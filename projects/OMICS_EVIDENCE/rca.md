@@ -312,9 +312,11 @@ hypothesis-driven ones. Measured against it:
 - [ ] Sample **GeneDB Use C rows** (organelle proteomes, complex map) for correct granularity,
       e.g. 64 trypanosomatid gene products all placed in `mitochondrial mRNA editing
       complex` from one complex map.
-- [ ] Add a regression test that `rca_matrisome_crosswalk.py` stays fully on its category
-      diagonal for matched human genes. Any deviation would mean BHF-UCL has started
-      annotating gene by gene.
+- [ ] Add a regression test that `rca_matrisome_crosswalk.py` stays on its category
+      diagonal for matched human genes, apart from the nine elasticity glycoproteins that
+      are off-diagonal by design (the committed report has 148 of 164 pairs on the diagonal;
+      the other 7 are symbols not in the human masterlist). Any other deviation would mean
+      BHF-UCL has started annotating gene by gene.
 
 ## Out of scope: quirks noted, not studied
 

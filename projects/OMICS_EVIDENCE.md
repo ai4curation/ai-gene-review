@@ -49,7 +49,10 @@ used**:
 - **A location read from a fraction is usually sound.** 57% of reviewed rows are
   accepted, rising to 63–89% for systematic localization screens and organelle
   proteomes. The exceptions are vesicle and body-fluid proteomes (6% accepted) and the
-  generic term `membrane` (23%).
+  generic term `membrane` (23%). These rates describe the reviews as inherited on
+  2026-10-05; this project has since re-reviewed both clusters by hand (Recommendation 1),
+  so the current vesicle and `membrane` actions are its own output, not independent
+  evidence.
 - **A function read from location or co-purification is unreliable under either code.**
   Examples are "cadherin binding" from an E-cadherin proximity screen (2 of 50 accepted)
   and the RCA matrisome "ECM structural constituent" rows (56%).
@@ -257,8 +260,9 @@ The data and the curators are the same. The difference is the inference step.
      transmembrane proteins of the plasma membrane or endosomes (category 1) and
      cytosolic proteins, including promiscuous enzyme and cytoskeleton cargo (category 2).
    - **Over-annotated → MARK_AS_OVER_ANNOTATED.** This covers co-isolated non-EV
-     constituents, with ALB, APOB, APOE and APOL1 as MISEV's negative markers
-     (category 3); residents of the ER, Golgi, mitochondria or nucleus (category 4); and
+     constituents (category 3). MISEV names ALB, APOA1/2 and APOB as negative markers;
+     APOE and APOL1 ride on the same plasma lipoproteins, so their plasma-microvesicle
+     rows were treated the same way; residents of the ER, Golgi, mitochondria or nucleus (category 4); and
      secreted or lumenal proteins with no EV receptor shown (category 5).
    - **ACCEPT** only for ALIX/PDCD6IP, which MISEV names as an EV marker actively
      incorporated by the biogenesis machinery.
@@ -296,21 +300,24 @@ The data and the curators are the same. The difference is the inference step.
    ([`dossiers_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/dossiers_settled.yaml)),
    and each protein was judged the same way, with one decision per protein in
    [`decisions_settled.py`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.py).
-   Proteins reviewed in both passes (APOE, PDCD6IP, ACTB, AHCY, ALPL, ASS1, ATP6AP2) got the
-   same call in both. 104 rows in 60 genes changed
+   Proteins reviewed in both passes (PDCD6IP, ACTB, AHCY, ALPL, ASS1, ATP6AP2) got the
+   same call in both. APOE did not: its pass-1 row is a plasma-microvesicle sample, but its
+   rows here come from urine, prostatic secretion, B-cell culture and CSF. APOE is not a
+   MISEV marker, and van Niel et al. (PMID:26387950) show it on intraluminal vesicles
+   secreted as exosomes, so those four rows stay KEEP_AS_NON_CORE. 100 rows in 59 genes
+   changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
    | Change | Rows | Proteins |
    |---|---:|---|
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 67 | secreted plasma and matrix proteins (A1BG, A2M, APOH, FN1, HPX, ITIH1–4, NID1, HSPG2) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, PSAP, SMPD1) |
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 32 | mitochondrial (ATP5F1A/B, HSPA9, HSPD1, ACAT1) and ER/Golgi residents (CALR, P4HB, PPIB, PRDX4, MAN1B1, LFNG) |
-   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 3) | 4 | APOE |
    | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
 
-   The other 314 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   The other 318 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
    membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
    MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
-   accepting ALIX alone is a judgement call carried over from pass 1. All 60 edited
+   accepting ALIX alone is a judgement call carried over from pass 1. All 59 edited
    reviews validate except A2M, which has an unrelated findings supporting-text error
    that predates this work.
 
@@ -401,6 +408,33 @@ The data and the curators are the same. The difference is the inference step.
 
 ## Session notes
 
+### 2026-10-10: fixes from the automated PR review
+
+The automated reviewer (`ai4c-reviewer`) found problems in how the manual passes were
+written back. Fixed:
+
+- **APOE.** Four non-plasma vesicle rows had been over-annotated as MISEV category 3,
+  but MISEV does not name APOE, and each row cites van Niel et al. (PMID:26387950)
+  showing ApoE on exosome-bound intraluminal vesicles. Those rows are restored to their
+  original KEEP_AS_NON_CORE. Only the plasma-microvesicle row stays over-annotated, and
+  its basis now says why. This page had also wrongly listed APOE and APOL1 among
+  MISEV's named markers.
+- **Provenance.** Every reason written by the passes now cites MISEV2018 as
+  `MISEV2018 (PMID:30637094)`.
+- **Stale summaries.** The apply scripts rewrote `action` and `reason` but left
+  `summary`, which then contradicted the action ("remains unresolved", "Retain"). Every
+  changed row now gets a summary that matches its decision. The scripts are idempotent:
+  a re-run edits nothing.
+- **Per-row wording.** The vesicle decisions can now override a protein's call row by
+  row (`R`). ALB's five rows each name their own sample.
+- **Contradicting quotes.** Six `supported_by` entries were a previous reviewer's own
+  argument for the action this review overturned (ARF1 ×3, GLA, PI15, PRDX4). They were
+  dropped (`S` in the decisions files). The other inherited quotes were checked: they
+  are source-paper text, UniProt text, or evidence the new basis already addresses
+  (e.g. DNAJB11's epitope-tagged construct).
+- **CD2AP.** Its rows are recorded as superseded by ai4curation/ai-gene-review#4287
+  rather than edited.
+
 ### 2026-10-10: merge with main; CD2AP left to its newer review
 
 Merging main brought in a separate CD2AP re-review (ai4curation/ai-gene-review#4287) that set its two exosome rows
@@ -415,7 +449,8 @@ already set to KEEP_AS_NON_CORE (220 genes). Dossiers were built with
 `build_dossiers.py --settled`, which skips rows from the first pass, and every protein
 was read. 104 rows changed (103 to MARK_AS_OVER_ANNOTATED, 1 to ACCEPT) and 314 were
 confirmed. 59 of the 60 edited reviews validate (A2M's error predates this work). One
-history record per touched gene (60).
+history record per touched gene (60). APOE's four rows were later restored (see the
+next note), leaving 100 changed in 59 genes.
 
 ### 2026-10-10: vesicle rows reviewed by hand; vesicle rule withdrawn
 

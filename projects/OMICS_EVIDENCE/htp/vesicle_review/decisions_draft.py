@@ -4,8 +4,9 @@ Written by a reviewer after reading each gene's dossier rows (UniProt location/f
 features, other location annotations as leads, source sample, current review). Nothing
 here is computed. Decisions are per protein because every row of a gene asserts the same
 thing (a vesicle-type location from an EV proteome); where the sample type would change
-the call it is said in the basis (none of the plasma-microvesicle rows needed a different
-call from the same protein's other rows).
+the call it is said in the basis, and R holds per-row overrides where a protein's rows
+differ in sample (ALB). APOE's one row here is a plasma-microvesicle sample; its other
+vesicle rows, from non-plasma samples, were reviewed in decisions_settled.py and kept.
 
 Framework: MISEV2018 (PMID:30637094), section 4-b-1 and Table 3, used as a guide for each
 judgement, not as a rule:
@@ -25,16 +26,17 @@ judgement, not as a rule:
 """
 
 CAT1 = ("KEEP_AS_NON_CORE", "Transmembrane/lipid-anchored protein of the plasma membrane or endosomal system "
-        "(UniProt); such proteins are expected EV contents (MISEV2018 category 1). True, but not its core location.")
+        "(UniProt); such proteins are expected EV contents (MISEV2018 (PMID:30637094) category 1). True, but not its core location.")
 CAT2 = ("KEEP_AS_NON_CORE", "Cytosolic protein (UniProt); cytosolic proteins, including abundant enzymes and "
-        "cytoskeletal proteins, are expected and often promiscuous EV contents (MISEV2018 category 2). True, but not "
+        "cytoskeletal proteins, are expected and often promiscuous EV contents (MISEV2018 (PMID:30637094) category 2). True, but not "
         "its core location.")
-CAT3 = ("MARK_AS_OVER_ANNOTATED", "Major constituent of non-EV structures co-isolated with EVs from body fluids "
-        "(MISEV2018 category 3 negative marker for plasma/serum EVs); detection does not establish EV localization.")
-CAT4 = ("MARK_AS_OVER_ANNOTATED", "Resident of an intracellular compartment that MISEV2018 lists as not enriched in "
+CAT3 = ("MARK_AS_OVER_ANNOTATED", "MISEV2018 (PMID:30637094) category 3 covers non-EV structures that "
+        "co-isolate with EVs, chiefly lipoproteins and albumin, from plasma, serum and serum-containing culture; "
+        "detection does not establish EV localization.")
+CAT4 = ("MARK_AS_OVER_ANNOTATED", "Resident of an intracellular compartment that MISEV2018 (PMID:30637094) lists as not enriched in "
         "small EVs of plasma-membrane/endosomal origin (category 4); an exosome annotation from a bulk EV proteome "
         "is not supported.")
-CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt); MISEV2018 category 5 says EV association "
+CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt); MISEV2018 (PMID:30637094) category 5 says EV association "
         "of such proteins needs the cognate EV-surface receptor to be shown, and none is shown for this protein.")
 
 
@@ -57,8 +59,8 @@ G = {
     "AHCTF1": note(CAT4, "Nuclear pore assembly factor (nucleus, nuclear envelope)."),
     "AHCY": note(CAT2, "Cytoplasmic adenosylhomocysteinase."),
     "AK2": note(CAT4, "Mitochondrial intermembrane-space adenylate kinase."),
-    "ALB": note(CAT3, "Serum albumin, named by MISEV2018 as a negative marker; applies to every sample here "
-                      "(urine, saliva, cell-culture and plasma preparations)."),
+    "ALB": note(CAT3, "Serum albumin, which MISEV2018 (PMID:30637094) names as a negative marker; see R for "
+                      "each row's sample."),
     "ALDH7A1": note(CAT2, "Cytosolic isoform (UniProt isoform 2: cytosol)."),
     "ALDOB": note(CAT2, "Cytosolic aldolase."),
     "ALK": note(CAT1, "Plasma-membrane receptor tyrosine kinase."),
@@ -67,9 +69,12 @@ G = {
     "AP2M1": note(CAT2, "Plasma-membrane clathrin adaptor subunit (peripheral, cytosolic face)."),
     "AP4M1": note(CAT4, "AP-4 coat subunit of the trans-Golgi network (UniProt ECO:0000269)."),
     "APAF1": note(CAT2, "Cytoplasmic apoptosome scaffold."),
-    "APOB": note(CAT3, "Apolipoprotein B, named by MISEV2018 as a negative marker."),
-    "APOE": note(CAT3, "Apolipoprotein E on lipoprotein particles, recovered from a plasma microvesicle preparation; "
-                       "the earlier ACCEPT described APOE's lipoprotein biology, not EV localization."),
+    "APOB": note(CAT3, "Apolipoprotein B, named by MISEV2018 (PMID:30637094) as a negative marker."),
+    "APOE": note(CAT3, "Apolipoprotein E recovered from a plasma microvesicle preparation. MISEV2018 "
+                       "(PMID:30637094) names APOA1/2 and APOB, not APOE, as negative markers, but APOE is carried "
+                       "on the same plasma lipoproteins, so this sample cannot separate the two. The earlier ACCEPT "
+                       "described APOE's lipoprotein biology, not EV localization. (APOE's other vesicle rows, "
+                       "from non-plasma samples, are KEEP_AS_NON_CORE; see decisions_settled.py.)"),
     "APOL1": note(CAT3, "HDL-associated apolipoprotein L1, recovered from a plasma microvesicle preparation."),
     "APP": note(CAT1, "Plasma-membrane/endosomal type I membrane protein; the earlier ACCEPT gave no basis for "
                       "exosomes being a core location."),
@@ -176,7 +181,7 @@ G = {
     "PAICS": note(CAT2, "Cytosolic purine-synthesis enzyme."),
     "PARK7": note(CAT2, "Cytoplasmic DJ-1; its EV presence matters as a biomarker, not as its site of action, so the "
                         "earlier ACCEPT is downgraded."),
-    "PDCD6IP": ("ACCEPT", "ALIX is named by MISEV2018 among proteins actively incorporated into EVs and is a standard EV "
+    "PDCD6IP": ("ACCEPT", "ALIX is named by MISEV2018 (PMID:30637094) among proteins actively incorporated into EVs and is a standard EV "
                           "marker; with syntenin and ESCRT it sorts cargo into intraluminal vesicles, so exosome localization "
                           "follows directly from its function."),
     "PDXK": note(CAT2, "Cytosolic kinase."),
@@ -227,4 +232,27 @@ G = {
                         "not where it acts."),
     "VPS4B": note(CAT2, "ESCRT AAA ATPase acting on the cytosolic face of endosomes; the exosome is a destination, "
                         "not where it acts."),
+}
+
+# Rows taken over by a later, separate review on main; recorded in decisions.yaml, not edited.
+SUPERSEDED = {
+    "CD2AP": "ai4curation/ai-gene-review#4287 re-reviewed both rows (UNDECIDED pending the source tables)",
+}
+
+# Per-row overrides where a protein's rows differ in sample and the basis should say so.
+_ALB = "Serum albumin, which MISEV2018 (PMID:30637094) names as a negative marker for EVs from plasma, serum and serum-containing culture."
+R = {
+    ("ALB", 52): note(CAT3, f"{_ALB} Here, urinary exosomes, where filtered plasma albumin is abundant."),
+    ("ALB", 53): note(CAT3, f"{_ALB} Here, exosomes from cultured B cells, where serum albumin in the medium is a recognised co-isolate."),
+    ("ALB", 54): note(CAT3, f"{_ALB} Here, exosomes from cultured trabecular meshwork cells, where serum albumin in the medium is a recognised co-isolate."),
+    ("ALB", 55): note(CAT3, f"{_ALB} Here, exosomes from expressed prostatic secretions in urine."),
+    ("ALB", 57): note(CAT3, f"{_ALB} Here, microvesicles isolated from plasma, the sample MISEV's marker is meant for."),
+}
+
+# supported_by entries that argued for the action this review overturned (a previous
+# reviewer's own judgement rather than evidence); dropped from the row.
+S = {
+    ("ARF1", 44): ["file:human/ARF1/ARF1-notes.md"],
+    ("ARF1", 50): ["file:human/ARF1/ARF1-notes.md"],
+    ("ARF1", 51): ["file:human/ARF1/ARF1-notes.md"],
 }

@@ -3,11 +3,12 @@
 Second pass of the vesicle review: the HDA/HTP vesicle-type rows that reviewers had already
 set to KEEP_AS_NON_CORE, which pass 1 (decisions_draft.py) did not cover. Written after
 reading each gene's dossier; nothing here is computed. Same MISEV2018 framework and the same
-category constants as pass 1. Genes reviewed in both passes (APOE, PDCD6IP, ACTB, AHCY, ALPL,
-ASS1, ATP6AP2) get the same call here as there.
+category constants as pass 1. Genes reviewed in both passes get the same call here as there
+(PDCD6IP, ACTB, AHCY, ALPL, ASS1, ATP6AP2), except APOE: its pass-1 row is a plasma
+microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT2, CAT3, CAT4, CAT5, note
+from decisions_draft import CAT1, CAT2, CAT4, CAT5, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -32,7 +33,11 @@ G = {
     "AMN": note(CAT1, "Apical plasma-membrane cubilin partner."),
     "ANKFY1": note(CAT1, "Peripheral endosome-membrane protein."),
     "APLP2": note(CAT1, "Plasma-membrane amyloid precursor-like protein."),
-    "APOE": note(CAT3, "Apolipoprotein E on lipoprotein particles, which co-isolate with EVs from body fluids."),
+    "APOE": note(CAT2, "Not a MISEV2018 (PMID:30637094) negative marker (it names APOA1/2 and APOB), and these "
+                       "samples are urine, prostatic secretion, B-cell culture and CSF rather than plasma. van Niel "
+                       "et al. (PMID:26387950) show ApoE on endosomal intraluminal vesicles that are secreted as "
+                       "exosomes, so the location is real; it is secondary to APOE's lipoprotein role. (Confirms the "
+                       "existing KEEP_AS_NON_CORE; the plasma-microvesicle row stays over-annotated in pass 1.)"),
     "APOH": note(CAT5, "Secreted plasma beta-2-glycoprotein I."),
     "ARL15": note(CAT2, "Small GTPase of the cytoplasmic face of membranes."),
     "ARMC3": note(CAT2, "Cytoplasmic armadillo-repeat protein."),
@@ -232,4 +237,13 @@ G = {
     "VPS37C": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
     "VPS37D": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
     "YWHAZ": note(CAT2, "Cytoplasmic 14-3-3 protein."),
+}
+
+
+# supported_by entries that argued for the action this review overturned (a previous
+# reviewer's own judgement rather than evidence); dropped from the row.
+S = {
+    ("GLA", 21): ["file:human/GLA/GLA-notes.md"],
+    ("PI15", 4): ["file:human/PI15/PI15-deep-research-manual.md"],
+    ("PRDX4", 31): ["file:human/PRDX4/PRDX4-deep-research-falcon.md"],
 }

@@ -131,19 +131,21 @@ def block_end(lines: list[str], start: int, indent: int) -> int:
     return i
 
 
-def render_reason(indent: int, text: str) -> list[str]:
-    """Render `reason:` as a block scalar that parses back to exactly `text`."""
+def render_reason(indent: int, text: str, key: str = "reason") -> list[str]:
+    """Render `<key>:` as a block scalar that parses back to exactly `text`."""
     pad = " " * (indent + 2)
     if "\n" in text:
         body = [pad + ln if ln else "" for ln in text.split("\n")]
-        return [" " * indent + "reason: |-"] + body
+        return [" " * indent + f"{key}: |-"] + body
     wrapped = textwrap.wrap(text, width=96, break_long_words=False, break_on_hyphens=False)
-    return [" " * indent + "reason: >-"] + [pad + ln for ln in wrapped]
+    return [" " * indent + f"{key}: >-"] + [pad + ln for ln in wrapped]
 
 
-def edit_file(path: str, changes: list[tuple[int, str, str]]) -> str:
+def edit_file(path: str, changes: list[tuple]) -> str:
     """Return new text for `path` with (annotation index, new action, new reason) applied.
 
+    A change may carry two optional extras: a new `summary` (None leaves it alone) and a
+    list of positions in `review.supported_by` to delete (the key goes if none remain).
     Locates each annotation's review block by walking `existing_annotations` items in
     order; raises if the text layout is not the expected block style.
     """
@@ -167,12 +169,41 @@ def edit_file(path: str, changes: list[tuple[int, str, str]]) -> str:
     if len(item_starts) - 1 != n_items:
         raise ValueError(f"found {len(item_starts) - 1} list items, expected {n_items}")
     # apply bottom-up so earlier line numbers stay valid
-    for idx, new_action, new_reason in sorted(changes, key=lambda c: -c[0]):
+    for change in sorted(changes, key=lambda c: -c[0]):
+        idx, new_action, new_reason = change[:3]
+        new_summary = change[3] if len(change) > 3 else None
+        drop = sorted(change[4] if len(change) > 4 else [], reverse=True)
         s, e = item_starts[idx], item_starts[idx + 1]
         rv = next(i for i in range(s, e) if re.match(r"^ *review:\s*$", lines[i]))
         rv_indent = len(lines[rv]) - len(lines[rv].lstrip(" "))
         rv_end = block_end(lines, rv, rv_indent)
         key_indent = rv_indent + 2
+        if drop:
+            sb = next(i for i in range(rv + 1, rv_end) if re.match(rf"^ {{{key_indent}}}supported_by:\s*$", lines[i]))
+            # list items may sit at the key's indent or two deeper
+            first = next(i for i in range(sb + 1, rv_end) if lines[i].strip())
+            item_ind = len(lines[first]) - len(lines[first].lstrip(" "))
+            assert lines[first].lstrip().startswith("- "), (path, idx)
+            sb_end = next((i for i in range(first + 1, rv_end) if lines[i].strip() and (
+                len(lines[i]) - len(lines[i].lstrip(" ")) < item_ind or (
+                    len(lines[i]) - len(lines[i].lstrip(" ")) == item_ind
+                    and not lines[i].lstrip().startswith("- ")))), rv_end)
+            starts = [i for i in range(sb + 1, sb_end)
+                      if re.match(rf"^ {{{item_ind}}}- ", lines[i])] + [sb_end]
+            for k in drop:
+                del lines[starts[k]:starts[k + 1]]
+            if len(drop) == len(starts) - 1:
+                del lines[sb]
+            rv_end = block_end(lines, rv, rv_indent)
+        if new_summary is not None:
+            sm = next((i for i in range(rv + 1, rv_end)
+                       if re.match(rf"^ {{{key_indent}}}summary:", lines[i])), None)
+            new_summary_lines = render_reason(key_indent, new_summary, key="summary")
+            if sm is not None:
+                lines[sm:block_end(lines, sm, key_indent)] = new_summary_lines
+            else:
+                lines[rv + 1:rv + 1] = new_summary_lines
+            rv_end = block_end(lines, rv, rv_indent)
         act = next((i for i in range(rv + 1, rv_end)
                     if re.match(rf"^ {{{key_indent}}}action:", lines[i])), None)
         rea = next((i for i in range(rv + 1, rv_end)
@@ -190,6 +221,49 @@ def edit_file(path: str, changes: list[tuple[int, str, str]]) -> str:
                        if re.match(rf"^ {{{key_indent}}}action:", lines[i]))
             lines[act + 1:act + 1] = new_reason_lines
     return "\n".join(lines)
+
+
+
+def apply_row_targets(targets: dict, write: bool) -> tuple[int, list[str]]:
+    """Bring rows to a target state; return (files edited, files that failed the parse check).
+
+    `targets` maps a review path to (index, action, reason, summary, drop_refs) tuples, where
+    drop_refs names `supported_by` entries (by reference_id) to delete. Rows already in the
+    target state are left alone, so re-running is a no-op. Each edited file is re-parsed and
+    compared with the original parse plus the intended changes.
+    """
+    import copy
+
+    edited, failed = 0, []
+    for path, rows in targets.items():
+        doc = yaml.load(open(path).read(), Loader=LOADER)
+        changes = []
+        expect = copy.deepcopy(doc)
+        for idx, action, reason, summary, drop_refs in rows:
+            rv = doc["existing_annotations"][idx]["review"]
+            sb = rv.get("supported_by") or []
+            drop = [k for k, x in enumerate(sb) if x.get("reference_id") in drop_refs]
+            if (rv.get("action"), rv.get("reason"), rv.get("summary")) == (action, reason, summary) and not drop:
+                continue
+            changes.append((idx, action, reason, summary, drop))
+            erv = expect["existing_annotations"][idx]["review"]
+            erv.update(action=action, reason=reason, summary=summary)
+            if drop:
+                kept = [x for k, x in enumerate(sb) if k not in drop]
+                if kept:
+                    erv["supported_by"] = kept
+                else:
+                    del erv["supported_by"]
+        if not changes:
+            continue
+        new_text = edit_file(path, changes)
+        if yaml.load(new_text, Loader=LOADER) != expect:
+            failed.append(path)
+            continue
+        edited += 1
+        if write:
+            open(path, "w").write(new_text)
+    return edited, failed
 
 
 def main() -> int:
