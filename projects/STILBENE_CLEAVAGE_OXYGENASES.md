@@ -3,6 +3,7 @@ title: "Stilbene Cleavage Oxygenases (SCO / lignostilbene α,β-dioxygenase fami
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [NEUCR, NOVAD, SPHPI, MYCMD]
+last_reviewed: 2026-10-05
 genes:
   - cao-1
   - cao-2
@@ -14,10 +15,6 @@ genes:
 manifest:
   slides:
     - href: STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/LocaBRZyx9MgonQTLUDrJF
-      title: Project brief
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)
@@ -34,7 +31,7 @@ TreeGrafter IEA) was marked REMOVE, and `GO:0016121` carotene catabolic process
 was either modified to `GO:0046272` stilbene catabolic process (four genes) or
 removed (the two LSD isozymes); the same terms were accepted on cao-2. The
 project also tracks GO's July 2026 revision of this area (new `GO:7770086`
-resveratrol dioxygenase activity) and proposes a *stilbene α,β-dioxygenase
+resveratrol dioxygenase activity) and proposes a *hydroxystilbene α,β-dioxygenase
 activity* grouping term. All seven reviews are still status IN_PROGRESS, and
 the grouping term exists so far only as a proposed new term in the cao-1 review.
 
@@ -67,13 +64,13 @@ Neurospora `cao-1` review that opened the thread.
 
 | Gene | UniProt | Organism | Role | Status |
 |---|---|---|---|---|
-| **cao-1** | Q7S860 | *Neurospora crassa* (NEUCR) | resveratrol/piceatannol (hydroxystilbene) cleavage | reviewed |
-| cao-2 (contrast) | A7UXI1 | *Neurospora crassa* (NEUCR) | torulene (carotenoid) cleavage — CCO sister | reviewed |
-| **NOV1** (Saro_0802) | Q2GA76 | *Novosphingobium aromaticivorans* (NOVAD) | resveratrol / isoeugenol-cleaving dioxygenase (structure + mechanism) | reviewed |
-| NOV2 (Saro_2809) | Q2G4H8 | *Novosphingobium aromaticivorans* (NOVAD) | stilbenoid-cleaving CCO (assayed with resveratrol/piceatannol) | reviewed |
-| **LSD-III (lsdB)** | Q52008 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase (founding LSD; EC 1.13.11.43) | reviewed |
-| LSD-I | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase isozyme I | reviewed |
-| **Rco1** | A0A0D1E6L2 | *Ustilago maydis* (MYCMD) | resveratrol cleavage oxygenase (fungal; no carotenoid activity) | reviewed |
+| <gene species="NEUCR" symbol="cao-1">cao-1</gene> | Q7S860 | *Neurospora crassa* (NEUCR) | resveratrol/piceatannol (hydroxystilbene) cleavage | reviewed |
+| <gene species="NEUCR" symbol="cao-2">cao-2</gene> (contrast) | A7UXI1 | *Neurospora crassa* (NEUCR) | torulene (carotenoid) cleavage - CCO sister | reviewed |
+| NOV1 (<gene species="NOVAD" symbol="Saro_0802">Saro_0802</gene>) | Q2GA76 | *Novosphingobium aromaticivorans* (NOVAD) | resveratrol / isoeugenol-cleaving dioxygenase (structure + mechanism) | reviewed |
+| NOV2 (<gene species="NOVAD" symbol="Saro_2809">Saro_2809</gene>) | Q2G4H8 | *Novosphingobium aromaticivorans* (NOVAD) | stilbenoid-cleaving CCO (assayed with resveratrol/piceatannol) | reviewed |
+| LSD-III (<gene species="SPHPI" symbol="lsdB">lsdB</gene>) | Q52008 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase (founding LSD; EC 1.13.11.43) | reviewed |
+| LSD-I (<gene species="SPHPI" symbol="Q53353">Q53353</gene>) | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase isozyme I | reviewed |
+| Rco1 (<gene species="MYCMD" symbol="RCO1">RCO1</gene>) | A0A0D1E6L2 | *Ustilago maydis* (MYCMD) | resveratrol cleavage oxygenase (fungal; no carotenoid activity) | reviewed |
 
 ## Substrate recognition: a two-ring-anchor model
 
@@ -84,8 +81,8 @@ A structure-based analysis of the CAO-1 co-crystals (5U90 resveratrol, 5U97 pice
 over the metal. This retrospectively explains CAO-1's entire empirical substrate panel (PMID:23893079),
 including why a free 4′-OH is *necessary but not sufficient* (4-hydroxystilbene has it but lacks the
 second anchor). Per-member specificity varies across the family: CAO-1 requires several free hydroxyls,
-whereas bacterial LsdA reportedly cleaves even 4-hydroxystilbene — a difference the planned bacterial
-reviews will examine structurally.
+whereas bacterial LsdA reportedly cleaves even 4-hydroxystilbene — a difference a follow-up
+bacterial/fungal anchor-residue comparison should examine structurally.
 
 ## Gene Ontology representation (a live issue)
 
@@ -105,11 +102,12 @@ this work:
   ontology snapshot this repo validates against, so structured `molecular_function` slots in the
   gene reviews still carry the validated parent GO:0016702 and name GO:7770086 in prose; they
   should be switched once the snapshot catches up.
-- This project proposes a **grouping term** — provisionally *"stilbene α,β-dioxygenase activity"* (the
-  literature-conventional name; "hydroxystilbene α,β-dioxygenase" is the scope-accurate descriptive
-  variant) — as the **parent** of GO:7770086 and GO:0050054 (lignostilbene α,β-dioxygenase), to
-  organize the currently-flat set of stilbene-cleavage leaf terms and to serve family-level (IBA)
-  annotation.
+- This project proposes a **grouping term** — *"hydroxystilbene α,β-dioxygenase activity"*, with
+  "stilbene α,β-dioxygenase" as the literature-conventional synonym — as the **parent** of
+  GO:7770086 and GO:0050054 (lignostilbene α,β-dioxygenase), to organize the currently-flat set of
+  stilbene-cleavage leaf terms and to serve family-level (IBA) annotation. The hydroxystilbene scope is
+  deliberate: these enzymes require free phenolic hydroxyl groups, so a term over all stilbenoids would
+  overstate the demonstrated family specificity.
 
 ## The IBA lesson
 
@@ -144,7 +142,7 @@ experimental evidence separates them.
   origin)? (See the cao-1 knowledge gaps.)
 - Do the bacterial (NOV1/NOV2/LsdA) and fungal (CAO-1/Rco1) members differ structurally in the
   two-anchor architecture in a way that explains their differing hydroxylation requirements?
-- Should GO adopt the proposed *stilbene α,β-dioxygenase activity* grouping as the parent of the
+- Should GO adopt the proposed *hydroxystilbene α,β-dioxygenase activity* grouping as the parent of the
   reaction-specific leaves?
 
 **Source**: [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review)

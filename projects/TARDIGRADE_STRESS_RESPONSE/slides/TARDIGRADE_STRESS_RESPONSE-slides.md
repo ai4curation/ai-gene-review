@@ -32,7 +32,7 @@ Chris Mungall | AI-Assisted Gene Review
 - During desiccation, **massive ROS accumulation** damages biomolecules in every cellular compartment
 - Radiation tolerance is likely a *byproduct* of desiccation tolerance — both stresses generate hydroxyl radicals
 
-**Goal:** curate the complete reviewed (Swiss-Prot) stress-response proteome of RAMVA
+**Goal:** curate RAMVA tardigrade protectants plus the expanded SOD-family candidates
 
 ---
 
@@ -67,7 +67,7 @@ Plus conventional ROS-scavenging enzymes (Cu/Zn-SODs, Mn-SOD).
 
 ## The Approach: AI-Assisted Gene Review
 
-- Curate each Swiss-Prot protein against existing GOA annotations using GO guidelines
+- Curate each RAMVA stress-response candidate against existing GOA annotations using GO guidelines
 - For each annotation: **ACCEPT / MODIFY / REMOVE / NEW** with literature + bioinformatic support
 - Deep research (falcon) synthesized per gene; reviewer adjudication on top
 - Where annotations were missing or wrong, propose **NEW** terms or corrections
@@ -77,9 +77,9 @@ Plus conventional ROS-scavenging enzymes (Cu/Zn-SODs, Mn-SOD).
 
 ## Finding 1: A Systematic Annotation Gap
 
-- The most consistent gap across **all TDPs**: absence of **GO:0009269 (response to desiccation)**
-- This is *the* core biological process for the entire family
-- Proposed as **NEW for every gene** in the project
+- The most consistent gap across **CAHS, SAHS, MAHS and LEA protectants**: absence of **GO:0009269 (response to desiccation)**
+- This is *the* core biological process for those protectants
+- Proposed as **NEW for seven protectant genes**
 - **Response to osmotic stress** proposed for several genes with gain-of-function data (MAHS, RvLEAM expressed in human cells)
 
 > The defining function of the whole protein family was simply not in the database.
@@ -103,11 +103,12 @@ We reviewed 9 RAMVA Cu/Zn-SOD paralogs. Bioinformatic analysis (sequence + PROSI
 | Verdict | Count | Examples |
 |---------|-------|----------|
 | Confirmed pseudoenzyme | 1 | RvSOD15 / RvY_13070 |
-| Probably impaired | 3 | RvY_00650, RvY_03757, RvY_17310 |
+| Probably impaired | 2 | RvY_00650, RvY_03757 |
+| Unresolved | 1 | RvY_17310 |
 | Copper chaperone (not a SOD) | 1 | RvY_15948 (CCS homolog) |
 | Likely functional canonical SOD | 4 | RvY_00651, RvY_03754, RvY_09480, RvY_10893 |
 
-At least **4 of 9** Cu/Zn-SOD-family paralogs appear to have lost/impaired canonical SOD activity.
+Three of nine Cu/Zn-SOD-fold proteins are pseudoenzymatic or probably impaired; **RvY_17310** remains unresolved.
 
 ---
 
@@ -115,17 +116,17 @@ At least **4 of 9** Cu/Zn-SOD-family paralogs appear to have lost/impaired canon
 
 - Crystal structure (PMID:37358501) shows **Val87 replaces the catalytic His** copper ligand
 - Confirmed structurally → its **4 SOD-activity annotations are OVER-ANNOTATED**
-- Three more paralogs keep all four catalytic Cu histidines at the residue level, **yet fail PROSITE PS00087** (N-terminal Cu coordination signature)
-- By analogy with the V87H mutant structure of RvSOD15 (a flexible loop can destabilize Cu coordination of the restored His87), these are likely impaired too
+- Two more paralogs keep all four catalytic Cu histidines at the residue level, **yet fail PROSITE PS00087** (N-terminal Cu coordination signature)
+- **RvY_17310** also fails PS00087 but has intact AlphaFold active-site geometry, so it is **UNDECIDED** pending assay
 - Validates Sim & Inoue (2023): "some other RvSODs are also unusual SODs" — now with a precise count
 
 ---
 
 ## Finding 4: Annotation Propagation Errors Are Systematic
 
-- Automated pipelines (**InterPro2GO, EC2GO, UniRule, ARBA**) assigned GO:0004784 (SOD activity) to **ALL** Cu/Zn-SOD-family proteins by Pfam membership alone
+- Automated pipelines (**InterPro2GO, EC2GO, UniRule, ARBA**) assigned GO:0004784 (SOD activity) to **8 Cu/Zn-SOD enzyme-family proteins** by Pfam membership alone
 - No check of catalytic-residue conservation or motif integrity
-- Canonical **"annotation propagation by family membership"** failure — documented for ≥4 of 9 paralogs
+- Canonical **"annotation propagation by family membership"** failure — documented for RvSOD15 and two probably impaired paralogs, with RvY_17310 still unresolved
 - **RvY_01767 (Mn-SOD)** also got a spurious "respiratory chain complex" annotation from an ARBA rule (it is a soluble matrix protein) → 1 REMOVE
 
 ---
@@ -152,7 +153,7 @@ At least **4 of 9** Cu/Zn-SOD-family paralogs appear to have lost/impaired canon
 ## Conclusions & Status
 
 - Full reviewed RAMVA stress proteome curated: **Dsup, 3 CAHS, 2 SAHS, MAHS, RvLEAM, 9 Cu/Zn-SODs, 1 Mn-SOD**
-- **GO:0009269 (response to desiccation)** proposed as the unifying NEW term across all TDPs
+- **GO:0009269 (response to desiccation)** proposed as the unifying NEW term across CAHS, SAHS, MAHS and LEA protectants
 - A reusable SOD bioinformatics pipeline (`analyze_sods.py`, `check_prosite.py`) revealed ~half the SOD expansion may be non-catalytic
 - "Gene duplication = more antioxidant capacity" is only **partially** correct
 

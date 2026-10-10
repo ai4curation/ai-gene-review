@@ -28,7 +28,7 @@ style: |
 
 A relation fix for succinate dehydrogenase subunits
 
-<span class="small">AI Gene Review · projects/SDH_GP2TERM_CONTRIBUTES_TO · in progress · 2026</span>
+<span class="small">AI Gene Review · projects/SDH_GP2TERM_CONTRIBUTES_TO · in progress · 2026-10-05</span>
 
 ---
 
@@ -37,8 +37,8 @@ A relation fix for succinate dehydrogenase subunits
 ## Bottom line
 
 - No single subunit of **succinate dehydrogenase** performs GO:0008177; GO agreed (go-annotation#6414) that subunits get **`contributes_to`**, not `enables`.
-- **5 repo reviews** carry GO:0008177. All say `contributes_to` in prose; at the audit only **SDHC** and **one SDHA row** had the structured qualifier (both from GOA).
-- **SDHB and SDHD are now edited** (PR #3223, merged): GOA `enables` rows → `MODIFY`, plus one paired `NEW` `contributes_to` row per gene. Open: SDHA, the plant SDH2 ortholog, PSEPK sdhA/sdhB.
+- **7 reviews** carry GOA rows for GO:0008177. **SDHC** was already structured; **SDHB/SDHD** now use `MODIFY` + paired `NEW` `contributes_to` rows.
+- Still open in **#582**: SDHA's GO:0000104 half-reaction decision, 9POAL NCGR_LOCUS67308, and PSEPK `sdhA`/`sdhB`.
 
 ---
 
@@ -48,7 +48,7 @@ A relation fix for succinate dehydrogenase subunits
 
 ---
 
-## What the audit found
+## Original human and 9POAL audit
 
 ![h:480](qualifier-audit.svg)
 
@@ -67,7 +67,7 @@ A relation fix for succinate dehydrogenase subunits
 
 - ✅ **Tier 1 (PR #3223):** SDHB (3 rows) and SDHD (1 row). The GOA rows keep GOA's own `enables` qualifier (not overridden); each `enables` row is `MODIFY` and a paired `NEW` `contributes_to` row (IDA) records the intent. Re-fetch once GOA reflects #6414.
 - ⬜ **Tier 2:** decide SDHA GO:0000104 vs GO:0008177; decide 9POAL NCGR_LOCUS67308 (MODIFY → GO:0009055 or keep with qualifier).
-- ⬜ PSEPK **sdhA / sdhB** reviews (added later) carry GO:0008177 with `enables`; add to scope.
+- ⬜ PSEPK **sdhA / sdhB** reviews carry GO:0008177 with `enables`; apply the #6414 pattern.
 - Order: `MODIFY` + paired `NEW` row → wait for GOA → `just fetch-gene` → `just validate`.
 
 **Read more:** `projects/SDH_GP2TERM_CONTRIBUTES_TO.md`

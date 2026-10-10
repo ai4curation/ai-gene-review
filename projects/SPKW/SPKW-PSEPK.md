@@ -1,5 +1,6 @@
 ---
 title: "SPKW P. putida (Pseudomonas putida) Subproject"
+autolink_gene_symbols: false
 ---
 
 # SPKW P. putida (Pseudomonas putida) Subproject
@@ -77,7 +78,7 @@ These are actual methyltransferases where "methylation" is their core function. 
 ### 2. Cell Wall / Cell Shape (32 + 27 genes) - LEGITIMATE
 
 Genes include:
-- **ftsI** - Peptidoglycan D,D-transpeptidase (PBP3)
+- **`ftsI`** - Peptidoglycan D,D-transpeptidase (PBP3)
 - **mraY** - Phospho-N-acetylmuramoyl-pentapeptide-transferase
 - **mrdA-I, mrdA-II** - Peptidoglycan D,D-transpeptidases (PBP2)
 - **ddl, ddlA, ddlB** - D-alanine--D-alanine ligases

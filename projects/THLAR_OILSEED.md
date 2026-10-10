@@ -1,6 +1,7 @@
 ---
 title: "Pennycress (Thlaspi arvense) Oilseed Domestication Genes"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [THLAR, ARATH]
 genes: [FAE1, TFP, CYP71B1, matK]
@@ -23,8 +24,9 @@ the pennycress CRISPR knockouts.
 
 - Domestication traits map onto single genes with strong knockout phenotypes in pennycress
   itself (oil composition, seed coat, glucosinolates, flowering habit, pod shatter, dormancy).
-- Arabidopsis orthologs are already reviewed in this repo (e.g. FAE1, TT8, TTG1, FLC, CBF1,
-  WRI1, DGAT1, FAD2), so each pennycress review can be checked against its ortholog.
+- Arabidopsis orthologs are already reviewed in this repo (e.g.
+  <gene species="ARATH" symbol="FAE1">FAE1</gene>, TT8, TTG1, FLC, CBF1, WRI1,
+  DGAT1, FAD2), so each pennycress review can be checked against its ortholog.
 - The glucosinolate-myrosinase defence system links the existing TFP review to sulfate
   assimilation modules and is not yet represented as a module.
 
@@ -71,28 +73,29 @@ the pennycress CRISPR knockouts.
 - **Fatty acid elongation** (`modules/fatty_acid_elongation_cycle.yaml`, updated). The
   condensation step is now a choice between two unrelated enzyme families that carry out
   the same reaction: animal and fungal ELOVLs, and plant 3-ketoacyl-CoA synthases (KCS).
-  The KCS variant uses Arabidopsis FAE1 and CER6 and pennycress FAE1 as examples, and cites
-  the PAINT node PTN000774398. The other three steps of the cycle are carried out by
-  orthologous enzymes in plants and animals, so each now lists an Arabidopsis example
-  (KCR1, PAS2, ECR/CER10) alongside the human one.
+  The KCS variant uses Arabidopsis <gene species="ARATH" symbol="FAE1">FAE1</gene> and CER6
+  and pennycress FAE1 as examples, and cites the PAINT node PTN000774398. The other three
+  steps of the cycle are carried out by orthologous enzymes in plants and animals, so each
+  now lists an Arabidopsis example (KCR1, PAS2, ECR/CER10) alongside the human one.
 - **Glucosinolate-myrosinase defense**
   (`modules/aliphatic_glucosinolate_myrosinase_defense.yaml`, new). It has five parts:
-  1. methionine chain elongation (BCAT4, MAM, IPMI, IPMDH1, BCAT3)
-  2. core structure (CYP79F, CYP83A1, GGP1, SUR1, UGT74C1, SOT17/18)
-  3. side-chain modification (FMO GS-OX, AOP2), which is optional
-  4. myrosinase hydrolysis (TGG1/TGG2)
-  5. specifier proteins (ESP, NSP, and pennycress TFP), which are optional
+    1. methionine chain elongation (BCAT4, MAM, IPMI, IPMDH1, BCAT3)
+    2. core structure (CYP79F, CYP83A1, GSTU20, GSTF11, GGP1, SUR1, UGT74C1,
+       SOT17, SOT18)
+    3. side-chain modification (FMO GS-OX, AOP2), which is optional
+    4. myrosinase hydrolysis (TGG1, TGG2)
+    5. specifier proteins (ESP, NSP, and pennycress TFP), which are optional
 
-  Each step cites a primary paper. Pennycress seed glucosinolate is mostly sinigrin
-  (allylglucosinolate), which requires a working AOP2. The Arabidopsis Columbia AOP2 is
-  inactive, so the module uses the functional Cvi-0 allele as its example.
+    Each step cites a primary paper. Pennycress seed glucosinolate is mostly sinigrin
+    (allylglucosinolate), which requires a working AOP2. The Arabidopsis Columbia AOP2 is
+    inactive, so the module uses the functional Cvi-0 allele as its example.
 
-All 25 Arabidopsis example enzymes named in these two modules now have full gene reviews
+All 28 Arabidopsis example enzymes named in these two modules now have full gene reviews
 (`genes/ARATH/<GENE>/`), as does pennycress FAE1. Things the reviews found that bear on
 the modules:
 
 - **Missing GO terms:** GO has no activity term for the CYP83A1 or AOP2 reactions, or for
-  the specific ESP and NSP1 reactions. Each review proposes one.
+  the specific ESP, NSP1 and TFP specifier reactions. Each review proposes one.
 - **Paralog mis-propagation:** leucine-biosynthesis annotations on MAM1 were inherited
   from its IPMS paralogs, and MAM1 shows no IPMS activity, so they are removed. MAM3 does
   have weak IPMS activity, so that annotation is kept as non-core.
@@ -134,6 +137,8 @@ The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.
 
 ## Next steps
 
+Tracked in [ai-gene-review#4015](https://github.com/ai4curation/ai-gene-review/issues/4015).
+
 1. Review the other oil-composition genes (FAD2, ROD1) using PMID:33968108.
 2. Report the pennycress gene-model errors to the assembly or annotation maintainers: AOP2
    (TAV2_LOCUS22152, a false intron), the AOP1-like fusion (TAV2_LOCUS20419) and PAS2 (fused
@@ -149,4 +154,5 @@ The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.
 - PMID:39657724 — multi-omics of the fae1 knockout.
 - PMID:32740897 — functional analysis of pennycress FAE1 in Arabidopsis.
 - PMID:41578087 — stacking domestication traits by CRISPR (Nature Plants 2026).
+- PMID:41685867 — tt8-2bp seed-coat anatomy and chemistry in pennycress.
 - PMID:39470818 — review of pennycress domestication and engineering.
