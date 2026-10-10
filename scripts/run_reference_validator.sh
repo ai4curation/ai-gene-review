@@ -10,7 +10,7 @@
 # Accepts one OR many data files. With many files it strips them in a single
 # pass and makes a single `validate data F1 F2 ...` call (the validator
 # builds/parses the schema once), which is dramatically faster than one process
-# per file. Requires linkml-reference-validator >= 0.2.1 (multi-file
+# per file. Requires linkml-reference-validator >= 0.3.0 (trusted-cache
 # `validate data`).
 #
 # Usage: scripts/run_reference_validator.sh validate data F1 [F2 ...] --schema S --target-class C --config CFG

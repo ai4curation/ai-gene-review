@@ -56,6 +56,14 @@ def test_repo_configs_trust_committed_cache(config_path):
     assert config["trust_cached_entries"] is True
 
 
+def test_warm_config_refreshes_stale_cache_entries():
+    config = yaml.safe_load(
+        (PROJECT_ROOT / "conf/reference_validator_warm_config.yaml").read_text()
+    )
+    assert config["cache_dir"] == "publications"
+    assert not config.get("trust_cached_entries", False)
+
+
 def test_in_process_title_quote_and_cache_preservation(cache):
     p = cache / "PMID_1.md"
     before = p.read_bytes()
@@ -146,7 +154,7 @@ def test_warming_uses_upstream_cli_without_running_it(monkeypatch):
     assert module["main"]() == 0
     cmd = calls[0][0][0]
     assert cmd[:5] == ["uv", "run", "linkml-reference-validator", "validate", "data"]
-    assert cmd[cmd.index("--config") + 1] == "conf/reference_validator_config.yaml"
+    assert cmd[cmd.index("--config") + 1] == "conf/reference_validator_warm_config.yaml"
     assert "--no-full-text" not in cmd
 
 
