@@ -122,3 +122,15 @@
 
 - A falcon deep-research job was started separately. The file BNIP3-deep-research-falcon.md was
   not present when the review was written, so the review uses primary literature only.
+
+## Addendum: falcon deep research (arrived after the review was written)
+
+`BNIP3-deep-research-falcon.md` landed after the annotation review was finished and was
+cross-checked against it afterwards. It agrees with the review's calls: mitophagy receptor at the
+outer mitochondrial membrane as the primary function; the LIR (W16/L19) and MER (42-53)
+contribute redundantly (the LIR-only mutant still rescues the null in remodelling muscle); fly
+BNIP3 clears mitochondrial rather than ER cargo in metamorphosing enterocytes; and cell-death
+effects are context-dependent, with a preprint reporting that knockdown *increases*
+Rbf1-induced apoptosis [file:DROME/BNIP3/BNIP3-deep-research-falcon.md "BNIP3 knockdown reduced
+basal mitophagy in larval wing discs and increased apoptosis caused by **Rbf1 overexpression**"].
+No annotation decision changes.
