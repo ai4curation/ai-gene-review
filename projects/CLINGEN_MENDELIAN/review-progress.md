@@ -66,6 +66,43 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 283 — 2026-10-10 01:04:37 UTC
+
+**283 complete / 2,593 remaining in the frozen 2,876-gene catalog.** Five distinct
+primary-gene campaign reviews add five originals and completions beyond checkpoint 278.
+No follow-up holds remain. Supplementary genes and repeat reviews add no count.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CDH11 | [#4486](https://github.com/ai4curation/ai-gene-review/pull/4486) | [36084b8f8c3b](https://github.com/ai4curation/ai-gene-review/commit/36084b8f8c3bf747a2c3be6e326a7e9628bbd789) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4486#pullrequestreview-5476563602) | 2026-10-10T00:52:07Z | [dccca414ec3a](https://github.com/ai4curation/ai-gene-review/commit/dccca414ec3aee49285c02d4cae8ec4498bcb7a9) |
+| CDH2 | [#4485](https://github.com/ai4curation/ai-gene-review/pull/4485) | [b94cb3bb39bd](https://github.com/ai4curation/ai-gene-review/commit/b94cb3bb39bdbd6a0190da67efd6886a19f902c3) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4485#pullrequestreview-5476598449) | 2026-10-10T00:52:57Z | [936cc03bfaa4](https://github.com/ai4curation/ai-gene-review/commit/936cc03bfaa4ad2017482fba735adedaf1dab770) |
+| CDH23 | [#4488](https://github.com/ai4curation/ai-gene-review/pull/4488) | [597e5068026d](https://github.com/ai4curation/ai-gene-review/commit/597e5068026d4d22551d7ce39be23180218df3bf) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4488#pullrequestreview-5476612754) | 2026-10-10T00:55:59Z | [f7075527f6e4](https://github.com/ai4curation/ai-gene-review/commit/f7075527f6e4dc11a19f2d621b82090b44806de3) |
+| CDH3 | [#4490](https://github.com/ai4curation/ai-gene-review/pull/4490) | [93e90cb9f65a](https://github.com/ai4curation/ai-gene-review/commit/93e90cb9f65aad5bce033015ebf12cc418a13fb7) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4490#pullrequestreview-5476668634) | 2026-10-10T01:01:23Z | [70c867e88cd2](https://github.com/ai4curation/ai-gene-review/commit/70c867e88cd267242f4f3beffdb9c8c91b90310b) |
+| CDH1 | [#4489](https://github.com/ai4curation/ai-gene-review/pull/4489) | [f09ac48d6dc1](https://github.com/ai4curation/ai-gene-review/commit/f09ac48d6dc12daab564213cc04dfa0a961c8203) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4489#pullrequestreview-5476714977) | 2026-10-10T01:04:37Z | [436d15327509](https://github.com/ai4curation/ai-gene-review/commit/436d15327509f7aa96cb41ba0c63ec35db1d9ed4) |
+
+Each approval belongs to its listed final head. Both test (3.12) and claude-review
+succeeded on that same commit before merge, verified through check-suite commit IDs.
+All 85 changed PR paths match approved heads and merge commits. All 26 gene artifacts
+match the fixed CDH1 cutoff commit. These checks preserve the accepted reviews
+without reopening their scientific decisions. Biological DRAFT status and justified
+UNDECIDED annotations do not themselves create completion holds.
+
+The completion cutoff is [436d15327509](https://github.com/ai4curation/ai-gene-review/commit/436d15327509f7aa96cb41ba0c63ec35db1d9ed4) at 2026-10-10T01:04:37Z.
+The later [source main snapshot ffaf00ab93d4](https://github.com/ai4curation/ai-gene-review/commit/ffaf00ab93d40e5fe2e71b283ac42f10ffb22d2f)
+contains these gene merges and [tracker PR #4493](https://github.com/ai4curation/ai-gene-review/pull/4493),
+which published checkpoint 278. Its later source-capture time does not add gene completions.
+Authenticated evidence was read at 2026-10-10T01:21:45.219910+00:00.
+
+All 2,876 catalog rows and association text, all 235 historical queue entries,
+all 39 earlier completion updates and every prior dated progress section are preserved.
+Only the five named primary checkboxes change, and a 40th completion update is appended.
+Older dated observations remain historical; the cutoff excludes all later merges
+and pending work. The first unchecked gene in literal catalog order remains ACBD5.
+
+CDHR1, CDK13 and CDKL5 remain outside this checkpoint regardless of later PR changes.
+
+[Checkpoint 283 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T012544Z-codex-10fc5a.yaml).
+
 ## Completion checkpoint 278 — 2026-10-10 00:09:16 UTC
 
 **278 complete / 2,598 remaining in the frozen 2,876-gene catalog.** This adds
