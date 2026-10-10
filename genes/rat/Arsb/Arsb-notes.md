@@ -151,3 +151,15 @@ catabolic process, N-acetylgalactosamine-4-sulfatase activity, lysosome,
 regulation of epithelial cell migration), the ISO annotation is
 `ACCEPT`ed. Where the human annotation is over-annotated or ISO-back-and-
 forth to weak evidence, we track the human review's disposition.
+
+## Re-review 2026-10-10
+
+GOA changes: none needing review (no PENDING or retired rows); 33 rows, including 2 reviewer-proposed NEW rows. There is no deep-research file, so the re-audit used this notes file, the refreshed UniProt entry (P50430) and the cached publications.
+
+- GO:0043890 N-acetylgalactosamine-6-sulfatase activity (ISO from mouse Arsb): REMOVE kept, now verified at source. QuickGO traces the mouse donor to an MGI IMP from PMID:24240681. That paper's full text (now cached) concerns only the 4-sulfatase [PMID:24240681 "Arylsulfatase B (N-acetylgalactosamine-4-sulfatase; ARSB) removes 4-sulfate groups from chondroitin-4-sulfate (C4S) and dermatan sulfate and is required for their degradation."] and contains no 6-sulfatase assay. The failure mode was changed to SOURCE_MISCITATION, and an unverified Reactome "minor 6-sulfatase activity" claim was dropped.
+- NEW GO:0043202 lysosomal lumen: deleted. It is a part_of descendant of lysosome (GO:0005764), which the gene already carries, and is now recorded as a suggested question instead. The core-function location is now lysosome.
+- NEW GO:0006027 glycosaminoglycan catabolic process: kept. Its summary wrongly called it the parent of the chondroitin/dermatan sulfate proteoglycan catabolic terms; QuickGO ancestry shows that it is not. The rationale now records the participation test (Arsb catalyzes the GalNAc-4-desulfation step) and the comparator check (GUSB, IDUA, IDS, SGSH carry the term). Support is now catalytic evidence rather than MPS VI necessity.
+- Added positive `supported_by` to 14 rows that had none (ISO/ISS/IEA lysosome, cell surface, 4-sulfatase, proteoglycan catabolism, epithelial migration, anterior head development, arylsulfatase activity), using UniProt CC lines and PMID:19536613, PMID:8037 and PMID:24240681. Mouse donor sources traced via QuickGO: arylsulfatase activity IDA PMID:7470017; anterior head development IMP PMID:26234751; dermatan sulfate proteoglycan catabolism IMP PMID:24240681.
+- Other actions unchanged. The REMOVE calls on response to pH (PMID:6137211) and response to methylmercury (PMID:1682910) rest on the cited abstracts, which describe enzyme kinetics and inhibition rather than a response process. Status set to COMPLETE.
+
+Open question: should GOA/MGI correct the mouse Arsb GO:0043890 IMP (PMID:24240681) to GO:0003943?
