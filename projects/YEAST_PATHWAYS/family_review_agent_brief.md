@@ -1,6 +1,6 @@
 # Brief for PANTHER family-review agents (YeastPathways module project)
 
-Repo: /home/user/ai-gene-review. You are writing `FamilyReview` records,
+Repo: ai-gene-review. You are writing `FamilyReview` records,
 `interpro/panther/<PTHR>/<PTHR>-review.yaml`, for PANTHER families that are
 used as role families in the YeastPathways-derived modules
 (`projects/YEAST_PATHWAYS/module_members/*.yaml` list them under
@@ -50,7 +50,7 @@ it, and record subfamily divergence once at family level.
    - `residue_sites` only if you can anchor a residue to a real UniProt
      sequence position you have checked; otherwise omit.
    - `references`, `review_status: COMPLETE`, `reviewed_by: claude-code`,
-     `review_date: 2026-10-06`.
+     `review_date: <today's date in YYYY-MM-DD form>`.
 4. Validate (all must pass without errors):
    ```
    uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml --target-class FamilyReview interpro/panther/<PTHR>/<PTHR>-review.yaml
