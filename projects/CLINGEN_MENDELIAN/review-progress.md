@@ -66,6 +66,58 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 302 — 2026-10-10 09:06:56 UTC
+
+**302 complete / 2,574 remaining in the frozen 2,876-gene catalog.** CERKL
+adds one first counted primary campaign review beyond checkpoint 301. Its
+primary review YAML was added by the qualifying PR. Its eight products and
+COMPLETE artifact status are not additional campaign completions. No completion
+holds remain, and no later gene merge is included.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CERKL | [#4531](https://github.com/ai4curation/ai-gene-review/pull/4531) | [eea866be3895](https://github.com/ai4curation/ai-gene-review/commit/eea866be3895951957a67d93b3ca9a76077aae9c) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4531#pullrequestreview-5478354438) | 2026-10-10T09:06:56Z | [5928e194d4a4](https://github.com/ai4curation/ai-gene-review/commit/5928e194d4a4e43bdd74b9b1f307a142107daa46) |
+
+The final head was approved at 08:42:54 UTC;
+[test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38036729073/job/114168591113) succeeded at 09:03:17 UTC on the same head; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38036729057/job/114168591533) succeeded at 08:43:10 UTC on the same head. Both checks and approval precede the 09:06:56 UTC merge.
+Authenticated review threads contain no unresolved entries. All
+**20 changed PR paths** have equal blobs at the approved head and actual merge.
+The **six changed gene-directory files** and **all six gene-directory blobs** at
+the cutoff are separate counted scopes. The complete CERKL tree
+[b0c153f1efc1](https://github.com/ai4curation/ai-gene-review/tree/5928e194d4a4e43bdd74b9b1f307a142107daa46/genes/human/CERKL)
+is identical at the approved head and merge/cutoff. The appended queue evidence
+records every changed-path blob and every cutoff gene artifact, with hashes.
+
+The tracker preimage is [PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551)
+at [head 7005ce6da531](https://github.com/ai4curation/ai-gene-review/commit/7005ce6da5315135560efb283ebd698790a584b3),
+which already contains checkpoint 301 and its genuine session history. That PR
+was open when this update was prepared; this is a follow-up on the same PR,
+not a claim that checkpoint 301 had merged. The biological completion cutoff
+is actual main [commit 5928e194d4a4](https://github.com/ai4curation/ai-gene-review/commit/5928e194d4a4e43bdd74b9b1f307a142107daa46).
+These are distinct source roles. The publisher must preserve the existing PR
+ancestry, guard its exact project preimages, append genuine session history and
+rerender. A later publication base does not move the cutoff.
+
+The checkpoint 288 counter definitions continue unchanged:
+`campaign_audited_merged` and its legacy compatibility alias `original_merged`
+are 302; `pending_followups` is zero; `completed` is 302. The literal queue
+array `$.genes` remains **235 objects / 235 distinct symbols**, independently
+parsed from baseline [blob c3d049524fd0](https://github.com/ai4curation/ai-gene-review/blob/7005ce6da5315135560efb283ebd698790a584b3/projects/CLINGEN_MENDELIAN/publication-queue.json).
+Historical nested observations are not queue-array entries. The checkpoint 301
+cardinality and artifact-scope clarifications are preserved without rewriting.
+
+All 2,876 catalog rows, association text and frontmatter, the complete serialized
+235-object queue array, all 50 prior completion-update object texts, and all
+previous progress text are preserved. Only the CERKL checkbox changes; update
+51 is appended, and both queue mirrors remain identical. No gene science,
+provider report or cached source is changed. DRAFT status or a justified
+UNDECIDED annotation does not itself create a campaign hold. The first unchecked
+gene in literal catalog order remains ACBD5.
+
+Authenticated evidence was read and this follow-up recorded at 2026-10-10 09:20:21 UTC.
+
+[Checkpoint 302 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml).
+
 ## Completion checkpoint 301 — 2026-10-10 07:58:54 UTC
 
 **301 complete / 2,575 remaining in the frozen 2,876-gene catalog.** CEP57,

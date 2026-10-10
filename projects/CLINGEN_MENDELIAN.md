@@ -2988,30 +2988,33 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**301 of 2,876 genes are complete; 2,575 remain.** CEP57, CEP85L and CFAP221
-add three first primary campaign completions beyond checkpoint 298. Their exact
-final heads were approved and passed required checks before their actual merges.
-There are 301 distinct primary genes with merged campaign reviews and no
-completion holds. Biological DRAFT status and justified UNDECIDED annotations
-remain independent of campaign completion.
+**302 of 2,876 genes are complete; 2,574 remain.** CERKL adds one first
+primary campaign completion beyond checkpoint 301. Its exact final head was
+approved and passed required checks before the actual merge. There are 302
+distinct primary genes with merged campaign reviews and no completion holds.
+Eight CERKL products and the review's COMPLETE artifact status do not add counts.
+Biological uncertainty and campaign completion remain separate assessments.
 
-The fixed completion cutoff is **2026-10-10 07:58:54 UTC**, through CFAP221 at
-[commit 8a69f3d2b551](https://github.com/ai4curation/ai-gene-review/commit/8a69f3d2b551d632a37bfeb6217a7d667db8d51b).
-The authenticated source snapshot is [main commit e49cb9becb5b](https://github.com/ai4curation/ai-gene-review/commit/e49cb9becb5bf0b3bcb307b23d8fa4a535c41536),
-which contains [tracker #4533](https://github.com/ai4curation/ai-gene-review/pull/4533),
-checkpoint 298, actually merged at **2026-10-10 07:56:46 UTC**.
-Its six project preimages are unchanged at the later completion cutoff.
-The source snapshot, completion cutoff and eventual publication branch base
-are distinct facts; publication from a later base requires matching these
-preimages and does not advance the cutoff. See [checkpoint 301 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-301-2026-10-10-075854-utc).
+The fixed completion cutoff is **2026-10-10 09:06:56 UTC**, through CERKL at
+[commit 5928e194d4a4](https://github.com/ai4curation/ai-gene-review/commit/5928e194d4a4e43bdd74b9b1f307a142107daa46).
+This update preserves the checkpoint 301 content already published on
+[tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551),
+using its authenticated [head 7005ce6da531](https://github.com/ai4curation/ai-gene-review/commit/7005ce6da5315135560efb283ebd698790a584b3)
+as the tracker preimage. That PR was still open when this follow-up was prepared;
+the tracker head is not described as a merged main snapshot. The actual main
+cutoff above authenticates CERKL's merged artifacts. Updating the same tracker
+PR preserves its history and does not count earlier completions again.
+See [checkpoint 302 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-302-2026-10-10-090656-utc).
 
-The explicit `campaign_audited_merged` counter and legacy compatibility semantics
-established at checkpoint 288 continue unchanged. Literal `$.genes` contains
-235 historical queue objects and 235 distinct symbols; nested observations
-elsewhere in the JSON are separate. Earlier dated records are preserved; later
-merges, supplementary products and repeated reviews add no count at this cutoff.
+The explicit `campaign_audited_merged` counter and legacy `original_merged`
+compatibility semantics remain unchanged. Literal `$.genes` still contains
+235 historical queue objects and 235 distinct symbols. Prior updates and
+their scope clarifications remain exact; later merges and supplementary products
+are outside this cutoff.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
+
+[Checkpoint 302 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3387,7 +3390,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CEP41** — HGNC:12370; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6d51830-8bb5-416d-8006-86d50c2f4fdb-2025-12-03T170000.000Z) (MONDO:0005308; AR; Definitive).
 - [x] **CEP57** — HGNC:30794; [mosaic variegated aneuploidy syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c44921de-14cf-4907-8bef-1525329ee89c-2019-11-22T145303.972Z) (MONDO:0013582; AR; Definitive).
 - [x] **CEP85L** — HGNC:21638; [lissencephaly 10](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30a3191e-5ee3-467c-afa1-27fada71f9ea-2024-09-24T170000.000Z) (MONDO:0030031; AD; Definitive).
-- [ ] **CERKL** — HGNC:21699; [CERKL-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3003820-dc03-4eb1-921a-6eaee749fa9f-2022-09-01T160000.000Z) (MONDO:0800401; AR; Definitive).
+- [x] **CERKL** — HGNC:21699; [CERKL-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3003820-dc03-4eb1-921a-6eaee749fa9f-2022-09-01T160000.000Z) (MONDO:0800401; AR; Definitive).
 - [x] **CFAP221** — HGNC:33720; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7c841e5-2973-4f23-8603-970e9e2cbc92-2025-12-16T120000.000Z) (MONDO:0016575; AR; Definitive).
 - [ ] **CFAP300** — HGNC:28188; [ciliary dyskinesia, primary, 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bcfa4e4-37a3-43a7-9b4d-60554bc7600c-2022-09-08T110000.000Z) (MONDO:0054843; AR; Definitive).
 - [ ] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
