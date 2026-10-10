@@ -1,6 +1,7 @@
 ---
 title: "Pennycress ortholog calls"
 species: [THLAR, ARATH]
+autolink_gene_symbols: false
 ---
 
 # Pennycress ortholog calls for module exemplars (curator judgment)
@@ -89,24 +90,18 @@ Analyses: `aop2_check.py` (output `AOP2_RESULTS.md`) and `aop2_genomic.py` (outp
   catalytic 2OG-Fe(II) domain lacks the first 41 positions of the Pfam model (PF03171).
 - **The genome has the missing sequence.** Six-frame translation of the locus (OU466862.2,
   chromosome 6) finds three stop-free stretches on the gene's strand. Together they cover B. rapa
-  AOP2 residues 3-430:
-  - residues 3-122: 85.8% id
-  - residues 123-347: 71.6% id, E = 3e-91
-  - residues 344-430: 80.5% id
-
-  The middle stretch (60999889-61000710) contains 568 bp that the gene model annotates as intron,
-  mostly a 474 bp "intron" at 61000111-61000584. That stretch encodes the residues the predicted
-  protein lacks.
+  AOP2 residues 3-430: residues 3-122 (85.8% id), residues 123-347 (71.6% id,
+  E = 3e-91), and residues 344-430 (80.5% id). The middle stretch
+  (60999889-61000710) contains 568 bp that the gene model annotates as intron, mostly a 474 bp
+  "intron" at 61000111-61000584. That stretch encodes the residues the predicted protein lacks.
 - **Conclusion.** The fragment results from an annotation error (a false intron), not from a
   truncated gene. The genome carries a complete AOP2-type coding sequence, consistent with
   pennycress allylglucosinolate (sinigrin) chemistry. These are coding exons in different genomic frames
   separated by introns, not a single open reading frame.
-- **Caveats.**
-  - Splice sites of the corrected model were not checked.
-  - No transcript evidence was used.
-  - Enzyme activity has not been tested.
-  - The model's first two annotated exons (60999055-60999090, 60999145-60999203) are not covered
-    by any AOP2-aligned segment, so its 5' end is probably also mis-predicted.
+- **Caveats.** Splice sites of the corrected model were not checked; no transcript evidence was
+  used; enzyme activity has not been tested; and the model's first two annotated exons
+  (60999055-60999090, 60999145-60999203) are not covered by any AOP2-aligned segment, so its
+  5' end is probably also mis-predicted.
 - **Adjacent AOP1-like model.** TAV2_LOCUS20419 (A0AAU9SRQ3, 631 aa, CDS CAH2071850) lies on the
   same chromosome sequence, on the opposite strand, 2,443 bp upstream of the AOP2 model
   (`AOP2_GENOMIC_RESULTS.md`). It is a fusion: a fragmentary AOP-like unit followed by a complete

@@ -2,6 +2,7 @@
 title: "TreeGrafter Inference Evaluation"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: MATURE
+last_reviewed: 2026-10-05
 tags: [EVALUATION, PIPELINE]
 # Bare symbols here span many species (aprA is Desulfovibrio, pepV is P. putida,
 # "FAS"/"ArgE" are family names), so prose auto-linking mis-targets; keep it off.
@@ -25,10 +26,6 @@ sidecars:
 manifest:
   slides:
     - href: TREEGRAFTER/slides/TREEGRAFTER-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/Wi9WbyuGcFMPSKNmXX1UoP
-      title: Project brief
 ---
 
 # TreeGrafter Inference Evaluation
@@ -306,15 +303,17 @@ Three things follow:
    merge is, in effect, already a QC gate, and the `GO_REF:0000118` residue is
    the part that failed it.
 
-   > **Caveat — the reviewers were not blind to the label.** `original_reference_id`
-   > is visible in the review YAML while the annotation is being adjudicated, and
-   > "combined multiple IEA methods" (`GO_REF:0000120`) reads as visibly stronger
-   > provenance than a lone `GO_REF:0000118`. So the 77%-vs-43% gap may be partly
-   > *caused by* the label rather than only *predicted* by it. The direction of the
-   > effect is very likely real — corroboration by an independent pipeline is
-   > genuine evidence — but the magnitude should not be taken at face value from
-   > this corpus; treat it as an upper bound until the provenance-blinded test in
-   > Next steps is run.
+    **Caveat — the reviewers were not blind to the label.**
+    `original_reference_id` is visible in the review YAML while the annotation
+    is being adjudicated, and "combined multiple IEA methods"
+    (`GO_REF:0000120`) reads as visibly stronger provenance than a lone
+    `GO_REF:0000118`. So the 77%-vs-43% gap may be partly *caused by* the label
+    rather than only *predicted* by it. The direction of the effect is very
+    likely real — corroboration by an independent pipeline is genuine evidence
+    — but the magnitude should not be taken at face value from this corpus;
+    treat it as an upper bound until the provenance-blinded test in Next steps
+    is run.
+
 2. **Uncorroborated InterPro2GO is down-graded more often than uncorroborated
    TreeGrafter** — 51% (54% for MF) — but mostly by `MARK_AS_OVER_ANNOTATED`
    (32%); its `REMOVE` rate (6.5%) is *lower* than TreeGrafter's (11.1%), and
@@ -1091,4 +1090,4 @@ cached substrate-panel quotes) rather than left on family-level doubt.
 
 ## Slides
 
-- [Slides](TREEGRAFTER/slides/TREEGRAFTER-slides.html) (Marp source: [TREEGRAFTER-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/TREEGRAFTER/slides/TREEGRAFTER-slides.md)) — AI generated
+- [Slides](TREEGRAFTER/slides/TREEGRAFTER-slides.html) (Marp source: [TREEGRAFTER-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/TREEGRAFTER/slides/TREEGRAFTER-slides.md))

@@ -36,9 +36,9 @@ A scoped review of 23 *S. cerevisiae* genes at the G1/S transition
 
 ## Bottom line
 
-- **Scoped, not yet started.** The plan is to review GO annotations for **23 genes** covering Start, the cyclins and CDK, and the translation machinery.
+- **Scoped, partly reviewed.** The plan spans **23 rows** covering Start, the cyclins and CDK, and the translation machinery.
 - The question: does GO capture **translational** control of the cell cycle as well as the transcriptional program?
-- Status: **1 of 23** has a review (**TOR1**, 67 annotations); the other 22 have no folder yet.
+- Status: **10 of 23** rows have reviews (**493 annotations**); 13 still need review or symbol triage.
 
 ---
 
@@ -64,8 +64,8 @@ A scoped review of 23 *S. cerevisiae* genes at the G1/S transition
 
 ## Before starting
 
-- **Fix the symbols.** Yeast eIF1 is `SUI1`; `EIF3` is a complex, not a gene; `EIF2A` needs checking. `SHE2` is listed as a ribosome biogenesis factor and its role should be confirmed.
-- Run `just fetch-gene yeast <GENE>` for each gene, then deep research and review.
-- Reuse the existing **TOR1** review (`genes/yeast/TOR1/`): 52 ACCEPT, 9 KEEP_AS_NON_CORE, 6 MARK_AS_OVER_ANNOTATED.
+- **Fix the symbols.** Yeast eIF1 is `SUI1`; `EIF3` is a complex, not a gene; `EIF2A` is the reviewed `SUI2` row.
+- Confirm why **SHE2** belongs before treating it as ribosome biogenesis.
+- Finish the 13 open rows tracked in #3960.
 
 **Read more:** `projects/YEAST_CELL_CYCLE.md`

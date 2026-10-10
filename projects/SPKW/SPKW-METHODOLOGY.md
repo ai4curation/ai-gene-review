@@ -253,9 +253,9 @@ broad-but-correct binding/enzyme-class terms.
 | B | Metal-binding, Metal-thiolate cluster | metal ion binding (GO:0046872) | 1149 | low risk (broad, correct) |
 | B | Nucleotide-binding / ATP-binding / Zinc-finger | nucleotide / ATP / zinc binding | 286–342 | low risk |
 | C | Ribonucleoprotein | ribonucleoprotein complex (GO:1990904) | 235 | correct |
-| C | Cell wall biogenesis/degradation | cell wall organization (GO:0071555) | 140 | correct (CASP1) |
+| C | Cell wall biogenesis/degradation | cell wall organization (GO:0071555) | 140 | correct (<gene species="SORBI" symbol="CASP1">CASP1</gene>) |
 | C | Storage protein / Seed storage protein | nutrient reservoir activity (GO:0045735) | 54 | correct (PATB1) |
-| D | Photosynthesis / Chlorophyll-binding | photosynthesis, photosystem I/II | 65–110 | context (PPC16, psaC) |
+| D | Photosynthesis / Chlorophyll-binding | photosynthesis, photosystem I/II | 65–110 | context (PPC16, <gene species="CHLRE" symbol="psaC">psaC</gene>) |
 
 ### Two over-annotation mechanisms made explicit at the keyword level
 

@@ -1,16 +1,14 @@
 ---
 title: "Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement"
 maturity: SCOPING
+last_reviewed: 2026-10-05
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast]
 genes: [YKT6, CLASP1, CLASP2, WIPI1, AP1AR, GLTP, SPA2]
 manifest:
   slides:
     - href: VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/XAjoLKXq6LnhcNxykAmQZq
-      title: Project brief
+      description: Vesicle targeting obsoletion slides
 ---
 
 # Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement
@@ -26,12 +24,13 @@ transport* and GO:0006895 *Golgi to endosome transport*. We pulled the
 22 experimental annotations from QuickGO (they fall on 4 of the 10
 terms, 6 of them on human genes), mapped each to its replacement, and
 queued the human trafficking genes (YKT6, CLASP1, CLASP2, WIPI1, AP1AR)
-for new reviews. The obsoletion has now landed: OLS shows GO:0006903
-and GO:0048203 obsolete, so the "still active" notes below are out of
-date. Scoped, not yet started: none of the queued genes has a review
-here. The page's impact scan missed one review: yeast `SPA2` carries a
-ComplexPortal NAS row on GO:0006903 for the polarisome, which its
-review keeps as non-core.
+for new reviews. The obsoletion has started to appear in released
+ontology snapshots: by the 2026-10-04 audit, OLS showed GO:0006903 and
+GO:0048203 as obsolete. Scoped, not yet started: none of the queued
+human genes has a review here. The only in-repo exact hit is now
+historical: yeast `SPA2` retains a retired ComplexPortal NAS annotation
+to GO:0006903 for the polarisome, kept as non-core, while the current
+SPA2 GOA has no GO:0006903 row or GO:0016192 successor row.
 
 Sibling trackers cover the later steps of vesicle delivery, which GO
 did move to new molecular functions:
@@ -43,19 +42,22 @@ did move to new molecular functions:
 
 ## Overview
 
-A GO obsoletion is retiring `GO:0006903 vesicle targeting` and its
-descendant hierarchy. These BP terms conflate a *vesicle-mediated
-transport* process with a *targeting/tethering* step in a way that is
-no longer considered meaningful, so each is being collapsed onto a
-broader, well-defined vesicle-transport parent. The biology is
-unchanged; the fix is terminological (move annotations to the
-designated replacement transport term).
+The GO obsoletion retired `GO:0006903 vesicle targeting` and its
+descendant hierarchy. These BP terms conflated a *vesicle-mediated
+transport* process with a *targeting/tethering* step in a way that GO
+no longer considers meaningful, so each was collapsed onto a broader,
+well-defined vesicle-transport parent. The biology is unchanged; the
+fix is terminological (move annotations to the designated replacement
+transport term).
 
 ## Upstream tickets
 
 - Annotation tracker: [geneontology/go-annotation#6424](https://github.com/geneontology/go-annotation/issues/6424)
 - Ontology ticket: [geneontology/go-ontology#31865](https://github.com/geneontology/go-ontology/issues/31865) — **closed 2026-05-16**
 - Upstream review spreadsheet (curator-maintained): `https://docs.google.com/spreadsheets/d/1o5T_b5I9RNLdWUgcnaHxv4lqiY88_Al3CvpC4ul3Sv8`
+- Local follow-up: [ai4curation/ai-gene-review#569](https://github.com/ai4curation/ai-gene-review/issues/569)
+  — tracks the remaining YKT6, CLASP1/CLASP2, WIPI1, AP1AR, GLTP, and
+  yeast AP-1 review queue
 
 ## Obsoletion plan (per upstream issue)
 
@@ -72,11 +74,13 @@ designated replacement transport term).
 | vesicle targeting, inter-Golgi cisterna | GO:0048204 | GO:0048219 inter-Golgi cisterna vesicle-mediated transport |
 | vesicle targeting, trans-Golgi to endosome | GO:0048203 | GO:0006895 Golgi to endosome transport |
 
-All ten source terms are still **active** (not yet obsolete) in
-QuickGO / GO API as of 2026-05-17 — the ontology ticket is merged but
-the obsoletion has not yet propagated to the released ontology or to
-annotations. All six listed replacement targets are valid, active BP
-terms.
+At project creation, all ten source terms were still **active** in
+QuickGO / GO API on 2026-05-17: the ontology ticket had merged, but the
+obsoletion had not yet propagated to the released ontology or annotations.
+By the 2026-10-04 audit, OLS already listed at least GO:0006903 and
+GO:0048203 as obsolete. Re-pull QuickGO before starting YKT6 or the other
+queued human reviews so the local GOA reflects any completed upstream
+annotation transfers.
 
 ## Affected experimental / direct annotations
 
@@ -95,10 +99,10 @@ will be handled entirely by IEA/IBA auto-migration.
 | UniProtKB:Q7Z460 | **CLASP1** | Homo sapiens (9606) | IMP | PMID:24859005 |
 | UniProtKB:O75122 | **CLASP2** | Homo sapiens (9606) | IMP | PMID:24859005 |
 | UniProtKB:Q61161 | Map4k2 | Mus musculus (10090) | IDA | PMID:8643544 |
-| UniProtKB:Q8K3E5 | Ahi1 | Mus musculus (10090) | IMP (acts_upstream_of_or_within) | PMID:20592197 |
+| UniProtKB:Q8K3E5 | `Ahi1` | Mus musculus (10090) | IMP (acts_upstream_of_or_within) | PMID:20592197 |
 | UniProtKB:P21707 | Syt1 | Rattus norvegicus (10116) | IDA | PMID:14715137 |
 | UniProtKB:P61023 | Chp1 | Rattus norvegicus (10116) | IDA | PMID:8626580 |
-| UniProtKB:Q258K2 | MYH9 | Canis lupus familiaris (9615) | IMP | PMID:18504258 |
+| UniProtKB:Q258K2 | `MYH9` | Canis lupus familiaris (9615) | IMP | PMID:18504258 |
 | UniProtKB:P53141 | MLC1 | S. cerevisiae S288C (559292) | IMP | PMID:12456647 |
 | ComplexPortal:CPX-3188 | polarisome | S. cerevisiae S288C (559292) | IMP | PMID:16166638 |
 | UniProtKB:P0CY31 | SEC4 | Candida albicans SC5314 (237561) | IGI | PMID:9639314 |
@@ -145,23 +149,26 @@ need per-annotation work here.
 
 ## Impact on this repo
 
-**No genes annotated to any of the obsoleted terms are currently
-reviewed in this repo.** Checked all 9606/yeast symbols above
-(`YKT6`, `CLASP1`, `CLASP2`, `WIPI1`, `AP1AR`, `GLTP`, `MLC1`,
-`SYT1`, `CHP1`, `MAP4K2`, `AHI1`, `TMED10`, `MYH9`, `SEC4`, AP-1
-subunits) against `genes/**/*-ai-review.yaml` — no matches.
+Only one in-repo review currently touches the obsoleted subtree
+historically: `genes/yeast/SPA2/SPA2-ai-review.yaml` retains a retired
+ComplexPortal polarisome GO:0006903 row and keeps it as non-core. The
+current SPA2 GOA no longer carries GO:0006903 or a GO:0016192 successor
+for the polarisome assertion, and the human queue above (`YKT6`, `CLASP1`,
+`CLASP2`, `WIPI1`, `AP1AR`, `GLTP`) remains unreviewed here.
 
-So **no existing reviews need refresh** for the obsoletion itself.
-This differs from the synaptic-vesicle-docking tracker
-(go-annotation#6415), where `mouse Camk2a` had to be queued for a
-refresh. Here the project is purely a forward-looking opportunity
+So no active local review is waiting on a deterministic term swap. Watch
+future SPA2 GOA pulls for a successor ComplexPortal transport row, while
+the human work remains forward-looking. This differs from the
+synaptic-vesicle-docking tracker (go-annotation#6415), where `mouse Camk2a`
+had to be queued for a refresh. Here the project is mostly an opportunity
 to add high-value, currently-unreviewed human trafficking genes.
 
 ## Scope
 
 - **Organisms**: human (6 of 22 EXP rows, 6 distinct human genes)
   and *S. cerevisiae* (7 rows, all the AP-1 / polarisome / MLC1
-  complex annotations) carry most of the experimental signal. Rat/mouse/dog/Candida/Arabidopsis rows are orthologs that
+  complex annotations) carry most of the experimental signal. Rat, mouse,
+  dog, Candida, and Arabidopsis rows are orthologs that
   will largely follow automatically once the model-organism groups
   remap.
 - **GO branches**: BP only — a transport-vs-targeting collapse onto
@@ -211,21 +218,19 @@ UniProt accession before starting. None are currently in the repo.
 6. *S. cerevisiae* AP-1 clathrin-adaptor subunits (**APL2/APL4/
    APM2/APS1**, PMID:17003107) — a coherent yeast complex set, but
    all IMP from a single study; consider only if extending yeast
-   coverage. The Reactome/SGD groups will likely remap these
+   coverage. SGD / ComplexPortal curators will likely remap these
    directly.
 
 ## Proposed approach
 
-1. **Hold as a tracking project — do not action yet.** The ontology
-   ticket (#31865) is merged/closed but all ten source terms are
-   still active in the released ontology and QuickGO as of
-   2026-05-17. Wait for the obsoletion to propagate before pulling
-   GOA, so `just fetch-gene` reflects the remapped terms.
-2. **When the obsoletion lands, start with human YKT6.** Run
-   `just fetch-gene human YKT6`, confirm the GOA pull shows
-   GO:0006903 as obsolete / remapped to GO:0016192, then review per
-   CLAUDE.md. Expect the right call to be MODIFY toward a more
-   informative SNARE MF rather than a literal transfer to the
+1. **Re-pull GOA before each review.** The ontology obsoletion has
+   landed, but GOA transfer status still needs to be checked gene by
+   gene. Run `just fetch-gene` immediately before starting a queued
+   review so the local GOA reflects any upstream migration from the
+   retired targeting term to its transport replacement.
+2. **Start with human YKT6.** Run `just fetch-gene human YKT6`, then
+   review per CLAUDE.md. Expect the right call to be MODIFY toward a
+   more informative SNARE MF rather than a literal transfer to the
    generic transport BP.
 3. **Follow with CLASP1/CLASP2 (as a pair), then WIPI1, then
    AP1AR.** Each review evaluates whether the designated
@@ -233,8 +238,8 @@ UniProt accession before starting. None are currently in the repo.
    narrower extant BP / cognate MF is warranted.
 4. **Defer Tier 3** (GLTP preprint-only; yeast AP-1 subunits) unless
    they surface via other workstreams.
-5. **Do not create reviews for the ortholog rows** (rat/mouse/dog/
-   Candida/Arabidopsis) or the IEA/IBA pool — these auto-migrate.
+5. **Do not create reviews for the ortholog rows** (rat, mouse, dog,
+   Candida, or Arabidopsis) or the IEA/IBA pool — these auto-migrate.
 
 ## Priority
 
@@ -243,7 +248,8 @@ than most obsoletion trackers in this repo — and several affected
 human genes (YKT6, CLASP1/2, WIPI1) are biologically important
 trafficking proteins with **no review yet in this repo**. The
 obsoletion is a good trigger to add them, but the work should wait
-until the obsoletion propagates to released annotations.
+for a fresh per-gene GOA pull so reviewers can see whether upstream
+has already migrated each targeting row.
 
 ## Status
 
@@ -254,3 +260,7 @@ until the obsoletion propagates to released annotations.
   affected gene is reviewed in this repo, so nothing needs refresh —
   held as a forward-looking tracking project. No gene reviews
   started.
+- 2026-10-04 — Re-audited local reviews. The six queued human genes
+  remain absent, but yeast SPA2 now has a review retaining the retired
+  ComplexPortal GO:0006903 row as non-core; the current SPA2 GOA no
+  longer carries GO:0006903 or a GO:0016192 successor.

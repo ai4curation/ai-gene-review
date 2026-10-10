@@ -1,16 +1,13 @@
 ---
 title: "UniProt CAUTION Note Project"
 maturity: MATURE
+last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 genes: [RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12, AZIN2]
 manifest:
   slides:
     - href: UNIPROT_CAUTION_NOTE/slides/UNIPROT_CAUTION_NOTE-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/MXs2GAexVfUiJm199ytbVq
-      title: Project brief
 ---
 
 # UniProt CAUTION Note Project
@@ -30,9 +27,8 @@ CASP12, AZIN2) that still carry electronic catalytic terms. We reviewed 13
 human genes from this worklist. Nine are pseudoenzymes that kept an inferred (IEA or IBA)
 catalytic term (DPYSL5, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12,
 AZIN2); each review removes at least one of these catalytic rows, while
-DPYSL4 leaves its broad hydrolase row UNDECIDED because of a reported
-deacetylation activity in mouse CRMP3. The Pending list below
-still names UniProt-wide scaling, which is done.
+DPYSL4 leaves its broad hydrolase rows UNDECIDED because of a reported
+deacetylation activity in mouse CRMP3.
 
 We did this because a curator's written warning is a cheap, precise pointer to
 annotations that deserve scrutiny, and because the GO `NOT` qualifier turns out
@@ -94,12 +90,12 @@ Mouse (844), *A. thaliana* (714), *E. coli* K12 (334), Rat (329), Bovine (206),
 *Dictyostelium* (192), *Drosophila* (160), Rice (150), *C. elegans* (122),
 Zebrafish (109).
 
-**Local corpus** (genes already fetched in this repo) — **209 CAUTION notes
-across 201 cached `*-uniprot.txt` records**:
+**Local corpus** (frozen fetched-cache pilot) — **208 CAUTION notes
+across 200 cached `*-uniprot.txt` records**:
 
 | Category | Count | Curation value | Description |
 |----------|------:|----------------|-------------|
-| contested-function | 44 | **high** | function is controversial / disputed / "however ..." |
+| contested-function | 43 | **high** | function is controversial / disputed / "however ..." |
 | reclassified-function | 37 | **high** | "was originally/initially thought to be ..." |
 | degenerate-domain | 16 | **high** | pseudo-enzyme; "lacks the catalytic/active-site residue" |
 | retracted-reference | 12 | **high** | a supporting paper has been retracted |
@@ -107,11 +103,19 @@ across 201 cached `*-uniprot.txt` records**:
 | other | 38 | mixed | residual curatorial notes not matched by keywords |
 | wgs-preliminary | 39 | low | boilerplate: sequence from a preliminary WGS entry |
 | lacks-conserved-residue | 19 | low | boilerplate feature-propagation warning |
-| **Total** | **209** | | across **201** records |
+| **Total** | **208** | | across **200** records |
 
 The WGS-preliminary boilerplate that dominated the *local* corpus essentially
 **vanishes** in reviewed entries (0–6), confirming it was a TrEMBL/unreviewed
 artifact rather than a curatorial signal.
+
+> **Snapshot provenance.** The database-wide CAUTION survey used reviewed
+> UniProt as of 2026-06-16. Query A/B counts below are frozen pilot outputs:
+> the local detector used a 2,675-gene fetched GOA corpus, and the UniProt-wide
+> QuickGO detector used the 14,513-accession CAUTION set with MF GOA pulled for
+> 12,194 accessions that had at least one molecular-function annotation.
+> `last_reviewed` records October 2026 reconciliation against current project
+> prose, slides, and the 13 reviewed YAMLs, not a rerun of those surveys.
 
 ## Why this matters for GO review
 
@@ -131,15 +135,15 @@ failure modes:
   `finding_review` (`DISPUTED`) and `reference_review` machinery, or
   `KEEP_AS_NON_CORE` / `MARK_AS_OVER_ANNOTATED` actions.
 
-Cross-referencing the DB-wide survey against the accessions we have **already
-fetched** (148 of our local genes overlap the reviewed-CAUTION set) yields
+Cross-referencing the DB-wide survey against the accessions that the pilot had
+**already fetched** (148 local genes overlapped the reviewed-CAUTION set) yielded
 **4,046 high-value, not-yet-reviewed candidates**: reclassified-function (2,401),
 degenerate-domain (1,342), retracted-reference (255), possible-artifact (48).
-Human alone contributes **95 pseudo-enzyme (degenerate-domain)** and **111
+Human alone contributed **95 pseudo-enzyme (degenerate-domain)** and **108
 retracted-reference** candidates, e.g.:
 
 - **RHBDF1** (Q96CC6) — "Lacks serine protease activity ... lacks the catalytic
-  Ser residue at position 720" (iRhom pseudo-protease).
+  `Ser` residue at position 720" (iRhom pseudo-protease).
 - **SUMF2** (Q8NBJ7) — "strongly similar to formylglycine-generating enzyme,
   lacks the catalytic Cys".
 - **PANK4** (Q9NVE7) — pantothenate kinase domain is degenerate.
@@ -195,7 +199,7 @@ reporting upstream), e.g. EDEM1/EDEM2 `mannosyl-oligosaccharide 1,2-α-mannosida
 
 **Query B — CAUTION PMID cited positively, never negated.** Flags genes where a
 UniProt CAUTION cites a PMID, a GO annotation is made *to that same PMID*, and
-there is *no* `NOT` annotation citing it. **69 flags / 39 genes.** Highest-value
+there is *no* `NOT` annotation citing it. **68 flags / 38 genes.** Highest-value
 molecular-function hits:
 
 - **CHMP1A** ↔ PMID:8863740 — `metallopeptidase activity` + `zinc ion binding`
@@ -240,29 +244,32 @@ experts' decisions, the validation we wanted before scaling UniProt-wide.
 
 Pulling molecular-function GOA from QuickGO for **all 14,513 reviewed CAUTION
 accessions** (MF annotations found for 12,194) and running both queries
-database-wide, flagging genes **not yet in this repo** (`net_new`):
+database-wide, flagging genes that were **not yet in this repo at scan time**
+as `net_new`:
 
 - **Query A: 247 conjunctions → 105 STRONG (100 in net-new genes)**, plus **97
   DIRECT same-term conflicts**.
 - **Query B: 1,140 flags (1,083 net-new).**
 
-**The STRONG net-new hits land squarely on known pseudoenzyme families**, recovered
-automatically and extended across orthologs — strong external validation:
+**The UniProt-wide Query A hits land squarely on known pseudoenzyme families**:
+the STRONG net-new subset recovered the CRMP/DPYSL proteins, ILK, ROR1 and
+CASP12, while the supported-parent Query A bucket also recovered AZIN2.
 
 | Gene(s) | Lost activity (NOT) | Persisting electronic over-annotation |
 |---------|---------------------|----------------------------------------|
-| **DPYSL2/CRMP2, DPYSL3, DPYSL4, CRMP1** (+ mouse/rat/chicken/bovine orthologs) | dihydropyrimidinase (GO:0004157) | `hydrolase activity` (GO:0016787/0016810) IEA — *the exact DPYSL5 pattern across the whole CRMP family* |
-| **ILK** (integrin-linked kinase) | protein Ser/Thr kinase (GO:0004674) | `protein kinase activity` IEA — classic **pseudokinase** |
+| **DPYSL2/CRMP2, DPYSL3, DPYSL4, CRMP1** (+ mouse, rat, chicken, and bovine orthologs) | dihydropyrimidinase (GO:0004157) | `hydrolase activity` (GO:0016787/0016810) IEA — *the exact DPYSL5 pattern across the whole CRMP family* |
+| **ILK** (integrin-linked kinase) | protein `Ser`/Thr kinase (GO:0004674) | `protein kinase activity` IEA — classic **pseudokinase** |
 | **ROR1** (+ orthologs, lin-18) | receptor tyrosine kinase (GO:0004714) | `protein kinase activity` IEA — **pseudokinase RTK** |
 | **CASP12** (+ CASP13 bovine) | cysteine-type endopeptidase (GO:0004197) | `cysteine-type peptidase activity` IEA — **pseudo-caspase** |
 | **AZIN2** (+ orthologs) | ornithine/arginine decarboxylase (GO:0004586/0008792) | `catalytic activity` IEA — dead ODC paralog (antizyme inhibitor) |
-| **Cpt1c** (mouse/rat) | carnitine O-palmitoyltransferase (GO:0004095) | `acyltransferase activity` IEA — same as the human CPT1C we audited |
+| **`Cpt1c`** (mouse and rat) | carnitine O-palmitoyltransferase (GO:0004095) | `acyltransferase activity` IEA — same as the human CPT1C we audited |
 
-That the method **independently rediscovers ILK, ROR1, CASP12, AZIN2 and the CRMP
-family** — canonical pseudoenzymes — from nothing but "CAUTION text + GO `NOT` +
-GO ancestry" is the validation that matters. **Immediate human review targets** (not
-yet in this repo): DPYSL2 (Q16555), DPYSL3 (Q14195), DPYSL4 (O14531), CRMP1
-(Q14194), ILK (Q13418), ROR1 (Q01973), CASP12 (Q6UXS9), AZIN2.
+That the method **independently rediscovered ILK, ROR1, CASP12, AZIN2 and the CRMP
+family** -- canonical pseudoenzymes -- from nothing but "CAUTION text + GO `NOT` +
+GO ancestry" is the validation that matters. **Immediate human review targets
+selected from those hits**: DPYSL2 (Q16555), DPYSL3 (Q14195), DPYSL4 (O14531),
+CRMP1 (Q14194), ILK (Q13418), ROR1 (Q01973), CASP12 (Q6UXS9), AZIN2. These
+have now been reviewed.
 
 ### Featured examples (from the cached corpus)
 
@@ -283,7 +290,7 @@ yet in this repo): DPYSL2 (Q16555), DPYSL3 (Q14195), DPYSL4 (O14531), CRMP1
 - **SACEN/eryCII** (Q939Z0) — "related to the cytochrome P450 family, lacks the
   heme-binding sites"; pseudo-enzyme that is actually a glycosyltransferase
   activator (already reviewed under CONTESTED_FUNCTION).
-- **ARATH/CRY1, CRY2** — "Was originally thought to be a DNA photolyase"
+- **ARATH/CRY1, ARATH/CRY2** — "Was originally thought to be a DNA photolyase"
   (cryptochromes are photoreceptors, not repair enzymes).
 
 ## Lessons learned
@@ -355,50 +362,54 @@ the queries need GOA (evidence codes + `NOT` qualifiers) per accession, which th
 # STATUS
 
 ## Done
-- [x] Confirmed UniProt CAUTION comments exist and are present in the cached
-  corpus (209 notes / 201 records).
-- [x] Wrote reproducible local extractor `extract_caution_notes.py`.
-- [x] Surveyed the **whole reviewed UniProt** via the REST API
+- Done: Confirmed UniProt CAUTION comments exist and are present in the cached
+  corpus in the frozen pilot snapshot (208 notes / 200 records).
+- Done: Wrote reproducible local extractor `extract_caution_notes.py`.
+- Done: Surveyed the **whole reviewed UniProt** via the REST API
   (`uniprot_api_survey.py`): 14,513 entries / 14,830 notes, with category and
   per-organism distributions — no `fetch-gene` required.
-- [x] Built `shortlist_candidates.py` → 4,046 high-value, not-yet-reviewed
+- Done: Built `shortlist_candidates.py` → 4,046 high-value, not-yet-reviewed
   candidates (`candidates_high_value.tsv`, `candidates.md`).
-- [x] **Deep dive batch 1** (`deep_dive_batch1.md`): fetched RHBDF1, SUMF2,
+- Done: **Deep dive batch 1** (`deep_dive_batch1.md`): fetched RHBDF1, SUMF2,
   PANK4, DPYSL5, NAALADL2; found 4/5 already correctly negated by GO and **1
   suspect domain-based over-annotation (DPYSL5 hydrolase IEAs — evidentially
   weak, not a logical contradiction)**.
 
-- [x] **DPYSL5 (CRMP5) full review** written and validated
+- Done: **DPYSL5 (CRMP5) full review** written and validated
   (`genes/human/DPYSL5/DPYSL5-ai-review.yaml`, DRAFT): `REMOVE` on the two IEA
   hydrolase over-annotations (`GO:0016787`, `GO:0016810`), `ACCEPT` on the curated
   `NOT`s, core function = negative regulation of dendrite morphogenesis.
 
-- [x] **All 5 batch-1 reviews completed** and validated (RHBDF1, SUMF2, PANK4,
+- Done: **All 5 batch-1 reviews completed** and validated (RHBDF1, SUMF2, PANK4,
   NAALADL2 + DPYSL5). DPYSL5 was the only one needing a `REMOVE` of a positively
   asserted catalytic term; PANK4 is a domain-swap pseudoenzyme (dead PanK domain
   + real, correctly annotated 4'-phosphopantetheine phosphatase).
 
-- [x] **Two systematic over-annotation queries implemented**
+- Done: **Two systematic over-annotation queries implemented**
   (`caution_conjunction_queries.py`): Query A (negated-child/positive-parent
   conjunction, 33 hits + 9 direct conflicts, with a STRONG/experimental-support
-  triage) and Query B (CAUTION-PMID-cited-positively-never-negated, 69 flags).
-- [x] **Validated the queries against existing reviews**
+  triage) and Query B (CAUTION-PMID-cited-positively-never-negated, 68 flags).
+- Done: **Validated the queries against existing reviews**
   (`audit_queries_vs_reviews.py`): Query A STRONG 8/11 CONFIRMED; Query B 17
   CONFIRMED catches (rest are expected PMID-level false-positives). **CPT1C and
   CHMP1A were already correctly curated** — the queries reproduced the experts'
   REMOVE/MODIFY decisions, so no edits needed.
-- [x] **Scaled both queries UniProt-wide via QuickGO** (`uniprot_wide_queries.py`):
+- Done: **Scaled both queries UniProt-wide via QuickGO** (`uniprot_wide_queries.py`):
   14,513 CAUTION accessions → Query A 247 conjunctions / 105 STRONG (100 net-new) +
-  97 direct conflicts; Query B 1,140 flags. STRONG net-new hits recover known
-  pseudoenzyme families (CRMP/DPYSL, ILK, ROR1, CASP12, AZIN2) across orthologs.
-- [x] **Reviewed the human CRMP family** (DPYSL2, DPYSL3, DPYSL4, CRMP1) — full
-  validated DRAFT reviews applying the DPYSL5 fix: `REMOVE` the electronic
-  `hydrolase activity` parents (GO:0016787/0016810/0016812), `ACCEPT` the curated
-  `NOT|dihydropyrimidinase`; DPYSL2 additionally `REMOVE`s a legacy positive
-  dihydropyrimidinase (TAS) + its dependent nucleobase-metabolism term. Core
-  function recorded as catalytically dead cytoskeletal regulator in semaphorin signaling.
+  97 direct conflicts; Query B 1,140 flags. Query A recovered known
+  pseudoenzyme families (CRMP/DPYSL, ILK, ROR1, CASP12, AZIN2) across orthologs,
+  with AZIN2 in the supported-parent rather than STRONG subset.
+- Done: **Reviewed the human CRMP family** (DPYSL2, DPYSL3, DPYSL4, CRMP1) — full
+  validated DRAFT reviews applying the DPYSL5 fix: `ACCEPT` the curated
+  `NOT|dihydropyrimidinase`, remove the unsupported cyclic-amide hydrolase
+  and legacy positive dihydropyrimidinase rows, and remove the broad
+  electronic hydrolase parents from DPYSL2, DPYSL3 and CRMP1. DPYSL4 removes
+  the cyclic-amide hydrolase IBA row but leaves the broader IEA hydrolase
+  parents UNDECIDED because of a reported mouse CRMP3 deacetylation activity.
+  Core function recorded as catalytically dead cytoskeletal regulator in
+  semaphorin signaling.
 
-- [x] **Reviewed net-new pseudoenzymes ILK, ROR1, CASP12, AZIN2** — full validated
+- Done: **Reviewed net-new pseudoenzymes ILK, ROR1, CASP12, AZIN2** — full validated
   DRAFT reviews. Each `REMOVE`s the electronic catalytic over-annotation flagged by
   the query (ILK `protein kinase activity`; ROR1 `protein kinase activity` + legacy
   TAS RTK/PTK-signaling; CASP12 `cysteine peptidase`/`endopeptidase`/proteolysis;
@@ -408,21 +419,15 @@ the queries need GOA (evidence codes + `NOT` qualifiers) per accession, which th
   AZIN2 = ODC-activator/antizyme inhibitor).
 
 ## Pending
-- [ ] Report the 9 local + 97 UniProt-wide DIRECT same-term GOA conflicts upstream
+- Todo: Report the 9 local + 97 UniProt-wide DIRECT same-term GOA conflicts upstream
   to GO.
-- [ ] Scale Queries A/B UniProt-wide via a QuickGO GOA pull keyed on the 14k
-  CAUTION accessions.
-- [ ] Audit the 255 retracted-reference candidates for retracted
+- Todo: Audit the 255 retracted-reference candidates for retracted
   `original_reference_id`s in existing reviews.
-- [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
-  the 1,342 degenerate-domain candidates to auto-surface over-annotations.
-- [ ] Audit retracted-reference candidates for retracted `original_reference_id`s
-  in any existing review.
-- [ ] Refine the keyword classifier to shrink the large "other" bucket (7,605
+- Todo: Refine the keyword classifier to shrink the large "other" bucket (7,605
   DB-wide notes) — many are genuine but unmatched.
-- [ ] Add a `just` target to regenerate the survey + shortlist on demand.
+- Todo: Add a `just` target to regenerate the survey + shortlist on demand.
 
-Last updated: 2026-06-16
+Last updated: 2026-10-05
 
 # NOTES
 

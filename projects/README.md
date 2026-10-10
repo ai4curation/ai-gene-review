@@ -83,22 +83,23 @@ genes: [GPX4, ACSL4]           # OPTIONAL: only when the gene set is small + exp
   Slides/Brief columns in the all-projects table, so the deck link does not also
   belong in the page body.
 
-  ```yaml
-  manifest:
-    slides:
-      - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
-        description: AI generated
-    artifacts:
-      - href: https://claude.ai/artifact/XXXX
-        title: Project brief
-  ```
+Example:
 
-### Known exceptions
+```yaml
+manifest:
+  slides:
+    - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/XXXX
+      title: Project brief
+```
 
-A few folders predate this convention and do not yet have a matching top-level
-`FOO.md` (their content lives entirely inside the folder): `PANTHER_IBA_REVIEW/`,
-`QUANTUM_SENSING/`, `TRANSCRIPTION_FACTORS/`, and `paint/`. These are migration
-targets — when touched, promote a top-level `FOO.md` overview page for them.
+### Known exception
+
+All legacy folder-only projects now have a top-level overview page. One support
+folder still has a case-mismatched legacy name: `PAINT.md` uses the lowercase
+`paint/` folder for slides and data.
 
 ## Rendering
 

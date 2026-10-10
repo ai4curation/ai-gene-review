@@ -1,16 +1,13 @@
 ---
 title: "Tardigrade Stress Response Protein Curation Project"
 maturity: MATURE
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [RAMVA]
 genes: [Dsup, CAHS1, CAHS2, CAHS3, SAHS1, SAHS2, MAHS, RvLEAM, RvY_00650, RvY_00651, RvY_01767, RvY_03754, RvY_03757, RvY_09480, RvY_10893, RvY_13070, RvY_15948, RvY_17310]
 manifest:
   slides:
     - href: TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/NioQYK8PTKAbsCS2daEeYq
-      title: Project brief
 ---
 
 # Tardigrade Stress Response Protein Curation Project
@@ -21,17 +18,17 @@ intrinsically disordered proteins that each protect a different cellular
 compartment, plus a much-expanded superoxide dismutase family. We reviewed all
 18 of its curated proteins: the chromatin shield Dsup, the cytosolic CAHS,
 secretory SAHS and mitochondrial MAHS families, the LEA protein RvLEAM, the Mn-SOD
-RvY_01767, and all 9 Cu/Zn-SOD paralogs. Across 84 annotation rows the actions
-were 38 ACCEPT, 18 NEW, 11 KEEP_AS_NON_CORE, 10 MARK_AS_OVER_ANNOTATED, 3 MODIFY,
+RvY_01767, and all 9 Cu/Zn-SOD paralogs. Across 83 annotation rows the actions
+were 38 ACCEPT, 17 NEW, 11 KEEP_AS_NON_CORE, 10 MARK_AS_OVER_ANNOTATED, 3 MODIFY,
 3 UNDECIDED and 1 REMOVE. Two results stand out: `GO:0009269` response to
 desiccation was missing from every disordered protectant and was proposed as
 NEW on seven genes, and a sequence plus PROSITE analysis of the SOD family
 (`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/`) found one pseudoenzyme
 (RvSOD15, whose Val87 in place of a copper-ligand histidine is confirmed by
 crystal structure, PMID:37358501; the cached record, which holds only the
-abstract and introduction, reports no activity measurement), three
-probably impaired paralogs, one copper chaperone and four likely functional
-enzymes.
+abstract and introduction, reports no activity measurement), two probably
+impaired paralogs, one unresolved paralog, one copper chaperone and four
+likely functional enzymes.
 
 We did this because the organism is both biologically unusual and almost
 entirely electronically annotated, which makes it a good place to see what
@@ -45,9 +42,19 @@ copies means more antioxidant capacity" does not hold as stated.
 
 ## Project Overview
 
-This project curates the complete set of reviewed (Swiss-Prot) proteins from the extremotolerant tardigrade *Ramazzottius varieornatus*. These proteins represent a remarkable evolutionary innovation: a suite of tardigrade-unique intrinsically disordered proteins (TDPs) that protect different cellular compartments during anhydrobiosis (near-complete desiccation), plus conventional stress-response enzymes. The same mechanisms that enable desiccation tolerance also confer extraordinary resistance to ionizing radiation, extreme temperatures, vacuum, and high pressure.
+This project curates stress-response proteins from the extremotolerant
+tardigrade *Ramazzottius varieornatus*: the reviewed Swiss-Prot TDP/RvSOD15
+set plus unreviewed SOD-family candidates needed to interpret the expanded
+antioxidant repertoire. The protectants represent a remarkable evolutionary
+innovation: a suite of tardigrade-unique intrinsically disordered proteins
+(TDPs) that protect different cellular compartments during anhydrobiosis
+(near-complete desiccation), plus conventional stress-response enzymes. The
+same mechanisms that enable desiccation tolerance also confer extraordinary
+resistance to ionizing radiation, extreme temperatures, vacuum, and high
+pressure.
 
 The TDP families partition by cellular compartment:
+
 - **Dsup** - nuclear/chromatin protectant (shields DNA from hydroxyl radicals via nucleosome binding)
 - **CAHS** - cytosolic-abundant heat-soluble proteins (form protective hydrogels/filaments upon desiccation)
 - **SAHS** - secretory-abundant heat-soluble proteins (protect extracellular components; FABP-like fold)
@@ -68,8 +75,8 @@ The TDP families partition by cellular compartment:
 | Gene Symbol | UniProt | Status | Deep Research | Review | Notes |
 |-------------|---------|--------|---------------|--------|-------|
 | CAHS1 | J7M799 | REVIEWED | falcon | REVIEWED | 2 GOA ACCEPT, 1 NEW (response to desiccation) |
-| CAHS2 | J7MDG6 | REVIEWED | falcon | REVIEWED | 1 GOA ACCEPT, 2 NEW (response to desiccation, response to osmotic stress) |
-| CAHS3 | J7M3T1 | REVIEWED | falcon | REVIEWED | 1 GOA ACCEPT, 2 NEW (response to desiccation, response to osmotic stress) |
+| CAHS2 | J7MDG6 | REVIEWED | falcon | REVIEWED | 1 GOA ACCEPT, 2 NEW (response to desiccation, acquisition of desiccation tolerance) |
+| CAHS3 | J7M3T1 | REVIEWED | falcon | REVIEWED | 1 GOA ACCEPT, 2 NEW (response to desiccation, protein stabilization) |
 
 ### Secretory Protectants (SAHS Family)
 
@@ -83,7 +90,7 @@ The TDP families partition by cellular compartment:
 | Gene Symbol | UniProt | Status | Deep Research | Review | Notes |
 |-------------|---------|--------|---------------|--------|-------|
 | MAHS | A0A1D1V3Z0 | REVIEWED | falcon | REVIEWED | 1 GOA ACCEPT, 3 NEW (desiccation, osmotic stress, protein stabilization) |
-| RvLEAM | A0A0E4AVP3 | REVIEWED | falcon | REVIEWED | 1 GOA MODIFY (mitochondrial matrix), 3 NEW (desiccation, osmotic stress, unfolded protein binding) |
+| RvLEAM | A0A0E4AVP3 | REVIEWED | falcon | REVIEWED | 1 GOA MODIFY (mitochondrial matrix), 2 NEW (desiccation, osmotic stress) |
 
 ### ROS Scavenging - Cu/Zn Superoxide Dismutase Paralog Family
 
@@ -91,26 +98,31 @@ R. varieornatus has an expanded family of 9 Cu/Zn SOD paralogs in UniProt
 (plus 1 Mn/Fe-SOD, RvY_01767). Sim & Inoue (2023) identified RvSOD15 as a
 likely pseudoenzyme and noted that "some other RvSODs" may also have lost
 function. We applied bioinformatic analysis (sequence conservation + PROSITE
-motif matching + Pfam membership) to all 9 Cu/Zn paralogs plus the Mn/Fe-SOD to assess catalytic
-capability. Details: `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`
+motif matching + Pfam membership) to all 9 Cu/Zn paralogs to assess
+catalytic capability. The first-pass sequence analysis is in
+`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`; the current
+reviews supersede two calls there by reclassifying RvY_01767 as a Mn/Fe-SOD
+instead of a degraded Cu/Zn-SOD and moving RvY_17310 to UNDECIDED after an
+OpenScientist active-site-geometry run conflicted with the PROSITE-failure
+verdict.
 
-| Gene Symbol | UniProt | Status | Verdict | Notes |
-|-------------|---------|--------|---------|-------|
-| **RvY_13070 (RvSOD15)** | A0A1D1VU85 | REVIEWED (Swiss-Prot) | **PSEUDOENZYME** | Val87 replaces catalytic His48; confirmed structurally (PMID:37358501); 4 SOD activity annots OVER-ANNOTATED |
-| RvY_00650 | A0A1D1UDY8 | REVIEWED | **IMPAIRED** | All Cu His present but PROSITE PS00087 fails (loop context divergent); 292 aa with N-terminal extension |
-| RvY_03757 | A0A1D1UP59 | REVIEWED | **IMPAIRED** | Same: residues OK, PROSITE PS00087 fails |
-| RvY_17310 | A0A1D1W3Y1 | REVIEWED | **IMPAIRED** | 475 aa (3x normal), residues OK, PROSITE PS00087 fails |
-| RvY_15948 | A0A1D1VWP9 | REVIEWED | **CCS chaperone** | NOT a SOD; copper chaperone homolog; H46→A, H48→C; correctly lacks SOD activity in GOA |
-| RvY_00651 | A0A1D1UKR0 | REVIEWED | Likely functional | 66% identity to human SOD1 (highest); all sequence + PROSITE checks pass |
-| RvY_03754 | A0A1D1UP68 | REVIEWED | Likely functional | 63% identity; all checks pass |
-| RvY_09480 | A0A1D1VEY6 | REVIEWED | Likely functional | All checks pass |
-| RvY_10893 | A0A1D1VE88 | REVIEWED | Likely functional | All checks pass |
+| Gene Symbol | UniProt | UniProt curation | Verdict | Notes |
+|-------------|---------|------------------|---------|-------|
+| **RvY_13070 (RvSOD15)** | A0A1D1VU85 | Reviewed | **PSEUDOENZYME** | Val87 replaces catalytic His48; confirmed structurally (PMID:37358501); 4 SOD activity annots OVER-ANNOTATED |
+| RvY_00650 | A0A1D1UDY8 | Unreviewed | **IMPAIRED** | All Cu His present but PROSITE PS00087 fails (loop context divergent); 292 aa with N-terminal extension |
+| RvY_03757 | A0A1D1UP59 | Unreviewed | **IMPAIRED** | Same: residues OK, PROSITE PS00087 fails |
+| RvY_17310 | A0A1D1W3Y1 | Unreviewed | **UNRESOLVED** | 475 aa (3x normal); PROSITE PS00087 fails, but active-site residues and AlphaFold geometry are intact; SOD-derived rows UNDECIDED |
+| RvY_15948 | A0A1D1VWP9 | Unreviewed | **CCS chaperone** | NOT a SOD; copper chaperone homolog; H46→A, H48→C; correctly lacks SOD activity in GOA |
+| RvY_00651 | A0A1D1UKR0 | Unreviewed | Likely functional | 66% identity to human SOD1 (highest); all sequence + PROSITE checks pass |
+| RvY_03754 | A0A1D1UP68 | Unreviewed | Likely functional | 63% identity; all checks pass |
+| RvY_09480 | A0A1D1VEY6 | Unreviewed | Likely functional | All checks pass |
+| RvY_10893 | A0A1D1VE88 | Unreviewed | Likely functional | All checks pass |
 
 ### Mn/Fe Superoxide Dismutase
 
-| Gene Symbol | UniProt | Status | Notes |
-|-------------|---------|--------|-------|
-| RvY_01767 | A0A1D1USM4 | REVIEWED | Mitochondrial Mn-SOD (different family from Cu/Zn-SODs); 6 ACCEPT, 1 REMOVE (incorrect respiratory chain complex annotation from ARBA rule) |
+| Gene Symbol | UniProt | UniProt curation | Notes |
+|-------------|---------|------------------|-------|
+| RvY_01767 | A0A1D1USM4 | Unreviewed | Mitochondrial Mn-SOD (different family from Cu/Zn-SODs); 5 ACCEPT, 1 KEEP_AS_NON_CORE, 1 REMOVE (incorrect respiratory chain complex annotation from ARBA rule) |
 
 ## Scientific Background
 
@@ -126,12 +138,12 @@ Most TDPs are intrinsically disordered proteins (IDPs). This is functionally imp
 
 ### Evolutionary Uniqueness
 
-The TDP families (CAHS, SAHS, MAHS, Dsup) are tardigrade-specific with no homologs outside the phylum. RvLEAM is the exception - LEA proteins are found in plants, nematodes, and other anhydrobiotic organisms, representing convergent evolution of desiccation tolerance. RvSOD15 is a conventional Cu-Zn superoxide dismutase.
+The TDP families (CAHS, SAHS, MAHS, Dsup) are tardigrade-specific with no homologs outside the phylum. RvLEAM is the exception - LEA proteins are found in plants, nematodes, and other anhydrobiotic organisms, representing convergent evolution of desiccation tolerance. RvSOD15 is a conventional Cu-Zn superoxide dismutase-family protein that has lost canonical SOD activity.
 
 ## Key Findings from Curation
 
-### Annotation gaps across all TDPs
-The most consistent gap is the absence of **GO:0009269 (response to desiccation)** from all TDP annotations. This is the core biological process for the entire family and was proposed as NEW for every gene. Similarly, **response to osmotic stress** was proposed for several genes where experimental gain-of-function data exists (MAHS, RvLEAM in human cells).
+### Annotation gaps across the desiccation protectants
+The most consistent gap is the absence of **GO:0009269 (response to desiccation)** from the CAHS, SAHS, MAHS and LEA annotations. This is the core biological process for those protectants and was proposed as NEW for seven genes. Similarly, **response to osmotic stress** was proposed for several genes where experimental gain-of-function data exists (MAHS, RvLEAM in human cells).
 
 ### RvSOD15 is a confirmed pseudoenzyme - and it's not alone
 The crystal structure (PMID:37358501) revealed that Val87 replaces a critical
@@ -140,25 +152,30 @@ Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
 (see `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`):
 
 - **1 confirmed pseudoenzyme** (RvSOD15/RvY_13070): structural data + sequence
-- **3 additional probably-impaired paralogs** (RvY_00650, RvY_03757, RvY_17310):
-  All four catalytic Cu histidines preserved at the residue level, BUT all three
+- **2 additional probably-impaired paralogs** (RvY_00650, RvY_03757):
+  All four catalytic Cu histidines are preserved at the residue level, but both
   fail PROSITE PS00087 (the N-terminal Cu coordination signature), indicating
   divergence in flanking residues that maintain the structural geometry of the
   Cu site. By analogy with the V87H mutant structure of RvSOD15 (where a
   nearby flexible loop can destabilize coordination of the restored His87 to
-  the Cu atom; PMID:37358501), these
-  paralogs likely have impaired catalytic function.
+  the Cu atom; PMID:37358501), these paralogs likely have impaired catalytic
+  function.
+- **1 unresolved paralog** (RvY_17310): this 475 aa protein also fails
+  PROSITE PS00087, but all active-site residues are conserved and an
+  OpenScientist AlphaFold active-site-geometry run argued the geometry is
+  compatible with SOD1-like catalysis; its SOD-derived rows are therefore
+  UNDECIDED pending direct assay.
 - **1 copper chaperone** (RvY_15948, CCS homolog): correctly lacks SOD activity
   annotation in GOA - automated pipelines got this one right
 - **4 likely-functional canonical SODs**: RvY_00651, RvY_03754, RvY_09480,
   RvY_10893
 
 This validates Sim & Inoue's claim that "some other RvSODs are also unusual
-SODs" and provides a more precise count: at least 4 of 9 Cu/Zn-SOD-family
-paralogs appear to have lost or impaired canonical
-SOD activity. The picture of "gene duplication = more antioxidant capacity"
-is only partially correct - roughly half the expanded SOD repertoire may be
-non-catalytic.
+SODs" and provides a more precise count: three of nine Cu/Zn-SOD-fold proteins
+are currently pseudoenzymatic or probably impaired, one is unresolved, one is
+CCS-like, and four pass the sequence/PROSITE checks. The picture of "gene
+duplication = more antioxidant capacity" is only partially correct - roughly
+half the expanded SOD repertoire may be non-catalytic.
 
 The bioinformatic analysis pipeline (sequence conservation + PROSITE PS00087/
 PS00332 + Pfam membership) is reusable: `analyze_sods.py` and `check_prosite.py`
@@ -166,13 +183,13 @@ in the bioinformatics folder.
 
 ### Annotation propagation errors are systematic
 Standard automated pipelines (InterPro2GO, EC2GO, UniRule, ARBA) assigned
-GO:0004784 (SOD activity) to ALL Cu/Zn-SOD-family proteins based on Pfam
-membership, without checking catalytic residue conservation or motif integrity.
-This is the canonical "annotation propagation by family membership" failure
-mode, and it is now clearly documented for at least 4 out of 9 Cu/Zn-SOD
-paralogs in this organism. RvY_01767 (Mn-SOD) also received an incorrect
-"respiratory chain complex" annotation from an ARBA rule, since mitochondrial
-Mn-SOD is a soluble matrix protein, not a respiratory chain component.
+GO:0004784 (SOD activity) to eight Cu/Zn-SOD enzyme-family proteins based on
+Pfam membership, including the RvSOD15 pseudoenzyme and two probably impaired
+paralogs, while correctly avoiding SOD activity on the CCS-like RvY_15948.
+RvY_17310 remains unresolved pending direct assay. RvY_01767 (Mn-SOD) also
+received an incorrect "respiratory chain complex" annotation from an ARBA rule,
+since mitochondrial Mn-SOD is a soluble matrix protein, not a respiratory
+chain component.
 
 ### Dsup DNA binding vs nucleosome binding
 The original GO:0003677 (DNA binding) annotation was initially proposed for MODIFY to nucleosome binding, but was corrected to ACCEPT after recognizing that GO:0031491 (nucleosome binding) is NOT a child of DNA binding in GO (it's under chromatin binding). Both are valid independent MF annotations for Dsup.

@@ -5,6 +5,7 @@ title: "Vampirome transcript -> UniProt mapping (auto from NCBI TSA + UniProt)"
 # Vampirome transcript -> UniProt mapping (auto from NCBI TSA + UniProt)
 
 Sources used for mapping:
+
 - NCBI E-utilities (ESearch/EFetch) on nuccore TSA records
 - UniProt REST API search on protein_id accessions
 

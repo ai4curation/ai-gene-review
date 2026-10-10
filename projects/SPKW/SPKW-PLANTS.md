@@ -1,5 +1,6 @@
 ---
 title: "SPKW Non-Arabidopsis Plants (PLANTS) Subproject"
+autolink_gene_symbols: false
 ---
 
 # SPKW Non-Arabidopsis Plants (PLANTS) Subproject
@@ -580,7 +581,7 @@ developmental genes (MADS3 organ identity, FEA2 meristem homeostasis) it is corr
 coarse → MODIFY to the precise process. "flower development" on flowering-*time* genes (GI, HD3A)
 is the ELF4 pattern — they control the timing/transition, not organ morphogenesis → MODIFY to a
 "regulation of flower development" term. GI's "rhythmic process" repeats the 100%-over-annotated
-human/ELF4 result.
+human `ELF4` result.
 
 ### Defense / killing keywords (defense response GO:0006952; toxin/killing)
 

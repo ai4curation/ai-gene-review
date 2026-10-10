@@ -3,28 +3,29 @@ title: "Yeast Cell Cycle & Translation Control"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+last_reviewed: '2026-10-05'
+genes: [CLN3, CLN2, SIC1, WHI5, CLB5, CLB2, CDC28, SWE1, SUI2, TOR1]   # reviewed genes only; full candidate list is in the checklist below
 manifest:
   slides:
     - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/9PwAusPtykDxdDpz1FfBMo
-      title: Project brief
+      description: Yeast cell-cycle translation-control slides
 ---
 
 # Yeast Cell Cycle & Translation Control
 
-**Bottom line:** scoped, not yet started. Budding yeast commits to division at
-Start, where Cln3-Cdc28 inactivates the Whi5 repressor and the G1 cyclins, the
-CDK inhibitor Sic1 and the B-type cyclins then drive entry into S phase. This
-project plans to review the GO annotations of 23 *S. cerevisiae* genes spanning
-that circuit and the translation and ribosome-biogenesis machinery thought to
-time it. The aim is to test whether GO captures translational control of the
-cell cycle as well as it captures the transcriptional program. As of this
-update only TOR1 has a gene review in the repo (67 annotations assessed);
-the other 22 genes have no review folder, and the checklist below
-still reads 0 of 23. The list also needs a symbol check before work starts:
-yeast eIF1 is SUI1, and "EIF3" names a complex rather than a gene.
+**Bottom line:** scoped, with the Start/CDK core partly reviewed. Budding yeast
+commits to division at Start, where Cln3-Cdc28 inactivates the Whi5 repressor
+and the G1 cyclins, the CDK inhibitor Sic1 and the B-type cyclins then drive
+entry into S phase. This project plans to review the GO annotations of 23
+*S. cerevisiae* rows spanning that circuit and the translation and
+ribosome-biogenesis machinery thought to time it. The aim is to test whether GO
+captures translational control of the cell cycle as well as it captures the
+transcriptional program. Ten rows now have gene reviews in the repo when the
+EIF2A entry is normalized to the standard yeast symbol SUI2 (493 annotations
+assessed); the remaining rows still need review or symbol triage. The list also
+needs cleanup before the translation branch starts: yeast eIF1 is SUI1, "EIF3"
+names a complex rather than a gene, and SHE2 needs a narrower rationale than
+ribosome biogenesis.
 
 ## Overview
 
@@ -59,51 +60,52 @@ This project reviews *Saccharomyces cerevisiae* genes central to **cell cycle re
 
 # STATUS
 
-Last updated: 2025-12-30
+Last updated: 2026-10-04
 
 ## Genes to Review
 
 ### G1 Cyclins & Cell Cycle Entry
-- [ ] CLN3 - G1 cyclin (cell size sensor, upstream of translational control)
-- [ ] CLN1 - G1 cyclin (redundant with CLN2)
-- [ ] CLN2 - G1 cyclin (critical output of Start mechanism)
-- [ ] SIC1 - CDK inhibitor (Clb-CDK inhibitor)
-- [ ] WHI5 - CKI (transcriptional repressor of G1-S genes)
+- Done: CLN3 - G1 cyclin (cell size sensor, upstream of translational control)
+- Todo: CLN1 - G1 cyclin (redundant with CLN2)
+- Done: CLN2 - G1 cyclin (critical output of Start mechanism)
+- Done: SIC1 - CDK inhibitor (Clb-CDK inhibitor)
+- Done: WHI5 - Start transcriptional corepressor of SBF-dependent G1-S genes
 
 ### S/G2/M Cyclins & Checkpoint Control
-- [ ] CLB5 - S-phase cyclin (replication licensing)
-- [ ] CLB6 - S-phase cyclin (replication licensing)
-- [ ] CLB1 - M-phase cyclin
-- [ ] CLB2 - M-phase cyclin
+- Done: CLB5 - S-phase cyclin (replication-origin firing)
+- Todo: CLB6 - S-phase cyclin (replication-origin firing)
+- Todo: CLB1 - M-phase cyclin
+- Done: CLB2 - M-phase cyclin
 
 ### CDK & Cell Cycle Kinases
-- [ ] CDC28 - CDK (master cell cycle kinase)
-- [ ] DBF4 - Cdc7 binding partner (licensing factor)
-- [ ] SWE1 - CDK inhibitor (checkpoint control)
+- Done: CDC28 - CDK (master cell cycle kinase)
+- Todo: DBF4 - Cdc7-Dbf4 regulatory subunit for replication-origin firing
+- Done: SWE1 - Wee1-family Cdc28 Tyr19 kinase (morphogenesis checkpoint)
 
-### Ribosome Biogenesis & Translation
-- [ ] RPS3 - 40S ribosomal subunit protein
-- [ ] RPL3 - 60S ribosomal subunit protein
-- [ ] IMP3 - Ribosome biogenesis factor
-- [ ] SHE2 - Ribosome biogenesis factor
-- [ ] RRN3 - rRNA transcription factor
+### Ribosome Biogenesis & RNA Localization
+- Todo: `RPS3` - 40S ribosomal subunit protein
+- Todo: RPL3 - 60S ribosomal subunit protein
+- Todo: IMP3 - Ribosome biogenesis factor
+- Todo: SHE2 - ASH1 mRNA localization factor; confirm the cell-cycle rationale
+- Todo: RRN3 - rRNA transcription factor
 
 ### Translation Factors & Regulators
-- [ ] EIF1 - Translation initiation factor
-- [ ] EIF2A - Translation initiation factor
-- [ ] EIF3 - Translation initiation factor
-- [ ] TIF1 - Eukaryotic initiation factor 4A (DEAD-box helicase)
+- Todo: SUI1 - eIF1 translation initiation factor
+- Done: SUI2 - eIF2 alpha subunit
+- Todo: eIF3 subunit TBD - eIF3 is a complex; select the yeast subunit(s) before review
+- Todo: TIF1 - Eukaryotic initiation factor 4A (DEAD-box helicase)
 
 ### Cell Size & Growth Control
-- [ ] TOR1 - Target of rapamycin (growth/nutrient sensing)
-- [ ] MSN2 - Stress response transcription factor
+- Done: TOR1 - Target of rapamycin (growth/nutrient sensing)
+- Todo: MSN2 - Stress response transcription factor
 
 ## Progress
 
-- Total genes: 23
-- Reviewed: 0
+- Total rows: 23
+- Reviewed: 10
+- Open review or symbol-triage rows: 13
 - In progress: 0
-- Completed: 0
+- Remaining work: [#3960](https://github.com/ai4curation/ai-gene-review/issues/3960)
 
 ---
 

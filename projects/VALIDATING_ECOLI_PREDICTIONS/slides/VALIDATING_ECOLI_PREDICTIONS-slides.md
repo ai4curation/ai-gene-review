@@ -84,6 +84,6 @@ Seven gene reviews against an expert audit of DeepECTransformer
 ## Status
 
 - ✅ 7/7 gene reviews and prediction reviews complete (March 2026).
-- The DeepECTF prediction table is browsable with the BioReason comparison material (`BIOREASON_COMPARISON/deepectf-eval.html`).
+- The production DeepECTF prediction table is browsable at `VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html`; the BioReason recapitulation table is separate.
 
 **Read more:** `projects/VALIDATING_ECOLI_PREDICTIONS.md` · `genes/ECOLI/<gene>/`

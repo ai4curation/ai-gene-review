@@ -1,5 +1,6 @@
 ---
 title: "SPKW Rhythmic Process Subproject"
+species: [human]
 ---
 
 # SPKW Rhythmic Process Subproject

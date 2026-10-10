@@ -1,6 +1,7 @@
 ---
 title: "Pennycress ortholog search results"
 species: [THLAR, ARATH]
+autolink_gene_symbols: false
 ---
 
 # Pennycress orthologs of module exemplars (reciprocal best hits)
