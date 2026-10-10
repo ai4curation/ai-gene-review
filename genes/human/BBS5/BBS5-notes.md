@@ -78,3 +78,9 @@ The repository caches for PMID:17574030 and PMID:22302990 contain abstracts only
 ## Generic binding cleanup, 2026-10-09
 
 The 14 GO:0005515 rows that still retained source-attributed BBS5 interactions as KEEP_AS_NON_CORE are now marked REMOVE. This supersedes the earlier recommendation to keep real experimental IPI records as non-core: the BBS9, BBSome-regulator and external partner associations remain recorded in row summaries, reasons and supporting_entities, but the bare protein-binding molecular-function term is not retained when no more specific BBS5 activity is supported.
+
+## Status refresh, 2026-10-10
+
+After the generic-binding rows were switched to `REMOVE`, focused status recomputation reported no
+validation warnings and derived `COMPLETE`. The status field is updated from `DRAFT` to `COMPLETE`; earlier
+entries that mention generic-binding advisories are historical.

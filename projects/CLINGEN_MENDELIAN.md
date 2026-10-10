@@ -2973,9 +2973,16 @@ checklist sections, so nuclear protein-coding headings exclude those genes.
 
 ## Curation instructions
 
-For this ClinGen project, follow the user's standing instruction: retain a supported, biologically correct `GO:0005515` (protein binding) annotation as `KEEP_AS_NON_CORE` when no evidence-backed, more specific replacement has been established. Use `MODIFY` when the evidence supports a more informative term. If the relevant evidence cannot be accessed or adjudicated, use `UNDECIDED`; this instruction does not verify an uninspected interaction or justify inventing a molecular activity from association alone.
+For ClinGen reviews, follow the repository-wide generic-binding policy: mark a supported `GO:0005515`
+(protein binding) annotation `REMOVE` when the evidence records a physical association but does not
+establish a more informative molecular-function term. Preserve the partner, assay context and source
+limits in the row's summary and reason. Use `MODIFY` only when the evidence supports a specific
+replacement term, and use `UNDECIDED` when the relevant evidence cannot be accessed or adjudicated.
 
-This is an intentional task-specific departure from the annotation-reviewer skill's informational-exclusion recommendation, which generally uses `REMOVE` for uninformative generic binding without declaring the reported interaction false. The authority is the user's explicit instruction for this project, not the ActionEnum alone. This does not change the repository-wide policy or claim an external maintainer sign-off.
+`REMOVE` in this context retires the uninformative GO term from the gene's functional summary; it does
+not assert that the reported interaction is false. Earlier B-series follow-ups temporarily retained
+supported generic interactions as `KEEP_AS_NON_CORE` under a project-specific exception. That exception is
+retired for new and follow-up ClinGen work.
 
 ## Status
 
@@ -2984,9 +2991,9 @@ each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
 The [BLOC1S6 binding rationale](CLINGEN_MENDELIAN/BLOC1S6-binding-rationale.md)
-records that review’s scoped use of supported, non-core interaction annotations
-and its evidence limits. It is a gene-specific exception to the general
-generic-binding guidance.
+records an earlier scoped exception and its evidence limits as historical
+provenance; it should not be reused as standing ClinGen guidance without
+re-review under the default generic-binding policy.
 
 **296 of 2,876 genes are complete; 2,580 remain.** CEP164 and CEP250 add
 two first primary campaign completions beyond checkpoint 294. Their exact final

@@ -115,3 +115,9 @@ The notes remain an append-only record. Earlier processing details and decisions
 ### Focused verification of the evidence follow-up
 
 The applied review retains 41 source assertions and two UniProt products, with one directly supported PLP-binding NEW and one catalytic core. Focused gene validation passed with eight advisories: seven supported generic interactions remain non-core under the supplied ActionEnum, and one advisory concerns not directly citing the unchanged generated research report. The biological evidence is instead tied to primary papers and curated records. HTML rendering passed. No global validation result is claimed. Earlier notes remain historical; this follow-up states the current decisions.
+
+## Summary cleanup - 2026-10-10
+
+The seven HSPD1/YBEY `GO:0005515` rows already had `REMOVE` actions and generic-binding removal reasons.
+Their summaries are now aligned with those actions so the rendered report does not describe the deleted
+protein-binding annotations as retained non-core interactions.
