@@ -1,3 +1,15 @@
+# Current source-based correction — 2026-10-10
+
+The historical page and diagram below are retained verbatim as provenance and are superseded where they conflict with this correction. CFTR conducts chloride and bicarbonate passively through an ATP-regulated pore; ATP hydrolysis controls conformation rather than pumping ions uphill. Direct bicarbonate permeation and stable tested selectivity are supported by PMID:19019741; the dynamic external-chloride model belongs to PMID:15010471.
+
+PMID:12369822 supports CFTR binding to NHERF2/E3KARP as a comparator in a DRA-focused study; it does not make DRA the original CFTR binding partner. ClC-3B/PDZ-organized association in PMID:12471024 does not independently establish that ClC-3B controls CFTR trafficking. PMID:19289574 supports SLC26A9 association/functional coupling, not ENaC regulation. Human airway rescue in PMID:19621064 measures sodium transport as well as fluid/chloride endpoints; an inferred CFTR effect on ENaC would run from CFTR to sodium-channel behavior, not the historical diagram's reverse inhibitory arrow. A direct molecular CFTR-to-ENaC step remains unresolved, so the current core does not assert one. Mucus hydration and clearance are distinguished from regulated mucus secretion.
+
+The historical drug discussion is a dated narrative, not a current clinical recommendation. See [the current review](CFTR-ai-review.yaml), [appended audit notes](CFTR-notes.md) and [literal source evidence](CFTR-source-evidence.json) for the current bounded conclusions.
+
+---
+
+## Preserved historical pathway narrative and superseded diagram
+
 # Pathway Summary for CFTR
 
 ## Overview
