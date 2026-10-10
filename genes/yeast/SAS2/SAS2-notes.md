@@ -40,3 +40,10 @@
   Cac1/Rlf2, the CAF-I largest subunit. The row remains `REMOVE` because generic
   protein binding is uninformative, but its evidence records the SAS-I link to
   CAF-I/Asf1 rather than another SAS acetyltransferase complex subunit.
+- Replaced residual title-only `supporting_text` snippets after PR review:
+  `PMID:11731479` and `PMID:15788653` now quote informative abstract text,
+  the SGD `PMID:27655944` silent-mating-type row is retained by curator
+  deference with an `UNVERIFIED` reference review because the local abstract
+  does not mention Sas2, and the zinc-binding RCA row now cites the
+  bioinformatic zinc-proteome method plus the UniProt C2HC MYST zinc-finger
+  feature.
