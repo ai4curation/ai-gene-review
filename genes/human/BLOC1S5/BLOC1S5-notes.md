@@ -122,3 +122,9 @@ Independent scientific review approved the final follow-up and its source-readin
 ## Generic binding follow-up - 2026-10-10
 
 The 17 experimental `GO:0005515` rows are now `REMOVE` under the default generic-binding policy. This changes the BLOC-1 assembly-associated rows from PMID:12191018, PMID:15102850, PMID:22203680, PMID:33961781, and PMID:40205054, plus the human binary-interaction rows from PMID:25416956 and PMID:32296183. The source partners and evidence are preserved, and several interactions remain useful support for MUTED-containing BLOC-1, but GO:0005515 itself does not name a specific MUTED molecular activity. Current totals are 10 `ACCEPT`, 11 `KEEP_AS_NON_CORE`, 17 `REMOVE`, 5 `UNDECIDED`, and 1 `MODIFY`.
+
+## Status refresh, 2026-10-10
+
+After the generic-binding rows were switched to `REMOVE`, focused status recomputation reported no
+validation warnings and derived `COMPLETE`. The status field is updated from `DRAFT` to `COMPLETE`; earlier
+entries that attribute `DRAFT` to retained generic-binding warnings are historical.
