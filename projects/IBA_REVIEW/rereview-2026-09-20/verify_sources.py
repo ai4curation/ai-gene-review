@@ -80,6 +80,10 @@ EXPECTED_RETIREMENTS = {
         make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:10564510"),
         make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"),
     ]),
+    "genes/yeast/HSP10/HSP10-ai-review.yaml": Counter([
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:7902576"),
+    ]),
     "genes/yeast/SSQ1/SSQ1-ai-review.yaml": Counter([
         make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043",
                        qualifier="enables"),
