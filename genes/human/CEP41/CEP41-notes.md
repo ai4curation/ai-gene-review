@@ -1,0 +1,40 @@
+# CEP41 functional review
+
+## 2026-10-10 — whole-gene evidence review
+
+CEP41 supports ciliary protein targeting and microtubule organization. The normal fetch seeded 40 assertions and four alternative products; all source fields, partner identifiers, qualifiers, reference identities and product descriptions are preserved. This is the first campaign review of this gene, not a claim of complete mechanistic knowledge.
+
+The binding instruction in the [published campaign instructions](https://github.com/ai4curation/ai-gene-review/blob/6ae4685964aa1aae16bfec2647cab2ccfed750f6/projects/CLINGEN_MENDELIAN.md#curation-instructions) retains supported generic binding as non-core when no better molecular function is justified. Here, the sole generic source supports a specific enzyme-binding refinement. Inaccessible target evidence remains undecided.
+
+### Ciliary targeting and modification
+
+[PMID:22246503](https://pmc.ncbi.nlm.nih.gov/articles/PMC3267856/), Results and Figure 2b, places endogenous CEP41 “at the centrioles and cilia” in mammalian cells including human hTERT-RPE1. Patient fibroblasts retain initial ARL13B-positive cilia despite striking loss of GT335/PolyE modification. Expression rescue, zebrafish axonemal ultrastructure and mouse IMCD3 TTLL6 localization identify a modification/architecture role beyond a general ciliopathy phenotype.
+
+Figure 4b reports tagged CEP41–TTLL6 complex association; Figure 4c shows restricted TTLL6 entry after Cep41 depletion. The Methods describe both human EGFP/HA and mouse GST/EGFP/FLAG CEP41 constructs. A human assay host does not settle the species of every tagged construct, and a cellular co-IP is not a purified binding interface. Enzyme binding is the supported resolution; a specific IFT motor bridge is still a hypothesis.
+
+The polyglutamylation ISS donor Q6GQN0 is zebrafish cep41 with an IMP from this same study. The original chemical-process row is refined to **protein localization to cilium**, the measured CEP41 step. TTLL6 performs glutamyl addition. This is a positive mechanistic refinement, not an assertion that all noncatalytic proteins are excluded from modification processes. Intrinsic glutamylase activity and a reaction-level CEP41 cofactor mechanism have not been established.
+
+[PMID:31885126](https://pmc.ncbi.nlm.nih.gov/articles/PMC7001496/), Results/Figures 3–8, adds human HUVEC/RPE1 and zebrafish evidence. The authors distinguish initial ciliation from length, modification and the “modulation of cilia disassembly”. CCP5 codepletion restores balanced glutamylation and several cellular phenotypes. HIF1A co-IP was performed in HEK293T, not HUVECs. AURKA phosphorylation and VEGF expression are downstream readouts; they do not give CEP41 kinase or transcription-factor activity. These context-dependent vascular results inform the biological summary without creating a list of new downstream process annotations.
+
+### Direct microtubule capability and structural scope
+
+[PMID:38841887](https://doi.org/10.1242/jcs.261927), Figures 1–2 and purification Methods, tests purified human NM_018718.3 CEP41 with goat-brain tubulin. The normal abstract describes “microtubule-stabilizing activity”. Selected [publisher full text](https://www.researchgate.net/publication/381222103_CEP41_a_ciliopathy-linked_centrosomal_protein_regulates_microtubule_assembly_and_cell_proliferation) resolves the construct and assay details. Bulk polymerization does not establish processive plus-end polymerase activity. Microtubule binding is included in the core; no redundant NEW binding assertion is added because GO:0005515 is an existing positive ancestor.
+
+[PMID:40593728](https://www.nature.com/articles/s41467-025-61015-6), Figure 6 and model-building Methods, assigns mouse CEP41 to mBMIP5 and supports multiciliogenesis. The luminal assignment raises an unresolved TTLL6-access question. This corroborates structural participation without claiming atomic human evidence or universal necessity for initial ciliation.
+
+The two core processes describe protein targeting and ciliary assembly/structural maturation, respectively. Their scope is consistent with preserved ciliation in human near-null fibroblasts. Alternative products Q9BYV8-1, -2, -4 and -5 remain separately recorded; unqualified source rows are not converted into universal isoform claims.
+
+### Source-specific limits and provenance
+
+- The original PMID:14654843 centrosome output was not independently recovered. The PMID:21399614 cache contains selected body sections but omits much of Results and the target tables. Both original IDAs are retained with separately cited, direct human localization corroboration from PMID:22246503. This does not claim that the independent study is their original experimental provenance.
+- PMID:19946888 describes membrane-fraction LC-MS, including associated proteins. The publisher identifies `jms1696_Suppinfotable1.xls`, but the recovered payloads are HTTP403 HTML rather than a workbook. Its exact CEP41 hit remains uninspected, so the membrane HDA is UNDECIDED. Neither membrane topology nor a false-positive detection is inferred.
+- The 22 Reactome events include Q9BYV8 through the cytosolic centrosome entity R-HSA-380269. Their broad compartment assertions remain non-core. Peripheral reaction titles describe other proteins' work and receive LOW reference relevance; they do not establish CEP41 kinase, motor or exchange-factor activity.
+- PAINT is an ancestral inference, not pairwise similarity. The exact node PTN002893044 is preserved; self-donor inclusion is legitimate. Its complete placement/history was not reconstructed. The retained basal-body active-in assertion is corroborated by localization plus a measured targeting role, not by a supposed basal-body catalytic assay.
+
+The [source evidence extract](CEP41-source-evidence.json) preserves literal donor, compartment, event and typed ontology fields with retrieval URLs and content hashes. It distinguishes source-linked database records from independent biological replication. It contains no invented target records or long literature quotations. Original publications and machine source files remain unchanged.
+
+### Research and validation record
+
+Normal source retrieval succeeded. An initial concurrent provider attempt began before UniProt metadata was available and failed its input template; the explicit fallback returned HTTP401. A single post-intake retry supplied the normal UniProt metadata: Falcon timed out at 90 seconds, and Perplexity again returned HTTP401. Task-specific process groups were cleaned up. No provider report was created or fabricated; this journal records manual primary-source work.
+
+Newly authored excerpts are counted across YAML and these notes, including repeated excerpts. Each source remains at or below 25 words. There is no inherited gene-notes prefix for this new gene. Normal gene validation, derived status and rendering are recorded in the handoff; a justified unresolved annotation does not by itself prevent a completed campaign audit after publication review and required checks.
