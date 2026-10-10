@@ -48,16 +48,16 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 
 - [ ] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; existing
   curated anchor, not yet rechecked in this project
-- [ ] `yeast/HSP78` - mitochondrial `Hsp104`/ClpB paralog; review in PR #4519
-- [ ] `SCHPO/hsp104` - fission yeast cytosolic `Hsp104` ortholog; review in PR
-  #4524
-- [ ] `SCHPO/hsp78` - fission yeast mitochondrial Hsp78 ortholog; review in
-  PR #4521
-- [ ] `CANAL/HSP104` - CGD-seeded *Candida albicans* `Hsp104` ortholog; review
+- [x] `yeast/HSP78` - mitochondrial `Hsp104`/ClpB paralog; merged in PR #4519
+- [x] `SCHPO/hsp104` - fission yeast cytosolic `Hsp104` ortholog; merged in
+  PR #4524
+- [x] `SCHPO/hsp78` - fission yeast mitochondrial Hsp78 ortholog; merged in PR
+  #4521
+- [x] `CANAL/HSP104` - CGD-seeded *Candida albicans* `Hsp104` ortholog; merged
   in PR #4523
-- [ ] `CANAL/HSP78` - *Candida albicans* mitochondrial Hsp78 ortholog; review
-  in PR #4522
-- [ ] `NEUCR/hsp98` - *Neurospora crassa* Hsp104-family member; review in PR
+- [x] `CANAL/HSP78` - *Candida albicans* mitochondrial Hsp78 ortholog; merged in
+  PR #4522
+- [x] `NEUCR/hsp98` - *Neurospora crassa* Hsp104-family member; merged in PR
   #4520
 
 ## Later Candidates
@@ -116,3 +116,5 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 - Opened sibling PRs for the six drafted Hsp100/ClpB reviews: `yeast/HSP78`
   (#4519), `NEUCR/hsp98` (#4520), `SCHPO/hsp78` (#4521), `CANAL/HSP78`
   (#4522), `CANAL/HSP104` (#4523), and `SCHPO/hsp104` (#4524).
+- Merged all six sibling Hsp100/ClpB reviews, bringing the mitochondrial Hsp78
+  and cytosolic non-*S. cerevisiae* Hsp104/hsp98 PAINT checks onto `main`.
