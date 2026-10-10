@@ -36,3 +36,7 @@
   `SAS2`/`Sas2`/`SAS-I` primary paper in *Saccharomyces*; the latest direct
   SAS-I H4K16 paper from a broader H4K16/Sas2 query remains the 2021
   replication-coupled acetylation study, PMID:34014972.
+- Corrected the newly seeded `GO:0005515` Q12495 interactor from Sas5 to
+  Cac1/Rlf2, the CAF-I largest subunit. The row remains `REMOVE` because generic
+  protein binding is uninformative, but its evidence records the SAS-I link to
+  CAF-I/Asf1 rather than another SAS acetyltransferase complex subunit.
