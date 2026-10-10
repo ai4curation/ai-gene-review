@@ -1,0 +1,7 @@
+# UTR4 (YEL038W, P32626) notes
+
+- Enolase-phosphatase E1 (EC 3.1.3.77), HAD-like hydrolase superfamily, MasA/MtnC family; Mg2+-dependent monomer [UniProt:P32626 "Bifunctional enzyme that catalyzes the enolization of 2,3-"]. Single enzyme performs both the enolization of DK-MTP-1-P and dephosphorylation to the acireductone DHK-MTPene; GO:0043874 acireductone synthase activity describes the overall reaction (RHEA:21700).
+- Genetic verification in yeast as the E1 step of the methionine salvage (MTA/Yang) cycle [PMID:18625006 "the 2,3-dioxomethiopentane-1-phosphate enolase/phosphatase as Utr4p"]; paralog YNL010W excluded [PMID:18625006 "The homologue of the enolase/phosphatase gene, YNL010w, was excluded from its candidate role in the cycle"]. Cached entry is abstract-only.
+- Comparative genomics: enolase-phosphatase MtnC is the step in most organisms; B. subtilis splits it into a RuBisCO-like enolase + phosphatase [PMID:15102328 "In other organisms, this step is performed by an enolase-phosphatase, encoded by gene mtnC"]. Basis of SGD ISS to human ENOPH1 (Q9UHY7).
+- Localization: cytoplasm and nucleus by GFP [PMID:14562095; UniProt:P32626 "Cytoplasm"].
+- Ontology issue: GO:0033353 "L-methionine cycle" is now defined as the SAM/SAH/homocysteine (activated methyl) cycle; UTR4 acts in MTA-to-methionine salvage, which is GO:0071267 "L-methionine salvage". The old term GO:0019509 "L-methionine salvage from methylthioadenosine" is obsolete; the UTR4 GO:0033353 rows (IBA, IEA, IMP) look like legacy migrations. Proposed MODIFY to GO:0071267 rather than removal.
