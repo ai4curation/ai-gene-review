@@ -1,5 +1,15 @@
 # PKS1 Bioinformatics Analysis Summary
 
+## Audit Note
+
+This summary is retained as a stale analysis artifact, not as curated evidence for
+`Pks1-ai-review.yaml`. The 2026-10-10 audit found that the generated outputs
+contradict the "all catalytic residues conserved" conclusion for several hard-coded
+coordinate checks, the homolog identity values are hand-entered rather than
+recomputed, and the GO recommendations include process terms that were rejected or
+narrowed in the 2026-10-01 re-review. Use the cached UniProt record and
+PMID:29958281 for curated support.
+
 ## Executive Summary
 Comprehensive bioinformatics analysis confirms PKS1 (A0A0B4ESU9) as a Type I iterative non-reducing polyketide synthase responsible for anthraquinone-based conidial pigment biosynthesis in *Metarhizium brunneum*. All essential catalytic residues are conserved, domain architecture matches characterized anthraquinone synthases, and phylogenetic analysis places it within the fungal pigment biosynthesis clade.
 

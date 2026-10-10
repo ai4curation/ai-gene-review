@@ -1,5 +1,17 @@
 # PKS1 Bioinformatics Analysis Report
 
+## Audit Note
+
+This report is retained as a stale analysis artifact, not as curated evidence for
+`Pks1-ai-review.yaml`. The 2026-10-10 audit found internal inconsistencies between
+the generated JSON and the prose summary: `pks1_analysis_data.json` reports
+failed checks for `KS_DTACSS_motif`, `ACP1_Ser1712`, and the TE `Ser1973`, whereas
+this report states that all essential catalytic residues are conserved. The scripts
+also mix de novo motif scans with hard-coded UniProt feature coordinates and
+manually assigned homolog identities. Use the cached UniProt record and
+PMID:29958281 for the curated Pks1 domain architecture, product, and phenotype
+support.
+
 ## Protein Overview
 - **Length**: 2137 amino acids
 - **Molecular Weight**: 233,136 Da (~234 kDa)
