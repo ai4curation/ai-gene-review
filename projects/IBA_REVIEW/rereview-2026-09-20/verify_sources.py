@@ -1,4 +1,4 @@
-"""Check source preservation, including one explicitly archived identity repair."""
+"""Check source preservation across the recovery and current-GOA repairs."""
 from collections import Counter
 from datetime import datetime, timezone
 import json
@@ -15,7 +15,6 @@ IDENTITY_MIGRATIONS = {
     "genes/worm/csr-1/csr-1-ai-review.yaml":
         "genes/worm/csr-1/csr-1-provenance/identity-migration-manifest.json",
 }
-
 
 def signature(annotation):
     return json.dumps({k: annotation[k] for k in FIELDS if k in annotation}, sort_keys=True)
@@ -114,6 +113,19 @@ EXPECTED_LABEL_REFRESHES = {
             ),
         ),
     ]),
+    "genes/yeast/SSA3/SSA3-ai-review.yaml": Counter([
+        (
+            make_signature(
+                "GO:0006515",
+                "protein quality control for misfolded or incompletely synthesized proteins",
+                "IMP", "PMID:24855027",
+            ),
+            make_signature(
+                "GO:0006515", "protein quality control", "IMP", "PMID:24855027",
+                qualifier="involved_in",
+            ),
+        ),
+    ]),
 }
 
 
@@ -122,31 +134,35 @@ def source_assertions(review):
                    if (a.get("review") or {}).get("action") != "NEW")
 
 
-def qualifier_backfill_matches(missing, current):
+def without_qualifier(serialized):
+    fields = json.loads(serialized)
+    fields.pop("qualifier", None)
+    return json.dumps(fields, sort_keys=True)
+
+
+def qualifier_backfill_matches(missing_exact, surplus_current):
     """Find missing frozen signatures preserved with only a new qualifier.
 
     Older seeded reviews omitted qualifiers that are now backfilled by a force
     fetch. A missing frozen assertion without qualifier is therefore preserved
-    when a current assertion has the same term/evidence/reference/isoform/NOT
+    when a surplus current assertion has the same term/evidence/reference/isoform/NOT
     fields plus any qualifier.
     """
-    current_by_unqualified = Counter()
-    for encoded, count in current.items():
-        data = json.loads(encoded)
-        if "qualifier" not in data:
+    current_with_qualifiers = Counter()
+    for serialized, count in surplus_current.items():
+        if "qualifier" not in json.loads(serialized):
             continue
-        data.pop("qualifier")
-        current_by_unqualified[json.dumps(data, sort_keys=True)] += count
+        current_with_qualifiers[without_qualifier(serialized)] += count
 
     matches = Counter()
-    for encoded, count in missing.items():
-        data = json.loads(encoded)
-        if "qualifier" in data:
+    for serialized, count in missing_exact.items():
+        if "qualifier" in json.loads(serialized):
             continue
-        matched = min(count, current_by_unqualified[encoded])
+        key = without_qualifier(serialized)
+        matched = min(count, current_with_qualifiers[key])
         if matched:
-            matches[encoded] = matched
-            current_by_unqualified[encoded] -= matched
+            matches[serialized] = matched
+            current_with_qualifiers[key] -= matched
     return matches
 
 
@@ -256,23 +272,26 @@ def main():
         if path in IDENTITY_MIGRATIONS and after.get("id") != before.get("id"):
             expected, migration = verify_identity_migration(path, commit, before, after)
             result["identity_migration"] = migration
-        missing = expected - current
-        qualifier_backfills = qualifier_backfill_matches(missing, current)
+        missing_exact = expected - current
+        surplus_current = current - expected
+        qualifier_backfills = qualifier_backfill_matches(missing_exact, surplus_current)
+        missing_after_backfills = missing_exact - qualifier_backfills
+        label_refreshes = label_refresh_matches(path, missing_after_backfills, current)
+        missing_after_refreshes = missing_after_backfills - label_refreshes
+        expected_retirements = EXPECTED_RETIREMENTS.get(path, Counter())
+        matched_retirements = expected_retirements & missing_after_refreshes
+        missing = missing_after_refreshes - matched_retirements
+        stale_retirements = expected_retirements - missing_after_refreshes
+
+        result["missing_source_assertions"] = dict(missing)
         if qualifier_backfills:
             result["qualifier_backfills"] = dict(qualifier_backfills)
-            missing -= qualifier_backfills
-        label_refreshes = label_refresh_matches(path, missing, current)
         if label_refreshes:
             result["label_refreshes"] = dict(label_refreshes)
-            missing -= label_refreshes
-        retirements = EXPECTED_RETIREMENTS.get(path, Counter())
-        applied = missing & retirements
-        unexpected_retirements = retirements - missing
-        if retirements:
-            result["expected_retirements"] = dict(applied)
-            if unexpected_retirements:
-                result["unexpected_expected_retirements"] = dict(unexpected_retirements)
-        result["missing_source_assertions"] = dict(missing - retirements)
+        if matched_retirements:
+            result["expected_retirements"] = dict(matched_retirements)
+        if stale_retirements:
+            result["unexpected_expected_retirements"] = dict(stale_retirements)
         results.append(result)
     report = dict(baseline_commit=commit, checked_at=datetime.now(timezone.utc).isoformat(), genes=results)
     (HERE / "source-preservation-check.json").write_text(json.dumps(report, indent=2) + "\n")

@@ -89,3 +89,7 @@ assertions and supporting evidence are preserved.
 ## Recovery PR signaling follow-up (2026-09-22)
 
 Restore full forskolin context in the quotation, distinguish external full-text access from the abstract-only cache, and retain branch-specific LPAR2 core terms without redundant NEW assertions beneath existing GPCR signaling.
+
+## OpenScientist cAMP follow-up (2026-10-05)
+
+The focused OpenScientist cAMP report was attached to the GO:0007189 row. Its conditional-heterologous caution is incorporated: the row remains `KEEP_AS_NON_CORE` because the direct LPAR2 evidence is forskolin-primed Sf9-cell cAMP potentiation, while native mammalian evidence strongly supports Gi-mediated cAMP lowering in epithelial contexts. The report is recorded as `DISPUTED` rather than accepted wholesale because the row already accepts PTHR22750/PTN002733616 ancestry while restricting the inherited activating term to non-core conditional capacity.
