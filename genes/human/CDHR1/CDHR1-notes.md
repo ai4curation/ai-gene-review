@@ -35,3 +35,11 @@ This review follows the [project's binding instruction at the pinned source comm
 The unresolved scientific questions are the native human partner/stoichiometry and geometry, calcium dependence, alternative-product behavior, and the mechanism regulating ectodomain shedding. They are preserved in the structured questions. Authentic external full-text access is distinguished from an abstract-only cache: the latter alone does not require labeling an actually inspected full paper inaccessible.
 
 Verbatim evidence anchors appear in the YAML and one short geometry anchor above, with aggregate authored quotations kept below 25 words per PMID across YAML and notes. Other literature descriptions are paraphrased; no quotation is repeated.
+
+## PR 4491 evidence clarification (2026-10-10)
+
+The calcium-binding row now cites only its original GO_REF:0000002 domain inference. PMID:41995082 remains discussed as an access boundary in the reason, but is no longer listed as calcium-binding support; its aggregation assay did not measure calcium binding or dependence. The non-core action is unchanged.
+
+The human IMP morphogenesis row now states the source-specific basis for its existing replacement explicitly: adult SD-OCT/AOSLO structural findings support outer-segment organization, whereas the original morphogenesis term describes acquisition of specialized photoreceptor features. GO:0035845 is a lateral semantic replacement, not a descendant of GO:0008594. The early zebrafish structural phenotype remains positive context and a caveat against excluding developmental roles; it is not the rationale for narrowing the human source. No action, source object, replacement term or core function changed.
+
+A structured question now asks whether the PROM1 association is direct and how it relates to PCDH15. The existing mouse PCDH21 co-immunoprecipitation evidence does not establish a purified binary interface or the native human complex. This adds no binding annotation. Existing evidence records, source caches and the prior notes journal are preserved.
