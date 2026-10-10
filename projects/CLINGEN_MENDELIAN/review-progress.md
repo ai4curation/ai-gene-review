@@ -66,6 +66,70 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 311 — 2026-10-10 19:26:28 UTC
+
+**311 complete / 2,565 remaining in the frozen 2,876-gene catalog.**
+CFTR is the sole new completion beyond checkpoint 310. This counts the first
+qualifying campaign audit of an existing review, not a newly created gene file.
+The prior counting rules and exceptions are unchanged: one completed campaign
+audit per primary gene, with no additional count or hold for products, repeated
+reviews, annotation actions or justified biological uncertainty.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CFTR | [#4568](https://github.com/ai4curation/ai-gene-review/pull/4568) | [6d3565c7c9eb](https://github.com/ai4curation/ai-gene-review/commit/6d3565c7c9eb5575203f5d8ac2d99e757fbe7b40) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4568#pullrequestreview-5480414462) | 2026-10-10T19:26:28Z | [4a9875aae93b](https://github.com/ai4curation/ai-gene-review/commit/4a9875aae93b762f99d87baf4621c9ededf6d71c) |
+
+CFTR approval was submitted at **19:02:19 UTC**;
+[test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38073199144/job/114274687566) succeeded at 19:18:13 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38073199273/job/114274688530) succeeded at 19:02:31 UTC. All gates match the final head and precede the actual merge,
+with zero unresolved threads. The full final formal approval and detailed comment
+were read; remaining suggestions are explicitly nonblocking. The audit preserves
+203 historical annotation objects while revising their scientific assessments and
+three core functions; the review's expanded-source deferral remains explicit.
+
+All **13 changed PR paths** have equal blobs in the approved-head and merge
+commit trees. Six changed gene-directory files are distinguished from the
+**12 total recursive gene-directory blobs** at the cutoff: unchanged source and
+provider artifacts remain part of the complete gene tree. The complete
+[CFTR tree at the cutoff](https://github.com/ai4curation/ai-gene-review/tree/4a9875aae93b762f99d87baf4621c9ededf6d71c/genes/human/CFTR)
+`b42601a3ce347fec5156f10641d9cbcca0b00aca` matches the approved, merge and authenticated source trees.
+Exact paths, sizes, Git blobs and SHA-256 hashes are retained in queue update 55.
+
+The authenticated source is [commit 4a9875aae93b](https://github.com/ai4curation/ai-gene-review/commit/4a9875aae93b762f99d87baf4621c9ededf6d71c),
+which is also the frozen CFTR completion cutoff. It contains the earlier
+[tracker310 #4631](https://github.com/ai4curation/ai-gene-review/pull/4631)
+merge `bb51b3177deed88185627c2017483b18a4de0f94` at **19:25:37 UTC**. That tracker was approved
+at 19:08:32 UTC on `a92f2976550ad7b7e9f37df24b2d85f5a04ea4e6`;
+both required checks succeeded before its merge, and all seven changed-path
+blobs match the approved head and merge tree. Merge times use **GitHub API
+`merged_at`**, with `committedDate` recorded separately; the values coincide for
+both of these merges. A later publication base is distinct and cannot count any
+subsequent gene merge without another reconciliation.
+
+All **148 existing records** in `history/projects/CLINGEN_MENDELIAN/`, authenticated
+by tree `c7db335f2efd5854a2d7e02d24c06c864facaf9a`, are protected. The five session-history
+links already present in the parent page remain unchanged:
+
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T174737Z-codex-0f8ff7.yaml`
+
+The publisher will scaffold and validate the new session history normally.
+No existing history or gene artifact is edited. Render previews use the complete
+authenticated source-main gene-review inventory; later link availability can change
+independently of this fixed count.
+
+All 2,876 catalog associations and frontmatter, the **235-object / 235-symbol**
+serialized queue array, all **54 prior completion-update object texts**, unrelated
+queue metadata and prior progress are preserved. Only CFTR's checkbox changes;
+update **55** is appended with an identical JSON mirror. The first unchecked
+literal entry remains ACBD5. Counter values are 311 for `completed`,
+`campaign_audited_merged` and the legacy `original_merged` alias, with zero
+`pending_followups` and 2,565 remaining.
+
+[Checkpoint 311 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T193909Z-codex-ab8464.yaml).
+
 ## Completion checkpoint 310 — 2026-10-10 17:19:03 UTC
 
 **310 complete / 2,566 remaining in the frozen 2,876-gene catalog.**
