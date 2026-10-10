@@ -114,6 +114,19 @@ EXPECTED_LABEL_REFRESHES = {
             ),
         ),
     ]),
+    "genes/yeast/SSA3/SSA3-ai-review.yaml": Counter([
+        (
+            make_signature(
+                "GO:0006515",
+                "protein quality control for misfolded or incompletely synthesized proteins",
+                "IMP", "PMID:24855027",
+            ),
+            make_signature(
+                "GO:0006515", "protein quality control", "IMP", "PMID:24855027",
+                qualifier="involved_in",
+            ),
+        ),
+    ]),
 }
 
 
