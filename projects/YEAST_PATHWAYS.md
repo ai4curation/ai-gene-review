@@ -248,10 +248,14 @@ NEW module pages become live as those PRs land.
   depends on a catalytic site). The remaining `FAMILY_FUNCTION_UNREVIEWED`
   warnings are scopes the family reviews deliberately leave `UNRESOLVED`, because
   no subfamily separates the members that have the activity.
-- Three cross-check items are known checker limits rather than disagreements:
-  zebrafish dph2 (the check ignores the contributes_to qualifier), LRO1 (one
-  mis-sourced ISO row removed while the activity is accepted in seven others), and
-  Scheffersomyces XYL1 (no PANTHER subfamily assignment for that proteome).
+- The family/gene cross-check lists no item in a YeastPathways role family. The
+  zebrafish dph2 item came from a qualifier split: an `enables` IEA row is marked
+  over-annotated beside an accepted `contributes_to` row. The check no longer
+  reports an over-annotated row as disagreement when another row for the same term
+  is kept. LRO1 is not flagged: its one REMOVE drops a mis-sourced ISO row, and
+  seven other rows keep PDAT activity. *Scheffersomyces* XYL1 has a PANTHER family
+  (PTHR11732) but no subfamily in UniProt, so the check counts it among genes it
+  cannot place.
 - GO term migration: several module concept terms (the glycolysis route terms
   GO:0061615 and siblings, GO:0034354) are obsolete in current GO but still live in
   the ontology release this repository validates against. Each affected module
