@@ -5,4 +5,4 @@
 - Side activity: phosphoglucomutase; overexpression rescues pgm1 pgm2; PGM2 cannot replace PCM1 [PMID:8174553 "over-expression of the AGM1 gene in a pgm1/pgm2 double deletion mutant which could restore phosphoglucomutase activity"]. GO:0004614 not in GOA; raised as a question rather than NEW.
 - With Uap1/Qri1 converts GlcNAc6P -> UDP-GlcNAc [PMID:9603950 "together with Agm1p, it produced UDP-N-acetylglucosamine from N-acetylglucosamine-6-phosphate"].
 - Localisation cytoplasm (+ nucleus by GFP) [PMID:14562095; PMID:11914276].
-- Generic IEA 'carbohydrate metabolic process' -> KEEP_AS_NON_CORE because GO:0006048 is already present; 'intramolecular phosphotransferase activity' -> MODIFY GO:0004610.
+- Generic IEA 'carbohydrate metabolic process' and 'intramolecular phosphotransferase activity' rows -> KEEP_AS_NON_CORE because they are true but redundant parents; GO:0006048 and GO:0004610 are already present.
