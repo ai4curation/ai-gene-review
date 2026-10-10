@@ -48,3 +48,7 @@ Main row-level calls:
   triglyceride biosynthesis, and macroautophagy as over-annotated or remove
   them, leaving the conserved catalytic and chromatin-regulatory function as
   the main Neurospora assertion.
+
+Follow-up cleanup: kept the H2A core-function text biological rather than
+GOA-facing, and expanded several UniProt continuation-fragment
+`supporting_text` snippets to the complete relevant lines.
