@@ -153,3 +153,11 @@ other annotation judgment. There are now 23 source annotations plus the one
 existing scaffold NEW proposal: 11 ACCEPT, 11 KEEP_AS_NON_CORE, 1 MODIFY, and
 1 NEW. All four alternative products, the scaffold core, and all reference
 records remain unchanged.
+
+## 2026-10-10 - generic binding follow-up
+
+Changed the three BBS4-specific `GO:0005515` rows from `KEEP_AS_NON_CORE` to
+`REMOVE`. The BBS4 association is consistent with BBIP1's scaffold position in
+the BBSome, but the generic `protein binding` MF is not informative enough to
+retain. The HDAC6-scoped row remains `MODIFY` to `GO:0042826 histone deacetylase
+binding`.
