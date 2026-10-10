@@ -21,3 +21,36 @@
 - OLS pass on the xenobiotic branch MF (review suggestion 5): searched GO for `arylamine N-hydroxylase activity` and `amine N-hydroxylase` — no such term exists (hits are unrelated specific monooxygenases such as GO:0018670, GO:0019135, GO:0004500). `GO:0004497 monooxygenase activity` is therefore retained for that entry as the closest non-invented term.
 - Species caveat worth keeping in view: [file:rat/Cyp4b1/Cyp4b1-deep-research-falcon.md "native human CYP4B1 has <1% of rabbit 4-IPO activity"]. Rat-vs-rabbit equivalence is *not* established either, so the 4-IPO bioactivation claim in `core_functions` rests on the rat lung/liver microsome evidence, not on the rabbit kinetics.
 - `description` rewritten to remove curation commentary per CLAUDE.md; `suggested_questions` and `suggested_experiments` added (both were absent).
+
+## Re-review 2026-10-10
+
+**GOA changes.** Five new ISO/ISS donor-split rows seeded (all PENDING): GO:0006805
+xenobiotic metabolic process (ISO, mouse Cyp4b1 MGI:MGI:103225), GO:0019395 fatty acid
+oxidation (ISO, MGI:MGI:103225), GO:0019395 (ISS, mouse CYP4B1 UniProtKB:Q64462),
+GO:0120503 medium-chain fatty acid omega-1 hydroxylase activity (ISO, MGI:MGI:103225),
+GO:0140981 medium-chain fatty acid omega-hydroxylase activity (ISO, MGI:MGI:103225). No
+rows retired. All five resolved to ACCEPT, consistent with their already-reviewed rat
+IEA/ISS/IDA siblings and naming the mouse ortholog donor.
+
+**UniProt refresh.** The generic P15129 FUNCTION text ("Cytochromes P450 are a group of
+heme-thiolate monooxygenases. In liver microsomes...") was replaced by a rat-specific
+FUNCTION giving experimental evidence [UniProtKB:P15129 "Catalyzes the omega- and
+(omega-1)-hydroxylation of saturated fatty acids and n-alkanes (PubMed:2229008)"] and a
+bioactivation sentence [UniProtKB:P15129 "Also bioactivates xenobiotics such as the
+procarcinogen 3-methoxy-4-aminoazobenzene and the cyclic arylamines 2-aminofluorene and
+2-aminoanthracene (By similarity)"]. Eight existing_annotations quotes and three
+core_functions quotes that cited the old text were replaced. Note this file still retains
+DR GO; cross-reference lines, so the "GO; ..." UniProt quotes (monooxygenase, iron ion
+binding, ER membrane) remain valid; only the GO:0016712 "GO; GO:0016712;..." quote was
+stale (that DR line was dropped) and was replaced with the EC 1.14.14.1 CATALYTIC ACTIVITY
+reaction string.
+
+**Actions.** No existing action changed. The two MODIFY rows (GO:0016705 -> GO:0004497;
+GO:0120502 -> GO:0120503) were re-checked and left as-is. No GO:0005515 protein-binding
+rows and no IBA rows are present. The three core_functions entries (omega-hydroxylase
+GO:0140981, omega-1 GO:0120503, monooxygenase GO:0004497 with xenobiotic/biphenyl process)
+are mutually coherent and consistent with the assigned actions; left unchanged.
+
+**Open questions.** omega:(omega-1) product ratio and chain-length dependence not
+established for the rat enzyme (rabbit data only); species difference in 4-ipomeanol
+activation unexplained.
