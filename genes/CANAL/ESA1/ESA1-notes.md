@@ -25,9 +25,9 @@ references:
 - PMID:40795216, *Genetics*: "Histone acetylation by SAGA complex but not by
   NuA4 complex is required for filamentation program in Candida albicans." The
   local cache has the abstract only. The abstract and journal page show that the
-  paper created an `Esa1E372Q` catalytic mutant; the mutant lowers bulk H4
-  acetylation and forms filaments constitutively, while H4 acetylation at the
-  assayed hyphal promoters is Gcn5/SAGA-dependent.
+  paper created an `Esa1E372Q` catalytic mutant; that mutant did not impair H4
+  acetylation at assayed hyphal genes and formed filaments constitutively, so it
+  supports the filamentation row rather than the bulk-H4 acetyltransferase row.
 - PMID:40988556, *Acta Biochim Biophys Sin*: "Yaf9 conditionally contributes to
   cell size control in Candida albicans." The cached PubMed record has no
   abstract, and a web search did not recover ESA1-specific text. The CGD
@@ -52,9 +52,9 @@ Main row-level calls:
   HAT activity rather than distinct enzymatic functions.
 - Remove `GO:0000786 nucleosome`: Esa1 acts on nucleosomes but is not itself a
   nucleosome component.
-- Modify `GO:0032777 piccolo histone acetyltransferase complex` to
-  `GO:0035267 NuA4 histone acetyltransferase complex`; the latter has a direct
-  CGD row and is the complex Lu et al. analyze in Candida.
-- Mark or remove budding-yeast-specific EnsemblCompara process rows for rDNA
-  heterochromatin, triglyceride biosynthesis, and macroautophagy rather than
-  letting them stand as Candida ESA1 biology.
+- Keep `GO:0032777 piccolo histone acetyltransferase complex` as non-core:
+  budding yeast has a characterized Piccolo NuA4 module, while the direct
+  Candida row already captures membership in the broader NuA4 complex.
+- Keep or mark as over-annotated the budding-yeast-specific EnsemblCompara
+  process rows for rDNA heterochromatin, triglyceride biosynthesis, and
+  macroautophagy rather than presenting them as core Candida ESA1 biology.
