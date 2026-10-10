@@ -10,4 +10,4 @@
 - Cytoplasm and nucleus (Huh 2003, PMID:14562095) [UniProt:Q03677 "SUBCELLULAR LOCATION: Cytoplasm. Nucleus."].
 
 ## GO term note
-- GO:0033353 "L-methionine cycle" is defined around SAM/SAH/Hcy, but ADI1 acts in the MTA-specific branch. The MTA-specific GO:0019509 term is obsolete, so GO:0071267 is the most specific live replacement for the GOA GO:0033353 rows.
+- GO:0033353 "L-methionine cycle" is defined around SAM/SAH/Hcy, but ADI1 acts in the MTA-specific branch. QuickGO marks the MTA-specific GO:0019509 term obsolete, so GO:0071267 is the nearest live replacement for the GOA GO:0033353 rows.
