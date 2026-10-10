@@ -1,103 +1,43 @@
-# Current source-based correction — 2026-10-10
-
-The historical page and diagram below are retained verbatim as provenance and are superseded where they conflict with this correction. CFTR conducts chloride and bicarbonate passively through an ATP-regulated pore; ATP hydrolysis controls conformation rather than pumping ions uphill. Direct bicarbonate permeation and stable tested selectivity are supported by PMID:19019741; the dynamic external-chloride model belongs to PMID:15010471.
-
-PMID:12369822 supports CFTR binding to NHERF2/E3KARP as a comparator in a DRA-focused study; it does not make DRA the original CFTR binding partner. ClC-3B/PDZ-organized association in PMID:12471024 does not independently establish that ClC-3B controls CFTR trafficking. PMID:19289574 supports SLC26A9 association/functional coupling, not ENaC regulation. Human airway rescue in PMID:19621064 measures sodium transport as well as fluid/chloride endpoints; an inferred CFTR effect on ENaC would run from CFTR to sodium-channel behavior, not the historical diagram's reverse inhibitory arrow. A direct molecular CFTR-to-ENaC step remains unresolved, so the current core does not assert one. Mucus hydration and clearance are distinguished from regulated mucus secretion.
-
-The historical drug discussion is a dated narrative, not a current clinical recommendation. See [the current review](CFTR-ai-review.yaml), [appended audit notes](CFTR-notes.md) and [literal source evidence](CFTR-source-evidence.json) for the current bounded conclusions.
-
----
-
-## Preserved historical pathway narrative and superseded diagram
-
 # Pathway Summary for CFTR
 
-## Overview
-CFTR (Cystic Fibrosis Transmembrane Conductance Regulator) is a unique ABC transporter that functions as a phosphorylation- and ATP-regulated anion channel rather than an active pump. It conducts chloride and bicarbonate ions across epithelial cell apical membranes, playing critical roles in fluid secretion, mucociliary clearance, and salt balance [PMID:11524016]. Channel activation requires PKA phosphorylation of the regulatory R domain and ATP binding/hydrolysis at nucleotide-binding domains, integrating cAMP signaling with epithelial ion transport.
+## Source correction — 2026-10-10
 
-## Core Signaling Pathways
+This page corrects the previously displayed pathway. The original published text and diagram remain unchanged as historical provenance in [CFTR-source-evidence.json](CFTR-source-evidence.json), rather than as current biological assertions. The [review](CFTR-ai-review.yaml) and [notes](CFTR-notes.md) document the evidence and remaining uncertainty.
 
-### cAMP-PKA Signaling Pathway
-CFTR activation is primarily controlled by the cAMP-PKA pathway. Hormones and neurotransmitters activate adenylyl cyclase, elevating cAMP levels which activate PKA. PKA phosphorylates multiple serine residues in CFTR's R domain, priming the channel for ATP-dependent gating [PMID:11524016]. This pathway is essential for regulated fluid secretion in airways, intestines, and exocrine glands.
+CFTR conducts chloride and bicarbonate through an ATP-regulated pore. ATP hydrolysis controls channel conformation; it does not drive uphill transport of each permeating ion. Bicarbonate conduction and stable selectivity under the tested conditions are supported by PMID:19019741. The external-chloride-dependent selectivity model belongs to the separate oocyte study PMID:15010471.
 
-### ATP-Dependent Channel Gating
-CFTR channel gating requires ATP binding and hydrolysis at its two nucleotide-binding domains (NBD1 and NBD2). ATP binding promotes NBD dimerization triggering channel opening, while ATP hydrolysis at NBD2 drives channel closure [PMID:8910473]. This creates a gating cycle where the channel alternates between open and closed states in an ATP-dependent manner.
+## Channel activation and epithelial transport
 
-### Epithelial Ion Transport Network
-CFTR functions within a coordinated network of epithelial ion transporters. It functionally couples with SLC26 anion exchangers (particularly DRA/SLC26A3) for chloride/bicarbonate exchange [PMID:12369822], and negatively regulates ENaC sodium channels to maintain proper ion and fluid balance across epithelia [PMID:15010471].
+CFTR is a phosphorylation-regulated anion channel concentrated at the apical membrane of many epithelia. PKA-dependent activation and nucleotide-dependent gating connect cellular signaling to chloride and bicarbonate permeation. Purified, reconstituted CFTR has ATPase activity, and monomers suffice for both channel and ATPase measurements; membrane self-association does not establish an obligatory dimeric pore [PMID:8910473, PMID:11524016]. The two nucleotide-binding folds have unequal catalytic and gating contributions, so a fixed ATP-turnover-to-opening ratio is not assumed [PMID:9931011].
 
-## Pathway Diagram
+The resulting anion flux contributes to epithelial fluid composition, airway-surface hydration and mucus clearance. Mucus hydration and transport are distinct from regulated mucus release. Human airway cultures rescued with CFTR show changes in chloride transport, benzamil-sensitive sodium transport and surface-liquid endpoints [PMID:19621064]. These findings retain physiological sodium coupling without asserting a defined direct CFTR-to-ENaC inhibitory contact or step.
+
+## Pathway diagram
 
 ```mermaid
 graph TD
-    A[GPCR: Hormone/Neurotransmitter Receptor] --> B[Adenylyl Cyclase: cAMP Synthesis]
-    B --> C[cAMP: Second Messenger]
-    C --> D[PKA: Protein Kinase A]
-    D -->|phosphorylates R domain| E["CFTR: Anion Channel (Apical Membrane)"]
-    
-    F[ATP: Energy Source] --> G[NBD1/NBD2: Nucleotide Binding Domains]
-    G -->|ATP binding/hydrolysis| E
-    
-    E -->|Cl- secretion| H[Lumen: Fluid Secretion]
-    E -->|HCO3- secretion| H
-    
-    I[DRA/SLC26A3: Cl-/HCO3- Exchanger] <-.->|functional coupling| E
-    J[ENaC: Na+ Channel] -.->|inhibits| E
-    
-    K[Shank2: PDZ Scaffold] -.->|negative regulation| E
-    L[ClC-3B: Chloride Channel] -.->|trafficking regulation| E
-    
-    M[Hsp90/Aha1: Chaperone Complex] -.->|folding/quality control| E
-    N[ERAD: Degradation Pathway] -.->|misfolded CFTR| E
-    
-    style E fill:#f9f,stroke:#333,stroke-width:2px
-    style D fill:#ffd,stroke:#333,stroke-width:1px
-    style G fill:#dfd,stroke:#333,stroke-width:1px
+    PKA[PKA] -->|phosphorylation-dependent activation| CFTR[CFTR anion channel]
+    ATP[ATP binding and hydrolysis] -->|conformational gating| CFTR
+    CFTR -->|passive chloride permeation| FLUID[Epithelial fluid composition]
+    CFTR -->|passive bicarbonate permeation| FLUID
+    FLUID --> HYDRATION[Surface-liquid hydration and mucus transport]
+    NHERF[NHERF / CAL / Shank PDZ proteins] ---|context-dependent binding and regulation| CFTR
+    SLC26A9[SLC26A9] ---|association and functional coupling| CFTR
+    QC[Chaperones and quality-control machinery] -->|folding and turnover of CFTR client| CFTR
 ```
 
-## Upstream Regulators
-- **Hormonal signals**: VIP, secretin, prostaglandins activate adenylyl cyclase [PMID:11524016]
-- **cAMP-PKA cascade**: PKA phosphorylation of R domain serine residues enables channel activation
-- **ATP availability**: Intracellular ATP levels control channel gating frequency [PMID:8910473]
+The diagram omits the earlier reversed ENaC inhibitory arrow. It also replaces the unsupported DRA-specific coupling and ClC-3B trafficking arrows with the interactions supported by their actual sources. It is a functional summary, not a claim that every displayed association is a purified binary interaction.
 
-## Downstream Effects
-- **Chloride secretion**: Primary anion conducted, drives transepithelial fluid secretion [PMID:11524016]
-- **Bicarbonate secretion**: Important for pH regulation and mucin hydration [PMID:15010471]
-- **ENaC inhibition**: Reduces sodium absorption to maintain ion balance
-- **Fluid secretion**: Controls hydration of airway surface liquid, digestive secretions, and sweat
+## Binding and regulatory context
 
-## Protein Interactions and Regulation
-- **DRA/SLC26A3**: Functional coupling for coordinated Cl-/HCO3- exchange [PMID:12369822]
-- **Shank2**: PDZ-domain scaffold that negatively regulates CFTR activity [PMID:14679199]
-- **ClC-3B**: Golgi-localized chloride channel involved in CFTR trafficking [PMID:12471024]
-- **Quality control machinery**: Hsp90/Aha1 chaperones and ERAD components process misfolded CFTR [PMID:16901789, PMID:17110338]
+- **NHERF2/E3KARP:** PMID:12369822 compares CFTR with DRA as ligands for the second PDZ domain of E3KARP. Its preserved CFTR partner is NHERF2, and that comparison alone does not establish CFTR–DRA functional coupling.
+- **Shank2 and other PDZ partners:** Shank2 association depends on its PDZ domain and can suppress CFTR activity in the tested cellular systems. NHERF1 and Shank interactions can compete [PMID:14679199, PMID:17244609].
+- **ClC-3B:** CFTR and ClC-3B share PDZ partners, and PDZK1 can promote their association. Their predominant localizations differ; this evidence does not establish that ClC-3B controls CFTR trafficking [PMID:12471024].
+- **SLC26A9:** Co-immunoprecipitation and current measurements support contextual channel association and functional coupling. Proposed ER-retention mechanisms are not treated as demonstrated direct trafficking steps [PMID:19289574].
+- **Quality control:** Chaperones and ubiquitin-system components recognize folding or trafficking states of CFTR. Their enzymatic and adaptor activities are not transferred to the CFTR client [PMID:16901789, PMID:17110338].
 
-## Disease Pathways
+## Disease and experimental context
 
-### Cystic Fibrosis Pathogenesis
-Loss-of-function mutations cause cystic fibrosis through multiple mechanisms:
-- **ΔF508 mutation**: Protein misfolding and ER retention, most common CF mutation [PMID:16546175]
-- **Defective chloride secretion**: Leads to thick, dehydrated mucus in airways
-- **Pancreatic insufficiency**: Loss of digestive enzyme secretion
-- **Male infertility**: Congenital bilateral absence of vas deferens
+Loss of CFTR function causes cystic fibrosis. F508del commonly impairs folding and delivery to the cell surface, while other variants alter gating or permeation. Effects differ across airway, intestinal, pancreatic and sweat-duct epithelia; CFTR supports secretion in some tissues and salt reabsorption in others.
 
-### Secretory Diarrhea
-CFTR hyperactivation by bacterial toxins (e.g., cholera toxin) causes excessive fluid secretion. Lysophosphatidic acid can inhibit CFTR-mediated secretory diarrhea through protein interactions [PMID:16203867].
-
-## Therapeutic Targets
-- **CFTR modulators**: Potentiators enhance channel gating, correctors improve folding/trafficking
-- **Chaperone modulation**: Targeting Hsp90/Aha1 to rescue misfolded CFTR [PMID:17110338]
-- **Miglustat**: Alpha-glucosidase inhibitor that rescues ΔF508-CFTR function [PMID:16546175]
-
-## Tissue-Specific Functions
-- **Airways**: Mucociliary clearance through airway surface liquid hydration
-- **Intestine**: Fluid secretion and pH regulation via HCO3- transport
-- **Pancreas**: Digestive enzyme secretion and ductal fluid flow
-- **Sweat glands**: Salt reabsorption (defective in CF leading to high sweat chloride)
-
-## Integration with Cellular Processes
-CFTR integrates multiple cellular signals:
-1. **Hormonal regulation**: Responds to systemic signals via cAMP
-2. **Metabolic state**: ATP-dependent gating links to cellular energy status
-3. **Ion homeostasis**: Coordinates with other channels/transporters for epithelial ion balance
-4. **Quality control**: Subject to extensive ER quality control and ERAD pathways
+The older cited intervention studies are experimental context, not current treatment recommendations. Miglustat rescued F508del channel function in the tested preparations [PMID:16546175]; Aha1 depletion altered the folding environment and rescued mutant surface delivery [PMID:17110338]. LPA-dependent receptor complexes suppressed CFTR-dependent intestinal secretion in the cholera-toxin experiments [PMID:16203867]. These partner and perturbation results complement the intrinsic channel/ATPase functions without establishing additional catalytic activities for CFTR.
