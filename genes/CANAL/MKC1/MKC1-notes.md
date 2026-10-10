@@ -33,10 +33,10 @@
   existing `GO:1900231 regulation of single-species biofilm formation on
   inanimate substrate`, because `mkc1` mutants adhered normally at 4 h but
   formed abnormal 48 h biofilms with reduced filamentation.
-- Modified the `cellular response to reactive oxygen species` row from the 2005
-  infection paper to `GO:0071732 cellular response to nitric oxide`; the cached
-  abstract supports nitric-oxide sensitivity and macrophage NO effects, not a
-  reactive-oxygen-species assay.
+- Left the `cellular response to reactive oxygen species` row from the 2005
+  infection paper undecided because the cache is abstract-only and only exposes
+  nitric-oxide sensitivity and macrophage NO effects; the NO response is
+  proposed separately as `GO:0071732 cellular response to nitric oxide`.
 - Kept the 2005 and 2010 caspofungin rows as non-core xenobiotic outputs of the
   same wall-integrity pathway. A current literature search found newer work on
   paradoxical growth and pathway activation that agrees with the MKC1
