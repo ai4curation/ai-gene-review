@@ -9,3 +9,5 @@ Batch review for the YeastPathways coenzyme_a_biosynthesis module (reaction: 3-a
 - Ald5 (mitochondrial) is not directly involved in this conversion [PMID:12586697].
 
 Decisions: core MF GO:0102244 3-aminopropanal dehydrogenase (NAD+); core BP GO:0019483 beta-alanine biosynthesis; polyamine catabolic process kept as non-core; generic ARBA/InterPro terms MODIFY to specific ones. YeastPathways assignment verified.
+
+Ehrlich-pathway follow-up: ALD3 is now recorded as a NEW, non-core participant in L-phenylalanine catabolism because it oxidizes phenylacetaldehyde in the oxidative fusel-acid branch, competing with 2-phenylethanol formation [PMID:23836015 "Ald3 is mainly responsible for phenylacetaldehyde oxidation, competing with 2-PE"].
