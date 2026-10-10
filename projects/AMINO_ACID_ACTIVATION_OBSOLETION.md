@@ -68,7 +68,7 @@ reviews contain reasoning that the obsoletion will **invert** (see
 
 ## Upstream tickets
 
-- Annotation tracker: [geneontology/go-annotation#6525](https://github.com/geneontology/go-annotation/issues/6525) (still open on 2026-10-04)
+- Annotation tracker: [geneontology/go-annotation#6525](https://github.com/geneontology/go-annotation/issues/6525) (ZFIN resolved the DANRE/gtpbp3 rows on 2026-09-08)
 - Ontology ticket: [geneontology/go-ontology#15375](https://github.com/geneontology/go-ontology/issues/15375) (closed 2026-09-02 after #32551 landed the obsoletion)
 - Affected annotations spreadsheet: [Google Sheet](https://docs.google.com/spreadsheets/d/1OQWHL67xbqC47wRI1THT1MdN53HcSUnCBqamItzCW9U)
 - Impacted groups (per upstream): UniProt 52, SGD 45, FlyBase 44, ComplexPortal 28,

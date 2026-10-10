@@ -36,7 +36,7 @@ A cross-cutting audit of how GO and this repository annotate membraneless compar
 
 ## Bottom line
 
-- **Being in a condensate is a location; making one is a function.** The corpus records the first in 294 gene folders and a GOA scaffold function in 16.
+- **Being in a condensate is a location; making one is a function.** The corpus records the first in 379 gene folders and a GOA scaffold function in 16.
 - Reviewers already downgraded or removed **206 of 659 (31%)** condensate-space annotations, with no shared rule.
 - A full re-review of **59 `GO:0034045` PAS-membrane assertions** left none at ACCEPT; GO has since made the term obsolete.
 
