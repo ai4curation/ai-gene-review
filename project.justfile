@@ -977,8 +977,27 @@ validate-references file:
 # silently certifying an unchecked quotation. Caches remain regenerable context.
 [group('QC')]
 validate-predictions +files:
-    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+
+# Schema and term validation for prediction files. In a PredictionReview the only
+# bound slot is `taxon`, so the term phase checks the taxon id and label only;
+# predicted GO terms are deliberately unbound (a model may predict an obsolete or
+# nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
+# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which have no
+# excerpts for validate-predictions' source-evidence check. Same blocking policy
+# as validate-all.
+[group('QC')]
+validate-prediction-terms +files:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
+    out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
+    rc=$?
+    echo "$out"
+    if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
+        exit 1
+    fi
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -1188,6 +1207,15 @@ validate-changed *files:
     fi
     echo "✓ All changed files passed validation."
 
+# conf/local_quote_baseline.yaml lists known non-verbatim file:/Reactome: quotes
+# (reported as warnings; any other failing quote is an error).
+# Example: just local-quote-baseline --prune
+#          just local-quote-baseline --report reports/local-quote-failures.yaml
+# Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
+[group('QC')]
+local-quote-baseline *args:
+    uv run python scripts/local_quote_baseline.py {{args}}
+
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
 # per-file reference and best-practices checks.
@@ -1198,14 +1226,19 @@ validate-all:
     echo "Schema validation (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
-    echo "Term validation (batch, errors block; label-mismatch warnings advisory)..."
-    # Enum-membership / not-found errors (❌ ERROR) are fatal; ontology label-mismatch
+    echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
+    # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
     # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
-    # bidirectional. Use just validate-terms for a fully strict (warnings-too) check.
+    # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
+    # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
     term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
     printf '%s\n' "$term_out"
-    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
+    # "Unable to validate" is LTV's ontology-service-unavailable message: every check was skipped.
+    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate"; then
         echo "✗ Term validation found errors (see above)"
+        exit_code=1
+    elif printf '%s\n' "$term_out" | grep -qE "Label mismatch for '?NCBITaxon:"; then
+        echo "✗ Term validation found taxon labels that do not match NCBITaxon (see above)"
         exit_code=1
     else
         echo "✓ Term validation: no errors (label warnings, if any, are advisory)"
@@ -1532,12 +1565,12 @@ render-all:
     uv run python -m ai_gene_review.render --all genes/
 
 # Assemble the already-rendered public site without changing the active Pages source.
-# This transitional artifact preserves the URLs currently served from main:/.
+# Preserve public URLs in the disposable artifact.
 stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
-# Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
+# Build the complete disposable publication tree without Git blob limits.
+build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1889,7 +1922,7 @@ pydantic:
 gen-all: gen-project pydantic
 
 # Deploy linkml-browser app for viewing exported annotations
-deploy-browser: export-annotations-json
+deploy-browser target=env_var_or_default("BROWSER_TARGET", "git"): export-annotations-json
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Deploying linkml-browser to app/ directory..."
@@ -1902,7 +1935,7 @@ deploy-browser: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
@@ -1911,8 +1944,8 @@ deploy-browser: export-annotations-json
     echo "To view: open app/index.html or run 'just serve-browser'"
 
 # Build the shared prediction-set and claim browser, including narrative reviews.
-deploy-predictions-browser:
-    uv run python -m ai_gene_review.tools.build_prediction_browser
+deploy-predictions-browser target=env_var_or_default("BROWSER_TARGET", "git"):
+    uv run python -m ai_gene_review.tools.build_prediction_browser --target "{{target}}"
 
 # Refresh the donor cache for the homology-propagation browser (network:
 # UniProt donor identities, QuickGO donor annotations, GO is_a/part_of closure).
@@ -1921,8 +1954,8 @@ refresh-propagation-sources *ARGS:
     uv run python -m ai_gene_review.tools.refresh_propagation_sources "$@"
 
 # Build the homology-propagation browser (app/propagation/) from cached files.
-deploy-propagation-browser:
-    uv run python -m ai_gene_review.tools.build_propagation_browser
+deploy-propagation-browser target=env_var_or_default("BROWSER_TARGET", "git"):
+    uv run python -m ai_gene_review.tools.build_propagation_browser --target "{{target}}"
 
 # Regenerate projects/HOMOLOGY_PROPAGATION/propagation-stats.md.
 propagation-stats:
@@ -1934,7 +1967,7 @@ serve-browser:
     @cd app && python3 -m http.server 8080
 
 # Update browser data without regenerating HTML
-update-browser-data: export-annotations-json
+update-browser-data target=env_var_or_default("BROWSER_TARGET", "git"): export-annotations-json
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Updating browser data..."
@@ -1947,7 +1980,7 @@ update-browser-data: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js

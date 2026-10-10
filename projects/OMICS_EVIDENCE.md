@@ -401,6 +401,13 @@ The data and the curators are the same. The difference is the inference step.
 
 ## Session notes
 
+### 2026-10-10: merge with main; CD2AP left to its newer review
+
+Merging main brought in a separate CD2AP re-review (ai4curation/ai-gene-review#4287) that set its two exosome rows
+(PMID:23533145, PMID:19056867) to UNDECIDED pending the source tables. The vesicle review
+had made them KEEP_AS_NON_CORE. The newer, row-specific review was kept, so
+`vesicle_review/decisions.yaml` overstates those two changes.
+
 ### 2026-10-10: settled vesicle rows reviewed by hand
 
 At the user's request ("Yes"), extended the vesicle review to the 418 vesicle-type rows

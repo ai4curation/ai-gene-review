@@ -402,6 +402,14 @@ The reference validator already catches the *mechanical* citation failures autom
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
 cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+Quotes citing `file:` or `Reactome:` sources are checked the same way, against
+the local file (resolved under `genes/`, then the repository root) or the cached
+`reactome/R-*.md` entry; a UniProt flat-file quote may run across the file's line
+wraps. Failures that predate this check are listed in `conf/local_quote_baseline.yaml`
+and only warn; fix them and run `just local-quote-baseline --prune`, never add to it.
+If `just fetch-gene` or a re-run deep-research file changes a source so that a quote
+no longer matches, re-quote the new text in the same change; if a review file is
+renamed, move its key in the baseline unchanged.
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.
@@ -597,7 +605,10 @@ other computational method that produces GO or EC predictions.
 
 ## Page rendering and deployment
 
-The site is deployed from `main` branch at root via GitHub Pages to https://ai4curation.io/ai-gene-review/.
+With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, the site is built from `main` and
+deployed as an Actions artifact via GitHub Pages to
+https://ai4curation.io/ai-gene-review/. In this mode, generated files in Git are
+not the live site. The Pages source setting must separately be `GitHub Actions`.
 
 ### Gene review HTML
 ```bash
@@ -720,15 +731,34 @@ driven:
 ### Browser app
 ```bash
 just deploy-browser    # update data.js + index.html for the interactive browser
+just deploy-browser pages  # disposable artifact build, without Git's blob cap
 ```
 Output: `app/`
 
 ### CI automation
 The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
-through GitHub Actions. It renders everything and creates a PR. Its publication
-schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
-and by the weekly full validation workflow. Pages deploy directly from main — no
-gh-pages branch needed for the static content.
+through GitHub Actions. With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, it renders,
+stages, compresses, checks and uploads the site, then deploys the artifact. It
+skips generated-file commits and PRs entirely; publication needs no App token,
+review or merge. Disabling that variable retains the legacy regeneration PR code
+path, but it cannot build a browser payload at or above Git's 100 MiB blob limit.
+The current corpus already exceeds that limit: flag-off is not a working rollback.
+It also does not change the repository's Pages source setting.
+Its publication schedule is exempt from agent cron profiles. Gene reviews are
+validated in PR CI and by the weekly full validation workflow.
+
+`just build-pages` builds the disposable artifact locally. All three browser
+builders accept the `pages` target (or `BROWSER_TARGET=pages`); their default
+`git` target retains GitHub's 100 MiB Git blob limit. The artifact target has no
+per-file Git limit: staging compresses the main annotation browser data and checks
+total site and tar sizes. Prediction and propagation browser payloads are currently
+staged uncompressed; these checks do not guarantee browser memory or load-time
+performance. Never commit generated output just because the artifact build passed.
+
+GitHub Pages officially supports a 1 GB site. Our existing temporary policy
+allows larger deployments below the 10 GB absolute artifact cutoff; that is not
+a hosting-capacity guarantee. A completed upload can be redeployed without
+rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
 
 ## General guidelines
 
