@@ -82,8 +82,9 @@ situations:
 - **ISO rows carry a human or rat experiment behind them.** A REMOVE of an ISO
   row needs a row-specific refutation; a shared boilerplate sentence ("either an
   unsupported transfer, a paralog overreach, or ...") asserts nothing. Where the
-  underlying rat finding is known (Ednra nuclear-membrane ETA receptors in
-  cardiomyocytes) the row was kept as non-core.
+  underlying source is not cited anywhere in the gene folder (Ednra T-tubule
+  and nuclear membrane) the rows were parked as UNDECIDED rather than kept or
+  removed.
 
 Two further patterns were observed and are flagged for a guideline line rather
 than edited row by row:
@@ -130,7 +131,7 @@ were covered.
 
 | Batch | Genes | Result |
 |-------|-------|--------|
-| 1 | Aldh2 Cdk5r1 Ctnnb1 Ednra Epo F2rl2 Kras Mir384 | agree; 2 edits (Ednra). Cdk5r1 p35-is-not-the-kinase MODIFYs uniform; F2rl2/Kras correctly stop at UNDECIDED on suspicious IDAs |
+| 1 | Aldh2 Cdk5r1 Ctnnb1 Ednra Epo F2rl2 Kras Mir384 | agree; 2 edits (Ednra, both to UNDECIDED). Cdk5r1 p35-is-not-the-kinase MODIFYs uniform; F2rl2/Kras correctly stop at UNDECIDED on suspicious IDAs |
 | 2 | Cbl Cdc42 Fbxo2 Gas6 Ifi204 Jak1 Mir100 Notch1 Rab7 | agree; 2 edits (Jak1). Cdc42 E3-ligase removal, Gas6 cytoplasm-for-a-secreted-ligand removal correct |
 | 3 | Akt1 Ccnt1 Drd1 Hras Mapk3 Musm1 Ndufb1 Spcs2 Stat1 Tuba1a | agree; 4 edits (Drd1, Musm1 ×2, Ndufb1). Tuba1a REMOVEs verified against full text; Spcs2 has no rows |
 | 4 | Camk2a Egf Ghr Grb2 Mtor Pten Surf1 Tert Uox Vmn2r73 | agree; 13 edits (Uox ×12, Ghr). Surf1 COX-activity→assembly MODIFY, Mtor Tyr-kinase removal correct |
@@ -165,12 +166,14 @@ were covered.
   pathway (IGI, PMID:17194762) — MODIFY (to the Gq/PLC sibling) → **ACCEPT**.
   The curator made paired IGI rows for both arms from the full text; the
   abstract itself contrasts the heteromer with Gs/olf-coupled D1 signalling.
-- **Ednra** — GO:0031965 nuclear membrane (ISO) — REMOVE →
-  **KEEP_AS_NON_CORE**; GO:0030315 T-tubule (ISO) — REMOVE → **UNDECIDED**.
-  Both REMOVEs carried a shared boilerplate reason and a pigmentation
-  supporting_text unrelated to the term. Nuclear-envelope ETA receptors in
-  rat ventricular cardiomyocytes are a documented finding, the expected source
-  of the transfer.
+- **Ednra** — GO:0031965 nuclear membrane and GO:0030315 T-tubule (both
+  ISO) — REMOVE → **UNDECIDED**. Both REMOVEs carried a shared boilerplate
+  reason and a pigmentation supporting_text unrelated to the term; that quote
+  was dropped. No source for the transferred cardiomyocyte localizations is
+  cited in the gene folder, so neither row is kept or removed until the RGD
+  record is checked. The two IPI `protein binding` REMOVE rows in the same file
+  carried the same template sentence; their action stands (uninformative term)
+  and the reason now says so.
 - **Musm1** — GO:0005009 insulin receptor activity (ISS) and GO:0008286 insulin
   receptor signaling pathway (IEA, derived from it) — MARK_AS_OVER_ANNOTATED →
   **REMOVE**. A secreted 19 kDa lipocalin cannot be a receptor tyrosine kinase;
