@@ -178,6 +178,16 @@ The vertebrate central nervous system shows unique RBFOX expression patterns:
 Research compiled through systematic literature search focusing on RBFOX3/NeuN function, alternative splicing mechanisms, neuronal specificity, and clinical significance.
 
 ### Deep Research Sources:
+
 - **file:RBFOX3-deep-research.md** - Comprehensive AI-generated research report using OpenAI Deep Research API, incorporating current literature and web sources (2025)
+
+## Bioinformatics Report Audit 2026-10-10
+
+- Left `RBFOX3-bioinformatics/RESULTS.md` uncited because it is a superseded
+  first-pass motif report.
+- The curated review cites
+  `RBFOX3-bioinformatics/rbfox3_analysis/RESULTS.md`; use that nested report as
+  the maintained evidence surface for RBFOX3 RRM, family-comparison, and
+  UGCAUG-recognition support.
 
 *Last updated: August 2025*

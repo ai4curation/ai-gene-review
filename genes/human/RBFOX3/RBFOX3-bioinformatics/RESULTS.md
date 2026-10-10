@@ -1,5 +1,13 @@
 # RBFOX3/NeuN Bioinformatics Analysis Results
 
+## Audit Note
+
+This top-level report is retained as a superseded first-pass analysis artifact, not
+as curated evidence for `RBFOX3-ai-review.yaml`. The review instead cites
+`RBFOX3-bioinformatics/rbfox3_analysis/RESULTS.md`, whose sequence, RBFOX-family,
+and RNA-binding analyses are the evidence surface for the RRM and family-comparison
+statements used in the YAML.
+
 ## Summary
 Bioinformatics analysis of RBFOX3 (A6NFN3) confirms it as an RNA-binding protein with a canonical RRM domain, intrinsically disordered regions, and features consistent with its role as a neuron-specific splicing regulator.
 
