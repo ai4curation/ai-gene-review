@@ -80,3 +80,12 @@ The ATP-binding rationale now explicitly includes the published comparison with 
 The description now names BBS10 among the associated assembly proteins, restores the mature BBSome composition and cytoplasmic context, and keeps evidential judgments in the review and knowledge gap. The PMID:33961781 full-text-unavailable flag was incorrect and is removed; its uninspected supplementary pair records remain a separate reading limit. The PMID:20080638 notes now identify the selected PMC text as external consultation, separate from the abstract-only normal cache. Its unrelated additional citation on photoreceptor maintenance is removed. The Falcon assessment again distinguishes independently supported assembly/localization claims from unverified motif, localization-exclusion, signaling and quantitative claims.
 
 The twelve generic interaction rows remain KEEP_AS_NON_CORE because their named associations are supported while an informative molecular activity is unresolved. REMOVE and UNDECIDED are available actions; neither is selected merely to satisfy the generic-binding advisory. This is an explicit biological judgment under the supplied ActionEnum, despite the narrower action preference in the repository's protein-binding policy. It does not claim that the enum permits only KEEP_AS_NON_CORE. No source tuple or annotation action changes in this follow-up.
+
+## 2026-10-10 - generic binding follow-up
+
+Changed all twelve `GO:0005515` protein-binding rows from `KEEP_AS_NON_CORE` to
+`REMOVE`. The named BBS7, BBS9, BBS10, BBS2 and MKKS/BBS6 associations still fit the
+BBS-chaperonin assembly network, but generic `protein binding` is not informative
+enough to retain as a molecular-function assertion and no replacement MF is established
+for the exact IPI/AP-MS sources. The BBS12 assembly role remains represented by
+`GO:0051131`.
