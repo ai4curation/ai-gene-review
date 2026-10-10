@@ -49,3 +49,8 @@
   propagated to N. crassa alo-1. It is a protein-binding claim transferred
   from budding yeast and is not implied by the conserved sugar-lactone
   oxidase activity or by the PAINT mitochondrial placement.
+- Added structured propagation reviews to the Ensembl Compara transfers:
+  broad mitochondrion, oxidative-stress response, and
+  D-erythroascorbate biosynthesis are safe transfers from S. cerevisiae, while
+  the Myo2-binding row is a bad transfer and the two outer-membrane rows are
+  over-specific for the available N. crassa ALO-1 evidence.
