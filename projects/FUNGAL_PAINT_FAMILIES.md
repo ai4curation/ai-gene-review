@@ -69,7 +69,7 @@ paralog-aware activity and complex checks.
 
 - [x] `yeast/ESA1` - NuA4 catalytic subunit; drafted in PR #4604
 - [x] `yeast/SAS2` - SAS-I catalytic subunit; drafted in PR #4606
-- [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
+- [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
 - [ ] CGD MYST-family member
