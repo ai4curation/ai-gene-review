@@ -2988,29 +2988,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**309 of 2,876 genes are complete; 2,567 remain.** The first qualifying
-campaign reviews for CFH, CFAP410, CFAP418, CFAP43, CFL2, CFI add 6 distinct catalog completions
-beyond checkpoint 303. Each final head was approved and passed both required checks
-before actual merge. There are 309 distinct primary genes with merged campaign
-reviews and no completion holds. Products, repeated reviews, annotation actions
-and justified biological uncertainty do not add counts or holds.
+**310 of 2,876 genes are complete; 2,566 remain.**
+[CHAT #4572](https://github.com/ai4curation/ai-gene-review/pull/4572) adds one
+first qualifying campaign completion beyond checkpoint 309. Its final head was
+approved and passed both required checks before merge. There are no completion holds;
+open PRs, products and repeated reviews add no completions.
 
-The fixed completion cutoff is **2026-10-10 13:12:56 UTC**, through
-[commit 91bbc12a004a](https://github.com/ai4curation/ai-gene-review/commit/91bbc12a004a42b6c26f3f9c58a1bd5f33556398).
-The authenticated source snapshot is
-[commit 91bbc12a004a](https://github.com/ai4curation/ai-gene-review/commit/91bbc12a004a42b6c26f3f9c58a1bd5f33556398),
-containing the published checkpoint 303 from
-[tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551),
-merged at 12:10:12 UTC in commit `39a7a8a8454f`. The completion cutoff,
-authenticated source snapshot and any later publication base are distinct concepts;
-a later publication base must preserve all six project preimages and cannot add
-subsequent completions to this checkpoint.
-See [checkpoint 309 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-309-2026-10-10-131256-utc).
+The fixed completion cutoff is **2026-10-10 17:19:03 UTC**, through
+[CHAT merge d029f88f542f](https://github.com/ai4curation/ai-gene-review/commit/d029f88f542f1702a286982b20a89349e979c302).
+The authenticated source is [commit 8cd2c9286f44](https://github.com/ai4curation/ai-gene-review/commit/8cd2c9286f44f998ce175f034a56ee6c7b49f4cc),
+which includes [tracker309 #4581](https://github.com/ai4curation/ai-gene-review/pull/4581),
+merged at **17:25:21 UTC**. Merge times use the GitHub API `merged_at` field;
+commit timestamps are recorded separately. The completion cutoff, source snapshot
+and later publication base remain distinct. A later base must preserve all six
+project preimages and cannot advance this count.
 
-The `campaign_audited_merged` counter and legacy `original_merged` compatibility
-semantics remain unchanged. Literal `$.genes` retains 235 historical queue objects
-and 235 distinct symbols. All 52 prior completion updates, their historical cutoffs
-and all prior progress remain exact. Newly counted reviews: [CFH #4555](https://github.com/ai4curation/ai-gene-review/pull/4555), [CFAP410 #4550](https://github.com/ai4curation/ai-gene-review/pull/4550), [CFAP418 #4553](https://github.com/ai4curation/ai-gene-review/pull/4553), [CFAP43 #4554](https://github.com/ai4curation/ai-gene-review/pull/4554), [CFL2 #4562](https://github.com/ai4curation/ai-gene-review/pull/4562), [CFI #4556](https://github.com/ai4curation/ai-gene-review/pull/4556).
+See [checkpoint 310 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-310-2026-10-10-171903-utc).
+Counter semantics, all 235 historical queue objects, all 53 previous completion
+updates and prior progress remain unchanged.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3019,6 +3014,8 @@ and all prior progress remain exact. Newly counted reviews: [CFH #4555](https://
 [Checkpoint 303 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml).
 
 [Checkpoint 309 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml).
+
+[Checkpoint 310 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T174737Z-codex-0f8ff7.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3405,7 +3402,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CFL2** — HGNC:1875; [nemaline myopathy 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c04b972-6797-42e7-87e8-ee97eb0bbad7-2019-11-25T150139.061Z) (MONDO:0012538; AR; Definitive).
 - [ ] **CFTR** — HGNC:1884; [cystic fibrosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb5b2eb1-e354-4e5a-ad5a-d0ee02805590-2022-06-01T040000.000Z) (MONDO:0009061; AR; Definitive).
 - [ ] **CHAMP1** — HGNC:20311; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4c67e6d5-1d58-4544-85e3-3078eec26231-2024-01-11T190000.000Z) (MONDO:0100038; AD; Definitive).
-- [ ] **CHAT** — HGNC:1912; [congenital myasthenic syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e6d5128-7f30-407b-9d0b-88bf8a719eb8-2025-03-24T160000.000Z) (MONDO:0009689; AR; Definitive).
+- [x] **CHAT** — HGNC:1912; [congenital myasthenic syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e6d5128-7f30-407b-9d0b-88bf8a719eb8-2025-03-24T160000.000Z) (MONDO:0009689; AR; Definitive).
 - [ ] **CHCHD10** — HGNC:15559; [frontotemporal dementia and/or amyotrophic lateral sclerosis 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d154f67a-25ce-40d3-9de3-1f001753843a-2022-09-13T160000.000Z) (MONDO:0014395; AD; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6940c6eb-dacf-46ce-a08c-d8b9f98b04ae-2023-05-18T160000.000Z) (MONDO:0044970; AD; Definitive).
 - [ ] **CHD2** — HGNC:1917; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5af80ea6-31c6-47d2-a5a5-299380f5593c-2022-07-14T190000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **CHD3** — HGNC:1918; [Snijders Blok-Campeau syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0e94c7c1-9c13-4189-8a9f-e9808916526f-2022-03-02T170000.000Z) (MONDO:0032600; AD; Definitive).
