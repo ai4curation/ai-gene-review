@@ -2988,23 +2988,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**283 of 2,876 genes are complete; 2,593 remain.** This checkpoint adds CDH11,
-CDH2, CDH23, CDH3 and CDH1 beyond checkpoint 278. All five final heads were
-approved and passed required checks before their actual merges. There are
-283 distinct primary genes with merged campaign reviews and no completion holds.
-Biological DRAFT status and justified UNDECIDED annotations remain independent
-of campaign completion.
+**286 of 2,876 genes are complete; 2,590 remain.** This checkpoint adds CDHR1,
+CDK13 and the substantive CDKN1B audit beyond checkpoint 283. All three final heads
+were approved and passed required checks before their actual merges. There are
+286 distinct primary genes with merged campaign reviews and no completion holds.
+An existing COMPLETE status alone does not count as a campaign audit. Biological
+DRAFT status and justified UNDECIDED annotations remain independent of completion.
 
-The completion evidence cutoff is **2026-10-10 01:04:37 UTC**, through the CDH1
-merge, at [cutoff commit 436d15327509](https://github.com/ai4curation/ai-gene-review/commit/436d15327509f7aa96cb41ba0c63ec35db1d9ed4).
-The later [source main snapshot ffaf00ab93d4](https://github.com/ai4curation/ai-gene-review/commit/ffaf00ab93d40e5fe2e71b283ac42f10ffb22d2f)
-contains these gene merges and [tracker PR #4493](https://github.com/ai4curation/ai-gene-review/pull/4493),
-which published checkpoint 278. Its later source-capture time does not add gene completions.
-See [checkpoint 283 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-283-2026-10-10-010437-utc).
-The preceding [checkpoint 278](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-278-2026-10-10-000916-utc)
+The completion evidence cutoff is **2026-10-10 01:50:04 UTC**, through the CDKN1B
+merge, at [cutoff commit faaaf56614b1](https://github.com/ai4curation/ai-gene-review/commit/faaaf56614b1d6e317b6f7ff25629bb166b7ba90).
+The later [source main snapshot 4d4eedf35ac6](https://github.com/ai4curation/ai-gene-review/commit/4d4eedf35ac645f2ec5899f6665ed0b968156edf)
+contains these gene merges and [tracker PR #4496](https://github.com/ai4curation/ai-gene-review/pull/4496),
+which published checkpoint 283. Its later source-capture time does not add gene completions.
+See [checkpoint 286 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-286-2026-10-10-015004-utc).
+The preceding [checkpoint 283](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-283-2026-10-10-010437-utc)
 remains the historical baseline. Later merges and open PRs are outside this cutoff.
 
-[Checkpoint 283 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T012544Z-codex-10fc5a.yaml).
+[Checkpoint 286 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T015708Z-codex-be4d78.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3362,12 +3362,12 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CDH2** — HGNC:1759; [agenesis of corpus callosum, cardiac, ocular, and genital syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2ed7ece4-2500-4634-9108-62140026ae86-2026-03-20T160000.000Z) (MONDO:0030065; AD; Definitive); [arrhythmogenic right ventricular cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7a03805-bf73-4d2d-9756-c666c67be119-2018-07-13T160000.000Z) (MONDO:0016587; AD; Limited); [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_73900af1-14ee-4933-b5dc-832753e6cc6c-2025-05-16T160000.000Z) (MONDO:0005021; AD; Limited).
 - [x] **CDH23** — HGNC:13733; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f5799772-f233-4004-99a8-e6a0dddf0e8b-2018-05-22T040000.000Z) (MONDO:0019497; AR; Definitive).
 - [x] **CDH3** — HGNC:1762; [EEM syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5791d618-93bf-4517-9c60-48e6490319a6-2021-08-05T160000.000Z) (MONDO:0009155; AR; Definitive).
-- [ ] **CDHR1** — HGNC:14550; [retinitis pigmentosa 65](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2774d220-f9c0-419c-b9d2-eb7a1dc8f4f1-2025-06-12T160000.000Z) (MONDO:0800352; AR; Definitive).
-- [ ] **CDK13** — HGNC:1733; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c594bcfa-2b2c-425a-8285-74bae8e01da8-2021-12-31T225720.705Z) (MONDO:0000508; AD; Definitive).
+- [x] **CDHR1** — HGNC:14550; [retinitis pigmentosa 65](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2774d220-f9c0-419c-b9d2-eb7a1dc8f4f1-2025-06-12T160000.000Z) (MONDO:0800352; AR; Definitive).
+- [x] **CDK13** — HGNC:1733; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c594bcfa-2b2c-425a-8285-74bae8e01da8-2021-12-31T225720.705Z) (MONDO:0000508; AD; Definitive).
 - [ ] **CDK4** — HGNC:1773; [melanoma, cutaneous malignant, susceptibility to, 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca76579b-1432-4edc-84e8-b3332dce4ede-2020-01-13T194434.667Z) (MONDO:0012183; AD; Definitive).
 - [ ] **CDK5RAP2** — HGNC:18672; [autosomal recessive primary microcephaly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_70dace84-4d61-44f5-9de5-a81b5c70cad4-2022-01-25T170000.000Z) (MONDO:0016660; AR; Definitive).
 - [ ] **CDKL5** — HGNC:11411; [CDKL5 disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a80cd86d-b085-4f35-9379-12a53ef367e2-2018-07-02T145731.072Z) (MONDO:0100039; XL; Definitive).
-- [ ] **CDKN1B** — HGNC:1785; [hereditary nonpolyposis colon cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8434) (MONDO:0018630; AR; Limited); [multiple endocrine neoplasia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b07f8882-dd5e-4831-9926-f8b4c2a8c265-2018-12-21T154854.477Z) (MONDO:0012552; AD; Definitive).
+- [x] **CDKN1B** — HGNC:1785; [hereditary nonpolyposis colon cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8434) (MONDO:0018630; AR; Limited); [multiple endocrine neoplasia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b07f8882-dd5e-4831-9926-f8b4c2a8c265-2018-12-21T154854.477Z) (MONDO:0012552; AD; Definitive).
 - [ ] **CDKN2A** — HGNC:1787; [melanoma-pancreatic cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0c0d2fc0-12b2-4855-b537-60394d0987dd-2019-08-14T194547.089Z) (MONDO:0011713; AD; Definitive).
 - [ ] **CDT1** — HGNC:24576; [Meier-Gorlin syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dfc9602f-fb88-419a-8955-6d7c00a52158-2023-03-03T170000.000Z) (MONDO:0013431; AR; Definitive).
 - [ ] **CEBPA** — HGNC:1833; [acute myeloid leukemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4234367e-149b-4f13-9243-341396fb4ccf-2019-08-18T155916.225Z) (MONDO:0018874; AD; Definitive).
