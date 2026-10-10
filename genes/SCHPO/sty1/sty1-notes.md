@@ -49,3 +49,15 @@ Sty1 (aka Spc1, Phh1, Hog1-like) is the fission-yeast stress-activated MAP kinas
 - Core BP: stress-activated MAPK cascade / p38MAPK cascade; cellular response to osmotic and oxidative stress; regulation of G2/M.
 - Over-general/uninformative: bare "protein binding" (many IPI) — KEEP_AS_NON_CORE / note guidance.
 - IEA "protein kinase activity" (GO:0004672) is a less-informative parent of MAP kinase activity -> MODIFY/over-annotated relative to MAP kinase activity but acceptable as general.
+
+## 2026-10-10 GOA/PAINT refresh
+
+- Refreshed UniProt/GOA with `just fetch-gene SCHPO sty1 --force`; this split several `GO:0005515 protein binding` rows by `WITH/FROM` partner and appended three broad PAINT IBAs from `PANTHER:PTN000622075`.
+- Reviewed the new protein-binding rows individually:
+  - Sin1 from PMID:10428959 -> `REMOVE`; real interaction, but no informative MF term beyond generic binding.
+  - Atf1 from PMID:12080074 -> `MODIFY` to `GO:0140297 DNA-binding transcription factor binding`, using the established Sty1-Atf1 substrate/retention evidence.
+  - Hal4 from PMID:15870269 -> `MODIFY` to `GO:0019901 protein kinase binding`.
+  - Atf1 from PMID:23695164 -> `MODIFY` to `GO:0140297 DNA-binding transcription factor binding`.
+- Corrected the now partner-specific sibling rows created by the GOA split: Srk1 remains `GO:0019901`; Pyp2 remains `GO:0019902`; Cmk2 remains `GO:0019901`; the Snr1 StressNet row is now `REMOVE` because no more specific MF is established for that partner.
+- Accepted the broad `PTN000622075` IBAs for `GO:0004674 protein serine/threonine kinase activity`, `GO:0005634 nucleus`, and `GO:0005737 cytoplasm`; all are broad but biologically correct for Sty1 and have target-specific experimental support. The target's own PomBase accession in the PAINT `WITH/FROM` list is not circular evidence under `projects/IBA_REVIEW.md`; it marks Sty1 as one of the experimentally grounded descendants used for the ancestral node.
+- Deep research could not be regenerated because no configured provider/API key was available. A web search found a newer 2025 report, "S-nitrosoglutathione activates Sty1 and Pap1 stress responses in Schizosaccharomyces pombe", DOI 10.1016/j.microb.2025.100424, but it is not PMID-cached and was not used for `supported_by`.
