@@ -24,7 +24,7 @@ manifest:
 
 # Cargo Receptor Ligand Activity (GO:0140355) — Obsoletion & Transfer
 
-**Bottom line:** GO is retiring `GO:0140355 cargo receptor ligand activity`
+**Bottom line:** GO has obsoleted `GO:0140355 cargo receptor ligand activity`
 with no replacement, because being recognised by a cargo receptor is something
 done to a protein, not an activity it performs; the receptor's
 `GO:0038024 cargo receptor activity` should carry the ligand as its input
@@ -34,7 +34,10 @@ mouse Cblif and yeast ATG5), so the real curation job is six experimental rows.
 We did this because three reviews in this repo use the term: TCN2 and CBLIF
 accept it and list it as a `core_functions` molecular function, which will fail
 strict validation once the term is obsolete, and TCN1 keeps it as non-core.
-Status: scoped, waiting for go-ontology#32466; no review has been edited yet.
+The ontology ticket closed on 2026-09-23 and QuickGO reports GO:0140355 as
+obsolete as of 2026-10-04; the annotation tracker remains open and the three
+local reviews have not been edited yet. They still validate against the repo's
+older ontology cache, with only unrelated protein-binding warnings.
 The three B12 carriers already carry `GO:0031419 cobalamin binding` and
 `GO:0015889 cobalamin transport`, and the receptors (CD320, CUBN, AMN) are
 reviewed here with `GO:0038024`, so no content should be lost. Two rows should
@@ -43,11 +46,12 @@ ISO whose human source annotation no longer exists.
 
 ## Overview
 
-A GO obsoletion proposal will retire the molecular-function term
+A GO obsoletion proposal retired the molecular-function term
 **GO:0140355 cargo receptor ligand activity** — *"The activity of a gene
 product that interacts with a cargo receptor and initiates endocytosis."*
-(synonym: *cargo*; verified in OLS 2026-09-12, still active, `is_a
-GO:0005515 protein binding`, no children).
+(synonym: *cargo*; verified in OLS on 2026-09-12 as `is_a
+GO:0005515 protein binding`, no children, and rechecked in QuickGO as obsolete
+on 2026-10-04).
 
 The objection is that the term describes **what is done to a gene product**,
 not an activity the gene product carries out. Being recognised by a cargo
@@ -78,7 +82,8 @@ human genes already carry the replacement content.
   groups listed as MGI 2, Reactome 3, SGD 1. MGI has already reported done
   (2026-09-11); Reactome's contact was reassigned to Lisa Matthews.
 - Ontology ticket: [geneontology/go-ontology#32466](https://github.com/geneontology/go-ontology/issues/32466)
-  — *"Obsoletion request: GO:0140355 cargo receptor ligand activity"* (OPEN).
+  — *"Obsoletion request: GO:0140355 cargo receptor ligand activity"* (CLOSED
+  2026-09-23).
 - Term origin, for context: [go-annotation#2364](https://github.com/geneontology/go-annotation/issues/2364)
   (apolipoprotein annotation review, where the gap was identified) →
   [go-ontology#17391](https://github.com/geneontology/go-ontology/issues/17391)
@@ -241,7 +246,7 @@ reviewed here.
 
 | GO id | Label | Aspect | Status for the three B12 carriers |
 |---|---|---|---|
-| GO:0140355 | cargo receptor ligand activity (**to be obsoleted**; still active) | MF | — |
+| GO:0140355 | cargo receptor ligand activity (**obsolete**) | MF | — |
 | GO:0031419 | cobalamin binding | MF | **already annotated on all three** (TCN1, TCN2, CBLIF) |
 | GO:0015889 | cobalamin transport | BP | **already annotated on all three** |
 | GO:0038024 | cargo receptor activity | MF | belongs to the *receptor* (CD320, CUBN/AMN), with the carrier as `has_input` |
@@ -320,17 +325,17 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land** before editing `core_functions` — the
-   ids are still active, so premature edits would swap a valid term for a
-   judgement call that curators may still overturn (the ticket has already
-   reversed direction once).
-2. When it lands, fix TCN2 and CBLIF together: they share a rationale and a
-   destination-term decision, and both have a receptor-side review in this
-   repo to check against.
+1. **Fix TCN2 and CBLIF together.** GO:0140355 is now obsolete, and those
+   reviews share a rationale and destination-term decision; both also have a
+   receptor-side review in this repo to check against.
+2. **Then fix TCN1.** Its GO:0140355 row is already non-core and its
+   `core_functions` are already on cobalamin binding/transport, so it should
+   be a small cleanup after the TCN2/CBLIF pattern is chosen.
 3. Decide the GO:0140104 question once, in one place, and apply it to all
    three carriers consistently.
 4. Re-run `just validate human TCN2 / CBLIF / TCN1` and confirm the
-   `core_functions` strict-validation errors clear.
+   obsolete-term rows are gone before the local ontology cache starts flagging
+   GO:0140355 in author-supplied `core_functions`.
 
 ## Open questions
 
@@ -344,3 +349,15 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
   annotated to GO:0140355 today, so the obsoletion strands nothing; but the
   2019 curation problem that motivated it ("we don't have an activity for
   this") is not solved by the obsoletion either.
+
+## Status
+
+- 2026-09-12 — Project file created while GO:0140355 was still active.
+  Re-derived the 172-row QuickGO footprint from three seeds, identified the six
+  experimental rows as the real curation set, and found the orphaned mouse
+  Hpse ISO row plus the misapplied yeast ATG5 seed.
+- 2026-10-04 — Re-audited after the upstream ontology obsoletion landed:
+  go-ontology#32466 closed on 2026-09-23, QuickGO now reports GO:0140355 as
+  obsolete, and go-annotation#6533 remains open. TCN2, CBLIF and TCN1 still
+  carry the obsolete rows locally but validate against the repo's older
+  ontology cache.

@@ -107,5 +107,5 @@ AIGR's own deep-research step.
   `reference_review` (0/22). The per-gene files in [`fa-cohort/`](fa-cohort/) are therefore the
   record of which papers came from Affinage.
 - **Not an independent recall sample.** Because these reviews were revised to fold Affinage's
-  papers in, their retrieval recall (85%) measures that step. They are reported separately
+  papers in, their retrieval recall (83%) measures that step. They are reported separately
   from the PAINT-backlog genes in [paint-campaign.md](paint-campaign.md).

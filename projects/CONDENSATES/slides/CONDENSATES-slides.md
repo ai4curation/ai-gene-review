@@ -36,8 +36,8 @@ A cross-cutting audit of how GO and this repository annotate membraneless compar
 
 ## Bottom line
 
-- **Being in a condensate is a location; making one is a function.** The corpus records the first in 238 gene folders and the scaffold function in 9.
-- Reviewers already downgraded **146 of 399 (37%)** condensate-space annotations, with no shared rule.
+- **Being in a condensate is a location; making one is a function.** The corpus records the first in 294 gene folders and a GOA scaffold function in 16.
+- Reviewers already downgraded or removed **206 of 659 (31%)** condensate-space annotations, with no shared rule.
 - A full re-review of **59 `GO:0034045` PAS-membrane assertions** left none at ACCEPT; GO has since made the term obsolete.
 
 ---
@@ -85,7 +85,7 @@ A cross-cutting audit of how GO and this repository annotate membraneless compar
 
 - ✅ Corpus audit script and tables: `projects/CONDENSATES/CONDENSATES-go-audit.md`
 - ✅ GO:0034045 slice audit: `projects/CONDENSATES/GO_0034045-annotation-audit.md`
-- ⬜ Run the **calibration batch** of scaffold genes (SQSTM1, NFE2L2, LGALS3, TP53 orthologs, Ccnt1, mid1, TARDBP) against the principles.
+- ⬜ Reconcile the expanded **23-folder GO:0140693 roster** against the draft principles (#4054).
 - ⬜ Decide whether to request a condensate grouping class and children of GO:0140693.
 
 **Related:** `projects/STRESS_GRANULES.md` · `projects/CAEEL_P_GRANULES.md` · `projects/SL.md`

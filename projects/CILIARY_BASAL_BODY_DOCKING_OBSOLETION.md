@@ -2,7 +2,8 @@
 title: "Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
-species: [human]
+species: [human, worm]
+genes: [mks-1, mks-3]
 manifest:
   slides:
     - href: CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.html
@@ -20,36 +21,36 @@ GO:0097711 *ciliary basal body-plasma membrane docking* and GO:1905353
 GO:1905349 *ciliary transition zone assembly*: docking of the mother
 centriole to vesicles and membrane is the first step of building the
 transition zone. OLS shows both terms obsolete as of 2026-09-26. We
-recorded the seven experimental annotations to GO:0097711 (two already
-removed by FlyBase, one fixed by Reactome, the other four moving to
-GO:1905349), checked the repo
+recorded the seven experimental annotations to GO:0097711 (six reported fixed
+by FlyBase, MGI, Reactome, UniProt, and Xenbase; the remaining ZFIN row is
+covered by upstream error reports after obsoletion), checked the repo
 for affected reviews, and queued CEP290 and RAB3IP as the candidate
 reviews. Scoped, not yet started: no gene directly annotated to either
 obsolete term is reviewed here, and no review in `genes/` uses them. The
 only repo contact is two worm reviews, `mks-1` and `mks-3`, which propose
 GO:1905349 as a NEW annotation for the MKS transition-zone module. The
-status notes below predate the obsoletion landing, and the vesicle-tether
-MF they anticipate now exists as GO:7770062 *vesicle membrane tethering
-activity* (see the sibling [vesicle tethering project](VESICLE_TETHERING_OBSOLETION.md)).
+vesicle-tether MF that this project anticipated now exists as GO:7770062
+*vesicle membrane tethering activity*; see the sibling
+[vesicle tethering project](VESICLE_TETHERING_OBSOLETION.md).
 
 ## Overview
 
-A GO obsoletion proposal will retire two ciliogenesis BP terms and merge their
-annotations into the existing assembly term for the ciliary transition zone:
+GO has retired two ciliogenesis BP terms and merged their annotations into the
+existing assembly term for the ciliary transition zone:
 
 - **GO:0097711 ciliary basal body-plasma membrane docking** (BP)
 - **GO:1905353 ciliary transition fiber assembly** (BP)
 
-Both will be replaced by **GO:1905349 ciliary transition zone assembly** (BP).
+Both are replaced by **GO:1905349 ciliary transition zone assembly** (BP).
 
 The rationale, captured in the upstream go-ontology discussion, is that the
 "docking" term as written actually describes the multi-step process of
 transition zone assembly — including basal body recruitment, ciliary vesicle
 docking, and plasma membrane fusion — rather than a single docking event.
 Annotations are well-covered by the existing transition zone assembly term, so
-the redundant/over-broad child can be retired. GO:1905353 (transition fiber
-assembly) is being retired alongside it because there are no experimental
-annotations to defend its existence and its scope overlaps with the same
+the redundant/over-broad child could be retired. GO:1905353 (transition fiber
+assembly) was retired alongside it because there were no experimental
+annotations to defend its existence and its scope overlapped with the same
 assembly process.
 
 This project tracks the impact on AI Gene Review and queues affected genes for
@@ -61,8 +62,9 @@ repository.
 - Annotation tracker: [geneontology/go-annotation#6405](https://github.com/geneontology/go-annotation/issues/6405)
 - Ontology ticket: [geneontology/go-ontology#31882](https://github.com/geneontology/go-ontology/issues/31882)
 - Related (vesicle docking obsoletion): [geneontology/go-annotation#6379](https://github.com/geneontology/go-annotation/issues/6379)
+- Local follow-up: [#396](https://github.com/ai4curation/ai-gene-review/issues/396)
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
@@ -79,11 +81,11 @@ retirement).
 |---|---|---|---|---|---|---|
 | FlyBase | Cby | D. melanogaster | FBgn0067317 | PMID:27646273 | IGI | Removed (hattrill, 2026-05-04) |
 | FlyBase | dila | D. melanogaster | FBgn0033447 | PMID:27646273 | IGI | Removed (hattrill, 2026-05-04) |
-| MGI | Cep290 | M. musculus | MGI:2384917 | PMID:27002738 | IMP | move to GO:1905349 |
+| MGI | Cep290 | M. musculus | MGI:2384917 | PMID:27002738 | IMP | MGI done (2026-05-05) |
 | Reactome | RAB3IP | H. sapiens | UniProtKB:Q96QF0 | Reactome:R-HSA-5620912 | TAS | Reactome fixed; appears in June 2026 release |
-| UniProt | Cep290 | D. melanogaster | FBgn0035168 | PMID:30013109 | IMP | move to GO:1905349 |
-| Xenbase | foxj1.L | X. laevis | XB-GENE-856300 | PMID:24048590 | NAS | move to GO:1905349 |
-| ZFIN | pam | D. rerio | ZDB-GENE-090313-384 | PMID:29540787 | IMP | move to GO:1905349 |
+| UniProt | Cep290 | D. melanogaster | FBgn0035168 | PMID:30013109 | IMP | UniProt done (2026-05-22) |
+| Xenbase | foxj1.L | X. laevis | XB-GENE-856300 | PMID:24048590 | NAS | Xenbase done (2026-05-05) |
+| ZFIN | pam | D. rerio | ZDB-GENE-090313-384 | PMID:29540787 | IMP | Term obsoleted; remaining rows surface in error reports |
 
 No InterPro2GO, UniProt-Keywords, or UniRule mappings to either term were
 listed in the upstream issue.
@@ -91,8 +93,8 @@ listed in the upstream issue.
 ## Impact on this repo
 
 No genes directly annotated to GO:0097711 or GO:1905353 are currently reviewed
-here. Searches under `genes/` for CEP290, RAB3IP, foxj1, and pam returned no
-matches.
+here. The obsolete IDs themselves are absent from GOA and review YAML under
+`genes/`, and `CEP290` and `RAB3IP` have not yet been reviewed.
 
 This means **no existing reviews need refresh** for the obsoletion itself, but
 the propagated (IBA / electronic) ancestry of GO:0097711 reaches a much wider
@@ -115,9 +117,11 @@ basal-body-docking-affected genes would strengthen that coverage.
   in the same branch (no MF or CC component).
 - **Type of fix**: terminological — the underlying biology (transition zone
   assembly) is unchanged; reviews would evaluate whether GO:1905349 (transition
-  zone assembly) is the appropriate ACCEPT for core function, or whether a more
-  specific MF (e.g. basal-body / vesicle tethering MFs from the parallel
-  vesicle-tethering obsoletion in #6379) better captures the gene's role.
+  zone assembly) is the appropriate ACCEPT for core function, or whether a
+  more specific MF better captures the gene's role. GO:7770062
+  *vesicle membrane tethering activity* is now available for proteins with
+  direct tethering activity, but is not a default replacement for CEP290's
+  structural role or RAB3IP's Rab8a GEF activity.
 
 ## Candidate genes for initial review
 
@@ -156,14 +160,12 @@ confirm UniProt accessions. None are currently in the repo.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land.** The upstream ontology ticket #31882 is
-   still open at the time of writing (most recent activity 2026-05-04). FlyBase
-   has already removed the two fly annotations and Reactome has fixed the
-   RAB3IP entry for the June 2026 release; the remaining four direct
-   annotations are pending action by MGI, UniProt, Xenbase, and ZFIN.
-2. **Once the obsoletion is applied**, regenerate GOA for any candidate gene
-   that gets reviewed; the merged term GO:1905349 should appear in place of
-   GO:0097711 for the IBA-propagated entries.
+1. **Record the upstream outcome.** OLS lists both GO:0097711 and GO:1905353
+   as obsolete and replaced by GO:1905349, FlyBase already removed the two fly
+   annotations, and Reactome has fixed the RAB3IP entry.
+2. **Regenerate GOA for any reviewed candidate gene.** The merged term
+   GO:1905349 should appear in place of GO:0097711 for any IBA-propagated
+   entries that now reach the human candidates.
 3. **Begin with CEP290 (human)** as the anchor review. Its annotation portfolio
    is large enough to exercise the cilia / ciliopathy curation pattern, and it
    has direct experimental support across multiple species that all converge
@@ -197,5 +199,10 @@ this a natural moment to tackle it.
 - 2026-05-05 — Project file created. Tracking upstream issue #6405 (last
   active 2026-05-05). Obsoletion not yet applied. FlyBase Cby/dila annotations
   already removed; Reactome RAB3IP fix scheduled for June 2026 release;
-  MGI/UniProt/Xenbase/ZFIN direct annotations still pending. No gene reviews
-  started yet in this repo.
+  MGI/UniProt/Xenbase/ZFIN direct annotations were still being tracked
+  upstream. No gene reviews started yet in this repo.
+- 2026-10-04 — Re-audited the repo: no GOA or review file contains
+  GO:0097711 or GO:1905353, human CEP290 and RAB3IP remain unreviewed, and the
+  only local biological touchpoint is that worm mks-1 and mks-3 already
+  propose GO:1905349 as a NEW process term for transition-zone assembly. Local
+  follow-up is tracked in [#396](https://github.com/ai4curation/ai-gene-review/issues/396).

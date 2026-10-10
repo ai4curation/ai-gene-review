@@ -72,4 +72,6 @@ Using predicted monomers and complexes to test GO claims. Scoped, not yet built.
 - ⬜ Test quaternary predictions for complex membership; test pLDDT for domain claims
 - ⬜ Consider a structural-evidence field in the review schema
 
+<span class="small">Open tracker: ai4curation/ai-gene-review#3959</span>
+
 **Read more:** `projects/ALPHAFOLD.md` · `projects/BGC.md` · `projects/PDB.md`

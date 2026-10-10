@@ -56,7 +56,7 @@ One protein, two genes: what GSDMD:TMEM106A means for gene-function curation
 
 | Phenomenon | DNA change? | Parent loci | Mechanism |
 |---|---|---|---|
-| Trans-spliced chimera | No | often different chromosomes | RNA trans-splicing |
+| Trans-spliced chimera | No | distant or separate | RNA trans-splicing |
 | cis read-through | No | adjacent, same strand | transcription past gene 1 |
 | DNA fusion gene | Yes | any | translocation |
 

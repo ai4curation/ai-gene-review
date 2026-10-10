@@ -1,31 +1,88 @@
 ---
 title: "Zebrafish Genome Duplication and Paralog Pairs"
-maturity: SCOPING
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [DANRE]
-genes: [cryaba, cryabb]
+genes:
+  - LOC564220
+  - wu_fi36a10
+  - abi1a
+  - abi1b
+  - agxta
+  - agxtb
+  - col1a1a
+  - col1a1b
+  - cryaba
+  - cryabb
+  - ctdspl2a
+  - ctdspl2b
+  - eef1da
+  - eef1db
+  - elna
+  - elnb
+  - exoc3l2a
+  - exoc3l2b
+  - fgf8a
+  - fgf8b
+  - gad1a
+  - gad1b
+  - gria1a
+  - gria1b
+  - grk7a
+  - grk7b
+  - guca1c
+  - guca1d
+  - lhfpl5a
+  - lhfpl5b
+  - mapre3a
+  - mapre3b
+  - mitfa
+  - mitfb
+  - olfm3a
+  - olfm3b
+  - pax6a
+  - pax6b
+  - prom1a
+  - prom1b
+  - samsn1a
+  - samsn1b
+  - sh3glb2a
+  - sh3glb2b
+  - si_dkey-283b1.7
+  - vwc2
+  - slc7a10a
+  - slc7a10b
+  - smad3a
+  - smad3b
+  - sox9a
+  - sox9b
+  - tbx5a
+  - tbx5b
+  - tmc2a
+  - tmc2b
+  - tp53bp2a
+  - tp53bp2b
+  - tusc2a
+  - tusc2b
+  - vcla
+  - vclb
 ---
 
 # Zebrafish Genome Duplication and Paralog Pairs
 
-**Bottom line:** Zebrafish keeps about 3,440 ohnolog pairs from the teleost-specific
-genome duplication (TGD), roughly 320–350 Mya. This project will review such pairs
-side by side and ask what happened to the ancestral function in each case:
-
-- **Partition (subfunctionalization):** the two copies split the ancestral functions.
-- **Innovation (neofunctionalization):** one copy gained a new function.
-- **Backup (redundancy or dosage retention):** both copies keep the same function.
-
-The first phase is background research, summarized in
-[Background research](DANRE_DUPLICATION/DANRE_DUPLICATION-background.md).
-
-- **Main finding so far:** most retained pairs diverged in *where and when* they are
-  expressed rather than in *what the protein does*.
-- **Clean cases are rare.** Only a small minority are clear cases of
-  neofunctionalization or subfunctionalization, when judged against an unduplicated
-  outgroup (spotted gar).
-- **Next step:** choose pairs and run the first side-by-side review
-  (cryaba/cryabb, which are already both reviewed).
+**Bottom line:** zebrafish keeps thousands of ohnolog pairs from the
+teleost-specific genome duplication (TGD), roughly 320-350 Mya. This project
+reviews those pairs side by side and asks what happened to the ancestral
+function: expression partition, protein-level innovation, dosage retention,
+backup or unresolved divergence. The 2026-10-04 snapshot covers **31 pair pages /
+62 gene reviews**: 10 literature-supported pairs plus a
+PANTHER/Compara-informed random sample. The main result matches the genome-wide
+literature: retained pairs usually keep the same molecular function and diverge
+in *where and when* the copies are expressed; clear protein-level innovation
+appeared only in `elnb`, and pure backup was not demonstrated. Details are in
+the [pair index](DANRE_DUPLICATION/pairs/README.md), the
+[random-sample summary](DANRE_DUPLICATION/random_sample_summary.md), and the
+[background research](DANRE_DUPLICATION/DANRE_DUPLICATION-background.md).
 
 ## Motivation
 
@@ -37,9 +94,11 @@ ways:
    is made on *one* copy. Whether it transfers to the other copy, or to the human
    ortholog, depends on whether the copies diverged in molecular function or only
    in expression.
-2. **Phylogenetic propagation treats the copies as equivalent.** IBA and ISO usually
-   give both copies the same terms. That is right for the backup and partition
-   fates, but may be wrong for neofunctionalized copies.
+2. **Phylogenetic propagation can treat copies as equivalent.** IBA and ISO often
+   give both copies the same inherited or sequence-inferred molecular-function
+   terms. Those usually transfer when the catalytic or binding activity is
+   conserved, but tissue-specific process and location terms need copy-specific
+   expression and localization checks.
 3. **Mutant phenotypes can be masked.** Zebrafish mutants can hide phenotypes when a
    paralog is upregulated (transcriptional adaptation). This complicates any claim
    that "gene X is not required for Y" or "X and Y are redundant".
@@ -59,6 +118,53 @@ ways:
 4. Do existing GOA annotations (experimental, IBA, ISO, IEA) handle the pair
    consistently? Are there annotations that should be copy-specific, or that should
    be shared but are missing from one copy?
+
+## Results
+
+### Reviewed pair set
+
+As of 2026-10-04, the project has **31 side-by-side pair pages** whose 62
+underlying gene reviews action all **1,022 GOA rows** present in the fetched
+review files. No existing annotation is still `PENDING`, and every gene review
+has a core-function summary.
+
+| Set | Pair pages | Current readout |
+|---|---:|---|
+| Literature-supported pairs | 10 | Four expression-level partitions, five mixed cases, and one collagen dosage case; this set contains the only clear protein-level innovation, `elnb` |
+| Random-sample pages | 21 | Seventeen non-`vcla` Compara-confirmed draws plus four early PANTHER-only draws retained as rejected or doubtful controls; most remain unresolved because few have perturbation data on both copies |
+
+Across the 31 pages, the fate calls are:
+
+| Fate | Pairs | Interpretation |
+|---|---:|---|
+| `PARTITION` | 8 | Usually an expression split with conserved molecular function; the `agxt` pair is the sequence-inferred protein-targeting exception |
+| `MIXED` | 5 | A shared molecular function with copy-specific expression or quantitative protein changes; `elnb` is the single clear new protein function |
+| `DOSAGE` | 1 | `col1a1a`/`col1a1b` both contribute chains to the type I collagen system |
+| `BACKUP` | 1 | `smad3a`/`smad3b`, still provisional because the single-mutant evidence was not visible |
+| `UNRESOLVED` | 16 | Mostly random pairs with expression-only, sequence-only or single-copy perturbation evidence |
+
+The **18 Compara-confirmed random draws** give the less biased view: 12 are
+`UNRESOLVED`, 4 are `PARTITION`, 1 is the provisional `smad3` backup, and 1 is
+the already-reviewed `vcla` mixed case. Only 7 of 18 have experimental data on
+both copies; 8 have expression data only, 2 have experiments on one copy only,
+and 1 rests on sequence evidence.
+
+### Curation consequences
+
+- Core molecular-function terms usually survive on both copies; biological
+  process and cellular-component annotations require copy-specific expression
+  or localization evidence.
+- Protein-level neofunctionalization was rare in the curated set. `elnb` gained
+  a bulbus-arteriosus elastin role that `elna` cannot substitute for; other
+  protein-level signals, such as `agxt` targeting or `guca1c`/`guca1d`
+  calcium-sensitivity differences, need biochemical or mutant confirmation.
+- The commonest GOA correction was removing IBA propagation of tissue-specific
+  process terms onto the non-expressing copy, for example `sox9a` heart
+  morphogenesis, `pax6a` pancreas development, `lhfpl5b` inner-ear/hearing
+  terms, `prom1a` photoreceptor differentiation, and `agxtb` peroxisome terms.
+- Apparent PANTHER `TGD_tree` calls still need an independent Compara or synteny
+  check. Four early random draws were kept in the record after that check failed
+  or weakened the TGD interpretation.
 
 ## Approach
 
@@ -148,11 +254,14 @@ the same order as the 3,440 ohnolog pairs from synteny in Howe et al. 2013
   the gar bridge) remains the independent check for `TGD_or_lineage` and
   `unresolved` pairs.
 
-## Candidate pairs
+## Candidate-pair triage
 
-### Pairs involving genes already reviewed in `genes/DANRE/`
+These tables record the starting candidate triage that was superseded by the
+31-pair review set summarized above.
 
-From `panther_tgd_pairs.tsv`:
+### Early candidates involving genes already reviewed in `genes/DANRE/`
+
+From the initial `panther_tgd_pairs.tsv` pass:
 
 | Pair | PANTHER call | Pair class | Partner reviewed? | Notes |
 |---|---|---|---|---|
@@ -182,13 +291,13 @@ These pairs come from the background research.
 | vcla / vclb | Paralog upregulation in PTC mutants (compensation) | TGD_tree | PMID:30944477 |
 | alcama / alcamb | Paralog upregulation in PTC mutants (compensation) | not called (Euteleostomi|DANRE) | PMID:30944477 |
 | gpr22a / gpr22b | Clear subfunctionalization (brain vs heart), judged against gar | TGD_likely_parallel | PMID:28944589 |
-| grk7a / grk7b | Not yet reviewed; cone photoreceptor kinases | TGD_tree | |
+| grk7a / grk7b | MIXED after review; asymmetric cone-GRK expression and a reportedly slower `grk7b` kinase | TGD_tree | [pair review](DANRE_DUPLICATION/pairs/grk7a_grk7b/grk7a_grk7b.md) |
 
 ---
 
 # STATUS
 
-*Last updated: 2026-09-27*
+*Last updated: 2026-10-04*
 
 - [x] Create project page and folder
 - [x] Background research on the TGD and fates of duplicates
@@ -196,10 +305,12 @@ These pairs come from the background research.
   cached, 85 quotes verified)
 - [x] Genome-wide TGD pair calls from PANTHER v19 trees
   (`panther_tgd_pairs.tsv`; replaces the earlier Ensembl Compara script)
-- [ ] Decide the pair-selection strategy: a targeted list, or a random sample of
-  1:1 `TGD_tree` / `TGD_likely_parallel` pairs from `panther_tgd_pairs.tsv`
-- [ ] Synteny check for `TGD_or_lineage` pairs chosen for review (including
-  cryaba/cryabb)
+- [x] Decide the pair-selection strategy: targeted literature-supported pairs
+  plus a random sample of `TGD_tree` pairs from `panther_tgd_pairs.tsv`
+- [x] Synteny/Compara check for chosen `TGD_or_lineage` and sampled PANTHER
+  pairs; `cryaba`/`cryabb`, `si:dkey-283b1.7`/`vwc2` and
+  `magi3b`/`wu:fi36a10` are recorded as unconfirmed or doubtful rather than
+  counted as established TGD cases
 - [x] Define a pair-comparison template ([pairs/README.md](DANRE_DUPLICATION/pairs/README.md))
   and `scripts/compare_pair.py`
 - [x] Batch 1, literature-supported pairs, all reviewed with pair pages:
@@ -209,20 +320,24 @@ These pairs come from the background research.
   accession holding all their experimental GOA rows. pax6a is missing 9 ZFIN
   experimental rows and pax6b 3 UniProt rows, which sit on sibling accessions.
 - [ ] Decide how to handle genes whose GOA annotations are split across UniProt
-  accessions (option: let `fetch-gene` merge GOA rows from secondary accessions)
+  accessions (option: let `fetch-gene` merge GOA rows from secondary accessions;
+  tracked in [#3968](https://github.com/ai4curation/ai-gene-review/issues/3968))
 - [x] Batch 2, literature-supported pairs, all reviewed with pair pages:
   fgf8a/fgf8b, tbx5a/tbx5b, col1a1a/col1a1b, grk7a/grk7b (grk7b updated), vcla/vclb
 - [x] Batch 3: random sample of 8 `TGD_tree` 1:1 pairs (seed 20260928;
   `scripts/sample_pairs.py`, `batch3_sample.tsv`), all reviewed with pair pages
-- [x] Batch 4: random sample enlarged to 18 Compara-confirmed pairs (35 draws); all reviewed.
-  Tabulated in [random_sample_summary.md](DANRE_DUPLICATION/random_sample_summary.md)
+- [x] Batch 4: random sample enlarged to 18 Compara-confirmed pairs (35 draws);
+  the 17 new non-`vcla` pairs were reviewed and tabulated in
+  [random_sample_summary.md](DANRE_DUPLICATION/random_sample_summary.md)
   (`scripts/tabulate_sample.py`)
 - [ ] Report upstream: PANTHER TGD_tree false positives (e.g. avp/oxt, myh10/myh14),
   PANTHER subfamily/ortholog errors (exoc3l2 as EXOC3L4, sh3glb2a in a drebrin-like
   subfamily, COL3A1 for col1a1a/b), and ZFIN attribution issues (col1a1a IMP genotypes;
   gad1 probe identity)
+  ([#3968](https://github.com/ai4curation/ai-gene-review/issues/3968))
 - [ ] Decide whether to fix PANTHER-derived symbol gaps in `panther_tgd_pairs.tsv`
-  (e.g. tmc2a has no ZFIN id)
+  (e.g. tmc2a has no ZFIN id; tracked in
+  [#3968](https://github.com/ai4curation/ai-gene-review/issues/3968))
 
 # NOTES
 

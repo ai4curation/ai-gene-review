@@ -150,7 +150,7 @@ def main() -> None:
     flags.sort(key=lambda f: (f["flag"], f["species"], f["gene"]))
     fields = ["flag", "species", "gene", "term_id", "term_label", "assay", "action", "evidence_snippet"]
     with open(os.path.join(args.out_dir, "assay_check_flags.csv"), "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields)
+        w = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(flags)
 

@@ -3,7 +3,7 @@ title: "Behaviour Annotation Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [mouse, human, rat, worm, yeast, DANRE, DROME, DAPPU]
-genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, Tuba1a, Agtr1a, Mtor, Fyn]
+genes: [App, STAT3, nphp-1, rat/Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, Tuba1a, Agtr1a, Mtor, Fyn]
 manifest:
   slides:
     - href: BEHAVIOR/slides/BEHAVIOR-slides.html
@@ -17,21 +17,38 @@ manifest:
 
 **Bottom line:** when a knockout changes how an animal behaves, the gene
 gets annotated to `behavior` (GO:0007610) or a child term, even when its
-molecular function sits many causal steps upstream. We mined every GOA file
-and every review in the corpus for behaviour terms, wrote a four-step rubric
-(remove if contradicted, accept if the gene acts in the circuit, keep as
-non-core if distal, mark over-annotated if uselessly broad), spot-checked
-every accepted row, and mapped 16 standardized behavioural assays (15 IMPReSS
-types plus the Morris water maze) to the GO terms they can support. We did this because behaviour is the most distal and
-most convergent readout there is, so it is the cleanest test of how reviewers
-handle phenotype-driven annotations. A re-run of the miner in September 2026
-finds 216 behaviour annotations in reviews, of which 197 were adjudicated as
-core or not: 169 (86%) were downgraded and 28 accepted, mostly sensory
-channels and receptors acting in the relevant neurons (worm lov-1, pkd-2,
-tax-4), plus the fly clock protein CRY and the satiety hormone GCG. `reports/REPORT.md`
-is regenerated from that re-run; the ~81% → 87% figures in the spot-check
-section below are the June snapshot (146 adjudicated) that motivated it, and
-the conclusion is unchanged.
+molecular function sits many causal steps upstream. We mined every GOA file and
+every review in the corpus for labels containing behaviour/behavior, wrote a
+four-step rubric (remove if contradicted, accept if the gene acts in the circuit,
+keep as non-core if distal, mark over-annotated if uselessly broad),
+spot-checked every accepted row, and mapped 16 standardized behavioural assays
+(15 IMPReSS types plus the Morris water maze) to the GO terms they can support.
+We did this because behaviour is the most distal and most convergent readout
+there is, so it is the cleanest test of how reviewers handle phenotype-driven
+annotations. A 2026-10-04 re-run of the lexical miner finds 267
+behaviour-label annotations in reviews, of which 247 were adjudicated as core or
+not: 219 (89%) were downgraded and 28 accepted, mostly sensory channels and
+receptors acting in the relevant neurons (worm
+[lov-1](../genes/worm/lov-1/lov-1-ai-review.yaml),
+[pkd-2](../genes/worm/pkd-2/pkd-2-ai-review.yaml), tax-4), plus the fly clock
+protein [CRY](../genes/DROME/CRY/CRY-ai-review.yaml) and the satiety hormone
+[GCG](../genes/human/GCG/GCG-ai-review.yaml). `reports/REPORT.md` is
+regenerated from that re-run; the ~81% → 87% figures in the spot-check section
+below are the June snapshot (146 adjudicated) that motivated it, and the
+conclusion is unchanged.
+
+**2026-10-04 audit:** the lexical snapshot re-derives against the current corpus,
+the IMPReSS assay→GO map validates, and the rat
+[Casp3](../genes/rat/Casp3/Casp3-ai-review.yaml) Morris-water-maze row is
+settled as `MARK_AS_OVER_ANNOTATED`. Twelve behaviour-label rows remain
+`UNDECIDED` in [Pde4](../genes/DROME/Pde4/Pde4-ai-review.yaml),
+[Agtr1a](../genes/mouse/Agtr1a/Agtr1a-ai-review.yaml),
+[GHSR](../genes/human/GHSR/GHSR-ai-review.yaml),
+[AKT1](../genes/human/AKT1/AKT1-ai-review.yaml), and
+[BLOC1S6](../genes/human/BLOC1S6/BLOC1S6-ai-review.yaml); replacing the
+label-matched miner with a real `GO:0007610` branch closure is tracked with
+that cleanup in
+[ai4curation/ai-gene-review#4046](https://github.com/ai4curation/ai-gene-review/issues/4046).
 
 ## Motivation
 
@@ -73,26 +90,28 @@ Mined with [`BEHAVIOR/mine_behavior.py`](BEHAVIOR/mine_behavior.py) over every
 decisions). The full tables regenerate into
 [`BEHAVIOR/reports/REPORT.md`](BEHAVIOR/reports/REPORT.md).
 
-**Source surface.** Behaviour terms in the corpus GOA files are mostly
-phenotype-driven: **IMP + IGI account for just over half** (114 of 209, 55%)
+**Source surface.** Behaviour-label terms in the corpus GOA files are mostly
+phenotype-driven: **IMP + IGI account for just over half** (150 of 268, 56%)
 of behaviour annotations; most of the rest is electronic or inferred by
-similarity (IEA 39, ISS 26, ISO 14), and only 3 are IDA (direct assay). The
-most common term is the broad `locomotory behavior` (GO:0007626, 26 rows) by a
-wide margin, followed by a cluster of terms at 7–11 rows each: `mating
-behavior`, `social behavior`, `behavioral response to pain`, `drinking
-behavior`, `chemosensory behavior`, `adult locomotory behavior`,
-`thermosensory behavior`, and `circadian behavior` (counts from the September
-2026 re-run of the miner).
+similarity (IEA 56, ISS 29, ISO 14), and only 3 are IDA (direct assay). The
+most common term is the broad `locomotory behavior` (GO:0007626, 31 rows) by a
+wide margin, followed by `social behavior`, `adult behavior`, `mating behavior`,
+`adult locomotory behavior`, `behavioral response to pain`, `drinking
+behavior`, and `chemosensory behavior` (counts from the 2026-10-04 re-run of the
+lexical miner). The follow-up in
+[ai4curation/ai-gene-review#4046](https://github.com/ai4curation/ai-gene-review/issues/4046)
+will move this from label matching to an ontology-closure count so labels such
+as `learning`, `memory`, and `startle response` are counted too.
 
 **Reviewer decisions.** Of the behaviour annotations reviewers have adjudicated
-as core-vs-not (197 of 216 in the September 2026 re-run, excluding the 10 `NEW`
-proposed terms, which add rather than downgrade, and 9 `UNDECIDED`), **169 (86%)
+as core-vs-not (247 of 267 in the 2026-10-04 re-run, excluding the 8 `NEW`
+proposed terms, which add rather than downgrade, and 12 `UNDECIDED`), **219 (89%)
 were downgraded** — kept as non-core, marked as over-annotated, or removed — and
 only 28 were `ACCEPT`ed as a core function:
 
 | Action | Meaning for a behaviour term | Share |
 |---|---|---|
-| `KEEP_AS_NON_CORE` | Real phenotype, distal to molecular function | dominant (147 of 216, ~68%) |
+| `KEEP_AS_NON_CORE` | Real phenotype, distal to molecular function | dominant (178 of 267, ~67%) |
 | `ACCEPT` | Behaviour genuinely near the core (e.g. receptors, clock genes) | minority |
 | `MARK_AS_OVER_ANNOTATED` | Too broad / too distal to be useful | small |
 | `REMOVE` | Contradicted — wrong gene/paralog or not supported | small |
@@ -105,31 +124,42 @@ pattern: the annotations are mostly *not wrong*, but they are mostly *not core*.
 These are real decisions already in the corpus — concrete illustrations of the
 "keep as non-core, it's a downstream readout" call:
 
-- **Tuba1a** (mouse, α-tubulin) — annotated to `locomotory behavior`, `motor
-  behavior`, `locomotory exploration behavior`, `adult locomotory behavior`,
-  and `adult behavior`, all IMP. All five kept as **non-core**: *"Behavioral
-  phenotypes are distal consequences of brain malformation caused by Tuba1a
-  mutation. Not a direct function."* The molecular function is microtubule
-  structure; the behaviour is the bottom of a long causal chain.
+- **[Tuba1a](../genes/mouse/Tuba1a/Tuba1a-ai-review.yaml)** (mouse,
+  α-tubulin) — annotated to `locomotory behavior`, `motor behavior`,
+  `locomotory exploration behavior`, `adult locomotory behavior`, and `adult
+  behavior`, all IMP. All five kept as **non-core**: *"Behavioral phenotypes
+  are distal consequences of brain malformation caused by Tuba1a mutation. Not a
+  direct function."* The molecular function is microtubule structure; the
+  behaviour is the bottom of a long causal chain.
 
-- **tpp1** (zebrafish, lysosomal tripeptidyl-peptidase) — `locomotory behavior`
-  (IMP) kept **non-core**: *"The direct conserved role is lysosomal
-  tripeptidyl-peptidase / proteolysis; neurodevelopmental and locomotor defects
-  are downstream phenotypes."*
+- **[tpp1](../genes/DANRE/tpp1/tpp1-ai-review.yaml)** (zebrafish, lysosomal
+  tripeptidyl-peptidase) — `locomotory behavior` (IMP) kept **non-core**: *"The
+  direct conserved role is lysosomal tripeptidyl-peptidase / proteolysis;
+  neurodevelopmental and locomotor defects are downstream phenotypes."*
 
-- **Ciliary genes** (BBS2, BBS4, MKKS, osm-5, nphp-1/4, che-2/3) — behaviour
-  and chemosensory-behaviour annotations arising because cilia defects disrupt
+- **Ciliary genes** ([BBS2](../genes/human/BBS2/BBS2-ai-review.yaml),
+  [BBS4](../genes/human/BBS4/BBS4-ai-review.yaml),
+  [MKKS](../genes/human/MKKS/MKKS-ai-review.yaml),
+  [osm-5](../genes/worm/osm-5/osm-5-ai-review.yaml),
+  [nphp-1](../genes/worm/nphp-1/nphp-1-ai-review.yaml) /
+  [nphp-4](../genes/worm/nphp-4/nphp-4-ai-review.yaml),
+  [che-2](../genes/worm/che-2/che-2-ai-review.yaml) /
+  [che-3](../genes/worm/che-3/che-3-ai-review.yaml)) — behaviour and
+  chemosensory-behaviour annotations arising because cilia defects disrupt
   sensory behaviour. Adjudicated as **non-core** organismal phenotypes, e.g.
   BBS2 `adult behavior`: *"Downstream organismal phenotype, not a direct
   molecular function."*
 
-- **Agtr1a** (mouse, angiotensin II receptor type 1a) — a `REMOVE`, not a
-  downgrade: direct central-angiotensin experiments assign **drinking
-  behaviour** to the paralog **AT1B**, so the AT1A annotation is *contradicted*,
-  not merely distal. This is the boundary case where `REMOVE` is the right call.
+- **[Agtr1a](../genes/mouse/Agtr1a/Agtr1a-ai-review.yaml)** (mouse,
+  angiotensin II receptor type 1a) — a partial `REMOVE`, not just a downgrade:
+  direct central-angiotensin experiments assign **drinking behaviour** to the
+  paralog **AT1B**, so the electronic AT1A annotations are *contradicted*, not
+  merely distal. The IMP/IGI rows are still `UNDECIDED` until their
+  abstract-only experimental citations can be checked.
 
-The contrast between Tuba1a/tpp1 (distal → non-core) and Agtr1a (wrong paralog →
-remove) is the core curation distinction this project sharpens.
+The contrast between Tuba1a/tpp1 (distal → non-core) and Agtr1a (wrong paralog
+where the evidence can be inspected → remove) is the core curation distinction
+this project sharpens.
 
 ## Curation guidance (working rubric)
 
@@ -179,34 +209,41 @@ downgrades.
 
 **Genuinely proximal — `ACCEPT` upheld:**
 
-- **CRY** (Drosophila) — `circadian behavior`: cryptochrome is a bona fide
-  circadian-clock photoreceptor; the behaviour is the clock's direct output.
-- **lov-1 / pkd-2** (C. elegans) — `male mating behavior` / `mating behavior`:
-  the polycystin-1/2 sensory channels that *constitute* the male-mating sensory
-  circuit; an ion channel acting directly in the relevant neurons (rubric step 2).
-- **GCG** (human) — `feeding behavior`: proglucagon/GLP-1 is a neuropeptide that
-  directly signals satiety to feeding circuits.
-- **DpuGr29** (Daphnia) — `chemosensory behavior`: a gustatory chemoreceptor,
-  the proximal transducer of the behaviour.
+- **[CRY](../genes/DROME/CRY/CRY-ai-review.yaml)** (Drosophila) — `circadian
+  behavior`: cryptochrome is a bona fide circadian-clock photoreceptor; the
+  behaviour is the clock's direct output.
+- **[lov-1](../genes/worm/lov-1/lov-1-ai-review.yaml) /
+  [pkd-2](../genes/worm/pkd-2/pkd-2-ai-review.yaml)** (C. elegans) — `male
+  mating behavior` / `mating behavior`: the polycystin-1/2 sensory channels
+  that *constitute* the male-mating sensory circuit; an ion channel acting
+  directly in the relevant neurons (rubric step 2).
+- **[GCG](../genes/human/GCG/GCG-ai-review.yaml)** (human) — `feeding behavior`:
+  proglucagon/GLP-1 is a neuropeptide that directly signals satiety to feeding
+  circuits.
+- **[DpuGr29](../genes/DAPPU/DpuGr29/DpuGr29-ai-review.yaml)** (Daphnia) —
+  `chemosensory behavior`: a 7TM chemoreceptor-family member with PAINT support
+  for generic chemosensory behavior; the exact ligand and circuit remain
+  unresolved.
 
 **Missed downgrades — corrected to `KEEP_AS_NON_CORE`:**
 
-- **App** (mouse) — `adult locomotory behavior` / `locomotory behavior` (×5,
-  IMP/IGI): "supported by knockout phenotypes" with supporting text describing
-  righting difficulty, ataxia and balance deficits — a distal neurological
-  readout, exactly the Tuba1a pattern.
-- **STAT3** (human) — `regulation of feeding behavior` / `eating behavior` (×3,
-  IEA/ISS): electronic annotations on a highly pleiotropic transcription factor;
-  distal to its core JAK-STAT signalling role.
-- **nphp-1** (C. elegans) — `turning behavior involved in mating` (IGI): a
-  **ciliary** gene (named in this project) whose behaviour annotation's own
-  reason states it is "part of the … phenotype" — a downstream consequence of
-  cilium dysfunction.
+- **[App](../genes/mouse/App/App-ai-review.yaml)** (mouse) — `adult locomotory
+  behavior` / `locomotory behavior` (×5, IMP/IGI): "supported by knockout
+  phenotypes" with supporting text describing righting difficulty, ataxia and
+  balance deficits — a distal neurological readout, exactly the Tuba1a pattern.
+- **[STAT3](../genes/human/STAT3/STAT3-ai-review.yaml)** (human) — `regulation
+  of feeding behavior` / `eating behavior` (×3, IEA/ISS): electronic annotations
+  on a highly pleiotropic transcription factor; distal to its core JAK-STAT
+  signalling role.
+- **[nphp-1](../genes/worm/nphp-1/nphp-1-ai-review.yaml)** (C. elegans) —
+  `turning behavior involved in mating` (IGI): a **ciliary** gene (named in this
+  project) whose behaviour annotation's own reason states it is "part of the …
+  phenotype" — a downstream consequence of cilium dysfunction.
 
 This moved 9 annotations from core to non-core, raising the downgrade rate among
 adjudicated behaviour annotations in the June snapshot from ~81% to **87%** (127 of 146; then only 19
-`ACCEPT`ed as core). The September 2026 re-run, over a larger corpus, gives 86%
-(169 of 197; 28 accepted). **Borderline cases left as-is** (documented, not changed): `daf-2`
+`ACCEPT`ed as core). The 2026-10-04 re-run, over a larger corpus, gives 89%
+(219 of 247; 28 accepted). **Borderline cases left as-is** (documented, not changed): `daf-2`
 feeding/eating (the pleiotropic insulin receptor — feeding is one of many
 outputs) and `trpm7` swimming (a channel-kinase whose swimming phenotype is
 plausibly a distal developmental consequence) — defensible either way and not
@@ -220,14 +257,15 @@ activity, or a downstream cellular consequence?) and **convergence** (is the
 readout a specific signature of process P, or a hub that many inputs feed into?).
 A whole-animal behaviour is the *maximal* phenotypic + high-convergence readout:
 it integrates the entire nervous system plus development, metabolism and basic
-cell biology, so almost any perturbation can move it. That is exactly why 86% (169 of 197) of
+cell biology, so almost any perturbation can move it. That is exactly why 89% (219 of 247) of
 adjudicated behaviour annotations are downgraded.
 
 Behaviour has now been added as a first-class readout in that project's catalogue
 (`BEHAVIORAL_ASSAY` in
 [`readout_catalog.yaml`](ASSAY_TO_FUNCTION/readout_catalog.yaml)), with the test
 names — Morris Water Maze, open field, rotarod, fear conditioning, … — as match
-patterns. The **Casp3 `swimming behavior`** case above is the emblematic failure
+patterns. The **[Casp3](../genes/rat/Casp3/Casp3-ai-review.yaml) `swimming
+behavior`** case above is the emblematic failure
 mode: the *assay modality* is mistaken for the gene's function. The Morris Water
 Maze is a swimming-based test of *spatial memory*; a gene merely measured in it
 (caspase-3, as an apoptosis marker) gets mis-annotated to `swimming behavior`.
@@ -277,31 +315,43 @@ readout class in [`ASSAY_TO_FUNCTION/readout_catalog.yaml`](ASSAY_TO_FUNCTION/re
 (generic readout↔action cross-tab via `mine_readouts.py`), and a dedicated
 [`check_behaviour_assays.py`](BEHAVIOR/impress/check_behaviour_assays.py) that
 verifies the *specific* GO term against the *specific* assay named in an
-annotation's evidence. The checker independently re-derived the **Casp3 `swimming
-behavior`** over-annotation (Morris Water Maze is a spatial-memory test; swimming
-is only the modality) — confirming that fix from the assay side.
+annotation's evidence. The checker independently re-derived the
+**[Casp3](../genes/rat/Casp3/Casp3-ai-review.yaml) `swimming behavior`**
+over-annotation (Morris Water Maze is a spatial-memory test; swimming is only
+the modality) — confirming that fix from the assay side. The 2026-10-04 refresh
+now sees 19 rows whose evidence text names a recognized assay and raises 11
+advisory flags; because the checker is exact-id rather than subsumption-aware,
+that expanded list belongs in the [#4046](https://github.com/ai4curation/ai-gene-review/issues/4046)
+cleanup before any of those hits are treated as curator errors.
 
 ## Status & next steps
 
 - [x] Mine the source surface and reviewer decisions; confirm the
       over-annotation signature (~81% of adjudicated behaviour annotations
-      downgraded, rising to 87% after the spot-check below; 86% of 197 in the
-      September 2026 re-run).
+      downgraded, rising to 87% after the spot-check below; 89% of 247 in the
+      2026-10-04 lexical re-run).
 - [x] Document exemplars and a working rubric.
 - [x] Spot-check the `ACCEPT`ed behaviour annotations — proximal cases upheld
-      (CRY, lov-1/pkd-2, GCG, DpuGr29); 9 missed downgrades (App ×5, STAT3 ×3,
-      nphp-1 ×1) corrected to `KEEP_AS_NON_CORE`.
-- [x] Re-review the un-adjudicated / `PENDING` behaviour annotations: only one
-      remained — **Casp3** `swimming behavior` (IEP, PMID:33574912). The cited
-      study uses the swimming-based Morris Water Maze to assay **memory**
-      (postoperative cognitive dysfunction) and measures caspase-3 only as a
-      hippocampal apoptosis marker, so swimming is the assay modality, not a
-      caspase-3 function → `MARK_AS_OVER_ANNOTATED`. **Every behaviour annotation
-      in the corpus is now adjudicated** (0 PENDING).
+      (CRY, lov-1/pkd-2, GCG), DpuGr29 kept as a generic PAINT-supported
+      chemosensory case, and 9 missed downgrades (App ×5, STAT3 ×3, nphp-1 ×1)
+      corrected to `KEEP_AS_NON_CORE`.
+- [x] Re-review the only un-adjudicated / `PENDING` behaviour annotation in that
+      spot-check queue: rat
+      **[Casp3](../genes/rat/Casp3/Casp3-ai-review.yaml)** `swimming behavior`
+      (IEP, PMID:33574912). The cited study uses the swimming-based Morris Water
+      Maze to assay **memory** (postoperative cognitive dysfunction) and
+      measures caspase-3 only as a hippocampal apoptosis marker, so swimming is
+      the assay modality, not a caspase-3 function →
+      `MARK_AS_OVER_ANNOTATED`.
 - [x] Cross-link with [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md): behaviour
       readouts are the most distal, most convergent quadrant of that framework;
       added a `BEHAVIORAL_ASSAY` readout class to its catalogue and documented the
       standardized behavioural-assay resources (NBO, MP, IMPReSS, OBI, CogPO).
+- [ ] Resolve the 12 remaining label-matched `UNDECIDED` rows in Drosophila
+      `Pde4`, mouse `Agtr1a`, and human `AKT1`, `BLOC1S6` and `GHSR`; then
+      re-run the project after replacing the lexical miner and exact-id assay
+      checker with behavior-branch-aware scans
+      ([#4046](https://github.com/ai4curation/ai-gene-review/issues/4046)).
 
 ## Related projects
 

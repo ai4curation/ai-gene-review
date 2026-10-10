@@ -25,8 +25,14 @@ from __future__ import annotations
 import argparse
 import collections
 import glob
-import re
 from pathlib import Path
+
+import yaml
+
+try:
+    from yaml import CSafeLoader as SafeLoader
+except ImportError:  # pragma: no cover - depends on the local PyYAML build.
+    from yaml import SafeLoader
 
 # Curated condensate-space terms. CC unless noted.
 TERMS: dict[str, str] = {
@@ -51,17 +57,11 @@ TERMS: dict[str, str] = {
 
 SCAFFOLD_MF = "GO:0140693"
 
-# An existing_annotations entry starts at column 0 with "- term:" followed by
-# an indented id. Capture through to the next entry.
-ANNOTATION_RE = re.compile(r"^- term:\n\s+id: (GO:\d+)\n(.*?)(?=^- term:|\Z)", re.S | re.M)
-ACTION_RE = re.compile(r"\n\s+action: ([A-Z_]+)")
-EVIDENCE_RE = re.compile(r"\n\s*evidence_type: (\S+)")
-
 
 def scan_goa(root: Path) -> dict[str, set[tuple[str, str]]]:
     """Map each term to the set of (species, gene) folders annotating it in GOA."""
     hits: dict[str, set[tuple[str, str]]] = collections.defaultdict(set)
-    for path in glob.glob(str(root / "genes" / "*" / "*" / "*-goa.tsv")):
+    for path in sorted(glob.glob(str(root / "genes" / "*" / "*" / "*-goa.tsv"))):
         parts = Path(path).parts
         species, gene = parts[-3], parts[-2]
         text = Path(path).read_text(errors="ignore")
@@ -75,27 +75,22 @@ def scan_reviews(root: Path):
     """Return (per-term action counts, GO:0140693 roster) from review YAML."""
     per_term: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     scaffold_roster: list[tuple[str, str, str, str]] = []
-    for path in glob.glob(str(root / "genes" / "*" / "*" / "*-ai-review.yaml")):
+    for path in sorted(glob.glob(str(root / "genes" / "*" / "*" / "*-ai-review.yaml"))):
         parts = Path(path).parts
         species, gene = parts[-3], parts[-2]
         text = Path(path).read_text(errors="ignore")
-        start = text.find("\nexisting_annotations:")
-        if start < 0:
+        if not any(term in text for term in TERMS):
             continue
-        end = text.find("\ncore_functions:", start)
-        body = text[start : end if end > 0 else len(text)]
-        for match in ANNOTATION_RE.finditer(body):
-            term = match.group(1)
+        data = yaml.load(text, Loader=SafeLoader) or {}
+        for annotation in data.get("existing_annotations") or []:
+            term = (annotation.get("term") or {}).get("id")
             if term not in TERMS:
                 continue
-            block = match.group(2)
-            action = ACTION_RE.search(block)
-            action = action.group(1) if action else "NONE"
+            action = (annotation.get("review") or {}).get("action") or "NONE"
             per_term[term][action] += 1
             if term == SCAFFOLD_MF:
-                evidence = EVIDENCE_RE.search(block)
                 scaffold_roster.append(
-                    (species, gene, evidence.group(1) if evidence else "?", action)
+                    (species, gene, annotation.get("evidence_type") or "?", action)
                 )
     return per_term, scaffold_roster
 

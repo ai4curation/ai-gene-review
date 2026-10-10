@@ -97,7 +97,7 @@ Which experimental readouts support a GO annotation, and which inflate it
 ## Status and next steps
 
 - ✅ 60-class catalogue, rubric (`RUBRIC.md`, `rubric.yaml`), flagger, 6 edits. Mature.
-- ⬜ Curator triage of `flagged_candidates.tsv`, starting with `indirect_ligand`.
+- ⬜ Curator triage of 443 `flagged_candidates.tsv` rows, starting with `indirect_ligand`.
 - ⬜ Generalise the machinery discriminator beyond signalling ligands.
 - ⬜ Decide STAT3 migration (#1422).
 

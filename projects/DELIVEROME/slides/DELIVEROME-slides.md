@@ -37,8 +37,8 @@ How GO can describe, and learn from, an atlas of therapeutic delivery addresses
 ## Bottom line
 
 - The **Deliverome** atlas wants surface proteins that cargo can use as a **delivery address**: present, internalized, and routed somewhere useful.
-- We defined the term, mapped it to **17 GO anchor terms**, and compared **human RAB7A** with **mouse Rab7** as a worked post-uptake routing example.
-- The two reviews **agree** on core Rab7 biology; mouse adds in vivo evidence that **Rab7 loss increases LNP escape**. 6 of 9 tasks done.
+- The first phase defined the term, mapped it to **17 GO anchor terms**, and compared **human RAB7A** with **mouse Rab7** as a worked post-uptake routing example.
+- The two reviews **agree** on core Rab7 biology; mouse adds in vivo evidence that **Rab7 loss increases LNP escape**.
 
 ---
 
@@ -88,7 +88,9 @@ How GO can describe, and learn from, an atlas of therapeutic delivery addresses
 - ✅ Delivery address defined; GO anchors; model-system stance (human primary, pombe for machinery, mouse for in vivo routing).
 - ✅ RAB7A and Rab7 harmonized; SynGO rows revisited.
 - ⬜ Build a GO-derived human surfaceome prior.
-- ⬜ Pick a small address pilot set (e.g. ASGR1, TFRC, FCGRT).
+- ⬜ Pick a small address pilot set.
 - ⬜ Draft a GO-CAM-like delivery-route template.
+
+Issue #4062 tracks the remaining three tasks.
 
 **Read more:** `projects/DELIVEROME.md` · `genes/human/RAB7A/` · `genes/mouse/Rab7/`

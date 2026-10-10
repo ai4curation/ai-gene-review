@@ -34,6 +34,12 @@ subsumption filter removed 104 redundant ones. A manual spot check of six
 candidates found four correct, one redundant and one questionable, so the
 candidates are curator leads, not automatic assertions.
 
+**2026-10-04 audit:** the 30 linked review drafts, 140 review rows, 23
+ARO→GO mappings, 9 recorded GO gaps, and 630 current annotation-gain
+candidates all re-derive from the checked-in YAML/TSV artifacts. The remaining
+GO new-term requests and next-family review expansions are tracked in
+[ai4curation/ai-gene-review#4037](https://github.com/ai4curation/ai-gene-review/issues/4037).
+
 We did this because CARD already holds expert-curated mechanism, drug and
 literature data for each determinant, and mining it is a cheap way to supply
 the specific enzyme chemistry that GO annotation is missing. The recurring
@@ -284,6 +290,10 @@ caveat.**
    consistent with treating these as **curator leads, not automatic assertions**.
 
 ### Candidate next genes
+
+The remaining AMR GO new-term requests and next-family review expansions are
+tracked in [ai4curation/ai-gene-review#4037](https://github.com/ai4curation/ai-gene-review/issues/4037).
+
 - **mph(C), mph(E), mph(G)** — other macrolide phosphotransferase family members (ARO macrolide phosphotransferase family).
 - **erm(B) / erm(C)** — 23S rRNA (adenine-N6)-methyltransferases (target alteration; MF `GO:0008988` rRNA (adenine-N6-)-methyltransferase activity).
 - **mef(A) / mef(E)** — macrolide efflux (MFS transporter; target efflux).
@@ -356,5 +366,3 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/AN
 - argNorm: normalization of antibiotic resistance gene annotations to the ARO (2025) *Bioinformatics*
 
 **Source**: AI Gene Review project, [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review). CARD/ARO are products of the Comprehensive Antibiotic Resistance Database (card.mcmaster.ca), CC-BY 4.0.
-</content>
-</invoke>

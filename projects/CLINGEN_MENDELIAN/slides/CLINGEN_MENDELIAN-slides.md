@@ -26,7 +26,7 @@ style: |
 
 # ClinGen Mendelian disease genes
 
-A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
+A one-gene-per-PR review campaign over 2,876 ClinGen-associated genes
 
 <span class="small">AI Gene Review · projects/CLINGEN_MENDELIAN · 2026</span>
 
@@ -38,7 +38,7 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 
 - Seeded from the **2026-09-25 ClinGen Gene–Disease Validity** export: every gene with a Definitive, Strong, Moderate or Limited association, **2,876 genes**.
 - Each gene gets its own PR reviewing its **molecular function and GO annotations**; a disease link alone does not establish a function.
-- **14 gene PRs merged** by the 2026-09-26 progress log (A4GALT → ACADVL, 607 annotations), each ticked in the checklist.
+- **201 genes are complete** at the 2026-10-03 16:43:30 UTC checkpoint; 2,675 remain and AKR1D1 is still excluded pending a source follow-up.
 
 ---
 
@@ -56,11 +56,11 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 
 ---
 
-## First fourteen genes: actions
+## Initial cohort: actions, 2026-09-26
 
 ![h:470](clingen-actions-chart.svg)
 
-<span class="small">All 26 REMOVEs are generic <code>protein binding</code> (17 on ABCC6). Justified UNDECIDED calls are kept where evidence is inaccessible, e.g. 5 on AASS and 6 on ACADVL.</span>
+<span class="small">The first 14 merged PRs reviewed 607 source annotations. All 26 REMOVEs were generic <code>protein binding</code> (17 on ABCC6), and justified UNDECIDED calls stayed explicit where evidence was inaccessible.</span>
 
 ---
 
@@ -75,7 +75,8 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 ## Status and next steps
 
 - ✅ Source archived and 2,876-gene inventory seeded (PR #3126).
-- ✅ Merged and recorded: A4GALT #3127, AARS2 #3128, AARS1 #3129, ABCA4 #3132, AASS #3133, ABCA3 #3134, ABCB4 #3135, ABCC6 #3138, ABCC9 #3148, ACAD8 #3151, ACAD9 #3152, ACADSB #3154, ACADS #3155, ACADVL #3157.
-- ⬜ Next batch (ABCC8 → ACTA2) is open or awaiting recording; see the progress log for live state.
+- ✅ 201 of 2,876 genes complete; 202 original gene PRs merged; AKR1D1 still awaits a required source follow-up.
+- ✅ Latest completion set: C1QA #3909, C1QB #3916, C1QTNF5 #3911, C2CD3 #3917, C1QBP #3914.
+- ⬜ Continue recording independently verified merges; RNA genes and other HGNC locus types remain separate workflows.
 
 **Read more:** `projects/CLINGEN_MENDELIAN.md` · `projects/CLINGEN_MENDELIAN/review-progress.md`

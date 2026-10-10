@@ -2,8 +2,8 @@
 title: "Biomolecular Condensates"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [human, worm, SCHPO, mouse]
-genes: [SQSTM1, NFE2L2, LGALS3, TARDBP, TP53, pgl-1, pgl-2, pgl-3, meg-2, meg-3, meg-4, mid1, Ccnt1]
+species: [human, worm, SCHPO, mouse, rat, EUPSC, NEUCR]
+genes: [SQSTM1, NFE2L2, LGALS3, TARDBP, TP53, AR, BLNK, CGAS, FLG, HNRNPA2B1, NLRP3, SOS1, pgl-2, meg-2, meg-3, meg-4, deps-1, mid1, frq, Ccnt1, Trp53, Tp53, Q6WDN4]
 manifest:
   slides:
     - href: CONDENSATES/slides/CONDENSATES-slides.html
@@ -19,9 +19,9 @@ manifest:
 the nucleolus and the phagophore assembly site are heavily annotated as
 locations, but GO and this repository almost never record which proteins build
 them. This cross-cutting project audited that gap with a regenerable script:
-238 gene folders carry a condensate-space CC term, yet only 9 carry
-`molecular condensate scaffold activity` (GO:0140693), and reviewers had
-already downgraded 146 of 399 (37%) reviewed condensate-space annotations
+294 gene folders carry a condensate-space CC term, yet only 16 GOA folders
+carry `molecular condensate scaffold activity` (GO:0140693), and reviewers
+had already downgraded or removed 206 of 659 (31%) reviewed condensate-space annotations
 without a shared rule. It then re-reviewed every annotation in the corpus to
 `GO:0034045` phagophore assembly site membrane and its two related terms
 (59 assertions across 21 gene folders, feeding GO issue #29437). Every
@@ -29,8 +29,8 @@ previously reviewed assertion had been accepted; after re-review, all 31
 first-pass assertions across 14 genes moved to MODIFY (26) or
 MARK_AS_OVER_ANNOTATED (5). GO has since obsoleted GO:0034045 and added
 `phagophore membrane` (GO:7770114). The five working principles below are
-still drafts, and the proposed calibration batch of scaffold genes has not
-been run.
+still drafts, and [#4054](https://github.com/ai4curation/ai-gene-review/issues/4054)
+tracks completion of the expanded scaffold-calibration set.
 
 Membraneless compartments — stress granules, P granules, P-bodies, the nucleolus, PML
 bodies, nuclear speckles, the phagophore assembly site — are among the most heavily
@@ -50,21 +50,21 @@ committed script) gives the shape of the problem:
 
 | | Count |
 |---|---|
-| Gene folders carrying at least one condensate-space CC term | 238 |
-| Reviewed condensate-space annotations | 399 |
-| Gene folders with `GO:0005730` nucleolus | 89 |
-| Gene folders with `GO:0140693` molecular condensate scaffold activity (MF) | 9 |
-| Gene folders with `GO:0140694` membraneless organelle assembly (BP) | 1 |
+| Gene folders carrying at least one condensate-space CC term | 294 |
+| Reviewed condensate-space annotations | 659 |
+| Gene folders with `GO:0005730` nucleolus | 117 |
+| Gene folders with `GO:0140693` molecular condensate scaffold activity (MF) in GOA | 16 |
+| Gene folders with `GO:0140694` membraneless organelle assembly (BP) in GOA | 3 |
 
-Eighty-nine genes are placed *in* the nucleolus; nine genes in the entire corpus are said
-to *scaffold* any condensate at all. The asymmetry is not a curation backlog — it reflects
-GO's own shape, where the compartments are richly subdivided and the activities that build
-them are represented by a single molecular-function term.
+One hundred seventeen gene folders are placed *in* the nucleolus; only 16 carry the GOA
+assertion that they *scaffold* any condensate at all. The asymmetry is not only a curation
+backlog — it reflects GO's own shape, where the compartments are richly subdivided and the
+activities that build them are represented by a single molecular-function term.
 
-Reviewers have already registered their discomfort without being asked to. Of 399 reviewed
-condensate-space annotations, **146 (37%) were downgraded or worse** — 121
-`KEEP_AS_NON_CORE`, 17 `MARK_AS_OVER_ANNOTATED`, 8 `REMOVE`. Nucleolus alone accounts for
-45 non-core, 9 over-annotated, and 3 removed. That is a consistent, repository-wide signal
+Reviewers have already registered their discomfort without being asked to. Of 659 reviewed
+condensate-space annotations, **206 (31%) were downgraded or removed** — 168
+`KEEP_AS_NON_CORE`, 19 `MARK_AS_OVER_ANNOTATED`, 19 `REMOVE`. Nucleolus alone accounts for
+70 non-core, 9 over-annotated, and 9 removed. That is a consistent, repository-wide signal
 that condensate localization, taken alone, is being judged uninformative about function —
 gene by gene, with no shared framework behind it. Supplying that framework is what this
 project is for.
@@ -101,7 +101,7 @@ batch.
    one that partitions into it. Reviews should decide which, and say so in
    `core_functions`, not leave a bare CC term to imply it.
 2. **Condensate CC alone is rarely a core function.** The corpus already behaves this way
-   (37% downgraded). Make it explicit rather than rediscovered per gene.
+   (31% downgraded or removed). Make it explicit rather than rediscovered per gene.
 3. **Prefer the material claim over the compartment claim.** "Drives phase separation of X"
    is checkable; "localizes to structure Y" often reflects a fixation artefact or an
    overexpression phenotype.
@@ -117,8 +117,8 @@ batch.
 
 | Asset | Kind | Status |
 |---|---|---|
-| [CAEEL_P_GRANULES](CAEEL_P_GRANULES.md) | per-condensate project (worm germ granules) | `IN_PROGRESS`; pgl-1, pgl-2, pgl-3, glh-1, meg-2, meg-3, meg-4 reviewed with no PENDING or UNDECIDED annotations |
-| [STRESS_GRANULES](STRESS_GRANULES.md) | per-condensate project (human SGs) | `SCOPING`; self-described stub, 5 of ~12 candidates have gene folders |
+| [CAEEL_P_GRANULES](CAEEL_P_GRANULES.md) | per-condensate project (worm germ granules) | `MATURE`; 19 worm germ-granule genes reviewed |
+| [STRESS_GRANULES](STRESS_GRANULES.md) | per-condensate project (human SGs) | `SCOPING`; 7 of 16 candidates reviewed, with G3BP1/G3BP2 still missing |
 | `MODULE:phagophore_assembly_site` | module | `DRAFT`; the corpus's only condensate modeled as a module |
 | `projects/CONDENSATES/scripts/scan_condensate_annotations.py` | audit script | regenerates every number on this page |
 | [GO:0034045 corpus slice audit](CONDENSATES/GO_0034045-annotation-audit.md) | per-assertion re-review | all 31 first-pass assertions across 14 genes moved off `ACCEPT` (26 `MODIFY`, 5 `MARK_AS_OVER_ANNOTATED`); input to GO issue #29437 |
@@ -128,40 +128,47 @@ batch.
 
 STRESS_GRANULES and CAEEL_P_GRANULES stay standalone; they are not folded in as sub-pages.
 Each is a domain project with its own species scope, gene list, and disease framing, in the
-same mould as PEROXISOME or ER_PHAGY, and CAEEL_P_GRANULES is already in progress with
-reviewed genes — absorbing it would bury finished work and break its index entry. This page
-is the cross-cutting layer above them: shared principles, shared ontology issues, and the
-corpus-wide audit that no single condensate project would produce.
+same mould as PEROXISOME or ER_PHAGY, and CAEEL_P_GRANULES is now mature with 19 completed
+reviews — absorbing it would bury finished work and break its index entry. This page is the
+cross-cutting layer above them: shared principles, shared ontology issues, and the corpus-wide
+audit that no single condensate project would produce.
 
-The P-granule work is also the methodological precedent worth generalising. It is the only
-place in the corpus where curators asserted `GO:0140693` as a **new** annotation rather than
-accepting an existing one — meg-2, meg-3, meg-4, and pgl-2 all carry `NEW`, four of the five
-`NEW` scaffold annotations in the repository. That is principle 1 already being applied,
-before it was written down.
+The P-granule work is also the methodological precedent worth generalising. It is the largest
+block of reviewer-added `GO:0140693` annotations: deps-1, meg-2, meg-3, meg-4 and pgl-2 all
+carry `NEW`, five of the seven `NEW` scaffold annotations in the repository. That is
+principle 1 already being applied, before it was written down.
 
-## Proposed first batch
+## Scaffold calibration
 
-Genes that already carry `GO:0140693` are the natural calibration set: small, cross-species,
-and already reviewed, so the batch tests the principles rather than the pipeline.
+Genes that already carry `GO:0140693` are the natural calibration set: small and cross-species,
+so the batch tests the principles rather than the pipeline. The September 2026 starting set
+covered SQSTM1, NFE2L2, LGALS3, mouse and rat p53, Ccnt1, mid1 and TARDBP; the live roster
+has since expanded to 46 scaffold rows across 23 folders:
 
-- **SQSTM1** — six scaffold annotations, five IDA, all `ACCEPT`; also the corpus's only
-  `GO:0140694` gene. The best-supported scaffold in the repository and the reference case.
-- **NFE2L2**, **LGALS3** — IDA scaffold annotations, `ACCEPT`; test whether the evidence
-  meets principle 4.
-- **TP53** and its orthologues — the mouse and rat orthologues were reviewed
-  `KEEP_AS_NON_CORE` and `MARK_AS_OVER_ANNOTATED` respectively, both on ISS/ISO. A live
-  disagreement about whether a scaffold function propagates by similarity at all.
-- **Ccnt1**, **mid1** — non-human scaffold annotations; check taxon-appropriateness.
-- **TARDBP** — heavily condensate-associated and disease-relevant, and a bridge to
-  STRESS_GRANULES.
+- **SQSTM1** — six scaffold annotations, five IDA, all `ACCEPT`; one of three GOA folders
+  with `GO:0140694`. The best-supported scaffold in the repository and the reference case.
+- **NFE2L2**, **LGALS3**, **mid1** — IDA scaffold annotations, `ACCEPT`; test whether the
+  evidence meets principle 4 in different cellular contexts.
+- **TARDBP**, **TP53** and p53 orthologues — direct human scaffold rows now sit alongside
+  propagated mouse and rat p53 rows that were reviewed `KEEP_AS_NON_CORE` and
+  `MARK_AS_OVER_ANNOTATED` respectively. They expose a live disagreement about whether
+  a scaffold function propagates by similarity at all.
+- **AR**, **BLNK**, **CGAS**, **HNRNPA2B1**, **NLRP3**, **SOS1** — newer completed human
+  signaling or nuclear-scaffold reviews that accepted existing GO:0140693 rows.
+- **FLG**, **Q6WDN4**, **deps-1**, **meg-2**, **meg-3**, **meg-4**, **pgl-2** —
+  reviewer-added scaffold rows that exercise the bar for a `NEW` molecular-function
+  annotation.
+
+Follow-up issue [#4054](https://github.com/ai4curation/ai-gene-review/issues/4054) tracks
+the remaining pass/fail sweep over this expanded roster.
 
 ## Open questions
 
 - Should `GO:0140693` have children distinguishing homotypic self-assembly from
-  heterotypic client recruitment? Nine genes is too few to tell; the batch should decide.
+  heterotypic client recruitment? The expanded 23-folder roster should decide.
 - Is a "biomolecular condensate" CC grouping class worth requesting, given that the
   membrane/no-membrane axis already exists and cuts differently?
 - What is the minimum evidence standard for a scaffold assertion, and should reviews record
   it structurally (e.g. as a knowledge-gap `boundary`) rather than in prose?
-- Do IEA/ISS/ISO scaffold annotations survive scrutiny anywhere? Of the 22 in the corpus, 8
-  are non-experimental and they account for every non-`ACCEPT` outcome.
+- Do IEA/ISS/ISO scaffold annotations survive outside the Ccnt1 case, or do mouse Trp53 and
+  rat Tp53 expose an orthology-transfer boundary for condensate scaffolds?

@@ -19,10 +19,10 @@ manifest:
 
 # Chimeric mRNA Trans-Fusions in Immunity
 
-**Bottom line:** a chimeric trans-fusion transcript joins exons from two separate genes,
-often on different chromosomes, into one mRNA by RNA trans-splicing with no DNA
-rearrangement, and its translation can yield a hybrid protein with its own function. A 2026
-Nature study (PMID:42686912) showed that inflammation in mouse macrophages produces a
+**Bottom line:** a chimeric trans-fusion transcript joins exons from two separate genes
+into one mRNA by RNA trans-splicing with no DNA rearrangement, and its translation can
+yield a hybrid protein with its own function. A 2026 Nature study (PMID:42686912) showed
+that inflammation in mouse macrophages produces a
 GSDMD:TMEM106A chimera whose TMEM106A part is read out of frame, and that the chimeric protein
 binds canonical GSDMD N-termini to speed pore formation and IL-1β release. We reviewed the two
 human parent genes, GSDMD (77 annotations) and TMEM106A (10), both now COMPLETE, and recorded
@@ -63,15 +63,14 @@ inflammation, with a trans-spliced **GSDMD:TMEM106A** chimera as the worked exam
   frame from Tmem106a (Gsdmd-Tmem106a) in mice" [PMID:42686912]. The GSDMD contribution is
   its pore-forming portion; the TMEM106A contribution is an **out-of-frame** peptide, i.e.
   not the canonical TMEM106A protein.
-- **How it forms — literally "trans".** The two parent genes sit at **distinct, non-adjacent
-  loci** and the fusion is made at the RNA level by **trans-splicing**, not by a DNA
-  translocation or a cis read-through: "Chromatin conformation capture studies reveal that
-  inflammation induces **interchromosomal** DNA interactions, positioning parent genes
-  proximally to facilitate the formation of chimeric mRNA" [PMID:42686912]. The
-  characterized chimera is the **mouse** *Gsdmd*/*Tmem106a* pair; we have not verified the
-  mouse chromosome assignments, and the abstract does not state the splice-site chemistry,
-  so no more specific mechanism is asserted here.
-- **When/where.** Inflammasome priming upregulates the chimera in myeloid cells; the protein
+- **How it forms — literally "trans".** The fusion is made at the RNA level by
+  **trans-splicing**, not by a DNA translocation or a cis read-through: "Chromatin
+  conformation capture studies reveal that inflammation induces **interchromosomal** DNA
+  interactions, positioning parent genes proximally to facilitate the formation of chimeric
+  mRNA" [PMID:42686912]. The characterized chimera is the **mouse** *Gsdmd*/*Tmem106a* pair;
+  we have not verified the mouse chromosome assignments, and the abstract does not state the
+  splice-site chemistry, so no more specific mechanism is asserted here.
+- **When/where.** Inflammasome priming upregulates the chimera in macrophages; the protein
   localizes to the plasma membrane [PMID:42686912].
 - **Function.** After inflammasome activation, "GSDMD-TMEM106A directly interacts with
   canonical GSDMD N termini to accelerate and enhance pore formation and IL-1β release"
@@ -84,19 +83,17 @@ inflammation, with a trans-spliced **GSDMD:TMEM106A** chimera as the worked exam
   non-targeted and targeted validation to identify chimeric transcripts in macrophages"
   [PMID:42686912] — so GSDMD:TMEM106A is the worked example out of a larger catalogue. The
   cached record for PMID:42686912 is **abstract-only** (`full_text_available: false`) and the
-  abstract gives no catalogue size, so no figure is quoted here. (An earlier draft of this
-  page asserted ">30,000 chimeric mRNAs"; that number is not in any source we hold and has
-  been removed.)
+  abstract gives no catalogue size, so no catalogue-size figure is quoted here.
 
 ```mermaid
 flowchart TB
     subgraph locusA["Gsdmd locus"]
       G["Gsdmd pre-mRNA<br/>(pore-forming N-terminus)"]
     end
-    subgraph locusB["Tmem106a locus (different chromosome)"]
+    subgraph locusB["Tmem106a locus (separate locus)"]
       T["Tmem106a pre-mRNA<br/>(out-of-frame C-terminal reading)"]
     end
-    INF["Inflammasome priming /<br/>inflammation"] --> LOOP["Interchromosomal<br/>chromatin looping (Hi-C)"]
+    INF["Inflammasome priming /<br/>inflammation"] --> LOOP["Parent-gene proximity<br/>(abstract-level 3C model)"]
     G --> LOOP
     T --> LOOP
     LOOP --> TS["RNA trans-splicing"]
@@ -111,18 +108,13 @@ flowchart TB
 
 | Phenomenon | DNA change? | Parent loci | Mechanism | Example |
 |---|---|---|---|---|
-| **Trans-spliced chimera** | No | Often different chromosomes | RNA trans-splicing | GSDMD:TMEM106A [PMID:42686912] |
+| **Trans-spliced chimera** | No | Distant or separate | RNA trans-splicing | GSDMD:TMEM106A [PMID:42686912] |
 | **cis read-through / conjoined gene** | No | Adjacent, same strand | Transcription past the stop of gene 1 into gene 2 | *(examples uncited — see note)* |
 | **DNA fusion gene** | Yes (translocation) | Any | Genomic rearrangement | *(examples uncited — see note)* |
 
-> **Note on the examples.** Only the GSDMD:TMEM106A row is sourced here. An earlier draft
-> listed **CLEC12A-MIR223HG** in the trans-spliced row; PR review flagged that the two loci
-> are neighbours on 12p13.31, which would make a **cis read-through** the more likely
-> reading. Since the entry carried no citation either way, it has been removed rather than
-> reclassified on an unsourced argument. The other illustrative pairs were likewise uncited
-> and have been dropped; the table now states the *criteria* that distinguish the three
-> phenomena, which is what it is for. Re-add examples only with a citation that establishes
-> the mechanism, not just the fusion.
+> **Note on the examples.** Only the GSDMD:TMEM106A row is sourced here. The other rows
+> deliberately omit illustrative pairs because this table needs citations that establish
+> the mechanism, not just the presence of a fused transcript.
 
 The GSDMD:TMEM106A case is notable for being a **physiologically functional immune effector**,
 whereas many catalogued chimeras are cancer-associated or of unproven function.
@@ -143,6 +135,13 @@ whereas many catalogued chimeras are cancer-associated or of unproven function.
 - How many of the catalogued chimeras are translated and functional, and by what
   criteria should any be curated as distinct gene products for GO?
 - Do other pyroptosis/inflammasome components participate in functional chimeras?
+
+## Project Status
+
+- [x] Review canonical human GSDMD and TMEM106A without assigning the mouse chimera to either
+  parent gene product
+- [ ] Define GO curation criteria for functional chimeric transcripts
+  ([#4050](https://github.com/ai4curation/ai-gene-review/issues/4050))
 
 ## References
 

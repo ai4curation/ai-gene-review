@@ -21,13 +21,13 @@ whether the catalytic residues are still there, whether a "transmembrane"
 segment makes sense, or whether a family member really has the family's
 substrate. This page catalogues four early cases where the review agent did
 that kind of ad-hoc analysis, one per analysis type. Epe1 (*S. pombe*) is the
-worked example: its JmjC domain carried seven catalytic or metal-binding
-annotations, and all seven are REMOVE in the review, while PHYKPL lost its IEA
-`transaminase activity` and *C. albicans* LPL1 lost its IEA `membrane` row.
+worked example: inherited and electronic JmjC catalytic rows are REMOVE in
+the review, while PHYKPL lost its IEA `transaminase activity` and *C. albicans*
+LPL1 lost its IEA `membrane` row.
 Only Epe1 has a scripted `-bioinformatics/` folder; PHYKPL and LPL1 were
 argued inside the review, and AcrF8 has no analysis folder. The catalogue
-below stopped in January 2026, while the repository now holds 237
-`genes/*/*/*-bioinformatics/` folders (116 human, 40 HORSE, 24 DROME), so the
+below stopped in January 2026, while the repository now holds 278
+`genes/*/*/*-bioinformatics/` folders (123 human, 40 HORSE, 25 DANRE, 24 DROME), so the
 table is a sample, not an inventory; see [BIOINFORMATICS](BIOINFORMATICS.md)
 for the reproducible-workflow standard.
 
@@ -59,7 +59,9 @@ The agentic AI system can:
 - Analysis: the Fe(II) facial triad is H297, E299 and **Y370**; the third
   ligand, which must be histidine for Fe(II) coordination, is tyrosine, the same
   substitution seen in catalytically dead human PHF2
-- **Conclusion**: Pseudo-enzyme lacking catalytic activity
+- **Conclusion**: Pseudo-enzyme candidate; inherited and electronic catalytic rows
+  are removed, while two experimental H3K9 demethylase rows and the generic
+  metal-binding row remain undecided pending curator review
 - **Location**: `genes/SCHPO/Epe1/Epe1-bioinformatics/`
 - **Provenance of the triad call**: the first Epe1 script reported an "HVD
   instead of HXD" motif, which does not hold up (HVD fits HXD). The Y370 defect
@@ -111,7 +113,7 @@ The agentic AI system can:
 
 | Gene | Species | Analysis Type | Key Finding | Status |
 |------|---------|--------------|-------------|--------|
-| Epe1 | pombe | Active site, cofactor binding | Pseudo-demethylase, no Fe(II) binding | COMPLETE |
+| Epe1 | pombe | Active site, cofactor binding | Electronic JmjC catalytic rows removed; experimental demethylase rows undecided | DRAFT |
 | AcrF8 | BPZF4 | Domain architecture, structure | Dual protein-RNA binding mechanism | COMPLETE |
 | PHYKPL | human | Substrate specificity | Phospho-lyase, not transaminase | COMPLETE |
 | LPL1 | CANAL | Localization signals | Lipid droplet, not membrane | COMPLETE |
@@ -159,13 +161,15 @@ Consider computational analysis when:
 - [x] pombe/Epe1 - JmjC domain analysis, Fe(II) binding
 - [x] human/PHYKPL - Enzyme classification
 - [x] CANAL/LPL1 - Localization prediction
+- [ ] Script the PHYKPL and LPL1 checks ([#4028](https://github.com/ai4curation/ai-gene-review/issues/4028))
+- [ ] Generate a full bioinformatics-analysis folder index ([#4029](https://github.com/ai4curation/ai-gene-review/issues/4029))
 
 ## Bioinformatics Folders
 - [x] genes/SCHPO/Epe1/Epe1-bioinformatics/
 - [ ] genes/human/PHYKPL/PHYKPL-bioinformatics/ (to be created)
 - [ ] genes/CANAL/LPL1/LPL1-bioinformatics/ (to be created)
 
-Last updated: 2026-01-22
+Last updated: 2026-10-04
 
 # NOTES
 
@@ -178,8 +182,9 @@ Documented cases where ad-hoc bioinformatics resolved annotation ambiguities.
 **Key Insight**: The most valuable bioinformatics application is **active site validation** for enzymes. Many proteins are annotated with enzymatic activity based on domain presence (IEA), but lack conserved catalytic residues.
 
 **Epe1 Example**:
-- JmjC domain → 7 enzymatic activity annotations
+- JmjC domain → inherited and electronic enzymatic activity annotations
 - Active site analysis → HVD instead of HXD, no Fe(II) binding (superseded: the defect is Y370 at the third Fe(II) ligand; see the Epe1 example above)
-- **Result**: All 7 enzymatic annotations marked REMOVE
+- **Result**: four inherited/electronic catalytic rows marked REMOVE; metal-binding
+  and experimental H3K9 demethylase rows left UNDECIDED
 
 This demonstrates how computational analysis can systematically identify pseudo-enzymes and prevent annotation errors from propagating.

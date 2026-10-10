@@ -38,7 +38,7 @@ What a literature-first function annotator gets right, and where its GO layer fa
 
 - **GO layer is lossy:** the specific curated molecular function appeared in Affinage's GO profile for **1 of 42** human genes (KRAS `GTPase activity`).
 - **Narrative is useful:** on the 22 Fanconi anemia genes it contributed **59 papers** and **13 new GO annotations** across 10 genes, with **no** curation decision reversed.
-- **Not a literature search:** it supplied **52%** of the 718 references 91 reviews had to find (an upper bound: 56 reviews were written with its report in hand); `gates_passed` checks precision, not recall.
+- **Not a literature search:** on 69 non-FA PAINT genes it supplied **48%** of 653 non-GOA references; 57 of those 69 reviews had read the report, so this is still an upper bound.
 
 ---
 
@@ -91,8 +91,8 @@ What a literature-first function annotator gets right, and where its GO layer fa
 ## Status and next steps
 
 - ✅ 42 genes in four GO-layer cohorts; 22-gene forward test; 91-gene retrieval test.
-- ⬜ Ontology-aware (ancestor/descendant) scoring instead of exact ids.
-- ⬜ Score the narrative with a rubric and a blinded second rater.
-- ⬜ Genome-wide symbol-collision sweep (accession vs described protein).
+- ⬜ Per-term / primary-core-MF precision scoring.
+- ⬜ Score narratives with a rubric and a blinded second rater.
+- ⬜ Genome-wide symbol-collision sweep; clean blind recall test.
 
-**Read more:** `projects/AFFINAGE_EVALUATION.md` · `projects/AFFINAGE_EVALUATION/results/` · `compare_affinage.py` · `retrieval_recall.py`
+**Read more:** `projects/AFFINAGE_EVALUATION.md` · `projects/AFFINAGE_EVALUATION/results/` · ai-gene-review#4031
