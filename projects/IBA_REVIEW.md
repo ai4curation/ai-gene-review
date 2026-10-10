@@ -104,14 +104,14 @@ pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
 wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
 failure modes, per-source status) that reviews now use; as of 2026-10-04,
-1,087 gene reviews carried 6,057 such blocks, including 2,686 on IBA rows and
-3,371 on other propagated or inferred rows. We did this because an IBA error at a family node
+1,487 gene reviews carried 7,495 such blocks across IBA, TreeGrafter, and other
+propagated or inferred rows. We did this because an IBA error at a family node
 spreads to every descendant, so one bad call can mislabel hundreds of
 proteins. The work covers both directions: in 1,015 reviewed human genes, 511
 curated core molecular functions (across 423 genes) had no IBA support in the
 2026-09-26 evidence-subtraction snapshot. A corpus-wide re-review started on
-2026-09-20 over 3,427 genes and 11,829 propagated annotations; 143 genes are
-reviewed, 57 await adjudication, and 3,226 remain unreviewed as of 2026-10-04
+2026-09-20 over 3,427 genes and 11,829 propagated annotations; 157 genes are
+reviewed, 56 await adjudication, and 3,213 remain unreviewed as of 2026-10-04
 ([rereview-2026-09-20](IBA_REVIEW/rereview-2026-09-20/README.md)).
 
 ## Status and follow-ups
@@ -119,8 +119,8 @@ reviewed, 57 await adjudication, and 3,226 remain unreviewed as of 2026-10-04
 - The 2026-09-20 IBA/TreeGrafter re-review baseline is frozen at 3,427 gene
   reviews: 10,868 IBA annotations plus 961 TreeGrafter annotations. Running
   `projects/IBA_REVIEW/rereview-2026-09-20/inventory.py` on 2026-10-04
-  refreshed progress to 143 `reviewed`, 57 `awaiting_adjudication`, 1
-  `incorporated_with_disagreement`, and 3,226 `unreviewed`.
+  refreshed progress to 157 `reviewed`, 56 `awaiting_adjudication`, 1
+  `incorporated_with_disagreement`, and 3,213 `unreviewed`.
 - [#4095](https://github.com/ai4curation/ai-gene-review/issues/4095) tracks the
   remaining IBA corpus re-review from the homology-propagation umbrella.
 - [#3988](https://github.com/ai4curation/ai-gene-review/issues/3988) tracks the

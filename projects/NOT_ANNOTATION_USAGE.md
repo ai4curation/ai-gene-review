@@ -19,8 +19,8 @@ a gene product lacks a function. In total 169 NOTs rest on IEP alone, and anothe
 TAIR computational (`RCA`) localization calls. UniProt CAUTION notes track the useful
 end: 27% of reviewed proteins with an MF NOT carry a CAUTION, 19.5% with loss-of-activity
 wording, against 7% and 1.9% for proteins whose NOTs are only to processes or
-locations. Our own gene reviews have so far ACCEPTed 233 of 297 NOTs they met
-(78.5%), so the
+locations. Our own gene reviews have so far ACCEPTed 266 of 342 NOTs they met
+(77.8%), so the
 review guidance needs a rule for judging NOTs, not just positive annotations.
 
 We started this because the FGFR4 review met `NOT involved_in response to bile acid`
@@ -89,8 +89,8 @@ Full tables are in [RESULTS.md](NOT_ANNOTATION_USAGE/RESULTS.md).
   The reverse direction (CAUTION notes describing lost activity on proteins with no MF
   NOT) is covered by Query B of the [UniProt CAUTION Note project](UNIPROT_CAUTION_NOTE.md).
 - **Our reviews have been deferential.**
-  - 297 negated rows in 187 reviews: 233 ACCEPT, 27 UNDECIDED, 25 KEEP_AS_NON_CORE,
-    9 REMOVE and 3 MARK_AS_OVER_ANNOTATED.
+  - 342 negated rows in 222 reviews: 266 ACCEPT, 28 UNDECIDED, 24 KEEP_AS_NON_CORE,
+    21 REMOVE and 3 MARK_AS_OVER_ANNOTATED.
   - The worklist in RESULTS.md lists the 9 reviewed NOTs to non-defense "response to"
     terms or with IEP evidence. FGFR4 and AGR2 are already REMOVE.
   - Not every item on that list is bad. CRY2 NOT photoreactive repair records that a

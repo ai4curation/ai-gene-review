@@ -68,9 +68,9 @@ The discovery method for both: the **AI gene review framework**.
 
 Findings emerged from **AI-assisted gene review**, then verified against primary evidence:
 
-- Current corpus: **5,625** gene-review YAMLs; **1,087** already carry structured `propagation_review` blocks
+- Current corpus: **6,254** gene-review YAMLs; **1,487** already carry structured `propagation_review` blocks
 - 2026-09-20 re-review baseline: **3,427** genes, **11,829** propagated rows (`10,868 IBA`, `961 TreeGrafter`)
-- 2026-10-04 progress: **143 reviewed**, **57 awaiting adjudication**, **3,226 unreviewed**
+- 2026-10-04 progress: **157 reviewed**, **56 awaiting adjudication**, **3,213 unreviewed**
 - Each strong REMOVE is cross-checked against UniProt, GO definitions, GOA **WITH/FROM**, PANTHER placement, cached literature, and MSA evidence where catalytic residues matter
 
 ---
@@ -215,9 +215,9 @@ The recurring failure mode is **acting on one line of evidence**. Flagging a cur
 
 # Status: MATURE + ACTIVE RE-REVIEW
 
-53 worked cases · 6,057 structured propagation-review blocks
+53 worked cases · 7,495 structured propagation-review blocks
 
-`rereview-2026-09-20`: 143 reviewed · 57 awaiting adjudication · 3,226 unreviewed
+`rereview-2026-09-20`: 157 reviewed · 56 awaiting adjudication · 3,213 unreviewed
 
 Verify, don't trust — synthesize UniProt, GO definitions, WITH/FROM, MSA, and primary literature before flagging.
 

@@ -27,7 +27,7 @@ merged the first into the second on 2026-08-22, broadening the definition of
 GO:0009249 to cover both assembly and attachment. We recorded the 12
 experimental annotations and 11 InterPro2GO/UniRule mappings the merge
 touches, then migrated the five reviews in this repo that carried GO:0009107
-(POPTR LIP1, LIP1P-1, LIP1P-2; BACSU lipA; PSEPK lipA). All nine affected
+(POPTR LIP1, LIP1P-1, LIP1P-2; BACSU/lipA; PSEPK/lipA). All nine affected
 `existing_annotations` rows are now MODIFY → GO:0009249, and none of the four
 `core_functions` blocks that listed GO:0009107 still does (PR #2784). What
 remains is a GOA re-fetch once GOA catches up and optional reviews of the
@@ -172,7 +172,7 @@ already separately mapped.
 
 ## Impact on this repo
 
-Five gene reviews carry `GO:0009107` and nine carry `GO:0009249`. Because
+Five gene reviews carry `GO:0009107` and ten carry `GO:0009249`. Because
 `existing_annotations[].term.id` values are GOA-sourced and deliberately **not**
 hard-validated (see CLAUDE.md), the obsoletion does not break validation there —
 but `core_functions` term ids **are** strictly validated. Four reviews used
@@ -213,7 +213,10 @@ are used interchangeably.
 ### Reviews containing `GO:0009249` (unaffected, but in scope for re-check)
 
 `POPTR/LIP1`, `POPTR/LIP1P-1`, `POPTR/LIP1P-2`, `BACSU/lipA`, `PSEPK/lipA`,
-`PSEPK/lipB`, `PSEPK/gcvH1`, `PSEPK/gcvH2`, and `METEA/gcvH`. The three
+`PSEPK/lipB`, `PSEPK/gcvH1`, `PSEPK/gcvH2`, `METEA/gcvH`, and `human/GCSH`.
+These gain scope (not lose it) when the definition broadens: `human/GCSH`
+already argues in its review text that `GO:0009249` is the better description of
+its role, which the broadened definition makes unambiguously correct. The three
 GcvH-family rows need a substrate/relay-role check: the two PSEPK rows are
 already `UNDECIDED`, and METEA/gcvH was flagged in
 [ai4curation/ai-gene-review#4118](https://github.com/ai4curation/ai-gene-review/issues/4118)

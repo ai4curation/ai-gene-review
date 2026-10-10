@@ -206,58 +206,63 @@ Counts are per reviewed (Swiss-Prot) protein carrying at least one NOT annotatio
 
 ## How this repo's reviews treated negated annotations
 
-297 negated rows across 187 reviewed genes.
+342 negated rows across 222 reviewed genes.
 
 | Action | rows | % |
 |---|---:|---:|
-| ACCEPT | 233 | 78.5 |
-| UNDECIDED | 27 | 9.1 |
-| KEEP_AS_NON_CORE | 25 | 8.4 |
-| REMOVE | 9 | 3.0 |
-| MARK_AS_OVER_ANNOTATED | 3 | 1.0 |
+| ACCEPT | 266 | 77.8 |
+| UNDECIDED | 28 | 8.2 |
+| KEEP_AS_NON_CORE | 24 | 7.0 |
+| REMOVE | 21 | 6.1 |
+| MARK_AS_OVER_ANNOTATED | 3 | 0.9 |
 
 | Evidence | rows | % |
 |---|---:|---:|
-| IDA | 133 | 44.8 |
-| IMP | 70 | 23.6 |
-| ISS | 22 | 7.4 |
-| IBA | 17 | 5.7 |
-| IKR | 14 | 4.7 |
-| IGI | 9 | 3.0 |
-| TAS | 9 | 3.0 |
-| ISO | 8 | 2.7 |
-| NAS | 4 | 1.3 |
-| RCA | 3 | 1.0 |
-| EXP | 3 | 1.0 |
-| IEP | 2 | 0.7 |
-| IPI | 2 | 0.7 |
+| IDA | 152 | 44.4 |
+| IMP | 84 | 24.6 |
+| ISS | 27 | 7.9 |
+| IBA | 18 | 5.3 |
+| IKR | 16 | 4.7 |
+| IGI | 12 | 3.5 |
+| TAS | 9 | 2.6 |
+| ISO | 8 | 2.3 |
+| NAS | 4 | 1.2 |
+| RCA | 3 | 0.9 |
+| IPI | 3 | 0.9 |
+| EXP | 3 | 0.9 |
+| IEP | 2 | 0.6 |
 | IC | 1 | 0.3 |
 
 ### Action by term category
 
 | Category | Rows | Actions |
 |---|---:|---|
-| catalytic activity | 74 | ACCEPT 65, UNDECIDED 5, KEEP_AS_NON_CORE 4 |
-| regulation of biological process | 48 | ACCEPT 36, UNDECIDED 7, KEEP_AS_NON_CORE 3, REMOVE 2 |
-| cellular component | 37 | ACCEPT 30, KEEP_AS_NON_CORE 4, REMOVE 3 |
-| metabolic process | 26 | ACCEPT 22, KEEP_AS_NON_CORE 2, UNDECIDED 2 |
-| binding (other) | 24 | ACCEPT 22, MARK_AS_OVER_ANNOTATED 1, REMOVE 1 |
-| developmental process | 22 | ACCEPT 10, KEEP_AS_NON_CORE 6, UNDECIDED 5, MARK_AS_OVER_ANNOTATED 1 |
-| other BP | 16 | ACCEPT 13, KEEP_AS_NON_CORE 2, MARK_AS_OVER_ANNOTATED 1 |
-| transporter activity | 14 | ACCEPT 9, UNDECIDED 5 |
-| localization | 12 | ACCEPT 7, UNDECIDED 3, REMOVE 1, KEEP_AS_NON_CORE 1 |
-| response to stimulus (other) | 8 | KEEP_AS_NON_CORE 3, ACCEPT 3, REMOVE 2 |
-| signaling | 6 | ACCEPT 6 |
+| catalytic activity | 84 | ACCEPT 74, UNDECIDED 5, KEEP_AS_NON_CORE 3, REMOVE 2 |
+| regulation of biological process | 52 | ACCEPT 40, UNDECIDED 7, KEEP_AS_NON_CORE 3, REMOVE 2 |
+| cellular component | 44 | ACCEPT 34, REMOVE 5, KEEP_AS_NON_CORE 4, UNDECIDED 1 |
+| metabolic process | 28 | ACCEPT 25, UNDECIDED 2, KEEP_AS_NON_CORE 1 |
+| binding (other) | 28 | ACCEPT 25, REMOVE 2, MARK_AS_OVER_ANNOTATED 1 |
+| developmental process | 26 | ACCEPT 13, KEEP_AS_NON_CORE 7, UNDECIDED 5, MARK_AS_OVER_ANNOTATED 1 |
+| other BP | 20 | ACCEPT 16, KEEP_AS_NON_CORE 3, MARK_AS_OVER_ANNOTATED 1 |
+| transporter activity | 15 | ACCEPT 10, UNDECIDED 5 |
+| response to stimulus (other) | 13 | REMOVE 8, ACCEPT 3, KEEP_AS_NON_CORE 2 |
+| localization | 13 | ACCEPT 8, UNDECIDED 3, REMOVE 1, KEEP_AS_NON_CORE 1 |
+| signaling | 8 | ACCEPT 7, REMOVE 1 |
 | other MF | 5 | ACCEPT 5 |
 | unknown | 4 | ACCEPT 4 |
-| defense/immune response | 1 | ACCEPT 1 |
+| defense/immune response | 2 | ACCEPT 2 |
 
 ### Worklist: reviewed NOTs to non-defense 'response to' terms or with IEP evidence
 
 | Organism | Gene | GO term | Label | Evidence | Current action |
 |---|---|---|---|---|---|
 | ARATH | CLV3 | GO:0002221 | pattern recognition receptor signaling pathway | IEP | ACCEPT |
-| ARATH | GID1A | GO:0009739 | response to gibberellin | IGI | KEEP_AS_NON_CORE |
+| ARATH | GID1A | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1B | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1B | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1B | GO:0009739 | response to gibberellin | IMP | REMOVE |
+| ARATH | GID1C | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1C | GO:0009739 | response to gibberellin | IMP | REMOVE |
 | SCHPO | chk1 | GO:0006281 | DNA repair | EXP | ACCEPT |
 | human | AGR2 | GO:0034976 | response to endoplasmic reticulum stress | IMP | REMOVE |
 | human | CRY2 | GO:0000719 | photoreactive repair | IDA | ACCEPT |

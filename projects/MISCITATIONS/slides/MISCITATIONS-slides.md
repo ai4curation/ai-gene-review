@@ -36,7 +36,7 @@ Citations that resolve, match their title, quote verbatim, and are still wrong
 
 ## Bottom line
 
-- We aggregated every `reference_review` in the repo: **23,416** adjudicated references, **871 flagged** (3.7% of an enriched sample, not an error rate).
+- We aggregated every `reference_review` in the repo: **33,255** adjudicated references, **1,085 flagged** (3.3% of an enriched sample, not an error rate).
 - Six seed cases re-verified live: **all six stand**, and all six errors live in **GOA, IntAct or UniProt**, not in this repo.
 - **4 of 6** are defects in how a correct paper was **attached** (WITH/FROM, evidence code, missing `NOT`), and the schema has **no field** for that yet.
 
@@ -46,7 +46,7 @@ Citations that resolve, match their title, quote verbatim, and are still wrong
 
 - **Check 1:** fetched title must match recorded title. A wrong PMID imported with its own title passes.
 - **Check 2:** every quote must be verbatim in the cached paper. A verbatim quote can support the **opposite** conclusion.
-- **Skipped prefixes:** `file:`, `GO_REF:`, `Reactome:` are never snippet-checked; **304 of 871** flags are on them.
+- **Skipped prefixes:** `file:`, `GO_REF:`, `Reactome:` are not checked by the external snippet validator; **347 of 1,085** flags are on them.
 
 So the flag is a manual judgement, recorded in `references[].reference_review.correctness`.
 
@@ -88,7 +88,7 @@ So the flag is a manual judgement, recorded in `references[].reference_review.co
 
 ## Patterns
 
-- **A wrong identifier is rarely wrong once:** 17 of 41 `WRONG_IDENTIFIER` rows come from eight PMIDs.
+- **A wrong identifier is rarely wrong once:** 27 of 56 `WRONG_IDENTIFIER` rows come from twelve PMIDs.
   - paralog spread: ELOVL1/ELOVL3 ← an ELOVL5 paper; NAA10/NAA40 ← a NAA60 paper
   - complex-partner spread: NPLOC4/UFD1, SERP1/SRPRB, UPF1/UPF2, CUL1/RBX1
 - **Symbol collision:** ADPRH ← "ARH1" hypercholesterolaemia; BRIP1 ← transcription factor BACH1.
@@ -101,7 +101,7 @@ So the flag is a manual judgement, recorded in `references[].reference_review.co
 - ✅ Aggregator, generated register and TSV; six seed cases verified and written up.
 - ✅ Two-kind taxonomy: reference-level vs evidence-attachment miscitation.
 - ⬜ **Decide where attachment defects go** (per-annotation flag, `FindingReviewStatusEnum`, or an `evidence_review` slot).
-- ⬜ Triage 349 `MISCITED` + 41 `WRONG_IDENTIFIER`; neighbour sweep on eight recurring PMIDs.
+- ⬜ Triage 417 `MISCITED` + 56 `WRONG_IDENTIFIER`; neighbour sweep on recurring PMIDs.
 - ⬜ Track schema and upstream-reporting follow-ups in ai4curation/ai-gene-review#4225.
 
 **Read more:** `projects/MISCITATIONS.md` · `MISCITATIONS/miscitation-register.md` · sibling `projects/MISCITATION_AUDIT.md`

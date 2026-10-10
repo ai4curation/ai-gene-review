@@ -65,8 +65,8 @@ analytical evidence. Family-review changes travel with the genes they discuss.
 
 ## Unfinished scientific work
 
-The regenerated progress report now records **143 reviewed**,
-**57 awaiting adjudication**, and **3,226 unreviewed** genes
+The regenerated progress report now records **157 reviewed**,
+**56 awaiting adjudication**, and **3,213 unreviewed** genes
 against the immutable 3,427-gene baseline as of 2026-10-04. These are audit
 statuses, not merge statuses. `reviewed` can still carry explicit human
 follow-up questions.
@@ -117,8 +117,8 @@ scaffolded session identifiers were retained.
 All 1,679 originally recovered paths are assigned to the batches above, except
 for the intentionally renamed CSR-1 archive whose bytes and hash are preserved.
 The comparison JSON, figure, Table S8 and deterministic benchmark sidecars are
-regenerated together. The full audit is currently 143 reviewed, 57 awaiting
-adjudication and 3,226 unreviewed; publishing these batches does not change the
+regenerated together. The full audit is currently 157 reviewed, 56 awaiting
+adjudication and 3,213 unreviewed; publishing these batches does not change the
 3,427-gene scientific-work denominator. Final merge status is recorded on the
 linked PRs.
 
