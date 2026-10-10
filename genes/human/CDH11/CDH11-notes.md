@@ -27,3 +27,12 @@ Supporting quotations are sparse and source-specific, with no repetition in thes
 ### Independent specificity and coherence check
 
 The final MF uses GO:0098641 because the adhesive ligand is itself a cadherin, a more specific fit than generic cell-cell adhesion mediator activity. Both unqualified cell-migration assertions are accepted as core, preserving the pig/valve scope of the ISS evidence. The skin-development decision concerns process scope, not rejection of the experimental fibrosis phenotype. No PAINT-node reassessment is claimed.
+
+
+## 2026-10-10 — cell-substrate adhesion follow-up
+
+The cell-substrate reason now separates the original assays explicitly. In PMID:33811546, human-CDH11-bearing mouse L cells bind immobilized human CDH11-Fc; that geometry demonstrates homophilic trans adhesion. Patient fibroblast initial attachment is comparable to controls through two hours (Fig.S4C), despite altered spreading and immature paxillin-positive focal adhesions (Fig.5b–d). The earlier reason’s plate-assay explanation is superseded by the source-grounded rationale below.
+
+Selected full [Langhe et al., PMID:26952325](https://www.nature.com/articles/ncomms10909) Results and Methods resolve the independent mechanism cited in the original Discussion. Xenopus neural-crest loss/rescue, flipping and single-cell force assays establish a structural contribution to fibronectin attachment through cadherin-11 transmembrane/cytoplasmic regions and a syndecan-4 complex. Syndecan-4 supplies the extracellular fibronectin-recognition role. Endogenous human HFF-1 focal-adhesion localization is distinct supporting evidence; Xenopus constructs transfected into human cell lines remain Xenopus protein experiments. This supports retaining the existing process as non-core with explicit species and assay limits, not assigning CDH11 an intrinsic fibronectin- or integrin-binding function.
+
+The core description now states the already accepted adhesion-coupled movement context. The human osteoblast co-IP quote is explicitly corroborative because the source discusses cadherins 4 and 11 together. Cytoplasmic localization remains unresolved: absence from a UniProt location summary is not proof of absence. Other actions, source assertions, products, earlier evidence JSON and source caches are unchanged. A genuine normal full cache for PMID:26952325 is added; no new scientific quotations are introduced.
