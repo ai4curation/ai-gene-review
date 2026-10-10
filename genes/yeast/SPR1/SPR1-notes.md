@@ -16,7 +16,8 @@
   assertion is on `PTN001262687`, the fungal extracellular and
   fungal-type-cell-wall beta-glucan assertions are on `PTN001262686`, and broad
   `GO:0009251 glucan catabolic process` is inherited from `PTN001262628`, a
-  family-root node seeded by Aspergillus SF34/SF39 exgB/exgD-like members.
+  family-root node that is directionally valid for SPR1 but less precise than
+  beta-glucan catabolism.
 - GOA already caches the Muthukumar et al. 1993 SPR1 paper and the Larriba et
   al. 1995 exoglucanase review. UniProt additionally cites the San Segundo et
   al. 1993 SSG1 cloning paper, so PMID:8509335 was fetched as corroborating
@@ -31,5 +32,12 @@
   native-promoter Spr1-GFP localized to the forming prospore membrane during
   meiosis and to the spore wall of mature spores. The 2014 high-throughput
   sporulation localization paper reports prospore-membrane localization in its
-  supplementary screen; the full-text cache describes the screen and its
-  caveats, but does not expose the SPR1 row from Table S1.
+  supplementary screen; its main text distinguishes soluble secreted proteins in
+  the prospore-membrane lumen from integral and peripheral membrane proteins, so
+  the SPR1 HDA row should be retained as a non-core compartment call.
+- The 2016 SWAT vacuole row came from a constitutive N-terminal tagging screen
+  performed in vegetative cells. Because SPR1 is sporulation-specific, and
+  Sga1 is a closely analogous sporulation-induced secreted glucan-degrading
+  enzyme whose earlier ectopic vegetative vacuole assignment was superseded by
+  prospore-membrane-lumen localization, the SWAT vacuole call is likely
+  over-annotated rather than a native site of Spr1 action.
