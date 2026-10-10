@@ -30,9 +30,12 @@ repointed to GO:0006418; the remaining migration is tracked in
 [#2747](https://github.com/ai4curation/ai-gene-review/issues/2747).
 
 It also surfaced an upstream problem, reported on geneontology/go-annotation#6525:
-zebrafish *gtpbp3*, a tRNA-modifying GTPase rather than a synthetase, is the
-only gene annotated to two of the mitochondrial terms, and a bulk migration
-would carry those six over-annotations into GO:0070127.
+zebrafish *gtpbp3*, a tRNA-modifying GTPase rather than a synthetase, was the
+only gene annotated to two of the mitochondrial terms. ZFIN deleted the six
+obsolete aminoacylation rows on 2026-09-08 and replaced them with a direct
+`tRNA 5-taurinomethyluridine synthase` row; the local follow-up is to re-fetch
+and re-review DANRE/gtpbp3, whose cached GOA file still carries the 2021-09-22
+ZFIN snapshot.
 
 ## Overview
 
@@ -249,7 +252,7 @@ hard-validated, so those will not break validation — but `core_functions` ids
 `GO:0006418` but no obsoleted term. They gain company rather than losing scope
 and are not part of the 33-review migration queue.
 
-### The gtpbp3 case is worth flagging upstream
+### The gtpbp3 case was resolved upstream
 
 `GO:0070153 mitochondrial leucyl-tRNA aminoacylation` and
 `GO:0070155 mitochondrial methionyl-tRNA aminoacylation` have **exactly one
@@ -265,10 +268,14 @@ noting that "gtpbp3KO zebrafish showed increased efficiencies of tRNA
 aminoacylation", which is inconsistent with gtpbp3 acting as a direct ligase and
 instead reflects an indirect consequence of altered tRNA modification.
 
-The merge would silently roll all six of these into one `GO:0070127`, converting
-a visible six-fold over-annotation into a single plausible-looking one. **These
-six annotations should be withdrawn rather than migrated**; this remains the
-main repo-derived follow-up for the open annotation migration ticket.
+The merge would have silently rolled all six of these into one `GO:0070127`,
+converting a visible six-fold over-annotation into a single plausible-looking
+one. After this repo flagged the problem on geneontology/go-annotation#6525,
+ZFIN deleted the six rows and added a direct `GO:0160236 tRNA
+5-taurinomethyluridine synthase` annotation on 2026-09-08. The remaining local
+work is to re-fetch and re-review DANRE/gtpbp3: its cached `gtpbp3-goa.tsv`
+still contains the stale 2021-09-22 ZFIN rows for the six obsolete mitochondrial
+aminoacylation terms.
 
 ### Module impact
 
@@ -322,9 +329,9 @@ Priority order.
 2. **human/AARS2** (Q5JTZ9) — the `proposed_replacement_terms: GO:0070143` is
    already a dangling target. Also carries an IMP on PMID:21549344 that is a
    genuine upstream experimental annotation.
-3. **DANRE/gtpbp3** (Q501Z5) — the six-annotation over-annotation cluster; the
-   sole basis for two of the obsoleted terms. This has been flagged upstream
-   and needs to be carried through GOA migration.
+3. **DANRE/gtpbp3** (Q501Z5) — re-fetch GOA and re-review after ZFIN removed the
+   six-annotation over-annotation cluster upstream on 2026-09-08; the cached
+   local snapshot still contains those obsolete rows.
 4. **The five GatCAB reviews** (POPTR/GATC, PSEPK/gatA, PSEPK/gatB, PSEPK/gatC,
    METTP/gatC) — all hinge on `GO:0070681`, which was obsoleted without a single
    safe `replaced_by` term.
@@ -362,8 +369,9 @@ Priority order.
 Thirty-three reviews are affected, 26 contain strictly validated
 `core_functions` ids that must change, and 16 contain reasoning the obsoletion
 directly contradicts. The ontology-side work has landed; the annotation
-migration remains open, so the gtpbp3 removal still needs to be carried through
-upstream.
+migration remains open, but the gtpbp3 removal has been carried through
+upstream; the local review still needs to be refreshed against the corrected
+ZFIN feed.
 
 ## Status
 
@@ -384,3 +392,8 @@ upstream.
   #32551 obsoleted all 43 terms on 2026-08-28, with `GO:0070681` receiving
   `consider` pointers rather than a safe `replaced_by`. The local tracking issue
   is #2747.
+- **2026-10-10** — Confirmed that ZFIN resolved the repo-derived DANRE/gtpbp3
+  over-annotation finding on geneontology/go-annotation#6525 on 2026-09-08:
+  the six obsolete mitochondrial aminoacylation rows were deleted upstream and a
+  `GO:0160236 tRNA 5-taurinomethyluridine synthase` row was added instead.
+  Re-fetching and re-reviewing the stale local DANRE/gtpbp3 cache remains.

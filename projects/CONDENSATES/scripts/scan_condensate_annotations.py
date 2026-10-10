@@ -71,7 +71,17 @@ def scan_goa(root: Path) -> dict[str, set[tuple[str, str]]]:
     return hits
 
 
-def scan_reviews(root: Path):
+def goa_union_count(hits: dict[str, set[tuple[str, str]]]) -> int:
+    """Count gene folders carrying at least one scanned term in GOA."""
+    gene_folders: set[tuple[str, str]] = set()
+    for folders in hits.values():
+        gene_folders.update(folders)
+    return len(gene_folders)
+
+
+def scan_reviews(
+    root: Path,
+) -> tuple[dict[str, collections.Counter[str]], list[tuple[str, str, str, str]]]:
     """Return (per-term action counts, GO:0140693 roster) from review YAML."""
     per_term: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     scaffold_roster: list[tuple[str, str, str, str]] = []
@@ -105,6 +115,11 @@ def main() -> None:
 
     goa = scan_goa(args.root)
     per_term, scaffold_roster = scan_reviews(args.root)
+
+    print("## GOA coverage summary\n")
+    print("| Measure | Gene folders |")
+    print("|---|---:|")
+    print(f"| Gene folders carrying at least one scanned GOA term | {goa_union_count(goa)} |\n")
 
     print("## GOA coverage\n")
     print("| Term | Label | Gene folders |")

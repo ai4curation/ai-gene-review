@@ -43,19 +43,25 @@ used directly.
   reviewed annotations than GOA-annotated genes.
 - Term labels are as of the scan date; the audit does not resolve them live.
 
+## GOA coverage summary
+
+| Measure | Gene folders |
+|---|---:|
+| Gene folders carrying at least one scanned GOA term | 377 |
+
 ## GOA coverage
 
 | Term | Label | Gene folders |
 |---|---|---|
-| GO:0005730 | nucleolus | 117 |
-| GO:0016607 | nuclear speck | 49 |
-| GO:0016604 | nuclear body | 45 |
-| GO:0010494 | cytoplasmic stress granule | 26 |
-| GO:0000407 | phagophore assembly site | 26 |
-| GO:0016605 | PML body | 24 |
-| GO:0000932 | P-body | 22 |
-| GO:0043186 | P granule | 21 |
-| GO:0036464 | cytoplasmic ribonucleoprotein granule | 18 |
+| GO:0005730 | nucleolus | 140 |
+| GO:0016607 | nuclear speck | 67 |
+| GO:0016604 | nuclear body | 53 |
+| GO:0000407 | phagophore assembly site | 36 |
+| GO:0016605 | PML body | 30 |
+| GO:0010494 | cytoplasmic stress granule | 29 |
+| GO:0043186 | P granule | 29 |
+| GO:0036464 | cytoplasmic ribonucleoprotein granule | 26 |
+| GO:0000932 | P-body | 25 |
 | GO:0140693 | molecular condensate scaffold activity (MF) | 16 |
 | GO:0140694 | membraneless organelle assembly (BP) | 3 |
 | GO:0035770 | ribonucleoprotein granule | 2 |
@@ -65,31 +71,33 @@ used directly.
 | GO:0045495 | pole plasm | 0 |
 | GO:0043228 | membraneless organelle (parent) | 0 |
 
-## Review outcomes (659 reviewed annotations)
+## Review outcomes (835 reviewed annotations)
 
 | Term | Label | Actions |
 |---|---|---|
-| GO:0005730 | nucleolus | ACCEPT 124, KEEP_AS_NON_CORE 70, MARK_AS_OVER_ANNOTATED 9, REMOVE 9, UNDECIDED 7, NEW 1 |
-| GO:0016607 | nuclear speck | ACCEPT 42, KEEP_AS_NON_CORE 20, MARK_AS_OVER_ANNOTATED 4, REMOVE 3, UNDECIDED 2, NEW 1 |
-| GO:0016604 | nuclear body | ACCEPT 27, KEEP_AS_NON_CORE 26, MARK_AS_OVER_ANNOTATED 1, MODIFY 1, REMOVE 1 |
-| GO:0000407 | phagophore assembly site | ACCEPT 44, KEEP_AS_NON_CORE 3 |
-| GO:0140693 | molecular condensate scaffold activity (MF) | ACCEPT 35, NEW 7, KEEP_AS_NON_CORE 2, MARK_AS_OVER_ANNOTATED 2 |
-| GO:0000932 | P-body | ACCEPT 36, KEEP_AS_NON_CORE 5, UNDECIDED 2, NEW 2 |
-| GO:0010494 | cytoplasmic stress granule | ACCEPT 25, KEEP_AS_NON_CORE 15, UNDECIDED 1, REMOVE 1, MARK_AS_OVER_ANNOTATED 1 |
-| GO:0043186 | P granule | ACCEPT 41, NEW 2 |
-| GO:0016605 | PML body | KEEP_AS_NON_CORE 19, ACCEPT 17, REMOVE 4, MODIFY 2 |
-| GO:0036464 | cytoplasmic ribonucleoprotein granule | ACCEPT 17, KEEP_AS_NON_CORE 8, MARK_AS_OVER_ANNOTATED 2, NEW 1, MODIFY 1, REMOVE 1 |
-| GO:0140694 | membraneless organelle assembly (BP) | ACCEPT 7 |
+| GO:0005730 | nucleolus | ACCEPT 136, KEEP_AS_NON_CORE 89, MARK_AS_OVER_ANNOTATED 12, UNDECIDED 9, REMOVE 9, NEW 1 |
+| GO:0016607 | nuclear speck | ACCEPT 59, KEEP_AS_NON_CORE 27, MARK_AS_OVER_ANNOTATED 5, REMOVE 3, UNDECIDED 2, MODIFY 1, NEW 1 |
+| GO:0043186 | P granule | ACCEPT 84, KEEP_AS_NON_CORE 2, MODIFY 2, NEW 2, REMOVE 1 |
+| GO:0016604 | nuclear body | KEEP_AS_NON_CORE 32, ACCEPT 29, UNDECIDED 2, MARK_AS_OVER_ANNOTATED 1, MODIFY 1, REMOVE 1 |
+| GO:0000407 | phagophore assembly site | ACCEPT 61, KEEP_AS_NON_CORE 3 |
+| GO:0000932 | P-body | ACCEPT 47, KEEP_AS_NON_CORE 5, UNDECIDED 2, NEW 2, REMOVE 1 |
+| GO:0016605 | PML body | ACCEPT 23, KEEP_AS_NON_CORE 22, REMOVE 5, MODIFY 2 |
+| GO:0140693 | molecular condensate scaffold activity (MF) | ACCEPT 34, NEW 10, KEEP_AS_NON_CORE 3, MARK_AS_OVER_ANNOTATED 2 |
+| GO:0010494 | cytoplasmic stress granule | ACCEPT 25, KEEP_AS_NON_CORE 19, UNDECIDED 1, REMOVE 1, MARK_AS_OVER_ANNOTATED 1 |
+| GO:0036464 | cytoplasmic ribonucleoprotein granule | ACCEPT 23, KEEP_AS_NON_CORE 11, MARK_AS_OVER_ANNOTATED 2, NEW 1, MODIFY 1, REMOVE 1 |
+| GO:0140694 | membraneless organelle assembly (BP) | ACCEPT 7, NEW 1 |
 | GO:0043232 | intracellular membraneless organelle (parent) | ACCEPT 5 |
 | GO:0035770 | ribonucleoprotein granule | ACCEPT 2 |
 | GO:0042382 | paraspeckles | NEW 1 |
 
-All actions combined: ACCEPT 422, KEEP_AS_NON_CORE 168, REMOVE 19, MARK_AS_OVER_ANNOTATED 19, NEW 15, UNDECIDED 12, MODIFY 4
+All actions combined: ACCEPT 535, KEEP_AS_NON_CORE 213, MARK_AS_OVER_ANNOTATED 23, REMOVE 22, NEW 19, UNDECIDED 16, MODIFY 7
 
-## GO:0140693 roster (46 annotations)
+## GO:0140693 roster (49 annotations)
 
 | Species | Gene | Evidence | Action |
 |---|---|---|---|
+| ARATH | VIN3 | IDA | NEW |
+| CHLRE | LCI5 | IDA | NEW |
 | EUPSC | Q6WDN4 | ISS | NEW |
 | NEUCR | frq | IDA | ACCEPT |
 | SCHPO | mid1 | IDA | ACCEPT |
@@ -105,11 +113,12 @@ All actions combined: ACCEPT 422, KEEP_AS_NON_CORE 168, REMOVE 19, MARK_AS_OVER_
 | human | CGAS | IEA | ACCEPT |
 | human | FLG | IDA | NEW |
 | human | HNRNPA2B1 | IDA | ACCEPT |
+| human | LAT | IDA | NEW |
 | human | LGALS3 | IDA | ACCEPT |
 | human | LGALS3 | IDA | ACCEPT |
 | human | NFE2L2 | IDA | ACCEPT |
 | human | NLRP3 | IDA | ACCEPT |
-| human | SOS1 | IDA | ACCEPT |
+| human | SOS1 | IDA | KEEP_AS_NON_CORE |
 | human | SQSTM1 | IDA | ACCEPT |
 | human | SQSTM1 | IDA | ACCEPT |
 | human | SQSTM1 | IDA | ACCEPT |
