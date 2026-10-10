@@ -157,13 +157,14 @@ def gene_actions_for_term(review_path: Path) -> dict[str, set[str]]:
 
 
 def soft_rows_excused(review_path: Path, term: str) -> bool:
-    r"""True when every over-annotated row for ``term`` sits beside a kept row that differs from it.
+    r"""True when the gene keeps ``term`` on rows that differ from every over-annotated row.
 
     A gene review can flag one row and keep another for the same term because the rows make
     different claims: an ``enables`` IEA beside an accepted ``contributes_to`` ISS for a
     non-catalytic subunit, say. The flag is then about that row's qualifier or evidence, and
-    the gene agrees the term is its own. Two rows with the same qualifier and evidence code
-    but opposite verdicts are not excused: that is an inconsistency to surface.
+    the gene agrees the term is its own. A flagged row with a kept twin (same qualifier and
+    evidence code, opposite verdict) is never excused, whatever other rows are kept: that is
+    an inconsistency to surface.
 
     >>> import tempfile
     >>> d = Path(tempfile.mkdtemp())
@@ -190,7 +191,7 @@ def soft_rows_excused(review_path: Path, term: str) -> bool:
             soft.append(row)
         elif action in RETAINING_ACTIONS:
             kept.append(row)
-    return bool(soft) and all(any(k != s for k in kept) for s in soft)
+    return bool(soft) and bool(kept) and all(s not in kept for s in soft)
 
 
 def _term_ids(entries) -> list[tuple[str, str]]:
