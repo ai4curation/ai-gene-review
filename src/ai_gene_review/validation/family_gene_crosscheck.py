@@ -320,10 +320,13 @@ def check_family_gene_disagreement(
                         f"but the gene review removes it",
                     )
                 )
-            elif actions & SOFT_DISAGREEING_ACTIONS:
+            elif actions & SOFT_DISAGREEING_ACTIONS and not actions & RETAINING_ACTIONS:
                 # A softer push-back still disagrees with a family that calls the term
                 # safe here, but it does not assert the term is wrong, so it is surfaced
-                # for adjudication rather than failing validation.
+                # for adjudication rather than failing validation. When another row for
+                # the same term is retained, the flag is about that row's evidence or
+                # qualifier (e.g. an enables IEA beside an accepted contributes_to row),
+                # and the gene agrees the term is its own.
                 results.append(
                     CrossCheck(
                         "FAMILY_GENE_DISAGREEMENT", family, gene.symbol, gene.subfamily,

@@ -153,6 +153,37 @@ def test_converse_disagreement_over_annotated_is_unresolved_not_conflict(tmp_pat
     assert result.gene_action == "MARK_AS_OVER_ANNOTATED"
 
 
+@pytest.mark.parametrize("kept", ["ACCEPT", "KEEP_AS_NON_CORE"])
+def test_over_annotated_row_beside_a_retained_row_is_not_disagreement(tmp_path, kept):
+    """One row flagged, another row for the same term kept: the gene retains the term.
+
+    This is the qualifier split, e.g. an ``enables`` IEA marked over-annotated for a
+    non-catalytic subunit while the ``contributes_to`` ISS row is accepted. The gene
+    agrees the term belongs to it, so a family calling the term safe is not disputed.
+    """
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "qualifier": "contributes_to", "review": {"action": kept}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []
+
+
+def test_remove_row_beside_a_retained_row_still_conflicts(tmp_path):
+    """A REMOVE asserts the term is wrong, so a retained sibling row does not excuse it."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "review": {"action": "ACCEPT"}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.CONFLICT
+
+
 @pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "UNDECIDED"])
 def test_converse_disagreement_ignores_non_disputing_actions(tmp_path, action):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
