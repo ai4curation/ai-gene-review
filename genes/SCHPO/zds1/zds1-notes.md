@@ -83,3 +83,12 @@
 
 ## Deep research
 - falcon deep-research job was launched by the orchestrator; not present at time of writing.
+
+## Addendum: falcon deep research (arrived after the review was written)
+
+`zds1-deep-research-falcon.md` landed after the annotation review was finished and was cross-checked
+against it. It agrees with the review: Zds1 is a non-catalytic regulatory protein localized to the
+cytosol, septum and cell cortex, required for cell-wall integrity, cell shape and sexual
+differentiation, and linked to PP2A in fission yeast only by a nitrogen-starvation Paa1 affinity-MS
+co-purification; no pombe experiment shows PP2A inhibition. It is cited on the GO:0004864 (MODIFY to
+GO:0019888) row. No annotation decision changes.
