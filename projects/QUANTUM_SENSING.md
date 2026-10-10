@@ -4,7 +4,6 @@ maturity: SCOPING
 last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [DROME, ARATH, human]
-autolink_gene_symbols: false
 manifest:
   slides:
     - href: QUANTUM_SENSING/slides/QUANTUM_SENSING-slides.html
@@ -28,13 +27,11 @@ native-robin/monarch/MagLOV review set:
 [#3971](https://github.com/ai4curation/ai-gene-review/issues/3971) tracks
 accession triage and the absent `projects/quantum-sensing-bioinformatics/`
 workflow. Existing reviews made for other projects already carry
-magnetoreception rows: fly [CRY](../genes/DROME/CRY/CRY-ai-review.yaml) has
-four `magnetoreception` / `response to magnetism` rows plus `GO:0050980
-detection of light stimulus involved in magnetoreception`; Arabidopsis
-[CRY1](../genes/ARATH/CRY1/CRY1-ai-review.yaml) has two `response to
-magnetism` rows; all are `KEEP_AS_NON_CORE`. Human
-[CRY2](../genes/human/CRY2/CRY2-ai-review.html) is reviewed as a mammalian
-circadian repressor and has no magnetoreception row.
+magnetoreception rows: fly DROME/CRY has four `magnetoreception` /
+`response to magnetism` rows plus `GO:0050980 detection of light stimulus
+involved in magnetoreception`; Arabidopsis ARATH/CRY1 has two `response to
+magnetism` rows; all are `KEEP_AS_NON_CORE`. Human human/CRY2 is reviewed as
+a mammalian circadian repressor and has no magnetoreception row.
 The page also holds an unrelated side note on open light-source datasets
 ([LIGHT_SOURCE_OPEN_DATASETS.md](QUANTUM_SENSING/LIGHT_SOURCE_OPEN_DATASETS.md)).
 
@@ -65,7 +62,7 @@ Mechanism hypothesis: blue-light excitation of FAD in cryptochrome triggers elec
 Key evidence and notes:
 - Avian CRY4: European robin CRY4 shows magnetic field effects on radical pair yields in vitro; site-specific mutations implicate multiple FAD-Trp radical pairs in the magnetic response. This is one of the most direct biochemical demonstrations of magnetically sensitive cryptochrome photochemistry. (Nature 2021)
 - Broad review: The radical-pair mechanism of magnetoreception is comprehensively reviewed with spin-chemistry and biological context. (Annual Review of Biophysics 2016)
-- Monarch butterfly CRY1: reported light-dependent magnetosensing makes native monarch CRY1 a candidate, but the accession and local evidence still need triage under #3971 before a review is seeded.
+- Monarch butterfly CRY1: light-dependent inclination sensing requires CRY1, not CRY2, with antennae and eyes implicated as magnetosensory organs; the accession and local evidence still need triage under #3971 before a review is seeded. (Nature Communications 2021)
 - Human CRY2: Human cryptochrome 2 can function as a light-dependent magnetosensor in a Drosophila transgenic system, suggesting the photochemistry is conserved even if a human magnetosense is not established. (Nature Communications 2011)
 - Drosophila CRY: GOA still has pre-replication magnetism rows on fly CRY; this project treats them as non-core and contested pending the replication-dispute review tracked in #3971.
 
@@ -160,8 +157,13 @@ Implication: potential quantum-tunneling or inelastic electron transfer mechanis
 ## References (selected)
 - Hore PJ, Mouritsen H. The radical-pair mechanism of magnetoreception. Annu Rev Biophys. 2016. doi:10.1146/annurev-biophys-032116-094545.
 - Xu J et al. Magnetic sensitivity of cryptochrome 4 from a migratory songbird. Nature. 2021. doi:10.1038/s41586-021-03618-9.
+- Wan G et al. Cryptochrome 1 mediates light-dependent inclination magnetosensing in monarch butterflies. Nat Commun. 2021. doi:10.1038/s41467-021-21002-z.
 - Foley LE et al. Human cryptochrome exhibits light-dependent magnetosensitivity. Nat Commun. 2011. doi:10.1038/ncomms1364.
 - Gegear RJ et al. Cryptochrome mediates light-dependent magnetosensitivity in Drosophila. Nature. 2008. doi:10.1038/nature07183.
+- Bassetto M et al. No evidence for magnetic field effects on the behaviour of Drosophila. Nature. 2023. doi:10.1038/s41586-023-06397-7.
+- Reppert SM. Magnetic field effects on behaviour in Drosophila. Nature. 2024. doi:10.1038/s41586-024-07319-x.
+- Kyriacou CP. Magnetic field responses in Drosophila. Nature. 2024. doi:10.1038/s41586-024-07320-4.
+- Bassetto M et al. Bassetto et al. reply. Nature. 2024. doi:10.1038/s41586-024-07321-3.
 - Engel GS et al. Evidence for wavelike energy transfer through quantum coherence in photosynthetic systems. Nature. 2007. doi:10.1038/nature05678.
 - Ishizaki A, Fleming GR. On the interpretation of quantum coherent beats observed in two-dimensional electronic spectra of photosynthetic light harvesting complexes. J Phys Chem B. 2011. doi:10.1021/jp112406h.
 - Franco MI et al. Molecular vibration-sensing component in Drosophila melanogaster olfaction. PNAS. 2011. doi:10.1073/pnas.1012293108.

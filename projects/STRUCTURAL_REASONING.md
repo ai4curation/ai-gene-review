@@ -1,14 +1,10 @@
 ---
 title: "Structural Reasoning in Annotation Review"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-10
 tags: [PIPELINE, BIOLOGY_DOMAIN]
 species: [human]
 genes: [SLC10A1, SLC10A2, SLC10A4, SLC10A6, SLC10A7]
-manifest:
-  artifacts:
-    - href: https://claude.ai/artifact/VonifPVfZAE7t96cv4Jpaz
-      title: SLC10 residue evidence
-      description: Interactive NTCP structure and annotated alignment
 ---
 
 # Structural Reasoning in Annotation Review

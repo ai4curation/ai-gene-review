@@ -1,6 +1,7 @@
 ---
 title: "Taxon Pathway Variance"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-10
 tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
 species: [worm, DROME, human, DICDI]
@@ -13,11 +14,6 @@ genes:
   - statA
   - statC
   - JAK1
-manifest:
-  artifacts:
-    - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
-      title: Brief for GO and PAINT
-      description: AI generated
 ---
 
 # Taxon Pathway Variance
