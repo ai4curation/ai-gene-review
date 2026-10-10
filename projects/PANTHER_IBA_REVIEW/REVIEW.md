@@ -28,16 +28,16 @@ data only (nothing hardcoded):
 Output: `iba_propagation.tsv` (one row per IBA, with our curation action joined).
 
 ```
-IBA annotations analyzed: 160
+IBA annotations analyzed: 161
   with UniProt seeds mappable to subfamilies: 90
-  CROSS_SUBFAMILY (seeds only from other subfamilies): 36
+  CROSS_SUBFAMILY (seeds only from other subfamilies): 38
 ```
 
 ## The big caveat: `CROSS_SUBFAMILY` is triage, not a verdict
 
 PANTHER subfamilies are very fine-grained, and true orthologs in different
 species routinely land in different SFs. So the flag has a **high false-positive
-rate** for broadly conserved functions. Among the 36 cross-subfamily hits, most
+rate** for broadly conserved functions. Among the 38 cross-subfamily hits, most
 are unambiguously correct and were (correctly) ACCEPTed:
 
 | Gene | IBA term | Why the flag is a false positive |
@@ -57,8 +57,9 @@ the ACCEPTed IBAs.
 
 ## Confirmed over-propagations (the genuine errors)
 
-The flag's true positives line up exactly with the three IBAs we removed/flagged
-by hand, now substantiated at the family level:
+Two `CROSS_SUBFAMILY` true positives are localization over-propagations; the
+third removed IBA emerges from inspecting the anillin source node as a
+sub-functionalization case:
 
 ### 1. pom1 — `cytoskeleton` (GO:0005856) → REMOVE ✓
 - Family **PTHR24058** (dual-specificity kinases); pom1 = **SF132** (DYRK-family kinase Pom1).
@@ -69,7 +70,7 @@ by hand, now substantiated at the family level:
 
 ### 2. rqh1 — `cytoplasm` (GO:0005737) → REMOVE ✓
 - Family **PTHR13710** (RecQ helicases); rqh1 = **SF153** (RecQ-like helicase BLM).
-- Seeds only from **SF105 / SF152** (other RecQ subfamilies).
+- Seeds only from **SF105 / SF108 / SF152** (other RecQ subfamilies).
 - Rqh1 is experimentally nuclear; a sibling-subfamily cytoplasm localization
   transferred onto it. **Over-propagation confirmed.**
 
@@ -116,7 +117,7 @@ UniProt mapping, not a lack of experimental grounding in the PAINT source set.
 
 ## Bottom line
 
-- 160 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
+- 161 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
   cytoskeleton, **rqh1** cytoplasm — localization terms crossing subfamilies) and
   one **sub-functionalization** case (**mid1** septin ring, where the ancestral
   anillin function partitioned to mid2 in pombe). All three were already caught

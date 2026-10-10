@@ -37,8 +37,8 @@ Reviewing GO annotations for the genes that decide neural cell fate
 ## Bottom line
 
 - GO describes fate choice with **specification → determination → commitment** terms from classical embryology; we asked whether the evidence behind each annotation supports the rung it claims.
-- **13 of 38** planned human genes reviewed (all 12 master regulators + DLX1): **1,652 annotations**, 960 accepted, 138 removed.
-- Fate-stage terms mostly **held up**; the removals were almost all generic `protein binding` (129 of 138). Priorities 2–4 (25 genes) are **not started**.
+- **13 of 38** planned human genes reviewed (all 12 master regulators + DLX1): **1,649 annotations**, 960 accepted, 138 removed.
+- Fate-stage terms mostly **held up**; the removals were almost all generic `protein binding` (129 of 138). Priority 2–4 work continues in #4232.
 
 ---
 
@@ -81,7 +81,7 @@ Reviewing GO annotations for the genes that decide neural cell fate
 
 - **HES1** is a repressor: projected *positive regulation of transcription* rows marked **over-annotated**.
 - **ASCL1**: *negative regulation of glial cell differentiation* (GO:0045686) proposed as **NEW**.
-- **OLIG2**: specification accepted; *oligodendrocyte cell fate commitment* (GO:0021779) added as **NEW**.
+- **OLIG2**: *oligodendrocyte cell fate specification* (GO:0021778) accepted; broad *neuron differentiation* modified to motor-neuron differentiation.
 - **NEUROD1**: *endocrine pancreas development* accepted alongside neuronal roles; insulin-secretion and glucose rows kept as non-core.
 - **STAT3** (456 rows) and **NOTCH1** (378 rows): 66 and 33 removals, all generic `protein binding`.
 
@@ -91,7 +91,7 @@ Reviewing GO annotations for the genes that decide neural cell fate
 
 - ✅ Priority 1 (12 master regulators) and DLX1 reviewed; all validate.
 - ⬜ Priority 2 subtype genes: DLX2, LHX6, TBR1, NR4A2, PITX3, ISL1, MNX1, OLIG1, SOX10.
-- ⬜ Priority 3–4 signalling and oligodendrocyte genes (SHH already reviewed under the cerebellum work).
-- ⬜ Decide whether granular commitment terms should give way to general terms plus Cell Ontology extensions.
+- ⬜ Priority 3–4 signalling and oligodendrocyte genes (SHH has an in-progress review from adjacent cerebellum/neuroblast work).
+- ⬜ Track the remaining project-specific reviews and granular-commitment decision in #4232.
 
 **Read more:** `projects/NEURON_DEVELOPMENT.md` · `genes/human/<GENE>/`

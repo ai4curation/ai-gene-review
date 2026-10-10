@@ -515,7 +515,7 @@ never propagates. Several even show a <strong>reviewed</strong> gap (FtsX 5, Vir
 Swiss-Prot entries that are missing the term too — the cleanest gap-fill targets.</p>
 <h2 id="the-verification-caveat-is-mandatory">The verification caveat is mandatory</h2>
 <p>NCBIFAM's <code>go_terms</code> are NCBI-assigned and <strong>not</strong> automatically current or correct.<br />
-Three distinct failure modes turned up while building the 28-row seed, each of which<br />
+Four distinct failure modes turned up while building the original hand-curated seed, each of which<br />
 a naive bulk ingest would have propagated:</p>
 <ul>
 <li><strong>Obsolete</strong> — <code>GO:0009448</code> on a GABA transaminase is an obsolete id.</li>
@@ -525,10 +525,13 @@ a naive bulk ingest would have propagated:</p>
   just an altitude issue — excluded.</li>
 <li><strong>Altitude-broad</strong> — several sit far above the family's real function, up to the<br />
   ontology <strong>near-root</strong> <code>GO:0003824 catalytic activity</code> (enoyl-CoA hydratase<br />
-  NF005804, spermidine synthase TIGR00417), or a class parent (dGTPase NF002326 →<br />
-<code>GO:0016793</code> when <code>GO:0008832 dGTPase activity</code> exists). For these we <strong>propose our<br />
+  NF005804, spermidine synthase TIGR00417). For these we <strong>propose our<br />
   own specific term</strong> as the <code>exactMatch</code> mapping (the EC-bridged child) instead of<br />
   recording NCBI's broad value.</li>
+<li><strong>Substrate-heterogeneous</strong> — a broad parent can be the right family-level term after all.<br />
+  NF002326 looked like a dGTPase-specific refinement but proved to include a SAMHD1-like<br />
+  broad-dNTPase clade, so the seed keeps <code>GO:0016793</code> for the whole family and records<br />
+<code>GO:0008832</code> / <code>GO:0106375</code> only as clade-level <code>narrowMatch</code> rows.</li>
 </ul>
 <h3 id="proposing-the-specific-term-unmasks-the-gain">Proposing the specific term unmasks the gain</h3>
 <p>The altitude fix is <strong>not cosmetic</strong>. Because UniProt's <code>go:</code> query is closure-aware,<br />
@@ -540,7 +543,8 @@ Re-measuring against the specific child we propose flips this:</p>
 <tr>
 <th>Family</th>
 <th style="text-align: right;">NCBI broad term (gain)</th>
-<th style="text-align: right;">Our specific term (gain all / reviewed)</th>
+<th style="text-align: right;">Specific child tested (gain all / reviewed)</th>
+<th>Final seed action</th>
 </tr>
 </thead>
 <tbody>
@@ -548,32 +552,39 @@ Re-measuring against the specific child we propose flips this:</p>
 <td>spermidine synthase TIGR00417</td>
 <td style="text-align: right;"><code>GO:0003824</code> (~0)</td>
 <td style="text-align: right;"><code>GO:0004766</code> — <strong>575</strong> / 1</td>
+<td>specific <code>exactMatch</code></td>
 </tr>
 <tr>
-<td>LL-<a href="../../../genes/human/DAP/DAP-ai-review.html">DAP</a> aminotransferase TIGR03542</td>
+<td><code>LL-DAP</code> aminotransferase TIGR03542</td>
 <td style="text-align: right;"><code>GO:0008483</code> (77)</td>
 <td style="text-align: right;"><code>GO:0010285</code> — <strong>1,185</strong> / 2</td>
+<td>specific <code>exactMatch</code></td>
 </tr>
 <tr>
 <td>dihydroorotase NF006559</td>
 <td style="text-align: right;"><code>GO:0016810</code> (4)</td>
 <td style="text-align: right;"><code>GO:0004151</code> — <strong>491</strong> / 0</td>
-</tr>
-<tr>
-<td>dGTPase NF002326</td>
-<td style="text-align: right;"><code>GO:0016793</code> (20)</td>
-<td style="text-align: right;"><code>GO:0008832</code> — <strong>456</strong> / <strong>13</strong></td>
+<td>specific <code>exactMatch</code></td>
 </tr>
 <tr>
 <td>enoyl-CoA hydratase NF005804</td>
 <td style="text-align: right;"><code>GO:0003824</code> (~0)</td>
 <td style="text-align: right;"><code>GO:0004300</code> — <strong>184</strong> / 1</td>
+<td>specific <code>exactMatch</code></td>
+</tr>
+<tr>
+<td>dGTPase NF002326</td>
+<td style="text-align: right;"><code>GO:0016793</code> (20)</td>
+<td style="text-align: right;"><code>GO:0008832</code> — apparent <strong>456</strong> / <strong>13</strong></td>
+<td>split, not a blanket strict-dGTPase <code>exactMatch</code></td>
 </tr>
 </tbody>
 </table>
-<p>So suggesting our own term is what converts these from invisible to actionable — and<br />
-surfaces genuine <strong>reviewed/Swiss-Prot</strong> gaps (dGTPase 13, LL-<a href="../../../genes/human/DAP/DAP-ai-review.html">DAP</a> 2) that the broad<br />
-NCBI assignment hid entirely.</p>
+<p>For the four EC-bridged enzyme rows, suggesting our own term is what converts these from<br />
+invisible into actionable TrEMBL gap-fills. The raw <code>LL-DAP</code> and spermidine reviewed<br />
+gaps were cross-kingdom paralog artifacts that vanish under PGAP's actual prokaryotic<br />
+scope, while dGTPase's apparent 456-entry strict-activity gain was the warning sign that<br />
+triggered the NF002326 family split.</p>
 <h3 id="but-high-gain-can-also-be-an-over-annotation-trap-ftsx">…but high gain can also be an over-annotation trap (FtsX)</h3>
 <p>The same machinery warns against over-reach. For <code>TIGR00439</code> (cell division protein<br />
 <strong>FtsX</strong>) the candidate terms give:</p>
@@ -610,7 +621,7 @@ hydrolysis rather than performing constriction. Propagating the specific term to
 3,306 entries would assert more than the evidence supports. The seed therefore maps<br />
 FtsX to the consensus <code>GO:0051301</code> (gain 22, confirmatory) and <strong>declines</strong> the<br />
 high-gain specific term. <strong>High gain is a flag for review, not an instruction to<br />
-propagate</strong> — it can mean a real masked gap (the five rows above) <em>or</em> an<br />
+propagate</strong> — it can mean a real masked gap (the table above) <em>or</em> an<br />
 over-annotation waiting to happen (FtsX).</p>
 <p>So an <code>ncbifam2go</code> build must, like the curated seed in<br />
 <a href="ncbifam2go.sssom.yaml"><code>ncbifam2go.sssom.yaml</code></a>:</p>
@@ -618,6 +629,8 @@ over-annotation waiting to happen (FtsX).</p>
 <li>drop obsolete <strong>and incorrect</strong> GO ids (check against EC where available),</li>
 <li><strong>propose the specific child</strong> where the NCBI term is a broad parent, and measure<br />
    gain against <em>that</em> term, not the parent,</li>
+<li>split substrate-heterogeneous families instead of blanket-propagating a high-gain<br />
+   strict child,</li>
 <li>EC-bridge-confirm enzyme rows via <code>ec2go</code>.</li>
 </ol>
 <h2 id="reproduce">Reproduce</h2>

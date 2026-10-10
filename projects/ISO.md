@@ -2,8 +2,9 @@
 title: "Inferred from Sequence Orthology (ISO) Evidence Code Review"
 collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [PIPELINE, EVALUATION]
-species: [human, mouse, rat]
+species: [ECOLI, PSEPK, SCHPO, human, mouse, rat]
 manifest:
   slides:
     - href: ISO/slides/ISO-slides.html
@@ -14,9 +15,30 @@ manifest:
 ---
 # Inferred from Sequence Orthology (ISO) Evidence Code Review
 
-**Bottom line:** ISO transfers a GO annotation from a gene to its ortholog in another species, so an ISO row can fail because the source annotation is weak or because the term should not cross that orthology edge. We read the ISO rows in existing gene reviews, worked through three contrasting cases in depth (mouse Calm3, Ghr and Ang2), and built a failure taxonomy that separates source defects from propagation defects, now recorded in the structured `review.propagation_review` field. We did this so that reviewers stop treating ISO as either trustworthy or garbage and instead say where each defect lives. As of 2026-09-26 the repo holds 4,345 reviewed ISO rows in 201 gene reviews (3,258 mouse, 962 rat, and 125 in human, fission yeast and bacterial reviews): 1,456 ACCEPT, 2,073 KEEP_AS_NON_CORE, 435 MARK_AS_OVER_ANNOTATED, 179 REMOVE, 111 MODIFY, 35 UNDECIDED, plus 56 NEW. The usual problem is a cloud of true but contextual transfers; outright failures cluster in cases like Ang2, a divergent angiogenin paralog where 41 of 46 ISO rows were removed. The corpus snapshot below (2026-06-29) predates these counts.
+**Bottom line:** ISO transfers a GO annotation from a gene to its ortholog in
+another species, so an ISO row can fail because the source annotation is weak or
+because the term should not cross that orthology edge. We read the ISO rows in
+existing gene reviews, worked through three contrasting cases in depth (mouse
+Calm3, Ghr and Ang2), and built a failure taxonomy that separates source
+defects from propagation defects, now recorded in the structured
+`review.propagation_review` field. We did this so that reviewers stop treating
+ISO as either trustworthy or garbage and instead say where each defect lives. As
+of 2026-10-04 the repo holds 4,416 ISO-tagged review rows in 209 gene reviews
+(3,324 mouse, 962 rat, and 130 in human, fission yeast and bacterial reviews):
+1,502 ACCEPT, 2,094 KEEP_AS_NON_CORE, 439 MARK_AS_OVER_ANNOTATED, 180 REMOVE,
+110 MODIFY, 35 UNDECIDED, plus 56 NEW. These are all ISO-tagged YAML rows: 475
+of them live in DRAFT, IN_PROGRESS, or INITIALIZED reviews and should be treated
+as provisional. The usual problem is a cloud of true but contextual transfers;
+outright failures cluster in cases like Ang2, a divergent angiogenin paralog
+where 41 of 46 ISO rows were removed.
 
-Of the 304 ISO rows that already carry a structured `propagation_review`, the commonest root causes are `PROPAGATION_BAD` (119) and `TERM_SCOPING_PROBLEM` (101), and the commonest subtype is `CONTEXT_OR_TISSUE_MISMATCH` (113). One action item remains: a reusable donor-trace script.
+Of the 315 ISO rows that already carry a structured `propagation_review`, 299
+also name at least one checked donor in `source_entities`; the remaining 16 are
+classification-only blocks that need source backfill. The commonest root causes
+are `PROPAGATION_BAD` (120) and `TERM_SCOPING_PROBLEM` (102), and the commonest
+subtype is `CONTEXT_OR_TISSUE_MISMATCH` (115). The remaining infrastructure
+work is to map automated donor support onto suggested source-status calls and
+teach the browser to distinguish one-to-one from one-to-many orthology calls.
 
 Part of [Propagation by Homology](HOMOLOGY_PROPAGATION.md).
 **[Browse ISO rows](../app/propagation/index.html?evidence=ISO)** ·
@@ -220,18 +242,18 @@ review:
 | `SOURCE_EVIDENCE_WEAK` | ISO and IBA | Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation. |
 | `CIRCULAR_PROPAGATION` | Mostly ISO, sometimes IBA | Propagation chain depends on another propagated annotation rather than independent source evidence. |
 
-Examples:
+Examples still to encode on the ISO rows:
 
-- Ang2 human ANG-to-mouse Ang2 angiogenesis rows:
-  `PROPAGATION_BAD` + `WRONG_ORTHOLOG_OR_PARALOG` + `FUNCTIONAL_DIVERGENCE`.
-- Ghr receptor internalization:
-  `SOURCE_STALE_OR_MISSING` + `EVIDENCE_CIRCULAR_OR_REDUNDANT`.
-- Ghr hormone-mediated signaling:
-  `TERM_SCOPING_PROBLEM` + `GRANULARITY_MISMATCH`.
-- Calm3 calcium ion binding:
-  `NO_FAILURE_CORE`.
-- Calm3 spindle/centrosome contexts:
-  `NO_FAILURE_NON_CORE` + `CONTEXT_OR_TISSUE_MISMATCH`.
+- Ang2 human ANG-to-mouse Ang2 angiogenesis rows: biologically
+  `PROPAGATION_BAD` + `FUNCTIONAL_DIVERGENCE`; structured ISO
+  `source_entities` still need to be backfilled.
+- Ghr receptor internalization: stale human donor support that should be
+  recorded as `SOURCE_STALE_OR_MISSING` once `source_entities` are added.
+- Ghr hormone-mediated signaling: `TERM_SCOPING_PROBLEM` +
+  `GRANULARITY_MISMATCH`.
+- Calm3 calcium ion binding: `NO_FAILURE_CORE`.
+- Calm3 spindle and centrosome contexts: `NO_FAILURE_NON_CORE` plus context or
+  compartment subtypes.
 
 ## Reviewer Checklist
 

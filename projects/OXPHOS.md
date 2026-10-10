@@ -1,6 +1,7 @@
 ---
 title: "Oxidative Phosphorylation (OXPHOS) Project"
 maturity: MATURE
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [NDUFS1, NDUFV1, NDUFS2, NDUFS4, ACAD9, SDHA, SDHB, SDHC, SDHD, SDHAF2, CYC1, UQCRFS1, UQCRC1, BCS1L, COX4I1, COX4I2, COX5B, COX6A1, COX6B1, NDUFA4, SURF1, SCO1, SCO2, COX10, COX15, LRPPRC, ATP5F1A, ATP5F1B, ATP5MC1, ATP5MC2, ATP5MC3, ATP5IF1, TMEM70, CYCS, COQ8A, ETFDH]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: OXPHOS/slides/OXPHOS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/2epY9vXE7hr4YB697cQHWY
-      title: Project brief
 ---
 
 # Oxidative Phosphorylation (OXPHOS) Project
@@ -19,15 +17,17 @@ manifest:
 electron-transport complexes, two mobile carriers and the ATP synthase, built
 from about 90 subunits plus dozens of assembly factors. We prioritized 38 human
 nuclear-encoded genes across all five complexes, the carriers and CoQ/ETF
-entry points, and reviewed every existing GO annotation on them; 36 now have
-reviews in the repo (1,330 annotations: 861 accepted, 201 kept as non-core, 152
-marked over-annotated, 38 modified, 52 removed, 18 NEW, 8 undecided). The reviews apply one
-pattern throughout: catalytic subunits enable their own activity and
-`contributes_to` the complex activity, non-catalytic subunits only contribute,
-and assembly factors (SURF1, SCO1/SCO2, COX10, COX15) are annotated to assembly
-or cofactor biosynthesis rather than to the oxidase itself. Typical removals
-were whole-complex activity on an assembly factor (SURF1 cytochrome-c oxidase
-activity) and a wrong-reaction MF (COX10 `GO:0004311`). A taxon-neutral
+entry points; 36 now have every existing row adjudicated in the repo (1,350
+annotations: 852 accepted, 192 kept as non-core, 152
+marked over-annotated, 46 modified, 82 removed, 18 NEW, 8 undecided). The reviews expose the
+target modeling pattern: catalytic subunits enable their own activity and
+`contributes_to` the complex activity, non-catalytic subunits should use
+`contributes_to` for whole-complex activity rather than independently enabling
+it, and assembly factors (SURF1, SCO1/SCO2, COX10, COX15) are annotated to
+assembly or cofactor biosynthesis rather than to the oxidase itself. Typical
+removals were whole-complex activity on an assembly factor (SURF1
+cytochrome-c oxidase activity) and a wrong-reaction MF (COX10 `GO:0004311`). A
+taxon-neutral
 [OXPHOS module](../modules/oxphos.yaml) models each complex as one catalytic
 node with its subunits as active units. NDUFS2, NDUFS4, SDHC, SDHD, UQCRC1,
 BCS1L, ACAD9, ATP5F1A, SDHAF2, COQ8A and ETFDH were reviewed under other
@@ -93,7 +93,7 @@ Transfers electrons from NADH to ubiquinone, pumping 4 H+ per NADH.
 ### Core catalytic subunits (Priority 1)
 | Gene | UniProt | Function | Notes |
 |------|---------|----------|-------|
-| NDUFS1 | Q16795 | 75 kDa Fe-S protein, electron transfer | N-module |
+| NDUFS1 | P28331 | 75 kDa Fe-S protein, electron transfer | N-module |
 | NDUFV1 | P49821 | 51 kDa, FMN/NADH binding | N-module, primary electron acceptor |
 | NDUFS2 | O75306 | 49 kDa, ubiquinone binding | Q-module |
 | NDUFS7 | O75251 | PSST, Fe-S cluster | Q-module |
@@ -132,7 +132,7 @@ Does NOT pump protons. Tumor suppressor role via oncometabolite mechanism.
 ### Assembly factors (Priority 2)
 | Gene | UniProt | Function | Notes |
 |------|---------|----------|-------|
-| SDHAF1 | Q6IAA8 | Fe-S cluster maturation of SDHB | Leukoencephalopathy |
+| SDHAF1 | A6NFY7 | Fe-S cluster maturation of SDHB | Leukoencephalopathy |
 | SDHAF2 | Q9NX18 | FAD insertion into SDHA | Paraganglioma |
 | SDHAF3 | Q9NRP4 | Protects SDHB Fe-S from ROS | |
 | SDHAF4 | Q5VUM1 | Chaperone for SDHA | |
@@ -154,7 +154,7 @@ cytochrome c via Q-cycle, pumping 4 H+ per QH2.
 | Gene | UniProt | Function | Notes |
 |------|---------|----------|-------|
 | BCS1L | Q9Y276 | Rieske protein insertion | GRACILE syndrome |
-| LYRM7 | Q5T7U8 | Rieske protein chaperone | |
+| LYRM7 | Q5U5X0 | Rieske protein chaperone | |
 | TTC19 | Q6DKK2 | UQCRFS1 fragment turnover | Neurodegeneration |
 
 ## Complex IV -- Cytochrome c oxidase
@@ -237,7 +237,7 @@ F1 (catalytic) + Fo (proton channel) + central/peripheral stalks.
 - **LHON**: MT-ND4, MT-ND1, MT-ND6 (Complex I, mtDNA)
 - **MELAS/MERRF**: tRNA mutations affecting multiple complexes
 - **Paraganglioma/pheochromocytoma**: SDHA/B/C/D, SDHAF2 (tumor suppressors)
-- **CoQ10 deficiency**: COQ2-9, PDSS1/2
+- **CoQ10 deficiency**: COQ2-9, PDSS1 and PDSS2
 - **GRACILE syndrome**: BCS1L (Complex III)
 - **Barth syndrome**: TAZ (cardiolipin, indirect)
 
@@ -280,6 +280,8 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 ---
 # STATUS
 
+Updated 2026-10-04.
+
 - [x] CYC1 -- already reviewed
 - [x] COX5B -- already reviewed
 - [x] ATP5MC1 -- already reviewed
@@ -290,11 +292,11 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] COX4I1 -- already reviewed
 - [x] NDUFA4 -- already reviewed
 - [x] SCO2 -- already reviewed
-- [x] SDHA -- reviewed 2026-02-11 (56 annotations, core_functions with contributes_to)
-- [x] SDHB -- reviewed 2026-02-11 (49 annotations, tumor suppressor role documented)
-- [x] CYCS -- reviewed 2026-02-11 (53 annotations, dual ETC/apoptosis core_functions)
+- [x] SDHA -- reviewed 2026-02-11 (59 rows incl. 1 NEW, core_functions with contributes_to)
+- [x] SDHB -- reviewed 2026-02-11 (50 rows incl. 1 NEW, tumor suppressor role documented)
+- [x] CYCS -- reviewed 2026-02-11 (73 rows incl. 1 NEW, dual ETC/apoptosis core_functions)
 - [x] NDUFS1 -- reviewed 2026-02-11 (57 annotations, Fe-S electron relay, contributes_to CI activity)
-- [x] NDUFV1 -- reviewed 2026-02-11 (44 annotations + 2 NEW, FMN catalytic subunit, NADH dehydrogenase activity)
+- [x] NDUFV1 -- reviewed 2026-02-11 (45 rows incl. 1 NEW, FMN catalytic subunit, NADH dehydrogenase activity)
 - [x] UQCRFS1 -- reviewed 2026-02-11 (31 annotations + 1 NEW, Rieske Fe-S electron transfer, contributes_to CIII activity)
 - [x] ATP5F1B -- reviewed 2026-02-11 (89 annotations, catalytic beta subunit, ecto-ATP synthase as non-core)
 - [x] SURF1 -- reviewed 2026-02-11 (19 annotations + 1 NEW, CIV assembly factor, root MF)
@@ -316,10 +318,26 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] SDHAF2 -- reviewed under another project or module
 - [x] COQ8A -- reviewed under another project or module
 - [x] ETFDH -- reviewed under another project or module
-- [ ] COX7A2L
-- [ ] HCCS
+- [ ] COX7A2L ([#3987](https://github.com/ai4curation/ai-gene-review/issues/3987))
+- [ ] HCCS ([#3987](https://github.com/ai4curation/ai-gene-review/issues/3987))
 
 # NOTES
+
+## 2026-10-04
+
+Revalidated the 36 row-adjudicated review YAMLs listed in the project and
+refreshed aggregate counts against the current files. The total is now 1,350
+existing-annotation rows; the Complex I-V per-complex counts still match the
+slide deck, while the Carriers / CoQ / ETF row moved to 134 annotations after
+CYCS grew to 73 rows. COX7A2L and HCCS remain the two unreviewed priority
+genes and are tracked in
+[#3987](https://github.com/ai4curation/ai-gene-review/issues/3987).
+Also rechecked non-catalytic OXPHOS subunit modeling language: COX4I2, COX6A1
+and COX6B1 follow the newer `contributes_to_molecular_function` pattern, while
+older NDUFS4, UQCRC1, COX5B and NDUFA4 reviews still need a future consistency
+pass before the target pattern is universal across the reviewed non-catalytic
+OXPHOS subunits
+([#4237](https://github.com/ai4curation/ai-gene-review/issues/4237)).
 
 ## 2026-06-20
 

@@ -3,6 +3,7 @@ title: "Phosphorylation Annotation Refactor Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, mouse]
+last_reviewed: 2026-10-05
 sidecars:
   slide_figures:
     - PHOSPHORYLATION_REFACTOR/slides/phospho-results.svg
@@ -11,47 +12,49 @@ manifest:
   slides:
     - href: PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/FZZCXiuP5Hpq5kY7s6nMFh
-      title: Project brief
 ---
 
 # Phosphorylation Annotation Refactor Project
-
-**Interactive demo shortlist (2026-09-28):** [48 unreviewed candidates](PHOSPHORYLATION_REFACTOR/demo/README.md)
-— 31 mouse, 13 rat, 2 fly, and 2 zebrafish — with current positive
-`involved_in` rows, verified identifiers, per-gene triage rationales, and a
-script to recheck annotation and review status. Human hits from this screen
-were already reviewed or were kinase/complex false positives. These are
-candidates for review, not completed curation decisions.
 
 **Bottom line:** GO often annotates proteins to "protein phosphorylation"
 (GO:0006468) and its children when they are the substrate, regulator or even
 the opposite enzyme of a kinase. We queried nine model organism databases for
 genes carrying a phosphorylation process term but no protein kinase activity
 (GO:0004672), then reviewed every flagged row in the mouse and human sets
-gene by gene. The repo now holds reviews for 60 of these genes (15 mouse, 45
-human) covering 68 phosphorylation-branch rows: 34 REMOVE, 26 MODIFY (mostly
-to GO:0045859 regulation of protein kinase activity or a substrate-specific
-term), 4 UNDECIDED, 3 MARK_AS_OVER_ANNOTATED and 1 ACCEPT.
+gene by gene. The repo now holds reviews for the 60 mouse and human targets from
+that pass; 58 still contain current phosphorylation-branch rows, covering 68
+reviewed rows: 34 REMOVE, 26 MODIFY (mostly to GO:0045859 regulation of
+protein kinase activity or a substrate-specific term), 4 UNDECIDED, 3
+MARK_AS_OVER_ANNOTATED and 1 ACCEPT.
+The four remaining mouse and human UNDECIDED phosphorylation rows need full-text
+adjudication and are tracked in
+[#4246](https://github.com/ai4curation/ai-gene-review/issues/4246).
 The errors fall into a small taxonomy: substrates annotated as enzymes,
 ligands and cyclins that only regulate a kinase, lipid and sugar kinases on the
 protein term, and phosphatases annotated to the reaction they reverse. SGD,
 PomBase and WormBase had no such rows; the human and mouse sets had the most,
-and RGD shows the same errors copied in by ISS. The per-gene status lists
-below predate some later edits: in the YAMLs Ang2 and BIRC6 are now UNDECIDED,
-ADM2 is REMOVE, and Egf, Ednra and Drd1 are MARK_AS_OVER_ANNOTATED. The fly,
-zebrafish, Arabidopsis and rat findings are
+and RGD shows the same errors copied in by ISS. The fly, zebrafish,
+Arabidopsis and rat findings are
 query-level recommendations with no gene reviews behind them.
+
+**Interactive demo shortlist (2026-09-28):** [48 unreviewed candidates](PHOSPHORYLATION_REFACTOR/demo/README.md)
+— 31 mouse, 13 rat, 2 fly, and 2 zebrafish — with current positive
+`involved_in` rows, verified identifiers, per-gene triage rationales, and a
+script to recheck annotation and review status. Human hits from this screen
+were already reviewed or were kinase/complex false positives. These are
+candidates for review, not completed curation decisions; the review pass is
+tracked in [#3997](https://github.com/ai4curation/ai-gene-review/issues/3997).
 
 **2026-09-28 non-mammalian re-audit:** the older fly, zebrafish,
 Arabidopsis and rat sections were rechecked against current fetched GOA with
 qualifiers preserved. Several old rows are no longer current positive protein
-phosphorylation assertions: Arabidopsis CRY2 was a false positive because both
-kinase rows are `NOT` annotations, PI4KG7, AAK1/FER and LecRK-I.5/I.8 are
+phosphorylation assertions: Arabidopsis `CRY2` was a false positive because both
+kinase rows are `NOT` annotations, `PI4KG7`, `AAK1/FER` and LecRK-I.5/I.8 are
 bona fide protein kinases, and Argk1, PWD and CKB2 do not currently carry
 positive protein-phosphorylation process rows. See the
 [detailed cross-species re-audit](PHOSPHORYLATION_REFACTOR/cross_species_reaudit.md).
+The Arabidopsis follow-up pass is tracked in
+[#4245](https://github.com/ai4curation/ai-gene-review/issues/4245).
 
 We did this because the set difference between "phosphorylation process" and
 "kinase activity" is a cheap, precise filter for a known class of
@@ -97,16 +100,16 @@ This project systematically analyzed phosphorylation annotations across **9 Mode
 2. **Mammalian MODs have systematic annotation issues.** MGI and GOA show recurring patterns of over-annotation:
    - **Cyclins** annotated to "protein phosphorylation" when they should be annotated to regulatory activity
    - **Signaling ligands** (EGF, EPO, PDGF, GAS6, endothelin) annotated as if they catalyze phosphorylation, when they trigger receptor-mediated signaling cascades
-   - **Phosphatases** annotated to phosphorylation - the opposite reaction! (CDC25B, PPP3CB, PTPN6 in human; TOPP4, CDC25 in Arabidopsis)
+   - **Phosphatases** annotated to phosphorylation - the opposite reaction! (CDC25B, PPP3CB, PTPN6 in human; TOPP4, `CDC25` in Arabidopsis)
    - **Transcription factors** treated as kinases when they are substrates (CREB1, ATF2, ERG, RUNX3, RARA)
    - **Adapter proteins** credited with kinase activity belonging to associated kinases
 
-3. **Errors propagate via ISS transfer.** The rat database (RGD) demonstrates this clearly: 8 of 11 problematic rows are ISS transfers from mouse and human, including rat/Ppp3cb, rat/Glyctk, rat/Gas6 and rat/Pdgfb. The glycerate kinase error specifically appears in human GLYCTK, fly CG9886, zebrafish glyctk, and rat/Glyctk. This highlights how computational inference methods can spread annotation errors across species.
+3. **Errors propagate via ISS transfer.** The rat database (RGD) demonstrates this clearly: 8 of 11 problematic rows are ISS transfers from mouse and human, including `rat/Ppp3cb`, `rat/Glyctk`, `rat/Gas6` and `rat/Pdgfb`. The glycerate kinase error specifically appears in human GLYCTK, fly CG9886, zebrafish glyctk, and `rat/Glyctk`. This highlights how computational inference methods can spread annotation errors across species.
 
 4. **Opposite-reaction errors are particularly problematic.** Annotating phosphatases (enzymes that REMOVE phosphate) to phosphorylation (the process of ADDING phosphate) represents a fundamental biological error. Found in:
    - Human: CDC25B, PPP3CB, PTPN6, PPP4R1
-   - Rat: rat/Ppp3cb (calcineurin, ISS from human)
-   - Arabidopsis: TOPP4, CDC25
+   - Rat: `rat/Ppp3cb` (calcineurin, ISS from human)
+   - Arabidopsis: TOPP4, `CDC25`
 
 5. **Lipid and sugar kinases require substrate-specific terms.** Genes like PI3K (lipid kinase), IP6K3 (inositol kinase), and GLYCTK (sugar kinase) should not be annotated to "protein phosphorylation" - they should use substrate-appropriate terms like GO:0046834 (lipid phosphorylation) or GO:0046835 (carbohydrate phosphorylation).
 
@@ -163,21 +166,24 @@ The gene encodes a **phosphatase** that catalyzes **dephosphorylation** (removes
 | Code | Subtype | EC Class | Examples |
 |------|---------|----------|----------|
 | O-tyr | Tyrosine phosphatase | EC 3.1.3.48 | PTPN6, CDC25B |
-| O-ser | Ser/Thr phosphatase | EC 3.1.3.16 | PPP3CB, PPP4R1 |
+| O-ser | `Ser/Thr` phosphatase | EC 3.1.3.16 | PPP3CB, PPP4R1 |
 | O-dual | Dual-specificity | EC 3.1.3.48 | CDC25B |
 
-**Diagnostic clue**: Gene name contains "phosphatase", "PTP", "PP", "CDC25"; EC 3.1.3.x
+**Diagnostic clue**: Gene name contains "phosphatase", "PTP", "PP", "`CDC25`"; EC 3.1.3.x
 
 ---
 
 ### R: Regulatory Role
-The gene **regulates** phosphorylation indirectly but does not catalyze it. Should be annotated to "regulation of..." terms.
+The gene **regulates** phosphorylation indirectly but does not catalyze it.
+These rows are usually better as "regulation of..." terms, or marked
+over-annotated when even a regulatory replacement would overstate direct
+participation in the assayed phosphorylation event.
 
-| Code | Subtype | Mechanism | Preferred GO | Examples |
-|------|---------|-----------|--------------|----------|
+| Code | Subtype | Mechanism | Common action or GO | Examples |
+|------|---------|-----------|---------------------|----------|
 | R-cyclin | Cyclin/CDK activator | Activates CDK kinase | GO:0061575 | Ccnb1, Ccne1, CCNE1, Ccnt1, Cdk5r1 |
-| R-ligand | Signaling ligand | Binds receptor, triggers cascade | GO:0045859 | Egf, Epo, Gas6, PDGFA, PDGFB |
-| R-receptor | Receptor | Activates kinases on ligand binding | GO:0045859 | Drd1, Ednra |
+| R-ligand | Signaling ligand | Binds receptor, triggers cascade | GO:0045859 or MARK_AS_OVER_ANNOTATED | Egf, Epo, Gas6, PDGFA, PDGFB |
+| R-receptor | Receptor | Activates kinases on ligand binding | GO:0045859 or MARK_AS_OVER_ANNOTATED | Drd1, Ednra |
 | R-cytokine | Cytokine | Activates JAK-STAT pathway | GO:0042531 | IL15, IL21, IFNL4 |
 | R-adapter | Adapter/scaffold | Recruits kinases to substrates | GO:0045859 | ABI2, YWHAZ, MAML1, PRRT1 |
 | R-gtpase | GTPase | Regulates kinases via GTP cycling | GO:0045859 | Cdc42 |
@@ -203,7 +209,7 @@ The gene encodes an **E3 ubiquitin ligase** (EC 2.3.2.x), not a kinase.
 
 | Code | Description | Examples |
 |------|-------------|----------|
-| U | E3 ubiquitin ligase | Cbl, BIRC6, MEX3B |
+| U | E3 ubiquitin ligase | Cbl, MEX3B |
 
 **Diagnostic clue**: RING finger domain; EC 2.3.2.x; UniProt shows ubiquitin ligase activity
 
@@ -239,7 +245,7 @@ Some genes exhibit multiple error types:
 |------|---------|-----------|-------|
 | PICK1 | R-adapter | S | Binds PKC (adapter) AND is phosphorylated at Thr-82 (substrate) |
 | MAML1 | R-adapter | S | Recruits CDK8 AND is phosphorylated at Ser-314/360 |
-| BIRC6 | U | S | E3 ligase AND shown as substrate in UniProt |
+| MEX3B | U | S | E3 ligase AND shown as substrate in UniProt |
 | TNKS | U (PARP) | S | Poly-ADP-ribosyltransferase AND phosphorylated by GSK3 |
 
 ---
@@ -393,8 +399,8 @@ Receptors with "protein phosphorylation" annotations (after excluding regulatory
 
 | Gene | UniProt | MGI ID | Annotation | Evidence | Status | Action |
 |------|---------|--------|------------|----------|--------|--------|
-| Drd1 | Q61616 | MGI:99578 | protein phosphorylation (GO:0006468) | IDA | reviewed | MODIFY → GO:0045859 |
-| Ednra | Q61614 | MGI:105923 | protein phosphorylation (GO:0006468) | IMP | reviewed | MODIFY → GO:0045859 |
+| Drd1 | Q61616 | MGI:99578 | protein phosphorylation (GO:0006468) | IDA | reviewed | MARK_AS_OVER_ANNOTATED |
+| Ednra | Q61614 | MGI:105923 | protein phosphorylation (GO:0006468) | IMP | reviewed | MARK_AS_OVER_ANNOTATED |
 
 **Note**: Agtr1a and Ghr were initially included but removed after refining the query methodology.
 They only have GO:0042976 "activation of Janus kinase activity" which is a regulatory term -
@@ -404,7 +410,7 @@ appropriate for receptors that activate JAKs, not an over-annotation.
 | Gene | UniProt | MGI ID | Annotation | Evidence | Status | Action |
 |------|---------|--------|------------|----------|--------|--------|
 | App | P12023 | MGI:88059 | GO:0006468 protein phosphorylation | IMP | reviewed | REMOVE (describes dephosphorylation!) |
-| Bcl2 | P10417 | MGI:88138 | GO:0018105/GO:0018107 peptidyl-Ser/Thr phosphorylation | IDA | reviewed | REMOVE (Bcl2 is SUBSTRATE, not enzyme) |
+| Bcl2 | P10417 | MGI:88138 | GO:0018105/GO:0018107 peptidyl-`Ser/Thr` phosphorylation | IDA | reviewed | REMOVE (Bcl2 is SUBSTRATE, not enzyme) |
 | Cbl | P22682 | MGI:88279 | GO:0006468 protein phosphorylation | ISS | reviewed | REMOVE (ubiquitin ligase, not kinase) |
 | Cdc42 | P60766 | MGI:106211 | GO:0006468 protein phosphorylation | IMP | reviewed | MODIFY → GO:0045859 (GTPase, not kinase) |
 
@@ -431,29 +437,29 @@ For most of these genes, the appropriate curation action will be:
 
 # STATUS
 
-- [x] Priority 1: Cyclins and CDK regulators (4/4)
-  - [x] Ccnb1 - MODIFY GO:0006468 → GO:0045859
-  - [x] Ccne1 - MODIFY GO:0006468 → GO:0045859 (2 annotations)
-  - [x] Ccnt1 - MODIFY GO:0006468 → GO:0045859
-  - [x] Cdk5r1 - MODIFY GO:0018105 → GO:0045859
-- [x] Priority 2: Signaling ligands (5/5)
-  - [x] Egf - MODIFY GO:0018108 → GO:0045859 (secreted ligand binds EGFR kinase)
-  - [x] Epo - MODIFY GO:0018105 → GO:0045859 (hormone activates JAK2 via EPOR)
-  - [x] Edn1 - MODIFY GO:0006468 → GO:0045859 (secreted peptide binds Ednra/Ednrb)
-  - [x] Gas6 - MODIFY GO:0006468 → GO:0045859 (ligand for AXL/TYRO3/MER RTKs)
-  - [x] Ang2 - **REMOVE** (MISANNOTATION: papers about Angiotensin II, not Angiogenin-2)
-- [x] Priority 3: Receptors (2/2 reviewed)
-  - [x] Drd1 - MODIFY GO:0006468 → GO:0045859
-  - [x] Ednra - MODIFY GO:0006468 → GO:0045859
+- **Done:** Priority 1: Cyclins and CDK regulators (4/4)
+  - **Done:** Ccnb1 - MODIFY GO:0006468 → GO:0045859
+  - **Done:** Ccne1 - MODIFY GO:0006468 → GO:0045859 (2 annotations)
+  - **Done:** Ccnt1 - MODIFY GO:0006468 → GO:0045859
+  - **Done:** Cdk5r1 - MODIFY GO:0018105 → GO:0045859
+- **Done:** Priority 2: Signaling ligands (5/5)
+  - **Done:** Egf - **MARK_AS_OVER_ANNOTATED** (secreted ligand binds EGFR kinase)
+  - **Done:** Epo - MODIFY GO:0018105 → GO:0045859 (hormone activates JAK2 via EPOR)
+  - **Done:** Edn1 - MODIFY GO:0006468 → GO:0045859 (secreted peptide binds Ednra/Ednrb)
+  - **Done:** Gas6 - MODIFY GO:0006468 → GO:0045859 (ligand for AXL/TYRO3/MER RTKs)
+  - **Done:** Ang2 - **UNDECIDED** (supporting evidence needs full-text adjudication)
+- **Done:** Priority 3: Receptors (2/2 reviewed)
+  - **Done:** Drd1 - **MARK_AS_OVER_ANNOTATED** (dopamine receptor activates downstream kinases)
+  - **Done:** Ednra - **MARK_AS_OVER_ANNOTATED** (endothelin receptor activates downstream kinases)
   - ~~Agtr1a~~ - removed (only has regulatory term, not a target)
   - ~~Ghr~~ - removed (only has regulatory term, not a target)
-- [x] Priority 4: Other cases (4/4)
-  - [x] App - **REMOVE** (paper PMID:16025111 describes DEphosphorylation, not phosphorylation!)
-  - [x] Bcl2 - **REMOVE** (2 annotations: Bcl2 is SUBSTRATE of phosphorylation, not enzyme)
-  - [x] Cbl - **REMOVE** (E3 ubiquitin ligase EC 2.3.2.27, not a kinase)
-  - [x] Cdc42 - MODIFY → GO:0045859 (small GTPase EC 3.6.5.2, regulates kinases)
+- **Done:** Priority 4: Other cases (4/4)
+  - **Done:** App - **REMOVE** (paper PMID:16025111 describes DEphosphorylation, not phosphorylation!)
+  - **Done:** Bcl2 - **REMOVE** (2 annotations: Bcl2 is SUBSTRATE of phosphorylation, not enzyme)
+  - **Done:** Cbl - **REMOVE** (E3 ubiquitin ligase EC 2.3.2.27, not a kinase)
+  - **Done:** Cdc42 - MODIFY → GO:0045859 (small GTPase EC 3.6.5.2, regulates kinases)
 
-**Last updated**: 2026-01-18
+**Last reconciled against current YAML actions**: 2026-10-05
 
 ---
 
@@ -513,8 +519,8 @@ These are PHOSPHATASES annotated to phosphorylation - the opposite reaction!
 | GAS6 | Q14393 | protein phosphorylation (GO:0006468) | IDA | MODIFY → GO:0045859 |
 | PDGFA | P04085 | peptidyl-tyrosine autophosphorylation (GO:0038083) | NAS | MODIFY |
 | PDGFB | P01127 | peptidyl-tyrosine phosphorylation + protein phosphorylation | IDA | MODIFY → GO:0045859 |
-| CALCA | P06881 | protein phosphorylation (GO:0006468) | IDA | MODIFY → GO:0045859 |
-| ADM2 | Q7Z4H4 | protein phosphorylation (GO:0006468) | IDA | MODIFY → GO:0045859 |
+| CALCA | P06881 | no current target row | - | no current phosphorylation-branch row |
+| ADM2 | Q7Z4H4 | protein phosphorylation (GO:0006468) | IDA | REMOVE |
 | IGFBP3 | P17936 | protein phosphorylation (GO:0006468) | IDA | MODIFY → GO:0045859 |
 | CCL11 | P51671 | protein phosphorylation (GO:0006468) | TAS | MODIFY → GO:0045859 |
 
@@ -547,7 +553,7 @@ These are PHOSPHATASES annotated to phosphorylation - the opposite reaction!
 | Gene | UniProt | Annotation | Evidence | Expected Action |
 |------|---------|------------|----------|-----------------|
 | ABI2 | Q9NYB9 | peptidyl-tyrosine phosphorylation (GO:0018108) | IDA | MODIFY → GO:0045859 |
-| ABI3 | Q9P2A4 | peptidyl-tyrosine phosphorylation (GO:0018108) | IDA | MODIFY → GO:0045859 |
+| ABI3 | Q9P2A4 | negated peptidyl-tyrosine phosphorylation (GO:0018108) | IDA | ACCEPT |
 | YWHAZ | P63104 | protein phosphorylation (GO:0006468) | IMP | MODIFY → GO:0045859 |
 
 **Rationale**: Adapter proteins scaffold kinase-substrate interactions but don't catalyze phosphorylation.
@@ -556,15 +562,15 @@ These are PHOSPHATASES annotated to phosphorylation - the opposite reaction!
 
 | Gene | UniProt | Annotation | Evidence | Expected Action |
 |------|---------|------------|----------|-----------------|
-| TNKS | O95271 | peptidyl-Ser/Thr phosphorylation | IDA | REMOVE (PARP, not kinase) |
-| BIRC6 | Q9NR09 | protein phosphorylation (GO:0006468) | TAS | REMOVE (ubiquitin ligase) |
+| TNKS | O95271 | peptidyl-`Ser/Thr` phosphorylation | IDA | REMOVE (PARP, not kinase) |
+| BIRC6 | Q9NR09 | protein phosphorylation (GO:0006468) | TAS | UNDECIDED |
 | LIPE | Q05469 | protein phosphorylation (GO:0006468) | TAS | REMOVE (lipase) |
 
 ### Other Genes for Review
 
 | Gene | UniProt | Annotation | Evidence | Notes |
 |------|---------|------------|----------|-------|
-| ERC1 | Q8IUD2 | I-kappaB phosphorylation | IDA | Scaffold protein |
+| ERC1 | Q8IUD2 | no current target row | - | already corrected in GOA |
 | PRDX4 | Q13162 | I-kappaB phosphorylation | TAS | Peroxiredoxin |
 | MORC3 | Q14149 | peptidyl-serine + protein phosphorylation | IDA | ATPase |
 | LIMD1 | Q9UGP4 | phosphorylation | IDA | LIM domain protein |
@@ -597,37 +603,37 @@ These are PHOSPHATASES annotated to phosphorylation - the opposite reaction!
 
 ## STATUS (Human)
 
-- [x] Priority H1: Phosphatases (3/3) **CRITICAL MISANNOTATIONS**
-  - [x] CDC25B - **REMOVE** (phosphatase EC 3.1.3.48, dephosphorylates CDK1)
-  - [x] PPP3CB - **REMOVE** (calcineurin phosphatase EC 3.1.3.16)
-  - [x] PTPN6 - **REMOVE** (2 annotations - SHP-1 tyrosine phosphatase EC 3.1.3.48)
-- [x] Priority H2: Cyclins (1/1)
-  - [x] CCNE1 - **MODIFY** → GO:0045859 (cyclin activates CDK2, no kinase activity itself)
-- [x] Priority H3: Signaling Ligands (6/6) *CALCA had no phosphorylation annotation*
-  - [x] GAS6 - **MODIFY** → GO:0045859 (TAM receptor ligand)
-  - [x] PDGFA - **REMOVE** (ligand annotated to autophosphorylation!)
-  - [x] PDGFB - **MODIFY** (2 annotations) → GO:0045859 (PDGFR ligand)
-  - [x] ADM2 - **MODIFY** → GO:0045859 (CALCRL/RAMP ligand)
-  - [x] IGFBP3 - **MODIFY** → GO:0045859 (IGF binding protein)
-  - [x] CCL11 - **MODIFY** → GO:0045859 (CCR3 chemokine ligand)
-- [x] Priority H4: Cytokines (3/3)
-  - [x] IL15 - **MODIFY** → GO:0042531 (cytokine INDUCES JAK-STAT, doesn't phosphorylate)
-  - [x] IL21 - **MODIFY** → GO:0042531 (cytokine INDUCES JAK-STAT, doesn't phosphorylate)
-  - [x] IFNL4 - **MODIFY** → GO:0042531 (type III interferon INDUCES JAK-STAT)
-- [x] Priority H5: Transcription Factors (5/5)
-  - [x] CREB1 - **REMOVE** (bZIP TF is SUBSTRATE, phosphorylated by CaMK/AKT/PKA)
-  - [x] ATF2 - **REMOVE** (bZIP TF is SUBSTRATE, phosphorylated at Thr-69/71 by p38/ERK)
-  - [x] ERG - **REMOVE** (ETS family TF is SUBSTRATE, phosphorylated by PKC)
-  - [x] RUNX3 - **REMOVE** (Runt-domain TF is SUBSTRATE, phosphorylated by Src)
-  - [x] RARA - **REMOVE** (nuclear receptor is SUBSTRATE, phosphorylated by AKT1/PKA)
-- [x] Priority H6: Adapter Proteins (3/3)
-  - [x] ABI2 - **MODIFY** → GO:0045859 (Abl interactor promotes c-Abl kinase activity, not enzyme)
-  - [x] ABI3 - **ACCEPT** (correct NEGATIVE annotation - "does not promote" phosphorylation)
-  - [x] YWHAZ - **MODIFY** → GO:0045859 (14-3-3 scaffold regulates RAF-ERK pathway)
-- [x] Priority H7: Other Non-Kinase Enzymes (3/3)
-  - [x] TNKS - **REMOVE** (PARP EC 2.4.2.30, paper describes GSK3 phosphorylating TNKS - substrate!)
-  - [x] BIRC6 - **REMOVE** (ubiquitin ligase EC 2.3.2.24, no kinase activity - UniProt shows substrate)
-  - [x] LIPE - **REMOVE** (lipase EC 3.1.1.79, paper explicitly describes LIPE as substrate of PKA/AMPK)
+- **Done:** Priority H1: Phosphatases (3/3) **CRITICAL MISANNOTATIONS**
+  - **Done:** CDC25B - **REMOVE** (phosphatase EC 3.1.3.48, dephosphorylates CDK1)
+  - **Done:** PPP3CB - **REMOVE** (calcineurin phosphatase EC 3.1.3.16)
+  - **Done:** PTPN6 - **REMOVE** (2 annotations - SHP-1 tyrosine phosphatase EC 3.1.3.48)
+- **Done:** Priority H2: Cyclins (1/1)
+  - **Done:** CCNE1 - **MODIFY** → GO:0045859 (cyclin activates CDK2, no kinase activity itself)
+- **Done:** Priority H3: Signaling Ligands (6/6) *CALCA had no phosphorylation annotation*
+  - **Done:** GAS6 - **MODIFY** → GO:0045859 (TAM receptor ligand)
+  - **Done:** PDGFA - **REMOVE** (ligand annotated to autophosphorylation!)
+  - **Done:** PDGFB - **MODIFY** (2 annotations) → GO:0045859 (PDGFR ligand)
+  - **Done:** ADM2 - **REMOVE** (CALCRL/RAMP ligand; the cited row is not evidence of direct phosphorylation)
+  - **Done:** IGFBP3 - **MODIFY** → GO:0045859 (IGF binding protein)
+  - **Done:** CCL11 - **MODIFY** → GO:0045859 (CCR3 chemokine ligand)
+- **Done:** Priority H4: Cytokines (3/3)
+  - **Done:** IL15 - **MODIFY** → GO:0042531 (cytokine INDUCES JAK-STAT, doesn't phosphorylate)
+  - **Done:** IL21 - **MODIFY** → GO:0042531 (cytokine INDUCES JAK-STAT, doesn't phosphorylate)
+  - **Done:** IFNL4 - **MODIFY** → GO:0042531 (type III interferon INDUCES JAK-STAT)
+- **Done:** Priority H5: Transcription Factors (5/5)
+  - **Done:** CREB1 - **REMOVE** (bZIP TF is SUBSTRATE, phosphorylated by CaMK/AKT/PKA)
+  - **Done:** ATF2 - **REMOVE** (bZIP TF is SUBSTRATE, phosphorylated at Thr-69/71 by p38/ERK)
+  - **Done:** ERG - **REMOVE** (ETS family TF is SUBSTRATE, phosphorylated by PKC)
+  - **Done:** RUNX3 - **REMOVE** (Runt-domain TF is SUBSTRATE, phosphorylated by Src)
+  - **Done:** RARA - **REMOVE** (nuclear receptor is SUBSTRATE, phosphorylated by AKT1/PKA)
+- **Done:** Priority H6: Adapter Proteins (3/3)
+  - **Done:** ABI2 - **MODIFY** → GO:0045859 (Abl interactor promotes c-Abl kinase activity, not enzyme)
+  - **Done:** ABI3 - **ACCEPT** (correct NEGATIVE annotation - "does not promote" phosphorylation)
+  - **Done:** YWHAZ - **MODIFY** → GO:0045859 (14-3-3 scaffold regulates RAF-ERK pathway)
+- **Done:** Priority H7: Other Non-Kinase Enzymes (3/3)
+  - **Done:** TNKS - **REMOVE** (PARP EC 2.4.2.30, paper describes GSK3 phosphorylating TNKS - substrate!)
+  - **Done:** BIRC6 - **UNDECIDED** (ubiquitin ligase; TAS support needs adjudication)
+  - **Done:** LIPE - **REMOVE** (lipase EC 3.1.1.79, paper explicitly describes LIPE as substrate of PKA/AMPK)
 
 ---
 
@@ -791,8 +797,9 @@ Reviewed 5 genes from the "Other Genes" list:
 
 **Human Priority H7: Other Non-Kinase Enzymes - Complete**
 
-All 3 genes reviewed. ALL are misannotations where non-kinase enzymes are incorrectly
-annotated to phosphorylation. These genes are SUBSTRATES of kinases, not enzymes:
+All 3 genes reviewed. TNKS and LIPE are clear substrate-as-enzyme removals;
+BIRC6 was later moved to UNDECIDED because the TAS source is abstract-only and
+needs full-text adjudication:
 
 1. **TNKS** (O95271) - Tankyrase-1
    - Annotations: GO:0018105 "peptidyl-serine phosphorylation" + GO:0018107 "peptidyl-threonine
@@ -806,10 +813,9 @@ annotated to phosphorylation. These genes are SUBSTRATES of kinases, not enzymes
 2. **BIRC6** (Q9NR09) - Baculoviral IAP repeat-containing protein 6 (BRUCE/Apollon)
    - Annotation: GO:0006468 "protein phosphorylation" (TAS, PMID:18329369)
    - BIRC6 is a ubiquitin-conjugating E2/E3 enzyme (EC 2.3.2.24) - NOT a kinase
-   - Paper describes BRUCE's "ubiquitin-conjugating activity" in cytokinesis abscission
-   - No mention of phosphorylation activity
-   - UniProt shows BIRC6 is PHOSPHORYLATED at Ser-480, Ser-581, etc. - it's a substrate
-   - Action: **REMOVE**
+   - The cached abstract is not enough to establish direct participation in
+     phosphorylation or to overrule the TAS assertion
+   - Action: **UNDECIDED** as of the 2026-10-05 reconciliation; full text is needed
 
 3. **LIPE** (Q05469) - Hormone-sensitive lipase
    - Annotation: GO:0006468 "protein phosphorylation" (TAS, PMID:3420405)
@@ -821,9 +827,10 @@ annotated to phosphorylation. These genes are SUBSTRATES of kinases, not enzymes
    - LIPE is the SUBSTRATE of PKA/AMPK phosphorylation that regulates its lipase activity
    - Action: **REMOVE**
 
-**Key insight**: These are all enzymes with well-characterized non-kinase activities
-(PARP, ubiquitin ligase, lipase) that are REGULATED by phosphorylation - they are
-substrates of kinases, not enzymes that perform phosphorylation.
+**Key insight**: TNKS and LIPE are enzymes with well-characterized non-kinase
+activities (PARP, lipase) that are regulated by phosphorylation - they are
+substrates of kinases, not enzymes that perform phosphorylation. BIRC6 has the
+same non-kinase caution but still needs the original TAS source checked.
 
 ---
 
@@ -832,11 +839,11 @@ substrates of kinases, not enzymes that perform phosphorylation.
 Total genes reviewed: 24
 - H1 Phosphatases: 3 → REMOVE (opposite function!)
 - H2 Cyclins: 1 → MODIFY
-- H3 Signaling Ligands: 6 → 5 MODIFY, 1 REMOVE (PDGFA)
+- H3 Signaling Ligands: 6 → 4 MODIFY, 2 REMOVE (PDGFA, ADM2)
 - H4 Cytokines: 3 → MODIFY
 - H5 Transcription Factors: 5 → REMOVE (substrates, not enzymes)
 - H6 Adapter Proteins: 3 → 2 MODIFY, 1 ACCEPT (negative annotation)
-- H7 Other Non-Kinase Enzymes: 3 → REMOVE (substrates of kinases)
+- H7 Other Non-Kinase Enzymes: 3 → 2 REMOVE, 1 UNDECIDED (BIRC6)
 
 ## 2026-01-19 (Session 8 continued)
 
@@ -1005,7 +1012,7 @@ All 4 genes reviewed. All are misannotations or over-annotations:
    - Bcl2 is the TARGET of phosphorylation, not the enzyme
    - Action: **REMOVE** (Bcl2 is substrate, not enzyme)
 
-3. **Cbl** (P22682) - E3 ubiquitin-protein ligase CBL ⚠️ MISANNOTATION
+3. **Cbl** (P22682) - E3 ubiquitin-protein ligase `CBL` ⚠️ MISANNOTATION
    - Annotation: GO:0006468 "protein phosphorylation" (ISS, GO_REF:0000024)
    - Cbl's enzymatic activity is EC 2.3.2.27 (ubiquitin transferase)
    - UniProt: "Phosphorylated on tyrosine residues by ALK, EGFR, FGR, INSR, SYK, FYN, ZAP70"
@@ -1029,13 +1036,14 @@ annotation edits need to be applied after fixing the reference titles.
 
 **Priority 2: Signaling Ligands - Complete**
 
-All 5 genes reviewed. 4 are over-annotations (MODIFY), 1 is a misannotation (REMOVE):
+All 5 genes reviewed. Four are over-annotations and one, Ang2, is now UNDECIDED
+pending full-text adjudication of the original papers:
 
 1. **Egf** (P01132) - Epidermal growth factor
    - Annotation: GO:0018108 "peptidyl-tyrosine phosphorylation" (IDA, PMID:9687508)
    - EGF is a secreted ligand that binds EGFR (the kinase). EGFR performs tyrosine phosphorylation
    - UniProt: "EGF stimulates the growth of various epidermal and epithelial tissues"
-   - Action: **MODIFY** → GO:0045859
+   - Action: **MARK_AS_OVER_ANNOTATED** as of the 2026-10-05 reconciliation
 
 2. **Epo** (P07321) - Erythropoietin
    - Annotation: GO:0018105 "peptidyl-serine phosphorylation" (IDA, PMID:9171102)
@@ -1056,15 +1064,13 @@ All 5 genes reviewed. 4 are over-annotations (MODIFY), 1 is a misannotation (REM
    - Already correctly annotated to GO:0045860 "positive regulation of protein kinase activity"
    - Action: **MODIFY** → GO:0045859
 
-5. **Ang2** (Q64438) - Angiogenin-2 ⚠️ MISANNOTATION
+5. **Ang2** (Q64438) - Angiogenin-2
    - Annotations: GO:0006468 "protein phosphorylation" (IDA PMID:28096417, IMP PMID:25313067)
-   - **CRITICAL ERROR**: Both PMIDs are about **Angiotensin II** (AngII), NOT Angiogenin-2!
+   - Prior observation, not a verdict: both PMIDs appear to be about **Angiotensin II** (AngII), not Angiogenin-2
      - PMID:25313067: "Angiotensin II signaling via protein kinase C phosphorylates Kelch-like 3"
      - PMID:28096417: "Phosphorylation by PKC and PKA regulate...WNK4"
-   - These papers describe how the hormone Angiotensin II activates PKC/PKA
-   - Ang2 (Angiogenin-2) is a RIBONUCLEASE (EC 3.1.27.-) with no involvement in angiotensin signaling
-   - Gene symbol confusion: Ang2 vs AngII
-   - Action: **REMOVE** (wrong gene entirely)
+   - These papers need full-text inspection before overruling experimental rows
+   - Action: **UNDECIDED** as of the 2026-10-05 reconciliation
 
 ## 2026-01-18 (Session 3)
 
@@ -1121,13 +1127,13 @@ After refining the query, only 2 receptors remain as targets:
    - Annotation: GO:0006468 "protein phosphorylation" (IDA, PMID:18496528)
    - PMID:18496528 shows D1R triggers a cascade (D1R → cAMP → PP2A → DARPP-32 → PP1 inhibition → H3 phosphorylation)
    - The receptor does NOT perform phosphorylation - it regulates kinase/phosphatase activity
-   - Action: **MODIFY** → GO:0045859 "regulation of protein kinase activity"
+   - Action: **MARK_AS_OVER_ANNOTATED** as of the 2026-10-05 reconciliation
 
 2. **Ednra** (Q61614) - Endothelin receptor type A
    - Annotation: GO:0006468 "protein phosphorylation" (IMP, PMID:31219639)
    - PMID:31219639 shows Ednra activates Cdc42 in a signaling cascade
    - The receptor does NOT perform phosphorylation directly
-   - Action: **MODIFY** → GO:0045859 "regulation of protein kinase activity"
+   - Action: **MARK_AS_OVER_ANNOTATED** as of the 2026-10-05 reconciliation
 
 **Removed from target list (false positives)**:
 - Agtr1a, Ghr - Only annotated to GO:0042976 "activation of Janus kinase activity" which is
@@ -1260,13 +1266,13 @@ Dref ISS transfer from human CAMKK2.
 
 ## STATUS (Fly)
 
-- [x] Query analysis completed
-- [x] Mulk - **CORRECT** (lipid kinase)
-- [x] rdgA - **CORRECT** (lipid kinase)
-- [x] Argk1 - **STALE HIT** (no current positive protein-phosphorylation BP row)
-- [x] Dref - **REMOVE** [S-tf] (transcription factor substrate / wrong CAMKK2
+- **Done:** Query analysis completed
+- **Done:** Mulk - **CORRECT** (lipid kinase)
+- **Done:** rdgA - **CORRECT** (lipid kinase)
+- **Done:** Argk1 - **STALE HIT** (no current positive protein-phosphorylation BP row)
+- **Done:** Dref - **REMOVE** [S-tf] (transcription factor substrate / wrong CAMKK2
   ISS transfer)
-- [x] CG9886 - **REMOVE** [W-sugar] (glycerate kinase, not protein kinase)
+- **Done:** CG9886 - **REMOVE** [W-sugar] (glycerate kinase, not protein kinase)
 
 **Last updated**: 2026-09-28
 
@@ -1338,8 +1344,8 @@ All genes with protein phosphorylation BP annotations have appropriate kinase MF
 
 | Gene | Phosphorylation Annotation | Kinase Activity Annotations | Status |
 |------|---------------------------|----------------------------|--------|
-| IPL1 | peptidyl-Ser/Thr phosphorylation | protein kinase activity, Ser/Thr kinase | ✓ CORRECT |
-| GCN2 | protein phosphorylation, autophosphorylation | eIF2α kinase, Ser/Thr kinase | ✓ CORRECT |
+| IPL1 | peptidyl-`Ser/Thr` phosphorylation | protein kinase activity, `Ser/Thr` kinase | ✓ CORRECT |
+| GCN2 | protein phosphorylation, autophosphorylation | eIF2α kinase, `Ser/Thr` kinase | ✓ CORRECT |
 | COQ8 | protein phosphorylation | protein kinase activity | ✓ CORRECT |
 | PBS2 | protein phosphorylation | MAP kinase kinase activity | ✓ CORRECT |
 
@@ -1391,10 +1397,10 @@ process. This is the correct annotation pattern that was missing in mammals.
 
 ## STATUS (Yeast)
 
-- [x] Query analysis completed - **ZERO problematic annotations found**
-- [x] All 4 genes with protein phosphorylation terms verified as kinases
-- [x] Yeast cyclins confirmed to have correct regulatory annotations
-- [x] No further curation actions needed
+- **Done:** Query analysis completed - **ZERO problematic annotations found**
+- **Done:** All 4 genes with protein phosphorylation terms verified as kinases
+- **Done:** Yeast cyclins confirmed to have correct regulatory annotations
+- **Done:** No further curation actions needed
 
 **Last updated**: 2026-01-19
 
@@ -1448,8 +1454,8 @@ All genes with protein phosphorylation BP annotations have appropriate kinase MF
 
 | Gene | Phosphorylation Annotation | Kinase Activity Annotations | Status |
 |------|---------------------------|----------------------------|--------|
-| dsk1 | peptidyl-serine phosphorylation | protein Ser/Thr kinase activity | ✓ CORRECT |
-| gsk3 | protein phosphorylation | protein Ser/Thr/Tyr kinase activity | ✓ CORRECT |
+| dsk1 | peptidyl-serine phosphorylation | protein `Ser/Thr` kinase activity | ✓ CORRECT |
+| gsk3 | protein phosphorylation | protein `Ser/Thr/Tyr` kinase activity | ✓ CORRECT |
 
 **dsk1** - Dual-specificity kinase related
 - DYRK family kinase
@@ -1496,10 +1502,10 @@ This suggests:
 
 ## STATUS (S. pombe)
 
-- [x] Query analysis completed - **ZERO problematic annotations found**
-- [x] All genes with protein phosphorylation terms verified as kinases (dsk1, gsk3)
-- [x] S. pombe cyclins confirmed to have correct regulatory annotations
-- [x] No further curation actions needed
+- **Done:** Query analysis completed - **ZERO problematic annotations found**
+- **Done:** All genes with protein phosphorylation terms verified as kinases (dsk1, gsk3)
+- **Done:** S. pombe cyclins confirmed to have correct regulatory annotations
+- **Done:** No further curation actions needed
 
 **Last updated**: 2026-01-19
 
@@ -1514,7 +1520,7 @@ Both yeast species have exemplary annotation quality.
 
 **Verified genes**:
 - **dsk1** - DYRK family kinase, correctly has kinase activity
-- **gsk3** - GSK-3 homolog, correctly has Ser/Thr/Tyr kinase activity
+- **gsk3** - GSK-3 homolog, correctly has `Ser/Thr/Tyr` kinase activity
 
 **Cyclin annotations verified**: All S. pombe cyclins (cdc13, cig1, cig2, puc1, mcs2, suc1) are
 annotated to regulator/activator functions, NOT to phosphorylation processes.
@@ -1610,11 +1616,11 @@ glyctk sugar kinase error (propagated by ISS transfer) was found.
 
 ## STATUS (Zebrafish)
 
-- [x] Query analysis completed - **1 problematic annotation found**
-- [x] glyctk verified as sugar kinase (EC 2.7.1.31) - **REMOVE** [W-sugar]
-- [x] 13 other protein phosphorylation genes verified as kinases
-- [x] Zebrafish cyclins confirmed to have correct regulatory annotations
-- [x] No signaling ligand over-annotations found
+- **Done:** Query analysis completed - **1 problematic annotation found**
+- **Done:** glyctk verified as sugar kinase (EC 2.7.1.31) - **REMOVE** [W-sugar]
+- **Done:** 13 other protein phosphorylation genes verified as kinases
+- **Done:** Zebrafish cyclins confirmed to have correct regulatory annotations
+- **Done:** No signaling ligand over-annotations found
 
 **Last updated**: 2026-01-19
 
@@ -1723,11 +1729,11 @@ and C. elegans.
 
 ## STATUS (C. elegans)
 
-- [x] Query analysis completed - **ZERO problematic annotations found**
-- [x] All 7 genes with protein phosphorylation verified as kinases
-- [x] All 8 peptidyl phosphorylation annotations verified as kinases
-- [x] C. elegans cyclins confirmed to have correct regulatory annotations
-- [x] No further curation actions needed
+- **Done:** Query analysis completed - **ZERO problematic annotations found**
+- **Done:** All 7 genes with protein phosphorylation verified as kinases
+- **Done:** All 8 peptidyl phosphorylation annotations verified as kinases
+- **Done:** C. elegans cyclins confirmed to have correct regulatory annotations
+- **Done:** No further curation actions needed
 
 **Last updated**: 2026-01-19
 
@@ -1764,7 +1770,7 @@ Extended the phosphorylation annotation analysis to Arabidopsis thaliana using t
 (`tair.ddb`). The January query mixed true experimental issues with stale rows, receptor-like
 kinases, and a `NOT` row that was counted as if it were positive. The 2026-09-28 re-audit
 leaves four current positive protein-phosphorylation rows that likely need removal or
-replacement: TOPP4, CDC25, ATPI4K ALPHA and RIN4.
+replacement: TOPP4, `CDC25`, ATPI4K ALPHA and RIN4.
 
 ## Summary Statistics (Arabidopsis - TAIR database)
 
@@ -1785,16 +1791,16 @@ replacement: TOPP4, CDC25, ATPI4K ALPHA and RIN4.
 | Gene | GO Term | Issue | Code | Action |
 |------|---------|-------|------|--------|
 | **TOPP4** | protein phosphorylation | Type 1 Protein Phosphatase (EC 3.1.3.16) | O-ser | **REMOVE** |
-| **CDC25** | protein phosphorylation | Tyrosine phosphatase (EC 3.1.3.48) | O-tyr | **REMOVE** |
+| **`CDC25`** | protein phosphorylation | Tyrosine phosphatase (EC 3.1.3.48) | O-tyr | **REMOVE** |
 
 **TOPP4** (AT2G39840) - Type One Protein Phosphatase 4
 - Has "protein serine/threonine phosphatase activity" annotation
 - Member of PP1 phosphatase complex
 - Phosphatases catalyze dephosphorylation, NOT phosphorylation
 
-**CDC25** (AT5G03455) - Cell division cycle 25 phosphatase
+**`CDC25`** (AT5G03455) - Cell division cycle 25 phosphatase
 - Has "protein tyrosine phosphatase activity" annotation
-- Unlike animal CDC25 phosphatases, plant CDC25 has unclear function
+- Unlike animal `CDC25` phosphatases, plant `CDC25` has unclear function
 - Still annotated as phosphatase - opposite reaction
 
 ### Lipid Kinase Annotated to Protein Phosphorylation [W-lipid]
@@ -1808,7 +1814,7 @@ not proteins.
 
 ### Stale or False Positive Arabidopsis Hits
 
-- **CRY2** is a false positive from qualifier flattening: its kinase activity
+- **`CRY2`** is a false positive from qualifier flattening: its kinase activity
   and protein autophosphorylation rows are both `NOT` annotations.
 - **PWD** and **CKB2** do not currently carry positive
   protein-phosphorylation process rows in GOA.
@@ -1828,8 +1834,8 @@ not proteins.
 
 | Gene | GO Term | Status | Notes |
 |------|---------|--------|-------|
-| **PI4K GAMMA 7** | protein autophosphorylation | KEEP | The PMID:17880284 abstract reports autophosphorylation and phosphorylation of Ser/Thr protein substrates |
-| **AAK1 / FER** | protein autophosphorylation | KEEP | AAK1 resolves to FERONIA, a receptor-like protein kinase with an IDA protein kinase activity row and an IDA protein autophosphorylation row from PMID:17673660 |
+| **PI4K GAMMA 7** | protein autophosphorylation | KEEP | The PMID:17880284 abstract reports autophosphorylation and phosphorylation of `Ser/Thr` protein substrates |
+| **`AAK1 / FER`** | protein autophosphorylation | KEEP | `AAK1` resolves to FERONIA, a receptor-like protein kinase with an IDA protein kinase activity row and an IDA protein autophosphorylation row from PMID:17673660 |
 | **LecRK-I.5** | protein phosphorylation | KEEP | P2K2/LecRK-I.5 is an active L-type lectin receptor kinase |
 | **LecRK-I.8** | protein autophosphorylation | KEEP | The full text of PMID:28722654 reports strong autophosphorylation by the LecRK-I.8 kinase domain |
 
@@ -1863,19 +1869,20 @@ correct annotation to regulatory activity rather than phosphorylation.
 | Substrates | 0 | 5 | 1 | 0 | 0 | **1** | 0 | 0 |
 
 **Key observation**: TAIR had several stale or false-positive query hits after qualifier-aware
-rechecking, but the remaining TOPP4 and CDC25 rows are still opposite-reaction phosphatase
+rechecking, but the remaining TOPP4 and `CDC25` rows are still opposite-reaction phosphatase
 errors, the same pattern seen in human GOA.
 
 ## STATUS (Arabidopsis)
 
-- [x] Query analysis completed - **4 current positive rows remain suspect**
-- [x] 2 phosphatases (TOPP4, CDC25) identified - **REMOVE** [O]
-- [x] 1 lipid kinase (ATPI4K ALPHA) - **MODIFY** [W-lipid]
-- [x] 1 substrate (RIN4) - **REMOVE** [S]
-- [x] CRY2 false positive - only negated NOT rows
-- [x] PWD, CKB2 stale hits - no current positive protein-phosphorylation BP row
-- [x] PI4K GAMMA 7, AAK1/FER, LecRK-I.5 and LecRK-I.8 are supported protein kinases
-- [ ] IEA annotations (29 genes) need systematic review
+- **Done:** Query analysis completed - **4 current positive rows remain suspect**
+- **Done:** 2 phosphatases (TOPP4, `CDC25`) identified - **REMOVE** [O]
+- **Done:** 1 lipid kinase (ATPI4K ALPHA) - **MODIFY** [W-lipid]
+- **Done:** 1 substrate (RIN4) - **REMOVE** [S]
+- **Done:** `CRY2` false positive - only negated NOT rows
+- **Done:** PWD, CKB2 stale hits - no current positive protein-phosphorylation BP row
+- **Done:** PI4K GAMMA 7, `AAK1/FER`, LecRK-I.5 and LecRK-I.8 are supported protein kinases
+- **Todo:** Review the 4 current positive TAIR rows and 29 IEA annotations in
+  [#4245](https://github.com/ai4curation/ai-gene-review/issues/4245)
 
 **Last updated**: 2026-09-28
 
@@ -1891,13 +1898,13 @@ systematic review.
 
 **Confirmed misannotations after 2026-09-28 re-audit**:
 1. **TOPP4** - Protein phosphatase annotated to phosphorylation [O-ser]
-2. **CDC25** - Tyrosine phosphatase annotated to phosphorylation [O-tyr]
+2. **`CDC25`** - Tyrosine phosphatase annotated to phosphorylation [O-tyr]
 3. **ATPI4K ALPHA** - PI4-kinase (lipid kinase) [W-lipid]
 4. **RIN4** - Immune regulator phosphorylated by AvrRpm1/AvrB-triggered kinases [S]
 
-**False positives or stale hits**: CRY2 is negated in GOA; PWD and CKB2 do not
+**False positives or stale hits**: `CRY2` is negated in GOA; PWD and CKB2 do not
 currently have positive protein-phosphorylation process rows; PI4K GAMMA 7,
-AAK1/FER, LecRK-I.5 and LecRK-I.8 are supported protein kinases.
+`AAK1/FER`, LecRK-I.5 and LecRK-I.8 are supported protein kinases.
 
 **Note**: Initial query found 49 genes, but 7 were false positives due to different ID formats
 in TAIR (locus:XXXXXX vs ATXGXXXXX). Symbol-based matching reduced this to 42 genes.
@@ -1933,38 +1940,38 @@ IDA annotations warrant closer examination.
 
 | Gene | GO Term | Error Type | Code | Origin |
 |------|---------|------------|------|--------|
-| **rat/Gas6** | protein phosphorylation | Signaling ligand | R-ligand | Mouse/Human |
-| **rat/Glyctk** | protein phosphorylation | Sugar kinase (EC 2.7.1.31) | W-sugar | Human |
-| **rat/Ilf3** | protein phosphorylation | Substrate | S | Human |
-| **rat/Pdgfb** | protein phosphorylation, peptidyl-Tyr phosphorylation | Signaling ligand | R-ligand | Human |
-| **rat/Prrt1** | protein phosphorylation | Adapter protein | R-adapter | Human |
-| **rat/Ywhaz** | protein phosphorylation | 14-3-3 adapter | R-adapter | Human |
-| **rat/Ppp3cb** | protein phosphorylation | **PHOSPHATASE** (calcineurin) | O-ser | Human |
+| **`rat/Gas6`** | protein phosphorylation | Signaling ligand | R-ligand | Mouse/Human |
+| **`rat/Glyctk`** | protein phosphorylation | Sugar kinase (EC 2.7.1.31) | W-sugar | Human |
+| **`rat/Ilf3`** | protein phosphorylation | Substrate | S | Human |
+| **`rat/Pdgfb`** | protein phosphorylation, peptidyl-Tyr phosphorylation | Signaling ligand | R-ligand | Human |
+| **`rat/Prrt1`** | protein phosphorylation | Adapter protein | R-adapter | Human |
+| **`rat/Ywhaz`** | protein phosphorylation | 14-3-3 adapter | R-adapter | Human |
+| **`rat/Ppp3cb`** | protein phosphorylation | **PHOSPHATASE** (calcineurin) | O-ser | Human |
 
-**rat/Ppp3cb** is particularly egregious - it's calcineurin, a calcium-dependent protein serine/threonine
+**`rat/Ppp3cb`** is particularly egregious - it's calcineurin, a calcium-dependent protein serine/threonine
 PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activity" (IDA/TAS) annotations.
 
 ### IDA Annotations (Require Review)
 
 | Gene | GO Term | Analysis | Code | Action |
 |------|---------|----------|------|--------|
-| **rat/Grm5** | protein phosphorylation | GPCR already annotated to positive regulation of MAPK cascade from the same PMID | R-receptor | **REMOVE** |
-| **rat/Pick1** | protein phosphorylation | PDZ scaffold with "protein kinase C binding" | R-adapter | **MODIFY** |
-| **rat/Thy1** | protein autophosphorylation | GPI-anchored ligand that triggers FAK autophosphorylation | R-ligand | **REMOVE** |
+| **`rat/Grm5`** | protein phosphorylation | GPCR already annotated to positive regulation of MAPK cascade from the same PMID | R-receptor | **REMOVE** |
+| **`rat/Pick1`** | protein phosphorylation | PDZ scaffold with "protein kinase C binding" | R-adapter | **MODIFY** |
+| **`rat/Thy1`** | protein autophosphorylation | GPI-anchored ligand that triggers FAK autophosphorylation | R-ligand | **REMOVE** |
 
-**rat/Grm5** (Metabotropic glutamate receptor 5)
+**`rat/Grm5`** (Metabotropic glutamate receptor 5)
 - GPCR that activates Src family kinases via Homer scaffolding
 - Has "protein tyrosine kinase activator activity" (IGI/ISO)
 - The receptor ACTIVATES kinases but doesn't phosphorylate - should be regulatory term
 - Action: **REMOVE** duplicate GO:0006468 row; GO:0043410 positive regulation of MAPK
   cascade already captures the PMID:15758184 evidence [R-receptor]
 
-**rat/Pick1** (Protein interacting with C kinase 1)
+**`rat/Pick1`** (Protein interacting with C kinase 1)
 - PDZ domain protein that binds and scaffolds PKC
 - Has "protein kinase C binding" (IDA) - it's an ADAPTER, not a kinase
 - Action: **MODIFY** → GO:0045859 [R-adapter]
 
-**rat/Thy1** (Thy-1 membrane glycoprotein)
+**`rat/Thy1`** (Thy-1 membrane glycoprotein)
 - GPI-anchored membrane protein
 - Annotated to "protein autophosphorylation" (IDA) but has NO kinase domain
 - Also has "negative regulation of protein kinase activity" (IDA)
@@ -1985,19 +1992,19 @@ PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activi
 | Substrates | 0 | 5 | **2** | 1 | 0 | 0 | 1 | 0 | 0 |
 
 **Key observation**: RGD errors are almost entirely ISS transfers from MGI/GOA. The 3 IDA annotations
-(rat/Grm5, rat/Pick1, rat/Thy1) represent independent rat-specific curation that also shows over-annotation patterns.
+(`rat/Grm5`, `rat/Pick1`, `rat/Thy1`) represent independent rat-specific curation that also shows over-annotation patterns.
 
 ## STATUS (Rat)
 
-- [x] Query analysis completed - **11 problematic rows across 10 genes found**
-- [x] 8 ISS transfer rows identified (same errors as mouse and human)
-- [x] 1 phosphatase (rat/Ppp3cb) - **REMOVE** [O-ser]
-- [x] 2 signaling ligands (rat/Gas6, rat/Pdgfb) - **MODIFY** [R-ligand]
-- [x] 1 sugar kinase (rat/Glyctk) - **REMOVE** [W-sugar]
-- [x] 2 adapters (rat/Ywhaz, rat/Pick1) - **MODIFY** [R-adapter]
-- [x] 1 AMPAR auxiliary subunit (rat/Prrt1) - **REMOVE**
-- [x] 1 receptor (rat/Grm5) - **REMOVE** [R-receptor]
-- [x] rat/Thy1 autophosphorylation - **REMOVE** [R-ligand]
+- **Done:** Query analysis completed - **11 problematic rows across 10 genes found**
+- **Done:** 8 ISS transfer rows identified (same errors as mouse and human)
+- **Done:** 1 phosphatase (`rat/Ppp3cb`) - **REMOVE** [O-ser]
+- **Done:** 2 signaling ligands (`rat/Gas6`, `rat/Pdgfb`) - **MODIFY** [R-ligand]
+- **Done:** 1 sugar kinase (`rat/Glyctk`) - **REMOVE** [W-sugar]
+- **Done:** 2 adapters (`rat/Ywhaz`, `rat/Pick1`) - **MODIFY** [R-adapter]
+- **Done:** 1 AMPAR auxiliary subunit (`rat/Prrt1`) - **REMOVE**
+- **Done:** 1 receptor (`rat/Grm5`) - **REMOVE** [R-receptor]
+- **Done:** `rat/Thy1` autophosphorylation - **REMOVE** [R-ligand]
 
 **Last updated**: 2026-09-28
 
@@ -2012,16 +2019,16 @@ mostly ISS transfers from mouse and human. The errors mirror those found in the
 source databases (MGI, GOA).
 
 **ISS transfer errors (7 genes)**:
-- rat/Gas6, rat/Pdgfb - signaling ligands [R-ligand]
-- rat/Glyctk - sugar kinase [W-sugar]
-- rat/Ilf3 - substrate [S]
-- rat/Prrt1, rat/Ywhaz - adapter proteins [R-adapter]
-- rat/Ppp3cb - phosphatase (calcineurin) [O-ser]
+- `rat/Gas6`, `rat/Pdgfb` - signaling ligands [R-ligand]
+- `rat/Glyctk` - sugar kinase [W-sugar]
+- `rat/Ilf3` - substrate [S]
+- `rat/Prrt1`, `rat/Ywhaz` - adapter proteins [R-adapter]
+- `rat/Ppp3cb` - phosphatase (calcineurin) [O-ser]
 
 **IDA annotations requiring review (3 genes)**:
-- rat/Grm5 - GPCR row redundant with a positive-regulation-of-MAPK annotation [R-receptor]
-- rat/Pick1 - PKC scaffold/adapter [R-adapter]
-- rat/Thy1 - GPI ligand upstream of FAK autophosphorylation [R-ligand]
+- `rat/Grm5` - GPCR row redundant with a positive-regulation-of-MAPK annotation [R-receptor]
+- `rat/Pick1` - PKC scaffold/adapter [R-adapter]
+- `rat/Thy1` - GPI ligand upstream of FAK autophosphorylation [R-ligand]
 
 **Annotation quality gradient (updated - 9 MODs)**:
 - **EXCELLENT**: SGD, PomBase, WormBase (0 errors)

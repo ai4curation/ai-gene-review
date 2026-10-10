@@ -37,8 +37,8 @@ Reviewing GO annotations across the five respiratory complexes, their carriers a
 ## Bottom line
 
 - OXPHOS makes most cellular ATP: **four electron-transport complexes, two carriers, one ATP synthase**, about 90 subunits plus assembly factors.
-- **36 of 38** prioritized human genes are reviewed: **1,330 annotations**, 861 accepted, 152 over-annotated, 52 removed, 18 NEW.
-- One pattern throughout: subunits **`contributes_to`** the complex activity; **assembly factors are not the enzyme**.
+- **36 of 38** prioritized human genes have all rows adjudicated: **1,350 annotations**, 852 accepted, 152 over-annotated, 82 removed, 18 NEW.
+- Target pattern: subunits **`contributes_to`** complex activities they do not catalyze alone; **assembly factors are not the enzyme**.
 
 ---
 
@@ -85,7 +85,7 @@ Reviewing GO annotations across the five respiratory complexes, their carriers a
 | III | 4 | 112 | 66 | 9 | 27 | 3 | 5 | 2 |
 | IV | 12 | 334 | 202 | 47 | 44 | 12 | 24 | 5 |
 | V | 7 | 322 | 202 | 55 | 39 | 6 | 13 | 1 |
-| Carriers / CoQ / ETF | 3 | 114 | 69 | 23 | 15 | 4 | 0 | 3 |
+| Carriers / CoQ / ETF | 3 | 134 | 60 | 14 | 15 | 12 | 30 | 3 |
 
 <span class="small">Counts from the 36 review YAMLs; 8 UNDECIDED (ATP5F1B 3, ATP5IF1 3, ACAD9 2) not shown. Complex IV includes its assembly factors and LRPPRC.</span>
 
@@ -101,7 +101,7 @@ Reviewing GO annotations across the five respiratory complexes, their carriers a
 
 ## Status and next steps
 
-- ✅ 36/38 prioritized genes reviewed; taxon-neutral OXPHOS module built.
+- ✅ 36/38 prioritized genes have all rows adjudicated; taxon-neutral OXPHOS module built.
 - ✅ Per-complex modules exist too (`mitochondrial_complex_i_core` … `mitochondrial_complex_iv`, ETF, CoQ10).
 - ⬜ **COX7A2L** (supercomplex factor, contested) and **HCCS** (cytochrome c heme lyase) not yet reviewed.
 - ✅ STATUS checklist updated for the 11 reviews done under other projects.

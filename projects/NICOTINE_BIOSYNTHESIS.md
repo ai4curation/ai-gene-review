@@ -1,6 +1,7 @@
 ---
 title: "Nicotine Biosynthesis Project"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 genes: [NaA622, NaA622_candidate_IFRH_0, NaAO2_candidate_AO_0, NaAO2_candidate_AO_1, NaBBL1_candidate_FOX1_0, NaBBL2_candidate_FOX1_2, NaBBL_candidate_FOX1_4, NaBBL_candidate_FOX2_2, NaBBL_candidate_FOX2_4, NaBGL1_candidate_BGLU18_6, NaBGL1_candidate_BGLU42, NaBGL2_candidate_BGLU18_1, NaMATE1_candidate_DTX40_3, NaMPO1_candidate_AMO_3, NaODC_candidate_DCOR, NaODC_candidate_ODC, NaPMT1.1, NaPMT1.2, NaPMT3, NaQPT2_candidate_QPT_0, NaQPT2_candidate_QPT_1, NaUGT1_candidate_UGT85A2_0]
 species: [NICAT]
@@ -11,26 +12,26 @@ manifest:
   slides:
     - href: NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/UnQ9Raqh1BixjT3CMmvgdH
-      title: Project brief
 ---
 # Nicotine Biosynthesis Project
 
 **Bottom line:** nicotine is made in tobacco roots from two branches, a
 pyridine ring from nicotinic acid and a pyrrolidine ring from putrescine, and
 2026 work in *Nicotiana attenuata* completed the pathway by adding a
-glucosylation step (UGT1), a deglucosylation step (BGL1/2) and a vacuolar MATE
-transporter. We seeded the project in *N. attenuata* (NICAT), mapped the
+glucosylation step (UGT1), a deglucosylation step (BGL1/2) and a candidate
+MATE transporter. We seeded the project in *N. attenuata* (NICAT), mapped the
 paper's gene names to current UniProt accessions by sequence, and created 22
 gene reviews: the core enzymes plus the plausible paralogs where the mapping
-was ambiguous. We did this because public annotation still lags the new
-pathway, so no GO record yet connects most of these proteins to nicotine. All
-22 reviews are at DRAFT status and cover 117 existing annotations; they propose
-`GO:0042179` nicotine biosynthetic process for six genes, remove electronic
-spermidine synthase terms from the three PMT paralogs, and narrow generic
-terms to specific activities such as `GO:0050139` nicotinate-N-glucosyltransferase
-activity for UGT1. `NaNAMNH` still has no stable public accession.
+was ambiguous. Public annotation already links older QPT2, ODC, PMT and BBL
+candidates to `GO:0042179`, but still lags newly mapped MPO1, UGT1, A622,
+BGLU18 and MATE1 accessions. All 22 reviews are at `DRAFT` status and cover
+117 GOA-sourced rows plus 6 `NEW` nicotine-process proposals: five enzyme rows
+and one tentative `NaMATE1` transporter candidate. The PMT reviews remove
+electronic spermidine-synthase carryover terms, and the UGT1 review narrows
+generic glucosyltransferase terms to `GO:0050139`
+nicotinate-N-glucosyltransferase activity. `NaNAMNH` still has no stable
+public accession, and [#4233](https://github.com/ai4curation/ai-gene-review/issues/4233)
+tracks that gap plus the `NaNUP` transport follow-up.
 
 > **Editor Brief (2026-04-04):**
 > Seed this project in *Nicotiana attenuata* (`NICAT`), not *N. tabacum*. The April 2, 2026
@@ -102,7 +103,7 @@ Exclude from the initial seed set:
 | `NaA622` | Ring-condensation branch point | Classical late-step nicotine pathway; retained in Cell model | Launch-ready |
 | `NaBBL1`, `NaBBL2` | Late oxidation after condensation | Classical BBL family; `NaBBL2` used in Cell yeast reconstruction | Provisional accession mapping |
 | `NaBGL1`, `NaBGL2` | Deglycosylation from NG to nicotine | New Cell 2026 step | BGLU18 candidate jobs launch-ready; older BGLU42 retained as comparator |
-| `NaMATE1` | Vacuolar membrane metabolon transporter/export step | New Cell 2026 transport component; required for high yeast production | Sequence-backed candidate mapping |
+| `NaMATE1` | MATE-family transporter associated with the late A622-MATE1-beta-GD1 module; direct substrate and membrane remain unresolved | New 2026 transport candidate requiring follow-up | Sequence-backed candidate mapping |
 
 ### Keep as follow-up, not seed-core
 
@@ -118,7 +119,7 @@ The incoming paper materially changes the project framing:
 
 - It strengthens the species choice in favor of *N. attenuata*.
 - It upgrades glycosylation and deglycosylation from side chemistry to pathway-core steps.
-- It makes `NaMATE1` a core transport gene rather than a peripheral transport annotation.
+- It makes `NaMATE1` a high-priority transport candidate in the late module rather than a generic peripheral transport follow-up.
 - It argues that the minimal heterologous production set is:
   `NaODC`, `NaPMT1`, `NaMPO`, `NaUGT1`, `NaA622`, `NaBBL2`, `NaBGL1`, and `NaMATE1`.
 - It also supports keeping the upstream pyridine branch (`NaAO2`, `NaNAMNH`, `NaQPT2`) in
@@ -157,6 +158,9 @@ This branch is already past pure scaffold stage:
 
 - All 22 current `launch_ready` aliases in `review_jobs.csv` have now been fetched into `genes/NICAT/`.
 - All 22 current launched NICAT aliases have now been advanced to `DRAFT` review state.
+- A 2026-10-04 recheck found 123 review rows across those 22 DRAFTs: 117 GOA-sourced
+  rows plus 5 enzyme `NEW` nicotine-biosynthesis proposals and one tentative `NaMATE1`
+  transporter proposal.
 - The 2026-04-05 mapping dive converted `NaUGT1`, `NaMPO1`, `NaBGL2`, and `NaMATE1`
   from pure accession backlog into fetched sequence-backed candidate rows.
 - The same review pass promotes `BGLU18_6` and `BGLU18_1` as the leading `beta-GD`
@@ -220,8 +224,10 @@ Important caveats:
 - [x] Decide that the new `BGLU18` candidates replace `BGLU42` as the primary
   deglycosylase review anchors, while retaining `BGLU42` as a comparator.
 - [x] Advance all currently launched NICAT aliases beyond `INITIALIZED`.
-- [ ] Resolve a stable public accession for `NaNAMNH`.
-- [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon is reviewed.
+- [ ] Resolve a stable public accession for `NaNAMNH`
+  ([#4233](https://github.com/ai4curation/ai-gene-review/issues/4233)).
+- [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon
+  is reviewed ([#4233](https://github.com/ai4curation/ai-gene-review/issues/4233)).
 
 ## Sources
 

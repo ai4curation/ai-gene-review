@@ -3,14 +3,12 @@ title: "Plant Bioenergy Modules"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [ARATH, POPTR, SORBI]
+last_reviewed: 2026-10-05
 autolink_gene_symbols: false
 manifest:
   slides:
     - href: PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/92U5hqDhdMw4bNbohBwAKP
-      title: Project brief
 ---
 
 # Plant Bioenergy Modules
@@ -26,7 +24,8 @@ have a shared, verified map of the enzymes and steps to anchor to. All five
 modules validate and are rendered; each is status DRAFT, and together they
 ground 48 distinct UniProt exemplars (mostly Arabidopsis) where the identifiers
 were verified. Grass-specific wall modules, suberin/cutin and per-gene reviews of
-feedstock orthologs have not started.
+feedstock orthologs have not started and are tracked in
+[#4001](https://github.com/ai4curation/ai-gene-review/issues/4001).
 
 ## Overview
 
@@ -107,11 +106,14 @@ documents and are candidates for future dedicated modules.
 
 ## Status / next steps
 
-- [x] Structured modules curated and validated against `ModuleReview`
+- **Done:** Structured modules curated and validated against `ModuleReview`
       (lignin, xylan, seed TAG; cellulose and photosynthesis pre-existing).
-- [ ] Grass-specific modules: mixed-linkage glucan (CSLF/CSLH) and
-      glucuronoarabinoxylan arabinosylation/feruloylation.
-- [ ] Suberin and cutin biosynthesis (barrier polyesters relevant to some
-      feedstocks and to pretreatment).
-- [ ] Per-gene reviews for feedstock-species orthologs (poplar/sorghum) of the
-      exemplar enzymes above.
+- **Todo:** Grass-specific modules: mixed-linkage glucan (CSLF/CSLH) and
+      glucuronoarabinoxylan arabinosylation/feruloylation
+      ([#4001](https://github.com/ai4curation/ai-gene-review/issues/4001)).
+- **Todo:** Suberin and cutin biosynthesis (barrier polyesters relevant to some
+      feedstocks and to pretreatment)
+      ([#4001](https://github.com/ai4curation/ai-gene-review/issues/4001)).
+- **Todo:** Per-gene reviews for feedstock-species orthologs (poplar/sorghum) of the
+      exemplar enzymes above
+      ([#4001](https://github.com/ai4curation/ai-gene-review/issues/4001)).

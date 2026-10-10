@@ -36,9 +36,9 @@ Scoping a multi-organism review of the microbial nitrogen-cycle enzymes
 
 ## Bottom line
 
-- **Scoped, no gene reviews started.** The cycle's dissimilatory steps are almost all bacterial or archaeal.
+- **Scoped, no exact module-grounding gene reviews started.** Several adjacent nitrogen-metabolism reviews now exist.
 - We chose **27 reviewed Swiss-Prot marker enzymes** across seven arms, plus `nxrA`, which has no reviewed entry.
-- A taxon-neutral **module** (`modules/nitrogen_cycle.yaml`, DRAFT) is built; it gives the specific pathway terms that annotations on **GO:0071941** should move to.
+- A taxon-neutral **module** (`modules/nitrogen_cycle.yaml`, DRAFT) is built with 25 direct Swiss-Prot groundings, an abstract NXR leaf, and CycA/NasA deferred to species realizations.
 
 ---
 
@@ -53,7 +53,8 @@ Scoping a multi-organism review of the microbial nitrogen-cycle enzymes
 | Arm | Markers | Model organisms |
 |---|---|---|
 | Fixation | nifH, nifD, nifK | *K. pneumoniae*, *A. vinelandii* |
-| Nitrification | amoA/B/C, hao, cycA; nxrA (no Swiss-Prot) | *N. europaea* |
+| Nitrification, ammonia ox. | amoA/B/C, hao, cycA | *N. europaea* |
+| Nitrification, nitrite ox. | nxrA (no Swiss-Prot) | NOB: *Nitrobacter* / *Nitrospira* |
 | Denitrification | narG, napA, nirS, nirK, norB, norC, nosZ | *E. coli*, *P. aeruginosa*, *P. denitrificans* ... |
 | DNRA | nrfA | *E. coli* |
 | Anammox | hzsA, hzsB, hzsG, hdh | *K. stuttgartiensis* |
@@ -68,15 +69,16 @@ Scoping a multi-organism review of the microbial nitrogen-cycle enzymes
 
 ![h:440](nitrogen-cycle-module-page.jpg)
 
-<span class="small">pages/modules/nitrogen_cycle.html: one part per arm, variant sets for convergent enzymes, Swiss-Prot exemplars as grounding.</span>
+<span class="small">pages/modules/nitrogen_cycle.html: one part per arm, variant sets for convergent enzymes, 25 direct Swiss-Prot groundings, and an abstract NXR leaf.</span>
 
 ---
 
 ## Status and next steps
 
 - ✅ Marker set chosen and accessions verified (2026-06-20); module drafted.
+- ✅ Adjacent DNRA, denitrification, archaeal ammonia-oxidation, assimilation and urea reviews checked.
 - ⬜ Resolve an accession for NOB nitrite oxidoreductase (`nxrA`).
-- ⬜ `just fetch-gene` each marker under its species code (e.g. NITEU, PARDE, KUEST) and review.
+- ⬜ Curate the 27 exact Swiss-Prot marker accessions plus a concrete NXR grounding (#3972).
 - ⬜ Log any GO:0071941 rows found to the companion obsoletion project.
 
 **Read more:** `projects/NITROGEN_CYCLE.md` · `modules/nitrogen_cycle.yaml` · `projects/NITROGEN_CYCLE_OBSOLETION.md`

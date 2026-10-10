@@ -65,10 +65,11 @@ analytical evidence. Family-review changes travel with the genes they discuss.
 
 ## Unfinished scientific work
 
-The regenerated progress report records **81 reviewed**,
-**65 awaiting adjudication**, and **3281 unreviewed** genes
-against the immutable 3,427-gene baseline. These are audit statuses, not merge
-statuses. `reviewed` can still carry explicit human follow-up questions.
+The regenerated progress report now records **143 reviewed**,
+**57 awaiting adjudication**, and **3,226 unreviewed** genes
+against the immutable 3,427-gene baseline as of 2026-10-04. These are audit
+statuses, not merge statuses. `reviewed` can still carry explicit human
+follow-up questions.
 
 The recovered local runner records contain 90 `report_ready` outputs and one
 `report_recovered_from_cancelled_job` output. These are the statuses recorded on
@@ -116,9 +117,10 @@ scaffolded session identifiers were retained.
 All 1,679 originally recovered paths are assigned to the batches above, except
 for the intentionally renamed CSR-1 archive whose bytes and hash are preserved.
 The comparison JSON, figure, Table S8 and deterministic benchmark sidecars are
-regenerated together. The full audit remains at 81 reviewed, 65 awaiting
-adjudication and 3,281 unreviewed; publishing these batches does not change that
-scientific-work denominator. Final merge status is recorded on the linked PRs.
+regenerated together. The full audit is currently 143 reviewed, 57 awaiting
+adjudication and 3,226 unreviewed; publishing these batches does not change the
+3,427-gene scientific-work denominator. Final merge status is recorded on the
+linked PRs.
 
 
 ## Provenance formatting repairs

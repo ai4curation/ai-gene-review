@@ -1,6 +1,7 @@
 ---
 title: "Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)"
 maturity: SCOPING
+last_reviewed: "2026-10-04"
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, mouse]
 genes: [VMP1, CALM1, Calm1, Calm2, Calm3]
@@ -12,9 +13,6 @@ manifest:
   slides:
     - href: MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/732CHnKMbyydt26H9ByLRQ
-      title: Project brief
 ---
 
 # Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)
@@ -32,16 +30,17 @@ row each from PMID:28890335, both ACCEPT) and mouse Calm1, Calm2 and Calm3
 (electronic or similarity rows, KEEP_AS_NON_CORE). Scoped, not yet started:
 none of those rows has been revisited since the obsoletion, and none of the
 canonical tethers (PDZD8, MFN2, VAPB, RMDN3, ERMES subunits) is reviewed here.
-The impact table below reports the mouse calmodulin actions loosely; the
-reviews mark them KEEP_AS_NON_CORE.
+The impact table below keeps the five affected reviews distinct from the seven
+old-term rows: one VMP1 row, one human CALM1 row, three mouse Calm1 rows, one
+mouse Calm2 row and one mouse Calm3 row.
 
 ## Overview
 
-A GO obsoletion proposal will retire **GO:1990456 mitochondrion-endoplasmic
-reticulum membrane tethering** (a BP term). The rationale matches the parallel
-ER–PM and peroxisome–chloroplast tether obsoletions: the activity is more
-appropriately captured at the molecular function level by the existing
-**GO:0140474 mitochondrion-endoplasmic reticulum membrane tether activity**.
+GO has retired **GO:1990456 mitochondrion-endoplasmic reticulum membrane
+tethering** as a BP term. The rationale matches the parallel ER-PM and
+peroxisome-chloroplast tether obsoletions: the activity is more appropriately
+captured at the molecular function level by **GO:0140474
+mitochondrion-endoplasmic reticulum membrane tether activity**.
 
 This project tracks the impact on AI Gene Review and queues the canonical
 mitochondrion–ER tether proteins for review.
@@ -51,7 +50,7 @@ mitochondrion–ER tether proteins for review.
 - Annotation tracker: [geneontology/go-annotation#6397](https://github.com/geneontology/go-annotation/issues/6397)
 - Ontology ticket: [geneontology/go-ontology#31875](https://github.com/geneontology/go-ontology/issues/31875)
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
@@ -81,35 +80,39 @@ mitochondrion–ER tether proteins for review.
 
 The obsoletion intersects existing reviews in the following way:
 
-| Gene | Organism | Existing action on GO:1990456 |
+| Gene | Organism | Existing GO:1990456 rows and actions |
 |---|---|---|
-| VMP1 | human | annotated with GO:1990456 in `genes/human/VMP1/VMP1-ai-review.yaml` |
-| CALM1 | human | GO:1990456 row currently `ACCEPT` |
-| Calm1 | mouse | GO:1990456 row present |
-| Calm2 | mouse | GO:1990456 row present |
-| Calm3 | mouse | GO:1990456 row present |
+| VMP1 | human | one UniProt IDA row from PMID:28890335, currently `ACCEPT` |
+| CALM1 | human | one UniProt IDA row from PMID:28890335, currently `ACCEPT` |
+| Calm1 | mouse | three propagated rows, `IEA`/`ISO`/`ISS`, all `KEEP_AS_NON_CORE` |
+| Calm2 | mouse | one Ensembl `IEA` row, currently `KEEP_AS_NON_CORE` |
+| Calm3 | mouse | one Ensembl `IEA` row, currently `KEEP_AS_NON_CORE` |
 
-These reviews will need a refresh once the obsoletion lands — for VMP1 and the
-calmodulin family the GO:1990456 annotation should be reassessed against
-GO:0140474 (or, for calmodulins, likely **REMOVED** because the evidence does
-not show that calmodulin itself is a mitochondrion–ER tether). Human VMP1 and
-CALM1 carry UniProt IDA annotations from PMID:28890335. Mouse Calm1/2/3 carry
-computational or similarity-propagated annotations (IEA/ISO/ISS), not Reactome
-TAS annotations.
+These reviews need a refresh now that the obsoletion has landed. Human VMP1
+and CALM1 carry UniProt IDA annotations from PMID:28890335 and should be
+reassessed against GO:0140474 using the full paper; if the CALM1 full text
+cannot be checked, leave the row `UNDECIDED` rather than overruling an
+experimental annotation from abstract-only evidence. The mouse Calm1/2/3 rows
+are computational or similarity-propagated and are likely **REMOVE** candidates
+because the evidence does not show that calmodulin itself is a
+mitochondrion-ER tether.
 
-Human CALM2 is not currently present in this repository, and human CALM3 does
-not currently have a GO:1990456 row in either GOA or the review YAML.
+Human `CALM2` is not currently present in this repository, and human `CALM3`
+does not currently have a GO:1990456 row in either GOA or the review YAML.
 
-No canonical mito–ER tether genes (ERMES components, PDZD8, MFN2,
-VAPB/PTPIP51) are currently reviewed in this repository.
+No canonical mito-ER tether genes (ERMES components, PDZD8, MFN2,
+VAPB/PTPIP51) are currently reviewed in this repository. Adjacent reviewed
+MAM genes such as BCAP31 and PSEN1 touch GO:0044233
+*mitochondria-associated endoplasmic reticulum membrane contact site*, but not
+the obsolete GO:1990456 BP term.
 
 ## Scope
 
 - **Organisms**: human (PDZD8, MFN2, VAPB, PTPIP51), S. cerevisiae (ERMES
   components: MMM1, MDM10, MDM12, MDM34), Dictyostelium (5 dictyBase
   annotations still pending), mouse (1 MGI annotation pending).
-- **GO branches**: BP (the obsoleted term itself) and MF GO:0140474. Both
-  belong to the membrane contact site (MCS) branch.
+- **GO branches**: obsolete BP GO:1990456 and live MF GO:0140474. GO:0140474
+  is a mitochondrion-ER-specific molecular tether activity.
 - **Type of fix**: terminological in GO; biology is well established. Reviews
   should evaluate whether the MF replacement (`tether activity`) is the better
   core-function term and add it where the underlying assay supports it.
@@ -153,16 +156,15 @@ than to fix outstanding GOA rows.
 ## Proposed approach and priority
 
 1. **Refresh existing affected reviews** (human VMP1 and CALM1; mouse
-   Calm1/2/3) to revisit GO:1990456 rows once the obsoletion lands. The
-   calmodulin rows likely should be **REMOVED** rather than rerouted, but the
-   rationale should distinguish the human UniProt IDA annotation from the mouse
-   computational/similarity-propagated annotations.
+   Calm1/2/3) to revisit GO:1990456 rows. The propagated mouse calmodulin rows
+   are likely **REMOVE** candidates, while the human CALM1 UniProt IDA row
+   needs full-text reassessment before it is changed.
 2. **Anchor new reviews** on **PDZD8** + **MFN2** as the highest-impact
    mammalian tethers, and on **MMM1** + **MDM12** for the yeast ERMES anchor
    pair.
-3. Once GO:0140474 is the canonical MF term, audit other genes in this
-   repository whose `core_functions` could legitimately gain it (e.g. through
-   the `proposed_replacement_terms` mechanism).
+3. Audit other genes in this repository whose `core_functions` could
+   legitimately gain GO:0140474 (e.g. through the `proposed_replacement_terms`
+   mechanism).
 
 ## Status
 
@@ -185,3 +187,8 @@ than to fix outstanding GOA rows.
   it needs a real assessment when refreshed. The local
   `cache/ontologies/go.tsv` still records GO:1990456 as live, so validation
   does not flag these five reviews yet.
+- 2026-10-04 — Re-audited the five affected reviews and found seven total
+  obsolete-term rows: two human IDA rows and five propagated mouse calmodulin
+  rows. BCAP31, PSEN1 and HSPA9 are already reviewed in the broader MAM/GRP75
+  biology but do not carry GO:1990456, so the exact stale-term queue remains
+  VMP1, CALM1, Calm1, Calm2 and Calm3.

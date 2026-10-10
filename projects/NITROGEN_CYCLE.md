@@ -1,6 +1,7 @@
 ---
 title: "Nitrogen Cycle Module"
 maturity: SCOPING
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN]
 autolink_gene_symbols: false
 sidecars:
@@ -11,15 +12,13 @@ manifest:
   slides:
     - href: NITROGEN_CYCLE/slides/NITROGEN_CYCLE-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/W3XvHrjuvVoB8T78sP322h
-      title: Project brief
 ---
 
 # Nitrogen Cycle Module
 
-**Bottom line:** scoped, with no gene reviews started. The nitrogen cycle is
-the set of microbial redox reactions that move nitrogen between N₂, ammonia,
+**Bottom line:** scoped, with no exact module-grounding gene reviews started.
+The nitrogen cycle is the set of microbial redox reactions that move nitrogen
+between N₂, ammonia,
 nitrite, nitrate and the gaseous intermediates, and almost every dissimilatory
 step is carried out by bacteria or archaea. This project picked canonical
 marker enzymes for each arm (fixation, nitrification, denitrification, DNRA,
@@ -28,12 +27,31 @@ checked against UniProt on 2026-06-20, plus nitrite oxidoreductase (`nxrA`),
 which has no reviewed entry. It also drafted a taxon-neutral module,
 [`modules/nitrogen_cycle.yaml`](../modules/nitrogen_cycle.html) (status
 DRAFT), with one part per arm, variant sets for convergent chemistries such as
-cd₁ versus copper nitrite reductase, and those exemplars as grounding. The aim
-is to have a mechanistically organised picture to review these enzymes'
-annotations against, and to supply the specific pathway terms that
-annotations on the grouping term GO:0071941 should move to (see the companion
-obsoletion project). None of the 27 accessions has a gene review in the repo
-yet.
+cd₁ versus copper nitrite reductase, 25 direct Swiss-Prot groundings from the
+candidate set, an abstract NXR function selector, and HAO-linked CycA plus the
+mono-subunit NasA alternate deferred to species realizations. The aim is to
+have a mechanistically organised picture to review these enzymes' annotations
+against, and to supply the specific pathway terms that annotations on the
+grouping term GO:0071941 should move to (see the companion obsoletion
+project). Curating the 27 exact accessions and a concrete NXR grounding is
+tracked in
+[#3972](https://github.com/ai4curation/ai-gene-review/issues/3972);
+[#2907](https://github.com/ai4curation/ai-gene-review/issues/2907) tracks the
+stale NarB donor-specificity assertion in the draft module.
+Adjacent reviews already cover DNRA
+([DESPS/nrfA](../genes/DESPS/nrfA/nrfA-ai-review.yaml)), denitrification
+([RHOPA/nosZ](../genes/RHOPA/nosZ/nosZ-ai-review.yaml)), archaeal ammonia
+oxidation ([NITRP/amoA](../genes/NITRP/amoA/amoA-ai-review.yaml), with
+re-review follow-up in
+[#796](https://github.com/ai4curation/ai-gene-review/issues/796)), and the
+Pseudomonas assimilation and ammonification genes
+[glnA](../genes/PSEPK/glnA/glnA-ai-review.yaml),
+[gltB](../genes/PSEPK/gltB/gltB-ai-review.yaml),
+[nirB](../genes/PSEPK/nirB/nirB-ai-review.yaml) and
+[ureC](../genes/PSEPK/ureC/ureC-ai-review.yaml); PSEPK
+[nasA](../genes/PSEPK/nasA/nasA-ai-review.yaml) is a nitrate/nitrite
+transporter, not the Klebsiella assimilatory nitrate reductase named in the
+candidate table.
 
 ## Overview
 
@@ -94,8 +112,9 @@ flowchart LR
     NO -- "norBC" --> N2O
     N2O -- "nosZ" --> N2
     NO2 -- "nrfA (DNRA)" --> NH3
+    NO2 -- "anammox nitrite reductase" --> NO
     NH3 -- "anammox: hzsABG" --> N2H4
-    NO2 -- "anammox: hzsABG" --> N2H4
+    NO -- "anammox: hzsABG" --> N2H4
     N2H4 -- "hdh" --> N2
     NO3 -- "assimilation (narB/nasA)" --> NO2
     NO2 -- "assimilation (nirA/nirB)" --> NH3
@@ -188,7 +207,7 @@ annotation-by-annotation plan):
 
 - **GO:0009399** nitrogen fixation
 - **GO:0019333** denitrification pathway
-- **GO:0019331** anaerobic respiration, nitrate to nitrite (and related)
+- **GO:0019331** anaerobic respiration, using ammonium as electron donor (anammox)
 - nitrification / nitrite-oxidation children
 - **GO:0019676** ammonia assimilation cycle (GS/GOGAT)
 
@@ -223,4 +242,12 @@ annotation-by-annotation plan):
   accessions are reviewed Swiss-Prot entries verified via the UniProt REST API
   on this date. The one unresolved marker is NOB nitrite oxidoreductase
   (`nxrA`), which has no reviewed entry and is flagged for accession resolution.
-  No gene reviews started yet.
+  No exact marker-accession gene reviews started yet.
+- 2026-10-04 — Nearby pathway reviews now cover several of the same reactions,
+  but not the exact module groundings: DESPS nrfA for DNRA, RHOPA nosZ for the
+  terminal denitrification step, NITRP amoA for archaeal ammonia oxidation
+  (needs [#796](https://github.com/ai4curation/ai-gene-review/issues/796)),
+  PSEPK nasA/nirB for nitrate/nitrite assimilation, glnA/gltB for ammonia
+  assimilation, and ureC for urea catabolism / ammonification. The remaining
+  exact-grounding review pass is tracked in
+  [#3972](https://github.com/ai4curation/ai-gene-review/issues/3972).

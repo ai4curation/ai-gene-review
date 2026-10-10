@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate EC-bridge-confirmed NCBIFAM -> GO mapping *candidates* at collection scale.
 
-The hand-curated seed [`ncbifam2go.sssom.yaml`](ncbifam2go.sssom.yaml) is 28 reviewed
-rows. This script scales the same idea to the whole NCBIFAM collection using the one
+The reviewed seed [`ncbifam2go.sssom.yaml`](ncbifam2go.sssom.yaml) contains manually
+curated rows plus promoted EC-bridge rows. This script scales the same idea to the whole
+NCBIFAM collection using the one
 piece of verification that needs no human judgement: the **EC bridge**. For every
 NCBIFAM model that carries an EC number, if the public `ec2go` mapping sends that EC
 to one of the model's own NCBI-assigned `go_terms`, then NCBIFAM(EC) and ec2go(EC)
@@ -103,7 +104,11 @@ def main(argv=None) -> int:
         c = line.split("\t")
         if len(c) <= COL_GO:
             continue
-        acc, ftype, prod = c[COL_ACCESSION], c[COL_FAMILY_TYPE], c[COL_PRODUCT]
+        acc, ftype, prod = (
+            c[COL_ACCESSION],
+            c[COL_FAMILY_TYPE],
+            c[COL_PRODUCT].strip(),
+        )
         gos = [t for t in c[COL_GO].replace(",", " ").split() if t.startswith("GO:")]
         ecs = [
             e.strip()
@@ -140,7 +145,7 @@ def main(argv=None) -> int:
                     ec,
                     ftype,
                     "yes" if base in in_seed else "",
-                    prod[:70],
+                    prod[:70].rstrip(),
                 )
             )
 
@@ -170,7 +175,7 @@ def main(argv=None) -> int:
     banner = (
         "# GENERATED -- EC-bridge-confirmed NCBIFAM->GO exactMatch candidates.\n"
         "# Source of truth: ncbifam2go_candidates.py (NOT hand-reviewed; mapping_justification\n"
-        "# would be semapv:CompositeMatching). The 28-row ncbifam2go.sssom.yaml is the reviewed core.\n"
+        "# would be semapv:CompositeMatching). ncbifam2go.sssom.yaml is the reviewed seed.\n"
         "# Regenerate: uv run python projects/NCBIFam/ncbifam2go_candidates.py\n"
     )
     args.out.write_text(banner + header + body)

@@ -36,9 +36,9 @@ Reviewing the Inferred from Expression Pattern evidence code
 
 ## Bottom line
 
-- IEP infers a role in a process from a change in the gene's **own expression**. We surveyed all **25,401** IEP rows in GOA and reviewed **550** in the repo.
-- The typical IEP row is **true but peripheral**: 22.5% accepted, **55.6% kept as non-core**, 16.7% flagged.
-- **1,110 of 1,147** CC rows breaking GORULE:0000006 come from **one ECO class** and could be fixed by one mapping change.
+- IEP infers a role in a process from a change in the gene's **own expression**. The 2026-07-27 QuickGO snapshot has **25,401** IEP rows; this repo has reviewed **646**.
+- The typical IEP row is **true but peripheral**: 21.8% accepted, **53.4% kept as non-core**, 20.9% flagged.
+- In the global snapshot, **1,110 of 1,147** CC rows breaking GORULE:0000006 come from **one ECO class** and could be fixed by one mapping change.
 
 ---
 
@@ -92,13 +92,13 @@ The tier predicts the verdict. The batch also **omits let-7a**, one of the three
 
 - Dispositions come from this repo's **AI reviews**, primed to look for over-annotation.
 - So rates measure one reviewer population; the **cross-code ordering** is more trustworthy than any single rate.
-- The **worked examples** carry the argument. The developmental-vs-stimulus flag gap (22.6% vs 16.8%) is **not significant** (Fisher p = 0.21).
+- The **worked examples** carry the argument. The current developmental-vs-stimulus flag gap is gone (22.7% vs 22.5%; Fisher p = 1.00).
 
 ---
 
 ## Status and next steps
 
 - Done: two-view survey, global atlas, failure-pattern catalogue, ECO diagnosis, miRNA cohort.
-- Open: a developmental-branch cohort; the *E. coli* PMID:11967071 batch (152 genes → DNA damage response); 22 PENDING rat Casp3 rows; independent disposition data; HEP.
+- Open: a developmental-branch cohort; the *E. coli* PMID:11967071 batch (152 genes → DNA damage response); independent disposition data; HEP.
 
 **Read more:** `projects/IEP.md` · `projects/IEP/iep-corpus-survey.md` · `projects/IEP/iep-global-atlas.md`

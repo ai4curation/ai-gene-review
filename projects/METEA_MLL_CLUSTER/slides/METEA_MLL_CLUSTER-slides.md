@@ -88,7 +88,7 @@ Re-annotating an "iron-siderophore" system in *Methylorubrum extorquens* AM1 as 
 ## Status and next steps
 
 - ✅ 10/10 reviews exist; deep research from Perplexity and Falcon for each gene.
-- ⬜ Review files are `DRAFT` or `INITIALIZED` except mllDE; the project page's action table and several UniProt IDs are out of date.
-- ⬜ Propose **lanthanophore biosynthetic process** and a lanthanide-metallophore transport term to GO.
+- ⬜ Review files are `DRAFT` or `INITIALIZED` except mllDE; six per-gene follow-ups plus mllF/mllG/mllJ finishing work are tracked in #4126.
+- ⬜ Consolidate the **lanthanophore biosynthetic process** NTR; decide whether MluA can support a lanthanide-metallophore transport term.
 
 **Read more:** `projects/METEA_MLL_CLUSTER.md` · `genes/METEA/mll*/` · `genes/METEA/mlu*/` · related: `projects/REE.md`

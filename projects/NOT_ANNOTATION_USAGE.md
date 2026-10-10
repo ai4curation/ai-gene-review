@@ -1,6 +1,7 @@
 ---
 title: "NOT Annotation Usage Audit"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [EVALUATION, PIPELINE]
 species: [human, rat, ARATH, SCHPO]
 genes: [FGFR4, AGR2, GCH1, HSPA6, CRY2, Ghr, CLV3, GID1A, chk1]
@@ -15,10 +16,11 @@ member has lost (3,405 rows), backed by an assay or by a PAINT loss-of-function 
 above all "NOT response to <chemical/stimulus>". There are 490 such rows, and the most
 common evidence for them is IEP, an expression pattern, which by itself cannot show that
 a gene product lacks a function. In total 169 NOTs rest on IEP alone, and another 627 are
-TAIR computational (RCA) localization calls. UniProt CAUTION notes track the useful
+TAIR computational (`RCA`) localization calls. UniProt CAUTION notes track the useful
 end: 27% of reviewed proteins with an MF NOT carry a CAUTION, 19.5% with loss-of-activity
 wording, against 7% and 1.9% for proteins whose NOTs are only to processes or
-locations. Our own gene reviews have so far ACCEPTed 83% of the NOTs they met, so the
+locations. Our own gene reviews have so far ACCEPTed 233 of 297 NOTs they met
+(78.5%), so the
 review guidance needs a rule for judging NOTs, not just positive annotations.
 
 We started this because the FGFR4 review met `NOT involved_in response to bile acid`
@@ -75,7 +77,7 @@ Full tables are in [RESULTS.md](NOT_ANNOTATION_USAGE/RESULTS.md).
 - **IEP NOTs are the clearest misuse.**
   - 169 rows, 82% of them to "response to" terms.
   - Submitted mainly by AgBase (65), UniProt (44), TAIR (33) and FlyBase (17).
-- **Computational NOTs exist.** 627 RCA NOTs, all TAIR localization calls (for
+- **Computational NOTs exist.** 627 `RCA` NOTs, all TAIR localization calls (for
   example "NOT located_in cytosol", "NOT located_in Golgi apparatus").
 - **CAUTION notes align with MF NOTs, not process NOTs.**
 
@@ -87,8 +89,8 @@ Full tables are in [RESULTS.md](NOT_ANNOTATION_USAGE/RESULTS.md).
   The reverse direction (CAUTION notes describing lost activity on proteins with no MF
   NOT) is covered by Query B of the [UniProt CAUTION Note project](UNIPROT_CAUTION_NOTE.md).
 - **Our reviews have been deferential.**
-  - 270 negated rows in 174 reviews: 223 ACCEPT, 20 UNDECIDED, 16 KEEP_AS_NON_CORE,
-    only 8 REMOVE.
+  - 297 negated rows in 187 reviews: 233 ACCEPT, 27 UNDECIDED, 25 KEEP_AS_NON_CORE,
+    9 REMOVE and 3 MARK_AS_OVER_ANNOTATED.
   - The worklist in RESULTS.md lists the 9 reviewed NOTs to non-defense "response to"
     terms or with IEP evidence. FGFR4 and AGR2 are already REMOVE.
   - Not every item on that list is bad. CRY2 NOT photoreactive repair records that a
@@ -119,14 +121,15 @@ Full tables are in [RESULTS.md](NOT_ANNOTATION_USAGE/RESULTS.md).
 ---
 # STATUS
 
-Updated 2026-10-01.
+Updated 2026-10-04.
 
 - [x] Download all GOA NOT annotations (QuickGO, 10,622 rows)
 - [x] Fetch UniProt CAUTION notes for NOT-annotated proteins (7,369 accessions)
 - [x] Classify NOTs by aspect, relation, evidence, assigning group and term category
 - [x] Join with the actions our reviews took on negated rows
 - [x] Fix the FGFR4 `NOT response to bile acid` review reasoning (human/FGFR4)
-- [ ] Review the reviewed-NOT worklist with the draft guidance:
+- [ ] Review the reviewed-NOT worklist with the draft guidance
+      ([#3982](https://github.com/ai4curation/ai-gene-review/issues/3982)):
   - [ ] human/GCH1 GO:0032496 response to lipopolysaccharide (IEP, KEEP_AS_NON_CORE)
   - [ ] human/HSPA6 GO:0070370 cellular heat acclimation (IMP, ACCEPT)
   - [ ] ARATH/CLV3 GO:0002221 pattern recognition receptor signaling pathway (IEP, ACCEPT)
@@ -138,11 +141,19 @@ Updated 2026-10-01.
   - [x] human/CRY2 GO:0000719 photoreactive repair (IDA, ACCEPT; sound MF-shaped negative)
 - [ ] Sample and read IEP NOTs by group (AgBase, UniProt, TAIR, FlyBase) to estimate the
       misuse rate
-- [ ] Inspect the 627 TAIR RCA localization NOTs (how were they generated?)
+- [ ] Inspect the 627 TAIR `RCA` localization NOTs (how were they generated?)
 - [ ] Agree the guidance above and add it to the annotation-reviewer skill and CLAUDE.md
 - [ ] Cross-check: proteins with a loss-of-activity CAUTION but no MF NOT
 
 # NOTES
+
+## 2026-10-04
+
+Revalidated the nine reviews represented in the reviewed-NOT worklist against the
+current YAML. FGFR4, AGR2 and human CRY2 remain completed; the remaining six
+rows still need a guidance-driven re-read alongside the broader sampling and
+CAUTION-note cross-checks, now tracked in
+[#3982](https://github.com/ai4curation/ai-gene-review/issues/3982).
 
 ## 2026-10-01
 

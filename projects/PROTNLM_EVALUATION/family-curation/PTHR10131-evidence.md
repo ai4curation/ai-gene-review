@@ -1,3 +1,7 @@
+---
+autolink_gene_symbols: false
+---
+
 # PTHR10131: source excerpts
 
 Raw provenance: [family snapshot](family-sources/PTHR10131.json); [UniProt snapshot](uniprot-records.jsonl.gz), supplemented by [successful retries](uniprot-retries.jsonl.gz).
@@ -78,4 +82,3 @@ Pfam: PF21341 [{"key": "EntryName", "value": "TRAF2_zf"}, {"key": "MatchStatus",
 Pfam: PF16673 [{"key": "EntryName", "value": "TRAF_BIRC3_bd"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF00097 [{"key": "EntryName", "value": "zf-C3HC4"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF02176 [{"key": "EntryName", "value": "zf-TRAF"}, {"key": "MatchStatus", "value": "1"}]
-

@@ -1,6 +1,7 @@
 ---
 title: "Neural and Glial Cell Fate Determination Project"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [ASCL1, NEUROG1, NEUROG2, NEUROD1, OLIG2, SOX9, NFIA, STAT3, NOTCH1, HES1, PAX6, SOX2, DLX1]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/HF8et9f8zWj6HJupfFzNUf
-      title: Project brief
 ---
 
 # Neural and Glial Cell Fate Determination Project
@@ -25,12 +23,13 @@ the kind of evidence it implies. We did this because the specification versus
 commitment distinction is hard to establish experimentally and single-cell
 data suggest continuous trajectories, so these terms are a likely source of
 over-precise annotation. So far 13 of the 38 planned human genes are reviewed
-(all 12 Priority 1 master regulators plus DLX1), covering 1,652 annotations:
+(all 12 Priority 1 master regulators plus DLX1), covering 1,649 annotations:
 960 accepted, 486 kept as non-core, 138 removed, 30 marked over-annotated,
-11 modified, 22 undecided and 5 new. Most removals (129 of 138) are generic
+11 modified, 22 undecided and 2 new. Most removals (129 of 138) are generic
 `protein binding` rows; the fate-stage terms themselves were mostly accepted,
-and the other 25 genes (Priorities 2 to 4) are not started here; SHH has a
-separate review from the cerebellum work.
+and the remaining project-specific work is the 24 unreviewed Priorities 2 to
+4 genes plus completion of the in-progress SHH review before deciding whether
+to fold SHH into this project.
 
 This matters because neuron versus glia is the clearest binary fate decision
 in development, which makes it the right place to test whether GO's
@@ -335,9 +334,9 @@ Key Notch pathway genes:
 
 - [x] Create gene folders and fetch UniProt/GOA data
 - [x] Priority 1 genes review (12/12 genes) - COMPLETE
-- [ ] Priority 2 genes review (1/10 genes)
-- [ ] Priority 3 genes review (0/8 genes)
-- [ ] Priority 4 genes review (0/8 genes)
+- [ ] Priority 2 genes review (1/10 genes) - continue in [#4232](https://github.com/ai4curation/ai-gene-review/issues/4232)
+- [ ] Priority 3 genes review (0/8 complete in this project; SHH has an in-progress review outside this project) - continue in [#4232](https://github.com/ai4curation/ai-gene-review/issues/4232)
+- [ ] Priority 4 genes review (0/8 genes) - continue in [#4232](https://github.com/ai4curation/ai-gene-review/issues/4232)
 - [ ] Pathway summary and integration
 
 ### Priority 1 Genes (Master Regulators) - COMPLETED
@@ -376,9 +375,19 @@ Key Notch pathway genes:
 
 **Project created: 2026-01-11**
 
-Initial project setup complete. Ready to begin gene reviews starting with Priority 1 master regulators.
+## 2026-10-04
 
-Total genes to review: ~38 genes across 4 priority tiers
+Recounted the 13 reviewed genes listed in frontmatter directly from their
+current `*-ai-review.yaml` files: 1,649 rows total, with 960 `ACCEPT`, 486
+`KEEP_AS_NON_CORE`, 138 `REMOVE`, 30 `MARK_AS_OVER_ANNOTATED`, 22
+`UNDECIDED`, 11 `MODIFY`, and 2 `NEW` decisions. The NEUROD1 `NEW`
+`GO:0031016` pancreas-development row duplicated existing `GO:0031018`
+endocrine-pancreas rows and has been removed; the OLIG2 `NEW` `GO:0021779`
+commitment row that appeared in the first project notes has also since been
+removed from the OLIG2 review. The only remaining fate-stage
+`existing_annotations` rows are ASCL1 and OLIG2 `ACCEPT` rows plus NAS
+non-core rows on PAX6 and SOX2. The direct tracker for the remaining Priority
+2-4 genes is [#4232](https://github.com/ai4curation/ai-gene-review/issues/4232).
 
 # NOTES
 

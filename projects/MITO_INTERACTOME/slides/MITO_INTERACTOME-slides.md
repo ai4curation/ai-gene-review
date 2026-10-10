@@ -67,7 +67,7 @@ What an AlphaFold-Multimer interactome of the mitochondrial proteome can and can
 
 ![h:440](coa4-review-table.jpg)
 
-<span class="small">Human COA4: complex IV assembly (IBA) accepted as core, now backed by the paper's knockout data. The BioPlex `protein binding` row is marked over-annotated.</span>
+<span class="small">Human COA4: complex IV assembly (IBA) accepted as core, now backed by the paper's knockout data. BioPlex preserves the COX11 partner but not a useful GO activity.</span>
 
 ---
 
@@ -82,6 +82,8 @@ What an AlphaFold-Multimer interactome of the mitochondrial proteome can and can
 | COX23 | yeast | 13 | 6 | 7 | 0 | 0 |
 | CMC2 | yeast | 12 | 6 | 5 | 1 | 0 |
 | PET191 | yeast | 10 | 6 | 4 | 0 | 0 |
+
+<span class="small">Total: 97 reviewed rows; 59 ACCEPT, 33 non-core, 4 over-annotated, 1 REMOVE.</span>
 
 <span class="small">The single REMOVE: COX17 `protein farnesylation` (GO:0018343), citing PMID:8078902, a paper about COX10. It seeded the miscitation audit.</span>
 
@@ -100,7 +102,7 @@ What an AlphaFold-Multimer interactome of the mitochondrial proteome can and can
 
 - ✅ Paper read and rules for using predicted PPIs written down.
 - ✅ Human COA4 and the yeast copper set reviewed; human COA5 already reviewed under the complex IV assembly module.
-- ⬜ Human **COX17, COX19, CMC2**; **TCAIM**, **UQCC4**; complex Q **COQ3, COQ10A/B**.
+- ⬜ #4229: human **COX17, COX19, CMC2**; **TCAIM**, **UQCC4**; complex Q **COQ3, COQ10A/B**.
 - ⬜ Test species and conservation scores as a prior for IBA complex-membership rows.
 
 **Read more:** `projects/MITO_INTERACTOME.md` · `genes/human/COA4/` · `genes/yeast/COX17/`

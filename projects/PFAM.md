@@ -1,6 +1,7 @@
 ---
 title: "Pfam → GO Mapping: A Precision Gap-Filling Experiment"
 maturity: MATURE
+last_reviewed: "2026-10-05"
 tags: [PIPELINE, EVALUATION]
 sidecars:
   slide_charts:
@@ -10,9 +11,6 @@ manifest:
   slides:
     - href: PFAM/slides/PFAM-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/W4798uw5yzf3XeGei7Mvp4
-      title: Project brief
 ---
 
 # Pfam → GO Mapping: A Precision Gap-Filling Experiment
@@ -27,19 +25,21 @@ against all 30,134 Pfam-A families. Splitting lumped entries offers almost
 nothing (only 76 GO-bearing entries have two or more Pfam members), but 24,888
 families (82.6%) get no GO term through InterPro at all, including well-known
 domains such as SH2 and EGF. We curated nine Pfam families as their own entries
-under `interpro/pfam/`: five proposed mappings verified against reviewed
-SwissProt members, and four rejected because a same-family member contradicts
-the term.
+under `interpro/pfam/`: five function-specific families with six proposed GO
+annotations verified against reviewed SwissProt members, and four rejected
+because a same-family member contradicts the term. Scaling that queue to more
+named, InterPro-uncovered families is tracked in
+[#4243](https://github.com/ai4curation/ai-gene-review/issues/4243).
 
 We did this because gene reviews consume InterPro2GO heavily, and we needed to
 know whether a second domain-level mapping file was a cheap source of extra
 precision. The answer redirects effort toward coverage of unmapped families and
-toward subfamily-grained sources such as PANTHER and NCBIfam.
+toward subfamily-grained sources such as PANTHER and NCBIFAM.
 
 ## Motivation
 
 InterPro integrates several member databases (Pfam, PROSITE/PROFILE, SMART, CDD,
-NCBIfam, PANTHER, …) and publishes a single curated GO mapping,
+NCBIFAM, PANTHER, …) and publishes a single curated GO mapping,
 [InterPro2GO](https://current.geneontology.org/ontology/external2go/interpro2go),
 which most pipelines (including GOA's IEA `with` pipeline) consume. Pfam is also
 published with its own GO mapping,
@@ -189,11 +189,11 @@ evolved function or is merely *named* after it. That verification split the nine
 
 | Pfam | family | proposed GO | supporting member | counter-example (why not InterPro) |
 |---|---|---|---|---|
-| [PF27512](../../interpro/pfam/PF27512/PF27512-review.yaml) | LeuD | 3-isopropylmalate dehydratase activity (GO:0003861) + L-leucine biosynth (GO:0009098) | LEUD_ECOLI (EC 4.2.1.33) | aconitase ACO1 (PF00694 sibling, EC 4.2.1.3) |
-| [PF02431](../../interpro/pfam/PF02431/PF02431-review.yaml) | Chalcone | chalcone isomerase activity (GO:0045430) | CFI1_ARATH (EC 5.5.1.6) | FAP1/FAP2 non-catalytic CHIL (PF16035, no EC) |
-| [PF07228](../../interpro/pfam/PF07228/PF07228-review.yaml) | SpoIIE | sporulation (GO:0030435) | **SP2E_BACSU — `genes/BACSU/spoIIE`** (in-repo review) | generic PP2Cs PPM1D/F (PF00481) |
-| [PF09043](../../interpro/pfam/PF09043/PF09043-review.yaml) | Lys-AminoMut_A | D-lysine 5,6-aminomutase activity (GO:0047826) | KAMD_ACESD (EC 5.4.3.3) | OAM α (PF16552 sibling, EC 5.4.3.5) |
-| [PF16552](../../interpro/pfam/PF16552/PF16552-review.yaml) | OAM_alpha | D-ornithine 4,5-aminomutase activity (GO:0047831) | OAMS_ACESD (EC 5.4.3.5) | 5,6-LAM α (PF09043 sibling, EC 5.4.3.3) |
+| [PF27512](../interpro/pfam/PF27512/PF27512-review.yaml) | LeuD | 3-isopropylmalate dehydratase activity (GO:0003861) + L-leucine biosynth (GO:0009098) | LEUD_ECOLI (EC 4.2.1.33) | aconitase ACO1 (PF00694 sibling, EC 4.2.1.3) |
+| [PF02431](../interpro/pfam/PF02431/PF02431-review.yaml) | Chalcone | chalcone isomerase activity (GO:0045430) | CFI1_ARATH (EC 5.5.1.6) | FAP1/FAP2 non-catalytic CHIL (PF16035, no EC) |
+| [PF07228](../interpro/pfam/PF07228/PF07228-review.yaml) | SpoIIE | sporulation (GO:0030435) | [SP2E_BACSU](../genes/BACSU/spoIIE/spoIIE-ai-review.html) (in-repo review) | generic PP2Cs PPM1D/F (PF00481) |
+| [PF09043](../interpro/pfam/PF09043/PF09043-review.yaml) | Lys-AminoMut_A | D-lysine 5,6-aminomutase activity (GO:0047826) | KAMD_ACESD (EC 5.4.3.3) | OAM α (PF16552 sibling, EC 5.4.3.5) |
+| [PF16552](../interpro/pfam/PF16552/PF16552-review.yaml) | OAM_alpha | D-ornithine 4,5-aminomutase activity (GO:0047831) | OAMS_ACESD (EC 5.4.3.5) | 5,6-LAM α (PF09043 sibling, EC 5.4.3.3) |
 
 **4 rejected** — the family is named for a function, but its reviewed members are
 functionally heterogeneous (a counter-example sits in the **same** Pfam), so the term
@@ -202,10 +202,10 @@ because the verification result is itself the useful product:
 
 | Pfam | family | term that does NOT hold | same-family counter-example |
 |---|---|---|---|
-| [PF14681](../../interpro/pfam/PF14681/PF14681-review.yaml) | UPRTase | uracil PRTase (GO:0004845) | UCKL1/URK1 uridine kinases (EC 2.7.1.48) — despite real Upp (P0A8F0) also being a member |
-| [PF16363](../../interpro/pfam/PF16363/PF16363-review.yaml) | GDP_Man_Dehyd | GDP-Man 4,6-dehydratase (GO:0008446) | GALE epimerase (5.1.3.2), UXS1 decarboxylase (4.1.1.35) |
-| [PF13360](../../interpro/pfam/PF13360/PF13360-review.yaml) | PQQ_2 (BamB) | OM assembly (GO:0043165) | RqkA protein kinase (2.7.11.1), PedH dehydrogenase (`genes/PSEPK/pedH`) |
-| [PF13561](../../interpro/pfam/PF13561/PF13561-review.yaml) | adh_short_C2 | enoyl-ACP reductase (GO:0016631) | FabG ketoacyl-ACP reductase (1.1.1.100) in the same family as FabI |
+| [PF14681](../interpro/pfam/PF14681/PF14681-review.yaml) | UPRTase | uracil PRTase (GO:0004845) | UCKL1/URK1 uridine kinases (EC 2.7.1.48) — despite real Upp (P0A8F0) also being a member |
+| [PF16363](../interpro/pfam/PF16363/PF16363-review.yaml) | GDP_Man_Dehyd | GDP-Man 4,6-dehydratase (GO:0008446) | GALE epimerase (5.1.3.2), UXS1 decarboxylase (4.1.1.35) |
+| [PF13360](../interpro/pfam/PF13360/PF13360-review.yaml) | PQQ_2 (BamB) | OM assembly (GO:0043165) | RqkA protein kinase (2.7.11.1), [PedH](../genes/PSEPK/pedH/pedH-ai-review.html) dehydrogenase |
+| [PF13561](../interpro/pfam/PF13561/PF13561-review.yaml) | adh_short_C2 | enoyl-ACP reductase (GO:0016631) | FabG ketoacyl-ACP reductase (1.1.1.100) in the same family as FabI |
 
 An index of both groups is in [PROPOSED_MAPPINGS.md](PFAM/PROPOSED_MAPPINGS.md).
 
@@ -216,7 +216,7 @@ type/membership, the member families that make the entry heterogeneous, the
 confidence, status, plus **`supporting_examples` and `counter_examples`** (characterized
 SwissProt members, linked to in-repo gene reviews where they exist). Each Pfam is
 therefore curated as a first-class **entry** (LinkML schema
-[`pfam_entry_review.yaml`](../../src/ai_gene_review/schema/pfam_entry_review.yaml)) under
+[`pfam_entry_review.yaml`](../src/ai_gene_review/schema/pfam_entry_review.yaml)) under
 `interpro/pfam/`. GO targets are id/label tuples bound to a GO-branch enum, so
 `linkml-term-validator` checks every term resolves and its label matches.
 
@@ -255,15 +255,16 @@ entry level is more plausibly found by:
 1. **InterPro's own hierarchy.** Child InterPro entries
    (`ParentChildTreeFile.txt`) already provide specific terms (e.g. a kinase
    *subfamily* entry); that precision is in InterPro2GO, not waiting in Pfam.
-2. **Other member databases, especially subfamily-grained ones.** NCBIfam/TIGRFAM
-   and HAMAP carry tight functional assignments, and **PANTHER subfamilies** are the
-   real source of subfamily-level specificity (this is what the PAINT/IBA pipeline
-   exploits). A `*2go`-style comparison of NCBIfam2go / panther subfamily mappings
-   vs InterPro2GO is the logical next experiment.
+2. **Other member databases, especially subfamily-grained ones.** NCBIFAM/TIGRFAM
+   and HAMAP carry tight prokaryotic functional assignments; the
+   [NCBIFam](NCBIFam.md) project measures what an `ncbifam2go` feed would add
+   beyond InterPro2GO. PANTHER subfamilies reach GO through PAINT/IBA rather
+   than a simple `*2go` projection, so the family-level audit belongs at the
+   ancestral node and subfamily-loss level.
 3. **Per-protein curation** (UniProt, GOA experimental) — outside the scope of
    domain→GO mappings entirely.
 
-See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW.md) and
+See [NCBIFam](NCBIFam.md), [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW.md) and
 [IBA_REVIEW.md](IBA_REVIEW.md) for the subfamily-level direction.
 
 ## Reproducing
@@ -294,8 +295,8 @@ Outputs (committed):
 - [`RESULTS.md`](PFAM/RESULTS.md) — Part 1 summary (auto-generated)
 - [`HEADROOM.md`](PFAM/HEADROOM.md) — Part 2 summary (auto-generated)
 - `interpro/pfam/<PFAM>/<PFAM>-review.yaml` — **curated Pfam entry reviews** (9 families:
-  5 proposed, 4 rejected-on-verification), schema
-  [`pfam_entry_review.yaml`](../../src/ai_gene_review/schema/pfam_entry_review.yaml);
+  5 function-specific, 4 rejected-on-verification), schema
+  [`pfam_entry_review.yaml`](../src/ai_gene_review/schema/pfam_entry_review.yaml);
   index in [`PROPOSED_MAPPINGS.md`](PFAM/PROPOSED_MAPPINGS.md), validated by `validate_pfam_reviews.py`
 - `PFAM/pfam_go_precision_gaps.tsv` — Part 1 non-SAME classified assertions
 - `PFAM/unintegrated_pfam_with_go.tsv` — pfam2go terms for unintegrated families

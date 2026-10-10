@@ -20,7 +20,7 @@ When phylogenetic propagation goes wrong — and when it falls short
 
 **Chris Mungall** | AI-Assisted Gene Review
 
-2026-06-22
+2026-10-04
 
 ---
 
@@ -68,10 +68,10 @@ The discovery method for both: the **AI gene review framework**.
 
 Findings emerged from **AI-assisted gene review**, then verified against primary evidence:
 
-- Mined all `genes/*/*/*-ai-review.yaml` — **2,732** reviews; IBA actions distributed as
-  `ACCEPT 4651 · KEEP_AS_NON_CORE 943 · MODIFY 321 · MARK_AS_OVER_ANNOTATED 189 · REMOVE 190 · UNDECIDED 39 · NEW 33`
-- Each REMOVE candidate cross-checked against: **UniProt** FUNCTION/CAUTION, the **GO term definition** (QuickGO/OLS), GOA **WITH/FROM** provenance + PANTHER family composition, cached **publications**, and a reproducible **MSA** of catalytic residues
-- Incompleteness quantified with a generic **evidence-subtraction** tool (`ai-gene-review subtraction-report`)
+- Current corpus: **5,625** gene-review YAMLs; **1,087** already carry structured `propagation_review` blocks
+- 2026-09-20 re-review baseline: **3,427** genes, **11,829** propagated rows (`10,868 IBA`, `961 TreeGrafter`)
+- 2026-10-04 progress: **143 reviewed**, **57 awaiting adjudication**, **3,226 unreviewed**
+- Each strong REMOVE is cross-checked against UniProt, GO definitions, GOA **WITH/FROM**, PANTHER placement, cached literature, and MSA evidence where catalytic residues matter
 
 ---
 
@@ -101,7 +101,6 @@ The single most useful diagnostic — reading the source proteins exposes the er
 
 **Tier A — wrong family / over-broad superfamily:**
 - **NTN1 / NTN3** (human) — secreted Netrins given **POU-domain TF** activity (`GO:0000981` etc.); WITH/FROM = POU2F1, POU1F1, POU4F1, POU4F3
-- **NOTCH1** — `GO:0007411` axon guidance from **SLIT1/2/3**
 - **IL23R** — `GO:0004925` prolactin-receptor activity from **PRLR**
 
 **Tier B — wrong paralog:**
@@ -115,8 +114,8 @@ The single most useful diagnostic — reading the source proteins exposes the er
 Family nodes that lump enzymes of **different specificities** leak substrate terms.
 
 - **AGK** (human) — `GO:0001729` ceramide kinase: three lines refute it ("only … monoacylglycerols and diacylglycerols … not ceramide and sphingosine", PMID:15939762; PMID:16269826). The dedicated ceramide kinase is **CERK**. PANTHER PTHR12358 mixes acylglycerol + sphingosine kinases.
-- **SAMD8/SMSr** — `GO:0033188` sphingomyelin synthase: actually makes **ceramide phosphoethanolamine** ("larger PC prevents an efficient fit")
 - **CPT1C** — RecName "Palmitoyl thioesterase"; lost carnitine transferase activity
+- **SAMD8/SMSr** — `GO:0033188` sphingomyelin synthase is under focused adjudication: CPE preference is strong, but complete wild-type SM loss still needs reconciliation
 
 **Sub-activity loss:** **CAPG** caps but does **not** sever actin (PMID:1322908); **CRYAA** is a holdase not a foldase — IBA contradicts a curated `NOT(refolding)`; worm **hsp-12.3/hsp-12.6** have *no* chaperone activity (PMID:9744800).
 
@@ -139,12 +138,12 @@ Family nodes that lump enzymes of **different specificities** leak substrate ter
 |---|---------|------------------|
 | 1 | Pseudo-enzyme propagation | Epe1, DPYSL2/3/4, AGO4, CASP12 |
 | 4 | Neo-functionalization (opposite reaction) | Cds1 (cysteine catabolism) |
-| 6 | Organism/tissue context transfer | RIMBP2 (NMJ → CNS synapse) |
+| 6 | Organism/tissue context transfer | RIMBP2 (historical NMJ trace; now unresolved) |
 | 8 | Partial sub-activity loss | CAPG, CRYAA, hsp-12.3 |
 | 9 | Regulatory-sign inversion | BCL2 |
-| 10 | Complex/compartment over-transfer | EIF4E2, ALDH1L1, PEX2 |
-| 11 | Substrate over-propagation | AGK, SAMD8, CPT1C |
-| 12 | Mis-grouping via WITH/FROM | NTN1, NOTCH1, ABRAXAS1 |
+| 10 | Complex/compartment over-transfer | CIRBP, ALDH1L1, PEX2 |
+| 11 | Substrate over-propagation | AGK, CPT1C, NQO2 |
+| 12 | Mis-grouping via WITH/FROM | NTN1, IL23R, ABRAXAS1 |
 | 13 | Generic compartment over-prop. | PIWIL1, EIF2AK3 |
 | 14 | Cross-kingdom process transfer | TOLL9, ndhA/D/K, sta-2 |
 | 15 | Regulator/effector conflation | SIR3, sigF/G/K, lys-7 |
@@ -155,7 +154,7 @@ Family nodes that lump enzymes of **different specificities** leak substrate ter
 
 Phylogenetic propagation only transfers what a curated ancestor already carries, at the ancestor's granularity — so much established biology never reaches the leaf.
 
-Using **evidence-subtraction** over **1015** reviewed human genes (with ontology closure, so an IBA call to a general parent still counts):
+Using **evidence-subtraction** over a 2026-09-26 snapshot of **1,015** reviewed human genes (with ontology closure, so an IBA call to a general parent still counts):
 
 - **62%** of annotation-grounded `core_functions` terms (4516 / 7278) would be **lost** if IBA were the only evidence
 - Restricting to molecular function (excluding low-info `binding`): **511 core MFs across 423 genes** have **no IBA support**, **401** experimentally grounded (IDA/IMP/IPI/EXP/TAS)
@@ -214,12 +213,12 @@ The recurring failure mode is **acting on one line of evidence**. Flagging a cur
 
 <!-- _class: lead -->
 
-# Status: COMPLETE
+# Status: MATURE + ACTIVE RE-REVIEW
 
-IBA is powerful but **directional**: it can over-annotate diverged leaves *and* under-call established biology.
+53 worked cases · 6,057 structured propagation-review blocks
 
-14 over-annotation patterns (plus one positive control) + a quantified incompleteness analysis (511 missed human core MFs).
+`rereview-2026-09-20`: 143 reviewed · 57 awaiting adjudication · 3,226 unreviewed
 
 Verify, don't trust — synthesize UniProt, GO definitions, WITH/FROM, MSA, and primary literature before flagging.
 
-**Chris Mungall** | AI-Assisted Gene Review | 2026-06-22
+**Chris Mungall** | AI-Assisted Gene Review | 2026-10-04

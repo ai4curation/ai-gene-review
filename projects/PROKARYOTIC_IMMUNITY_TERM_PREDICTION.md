@@ -2,6 +2,7 @@
 title: "Prokaryotic Immunity Term Prediction"
 maturity: SCOPING
 tags: [PIPELINE]
+last_reviewed: 2026-10-05
 sidecars:
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
@@ -11,9 +12,6 @@ manifest:
   slides:
     - href: PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/14vNKPzXp8HCF7zFRx11VH
-      title: Project brief
 ---
 
 # Prokaryotic Immunity Term Prediction
@@ -152,3 +150,5 @@ Deferred:
 - export of wrapper output into `PredictionReview` YAML
 - expansion of the registry to more defense families and GO policies
 - support for evidence-code policy and provenance payloads
+
+Tracker: [#3962](https://github.com/ai4curation/ai-gene-review/issues/3962)

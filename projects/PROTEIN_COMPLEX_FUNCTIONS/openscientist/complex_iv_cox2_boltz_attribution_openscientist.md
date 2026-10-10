@@ -1,5 +1,6 @@
 ---
 title: "Structure-Informed Complex Function Attribution: Human Complex IV COX2 Copper-Maturation Module"
+species: [human]
 ---
 
 # Structure-Informed Complex Function Attribution: Human Complex IV COX2 Copper-Maturation Module
@@ -8,7 +9,7 @@ title: "Structure-Informed Complex Function Attribution: Human Complex IV COX2 C
 
 This investigation evaluated whether Boltz2-like protein-complex structure prediction can meaningfully improve Gene Ontology (GO) function attribution for the six-protein module responsible for copper insertion into the CuA binuclear center of mitochondrial Complex IV subunit COX2. By integrating primary experimental literature (10 papers), existing crystal and NMR structures (PDB 5Z62, 1WP0, 2GQM, 2GT6, 2RLI), STRING protein interaction network data, coordinate-level analysis of the assembled CuA site, and rigorous specification of six Boltz2/AlphaFold-Multimer model comparisons, we established a complete functional classification for each component of the maturation module.
 
-**The core attribution is as follows:** MT-CO2 is the **sole executor** of CuA-mediated electron transfer (all six copper ligands intrinsic); SCO1 is the **direct active copper donor** (terminal metallochaperone, non-bypassable by upstream COX17 overexpression); SCO2 is a **dual-function redox/copper-state modulator** acting as a thiol-disulfide oxidoreductase for SCO1 and as an upstream regulator of COX2 translation; COA6 is a **thiol-disulfide oxidoreductase** that reduces copper-coordinating disulfides in SCO1 and COX2; COX20 is a **structural presenter/stabilizer** of unassembled COX2 in the inner membrane; and COX16 is a **partially redundant accessory assembly factor**. These classifications have direct implications for GO curation: SCO1 should receive copper chaperone activity; SCO2 should receive copper ion binding but NOT copper chaperone activity; COX20 and COX16 should receive complex IV assembly but no copper-related molecular function annotations; and none of these maturation factors should receive `contributes_to` cytochrome c oxidase activity because they are not subunits of the assembled holoenzyme.
+**The core attribution is as follows:** MT-CO2 is the **sole executor** of CuA-mediated electron transfer (all six copper ligands intrinsic); SCO1 is the **direct active copper donor** (terminal metallochaperone, non-bypassable by upstream `COX17` overexpression); SCO2 is a **dual-function redox/copper-state modulator** acting as a thiol-disulfide oxidoreductase for SCO1 and as an upstream regulator of COX2 translation; COA6 is a **thiol-disulfide oxidoreductase** that reduces copper-coordinating disulfides in SCO1 and COX2; COX20 is a **structural presenter/stabilizer** of unassembled COX2 in the inner membrane; and COX16 is a **partially redundant accessory assembly factor**. These classifications have direct implications for GO curation: SCO1 should receive copper chaperone activity; SCO2 should receive copper ion binding but NOT copper chaperone activity; COX20 and COX16 should receive complex IV assembly but no copper-related molecular function annotations; and none of these maturation factors should receive `contributes_to` cytochrome c oxidase activity because they are not subunits of the assembled holoenzyme.
 
 Structure prediction represents a genuinely useful but bounded evidence layer for this module. We define specific decisive readouts: Boltz2/AF-Multimer predictions can distinguish direct copper-transfer interfaces (SCO1/SCO2 CxxxC motifs positioned < 12 A Ca from COX2 CuA cysteines C196/C200) from stabilization contacts (COX20 contacting COX2 transmembrane helices > 20 A from CuA). Interface confidence thresholds (ipTM > 0.5, PAE < 10 A at interface) distinguish curation-grade evidence from hypothesis-generating predictions. However, structure prediction fundamentally cannot capture SCO2's translational regulation role, COA6's transient redox catalysis, temporal ordering of the maturation pathway, or the copper speciation chemistry that underlies the metallation mechanism. The single most informative prediction to run is **Model C: MT-CO2 (full-length) + SCO1 (mature IMS domain) + SCO2 (mature IMS domain) with Cu(I) ions**, which would directly test the competitive vs. cooperative binding geometry of the two SCO proteins at the CuA site and could provide decisive evidence for the relay model.
 
@@ -18,7 +19,7 @@ Structure prediction represents a genuinely useful but bounded evidence layer fo
 
 ### Finding 1: SCO1 Is the Terminal Copper Metallochaperone for COX2 CuA (Direct Active Contributor, Class 2)
 
-SCO1 functions as the direct, terminal copper donor to the COX2 CuA site -- the last protein in the copper delivery chain before CuA is metallated. This conclusion rests on convergent evidence from genetics, biochemistry, and structural biology. Leary et al. (2004) demonstrated a critical asymmetry: overexpression of the upstream metallochaperone COX17 rescues cytochrome c oxidase deficiency in SCO2-mutant patient cells but **not** in SCO1-mutant cells ([PMID: 15229189](https://pubmed.ncbi.nlm.nih.gov/15229189/)). This non-bypassability places SCO1 at the terminal step -- excess copper delivery through COX17 can compensate for SCO2's redox function but cannot substitute for SCO1's direct copper transfer function. Leary et al. (2009) established the pathway order by demonstrating that "SCO2 acts upstream of SCO1, and that it is indispensable for CO II synthesis. The subsequent maturation of CO II is contingent upon the formation of a complex that includes both SCO proteins, each with a functional CxxxC copper-coordinating motif" ([PMID: 19336478](https://pubmed.ncbi.nlm.nih.gov/19336478/)).
+SCO1 functions as the direct, terminal copper donor to the COX2 CuA site -- the last protein in the copper delivery chain before CuA is metallated. This conclusion rests on convergent evidence from genetics, biochemistry, and structural biology. Leary et al. (2004) demonstrated a critical asymmetry: overexpression of the upstream metallochaperone `COX17` rescues cytochrome c oxidase deficiency in SCO2-mutant patient cells but **not** in SCO1-mutant cells ([PMID: 15229189](https://pubmed.ncbi.nlm.nih.gov/15229189/)). This non-bypassability places SCO1 at the terminal step -- excess copper delivery through `COX17` can compensate for SCO2's redox function but cannot substitute for SCO1's direct copper transfer function. Leary et al. (2009) established the pathway order by demonstrating that "SCO2 acts upstream of SCO1, and that it is indispensable for CO II synthesis. The subsequent maturation of CO II is contingent upon the formation of a complex that includes both SCO proteins, each with a functional CxxxC copper-coordinating motif" ([PMID: 19336478](https://pubmed.ncbi.nlm.nih.gov/19336478/)).
 
 Structurally, SCO1 coordinates Cu(I) through its CxxxC motif (C169-P-D-V-C173) and H260 in a trigonal planar geometry within a thioredoxin-like fold. Experimental structures -- PDB 1WP0 (crystal, 2.8 A), 2GQM and 2GT6 (Cu-bound NMR) -- confirm this copper-binding mode. The internal Ca distance between C169 and C173 is 5.8 A, reflecting the conserved CxxxC spacing. The soluble IMS domain (residues ~130-301) is the functionally relevant portion for copper transfer.
 
@@ -28,7 +29,7 @@ Structurally, SCO1 coordinates Cu(I) through its CxxxC motif (C169-P-D-V-C173) a
 
 SCO2 performs two mechanistically distinct functions in COX2 maturation, creating a unique classification challenge. First, it acts as a thiol-disulfide oxidoreductase that modulates the redox state of SCO1's copper-coordinating cysteines. Leary et al. (2009) demonstrated this directly: "Overexpression of wild-type SCO2, or knockdown of mutant SCO2, in SCO2 cells alters the ratio of oxidized to reduced cysteines in SCO1, suggesting that SCO2 acts as a thiol-disulphide oxidoreductase to oxidize the copper-coordinating cysteines in SCO1 during CO II maturation" ([PMID: 19336478](https://pubmed.ncbi.nlm.nih.gov/19336478/)). Second, SCO2 is required for COX2 (COII) synthesis itself -- pulse-labeling experiments in SCO2-deficient cells showed reduced COII translation, a function not shared by SCO1.
 
-SCO2 has a thioredoxin domain (residues 85-259) with its CxxxC motif (C133-P-D-I-C137) and H224 (CxxxC internal Ca distance: 6.0 A). Its Cu-bound structure is available (PDB 2RLI, NMR). The critical distinction from SCO1 is that SCO2 modulates the *ability* of SCO1 to receive and deliver copper, rather than transferring copper to CuA directly. The COX17 bypass experiment confirms this: excess copper through COX17 can compensate for the redox modulation SCO2 provides, but cannot replace SCO1's direct delivery.
+SCO2 has a thioredoxin domain (residues 85-259) with its CxxxC motif (C133-P-D-I-C137) and H224 (CxxxC internal Ca distance: 6.0 A). Its Cu-bound structure is available (PDB 2RLI, NMR). The critical distinction from SCO1 is that SCO2 modulates the *ability* of SCO1 to receive and deliver copper, rather than transferring copper to CuA directly. The `COX17` bypass experiment confirms this: excess copper through `COX17` can compensate for the redox modulation SCO2 provides, but cannot replace SCO1's direct delivery.
 
 The dual nature of SCO2's function has a direct implication for structure prediction: Boltz2/AF-Multimer can evaluate the thiol-disulfide oxidoreductase activity (by measuring SCO2 CxxxC proximity to SCO1 CxxxC) but **cannot capture the translational regulation function at all**. This limits structure prediction's ability to fully classify SCO2.
 
@@ -70,8 +71,6 @@ A crucial structural constraint emerges: in the assembled holoenzyme, the CuA cy
 
 STRING database physical interaction scores (human, required_score > 400) independently validate the proposed attribution hierarchy. The highest combined scores involve MT-CO2 with SCO2 (0.891), SCO1 (0.852), and COA6 (0.836), reflecting the direct involvement of these proteins in CuA maturation. The MT-CO2-COA6 pair has the highest experimental evidence score (0.540), supporting direct COA6 access to COX2 cysteines. COX20-MT-CO2 scores lower (0.626), consistent with a stabilization rather than catalytic role. Notably, SCO1-SCO2 physical interaction falls below the threshold, suggesting their redox exchange is too transient for standard PPI detection -- an important caveat for structure prediction, which may similarly show low confidence for this interface.
 
-{{figure:copper_maturation_pathway.png|caption=Comprehensive pathway diagram showing all protein roles in the COX2 CuA copper-maturation module. Arrows indicate copper transfer routes (COX17 to SCO2 to SCO1 to COX2 CuA), redox modulation (SCO2 and COA6 acting on SCO1/COX2 cysteines), and structural stabilization (COX20 on COX2 transmembrane domain). Structure-prediction-testable interfaces are highlighted with distance thresholds.}}
-
 ---
 
 ## Mechanistic Model and Interpretation
@@ -108,9 +107,9 @@ The copper maturation pathway for COX2 CuA operates as a sequential, redox-gated
                                             +-----------+      +-----------+
 ```
 
-**Step 1 -- Copper entry to IMS:** COX17 delivers Cu(I) to the IMS. COX17 overexpression rescues SCO2 deficiency but not SCO1 deficiency, placing COX17 upstream of both SCO proteins.
+**Step 1 -- Copper entry to IMS:** `COX17` delivers Cu(I) to the IMS. `COX17` overexpression rescues SCO2 deficiency but not SCO1 deficiency, placing `COX17` upstream of both SCO proteins.
 
-**Step 2 -- SCO2 receives copper and primes SCO1:** SCO2 receives copper from COX17 and acts as a thiol-disulfide oxidoreductase, oxidizing SCO1's copper-coordinating cysteines. This creates a redox-gated mechanism ensuring proper copper handoff. SCO2 also has a mechanistically separable role in enabling COX2 translation.
+**Step 2 -- SCO2 receives copper and primes SCO1:** SCO2 receives copper from `COX17` and acts as a thiol-disulfide oxidoreductase, oxidizing SCO1's copper-coordinating cysteines. This creates a redox-gated mechanism ensuring proper copper handoff. SCO2 also has a mechanistically separable role in enabling COX2 translation.
 
 **Step 3 -- COA6 reduces disulfides for copper binding:** COA6 reduces the copper-coordinating disulfide bonds in both SCO1 and COX2, making their cysteine thiols available for Cu(I) coordination. This is a catalytic, transient interaction.
 
@@ -119,8 +118,6 @@ The copper maturation pathway for COX2 CuA operates as a sequential, redox-gated
 **Step 5 -- COX2 stabilization during maturation:** Throughout this process, COX20 stabilizes unassembled COX2 in the inner membrane, protecting it from i-AAA protease degradation and facilitating C-tail export across the membrane. COX16 provides additional, partially redundant facilitation of the metallation process.
 
 **Step 6 -- Assembly completion:** The copper-loaded COX2 intermediate proceeds through subsequent assembly steps to form the mature Complex IV holoenzyme, at which point the maturation factors are no longer associated.
-
-{{figure:attribution_matrix.png|caption=Visual attribution matrix for all six proteins in the COX2 copper-maturation module, showing functional class assignments (sole executor, direct active contributor, structural presenter, redox modulator, accessory member) with supporting evidence types and GO annotation implications.}}
 
 ---
 
@@ -132,7 +129,7 @@ The copper maturation pathway for COX2 CuA operates as a sequential, redox-gated
 
 ### Limitation Statement
 
-**Boltz2, AlphaFold-Multimer, and equivalent structure-prediction tools could not be directly run in this OpenScientist environment.** All model comparisons below are **specified but not executed**. We compensate by: (1) analyzing available experimental structures at coordinate level; (2) defining exact input specifications with mature sequences, cofactors, and membrane constraints; (3) establishing specific distance thresholds and confidence cutoffs that constitute curation-grade vs. hypothesis-generating evidence; and (4) leveraging STRING interaction scores as an orthogonal evidence layer.
+**Original execution status and later runs.** The table below started as the OpenScientist execution plan before the hosted Boltz2 and ESMFold2 pilots were run. The archived BioLM/ESMFold2 sidecars now show that the runnable MT-CO2:SCO1/SCO2/COA6 domain models stayed low confidence and hypothesis-generating: ESMFold2 Model C reached `ipTM 0.390` and still placed SCO1 about 50 A from the COX2 CuA site, while the BioLM Boltz2 Model C domain run reported `MT-CO2:SCO1` pair-chain `ipTM 0.165`.
 
 ### Model Comparison Table
 
@@ -144,8 +141,6 @@ The copper maturation pathway for COX2 CuA operates as a sequential, redox-gated
 | **D** | MT-CO2 + SCO1 + SCO2 + COA6 | Specified | A-C as Model C; D: Q5JTJ3(1-125) | 4x Cu(I); COA6 disulfides; bilayer | COA6-SCO1 PAE; COA6-COX2 PAE | COA6 CHCH near SCO1/COX2 CxxxC cysteines | If COA6 contacts cysteines: supports reductase positioning | Transient interaction may not be captured; COA6 small (125 residues) |
 | **E** | MT-CO2 + COX20 + SCO1/SCO2/COA6 | Specified | A: P00403(1-227); B: Q5RI15(2-118); C-E as above | As above; COX20 2x TM | COX20-COX2 PAE (TM vs. IMS region) | COX20 contacts COX2 TM helices only; absent from CuA region | If COX20 distant from CuA (> 20 A): confirms Class 3 | 5-chain complex; membrane modeling challenging |
 | **F** | MT-CO2 + COX16 + SCO1/SCO2/COA6 | Specified (optional) | A: P00403(1-227); B: Q9P0S2(1-106); C-E as above | As above; COX16 1x TM | COX16 bridging contacts; position relative to CuA | COX16 peripheral; no direct CuA contact | If peripheral: confirms Class 5 | Disordered COX16 C-term (77-106) may lower quality |
-
-{{figure:model_comparison_plan.png|caption=Priority-ranked Boltz2/AF-Multimer model comparisons for the COX2 copper-maturation module. Model C (MT-CO2 + SCO1 + SCO2) is the highest-priority prediction. Each panel shows input composition, key interfaces to evaluate, and decisive readout criteria.}}
 
 ### Production-Ready Input Specifications
 
@@ -174,7 +169,7 @@ All sequences use mature forms (transit/signal peptides removed):
 | Protein | Class | Direct Molecular Role | Primary Evidence | Structure Prediction Can Support | Structure Prediction Cannot Prove | GO Curation Implication |
 |:--------|:------|:---------------------|:----------------|:-------------------------------|:--------------------------------|:-----------------------|
 | **MT-CO2** | 1 -- Sole executor | CuA electron transfer from cyt c to heme a | PDB 5Z62; all 6 CuA ligands intrinsic | CuA geometry already resolved experimentally | Electron transfer rates; redox potentials | **cytochrome c oxidase activity** (direct); **copper ion binding** |
-| **SCO1** | 2 -- Direct active contributor | Terminal Cu(I) metallochaperone to CuA | Genetics: non-bypassable by COX17 (PMID:15229189); structures: PDB 1WP0/2GQM | High-confidence CxxxC-to-CuA interface (< 12 A Ca) | Cu transfer kinetics; in vivo directionality | **copper chaperone activity**; **copper ion binding**; **CIV assembly** |
+| **SCO1** | 2 -- Direct active contributor | Terminal Cu(I) metallochaperone to CuA | Genetics: non-bypassable by `COX17` (PMID:15229189); structures: PDB 1WP0/2GQM | High-confidence CxxxC-to-CuA interface (< 12 A Ca) | Cu transfer kinetics; in vivo directionality | **copper chaperone activity**; **copper ion binding**; **CIV assembly** |
 | **SCO2** | 4 -- Redox/copper-state modulator | Thiol-disulfide oxidoreductase for SCO1; COX2 synthesis regulator | Biochemistry: SCO1 Cys redox alteration (PMID:19336478); pulse-labeling | SCO2-SCO1 CxxxC proximity (redox contact) | Translational regulation; redox chemistry direction | **copper ion binding**; **CIV assembly**; possibly **protein disulfide oxidoreductase**; NOT copper chaperone |
 | **COA6** | 4 -- Redox/copper-state modulator | Disulfide reductase for SCO1 and COX2 cysteines | Structure + biochemistry: in vitro reduction (PMID:31851937); genetics (PMID:26160915) | CHCH Cx9C near SCO1/COX2 CxxxC (redox geometry) | Reduction potentials; catalytic mechanism | **CIV assembly**; possibly **protein disulfide oxidoreductase**; NOT copper chaperone |
 | **COX20** | 3 -- Structural presenter | Stabilizes COX2 in IM; facilitates C-tail export | Genetics: i-AAA protease bypass (PMID:22095077); no Cu motifs | TM packing with COX2 TM; absence from CuA region | Protease protection dynamics; translocation mechanism | **CIV assembly**; NO copper MF; NO `contributes_to` CcO |
@@ -196,13 +191,11 @@ All sequences use mature forms (transit/signal peptides removed):
 | **protein disulfide oxidoreductase activity** (GO:0015035) | NO | NO | **Consider** | **Consider** | NO | NO |
 | **electron transfer activity** (GO:0009055) | **YES** | NO | NO | NO | NO | NO |
 
-{{figure:go_annotation_matrix.png|caption=Comprehensive GO annotation decision matrix showing which terms each protein should (green), should not (red), or might (yellow) receive. Key distinctions: SCO1 alone receives copper chaperone activity; SCO2 receives copper ion binding but not copper chaperone; none of the maturation factors receive contributes_to cytochrome c oxidase activity.}}
-
 ### Critical Curation Principles Applied
 
 **Why SCO1 should NOT receive `contributes_to` cytochrome c oxidase activity:** SCO1 is not a subunit of the assembled CIV holoenzyme. It acts during maturation and dissociates before the final complex forms. The `contributes_to` qualifier is for subunits of a complex that has a molecular function, not for upstream assembly/maturation factors. Complex membership should not export molecular function, and SCO1 is not even a complex member.
 
-**Why SCO2 should NOT receive copper chaperone activity:** The term "copper chaperone" implies physical copper delivery to a target site. While SCO2 binds copper and is essential for CuA maturation, its demonstrated biochemical mechanism is thiol-disulfide oxidoreductase activity on SCO1 -- it chaperones the *redox state* of the chaperone, not copper to CuA. The COX17 bypass experiment confirms: excess copper delivery rescues SCO2 deficiency (compensating for the redox function) but not SCO1 deficiency (the direct transfer step is irreplaceable).
+**Why SCO2 should NOT receive copper chaperone activity:** The term "copper chaperone" implies physical copper delivery to a target site. While SCO2 binds copper and is essential for CuA maturation, its demonstrated biochemical mechanism is thiol-disulfide oxidoreductase activity on SCO1 -- it chaperones the *redox state* of the chaperone, not copper to CuA. The `COX17` bypass experiment confirms: excess copper delivery rescues SCO2 deficiency (compensating for the redox function) but not SCO1 deficiency (the direct transfer step is irreplaceable).
 
 **Why MT-CO2 should NOT receive CIV assembly:** MT-CO2 is the substrate of assembly. It does not catalyze or facilitate the assembly of other subunits. Assembly GO terms should be reserved for the factors that actively promote assembly.
 
@@ -279,7 +272,7 @@ These are the specific residue-level and distance-level checks that would change
 
 | Citation | Key Contribution | Evidence Type |
 |:---------|:----------------|:-------------|
-| [PMID: 15229189](https://pubmed.ncbi.nlm.nih.gov/15229189/) -- Leary et al. 2004 | SCO1/SCO2 independent cooperative roles; COX17 rescues SCO2 not SCO1 | Genetics, cell biology |
+| [PMID: 15229189](https://pubmed.ncbi.nlm.nih.gov/15229189/) -- Leary et al. 2004 | SCO1/SCO2 independent cooperative roles; `COX17` rescues SCO2 not SCO1 | Genetics, cell biology |
 | [PMID: 19336478](https://pubmed.ncbi.nlm.nih.gov/19336478/) -- Leary et al. 2009 | SCO2 as thiol-disulfide oxidoreductase for SCO1; required for COII synthesis | Biochemistry, pulse-labeling |
 | [PMID: 31851937](https://pubmed.ncbi.nlm.nih.gov/31851937/) -- Soma et al. 2019 | COA6 structure; reduces SCO1/COX2 disulfides enabling Cu binding | Structural biology, biochemistry |
 | [PMID: 26160915](https://pubmed.ncbi.nlm.nih.gov/26160915/) -- Stroud et al. 2015 | COA6 essential for COX2 biogenesis; associates with COX2 and SCO1 | Cell biology, proteomics |
@@ -295,7 +288,7 @@ These are the specific residue-level and distance-level checks that would change
 **For SCO1 as terminal copper donor (F001):**
 > "These results indicate that SCO2 acts upstream of SCO1, and that it is indispensable for CO II synthesis. The subsequent maturation of CO II is contingent upon the formation of a complex that includes both SCO proteins, each with a functional CxxxC copper-coordinating motif." -- PMID: 19336478
 
-> "Overexpression of the metallochaperone COX17 rescued the COX deficiency in SCO2 patient cells but not in SCO1 patient cells." -- PMID: 15229189
+> "Overexpression of the metallochaperone `COX17` rescued the COX deficiency in SCO2 patient cells but not in SCO1 patient cells." -- PMID: 15229189
 
 **For SCO2 as thiol-disulfide oxidoreductase (F002):**
 > "Overexpression of wild-type SCO2, or knockdown of mutant SCO2, in SCO2 cells alters the ratio of oxidized to reduced cysteines in SCO1, suggesting that SCO2 acts as a thiol-disulphide oxidoreductase to oxidize the copper-coordinating cysteines in SCO1 during CO II maturation." -- PMID: 19336478
@@ -397,7 +390,7 @@ These are the specific residue-level and distance-level checks that would change
 
 | ID | Hypothesis | Status | Key Evidence |
 |:---|:----------|:-------|:------------|
-| H001 | SCO1 is the direct copper donor (metallochaperone) to COX2 CuA | **Supported** | Non-bypassable by COX17 (PMID:15229189); downstream of SCO2 (PMID:19336478) |
+| H001 | SCO1 is the direct copper donor (metallochaperone) to COX2 CuA | **Supported** | Non-bypassable by `COX17` (PMID:15229189); downstream of SCO2 (PMID:19336478) |
 | H002 | SCO2 acts primarily as a thiol-disulfide oxidoreductase for SCO1 | **Supported** | Alters SCO1 Cys redox ratio (PMID:19336478); also required for COX2 synthesis |
 | H003 | COA6 is a disulfide reductase for SCO1/COX2 enabling Cu binding | **Supported** | In vitro reduction demonstrated (PMID:31851937); KO causes CIV deficiency (PMID:26160915) |
 | H004 | COX20 is a structural presenter/stabilizer, not copper executor | **Supported** | i-AAA protease bypass (PMID:22095077); no Cu-binding motifs |

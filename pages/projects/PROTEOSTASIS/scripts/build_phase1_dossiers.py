@@ -73,7 +73,7 @@ def fmt_val(v):
 
 summary = []
 for g in gene_list:
-    lines = [f"# PN dossier: {g}", ""]
+    lines = ["---", "species: [human]", "---", "", f"# PN dossier: {g}", ""]
     batch, ypath = gene_batch[g]
     lines.append(f"- review_batch: {batch}")
     lines.append(f"- review_yaml: {ypath}")

@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXW4
 - **UniProt:** P57775 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
 - **PN placement (2 rows):** Row1 `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|WD40` (PMID:15340381); Row2 `UPS|Ubiquitin and UBL binding|E3 ligase|CUL1 receptor|idiosyncratic Ub binding / WD40` (PMID:21070969). **PN-node mapping:** Row1 group=mapped GO:1990756; Row2 group=mapped GO:0061630 ubiquitin protein ligase activity (new_to_goa); both class nodes context_only/too_broad.

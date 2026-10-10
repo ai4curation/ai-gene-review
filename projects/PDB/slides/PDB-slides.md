@@ -36,8 +36,8 @@ Where deposited structures change a gene's annotation, and where they only confi
 
 ## Bottom line
 
-- **949 of 2,529** pipeline genes have a deposited structure (13,415 PDB entries), yet only **15%** of 737 structure-paper and gene pairs are cited in GOA.
-- Structures reliably give under-curated proteins their **first experimental-grade evidence** (~12 annotations, **4 NEW** rows in round 2).
+- **1,991** pipeline genes have a deposited structure (27,157 PDB entries), yet only **19%** of 1,668 structure-paper and gene pairs are cited in GOA.
+- Structures reliably give under-curated proteins their **first experimental-grade evidence** (>12 annotations, **5 NEW** rows across the reviews).
 - **New informative function is rare**: 2 structure-unique annotations (both merA); the papers' own hypotheses paid off clearly in 1 of 6.
 
 ---
@@ -46,7 +46,7 @@ Where deposited structures change a gene's annotation, and where they only confi
 
 - A bound **cofactor, metal, ligand or partner** is direct evidence for MF, binding and complex membership.
 - Rank candidates by **richness × sparsity**: a cofactor-bound, full-length structure of an IEA-only enzyme scores high.
-- Three cuts (278 genes): **dark_mf** 114 · **euk** 100 · **contested** 130 (a review disputed a catalytic MF).
+- Three cuts (620 genes): **dark_mf** 206 · **euk** 210 · **contested** 340 (a review disputed a catalytic MF).
 
 ---
 
@@ -54,7 +54,7 @@ Where deposited structures change a gene's annotation, and where they only confi
 
 ![h:460](pdb-citation-gap.svg)
 
-<span class="small">174 of 247 genes cite none of their structure papers. GAP_OPPORTUNITY: the paper predates the gene's latest experimental annotation.</span>
+<span class="small">353 of 573 genes cite none of their structure papers. GAP_OPPORTUNITY: the paper predates the gene's latest experimental annotation.</span>
 
 ---
 
@@ -89,8 +89,8 @@ Where deposited structures change a gene's annotation, and where they only confi
 ## Status and next steps
 
 - ✅ Inventory, RCSB enrichment, citation-gap and H1 ledger
-- ✅ Structure-informed reviews: XYL1, IDH3B, COX6B1, psaC, COI1, ATAD1; merA, mcrA, secA, mxaI
-- ⬜ Work down `GAP_WORKLIST.md` (PNO1, RPS3, BIRC5, GCH1, SIRT2 …)
+- ✅ Structure-informed reviews: XYL1, IDH3B, COX6B1, psaC, COI1, ATAD1; HSPB3; merA, mcrA, secA; mxaI null
+- ⬜ Work down `GAP_WORKLIST.md` (FANCB, PNO1, RCO1, RPS3, AEBP2 …)
 - ⬜ Map complex partners to UniProt; consider a PDB-evidence field in the schema
 
 **Read more:** `projects/PDB.md` · `projects/PDB/H1_LEDGER.md` · `projects/PDB/CURATION_GAP.md`

@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Focused function hypothesis
 
 Hypothesis: The horse protein A0A9L0RGD6 positively regulates double-strand break repair via nonhomologous end joining.

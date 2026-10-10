@@ -75,7 +75,7 @@ Swiss-Prot entries that are missing the term too — the cleanest gap-fill targe
 ## The verification caveat is mandatory
 
 NCBIFAM's `go_terms` are NCBI-assigned and **not** automatically current or correct.
-Three distinct failure modes turned up while building the 28-row seed, each of which
+Four distinct failure modes turned up while building the original hand-curated seed, each of which
 a naive bulk ingest would have propagated:
 
 - **Obsolete** — `GO:0009448` on a GABA transaminase is an obsolete id.
@@ -85,10 +85,13 @@ a naive bulk ingest would have propagated:
   just an altitude issue — excluded.
 - **Altitude-broad** — several sit far above the family's real function, up to the
   ontology **near-root** `GO:0003824 catalytic activity` (enoyl-CoA hydratase
-  NF005804, spermidine synthase TIGR00417), or a class parent (dGTPase NF002326 →
-  `GO:0016793` when `GO:0008832 dGTPase activity` exists). For these we **propose our
+  NF005804, spermidine synthase TIGR00417). For these we **propose our
   own specific term** as the `exactMatch` mapping (the EC-bridged child) instead of
   recording NCBI's broad value.
+- **Substrate-heterogeneous** — a broad parent can be the right family-level term after all.
+  NF002326 looked like a dGTPase-specific refinement but proved to include a SAMHD1-like
+  broad-dNTPase clade, so the seed keeps `GO:0016793` for the whole family and records
+  `GO:0008832` / `GO:0106375` only as clade-level `narrowMatch` rows.
 
 ### Proposing the specific term unmasks the gain
 
@@ -97,17 +100,19 @@ the gain measured against a broad parent is near-zero (the parent is already
 near-universal), so the broad NCBI term makes a real gap look like *no* gap.
 Re-measuring against the specific child we propose flips this:
 
-| Family | NCBI broad term (gain) | Our specific term (gain all / reviewed) |
-|--------|-----------------------:|----------------------------------------:|
-| spermidine synthase TIGR00417 | `GO:0003824` (~0) | `GO:0004766` — **575** / 1 |
-| LL-DAP aminotransferase TIGR03542 | `GO:0008483` (77) | `GO:0010285` — **1,185** / 2 |
-| dihydroorotase NF006559 | `GO:0016810` (4) | `GO:0004151` — **491** / 0 |
-| dGTPase NF002326 | `GO:0016793` (20) | `GO:0008832` — **456** / **13** |
-| enoyl-CoA hydratase NF005804 | `GO:0003824` (~0) | `GO:0004300` — **184** / 1 |
+| Family | NCBI broad term (gain) | Specific child tested (gain all / reviewed) | Final seed action |
+|--------|-----------------------:|------------------------------------------:|-------------------|
+| spermidine synthase TIGR00417 | `GO:0003824` (~0) | `GO:0004766` — **575** / 1 | specific `exactMatch` |
+| `LL-DAP` aminotransferase TIGR03542 | `GO:0008483` (77) | `GO:0010285` — **1,185** / 2 | specific `exactMatch` |
+| dihydroorotase NF006559 | `GO:0016810` (4) | `GO:0004151` — **491** / 0 | specific `exactMatch` |
+| enoyl-CoA hydratase NF005804 | `GO:0003824` (~0) | `GO:0004300` — **184** / 1 | specific `exactMatch` |
+| dGTPase NF002326 | `GO:0016793` (20) | `GO:0008832` — apparent **456** / **13** | split, not a blanket strict-dGTPase `exactMatch` |
 
-So suggesting our own term is what converts these from invisible to actionable — and
-surfaces genuine **reviewed/Swiss-Prot** gaps (dGTPase 13, LL-DAP 2) that the broad
-NCBI assignment hid entirely.
+For the four EC-bridged enzyme rows, suggesting our own term is what converts these from
+invisible into actionable TrEMBL gap-fills. The raw `LL-DAP` and spermidine reviewed
+gaps were cross-kingdom paralog artifacts that vanish under PGAP's actual prokaryotic
+scope, while dGTPase's apparent 456-entry strict-activity gain was the warning sign that
+triggered the NF002326 family split.
 
 ### …but high gain can also be an over-annotation trap (FtsX)
 
@@ -127,7 +132,7 @@ hydrolysis rather than performing constriction. Propagating the specific term to
 3,306 entries would assert more than the evidence supports. The seed therefore maps
 FtsX to the consensus `GO:0051301` (gain 22, confirmatory) and **declines** the
 high-gain specific term. **High gain is a flag for review, not an instruction to
-propagate** — it can mean a real masked gap (the five rows above) *or* an
+propagate** — it can mean a real masked gap (the table above) *or* an
 over-annotation waiting to happen (FtsX).
 
 So an `ncbifam2go` build must, like the curated seed in
@@ -136,7 +141,9 @@ So an `ncbifam2go` build must, like the curated seed in
 1. drop obsolete **and incorrect** GO ids (check against EC where available),
 2. **propose the specific child** where the NCBI term is a broad parent, and measure
    gain against *that* term, not the parent,
-3. EC-bridge-confirm enzyme rows via `ec2go`.
+3. split substrate-heterogeneous families instead of blanket-propagating a high-gain
+   strict child,
+4. EC-bridge-confirm enzyme rows via `ec2go`.
 
 ## Reproduce
 

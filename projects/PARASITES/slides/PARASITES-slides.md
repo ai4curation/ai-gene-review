@@ -36,9 +36,9 @@ GO review of nematode genes that work at the host interface
 
 ## Bottom line
 
-- Parasites invade hosts, evade immunity and steal nutrients; these functions are **thinly covered by GO**, and parasite species have **few reviewed UniProt entries**.
-- We anchored on *S. carpocapsae* **nas-8** (the genus's only Swiss-Prot entry) and **five *Brugia malayi*** secreted or surface proteins.
-- **All 6 reviewed: 35 GOA rows**, 21 ACCEPT. Key fix: a CPI-2 **aspartic-type** inhibitor row → **cysteine-type**, since legumain is a cysteine protease.
+- Parasites invade hosts, evade immunity and scavenge host nutrients; these functions are **thinly covered by GO**, and parasite species have **few reviewed UniProt entries**.
+- We anchored on *S. carpocapsae* **nas-8** (the genus's only Swiss-Prot entry) and **five reviewed *Brugia malayi*** secreted, cuticle or surface proteins.
+- **All 35 GOA rows actioned across 6 seed reviews**, with 21 ACCEPT. Key fix: a CPI-2 **aspartic-type** inhibitor row → **cysteine-type**, since legumain is a cysteine protease.
 
 ---
 
@@ -48,7 +48,7 @@ GO review of nematode genes that work at the host interface
 
 ---
 
-## What the six proteins do at the host interface
+## What the seed proteins do
 
 ![h:500](host-interface.svg)
 
@@ -79,9 +79,9 @@ GO review of nematode genes that work at the host interface
 
 ## Status and next steps
 
-- ✅ 6/6 seed genes reviewed and rendered (the project page's "PENDING" labels are out of date).
-- ⬜ No deep research or notes files yet; reviews rest on UniProt and cached papers.
-- ⬜ *S. hermaphroditum* (`9BILA`): no seed chosen, no reviewed entries; will need literature + bioinformatics.
-- ⬜ Fold in the host-modulator candidates from [PARASITE_IMMUNE_MODULATORS](../../PARASITE_IMMUNE_MODULATORS.md).
+- ✅ 35/35 imported GOA rows now have curation actions.
+- ⬜ Six seed YAMLs remain `INITIALIZED`; add notes/deep research before final re-review.
+- ⬜ [#3992](https://github.com/ai4curation/ai-gene-review/issues/3992): pick *S. hermaphroditum* (`9BILA`) seeds; no reviewed entries, so this needs literature + bioinformatics.
+- ⬜ [#3992](https://github.com/ai4curation/ai-gene-review/issues/3992): fold in the host-modulator candidates from `PARASITE_IMMUNE_MODULATORS`.
 
 **Read more:** `projects/PARASITES.md` · `genes/BRUMA/` · `genes/STECR/nas-8/`

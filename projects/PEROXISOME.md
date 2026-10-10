@@ -1,6 +1,7 @@
 ---
 title: "Peroxisome Biogenesis Project"
 maturity: MATURE
+last_reviewed: "2026-10-05"
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [PEX1, PEX2, PEX3, PEX5, PEX6, PEX7, PEX10, PEX11A, PEX11B, PEX11G, PEX12, PEX13, PEX14, PEX16, PEX19, PEX26]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: PEROXISOME/slides/PEROXISOME-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/7Y2qKPFq916QDfjfp87CRG
-      title: Project brief
 ---
 
 # Peroxisome Biogenesis Project
@@ -21,11 +19,11 @@ receptor-docking-recycling cycle, and divide the organelle; their loss causes
 Zellweger spectrum disorders. We reviewed every existing GO annotation on the
 16 human peroxins, in three phases: import and recycling, the RING ligases and
 docking complex, then membrane biogenesis and proliferation. All 16 reviews
-are in the repo (828 annotations: 579 accepted, 51 kept as non-core, 93 marked
-over-annotated, 28 modified, 64 removed, 11 NEW, 2 undecided). PEX39, a
+are in the repo (828 annotations: 561 accepted, 51 kept as non-core, 94 marked
+over-annotated, 44 modified, 65 removed, 11 NEW, 2 undecided). PEX39, a
 recently characterized PTS2-import factor that binds PEX7, has its own review
 but is outside this set. Generic `protein binding` was
-the dominant problem: 35 of PEX19's 37 removals and 17 of PEX5's 19
+the dominant problem: 35 of PEX19's 37 removals and 18 of PEX5's 20
 over-annotations are `protein binding` IPI rows. The other recurring pattern
 was guilt by cargo or phenotype, where a peroxin is annotated to the metabolic
 process of the enzymes it imports or to a downstream knockout phenotype; these
@@ -33,8 +31,9 @@ rows were mostly kept as non-core (PEX7 ether lipid biosynthesis, PEX13 neuron
 migration) rather than removed. The
 conserved machinery is modelled in the
 [peroxisome lifecycle module](../modules/peroxisome-lifecycle.html), and the
-obsoletion of the targeting-signal binding terms that affects PEX5, PEX7 and
-PEX19 is tracked separately.
+targeting-signal binding obsoletion has already been folded into the PEX5,
+PEX7 and PEX19 reviews. The two remaining `UNDECIDED` rows are tracked in
+[#4242](https://github.com/ai4curation/ai-gene-review/issues/4242).
 
 ## Overview
 
@@ -48,6 +47,7 @@ other peroxisomal biogenesis disorders (PBDs).
 ## Model Species
 
 **Primary: Homo sapiens (human)**
+
 - Zellweger spectrum disorders provide clinical relevance
 - Comprehensive proteomics data available
 - Well-characterized import pathways
@@ -85,6 +85,7 @@ other peroxisomal biogenesis disorders (PBDs).
 ## Evolutionary Conservation
 
 The PEX machinery shows tiered conservation:
+
 - **Deeply conserved (yeast to human)**: PEX1, 2, 3, 5, 6, 7, 10, 12, 13, 14, 19
 - **Metazoan innovations**: PEX11 family expansion (1 in yeast -> 3 in human)
 - **Vertebrate-specific**: PEX26 (replaces yeast PEX15, convergent evolution)
@@ -145,76 +146,61 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 # STATUS
 
 ## Phase 1 Genes
-- [x] PEX1 (O43933)
-- [x] PEX5 (P50542)
-- [x] PEX6 (Q13608)
-- [x] PEX7 (O00628)
-- [x] PEX14 (O75381)
-- [x] PEX26 (Q7Z412)
+- **Done:** PEX1 (O43933)
+- **Done:** PEX5 (P50542)
+- **Done:** PEX6 (Q13608)
+- **Done:** PEX7 (O00628)
+- **Done:** PEX14 (O75381)
+- **Done:** PEX26 (Q7Z412)
 
 ## Phase 2 Genes
-- [x] PEX2 (P28328)
-- [x] PEX10 (O60683)
-- [x] PEX12 (O00623)
-- [x] PEX13 (Q92968)
+- **Done:** PEX2 (P28328)
+- **Done:** PEX10 (O60683)
+- **Done:** PEX12 (O00623)
+- **Done:** PEX13 (Q92968)
 
 ## Phase 3 Genes
-- [x] PEX3 (P56589)
-- [x] PEX16 (Q9Y5Y5)
-- [x] PEX19 (P40855)
-- [x] PEX11A (O75192)
-- [x] PEX11B (O96011)
-- [x] PEX11G (Q96HA9)
+- **Done:** PEX3 (P56589)
+- **Done:** PEX16 (Q9Y5Y5)
+- **Done:** PEX19 (P40855)
+- **Done:** PEX11A (O75192)
+- **Done:** PEX11B (O96011)
+- **Done:** PEX11G (Q96HA9)
 
 # NOTES
 
 ## 2026-03-05
 
+Original completion notes from the first pass over the 16-gene set. Exact
+per-gene action counts in this March snapshot were superseded by later
+receptor-term obsoletion and RING-complex follow-up edits; use the current
+YAMLs and the 2026-10-05 aggregate above for live counts.
+
 - Phase 3 annotation reviews complete (all 6 genes: PEX3, PEX16, PEX19, PEX11A, PEX11B, PEX11G)
 - Key findings across Phase 3:
-  - PEX19: 37 REMOVE actions (45% of annotations!) — likely many protein binding annotations from HTP interactome studies
-  - PEX3: 17 over-annotations flagged — highest proportion of any gene; many downstream metabolic processes
-  - PEX11B: 12 over-annotations — many guilt-by-phenotype annotations from KO studies
-  - PEX11G: smallest gene (11 annotations) reviewed cleanly; tissue-specific role confirmed
-  - PEX16: 3 annotations removed; well-characterized ER-to-peroxisome pathway annotations retained
-  - Several NEW annotations proposed across Phase 3 genes (PEX16, PEX19, PEX11A, PEX11G)
-- Review statistics:
-  - PEX3: 47 annotations (20 ACCEPT, 17 OVER, 6 MODIFY, 3 NON_CORE, 1 UNDECIDED)
-  - PEX16: 34 annotations (26 ACCEPT, 3 REMOVE, 3 MODIFY, 1 OVER, 1 NEW)
-  - PEX19: 82 annotations (38 ACCEPT, 37 REMOVE, 4 NEW, 1 MODIFY, 1 OVER, 1 NON_CORE)
-  - PEX11A: 21 annotations (17 ACCEPT, 2 REMOVE, 1 OVER, 1 NEW)
-  - PEX11B: 40 annotations (23 ACCEPT, 12 OVER, 3 NON_CORE, 2 REMOVE)
-  - PEX11G: 12 annotations (8 ACCEPT, 1 REMOVE, 1 MODIFY, 1 OVER, 1 NEW)
+    - PEX19 had the largest removal set, driven mostly by generic protein-binding rows from high-throughput interactome studies
+    - PEX3 and PEX11B carried many downstream metabolic-process or knockout-phenotype over-annotations
+    - PEX11G was the smallest Phase 3 review; its tissue-specific role was confirmed
+    - PEX16: 3 annotations removed; well-characterized ER-to-peroxisome pathway annotations retained
+    - Several NEW annotations proposed across Phase 3 genes (PEX16, PEX19, PEX11A, PEX11G)
 
 - Phase 2 annotation reviews complete (all 4 genes: PEX2, PEX10, PEX12, PEX13)
 - Key findings across Phase 2:
-  - RING complex (PEX2/PEX10/PEX12) shows cleaner annotations than Phase 1 receptors — fewer over-annotations
-  - PEX2: 5 annotations removed, including generic protein binding; 9 non-core (downstream metabolic processes)
-  - PEX10: cleanest review — only 1 over-annotation, 1 modify; strong ISS evidence from cryo-EM channel paper (PMID:35768507)
-  - PEX12: 4 modify actions, mostly refining E3 ligase specificity; bridges RING complex to docking via PEX5/PEX10 interactions
-  - PEX13: 8 over-annotations flagged (mostly downstream metabolic); 1 NEW annotation proposed; SH3 domain scaffold function confirmed
-- Review statistics:
-  - PEX2: 59 annotations (40 ACCEPT, 9 NON_CORE, 5 REMOVE, 4 OVER, 1 UNDECIDED)
-  - PEX10: 39 annotations (34 ACCEPT, 3 NON_CORE, 1 MODIFY, 1 OVER)
-  - PEX12: 55 annotations (44 ACCEPT, 6 NON_CORE, 4 MODIFY, 1 OVER)
-  - PEX13: 52 annotations (35 ACCEPT, 8 OVER, 8 NON_CORE, 1 NEW)
+    - RING complex (PEX2/PEX10/PEX12) shows cleaner annotations than Phase 1 receptors — fewer over-annotations
+    - PEX2: 5 annotations removed, including generic protein binding; 9 non-core (downstream metabolic processes)
+    - PEX10 had strong ISS evidence from the cryo-EM channel paper (PMID:35768507)
+    - PEX12: 4 modify actions, mostly refining E3 ligase specificity; bridges RING complex to docking via PEX5/PEX10 interactions
+    - PEX13 downstream metabolic annotations were flagged, and its SH3-domain scaffold function was confirmed
 
 - Phase 1 annotation reviews complete (all 6 genes)
 - Key findings across Phase 1:
-  - Pervasive over-annotation of generic "protein binding" (GO:0005515) across all genes (25+ instances)
-  - PEX7: homodimerization annotation (GO:0042803) contradicted by cited paper PMID:10978175 which shows WD40 repeat mediates PTS2 binding, not dimerization
-  - PEX14: phase separation behavior emerging as new paradigm for import pore (PMID:34551879)
-  - PEX14: beta-tubulin binding (GO:0048487) is a validated core function, connecting peroxisomes to cytoskeleton
-  - PEX5: 118 annotations reviewed, highest annotation count; 19 over-annotations flagged
-  - PEX26: convergent evolution with yeast PEX15 visible in annotation evidence patterns
-  - Guilt-by-cargo pattern: several genes annotated with cargo metabolic processes (e.g. ether lipid biosynthesis for PEX7)
-- Review statistics:
-  - PEX1: 52 annotations (46 ACCEPT, 4 REMOVE, 1 OVER, 1 NON_CORE)
-  - PEX5: 118 annotations (89 ACCEPT, 19 OVER, 4 NON_CORE, 3 MODIFY, 2 REMOVE, 1 UNDECIDED)
-  - PEX6: 50 annotations (43 ACCEPT, 4 MODIFY, 3 NON_CORE)
-  - PEX7: 47 annotations (35 ACCEPT, 6 REMOVE, 2 MODIFY, 2 OVER, 2 NON_CORE)
-  - PEX14: 81 annotations (56 ACCEPT, 17 OVER, 4 NON_CORE, 3 MODIFY, 1 REMOVE)
-  - PEX26: 36 annotations (24 ACCEPT, 8 OVER, 3 NON_CORE, 1 REMOVE)
+    - Pervasive over-annotation of generic "protein binding" (GO:0005515) across all genes (25+ instances)
+    - PEX7: homodimerization annotation (GO:0042803) contradicted by cited paper PMID:11931631 which shows WD40 repeat mediates PTS2 binding, not dimerization
+    - PEX14: phase separation behavior emerging as new paradigm for import pore (PMID:34551879)
+    - PEX14: beta-tubulin binding (GO:0048487) is a validated core function, connecting peroxisomes to cytoskeleton
+    - PEX5 had the highest annotation count in the set
+    - PEX26: convergent evolution with yeast PEX15 visible in annotation evidence patterns
+    - Guilt-by-cargo pattern: several genes annotated with cargo metabolic processes (e.g. ether lipid biosynthesis for PEX7)
 
 ## 2026-05-01
 

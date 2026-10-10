@@ -1,6 +1,7 @@
 ---
 title: "NOT annotation usage: results"
 species: [human, rat, ARATH, SCHPO]
+autolink_gene_symbols: false
 ---
 # NOT annotation usage: results
 
@@ -205,48 +206,48 @@ Counts are per reviewed (Swiss-Prot) protein carrying at least one NOT annotatio
 
 ## How this repo's reviews treated negated annotations
 
-270 negated rows across 174 reviewed genes.
+297 negated rows across 187 reviewed genes.
 
 | Action | rows | % |
 |---|---:|---:|
-| ACCEPT | 223 | 82.6 |
-| UNDECIDED | 20 | 7.4 |
-| KEEP_AS_NON_CORE | 16 | 5.9 |
-| REMOVE | 8 | 3.0 |
-| MARK_AS_OVER_ANNOTATED | 3 | 1.1 |
+| ACCEPT | 233 | 78.5 |
+| UNDECIDED | 27 | 9.1 |
+| KEEP_AS_NON_CORE | 25 | 8.4 |
+| REMOVE | 9 | 3.0 |
+| MARK_AS_OVER_ANNOTATED | 3 | 1.0 |
 
 | Evidence | rows | % |
 |---|---:|---:|
-| IDA | 130 | 48.1 |
-| IMP | 61 | 22.6 |
-| IBA | 17 | 6.3 |
-| IKR | 14 | 5.2 |
-| ISS | 11 | 4.1 |
-| TAS | 9 | 3.3 |
-| ISO | 8 | 3.0 |
-| IGI | 7 | 2.6 |
-| NAS | 3 | 1.1 |
-| EXP | 3 | 1.1 |
-| RCA | 2 | 0.7 |
+| IDA | 133 | 44.8 |
+| IMP | 70 | 23.6 |
+| ISS | 22 | 7.4 |
+| IBA | 17 | 5.7 |
+| IKR | 14 | 4.7 |
+| IGI | 9 | 3.0 |
+| TAS | 9 | 3.0 |
+| ISO | 8 | 2.7 |
+| NAS | 4 | 1.3 |
+| RCA | 3 | 1.0 |
+| EXP | 3 | 1.0 |
 | IEP | 2 | 0.7 |
 | IPI | 2 | 0.7 |
-| IC | 1 | 0.4 |
+| IC | 1 | 0.3 |
 
 ### Action by term category
 
 | Category | Rows | Actions |
 |---|---:|---|
 | catalytic activity | 74 | ACCEPT 65, UNDECIDED 5, KEEP_AS_NON_CORE 4 |
-| regulation of biological process | 45 | ACCEPT 36, UNDECIDED 6, REMOVE 2, KEEP_AS_NON_CORE 1 |
-| cellular component | 36 | ACCEPT 29, KEEP_AS_NON_CORE 4, REMOVE 3 |
+| regulation of biological process | 48 | ACCEPT 36, UNDECIDED 7, KEEP_AS_NON_CORE 3, REMOVE 2 |
+| cellular component | 37 | ACCEPT 30, KEEP_AS_NON_CORE 4, REMOVE 3 |
 | metabolic process | 26 | ACCEPT 22, KEEP_AS_NON_CORE 2, UNDECIDED 2 |
-| binding (other) | 23 | ACCEPT 22, MARK_AS_OVER_ANNOTATED 1 |
-| other BP | 13 | ACCEPT 11, MARK_AS_OVER_ANNOTATED 1, KEEP_AS_NON_CORE 1 |
-| transporter activity | 13 | ACCEPT 9, UNDECIDED 4 |
-| localization | 11 | ACCEPT 7, UNDECIDED 2, REMOVE 1, KEEP_AS_NON_CORE 1 |
+| binding (other) | 24 | ACCEPT 22, MARK_AS_OVER_ANNOTATED 1, REMOVE 1 |
+| developmental process | 22 | ACCEPT 10, KEEP_AS_NON_CORE 6, UNDECIDED 5, MARK_AS_OVER_ANNOTATED 1 |
+| other BP | 16 | ACCEPT 13, KEEP_AS_NON_CORE 2, MARK_AS_OVER_ANNOTATED 1 |
+| transporter activity | 14 | ACCEPT 9, UNDECIDED 5 |
+| localization | 12 | ACCEPT 7, UNDECIDED 3, REMOVE 1, KEEP_AS_NON_CORE 1 |
 | response to stimulus (other) | 8 | KEEP_AS_NON_CORE 3, ACCEPT 3, REMOVE 2 |
-| developmental process | 6 | ACCEPT 4, MARK_AS_OVER_ANNOTATED 1, UNDECIDED 1 |
-| signaling | 5 | ACCEPT 5 |
+| signaling | 6 | ACCEPT 6 |
 | other MF | 5 | ACCEPT 5 |
 | unknown | 4 | ACCEPT 4 |
 | defense/immune response | 1 | ACCEPT 1 |

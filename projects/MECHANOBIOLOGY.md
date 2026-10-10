@@ -3,6 +3,8 @@ title: "Mechanobiology Gene Review Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+last_reviewed: "2026-10-04"
+genes: [ITGB1, TLN1, VCL, PTK2, SYNE1, SYNE2, SUN1, SUN2, YAP1, LATS1, FN1, LOX, SPARC, DCN]
 manifest:
   slides:
     - href: MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.html
@@ -19,16 +21,17 @@ membrane tension through channels such as PIEZO1, integrin adhesions, the
 nuclear lamina and the YAP/TAZ pathway, and GO annotations in this area mix
 genuine sensors with generic adhesion, cytoskeleton and ECM terms. This page
 defines the scope for reviewing that gene set: inclusion criteria, six
-sensor-to-modifier modules, 30 candidate genes in five review batches, and
+sensor-to-modifier modules, 30 starter genes in five review batches, and
 the `stimulus -> sensor -> downstream axis -> phenotype` chain each review
 should record. We scoped it this way so that reviews separate the few direct
 mechanosensors from the many downstream effectors and ECM genes that are easy
-to over-annotate with `response to mechanical stimulus`. Scoped, not yet
-started: none of the Batch A to D genes (PIEZO1/2, TRPV4, PKD1/2, the
-integrin adhesome, LINC complex or Hippo effectors) has a review in the repo.
-Four Batch E matrix genes (FN1, LOX, SPARC, DCN) have human reviews made for
-other purposes, covering 355 annotations, but none has been assessed against
-this project's mechanical-chain questions.
+to over-annotate with `response to mechanical stimulus`. **Status:** the
+canonical direct sensors remain unreviewed, but 14 downstream or
+microenvironment genes already have human reviews from adjacent work: ITGB1,
+TLN1, VCL and PTK2 in the adhesome batch; SYNE1, SYNE2, SUN1 and SUN2 in the
+LINC batch; YAP1 and LATS1 in the Hippo batch; and FN1, LOX, SPARC and DCN in
+the matrix batch. The remaining starter set is tracked in
+[#3970](https://github.com/ai4curation/ai-gene-review/issues/3970).
 
 ## Scope
 
@@ -170,7 +173,9 @@ These are useful anchors for choosing batches, but should not become hype-driven
 
 ## Expected outputs
 
-- a reviewed starter set of high-confidence mechanobiology genes in `genes/<organism>/<gene>/`
+- completion of the remaining direct mechanosensor, adhesome, nuclear-envelope,
+  Hippo/contractility, and matrix/fibrosis starter reviews
+  ([#3970](https://github.com/ai4curation/ai-gene-review/issues/3970))
 - a project-level summary table linking stimulus, sensor/transducer class, downstream axis, and phenotype
 - a shortlist of over-annotation patterns or recurrent GO term pain points in mechanobiology curation
 - possible pathway-style summary pages once the first review batches stabilize

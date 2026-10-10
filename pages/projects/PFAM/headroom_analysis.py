@@ -61,6 +61,11 @@ DATA = HERE / "data"
 GENERAL_DEPTH_THRESHOLD = 3  # depth <= this counts as a general term
 
 
+def md_code(value: object) -> str:
+    text = str(value).replace("`", "\\`")
+    return f"`{text}`"
+
+
 def parse_interpro(path: Path):
     """Return (pf2ipr, ipr_type, ipr_members, interpro_release)."""
     pf2ipr: dict[str, str] = {}
@@ -281,7 +286,7 @@ def main() -> int:
     for pf, fam_name, ipr, typ, reason, clan, desc in gap_rows:
         if desc and "DUF" not in fam_name and shown < 20:
             d = desc if len(desc) < 70 else desc[:67] + "…"
-            A(f"| {pf} | {fam_name} | {reason} | {d} |")
+            A(f"| {pf} | {md_code(fam_name)} | {reason} | {md_code(d)} |")
             shown += 1
     A("")
     A(f"*(Note: a large share of uncovered families are domains of unknown function "
@@ -319,7 +324,7 @@ def main() -> int:
     fam_super_ranked = sorted(fam_super, key=lambda e: (-e[2], e[3]))
     for ipr, typ, n, d, gos, mem in fam_super_ranked[:25]:
         go_str = "; ".join(glabel(g) for g in gos[:2]) + ("…" if len(gos) > 2 else "")
-        ex = "; ".join(pfam_meta.get(p, ("", "", p, ""))[2] for p in mem[:4])
+        ex = "; ".join(md_code(pfam_meta.get(p, ("", "", p, ""))[2]) for p in mem[:4])
         if len(mem) > 4:
             ex += f"; +{len(mem)-4}"
         A(f"| {ipr} | {typ} | {n} | {d} | {go_str} | {ex} |")

@@ -55,7 +55,7 @@ family/ortholog associations.
 A **second round** then tested the opposite population — the 10 genes whose predictions the
 review had **disputed** (`NPI`/`PLI`, "the prediction is wrong") — as the same blinded
 hypotheses, to check our own rejections. **9 of 10 were independently confirmed as
-misassignments; 1 (GADMO/tbc1d14) was partially overturned** (see the dispute-confirmation
+misassignments; 1 (`GADMO/tbc1d14`) was partially overturned** (see the dispute-confirmation
 section). Together the two rounds show the adjudicator moves in both directions: it upholds
 well-reasoned rejections and catches an over-harsh one.
 
@@ -88,12 +88,12 @@ a call.
 | MYTGA/A0A8B6GS20 | PI3P phosphatase (`NPI`) | catalytically dead pseudophosphatase (MTMR9-like) | confirmed |
 | ASPOR/Q2U1U6 | O-glycosyl hydrolase (`NPI`) | polysaccharide lyase, not GH (and too small for either) | confirmed |
 | WHEAT/F6LAX4 | 6 animal/mitotic terms (`NPI×6`) | PP2A A scaffold; terms taxon-inappropriate or B56-subunit (not A) | confirmed |
-| CAEEL/mcm-4 (A0A061AL94) | transcription initiation (`NPI`) | 74-aa MCM4 replicative-helicase fragment | confirmed |
+| `CAEEL/mcm-4` (A0A061AL94) | transcription initiation (`NPI`) | 74-aa MCM4 replicative-helicase fragment | confirmed |
 | XENTR/A0A8J0SCI2 | DNA-binding TF activator (`NPI`) | naked C2H2 array, no effector domain → direction not sequence-determinable | confirmed |
-| DANRE/dnajc6 (A0A8M9QG43) | dephosphorylation (`NPI`) | PTEN-fold pseudophosphatase, no intact catalytic site | confirmed |
+| `DANRE/dnajc6` (A0A8M9QG43) | dephosphorylation (`NPI`) | PTEN-fold pseudophosphatase, no intact catalytic site | confirmed |
 | DROPS/A0A6I8W8A2 | ligase activity (`NPI`) | 169-aa RCC1 β-propeller, no HECT/RING (HERC3 name-transfer) | confirmed |
 | XENNA/D3VIU4 | ligand-gated ion channel (`NPI`) | periplasmic SBP; iGluR fold homology but no TM pore | confirmed |
-| **GADMO/tbc1d14 (A0A8C5FPT8)** | **autophagosome (`NPI`)** | **defensible — human ortholog has a curated IDA** | **overturned → `CNN`** |
+| **`GADMO/tbc1d14` (A0A8C5FPT8)** | **autophagosome (`NPI`)** | **defensible — human ortholog has a curated IDA** | **overturned → `CNN`** |
 
 **9 confirmed, 1 overturned.** The overturn is the informative case: our review flatly rejected
 autophagosome for tbc1d14, but human TBC1D14 (Q9P2M4) carries a **direct experimental IDA

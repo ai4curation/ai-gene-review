@@ -18,13 +18,13 @@ foreground is the study metabolites mapped into that same participant space. For
 each GO term we run a one-sided hypergeometric (Fisher) over-representation test
 and report Benjamini-Hochberg FDR.
 
-Because rhea2go is a molecular-function mapping, the directly-reached terms are
+Because rhea2go is a molecular-function mapping, the directly reached terms are
 GO **molecular function**; closure over ``is_a`` and ``part_of`` lifts them to
-more general function terms (and, where ChEBI/GO model it, the occasional parent
-of another aspect). True biological-*process* lift needs the enzyme/gene layer
-(GOA / GO-CAM) and is the documented next step — but even at MF level the value
-GO adds over a flat pathway list is visible: the ontology aggregates many
-specific enzyme activities into significantly-enriched higher-level functions.
+more general function terms. The companion ``go_bp_enrichment.py`` script lifts
+the same normalized metabolite set to biological processes via human enzymes,
+GOA BP annotations and GO closure; the MF report here still shows the value GO
+adds over a flat pathway list by aggregating specific enzyme activities into
+significantly enriched higher-level functions.
 
 Everything is computed live (Rhea REST, GO rhea2go, go-basic.obo, OLS4) and
 cached under ``.cache/``; nothing is hardcoded.
@@ -199,8 +199,9 @@ def write_report(out: Path, title: str, source: str | None, N: int, n: int,
     L.append("`k/n` = foreground metabolites annotated to the term / foreground size;")
     L.append("`K/N` = same in the background universe; `Fold` = (k/n)/(K/N). Terms reached")
     L.append("via `rhea2go` are GO **molecular function**; closure lifts them to more general")
-    L.append("function terms. BP-level lift via the enzyme/gene layer (GOA / GO-CAM) is the")
-    L.append(f"documented next step (see the [project page]({rel_prefix}../../METABOLOMICS.md)).")
+    bp_name = out.name.replace("GO-ENRICHMENT", "GO-BP-ENRICHMENT")
+    L.append("function terms. The companion human GO-BP ORA report lifts the same normalized")
+    L.append(f"metabolite set through Swiss-Prot enzymes and GOA BP closure ([{bp_name}]({bp_name})).")
     L.append("\n## Method / reproducibility\n")
     L.append(f"- Normalization: [`chebi.py`]({rel_prefix}chebi.py); Rhea + rhea2go:")
     L.append(f"  [`rhea.py`]({rel_prefix}rhea.py); GO closure: `go-basic.obo` (cached).")

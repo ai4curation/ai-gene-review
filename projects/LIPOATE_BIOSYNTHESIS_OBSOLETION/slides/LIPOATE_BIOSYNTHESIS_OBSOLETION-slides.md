@@ -38,7 +38,7 @@ GO:0009107 → GO:0009249 protein lipoylation (definition broadened)
 
 - Lipoate is built **on the carrier protein**, so "lipoate biosynthesis" and "protein lipoylation" were the same reactions; GO **merged GO:0009107 into GO:0009249** on 2026-08-22.
 - The merge touches **12 experimental rows** and **11 mappings** upstream, and **5 reviews** here: all **9 rows are MODIFY → GO:0009249** and 4 `core_functions` blocks were cleaned (PR #2784).
-- **Open:** re-point the `GO:0016992 part_of` edge upstream, re-fetch GOA, and optionally review B. subtilis lipM / lipL / gcvH.
+- **Open:** re-fetch GOA once obsolete GO:0009107 disappears from public GOA, and optionally review B. subtilis lipM / lipL / gcvH.
 
 ---
 
@@ -73,14 +73,14 @@ GO:0009107 → GO:0009249 protein lipoylation (definition broadened)
 | BACSU/lipA | IEA, IGI (upstream item #2) | MODIFY → GO:0009249 | GO:0009107 dropped |
 | PSEPK/lipA | IEA | MODIFY → GO:0009249 | none listed |
 
-Each `core_functions` block already listed GO:0009249, so the fix was a deletion. 10 reviews carry GO:0009249 and gain scope from the broader definition.
+Each `core_functions` block already listed GO:0009249, so the fix was a deletion. 9 reviews carry GO:0009249; GcvH-family rows still need the substrate/relay check.
 
 ---
 
 ## Status and next steps
 
 - **Done (2026-08-30, PR #2784):** 5 reviews migrated; `cache/ontologies/go.tsv` row refreshed to obsolete.
-- **Open:** comment upstream that **GO:0016992 lipoate synthase activity** loses its only BP link (`part_of GO:0009107`).
+- **Done upstream:** **GO:0016992 lipoate synthase activity** is now `part_of GO:0009249`.
 - **Open:** re-fetch GOA for the 5 genes once GOA reflects the merge.
 - **Optional:** review *B. subtilis* **lipM, lipL, gcvH** (4 of the 12 experimental rows), the clearest case for the merge.
 

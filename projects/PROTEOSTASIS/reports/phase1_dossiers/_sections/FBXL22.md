@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXL22
 
 - **UniProt:** Q6P050 (FBXL22) · **batch:** proteostasis-batch-2026-06-13 (Falcon DR) · **review status:** COMPLETE

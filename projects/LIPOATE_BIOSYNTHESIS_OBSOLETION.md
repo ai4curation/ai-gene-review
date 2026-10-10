@@ -1,6 +1,7 @@
 ---
 title: "Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoylation"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [OBSOLETION]
 species: [BACSU, PSEPK, POPTR, METEA, human, mouse, yeast]
 sidecars:
@@ -29,17 +30,16 @@ touches, then migrated the five reviews in this repo that carried GO:0009107
 (POPTR LIP1, LIP1P-1, LIP1P-2; BACSU lipA; PSEPK lipA). All nine affected
 `existing_annotations` rows are now MODIFY → GO:0009249, and none of the four
 `core_functions` blocks that listed GO:0009107 still does (PR #2784). What
-remains is an upstream comment on the orphaned `GO:0016992 part_of GO:0009107`
-edge, a GOA re-fetch once GOA catches up, and optional reviews of the
-*B. subtilis* GcvH-relay genes (lipM, lipL, gcvH). The Priority paragraph
-below predates the merge landing.
+remains is a GOA re-fetch once GOA catches up and optional reviews of the
+*B. subtilis* GcvH-relay genes (lipM, lipL, gcvH). The lipoate synthase
+`GO:0016992 part_of` edge was re-pointed to GO:0009249 in the ontology merge.
 
 ## Overview
 
-A GO obsoletion proposal will obsolete `GO:0009107 lipoate biosynthetic process`
-and **merge** it into `GO:0009249 protein lipoylation`, with the latter's
-definition broadened to cover both cofactor assembly and its attachment to
-lipoyl-carrier proteins.
+GO obsoleted `GO:0009107 lipoate biosynthetic process` and **merged** it into
+`GO:0009249 protein lipoylation`, with the latter's definition broadened to
+cover both de novo cofactor assembly on lipoyl-carrier proteins and exogenous
+lipoate ligation.
 
 The upstream rationale is that the two terms are used inconsistently: enzymes
 that perform the *biosynthetic* chemistry (octanoyl transfer, sulfur insertion)
@@ -52,14 +52,14 @@ same set of reactions from two angles. Consolidating them follows the precedent
 set by `protein glycosylation`.
 
 This project tracks the impact of that merge on AI Gene Review. Unlike most
-obsoletion projects in this repo, **several affected genes are already reviewed
-here** (see [Impact on this repo](#impact-on-this-repo)), so this is a concrete
-re-review queue rather than a pure documentation exercise.
+obsoletion projects in this repo, **several affected genes were already reviewed
+here** (see [Impact on this repo](#impact-on-this-repo)), so the merge required
+a small direct review migration rather than a pure documentation pass.
 
 ## Upstream tickets
 
-- Annotation tracker: [geneontology/go-annotation#6505](https://github.com/geneontology/go-annotation/issues/6505) (opened 2026-08-14)
-- Ontology ticket: [geneontology/go-ontology#32418](https://github.com/geneontology/go-ontology/issues/32418) (opened 2026-08-06, open)
+- Annotation tracker: [geneontology/go-annotation#6505](https://github.com/geneontology/go-annotation/issues/6505) (opened 2026-08-14; still open on 2026-10-04)
+- Ontology ticket: [geneontology/go-ontology#32418](https://github.com/geneontology/go-ontology/issues/32418) (opened 2026-08-06; closed 2026-08-21)
 - Affected annotations spreadsheet: [Google Sheet](https://docs.google.com/spreadsheets/d/1Cl-vmLcSU88aFtfCh4-Iy54fF7AcrRUfs2tITzf6IkM/edit?usp=sharing)
 - Impacted groups (per upstream issue): EcoliWiki 2, FlyBase 2, MGI 1 (done),
   MTBBASE 1, SGD 1, TIGR 1, UniProt 6
@@ -68,14 +68,18 @@ re-review queue rather than a pure documentation exercise.
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
-| lipoate biosynthetic process | GO:0009107 | GO:0009249 protein lipoylation (merge; definition to be broadened) |
+| lipoate biosynthetic process | GO:0009107 | GO:0009249 protein lipoylation (merge; definition broadened) |
 
-**Update 2026-08-30: the obsoletion has landed.** Live QuickGO
+**Update 2026-10-04: the obsoletion remains landed.** Live QuickGO
 (`/ontology/go/terms/GO:0009107/complete`, checked 2026-08-30 during the POPTR
 re-review) returns `isObsolete: true` with `replaced_by GO:0009249`, the comment
 "The reason for obsoletion is that the term usage has been inconsistent", and
-ontology edits timestamped 2026-08-22. The paragraph below records the pre-obsoletion
-state for history.
+ontology edits timestamped 2026-08-22. QuickGO now also shows the broadened
+`GO:0009249` definition in place: "The chemical reactions and pathways resulting
+in the attachment of a lipoyl group to a lipoyl carrier protein, either by de
+novo assembly on the carrier protein via transfer of an octanoyl group followed
+by sulfur insertion, or by ligation of exogenous lipoate." The paragraph below
+records the pre-obsoletion state for history.
 
 Term status verified via OLS on 2026-08-15 — both terms were then **live**:
 
@@ -92,16 +96,15 @@ Term status verified via OLS on 2026-08-15 — both terms were then **live**:
 
 ### Ontology-structure note
 
-`GO:0009107` currently has exactly one asserted child, and it is a **`part_of`
-link from a molecular function**: `GO:0016992 lipoate synthase activity`
-(QuickGO children endpoint, 2026-08-15). When the merge lands, that `part_of`
-edge must be re-pointed at `GO:0009249`, or lipoate synthase loses its only
-BP anchor. This is worth flagging on the ontology ticket — it is not mentioned
-in either upstream issue.
+`GO:0009107` had exactly one asserted child before the obsoletion, and it was a
+**`part_of` link from a molecular function**: `GO:0016992 lipoate synthase
+activity` (QuickGO children endpoint, 2026-08-15). That edge did not remain
+orphaned: QuickGO history for `GO:0016992`, checked 2026-10-04, records that GO
+deleted `part_of GO:0009107` and added `part_of GO:0009249` on 2026-08-22.
 
-A related caveat raised by Antonialock on go-ontology#32418: GCSH-type proteins
-are not merely assembly scaffolds but are themselves lipoyl-dependent enzymes
-whose lipoyl group acts as a swinging arm, so assembly and transfer are
+A related caveat raised by Antonialock on go-ontology#32418: GcvH-type relay
+proteins are not merely assembly scaffolds or terminal acceptors; their lipoyl
+domains can act as swinging-arm carriers, so assembly and transfer are
 genuinely intertwined. The merge is consistent with that view.
 
 ## Affected experimental annotations
@@ -138,7 +141,8 @@ Notes on this list:
   group to other lipoyl domains, and `LipA` sulfurates — no free lipoate is ever made,
   so "biosynthetic process" is a misnomer for every step.
 - The two EcoliWiki and one MGI annotation use `acts_upstream_of_or_within`,
-  which will also want revisiting to `involved_in` when the terms are merged.
+  which may also need relation cleanup as GOA retargets GO:0009107 rows to
+  GO:0009249.
 
 ## Mappings flagged for redirection
 
@@ -168,7 +172,7 @@ already separately mapped.
 
 ## Impact on this repo
 
-Five gene reviews carry `GO:0009107` and ten carry `GO:0009249`. Because
+Five gene reviews carry `GO:0009107` and nine carry `GO:0009249`. Because
 `existing_annotations[].term.id` values are GOA-sourced and deliberately **not**
 hard-validated (see CLAUDE.md), the obsoletion does not break validation there —
 but `core_functions` term ids **are** strictly validated. Four reviews used
@@ -209,10 +213,12 @@ are used interchangeably.
 ### Reviews containing `GO:0009249` (unaffected, but in scope for re-check)
 
 `POPTR/LIP1`, `POPTR/LIP1P-1`, `POPTR/LIP1P-2`, `BACSU/lipA`, `PSEPK/lipA`,
-`PSEPK/lipB`, `PSEPK/gcvH1`, `PSEPK/gcvH2`, `METEA/gcvH`, `human/GCSH`. These
-gain scope (not lose it) when the definition broadens — `human/GCSH` already
-argues in its review text that `GO:0009249` is the better description of its
-role, which the broadened definition makes unambiguously correct.
+`PSEPK/lipB`, `PSEPK/gcvH1`, `PSEPK/gcvH2`, and `METEA/gcvH`. The three
+GcvH-family rows need a substrate/relay-role check: the two PSEPK rows are
+already `UNDECIDED`, and METEA/gcvH was flagged in
+[ai4curation/ai-gene-review#4118](https://github.com/ai4curation/ai-gene-review/issues/4118)
+because its current ACCEPT rests on evidence that GcvH is lipoylated, which
+establishes acceptor status rather than participation in protein lipoylation.
 
 ### Related in-repo work
 
@@ -229,26 +235,27 @@ the merge. See also
   *M. tuberculosis* 1), plus human, mouse, *D. melanogaster*, and
   *S. cerevisiae*. In-repo affected reviews are POPTR (3), BACSU (1), PSEPK (1).
 - **GO branch**: BP only. No MF term is obsoleted — `GO:0016992 lipoate synthase
-  activity` and the octanoyltransferase MFs are unaffected (though the
-  `part_of` edge noted above must be re-pointed).
+  activity` and the octanoyltransferase MFs are unaffected, and the
+  `GO:0016992 part_of` edge noted above was re-pointed.
 - **Type of fix**: structural / curation hygiene. The biology is
   uncontroversial and no annotation needs to be rebutted on biological grounds;
   the change removes a redundant BP framing.
 
-## Candidate genes for initial review
+## Follow-up candidates
 
-Listed in priority order.
+The first three entries were the in-repo obsoletion migration and are now done;
+the later entries remain useful extensions if we want additional coverage of
+the experimental rows on the upstream tracker.
 
-1. **BACSU/lipA** (O32129) — highest priority. Already reviewed here **and**
-   carries one of the twelve upstream experimental annotations (IGI,
-   PMID:19820084). The review's `core_functions` block needs the redundant
-   `GO:0009107` entry dropped.
-2. **POPTR/LIP1, LIP1P-1, LIP1P-2** (B9H5L9 and paralogues) — already reviewed;
-   mechanical `core_functions` edits plus a note on the two IBA/IEA
-   `existing_annotations`. The IBA descends from `MGI:1934604` (mouse *Lias*),
-   which is upstream item #12, so these move together.
-3. **PSEPK/lipA** (Q88DM5) — already reviewed; `existing_annotations` only, no
-   `core_functions` change needed.
+1. **BACSU/lipA** (O32129) — done in PR #2784. The review carried one of the
+   twelve upstream experimental annotations (IGI, PMID:19820084), now reviewed
+   as MODIFY → GO:0009249, and the redundant `GO:0009107` core BP was dropped.
+2. **POPTR/LIP1, LIP1P-1, LIP1P-2** (B9H5L9 and paralogues) — done in PR #2784.
+   The redundant `GO:0009107` core BPs were dropped and the IBA/IEA
+   `existing_annotations` rows now MODIFY to GO:0009249.
+3. **PSEPK/lipA** (Q88DM5) — done in PR #2784. Its `GO:0009107`
+   `existing_annotations` row now MODIFYs to GO:0009249; no `core_functions`
+   change was needed.
 4. **B. subtilis `lipM` (P54511), `lipL` (P39648), `gcvH` (O32174)** — not yet in the
    repo. Four of the twelve upstream experimental annotations sit on these three
    proteins, and together they define the GcvH-relay route that motivates the
@@ -267,10 +274,10 @@ Listed in priority order.
 1. ~~**Wait for the merge to land before editing gene reviews.**~~ **Done** —
    the obsoletion landed upstream on 2026-08-22 (verified via live QuickGO on
    2026-08-30), so the wait ended.
-2. **Comment upstream on the `GO:0016992 part_of GO:0009107` edge**, which is
-   the one structural detail neither issue mentions. Still open — `GO:0016992`
-   remains live and is still the `core_functions` MF in POPTR/LIP1 and
-   LIP1P-1, unaffected by the BP obsoletion.
+2. ~~**Make sure the `GO:0016992 part_of GO:0009107` edge is re-pointed.**~~
+   **Done upstream** — the 2026-08-22 ontology edit re-pointed
+   `GO:0016992 lipoate synthase activity` from `part_of GO:0009107` to
+   `part_of GO:0009249`.
 3. ~~**When the merge lands**, drop the redundant `GO:0009107` entry from the
    four `core_functions` blocks and re-run `just validate`.~~ **Done
    2026-08-30** (PR #2784): all four `core_functions` entries dropped, the
@@ -278,20 +285,29 @@ Listed in priority order.
    `cache/ontologies/go.tsv` row refreshed to the obsolete state; all five
    reviews validate with 0 errors and 0 warnings. **Remaining sub-step:**
    re-fetch GOA for the five affected genes once GOA itself catches up with the
-   merge, so `existing_annotations` picks up the replacement term.
+   merge, so `existing_annotations` picks up the replacement term. QuickGO
+   still reported 23,924 exact annotations on obsolete GO:0009107 on 2026-10-04,
+   so the upstream GOA cleanup has not yet reached the public annotation API.
 4. **Optionally extend coverage** to the *B. subtilis* GcvH-relay trio
    (`lipM`, `lipL`, `gcvH`), which is the most instructive untouched cluster on the
    upstream list. Still open.
 
 ## Priority
 
-Medium. Higher than most obsoletion projects in this repo because five existing
-reviews are directly affected and four contain author-supplied `core_functions`
-ids that must change — but not urgent, since the ontology ticket is still open
-and only MGI has marked its annotations done upstream.
+Medium-low. The risky part is complete: the ontology merge landed, the only
+MF-to-BP `part_of` edge was re-pointed, and the five directly affected local
+reviews no longer carry GO:0009107 in `core_functions`. Keep the page open only
+for the upstream GOA refresh and optional new reviews of the *B. subtilis*
+GcvH-relay trio.
 
 ## Status
 
+- 2026-10-04 — **Ontology edge follow-up resolved upstream; GOA still pending.**
+  QuickGO confirms `GO:0016992 lipoate synthase activity` is live and now has
+  `part_of GO:0009249`, while `GO:0009107` is obsolete with `replaced_by
+  GO:0009249`. The annotation tracker remains open and exact GOA still reports
+  23,924 rows on obsolete GO:0009107, so local GOA re-fetch is still blocked on
+  upstream annotation cleanup.
 - 2026-08-30 — **Obsoletion confirmed landed; in-repo migration applied**
   (PR #2784, POPTR knowledge-base re-review). Live QuickGO returns
   `isObsolete: true` and `replaced_by GO:0009249` for `GO:0009107`, with the
@@ -302,9 +318,9 @@ and only MGI has marked its annotations done upstream.
   `existing_annotations` row carrying the term (including the BACSU/lipA IGI,
   upstream experimental item #2) switched to MODIFY → `GO:0009249` with reasons
   recording the obsoletion; the `cache/ontologies/go.tsv` row refreshed to
-  `obsolete lipoate biosynthetic process` / `True`. Remaining: the upstream
-  `GO:0016992 part_of` edge comment (approach step 2), a GOA re-fetch for the
-  five genes once GOA catches up, and the optional GcvH-relay trio reviews
+  `obsolete lipoate biosynthetic process` / `True`. Remaining then: the
+  upstream `GO:0016992 part_of` edge check (approach step 2), a GOA re-fetch for
+  the five genes once GOA catches up, and the optional GcvH-relay trio reviews
   (step 4).
 - 2026-08-15 — Project file created. Tracking go-annotation#6505 (opened
   2026-08-14) and go-ontology#32418 (opened 2026-08-06, open). Obsoletion not

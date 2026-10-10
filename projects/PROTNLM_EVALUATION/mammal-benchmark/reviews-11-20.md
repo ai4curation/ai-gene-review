@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Horse benchmark review: pairs 11–20
 
 All ten selected horse targets have a paired human review, a human research file, an exact-sequence comparison, and claim-level ProtNLM assessment. Unresolved experimental-source details and consequential target-sequence gaps remain explicit uncertainties.

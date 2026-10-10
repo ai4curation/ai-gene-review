@@ -1,18 +1,19 @@
 ---
 title: "Are PDB structure papers overlooked by GO/MOD curation?"
+species: [ARATH, human]
 ---
 # Are PDB structure papers overlooked by GO/MOD curation?
 
 Per (gene, structure-paper) status: is the structure's primary publication cited in the gene's GOA REFERENCE column?
 
-- Structure papers assessed (gene x PMID pairs): **737** across **247** genes
-- **CITED** by GOA: **110** (15%)
-- **GAP_OPPORTUNITY** (not cited; gene curated experimentally after the structure's year): **478** (65%)
-- **GAP_LAG** (not cited; structure newer than latest GOA annotation): **21** (3%)
-- **GAP_NO_EXP_CURATION** (not cited; gene has no experimental GO annotations at all): **128** (17%)
-- NO_GOA_FILE (could not assess): **0**
+- Structure papers assessed (gene x PMID pairs): **1668** across **573** genes
+- **CITED** by GOA: **317** (19%)
+- **GAP_OPPORTUNITY** (not cited; gene curated experimentally after the structure's year): **1051** (63%)
+- **GAP_LAG** (not cited; structure newer than latest GOA annotation): **61** (4%)
+- **GAP_NO_EXP_CURATION** (not cited; gene has no experimental GO annotations at all): **236** (14%)
+- NO_GOA_FILE (could not assess): **3**
 
-Genes where **no** structure paper is cited by GOA: **174** / 247.
+Genes where **no** structure paper is cited by GOA: **353** / 573.
 
 ## Interpretation
 
@@ -24,18 +25,18 @@ Genes with many deposited structures sharing an uncited primary publication, des
 
 | gene | organism | structure paper | paper yr | # structures | latest exp. curation |
 | --- | --- | --- | --- | --- | --- |
+| IMPDH1 | human | PMID:35013599 | 2022 | 12 | 2025 |
+| IMPDH2 | human | PMID:31999252 | 2020 | 10 | 2026 |
+| COP1 | ARATH | PMID:31304983 | 2019 | 9 | 2025 |
 | GCH1 | human | PMID:33229582 | 2020 | 9 | 2025 |
-| COP1 | ARATH | PMID:31304983 | 2019 | 8 | 2025 |
+| MCCC1 | human | PMID:39223421 | 2025 | 9 | 2026 |
+| ACLY | human | PMID:28777081 | 2017 | 8 | 2026 |
+| AP1S3 | human | PMID:36269825 | 2022 | 8 | 2026 |
+| ATP5F1E | human | PMID:37244256 | 2023 | 8 | 2026 |
+| ATP5PO | human | PMID:37244256 | 2023 | 8 | 2026 |
+| CPS1 | human | PMID:25111069 | 2014 | 8 | 2026 |
 | BIRC5 | human | PMID:22357620 | 2012 | 7 | 2026 |
 | CASP3 | human | PMID:15115390 | 2004 | 7 | 2026 |
+| FDPS | human | PMID:16892359 | 2006 | 7 | 2026 |
 | FTH1 | human | PMID:17070541 | 2007 | 7 | 2025 |
 | HTT | human | PMID:19748341 | 2009 | 7 | 2025 |
-| PNO1 | yeast | PMID:32943521 | 2020 | 7 | 2025 |
-| Cftr | mouse | PMID:14685259 | 2004 | 6 | 2025 |
-| EIF2AK3 | human | PMID:25587754 | 2015 | 6 | 2026 |
-| MAP3K5 | human | PMID:23776076 | 2013 | 6 | 2025 |
-| PUS3 | human | PMID:38996458 | 2024 | 6 | 2024 |
-| SPR | human | PMID:31244106 | 2019 | 6 | 2025 |
-| AIPL1 | human | PMID:28739921 | 2017 | 5 | 2026 |
-| CCT7 | yeast | PMID:31492816 | 2019 | 5 | 2025 |
-| CCT7 | yeast | PMID:36921056 | 2023 | 5 | 2025 |

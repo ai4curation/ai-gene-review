@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXL16
 - **UniProt:** Q8N461 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
 - **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|LRR` ; **PN-node mapping:** group-level `mapped / ok_for_propagation_to_go / GO:1990756`; F-box+LRR subtype/type `no_mapping`; class `context_only / too_broad / GO:0061630`; branch `no_mapping`. NB signature domain is IPR036047 (LRR fold), not the IPR001810 F-box used by siblings.

@@ -2,19 +2,17 @@
 title: "Protein Complex Functions Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
-species: [human]
+species: [human, PSEAE, STRCO, SACEN]
+last_reviewed: 2026-10-05
 manifest:
   slides:
     - href: PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/NFR4zX8oqgzvQhqZF1aQ28
-      title: Project brief
 ---
 
 # Protein Complex Functions Project
 
-**Bottom line:** when an activity belongs to a protein complex, GO annotation tends to hand the catalytic function to every subunit, so structural, accessory, regulatory and assembly proteins end up labelled as catalysts. This project sets out how to attribute complex functions: which members enable the activity, which contribute to it, and which should instead carry assembly, stability, regulation or membership terms. We did this because the problem recurs in large complexes (OXPHOS, proteasome, ribosome) and because GO-CAM export currently turns complex membership into `contributes_to` molecular-function annotations for supernumerary subunits. So far the project has a decision framework, review rubric and GO-CAM export position (favouring separate active-member and accessory/structural-member relations), the PSMB5 and PSMA1 reviews as a catalytic versus structural proteasome pair, and three obligate-heterodimer examples from the BGC project. Structure-prediction pilots with BioLM Boltz2 and ESMFold2 on CYC1:UQCRFS1, PSMB5:PSMA1 and COX2:SCO1/SCO2 did not produce a curation-grade interface: the Boltz2 runs all had ipTM below 0.4, and the ESMFold2 COX2:SCO1 runs that reached ipTM 0.58 to 0.63 still placed the SCO1 copper motif about 50 Å from the COX2 CuA site. Structure prediction therefore stays hypothesis-generating, not curation evidence. The OXPHOS attribution matrix, the audit of existing OXPHOS reviews and the downstream-user guidance are not yet done, so the project is still in progress.
+**Bottom line:** when an activity belongs to a protein complex, GO annotation tends to hand the catalytic function to every subunit, so structural, accessory, regulatory and assembly proteins end up labelled as catalysts. This project sets out how to attribute complex functions: which members enable the activity, which contribute to it, and which should instead carry assembly, stability, regulation or membership terms. We did this because the problem recurs in large complexes (OXPHOS, proteasome, ribosome) and because GO-CAM export currently turns complex membership into `contributes_to` molecular-function annotations for supernumerary subunits. So far the project has a decision framework, review rubric and GO-CAM export position (favouring separate active-member and accessory/structural-member relations), the PSMB5 and PSMA1 reviews as a catalytic versus structural proteasome pair, and three obligate-heterodimer examples from the BGC project. Structure-prediction pilots with BioLM Boltz2 and ESMFold2 on CYC1:UQCRFS1, PSMB5:PSMA1 and COX2:SCO1/SCO2 did not produce a curation-grade interface: the Boltz2 runs all had ipTM below 0.4, and the ESMFold2 COX2:SCO1 runs that reached ipTM 0.58 to 0.63 still placed the SCO1 copper motif about 50 Å from the COX2 CuA site. Structure prediction therefore stays hypothesis-generating, not curation evidence. The OXPHOS attribution matrix, the audit of existing OXPHOS reviews and the downstream-user guidance are not yet done and are tracked in [#4002](https://github.com/ai4curation/ai-gene-review/issues/4002), so the project is still in progress.
 
 ## Overview
 
@@ -275,6 +273,15 @@ to every component.
 - `projects/PROTEIN_COMPLEX_FUNCTIONS/proteasome_boltz/RESULTS_PSMB5_PSMA1_BIOLM.md` records a non-OXPHOS hosted BioLM
   Boltz2 run for proteasome attribution: catalytic beta subunit PSMB5 versus structural alpha
   subunit PSMA1.
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/RESULTS_CYC1_UQCRFS1_ESMFOLD2.md`,
+  `RESULTS_PSMB5_PSMA1_ESMFOLD2.md`, `RESULTS_MODEL_C_ESMFOLD2.md`, and
+  `RESULTS_MODEL_C_FULL_ESMFOLD2.md` record the ESMFold2 archive reruns for the Complex
+  III, proteasome and COX2:SCO1/SCO2 pilots. As with the BioLM Boltz2 runs, their
+  interfaces stayed hypothesis-generating.
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/RESULTS_MODEL_A_ESMFOLD2.md`,
+  `RESULTS_MODEL_A_CU_ESMFOLD2.md`, `RESULTS_MODEL_A_1CU_ESMFOLD2.md`, and
+  `RESULTS_COA6_ESMFOLD2.md` record the COX2:SCO1 metal-aware follow-ups, which tested
+  apo, one-copper and three-copper SCO1 inputs and a COA6:SCO1 comparison.
 
 ## Structure Prediction API Access
 
@@ -285,16 +292,15 @@ returned CIF, confidence summary, input payload, and analysis notes under `proje
 `boltz predict` can still be useful for reproducibility or batch work, but local run outputs are not
 part of this project PR.
 
-### Candidate replacement: ESMFold2 (Biohub / biohub.ai)
+### ESMFold2 follow-up
 
-ESMFold2 is a strong candidate to use alongside or in place of the BioLM Boltz2 endpoint for the
-complex-interface pilots in this project. It is the structure/interaction model in Biohub's
-("a world model of protein biology", formerly EvolutionaryScale Forge) release and is directly
-relevant to our attribution question because it is built around protein-protein and
-antibody-antigen interface prediction. See the 2026-05-29 NOTES entry for the full evaluation. Net
-position: adopt ESMFold2 as an additional hosted endpoint and re-run the existing archived inputs
-head-to-head, keeping the Boltz2 outputs for provenance. All such predictions remain
-hypothesis-generating and must not be used as curation evidence.
+ESMFold2 was the secondary hosted endpoint used to test the BioLM Boltz2 pilot results. After the
+2026-05-29 endpoint triage, the project reran the archived CYC1:UQCRFS1, PSMB5:PSMA1 and
+COX2:SCO1/SCO2 inputs in ESMFold2, then added metal-aware COX2:SCO1 follow-ups to ask whether
+apo, one-copper, or three-copper SCO1 inputs could bring the CxxC copper motif near the MT-CO2 CuA
+site. The reruns reproduced the curation conclusion: they were useful negative and
+method-comparison controls, but every interface remained hypothesis-generating and must not be
+used as GO evidence.
 
 ## Related Projects
 
@@ -312,27 +318,31 @@ hypothesis-generating and must not be used as curation evidence.
 
 # STATUS
 
-- [x] Project created
-- [x] OXPHOS project incorporated as initial case set
-- [x] GO-CAM modeling issue #1 incorporated as motivating modeling problem
-- [x] GO-CAM call slide deck incorporated into modeling/export position
-- [x] Add static Complex IV BioLM Boltz2 structure viewer under this project
-- [x] Add hosted BioLM Boltz2 API access notes, payload generator, and endpoint caller
-- [x] Run hosted BioLM Boltz2 Model C pilot for full/mature and domain-only inputs
-- [x] Run hosted BioLM pairwise MT-CO2:SCO1 domain control
-- [x] Run hosted BioLM Complex III CYC1:UQCRFS1 active-interface pilot
-- [x] Run hosted BioLM proteasome PSMB5:PSMA1 attribution pilot
-- [x] Complete PSMA1 and PSMB5 reviews as the first non-OXPHOS attribution pair
-- [x] Add a second complex class outside mitochondria, likely proteasome or ribosome
-- [ ] Build an OXPHOS attribution matrix for reviewed and pending genes
-- [ ] Audit existing OXPHOS reviews for direct-function, `contributes_to`, and assembly-factor
-      consistency
-- [ ] Draft downstream-user guidance for enrichment and ML-label consumers
-- [x] Investigate ESMFold2 (Biohub/biohub.ai) as an alternative to BioLM Boltz2 for complex pilots
-- [x] Re-run archived complex inputs (CYC1:UQCRFS1, PSMB5:PSMA1, COX2 Model C) on ESMFold2 as a
-      head-to-head against the Boltz2 confidence summaries
-- [x] ESMFold2 COX2:SCO1 Model A metal-aware probes (apo / 3 Cu / 1 Cu), CuA-vs-PDB validation,
-      and within-cap context variants; assembled-enzyme test blocked by the 768-residue cap
+- **Done:** Project created
+- **Done:** OXPHOS project incorporated as initial case set
+- **Done:** GO-CAM modeling issue #1 incorporated as motivating modeling problem
+- **Done:** GO-CAM call slide deck incorporated into modeling/export position
+- **Done:** Add static Complex IV BioLM Boltz2 structure viewer under this project
+- **Done:** Add hosted BioLM Boltz2 API access notes, payload generator, and endpoint caller
+- **Done:** Run hosted BioLM Boltz2 Model C pilot for full/mature and domain-only inputs
+- **Done:** Run hosted BioLM pairwise MT-CO2:SCO1 domain control
+- **Done:** Run hosted BioLM Complex III CYC1:UQCRFS1 active-interface pilot
+- **Done:** Run hosted BioLM proteasome PSMB5:PSMA1 attribution pilot
+- **Done:** Complete PSMA1 and PSMB5 reviews as the first non-OXPHOS attribution pair
+- **Done:** Add a second complex class outside mitochondria, likely proteasome or ribosome
+- **Todo:** Build an OXPHOS attribution matrix for reviewed and pending genes
+  ([#4002](https://github.com/ai4curation/ai-gene-review/issues/4002))
+- **Todo:** Audit existing OXPHOS reviews for direct-function, `contributes_to`, and
+  assembly-factor consistency ([#4002](https://github.com/ai4curation/ai-gene-review/issues/4002))
+- **Todo:** Draft downstream-user guidance for enrichment and ML-label consumers
+  ([#4002](https://github.com/ai4curation/ai-gene-review/issues/4002))
+- **Done:** Investigate ESMFold2 (Biohub/biohub.ai) as an alternative to BioLM Boltz2 for
+  complex pilots
+- **Done:** Re-run archived complex inputs (CYC1:UQCRFS1, PSMB5:PSMA1, COX2 Model C) on
+  ESMFold2 as a head-to-head against the Boltz2 confidence summaries
+- **Done:** ESMFold2 COX2:SCO1 Model A metal-aware probes (apo / 3 Cu / 1 Cu),
+  CuA-vs-PDB validation, and within-cap context variants; assembled-enzyme test blocked by the
+  768-residue cap
 
 # NOTES
 
@@ -575,7 +585,7 @@ Adding partner chaperones did not help and lowered confidence (Model C domains 0
 (18.8 -> 33 -> 72 A) — a hallmark of low-confidence docking rather than a real interface.
 
 The one genuinely different test, SCO1 against the assembled enzyme (so native context removes the
-non-CuA COX2 surfaces), is blocked: the hosted esmfold2-fast endpoint caps total input at 768
+non-CuA COX2 surfaces), is blocked: the hosted esmfold2-fast endpoint limits total input to 768
 residues (422 error). The mtDNA core COX1+COX2+COX3 (1001), core+SCO1 (1191), and the full
 14-subunit enzyme (~2073) all exceed it; even COX1+COX2+SCO1 (930) is over. Forcing a bridging
 copper via pocket conditioning is also unavailable (401, feature-gated). Modeling the assembled
@@ -591,18 +601,22 @@ biochemistry-driven, with structure prediction confined to small-domain triage. 
 
 ## 2026-06-13 BGC obligate-heterodimer worked examples (BGC project)
 
-Three reviewed obligate heterodimers from `BGC.md` are clean worked examples of the
-catalytic-member attribution principle (function on the catalytic subunit with `enables`;
-the required non-catalytic partner takes `contributes_to`, plus the shared complex CC):
+Three reviewed obligate heterodimers from `BGC.md` are worked examples of the catalytic-member
+attribution principle: the catalytic molecular function belongs on the catalytic subunit with
+`enables`, not on every required partner with the same fold or the same assembled complex. They
+also separate three outcomes for the non-catalytic partner:
 
-| Complex | Catalytic member (`enables` MF) | Non-catalytic partner | Partner's role |
+| Complex | Catalytic member (`enables` MF) | Non-catalytic partner | Current partner treatment |
 |---|---|---|---|
-| **PqsBC** (`genes/PSEAE/pqsC`, `pqsB`) | PqsC — EC 2.3.1.230 (active site Cys-129/His-269) | PqsB | Required FabH-fold subunit, no active site → `contributes_to acyltransferase activity` |
-| **Act KS-CLF** (`genes/STRCO/actI-ORF1`, `actI-ORF2`) | KSα/ActI-ORF1 — polyketide synthase activity (GO:0016218) | KSβ/CLF | Chain-length factor, "no active site"; proposed `polyketide chain length factor activity` |
-| **EryCII-EryCIII** (`genes/SACEN/eryCIII`, `eryCII`) | EryCIII — hexosyltransferase (EC 2.4.1.278) | EryCII | Heme-less P450 pseudoenzyme → `enzyme activator activity` (GO:0008047) + `protein stabilization` |
+| **PqsBC** (`genes/PSEAE/pqsC`, `pqsB`) | PqsC — EC 2.3.1.230 (active site Cys-129/His-269) | PqsB | Required FabH-fold subunit, no active site; currently has `contributes_to acyltransferase activity`, with no specific complex CC |
+| **Act KS-CLF** (`genes/STRCO/actI-ORF1`, `actI-ORF2`) | KSα/ActI-ORF1 — polyketide synthase activity (GO:0016218) | KSβ/CLF | `contributes_to polyketide synthase activity` in the type II PKS complex; proposed `polyketide chain length factor activity` |
+| **EryCII-EryCIII** (`genes/SACEN/eryCIII`, `eryCII`) | EryCIII — hexosyltransferase (EC 2.4.1.278) | EryCII | Heme-less P450 pseudoenzyme with its own `enzyme activator activity` (GO:0008047), `protein stabilization`, erythromycin biosynthesis, and generic complex annotations |
 
-All three were over-annotated in GOA with the catalytic MF on the non-catalytic partner
-(domain-signature propagation); corrected per the "function on the catalytic member" guideline.
-EryCII is notable: rather than `contributes_to` the GT activity, the partner has its **own** MF
-(allosteric activator), and full GT activity *requires* it. Cross-refs: `PSEUDOENZYMES.md`,
-`OVER_ANNOTATION_PATTERNS.md` (patterns 7-8).
+All three were over-annotated in GOA with the catalytic MF on the non-catalytic partner through
+domain-signature propagation; the corrected reviews put those functions back on PqsC, ActI-ORF1
+and EryCIII. The positive convention for the required partners is still open: PqsB lacks a current
+`in_complex` term and may not need `contributes_to`, ActI-ORF2 may eventually need a dedicated CLF
+term instead of only `contributes_to`, and EryCII may or may not warrant an additional
+`contributes_to` to EryCIII's glycosyltransferase activity. Those BGC convention questions are
+tracked in [#4248](https://github.com/ai4curation/ai-gene-review/issues/4248). Cross-refs:
+`PSEUDOENZYMES.md`, `OVER_ANNOTATION_PATTERNS.md` (patterns 7-8).

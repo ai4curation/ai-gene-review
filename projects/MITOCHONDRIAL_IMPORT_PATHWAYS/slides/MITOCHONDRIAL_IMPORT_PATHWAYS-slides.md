@@ -38,7 +38,7 @@ One GO process term per import route, and a review of the human import machinery
 
 - Mitochondrial proteins reach their compartment by **six import routes**, but GO grouped them inconsistently; **GO issue #31711** proposed one term per route.
 - GO has **added the route terms** (`GO:7770058`, `GO:7770059`, `GO:7770060`, `GO:7770061`, `GO:7770063`) and reworded `GO:0030150` and `GO:0160203`.
-- We reviewed **670 annotations on 23 human genes** of the machinery; among them only **MTCH2** yet carries a new route term (MTCH1 and yeast MIM1 also do, outside the set).
+- We reviewed **670 annotations on 23 human genes** of the machinery; among them only **MTCH2** yet carries a new route term (MTCH1 already does, and yeast MIM1 has a draft proposal).
 
 ---
 
@@ -68,7 +68,7 @@ One GO process term per import route, and a review of the human import machinery
 2. **Localization refined**: SAMM50 *mitochondrion* → *mitochondrial outer membrane*; PMPCA → *mitochondrial matrix*.
 3. **Wrong route**: SAMM50 *protein import into mitochondrial matrix* → *protein insertion into mitochondrial outer membrane*.
 4. **CHCHD4** *protein-disulfide reductase* → *disulfide oxidoreductase activity*: MIA40 oxidises its substrates.
-5. **MTCH2** gains NEW `GO:7770059` α-helical OM insertion, matching MTCH1 and yeast MIM1.
+5. **MTCH2** gains NEW `GO:7770059` α-helical OM insertion, aligning it with MTCH1 and yeast MIM1's draft proposal.
 
 ---
 
@@ -82,9 +82,9 @@ One GO process term per import route, and a review of the human import machinery
 
 ## Status and next steps
 
-- ✅ Issue #31711 read; 23 priority genes fetched and reviewed (the page checklist predated most of them).
+- ✅ 23 priority genes fetched; all 670 current rows have review actions.
 - ✅ GO added the route terms and reworded the matrix and IMS terms.
 - ⬜ Move reviews onto the new terms: TIMM22 → `GO:7770061`, SAMM50/MTX → `GO:7770063`, TIMM21 → `GO:7770060`.
-- ⬜ Two grouping terms proposed for obsoletion, `GO:0070585` and `GO:0072656`, are still live in GO.
+- ⬜ Track remaining route-term and obsoletion follow-ups in ai-gene-review #4227.
 
 **Read more:** `projects/MITOCHONDRIAL_IMPORT_PATHWAYS.md` · `genes/human/<GENE>/`

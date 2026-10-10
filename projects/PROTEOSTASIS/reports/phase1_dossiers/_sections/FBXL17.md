@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXL17
 - **UniProt:** Q9UF56 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
 - **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|LRR` ; **PN-node mapping:** group-level `mapped / ok_for_propagation_to_go / GO:1990756`; F-box+LRR subtype/type `no_mapping`; class `context_only / too_broad / GO:0061630`; branch `no_mapping`.

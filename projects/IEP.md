@@ -1,6 +1,7 @@
 ---
 title: "Inferred from Expression Pattern (IEP) Evidence Code Review"
 maturity: MATURE
+last_reviewed: 2026-10-04
 tags: [PIPELINE, EVALUATION]
 species: [rat, ARATH, human, worm, DICDI, ECOLI, ORYSJ, MEDTR, mouse, yeast, DROME]
 genes:
@@ -38,6 +39,8 @@ genes:
   - LGALS3
   - TOLLIP
   - ACTL8
+  - CASP6
+  - SULT1B1
   - RB1
   - BAG6
   - NFE2L2
@@ -79,7 +82,7 @@ manifest:
 
 # Inferred from Expression Pattern (IEP) Evidence Code Review
 
-**Bottom line:** IEP is the experimental evidence code that infers a gene's role in a process from a change in its own expression, so every IEP row carries a leap from "its abundance moved" to "it takes part". We surveyed all 25,401 IEP annotations in UniProt-GOA and reviewed the 550 IEP rows on 221 genes in this repo as of the 2026-09-13 survey (by 2026-09-26 the repo held 565 IEP rows across 235 gene reviews; the rates below have not been re-derived for those), including a tiered cohort of five miRNAs from one 130-gene batch. We did this to measure whether that leap holds, and to name the ways it fails. The characteristic IEP row is true but peripheral: reviewers accepted only 22.5% of IEP rows (the lowest of any code except IPI) and kept 55.6% as non-core, while 16.7% were flagged as over-annotated, modified or removed. Seven failure patterns recur, led by inducible bystanders (a detox enzyme collecting one `response to X` term per induction paper) and developmental time-courses read as tissue-building roles. Globally, 1,110 of the 1,147 cellular-component IEP rows that break GORULE:0000006 trace to a single ECO class (ECO:0000279) and could be cleared by one mapping change.
+**Bottom line:** IEP is the experimental evidence code that infers a gene's role in a process from a change in its own expression, so every IEP row carries a leap from "its abundance moved" to "it takes part". In the committed 2026-07-27 QuickGO snapshot, UniProt-GOA held 25,401 IEP annotations; in the current checked-out repo survey, cached GOA files hold 650 IEP rows and AI Gene Review has reviewed 646 IEP rows across 297 gene reviews. The characteristic IEP row is true but peripheral: reviewers accepted only 21.8% of IEP rows, the lowest of any code except IPI, and kept 53.4% as non-core, while 20.9% were flagged as over-annotated, modified or removed. Seven failure patterns recur, led by inducible bystanders (a detox enzyme collecting one `response to X` term per induction paper) and developmental time-courses read as tissue-building roles. In the 2026-07-27 global snapshot, 1,110 of the 1,147 cellular-component IEP rows that break GORULE:0000006 trace to a single ECO class (ECO:0000279) and could be cleared by one mapping change.
 
 The dispositions come from this repository's own AI reviews, so the rates measure one primed reviewer population. The worked examples below carry the argument, and the open action items (a developmental cohort, the *E. coli* DNA-damage batch, independent disposition data) are listed at the foot of the page.
 
@@ -148,25 +151,23 @@ exists only because somebody chose that gene for review.
 [`IEP/iep_global_atlas.py`](IEP/iep_global_atlas.py) (output:
 [iep-global-atlas.md](IEP/iep-global-atlas.md)) supplies the denominator: the
 **complete** set of IEP annotations in UniProt-GOA, downloaded from QuickGO. IEP
-is rare enough that no sampling is needed — there are only 25,401 of them.
+is rare enough that no sampling is needed. The committed global snapshot was
+downloaded on 2026-07-27 and has 25,401 IEP rows.
 
 | | Global (UniProt-GOA) | Repo GOA files | Coverage |
 |---|---:|---:|---:|
-| IEP annotations | 25,401 | 555 | 2.2% |
-| Gene products with IEP | 10,618 | 218 | 2.1% |
-| Distinct GO terms | 2,383 | 288 | 12.1% |
-| Distinct references | 11,777 | 368 | 3.1% |
+| IEP annotations | 25,401 | 650 | 2.6% |
+| Gene products with IEP | 10,618 | 294 | 2.8% |
+| Distinct GO terms | 2,383 | 315 | 13.2% |
+| Distinct references | 11,777 | 410 | 3.5% |
 
-Within the repo, IEP is rare in the same way it is globally: 555 of 149,995
-cached GOA rows (0.4%), roughly one IEP row per 40 IDA rows, spread over 220
-gene directories (218 distinct accessions, two of which have a directory under
-two different symbols). The review view finds 550 IEP rows in
-221 review files. The two sides do not line up exactly, and neither is a subset
-of the other: cached GOA files and reviews are refreshed independently, so a
-review can retain a row that a later GOA download dropped, and a GOA row can
-arrive after the review that would have carried it. The gap is small — under 1%
-of rows, one review file — but it means the two views should be read as two
-measurements of the same thing rather than as one filtered from the other.
+Within the repo, IEP is rare in the same way it is globally: 650 of 203,576
+cached GOA rows (0.3%), roughly one IEP row per 45 IDA rows, spread over 294
+gene directories. The review view finds 646 IEP rows in 297 review files. The
+two sides do not line up exactly, and neither is a subset of the other: cached
+GOA files and reviews are refreshed independently, so a review can retain a row
+that a later GOA download dropped, and a GOA row can arrive after the review
+that would have carried it.
 
 Review-view denominators include all entries in `existing_annotations`, including
 reviewer-proposed `NEW` annotations. The disposition table reports `NEW`
@@ -200,7 +201,7 @@ apply to the recommendations at the foot of this page as much as to the tables:
   vocabulary offers `KEEP_AS_NON_CORE` and `MARK_AS_OVER_ANNOTATED` as
   first-class verdicts, making "true but peripheral" an easy call to reach —
   and "true but peripheral" is exactly this page's headline conclusion about
-  IEP. A 16.7% flag rate should not be read as "16.7% of IEP annotations in GOA
+  IEP. A 20.9% flag rate should not be read as "20.9% of IEP annotations in GOA
   are wrong".
 - **The qualitative claims are the load-bearing ones.** The failure patterns
   below are argued from named genes, named papers and quoted reviewer reasons,
@@ -215,20 +216,20 @@ is marked as suggestive in the text.
 
 | GO branch (is_a + part_of closure) | Global rows | Global share | Repo share | Flagged in repo |
 |---|---:|---:|---:|---:|
-| response to stimulus (GO:0050896) | 17,099 | 67.3% | 69.3% | 16.8% |
-| developmental process (GO:0032502) | 4,110 | 16.2% | 15.3% | 22.6% |
-| biological regulation (GO:0065007) | 1,041 | 4.1% | 6.0% | 15.2% |
-| unclassified (obsolete/unresolvable) | 1,395 | 5.5% | 4.4% | 8.3% |
+| response to stimulus (GO:0050896) | 17,099 | 67.3% | 66.9% | 22.5% |
+| developmental process (GO:0032502) | 4,110 | 16.2% | 17.0% | 22.7% |
+| biological regulation (GO:0065007) | 1,060 | 4.2% | 7.3% | 19.1% |
+| unclassified (obsolete/unresolvable) | 1,395 | 5.5% | 3.9% | 8.0% |
 | cellular component | 1,147 | 4.5% | 2.5% | 0% |
-| metabolic process / localization / MF | 609 | 2.4% | 2.5% | 14.3% |
+| metabolic process / localization / MF | 590 | 2.3% | 2.5% | 12.5% |
 
 Branch assignment is **first match wins** in the order above, so a term parented
 under both `response to stimulus` and `developmental process` — a defence
 response that is also a developmental one, say — is counted as
 stimulus-response. Those dual-parented rows are excluded from the developmental
 bucket. A different bucket priority could change the flag-rate comparison; its
-effect has not been measured. The repo shares here are the review view (550
-rows); the representativeness tables further down use the GOA view (555 rows),
+effect has not been measured. The repo shares here are the review view (646
+rows); the representativeness tables further down use the GOA view (650 rows),
 which is why the same stratum can differ by a point.
 
 Seven out of ten IEP annotations are a "response to X" term, both globally and in
@@ -237,60 +238,51 @@ a stimulus, see which transcripts move. Globally the most frequent terms are
 `response to xenobiotic stimulus` (512 rows), `response to cold` (387),
 `response to bacterium` (384) and `response to abscisic acid` (379).
 
-The flag rates in that table hint at a second-order finding — **the developmental
-branch may be the riskier one** — but the corpus is too small to establish it.
-19 of 84 developmental rows were flagged against 64 of 381 stimulus rows, a
-difference not separable from noise (two-sided Fisher exact p = 0.21). Splitting
-by species does not establish a general developmental excess: the direction
-repeats in the three largest species (rat 33.3% vs 25.0%, human 20.6% vs 10.4%,
-*Arabidopsis* 40.0% vs 8.6%), but none of those contrasts reaches significance.
-It reverses in *Dictyostelium* (10.0% vs 18.2%) and in mouse, where 0/4
-developmental rows are flagged against 8/8 stimulus rows (Fisher p = 0.002).
-The mouse result is an opposite-direction contrast in only 12 rows, not evidence
-for a general developmental risk. The developmental rows span 54 gene
-directories across seven species, but that spread does not rule out review-batch
-or gene-selection confounding.
+The current corpus no longer shows even a descriptive developmental excess:
+25 of 110 developmental rows were flagged against 97 of 432 stimulus rows
+(22.7% versus 22.5%; two-sided Fisher exact p = 1.00). That branch-level rate is
+not the point. The developmental-time-course pattern below is supported by the
+worked metabolic examples, not by a corpus-wide flag-rate difference.
 
-The mechanistic reason to expect the gap is independent of the numbers, and it
-is argued below from worked examples rather than from the flag rate: a "response
-to X" row is usually at least *true* — the transcript really did move when the
-stimulus was applied — whereas an "X development" row inferred from a
-developmental time-course is a genuine over-reach whenever rising abundance as a
-tissue matures reflects demand for the enzyme's product rather than an
-instructive role in building the tissue.
+The mechanistic reason to treat developmental time-courses as a risk class is
+argued below from worked examples: a "response to X" row is usually at least
+*true* — the transcript really did move when the stimulus was applied — whereas
+an "X development" row inferred from a developmental time-course is a genuine
+over-reach whenever rising abundance as a tissue matures reflects demand for the
+enzyme's product rather than an instructive role in building the tissue.
 
 ### The disposition data: IEP is not wrong so much as peripheral
 
-This corpus's reviewers flagged 16.7% of IEP rows (REMOVE +
+This corpus's reviewers flagged 20.9% of IEP rows (REMOVE +
 MARK_AS_OVER_ANNOTATED + MODIFY). That is worse than the other experimental
-codes (IDA 6.8%, IMP 6.8%, IGI 6.4%) but comparable to ISO (16.8%) and better
-than IEA (20.4%) — not, on its own, a damning number.
+codes (IDA 7.0%, IMP 7.4%, IGI 6.6%) and slightly above IEA (19.9%), but far
+below IPI (71.8%) — not, on its own, a damning number.
 
 The sharper contrast is at the other end of the distribution:
 
 | Code | Reviewed rows | % ACCEPT | % whose term reaches `core_functions` |
 |---|---:|---:|---:|
-| TAS | 15,432 | 73.9% | 56.2% |
-| IBA | 9,728 | 72.3% | 50.8% |
-| IDA | 21,893 | 69.3% | 43.9% |
-| IEA | 31,612 | 50.6% | 29.4% |
-| IMP | 9,863 | 48.3% | 32.8% |
-| IGI | 1,557 | 45.3% | 26.6% |
-| ISO | 4,245 | 33.1% | 16.2% |
-| **IEP** | **550** | **22.5%** | **10.0%** |
-| IPI | 17,834 | 10.7% | 4.3% |
+| TAS | 22,475 | 76.4% | 57.1% |
+| IBA | 13,614 | 72.8% | 50.8% |
+| IDA | 29,117 | 68.7% | 45.3% |
+| IEA | 42,811 | 50.6% | 29.1% |
+| IMP | 13,564 | 46.7% | 33.5% |
+| IGI | 2,306 | 46.4% | 29.8% |
+| ISO | 4,416 | 34.0% | 17.2% |
+| **IEP** | **646** | **21.8%** | **10.4%** |
+| IPI | 31,325 | 7.8% | 3.4% |
 
 The `% core` column credits a code whenever a term it carries also appears in
 `core_functions`, even when the term got there on the strength of a different
 code annotating it too. It is therefore generous to every code, and most
-generous to codes that co-annotate often — including IEP, whose 10.0% falls to
-9.1% if only rows the reviewer also ACCEPTed are counted.
+generous to codes that co-annotate often — including IEP, whose 10.4% falls to
+9.3% if only rows the reviewer also ACCEPTed are counted.
 
 Read with the [limitations above](#what-flagged-means-and-does-not-mean) in
 mind, IEP has the lowest ACCEPT rate and the lowest core-function grounding rate
 of any code surveyed except IPI — and IPI's position is a known artifact of
 `protein binding` rather than a property of physical-interaction evidence. The
-missing IEP mass went to `KEEP_AS_NON_CORE`, which absorbs **55.6%** of IEP
+missing IEP mass went to `KEEP_AS_NON_CORE`, which absorbs **53.4%** of IEP
 rows, the highest share of any code.
 
 So the characteristic IEP annotation is not false. It is *true and peripheral*:
@@ -300,23 +292,23 @@ nothing in the annotation is checkably wrong.
 
 Two more measurements sharpen it:
 
-- **72.4%** of IEP rows are the **sole** carrier of their GO term in the review
+- **71.8%** of IEP rows are the **sole** carrier of their GO term in the review
   — no other evidence code in the same gene supports that term. IEP is not
   mostly redundant confirmation of what IDA/IMP already say; it is mostly
   adding terms nothing else supports. That figure tests **exact term-id
   equality**, so it is an upper bound: an IEP `response to heat` sitting beside
   an IDA `cellular response to heat` counts as sole. Allowing an ancestor or
-  descendant under a non-IEP code to corroborate drops it to **53.5%** — still a
+  descendant under a non-IEP code to corroborate drops it to **54.0%** — still a
   majority, and still the substantive point, but the honest number to quote for
   "IEP is load-bearing" is the closure-aware one.
 - IEP clusters heavily. The median IEP-carrying gene has **one** IEP row, but the
-  top 10% of them (23 of 221 genes) carry **42.7%** of all IEP rows. rat/Hmgcs2
+  top 10% of them (30 of 297 genes) carry **40.7%** of all IEP rows. rat/Hmgcs2
   alone has 33; rat/Hspa8 25; rat/Casp3 23; rat/Tp53 18. A gene that attracts
   stimulus-response papers accumulates a proportional cloud of IEP terms.
-  Globally the same shape holds almost exactly: 21 repo genes have 5 or more IEP
-  rows, 9.5% of IEP-carrying genes carrying 41.3% of rows, against 1,117 gene
-  products globally — 10.5% of IEP-carrying products, accounting for **42.3%** of
-  all IEP annotations.
+  Globally the shape is broader but still concentrated: 21 repo genes have 5 or
+  more IEP rows, 7.1% of IEP-carrying genes carrying 35.1% of rows, against
+  1,117 gene products globally — 10.5% of IEP-carrying products, accounting for
+  **42.3%** of all IEP annotations.
 
 ## Is the reviewed sample representative?
 
@@ -331,12 +323,11 @@ come out close to proportional:
 
 | Stratum | Global | Repo | Ratio |
 |---|---:|---:|---:|
-| `response to stimulus` branch | 67.3% | 68.3% | 1.01x |
-| `developmental process` branch | 16.2% | 15.1% | 0.94x |
-| `involved_in` qualifier | 75.3% | 72.1% | 0.96x |
-| `acts_upstream_of_or_within` qualifier | 19.1% | 23.1% | 1.21x |
-| biological_process aspect | 95.2% | 95.9% | 1.01x |
-| Genes with ≥5 IEP rows, as share of IEP rows | 42.3% | 41.3% | 0.98x |
+| `response to stimulus` branch | 67.3% | 66.0% | 0.98x |
+| `developmental process` branch | 16.2% | 16.9% | 1.05x |
+| `involved_in` qualifier | 75.3% | 72.0% | 0.96x |
+| `acts_upstream_of_or_within` qualifier | 19.1% | 23.5% | 1.23x |
+| biological_process aspect | 95.2% | 96.2% | 1.01x |
 
 The global counts independently support two descriptive findings: IEP is
 overwhelmingly a stimulus-response code, and its annotations concentrate in a
@@ -349,18 +340,18 @@ picture of IEP:
 
 | Stratum | Global | Repo | Ratio |
 |---|---:|---:|---:|
-| *Homo sapiens* | 3.7% | 18.2% | **4.96x** |
-| *Dictyostelium discoideum* | 0.7% | 4.1% | **6.05x** |
-| *Arabidopsis* / TAIR | 19.7% | 27.7% | 1.41x |
-| *Rattus norvegicus* / RGD | 47.5% | 34.2% | 0.72x |
-| *Mus musculus* | 8.0% | 4.9% | 0.60x |
-| MGI as annotation group | 3.4% | 2.5% | 0.73x |
-| *Drosophila* / FlyBase | 4.4% | 1.3% | **0.29x** |
-| EcoCyc | 1.6% | 0.4% | **0.22x** |
+| *Homo sapiens* | 3.7% | 22.9% | **6.25x** |
+| *Dictyostelium discoideum* | 0.7% | 3.5% | **5.17x** |
+| *Arabidopsis* / TAIR | 19.7% | 26.6% | 1.35x |
+| *Rattus norvegicus* / RGD | 47.5% | 29.2% | 0.62x |
+| *Mus musculus* | 8.0% | 4.6% | 0.57x |
+| MGI as annotation group | 3.4% | 2.2% | 0.62x |
+| *Drosophila* / FlyBase | 4.4% | 1.7% | **0.38x** |
+| EcoCyc | 1.6% | 0.5% | **0.28x** |
 
-Entirely absent from the repo: **AgBase** (785 rows), **ZFIN** (326),
-**CollecTF** (211); *Gossypium hirsutum* (395), *Danio rerio* (335),
-*Gallus gallus* (279), *M. tuberculosis* H37Rv (179).
+Entirely absent from the repo: **AgBase** (785 rows), **CollecTF** (211);
+*Gossypium hirsutum* (395), *Gallus gallus* (279), and *M. tuberculosis* H37Rv
+(179).
 
 The human over-sampling is expected — the repo is human-centric. The coarse
 term-type shares above remain close to the global shares, but organism
@@ -373,10 +364,11 @@ single-screen IEP batches in all of GOA are MGI's (see
 so the stratum was exactly where the most extreme instance of a pattern this
 page documents actually lives. Before [the miRNA cohort](#cohort-review-130-mirnas-one-term-one-paper),
 the repo sampled MGI at **0.05x** — 1 row against a 3.4% global share. Five
-targeted reviews took it to 0.73x, close to proportional at the row level. At
-the *product* level the gap is barely dented: 5 reviewed of the 437 RNAcentral
-gene products, and 3 of 294, 5 of 139 and 2 of 103 rows for the three batch
-terms those reviews touched. Row-share parity is not cohort coverage.
+targeted reviews took it into the same order of magnitude at the row level; as
+the local corpus has grown, MGI now sits at 0.62x of its global row share. At the
+*product* level the gap is barely dented: 5 reviewed of the 437 RNAcentral gene
+products, and 3 of 294, 5 of 139 and 2 of 103 rows for the three batch terms
+those reviews touched. Row-share parity is not cohort coverage.
 
 **A slice the repo under-samples but can represent.** 840 global IEP rows
 (3.3%), on 437 gene products, are **RNAcentral** entries rather than proteins —
@@ -395,8 +387,8 @@ restating:
    the repo sample was proportionally *accurate* (1.01x for BP, 0.80x for CC) all
    along. The mechanism proposed from 20 rows holds at scale: see
    [below](#gorule0000006-violations-are-an-eco-mapping-artifact).
-2. *No GO term is majority-IEP.* Within a gene, 72.4% of IEP rows are the sole
-   carrier of their exact term (53.5% with closure). But measured per term across
+2. *No GO term is majority-IEP.* Within a gene, 71.8% of IEP rows are the sole
+   carrier of their exact term (54.0% with closure). But measured per term across
    the whole ontology, IEP is never the dominant support: the most IEP-dependent
    frequent term is `seed trichome elongation` at **19.6%** of its annotations,
    then `response to ethanol` (15.5%) and
@@ -412,7 +404,7 @@ restating:
 | Pattern | Description | Examples | Typical action |
 |---|---|---|---|
 | **Inducible bystander** | A constitutively-functioning enzyme is transcriptionally induced by many unrelated stimuli; each induction paper yields one `response to X` row. | rat/Gsta4, rat/Gstt1, rat/Qdpr, rat/Hsd11b2, rat/Gss | MARK_AS_OVER_ANNOTATED |
-| **Developmental time-course → tissue term** | Abundance rises as a tissue matures; curated as involvement in building that tissue. | rat/Ckmt2, rat/Ephx1, rat/Qdpr, rat/Hmgcs2, rat/Gamt, rat/Pgam2 | MARK_AS_OVER_ANNOTATED |
+| **Developmental time-course → tissue term** | Abundance rises as a tissue matures; curated as involvement in building that tissue. | rat/Ckmt2, rat/Ephx1, rat/Qdpr, rat/Gamt, rat/Pgam2 | MARK_AS_OVER_ANNOTATED |
 | **Differential-expression screen batch** | One screen generates one term across many unrelated genes. | PMID:21492153 → 8 genes, all `epithelial cell differentiation`; globally up to 291 genes from one paper | MARK_AS_OVER_ANNOTATED / REMOVE |
 | **Promiscuous hub inversion** | A signalling hub whose own transcript answers every stimulus collects the whole stimulus catalogue — while its actual role is to *drive* those responses. | ARATH/PIF3 (7 rows, one paper) | MARK_AS_OVER_ANNOTATED / MODIFY |
 | **Regulon membership ≠ function** | Being a transcriptional target of a stimulus-responsive regulator is a property of the promoter, not of the protein. | ECOLI/arnF, yeast/THI22 | MARK_AS_OVER_ANNOTATED |
@@ -458,17 +450,16 @@ increasing metabolic demand for phosphocreatine buffering, not a direct
 instructive role of Ckmt2 in heart morphogenesis."
 
 The same shape recurs: rat/Ephx1 and rat/Qdpr → `liver development`, rat/Gamt →
-`embryonic liver development`, rat/Hmgcs2 → `lung development` and `adipose
-tissue development`, rat/Pgam2 → `spermatogenesis`. In every case the protein is
-a metabolic enzyme whose product the maturing tissue needs more of. The tissue
-builds the enzyme; the enzyme does not build the tissue.
+`embryonic liver development`, rat/Pgam2 → `spermatogenesis`. In every case the
+protein is a metabolic enzyme whose product the maturing tissue needs more of.
+The tissue builds the enzyme; the enzyme does not build the tissue.
 
-This is the mechanism behind the developmental branch's higher flag rate (22.6%
-versus 16.8%, though as noted that difference is not statistically separable
-from noise on 84 rows): a metabolic enzyme genuinely *participates in* a stress
-response in a way it does not *participate in* organogenesis. The six genes
-above are the evidence; the flag rate is a description of how often the pattern
-came up, not a demonstration that it exists.
+This is why the developmental-branch cohort remains worth reviewing even though
+the refreshed corpus no longer has a higher developmental flag rate: a metabolic
+enzyme genuinely *participates in* a stress response in a way it does not
+*participate in* organogenesis. The five genes above are the evidence; the
+branch-wide flag rate is only a description of how often the pattern came up,
+not a demonstration that it exists.
 
 ### 3. Differential-expression screen batch: one screen, one term, N genes
 
@@ -477,14 +468,16 @@ differentiated Caco-2 intestinal cells. It reports "53 proteins that were
 differently regulated during the differentiation process", 34 of them identified
 by MALDI-TOF, and those identifications were curated `involved_in`
 `GO:0030855 epithelial cell differentiation` with IEP. In
-this corpus that single paper is the source for eight genes:
+this corpus that single paper is the source for ten genes:
 human/ACADVL, human/ACTL8, human/CDK1, human/CPT1A, human/FN3K, human/LGALS3,
-human/PGK1 and human/TOLLIP — a very-long-chain acyl-CoA dehydrogenase, a
-cyclin-dependent kinase, a glycolytic kinase, a fructosamine kinase, a galectin
-and a TLR adaptor. Six of the eight were flagged (five MARK_AS_OVER_ANNOTATED,
-human/FN3K REMOVE); the other two, human/LGALS3 and human/TOLLIP, were kept as
-non-core with reviewers noting the evidence is "correlative expression-pattern"
-and the process "secondary" to the protein's actual role.
+human/PGK1, human/TOLLIP, human/CASP6 and human/SULT1B1 — a very-long-chain
+acyl-CoA dehydrogenase, a cyclin-dependent kinase, a glycolytic kinase, a
+fructosamine kinase, a galectin, a TLR adaptor, a caspase and a sulfotransferase.
+Six of the ten were flagged (five MARK_AS_OVER_ANNOTATED, human/FN3K REMOVE);
+two, human/LGALS3 and human/TOLLIP, were kept as non-core with reviewers noting
+the evidence is "correlative expression-pattern" and the process "secondary" to
+the protein's actual role; two more, human/ACTL8 and human/CASP6, are now
+UNDECIDED.
 
 human/CDK1 is the case that exposes the underlying logic error. The review notes
 that CDK1 "promotes proliferation, which decreases during differentiation" —
@@ -532,7 +525,7 @@ its cohort, not on its own, because the cohort reveals the annotation rule that
 produced it. And because these batches are concentrated in MGI, which the repo
 sampled at 0.05x before this project touched it, the reviewed corpus was blind
 to the most extreme form of the pattern; the cohort below is the start of fixing
-that, and it moved the MGI row share to 0.73x on five reviews.
+that, and it moved the MGI row share to 0.62x on five reviews.
 
 #### Cohort review: 130 miRNAs, one term, one paper
 
@@ -594,7 +587,7 @@ sharper findings than the LTP batch itself:
   the organ of Corti during hearing loss, not normal hearing.
 
 Across the 13 IEP rows in this cohort: 2 ACCEPT, 7 MARK_AS_OVER_ANNOTATED,
-4 REMOVE — an 85% flag rate against 16.7% corpus-wide, and 4 REMOVEs added to a
+4 REMOVE — an 85% flag rate against 20.9% corpus-wide, and 4 REMOVEs added to a
 corpus that previously held 7 in total. Targeting batch cohorts rather than
 individual rows is therefore a high-yield review strategy, which is the practical
 lesson for the remaining candidates.
@@ -729,9 +722,9 @@ actually expression-pattern evidence.
 
 ## Where IEP Is Legitimate
 
-IEP is not a code to review adversarially. 22.5% of IEP rows were accepted, and
-55 IEP rows ground a term in a gene's `core_functions` — 50 of them rows the
-reviewer both accepted and let reach core, the other 5 riding on a co-annotated
+IEP is not a code to review adversarially. 21.8% of IEP rows were accepted, and
+67 IEP rows ground a term in a gene's `core_functions` — 60 of them rows the
+reviewer both accepted and let reach core, the other 7 riding on a co-annotated
 non-IEP row for the same term. The accepted cases share
 a single property, and it is the discriminator this project turns on: **the
 gene's job is the response itself**.
@@ -757,8 +750,8 @@ gene's job is the response itself**.
   MEDTR/NFP (`nodulation`), worm/skn-1 (`response to oxidative stress`) and
   worm/xbp-1 (`IRE1-mediated unfolded protein response`) all keep IEP rows that
   restate what IMP and IDA independently establish. Here IEP costs nothing and
-  adds a line of evidence — the 27.6% of IEP rows that are *not* the sole carrier
-  of their term on an exact term match, or 46.5% once a non-IEP annotation on a
+  adds a line of evidence — the 28.2% of IEP rows that are *not* the sole carrier
+  of their term on an exact term match, or 46.0% once a non-IEP annotation on a
   parent or child term counts as corroboration.
 - **Markers that are the differentiated product.** DICDI/ecmB, as above.
 
@@ -811,7 +804,7 @@ Before accepting or flagging an IEP row.
 - Check whether the term already has non-IEP support in the same gene, and check
   the parents and children too, not just the exact term. If something in that
   lineage is covered by IDA/IMP, the IEP row is cheap corroboration; if nothing
-  is (53.5% of rows), the IEP row is load-bearing and deserves the full agency
+  is (54.0% of rows), the IEP row is load-bearing and deserves the full agency
   question.
 
 ### Prefer the right action
@@ -824,7 +817,7 @@ Before accepting or flagging an IEP row.
 - `REMOVE` should be reserved for a categorical mismatch, where the process is
   not merely peripheral but belongs to a different functional class entirely
   (human/RB1 `Ras protein signal transduction`, human/FN3K `epithelial cell
-  differentiation`). Only 11 of 550 rows met that bar, four of them added by the
+	  differentiation`). Only 21 of 646 rows met that bar, four of them added by the
   [miRNA cohort](#cohort-review-130-mirnas-one-term-one-paper).
 - Do not REMOVE an IEP row merely because the evidence code is weak. The
   induction happened; what is at issue is the term, not the experiment.
@@ -849,13 +842,13 @@ correct answer is "true, keep it, but it is not what this gene is for."
    activity, the informative annotation is the parent term once, not the
    catalogue. rat/Gstt1's four sibling stimulus terms say less together than
    `response to xenobiotic stimulus` alone.
-3. **Developmental time-courses may need a higher bar than stimulus responses.**
+3. **Developmental time-courses still deserve targeted review.**
    The mechanism is clear enough — metabolic demand tracks tissue maturation
-   without any instructive role, as rat/Ckmt2, rat/Ephx1, rat/Qdpr, rat/Hmgcs2,
-   rat/Gamt and rat/Pgam2 each show individually. The corpus-level flag-rate gap
-   (22.6% versus 16.8%) points the same way but is **not** statistical support:
-   at 19/84 versus 64/381 it is within noise (Fisher p = 0.21). This
-   recommendation rests on the worked cases, and testing it properly needs a
+   without any instructive role, as rat/Ckmt2, rat/Ephx1, rat/Qdpr, rat/Gamt and
+   rat/Pgam2 each show individually. The current corpus has no developmental
+   excess to lean on: 25/110 developmental rows and 97/432 stimulus-response
+   rows are flagged (22.7% versus 22.5%; Fisher p = 1.00). This recommendation
+   rests on the worked cases, and testing it properly needs a
    developmental-branch cohort sampled for the purpose.
 4. **Fix the ECO→GAF collapse rather than the annotations.** The GORULE:0000006
    violations come from a multiply-parented ECO class (ECO:0000279) whose GAF
@@ -883,15 +876,18 @@ correct answer is "true, keep it, but it is not what this gene is for."
 - [x] Make every figure on this page regenerable from the committed scripts, and
       attach a significance test to the one comparison that carries a
       recommendation.
-- [ ] Sample a **developmental-branch cohort** for the purpose, so the branch
-      flag-rate difference is either established or dropped. 4,110 global rows
-      are available and the current 84 are far too few (Fisher p = 0.21).
+- [ ] Sample a **developmental-branch cohort** for the purpose, rather than
+      reading cohort quality out of the mixed current rate. 4,110 global rows
+      are available in the 2026-07-27 snapshot; the current local rate, 25/110
+      versus 97/432 for stimulus-response (Fisher p = 1.00), drops the old
+      descriptive developmental excess.
 - [ ] Get a disposition signal that is not this project's own reviewers — e.g.
       compare against annotations GO itself has since removed or re-coded —
       so the [limitations](#what-flagged-means-and-does-not-mean) on the
       cross-code table can be lifted rather than merely stated.
-- [ ] Review the remaining 22 `PENDING` IEP rows, all on rat/Casp3 — the largest
-      single unreviewed block already in the repo.
+- [x] Review the remaining 22 `PENDING` IEP rows, all on rat/Casp3 — the largest
+      single unreviewed block that was in the repo in the 2026-09-13 survey.
+      The refreshed 2026-10-04 survey has zero `PENDING` IEP rows.
 - [x] Review a batch cohort rather than another single gene, sampling tiers
       within the cohort so the batch is tested rather than assumed. Done for
       PMID:25858512 — see
@@ -901,7 +897,7 @@ correct answer is "true, keep it, but it is not what this gene is for."
       organism this repo already covers well. The tiering is available there too:
       the paper distinguishes SOS-regulon members from the wider induced set.
 - [ ] Continue closing the MGI gap at the *product* level. The five miRNA
-      reviews took MGI's row share from 0.05x to 0.73x of its 3.4% global share,
+      reviews took MGI's row share from 0.05x to 0.62x of its 3.4% global share,
       which flatters the coverage: `cellular response to leukemia inhibitory
       factor` has 3 rows reviewed of 294, `long-term synaptic potentiation` 5 of
       139, `sensory perception of sound` 2 of 103.
@@ -912,16 +908,17 @@ correct answer is "true, keep it, but it is not what this gene is for."
       move under every perturbation — and rat/Hmgcs2's 33 rows, the repo's
       current maximum, is smaller than any of them.
 - [ ] Work through [`data/iep_review_candidates.tsv`](IEP/data/iep_review_candidates.tsv):
-      4,807 not-yet-reviewed gene products sampled up to 3 per global term
+      4,787 not-yet-reviewed gene products sampled up to 3 per global term
       stratum, so the long tail of terms is reachable and not just the head.
-- [ ] Decide whether IEP warrants structured review fields. `PropagationReview`
-      is documented as covering "a propagated **or inferred** annotation" and its
-      `TERM_SCOPING_PROBLEM`, `NO_FAILURE_NON_CORE`, `ROLE_CONFLATION`,
-      `GRANULARITY_MISMATCH` and `CONTEXT_OR_TISSUE_MISMATCH` values already fit
-      IEP, but there is no value for the central IEP failure — *correlation
-      asserted as participation*. Candidate additions: an
-      `EXPRESSION_CORRELATION_ONLY` failure mode and a `REGULON_MEMBERSHIP`
-      subtype.
+- [ ] Decide whether IEP warrants structured review fields
+      ([#4102](https://github.com/ai4curation/ai-gene-review/issues/4102)).
+      `PropagationReview` is documented as covering "a propagated **or
+      inferred** annotation" and its `TERM_SCOPING_PROBLEM`,
+      `NO_FAILURE_NON_CORE`, `ROLE_CONFLATION`, `GRANULARITY_MISMATCH` and
+      `CONTEXT_OR_TISSUE_MISMATCH` values already fit IEP, but there is no value
+      for the central IEP failure — *correlation asserted as participation*.
+      Candidate additions: an `EXPRESSION_CORRELATION_ONLY` failure mode and a
+      `REGULON_MEMBERSHIP` subtype.
 - [ ] Extend the survey to HEP (the high-throughput IEP twin), which shares
       GORULE:0000006 and every pattern on this page but is generated at screen
       scale.

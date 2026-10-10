@@ -38,7 +38,7 @@ Scoping a GO review of the genes that sense and transmit force
 
 - Cells sense stiffness, shear, stretch and membrane tension through **PIEZO channels, integrin adhesions, the nuclear lamina and YAP/TAZ**; GO mixes true sensors with generic adhesion and ECM terms.
 - The page defines **inclusion criteria, six modules and 30 candidate genes** in five batches, and a `stimulus → sensor → axis → phenotype` chain for every review.
-- **Scoped, not started.** No Batch A–D gene has a review; four matrix genes (FN1, LOX, SPARC, DCN) were reviewed for other purposes.
+- **Scoped, partially populated.** Fourteen adhesome, LINC, Hippo and matrix genes already have adjacent human reviews; the direct sensors and 16 remaining starter genes are tracked in #3970.
 
 ---
 
@@ -66,9 +66,10 @@ Scoping a GO review of the genes that sense and transmit force
 
 ## Status and next steps
 
-- ⬜ Batch A: PIEZO1, PIEZO2, TRPV4, PKD1, PKD2 (`just fetch-gene human <GENE>` then review).
-- ⬜ Re-read FN1, LOX, SPARC, DCN against the mechanical-chain questions.
-- ⬜ Batches B–D, then a stimulus / sensor / axis / phenotype summary table.
+- ⬜ Batch A direct sensors: PIEZO1, PIEZO2, TRPV4, PKD1, PKD2.
+- ⬜ Remaining B–E starter genes: ITGA5, PXN, LMNA, EMD, WWTR1, LATS2, RHOA, ROCK1, ROCK2, TGFB1, CTGF.
+- ⬜ Re-read the 14 adjacent reviews against the mechanical-chain questions.
+- ⬜ Build a stimulus / sensor / axis / phenotype summary table.
 - ⬜ List recurring GO pain points only after several batches.
 
 **Read more:** `projects/MECHANOBIOLOGY.md`

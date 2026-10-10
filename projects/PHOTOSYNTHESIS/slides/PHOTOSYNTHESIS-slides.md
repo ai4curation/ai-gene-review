@@ -38,7 +38,7 @@ Concept notes, a taxon-neutral module, and a candidate-gene checklist
 
 - Oxygenic photosynthesis moves electrons from **water → PSII → cyt b6f → PSI → NADP+** and spends NADPH + ATP fixing CO2 in the **CBB cycle**.
 - First pass done: **concept notes**, falcon deep research, a **DRAFT photosynthesis module**, and a checklist over **7 functional modules**.
-- **Gene reviews have not started** beyond three Chlamydomonas genes already in the repo: **psaC** (complete), **CP12** (draft), **LCI5**.
+- **Gene reviews have not started** beyond three Chlamydomonas genes already in the repo: **psaC** (complete), **CP12** (draft), **LCI5** (draft).
 
 ---
 
@@ -74,11 +74,11 @@ Concept notes, a taxon-neutral module, and a candidate-gene checklist
 
 ## The three seeded reviews
 
-| Gene | Status | Rows | Outcome |
+| Gene | Status | GOA Rows | Outcome |
 |---|---|---|---|
 | **psaC** (PSI Fe-S subunit) | COMPLETE | 9 | 5 accept, 2 over-annotated, 2 **removed** (generic metal ion binding, oxidoreductase) |
 | **CP12** (CBB redox switch) | DRAFT | 11 | 6 accept, 2 non-core, 3 `protein binding` → *enzyme binding* |
-| **LCI5** (CCM thylakoid protein) | — | 0 | no GOA rows; 7 terms proposed |
+| **LCI5** (CCM thylakoid protein) | DRAFT | 0 | no GOA rows; 7 tentative `NEW` rows |
 
 ---
 
@@ -88,5 +88,6 @@ Concept notes, a taxon-neutral module, and a candidate-gene checklist
 - ⬜ Module A PSII: psbA, psbD, psbB/C, psbO · Module B PSI: psaA/B
 - ⬜ Module C electron transport: petA/B/C, petE, petF, petH, atpA/B
 - ⬜ Modules D–G: LHCB1, PsbS; rbcL/S, rca, PRK, GAPDH; LCIA/B, CCM1; CHLH, POR
+- ⬜ Candidate review pass tracked in ai-gene-review#3998
 
 **Read more:** `projects/PHOTOSYNTHESIS.md` · `modules/photosynthesis.yaml` · `terms/photosynthesis/`
