@@ -81,3 +81,16 @@ research record.
 - NEW GO:0036297 interstrand cross-link repair (IMP, PMID:16717288; the RAD51C and XRCC2 reviews
   make the same addition).
 - GO:0097435 MODIFY to GO:0000730, consistent with the sibling reviews.
+
+## 2026-10-10 revision (PR #4409 review)
+- Walker A conflict made explicit. PMID:16717288 (human RAD51D in hamster CHO rad51d cells) finds
+  Walker A mutants complement efficiently and explicitly notes that the mouse study
+  [PMID:16717288 "in which only A-motif mutants were examined, reached the opposite conclusion"].
+  PMID:16236763 (mouse MEFs) reports
+  [PMID:16236763 "The K113R and K113A mutants demonstrated a respective 96 and 83% decrease in repair capacity relative to wild-type"].
+  Recorded as a DISPUTED finding_review on the PMID:16236763 reference (superseded_by PMID:16717288
+  and the two cryo-EM papers that show RAD51D is not catalytic). The GO:0036297 NEW row now quotes
+  the K113 result instead of the "ATP binding and hydrolysis" interpretation, and the GO:0008094
+  reason now presents both Walker A results instead of only the CHO result.
+- X3CDX2 core function: description explains why no MF is asserted (GO:0140619 assigned to XRCC3).
+- Completed the truncated PMID:41196948 quote.

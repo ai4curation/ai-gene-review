@@ -77,8 +77,16 @@ Targeted update alongside the new XRCC3 review (`genes/human/XRCC3/`).
   consistent with the primary data [PMID:26354865 "Interestingly, unlike RAD51C and XRCC3, XRCC2 was dispensable for replication restart"].
   Restart moved to the CX3 core function (added GO:0031297 there); description edited accordingly.
 - New assemblies: RAD51C bridges XRCC3 and RAD51D-XRCC2 in X3CDX2, which caps RAD51 filaments
-  [PMID:41196948 "the XRCC3 complex stably caps the 5' termini of RAD51 filaments to promote"];
+  [PMID:41196948 "the XRCC3 complex stably caps the 5' termini of RAD51 filaments to promote homologous pairing"];
   independently DX2-CX3 / BCDX2-CX3 supercomplex [PMID:41772053]. No GO complex term exists for
   X3CDX2 (added as a suggested question).
 - No annotation actions were changed. The legacy MARK_AS_OVER_ANNOTATED actions on GO:0005515 were
   left as-is (outside the scope of this targeted update).
+
+## 2026-10-10 revision (PR #4409 review)
+- All 14 GO:0005515 protein binding rows changed from MARK_AS_OVER_ANNOTATED to REMOVE, for
+  consistency with the RAD51B, RAD51D and XRCC3 reviews: the generic term is uninformative, and the
+  problem is lack of functional content, not a claim that exceeds the evidence. Removal does not
+  dispute the interactions, which are captured by GO:0033063 / GO:0033065 and the core functions.
+  This supersedes the note above that the legacy actions were left as-is.
+- Completed the truncated PMID:41196948 quote ("...to promote homologous pairing").

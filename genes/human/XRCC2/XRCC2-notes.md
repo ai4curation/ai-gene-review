@@ -88,3 +88,12 @@ Targeted update alongside the new XRCC3 review (`genes/human/XRCC3/`).
 - XRCC2 is dispensable for fork restart, a CX3-specific function [PMID:26354865]; the review also
   summarizes the DX2/ATR-XRCC2 S247 role in restraining fork progression (PMID:30566856, already cited).
 - No annotation actions were changed.
+
+## 2026-10-10 revision (PR #4409 review)
+- All 16 GO:0005515 protein binding rows changed from MARK_AS_OVER_ANNOTATED to REMOVE (uninformative
+  generic term; removal does not dispute the interactions; BCDX2 membership is captured by GO:0033063).
+  Consistent with the RAD51B, RAD51D and XRCC3 reviews.
+- X3CDX2 core function: no MF asserted, and the description now says why. XRCC3 is the
+  RAD51-contacting subunit and RAD51-X3C stimulates strand exchange without DX2
+  [PMID:42020761 "RAD51–X3C displayed significantly enhanced DNA strand exchange activity over RAD51 alone across the protein concentrations tested"],
+  so GO:0140619 (contributes_to) stays on XRCC3 only. Added PMID:42020761 to references.

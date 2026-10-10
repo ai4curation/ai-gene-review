@@ -15,7 +15,7 @@
 - CX3 = RAD51C-XRCC3, purified from human cells [PMID:11751635 "the other consists of RAD51C with XRCC3"].
 - New assemblies (2026 cryo-EM, three independent groups):
   - X3CDX2 (XRCC3-RAD51C-RAD51D-XRCC2) caps the 5' end of RAD51 filaments
-    [PMID:41196948 "the XRCC3 complex stably caps the 5' termini of RAD51 filaments to promote"];
+    [PMID:41196948 "the XRCC3 complex stably caps the 5' termini of RAD51 filaments to promote homologous pairing"];
     XRCC3 contacts RAD51 and XRCC2 forms the cap [PMID:41196948 "with XRCC3 directly interacting with RAD51, and XRCC2 forming the cap"].
   - BCDX2-CX3-RAD51 "loader" and DX2-CX3 "anchor" [PMID:41772053 "a dynamic BCDX2-CX3
     'loader' and a stable DX2-CX3 'anchor'"].
@@ -57,6 +57,12 @@
   complements [PMID:41719405]. -> NEW GO:0062176 R-loop processing (non-core; single study).
   Comparator check: GO:0062176 in human is carried by non-catalytic recruiters/regulators
   (SIRT7, SRPK2, NFAT5) as well as nucleases (MRE11).
+  QuickGO query (2026-10-10; goId=GO:0062176, goUsage=exact, taxonId=9606) returns 10 rows, all
+  involved_in IDA assigned by UniProt: SIRT7 (Q9NRC8, PMID:28790157; deacetylase of the helicase
+  DDX21), SRPK2 (P78362, PMID:28076779; kinase acting on the helicase DDX23), NFAT5 (O94916,
+  PMID:34049076), MRE11/RAD50/NBN (PMID:31537797), PRIMPOL (PMID:30478192), DDX21 (PMID:28790157),
+  DDX23 (PMID:28076779), RAD54L2 (PMID:39028815). So regulators that act on the resolving enzyme,
+  not only the enzymes themselves, carry the term, which is the role CX3 plays for FANCM.
 
 ### Mitochondria
 - XRCC3 in mitochondria [PMID:20413593]; RAD51C/XRCC3 in mitochondrial nucleoid, supports mtDNA
@@ -82,3 +88,10 @@
 - GO:0000730 DNA recombinase assembly considered for core function 1 but omitted: the trigger
   review notes X3CDX2 "is unable to stimulate RAD51 filament formation on RPA-coated ssDNA", while
   PMID:42020761 reports enhanced filament assembly; conflicting, so not asserted.
+
+## 2026-10-10 revision (PR #4409 review)
+- GO:0062176 comparator substantiated with the QuickGO query and evidence codes (above).
+- Completed the truncated PMID:41196948 quote.
+- GO:0000403 Y-form DNA binding considered and not added: the PMID:20207730 fork substrate has duplex
+  arms, and the authors conclude ssDNA does not drive recognition, whereas GO:0000403 is defined by
+  unpaired strands at one end.
