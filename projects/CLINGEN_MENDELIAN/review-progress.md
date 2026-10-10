@@ -66,6 +66,79 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 315 — 2026-10-10 19:51:39 UTC
+
+**315 complete / 2,561 remaining in the frozen 2,876-gene catalog.**
+CHMP2B, CHCHD10, CHD8 and CHD2 are the four new distinct campaign completions
+beyond published checkpoint 311. Each counts once after its first qualifying
+substantive campaign audit, including audits of pre-existing reviews. Products,
+review rounds, annotation actions, DRAFT status and justified uncertainty add
+neither extra completions nor holds. Prior counting rules and exceptions stand.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CHMP2B | [#4605](https://github.com/ai4curation/ai-gene-review/pull/4605) | [30be2a43fc2f](https://github.com/ai4curation/ai-gene-review/commit/30be2a43fc2f47d32320251b66082b767556c738) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4605#pullrequestreview-5480443860) | 2026-10-10T19:41:06Z | [6e9b6acc8eb9](https://github.com/ai4curation/ai-gene-review/commit/6e9b6acc8eb902937093965ab58f54fccff8cc5b) |
+| CHCHD10 | [#4574](https://github.com/ai4curation/ai-gene-review/pull/4574) | [7729ff7dad9e](https://github.com/ai4curation/ai-gene-review/commit/7729ff7dad9ecc0d210d8a8aa1524bbf0eab51f5) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4574#pullrequestreview-5480469507) | 2026-10-10T19:42:32Z | [3aedc52f8279](https://github.com/ai4curation/ai-gene-review/commit/3aedc52f82794f012bc437275c3ece1d30151281) |
+| CHD8 | [#4595](https://github.com/ai4curation/ai-gene-review/pull/4595) | [10ab59bc71ac](https://github.com/ai4curation/ai-gene-review/commit/10ab59bc71acad2ffcbb41c95d1fecfb3f0a6520) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4595#pullrequestreview-5480497659) | 2026-10-10T19:43:14Z | [0cb3cb1509e1](https://github.com/ai4curation/ai-gene-review/commit/0cb3cb1509e154b723d87e535dd2552bdf7c3d05) |
+| CHD2 | [#4583](https://github.com/ai4curation/ai-gene-review/pull/4583) | [3db922a437a0](https://github.com/ai4curation/ai-gene-review/commit/3db922a437a0e0eecd79cf55aba9d15ccf44aa88) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4583#pullrequestreview-5480514357) | 2026-10-10T19:51:39Z | [e20dd96d4115](https://github.com/ai4curation/ai-gene-review/commit/e20dd96d41152636ac61f320e462b1339edba66f) |
+
+- **CHMP2B**: approved at 19:11:48 UTC; [test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38073806920/job/114276477674) succeeded at 19:31:57 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38073806935/job/114276478279) succeeded at 19:12:03 UTC.
+- **CHCHD10**: approved at 19:19:59 UTC; [test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38074571626/job/114278736005) succeeded at 19:38:37 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38074571631/job/114278736604) succeeded at 19:20:14 UTC.
+- **CHD8**: approved at 19:28:00 UTC; [test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38074813505/job/114279473299) succeeded at 19:39:26 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38074813523/job/114279475834) succeeded at 19:28:15 UTC.
+- **CHD2**: approved at 19:31:11 UTC; [test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38075681998/job/114282033949) succeeded at 19:49:31 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38075681996/job/114282034188) succeeded at 19:31:30 UTC.
+
+All approvals and required check completions match the final heads and precede
+the corresponding merges; there are zero unresolved review threads. Complete
+final formal approvals and detailed comments were read. The reviewers discharged
+the important findings and identified only nonblocking suggestions. These are
+completed campaign audits, not counts of newly created files or additional isoforms.
+
+Changed paths and complete gene directories have different scopes:
+
+| Gene | Changed PR paths | Changed gene files | All gene-directory blobs at cutoff | Complete gene-tree OID |
+|---|---:|---:|---:|---|
+| CHMP2B | 13 | 6 | 8 | `16e1b37b20fcfd231e2b4e99b2e18b0a66307329` |
+| CHCHD10 | 18 | 6 | 6 | `95effecc352323b1531c537390b87a5c9804e75b` |
+| CHD8 | 24 | 5 | 5 | `eb0be3b2a37b700545e33eb8b1dd0eb1020a8358` |
+| CHD2 | 15 | 6 | 6 | `2f333a6dcc8c31e1ef06b4d596e53f92a048e703` |
+
+All **70 changed gene-PR paths** have equal blobs at the approved head and merge.
+All **25 complete gene-directory artifacts** match at the approved head, individual
+merge, counted-gene cutoff and authenticated tracker source. Unchanged source and
+provider artifacts are included in the complete directories. Exact paths, sizes,
+Git blobs and SHA-256 hashes are recorded in queue update **56**.
+
+The frozen counted-gene cutoff is [CHD2 merge e20dd96d4115](https://github.com/ai4curation/ai-gene-review/commit/e20dd96d41152636ac61f320e462b1339edba66f),
+API `merged_at` **2026-10-10T19:51:39Z**. The later authenticated source is
+[tracker311 #4648 merge d1ce0f02e084](https://github.com/ai4curation/ai-gene-review/commit/d1ce0f02e084844e241b6003bed77cfa20569466),
+API `merged_at` **2026-10-10T20:49:21Z**. Tracker311 was approved on
+`8f74fe943668dfcdab99c2a50b20096babddb01d` at 20:30:21 UTC;
+both required checks succeeded before its merge, and all **seven** changed-path
+blobs match its approved and merge trees. GitHub API merge times and commit times
+are recorded separately. The source contains all four counted merges and the
+published checkpoint 311; its later date does not count any additional gene.
+A later publication base cannot advance the fixed count without reconciliation.
+CHD7 and all other open or subsequent PR merges are outside this checkpoint.
+
+All **149 existing session histories** under `history/projects/CLINGEN_MENDELIAN/`
+remain protected, authenticated by tree `877465c4fee26447284021757559a3ae195ef856`.
+The six existing history links remain unchanged. The prior checkpoint 311's
+forward-looking history sentence is corrected to describe its already committed
+record; no old session-history file is rewritten. All other prior progress is exact.
+
+All 2,876 catalog associations and frontmatter, the **235-object / 235-symbol**
+serialized queue array, all **55 prior completion-update texts** and unrelated
+queue metadata remain unchanged. Only the four named checkboxes change; update
+**56** is appended with an identical JSON mirror. The first unchecked literal
+entry remains ACBD5. Counter values are 315 for `completed`,
+`campaign_audited_merged` and the legacy `original_merged` alias, zero for
+`pending_followups`, and 2,561 remaining. Normal render previews use the complete
+authenticated source-main inventory for link availability, independently of counts.
+
+Session provenance accompanies this checkpoint at publication.
+
+[Checkpoint 315 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T211146Z-codex-4853e6.yaml).
+
 ## Completion checkpoint 311 — 2026-10-10 19:26:28 UTC
 
 **311 complete / 2,565 remaining in the frozen 2,876-gene catalog.**
@@ -115,7 +188,7 @@ links already present in the parent page remain unchanged:
 - `history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml`
 - `history/projects/CLINGEN_MENDELIAN/2026-10-10T174737Z-codex-0f8ff7.yaml`
 
-The publisher will scaffold and validate the new session history normally.
+The checkpoint 311 session history is committed and linked below.
 No existing history or gene artifact is edited. Render previews use the complete
 authenticated source-main gene-review inventory; later link availability can change
 independently of this fixed count.
