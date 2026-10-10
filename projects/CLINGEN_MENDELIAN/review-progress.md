@@ -83,7 +83,9 @@ The final head was approved at 08:42:54 UTC;
 Authenticated review threads contain no unresolved entries. All
 **20 changed PR paths** have equal blobs at the approved head and actual merge.
 The **six changed gene-directory files** and **all six gene-directory blobs** at
-the cutoff are separate counted scopes. The complete CERKL tree
+the cutoff are separate counted scopes. For a case where the counts differ,
+see the [checkpoint 301 CEP290 example](#completion-checkpoint-301-2026-10-10-075854-utc):
+four changed gene files versus eight directory blobs. The complete CERKL tree
 [b0c153f1efc1](https://github.com/ai4curation/ai-gene-review/tree/5928e194d4a4e43bdd74b9b1f307a142107daa46/genes/human/CERKL)
 is identical at the approved head and merge/cutoff. The appended queue evidence
 records every changed-path blob and every cutoff gene artifact, with hashes.
@@ -115,6 +117,14 @@ UNDECIDED annotation does not itself create a campaign hold. The first unchecked
 gene in literal catalog order remains ACBD5.
 
 Authenticated evidence was read and this follow-up recorded at 2026-10-10 09:20:21 UTC.
+
+
+The committed project pages were regenerated using the six authenticated CERKL
+artifacts at the frozen merge cutoff as temporary rendering context. CERKL now
+links to its review; the parent page retains 1,865 missing-review warnings for
+other genes. This rendering context does not add gene files to the tracker PR.
+
+[Tracker review follow-up history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T101502Z-codex-2b22e1.yaml).
 
 [Checkpoint 302 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml).
 
