@@ -7,7 +7,7 @@ Shared GAPDH family evidence (TDH1/TDH2/TDH3 are paralogous NAD+-dependent phosp
 - Cell wall + cytosol [PMID:11158358 "Tdh2 and Tdh3 polypeptides are present in the cell wall, as well as in the cytosol, of exponentially growing cells"]; [PMID:11158358 "Tdh1 is only detected in stationary-phase cells, again in both cytosol and cell wall extracts"].
 - Side activity: NAD(P)H hydratase [UniProt:P00358 "FUNCTION: As a side activity, catalyzes the hydration of the"]; NADP binding IEA from IPR006424 judged over-annotation for an NAD-specific GAPDH.
 - Peripheral mitochondrial pool [PMID:16962558 "all glycolytic enzymes are associated with mitochondria in yeast"]; minor lipid-particle co-fractionation [PMID:10515935 "glyceraldehyde-3-phosphate dehydrogenase (GAPDH) and Yju3p (the amount of Yju3p was greater than GAPDH)"].
-- Melatonin affinity pull-down hit [PMID:31708896 "glyceraldehyde-3-phosphate dehydrogenase (Tdh1p, Tdh2p, Tdh3p; band f)"]; kept non-core.
+- Melatonin affinity pull-down hit [PMID:31708896 "glyceraldehyde-3-phosphate dehydrogenase (Tdh1p, Tdh2p, Tdh3p; band f)"]; weak affinity-capture evidence marked over-annotated.
 - NO/S-nitrosation and apoptosis (TDH2/TDH3 IMP) [PMID:17726063 "NO signalling and GAPDH S-nitrosation are linked with H2O2-induced apoptotic cell death"] (abstract only; kept non-core).
 
 TDH2-specific:
