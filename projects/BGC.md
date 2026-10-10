@@ -40,7 +40,7 @@ and PDB entries (1TQY, 2YJN) with the reviewed KS-CLF and EryCII/EryCIII
 pairs.
 
 **Project type:** Gene curation (exemplar enzymes from microbial natural-product gene clusters)
-**Status:** In progress — three of five exemplar pairs reviewed; nosiheptide and pyoluteorin pairs queued
+**Status:** In progress — three of five exemplar pairs reviewed; nosiheptide and pyoluteorin pairs queued, plus candidate targets drawn from the 2025–2026 BGC review literature
 
 ## Overview
 
@@ -150,6 +150,54 @@ For each protein in a selected complex:
 | Nosiheptide pair (STRAT) | thiopeptide RiPP | Queued |
 | Pyoluteorin pair (PSEF5) | edge-case control | Queued |
 
+### Candidate targets from the recent BGC reviews
+
+Not started; see "What the recent BGC reviews imply for this project" below for
+the reasoning. Accessions are from UniProt REST queries made 2026-10-06 and must
+be re-confirmed at the `fetch-gene` step.
+
+- [ ] **Terrein TerA / TerB (ASPTN; Q0D1N9 / Q0D1P0)** — a *fungal* pair of
+  two **catalytic** enzymes that act sequentially and are proposed to interact
+  (substrate channeling): TerA is the non-reducing PKS, and TerB is a KS-less
+  PKS-like protein (DH, MeT and KR regions per UniProt) that reduces TerA's
+  2,3-dehydro-6-hydroxymellein to 6-hydroxymellein (PMID:41614020). This is
+  *not* the non-catalytic-partner pattern of PqsB / KSβ-CLF / EryCII; it tests
+  whether fatty-acid mis-propagation on a fungal PKS and a PKS-like reductase
+  follows the same signature seen on bacterial condensing enzymes. GOA currently gives both IEA
+  `fatty acid synthase activity` (GO:0004312) and `fatty acid biosynthetic
+  process` (GO:0006633), and TerA additionally IEA `3-oxoacyl-[acyl-carrier-protein]
+  synthase activity` (GO:0004315) — the same fatty-acid mis-propagation seen on
+  KSα and PqsC. On TerB, a `fatty acid synthase activity` IEA would reflect a
+  KR/DH-domain mapping on a real reductase, not fold inheritance by a
+  non-catalytic subunit, so the right replacement is a reductase-class term
+  rather than `contributes_to`. Check first whether this pair appears in MIBiG / the Moriwaki
+  screen, which covers bacterial clusters only.
+- [ ] **TerR (ASPTN; Q0D1P5)** — cluster-situated Zn2Cys6 activator, IEA-only.
+  Reference case for how far a cluster-specific regulator's BP scope should
+  extend.
+- [ ] **γ-butyrolactone system, *S. coelicolor*: ScbA (Q7AKF0 / SCO6266),
+  ScbR (Q7AKF1 / SCO6265),
+  pseudo-receptor ScbR2** (accession unresolved — `SCO6286`/Q93S03 is a
+  candidate but was not confirmed; resolve at `fetch-gene`). ScbA has only IEA
+  `transferase activity` despite a reviewed EC 2.3.1.277 assignment; ScbR has no
+  ligand-binding MF. Both the receptor MF and the AfsA reaction look like
+  `proposed_new_terms`.
+- [ ] **A-factor system, *S. griseus*: AfsA (B1VN93), ArpA (Q9ZN78)** — ArpA
+  carries NAS `involved_in streptomycin biosynthetic process` (GO:0019872,
+  PMID:2111804) and NAS `negative regulation of sporulation...` (GO:0042174).
+  A signal receptor/repressor annotated to the biosynthetic process it controls
+  is exactly the regulator-to-process conflation to adjudicate; read PMID:2111804
+  first — as an author statement the likely action is MODIFY to a regulation
+  term, not REMOVE. An OLS search (2026-10-10) found no streptomycin- or
+  antibiotic-specific regulation term; the candidate replacement is
+  `negative regulation of secondary metabolite biosynthetic process`
+  (GO:1900377), child of GO:1900376.
+- [ ] **MbtH-like proteins (STRCO; Q9Z388 / SCO3218, Q9RK17 / SCO0489)** —
+  non-catalytic activators of NRPS adenylation domains, i.e. the project's
+  "only functional when assembled" premise in NRPS form. Both are
+  TrEMBL-only with IBA annotations. Check whether the Moriwaki data predict
+  MLP–A-domain pairs before promoting these to exemplars.
+
 ### First worked example: PqsBC (BGC0000922)
 
 The PqsB/PqsC pair validates the project premise. Reviewing both subunits
@@ -225,6 +273,115 @@ catalytic family (here cytochrome P450) propagates a full catalytic/cofactor ann
 set onto a pseudoenzyme that has demonstrably lost the active site** — flagged whenever
 UniProt carries a "lacks the ... binding sites" CAUTION.
 
+## What the recent BGC reviews imply for this project
+
+A 2026 *Essays in Biochemistry* special issue revisited the BGC concept
+(editorial PMID:42619353), and is read here alongside a review of BGC
+regulation (PMID:42469370, 2026) and one of the fungal terrein cluster
+(PMID:41614020, 2025). All are secondary sources: the primary papers they cite must be
+fetched before any point below is used as annotation evidence.
+
+**1. Complexes constrain the backbone; tailoring enzymes vary it.** In modular
+systems, "highly evolved protein-protein interactions [36,44–50] within modular
+enzymes typically constrain PKSs and NRPSs to the production of only one or a
+handful of core backbones", while "different products mostly result from
+variable or incomplete tailoring reactions acting on the same backbone"
+(PMID:42124485). The project's choice of core condensing/assembly complexes as
+annotation units is thus the stable end of the spectrum. The corollary is a
+caution: compound-specific MF or BP terms are riskiest on **tailoring enzymes**,
+which is where our remaining queued pairs (ActVA region, nosiheptide maturation)
+sit.
+
+**2. Substrate specificity can drift between related copies, but unevenly.**
+The diversification evidence in PMID:42124485 is mostly about the core
+assembly-line enzymes, and it cuts both ways. For NRPS adenylation domains,
+"point mutations can also alter the substrate specificity of NRPSs, often
+resulting in promiscuous variants", and intra-BGC gene conversion
+"‘copy-pastes’ sequences from one gene to another within the same BGC, often
+changing the encoded enzymatic functions" (PMID:42124485). But the same
+paragraph adds: "In contrast, phylogenetic analyses of AT domains from modular
+PKSs suggest that point mutations do not normally change the building block
+these domains select" (PMID:42124485) — so specificity is not uniformly labile
+even within core enzymes, which reinforces point 1 for PKS AT domains. For
+tailoring enzymes the cited claim is a different one, cross-cluster
+promiscuity rather than allelic divergence: a *Streptomyces* essay proposes
+that "tailoring enzymes such as the monooxygenase (example B) and the
+glucosyltransferase (example A) are not limited to their own BGC but can
+interact with the PKSs encoded elsewhere in the genome" (PMID:42388094) — a
+hypothesis in that paper, not an established result. Practical consequence for
+us: treat an IBA or ISS that transfers a *specific* substrate/product term
+between allelic or HGT-acquired copies with caution wherever the evidence
+shows specificity can drift (NRPS A domains; enzymes that may act on
+substrates from other clusters), and do not assume the same caution applies
+to PKS AT domains, whose building-block selection appears conserved. Prefer the
+donor-independent activity term (e.g. the oxidoreductase or glycosyltransferase
+class) unless the specific product was assayed for *that* protein. The same
+logic applies to heterologous-expression literature, where "host enzymes acting
+on pathway intermediates (e.g. promiscuous tailoring enzymes, host-encoded
+cytochrome P450s, or glycosyltransferases) may generate modified metabolites
+that are not detected in the native host" (PMID:41847751) — a novel congener
+seen in a heterologous host does not license a product-specific term on the
+cluster's own enzyme. HGT itself is "now well acknowledged but also properly
+dimensioned in the context of vertical evolution" (PMID:42619353), which is the
+right frame for reading an IBA node placement over a mobilisable cluster.
+
+**3. Cluster-situated regulators: annotate the regulation, and do not assume the
+ortholog regulates the same cluster.** Pathway-specific transcription factors
+"act as dedicated switches to coordinate expression of all biosynthetic genes"
+(PMID:42469370), but their target can be rewired between relatives: a XanC
+homologue "no longer controls xanthocillin but instead activates the entirely
+different citrinin BGC", so "the function of a PSTF is context-dependent and can
+diverge even between related species" (PMID:42469370). For curation this means
+(a) orthology alone does not transfer a *cluster-specific* regulation term, and
+(b) a regulator belongs on a regulation-of-expression term plus, where the
+evidence supports it, regulation of the biosynthetic process — not on the
+biosynthetic process itself, which the enzymes perform (the CLAUDE.md
+participation test: a product is `involved_in` a process only if it does some
+of the work of that process). In the terrein cluster the
+TerR-binding motifs are informative about scope rather than activity: they
+"were not detected in the promoter regions of terG, terH, and terI, which are
+dispensable for terrein production" (PMID:41614020).
+
+**4. γ-butyrolactone receptors are a distinct, under-annotated MF class.** The
+*Streptomyces* lactone-signalling systems comprise a signal synthase (AfsA
+family, Pfam03756), a TetR-family receptor and often a "pseudo-receptor":
+"some of them (termed as ‘pseudo-receptors’) act as negative regulators for
+antibiotic production" (PMID:42494319). Two statements in that review are
+directly about annotation transfer. First, ligand identity does not follow from
+sequence: "their specific ligands are unable to predict in terms of their amino
+acid sequence homology" (PMID:42494319) — so a specific signalling-molecule
+binding MF should not be propagated by similarity between receptor homologues.
+Second, genomic context is usually a good guide — the system "is generally
+predictable due to their vicinal genetic location" (PMID:42494319) — but not
+always: the A-factor system belongs to the stand-alone type, which "is rare
+distribution in Streptomyces" (PMID:42494319), and there "it is difficult to
+predict the functional receptor genes on the basis of genetic locus of signaling-molecule/receptor system" (PMID:42494319).
+The mechanism is well defined where it has been tested: "Its cognate receptor,
+ScbR, is a TetR-family repressor that binds directly to the promoter of kasO
+(also known as cpkO), the PSTF for a cryptic polyketide BGC" (PMID:42469370).
+A QuickGO/OLS check (2026-10-06) found **no GO molecular-function term for
+γ-butyrolactone / A-factor binding**, and no term for EC 2.3.1.277 (the AfsA
+reaction), while GOA gives ScbA (Q7AKF0) and AfsA (B1VN93) only IEA
+`transferase activity`. Both are `proposed_new_terms` candidates.
+
+**5. Non-catalytic activating partners extend beyond our current exemplars.**
+MbtH-like proteins are the NRPS version of the project's pattern — "PacL showed
+no adenylation activity unless combined with the MLP PacJ" (PMID:42210863) — as
+are type II thioesterases, which "function as proofreading enzymes to remove
+aberrant acyl groups from stalled carrier proteins" (PMID:42210863) and so act
+on the assembly line without being part of the chain-extension chemistry.
+
+**6. Interacting sequential enzymes are a separate case.** The fungal terrein
+cluster offers a contrasting pair in which *both* partners are catalytic:
+"TerA and TerB act collaboratively, and a close interaction between the two was
+proposed" (PMID:41614020), yet "TerB reduces 2,3-dehydro-6-hydroxymellein to
+6-hydroxymellein (Figure 1)" (PMID:41614020). Here each protein carries its own
+activity term and the interaction is best read as substrate channeling, not
+activation of a non-catalytic subunit. Separately, TerA's "low extension cycle specificity enables adding two
+to four extender units, leading to different chain length products"
+(PMID:41614020) — a documented case where one PKS yields several products, so a
+single product-specific MF term would be wrong.
+
 ## Caveats when using the predictions as evidence
 
 - **ipTM/ipSAE are confidence scores, not truth.** The authors' own validation set
@@ -247,6 +404,25 @@ UniProt carries a "lacks the ... binding sites" CAUTION.
   bioRxiv 2025.10.26.684697 (v2, 2026). doi:10.1101/2025.10.26.684697.
 - Data deposit: Zenodo doi:10.5281/zenodo.17451667.
 - MIBiG: Minimum Information about a Biosynthetic Gene cluster database, v4.0.
+- Barona-Gómez F. Bacterial biosynthetic gene clusters. *Essays Biochem* 2026.
+  PMID:42619353 (editorial for the special issue).
+- Nivina A, Thiel Pizarro P. Evolutionary strategies of late-stage diversification
+  in bacterial biosynthetic gene clusters. *Essays Biochem* 2026. PMID:42124485.
+- Zotchev SB. Inter-species horizontal transfer of biosynthetic gene clusters.
+  *Essays Biochem* 2026. PMID:41847751.
+- Nayeb G Hosseini G, Barona-Gómez F. Intra- and inter-biosynthetic gene cluster
+  allelic variation as drivers of chemical diversification in *Streptomyces*.
+  *Essays Biochem* 2026. PMID:42388094.
+- Göbner L *et al.* Heterologous expression of NRPS and PKS pathways in
+  *Escherichia coli*. *Essays Biochem* 2026. PMID:42210863.
+- Teshima A *et al.* Distribution of lactone-signaling system for expression of
+  secondary metabolite BGCs in *Streptomyces* species. *Essays Biochem* 2026.
+  PMID:42494319.
+- Matine I *et al.* Regulatory and metabolic control of microbial biosynthetic
+  gene clusters. *Commun Biol* 2026. PMID:42469370.
+- Németh MZ *et al.* The terrein biosynthetic gene cluster of *Aspergillus
+  terreus*: structure, function, regulation, and similar gene clusters.
+  *Front Fungal Biol* 2025. PMID:41614020.
 - Related internal projects (findings cross-registered): `projects/ALPHAFOLD.md`,
   `projects/PROTEIN_COMPLEX_FUNCTIONS.md` (catalytic-member attribution),
   `projects/PSEUDOENZYMES.md` (EryCII, PqsB, CLF), `projects/OVER_ANNOTATION_PATTERNS.md`
