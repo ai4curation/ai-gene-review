@@ -74,9 +74,10 @@ Two complementary layers:
    cross-tabulates behavioural-assay mentions against reviewer action.
 2. **Specific** — `check_behaviour_assays.py` uses
    `behavioural_assay_go_map.yaml` to verify the *exact GO term* against the
-   *specific assay*. This independently re-derived the **Casp3 `swimming
-   behavior` → Morris Water Maze** over-annotation (the assay is a spatial-memory
-   test; swimming is only the modality).
+   *specific assay*. This independently re-derived the **<gene species="rat"
+   symbol="Casp3">Casp3</gene> `swimming behavior` → Morris Water Maze**
+   over-annotation (the assay is a spatial-memory test; swimming is only the
+   modality).
 
 The check is **exact-id and advisory**: it matches the annotated term id against
 the assay's licensed set (a future refinement would use GO subsumption so child

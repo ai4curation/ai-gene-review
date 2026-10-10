@@ -26,7 +26,7 @@ style: |
 
 # cGAS-STING cytosolic DNA sensing
 
-A scoped project: ten candidate genes, three already reviewed
+A scoped project: ten candidate genes, five already reviewed
 
 <span class="small">AI Gene Review · projects/CGAS_STING_PATHWAY · 2026</span>
 
@@ -38,7 +38,8 @@ A scoped project: ten candidate genes, three already reviewed
 
 - **cGAS** senses cytosolic DNA and makes **2'3'-cGAMP**; **STING1** then recruits **TBK1** to activate **IRF3** and type I interferon.
 - **Scoped, not yet started**: no project-specific review work has been done.
-- **3 of 10** candidates already have complete reviews from other projects (STING1, TBK1, IFI16; 529 annotations). **CGAS** and six others have no gene folder.
+- **5 of 10** candidates already have complete reviews from other projects (CGAS, STING1, TBK1, IRF3, IFI16; 917 annotations).
+- **TREX1**, **ENPP1**, **SAMHD1**, **IRF7** and **IFNB1** still have no review folder.
 
 ---
 
@@ -68,10 +69,10 @@ A scoped project: ten candidate genes, three already reviewed
 
 | Gene | State |
 |---|---|
-| STING1, TBK1, IFI16 | Reviewed (COMPLETE), from other projects |
-| CGAS, IRF3, TREX1, ENPP1, SAMHD1, IRF7, IFNB1 | No gene folder |
+| CGAS, STING1, TBK1, IRF3, IFI16 | Reviewed (COMPLETE), from other projects |
+| TREX1, ENPP1, SAMHD1, IRF7, IFNB1 | No gene folder |
 
-- ⬜ `just fetch-gene human <GENE>` for the seven missing genes, starting with **CGAS**.
+- ⬜ `just fetch-gene human <GENE>` for the five missing genes.
 - ⬜ Review, then consider a cytosolic DNA sensing module.
 
 **Read more:** `projects/CGAS_STING_PATHWAY.md`

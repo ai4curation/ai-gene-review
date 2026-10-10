@@ -28,7 +28,7 @@ stay on native function. We built an allergen-to-UniProt index (32 genes, 31 mol
 registry snapshot and worklist from UniProt's Allergen keyword (1,020 reviewed entries), and
 an IEDB epitope ETL, then ranked targets by epitope load times function uncertainty. So far 24
 genes are reviewed (the full cat set, dog, horse, cow, mouse, rat, house dust mite and birch
-allergens, plus the uteroglobin comparator Scgb1a1): 219 existing annotations, none removed, 62 marked
+allergens, plus the uteroglobin comparator Scgb1a1): 219 existing annotations, none removed, 60 marked
 over-annotated (40 of them, mostly ISS metabolic and insulin-signalling terms, on the mouse and rat MUPs) plus 18 new terms
 proposed. The headline is that the top-priority allergens (Bet v 1, Fel d 1, Can f 1) are
 heavily IgE-targeted and still have no known native function. Coverage of the registry is
@@ -307,11 +307,14 @@ and matches the allergen designation by **regex** so embedded IEDB names
 
 ## Status
 
-- **SCOPING.** Architecture and first secretoglobin cohort drafted.
-- Curated: FELCA/CH1, FELCA/CH2, mouse/Scgb1a1.
-- Done: allergen→UniProt index (molecule↔gene bridge, now 16 genes / 15 molecules)
-  and a UniProt-KW-0020 registry snapshot + fetch worklist (6/1020 reviewed-registry
-  covered). The full domestic-cat allergen set (Fel d 1, 2, 3, 4, 7, 8) is curated.
+- **IN_PROGRESS.** 24 source-allergen/comparator reviews are present and all are
+  still DRAFT; the local index has 32 genes across 31 allergen molecules when it
+  also counts human, yeast, tomato, potato and maize allergens already reviewed
+  outside this cohort.
+- Done: the allergen→UniProt index (molecule↔gene bridge over the cached local
+  reviews) and a UniProt-KW-0020 registry snapshot + fetch worklist (6/1020
+  reviewed-registry entries covered when the 2026_02 snapshot was built). The
+  full domestic-cat allergen set (Fel d 1, 2, 3, 4, 7, 8) is curated.
 - Done: IEDB epitope ETL — **both axes of the prioritization metric are now live**
   (function-gap flag × IEDB epitope/IgE load), realized in the cat priority ranking.
 - Done: worked the worklist by priority — dog cohort (Can f 1/2/3/6), mammalian
@@ -322,5 +325,6 @@ and matches the allergen designation by **regex** so embedded IEDB names
   parallel); MUP (Mus m 1 / Rat n 1) metabolic annotations are ISS over-propagation;
   Bet v 1 ABA-receptor annotations are fold-based over-propagation; Der p 23 chitin
   binding is correctly a negated GOA annotation.
-- Next: extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`),
-  then continue the backlog (other pollens, foods, molds, insects) by priority.
+- Next: extend the IEDB name-join to protein-name-labelled allergens (human
+  `Hom s …`), then continue the backlog (other pollens, foods, molds, insects)
+  by priority ([#4033](https://github.com/ai4curation/ai-gene-review/issues/4033)).

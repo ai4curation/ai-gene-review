@@ -7,7 +7,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 genes: [TFRC, CLTC, RAB7A, Rab7]
 priority: high
-last_reviewed: 2026-07-19
+last_reviewed: 2026-10-04
 scope: Exploratory Deliverome-to-GO project focused on delivery-address semantics, internal trafficking model systems, and a human and mouse Rab7 comparison for post-internalization routing
 review_sets:
   existing_human_anchors:
@@ -20,6 +20,7 @@ review_sets:
     - human/RAB7A_vs_mouse/Rab7
   completed_tasks:
     - define_delivery_address_meaning
+    - map_deliverome_concepts_to_go_anchor_terms
     - compare_human_RAB7A_mouse_Rab7
     - update_model_system_stance
     - harmonize_RAB7A_core_function_synthesis
@@ -53,16 +54,16 @@ address", which depends on surface abundance, internalization and where the
 receptor routes cargo after uptake. This project works out how GO could
 supply vocabulary, priors and GO-CAM route structure to that atlas, and how
 Deliverome assays could feed back into GO without mixing engineered delivery
-with endogenous biology. So far we defined what a delivery address means,
-mapped Deliverome concepts to 17 GO anchor terms, set a model-system stance,
-and compared the human RAB7A and mouse Rab7 reviews as a worked example of
-post-internalization routing. The comparison found the two reviews agree on
-conserved Rab GTPase activity, endosome maturation and retromer binding;
-mouse Rab7 adds in vivo liver evidence that Rab7 loss increases lipid
-nanoparticle escape (PMID:41814093), and its SynGO synapse rows are kept as
-non-core. Six of nine planned tasks are done; the GO-derived surfaceome
-prior, a pilot set of address proteins and a delivery-route template are not
-started.
+with endogenous biology. The first phase defined what a delivery address
+means, mapped Deliverome concepts to 17 GO anchor terms, set a model-system
+stance, and compared the complete human RAB7A and mouse Rab7 reviews as a
+worked example of post-internalization routing. The comparison found that the
+two reviews agree on conserved Rab GTPase activity, endosome maturation and
+retromer binding; mouse Rab7 adds in vivo liver evidence that Rab7 loss
+increases lipid nanoparticle escape (PMID:41814093), and its SynGO synapse
+rows are kept as non-core. The remaining surfaceome-prior, address-pilot and
+route-template work is tracked in
+[#4062](https://github.com/ai4curation/ai-gene-review/issues/4062).
 
 We did this because GO already annotates most of the machinery a delivery
 atlas needs (cell surface, receptor internalization, endosomal routing), and
@@ -76,7 +77,19 @@ The Deliverome Project proposes an open atlas of human surface proteins for targ
 - how GO could contribute evidence-aware vocabulary, priors, and GO-CAM structure to Deliverome-style data;
 - how Deliverome data could contribute back to GO standard annotation and GO-CAMs without mixing endogenous biology with engineered delivery behavior.
 
-This PR keeps the work scoped to project framing plus a human and mouse Rab7 comparison. It does not add a full Deliverome pilot review set.
+This first phase keeps the work scoped to project framing plus a human and mouse Rab7 comparison. It does not add a full Deliverome pilot review set.
+
+## Reviewed Anchors
+
+The 2026-10-04 snapshot links four complete reviews as anchors for later
+Deliverome pilot selection:
+
+| Review | GOA rows actioned | Deliverome role |
+| --- | ---: | --- |
+| TFRC | 154 | Cell-surface transferrin receptor and candidate transcytosis address |
+| CLTC | 164 | Clathrin heavy chain for coated-pit uptake machinery |
+| human RAB7A | 124 | Late-endosomal Rab switch and human disease/trafficking anchor |
+| mouse Rab7 | 119 | In vivo post-internalization routing and LNP-escape model |
 
 ## What "Delivery Address" Means
 
@@ -167,17 +180,21 @@ The human and mouse comparison is reassuring for GO transfer: both reviews conve
 
 # STATUS
 
-## 2026-07-19
+## 2026-10-04
 
 - [x] Create focused Deliverome project document.
 - [x] Define delivery-address meaning.
+- [x] Map Deliverome concepts to 17 GO anchor terms.
 - [x] Record model-system stance, including pombe for conserved internal trafficking and mouse Rab7/Rab7a for in vivo post-internalization routing.
 - [x] Compare human RAB7A and mouse Rab7/Rab7a.
 - [x] Harmonize human RAB7A core-function synthesis with mouse Rab7/Rab7a for early-to-late endosome maturation, late endosome membrane localization, and retromer binding.
 - [x] Revisit mouse SynGO AMPA-receptor trafficking annotations from PMID:24217640.
-- [ ] Build GO-derived human surfaceome prior.
-- [ ] Select a small delivery-address pilot set.
-- [ ] Draft a GO-CAM-like delivery route template.
+- [ ] Build GO-derived human surfaceome prior
+  ([#4062](https://github.com/ai4curation/ai-gene-review/issues/4062)).
+- [ ] Select a small delivery-address pilot set
+  ([#4062](https://github.com/ai4curation/ai-gene-review/issues/4062)).
+- [ ] Draft a GO-CAM-like delivery route template
+  ([#4062](https://github.com/ai4curation/ai-gene-review/issues/4062)).
 
 # NOTES
 

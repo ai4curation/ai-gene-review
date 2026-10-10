@@ -2,20 +2,63 @@
 title: "CRISPR-Cas immunity and anti-CRISPR counter-defence"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [BPZF4]
-genes: [AcrF8]
+species: [ECOLI, PSEAB, MYCTU, STRP1, NEIM8, ACISB, FRATN, STRTR, THET8, LEPBD, LEPSD, BPZF4, BPD31, LISMN, 9CAUD, NEIME, SIRV1, 9GAMM]
+genes:
+  - ECOLI/ygbT
+  - PSEAB/cas1
+  - ECOLI/ygbF
+  - ECOLI/casE
+  - PSEAB/cas6f
+  - MYCTU/cas6
+  - ECOLI/rnc
+  - ECOLI/casA
+  - ECOLI/casB
+  - ECOLI/casC
+  - ECOLI/casD
+  - PSEAB/csy3
+  - PSEAB/csy1
+  - PSEAB/csy2
+  - ECOLI/ygcB
+  - PSEAB/cas3
+  - THET8/cas10
+  - STRTR/cas10
+  - THET8/csm6
+  - MYCTU/csm6
+  - STRP1/cas9
+  - NEIM8/cas9
+  - ACISB/cas12a
+  - FRATN/cas12a
+  - LEPSD/cas13a
+  - LEPBD/cas13a
+  - BPZF4/AcrF8
+  - BPD31/orf30
+  - LISMN/acrIIA4
+  - 9CAUD/acrIIA2
+  - 9CAUD/acrIF3
+  - NEIME/acrIIC1
+  - 9GAMM/acrVA1
+  - SIRV1/orf114
+  - BPZF4/ACA2
 autolink_gene_symbols: false
 ---
 
 # CRISPR-Cas immunity and anti-CRISPR counter-defence
 
-**Two module documents, curated as a matched pair: the host pathway
-([crispr_cas_adaptive_immunity](../modules/crispr_cas_adaptive_immunity.html)) and
-the phage counter-defence that targets it
-([anti_crispr_suppression](../modules/anti_crispr_suppression.html)). Keeping them
-separate is the substantive modelling decision — each is reusable alone, and the
-pairing makes visible that anti-CRISPR mechanisms are individuated by *which step
-of the host pathway they attack*, not by homology, because they have none.**
+**Bottom line:** CRISPR-Cas systems give bacteria and archaea RNA-guided adaptive
+immunity against mobile genetic elements, while sequence-unrelated phage
+anti-CRISPR proteins shut the pathway off by attacking particular host steps.
+This project curated the host pathway
+([crispr_cas_adaptive_immunity](../modules/crispr_cas_adaptive_immunity.html))
+and the viral counter-defence
+([anti_crispr_suppression](../modules/anti_crispr_suppression.html)) as a
+matched module pair, then reviewed all 35 UniProt groundings used by those
+modules. Keeping the two modules separate is the substantive modelling decision:
+each is reusable alone, and the pairing makes visible that anti-CRISPR
+mechanisms are individuated by *which step of the host pathway they attack*, not
+by homology, because they have none. The local reviews and modules are grounded;
+the remaining work is curation of the drafted guide-RNA recognition,
+oligoadenylate-signalling and nucleic-acid-mimicry terms with GO
+([#3966](https://github.com/ai4curation/ai-gene-review/issues/3966)).
 
 ## Why two modules rather than one
 

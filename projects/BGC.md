@@ -33,11 +33,8 @@ and 1 proposed as `NEW`. Two reusable patterns emerged: non-catalytic partners
 from their fold, and a pseudoenzyme (EryCII, a heme-less P450 homologue)
 inherits a full P450 cofactor set, all four rows of which were removed.
 Catalytic KAS-fold partners also inherit fatty-acid synthesis terms that do
-not fit a polyketide or quinolone pathway. The nosiheptide and pyoluteorin pairs are
-still queued. The queued "ActVA" and "DEBS" rows in the status table below predate
-this work: those two candidates share their MIBiG
-and PDB entries (1TQY, 2YJN) with the reviewed KS-CLF and EryCII/EryCIII
-pairs.
+not fit a polyketide or quinolone pathway. The nosiheptide and pyoluteorin
+pairs are still queued in #4047.
 
 **Project type:** Gene curation (exemplar enzymes from microbial natural-product gene clusters)
 **Status:** In progress — three of five exemplar pairs reviewed; nosiheptide and pyoluteorin pairs queued
@@ -103,8 +100,8 @@ accessions and final gene symbols are resolved at the `fetch-gene` step.
 | BGC (MIBiG) | Organism (species code) | Product | Class | Protein pair (GenBank) | PDB | ipTM | Notes / annotation angle |
 |---|---|---|---|---|---|---|---|
 | BGC0000922 | *Pseudomonas aeruginosa* PAO1 (PSEAE) | 2-alkyl-4-quinolones (PQS precursors) | PKS | aag04386.1 / aag04387.1 | 5DWZ | 0.95 | **PqsB / PqsC** condensing heterodimer of the *pqs* quorum-sensing pathway; clinically important; classic obligate heterocomplex. |
-| BGC0000194 | *Streptomyces coelicolor* A3(2) (STRCO) | actinorhodin | type II PKS | cac44200.1 / cac44201.1 | 1TQY | 0.96 | Model type II PKS tailoring step (ActVA region monooxygenase/cyclase); textbook system. |
-| BGC0000055 | *Saccharopolyspora erythraea* NRRL 2338 (SACEN) | erythromycin A–D | modular PKS | cam00066.1 / cam00067.1 | 2YJN | 0.92 | DEBS-associated pair (Hetero 4-mer); modular PKS docking/tailoring; flagship polyketide. |
+| BGC0000194 | *Streptomyces coelicolor* A3(2) (STRCO) | actinorhodin | type II PKS | cac44200.1 / cac44201.1 | 1TQY | 0.96 | **actI-ORF1 / actI-ORF2** KS-CLF minimal PKS; catalytic ketosynthase plus non-catalytic chain-length factor. |
+| BGC0000055 | *Saccharopolyspora erythraea* NRRL 2338 (SACEN) | erythromycin A–D | macrolide tailoring | cam00066.1 / cam00067.1 | 2YJN | 0.92 | **EryCII / EryCIII** desosaminylation pair; P450-homologue activator plus catalytic glycosyltransferase. |
 | BGC0000610 | *Streptomyces actuosus* (STRAT) | nosiheptide | RiPP (thiopeptide) | acr48346.1 / acr48347.1 | 8K60 | 0.88 | RiPP maturation enzymes; tests CC/MF annotation of post-translational tailoring complex. |
 | BGC0000127 | *Pseudomonas protegens* Pf-5 (PSEF5) | pyoluteorin | PKS | aad24885.1 / aad24881.1 | 6O6E | 0.76 | Lower-confidence positive control — useful "edge case" for calibrating how much weight to give an ipTM≈0.76 prediction. |
 
@@ -145,10 +142,8 @@ For each protein in a selected complex:
 | actI-ORF2 / KSβ-CLF (STRCO, Q02062) | actinorhodin KS-CLF (non-catalytic chain-length factor) | **Review complete** |
 | eryCII (SACEN, A4F7P2) | EryCII-EryCIII (P450-homologue GT activator; pseudoenzyme) | **Review complete** |
 | eryCIII (SACEN, A4F7P3) | EryCII-EryCIII (desosaminyl glycosyltransferase) | **Review complete** |
-| ActVA region pair (STRCO) | actinorhodin tailoring | Queued |
-| Erythromycin DEBS pair (SACEN) | modular PKS | Queued |
-| Nosiheptide pair (STRAT) | thiopeptide RiPP | Queued |
-| Pyoluteorin pair (PSEF5) | edge-case control | Queued |
+| Nosiheptide pair (STRAT) | thiopeptide RiPP | Queued in #4047 |
+| Pyoluteorin pair (PSEF5) | edge-case control | Queued in #4047 |
 
 ### First worked example: PqsBC (BGC0000922)
 
@@ -203,9 +198,10 @@ catalytic/non-catalytic *condensing* enzymes to a **catalytic enzyme + pseudoenz
 activator** pair:
 
 - **EryCIII (catalytic GT)** is the desosaminyl transferase (EC 2.4.1.278); cleanly
-  annotated (IDA, PMID:15303858). Minor fixes: MODIFY `UDP-glycosyltransferase
-  activity` → hexosyltransferase (donor is **TDP**-D-desosamine, not UDP), and add the
-  specific erythromycin-biosynthesis BP; propose an EC 2.4.1.278 MF term.
+  annotated (IDA, PMID:15303858). Minor fixes: REMOVE `UDP-glycosyltransferase
+  activity` because the donor is **TDP**-D-desosamine and GO:0016758
+  hexosyltransferase activity is already present by IEA and IDA; add the specific
+  erythromycin-biosynthesis BP; propose an EC 2.4.1.278 MF term.
 - **EryCII is a P450 PSEUDOENZYME.** UniProt states it "lacks the heme-binding sites";
   it functions as an allosteric activator/stabiliser of EryCIII (PMID:22056329). All
   four of its IEA P450 terms (monooxygenase, heme binding, iron ion binding,

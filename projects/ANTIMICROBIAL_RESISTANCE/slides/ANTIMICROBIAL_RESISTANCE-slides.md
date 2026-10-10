@@ -105,14 +105,14 @@ Reviewing 30 resistance determinants and bridging CARD's ontology to GO
 | MARK_AS_OVER_ANNOTATED | 5 |
 | REMOVE | 2 |
 
-<span class="small">140 existing-annotation rows. NEW dominates because many TrEMBL accessions had no GOA at all. The 20-gene focused batch is draft-level (curator leads).</span>
+<span class="small">140 existing-annotation rows. NEW dominates because many TrEMBL accessions had no GOA at all. The 30-gene cohort is draft-level (curator leads).</span>
 
 ---
 
 ## Status and next steps
 
 - ✅ 30 gene reviews, SSSOM mapping set, pipeline, annotation-gain report and spot review.
-- ⬜ Submit the missing leaf MF terms (tetracycline monooxygenase, erythromycin esterase, rifampin ADP-ribosyltransferase, lincosamide nucleotidyltransferase, FosB, Cfr).
-- ⬜ Next families: mph(C/E/G), erm(B/C), mef(A/E), ere(A), CTX-M / KPC.
+- ⬜ Submit GO requests for the 9 no-match ARO rows plus FosB.
+- ⬜ Next families: mph(C/E/G), erm(B/C), mef(A/E), ere(A), CTX-M / KPC — tracked in #4037.
 
 **Read more:** `projects/ANTIMICROBIAL_RESISTANCE.md` · `projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml` · `uniprot2aro2go.py`

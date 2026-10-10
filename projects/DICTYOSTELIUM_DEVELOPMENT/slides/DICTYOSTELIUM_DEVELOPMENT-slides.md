@@ -1,5 +1,5 @@
 ---
-title: "Dictyostelium development: 14 modules, 52 genes"
+title: "Dictyostelium development: 14 modules, 54 reviews"
 marp: true
 theme: default
 paginate: true
@@ -26,7 +26,7 @@ style: |
 
 # Dictyostelium development
 
-From single amoebae to a fruiting body: 14 modules and 52 reviewed genes
+From single amoebae to a fruiting body: 14 modules and 54 development reviews
 
 <span class="small">AI Gene Review · projects/DICTYOSTELIUM_DEVELOPMENT · 2026</span>
 
@@ -37,7 +37,7 @@ From single amoebae to a fruiting body: 14 modules and 52 reviewed genes
 ## Bottom line
 
 - Starving *Dictyostelium* amoebae **aggregate by cAMP relay** and build a **stalk and spore** fruiting body in about a day.
-- We split development into **14 modules**, reviewed **52 genes** covering all of them, and authored **8 DRAFT ModuleReview** documents.
+- We split development into **14 modules**, completed a **52-gene review batch**, and folded in **mlcD + rdeA** to ground **8 DRAFT ModuleReviews**.
 - **1,478 annotations:** 797 accepted, 546 non-core, 42 modified, 37 over-annotated, **19 removed**, 37 undecided.
 
 ---
@@ -75,15 +75,14 @@ From single amoebae to a fruiting body: 14 modules and 52 reviewed genes
 
 ![h:440](dicty-sdf2-module-page.jpg)
 
-<span class="small">dicty_sdf2_encapsulation_relay: AcbA → TagC → SDF-2 ⊣ DhkA → RegA ⊣ PKA; one of 8 DRAFT modules grounded in the gene reviews.</span>
+<span class="small">dicty_sdf2_encapsulation_relay: AcbA → TagC → SDF-2 ⊣ DhkA → RdeA → RegA ⊣ PKA; one of 8 DRAFT modules grounded in the gene reviews.</span>
 
 ---
 
 ## Status and next steps
 
-- ✅ 52 genes reviewed and validated; all 14 modules represented; 8 ModuleReviews.
+- ✅ 52-gene batch reviewed; mlcD + rdeA integrated; all 14 modules represented; 8 ModuleReviews.
 - ⬜ Per-gene notes journals; expert second-pass QA.
 - ⬜ Deeper paralogs: *tgr* locus, Ras/Rap, dhk/grl, ecm/cot, statB/statD.
-- ⬜ rdeA is reviewed but not yet listed on the page or grounded in the SDF-2 module.
 
 **Read more:** `projects/DICTYOSTELIUM_DEVELOPMENT.md` · `modules/dicty_*.yaml` · `genes/DICDI/`

@@ -18,30 +18,30 @@ manifest:
 coating* because the proteins annotated to it (SAR1, SEC12, SEC23, SEC16,
 SED4, PEF1, PREB) are parts of COPII coat assembly, not upstream
 regulators of it, and their annotations move to GO:0048208, now labelled
-*COPII vesicle coat assembly*. OLS shows GO:0003400 obsolete as of
-2026-09-26, and GOA rows in recent reviews already carry the new label. We
+*COPII vesicle coat assembly*. QuickGO shows GO:0003400 obsolete and
+GO:0048208 live with the renamed label as of 2026-10-04. We
 recorded the 11 experimental annotations (8 SGD, 3 UniProt), including one
 disputed human MAPK15 row slated for removal, and the UniRule UR001628761
-mapping that needs redirecting. Scoped, not yet started: none of the 11
+mapping that needs redirecting. Scoped, not yet started: none of the directly
 affected genes is reviewed here, and no review uses GO:0003400. Nine human
 reviews do touch the replacement term: seven TRAPP subunits MODIFY a NAS
 GO:0048208 row to GO:0006888 *ER to Golgi vesicle-mediated transport*, and
-CUL3 and CSNK1D keep theirs as non-core. The proposed first reviews are
-human SAR1A and SEC23A.
+CUL3 and CSNK1D keep theirs as non-core. The proposed first reviews are human
+SAR1A and SEC23A.
 
 ## Overview
 
-A GO obsoletion proposal will retire **GO:0003400 regulation of COPII vesicle
-coating** (BP) and merge its annotations into **GO:0048208 COPII vesicle
-coating** (BP). The rationale, captured in the upstream ontology ticket, is
-that the proteins currently annotated to GO:0003400 act *part_of* the COPII
+A GO obsoletion proposal retired **GO:0003400 regulation of COPII vesicle
+coating** (BP) and replaced it with **GO:0048208 COPII vesicle coat
+assembly** (BP). The rationale, captured in the upstream ontology ticket, is
+that the proteins previously annotated to GO:0003400 act *part_of* the COPII
 vesicle coating pathway (they are components of the coating machinery —
 SAR1, SEC12, SEC23, SEC16, SED4, PEF1, PREB) rather than upstream regulators
 of that pathway, so the "regulation of …" parent does not describe their
 biology accurately. One UniProt entry on the upstream list (human MAPK15,
 Q8TD08) is being disputed and is slated for removal rather than transfer.
 
-The replacement term GO:0048208 is also being renamed at the same time:
+The replacement term GO:0048208 was renamed in the same PR:
 
 - `GO:0048208` *COPII vesicle coating* → **COPII vesicle coat assembly**
 - `GO:0006901` *vesicle coating* → **vesicle coat assembly**
@@ -58,15 +58,15 @@ repository.
 - Annotation tracker: [geneontology/go-annotation#6389](https://github.com/geneontology/go-annotation/issues/6389)
 - Ontology ticket: [geneontology/go-ontology#31945](https://github.com/geneontology/go-ontology/issues/31945) (CLOSED — obsoletion + rename applied via PR #32013)
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
 | regulation of COPII vesicle coating | GO:0003400 | GO:0048208 COPII vesicle coat assembly (renamed from "COPII vesicle coating") |
 
-Term labels were verified in OLS on 2026-05-24. Both `GO:0003400` and
-`GO:0048208` are still live in OLS at the time of this check (the obsoletion
-will become visible after the next GO release ingests PR #32013).
+QuickGO and OLS were rechecked on 2026-10-04: GO:0003400 is obsolete with
+GO:0048208 as its replacement, and GO:0048208 is live with the renamed
+*COPII vesicle coat assembly* label.
 
 ## Affected experimental annotations (from upstream spreadsheet)
 
@@ -89,26 +89,27 @@ upstream Google Sheet on 2026-05-24:
 
 ## Mappings flagged for redirection
 
-- `unirule2go`: **UniRule:UR001628761** → GO:0003400. Verified live via
-  UniProt REST on 2026-05-24. Condition set: PANTHER **PTHR23284** AND
-  taxon ∈ {Mammalia (40674), Arabidopsis (3701), Ascomycota (4890)}. This
-  is the SEC12/PREB/SED4 family (matches affected SGD SEC12 + SED4 and
-  human PREB entries above), so a clean redirect to GO:0048208 (COPII
-  vesicle coat assembly) is appropriate once the obsoletion lands. The
-  human MAPK15 PTHR24055 entry is outside this rule's family condition and
-  is independently handled by the disputed-annotation removal.
+- `unirule2go`: **UniRule:UR001628761** → GO:0003400. Still live with a
+  GO:0003400 dbReference in UniProt REST on 2026-10-04. Condition set:
+  PANTHER **PTHR23284** AND taxon ∈ {Mammalia (40674), Arabidopsis (3701),
+  Ascomycota (4890)}. This is the SEC12/PREB/SED4 family (matches affected
+  SGD SEC12 + SED4 and human PREB entries above), so a clean redirect to
+  GO:0048208 (COPII vesicle coat assembly) is appropriate and still
+  outstanding now that the obsoletion has landed. The human MAPK15 PTHR24055
+  entry is outside this rule's family condition and is independently handled
+  by the disputed-annotation removal.
 
 No InterPro2GO or UniProt-Keywords mappings to GO:0003400 were listed in the
 upstream issue.
 
 ## Impact on this repo
 
-No genes directly annotated to GO:0003400 are currently reviewed here.
-Searches under `genes/` for SAR1, SED4, PEF1, SEC12, SEC23, SEC16A, MAPK15,
-and PREB (and the UniProt accessions O15027, Q8TD08, Q9HCU5) returned no
-matches on 2026-05-24. This means **no existing reviews need refresh** for
-the obsoletion itself; the project is a queueing exercise that lines up
-COPII machinery components for prospective review.
+No genes directly annotated to GO:0003400 are currently reviewed here. Exact
+searches under `genes/` found no GO:0003400 rows on 2026-10-04, and the
+affected human and yeast symbols remain absent as gene-review folders. This
+means **no existing reviews need refresh** for the obsoletion itself; the
+project is a queueing exercise that lines up COPII machinery components for
+prospective review.
 
 The repo currently has a related COPII track in
 [`projects/`](.) only via the parallel vesicle-targeting / vesicle-tethering
@@ -198,30 +199,24 @@ are currently in the repo.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land before bulk-rewriting.** The upstream
-   ontology ticket #31945 is CLOSED and the corresponding PR (#32013) was
-   opened on 2026-04-22; the obsoletion + rename will be visible once a
-   GO release ingests it. Reviews can proceed on the underlying biology
-   now using the live GO:0048208 term ID (action codes ACCEPT / MODIFY /
-   REMOVE are independent of the obsoletion timing).
-2. **Begin with SAR1A (human)** as the anchor review. The COPII coat GTPase
+1. **Begin with SAR1A (human)** as the anchor review. The COPII coat GTPase
    is the canonical example for the replacement term and has substantial
    biochemistry / cryo-EM literature for `core_functions` synthesis.
-3. **Follow with SEC23A (human)** to cover the inner coat layer and the
+2. **Follow with SEC23A (human)** to cover the inner coat layer and the
    SAR1-GAP relationship — gives a paired review that exercises the
    GTPase / GAP partnership in one of the field's textbook examples.
-4. **Add SEC16A and PREB** if the project expands beyond the GTPase /
+3. **Add SEC16A and PREB** if the project expands beyond the GTPase /
    GAP pair, since they are the human entries actually on the upstream list.
-5. **Defer the yeast-only entries** (SAR1, SEC12, SEC23, SED4, PEF1) and
+4. **Defer the yeast-only entries** (SAR1, SEC12, SEC23, SED4, PEF1) and
    the disputed MAPK15 unless interest develops; the human Tier 1/2 reviews
    cover the biology more efficiently for this repo's audience.
-6. **Cross-reference with the ERV14 COPII cargo receptor project**
+5. **Cross-reference with the ERV14 COPII cargo receptor project**
    ([#402](https://github.com/ai4curation/ai-gene-review/issues/402),
    tracking [go-annotation#6406](https://github.com/geneontology/go-annotation/issues/6406))
    — that project covers the cargo-recognition side of COPII budding,
    which sits immediately downstream of the coat-assembly biology covered
    here.
-7. **Flag the disputed MAPK15 annotation upstream** if interest develops in
+6. **Flag the disputed MAPK15 annotation upstream** if interest develops in
    reviewing it locally; otherwise the upstream removal stands on its own.
 
 ## Priority
@@ -240,4 +235,13 @@ so the obsoletion is a reasonable trigger to start that coverage.
   Verified GO:0003400 and GO:0048208 still live in OLS on 2026-05-24;
   verified UniRule UR001628761 (PTHR23284, mammalian/Arabidopsis/Ascomycota
   scope) live in UniProt REST on 2026-05-24. No gene reviews started yet
-  in this repo; none of the 11 affected genes are present under `genes/`.
+  in this repo; none of the directly affected genes were present under
+  `genes/`.
+- 2026-10-04 — Re-audited after the obsoletion became visible in QuickGO:
+  GO:0003400 now resolves as obsolete and GO:0048208 is live as *COPII vesicle
+  coat assembly*. SAR1A, SEC23A, SEC16A and PREB remain absent locally; the
+  only human GO:0048208 rows in reviewed files are the seven TRAPP subunits
+  plus CUL3 and CSNK1D, which are related replacement-term precedents rather
+  than direct GO:0003400 carriers. UniRule UR001628761 still carries a
+  GO:0003400 dbReference in UniProt REST and remains the outstanding mapping
+  redirect.

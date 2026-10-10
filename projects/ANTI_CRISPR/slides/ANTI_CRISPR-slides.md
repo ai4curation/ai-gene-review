@@ -118,6 +118,18 @@ A dedicated term would let curators capture the crRNA-binding mechanism distinct
 
 ---
 
+## Paired regulator: Aca2
+
+**Pectobacterium phage ZF40** · UniProt **H9C180** · Status **COMPLETE**
+
+- Homodimeric HTH repressor of the **acrIF8-aca2** operon
+- Binds inverted-repeat DNA operators to shut off transcription
+- Also binds conserved mRNA stem-loops and blocks ribosome access
+- Generic `DNA binding` IEA refined to **DNA-binding transcription factor activity**
+- Weak SPKW `metal ion binding` annotation removed
+
+---
+
 ## Key mechanisms to annotate
 
 1. **Surveillance complex binding** — GO:0043021 (ribonucleoprotein complex binding)
@@ -150,14 +162,14 @@ Presented at the **Gene Ontology Consortium Meeting, October 2025, Cambridge UK*
 
 ## Conclusions & future directions
 
-**Status: project COMPLETE for the AcrF8 flagship review**
+**Status: two ZF40 reviews complete; wider Acr families in progress**
 
-The AcrF8 example demonstrates:
+The AcrF8/Aca2 pair demonstrates:
 1. Need for more **specific GO terms** for CRISPR-Cas inhibition mechanisms
 2. Value of **structural biology** in informing function annotations
-3. Importance of distinguishing **protein-only vs. protein+RNA** binding mechanisms
+3. Importance of distinguishing **anti-CRISPR effectors** from their Aca regulators
 
 **Next steps**:
 - Identify additional Acr proteins in UniProt / QuickGO
-- Review Aca regulator annotations
-- Propose new GO terms for crRNA-binding mechanisms
+- Curate drafted CRISPR / anti-CRISPR GO terms
+- Compare Aca2 with other Aca regulators

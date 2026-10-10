@@ -71,7 +71,7 @@ across a family or paralog.
 | yrhB | Imm35 immunity (ISS)? | Fold yes, function no → chaperone | MODIFY |
 | Rv0898c | DUF2630 → a function? | Fold classifiable, function not | keep ND |
 | Rv0311 | Intein splicing (IEA)? | Over-annotated | REMOVE |
-| RvY_17310 | Tardigrade Cu/Zn-SOD? | **Supported** — full active site retained | keep |
+| RvY_17310 | Tardigrade Cu/Zn-SOD? | conflicting geometry; paralogs impaired | UNDECIDED |
 
 ---
 
@@ -82,7 +82,7 @@ across a family or paralog.
 | SCO1 | copper chaperone = core MF | supported (high) |
 | pmp20 | thioredoxin peroxidase | over-annotated → remove |
 | IL21 | pos. reg. T-cell proliferation = core | keep as non-core |
-| STAT3 | pos. reg. cell migration = core | non-core (bidirectional) |
+| STAT3 | pos. reg. cell migration = core | OS: non-core; review UNDECIDED |
 | CFAP300 | scaffold/adaptor/chaperone? | unresolvable; add BP |
 
 ---
@@ -96,8 +96,8 @@ The highest-value outcomes were **family-level errors**, not single genes:
 - **CLCN7**: transepithelial-transport term traced to a ComplexPortal
   family-level sentence → propagated by PANTHER IBA to **~1,198 ortholog
   annotations**
-- **RvY_17310**: independently flagged the *degenerate paralogs*
-  (RvY_13070 / RvY_13431) while clearing the target itself
+- **RvY_17310 family**: independently flagged the *degenerate paralogs*
+  (RvY_13070 / RvY_13431); the long target stayed UNDECIDED
 
 ---
 
@@ -138,7 +138,6 @@ structure or catalytic-residue analysis. That layer is exactly the gap.
   machinery? (their InterPro set lacks HSP70-specific domains HSPA8 has)
 - **NPLOC4** — `DUB > MPN`: real JAMM metalloprotease, or pseudo-DUB?
 - **AARSD1** — AlaX editing residues present vs HSP90-cochaperone artifact?
-- **GABARAPL3** — ATG8 ortholog flagged "pseudogene": functional?
 
 ---
 
@@ -158,10 +157,10 @@ structure or catalytic-residue analysis. That layer is exactly the gap.
 
 ## Status
 
-8 reviews wired in; new batch (DNAJC28, C18orf21, HSPA12A/B, NPLOC4, AARSD1)
-in flight.
+PN/executable batch wired in: Rv0311, NPLOC4, HSPA12A/B, AARSD1, DNAJC28;
+C18orf21 remains verification-gated.
 
 Next: run MED non-structural leads; write up the systematic-mis-annotation
-cases; resolve the RvY_17310 vs prior-review disagreement.
+cases.
 
 **Ask a question the literature can't settle — then compute.**

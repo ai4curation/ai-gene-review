@@ -37,7 +37,7 @@ stays `KEEP_AS_NON_CORE`.
 
 | gene | term (GO) | refs | why deferred |
 |---|---|---|---|
-| **IL21** (human) | positive regulation of T cell proliferation (GO:0042102, ×2) | PMID:17673207, PMID:15207081 | Borderline core vs non-core: the effect is real and directly evidenced, but IL21 is a weak, context-dependent T-cell mitogen relative to its signature B-cell/Tfh axis. Set `UNDECIDED` and removed from `core_functions` pending expert review — see **issue [#1418](https://github.com/ai4curation/ai-gene-review/issues/1418)**. The B-cell/Tfh/GC/Ig signature processes remain core; NK cytotoxicity (GO:0045954, IBA/IEA) is raised in the issue for the same review. |
+| **IL21** (human) | positive regulation of T cell proliferation (GO:0042102, ×2) | PMID:17673207, PMID:15207081 | Borderline core vs non-core: the effect is real and directly evidenced, but IL21 is a weak, context-dependent T-cell mitogen relative to its signature B-cell/Tfh axis. The rows were first set `UNDECIDED` for **issue [#1418](https://github.com/ai4curation/ai-gene-review/issues/1418)**, then resolved to `KEEP_AS_NON_CORE` (#1558). The B-cell/Tfh/GC/Ig signature processes remain core; NK cytotoxicity (GO:0045954, IBA/IEA) is raised in the same issue for the review. |
 
 ## Re-reviewed but deliberately NOT changed (flag was a false positive)
 

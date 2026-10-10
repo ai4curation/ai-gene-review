@@ -2,7 +2,7 @@
 title: "COSCIENTIST"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
-species: [human, ECOLI, MYCTU, METJA, SCHPO, worm]
+species: [human, ECOLI, MYCTU, METJA, RAMVA, SCHPO, worm]
 manifest:
   slides:
     - href: COSCIENTIST/slides/COSCIENTIST-slides.html
@@ -27,9 +27,9 @@ row on CLCN7, which traces to a family-level statement propagated to about
 1,198 orthologs. Structural questions made the agent execute code, while
 topology and regulatory questions mostly got reasoning over databases until a
 prompt-template change (tested A/B on CLCN7) made it compute. No hallucinated
-citations were found. The approach is now routine: the repo holds 295
-finished OpenScientist hypothesis reports (`openscientist.md`) for 263 genes,
-out of 310 run directories under `genes/*/*/*-hypotheses/`,
+citations were found. The approach is now routine: the repo holds 299
+finished OpenScientist hypothesis reports (`openscientist.md`) for 267 genes,
+out of 314 run directories under `genes/*/*/*-hypotheses/`,
 far more than the tables below list.
 
 📊 **Slides:** [COSCIENTIST-slides](COSCIENTIST/slides/COSCIENTIST-slides.html)
@@ -88,10 +88,10 @@ paralog, not just the gene under review.
 
 | Gene | Hypothesis | Verdict | Note |
 |------|-----------|---------|------|
-| SCO1 | `GO:0016531` copper chaperone = core MF | Supported (high) | flagged SCO2 paralog over-annotation; IEA→IMP upgrade lead |
+| SCO1 | `GO:0016531` copper chaperone = core MF | Supported (high) | raised SCO2 copper-chaperone follow-up; IEA→IMP upgrade lead |
 | SCHPO/pmp20 | `GO:0008379` thioredoxin peroxidase | Over-annotated → remove | reference *refutes* activity; GO logic conflict (NOT on parent) |
 | IL21 | `GO:0042102` pos. reg. T-cell proliferation = core | Keep as non-core | B-cell/Tfh axis is the signature function |
-| STAT3 | `GO:0030335` pos. reg. cell migration = core | Non-core | bidirectional migration effect = downstream, not core |
+| STAT3 | `GO:0030335` pos. reg. cell migration = core | OpenScientist: non-core | review remains UNDECIDED / expert-deferred |
 | CFAP300 | scaffold/adaptor/chaperone in dynein preassembly? | Unresolvable; add BP | "protein binding" confirmed uninformative; structural compute |
 
 ### Non-structural batch (topology / regulatory / motif)
@@ -215,7 +215,8 @@ analysis would be the deciding evidence:
       (Rv0311 intein REMOVE; NPLOC4 pseudo-DUB; HSPA12A/HSPA12B pseudo-chaperones,
       no GO:0140662; AARSD1 AlaX editing confirmed; RvY_17310 left UNDECIDED after
       verifying the paralog claims; C18orf21 → RMP24/RNase MRP recorded as a
-      verification-gated lead). DNAJC28 pending its re-run.
+      verification-gated lead; DNAJC28 J-domain/HPD motif competence checked and
+      wired in).
 - [ ] Formalize C18orf21 → RNase MRP (GO:0000172) once the 2025–26 primary papers
       are fetched/cached and verified.
 - [ ] Run the MED non-structural leads (WFS1, SORL1, CTBP1).

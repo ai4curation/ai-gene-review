@@ -37,7 +37,7 @@ GO:0097711 and GO:1905353 → GO:1905349 ciliary transition zone assembly
 ## Bottom line
 
 - GO **obsoleted** basal body-plasma membrane docking and transition fiber assembly; both merge into **GO:1905349** ciliary transition zone assembly.
-- **7 experimental rows** were affected: FlyBase removed 2, Reactome fixed RAB3IP, 4 move to the replacement.
+- **7 experimental rows** were affected: FlyBase, MGI, Reactome, UniProt and Xenbase reported fixes; ZFIN remains for upstream error reports.
 - **Scoped, not yet started:** no affected gene is reviewed here; **CEP290** and **RAB3IP** are queued.
 
 ---
@@ -65,7 +65,7 @@ GO:0097711 and GO:1905353 → GO:1905349 ciliary transition zone assembly
 
 ## What this means for the repo
 
-- `grep` over `genes/`: **no review uses GO:0097711 or GO:1905353.**
+- `grep` over `genes/`: **no GOA or review YAML uses GO:0097711 / GO:1905353.**
 - CEP290, RAB3IP, FOXJ1 and pam have **no review folders** yet.
 - Worm `mks-1` and `mks-3` (from `CAEEL_CILIOPATHY`) already propose **NEW GO:1905349** for the MKS transition-zone module (IMP / IGI, PMID:21422230).
 - The anticipated tether MF now exists: **GO:7770062** vesicle membrane tethering activity (sibling `VESICLE_TETHERING_OBSOLETION`).

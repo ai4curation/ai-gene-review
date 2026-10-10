@@ -94,18 +94,18 @@ The heat stress response in Arabidopsis operates through a hierarchical transcri
 
 ## Curation Strategy
 
-### Phase 1: Data Collection (In Progress)
+### Phase 1: Data Collection (Complete)
 1. Fetch UniProt records for all 10 genes
 2. Fetch GO annotations from QuickGO
 3. Generate deep research files using perplexity
 
-### Phase 2: Master Regulators Review
-Focus on HSFA1A, HSFA2, HSFA1B, HSFA1D first as they control the entire network
+### Phase 2: Master Regulators Review (Complete)
+Reviewed HSFA1A, HSFA2, HSFA1B and HSFA1D first because they control the entire network.
 
-### Phase 3: Chaperones and Integrators
-Review HSP101, HSC70-1, HSP90.1, DREB2A, HSFA3, HSFA1E
+### Phase 3: Chaperones and Integrators (Complete)
+Reviewed HSP101, HSC70-1, HSP90.1, DREB2A, HSFA3 and HSFA1E.
 
-### Phase 4: Network Integration
+### Phase 4: Network Integration (Next; [#4038](https://github.com/ai4curation/ai-gene-review/issues/4038))
 Ensure annotations capture:
 - Hierarchical regulatory relationships
 - Protein-protein interactions (HSP-HSF)
@@ -141,14 +141,14 @@ Ensure annotations capture:
 
 ## Progress Tracking
 
-**Last Updated:** 2026-09-26 (per-gene action counts refreshed from the current review files)
+**Last Updated:** 2026-10-04 (per-gene action counts refreshed from the current review files; review `status` fields aligned to COMPLETE)
 
 **Overall Progress:** 10/10 genes complete (100%) ✅✅✅
 **Data Collection:** 10/10 genes fetched (100%)
 **Deep Research:** 10/10 genes COMPLETE (100%) - **435 total citations** ✅
 **Annotation Review:** 10/10 genes (100%) ✅
 
-**Current Phase:** ✅ PROJECT COMPLETE ✅
+**Current Phase:** ✅ PER-GENE REVIEW COMPLETE; network integration tracked in [#4038](https://github.com/ai4curation/ai-gene-review/issues/4038)
 
 **✅ ALL 10 GENES FULLY CURATED:**
 

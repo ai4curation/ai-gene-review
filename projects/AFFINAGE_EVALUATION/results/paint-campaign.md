@@ -22,9 +22,9 @@ uv run python retrieval_recall.py --genes-file results/paint-campaign/campaign-g
     --split-file fa-cohort-genes.txt --split-name FA
 ```
 
-The figures below were regenerated at commit `943b98815` (2026-10-01). They differ
-slightly from the first run (1626 → 1634 cited PMIDs, 718 → 726 novel, 52% → 51%
-pooled) because some reviews have been edited since.
+The figures below were rerun on 2026-10-04. They differ slightly from the first
+run (1626 → 1636 cited PMIDs, 718 → 728 novel, 52% → 51% pooled) because some
+reviews have been edited since.
 
 ## The 91 genes are two cohorts
 
@@ -38,8 +38,8 @@ first version of this page pooled them, which inflated every headline:
 | cohort | genes | novel refs | supplied by Affinage | recall |
 |--------|------:|-----------:|---------------------:|-------:|
 | **PAINT backlog (non-FA)** | **69** | **653** | **311** | **48%** |
-| FA cohort | 22 | 73 | 62 | 85% |
-| all 91, pooled | 91 | 726 | 373 | 51% |
+| FA cohort | 22 | 75 | 62 | 83% |
+| all 91, pooled | 91 | 728 | 373 | 51% |
 
 17 of the 22 FA genes score 100%. The non-FA figure is the one to quote.
 
@@ -51,15 +51,15 @@ to go find (48%), and its trust gates cannot tell you which half is missing.**
 | (all 91) | |
 |---|---|
 | PMIDs Affinage returned | 1344 |
-| PMIDs cited by the finished reviews | 1634 |
+| PMIDs cited by the finished reviews | 1636 |
 | ... already supplied by GOA (no search needed) | 908 |
-| **References the reviews had to find** | **726** |
+| **References the reviews had to find** | **728** |
 | ... supplied by Affinage | 373 |
 | Pooled novel-reference recall (all 91 / non-FA 69) | 51% / **48%** |
 | Fraction of Affinage's returned refs the reviews used (all 91 / non-FA / FA) | 39% / 59% / 21% |
 
 The denominator matters. Counting every PMID in a finished review makes recall
-look like 32%, but 908 of the 1634 references arrive prepackaged in the GOA
+look like 32%, but 908 of the 1636 references arrive prepackaged in the GOA
 file — the reviewer is handed them and no retrieval is involved. Scoring a
 retrieval provider against references it was never asked to retrieve measures
 nothing. Restricted to the references the reviewer genuinely had to locate,
@@ -171,7 +171,7 @@ are written down somewhere.
 ## Limits of this analysis
 
 **48% (non-FA) is an upper bound, for two reasons, and the second is the larger one.**
-The FA cohort's 85% is not a recall estimate at all (see above).
+The FA cohort's 83% is not a recall estimate at all (see above).
 
 The reviews were written *with the Affinage report in hand* — 57 of the 69 non-FA
 reviews cite it as a source. The reference set being scored is therefore partly **caused by** the

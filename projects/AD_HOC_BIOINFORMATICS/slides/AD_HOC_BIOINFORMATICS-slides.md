@@ -38,7 +38,7 @@ Small computations that test a domain-based GO annotation
 
 - A domain hit says what a protein's **ancestors** did. A residue-level check says whether this protein can still do it.
 - Four early cases, one per analysis type: **Epe1** (active site), **PHYKPL** (substrate), **LPL1** (localization), **AcrF8** (domain architecture).
-- Epe1: all **7** JmjC catalytic/metal rows are **REMOVE**. The catalogue is a sample: the repo now has **237** `-bioinformatics/` folders.
+- Epe1: inherited/electronic JmjC catalytic rows are **REMOVE**, while experimental H3K9me rows stay **UNDECIDED**. The repo now has **278** `-bioinformatics/` folders.
 
 ---
 
@@ -69,7 +69,7 @@ Small computations that test a domain-based GO annotation
 
 | Gene | Species | Analysis | Review outcome (verified in YAML) |
 |---|---|---|---|
-| Epe1 | SCHPO | Active site, cofactor | 7 catalytic/metal rows REMOVE |
+| Epe1 | SCHPO | Active site, cofactor | IBA/IEA catalytic rows REMOVE |
 | PHYKPL | human | Substrate specificity | IEA `transaminase activity` REMOVE |
 | LPL1 | CANAL | Localization signal | IEA `membrane` REMOVE; lipid droplet kept |
 | AcrF8 | BPZF4 | Domain architecture | no analysis folder |
@@ -88,8 +88,8 @@ Small computations that test a domain-based GO annotation
 
 ## Status and next steps
 
-- Catalogue frozen at 4 cases (Jan 2026); **237** analysis folders exist across `genes/`.
-- ⬜ Create `PHYKPL-bioinformatics/` and `LPL1-bioinformatics/` (still listed as to-do).
-- ⬜ Replace the hand table with an index generated from the folders.
+- Catalogue frozen at 4 cases (Jan 2026); **278** analysis folders exist across `genes/`.
+- ⬜ Create `PHYKPL-bioinformatics/` and `LPL1-bioinformatics/` (#4028).
+- ⬜ Replace the hand table with an index generated from the folders (#4029).
 
 **Read more:** `projects/AD_HOC_BIOINFORMATICS.md` · `projects/BIOINFORMATICS.md` · `genes/SCHPO/Epe1/Epe1-bioinformatics/`

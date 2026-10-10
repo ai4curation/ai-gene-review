@@ -17,17 +17,21 @@ manifest:
 
 **Bottom line:** anti-CRISPR (Acr) proteins are small phage proteins that switch
 off bacterial CRISPR-Cas immunity, and their GO annotations lag far behind a
-detailed structural literature. We reviewed two genes from Pectobacterium phage
-ZF40: the Type I-F inhibitor AcrF8 and its Aca2 repressor (reviewed as
-`genes/BPZF4/ACA2`, which the pending list below predates). For AcrF8 the
-generic IEA term `GO:0052170` (symbiont-mediated suppression of host innate immune response) was
+detailed structural literature. We reviewed two complete genes from Pectobacterium
+phage ZF40: the Type I-F inhibitor AcrF8 and the dual DNA/RNA-binding Aca2
+repressor that controls the `acrIF8-aca2` operon. For AcrF8, the generic IEA
+term `GO:0052170` (symbiont-mediated suppression of host innate immune response) was
 modified to `GO:0098672` (symbiont-mediated suppression of host CRISPR-cas system), and
 `GO:0043021` ribonucleoprotein complex binding was added as its core function
 from the cryo-EM structure (PMID:32170016). We also proposed a new term,
 "CRISPR RNA binding anti-CRISPR activity", because AcrF8 contacts the crRNA as
-well as the Cas7f backbone and no current term captures that. The wider Acr
-families (AcrIF, AcrIE, AcrIIA) have not been started, so the project is a
-worked example rather than a family-wide review.
+well as the Cas7f backbone and no current term captures that. The Aca2 review
+refined generic DNA/RNA-binding annotations into a transcriptional and
+translational repressor model, with low-priority cleanup tracked in
+[ai4curation/ai-gene-review#778](https://github.com/ai4curation/ai-gene-review/issues/778).
+The wider Acr families (AcrIF, AcrIE, AcrIIA) remain the next review target,
+and GO term curation for drafted CRISPR/anti-CRISPR terms is tracked in
+[ai4curation/ai-gene-review#3966](https://github.com/ai4curation/ai-gene-review/issues/3966).
 
 ## Overview
 
@@ -83,16 +87,18 @@ These proteins are excellent targets for AI-assisted curation because their mech
 
 ## Genes for Review
 
-### Priority 1: Structurally Characterized Acrs
-| Species | Gene | CRISPR Type | Status |
-|---------|------|-------------|--------|
-| BPZF4 | AcrF8 | Type I-F | COMPLETE |
+### Completed ZF40 reviews
 
-### Priority 2: Other Acr Families
-(To be identified - AcrIF, AcrIE, AcrIIA families)
+| Species | Gene | Role | Status |
+|---------|------|------|--------|
+| BPZF4 | <gene species="BPZF4" symbol="AcrF8">AcrF8</gene> | Type I-F inhibitor with dual protein/crRNA binding | COMPLETE |
+| BPZF4 | <gene species="BPZF4" symbol="ACA2">ACA2</gene> | Aca2 DNA/RNA-binding repressor of the `acrIF8-aca2` operon | COMPLETE; follow-up [#778](https://github.com/ai4curation/ai-gene-review/issues/778) |
 
-### Priority 3: Aca Regulators
-(Anti-CRISPR associated proteins that regulate Acr expression)
+### Next review targets
+
+- **AcrIF / AcrIE / AcrIIA families** — expand beyond the ZF40 type I-F worked example.
+- **Aca regulators beyond Aca2** — compare whether DNA and RNA repression are conserved or Aca2-specific.
+- **Drafted CRISPR/anti-CRISPR GO terms** — curate the new-term requests tracked in [#3966](https://github.com/ai4curation/ai-gene-review/issues/3966).
 
 ## Key Mechanisms to Annotate
 
@@ -119,13 +125,20 @@ These proteins are excellent targets for AI-assisted curation because their mech
 
 ## Completed Reviews
 - [x] BPZF4/AcrF8 - Type I-F inhibitor with dual protein-RNA binding
+- [x] BPZF4/ACA2 - Aca2 dual DNA/RNA-binding repressor
 
 ## Pending
 - [ ] Identify additional Acr proteins in UniProt/QuickGO
-- [ ] Review Aca regulator annotations
-- [ ] Propose new GO terms for crRNA-binding mechanisms
+- [ ] Resolve Aca2 cleanup in [#778](https://github.com/ai4curation/ai-gene-review/issues/778)
+- [ ] Propose and curate drafted CRISPR/anti-CRISPR GO terms in [#3966](https://github.com/ai4curation/ai-gene-review/issues/3966)
 
-Last updated: 2026-01-22
+Last updated: 2026-10-04
+
+## 2026-10-04
+
+Rechecked the project against both complete BPZF4 gene reviews. AcrF8 remains the
+flagship anti-CRISPR mechanism example, and ACA2 is now listed explicitly as the
+paired Aca regulator review rather than left in the pending queue.
 
 # NOTES
 

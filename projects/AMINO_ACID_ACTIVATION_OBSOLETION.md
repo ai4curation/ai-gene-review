@@ -14,38 +14,41 @@ manifest:
 
 # Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs
 
-**Bottom line:** GO is obsoleting 43 biological-process terms that name the
+**Bottom line:** GO obsoleted 43 biological-process terms that name the
 amino acid charged onto a tRNA (alanyl-tRNA aminoacylation and so on, plus
-their mitochondrial twins) and merging them into two parents, GO:0006418 and
-GO:0070127, because amino-acid identity is already captured by the 1:1
-`<aa>-tRNA ligase activity` MF terms. We checked every affected term in
-QuickGO, counted its annotations (six mitochondrial terms have none), and
-enumerated the reviews in this repo that use them. The obsoletion matters here
-because it reverses a judgment our reviews make: they mark GO:0006418 as
-over-annotated because the amino-acid-specific child "already captures" the
-process. The impact tables below were written on 2026-08-29, before the PSEPK
-aminoacyl-tRNA batch (#2899) merged; the repo now has 33 reviews touching the
-obsoleted terms, 26 of them in strictly validated `core_functions`, and 16
-reviews that mark GO:0006418 over-annotated or modify it away (15 PSEPK
-synthetases plus human AARS1). No review has been edited for the obsoletion
-yet, and the module text records that QuickGO's 2026-09-22 snapshot already
-obsoletes GO:0006421, GO:0006425 and GO:0070681.
+their mitochondrial twins) because amino-acid identity is already captured by
+the 1:1 `<aa>-tRNA ligase activity` MF terms. PR #32551 landed on 2026-08-28:
+22 terms were replaced by GO:0006418, 20 mitochondrial terms were replaced by
+GO:0070127, and the indirect transamidation term GO:0070681 was obsoleted with
+`consider` pointers only. We checked every affected term in QuickGO on
+2026-08-29, counted its annotations (six mitochondrial terms had none), and
+enumerated the reviews in this repo that use them. The current repo has 33
+reviews touching the obsoleted terms, 26 of them in strictly validated
+`core_functions`, and 16 reviews that mark GO:0006418 over-annotated or modify
+it away (15 PSEPK synthetases plus human AARS1). DROME/TyrRS has already been
+repointed to GO:0006418; the remaining migration is tracked in
+[#2747](https://github.com/ai4curation/ai-gene-review/issues/2747).
 
-It also surfaced an upstream problem worth reporting: zebrafish *gtpbp3*, a
-tRNA-modifying GTPase rather than a synthetase, is the only gene annotated to
-two of the mitochondrial terms, and a bulk migration would carry those six
-over-annotations into GO:0070127.
+It also surfaced an upstream problem, reported on geneontology/go-annotation#6525:
+zebrafish *gtpbp3*, a tRNA-modifying GTPase rather than a synthetase, was the
+only gene annotated to two of the mitochondrial terms. ZFIN deleted the six
+obsolete aminoacylation rows on 2026-09-08 and replaced them with a direct
+`tRNA 5-taurinomethyluridine synthase` row; the local follow-up is to re-fetch
+and re-review DANRE/gtpbp3, whose cached GOA file still carries the 2021-09-22
+ZFIN snapshot.
 
 ## Overview
 
-A GO obsoletion proposal will obsolete **43 biological-process terms** that name a
-specific amino acid being charged onto tRNA — the 20 cytosolic
+GO has obsoleted **43 biological-process terms** that name a specific amino acid
+being charged onto tRNA — the 20 cytosolic
 `<aa>yl-tRNA aminoacylation` terms, their 20 mitochondrial counterparts, two
 redundant compartment-qualified variants, and the transamidation route term.
-Every one of them is replaced by a compartment-level parent:
+The direct charging terms were replaced by compartment-level parents:
 
-- 23 terms → `GO:0006418 tRNA aminoacylation for protein translation`
+- 22 terms → `GO:0006418 tRNA aminoacylation for protein translation`
 - 20 terms → `GO:0070127 tRNA aminoacylation for mitochondrial protein translation`
+- 1 term, `GO:0070681 glutaminyl-tRNAGln biosynthesis via transamidation` →
+  obsolete with `consider` pointers, but no automatic `replaced_by`
 
 The rationale is that **amino-acid specificity is a molecular-function
 distinction, not a process one**. Each obsoleted BP has an exact 1:1 MF
@@ -56,26 +59,26 @@ terms map to the **same** MF as their cytosolic counterparts, because compartmen
 is likewise not a molecular-function distinction: a synthetase charging tRNA in
 both compartments takes one MF annotation, not two.
 
-This project tracks the impact on AI Gene Review. **Fifteen gene reviews in this
-repo are affected**, eleven of them through author-supplied `core_functions` term
-ids that are strictly validated and will need to change — so this is a concrete
-re-review queue, not a documentation exercise. More importantly, four reviews
-contain reasoning that the obsoletion will **invert** (see
-[The four inverted judgments](#the-four-inverted-judgments)).
+This project tracks the impact on AI Gene Review. **Thirty-three gene reviews in
+this repo are affected**, 26 of them through author-supplied `core_functions`
+term ids that are strictly validated and will need to change — so this is a
+concrete re-review queue, not a documentation exercise. More importantly, 16
+reviews contain reasoning that the obsoletion will **invert** (see
+[The inverted judgments](#the-inverted-judgments)).
 
 ## Upstream tickets
 
-- Annotation tracker: [geneontology/go-annotation#6525](https://github.com/geneontology/go-annotation/issues/6525) (updated 2026-08-28)
-- Ontology ticket: [geneontology/go-ontology#15375](https://github.com/geneontology/go-ontology/issues/15375) (opened 2018-03-10, **open**)
+- Annotation tracker: [geneontology/go-annotation#6525](https://github.com/geneontology/go-annotation/issues/6525) (ZFIN resolved the DANRE/gtpbp3 rows on 2026-09-08)
+- Ontology ticket: [geneontology/go-ontology#15375](https://github.com/geneontology/go-ontology/issues/15375) (closed 2026-09-02 after #32551 landed the obsoletion)
 - Affected annotations spreadsheet: [Google Sheet](https://docs.google.com/spreadsheets/d/1OQWHL67xbqC47wRI1THT1MdN53HcSUnCBqamItzCW9U)
 - Impacted groups (per upstream): UniProt 52, SGD 45, FlyBase 44, ComplexPortal 28,
   EcoCyc 25, GeneDB 11, MGI 7, CAFA 7, CGD 6, ZFIN 6, PINC 5, RGD 4, EcoliWiki 4,
   BHF-UCL 3, MTBBASE 2, HGNC 1, PomBase 1 — **251 total**
 
-### Two structural changes have already landed
+### The ontology work has landed
 
-The surrounding hierarchy was repaired ahead of the obsoletion, in two PRs merged
-against go-ontology#15375:
+The surrounding hierarchy was repaired ahead of the obsoletion, in two PRs
+merged against go-ontology#15375:
 
 - **#32537** (merged 2026-08-26) severed `tRNA aminoacylation` from
   `amino acid metabolic process`. Charging a tRNA attaches an amino acid to
@@ -87,6 +90,9 @@ against go-ontology#15375:
   biosynthetic process` edge was **rejected** during review — correctly, since
   `GO:0043040 tRNA aminoacylation for nonribosomal peptide biosynthetic process`
   falsifies the universal claim.
+- **#32551** (merged 2026-08-28) obsoleted the 43 amino-acid-specific terms.
+  `GO:0070681` was included, but deliberately has `consider` pointers rather
+  than a single automatic replacement.
 
 **Release lag caveat:** as of 2026-08-29 neither OLS nor QuickGO reflects these
 merges. Both still return `GO:0043038` as non-obsolete, and both still label
@@ -94,7 +100,7 @@ merges. Both still return `GO:0043038` as non-obsolete, and both still label
 among its synonyms). Do not treat the live lookup services as evidence that the
 merges have not happened; check the ontology repo instead.
 
-### Count discrepancy worth confirming upstream
+### The 42-vs-43 question was settled
 
 The ontology ticket's proposal says **"Obsoleted (42)"**; the annotation ticket
 lists **43** terms. The difference is `GO:0070681 glutaminyl-tRNAGln biosynthesis
@@ -102,10 +108,10 @@ via transamidation`, which is the one entry that breaks the 1:1 pattern — it i
 the *indirect* transamidation route (misacylated Glu-tRNA(Gln) formed by a
 non-discriminating GluRS, then amidated by GatCAB), and its MF counterpart is
 `GO:0050567 glutaminyl-tRNA synthase (glutamine-hydrolyzing) activity`, not a
-glutamine-tRNA ligase. Whether it is genuinely in the same obsoletion batch
-should be confirmed before any in-repo edits, because **five of this repo's
-fifteen affected reviews hang on `GO:0070681` alone**, and it is also the source
-term for a `concepts` node in `modules/bacterial_aminoacyl_trna_charging.yaml`.
+glutamine-tRNA ligase. The final ontology PR did include it in the obsoletion
+batch, but with `consider` pointers rather than a `replaced_by` edge, so the
+five affected reviews and the `modules/bacterial_aminoacyl_trna_charging.yaml`
+concept still need curator judgment instead of a mechanical redirect.
 
 ## Obsoletion plan (per upstream)
 
@@ -186,14 +192,15 @@ ComplexPortal (28), CAFA (7) and PINC (5) contributions largely do not carry
 `ECO:0000269`-descendant evidence codes. Reconcile against the spreadsheet before
 quoting either number as authoritative.
 
-## The four inverted judgments
+## The inverted judgments
 
 This is the most consequential finding for this repo, and it is not a mechanical
 id swap.
 
-Four reviews here carry an explicit review action on `GO:0006418` — the term
-everything is being merged **into** — arguing that it is too general and is
-superseded by the amino-acid-specific child:
+Sixteen reviews here carry an explicit review action on `GO:0006418` — the term
+the cytosolic leaves were merged **into** — arguing that it is too general and is
+superseded by the amino-acid-specific child. The 2026-08-29 snapshot already had
+four representative examples:
 
 | Review | Action on GO:0006418 | Recorded reason |
 |---|---|---|
@@ -202,10 +209,12 @@ superseded by the amino-acid-specific child:
 | PSEPK/serS | `MODIFY` → GO:0006434 | "SerS has defined serine and tRNA substrates. GO:0006434 preserves its direct role in translational tRNA charging while recording the known amino-acid specificity." |
 | human/AARS1 | `MODIFY` → GO:0006419 | "Use the alanine-specific aminoacylation process." |
 
-The obsoletion asserts the **opposite**: the substrate-specific child is the wrong
-place to record specificity, and `GO:0006418` is the correct BP. After the merge,
-each of these four says "replace the surviving term with an obsolete one", and
-two of them mark the surviving term as an over-annotation.
+The obsoletion asserts the **opposite**: the substrate-specific child is the
+wrong place to record specificity, and `GO:0006418` is the correct BP. After the
+PSEPK aminoacyl-tRNA batch merged, the inverted set grew to `PSEPK/argS`,
+`PSEPK/aspS`, `PSEPK/cysS`, `PSEPK/glnS`, `PSEPK/gltX`, `PSEPK/ileS`,
+`PSEPK/leuS`, `PSEPK/lysS`, `PSEPK/metG`, `PSEPK/proS`, `PSEPK/serS`,
+`PSEPK/thrS`, `PSEPK/trpS`, `PSEPK/tyrS`, `PSEPK/valS` and `human/AARS1`.
 
 These reviews are not wrong about the biology — SerS really does charge serine —
 they applied a general "prefer the most specific term" heuristic to an axis
@@ -224,45 +233,26 @@ regardless of how the rest of the review is handled.
 
 ## Impact on this repo
 
-Fifteen reviews touch the obsoleted terms or their replacements. Per CLAUDE.md,
-`existing_annotations[].term.id` is GOA-sourced and **not** hard-validated, so
-those will not break validation — but `core_functions` ids **are** strictly
-validated, and **eleven reviews use an obsoleted term inside
-`core_functions.directly_involved_in`**.
+Thirty-three reviews touch the obsoleted terms or their replacements. Per
+CLAUDE.md, `existing_annotations[].term.id` is GOA-sourced and **not**
+hard-validated, so those will not break validation — but `core_functions` ids
+**are** strictly validated, and 26 reviews use an obsoleted term inside
+`core_functions.directly_involved_in`.
 
-### Reviews needing a `core_functions` change (11)
+| Group | Reviews | Obsolete ids in `core_functions` | Current issue |
+|---|---:|---:|---|
+| PSEPK aminoacyl-tRNA synthetases | 21 | 21 | 15 invert GO:0006418; six still use only the obsolete child BP |
+| PSEPK GatABC | 3 | 0 | GO:0070681 existing rows are `UNDECIDED` |
+| human AARS1, AARS2 | 2 | 2 | AARS1 is inverted; AARS2 proposes GO:0070143 |
+| POPTR ALARS, POPTR GATC, METTP gatC | 3 | 3 | Core BPs point to GO:0006419 or GO:0070681 |
+| DANRE gtpbp3 | 1 | 0 | Six mitochondrial IMP rows are marked over-annotated |
+| human AARSD1, human DARS2, DROME TyrRS | 3 | 0 | Existing rows only; TyrRS has already been re-argued to GO:0006418 |
 
-| Review | Accession | `core_functions` term | `existing_annotations` on obsoleted terms |
-|---|---|---|---|
-| human/AARS1 | P49588 | GO:0006419 | ×6 — IBA, IEA, IMP (PMID:33909043), IDA (PMID:28493438), IDA (PMID:27622773), TAS (PMID:7761427); all ACCEPT |
-| human/AARS2 | Q5JTZ9 | GO:0070143 | GO:0070143 IBA + IMP (PMID:21549344) ACCEPT; GO:0006419 IEA MODIFY→GO:0070143 |
-| POPTR/ALARS | B9HQZ6 | GO:0006419 | IBA + IEA, both ACCEPT |
-| POPTR/GATC | B9INH0 | GO:0070681 | IBA + IEA, both ACCEPT |
-| PSEPK/gatA | Q88PB9 | GO:0070681 | IEA ACCEPT |
-| PSEPK/gatB | Q88PC0 | GO:0070681 | IEA ACCEPT |
-| PSEPK/gatC | Q88PB8 | GO:0070681 | IEA ACCEPT |
-| METTP/gatC | A0B5K3 | GO:0070681 | IEA ACCEPT |
-| PSEPK/glnS | Q88IU5 | GO:0006425 | GO:0006425 IEA ACCEPT; GO:0006424 IEA REMOVE |
-| PSEPK/gltX | Q88LF6 | GO:0006424 | IEA ACCEPT |
-| PSEPK/serS | Q88FT2 | GO:0006434 | IEA ACCEPT |
+**human/AIMP1** (Q12904), **human/AIMP2** (Q13155), and **HORSE/DARS2** carry
+`GO:0006418` but no obsoleted term. They gain company rather than losing scope
+and are not part of the 33-review migration queue.
 
-### Reviews affected only in `existing_annotations` (2)
-
-- **DANRE/gtpbp3** (Q501Z5) — six IMP annotations, all from PMID:30916346, to
-  GO:0070143 / GO:0070153 / GO:0070154 / GO:0070155 / GO:0070183 / GO:0070184.
-  All six are already `MARK_AS_OVER_ANNOTATED` here. See below.
-- **human/AARSD1** (Q9BTE6) — GO:0006419 IEA (GO_REF:0000002), already `REMOVE`.
-  AARSD1 is an editing-domain-only paralogue that does not charge tRNA, so the
-  obsoletion is orthogonal: the annotation should go regardless of which BP term
-  survives.
-
-### Reviews carrying only the replacement terms (2, unaffected)
-
-**human/AIMP1** (Q12904) and **human/AIMP2** (Q13155) each carry `GO:0006418`
-(NAS, ACCEPT) and no obsoleted term. They gain company rather than losing scope.
-Worth a re-check pass only.
-
-### The gtpbp3 case is worth flagging upstream
+### The gtpbp3 case was resolved upstream
 
 `GO:0070153 mitochondrial leucyl-tRNA aminoacylation` and
 `GO:0070155 mitochondrial methionyl-tRNA aminoacylation` have **exactly one
@@ -278,11 +268,14 @@ noting that "gtpbp3KO zebrafish showed increased efficiencies of tRNA
 aminoacylation", which is inconsistent with gtpbp3 acting as a direct ligase and
 instead reflects an indirect consequence of altered tRNA modification.
 
-The merge would silently roll all six of these into one `GO:0070127`, converting
-a visible six-fold over-annotation into a single plausible-looking one. **These
-six annotations should be withdrawn rather than migrated**, and that is worth
-saying on go-annotation#6525 while the batch is still being assembled — it is
-exactly the kind of case a bulk term-replacement will otherwise launder.
+The merge would have silently rolled all six of these into one `GO:0070127`,
+converting a visible six-fold over-annotation into a single plausible-looking
+one. After this repo flagged the problem on geneontology/go-annotation#6525,
+ZFIN deleted the six rows and added a direct `GO:0160236 tRNA
+5-taurinomethyluridine synthase` annotation on 2026-09-08. The remaining local
+work is to re-fetch and re-review DANRE/gtpbp3: its cached `gtpbp3-goa.tsv`
+still contains the stale 2021-09-22 ZFIN rows for the six obsolete mitochondrial
+aminoacylation terms.
 
 ### Module impact
 
@@ -317,36 +310,39 @@ go-annotation#6525 for the full list. Two observations:
 
 ## Scope
 
-- **Organisms**: broad. In-repo: human (5), PSEPK (6), POPTR (2), DANRE (1),
-  METTP (1). Upstream: SGD/FlyBase/EcoCyc-dominant, i.e. yeast, fly and *E. coli*.
+- **Organisms**: broad. In-repo affected by obsolete ids: PSEPK (24), human
+  (4), POPTR (2), DANRE (1), DROME (1), METTP (1). Upstream:
+  SGD/FlyBase/EcoCyc-dominant, i.e. yeast, fly and *E. coli*.
 - **GO branch**: BP only. **No MF term is obsoleted** — the 20 `<aa>-tRNA ligase
   activity` terms and `GO:0050567` all remain, and are where specificity now lives.
 - **Type of fix**: structural, but with a genuine curation-philosophy component.
-  Unlike a pure merge, this one **contradicts recorded reasoning in four reviews**
+  Unlike a pure merge, this one **contradicts recorded reasoning in 16 reviews**
   and requires those to be re-argued, not just re-pointed.
 
-## Candidate genes for initial review
+## Current work queue
 
 Priority order.
 
-1. **PSEPK/glnS, PSEPK/gltX, PSEPK/serS, human/AARS1** — highest priority. These
-   four carry the inverted `GO:0006418` judgments. They need a re-argued review,
-   not an id swap, and they are the ones that will look actively wrong once the
-   merge lands.
+1. **The 16 inverted `GO:0006418` rows** — highest priority. These need a
+   re-argued review, not an id swap, and they are the ones that look actively
+   wrong now that the merge has landed.
 2. **human/AARS2** (Q5JTZ9) — the `proposed_replacement_terms: GO:0070143` is
    already a dangling target. Also carries an IMP on PMID:21549344 that is a
    genuine upstream experimental annotation.
-3. **DANRE/gtpbp3** (Q501Z5) — the six-annotation over-annotation cluster; the
-   sole basis for two of the obsoleted terms. Should drive an upstream comment
-   before the batch is finalised.
+3. **DANRE/gtpbp3** (Q501Z5) — re-fetch GOA and re-review after ZFIN removed the
+   six-annotation over-annotation cluster upstream on 2026-09-08; the cached
+   local snapshot still contains those obsolete rows.
 4. **The five GatCAB reviews** (POPTR/GATC, PSEPK/gatA, PSEPK/gatB, PSEPK/gatC,
-   METTP/gatC) — all hinge on `GO:0070681`, whose inclusion in the
-   batch is the open question above. Hold until that is settled.
+   METTP/gatC) — all hinge on `GO:0070681`, which was obsoleted without a single
+   safe `replaced_by` term.
 5. **POPTR/ALARS** (B9HQZ6) — clean mechanical case; IBA + IEA, both ACCEPT, one
    `core_functions` entry.
 6. **human/AARSD1** (Q9BTE6) — already `REMOVE`; confirm the removal survives the
    merge rather than being migrated to `GO:0006418`.
-7. **Not yet in repo, worth adding**: *E. coli* `valS` (P07118) is the **sole**
+7. **human/DARS2** and **DROME/TyrRS** — annotation-row-only cleanups. TyrRS
+   already proposes GO:0006418 for its two GO:0006437 rows and uses GO:0006418
+   in `core_functions`.
+8. **Not yet in repo, worth adding**: *E. coli* `valS` (P07118) is the **sole**
    annotation to `GO:0061475`, and yeast `MSR1` (P38714) / `MSE1` (P48525) are
    the sole annotations to `GO:0070144` / `GO:0070149` (all verified via QuickGO,
    2026-08-29). Three single-annotation terms, three reviewable genes — a cheap
@@ -354,31 +350,28 @@ Priority order.
 
 ## Proposed approach
 
-1. **Do not edit gene reviews yet.** go-ontology#15375 is still open and the
-   43-vs-42 question is unresolved. Editing `core_functions` now would desynchronise
-   eleven reviews from GOA for no gain.
-2. **Comment on go-annotation#6525** with the two findings this repo can
-   contribute that are not in the upstream thread: (a) the gtpbp3 cluster should
-   be withdrawn rather than migrated, with the single-annotation evidence above;
-   (b) confirm whether `GO:0070681` is in the batch, since its MF counterpart and
-   MetaCyc mapping make it structurally unlike the other 42.
-3. **When the obsoletion lands**: re-point the eleven `core_functions` entries to
-   `GO:0006418` / `GO:0070127`, re-run `just validate` per gene, and re-fetch GOA
-   so `existing_annotations` pick up the replacements.
-4. **Re-argue, don't re-point, the four inverted reviews.** Each needs its
+1. **Re-argue, don't re-point, the 16 inverted reviews.** Each needs its
    specificity claim relocated to the MF slot and its `reason` text rewritten.
    Record the general pattern in [OVER_ANNOTATION_PATTERNS](OVER_ANNOTATION_PATTERNS.md).
-5. **Refresh the module**: update `modules/bacterial_aminoacyl_trna_charging.yaml`
-   — the `GO:0043039` evidence title, and the `GO:0070681` concepts term if it is
-   confirmed in the batch.
+2. **Re-point 26 `core_functions` entries** to `GO:0006418` or `GO:0070127`
+   where there is a direct replacement, then re-run `just validate` per gene and
+   re-fetch GOA so `existing_annotations` pick up the GOA-side replacements.
+3. **Manually handle `GO:0070681`** in the GatCAB reviews and module. The final
+   ontology intentionally did not assert a single automatic replacement.
+4. **Refresh the module**: update `modules/bacterial_aminoacyl_trna_charging.yaml`
+   — the `GO:0043039` evidence title and the stale `GO:0070681` concept.
+5. **Keep #2747 current** until all 33 reviews have either been repointed or
+   explicitly adjudicated against the final ontology change.
 
 ## Priority
 
-**High** — the highest of the obsoletion projects currently in this repo. Fifteen
-reviews are affected, eleven contain strictly-validated `core_functions` ids that
-must change, and four contain reasoning the obsoletion directly contradicts. The
-upstream ontology work is actively moving (two PRs merged in the last week), so
-the window for contributing the gtpbp3 finding is now.
+**High** — the highest of the obsoletion projects currently in this repo.
+Thirty-three reviews are affected, 26 contain strictly validated
+`core_functions` ids that must change, and 16 contain reasoning the obsoletion
+directly contradicts. The ontology-side work has landed; the annotation
+migration remains open, but the gtpbp3 removal has been carried through
+upstream; the local review still needs to be refreshed against the corrected
+ZFIN feed.
 
 ## Status
 
@@ -390,4 +383,17 @@ the window for contributing the gtpbp3 finding is now.
   terms, and the single-annotation attributions for `GO:0061475`, `GO:0070144`,
   `GO:0070149`, `GO:0070153` and `GO:0070155` all verified via the QuickGO
   annotation API. In-repo impact enumerated by parsing all 15 affected review
-  YAMLs. No upstream comment posted yet.
+  YAMLs. The gtpbp3 removal finding had already been posted to
+  go-annotation#6525 on 2026-08-27.
+- **2026-10-04** — Re-derived the current repo impact after the PSEPK
+  aminoacyl-tRNA batch and later TyrRS/DARS2 edits: 33 reviews still touch
+  obsoleted source terms, 26 have obsoleted BP ids in `core_functions`, and 16
+  contain inverted GO:0006418 judgments. go-ontology#15375 is now closed:
+  #32551 obsoleted all 43 terms on 2026-08-28, with `GO:0070681` receiving
+  `consider` pointers rather than a safe `replaced_by`. The local tracking issue
+  is #2747.
+- **2026-10-10** — Confirmed that ZFIN resolved the repo-derived DANRE/gtpbp3
+  over-annotation finding on geneontology/go-annotation#6525 on 2026-09-08:
+  the six obsolete mitochondrial aminoacylation rows were deleted upstream and a
+  `GO:0160236 tRNA 5-taurinomethyluridine synthase` row was added instead.
+  Re-fetching and re-reviewing the stale local DANRE/gtpbp3 cache remains.

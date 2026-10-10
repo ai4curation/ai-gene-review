@@ -1,5 +1,5 @@
 ---
-title: "Bacillus subtilis: reviewing 29 model Gram-positive genes"
+title: "Bacillus subtilis: reviewing 35 model Gram-positive genes"
 marp: true
 theme: default
 paginate: true
@@ -26,7 +26,7 @@ style: |
 
 # *Bacillus subtilis*
 
-Reviewing GO annotations on 29 genes of the model Gram-positive bacterium
+Reviewing GO annotations on 35 genes of the model Gram-positive bacterium
 
 <span class="small">AI Gene Review · projects/BACSU · 2026</span>
 
@@ -36,9 +36,9 @@ Reviewing GO annotations on 29 genes of the model Gram-positive bacterium
 
 ## Bottom line
 
-- We reviewed **every GO annotation on 29 genes** in three rounds: CACAO-curated genes, key functional genes, and the **sporulation sigma cascade** plus industrial enzymes.
-- **343 rows**: 200 accepted, 28 kept as non-core, 45 modified, 44 NEW, 14 removed, 10 over-annotated, 2 undecided.
-- Recurring fixes: **sigma factors are not RNA polymerases**, a fold-based **acyltransferase** call on spoVAD removed, rows citing a paper that never mentions the gene removed.
+- We reviewed **GOA annotations on 35 genes**: CACAO-curated flagellar/germination genes, key functional genes, the **sporulation sigma cascade**, industrial enzymes, and six follow-up sporulation/cofactor genes.
+- **396 rows**: 225 accepted, 37 kept as non-core, 47 modified, 53 NEW, 15 removed, 16 over-annotated, 3 undecided.
+- Recurring fixes: **sigma factors are not RNA polymerases**, a fold-based **acyltransferase** call on spoVAD removed, unsupported fliY/swrD rows citing the wrong paper removed.
 
 ---
 
@@ -61,11 +61,11 @@ Reviewing GO annotations on 29 genes of the model Gram-positive bacterium
 
 ![h:450](sigG-review-table.jpg)
 
-<span class="small">sigG review: IBA rows for RNA polymerase activity (GO:0003899) and cis-regulatory region binding (GO:0000976) removed; the correct function is GO:0016987 sigma factor activity. Same calls on sigF and sigK.</span>
+<span class="small">sigG review: IBA rows for RNA polymerase activity (GO:0003899) and cis-regulatory region binding (GO:0000976) removed; the correct promoter-specificity function is GO:0016987 sigma factor activity.</span>
 
 ---
 
-## Results across 29 genes
+## Results across 35 genes
 
 ![h:480](actions-bar.svg)
 
@@ -73,7 +73,7 @@ Reviewing GO annotations on 29 genes of the model Gram-positive bacterium
 
 ## Notable findings
 
-1. **PMID:25313396** lists the minimal FlgM-secretion components and does not include fliH, fliY or swrD. Rows citing it were **removed** (fliY, swrD) or left **UNDECIDED** (fliH).
+1. **PMID:25313396** lists the minimal FlgM-secretion components and does not include fliH, fliY or swrD. Unsupported fliY/swrD rows were **removed**; fliH rows remain **UNDECIDED**.
 2. **spoVAD**: `acyltransferase activity` came from a thiolase-like fold; it is a Ca-DPA channel component. **Removed**.
 3. **yddE** is labelled uncharacterized in UniProt but is **ConE**, the VirB4-like ATPase of the ICEBs1 conjugation system.
 4. Generic `metal ion binding` refined to **zinc / calcium binding** (nprE); `hydrolase activity` marked over-annotated where specific terms exist.
@@ -82,8 +82,8 @@ Reviewing GO annotations on 29 genes of the model Gram-positive bacterium
 
 ## Status and next steps
 
-- ✅ 29/29 reviews present and rendered; sporulation cascade pathway summary written.
-- ⬜ Most YAML files still say `status: DRAFT`; fliH has 2 UNDECIDED rows.
-- ⬜ Fix the project tables: several UniProt IDs differ from the reviewed accessions (lipA is reviewed as lipoyl synthase O32129).
+- ✅ 35/35 reviews present and rendered; sporulation cascade pathway summary written.
+- ⬜ Finalise YAML statuses: 5 COMPLETE, 26 DRAFT, 4 IN_PROGRESS (#4044).
+- ⬜ Work through eight open per-gene re-review issues (#4044).
 
 **Read more:** `projects/BACSU.md` · `projects/BACSU/BACSU_SPORULATION-pathway.md` · `genes/BACSU/<gene>/`

@@ -94,4 +94,6 @@ Reviewing every GO annotation on 34 human genes behind amyloid, tau, lipid and m
 - ⬜ Reusable normal-biology modules: APP processing, γ-secretase intramembrane proteolysis, apolipoprotein transport, microglial lipid sensing, tau microtubule biology, endocytic adaptors.
 - ⬜ Resolve the 34 UNDECIDED rows with full text.
 
+<span class="small">Open tracker: ai4curation/ai-gene-review#4035</span>
+
 **Read more:** `projects/ALZHEIMER_DISEASE.md` · `genes/human/<GENE>/`
