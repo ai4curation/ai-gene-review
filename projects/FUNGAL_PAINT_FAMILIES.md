@@ -67,7 +67,7 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/NuA3 placements that need
 paralog-aware activity and complex checks.
 
-- [ ] `yeast/ESA1` - NuA4 catalytic subunit
+- [x] `yeast/ESA1` - NuA4 catalytic subunit; drafted in PR #4604
 - [ ] `yeast/SAS2` - SAS-I catalytic subunit
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
@@ -149,6 +149,11 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
   `PANTHER:PTN004172926` IBA rows fit Sas3's conserved MYST activity in
   chromatin, and the fungal `PANTHER:PTN008308138` row correctly places the
   NuA3a complex assertion on the Sas3 branch.
+- Re-reviewed `yeast/ESA1` as the first MYST-family entry. The current
+  `PTHR10615` PAINT assertions are consistent with ESA1's placement under the
+  broad eukaryotic MYST and fungal ESA1/H4-acetyltransferase nodes; the refresh
+  mostly added current GOA rows, removed generic `protein binding`, and
+  redirected a nucleosome component row to `GO:0031491 nucleosome binding`.
 - Started `PTHR35329` as a compact CHS7-family follow-up. Yeast `CHS7` was
   already reviewed; `NEUCR/csc-1` checks the same `PTN002175570` fungal PAINT
   ancestor against the direct CSE-7/CHS-4 trafficking paper and the newer
