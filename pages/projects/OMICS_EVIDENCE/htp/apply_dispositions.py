@@ -8,26 +8,15 @@ Two rules, agreed on projects/OMICS_EVIDENCE.md (Recommendations, 2026-10-06):
      Left alone: ACCEPT and REMOVE (explicit protein-specific judgements; ACCEPT rows are
      listed in the audit for follow-up), KEEP_AS_NON_CORE (already compliant), MODIFY, NEW.
 
-  M. Generic `membrane` (GO:0016020) from a membrane-fraction proteome, for a protein
-     with no documented membrane anchor or membrane association.
-     Rows: evidence_type HDA or HTP, not negated, term GO:0016020, and
-     membrane_association() finds nothing. That test uses identifiers only, never label
-     text: (a) structured UniProt anchor features (FT TRANSMEM / INTRAMEM / LIPID), or
-     (b) any row in the gene's *-goa.tsv, other than NOT rows and high-throughput codes
-     (the kind of evidence under review), to GO:0016020 or any of its is_a/part_of
-     descendants in GO (e.g. plasma membrane, extrinsic component of membrane,
-     organelle membranes). UniProt subcellular-location and keyword mappings reach
-     GOA as GO ids, so they are covered by (b) without matching their labels.
-     Change: action KEEP_AS_NON_CORE / UNDECIDED / PENDING / unset
-     -> MARK_AS_OVER_ANNOTATED.
-     Left alone: ACCEPT (explicit judgement; listed in the audit), REMOVE, MODIFY (a
-     replacement was chosen), NEW, and every row of a protein with a documented membrane
-     anchor or association, or with no UniProt or GOA file to check.
-
-  Revision: the first run of 2026-10-06 tested association by searching UniProt's
-  SUBCELLULAR LOCATION free text for the word "membrane". Rows carrying that run's
-  note (OLD_NOTE_M_RE) are first restored to their pre-disposition action and reason,
-  then rule M is applied afresh, so rerunning the script corrects them.
+  M. WITHDRAWN 2026-10-10. A rule for generic `membrane` (GO:0016020) rows was applied
+     on 2026-10-06, first with a label-text test and then with an identifier-based test
+     (UniProt anchor features, or GOA rows to the GO:0016020 is_a/part_of closure). Both
+     were still a rule deciding the outcome, with existing annotations treated as
+     authoritative rather than as leads, so the rule was withdrawn, its edits undone, and
+     every candidate row reviewed by hand: see membrane_review/ (build_dossiers.py,
+     decisions_draft.py, apply_decisions.py, decisions.yaml). The helper functions
+     below (has_anchor_feature, membrane_closure, membrane_annotations) remain because
+     build_dossiers.py uses them to *gather* leads, not to decide.
 
 Edits are textual and minimal: only the row's `action:` line changes, and its `reason:`
 value is rewritten to the original text plus a disposition note. Each edited file is
@@ -207,27 +196,16 @@ def main() -> int:
     ap.add_argument("--write", action="store_true", help="edit files (default: dry run)")
     ap.add_argument("--audit", default=AUDIT, help="audit file to write with --write")
     args = ap.parse_args()
-    closure = membrane_closure()
 
     changed_rows, accepted_vesicle, accepted_membrane, skipped, failed = [], [], [], [], []
     reverted: list[dict] = []
     files_changed = 0
     for path in sorted(glob.glob(os.path.join(ROOT, "genes", "*", "*", "*-ai-review.yaml"))):
         text = open(path).read()
-        if not (any(t in text for t in VESICLE_TERMS) or MEMBRANE in text):
+        if not any(t in text for t in VESICLE_TERMS):
             continue
         doc = yaml.load(text, Loader=LOADER) or {}
         org, gene = path.split(os.sep)[-3], path.split(os.sep)[-2]
-        uni_path = os.path.join(os.path.dirname(path), f"{gene}-uniprot.txt")
-        goa_path = os.path.join(os.path.dirname(path), f"{gene}-goa.tsv")
-        evidence: list[str] = []
-        if os.path.exists(uni_path) and os.path.exists(goa_path):
-            if has_anchor_feature(open(uni_path).read()):
-                evidence.append("UniProt anchor feature")
-            evidence += membrane_annotations(goa_path, closure)
-            anchor = bool(evidence)
-        else:
-            anchor = None
         changes = []
         for idx, a in enumerate(doc.get("existing_annotations") or []):
             if a.get("evidence_type") not in CODES or a.get("negated"):
@@ -245,26 +223,7 @@ def main() -> int:
                 else:
                     continue
             elif tid == MEMBRANE:
-                reason0 = str(rv.get("reason") or "")
-                m = OLD_NOTE_M_RE.search(reason0)
-                if m:  # undo the label-text run, then decide afresh
-                    old = None if m.group(1) == "unset" else m.group(1)
-                    rv = {**rv, "reason": OLD_NOTE_M_RE.sub("", reason0).strip()}
-                if anchor is None:
-                    skipped.append({**base, "why": "no UniProt or GOA file"})
-                    if m:
-                        raise SystemExit(f"cannot re-decide {gene}: no UniProt/GOA file")
-                    continue
-                if anchor or old not in RULE_M_FROM:
-                    if old == "ACCEPT" and not anchor:
-                        accepted_membrane.append(base)
-                    if not m:
-                        continue
-                    # previously changed by the label-text run: restore the original
-                    new, note = old, None
-                    reverted.append({**base, "restored_action": old, "association": evidence})
-                else:
-                    new, note = "MARK_AS_OVER_ANNOTATED", NOTE_M
+                continue  # rule M withdrawn 2026-10-10; see module docstring
             else:
                 continue
             reason = (str(rv.get("reason") or "").strip())

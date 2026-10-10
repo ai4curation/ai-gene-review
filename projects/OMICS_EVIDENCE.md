@@ -237,42 +237,78 @@ The data and the curators are the same. The difference is the inference step.
      `blood microparticle`, `vesicle`) from bulk vesicle or body-fluid proteomes are
      KEEP_AS_NON_CORE by default. ACCEPT stays only for a protein-specific reason, such as
      known vesicle machinery. REMOVE stays for protein-specific contrary evidence.
-   - **Generic `membrane`** from a membrane-fraction proteome is MARK_AS_OVER_ANNOTATED
-     when the protein has no documented membrane anchor or association. The test uses
-     identifiers, never label text. It requires both of the following:
-     - no structured UniProt anchor feature (FT TRANSMEM, INTRAMEM or LIPID);
-     - no annotation in the gene's GOA file to GO:0016020 or any of its is_a/part_of
-       descendants, ignoring NOT rows and high-throughput codes. Descendants include
-       plasma membrane, extrinsic component of membrane and organelle membranes, taken
-       from the GO graph via OAK. UniProt's subcellular-location and keyword mappings
-       reach GOA as GO IDs, so they count without matching their wording.
+   - **Generic `membrane`** from a membrane-fraction proteome: **reviewed by hand, row by
+     row** (2026-10-10). No rule decides these rows. Two rules were tried on 2026-10-06
+     and withdrawn: first a text search of UniProt's location prose, then an ID-based
+     test over existing annotations. Both treated existing annotations as authoritative
+     rather than as leads, and both let a rule make a curation call.
 
-   [`htp/apply_dispositions.py`](OMICS_EVIDENCE/htp/apply_dispositions.py) applied these
-   to **270 rows in 173 reviews** (net, after the correction described below):
+   [`htp/apply_dispositions.py`](OMICS_EVIDENCE/htp/apply_dispositions.py) applied the
+   vesicle rule to **241 rows in 148 reviews**:
 
-   | Rule | Change | Rows |
-   |---|---|---:|
-   | Vesicle-type | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 175 |
-   | Vesicle-type | UNDECIDED → KEEP_AS_NON_CORE | 66 |
-   | Membrane | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED | 16 |
-   | Membrane | UNDECIDED → MARK_AS_OVER_ANNOTATED | 13 |
-
-   **Correction.** The first run decided "no membrane association" by searching UniProt's
-   subcellular-location free text for the word "membrane". It was redone with the
-   ID-based test above, which reversed 11 rows. Those proteins have ID-level membrane
-   annotations that the text search missed: AHNAK, HSPD1 and DCTN1 by IDA; PIK3R1, APOE
-   and CDK1 via Reactome; HSPA2, HSPA14 and STAU2 by IBA; NBR1 and PDCD6IP. The
-   correction also added 1 row: DNAJB11, an ER-lumen chaperone whose location text
-   happened to contain the word. See
-   [`disposition-2026-10-06-membrane-revision.yaml`](OMICS_EVIDENCE/htp/disposition-2026-10-06-membrane-revision.yaml).
+   | Change | Rows |
+   |---|---:|
+   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 175 |
+   | UNDECIDED → KEEP_AS_NON_CORE | 66 |
 
    Only the action changed. Each row's reason was kept and a dated disposition note
    appended, and each edited file was re-parsed to confirm nothing else moved. The audit
    file [`disposition-2026-10-06.yaml`](OMICS_EVIDENCE/htp/disposition-2026-10-06.yaml)
-   lists every changed row. It also lists the explicit ACCEPTs that the rules matched but
-   left in place, for review: 42 vesicle rows (e.g. GAPDH ×7, HSPA1A, PARK7, CLU, THBS1,
-   alongside genuine EV machinery such as PDCD6IP and CHMP3) and 2 membrane rows
-   with no ID-level membrane association (ABI3, AGFG2).
+   lists every changed row. Its membrane entries, and the revision file
+   `disposition-2026-10-06-membrane-revision.yaml`, are kept as a record of the
+   withdrawn rule. Those edits have been undone. The audit also lists 42 explicit vesicle
+   ACCEPTs left in place for review: GAPDH ×7, HSPA1A, PARK7, CLU, THBS1, and genuine EV
+   machinery such as PDCD6IP and CHMP3.
+
+   **Membrane-row manual review.** Candidates are all 163 HDA/HTP `membrane` rows (159
+   genes) for proteins without a structured UniProt anchor feature. A protein with a
+   TM segment, intramembrane region or lipid anchor is in a membrane by construction.
+   [`membrane_review/build_dossiers.py`](OMICS_EVIDENCE/htp/membrane_review/build_dossiers.py)
+   gathers the material for each row and decides nothing. A dossier holds:
+   - UniProt location and function text, verbatim;
+   - the gene's other location annotations with their codes and references, offered as
+     leads to check;
+   - the source paper's title;
+   - the current action and reason.
+
+   151 of the 163 rows come from one NK-cell membrane proteome (PMID:19946888). Its
+   authors stripped peripheral proteins before analysis and report that about 60% of
+   their identifications are not predicted membrane proteins. So the question for each
+   row was whether there is **protein-specific evidence** of stable membrane association:
+   - **Yes** (an experimental UniProt membrane location, or a membrane annotation whose
+     source supports it): KEEP_AS_NON_CORE. The term is true but generic; the specific
+     membrane term carries the location.
+   - **No**: MARK_AS_OVER_ANNOTATED. Earlier REMOVE calls on such proteins were confirmed
+     rather than churned.
+   - **ACCEPT** was kept only where membrane association is the core of the activity and
+     no specific term carries it (ANXA11, PIK3C3).
+
+   Leads were followed where they mattered. Examples:
+   - DNAJB11: UniProt's ER-membrane note applies only to a C-terminally tagged construct,
+     so the row is over-annotated.
+   - EIF5A: its ER-membrane EXP lead (PMID:8660923) could not be checked, because no
+     abstract is cached. The cached localization study shows nuclear and cytoplasmic
+     distribution only, so the row stays over-annotated and the reason says so.
+   - APOE: its plasma-membrane leads are Reactome rows for APOE bound to receptors, so it
+     is over-annotated.
+
+   [`decisions_draft.py`](OMICS_EVIDENCE/htp/membrane_review/decisions_draft.py) records
+   a basis for every row, including the 97 confirmed unchanged.
+   [`decisions.yaml`](OMICS_EVIDENCE/htp/membrane_review/decisions.yaml) is the
+   reviewable output. 66 rows changed:
+
+   | Change | Rows | Typical reason |
+   |---|---:|---|
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED | 20 | soluble protein, no membrane evidence (e.g. AGO3, AGO4, FKBP5, PPIB, RPL18A) |
+   | ACCEPT → KEEP_AS_NON_CORE | 17 | generic parent of an experimentally supported specific membrane term (AP-1/AP-3, clathrin, ATP synthase, PICALM, NF1) |
+   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 13 | documented peripheral membrane protein (ACAP1/2, ACBD3, LSS, KIF5B, G6PD, LDHB, CDK5RAP3) |
+   | UNDECIDED → MARK_AS_OVER_ANNOTATED | 13 | soluble cytosolic/nuclear protein (AARS1, AIMP1/2, CAD, GEMIN5) |
+   | ACCEPT → MARK_AS_OVER_ANNOTATED | 1 | AGFG2: no location evidence beyond cytoplasm/vesicle |
+   | UNDECIDED → KEEP_AS_NON_CORE | 1 | CARMIL2: EXP/IDA plasma membrane |
+   | REMOVE → KEEP_AS_NON_CORE | 1 | GAPDH: experimental UniProt membrane location |
+
+   Final membrane-row actions: 93 MARK_AS_OVER_ANNOTATED, 56 KEEP_AS_NON_CORE, 11
+   REMOVE, 2 ACCEPT, 1 MODIFY. All 64 edited reviews validate.
 2. **Report the mis-coded clusters to their groups:**
    - HDA→HEP for expression-derived process rows (PMID:16210410).
    - HDA for RCA Use C rows that are really direct localizations (see the RCA sub-page).
@@ -284,9 +320,12 @@ The data and the curators are the same. The difference is the inference step.
 
 - [x] Decide and document the vesicle-type and generic-`membrane` dispositions
       (Recommendation 1), then apply them as a batch to existing reviews (2026-10-06).
-- [ ] Revisit the 44 ACCEPT rows the disposition rules matched but left alone (audit
-      file), keeping ACCEPT only for genuine vesicle machinery or documented membrane
-      association.
+- [ ] Revisit the 42 vesicle ACCEPT rows the disposition rule matched but left alone
+      (audit file), keeping ACCEPT only for genuine vesicle machinery.
+- [ ] Decide whether the vesicle rule should also be replaced by row-by-row review. It
+      was applied as a rule (241 rows); the membrane experience suggests reviewing it the
+      same way, starting with the 66 UNDECIDED rows it resolved without a per-protein
+      judgement.
 - [ ] Review a sample of the **unreviewed MF clusters** with the use-2/use-3 test: serine
       hydrolase activity-based probes (PMID:33827210), copper/cobalt/zinc ion binding from
       plant mitochondrial metal-affinity proteomics (PMID:20018591), kinase
@@ -307,6 +346,16 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-10: membrane rows reviewed by hand; rule withdrawn
+
+The user pointed out that the ID-based membrane rule still let a rule make the curation
+call, with existing annotations treated as authoritative instead of as leads. Undid all
+29 rows the rule had changed, restoring each to its original reviewer's action and
+reason (byte-exact where the file had no other change). Withdrew rule M from
+`apply_dispositions.py`; a dry run now changes nothing. Built per-row dossiers
+(`membrane_review/`) and reviewed all 163 candidate rows individually: 66 changed, 97
+confirmed. All 64 edited reviews validate. One history record per touched gene.
 
 ### 2026-10-06: membrane rule corrected to use identifiers
 
