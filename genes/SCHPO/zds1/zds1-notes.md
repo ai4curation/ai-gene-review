@@ -42,7 +42,7 @@
   zds1delta/zds1delta (PMID:29259000) [PMID:29259000 "showed phenotypes indicative of defective
   conjugation (dbl2Δ), meiotic entry (cdt2Δ, zds1Δ), or asci formation (tpr1Δ, dms1Δ)"];
   various drug sensitivities/resistances (PMID:37787768).
-- PomBase GO set (2026-10): MF protein phosphatase regulator activity (ISO from SGD ZDS2);
+- PomBase GO set (2026-10): MF protein phosphatase regulator activity (ISO from SGD ZDS1, SGD:S000004886);
   BP establishment of cell polarity (IBA), positive regulation of G2/M transition (IBA), signal
   transduction (NAS); CC cytosol and cell division site (HDA, ORFeome PMID:16823372). The new IBA
   GO:0004864 protein phosphatase inhibitor activity (PAINT 2026-03-20) is in GOA but not yet in

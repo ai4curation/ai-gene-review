@@ -54,3 +54,11 @@ All four GO:0005515 IPI rows (Boi1 from PMID:10688190, PMID:11743162 and
 PMID:19841731; Sla1 from PMID:19841731) come from high-throughput two-hybrid or
 SH3-interactome screens. None supports a more specific Zds2 MF, so all four are
 REMOVE.
+
+## Addendum: falcon deep research (arrived after the review was written)
+
+`ZDS2-deep-research-falcon.md` landed after the annotation review was finished and was cross-checked
+against it. It agrees with the review: Zds2 is a non-catalytic regulator of PP2A-Cdc55 that binds
+Cdc55 through its conserved C-terminal region, localizes to the bud cortex and bud neck, and acts
+redundantly with Zds1 in mitotic entry and early-anaphase Cdc14 release. It is cited on the GO:0004864
+(MODIFY to GO:0019888) row. No annotation decision changes.
