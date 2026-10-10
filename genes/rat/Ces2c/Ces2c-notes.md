@@ -28,3 +28,5 @@
   palmitate"; the full text is not cached, so the curator/UniProt reading is deferred to.
 - Open question: confirm from the full text of PMID:12230550 the retinyl palmitate hydrolase
   rate measured for the AB010635 (Ces2c) protein.
+
+**Stale UniProt quotes (2026-10-10):** replaced 6 `UniProtKB:O70631` supporting_text quotes (legacy `DR GO;` lines with evidence codes no longer present in the refreshed flat file) with verbatim SUBCELLULAR LOCATION, CATALYTIC ACTIVITY (acylcarnitine hydrolysis) and FUNCTION text from the current `Ces2c-uniprot.txt`.
