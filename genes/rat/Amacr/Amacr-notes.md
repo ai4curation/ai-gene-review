@@ -24,3 +24,5 @@
 **Open questions:**
 - PMID:14561759 (rat liver peroxisome proteomics) supports the peroxisome IDA only through the curator's reading of the full text; the abstract does not name Amacr.
 - core_functions lists both GO:0008206 bile acid metabolic process and its descendant GO:0006699 bile acid biosynthetic process. This is redundant but harmless; left as is.
+
+**Stale UniProt quotes (2026-10-10):** replaced 15 `UniProtKB:P70473` supporting_text quotes (paraphrased FUNCTION text no longer in the refreshed flat file) with verbatim FUNCTION and SUBCELLULAR LOCATION lines from the current `Amacr-uniprot.txt`, matched to each row (location rows quote SUBCELLULAR LOCATION, activity/process rows quote FUNCTION).
