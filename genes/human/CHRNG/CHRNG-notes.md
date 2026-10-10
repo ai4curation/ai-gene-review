@@ -1,0 +1,41 @@
+# CHRNG review notes
+
+## 2026-10-10 — whole-gene review
+
+The genuine isolated normal seed contains 45 original source objects, 2 products and 14 reference pairs. These are preserved exactly. The initial ownership gate authenticated human CHRNG (HGNC:1967/P07510; alias ACHRG) as the literal unchecked catalog entry after reserved CHRNB2, with 245 complete open-PR inventories and no alias/accession/queue overlap. Publication order remains CHRNB2 then CHRNG.
+
+Gamma performs the pore/gating and complementary ligand-site work of the fetal muscle receptor. One integrated core uses contributes_to GO:0022848 for the heteropentamer containing two alpha1 subunits, beta1, gamma and delta. Receptor excitation supplies the electrical step triggering skeletal-muscle contraction; it does not make gamma a contractile motor. Existing broad channel/transport/signaling assertions are refined without changing any original evidence or relation. Existing postsynaptic and broad plasma-membrane compartments can both remain core-relevant.
+
+### Actual primary evidence
+
+- PMID:16527851 directly expresses human fetal receptor subunits in rat GH4C1 cells, with primary human myotube confirmation. Agonist-evoked current and calcium measurements establish approximately 3% fractional calcium current. Store-release and nontransfected-cell controls support entry through the receptor. Adult epsilon-dependent higher calcium permeability is not assigned to gamma alone.
+- PMID:16826520 studies human CHRNG families but uses mouse subunit cDNAs in human HEK cells for reconstitution. Homologous gamma substitutions or omission prevent receptor surface appearance while intracellular assembly intermediates remain. Human host cells are not proof of human constructs. Mouse embryo expression is also separate. The positive developmental phenotype does not automatically manufacture a new assembly or organogenesis process assertion.
+- PMID:16826531 provides human family genetics and variable prenatal/postnatal pathology. Prenatal receptor failure and later replacement by epsilon contextualize the phenotype; biochemical activity was not measured in the families.
+- PMID:39085615 provides native bovine fetal/adult receptor structures, including the gamma complementary agonist-site and pore contributions. The ACh-bound structure is desensitized and nonconducting. Conserved structural interpretation is distinct from human reconstitution and does not show all human products functional.
+- PMID:8040310 was recovered as the authentic JCI PDF. Human fetal 8–14 week and adult muscle preparations are used for antibody radioimmunoprecipitation. The association with neonatal myasthenia is positive receptor-level evidence; gamma-specific antibody epitopes and contractile force are not isolated. Its unchanged normal publication cache remains abstract-only despite actual external full access.
+- PMID:3967651 authentic abstract establishes human genomic cloning and predicted membrane topology. The official full-body request was 403. Later independent human receptor measurements support the retained/refined functions without pretending they were measured in this cloning paper.
+- PMID:41826296 is a recent human case without pterygia. The alternative-start/hypomorphic interpretation is computational and awaits protein-level tests; it does not resolve the function of the current alternative product.
+
+### Exact binding evidence and specificity
+
+All 11 seeded generic-binding assertions have exact positive IntAct joins: 21 literal records. The 2014 primary verifies pairs repeatedly with confirmed identity; the 2018/2019 methods compare WT and variant GAL4-fusion pairs with autoactivation controls. Dataset-level orthogonal validation is not a native assay for each CHRNG pair. The 2018 position 448 feature belongs to CHRNG; the 2019 position 74/115 features belong to NOTCH2NLA. No source feature is silently dropped.
+
+The two KRT31 pairs are refined to cytoskeletal protein binding because KRT31 is a type-I keratin, matching the actual GO:0008092 protein-class definition. Keratin filament binding would instead require the assembled filament, which was not tested. KRTAP10-7/-8/-9 are interfilamentous matrix proteins and are not automatically keratin filament subunits. NOTCH2NLA is a Notch-pathway modulator, not the NOTCH2 receptor. The remaining supported generic pairs stay non-core under the campaign convention. No native encounter, adaptor, Notch or cytoskeletal mechanism is inferred.
+
+### Propagation, source composition and products
+
+Original PAINT nodes and qualifiers are immutable. Qualified SUPPORTS_TRANSFER rests on the actual curated propagation plus independent target-containing receptor evidence; historical IBD placement, tree and MSA are not reconstructed. Selected rat/bovine/mouse records provide context, not proof from donor number. Target self-inclusion is not circular. The rat RGD:2354 is Chrng/P18916; bovine P13536 is the preserved ISS donor.
+
+Both Reactome location assertions reach the literal CHRNG/P07510 entity 507843 at plasma membrane. Their chain passes through a delta/epsilon/gamma set 532618 within modeled alpha3-beta4 complex 532621. The correct compartment is retained, but the source's composition is not silently relabeled as the fetal muscle heteropentamer. An expert question records that discrepancy.
+
+The displayed 517-residue P07510-1 and alternative P07510-2 are preserved. VSP055775 replaces canonical residues 117–169 with lysine, affecting part of the extracellular ligand-binding region. Both products were not demonstrated functional by the receptor studies; no experimental source isoform is invented.
+
+### Provenance and checks
+
+The real Falcon provider attempt timed out at 90 seconds; the real Perplexity fallback returned 401 insufficient quota. No fabricated provider output was written. Exact-main caches take precedence over archived fresh variants. Human calcium source 16527851 is authenticated from published CHRNA1 PR4611; newly fetched primary caches are genuine normal outputs. The selected GO-CAM index has no target activity. No NEW process is proposed.
+
+Authored source-artifact citations are bare provenance references and contain no self-quotations or VERIFIED claim for the artifact. Short primary snippets are counted cumulatively across the YAML and notes, including repetitions, within 25 words per source. These notes add no primary quotations. Normal validation/status/render and fresh source/ownership guards precede sealing. Review status does not count a campaign completion before the later approved/check-passing merge gate.
+
+### Conserved complementary ligand-binding contribution
+
+One NEW GO:0042166 is added with contributes_to, ISS, PMID:39085615 and bovine donor UniProtKB:P13536. Actual native bovine structure 9AVU places gamma at the complementary ligand pocket; its chain B/entity 4 exactly matches P13536 residues 23–519. The eight checked human canonical pocket/stabilizing positions are conserved, with adjacent V138/I138 distinguished. This supports conserved ligand recognition within the receptor, not an isolated-gamma affinity measurement or human structural IDA. VSP_055775 replaces residues 117–169 with lysine, so P07510-2 remains functionally unresolved. The typed hierarchy has no ancestor/descendant overlap with any of the 27 seeded terms; current human CHRND provides a same-role contributes_to comparator. This adds MF coverage, not a NEW process or a second core. ROOT's bounded source/sequence/ontology report and mutation-free verifier are pinned in the artifact; the owner independently read the actual ligand-contact Results.
