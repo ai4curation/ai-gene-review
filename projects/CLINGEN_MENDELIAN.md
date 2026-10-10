@@ -2988,24 +2988,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**292 of 2,876 genes are complete; 2,584 remain.** CEBPA and CEP104 add two
-first campaign completions beyond checkpoint 290. Both final heads were approved
-and passed required checks before their actual merges. There are 292 distinct
-primary genes with merged campaign reviews and no completion holds. Biological
-DRAFT status and justified UNDECIDED annotations remain independent of campaign completion.
+**293 of 2,876 genes are complete; 2,583 remain.** CEP120 adds one first
+campaign completion beyond checkpoint 292. Its final head was approved and passed
+required checks before the actual merge. There are 293 distinct primary genes
+with merged campaign reviews and no completion holds. Biological DRAFT status
+and justified UNDECIDED annotations remain independent of campaign completion.
 
-The fixed completion cutoff is **2026-10-10 04:42:08 UTC**, through
-CEP104 at [commit 04685e86ca43](https://github.com/ai4curation/ai-gene-review/commit/04685e86ca438d813fae98a3ac8e507cb32838e5).
-The source snapshot is the later [main commit 2b6a4561b112](https://github.com/ai4curation/ai-gene-review/commit/2b6a4561b112799f115b70c8fdbf46494a1fb143),
-which contains tracker 290 merged at **2026-10-10 04:42:51 UTC**.
-The published baseline is [tracker #4506](https://github.com/ai4curation/ai-gene-review/pull/4506),
-which recorded checkpoint 290. See [checkpoint 292 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-292-2026-10-10-044208-utc).
+The fixed completion cutoff is **2026-10-10 04:52:48 UTC**, through
+CEP120 at [commit 6ae4685964aa](https://github.com/ai4curation/ai-gene-review/commit/6ae4685964aa1aae16bfec2647cab2ccfed750f6).
+The source snapshot is the later [main commit ea02a3dc102c](https://github.com/ai4curation/ai-gene-review/commit/ea02a3dc102c093a1a5e34359f3800a4ee83195b),
+which contains tracker 292 merged at **2026-10-10 05:09:12 UTC**.
+The published baseline is [tracker #4509](https://github.com/ai4curation/ai-gene-review/pull/4509),
+which recorded checkpoint 292. See [checkpoint 293 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-293-2026-10-10-045248-utc).
 The explicit `campaign_audited_merged` counter and legacy compatibility semantics
 established at checkpoint 288 continue unchanged. Earlier dated records are
 preserved; later merges, supplementary products and repeated reviews add no count
 at this cutoff.
 
-[Checkpoint 292 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T044658Z-codex-7ed45f.yaml).
+[Checkpoint 293 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T051833Z-codex-2fb312.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3373,7 +3373,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CDT1** — HGNC:24576; [Meier-Gorlin syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dfc9602f-fb88-419a-8955-6d7c00a52158-2023-03-03T170000.000Z) (MONDO:0013431; AR; Definitive).
 - [x] **CEBPA** — HGNC:1833; [acute myeloid leukemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4234367e-149b-4f13-9243-341396fb4ccf-2019-08-18T155916.225Z) (MONDO:0018874; AD; Definitive).
 - [x] **CEP104** — HGNC:24866; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be550486-4da7-4de4-9db4-6f5cdb98ff39-2025-01-28T170000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CEP120** — HGNC:26690; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6be10beb-c032-44a6-a4bf-f9d644ba6085-2025-06-25T160000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **CEP120** — HGNC:26690; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6be10beb-c032-44a6-a4bf-f9d644ba6085-2025-06-25T160000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **CEP152** — HGNC:29298; [microcephaly with or without short stature](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_52841ad8-48fd-4b71-bf08-828656cd83f6-2022-06-28T160000.000Z) (MONDO:0100346; AR; Definitive).
 - [ ] **CEP164** — HGNC:29182; [CEP164-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_961b81f6-7ad1-49e2-b675-c035b4d8d35d-2021-10-27T040000.000Z) (MONDO:0700344; AR; Definitive).
 - [ ] **CEP250** — HGNC:1859; [cone-rod dystrophy and hearing loss 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0f7cc857-5ea9-474b-9c4d-8edd5c97c89a-2025-07-16T160000.000Z) (MONDO:0020780; AR; Definitive).
