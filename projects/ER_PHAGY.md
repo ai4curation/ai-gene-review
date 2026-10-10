@@ -4,7 +4,7 @@ maturity: SCOPING
 last_reviewed: 2026-10-04
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
-genes: [SEC62, ATL3, CALCOCO1, RETREG2, UBAC2, CDK5RAP3, ULK1, ATG9A, EIF2AK3]   # reviewed genes only; full candidate list is in the table below
+genes: [SEC62, ATL3, CALCOCO1, RETREG2, UBAC2, CDK5RAP3, MAP1LC3B, GABARAP, ULK1, ATG9A, ERN1, EIF2AK3]   # reviewed genes only; full candidate list is in the table below
 manifest:
   slides:
     - href: ER_PHAGY/slides/ER_PHAGY-slides.html
@@ -22,15 +22,16 @@ soluble or cytosolic cargo adaptors that bind ATG8-family proteins such as LC3B
 and GABARAP. The candidate table below lists 16 seed or related human genes. No
 review has been made specifically for this ER_PHAGY project and no local
 `modules/*.yaml` module exists yet, although a cached human GO-CAM already covers
-the UFMylation/CYB5R3 reticulophagy branch. Nine table genes already have local
-review folders from other projects: seven are COMPLETE (SEC62, ATL3, CALCOCO1,
-RETREG2, UBAC2, CDK5RAP3 and EIF2AK3), while ULK1 and ATG9A still have
-INITIALIZED CONDENSATES phagophore reviews. SEC62 keeps its IMP `reticulophagy`
-(GO:0061709) annotation as non-core; CALCOCO1, RETREG2 and UBAC2 capture
-reticulophagy as a core receptor/adaptor process; CDK5RAP3 captures
-UFM1-dependent positive regulation of reticulophagy; and the ATL3 review
-declined to add reticulophagy without better evidence. The defining membrane
-receptors RETREG1, RTN3, CCPG1 and TEX264 still have no review.
+the UFMylation/CYB5R3 reticulophagy branch. Twelve table genes already have
+local review folders from other projects: eight are COMPLETE (SEC62, ATL3,
+CALCOCO1, RETREG2, UBAC2, CDK5RAP3, ERN1 and EIF2AK3), MAP1LC3B and GABARAP
+are DRAFT, and ULK1 and ATG9A still have INITIALIZED CONDENSATES phagophore
+reviews. SEC62 keeps its IMP `reticulophagy` (GO:0061709) annotation as
+non-core; CALCOCO1, RETREG2 and UBAC2 capture reticulophagy as a core
+receptor/adaptor process; CDK5RAP3 captures UFM1-dependent positive regulation
+of reticulophagy; and the ATL3 review declined to add reticulophagy without
+better evidence. The defining membrane receptors RETREG1, RTN3, CCPG1 and
+TEX264 still have no review.
 
 ## Overview
 
@@ -111,8 +112,8 @@ Proteins that bridge ER to autophagosomes via LC3/GABARAP-binding motifs:
 
 ## Project Status
 
-- [x] Cross-project reviews checked for SEC62, ATL3, CALCOCO1, RETREG2, UBAC2, CDK5RAP3,
-  ULK1, ATG9A and EIF2AK3
-- [ ] Fetch and review RETREG1, RTN3, CCPG1, TEX264, MAP1LC3B, GABARAP and ERN1
+- [x] Cross-project reviews checked for SEC62, ATL3, CALCOCO1, RETREG2, UBAC2,
+  CDK5RAP3, MAP1LC3B, GABARAP, ULK1, ATG9A, ERN1 and EIF2AK3
+- [ ] Fetch and review RETREG1, RTN3, CCPG1 and TEX264
   ([#3957](https://github.com/ai4curation/ai-gene-review/issues/3957))
 - [ ] Build an ER-phagy module around LC3/GABARAP-binding ER-phagy receptors and adaptors

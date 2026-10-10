@@ -32,8 +32,8 @@ REMOVE → ACCEPT), and all three edits are in the current YAMLs. We also
 adjudicated all 143 NOT annotations and logged four fence cases (AGO3/AGR2,
 ATP23, GAPDH, HSPA1B) and two literature questions (ASCL1, ATF3) for a
 curator. The sweep finished in July 2026; since then TRA2B, flagged below as
-never reviewed, has been reviewed, and the human set has grown to 2,289
-review files, so about 966 newer reviews have not had this second pass.
+never reviewed, has been reviewed, and the human set has grown to 2,812
+review files, so 1,489 newer reviews have not had this second pass.
 
 We did this to measure how far the first-pass actions can be trusted before
 building summaries and modules on them, and to find any systematic reviewer
@@ -84,7 +84,7 @@ per-annotation-action level. Bottom line:
     without full-text access (e.g. `ASCL1`, `ATF3`).
   - Fence cases where the existing action was left in place but would benefit from
     curator review (`AGO3`/`AGR2`, `ATP23`, `GAPDH`, `HSPA1B`).
-  - A second pass across the 966 human review files added after the original
+  - A second pass across the 1,489 human review files added after the original
     A-to-Z sweep. These are tracked in
     [#4097](https://github.com/ai4curation/ai-gene-review/issues/4097).
 

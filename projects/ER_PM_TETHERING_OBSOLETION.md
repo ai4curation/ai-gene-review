@@ -157,7 +157,7 @@ add files without confirming the UniProt accession from the UniProt API.
 ### Plant Synaptotagmins (TAIR)
 
 7. **SYT3** (Arabidopsis, AT5G04220) — TAIR-migrated ER–PM adaptor row; exact
-   GO:0160214 IDA annotation from PMID:33944955.
+   GO:0160214 IDA annotation from PubMed-verified PMID:33944955.
 8. **SYT1** (Arabidopsis, AT2G20990) — most-studied plant ER–PM tether;
    Ca²⁺-regulated; involved in stress-induced membrane contact stabilization.
 9. **SYT5** (Arabidopsis) — additional plant ER–PM tether; redundant with SYT1.

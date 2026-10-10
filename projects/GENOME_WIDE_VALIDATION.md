@@ -159,6 +159,6 @@ Open follow-ups are tracked in [#4090](https://github.com/ai4curation/ai-gene-re
 
 - Tawfiq R, Kulmanov M, Hoehndorf R. *Evaluating completeness, coherence, and consistency of
   genome-scale function annotations.* Briefings in Bioinformatics, 2026, 27(3):bbag336.
-  [PMID:42366621](https://pubmed.ncbi.nlm.nih.gov/42366621/);
+  PubMed-verified [PMID:42366621](https://pubmed.ncbi.nlm.nih.gov/42366621/);
   [doi:10.1093/bib/bbag336](https://doi.org/10.1093/bib/bbag336). Software (GAEF):
   <https://github.com/bio-ontology-research-group/GAEF>.

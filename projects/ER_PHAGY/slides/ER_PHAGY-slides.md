@@ -37,7 +37,7 @@ Selective autophagy of the endoplasmic reticulum: a scoped project
 ## Bottom line
 
 - **Scoped, not started.** No ER-phagy module and no review made for this project.
-- **16 seed/related human genes** listed; **7 COMPLETE**, **2 INITIALIZED**, **7 not started**.
+- **16 seed/related human genes** listed; **8 COMPLETE**, **2 DRAFT**, **2 INITIALIZED**, **4 not started**.
 - The defining receptors **RETREG1 (FAM134B), RTN3, CCPG1, TEX264** have **no review yet**.
 - GO-CAM already covers one **UFMylation/CYB5R3 reticulophagy** branch.
 
@@ -71,14 +71,13 @@ Selective autophagy of the endoplasmic reticulum: a scoped project
 - **CALCOCO1, RETREG2, UBAC2**: ER-phagy receptor/adaptor reviews now add core reticulophagy biology.
 - **CDK5RAP3**: captures the UFM1-dependent positive regulation of reticulophagy.
 - **ATL3**: a reticulophagy projection was **not** promoted to a new annotation; the review keeps ER membrane fusion as core and asks for receptor-mutant rescue experiments.
-- **ULK1, ATG9A**: initialized in the CONDENSATES phagophore-membrane audit, not ER_PHAGY.
+- **ERN1**: COMPLETE ER-stress review; **GABARAP, MAP1LC3B** are DRAFT; **ULK1, ATG9A** are INITIALIZED.
 
 ---
 
 ## Next steps
 
 1. `just fetch-gene human RETREG1` (and RTN3, CCPG1, TEX264); review them first.
-2. Review MAP1LC3B, GABARAP and ERN1.
-3. Decide whether an ER-phagy receptor/adaptor module is warranted, alongside `modules/phagophore_assembly_site.yaml`.
+2. Decide whether an ER-phagy receptor/adaptor module is warranted, alongside `modules/phagophore_assembly_site.yaml`.
 
 **Read more:** `projects/ER_PHAGY.md` · `genes/human/SEC62/` · `genes/human/ATL3/` · `genes/human/CALCOCO1/`

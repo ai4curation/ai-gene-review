@@ -26,13 +26,14 @@ transcriptionally. Those gene-level reviews are now summarized in a
 decomposable [ferroptosis module](../modules/ferroptosis.html) with production
 GO-CAM associations for AIFM2, GPX4, NFE2L2, and SLC7A11 switch models.
 
-The 22 COMPLETE reviews cover 2,362 seeded GOA annotations plus 10 proposed new
-ones as of 2026-10-04. Across those rows, 1,458 annotations were accepted as
-core, 297 were kept as non-core, 113 were marked over-annotated, 97 were
-modified, 377 were removed, and 20 were left undecided. TP53 alone contributed
-872 seeded rows, 344 of which were removed. The core suppressor term
-`GO:0110076` negative regulation of ferroptosis is accepted on GPX4, SLC7A11,
-AIFM2, FTH1, and NFE2L2 and proposed as a new annotation for DHODH.
+The 22 reviewed gene files, 21 COMPLETE plus ACSL4 still DRAFT, cover 2,362
+seeded GOA annotations plus 10 proposed new ones as of 2026-10-04. Across those
+rows, 1,458 annotations were accepted as core, 297 were kept as non-core, 113
+were marked over-annotated, 97 were modified, 377 were removed, and 20 were left
+undecided. TP53 alone contributed 872 seeded rows, 344 of which were removed.
+The core suppressor term `GO:0110076` negative regulation of ferroptosis is
+accepted on GPX4, SLC7A11, AIFM2, FTH1, and NFE2L2 and proposed as a new
+annotation for DHODH.
 
 ## Mechanistic Scope
 
@@ -128,9 +129,8 @@ scope tracked in [#4084](https://github.com/ai4curation/ai-gene-review/issues/40
 
 ## 2026-10-04
 
-- Re-audited the 22 human gene reviews: all validate, ACSL4 was promoted from
-  `DRAFT` to `COMPLETE`, and the aggregate seeded/`NEW`/action counts still
-  match the project summary.
+- Re-audited the 22 human gene reviews: all validate, ACSL4 remains `DRAFT`,
+  and the aggregate seeded/`NEW`/action counts still match the project summary.
 - Refreshed the project page and slide deck to lead with the mechanism and the
   concrete curation results instead of the original priority-order plan.
 - Fixed the main module so FADS2 is treated as adjacent follow-up scope, DHODH's
