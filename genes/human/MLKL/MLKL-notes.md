@@ -1,100 +1,62 @@
-# MLKL (human, Q8NB16) — curation notes
+# MLKL (human, Q8NB16) curation notes
 
-**Provenance note:** Provider deep research for this gene FAILED (Falcon returned
-HTTP 402 Payment Required; Perplexity was not configured). No
-`MLKL-deep-research-<provider>.md` exists. The synthesis below replaces it and was
-written manually from the UniProt record (Q8NB16) and the cached publications in
-`publications/` (abstracts and, where available, PMC full text).
+## Provenance / process
 
-## Identity and architecture
+- Deep research via falcon was not attempted: it is known to fail for this batch (HTTP 402). No
+  `-deep-research-*.md` file exists; these notes are built directly from cached publications
+  (fetched with `just fetch-gene-pmids` and `just fetch-pmid`), UniProt, and QuickGO.
+- No human RIPK1 or RIPK3 reviews exist yet in `genes/human/`, so there is nothing to align with.
+- Context: PANTHER family review `interpro/panther/PTHR44329/PTHR44329-review.yaml` lists MLKL as a
+  member exception to family-wide GO:0004672 protein kinase activity and to the SF298-scoped
+  GO:0004713 protein tyrosine kinase activity, and judged the PAINT NOT node PTN008689042 SOUND.
 
-- Mixed lineage kinase domain-like protein, 471 aa. N-terminal four-helix bundle
-  (4HB) "killer" domain plus brace helices, C-terminal pseudokinase domain
-  (UniProt DOMAIN 194..469). Belongs to the protein kinase superfamily but is a
-  catalytically inactive pseudokinase.
-- [PMID:24012422 "Structurally, MLKL comprises a four-helical bundle tethered to the
-  pseudokinase domain, which contains an unusual pseudoactive site. Although the
-  pseudokinase domain binds ATP, it is catalytically inactive"]
-- [PMID:24703947 "binds to RIP3 through its kinase-like domain but lacks kinase
-  activity of its own"]
-- Human pseudokinase domain crystal structure, nucleotide binding probed by
-  mutagenesis [PMID:24219132 "we report the crystal structure of the human MLKL
-  pseudokinase domain at 1.7 Å"]. Note: Zhao et al. 2012 [PMID:22421439] reported
-  apparent kinase activity of MLKL in vitro, but later structural and biochemical
-  work established it is a pseudokinase; GOA carries NOT annotations for kinase
-  activity, which are correct.
+## Domain architecture
 
-## Activation by RIPK3
+- N-terminal four-helix bundle (4HB, executioner domain, ~res 1-125), two-helix "brace", C-terminal
+  pseudokinase domain (PsKD). UniProt: "Pseudokinase that plays a key role in TNF-induced"
+  necroptosis; "The protein kinase domain is catalytically inactive" (mouse-derived, By similarity).
 
-- Identified as the target of necrosulfonamide and a RIP3 interactor; RIP3
-  phosphorylates T357/S358 [PMID:22265413 "MLKL was phosphorylated by RIP3 at the
-  threonine 357 and serine 358 residues, and these phosphorylation events were
-  critical for necrosis"].
-- Phosphorylation acts as a molecular switch [PMID:24012422 "its essential
-  nonenzymatic role in necroptotic signaling is induced by receptor-interacting
-  serine-threonine kinase 3 (RIPK3)-mediated phosphorylation"].
-- Pseudokinase domain restrains the 4HB [PMID:25288762 "the MLKL pseudokinase domain
-  acts as a latch to restrain the N-terminal four-helix bundle (4HB) domain"].
-- Necrosome association with RIP1/RIP3/PGAM5 [PMID:22265414 "The programmed necrosis
-  induced by TNF-α requires the activities of the receptor-interacting
-  serine-threonine kinases RIP1 and RIP3 and their interaction with the mixed
-  lineage kinase domain-like protein MLKL"].
-- Highly phosphorylated soluble inositol phosphates (IP6 etc.) are required
-  co-activators [PMID:29883610 "purified MLKL specifically bound the IP6 affinity
-  reagent but not a phosphate control reagent (Figure 6C), suggesting that MLKL
-  directly binds IP6"; "genetic disruption of IP kinases to abolish production of
-  higher order inositol phosphates blocked necroptosis downstream of MLKL
-  phosphorylation by RIPK3"].
+## Pseudokinase status (firm)
 
-## Oligomerization, membrane translocation, membrane disruption (executioner role)
+- Mouse MLKL: [PMID:24012422 "Although the pseudokinase domain binds ATP, it is catalytically inactive"].
+- Human MLKL binds ATP without divalent cations (Class 2 pseudokinase) and the earlier reported kinase
+  activity is attributed to contamination: [PMID:24107129 "it is probable that the catalytic activity previously attributed to MLKL is likely to arise from the catalytic activity of a contaminating protein"];
+  [PMID:24107129 "We measured ATP binding to human MLKL by both thermal-shift assay and ITC"].
+- Human structure: PMID:24219132 (abstract only) - crystal structure of human PsKD, nucleotide-binding
+  mutagenesis; source of the IDA ATP binding annotation.
+- [PMID:24703947 "binds to RIP3 through its kinase-like domain but lacks kinase activity of its own"].
+- [PMID:29930286 "Despite lacking catalytic activity, MLKL has retained the ability to bind ATP"].
+- GOA has NO positive kinase-activity rows for human MLKL; both kinase rows are NOT (ISS GO:0004672 and
+  IBA GO:0004674 from PTN008689042). Both accepted.
 
-- Oligomerization: trimer [PMID:24316671 "MLKL forms a homotrimer through its
-  amino-terminal coiled-coil domain"]; tetramer [PMID:24366341 "Both the
-  HBD*-mediated and TNF-induced complexes of MLKL(ND) or MLKL are tetramers"];
-  high-molecular-weight complexes [PMID:25288762]. Exact stoichiometry is
-  context-dependent; homo-oligomerization per se is well established.
-- Translocation to plasma membrane is required [PMID:24316671 "the plasma membrane
-  localization of trimerized MLKL is critical for mediating necroptosis"];
-  [PMID:24366341 "translocation of these complexes to lipid rafts of the plasma
-  membrane precedes cell death"].
-- Phosphoinositide binding and direct membrane permeabilization: [PMID:24813885 "a
-  patch of positively charged amino acids on the surface of the 4HBD binds to
-  phosphatidylinositol phosphates (PIPs) and allows recruitment of MLKL to the
-  plasma membrane"; "recombinant MLKL, but not a mutant lacking these positive
-  charges, induces leakage of PIP-containing liposomes as potently as BAX"];
-  [PMID:24703947 "The phosphorylated MLKL forms an oligomer that binds to
-  phosphatidylinositol lipids and cardiolipin. This property allows MLKL to move
-  from the cytosol to the plasma and intracellular membranes, where it directly
-  disrupts membrane integrity, resulting in necrotic death."].
-- Downstream ion flux: Ca2+ influx (TRPM7 implicated) [PMID:24316671]; Na+ influx
-  [PMID:24366341]. Membrane localization is necessary but not sufficient
-  [PMID:25288762 "membrane localization is necessary, but insufficient, to induce
-  cell death"].
-- ESCRT-III counteracts MLKL-induced PM damage [PMID:28388412 "The activation of
-  mixed lineage kinase-like (MLKL) by receptor-interacting protein kinase-3 (RIPK3)
-  results in plasma membrane (PM) disruption and a form of regulated necrosis,
-  called necroptosis."].
+## Activation and execution
 
-## Genetics / physiology
+- RIPK3 phosphorylates MLKL T357/S358: [PMID:22265413 "MLKL was phosphorylated by RIP3 at the threonine 357 and serine 358 residues"].
+- Oligomerization: Cai 2014 reported trimers [PMID:24316671 "MLKL forms a homotrimer through its amino-terminal coiled-coil domain"],
+  but the trimer was partly disulfide-stabilized during lysis [PMID:24316671 "the disulphide bonds of the trimerized MLKL proteins were formed by oxidation during cell lysis"];
+  later work shows human MLKL tetramers [PMID:29930286 "Wild-type hMLKL assembled into tetramers in vitro, robustly permeabilized liposomes"].
+  Stoichiometry remains debated -> generalize homotrimerization to protein homooligomerization.
+- PIP binding / membrane permeabilization: [PMID:24813885 "a patch of positively charged amino acids on the surface of the 4HBD binds to phosphatidylinositol phosphates (PIPs)"];
+  [PMID:24813885 "induces leakage of PIP-containing liposomes as potently as BAX"];
+  [PMID:24703947 "The phosphorylated MLKL forms an oligomer that binds to phosphatidylinositol lipids and cardiolipin"];
+  [PMID:26853145 "PI(4,5)P2 is the preferred PIP-binding partner"].
+- Inositol phosphate code: IPMK/ITPK1 needed for MLKL oligomerization and membrane localization
+  [PMID:29883610 "In IP kinase mutant cells, MLKL failed to oligomerize"].
+- 4HB clusters: membrane localization necessary but not sufficient [PMID:25288762 "membrane localization is necessary, but insufficient, to induce cell death"].
+- Downstream Ca2+ influx via TRPM7 (Cai 2014) - not taken as an MLKL activity.
 
-- Mlkl-null mice are viable and resistant to necroptosis [PMID:23835476 "found Mlkl
-  to be dispensable for normal mouse development as well as immune cell
-  development"]; [PMID:24012422 "cells derived from these animals were resistant to
-  TNF-induced necroptosis unless MLKL expression was restored"].
-- Antiviral role and nuclear necroptosis during influenza infection are inferred
-  from mouse (UniProt "By similarity"; ZBP1-RIPK3-MLKL axis). Human-specific
-  evidence not reviewed here.
-- Species specificity: human MLKL interacts with human but not mouse RIPK3 (UniProt).
+## Localization
 
-## Curation conclusions
+- Cytosol (basal), plasma membrane (activated) [PMID:24316671]. Nucleus: mouse, influenza/ZBP1 nuclear
+  necroptosis (ISS transfer only for human) - non-core.
 
-- Core: executioner of necroptosis (GO:0097528 execution phase of necroptosis);
-  disrupts the plasma membrane (GO:0140912 membrane destabilizing activity) after
-  binding phosphatidylinositol phosphates (GO:1901981) to target it; binds IP6 (GO:0000822) as an obligate activation cofactor.
-- Kinase NOT annotations: accept.
-- protein binding (RIPK3, IPI x3): MODIFY to protein kinase binding (GO:0019901).
-- GO:0140911 pore-forming activity is restricted to the membrane of another cell and
-  does not fit, but GO:0140912 membrane destabilizing activity ("binding to a membrane
-  and increasing its permeability") does, and is the core activity used for NINJ1. It is
-  now MLKL's core molecular function (NEW, IDA, PMID:24813885 liposome leakage), with
-  phosphatidylinositol phosphate binding kept as the membrane-targeting activity.
+## Decisions summary
+
+- REMOVE: GO:0007166 cell surface receptor signaling pathway (IEA InterPro2GO from the Cbl-N
+  superfamily IPR036537; structural 4HB fold resemblance, not Cbl adaptor function).
+- MODIFY: protein binding (x3, RIPK3 partner) -> protein kinase binding; homotrimerization ->
+  protein homooligomerization.
+- NEW: GO:0005546 PI(4,5)P2 binding; GO:0140912 membrane destabilizing activity (MLKL itself
+  permeabilizes membranes; comparator NINJ1 carries the term; GSDMD carries wide pore channel activity).
+- Necroptotic signaling pathway kept non-core (MLKL is the effector at the end of the RIPK3 pathway;
+  execution phase of necroptosis is the core process).
