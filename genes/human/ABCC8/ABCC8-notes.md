@@ -240,3 +240,13 @@ structural evidence, human construct/HEK293 assay context and absence of a
 direct ankyrin-B/SUR1-binding inference are retained. All 64 decisions, two
 core functions, three alternative products and source records are unchanged.
 This correction does not require a new biological annotation or cache rewrite.
+
+## 2026-10-10 — UNDECIDED rows rechecked; status left DRAFT
+
+The five UNDECIDED rows (GO:0001678, GO:0010989, GO:0030672, GO:0042734, GO:0060253)
+are all Ensembl Compara IEA projections from rat Q09429, whose own annotations trace
+to PMID:23828271, PMID:14645230 and PMID:23149556. All three caches remain
+abstract-only (`full_text_available: false`). PMID:23149556 has a PMC record
+(PMC3587805), but the PMC full-text service returned the abstract only, so the
+glial-proliferation assay still cannot be read. No new cached evidence resolves any
+of the five rows, so their actions are unchanged and the review stays DRAFT.
