@@ -9,6 +9,10 @@ manifest:
   slides:
     - href: paint/slides/PAINT-slides.html
       description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
+      title: JAK-STAT briefing
+      description: AI generated
 ---
 
 # PAINT Human No-IBA Gene Review Project
