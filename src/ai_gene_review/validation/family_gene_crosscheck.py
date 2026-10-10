@@ -19,7 +19,8 @@ Three checks, all deterministic joins over data already in the repo:
     violation. ``NOT_APPLICABLE`` is the stronger form: no member may retain it.
 
 ``check_pruning_conflicts``
-    A ``node_assessment`` of ``NEEDS_PRUNING`` / ``TOO_DEEP`` / ``WRONG_NODE`` names the
+    A ``node_assessment`` of ``NEEDS_PRUNING`` / ``TOO_DEEP`` / ``WRONG_NODE`` (or
+    ``LOSS_SUPPORTED`` on an IRD/IKR row) names the
     subfamilies that wrongly inherit a term. A gene in one of those subfamilies that
     retains the term is a conflict.
 
@@ -54,6 +55,11 @@ from pathlib import Path
 
 import yaml
 from yaml import CSafeLoader as _Loader  # libyaml; ~10x faster over the gene corpus
+
+# Node verdicts that say the named subfamilies should NOT carry the term: a gain placed
+# too deep or needing pruning, or a loss (IRD/IKR) judged correct. LOSS_CONTRADICTED and
+# LOSS_TOO_BROAD are deliberately absent: they say members below the loss keep the term.
+PRUNING_VERDICTS = frozenset({"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE", "LOSS_SUPPORTED"})
 
 PANTHER_SF_RE = re.compile(r"DR   PANTHER; (PTHR\d+:SF\d+);")
 PANTHER_FAM_RE = re.compile(r"DR   PANTHER; (PTHR\d+);")
@@ -244,7 +250,7 @@ def check_pruning_conflicts(
 ) -> list[CrossCheck]:
     """Genes retaining a term whose node assessment says their subfamily should be pruned."""
     family = review.get("family_id", "?")
-    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    negative = PRUNING_VERDICTS
     results: list[CrossCheck] = []
 
     for assessment in review.get("node_assessments") or []:
@@ -347,7 +353,7 @@ def check_member_exceptions(
     member's gene review, which must not keep the term.
     """
     family = review.get("family_id", "?")
-    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    negative = PRUNING_VERDICTS
     pruned_nodes = {
         (a.get("node_id"), (a.get("asserted_term") or {}).get("id"))
         for a in review.get("node_assessments") or []

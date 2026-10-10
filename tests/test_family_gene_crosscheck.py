@@ -30,7 +30,8 @@ RECEPTOR_SF = "PANTHER:PTHR11022:SF41"
 TERM = "GO:0008745"
 
 
-def _family_review(*, scope="SUBFAMILY_ONLY", allowed=(CATALYTIC_SF,), node_affects=()):
+def _family_review(*, scope="SUBFAMILY_ONLY", allowed=(CATALYTIC_SF,), node_affects=(),
+                   node_verdict="NEEDS_PRUNING"):
     review = {
         "family_id": FAMILY,
         "term_assessments": [
@@ -47,7 +48,7 @@ def _family_review(*, scope="SUBFAMILY_ONLY", allowed=(CATALYTIC_SF,), node_affe
             {
                 "node_id": "PANTHER:PTN002475783",
                 "asserted_term": {"id": TERM, "label": "amidase"},
-                "assessment": "NEEDS_PRUNING",
+                "assessment": node_verdict,
                 "assessment_reason": "test",
                 "affected_subfamilies": [
                     {"id": sf, "label": "x"} for sf in node_affects
@@ -128,6 +129,23 @@ def test_pruning_conflict_fires_for_affected_subfamily(tmp_path):
     )
     assert [r.verdict for r in results] == [Verdict.CONFLICT]
     assert "needs pruning" in results[0].message
+
+
+@pytest.mark.parametrize(
+    "verdict,fires",
+    [
+        ("LOSS_SUPPORTED", True),  # a correct IRD/IKR: the clade should not keep the term
+        ("LOSS_CONTRADICTED", False),  # the loss is wrong: keeping the term is right
+        ("LOSS_TOO_BROAD", False),
+    ],
+)
+def test_pruning_conflict_for_loss_verdicts(tmp_path, verdict, fires):
+    """Only a supported loss tells genes below it to drop the term."""
+    gene = _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "ACCEPT")
+    results = check_pruning_conflicts(
+        _family_review(node_affects=(RECEPTOR_SF,), node_verdict=verdict), {FAMILY: [gene]}
+    )
+    assert bool(results) is fires
 
 
 def test_pruning_ignores_unaffected_subfamily(tmp_path):

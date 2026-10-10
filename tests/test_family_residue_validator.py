@@ -311,9 +311,11 @@ def test_tandem_residues_hide_off_by_one_errors():
 class FakePaintRow:
     """Stand-in for module_validator.PaintAnnotationRow."""
 
-    def __init__(self, family: str, go_id: str):
+    def __init__(self, family: str, go_id: str, evidence: str = "IBD", negated: bool = False):
         self.family = family
         self.go_id = go_id
+        self.evidence = evidence
+        self.negated = negated
 
 
 PAINT = {
@@ -357,7 +359,8 @@ def test_node_assessment_outcomes(node, term, outcome, fragment):
     """A node/term pairing is checked against the family's own PAINT rows."""
     from ai_gene_review.validation.family_residue_validator import check_node_assessments
 
-    (result,) = check_node_assessments(_node_review(node, term), PAINT)
+    results = check_node_assessments(_node_review(node, term), PAINT)
+    (result,) = [r for r in results if r.kind != "NODE_POLARITY"]
     assert result.outcome is outcome
     assert fragment in result.message
 
@@ -370,6 +373,77 @@ def test_cross_family_node_names_the_real_family():
         _node_review("PANTHER:PTN000999", "GO:0008168"), PAINT
     )
     assert "PTHR99999" in result.message
+
+
+LOSS_PAINT = {
+    "PANTHER:PTN000002": [FakePaintRow("PTHR00001", "GO:0007259", "IRD", True)],
+    "PANTHER:PTN000003": [FakePaintRow("PTHR00001", "GO:0004181", "IKR", True)],
+}
+
+
+def _loss_review(node, verdict, **declared):
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "node_assessments": [
+            {
+                "node_id": node,
+                "asserted_term": {"id": LOSS_PAINT[node][0].go_id, "label": "x"},
+                "assessment": verdict,
+                "assessment_reason": "test",
+                **declared,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    "node,verdict,declared,outcome,fragment",
+    [
+        # a correctly declared IRD judged with a loss verdict
+        ("PANTHER:PTN000002", "LOSS_CONTRADICTED", {"negated": True, "evidence": "IRD"},
+         Outcome.PASS, "agree"),
+        ("PANTHER:PTN000003", "LOSS_SUPPORTED", {"negated": True, "evidence": "IKR"},
+         Outcome.PASS, "agree"),
+        # the pre-existing TYK2 pattern: an IRD assessed with a gain verdict, undeclared
+        ("PANTHER:PTN000002", "WRONG_NODE", {}, Outcome.FAIL, "declare negated: true"),
+        # declared as a loss but judged with a gain verdict
+        ("PANTHER:PTN000002", "SOUND", {"negated": True, "evidence": "IRD"},
+         Outcome.FAIL, "is for gain rows"),
+        # wrong evidence code for the row
+        ("PANTHER:PTN000002", "LOSS_SUPPORTED", {"negated": True, "evidence": "IKR"},
+         Outcome.FAIL, "PAINT records ['IRD']"),
+        # UNRESOLVED is allowed on either polarity
+        ("PANTHER:PTN000002", "UNRESOLVED", {"negated": True, "evidence": "IRD"},
+         Outcome.PASS, "agree"),
+    ],
+)
+def test_loss_rows_need_loss_declarations(node, verdict, declared, outcome, fragment):
+    """IRD/IKR rows must be declared negated and judged with LOSS_* verdicts."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    results = check_node_assessments(_loss_review(node, verdict, **declared), LOSS_PAINT)
+    (result,) = [r for r in results if r.kind == "NODE_POLARITY"]
+    assert result.outcome is outcome
+    assert fragment in result.message
+
+
+@pytest.mark.parametrize(
+    "verdict,declared,outcome",
+    [
+        ("SOUND", {}, Outcome.PASS),
+        ("LOSS_SUPPORTED", {}, Outcome.FAIL),  # loss verdict on a gain row
+        ("SOUND", {"negated": True, "evidence": "IRD"}, Outcome.FAIL),  # gain declared as loss
+    ],
+)
+def test_gain_rows_reject_loss_declarations(verdict, declared, outcome):
+    """An IBD row may not be declared negated or judged with a LOSS_* verdict."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    review = _node_review("PANTHER:PTN000001", "GO:0008745")
+    review["node_assessments"][0].update({"assessment": verdict, **declared})
+    results = check_node_assessments(review, PAINT)
+    (result,) = [r for r in results if r.kind == "NODE_POLARITY"]
+    assert result.outcome is outcome
 
 
 @pytest.mark.integration

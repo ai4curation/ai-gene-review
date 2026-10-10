@@ -39,6 +39,16 @@ IBD_FIXTURE = "\n".join(
 )
 
 
+def _seed_treegrafter(cache_dir: Path, text: str = "") -> None:
+    """Write a (by default empty) TreeGrafter node->family table into the cache."""
+    import gzip
+
+    from ai_gene_review.etl.panther_paint import TREEGRAFTER_URL
+
+    with gzip.open(cache_dir / TREEGRAFTER_URL.rsplit("/", 1)[1], "wt") as fh:
+        fh.write(text)
+
+
 # A trimmed leaf gaf (UniProt-centric IBA). col2 = UniProt, col8 (idx 7) = with/from
 # containing the ancestral PTN node + experimental seeds.
 LEAF_FIXTURE = "\n".join(
@@ -218,6 +228,7 @@ def test_fetch_family_paint_end_to_end_with_seeded_cache(tmp_path: Path):
     cache_dir.mkdir()
     # Cache files are keyed by URL basename.
     (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE)
+    _seed_treegrafter(cache_dir)
     with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
         fh.write(LEAF_FIXTURE)
 
@@ -255,6 +266,7 @@ def test_fetch_family_paint_extra_uniprot_expands_nodes(tmp_path: Path):
     cache_dir = tmp_path / ".cache"
     cache_dir.mkdir()
     (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE)
+    _seed_treegrafter(cache_dir)
     with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
         fh.write(LEAF_FIXTURE)
 
@@ -282,6 +294,7 @@ def _seed_cache(cache_dir: Path) -> None:
 
     cache_dir.mkdir(parents=True, exist_ok=True)
     (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE)
+    _seed_treegrafter(cache_dir)
     with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
         fh.write(LEAF_FIXTURE)
 
@@ -328,3 +341,80 @@ def test_fetch_all_family_paint_bulk(tmp_path: Path):
     assert (panther / "PTHR1" / "PTHR1-paint.tsv").exists()
     # Empty families are skipped and any obsolete prior slice is removed.
     assert not stale_slice.exists()
+
+
+def test_fetch_family_paint_includes_ird_nodes_without_leaves(tmp_path: Path):
+    """An IRD node has no leaf IBA, so it must be found via its ancestral node.
+
+    Regression: slices used to be built only from nodes cited by leaf IBAs, which
+    silently dropped most IRD rows (see projects/IRD_EVIDENCE.md).
+    """
+    import gzip
+
+    from ai_gene_review.etl.panther_paint import (
+        IBD_GAF_URL,
+        LEAF_GAF_URL,
+        fetch_family_paint,
+    )
+
+    ird_on_family = (
+        "PANTHER\tPTN000099999\tPTN000099999\tNOT\tGO:0016538\tGO_REF:0000033\tIRD\t"
+        "PANTHER:PTN000019791\tF\t\t\tprotein\ttaxon:4751\t20260101\tGO_Central\t\t"
+    )
+    cache_dir = tmp_path / ".cache"
+    cache_dir.mkdir()
+    (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE + "\n" + ird_on_family)
+    _seed_treegrafter(cache_dir)
+    with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
+        fh.write(LEAF_FIXTURE)
+    entries_csv = tmp_path / "PTHRX-entries.csv"
+    entries_csv.write_text("id,name\nP14635,cyclin B1\n")
+    out_dir = tmp_path / "PTHRX"
+
+    tsv_path, nodes = fetch_family_paint(
+        "PTHRX", entries_csv=entries_csv, out_dir=out_dir, cache_dir=cache_dir
+    )
+
+    # the family's own IRD is added; the fixture's unrelated IRD (whose ancestor
+    # PTN001800605 is not a family node) is not
+    assert nodes == {"PTN000019791", "PTN000099999"}
+    assert tsv_path is not None
+    rows = tsv_path.read_text().strip().splitlines()[1:]
+    assert len(rows) == 3
+    assert any("PTN000099999\tGO:0016538" in r and "\tIRD\t" in r for r in rows)
+
+
+def test_fetch_family_paint_uses_treegrafter_for_leafless_nodes(tmp_path: Path):
+    """A gain whose whole clade is blocked by a loss has no leaf IBA anywhere.
+
+    Neither the gain node nor its loss is reachable from leaf with/from fields, so
+    PANTHER's own node->family table is what puts them in the slice.
+    """
+    import gzip
+
+    from ai_gene_review.etl.panther_paint import (
+        IBD_GAF_URL,
+        LEAF_GAF_URL,
+        fetch_family_paint,
+    )
+
+    orphan = "\n".join([
+        "PANTHER\tPTN000500000\tPTN000500000\t\tGO:0016175\tGO_REF:0000033\tIBD\t"
+        "SGD:S000003128\tF\t\t\tprotein\ttaxon:4751\t20230405\tGO_Central\t\t",
+        "PANTHER\tPTN000500001\tPTN000500001\tNOT\tGO:0016175\tGO_REF:0000033\tIRD\t"
+        "PANTHER:PTN000500000\tF\t\t\tprotein\ttaxon:4751\t20230405\tGO_Central\t\t",
+    ])
+    cache_dir = tmp_path / ".cache"
+    cache_dir.mkdir()
+    (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE + "\n" + orphan)
+    _seed_treegrafter(cache_dir, "PTHRX:AN7\tPTHRX:SF1\tPTN000500000\n")
+    with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
+        fh.write(LEAF_FIXTURE)
+    entries_csv = tmp_path / "PTHRX-entries.csv"
+    entries_csv.write_text("id,name\nP14635,cyclin B1\n")
+
+    _, nodes = fetch_family_paint(
+        "PTHRX", entries_csv=entries_csv, out_dir=tmp_path / "PTHRX", cache_dir=cache_dir
+    )
+    # the TreeGrafter-only gain node, and the IRD that names it, are both included
+    assert nodes == {"PTN000019791", "PTN000500000", "PTN000500001"}
