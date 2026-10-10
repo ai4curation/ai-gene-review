@@ -63,10 +63,29 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 ## Later Candidates
 
 - [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
-- [ ] `PTHR31297` fungal glucan exo-1,3-beta-glucosidases
+- [x] `PTHR31297` fungal glucan exo-1,3-beta-glucosidases
 - [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
 - [ ] `PTHR10615` MYST-family histone acetyltransferases
 - [ ] `PTHR43762` fungal D-arabinono-1,4-lactone oxidases
+
+## Family 2: Fungal Glucanases
+
+`PTHR31297` contains several fungal GH5 glucanase subtrees. The current
+EXG1/XOG1-family IBA rows split over a broad Aspergillus-root
+`PTN001262628` glucan-catabolism node, a fungal `PTN001262686` extracellular
+cell-wall beta-glucan node, and a Saccharomycetes `PTN001262687`
+exo-1,3-beta-glucosidase node.
+
+- [ ] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in the current
+  PR
+- [ ] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
+  clade
+- [ ] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
+  fungal wall beta-glucan node
+- [ ] `CANAL/XOG1` - CGD-seeded *Candida albicans*
+  exo-1,3-beta-glucosidase; review in PR #4596
+- [ ] `NEUCR/NCU09652` - *Neurospora crassa* PTHR31297 member to place against
+  the yeast, PomBase, and CGD subtrees
 
 ---
 
@@ -116,5 +135,10 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 - Opened sibling PRs for the six drafted Hsp100/ClpB reviews: `yeast/HSP78`
   (#4519), `NEUCR/hsp98` (#4520), `SCHPO/hsp78` (#4521), `CANAL/HSP78`
   (#4522), `CANAL/HSP104` (#4523), and `SCHPO/hsp104` (#4524).
+- Started the PTHR31297 fungal glucanase family with `yeast/EXG1`. Its exact
+  exo-1,3-beta-glucosidase IBA from `PTN001262687` and fungal extracellular
+  wall beta-glucan IBAs from `PTN001262686` were retained, while the broader
+  Aspergillus-seeded `PTN001262628` glucan-catabolism IBA was marked as
+  over-scoped for the EXG1/XOG1/Spr1 subclade.
 - Merged all six sibling Hsp100/ClpB reviews, bringing the mitochondrial Hsp78
   and cytosolic non-*S. cerevisiae* Hsp104/hsp98 PAINT checks onto `main`.
