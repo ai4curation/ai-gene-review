@@ -85,20 +85,7 @@ The RNF2 decision now rests on the BBS2/RNF2 interaction curated with IPI and on
 
 The action totals and all 89 source keys remain unchanged. Generic interaction observations remain non-core under the user's explicit ActionEnum criteria; the reviewer request to remove otherwise supported interactions solely because the term is broad conflicts with those criteria. No new annotations or source records are introduced in this response.
 
-
 ## 2026-10-09 — project instruction and bounded review follow-up
-
-The authority for supported generic-binding retention is the standing explicit
-user instruction in the
-[ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions).
-It directs KEEP_AS_NON_CORE for a supported, biologically correct GO:0005515
-annotation when no evidence-backed finer term is established, MODIFY when such
-a refinement is supported, and UNDECIDED when the relevant evidence cannot be
-adjudicated. This instruction takes precedence over the generic-binding skill
-default and validator advisory. Earlier ActionEnum-only explanations were
-incomplete; no repository-wide policy change or additional maintainer sign-off
-is claimed. The repeated generic-interaction reasons now identify this authority
-and the lack of an established finer function for the particular pair.
 
 The stereocilium relationship was independently rechecked using the
 [QuickGO is_a-only ancestor API](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO%3A0032420/ancestors?relations=is_a)
@@ -118,10 +105,6 @@ This makes no claim that isoform 2 lacks the interface or cannot heterodimerize.
 A narrower annotation can follow a verified construct/interface comparison;
 uniformity with the canonical partner alone is insufficient.
 
-The previously accepted RNF2 refinement, five supporting quotations, and
-ciliary process/location synthesis remain unchanged. All 89 source assertions,
-annotation actions, core functions and reference records are preserved:
-16 ACCEPT, 56 KEEP_AS_NON_CORE, 15 MODIFY and two UNDECIDED. The 26 generic
-binding advisories remain an acknowledged consequence of the explicit project
-instruction. This entry supersedes the earlier policy-authority explanation;
-prior journal entries remain historical.
+## Generic binding cleanup, 2026-10-09
+
+The 26 GO:0005515 rows that still retained source-attributed interactions as KEEP_AS_NON_CORE are now marked REMOVE. This supersedes the 2026-09-30 generic-binding policy-disagreement note: the BBSome, BBS-chaperonin and external partner associations remain recorded in row summaries and supporting_entities, but the bare protein-binding molecular-function term is not retained. The 13 GO:0005515 rows already refined to specific BBS9 scaffold or BBS7 heterodimer functions were left as MODIFY.
