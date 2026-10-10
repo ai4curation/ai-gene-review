@@ -64,14 +64,15 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 ## Family 2: MYST Histone Acetyltransferases
 
 `PTHR10615` contains a broad eukaryotic MYST histone-acetyltransferase node and
-separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/NuA3 placements that need
+separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/KAT7 placements that need
 paralog-aware activity and complex checks.
 
 - [ ] `yeast/ESA1` - NuA4 catalytic subunit
 - [ ] `yeast/SAS2` - SAS-I catalytic subunit
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
-- [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
-- [ ] `SCHPO/mst2` - fission yeast MYST acetyltransferase
+- [ ] `SCHPO/mst1` - fission-yeast Esa1/NuA4-family MYST acetyltransferase
+- [x] `SCHPO/mst2` - fission-yeast Sas3/KAT7-family H3K14
+  acetyltransferase; drafted in PR #4609
 - [ ] CGD MYST-family member
 - [ ] `NEUCR` MYST-family member
 
@@ -149,6 +150,10 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
   `PANTHER:PTN004172926` IBA rows fit Sas3's conserved MYST activity in
   chromatin, and the fungal `PANTHER:PTN008308138` row correctly places the
   NuA3a complex assertion on the Sas3 branch.
+- Re-reviewed `SCHPO/mst2` in the MYST family. The broad
+  `PANTHER:PTN004172926` rows fit Mst2 as a conserved chromatin MYST HAT, while
+  the fungal `PANTHER:PTN008308138` NuA3a assertion needs replacement with the
+  fission-yeast Mst2 histone acetyltransferase complex term.
 - Started `PTHR35329` as a compact CHS7-family follow-up. Yeast `CHS7` was
   already reviewed; `NEUCR/csc-1` checks the same `PTN002175570` fungal PAINT
   ancestor against the direct CSE-7/CHS-4 trafficking paper and the newer
