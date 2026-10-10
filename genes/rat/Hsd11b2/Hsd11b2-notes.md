@@ -95,3 +95,5 @@ and a CAUTION note
   proposed: the evidence is transferred, not rat-specific, and GO:0070523
   (11-beta-hydroxysteroid dehydrogenase (NAD+) activity) already covers the chemistry
   at the general-substrate level.
+
+**Stale UniProt quotes (2026-10-10):** replaced 7 `UniProtKB:P50233` supporting_text quotes (an abridged FUNCTION sentence no longer in the refreshed flat file) with verbatim CATALYTIC ACTIVITY reactions (generic 11beta-hydroxysteroid and corticosterone) and a verbatim FUNCTION sentence on glucocorticoid inactivation from the current `Hsd11b2-uniprot.txt`.
