@@ -3,7 +3,7 @@ title: "IRD Evidence: How PAINT Uses Inferred from Rapid Divergence"
 maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE]
 species: [human, mouse, rat, yeast, SCHPO, DROME, NEUCR, ARATH]
-genes: [SSA1, SSA2, SLC52A1, CFLAR, HDAC6, PIP4K2A, FZD9, ATG16L2, pmp20, cia30]
+genes: [SSA1, SSA2, SSA3, SSA4, SSB1, SSB2, SSZ1, SLC52A1, CFLAR, HDAC6, PIP4K2A, FZD9, ATG16L2, pmp20, cia30]
 ---
 # IRD Evidence: How PAINT Uses Inferred from Rapid Divergence
 
@@ -213,6 +213,58 @@ sample biased towards conflicts, not an error rate for IRD. Two patterns recur:
 - **A localization IRD that followed an activity change.** PNLIPRP1 lost lipase activity,
   not secretion. CDK8 moved to a more specific complex term rather than leaving Mediator.
 
+### Case study: yeast Hsp70s and "protein refolding"
+
+This one case shows most of what this project found about IRD.
+
+**What PAINT did.** In 2022 PAINT placed an IBD for GO:0042026 protein refolding on
+PTN000452648, the ancestor of the cytosolic and mitochondrial Hsp70s (PTHR19375). Its
+seeds were yeast SSA1 (`SGD:S000000004`), yeast mitochondrial SSC1 (`SGD:S000003806`)
+and six human HSPA proteins. On 2026-06-16 an IRD (PTN001065099, Fungi) stopped that
+term descending into all fungal cytosolic Hsp70s. In *S. cerevisiae* the IRD clade holds
+four groups:
+
+| Group | Subfamily | Role | Our gene reviews |
+|---|---|---|---|
+| SSA1, SSA2 | SF395 | general cytosolic chaperones, stress refolding and disaggregation | ACCEPT the refolding IBA; core function |
+| SSA3, SSA4 | SF385 | stress-induced SSA paralogs | ACCEPT the refolding IBA; core function |
+| SSB1, SSB2 | SF467 | ribosome-associated, fold nascent chains | MODIFY the IBA to protein folding, citing this IRD |
+| SSZ1 | SF539 | ribosome-associated complex (RAC) partner of Zuo1 | MODIFY the IBA to protein folding, citing this IRD |
+
+**Verdict: LOSS_TOO_BROAD.** The loss fits SSB and SSZ1, whose job is cotranslational
+folding rather than rescuing denatured proteins. It does not fit SSA:
+
+- SSA1 is itself one of the seeds of the IBD the IRD blocks, and SGD has two IDA
+  refolding annotations for it: reactivation of denatured luciferase (PMID:18706386) and
+  Hsp104/Hsp70/Hsp40 rescue of aggregated proteins (PMID:9674429).
+- The fix is to move the IRD down onto the SSB/SSZ1 branch, or remove it, so the SSA
+  subfamilies inherit the term again.
+
+**Why the gene reviews look fine but are not settled.**
+
+- **Our cached GOA files predate the IRD.** All seven proteins still carry the refolding
+  IBA in their `*-goa.tsv`. In the current PAINT leaf file none of them do.
+- **The reviews split the right way, by different routes.** The SSB/SSZ1 reviews were
+  written after the IRD existed, saw it, and MODIFYed. The SSA reviews ACCEPTed an
+  annotation that has since been withdrawn upstream by a block we judge to be wrong.
+- **SSA3 and SSA4 rest on the IBA alone.** SSA1 has its own IDA rows for refolding. SSA2's
+  review cites a refolding paper. SSA3 and SSA4 have no experimental refolding annotation
+  in GOA; their nearest experimental rows are IGI for the broader GO:0006457 protein
+  folding (PMID:9789005).
+- **What happens on the next GOA refresh.** Unless PAINT moves the IRD, SSA3 and SSA4
+  lose their only refolding annotation. Their reviews would then name a core function
+  with no annotation behind it.
+
+**What to do.**
+
+- **PAINT feedback (main action).** Ask for the IRD to be moved to the SSB/SSZ1 branch.
+  The evidence: SSA1 is a seed of the blocked IBD, and the SSA paralogs are the canonical
+  yeast refolding chaperones.
+- **Gene reviews (no change now).**
+  - SSA2–4 could add a note that the refolding IBA they accept has been withdrawn
+    upstream by an IRD judged too broad (PTHR19375 family review).
+  - SSA3 and SSA4 should get literature support for refolding if the IRD stays.
+
 ### PAINT slices were missing most IRD rows
 
 While adjudicating these rows we found that `interpro/panther/*/*-paint.tsv`, the
@@ -268,8 +320,9 @@ Updated 2026-10-06.
 - [x] Fix the PAINT slicer so IRD nodes are not dropped; refresh the 545 affected slices
 - [ ] Adjudicate the remaining 151 seeded IRD rows (their families have no review yet)
 - [ ] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows
-- [ ] Revisit gene reviews affected by the verdicts (SSA1–4 refolding, TIMM50 phosphatase,
-      CDKL5, AOC3, UCP3)
+- [ ] Report the fungal Hsp70 refolding IRD (PTHR19375) to PAINT as too broad
+- [ ] SSA2–4 gene reviews: note that the accepted refolding IBA was withdrawn upstream;
+      find literature support for SSA3/SSA4 refolding if the IRD stays
 - [ ] Revisit the 24 stale IBAs in 15 reviews (SSA/SSB/SSZ1, pmp20, CFLAR, SLC52A1, cia30,
       CACNA1G, CASP14, Drd1, Acot1)
 - [ ] Add an IRD check to the annotation-reviewer skill, so that IRD clade membership is
