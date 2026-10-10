@@ -17,18 +17,19 @@
 - The InterPro `GO:0016491` row was also accepted. The protein has CBR-like
   and FAD-binding FR-type signatures, but neither GOA nor UniProt imports an
   EC or Rhea reaction for O13809.
-- The target-specific mitochondrial localization from PMID:16823372 and the
-  UniProt mitochondrial outer-membrane row were accepted.
+- The target-specific broad mitochondrial localization from PMID:16823372 was
+  accepted. The UniProt mitochondrial outer-membrane row and PomBase
+  CYC2-derived inner-membrane ISO were both left `UNDECIDED` because the cached
+  fission-yeast YFP evidence does not resolve the submitochondrial topology.
 - The S. cerevisiae `CYC2` ISO to `GO:0031314 extrinsic component of
-  mitochondrial inner membrane` was removed. The donor is a real inner-membrane
-  intermembrane-space-facing flavoprotein, but this topology conflicts with the
-  target-supported UniProt mitochondrial outer-membrane row.
+  mitochondrial inner membrane` was left unresolved. The donor is a real
+  inner-membrane intermembrane-space-facing flavoprotein, but O13809 also has an
+  unresolved, UniProt-derived outer-membrane call and no direct topology assay.
 - The PomBase IC row to `GO:1903607 cytochrome c biosynthetic process` was
-  accepted as a CYC2-like inference from the characterized budding-yeast
-  protein. This row should not be expanded into `GO:0004128` cytochrome-b5
-  reductase activity: that term is only the historical GO annotation used as
-  the IC basis, and no specific PTHR19370 cytochrome-b5 reductase PAINT node
-  propagates to O13809.
+  kept as non-core. It records a curator's CYC2-like inference, but PANTHER
+  groups O13809 with CBR1-family SF184 members rather than yeast CYC2, the
+  `GO:0004128` IC basis is dangling, and no specific PTHR19370 cytochrome-b5
+  reductase PAINT node propagates to O13809.
 - `just deep-research-falcon SCHPO SPAC17H9.12c --fallback perplexity-lite`
   could not run to completion because no deep-research provider API keys were
   available. Manual web searches for `O13809`, `SPAC17H9.12c`, `C17H9.12c`,
