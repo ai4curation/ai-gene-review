@@ -1,6 +1,7 @@
 ---
 title: "ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)"
 maturity: SCOPING
+last_reviewed: 2026-10-04
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast, ARATH]
 genes: [VAPA]
@@ -20,7 +21,7 @@ manifest:
 against the plasma membrane is a molecular function. Annotations move to the
 function term GO:0160214 *endoplasmic reticulum-plasma membrane adaptor
 activity*, with GO:0051643 *endoplasmic reticulum localization* for any
-process aspect. We recorded the upstream plan, the affected groups (CGD 4,
+process aspect. We recorded the upstream outcome, the affected groups (CGD 4,
 PomBase 13, TAIR 2, UniProt 2) and the eight InterPro2GO mappings InterPro has
 already removed, and checked the repo (`grep -rl` over all files under
 `genes/`). No review YAML or GOA file uses either term, and no dedicated ER-PM
@@ -38,8 +39,8 @@ ESYT2 and yeast TCB3.
 
 ## Overview
 
-A GO obsoletion proposal will retire **GO:0061817 endoplasmic reticulum–plasma
-membrane tethering** (a BP term). The rationale is that the activity is better
+GO has retired **GO:0061817 endoplasmic reticulum–plasma membrane
+tethering** as a BP term. The rationale is that the tether itself is better
 captured at the molecular function level by **GO:0160214 endoplasmic
 reticulum–plasma membrane adaptor activity**, with the broader spatial
 consequence captured by **GO:0051643 endoplasmic reticulum localization** (BP).
@@ -54,9 +55,9 @@ yet in this repository.
 - Annotation tracker: [geneontology/go-annotation#6383](https://github.com/geneontology/go-annotation/issues/6383)
 - Ontology ticket: [geneontology/go-ontology#31873](https://github.com/geneontology/go-ontology/issues/31873)
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
-| Obsoleted term | ID | Replacement candidates |
+| Obsoleted term | ID | Replacement terms |
 |---|---|---|
 | endoplasmic reticulum–plasma membrane tethering | GO:0061817 | MF: GO:0160214 endoplasmic reticulum–plasma membrane adaptor activity; BP: GO:0051643 endoplasmic reticulum localization |
 
@@ -64,15 +65,15 @@ yet in this repository.
 
 | Group | Annotations | Status |
 |---|---:|---|
-| CGD (Candida Genome Database; *Candida* species not recorded upstream) | 4 | pending |
+| CGD (Candida Genome Database; *Candida* species not recorded upstream) | 4 | DONE |
 | PomBase | 13 | DONE |
-| TAIR (Arabidopsis) | 2 | pending |
-| UniProt | 2 | per latest comment, "uniprot updated" |
+| TAIR (Arabidopsis) | 2 | DONE |
+| UniProt | 2 | DONE |
 
 ### InterPro2GO mappings (per latest upstream comment, term removed by InterPro)
 
-These eight InterPro entries previously mapped to GO:0061817 and have since had
-the mapping removed (will appear in InterPro release 109.0):
+These eight InterPro entries previously mapped to GO:0061817; InterPro has
+removed that mapping from the live records.
 
 | InterPro ID | Family | Maps to (organisms) |
 |---|---|---|
@@ -81,15 +82,17 @@ the mapping removed (will appear in InterPro release 109.0):
 | IPR037765 | Tricalbin C2B domain | yeast Tcb1/2/3 |
 | IPR037762 | Tricalbin C2C domain | yeast Tcb1/2/3 |
 | IPR037756 | Tricalbin C2D domain | yeast Tcb1/2/3 |
-| IPR037733 | Extended synaptotagmin C2A domain | mammalian ESYT1/2/3 and plant SYT1/SYT5 |
+| IPR037733 | Extended synaptotagmin C2A domain | mammalian ESYT1/2/3 and plant SYT1/SYT3/SYT5 |
 | IPR037749 | Extended synaptotagmin C2B domain | mammalian ESYT1/2/3 |
 | IPR037752 | Extended synaptotagmin C-terminal C2 domain | mammalian ESYT1/2/3 |
 
 ## Impact on this repo
 
-No genes in the ER–PM tether family are currently reviewed. A search for ESYT,
-TCB, tricalbin, or synaptotagmin under `genes/` returned no matches, and no
-`*-ai-review.yaml` or `*-goa.tsv` file contains GO:0061817 or GO:0160214.
+No canonical extended-synaptotagmin, tricalbin, or plant-SYT ER-PM tether is
+currently reviewed. There are no `genes/human/ESYT1`-`ESYT3`,
+`genes/yeast/TCB1`-`TCB3`, or `genes/ARATH/SYT1`/`SYT3`/`SYT5` review
+directories; no GOA file contains GO:0061817 or GO:0160214; and the only
+review occurrence of GO:0160214 is VAPA's suggested question.
 
 A search across **all** file types (`grep -rl GO:0061817 genes/`) finds one
 hit: `genes/human/VAPA/VAPA-uniprot.txt:505`, a DR line in the cached UniProt
@@ -122,9 +125,8 @@ coherent candidate set for proactive review.
 - **Organisms**: human (mammalian E-Syts), S. cerevisiae (tricalbins), and
   Arabidopsis (plant SYTs / TAIR-affected entries). Yeast S. pombe is already
   handled upstream by PomBase.
-- **GO branches**: BP (the obsoleted term itself) and the proposed MF
-  replacement GO:0160214 — both belong to the membrane contact site (MCS)
-  branch.
+- **GO branches**: BP (the obsoleted term itself) and the MF replacement
+  GO:0160214 — both belong to the membrane contact site (MCS) branch.
 - **Type of fix**: terminological in GO; biology is well-established. Reviews
   should evaluate whether the MF replacement (adaptor activity) or BP parent
   (ER localization) is the better core-function term, and propose either as
@@ -154,38 +156,34 @@ add files without confirming the UniProt accession from the UniProt API.
 
 ### Plant Synaptotagmins (TAIR)
 
-7. **SYT1** (Arabidopsis, AT2G20990) — most-studied plant ER–PM tether;
+7. **SYT3** (Arabidopsis, AT5G04220) — TAIR-migrated ER–PM adaptor row; exact
+   GO:0160214 IDA annotation from PubMed-verified PMID:33944955.
+8. **SYT1** (Arabidopsis, AT2G20990) — most-studied plant ER–PM tether;
    Ca²⁺-regulated; involved in stress-induced membrane contact stabilization.
-   Likely candidate for one of the two TAIR annotations under review upstream.
-8. **SYT5** (Arabidopsis) — additional plant ER–PM tether; redundant with SYT1.
+9. **SYT5** (Arabidopsis) — additional plant ER–PM tether; redundant with SYT1.
 
 ### Lower priority / verification only
 
-9. **CGD-affected *Candida* orthologs** (species to confirm from the CGD rows) — 4 annotations upstream; not a
-   primary AI Gene Review focus organism. Defer unless the broader project
-   expands to fungal pathogens.
+10. **CGD-resolved *Candida* orthologs** — CGD handled the four original
+    GO:0061817 annotations upstream; defer local reviews unless the project
+    expands to fungal pathogens.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion decision.** Comment thread on
-   geneontology/go-ontology#31873 should be monitored; the InterPro mappings
-   have already been removed (per comment from Sara), so the upstream work
-   is partly underway.
-2. **Once the obsoletion lands**, the replacement MF term GO:0160214 will be
-   the natural ACCEPT for core-function annotations of these tethers. Reviews
-   should propose this MF and either GO:0051643 (ER localization) or a more
-   informative BP child term (membrane contact site organization etc.) for
-   process-level annotation.
-3. **VAPA: done ([PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220)).** Assessed for GO:0160214 and not annotated,
+1. **Record the upstream outcome.** GO:0061817 is obsolete, GO:0160214 is
+   active as the replacement MF, PomBase, UniProt, TAIR, and CGD have all
+   updated their affected rows, and InterPro has removed the eight former
+   InterPro2GO mappings to GO:0061817.
+2. **VAPA: done ([PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220)).** Assessed for GO:0160214 and not annotated,
    because the PM lipid binding at VAPA contacts is the partner's. Whether
    the term should cover ER-anchored FFAT receptors (the PomBase scs2/scs22
    and UniProt VAPB precedent) is raised as a suggested question.
-4. **Begin with ESYT2 + TCB3** as anchor reviews — these are the most
+3. **Begin with ESYT2 + TCB3** as anchor reviews — these are the most
    structurally and biochemically characterized members and have the cleanest
    literature support for the adaptor/tether MF call.
-5. **Use the family as a coherent batch** — once one member is reviewed, the
+4. **Use the family as a coherent batch** — once one member is reviewed, the
    others can leverage shared references and core-function language.
-6. **For TAIR plant SYTs**, defer until ESYT/TCB reviews establish the
+5. **For TAIR plant SYTs**, defer until ESYT/TCB reviews establish the
    template; plant annotations also require careful handling of stress/drought
    phenotypes vs. core MCS function.
 
@@ -205,3 +203,8 @@ membrane contact site (MCS) area has been growing in interest.
   (definition requires PM lipid binding by the adaptor; at VAPA contacts the
   partner's PH domain does it). VAPA never had GO:0061817 in GOA or its
   review; the only occurrence is a UniProt DR line in `VAPA-uniprot.txt`.
+- 2026-10-04 — Re-audited the project against the current repo state. VAPA
+  remains the only local review touching GO:0160214, all upstream groups have
+  updated their GO:0061817 rows, no canonical ESYT/TCB/SYT tether has been
+  reviewed, and the remaining work is to start anchor reviews for ESYT2 and
+  TCB3 now that the obsoletion has landed.

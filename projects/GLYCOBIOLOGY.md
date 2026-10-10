@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human]
 genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1, GALNT1, C1GALT1, C1GALT1C1, GCNT1]
+last_reviewed: 2026-10-04
 manifest:
   slides:
     - href: GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html
@@ -21,16 +22,17 @@ and read by lectins, and GO annotation of these glycogenes is easy to get wrong
 at the level of specificity. We reviewed every existing GO annotation on 11
 human glycogenes (seven exemplars spanning transferase, lectin and CDG axes,
 then four mucin-type O-glycan initiation genes), indexed 17 glycobiology
-pathway modules whose 100 cited gene reviews add 2,735 more annotations, and
+pathway modules whose 100 cited gene reviews add 2,748 more annotations, and
 built a CAZy-family-to-GO mapping (`cazy2go`) as the glyco analogue of
-`interpro2go`. Across the 376 exemplar annotations only 4 were removed, while
-105 were kept as non-core, 48 marked over-annotated and 36 modified: the
-problem is altitude and pleiotropy (generic parent MF or `membrane` terms,
-downstream physiology on single-sugar enzymes), not wrong functions, and the
-module cohort shows the same skew. The `cazy2go` work produced a 60-row
-safe-to-propagate set and 34 hand-endorsed family-level gaps in `interpro2go`,
-still awaiting curator sign-off. The GOA closure query that would size the full
-animal glycogene set has not been run.
+`interpro2go`. Across the 376 single-gene exemplar annotations only 4 were
+removed, while 107 were kept as non-core, 40 marked over-annotated, 38 modified,
+and 2 proposed as new: the problem is altitude and pleiotropy (generic parent MF
+or `membrane` terms, downstream physiology on single-sugar enzymes), not wrong
+functions, and the module cohort shows the same skew. The `cazy2go` work
+produced a 60-row safe-to-propagate set and 34 hand-endorsed family-level gaps
+in `interpro2go`, still awaiting curator sign-off. The GOA closure query that
+would size the full animal glycogene set is tracked with the remaining
+follow-ups in [#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).
 
 ## Overview
 
@@ -66,69 +68,6 @@ that the specialist glyco resources capture well, and where does GO
 over-annotate glycogenes** (e.g. propagating downstream "guilt-by-substrate"
 metabolic processes onto an enzyme that only adds one sugar)?
 
-## The glycobiology GO term landscape
-
-Key entry points into the ontology (GO IDs/labels verified against QuickGO,
-GO release current as of 2026-06). Closure (descendant) sets under these terms
-define the working scope of the audit.
-
-### Molecular function (the enzymes and binders)
-
-| GO ID | Label | Notes |
-|-------|-------|-------|
-| GO:0016757 | glycosyltransferase activity | builds glycosidic bonds from activated sugar donors; ~the CAZy **GT** families |
-| GO:0016798 | hydrolase activity, acting on glycosyl bonds | glycosidases; ~the CAZy **GH** families (parent of glycosidase children) |
-| GO:0030246 | carbohydrate binding | parent of the **lectin** activities |
-| GO:0120153 | calcium-dependent carbohydrate binding | C-type lectin domain signature |
-| GO:0097367 | carbohydrate derivative binding | nucleotide-sugar / activated-donor binding |
-
-### Biological process (where the sugars go)
-
-| GO ID | Label | Notes |
-|-------|-------|-------|
-| GO:0070085 | glycosylation | broad parent process |
-| GO:0006486 | protein glycosylation | protein-acceptor branch |
-| GO:0006487 | protein N-linked glycosylation | Asn-linked; dolichol/OST pathway |
-| GO:0006493 | protein O-linked glycosylation | Ser/Thr-linked |
-| GO:0036066 | protein O-linked glycosylation via fucose | e.g. POFUT1/2 on EGF/TSR repeats (Notch) |
-| GO:0180059 | protein O-linked glycosylation via glucose | e.g. POGLUT on EGF repeats |
-| GO:0006505 | GPI anchor metabolic process | PIG-/PGAP- gene family |
-| GO:0006506 | GPI anchor biosynthetic process | dolichol-phosphate / ER-luminal assembly |
-| GO:0120574 | GPI anchor remodelling | post-attachment editing (PGAP genes) |
-
-These anchor terms give a reproducible way to pull the animal glycogene set from
-GOA for the usage audit (filter by aspect + closure under these IDs, restricted
-to the animal taxa we curate).
-
-## External glycoscience resources (landscape)
-
-Full dossier with URLs, identifier schemes, licences, and programmatic-access
-notes: **[GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md)**.
-Headline resources:
-
-| Resource | Type | Role for GO curation |
-|----------|------|----------------------|
-| [GlyGen](https://www.glygen.org/) | Integrating portal (glycoprotein- + glycan-centric); REST API + SPARQL | one-stop cross-reference hub; harmonises GlyConnect, UniCarbKB, GlyTouCan, CAZy, UniProt |
-| [GlyTouCan](https://glytoucan.org/) | International glycan-structure repository (accessions) | the canonical glycan-structure identifier space |
-| [GlyCosmos](https://glycosmos.org/) | Web portal integrating glyco- with omics (JSCR) | gene/disease/pathway links; RDF |
-| GlyConnect / [Glyco@Expasy](https://www.expasy.org/glycomics) | Glycan structures, sites, biosynthetic enzymes | enzyme↔glycan↔site evidence to cross-check MF annotations |
-| [UniCarbKB](https://unicarbkb.org/) | Curated glycan structures + glycoprotein sites | site-level glycosylation evidence |
-| [CAZy](http://www.cazy.org/) | Carbohydrate-active enzyme families (GT/GH/PL/CE/CBM) | sequence-family ↔ activity mapping; sanity-checks MF over-/under-annotation |
-| [GlycoCoO](https://github.com/glycoinfo/GlycoCoO) | GlycoConjugate Ontology | semantic model for glycoconjugate annotation; alignment target for GO |
-
-The GlySpace Alliance (GlyGen + Glyco@Expasy + GlyCosmos) is the coordinating
-umbrella; GlyTouCan is the shared structure-ID backbone they all link to.
-
-### Reusing these resources for curation
-
-How the resources feed GO curation (forward `cazy2go` propagation, GlycoCoO→GO
-alignment, and confirmatory GlyGen cross-checks; GO-CAM/pathway deferred) is a
-decision record in
-[GLYCOBIOLOGY-resource-reuse.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resource-reuse.md),
-with a seeded [`cazy2go.sssom.yaml`](GLYCOBIOLOGY/cazy2go.sssom.yaml) (CAZy
-family → GO molecular function, the glyco analogue of `interpro2go`) built from
-the exemplar GT families.
-
 ## Exemplar reviews (calibration set)
 
 Seven human genes were reviewed to calibrate the over-/under-annotation
@@ -153,20 +92,20 @@ All seven validate clean (`status: DRAFT`).
 
 ### Verdict distributions (authoritative, from the YAMLs)
 
-| Gene | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
-|------|--:|-------:|---------:|-----:|-------:|-------:|----:|
-| B3GALNT2 | 16 | 5 | 2 | 2 | 7 | 0 | 0 |
-| LGALS3 | 106 | 23 | 62 | 20 | 0 | 0 | 1 |
-| PMM2 | 23 | 16 | 2 | 4 | 1 | 0 | 0 |
-| POFUT1 | 21 | 15 | 2 | 3 | 1 | 0 | 0 |
-| MGAT1 | 26 | 11 | 6 | 5 | 4 | 0 | 0 |
-| ST6GAL1 | 35 | 23 | 5 | 2 | 4 | 1 | 0 |
-| B4GALT1 | 76 | 44 | 21 | 6 | 5 | 0 | 0 |
-| **Total** | **303** | **137** | **100** | **42** | **22** | **1** | **1** |
+| Gene | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | UNDECIDED |
+|------|--:|-------:|---------:|-----:|-------:|-------:|----:|----------:|
+| B3GALNT2 | 16 | 6 | 2 | 0 | 7 | 0 | 0 | 1 |
+| LGALS3 | 106 | 23 | 62 | 20 | 0 | 0 | 1 | 0 |
+| PMM2 | 23 | 16 | 2 | 4 | 1 | 0 | 0 | 0 |
+| POFUT1 | 21 | 15 | 2 | 3 | 1 | 0 | 0 | 0 |
+| MGAT1 | 26 | 11 | 6 | 5 | 4 | 0 | 0 | 0 |
+| ST6GAL1 | 35 | 23 | 5 | 2 | 4 | 1 | 0 | 0 |
+| B4GALT1 | 76 | 46 | 23 | 0 | 7 | 0 | 0 | 0 |
+| **Total** | **303** | **140** | **102** | **34** | **24** | **1** | **1** | **1** |
 
 Only **1/303 REMOVE** (ST6GAL1, a high-throughput-interactome `protein binding`),
-against **100 NON_CORE + 42 OVER + 22 MODIFY** — i.e. ~54% of annotations are
-*demoted or refined* but **99.7%** are *retained in some form*. The
+against **102 NON_CORE + 34 OVER + 24 MODIFY** — i.e. ~53% of annotations are
+*demoted, refined, or still unresolved* but **99.7%** are *retained in some form*. The
 mis-annotation signal is overwhelmingly **altitude/specificity and pleiotropy**,
 not wrong functions — exactly the project's prediction. (PMM2's three former
 REMOVEs have since been softened to `MARK_AS_OVER_ANNOTATED`; the counts above
@@ -193,7 +132,7 @@ are recomputed from the YAMLs rather than carried forward.)
   **21** generic `protein binding` (GO:0005515) IPI annotations — *all* downgraded;
   many are glycan-mediated lectin contacts whose informative MF is `carbohydrate
   binding` (GO:0030246).
-- **Pleiotropy ≠ core.** The dominant LGALS3 verdict was **NON_CORE (64/106)**; its
+- **Pleiotropy ≠ core.** The dominant LGALS3 verdict was **NON_CORE (62/106)**; its
   immune/apoptosis/fibrosis/cancer biology is downstream of one core activity
   (β-galactoside CRD binding + N-terminal LLPS lattice). A new `GO:0062093 lysophagy`
   annotation was *added* (the damaged-endomembrane glycan-sensing role).
@@ -211,11 +150,11 @@ are recomputed from the YAMLs rather than carried forward.)
   stale EC number (ST6GAL1 "2.4.99.1" → current 2.4.3.1) were rejected and recorded
   in notes rather than cited.
 
-Net: across all 303 exemplar annotations the verdict skew (a single REMOVE, a
-high-throughput-interactome `protein binding`; heavy NON_CORE + OVER + MODIFY)
-matches the project's prediction — glycogene mis-annotation is dominated by
-**altitude / specificity and pleiotropy**, not outright wrong functions. The
-independent 2,735-annotation module cohort
+Net: across all 303 Phase 1/2 exemplar annotations, the verdict skew (a single
+REMOVE, a high-throughput-interactome `protein binding`; heavy NON_CORE + OVER
++ MODIFY) matches the project's prediction — glycogene mis-annotation is
+dominated by **altitude / specificity and pleiotropy**, not outright wrong
+functions. The independent 2,748-annotation module cohort
 ([pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)) reproduces this at
 scale.
 
@@ -299,20 +238,20 @@ glycolipids, heparan sulfate and keratan/chondroitin sulfate. Index, with the
 cohort analysis:
 **[GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)**.
 
-These were curated independently and, until now, were linked from no project page
-— so the corpus is considerably larger than the exemplar set alone implies. The
-17 modules cite **100 distinct human gene reviews** (all present in
-`genes/human/`, **zero overlap** with the seven exemplars) carrying **2,735
+These were curated independently as pathway-level documents, so the corpus
+probes a wider glycobiology space than the exemplar set alone implies. The 17
+modules cite **100 distinct human gene reviews** (all present in
+`genes/human/`, **zero overlap** with the 11 single-gene exemplars) carrying **2,748
 adjudicated annotations**. That cohort is a second, independent verdict baseline:
 
-| Cohort | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
-|--------|--:|-------:|---------:|-----:|-------:|-------:|----:|
-| Module genes (100) | 2735 | 63.2% | 17.8% | 15.4% | 2.7% | 0.5% | 0.4% |
-| Exemplars (7) | 303 | 45.2% | 33.0% | 13.9% | 7.3% | 0.3% | 0.3% |
+| Cohort | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | UNDECIDED |
+|--------|--:|-------:|---------:|-----:|-------:|-------:|----:|----------:|
+| Module genes (100) | 2748 | 63.3% | 17.6% | 14.0% | 3.4% | 0.8% | 0.4% | 0.5% |
+| Exemplars (7) | 303 | 46.2% | 33.7% | 11.2% | 7.9% | 0.3% | 0.3% | 0.3% |
 
 It corroborates the project's central claim on 10× the data — REMOVE stays
-under 1%, retention ~99.5% — while showing the exemplar set is deliberately
-NON_CORE-skewed (62 of its 100 NON_CORE verdicts are LGALS3 alone). The gap
+under 1%, retention ~99.2% — while showing the exemplar set is deliberately
+NON_CORE-skewed (62 of its 102 NON_CORE verdicts are LGALS3 alone). The gap
 between the two rows is a **gene-class effect**, narrow biosynthetic enzymes
 versus a pleiotropic lectin, and should be read that way when the GOA closure
 query yields a third number.
@@ -322,10 +261,73 @@ Two gaps the module axis exposes:
 - **O-glycosylation is uncovered.** No module addresses mucin-type,
   GALNT-initiated O-glycan biosynthesis; the exemplars reach O-linked biology
   only via POFUT1 and B3GALNT2.
-- **The module cohort under-proposes new terms** — 1 `proposed_new_terms` entry
-  across 100 genes, against 8 across the 7 exemplars. Almost certainly a
+- **The module cohort under-proposes new terms** — 2 `proposed_new_terms` entries
+  across 100 module genes, against 8 across the 7 Phase 1/2 exemplars. Almost certainly a
   curation-process artifact rather than a real coverage difference, and a
   concrete re-review target.
+
+## The glycobiology GO term landscape
+
+Key entry points into the ontology (GO IDs/labels verified against QuickGO,
+GO release current as of 2026-06). Closure (descendant) sets under these terms
+define the working scope of the audit.
+
+### Molecular function (the enzymes and binders)
+
+| GO ID | Label | Notes |
+|-------|-------|-------|
+| GO:0016757 | glycosyltransferase activity | builds glycosidic bonds from activated sugar donors; ~the CAZy **GT** families |
+| GO:0016798 | hydrolase activity, acting on glycosyl bonds | glycosidases; ~the CAZy **GH** families (parent of glycosidase children) |
+| GO:0030246 | carbohydrate binding | parent of the **lectin** activities |
+| GO:0120153 | calcium-dependent carbohydrate binding | C-type lectin domain signature |
+| GO:0097367 | carbohydrate derivative binding | nucleotide-sugar / activated-donor binding |
+
+### Biological process (where the sugars go)
+
+| GO ID | Label | Notes |
+|-------|-------|-------|
+| GO:0070085 | glycosylation | broad parent process |
+| GO:0006486 | protein glycosylation | protein-acceptor branch |
+| GO:0006487 | protein N-linked glycosylation | Asn-linked; dolichol/OST pathway |
+| GO:0006493 | protein O-linked glycosylation | Ser/Thr-linked |
+| GO:0036066 | protein O-linked glycosylation via fucose | e.g. POFUT1/2 on EGF/TSR repeats (Notch) |
+| GO:0180059 | protein O-linked glycosylation via glucose | e.g. POGLUT on EGF repeats |
+| GO:0006505 | GPI anchor metabolic process | PIG-/PGAP- gene family |
+| GO:0006506 | GPI anchor biosynthetic process | dolichol-phosphate / ER-luminal assembly |
+| GO:0120574 | GPI anchor remodelling | post-attachment editing (PGAP genes) |
+
+These anchor terms give a reproducible way to pull the animal glycogene set from
+GOA for the usage audit (filter by aspect + closure under these IDs, restricted
+to the animal taxa we curate).
+
+## External glycoscience resources (landscape)
+
+Full dossier with URLs, identifier schemes, licences, and programmatic-access
+notes: **[GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md)**.
+Headline resources:
+
+| Resource | Type | Role for GO curation |
+|----------|------|----------------------|
+| [GlyGen](https://www.glygen.org/) | Integrating portal (glycoprotein- + glycan-centric); REST API + SPARQL | one-stop cross-reference hub; harmonises GlyConnect, UniCarbKB, GlyTouCan, CAZy, UniProt |
+| [GlyTouCan](https://glytoucan.org/) | International glycan-structure repository (accessions) | the canonical glycan-structure identifier space |
+| [GlyCosmos](https://glycosmos.org/) | Web portal integrating glyco- with omics (JSCR) | gene/disease/pathway links; RDF |
+| GlyConnect / [Glyco@Expasy](https://www.expasy.org/glycomics) | Glycan structures, sites, biosynthetic enzymes | enzyme↔glycan↔site evidence to cross-check MF annotations |
+| [UniCarbKB](https://unicarbkb.org/) | Curated glycan structures + glycoprotein sites | site-level glycosylation evidence |
+| [CAZy](http://www.cazy.org/) | Carbohydrate-active enzyme families (GT/GH/PL/CE/CBM) | sequence-family ↔ activity mapping; sanity-checks MF over-/under-annotation |
+| [GlycoCoO](https://github.com/glycoinfo/GlycoCoO) | GlycoConjugate Ontology | semantic model for glycoconjugate annotation; alignment target for GO |
+
+The GlySpace Alliance (GlyGen + Glyco@Expasy + GlyCosmos) is the coordinating
+umbrella; GlyTouCan is the shared structure-ID backbone they all link to.
+
+### Reusing these resources for curation
+
+How the resources feed GO curation (forward `cazy2go` propagation, GlycoCoO→GO
+alignment, and confirmatory GlyGen cross-checks; GO-CAM/pathway deferred) is a
+decision record in
+[GLYCOBIOLOGY-resource-reuse.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resource-reuse.md),
+with a seeded [`cazy2go.sssom.yaml`](GLYCOBIOLOGY/cazy2go.sssom.yaml) (CAZy
+family → GO molecular function, the glyco analogue of `interpro2go`) built from
+the exemplar GT families.
 
 ## Candidate animal genes already in the repo
 
@@ -366,7 +368,8 @@ fuller candidate list; these are the already-curated anchors.
 
 - How large is the animal glycogene set under the anchor terms, and what is the
   ACCEPT/MODIFY/OVER/REMOVE verdict distribution relative to the corpus baseline?
-  *(Partly answered: 107 glycogenes are already reviewed — see
+  *(Partly answered: 111 human glycogenes are already reviewed — 11 single-gene
+  exemplars plus the 100 genes in
   [pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) — but the two cohorts
   give materially different distributions, so "the" baseline depends on
   gene-class composition. The closure query needs to report that composition, not
@@ -382,26 +385,26 @@ fuller candidate list; these are the already-curated anchors.
 
 - **Started**: 2026-06-21
 - **Maturity**: IN_PROGRESS — scope, GO anchor-term set (QuickGO-verified), and
-  external resource landscape defined; **7 exemplar reviews complete** (B3GALNT2,
-  LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1; 303 annotations; all validate
-  clean), each backed by a **FutureHouse Falcon deep-research report** integrated
-  into the YAML. They confirm the altitude/specificity + pleiotropy
-  over-annotation hypotheses (137 ACCEPT / 100 NON_CORE / 42 OVER / 22 MODIFY /
-  1 REMOVE / 1 NEW). **17 pathway modules** and their **100-gene / 2,735-annotation**
+  external resource landscape defined; **11 human exemplar reviews complete**
+  (the 7-gene Phase 1/2 set plus 4 mucin-type O-glycan initiation genes; 376
+  annotations), and all validate clean. The first seven are backed by a
+  **FutureHouse Falcon deep-research report** integrated into the YAML, while
+  Phase 3 was curated directly from cached GOA publications. Together they
+  confirm the altitude/specificity + pleiotropy over-annotation hypotheses (184
+  ACCEPT / 107 NON_CORE / 40 OVER / 38 MODIFY / 4 REMOVE / 2 NEW / 1 UNDECIDED).
+  **17 pathway modules** and their **100-gene / 2,748-annotation**
   cohort are now indexed under
   [GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) and reproduce
-  the same skew independently. **Phase 3** adds four mucin-type O-glycan genes
-  (GALNT1, C1GALT1, C1GALT1C1, GCNT1; 73 annotations), partly closing the
-  O-glycosylation gap.
+  the same skew independently.
 - **Next steps**: (1) run the GOA closure query for the anchor terms across the
   animal taxa to enumerate the glycogene set and its verdict baseline — the
-  107-gene reviewed corpus (7 exemplars + 100 module genes) is the denominator to
-  measure it against; (2) flesh out
-  [GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md) with access
-  recipes; (3) promote the 8 exemplar `proposed_new_terms` as GO new-term
-  requests; (4) extend the review/Falcon pass to the already-curated anchor genes
-  (GPC6, Notch1, Uggt1) and a glycosidase/CDG type-II gene; (5) close the
-  **O-glycosylation gap** with a mucin-type GALNT-initiated O-glycan module;
-  (6) re-review the module cohort for `proposed_new_terms`, which it currently
-  under-proposes (1 across 100 genes); (7) extend Phase 3 across the remaining GALNT paralogues and the
-  core 3/core 4 and capping steps.
+  111-gene reviewed human corpus (11 exemplars + 100 module genes) is the
+  denominator to measure it against; (2) promote the 8 exemplar
+  `proposed_new_terms` as GO new-term requests; (3) get curator sign-off on the
+  34 hand-endorsed `cazy2go` true gaps and 210 family-specific subfamily
+  proposals; (4) build the GlycoCoO/GlycoEnzOnto→GO SSSOM alignment and GlyGen
+  cross-check probe; (5) add a mucin-type GALNT-initiated O-glycan module; (6)
+  re-review the module cohort for `proposed_new_terms`, which it currently
+  under-proposes (2 across 100 module genes); (7) extend Phase 3 across the
+  remaining GALNT paralogues and the core 3/core 4 and capping steps. See
+  [#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).

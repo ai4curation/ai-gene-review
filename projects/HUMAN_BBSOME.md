@@ -4,6 +4,7 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [BBS1, BBS2, ARL6, BBS4, BBS5, MKKS, BBS7, TTC8, BBS9, BBS10, BBS12, LZTFL1, BBIP1, CCDC28B]
+last_reviewed: 2026-10-04
 manifest:
   slides:
     - href: HUMAN_BBSOME/slides/HUMAN_BBSOME-slides.html
@@ -99,9 +100,9 @@ reusable **cell-component module** for the BBSome under `modules/bbsome.yaml`.
 - [x] Build `modules/bbsome.yaml` cell-component module (passes `linkml-validate` + term-validator)
 - [x] Per-gene annotation reviews (14/14)
 - [x] Validate all (module + all 14 gene reviews `✓ Valid`)
-- [ ] Pathway/summary integration (optional follow-up)
+- [ ] Pathway/summary integration (optional follow-up; [#4096](https://github.com/ai4curation/ai-gene-review/issues/4096))
 
-### Review summary (completed 2026-06-14; counts re-derived from the review YAMLs 2026-09-26)
+### Review summary (completed 2026-06-14; counts re-derived from the review YAMLs 2026-10-04)
 
 All 14 gene reviews are complete and validate cleanly. Each gene received a
 standalone `description`, full per-annotation review (action + summary + reason),
@@ -120,9 +121,9 @@ blocks, and a `<GENE>-notes.md` research journal with cited provenance.
 | TTC8 | 45 | 23 | 10 | 12 | 0 | 0 |
 | BBS9 | 48 (+1) | 20 | 13 | 13 | 2 | 0 |
 | BBS10 | 12 (+2) | 5 | 4 | 3 | 0 | 0 |
-| BBS12 | 12 (+1) | 3 | 3 | 6 | 0 | 0 |
+| BBS12 | 19 | 3 | 14 | 0 | 1 | 0 |
 | LZTFL1 | 24 | 13 | 2 | 9 | 0 | 0 |
-| BBIP1 | 22 (+3) | 11 | 8 | 3 | 0 | 0 |
+| BBIP1 | 23 (+1) | 11 | 11 | 0 | 1 | 0 |
 | CCDC28B | 6 | 4 | 0 | 2 | 0 | 0 |
 
 **Cross-cutting findings:**

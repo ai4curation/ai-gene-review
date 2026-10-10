@@ -65,3 +65,9 @@ leaves **210 trustworthy proposals across 56 families** — signature-level, saf
 - `spread ≤ 2` is a heuristic; a few legitimate subfamily signatures span 2–3 related families.
 - CONFIRMS validate; **PROPOSED rows are candidates requiring a human GO/InterPro2GO curator** to
   confirm the signature universally implies the activity before any submission.
+
+## Next
+
+Curator sign-off on the 210 family-specific signature proposals and the decision to rerun or freeze
+the 2026-06 CAZy/UniProt/InterPro inputs before any external submission are tracked in
+[#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).
