@@ -195,7 +195,17 @@ No process or function annotation is proposed, for two reasons.
    ligand without naming a function, so importing that pattern would reproduce
    the `protein binding` problem rather than fix it.
 
-Recorded instead as a suggested question.
+Recorded instead as a suggested question, in
+`suggested_questions` ("Does GO need a term for contact-dependent growth
+inhibition, and if so should receptor proteins such as BamA be annotated to it at
+all?").
+
+This reasoning was also carried as a `knowledge_gaps` entry on
+`core_functions[0]`; it was removed on PR review. The point is an ontology gap
+plus the boundary decision it supports, not a biological unknown — no wet-lab
+experiment would close it — and CLAUDE.md reserves `knowledge_gaps` for things
+nobody knows. The substance was already recorded here and in
+`suggested_questions`, so nothing was lost with it.
 
 ## Per-row notes on the 27 `protein binding` rows
 
