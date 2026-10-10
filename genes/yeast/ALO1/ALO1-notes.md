@@ -29,25 +29,27 @@
   were more sensitive to oxidative stress, whereas ALO1 overexpression made cells
   more resistant [PMID:10094636].
 - Several HDA rows are from large-scale mitochondrial or mitochondrial
-  outer-membrane proteomics papers. The cached PMID:14576278 and PMID:16407407
-  full texts describe the purified-mitochondria and purified-outer-membrane
-  proteomics workflows but do not expose the ALO1-specific supplemental rows in
-  the local text. Retain these rows as curator-extracted high-throughput
-  localization evidence and cross-check them against the 2025 outer-membrane
-  abstract.
-- The PMID:16689936, PMID:16823961, and PMID:24769239 caches are abstract-only.
-  Their abstracts describe mitochondrial outer-membrane protein analysis,
-  PROMITO mitochondrial proteomics, and quantitative mitochondrial
-  proteome/phosphoproteome profiling respectively, but they do not name ALO1.
-  Retain these rows because SGD curators had access to the relevant full text or
-  supplement.
+  outer-membrane proteomics papers. The cached abstracts for PMID:14576278,
+  PMID:16407407, PMID:16689936, PMID:16823961, and PMID:24769239 describe
+  purified-mitochondria, purified-outer-membrane, PROMITO, and quantitative
+  mitochondrial proteomics workflows, but they do not expose the ALO1-specific
+  supplemental rows in the local cache. Retain these rows as curator-extracted
+  high-throughput localization evidence because SGD curators had access to the
+  relevant full text or supplement.
 - Chelius et al. 2025 performed a protein-fragment complementation screen with
   the Myo2 cargo-binding domain and found Alo1 as a robust hit; the abstract
   explicitly links Alo1 to Myo2 recruitment to mitochondria and to mitochondrial
   inheritance defects in alo1 mutants [PMID:39775849]. This supports keeping the
   new `myosin V binding`, `mitochondrion inheritance`, and cytoplasmic-side
-  mitochondrial outer-membrane rows, but these are contextual functions rather
-  than a replacement for the core oxidase model.
+  mitochondrial outer-membrane rows, but the cached abstract only exposes
+  mitochondrial outer-membrane localization, not the exact cytoplasmic-side assay.
+  These are contextual functions rather than a replacement for the core oxidase
+  model.
+- UniProt records that purified Alo1 can oxidize L-gulono-1,4-lactone and
+  L-galactono-1,4-lactone in addition to D-arabinono-1,4-lactone. This makes the
+  InterPro-derived `GO:0016899` row a valid non-core parent for the in vitro
+  substrate range; the physiological core remains `GO:0003885
+  D-arabinono-1,4-lactone oxidase activity` in D-erythroascorbate biosynthesis.
 
 ### PAINT / IBA review
 
@@ -66,6 +68,9 @@
   from fungi. Do not add an ascorbate-process `NEW` row: budding yeast ALO1 is in
   D-erythroascorbate biosynthesis, and that process is already in GOA as
   `GO:0070485`.
+- Ask PAINT whether to retain the fungal PTN001015900 loss of ascorbic acid
+  biosynthesis while keeping D-erythroascorbate biosynthesis for the ALO1
+  subfamily.
 
 ### Main curation decisions
 
