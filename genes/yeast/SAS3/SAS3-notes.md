@@ -18,3 +18,22 @@
 - Other 2023-2026 PubMed hits were not direct SAS3 evidence: PMID:39299382 is a
   review of H3K36 methylation, PMID:39082211 studies a NuA3 ortholog subunit in
   Beauveria bassiana, and PMID:36864781 focuses on Gcn5 and NuA4 HAT activities.
+
+## 2026-10-10 refresh
+
+- Re-fetched `yeast/SAS3`, bringing the review to the current 36 GOA rows and
+  adding six current rows for IntAct protein interactions, experimentally
+  supported UniProt protein-lysine-acetyltransferase activity, and ComplexPortal
+  NuA3a membership.
+- Dropped eight stale rows from the older GOA snapshot: obsolete keyword-derived
+  GO_REF:0000043 parent rows and two interaction rows no longer present in GOA.
+- Removed the three newly seeded generic `GO:0005515 protein binding` rows and
+  accepted the new experimental `GO:0061733 protein-lysine-acetyltransferase
+  activity` and `GO:1990467 NuA3a histone acetyltransferase complex` rows.
+- Added a conservative `NEW` row for `GO:0036408 histone H3K14
+  acetyltransferase activity`, which already exists as a GO molecular-function
+  term and is directly supported by NuA3 H3-tail substrate positioning in
+  PMID:41318527.
+- Kept the standing PAINT decisions: the broad `PANTHER:PTN004172926`
+  MYST-family rows are safe for Sas3/NuA3, and fungal `PANTHER:PTN008308138`
+  correctly places NuA3a complex membership on the Sas3 branch.
