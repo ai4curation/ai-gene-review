@@ -33,6 +33,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR19370` NADH-CYTOCHROME B5 REDUCTASE | fungal reductase nodes | `MCR1`/`CBR1`/`cbr1`/`mcr-1` |
 | `PTHR10615` HISTONE ACETYLTRANSFERASE | fungal MYST acetyltransferase nodes | `ESA1`/`SAS` paralogs/`mst` paralogs |
 | `PTHR43762` L-GULONOLACTONE OXIDASE | fungal `ALO1` node | `ALO1`/`alo1`/`ALO1`/`alo-1` |
+| `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 
 ---
 
@@ -67,6 +68,19 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 - [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
 - [ ] `PTHR10615` MYST-family histone acetyltransferases
 - [ ] `PTHR43762` fungal D-arabinono-1,4-lactone oxidases
+
+## Family 2: Chitin Synthase Export Chaperones
+
+`PTHR35329` contains a compact fungal CHS7-family ancestor,
+`PANTHER:PTN002175570`, with PAINT assertions for ER membrane, chitin
+biosynthetic process, protein folding, and protein folding chaperone activity.
+
+- [x] `yeast/CHS7` - *S. cerevisiae* CHS7 anchor; already reviewed and aligned
+  to the current `PTN002175570` PAINT assertions before this project
+- [x] `NEUCR/csc-1` - *Neurospora crassa* CSE-7/CHS-4 export factor; drafted
+  in this branch
+- [ ] *Candida albicans* Q5AA40 - CGD seed for the
+  `GO:0006031 chitin biosynthetic process` IBD
 
 ---
 
@@ -118,3 +132,7 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
   (#4522), `CANAL/HSP104` (#4523), and `SCHPO/hsp104` (#4524).
 - Merged all six sibling Hsp100/ClpB reviews, bringing the mitochondrial Hsp78
   and cytosolic non-*S. cerevisiae* Hsp104/hsp98 PAINT checks onto `main`.
+- Started `PTHR35329` as a compact CHS7-family follow-up. Yeast `CHS7` was
+  already reviewed; `NEUCR/csc-1` checks the same `PTN002175570` fungal PAINT
+  ancestor against the direct CSE-7/CHS-4 trafficking paper and the newer
+  CSE-8 paralog paper, leaving `CANAL/CHS7` as the next Candida seed to review.
