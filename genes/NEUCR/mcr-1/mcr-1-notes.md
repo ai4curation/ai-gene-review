@@ -14,13 +14,15 @@
   N. crassa cbr1 (Q7RXL1) is in the CBR1-like `PTHR19370:SF184` branch.
 - `PTN000452207` carries the MCR1 mitochondrial localization and broad
   NAD(P)H-dependent cytochrome-b5 reductase molecular-function assertions.
-  These are sound for N. crassa mcr-1, but the molecular-function term should
-  be refined to the Rhea/EC-backed NADH-specific child `GO:0090524`.
+  The molecular-function row is seeded by S. cerevisiae MCR1 and PGA3 at a
+  broad eukaryotic node, so the broad term is retained as a deliberate
+  node-level assertion rather than refined on the PAINT row; the separate
+  Rhea/EC mapping captures the NADH-specific child `GO:0090524`.
 - `PTN000452208` carries `GO:0006696 ergosterol biosynthetic process` from an
   S. cerevisiae MCR1 source. PMID:10622712 reconstituted Candida CYP51 sterol
-  14alpha-demethylation with purified yeast cytochrome b5 and NADH-cytochrome
-  b5 reductase, so it supports the biochemical possibility of a direct electron
-  transfer step.
+  14alpha-demethylation with a yeast microsomal cytochrome b5/NADH-cytochrome
+  b5 reductase chain, which supports the CBR1 branch rather than directly
+  establishing an ER ergosterol role for mitochondrial MCR1.
 - Searches for newer direct N. crassa mcr-1 work by `Q7SFY2`, `mcr-1`,
   `NCU03112`, and "Neurospora crassa NADH-cytochrome b5 reductase 2" did not
   find primary evidence that changes the PAINT-backed MCR1-clade assessment.
