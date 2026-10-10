@@ -70,4 +70,4 @@ response MAPK cascade. [PMID:41844616]
 
 A 2026 PLOS Biology paper used phospho-Spk1 as a readout of pheromone MAPK
 activation while studying Cdc42 thresholds for fission-yeast mating and cell
-fusion; it did not change the Spk1 annotation decisions.
+fusion; it did not change the Spk1 annotation decisions. [PMID:41855172]
