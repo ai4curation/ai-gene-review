@@ -52,7 +52,7 @@ experimental evidence.
 |----------------|----------------------------------|-----------------|
 | IPR000719 — Protein kinase domain | Pseudokinase members challenge the assumption that every domain match binds ATP and phosphorylates proteins. | Remove the blanket ATP-binding and protein-phosphorylation mappings; assess narrower catalytic entries. |
 | IPR001128 — Cytochrome P450 | The assessment supports cofactor-binding mappings but questions uniform catalytic assignments across functionally diverse members. | Retain the binding mappings; review the scope of monooxygenase and oxidoreductase mappings. |
-| IPR001424 — Cu/Zn superoxide dismutase domain | Copper-chaperone members challenge a domain-wide superoxide-metabolism assignment. | Remove the blanket process mapping and request the process term on the Cu/Zn SOD UniRule instead; assess metal binding separately. |
+| IPR001424 — Cu/Zn superoxide dismutase domain | Copper-chaperone members make the domain-wide superoxide-metabolism assignment too broad, while fungal Cu-only SODs show the term still needs cover outside the canonical Cu/Zn SOD rule. | Remove the blanket process mapping and request process-term cover on both the Cu/Zn SOD UniRule and a fungal Cu-only SOD rule or narrower entry; assess metal binding separately. |
 | IPR000276 — Rhodopsin-like GPCRs | The assessment flags atypical receptors as exceptions to canonical G-protein coupling. | Review receptor-activity and signaling mappings at subfamily level, verifying evidence for the proposed exceptions. |
 | IPR001046 — NRAMP / SLC11 | The assessment supports broad metal-transport terms rather than substrate-specific assignments across the entry. | Retain broad transport mappings; evaluate more specific functions on individual members. |
 | IPR012724 — Chaperone DnaJ | The assessment attributes ATP binding to the Hsp70 partner rather than DnaJ. | Remove the ATP-binding mapping; retain protein folding and review the scope of the heat-response mapping. |
@@ -76,10 +76,10 @@ the taxon. The notes were checked against the UniProt UniRule API and the curren
 
 | Removal | What still supplies the term | Request |
 |---------|------------------------------|---------|
-| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; 7 reviewed genes lose the term, mostly correctly annotated, so family rules are needed |
+| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; all 7 reviewed sole-source losses were accepted or kept, so family rules are needed |
 | IPR000719 protein phosphorylation | Active-site entries IPR008271 and IPR008266 | Remove |
-| IPR001424 superoxide metabolic process | UniRule UR000000113 selects Cu/Zn SODs and excludes CCS, but assigns only the EC number | Remove; add `GO:0019430` to that rule |
-| IPR012724 ATP binding | Nothing needed; the HAMAP DnaJ rule MF_01152 also assigns no ATP binding | Remove |
+| IPR001424 superoxide metabolic process | UniRule UR000000113 selects canonical Cu/Zn SODs and excludes CCS, but assigns only the EC number; Candida albicans SOD5 lacks its PS00332 condition and needs separate Cu-only SOD cover | Remove; add `GO:0019430` to the Cu/Zn rule and to a fungal Cu-only SOD rule or narrower entry |
+| IPR012724 ATP binding | Nothing needed; the HAMAP DnaJ rule MF_01152 also assigns no ATP-binding or zinc-ion-binding GO term | Remove |
 | IPR042371 dsRNA adenosine deaminase activity | IPR002466 gives ADARs a deaminase term; no rule assigns the specific one | Remove; a rule conditioned on IPR002466 could restore it |
 | IPR006935 DNA binding | HAMAP UvrB rule MF_00204; nothing for RIG-I-like receptors or Dicer | Replace with `GO:0003676` |
 | IPR045122, IPR013380 (two), IPR005714 | Not needed; the terms are wrong for every member | Remove; for IPR045122 and IPR013380, add the correct family-wide terms as mappings |
