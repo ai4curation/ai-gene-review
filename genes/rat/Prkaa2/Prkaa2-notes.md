@@ -111,3 +111,70 @@ This analysis synthesized:
 **Validation Status**: After marking these annotations as retired, the gene should pass GOA validation checks since retired annotations are now excluded from validation.
 
 **Note**: These annotations represent legitimate functional information that was previously transferred from experimentally verified mouse/human data. The retirement only reflects changes in the GOA annotation pipeline, not changes in the underlying biology.
+
+## Re-review 2026-10-10
+
+Re-review after the GOA/UniProt refresh (commit a3cf70b6d). 193 rows in total.
+
+### What GOA changed
+
+- **Large turnover.** 25 rows were newly seeded and 36 rows were newly retired; 25 rows had
+  already been retired before this refresh, so 61 rows are now retired in total (review text kept).
+- Newly retired: the whole GO_REF:0000043 (UniProt keyword) IEA block (nucleotide binding, kinase
+  activity, transferase activity, lipid/fatty acid/steroid/cholesterol metabolic and biosynthetic
+  terms, autophagy, Wnt signaling, rhythmic process, metal ion binding, chromatin organization);
+  the GO_REF:0000120 ATP binding, protein serine/threonine kinase activity and nucleus rows; the
+  GO_REF:0000116 protein serine kinase activity row; the protein binding IPI from PMID:16648175;
+  and 15 ISO GO_REF:0000121 rows (Golgi apparatus, ciliary basal body, cytoplasmic
+  translation, cellular response to starvation and to amino acid starvation, TORC1 signaling,
+  positive and negative regulation of translational initiation, protein localization to lysosome,
+  protein K6-linked ubiquitination, positive regulation of TORC1 signaling, phosphatidylethanolamine
+  and phosphatidylcholine biosynthesis, positive regulation of cytochrome c release, hepatocyte
+  apoptotic process).
+- Newly seeded (all resolved): donor-split ISO rows from human PRKAA2 (UniProtKB:P54646) and mouse
+  Prkaa2 (MGI:MGI:1336173), ISS rows from P54646 and mouse UniProtKB:Q8BRK8, re-sourced IEA rows
+  (EC:2.7.11.1, InterPro, UniProtKB-SubCell nucleus and late endosome), adiponectin-activated
+  signaling pathway (ISO, P54646), and four EXP rows from UniProt catalytic-activity curation:
+  GO:0047322 and GO:0106310 from PMID:2369897 (HMG-CoA reductase) and PMID:9029219 (acetyl-CoA
+  carboxylase).
+
+### Judgments
+
+- EXP GO:0047322 from PMID:9029219 (an ACC paper) is ACCEPT: GO:0050405 [acetyl-CoA carboxylase]
+  kinase activity is obsolete and replaced_by GO:0047322, whose xrefs include RHEA:20333 (the ACC
+  reaction) [PMID:9029219 "Phosphorylation by AMPK increased the Km for ATP and acetyl-CoA."].
+- Protein binding (GO:0005515): all three IPI rows are REMOVE (none left as MARK_AS_OVER_ANNOTATED).
+  PFKFB2 and ChREBP are kinase substrates [PMID:11069105 "Heart PFK-2 was phosphorylated on Ser466
+  and activated by AMPK"; PMID:11724780 "AMPK specifically phosphorylated Ser(568) of ChREBP."], so
+  no binding-type MF is supported beyond the catalytic activity already annotated; the PMID:16648175
+  partners are other AMPK subunits, captured by the complex row. Removal does not mean the
+  interactions are false.
+- Action changes on previously reviewed rows: protein kinase activity (IEA InterPro and IDA
+  PMID:12065578) REMOVE -> MODIFY to AMP-activated protein kinase activity (too general, not wrong);
+  protein-macromolecule adaptor activity (IDA PMID:15695819) REMOVE -> UNDECIDED (the earlier
+  removal rested on the paper being about the beta subunit, which is not a valid basis for removing
+  an experimental row); regulation of stress granule assembly (ISO mouse) MARK_AS_OVER_ANNOTATED ->
+  KEEP_AS_NON_CORE [PMID:27430620 "Our studies identified multiple steps of de novo SG assembly that
+  are controlled by the kinase."]; cellular response to prostaglandin E stimulus (ISO mouse)
+  MARK_AS_OVER_ANNOTATED -> UNDECIDED (cached abstract of PMID:23479225 does not describe the AMPK
+  experiment).
+- Remaining MARK_AS_OVER_ANNOTATED active rows (regulation of microtubule cytoskeleton organization;
+  positive regulation of protein localization) carry an explicit overshoot statement.
+- Donor named in `reason` on every new ISO/ISS row; missing reasons added to three legacy rows
+  (negative regulation of TOR signaling ISS; negative regulation of TORC1 signaling ISS and ISO).
+- No stale `UniProtKB:` quotes remain (checker reports 0).
+- Description: rat symbol used, activation mechanism (gamma-subunit nucleotide binding, Thr-172
+  phosphorylation by LKB1/STK11) and mTORC1 substrates added.
+- core_functions: added in_complex nucleotide-activated protein kinase complex; replaced negative
+  regulation of TOR signaling with the more specific negative regulation of TORC1 signaling; the
+  HMGCR/ACC kinase function is now linked to regulation of lipid metabolic process instead of
+  cholesterol metabolic process (AMPK regulates, rather than executes, lipid metabolism).
+
+### Open questions
+
+- PMID:15695819 protein-macromolecule adaptor activity (IDA) on the alpha subunit needs a full-text
+  check.
+- PMID:23479225 (cellular response to prostaglandin E stimulus, mouse donor IGI) needs a full-text
+  check of the AMPK experiment.
+- Two advisory validator warnings remain because retired GO_REF:0000096 rows keep their legacy
+  MARK_AS_OVER_ANNOTATED actions while the active GO_REF:0000121 rows were re-judged.
