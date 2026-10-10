@@ -117,3 +117,11 @@ CC GO:0005741 mitochondrial outer membrane. None of GO:0140580 / GO:0000423 is i
 ## Deep research
 
 - falcon deep research was launched by the parent agent; not available at time of writing.
+
+## Addendum: falcon deep research (arrived after the review was written)
+
+`Bnip3l-deep-research-falcon.md` (falcon, retried with a longer timeout after a first 600 s timeout)
+landed after the annotation review was finished. It was cross-checked against the review and agrees
+with its calls: the primary role is a LIR-bearing, tail-anchored mitochondrial autophagy receptor at
+the outer mitochondrial membrane, and cell-death outputs are context-dependent and separable from
+receptor function. It is cited on the core GO:0140580 annotation. No annotation decision changes.

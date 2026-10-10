@@ -103,3 +103,11 @@
   observations. ER at the root is broader and deeper than the ER membrane node at Euteleostomi.
 </content>
 </invoke>
+
+## Addendum: falcon deep research (arrived after the review was written)
+
+`Bnip3-deep-research-falcon.md` (falcon, retried with a longer timeout after a first 600 s timeout)
+landed after the annotation review was finished. It was cross-checked against the review and agrees
+with its calls: the primary role is a LIR-bearing, tail-anchored mitochondrial autophagy receptor at
+the outer mitochondrial membrane, and cell-death outputs are context-dependent and separable from
+receptor function. It is cited on the core GO:0140580 annotation. No annotation decision changes.
