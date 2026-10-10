@@ -1,0 +1,45 @@
+# CERKL notes
+
+## 2026-10-10 substantive annotation review
+
+CERKL has 16 original annotations and eight alternative products. This review preserves every original source object, including the two PPM1A partners, electronic donors and PAINT nodes. One new molecular-function annotation records direct mRNA binding by the sequence-defined human CERKLa product. No new biological-process or NOT assertion is introduced.
+
+The campaign's [immutable curation instructions](https://github.com/ai4curation/ai-gene-review/blob/f5d0abbae8a1e96993f4814b86c88194e743a09e/projects/CLINGEN_MENDELIAN.md#curation-instructions) permit supported generic binding to remain non-core where no stronger MF is justified. Here both original PPM1A associations admit a partner-class refinement; neither is interpreted as CERKL phosphatase activity or activation. The ancestry/comparator restriction for new process terms is not extended into a categorical ban on new molecular functions.
+
+### Own molecular activities and product boundaries
+
+[PMID:24498393](https://doi.org/10.1371/journal.pone.0087898), Figure 4C-D and its protein-purification/RNA-EMSA Methods, directly tests bacterial His-MBP-tagged human CERKLa. Purified protein shifts mRNA from human retina or COS-7 cells with protein-negative and unlabeled-competition controls. The N-terminal 1–256 fragment retains binding; the 252–532 fragment does not. The paper's NM_201548.4 translation, NP_963842.1, exactly matches the 532-aa current Q49MI3-2 sequence after the documented VSP_016659 deletion from displayed Q49MI3-1. This is tested-product specificity, not proof that other products lack the function. Short exact source anchors are present in the NEW annotation and RNA-binding core.
+
+The same paper's cap-affinity experiment uses a human-cell immunoprecipitate, so it does not establish purified direct cap recognition. Its microtubule and translation-factor associations also include complex/RNA-mediated interactions. No direct microtubule-binding, translation-factor, motor or RNA-transport activity is added. The cellular mRNP evidence supplies context for mRNA binding without proving that RNA binding causes protection from apoptosis.
+
+[PMID:23501591](https://doi.org/10.1016/j.exer.2013.03.003), Sections 2.6–2.8 and Figure 8, reports sphingomyelin, glucosylceramide and galactosylceramide association using transfected HEK293T protein lysates and immobilized lipids. Retinoic-acid signal also occurred with empty vector and was discarded. This is not a purified affinity or transport assay. Earlier [PMID:19158957](https://pmc.ncbi.nlm.nih.gov/articles/PMC2628313/), Results following Figure 3, reported negative overlays with both purified GST-CERKLa and fresh HEK293T lysate. The retained sphingolipid-binding annotation is therefore bounded to the positive assay context, not a universal behavior or explanation of all retinal lipid phenotypes. The 2013 mouse model retained about 35% expression and should not be described as a complete null.
+
+### Why the catalytic transfers are rejected
+
+The kinase name/domain alone does not establish phosphorylation. Full selected Methods and Results of PMID:19158957 test four cloned human retinal a/b/c/d products, both cell lysates and purified GST formats, with functioning CERK controls, standard and photoreceptor-derived lipid preparations, and cellular labeling. PMID:23501591 extends the negative tests to very-long-chain ceramides and mixed-lipid phosphorus assays. [PMID:22678504](https://pmc.ncbi.nlm.nih.gov/articles/PMC3394741/) provides additional C6-NBD-ceramide/CERK-control assay text, although its exact full-length construct mapping remains limited.
+
+These are target-specific reasons to reject positive lipid-kinase and kinase inferences. They do not prove inactivity of all eight products under every substrate/cofactor condition. No NOT annotation is manufactured. The current InterPro IPR001206 record really does map to GO:0016301: the issue is transfer to this target, not a nonexistent mapping or fabricated lost residue. Historical PAINT node PTN002285910 remains explicitly unresolved; donor count and target self-evidence are not used as objections.
+
+### Survival and context-dependent regulation
+
+PMID:19158957 Figure 7 measures PARP cleavage in human HeLa cells expressing human 532-aa CERKLa. Protection is seen with 300 micromolar hydrogen peroxide over 12–24 hours, with important negative boundaries at the higher dose, other stimuli and later time point. The COS-7 propidium-iodide experiment separately measures both necrotic and apoptotic death. The existing negative-apoptosis BP is retained, without inventing intrinsic antioxidant or caspase-inhibitor molecular activity.
+
+The authentic abstract of [PMID:24735978](https://doi.org/10.1016/j.bbadis.2014.04.009) reports TRX2 association, redox-state maintenance and protection; its full Methods were not recovered, so biochemical species/product assignments and direct redox catalysis are not inferred. [PMID:30205735](https://doi.org/10.1080/15548627.2018.1520548), Figures 5–9 and the cloning/RNAi Methods, supports CERKL-dependent SIRT1 stability and autophagy in human ARPE-19 cells through depletion/rescue and tagged co-IP. It does not show CERKL deacetylase or kinase activity.
+
+The newer [PMID:41288005](https://pubmed.ncbi.nlm.nih.gov/41288005/), Results 3.6–3.7 and the lipid/PI3P/LC3 Methods, instead finds lower PI3P and autophagy with CERKL expression in human pancreatic cancer lines, including bafilomycin controls. Its Discussion explicitly distinguishes the ARPE-19 result. No universal autophagy direction, new cancer process or direct lipid-catalytic activity is asserted. Product identity in these two autophagy papers remains incompletely resolved.
+
+### Localization and exact source tracing
+
+The mouse donor A2AQH1 has exact IDA segment-localization records from [PMID:23142158](https://pubmed.ncbi.nlm.nih.gov/23142158/). Its Figure 3 and immunofluorescence Methods show mouse and rat inner/outer-segment labeling with omitted-primary controls. Those are ortholog observations, not direct human-segment experiments.
+
+[PMID:21151604](https://pubmed.ncbi.nlm.nih.gov/21151604/), Figures 4–6 and antibody Methods, directly shows endogenous human ARPE-19 nuclear, cytoplasmic and perinuclear CERKL, with antigen-pre-absorption controls. It also finds exclusion from fibrillarin-positive nucleoli in human ARPE-19 and mouse 661W cells. This differs from tagged-product nucleolar accumulation in PMID:19158957. The nucleolus assertion is retained as a non-core expression-context observation; its physiological relevance remains a question. Likewise, positive ER/Golgi imaging and fractionation in 2009 are kept distinct from the later negative colocalization description in PMID:24498393 Figure S1. No uniform localization of all eight products is claimed.
+
+### Interaction evidence and access provenance
+
+[CERKL-source-evidence.json](CERKL-source-evidence.json) contains literal source objects, exact interaction records, donor annotations, source URLs/query receipts and SHA-256 hashes. It is a curated source extract, not a custom sequence-analysis pipeline or a claim that every full supplement was inspected.
+
+For [PMID:33961781](https://doi.org/10.1016/j.cell.2021.04.011), three exact IntAct records link Q49MI3 to P35813 in human HEK293T/HCT116 AP-MS experiments. For [PMID:40205054](https://doi.org/10.1038/s41586-025-08878-3), the publication-linked author AP-MS network contains CERKL–PPM1A edge 609146. UniProt independently establishes P35813 as PPM1A, a protein Ser/Thr phosphatase. These observations support protein phosphatase binding at physical-association resolution; they do not establish a purified binary interface, activation, substrate or individual CERKL product. Database records and GOA share source provenance; repeated records are not automatically biological replication.
+
+The genuine normal seed and source caches were preserved. Existing main caches were selected exactly; missing references were obtained by the unchanged normal fetch command in isolation. Falcon was attempted with a 90-second bound and timed out; the explicit Perplexity-lite fallback returned HTTP 401 for insufficient quota. No provider report was fabricated. Manual primary research continued. The normal abstracts of PMID:15708351, PMID:19501188 and PMID:24735978 remain explicitly abstract-only; selected complete primary papers carry the actual load-bearing claims.
+
+Independent annotation-review and core-synthesis consultations assessed catalytic transfer and positive mRNA binding separately. GO definitions were checked through the official service. The authenticated GO-CAM index had no CERKL/Q49MI3 entry. This absence was not used to manufacture a new process. All newly authored source excerpts, including repeats, are counted per publication; notes introduce no additional verbatim literature excerpts.
