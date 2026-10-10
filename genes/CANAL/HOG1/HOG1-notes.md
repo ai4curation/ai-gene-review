@@ -38,3 +38,7 @@
   while the broad PAINT, PMID:15229284, and UniProt-SubCell cytoplasm rows now
   cite UniProt's explicit cytoplasm/nucleus location block instead of reusing a
   nuclear-accumulation-only quote.
+- The oxidized-linolenic-acid phenotype is covered by the existing
+  `GO:0071447 cellular response to hydroperoxide` term. The proposed
+  lipid-peroxidation NTR was therefore dropped, and the peroxide-stress row
+  from PMID:39432552 now redirects to GO:0071447.
