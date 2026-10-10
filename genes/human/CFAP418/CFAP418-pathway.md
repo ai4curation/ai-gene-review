@@ -1,3 +1,15 @@
+# CFAP418 pathway interpretation — corrected 2026-10-10
+
+**The historical summary and diagram below are superseded.** See the [current biological review](CFAP418-ai-review.html) and [dated audit notes](CFAP418-notes.md) for the supported interpretation and source limits.
+
+The current molecular function is phospholipid binding, inferred for human CFAP418 from direct full-length mouse phosphatidic-acid/cardiolipin overlay assays (PMID:37971880). Human FAM161A association is supported, but a ciliary scaffold, IFT-transport mechanism and direct disc-building step have not been established. Ciliary-base staining is nonexclusive and assay dependent; broad cytoplasmic and photoreceptor inner-segment distribution is also supported. The knockout disc-organization experiments are in PMID:29440555, not PMID:22177090.
+
+The historical bioinformatics report used Q6ZT21/TMPPE rather than CFAP418. Its coiled-coil/motif analysis cannot support this protein. The [source audit](CFAP418-source-evidence.json) documents the exact identity and sequence-parsing problems. Original source/provider/bioinformatics files remain preserved. The diagram below and the [old review SVG](CFAP418-review-visual.svg) are historical, superseded illustrations, not the current functional model.
+
+---
+
+## Preserved historical pathway text
+
 # Pathway Summary for CFAP418
 
 ## Overview
