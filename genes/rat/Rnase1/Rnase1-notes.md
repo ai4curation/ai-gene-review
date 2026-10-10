@@ -25,3 +25,5 @@
 
 **Open questions:**
 - Should cytosol/lysosomal lumen localizations that come from CMA-substrate Reactome events be kept for an endogenously secreted protein, or marked as over-annotation? The original CMA work used exogenously introduced RNase A.
+
+**Stale UniProt quotes (2026-10-10):** replaced 5 `UniProtKB:P00684` supporting_text quotes (the FUNCTION text now wraps at "double-/stranded", so the old quote no longer matched the flat file) with the verbatim first FUNCTION sentence on cleavage of RNA 3' of pyrimidine nucleotides from the current `Rnase1-uniprot.txt`.
