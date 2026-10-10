@@ -10,4 +10,4 @@
 - Cytoplasm and nucleus (Huh 2003, PMID:14562095) [UniProt:Q03677 "SUBCELLULAR LOCATION: Cytoplasm. Nucleus."].
 
 ## GO term note
-- GO:0033353 "L-methionine cycle" is defined around SAM/SAH/Hcy, but GOA uses it for all MTA-salvage enzymes (GO:0019509 is obsolete). Accepted; core BP uses GO:0071267 L-methionine salvage. Raised as a suggested question.
+- GO:0033353 "L-methionine cycle" is defined around SAM/SAH/Hcy, but ADI1 acts in the MTA-specific branch. QuickGO marks the MTA-specific GO:0019509 term obsolete, so GO:0071267 is the nearest live replacement for the GOA GO:0033353 rows.

@@ -5,5 +5,6 @@
 - Lipoylated in vivo [PMID:32974306 "Lipoyl-Gcv3p is the lipoic acid bound subunit of glycine cleavage system (GCV)."].
 
 ## Curation observations
-- No GO MF term for lipoyl/aminomethyl carrier; GO:0031405 lipoic acid binding used as the closest.
+- No GCS-specific GO MF term for the lipoyl/aminomethyl swinging-arm carrier; GO:0031405 lipoic acid
+  binding used as the closest, while GO:0140104 molecular carrier activity may be an appropriate parent.
 - protein lipoylation (IMP) accepted: Gcv3 is the first lipoylated intermediate in the relay, not just a substrate (same logic as Bacillus GcvH).
