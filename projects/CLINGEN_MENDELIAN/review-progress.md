@@ -66,6 +66,61 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 296 — 2026-10-10 06:07:16 UTC
+
+**296 complete / 2,580 remaining in the frozen 2,876-gene catalog.** CEP164 and
+CEP250 add two first counted primary campaign audits beyond checkpoint 294.
+CEP164 is a substantive audit of a pre-existing review; CEP250 adds a new review
+file. Both count once as primary genes, irrespective of products or prior file
+presence. No required follow-up holds remain. Supplementary products and
+repeated reviews of already counted genes add no completion.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CEP164 | [#4508](https://github.com/ai4curation/ai-gene-review/pull/4508) | [f596d88e3b5c](https://github.com/ai4curation/ai-gene-review/commit/f596d88e3b5cc14bf41331a4f3c670b11fa5c77b) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4508#pullrequestreview-5477762192) | 2026-10-10T05:43:15Z | [88a6b9a1b7e9](https://github.com/ai4curation/ai-gene-review/commit/88a6b9a1b7e9b800c1e00a0879389ea38659587d) |
+| CEP250 | [#4510](https://github.com/ai4curation/ai-gene-review/pull/4510) | [02a91a83f87b](https://github.com/ai4curation/ai-gene-review/commit/02a91a83f87beac809b56a549668ab6db18bbf87) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4510#pullrequestreview-5477819434) | 2026-10-10T06:07:16Z | [88df55227943](https://github.com/ai4curation/ai-gene-review/commit/88df552279432a342e5928b8edb0290745e2776b) |
+
+CEP164's exact head was approved at 05:20:31 UTC, with successful claude-review
+at 05:20:48 UTC and test (3.12) at 05:40:08 UTC, before its 05:43:15 UTC merge.
+CEP250's exact head was approved at 05:43:02 UTC, with successful claude-review
+at 05:43:33 UTC and test (3.12) at 06:06:00 UTC, before its 06:07:16 UTC merge.
+Captured pre-merge and independent live records contain zero unresolved review
+threads. All eight CEP164 and all 24 CEP250 changed PR paths have identical
+approved-head blobs and blobs at their respective merge-commit trees. The
+eight CEP164 and six CEP250 gene artifacts also match their approved heads,
+the frozen cutoff and the authenticated source snapshot.
+
+The source snapshot is [commit f5d0abbae8a1](https://github.com/ai4curation/ai-gene-review/commit/f5d0abbae8a1e96993f4814b86c88194e743a09e),
+the actual [tracker294 #4514](https://github.com/ai4curation/ai-gene-review/pull/4514)
+merge at 2026-10-10T06:14:26Z. Its exact approved head and successful required
+checks were independently verified. This later snapshot supplies the published
+294 baseline without advancing the earlier CEP250 completion cutoff.
+The eventual publication branch base is a separate fact. Four source-file and
+two derived-page preimages are authenticated at this snapshot; if publication
+uses a later base, all six must be checked identical and that base recorded in
+the publication receipt. No future branch identity is assumed here.
+
+The counter definitions established at checkpoint 288 remain in force:
+`campaign_audited_merged` counts distinct frozen-catalog primary genes with a
+merged campaign review; subtracting `pending_followups` gives `completed`.
+`original_merged` remains the compatibility alias in this appended snapshot.
+The three applicable values are 296, 0 and 296. Existing review-file presence,
+supplementary products and repeated reviews do not independently add campaign
+completions. A separate checkpoint295 was not published; its preliminary CEP164
+evidence is incorporated into this two-gene checkpoint without double counting.
+
+All 2,876 catalog rows and association text, all 235 historical queue entries,
+all 47 prior completion updates and all previous progress text are preserved.
+Only the CEP164 and CEP250 checkboxes change; update 48 is appended. The queue
+gene array remains unchanged. Biological DRAFT status or justified UNDECIDED
+annotations alone create no hold. CEP290, CEP41, CEP57 and later work remain
+outside this fixed completion cutoff. The first unchecked gene in literal
+catalog order remains ACBD5.
+
+Authenticated evidence was read and this proposal recorded at 2026-10-10 06:17:06 UTC.
+
+[Checkpoint 296 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T062653Z-codex-fb098d.yaml).
+
 ## Completion checkpoint 294 — 2026-10-10 05:23:30 UTC
 
 **294 complete / 2,582 remaining in the frozen 2,876-gene catalog.** CEP152 adds
