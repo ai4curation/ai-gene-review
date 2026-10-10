@@ -43,8 +43,7 @@ def main() -> int:
         # expected and irrelevant here; we only want the references fetched into the cache.
         subprocess.run(
             [
-                "uv", "run", "python", "-m",
-                "ai_gene_review.validation.reference_cli", "validate", "data", *batch,
+                "uv", "run", "linkml-reference-validator", "validate", "data", *batch,
                 "--schema", SCHEMA, "--target-class", "GeneReview", "--config", CONFIG,
             ],
             stdout=subprocess.DEVNULL,
