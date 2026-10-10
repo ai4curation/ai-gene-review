@@ -27,7 +27,7 @@
   PomBase ISO from budding-yeast ESA1 for the same H4 activity; the newer PAINT
   assertion is the better propagation, but both support the same conserved
   activity.
-- The `Swr1 complex` row from PMID:19040720 is sound in spirit but points at
+- The `Swr1 complex` row from PMID:19915592 is sound in spirit but points at
   the wrong complex for Mst1. The comparative proteomics paper puts Mst1 in the
   fission-yeast NuA4 table, whereas Swr1C shares Arp4/Alp5, Swc4, Yaf9, Act1,
   and other chromatin-environment subunits but not Mst1.
