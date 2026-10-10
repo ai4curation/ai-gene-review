@@ -1,6 +1,6 @@
 """Warm the publications cache with full text via linkml-reference-validator.
 
-This module drives the linkml-reference-validator (>= 0.2.1) full-text provider
+This module drives the linkml-reference-validator (>= 0.3.0) full-text provider
 chain — PMC, Europe PMC preprints, Unpaywall, OpenAlex by default — over the
 repo's own ``publications/PMID_*.md`` cache to upgrade abstract-only records to
 full text. It is modeled on the monarch-initiative/dismech
@@ -394,8 +394,8 @@ def warm_publication(
         # routine `ReferenceFetcher.fetch` uses internally; it is not yet public
         # API — public-API request tracked in
         # https://github.com/ai4curation/ai-gene-review/issues/2789 (to be
-        # transferred to linkml-reference-validator); pyproject bounds LRV <0.3
-        # until it lands.
+        # transferred to linkml-reference-validator). Keep a contract test
+        # around the tuple shape while this remains private.
         try:  # external system boundary: symmetric with the locate guard above,
             # so one failed download still lets later providers try this record
             text, fmt, _pdf_bytes, error = fetcher._materialize(location)

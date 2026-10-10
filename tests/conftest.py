@@ -1,18 +1,70 @@
 """Shared test configuration and fixtures.
 
-Provides automatic VCR cassette recording/replay for integration tests.
+Provides automatic VCR cassette recording/replay for integration tests, and
+fails the run if any test writes into the committed publications/ or genes/.
 """
 
 import builtins
 import os
+import subprocess
 from pathlib import Path
+from typing import Optional
 
 import pytest
 import vcr
 
 
 CASSETTES_DIR = Path(__file__).parent / "cassettes"
-WORKING_TREE_GENES = Path(__file__).resolve().parents[1] / "genes"
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+WORKING_TREE_GENES = REPO_ROOT / "genes"
+# Committed curated data that no test may write to; tests use tmp_path instead.
+PROTECTED_TREES = ("publications", "genes")
+
+
+def _protected_tree_status() -> Optional[str]:
+    """Return git's porcelain status of the protected trees, or None without git.
+
+    Untracked files are included, so a newly cached ``PMID_*.md`` counts too.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all", "--", *PROTECTED_TREES],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError):  # not a git checkout
+        return None
+    return result.stdout
+
+
+def pytest_sessionstart(session):
+    """Snapshot the protected trees before any test runs."""
+    session.config._protected_tree_status = _protected_tree_status()
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Fail the run if any test changed committed publications/ or genes/ files."""
+    before = getattr(session.config, "_protected_tree_status", None)
+    if before is None:
+        return
+    after = _protected_tree_status()
+    if after is None or after == before:
+        return
+    changed = sorted(set(after.splitlines()) - set(before.splitlines()))
+    reporter = session.config.pluginmanager.get_plugin("terminalreporter")
+    message = (
+        "Tests modified the committed "
+        + "/".join(PROTECTED_TREES)
+        + " trees (write to tmp_path instead):\n  "
+        + "\n  ".join(changed or ["(status changed for already-modified files)"])
+    )
+    if reporter is not None:
+        reporter.write_line(message, red=True, bold=True)
+    session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
 def pytest_addoption(parser):

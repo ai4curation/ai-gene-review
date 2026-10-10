@@ -255,6 +255,22 @@ def test_warm_publication_full_text_via_provider_chain(
     assert miss_frontmatter["full_text_attempted"] is True
 
 
+def test_lrv_materialize_private_contract_still_matches_warm_sweep(tmp_path: Path) -> None:
+    """Guard the private ReferenceFetcher._materialize call until issue #2789 lands."""
+    from linkml_reference_validator.models import (
+        FullTextLocation,
+        ReferenceValidationConfig,
+    )
+    from linkml_reference_validator.etl.reference_fetcher import ReferenceFetcher
+
+    fetcher = ReferenceFetcher(ReferenceValidationConfig(cache_dir=tmp_path / "lrv"))
+    text, fmt, pdf_bytes, error = fetcher._materialize(
+        FullTextLocation(text="Stub full text.", format_hint="text")
+    )
+
+    assert (text, fmt, pdf_bytes, error) == ("Stub full text.", "text", None, False)
+
+
 ABSTRACT = (
     "The CLAVATA1 and CLAVATA3 genes are required to maintain the balance "
     "between cell proliferation and organ formation at the shoot and flower "

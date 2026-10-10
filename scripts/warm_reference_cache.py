@@ -9,6 +9,10 @@ reference phase network-bound (~59 min). Running the validator once over the who
 corpus with full-text fetching on (the validator's default) populates the cache so
 subsequent runs are cache-bound.
 
+Unlike normal validation, this sweep intentionally does not trust cached entries:
+its job is to re-fetch abstract-only or stale records and upgrade them when full
+text has become available.
+
 This processes the corpus in chunks for progress/resumability and ignores
 validation pass/fail — the goal here is only to populate the cache. References are
 read from the structured YAML fields (not a regex over prose), so no malformed
@@ -25,7 +29,7 @@ import sys
 import time
 
 SCHEMA = "src/ai_gene_review/schema/gene_review.yaml"
-CONFIG = "conf/reference_validator_config.yaml"
+CONFIG = "conf/reference_validator_warm_config.yaml"
 CHUNK = 100
 
 
@@ -43,8 +47,7 @@ def main() -> int:
         # expected and irrelevant here; we only want the references fetched into the cache.
         subprocess.run(
             [
-                "uv", "run", "python", "-m",
-                "ai_gene_review.validation.reference_cli", "validate", "data", *batch,
+                "uv", "run", "linkml-reference-validator", "validate", "data", *batch,
                 "--schema", SCHEMA, "--target-class", "GeneReview", "--config", CONFIG,
             ],
             stdout=subprocess.DEVNULL,
