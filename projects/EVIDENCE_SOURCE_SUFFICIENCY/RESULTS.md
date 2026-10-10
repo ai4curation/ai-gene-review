@@ -1,15 +1,16 @@
 ---
-title: "EVIDENCE_SOURCE_SUFFICIENCY — preliminary results (objective auto-pass)"
+title: "EVIDENCE_SOURCE_SUFFICIENCY — pilot results: auto-pass + blind ablation"
 ---
 
-# EVIDENCE_SOURCE_SUFFICIENCY — preliminary results (objective auto-pass)
+# EVIDENCE_SOURCE_SUFFICIENCY — pilot results: auto-pass + blind ablation
 
-**Status: PARTIAL.** These come from the *objective* auto-labeling pass
-(`autolabel.py`), which locates each curator's cited justifying quote in the
-cached publication / deep-research file. They answer a sharp, reproducible
-question — *where does the cited justifying fact live?* — but are **a lower bound
-on abstract-sufficiency**, and the unbiased blind-ablation test is **not yet
-run**. Read with the caveats at the bottom.
+**Status: PILOT COMPLETE; H-d still pending.** The objective auto-labeling pass
+(`autolabel.py`) locates each curator's cited justifying quote in the cached
+publication / deep-research file, then the blind-ablation pass asks whether one
+restricted source bundle is enough to re-ACCEPT a row without seeing the
+original decision. These are sharp, reproducible tests, but the full-text
+reading pass and larger blinded sample are still open; read with the caveats at
+the bottom.
 
 Sample: 30 human genes, 484 ACCEPT annotations (seed 20260614). Quote located in
 cached text for **373/484**; the other 111 had no cited supporting_text or a

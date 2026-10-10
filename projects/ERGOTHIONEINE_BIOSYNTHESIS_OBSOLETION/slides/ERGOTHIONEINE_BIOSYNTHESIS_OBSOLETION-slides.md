@@ -70,5 +70,5 @@ GO:0052704 and GO:0140479 → GO:0052699 ergothioneine biosynthetic process
 3. Species folder: **`MYCS2`** (strain mc(2)155, taxon 246196), beside the generic `MYCSM` used by `arr` — as `PSEAE` sits beside `PSEAI`.
 4. S. pombe egt1/egt2 are unaffected and optional.
 
-**Upstream:** go-annotation#6402 · go-ontology#32018 · go-ontology#11163
+**Upstream:** go-annotation#6402 closed · go-ontology#32018 closed · go-ontology#11163
 **Read more:** `projects/ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION.md`

@@ -2,6 +2,8 @@
 title: "Genome-wide validation: system-level plausibility of annotation sets"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
+species: [ECOLI]
+last_reviewed: 2026-10-04
 autolink_gene_symbols: false
 sidecars:
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
@@ -26,13 +28,13 @@ framework of Tawfiq, Kulmanov & Hoehndorf (2026), we score a genome's annotation
 set against constraints already encoded in GO (essential functions present,
 `has_part` dependencies satisfied, taxon constraints respected) and turn each
 violation into a reviewable curation lead. So far only coherence has been built:
-the [E. coli pilot](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md) scored the EcoCyc
-GAF against the 743 asserted `has_part` pairs in GO and found 17 of 129 activated
-dependencies unsatisfied (86.8% coherence). The 17 include one plausible biological
-gap (a denitrification pathway with no nitrous-oxide reductase), several
-granularity gaps, and probable over-annotations such as viral and heterochromatin
-terms on *E. coli*. Completeness, consistency, the minimal-genome pilot and the
-predictor sweep are not started.
+the [E. coli pilot](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md), rerun on
+2026-10-04, scored the EcoCyc GAF against the 743 asserted `has_part` pairs in GO
+and found 17 of 129 activated dependencies unsatisfied (86.8% coherence). The 17
+include a likely whole-pathway overreach (denitrification on a strain with no
+nitrous-oxide reductase), several likely granularity gaps, probable viral and
+eukaryotic over-annotations, and unresolved cases. Completeness, consistency, the
+minimal-genome pilot and the predictor sweep are still roadmap items.
 
 We are doing this because computational predictors can be accurate protein by
 protein yet produce a genome that no viable organism could have, and a cheap
@@ -45,10 +47,11 @@ set-level screen would catch that across all the prediction sets this repo revie
   errors that are invisible per-protein (a pathway missing its committed step; a function that
   can't belong to this organism's lineage).
 - **Constraints already encoded in GO, not hand-authored rules.** Completeness draws on
-  minimal-genome essential-function sets; coherence reuses GO `has_part` (RO:0000051) axioms
-  and MetaCyc pathway structure; consistency reuses GO taxon constraints (`only_in_taxon` /
-  `never_in_taxon`). The validator is a reasoner over existing axioms, so it scales across
-  genomes without per-organism curation.
+  minimal-genome essential-function sets; the first coherence pass reuses asserted GO
+  `has_part` (RO:0000051) axioms, with inferred `has_part` and MetaCyc pathway routes next;
+  consistency reuses GO taxon constraints (`only_in_taxon` / `never_in_taxon`). The validator
+  is a reasoner over existing axioms, so it scales across genomes without per-organism
+  curation.
 - **Sharpest as a predictor QC.** Curated model-organism annotations largely satisfy these
   constraints; genome-scale *computational predictions* systematically violate them. That makes
   this a natural, cheap screen over the prediction-set work already in this repo.
@@ -77,7 +80,7 @@ side. Genome-wide validation is the umbrella that generalizes both to a genome-s
 | Criterion | Question | Axiom source | A violation means |
 |---|---|---|---|
 | **Completeness** | Are functions essential for life present? | minimal-genome essential-function set (mapped to GO) | the genome lacks a process no viable cell can omit — likely an annotation gap |
-| **Coherence** | Are functional dependencies satisfied? | GO `has_part` (RO:0000051) + MetaCyc pathway structure | a step/function is annotated but a required part/precursor is annotated nowhere in the genome |
+| **Coherence** | Are functional dependencies satisfied? | implemented: asserted GO `has_part`; planned: inferred `has_part`, MetaCyc routes, protein-complex constraints | a step/function is annotated but a required part/precursor is annotated nowhere in the genome |
 | **Consistency** | Are mutually exclusive functions absent together? | GO `in_taxon` / `only_in_taxon` / `never_in_taxon` constraints | two functions restricted to disjoint lineages are annotated to one genome — an over-propagation |
 
 Each has a **protein-level** form (both functions on one protein) and a **genome-level** form
@@ -90,12 +93,15 @@ absence of a required part is strong evidence of a gap; presence only permits a 
 
 ## How it connects to existing work
 
-This project is an umbrella; it should reuse and link, not re-implement:
+This project is an umbrella; its genome-level checks should converge with the repo's
+existing pathway and module logic:
 
 - [Pathway satisfiability](PATHWAY_SATISFIABILITY.md) — the module-logic engine
   (`src/ai_gene_review/module_logic.py`) that already tests pathway coherence and emits
-  abduction leads. Genome-wide coherence is this engine run over *all* pathway/`has_part`
-  dependencies for a genome rather than a single curated module.
+  abduction leads. Genome-wide coherence is the same dependency-checking idea run over
+  genome-scale pathway / `has_part` dependencies rather than one curated module; the first
+  E. coli pilot is a standalone asserted-GO prototype in
+  `GENOME_WIDE_VALIDATION/pilot-ecoli/coherence_pilot.py`.
 - [Metabolic Model Analysis](METABOLIC_MODEL_ANALYSIS.md) — GEM gene-protein-reaction
   associations as an independent EC/MF validation source; a complementary, quantitative
   coherence check.
@@ -111,16 +117,19 @@ engine is organism-agnostic.
 
 1. **E. coli K-12 (gold standard) — [Pilot 1, first result](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md).**
    Coherence implemented end-to-end on the EcoCyc GAF using GO `has_part` axioms:
-   **86.8% coherence**, and the 17 violations triage into a genuine biological gap
-   (denitrification lacking nitrous-oxide reductase), annotation-granularity gaps (complex /
-   MF sub-terms), and probable over-annotations (eukaryote/viral terms on E. coli) — every one
-   a reviewable lead. Runs from public data; see the pilot README and its `RESULTS.md`.
+   **86.8% coherence**. The 17 violations include a likely whole-pathway overreach
+   (denitrification lacking nitrous-oxide reductase), likely annotation-granularity gaps
+   (complex / MF sub-terms), probable over-annotations (eukaryote/viral terms on E. coli),
+   and unresolved leads to triage. Runs from public data; see the pilot README and its
+   `RESULTS.md`.
 2. **A minimal genome (JCVI syn3.0 / *Mycoplasma*).** Small, tractable, and the natural source
    of the completeness essential-function set — a strong signal for completeness/coherence.
 3. **Predictor sweep.** Run one or more genome-scale prediction sets (e.g. InterPro2GO,
    DeepGO-family) through the same criteria and quantify the curated-vs-predicted gap.
 
-## Plan (scoping)
+## Implementation status
+
+Open follow-ups are tracked in [#4090](https://github.com/ai4curation/ai-gene-review/issues/4090).
 
 - [x] Extract the dependency set (asserted GO `has_part` pairs) and score a genome's GAF for
       coherence — done in [Pilot 1](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md). *Next:* add
@@ -150,5 +159,6 @@ engine is organism-agnostic.
 
 - Tawfiq R, Kulmanov M, Hoehndorf R. *Evaluating completeness, coherence, and consistency of
   genome-scale function annotations.* Briefings in Bioinformatics, 2026, 27(3):bbag336.
+  [PMID:42366621](https://pubmed.ncbi.nlm.nih.gov/42366621/);
   [doi:10.1093/bib/bbag336](https://doi.org/10.1093/bib/bbag336). Software (GAEF):
   <https://github.com/bio-ontology-research-group/GAEF>.

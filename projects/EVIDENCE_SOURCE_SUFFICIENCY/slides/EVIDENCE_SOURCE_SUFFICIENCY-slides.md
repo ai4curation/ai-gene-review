@@ -81,9 +81,9 @@ Which cheap sources are enough to confirm a GO annotation?
 
 ## Status and next steps
 
-- ✅ `publication_type` field, `analyze-evidence-sources` CLI, protocol, sampler, scorer, auto-label pass, blind ablation.
-- ⬜ Full-text reading pass (tests H-d; makes "fact in abstract" semantic).
-- ⬜ Better review detection (journal/MeSH heuristics); broader REVIEW_ONLY bundle.
-- ⬜ Scale past 30 genes to tighten the blind CIs; score deep-research depth.
+- **Done:** `publication_type` field, evidence-source CLI, protocol, sampler, scorer, auto-label pass, blind ablation.
+- **Open:** full-text reading pass to test H-d and make "fact in abstract" semantic.
+- **Open:** better review detection with MeSH/content heuristics; broader REVIEW_ONLY bundle.
+- **Open:** scale past 30 genes to tighten blind CIs; score deep-research depth.
 
 **Read more:** `projects/EVIDENCE_SOURCE_SUFFICIENCY.md` · `…/RESULTS.md` · `…/PROTOCOL.md`

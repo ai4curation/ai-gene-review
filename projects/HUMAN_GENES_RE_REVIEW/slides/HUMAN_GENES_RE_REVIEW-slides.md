@@ -28,7 +28,7 @@ style: |
 
 A second reader for every curation action in 1,323 human reviews
 
-<span class="small">AI Gene Review · projects/HUMAN_GENES_RE_REVIEW · 2026</span>
+<span class="small">AI Gene Review · projects/HUMAN_GENES_RE_REVIEW · reviewed 2026-10-04</span>
 
 ---
 
@@ -38,7 +38,7 @@ A second reader for every curation action in 1,323 human reviews
 
 - We re-read the action on every existing annotation in **1,323 human reviews** (AAAS → ZSWIM8, ~55k actions) and asked "do I agree?"
 - **~99.7% agreement**: only **3 actions changed** (ABL1, ADRM1, BRCA2); all 143 **NOT** annotations adjudicated.
-- Sweep **complete** (July 2026). The human set has since grown to **2,048** files, so ~725 newer reviews have not had a second pass.
+- Sweep **complete** (July 2026). The human set has since grown to **2,289** files, so ~966 newer reviews have not had a second pass.
 
 ---
 
@@ -85,9 +85,10 @@ A second reader for every curation action in 1,323 human reviews
 
 ## Status and next steps
 
-- ✅ A→Z sweep over 1,323 files; 3 edits, all present in the current YAMLs.
-- ✅ TRA2B, flagged as never reviewed, has since been reviewed (no PENDING rows).
-- ⬜ Resolve the fence cases and the ASCL1 / ATF3 literature questions.
-- ⬜ Second pass for the ~725 human reviews added after July 2026.
+- Done: A→Z sweep over 1,323 files; 3 edits, all present in the current YAMLs.
+- Done: TRA2B, flagged as never reviewed, has since been reviewed with no PENDING rows.
+- Next: resolve the fence cases and the ASCL1 / ATF3 literature questions.
+- Next: second pass for the ~966 human reviews added after July 2026.
+- Tracker: #4097.
 
 **Read more:** `projects/HUMAN_GENES_RE_REVIEW.md`

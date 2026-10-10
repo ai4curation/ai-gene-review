@@ -1,6 +1,7 @@
 ---
 title: "Protein Families"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-04
 tags: [PIPELINE, EVALUATION]
 template: family_index
 autolink_gene_symbols: false
@@ -13,7 +14,7 @@ manifest:
       title: Project brief
 ---
 
-**Bottom line:** many GO annotations reach a gene through its protein family, by PAINT/IBA propagation from a node in a PANTHER tree or by InterPro2GO mapping of a Pfam domain, so a call about what a family does is copied onto every member below that point. This page is the catalog of our family-level reviews: each one asks whether the family is functionally uniform enough for a term to sit on all of it, and records a scope (family-wide, subfamily-only, residue-determined or unresolved) for each GO term assessed. We did this because per-gene reviews kept tracing over-propagated annotations back to functionally heterogeneous families, and correcting them one gene at a time leaves the source in place. The catalog currently holds 333 entries (324 PANTHER families, 9 Pfam domains), 211 of them marked complete. Of the families with a recorded coherence call, 145 are heterogeneous, 53 mostly coherent and only 28 fully coherent; of 327 term-scope calls, 83 are safe family-wide, 29 only for named subfamilies, 6 depend on a curated residue, and 199 remain unresolved, with 10 not applicable. All 9 Pfam entries were judged not viable for a domain-level GO mapping.
+**Bottom line:** many GO annotations reach a gene through a reusable family or signature source. PAINT/IBA places a function at an ancestral node in a PANTHER tree and lets descendants inherit it; InterPro2GO attaches a GO term to every protein that matches an InterPro/Pfam signature. This page catalogs reviews of both sources: whether a PANTHER family is functionally uniform enough for a term to descend family-wide, and whether a Pfam-associated InterPro entry is specific enough for a domain-level GO mapping. We did this because per-gene reviews kept tracing over-propagated annotations back to functionally heterogeneous families, and correcting them one gene at a time leaves the source in place. The catalog currently holds 353 entries (344 PANTHER families, 9 Pfam domains), 218 of them marked complete. Among entries with a determinate coherence call, 151 are heterogeneous, 60 mostly coherent and only 33 fully coherent; another 20 are explicitly unknown and 89 have no recorded coherence call yet. Of 391 term-scope calls, 98 are safe family-wide, 61 only for named subfamilies, 7 depend on a curated residue, and 211 remain unresolved, with 14 not applicable. All 9 Pfam entries were judged not viable for a domain-level GO mapping.
 
 The collections, focused family projects and related mapping reviews below give the detail behind those counts.
 
