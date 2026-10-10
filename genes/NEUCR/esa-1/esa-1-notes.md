@@ -41,9 +41,13 @@ Main row-level calls:
   Wang et al. directly showed H2A K9 acetylation by ESA-1V5.
 - Remove `GO:0000786 nucleosome`: ESA-1 acts on nucleosomes but is not a
   nucleosome component.
-- Modify `GO:0032777 piccolo histone acetyltransferase complex` to
-  `GO:0035267 NuA4 histone acetyltransferase complex`; Neurospora full NuA4 is
-  directly supported, but a separate ESA1/EPL1/YNG2-like Piccolo core is not.
+- Keep `GO:0032777 piccolo histone acetyltransferase complex` as non-core by
+  yeast transfer; Neurospora full NuA4 is directly supported, but a separate
+  ESA1/EPL1/YNG2-like Piccolo core is not.
+- Add a conservative `GO:0042752 regulation of circadian rhythm` `NEW` row from
+  the esa-1 knockdown and esa-1E395Q dominant-negative assays in PMID:37291101,
+  while leaving the clock role secondary to ESA-1's core NuA4 H4 and H2A
+  acetyltransferase activities.
 - Mark yeast-specific EnsemblCompara process rows for rDNA heterochromatin,
   triglyceride biosynthesis, and macroautophagy as over-annotated or remove
   them, leaving the conserved catalytic and chromatin-regulatory function as
