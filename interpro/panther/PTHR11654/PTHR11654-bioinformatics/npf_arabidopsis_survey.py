@@ -8,15 +8,19 @@ parameters. Run from the repository root:
 
 Outputs (written next to this script):
   arath_npf_members.tsv   UniProt accession, NPF name, PANTHER subfamily id + name
-  arath_npf_goa_mf_bp.tsv GOA MF/BP rows (term, evidence, source) for all members
-  arath_npf_goa_summary.tsv per (term, evidence, source): member count and members
+  arath_npf_goa.tsv       GOA MF/BP/CC rows (term, evidence, source) for all members
+  arath_npf_goa_summary.tsv per (aspect, term, evidence, source): member count and members
   arath_npf_exxer.tsv     residues aligned to NPF6.3 E41/E44/R45 (TM1 ExxER/K motif)
+  global_electronic_counts.tsv  all-taxa QuickGO annotation counts for the InterPro2GO
+                          and ARBA mappings discussed in the review (one query per row)
 
 Steps:
 1. UniProtKB (reviewed, taxon 3702, xref PANTHER PTHR11654) -> member list.
 2. PANTHER geneinfo API -> subfamily (SF) per member; SF names from the local
    interpro/panther/panther.obo.
-3. QuickGO annotation download -> all MF/BP GO annotations for the members.
+3. QuickGO annotation download -> all GO annotations (MF, BP and CC) for the members.
+3b. QuickGO annotation search (exact GO id, withFrom = mapping source, optional taxon)
+   -> global annotation counts for each electronic mapping in GLOBAL_QUERIES.
 4. Global pairwise alignment (BLOSUM62, gap open -10, extend -0.5) of every member
    to NPF6.3/CHL1 (Q05085) and read the residues aligned to E41, E44, R45. A
    pairwise alignment is a coarse proxy for a family MSA; treat gaps or ambiguous
@@ -43,6 +47,15 @@ REPO = HERE.parents[3]
 OBO = REPO / "interpro" / "panther" / "panther.obo"
 ANCHOR = "Q05085"  # NPF6.3 / CHL1 / NRT1.1
 ANCHOR_SITES = {41: "E", 44: "E", 45: "R"}
+# (label, GO id, withFrom source, NCBI taxon or None for all taxa)
+GLOBAL_QUERIES = [
+    ("IPR044739", "GO:0071916", "InterPro:IPR044739", None),
+    ("IPR044739", "GO:0042937", "InterPro:IPR044739", None),
+    ("IPR044739", "GO:0042938", "InterPro:IPR044739", None),
+    ("IPR018456", "GO:0006857", "InterPro:IPR018456", None),
+    ("IPR018456", "GO:0006857", "InterPro:IPR018456", 33090),
+    ("ARBA00084141", "GO:0080054", "ARBA:ARBA00084141", None),
+]
 
 
 def get(url: str, accept: str | None = None) -> str:
@@ -90,7 +103,15 @@ def goa(accs: list[str]) -> list[dict]:
         "&geneProductId=" + ",".join(accs)
     )
     rows = list(csv.DictReader(io.StringIO(get(url, "text/tsv")), delimiter="\t"))
-    return [r for r in rows if r["GO ASPECT"] in ("F", "P")]
+    return [r for r in rows if r["GO ASPECT"] in ("F", "P", "C")]
+
+
+def global_count(go_id: str, with_from: str, taxon: int | None) -> int:
+    params = {"goId": go_id, "goUsage": "exact", "withFrom": with_from, "limit": 1}
+    if taxon is not None:
+        params.update({"taxonId": taxon, "taxonUsage": "descendants"})
+    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?" + urllib.parse.urlencode(params)
+    return int(json.loads(get(url, "application/json"))["numberOfHits"])
 
 
 def seq(acc: str) -> str:
@@ -118,7 +139,7 @@ def main() -> int:
     sf = panther_sf(accs)
     names = sf_names()
     with open(HERE / "arath_npf_members.tsv", "w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         w.writerow(["accession", "npf_name", "panther_sf", "panther_sf_name"])
         for m in sorted(mem, key=lambda x: [int(t) for t in re.findall(r"\d+", x["name"])]):
             s = sf.get(m["acc"], "")
@@ -127,8 +148,8 @@ def main() -> int:
     rows = goa(accs)
     name_of = {m["acc"]: m["name"] for m in mem}
     summary: dict[tuple, set] = defaultdict(set)
-    with open(HERE / "arath_npf_goa_mf_bp.tsv", "w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+    with open(HERE / "arath_npf_goa.tsv", "w", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         w.writerow(["accession", "npf_name", "qualifier", "go_id", "go_name", "aspect", "evidence", "reference", "with_from", "assigned_by"])
         for r in rows:
             acc = r["GENE PRODUCT ID"]
@@ -138,22 +159,28 @@ def main() -> int:
             w.writerow([acc, name_of.get(acc, ""), r["QUALIFIER"], r["GO TERM"], r["GO NAME"], r["GO ASPECT"], r["GO EVIDENCE CODE"], r["REFERENCE"], r["WITH/FROM"], r["ASSIGNED BY"]])
             summary[(r["GO ASPECT"], r["GO TERM"], r["GO NAME"], r["QUALIFIER"], r["GO EVIDENCE CODE"], src)].add(name_of.get(acc, acc))
     with open(HERE / "arath_npf_goa_summary.tsv", "w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         w.writerow(["aspect", "go_id", "go_name", "qualifier", "evidence", "electronic_source", "n_members", "members"])
         for k in sorted(summary, key=lambda k: (k[0], k[2], k[4])):
             w.writerow([*k, len(summary[k]), " ".join(sorted(summary[k]))])
+
+    with open(HERE / "global_electronic_counts.tsv", "w", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
+        w.writerow(["source", "go_id", "with_from", "taxon", "n_annotations"])
+        for label, go_id, wf, taxon in GLOBAL_QUERIES:
+            w.writerow([label, go_id, wf, f"NCBITaxon:{taxon}" if taxon else "all", global_count(go_id, wf, taxon)])
 
     anchor_seq = seq(ANCHOR)
     for p, aa in ANCHOR_SITES.items():
         assert anchor_seq[p - 1] == aa, f"anchor {ANCHOR} {p} is {anchor_seq[p-1]}, expected {aa}"
     with open(HERE / "arath_npf_exxer.tsv", "w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         w.writerow(["accession", "npf_name", "pos_E41", "aa_E41", "pos_E44", "aa_E44", "pos_R45", "aa_R45", "ExxE[RK]_intact"])
         for m in sorted(mem, key=lambda x: [int(t) for t in re.findall(r"\d+", x["name"])]):
             res = aligned_residues(anchor_seq, seq(m["acc"]))
             intact = res[41][1] == "E" and res[44][1] == "E" and res[45][1] in ("R", "K")
             w.writerow([m["acc"], m["name"], res[41][0], res[41][1], res[44][0], res[44][1], res[45][0], res[45][1], intact])
-    print(f"{len(mem)} members; {len(rows)} MF/BP annotation rows written to {HERE}")
+    print(f"{len(mem)} members; {len(rows)} GO annotation rows (MF/BP/CC) written to {HERE}")
     return 0
 
 
