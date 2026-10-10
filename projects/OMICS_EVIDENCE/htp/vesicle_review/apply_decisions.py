@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 import sys
 from collections import Counter, defaultdict
 
@@ -44,6 +45,19 @@ SUMMARY = {
     "ACCEPT": "The protein is an established EV marker incorporated by the EV biogenesis machinery; the "
               "vesicle location is supported.",
 }
+
+
+def base_summary(path: str, idx: int, ann: dict) -> str | None:
+    """The row's summary as it was before this project, read from the merge base with main."""
+    rel = os.path.relpath(path, ROOT)
+    base = subprocess.run(["git", "merge-base", "HEAD", "origin/main"], cwd=ROOT, capture_output=True,
+                          text=True, check=True).stdout.strip()
+    text = subprocess.run(["git", "show", f"{base}:{rel}"], cwd=ROOT, capture_output=True, text=True,
+                          check=True).stdout
+    old = yaml.load(text, Loader=LOADER)["existing_annotations"][idx]
+    assert (old["term"]["id"], old.get("original_reference_id")) == (
+        ann["term"]["id"], ann.get("original_reference_id")), (path, idx)
+    return old["review"].get("summary")
 
 
 def main() -> int:
@@ -86,8 +100,12 @@ def main() -> int:
             targets[path].append((d["row_index"], action, f"{basis} {NOTE.format(old=old)}",
                                   SUMMARY[action], set(S.get(key, []))))
         elif MARKER in str(rv.get("reason") or ""):
-            # changed by an earlier run, now decided back to the pre-review action
-            targets[path].append((d["row_index"], old, d["current_reason"], rv.get("summary"), set()))
+            # changed by an earlier run, now decided back to the pre-review action and reason;
+            # a summary this script generated is put back to the pre-review one as well
+            summary = rv.get("summary")
+            if summary in SUMMARY.values():
+                summary = base_summary(path, d["row_index"], ann)
+            targets[path].append((d["row_index"], old, d["current_reason"], summary, set()))
     edited, failed = apply_row_targets(targets, args.write)
     moves = Counter((r["previous_action"], r["decision"]) for r in records if r["changed"])
     print(f"{'WROTE' if args.write else 'DRY RUN'}: {sum(1 for r in records if r['changed'])} of "

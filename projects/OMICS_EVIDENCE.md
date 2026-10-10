@@ -264,8 +264,14 @@ The data and the curators are the same. The difference is the inference step.
      APOE and APOL1 ride on the same plasma lipoproteins, so their plasma-microvesicle
      rows were treated the same way; residents of the ER, Golgi, mitochondria or nucleus (category 4); and
      secreted or lumenal proteins with no EV receptor shown (category 5).
-   - **ACCEPT** only for ALIX/PDCD6IP, which MISEV names as an EV marker actively
-     incorporated by the biogenesis machinery.
+   - **ACCEPT** only for ALIX/PDCD6IP, on protein-specific grounds: UniProt records that
+     ALIX sorts multivesicular-body cargo into intralumenal vesicles and regulates exosome
+     biogenesis (PubMed:22660413). MISEV itself puts ALIX in category 2a with TSG101 and the
+     CHMPs, so this is not a MISEV category distinction.
+   - Category 2 is split as MISEV splits it: 2a, cytosolic proteins with lipid or
+     membrane-protein binding ability (ESCRT, annexins, HSPA8), and 2b, promiscuous cargo
+     (actins, abundant enzymes). Both are KEEP_AS_NON_CORE. Ribosomal proteins are
+     category 3b (co-isolated aggregates), so they are MARK_AS_OVER_ANNOTATED.
 
    Where an earlier reason made a factual claim, it was checked. The SCAMP3 ACCEPT said
    SCAMP3 is "required for extracellular vesicle biogenesis", but the cited papers
@@ -276,20 +282,20 @@ The data and the curators are the same. The difference is the inference step.
    [`decisions_draft.py`](OMICS_EVIDENCE/htp/vesicle_review/decisions_draft.py) holds one
    decision and basis per protein, and
    [`decisions.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions.yaml) lists every row.
-   248 rows changed:
+   244 rows changed (excluding the two CD2AP rows; see the session notes):
 
    | Change | Rows | Typical reason |
    |---|---:|---|
-   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 143 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase |
+   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 139 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase |
    | UNDECIDED → KEEP_AS_NON_CORE | 46 | the same categories, previously left undecided for lack of the supplementary table |
    | ACCEPT → KEEP_AS_NON_CORE | 28 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3 |
    | UNDECIDED → MARK_AS_OVER_ANNOTATED | 20 | albumin, AK2, AUP1, BPTF, ACSL4, complement, lysosomal enzymes, ATP6AP1 |
    | ACCEPT → MARK_AS_OVER_ANNOTATED | 11 | secreted proteins accepted only for being secreted: CLU ×4, THBS1 ×4, THBS4, SCGB1A1; APOE in plasma microvesicles |
 
-   Final vesicle-row actions: 217 KEEP_AS_NON_CORE, 63 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
+   Final vesicle-row actions: 215 KEEP_AS_NON_CORE, 65 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
    (PDCD6IP). For most cytosolic cargo the manual outcome matches the withdrawn rule,
-   because under MISEV such proteins really are in EVs. It differs from the rule on 91
-   rows: 52 that the rule would have made non-core are over-annotated, and 39 ACCEPTs
+   because under MISEV such proteins really are in EVs. As first applied, it differed from
+   the rule on 91 rows: 52 that the rule would have made non-core are over-annotated, and 39 ACCEPTs
    that the rule left in place are changed. 138 of the 140 edited reviews
    validate. The 2 errors (ATP6V1C1, NRAS) are unrelated findings supporting-text issues
    that predate this work.
@@ -304,22 +310,24 @@ The data and the curators are the same. The difference is the inference step.
    same call in both. APOE did not: its pass-1 row is a plasma-microvesicle sample, but its
    rows here come from urine, prostatic secretion, B-cell culture and CSF. APOE is not a
    MISEV marker, and van Niel et al. (PMID:26387950) show it on intraluminal vesicles
-   secreted as exosomes, so those four rows stay KEEP_AS_NON_CORE. 100 rows in 59 genes
+   secreted as exosomes, so those four rows stay KEEP_AS_NON_CORE. GAS6 and APOH also stay
+   KEEP_AS_NON_CORE: both bind phosphatidylserine or anionic phospholipids, the lipid-receptor
+   route by which MISEV category 5 allows secreted proteins onto EVs. 98 rows in 57 genes
    changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
    | Change | Rows | Proteins |
    |---|---:|---|
-   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 67 | secreted plasma and matrix proteins (A1BG, A2M, APOH, FN1, HPX, ITIH1–4, NID1, HSPG2) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, PSAP, SMPD1) |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 65 | secreted plasma and matrix proteins (A1BG, A2M, FN1, HPX, ITIH1–4, NID1, HSPG2) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, PSAP, SMPD1) |
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 32 | mitochondrial (ATP5F1A/B, HSPA9, HSPD1, ACAT1) and ER/Golgi residents (CALR, P4HB, PPIB, PRDX4, MAN1B1, LFNG) |
    | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
 
-   The other 318 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   The other 320 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
    membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
    MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
-   accepting ALIX alone is a judgement call carried over from pass 1. All 59 edited
-   reviews validate except A2M, which has an unrelated findings supporting-text error
-   that predates this work.
+   accepting ALIX alone rests on its protein-specific role in exosome biogenesis, not on
+   MISEV. The edited reviews validate; A2M's quote error, which predated this work, is
+   fixed.
 
    **Membrane-row manual review.** Candidates are all 163 HDA/HTP `membrane` rows (159
    genes) for proteins without a structured UniProt anchor feature. A protein with a
@@ -407,6 +415,27 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-10: second round of automated-review fixes
+
+The automated reviewer re-checked the earlier fixes against MISEV2018 Table 3 and found
+four places where a reason misstated the authority it cites. Fixed:
+
+- **Ribosomal proteins (RPS3, RACK1).** Table 3 puts ribosomal proteins in category 3b,
+  a co-isolated aggregate, not category 2. Their four vesicle rows return to
+  MARK_AS_OVER_ANNOTATED, their pre-review action, and the files are back to their
+  original text.
+- **GAS6 and APOH.** Category 5 allows secreted proteins onto EVs through promiscuous
+  lipid receptors, and both bind phosphatidylserine or anionic phospholipids. Their rows
+  return to the original KEEP_AS_NON_CORE.
+- **Category 2a vs 2b.** ESCRT subunits, annexins and HSPA8 now cite category 2a
+  (lipid or membrane-protein binding) rather than 2b's "promiscuous" wording. ALIX's
+  ACCEPT is restated as protein-specific (UniProt; PubMed:22660413), since MISEV puts
+  ALIX in 2a with TSG101.
+- **APOB.** Its one row is a urine sample, where MISEV's plasma/serum marker scope does
+  not apply directly. It now has its own basis: APOB lipoproteins are not normally
+  filtered into urine.
+- **Citation.** MISEV2018 is cited with its PMID exactly once per reason.
 
 ### 2026-10-10: fixes from the automated PR review
 

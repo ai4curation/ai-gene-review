@@ -21,16 +21,20 @@ judgement, not as a rule:
     an *exosome* annotation -> MARK_AS_OVER_ANNOTATED.
   * Category 5 (secreted or lumenal proteins; association with EVs needs the cognate EV
     receptor to be explored) -> MARK_AS_OVER_ANNOTATED absent such evidence.
-  * ACCEPT only where MISEV itself treats the protein as an EV marker actively incorporated
-    by the biogenesis machinery (ALIX/PDCD6IP).
+  * ACCEPT only where the protein itself works in EV biogenesis (ALIX/PDCD6IP; UniProt,
+    PubMed:22660413). MISEV places ALIX in category 2a with TSG101 and the CHMPs, so this is
+    a protein-specific call, not a category one.
 """
 
 CAT1 = ("KEEP_AS_NON_CORE", "Transmembrane/lipid-anchored protein of the plasma membrane or endosomal system "
         "(UniProt); such proteins are expected EV contents (MISEV2018 (PMID:30637094) category 1). True, but not its core location.")
 CAT2 = ("KEEP_AS_NON_CORE", "Cytosolic protein (UniProt); cytosolic proteins, including abundant enzymes and "
-        "cytoskeletal proteins, are expected and often promiscuous EV contents (MISEV2018 (PMID:30637094) category 2). True, but not "
-        "its core location.")
-CAT3 = ("MARK_AS_OVER_ANNOTATED", "MISEV2018 (PMID:30637094) category 3 covers non-EV structures that "
+        "cytoskeletal proteins, are expected and often promiscuous EV contents (MISEV2018 (PMID:30637094) category 2b). True, but "
+        "not its core location.")
+CAT2A = ("KEEP_AS_NON_CORE", "Cytosolic protein with lipid or membrane-protein binding ability; MISEV2018 (PMID:30637094) "
+         "category 2a lists such proteins (ESCRT components, ALIX, annexins, HSPA8 and others) as expected EV contents. True, "
+         "but not its core location.")
+CAT3 = ("MARK_AS_OVER_ANNOTATED", "MISEV2018 (PMID:30637094) category 3a covers non-EV structures that "
         "co-isolate with EVs, chiefly lipoproteins and albumin, from plasma, serum and serum-containing culture; "
         "detection does not establish EV localization.")
 CAT4 = ("MARK_AS_OVER_ANNOTATED", "Resident of an intracellular compartment that MISEV2018 (PMID:30637094) lists as not enriched in "
@@ -40,8 +44,16 @@ CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt); MISEV2
         "of such proteins needs the cognate EV-surface receptor to be shown, and none is shown for this protein.")
 
 
+CAT3B = ("MARK_AS_OVER_ANNOTATED", "Ribosomal protein; MISEV2018 (PMID:30637094) category 3b lists ribosomal proteins "
+         "among the protein and protein/nucleic-acid aggregates that co-isolate with EVs, so detection does not establish EV "
+         "localization.")
+
+
 def note(base: tuple[str, str], extra: str) -> tuple[str, str]:
-    return (base[0], f"{extra} {base[1]}")
+    text = base[1]
+    if "PMID:30637094" in extra:  # cite the paper once per reason
+        text = text.replace("MISEV2018 (PMID:30637094)", "MISEV2018")
+    return (base[0], f"{extra} {text}")
 
 
 G = {
@@ -65,7 +77,7 @@ G = {
     "ALDOB": note(CAT2, "Cytosolic aldolase."),
     "ALK": note(CAT1, "Plasma-membrane receptor tyrosine kinase."),
     "ALPL": note(CAT1, "GPI-anchored plasma-membrane alkaline phosphatase."),
-    "ANXA11": note(CAT2, "Calcium-dependent membrane-binding annexin; annexins are classic category 2 EV proteins."),
+    "ANXA11": note(CAT2A, "Calcium-dependent membrane-binding annexin; annexins are classic category 2 EV proteins."),
     "AP2M1": note(CAT2, "Plasma-membrane clathrin adaptor subunit (peripheral, cytosolic face)."),
     "AP4M1": note(CAT4, "AP-4 coat subunit of the trans-Golgi network (UniProt ECO:0000269)."),
     "APAF1": note(CAT2, "Cytoplasmic apoptosome scaffold."),
@@ -127,7 +139,7 @@ G = {
     "CARD11": note(CAT2, "Cytoplasmic/membrane-raft signalling scaffold."),
     "CC2D1A": note(CAT2, "Cytoplasmic protein that binds ESCRT-III."),
     "CD2AP": note(CAT2, "Cytoplasmic adaptor linking membrane proteins to actin."),
-    "CHMP3": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes; its presence in EVs follows from "
+    "CHMP3": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes; its presence in EVs follows from "
                         "ILV formation, but the exosome is a destination, not where it acts."),
     "CLU": note(CAT5, "Secreted clusterin (UniProt isoform 1: secreted); the earlier ACCEPT rested on its being "
                       "secreted, which does not establish EV localization. Applies to the plasma microvesicle row too."),
@@ -181,9 +193,10 @@ G = {
     "PAICS": note(CAT2, "Cytosolic purine-synthesis enzyme."),
     "PARK7": note(CAT2, "Cytoplasmic DJ-1; its EV presence matters as a biomarker, not as its site of action, so the "
                         "earlier ACCEPT is downgraded."),
-    "PDCD6IP": ("ACCEPT", "ALIX is named by MISEV2018 (PMID:30637094) among proteins actively incorporated into EVs and is a standard EV "
-                          "marker; with syntenin and ESCRT it sorts cargo into intraluminal vesicles, so exosome localization "
-                          "follows directly from its function."),
+    "PDCD6IP": ("ACCEPT", "ALIX itself works in EV biogenesis: UniProt records that it sorts multivesicular-body cargo into "
+                "intralumenal vesicles and regulates exosome biogenesis with SDC1/4 and SDCBP (PubMed:22660413). This is a "
+                "protein-specific call, not a MISEV category one: MISEV2018 (PMID:30637094) lists ALIX in category 2a "
+                "together with TSG101 and the CHMPs."),
     "PDXK": note(CAT2, "Cytosolic kinase."),
     "PEX1": note(CAT2, "Cytosolic AAA ATPase recruited to peroxisomes (UniProt cytosol, ECO:0000269)."),
     "PFAS": note(CAT2, "Cytoplasmic purine-synthesis enzyme."),
@@ -197,9 +210,9 @@ G = {
     "PYGL": note(CAT2, "Cytosolic glycogen phosphorylase."),
     "PYGM": note(CAT2, "Cytosolic glycogen phosphorylase."),
     "RAB1B": note(CAT4, "Prenylated GTPase of the ER-to-Golgi pathway (early secretory compartments)."),
-    "RACK1": note(CAT2, "Cytoplasmic/peripheral plasma-membrane scaffold and ribosomal protein."),
+    "RACK1": note(CAT3B, "RACK1 is a core 40S ribosomal subunit protein as well as a signalling scaffold."),
     "RPE": note(CAT2, "Cytosolic epimerase."),
-    "RPS3": note(CAT2, "Cytosolic ribosomal protein."),
+    "RPS3": note(CAT3B, "40S ribosomal protein S3."),
     "SCAMP3": note(CAT1, "Endosomal/post-Golgi membrane protein. The earlier ACCEPT said SCAMP3 is required for EV "
                          "biogenesis, but the cited work (PMID:19158374, PMID:23418353) shows it regulates ESCRT-dependent "
                          "MVB sorting of EGFR, not EV biogenesis."),
@@ -228,9 +241,9 @@ G = {
     "UFC1": note(CAT2, "Cytosolic E2 enzyme."),
     "UGGT1": note(CAT4, "ER-lumenal glucosyltransferase with an ER-retrieval signal."),
     "UGP2": note(CAT2, "Cytoplasmic UDP-glucose pyrophosphorylase."),
-    "VPS4A": note(CAT2, "ESCRT AAA ATPase acting on the cytosolic face of endosomes; the exosome is a destination, "
+    "VPS4A": note(CAT2A, "ESCRT AAA ATPase acting on the cytosolic face of endosomes; the exosome is a destination, "
                         "not where it acts."),
-    "VPS4B": note(CAT2, "ESCRT AAA ATPase acting on the cytosolic face of endosomes; the exosome is a destination, "
+    "VPS4B": note(CAT2A, "ESCRT AAA ATPase acting on the cytosolic face of endosomes; the exosome is a destination, "
                         "not where it acts."),
 }
 
@@ -246,6 +259,10 @@ R = {
     ("ALB", 53): note(CAT3, f"{_ALB} Here, exosomes from cultured B cells, where serum albumin in the medium is a recognised co-isolate."),
     ("ALB", 54): note(CAT3, f"{_ALB} Here, exosomes from cultured trabecular meshwork cells, where serum albumin in the medium is a recognised co-isolate."),
     ("ALB", 55): note(CAT3, f"{_ALB} Here, exosomes from expressed prostatic secretions in urine."),
+    ("APOB", 146): note(CAT3, "Apolipoprotein B, which MISEV2018 (PMID:30637094) names as a negative marker. Here, "
+                               "exosomes from expressed prostatic secretions in urine: APOB-containing lipoproteins are "
+                               "large and are not normally filtered into urine, so this detection is more likely "
+                               "co-isolated plasma or seminal-fluid material than EV cargo."),
     ("ALB", 57): note(CAT3, f"{_ALB} Here, microvesicles isolated from plasma, the sample MISEV's marker is meant for."),
 }
 

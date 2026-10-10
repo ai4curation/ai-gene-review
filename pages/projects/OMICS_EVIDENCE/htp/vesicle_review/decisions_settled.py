@@ -8,7 +8,7 @@ category constants as pass 1. Genes reviewed in both passes get the same call he
 microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT2, CAT4, CAT5, note
+from decisions_draft import CAT1, CAT2, CAT2A, CAT4, CAT5, G as G1, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -38,7 +38,10 @@ G = {
                        "et al. (PMID:26387950) show ApoE on endosomal intraluminal vesicles that are secreted as "
                        "exosomes, so the location is real; it is secondary to APOE's lipoprotein role. (Confirms the "
                        "existing KEEP_AS_NON_CORE; the plasma-microvesicle row stays over-annotated in pass 1.)"),
-    "APOH": note(CAT5, "Secreted plasma beta-2-glycoprotein I."),
+    "APOH": ("KEEP_AS_NON_CORE", "Secreted plasma beta-2-glycoprotein I, which binds anionic phospholipids. MISEV2018 "
+                       "(PMID:30637094) category 5 allows secreted proteins to associate with EVs through promiscuous "
+                       "lipid receptors on the EV surface, so the detection is plausible. (Confirms the existing "
+                       "KEEP_AS_NON_CORE.)"),
     "ARL15": note(CAT2, "Small GTPase of the cytoplasmic face of membranes."),
     "ARMC3": note(CAT2, "Cytoplasmic armadillo-repeat protein."),
     "ARPC4": note(CAT2, "Arp2/3 complex subunit (cytoskeleton)."),
@@ -73,12 +76,12 @@ G = {
     "CD48": note(CAT1, "GPI-anchored plasma-membrane protein."),
     "CDH1": note(CAT1, "Plasma-membrane E-cadherin."),
     "CDK1": note(CAT2, "Cytoplasmic and nuclear cell-cycle kinase."),
-    "CHMP1A": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
-    "CHMP2A": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
-    "CHMP2B": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
-    "CHMP4B": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
-    "CHMP5": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
-    "CHMP6": note(CAT2, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
+    "CHMP1A": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
+    "CHMP2A": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
+    "CHMP2B": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
+    "CHMP4B": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
+    "CHMP5": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
+    "CHMP6": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes (as CHMP3 in pass 1)."),
     "CKB": note(CAT2, "Cytosolic creatine kinase."),
     "CLTC": note(CAT2, "Clathrin heavy chain on the cytoplasmic face of vesicle membranes."),
     "COASY": note(CAT2, "Mainly cytosolic CoA synthase."),
@@ -107,7 +110,10 @@ G = {
     "GALK1": note(CAT2, "Cytosolic galactokinase."),
     "GALM": note(CAT2, "Cytoplasmic galactose mutarotase."),
     "GALNS": note(CAT5, "Lysosomal lumenal sulfatase."),
-    "GAS6": note(CAT5, "Secreted TAM-receptor ligand."),
+    "GAS6": ("KEEP_AS_NON_CORE", "Secreted TAM-receptor ligand whose gamma-carboxylated Gla domain binds phosphatidylserine on "
+                       "membranes and vesicles. MISEV2018 (PMID:30637094) category 5 allows secreted proteins to "
+                       "associate with EVs through promiscuous lipid receptors on the EV surface, so the detection is "
+                       "plausible. (Confirms the existing KEEP_AS_NON_CORE.)"),
     "GBA": note(CAT5, "Lysosomal lumenal glucocerebrosidase."),
     "GBA1": note(CAT5, "Lysosomal lumenal glucocerebrosidase."),
     "GET3": note(CAT2, "Cytoplasmic tail-anchored-protein targeting ATPase."),
@@ -139,7 +145,7 @@ G = {
     "HSPA2": note(CAT2, "Cytoplasmic HSP70."),
     "HSPA4": note(CAT2, "Cytoplasmic HSP110-family chaperone."),
     "HSPA6": note(CAT2, "Cytoplasmic HSP70."),
-    "HSPA8": note(CAT2, "Cytoplasmic HSC70, which also acts at endosomal membranes."),
+    "HSPA8": note(CAT2A, "Cytoplasmic HSC70, which also acts at endosomal membranes."),
     "HSPA9": note(CAT4, "Mitochondrial HSP70 (mortalin)."),
     "HSPD1": note(CAT4, "Mitochondrial matrix HSP60."),
     "HSPG2": note(CAT5, "Secreted basement-membrane perlecan."),
@@ -165,8 +171,8 @@ G = {
     "MGP": note(CAT5, "Secreted matrix Gla protein."),
     "MTHFD1": note(CAT2, "Cytoplasmic C1-tetrahydrofolate synthase."),
     "MUC1": note(CAT1, "Apical plasma-membrane mucin."),
-    "MVB12A": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
-    "MVB12B": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
+    "MVB12A": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
+    "MVB12B": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
     "NAGLU": note(CAT5, "Lysosomal lumenal N-acetylglucosaminidase."),
     "NAMPT": note(CAT2, "Cytoplasmic/nuclear enzyme also released extracellularly."),
     "NAPRT": note(CAT2, "Cytosolic nicotinate phosphoribosyltransferase."),
@@ -182,8 +188,7 @@ G = {
     "PARD6B": note(CAT2, "Cytoplasmic polarity adapter recruited to the plasma membrane."),
     "PCBD1": note(CAT2, "Cytoplasmic/nuclear pterin-4a-carbinolamine dehydratase."),
     "PDCD5": note(CAT2, "Cytoplasmic/nuclear apoptosis regulator."),
-    "PDCD6IP": ("ACCEPT", "ALIX is named by MISEV2018 among proteins actively incorporated into EVs and is a standard EV "
-                "marker; consistent with the pass-1 decision for the same protein."),
+    "PDCD6IP": G1["PDCD6IP"],
     "PGK1": note(CAT2, "Cytosolic phosphoglycerate kinase."),
     "PGM1": note(CAT2, "Cytoplasmic phosphoglucomutase."),
     "PHGDH": note(CAT2, "Cytosolic phosphoglycerate dehydrogenase."),
@@ -225,17 +230,17 @@ G = {
     "TNFSF10": note(CAT1, "Plasma-membrane TRAIL ligand."),
     "TPI1": note(CAT2, "Cytoplasmic triosephosphate isomerase."),
     "TPM3": note(CAT2, "Cytoskeletal tropomyosin."),
-    "TSG101": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes; an EV marker protein, but its "
+    "TSG101": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes; an EV marker protein, but its "
                          "core location is the endosome."),
     "TXN": note(CAT2, "Cytoplasmic thioredoxin."),
     "TXNDC16": note(CAT4, "ER-lumen thioredoxin-domain protein."),
     "UPB1": note(CAT2, "Cytoplasmic beta-ureidopropionase."),
     "VCL": note(CAT2, "Cytoskeletal vinculin at the cytoplasmic face of the plasma membrane."),
     "VCP": note(CAT2, "Cytosolic AAA ATPase p97."),
-    "VPS28": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
-    "VPS37B": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
-    "VPS37C": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
-    "VPS37D": note(CAT2, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
+    "VPS28": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
+    "VPS37B": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
+    "VPS37C": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
+    "VPS37D": note(CAT2A, "ESCRT-I subunit acting on the cytosolic face of endosomes."),
     "YWHAZ": note(CAT2, "Cytoplasmic 14-3-3 protein."),
 }
 
