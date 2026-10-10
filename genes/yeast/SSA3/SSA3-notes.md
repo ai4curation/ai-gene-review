@@ -78,3 +78,27 @@ The YAML `description` field was revised to keep it as a standalone biological s
 - Converted the legacy bare `GO:0005515 protein binding` rows from generic
   high-throughput interaction datasets to `REMOVE`; the two Hsp70-paralog
   interaction rows remain `MODIFY` to `GO:0030544 Hsp70 protein binding`.
+
+## 2026-10-01 current-GOA refresh follow-up
+
+- Forced a current `fetch-gene` refresh because live GOA for SSA3 has moved from
+  55 historical rows to 19 rows. The review now keeps all historical source
+  assertions and marks rows that no longer exactly match live GOA as
+  `retired: true` rather than losing the earlier curation.
+- Reviewed all newly exact current rows: the refreshed PTN002321897
+  `GO:0005737 cytoplasm` and PTN000452648 `GO:0016887 ATP hydrolysis activity`
+  IBAs are accepted as supported inherited Ssa/Hsp70 assertions, the refreshed
+  PTN000452648 `GO:0044183 protein folding chaperone` IBA remains a sound
+  transfer but is narrowed to `GO:0140662 ATP-dependent protein folding
+  chaperone`, InterPro2GO `GO_REF:0000002` now provides the ATP-binding and
+  ATP-hydrolysis IEAs, and the new ARBA `GO:0030163 protein catabolic process`
+  row is kept as non-core because degradation is a contextual branch of Ssa
+  client handling.
+- The 2026 PAINT rows still use SSA3 itself as a descendant evidence source for
+  cytoplasm and ATP hydrolysis. This is correct for an inherited IBA grounded in
+  target-family experimental evidence, not circular support.
+- Searched PubMed for exact `SSA3`/`Ssa3`/`YBL075C` mentions in 2025-2026.
+  The only exact hit was PMID:41314856, a Saccharomyces boulardii
+  gastric/intestinal stress proteomics study that mentions APJ1 and SSA3 as
+  condition-specific chaperone hubs in the abstract; it did not change the
+  S. cerevisiae S288C GO review.
