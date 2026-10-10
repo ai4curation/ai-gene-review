@@ -96,3 +96,7 @@ This focused pass read the PMID29779826 abstract, selected Results paragraph on 
 
 
 This follow-up passed independent science peer 270b28, focused gene validation 29e20c, rendering 2f6bb7 and history validation 4e6d56. This closes the pending checks described above. Validation retained five retained generic-binding policy warnings; these are documented unresolved issues, not a claim of warning-free review. No full-repository validation was run.
+
+## Generic binding follow-up - 2026-10-10
+
+The five remaining `GO:0005515` IPI rows were changed from `KEEP_AS_NON_CORE` to `REMOVE`. They record viral-host, human liver, BioPlex, and HuRI interaction-mapping observations, but do not identify a specific BCKDK substrate, adapter activity, regulatory interaction, or core BCAA-catabolism mechanism and therefore should not be retained as generic protein-binding molecular-function annotations.
