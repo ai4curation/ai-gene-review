@@ -92,3 +92,5 @@ on the annotation:
   gene and none was proposed - the enzyme's contribution to neurodevelopment runs
   through the creatine (and the guanidinoacetate) it makes, which is the substrate/product
   relationship rather than participation in the developmental process.
+
+**Stale UniProt quotes (2026-10-10):** replaced 14 `UniProtKB:P10868` supporting_text quotes that no longer matched the refreshed flat file (the FUNCTION line now wraps at "S-/adenosylmethionine"): 13 with verbatim PATHWAY, CATALYTIC ACTIVITY or FUNCTION text from the current `Gamt-uniprot.txt`, and the cytoplasm IBA row with a verbatim deep-research quote on cytosolic localization (UniProt has no SUBCELLULAR LOCATION line).
