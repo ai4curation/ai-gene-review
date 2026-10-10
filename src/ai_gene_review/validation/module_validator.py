@@ -1904,6 +1904,8 @@ def validate_module_file(
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
 
+    errors.extend(validate_leaf_grounding_completeness(doc))
+
     # Reaction chaining: advisory only (never blocks). A `chaining_status`
     # override on a connection acknowledges a known gap and suppresses its
     # warning. Resolution touches the GO/RHEA ontology DBs, so it degrades to
@@ -2217,6 +2219,42 @@ def validate_feedback_loops(doc: object) -> List[str]:
         for f in feedback_loop_findings(doc)
         if f.get("severity") == "warning"
     ]
+
+
+def validate_leaf_grounding_completeness(doc: object) -> List[str]:
+    """Require completed concrete modules to ground every leaf node to a protein.
+
+    Draft modules are allowed to bottom out in an abstract selector while the
+    curator is still finding exemplar accessions. Once a concrete module is
+    marked ``status: COMPLETE``, every terminal node should name at least one
+    concrete UniProtKB representative through its annoton participant.
+    Reusable templates with ``scope: ABSTRACT`` are skipped by the shared QC
+    helper because they are intentionally gene-free. A terminal node marked
+    ``intentionally_ungrounded`` is skipped too when the curator has explicitly
+    recorded that the role is distributed/open-ended rather than awaiting a
+    representative.
+    """
+    if not isinstance(doc, dict):
+        return []
+    if str(doc.get("status") or "").strip().upper() != "COMPLETE":
+        return []
+
+    # Imported here to avoid pulling renderer/QC dependencies into module load.
+    from ai_gene_review.module_qc import leaf_nodes_missing_representatives
+
+    errors: List[str] = []
+    for gap in leaf_nodes_missing_representatives(doc):
+        node_id = gap.get("id") or "<unknown>"
+        label = gap.get("label") or node_id
+        selector_types = gap.get("selector_types") or []
+        selector_text = ", ".join(selector_types) if selector_types else "none"
+        errors.append(
+            "Completeness: COMPLETE concrete modules must ground every leaf to "
+            f"at least one UniProtKB representative; leaf {node_id!r} "
+            f"({label}) has {gap.get('annoton_count', 0)} annoton(s) "
+            f"with selector_types: {selector_text}"
+        )
+    return errors
 
 
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:

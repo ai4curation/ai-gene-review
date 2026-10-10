@@ -3283,6 +3283,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'Experiment',
                        'RuleReview',
                        'PredictionReview']} })
+    intentionally_ungrounded: Optional[bool] = Field(default=None, description="""Whether this terminal node intentionally represents a distributed or open-ended role that cannot be grounded to a single representative protein without misrepresenting the module. Set this only on leaf nodes whose abstract participant selector is part of the biological model, not a placeholder awaiting curation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     concepts: Optional[list[Descriptor]] = Field(default=None, description="""Optional ontology/database grounding for this module node.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     context: Optional[ModuleContext] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleConnection']} })
     annotons: Optional[list[ModuleAnnoton]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
