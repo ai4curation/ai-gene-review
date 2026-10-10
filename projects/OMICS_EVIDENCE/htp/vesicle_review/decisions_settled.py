@@ -8,7 +8,7 @@ category constants as pass 1. Genes reviewed in both passes get the same call he
 microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT2, CAT2A, CAT4, CAT5, G as G1, note
+from decisions_draft import CAT1, CAT2, CAT2A, CAT4, CAT5, CAT5_BOUND, G as G1, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -21,7 +21,7 @@ G = {
     "ACTB": note(CAT2, "Cytoplasmic actin."),
     "ADAM10": note(CAT1, "Plasma-membrane metalloprotease."),
     "ADIRF": note(CAT4, "UniProt places ADIRF in the nucleus only."),
-    "AGRN": note(CAT5, "Secreted extracellular-matrix proteoglycan."),
+    "AGRN": note(CAT5, "Secreted heparan-sulfate proteoglycan; its proteoglycan-binding annotations are by sequence similarity only (ISS)."),
     "AHCY": note(CAT2, "Cytoplasmic adenosylhomocysteinase."),
     "AHNAK": note(CAT2, "Large scaffold protein that shuttles to the cytoplasmic face of the plasma membrane."),
     "AHSA1": note(CAT2, "Cytosolic HSP90 co-chaperone."),
@@ -85,7 +85,7 @@ G = {
     "CKB": note(CAT2, "Cytosolic creatine kinase."),
     "CLTC": note(CAT2, "Clathrin heavy chain on the cytoplasmic face of vesicle membranes."),
     "COASY": note(CAT2, "Mainly cytosolic CoA synthase."),
-    "COMP": note(CAT5, "Secreted extracellular-matrix protein."),
+    "COMP": note(CAT5_BOUND, "Secreted matrix protein with experimental heparin and proteoglycan binding (IDA). (Confirms the existing KEEP_AS_NON_CORE.)"),
     "COPS8": note(CAT2, "Cytoplasmic/nuclear COP9 signalosome subunit."),
     "CRISPLD1": note(CAT5, "Secreted protein."),
     "CSK": note(CAT2, "Cytoplasmic tyrosine kinase with a lipid-raft pool."),
@@ -104,7 +104,7 @@ G = {
     "FAS": note(CAT1, "Plasma-membrane death receptor."),
     "FKBP4": note(CAT2, "Cytosolic HSP90 co-chaperone."),
     "FKBP5": note(CAT2, "Cytoplasmic HSP90 co-chaperone."),
-    "FN1": note(CAT5, "Secreted extracellular-matrix fibronectin."),
+    "FN1": note(CAT5_BOUND, "Secreted fibronectin with experimental proteoglycan binding (IDA). (Confirms the existing KEEP_AS_NON_CORE.)"),
     "FTH1": note(CAT2, "Cytoplasmic ferritin heavy chain."),
     "G6PD": note(CAT2, "Cytosolic glucose-6-phosphate dehydrogenase."),
     "GALK1": note(CAT2, "Cytosolic galactokinase."),
@@ -148,7 +148,7 @@ G = {
     "HSPA8": note(CAT2A, "Cytoplasmic HSC70, which also acts at endosomal membranes."),
     "HSPA9": note(CAT4, "Mitochondrial HSP70 (mortalin)."),
     "HSPD1": note(CAT4, "Mitochondrial matrix HSP60."),
-    "HSPG2": note(CAT5, "Secreted basement-membrane perlecan."),
+    "HSPG2": note(CAT5, "Secreted basement-membrane perlecan, itself a proteoglycan, with no recorded binding to EV-surface receptors."),
     "IDUA": note(CAT5, "Lysosomal lumenal iduronidase."),
     "ITGB1": note(CAT1, "Plasma-membrane integrin."),
     "ITIH1": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor chain."),
@@ -177,7 +177,7 @@ G = {
     "NAMPT": note(CAT2, "Cytoplasmic/nuclear enzyme also released extracellularly."),
     "NAPRT": note(CAT2, "Cytosolic nicotinate phosphoribosyltransferase."),
     "NCSTN": note(CAT1, "Gamma-secretase membrane subunit of the plasma membrane and endosomes."),
-    "NID1": note(CAT5, "Secreted basement-membrane nidogen."),
+    "NID1": note(CAT5_BOUND, "Secreted basement-membrane nidogen with experimental proteoglycan binding (IPI). (Confirms the existing KEEP_AS_NON_CORE.)"),
     "NME2": note(CAT2, "Cytoplasmic nucleoside-diphosphate kinase."),
     "NPHS2": note(CAT1, "Podocyte plasma-membrane podocin."),
     "NQO2": note(CAT2, "Cytoplasmic quinone reductase."),
@@ -185,7 +185,7 @@ G = {
     "P3H1": note(CAT4, "ER prolyl 3-hydroxylase."),
     "P4HB": note(CAT4, "ER-lumen protein disulfide isomerase."),
     "PAFAH1B1": note(CAT2, "Cytoplasmic dynein regulator LIS1."),
-    "PARD6B": note(CAT2, "Cytoplasmic polarity adapter recruited to the plasma membrane."),
+    "PARD6B": note(CAT2A, "Cytoplasmic polarity adapter recruited to the plasma membrane."),
     "PCBD1": note(CAT2, "Cytoplasmic/nuclear pterin-4a-carbinolamine dehydratase."),
     "PDCD5": note(CAT2, "Cytoplasmic/nuclear apoptosis regulator."),
     "PDCD6IP": G1["PDCD6IP"],
@@ -203,7 +203,7 @@ G = {
     "PPP2R1B": note(CAT2, "Cytoplasmic PP2A scaffold subunit."),
     "PRDX4": note(CAT4, "ER-lumen peroxiredoxin."),
     "PRSS23": note(CAT5, "Secreted serine protease."),
-    "PSAP": note(CAT5, "Lysosomal lumenal prosaposin, also secreted."),
+    "PSAP": note(CAT5_BOUND, "Prosaposin, lysosomal and secreted, with experimental phospholipid binding (IDA). (Confirms the existing KEEP_AS_NON_CORE.)"),
     "PSAT1": note(CAT2, "Cytosolic phosphoserine aminotransferase."),
     "PSMA1": note(CAT2, "Cytoplasmic/nuclear proteasome subunit."),
     "PSMB5": note(CAT2, "Cytoplasmic/nuclear proteasome subunit."),

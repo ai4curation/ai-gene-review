@@ -100,8 +100,10 @@ def main() -> int:
             targets[path].append((d["row_index"], action, f"{basis} {NOTE.format(old=old)}",
                                   SUMMARY[action], set(S.get(key, []))))
         elif MARKER in str(rv.get("reason") or ""):
-            # changed by an earlier run, now decided back to the pre-review action and reason;
-            # a summary this script generated is put back to the pre-review one as well
+            # changed by an earlier run, now decided back to the pre-review action and reason.
+            # Dropped supported_by entries are not restored here, so S must not name such a row.
+            assert key not in S, f"{key}: S drop on a row decided back to its pre-review action"
+            # A summary this script generated is put back to the pre-review one as well
             summary = rv.get("summary")
             if summary in SUMMARY.values():
                 summary = base_summary(path, d["row_index"], ann)

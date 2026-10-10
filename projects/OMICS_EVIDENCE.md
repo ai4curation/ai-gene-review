@@ -287,18 +287,18 @@ The data and the curators are the same. The difference is the inference step.
    | Change | Rows | Typical reason |
    |---|---:|---|
    | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 139 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase |
-   | UNDECIDED → KEEP_AS_NON_CORE | 46 | the same categories, previously left undecided for lack of the supplementary table |
-   | ACCEPT → KEEP_AS_NON_CORE | 28 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3 |
-   | UNDECIDED → MARK_AS_OVER_ANNOTATED | 20 | albumin, AK2, AUP1, BPTF, ACSL4, complement, lysosomal enzymes, ATP6AP1 |
-   | ACCEPT → MARK_AS_OVER_ANNOTATED | 11 | secreted proteins accepted only for being secreted: CLU ×4, THBS1 ×4, THBS4, SCGB1A1; APOE in plasma microvesicles |
+   | UNDECIDED → KEEP_AS_NON_CORE | 47 | the same categories, previously left undecided for lack of the supplementary table |
+   | ACCEPT → KEEP_AS_NON_CORE | 33 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3 |
+   | UNDECIDED → MARK_AS_OVER_ANNOTATED | 19 | albumin, AK2, AUP1, BPTF, ACSL4, complement, lysosomal enzymes, ATP6AP1 |
+   | ACCEPT → MARK_AS_OVER_ANNOTATED | 6 | secreted proteins accepted only for being secreted, with no recorded proteoglycan or lipid binding: CLU ×4, SCGB1A1; APOE in plasma microvesicles |
 
-   Final vesicle-row actions: 215 KEEP_AS_NON_CORE, 65 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
+   Final vesicle-row actions: 221 KEEP_AS_NON_CORE, 59 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
    (PDCD6IP). For most cytosolic cargo the manual outcome matches the withdrawn rule,
    because under MISEV such proteins really are in EVs. As first applied, it differed from
    the rule on 91 rows: 52 that the rule would have made non-core are over-annotated, and 39 ACCEPTs
-   that the rule left in place are changed. 138 of the 140 edited reviews
-   validate. The 2 errors (ATP6V1C1, NRAS) are unrelated findings supporting-text issues
-   that predate this work.
+   that the rule left in place are changed. The edited reviews validate. The quote errors
+   in ATP6V1C1 and NRAS, which predated this work, are fixed (ATP6V1C1 in this PR, NRAS
+   on main).
 
    **Second pass: rows already set to non-core.** The 418 HDA/HTP vesicle-type rows (220
    genes) that reviewers had already set to KEEP_AS_NON_CORE were not candidates above.
@@ -312,17 +312,20 @@ The data and the curators are the same. The difference is the inference step.
    MISEV marker, and van Niel et al. (PMID:26387950) show it on intraluminal vesicles
    secreted as exosomes, so those four rows stay KEEP_AS_NON_CORE. GAS6 and APOH also stay
    KEEP_AS_NON_CORE: both bind phosphatidylserine or anionic phospholipids, the lipid-receptor
-   route by which MISEV category 5 allows secreted proteins onto EVs. 98 rows in 57 genes
+   route by which MISEV category 5 allows secreted proteins onto EVs. The same applies to
+   every category-5 protein with experimental proteoglycan, heparin or lipid binding: FN1,
+   NID1, COMP and PSAP stay KEEP_AS_NON_CORE here, and THBS1, THBS4 and C1QB become
+   KEEP_AS_NON_CORE in pass 1. 90 rows in 53 genes
    changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
    | Change | Rows | Proteins |
    |---|---:|---|
-   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 65 | secreted plasma and matrix proteins (A1BG, A2M, FN1, HPX, ITIH1–4, NID1, HSPG2) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, PSAP, SMPD1) |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 57 | secreted plasma and matrix proteins with no recorded proteoglycan or lipid binding (A1BG, A2M, HPX, ITIH1–4, HSPG2, AGRN) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, SMPD1) |
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 32 | mitochondrial (ATP5F1A/B, HSPA9, HSPD1, ACAT1) and ER/Golgi residents (CALR, P4HB, PPIB, PRDX4, MAN1B1, LFNG) |
    | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
 
-   The other 320 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   The other 328 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
    membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
    MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
    accepting ALIX alone rests on its protein-specific role in exosome biogenesis, not on
@@ -415,6 +418,27 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-10: third round of automated-review fixes
+
+The reviewer found that the category-5 template still claimed "none is shown" for an
+EV-surface receptor on proteins whose own annotations record exactly the routes MISEV
+names. The GAS6/APOH argument is now applied to the whole class rather than only to the
+proteins named in the review. Every category-5 protein's GOA was checked for experimental
+heparin, proteoglycan or lipid binding:
+
+- **Back to non-core** (`CAT5_BOUND`): FN1, NID1, COMP and PSAP, restored to their
+  original text; THBS1, THBS4 and C1QB, previously ACCEPT or UNDECIDED. C1QB was not
+  named in the review but has PS binding by IDA.
+- **Still over-annotated, with a softened template**: the rest. The template now says
+  only what holds: MISEV asks for evidence of EV association, a bulk proteome cannot
+  separate surface binding from co-isolation, and the protein's annotations record no
+  experimental proteoglycan, heparin or lipid binding. AGRN (ISS only), HSPG2 and MGP
+  are in this group.
+- **Wording**: category 2a now also covers cytosolic proteins recruited to membranes
+  (ARF1, ARL6, ARL8A/B, APPL2, AP2M1, PARD6B, PLCG2, the V-ATPase V1 subunits).
+- **Script**: the revert path now refuses to run on a row with an `S` quote drop, since
+  it cannot restore dropped `supported_by` entries.
 
 ### 2026-10-10: second round of automated-review fixes
 

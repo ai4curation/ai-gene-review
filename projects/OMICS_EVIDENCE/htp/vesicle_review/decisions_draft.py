@@ -40,8 +40,14 @@ CAT3 = ("MARK_AS_OVER_ANNOTATED", "MISEV2018 (PMID:30637094) category 3a covers 
 CAT4 = ("MARK_AS_OVER_ANNOTATED", "Resident of an intracellular compartment that MISEV2018 (PMID:30637094) lists as not enriched in "
         "small EVs of plasma-membrane/endosomal origin (category 4); an exosome annotation from a bulk EV proteome "
         "is not supported.")
-CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt); MISEV2018 (PMID:30637094) category 5 says EV association "
-        "of such proteins needs the cognate EV-surface receptor to be shown, and none is shown for this protein.")
+CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt). MISEV2018 (PMID:30637094) category 5 "
+        "allows such proteins onto EVs through specific or promiscuous (proteoglycan, lipid) receptors on the EV "
+        "surface, but asks that their identification be backed by evidence of that association. A bulk EV proteome "
+        "cannot separate surface binding from co-isolation, and this protein's annotations record no experimental "
+        "proteoglycan, heparin or lipid binding.")
+CAT5_BOUND = ("KEEP_AS_NON_CORE", "MISEV2018 (PMID:30637094) category 5 allows secreted proteins onto EVs through "
+              "promiscuous (proteoglycan, lipid) receptors on the EV surface, so the detection is plausible. True, "
+              "but not its core location.")
 
 
 CAT3B = ("MARK_AS_OVER_ANNOTATED", "Ribosomal protein; MISEV2018 (PMID:30637094) category 3b lists ribosomal proteins "
@@ -77,8 +83,8 @@ G = {
     "ALDOB": note(CAT2, "Cytosolic aldolase."),
     "ALK": note(CAT1, "Plasma-membrane receptor tyrosine kinase."),
     "ALPL": note(CAT1, "GPI-anchored plasma-membrane alkaline phosphatase."),
-    "ANXA11": note(CAT2A, "Calcium-dependent membrane-binding annexin; annexins are classic category 2 EV proteins."),
-    "AP2M1": note(CAT2, "Plasma-membrane clathrin adaptor subunit (peripheral, cytosolic face)."),
+    "ANXA11": note(CAT2A, "Calcium-dependent membrane-binding annexin; annexins are classic category 2a EV proteins."),
+    "AP2M1": note(CAT2A, "Plasma-membrane clathrin adaptor subunit (peripheral, cytosolic face)."),
     "AP4M1": note(CAT4, "AP-4 coat subunit of the trans-Golgi network (UniProt ECO:0000269)."),
     "APAF1": note(CAT2, "Cytoplasmic apoptosome scaffold."),
     "APOB": note(CAT3, "Apolipoprotein B, named by MISEV2018 (PMID:30637094) as a negative marker."),
@@ -90,14 +96,14 @@ G = {
     "APOL1": note(CAT3, "HDL-associated apolipoprotein L1, recovered from a plasma microvesicle preparation."),
     "APP": note(CAT1, "Plasma-membrane/endosomal type I membrane protein; the earlier ACCEPT gave no basis for "
                       "exosomes being a core location."),
-    "APPL2": note(CAT2, "Peripheral early-endosome adaptor."),
+    "APPL2": note(CAT2A, "Peripheral early-endosome adaptor."),
     "APRT": note(CAT2, "Cytosolic salvage enzyme."),
-    "ARF1": note(CAT2, "Myristoylated cytosolic small GTPase that cycles onto membranes."),
+    "ARF1": note(CAT2A, "Myristoylated cytosolic small GTPase that cycles onto membranes."),
     "ARHGAP23": note(CAT2, "Cytosolic Rho GAP."),
     "ARHGEF18": note(CAT2, "Cytoplasmic/cortical Rho GEF."),
-    "ARL6": note(CAT2, "Peripheral ciliary-membrane GTPase (urinary EVs carry ciliary proteins)."),
-    "ARL8A": note(CAT2, "Peripheral late-endosome/lysosome GTPase."),
-    "ARL8B": note(CAT2, "Peripheral late-endosome/lysosome GTPase."),
+    "ARL6": note(CAT2A, "Peripheral ciliary-membrane GTPase (urinary EVs carry ciliary proteins)."),
+    "ARL8A": note(CAT2A, "Peripheral late-endosome/lysosome GTPase."),
+    "ARL8B": note(CAT2A, "Peripheral late-endosome/lysosome GTPase."),
     "ARMC9": note(CAT2, "Cytoplasmic ciliary basal-body protein."),
     "ARPC1B": note(CAT2, "Arp2/3 complex subunit."),
     "ARSA": note(CAT5, "Soluble lysosomal sulfatase."),
@@ -112,22 +118,22 @@ G = {
     "ATP6AP2": note(CAT1, "Prorenin receptor / V-ATPase accessory protein, with UniProt lysosome-membrane and cell-surface "
                           "locations."),
     "ATP6V0A1": note(CAT1, "V-ATPase V0 a1 subunit of endosomal/vesicle membranes."),
-    "ATP6V1A": note(CAT2, "V-ATPase V1 subunit, assembled on endosomal and apical membranes from the cytosol."),
-    "ATP6V1B1": note(CAT2, "V-ATPase V1 subunit of the apical membrane of renal intercalated cells."),
-    "ATP6V1B2": note(CAT2, "V-ATPase V1 subunit."),
-    "ATP6V1C1": note(CAT2, "V-ATPase V1 subunit."),
-    "ATP6V1C2": note(CAT2, "V-ATPase V1 subunit."),
-    "ATP6V1D": note(CAT2, "V-ATPase V1 subunit."),
-    "ATP6V1E1": note(CAT2, "V-ATPase V1 subunit."),
-    "ATP6V1F": note(CAT2, "V-ATPase V1 subunit."),
-    "ATP6V1H": note(CAT2, "V-ATPase V1 subunit."),
+    "ATP6V1A": note(CAT2A, "V-ATPase V1 subunit, assembled on endosomal and apical membranes from the cytosol."),
+    "ATP6V1B1": note(CAT2A, "V-ATPase V1 subunit of the apical membrane of renal intercalated cells."),
+    "ATP6V1B2": note(CAT2A, "V-ATPase V1 subunit."),
+    "ATP6V1C1": note(CAT2A, "V-ATPase V1 subunit."),
+    "ATP6V1C2": note(CAT2A, "V-ATPase V1 subunit."),
+    "ATP6V1D": note(CAT2A, "V-ATPase V1 subunit."),
+    "ATP6V1E1": note(CAT2A, "V-ATPase V1 subunit."),
+    "ATP6V1F": note(CAT2A, "V-ATPase V1 subunit."),
+    "ATP6V1H": note(CAT2A, "V-ATPase V1 subunit."),
     "AUP1": note(CAT4, "ER-membrane and lipid-droplet protein (UniProt ECO:0000269)."),
     "BLVRB": note(CAT2, "Cytoplasmic reductase."),
     "BPGM": note(CAT2, "Cytosolic erythrocyte enzyme."),
     "BPTF": note(CAT4, "Nuclear chromatin-remodelling subunit."),
     "BTD": note(CAT5, "Secreted biotinidase."),
     "C1GALT1C1": note(CAT4, "ER-membrane chaperone (Cosmc)."),
-    "C1QB": note(CAT5, "Secreted complement C1q subunit, recovered from a plasma microvesicle preparation."),
+    "C1QB": note(CAT5_BOUND, "Secreted complement C1q subunit with experimental phosphatidylserine binding (IDA)."),
     "C3": note(CAT5, "Secreted complement C3."),
     "CACNA2D1": note(CAT1, "Plasma-membrane calcium-channel subunit."),
     "CACYBP": note(CAT2, "Cytoplasmic/nuclear calcyclin-binding protein."),
@@ -203,7 +209,7 @@ G = {
     "PGAM2": note(CAT2, "Cytosolic glycolytic enzyme."),
     "PGD": note(CAT2, "Cytoplasmic pentose-phosphate enzyme."),
     "PGLS": note(CAT2, "Cytoplasmic pentose-phosphate enzyme."),
-    "PLCG2": note(CAT2, "Cytoplasmic/membrane-raft phospholipase."),
+    "PLCG2": note(CAT2A, "Cytoplasmic/membrane-raft phospholipase."),
     "PMVK": note(CAT2, "Cytosolic kinase."),
     "PPP2R1A": note(CAT2, "Cytoplasmic PP2A scaffold."),
     "PTPN6": note(CAT2, "Cytoplasmic tyrosine phosphatase."),
@@ -232,8 +238,8 @@ G = {
                        "microvesicle row too."),
     "SYNE2": note(CAT4, "Nuclear-envelope (outer nuclear membrane) protein."),
     "TAX1BP1": note(CAT2, "Cytoplasmic autophagy adaptor."),
-    "THBS1": note(CAT5, "Secreted matricellular thrombospondin-1; the earlier ACCEPT rested on its being secreted."),
-    "THBS4": note(CAT5, "Secreted thrombospondin-4; the earlier ACCEPT rested on its being secreted."),
+    "THBS1": note(CAT5_BOUND, "Secreted thrombospondin-1 with experimental heparin and phosphatidylserine binding (IDA); the earlier ACCEPT rested only on its being secreted."),
+    "THBS4": note(CAT5_BOUND, "Secreted thrombospondin-4 with experimental heparin binding (IDA); the earlier ACCEPT rested only on its being secreted."),
     "TKFC": note(CAT2, "Cytosolic kinase."),
     "TKT": note(CAT2, "Cytosolic transketolase."),
     "TMEM63A": note(CAT1, "Lysosome/endosome membrane channel."),
