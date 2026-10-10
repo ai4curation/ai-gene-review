@@ -44,10 +44,10 @@
   conditions."]. I therefore added a `NEW` `GO:0140545 ATP-dependent protein
   disaggregase activity` row.
 
-- The broad `PANTHER:PTN000181243` cytoplasm IBA was marked over-annotated. The
-  node is above the fungal Hsp104/Hsp78 split and is safe for ATP hydrolysis and
-  heat response, but Hsp78's active compartment is the matrix from the
-  descendant `PANTHER:PTN000909045` node.
+- The broad `PANTHER:PTN000181243` cytoplasm IBA was modified to mitochondrial
+  matrix. Cytoplasm is a true but uninformative parent for mitochondrial Hsp78,
+  and Hsp78's direct active compartment is the matrix from the descendant
+  `PANTHER:PTN000909045` node.
 
 - The two generic `protein binding` IPI rows to Ssa1 were removed on GO-quality
   grounds. They report generic high-throughput or Hsp70-centered interactions,
