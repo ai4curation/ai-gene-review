@@ -2988,33 +2988,37 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**303 of 2,876 genes are complete; 2,573 remain.** CFAP300 adds one first
-counted substantive campaign audit beyond checkpoint 302. Its existing review was
-not already a campaign completion. The final head was approved and passed both
-required checks before actual merge. There are 303 distinct primary genes with
-merged campaign reviews and no completion holds. Product counts, retained authored
-annotations and an unresolved molecular mechanism do not add counts or create a hold.
+**309 of 2,876 genes are complete; 2,567 remain.** The first qualifying
+campaign reviews for CFH, CFAP410, CFAP418, CFAP43, CFL2, CFI add 6 distinct catalog completions
+beyond checkpoint 303. Each final head was approved and passed both required checks
+before actual merge. There are 309 distinct primary genes with merged campaign
+reviews and no completion holds. Products, repeated reviews, annotation actions
+and justified biological uncertainty do not add counts or holds.
 
-The fixed completion cutoff is **2026-10-10 10:35:31 UTC**, through CFAP300 at
-[commit 2f68dd87cb96](https://github.com/ai4curation/ai-gene-review/commit/2f68dd87cb96a240d03d5debc6c7f131bb7b2808).
-This follow-up preserves checkpoints 301 and 302, their history and the subsequent
-review corrections on the same [tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551).
-Its authenticated [head 13435e510e4f](https://github.com/ai4curation/ai-gene-review/commit/13435e510e4f68f6b0b345c62deed08b63996d3d)
-is the exact tracker preimage and was still open when this packet was prepared.
-That tracker head is distinct from the actual main completion cutoff and from any
-later publication checkout. Updating this PR does not count earlier completions again.
-See [checkpoint 303 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-303-2026-10-10-103531-utc).
+The fixed completion cutoff is **2026-10-10 13:12:56 UTC**, through
+[commit 91bbc12a004a](https://github.com/ai4curation/ai-gene-review/commit/91bbc12a004a42b6c26f3f9c58a1bd5f33556398).
+The authenticated source snapshot is
+[commit 91bbc12a004a](https://github.com/ai4curation/ai-gene-review/commit/91bbc12a004a42b6c26f3f9c58a1bd5f33556398),
+containing the published checkpoint 303 from
+[tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551),
+merged at 12:10:12 UTC in commit `39a7a8a8454f`. The completion cutoff,
+authenticated source snapshot and any later publication base are distinct concepts;
+a later publication base must preserve all six project preimages and cannot add
+subsequent completions to this checkpoint.
+See [checkpoint 309 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-309-2026-10-10-131256-utc).
 
 The `campaign_audited_merged` counter and legacy `original_merged` compatibility
-semantics remain unchanged. Literal `$.genes` still contains 235 historical queue
-objects and 235 distinct symbols. All 51 prior completion updates, their scope
-clarifications and prior progress remain exact; later merges are outside this cutoff.
+semantics remain unchanged. Literal `$.genes` retains 235 historical queue objects
+and 235 distinct symbols. All 52 prior completion updates, their historical cutoffs
+and all prior progress remain exact. Newly counted reviews: [CFH #4555](https://github.com/ai4curation/ai-gene-review/pull/4555), [CFAP410 #4550](https://github.com/ai4curation/ai-gene-review/pull/4550), [CFAP418 #4553](https://github.com/ai4curation/ai-gene-review/pull/4553), [CFAP43 #4554](https://github.com/ai4curation/ai-gene-review/pull/4554), [CFL2 #4562](https://github.com/ai4curation/ai-gene-review/pull/4562), [CFI #4556](https://github.com/ai4curation/ai-gene-review/pull/4556).
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
 [Checkpoint 302 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml).
 
 [Checkpoint 303 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml).
+
+[Checkpoint 309 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3393,12 +3397,12 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CERKL** — HGNC:21699; [CERKL-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3003820-dc03-4eb1-921a-6eaee749fa9f-2022-09-01T160000.000Z) (MONDO:0800401; AR; Definitive).
 - [x] **CFAP221** — HGNC:33720; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7c841e5-2973-4f23-8603-970e9e2cbc92-2025-12-16T120000.000Z) (MONDO:0016575; AR; Definitive).
 - [x] **CFAP300** — HGNC:28188; [ciliary dyskinesia, primary, 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bcfa4e4-37a3-43a7-9b4d-60554bc7600c-2022-09-08T110000.000Z) (MONDO:0054843; AR; Definitive).
-- [ ] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CFAP418** — HGNC:27232; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_791b95ad-3c89-436c-aa6e-c153c1c1ea61-2024-07-11T160000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CFAP43** — HGNC:26684; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f2622390-3981-4f40-8c28-194fb13dd35a-2026-04-09T190000.000Z) (MONDO:0016575; AR; Limited); [spermatogenic failure 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5055c70-e22e-47e5-af3b-04f3f2a0ed34-2022-12-14T200000.000Z) (MONDO:0054723; AR; Definitive).
-- [ ] **CFH** — HGNC:4883; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9eeff991-b5ac-4d1b-a128-47fa2306c1c5-2024-02-21T170000.000Z) (MONDO:0013892; AR; Definitive); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b0a234f8-1d8e-4a26-a76f-40219591c75c-2023-07-02T160000.000Z) (MONDO:0016244; SD; Definitive).
-- [ ] **CFI** — HGNC:5394; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_943f6c06-e32b-4052-8628-4c28de20c838-2024-06-28T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3a5fcd7c-0da5-4ba3-b0c6-2d40f985c418-2023-06-01T160000.000Z) (MONDO:0016244; AD; Definitive).
-- [ ] **CFL2** — HGNC:1875; [nemaline myopathy 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c04b972-6797-42e7-87e8-ee97eb0bbad7-2019-11-25T150139.061Z) (MONDO:0012538; AR; Definitive).
+- [x] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **CFAP418** — HGNC:27232; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_791b95ad-3c89-436c-aa6e-c153c1c1ea61-2024-07-11T160000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **CFAP43** — HGNC:26684; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f2622390-3981-4f40-8c28-194fb13dd35a-2026-04-09T190000.000Z) (MONDO:0016575; AR; Limited); [spermatogenic failure 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5055c70-e22e-47e5-af3b-04f3f2a0ed34-2022-12-14T200000.000Z) (MONDO:0054723; AR; Definitive).
+- [x] **CFH** — HGNC:4883; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9eeff991-b5ac-4d1b-a128-47fa2306c1c5-2024-02-21T170000.000Z) (MONDO:0013892; AR; Definitive); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b0a234f8-1d8e-4a26-a76f-40219591c75c-2023-07-02T160000.000Z) (MONDO:0016244; SD; Definitive).
+- [x] **CFI** — HGNC:5394; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_943f6c06-e32b-4052-8628-4c28de20c838-2024-06-28T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3a5fcd7c-0da5-4ba3-b0c6-2d40f985c418-2023-06-01T160000.000Z) (MONDO:0016244; AD; Definitive).
+- [x] **CFL2** — HGNC:1875; [nemaline myopathy 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c04b972-6797-42e7-87e8-ee97eb0bbad7-2019-11-25T150139.061Z) (MONDO:0012538; AR; Definitive).
 - [ ] **CFTR** — HGNC:1884; [cystic fibrosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb5b2eb1-e354-4e5a-ad5a-d0ee02805590-2022-06-01T040000.000Z) (MONDO:0009061; AR; Definitive).
 - [ ] **CHAMP1** — HGNC:20311; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4c67e6d5-1d58-4544-85e3-3078eec26231-2024-01-11T190000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **CHAT** — HGNC:1912; [congenital myasthenic syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e6d5128-7f30-407b-9d0b-88bf8a719eb8-2025-03-24T160000.000Z) (MONDO:0009689; AR; Definitive).
