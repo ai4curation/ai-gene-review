@@ -27,7 +27,7 @@
 ### PAINT / IBA review
 
 - `PTN000622075` is the broad MAPK-family PAINT node. The IBA rows it contributes to Q96TL5 are only `protein serine/threonine kinase activity`, nucleus, and cytoplasm. They are generic but safe for a catalytically intact HOG1-subfamily MAPK; the node is not transferring a clade-specific ERK/JNK/p38 pathway term onto the wrong fungal branch.
-- `PTN001172058` is the fungal HOG/Sty1 node. Its `stress-activated MAPK cascade` and `osmosensory signaling pathway` transfers match direct Neurospora evidence from PMID:11823187, PMID:16278449, and PMID:17392518. The `cellular response to oxidative stress` transfer is safe by the node placement and fungal comparators, but the cached Q96TL5 papers here directly emphasize osmotic, fungicide, turgor, and developmental signaling more than an OS-2 oxidative-stress step, so I kept that row as non-core.
+- `PTN001172058` is the fungal HOG/Sty1 node. Its `stress-activated MAPK cascade` and `osmosensory signaling pathway` transfers match direct Neurospora evidence from PMID:11823187, PMID:16278449, and PMID:17392518. The `cellular response to oxidative stress` transfer is also retained as core: PMID:16990038 and PMID:18948219 show OS-2-dependent induction of catalase transcripts downstream of osmotic, fludioxonil, NaCl, and heat-shock inputs.
 - Short `WITH/FROM` lists on the `PTN001172058` rows are not evidence of weak support: the PAINT curator is asserting inheritance from the fungal HOG/Sty1 node, not a pairwise transfer from the extant seed count.
 
 ### Newer-paper sweep
@@ -36,8 +36,8 @@ Manual search did not turn up a newer paper that changes the core interpretation
 
 ### Row decisions
 
-- Accepted the IBA/IEA/ISS catalytic rows for `protein kinase activity`, `protein serine/threonine kinase activity`, `MAP kinase activity`, and `protein serine kinase activity`. The parents are less specific than MAP kinase activity but not misleading.
+- Kept the IBA/IEA/ISS parent catalytic rows for `protein kinase activity`, `protein serine/threonine kinase activity`, and `protein serine kinase activity` as correct but non-core or over-annotated relative to `MAP kinase activity`.
 - Accepted `ATP binding` as a non-core ATP-dependent kinase-domain property.
 - Accepted nucleus and cytoplasm from both IBA and UniProt-SubCell IEA, consistent with HOG-family MAPK nucleocytoplasmic signaling.
 - Accepted `osmosensory signaling pathway` and `stress-activated MAPK cascade`; they are core HOG/OS pathway functions.
-- Kept `cellular response to oxidative stress` as non-core, not removed: the `PTN001172058` placement is appropriate, and fungal HOG/Sty1 comparators support oxidative-stress signaling even though the cached Neurospora evidence is more direct for osmotic/fungicide signaling.
+- Accepted `cellular response to oxidative stress`: the `PTN001172058` placement is appropriate, and direct cached Neurospora catalase-expression evidence supports the OS-2 role.
