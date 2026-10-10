@@ -117,8 +117,7 @@ EXG1/XOG1-family IBA rows split over a broad Aspergillus-root
 cell-wall beta-glucan node, and a Saccharomycetes `PTN001262687`
 exo-1,3-beta-glucosidase node.
 
-- [ ] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in the current
-  PR
+- [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in PR #4610
 - [ ] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
   clade
 - [ ] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the

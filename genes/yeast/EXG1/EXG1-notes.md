@@ -16,15 +16,17 @@
   glucanases, including EXG1. `GO:0005576 extracellular region` and
   `GO:0070879 fungal-type cell wall beta-glucan metabolic process` sit at the
   slightly broader fungal `PTN001262686` node. Broad `GO:0009251 glucan
-  catabolic process` sits at a much broader node, `PTN001262628`, seeded only by
-  Aspergillus SF34/SF39 exgB/exgD-like members in the local PAINT cache and is
-  over-scoped for yeast EXG1.
+  catabolic process` sits at a much broader node, `PTN001262628`, seeded by
+  Aspergillus SF34/SF39 exgB/exgD-like members in the local PAINT cache. Exg1's
+  small-substrate preference and inhibition by high laminaran concentrations
+  make that node a poor fit for yeast EXG1's in vivo role.
 - The direct recombinant-enzyme paper, PMID:11471729, is abstract-only in the
   cache and supports exo-beta-1,3-glucanase activity plus a broad in vitro
-  substrate profile. It confirms beta-1,6-linked substrate activity but does not
-  establish an endo-1,6 mode in the cached abstract, so the SGD
-  `GO:0046557 glucan endo-1,6-beta-glucosidase activity` row is marked as
-  over-annotated.
+  substrate profile. It confirms beta-glucosidase activity on small
+  beta-1,6-linked substrates, while the reported preference for gentiobiose over
+  the beta-1,6 polymer pustulan argues for replacing the SGD `GO:0046557 glucan
+  endo-1,6-beta-glucosidase activity` row with `GO:0008422 beta-glucosidase
+  activity`.
 - Searched PubMed for newer `EXG1`, `YLR300W`, and `SCW6` papers. The main
   newer direct biochemical hit is PMID:41439696, a 2026 full-text ScEXG1 study
   showing that His-tagged ScEXG1 hydrolyzes beta-1,3 glucan and can form
@@ -34,7 +36,7 @@
   alter EXG1's core GO function.
 - The 2016 SWAT paper, PMID:26928762, is full text in the cache, but the
   extracted text does not include the supplementary EXG1 localization row behind
-  the SGD `GO:0000324 fungal-type vacuole` assignment. Because mature Exg1 has a
-  cleaved signal peptide and direct evidence for secretion to the extracellular
-  region/cell wall, the vacuole row was marked as over-annotated rather than as
-  a core site of action.
+  the SGD `GO:0000324 fungal-type vacuole` assignment. Because the SWAT-GFP
+  acceptor used constitutive N-terminal tagging, and mature Exg1 is a processed
+  secreted cell-wall glycoprotein, the vacuole row was marked as over-annotated
+  rather than as a core site of action.
