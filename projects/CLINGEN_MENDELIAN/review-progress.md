@@ -66,6 +66,43 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 289 — 2026-10-10 03:28:19 UTC
+
+**289 complete / 2,587 remaining in the frozen 2,876-gene catalog.** CDT1 adds
+one first primary campaign completion beyond checkpoint 288. No required
+follow-up holds remain. Supplementary products and repeated reviews of already
+counted genes add no completion.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CDT1 | [#4500](https://github.com/ai4curation/ai-gene-review/pull/4500) | [84bf468a05a4](https://github.com/ai4curation/ai-gene-review/commit/84bf468a05a4df293c4ba6968529ec9171ad2b51) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4500#pullrequestreview-5477289703) | 2026-10-10T03:28:19Z | [7a6b71b1a228](https://github.com/ai4curation/ai-gene-review/commit/7a6b71b1a2286c223dcc0336b1334e716972016f) |
+
+The final head has successful test (3.12) and claude-review checks on that same
+commit before merge. All 27 changed PR paths match their approved-head and merge
+blobs; all six gene artifacts also match the frozen source/cutoff. The source main
+is [commit 7a6b71b1a228](https://github.com/ai4curation/ai-gene-review/commit/7a6b71b1a2286c223dcc0336b1334e716972016f),
+the CDT1 merge at 2026-10-10T03:28:19Z. The published baseline [tracker #4501](https://github.com/ai4curation/ai-gene-review/pull/4501)
+merged as [9dfaa0a45aed](https://github.com/ai4curation/ai-gene-review/commit/9dfaa0a45aedac6184dd4d0419de92c524e7683c).
+
+The counter definitions established at checkpoint 288 remain in force:
+`campaign_audited_merged` counts distinct frozen-catalog primary genes with a
+merged campaign review; subtracting `pending_followups` gives `completed`.
+`original_merged` remains a compatibility alias in this new snapshot. The three
+applicable values are 289, 0 and 289. Existing review-file presence, supplementary
+products and repeated reviews do not independently add campaign completions.
+
+All 2,876 catalog rows and association text, all 235 actual historical queue
+entries, all 42 prior completion updates and all previous progress text are
+preserved. Only CDT1's checkbox changes; update 43 is appended. The queue gene
+array remains unchanged; new completion evidence is appended to the update series.
+Biological DRAFT status or justified UNDECIDED annotations alone create no hold.
+CDKN2A, CEBPA and later merges are outside this fixed cutoff. The first unchecked
+gene in literal catalog order remains ACBD5.
+
+Authenticated evidence was read and this proposal recorded at 2026-10-10T03:33:18.439324+00:00.
+
+[Checkpoint 289 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T034138Z-codex-80263b.yaml).
+
 ## Completion checkpoint 288 — 2026-10-10 02:29:14 UTC
 
 **288 complete / 2,588 remaining in the frozen 2,876-gene catalog.** CDKL5 and

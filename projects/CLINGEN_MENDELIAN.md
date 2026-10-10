@@ -2988,23 +2988,22 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**288 of 2,876 genes are complete; 2,588 remain.** CDKL5 and the substantive
-CDKN1C audit add two first campaign completions beyond checkpoint 286. Both final
-heads were approved and passed required checks before their actual merges. There
-are 288 distinct primary genes with merged campaign reviews and no completion holds.
-An existing review file or COMPLETE status alone does not count as a campaign audit.
-Biological DRAFT status and justified UNDECIDED annotations remain independent of completion.
+**289 of 2,876 genes are complete; 2,587 remain.** CDT1 adds one first
+campaign completion beyond checkpoint 288. Its final head was approved and passed
+required checks before the actual merge. There are 289 distinct primary genes with
+merged campaign reviews and no completion holds. Biological DRAFT status and
+justified UNDECIDED annotations remain independent of campaign completion.
 
-The fixed completion cutoff and source main are **2026-10-10 02:29:14 UTC**, through
-CDKN1C, at [commit e94991ceada8](https://github.com/ai4curation/ai-gene-review/commit/e94991ceada8507158f48e9902087033919dd36b).
-The published baseline is [tracker #4498](https://github.com/ai4curation/ai-gene-review/pull/4498),
-which recorded checkpoint 286. See [checkpoint 288 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-288-2026-10-10-022914-utc).
-The new snapshot explicitly records `campaign_audited_merged`; the legacy
-`original_merged` field is retained for compatibility with its scope clarified in
-that snapshot. Earlier dated counts remain unchanged. Later merges and open PRs
-are outside this cutoff.
+The fixed completion cutoff and source main are **2026-10-10 03:28:19 UTC**, through
+CDT1, at [commit 7a6b71b1a228](https://github.com/ai4curation/ai-gene-review/commit/7a6b71b1a2286c223dcc0336b1334e716972016f).
+The published baseline is [tracker #4501](https://github.com/ai4curation/ai-gene-review/pull/4501),
+which recorded checkpoint 288. See [checkpoint 289 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-289-2026-10-10-032819-utc).
+The explicit `campaign_audited_merged` counter and legacy compatibility semantics
+established at checkpoint 288 continue unchanged. Earlier dated records are
+preserved; later merges, supplementary products and repeated reviews add no count
+at this cutoff.
 
-[Checkpoint 288 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T024556Z-codex-38e3b8.yaml).
+[Checkpoint 289 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T034138Z-codex-80263b.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3369,7 +3368,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CDKL5** — HGNC:11411; [CDKL5 disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a80cd86d-b085-4f35-9379-12a53ef367e2-2018-07-02T145731.072Z) (MONDO:0100039; XL; Definitive).
 - [x] **CDKN1B** — HGNC:1785; [hereditary nonpolyposis colon cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8434) (MONDO:0018630; AR; Limited); [multiple endocrine neoplasia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b07f8882-dd5e-4831-9926-f8b4c2a8c265-2018-12-21T154854.477Z) (MONDO:0012552; AD; Definitive).
 - [ ] **CDKN2A** — HGNC:1787; [melanoma-pancreatic cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0c0d2fc0-12b2-4855-b537-60394d0987dd-2019-08-14T194547.089Z) (MONDO:0011713; AD; Definitive).
-- [ ] **CDT1** — HGNC:24576; [Meier-Gorlin syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dfc9602f-fb88-419a-8955-6d7c00a52158-2023-03-03T170000.000Z) (MONDO:0013431; AR; Definitive).
+- [x] **CDT1** — HGNC:24576; [Meier-Gorlin syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dfc9602f-fb88-419a-8955-6d7c00a52158-2023-03-03T170000.000Z) (MONDO:0013431; AR; Definitive).
 - [ ] **CEBPA** — HGNC:1833; [acute myeloid leukemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4234367e-149b-4f13-9243-341396fb4ccf-2019-08-18T155916.225Z) (MONDO:0018874; AD; Definitive).
 - [ ] **CEP104** — HGNC:24866; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be550486-4da7-4de4-9db4-6f5cdb98ff39-2025-01-28T170000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **CEP120** — HGNC:26690; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6be10beb-c032-44a6-a4bf-f9d644ba6085-2025-06-25T160000.000Z) (MONDO:0005308; AR; Definitive).
