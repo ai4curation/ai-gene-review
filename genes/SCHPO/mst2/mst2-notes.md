@@ -31,3 +31,12 @@
 - Retained the ORFeome cytosol and UniProt cytoplasm localizations as non-core:
   they are compatible with UniProt's dual cytoplasm/nucleus statement but do not
   describe the core H3K14 acetyltransferase activity on nuclear chromatin.
+- Followed up on PR review by fetching full text for the two UniProt FUNCTION
+  papers that were missing from the first pass. `PMID:16199868` established
+  nuclear chromatin localization and Mst2's negative regulation of telomeric
+  silencing. `PMID:22184112` biochemically defined the Mst2 complex as a
+  nucleosomal H3K14 acetyltransferase and showed that Mst2 and Gcn5-dependent
+  H3K14ac supports activation of the DNA damage checkpoint. The
+  GO-Central-facing `GO:1990467` to `GO:0036410` complex replacement remains a
+  curation action for the PAINT row rather than an expert-facing biology
+  question.
