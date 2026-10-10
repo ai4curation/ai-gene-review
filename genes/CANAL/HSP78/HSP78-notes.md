@@ -22,10 +22,11 @@
   mitochondrial-matrix localization, protein refolding, and protein unfolding.
   All three were accepted because C. albicans HSP78 is in that clade.
 
-- The broad `PANTHER:PTN000181243` cytoplasm IBA was marked over-annotated,
-  while the ATP hydrolysis and cellular heat-response IBAs from the same broad
-  node were accepted. The broader node is above the Hsp104/Hsp78 split and is
-  safe only for functions genuinely retained by both branches.
+- The broad `PANTHER:PTN000181243` cytoplasm IBA was marked over-annotated
+  because `GO:0005737` is true but too broad for the mitochondrial-matrix Hsp78
+  branch. The ATP hydrolysis and cellular heat-response IBAs from the same broad
+  node were accepted as functions retained on both sides of the Hsp104/Hsp78
+  split.
 
 - S. cerevisiae HSP78 provides the experimental orthology anchor for the
   Candida row set: matrix localization [PMID:8413229, "Submitochondrial
