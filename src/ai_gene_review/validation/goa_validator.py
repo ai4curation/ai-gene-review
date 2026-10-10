@@ -633,6 +633,7 @@ class GOAValidator:
         goa_file: Optional[Path] = None,
         output_file: Optional[Path] = None,
         fetch_titles: bool = False,
+        publications_dir: Optional[Path] = None,
     ) -> Tuple[int, Path, int, int, int]:
         """Seed missing annotations from GOA file into YAML.
 
@@ -645,6 +646,8 @@ class GOAValidator:
             goa_file: Path to GOA file (if None, derives from yaml_file path)
             output_file: Output path (if None, overwrites input file)
             fetch_titles: If True, fetch actual titles from PubMed (may be slow)
+            publications_dir: Publication cache read and written when fetching
+                titles (default: ``publications`` relative to the working directory)
 
         Returns:
             Tuple of (annotations added, output file path, references added,
@@ -894,8 +897,11 @@ class GOAValidator:
                     if pmid.startswith("PMID:"):
                         pmid_num = pmid[5:]  # Remove 'PMID:' prefix
                         try:
-                            # Use publications directory for cache
-                            cache_dir = Path("publications")
+                            cache_dir = (
+                                publications_dir
+                                if publications_dir is not None
+                                else Path("publications")
+                            )
 
                             # First try to get just the title from cache (fast)
                             cached_title = get_cached_title(pmid_num, cache_dir)

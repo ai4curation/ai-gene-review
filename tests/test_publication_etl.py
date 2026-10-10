@@ -163,15 +163,17 @@ def test_extract_pmids_from_empty_yaml():
 
 
 @pytest.mark.integration
-def test_fetch_pubmed_data():
+def test_fetch_pubmed_data(tmp_path):
     """Test fetching real data from PubMed.
 
     This test requires network access and is marked as integration.
+    The cache goes to tmp_path: the default would overwrite the committed
+    publications/PMID_29727692.md.
     """
     # Use a known PMID from CFAP300 literature
     pmid = "29727692"
 
-    pub = fetch_pubmed_data(pmid)
+    pub = fetch_pubmed_data(pmid, cache_dir=tmp_path)
 
     assert pub is not None
     assert pub.pmid == pmid
