@@ -36,6 +36,10 @@ from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
+from ai_gene_review.validation.local_source_text import (
+    validate_local_source_quotes,
+)
+from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
     cached_text_missing,
@@ -374,6 +378,10 @@ def validate_gene_review(
             progress_callback=progress_callback,
             publications_dir=publications_dir,
         )
+        # Local sources need no network, so this runs even when reference
+        # validation is off (validate-all's best-practices pass): the external
+        # validator skips file: and Reactome: quotes entirely.
+        validate_local_source_quotes(data, report, yaml_file_path)
 
     return report
 
@@ -1129,12 +1137,12 @@ def check_best_practices_rules(
     if "taxon" in data:
         taxon = data["taxon"]
         if isinstance(taxon, dict):
-            if "id" in taxon and not taxon["id"].startswith("NCBITaxon:"):
+            if "id" in taxon and not is_ncbitaxon_curie(taxon["id"]):
                 report.add_issue(
-                    ValidationSeverity.INFO,
-                    "Taxon ID should use NCBITaxon prefix",
+                    ValidationSeverity.ERROR,
+                    "Taxon ID must be an NCBITaxon:<digits> CURIE",
                     path="taxon.id",
-                    suggestion=f"Use 'NCBITaxon:{taxon['id']}' format",
+                    suggestion="Use the NCBI taxonomy id from the UniProt OX line, e.g. 'NCBITaxon:9606'",
                 )
 
     # Check description length
