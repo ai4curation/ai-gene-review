@@ -117,3 +117,23 @@ All PMIDs cited in the BioReason deep research and existing GOA annotations were
 6. **Lipid binding (GO:0008289)** - ISO from human P10912. Evidence likely relates to GHR association with lipid rafts via extracellular subdomain 2 (PMID:19914217), or cholesterol-dependent membrane localization. Annotation is reasonable but somewhat indirect.
 
 7. **Nuclear localization** - ISO from mouse. There IS evidence for GHR nuclear translocation (PMID:7989347, Conway-Campbell et al. 2007). The annotation is reasonable.
+
+
+## Re-review 2026-10-10
+
+**GOA changes.** GOA refresh added 13 rows (all seeded PENDING) and retired 5.
+- Retired: GO:0005615 extracellular space (IEA GO_REF:0000107, ISO, IDA PMID:11126270) -- GO:0005615 is now obsolete and GOA carries GO:0005576 extracellular region instead; GO:0005576 IEA GO_REF:0000044 (now carried via GO_REF:0000120, SubCell SL-0243); GO:0042976 activation of Janus kinase activity IDA PMID:11244571 (the GHR-Jak association from this paper is still carried as protein kinase binding IPI rows).
+- New: five GO:0005576 extracellular region rows (IDA PMID:11126270, IEA GO_REF:0000120, two ISO from human GHR, ISS GO_REF:0000024); plasma membrane ISS and ISO donor splits (mouse Ghr; human GHR located_in alongside the existing is_active_in row); GHR activity, membrane and peptide hormone binding ISO from human GHR; protein kinase binding IPI with Jak1 (RGD:69056) alongside Jak2 (RGD:2939); GH receptor signaling via JAK-STAT ISO from pig GHR (RGD:13933079).
+- All extracellular rows kept as non-core (soluble GHBP) [PMID:11126270 "GHBP increased at 24 h following both CLP and LAP"]. Jak1 row accepted [PMID:11244571 "This is the first study to show that both Jak1 and Jak2 are associated with the GHR in rat tissues."]. Pig-donor JAK-STAT row accepted [PMID:8702683 "we demonstrate that GH induces rapid tyrosine phosphorylation of different isoforms of STAT5 in mouse L cells stably transfected with a cDNA encoding porcine GHR (pGHR)"].
+
+**Source tracing for human-isoform ISO rows.** RGD's human GHR annotations show that the isoform-tagged ISO rows (receptor internalization, response to cycloheximide, growth factor binding, extracellular region with P10912-1/-2) come from Amit et al. 1997 (PMID:9360546), and response to estradiol from Leung et al. 2003 (PMID:12552091). Human P10912-2 is GHRtr (GHR1-279), a truncated membrane-anchored isoform -- not GHBP. The earlier review text describing these NOT rows as the "GHBP isoform" was wrong; rat isoform 2 (P16310-2) is the GHBP splice form and has no GHRtr equivalent.
+
+**Action changes.**
+- GO:0031623 receptor internalization, NOT ISO (P10912-2): KEEP_AS_NON_CORE -> REMOVE. An isoform-specific negative result for human GHRtr was propagated to the whole rat gene product, contradicting the positive row and the documented internalization of full-length GHR [PMID:9360546 "In contrast to CHO/hGHR cells, CHO/hGHRtr cells did not exhibit any GH-induced receptor down-regulation, and internalization was markedly reduced."].
+- GO:0046898 response to cycloheximide, NOT ISO (P10912-2): KEEP_AS_NON_CORE -> REMOVE (same isoform-propagation problem).
+- GO:0046898 response to cycloheximide, ISO (P10912-1): KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. Cycloheximide was a translation inhibitor used to measure receptor turnover [PMID:9360546 "incubation of CHO/hGHR cells with cycloheximide caused parallel disappearance of hGHR and GHBP"].
+- No other action changes. Positive support (UniProt CC lines, falcon deep research, or source papers) was added to ~35 ACCEPT/KEEP_AS_NON_CORE rows that had none; the nucleus ISO row is now supported by the mouse source paper [PMID:9144201 "In cleavage-stage embryos this immunoreactivity was localized mainly to the nucleus"].
+
+**Unchanged policy checks.** No GO:0005515 rows. IBA rows were not challenged. No NEW rows. Description and core_functions unchanged (core_functions still lists GO:0042976 under directly_involved_in; the term is current, only the GOA row was retired).
+
+**Open questions.** The validator flags inconsistent actions for GO:0031623 and GO:0046898 because it does not distinguish the NOT rows from the positive rows; the split is intentional. The GO:0005829 cytosol IBA (is_active_in) remains KEEP_AS_NON_CORE, but the cytoplasmic tail of a type I membrane receptor is not normally captured as cytosol; a PAINT curator might revisit that node.
