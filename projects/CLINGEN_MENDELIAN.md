@@ -2988,23 +2988,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**310 of 2,876 genes are complete; 2,566 remain.**
-[CHAT #4572](https://github.com/ai4curation/ai-gene-review/pull/4572) adds one
-first qualifying campaign completion beyond checkpoint 309. Its final head was
-approved and passed both required checks before merge. There are no completion holds;
-open PRs, products and repeated reviews add no completions.
+**311 of 2,876 genes are complete; 2,565 remain.**
+[CFTR #4568](https://github.com/ai4curation/ai-gene-review/pull/4568) adds one
+first qualifying campaign audit beyond checkpoint 310. Its existing review received
+a substantive annotation and core-function audit, with exact-head approval and both
+required checks before merge. Existing files, alternative products and repeated
+review rounds do not change the one-gene count. There are no completion holds.
 
-The fixed completion cutoff is **2026-10-10 17:19:03 UTC**, through
-[CHAT merge d029f88f542f](https://github.com/ai4curation/ai-gene-review/commit/d029f88f542f1702a286982b20a89349e979c302).
-The authenticated source is [commit 8cd2c9286f44](https://github.com/ai4curation/ai-gene-review/commit/8cd2c9286f44f998ce175f034a56ee6c7b49f4cc),
-which includes [tracker309 #4581](https://github.com/ai4curation/ai-gene-review/pull/4581),
-merged at **17:25:21 UTC**. Merge times use the GitHub API `merged_at` field;
-commit timestamps are recorded separately. The completion cutoff, source snapshot
-and later publication base remain distinct. A later base must preserve all six
-project preimages and cannot advance this count.
+The frozen completion cutoff is **2026-10-10 19:26:28 UTC**, through
+[CFTR merge 4a9875aae93b](https://github.com/ai4curation/ai-gene-review/commit/4a9875aae93b762f99d87baf4621c9ededf6d71c).
+The authenticated source is that same commit. It already contains the
+[tracker310 #4631](https://github.com/ai4curation/ai-gene-review/pull/4631)
+merge `bb51b3177deed88185627c2017483b18a4de0f94`, at **19:25:37 UTC**. Times use the GitHub API `merged_at`;
+commit timestamps are recorded separately. A later publication base must preserve
+all six project preimages and cannot advance this frozen count.
 
-See [checkpoint 310 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-310-2026-10-10-171903-utc).
-Counter semantics, all 235 historical queue objects, all 53 previous completion
+See [checkpoint 311 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-311-2026-10-10-192628-utc).
+Counter semantics, all 235 historical queue objects, all 54 previous completion
 updates and prior progress remain unchanged.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
@@ -3016,6 +3016,8 @@ updates and prior progress remain unchanged.
 [Checkpoint 309 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml).
 
 [Checkpoint 310 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T174737Z-codex-0f8ff7.yaml).
+
+[Checkpoint 311 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T193909Z-codex-ab8464.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3400,7 +3402,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CFH** — HGNC:4883; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9eeff991-b5ac-4d1b-a128-47fa2306c1c5-2024-02-21T170000.000Z) (MONDO:0013892; AR; Definitive); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b0a234f8-1d8e-4a26-a76f-40219591c75c-2023-07-02T160000.000Z) (MONDO:0016244; SD; Definitive).
 - [x] **CFI** — HGNC:5394; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_943f6c06-e32b-4052-8628-4c28de20c838-2024-06-28T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3a5fcd7c-0da5-4ba3-b0c6-2d40f985c418-2023-06-01T160000.000Z) (MONDO:0016244; AD; Definitive).
 - [x] **CFL2** — HGNC:1875; [nemaline myopathy 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c04b972-6797-42e7-87e8-ee97eb0bbad7-2019-11-25T150139.061Z) (MONDO:0012538; AR; Definitive).
-- [ ] **CFTR** — HGNC:1884; [cystic fibrosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb5b2eb1-e354-4e5a-ad5a-d0ee02805590-2022-06-01T040000.000Z) (MONDO:0009061; AR; Definitive).
+- [x] **CFTR** — HGNC:1884; [cystic fibrosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb5b2eb1-e354-4e5a-ad5a-d0ee02805590-2022-06-01T040000.000Z) (MONDO:0009061; AR; Definitive).
 - [ ] **CHAMP1** — HGNC:20311; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4c67e6d5-1d58-4544-85e3-3078eec26231-2024-01-11T190000.000Z) (MONDO:0100038; AD; Definitive).
 - [x] **CHAT** — HGNC:1912; [congenital myasthenic syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e6d5128-7f30-407b-9d0b-88bf8a719eb8-2025-03-24T160000.000Z) (MONDO:0009689; AR; Definitive).
 - [ ] **CHCHD10** — HGNC:15559; [frontotemporal dementia and/or amyotrophic lateral sclerosis 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d154f67a-25ce-40d3-9de3-1f001753843a-2022-09-13T160000.000Z) (MONDO:0014395; AD; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6940c6eb-dacf-46ce-a08c-d8b9f98b04ae-2023-05-18T160000.000Z) (MONDO:0044970; AD; Definitive).
