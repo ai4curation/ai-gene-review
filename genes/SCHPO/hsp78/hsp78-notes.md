@@ -32,9 +32,10 @@
 
 - The broad `PANTHER:PTN000181243` rows were split by term. ATP hydrolysis and
   cellular response to heat were accepted because they apply across both Hsp104
-  and Hsp78 descendants. The `cytoplasm` row was marked over-annotated because
-  the matrix-specific `PANTHER:PTN000909045` placement is the right compartment
-  for the mitochondrial Hsp78 paralog.
+  and Hsp78 descendants. The `cytoplasm` row was modified to mitochondrial
+  matrix because cytoplasm is a true but uninformative parent and the
+  matrix-specific `PANTHER:PTN000909045` placement is the right direct
+  compartment for the mitochondrial Hsp78 paralog.
 
 - The `GO:0006457 protein folding` ARBA row was modified to `GO:0042026 protein
   refolding`. Hsp78 acts after clients have misfolded and aggregated; it is not
