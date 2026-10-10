@@ -2,71 +2,60 @@
 
 ## Overview
 
-alo1 encodes a D-arabinono-1,4-lactone oxidase that catalyzes the terminal step in fungal D-erythroascorbic acid biosynthesis, a 5-carbon analog of vitamin C that serves as an important antioxidant in S. pombe. This mitochondrial outer membrane-anchored flavoprotein uses molecular oxygen to oxidize D-arabinono-1,4-lactone, producing D-erythroascorbic acid and hydrogen peroxide [file:pombe/alo1/alo1-deep-research.md]. The enzyme plays a critical role in cellular antioxidant defense, with deletion mutants showing hypersensitivity to oxidative stress, and recent evidence suggests potential moonlighting functions in mitochondrial inheritance during stress conditions.
+S. pombe alo1 is best treated as a predicted mitochondrial, FAD-linked
+aldonolactone oxidoreductase whose exact substrate and pathway are unresolved.
+The current positive molecular-function annotations support a broad
+oxygen-dependent activity on CH-OH donors, while PomBase negates the exact
+budding-yeast D-arabinono-1,4-lactone oxidase activity and the corresponding
+D-erythroascorbate biosynthetic process.
 
-## D-Erythroascorbic Acid Biosynthetic Pathway
+## Predicted Aldonolactone Oxidation
 
-The primary pathway mediated by alo1 is the terminal step of D-erythroascorbic acid (EASC) biosynthesis in fungi. Alo1 catalyzes the FAD-dependent oxidation of D-arabinono-1,4-lactone using molecular oxygen as the electron acceptor, producing D-erythroascorbic acid and hydrogen peroxide [file:pombe/alo1/alo1-deep-research.md]. This reaction represents the culmination of a multi-step biosynthetic pathway that converts simple sugar precursors into the fungal vitamin C analog. The enzyme contains a covalently bound FAD cofactor essential for its oxidase activity and shows high specificity for its arabinono-lactone substrate.
+The supported enzymatic model is FAD-dependent oxidation of an aldonolactone
+substrate with oxygen as the electron acceptor. InterPro, ARBA, and PomBase all
+support oxidoreductase activity, but the current annotations stop at either
+`GO:0016491 oxidoreductase activity` or `GO:0016899 oxidoreductase activity,
+acting on the CH-OH group of donors, oxygen as acceptor`. That scope should be
+preserved until direct fission-yeast biochemistry identifies the native
+substrate.
 
-## Antioxidant Defense Network
+## Mitochondrial Membrane Context
 
-D-erythroascorbic acid produced by alo1 functions as a key component of the cellular antioxidant defense system in S. pombe. This 5-carbon ascorbic acid analog serves as a reducing agent that can scavenge reactive oxygen species and protect cellular components from oxidative damage [PMID:10094636]. The antioxidant capacity of EASC is particularly important during oxidative stress conditions, where elevated ROS levels could damage proteins, lipids, and nucleic acids. The alo1 deletion mutants' hypersensitivity to oxidative stress demonstrates the critical role of this pathway in maintaining cellular redox homeostasis.
-
-## Mitochondrial Outer Membrane Integration
-
-alo1 is anchored to the mitochondrial outer membrane, positioning it at a strategic location for both EASC production and potential interactions with other mitochondrial processes [file:pombe/alo1/alo1-deep-research-alt.md]. This localization places the enzyme at the interface between cytoplasmic and mitochondrial metabolism, allowing it to contribute to both compartments' antioxidant defenses. The membrane association may also facilitate the enzyme's recently discovered potential moonlighting function in mitochondrial inheritance, similar to its S. cerevisiae ortholog's interaction with the myosin motor Myo2 [PMID:39775849].
-
-## Potential Mitochondrial Inheritance Pathway
-
-Recent studies in S. cerevisiae have revealed that ALO1 has a moonlighting function where it binds the myosin V motor Myo2 and aids in mitochondrial inheritance during cell division, particularly under oxidative stress conditions [PMID:39775849]. While this role remains to be confirmed in S. pombe, the conservation of alo1 function and mitochondrial localization suggests it may similarly interact with the S. pombe myosin V homolog Myo52 to facilitate proper mitochondrial distribution. This potential dual function would link antioxidant production with organelle inheritance mechanisms.
+alo1 is linked to mitochondria by two independent annotation paths. A PomBase HDA
+row places alo1 in the fission-yeast mitochondrion from the ORFeome localization
+study, and PomBase also transfers mitochondrial outer-membrane localization from
+the budding-yeast ortholog. The cached ORFeome abstract describes localization
+coverage for 4,431 proteins, approximately 90% of the fission-yeast proteome
+[PMID:16823372].
 
 ## Pathway Diagram
 
 ```mermaid
 graph TD
-    A["D-arabinono-1,4-lactone: Substrate"] --> B["alo1: Lactone Oxidase (Outer Membrane)"]
-    C["O2: Electron Acceptor"] --> B
-    D["FAD: Cofactor"] --> B
+    A["?: native aldonolactone substrate"] --> B["alo1: FAD-linked CH-OH oxidoreductase"]
+    C["O2: electron acceptor"] --> B
+    D["FAD: cofactor"] -.-> B
 
-    B --> E["D-erythroascorbic acid: Antioxidant Product"]
-    B --> F["H2O2: Hydrogen Peroxide"]
+    B --> E["?: oxidized aldonolactone product"]
+    B --> F["H2O2: byproduct"]
 
-    G["?: Upstream Biosynthetic Enzymes"] --> A
-    H["Sugar Precursors: Metabolic Input"] --> G
+    B -. "is_active_in / located_in" .-> G["mitochondrial outer membrane"]
 
-    E --> I["ROS Scavenging: Antioxidant Defense"]
-    F --> J["Catalase: H2O2 Detoxification"]
+    E --> H["?: unresolved biological process"]
 
-    I --> K["Cellular Protection: Oxidative Stress Resistance"]
-    J --> L["Water + O2: Detoxification Products"]
-
-    B --> M["?: Myo52 Interaction (Potential)"]
-    M --> N["Mitochondrial Inheritance: Organelle Distribution"]
-
-    O["Oxidative Stress: Environmental Challenge"] --> I
-    O --> M
-
-    P["Cell Division: Mitochondrial Segregation"] --> N
-
-    style A fill:#ffcccc
     style B fill:#ccffcc
-    style E fill:#ccccff
-    style K fill:#ffffcc
-    style N fill:#ffcccc
+    style A fill:#eeeeee
+    style E fill:#eeeeee
+    style H fill:#eeeeee
 ```
 
-## Integration with Oxidative Stress Response
+## Open Pathway Questions
 
-The alo1-mediated EASC biosynthetic pathway integrates with the broader oxidative stress response network in S. pombe. The antioxidant capacity provided by D-erythroascorbic acid complements other cellular antioxidant systems including glutathione, catalase, and superoxide dismutase. During oxidative stress conditions, the production of EASC by alo1 becomes particularly critical for cell survival, as evidenced by the oxidative stress sensitivity of alo1 deletion mutants. This positions alo1 as an essential component of the stress response machinery.
-
-## Metabolic Connections and Regulation
-
-The substrate for alo1, D-arabinono-1,4-lactone, is produced through a multi-step biosynthetic pathway that connects to central carbohydrate metabolism. The regulation of alo1 expression and activity may be linked to cellular energy status, oxidative stress levels, and metabolic demands for antioxidant production. The enzyme's requirement for molecular oxygen also creates a connection to cellular respiration and oxygen availability, potentially making it sensitive to hypoxic conditions.
-
-## Evolutionary Conservation and Fungal-Specific Function
-
-The alo1 enzyme and D-erythroascorbic acid biosynthetic pathway represent a fungal-specific adaptation for antioxidant defense that differs from the L-ascorbic acid (vitamin C) synthesis found in plants and some animals. This evolutionary divergence highlights how different organisms have evolved distinct strategies for producing reducing equivalents to combat oxidative stress. The conservation of alo1 across fungal species indicates the importance of this antioxidant system for fungal survival and success in diverse environments.
-
-## Research and Biotechnological Implications
-
-Understanding the alo1 pathway has implications for both basic research into antioxidant mechanisms and potential biotechnological applications. The enzyme's role in producing a vitamin C analog could be exploited for biotechnological production of antioxidant compounds. Additionally, the potential moonlighting function in mitochondrial inheritance opens new avenues for understanding how cells coordinate metabolic enzyme function with organelle distribution during cell division.
+Direct S. pombe experiments are needed to identify the aldonolactone substrate,
+the product, and the biological process in which alo1 acts. Current PAINT and
+PomBase curation both argue against reusing the exact budding-yeast
+D-erythroascorbate biosynthesis assertion for this target without such evidence:
+PAINT withholds the exact `GO:0003885` activity from the S. pombe branch, while
+PomBase exports NOT rows for that activity and the corresponding process. The
+PAINT `GO:0019853` IRD should be read more narrowly as a pruning of the
+L-ascorbate process from fungi.
