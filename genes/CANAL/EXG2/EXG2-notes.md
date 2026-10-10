@@ -11,8 +11,8 @@
 - Tried the default `falcon` deep-research provider with `perplexity-lite`
   fallback. Both providers failed because no deep-research credentials are
   configured in this environment, so this review used cached GOA and UniProt
-  publications, UniProt, PTHR31297 PAINT data, the sibling XOG1/EXG1/SPR1
-  reviews, and manual literature searches instead.
+  publications, UniProt, PTHR31297 PAINT data, the GOA WITH/FROM seed records,
+  and manual literature searches instead.
 - PTHR31297 places C. albicans Exg2 in `PTHR31297:SF1`, the same subfamily as
   C. albicans Xog1 and budding-yeast Exg1/Spr1. The exact
   `GO:0004338 glucan exo-1,3-beta-glucosidase activity` IBD is placed on
@@ -22,8 +22,9 @@
 - The broad `GO:0009251 glucan catabolic process` row inherits from
   `PANTHER:PTN001262628`, the PTHR31297 family-root node that is seeded by
   Aspergillus SF34/SF39 exgD/exgB-like branches as well as the SF1
-  Saccharomycetes glucanases. This is the same over-scoped root IBA flagged in
-  EXG1 and SPR1.
+  Saccharomycetes glucanases. The transfer is directionally correct for a
+  beta-glucanase, but `GO:0051275 beta-glucan catabolic process` is more
+  specific for Exg2's predicted exo-1,3-beta-glucanase reaction.
 - The direct PMID:19824013 row reports a C. albicans plasma-membrane proteome
   enriched for GPI-anchored membrane proteins, but the cached abstract does not
   name EXG2. Because UniProt predicts a C-terminal GPI anchor and maps Exg2 to
