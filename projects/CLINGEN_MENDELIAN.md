@@ -2988,33 +2988,33 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**302 of 2,876 genes are complete; 2,574 remain.** CERKL adds one first
-primary campaign completion beyond checkpoint 301. Its exact final head was
-approved and passed required checks before the actual merge. There are 302
-distinct primary genes with merged campaign reviews and no completion holds.
-Eight CERKL products and the review's COMPLETE artifact status do not add counts.
-Biological uncertainty and campaign completion remain separate assessments.
+**303 of 2,876 genes are complete; 2,573 remain.** CFAP300 adds one first
+counted substantive campaign audit beyond checkpoint 302. Its existing review was
+not already a campaign completion. The final head was approved and passed both
+required checks before actual merge. There are 303 distinct primary genes with
+merged campaign reviews and no completion holds. Product counts, retained authored
+annotations and an unresolved molecular mechanism do not add counts or create a hold.
 
-The fixed completion cutoff is **2026-10-10 09:06:56 UTC**, through CERKL at
-[commit 5928e194d4a4](https://github.com/ai4curation/ai-gene-review/commit/5928e194d4a4e43bdd74b9b1f307a142107daa46).
-This update preserves the checkpoint 301 content already published on
-[tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551),
-using its authenticated [head 7005ce6da531](https://github.com/ai4curation/ai-gene-review/commit/7005ce6da5315135560efb283ebd698790a584b3)
-as the tracker preimage. That PR was still open when this follow-up was prepared;
-the tracker head is not described as a merged main snapshot. The actual main
-cutoff above authenticates CERKL's merged artifacts. Updating the same tracker
-PR preserves its history and does not count earlier completions again.
-See [checkpoint 302 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-302-2026-10-10-090656-utc).
+The fixed completion cutoff is **2026-10-10 10:35:31 UTC**, through CFAP300 at
+[commit 2f68dd87cb96](https://github.com/ai4curation/ai-gene-review/commit/2f68dd87cb96a240d03d5debc6c7f131bb7b2808).
+This follow-up preserves checkpoints 301 and 302, their history and the subsequent
+review corrections on the same [tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551).
+Its authenticated [head 13435e510e4f](https://github.com/ai4curation/ai-gene-review/commit/13435e510e4f68f6b0b345c62deed08b63996d3d)
+is the exact tracker preimage and was still open when this packet was prepared.
+That tracker head is distinct from the actual main completion cutoff and from any
+later publication checkout. Updating this PR does not count earlier completions again.
+See [checkpoint 303 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-303-2026-10-10-103531-utc).
 
-The explicit `campaign_audited_merged` counter and legacy `original_merged`
-compatibility semantics remain unchanged. Literal `$.genes` still contains
-235 historical queue objects and 235 distinct symbols. Prior updates and
-their scope clarifications remain exact; later merges and supplementary products
-are outside this cutoff.
+The `campaign_audited_merged` counter and legacy `original_merged` compatibility
+semantics remain unchanged. Literal `$.genes` still contains 235 historical queue
+objects and 235 distinct symbols. All 51 prior completion updates, their scope
+clarifications and prior progress remain exact; later merges are outside this cutoff.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
 [Checkpoint 302 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml).
+
+[Checkpoint 303 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3392,7 +3392,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CEP85L** — HGNC:21638; [lissencephaly 10](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30a3191e-5ee3-467c-afa1-27fada71f9ea-2024-09-24T170000.000Z) (MONDO:0030031; AD; Definitive).
 - [x] **CERKL** — HGNC:21699; [CERKL-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3003820-dc03-4eb1-921a-6eaee749fa9f-2022-09-01T160000.000Z) (MONDO:0800401; AR; Definitive).
 - [x] **CFAP221** — HGNC:33720; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7c841e5-2973-4f23-8603-970e9e2cbc92-2025-12-16T120000.000Z) (MONDO:0016575; AR; Definitive).
-- [ ] **CFAP300** — HGNC:28188; [ciliary dyskinesia, primary, 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bcfa4e4-37a3-43a7-9b4d-60554bc7600c-2022-09-08T110000.000Z) (MONDO:0054843; AR; Definitive).
+- [x] **CFAP300** — HGNC:28188; [ciliary dyskinesia, primary, 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bcfa4e4-37a3-43a7-9b4d-60554bc7600c-2022-09-08T110000.000Z) (MONDO:0054843; AR; Definitive).
 - [ ] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **CFAP418** — HGNC:27232; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_791b95ad-3c89-436c-aa6e-c153c1c1ea61-2024-07-11T160000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **CFAP43** — HGNC:26684; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f2622390-3981-4f40-8c28-194fb13dd35a-2026-04-09T190000.000Z) (MONDO:0016575; AR; Limited); [spermatogenic failure 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5055c70-e22e-47e5-af3b-04f3f2a0ed34-2022-12-14T200000.000Z) (MONDO:0054723; AR; Definitive).

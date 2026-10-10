@@ -66,6 +66,51 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 303 — 2026-10-10 10:35:31 UTC
+
+**303 complete / 2,573 remaining in the frozen 2,876-gene catalog.** Count only
+CFAP300's first qualifying substantive campaign audit beyond checkpoint 302.
+The primary YAML was modified, not newly created: its older review did not already
+constitute this campaign's completion. Products, retained authored annotations and
+unresolved molecular-function biology are not additional counts or completion holds.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CFAP300 | [#4537](https://github.com/ai4curation/ai-gene-review/pull/4537) | [2ce993337db4](https://github.com/ai4curation/ai-gene-review/commit/2ce993337db434922b345a71d2e62d062dfbe9e8) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4537#pullrequestreview-5478629937) | 2026-10-10T10:35:31Z | [2f68dd87cb96](https://github.com/ai4curation/ai-gene-review/commit/2f68dd87cb96a240d03d5debc6c7f131bb7b2808) |
+
+Approval was submitted at 10:32:35 UTC; [test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38038301303/job/114173278760) succeeded at 09:20:49 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38038301308/job/114184993286) succeeded at 10:32:53 UTC.
+All three gates refer to the same final head and precede the actual 10:35:31 UTC
+merge. There are no unresolved review threads. All **seven changed PR paths**
+have identical blobs at the approved-head and merge-commit trees. The **four changed
+gene-directory files** are a different scope from **all 19 recursive gene-directory
+blobs at the cutoff**, which include preserved sources and provider artifacts.
+The complete [CFAP300 tree](https://github.com/ai4curation/ai-gene-review/tree/2f68dd87cb96a240d03d5debc6c7f131bb7b2808/genes/human/CFAP300)
+`b7b7cdbf9c76ece61c8157b9a11517d6b7ef13cb` is equal at head and merge/cutoff.
+The appended queue record contains every changed-path blob and all 19 cutoff artifacts.
+
+The exact tracker preimage is open [PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551)
+[head 13435e510e4f](https://github.com/ai4curation/ai-gene-review/commit/13435e510e4f68f6b0b345c62deed08b63996d3d), preserving its
+301/302 checkpoints, three existing history records and later review corrections.
+It is not described as a merged tracker snapshot. The distinct biological cutoff
+is actual main [commit 2f68dd87cb96](https://github.com/ai4curation/ai-gene-review/commit/2f68dd87cb96a240d03d5debc6c7f131bb7b2808).
+A later publisher base cannot advance that cutoff; ROOT must guard the same six
+project preimages, preserve the PR ancestry and append genuine session history.
+The prior correction distinguishing changed artifacts from whole-directory files
+and the restored CERKL review link remain intact.
+
+Counter definitions are unchanged: `campaign_audited_merged`, legacy
+`original_merged` and `completed` are 303; `pending_followups` is zero. Literal
+`$.genes` is still **235 objects / 235 distinct symbols**, not the count of every
+nested historical gene key. All 2,876 catalog associations and frontmatter, the
+serialized queue array, all 51 prior update object texts, unrelated queue metadata
+and all previous progress text are preserved. Only CFAP300's checkbox changes;
+update 52 is appended and the JSON mirror is exact. The first unchecked literal
+catalog gene remains ACBD5. No gene science or source cache is edited.
+
+Evidence inspected and this follow-up recorded at 2026-10-10 10:51:57 UTC.
+
+[Checkpoint 303 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml).
+
 ## Completion checkpoint 302 — 2026-10-10 09:06:56 UTC
 
 **302 complete / 2,574 remaining in the frozen 2,876-gene catalog.** CERKL
