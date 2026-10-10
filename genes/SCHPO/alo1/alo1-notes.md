@@ -31,6 +31,10 @@
   localization, and orthology-transferred mitochondrial outer-membrane
   localization, paired with `NOT` rows against exact D-arabinono-1,4-lactone
   oxidase activity and dehydro-D-arabinono-1,4-lactone biosynthesis.
+- The visible GO_REF on all three PomBase IGC rows is `GO_REF:0000025`,
+  `DEPRECATED Operon structure as IGC evidence`. That deprecated operon route
+  does not explain S. pombe genomic-context inference, so these rows should be
+  followed up with PomBase while being retained by deference to the curator.
 - Cached S. cerevisiae publications, including the 1998 ALO1 enzymology paper
   and the 2025 Alo1/Myo2 study, are useful for family context but do not
   justify transferring the exact substrate, the D-erythroascorbate biosynthetic
@@ -48,8 +52,20 @@
   the forced GOA refresh.
 - `PANTHER:PTN001015900` carries the fungal `GO:0005739 mitochondrion` IBD and
   an IRD pruning `GO:0019853 L-ascorbic acid biosynthetic process` below the
-  broad `PTN000356408` placement. Do not add an ascorbate biosynthetic process
-  row.
+  broad `PTN000356408` placement. The parent GO:0019853 IBD is seeded by plant,
+  mouse and bacterial donors rather than fungal ALO1 proteins, so this IRD
+  argues against L-ascorbate biosynthesis in Dikarya but is not evidence
+  against a fungal D-erythroascorbate process.
+- The UniProt Q9HDX8 record still asserts `EC=1.1.3.37`, `RHEA:23756` and the
+  D-erythroascorbate pathway step by homology. That is now in tension with the
+  PomBase NOT rows and broad GO:0016899 assertion, and should be reported
+  upstream rather than hidden.
+- `PANTHER:PTHR43762:SF1` includes S. pombe Q9HDX8 and budding-yeast ALO1 but
+  also proteins annotated as archaeal long-chain alcohol oxidase, mycobacterial
+  DprE1 and alditol oxidase. Combined with budding-yeast ALO's relaxed
+  D-arabinono-, L-gulono- and L-galactono-1,4-lactone specificity, subfamily
+  membership alone is not enough to choose the exact in-vivo substrate for S.
+  pombe.
 
 ### Main curation decisions
 
@@ -57,7 +73,8 @@
   longer present in the current GOA export.
 - Accepted the new PomBase `NOT` rows against exact
   D-arabinono-1,4-lactone oxidase activity and
-  dehydro-D-arabinono-1,4-lactone biosynthesis.
+  dehydro-D-arabinono-1,4-lactone biosynthesis by curator deference, while
+  flagging their deprecated `GO_REF:0000025` provenance for follow-up.
 - Accepted the positive `GO:0016899` rows as the best current molecular-function
   level and kept broad `GO:0016491` and FAD-binding rows as non-core support.
 - Kept the PAINT `GO:0005739` mitochondrion IBA and the ORFeome mitochondrion
@@ -66,3 +83,8 @@
 - Did not add any `NEW` rows. Neither exact D-erythroascorbate biosynthesis,
   L-ascorbate biosynthesis, oxidative-stress response, nor the S. cerevisiae
   Alo1/Myo2 inheritance role is currently justified for S. pombe alo1.
+- Updated the BioReason-Pro SFT prediction review in the same folder to match
+  this re-review: L-gulonolactone oxidase is now `UNC` rather than `PLI` because
+  direct S. pombe substrate specificity is unresolved, while L-ascorbic acid
+  biosynthesis remains `PLI` because the PAINT IRD explicitly removes that
+  process from the Dikarya branch.

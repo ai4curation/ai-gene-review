@@ -54,4 +54,8 @@ graph TD
 Direct S. pombe experiments are needed to identify the aldonolactone substrate,
 the product, and the biological process in which alo1 acts. Current PAINT and
 PomBase curation both argue against reusing the exact budding-yeast
-D-erythroascorbate biosynthesis assertion for this target without such evidence.
+D-erythroascorbate biosynthesis assertion for this target without such evidence:
+PAINT withholds the exact `GO:0003885` activity from the S. pombe branch, while
+PomBase exports NOT rows for that activity and the corresponding process. The
+PAINT `GO:0019853` IRD should be read more narrowly as a pruning of the
+L-ascorbate process from fungi.
