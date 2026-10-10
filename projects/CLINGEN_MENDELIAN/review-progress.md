@@ -66,6 +66,66 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 310 — 2026-10-10 17:19:03 UTC
+
+**310 complete / 2,566 remaining in the frozen 2,876-gene catalog.**
+CHAT is the sole new completion beyond checkpoint 309. The existing counting
+rules and queue exceptions are unchanged: one qualifying campaign audit per
+primary gene, with no additional count or hold for products, repeated reviews,
+annotation actions or justified biological uncertainty.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CHAT | [#4572](https://github.com/ai4curation/ai-gene-review/pull/4572) | [e589d7f1f8b2](https://github.com/ai4curation/ai-gene-review/commit/e589d7f1f8b21010ea16ec68c9b76a587512177c) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4572#pullrequestreview-5480030944) | 2026-10-10T17:19:03Z | [d029f88f542f](https://github.com/ai4curation/ai-gene-review/commit/d029f88f542f1702a286982b20a89349e979c302) |
+
+CHAT approval was submitted at **17:12:28 UTC**; [test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38056392609/job/114225683545) succeeded at 14:36:38 UTC; [claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38056392616/job/114261905807) succeeded at 17:13:28 UTC.
+These gates all match the final head and precede the actual merge, with zero
+unresolved review threads. The complete final approval and review comment were
+read; remaining suggestions are explicitly nonblocking. This first campaign
+review creates the CHAT review and counts once.
+
+All **18 changed PR paths** have equal blobs in the approved-head and merge
+commit trees. The **six changed gene-directory files** are also the **six total
+recursive gene-directory blobs** at the cutoff. The complete
+[CHAT tree at the cutoff](https://github.com/ai4curation/ai-gene-review/tree/d029f88f542f1702a286982b20a89349e979c302/genes/human/CHAT)
+`5cc5a36bb01904cd8ce8c39836dc47a6a6ff2a7a` matches the approved, merge and authenticated source trees.
+Exact path, size, Git-blob and SHA-256 evidence is retained in queue update 54.
+
+The source snapshot is [commit 8cd2c9286f44](https://github.com/ai4curation/ai-gene-review/commit/8cd2c9286f44f998ce175f034a56ee6c7b49f4cc),
+the actual [tracker309 #4581](https://github.com/ai4curation/ai-gene-review/pull/4581)
+merge at **17:25:21 UTC**, after the frozen CHAT cutoff at **17:19:03 UTC**.
+The source tracker was approved at 17:14:22 UTC on
+`ded21ac6da3d0cf79152a77d1ae65ad5aa5869f6` and both required checks succeeded before merge;
+all seven tracker changed-path blobs match its approved head and merge tree.
+The times in this checkpoint use **GitHub API `merged_at`**, not commit timestamps:
+CHAT's merge commit has `committedDate` **17:19:02 UTC**, while its API merge time
+is **17:19:03 UTC**. A later publication base is a third reference point and must
+preserve the six project preimages without adding subsequent gene completions.
+
+All **147 existing records** in `history/projects/CLINGEN_MENDELIAN/`, authenticated
+by tree `f9251d3d41ff393dcc472a1a257b43acda7d81c3`, are protected. In particular, the four
+session-history links already present in the parent page remain unchanged:
+
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml`
+- `history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml`
+
+The publisher will scaffold and validate the new session history normally.
+No existing history or gene artifact is edited. The render preview uses the
+complete authenticated source-main gene-review inventory; later link availability
+can change independently of this fixed count.
+
+All 2,876 catalog associations and frontmatter, the **235-object / 235-symbol**
+serialized queue array, all **53 prior completion-update object texts**, unrelated
+queue metadata and all prior progress are preserved. Only CHAT's checkbox changes;
+update **54** is appended, with an identical JSON mirror. The first unchecked
+literal catalog entry remains ACBD5. Counter values are 310 for `completed`,
+`campaign_audited_merged` and the legacy `original_merged` alias, with zero
+`pending_followups` and 2,566 remaining.
+
+[Checkpoint 310 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T174737Z-codex-0f8ff7.yaml).
+
 ## Completion checkpoint 309 — 2026-10-10 13:12:56 UTC
 
 **309 complete / 2,567 remaining in the frozen 2,876-gene catalog.** The first
