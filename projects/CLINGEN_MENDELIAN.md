@@ -2988,25 +2988,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**276 of 2,876 genes are complete; 2,600 remain.** This checkpoint adds CDC45
-and closes AKR1D1's required source follow-up beyond published checkpoint 274.
-Both final PR heads were approved and passed the required checks before merge.
+**278 of 2,876 genes are complete; 2,598 remain.** This checkpoint adds CDC42
+and CDC73 beyond published checkpoint 276. Both final heads were approved and
+passed the required checks before merge. There are 278 distinct primary genes
+with merged campaign reviews and no completion holds at this cutoff.
+Biological DRAFT status and justified UNDECIDED annotations remain independent
+of campaign completion.
 
-There are 276 distinct primary genes with merged campaign reviews and no
-remaining completion holds at this cutoff. CDC45 adds one original reviewed
-gene; the AKR1D1 follow-up closes the existing Reactome source gate without
-counting a second original-gene merge. Biological DRAFT status and justified
-UNDECIDED annotations remain independent of campaign completion.
+The completion evidence cutoff is **2026-10-10 00:09:16 UTC**, through the CDC73
+merge, at [cutoff commit c488afbe915c](https://github.com/ai4curation/ai-gene-review/commit/c488afbe915c1b6b58ebf39c5820bb383f581910).
+The later [source main snapshot 10eda3330253](https://github.com/ai4curation/ai-gene-review/commit/10eda3330253be3140fe764020499de4f8ce8bf3)
+contains these gene merges and [tracker PR #4487](https://github.com/ai4curation/ai-gene-review/pull/4487),
+which published checkpoint 276 after this completion cutoff. Source capture
+time does not add later gene completions.
+See [checkpoint 278 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-278-2026-10-10-000916-utc).
+The preceding [checkpoint 276](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-276-2026-10-09-233332-utc)
+remains the historical baseline; open PRs and later merges are outside this cutoff.
 
-The completion evidence cutoff is **2026-10-09 23:33:32 UTC**, through the
-AKR1D1 follow-up merge, on [main commit 5c3a43a48ef7](https://github.com/ai4curation/ai-gene-review/commit/5c3a43a48ef70fac4f5438c17cd2989515e50865).
-See [checkpoint 276 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-276-2026-10-09-233332-utc).
-Open PRs and subsequent work add no completion at this cutoff. The preceding
-[checkpoint 274](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-274-2026-10-09-184944-utc)
-and its [merged tracker PR #4472](https://github.com/ai4curation/ai-gene-review/pull/4472)
-remain the historical baseline.
-
-[Checkpoint 276 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-09T235057Z-codex-dd0cc6.yaml).
+[Checkpoint 278 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T005709Z-codex-0ec475.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3356,9 +3355,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CD79B** — HGNC:1699; [agammaglobulinemia 6, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c252b2c-2183-4e7d-8ceb-69f7a01cc1d9-2021-01-26T171006.440Z) (MONDO:0012987; AR; Definitive).
 - [x] **CDAN1** — HGNC:1713; [anemia, congenital dyserythropoietic, type 1a](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c9465f7d-4fc8-49b6-aa2c-4b92eb5f8c32-2025-01-07T170000.000Z) (MONDO:0009135; AR; Definitive).
 - [x] **CDC14A** — HGNC:1718; [hearing impairment and infertile male syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_144089d2-83ec-4c6c-8b43-9a4cae801d51-2023-06-01T160000.000Z) (MONDO:0100069; AR; Strong); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e869e4b1-30e2-4d9b-9b69-124903d7b307-2025-02-25T170000.000Z) (MONDO:0019497; AR; Definitive).
-- [ ] **CDC42** — HGNC:1736; [macrothrombocytopenia-lymphedema-developmental delay-facial dysmorphism-camptodactyly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95177a3a-0dca-4945-8a44-f63697739cef-2021-10-27T162623.932Z) (MONDO:0014757; AD; Definitive).
+- [x] **CDC42** — HGNC:1736; [macrothrombocytopenia-lymphedema-developmental delay-facial dysmorphism-camptodactyly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95177a3a-0dca-4945-8a44-f63697739cef-2021-10-27T162623.932Z) (MONDO:0014757; AD; Definitive).
 - [x] **CDC45** — HGNC:1739; [Meier-Gorlin syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab0dc4e6-06ae-4f78-8393-05ac2bbb563f-2023-05-30T160000.000Z) (MONDO:0014894; AR; Definitive).
-- [ ] **CDC73** — HGNC:16783; [hyperparathyroidism 2 with jaw tumors](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5bd498b-dc86-4f2d-a51b-48baf7017a02-2019-04-19T160000.000Z) (MONDO:0007768; AD; Definitive).
+- [x] **CDC73** — HGNC:16783; [hyperparathyroidism 2 with jaw tumors](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5bd498b-dc86-4f2d-a51b-48baf7017a02-2019-04-19T160000.000Z) (MONDO:0007768; AD; Definitive).
 - [ ] **CDH1** — HGNC:1748; [CDH1-related diffuse gastric and lobular breast cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14223ff7-e6b0-4c60-bee6-df55301d2017-2024-03-22T170000.000Z) (MONDO:0100488; AD; Definitive).
 - [ ] **CDH11** — HGNC:1750; [Elsahy-Waters syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_41cee7da-44c3-49fa-b174-80ae3da5d153-2024-05-17T160000.000Z) (MONDO:0008885; AR; Definitive); [Teebi hypertelorism syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d159047f-2ee5-4406-8def-c5fe63b7ffe8-2024-05-17T160000.000Z) (MONDO:0030674; AD; Moderate).
 - [ ] **CDH2** — HGNC:1759; [agenesis of corpus callosum, cardiac, ocular, and genital syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2ed7ece4-2500-4634-9108-62140026ae86-2026-03-20T160000.000Z) (MONDO:0030065; AD; Definitive); [arrhythmogenic right ventricular cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7a03805-bf73-4d2d-9756-c666c67be119-2018-07-13T160000.000Z) (MONDO:0016587; AD; Limited); [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_73900af1-14ee-4933-b5dc-832753e6cc6c-2025-05-16T160000.000Z) (MONDO:0005021; AD; Limited).
