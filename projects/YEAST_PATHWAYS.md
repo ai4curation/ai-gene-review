@@ -142,93 +142,93 @@ evidence for arg41 while the IMP evidence is on its paralog arg7).
 Counts are per module and include genes and families shared between modules, so
 the totals are larger than the number of distinct reviews. Only committed,
 fully reviewed files are counted. These counts track the complete
-`claude/yeastpathways-01` through `claude/yeastpathways-13` series; links to
+`claude/yeastpathways-01` through `claude/yeastpathways-15` series; links to
 NEW module pages become live as those PRs land.
 
 | Module | Action | YeastPathways frames | S. cerevisiae reviewed | S. pombe reviewed | Families reviewed |
 |---|---|---|---|---|---|
-| [histidine_biosynthesis](../modules/histidine_biosynthesis.html) | ALIGN | 1 | 7/7 | 8/8 | 0/3 |
+| [histidine_biosynthesis](../modules/histidine_biosynthesis.html) | ALIGN | 1 | 7/7 | 8/8 | 3/3 |
 | [arginine_biosynthesis](../modules/arginine_biosynthesis.html) | ALIGN | 2 | 9/9 | 10/10 | 3/3 |
-| [lysine_biosynthesis_aminoadipate](../modules/lysine_biosynthesis_aminoadipate.html) | NEW | 1 | 12/12 | 8/8 | 1/7 |
+| [lysine_biosynthesis_aminoadipate](../modules/lysine_biosynthesis_aminoadipate.html) | NEW | 1 | 12/12 | 8/8 | 7/7 |
 | [branched_chain_amino_acid_biosynthesis](../modules/branched_chain_amino_acid_biosynthesis.html) | ALIGN | 4 | 12/12 | 10/10 | 12/12 |
 | [bacterial_shikimate_chorismate_biosynthesis](../modules/bacterial_shikimate_chorismate_biosynthesis.html) | GENERALIZE | 1 | 4/4 | 4/4 | 8/8 |
-| [phenylalanine_tyrosine_biosynthesis](../modules/phenylalanine_tyrosine_biosynthesis.html) | NEW | 3 | 5/5 | 4/4 | 2/5 |
-| [tryptophan_biosynthesis](../modules/tryptophan_biosynthesis.html) | ALIGN | 1 | 5/5 | 4/4 | 0/6 |
-| [phosphorylated_serine_biosynthesis](../modules/phosphorylated_serine_biosynthesis.html) | ALIGN | 1 | 4/4 | 3/3 | 0/2 |
-| [glycine_serine_interconversion](../modules/glycine_serine_interconversion.html) | NEW | 5 | 4/4 | 0/0 | 0/3 |
+| [phenylalanine_tyrosine_biosynthesis](../modules/phenylalanine_tyrosine_biosynthesis.html) | NEW | 3 | 5/5 | 4/4 | 5/5 |
+| [tryptophan_biosynthesis](../modules/tryptophan_biosynthesis.html) | ALIGN | 1 | 5/5 | 4/4 | 6/6 |
+| [phosphorylated_serine_biosynthesis](../modules/phosphorylated_serine_biosynthesis.html) | ALIGN | 1 | 4/4 | 3/3 | 2/2 |
+| [glycine_serine_interconversion](../modules/glycine_serine_interconversion.html) | NEW | 5 | 4/4 | 0/0 | 3/3 |
 | [aspartate_family_threonine_biosynthesis](../modules/aspartate_family_threonine_biosynthesis.html) | NEW | 5 | 5/5 | 5/5 | 5/5 |
-| [methionine_biosynthesis](../modules/methionine_biosynthesis.html) | ALIGN | 3 | 5/5 | 5/5 | 0/6 |
-| [fungal_sulfur_amino_acid_transsulfuration](../modules/fungal_sulfur_amino_acid_transsulfuration.html) | NEW | 4 | 4/4 | 2/2 | 0/2 |
+| [methionine_biosynthesis](../modules/methionine_biosynthesis.html) | ALIGN | 3 | 5/5 | 5/5 | 6/6 |
+| [fungal_sulfur_amino_acid_transsulfuration](../modules/fungal_sulfur_amino_acid_transsulfuration.html) | NEW | 4 | 4/4 | 2/2 | 2/2 |
 | [aps_dependent_assimilatory_sulfate_reduction](../modules/aps_dependent_assimilatory_sulfate_reduction.html) | ALIGN | 3 | 7/7 | 6/6 | 5/5 |
-| [siroheme_biosynthesis](../modules/siroheme_biosynthesis.html) | NEW | 1 | 2/2 | 0/0 | 0/3 |
-| [methionine_cycle](../modules/methionine_cycle.html) | ALIGN | 2 | 7/7 | 5/5 | 0/6 |
-| [methionine_salvage_mta_cycle](../modules/methionine_salvage_mta_cycle.html) | NEW | 2 | 9/9 | 5/5 | 0/7 |
-| [proline_metabolism](../modules/proline_metabolism.html) | GENERALIZE | 2 | 6/6 | 6/6 | 3/6 |
+| [siroheme_biosynthesis](../modules/siroheme_biosynthesis.html) | NEW | 1 | 2/2 | 0/0 | 3/3 |
+| [methionine_cycle](../modules/methionine_cycle.html) | ALIGN | 2 | 7/7 | 5/5 | 6/6 |
+| [methionine_salvage_mta_cycle](../modules/methionine_salvage_mta_cycle.html) | NEW | 2 | 9/9 | 5/5 | 7/7 |
+| [proline_metabolism](../modules/proline_metabolism.html) | GENERALIZE | 2 | 6/6 | 6/6 | 6/6 |
 | [arginine_catabolism_arginase_pathway](../modules/arginine_catabolism_arginase_pathway.html) | NEW | 2 | 5/5 | 6/6 | 5/5 |
-| [nitrogen_assimilation_glutamate_glutamine](../modules/nitrogen_assimilation_glutamate_glutamine.html) | NEW | 5 | 5/5 | 4/4 | 0/3 |
+| [nitrogen_assimilation_glutamate_glutamine](../modules/nitrogen_assimilation_glutamate_glutamine.html) | NEW | 5 | 5/5 | 4/4 | 3/3 |
 | [aspartate_asparagine_metabolism](../modules/aspartate_asparagine_metabolism.html) | NEW | 6 | 10/10 | 4/4 | 4/4 |
 | [ehrlich_pathway](../modules/ehrlich_pathway.html) | NEW | 6 | 15/15 | 0/0 | 5/5 |
-| [gaba_shunt](../modules/gaba_shunt.html) | GENERALIZE | 2 | 3/3 | 3/3 | 1/5 |
-| [polyamine_metabolism](../modules/polyamine_metabolism.html) | GENERALIZE | 4 | 7/7 | 7/7 | 0/11 |
-| [ureide_urea_catabolism](../modules/ureide_urea_catabolism.html) | NEW | 4 | 4/4 | 5/5 | 0/10 |
-| [emp_glycolysis](../modules/emp_glycolysis.html) | ALIGN | 4 | 20/20 | 14/14 | 9/14 |
+| [gaba_shunt](../modules/gaba_shunt.html) | GENERALIZE | 2 | 3/3 | 3/3 | 5/5 |
+| [polyamine_metabolism](../modules/polyamine_metabolism.html) | GENERALIZE | 4 | 7/7 | 7/7 | 11/11 |
+| [ureide_urea_catabolism](../modules/ureide_urea_catabolism.html) | NEW | 4 | 4/4 | 5/5 | 10/10 |
+| [emp_glycolysis](../modules/emp_glycolysis.html) | ALIGN | 4 | 20/20 | 14/14 | 14/14 |
 | [alcoholic_fermentation](../modules/alcoholic_fermentation.html) | NEW | 6 | 6/6 | 6/6 | 7/7 |
-| [pdh_bypass_acetyl_coa_synthesis](../modules/pdh_bypass_acetyl_coa_synthesis.html) | NEW | 2 | 9/9 | 0/0 | 3/4 |
-| [gluconeogenesis](../modules/gluconeogenesis.html) | ALIGN | 1 | 15/15 | 0/0 | 5/14 |
-| [tca_cycle](../modules/tca_cycle.html) | ALIGN | 3 | 17/17 | 16/16 | 0/12 |
-| [glyoxylate_cycle](../modules/glyoxylate_cycle.html) | NEW | 1 | 6/6 | 0/0 | 0/3 |
-| [pyruvate_metabolism](../modules/pyruvate_metabolism.html) | ALIGN | 1 | 7/7 | 6/6 | 0/5 |
-| [pentose_phosphate_pathway](../modules/pentose_phosphate_pathway.html) | ALIGN | 4 | 16/16 | 8/8 | 0/8 |
-| [glycerol_metabolism](../modules/glycerol_metabolism.html) | NEW | 2 | 9/9 | 6/6 | 2/6 |
-| [galactose_leloir_pathway](../modules/galactose_leloir_pathway.html) | ALIGN | 1 | 5/5 | 4/4 | 1/5 |
-| [xylose_oxidoreductase_pathway](../modules/xylose_oxidoreductase_pathway.html) | NEW | 2 | 3/3 | 0/0 | 2/4 |
-| [trehalose_metabolism](../modules/trehalose_metabolism.html) | NEW | 2 | 7/7 | 6/6 | 0/9 |
-| [glycogen_metabolism_fungal](../modules/glycogen_metabolism_fungal.html) | NEW | 2 | 11/11 | 0/0 | 2/8 |
-| [hexosamine_biosynthesis](../modules/hexosamine_biosynthesis.html) | ALIGN | 1 | 4/4 | 5/5 | 2/5 |
-| [fungal_chitin_chitosan_synthesis](../modules/fungal_chitin_chitosan_synthesis.html) | NEW | 2 | 7/7 | 0/0 | 0/5 |
+| [pdh_bypass_acetyl_coa_synthesis](../modules/pdh_bypass_acetyl_coa_synthesis.html) | NEW | 2 | 9/9 | 0/0 | 4/4 |
+| [gluconeogenesis](../modules/gluconeogenesis.html) | ALIGN | 1 | 15/15 | 0/0 | 14/14 |
+| [tca_cycle](../modules/tca_cycle.html) | ALIGN | 3 | 17/17 | 16/16 | 12/12 |
+| [glyoxylate_cycle](../modules/glyoxylate_cycle.html) | NEW | 1 | 6/6 | 0/0 | 3/3 |
+| [pyruvate_metabolism](../modules/pyruvate_metabolism.html) | ALIGN | 1 | 7/7 | 6/6 | 5/5 |
+| [pentose_phosphate_pathway](../modules/pentose_phosphate_pathway.html) | ALIGN | 4 | 16/16 | 8/8 | 8/8 |
+| [glycerol_metabolism](../modules/glycerol_metabolism.html) | NEW | 2 | 9/9 | 6/6 | 6/6 |
+| [galactose_leloir_pathway](../modules/galactose_leloir_pathway.html) | ALIGN | 1 | 5/5 | 4/4 | 5/5 |
+| [xylose_oxidoreductase_pathway](../modules/xylose_oxidoreductase_pathway.html) | NEW | 2 | 3/3 | 0/0 | 4/4 |
+| [trehalose_metabolism](../modules/trehalose_metabolism.html) | NEW | 2 | 7/7 | 6/6 | 9/9 |
+| [glycogen_metabolism_fungal](../modules/glycogen_metabolism_fungal.html) | NEW | 2 | 11/11 | 0/0 | 8/8 |
+| [hexosamine_biosynthesis](../modules/hexosamine_biosynthesis.html) | ALIGN | 1 | 4/4 | 5/5 | 5/5 |
+| [fungal_chitin_chitosan_synthesis](../modules/fungal_chitin_chitosan_synthesis.html) | NEW | 2 | 7/7 | 0/0 | 5/5 |
 | [dolichol_phosphate_sugar_donor_supply](../modules/dolichol_phosphate_sugar_donor_supply.html) | ALIGN | 2 | 11/11 | 11/11 | 12/12 |
-| [n_glycan_llo_assembly_cytoplasmic](../modules/n_glycan_llo_assembly_cytoplasmic.html) | ALIGN | 1 | 6/6 | 6/6 | 0/7 |
-| [n_glycan_llo_assembly_lumenal](../modules/n_glycan_llo_assembly_lumenal.html) | ALIGN | 1 | 6/6 | 6/6 | 0/4 |
-| [methylglyoxal_detoxification](../modules/methylglyoxal_detoxification.html) | ALIGN | 1 | 3/3 | 3/3 | 0/2 |
-| [glutathione_dependent_formaldehyde_detoxification](../modules/glutathione_dependent_formaldehyde_detoxification.html) | ALIGN | 1 | 3/3 | 0/0 | 1/3 |
-| [glutathione_synthesis_gamma_glutamyl_cycle](../modules/glutathione_synthesis_gamma_glutamyl_cycle.html) | ALIGN | 3 | 9/9 | 10/10 | 0/8 |
-| [glutathione_biosynthesis](../modules/glutathione_biosynthesis.html) | ALIGN | 1 | 2/2 | 2/2 | 0/4 |
-| [glutathione_thioredoxin_redox_systems](../modules/glutathione_thioredoxin_redox_systems.html) | NEW | 4 | 18/18 | 8/8 | 1/11 |
-| [tetrahydrofolate_biosynthesis](../modules/tetrahydrofolate_biosynthesis.html) | NEW | 7 | 7/7 | 7/7 | 2/11 |
-| [folate_one_carbon_interconversion](../modules/folate_one_carbon_interconversion.html) | ALIGN | 2 | 6/6 | 0/0 | 0/8 |
-| [glycine_cleavage_system](../modules/glycine_cleavage_system.html) | ALIGN | 1 | 4/4 | 4/4 | 0/4 |
-| [riboflavin_biosynthesis](../modules/riboflavin_biosynthesis.html) | ALIGN | 1 | 8/8 | 8/8 | 0/8 |
-| [eukaryotic_thiamine_biosynthesis](../modules/eukaryotic_thiamine_biosynthesis.html) | NEW | 1 | 9/9 | 7/7 | 0/5 |
-| [vitamin_b6_plp_metabolism](../modules/vitamin_b6_plp_metabolism.html) | GENERALIZE | 1 | 4/4 | 5/5 | 1/5 |
+| [n_glycan_llo_assembly_cytoplasmic](../modules/n_glycan_llo_assembly_cytoplasmic.html) | ALIGN | 1 | 6/6 | 6/6 | 7/7 |
+| [n_glycan_llo_assembly_lumenal](../modules/n_glycan_llo_assembly_lumenal.html) | ALIGN | 1 | 6/6 | 6/6 | 4/4 |
+| [methylglyoxal_detoxification](../modules/methylglyoxal_detoxification.html) | ALIGN | 1 | 3/3 | 3/3 | 2/2 |
+| [glutathione_dependent_formaldehyde_detoxification](../modules/glutathione_dependent_formaldehyde_detoxification.html) | ALIGN | 1 | 3/3 | 0/0 | 3/3 |
+| [glutathione_synthesis_gamma_glutamyl_cycle](../modules/glutathione_synthesis_gamma_glutamyl_cycle.html) | ALIGN | 3 | 9/9 | 10/10 | 8/8 |
+| [glutathione_biosynthesis](../modules/glutathione_biosynthesis.html) | ALIGN | 1 | 2/2 | 2/2 | 4/4 |
+| [glutathione_thioredoxin_redox_systems](../modules/glutathione_thioredoxin_redox_systems.html) | NEW | 4 | 18/18 | 8/8 | 11/11 |
+| [tetrahydrofolate_biosynthesis](../modules/tetrahydrofolate_biosynthesis.html) | NEW | 7 | 7/7 | 7/7 | 11/11 |
+| [folate_one_carbon_interconversion](../modules/folate_one_carbon_interconversion.html) | ALIGN | 2 | 6/6 | 0/0 | 8/8 |
+| [glycine_cleavage_system](../modules/glycine_cleavage_system.html) | ALIGN | 1 | 4/4 | 4/4 | 4/4 |
+| [riboflavin_biosynthesis](../modules/riboflavin_biosynthesis.html) | ALIGN | 1 | 8/8 | 8/8 | 8/8 |
+| [eukaryotic_thiamine_biosynthesis](../modules/eukaryotic_thiamine_biosynthesis.html) | NEW | 1 | 9/9 | 7/7 | 5/5 |
+| [vitamin_b6_plp_metabolism](../modules/vitamin_b6_plp_metabolism.html) | GENERALIZE | 1 | 4/4 | 5/5 | 5/5 |
 | [biotin_biosynthesis](../modules/biotin_biosynthesis.html) | ALIGN | 1 | 5/5 | 1/1 | 6/6 |
 | [coenzyme_a_biosynthesis](../modules/coenzyme_a_biosynthesis.html) | ALIGN | 2 | 13/13 | 8/8 | 11/11 |
-| [nad_de_novo_and_salvage_fungal](../modules/nad_de_novo_and_salvage_fungal.html) | NEW | 10 | 15/15 | 9/9 | 0/13 |
-| [heme_biosynthesis](../modules/heme_biosynthesis.html) | ALIGN | 3 | 8/8 | 8/8 | 0/5 |
-| [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) | GENERALIZE | 4 | 14/14 | 11/11 | 0/11 |
-| [isoprenoid_diphosphate_biosynthesis](../modules/isoprenoid_diphosphate_biosynthesis.html) | ALIGN | 1 | 3/3 | 3/3 | 0/3 |
-| [mevalonate_pathway](../modules/mevalonate_pathway.html) | GENERALIZE | 2 | 7/7 | 6/6 | 0/7 |
-| [ergosterol_biosynthesis](../modules/ergosterol_biosynthesis.html) | NEW | 6 | 16/16 | 18/18 | 2/10 |
-| [fatty_acid_de_novo_synthesis](../modules/fatty_acid_de_novo_synthesis.html) | GENERALIZE | 9 | 5/5 | 5/5 | 0/6 |
-| [type_ii_fatty_acid_synthesis](../modules/type_ii_fatty_acid_synthesis.html) | ALIGN | 1 | 7/7 | 6/6 | 3/14 |
-| [fatty_acid_elongation_cycle](../modules/fatty_acid_elongation_cycle.html) | ALIGN | 1 | 6/6 | 5/5 | 0/4 |
-| [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) | ALIGN | 1 | 10/10 | 0/0 | 0/9 |
+| [nad_de_novo_and_salvage_fungal](../modules/nad_de_novo_and_salvage_fungal.html) | NEW | 10 | 15/15 | 9/9 | 13/13 |
+| [heme_biosynthesis](../modules/heme_biosynthesis.html) | ALIGN | 3 | 8/8 | 8/8 | 5/5 |
+| [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) | GENERALIZE | 4 | 14/14 | 11/11 | 11/11 |
+| [isoprenoid_diphosphate_biosynthesis](../modules/isoprenoid_diphosphate_biosynthesis.html) | ALIGN | 1 | 3/3 | 3/3 | 3/3 |
+| [mevalonate_pathway](../modules/mevalonate_pathway.html) | GENERALIZE | 2 | 7/7 | 6/6 | 7/7 |
+| [ergosterol_biosynthesis](../modules/ergosterol_biosynthesis.html) | NEW | 6 | 16/16 | 18/18 | 10/10 |
+| [fatty_acid_de_novo_synthesis](../modules/fatty_acid_de_novo_synthesis.html) | GENERALIZE | 9 | 5/5 | 5/5 | 6/6 |
+| [type_ii_fatty_acid_synthesis](../modules/type_ii_fatty_acid_synthesis.html) | ALIGN | 1 | 7/7 | 6/6 | 14/14 |
+| [fatty_acid_elongation_cycle](../modules/fatty_acid_elongation_cycle.html) | ALIGN | 1 | 6/6 | 5/5 | 4/4 |
+| [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) | ALIGN | 1 | 10/10 | 0/0 | 9/9 |
 | [carnitine_shuttle](../modules/carnitine_shuttle.html) | GENERALIZE | 1 | 5/5 | 0/0 | 3/3 |
-| [triacylglycerol_biosynthesis](../modules/triacylglycerol_biosynthesis.html) | GENERALIZE | 4 | 9/9 | 8/8 | 1/10 |
+| [triacylglycerol_biosynthesis](../modules/triacylglycerol_biosynthesis.html) | GENERALIZE | 4 | 9/9 | 8/8 | 10/10 |
 | [cdp_dag_phospholipid_synthesis](../modules/cdp_dag_phospholipid_synthesis.html) | NEW | 6 | 11/11 | 11/11 | 11/11 |
-| [kennedy_pathway_phospholipid_synthesis](../modules/kennedy_pathway_phospholipid_synthesis.html) | GENERALIZE | 2 | 6/6 | 4/4 | 2/5 |
-| [phosphoinositide_biosynthesis](../modules/phosphoinositide_biosynthesis.html) | NEW | 1 | 6/6 | 6/6 | 0/5 |
-| [myo_inositol_and_inositol_phosphate_biosynthesis](../modules/myo_inositol_and_inositol_phosphate_biosynthesis.html) | NEW | 2 | 8/8 | 5/5 | 0/6 |
-| [sphingolipid_de_novo_synthesis](../modules/sphingolipid_de_novo_synthesis.html) | GENERALIZE | 1 | 15/15 | 14/14 | 3/11 |
+| [kennedy_pathway_phospholipid_synthesis](../modules/kennedy_pathway_phospholipid_synthesis.html) | GENERALIZE | 2 | 6/6 | 4/4 | 5/5 |
+| [phosphoinositide_biosynthesis](../modules/phosphoinositide_biosynthesis.html) | NEW | 1 | 6/6 | 6/6 | 5/5 |
+| [myo_inositol_and_inositol_phosphate_biosynthesis](../modules/myo_inositol_and_inositol_phosphate_biosynthesis.html) | NEW | 2 | 8/8 | 5/5 | 6/6 |
+| [sphingolipid_de_novo_synthesis](../modules/sphingolipid_de_novo_synthesis.html) | GENERALIZE | 1 | 15/15 | 14/14 | 11/11 |
 | [de_novo_purine_synthesis](../modules/de_novo_purine_synthesis.html) | ALIGN | 5 | 9/9 | 8/8 | 14/14 |
-| [purine_nucleotide_interconversion](../modules/purine_nucleotide_interconversion.html) | GENERALIZE | 4 | 10/10 | 0/0 | 4/9 |
+| [purine_nucleotide_interconversion](../modules/purine_nucleotide_interconversion.html) | GENERALIZE | 4 | 10/10 | 0/0 | 9/9 |
 | [dntp_de_novo_synthesis](../modules/dntp_de_novo_synthesis.html) | NEW | 3 | 9/9 | 0/0 | 7/7 |
 | [de_novo_pyrimidine_synthesis](../modules/de_novo_pyrimidine_synthesis.html) | ALIGN | 4 | 10/10 | 8/8 | 6/6 |
-| [purine_salvage_and_catabolism](../modules/purine_salvage_and_catabolism.html) | GENERALIZE | 4 | 7/7 | 5/5 | 0/11 |
-| [pyrimidine_salvage](../modules/pyrimidine_salvage.html) | NEW | 2 | 6/6 | 7/7 | 2/7 |
-| [oxphos](../modules/oxphos.html) | ALIGN | 1 | 3/3 | 2/2 | 0/2 |
+| [purine_salvage_and_catabolism](../modules/purine_salvage_and_catabolism.html) | GENERALIZE | 4 | 7/7 | 5/5 | 11/11 |
+| [pyrimidine_salvage](../modules/pyrimidine_salvage.html) | NEW | 2 | 6/6 | 7/7 | 7/7 |
+| [oxphos](../modules/oxphos.html) | ALIGN | 1 | 3/3 | 2/2 | 2/2 |
 | [diphthamide_biosynthesis](../modules/diphthamide_biosynthesis.html) | NEW | 1 | 7/7 | 0/0 | 5/5 |
-| [erythroascorbate_biosynthesis](../modules/erythroascorbate_biosynthesis.html) | NEW | 1 | 3/3 | 0/0 | 1/3 |
-| **Total (with overlaps)** | | | 627/627 | 420/420 | 185/547 |
+| [erythroascorbate_biosynthesis](../modules/erythroascorbate_biosynthesis.html) | NEW | 1 | 3/3 | 0/0 | 3/3 |
+| **Total (with overlaps)** | | | 627/627 | 420/420 | 547/547 |
 
 ### Remaining work
 
@@ -237,17 +237,21 @@ NEW module pages become live as those PRs land.
   their PomBase name or systematic ORF rather than the module-member label (for
   example `ups1` for HEM4, `gpt2` for ALG7); the table matches these by UniProt
   accession.
-- 134 of the 443 distinct PANTHER role families have a family review; the other
-  309 are not yet reviewed.
-- Module-family scope warnings: many modules ground a role on a whole PANTHER
-  family where the family review restricts the activity to particular subfamilies.
-  `module_validator` reports these as `FAMILY_SCOPE_RESTRICTED` warnings (a
-  subfamily outside the reviewed scope is already a blocking `FAMILY_CONFLICT`).
-  They are left as warnings rather than re-pointed in bulk, because choosing a
-  subfamily or PAINT node is a placement judgement. Examples: the carnitine
-  shuttle (PTHR24064, PTHR22589, PTHR45624), PanE/PanC in CoA biosynthesis,
-  PDXP in vitamin B6, MPDU1, and the shared BioA / GABA transaminase family
-  PTHR42684 used by two modules for two activities.
+- All 443 distinct PANTHER role families have a family review (309 are in
+  `claude/yeastpathways-14`, the last seven in `claude/yeastpathways-15`).
+- Consistency pass: the family/gene cross-check over all family reviews reports no
+  conflicts, and module validation of the YeastPathways modules reports no errors.
+  Module family selectors that named a whole PANTHER family for an activity its
+  family review scopes to particular subfamilies now list those subfamilies, so
+  `FAMILY_SCOPE_RESTRICTED` warnings dropped from 143 to 6. The six left are
+  parent-term or residue-determined scopes (for example PanK, whose activity
+  depends on a catalytic site). The remaining `FAMILY_FUNCTION_UNREVIEWED`
+  warnings are scopes the family reviews deliberately leave `UNRESOLVED`, because
+  no subfamily separates the members that have the activity.
+- Three cross-check items are known checker limits rather than disagreements:
+  zebrafish dph2 (the check ignores the contributes_to qualifier), LRO1 (one
+  mis-sourced ISO row removed while the activity is accepted in seven others), and
+  Scheffersomyces XYL1 (no PANTHER subfamily assignment for that proteome).
 - GO term migration: several module concept terms (the glycolysis route terms
   GO:0061615 and siblings, GO:0034354) are obsolete in current GO but still live in
   the ontology release this repository validates against. Each affected module
