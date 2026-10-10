@@ -290,6 +290,30 @@ The data and the curators are the same. The difference is the inference step.
    validate. The 2 errors (ATP6V1C1, NRAS) are unrelated findings supporting-text issues
    that predate this work.
 
+   **Second pass: rows already set to non-core.** The 418 HDA/HTP vesicle-type rows (220
+   genes) that reviewers had already set to KEEP_AS_NON_CORE were not candidates above.
+   `build_dossiers.py --settled` built their dossiers
+   ([`dossiers_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/dossiers_settled.yaml)),
+   and each protein was judged the same way, with one decision per protein in
+   [`decisions_settled.py`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.py).
+   Proteins reviewed in both passes (APOE, PDCD6IP, ACTB, AHCY, ALPL, ASS1, ATP6AP2) got the
+   same call in both. 104 rows in 60 genes changed
+   ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
+
+   | Change | Rows | Proteins |
+   |---|---:|---|
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 67 | secreted plasma and matrix proteins (A1BG, A2M, APOH, FN1, HPX, ITIH1–4, NID1, HSPG2) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, PSAP, SMPD1) |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 32 | mitochondrial (ATP5F1A/B, HSPA9, HSPD1, ACAT1) and ER/Golgi residents (CALR, P4HB, PPIB, PRDX4, MAN1B1, LFNG) |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 3) | 4 | APOE |
+   | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
+
+   The other 314 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
+   MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
+   accepting ALIX alone is a judgement call carried over from pass 1. All 60 edited
+   reviews validate except A2M, which has an unrelated findings supporting-text error
+   that predates this work.
+
    **Membrane-row manual review.** Candidates are all 163 HDA/HTP `membrane` rows (159
    genes) for proteins without a structured UniProt anchor feature. A protein with a
    TM segment, intramembrane region or lipid anchor is in a membrane by construction.
@@ -352,9 +376,10 @@ The data and the curators are the same. The difference is the inference step.
       (Recommendation 1), then apply them as a batch to existing reviews (2026-10-06).
 - [x] Replace the vesicle rule with row-by-row review, including the 42 flagged ACCEPTs
       (2026-10-10).
-- [ ] Extend the vesicle review to the 418 vesicle-type rows that reviewers had already
-      set to KEEP_AS_NON_CORE. They were not candidates here, but MISEV category 3–5
-      proteins among them (e.g. mitochondrial or ER residents) should be over-annotated.
+- [x] Extend the vesicle review to the 418 vesicle-type rows that reviewers had already
+      set to KEEP_AS_NON_CORE (2026-10-10; 104 changed).
+- [ ] Decide whether ESCRT subunits (TSG101, CHMP*) should be treated like ALIX, which
+      MISEV2018 places in the same category 2a.
 - [ ] Review a sample of the **unreviewed MF clusters** with the use-2/use-3 test: serine
       hydrolase activity-based probes (PMID:33827210), copper/cobalt/zinc ion binding from
       plant mitochondrial metal-affinity proteomics (PMID:20018591), kinase
@@ -375,6 +400,15 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-10: settled vesicle rows reviewed by hand
+
+At the user's request ("Yes"), extended the vesicle review to the 418 vesicle-type rows
+already set to KEEP_AS_NON_CORE (220 genes). Dossiers were built with
+`build_dossiers.py --settled`, which skips rows from the first pass, and every protein
+was read. 104 rows changed (103 to MARK_AS_OVER_ANNOTATED, 1 to ACCEPT) and 314 were
+confirmed. 59 of the 60 edited reviews validate (A2M's error predates this work). One
+history record per touched gene (60).
 
 ### 2026-10-10: vesicle rows reviewed by hand; vesicle rule withdrawn
 
