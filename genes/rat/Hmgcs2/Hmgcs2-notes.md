@@ -131,3 +131,18 @@ Reviewed all 55 rows against the 29 existing references, available primary abstr
 Read the entire `mevalonate-and-isoprenoid-synthesis/openscientist.md` report and both delivered CSV artifacts. The report supports the established ketogenic core and emphasizes the HMGCR/mitochondrial compartment distinction. It also acknowledges absence of native compartment-resolved isotope tracing. Those findings do not establish universal exclusion from the pathway. Its recommended removal/NOT rests partly on a failed literature search: PMID:7961793, independently checked against PubMed, explicitly reports cholesterol labeling after mitochondrial HMG-CoA synthase complementation and mitochondrial immunolocalization. The cached paper is abstract-only; no unobserved transport mechanism, rat construct identity or physiological in-vivo flux is inferred. The engineered system is evidence of capacity, not a new core rat pathway assertion.
 
 Live QuickGO returned 55 P22791 annotations, including GO:0008299 IEA (InterPro IPR000590/IPR010122), contrary to the report and its CSV. The earlier GO:0010142 rows are absent from that current release, matching the previously observed PAINT-slice drift, but the original source rows remain intact. Snapshot: `projects/IBA_REVIEW/rereview-2026-09-20/hmgcs2-live-annotations.json`. The report's evidence-code hierarchy is not a substitute for an ancestral-node argument. All three reviewed pathway rows remain UNDECIDED; no NOT assertion is added. Native flux and curator clarification remain follow-up questions.
+
+## Re-review 2026-10-10
+
+GOA refresh (commit a3cf70b6d) changes:
+- 2 new rows, both HMG-CoA synthase activity (GO:0004421) from human HMGCS2 (UniProtKB:P54868): one ISO (a donor-split duplicate of the mouse-donor ISO row) and one ISS. Both ACCEPT, matching the direct rat evidence [PMID:1971108 "The expression product of the cDNA in Escherichia coli has HMG-CoA synthase activity"].
+- 2 rows retired: the GO:0010142 (farnesyl diphosphate biosynthetic process, mevalonate pathway) IBA and IEA rows. GO:0010142 is obsolete (see projects/MEVALONATE_PATHWAY_OBSOLETION.md). Both stay UNDECIDED as set in the 2026-09 reviews; a sentence was added confirming that GOA has withdrawn them.
+
+Other changes:
+- The ISO HMG-CoA synthase row whose donor is MGI:MGI:101939 (mouse Hmgcs2) had a summary saying "from human ortholog". It was corrected to name the mouse donor and given a reason and support.
+- 12 ACCEPT/KEEP_AS_NON_CORE rows (acetyl-CoA metabolism, mitochondrion, HMG-CoA synthase IEA, acyltransferase, identical protein binding, ketone body biosynthesis ISO) had no `supported_by`. They now cite UniProt CC text (FUNCTION, "SUBCELLULAR LOCATION: Mitochondrion", "SUBUNIT: Homodimer.") or cached papers (PMID:1971108, PMID:17971398, PMID:8097464). No actions changed.
+- No stale UniProt quotes were found.
+
+Open questions (unchanged from the 2026-09 reviews):
+- UNDECIDED rows needing full text or physiological data: lung development (PMID:7911291), adipose tissue development (PMID:10357839), cellular response to amino acid stimulus (PMID:20508999), isoprenoid biosynthetic process (IEA), and the two retired GO:0010142 rows.
+- Response to temperature stimulus (IEP, PMID:10357839) is MARK_AS_OVER_ANNOTATED because the abstract reports expression "independent of ... the thermic environment". The full text has not been read.
