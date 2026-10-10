@@ -2988,26 +2988,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**274 of 2,876 genes are complete; 2,602 remain.** This checkpoint adds four
-verified completions beyond published checkpoint 270: CDC14A, BIN1, BLM and
-BCL10. Each final PR head was approved and passed the required checks before
-its merge.
+**276 of 2,876 genes are complete; 2,600 remain.** This checkpoint adds CDC45
+and closes AKR1D1's required source follow-up beyond published checkpoint 274.
+Both final PR heads were approved and passed the required checks before merge.
 
-There are 275 distinct primary genes with merged campaign reviews. CDC14A adds
-one original reviewed gene; the BIN1, BLM and BCL10 follow-ups close earlier
-holds without adding second original-gene merges. AKR1D1 remains incomplete
-because its required Reactome source follow-up [#4465](https://github.com/ai4curation/ai-gene-review/pull/4465)
-had not merged at this cutoff. Its checkbox remains unchecked. Biological
-DRAFT status and justified UNDECIDED annotations remain independent of
-campaign completion.
+There are 276 distinct primary genes with merged campaign reviews and no
+remaining completion holds at this cutoff. CDC45 adds one original reviewed
+gene; the AKR1D1 follow-up closes the existing Reactome source gate without
+counting a second original-gene merge. Biological DRAFT status and justified
+UNDECIDED annotations remain independent of campaign completion.
 
-The completion evidence cutoff is **2026-10-09 18:49:44 UTC**, through the BCL10
-follow-up merge, on [main commit db510ed9a7ef](https://github.com/ai4curation/ai-gene-review/commit/db510ed9a7efdcb0cbf24a3d98be7f9b07898eb3).
-See [checkpoint 274 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-274-2026-10-09-184944-utc).
+The completion evidence cutoff is **2026-10-09 23:33:32 UTC**, through the
+AKR1D1 follow-up merge, on [main commit 5c3a43a48ef7](https://github.com/ai4curation/ai-gene-review/commit/5c3a43a48ef70fac4f5438c17cd2989515e50865).
+See [checkpoint 276 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-276-2026-10-09-233332-utc).
 Open PRs and subsequent work add no completion at this cutoff. The preceding
-[checkpoint 270](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-270-2026-10-09-173648-utc)
-and its [merged tracker PR #4467](https://github.com/ai4curation/ai-gene-review/pull/4467)
+[checkpoint 274](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-274-2026-10-09-184944-utc)
+and its [merged tracker PR #4472](https://github.com/ai4curation/ai-gene-review/pull/4472)
 remain the historical baseline.
+
+[Checkpoint 276 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-09T235057Z-codex-dd0cc6.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3128,7 +3127,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **AIPL1** — HGNC:359; [AIPL1-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_594ca712-dbb5-408b-8aba-68dbfaf7f778-2023-02-02T170000.000Z) (MONDO:0100438; AR; Definitive).
 - [x] **AIRE** — HGNC:360; [autoimmune polyendocrine syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c8a4a9cc-050b-46dc-b24a-af6a53517274-2024-11-07T170000.000Z) (MONDO:0009411; AR; Definitive).
 - [x] **AK2** — HGNC:362; [reticular dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aba98528-8032-4dd4-bd1d-5381b102323c-2021-05-20T150257.066Z) (MONDO:0009973; AR; Definitive).
-- [ ] **AKR1D1** — HGNC:388; [congenital bile acid synthesis defect 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_236a7baf-2425-4882-a6de-130dfb5117ac-2024-09-27T160000.000Z) (MONDO:0009339; AR; Definitive).
+- [x] **AKR1D1** — HGNC:388; [congenital bile acid synthesis defect 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_236a7baf-2425-4882-a6de-130dfb5117ac-2024-09-27T160000.000Z) (MONDO:0009339; AR; Definitive).
 - [ ] **AKT2** — HGNC:392; [AKT2-related familial partial lipodystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_77eff07e-5764-4161-86b7-ac8289cc5461-2026-01-21T170000.000Z) (MONDO:0019192; AD; Limited); [hypoinsulinemic hypoglycemia and body hemihypertrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e618f03-4993-4f30-8a81-5f2dc72517d6-2026-03-06T170000.000Z) (MONDO:0009416; AD; Definitive).
 - [ ] **AKT3** — HGNC:393; [microcephaly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6e3b524c-5d27-43d6-a0db-4f8f7cf1f872-2021-10-26T150030.155Z) (MONDO:0001149; AD; Limited); [overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_52b1df18-387f-4c38-a655-682e4d2eb378-2021-07-29T213439.431Z) (MONDO:0100283; AD; Definitive).
 - [x] **ALAS2** — HGNC:397; [X-linked erythropoietic protoporphyria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_61e658f9-fdc9-4b3c-8788-80eb1ad83b0b-2022-03-27T181700.091Z) (MONDO:0010420; XL; Definitive).
@@ -3358,7 +3357,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CDAN1** — HGNC:1713; [anemia, congenital dyserythropoietic, type 1a](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c9465f7d-4fc8-49b6-aa2c-4b92eb5f8c32-2025-01-07T170000.000Z) (MONDO:0009135; AR; Definitive).
 - [x] **CDC14A** — HGNC:1718; [hearing impairment and infertile male syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_144089d2-83ec-4c6c-8b43-9a4cae801d51-2023-06-01T160000.000Z) (MONDO:0100069; AR; Strong); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e869e4b1-30e2-4d9b-9b69-124903d7b307-2025-02-25T170000.000Z) (MONDO:0019497; AR; Definitive).
 - [ ] **CDC42** — HGNC:1736; [macrothrombocytopenia-lymphedema-developmental delay-facial dysmorphism-camptodactyly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95177a3a-0dca-4945-8a44-f63697739cef-2021-10-27T162623.932Z) (MONDO:0014757; AD; Definitive).
-- [ ] **CDC45** — HGNC:1739; [Meier-Gorlin syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab0dc4e6-06ae-4f78-8393-05ac2bbb563f-2023-05-30T160000.000Z) (MONDO:0014894; AR; Definitive).
+- [x] **CDC45** — HGNC:1739; [Meier-Gorlin syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab0dc4e6-06ae-4f78-8393-05ac2bbb563f-2023-05-30T160000.000Z) (MONDO:0014894; AR; Definitive).
 - [ ] **CDC73** — HGNC:16783; [hyperparathyroidism 2 with jaw tumors](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5bd498b-dc86-4f2d-a51b-48baf7017a02-2019-04-19T160000.000Z) (MONDO:0007768; AD; Definitive).
 - [ ] **CDH1** — HGNC:1748; [CDH1-related diffuse gastric and lobular breast cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14223ff7-e6b0-4c60-bee6-df55301d2017-2024-03-22T170000.000Z) (MONDO:0100488; AD; Definitive).
 - [ ] **CDH11** — HGNC:1750; [Elsahy-Waters syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_41cee7da-44c3-49fa-b174-80ae3da5d153-2024-05-17T160000.000Z) (MONDO:0008885; AR; Definitive); [Teebi hypertelorism syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d159047f-2ee5-4406-8def-c5fe63b7ffe8-2024-05-17T160000.000Z) (MONDO:0030674; AD; Moderate).
