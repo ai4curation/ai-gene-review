@@ -496,3 +496,33 @@ sentence to quote.
 
 54 ACCEPT, 18 REMOVE, 9 MODIFY, 6 MARK_AS_OVER_ANNOTATED, across all 87 rows.
 `just validate ECOLI tolC` is clean with no warnings.
+
+---
+
+## 14. Live-ontology checks the PR reviewer could not run
+
+The reviewer had no web access and flagged two wording questions conditionally.
+Both were checked against the live ontology; both came out in favour of the
+current text, so nothing was changed.
+
+### 14a. `GO:0015562` does say "substance", not "solute"
+
+The type I module's description for the TolC annoton justifies the
+substrate-general term on the definition's wording. QuickGO returns:
+
+> Enables the transfer of a specific substance or related group of substances
+> from the inside of the cell to the outside of the cell across a membrane.
+
+"Substance", not "solute". The sentence is therefore within what the definition
+supports, and the comparator argument (PrtF, AprF and TolC all carry this term;
+no outer-membrane factor carries the protein-transporter term) stands
+independently of it.
+
+### 14b. The `GO:0008320` label in §6 and §9b is the current one
+
+`cache/go/terms.csv` carries "protein transmembrane transporter activity", dated
+2026-05-08. The live ontology returns **"transmembrane protein transporter
+activity"**, which is the form used above and the form the module validator
+accepted when it checked that label. The repository cache is the stale copy
+here, not these notes. Left as written; the cache will correct itself on its
+next refresh.

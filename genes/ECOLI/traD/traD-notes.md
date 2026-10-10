@@ -69,3 +69,20 @@ Within the F transfer region, TraD is the VirD4 counterpart and TraC is the
 VirB4 counterpart. On pKM101 the symbol TraB names the VirB4 counterpart. The
 symbols are not portable between plasmids, and one GOA row has already been
 attributed across that boundary (see `genes/ECOLI/traB/traB-notes.md`).
+
+---
+
+## Hierarchy check: GO:0044097 and GO:0009291 are not in the same subtree
+
+Raised in PR review, since CLAUDE.md rejects a proposed term that is an ancestor
+or descendant of one the gene already carries. Checked both directions against
+the live ontology's ancestor closure over `is_a` and `part_of`:
+
+- ancestors of `GO:0044097` (secretion by the type IV secretion system) do **not**
+  contain `GO:0009291` (unidirectional conjugation);
+- ancestors of `GO:0009291` do **not** contain `GO:0044097`.
+
+So proposing the secretion term alongside the existing conjugation term adds
+coverage rather than redundancy, and the mirror-image choice in
+`genes/ECOLI/traB` of using `GO:0044097` in preference to `GO:0009291` is
+likewise not a parent/child substitution. Both stand as written.

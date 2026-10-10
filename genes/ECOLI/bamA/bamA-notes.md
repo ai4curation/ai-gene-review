@@ -238,3 +238,36 @@ term is right for a peripheral linker and wrong for the central barrel.)
   appearing in its own WITH/FROM is correct and expected — it marks that the
   node was placed partly on this gene's own experimental annotations — and is
   not circularity.
+
+---
+
+## The GOA molecular-function gap is a curation gap, not a knowledge gap
+
+Moved here from `core_functions[0].knowledge_gaps` on PR review. CLAUDE.md
+reserves `knowledge_gaps` for things nobody knows, resolvable only by new
+experiments; this one is resolvable by curation, so it belongs in notes. The
+substance is unchanged.
+
+GOA records no molecular function for BamA beyond protein binding and chaperone
+binding, leaving the insertase activity expressed only through process and
+component terms. This review proposes `GO:0032977`, which the comparator check
+supports: yeast SAM50, the Omp85-family beta-barrel insertase of the
+mitochondrial outer membrane, carries the term by IMP, and *E. coli* YidC carries
+it by IMP and IDA. The gap appears to be a propagation failure rather than a
+curatorial judgment, since SAM50's annotation was never placed as an ancestral
+IBD and so no IBA reached the bacterial clade. Human SAMM50 and *E. coli* TamA
+are in the same position, with only protein binding in the molecular function
+aspect.
+
+**What was asserted instead, and why.** `GO:0032977` as `enables` for BamA, on
+the strength of the proteoliposome reconstitution plus the structural evidence
+that the substrate strand pairs with BamA's own lateral gate. Not asserted for
+the complex as an undifferentiated whole, and not weakened to `contributes_to`,
+since GO places the same term on SAM50 and YidC in their own right despite both
+working only within larger machines.
+
+**Why it mattered beyond this gene.** The absence of an insertase molecular
+function in GOA forced `modules/bacterial_type_v_secretion.yaml` to assert
+`GO:0032977` for BamA as an explicit curator synthesis and flag the discrepancy;
+the same would apply to any pathway model of outer-membrane protein biogenesis.
+Settling the term on the gene removes the need for that synthesis.
