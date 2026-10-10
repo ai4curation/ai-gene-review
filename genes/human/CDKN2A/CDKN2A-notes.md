@@ -1,139 +1,87 @@
-# CDKN2A (human) review notes
+# CDKN2A notes
 
-**Provenance note:** provider deep research for this gene failed (Falcon returned
-HTTP 402 Payment Required; Perplexity was not configured). No
-`CDKN2A-deep-research-*.md` file exists. This notes file is a manual literature
-synthesis from the UniProt record (P42771), the cached publications in
-`publications/`, and PubMed lookups, and it replaces the provider deep research
-for this review.
+## 2026-10-10 — ClinGen Mendelian review
 
-## Locus and products
+This new review uses authenticated main `ffaf00ab93d40e5fe2e71b283ac42f10ffb22d2f` for eligibility and existing-source bytes. The frozen catalog listed CDKN2A as unchecked; complete changed-path checks of 169 open PRs and HGNC aliases found no overlapping owner. No earlier CDKN2A notes existed at that main revision. The normal fetch produced 79 original P42771 assertions, six alternative products and 42 initial references. Every source annotation, qualifier, partner, product and fetched title is preserved. No NEW assertion is introduced.
 
-- CDKN2A (INK4a/ARF locus, 9p21) encodes two unrelated proteins from alternative
-  first exons (1alpha, 1beta) spliced to a shared exon 2 read in different frames:
-  p16INK4a (UniProt P42771, this review) and p14ARF (UniProt Q8N726, separate
-  entry). UniProt CAUTION: the P42771 proteins "are completely unrelated in terms
-  of sequence and function to tumor suppressor ARF (AC Q8N726) which is encoded by
-  the same gene."
-- [PMID:11278317 "The INK4a gene, one of the most often disrupted loci in human cancer, encodes
-  two unrelated proteins, p16(INK4a) and p14(ARF) (ARF) both capable of inducing
-  cell cycle arrest."]
-- [PMID:9529249 "The INK4a-ARF locus encodes two unrelated proteins that both function in tumor
-  suppression."]
-- All GOA rows in `CDKN2A-goa.tsv` are on P42771 (p16INK4a). None carry an isoform
-  column. Several rows, however, derive from ARF papers (see "ARF leakage" below).
+The normal default Falcon attempt timed out at its bounded limit; the genuine perplexity-lite fallback returned an insufficient-quota error. Neither produced a report. This journal and the accompanying manual evidence are explicitly manual research. Authentic normal source caches are preserved, with existing-main versions selected byte-for-byte and fresh variants archived separately.
 
-## p16INK4a: molecular function
+### Biological synthesis
 
-- Ankyrin-repeat protein of the INK4 family; binds CDK4 and CDK6 (monomeric and
-  cyclin D-bound) and inhibits their kinase activity, preventing Rb phosphorylation.
-  - [PMID:8259215 "demonstrate that p16
-    binds to CDK4 and inhibits the catalytic activity of the CDK4/cyclin D enzymes."]
-  - [PMID:9751050 "the INK4 inhibitors bind next
-    to the ATP-binding site of the catalytic cleft, opposite where the activating
-    cyclin subunit binds."]
-  - [PMID:9751050 "The INK4
-    inhibitors also distort the kinase catalytic cleft and interfere with ATP
-    binding, which explains how they can inhibit the preassembled Cdk4/6-cyclin D
-    complexes as well."]
-  - [PMID:9751050 "Tumour-derived mutations in INK4a and Cdk4 map to interface
-    contacts, solidifying the role of CDK binding and inhibition in the tumour
-    suppressor activity of p16INK4a."]
-  - [PMID:17909018 "the R24P variant is
-    specifically defective for binding to CDK4 but remains able to associate with
-    CDK6."] (familial melanoma variant; CDK4 binding loss is sufficient to phenocopy
-    p16 deficiency in fibroblasts).
-- Specificity: INK4 proteins inhibit cyclin D-CDK4/6 but not CDK2 or CDC1
-  complexes [PMID:7739547 "specifically inhibit the kinase activities of
-  CDK4 and CDK6, but do not affect those of cyclin E-CDK2, cyclin A-CDK2, or
-  cyclin B-CDC2"] (this paper characterizes mouse p18/p19 INK4c/d by comparison
-  with human p16).
+p16INK4A is an INK4 inhibitor of CDK4/6, not a kinase or cyclin-binding enzyme. Its binding limits cyclin-D-dependent phosphorylation of RB and restrains G1/S progression and proliferation; it contributes to stable arrest in senescence contexts [PMID:8259215, PMID:9751050, PMID:10208428, PMID:16243918]. The core includes nuclear and cytosolic regulatory pools. Observed subcellular localization, PAINT activity-in-compartment assertions, and the curated cytosolic INK4–CDK reaction are distinguished rather than treating staining alone as proof of activity.
 
-## p16INK4a: biological roles
+The unrelated p14ARF reading-frame product is explicitly mapped to Q8N726-1 in functional_isoforms. Its MDM2/p53 mechanism and bounded N32-fusion ligase inhibition are separate from the P42771 core [PMID:9724636, PMID:35944929]. Full primary construct and knockout checks resolve five source/product errors: one ARF/spinophilin interaction and four transfers of ARF-dependent apoptosis from the mouse p16 accession. These are not generic-binding policy removals and do not negate the valid ARF biology. No untested function is transferred to smARF, p12 or every splice product.
 
-- G1 arrest dependent on functional Rb: [PMID:7603984 "we show that
-  overexpression of p16ink4 in certain cell types will lead to an arrest in the G1
-  phase of the cell cycle. In addition, we show that p16ink4 can only suppress the
-  growth of human cells that contain functional pRB."]
-- [PMID:10208428 "induced growth arrest, inhibited DNA synthesis, and prevented
-  phosphorylation of the retinoblastoma protein (pRb) in cell lines expressing
-  functional pRb."]
-- Senescence effector: required for human fibroblast replicative senescence and
-  RAS-induced senescence [PMID:14720514 "These data provide the
-  first direct evidence that p16(INK4a) is necessary for the initiation of both
-  telomere-dependent and telomere-independent senescence in human cells."]
-- Oncogene-induced senescence: [PMID:9054499 "The arrest induced by ras is accompanied by
-  accumulation of p53 and p16, and is phenotypically indistinguishable from
-  cellular senescence. Inactivation of either p53 or p16 prevents ras-induced
-  arrest in rodent cells"]
-- Endothelial premature senescence via Rb: [PMID:16243918 "HUVECs transfected with p16-EGFP showed an increased proportion of senescent
-  cells"]; [PMID:16243918 "suppression of Rb eliminated senescence initiated
-  by either p16 or p21 overexpression."]
-- Telomere-independent: [PMID:15149599 "These pathways do not affect expression of p16, which
-  was upregulated in a telomere- and DNA damage-independent manner in a subset of
-  cells."]
-- SAHF: [PMID:16901784 "HMGA proteins cooperate with the
-  p16(INK4a) tumor suppressor to promote SAHF formation and proliferative arrest"].
-  Abstract does not state that p16 protein itself localizes to SAHFs; full text not
-  available here.
-- Biomarker of aging and senescent cells:
-  [PMID:15520862 "expression of p16INK4a and Arf markedly increases in
-  almost all rodent tissues with advancing age"];
-  [PMID:22048312 "we made use of a
-  biomarker for senescence, p16(Ink4a), to design a novel transgene, INK-ATTAC,
-  for inducible elimination of p16(Ink4a)-positive senescent cells"]. Note: the
-  senescence-marker role is about p16 *expression*; the protein's mechanistic
-  contribution to senescence is enforcement of the G1 arrest via CDK4/6-Rb.
+### Annotation decisions and standing authority
 
-## Peripheral / single-study activities (p16)
+Final actions are 32 ACCEPT, 24 MODIFY, 15 KEEP_AS_NON_CORE, five REMOVE, two UNDECIDED and one MARK_AS_OVER_ANNOTATED. The 24 refinements comprise 23 source-specific CDK4/6 binding assertions plus one population-proliferation correction. Distinct source rows are preserved even when their replacement terms coincide.
 
-- NF-kB p65 binding and repression of NF-kB transactivation upon overexpression
-  [PMID:10353611 "Overexpression of
-  INK4 molecules suppresses the transactivational ability of NF-kappaB
-  significantly."]
-- Integrin alphavbeta3-dependent spreading inhibited by p16 or CKI peptides
-  [PMID:10205165 "Expression of full-length p16(INK4a) blocks alphavbeta3 integrin-dependent cell
-  spreading on vitronectin but not collagen IV."]
-- PCNA binding and pol delta inhibition (one affinity-proteomics study)
-  [PMID:17955473 "p16(ink4a) interacts directly with the DNA
-  polymerase delta accessory protein PCNA and thereby inhibits the polymerase
-  activity."]
-- Other binary interactors (ISOC2, BRG1/SMARCA4, GMNN, DEAF1, HNRNPU, CRELD2,
-  TDRD7) from Y2H/microarray screens; functional relevance unclear.
-- RNA binding: only from an mRNA interactome capture (HDA, PMID:22681889); no
-  dedicated evidence.
-- Nuclear import: p16 enters the nucleus; familial melanoma mutation increases nuclear
-  accumulation via RanGDP/ankyrin-repeat code [PMID:24855949 "is acquired by the most common familial melanoma-associated CDKN2A
-  mutation, leading to nuclear accumulation of mutant p16ink4a."]
+The [immutable project instruction](https://github.com/ai4curation/ai-gene-review/blob/ffaf00ab93d40e5fe2e71b283ac42f10ffb22d2f/projects/CLINGEN_MENDELIAN.md#curation-instructions) is the authority for supported generic binding retention. It says to retain a supported, biologically correct GO:0005515 annotation as KEEP_AS_NON_CORE when no evidence-backed, more specific replacement has been established. It also requires evidence-backed MODIFY and unresolved UNDECIDED. This explicit user instruction overrides the annotation-reviewer skill's general informational-exclusion recommendation; it does not verify an uninspected pair or establish a narrower activity from a partner name alone.
 
-## ARF (p14ARF, Q8N726) — separate product, not this entry
+Protein-kinase binding refinements rely on verified CDK4/6 associations. Their screen methods do not individually establish inhibition; p16 inhibitor activity has separate biochemical support. Other source-linked associations remain non-core at their measured resolution. IntAct, BioGRID and GOA may share curation provenance and are not counted as independent replication.
 
-- [PMID:9529249 "We show here that
-  ARF binds to MDM2 and promotes the rapid degradation of MDM2."]
-- [PMID:9529248 "suggests that p19Arf functions mechanistically to prevent MDM2's neutralization
-  of p53."]
+The negative cell-growth row measured serial viable-cell counts, DNA synthesis, colonies and cell-cycle profiles; it is refined to negative regulation of cell population proliferation, with early cytostasis separated from later death [PMID:10208428]. The Ras IEP assertion is over-annotated as a relay role: induced p16 and delayed arrest do not show that p16 relays the Ras signal [PMID:9054499]. Non-core matrix adhesion and NF-kappaB regulation retain the exact assay contexts rather than becoming additional core functions.
 
-### ARF leakage into P42771 annotations
+Two explicit uncertainties remain. The RNA-capture dataset has a positive classIII CDKN2A entry but does not resolve p16-specific peptides versus ARF. The senescence-focus source supports formation/arrest but its inaccessible full experiment leaves p16 residence in the focus unadjudicated. These are evidence-bound uncertainties, not negative functional claims.
 
-- GO:0005515 IPI PMID:11278317 (spinophilin/PPP1R9B): paper is about ARF
-  [PMID:11278317 "the
-  human homologue of spinophilin/neurabin II, a regulatory subunit of protein
-  phosphatase 1 catalytic subunit specifically interacts with ARF"]. Mapped to the
-  p16 accession; belongs on Q8N726.
-- GO:0034393 and GO:2000111 (ISS from mouse P51480, and Ensembl IEA projections of
-  the same): source paper is a p19ARF knockout study
-  [PMID:20381282 "p19(ARF) deficiency significantly attenuates
-  apoptosis both in atherosclerotic lesions and in cultured macrophages and
-  vascular smooth muscle cells"]. Mouse P51480 is the mouse p16 accession; the
-  ISS and the Ensembl projection therefore carry an ARF phenotype onto p16 in both
-  species. Should be on ARF (Q8N726 / mouse Q64364), not P42771.
+PAINT assertions retain their phylogenetic meaning. Neither a short donor list nor target-self support is treated as weakness/circularity. Exact ancestral node placement was not reconstructed; independently established target function and the absence of a specific loss claim support retention. ARBA and location-mapping rows likewise retain provenance without claiming a newly reconstructed whole rule.
 
-## Curation decisions summary
+### Source access
 
-- Core MF: GO:0004861 CDK serine/threonine kinase inhibitor activity (CDK4/6).
-- Core BP: negative regulation of G1/S transition (GO:2000134), negative regulation
-  of CDK activity, negative regulation of cell population proliferation, cellular
-  senescence (incl. replicative and oncogene-induced).
-- Generic protein binding: REMOVE, except CDK4/6 rows with direct inhibitory
-  evidence, which are MODIFIED to GO:0004861.
-- ARF-derived rows: REMOVE from P42771 (flag for transfer to Q8N726).
+The [manual primary evidence](CDKN2A-manual-evidence.md), [interaction extract](CDKN2A-interaction-evidence.json), [screen extract](CDKN2A-screen-evidence.json) and [product/donor extract](CDKN2A-product-evidence.json) provide source URLs, exact record fields and bounded assay/construct interpretation. Existing abstract-only caches were not rewritten to imitate full text. Reference review notes state both the cache status and actual external access; no full-text-unavailable flag contradicts a successful external reading.
+
+No new quotations appear in this notes journal. Short primary anchors appear once each in YAML or the manual-evidence file. The authoring audit counts repeated excerpts across all authored files against a 25-word-per-source limit; this is an authoring constraint, not an asserted repository validator rule.
+
+### Reference reading ledger
+
+- [PMID:10205165](https://pubmed.ncbi.nlm.nih.gov/10205165/): Selected publication cache is abstract-only. Authentic full publisher HTML was independently retrieved and selected Results, Figure 10 and Methods read; human VUP15 full-length p16 experiments are distinct from acute CKI-peptide assays. The earlier attempted JCB URL was unrelated and unsuccessful and supplies no evidence.
+- [PMID:10208428](https://pubmed.ncbi.nlm.nih.gov/10208428/): Selected publication cache is abstract-only. Authentic full publisher PDF selected Results, Figure 2 and construct/counting Methods were independently read. Human p16 and human A549 are distinguished from mouse MT1A2; proliferation endpoints are not individual-cell biomass measurements.
+- [PMID:10353611](https://pubmed.ncbi.nlm.nih.gov/10353611/): Selected publication cache is abstract-only. Authentic full publisher PDF Figures 1–4 and associated Methods/Results were read: human tagged/endogenous p16–RELA association, recombinant overlay and NF-kappaB reporter effects. No constitutive or universal interaction is claimed.
+- [PMID:11278317](https://pubmed.ncbi.nlm.nih.gov/11278317/): Abstract cache retained. Full author manuscript Methods and Figure 2 establish ARF constructs rather than P42771 p16. The paper is valid ARF biology but miscited for this p16 source assertion; exact construct/reading-frame distinction was independently checked.
+- [PMID:14720514](https://pubmed.ncbi.nlm.nih.gov/14720514/): Abstract cache plus selected original publisher Methods accessed through browser indexing; exon-1alpha p16 siRNA is distinguished from ARF. No complete full-paper archive or new figure-pixel inspection is claimed. Positive replicative-senescence phenotype is limited to the tested human cells.
+- [PMID:15149599](https://pubmed.ncbi.nlm.nih.gov/15149599/): Abstract-only. It distinguishes telomere-associated ATM/p53/p21 signaling from independently upregulated p16 in a subset of cells. No wrong-paralog or negative p16-function claim is based on its title; broad established p16 functions retain independent primary support.
+- [PMID:15232106](https://pubmed.ncbi.nlm.nih.gov/15232106/): Abstract plus exact source-linked IntAct human pair/method records. These record-level checks support the three protein-array assertions; the complete article/supplement was not re-read.
+- [PMID:16243918](https://pubmed.ncbi.nlm.nih.gov/16243918/): Abstract cache retained. Selected full author-uploaded manuscript Results and Figure 2/4–7 descriptions were read through browser indexing. Direct HTTP retrieval failed; successful indexed full text is distinct from that failed download. The p16–EGFP nuclear/cytoplasmic localization is explicitly reported as data not shown, not newly inspected image data.
+- [PMID:16901784](https://pubmed.ncbi.nlm.nih.gov/16901784/): Abstract-only despite bounded publisher/repository attempts. It positively supports p16 cooperation in proliferative arrest/transcriptional repression; the exact p16 focus-localization experiment remains inaccessible and unresolved.
+- [PMID:17517622](https://pubmed.ncbi.nlm.nih.gov/17517622/): Genuine full cached Results and expression Methods read. Figure 2e describes p16/CDK4 as a positive control even though the article foregrounds PFTK1. The title is not used to reject the target assertion.
+- [PMID:17658461](https://pubmed.ncbi.nlm.nih.gov/17658461/): Abstract-only. The primary abstract explicitly reports p16/ISOC2 binding with pull-down/co-IP and tagged colocalization. Species/construct details beyond the abstract were not inferred, and no enzymatic function is transferred from the ISOC2 name.
+- [PMID:17909018](https://pubmed.ncbi.nlm.nih.gov/17909018/): Abstract plus exact human pair, host and mutant features in IntAct. Wild-type controls and A20P/R24P comparisons remain distinct. Full article pixels were not newly inspected.
+- [PMID:17955473](https://pubmed.ncbi.nlm.nih.gov/17955473/): Abstract plus exact human PCNA/MCM6/CDK pair and assay records from IntAct. Source-level assay identity was checked; no claim of reading the complete article or original MS peptides.
+- [PMID:19149898](https://pubmed.ncbi.nlm.nih.gov/19149898/): Selected full cached Results/Figures 1–3, BRG1-depletion experiments and human construct/co-IP Methods read. Native p16/BRG1 association is supported; the study does not establish that BRG1 is required for the tested p16 arrest/senescence.
+- [PMID:20381282](https://pubmed.ncbi.nlm.nih.gov/20381282/): Abstract cache retained. Full author manuscript Methods/Results/Figures 4–5 and supplement genotyping/Figure S2 read independently. ARF deficiency and retained p16 resolve the source-product mismatch; current human/mouse GOA and UniProt mappings checked. The separate historical Ensembl GO assertion was not recovered.
+- [PMID:21988832](https://pubmed.ncbi.nlm.nih.gov/21988832/): Full cache available; exact target pair/method/host records inspected for four interactions. Human protein origin is distinct from the yeast assay host; target-record verification is not independent replication.
+- [PMID:22681889](https://pubmed.ncbi.nlm.nih.gov/22681889/): Abstract cache retained. Authentic author thesis reproduces primary Table S1; the CDKN2A row and class definition were read and PDF page 147 visually inspected. Gene-level class III capture is positive, but p16-versus-ARF peptide/accession resolution remains unavailable.
+- [PMID:23455922](https://pubmed.ncbi.nlm.nih.gov/23455922/): Abstract plus exact source-linked IntAct tagged CDK4/p16 AP-MS record; no independent full supplement or peptide inspection.
+- [PMID:23602568](https://pubmed.ncbi.nlm.nih.gov/23602568/): Abstract plus exact source-linked human CDK4/6–p16 TAP records. These establish association, not inhibition by the assay alone; complete supplements were not newly inspected.
+- [PMID:24855949](https://pubmed.ncbi.nlm.nih.gov/24855949/): Abstract plus exact human pair records, with wild-type and p16 residue53/87 mutation effects retained. The complete article was not newly inspected; the source-specific binding claim does not require inferring an import mechanism for every variant.
+- [PMID:24981860](https://pubmed.ncbi.nlm.nih.gov/24981860/): Abstract plus authentic source-linked BioGRID 2941238 human affinity-capture MS record. Original peptide-level product assignment was not re-read; retention of GOA P42771 mapping is explicit and supported by independent p16/CDK4 evidence.
+- [PMID:26496610](https://pubmed.ncbi.nlm.nih.gov/26496610/): Abstract plus exact source-linked human CDK4/p16 tagged affinity-purification record. No new stoichiometric or direct-interface claim.
+- [PMID:27229929](https://pubmed.ncbi.nlm.nih.gov/27229929/): Full cached Methods plus authentic publisher supplementary Table S5A row594 and BioGRID2380823. Human ORFeome/Y2H gene pair confirmed; the exact p16-versus-ARF ORF sequence was not independently recovered. Retention defers to GOA product mapping with independent p16/geminin association evidence.
+- [PMID:28514442](https://pubmed.ncbi.nlm.nih.gov/28514442/): Full cache available; exact source-linked HEK293T affinity-purification pair records inspected. No kinase activation/inhibition is inferred from AP-MS alone.
+- [PMID:32707033](https://pubmed.ncbi.nlm.nih.gov/32707033/): Full cache available; exact source-linked human pair/host/tag records inspected. Human HEK293 Flp-In T-REx pull-down association is distinct from an inhibition assay.
+- [PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/): Full cache available; exact human HEK293T source records inspected. Repeated database representations are not independent replication and are not generalized to HCT116 for these specific rows.
+- [PMID:35271311](https://pubmed.ncbi.nlm.nih.gov/35271311/): Accessible original article text plus original official processed interaction CSV lines4263/4264 and library metadata line220 inspected. Endogenous N-terminal tag and P42771/p16 transcript identify the bait; CDK4 protein-group accession ambiguity is retained.
+- [PMID:7603984](https://pubmed.ncbi.nlm.nih.gov/7603984/): Abstract-only. Human RB-dependent growth arrest and separate mouse fibroblast comparison are explicit. The positive bounded result supports p16 antiproliferative function without reconstructing unavailable full methods.
+- [PMID:7739547](https://pubmed.ncbi.nlm.nih.gov/7739547/): Abstract-only. The source foregrounds mouse p18/p19 INK4 proteins; this alone cannot adjudicate all human p16 controls. Correct established p16 inhibitor/process assertions are retained with independent direct p16 evidence, not removed by title inference.
+- [PMID:8259215](https://pubmed.ncbi.nlm.nih.gov/8259215/): Abstract cache retained. Full authentic publisher PDF selected Results, Figures1–3 and Methods read: 148-residue historical human p16 clone, endogenous human complexes and purified His-p16 inhibition in a reconstituted CDK4/cyclinD2 GST-RB kinase assay. Neighboring p21 article on first printed page is excluded.
+- [PMID:9054499](https://pubmed.ncbi.nlm.nih.gov/9054499/): Abstract cache retained. Full university-hosted primary PDF selected Results/Figures2–6, Discussion and Methods read. Human IMR90, ratREF52 and broader E1A results are distinguished; p16 induction does not demonstrate a Ras-relay activity.
+- [PMID:9751050](https://pubmed.ncbi.nlm.nih.gov/9751050/): Abstract plus exact IntAct crystallographic participant record and authentic PDB1BI7 metadata. Human P42771-mapped156-residue chain verified. Complete publication body was not newly read; structural entry resolution3.4angstrom is not relabeled2.8.
+- [PMID:9724636](https://pubmed.ncbi.nlm.nih.gov/9724636/): Genuine new normal abstract; full publisher HTML selected human ARF/MDM2/p53 Results and Methods independently read. MDM2-dependent ternary co-IP does not demonstrate direct ARF–p53 binding.
+- [PMID:35944929](https://pubmed.ncbi.nlm.nih.gov/35944929/): Genuine full normal cache. Selected Results/Figures3–5 and expression/purification/pull-down/lysine-discharge Methods read independently. Engineered N32 ARF/GFP/MDM2 fusion constructs support the bounded ARF inhibitor mechanism; no full-length untagged assay is claimed.
+
+
+## 2026-10-10 accession and source follow-up
+
+This entry supersedes the earlier functional-class placement and four shared interaction reasons; the preceding journal is preserved verbatim. The actual PR-head [alternative-ORF rule](https://github.com/ai4curation/ai-gene-review/blob/ae12b837e6e617a8f6da914e18e43264c4daf7f3/CLAUDE.md#alternative-orf-peptides-one-folder-per-uniprot-accession) requires the unrelated ARF protein to have its own accession folder. Both functional_isoforms entries are removed from this P42771 review. The primary p16 inhibitor core remains. UniProt's six alternative-product descriptions, including external Q8N726 entries, remain unchanged; the source listing is not declared erroneous. [The separate Q8N726 review](../CDKN2A__Q8N726/CDKN2A__Q8N726-ai-review.yaml) substantively reviews its own 72 seeded annotations. It does not synthesize ARF source tags on p16 rows or merely relocate the old assertions.
+
+The five p16 product-mismatch actions remain REMOVE after the prior full primary construct/genotype assessment. The valid ARF experiments remain described in the prior evidence and accession-specific discussion, but are not manufactured into new transferred annotations. The full-length human ARF–spinophilin assay and mouse ARF apoptosis findings do not establish p16 activities.
+
+RNA row 2 remains UNDECIDED. H1 is genuinely named the label-swap experiment; the raw table is heavy/light. Light is crosslinked in L1/L2 and heavy in H1, so normalized crosslinked/control log2 enrichment is +3.31 and +1.39, respectively, yielding mean +2.35. Both measured observations enrich, only L1 exceeds threefold, and L2 is missing. Neither class III nor lack of a canonical RNA-binding domain proves an erroneous interaction. The inspected gene-symbol row and protein-group Methods still do not resolve P42771 versus Q8N726 peptides.
+
+Rows 21–24 now have individual partner reasons. Authentic PMID:21988832 supplementary Table S1 identifies the bait as p16; Table S2 and eight exact positive IntAct records support engineered DEAF1, HNRNPU, TDRD7 and CRELD2 associations. The first three remain non-core with compatible intracellular context. CRELD2 becomes UNDECIDED: its signal peptide/ER routing raises a native encounter question that the fragment/tag/lysis assays do not settle. Positive assays are acknowledged; no artifact or impossible interaction is asserted. The compact [source extract](CDKN2A-followup-evidence.json) preserves literal pair, method, host and source records. These database records describe the original experiments, not independent replication.
+
+The [standing project instruction](https://github.com/ai4curation/ai-gene-review/blob/e2c5e7f01a9f1af595ca96c475b1e75b49e07d88/projects/CLINGEN_MENDELIAN.md#curation-instructions) continues to govern supported generic association. All 79 annotation source objects, six products and selected existing caches are unchanged. No new quotations are authored in this append; historical quotations above are inherited. No NEW annotation is added.
+
+## 2026-10-10 — second review follow-up
+
+The RNA-binding question now asks both which CDKN2A product supplied the captured peptides and whether independent direct RNA-binding assays on defined p16 establish the interaction and its specificity. Product resolution alone would not settle the functional interpretation. The existing UNDECIDED action and source-specific RNA evidence assessment are unchanged, as are all 79 source assertions, products and other decisions.

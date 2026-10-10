@@ -3,7 +3,7 @@ title: "Microproteins (sORF-encoded peptides)"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
-genes: [STRIT1, MRLN, ERLN, SLN, PLN, MTLN, UQCC6, NBDY, MYMX, SPAAR, PIGBOS1, SMIM43, TUNAR, ASDURF, MLDHR, MARCHF6-DT, CLMB, TZMP1, SMIM1, SMIM22, APELA, SNRPGP15, PMCHL1, DPH3P1, GNG5B, SMIM26, P3R3URF, ADIG]
+genes: [STRIT1, MRLN, ERLN, SLN, PLN, MTLN, UQCC6, NBDY, MYMX, SPAAR, PIGBOS1, SMIM43, TUNAR, ASDURF, MLDHR, MARCHF6-DT, CLMB, TZMP1, SMIM1, SMIM22, APELA, SNRPGP15, PMCHL1, DPH3P1, GNG5B, SMIM26, P3R3URF, ADIG, MICOS10, SMIM3, TINCR, FBXW7-AS1, SNURF, C18orf32, C8orf17, C2orf15, KIAA0040, LINC01587, SMIM10L1, NLRP2B, SMIM45, PRAC2, SEPTIN14P20]
 ---
 
 # Microproteins (sORF-encoded peptides)
@@ -323,6 +323,12 @@ sequence still supports the specific activity or location:
   - secretion-dependent hormone activity without a signal peptide (`PMCHL1`, `PMCHL2`);
   - transcription regulation without DNA-binding zinc fingers (`ZNF788P`);
   - process and location terms with nothing locus-specific behind them.
+- The locus type decides which half of the rule applies to process and location rows. On a
+  pseudogene locus with weak protein evidence (PE5, no transcript support), those rows are
+  removed and only residue-supported MF rows are flagged. On a protein-coding locus whose ORF
+  is intact but whose product is undetected (`GNG5B`: HGNC protein-coding, MANE, CaaX motif
+  kept, PE3), every row is flagged as over-annotated instead, because a real product is
+  plausible and the inherited terms are not contradicted by anything.
 - The rule was written down after PR review found it had been applied inconsistently. SNRPGP15's
   RNA binding had been changed to over-annotated, which also resolved a CI conflict with the
   PTHR10553 family review (which scopes RNA binding family-wide), while DPH3P1's equivalent rows
@@ -345,6 +351,58 @@ sequence still supports the specific activity or location:
 4. **Census caveat.** The rule-based census was wrong for two of the seven: `LITAFD` is a
    real conserved gene, and `GNG5B` has been promoted to protein-coding. Tier assignments from
    the census should be read as leads to check, not conclusions.
+
+## Tier 4 results (2026-10-08)
+
+Tier 4 covered the rest of the census's sORF-class entries that carry GO rows (12 with
+protein-level evidence, 4 without), plus the two classic regulins `SLN` and `PLN` as
+comparators. All 18 are reviewed and validated: 386 GOA rows, of which 116 ACCEPT,
+16 KEEP_AS_NON_CORE, 22 MARK_AS_OVER_ANNOTATED, 21 MODIFY, 208 REMOVE and 3 UNDECIDED,
+plus 3 NEW. Bare `protein binding` accounts for 197 of the 208 removals: 58 of 60 rows on
+`SMIM3`, 54 of 64 on `SMIM1` and 62 on `PLN`, almost all from HuRI-type yeast two-hybrid
+screens with unrelated membrane partners. This is the STRIT1 pattern again: single-helix
+microproteins are "sticky" in Y2H.
+
+| entry | rows | outcome | note |
+|---|---:|---|---|
+| `PLN` | 139 | 39 ACCEPT, 65 REMOVE, 16 over-annotated, 10 MODIFY, 8 non-core, 1 UNDECIDED | core: ATPase inhibitor activity (GO:0042030) on SERCA2a, relieved by phosphorylation; homopentamer reservoir. Heart rate over-annotated (the null mouse has normal heart rate) |
+| `SLN` | 29 | 15 ACCEPT, 5 MODIFY, 5 REMOVE, 3 non-core, 1 over-annotated | generic enzyme inhibitor/regulator terms → GO:0042030; Ca2+ transport terms → GO:1902081, since SLN regulates the pump and does not carry Ca2+ |
+| `MICOS10` | 24 | 16 ACCEPT, 8 REMOVE, 1 NEW | NEW membrane bending activity (GO:0180020) by ISS from yeast Mic10 (glycine motifs conserved); SAM complex HDA row removed, as in the APOO/APOOL reviews |
+| `SMIM1` | 64 | 8 ACCEPT, 54 REMOVE, 1 MODIFY, 1 non-core | Vel antigen; an IBA for *nucleate* erythrocyte development (zebrafish donor) on a species whose red cells lose the nucleus → erythrocyte differentiation |
+| `SMIM3` | 60 | 1 ACCEPT, 58 REMOVE, 1 over-annotated | membrane only; no function known |
+| `TINCR` | 8 | 6 ACCEPT, 2 non-core, 2 NEW | NEW SUMO binding (IDA) and positive regulation of epithelial cell differentiation (IMP, start-codon knockout with recoded rescue; one group, another saw no effect) |
+| `FBXW7-AS1` (DEspR) | 9 | 4 ACCEPT, 4 MODIFY, 1 REMOVE | GPCR-defined terms on a single-pass 85-aa protein → transmembrane signaling receptor activity; "VEGF receptor" terms → the assayed ligand is the VEGF-A *signal peptide*. All ligand data from one lab; the authors' own MS did not detect the protein |
+| `SNURF` | 5 | 4 ACCEPT, 1 REMOVE | **name collision**: the ATPase-binding IEA comes from a mouse IPI where "SNURF" is RNF4 (residues 20–177 cannot exist in a 71-aa protein); fix belongs at MGI |
+| `C18orf32` | 9 | 5 ACCEPT, 3 REMOVE, 1 over-annotated | ER/lipid droplet. Its best-supported biology, a requirement for PGAP1-mediated GPI inositol deacylation (and a GPI-deficiency disorder), is not in GOA; not annotated because PGAP1 does the step |
+| `NLRP2B` | 11 | 9 ACCEPT, 2 non-core | pyrin-only NF-κB dampener; endogenous protein never detected; the NOT IL-1β/NLRP3 rows are informative against the PYDC2 paralog |
+| `SEPTIN14P20` (RBRP) | 3 | 2 ACCEPT, 1 MODIFY | residues 1–47 are identical to SEPTIN14 383–429, contradicting the paper's "no homologs" claim and weakening its antibody/MS existence evidence (marked DISPUTED) |
+| `SMIM45` | 6 | 1 ACCEPT, 5 REMOVE | **sequence swap**: the experimental rows (PMID:36593289) describe the downstream 107-aa hominoid ORF; UniProt replaced the entry's sequence with the conserved 68-aa upstream ORF in 2023_03 and the rows stayed |
+| `C8orf17` | 8 | 2 ACCEPT, 2 REMOVE, 2 over-annotated, 2 UNDECIDED | PE1, but Ensembl transcript is TEC with no orthologues |
+| `C2orf15` | 6 | 5 REMOVE, 1 over-annotated | Y2H binding and one RNA-capture hit |
+| `LINC01587` | 1 | 1 REMOVE | TAS nervous system development from a differential-display methods paper |
+| `KIAA0040`, `SMIM10L1`, `PRAC2` | 1, 1, 2 | ACCEPT | location only |
+
+### What Tier 4 adds
+
+1. **Annotations outlive the sequence they were made on.** `SMIM45` is the third case after
+   `ZNF788P` and `SNRPGP15`: the experiment was on a 107-aa product that no longer has an
+   accession, and the rows now sit on an unrelated 68-aa protein. A bicistronic locus makes
+   this worse, because both products share the symbol and the transcript. The upstream fix is
+   for UniProt to give the 107-aa product its own entry and move the statements.
+2. **Old names collide with new genes.** `SNURF` was once also a name for RNF4, and an
+   IEA transferred an RNF4 interaction onto the 71-aa uORF peptide. Microprotein genes often
+   reuse short, generic names, so symbol-based text mining and orthology transfer are both
+   exposed.
+3. **Existence claims for alt-ORF peptides need a parent check.** RBRP (`SEPTIN14P20`) is
+   largely septin sequence, so antibody and MS evidence that does not exclude SEPTIN14 does
+   not establish the peptide. This is the `SNRPGP15` shared-peptide problem in another form.
+4. **Regulin MF pattern (Plan item 7).** `PLN`, `MRLN` and `ERLN` now carry GO:0042030
+   ATPase inhibitor activity, and the `SLN` review recommends the same; GOA's SLN rows used
+   only generic enzyme inhibitor/regulator terms, which are not parents of GO:0042030.
+   `STRIT1` (DWORF) carries GO:0141109 transporter activator activity, which is the remaining
+   asymmetry: either DWORF moves to ATPase activator activity (GO:0001671) or the inhibitors
+   move to transporter inhibitor activity (GO:0141110, which PLN also has by IDA). Both reviews
+   leave this as a suggested question for GO.
 
 ## Naming alternative-ORF peptides (vs isoforms and polyproteins)
 
@@ -414,13 +472,18 @@ What this does not solve:
    - `MTLN`: its regulatory role in respiratory supercomplex assembly;
    - SHMOOSE (`C0HM83`): MICOS complex binding.
    Each should become a `proposed_new_terms` entry with a scoped definition.
-7. Follow-up: settle the regulin MF pattern (ATPase vs transporter inhibitor/activator terms)
-   across PLN, SLN, MRLN, ERLN and STRIT1, and review SLN and PLN as comparators.
+7. Follow-up: settle the regulin MF pattern. SLN and PLN are now reviewed; the inhibitors
+   converge on GO:0042030, and the open choice is how to code DWORF (`STRIT1`) consistently
+   (see "What Tier 4 adds").
+8. Upstream reports: SMIM45 sequence swap (UniProt), SNURF/RNF4 name collision (MGI).
+9. Next census slice: the remaining zero-GO sORF entries (mostly PE5 lncRNA ORFs) do not need
+   review; the SLC35A4 uORF peptide (STREMI, reported MIC10-like) is a candidate if UniProt
+   gives it an accession.
 
 ---
 # STATUS
 
-Last updated: 2026-09-30
+Last updated: 2026-10-08
 
 ## Census
 - [x] Census script + tables (`MICROPROTEINS/scripts/microprotein_census.py`)
@@ -451,13 +514,24 @@ Last updated: 2026-09-30
 ## Tier 3 — over-annotation audit (PE4–5 with IBA/ISS function)
 - [x] SNRPGP15, PMCHL1, PMCHL2, DPH3P1, GNG5B, LITAFD, ZNF788P (see [Tier 3 results](#tier-3-results-2026-10-04))
 
-## Comparators (classic small proteins)
-- [ ] SLN, PLN (SERCA regulators; well annotated — the template for MRLN/STRIT1/ERLN)
+## Tier 4 — remaining sORF-class with GO rows, plus comparators
+- [x] Protein-level: MICOS10, SMIM1, TINCR, FBXW7-AS1, SNURF, C18orf32, C8orf17, SMIM3, C2orf15, KIAA0040, LINC01587, SMIM10L1
+- [x] Without protein-level evidence: NLRP2B, SMIM45, PRAC2, SEPTIN14P20
+- [x] Comparators SLN, PLN (see [Tier 4 results](#tier-4-results-2026-10-08))
 
 ## Already reviewed in repo (≤100 aa, sORF-relevant)
 - [x] SMIM26, P3R3URF, ADIG (plus canonical small proteins such as TOMM5/6/7, PIGY, UQCC3)
 
 # NOTES
+
+## 2026-10-08
+
+- Tier 4: 18 reviews (16 census sORF-class entries with GO rows, plus SLN and PLN), one agent
+  per gene or small group. The first FBXW7-AS1/C18orf32 agent was stopped by a safety
+  classifier before writing anything; both genes were redone by fresh agents.
+- Carried the four optional nits from the PR #3680 review: the GNG5B locus-type clause in the
+  Tier 3 rule, DPH3P1's stale "removal" wording, TZMP1's replicate/negative-control wording,
+  and named comparators (ATP5IF1, PLN, FNIP1, FNIP2) in the MIR155HG__C0HMA1 NEW reason.
 
 ## 2026-10-05
 
