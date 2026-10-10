@@ -47,8 +47,8 @@ def test_fetch_repairs_existing_bag6_note_and_preserves_curated_fields(tmp_path,
     monkeypatch.setattr(gene, "fetch_goa_data", lambda accession: goa)
     monkeypatch.setattr(gene, "_extract_panther_family_id", lambda text: None)
     calls = []
-    def seed(self, yaml_file, goa_file, fetch_titles=True):
-        calls.append((yaml_file, goa_file, fetch_titles))
+    def seed(self, yaml_file, goa_file, fetch_titles=True, publications_dir=None):
+        calls.append((yaml_file, goa_file, fetch_titles, publications_dir))
         return 0, None, 0, 0, 0
     monkeypatch.setattr(GOAValidator, "seed_missing_annotations", seed)
     result = gene.fetch_gene_data(("human", "BAG6"), base_path=tmp_path, fetch_titles=False)
@@ -61,6 +61,7 @@ def test_fetch_repairs_existing_bag6_note_and_preserves_curated_fields(tmp_path,
     assert second["alternative_product_sequences_repaired"] == 0
     assert review.read_bytes() == first_bytes
     assert len(calls) == 2 and all(call[2] is False for call in calls)
+    assert all(call[3] == tmp_path / "publications" for call in calls)
     assert (directory / "BAG6-uniprot.txt").read_text() == raw
     assert (directory / "BAG6-goa.tsv").read_text() == goa
 
