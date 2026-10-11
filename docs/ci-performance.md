@@ -36,6 +36,11 @@ generation, Python imports, and ontology initialization can be reused within
 each process. All existing files, validation phases, and blocking exit statuses
 are retained. Quoted Bash arrays preserve filenames containing spaces.
 
+One diagnostic tradeoff: an uncaught loader or validator exception can stop a
+batch before later files are checked. The phase still exits nonzero and blocks
+CI, and subsequent validation phases still run, but errors in later files may
+only appear after the malformed file is fixed and validation is rerun.
+
 As in dismech's
 [CI workflow](https://github.com/monarch-initiative/dismech/blob/main/.github/workflows/main.yaml),
 the unconditional disk cleanup is replaced with a capacity report. Our sampled
@@ -46,7 +51,9 @@ Local checks on this checkout passed for all 283 family reviews (14.54s schema,
 42.77s terms) and all 450 module schemas (12.33s). These are local timings, not
 post-change GitHub runner measurements. Regression tests exercise failures in
 each recipe phase and verify that the real schema and term validators reject an
-invalid second file after a valid first file.
+invalid second file after a valid first file. Absolute times vary with cache
+state and machine load; use the same-machine comparison below to isolate the
+benefit of batching.
 
 A same-machine comparison on the first ten sorted family reviews isolates the
 batching effect (both modes passed with the same schema, flags, and inputs):
