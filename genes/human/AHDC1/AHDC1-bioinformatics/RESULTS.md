@@ -101,11 +101,16 @@ exits 1 with eight failures; see `AHDC1-notes.md`, "Legacy checks and current
 validation boundary". The drift is now the point: the derive-both-sides
 guarantee held only while the script passed.
 
-All seven self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
-`retracted_phrasing`, `required_claim_missing`, `paired_claim_one_side_removed`,
-`paired_claim_row_deleted`, `regression_stale_reference_review`. The paired-claim mutations go **through the YAML parser** so
-exactly one side is thinned, and each asserts the mutation landed before running the check
-— a guard whose mutation silently no-ops "proves" itself against nothing.
+In the earlier review shape, all seven self-test guards fired:
+`coverage_on_deleted_entry`, `duplicate_key`, `retracted_phrasing`,
+`required_claim_missing`, `paired_claim_one_side_removed`,
+`paired_claim_row_deleted`, `regression_stale_reference_review`. Three of
+those guards assume a standalone `GO:0003682` row and stale reference-review
+prose that no longer exist, so `--self-test` now aborts before the later
+mutation checks can run. Historically, the paired-claim mutations went
+**through the YAML parser** so exactly one side was thinned, and each asserted
+the mutation landed before running the check — a guard whose mutation silently
+no-ops "proves" itself against nothing.
 
 Each case also asserts **which** problem appeared, not merely that one did. `bool(run())`
 would have been satisfied by any failure, and three of the six mutations share a YAML
@@ -135,10 +140,13 @@ The lint did not catch it, and the reason is structural, not an oversight in one
    patterns. Of the seven phrasings in the previous version, **zero** could match anything
    in the review file at all.
 
-Proof, not assertion: splicing the historical sentence back into a copy now fails on **two
-independent patterns**, and that splice is committed as the `regression_stale_reference_review`
-self-test guard — the only case here taken from a real defect rather than from a mutation I
-invented.
+At the time, proof rather than assertion: splicing the historical sentence
+back into a copy failed on **two independent patterns**, and that splice was
+committed as the `regression_stale_reference_review` self-test guard — the
+only case taken from a real defect rather than from a mutation I invented.
+That guard now belongs to the same legacy shape as the paired-claim checks,
+because the sentence fragment it splices against is absent from the current
+YAML.
 
 **The general lesson:** a regression lint seeded from the diff of a fix inherits the fix's
 vocabulary, not the claim's meaning. Seed it from what the claim *asserts* — preferably a
