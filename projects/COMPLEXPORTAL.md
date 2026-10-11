@@ -31,6 +31,8 @@ For each CP complex, and for each GO row it generates, we ask:
 3. **Term distribution.** Is every subunit annotated with every complex-level BP and CC term? This
    is the same over-propagation problem as in [PROTEIN_COMPLEX_FUNCTIONS](PROTEIN_COMPLEX_FUNCTIONS.md),
    but at the BP level.
+4. **Process specificity.** Is a BP term the process the complex performs, or a downstream
+   consequence (for example, cell wall organization for an anchoring enzyme)?
 
 ### Two annotation layers
 
@@ -47,8 +49,24 @@ So the MF over-propagation issue does not arise from CP, but every BP and CC on 
 reaches every subunit unchanged, with the complex's evidence code and reference. In this
 repo's gene reviews only the subunit layer is visible, because `*-goa.tsv` is fetched per
 UniProt accession.
-4. **Process specificity.** Is a BP term the process the complex performs, or a downstream
-   consequence (for example, cell wall organization for an anchoring enzyme)?
+
+**GO/GOA pipeline status** (from GOA and IEA working-group minutes, April to May 2026; not
+independently verified here):
+
+- The roll-down is a documented GOA rule: complex members receive all of the complex's CC and BP
+  annotations, but not its MF. A separate step generalises some membrane-child CC terms to
+  `membrane`; its scope and rationale are not fully documented.
+- An early-2026 Alliance release dropped CP `part_of` rows on members. GOA reported this as a
+  pipeline bug, to be restored in the next release. It was not a policy change. We have not
+  checked that the rows came back.
+- The IEA working group judged the NAS pipeline acceptable for CPX entities. It flagged that
+  deriving subunit rows associates proteins with papers that do not mention them, and proposed
+  IC with a GO_REF (from the `part_of` CC annotation) instead of the complex's PMID. No decision
+  had been implemented as of these minutes.
+
+That proposal speaks to this project's reference-support question (question 2). In the gaa1 case
+the PMID is weak even for the complex, so changing the evidence code alone would not fix the
+pombe rows.
 
 ### Size of the problem in this repo
 
