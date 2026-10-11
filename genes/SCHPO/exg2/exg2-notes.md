@@ -57,7 +57,10 @@ PTHR31297 PAINT notes:
 - The only PTHR31297 IBA currently inherited by Exg2 is
   `PANTHER:PTN001262628` for `GO:0009251 glucan catabolic process`, seeded by
   Aspergillus nidulans ExgD/Q5AVZ7 and ExgB/Q5B6Q3. This is broad fungal GH5
-  inheritance rather than an Exg2-specific catalytic claim.
+  inheritance rather than an Exg2-specific catalytic claim; it is retained as
+  non-core because the direct vegetative Exg2 data show abnormal wall
+  deposition after overexpression but do not demonstrate normal glucan
+  catabolism.
 - The narrower fungal extracellular/cell-wall node `PANTHER:PTN001262686` and
   Saccharomycetales exo-1,3-beta-glucosidase node `PANTHER:PTN001262687` do
   not hit S. pombe Exg2. The fission-yeast-specific `PANTHER:PTN008631699`
