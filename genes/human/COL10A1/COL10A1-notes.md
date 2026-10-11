@@ -1,6 +1,6 @@
 # COL10A1 acquisition and review notes
 
-Fresh official identity and all371 open-PR ownership inventories are clear at fbaed2dd. Genuine fetch returned0; immutable seed has34 original assertions, no alternative-product block and17 references. Publication caching completed in parallel with authentic Falcon/fallback attempts. Falcon timed out after90seconds; fallback returned HTTP401 insufficient quota. No provider report was fabricated. Exact-main shared publication,Reactome,family andGO-CAM cache variants are preserved; fresh normal variants remain separately archived.
+Fresh official identity and all 371 open-PR ownership inventories are clear at fbaed2dd. Genuine fetch returned 0; immutable seed has 34 original assertions, no alternative-product block and 17 references. Publication caching completed in parallel with authentic Falcon/fallback attempts. Falcon timed out after 90 seconds; fallback returned HTTP 401 insufficient quota. No provider report was fabricated. Exact-main shared publication, Reactome, family and GO-CAM cache variants are preserved; fresh normal variants remain separately archived.
 
 Systematic manual primary/source review is in progress. ROOT owns bounded core/assembly consultation. Non-UniProt donor identifiers were rejected by the current QuickGO endpoint; their raw failed receipts remain separate, and official cross-reference resolution will precede any source-label assertions.
 
@@ -47,3 +47,31 @@ The bounded ROOT structural/calcium consultation is distinct from this whole own
 ### Final validation and finite scope
 
 Normal2 validation, status and render all pass on the final DRAFT candidate. The seven advisories concern intentionally retained positive generic-binding associations under the campaign policy. The only parsed YAML change from the first whole-review draft is the derived status; no source assertion, action, reference or core changed. Current finite guards at main 6a854f0a cover 13 absent additions, 15 exact protected paths and 356 complete open-PR inventories. The new PMID:34234345 cache is byte-identical to the independently owned PR #4372 occurrence. Publisher application and new history remain ROOT-only.
+
+## Follow-up to PR #4916
+
+The original 35 assertions and all actions remain intact, including the existing calcium-binding NEW. No new annotation, pathway, alternative product or cache is introduced by this follow-up. The earlier acquisition and validation record above is historical; the corrections here address the current review.
+
+### Binding classes and the campaign instruction
+
+The [campaign Curation instructions](https://github.com/ai4curation/ai-gene-review/blob/905a35aeb3efd4a8b4c14248748f25ba8a7e358f/projects/CLINGEN_MENDELIAN.md#curation-instructions) explicitly give the user's override: retain supported generic protein-binding assertions as non-core unless a specific supported replacement is available. The instruction is present at the authenticated main revision; it is not inferred from enum availability. Seven positive generic associations therefore remain non-core. The stored raw records retain their evidence codes, references, partner products and assay features.
+
+The four transcription-factor-binding refinements also remain. [GO:0061629](https://www.ebi.ac.uk/QuickGO/term/GO:0061629) defines the bound protein class, rather than requiring transcriptional regulation by the binding protein. An endogenous nuclear encounter is not established here. All 18 records for the five challenged class pairs are positive human-sequence yeast two-hybrid results: three each for canonical BANP, MESD, NRF1-4 and ZNF410-3, and six for BANP-2. These include array/pooling/validated assay records, not 18 independent native interaction validations. The COL10A1 sequence is its 680-residue precursor, not an experimentally isolated mature extracellular trimer.
+
+The independent class support remains explicit: the available complete PMID:34234345 abstract establishes human/mouse BANP CGI-promoter transcriptional activity. Official BANP-2 sequence edits retain the BEN domain; NRF1-4 retains its DNA-binding region while changing part of the activation region; ZNF410-3 retains all five annotated DNA-binding fingers. These exact products are sequence/ROGID authenticated, but no exact-variant transcriptional assay or interaction interface is claimed. [MESD Q14696](https://www.uniprot.org/uniprotkb/Q14696/entry) has independently curated folding/transport chaperone activity, which fits GO:0051087. That class refinement does not imply MESD folds collagen X. The peer read selected original screen-design and validation text; global orthogonal validation rates are not assigned to these individual pairs.
+
+### Type X structural role
+
+The current [GO:0030020 comment](https://www.ebi.ac.uk/QuickGO/term/GO:0030020) explicitly states: “Extracellular matrix collagen proteins may be annotated to this term.” This convention and positive type-X assembly evidence support the three existing classifications and the single matrix structural core. The human proteomic target detections do not become mechanical assays, and the inherited PAINT assertion is not rejected from donor count or absence of an isolated tensile test. The full historical PAINT tree remains uninspected.
+
+The human isolated NC1 study and the complete available chick self-assembly abstract have distinct scope. Neither proves full-length human tensile modulus or requires type X to have the architecture of a major fibrillar collagen. The current GO:0005599 comment likewise distinguishes in-vitro lattice formation from in-vivo fibril association. An independent bounded ROOT consultation re-read selected human manuscript windows and the chick abstract and agreed with retention; its original accessed sources and limited read scope are pinned separately. The core description now states the biology, with the GO convention documented here and in source-specific reasons.
+
+### Developmental specificity and calcium
+
+The description now includes the hypertrophic-chondrocyte context from the official COL10A1 record and the dominant Schmid metaphyseal chondrodysplasia relationship from the clinical source. It does not attribute tissue-expression evidence to the PMID:8554571 abstract. The source-specific skeletal-development assertion remains: structural participation can support a developmental role, but the available clinical/assembly evidence does not resolve the narrower cartilage-to-bone conversion or cartilage-development process. No new mineralization process is inferred from expression or disease alone.
+
+[UniProt Q03692](https://www.uniprot.org/uniprotkb/Q03692/entry) lists calcium-coordinating residues 626, 627, 633 and 634. All these features refer to PMID:11839302/PDB 1GR3, so this is corroborating annotation of the same original structural result, not an independent second experiment. The existing non-core calcium-binding assertion retains the isolated human construct and no mineral-nucleation or native stoichiometry claim. The old notes have only spacing corrections before this append; source caches and old history remain unchanged.
+
+### Follow-up validation
+
+Ordinary validation, status dry-run and rendering passed on this exact final YAML. All seven advisories are the retained positive generic-binding rows covered by the explicit campaign instruction. The existing DRAFT status is consistent; there is no schema error or status mismatch. Final notes and index were rendered once more after this record was appended. Actual isolated validator runtime changes in the lockfile and term cache were retained and recorded; no validator source was patched. All selected sources and old history remain exact.
