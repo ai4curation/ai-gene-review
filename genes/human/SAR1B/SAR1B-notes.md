@@ -1,9 +1,30 @@
 # SAR1B notes
 
 Review created 2026-10-09 from the GOA stub (76 annotations). The literature work was
-done manually with PubMed and the cached `publications/` files. A Falcon deep-research
-run (`just deep-research-falcon human SAR1B`) timed out after 600 s, so no deep-research
-file exists.
+done manually with PubMed and the cached `publications/` files while the Falcon
+deep-research run was in progress. The client reported a timeout after 600 s, but the
+provider finished and `SAR1B-deep-research-falcon.md` was written afterwards (run ended
+2026-10-09T16:41). It was checked against this review on 2026-10-11:
+
+- It agrees on the core annotation: SEC12-loaded SAR1B-GTP nucleates the COPII coat
+  (SEC23-SEC24, then SEC13-SEC31), SEC23 is the GAP, and the physiologically important
+  cargo is ApoB-containing lipoprotein. GTP is the substrate; lipoproteins are cargo, not
+  substrates. This matches core functions 1 and 2.
+- It reads the Caco-2/15 knockout figures (PMID:28982670) as remaining output (about 40%
+  of control TG, 57% ApoB-48, 34.5% chylomicrons), not as the size of the decrease. The
+  abstract's wording ("decreased secretion of triglycerides (≈40%)") supports either
+  reading, so the review does not rely on the exact numbers; both readings show SAR1B
+  dependence with partial SAR1A compensation.
+- It adds a caveat on core function 2: in a cell-free rat intestinal assay
+  (Siddiqi 2010, J Lipid Res 51:1093) prechylomicron transport vesicles budded without
+  COPII proteins, and SEC24C was needed for Golgi docking. The COPII requirement may
+  therefore lie partly at targeting rather than budding. This is the subject of suggested
+  question 1; it does not change any annotation call.
+- It cites Tang et al. 2024 (PNAS): a Sar1a coding sequence knocked into the mouse Sar1b
+  locus rescues Sar1b-null lethality. That supports suggested question 3 (partial
+  redundancy set largely by expression pattern).
+- It does not discuss the leucine-sensing role (core function 3); the review's evidence
+  for that comes from PMID:34290409.
 
 ## Normal function
 

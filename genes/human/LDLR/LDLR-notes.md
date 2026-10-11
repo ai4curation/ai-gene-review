@@ -1,8 +1,29 @@
 # LDLR review notes
 
-Deep research: `just deep-research-falcon human LDLR` was attempted on 2026-10-09 and failed
-(provider timed out after 600 s). The review was done manually from the GOA-cited publications
-cached in `publications/` and the UniProt record.
+Deep research: the client reported a timeout after 600 s on 2026-10-09, so the review was done
+manually from the GOA-cited publications cached in `publications/` and the UniProt record. The
+provider in fact finished (run ended 2026-10-09T16:41) and `LDLR-deep-research-falcon.md` was
+written afterwards. It was checked against this review on 2026-10-11:
+
+- It agrees on the core annotation: surface recognition and clathrin-mediated endocytosis of
+  apoB-100- and apoE-bearing lipoprotein particles, acid-dependent cargo release in the
+  endosome via the LA-repeat/beta-propeller closed conformation, and receptor recycling. It
+  stresses that the substrate is the apolipoprotein-bearing particle rather than free
+  cholesterol, and that LDLR is not an enzyme or a sterol transporter. This matches core
+  functions 1 and 2 and the review's rejection of generic transporter terms.
+- It confirms the regulatory layer the review annotates: SREBP-2/SCAP transcriptional control,
+  PCSK9 binding to EGF-A diverting the receptor to lysosomes (including an intracellular
+  trans-Golgi route), and LXR-induced IDOL/MYLIP ubiquitination of the cytosolic tail.
+- It adds the Reimund et al. cryo-EM structure of apoB-100-containing LDL bound to LDLR
+  (Nature 638, online 2024-12-11; ~5.6 and ~7.9 A), which resolves two interfaces: the LA
+  modules contact basic regions of the apoB-100 beta-belt, and the beta-propeller contacts the
+  apoB-100 N-terminal domain. This is direct structural support for core function 1; the
+  resolution does not support residue-level claims.
+- It flags a specificity caveat the review should not overstate: the 2024 Commander/Retriever
+  recycling work (Butkovic et al.) used LRP1 and other cargoes, not LDLR, so endosomal
+  recycling machinery beyond the FDNPVY/ARH/AP-2 step is not LDLR-specific evidence. The
+  review annotates only the adaptor step (GO:0035612), which is unaffected.
+- It does not discuss the VSV entry-receptor role (PMID:23589850), reviewed here separately.
 
 ## Core biology (with provenance)
 
