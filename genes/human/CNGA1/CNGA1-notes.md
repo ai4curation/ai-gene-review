@@ -31,3 +31,14 @@ No NEW process is proposed. The actual GO-CAM index has no target hits at the au
 ## Access and quotation scope
 
 Selected caches retain their real access flags. Original 11379879/20890309 text and selected 7479749 scanned pages are separate external-source consultations; 1379636 remains abstract-only. The source index supplies URLs, hashes, exact record locators and concise interpretations. It is provenance, not independent evidence for its own conclusions, and is not quoted in annotation supported_by. Raw complete primary passages remain temporary. The only authored primary quotations are the short YAML anchors; the notes and index do not repeat them. Final validation and literal preservation checks are recorded in the finite packet.
+
+
+## CNGA1 follow-up: source attribution and propagation
+
+The cGMP-channel evidence now also cites the authentic PMID:1379636 abstract: the full-length human clone produced functional channels in 293S cells, whereas the reported shorter splice construct did not. This does not establish a purified binding affinity or a new current UniProt product. PMID:11379879 remains the original source and its reference assessment remains MISCITED; the visual-perception support list now cites only the independently relevant CNGA1 evidence.
+
+The beta-subunit ISS sources are explicitly resolved as bovine CNGB1 and mouse Cngb1. Experimental records support their shared channel activity or outer-segment compartment, while direct CNGA1 experiments justify the target decisions. They are not relabeled as alpha-subunit orthologs, and the historical ISS selection is not reconstructed. The chemical-sensory IBA remains a non-core inherited assertion: present-day paralog names and rod expression alone cannot establish an ancestral placement error or target-specific loss. Its historical PAINT node remains unresolved.
+
+The original GRB14 Methods and supplement establish positive interaction experiments but leave the tested CNGA1 plasmid's species uncertain. UNDECIDED therefore concerns attribution to the human target, not a lack of binding or the term's genericity. The applicable [ClinGen project instruction](https://github.com/ai4curation/ai-gene-review/blob/4f119e91a2180e10ef9d14871829da3dd18a1db6/projects/CLINGEN_MENDELIAN.md#L2974-L2978) expressly permits supported non-core protein binding and unresolved adjudication.
+
+All selected publication caches retain their original bytes and availability flags. In the structured source index, cache hashes identify selected cache bytes; the separate original-paper URLs and external receipts identify recovered full articles, supplements and page images. This follow-up adds no primary quotations or new annotations.
