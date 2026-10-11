@@ -35,3 +35,10 @@ No GO-CAM target activity was found in the authenticated current index. No NEW p
 ### Final applicability check
 
 Authenticated main `35d102bc46bae9377ad6c60151bed1f07c62bf85` retains all ten protected source files unchanged and all 14 finite additions absent. The refreshed ownership inventory covers 242 complete current-head PR file/label inventories; gene, aliases, accession and queue remain clear. No shared-cache collisions or GO-CAM target hits were found. There are 13 literal target interaction records, and 19 current donor/source joins containing 32 same-term records; these are reproducibility counts, not evidence-strength or historical-node inferences.
+
+
+## 2026-10-11 — Biological description update
+
+The summary now connects capicua repression to RTK/Ras–MAPK signaling and names its TGAATGAA-like recognition sequence. It distinguishes normal CIC tumor-suppressor activity and recurrent oligodendroglioma mutations from the oncogenic CIC–DUX4 fusion context. These additions are supported by the selected full text of PMID:28278156 (Introduction, Figure 1 and Discussion), with corroborating background in PMID:40967212 (Introduction). This is a biological summary; it does not assign the fusion's activator activity to normal CIC or generalize every variant's effect on DNA binding.
+
+The existing source-specific annotation decisions, product mapping and experimental construct limits are retained. Earlier source-access and publication records above describe their original snapshots. No additional primary quotation is introduced.
