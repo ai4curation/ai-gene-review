@@ -87,5 +87,6 @@
   NADH-dependent Dph3 reductase term for the two known electron acceptors.
 - Mitochondrion and mitochondrial outer-membrane rows are high-throughput or
   subcellular-location mappings but match the expected Cbr1 membrane topology.
-  The nucleus row comes from an N-terminal GFP SWAp-Tag library and should be
-  kept, at most, as non-core high-throughput localization.
+  The nucleus row comes from an N-terminal GFP SWAp-Tag library whose tag sits
+  directly upstream of Cbr1's only transmembrane helix at residues 7-27, so it
+  is best treated as over-annotated.
