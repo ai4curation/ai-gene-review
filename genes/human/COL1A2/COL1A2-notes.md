@@ -1,105 +1,59 @@
-# COL1A2 (human, UniProt P08123) curation notes
+# COL1A2 augmentation notes
 
-## Deep research status
+## Historical provenance and source preservation
 
-- 2026-10-05: `just deep-research-falcon human COL1A2` failed on the first attempt
-  (Edison API returned `429 Too Many Requests`; "Provider falcon exited with code 1 /
-  All providers failed"). No perplexity key is available. A single retry also failed (falcon timed out after 600s);
-  the review below was written from the UniProt record and the cached publications in
-  `publications/` (PubMed abstracts / full texts), not from a deep-research report.
-- UPDATE 2026-10-05: the failure statement above is superseded. The falcon job completed
-  late (end_time 01:34) and `COL1A2-deep-research-falcon.md` now exists; it has been
-  reconciled with the review (see "Falcon deep research reconciliation" below).
+The prior review was genuinely approved and merged in PR4262. Its eight gene/history paths and genuine Falcon output are preserved in the authenticated before/archive records; their existence is not erased or recast as a new review. Current reassessment addresses source-specific scientific and campaign requirements. The genuine isolated fetch produced133 assertions and91 references; every source object matches the historical non-NEW objects exactly. The prior review also included one reviewer-authored fibril-membership proposal. All134 objects, qualifiers and source identities remain intact, with93 old reference identities and four supplemental references (97 total). No alternative product object exists. [UniProt:P08123]
 
-## Identity and structure
+This current note replaces the earlier excessive literal quotations with faithful cited paraphrases. Exact original notes, historical YAML, provider artifacts and append-only history remain in the immutable before/archive. The scientific conclusions below explicitly supersede the earlier location-based binding removals, contamination interpretation and other named judgments; this is not retrospective editing of those original records. The new Falcon attempt genuinely timed out; configured perplexity-lite fallback returned401 insufficient_quota. Terminal receipts and original outputs are retained. No authored document is presented as a provider result.
 
-- Collagen alpha-2(I) chain; precursor with signal peptide (1-22), N-propeptide
-  (23-79), mature chain (80-1119) and C-propeptide (1120-1366) carrying the COLFI
-  (fibrillar collagen C-terminal) domain [file:human/COL1A2/COL1A2-uniprot.txt].
-- "Trimers of one alpha 2(I) and two alpha 1(I) chains" [file:human/COL1A2/COL1A2-uniprot.txt].
-- "Type I procollagen is a heterotrimer composed of two proalpha1(I) chains and one
-  proalpha2(I) chain, encoded by the COL1A1 and COL1A2 genes, respectively."
-  [PMID:18375391]
-- C-propeptide drives chain selection and heterotrimer assembly: "the C-propeptide of
-  proalpha2(I), like that of the proalpha1(I) C-propeptide, is essential for efficient
-  assembly of type I procollagen heterotrimers" [PMID:18375391]. Mutant chains "were
-  slow to assemble with proalpha1(I) chains to form heterotrimers and that were retained
-  intracellularly" [PMID:18375391].
-- Prolines in Y position hydroxylated [file:human/COL1A2/COL1A2-uniprot.txt].
+## Core structural role and processing
 
-## Function
+The single core remains tensile ECM structure in the type I collagen trimer, normally two alpha1 chains plus one alpha2 chain. The1366-residue P08123 precursor has signal peptide1–22, N-propeptide23–79, collagen chain80–1119 and C-propeptide1120–1366 in the official record. The C-propeptide performs intrinsic chain-selection/association work: alpha2 is not inert during assembly. The original18375391 source measures association and trimer incorporation, not direct fibril imaging. The adaptor term is still over-annotated because a separate coordinating adaptor mechanism was not established; this is not a blanket ban on subunits or a requirement for two different protein species. Processing proteases perform cleavage. [PMID:18375391; PMID:1916105]
 
-- Fibrillar (group I) collagen: "Forms the fibrils of tendon, ligaments and bones. In
-  bones the fibrils are mineralized with calcium hydroxyapatite."
-  [file:human/COL1A2/COL1A2-uniprot.txt]
-- Fibrils "are made by alloys of fibrillar collagens (types I, II, III, V, and XI)"
-  [PMID:1916105].
-- "Collagen-I is the most abundant protein in the human body" [PMID:26848503].
-- Core MF: extracellular matrix structural constituent conferring tensile strength
-  (GO:0030020); complex: collagen type I trimer (GO:0005584); process: collagen fibril
-  organization (GO:0030199); location: extracellular matrix.
+The old row133 is explicitly a historical reviewer-authored proposal, absent from current GOA, rather than a freshly fetched IEA assertion. It is retained as non-core context with original source fields intact. Type I trimer is_a fibrillar collagen trimer, which is part_of collagen fibril; that existing typed path already supplies the assembly context. The explicit retired flag withdraws this redundant reviewer-authored proposal; it does not say GOA retired it. There is no new annotation or extra scaffold core.
 
-## Biosynthesis / trafficking (non-core locations)
+## Binding evidence and exact products
 
-- Procollagen folds in ER lumen; TMEM131 PapD-like domain binds the COL1A2 C-terminus
-  and links it to TRAPPIII for ER-to-Golgi export: "we identified two human proteins,
-  COL1A2 and TRAPPC8, that bind to the N- and C-terminal domains of human TMEM131,
-  respectively" [PMID:32095531]. COL1A2 is cargo here, not an effector.
-- Collagen-I proteostasis network interactome mapped by IP-MS [PMID:26848503].
+All positive interactions are reviewed independently of native-compartment assumptions. Eighty-seven raw IntAct/MINT records retain all42 fields. Thirteen official sequences reconstruct, comprising the1366-aa target and12 partner/product sequences. Ten products have exact export ROGID matches; P02452, P39900 and Q92545 have verified official FASTAs but no matching export record, so no ROGID-match claim is made for those three. UBQLN1-2 is561 residues after the official417–444 deletion. Matching a reference sequence does not prove native processing in a yeast reporter. The human MESD screen sequence is the234-aa precursor including its signal peptide. No exported match for an older low-throughput pair is used as evidence against its primary experiment.
 
-## Disease (supports developmental/tissue-level process annotations, non-core)
+Direct alpha1–alpha2 assembly supports collagen-binding refinements for18375391 and26848503. The latter's genuine fresh full variant describes human signal/tagged constructs in HT-1080 cells and reciprocal recovery; it is separately archived from the protected limited main cache. Native Saos-2 validation is not silently assigned to every pair. The TMEM131 association uses the last165 residues of human COL1A2 and recloned C-propeptide constructs; it supports association without a collagen chaperone or adaptor activity. [PMID:18375391; PMID:26848503; PMID:32095531]
 
-- Osteogenesis imperfecta types 1-4, EDS arthrochalasia type 2, EDS cardiac valvular
-  type (recessive null) [file:human/COL1A2/COL1A2-uniprot.txt].
-- Dominant C-propeptide mutations cause OI type IV [PMID:18375391].
-- Gene-targeted correction of mutant COL1A2 alleles in OI MSCs: "MSCs targeted at mutant
-  COL1A2 alleles produced normal type I procollagen and formed bone" [PMID:17955022].
-- Teeth: "The intense expression of pro-alpha 2(I) mRNA in odontoblasts of adult teeth
-  suggests that ... they continue to synthesize heterotrimeric type I collagen molecules"
-  [PMID:1740554].
+Three SGTA interactions support protein-folding chaperone binding. The reconstitution paper demonstrates hydrophobic-client capture/triage, which falls within the official folding-or-transport class, not autonomous insertion or ubiquitination by SGTA. Exact supplementary species of every component were not independently recovered. MESD refinement is supported by conserved class evidence, chiefly fly Boca and mouse Mesd rescue; human LRP1 is a substrate construct, not a human MESD folding assay. Both premises remain separate from the positive human screen interactions. [PMID:28104892; PMID:15014448; PMID:25416956; PMID:26871637; PMID:32296183]
 
-## Problematic annotations noted
+The EIF3F pair is refined to ubiquitin-specific protease binding, whose official synonyms explicitly include deubiquitinase binding. Original experiments use human full-length/MPN GST constructs in bacterial ubiquitin-fusion cleavage; mouse mutant/probe/Notch-rescue assays are separate. This does not assert a collagen substrate relationship, catalytic-site contact or collagen–Notch physiology. The genuine original PMC text was read in the independent bounded consultation; the normal cache remains abstract-only. [PMID:21124883; PMID:32296183]
 
-- PMID:17217948 (TGF-beta receptor signaling; Rho signal transduction, IDA): COL1A2
-  promoter activity / mRNA is the readout of TGF-beta2/RhoA signaling in ARPE-19 cells
-  ("Constitutively active RhoA increased COL1A2 promoter activity"). COL1A2 protein does
-  not perform any step of these pathways (target gene, not participant).
-- PMID:17334644 (regulation of blood pressure, IMP): candidate-gene association of a
-  (GT)n COL1A2 polymorphism with BP in Japanese men. Association only.
-- PMID:8841196 (skeletal system development, IMP): abstract concerns the COL1A1 Sp1
-  polymorphism; COL1A2 only mentioned as a candidate. Full text not available; function
-  is correct for COL1A2 anyway (OI), so kept as non-core.
-- PMID:17211858 (blood vessel development, collagen fibril organization, identical
-  protein binding, skin morphogenesis): abstract describes alpha1(I) R-to-C substitutions
-  (COL1A1) forming "disulfide-bonded alpha1(I)-dimers". Full text not available; cannot
-  confirm what was assayed for COL1A2. Identical protein binding left UNDECIDED.
-- Mouse SMAD binding (source of IEA GO:0046332): PMID:14559231 is a Y2H / GST pulldown
-  of in vitro translated collagens with Smad MH2 domains; collagen chains are ER-lumenal
-  / extracellular while SMADs are cytosolic/nuclear, so the interaction is topologically
-  implausible in vivo.
-- Protein binding IPIs (SGTA, SGTB, UBQLN1/2, KCNIP4, EIF3F, MESD, SMARCD1) are binary
-  Y2H interactome hits [PMID:25416956, PMID:26871637, PMID:32296183]; SGTA/UBQLN bind
-  hydrophobic signal sequences of mislocalized secretory proteins; uninformative.
-- MMP12 (protease binding): collagen is the substrate - "The catalytic domain of MMP-12
-  binds to the triple helix and cleaves the typical sites -Gly(775)-Leu(776)- in alpha-2
-  type I collagen" [PMID:19932771].
-- PDGF binding: "All radiolabeled PDGF isoforms specifically interacted with type I, II,
-  III, IV, V, and VI collagens" [PMID:8900172]; in vitro ECM-growth factor sequestration,
-  non-core.
+SGTB remains positive non-core because its documented ATPase-regulating co-chaperone role does not independently resolve the client-binding folding/transport activity specified by the proposed class. Similarity evidence is not rejected as a category. KCNIP4 regulates channels but is not the pore; SMARCD1 is refined to transcription coactivator binding: the canonical515-aa product and curated nuclear-receptor–BRG1 transactivation function match the actual term. Lack of DNA binding or intrinsic ATPase is compatible with coactivator function; no new activity-paper full read or collagen transcriptional activity is claimed. Ubiquilin cargo-routing roles do not automatically establish folding-chaperone activity. These individual class limits do not negate the associations. Generic binding is retained when no supported specific refinement is available. [PMID:26871637; PMID:32296183]
 
-## Falcon deep research reconciliation (2026-10-05)
+The MMP12 source supports substrate–protease recognition/cleavage, so the original protease-binding IPI remains non-core without a collagen protease-regulator claim. Full isolated-chain binding boundaries remain unavailable. The mouse SMAD premise has three explicit current MGI alpha2 IPI records and a positive murine-library/GST abstract. Exact full-paper alpha2 constructs were not recovered; identity rests on curator records, not an independently inspected construct. Topology alone does not refute that binding. [PMID:19932771; PMID:14559231]
 
-- `COL1A2-deep-research-falcon.md` completed after the review was written. It is fully
-  consistent with the review: alpha2(I) chain of the [alpha1(I)]2alpha2(I) heterotrimer,
-  C-propeptide-driven chain assembly in the ER, extracellular load-bearing fibril function,
-  ADAMTS2/BMP1 propeptide processing acting on (not by) COL1A2, and TGF-beta/SMAD as
-  upstream drivers of COL1A2 expression (supports the REMOVE of the TGF-beta and Rho
-  signalling IDA annotations from PMID:17217948).
-- Additions noted but not acted on: Malfait 2006 J Med Genet (homozygous COL1A2 frameshift,
-  complete alpha2(I) absence, valvular EDS; already reflected in the description via UniProt);
-  Lee 2022 DMM (Col1a2-null vs oim mice; already reflected in a suggested question on
-  homotrimers); Mariano 2023 bioRxiv preprint (BMP1 site FYRA|DQPR at residue 1120);
-  Ling 2024 (DDR2 signalling by type I collagen, not chain-resolved). None changes an
-  annotation decision.
-- Deep-research file added to references and cited as supporting text on the GO:0007179
-  REMOVE. No annotation actions changed. Status set to COMPLETE.
+## Source-specific process and disease limits
+
+Human OI-derived MSC allele targeting, collagen labeling/thermostability and bone-forming implants support a skeletal context. Multiple targeted clones formed bone, including some targeting the wild-type allele; the source does not demonstrate alpha2-alone instruction of osteoblast differentiation. [PMID:17955022]
+
+The available17211858 abstract explicitly concerns alpha1 mutant chains; its full alpha2 scope is unresolved. Blood-vessel development and identical-protein binding therefore remain undecided, rather than wrong-gene removals. Independent target evidence supports known matrix, fibril and broad dermal contexts while preserving that reference limitation. The8841196 abstract similarly does not justify a confident misattribution claim. [PMID:17211858; PMID:8841196]
+
+Rho/TGF signaling abstracts positively show COL1A2 transcript/promoter regulation, but do not resolve a protein-performed signaling step. Blood-pressure polymorphism association is also positive yet does not establish the target's performed process. Full sources remain unavailable, so these three assertions are undecided, with neither categorical absence nor a low-quality judgment inferred solely from study design. Adult tooth expression and caries-associated dentin repair remain positive findings, but source-specific odontogenesis is undecided because the term requires formation-to-maturation. Skin and broad organ development remain contextual non-core roles. [PMID:17217948; PMID:17334644; PMID:1740554]
+
+## Exact matrix and exosome targets
+
+Human aortic original TableII contains CO1A2_HUMAN with12 unique peptides,15 unique spectra and70 total spectra. The stem-cell ECM Table1 includes COL1A2 at18.1 normalized spectra in feeder-free HUES1 ECM, with mouse/human feeder columns kept distinct. Colon/liver supplemental row97 identifies one P08123/legacy-accession protein group in two sheets, which are duplicate presentations rather than independent experiments or isoform-resolved measurements. These are matrix detections, not direct force assays. [PMID:20551380; PMID:23658023; PMID:25037231]
+
+Original bone-marrow S2/S3 workbooks contain the target. The MGUS summary is ND whereas detailed S3 has a positive target entry; both are retained without inventing a uniform disease effect. Exact target supplements for27068509,27559042,28327460 and28675934 remain uninspected. Earlier286 workbook responses were HTML challenges, not readable XLSX files. Independent target evidence supports known ECM roles without claiming those missing target checks. [PMID:28344315; PMID:27068509; PMID:27559042; PMID:28327460; PMID:28675934]
+
+The original human trabecular-meshwork exosome Table1 explicitly lists COL1A2/P08123 with normalized spectra96.4 versus1.7 in the urine comparison. Exosome-depleted medium, serial centrifugation and pellet washing provide positive fraction evidence. The prior contamination-based over-annotation is corrected to non-core retention. The work does not show target-specific intraluminal sorting, biogenesis or marker-flotation validation. [PMID:21362503]
+
+## Model and propagation boundaries
+
+Sixty actual Reactome event summaries and explicit nested P08123 paths were read. Fibril-containing extracellular entities justify ECM refinements; soluble precursor, cleavage and secretion contexts retain broader extracellular region. ER lumen is a biosynthetic context. Enclosing receptor/enzyme/transcription-factor events never transfer their activities to collagen. All source IDs and qualifiers remain exact.
+
+Current donor identities and same-term records are resolved literally, including MOD aliases. They support target assessments without claiming reconstructed historical PAINT tree/MSA/IBD placement; a short donor list or target self-evidence is not a failure. Target-matched current ARBA conditions are traced exactly, not assumed identical to historical rules. The complete selected GO-CAM index was scanned; no NEW is proposed.
+
+## Review boundary
+
+The draft contains60 MODIFY,38 ACCEPT,29 KEEP_AS_NON_CORE,6 UNDECIDED and1 MARK_AS_OVER_ANNOTATED decisions. All133 machine-source objects are exact. The earlier synthetic proposal retains all its pre-existing fields with an explicitly added retired flag; no source object or historical reference identity is deleted. The complete first draft is preserved; subsequent exact semantic changes are recorded separately. Notes and index are manual audit artifacts, not primary evidence. Normal validation, applicability and final whole peer are recorded with the final handoff. ROOT alone handles publication and append-only history.
+
+## Final validation and applicability
+
+Normal2 validation, status dry-run and rendering pass at the final scientific YAML. Eleven advisories remain: nine evidence-supported generic-binding NC rows, one source-specific extracellular-region A/MOD distinction and one advisory that annotations do not cite the preserved historical Falcon report. The campaign explicitly permits supported generic binding retention; source-specific soluble versus fibrillar contexts explain the location distinction; genuine provider provenance is retained without using a report as primary evidence. Status remains DRAFT as calculated by normal tooling. Normal1's historical-proposal coverage failure is preserved; the explicit scientific withdrawal of that redundant synthetic proposal and retirement metadata correct it, with no source-field rewriting or validation bypass.
+
+Final source/ownership applicability uses main905a35aeb3efd4a8b4c14248748f25ba8a7e358f and the complete closing census. Eight finite files (two modifications and six additions) are proposed, with98 protected context/history/source paths. All original histories and provider artifacts remain exact. The only current tooling-tree change is the uninvoked automation merge/queue script; complete old/current script-tree comparison proves validation/status/render code remains unchanged. The isolated normal toolchain also added genuine term-cache rows without changing existing rows; that cache is not published. ROOT alone authenticates the final publisher and appends a genuine history record.
