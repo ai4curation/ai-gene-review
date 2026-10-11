@@ -2,20 +2,44 @@
 
 For each in-scope disorder and each gene bound in its genetic records, compare the GO
 terms on pathograph nodes naming that gene with the gene's AIGR core-function terms
-(exact, or related through is_a/part_of ancestry), and list AIGR modules containing the
-gene's UniProt accession. Emits a YAML report.
+(exact, or related through is_a/part_of ancestry), and find AIGR modules that contain
+the gene's UniProt accession. Emits a YAML report with a provenance block.
 
 Usage, from the ai-gene-review root with a dismech checkout beside it:
 
     DISMECH_DIR=../dismech uv run python projects/DISMECH_METABOLIC_ALIGNMENT/align_audit.py \
-        projects/DISMECH_METABOLIC_ALIGNMENT/scope.json report.yaml
-    python3 projects/DISMECH_METABOLIC_ALIGNMENT/make_page.py report.yaml \
+        projects/DISMECH_METABOLIC_ALIGNMENT/scope.yaml \
+        projects/DISMECH_METABOLIC_ALIGNMENT/report.yaml
+    python3 projects/DISMECH_METABOLIC_ALIGNMENT/make_page.py \
+        projects/DISMECH_METABOLIC_ALIGNMENT/report.yaml \
         projects/DISMECH_METABOLIC_ALIGNMENT.md
+
+Two properties of the comparison are deliberate, and are stated on the generated page
+because they make this a weak consistency test rather than a strong one:
+
+* ``related()`` is **symmetric** and **unbounded in distance**. It holds when either
+  term is an is_a/part_of ancestor of the other, at any depth, so a dismech node bound
+  to something broad aligns with a specific core function and the reverse, and two terms
+  many levels apart still align. The report records which core term each node term
+  matched (``aligned_pairs``) so the distance behind a match can be judged per row.
+* Module **membership** says the gene is in some module; it does not say the module is
+  about the function the row aligned on. The two are reported separately:
+  ``NO_MODULE_MEMBERSHIP`` means no module contains the accession, and
+  ``MODULE_NOT_COVERING`` means one does but no annoton for this gene, in any of them,
+  carries a GO term related to the aligned terms. AIFM1 sitting in
+  ``apoptotic_execution_phase`` while the aligned function is the mitochondrial
+  disulfide relay is the case the second flag exists to catch.
+
+Module membership and module GO terms are read from the module structure
+(``module.parts[].node.annotons[]``, including protein-complex ``active_units``), not by
+regex over the file text, so an accession mentioned only in ``notes`` or in evidence
+does not count as membership.
 """
+import datetime
 import glob
 import json
 import os
-import re
+import subprocess
 import sys
 
 import yaml
@@ -23,26 +47,88 @@ from oaklib import get_adapter
 
 DM = os.environ.get("DISMECH_DIR", "../dismech")
 AG = os.environ.get("AIGR_DIR", ".")
-SCOPE = json.load(open(sys.argv[1]))
+_scope_path = sys.argv[1]
+with open(_scope_path) as fh:
+    SCOPE = json.load(fh) if _scope_path.endswith(".json") else yaml.safe_load(fh)
 OUT = sys.argv[2]
 
-go = get_adapter(os.environ.get("GO_ADAPTER", "sqlite:obo:go"))
+GO_ADAPTER = os.environ.get("GO_ADAPTER", "sqlite:obo:go")
+go = get_adapter(GO_ADAPTER)
 PRED = ["rdfs:subClassOf", "BFO:0000050"]
 _anc = {}
+_anc_failures = []
 
 
 def anc(t):
+    """Ancestor closure of a GO term.
+
+    A lookup failure is recorded rather than silently swallowed: if the adapter were
+    unavailable, every comparison would degrade to exact match and the page would be
+    quietly wrong, so the run aborts at the end if anything failed to resolve.
+    """
     if t not in _anc:
         try:
             _anc[t] = set(go.ancestors(t, predicates=PRED, reflexive=True))
-        except Exception:
+        except Exception as exc:  # noqa: BLE001 - recorded, then re-raised in aggregate
+            _anc_failures.append((t, f"{type(exc).__name__}: {exc}"))
             _anc[t] = {t}
     return _anc[t]
 
 
 def related(a, b):
+    """True when a and b are the same term, or either is an ancestor of the other.
+
+    Symmetric and distance-unbounded; see the module docstring.
+    """
     return a == b or b in anc(a) or a in anc(b)
 
+
+def _git(repo, *args):
+    try:
+        return subprocess.run(["git", "-C", repo, *args], capture_output=True,
+                              text=True, check=True).stdout.strip()
+    except Exception:
+        return None
+
+
+def _go_version():
+    """GO release of the adapter actually in use, read from the ontology itself."""
+    try:
+        for v in go.ontology_versions("go"):
+            if v:
+                return v
+    except Exception:
+        pass
+    try:  # sqlite adapters: owl:versionInfo on the ontology document
+        import sqlite3
+        path = GO_ADAPTER.split(":", 1)[1]
+        if path.startswith("obo:"):
+            path = os.path.expanduser(f"~/.data/oaklib/{path[4:]}.db")
+        rows = sqlite3.connect(path).execute(
+            "select value from statements where predicate = 'owl:versionInfo' "
+            "and subject like '%go%' limit 1").fetchall()
+        if rows:
+            return rows[0][0]
+    except Exception:
+        pass
+    return None
+
+
+PROVENANCE = dict(
+    run_date=datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    go_adapter=GO_ADAPTER,
+    go_version=_go_version(),
+    dismech_revision=_git(DM, "rev-parse", "HEAD"),
+    dismech_describe=_git(DM, "log", "-1", "--format=%h %cs %s"),
+    # AIGR_REVISION / AIGR_REF let the audit record which tree it read when AIGR_DIR is
+    # not itself a checkout. The reviews and modules this audit compares are spread over
+    # the ten themed branches split out of #4690, so the run behind the committed page
+    # reads a tree materialised from the combined branch rather than one worktree.
+    aigr_revision=os.environ.get("AIGR_REVISION") or _git(AG, "rev-parse", "HEAD"),
+    aigr_branch=os.environ.get("AIGR_REF") or _git(AG, "rev-parse", "--abbrev-ref", "HEAD"),
+    aigr_dir=AG,
+    scope_entries=len(SCOPE),
+)
 
 # AIGR: symbol -> (uniprot, status, core term sets)
 aigr = {}
@@ -65,22 +151,91 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
             for x in v:
                 if isinstance(x, dict) and x.get("id"):
                     dest.add(x["id"])
-    # Terms the review keeps (ACCEPT or KEEP_AS_NON_CORE, or proposed NEW) but does not
-    # treat as core: used to tell "consistent with a non-core function" from "no match".
-    kept = set()
+    # Terms the review keeps as existing annotations but does not treat as core: used to
+    # tell "consistent with a non-core function" from "no match". NEW is held separately,
+    # because a NEW term is proposed by the review, not an annotation the review keeps.
+    kept, proposed = set(), set()
     for a in d.get("existing_annotations") or []:
         act = ((a.get("review") or {}).get("action") or "")
         tid_ = (a.get("term") or {}).get("id")
-        if tid_ and not a.get("negated") and act in ("ACCEPT", "KEEP_AS_NON_CORE", "NEW"):
+        if not tid_ or a.get("negated"):
+            continue
+        if act in ("ACCEPT", "KEEP_AS_NON_CORE"):
             kept.add(tid_)
-    aigr[sym] = dict(uniprot=d.get("id"), status=d.get("status"), mf=mf, bp=bp, cc=cc, kept=kept)
+        elif act == "NEW":
+            proposed.add(tid_)
+    aigr[sym] = dict(uniprot=d.get("id"), status=d.get("status"),
+                     mf=mf, bp=bp, cc=cc, kept=kept, proposed=proposed)
 
-# modules: accession -> module names
+
+def _annoton_terms(an):
+    """GO term ids a module annoton asserts (function, processes, locations, in/outputs)."""
+    out = set()
+    f = an.get("function")
+    if isinstance(f, dict):
+        out.add((f.get("term") or {}).get("id"))
+    for k in ("processes", "locations", "inputs", "outputs"):
+        for x in an.get(k) or []:
+            if isinstance(x, dict):
+                out.add((x.get("term") or {}).get("id"))
+    pc = (an.get("participant") or {}).get("protein_complex") or {}
+    for key in ("active_units", "components"):
+        for sub in pc.get(key) or []:
+            if isinstance(sub, dict):
+                out |= _annoton_terms(sub)
+    out.discard(None)
+    return {t for t in out if str(t).startswith("GO:")}
+
+
+def _participant_accessions(part):
+    """UniProt accessions a module participant names, across every selector shape.
+
+    `FAMILY` is the most common selector in this corpus, and it names its proteins as
+    `family.representative_members[].term`, not as a `gene_product`. Reading only
+    `gene_product` would miss most parts: LIPA is a representative member of
+    PANTHER:PTHR11005:SF26 in ldl_receptor_mediated_endocytosis, so it would read as
+    belonging to no module at all.
+    """
+    out = set()
+    if not isinstance(part, dict):
+        return out
+    for key in ("gene_product", "gene", "ortholog_of"):
+        v = part.get(key)
+        if isinstance(v, dict):
+            out.add((v.get("term") or {}).get("id"))
+    fam = part.get("family") or {}
+    for mem in fam.get("representative_members") or []:
+        if isinstance(mem, dict):
+            out.add((mem.get("term") or {}).get("id"))
+    pc = part.get("protein_complex") or {}
+    for key in ("active_units", "components"):
+        for sub in pc.get(key) or []:
+            if isinstance(sub, dict):
+                out |= _participant_accessions(sub.get("participant") or sub)
+    out.discard(None)
+    return {a.split(":", 1)[1] for a in out if str(a).startswith("UniProtKB:")}
+
+
+def _annoton_accessions(an):
+    """UniProt accessions a module annoton's participant names."""
+    return _participant_accessions(an.get("participant") or {})
+
+
+# modules: accession -> {module name -> GO terms of that gene's annotons in that module}
 mod_by_acc = {}
 for p in glob.glob(f"{AG}/modules/*.yaml"):
-    txt = open(p).read()
-    for acc in set(re.findall(r"UniProtKB:([A-Z0-9]{6,10})", txt)):
-        mod_by_acc.setdefault(acc, set()).add(os.path.basename(p)[:-5])
+    mname = os.path.basename(p)[:-5]
+    try:
+        md = yaml.safe_load(open(p))
+    except Exception:
+        continue
+    mod = md.get("module") or {}
+    for part in mod.get("parts") or []:
+        node = part.get("node") or {}
+        for an in node.get("annotons") or []:
+            terms = _annoton_terms(an)
+            for acc in _annoton_accessions(an):
+                mod_by_acc.setdefault(acc, {}).setdefault(mname, set()).update(terms)
 
 hgnc_sym = {}
 for line in open(f"{DM}/cache/hgnc/terms.csv"):
@@ -153,28 +308,62 @@ for name in SCOPE:
                 flags.append("AIGR_NOT_COMPLETE")
             core = a["mf"] | a["bp"]
             dm = node_mf | node_bp
+            if dm and not core:
+                # Nothing to compare against. Without a flag this row would print "ok".
+                flags.append("NO_CORE_FUNCTION_TERMS")
             if dm and core:
-                aligned = sorted(t for t in dm if any(related(t, c) for c in core))
+                pairs = {}
+                for t in sorted(dm):
+                    hits = sorted(c for c in core if related(t, c))
+                    if hits:
+                        pairs[t] = hits
+                aligned = sorted(pairs)
                 g["aligned_terms"] = aligned
+                # Which core term each node term matched, so the unbounded ancestry
+                # distance behind a match is visible rather than assumed small.
+                if pairs:
+                    g["aligned_pairs"] = {t: (v[0] if len(v) == 1 else v) for t, v in pairs.items()}
                 if not aligned:
                     noncore = sorted(t for t in dm if any(related(t, k) for k in a["kept"]))
+                    prop = sorted(t for t in dm if any(related(t, k) for k in a["proposed"]))
                     if noncore:
                         g["aligned_noncore_terms"] = noncore
                         flags.append("ALIGNED_NONCORE")
+                    elif prop:
+                        g["aligned_proposed_terms"] = prop
+                        flags.append("ALIGNED_PROPOSED")
                     else:
                         flags.append("NO_GO_ALIGNMENT")
                 g["dismech_only"] = sorted(dm - set(aligned))
-            mods = sorted(mod_by_acc.get(a["uniprot"], []))
+            mods_terms = mod_by_acc.get(a["uniprot"], {})
+            mods = sorted(mods_terms)
             g["modules"] = mods
             if not mods:
-                flags.append("NO_MODULE")
+                flags.append("NO_MODULE_MEMBERSHIP")
+            elif g.get("aligned_terms"):
+                # Membership is not coverage: the gene may be in a module about a
+                # different one of its functions than the one this row aligned on.
+                covering = sorted(m for m in mods if any(
+                    related(t, mt) for t in g["aligned_terms"] for mt in mods_terms[m]))
+                g["covering_modules"] = covering
+                if not covering:
+                    flags.append("MODULE_NOT_COVERING")
         g["flags"] = flags
         entry["genes"].append(g)
     report.append(entry)
 
-yaml.safe_dump(report, open(OUT, "w"), sort_keys=False, width=120)
+if _anc_failures:
+    for t, exc in _anc_failures[:10]:
+        print(f"ancestor lookup failed: {t}: {exc}", file=sys.stderr)
+    sys.exit(f"{len(_anc_failures)} GO ancestor lookups failed; every comparison would "
+             "degrade to exact match, so no report was written.")
+
+yaml.safe_dump(dict(provenance=PROVENANCE, entries=report),
+               open(OUT, "w"), sort_keys=False, width=120)
 from collections import Counter
+
 c = Counter(fl for e in report for g in e.get("genes", []) for fl in g["flags"])
+print("provenance", PROVENANCE)
 print("entries", len(report), "gene-rows", sum(len(e.get("genes", [])) for e in report))
 print(dict(c))
-print("entries with problem:", [ (e["entry"], e["problem"]) for e in report if e.get("problem")])
+print("entries with problem:", [(e["entry"], e["problem"]) for e in report if e.get("problem")])
