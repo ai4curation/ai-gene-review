@@ -28,10 +28,10 @@ the review keeps), `ALIGNED_NONCORE` (node terms match only annotations the revi
 non-core; informational, not a defect), `NO_MODULE`.
 
 **Summary.** 116 entries; 161 principal gene rows (causative and untyped);
-151 have no flag other than `NO_MODULE` or `ALIGNED_NONCORE`. Flag counts on principal rows: `NO_AIGR_REVIEW` 10, `NO_MODULE` 16.
+161 have no flag other than `NO_MODULE` or `ALIGNED_NONCORE`. Flag counts on principal rows: `NO_MODULE` 26.
 
-Polygenic entries (Type I diabetes, the MELAS mt-tRNA genes) and modifier/susceptibility genes are
-listed but were not required to align: their genes are risk loci or mtDNA tRNAs, not the
+Polygenic entries (Type I diabetes) and modifier/susceptibility genes are
+listed but were not required to align: their genes are risk loci or modifiers, not the
 normal-function owners of a single pathway step.
 
 | Entry | Gene | Relationship | AIGR | Aligned GO terms | Modules | Flags |
@@ -112,19 +112,19 @@ normal-function owners of a single pathway step.
 | LPIN1-Related_Recurrent_Myoglobinuria | LPIN1 | CAUSATIVE | COMPLETE | GO:0008195 | triacylglycerol_biosynthesis | ok |
 | Late-Onset_Pompe_Disease | GAA | CAUSATIVE | COMPLETE | GO:0004558 | lysosomal_glycogen_degradation | ok |
 | Leber-like_Hereditary_Optic_Neuropathy_Autosomal_Recessive_1 | DNAJC30 | CAUSATIVE | COMPLETE | GO:0019899 GO:0034367 | - | NO_MODULE |
-| MELAS_Syndrome | MT-TL1 | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TL1 | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
 | MELAS_Syndrome | MT-ND5 | CAUSATIVE | COMPLETE | GO:0008137 | mitochondrial_complex_i_core | ok |
 | MELAS_Syndrome | MT-ND1 | CAUSATIVE | COMPLETE | GO:0008137 | mitochondrial_complex_i_core | ok |
 | MELAS_Syndrome | MT-ND6 | CAUSATIVE | COMPLETE | GO:0008137 | mitochondrial_complex_i_core | ok |
-| MELAS_Syndrome | MT-TQ | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TH | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TK | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TC | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TS1 | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TS2 | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TV | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TW | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TM | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TQ | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TH | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TK | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TC | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TS1 | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TS2 | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TV | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TW | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
+| MELAS_Syndrome | MT-TM | CAUSATIVE | COMPLETE | GO:0032543 | - | NO_MODULE |
 | MEND_Syndrome | EBP | CAUSATIVE | COMPLETE | GO:0006695 GO:0047750 | cholesterol_synthesis_post_lanosterol | ok |
 | MEND_Syndrome | APOA5 | MODIFIER | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
 | MEND_Syndrome | ABCA1 | MODIFIER | COMPLETE | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE |
@@ -225,14 +225,14 @@ normal-function owners of a single pathway step.
 
 ## Notes on remaining flags
 
-- Every causative protein-coding gene row is free of flags other than `NO_MODULE`. The other
-  flags fall on the MELAS mt-tRNA genes and on modifier, susceptibility and disputed genes,
-  none of which were required to align.
-- **MELAS mtDNA genes**: MT-ND1, MT-ND5 and MT-ND6 have ai-gene-review reviews and are
-  parts of mitochondrial_complex_i_core; they align with the dismech complex I node
-  (NADH:ubiquinone oxidoreductase activity, DECREASED). The mt-tRNA genes (MT-TL1 and
-  others) encode no protein, so they have no UniProt entry and cannot be reviewed in
-  ai-gene-review; they are the only rows still flagged `NO_AIGR_REVIEW`.
+- Every causative gene row is free of flags other than `NO_MODULE`. The other flags fall on
+  modifier, susceptibility and disputed genes, none of which were required to align.
+- **MELAS mtDNA genes**: MT-ND1, MT-ND5 and MT-ND6 have reviews and are parts of
+  mitochondrial_complex_i_core, aligning with the dismech complex I node (NADH:ubiquinone
+  oxidoreductase activity, DECREASED). The ten mt-tRNA genes (MT-TL1, MT-TQ, MT-TH, MT-TK,
+  MT-TC, MT-TS1, MT-TS2, MT-TV, MT-TW, MT-TM) have ncRNA reviews (RNAcentral ids) whose core
+  function, triplet codon-amino acid adaptor activity in mitochondrial translation, matches
+  the dismech translation-defect nodes.
 - **UCP2** (DISPUTED): dismech binds regulation of insulin secretion (GO:0050796), which
   is the parent of a UCP2 annotation the review keeps as non-core (GO:0061179), so the row
   is `ALIGNED_NONCORE`. dismech deliberately binds no UCP2
@@ -258,4 +258,5 @@ normal-function owners of a single pathway step.
 - **HNF1A / HNF4A**: Transcription factors whose hyperinsulinism and MODY roles act through many target genes; no beta-cell transcriptional-network module exists yet.
 - **SLC16A1**: Disease mechanism is ectopic beta-cell expression of a transporter whose normal role (lactate/pyruvate transport) belongs to no beta-cell pathway; a monocarboxylate-transport module would not include the disease mechanism.
 - **SIM1**: Transcription factor needed for paraventricular hypothalamic neuron development and function; it acts on, rather than within, the leptin_melanocortin_signaling module, whose parts are the ligand, processing and receptor steps.
+- **MT-TL1 and the other MELAS mt-tRNAs**: No mitochondrial translation module exists; in mitochondrial_trna_charging_and_initiator_formylation a tRNA would appear only as a synthetase substrate, which the substrate guidance excludes, and module parts are UniProt proteins.
 - **UCP2**: Causal role disputed (relationship DISPUTED); its transported substrate is itself contested.
