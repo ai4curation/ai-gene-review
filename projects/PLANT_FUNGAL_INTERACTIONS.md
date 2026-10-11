@@ -2,8 +2,8 @@
 title: "Plant-Fungal Interactions"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [ARATH, ORYSJ, HORVU, MEDTR, LOTJA, PYRO7, FULFL, MYCMD, GIBZE]
-genes: [CERK1, LYK5, LYM2, SYP121, BGLU26, ABCG36, CYP71B15, CYP79B2, MLO2, WRKY33, ERF094, MPK3, CEBIP, PIKM1-TS, RGA4, RGA5, MLO, NORK, DMI1, CASTOR, CYCLOPS, RAM1, STR, PT4, PWL2, BAS1, slp1, PMK1, MPG1, AVR9, AVR4, ECP6, CMU1, PIT2, See1, TRI5, CYP79B3, CYP71A13, CYP71A12, GSTF6, LYK4, PBL27, PBL1, MAPKKK5, MKK4, MKK5, RLCK185]
+species: [ARATH, ORYSJ, HORVU, MEDTR, LOTJA, PYRO7, FULFL, MYCMD, GIBZE, SOLPI, SOLHA, PYROR, FUSOX]
+genes: [CERK1, LYK5, LYM2, SYP121, BGLU26, ABCG36, CYP71B15, CYP79B2, MLO2, WRKY33, ERF094, MPK3, CEBIP, PIKM1-TS, RGA4, RGA5, MLO, NORK, DMI1, CASTOR, CYCLOPS, RAM1, STR, PT4, PWL2, BAS1, slp1, PMK1, MPG1, AVR9, AVR4, ECP6, CMU1, PIT2, See1, TRI5, CYP79B3, CYP71A13, CYP71A12, GSTF6, LYK4, PBL27, PBL1, MAPKKK5, MKK4, MKK5, RLCK185, CF-9, Cf-4, Pi-ta, MLA10, AVR-Pia, AVR-Pita, ACE1, SIX1]
 ---
 
 # Plant-Fungal Interactions
@@ -20,7 +20,8 @@ assessed, with 333 accepted, 161 kept as non-core, 71 modified, 40 marked
 over-annotated, 47 removed and none left undecided, plus 36 new annotations
 proposed. All 36 reviews validate and are marked COMPLETE. (These counts cover the 36
 project genes; the 11 module members reviewed later are counted separately below and
-leave 3 rows undecided.)
+leave 3 rows undecided, and the 8 effector/receptor extension genes are counted in
+their own table.)
 The main corrections were separating genes that do the work of a defence
 process from genes that are only needed for it, replacing `protein binding`
 rows with specific terms, and giving each partner in a receptor pair, and
@@ -38,7 +39,10 @@ gene does part of the work (see the `NEW` guidance in `CLAUDE.md`).
 **Project Start Date:** 2026-10-02
 **Organisms:** *Arabidopsis thaliana*, rice, barley, tomato, *Medicago truncatula*,
 *Lotus japonicus*, *Pyricularia oryzae* (rice blast), *Fulvia fulva* (tomato leaf
-mould), *Ustilago maydis* (corn smut), *Fusarium graminearum* (head blight)
+mould), *Ustilago maydis* (corn smut), *Fusarium graminearum* (head blight);
+extension genes add *Solanum pimpinellifolium* (Cf-9), *S. habrochaites* (Cf-4) and
+*Fusarium oxysporum*
+f. sp. *lycopersici* (SIX1)
 
 ## Scope
 
@@ -241,6 +245,36 @@ COMPLETE.
 
 ---
 
+## Extension: effector and receptor partners
+
+Eight genes from the "candidates without a reviewed UniProt entry" list were
+reviewed once their accessions were looked up on 2026-10-10. Only candidates with
+GOA rows were taken; AVR-Pik (13 entries), AVR1-CO39, Pep1, Tin2 and SP7 have no GOA
+rows on any entry found, and ACE1 (the *P. oryzae* enzyme whose product Pi33 rice
+recognises) was added in their place. Counts are taken from the review files.
+
+| Gene | Accession | Rows | Accept | Non-core | Modify | Over-annot. | Remove | Undecided | New | Main correction |
+|------|-----------|-----:|-------:|---------:|-------:|------------:|-------:|----------:|----:|-----------------|
+| SOLPI/CF-9 | Q40235 | 10 | 8 | 1 | 0 | 0 | 1 | 0 | 2 | Protein binding row (retracted CITRX paper) removed; innate immune receptor activity and cell-surface receptor signalling added on the Cf-4 comparator |
+| SOLHA/Cf-4 | O50025 | 6 | 5 | 0 | 1 | 0 | 0 | 0 | 0 | Pattern recognition receptor activity moved to innate immune receptor activity (AVR4 is a race-specific effector, not a conserved pattern) |
+| ORYSJ/Pi-ta | Q84UB1 | 6 | 1 | 2 | 0 | 2 | 1 | 0 | 0 | Accession is the susceptible Ser918 allele; AVR-Pita recognition reassigned to Ptr (2024), so the ARBA immune terms are over-annotated |
+| HORVU/MLA10 | Q6WWJ4 | 6 | 1 | 2 | 2 | 0 | 1 | 0 | 3 | Defence terms narrowed to defence response to fungus; innate immune receptor activity, nucleus and cytoplasm added |
+| PYROR/AVR-Pia | B9WZW9 | 3 | 0 | 0 | 3 | 0 | 0 | 0 | 1 | PHI-base perturbation rows refined to activation of plant HR; host cytoplasm added |
+| PYROR/AVR-Pita | F7J183 | 3 | 1 | 1 | 0 | 1 | 0 | 0 | 3 | Predicted protease kept non-core (no activity shown); OsCOX11-linked PTI suppression, host mitochondrion and HR activation added |
+| PYRO7/ACE1 | G4MVZ2 | 10 | 3 | 3 | 4 | 0 | 0 | 0 | 0 | Fatty acid synthase terms moved to polyketide synthase and NRPS activity |
+| FUSOX/SIX1 | Q709D8 | 6 | 3 | 0 | 0 | 0 | 2 | 1 | 1 | Two rows citing papers that never test Six1 protein removed; host apoplast added |
+| **Total** | | **50** | **22** | **9** | **10** | **3** | **5** | **1** | **10** | |
+
+Two points bear on the curation questions. First, for receptor pairs (question 5)
+the receptor-side genes carry the receptor activity (Cf-9 and MLA10 gain
+`innate immune receptor activity`, and Cf-4's pattern recognition receptor row is
+moved to it), and the effectors carry only effector-side
+process terms. A drafted `signaling receptor binding` term for AVR-Pia binding RGA5
+was dropped: no fungal or oomycete gene product carries it experimentally. Second,
+Pi-ta shows how a resistance phenotype can be attached to the wrong gene in a
+cluster: the 2024 *Ptr* work moves AVR-Pita recognition off the Pi-ta NLR, and the
+GOA accession is itself a susceptible allele.
+
 # STATUS
 
 Last updated: 2026-10-02
@@ -321,13 +355,13 @@ These are central to the field but no Swiss-Prot entry was found under the
 expected gene name. Look up the correct (possibly TrEMBL) accession before
 running `fetch-gene`; do not guess one.
 
-- [ ] Barley MLA10 (powdery mildew NLR) with Blumeria AVRa10
-- [ ] Rice Pi-ta with *P. oryzae* AVR-Pita
-- [ ] *P. oryzae* AVR-Pik, AVR-Pia, AVR1-CO39 (partners for the Tier 3 NLRs)
-- [ ] Tomato Cf-9 / Cf-4 (the Cf-9 receptor itself is from *S. pimpinellifolium*)
-- [ ] *U. maydis* Pep1 and Tin2
-- [ ] *Fusarium oxysporum* SIX1 (Avr3)
-- [ ] *Rhizophagus irregularis* SP7
+- [x] Barley MLA10 (HORVU, Q6WWJ4, TrEMBL); Blumeria AVRa10 has no UniProt entry under that name
+- [x] Rice Pi-ta (ORYSJ, Q84UB1) and *P. oryzae* AVR-Pita (PYROR, F7J183)
+- [x] *P. oryzae* AVR-Pia (PYROR, B9WZW9). AVR-Pik entries have no GOA rows and AVR1-CO39 has no entry under that name; ACE1 (PYRO7, G4MVZ2) added instead
+- [x] Cf-9 (SOLPI, Q40235, Swiss-Prot) and Cf-4 (SOLHA, O50025, TrEMBL; *S. habrochaites*)
+- [ ] *U. maydis* Pep1 and Tin2 (no UniProt entry found under these names on 2026-10-10)
+- [x] *Fusarium oxysporum* SIX1 (FUSOX, Q709D8)
+- [ ] *Rhizophagus irregularis* SP7 (TrEMBL entries G0X6X9/G0X6Y0/G0X6Y1 have no GOA rows)
 
 ## Workflow per gene
 
@@ -339,6 +373,17 @@ running `fetch-gene`; do not guess one.
    `just new-history`
 
 # NOTES
+
+## 2026-10-10
+
+- Reviewed eight extension genes (table under "Extension: effector and receptor
+  partners"): Cf-9, Cf-4, Pi-ta, MLA10, AVR-Pia, AVR-Pita, ACE1 and SIX1. All validate and
+  are COMPLETE. AVR-Pita's falcon deep research failed once and arrived after its
+  review; it agrees with the review and is now cited.
+- Cf-4 (O50025) was first used only as the comparator for Cf-9's new receptor terms,
+  then reviewed in its own right once its six GOA rows were checked. AVR-Pik
+  (13 entries), AVR1-CO39, Pep1, Tin2 and SP7 were skipped for lack of GOA rows or
+  UniProt entries.
 
 ## 2026-10-09
 
