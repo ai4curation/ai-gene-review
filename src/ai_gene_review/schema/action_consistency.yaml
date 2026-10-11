@@ -6,37 +6,47 @@
 # rows' terms are related, and how severe the combination is. Strictness is
 # ratcheted by editing `severity` here (OK -> INFO -> WARNING -> ERROR).
 #
+# Each rule reads as a sentence, left to right:
+#
+#   "the <action_1> row's term is <relation> the <action_2> row's term"
+#
 # Columns:
 #   action_1, action_2  ActionEnum values.
-#   relation            SAME_TERM: both rows carry the same term id (symmetric).
-#                       DESCENDANT: action_1 is on a term that is a strict
-#                       descendant (is_a/part_of) of action_2's term.
+#   relation            SAME_TERM      both rows carry the same term id (symmetric).
+#                       DESCENDANT_OF  action_1's term is a strict descendant
+#                                      (is_a/part_of) of action_2's term, i.e.
+#                                      action_1 is on the MORE SPECIFIC term.
+#                       ANCESTOR_OF    action_1's term is a strict ancestor of
+#                                      action_2's term, i.e. action_1 is on the
+#                                      MORE GENERAL term.
+#                       "A ANCESTOR_OF B" and "B DESCENDANT_OF A" are the same
+#                       rule; listing both is rejected as a duplicate.
 #   severity            OK (documented, not reported) | INFO | WARNING | ERROR.
 #   rationale           Why the combination is (in)consistent; shown in reports.
 #
 # Only non-negated rows are compared, and rows annotated to two different
 # isoforms are never compared with each other. Pairs not listed are not checked.
-# DESCENDANT rules are not evaluated yet (they need the ontology); only OK is
-# accepted for them until that lands. See docs/action_consistency.md.
+# DESCENDANT_OF / ANCESTOR_OF rules are not evaluated yet (they need the
+# ontology); only OK is accepted for them until that lands. See docs/action_consistency.md.
 rules:
   - action_1: ACCEPT
-    action_2: REMOVE
     relation: SAME_TERM
+    action_2: REMOVE
     severity: WARNING
     rationale: >-
       REMOVE says the claim is unlikely to be correct, ACCEPT says it is a core
       function. Duplicate rows for a true claim reinforce it and are never grounds
       for REMOVE, whatever their evidence code.
-  - action_1: ACCEPT
-    action_2: TOO_GENERAL
-    relation: DESCENDANT
+  - action_1: TOO_GENERAL
+    relation: ANCESTOR_OF
+    action_2: ACCEPT
     severity: OK
     rationale: >-
       The intended use of TOO_GENERAL: a broad term subsumed by a more specific
       accepted term.
-  - action_1: KEEP_AS_NON_CORE
-    action_2: TOO_GENERAL
-    relation: DESCENDANT
+  - action_1: TOO_GENERAL
+    relation: ANCESTOR_OF
+    action_2: KEEP_AS_NON_CORE
     severity: OK
     rationale: >-
-      As above, for a subsuming term kept as non-core.
+      As above, for a more specific term kept as non-core.

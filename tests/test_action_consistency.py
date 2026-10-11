@@ -131,7 +131,9 @@ def _raw(**overrides):
         {"action_1": "ACEPT"},
         {"relation": "SIBLING"},
         {"severity": "FATAL"},
-        {"relation": "DESCENDANT", "severity": "WARNING"},
+        {"relation": "DESCENDANT", "severity": "OK"},  # old, ambiguous name
+        {"relation": "DESCENDANT_OF", "severity": "WARNING"},
+        {"relation": "ANCESTOR_OF", "severity": "ERROR"},
     ],
 )
 def test_malformed_rules_fail_fast(overrides):
@@ -149,3 +151,29 @@ def test_same_term_duplicates_are_unordered():
 def test_gaa1_review_is_consistent():
     path = Path(__file__).parent.parent / "genes/SCHPO/gaa1/gaa1-ai-review.yaml"
     assert list(iter_conflicts(yaml.safe_load(path.read_text()))) == []
+
+
+def test_mirror_image_hierarchical_rules_are_duplicates():
+    """"A ANCESTOR_OF B" and "B DESCENDANT_OF A" state the same rule."""
+    raw = _raw(action_1="TOO_GENERAL", relation="ANCESTOR_OF", action_2="ACCEPT",
+               severity="OK")
+    raw["rules"].append({**raw["rules"][0], "action_1": "ACCEPT",
+                         "relation": "DESCENDANT_OF", "action_2": "TOO_GENERAL"})
+    with pytest.raises(ValueError, match="duplicate"):
+        parse_rules(raw)
+
+
+def test_same_direction_with_swapped_actions_is_a_different_rule():
+    """Direction matters: these say opposite things about which term is broader."""
+    raw = _raw(action_1="TOO_GENERAL", relation="ANCESTOR_OF", action_2="ACCEPT",
+               severity="OK")
+    raw["rules"].append({**raw["rules"][0], "action_1": "ACCEPT",
+                         "action_2": "TOO_GENERAL"})
+    assert len(parse_rules(raw)) == 2
+
+
+def test_packaged_table_puts_too_general_on_the_broader_term():
+    rules = [r for r in load_rules() if "TOO_GENERAL" in (r.action_1, r.action_2)]
+    assert rules
+    for r in rules:
+        assert r.describe().startswith("the TOO_GENERAL row's term is an ancestor of")

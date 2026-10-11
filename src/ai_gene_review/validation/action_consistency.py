@@ -25,10 +25,19 @@ RULES_PATH = Path(__file__).parent.parent / "schema" / "action_consistency.yaml"
 
 
 class Relation(str, Enum):
-    """How the terms of the two compared rows are related."""
+    """How the action_1 row's term relates to the action_2 row's term.
+
+    A rule reads as a sentence: "the <action_1> row's term is <relation> the
+    <action_2> row's term". Ancestry is strict and follows is_a/part_of.
+    """
 
     SAME_TERM = "SAME_TERM"
-    DESCENDANT = "DESCENDANT"
+    DESCENDANT_OF = "DESCENDANT_OF"
+    ANCESTOR_OF = "ANCESTOR_OF"
+
+
+#: Relations that need the ontology; not evaluated yet, so only OK is allowed.
+HIERARCHICAL = frozenset({Relation.DESCENDANT_OF, Relation.ANCESTOR_OF})
 
 
 class Severity(str, Enum):
@@ -49,6 +58,22 @@ class ConsistencyRule:
     relation: Relation
     severity: Severity
     rationale: str
+
+    def describe(self) -> str:
+        """Render the rule as the sentence it encodes.
+
+        >>> ConsistencyRule("TOO_GENERAL", "ACCEPT", Relation.ANCESTOR_OF,
+        ...                 Severity.OK, "x").describe()
+        "the TOO_GENERAL row's term is an ancestor of the ACCEPT row's term"
+        """
+        phrase = {
+            Relation.SAME_TERM: "the same as",
+            Relation.DESCENDANT_OF: "a descendant of",
+            Relation.ANCESTOR_OF: "an ancestor of",
+        }[self.relation]
+        return (
+            f"the {self.action_1} row's term is {phrase} the {self.action_2} row's term"
+        )
 
 
 @dataclass(frozen=True)
@@ -82,7 +107,7 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
     rules: List[ConsistencyRule] = []
     seen: set[Tuple[str, ...]] = set()
     for i, row in enumerate(raw.get("rules") or []):
-        expected = {"action_1", "action_2", "relation", "severity", "rationale"}
+        expected = {"action_1", "relation", "action_2", "severity", "rationale"}
         if set(row) != expected:
             raise ValueError(f"rule {i}: expected keys {sorted(expected)}, got {sorted(row)}")
         for column in ("action_1", "action_2"):
@@ -95,9 +120,10 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
             severity=Severity(row["severity"]),
             rationale=" ".join(str(row["rationale"]).split()),
         )
-        if rule.relation is Relation.DESCENDANT and rule.severity is not Severity.OK:
+        if rule.relation in HIERARCHICAL and rule.severity is not Severity.OK:
             raise ValueError(
-                f"rule {i}: DESCENDANT rules are not evaluated yet; only OK is allowed"
+                f"rule {i}: {rule.relation.value} rules are not evaluated yet; "
+                "only OK is allowed"
             )
         key = _rule_key(rule)
         if key in seen:
@@ -108,10 +134,20 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
 
 
 def _rule_key(rule: ConsistencyRule) -> Tuple[str, ...]:
-    """Identity of a rule; SAME_TERM pairs are unordered, DESCENDANT pairs ordered."""
+    """Canonical identity of a rule, so a rule and its mirror image collide.
+
+    SAME_TERM is symmetric; "A ANCESTOR_OF B" is the same rule as "B DESCENDANT_OF A".
+
+    >>> a = ConsistencyRule("TOO_GENERAL", "ACCEPT", Relation.ANCESTOR_OF, Severity.OK, "")
+    >>> b = ConsistencyRule("ACCEPT", "TOO_GENERAL", Relation.DESCENDANT_OF, Severity.OK, "")
+    >>> _rule_key(a) == _rule_key(b)
+    True
+    """
     if rule.relation is Relation.SAME_TERM:
         a, b = sorted((rule.action_1, rule.action_2))
         return (rule.relation.value, a, b)
+    if rule.relation is Relation.ANCESTOR_OF:
+        return (Relation.DESCENDANT_OF.value, rule.action_2, rule.action_1)
     return (rule.relation.value, rule.action_1, rule.action_2)
 
 

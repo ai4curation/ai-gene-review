@@ -14,12 +14,18 @@ Which action combinations are contradictions, and how severe each is, is declare
 and enforced by `ai_gene_review.validation.action_consistency` during
 best-practices validation (`check_type: action_consistency`).
 
+Each rule reads as a sentence, left to right: *the `action_1` row's term is
+`relation` the `action_2` row's term*.
+
 | Column | Meaning |
 |---|---|
 | `action_1`, `action_2` | `ActionEnum` values |
-| `relation` | `SAME_TERM`: both rows carry the same term (symmetric). `DESCENDANT`: `action_1` is on a strict `is_a`/`part_of` descendant of `action_2`'s term |
+| `relation` | `SAME_TERM`: both rows carry the same term (symmetric). `DESCENDANT_OF`: `action_1` is on the **more specific** term, a strict `is_a`/`part_of` descendant of `action_2`'s. `ANCESTOR_OF`: `action_1` is on the **more general** term |
 | `severity` | `OK` (documented as consistent, not reported), `INFO`, `WARNING`, `ERROR` |
 | `rationale` | Shown as the suggestion in validation reports |
+
+`A ANCESTOR_OF B` and `B DESCENDANT_OF A` are the same rule; the loader rejects a
+table that lists both.
 
 Only non-negated rows are compared; rows annotated to two different isoforms are not
 compared with each other. Pairs not in the table are not checked.
@@ -29,17 +35,17 @@ the existing reviews that violate it have been fixed.
 
 ### Current state
 
-| action_1 | action_2 | relation | severity |
-|---|---|---|---|
-| ACCEPT | REMOVE | SAME_TERM | WARNING |
-| ACCEPT | TOO_GENERAL | DESCENDANT | OK |
-| KEEP_AS_NON_CORE | TOO_GENERAL | DESCENDANT | OK |
+| action_1 | relation | action_2 | severity | reads as |
+|---|---|---|---|---|
+| ACCEPT | SAME_TERM | REMOVE | WARNING | an ACCEPT row and a REMOVE row share a term |
+| TOO_GENERAL | ANCESTOR_OF | ACCEPT | OK | the TOO_GENERAL term is more general than an ACCEPTed term |
+| TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
 REMOVEd rows are mostly TAS, IDA, IMP and IPI). It stays a WARNING until those are
 fixed, then can become an ERROR.
 
-`DESCENDANT` rules are not evaluated yet (they need the ontology at validation
+`DESCENDANT_OF` and `ANCESTOR_OF` rules are not evaluated yet (they need the ontology at validation
 time), so the loader only accepts `OK` for them.
 
 Unlike the older `inconsistent_review_actions` warning, this check has no exemption for
