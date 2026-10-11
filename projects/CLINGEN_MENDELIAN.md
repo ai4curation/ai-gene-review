@@ -2988,33 +2988,40 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**303 of 2,876 genes are complete; 2,573 remain.** CFAP300 adds one first
-counted substantive campaign audit beyond checkpoint 302. Its existing review was
-not already a campaign completion. The final head was approved and passed both
-required checks before actual merge. There are 303 distinct primary genes with
-merged campaign reviews and no completion holds. Product counts, retained authored
-annotations and an unresolved molecular mechanism do not add counts or create a hold.
+**315 of 2,876 genes are complete; 2,561 remain.**
+CHMP2B [#4605](https://github.com/ai4curation/ai-gene-review/pull/4605),
+CHCHD10 [#4574](https://github.com/ai4curation/ai-gene-review/pull/4574),
+CHD8 [#4595](https://github.com/ai4curation/ai-gene-review/pull/4595) and
+CHD2 [#4583](https://github.com/ai4curation/ai-gene-review/pull/4583) add four
+first qualifying campaign audits beyond published checkpoint 311. All received
+final-head approval and both required checks before merge. Existing review files,
+products, repeated review rounds and justified biological uncertainty do not
+change the one-gene count or create completion holds.
 
-The fixed completion cutoff is **2026-10-10 10:35:31 UTC**, through CFAP300 at
-[commit 2f68dd87cb96](https://github.com/ai4curation/ai-gene-review/commit/2f68dd87cb96a240d03d5debc6c7f131bb7b2808).
-This follow-up preserves checkpoints 301 and 302, their history and the subsequent
-review corrections on the same [tracker PR #4551](https://github.com/ai4curation/ai-gene-review/pull/4551).
-Its authenticated [head 13435e510e4f](https://github.com/ai4curation/ai-gene-review/commit/13435e510e4f68f6b0b345c62deed08b63996d3d)
-is the exact tracker preimage and was still open when this packet was prepared.
-That tracker head is distinct from the actual main completion cutoff and from any
-later publication checkout. Updating this PR does not count earlier completions again.
-See [checkpoint 303 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-303-2026-10-10-103531-utc).
+The frozen counted-gene cutoff is **2026-10-10 19:51:39 UTC**, through
+[CHD2 merge e20dd96d4115](https://github.com/ai4curation/ai-gene-review/commit/e20dd96d41152636ac61f320e462b1339edba66f).
+The authenticated tracker source is the later
+[tracker311 #4648 merge d1ce0f02e084](https://github.com/ai4curation/ai-gene-review/commit/d1ce0f02e084844e241b6003bed77cfa20569466)
+at **20:49:21 UTC**. These timestamps use the GitHub API `merged_at`.
+The source snapshot and a later publication base do not advance this frozen count.
 
-The `campaign_audited_merged` counter and legacy `original_merged` compatibility
-semantics remain unchanged. Literal `$.genes` still contains 235 historical queue
-objects and 235 distinct symbols. All 51 prior completion updates, their scope
-clarifications and prior progress remain exact; later merges are outside this cutoff.
+See [checkpoint 315 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-315-2026-10-10-195139-utc).
+All 235 historical queue objects, all 55 previous completion updates and counter
+semantics remain unchanged. No open PR or subsequent merge is included.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
 [Checkpoint 302 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T092814Z-codex-e50f41.yaml).
 
 [Checkpoint 303 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T110009Z-codex-bd1c4a.yaml).
+
+[Checkpoint 309 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T132811Z-codex-22f68a.yaml).
+
+[Checkpoint 310 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T174737Z-codex-0f8ff7.yaml).
+
+[Checkpoint 311 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T193909Z-codex-ab8464.yaml).
+
+[Checkpoint 315 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T211146Z-codex-4853e6.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3393,24 +3400,24 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CERKL** — HGNC:21699; [CERKL-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3003820-dc03-4eb1-921a-6eaee749fa9f-2022-09-01T160000.000Z) (MONDO:0800401; AR; Definitive).
 - [x] **CFAP221** — HGNC:33720; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7c841e5-2973-4f23-8603-970e9e2cbc92-2025-12-16T120000.000Z) (MONDO:0016575; AR; Definitive).
 - [x] **CFAP300** — HGNC:28188; [ciliary dyskinesia, primary, 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bcfa4e4-37a3-43a7-9b4d-60554bc7600c-2022-09-08T110000.000Z) (MONDO:0054843; AR; Definitive).
-- [ ] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CFAP418** — HGNC:27232; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_791b95ad-3c89-436c-aa6e-c153c1c1ea61-2024-07-11T160000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CFAP43** — HGNC:26684; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f2622390-3981-4f40-8c28-194fb13dd35a-2026-04-09T190000.000Z) (MONDO:0016575; AR; Limited); [spermatogenic failure 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5055c70-e22e-47e5-af3b-04f3f2a0ed34-2022-12-14T200000.000Z) (MONDO:0054723; AR; Definitive).
-- [ ] **CFH** — HGNC:4883; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9eeff991-b5ac-4d1b-a128-47fa2306c1c5-2024-02-21T170000.000Z) (MONDO:0013892; AR; Definitive); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b0a234f8-1d8e-4a26-a76f-40219591c75c-2023-07-02T160000.000Z) (MONDO:0016244; SD; Definitive).
-- [ ] **CFI** — HGNC:5394; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_943f6c06-e32b-4052-8628-4c28de20c838-2024-06-28T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3a5fcd7c-0da5-4ba3-b0c6-2d40f985c418-2023-06-01T160000.000Z) (MONDO:0016244; AD; Definitive).
-- [ ] **CFL2** — HGNC:1875; [nemaline myopathy 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c04b972-6797-42e7-87e8-ee97eb0bbad7-2019-11-25T150139.061Z) (MONDO:0012538; AR; Definitive).
-- [ ] **CFTR** — HGNC:1884; [cystic fibrosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb5b2eb1-e354-4e5a-ad5a-d0ee02805590-2022-06-01T040000.000Z) (MONDO:0009061; AR; Definitive).
+- [x] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **CFAP418** — HGNC:27232; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_791b95ad-3c89-436c-aa6e-c153c1c1ea61-2024-07-11T160000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **CFAP43** — HGNC:26684; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f2622390-3981-4f40-8c28-194fb13dd35a-2026-04-09T190000.000Z) (MONDO:0016575; AR; Limited); [spermatogenic failure 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5055c70-e22e-47e5-af3b-04f3f2a0ed34-2022-12-14T200000.000Z) (MONDO:0054723; AR; Definitive).
+- [x] **CFH** — HGNC:4883; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9eeff991-b5ac-4d1b-a128-47fa2306c1c5-2024-02-21T170000.000Z) (MONDO:0013892; AR; Definitive); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b0a234f8-1d8e-4a26-a76f-40219591c75c-2023-07-02T160000.000Z) (MONDO:0016244; SD; Definitive).
+- [x] **CFI** — HGNC:5394; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_943f6c06-e32b-4052-8628-4c28de20c838-2024-06-28T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3a5fcd7c-0da5-4ba3-b0c6-2d40f985c418-2023-06-01T160000.000Z) (MONDO:0016244; AD; Definitive).
+- [x] **CFL2** — HGNC:1875; [nemaline myopathy 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c04b972-6797-42e7-87e8-ee97eb0bbad7-2019-11-25T150139.061Z) (MONDO:0012538; AR; Definitive).
+- [x] **CFTR** — HGNC:1884; [cystic fibrosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb5b2eb1-e354-4e5a-ad5a-d0ee02805590-2022-06-01T040000.000Z) (MONDO:0009061; AR; Definitive).
 - [ ] **CHAMP1** — HGNC:20311; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4c67e6d5-1d58-4544-85e3-3078eec26231-2024-01-11T190000.000Z) (MONDO:0100038; AD; Definitive).
-- [ ] **CHAT** — HGNC:1912; [congenital myasthenic syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e6d5128-7f30-407b-9d0b-88bf8a719eb8-2025-03-24T160000.000Z) (MONDO:0009689; AR; Definitive).
-- [ ] **CHCHD10** — HGNC:15559; [frontotemporal dementia and/or amyotrophic lateral sclerosis 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d154f67a-25ce-40d3-9de3-1f001753843a-2022-09-13T160000.000Z) (MONDO:0014395; AD; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6940c6eb-dacf-46ce-a08c-d8b9f98b04ae-2023-05-18T160000.000Z) (MONDO:0044970; AD; Definitive).
-- [ ] **CHD2** — HGNC:1917; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5af80ea6-31c6-47d2-a5a5-299380f5593c-2022-07-14T190000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **CHAT** — HGNC:1912; [congenital myasthenic syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e6d5128-7f30-407b-9d0b-88bf8a719eb8-2025-03-24T160000.000Z) (MONDO:0009689; AR; Definitive).
+- [x] **CHCHD10** — HGNC:15559; [frontotemporal dementia and/or amyotrophic lateral sclerosis 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d154f67a-25ce-40d3-9de3-1f001753843a-2022-09-13T160000.000Z) (MONDO:0014395; AD; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6940c6eb-dacf-46ce-a08c-d8b9f98b04ae-2023-05-18T160000.000Z) (MONDO:0044970; AD; Definitive).
+- [x] **CHD2** — HGNC:1917; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5af80ea6-31c6-47d2-a5a5-299380f5593c-2022-07-14T190000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **CHD3** — HGNC:1918; [Snijders Blok-Campeau syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0e94c7c1-9c13-4189-8a9f-e9808916526f-2022-03-02T170000.000Z) (MONDO:0032600; AD; Definitive).
 - [ ] **CHD4** — HGNC:1919; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f1795399-d5bc-456d-bc6b-be07d7ab6af6-2023-04-19T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **CHD7** — HGNC:20626; [CHARGE syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_26ae5799-567b-431b-b981-3bc2f8635802-2026-06-03T040000.000Z) (MONDO:0008965; AD; Definitive).
-- [ ] **CHD8** — HGNC:20153; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3134b4e1-2fee-4025-99af-b2146cc2ccf8-2018-07-16T100000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **CHD8** — HGNC:20153; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3134b4e1-2fee-4025-99af-b2146cc2ccf8-2018-07-16T100000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **CHEK2** — HGNC:16627; [CHEK2-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_49566325-8710-4b72-ad64-79528585223d-2024-11-04T180000.000Z) (MONDO:0700271; AD; Definitive); [hereditary nonpolyposis colon cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_9862) (MONDO:0018630; AD; Limited).
 - [ ] **CHM** — HGNC:1940; [choroideremia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d84b01d6-8b3c-4a1e-bd25-68ee6962f374-2020-10-26T124704.094Z) (MONDO:0010557; XL; Definitive).
-- [ ] **CHMP2B** — HGNC:24537; [frontotemporal dementia and/or amyotrophic lateral sclerosis 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_287cab44-b8b6-411c-903a-6214ac5e98af-2022-07-12T160000.000Z) (MONDO:0010936; AD; Definitive).
+- [x] **CHMP2B** — HGNC:24537; [frontotemporal dementia and/or amyotrophic lateral sclerosis 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_287cab44-b8b6-411c-903a-6214ac5e98af-2022-07-12T160000.000Z) (MONDO:0010936; AD; Definitive).
 - [ ] **CHN1** — HGNC:1943; [Duane retraction syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c19544e0-2fb1-4d8a-b1ad-f493068f76bb-2025-12-01T180000.000Z) (MONDO:0011444; AD; Definitive).
 - [ ] **CHRNA1** — HGNC:1955; [myasthenic syndrome, congenital, 1B, fast-channel](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92a087f2-9dcc-4de3-8e33-3d01a123452a-2024-06-26T040000.000Z) (MONDO:0012156; AR; Definitive).
 - [ ] **CHRNA4** — HGNC:1958; [familial sleep-related hypermotor epilepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e3aa0108-5514-48ba-a09c-5506b2030d1f-2020-02-18T170000.000Z) (MONDO:0000030; AD; Definitive).
