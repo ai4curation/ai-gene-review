@@ -39,7 +39,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-10-10
+Last updated: 2026-10-11
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -94,6 +94,20 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
   in this branch
 - [ ] *Candida albicans* Q5AA40 - CGD seed for the
   `GO:0006031 chitin biosynthetic process` IBD
+
+## Family 4: MAP Kinases
+
+`PTHR24055` includes broad MAPK-family PAINT placements for generic kinase
+activity and active compartments, plus fungal HOG/Sty1 stress-MAPK placements
+such as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
+stress-activated MAPK-cascade assertions.
+
+- [x] `NEUCR/hog-1` - *Neurospora crassa* OS-2/HOG-1 stress MAPK; merged in PR
+  #4570
+- [x] `CANAL/HOG1` - *Candida albicans* HOG stress MAPK; merged in PR #4565
+- [ ] `SCHPO/sty1` - fission yeast Sty1/Spc1 stress MAPK; drafted in PR #4573
+  and awaiting follow-up review
+- [ ] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; drafted in this branch
 
 ---
 
@@ -153,3 +167,13 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
   already reviewed; `NEUCR/csc-1` checks the same `PTN002175570` fungal PAINT
   ancestor against the direct CSE-7/CHS-4 trafficking paper and the newer
   CSE-8 paralog paper, leaving `CANAL/CHS7` as the next Candida seed to review.
+
+## 2026-10-11
+
+- Re-reviewed `yeast/HOG1` against `PTHR24055`. The broad
+  `PANTHER:PTN000622075` Ser/Thr kinase, nucleus, and cytoplasm rows all remain
+  appropriate for an experimentally characterized MAPK, and the fungal
+  `PANTHER:PTN001172058` osmosensory/stress-MAPK placements fit the budding
+  yeast HOG cascade. The oxidative-stress IBA is valid but secondary for
+  budding yeast, so it remains non-core while the ancestral node itself is
+  recorded as `NO_FAILURE_NON_CORE`.
