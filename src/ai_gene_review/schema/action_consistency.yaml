@@ -1,0 +1,42 @@
+# Consistency rules between review actions within one gene review.
+#
+# A review makes claims about the gene, not about evidence codes: two rows that
+# share a term are two pieces of evidence for one claim, and the actions on them
+# must not contradict each other. Each rule names a pair of actions, how the two
+# rows' terms are related, and how severe the combination is. Strictness is
+# ratcheted by editing `severity` here (OK -> INFO -> WARNING -> ERROR).
+#
+# Columns:
+#   action_1, action_2  ActionEnum values.
+#   relation            SAME_TERM: both rows carry the same term id (symmetric).
+#                       DESCENDANT: action_1 is on a term that is a strict
+#                       descendant (is_a/part_of) of action_2's term.
+#   severity            OK (documented, not reported) | INFO | WARNING | ERROR.
+#   rationale           Why the combination is (in)consistent; shown in reports.
+#
+# Only non-negated rows are compared, and rows annotated to two different
+# isoforms are never compared with each other. Pairs not listed are not checked.
+# DESCENDANT rules are not evaluated yet (they need the ontology); only OK is
+# accepted for them until that lands. See docs/action_consistency.md.
+rules:
+  - action_1: ACCEPT
+    action_2: REMOVE
+    relation: SAME_TERM
+    severity: WARNING
+    rationale: >-
+      REMOVE says the claim is unlikely to be correct, ACCEPT says it is a core
+      function. Duplicate rows for a true claim reinforce it and are never grounds
+      for REMOVE, whatever their evidence code.
+  - action_1: ACCEPT
+    action_2: TOO_GENERAL
+    relation: DESCENDANT
+    severity: OK
+    rationale: >-
+      The intended use of TOO_GENERAL: a broad term subsumed by a more specific
+      accepted term.
+  - action_1: KEEP_AS_NON_CORE
+    action_2: TOO_GENERAL
+    relation: DESCENDANT
+    severity: OK
+    rationale: >-
+      As above, for a subsuming term kept as non-core.

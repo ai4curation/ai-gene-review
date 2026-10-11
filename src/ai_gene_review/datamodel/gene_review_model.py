@@ -624,6 +624,10 @@ class ActionEnum(str, Enum):
     """
     The term is not entirely wrong, but likely represents an over-annotation of the gene
     """
+    TOO_GENERAL = "TOO_GENERAL"
+    """
+    The term is true of the gene, but so broad that it adds nothing, because a more specific term asserted elsewhere in this review (ACCEPT, KEEP_AS_NON_CORE, NEW, or a MODIFY replacement) already entails it. This is a judgment about the term's informativeness, not about this row's evidence, which is weighed separately; it never means the claim is false. Use REMOVE only for claims that are unlikely to be correct, and MODIFY when this row's own evidence supports a more specific term. Use sparingly: a broader term that still says something useful about the gene (e.g. a pathway-level process alongside a specific step) should be accepted or kept as non-core.
+    """
     UNDECIDED = "UNDECIDED"
     """
     The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS RELEVANT PUBLICATIONS

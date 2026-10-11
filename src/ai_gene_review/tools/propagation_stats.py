@@ -21,7 +21,7 @@ from ai_gene_review.export.propagation_export import (
     collect_propagation_data,
 )
 
-ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "MODIFY",
+ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL", "MARK_AS_OVER_ANNOTATED", "MODIFY",
            "REMOVE", "UNDECIDED"]
 NEGATIVE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
 IBA_BUCKETS = [
