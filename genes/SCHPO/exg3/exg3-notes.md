@@ -34,7 +34,9 @@ Direct evidence:
   3-fold and 6-fold increase in activity"].
 - The normal vegetative role of Exg3 is not genetically resolved. Single
   `exg1`, `exg2`, `exg3`, and triple-deletion strains lacked detectable
-  vegetative growth and wall-stress phenotypes in PMID:20852022.
+  vegetative growth and wall-stress phenotypes in PMID:20852022, so the
+  fungal-type cell-wall beta-glucan metabolic process rows should be retained
+  as non-core rather than promoted into `core_functions`.
 - PMID:25825517 places Exg3 with the other assayed fission-yeast glucanases at
   the mating fusion focus: [PMID:25825517 A formin-nucleated actin aster
   concentrates cell wall hydrolases for cell fusion in fission yeast,
