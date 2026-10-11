@@ -91,10 +91,15 @@ uv run python genes/human/AHDC1/AHDC1-bioinformatics/audit_ahdc1_claims.py
 uv run python genes/human/AHDC1/AHDC1-bioinformatics/audit_ahdc1_claims.py --self-test
 ```
 
-Current state: `0 problems`, with `GOA rows=15  entries=20  NEW=5` and the action tally
-`ACCEPT 9 · MODIFY 2 · KEEP_AS_NON_CORE 2 · MARK_AS_OVER_ANNOTATED 2 · NEW 5`. These
-numbers are **not** hand-maintained here — the script derives both sides and fails if they
-disagree, so this table cannot drift away from the file without the check going red.
+**Historical state (pre-2026-09-27 re-review; no longer true).** At the time
+this audit was written it reported `0 problems`, with
+`GOA rows=15  entries=20  NEW=5` and the action tally
+`ACCEPT 9 · MODIFY 2 · KEEP_AS_NON_CORE 2 · MARK_AS_OVER_ANNOTATED 2 · NEW 5`.
+The review now has 15 entries and no `NEW` rows
+(`5 ACCEPT · 4 KEEP_AS_NON_CORE · 3 MODIFY · 3 REMOVE`), and this legacy audit
+exits 1 with eight failures; see `AHDC1-notes.md`, "Legacy checks and current
+validation boundary". The drift is now the point: the derive-both-sides
+guarantee held only while the script passed.
 
 All seven self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
 `retracted_phrasing`, `required_claim_missing`, `paired_claim_one_side_removed`,
