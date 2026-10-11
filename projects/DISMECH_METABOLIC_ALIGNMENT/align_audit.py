@@ -187,14 +187,18 @@ def _annoton_terms(an):
     return {t for t in out if str(t).startswith("GO:")}
 
 
-def _participant_accessions(part):
-    """UniProt accessions a module participant names, across every selector shape.
+def _participant_curies(part):
+    """Every identifier CURIE a module participant names, across all selector shapes.
 
     `FAMILY` is the most common selector in this corpus, and it names its proteins as
     `family.representative_members[].term`, not as a `gene_product`. Reading only
     `gene_product` would miss most parts: LIPA is a representative member of
     PANTHER:PTHR11005:SF26 in ldl_receptor_mediated_endocytosis, so it would read as
-    belonging to no module at all.
+    belonging to no module at all. A `PROTEIN_COMPLEX` selector nests a participant per
+    subunit, each typically a FAMILY, which is how ABCG5 and ABCG8 are named.
+
+    This returns raw CURIEs and leaves the UniProtKB filtering to the caller, so that
+    the recursion cannot strip a prefix the next level up is still matching on.
     """
     out = set()
     if not isinstance(part, dict):
@@ -211,14 +215,15 @@ def _participant_accessions(part):
     for key in ("active_units", "components"):
         for sub in pc.get(key) or []:
             if isinstance(sub, dict):
-                out |= _participant_accessions(sub.get("participant") or sub)
+                out |= _participant_curies(sub.get("participant") or sub)
     out.discard(None)
-    return {a.split(":", 1)[1] for a in out if str(a).startswith("UniProtKB:")}
+    return out
 
 
 def _annoton_accessions(an):
     """UniProt accessions a module annoton's participant names."""
-    return _participant_accessions(an.get("participant") or {})
+    return {c.split(":", 1)[1] for c in _participant_curies(an.get("participant") or {})
+            if str(c).startswith("UniProtKB:")}
 
 
 def _walk_annotons(obj):
