@@ -45,9 +45,10 @@
   Bcy1-GFP imaging reports that the holoenzyme is mainly cytosolic
   [PMID:39998251, "the PKA holoenzyme is mainly cytosolic"].
 - The adenylate cyclase-activating GPCR pathway IBA from
-  `PANTHER:PTN000180782` is over-scoped for BCY1. Bcy1 acts downstream of Ras1
-  and Cyr1 as the PKA inhibitor, so the row was modified to `GO:0141162
-  negative regulation of cAMP/PKA signal transduction`.
+  `PANTHER:PTN000180782` is appropriate for BCY1. Bcy1 is the cAMP-responsive
+  PKA regulatory subunit in the GPCR-to-cAMP cassette, so the row was accepted
+  and Bcy1's receptor-neutral cAMP/PKA pathway participation was retained via
+  the `GO:0046580` Ras-signaling replacement terms.
 - The fungi-level nuclear-localization IBA from `PANTHER:PTN000908765` is left
   unresolved. The 2006 abstract supports the older C. albicans Bcy1-GFP nuclear
   model [PMID:16473139, "nuclear localization of the regulatory subunit"], but
