@@ -363,6 +363,23 @@ budding yeast CPX-1275) and four predicted human complexes containing GPAA1.
       `reference_review` `MISCITED`.
 - [ ] Prepare feedback for CP and UniProt curators once there are several confirmed cases.
 
+## Reproduce
+
+Run from the repo root. Step 1 parses every gene review (about 2 minutes) and writes an
+intermediate file that is not committed. Steps 2 and 3 call QuickGO and NCBI E-utilities, so
+their output is a snapshot (2026-10-11 for the committed copy).
+
+```bash
+D=projects/COMPLEXPORTAL
+uv run python $D/scripts/cp_review_join.py /tmp/cp_joined.json              # CP rows + review actions
+uv run python $D/scripts/cp_pmid_usage.py $D/data/cp_pmid_usage.yaml        # GOA-wide PMID usage
+uv run python $D/scripts/cp_pmid_pubtypes.py $D/data/cp_pmid_usage.yaml     # add PubMed types
+uv run python $D/scripts/cp_flag_rules.py /tmp/cp_joined.json $D/data/cp_pmid_usage.yaml $D/data/cp_rule_eval.yaml
+```
+
+`data/cp_rejected_rows.yaml` was extracted from the step 1 output (rows whose action is
+`MARK_AS_OVER_ANNOTATED`, `MODIFY` or `REMOVE`).
+
 ## Sources
 
 - Complex Portal web service: `https://www.ebi.ac.uk/intact/complex-ws/complex/CPX-10141`,
