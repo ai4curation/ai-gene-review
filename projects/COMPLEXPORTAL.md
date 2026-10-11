@@ -30,8 +30,23 @@ For each CP complex, and for each GO row it generates, we ask:
    it pushes are NAS against the complex's reference. This is the main point to check.
 3. **Term distribution.** Is every subunit annotated with every complex-level BP and CC term? This
    is the same over-propagation problem as in [PROTEIN_COMPLEX_FUNCTIONS](PROTEIN_COMPLEX_FUNCTIONS.md),
-   but at the BP level. CP does not appear to push MF rows: none of the 5,005 rows is
-   `molecular_function`, and the complex MF stays on the CP record.
+   but at the BP level.
+
+### Two annotation layers
+
+CP annotates in GOA at two levels (checked in QuickGO for CPX-10141 and CPX-2687):
+
+- **The complex itself** (`ComplexPortal:CPX-*` as the gene product) carries `enables` MF,
+  `involved_in` BP and `located_in` CC, all NAS against the complex's reference.
+- **Every subunit** (`UniProtKB:*`) receives a derived copy: the same BP and CC terms, plus
+  `part_of` the GO complex term (IPI where CP has interaction evidence, as for the fly record,
+  otherwise NAS). The MF is **not** copied, so even the catalytic subunit (gpi8, PIG-K) gets no MF
+  from CP. None of the 5,005 subunit rows cached here is `molecular_function`.
+
+So the MF over-propagation issue does not arise from CP, but every BP and CC on the complex
+reaches every subunit unchanged, with the complex's evidence code and reference. In this
+repo's gene reviews only the subunit layer is visible, because `*-goa.tsv` is fetched per
+UniProt accession.
 4. **Process specificity.** Is a BP term the process the complex performs, or a downstream
    consequence (for example, cell wall organization for an anchoring enzyme)?
 
