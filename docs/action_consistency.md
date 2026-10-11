@@ -27,6 +27,28 @@ Each rule reads as a sentence, left to right: *the `action_1` row's term is
 `A ANCESTOR_OF B` and `B DESCENDANT_OF A` are the same rule; the loader rejects a
 table that lists both.
 
+### Exceptions: term filters
+
+A rule can be restricted to rows whose term matches, with optional `term_1` and
+`term_2` (one per side; SAME_TERM rows share a term, so they take `term_1` only):
+
+```yaml
+term_1: {exact: GO:0005515}                         # this term only
+term_1: {exact: [GO:0003674, GO:0008150, GO:0005575]}  # any of these
+```
+
+An exception is just a more specific rule, usually with severity `OK`. When several
+rules match a pair of rows, the one with the most term filters wins. Equally specific
+rules that can match the same rows but disagree on severity are rejected when the
+table loads, so there is never a silent tie.
+
+Deliberately not supported: NOT/AND expressions, ancestor-of matchers, and per-gene
+exceptions (fix the review instead). `{self_or_descendant: ...}` (a term or anything
+below it) is reserved and rejected until the hierarchical relations are evaluated,
+since it needs the ontology too. Protein binding wants `exact` anyway: its
+descendants (enzyme binding, kinase binding, ...) are informative and follow the
+normal rules.
+
 Only non-negated rows are compared; rows annotated to two different isoforms are not
 compared with each other. Pairs not in the table are not checked.
 
@@ -38,11 +60,13 @@ the existing reviews that violate it have been fixed.
 | action_1 | relation | action_2 | severity | reads as |
 |---|---|---|---|---|
 | ACCEPT | SAME_TERM | REMOVE | WARNING | an ACCEPT row and a REMOVE row share a term |
+| ACCEPT (term_1 exactly GO:0005515) | SAME_TERM | REMOVE | OK | exception: protein binding is tracked by its own policy |
 | TOO_GENERAL | ANCESTOR_OF | ACCEPT | OK | the TOO_GENERAL term is more general than an ACCEPTed term |
 | TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
-REMOVEd rows are mostly TAS, IDA, IMP and IPI). It stays a WARNING until those are
+REMOVEd rows are mostly TAS, IDA, IMP and IPI); with the protein binding exception,
+34 reviews (301 row pairs). It stays a WARNING until those are
 fixed, then can become an ERROR.
 
 `DESCENDANT_OF` and `ANCESTOR_OF` rules are not evaluated yet (they need the ontology at validation

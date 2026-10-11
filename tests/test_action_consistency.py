@@ -154,21 +154,30 @@ def test_gaa1_review_is_consistent():
 
 
 def test_mirror_image_hierarchical_rules_are_duplicates():
-    """"A ANCESTOR_OF B" and "B DESCENDANT_OF A" state the same rule."""
-    raw = _raw(action_1="TOO_GENERAL", relation="ANCESTOR_OF", action_2="ACCEPT",
-               severity="OK")
-    raw["rules"].append({**raw["rules"][0], "action_1": "ACCEPT",
-                         "relation": "DESCENDANT_OF", "action_2": "TOO_GENERAL"})
+    """ "A ANCESTOR_OF B" and "B DESCENDANT_OF A" state the same rule."""
+    raw = _raw(
+        action_1="TOO_GENERAL", relation="ANCESTOR_OF", action_2="ACCEPT", severity="OK"
+    )
+    raw["rules"].append(
+        {
+            **raw["rules"][0],
+            "action_1": "ACCEPT",
+            "relation": "DESCENDANT_OF",
+            "action_2": "TOO_GENERAL",
+        }
+    )
     with pytest.raises(ValueError, match="duplicate"):
         parse_rules(raw)
 
 
 def test_same_direction_with_swapped_actions_is_a_different_rule():
     """Direction matters: these say opposite things about which term is broader."""
-    raw = _raw(action_1="TOO_GENERAL", relation="ANCESTOR_OF", action_2="ACCEPT",
-               severity="OK")
-    raw["rules"].append({**raw["rules"][0], "action_1": "ACCEPT",
-                         "action_2": "TOO_GENERAL"})
+    raw = _raw(
+        action_1="TOO_GENERAL", relation="ANCESTOR_OF", action_2="ACCEPT", severity="OK"
+    )
+    raw["rules"].append(
+        {**raw["rules"][0], "action_1": "ACCEPT", "action_2": "TOO_GENERAL"}
+    )
     assert len(parse_rules(raw)) == 2
 
 
@@ -177,3 +186,118 @@ def test_packaged_table_puts_too_general_on_the_broader_term():
     assert rules
     for r in rules:
         assert r.describe().startswith("the TOO_GENERAL row's term is an ancestor of")
+
+
+PB = {"exact": "GO:0005515"}
+
+
+def test_exception_rule_overrides_general_rule():
+    rules = tuple(
+        parse_rules(
+            {
+                "rules": [
+                    _raw()["rules"][0],
+                    {**_raw()["rules"][0], "term_1": PB, "severity": "OK"},
+                ]
+            }
+        )
+    )
+    pb = doc(row("ACCEPT", term="GO:0005515"), row("REMOVE", term="GO:0005515"))
+    other = doc(row("ACCEPT"), row("REMOVE"))
+    assert pairs(pb, rules) == []
+    assert pairs(other, rules) == [(0, 1)]
+
+
+def test_exception_can_also_tighten():
+    """A filtered rule may raise severity for one term, not just exempt it."""
+    rules = tuple(
+        parse_rules(
+            {
+                "rules": [
+                    {**_raw()["rules"][0], "severity": "OK"},
+                    {
+                        **_raw()["rules"][0],
+                        "term_1": {"exact": ["GO:1", "GO:2"]},
+                        "severity": "ERROR",
+                    },
+                ]
+            }
+        )
+    )
+    [c] = iter_conflicts(
+        doc(row("ACCEPT", term="GO:2"), row("REMOVE", term="GO:2")), rules
+    )
+    assert c.rule.severity is Severity.ERROR
+    assert list(iter_conflicts(doc(row("ACCEPT"), row("REMOVE")), rules)) == []
+
+
+def test_equally_specific_overlapping_disagreeing_rules_are_ambiguous():
+    raw = {
+        "rules": [
+            {
+                **_raw()["rules"][0],
+                "term_1": {"exact": ["GO:1", "GO:2"]},
+                "severity": "OK",
+            },
+            {
+                **_raw()["rules"][0],
+                "term_1": {"exact": ["GO:2", "GO:3"]},
+                "severity": "ERROR",
+            },
+        ]
+    }
+    with pytest.raises(ValueError, match="ambiguous"):
+        parse_rules(raw)
+
+
+def test_disjoint_filters_are_not_ambiguous():
+    raw = {
+        "rules": [
+            {**_raw()["rules"][0], "term_1": {"exact": "GO:1"}, "severity": "OK"},
+            {**_raw()["rules"][0], "term_1": {"exact": "GO:2"}, "severity": "ERROR"},
+        ]
+    }
+    assert len(parse_rules(raw)) == 2
+
+
+def test_hierarchical_mirror_with_filters_is_a_duplicate():
+    """Filters travel with their action when a rule is mirrored."""
+    base = _raw(
+        action_1="REMOVE",
+        relation="ANCESTOR_OF",
+        action_2="ACCEPT",
+        severity="OK",
+        term_1=PB,
+    )
+    mirror = {
+        **base["rules"][0],
+        "action_1": "ACCEPT",
+        "relation": "DESCENDANT_OF",
+        "action_2": "REMOVE",
+        "term_2": PB,
+    }
+    del mirror["term_1"]
+    base["rules"].append(mirror)
+    with pytest.raises(ValueError, match="duplicate"):
+        parse_rules(base)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"term_1": {"self_or_descendant": "GO:0005488"}},  # reserved
+        {"term_1": {"fuzzy": "GO:0005515"}},
+        {"term_1": {"exact": []}},
+        {"term_1": "GO:0005515"},
+        {"term_2": PB},  # SAME_TERM takes term_1 only
+        {"term_3": PB},
+    ],
+)
+def test_malformed_term_filters_fail_fast(overrides):
+    with pytest.raises(ValueError):
+        parse_rules(_raw(**overrides))
+
+
+def test_packaged_table_exempts_protein_binding():
+    data = doc(row("ACCEPT", term="GO:0005515"), row("REMOVE", term="GO:0005515"))
+    assert list(iter_conflicts(data)) == []
