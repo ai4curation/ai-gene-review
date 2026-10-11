@@ -26,9 +26,9 @@ Flags: `UNTYPED`/`NO_ORIGIN` (genetic record lacks relationship type / variant o
 `AIGR_NOT_COMPLETE`, `NO_GO_ALIGNMENT` (no node term matches a core function), `NO_MODULE`.
 
 **Summary.** 116 entries; 161 principal gene rows (causative and untyped);
-148 have no flag other than `NO_MODULE`. Flag counts on principal rows: `NO_AIGR_REVIEW` 13, `NO_MODULE` 16, `NO_ORIGIN` 13.
+151 have no flag other than `NO_MODULE`. Flag counts on principal rows: `NO_AIGR_REVIEW` 10, `NO_MODULE` 16.
 
-Polygenic entries (Type I diabetes, the MELAS mtDNA genes) and modifier/susceptibility genes are
+Polygenic entries (Type I diabetes, the MELAS mt-tRNA genes) and modifier/susceptibility genes are
 listed but were not required to align: their genes are risk loci or mtDNA tRNAs, not the
 normal-function owners of a single pathway step.
 
@@ -110,19 +110,19 @@ normal-function owners of a single pathway step.
 | LPIN1-Related_Recurrent_Myoglobinuria | LPIN1 | CAUSATIVE | COMPLETE | GO:0008195 | triacylglycerol_biosynthesis | ok |
 | Late-Onset_Pompe_Disease | GAA | CAUSATIVE | COMPLETE | GO:0004558 | lysosomal_glycogen_degradation | ok |
 | Leber-like_Hereditary_Optic_Neuropathy_Autosomal_Recessive_1 | DNAJC30 | CAUSATIVE | COMPLETE | GO:0019899 GO:0034367 | - | NO_MODULE |
-| MELAS_Syndrome | MT-TL1 | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-ND5 | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-ND1 | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-ND6 | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TQ | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TH | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TK | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TC | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TS1 | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TS2 | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TV | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TW | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
-| MELAS_Syndrome | MT-TM | CAUSATIVE | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TL1 | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-ND5 | CAUSATIVE | COMPLETE | GO:0008137 | mitochondrial_complex_i_core | ok |
+| MELAS_Syndrome | MT-ND1 | CAUSATIVE | COMPLETE | GO:0008137 | mitochondrial_complex_i_core | ok |
+| MELAS_Syndrome | MT-ND6 | CAUSATIVE | COMPLETE | GO:0008137 | mitochondrial_complex_i_core | ok |
+| MELAS_Syndrome | MT-TQ | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TH | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TK | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TC | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TS1 | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TS2 | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TV | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TW | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
+| MELAS_Syndrome | MT-TM | CAUSATIVE | - | - | - | NO_AIGR_REVIEW |
 | MEND_Syndrome | EBP | CAUSATIVE | COMPLETE | GO:0006695 GO:0047750 | cholesterol_synthesis_post_lanosterol | ok |
 | MEND_Syndrome | APOA5 | MODIFIER | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
 | MEND_Syndrome | ABCA1 | MODIFIER | COMPLETE | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE |
@@ -223,13 +223,19 @@ normal-function owners of a single pathway step.
 
 ## Notes on remaining flags
 
-- Every causative nuclear-gene row is free of flags other than `NO_MODULE`. The other flags fall on
-  the MELAS mtDNA genes and on modifier, susceptibility and disputed genes, none of which were
-  required to align.
-- **MELAS mtDNA genes** (MT-TL1, MT-ND1/5/6 and the other tRNA genes): ai-gene-review has no
-  reviews for mitochondrially encoded tRNA or complex I subunit genes, and the dismech record
-  types them by relationship but not by variant origin (heteroplasmic mtDNA variants fit
-  neither GERMLINE nor SOMATIC cleanly).
+- Every causative protein-coding gene row is free of flags other than `NO_MODULE`. The other
+  flags fall on the MELAS mt-tRNA genes and on modifier, susceptibility and disputed genes,
+  none of which were required to align.
+- **MELAS mtDNA genes**: MT-ND1, MT-ND5 and MT-ND6 have ai-gene-review reviews and are
+  parts of mitochondrial_complex_i_core; they align with the dismech complex I node
+  (NADH:ubiquinone oxidoreductase activity, DECREASED). The mt-tRNA genes (MT-TL1 and
+  others) encode no protein, so they have no UniProt entry and cannot be reviewed in
+  ai-gene-review; they are the only rows still flagged `NO_AIGR_REVIEW`.
+- **UCP2** (DISPUTED): dismech binds regulation of insulin secretion (GO:0050796), which
+  is the parent of a UCP2 annotation the review keeps as non-core (GO:0061179). The
+  audit compares against core functions only. dismech deliberately binds no UCP2
+  activity, because its causal role in hyperinsulinism and its transported substrate
+  are both disputed.
 - **TMEM251** is the dismech/HGNC-build label for the gene now named LYSET; it is matched to
   the LYSET review.
 - **Type I diabetes risk loci** (PTPN22, IL2RA, CTLA4, IFIH1, BACH2, TNFAIP3, EGR2, IRF4, IKZF1,
