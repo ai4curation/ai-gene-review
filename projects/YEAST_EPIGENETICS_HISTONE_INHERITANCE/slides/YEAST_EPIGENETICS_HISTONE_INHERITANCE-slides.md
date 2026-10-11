@@ -36,9 +36,9 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 
 ## Bottom line
 
-- **25 genes** reviewed: **1,255 existing annotations**, 778 ACCEPT, 288 KEEP_AS_NON_CORE, 132 REMOVE.
-- **110 of the 132 removals** are generic `protein binding` rows. The substantive fixes: SAS2/SAS3 substrates (H4K16 / H3K14), IBA rows that confuse ORC with SIR3, and a mis-filed HST1 review that was ZDS1.
-- **Two gaps:** the CAF-1 chromatin assembly factor subunits (RLF2/CAC1, CAC2, MSI1) are not yet reviewed; CLR4 is a fission yeast gene.
+- **28 genes** reviewed: **1,373 existing annotations** plus 11 proposed NEW rows.
+- Current action split: **828 ACCEPT**, **184 KEEP_AS_NON_CORE**, **305 REMOVE**, 22 MODIFY, 19 MARK_AS_OVER_ANNOTATED, 15 UNDECIDED, 11 NEW.
+- **270 of the 305 removals** are generic `protein binding` rows; one cleanup remains: CLR4 is a fission yeast gene to drop or replace.
 
 ---
 
@@ -67,7 +67,7 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 - **REMOVE** SAS2 `GO:0035267` NuA4 histone acetyltransferase complex (IBA): SAS2 is in the SAS complex, not NuA4.
 - **REMOVE** SIR3 `GO:0006270` DNA replication initiation (IBA): SIR3 restrains origin activity; it does not start replication.
 - **MARK_AS_OVER_ANNOTATED** DOT1 `GO:0008168` methyltransferase activity (IEA): the specific H3K79 term says more.
-- **UNDECIDED** 9 HST1 rows: Sir2-like inferences and experimental rows that need the full text.
+- **UNDECIDED** 7 HST1 rows: Sir2-like inferences and experimental rows that need the full text.
 
 ---
 
@@ -81,9 +81,8 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 
 ## Status and next steps
 
-- ✅ Reviewed: 25 intended genes in `genes/yeast/` (HATs, HDACs, SIR, HMTs, FACT/ASF1/RTT109, SWI/SNF, CHD1, RCO1, PHD1)
-- ⬜ Chromatin assembly factor CAF-1: RLF2 (alias CAC1), CAC2, MSI1 reviews pending. The old `genes/yeast/CAF1/` folder was the CCR4-NOT deadenylase, now renamed POP2 and outside this project
+- ✅ Reviewed: 28 intended genes in `genes/yeast/` (HATs, HDACs, SIR, HMTs, FACT/CAF-1/ASF1/RTT109, SWI/SNF, CHD1, RCO1, PHD1)
+- ✅ Chromatin assembly factor CAF-1: RLF2 (alias CAC1), CAC2 and MSI1 are now reviewed. The old `genes/yeast/CAF1/` folder was the CCR4-NOT deadenylase, now renamed POP2 and outside this project
 - ⬜ CLR4: replace with an *S. cerevisiae* gene or drop
-- ⬜ Checklist boxes and per-phase counts on the page predate later re-reviews
 
 **Read more:** `projects/YEAST_EPIGENETICS_HISTONE_INHERITANCE.md`
