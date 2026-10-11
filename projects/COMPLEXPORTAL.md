@@ -85,6 +85,57 @@ These counts come from the `*-goa.tsv` files under `genes/`, filtered to `ASSIGN
 By species: human 3,820; *S. cerevisiae* 382; *D. melanogaster* 228; *C. elegans* 215;
 *S. pombe* 105; mouse 103; *E. coli* 100; *A. thaliana* 48.
 
+## First accuracy estimate from existing gene reviews
+
+Every one of the 5,005 CP subunit rows in the cached GOA files belongs to a gene that already
+has a review (1,093 genes). Each row was matched to its review action on (GO term, evidence
+code, reference) using [`scripts/cp_review_join.py`](COMPLEXPORTAL/scripts/cp_review_join.py),
+and all rows matched. "Acceptable" means `ACCEPT` or `KEEP_AS_NON_CORE`.
+
+| Slice | Rows | Acceptable | Over-annotated | Modify | Remove | Undecided |
+|---|---|---|---|---|---|---|
+| **All** | 5,005 | **88.0%** | 4.6% | 4.6% | 0.8% | 1.9% |
+| CC | 2,191 | 95.0% | 1.2% | 2.3% | 0.5% | 1.0% |
+| BP | 2,814 | 82.6% | 7.2% | 6.3% | 1.1% | 2.7% |
+| IPI | 686 | 94.9% | 1.9% | 2.9% | 0 | 0.3% |
+| IDA | 984 | 90.4% | 3.2% | 4.5% | 0.8% | 1.1% |
+| NAS | 3,131 | 85.6% | 5.9% | 5.0% | 1.0% | 2.5% |
+| IMP | 153 | 89.5% | 1.3% | 3.9% | 1.3% | 3.9% |
+
+By species, the acceptable share is 88.0% for human (3,820 rows), 86.6% for budding yeast (382),
+94.7% for fly (228), 90.2% for worm (215), 94.3% for pombe (105), 86.0% for *E. coli* (100),
+97.9% for *Arabidopsis* (48) and 65.0% for mouse (103). The mouse figure comes almost entirely
+from Actb: 27 of its 36 rejected rows are β-actin inheriting the processes of every complex it
+belongs to.
+
+**How to read this.** About 88% of CP-derived subunit annotations survive review, 95% for CC and
+83% for BP. Outright wrong rows are under 1%; most problems are imprecision (wrong-direction
+regulation terms, downstream outcomes, over-general terms). Patterns among the 42 `REMOVE` rows:
+
+- **Direction errors in regulation terms.** The inhibited partner gets "negative regulation of X":
+  BAK1 (MOMP, cytochrome c release), DFFB (DNA fragmentation), worm ced-3 and ced-4.
+- **Downstream or neighbouring processes.** SDHA, SDHB and SDHC are given "proton motive
+  force-driven mitochondrial ATP synthesis" (20 rows of this term are rejected across genes);
+  ESPL1 is given sister-chromatid cohesion maintenance.
+- **Wrong location for a subunit.** CAF-1 subunits (yeast CAC2, MSI1, RLF2) are given `part_of`
+  nucleosome; *E. coli* periplasmic PstS is given `membrane`.
+- **References that do not cover the subunit,** as in the gaa1 case: dynein-2 subunits given
+  "male germ cell nucleus" from a dynein-1 paper.
+- **Promiscuous subunits** (actin, and probably other shared subunits) inherit every process of
+  every complex they belong to.
+
+**Limitations.**
+
+- The reviews are AI reviews, not an independent gold standard, and they lean towards `ACCEPT`.
+- They judge whether a term is right for the gene, not whether the cited reference supports it.
+  So the reference-support failures that the IEA working group flagged, and that gaa1 shows, are
+  mostly not counted here. The three pombe gaa1 `REMOVE` rows are counted as removed only because
+  they duplicate the IBA rows.
+- Human rows dominate the total (76%).
+- Treat 88% as an upper bound on term correctness, and as saying nothing about evidence
+  correctness. A manual audit of a random sample is the next step, scoring term and reference
+  separately.
+
 ## Case 1: Gaa1 in the GPI-anchor transamidase complex
 
 Records were fetched from the CP web service on 2026-10-11 (`/intact/complex-ws/complex/<CPX>`).
@@ -172,6 +223,9 @@ budding yeast CPX-1275) and four predicted human complexes containing GPAA1.
 
 ## Plan
 
+- [x] First estimate: join CP GOA rows to existing review actions (88% acceptable).
+- [ ] Manual audit of a stratified random sample (by species, aspect and evidence), scoring
+      term correctness and reference support separately.
 - [ ] Fetch CP records for every complex behind a `ComplexPortal` GOA row in reviewed genes. Cache
       them as YAML (for example `projects/COMPLEXPORTAL/complexes/CPX-*.yaml`), joined to the GOA rows.
 - [ ] For NAS rows, list the distinct cited PMIDs per species, and flag those whose cached
