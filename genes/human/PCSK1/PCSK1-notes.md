@@ -1,9 +1,29 @@
 # PCSK1 (P29120) — curation notes
 
-Deep research providers were unavailable in this session (`just deep-research-falcon human PCSK1`
-timed out after 600 s with "agentapi not found in PATH"), so the literature work below was done
-manually from PubMed and the cached `publications/` entries. No file was named
-`-deep-research-<provider>.md`.
+Deep research: the client failed in this session (`just deep-research-falcon human PCSK1` timed out
+after 600 s with "agentapi not found in PATH"), so the literature work below was done manually
+from PubMed and the cached `publications/` entries. The provider finished afterwards and
+`PCSK1-deep-research-falcon.md` is committed; it was checked against this review on 2026-10-11.
+
+- It agrees on the core annotation: a calcium-dependent subtilisin/kexin-family serine
+  endoprotease performing limited proteolysis immediately after a basic residue at paired-basic
+  sites, autocatalytically processed during maturation, sorted to dense-core secretory granules
+  where it acts at about pH 5-5.5. A dibasic motif alone does not make a protein a substrate.
+- It supports the granule-sorting annotation with the Dikeakos NMR work: residues 738-750 form an
+  amphipathic helix and a hydrophobic patch centred on Leu745 redirects a constitutively secreted
+  reporter to regulated granules. That is a trafficking role of the C-terminal tail, distinct from
+  catalysis by the S8 domain.
+- It raises a species caveat worth noting against the proinsulin substrate rows. The familiar
+  division of labour in which PC2 cuts the other proinsulin junction is largely mouse-based; in
+  primary human islets, validated staining found essentially no PC2 in ordinary beta cells, and
+  blocking PC2-dependent glucagon formation did not prevent mature insulin formation, while two
+  PC1/3 inhibitors did impede proinsulin processing.
+- It agrees that proglucagon processing to GLP-1 and GLP-2 in intestinal L cells is PCSK1's, and
+  that the same precursor yields glucagon by a PC2-dependent route in alpha cells, so the product
+  depends on which convertase the cell expresses.
+- It notes PC2 can partly compensate for pro-IAPP processing, and that some authentic circulating
+  ACTH remains in human PCSK1 deficiency, so PCSK1 is not invariably the exclusive processor of
+  its substrates.
 
 ## Enzyme identity
 

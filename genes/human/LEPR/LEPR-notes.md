@@ -1,9 +1,27 @@
 # LEPR (P48357) — curation notes
 
-Deep research providers were unavailable in this session (`just deep-research-falcon human LEPR`
-timed out after 600 s with "agentapi not found in PATH"), so the literature work below was done
-manually from PubMed and the cached `publications/` entries. No file was named
-`-deep-research-<provider>.md`.
+Deep research: the client failed in this session (`just deep-research-falcon human LEPR` timed out
+after 600 s with "agentapi not found in PATH"), so the literature work below was done manually
+from PubMed and the cached `publications/` entries. The provider finished afterwards and
+`LEPR-deep-research-falcon.md` is committed; it was checked against this review on 2026-10-11.
+
+- It agrees on the core annotation: a class-I cytokine receptor for leptin with no intrinsic
+  kinase activity, the long LEPRb isoform being the signalling-competent form, activating
+  receptor-associated JAK2 through Box1/Box2, with Tyr1138-STAT3 the dominant route (and the
+  inducer of SOCS3 feedback), Tyr985 giving SOCS3 recruitment and SHP2-GRB2-ERK, and Tyr1077-STAT5
+  biochemically real but much less consequential for energy balance.
+- It supports the blood-brain-barrier call as now restated in the review. The short isoform ObRa
+  has long been proposed as the shuttle, and that is the claim the direct experiments refute:
+  endothelial ObR is not the primary leptin transporter at the human BBB [PMID:27037668], and the
+  LEPRa-LRP1 transcytosis model rests on a 2023 preprint using mouse and rat cells, not human
+  in vivo data.
+- It adds the Saxton 2023 cryo-EM activation mechanism: leptin binds CRH2 at a higher-affinity
+  interface and the Ig-like region at a lower-affinity one, giving an asymmetric assembly in which
+  one leptin bridges two receptor chains. The purified structural complex used mouse proteins;
+  signalling was tested separately with human leptin and full-length human LEPR.
+- It notes SEL1L-HRD1 ER-associated degradation controls LEPRb maturation and surface delivery,
+  with the obesity-associated human C604S receptor folding-defective. The ER is a biogenesis and
+  quality-control compartment, not a signalling site, which is how this review treats it.
 
 ## Identity and architecture
 

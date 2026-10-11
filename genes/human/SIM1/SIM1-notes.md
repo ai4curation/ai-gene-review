@@ -1,7 +1,26 @@
 # SIM1 notes
 
-Deep research (`just deep-research-falcon human SIM1`) timed out after 600 s ("All providers failed"),
-so the literature work was done manually with PubMed and the cached `publications/` files.
+Deep research: the client reported a timeout after 600 s ("All providers failed"), so the
+literature work was done manually with PubMed and the cached `publications/` files. The provider
+finished afterwards and `SIM1-deep-research-falcon.md` is committed; it was checked against this
+review on 2026-10-11.
+
+- It agrees on the core annotation: a nuclear bHLH-PAS transcription factor acting mainly as a
+  heterodimer with ARNT2 (and with ARNT in cell assays), preferring TACGTG-containing elements,
+  required for PVN, supraoptic and anterior periventricular neuroendocrine development.
+- It answers suggested question 1, which has been rewritten accordingly. Postnatal CNS deletion of
+  Sim1 is by itself sufficient to cause hyperphagic obesity in mouse, dosage-dependently, with
+  reduced hypothalamic Oxt and PVN Mc4r and without global PVN hypocellularity or loss of the
+  examined projections [PMID:20220015]. The postnatal role is therefore separable from the
+  developmental one; what remains open is the mechanism.
+- It cautions on exactly the point question 2 asks about: reduced Oxt or Mc4r expression in a
+  Sim1 mutant does not establish either as a directly bound SIM1 target, and Brn2 was not induced
+  in the cell-line screen that found 268 candidate SIM1/ARNT2-responsive transcripts. The complete
+  set of directly occupied human hypothalamic targets is unresolved.
+- On the p.R171H variant, a 2026 biochemical study found impaired DNA-responsive reporter activity
+  with preserved ARNT/ARNT2 association, and purified wild-type and R171H complexes were not
+  distinguishable by its mobility-shift assays, so the defect is narrower than loss of all
+  intrinsic DNA binding.
 
 ## Function
 - bHLH-PAS TF requiring ARNT/ARNT2 [PMID:23778136 "One of the aryl hydrocarbon receptor nuclear translocators, either ARNT or ARNT2, is required as a dimerization partner for SIM1 to function as a transcription factor, with mouse knockout studies suggesting that ARNT2 is the in vivo partner in the hypothalamus"]; [PMID:10640708 "we provide evidence that Sim1 and Arnt2 form dimers in vitro"].
