@@ -1,5 +1,6 @@
 ---
 title: "UniProt CAUTION — High-Value Review Candidates"
+autolink_gene_symbols: false
 ---
 
 # High-Value CAUTION Review Candidates (not yet in repo)
@@ -103,4 +104,3 @@ Human examples:
 - **HBG1** (P69891): The modification form of Leu-142 is subject of controversy and could be the artifactual result of sample handling. {ECO:0000305|Pu
 - **NOX1** (Q9Y5S8): An isoform named NOH-1S resulting from alternative splicing was first described as a voltage-gated proton channel that mediates th
 - **PPP1R13L** (Q8WUF5): An alternative product iASPP(RAI) has been described (PubMed:10336463, PubMed:15489900). However, it is not detected in vivo and i
-

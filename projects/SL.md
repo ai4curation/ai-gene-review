@@ -1,6 +1,7 @@
 ---
 title: "UniProt Subcellular Locations (SL) Unique Terms Project"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [PIPELINE, EVALUATION]
 species: [human, mouse, yeast, SCHPO, worm, DICDI]
 sidecars:
@@ -10,10 +11,6 @@ sidecars:
 manifest:
   slides:
     - href: SL/slides/SL-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/U1DVKXZnKCDpdWahMw1JTy
-      title: Project brief
 ---
 
 # UniProt Subcellular Locations (SL) Unique Terms Project
@@ -22,16 +19,18 @@ manifest:
 cellular-component annotations through the still-running `GO_REF:0000044`
 pipeline, and many genes get a location from that source alone. We scanned
 every such SL-unique annotation in the repo, compared them with the reviewers'
-verdicts, and re-reviewed 22 genes where the pattern pointed. The main result
-is that the failures are about granularity, not truth: bare `membrane`,
-`cytoskeleton` and `mitochondrial membrane` fail at 23–36%, while every precise
-membrane term fails at 0%, and the obvious fix (drop an SL term when a more
-specific one is present) was tested and refuted. The tables below were measured
-on 1,297 reviewed annotations; a re-run of `scan_sl_unique.py` on 2026-09-26
-over the grown corpus (1,565 reviewed, 1,179 gene folders) gives the same
-picture, with 40% downgraded or worse and a 9% hard-issue rate. So far 27
-annotations have been moved, 18 of them for the defective SL-0221 →
-GO:0034045 mapping.
+verdicts, and re-reviewed 22 genes where the pattern pointed. The first result
+was that the failures are about granularity, not truth: broad locations such as
+`membrane`, `cytoskeleton`, `endomembrane system` and `mitochondrial membrane`
+were flagged far more often than precise locations such as ER, Golgi and late
+endosome membranes. That pattern still holds on 2026-10-05 after the corpus grew
+to 1,852 SL-unique annotations in 1,380 gene folders, 1,837 of them reviewed:
+39% are downgraded or worse and 8% carry a hard issue. The obvious fix, dropping
+an SL term when a more specific CC term is present, was tested and refuted. So
+far the SL first pass has moved 27 annotations, 18 of them for the defective
+SL-0221 → GO:0034045 mapping; GO has since obsoleted GO:0034045 and created
+GO:7770114 phagophore membrane, confirming the SL-0221 finding while superseding
+some of the original missing-term recommendations.
 
 We did this because `GO_REF:0000044` is one of the largest single sources of
 CC annotation in GOA and, unlike the retired keyword pipeline, it records the
@@ -60,42 +59,43 @@ for free, per annotation.
 
 ## Key finding: the failure is granularity, not truth
 
-Across 1,297 reviewed SL-unique annotations in this corpus (986 gene folders), **41% were
-downgraded or worse** and **10% carry a hard issue** (`REMOVE` / `MARK_AS_OVER_ANNOTATED` /
-`MODIFY`). But the issue rate is not spread evenly, and the pattern is sharp:
+Across the 1,297 reviewed SL-unique annotations in the 2026-08 snapshot, **41% were
+downgraded or worse** and **10% carried a hard issue** (`REMOVE` / `MARK_AS_OVER_ANNOTATED` /
+`MODIFY`). Re-running the scanner on 2026-10-05 gives nearly the same aggregate
+view — 718 of 1,837 reviewed rows downgraded or worse (39%), and 151 of 1,837
+with a hard issue (8%) — but the issue rate is not spread evenly:
 
 | SL location | Reviewed | Issue rate | | SL location | Reviewed | Issue rate |
 |---|---|---|---|---|---|---|
-| SL-0171 Mitochondrion membrane | 13 | **31%** | | SL-0097 ER membrane | 36 | **0%** |
-| SL-0066 Cilium | 12 | **25%** | | SL-0134 Golgi apparatus membrane | 21 | **0%** |
-| SL-0162 Membrane | 61 | **28%** | | SL-0151 Late endosome membrane | 18 | **0%** |
-| SL-0147 Endomembrane system | 10 | **20%** | | SL-0071 Clathrin-coated vesicle membrane | 18 | **0%** |
-| SL-0090 Cytoskeleton | 59 | **27%** | | SL-0091 Cytosol | 13 | **0%** |
-| SL-0132 Golgi apparatus | 23 | **17%** | | SL-0158 Lysosome | 10 | **0%** |
-| SL-0243 Secreted | 89 | **15%** | | SL-0182 Nucleus membrane | 10 | **0%** |
+| SL-0171 Mitochondrion membrane | 14 | **36%** | | SL-0097 ER membrane | 50 | **0%** |
+| SL-0066 Cilium | 15 | **27%** | | SL-0134 Golgi apparatus membrane | 33 | **0%** |
+| SL-0147 Endomembrane system | 16 | **25%** | | SL-0151 Late endosome membrane | 22 | **0%** |
+| SL-0162 Membrane | 103 | **21%** | | SL-0071 Clathrin-coated vesicle membrane | 20 | **5%** |
+| SL-0090 Cytoskeleton | 110 | **16%** | | SL-0091 Cytosol | 21 | **0%** |
+| SL-0132 Golgi apparatus | 33 | **15%** | | SL-0158 Lysosome | 10 | **0%** |
+| SL-0243 Secreted | 107 | **15%** | | SL-0182 Nucleus membrane | 14 | **0%** |
 
 The cleanest demonstration is within a single organelle:
 
 | SL location | Reviewed | Issue rate |
 |---|---|---|
-| SL-0171 Mitochondrion **membrane** | 13 | 31% |
-| SL-0168 Mitochondrion **inner** membrane | 19 | 11% |
-| SL-0170 Mitochondrion **matrix** | 14 | 7% |
+| SL-0171 Mitochondrion **membrane** | 14 | 36% |
+| SL-0168 Mitochondrion **inner** membrane | 21 | 10% |
+| SL-0170 Mitochondrion **matrix** | 16 | 6% |
 
-(The SL-0162 and SL-0090 rates include the batches reviewed under their own subprojects; the
-pre-batch figures were 23% and 17%.)
+Counts in both tables are from `scan_sl_unique.py` on 2026-10-05.
 
 Same organelle, same pipeline, same curators. The under-specified location is three to four
-times worse. The pattern repeats for Golgi apparatus (17%) versus Golgi apparatus membrane
-(0%), endoplasmic reticulum (10%) versus ER membrane (0%), and bare Membrane (28%) versus
-every specific membrane in the table (0%).
+times worse. The pattern repeats for Golgi apparatus (15%) versus Golgi apparatus membrane
+(0%), endoplasmic reticulum (8%) versus ER membrane (0%), and bare Membrane (21%) versus
+the specific ER, Golgi and late-endosome membrane locations that remain at 0%.
 
 **This is a different failure mode from SPKW.** SPKW's problems were semantic — process
 conflation, regulatory conflation, expression mistaken for function. The gene was in the wrong
 place in a pathway. SL's problem is that an under-specified location maps to a GO term that is
 *true but uninformative*, and reviewers then have to adjudicate whether "true but
 uninformative" counts as over-annotation. Hence the unusually high `KEEP_AS_NON_CORE` share
-(406 of 1,297, 31%) alongside a modest hard-issue rate.
+(567 of 1,837, 31%) alongside a modest hard-issue rate.
 
 ## The redundancy hypothesis, tested and refuted
 
@@ -132,9 +132,11 @@ first.
 location says anything, and it has to be made per annotation.
 
 *Caveat on re-running the numbers:* the table above is the pre-intervention measurement.
-Re-running the script now returns 12% vs 8%, because the [SL-0162](SL/SL-0162-MEMBRANE.md) and
+Re-running the script on 2026-10-05 returns 10% vs 7%, but the
+[SL-0162](SL/SL-0162-MEMBRANE.md) and
 [SL-0090](SL/SL-0090-CYTOSKELETON.md) batches deliberately selected redundant cases to
-re-review. That is a self-fulfilling measurement and should not be quoted as a result.
+re-review. That later split is partly self-fulfilling; the least biased redundancy test is the
+pre-batch one.
 
 ## Failure-mode patterns
 
@@ -172,11 +174,14 @@ was not used:
   were already `MODIFY` to `GO:0016010` and `GO:0042383`. A protein associating with the
   cytoskeleton *through a named complex* can be annotated to the complex. Page corrected.
 
-**So the missing-term situation is specific to SL-0221**, where the target GO term is itself
-defective and the replacements (phagophore membrane, phagophore rim, ER-phagophore contact
-site) genuinely do not exist and are now proposed on the ATG2A, ATG2B and atg-18 reviews.
-Everywhere else in the SL corpus, the destination exists — the question is only whether the
-reviewer looked for it.
+At the 2026-08 sweep, the missing-term situation was specific to SL-0221: the
+target GO term was defective and the needed replacements (phagophore membrane,
+phagophore rim, ER-phagophore contact site) were not all present. GO has since
+obsoleted GO:0034045 and created GO:7770114 phagophore membrane, so several
+GO:0034045 reviews now point to the new term where the evidence really is
+phagophore-membrane residence. The broader sweep result still stands:
+everywhere else in the SL corpus, the destination exists — the question is only
+whether the reviewer looked for it.
 
 ### Pattern C has a mirror image: the reviewer's family argument over-reaches too
 
@@ -204,8 +209,9 @@ say so explicitly, so the reasoning can be checked separately from the conclusio
 Pattern C is the one with a targeted fix: auditing the handful of family rules that attach
 `Secreted`/`Cell surface` to housekeeping enzyme families would remove a disproportionate
 share of the *wrong* (as opposed to merely vague) annotations. HAMAP MF_00318 on enolase
-alone accounts for two of the 13 SL-0243 flags in this small corpus and would account for far
-more at GOA scale.
+alone accounts for two of the first 13 SL-0243 flags in this small corpus and would account
+for far more at GOA scale; [#4259](https://github.com/ai4curation/ai-gene-review/issues/4259)
+tracks that follow-up.
 
 Full tables and the query in [SL-METHODOLOGY.md](SL/SL-METHODOLOGY.md), regenerable from a
 committed script.
@@ -214,16 +220,16 @@ committed script.
 
 | Subproject | SL | Reviewed | Issue rate | Status |
 |---|---|---|---|---|
-| [Membrane](SL/SL-0162-MEMBRANE.md) | SL-0162 | 61 | 28% | 3 annotations moved; pattern A |
-| [Cytoskeleton](SL/SL-0090-CYTOSKELETON.md) | SL-0090 | 59 | 27% | 6 annotations moved; patterns A + B |
-| [Secreted](SL/SL-0243-SECRETED.md) | SL-0243 | 89 | 15% | analysis only; patterns C + D |
-| [Mitochondrial granularity triple](SL/SL-MITOCHONDRIA.md) | SL-0171/0168/0170 | 46 | 31/11/7% | controlled comparison; analysis only |
-| [SL-0221 / phagophore assembly site membrane](CONDENSATES/GO_0034045-annotation-audit.md) | SL-0221 | 29 | — | 18 annotations moved; feeding GO issue #29437 |
+| [Membrane](SL/SL-0162-MEMBRANE.md) | SL-0162 | 103 | 21% | 3 annotations moved; pattern A |
+| [Cytoskeleton](SL/SL-0090-CYTOSKELETON.md) | SL-0090 | 110 | 16% | 6 annotations moved; patterns A + B |
+| [Secreted](SL/SL-0243-SECRETED.md) | SL-0243 | 107 | 15% | analysis only; pattern C follow-up in #4259 |
+| [Mitochondrial granularity triple](SL/SL-MITOCHONDRIA.md) | SL-0171/0168/0170 | 51 | 36/10/6% | controlled comparison; analysis only |
+| [SL-0221 / phagophore assembly site membrane](CONDENSATES/GO_0034045-annotation-audit.md) | SL-0221 | 29 | — | 18 first-pass annotations moved; GO:0034045 is now obsolete |
 
 ### SL-0221: a third failure mode
 
-`SL-0221 Preautophagosomal structure membrane` → `GO:0034045` is neither a semantic error nor
-a granularity error. **The target GO term is logically defective**: it asserts via
+`SL-0221 Preautophagosomal structure membrane` → `GO:0034045` was neither a semantic error nor
+a granularity error. **The target GO term was logically defective**: it asserted via
 `bounding_layer_of` that a membrane bounds the phagophore assembly site, which is a protein
 condensate with no bounding bilayer.
 
@@ -237,15 +243,19 @@ This case is documented in full in the
 - **The mapping amplifies whatever it is given.** SL-0221 drives ~801 IEAs under
   `GO_REF:0000044`, plus everything derived from it via Ensembl projection
   (`GO_REF:0000107`), ARBA (`GO_REF:0000117`) and TreeGrafter (`GO_REF:0000118`). This corpus
-  holds both ends of one such chain: human RAB7A's annotation is a projection of mouse Rab7a's.
+  holds both ends of one such chain: human RAB7A's annotation is a projection of mouse `Rab7a`'s.
 - **SL-unique annotations are where the mapping is unchecked.** Every one of the 23 previously
   reviewed GO:0034045/GO:0097632 assertions in this corpus had been `ACCEPT`ed. Re-reviewed
   against the ontology defect, 18 of 29 moved to `MODIFY`.
+- **The ontology can recover.** In 2026-09, GO obsoleted GO:0034045 and created
+  GO:7770114 phagophore membrane. Current reviews now use GO:7770114 for several
+  membrane-supported cases, superseding the original missing-term recommendation.
 
 ## What the subprojects established
 
-- **The granularity signal is real and large** — 28% on `membrane`, 27% on `cytoskeleton`,
-  31% on `mitochondrial membrane`, against 0% on every precise membrane term in the corpus.
+- **The granularity signal is real and large** — as of 2026-10-05, 21% on `membrane`, 16% on
+  `cytoskeleton`, and 36% on `mitochondrial membrane`, against 0% on ER, Golgi, and late
+  endosome membrane.
 - **But it is not redundancy**, so it cannot be automated away (above).
 - **Precision does not reduce errors; it makes them visible.** The mitochondrial triple's
   precise siblings still fail at 7-11%, but they fail *informatively*: a wrong sub-compartment
@@ -264,17 +274,20 @@ This case is documented in full in the
   specific descendant from any source?~~ **Tested and refuted** (above): it would address
   almost nothing. What *would* help is harder — a judgment about whether a location is
   informative for a given protein, which is not derivable from the annotation graph.
-- Should GO's `located_in` be usable at all for peripheral association (pattern B), or does
-  that need a different relation? SGCA and SGCE are the test cases.
+- Does any Pattern B case actually lack a named complex or destination term? SGCA and SGCE
+  originally looked like policy edge cases, but both already had better complex terms.
 - How many SL locations map to GO terms whose logical axioms do not hold for the structure the
-  location names? SL-0221 was found by accident. There is no systematic check.
-- Does the issue rate hold outside this corpus? These 986 genes were selected for review for
+  location names? SL-0221 was found by accident. [#4260](https://github.com/ai4curation/ai-gene-review/issues/4260)
+  tracks a systematic check.
+- Does the issue rate hold outside this corpus? These 1,380 genes were selected for review for
   other reasons and are not a random sample of GOA.
 
 ## Project status
 
 - **Started**: 2026-08-08
-- **Corpus scan**: 1,300 SL-unique annotations, 986 gene folders, 1,297 with reviews
-- **Genes reviewed under this project**: 22 — 11 for SL-0221, 5 for SL-0162 (3 with annotations moved, 2 reverted to `ACCEPT` after re-review), 6 for SL-0090
-- **Annotations moved**: 27 — 18 under SL-0221, 9 under SL-0162/SL-0090
-- **Scripts**: `projects/SL/scripts/scan_sl_unique.py`, `projects/SL/scripts/sl_redundancy.py`
+- **Corpus scan, 2026-10-05**: 1,852 SL-unique annotations, 1,380 gene folders, 1,837 with reviews
+- **Genes reviewed in the first SL pass**: 22 — 11 for SL-0221, 5 for SL-0162 (3 with annotations moved, 2 reverted to `ACCEPT` after re-review), 6 for SL-0090
+- **Annotations moved in the first SL pass**: 27 — 18 under SL-0221, 9 under SL-0162/SL-0090
+- **Open follow-ups**: [#4259](https://github.com/ai4curation/ai-gene-review/issues/4259) for `Secreted`/`Cell surface` family rules; [#4260](https://github.com/ai4curation/ai-gene-review/issues/4260) for systematic SL-to-GO mapping axiom checks
+- **Scripts**: [`scan_sl_unique.py`](SL/scripts/scan_sl_unique.py),
+  [`sl_redundancy.py`](SL/scripts/sl_redundancy.py)
