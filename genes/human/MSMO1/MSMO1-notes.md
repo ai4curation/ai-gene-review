@@ -69,3 +69,14 @@ Reactome entries.
 - directly_involved_in GO:0006695 cholesterol biosynthetic process.
 - located_in GO:0005789 endoplasmic reticulum membrane.
 </content>
+
+## Revision 2026-10-09
+
+- core_functions: removed `contributes_to_molecular_function: GO:0005506 iron ion binding`.
+  `contributes_to` is for a subunit contributing to an activity of a complex; iron binding is
+  the enzyme's own cofactor-binding property and is already captured by the accepted
+  GO:0005506 annotation. Core MF stays GO:0000254 C-4 methylsterol oxidase activity.
+- GO:0005515 protein binding (HuRI) -> REMOVE (validator policy: MARK_AS_OVER_ANNOTATED is
+  not used for bare protein binding; removal does not dispute the interaction).
+- Alignment with dismech MSMO1_Deficiency: molecular node uses GO:0000254 (DECREASED) and
+  GO:0006695 (DECREASED), gene hgnc:10545 -- consistent with this review.

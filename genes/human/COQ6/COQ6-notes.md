@@ -92,5 +92,7 @@ susceptibility.
   seeded annotation — MARK_AS_OVER_ANNOTATED per policy (never REMOVE an IPI bare
   protein binding); the informative content is captured by the complex membership
   term.
-</content>
-</invoke>
+
+## 2026-10-11 completion pass (claude-code)
+
+Core functions limited to the two catalytic activities: C5 hydroxylation (GO:0106364) and C1 hydroxylation (GO:0120538), both FAD-dependent with electrons from FDX2/FDXR [PMID:38425362 "corroborating its dual functionality as both a C5 and C1 hydroxylase"]. FAD binding is now non-core because it is cofactor binding. Duplicate-evidence rows for core terms changed to ACCEPT. Bare protein binding changed to REMOVE. Status COMPLETE.
