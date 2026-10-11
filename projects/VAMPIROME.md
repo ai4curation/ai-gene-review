@@ -185,5 +185,5 @@ these accessions also appear in the reviewed priority shortlist above.
 - Added deep-research support snippets for core functions where available.
 - Created notes files for K9IMD0, K9IZA2, K9IYM3, and K9J287.
 - Created notes files for remaining shortlisted candidates (K9IJK6, K9IFY6, K9IWR0, K9IFT7, K9IWH5, K9IIP0, K9IUF6, K9IWC0, K9IWX5, K9J2R0).
-- Started CALCA/vCGRP mapping via transcriptome search; no peptide matches in RefSeq or TSA GABZ01
+- Started `CALCA`/vCGRP mapping via transcriptome search; no peptide matches in RefSeq or TSA GABZ01
   (see [CALCA-bioinformatics RESULTS](../genes/DESRO/CALCA/CALCA-bioinformatics/RESULTS.md)).
