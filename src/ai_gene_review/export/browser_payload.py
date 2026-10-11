@@ -10,8 +10,24 @@ from typing import Any
 DATA_JS_ASSIGNMENT_PREFIX = "window.searchData = "
 DATA_JS_READY_EVENT = "window.dispatchEvent(new Event('searchDataReady'));"
 COLUMNAR_DATA_JS_PREFIX = "(()=>{const c="
+# Git blob limit, not an Actions artifact or Pages per-file limit.
 GITHUB_FILE_SIZE_LIMIT_BYTES = 100 * 1024 * 1024
 BROWSER_DATA_WARNING_BYTES = 80 * 1024 * 1024
+
+
+def browser_data_size_limit(target: str) -> int | None:
+    """Use Git's blob budget only for files destined for a Git commit.
+
+    >>> browser_data_size_limit("git")
+    104857600
+    >>> browser_data_size_limit("pages") is None
+    True
+    """
+    if target == "pages":
+        return None
+    if target == "git":
+        return GITHUB_FILE_SIZE_LIMIT_BYTES
+    raise ValueError(f"Unknown browser build target: {target}")
 
 
 GO_REF_CODENAMES = {
@@ -168,10 +184,16 @@ def encode_browser_data_js(data: object) -> str:
 def validate_browser_data_js_size(
     size: int,
     *,
-    max_bytes: int = GITHUB_FILE_SIZE_LIMIT_BYTES,
+    max_bytes: int | None = GITHUB_FILE_SIZE_LIMIT_BYTES,
 ) -> None:
-    """Reject a generated browser payload that GitHub cannot store."""
-    if size >= max_bytes:
+    """Enforce a destination's byte budget; None means no per-file budget.
+
+    Artifact builds check the complete staged site and archive separately.
+    Staging gzips the main annotation browser payload; prediction and propagation
+    payloads remain uncompressed. These hosting budgets are not browser memory
+    or load-time guarantees, and Git's blob cap is not a browser performance budget.
+    """
+    if max_bytes is not None and size >= max_bytes:
         raise ValueError(
             "Encoded browser data is "
             f"{size:,} bytes ({size / 1024 / 1024:.2f} MiB); "
@@ -184,7 +206,7 @@ def write_browser_data_js(
     data: object,
     path: Path,
     *,
-    max_bytes: int = GITHUB_FILE_SIZE_LIMIT_BYTES,
+    max_bytes: int | None = GITHUB_FILE_SIZE_LIMIT_BYTES,
 ) -> int:
     """Encode and write browser data after checking the final byte size."""
     encoded = encode_browser_data_js(data)

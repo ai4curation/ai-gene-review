@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepECTransformer Prediction Evaluation (E. coli)</title>
+    <style>
+        :root {
+            --color-cor: #16a34a;
+            --color-cnn: #65a30d;
+            --color-lsp: #ca8a04;
+            --color-unc: #6b7280;
+            --color-pli: #dc2626;
+            --color-npi: #ef4444;
+            --color-rep: #f97316;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #fff;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .summary-stat { text-align: center; }
+        .summary-stat .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-stat .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .assessment-dist {
+            display: flex;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .assessment-dist .seg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            min-width: 0;
+            transition: flex 0.3s;
+        }
+        .seg-COR { background: var(--color-cor); }
+        .seg-CNN { background: var(--color-cnn); }
+        .seg-LSP { background: var(--color-lsp); }
+        .seg-UNC { background: var(--color-unc); }
+        .seg-PLI { background: var(--color-pli); }
+        .seg-NPI { background: var(--color-npi); }
+        .seg-REP { background: var(--color-rep); }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls input[type="text"] {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 250px;
+        }
+        .controls select {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: var(--bg-light);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover { background: #eef2ff; }
+        th .sort-arrow { font-size: 0.65rem; margin-left: 0.3rem; color: var(--text-muted); }
+        td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        tr:hover { background: #fafbff; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-COR { background: var(--color-cor); }
+        .badge-CNN { background: var(--color-cnn); }
+        .badge-LSP { background: var(--color-lsp); }
+        .badge-UNC { background: var(--color-unc); }
+        .badge-PLI { background: var(--color-pli); }
+        .badge-NPI { background: var(--color-npi); }
+        .badge-REP { background: var(--color-rep); }
+
+        .badge-error {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .term-type {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .gene-link { color: #2563eb; text-decoration: none; }
+        .gene-link:hover { text-decoration: underline; }
+
+        .summary-cell { max-width: 400px; }
+        .summary-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            font-size: 0.8rem;
+            color: #374151;
+        }
+        tr.expanded .summary-text {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .no-predictions {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .protein-row td { background: #f8fafc; font-weight: 500; }
+
+        footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<h1>DeepECTransformer Prediction Evaluation (E. coli)</h1>
+<p class="subtitle"></p>
+
+<div class="summary-bar">
+    <div class="summary-stat">
+        <div class="value">7</div>
+        <div class="label">Proteins</div>
+    </div>
+    <div class="summary-stat">
+        <div class="value">7</div>
+        <div class="label">Predictions</div>
+    </div>
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-cor);">1</div>
+        <div class="label">COR</div>
+    </div>
+
+
+
+
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-unc);">1</div>
+        <div class="label">UNC</div>
+    </div>
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-pli);">2</div>
+        <div class="label">PLI</div>
+    </div>
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-npi);">2</div>
+        <div class="label">NPI</div>
+    </div>
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-rep);">1</div>
+        <div class="label">REP</div>
+    </div>
+
+
+    <div class="summary-stat">
+        <div class="value">0.4</div>
+        <div class="label">Mean CS</div>
+    </div>
+</div>
+
+
+<div class="assessment-dist">
+
+
+    <div class="seg seg-COR" style="flex: 1;" title="COR: 1">
+        COR (1)
+    </div>
+
+
+
+
+
+
+
+    <div class="seg seg-UNC" style="flex: 1;" title="UNC: 1">
+        UNC (1)
+    </div>
+
+
+
+    <div class="seg seg-PLI" style="flex: 2;" title="PLI: 2">
+        PLI (2)
+    </div>
+
+
+
+    <div class="seg seg-NPI" style="flex: 2;" title="NPI: 2">
+        NPI (2)
+    </div>
+
+
+
+    <div class="seg seg-REP" style="flex: 1;" title="REP: 1">
+        REP (1)
+    </div>
+
+
+</div>
+
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cor)"></div>COR — Correct novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cnn)"></div>CNN — Correct, not novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-lsp)"></div>LSP — Less precise</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-unc)"></div>UNC — Uncertain</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-pli)"></div>PLI — Paralog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-npi)"></div>NPI — Nonparalog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-rep)"></div>REP — Frequency bias</div>
+</div>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Filter by protein, term, or text…" oninput="filterTable()">
+    <select id="assessmentFilter" onchange="filterTable()">
+        <option value="">All assessments</option>
+
+        <option value="COR">COR</option>
+
+        <option value="CNN">CNN</option>
+
+        <option value="LSP">LSP</option>
+
+        <option value="UNC">UNC</option>
+
+        <option value="PLI">PLI</option>
+
+        <option value="NPI">NPI</option>
+
+        <option value="REP">REP</option>
+
+    </select>
+    <select id="typeFilter" onchange="filterTable()">
+        <option value="">All term types</option>
+
+        <option value="EC">EC</option>
+
+    </select>
+    <label style="font-size:0.85rem;">
+        <input type="checkbox" id="hideNoPred" onchange="filterTable()"> Hide no-prediction rows
+    </label>
+</div>
+
+<table id="evalTable">
+<thead>
+<tr>
+    <th onclick="sortTable(0)">Protein <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(1)">Organism <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(2)">Predicted Term <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(3)">Type <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(4)">Assessment <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(5)">CS <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(6)">Error <span class="sort-arrow">▼</span></th>
+    <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+
+
+
+<tr data-assessment="REP" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/fepE/fepE-ai-review.html">P26266</a>
+        <br><small style="color:var(--text-muted)">fepE</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.7.13.3</strong><br>
+        histidine kinase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-REP">REP</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Repetition/frequency bias error. FepE was one of 12 proteins incorrectly annotated as histidine kinase (EC 2.7.13.3) by DeepECTF. None of these 12 have sequence similarity to histidine kinase families, and 8 have been annotated with different experimentally validated functions. E. coli has 29 actual histidine kinases, making this a high-frequency label in the training data. The model appears to default to this common EC number when it cannot identify informative sequence features. FepE is actually a Wzz-family polysaccharide co-polymerase (PCP-1 class) that determines very-long modal O-antigen chain length. The OpenScientist kinase audit independently confirmed that FepE has the periplasmic Wzz domain rather than the cytoplasmic machinery required for a bacterial tyrosine kinase, strengthening the conclusion that no kinase domain is present. FepE functions through structural oligomerization, not catalysis.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/yciO/yciO-ai-review.html">P0AFR4</a>
+        <br><small style="color:var(--text-muted)">yciO</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.7.7.87</strong><br>
+        L-threonylcarbamoyladenylate synthase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Paralog incorrect. YciO is a member of the same Pfam family (PF01300) as TsaC/Sua5, and DeepECTF assigns the same EC number. However: (1) In vitro activity is 10,000x weaker than TsaC (0.14 nM/min vs 2.8 uM/min). (2) YciO does not complement tsaC deletion in vivo. (3) YciO has a conserved positively charged surface patch absent in TsaC, suggesting RNA-binding function. (4) yciO genes co-localize with rnm (RNase AM) genes, suggesting a role in rRNA metabolism rather than tRNA modification. The weak in vitro activity likely represents residual ancestral catalytic activity from TsaC, not the evolved biological function.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/yegV/yegV-ai-review.html">P76419</a>
+        <br><small style="color:var(--text-muted)">yegV</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.7.1.92</strong><br>
+        dehydro-2-deoxygluconokinase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Paralog incorrect. YegV is annotated as an uncharacterized sugar kinase (EC 2.7.1.-) in UniProt, so DeepECTF correctly predicted the first 3 digits of the EC number but assigned the wrong substrate specificity. The dehydro-2-deoxygluconokinase (EC 2.7.1.92) activity is already encoded by KdgK/b3526, a different member of the same sugar kinase superfamily. This is a classic overpropagation mistake (error type 6) - failing to distinguish nonisofunctional paralogous subgroups within the superfamily.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/ygfF/ygfF-ai-review.html">P52037</a>
+        <br><small style="color:var(--text-muted)">ygfF</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:1.1.1.47</strong><br>
+        glucose 1-dehydrogenase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Correct prediction. YgfF belongs to the SDR63C/Glucose 1-dehydrogenase subgroup of the SDR superfamily (IPR002347), as classified by the Oppermann/Persson HMM-based nomenclature system. The DeepECTF prediction matches this classification and was validated by in vitro assay. However, the actual in vivo substrate is NAD+ not NADP+, and the physiological substrate may be D-gluconate rather than glucose.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/yjdM/yjdM-ai-review.html">P0AFJ1</a>
+        <br><small style="color:var(--text-muted)">yjdM</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:3.11.1.2</strong><br>
+        phosphonoacetate hydrolase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td><span class="badge-error">IN_VITRO_NOT_IN_VIVO</span></td>
+    <td class="summary-cell"><div class="summary-text">Uncertain. YjdM was shown to catalyze phosphonoacetate hydrolase activity in vitro, but multiple lines of evidence suggest this is not its biological function: (1) The initial report linking YjdM to phosphonate catabolism was refuted by additional genetic analyses (Metcalf and Wanner 1993). (2) The experimentally validated PhnA belongs to a nonhomologous family, and expression of that family in E. coli showed PhnA activity was absent. (3) Genome neighborhood analysis shows yjdM genes are generally NOT near phosphonate catabolism or transport genes except in E. coli, where it happens to be upstream of the phn operon. (4) True phnA genes cluster with phosphonoacetate transporters and regulators. The in vitro activity may represent promiscuous hydrolytic activity rather than the evolved biological function.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/yjhQ/yjhQ-ai-review.html">P39368</a>
+        <br><small style="color:var(--text-muted)">yjhQ</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.3.1.189</strong><br>
+        mycothiol synthase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PATHWAY_CONTEXT_IGNORED</span></td>
+    <td class="summary-cell"><div class="summary-text">Nonparalog incorrect. Mycothiol is not a molecule synthesized by E. coli. The mycothiol biosynthesis pathway (BioCyc ID: PWY1G-0) is absent from E. coli - none of the other pathway enzymes are encoded in the genome. Mycothiol is produced by Actinobacteria (e.g., Mycobacterium). YjhQ is actually an N-acetyltransferase that functions as an antitoxin in the TopAI-YjhQ type IV toxin-antitoxin system, sequestering the TopAI toxin to prevent translation inhibition.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ECOLI/yrhB/yrhB-ai-review.html">P46857</a>
+        <br><small style="color:var(--text-muted)">yrhB</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:4.1.2.50</strong><br>
+        6-carboxytetrahydropterin synthase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Nonparalog incorrect. The 6-carboxytetrahydropterin synthase (EC 4.1.2.50) activity in E. coli is catalyzed by QueD/b2765. A queD mutant completely lacks this activity, demonstrating that YrhB does not serve as a redundant enzyme for this function. YrhB has no sequence similarity to the QueD family. Instead, YrhB adopts the Imm35 fold and direct BL21(DE3) assays on a protein identical to K-12 YrhB support ATP-independent chaperone-like activity, which is an entirely different biological function.</div></td>
+</tr>
+
+
+
+</tbody>
+</table>
+
+<footer>
+    Generated from 7 prediction review YAML files.
+    Assessment categories per de Crécy-Lagard et al. 2025 (PMID:40703034).
+</footer>
+
+<script>
+function filterTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const assessment = document.getElementById('assessmentFilter').value;
+    const termType = document.getElementById('typeFilter').value;
+    const hideNoPred = document.getElementById('hideNoPred').checked;
+    const rows = document.querySelectorAll('#evalTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowAssessment = row.dataset.assessment;
+        const rowType = row.dataset.type;
+        const isNoPred = row.dataset.nopred === '1';
+        let show = true;
+        if (search && !text.includes(search)) show = false;
+        if (assessment && rowAssessment !== assessment) show = false;
+        if (termType && rowType !== termType) show = false;
+        if (hideNoPred && isNoPred) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+    const tbody = document.querySelector('#evalTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+        const aVal = (a.children[col] || {}).textContent || '';
+        const bVal = (b.children[col] || {}).textContent || '';
+        const cmp = aVal.localeCompare(bVal, undefined, {numeric: true});
+        return sortAsc ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+
+</body>
+</html>

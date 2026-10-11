@@ -299,3 +299,17 @@ These receipts were rechecked against publicly accessible original articles. The
 The three public passages above were re-read at their original Table III, Discussion and Results locations. Their annotation evidence objects now name the primary PMIDs directly. The normal caches remain abstract-only, so those objects record the access limitation without a cached quote. The excerpts above remain external-reading receipts, not independent evidence or a substitute for validation against an unmodified primary cache. This supersedes the earlier routing of these quotes through the notes file. The schema reserves `supporting_text_fulltext` for text that cannot be shared publicly; these public originals do not establish that condition.
 
 The [2DDH deposition](https://www.rcsb.org/structure/2DDH) again confirms the rat ACOX1/P07872 construct, E. coli expression host and primary citation [PMID:16672280]. Its [HXD chemical component](https://www.rcsb.org/ligand/HXD) is (3R)-3-hydroxydodecanoic acid, C12H24O3. The paper's abstract separately attributes the retained C12 fatty-acid moiety to thioester hydrolysis of dodecanoyl-CoA. Hydrolysis alone would give dodecanoic acid, not introduce a 3-hydroxyl group. The inspected abstract and deposition therefore do not resolve the hydroxyl's origin; no additional in-crystal chemistry is inferred. This clarification supersedes the earlier wording that joined the two accounts without identifying that gap. The observed rat ligand remains family-level accommodation evidence, not a direct human ACOX2 free-acid binding assay.
+
+## 2026-10-05 - OpenScientist substrate/hydroxylase follow-up
+
+Evaluated `ACOX2-hypotheses/substrate-chain-length-binding-and-hydroxylase-chemistry/openscientist.md`.
+The report's strongest conclusion agrees with the current review: GO:0033791 has
+a term-definition and annotation-mapping defect because its live hydroxylase
+reaction does not match the FAD/O2-dependent ACOX2 enoyl-CoA-forming reaction.
+
+I did not adopt the report's stronger demotions of `GO:0005504 fatty acid binding`
+or `GO:0000038 very long-chain fatty acid metabolic process`. It correctly found
+no direct human ACOX2 free-fatty-acid-binding assay and no direct recombinant
+C24/C26 oxidation panel, but the later source audit records enough unresolved
+ancestral and preparation-level evidence to keep both PAINT rows `UNDECIDED`
+rather than converting absent target assays into `MARK_AS_OVER_ANNOTATED`.

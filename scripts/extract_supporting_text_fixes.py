@@ -15,12 +15,16 @@ from pathlib import Path
 
 from linkml_reference_validator.validation.supporting_text_validator import SupportingTextValidator
 from linkml_reference_validator.models import ReferenceValidationConfig
+from ai_gene_review.validation.reference_cache_compat import (
+    install_reference_cache_compatibility,
+)
 
 
 config = ReferenceValidationConfig(
     cache_dir="publications",
     literal_bracket_patterns=[r"[^a-zA-Z\s]"],
 )
+install_reference_cache_compatibility()
 validator = SupportingTextValidator(config)
 
 SKIP_PREFIXES = {

@@ -131,8 +131,12 @@ The reviews give the evidence with verbatim quotes. In brief:
   now records both as **TOO_DEEP**, lists SF9, SF62 and SF81 as diverged
   subfamilies, and scopes `GO:0046933` to the F1-β subfamilies and `GO:0008564` to
   the export-ATPase subfamilies (updated 2026-09-27).
-- **Not in the frozen headline figures.** These rows postdate the frozen 2026-09-06
-  snapshot, so they are absent from the tables on the main TreeGrafter page.
+- **In the headline figures since 2026-10-01.** All five TreeGrafter rows (`fliI`
+  in CAUVC, HELPJ and PSEPK; `sctN` in SHIFL and YEREN) are in the main page's
+  tables refreshed at `943b98815`, all `REMOVE`. In its four-mode classification
+  they are filed as mode 1 by the operational rule there (correct subfamily,
+  wrong term from a node above it); this page identifies that node term as an
+  inherited PAINT IBD.
 
 ## Suggested upstream fixes
 

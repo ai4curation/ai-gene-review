@@ -23,3 +23,10 @@ The original Falcon attempt failed with HTTP 429 (rate limit), and the configure
 ## Rvs167 and anatomical scope
 
 The target architecture is BAR 17–269 plus SH3 407–467, not simply an unspecified BAR protein. PTHR47174:SF1 is explicitly Rvs167; the broader InterPro BIN3/RVS161-like label is not itself a specific Rvs161 call. PMID:20610658 distinguishes Rvs161 from Rvs167 by the latter’s SH3-containing architecture. The literal fly-derived paragraph is incompatible with fungal anatomy, while its conserved endocytosis component remains well supported. PMID:19596778 reports Candida RVS167 mutant defects in actin patch polarization, supporting the process annotation. The medial-cortex and mating-projection-tip patterns remain uncertain for the Neurospora protein.
+
+## 2026-10-01 re-review (GOA refresh)
+
+GOA refresh added no new rows and no existing rows vanished from the current snapshot. Existing
+judgments were re-audited against current curation rules and left unchanged. Added structured
+`propagation_review` blocks (with PANTHER PTN source entities) to the IBA rows reviewed as
+UNDECIDED/MODIFY, which previously lacked them.

@@ -74,13 +74,11 @@ graph TD
     style G fill:#ffebee
 ```
 
-## Lipid Droplet Association and Neutral Lipid Regulation
+## Lipid Droplet Proteomics
 
-Beyond its primary endoplasmic reticulum localization, NTE1 also associates with lipid droplets, where it may contribute to the regulation of neutral lipid storage and mobilization. The enzyme's phospholipase activity can influence the phospholipid monolayer composition of lipid droplets, affecting droplet stability and access by other lipases.
+NTE1 was recovered from purified lipid-droplet fractions in a high-confidence yeast proteomics analysis, but the same study's microscopy follow-up found that Nte1 did not show lipid-droplet localization and interpreted it as a protein that co-purifies with the fraction rather than a bona fide droplet component [PMID:24868093].
 
-This dual localization (ER and lipid droplets) positions NTE1 to coordinate between membrane phospholipid metabolism and neutral lipid storage. During conditions requiring lipid mobilization, NTE1 activity at lipid droplets may facilitate the release of stored fatty acids for membrane synthesis or energy production.
-
-The association with lipid droplets also connects NTE1 to broader cellular energy metabolism, as these organelles serve as dynamic storage depots that respond to nutritional status and metabolic demands.
+That result is consistent with NTE1's primary activity at the endoplasmic reticulum, where ER-localized phosphatidylcholine deacylation can indirectly affect neutral-lipid storage without requiring NTE1 to act on the lipid droplet itself.
 
 ## Cross-Talk with Sphingolipid Metabolism
 

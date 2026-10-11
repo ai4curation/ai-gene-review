@@ -42,3 +42,28 @@
 - Response to UV radiation
 - Response to temperature stress
 - Fungal-type cell wall organization (pigment deposition)
+## Re-review 2026-10-01 (GOA refresh)
+
+- New GOA rows reviewed:
+  - GO:0016740 transferase activity (IEA, GO_REF:0000002, InterPro:IPR001227) -> MODIFY
+    to GO:0016218 polyketide synthase activity (as for the acyltransferase row).
+  - GO:0044550 secondary metabolite biosynthetic process (IEA, GO_REF:0000118 TreeGrafter)
+    -> MODIFY to GO:0030639 polyketide biosynthetic process (replaces vanished
+    GO_REF:0000120 row for the same term).
+- Vanished from current GOA -> `retired: true` (reviews kept): GO:0003824 catalytic
+  activity (GO_REF:0000043), GO:0016740 transferase activity (GO_REF:0000120),
+  GO:0044550 secondary metabolite biosynthetic process (GO_REF:0000120).
+- NEW proposals re-audited against the participation/comparator rules:
+  - Dropped GO:0009411 response to UV, GO:0009266 response to temperature stimulus
+    (downstream protective effects of the pigment, not processes Pks1 executes) and
+    GO:0048315 conidium formation (Pks1 KO strains still form conidia, just red ones).
+  - Dropped GO:0046189 phenol-containing compound biosynthetic process (chemical-class
+    restatement of the polyketide product; no added information).
+  - Replaced GO:0043473 pigmentation with GO:0046148 pigment biosynthetic process (IMP);
+    comparator check via QuickGO: conidial pigment PKSs wA (Q03149) and alb1 (Q4WZA8)
+    carry GO:0046148 by IMP.
+  - Kept GO:0030639 polyketide biosynthetic process (now IMP, PMID:29958281); fixed its
+    reason, which wrongly named the product isoflavipucine.
+- Removed non-verbatim supporting texts (a quote attributed to Pks1-bioinformatics/
+  RESULTS.md and a paraphrased PMID:29958281 finding); core_functions consolidated from
+  four entries to two.

@@ -377,6 +377,16 @@ def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
     assert manifest.deployable is deployable
 
 
+@pytest.mark.parametrize("size,supported", [(1_000_000_000, True), (1_000_000_001, False)])
+def test_supported_capacity_is_separate_from_absolute_cutoff(tmp_path, size, supported):
+    """A deployment permitted by policy can still exceed supported hosting capacity."""
+    _site_fixture(tmp_path)
+    manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
+    assert manifest.supported_size_budget_bytes == 1_000_000_000
+    assert manifest.within_supported_size is supported
+    assert manifest.deployable
+
+
 def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
     _write(tmp_path / "index.html", '<a href="missing.pdf">Missing</a>')

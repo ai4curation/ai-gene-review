@@ -38,6 +38,7 @@ Mining ~6,300 reviewer REMOVE decisions for candidate NOT annotations
 
 - A **NOT annotation** is the only way to stop pipelines re-asserting a wrong activity; a REMOVE cleans one review.
 - A keyword score over ~6,319 REMOVE/over-annotated rows found **250 candidates in 19 species**, **115 strong**, **22 Tier 1**.
+- A later BGC pass adds five high-score heme-less P450 and active-site-less condensing-fold candidates.
 - None has yet been **literature-verified or filed** as a NOT: this is a worklist, not a submission.
 
 ---
@@ -79,7 +80,7 @@ Mining ~6,300 reviewer REMOVE decisions for candidate NOT annotations
 
 ## Patterns
 
-1. **Pseudo-enzymes** (highest value): Epe1, PLD5, AKTIP, AIP, CG6051, CPT1C, Pld4.
+1. **Pseudo-enzymes** (highest value): Epe1, PLD5, AKTIP, AIP, CG6051, CPT1C, EryCII.
 2. **Domain ≠ function**: dockerins as hydrolases; DnaJ domains as ATP-binding (YDJ1, DNAJA2, DNAJA4, Dnaja3, DnaJ).
 3. **"Is phosphorylated" ≠ "does phosphorylation"**: ~19 human genes on `GO:0006468`. Largest by count, but mostly **removals, not NOTs**.
 4. **Assembly factor ≠ complex activity**: SURF1, ATP10, IDH3B, Ccs.

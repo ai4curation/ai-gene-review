@@ -2,6 +2,7 @@
 title: "Validating E. coli ML Predictions"
 collections: [FUNCTION_PREDICTION]
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [ECOLI]
 genes: [ygfF, yciO, yegV, yjhQ, yrhB, yjdM, fepE]
@@ -14,10 +15,7 @@ sidecars:
 manifest:
   slides:
     - href: VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/TgrzGMFVcJVh62Yn7CMNLU
-      title: Project brief
+      description: Validating E. coli ML predictions slides
 ---
 
 # Validating E. coli ML Predictions
@@ -42,6 +40,11 @@ exist in GOA. The UniProt and b-number columns in the tables below were correcte
 on 2026-09-26 to match the review files.
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
+**[Prediction reviews table](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html)** — this project's calls for the 7 genes, rendered from
+`genes/ECOLI/*/*-det-predictions-review.yaml`. A separate
+[blinded recapitulation](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md)
+([table](BIOREASON_COMPARISON/deepectf-eval.html)) re-reviewed the same predictions without the expert labels and matched them for only 4/7 genes.
 
 
 ## Overview
@@ -115,20 +118,33 @@ Sampling across the error taxonomy to evaluate existing GO annotations in contex
 # STATUS
 
 ## Completed Reviews
-- [x] ECOLI/ygfF - Correct novel prediction (SDR family) - glucose 1-dehydrogenase confirmed
-- [x] ECOLI/yciO - Paralog incorrect (TsaC paralog) - 10,000x weaker activity, recommends removing EC 2.7.7.87
-- [x] ECOLI/yegV - Paralog incorrect (sugar kinase) - first 3 EC digits correct, substrate unknown
-- [x] ECOLI/yjhQ - Non-paralog incorrect (mycothiol synthase) - mycothiol absent from E. coli; actually antitoxin
-- [x] ECOLI/yrhB - Non-paralog incorrect (QueD duplicate) - activity belongs to QueD; Imm35 immunity domain
-- [x] ECOLI/yjdM - Uncertain (phosphonoacetate hydrolase) - in vitro activity but no in vivo support
-- [x] ECOLI/fepE - Repetition error (histidine kinase) - frequency bias; actually Wzz O-antigen regulator
+- Done: ECOLI/ygfF - Correct novel prediction (SDR family) - glucose 1-dehydrogenase confirmed
+- Done: ECOLI/yciO - Paralog incorrect (TsaC paralog) - 10,000x weaker activity, recommends removing EC 2.7.7.87
+- Done: ECOLI/yegV - Paralog incorrect (sugar kinase) - first 3 EC digits correct, substrate unknown
+- Done: ECOLI/yjhQ - Non-paralog incorrect (mycothiol synthase) - mycothiol absent from E. coli; actually antitoxin
+- Done: ECOLI/yrhB - Non-paralog incorrect (QueD duplicate) - activity belongs to QueD; Imm35 immunity domain
+- Done: ECOLI/yjdM - Uncertain (phosphonoacetate hydrolase) - in vitro activity but no in vivo support
+- Done: ECOLI/fepE - Repetition error (histidine kinase) - frequency bias; actually Wzz O-antigen regulator
 
 ## Pending Reviews
 (none)
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 # NOTES
+
+## 2026-09-27
+
+- Several reference PMIDs in the `*-det-predictions-review.yaml` files resolved to unrelated papers, including the DeepECTF citation 37820725, a labile-iron imaging study. These were corrected on main in PR #3273 (DeepECTF is now PMID:37963869).
+- Build: `render-bioreason-eval` is now part of `build-pages` and the daily page workflow.
+
+## 2026-09-26
+
+- Corrected the UniProt accessions for all 7 genes and the b-numbers for ygfF (b2902) and yciO (b1267), taking the values from the
+  cached `*-uniprot.txt` files. Also corrected the `locus_tag` in `ygfF-det-predictions-review.yaml`.
+- The "Prediction reviews" link previously pointed to the blinded recapitulation table. Its calls differ from this project's on
+  ygfF (UNC vs COR), yegV (UNC vs PLI) and yjdM (NPI vs UNC). The link now points to a table rendered from the production reviews, and the
+  recapitulation table is labelled as such. See the [cross-project review](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md).
 
 ## 2026-03-22
 
@@ -136,6 +152,7 @@ Last updated: 2026-09-26
 
 Completed reviews for all 7 E. coli genes spanning the de Crecy-Lagard et al. error taxonomy.
 Key findings:
+
 - COR (ygfF): DeepECTF prediction validated; existing GO annotations mostly appropriate
 - PLI (yciO, yegV): Paralog confusion leads to incorrect substrate/function annotations
 - NPI (yjhQ, yrhB): ML models ignore organism pathway context entirely

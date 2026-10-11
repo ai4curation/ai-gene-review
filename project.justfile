@@ -222,14 +222,32 @@ refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba
 build-panther-obo *args="":
     uv run ai-gene-review build-panther-obo --output-dir . {{args}}
 
-# Refresh interpro/panther/panther-members.tsv (UniProt accession -> PANTHER
-# family) for the accessions cited as representative_members in modules/.
-# This backs the check that a declared family really contains its own member,
-# which is what distinguishes a mis-grounded family from a mislabelled one.
-# Run after adding modules that cite new representative proteins.
+# Build or extend the PANTHER member index (UniProt accession -> PANTHER family)
+# for the accessions cited in modules/ and family reviews. This backs the check
+# that a declared family really contains its own member, which is what
+# distinguishes a mis-grounded family from a mislabelled one. The index is a
+# build artifact in the git-ignored .cache/panther/ (not committed), built from
+# release-pinned PANTHER classifications plus a UniProt fallback. By default it
+# only adds newly cited accessions; pass --rebuild to regenerate everything.
+# Rows in interpro/panther/panther-members-overrides.tsv are applied last, so a
+# curated assignment (each with its reason) survives regeneration.
 [group('QC')]
 refresh-panther-members *args="":
     uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
+
+# Make sure the member index covers everything currently cited. Cheap and offline
+# when .cache/panther is warm; downloads PANTHER classifications on a cold cache.
+# A failure (e.g. offline with an empty cache) warns rather than aborting, because
+# validators then report unindexed members as "not checked" instead of guessing.
+ensure-panther-members:
+    #!/usr/bin/env bash
+    mkdir -p .cache/panther
+    if ! uv run ai-gene-review refresh-panther-members --output-dir . >.cache/panther/refresh.log 2>&1; then
+        echo "::warning::Could not build the PANTHER member index (see .cache/panther/refresh.log); family-membership checks will report 'not checked'."
+        tail -5 .cache/panther/refresh.log
+    else
+        tail -1 .cache/panther/refresh.log
+    fi
 
 # Verify every committed interpro/panther/*/*-paint.tsv row against PANTHER's
 # upstream IBD.gaf. PTN claims are validated against slices that curation PRs
@@ -959,8 +977,27 @@ validate-references file:
 # silently certifying an unchecked quotation. Caches remain regenerable context.
 [group('QC')]
 validate-predictions +files:
-    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+
+# Schema and term validation for prediction files. In a PredictionReview the only
+# bound slot is `taxon`, so the term phase checks the taxon id and label only;
+# predicted GO terms are deliberately unbound (a model may predict an obsolete or
+# nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
+# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which have no
+# excerpts for validate-predictions' source-evidence check. Same blocking policy
+# as validate-all.
+[group('QC')]
+validate-prediction-terms +files:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
+    out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
+    rc=$?
+    echo "$out"
+    if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
+        exit 1
+    fi
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -1001,7 +1038,7 @@ check-retractions *ARGS:
 # conformance. The external linkml-term-validator only checks enum-bound slots,
 # which ModuleReview lacks, so module semantics are checked by the project's
 # module_validator instead.
-validate-modules:
+validate-modules: ensure-panther-members
     #!/usr/bin/env bash
     set -uo pipefail
     files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
@@ -1170,6 +1207,15 @@ validate-changed *files:
     fi
     echo "✓ All changed files passed validation."
 
+# conf/local_quote_baseline.yaml lists known non-verbatim file:/Reactome: quotes
+# (reported as warnings; any other failing quote is an error).
+# Example: just local-quote-baseline --prune
+#          just local-quote-baseline --report reports/local-quote-failures.yaml
+# Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
+[group('QC')]
+local-quote-baseline *args:
+    uv run python scripts/local_quote_baseline.py {{args}}
+
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
 # per-file reference and best-practices checks.
@@ -1180,14 +1226,19 @@ validate-all:
     echo "Schema validation (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
-    echo "Term validation (batch, errors block; label-mismatch warnings advisory)..."
-    # Enum-membership / not-found errors (❌ ERROR) are fatal; ontology label-mismatch
+    echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
+    # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
     # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
-    # bidirectional. Use just validate-terms for a fully strict (warnings-too) check.
+    # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
+    # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
     term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
     printf '%s\n' "$term_out"
-    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
+    # "Unable to validate" is LTV's ontology-service-unavailable message: every check was skipped.
+    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate"; then
         echo "✗ Term validation found errors (see above)"
+        exit_code=1
+    elif printf '%s\n' "$term_out" | grep -qE "Label mismatch for '?NCBITaxon:"; then
+        echo "✗ Term validation found taxon labels that do not match NCBITaxon (see above)"
         exit_code=1
     else
         echo "✓ Term validation: no errors (label warnings, if any, are advisory)"
@@ -1514,22 +1565,24 @@ render-all:
     uv run python -m ai_gene_review.render --all genes/
 
 # Assemble the already-rendered public site without changing the active Pages source.
-# This transitional artifact preserves the URLs currently served from main:/.
+# Preserve public URLs in the disposable artifact.
 stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
-# Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects render-prediction-eval render-modules render-dashboard deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
+# Build the complete disposable publication tree without Git blob limits.
+build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
 
-# Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT, DeepECTF)
+# Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT) and the
+# DeepECTransformer tables (blinded recapitulation copies and production E. coli reviews)
 render-bioreason-eval:
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
-    uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
+    uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'DeepECTransformer Blinded Recapitulation (ESR-ECOLI-DET-Mini; 4/7 match to expert labels)'
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html' --title 'DeepECTransformer Prediction Evaluation (E. coli)'
 
 # Refresh the deterministic BioReason benchmark cohort, gene, quality, and metrics sidecars
 refresh-bioreason-benchmark-sidecars:
@@ -1869,7 +1922,7 @@ pydantic:
 gen-all: gen-project pydantic
 
 # Deploy linkml-browser app for viewing exported annotations
-deploy-browser: export-annotations-json
+deploy-browser target=env_var_or_default("BROWSER_TARGET", "git"): export-annotations-json
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Deploying linkml-browser to app/ directory..."
@@ -1882,7 +1935,7 @@ deploy-browser: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
@@ -1891,8 +1944,8 @@ deploy-browser: export-annotations-json
     echo "To view: open app/index.html or run 'just serve-browser'"
 
 # Build the shared prediction-set and claim browser, including narrative reviews.
-deploy-predictions-browser:
-    uv run python -m ai_gene_review.tools.build_prediction_browser
+deploy-predictions-browser target=env_var_or_default("BROWSER_TARGET", "git"):
+    uv run python -m ai_gene_review.tools.build_prediction_browser --target "{{target}}"
 
 # Refresh the donor cache for the homology-propagation browser (network:
 # UniProt donor identities, QuickGO donor annotations, GO is_a/part_of closure).
@@ -1901,8 +1954,8 @@ refresh-propagation-sources *ARGS:
     uv run python -m ai_gene_review.tools.refresh_propagation_sources "$@"
 
 # Build the homology-propagation browser (app/propagation/) from cached files.
-deploy-propagation-browser:
-    uv run python -m ai_gene_review.tools.build_propagation_browser
+deploy-propagation-browser target=env_var_or_default("BROWSER_TARGET", "git"):
+    uv run python -m ai_gene_review.tools.build_propagation_browser --target "{{target}}"
 
 # Regenerate projects/HOMOLOGY_PROPAGATION/propagation-stats.md.
 propagation-stats:
@@ -1914,7 +1967,7 @@ serve-browser:
     @cd app && python3 -m http.server 8080
 
 # Update browser data without regenerating HTML
-update-browser-data: export-annotations-json
+update-browser-data target=env_var_or_default("BROWSER_TARGET", "git"): export-annotations-json
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Updating browser data..."
@@ -1927,7 +1980,7 @@ update-browser-data: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
@@ -2534,23 +2587,23 @@ cron-profile name:
 # skipped -- relabelling those would hide a wrong family id. Fix the id first.
 # Example: just fix-panther-labels --apply
 [group('QC')]
-fix-panther-labels *args="":
+fix-panther-labels *args="": ensure-panther-members
     uv run ai-gene-review fix-panther-labels --output-dir . {{args}}
 
 # Check PANTHER family ids written into module PROSE (notes/description/statement)
-# against interpro/panther/panther-members.tsv. Module validation only reads
+# against the PANTHER member index (.cache/panther). Module validation only reads
 # term.id/label pairs, so a PANTHER id in free text is invisible to it -- nine
 # such claims were contradicted by the repo's own data. Catches 7 of those 9;
 # symbol-phrased and first-of-a-shared-pair claims are documented misses.
 [group('QC')]
-scan-prose-panther *args="":
+scan-prose-panther *args="": ensure-panther-members
     uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
 
 # Print every row of the PANTHER review report's scope table.
 # That table went stale four times because its rows had no committed
 # derivation; paste this output over the table after a merge.
 [group('QC')]
-panther-report-stats *args="":
+panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
 
 # ============ History records (ported from dismech) ============
@@ -2615,7 +2668,7 @@ backfill-history *ARGS:
 #      PANTHER id/label/membership;
 #   4. cross-checks against the gene corpus, and gene-level residue claims.
 # Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
-validate-families:
+validate-families: ensure-panther-members
     #!/usr/bin/env bash
     set -uo pipefail
     files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
@@ -2635,6 +2688,11 @@ validate-families:
             -s src/ai_gene_review/schema/family_review.yaml \
             -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
     done <<< "$files"
+    echo "Validating supporting_text quotes against cached publications..."
+    # One multi-file call (schema parsed once); same wrapper and config as gene reviews.
+    scripts/run_reference_validator.sh validate data $files \
+        --schema src/ai_gene_review/schema/family_review.yaml \
+        --target-class FamilyReview --config conf/reference_validator_config.yaml || rc=1
     echo "Validating curated residue sites against UniProt sequences..."
     uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
     echo "Cross-checking family reviews against the gene corpus..."
