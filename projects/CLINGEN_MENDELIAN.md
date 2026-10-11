@@ -2988,21 +2988,21 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**336 of 2,876 genes are complete; 2,540 remain.**
-[CLCN4 #4681](https://github.com/ai4curation/ai-gene-review/pull/4681) adds one
-verified merged review beyond checkpoint 335. Its final revision was approved,
-the required test passed, and automatic squash merge completed at
-**2026-10-11 10:15:33 UTC**. All 22 changed paths, all six gene files and all
-13 referenced PMID caches match the approved revision.
+**337 of 2,876 genes are complete; 2,539 remain.**
+[CLCN5 #4686](https://github.com/ai4curation/ai-gene-review/pull/4686) adds one
+verified merged review beyond checkpoint 336. Its final revision was approved,
+the required test passed, and squash merge completed at
+**2026-10-11 10:33:02 UTC**. All 18 changed paths, all six gene files and all
+11 referenced PMID caches match the approved revision.
 
-The frozen gene cutoff is [CLCN4 merge 38b117f6c544](https://github.com/ai4curation/ai-gene-review/commit/38b117f6c544544dd9034bb1fd9ed12f25a08e21).
-This amendment starts from the actual pending [tracker #4806 revision 4ad06a72170d](https://github.com/ai4curation/ai-gene-review/commit/4ad06a72170d5ce10eaff72e510491243a21973b).
+The frozen gene cutoff is [CLCN5 merge d0f37ace6af1](https://github.com/ai4curation/ai-gene-review/commit/d0f37ace6af1e18e19b58afbda935e2f753110a5).
+This amendment starts from the actual pending [tracker #4806 revision 0314bf1973a8](https://github.com/ai4curation/ai-gene-review/commit/0314bf1973a88ddab8c71030db41203b30205dc1).
 The tracker PR remains pending; tracker publication adds no gene completion.
 Each gene counts once, including reviews with justified uncertainty.
 
-See [checkpoint 336 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-336-2026-10-11-101533-utc).
-All 235 historical queue objects, 59 previous completion updates, prior progress
-entries and existing history records are preserved. Only CLCN4 is added here.
+See [checkpoint 337 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-337-2026-10-11-103302-utc).
+All 235 historical queue objects, 60 previous completion updates, prior progress
+entries and existing history records are preserved. Only CLCN5 is added here.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3025,6 +3025,8 @@ entries and existing history records are preserved. Only CLCN4 is added here.
 [Checkpoint 335 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T085605Z-codex-f501c7.yaml).
 
 [Checkpoint 336 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T102604Z-codex-e4d494.yaml).
+
+[Checkpoint 337 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T103826Z-codex-9b0957.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3436,7 +3438,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CIITA** — HGNC:7067; [MHC class II deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0dab225e-0bdd-4f96-a351-4e490601ba15-2022-11-03T170000.000Z) (MONDO:0008855; AR; Definitive).
 - [x] **CISD2** — HGNC:24212; [Wolfram syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0a18d59c-c00c-4bb3-b6d6-1e59b92d1313-2023-06-01T160000.000Z) (MONDO:0018105; AR; Definitive).
 - [x] **CLCN4** — HGNC:2022; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54fbcbc8-77d7-4496-8527-1171cdd7452c-2026-07-22T100000.000Z) (MONDO:0100148; XL; Definitive).
-- [ ] **CLCN5** — HGNC:2023; [Dent disease type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c5b5abc-4f1f-4491-b5db-5208906f0f1b-2022-07-21T160000.000Z) (MONDO:0010225; XL; Definitive).
+- [x] **CLCN5** — HGNC:2023; [Dent disease type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c5b5abc-4f1f-4491-b5db-5208906f0f1b-2022-07-21T160000.000Z) (MONDO:0010225; XL; Definitive).
 - [ ] **CLCN7** — HGNC:2025; [autosomal dominant osteopetrosis 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_23840c1f-9d30-4ccf-9fc0-604a0cb12eb4-2023-12-04T170000.000Z) (MONDO:0008156; AD; Definitive); [autosomal recessive osteopetrosis 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_651b6ac5-131e-48b2-9869-71f2a9b42dbe-2023-10-04T160000.000Z) (MONDO:0012676; AR; Definitive); [hypopigmentation, organomegaly, and delayed myelination and development](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0e47aa25-2107-4e36-8fa8-f9e81eb9de69-2026-01-09T170000.000Z) (MONDO:0032805; AD; Definitive).
 - [x] **CLDN14** — HGNC:2035; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_17528cdb-97e0-4128-92de-9e419902aa62-2018-05-01T160000.000Z) (MONDO:0019497; AR; Definitive).
 - [x] **CLDN16** — HGNC:2037; [renal hypomagnesemia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd2b60d4-b932-4d0b-bc46-d6b0827a6333-2023-12-06T050000.000Z) (MONDO:0009550; AR; Definitive).
