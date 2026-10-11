@@ -39,10 +39,16 @@ MODULE_REASONS = {
     "AIFM1": "The aligned function is the mitochondrial disulfide relay (CHCHD4 anchoring); no module covers the relay. AIFM1 is a part of apoptotic_execution_phase, whose AIFM1 annoton carries DNA binding, nucleus and positive regulation of apoptotic process: a different AIFM1 activity, and not the encephalomyopathy mechanism.",
     "APOB": "The aligned term is GO:0034379 very-low-density lipoprotein particle assembly, and there is no VLDL-assembly module. APOB is a part of chylomicron_assembly_secretion, whose scope is GO:0034378 chylomicron assembly, and of ldl_receptor_mediated_endocytosis, which is about the receptor taking the particle up. GO:0034378 and GO:0034379 are siblings, not one inside the other, so the hepatic VLDL step is genuinely unmodelled. APOB's other row, the LDL-receptor-binding one, is covered.",
     "NUBPL": "The aligned term is GO:0016226 iron-sulfur cluster assembly. NUBPL is a part of complex_i_assembly_factors, whose scope is GO:0032981 mitochondrial respiratory chain complex I assembly: NUBPL delivers an Fe-S cluster to the assembling complex, and the cluster's own assembly is a different process that no module covers.",
-    "NDUFA1": "A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The dismech node binds the molecular function GO:0008137 NADH dehydrogenase (ubiquinone) activity, while complex_i_accessory_subunits declares its scope as the biological process GO:0006120 mitochondrial electron transport, NADH to ubiquinone. Those are the same chemistry in two GO aspects, and is_a/part_of ancestry does not cross between molecular function and biological process, so no amount of ontology walking will relate them. The module is the right one.",
+    "NDUFA1": "A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The module is the right one; the cause is an asymmetry in how the two sides may say the same thing. The dismech node binds GO:0008137 NADH dehydrogenase (ubiquinone) activity, which the review carries as contributes_to_molecular_function, so the row aligns. complex_i_accessory_subunits says the identical relation the GO-idiomatic way, giving its NDUFA1 annoton GO:0005198 structural molecule activity as part of complex I, and GO:0005198 does not relate to GO:0008137 by is_a/part_of ancestry: a structural role and the activity it supports are different branches of molecular function. Coverage accepts a contributes-to term from the review but has no way to read the module\'s structural-plus-part_of idiom as the same claim. (The module also declares GO:0006120 as its process scope, which ancestry cannot reach from an activity either, since is_a/part_of does not cross between molecular function and biological process; but that aspect divide is not what decides this row.)",
 }
 MODULE_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
-SOFT = MODULE_FLAGS + ("ALIGNED_NONCORE", "ALIGNED_PROPOSED")
+# Flags that qualify a row rather than mark it defective. PARTIAL_ALIGNMENT,
+# ALIGNED_CONTRIBUTES_ONLY and ALIGNED_ON_SHARED_NODE_ONLY are counted and reported
+# individually below rather than folded into one "clean" figure, because each is a way
+# the test can be weaker than the row looks.
+QUALIFYING = ("PARTIAL_ALIGNMENT", "ALIGNED_CONTRIBUTES_ONLY",
+              "ALIGNED_ON_SHARED_NODE_ONLY")
+SOFT = MODULE_FLAGS + ("ALIGNED_NONCORE", "ALIGNED_PROPOSED") + QUALIFYING
 
 lines = [
     "---",
@@ -59,9 +65,14 @@ from collections import Counter
 PRINCIPAL_RELATIONSHIPS = (None, "CAUSATIVE")
 principal = lambda g: g.get("relationship") in PRINCIPAL_RELATIONSHIPS
 
-all_genes = sorted({g["gene"] for e in rep for g in e.get("genes", [])})
+# Only genes the audit actually matched to a review. Listing every symbol in the report
+# would count modifier and susceptibility genes with no review (SAR1A, APOA5, SH2B1,
+# NCOA1, TYK2) toward this project's gene coverage in the all-projects table, and
+# `resolve_frontmatter_gene_links` leaves an unresolvable symbol silently unlinked.
+reviewed_genes = sorted({g["gene"] for e in rep for g in e.get("genes", [])
+                         if g.get("aigr_status")})
 lines += [
-    "genes: [" + ", ".join(all_genes) + "]",
+    "genes: [" + ", ".join(reviewed_genes) + "]",
     "---",
     "",
     "# dismech metabolic disorders aligned with ai-gene-review",
@@ -81,8 +92,8 @@ lines += [
     "table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the",
     "repository.",
     "",
-    "**What \"aligned\" does and does not claim.** Two properties of the test make it a weak check,",
-    "and either can turn a row green that a curator would not:",
+    "**What \"aligned\" does and does not claim.** Four properties of the test make it a weak",
+    "check, and any of them can turn a row green that a curator would not:",
     "",
     "- The relation is **symmetric** and **unbounded in distance**. A node term counts as aligned",
     "  when either it or the core term is an is_a/part_of ancestor of the other, at any depth. So a",
@@ -92,6 +103,20 @@ lines += [
     "  distance behind a match is visible per row. `DMP1 | GO:0005509` (calcium ion binding) is the",
     "  clearest row where the verdict carries little information; reading a row as agreement means",
     "  reading its pair.",
+    "- A dismech node binds its GO terms **at node level**, and a node may name several genes.",
+    "  dismech has no per-gene attribution inside a node, so every term on a shared node is read",
+    "  for every gene on it, and a row can align on a co-named partner's activity. The column",
+    "  marks such a term `s`, and `ALIGNED_ON_SHARED_NODE_ONLY` fires where *every* term a row",
+    "  aligned on came from a shared node. The hyperinsulinism node naming both GLUD1 and HADH,",
+    "  which carries glutamate dehydrogenase activity and enzyme inhibitor activity together, is",
+    "  the case to read: each gene is credited with both, and here that happens to be right in",
+    "  both directions (HADH does inhibit GLUD1), which is exactly why it needs marking rather",
+    "  than trusting.",
+    "- `contributes_to_molecular_function` is compared **alongside** core molecular function. A",
+    "  subunit that contributes to a complex-level activity without enabling it is doing what the",
+    "  dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,",
+    "  so a term matched only that way is marked `c` and `ALIGNED_CONTRIBUTES_ONLY` fires where a",
+    "  row's whole alignment rests on one.",
     "- Module **membership** is not module **coverage**. Membership says the gene is a part of some",
     "  module; coverage says a module is about the function the row aligned on, which is a different",
     "  and stronger claim. They are flagged separately: `NO_MODULE_MEMBERSHIP` means no module",
@@ -104,18 +129,24 @@ lines += [
     "",
     "Coverage reads the module's declared `concepts`, at module level and per node, as well as its",
     "annotons' terms: a module states its scope as processes while its annotons carry the molecular",
-    "functions of individual parts, so annotons alone miss what the module is about. One limitation",
-    "survives that and is left visible rather than waived: is_a/part_of ancestry does not cross",
+    "functions of individual parts, so annotons alone miss what the module is about. Two limitations",
+    "survive that and are left visible rather than waived. is_a/part_of ancestry does not cross",
     "between molecular function and biological process, so a dismech node bound to an activity and",
     "a module scoped to the corresponding process cannot be related, however plainly they are the",
-    "same chemistry. NDUFA1 is that row.",
+    "same chemistry. And coverage is asymmetric about complex membership: it accepts a",
+    "`contributes_to_molecular_function` term from the review, but cannot read a module's",
+    "GO-idiomatic way of saying the same thing - a subunit given `GO:0005198` structural molecule",
+    "activity as part of the complex - as the same claim, because a structural role and the",
+    "activity it supports are unrelated branches of molecular function. NDUFA1 is the row where",
+    "the second limitation decides the verdict, not the first.",
     "",
     "Membership is read from the module structure (`parts[].node.annotons[]`, following the",
-    "participant whichever selector it uses, including a `FAMILY` participant's",
-    "`representative_members` and a protein complex's active units and components), and following",
-    "nested parts and variant sets, so a gene named only in a module's notes or evidence does not",
-    "count as a part. Reading the files as text instead finds 3,707 accessions against 3,659 real",
-    "parts; the 48 extra are mentions rather than parts.",
+    "participant whichever selector it uses - `gene_product`, `gene`, `ortholog_of`, `homolog_of`,",
+    "a `FAMILY` participant's `representative_members`, and a protein complex's `active_units`) and",
+    "following nested parts and variant sets, so a gene named only in a module's notes or evidence",
+    "does not count as a part. The run records both counts in its provenance below, so the gap",
+    "between reading the structure and reading the file text is a measured figure rather than a",
+    "quoted one.",
     "",
     "Flags: `UNTYPED`/`NO_ORIGIN` (genetic record lacks relationship type / variant origin),",
     "`NO_GO_ON_GENE_NODES` (no node naming the gene carries a GO term), `NO_AIGR_REVIEW`,",
@@ -123,8 +154,11 @@ lines += [
     "compare against), `NO_GO_ALIGNMENT` (no node term matches a core function, an annotation the",
     "review keeps, or a term it proposes), `ALIGNED_NONCORE` (node terms match only annotations the",
     "review keeps as non-core), `ALIGNED_PROPOSED` (node terms match only terms the review proposes",
-    "as NEW, which are not yet annotations), `NO_MODULE_MEMBERSHIP`, `MODULE_NOT_COVERING`. The last",
-    "four are informational, not defects.",
+    "as NEW, which are not yet annotations), `PARTIAL_ALIGNMENT` (some node terms aligned and",
+    "others matched nothing), `ALIGNED_CONTRIBUTES_ONLY`, `ALIGNED_ON_SHARED_NODE_ONLY`,",
+    "`NO_MODULE_MEMBERSHIP`, `MODULE_NOT_COVERING`. The last seven are informational, not defects,",
+    "but the three in the middle each say the verdict is weaker than `ok` would suggest, so they",
+    "are counted separately below rather than absorbed into one clean figure.",
     "",
 ]
 if PROV:
@@ -138,6 +172,18 @@ if PROV:
         f"- ai-gene-review revision: `{PROV.get('aigr_revision') or 'unrecorded'}`"
         + (f" (branch `{PROV['aigr_branch']}`)" if PROV.get("aigr_branch") else ""),
         f"- GO release: `{PROV.get('go_version') or 'unrecorded'}`, adapter `{PROV.get('go_adapter') or 'unrecorded'}`",
+    ]
+    _ma = PROV.get("module_accessions") or {}
+    if _ma:
+        lines.append(
+            f"- modules read: `{_ma.get('modules_read')}`; UniProt accessions reached as parts:"
+            f" `{_ma.get('accessions_as_parts')}`, against `{_ma.get('accessions_in_file_text')}`"
+            " matching the accession pattern anywhere in the module file text. Both are sums over"
+            " modules of that module's distinct accessions, so a protein in several modules counts"
+            " once per module; the difference is accessions mentioned in notes or evidence of a"
+            " module they are not a part of, which this audit does not count as membership."
+        )
+    lines += [
         "",
         "Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten",
         "themed PRs split out of #4690, so on a branch without those merged the audit cannot be",
@@ -147,64 +193,122 @@ if PROV:
 
 
 def aligned_cell(g):
-    """Node term with the core term it matched, so an unbounded match is visible."""
+    """Node term with the core term it matched, so an unbounded match is visible.
+
+    Every match is shown where a node term relates to more than one core term: picking
+    one would show the alphabetically smallest GO id, which need not be the nearest.
+    A term matched only through `contributes_to_molecular_function` is marked, and so is
+    one held only because another gene shares the node it came from.
+    """
     pairs = g.get("aligned_pairs") or {}
     terms = g.get("aligned_terms") or []
     if not terms:
         return "-"
+    contrib = set(g.get("aligned_via_contributes_to") or [])
+    shared = set(g.get("shared_node_terms") or [])
     cells = []
     for t in terms:
         c = pairs.get(t)
-        if isinstance(c, list):
-            c = c[0]
-        cells.append(t if (c is None or c == t) else f"{t}&rarr;{c}")
+        cs = c if isinstance(c, list) else [c]
+        cs = [x for x in cs if x is not None]
+        if not cs or cs == [t]:
+            cell = t
+        else:
+            cell = f"{t}&rarr;" + "/".join(cs)
+        marks = ("c" if t in contrib else "") + ("s" if t in shared else "")
+        cells.append(cell + (f" <sup>{marks}</sup>" if marks else ""))
     return " ".join(cells)
 
 
+def unaligned_cell(g):
+    """Node terms that matched no core function: the half that shows disagreement."""
+    terms = g.get("dismech_only") or []
+    if not terms:
+        return "-"
+    shared = set(g.get("shared_node_terms") or [])
+    return " ".join(t + " <sup>s</sup>" if t in shared else t for t in terms)
+
+
 def modules_cell(g):
-    """Modules, marking those whose own GO terms do not cover the aligned function."""
+    """Modules the gene is a part of, linked, marking a non-covering one only when flagged.
+
+    `(not covering)` used to print on any module outside `covering_modules`, including on
+    rows carrying no flag, where it only means the gene's other module is about its other
+    function. Marking it only where `MODULE_NOT_COVERING` fires keeps it to the rows the
+    page has a stated reason for.
+    """
     mods = g.get("modules") or []
     if not mods:
         return "-"
-    cov = g.get("covering_modules")
-    if cov is None:
-        return " ".join(mods)
-    return " ".join(m if m in cov else f"{m} (not covering)" for m in mods)
+    link = lambda m: f"[{m}](../modules/{m}.html)"
+    if "MODULE_NOT_COVERING" not in (g.get("flags") or []):
+        return " ".join(link(m) for m in mods)
+    cov = g.get("covering_modules") or []
+    return " ".join(link(m) if m in cov else f"{link(m)} (not covering)" for m in mods)
 
 
 c = Counter(f for e in rep for g in e.get("genes", []) if principal(g) for f in g["flags"])
 n_rows = sum(1 for e in rep for g in e.get("genes", []) if principal(g))
 n_clean = sum(1 for e in rep for g in e.get("genes", [])
               if principal(g) and not [f for f in g["flags"] if f not in SOFT])
+n_partial = sum(1 for e in rep for g in e.get("genes", [])
+                if principal(g) and "PARTIAL_ALIGNMENT" in g["flags"])
+n_full = sum(1 for e in rep for g in e.get("genes", [])
+             if principal(g) and g.get("aligned_terms") and not g.get("dismech_only"))
 lines += [
     f"**Summary.** {len(rep)} entries; {n_rows} principal gene rows (causative and untyped);",
-    f"{n_clean} carry no flag other than a module flag, `ALIGNED_NONCORE` or `ALIGNED_PROPOSED`."
+    f"{n_clean} carry no flag other than a module flag or one of the qualifying flags - none"
+    " carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or"
+    " `GENE_ON_NO_NODE`."
     + (" Flag counts on principal rows: " + ", ".join(f"`{k}` {v}" for k, v in sorted(c.items())) + "."
        if c else " No principal row carries a flag."),
+    "",
+    f"**Agreement is partial on many rows, and the table shows both halves.** {n_full} principal",
+    f"rows align every GO term their dismech nodes carry; {n_partial} align some and leave others",
+    "matching nothing in the gene review. A partial row is usually not a defect in either",
+    "repository - it is dismech modelling a step of the disease mechanism that is not part of the",
+    "gene's normal function, which is what the two resources are each for. `LCT` is the clearest",
+    "case: the row aligns `GO:0000016` lactase activity and leaves `GO:0006366` transcription by",
+    "RNA polymerase II unaligned, because the hypolactasia mechanism is the enhancer that switches",
+    "the gene off, and transcribing its own gene is not a function of lactase. Reading such a row",
+    "as full agreement would be wrong in the other direction, so the unaligned terms are printed",
+    "rather than dropped.",
     "",
     "Polygenic entries (Type I diabetes) and modifier/susceptibility genes are",
     "listed but were not required to align: their genes are risk loci or modifiers, not the",
     "normal-function owners of a single pathway step.",
     "",
-    "| Entry | Gene | Relationship | AIGR | Aligned GO terms (node&rarr;core) | Modules | Flags |",
-    "|---|---|---|---|---|---|---|",
+    "In the GO-term columns, <sup>c</sup> marks a term matched only through the review's",
+    "`contributes_to_molecular_function`, and <sup>s</sup> a term the gene holds only because",
+    "another gene is named on the same dismech node. Where a node term relates to several core",
+    "terms, all of them are shown separated by `/`.",
+    "",
+    "| Entry | Gene | Relationship | AIGR | Aligned GO terms (node&rarr;core) | Unaligned node terms | Modules | Flags |",
+    "|---|---|---|---|---|---|---|---|",
 ]
 for e in rep:
     if not e.get("genes"):
-        lines.append(f"| {e['entry']} | - | - | - | - | - | {e.get('problem','')}: {NOTES.get((e['entry'], None), '')} |")
+        lines.append(f"| {e['entry']} | - | - | - | - | - | - | {e.get('problem','')}: {NOTES.get((e['entry'], None), '')} |")
         continue
     for g in e["genes"]:
         flags = ", ".join(g["flags"]) or "ok"
         lines.append(
             f"| {e['entry']} | {g['gene']} | {g.get('relationship') or '-'} | {g.get('aigr_status') or '-'} | "
-            f"{aligned_cell(g)} | {modules_cell(g)} | {flags} |"
+            f"{aligned_cell(g)} | {unaligned_cell(g)} | {modules_cell(g)} | {flags} |"
         )
 lines += [
     "",
     "## Notes on remaining flags",
     "",
-    "- Every causative gene row is free of flags other than the two module flags. The other flags",
-    "  fall on modifier, susceptibility and disputed genes, none of which were required to align.",
+    "- **No causative row carries `NO_GO_ALIGNMENT`**, which is the flag that would mark a real",
+    "  contradiction: every causative gene has at least one node term matching a core function.",
+    "  The flags causative rows do carry say something weaker. The two module flags are about",
+    "  what is modelled elsewhere in ai-gene-review, not about this gene's function.",
+    "  `PARTIAL_ALIGNMENT` marks non-overlap rather than conflict - dismech modelling a step the",
+    "  gene's normal function does not include - and `ALIGNED_CONTRIBUTES_ONLY` and",
+    "  `ALIGNED_ON_SHARED_NODE_ONLY` mark a match that rests on a weaker relation than the row",
+    "  looks. `ALIGNED_NONCORE` falls only on UCP2, a DISPUTED gene that was never required to",
+    "  align, as do the `NO_AIGR_REVIEW` and `AIGR_NOT_COMPLETE` rows.",
     "- **MELAS mtDNA genes**: MT-ND1, MT-ND5 and MT-ND6 have reviews and are parts of",
     "  mitochondrial_complex_i_core, aligning with the dismech complex I node (NADH:ubiquinone",
     "  oxidoreductase activity, DECREASED). The ten mt-tRNA genes (MT-TL1, MT-TQ, MT-TH, MT-TK,",
@@ -222,20 +326,44 @@ lines += [
     "  TYK2) are SUSCEPTIBILITY records with no single pathway step; several ai-gene-review entries",
     "  for them are still drafts from other projects.",
 ]
-lines += ["", "## Causative genes without a covering module, and why", ""]
-for k, v in MODULE_REASONS.items():
-    lines.append(f"- **{k}**: {v}")
+# Which module flag each named gene actually carries, and whether its row is principal,
+# so the list cannot read as "these causative genes are all in a module that misses their
+# function" when most of them are in no module at all and one is not causative.
+flag_by_gene, principal_genes = {}, set()
+for e in rep:
+    for g in e.get("genes", []):
+        for f in g["flags"]:
+            if f in MODULE_FLAGS:
+                flag_by_gene.setdefault(g["gene"], set()).add(f)
+        if principal(g):
+            principal_genes.add(g["gene"])
 
-# Enforce the claim above: every principal row carrying a module flag must have a reason.
+lines += ["", "## Genes with a module flag, and why", "",
+          "`NO_MODULE_MEMBERSHIP` means no module contains the gene; `MODULE_NOT_COVERING` means",
+          "one does but nothing in it is about the function the row aligned on. Rows that are not",
+          "causative are marked, since they were never required to align.", ""]
+for k, v in MODULE_REASONS.items():
+    names = [n.strip() for n in k.split("/")]
+    fl = sorted({f for n in names for f in flag_by_gene.get(n, ())})
+    tag = ", ".join(f"`{f}`" for f in fl) or "`no module flag on this run`"
+    if names and not any(n in principal_genes for n in names):
+        tag += ", not causative"
+    lines.append(f"- **{k}** ({tag}): {v}")
+
+# Enforce the claim above in both directions: every principal row carrying a module flag
+# must have a reason, and every reason must still name a gene that carries one. The
+# unused side used to compare against every gene in the report, so a reason that had
+# stopped applying lingered silently.
 covered = {g.strip() for key in MODULE_REASONS for g in key.split("/")}
 missing = sorted({g["gene"] for e in rep for g in e.get("genes", [])
                   if principal(g) and [f for f in g["flags"] if f in MODULE_FLAGS]} - covered)
 if missing:
     sys.exit("MODULE_REASONS has no entry for principal rows flagged "
              f"{'/'.join(MODULE_FLAGS)}: {', '.join(missing)}")
-unused = sorted(covered - {g["gene"] for e in rep for g in e.get("genes", [])})
+unused = sorted(covered - set(flag_by_gene))
 if unused:
-    print("warning: MODULE_REASONS names genes absent from the report:", ", ".join(unused))
+    sys.exit("MODULE_REASONS names genes that carry no module flag on this run, so the "
+             f"stated reason no longer applies: {', '.join(unused)}")
 
 open(out, "w").write("\n".join(lines) + "\n")
 print("wrote", out, n_rows, n_clean)

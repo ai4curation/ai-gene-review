@@ -22,6 +22,19 @@ because they make this a weak consistency test rather than a strong one:
   to something broad aligns with a specific core function and the reverse, and two terms
   many levels apart still align. The report records which core term each node term
   matched (``aligned_pairs``) so the distance behind a match can be judged per row.
+* A dismech pathophysiology node binds its GO terms at **node level**, and a node may name
+  several genes. dismech has no per-gene attribution inside a node, so every term on a
+  shared node is read for every gene on it. The report records which of a gene's node terms
+  came *only* from a shared node (``shared_node_terms``), so a row whose verdict could rest
+  on a co-named partner's activity is visible rather than assumed clean. The
+  GLUD1/HADH hyperinsulinism node, which carries both glutamate dehydrogenase activity and
+  enzyme inhibitor activity, is the case this field exists to expose.
+* ``contributes_to_molecular_function`` is compared **alongside** core molecular function,
+  not folded into it: a subunit that contributes to a complex-level activity without
+  enabling it is doing the thing the dismech node describes, so excluding it would lose
+  real agreement. But the two are different claims, so a node term matching only a
+  contributes-to function is recorded in ``aligned_via_contributes_to``, and a row whose
+  whole alignment rests on one is flagged ``ALIGNED_CONTRIBUTES_ONLY``.
 * Module **membership** says the gene is in some module; it does not say the module is
   about the function the row aligned on. The two are reported separately:
   ``NO_MODULE_MEMBERSHIP`` means no module contains the accession, and
@@ -35,10 +48,12 @@ Module membership and module GO terms are read from the module structure
 regex over the file text, so an accession mentioned only in ``notes`` or in evidence
 does not count as membership.
 """
+import csv
 import datetime
 import glob
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -129,6 +144,9 @@ PROVENANCE = dict(
     aigr_dir=AG,
     scope_entries=len(SCOPE),
 )
+# Filled in after the modules are read, so the claim that reading module files as text
+# overcounts parts is reproducible from a run rather than quoted from a one-off count.
+MODULE_COUNTS = {}
 
 # AIGR: symbol -> (uniprot, status, core term sets)
 aigr = {}
@@ -138,9 +156,12 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
         d = yaml.safe_load(open(p))
     except Exception:
         continue
-    mf, bp, cc = set(), set(), set()
+    mf, mf_contributes, bp, cc = set(), set(), set(), set()
     for cf in d.get("core_functions") or []:
-        for k, dest in (("molecular_function", mf), ("contributes_to_molecular_function", mf)):
+        # Kept apart: enabling an activity and contributing to a complex that has it are
+        # different claims, and a row that aligns only on the weaker one says so.
+        for k, dest in (("molecular_function", mf),
+                        ("contributes_to_molecular_function", mf_contributes)):
             v = cf.get(k)
             if isinstance(v, dict) and v.get("id"):
                 dest.add(v["id"])
@@ -165,24 +186,30 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
         elif act == "NEW":
             proposed.add(tid_)
     aigr[sym] = dict(uniprot=d.get("id"), status=d.get("status"),
-                     mf=mf, bp=bp, cc=cc, kept=kept, proposed=proposed)
+                     mf=mf, mf_contributes=mf_contributes, bp=bp, cc=cc,
+                     kept=kept, proposed=proposed)
 
 
 def _annoton_terms(an):
-    """GO term ids a module annoton asserts (function, processes, locations, in/outputs)."""
+    """GO term ids a module annoton asserts (its function, processes and locations).
+
+    `ModuleAnnoton` carries exactly `function`, `processes` and `locations`; it has no
+    `inputs`/`outputs`, and `ProteinComplexDescriptor` has only `active_units`. Earlier
+    versions also read `inputs`, `outputs` and a complex's `components`, none of which
+    exist in the schema, so those branches never fired.
+    """
     out = set()
     f = an.get("function")
     if isinstance(f, dict):
         out.add((f.get("term") or {}).get("id"))
-    for k in ("processes", "locations", "inputs", "outputs"):
+    for k in ("processes", "locations"):
         for x in an.get(k) or []:
             if isinstance(x, dict):
                 out.add((x.get("term") or {}).get("id"))
     pc = (an.get("participant") or {}).get("protein_complex") or {}
-    for key in ("active_units", "components"):
-        for sub in pc.get(key) or []:
-            if isinstance(sub, dict):
-                out |= _annoton_terms(sub)
+    for sub in pc.get("active_units") or []:
+        if isinstance(sub, dict):
+            out |= _annoton_terms(sub)
     out.discard(None)
     return {t for t in out if str(t).startswith("GO:")}
 
@@ -203,7 +230,10 @@ def _participant_curies(part):
     out = set()
     if not isinstance(part, dict):
         return out
-    for key in ("gene_product", "gene", "ortholog_of"):
+    # Every `ParticipantSelector` slot that names a protein identity. `homolog_of` is a
+    # `GeneDescriptor` like `ortholog_of`, so omitting it would make a gene named only
+    # that way read as a member of nothing.
+    for key in ("gene_product", "gene", "ortholog_of", "homolog_of"):
         v = part.get(key)
         if isinstance(v, dict):
             out.add((v.get("term") or {}).get("id"))
@@ -212,10 +242,9 @@ def _participant_curies(part):
         if isinstance(mem, dict):
             out.add((mem.get("term") or {}).get("id"))
     pc = part.get("protein_complex") or {}
-    for key in ("active_units", "components"):
-        for sub in pc.get(key) or []:
-            if isinstance(sub, dict):
-                out |= _participant_curies(sub.get("participant") or sub)
+    for sub in pc.get("active_units") or []:
+        if isinstance(sub, dict):
+            out |= _participant_curies(sub.get("participant") or sub)
     out.discard(None)
     return out
 
@@ -283,6 +312,10 @@ def _concept_terms(obj):
 
 mod_by_acc = {}
 mod_terms = {}
+# Per-module counts of accessions reached structurally against accessions appearing
+# anywhere in the file text, so the gap between the two is a measured figure.
+_ACC_RE = re.compile(r"UniProtKB:([A-Z0-9]+)")
+structural_accs = textual_accs = 0
 for p in glob.glob(f"{AG}/modules/*.yaml"):
     mname = os.path.basename(p)[:-5]
     try:
@@ -297,12 +330,21 @@ for p in glob.glob(f"{AG}/modules/*.yaml"):
     mod_terms[mname] = terms
     for acc in accs:
         mod_by_acc.setdefault(acc, set()).add(mname)
+    structural_accs += len(accs)
+    textual_accs += len(set(_ACC_RE.findall(open(p).read())))  # unique, as accs is
 
+MODULE_COUNTS = dict(modules_read=len(mod_terms),
+                     accessions_as_parts=structural_accs,
+                     accessions_in_file_text=textual_accs)
+PROVENANCE["module_accessions"] = MODULE_COUNTS
+
+# Parsed with the csv module rather than split(","): a quoted label containing a comma
+# would shift every later field and silently yield the wrong symbol.
 hgnc_sym = {}
-for line in open(f"{DM}/cache/hgnc/terms.csv"):
-    parts = line.rstrip("\n").split(",")
-    if len(parts) >= 2:
-        hgnc_sym[parts[0].lower()] = parts[1]
+with open(f"{DM}/cache/hgnc/terms.csv", newline="") as fh:
+    for row in csv.reader(fh):
+        if len(row) >= 2:
+            hgnc_sym[row[0].lower()] = row[1]
 
 
 def tid(x):
@@ -331,6 +373,12 @@ for name in SCOPE:
         sym = hgnc_sym.get(gid, gid)
         sym = {"TMEM251": "LYSET"}.get(sym, sym)  # HGNC rename; AIGR folder uses current symbol
         node_mf, node_bp, node_cc, nodes = set(), set(), set(), []
+        # A node binds its GO terms at node level and may name several genes, and dismech
+        # has no per-gene attribution inside a node. So terms on a shared node are read
+        # for every gene on it, and the two provenances are tracked apart: `shared_terms`
+        # minus `sole_terms` is the set this gene holds *only* because a partner was
+        # named on the same node.
+        sole_terms, shared_terms, shared_nodes = set(), set(), []
         for n in d.get("pathophysiology") or []:
             ng = [(tid(g) or "").lower() for g in n.get("genes") or []]
             if isinstance(n.get("gene"), dict):
@@ -342,13 +390,20 @@ for name in SCOPE:
             if gid not in ng:
                 continue
             nodes.append(n.get("name"))
+            here = set()
             for x in n.get("molecular_functions") or []:
-                node_mf.add(tid(x))
+                node_mf.add(tid(x)); here.add(tid(x))
             for x in n.get("biological_processes") or []:
-                node_bp.add(tid(x))
+                node_bp.add(tid(x)); here.add(tid(x))
             for k in ("cellular_components", "locations"):
                 for x in n.get(k) or []:
                     node_cc.add(tid(x))
+            here.discard(None)
+            if len({x for x in ng if x}) > 1:
+                shared_terms |= here
+                shared_nodes.append(n.get("name"))
+            else:
+                sole_terms |= here
         node_mf.discard(None); node_bp.discard(None); node_cc.discard(None)
         a = aigr.get(sym)
         g = dict(gene=sym, hgnc=gid, relationship=rel, origin=origin, nodes=len(nodes))
@@ -368,22 +423,45 @@ for name in SCOPE:
             if a["status"] != "COMPLETE":
                 flags.append("AIGR_NOT_COMPLETE")
             core = a["mf"] | a["bp"]
+            contributes = a["mf_contributes"]
+            comparable = core | contributes
             dm = node_mf | node_bp
-            if dm and not core:
+            # Node terms this gene holds only because a partner shares one of its nodes.
+            only_shared = sorted((shared_terms - sole_terms) & dm)
+            if only_shared:
+                g["shared_node_terms"] = only_shared
+                g["shared_nodes"] = sorted({n for n in shared_nodes if n})
+            if dm and not comparable:
                 # Nothing to compare against. Without a flag this row would print "ok".
                 flags.append("NO_CORE_FUNCTION_TERMS")
-            if dm and core:
-                pairs = {}
+            if dm and comparable:
+                pairs, contrib_only = {}, []
                 for t in sorted(dm):
                     hits = sorted(c for c in core if related(t, c))
                     if hits:
                         pairs[t] = hits
+                        continue
+                    # Falls back to contributes-to, and says so: a subunit contributing
+                    # to a complex-level activity is doing what the node describes, but
+                    # it is a weaker claim than enabling the activity itself.
+                    chits = sorted(c for c in contributes if related(t, c))
+                    if chits:
+                        pairs[t] = chits
+                        contrib_only.append(t)
                 aligned = sorted(pairs)
                 g["aligned_terms"] = aligned
                 # Which core term each node term matched, so the unbounded ancestry
                 # distance behind a match is visible rather than assumed small.
                 if pairs:
                     g["aligned_pairs"] = {t: (v[0] if len(v) == 1 else v) for t, v in pairs.items()}
+                if contrib_only:
+                    g["aligned_via_contributes_to"] = sorted(contrib_only)
+                    if len(contrib_only) == len(aligned):
+                        flags.append("ALIGNED_CONTRIBUTES_ONLY")
+                if aligned and set(aligned) <= set(only_shared):
+                    # Every term this row aligned on came from a node it shares with
+                    # another gene, so the verdict may rest on a partner's activity.
+                    flags.append("ALIGNED_ON_SHARED_NODE_ONLY")
                 if not aligned:
                     noncore = sorted(t for t in dm if any(related(t, k) for k in a["kept"]))
                     prop = sorted(t for t in dm if any(related(t, k) for k in a["proposed"]))
@@ -396,6 +474,11 @@ for name in SCOPE:
                     else:
                         flags.append("NO_GO_ALIGNMENT")
                 g["dismech_only"] = sorted(dm - set(aligned))
+                if aligned and g["dismech_only"]:
+                    # Agreement is partial: dismech models something the review's core
+                    # functions do not cover. Flagged so a partly-matching row cannot
+                    # read as a fully clean one.
+                    flags.append("PARTIAL_ALIGNMENT")
             mods = sorted(mod_by_acc.get(a["uniprot"], ()))
             g["modules"] = mods
             if not mods:
