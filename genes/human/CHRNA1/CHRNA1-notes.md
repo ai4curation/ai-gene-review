@@ -35,3 +35,12 @@ The source artifact records meaningful authored evidence paraphrases, exact orig
 ### 2026-10-10 evidence-presentation correction
 
 Removed 74 quotations of authored audit interpretations from file-reference supporting text. Bare file citations remain as links to the provenance index; they are not independent scientific support. The artifact reference no longer marks its own interpretations VERIFIED. Primary quotations, source-specific reasons, all annotation actions and the biological synthesis remain unchanged.
+
+
+### Postsynaptic potential and source-provenance follow-up
+
+The three GO:0042391 assertions are refined to the existing GO:0060078 term. The human endplate measurements in PMID:8872460 and PMID:9221765 establish the postsynaptic membrane scope. The former reports endplate-potential summation in Results and predicts depolarization block in Discussion; the latter measures endplate amplitudes and decay and separately tests human alpha V249F receptors. The ARBA assertion is refined using this independent target evidence, with its source identifier unchanged. No new process assertion is added.
+
+Annotation support now cites the primary publications, source GO_REF or Reactome records and, where used, the external InterPro, QuickGO, HPA or physical-entity records directly. The authored source index remains a provenance reference, with no per-row support pointers. Its historical annotation-fact prose is retained for audit and superseded by the current YAML reasons and this entry. In particular, the repeated PMID:9221765 wording did not identify the original source of GO_REF annotations. The current reasons distinguish family/domain transfer, ARBA inference, PAINT assertion, orthology and direct experiments. Historical PAINT node placement remains uninspected, and the two presynaptic assertions remain UNDECIDED; the logical presynapse inference follows its unresolved premise.
+
+The captured UniProt P02709 record identifies bovine CHRNA1, correcting the prior Torpedo label in one ISS reason. No source accession is rewritten. The muscle-homeostasis refinement remains non-core, consistent with the independently retained assertion. The core's title fragment is replaced by a short Results anchor; a separate endplate-amplitude anchor supports the membrane-potential refinement. Existing notes and source bytes remain exact, and cumulative primary quotations across the YAML, notes and index are audited. The earlier notes' workflow-heavy wording remains historical provenance rather than being rewritten.
