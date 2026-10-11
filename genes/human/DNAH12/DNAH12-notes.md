@@ -53,3 +53,14 @@ Checked against the cached full texts:
 - New: PMID:39849482 (IQUB) RS1 loss depletes DNAH12, which places it near RS1.
 - The report flags a length discrepancy: Geng cites a predicted 3960-aa
   protein, while UniProt Q6ZR08 and the eLife construct are 3092 aa.
+
+## Variant nomenclature (checked against sequences)
+- Q6ZR08 (3092 aa, ENST00000351747) and NM_001366028.2 (3960 aa, isoform 4)
+  differ by 19 residues upstream of about position 772. So p.Gln2077Ter
+  (c.6229C>T) and p.Gln2096Ter (c.6286C>T) are the same nonsense allele;
+  the flanking sequence YKQSV is identical in both.
+- That allele is reported in PMID:40146200 (P9), PMID:39071892 (NJ0278),
+  PMID:42321500 (patient 2) and PMID:39267058 (candidate), all in Chinese
+  men. ClinVar has it twice: VCV 3899932 and VCV 5006672.
+- PMID:34791246 genotype from OMIM's ClinVar records: p.Pro1389Leu /
+  p.Ser2178Ter (NM_001366028); VCV 3899930 and 3899931.
