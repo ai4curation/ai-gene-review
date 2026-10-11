@@ -117,10 +117,14 @@ fixed, then can become ERRORs.
 `part_of` (a positive annotation to `axoneme` entails `cilium`). They need the GO
 database (`sqlite:obo:go` via OAK), so they run only when validation loads it:
 `ai-gene-review validate --terms` or `--ontology-checks`, which `just validate` and
-`just validate-all` use. Plain best-practice runs and unit tests skip them. If the
-ontology cannot be loaded, one WARNING says the hierarchical rules were skipped, and
-per-annotation exceptions are not flagged as stale in runs that could not check the
-hierarchy.
+`just validate-all` use. Plain best-practice runs and unit tests skip them, and in
+those runs per-annotation exceptions are not flagged as stale (the hierarchy was not
+checked).
+
+When ontology checks are requested, a missing or broken GO database fails fast: the
+CLI loads GO and checks a known `part_of` edge (axoneme -> cilium) before validating
+any file, and any later lookup error raises. Hierarchical rules are never silently
+skipped.
 
 Unlike the older `inconsistent_review_actions` warning, this check has no exemption for
 REMOVE rows that cite a different reference: REMOVE is a judgment on the claim,

@@ -508,3 +508,11 @@ def test_real_go_hierarchy_uses_part_of():
     )
     [conflict] = iter_conflicts(data, ancestors=go_ancestors())
     assert (conflict.term_id, conflict.term_id_2) == ("GO:0005776", "GO:0000421")
+
+
+def test_go_ancestors_fails_fast_on_a_bad_adapter():
+    """A broken ontology must raise, never silently skip hierarchical rules."""
+    from ai_gene_review.validation.action_consistency import GoAncestors
+
+    with pytest.raises(Exception):
+        GoAncestors("sqlite:/nonexistent/path/go.db").load()

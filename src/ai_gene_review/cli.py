@@ -1005,6 +1005,12 @@ def validate(
     check_references = not no_references
     check_schema = not no_schema
     check_ontology = terms or ontology_checks
+    if check_ontology and check_best_practices:
+        # Fail fast, before any file: per-file errors would hide a missing ontology
+        # behind thousands of identical failures.
+        from ai_gene_review.validation.action_consistency import go_ancestors
+
+        go_ancestors().load()
     schema_path = Path(schema).resolve() if schema else get_schema_path()
 
     # Validate single file or multiple files

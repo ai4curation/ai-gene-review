@@ -396,38 +396,40 @@ GO_PREDICATES = ("rdfs:subClassOf", "BFO:0000050")
 class GoAncestors:
     """Lazy, cached GO ancestor lookup over is_a and part_of.
 
-    Failures to build or query the external adapter are recorded in ``failure``
-    rather than raised, so validation can report that hierarchical rules were skipped.
+    Fails fast: any problem building or querying the adapter raises, so a run that
+    asked for ontology checks never silently skips them. Call :meth:`load` before a
+    batch to fail before any file is validated.
     """
+
+    #: A known part_of edge (axoneme part_of cilium) used to sanity-check the database.
+    PROBE = ("GO:0005930", "GO:0005929")
 
     def __init__(self, adapter_string: str = "sqlite:obo:go"):
         self.adapter_string = adapter_string
-        self.failure: Optional[str] = None
         self._adapter: Any = None
 
-    def _get_adapter(self) -> Any:
-        if self._adapter is None and self.failure is None:
+    def load(self) -> "GoAncestors":
+        """Build the adapter and check it returns a known ancestor; raise otherwise."""
+        if self._adapter is None:
             from oaklib import get_adapter
 
-            try:
-                self._adapter = get_adapter(self.adapter_string)
-            except Exception as error:  # External ontology construction can fail.
-                self.failure = f"GO adapter could not be loaded ({error})"
-        return self._adapter
+            self._adapter = get_adapter(self.adapter_string)
+            child, parent = self.PROBE
+            if parent not in self(child):
+                raise RuntimeError(
+                    f"GO ancestor lookup via {self.adapter_string} is broken: "
+                    f"{parent} is not an ancestor of {child}"
+                )
+        return self
 
     @lru_cache(maxsize=65536)
     def __call__(self, term_id: str) -> FrozenSet[str]:
-        adapter = self._get_adapter()
-        if adapter is None:
-            return frozenset()
-        try:
-            found = adapter.ancestors(
-                term_id, predicates=list(GO_PREDICATES), reflexive=False
-            )
-            return frozenset(found) - {term_id}
-        except Exception as error:  # External ontology queries can also fail.
-            self.failure = f"GO ancestor lookup failed for {term_id} ({error})"
-            return frozenset()
+        if self._adapter is None:
+            self.load()
+        found = self._adapter.ancestors(
+            term_id, predicates=list(GO_PREDICATES), reflexive=False
+        )
+        return frozenset(found) - {term_id}
 
 
 @lru_cache(maxsize=1)
@@ -655,6 +657,7 @@ def check_action_consistency(
 
     Hierarchical rules run only when *ancestors* is given; without it, exceptions
     that could be explained by a hierarchical conflict are not flagged as stale.
+    A failing *ancestors* lookup raises: ontology checks are never silently skipped.
     """
     from ai_gene_review.validation.validation_report import ValidationSeverity
 
@@ -687,18 +690,7 @@ def check_action_consistency(
             validation_category="BestPractices",
             check_type="action_consistency",
         )
-    failure = getattr(ancestors, "failure", None)
-    if failure:
-        report.add_issue(
-            ValidationSeverity.WARNING,
-            f"Hierarchical action-consistency rules were skipped: {failure}",
-            path="existing_annotations",
-            validation_category="BestPractices",
-            check_type="action_consistency",
-        )
-    can_judge_staleness = (
-        ancestors is not None and not failure
-    ) or not _hierarchical_rules_active()
+    can_judge_staleness = ancestors is not None or not _hierarchical_rules_active()
     for index, ann in enumerate(data.get("existing_annotations") or []):
         if not isinstance(ann, dict) or not can_judge_staleness:
             continue
