@@ -36,3 +36,20 @@
   the work of the process).
 - MODIFY dynein complex -> inner dynein arm.
 - dynein intermediate chain binding: UNDECIDED (no DNAH12-specific data).
+
+## Falcon deep research (DNAH12-deep-research-falcon.md, 835 s, 23 citations)
+Checked against the cached full texts:
+- PMID:39071892: patient AY0749 kept DNAH1 and DNAI2 but lost SPAG6
+  [PMID:39071892 "the expression levels of DNAH1 and DNAI2 were
+  predominantly normal, whereas the expression of SAPG6 was mostly
+  absent"]. This conflicts with the eLife report of DNAH1 loss; added as a
+  suggested question.
+- PMID:39071892 cohort frequency is 3/1532. ICSI gave one live birth
+  (AY0749), one clinical pregnancy (NJ0278), and one couple (XM0178)
+  awaiting transfer. The report's claim of a miscarriage is not in the
+  cached text, so I have not used it.
+- New: PMID:36792588 (DNALI1) IP-MS from human sperm recovers DNAH12; DNAH12
+  stays in DNALI1-mutant sperm.
+- New: PMID:39849482 (IQUB) RS1 loss depletes DNAH12, which places it near RS1.
+- The report flags a length discrepancy: Geng cites a predicted 3960-aa
+  protein, while UniProt Q6ZR08 and the eLife construct are 3092 aa.
