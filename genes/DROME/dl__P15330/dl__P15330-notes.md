@@ -30,4 +30,4 @@ Reviewed together with Dif (P98149) for the INNATE_IMMUNITY project (batch 1, To
 
 ## Deep research
 
-Falcon deep research (`dl-deep-research-falcon.md`) finished after the first draft. It was read and is consistent with the review (no conflicting claims), and it is cited as supporting evidence in core_functions. The review rests mainly on the UniProt record and the cached publications.
+Falcon deep research (`dl__P15330-deep-research-falcon.md`) finished after the first draft. It was read and is consistent with the review (no conflicting claims), and it is cited as supporting evidence in core_functions. The review rests mainly on the UniProt record and the cached publications.

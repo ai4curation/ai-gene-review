@@ -30,19 +30,19 @@ artifact_sources:
   edison_answer_artifacts: 3
 artifacts:
 - filename: artifact-00.md
-  path: dl-deep-research-falcon_artifacts/artifact-00.md
+  path: dl__P15330-deep-research-falcon_artifacts/artifact-00.md
   media_type: text/markdown
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
 - filename: artifact-01.md
-  path: dl-deep-research-falcon_artifacts/artifact-01.md
+  path: dl__P15330-deep-research-falcon_artifacts/artifact-01.md
   media_type: text/markdown
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-01
 - filename: artifact-02.md
-  path: dl-deep-research-falcon_artifacts/artifact-02.md
+  path: dl__P15330-deep-research-falcon_artifacts/artifact-02.md
   media_type: text/markdown
   source: edison_answer_artifacts
   data_storage_id: null
@@ -410,9 +410,9 @@ References
 
 ## Artifacts
 
-- [Edison artifact artifact-00](dl-deep-research-falcon_artifacts/artifact-00.md)
-- [Edison artifact artifact-01](dl-deep-research-falcon_artifacts/artifact-01.md)
-- [Edison artifact artifact-02](dl-deep-research-falcon_artifacts/artifact-02.md)
+- [Edison artifact artifact-00](dl__P15330-deep-research-falcon_artifacts/artifact-00.md)
+- [Edison artifact artifact-01](dl__P15330-deep-research-falcon_artifacts/artifact-01.md)
+- [Edison artifact artifact-02](dl__P15330-deep-research-falcon_artifacts/artifact-02.md)
 
 ## Citations
 
