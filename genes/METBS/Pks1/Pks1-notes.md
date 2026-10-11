@@ -71,12 +71,16 @@
 
 ## Bioinformatics Report Audit 2026-10-10
 
-- Reviewed `Pks1-bioinformatics/RESULTS.md` and left it uncited. The report's
-  generated JSON fails several residue checks (`KS_DTACSS_motif`, `ACP1_Ser1712`,
-  and TE `Ser1973`) even though the prose concludes that all essential catalytic
-  residues are conserved.
+- Reviewed `Pks1-bioinformatics/RESULTS.md` and left it uncited. The embedded
+  `PKS1_SEQUENCE` is 2137 aa while the cached UniProt record is 2148 aa and
+  diverges by residue 40, so the current UniProt `ACT_SITE` and `MOD_RES`
+  coordinates were indexed into the wrong sequence. The failed coordinate
+  checks are artifacts and do not impeach the UniProt `MOD_RES` 1712/1830
+  evidence supporting the accepted GO:0031177 phosphopantetheine binding
+  annotation.
 - The scripts mix an automated motif scanner with manually encoded UniProt active
-  sites and manually assigned homolog identity values, so the outputs do not
+  sites, manually assigned homolog identity values, hard-coded conservation
+  prose, and hard-coded evolutionary and selection claims, so the outputs do not
   constitute an independent reproducible phylogenetic or active-site analysis.
 - The report's GO recommendations include `GO:0009411 response to UV` and the
   broad `GO:0043473 pigmentation`; those were rejected or replaced in the
