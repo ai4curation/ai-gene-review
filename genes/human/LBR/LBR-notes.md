@@ -54,5 +54,7 @@ locate additional PMIDs, which were then fetched with `just fetch-pmid`).
   owned by another group (W2-CHOL-A).
 
 ## Deep research
-`just deep-research-falcon human LBR` was attempted on 2026-10-09 and failed
-("All providers failed"); the literature review above was done manually instead.
+`just deep-research-falcon human LBR` was attempted on 2026-10-09 and first failed
+("All providers failed"), so the literature review above was done manually. A later falcon run
+succeeded and is committed as `LBR-deep-research-falcon.md`. It adds the Tudor-domain H4K20me2
+recognition (Hirano et al. 2012, PMID:23100253), now captured as a NEW GO:0140005 annotation.

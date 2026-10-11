@@ -68,7 +68,6 @@ Reactome entries.
 - MF GO:0000254 C-4 methylsterol oxidase activity (+ contributes iron ion binding GO:0005506).
 - directly_involved_in GO:0006695 cholesterol biosynthetic process.
 - located_in GO:0005789 endoplasmic reticulum membrane.
-</content>
 
 ## Revision 2026-10-09
 

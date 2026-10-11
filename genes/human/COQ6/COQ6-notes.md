@@ -89,9 +89,9 @@ susceptibility.
 - ubiquinone biosynthesis complex (GO:0110142, part_of, IPI PMID:27499296) — core
   CC of the synthome, ACCEPT.
 - Four IPI GO:0005515 "protein binding" (COQ3/COQ4/COQ5/COQ7) collapse to a single
-  seeded annotation — MARK_AS_OVER_ANNOTATED per policy (never REMOVE an IPI bare
-  protein binding); the informative content is captured by the complex membership
-  term.
+  seeded annotation. First marked MARK_AS_OVER_ANNOTATED; superseded in the 2026-10-11
+  pass below by REMOVE under the current bare protein-binding policy. The informative
+  content is captured by the complex membership term.
 
 ## 2026-10-11 completion pass (claude-code)
 
