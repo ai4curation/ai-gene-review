@@ -51,3 +51,29 @@ The ordinary validation, status check and render passed. The one curation adviso
 Live CNTN2 PR #4830 has three byte-identical shared full caches (PMID:12963709, PMID:19458237 and PMID:26217189). Its PMID:18179895 cache is a genuine abstract-only variant, whereas this packet's genuine normal cache includes the full body actually read. Both variants and exact blob hashes are preserved. ROOT authorized a deliberate stronger-source publication exception; no equality or downgrade is claimed. The current CNTN2 YAML contains no quoted anchor for that PMID, so the upgrade does not invalidate a published literal snippet.
 
 A final ownership capture stopped when live main changed. Its failure log is retained; the unsealed capture directory was refreshed during the subsequent attempt, so it is not represented as an immutable complete first snapshot. The successful current capture and its explicit same-head/base inventory proofs are authoritative.
+
+## 2026-10-11 — source-specific follow-up
+
+This biological evidence appendix retains the earlier notes as an exact historical prefix. The earlier statement that quotations occur only in YAML describes that version: this appendix adds three short source excerpts, and three other distinct excerpts are added to annotation support. Aggregate quotation limits are checked across both files; the structured index contains no copied excerpt.
+
+### The scaffold and its associated channels
+
+Original rat brain experiments recover Caspr2 with Kv1.2/Kvβ2, using Kv2.1, preimmune and absorption controls. Later rat brain experiments co-precipitate TAG-1, Caspr2 and Kv1.2, whereas tested heterologous combinations did not establish a direct minimal channel–Caspr2 association. The positive native assembly and the failed reduced reconstitution address different questions. The original channel-complex annotations remain supported; the authored core now names the Caspr2/TAG-1 scaffold and omits the optional channel-complex slot, without denying the larger native assembly or assigning Caspr2 ion conductance. Initial recruitment and maintenance are still not fully separated. [PMID:10624965; PMID:12963709]
+
+The mouse nerve experiments recorded compound action potentials from optic and sciatic nerves, measured conduction velocity and refractory period, and tested selected developmental, temperature and pharmacological conditions. The authors report: [PMID:12963709 "there was no apparent change in nerve conduction."] This bounded negative result must accompany the positive channel-redistribution result. It does not establish universal absence of a signaling role, nor resolve the original unavailable NAS source for impulse transmission. The annotation remains UNDECIDED at that source's scope.
+
+### Binding and context-dependent responses
+
+The human ectodomain study measured micromolar CNTN1 affinity with [PMID:26721881 "fast association and dissociation rates"]. A separate live-cell assay also supported CNTN1 binding. Its negative purified TAG-1 assay remains distinct from positive cis-complex and presentation-dependent experiments; no family-wide binding assumption is made.
+
+The CPE study's complete abstract reports two-hybrid, GST pull-down and immunoprecipitation. It also says the immunoreactivities [PMID:19166515 "co-migrated in the fractions of Golgi/ER"]. Binding and compartment observations are retained without inferring CPE catalytic regulation or inventing the exact species of each transfected construct. Full Results remain unavailable; the short new annotation anchor is taken from the actual protected abstract.
+
+Mouse DRG neurite responses provide positive, limited evidence for Caspr2 participation in CD24-triggered signaling through TAG-1/L1-associated surface machinery. Caspr2 antibody blockade is interpreted with contactin/TAG-1 genetic backgrounds and the negative cerebellar context; there was no Caspr2-knockout experiment in that study. The broad signaling IBA stays non-core. A non-CNTNAP donor or a short donor list does not demonstrate an incorrect historical ancestral placement, which remains uninspected. [PMID:19458237]
+
+Human CNTNAP2 rescue of gap-junction and locomotion defects in worms, including restoration of ectopic Cx43-based junctions, is genuine human-product complementation. The new literal annotation anchor makes that result directly checkable. It does not transfer the worm NLR-1 actin-binding assay into a human molecular function or establish native human gap-junction physiology. [PMID:33238150]
+
+### Source continuity
+
+The shared PMID:18179895 full cache is the same genuine version already published with this review. Its PMID, title, DOI, PMCID, authors and abstract match the current-main abstract variant; the full body directly includes the rat TAG-1 synaptic-membrane fractionation used by the merged CNTN2 review. Every current-main consumer was checked and no source quote is lost. Resolving the single add/add conflict should retain these authenticated full bytes, preserve both variants in the evidence record and leave all other sources and histories unchanged.
+
+Reference assessments now describe the actual methods, results and access boundaries in plain terms. The existing notes prefix and history records are not rewritten. The failed provider attempts remain documented; no provider output or new research report is fabricated. No annotation source field, product identity, qualifier, action or new-process assertion changes in this amendment.
