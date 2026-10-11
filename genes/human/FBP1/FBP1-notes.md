@@ -5,9 +5,13 @@ UniProt P09467 (F16P1_HUMAN); HGNC:3606; EC 3.1.3.11; 338 aa; FBPase class 1 fam
 
 ## Literature work (2026-10-09)
 
-`just deep-research-falcon human FBP1` failed ("Provider falcon timed out after 600s"); the review below was
-written from UniProt, GOA, cached Reactome entries and cached PubMed abstracts/full texts
-(fetched with `just fetch-pmid`), not from a deep-research report.
+`just deep-research-falcon human FBP1` reported a timeout ("Provider falcon timed out after 600s"), so the
+review below was written from UniProt, GOA, cached Reactome entries and cached PubMed abstracts/full texts
+(fetched with `just fetch-pmid`). The falcon report (`FBP1-deep-research-falcon.md`) was written afterwards.
+Checked against the review: it gives the same primary annotation (cytosolic, metal-dependent
+fructose-1,6-bisphosphate 1-phosphohydrolase for hepatic and renal gluconeogenesis, restrained by AMP and
+fructose-2,6-bisphosphate) and treats nuclear HIF repression in ccRCC as secondary, as the review does
+(PMID:25043030 rows), so it changes no curation decision.
 
 ## Core biology
 

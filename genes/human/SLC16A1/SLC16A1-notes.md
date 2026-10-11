@@ -1,7 +1,12 @@
 # SLC16A1 (MCT1, P53985) — review notes
 
-Deep research: `just deep-research-falcon human SLC16A1` timed out (600 s, all providers failed);
-review grounded in UniProt P53985, GOA, and cached publications.
+Deep research: `just deep-research-falcon human SLC16A1` reported a timeout (600 s, all providers failed),
+so the review was grounded in UniProt P53985, GOA, and cached publications. The falcon report
+(`SLC16A1-deep-research-falcon.md`) was written afterwards. Checked against the review: its annotation
+conclusion (basigin-associated, mainly plasma-membrane, proton-coupled L-lactate/monocarboxylate
+transporter) matches the core function. It also mentions a proposed direct mitochondrial import role
+(Cluntun et al. 2024), which it says should be annotated separately at its own level of evidence; there is
+no GOA annotation for it and the review does not add one.
 
 ## Function
 - Proton-coupled bidirectional monocarboxylate transporter of the plasma membrane: lactate, pyruvate,
