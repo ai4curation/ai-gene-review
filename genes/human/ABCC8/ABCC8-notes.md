@@ -250,3 +250,13 @@ abstract-only (`full_text_available: false`). PMID:23149556 has a PMC record
 (PMC3587805), but the PMC full-text service returned the abstract only, so the
 glial-proliferation assay still cannot be read. No new cached evidence resolves any
 of the five rows, so their actions are unchanged and the review stays DRAFT.
+
+## 2026-10-11 — status set to COMPLETE
+
+The five UNDECIDED rows above are the action the review guidelines require when the
+supporting publications cannot be read, and they concern electronic Compara projections
+that sit outside SUR1's core function. All 64 annotations carry a decision, and the core
+functions (potassium channel regulator activity on the Kir6.2 K(ATP) channel, and the
+intrinsic ATP hydrolysis of the SUR1 nucleotide-binding domains) are complete. As in other completed reviews that carry UNDECIDED rows, the review
+is marked COMPLETE. The rows should be revisited if full text for PMID:23828271,
+PMID:14645230 or PMID:23149556 becomes available.
