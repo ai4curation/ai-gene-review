@@ -22,3 +22,11 @@
   feedback loop. PMID:39565189 was also inspected; it gives systems-level
   context for Mst2C/NuA3 modules in heterochromatin regulation but did not add a
   mst2-specific annotation beyond the direct Wang/Jia/Grewal papers.
+- PR review found three inherited transcription rows whose `supporting_text`
+  cited only a generic PMID:22184112 background sentence. Those rows now cite
+  the direct telomeric anti-silencing and targeted-Mst2 HAT heterochromatin
+  evidence instead. PMID:22184112 also establishes that loss of Mst2/Gcn5-dependent
+  H3K14ac impairs DNA-damage checkpoint activation, but `rad3` and `chk1` are
+  the local checkpoint-signaling comparators; a suggested question now asks
+  whether any non-core checkpoint term belongs on the chromatin-accessibility
+  HATs or Mst2-complex subunits.
