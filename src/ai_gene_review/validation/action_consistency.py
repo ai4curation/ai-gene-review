@@ -3,19 +3,34 @@
 A gene review judges claims about the gene, not evidence codes. Two GOA rows to the
 same term are two pieces of evidence for one claim; they may reinforce each other, but
 the review's actions on them must not contradict each other (e.g. ACCEPT on the IBA row
-and REMOVE on the NAS row). Which combinations count as contradictions, and how severe
-each is, lives in ``schema/action_consistency.yaml`` so strictness can be ratcheted one
-row at a time.
+and REMOVE on the NAS row, or keeping both a term and a NOT annotation to it). Which
+combinations count as contradictions, and how severe each is, lives in
+``schema/action_consistency.yaml`` so strictness can be ratcheted one row at a time.
+
+A review row can carry ``review.consistency_exception`` (with a reason) for the very
+rare case where an apparent contradiction is correct: its conflicts are then reported
+at INFO with the reason, and an exception that matches no conflict is flagged.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Iterator, List, Optional, Tuple
+from typing import (
+    Any,
+    Dict,
+    FrozenSet,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import yaml
 
@@ -54,7 +69,7 @@ class MatchMode(str, Enum):
 
     EXACT = "exact"
     #: The term itself or any is_a/part_of descendant; needs the ontology, so it is
-    #: parsed for documentation but not evaluated yet.
+    #: reserved but not evaluated yet.
     SELF_OR_DESCENDANT = "self_or_descendant"
 
 
@@ -82,28 +97,66 @@ class TermFilter:
     def describe(self) -> str:
         """Short human-readable form, e.g. ``exactly GO:0005515``."""
         ids = " or ".join(sorted(self.ids))
-        return (
-            f"exactly {ids}"
-            if self.mode is MatchMode.EXACT
-            else f"{ids} or a descendant"
-        )
+        if self.mode is MatchMode.EXACT:
+            return f"exactly {ids}"
+        return f"{ids} or a descendant"
+
+
+@dataclass(frozen=True)
+class Side:
+    """One side of a rule: which actions, on rows of which polarity."""
+
+    actions: FrozenSet[str]
+    negated: bool = False
+
+    def matches(self, action: str, negated: bool) -> bool:
+        """Whether a row with *action* and *negated* polarity falls on this side."""
+        return action in self.actions and negated == self.negated
+
+    def overlaps(self, other: "Side") -> bool:
+        """Whether some row could fall on both sides."""
+        return self.negated == other.negated and bool(self.actions & other.actions)
+
+    def describe(self) -> str:
+        """E.g. ``NOT-row ACCEPT or KEEP_AS_NON_CORE``."""
+        acts = " or ".join(sorted(self.actions))
+        return f"{acts} NOT" if self.negated else acts
+
+
+def _actions(value: Union[str, Iterable[str]]) -> FrozenSet[str]:
+    """Normalise one action or a collection of actions to a frozenset."""
+    return frozenset([value]) if isinstance(value, str) else frozenset(value)
 
 
 @dataclass(frozen=True)
 class ConsistencyRule:
     """One row of the action-consistency table.
 
-    ``term_1`` and ``term_2`` optionally restrict the rule to rows whose terms match;
-    a filtered rule is an exception to (takes precedence over) a less filtered one.
+    ``action_1``/``action_2`` may each be one action or several (any of them).
+    ``negated_1``/``negated_2`` select NOT rows. ``term_1``/``term_2`` optionally
+    restrict the rule to rows whose terms match; a filtered rule is an exception to
+    (takes precedence over) a less filtered one.
     """
 
-    action_1: str
-    action_2: str
+    action_1: Union[str, FrozenSet[str]]
+    action_2: Union[str, FrozenSet[str]]
     relation: Relation
     severity: Severity
     rationale: str
     term_1: Optional[TermFilter] = None
     term_2: Optional[TermFilter] = None
+    negated_1: bool = False
+    negated_2: bool = False
+    side_1: Side = field(init=False)
+    side_2: Side = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "side_1", Side(_actions(self.action_1), self.negated_1)
+        )
+        object.__setattr__(
+            self, "side_2", Side(_actions(self.action_2), self.negated_2)
+        )
 
     @property
     def specificity(self) -> int:
@@ -116,10 +169,9 @@ class ConsistencyRule:
         >>> ConsistencyRule("TOO_GENERAL", "ACCEPT", Relation.ANCESTOR_OF,
         ...                 Severity.OK, "x").describe()
         "the TOO_GENERAL row's term is an ancestor of the ACCEPT row's term"
-        >>> pb = TermFilter(MatchMode.EXACT, frozenset({"GO:0005515"}))
-        >>> ConsistencyRule("ACCEPT", "REMOVE", Relation.SAME_TERM, Severity.OK, "x",
-        ...                 term_1=pb).describe()
-        "the ACCEPT row's term (exactly GO:0005515) is the same as the REMOVE row's term"
+        >>> ConsistencyRule(frozenset({"ACCEPT", "KEEP_AS_NON_CORE"}), "ACCEPT",
+        ...     Relation.SAME_TERM, Severity.WARNING, "x", negated_1=True).describe()
+        "the ACCEPT or KEEP_AS_NON_CORE NOT row's term is the same as the ACCEPT row's term"
         """
         phrase = {
             Relation.SAME_TERM: "the same as",
@@ -127,12 +179,14 @@ class ConsistencyRule:
             Relation.ANCESTOR_OF: "an ancestor of",
         }[self.relation]
 
-        def side(action: str, term: Optional[TermFilter]) -> str:
-            return f"the {action} row's term" + (
-                f" ({term.describe()})" if term else ""
-            )
+        def side(s: Side, term: Optional[TermFilter]) -> str:
+            text = f"the {s.describe()} row's term"
+            return text + (f" ({term.describe()})" if term else "")
 
-        return f"{side(self.action_1, self.term_1)} is {phrase} {side(self.action_2, self.term_2)}"
+        return (
+            f"{side(self.side_1, self.term_1)} is {phrase} "
+            f"{side(self.side_2, self.term_2)}"
+        )
 
 
 @dataclass(frozen=True)
@@ -147,7 +201,7 @@ class Conflict:
 
 
 REQUIRED_KEYS = {"action_1", "relation", "action_2", "severity", "rationale"}
-OPTIONAL_KEYS = {"term_1", "term_2"}
+OPTIONAL_KEYS = {"term_1", "term_2", "negated_1", "negated_2"}
 
 
 def parse_term_filter(where: str, raw: Any) -> TermFilter:
@@ -180,6 +234,24 @@ def parse_term_filter(where: str, raw: Any) -> TermFilter:
     return TermFilter(mode, frozenset(id_list))
 
 
+def _parse_actions(where: str, raw: Any, valid: Set[str]) -> FrozenSet[str]:
+    """Parse one action or a non-empty list of actions, rejecting unknown values."""
+    values = [raw] if isinstance(raw, str) else raw
+    if not isinstance(values, list) or not values:
+        raise ValueError(f"{where}: expected an action or a non-empty list of actions")
+    for value in values:
+        if value not in valid:
+            raise ValueError(f"{where}: unknown action {value!r}")
+    return frozenset(values)
+
+
+def _parse_flag(where: str, raw: Any) -> bool:
+    """Parse a strict YAML boolean."""
+    if not isinstance(raw, bool):
+        raise ValueError(f"{where}: expected true or false, got {raw!r}")
+    return raw
+
+
 def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
     """Parse and validate the rules table, failing fast on anything malformed.
 
@@ -194,7 +266,7 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
     ...     "relation": "SAME_TERM", "severity": "WARNING", "rationale": "x"}]})
     Traceback (most recent call last):
     ...
-    ValueError: rule 0: unknown action 'ACEPT'
+    ValueError: rule 0 action_1: unknown action 'ACEPT'
     """
     valid_actions = {a.value for a in ActionEnum}
     rules: List[ConsistencyRule] = []
@@ -205,12 +277,13 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
                 f"rule {i}: expected keys {sorted(REQUIRED_KEYS)} plus optional "
                 f"{sorted(OPTIONAL_KEYS)}, got {sorted(row)}"
             )
-        for column in ("action_1", "action_2"):
-            if row[column] not in valid_actions:
-                raise ValueError(f"rule {i}: unknown action {row[column]!r}")
         rule = ConsistencyRule(
-            action_1=row["action_1"],
-            action_2=row["action_2"],
+            action_1=_parse_actions(
+                f"rule {i} action_1", row["action_1"], valid_actions
+            ),
+            action_2=_parse_actions(
+                f"rule {i} action_2", row["action_2"], valid_actions
+            ),
             relation=Relation(row["relation"]),
             severity=Severity(row["severity"]),
             rationale=" ".join(str(row["rationale"]).split()),
@@ -220,6 +293,8 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
             term_2=parse_term_filter(f"rule {i} term_2", row["term_2"])
             if "term_2" in row
             else None,
+            negated_1=_parse_flag(f"rule {i} negated_1", row.get("negated_1", False)),
+            negated_2=_parse_flag(f"rule {i} negated_2", row.get("negated_2", False)),
         )
         if rule.relation is Relation.SAME_TERM and rule.term_2 is not None:
             raise ValueError(
@@ -236,32 +311,28 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
     return rules
 
 
-Canonical = Tuple[str, str, str, Optional[TermFilter], Optional[TermFilter]]
+#: (side, filter) for each end of a rule, oriented so a DESCENDANT_OF reading holds.
+Oriented = Tuple[Tuple[Side, Optional[TermFilter]], Tuple[Side, Optional[TermFilter]]]
 
 
-def _canonical(rule: ConsistencyRule) -> Canonical:
-    """Orientation-free form, so a rule and its mirror image compare equal.
+def _orientations(rule: ConsistencyRule) -> List[Oriented]:
+    """The ways a rule's two ends can be lined up against another rule's.
 
-    SAME_TERM is symmetric (its one filter applies to the shared term);
-    "A ANCESTOR_OF B" is the same rule as "B DESCENDANT_OF A", filters included.
-
-    >>> a = ConsistencyRule("TOO_GENERAL", "ACCEPT", Relation.ANCESTOR_OF, Severity.OK, "")
-    >>> b = ConsistencyRule("ACCEPT", "TOO_GENERAL", Relation.DESCENDANT_OF, Severity.OK, "")
-    >>> _canonical(a) == _canonical(b)
-    True
+    ANCESTOR_OF is flipped into DESCENDANT_OF form; SAME_TERM is symmetric, so both
+    orders are returned (its single filter applies to the shared term, i.e. both ends).
     """
+    end_1, end_2 = (rule.side_1, rule.term_1), (rule.side_2, rule.term_2)
     if rule.relation is Relation.SAME_TERM:
-        a, b = sorted((rule.action_1, rule.action_2))
-        return (rule.relation.value, a, b, rule.term_1, None)
+        end_1, end_2 = (rule.side_1, rule.term_1), (rule.side_2, rule.term_1)
+        return [(end_1, end_2), (end_2, end_1)]
     if rule.relation is Relation.ANCESTOR_OF:
-        return (
-            Relation.DESCENDANT_OF.value,
-            rule.action_2,
-            rule.action_1,
-            rule.term_2,
-            rule.term_1,
-        )
-    return (rule.relation.value, rule.action_1, rule.action_2, rule.term_1, rule.term_2)
+        return [(end_2, end_1)]
+    return [(end_1, end_2)]
+
+
+def _family(rule: ConsistencyRule) -> Relation:
+    """Relation family; ANCESTOR_OF and DESCENDANT_OF are mirror images."""
+    return Relation.DESCENDANT_OF if rule.relation in HIERARCHICAL else rule.relation
 
 
 def _may_overlap(f: Optional[TermFilter], g: Optional[TermFilter]) -> bool:
@@ -277,25 +348,35 @@ def _may_overlap(f: Optional[TermFilter], g: Optional[TermFilter]) -> bool:
 
 
 def _check_pair(i: int, rule: ConsistencyRule, j: int, other: ConsistencyRule) -> None:
-    """Reject duplicates, and equally specific rules that could both match and disagree."""
-    (rel, a1, a2, f1, f2), (o_rel, o_a1, o_a2, g1, g2) = (
-        _canonical(rule),
-        _canonical(other),
-    )
-    if (rel, a1, a2) != (o_rel, o_a1, o_a2):
+    """Reject duplicates, and equally specific rules that could both match and disagree.
+
+    >>> a = ConsistencyRule("TOO_GENERAL", "ACCEPT", Relation.ANCESTOR_OF, Severity.OK, "")
+    >>> b = ConsistencyRule("ACCEPT", "TOO_GENERAL", Relation.DESCENDANT_OF, Severity.OK, "")
+    >>> _check_pair(1, b, 0, a)
+    Traceback (most recent call last):
+    ...
+    ValueError: rule 1: duplicate of rule 0 (the ACCEPT row's term is a descendant of the TOO_GENERAL row's term)
+    """
+    if _family(rule) is not _family(other):
         return
-    if (f1, f2) == (g1, g2):
-        raise ValueError(f"rule {i}: duplicate of rule {j} ({rule.describe()})")
-    if (
-        rule.specificity == other.specificity
-        and rule.severity is not other.severity
-        and _may_overlap(f1, g1)
-        and _may_overlap(f2, g2)
-    ):
-        raise ValueError(
-            f"rule {i}: ambiguous with rule {j}: equally specific, can match the same "
-            f"rows, and disagree on severity ({rule.severity.value} vs {other.severity.value})"
+    mine = _orientations(rule)[0]
+    for theirs in _orientations(other):
+        if mine == theirs:
+            raise ValueError(f"rule {i}: duplicate of rule {j} ({rule.describe()})")
+    for theirs in _orientations(other):
+        overlap = all(
+            s.overlaps(o) and _may_overlap(f, g) for (s, f), (o, g) in zip(mine, theirs)
         )
+        if (
+            overlap
+            and rule.specificity == other.specificity
+            and rule.severity is not other.severity
+        ):
+            raise ValueError(
+                f"rule {i}: ambiguous with rule {j}: equally specific, can match the "
+                f"same rows, and disagree on severity ({rule.severity.value} vs "
+                f"{other.severity.value})"
+            )
 
 
 @lru_cache(maxsize=1)
@@ -311,10 +392,14 @@ def _comparable(ann_1: Dict[str, Any], ann_2: Dict[str, Any]) -> bool:
     return not (iso_1 and iso_2 and iso_1 != iso_2)
 
 
+#: (row index, annotation, action, negated)
+Row = Tuple[int, Dict[str, Any], str, bool]
+
+
 def _governing_rule(
-    rules: List[ConsistencyRule], act_a: str, act_b: str, term_id: str
+    rules: List[ConsistencyRule], a: Row, b: Row, term_id: str
 ) -> Optional[Tuple[ConsistencyRule, bool]]:
-    """The most specific SAME_TERM rule matching two rows, and whether row a is action_1.
+    """The most specific SAME_TERM rule matching two rows, and whether row a is side 1.
 
     Parsing guarantees that equally specific matches agree on severity.
     """
@@ -322,9 +407,9 @@ def _governing_rule(
     for rule in rules:
         if rule.term_1 is not None and not rule.term_1.matches(term_id):
             continue
-        if (act_a, act_b) == (rule.action_1, rule.action_2):
+        if rule.side_1.matches(a[2], a[3]) and rule.side_2.matches(b[2], b[3]):
             matching.append((rule, True))
-        elif (act_b, act_a) == (rule.action_1, rule.action_2):
+        elif rule.side_1.matches(b[2], b[3]) and rule.side_2.matches(a[2], a[3]):
             matching.append((rule, False))
     return max(matching, key=lambda m: m[0].specificity, default=None)
 
@@ -350,7 +435,7 @@ def iter_conflicts(
     >>> list(iter_conflicts(doc, (rule, exempt)))
     []
 
-    Negated rows make the opposite claim and are not compared with positive ones:
+    Polarity is part of a rule: a positive-only rule ignores NOT rows.
 
     >>> doc["existing_annotations"][1]["negated"] = True
     >>> list(iter_conflicts(doc, (rule,)))
@@ -366,9 +451,9 @@ def iter_conflicts(
         annotations, list
     ):
         return
-    by_term: Dict[str, List[Tuple[int, Dict[str, Any], str]]] = {}
+    by_term: Dict[str, List[Row]] = {}
     for index, ann in enumerate(annotations):
-        if not isinstance(ann, dict) or ann.get("negated"):
+        if not isinstance(ann, dict):
             continue
         term = ann.get("term")
         review = ann.get("review")
@@ -376,17 +461,18 @@ def iter_conflicts(
             continue
         term_id, action = term.get("id"), review.get("action")
         if isinstance(term_id, str) and isinstance(action, str):
-            by_term.setdefault(term_id, []).append((index, ann, action))
+            row = (index, ann, action, bool(ann.get("negated")))
+            by_term.setdefault(term_id, []).append(row)
     for term_id, rows in by_term.items():
-        for (i_a, ann_a, act_a), (i_b, ann_b, act_b) in combinations(rows, 2):
-            if not _comparable(ann_a, ann_b):
+        for a, b in combinations(rows, 2):
+            if not _comparable(a[1], b[1]):
                 continue
-            governing = _governing_rule(same_term, act_a, act_b, term_id)
+            governing = _governing_rule(same_term, a, b, term_id)
             if governing is None or governing[0].severity is Severity.OK:
                 continue
             rule, a_first = governing
-            i_1, i_2 = (i_a, i_b) if a_first else (i_b, i_a)
-            yield Conflict(rule, term_id, ann_a["term"].get("label"), i_1, i_2)
+            i_1, i_2 = (a[0], b[0]) if a_first else (b[0], a[0])
+            yield Conflict(rule, term_id, a[1]["term"].get("label"), i_1, i_2)
 
 
 def _describe_row(data: Dict[str, Any], index: int) -> str:
@@ -395,23 +481,88 @@ def _describe_row(data: Dict[str, Any], index: int) -> str:
     bits = [
         b for b in (ann.get("evidence_type"), ann.get("original_reference_id")) if b
     ]
+    polarity = " NOT" if ann.get("negated") else ""
     return (
-        f"{ann['review']['action']} on row {index} ({', '.join(bits) or 'no evidence'})"
+        f"{ann['review']['action']}{polarity} on row {index} "
+        f"({', '.join(bits) or 'no evidence'})"
     )
 
 
+def _exception_reason(data: Dict[str, Any], index: int) -> Optional[str]:
+    """The row's ``review.consistency_exception.reason``, if it declares one."""
+    review = data["existing_annotations"][index].get("review") or {}
+    exception = review.get("consistency_exception")
+    if isinstance(exception, dict) and exception.get("reason"):
+        return " ".join(str(exception["reason"]).split())
+    return None
+
+
+def iter_negated_too_general(data: Dict[str, Any]) -> Iterator[int]:
+    """Yield indices of NOT rows marked TOO_GENERAL.
+
+    A NOT on a broad term is the strongest negative claim, not an uninformative one.
+
+    >>> list(iter_negated_too_general({"existing_annotations": [
+    ...     {"negated": True, "review": {"action": "TOO_GENERAL"}},
+    ...     {"review": {"action": "TOO_GENERAL"}}]}))
+    [0]
+    """
+    for index, ann in enumerate(data.get("existing_annotations") or []):
+        if isinstance(ann, dict) and ann.get("negated"):
+            if (ann.get("review") or {}).get("action") == "TOO_GENERAL":
+                yield index
+
+
 def check_action_consistency(data: Dict[str, Any], report) -> None:
-    """Add one issue per conflicting row pair, at the severity the rules table sets."""
+    """Report action conflicts at the table's severity, honouring row exceptions."""
     from ai_gene_review.validation.validation_report import ValidationSeverity
 
+    used: Set[int] = set()
     for c in iter_conflicts(data):
-        severity = ValidationSeverity[c.rule.severity.value]
+        reasons = {
+            i: r for i in (c.index_1, c.index_2) if (r := _exception_reason(data, i))
+        }
+        used.update(reasons)
+        message = (
+            f"Contradictory review actions for {c.term_id} "
+            f"({c.term_label or 'unknown'}): {_describe_row(data, c.index_1)} vs "
+            f"{_describe_row(data, c.index_2)}"
+        )
+        if reasons:
+            severity = ValidationSeverity.INFO
+            message += " -- allowed by consistency_exception: " + "; ".join(
+                reasons.values()
+            )
+        else:
+            severity = ValidationSeverity[c.rule.severity.value]
         report.add_issue(
             severity,
-            f"Contradictory review actions for {c.term_id} ({c.term_label or 'unknown'}): "
-            f"{_describe_row(data, c.index_1)} vs {_describe_row(data, c.index_2)}",
+            message,
             path=f"existing_annotations[{c.index_2}].review.action",
             suggestion=c.rule.rationale,
+            validation_category="BestPractices",
+            check_type="action_consistency",
+        )
+    for index, ann in enumerate(data.get("existing_annotations") or []):
+        if not isinstance(ann, dict):
+            continue
+        if _exception_reason(data, index) and index not in used:
+            report.add_issue(
+                ValidationSeverity.WARNING,
+                f"existing_annotations[{index}] declares a consistency_exception but "
+                "is not in any action-consistency conflict",
+                path=f"existing_annotations[{index}].review.consistency_exception",
+                suggestion="Remove the stale exception.",
+                validation_category="BestPractices",
+                check_type="action_consistency",
+            )
+    for index in iter_negated_too_general(data):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            "TOO_GENERAL on a NOT annotation: a negative claim on a broad term is the "
+            "strongest such claim, not an uninformative one",
+            path=f"existing_annotations[{index}].review.action",
+            suggestion="Use ACCEPT, KEEP_AS_NON_CORE, REMOVE or UNDECIDED.",
             validation_category="BestPractices",
             check_type="action_consistency",
         )

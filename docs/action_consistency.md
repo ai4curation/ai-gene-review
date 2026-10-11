@@ -19,10 +19,12 @@ Each rule reads as a sentence, left to right: *the `action_1` row's term is
 
 | Column | Meaning |
 |---|---|
-| `action_1`, `action_2` | `ActionEnum` values |
+| `action_1`, `action_2` | An `ActionEnum` value, or a list of them (any of) |
 | `relation` | `SAME_TERM`: both rows carry the same term (symmetric). `DESCENDANT_OF`: `action_1` is on the **more specific** term, a strict `is_a`/`part_of` descendant of `action_2`'s. `ANCESTOR_OF`: `action_1` is on the **more general** term |
 | `severity` | `OK` (documented as consistent, not reported), `INFO`, `WARNING`, `ERROR` |
 | `rationale` | Shown as the suggestion in validation reports |
+| `negated_1`, `negated_2` | Optional, default `false`; `true` selects NOT rows on that side |
+| `term_1`, `term_2` | Optional term filters (below) |
 
 `A ANCESTOR_OF B` and `B DESCENDANT_OF A` are the same rule; the loader rejects a
 table that lists both.
@@ -43,14 +45,48 @@ rules that can match the same rows but disagree on severity are rejected when th
 table loads, so there is never a silent tie.
 
 Deliberately not supported: NOT/AND expressions, ancestor-of matchers, and per-gene
-exceptions (fix the review instead). `{self_or_descendant: ...}` (a term or anything
+exceptions in the table (see per-annotation exceptions below for the rare real case). `{self_or_descendant: ...}` (a term or anything
 below it) is reserved and rejected until the hierarchical relations are evaluated,
 since it needs the ontology too. Protein binding wants `exact` anyway: its
 descendants (enzyme binding, kinase binding, ...) are informative and follow the
 normal rules.
 
-Only non-negated rows are compared; rows annotated to two different isoforms are not
-compared with each other. Pairs not in the table are not checked.
+Rows annotated to two different isoforms are not compared with each other. Pairs not
+in the table are not checked.
+
+### NOT annotations
+
+Polarity is part of every rule (`negated_1`/`negated_2`, default positive), because
+NOT runs the logic the other way:
+
+- A positive annotation entails its ancestors; a NOT entails its descendants. Keeping
+  a positive term and keeping NOT on the same term (or, once hierarchical rules are
+  evaluated, on an ancestor of it) is a contradiction.
+- REMOVE on a NOT row only doubts the negative claim; it does not assert the positive
+  one. So REMOVE on both a term and NOT the term is consistent (agnostic), and so is
+  keeping the NOT while removing the positive.
+- TOO_GENERAL is never used on a NOT row (an ERROR): a NOT on a broad term is the
+  strongest negative claim, not an uninformative one.
+
+GOA legitimately carries conflicting positive and NOT annotations from different
+papers. The review should still decide (REMOVE or UNDECIDED one side), or, when both
+genuinely hold in different contexts, record a per-annotation exception.
+
+### Per-annotation exceptions
+
+For very rare cases where an apparent contradiction is correct, a row can declare it:
+
+```yaml
+review:
+  action: ACCEPT
+  consistency_exception:
+    reason: NOT in roots (PMID:...), positive in shoots (PMID:...)
+```
+
+Conflicts involving that row are still reported, at INFO with the reason, so they stay
+visible. An exception on a row that is not in any conflict is flagged (WARNING) so it
+cannot go stale. Exceptions do not apply to single-row checks such as TOO_GENERAL on a
+NOT row.
 
 Strictness is ratcheted by editing the table: add a pair, or raise a severity, once
 the existing reviews that violate it have been fixed.
@@ -61,13 +97,14 @@ the existing reviews that violate it have been fixed.
 |---|---|---|---|---|
 | ACCEPT | SAME_TERM | REMOVE | WARNING | an ACCEPT row and a REMOVE row share a term |
 | ACCEPT (term_1 exactly GO:0005515) | SAME_TERM | REMOVE | OK | exception: protein binding is tracked by its own policy |
+| [ACCEPT, KEEP_AS_NON_CORE], negated_1 | SAME_TERM | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a kept NOT row and a kept positive row share a term |
 | TOO_GENERAL | ANCESTOR_OF | ACCEPT | OK | the TOO_GENERAL term is more general than an ACCEPTed term |
 | TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
 REMOVEd rows are mostly TAS, IDA, IMP and IPI); with the protein binding exception,
-34 reviews (301 row pairs). It stays a WARNING until those are
-fixed, then can become an ERROR.
+34 reviews (301 row pairs). The NOT rule fired on 23 reviews (54 row pairs; e.g. GAI,
+RGA, WUS, Akt1). Both stay WARNINGs until those are fixed, then can become ERRORs.
 
 `DESCENDANT_OF` and `ANCESTOR_OF` rules are not evaluated yet (they need the ontology at validation
 time), so the loader only accepts `OK` for them.

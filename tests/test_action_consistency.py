@@ -108,8 +108,11 @@ def test_report_uses_table_severity_and_points_at_second_row():
 def test_packaged_table_loads_and_has_accept_remove():
     rules = load_rules()
     assert any(
-        {r.action_1, r.action_2} == {"ACCEPT", "REMOVE"}
+        {r.side_1.actions, r.side_2.actions}
+        == {frozenset({"ACCEPT"}), frozenset({"REMOVE"})}
         and r.relation is Relation.SAME_TERM
+        and not (r.negated_1 or r.negated_2)
+        and r.term_1 is None
         for r in rules
     )
 
@@ -182,7 +185,12 @@ def test_same_direction_with_swapped_actions_is_a_different_rule():
 
 
 def test_packaged_table_puts_too_general_on_the_broader_term():
-    rules = [r for r in load_rules() if "TOO_GENERAL" in (r.action_1, r.action_2)]
+    rules = [
+        r
+        for r in load_rules()
+        if r.relation is not Relation.SAME_TERM
+        and "TOO_GENERAL" in r.side_1.actions | r.side_2.actions
+    ]
     assert rules
     for r in rules:
         assert r.describe().startswith("the TOO_GENERAL row's term is an ancestor of")
@@ -301,3 +309,102 @@ def test_malformed_term_filters_fail_fast(overrides):
 def test_packaged_table_exempts_protein_binding():
     data = doc(row("ACCEPT", term="GO:0005515"), row("REMOVE", term="GO:0005515"))
     assert list(iter_conflicts(data)) == []
+
+
+# --- NOT annotations -------------------------------------------------------
+
+
+def not_row(action, **extra):
+    return row(action, negated=True, **extra)
+
+
+@pytest.mark.parametrize(
+    "neg_action,pos_action,conflict",
+    [
+        ("ACCEPT", "ACCEPT", True),
+        ("KEEP_AS_NON_CORE", "TOO_GENERAL", True),
+        ("ACCEPT", "NEW", True),
+        ("REMOVE", "ACCEPT", False),  # doubting the NOT claim is consistent
+        ("ACCEPT", "REMOVE", False),  # keeping NOT while removing the positive
+        ("REMOVE", "REMOVE", False),  # agnostic
+        ("UNDECIDED", "ACCEPT", False),
+    ],
+)
+def test_packaged_table_kept_not_vs_kept_positive(neg_action, pos_action, conflict):
+    data = doc(not_row(neg_action), row(pos_action))
+    conflicts = list(iter_conflicts(data))
+    assert bool(conflicts) is conflict
+    if conflict:
+        # the NOT row is side 1 of the rule
+        assert (conflicts[0].index_1, conflicts[0].index_2) == (0, 1)
+
+
+def test_positive_only_rule_still_ignores_not_rows():
+    """ACCEPT on a NOT row and REMOVE on the positive row agree with each other."""
+    assert pairs(doc(not_row("ACCEPT"), row("REMOVE"))) == []
+
+
+def test_polarity_distinguishes_otherwise_identical_rules():
+    raw = {
+        "rules": [
+            _raw()["rules"][0],
+            {**_raw()["rules"][0], "negated_1": True, "severity": "ERROR"},
+        ]
+    }
+    assert len(parse_rules(raw)) == 2
+
+
+def test_action_lists_overlap_for_ambiguity():
+    raw = {
+        "rules": [
+            {**_raw()["rules"][0], "action_1": ["ACCEPT", "KEEP_AS_NON_CORE"]},
+            {**_raw()["rules"][0], "action_1": "KEEP_AS_NON_CORE", "severity": "ERROR"},
+        ]
+    }
+    with pytest.raises(ValueError, match="ambiguous"):
+        parse_rules(raw)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"action_1": []},
+        {"action_1": ["ACCEPT", "ACEPT"]},
+        {"negated_1": "yes"},
+    ],
+)
+def test_malformed_lists_and_flags_fail_fast(overrides):
+    with pytest.raises(ValueError):
+        parse_rules(_raw(**overrides))
+
+
+# --- per-annotation exceptions and single-row checks ------------------------
+
+
+def issues(data):
+    report = ValidationReport(file_path="x.yaml", is_valid=True)
+    check_action_consistency(data, report)
+    return [i for i in report.issues if i.check_type == "action_consistency"]
+
+
+def test_consistency_exception_downgrades_to_info_with_reason():
+    excepted = not_row("ACCEPT")
+    excepted["review"]["consistency_exception"] = {
+        "reason": "NOT in roots, positive in shoots"
+    }
+    [issue] = issues(doc(excepted, row("ACCEPT")))
+    assert issue.severity == ValidationSeverity.INFO
+    assert "NOT in roots, positive in shoots" in issue.message
+
+
+def test_stale_consistency_exception_is_flagged():
+    stale = row("ACCEPT")
+    stale["review"]["consistency_exception"] = {"reason": "left over"}
+    [issue] = issues(doc(stale, row("ACCEPT")))
+    assert issue.severity == ValidationSeverity.WARNING
+    assert "not in any action-consistency conflict" in issue.message
+
+
+def test_too_general_on_not_row_is_an_error():
+    [issue] = issues(doc(not_row("TOO_GENERAL")))
+    assert issue.severity == ValidationSeverity.ERROR

@@ -172,6 +172,9 @@ A review judges claims about the gene, not evidence codes: rows sharing a term r
 actions must not contradict each other. Never REMOVE a row as a "duplicate" of another row to the same term, and
 never REMOVE a true-but-broad term (use TOO_GENERAL). Validation enforces this from the table in
 `src/ai_gene_review/schema/action_consistency.yaml` (see `docs/action_consistency.md`).
+Do not keep both a term and a NOT annotation to it: decide which the evidence supports (REMOVE or UNDECIDED
+the other). Only in the very rare case where both genuinely hold (e.g. different tissues or conditions), add
+`review.consistency_exception: {reason: ...}` to the row, citing the evidence for each context.
 
 It may also be OK for IEAs to be broader than what is determined by IBA or literature, you can just mark these as accept,
 unless you think the mapping is too general.
