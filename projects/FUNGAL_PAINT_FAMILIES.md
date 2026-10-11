@@ -71,7 +71,7 @@ paralog-aware activity and complex checks.
 - [ ] `yeast/SAS2` - SAS-I catalytic subunit
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
-- [ ] `SCHPO/mst2` - fission yeast MYST acetyltransferase
+- [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
 - [ ] CGD MYST-family member
 - [ ] `NEUCR` MYST-family member
 
@@ -108,6 +108,24 @@ stress-activated MAPK-cascade assertions.
 - [ ] `SCHPO/sty1` - fission yeast Sty1/Spc1 stress MAPK; drafted in PR #4573
   and awaiting follow-up review
 - [ ] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; drafted in this branch
+
+## Family 5: Fungal Glucanases
+
+`PTHR31297` contains several fungal GH5 glucanase subtrees. The current
+EXG1/XOG1-family IBA rows split over a broad Aspergillus-root
+`PTN001262628` glucan-catabolism node, a fungal `PTN001262686` extracellular
+cell-wall beta-glucan node, and a Saccharomycetes `PTN001262687`
+exo-1,3-beta-glucosidase node.
+
+- [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in PR #4610
+- [ ] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
+  clade
+- [ ] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
+  fungal wall beta-glucan node
+- [ ] `CANAL/XOG1` - CGD-seeded *Candida albicans*
+  exo-1,3-beta-glucosidase; review in PR #4596
+- [ ] `NEUCR/NCU09652` - *Neurospora crassa* PTHR31297 member to place against
+  the yeast, PomBase, and CGD subtrees
 
 ---
 
@@ -167,6 +185,11 @@ stress-activated MAPK-cascade assertions.
 - Opened sibling PRs for the six drafted Hsp100/ClpB reviews: `yeast/HSP78`
   (#4519), `NEUCR/hsp98` (#4520), `SCHPO/hsp78` (#4521), `CANAL/HSP78`
   (#4522), `CANAL/HSP104` (#4523), and `SCHPO/hsp104` (#4524).
+- Started the PTHR31297 fungal glucanase family with `yeast/EXG1`. Its exact
+  exo-1,3-beta-glucosidase IBA from `PTN001262687` and fungal extracellular
+  wall beta-glucan IBAs from `PTN001262686` were retained, while the broader
+  Aspergillus-seeded `PTN001262628` glucan-catabolism IBA was marked as
+  over-scoped for the EXG1/XOG1/Spr1 subclade.
 - Merged all six sibling Hsp100/ClpB reviews, bringing the mitochondrial Hsp78
   and cytosolic non-*S. cerevisiae* Hsp104/hsp98 PAINT checks onto `main`.
 - Re-reviewed `yeast/SAS3` in the MYST family. Broad
@@ -192,3 +215,9 @@ stress-activated MAPK-cascade assertions.
   yeast HOG cascade. The oxidative-stress IBA is valid but secondary for
   budding yeast, so it remains non-core while the ancestral node itself is
   recorded as `NO_FAILURE_NON_CORE`.
+- Drafted `SCHPO/mst2` in `PTHR10615`. The broad `PTN004172926` MYST-family
+  IBAs are appropriate for Mst2, while the fungal `PTN008308138`
+  NuA3a-complex IBA is too exact for the related fission-yeast Mst2 complex and
+  was redirected to `GO:0036410`. The direct Mst2 heterochromatin rows were
+  aligned with the negative-regulation model supported by the 2011, 2015, 2024,
+  and 2026 fission-yeast papers.
