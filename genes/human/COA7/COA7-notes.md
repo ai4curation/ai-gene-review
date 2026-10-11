@@ -6,30 +6,12 @@ Synonyms: C1orf163, RESA1 (RESpiratory chain Assembly 1), SELRC1 / SEL1 repeat-c
 HGNC:25716. MANE NP_075565.2. 231 aa. Belongs to the hcp beta-lactamase family; contains
 five Sel1-like repeats (helix-turn-helix α/α). PDB 7MQZ (2.39 Å).
 
-## Core biology (verified)
+## Core biology and short primary anchors
 
-- **Mitochondrial intermembrane-space (IMS) protein.** Soluble IMS protein; import into the
-  IMS is mediated by the MIA pathway (CHCHD4/MIA40) via transient intermolecular disulfide
-  bonds. [PMID:24333015]
-  [PMID:30885959]. UniProt SubCell: Mitochondrion intermembrane space
-  (SL-0169) → GO:0005758.
-
-- **Complex IV (cytochrome c oxidase) assembly factor.** Metazoan-specific. Knockdown reduces
-  OXPHOS complex levels; strongest defect is in complex IV assembly (also complex I).
-  [PMID:24333015]. Named
-  RESA1 for RESpiratory chain Assembly 1. Core BP = mitochondrial respiratory chain complex IV
-  assembly (GO:0033617); IBA carries the broader GO:0008535.
-
-- **Acts early in complex IV assembly.** Loss of COA7 blocks assembly after the COX1 module is
-  built; progression requires copper incorporation and addition of COX2/COX3 modules.
-  [PMID:35210360].
-
-- **Redox / disulfide-reductase role in copper relay (MT-CO2/COX2 maturation).** COA7 is a
-  heme-binding protein; heme-COA7 has a reduction potential of −353 mV and reduces the disulfide
-  bonds forming the copper-binding sites of the copper metallochaperones SCO1 and SCO2, thereby
-  regenerating the copper relay to the CuA site (COX2). This underpins GO:0015035 protein-
-  disulfide reductase activity (IDA, PMID:35210360; IBA GO_REF:0000033).
-  [PMID:35210360].
+- **Soluble mitochondrial IMS protein.** The original abstract reports a "mitochondrial soluble intermembrane space protein" [PMID:24333015]. Later human-cell affinity purification, disulfide-sensitive interaction and import experiments establish the CHCHD4/MIA40 substrate relationship [PMID:30885959]. This is COA7 import, not import catalysis performed by COA7.
+- **Complex-IV assembly.** The original knockdown study reports "strongest defects in the assembly of complex IV" [PMID:24333015]. Its complex-I effects are retained as context, not promoted to a separate core assembly role.
+- **COX2/COX3 module maturation.** Human knockout/rescue and assembly-intermediate experiments place COA7 after the COX1 module; the authors describe "maturation of the COX2 and/or COX3 modules" [PMID:35210360, Results on complex-IV assembly]. This does not resolve every direct physical assembly contact.
+- **Heme-dependent disulfide reduction.** Reduced, heme-loaded recombinant human COA7 reduces SCO1/SCO2 disulfides, with the authors reporting "disulfide reductase activity" [PMID:35210360, Results and Figure 4]. The measured reduction potential is −353 mV. Cellular redox changes and rescue connect this activity to the copper relay; neither a physiological electron donor nor repeated catalytic turnover was established. COA7 is not asserted to deliver copper or heme to complex IV.
 
 ## Disease
 
@@ -39,9 +21,9 @@ five Sel1-like repeats (helix-turn-helix α/α). PDB 7MQZ (2.39 Å).
   degradation, reduced IMS import), D6G, R39W, S149I. [PMID:27683825; PMID:29718187; PMID:30885959].
   Not a GO annotation but supports the localization/function calls.
 
-## Annotation-by-annotation dispositions
+## Superseded baseline dispositions — historical context only
 
-GOA has 14 lines (mapped to 14 existing_annotations, some IPI rows collapsed by reference).
+The original review contained 14 source objects. The following old action list is retained as historical context, not the current review. The current source union, partner refinements and retired aggregate flags are described below and in the YAML; the original baseline bytes are preserved separately.
 
 - GO:0008535 respiratory chain complex IV assembly, IBA — ACCEPT (broader parent of GO:0033617).
 - GO:0015035 protein-disulfide reductase activity, IBA — ACCEPT (backed by IDA PMID:35210360).
@@ -59,11 +41,10 @@ GOA has 14 lines (mapped to 14 existing_annotations, some IPI rows collapsed by 
   the GO term itself is uninformative; per policy NOT removed).
 - GO:0005758 mitochondrial intermembrane space, IDA (PMID:30885959) — ACCEPT.
 
-## Core functions
+## Historical core summary
 - MF: GO:0015035 protein-disulfide reductase activity (IDA-supported; the exact GOA MF).
 - BP: GO:0033617 mitochondrial respiratory chain complex IV assembly (directly_involved_in).
 - CC: GO:0005758 mitochondrial intermembrane space (located_in).
-</content>
 
 ## Current source-grounded assessment — 2026-10-11
 
@@ -79,7 +60,7 @@ Localization is source-specific. The original 2013 abstract positively supports 
 
 All positive screen observations are retained under the campaign supported-binding policy (projects/CLINGEN_MENDELIAN.md, supported experimental generic-binding exception). Genericity and uncertain native colocalization do not make an interaction false. HuRI contributes five exact partner pairs with 15 positive array, pooling and validated Y2H records. The separate neurodegeneration interactome contributes 12 pairs with 36 positive records; its DMWD 316–649 and PRPF40A-2 716–930 regions are explicit. Dataset-wide MAPPIT/GPCA or DULIP validation is not assigned to every COA7 pair. [PMID:32296183; PMID:32814053]
 
-Class refinements identify SUOX, HMOX2, ACOT8 and BKGD as enzymes; CASP6 and DPP8 as proteases; RAN as a small GTPase; FGFR3 as an FGF receptor; TLE5-2 as a corepressor-class protein; and ENKD1 as a microtubule-associated cytoskeletal protein. They do not transfer the partners’ catalytic or signaling activities to COA7. Exact official partner products reconstruct to SNRPB-2 231, TLE5-2 264, PRPF40A-2 930 and LAMP2B 410 residues. The GSN record fingerprint matches the secreted 782-residue precursor rather than the distinct cytoplasmic isoform, so its positive association remains non-core without an unresolved component-class refinement. ENKD1’s class rests on microtubule binding/stabilization plus localization, not an invented part_of record. TLE5-2 class inference is not an isoform-specific repression experiment.
+Class refinements identify SUOX, HMOX2, ACOT8 and BKGD as enzymes; CASP6 and DPP8 as proteases; RAN as a small GTPase; FGFR3 as an FGF receptor; TLE5-2 as a corepressor-class protein; and ENKD1 as a microtubule-associated cytoskeletal protein. They do not transfer the partners’ catalytic or signaling activities to COA7. Exact official partner products reconstruct to SNRPB-2 231, TLE5-2 264, PRPF40A-2 930 and LAMP2B 410 residues. The initial GSN decision was non-core at the component-class boundary; the second follow-up below supersedes it with the supported regulatory-protein-binding child while preserving the exact 782-residue precursor. ENKD1’s class rests on microtubule binding/stabilization plus localization, not an invented part_of record. TLE5-2 class inference is not an isoform-specific repression experiment.
 
 BioPlex contributes three exact human HCT116 anti-tag coimmunoprecipitation records for ACOT8, DPP8 and BKGD/C11orf54. The 2025 paper’s original U2OS AP-MS dataset independently contains those three edges; each partner is marked bait and COA7 prey. These are actual AP-MS edges, not inferred image-proximity links or a reused HEK293 comparison network. Complex-mediated capture does not establish purified binary binding or a native mitochondrial pathway. The current name BKGD is linked to the original C11orf54 label by its official identity. [PMID:33961781; PMID:40205054]
 
@@ -89,7 +70,7 @@ Access is recorded precisely. Eight original main publication caches remain unch
 
 The authentic Falcon research attempt timed out, and its sole fallback returned an insufficient-quota error. No provider report was invented. Manual primary reading and the separate bounded catalytic and partner-class consultations support this review. Current target self evidence in PAINT is valid experimental grounding, while the historical PTN placement remains uninspected. The GO-CAM index has no COA7 match; that absence is not evidence for a new process.
 
-Normal validation, status consistency and rendering pass. Fourteen advisories concern the deliberately retained positive generic-binding assertions and are dispositioned by the explicit campaign policy. DRAFT is the ordinary tool-derived consistent status. The final ownership census contains 360 complete open-PR inventories with no COA7 overlap; existing source bytes are unchanged. ROOT will authenticate the live publisher application separately.
+Normal validation, status consistency and rendering pass. Fourteen advisories concern the deliberately retained positive generic-binding assertions and are dispositioned by the explicit campaign policy. DRAFT is the ordinary tool-derived consistent status. That original review used a complete ownership census; its dated working receipts are provenance, not a claim about current PR state. Existing source bytes remain unchanged.
 
 ## Follow-up of the published COA7 review
 
@@ -97,7 +78,7 @@ This amendment clarifies source status and evidence access while retaining the p
 
 The original project instruction is [Curation instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions). Supported generic binding remains non-core if no justified refinement exists. Binding to an authenticated receptor, GTPase or catalytic-protein class does not itself assign receptor agonism, signaling, GTPase regulation or catalysis to COA7. The positive binary screens and AP-MS records retain their assay and product limits. Earlier blanket dismissal of these pairs as noise is superseded; absence of an established physiological interaction is not proof that the measured interaction is false.
 
-The exact GO:0008092 definition requires a cytoskeletal protein component, not a filament-forming or mechanically structural molecule. ENKD1's official experimental microtubule-binding/stabilizing and centrosomal/centriolar/spindle evidence supports the retained class refinement. The gelsolin record maps to the 782-residue secreted precursor, whereas the official cytoskeletal location specifically concerns the distinct cytoplasmic product. Its positive actin-modulating capacity remains acknowledged; the conservative non-core decision concerns unresolved component-class scope for the tested product. No partner-function paper is represented as newly read merely because an official entry cites it.
+The exact GO:0008092 definition requires a cytoskeletal protein component, not a filament-forming or mechanically structural molecule. ENKD1's official experimental microtubule-binding/stabilizing and centrosomal/centriolar/spindle evidence supports the retained class refinement. The gelsolin record maps to the 782-residue secreted precursor, whereas the official cytoskeletal location specifically concerns the distinct cytoplasmic product. This first follow-up retained positive actin-modulating capacity but left the component-class refinement unresolved; the second follow-up below resolves the more specific regulatory class. No partner-function paper is represented as newly read merely because an official entry cites it.
 
 Short verbatim anchors are restored for the original IMS location, later swelling experiment, HuRI retesting, BioPlex cell-line scope and U2OS AP-MS method. The original quotations were accurate; the earlier compression limited aggregate quotation, not citation validity. Existing reductase/heme and disputed-localization anchors remain unchanged. Restoring every old quotation or repeating a generic screen sentence for every partner would add repetition without authenticating the individual pair. The [evidence index](COA7-source-evidence.json) now contains the selected original MitoCoP header/cell values, all 54 complete source MITAB records underlying 20 screen pairs, and the original U2OS nodes/edges/bait attributes for its three pairs. Annotation and reference entries explicitly cite this record-level material. These original-data projections are distinct from the index's authored interpretations and are not self-authored experimental evidence.
 
@@ -106,3 +87,19 @@ The separately read [author-deposited neurodegeneration article](https://edoc.md
 The more specific mitochondrial assembly replacement retains the independent IBA and IMP sources; convergent reviewed terms are not source duplicates to delete. Its term-scoping root cause concerns the present human assertion, not a reconstructed failure of the historical PAINT node. The unscoped historical CHCHD4 assertion also remains exact, with its current Q8N4Q1 supporting-entity enrichment documented separately. The description now makes the SCO/CuA copper-relay connection explicit without claiming that COA7 transfers copper or delivers heme.
 
 Ordinary validation, status checking and rendering passed on the final YAML. Fourteen advisories concern the supported generic-binding NC rows (including the retired aggregates); they are retained under the project instruction above. The tool-derived status remains DRAFT. No source cache, original assertion value, product declaration, core function or earlier history was changed.
+
+## Second follow-up: definitions, source provenance and quote allocation
+
+The current [FGFR-binding definition](https://www.ebi.ac.uk/QuickGO/term/GO:0005104), [corepressor-binding definition](https://www.ebi.ac.uk/QuickGO/term/GO:0001222) and [cytoskeletal-protein-binding definition](https://www.ebi.ac.uk/QuickGO/term/GO:0008092) describe the bound partner. Their typed ancestry does not add a requirement that COA7 participates in the partner's native functional module. Exact positive binary records plus authenticated partner class therefore support the retained FGFR3, TLE5-2 and ENKD1 refinements. Processing, isoform and assay limits remain explicit; the partner's activity is not assigned to COA7.
+
+ENKD1 has experimental microtubule-binding/stabilizing and cytoskeletal-component evidence in its official record. Gelsolin is now refined to [cytoskeletal regulatory protein binding](https://www.ebi.ac.uk/QuickGO/term/GO:0005519), a more specific child of GO:0008092. Its three record fingerprints match the 782-residue displayed precursor, whose official actin capping, nucleation and severing function establishes the regulatory class. The distinct 731-residue cytoplasmic isoform's localization does not negate that positive capability. This supersedes the earlier non-core class judgment and the first round-two draft, which stopped at component-location uncertainty without assessing the regulatory child. No COA7 cytoskeletal process, native interaction, mature processing state or contact with a particular domain is inferred. The positive screen and exact product scope remain unchanged.
+
+The [historical COA7 review at dad9d5ce](https://github.com/ai4curation/ai-gene-review/blob/dad9d5ce4ef7f81b183d7a6b464d4ff618f36668/genes/human/COA7/COA7-ai-review.yaml) has Git blob 3d8485643a6c44ed7c637e184b3b8da1fbb83f46. Its PMID:30885959 IPI object truly lacks supporting_entities. The genuine normal seed contains the corresponding assertion with Q8N4Q1. Both exact objects, the authenticated historical blob and the mapping are represented in the evidence index. Retaining the historical object does not deny the current CHCHD4 source field or the positive human interaction.
+
+The four current core-biology points above now each carry a short exact primary anchor. Three YAML anchors were shortened to allocate the aggregate source budget across YAML and notes. All retained quotations are literal; no citation was removed as scientifically invalid. The historical action table is explicitly labeled superseded, and the stray closing tag is removed. JSON is retained for the existing evidence index to preserve its stable literal-data representation. Convergence of the independent IBA and IMP assembly terms does not duplicate or delete their different source assertions.
+
+Round-two ordinary validation, status consistency and rendering pass with 13 supported generic-binding advisories under the campaign instruction. The status remains DRAFT. The sole action change is gelsolin refinement to GO:0005519; all 37 source objects, the existing heme proposal, four retired flags, 14 reference identity pairs and the integrated core are preserved.
+
+## Independent peer specificity clarification
+
+The second follow-up now refines the ENKD1 replacement from GO:0008092 to [cytoskeletal regulatory protein binding](https://www.ebi.ac.uk/QuickGO/term/GO:0005519). The experimentally supported [official ENKD1 record](https://www.uniprot.org/uniprotkb/Q9H0I2/entry) describes regulation of microtubule organization and stability, including astral microtubule stabilization and spindle orientation. This supplies a positive regulatory-class basis beyond component localization. The three positive HuRI records map to the same 346-residue product; MODIFY remains the action. This clarification supersedes the broader ENKD1 replacement discussed above, while preserving the assay, source, product and physiological limits. No new primary-paper read, quotation, COA7 cytoskeletal process or contacted interface is asserted. The sealed first round-two packet remains immutable.
