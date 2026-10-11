@@ -52,12 +52,13 @@
   matches direct Cgs1-GFP microscopy.
 - Accepted `GO:0005952 cAMP-dependent protein kinase complex` from PAINT,
   InterPro, and direct Pka1-Cgs1 complex formation.
-- Modified `GO:0007189 adenylate cyclase-activating G protein-coupled receptor
-  signaling pathway` and `GO:0110034 negative regulation of
-  adenylate cyclase-activating glucose-activated G protein-coupled receptor
-  signaling pathway` to `GO:0141162 negative regulation of cAMP/PKA signal
-  transduction`. Cgs1 inhibits the PKA catalytic subunit downstream of cAMP; it
-  is not itself the upstream Git3/Gpa2/Cyr1 receptor-cyclase machinery.
+- Accepted `GO:0007189 adenylate cyclase-activating G protein-coupled receptor
+  signaling pathway` for Cgs1 as the cAMP-sensing PKA regulatory subunit in the
+  GPCR-to-cAMP cassette, accepted PomBase's specific `GO:0110034 negative
+  regulation of adenylate cyclase-activating glucose-activated G
+  protein-coupled receptor signaling pathway`, and proposed `GO:0141162
+  negative regulation of cAMP/PKA signal transduction` as the receptor-neutral
+  companion process term.
 - Kept broad `GO:0006950 response to stress`, `GO:0042149 cellular response to
   glucose starvation`, and `GO:0046827 positive regulation of protein export
   from nucleus` as non-core contexts or consequences of the PKA-regulatory
