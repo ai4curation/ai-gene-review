@@ -83,7 +83,13 @@ weakest.
 ## Existing GO decisions (the labelled set)
 
 Obsolete MF terms whose obsoletion comment cites a non-physiological reaction
-or substrate — 15 in the current `go-edit.obo`:
+or substrate. A keyword scan of `go-edit.obo` returns **15** matches, which
+split three ways: **12** are physiology or assay-artefact decisions (the table
+below), **2** are substrate-specific transporter obsoletions that are a
+granularity rather than a physiology call (`GO:0043216`, `GO:0103113`, noted
+after the table), and **1** is `GO:0042895` antibiotic transmembrane
+transporter activity, obsoleted for inconsistent usage rather than for
+substrate physiology, so it is excluded from the calibration set. The 12:
 
 | Term | Reason | Issue |
 |---|---|---|
@@ -150,7 +156,7 @@ SPR (a sepiapterin reductase incidentally tested on benzil):
 
 | Gene | Evidence | Key calls |
 |---|---|---|
-| yeast/IRC24 | benzil reduction in vitro, NADPH-preferring; DNA-damage induced; increased Rad52 foci on deletion | `GO:0016616` → `GO:0004090`; `GO:0050664` (O₂ acceptor) IDA + its IBA → `GO:0004090` |
+| yeast/IRC24 | benzil reduction in vitro, NADPH-preferring; induced by single-strand DNA damage (PMID:17163986, a genome-wide transcriptional-response study, not an IRC24-specific one); increased Rad52 foci on deletion | `GO:0016616` → `GO:0004090`; `GO:0050664` (O₂ acceptor) IDA + its IBA → `GO:0004090` |
 | yeast/NRE1 | tandem paralog, 52% identical, same activity; crystal structures 3KZV/6UHX | same |
 | BACCE/yueD | found by expression screen; broad aromatic carbonyl range; cytoplasmic by GFP | `GO:0016616` → `GO:0004090`; BH4 biosynthesis REMOVE; SPR activity over-annotated |
 | BACSU/yueD | never assayed; 41% identical to the B. cereus enzyme | `GO:0016616` → `GO:0004090`; BH4 IBA REMOVE; SPR IBA UNDECIDED |

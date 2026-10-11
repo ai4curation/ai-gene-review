@@ -45,3 +45,36 @@ class GO:0016616. Consequences visible in GOA:
 Move `xref: RHEA:25968 {source="skos:narrowMatch"}` from GO:0016616 to GO:0004090.
 More generally, flag any RHEA xref on an EC-incomplete (x.x.x.-) grouping term:
 currently 9 reactions on GO:0016616, GO:0008241 and GO:0016712.
+
+## Gene-specific notes: B. subtilis yueD (O32099, BSU31840)
+
+The set-level notes above are shared across the four RHEA:25968 genes. What is
+specific to this one:
+
+- **Nothing about this protein has been measured.** It is the only member of the
+  set with no experimental data of any kind. Every annotation it carries is an
+  inference, and UniProt says so explicitly, basing both its FUNCTION and its
+  SUBCELLULAR LOCATION lines on ECO:0000250|UniProtKB:Q8RJB2, the B. cereus
+  ortholog. For that reason this review asserts **no core function**: recording
+  one would convert an inference into a claim about an unassayed protein.
+- **Why the B. cereus quotes are legitimate here.** The supporting quotes on the
+  cytoplasm and GO:0016616 rows come from the B. cereus characterization. That
+  is appropriate because homology to Q8RJB2 *is* the stated basis of the
+  annotation, and the reasons now say so explicitly. This differs from the
+  yeast files, where B. cereus quotes were supporting yeast-specific rows and
+  were corrected after PR review.
+- **The asymmetry between GO:0004090 and GO:0004757.** This review refines
+  GO:0016616 to GO:0004090 on 41% identity, yet leaves the sepiapterin reductase
+  IBA UNDECIDED on the same identity. That is deliberate, and the reason now
+  states it: GO:0004090 names a chemistry every characterized family member
+  performs, whereas GO:0004757 asserts a specific pterin substrate that no
+  Bacillus family member has ever been tested on. Homology at this distance
+  carries a reaction class but not a substrate.
+- **BH4 is the clean REMOVE.** Tetrahydrobiopterin biosynthesis is an animal
+  pathway and B. subtilis is not known to run it, so the PTHR44085 IBA to
+  GO:0006729 is a pathway-context failure independent of how the enzyme behaves.
+  B. subtilis does have a PTPS-family protein, but it serves queuosine rather
+  than BH4, which is the kind of near-miss that makes this propagation
+  plausible-looking.
+- **41% identity to a characterized ortholog is the whole evidence base.**
+  [PMID:11745140 "Bacillus subtilis yueD protein (41% identity)"].

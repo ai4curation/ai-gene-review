@@ -45,3 +45,36 @@ class GO:0016616. Consequences visible in GOA:
 Move `xref: RHEA:25968 {source="skos:narrowMatch"}` from GO:0016616 to GO:0004090.
 More generally, flag any RHEA xref on an EC-incomplete (x.x.x.-) grouping term:
 currently 9 reactions on GO:0016616, GO:0008241 and GO:0016712.
+
+## Gene-specific notes: IRC24 (P40580, YIR036C)
+
+The set-level notes above are shared across the four RHEA:25968 genes. What is
+specific to this one:
+
+- **It is the founding yeast member.** Maruyama et al. isolated the gene and
+  showed the recombinant protein reduces benzil
+  [PMID:11796169 "both recombinant proteins also reduced benzil to (S)-benzoin in"],
+  which is also the quote now used for the GO:0004090 and GO:0016616 rows. An
+  earlier draft of this review supported those rows with the paper's *B. cereus*
+  sentence; that was a cross-organism citation and was corrected after PR review.
+- **It is the IBA seed.** The GO:0050664 IBA on NRE1 is seeded from this gene's
+  own SGD IDA (SGD:S000001475) via PANTHER:PTN002453021. Per the project's IBA
+  guidance that self-appearance in WITH/FROM is correct and expected, not
+  circular, so it is deliberately *not* marked CIRCULAR_OR_REDUNDANT.
+- **The GO:0050664 problem originates here.** The 2013 SGD IDA chose a term
+  whose EC 1.6.3.- acceptor is molecular oxygen, while the assay reduces benzil
+  with NADPH. The citation is correct in every respect; only the term is wrong.
+  The propagation_review therefore records root_cause TERM_SCOPING_PROBLEM and
+  asserts no failure_modes, since no enum value describes a wrong-acceptor term.
+- **Two process-level hints that go nowhere.** Deletion raises spontaneous Rad52
+  focus levels [UniProt DISRUPTION PHENOTYPE, ECO:0000269|PubMed:18085829], and
+  the gene is induced by single-strand DNA damage
+  [UniProt INDUCTION, ECO:0000269|PubMed:17163986 - a genome-wide transcriptional
+  response study, not an IRC24-specific one]. Neither connects the reductase
+  chemistry to genome maintenance, so the ND biological_process row is accepted
+  rather than replaced.
+- **Kinetics.** Km 0.42 mM for benzil with NADPH, 1.2 mM with NADH; kcat
+  9.2 min-1 on benzil and 86.2 min-1 on 1-phenyl-1,2-propanedione (UniProt
+  BIOPHYSICOCHEMICAL PROPERTIES). The ~9x faster turnover on the smaller
+  aryl-alkyl diketone is the same affinity/efficiency split the OpenScientist
+  run later found for B. cereus YueD.

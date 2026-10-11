@@ -45,3 +45,35 @@ class GO:0016616. Consequences visible in GOA:
 Move `xref: RHEA:25968 {source="skos:narrowMatch"}` from GO:0016616 to GO:0004090.
 More generally, flag any RHEA xref on an EC-incomplete (x.x.x.-) grouping term:
 currently 9 reactions on GO:0016616, GO:0008241 and GO:0016712.
+
+## Gene-specific notes: NRE1 (P40579, YIR035C)
+
+The set-level notes above are shared across the four RHEA:25968 genes. What is
+specific to this one:
+
+- **It was an orphan until 2023.** SGD characterized Nre1p as a protein of
+  unconfirmed function; the MicroPublication paper is the first demonstration of
+  any in vitro activity for it
+  [PMID:37602278 "Thus, Nre1p is a benzil reductase in vitro and likely paralog of Irc24p."].
+- **It has the structures; IRC24 does not.** Two crystal structures exist
+  (PDB 3KZV at 2.00 A, 6UHX at 2.75 A, both unpublished elsewhere), while IRC24
+  has only an AlphaFold model. The OpenScientist run exploited exactly this
+  asymmetry, superposing the IRC24 model onto 6UHX.
+- **The paralog pocket is shared, not diverged.** That run measured 1.36 A CA
+  RMSD and found the substrate pocket 15/18 residues identical with the
+  Ser-Tyr-Lys triad conserved, so the pocket is *more* conserved than the
+  protein overall (52% identity). The single non-conservative near-pocket change
+  is Nre1 Asp138 / Irc24 Gly145, in the second shell at 4.8 A. Consequence for
+  curation: annotations should transfer symmetrically between the two genes, and
+  this review's GO:0004090 call matches IRC24's for that reason.
+- **Cofactor preference.** Km 0.39 mM for benzil with NADPH versus 0.96 mM with
+  NADH (UniProt), i.e. the same ~2-fold NADPH preference reported for Irc24,
+  which is why the NADPH-specific GO:0004090 is preferred over a cofactor-
+  agnostic parent.
+- **Localization is independently supported.** Two separate high-throughput
+  datasets place Nre1 in the cytoplasm (PMID:11914276, PMID:14562095), and the
+  2023 paper restates it
+  [PMID:37602278 "High-throughput protein expression data confirm that Nre1p is cytoplasmic"].
+  That quote now supports the keyword-mapped IEA row as well; an earlier draft
+  used the paper's *B. cereus* GFP sentence there, which was a cross-organism
+  citation and was corrected after PR review.
