@@ -76,7 +76,8 @@ paralog-aware activity and complex checks.
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
 - [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; merged in PR
   #4774
-- [ ] `NEUCR` MYST-family member
+- [x] `NEUCR/esa-1` - Neurospora ESA1/NuA4 catalytic subunit; drafted in
+  this branch
 
 ## Later Candidates
 
@@ -272,6 +273,11 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
   contrary Neurospora localization data, and the over-specific `GO:0007189`
   GPCR pathway row from `PTN000180782` was redirected to neutral
   `GO:0141156` cAMP/PKA signal transduction.
+- Rechecked `NEUCR/esa-1` as the filamentous-fungal ESA1 representative in
+  `PTHR10615:SF218`. The fungal `PANTHER:PTN000834946` H4-acetyltransferase
+  row and the broad eukaryotic `PANTHER:PTN004172926` MYST-root rows remain
+  sound against the PAINT placement; the second-pass edits only tightened
+  UniProt evidence snippets.
 - Added `PTHR10868` as a compact sterol C-8 isomerase family after sibling
   `yeast/ERG2`, `SCHPO/erg2`, and `NEUCR/erg-1` reviews had checked the same
   fungal node placements. The `CANAL/ERG2` follow-up accepts the fungal
