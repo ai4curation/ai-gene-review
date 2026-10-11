@@ -9,15 +9,22 @@ autolink_gene_symbols: false
 
 # Complex Portal Annotation Correctness
 
-**Bottom line:** Complex Portal (CP) curates protein complexes and pushes GO annotations to every
-subunit it lists, under `assigned_by: ComplexPortal`. This project checks whether those rows are
-correct: whether the complex is real in that species, whether its listed members are right, whether
-the cited reference supports it, and whether a complex-level GO term holds for each subunit. In the
-GOA files cached in this repo there are 5,005 such rows, and 3,131 of them (63%) are NAS. The first
-case, the GPI-anchor transamidase (GPI-T) subunit Gaa1 in fly and fission yeast, shows two different
-problems. The fission-yeast complex cites a paper that only predicts GPI-modification sites from
-sequence. Both records also carry outcome terms that belong to the GPI-anchored proteins rather
-than to the enzyme.
+**Bottom line:** Complex Portal (CP) annotates protein complexes, and GOA copies each complex's
+process (BP) and location (CC) terms, but not its function (MF), to every subunit, under
+`assigned_by: ComplexPortal`. This project checks whether those subunit rows are correct. The
+5,005 such rows in this repo's cached GOA files all belong to reviewed genes, and 88% of them
+survive review (95% of CC, 83% of BP). Fewer than 1% are outright wrong; most rejected rows are
+imprecise. The typical failures are regulation terms in the wrong direction (the inhibited subunit
+annotated as the inhibitor), downstream processes, a partner's activity, and promiscuous subunits
+such as actin inheriting every complex's terms. Simple rules raise the rejection rate among
+flagged rows to about 29% against a 10% base, so they help triage but cannot replace reading.
+Corroboration works the other way: rows another group also annotated from the same paper were
+almost never rejected (2 of 445). 41% of the papers CP cites are cited by no other group in GOA,
+and a quarter of those are reviews; 20 rows give a review an experimental evidence code. We also
+found a direct contradiction, CHMP3, where CP and UniProt draw opposite conclusions from the same
+paper. The review verdicts judge terms, not references, so reference problems are under-counted.
+The gaa1 case shows one: the fission-yeast GPI transamidase record rests on a paper that only
+predicts GPI-modification sites.
 
 ## Scope and questions
 
@@ -110,19 +117,28 @@ belongs to.
 
 **How to read this.** About 88% of CP-derived subunit annotations survive review, 95% for CC and
 83% for BP. Outright wrong rows are under 1%; most problems are imprecision (wrong-direction
-regulation terms, downstream outcomes, over-general terms). Patterns among the 42 `REMOVE` rows:
+regulation terms, downstream outcomes, over-general terms). All 502 rejected rows, with the
+review's reason, are in [`data/cp_rejected_rows.yaml`](COMPLEXPORTAL/data/cp_rejected_rows.yaml).
 
-- **Direction errors in regulation terms.** The inhibited partner gets "negative regulation of X":
-  BAK1 (MOMP, cytochrome c release), DFFB (DNA fragmentation), worm ced-3 and ced-4.
-- **Downstream or neighbouring processes.** SDHA, SDHB and SDHC are given "proton motive
-  force-driven mitochondrial ATP synthesis" (20 rows of this term are rejected across genes);
-  ESPL1 is given sister-chromatid cohesion maintenance.
-- **Wrong location for a subunit.** CAF-1 subunits (yeast CAC2, MSI1, RLF2) are given `part_of`
-  nucleosome; *E. coli* periplasmic PstS is given `membrane`.
-- **References that do not cover the subunit,** as in the gaa1 case: dynein-2 subunits given
-  "male germ cell nucleus" from a dynein-1 paper.
-- **Promiscuous subunits** (actin, and probably other shared subunits) inherit every process of
-  every complex they belong to.
+### Examples of rejected rows
+
+| Pattern | Gene | CP-derived term | Evidence | Why rejected (from the gene review) |
+|---|---|---|---|---|
+| Regulation in the wrong direction | human/BAK1 | negative regulation of release of cytochrome c from mitochondria (GO:0090201) | IDA PMID:15901672 | BAK is the restrained target, not the negative regulator, in the anti-apoptotic complex |
+| Regulation in the wrong direction | human/DFFB | negative regulation of apoptotic DNA fragmentation (GO:1902511) | IDA PMID:11371636 | DFFB is the nuclease being inhibited, not the inhibitor |
+| Regulation in the wrong direction | worm/ced-3 | negative regulation of execution phase of apoptosis (GO:1900118) | IMP PMID:10101135 | The inhibitor is MAC-1; CED-3 is the inhibited protease (ced-4 likewise) |
+| Regulation in the wrong direction | human/PPP3CA | positive regulation of calcium ion import across plasma membrane (GO:1905665) | NAS PMID:17640527 | Anchored calcineurin suppresses PKA enhancement of CaV1.2 current |
+| Downstream or neighbouring process | human/SDHB | proton motive force-driven mitochondrial ATP synthesis (GO:0042776) | NAS PMID:30030361 | Complex II pumps no protons (SDHA and SDHC likewise; 20 rows of this term rejected) |
+| Downstream or neighbouring process | human/ESPL1 | maintenance of mitotic sister chromatid cohesion (GO:0034088) | NAS PMID:34290405 | Separase cleaves cohesin; cohesion is maintained by cohesin, shugoshin-PP2A and separase inhibitors |
+| Activity of a partner | human/MBL2 | proteolysis (GO:0006508) | IDA PMID:22691502 | The MASP proteases cleave C4/C2; MBL has no protease activity |
+| Activity of a partner | human/PDGFA | peptidyl-tyrosine autophosphorylation (GO:0038083) | NAS PMID:11297552 | Autophosphorylation is done by the receptor, not the ligand |
+| Wrong process for the protein | human/CLCN7 | transepithelial chloride transport (GO:0030321) | IDA PMID:32851177 | ClC-7 is an endolysosomal antiporter |
+| Wrong process for the protein | human/TERT | telomere maintenance via recombination (GO:0000722) | NAS PMID:20351177 | Recombination-based telomere maintenance (ALT) is the telomerase-independent pathway |
+| Wrong location for a subunit | yeast/CAC2 | nucleosome (GO:0000786) | IDA PMID:30239791 (a review) | CAF-1 deposits histones but is not part of the nucleosome (MSI1, RLF2 likewise) |
+| Wrong location for a subunit | ECOLI/pstS | membrane (GO:0016020) | NAS PMID:3881386 | PstS is a periplasmic binding protein |
+| Reference does not cover the subunit | human/DYNC2H1 | male germ cell nucleus (GO:0001673) | NAS PMID:36973253 | Paper is about dynein-1 (DYNLRB1/2) complexes and does not mention dynein-2 |
+| Reference does not cover the subunit | human/RPL18A | striated muscle contraction (GO:0006941) | NAS PMID:34081545 | Paper studies RPL3L, not RPL18A |
+| Promiscuous subunit | mouse/Actb | kinetochore (GO:0000776) | NAS PMID:11078522 | Transferred from chromatin-remodeller complexes that contain actin; 27 Actb rows rejected |
 
 **Limitations.**
 
@@ -135,6 +151,110 @@ regulation terms, downstream outcomes, over-general terms). Patterns among the 4
 - Treat 88% as an upper bound on term correctness, and as saying nothing about evidence
   correctness. A manual audit of a random sample is the next step, scoring term and reference
   separately.
+
+## Rules for flagging suspect rows
+
+Spot checks do not scale, so we tested simple rules that could flag CP rows for review. Each rule
+was scored against the same review verdicts: precision is the share of flagged rows that the
+review rejected, compared with a base rate of 10.0% (502 of 5,005). Script:
+[`scripts/cp_flag_rules.py`](COMPLEXPORTAL/scripts/cp_flag_rules.py); full output with examples:
+[`data/cp_rule_eval.yaml`](COMPLEXPORTAL/data/cp_rule_eval.yaml).
+
+| Rule | Flagged | Rejected | Precision | Lift | Recall |
+|---|---|---|---|---|---|
+| Outcome-type BP term (regulation, response to, development) **and** subunit has ≥5 CP references | 413 | 118 | 28.6% | 2.9× | 23% |
+| "response to" term | 85 | 20 | 23.5% | 2.4× | 4% |
+| Regulation term not corroborated by another group | 720 | 164 | 22.8% | 2.3× | 33% |
+| Regulation term (any) | 751 | 164 | 21.8% | 2.2× | 33% |
+| Outcome-type term, paper cited only by CP | 415 | 89 | 21.4% | 2.1× | 18% |
+| Outcome-type term, paper is a review | 122 | 25 | 20.5% | 2.0× | 5% |
+| BP, subunit has ≥5 CP references | 960 | 182 | 19.0% | 1.9× | 36% |
+| BP, gene not named in the cached full text | 468 | 87 | 18.6% | 1.9× | 17% |
+| Any BP | 2,814 | 414 | 14.7% | 1.5× | 82% |
+| Gene not named in cached full text | 780 | 105 | 13.5% | 1.3× | 21% |
+| Paper is a review | 812 | 105 | 12.9% | 1.3× | 21% |
+| Paper cited only by CP anywhere in GOA | 2,121 | 229 | 10.8% | 1.1× | 46% |
+| **Same gene, term and paper also annotated by another group** | 445 | **2** | **0.4%** | 0.04× | — |
+
+What this shows:
+
+- **No single rule is precise enough to act on automatically.** The best combination roughly
+  triples the rejection rate, to about 29%. These rules are for triage: they order the review
+  queue but do not replace reading.
+- **Regulation terms are the clearest content signal.** They account for a third of all
+  rejections, and the failure is usually direction or target confusion: the complex regulates X,
+  but a subunit is the thing being regulated.
+- **Promiscuous subunits** (actin, shared ATPase or ubiquitin-ligase subunits) are the clearest
+  gene-level signal.
+- **"Gene not named in the paper" is weak on its own.** Matching on gene symbols and UniProt
+  synonyms misses protein names, and it is uninformative for abstract-only papers. It helps only
+  in combination with BP.
+- **Corroboration is the strongest signal in the other direction.** When another group has
+  annotated the same gene, term and paper, the row was almost never rejected (2 of 445). Rows
+  like these could be skipped in an audit.
+- **Having been read by another curator, without corroboration, is not a conflict signal.** Rows
+  whose paper another group used for the same gene, but for other terms, are rejected at 8.7%,
+  slightly below the base rate.
+
+### Direct conflicts with other annotations
+
+Only 4 CP rows clash with a `NOT` annotation on the same gene and term. Three of them are a direct
+contradiction from the same paper with the same evidence code:
+
+| Gene | Term | CP row | Contradicting row |
+|---|---|---|---|
+| human/CHMP3 | nucleus organization (GO:0006997) | IMP PMID:20616062 | NOT, UniProt, IMP PMID:20616062 |
+| human/CHMP3 | mitotic metaphase chromosome alignment (GO:0007080) | IMP PMID:20616062 | NOT, UniProt, IMP PMID:20616062 |
+| human/CHMP3 | regulation of mitotic spindle assembly (GO:1901673) | IMP PMID:20616062 | NOT, UniProt, IMP PMID:20616062 |
+| human/SIRT1 | nucleolus (GO:0005730) | IDA PMID:18485871 | NOT, UniProt, IDA PMID:16079181 (a different paper) |
+
+PMID:20616062 (Morita et al. 2010) depleted each of the 11 human ESCRT-III proteins and reports
+spindle and nuclear defects for "most" of them. The per-protein results are in figures that the
+cached text does not include, so we cannot tell from here which curator is right for CHMP3.
+UniProt's NOT suggests CHMP3 depletion was one of the exceptions, and CP's positive rows look
+like the ESCRT-III complex-level result rolled down to every subunit. The CHMP3 review currently
+accepts or keeps all three rows. They should be re-examined against the figures, and this check
+should run routinely.
+
+## Papers cited only by Complex Portal
+
+QuickGO was queried for every PMID cited on a CP row, counting all annotations in GOA that cite
+it and how many of those are CP's. PubMed publication types were added from NCBI E-utilities.
+Data: [`data/cp_pmid_usage.yaml`](COMPLEXPORTAL/data/cp_pmid_usage.yaml); scripts:
+[`cp_pmid_usage.py`](COMPLEXPORTAL/scripts/cp_pmid_usage.py),
+[`cp_pmid_pubtypes.py`](COMPLEXPORTAL/scripts/cp_pmid_pubtypes.py).
+
+- **447 of the 1,084 PMIDs (41%) are cited only by CP** anywhere in GOA. They support 2,121 of
+  the 5,005 subunit rows (42%). By species, the share of CP rows resting on such papers is
+  highest for human (1,809 of 3,793 PMID-cited rows) and lowest for pombe (15 of 105) and
+  *Arabidopsis* (3 of 48).
+- **A quarter of them are reviews.** PubMed tags 110 of the 447 CP-only papers as Review,
+  against 3 of the 637 papers that other groups also cite. GO curators generally avoid
+  annotating from reviews, so CP is close to the only route by which these reviews become GO
+  evidence. The largest are reviews of V-ATPase structure (PMID:32001091, 77 rows), OXPHOS
+  complex assembly (PMID:30030361, 70 rows, 20 rejected), the SCF complex (PMID:34445249, 63 rows)
+  and TRAPP complexes (PMID:27066478, 48 rows, 20 rejected).
+- **CP-only papers are newer**, with a median year of 2015 against 2009 for papers that other
+  groups also cite. This fits CP curating recent structural and complex-composition papers that
+  MOD curators have not reached.
+- **On their own they are not much worse.** Rows resting on CP-only papers are rejected at
+  10.8%, against 9.5% for shared papers. The review verdicts judge the term rather than the
+  reference, though, so this is the place where reference problems most likely go uncounted.
+
+**A deterministic evidence-code check.** 812 CP rows cite a review, and almost all of them are NAS,
+which is the right code. But 20 rows assign an experimental code to a review:
+
+- PMID:30239791 (CAF-1 mechanism review): 9 IDA and 3 IPI rows for yeast CAC2, MSI1 and RLF2,
+  including the three "nucleosome" rows that were removed.
+- PMID:29249570: IDA for CUL3, KEAP1 and RBX1 (proteasome-mediated catabolism).
+- PMID:17101441: IPI for RPD3 and RCO1 (Rpd3S complex).
+- PMID:22898774: IDA for MAD2L1.
+- PMID:24984776: IPI for BLM.
+- PMID:12067652: EXP for GEMIN5.
+
+Most of these terms are biologically fine, but the evidence code says an experiment was reported
+in a paper that only reviews experiments. This needs no biological judgement to check, though
+PubMed's Review tag should be confirmed for each paper, since some primary papers carry it too.
 
 ## Case 1: Gaa1 in the GPI-anchor transamidase complex
 
@@ -224,12 +344,15 @@ budding yeast CPX-1275) and four predicted human complexes containing GPAA1.
 ## Plan
 
 - [x] First estimate: join CP GOA rows to existing review actions (88% acceptable).
+- [x] Flagging rules scored against review verdicts; papers cited only by CP characterised.
+- [ ] Re-examine human/CHMP3 against the PMID:20616062 figures (CP IMP vs UniProt NOT, same paper).
+- [ ] Confirm PubMed Review status for the 6 papers carrying experimental codes, and report them to CP.
 - [ ] Manual audit of a stratified random sample (by species, aspect and evidence), scoring
       term correctness and reference support separately.
 - [ ] Fetch CP records for every complex behind a `ComplexPortal` GOA row in reviewed genes. Cache
       them as YAML (for example `projects/COMPLEXPORTAL/complexes/CPX-*.yaml`), joined to the GOA rows.
-- [ ] For NAS rows, list the distinct cited PMIDs per species, and flag those whose cached
-      title or abstract does not name the organism or the complex (as with PMID:15003443).
+- [ ] For NAS rows, flag papers whose cached text does not name the organism or the complex
+      (as with PMID:15003443); gene-name matching alone proved weak.
 - [ ] List the BP terms that CP pushes to all subunits and that describe a downstream outcome rather
       than the complex's own process (cell wall organisation, development, signalling outcomes).
 - [ ] Check CP ECO evidence and template provenance: was the complex inferred from an ortholog

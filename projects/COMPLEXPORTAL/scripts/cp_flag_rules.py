@@ -121,6 +121,10 @@ def main(joined, usage_path, out_path):
                 flags["paper_cited_only_by_cp_in_all_goa"].append(i)
             else:
                 flags["paper_also_cited_by_other_groups_in_goa"].append(i)
+        if u and "Review" in (u.get("pubtype") or []):
+            flags["paper_is_review"].append(i)
+            if u["total_annotations"] == u["complexportal_annotations"]:
+                flags["paper_is_review_and_cited_only_by_cp"].append(i)
 
     # combined rules
     S = {k: set(v) for k, v in flags.items()}
@@ -136,6 +140,9 @@ def main(joined, usage_path, out_path):
     if "paper_cited_only_by_cp_in_all_goa" in S:
         flags["combo_bp_and_paper_cited_only_by_cp"] = sorted(bp & S["paper_cited_only_by_cp_in_all_goa"])
         flags["combo_outcome_term_and_paper_cited_only_by_cp"] = sorted(outcome & S["paper_cited_only_by_cp_in_all_goa"])
+    if "paper_is_review" in S:
+        flags["combo_bp_and_review_paper"] = sorted(bp & S["paper_is_review"])
+        flags["combo_outcome_term_and_review_paper"] = sorted(outcome & S["paper_is_review"])
 
     n = len(R)
     nbad = sum(r["action"] in BAD for r in R)
