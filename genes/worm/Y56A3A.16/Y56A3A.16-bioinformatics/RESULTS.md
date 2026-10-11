@@ -46,7 +46,8 @@ be more sensitive; absence here is not proof of absence).
 - Worm Y56A3A.16 is a divergent family member: only the RH domain is recognisable, and it is
   roughly equidistant (~32% identity) from RUBCN, Pacer and fly Rubicon. Sequence alone
   cannot assign it to the Rubicon or Pacer side; PANTHER places it in subfamily SF1 with
-  invertebrate Rubicon. Its RH domain has fewer cysteines (13) than the RH domains of the other
+  invertebrate Rubicon (UniProt cross-reference `DR   PANTHER; PTHR45971:SF1` in both
+  `genes/worm/Y56A3A.16/Y56A3A.16-uniprot.txt` and `genes/DROME/Rubicon/Rubicon-uniprot.txt`). Its RH domain has fewer cysteines (13) than the RH domains of the other
   three proteins (17-18), so some zinc-coordinating positions may not be conserved (not
   examined residue-by-residue here).
 - Functional assignment therefore has to rest on experiments (Nakamura et al. 2019,

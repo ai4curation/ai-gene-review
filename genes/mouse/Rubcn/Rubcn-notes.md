@@ -19,3 +19,4 @@
 
 ## Actions
 - GO:0005515 (EGFR, IPI) REMOVE; nucleoplasm ISO REMOVE; PI3K/AKT signalling MODIFY to GO:0141039; GO:1901981 IBA MARK_AS_OVER_ANNOTATED; cytosol KEEP_AS_NON_CORE; others ACCEPT.
+- GO:0031267 small GTPase binding is proposed as NEW for human RUBCN (RH domain-Rab7-GTP crystal structure, PMID:32632011) but is deliberately not mirrored here: the structural and binding evidence is human-only, mouse Rubcn would inherit it by orthology (ISS/ISO from the human annotation once curated), so no NEW row is added for mouse; the Rab7 interaction is used only as mechanistic context for the late endosome/lysosome location and autophagosome-maturation rows.

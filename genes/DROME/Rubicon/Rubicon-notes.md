@@ -21,7 +21,7 @@
 
 - Both arms of vertebrate RUBCN biology are present in fly: inhibition of canonical autophagy (aging/neurons) and promotion of LAP/LAP-like single-membrane Atg8ylation (glia, egg). No fly evidence for Pacer-type promotion of canonical autophagosome maturation. Fly Rubicon therefore behaves like vertebrate Rubicon.
 - Direct biochemistry (VPS34/UVRAG binding, Rab7 binding, lipid binding) is not demonstrated for the fly protein; these are inferred from human RUBCN and the conserved RUN/PIKBD/RH domains.
-- GO:1901981 (phosphatidylinositol phosphate binding, IBA from root PTN002915557) is seeded only by human Pacer; human RUBCN itself has no direct PIP-binding evidence and the Pacer PIP-binding region is unmapped. Kept as non-core.
+- GO:1901981 (phosphatidylinositol phosphate binding, IBA from root PTN002915557) is seeded only by human Pacer; human RUBCN itself has no direct PIP-binding evidence and the Pacer PIP-binding region is unmapped. Marked MARK_AS_OVER_ANNOTATED in the review (updated from an earlier "kept as non-core" call): the seed is the vertebrate Pacer paralog only, direct lipid binding is not shown for fly Rubicon, and human Rubicon was not pulled down by PtdIns(3)P beads, so the term is treated as an over-propagation from the Pacer lineage, matching the human and mouse RUBCN reviews.
 - GO:0043231 (intracellular membrane-bounded organelle, root IBD, fly is a seed) is correct but very general; the specific compartments are late endosome/phagosome (glia) and MVB limiting membrane (egg). Not yet in fly GOA.
 
 ## Literature search
