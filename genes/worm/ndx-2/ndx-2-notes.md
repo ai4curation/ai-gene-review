@@ -56,8 +56,8 @@ Uses ndx-2 RNAi as a tool to raise oxidised nucleotides in exo-3 mutants; no new
   the 8-oxo term records what was specifically demonstrated.
 - NEW GO:0044716 8-oxo-GDP phosphatase activity (IDA, PMID:24435662): 25.2% versus GDP 5.4%.
 - GO:0016787 hydrolase activity (IEA): MODIFY to GO:0044715.
-- GO:0005634 nucleus (IBA): ACCEPT as an inference from human NUDT5, which works in the nucleus;
-  there are no worm localization data.
+- GO:0005634 nucleus (IBA): KEEP_AS_NON_CORE as a plausible PAINT inference from human NUDT5;
+  there are no direct worm localization data.
 - GO:0006753 nucleoside phosphate metabolic process and GO:0019693 ribose phosphate metabolic
   process (IBA): KEEP_AS_NON_CORE. Both are correct but very broad consequences of the
   diphosphatase activities.
