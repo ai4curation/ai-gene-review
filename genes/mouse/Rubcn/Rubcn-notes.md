@@ -1,0 +1,22 @@
+# Rubcn (mouse, Q80U62) review notes
+
+## Sources
+- Deep research: no `Rubcn-deep-research-*.md` was present when this review was written; the review relies on cached publications, UniProt and the human RUBCN review.
+- Martinez et al. 2015 (PMID:26098576, LAP/NOX2/Rubicon) and Martinez et al. 2016 (PMID:27096368, lupus-like disease in LAP-deficient mice) are both RETRACTED (retraction notes PMID:38438803 and PMID:36045298). They are not used as evidence for LAP or lupus-like phenotypes of Rubcn knockout mice.
+
+## Evidence synthesis
+- Mouse Rubicon was identified in Beclin 1-EGFP complexes from mouse tissues and inhibits VPS34: [PMID:19270693 "Rubicon reduces Vps34 activity and downregulates autophagy"]; [PMID:19270693 "This result suggests that over-expression of Rubicon inhibits the Vps34 kinase activity, and this effect does not require Beclin 1"]; overexpression gives [PMID:19270693 "aberrant late endosomal/lysosomal structures and impaired autophagosome maturation"].
+- Direct PI3P binding was tested and was negative: [PMID:19270693 "Rubicon-EGFP was not pulled down by PtdIns(3)P-conjugated sepharose beads"], although Rubicon-positive structures are PI3P-enriched.
+- RH domain binds Rab7-GTP: [PMID:32632011 "Rubicon-mediated inhibition of autophagy requires the interaction of the C-terminal Rubicon homology (RH) domain of Rubicon with Rab7-GTP"]. The structure argues against FYVE-like lipid binding: [PMID:32632011 "Rubicon has not been reported to bind specifically to phospholipids"].
+- A 2026 bioRxiv preprint (PMID:42845427, abstract only) reports that the Rubicon PIKBD binds PI3KC3-C2 via the BECN1 BARA domain and that this interface accounts for Rubicon's negative effects: [PMID:42845427 "Rubicon binds directly to PI3KC3-C2 only via the BARA domain of the BECN1 subunit"]. Preprint, so used as context only.
+- Mouse genetics: [PMID:30783089 "Rubicon knockout mice exhibits reductions in interstitial fibrosis in kidney and reduced α-synuclein accumulation in the brain"]; [PMID:27637015 "Up-regulation of Rubicon was associated with suppression of the late stage of autophagy"] (hepatocyte KO protects from HFD steatosis); [PMID:35282767 "Adipose-specific rubcn-knockout mice exhibited systemic fat loss that was not accelerated by fasting"].
+- Immunity (human/mouse macrophages, Jung lab): Rubicon promotes NADPH oxidase activation [PMID:22423966 "Rubicon is also an essential, positive regulator of the NADPH oxidase complex"] and feedback-inhibits CARD9 signalling [PMID:22423967 "Rubicon is a physiological feedback inhibitor of CBM-mediated PRR signaling"]. Not in mouse GOA; not proposed as NEW (non-core, no mouse GOA rows).
+
+## PAINT (PTHR45971) assessment
+- PTN002915566 (RUBCN clade, Euteleostomi): early endosome, late endosome, negative regulation of endocytosis, negative regulation of autophagosome maturation all sound for mouse Rubcn; mouse experimental data (PMID:19270693) independently confirm them.
+- PTN002915557 (Eukaryota root): GO:1901981 seeded only by RUBCNL/Pacer (Q9H714, IDA PMID:28306502). For Rubicon proper it is contradicted by a negative pull-down and structural reasoning; MARK_AS_OVER_ANNOTATED. GO:0043231 (organelle) is generic and true but was not propagated to mouse Rubcn in this GOA file.
+- Fly Rubicon (Q9W3C9) has the PIKBD (PF21054) and RH (PF13901) but lacks a RUN domain; worm Y56A3A.16 (G2HK09) has only the RH domain detected by Pfam. Neither has direct lipid-binding evidence; fly Rubicon localizes to Rab7-positive late endosomes/phagosomes in glia [PMID:37248218 "Apparently, almost all Rubicon dots colocalized with Rab7-positive late endosomes/phagosomes in uninjured and injured wing nerve glia"], consistent with Rab7 rather than lipid targeting. Knockdown extends worm and fly lifespan [PMID:30783089 "knockdown of Rubicon extends worm and fly lifespan and ameliorates several age-associated phenotypes"].
+
+## Actions
+- GO:0005515 (EGFR, IPI) REMOVE; nucleoplasm ISO REMOVE; PI3K/AKT signalling MODIFY to GO:0141039; GO:1901981 IBA MARK_AS_OVER_ANNOTATED; cytosol KEEP_AS_NON_CORE; others ACCEPT.
+- GO:0031267 small GTPase binding is proposed as NEW for human RUBCN (RH domain-Rab7-GTP crystal structure, PMID:32632011) but is deliberately not mirrored here: the structural and binding evidence is human-only, mouse Rubcn would inherit it by orthology (ISS/ISO from the human annotation once curated), so no NEW row is added for mouse; the Rab7 interaction is used only as mechanistic context for the late endosome/lysosome location and autophagosome-maturation rows.
