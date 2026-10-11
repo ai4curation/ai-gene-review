@@ -66,6 +66,73 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 335 — 2026-10-11 08:23:41 UTC
+
+**335 complete / 2,541 remaining in the frozen 2,876-gene catalog.**
+CLDN16 is the sole new qualifying completion. It was unchecked in the actual
+pending tracker334 proposal and absent from all 58 prior completion additions.
+The two rounds of its gene review count as one audit, with no additional count
+for products or justified UNDECIDED decisions.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CLDN16 | [#4700](https://github.com/ai4curation/ai-gene-review/pull/4700) | `0005e0722bc3720721c81c3fb4384afc655ddc65` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4700#pullrequestreview-5482461058) | 2026-10-11T08:23:41Z | `72f77443344b3bdd8f49d54f237b85b4d70fa0a3` |
+
+The exact-head approval was submitted at **2026-10-11T08:01:10Z**.
+The reviewer explicitly resolved both mandatory issues and approved the final
+source-scoped magnesium and partner-dependent adhesion decisions. Suggestions
+about a new term, boolean wording and optional core cargo specificity are nonblocking.
+The approval noted that tests were still running; the final gate independently
+verified both required checks succeeded before the merge:
+
+- [Build and test / test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38112098235/job/114389598527) succeeded at **2026-10-11T08:14:46Z**.
+- [Claude Code Review / claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38112098322/job/114389599097) succeeded at **2026-10-11T08:02:06Z**.
+
+The complete final review, detailed comment and empty review-thread set were
+read. No actionable objection remains. ROOT's actual merge and publisher-state
+receipts are reused without another merge or workflow retry. This checkpoint
+makes no new scientific claim or primary-source reading claim.
+
+### Exact content and source proof
+
+All **19 changed PR paths** have identical approved-head, merge and captured-current-main
+blobs, including both gene histories and all added publication caches. The complete
+six-file CLDN16 directory is also identical at those three commits. All **11 referenced
+PMID cache pairs** match; the unchanged source annotations and ancillary reference
+identities remain those of the approved gene review. Exact paths, Git object IDs,
+SHA-256 hashes and sizes are recorded in queue update **59**.
+
+The gene cutoff is `72f77443344b3bdd8f49d54f237b85b4d70fa0a3`, API merged at **2026-10-11T08:23:41Z**.
+Its Git commit time is recorded separately as **2026-10-11T09:23:40+01:00**.
+The later applicability snapshot `f057b5f28fd4eff091a80d1e1bb7a72c1b1136d3` adds no completion.
+
+### Pending tracker baseline and preservation
+
+The baseline is the actual open [tracker334 #4806](https://github.com/ai4curation/ai-gene-review/pull/4806)
+head `68ca45f3b459de78ed4c7ef4326a21993f160030`. Its queue is byte-identical to the already verified tracker334 proposal;
+the prior 334-gene evidence is reused, not reconstructed from a stale main-branch
+page and not recounted. The baseline tracker is **pending**, not described as merged.
+The coordinator will amend that PR only after reviewing this isolated delta.
+
+Exactly one checkbox changes. All 2,876 association texts, frontmatter, **235 queue
+objects**, **58 prior completion updates**, unrelated queue metadata and the complete
+prior progress text remain exact. Update **59** is appended and the two JSON mirrors
+are identical. The nine existing parent-page session links and all **152 project
+history records** present at the baseline are preserved. ROOT alone creates and
+validates the new session record; this proposal does not rewrite any history.
+
+Counts are **335** for `completed`, `campaign_audited_merged` and legacy
+`original_merged`, **0** for `pending_followups`, and **2,541** remaining.
+No other open or newly merged gene is counted by this frozen amendment. In particular,
+CLPP and FH remain unchecked under the preserved checkpoint334 scope.
+
+Ordinary frontmatter tests and both project renders compare the baseline and
+proposal using the same authenticated current-main renderer and complete gene-review
+context. Missing-review availability warnings must remain identical; availability
+alone is never completion. Final check counts are recorded in the proposal handoff.
+
+[Checkpoint 335 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T085605Z-codex-f501c7.yaml).
+
 ## Completion checkpoint 334 — 2026-10-11 06:08:52 UTC
 
 **334 complete / 2,542 remaining in the frozen 2,876-gene catalog.**

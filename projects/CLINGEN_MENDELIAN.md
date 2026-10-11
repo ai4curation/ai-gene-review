@@ -2988,24 +2988,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**334 of 2,876 genes are complete; 2,542 remain.**
-CHEK2 [#4599](https://github.com/ai4curation/ai-gene-review/pull/4599), CHAMP1 [#4569](https://github.com/ai4curation/ai-gene-review/pull/4569), CHN1 [#4607](https://github.com/ai4curation/ai-gene-review/pull/4607), CIITA [#4670](https://github.com/ai4curation/ai-gene-review/pull/4670), CIB2 [#4657](https://github.com/ai4curation/ai-gene-review/pull/4657), CHD3 [#4587](https://github.com/ai4curation/ai-gene-review/pull/4587), CHD4 [#4589](https://github.com/ai4curation/ai-gene-review/pull/4589), CHRNA1 [#4611](https://github.com/ai4curation/ai-gene-review/pull/4611), CHRNA4 [#4630](https://github.com/ai4curation/ai-gene-review/pull/4630), CISD2 [#4673](https://github.com/ai4curation/ai-gene-review/pull/4673), CLDN14 [#4693](https://github.com/ai4curation/ai-gene-review/pull/4693) add eleven distinct qualifying audits beyond published checkpoint 323.
-Each has approval on the exact published head, successful required checks before
-its actual merge, and verified merged review content. The rule is one count per
-gene; products, repeated review rounds and justified biological uncertainty do
-not add counts or completion holds.
+**335 of 2,876 genes are complete; 2,541 remain.**
+[CLDN16 #4700](https://github.com/ai4curation/ai-gene-review/pull/4700) adds one
+qualifying audit beyond checkpoint 334. Approval is on its exact published head,
+both required checks succeeded before merge, and the merged files match that head.
+Each gene counts once; products, follow-up rounds and justified uncertainty add no
+extra completions or holds.
 
-The frozen gene cutoff and authenticated source are
-[CLDN14's merge 0a6db3106b10](https://github.com/ai4curation/ai-gene-review/commit/0a6db3106b108a9001acebd41df887c750b41faf),
-**2026-10-11 06:08:52 UTC** (GitHub API merge time). The baseline is the actual
-[tracker323 #4688 merge 4e9ce09b86d9](https://github.com/ai4curation/ai-gene-review/commit/4e9ce09b86d9efc203871f8f7839b2645a7e3466)
-at **06:07:21 UTC**. The tracker merge itself adds no gene completion. Later
-publication dates or open PRs do not advance this cutoff.
+The frozen gene cutoff is [CLDN16 merge 72f77443344b](https://github.com/ai4curation/ai-gene-review/commit/72f77443344b3bdd8f49d54f237b85b4d70fa0a3),
+**2026-10-11 08:23:41 UTC** (GitHub API merge time). This update starts from the
+actual pending [tracker334 #4806 head 68ca45f3b459](https://github.com/ai4curation/ai-gene-review/commit/68ca45f3b459de78ed4c7ef4326a21993f160030),
+not the older canonical project file. The tracker PR was still open when captured;
+its publication and this amendment do not themselves add a gene completion.
 
-See [checkpoint 334 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-334-2026-10-11-060852-utc).
-All 235 historical queue objects, all 57 prior completion updates and existing
-counter semantics remain unchanged. CLPP and FH remain unchecked; this checkpoint
-does not count their earlier excluded reviews or any unmerged follow-up.
+See [checkpoint 335 evidence and scope](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-335-2026-10-11-082341-utc).
+All 235 historical queue objects, all 58 prior completion updates, the complete
+prior progress log and existing counter semantics remain unchanged. This checkpoint
+counts only CLDN16; later merges and open corrective reviews are outside its cutoff.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3024,6 +3023,8 @@ does not count their earlier excluded reviews or any unmerged follow-up.
 [Checkpoint 323 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T233005Z-codex-3f117f.yaml).
 
 [Checkpoint 334 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T070056Z-codex-71fc99.yaml).
+
+[Checkpoint 335 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T085605Z-codex-f501c7.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3438,7 +3439,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **CLCN5** — HGNC:2023; [Dent disease type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c5b5abc-4f1f-4491-b5db-5208906f0f1b-2022-07-21T160000.000Z) (MONDO:0010225; XL; Definitive).
 - [ ] **CLCN7** — HGNC:2025; [autosomal dominant osteopetrosis 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_23840c1f-9d30-4ccf-9fc0-604a0cb12eb4-2023-12-04T170000.000Z) (MONDO:0008156; AD; Definitive); [autosomal recessive osteopetrosis 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_651b6ac5-131e-48b2-9869-71f2a9b42dbe-2023-10-04T160000.000Z) (MONDO:0012676; AR; Definitive); [hypopigmentation, organomegaly, and delayed myelination and development](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0e47aa25-2107-4e36-8fa8-f9e81eb9de69-2026-01-09T170000.000Z) (MONDO:0032805; AD; Definitive).
 - [x] **CLDN14** — HGNC:2035; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_17528cdb-97e0-4128-92de-9e419902aa62-2018-05-01T160000.000Z) (MONDO:0019497; AR; Definitive).
-- [ ] **CLDN16** — HGNC:2037; [renal hypomagnesemia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd2b60d4-b932-4d0b-bc46-d6b0827a6333-2023-12-06T050000.000Z) (MONDO:0009550; AR; Definitive).
+- [x] **CLDN16** — HGNC:2037; [renal hypomagnesemia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd2b60d4-b932-4d0b-bc46-d6b0827a6333-2023-12-06T050000.000Z) (MONDO:0009550; AR; Definitive).
 - [ ] **CLN3** — HGNC:2074; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6be652b4-092f-4d1c-9606-4dfeb689c4b9-2023-04-04T040000.000Z) (MONDO:0016295; AR; Definitive).
 - [ ] **CLN5** — HGNC:2076; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a522b1d6-5ade-4749-94b8-d5426bbe5961-2021-09-08T023930.981Z) (MONDO:0016295; AR; Definitive).
 - [ ] **CLN6** — HGNC:2077; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_09654b45-6649-4d11-b43e-aeb6d20fb86d-2020-12-01T170000.000Z) (MONDO:0016295; AR; Definitive).
