@@ -17,10 +17,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
-from itertools import combinations
+from itertools import combinations, permutations
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Dict,
     FrozenSet,
     Iterable,
@@ -51,7 +52,8 @@ class Relation(str, Enum):
     ANCESTOR_OF = "ANCESTOR_OF"
 
 
-#: Relations that need the ontology; not evaluated yet, so only OK is allowed.
+#: Relations that need the ontology; evaluated only when an ancestor lookup is given
+#: (``ai-gene-review validate --terms`` or ``--ontology-checks``).
 HIERARCHICAL = frozenset({Relation.DESCENDANT_OF, Relation.ANCESTOR_OF})
 
 
@@ -198,6 +200,9 @@ class Conflict:
     term_label: Optional[str]
     index_1: int
     index_2: int
+    #: For hierarchical rules, the term of the index_2 row (term_id is index_1's).
+    term_id_2: Optional[str] = None
+    term_label_2: Optional[str] = None
 
 
 REQUIRED_KEYS = {"action_1", "relation", "action_2", "severity", "rationale"}
@@ -300,11 +305,6 @@ def parse_rules(raw: Dict[str, Any]) -> List[ConsistencyRule]:
             raise ValueError(
                 f"rule {i}: SAME_TERM rows share one term; filter it with term_1"
             )
-        if rule.relation in HIERARCHICAL and rule.severity is not Severity.OK:
-            raise ValueError(
-                f"rule {i}: {rule.relation.value} rules are not evaluated yet; "
-                "only OK is allowed"
-            )
         for j, other in enumerate(rules):
             _check_pair(i, rule, j, other)
         rules.append(rule)
@@ -386,6 +386,56 @@ def load_rules() -> Tuple[ConsistencyRule, ...]:
         return tuple(parse_rules(yaml.safe_load(fh)))
 
 
+#: Maps a term id to its strict is_a/part_of ancestors.
+Ancestors = Callable[[str], FrozenSet[str]]
+
+#: is_a and part_of: a positive annotation to a term entails both kinds of ancestor.
+GO_PREDICATES = ("rdfs:subClassOf", "BFO:0000050")
+
+
+class GoAncestors:
+    """Lazy, cached GO ancestor lookup over is_a and part_of.
+
+    Failures to build or query the external adapter are recorded in ``failure``
+    rather than raised, so validation can report that hierarchical rules were skipped.
+    """
+
+    def __init__(self, adapter_string: str = "sqlite:obo:go"):
+        self.adapter_string = adapter_string
+        self.failure: Optional[str] = None
+        self._adapter: Any = None
+
+    def _get_adapter(self) -> Any:
+        if self._adapter is None and self.failure is None:
+            from oaklib import get_adapter
+
+            try:
+                self._adapter = get_adapter(self.adapter_string)
+            except Exception as error:  # External ontology construction can fail.
+                self.failure = f"GO adapter could not be loaded ({error})"
+        return self._adapter
+
+    @lru_cache(maxsize=65536)
+    def __call__(self, term_id: str) -> FrozenSet[str]:
+        adapter = self._get_adapter()
+        if adapter is None:
+            return frozenset()
+        try:
+            found = adapter.ancestors(
+                term_id, predicates=list(GO_PREDICATES), reflexive=False
+            )
+            return frozenset(found) - {term_id}
+        except Exception as error:  # External ontology queries can also fail.
+            self.failure = f"GO ancestor lookup failed for {term_id} ({error})"
+            return frozenset()
+
+
+@lru_cache(maxsize=1)
+def go_ancestors() -> GoAncestors:
+    """The shared GO ancestor lookup (loaded on first use)."""
+    return GoAncestors()
+
+
 def _comparable(ann_1: Dict[str, Any], ann_2: Dict[str, Any]) -> bool:
     """Rows on two different isoforms make independent claims and are not compared."""
     iso_1, iso_2 = ann_1.get("isoform"), ann_2.get("isoform")
@@ -414,10 +464,78 @@ def _governing_rule(
     return max(matching, key=lambda m: m[0].specificity, default=None)
 
 
-def iter_conflicts(
-    data: Dict[str, Any], rules: Optional[Tuple[ConsistencyRule, ...]] = None
+def _governing_hierarchical_rule(
+    rules: List[ConsistencyRule], specific: Row, general: Row, terms: Tuple[str, str]
+) -> Optional[ConsistencyRule]:
+    """The most specific hierarchical rule matching a (descendant, ancestor) row pair."""
+    matching = []
+    for rule in rules:
+        ((spec_side, spec_filter), (gen_side, gen_filter)) = _orientations(rule)[0]
+        if not spec_side.matches(specific[2], specific[3]):
+            continue
+        if not gen_side.matches(general[2], general[3]):
+            continue
+        if spec_filter is not None and not spec_filter.matches(terms[0]):
+            continue
+        if gen_filter is not None and not gen_filter.matches(terms[1]):
+            continue
+        matching.append(rule)
+    return max(matching, key=lambda r: r.specificity, default=None)
+
+
+def _collect_rows(data: Dict[str, Any]) -> List[Tuple[str, Row]]:
+    """(term id, row) for every annotation with a term id and an action."""
+    rows = []
+    annotations = data.get("existing_annotations")
+    for index, ann in enumerate(annotations if isinstance(annotations, list) else []):
+        if not isinstance(ann, dict):
+            continue
+        term = ann.get("term")
+        review = ann.get("review")
+        if not isinstance(term, dict) or not isinstance(review, dict):
+            continue
+        term_id, action = term.get("id"), review.get("action")
+        if isinstance(term_id, str) and isinstance(action, str):
+            rows.append((term_id, (index, ann, action, bool(ann.get("negated")))))
+    return rows
+
+
+def _iter_hierarchical_conflicts(
+    rows: List[Tuple[str, Row]], rules: List[ConsistencyRule], ancestors: Ancestors
 ) -> Iterator[Conflict]:
-    """Yield each pair of same-term rows whose governing rule is not OK.
+    """Conflicts between rows whose terms are in a strict ancestor relationship."""
+    for (t_spec, spec), (t_gen, gen) in permutations(rows, 2):
+        if t_spec == t_gen or t_gen not in ancestors(t_spec):
+            continue
+        if not _comparable(spec[1], gen[1]):
+            continue
+        rule = _governing_hierarchical_rule(rules, spec, gen, (t_spec, t_gen))
+        if rule is None or rule.severity is Severity.OK:
+            continue
+        # index_1 is always the action_1 row as the rule is written.
+        first, second = (
+            (spec, gen) if rule.relation is Relation.DESCENDANT_OF else (gen, spec)
+        )
+        yield Conflict(
+            rule,
+            first[1]["term"]["id"],
+            first[1]["term"].get("label"),
+            first[0],
+            second[0],
+            term_id_2=second[1]["term"]["id"],
+            term_label_2=second[1]["term"].get("label"),
+        )
+
+
+def iter_conflicts(
+    data: Dict[str, Any],
+    rules: Optional[Tuple[ConsistencyRule, ...]] = None,
+    ancestors: Optional[Ancestors] = None,
+) -> Iterator[Conflict]:
+    """Yield each pair of rows whose governing rule is not OK.
+
+    SAME_TERM rules are always evaluated; DESCENDANT_OF/ANCESTOR_OF rules only when
+    an *ancestors* lookup is given.
 
     >>> rule = ConsistencyRule("ACCEPT", "REMOVE", Relation.SAME_TERM,
     ...                        Severity.WARNING, "x")
@@ -440,31 +558,40 @@ def iter_conflicts(
     >>> doc["existing_annotations"][1]["negated"] = True
     >>> list(iter_conflicts(doc, (rule,)))
     []
+
+    Hierarchical rules need an ancestor lookup (here a toy one: GO:2 is_a GO:1):
+
+    >>> not_up = ConsistencyRule("ACCEPT", "ACCEPT", Relation.ANCESTOR_OF,
+    ...     Severity.WARNING, "x", negated_1=True)
+    >>> doc = {"existing_annotations": [
+    ...     {"term": {"id": "GO:2"}, "review": {"action": "ACCEPT"}},
+    ...     {"term": {"id": "GO:1"}, "negated": True, "review": {"action": "ACCEPT"}}]}
+    >>> toy = {"GO:2": frozenset({"GO:1"})}
+    >>> list(iter_conflicts(doc, (not_up,)))
+    []
+    >>> [(c.term_id, c.term_id_2) for c in iter_conflicts(doc, (not_up,), toy.get)]
+    [('GO:1', 'GO:2')]
     """
-    same_term = [
-        r
-        for r in (load_rules() if rules is None else rules)
-        if r.relation is Relation.SAME_TERM
-    ]
-    annotations = data.get("existing_annotations")
-    if not any(r.severity is not Severity.OK for r in same_term) or not isinstance(
-        annotations, list
+    all_rules = load_rules() if rules is None else rules
+    same_term = [r for r in all_rules if r.relation is Relation.SAME_TERM]
+    hierarchical = [r for r in all_rules if r.relation in HIERARCHICAL]
+    rows = _collect_rows(data)
+    if ancestors is not None and any(
+        r.severity is not Severity.OK for r in hierarchical
     ):
+        lookup = ancestors
+
+        def strict_ancestors(term_id: str) -> FrozenSet[str]:
+            return lookup(term_id) or frozenset()
+
+        yield from _iter_hierarchical_conflicts(rows, hierarchical, strict_ancestors)
+    if not any(r.severity is not Severity.OK for r in same_term):
         return
     by_term: Dict[str, List[Row]] = {}
-    for index, ann in enumerate(annotations):
-        if not isinstance(ann, dict):
-            continue
-        term = ann.get("term")
-        review = ann.get("review")
-        if not isinstance(term, dict) or not isinstance(review, dict):
-            continue
-        term_id, action = term.get("id"), review.get("action")
-        if isinstance(term_id, str) and isinstance(action, str):
-            row = (index, ann, action, bool(ann.get("negated")))
-            by_term.setdefault(term_id, []).append(row)
-    for term_id, rows in by_term.items():
-        for a, b in combinations(rows, 2):
+    for term_id, row in rows:
+        by_term.setdefault(term_id, []).append(row)
+    for term_id, rows_for_term in by_term.items():
+        for a, b in combinations(rows_for_term, 2):
             if not _comparable(a[1], b[1]):
                 continue
             governing = _governing_rule(same_term, a, b, term_id)
@@ -513,20 +640,37 @@ def iter_negated_too_general(data: Dict[str, Any]) -> Iterator[int]:
                 yield index
 
 
-def check_action_consistency(data: Dict[str, Any], report) -> None:
-    """Report action conflicts at the table's severity, honouring row exceptions."""
+def _hierarchical_rules_active() -> bool:
+    """Whether the packaged table has any reportable hierarchical rule."""
+    return any(
+        r.relation in HIERARCHICAL and r.severity is not Severity.OK
+        for r in load_rules()
+    )
+
+
+def check_action_consistency(
+    data: Dict[str, Any], report, ancestors: Optional[Ancestors] = None
+) -> None:
+    """Report action conflicts at the table's severity, honouring row exceptions.
+
+    Hierarchical rules run only when *ancestors* is given; without it, exceptions
+    that could be explained by a hierarchical conflict are not flagged as stale.
+    """
     from ai_gene_review.validation.validation_report import ValidationSeverity
 
     used: Set[int] = set()
-    for c in iter_conflicts(data):
+    for c in iter_conflicts(data, ancestors=ancestors):
         reasons = {
             i: r for i in (c.index_1, c.index_2) if (r := _exception_reason(data, i))
         }
         used.update(reasons)
+        where = f"{c.term_id} ({c.term_label or 'unknown'})"
+        if c.term_id_2 is not None:
+            where += f" and {c.term_id_2} ({c.term_label_2 or 'unknown'})"
         message = (
-            f"Contradictory review actions for {c.term_id} "
-            f"({c.term_label or 'unknown'}): {_describe_row(data, c.index_1)} vs "
-            f"{_describe_row(data, c.index_2)}"
+            f"Contradictory review actions for {where}: "
+            f"{_describe_row(data, c.index_1)} vs {_describe_row(data, c.index_2)}"
+            f" [{c.rule.describe()}]"
         )
         if reasons:
             severity = ValidationSeverity.INFO
@@ -543,8 +687,20 @@ def check_action_consistency(data: Dict[str, Any], report) -> None:
             validation_category="BestPractices",
             check_type="action_consistency",
         )
+    failure = getattr(ancestors, "failure", None)
+    if failure:
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            f"Hierarchical action-consistency rules were skipped: {failure}",
+            path="existing_annotations",
+            validation_category="BestPractices",
+            check_type="action_consistency",
+        )
+    can_judge_staleness = (
+        ancestors is not None and not failure
+    ) or not _hierarchical_rules_active()
     for index, ann in enumerate(data.get("existing_annotations") or []):
-        if not isinstance(ann, dict):
+        if not isinstance(ann, dict) or not can_judge_staleness:
             continue
         if _exception_reason(data, index) and index not in used:
             report.add_issue(

@@ -571,6 +571,7 @@ def _validate_gene_review_cli(
     check_schema: bool,
     check_terms: bool,
     show_timing: bool = False,
+    check_ontology: bool = False,
 ) -> ValidationReport:
     yaml_file = yaml_file.resolve()
     schema_path = schema_path.resolve()
@@ -674,6 +675,7 @@ def _validate_gene_review_cli(
                 check_best_practices=True,
                 check_goa=check_goa,
                 check_supporting_text=check_references,
+                check_ontology=check_ontology,
             )
             _merge_report(report, best_practices_report)
         except Exception as e:
@@ -737,6 +739,7 @@ def _validate_multiple_files_cli(
     check_terms: bool,
     show_progress: bool = False,
     show_timing: bool = False,
+    check_ontology: bool = False,
 ) -> BatchValidationReport:
     batch_report = BatchValidationReport()
 
@@ -772,6 +775,7 @@ def _validate_multiple_files_cli(
                         check_schema,
                         check_terms,
                         show_timing=show_timing,
+                        check_ontology=check_ontology,
                     )
                 )
                 progress.advance(main_task)
@@ -787,6 +791,7 @@ def _validate_multiple_files_cli(
                     check_schema,
                     check_terms,
                     show_timing=show_timing,
+                    check_ontology=check_ontology,
                 )
             )
 
@@ -931,6 +936,16 @@ def validate(
             help="Run ontology term/label validation with linkml-term-validator",
         ),
     ] = False,
+    ontology_checks: Annotated[
+        bool,
+        typer.Option(
+            "--ontology-checks",
+            help=(
+                "Run best-practice checks that need the GO hierarchy (e.g. ancestor/"
+                "descendant action-consistency rules). Implied by --terms."
+            ),
+        ),
+    ] = False,
     no_goa: Annotated[
         bool, typer.Option("--no-goa", help="Skip GOA validation")
     ] = False,
@@ -989,6 +1004,7 @@ def validate(
     check_goa = not no_goa
     check_references = not no_references
     check_schema = not no_schema
+    check_ontology = terms or ontology_checks
     schema_path = Path(schema).resolve() if schema else get_schema_path()
 
     # Validate single file or multiple files
@@ -1005,6 +1021,7 @@ def validate(
             check_schema,
             terms,
             show_timing=show_timing,
+            check_ontology=check_ontology,
         )
 
         # Determine status symbol and color
@@ -1076,6 +1093,7 @@ def validate(
             terms,
             show_progress=True,  # Enable progress bar for multiple files
             show_timing=show_timing,
+            check_ontology=check_ontology,
         )
 
         # Show summary

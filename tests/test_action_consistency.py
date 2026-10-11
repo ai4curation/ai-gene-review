@@ -135,8 +135,6 @@ def _raw(**overrides):
         {"relation": "SIBLING"},
         {"severity": "FATAL"},
         {"relation": "DESCENDANT", "severity": "OK"},  # old, ambiguous name
-        {"relation": "DESCENDANT_OF", "severity": "WARNING"},
-        {"relation": "ANCESTOR_OF", "severity": "ERROR"},
     ],
 )
 def test_malformed_rules_fail_fast(overrides):
@@ -189,6 +187,7 @@ def test_packaged_table_puts_too_general_on_the_broader_term():
         r
         for r in load_rules()
         if r.relation is not Relation.SAME_TERM
+        and not (r.negated_1 or r.negated_2)
         and "TOO_GENERAL" in r.side_1.actions | r.side_2.actions
     ]
     assert rules
@@ -381,9 +380,9 @@ def test_malformed_lists_and_flags_fail_fast(overrides):
 # --- per-annotation exceptions and single-row checks ------------------------
 
 
-def issues(data):
+def issues(data, ancestors=None):
     report = ValidationReport(file_path="x.yaml", is_valid=True)
-    check_action_consistency(data, report)
+    check_action_consistency(data, report, ancestors=ancestors)
     return [i for i in report.issues if i.check_type == "action_consistency"]
 
 
@@ -400,7 +399,7 @@ def test_consistency_exception_downgrades_to_info_with_reason():
 def test_stale_consistency_exception_is_flagged():
     stale = row("ACCEPT")
     stale["review"]["consistency_exception"] = {"reason": "left over"}
-    [issue] = issues(doc(stale, row("ACCEPT")))
+    [issue] = issues(doc(stale, row("ACCEPT")), ancestors=lambda t: frozenset())
     assert issue.severity == ValidationSeverity.WARNING
     assert "not in any action-consistency conflict" in issue.message
 
@@ -408,3 +407,104 @@ def test_stale_consistency_exception_is_flagged():
 def test_too_general_on_not_row_is_an_error():
     [issue] = issues(doc(not_row("TOO_GENERAL")))
     assert issue.severity == ValidationSeverity.ERROR
+
+
+# --- hierarchical rules ------------------------------------------------------
+
+#: Toy hierarchy: GO:C part_of GO:B is_a GO:A.
+TOY = {"GO:C": frozenset({"GO:B", "GO:A"}), "GO:B": frozenset({"GO:A"})}
+
+
+def toy(term_id):
+    return TOY.get(term_id, frozenset())
+
+
+def hrows(*specs):
+    """specs: (term, action, negated)."""
+    return doc(
+        *(
+            row(action, term=term, negated=True) if neg else row(action, term=term)
+            for term, action, neg in specs
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "specs,expected",
+    [
+        # kept NOT on an ancestor of a kept positive term: conflict
+        ((("GO:A", "ACCEPT", True), ("GO:C", "ACCEPT", False)), [(0, 1)]),
+        ((("GO:B", "KEEP_AS_NON_CORE", True), ("GO:C", "NEW", False)), [(0, 1)]),
+        # row order does not matter; index_1 is always the NOT (action_1) row
+        ((("GO:C", "ACCEPT", False), ("GO:A", "ACCEPT", True)), [(1, 0)]),
+        # NOT on a descendant of a positive term is consistent
+        ((("GO:C", "ACCEPT", True), ("GO:A", "ACCEPT", False)), []),
+        # doubting the NOT claim is consistent
+        ((("GO:A", "REMOVE", True), ("GO:C", "ACCEPT", False)), []),
+        # unrelated terms
+        ((("GO:A", "ACCEPT", True), ("GO:X", "ACCEPT", False)), []),
+    ],
+)
+def test_packaged_not_ancestor_rule(specs, expected):
+    conflicts = [c for c in iter_conflicts(hrows(*specs), ancestors=toy) if c.term_id_2]
+    assert [(c.index_1, c.index_2) for c in conflicts] == expected
+
+
+def test_hierarchical_rules_need_an_ancestor_lookup():
+    data = hrows(("GO:A", "ACCEPT", True), ("GO:C", "ACCEPT", False))
+    assert list(iter_conflicts(data)) == []
+
+
+def test_hierarchical_conflict_message_names_both_terms():
+    report = ValidationReport(file_path="x.yaml", is_valid=True)
+    data = hrows(("GO:A", "ACCEPT", True), ("GO:C", "ACCEPT", False))
+    check_action_consistency(data, report, ancestors=toy)
+    [issue] = [i for i in report.issues if i.check_type == "action_consistency"]
+    assert "GO:A" in issue.message and "GO:C" in issue.message
+    assert "is an ancestor of" in issue.message
+
+
+def test_hierarchical_term_filter_exception():
+    general = _raw(
+        action_1="ACCEPT",
+        relation="ANCESTOR_OF",
+        action_2="ACCEPT",
+        negated_1=True,
+    )["rules"][0]
+    rules = tuple(
+        parse_rules(
+            {
+                "rules": [
+                    general,
+                    {**general, "term_1": {"exact": "GO:A"}, "severity": "OK"},
+                ]
+            }
+        )
+    )
+    flagged = hrows(("GO:B", "ACCEPT", True), ("GO:C", "ACCEPT", False))
+    exempt = hrows(("GO:A", "ACCEPT", True), ("GO:C", "ACCEPT", False))
+    assert len(list(iter_conflicts(flagged, rules, toy))) == 1
+    assert list(iter_conflicts(exempt, rules, toy)) == []
+
+
+def test_exception_not_called_stale_when_hierarchy_was_not_checked():
+    excepted = row("ACCEPT", term="GO:A", negated=True)
+    excepted["review"]["consistency_exception"] = {"reason": "context-specific"}
+    data = doc(excepted, row("ACCEPT", term="GO:C"))
+    assert issues(data) == []  # hierarchy not evaluated: no conflict, no stale flag
+    report = ValidationReport(file_path="x.yaml", is_valid=True)
+    check_action_consistency(data, report, ancestors=toy)
+    [issue] = [i for i in report.issues if i.check_type == "action_consistency"]
+    assert issue.severity == ValidationSeverity.INFO
+
+
+@pytest.mark.integration
+def test_real_go_hierarchy_uses_part_of():
+    """WIPI2-shaped case: autophagosome membrane is part_of autophagosome."""
+    from ai_gene_review.validation.action_consistency import go_ancestors
+
+    data = hrows(
+        ("GO:0005776", "ACCEPT", True), ("GO:0000421", "KEEP_AS_NON_CORE", False)
+    )
+    [conflict] = iter_conflicts(data, ancestors=go_ancestors())
+    assert (conflict.term_id, conflict.term_id_2) == ("GO:0005776", "GO:0000421")

@@ -45,9 +45,10 @@ rules that can match the same rows but disagree on severity are rejected when th
 table loads, so there is never a silent tie.
 
 Deliberately not supported: NOT/AND expressions, ancestor-of matchers, and per-gene
-exceptions in the table (see per-annotation exceptions below for the rare real case). `{self_or_descendant: ...}` (a term or anything
-below it) is reserved and rejected until the hierarchical relations are evaluated,
-since it needs the ontology too. Protein binding wants `exact` anyway: its
+exceptions in the table (see per-annotation exceptions below for the rare real case).
+`{self_or_descendant: ...}` (a term or anything below it) is reserved and still
+rejected: unlike the hierarchical relations, a filter must also work when the
+ontology is not loaded. Protein binding wants `exact` anyway: its
 descendants (enzyme binding, kinase binding, ...) are informative and follow the
 normal rules.
 
@@ -60,8 +61,8 @@ Polarity is part of every rule (`negated_1`/`negated_2`, default positive), beca
 NOT runs the logic the other way:
 
 - A positive annotation entails its ancestors; a NOT entails its descendants. Keeping
-  a positive term and keeping NOT on the same term (or, once hierarchical rules are
-  evaluated, on an ancestor of it) is a contradiction.
+  a positive term and keeping NOT on the same term or on an ancestor of it is a
+  contradiction (e.g. NOT `cilium` vs `axoneme`, which is part_of it).
 - REMOVE on a NOT row only doubts the negative claim; it does not assert the positive
   one. So REMOVE on both a term and NOT the term is consistent (agnostic), and so is
   keeping the NOT while removing the positive.
@@ -98,16 +99,28 @@ the existing reviews that violate it have been fixed.
 | ACCEPT | SAME_TERM | REMOVE | WARNING | an ACCEPT row and a REMOVE row share a term |
 | ACCEPT (term_1 exactly GO:0005515) | SAME_TERM | REMOVE | OK | exception: protein binding is tracked by its own policy |
 | [ACCEPT, KEEP_AS_NON_CORE], negated_1 | SAME_TERM | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a kept NOT row and a kept positive row share a term |
+| [ACCEPT, KEEP_AS_NON_CORE], negated_1 | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a kept NOT row is on an ancestor of a kept positive term |
 | TOO_GENERAL | ANCESTOR_OF | ACCEPT | OK | the TOO_GENERAL term is more general than an ACCEPTed term |
 | TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
 REMOVEd rows are mostly TAS, IDA, IMP and IPI); with the protein binding exception,
 34 reviews (301 row pairs). The NOT rule fired on 23 reviews (54 row pairs; e.g. GAI,
-RGA, WUS, Akt1). Both stay WARNINGs until those are fixed, then can become ERRORs.
+RGA, WUS, Akt1), and its ancestor form on 11 reviews (22 row pairs; e.g. ARL6 NOT
+`cilium` vs `axoneme`, DNM1L NOT `endoplasmic reticulum` vs `endoplasmic reticulum
+membrane`, APP NOT `dendrite` vs `dendritic spine`). All stay WARNINGs until those are
+fixed, then can become ERRORs.
 
-`DESCENDANT_OF` and `ANCESTOR_OF` rules are not evaluated yet (they need the ontology at validation
-time), so the loader only accepts `OK` for them.
+### Hierarchical rules and the ontology
+
+`DESCENDANT_OF` and `ANCESTOR_OF` rules use strict GO ancestry over `is_a` and
+`part_of` (a positive annotation to `axoneme` entails `cilium`). They need the GO
+database (`sqlite:obo:go` via OAK), so they run only when validation loads it:
+`ai-gene-review validate --terms` or `--ontology-checks`, which `just validate` and
+`just validate-all` use. Plain best-practice runs and unit tests skip them. If the
+ontology cannot be loaded, one WARNING says the hierarchical rules were skipped, and
+per-annotation exceptions are not flagged as stale in runs that could not check the
+hierarchy.
 
 Unlike the older `inconsistent_review_actions` warning, this check has no exemption for
 REMOVE rows that cite a different reference: REMOVE is a judgment on the claim,

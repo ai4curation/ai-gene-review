@@ -1251,7 +1251,7 @@ validate-all:
     echo ""
     echo "Best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --no-schema --no-references --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --no-schema --no-references --ontology-checks --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
