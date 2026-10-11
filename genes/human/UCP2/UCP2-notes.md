@@ -4,10 +4,10 @@ Deep research: falcon timed out (all providers failed). Review grounded in UniPr
 
 ## Function
 - C4-dicarboxylate (malate, oxaloacetate, aspartate)/phosphate+H+ antiporter of the inner mitochondrial
-  membrane [PMID:24395786 "UCP2 reconstituted in lipid vesicles catalyzed the"; "by exporting C4 compounds out of mitochondria, UCP2 limits the oxidation of"].
+  membrane [PMID:24395786 "UCP2 reconstituted in lipid vesicles catalyzed the exchange of malate, oxaloacetate, and aspartate for phosphate plus a proton from opposite sides of the membrane."; "by exporting C4 compounds out of mitochondria, UCP2 limits the oxidation of acetyl-CoA-producing substrates such as glucose and enhances glutaminolysis, preventing the mitochondrial accumulation of C4 metabolites derived from glutamine."].
   Core MF chosen: dicarboxylate:phosphate antiporter activity (GO:0015364), via MODIFY of antiporter activity.
 - Fatty-acid-activated proton conductance and chloride transport in reconstitution
-  [PMID:26182433 "transported protons in the presence of physiologically-relevant"]; physiological uncoupling is debated.
+  [PMID:26182433 "transported protons in the presence of physiologically-relevant fatty acid (FA) activators."]; physiological uncoupling is debated.
 - Does not mediate adaptive thermogenesis (UniProt) -> UCP1-derived IBA thermogenesis/uncoupler terms MARK_AS_OVER_ANNOTATED
   (PANTHER nodes PTN001183920, PTN000642156 grounded in Ucp1 MGI:98894 / RGD:3931).
 
