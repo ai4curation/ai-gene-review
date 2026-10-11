@@ -67,13 +67,13 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/NuA3 placements that need
 paralog-aware activity and complex checks.
 
-- [x] `yeast/ESA1` - NuA4 catalytic subunit; drafted in PR #4604
-- [x] `yeast/SAS2` - SAS-I catalytic subunit; drafted in PR #4606
+- [ ] `yeast/ESA1` - NuA4 catalytic subunit; open follow-up in PR #4604
+- [ ] `yeast/SAS2` - SAS-I catalytic subunit; open follow-up in PR #4606
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
 - [x] `SCHPO/mst1` - fission yeast Esa1/NuA4-family MYST
   acetyltransferase; merged in PR #4601
-- [x] `SCHPO/mst2` - fission yeast Sas3/KAT7-family H3K14
-  acetyltransferase; drafted in PR #4609
+- [ ] `SCHPO/mst2` - fission yeast Sas3/KAT7-family H3K14
+  acetyltransferase; open follow-up in PR #4711
 - [x] `CANAL/ESA1` - *Candida albicans* Esa1/NuA4-family MYST
   acetyltransferase; merged in PR #4598
 - [x] `NEUCR/esa-1` - *Neurospora crassa* Esa1/NuA4-family MYST
