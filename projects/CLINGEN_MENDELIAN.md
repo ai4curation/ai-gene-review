@@ -2988,21 +2988,21 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**337 of 2,876 genes are complete; 2,539 remain.**
-[CLCN5 #4686](https://github.com/ai4curation/ai-gene-review/pull/4686) adds one
-verified merged review beyond checkpoint 336. Its final revision was approved,
+**338 of 2,876 genes are complete; 2,538 remain.**
+[CLN5 #4710](https://github.com/ai4curation/ai-gene-review/pull/4710) adds one
+verified merged review beyond checkpoint 337. Its final revision was approved,
 the required test passed, and squash merge completed at
-**2026-10-11 10:33:02 UTC**. All 18 changed paths, all six gene files and all
-11 referenced PMID caches match the approved revision.
+**2026-10-11 11:03:24 UTC**. All 26 changed paths, all six gene files and all
+25 referenced PMID caches match the approved revision.
 
-The frozen gene cutoff is [CLCN5 merge d0f37ace6af1](https://github.com/ai4curation/ai-gene-review/commit/d0f37ace6af1e18e19b58afbda935e2f753110a5).
-This amendment starts from the actual pending [tracker #4806 revision 0314bf1973a8](https://github.com/ai4curation/ai-gene-review/commit/0314bf1973a88ddab8c71030db41203b30205dc1).
+The frozen gene cutoff is [CLN5 merge b7934f19c0fc](https://github.com/ai4curation/ai-gene-review/commit/b7934f19c0fc20c5f57601b41a87fc02850082d6).
+This amendment starts from the actual pending [tracker #4806 revision b268c1432f69](https://github.com/ai4curation/ai-gene-review/commit/b268c1432f697b432dc39b6da1b5b985fc0895e2).
 The tracker PR remains pending; tracker publication adds no gene completion.
 Each gene counts once, including reviews with justified uncertainty.
 
-See [checkpoint 337 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-337-2026-10-11-103302-utc).
-All 235 historical queue objects, 60 previous completion updates, prior progress
-entries and existing history records are preserved. Only CLCN5 is added here.
+See [checkpoint 338 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-338-2026-10-11-110324-utc).
+All 235 historical queue objects, 61 previous completion updates, prior progress
+entries and existing history records are preserved. Only CLN5 is added here.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3027,6 +3027,8 @@ entries and existing history records are preserved. Only CLCN5 is added here.
 [Checkpoint 336 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T102604Z-codex-e4d494.yaml).
 
 [Checkpoint 337 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T103826Z-codex-9b0957.yaml).
+
+[Checkpoint 338 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T111210Z-codex-c209d2.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3443,7 +3445,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CLDN14** — HGNC:2035; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_17528cdb-97e0-4128-92de-9e419902aa62-2018-05-01T160000.000Z) (MONDO:0019497; AR; Definitive).
 - [x] **CLDN16** — HGNC:2037; [renal hypomagnesemia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd2b60d4-b932-4d0b-bc46-d6b0827a6333-2023-12-06T050000.000Z) (MONDO:0009550; AR; Definitive).
 - [ ] **CLN3** — HGNC:2074; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6be652b4-092f-4d1c-9606-4dfeb689c4b9-2023-04-04T040000.000Z) (MONDO:0016295; AR; Definitive).
-- [ ] **CLN5** — HGNC:2076; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a522b1d6-5ade-4749-94b8-d5426bbe5961-2021-09-08T023930.981Z) (MONDO:0016295; AR; Definitive).
+- [x] **CLN5** — HGNC:2076; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a522b1d6-5ade-4749-94b8-d5426bbe5961-2021-09-08T023930.981Z) (MONDO:0016295; AR; Definitive).
 - [ ] **CLN6** — HGNC:2077; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_09654b45-6649-4d11-b43e-aeb6d20fb86d-2020-12-01T170000.000Z) (MONDO:0016295; AR; Definitive).
 - [ ] **CLN8** — HGNC:2079; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_68775ed0-576e-4ee7-90f2-d16329ecd7c1-2020-09-07T220116.243Z) (MONDO:0016295; AR; Definitive).
 - [ ] **CLPP** — HGNC:2084; [Perrault syndrome 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_15291cb2-a541-4f88-91c8-0b441e3b64cb-2018-03-27T160000.000Z) (MONDO:0013588; AR; Definitive).
