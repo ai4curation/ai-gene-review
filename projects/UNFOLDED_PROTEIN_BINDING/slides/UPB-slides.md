@@ -15,13 +15,13 @@ backgroundImage: url('https://marp.app/assets/hero-background.svg')
 **Reclassifying GO:0051082 & GO:0031249**
 
 Chris Mungall | AI-Assisted Gene Review
-2026-02-14
+2026-10-04 refresh
 
 ---
 
 ## The Problem
 
-**GO:0051082** "unfolded protein binding" and **GO:0031249** "denatured protein binding" proposed for obsoletion ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962))
+**GO:0051082** "unfolded protein binding" and **GO:0031249** "denatured protein binding" were obsoleted ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962))
 
 These terms conflate mechanistically distinct activities under a single "binding" label:
 
@@ -67,18 +67,19 @@ Key reviews informing this reclassification:
 
 ---
 
-## Scope of This Review
+## Phase-1 Scope
 
 | Metric | Count |
 |--------|-------|
-| Unique genes reviewed | **148** |
+| Unique genes in frozen audit | **148** |
 | Human genes (primary) | 33 |
 | Non-human genes | 115 |
 | Species covered | 17 |
 | Total annotations reviewed | **5,529** |
 | Remaining PENDING | **0** |
 
-All experimental annotations to GO:0051082/GO:0031249 across all species.
+Feb 2026 action snapshot; the live registry has since grown through follow-up
+case studies and identity corrections.
 
 ---
 
@@ -103,7 +104,7 @@ All experimental annotations to GO:0051082/GO:0031249 across all species.
 | Foldase (GroEL, TRiC) | MODIFY | [GO:0044183](https://www.ebi.ac.uk/QuickGO/term/GO:0044183) |
 | Foldase/holdase (HSP70) | MODIFY | GO:0044183 *(holdase NTR pending)* |
 | Co-chaperone, J-domain | MODIFY | GO:0044183 *(interim)* |
-| Holdase (sHSP, crystallin) | MODIFY | holdase NTR *(retain GO:0051082)* |
+| Holdase (sHSP, crystallin) | MODIFY | proposed holdase chaperone activity |
 | Disaggregase | MODIFY | [GO:0140545](https://www.ebi.ac.uk/QuickGO/term/GO:0140545) |
 | ER/QC sensor | REMOVE | *(not chaperones)* |
 | HSP90 co-chaperone | OVER_ANNOTATED | *(not direct UPB)* |
@@ -115,8 +116,8 @@ All experimental annotations to GO:0051082/GO:0031249 across all species.
 | Primary action | Count | Notes |
 |----------------|-------|-------|
 | MODIFY to GO:0044183 (foldase) | 16 | HSP70 (6), J-domain interim (4), prefoldin (6) |
-| MODIFY to holdase NTR | 7 | sHSPs, CLU, SCG5, DNAJB6, DNAJB8 |
-| MODIFY to other specific MF | 2 | NPM1, AIP |
+| MODIFY to proposed holdase chaperone activity | 6 | sHSPs, CLU, DNAJB6, DNAJB8 |
+| MODIFY to other specific MF | 3 | NPM1, AIP, SCG5 |
 | MARK_AS_OVER_ANNOTATED | 5 | Sensor/co-chaperone cases |
 | REMOVE | 3 | SYVN1, ERLEC1, GRPEL1 |
 
@@ -129,7 +130,7 @@ Plus 3 co-annotations to [GO:0140545](https://www.ebi.ac.uk/QuickGO/term/GO:0140
 | Gene | Before | After | Why |
 |------|--------|-------|-----|
 | HSPA1A | GO:0051082 | GO:0044183 + GO:0140545 | ATP-dependent foldase + disaggregase |
-| CRYAB | GO:0051082 | holdase NTR | sHSP holdase; prevents aggregation in situ |
+| CRYAA | GO:0051082 | proposed holdase chaperone activity | sHSP holdase; prevents aggregation in situ |
 | DNAJB1 | GO:0051082 | GO:0044183 *(interim)* | J-domain co-chaperone, not independent foldase |
 | SYVN1 | GO:0051082 | REMOVE | E3 ligase; recognizes misfolded substrates |
 | NPM1 | GO:0051082 | [GO:0140713](https://www.ebi.ac.uk/QuickGO/term/GO:0140713) | Histone chaperone; UPB was secondary |
@@ -138,14 +139,14 @@ Plus 3 co-annotations to [GO:0140545](https://www.ebi.ac.uk/QuickGO/term/GO:0140
 
 ## Critical Finding: The Holdase Gap
 
-**[GO:0140309](https://www.ebi.ac.uk/QuickGO/term/GO:0140309)** "unfolded protein carrier activity" does **not** fit most holdases.
+**[GO:0140309](https://www.ebi.ac.uk/QuickGO/term/GO:0140309)** "unfolded protein holdase activity" does **not** fit most holdases.
 
 - Created Nov 2025 for TIM carrier-holdases (Tim9-Tim10) in [go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552)
-- Definition requires escort "between two different cellular components"
-- "holdase" is a **BROAD** synonym (not exact) on GO:0140309
-- Val acknowledged a general holdase term was needed but deferred it
+- Definition still requires escort "to an acceptor molecule or to a specific location"
+- It remains a child of GO:0140597 "protein carrier chaperone"
+- The primary `holdase` label outgrew the carrier-specific definition
 
-**7 human genes + HSPH1 are in-situ holdases** that prevent aggregation without inter-compartment escort. They cannot use GO:0140309.
+**6 human genes + HSPH1 are in-situ holdases** that prevent aggregation without delivery to a defined acceptor or destination. They cannot use GO:0140309.
 
 ---
 
@@ -156,9 +157,9 @@ Plus 3 co-annotations to [GO:0140545](https://www.ebi.ac.uk/QuickGO/term/GO:0140
 **Parentage:** Direct child of GO:0003674 (molecular_function).
 [GO:0140309](https://www.ebi.ac.uk/QuickGO/term/GO:0140309) (carrier-holdase) becomes a child of this new term.
 
-**Affected genes:** CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8, HSPH1
+**Affected genes:** CRYAA, CRYAB, HSPB6, CLU, DNAJB6, DNAJB8, HSPH1
 
-**[GO:0051082](https://www.ebi.ac.uk/QuickGO/term/GO:0051082) obsoletion must be blocked until this NTR exists.**
+Remaining in-situ holdase migrations are tracked in [ai-gene-review#2222](https://github.com/ai4curation/ai-gene-review/issues/2222).
 
 ---
 
@@ -177,13 +178,14 @@ Plus 3 co-annotations to [GO:0140545](https://www.ebi.ac.uk/QuickGO/term/GO:0140
 
 ---
 
-## Cross-Species Validation
+## Phase-1 Cross-Species Stress Test
 
-The same mechanism classes apply universally across 17 species.
+The phase-1 audit applied the human-derived categories across 17 species and
+exposed bacterial, fungal and metazoan edge cases.
 
 | Species | Genes | Highlights |
 |---------|-------|------------|
-| *S. cerevisiae* | 67 | All 14 mechanism classes represented |
+| *S. cerevisiae* | 67 | Most mechanism classes represented |
 | *E. coli* | 13 | Periplasmic holdases (SurA, Skp, Spy, HdeA/B) |
 | *D. melanogaster* | 7 | sHSPs Hsp22-27 |
 | *M. musculus* | 6 | Hspa8 largest review (240 annotations) |
@@ -196,17 +198,17 @@ The same mechanism classes apply universally across 17 species.
 
 - **SlrP** (*S. typhimurium*): **misannotation removed** — T3SS effector E3 ligase, not a chaperone
 - **CnoX** (*E. coli*): redox-activated holdase — becomes active under oxidative stress when Cys residues are oxidized
-- **Peroxiredoxins** (TSA1, pmp20, tpx1): dual-function — peroxidase at low stress, holdase at high stress (overoxidation switch)
-- **Assembly factors** (ATP10, PET100, COX20): single-client chaperones, not general UPB — all OVER_ANNOTATED
+- **Peroxiredoxins** (TSA1, pmp20, tpx1): dual-function enzymes with stress-dependent holdase activity
+- **Assembly factors** (ATP10, PET100, SHY1): single-client chaperones, not general UPB
 - **IRE1** (yeast + *T. reesei*): UPR sensor, not chaperone — cross-kingdom confirmation
 
 ---
 
 ## What We Need from GO Editors
 
-1. **Holdase NTR (BLOCKING)**: Create "holdase chaperone activity" for in-situ holdases
-2. **Block [GO:0051082](https://www.ebi.ac.uk/QuickGO/term/GO:0051082) obsoletion** until holdase NTR exists (7 genes have no replacement)
-3. **Preferred labels**: "foldase" exact synonym on GO:0044183; "holdase" exact on new term
+1. **Holdase NTR (UNRESOLVED)**: Create "holdase chaperone activity" for in-situ holdases
+2. **Repair obsoletion guidance** for obsolete GO:0051082 / GO:0031249
+3. **Preferred labels**: "foldase" exact synonym on GO:0044183; reserve plain "holdase" for the general term
 4. **Co-chaperone MF gap**: How should J-domain function be annotated?
 5. **HSP70 dual annotation**: Confirm foldase + holdase per experimental context
 6. **Misfolded protein sensor**: New term for SYVN1, SAN1, Fbxo2?
@@ -217,10 +219,10 @@ The same mechanism classes apply universally across 17 species.
 
 ## Summary
 
-**148 genes** across **17 species**, **5,529 annotations** reviewed
+**148 phase-1 genes** across **17 species**, **5,529 annotations** reviewed
 
-The key bottleneck is the **holdase NTR** — without it, 7+ genes
-cannot be reannotated and GO:0051082 obsoletion is blocked.
+The key bottleneck is the **holdase NTR** — without it, six human
+in-situ holdases plus HSPH1 lack a valid GO replacement after GO:0051082 and GO:0031249 obsoletion.
 
 All gene review YAMLs: `genes/<SPECIES>/<GENE>/`
 Validate: `just validate-all`

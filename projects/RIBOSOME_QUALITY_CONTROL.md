@@ -1,6 +1,7 @@
 ---
 title: "Ribosome Quality Control (RQC) Project"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [ZNF598, EDF1, GIGYF2, PELO, HBS1L, ABCE1, NEMF, LTN1, TCF25, ANKZF1, ASCC3, ASCC2, VCP]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/UbYWkzMVw26ir7qryZGAgu
-      title: Project brief
 ---
 
 # Ribosome Quality Control (RQC) Project
@@ -20,9 +18,11 @@ ribosomes, splits them, and destroys the incomplete nascent chain: ZNF598 and
 EDF1 sense collisions, PELO-HBS1L and ABCE1 split the ribosome, and the NEMF-LTN1
 RQC complex ubiquitinates the chain left on the 60S subunit. All 13 candidate
 genes on this page now have complete gene reviews, made during the Proteostasis
-batches (whose co-translational QC selection covers RQC) rather than under this
-project; the "Stub" status line at the bottom predates them. Across the 12 RQC
-genes (VCP excluded) the reviews assess 430 GOA rows: 276 ACCEPT, 95
+batches, whose co-translational QC selection covers RQC, rather than under this
+project; the stale "Stub" line has been cleared and the remaining module/GO-CAM
+follow-up is tracked in
+[#3952](https://github.com/ai4curation/ai-gene-review/issues/3952). Across the
+12 RQC genes (VCP excluded) the reviews assess 430 GOA rows: 276 ACCEPT, 95
 KEEP_AS_NON_CORE, 20 REMOVE, 18 MARK_AS_OVER_ANNOTATED, 17 MODIFY and 4 NEW.
 The 97 rows that use RQC-specific terms, such as `rescue of stalled cytosolic
 ribosome` (GO:0072344) and `RQC complex` (GO:1990112), were all accepted or
@@ -32,12 +32,17 @@ although six production GO-CAMs in `gocams/` already model parts of the pathway.
 
 ## Overview
 
-Ribosome Quality Control (RQC) is a surveillance pathway that detects and resolves stalled or colliding ribosomes during translation. This prevents accumulation of aberrant proteins and maintains proteostasis. The field has seen major advances 2020+ with structural and mechanistic discoveries.
+Ribosome quality control is a cytosolic surveillance pathway that detects stalled
+and collided ribosomes during translation, represses defective messages,
+disassembles stalled ribosomes, and targets incomplete nascent chains for
+ubiquitin-dependent degradation. The gene-level reviews are now complete for the
+human core on this page; the remaining work is to turn those reviewed functions
+into a compact RQC module and reconcile them with existing GO-CAM pathway models.
 
 ## Model Species
 
 **Primary: Homo sapiens (human)**
-- Best characterized in human/mammalian systems
+- Best characterized in human and mammalian systems
 - Links to neurodegenerative disease (ALS, etc.)
 
 ## Core Pathway Architecture
@@ -69,7 +74,7 @@ Targets problematic mRNAs:
 - **VCP/p97** - Extracts ubiquitinated substrates
 - **Proteasome** - Degrades aberrant proteins
 
-## Candidate Genes (~15)
+## Candidate Genes
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -79,7 +84,7 @@ Targets problematic mRNAs:
 | PELO | Q9BRX2 | Ribosome rescue |
 | HBS1L | Q9Y450 | GTPase for splitting |
 | ABCE1 | P61221 | Ribosome splitting ATPase |
-| NEMF | O00762 | RQC complex |
+| NEMF | O60524 | RQC complex |
 | LTN1 | O94822 | E3 ubiquitin ligase |
 | TCF25 | Q9BQ70 | RQC complex |
 | ANKZF1 | Q9H8Y5 | Peptide release |
@@ -87,7 +92,7 @@ Targets problematic mRNAs:
 | ASCC2 | Q9H1I8 | ASCC complex |
 | VCP | P55072 | AAA+ ATPase |
 
-## Key Recent Discoveries (2020+)
+## Key Mechanistic Themes
 
 - EDF1 as collision sensor (2020)
 - ASCC complex structure and function
@@ -102,4 +107,10 @@ Targets problematic mRNAs:
 
 ## Project Status
 
-- [ ] Stub - needs gene folder setup
+- [x] Review all 13 candidate genes listed here
+- [ ] Build an RQC module spanning ZNF598/EDF1 collision sensing,
+  PELO-HBS1L-ABCE1 splitting and NEMF-LTN1 nascent-chain handling
+  ([#3952](https://github.com/ai4curation/ai-gene-review/issues/3952))
+- [ ] Cross-check the six production GO-CAMs that already model parts of the
+  pathway against the curated gene reviews
+  ([#3952](https://github.com/ai4curation/ai-gene-review/issues/3952))
