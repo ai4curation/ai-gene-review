@@ -50,8 +50,9 @@
   IntAct rows are generic `protein binding` assertions to TPK1/TPK2/TPK3 or to
   the prolyl isomerase ESS1; only the catalytic-subunit interactors can be
   narrowed to `GO:0034236 protein kinase A catalytic subunit binding`.
-- Flagged PMID:16683188 as an unrelated mammalian Siva/PMP22 paper that cannot
-  support the `BCY1` identical-protein-binding row.
+- Left the PMID:16683188 `BCY1` identical-protein-binding row undecided: the
+  abstract-only cache foregrounds a human Siva/PMP22 interaction, and the
+  IntAct-specific evidence for Bcy1 self-interaction cannot be verified locally.
 
 ### Curation decisions
 
@@ -76,6 +77,6 @@
   paper used `bcy1` deletion only to bypass the essential Ras-cAMP branch in a
   `ras1 ras2` background; Ras proteins, not Bcy1, are the actors that recruit
   Lte1 to the bud cortex.
-- Removed the PMID:16683188 Bcy1 self-interaction row as a wrong-identifier
-  citation; kept the two yeast high-throughput self-interaction rows as
-  non-core support for regulatory-subunit dimerization.
+- Left the PMID:16683188 Bcy1 self-interaction row undecided because only an
+  abstract was cached; kept the two yeast high-throughput self-interaction rows
+  as non-core support for regulatory-subunit dimerization.
