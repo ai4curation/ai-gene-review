@@ -71,7 +71,7 @@ paralog-aware activity and complex checks.
 - [ ] `yeast/SAS2` - SAS-I catalytic subunit
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
-- [ ] `SCHPO/mst2` - fission yeast MYST acetyltransferase
+- [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
 - [ ] CGD MYST-family member
 - [ ] `NEUCR` MYST-family member
 
@@ -192,3 +192,9 @@ stress-activated MAPK-cascade assertions.
   yeast HOG cascade. The oxidative-stress IBA is valid but secondary for
   budding yeast, so it remains non-core while the ancestral node itself is
   recorded as `NO_FAILURE_NON_CORE`.
+- Drafted `SCHPO/mst2` in `PTHR10615`. The broad `PTN004172926` MYST-family
+  IBAs are appropriate for Mst2, while the fungal `PTN008308138`
+  NuA3a-complex IBA is too exact for the related fission-yeast Mst2 complex and
+  was redirected to `GO:0036410`. The direct Mst2 heterochromatin rows were
+  aligned with the negative-regulation model supported by the 2011, 2015, 2024,
+  and 2026 fission-yeast papers.
