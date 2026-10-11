@@ -183,11 +183,13 @@ Research compiled through systematic literature search focusing on RBFOX3/NeuN f
 
 ## Bioinformatics Report Audit 2026-10-10
 
-- Left `RBFOX3-bioinformatics/RESULTS.md` uncited because it is a superseded
-  first-pass motif report.
-- The curated review cites
-  `RBFOX3-bioinformatics/rbfox3_analysis/RESULTS.md`; use that nested report as
-  the maintained evidence surface for RBFOX3 RRM, family-comparison, and
-  UGCAUG-recognition support.
+- Left `RBFOX3-bioinformatics/RESULTS.md` uncited because it is part of a
+  superseded first-pass motif artifact set.
+- The cited nested report
+  `RBFOX3-bioinformatics/rbfox3_analysis/RESULTS.md` was audited: an ungapped
+  RBFOX1/2 family-identity artifact, an RNP1 misassignment to RQMFGQF, and
+  overstatement of by-similarity UniProt RNA-interaction sites were removed
+  before its remaining sequence/RRM/UGCAUG statements were used in
+  `RBFOX3-ai-review.yaml`.
 
-*Last updated: August 2025*
+*Last updated: October 2026*
