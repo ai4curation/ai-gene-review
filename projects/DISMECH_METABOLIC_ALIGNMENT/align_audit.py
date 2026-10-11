@@ -221,8 +221,38 @@ def _annoton_accessions(an):
     return _participant_accessions(an.get("participant") or {})
 
 
-# modules: accession -> {module name -> GO terms of that gene's annotons in that module}
+def _walk_annotons(obj):
+    """Every annoton anywhere in a module, however deeply nested.
+
+    A node may hold `annotons`, nested `parts`, or `variant_sets` whose variants hold
+    their own annotons (FBP1 is reached only through a variant set, and the glucose
+    release step only through nested parts). Walking just `parts[].node.annotons` would
+    silently drop those genes and report them as belonging to no module.
+    """
+    if isinstance(obj, dict):
+        for an in obj.get("annotons") or []:
+            if isinstance(an, dict):
+                yield an
+        for key in ("parts", "variant_sets", "variants", "nodes"):
+            for sub in obj.get(key) or []:
+                yield from _walk_annotons(sub)
+        node = obj.get("node")
+        if isinstance(node, dict):
+            yield from _walk_annotons(node)
+    elif isinstance(obj, list):
+        for sub in obj:
+            yield from _walk_annotons(sub)
+
+
+# accession -> set of module names it is a part of, and module name -> all its GO terms.
+# Coverage is judged against the module's whole term set rather than against the gene's
+# own annoton: asking whether this module is about the aligned function is the useful
+# question, and the narrower test produced false positives wherever a module asserts a
+# subunit's role with a different term from the one the dismech node used (MT-ND1 as
+# ubiquinone binding, NDUFS7 as NADH dehydrogenase activity, against complex I nodes
+# bound to NADH:ubiquinone oxidoreductase activity and 4Fe-4S cluster binding).
 mod_by_acc = {}
+mod_terms = {}
 for p in glob.glob(f"{AG}/modules/*.yaml"):
     mname = os.path.basename(p)[:-5]
     try:
@@ -230,12 +260,13 @@ for p in glob.glob(f"{AG}/modules/*.yaml"):
     except Exception:
         continue
     mod = md.get("module") or {}
-    for part in mod.get("parts") or []:
-        node = part.get("node") or {}
-        for an in node.get("annotons") or []:
-            terms = _annoton_terms(an)
-            for acc in _annoton_accessions(an):
-                mod_by_acc.setdefault(acc, {}).setdefault(mname, set()).update(terms)
+    terms, accs = set(), set()
+    for an in _walk_annotons(mod):
+        terms |= _annoton_terms(an)
+        accs |= _annoton_accessions(an)
+    mod_terms[mname] = terms
+    for acc in accs:
+        mod_by_acc.setdefault(acc, set()).add(mname)
 
 hgnc_sym = {}
 for line in open(f"{DM}/cache/hgnc/terms.csv"):
@@ -335,8 +366,7 @@ for name in SCOPE:
                     else:
                         flags.append("NO_GO_ALIGNMENT")
                 g["dismech_only"] = sorted(dm - set(aligned))
-            mods_terms = mod_by_acc.get(a["uniprot"], {})
-            mods = sorted(mods_terms)
+            mods = sorted(mod_by_acc.get(a["uniprot"], ()))
             g["modules"] = mods
             if not mods:
                 flags.append("NO_MODULE_MEMBERSHIP")
@@ -344,7 +374,7 @@ for name in SCOPE:
                 # Membership is not coverage: the gene may be in a module about a
                 # different one of its functions than the one this row aligned on.
                 covering = sorted(m for m in mods if any(
-                    related(t, mt) for t in g["aligned_terms"] for mt in mods_terms[m]))
+                    related(t, mt) for t in g["aligned_terms"] for mt in mod_terms.get(m, ())))
                 g["covering_modules"] = covering
                 if not covering:
                     flags.append("MODULE_NOT_COVERING")
