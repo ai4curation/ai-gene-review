@@ -20,6 +20,12 @@
   Aspergillus SF34/SF39 exgB/exgD-like members in the local PAINT cache. Exg1's
   small-substrate preference and inhibition by high laminaran concentrations
   make that node a poor fit for yeast EXG1's in vivo role.
+- Kept all broad carbohydrate, polysaccharide, and glucan process rows aligned
+  on `GO:0070879` rather than `GO:0051275 beta-glucan catabolic process`.
+  `GO:0051275` is a child of `GO:0009251 glucan catabolic process`, so
+  proposing it while marking the parent over-annotated would contradict the
+  conclusion that Exg1 is better represented as a wall beta-glucan-remodeling
+  enzyme than as a bulk glucan catabolism factor.
 - The direct recombinant-enzyme paper, PMID:11471729, is abstract-only in the
   cache and supports exo-beta-1,3-glucanase activity plus a broad in vitro
   substrate profile. It confirms beta-glucosidase activity on small
