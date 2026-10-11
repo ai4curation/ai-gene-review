@@ -81,7 +81,7 @@ How a carotenoid term spread to every stilbene cleaver in the family
 
 ![h:440](cao1-review-table.jpg)
 
-<span class="small">From the cao-1 review: a *hydroxystilbene / stilbene α,β-dioxygenase activity* term as parent of GO:7770086 and GO:0050054, to carry the family-level annotation.</span>
+<span class="small">From the cao-1 review: a *hydroxystilbene α,β-dioxygenase activity* grouping term as parent of GO:7770086 and GO:0050054, to carry the family-level annotation.</span>
 
 ---
 
