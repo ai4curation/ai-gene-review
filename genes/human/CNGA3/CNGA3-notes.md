@@ -39,3 +39,11 @@ The current official pure is_a closure places phototransduction under signal tra
 ### Follow-up validation disposition
 
 Normal validation, status dry-run and rendering pass. The two advisories retain the campaign-supported non-core protein-binding assertion and the source-specific visual-perception uncertainty for 10958649 alongside independently supported visual-perception assertions. Neither advisory warrants erasing the assay or source distinction. The calculated DRAFT status is unchanged. The complete original notes remain an exact prefix; no prior history is rewritten.
+
+## Reconciliation of visual perception and phototransduction
+
+The preceding follow-up's replacement of visual perception in the core list is superseded. Fresh official QuickGO ancestor and descendant queries using both is_a and part_of establish that GO:0007601 and GO:0007602 are not in either subsumption direction. CNGA3 performs the cGMP-controlled channel step and contributes directly to cone vision; the clinical mutation cohorts and cone-response measurements support the retained visual-perception assertions. Both supported processes now appear in the core, alongside cation transport. No new annotation or change to the three accepted visual-perception rows is needed. [PMID:11536077; PMID:15712225; PMID:9662398; PMID:34969976]
+
+The complex-membership anchor now uses the abstract's positive functional-heteromer result instead of a short fragment from the mutant's negative assembly-disruption comparison. The S435F mutant context remains explicit, with wild-type assembly supported by the original Results already inspected. The DOI https://doi.org/10.1074/jbc.M305102200 provides a stable identifier alongside the documented author-uploaded access route. [PMID:12815043]
+
+The core description now states the biological heteromer/homomer distinction without qualifier-preservation bookkeeping. Original source qualifiers and products remain unchanged. Completion will be recorded only after a qualifying merge.
