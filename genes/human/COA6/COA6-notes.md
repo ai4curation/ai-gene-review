@@ -1,43 +1,23 @@
-> Historical note provenance: the inherited entries below are retained with source quotations compressed to cited paraphrases. The current assessment appended below supersedes their universal copper-negative statement, generic-binding exclusions, nonspecific-RNA dismissal, exact twin-CX9C wording and unqualified product claims. The original notes and review are preserved in the immutable intake baseline; no history record was rewritten.
+> Note correction provenance: this version explicitly corrects the outdated conclusions in the inherited sections below. The complete previously published notes (SHA-256 92656c345c721f9d337cb8d6daec3e8118af8b4b06d92c2595a5e132a32ae140) and the earlier original notes are preserved in the immutable review packet. Corrections are itemized at the end; no old history record is rewritten. Earlier quotations remain faithful cited paraphrases where restoring them would exceed the per-source quotation budget.
 
 # COA6 (Q5JTJ3) review notes
 
 Human COA6 (C1orf31), HGNC:18025. 125 aa, ~14 kDa. Chromosome 1.
-Belongs to the cytochrome c oxidase subunit 6B family (twin CX9C / CHCH-domain
-IMS protein). MANE isoform is Q5JTJ3-2 per UniProt; 3 alternative products.
+COA6 has a CHCH fold with a noncanonical C-X9-C-Xn-C-X10-C motif; it is an assembly factor rather than a structural COX6B subunit. The three preserved products have lengths 125, 155 and 79 residues. Product identity does not establish equivalent functional testing.
 
 ## Function summary
 
-COA6 is a small mitochondrial intermembrane-space (IMS) / inner-membrane-associated
-assembly factor for respiratory chain complex IV (cytochrome c oxidase, CcO). Its
-core role is in copper delivery to and maturation of the mtDNA-encoded subunit
-MT-CO2/COX2, specifically metallation of the binuclear CuA center.
+COA6 is a small mitochondrial intermembrane-space protein whose disulfide-reductase activity supports MT-CO2/COX2 copper-site maturation and respiratory complex-IV assembly. Recombinant human isoform 3 reduces SCO1, SCO2 and COX2; cellular SCO1/SCO2 responses differ with the experimental system [PMID:31851937; PMID:32061935].
 
-- COA6 is required for complex IV biogenesis in yeast, zebrafish and human cells
-  [PMID:24549041]. Its loss causes accumulation of CcO assembly
-  intermediates and destabilization of newly synthesized COX2
-  [PMID:26160915].
-- The original model places COA6 in the pathway that builds the COX2 copper site,
-  based on its requirement for COX2 production and its temporary association with
-  the emerging subunit
-  [PMID:25959673].
-- Structural + biochemical work shows COA6 adopts a CHCH fold typical of IMS redox
-  proteins and acts as a thiol-disulfide oxidoreductase toward its clients SCO1 and
-  COX2, reducing the copper-coordinating disulfides to allow copper binding; notably
-  COA6 itself is NOT a copper-binding protein under physiological conditions
-  [PMID:31851937].
-  This qualifies the earlier IDA copper_ion_binding annotation (PMID:26160915 reported
-  COA6 binds copper in the experimental preparation), which the later structural study
-  reinterprets as non-physiological.
+The 2015 authors explicitly concluded that COA6 belongs to the “mitochondrial copper relay system” [PMID:25959673, abstract; https://doi.org/10.1016/j.cmet.2015.04.012]. Their positive COA6/SCO2/COX2 assembly evidence is retained. This is the authors' conclusion, not a claim that isolated human COA6 was shown to transfer copper autonomously.
+
+Human copper-binding capacity is positive [PMID:26160915; PMID:31515291]. The yeast mitochondrial-fraction experiment in PMID:31851937 does not establish a universal human copper-negative result; that study also detects binding after recombinant human protein reconstitution. The physiological carrier model remains unresolved. The former blanket negative in this section is withdrawn, without discarding either experimental result.
 
 ## Localization
 
-Mitochondrion intermembrane space (UniProt SUBCELLULAR LOCATION,
-ECO:0000269|PubMed:25339201, PubMed:25959673). Imported via the MIA pathway
-using its twin-CX9C motif [PMID:24549041].
-CC terms: GO:0005758 mitochondrial intermembrane space (IDA/EXP); GO:0005739
-mitochondrion (IBA/IEA/IDA/HTP/ISS). Functionally it works at the inner-membrane
-face where CcO assembles (GO:0005743 inner membrane / GO:0045277 complex IV).
+Human mitochondrial fractionation and protease-accessibility evidence supports soluble intermembrane-space localization [PMID:25959673; PMID:25339201 Supplement Figure S1 legend]. Association with COX2 assembly factors occurs near the inner membrane; it does not make COA6 an integral membrane or stable mature-complex-IV subunit.
+
+PMID:24549041 discusses yeast Coa6 import through the MIA pathway, citing prior work, and shows that cysteine-motif substitutions can affect import or stability. This is retained as the source-specific import context, not recast as a direct human import assay or an import-catalyst function of COA6. The exact twin-CX9C wording is replaced by the noncanonical motif above.
 
 ## Interactions (all IPI GO:0005515 in GOA)
 
@@ -45,13 +25,9 @@ face where CcO assembles (GO:0005743 inner membrane / GO:0045277 complex IV).
 - SCO2 (O43819) + MT-CO2/COX2 (P00403), PMID:25959673 — copper relay partners/client
 - COX20 (Q5RI15), PMID:28330871 and PMID:29154948 — COX2 maturation module chaperone
 - COX16 (Q9P0S2), PMID:29381136 — COX2 metallation/assembly
-- TTC19 (Q6DKK2), DTX2 (Q86UW9), CABP2 (Q9NPB3), PMID:32296183 — HuRI binary
-  interactome hits; biologically non-obvious, likely high-throughput false/indirect;
-  treat as protein-binding over-annotation.
+- TTC19 (Q6DKK2), DTX2 (Q86UW9), CABP2 (Q9NPB3), PMID:32296183 — positive HuRI binary interactions. Each has three literal records, including validated two-hybrid evidence; the TTC19 record specifies residues 108–380. The earlier unsupported false/indirect characterization is withdrawn.
 
-Interactions with SCO1/SCO2/COX2/COX20/COX16 are all within the COX2 copper-delivery
-module and support the assembly-factor MF/BP rather than being informative "protein
-binding" annotations in their own right.
+Supported generic interactions are retained as non-core under the campaign policy. DTX2's verified E3 class supports ubiquitin-protein-ligase binding; TTC19 and CABP2 do not acquire that class merely because their record counts match. COX20's nascent-COX2 stabilization role supports protein-folding-chaperone binding. COX16's recruitment/module-merger function supports assembly association without establishing that chaperone class. These are assay-scoped classifications, not claims of native contact or downstream COA6 signaling.
 
 ## Disease
 
@@ -59,9 +35,7 @@ Mitochondrial complex IV deficiency, nuclear type 13 (MC4DN13, MIM:616501):
 autosomal recessive fatal infantile hypertrophic cardiomyopathy, left-ventricular
 non-compaction, lactic acidosis, complex IV deficiency
 [PMID:25339201].
-Pathogenic variant W59C mistargets COA6 to the matrix and abolishes SCO2/MT-CO2
-binding (UniProt VARIANT). Copper supplementation partially rescues the CcO defect
-[PMID:24549041; PMID:25339201].
+The W59C variant is associated with mistargeting and disturbed assembly-factor association. Copper rescue in PMID:24549041 is a yeast result; it is not presented as established treatment of affected children. Product and assay boundaries remain explicit in the current assessment below.
 
 ## Schema notes
 
@@ -70,22 +44,14 @@ binding (UniProt VARIANT). Copper supplementation partially rescues the CcO defe
 - suggested_experiments is a list of Experiment objects (key: description, optional
   hypothesis/experiment_type).
 
-## Annotation-specific judgments
+## Current annotation judgments
 
-- GO:0015035 protein-disulfide reductase activity — IDA (PMID:31851937) is the
-  experimentally grounded MF; ACCEPT (core). The IBA duplicate ACCEPT.
-- GO:0005507 copper ion binding — IDA (PMID:26160915) captures in vitro Cu-binding
-  capacity but PMID:31851937 shows COA6 is not a physiological Cu-binding protein;
-  MARK_AS_OVER_ANNOTATED (do not REMOVE experimental IDA).
-- GO:0033617 / GO:0008535 (complex IV assembly, mito and generic) — ACCEPT; core BP.
-  GO:0008535 is the less-specific parent of GO:0033617; keep as-is (GOA), core = 0033617.
-- GO:0005515 protein binding (multiple IPI) — MARK_AS_OVER_ANNOTATED per curation
-  policy (uninformative bare protein binding); the informative content is captured
-  by the assembly-factor MF/BP and the specific partners are noted above.
-- GO:0003723 RNA binding — HDA from a global mRNA-interactome capture (PMID:22658674);
-  no evidence COA6 is a bona fide RNA-binding protein; MARK_AS_OVER_ANNOTATED.
-- GO:0005739 mitochondrion (IBA/IEA/IDA/HTP/ISS) — ACCEPT (broad but correct); the
-  more specific GO:0005758 IMS is the informative CC.
+- Protein-disulfide reductase activity is the integrated molecular core; its direct human activity evidence and inherited annotation are retained.
+- Copper ion binding is retained as non-core measured capacity, with physiological carriage unresolved.
+- General complex-IV assembly terms are refined to mitochondrial complex-IV assembly without altering original term IDs.
+- Positive generic protein interactions remain non-core unless a verified partner class supports refinement. They are not marked over-annotated solely because the label is broad.
+- The RNA-capture observation remains non-core at its measured contact scope; no RNA-processing function is proposed. The earlier categorical dismissal is withdrawn.
+- Broad mitochondrial annotations are preserved or refined according to source and product scope, with IMS localization supported independently.
 
 ## Current source-grounded assessment — 2026-10-11
 
@@ -106,3 +72,17 @@ All three official alternative products are preserved. Deterministic reconstruct
 Access was checked source by source. Existing main publication caches remain exact. Separate genuine full variants provide the missing Results/Methods for PMID:24549041 and PMID:28330871. PMID:25959673 was read from its authentic repository-hosted publisher article and supplement; PMID:26160915 remains abstract-only. The two new genuine full caches are PMID:31515291 and PMID:32061935. Short literal anchors appear only in the YAML; the source index contains records, URLs, hashes and paraphrases, not duplicate quotations.
 
 The genuine default Falcon attempt timed out, and the recorded fallback returned an insufficient-quota error. No provider report was fabricated. This manual assessment and the original primary evidence underpin the review. The GO-CAM index has no target match; this absence does not justify a new process assertion.
+
+## PR #4857 follow-up — source and policy dispositions
+
+The supported-binding rule comes from the ClinGen campaign's explicit project/user override, reproduced in the current project policy at [CLINGEN_MENDELIAN.md](../../../projects/CLINGEN_MENDELIAN.md). It supersedes the generic instruction to remove uninformative protein binding. This does not waive evidence review: the nine HuRI records, mapped sequences and official partner classes were checked again. Comparable assay counts do not require identical partner-class terms.
+
+The review intentionally retains 32 historical-plus-current assertions covering 30 current GOA rows. Historical aggregates 6 and 24 overlap current partner rows 29–31 and 27–28 respectively. Their supporting entities are not silently rewritten; these rows preserve source history and must not be counted as independent experimental replication.
+
+The superseded early note statements have now been corrected in place, with exact old/new text retained in the follow-up provenance: COX6B-family wording, universal copper negation, exact motif and import scope, HuRI false/indirect language, blanket binding/RNA overannotation, and unqualified copper-rescue wording. The prior current-assessment section remains intact. The original authors' copper-relay conclusion is stated explicitly above with one short verbatim anchor; larger inherited quotations are not restored. Public DOI/repository and source-index locators keep the evidence checkable without duplicating quotations.
+
+PAINT comments now identify the actual reductase, assembly and mitochondrial-location premises separately. Current experimental grounding on the target is not circular evidence, while the historical ancestral node remains unresolved. No source objects, products, core terms or old history records change. The publication history for this amendment will be created by ROOT and can link PR #4857; existing records with an empty PR list remain append-only.
+
+### Validation disposition
+
+Ordinary validation, derived-status check and rendering passed on the finite candidate with nine advisories: eight positive generic-binding NC decisions retained under the explicit campaign override, plus the source-specific broad mitochondrial ACCEPT/IMS-refinement difference. The derived status is unchanged. These are reviewed scientific dispositions, not bypassed checks. No new cache, source object or history edit is included in this owner packet.
