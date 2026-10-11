@@ -64,3 +64,21 @@ Checked against the cached full texts:
   men. ClinVar has it twice: VCV 3899932 and VCV 5006672.
 - PMID:34791246 genotype from OMIM's ClinVar records: p.Pro1389Leu /
   p.Ser2178Ter (NM_001366028); VCV 3899930 and 3899931.
+
+## Ortholog, family and missing IBAs (checked 2026-10-11)
+- Mouse ortholog: Dnah12, MGI:107720, UniProt Q3V0Q1, 3086 aa.
+- Human DNAH12 has no IBA (QuickGO: 12 annotations, none IBA, none NOT).
+  Mouse Dnah12 has 8 IBAs from three PAINT nodes: PTN000743491 (motor
+  activity, intermediate chain and light intermediate chain binding, cilium
+  movement, 9+2 motile cilium), PTN008951089 (inner dynein arm assembly,
+  sperm flagellum assembly) and PTN008503981 (inner dynein arm).
+- Cause: the PANTHER 19 API classifies the orthologs into different families.
+  Human Q6ZR08 is PTHR46532:SF11 ("male fertility factor kl5"; 34 leaves,
+  and DNAH12 is its only human or mouse member). Mouse Q3V0Q1 is
+  PTHR10676:SF255 ("dynein heavy chain family protein"), whose tree contains
+  PTN000743491 and PTN008951089. Checked with the PANTHER treeinfo and
+  geneinfo services.
+- A third assignment exists: the InterPro/UniProt PANTHER cross-references
+  put both in PTHR22878:SF70 (named "DYNEIN HEAVY CHAIN 2, AXONEMAL").
+- Human DNAH12 is listed in projects/paint/human-no-IBA.tsv under
+  PTHR46532.
