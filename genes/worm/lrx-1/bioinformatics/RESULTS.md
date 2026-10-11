@@ -46,7 +46,7 @@ Initial bioinformatics analysis of the C. elegans LRX-1 protein suggests it may 
 - [ ] Full pipeline not implemented here
 
 ### Data Integrity
-- [x] UniProt entry Q95Y86 analyzed
+- [x] UniProt entry Q22179 analyzed
 - [x] Sequence features examined
 - [x] External predictions obtained
 - [ ] Comprehensive validation pending
@@ -78,7 +78,6 @@ Initial bioinformatics analysis of the C. elegans LRX-1 protein suggests it may 
 
 ## Files in This Directory
 
-- `ANALYSIS_RESULTS.md`: Original preliminary findings (deprecated)
 - `RESULTS.md`: This file with updated summary and checklist
 
 ---
