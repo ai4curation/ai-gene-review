@@ -24,3 +24,7 @@
 - Added a local `NEW` row for the current `PTN002175570` `GO:0044183 protein
   folding chaperone` assertion because the local GOA snapshot still has only a
   no-data molecular-function placeholder.
+- Left both CGD flocculation rows undecided. The cached PMID:16079341 abstract
+  supports CHS7-dependent chitin, septation, filamentation, and colony
+  morphology phenotypes, but it does not expose the flocculation assay or
+  reconcile the same-paper `GO:0000128` and `GO:0060257` directionality.
