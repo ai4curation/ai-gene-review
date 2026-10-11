@@ -1,5 +1,15 @@
 # MTC7 Bioinformatics Analysis Results
 
+## Audit Note
+
+This report is retained as a stale topology artifact, not as curated biological
+evidence for `MTC7-ai-review.yaml`. Its two-transmembrane-helix prediction
+agrees with the cached UniProt feature table and informed the 2026-09-28 review,
+but the proposed C-terminal NLS, palmitoylation, membrane-nuclear shuttling, and
+telomere mechanisms are computational hypotheses. They were deliberately not
+propagated to GO annotations after the MTC7 literature review found no direct
+molecular function or telomere-capping evidence.
+
 ## Executive Summary
 
 Comprehensive bioinformatics analysis of the yeast MTC7 protein (Maintenance of telomere capping protein 7) reveals a small membrane protein with two transmembrane helices and a highly charged C-terminal domain. The protein shows characteristic features of a membrane-anchored protein with potential nuclear/membrane localization signals.
