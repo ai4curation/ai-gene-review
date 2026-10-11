@@ -23,10 +23,12 @@ list are in [DISMECH_METABOLIC_ALIGNMENT/](DISMECH_METABOLIC_ALIGNMENT/).
 
 Flags: `UNTYPED`/`NO_ORIGIN` (genetic record lacks relationship type / variant origin),
 `NO_GO_ON_GENE_NODES` (no node naming the gene carries a GO term), `NO_AIGR_REVIEW`,
-`AIGR_NOT_COMPLETE`, `NO_GO_ALIGNMENT` (no node term matches a core function), `NO_MODULE`.
+`AIGR_NOT_COMPLETE`, `NO_GO_ALIGNMENT` (no node term matches a core function or any annotation
+the review keeps), `ALIGNED_NONCORE` (node terms match only annotations the review keeps as
+non-core; informational, not a defect), `NO_MODULE`.
 
 **Summary.** 116 entries; 161 principal gene rows (causative and untyped);
-151 have no flag other than `NO_MODULE`. Flag counts on principal rows: `NO_AIGR_REVIEW` 10, `NO_MODULE` 16.
+151 have no flag other than `NO_MODULE` or `ALIGNED_NONCORE`. Flag counts on principal rows: `NO_AIGR_REVIEW` 10, `NO_MODULE` 16.
 
 Polygenic entries (Type I diabetes, the MELAS mt-tRNA genes) and modifier/susceptibility genes are
 listed but were not required to align: their genes are risk loci or mtDNA tRNAs, not the
@@ -93,7 +95,7 @@ normal-function owners of a single pathway step.
 | Hyperinsulinemic_Hypoglycemia | HNF4A | CAUSATIVE | COMPLETE | GO:0001228 | - | NO_MODULE |
 | Hyperinsulinemic_Hypoglycemia | HNF1A | CAUSATIVE | COMPLETE | GO:0001228 | - | NO_MODULE |
 | Hyperinsulinemic_Hypoglycemia | SLC16A1 | CAUSATIVE | COMPLETE | GO:0015650 | - | NO_MODULE |
-| Hyperinsulinemic_Hypoglycemia | UCP2 | DISPUTED | COMPLETE | - | - | NO_GO_ALIGNMENT, NO_MODULE |
+| Hyperinsulinemic_Hypoglycemia | UCP2 | DISPUTED | COMPLETE | - | - | ALIGNED_NONCORE, NO_MODULE |
 | Hyperinsulinemic_Hypoglycemia | HK1 | CAUSATIVE | COMPLETE | GO:0004340 | glycolysis_investment_phase | ok |
 | Hyperphosphatemic_Familial_Tumoral_Calcinosis | GALNT3 | CAUSATIVE | COMPLETE | GO:0004653 | fgf23_klotho_phosphate_homeostasis | ok |
 | Hyperphosphatemic_Familial_Tumoral_Calcinosis | FGF23 | CAUSATIVE | COMPLETE | GO:0005179 | fgf23_klotho_phosphate_homeostasis fgfr_signaling | ok |
@@ -232,8 +234,8 @@ normal-function owners of a single pathway step.
   others) encode no protein, so they have no UniProt entry and cannot be reviewed in
   ai-gene-review; they are the only rows still flagged `NO_AIGR_REVIEW`.
 - **UCP2** (DISPUTED): dismech binds regulation of insulin secretion (GO:0050796), which
-  is the parent of a UCP2 annotation the review keeps as non-core (GO:0061179). The
-  audit compares against core functions only. dismech deliberately binds no UCP2
+  is the parent of a UCP2 annotation the review keeps as non-core (GO:0061179), so the row
+  is `ALIGNED_NONCORE`. dismech deliberately binds no UCP2
   activity, because its causal role in hyperinsulinism and its transported substrate
   are both disputed.
 - **TMEM251** is the dismech/HGNC-build label for the gene now named LYSET; it is matched to

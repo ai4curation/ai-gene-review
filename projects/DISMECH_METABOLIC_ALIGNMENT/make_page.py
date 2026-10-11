@@ -56,17 +56,19 @@ lines = [
     "",
     "Flags: `UNTYPED`/`NO_ORIGIN` (genetic record lacks relationship type / variant origin),",
     "`NO_GO_ON_GENE_NODES` (no node naming the gene carries a GO term), `NO_AIGR_REVIEW`,",
-    "`AIGR_NOT_COMPLETE`, `NO_GO_ALIGNMENT` (no node term matches a core function), `NO_MODULE`.",
+    "`AIGR_NOT_COMPLETE`, `NO_GO_ALIGNMENT` (no node term matches a core function or any annotation",
+    "the review keeps), `ALIGNED_NONCORE` (node terms match only annotations the review keeps as",
+    "non-core; informational, not a defect), `NO_MODULE`.",
     "",
 ]
 from collections import Counter
 principal = lambda g: g.get("relationship") not in ("MODIFIER", "SUSCEPTIBILITY", "DISPUTED", "RISK_FACTOR")
 c = Counter(f for e in rep for g in e.get("genes", []) if principal(g) for f in g["flags"])
 n_rows = sum(1 for e in rep for g in e.get("genes", []) if principal(g))
-n_clean = sum(1 for e in rep for g in e.get("genes", []) if principal(g) and not [f for f in g["flags"] if f != "NO_MODULE"])
+n_clean = sum(1 for e in rep for g in e.get("genes", []) if principal(g) and not [f for f in g["flags"] if f not in ("NO_MODULE", "ALIGNED_NONCORE")])
 lines += [
     f"**Summary.** {len(rep)} entries; {n_rows} principal gene rows (causative and untyped);",
-    f"{n_clean} have no flag other than `NO_MODULE`. Flag counts on principal rows: "
+    f"{n_clean} have no flag other than `NO_MODULE` or `ALIGNED_NONCORE`. Flag counts on principal rows: "
     + ", ".join(f"`{k}` {v}" for k, v in sorted(c.items())) + ".",
     "",
     "Polygenic entries (Type I diabetes, the MELAS mt-tRNA genes) and modifier/susceptibility genes are",
@@ -99,8 +101,8 @@ lines += [
     "  others) encode no protein, so they have no UniProt entry and cannot be reviewed in",
     "  ai-gene-review; they are the only rows still flagged `NO_AIGR_REVIEW`.",
     "- **UCP2** (DISPUTED): dismech binds regulation of insulin secretion (GO:0050796), which",
-    "  is the parent of a UCP2 annotation the review keeps as non-core (GO:0061179). The",
-    "  audit compares against core functions only. dismech deliberately binds no UCP2",
+    "  is the parent of a UCP2 annotation the review keeps as non-core (GO:0061179), so the row",
+    "  is `ALIGNED_NONCORE`. dismech deliberately binds no UCP2",
     "  activity, because its causal role in hyperinsulinism and its transported substrate",
     "  are both disputed.",
     "- **TMEM251** is the dismech/HGNC-build label for the gene now named LYSET; it is matched to",

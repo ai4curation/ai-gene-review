@@ -65,7 +65,15 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
             for x in v:
                 if isinstance(x, dict) and x.get("id"):
                     dest.add(x["id"])
-    aigr[sym] = dict(uniprot=d.get("id"), status=d.get("status"), mf=mf, bp=bp, cc=cc)
+    # Terms the review keeps (ACCEPT or KEEP_AS_NON_CORE, or proposed NEW) but does not
+    # treat as core: used to tell "consistent with a non-core function" from "no match".
+    kept = set()
+    for a in d.get("existing_annotations") or []:
+        act = ((a.get("review") or {}).get("action") or "")
+        tid_ = (a.get("term") or {}).get("id")
+        if tid_ and not a.get("negated") and act in ("ACCEPT", "KEEP_AS_NON_CORE", "NEW"):
+            kept.add(tid_)
+    aigr[sym] = dict(uniprot=d.get("id"), status=d.get("status"), mf=mf, bp=bp, cc=cc, kept=kept)
 
 # modules: accession -> module names
 mod_by_acc = {}
@@ -149,7 +157,12 @@ for name in SCOPE:
                 aligned = sorted(t for t in dm if any(related(t, c) for c in core))
                 g["aligned_terms"] = aligned
                 if not aligned:
-                    flags.append("NO_GO_ALIGNMENT")
+                    noncore = sorted(t for t in dm if any(related(t, k) for k in a["kept"]))
+                    if noncore:
+                        g["aligned_noncore_terms"] = noncore
+                        flags.append("ALIGNED_NONCORE")
+                    else:
+                        flags.append("NO_GO_ALIGNMENT")
                 g["dismech_only"] = sorted(dm - set(aligned))
             mods = sorted(mod_by_acc.get(a["uniprot"], []))
             g["modules"] = mods
