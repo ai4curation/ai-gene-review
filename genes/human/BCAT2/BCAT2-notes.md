@@ -93,6 +93,15 @@ The focused BCAT2 validation passed with eight advisories. Seven concern the sup
 
 This entry supersedes the earlier withdrawal of PLP binding and the citation assignments described above. All 41 source assertions, their identifiers/evidence/qualifiers/partners and both alternative products remain unchanged. The current proposal has 28 ACCEPT, 12 KEEP_AS_NON_CORE, one MODIFY and one NEW. It retains one catalytic core.
 
+## 2026-10-10 - generic binding follow-up
+
+Changed all seven HSPD1/YBEY `GO:0005515` high-throughput protein-binding rows
+from `KEEP_AS_NON_CORE` to `REMOVE`. The interaction records may remain useful
+as evidence, but the generic GO molecular-function assertion is not informative
+and none of the exact screens establishes a BCAT2 catalytic, chaperone-binding or
+transport activity. The core branched-chain-amino-acid transaminase and PLP-binding
+assertions are unchanged.
+
 The Ile/Val-specific judgments now cite the immutable human UniProt reactions (RHEA:24801 and RHEA:24813) and the human Reactome reaction R-HSA-70724. The abstract of the CXXC study supports catalytic mechanism but does not by itself document these substrate-specific assays [PMID:17050531]. The older source reference is preserved where it belongs: its abstract explicitly describes yeast experiments, so no human assay is invented from it [PMID:8702755].
 
 Human BCATm structural evidence supports the specific PLP-binding MF [PMID:11264579]. The active-site cofactor is part of the same catalytic unit; its binding term is a different MF branch and is not rendered redundant simply by having a transaminase term. The restored NEW is anchored to this structural paper, replacing the old proposal's inappropriate reliance on PMID:8702755. No NEW process is proposed.
@@ -106,3 +115,9 @@ The notes remain an append-only record. Earlier processing details and decisions
 ### Focused verification of the evidence follow-up
 
 The applied review retains 41 source assertions and two UniProt products, with one directly supported PLP-binding NEW and one catalytic core. Focused gene validation passed with eight advisories: seven supported generic interactions remain non-core under the supplied ActionEnum, and one advisory concerns not directly citing the unchanged generated research report. The biological evidence is instead tied to primary papers and curated records. HTML rendering passed. No global validation result is claimed. Earlier notes remain historical; this follow-up states the current decisions.
+
+## Summary cleanup - 2026-10-10
+
+The seven HSPD1/YBEY `GO:0005515` rows already had `REMOVE` actions and generic-binding removal reasons.
+Their summaries are now aligned with those actions so the rendered report does not describe the deleted
+protein-binding annotations as retained non-core interactions.

@@ -148,3 +148,7 @@ Both requested publication records are now available. PMID:23572516 is cached as
 The scientific corrections are distinct from the remaining generic-binding policy disagreement. Supported interactions remain non-core under the supplied ActionEnum. This clarification changes no annotation, core function, product, reference, or supporting quotation. It appends to the journal rather than deleting historical paragraphs.
 
 </details>
+
+## 2026-10-09 generic binding cleanup
+
+The remaining 27 GO:0005515 rows that kept source-attributed BBS7 interactions as KEEP_AS_NON_CORE are now marked REMOVE. This supersedes the 2026-09-30 generic-binding policy-disagreement note: the exact BBSome, BBS-chaperonin and external partner associations remain recorded in row summaries, reasons and supporting_entities, but the bare protein-binding molecular-function term is not retained. The direct PMID:22500027 BBS2 heterodimer row remains MODIFY to GO:0046982 because that source and PMID:31530639 support a specific heterodimerization replacement.

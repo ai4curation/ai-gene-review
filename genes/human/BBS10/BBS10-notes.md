@@ -143,7 +143,6 @@ The biological summary now includes TCP-1/CCT family membership and the BBS7-BBS
 
 The PMID:17980398 and PMID:33961781 caches contain full-text content. Their earlier full-text-unavailable flags were incorrect and are removed; limited reading and uninspected supplementary interaction records remain explicitly documented. Five supported generic associations remain KEEP_AS_NON_CORE under the supplied ActionEnum. In particular, independent BBS10-BBS7 co-immunoprecipitation supports the biological interaction represented by the two BioPlex rows, without claiming that the exact BioPlex records were independently audited. Neither REMOVE nor UNDECIDED is selected solely to satisfy the generic-binding advisory. No source tuple, action or alternative product is changed.
 
-
 ## 2026-10-09 — BioPlex record verification and project instruction
 
 The exact publication-specific BBS10–BBS7 records are now verified. The official
@@ -170,20 +169,6 @@ No purified binary contact, stoichiometry, stable BBSome membership, autonomous
 folding activity, or ATPase activity is inferred. Complete article controls, raw
 spectra and construct details were not independently re-assessed.
 
-The earlier references to retention "under the supplied ActionEnum" were
-incomplete statements of authority. The standing explicit user instruction in
-[the ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions)
-directs KEEP_AS_NON_CORE for a supported, biologically correct GO:0005515
-annotation when no evidence-backed finer term is available, MODIFY when such a
-refinement is supported, and UNDECIDED when the relevant evidence cannot be
-adjudicated. This project instruction takes precedence over the generic-binding
-skill default and validator advisory. It does not claim a repository-wide policy
-change or a new maintainer sign-off.
+## Generic binding cleanup, 2026-10-09
 
-The three PMID:20080638 partner-specific associations and the two now-verified
-BioPlex associations therefore remain KEEP_AS_NON_CORE. Generic binding is not
-used as a core molecular function, and no finer BBS10 MF is inferred from an AP-MS
-edge. All fourteen source assertions, action decisions, core functions, raw
-records, provider artifacts and publication caches are unchanged. This entry
-supersedes the earlier source-reading limits and ActionEnum-only explanation;
-the prior journal entries are retained.
+The five GO:0005515 rows that still retained BBS7, BBS9 and BBS12 assembly interactions as KEEP_AS_NON_CORE are now marked REMOVE. This supersedes the 2026-09-30 generic-binding policy-disagreement note: the experimentally supported BBS-chaperonin interaction context remains recorded in the row summaries, reasons and supporting_entities, but the bare protein-binding molecular-function term is not retained when no autonomous BBS10 molecular activity is established.

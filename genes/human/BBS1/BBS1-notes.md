@@ -244,6 +244,10 @@ The PMID:23943788 annotation remains accepted with explicit curator deference. I
 
 Repeated policy and audit boilerplate has been replaced by partner- and study-specific biological reasons. Detailed source access and supplementary-pair limits are retained in the corresponding reference reviews. All 37 generic binding rows remain KEEP_AS_NON_CORE under the supplied ActionEnum: the recorded associations are retained, but no additional informative molecular activity is established. No interaction is declared false merely because its label is broad. The exact Q8TAM2 partner in the PMID:24939912 generic interaction row is TTC8/BBS8. Its previous PC1-focused summary conflated the paper’s cargo experiments with the distinct GOA partner; the summary is corrected without changing the source object or action. PMID/DOI and figure-label spacing in authored prose is repaired.
 
+## Generic binding cleanup, 2026-10-09
+
+The 37 GO:0005515 rows that still retained source-attributed interactions as KEEP_AS_NON_CORE are now marked REMOVE. This supersedes the 2026-09-30 generic-binding policy-disagreement note: the BBSome, RAB3IP, PCM1, TTC8/BBS8 and high-throughput partner associations remain recorded in row summaries and supporting_entities, but the bare protein-binding molecular-function term is not retained. The four GO:0005515 rows already refined to LEPR or ARL6 binding were left as MODIFY.
+
 The evidence check counts all quoted text across the proposed YAML and this new notes appendix, including repeated occurrences; each source remains within 25 words. Existing journal entries are preserved as historical text. No source cache, raw GOA, UniProt record or generated research file was changed. This temporary proposal has not been canonically applied or fully validated.
 
 

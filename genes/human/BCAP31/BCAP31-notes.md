@@ -152,6 +152,12 @@ Short verbatim anchors now support the signaling and mitochondrial-localization 
 
 The two historical trafficking IBAs now record `SOURCE_STALE_OR_MISSING` for PANTHER:PTN000294723. This classification means that their respective transferred terms no longer appear on the inspected node. It does not infer the reason for the historical source withdrawal or a target-specific loss of function. No biological failure subtype is assigned. The current BCAP31-seeded translocation-chaperone IBD remains explicitly acknowledged above.
 
+## Generic binding policy cleanup, 2026-10-05 UTC
+
+The remaining eighteen bare GO:0005515 rows are now REMOVE under the codified generic-binding policy. Each original IPI record keeps its source, qualifier, and partner accession; removing the generic term does not assert that the HACD2, HTT, viral SH, BCAP29, TIMMDC1, APP, CFTR, BCL2, combined NDUFS4/BCL2/VDAC1/NDUFB11, SEC61B, TRAM1, DERL1, TOMM40, KLK6, or original CASP8 associations are false.
+
+The three evidence-backed refinements remain MODIFY: CFTR client handling to protein carrier activity, and the FIS1/procaspase-8 signaling-platform rows to signaling adaptor activity. The current action totals across 61 source rows are 18 ACCEPT, 18 KEEP_AS_NON_CORE, 3 MODIFY, 2 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED and 19 REMOVE.
+
 
 ## Second follow-up validation, 2026-10-01 UTC
 
