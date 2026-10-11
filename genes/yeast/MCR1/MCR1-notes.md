@@ -25,12 +25,13 @@
   via the translocase of the outer mitochondrial membrane (TOM) complex, the other form
   is integrated into the outer membrane by a process that does not require any of the
   known import components at the outer membrane"].
-- PMID:10622712 is abstract-only but directly supports the ergosterol-biosynthesis
-  annotation. In purified fungal components, cytochrome b5 plus NADH-cytochrome b5
-  reductase could supply both electrons for sterol 14alpha-demethylation by CYP51:
-  [PMID:10622712, "fungal CYP51 mediated sterol 14alpha-demethylation can be wholly
-  and efficiently supported by the cytochrome b5/NADH cytochrome b5 reductase electron
-  transport system"].
+- PMID:10622712 is abstract-only and supports retention of the
+  ergosterol-biosynthesis annotation, but the abstract frames the CYP51
+  reconstitution as a microsomal cytochrome b5/NADH-cytochrome b5 reductase
+  system rather than distinguishing mitochondrial Mcr1 from the ER-localized
+  paralog Cbr1: [PMID:10622712, "fungal CYP51 mediated sterol
+  14alpha-demethylation can be wholly and efficiently supported by the
+  cytochrome b5/NADH cytochrome b5 reductase electron transport system"].
 - PMID:11420140 is abstract-only and supports the oxidative-stress row through
   D-erythroascorbyl free-radical reduction. The `mcr1` disruptant lost almost all
   NADH-D-erythroascorbyl free-radical reductase activity and became hypersensitive to
@@ -58,9 +59,11 @@
   is expected for an IBA whose node placement is grounded partly in the target's own
   experimental annotation.
 - PAINT places `GO:0006696 ergosterol biosynthetic process` at child node
-  `PANTHER:PTN000452208`, again with `SGD:S000001633` as the seed. The node is
-  narrower than the pan-eukaryotic reductase activity and fits the yeast/fungal CYP51
-  electron-transfer system, so the IBA should be retained.
+  `PANTHER:PTN000452208`, again with `SGD:S000001633` as the seed. This is a
+  valid self-seeded inherited PAINT assertion, but it is kept as non-core
+  because the available CYP51 reconstitution evidence tracks the microsomal
+  cytochrome-b5/NADH-cytochrome-b5-reductase system rather than establishing
+  that mitochondrial Mcr1 feeds ER-localized CYP51 in vivo.
 - The molecular function rows need two layers of specificity: `GO:0016491
   oxidoreductase activity` is true but too broad, while `GO:0090524 cytochrome-b5
   reductase activity, acting on NADH` captures the EC/RHEA direction better than
