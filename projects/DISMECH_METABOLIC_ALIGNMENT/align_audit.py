@@ -256,6 +256,31 @@ def _walk_annotons(obj):
 # subunit's role with a different term from the one the dismech node used (MT-ND1 as
 # ubiquinone binding, NDUFS7 as NADH dehydrogenase activity, against complex I nodes
 # bound to NADH:ubiquinone oxidoreductase activity and 4Fe-4S cluster binding).
+def _concept_terms(obj):
+    """GO terms declared as `concepts` anywhere in a module.
+
+    A module states its scope as process-level concepts, at module level and on each
+    node, while its annotons carry the molecular functions of individual parts. Reading
+    annotons alone therefore misses what the module is *about*: peroxisome-lifecycle's
+    annotons carry PTS-binding, ubiquitin-ligase and ATPase activities, and only its
+    concepts carry peroxisome organization and protein import into the peroxisome
+    matrix, which are the terms the dismech PEX nodes use.
+    """
+    out = set()
+    if isinstance(obj, dict):
+        for c in obj.get("concepts") or []:
+            if isinstance(c, dict):
+                out.add((c.get("term") or {}).get("id"))
+        for v in obj.values():
+            if isinstance(v, (dict, list)):
+                out |= _concept_terms(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            out |= _concept_terms(v)
+    out.discard(None)
+    return {t for t in out if str(t).startswith("GO:")}
+
+
 mod_by_acc = {}
 mod_terms = {}
 for p in glob.glob(f"{AG}/modules/*.yaml"):
@@ -265,7 +290,7 @@ for p in glob.glob(f"{AG}/modules/*.yaml"):
     except Exception:
         continue
     mod = md.get("module") or {}
-    terms, accs = set(), set()
+    terms, accs = _concept_terms(mod), set()
     for an in _walk_annotons(mod):
         terms |= _annoton_terms(an)
         accs |= _annoton_accessions(an)

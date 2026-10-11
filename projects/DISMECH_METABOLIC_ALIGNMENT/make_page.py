@@ -37,6 +37,9 @@ MODULE_REASONS = {
     "MT-TL1 / MT-TQ / MT-TH / MT-TK / MT-TC / MT-TS1 / MT-TS2 / MT-TV / MT-TW / MT-TM": "No mitochondrial translation module exists; in mitochondrial_trna_charging_and_initiator_formylation a tRNA would appear only as a synthetase substrate, which the substrate guidance excludes, and module parts are UniProt proteins.",
     "UCP2": "Causal role disputed (relationship DISPUTED); its transported substrate is itself contested.",
     "AIFM1": "The aligned function is the mitochondrial disulfide relay (CHCHD4 anchoring); no module covers the relay. AIFM1 is a part of apoptotic_execution_phase, whose AIFM1 annoton carries DNA binding, nucleus and positive regulation of apoptotic process: a different AIFM1 activity, and not the encephalomyopathy mechanism.",
+    "APOB": "The aligned term is GO:0034379 very-low-density lipoprotein particle assembly, and there is no VLDL-assembly module. APOB is a part of chylomicron_assembly_secretion, whose scope is GO:0034378 chylomicron assembly, and of ldl_receptor_mediated_endocytosis, which is about the receptor taking the particle up. GO:0034378 and GO:0034379 are siblings, not one inside the other, so the hepatic VLDL step is genuinely unmodelled. APOB's other row, the LDL-receptor-binding one, is covered.",
+    "NUBPL": "The aligned term is GO:0016226 iron-sulfur cluster assembly. NUBPL is a part of complex_i_assembly_factors, whose scope is GO:0032981 mitochondrial respiratory chain complex I assembly: NUBPL delivers an Fe-S cluster to the assembling complex, and the cluster's own assembly is a different process that no module covers.",
+    "NDUFA1": "A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The dismech node binds the molecular function GO:0008137 NADH dehydrogenase (ubiquinone) activity, while complex_i_accessory_subunits declares its scope as the biological process GO:0006120 mitochondrial electron transport, NADH to ubiquinone. Those are the same chemistry in two GO aspects, and is_a/part_of ancestry does not cross between molecular function and biological process, so no amount of ontology walking will relate them. The module is the right one.",
 }
 MODULE_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
 SOFT = MODULE_FLAGS + ("ALIGNED_NONCORE", "ALIGNED_PROPOSED")
@@ -98,6 +101,14 @@ lines += [
     "  in `apoptotic_execution_phase`, whose AIFM1 annoton carries DNA binding, nucleus and",
     "  positive regulation of apoptotic process, while the aligned function is the mitochondrial",
     "  disulfide relay. No module covers the relay.",
+    "",
+    "Coverage reads the module's declared `concepts`, at module level and per node, as well as its",
+    "annotons' terms: a module states its scope as processes while its annotons carry the molecular",
+    "functions of individual parts, so annotons alone miss what the module is about. One limitation",
+    "survives that and is left visible rather than waived: is_a/part_of ancestry does not cross",
+    "between molecular function and biological process, so a dismech node bound to an activity and",
+    "a module scoped to the corresponding process cannot be related, however plainly they are the",
+    "same chemistry. NDUFA1 is that row.",
     "",
     "Membership is read from the module structure (`parts[].node.annotons[]`, following the",
     "participant whichever selector it uses, including a `FAMILY` participant's",
