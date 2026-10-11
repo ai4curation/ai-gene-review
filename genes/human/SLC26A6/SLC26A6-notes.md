@@ -1,7 +1,8 @@
 # SLC26A6 (Q9BXS9) review notes
 
-Deep research: `just deep-research-falcon human SLC26A6` failed ("All providers failed"); literature reviewed
-manually from PubMed and cached `publications/` files.
+Deep research: a first `just deep-research-falcon human SLC26A6` attempt failed ("All providers failed"),
+so the literature work below was done manually from PubMed and the cached `publications/` files. A later
+falcon run succeeded and is committed as `SLC26A6-deep-research-falcon.md`.
 
 ## Function
 - Apical brush-border anion exchanger (PAT1/CFEX) of intestine, pancreatic duct, proximal tubule
