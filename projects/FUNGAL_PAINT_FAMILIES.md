@@ -92,8 +92,8 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
   to the current `PTN002175570` PAINT assertions before this project
 - [x] `NEUCR/csc-1` - *Neurospora crassa* CSE-7/CHS-4 export factor; drafted
   in this branch
-- [ ] *Candida albicans* Q5AA40 - CGD seed for the
-  `GO:0006031 chitin biosynthetic process` IBD
+- [x] `CANAL/CHS7` - CGD's *Candida albicans* seed for the
+  `GO:0006031 chitin biosynthetic process` IBD; drafted in this branch
 
 ## Family 4: MAP Kinases
 
@@ -112,6 +112,16 @@ stress-activated MAPK-cascade assertions.
 ---
 
 # NOTES
+
+## 2026-10-11
+
+- Drafted `CANAL/CHS7` to complete the compact `PTHR35329` CHS7-family set.
+  The review accepts the `PANTHER:PTN002175570` ER-membrane, protein-folding,
+  and chitin-biosynthesis IBAs, adds the current PAINT `GO:0044183 protein
+  folding chaperone` assertion as a `NEW` row, removes the stale no-data
+  molecular-function placeholder, and keeps the direct C. albicans morphology
+  annotations as non-core outcomes of impaired Chs3-dependent wall chitin
+  synthesis.
 
 ## 2026-10-05
 
