@@ -53,7 +53,13 @@ CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt). MISEV2
         "allows such proteins onto EVs through specific or promiscuous (proteoglycan, lipid) receptors on the EV "
         "surface, but asks that their identification be backed by evidence of that association. A bulk EV proteome "
         "cannot separate surface binding from co-isolation, and this protein's annotations record no experimental "
-        "proteoglycan, heparin or lipid binding.")
+        "proteoglycan, heparin or lipid binding, and its own review keeps no experimental cell-surface or "
+        "plasma-membrane pool.")
+CAT5_SURFACE = ("KEEP_AS_NON_CORE", "Secreted or lumenal protein (UniProt) with an experimentally documented cell-surface "
+                "or plasma-membrane pool that its own review keeps. MISEV2018 (PMID:30637094) category 5 allows such "
+                "proteins onto EVs through specific or promiscuous receptors on the EV surface, and small EVs budding "
+                "from the plasma membrane can carry a surface-bound pool, so the detection is plausible. True, but not "
+                "its core location.")
 CAT5_BOUND = ("KEEP_AS_NON_CORE", "MISEV2018 (PMID:30637094) category 5 allows secreted proteins onto EVs through "
               "promiscuous (proteoglycan, lipid) receptors on the EV surface, so the detection is plausible. True, "
               "but not its core location.")
@@ -143,7 +149,8 @@ G = {
     "BTD": note(CAT5, "Secreted biotinidase."),
     "C1GALT1C1": note(CAT4, "ER-membrane chaperone (Cosmc)."),
     "C1QB": note(CAT5_BOUND, "Secreted complement C1q subunit with experimental phosphatidylserine binding (IDA)."),
-    "C3": note(CAT5, "Secreted complement C3."),
+    "C3": note(CAT5_SURFACE, "Secreted complement C3; C3b binds covalently to cell surfaces through its exposed "
+                             "thioester, and its review accepts five cell-surface rows by EXP."),
     "CACNA2D1": note(CAT1, "Plasma-membrane calcium-channel subunit."),
     "CACYBP": note(CAT2, "Cytoplasmic/nuclear calcyclin-binding protein."),
     "CAD": note(CAT2, "Cytoplasmic pyrimidine-synthesis enzyme."),
@@ -156,8 +163,10 @@ G = {
     "CD2AP": note(CAT2, "Cytoplasmic adaptor linking membrane proteins to actin."),
     "CHMP3": note(CAT2A, "ESCRT-III subunit acting on the cytosolic face of endosomes; its presence in EVs follows from "
                         "ILV formation, but the exosome is a destination, not where it acts."),
-    "CLU": note(CAT5, "Secreted clusterin (UniProt isoform 1: secreted); the earlier ACCEPT rested on its being "
-                      "secreted, which does not establish EV localization. Applies to the plasma microvesicle row too."),
+    "CLU": note(CAT5_SURFACE, "Secreted clusterin (UniProt isoform 1: secreted), with receptor-mediated cell-surface "
+                              "and plasma-membrane pools by IDA (PMID:17567961, PMID:30333625). The earlier ACCEPT "
+                              "rested on its being secreted, which does not make the exosome its core location. "
+                              "Applies to the plasma microvesicle row too."),
     "CR1": note(CAT1_GO, "Plasma-membrane complement receptor (podocyte/erythrocyte)."),
     "CRYAB": note(CAT2, "Cytoplasmic small heat-shock protein."),
     "CSNK2B": note(CAT2_GO, "CK2 regulatory subunit (cytoplasmic and nuclear)."),
@@ -203,7 +212,8 @@ G = {
     "MYH9": note(CAT2, "Non-muscle myosin II."),
     "NAGK": note(CAT2_GO, "Cytosolic kinase."),
     "NANS": note(CAT2_GO, "Cytosolic sialic-acid synthase."),
-    "NEU1": note(CAT5, "Lysosomal sialidase (lysosome lumen/membrane)."),
+    "NEU1": note(CAT5_SURFACE, "Lysosomal sialidase (lysosome lumen/membrane), with a plasma-membrane pool by IDA "
+                               "(PMID:27917893)."),
     "NRAS": note(CAT1, "Lipid-anchored plasma-membrane GTPase (cytoplasmic face)."),
     "PAICS": note(CAT2_GO, "Cytosolic purine-synthesis enzyme."),
     "PARK7": note(CAT2, "Cytoplasmic DJ-1; its EV presence matters as a biomarker, not as its site of action, so the "

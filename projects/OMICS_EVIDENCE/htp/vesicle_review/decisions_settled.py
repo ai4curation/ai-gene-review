@@ -8,7 +8,7 @@ category constants as pass 1. Genes reviewed in both passes get the same call he
 microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT1_GO, CAT2, CAT2_GO, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, G as G1, note
+from decisions_draft import CAT1, CAT1_GO, CAT2, CAT2_GO, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, CAT5_SURFACE, G as G1, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -181,7 +181,8 @@ G = {
     "LFNG": note(CAT4, "Golgi glycosyltransferase."),
     "LGALS3": note(CAT2, "Cytoplasmic galectin secreted by a non-classical route."),
     "LOXL4": note(CAT5, "Secreted lysyl oxidase-like enzyme."),
-    "LPO": note(CAT5, "Secreted lactoperoxidase."),
+    "LPO": note(CAT5_SURFACE, "Secreted lactoperoxidase, with a basolateral plasma-membrane pool by IDA "
+                              "(PMID:19059195)."),
     "LRG1": note(CAT5, "Secreted plasma glycoprotein."),
     "LRP2": note(CAT1, "Apical plasma-membrane endocytic receptor (megalin)."),
     "LRRK2": note(CAT2, "Cytoplasmic kinase associated with vesicle and Golgi membranes."),
@@ -236,7 +237,8 @@ G = {
     "SCAMP2": note(CAT1, "Multi-pass membrane carrier of post-Golgi and endosomal recycling membranes."),
     "SLC3A2": note(CAT1, "Plasma-membrane amino-acid transporter heavy chain (CD98)."),
     "SMO": note(CAT1, "Plasma-membrane GPCR."),
-    "SMPD1": note(CAT5, "Lysosomal lumenal acid sphingomyelinase, also secreted."),
+    "SMPD1": note(CAT5_SURFACE, "Lysosomal lumenal acid sphingomyelinase, also secreted, with a plasma-membrane "
+                                "pool by IDA (PMID:20956541)."),
     "SOD1": note(CAT2, "Cytoplasmic superoxide dismutase."),
     "SORL1": note(CAT1, "Single-pass sorting receptor of Golgi, endosome and plasma membranes."),
     "SPR": note(CAT2, "Cytoplasmic sepiapterin reductase."),

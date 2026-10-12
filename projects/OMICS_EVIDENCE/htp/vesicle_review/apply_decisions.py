@@ -190,7 +190,7 @@ def go_pm_endosome(organism: str, gene: str) -> bool:
 
 # CAT4's residency claim and CAT2A's cytosolic/membrane-binding claim, checked against UniProt or GO.
 RESIDENT_CLAIM = "Mainly resident in an intracellular compartment"
-RESIDENT_TEXT = re.compile(r"nucle|mitochondri|endoplasmic|golgi|peroxisom|lipid droplet|sarcoplasmic", re.I)
+RESIDENT_TEXT = re.compile(r"nucleus|nuclear|mitochondri|endoplasmic|golgi|peroxisom|lipid droplet|sarcoplasmic", re.I)
 CAT2A_CLAIM = "Cytosolic protein with lipid or membrane-protein binding ability"
 CAT2A_TEXT = re.compile(r"cytoplasm|cytosol|peripheral membrane|lipid-anchor", re.I)
 

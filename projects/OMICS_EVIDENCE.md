@@ -282,17 +282,17 @@ The data and the curators are the same. The difference is the inference step.
    [`decisions_draft.py`](OMICS_EVIDENCE/htp/vesicle_review/decisions_draft.py) holds one
    decision and basis per protein, and
    [`decisions.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions.yaml) lists every row.
-   247 rows changed (excluding the two CD2AP rows; see the session notes):
+   249 rows changed (excluding the two CD2AP rows; see the session notes):
 
    | Change | Rows | Typical reason |
    |---|---:|---|
-   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 142 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase; LMAN2 and SYNE2, with documented surface pools |
-   | UNDECIDED → KEEP_AS_NON_CORE | 47 | the same categories, previously left undecided for lack of the supplementary table |
-   | ACCEPT → KEEP_AS_NON_CORE | 33 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3 |
-   | UNDECIDED → MARK_AS_OVER_ANNOTATED | 19 | albumin, AK2, AUP1, BPTF, ACSL4, complement, lysosomal enzymes, ATP6AP1 |
-   | ACCEPT → MARK_AS_OVER_ANNOTATED | 6 | secreted proteins accepted only for being secreted, with no recorded EV-surface binding route: CLU ×4, SCGB1A1 (its phospholipids are cavity ligands); APOE in plasma microvesicles |
+   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 144 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase; LMAN2, SYNE2 and NEU1, with documented surface pools |
+   | UNDECIDED → KEEP_AS_NON_CORE | 50 | the same categories, previously left undecided for lack of the supplementary table; C3, whose C3b binds cell surfaces covalently |
+   | ACCEPT → KEEP_AS_NON_CORE | 37 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3; CLU ×4, with a receptor-bound surface pool |
+   | UNDECIDED → MARK_AS_OVER_ANNOTATED | 16 | albumin, AK2, AUP1, BPTF, ACSL4, lysosomal enzymes, ATP6AP1 |
+   | ACCEPT → MARK_AS_OVER_ANNOTATED | 2 | SCGB1A1, accepted only for being secreted (its phospholipids are cavity ligands); APOE in plasma microvesicles |
 
-   Final vesicle-row actions: 224 KEEP_AS_NON_CORE, 56 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
+   Final vesicle-row actions: 233 KEEP_AS_NON_CORE, 47 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
    (PDCD6IP). For most cytosolic cargo the manual outcome matches the withdrawn rule,
    because under MISEV such proteins really are in EVs. As first applied, it differed from
    the rule on 91 rows: 52 that the rule would have made non-core are over-annotated, and 39 ACCEPTs
@@ -318,17 +318,18 @@ The data and the curators are the same. The difference is the inference step.
    KEEP_AS_NON_CORE in pass 1. Mitochondrial and ER proteins whose own reviews keep an
    experimental cell-surface or plasma-membrane pool (HSPD1, ATP5F1A/B, CALR, GOT2, P4HB; LMAN2 and
    SYNE2 in pass 1) also stay KEEP_AS_NON_CORE, since small EVs budding from the plasma membrane can
-   carry that pool. 73 rows in 45 genes
+   carry that pool, and the same holds for secreted proteins with such a pool (SMPD1, LPO here;
+   C3, CLU and NEU1 in pass 1). 71 rows in 43 genes
    changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
    | Change | Rows | Proteins |
    |---|---:|---|
-   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 50 | secreted plasma and matrix proteins with no recorded proteoglycan or lipid binding (A1BG, A2M, HPX, ITIH3, ITIH4, HSPG2, AGRN) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, SMPD1) |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 48 | secreted plasma and matrix proteins with no recorded proteoglycan or lipid binding or surface pool (A1BG, A2M, HPX, ITIH3, ITIH4, HSPG2, AGRN) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA) |
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 22 | mitochondrial (HSPA9, ACAT1) and ER/Golgi residents (PPIB, PRDX4, MAN1B1, LFNG) with no documented surface pool |
    | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
 
-   The other 345 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   The other 347 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
    membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
    MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
    accepting ALIX alone rests on its protein-specific role in exosome biogenesis, not on
@@ -498,9 +499,20 @@ membranes, passed it. The pattern now names only plasma-membrane, endosomal and 
 locations, and SYPL1, ATP6V0A1, ATP6V0C and NCSTN now cite GO for the compartment. Two more
 claims are now checked: the category-4 residency clause (a nuclear, mitochondrial, ER,
 Golgi, peroxisomal or lipid-droplet location in UniProt or GO) and the category-2a
-cytosolic clause. With these, every factual clause in every template is checked. SYNE2's
+cytosolic clause. SYNE2's
 reason now answers the earlier reviewer's point about peptide-level detection of a giant
 protein.
+
+The next re-review applied the surface-pool test to category 5, which its template's own
+wording invites ("specific or promiscuous receptors"): five secreted proteins have an
+experimental cell-surface or plasma-membrane row their reviews keep. C3 (covalent C3b
+deposition, EXP ×5), CLU (receptor-bound, IDA), SMPD1, LPO and NEU1 now share a
+`CAT5_SURFACE` basis (KEEP_AS_NON_CORE). SMPD1 and LPO return to their original text; C3's
+three rows move from UNDECIDED, CLU's four from ACCEPT and NEU1's two from
+MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. The category-5 template now also states that the
+protein's review keeps no experimental surface pool, which the script checks. Two template
+clauses are still taken on trust: the "lipid or membrane-protein binding" half of
+category 2a, and category 3b's "ribosomal protein" (RPS3, RACK1).
 
 ### 2026-10-10: third round of automated-review fixes
 
