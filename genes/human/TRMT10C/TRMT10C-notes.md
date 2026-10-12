@@ -23,20 +23,27 @@ curl -H 'Accept: application/json' \
 
 40 human annotations. Grouped by symbol and qualifier:
 
-| gene product | qualifier | evidence |
-|---|---|---|
-| PRORP | `enables` | IBA, IDA, IEA |
-| POP1 | `contributes_to` | IBA, IDA |
-| POP4, POP5, POP7, RPP14, RPP21, RPP25, RPP30, RPP38, RPP40 | `contributes_to` | IDA |
-| RPPH1 and other ncRNA entries | `enables` | IEA |
+| gene product | complex | qualifier | evidence |
+|---|---|---|---|
+| RPPH1 and other ncRNA entries | nuclear (the catalyst) | `enables` | IEA |
+| POP1 | nuclear | `contributes_to` | IBA, IDA |
+| POP4, POP5, POP7, RPP14, RPP21, RPP25, RPP30, RPP38, RPP40 | nuclear | `contributes_to` | IDA |
+| PRORP | **mitochondrial** (the catalyst) | `enables` | IBA, IDA, IEA |
+
+Note the complex column: PRORP (O15091) is `part_of GO:0030678`, the *mitochondrial* complex,
+not the nuclear one. So no nuclear **protein** subunit carries `enables` at all - the nuclear
+catalyst is an RNA - and PRORP is the only protein in either complex that does, because the
+mitochondrial catalyst is a protein.
 
 (POP5, RPP30 and RPP40 additionally carry an `enables` row by IEA or TAS; every IDA row on a
 protein subunit other than PRORP is `contributes_to`.)
 
-So GO's convention for this complex is `enables` for the catalyst and `contributes_to` for the
-rest, which is exactly the shape of the proposed row — the comparator set supports it rather
-than contradicting it. Neither mitochondrial accessory subunit carries `GO:0004526` in GOA,
-so they are the outliers.
+So GO's convention for an RNase P holoenzyme is `enables` for whatever does the chemistry -
+the RPPH1 RNA in the nucleus, PRORP in mitochondria - and `contributes_to` for the other
+protein subunits. That is exactly the shape of the proposed row: TRMT10C does not do the
+chemistry, and the ten nuclear protein subunits in the same position all carry the term with
+this qualifier. Neither mitochondrial accessory subunit carries `GO:0004526` in GOA, so they
+are the outliers.
 
 The nuclear subunit genes have no folders in this repository, so this table is the only
 in-branch record of the query; re-run the curl above to check it.
