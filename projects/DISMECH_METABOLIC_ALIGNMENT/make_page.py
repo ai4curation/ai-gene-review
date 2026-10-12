@@ -73,11 +73,21 @@ def row_index(entries):
 ROWS_HERE, ROWS_THERE = row_index(rep), row_index(ALT_REP) if ALT_REP else {}
 # Whether the ordinal in the key is doing anything, measured rather than asserted.
 REPEATED_ROWS = sorted({(e, g) for (e, g, n) in list(ROWS_HERE) + list(ROWS_THERE) if n})
+# Symbols holding more than one row anywhere in either report. Scoped to the reports, not
+# to one flag's movement: a gene with rows in three entries prints bare wherever only one
+# of them moved, and the same page then prints the same symbol both ways - HADH
+# disambiguated in one bullet and bare two bullets later. 20 symbols qualify.
+# Counted over the union of row keys, so a row present in both reports counts once and the
+# threshold is "more than one row" rather than an artifact of concatenating two lists.
+_ALL_SYMS = [g for (_, g, _) in set(ROWS_HERE) | set(ROWS_THERE)]
+AMBIGUOUS_SYMS = {g for g in set(_ALL_SYMS) if _ALL_SYMS.count(g) > 1}
 if REPEATED_ROWS:
-    # Not silent: if a duplicate ever appears, the row accounting below starts separating
-    # rows a reader cannot tell apart from the symbol and entry the page prints.
-    print("note: genes holding more than one row in one entry:",
-          ", ".join(f"{g} ({e})" for e, g in REPEATED_ROWS[:5]))
+    # Fatal rather than a console note. A true duplicate is exactly the case the page
+    # cannot disambiguate - show_rows prints the entry, which would be identical - so the
+    # accounting below would name two rows a reader cannot tell apart, silently.
+    sys.exit(f"{len(REPEATED_ROWS)} gene(s) hold more than one row inside one entry "
+             f"({', '.join(f'{g} ({e})' for e, g in REPEATED_ROWS)}); the movement "
+             "accounting names rows by entry and symbol, which cannot separate them")
 
 
 def flag_rows(entries, flag):
@@ -212,11 +222,10 @@ def alt_comparison():
         if flag in absent:
             return "the flag is itself the absence of a review on the tree carrying it"
         if flag in thin:
-            return "the flag is itself a stub review on the tree carrying it"
+            return ("the flag is itself a stub review, or the absence of core-function"
+                    " terms, on the tree carrying it")
         if set(absent) & thrs:
             return "the row has no review on the other tree"
-        if set(thin) & thrs:
-            return "the review on the other tree is a stub or has no core-function terms"
         mods = (set(mine.get("modules") or ()), set(theirs.get("modules") or ()))
         terms = (set(mine.get("aligned_terms") or ()), set(theirs.get("aligned_terms") or ()))
         if flag in modular and mods[0] != mods[1]:
@@ -230,6 +239,14 @@ def alt_comparison():
         # contents and its stub review is incidental.
         if flag in modular and terms[0] == terms[1]:
             return "the same modules carry different terms"
+        # Both thin checks sit here, below the module causes and behind the same gate.
+        # Only the *absent* case is justified by the audit's control flow: a row with no
+        # review returns before any module test, while AIGR_NOT_COMPLETE does not
+        # short-circuit them (align_audit.py). So a thin review on either side can only
+        # have moved a module verdict by changing the aligned terms, and is checked where
+        # that is true. PEX5 keeps its cause, its terms being absent on the second tree.
+        if set(thin) & thrs and terms[0] != terms[1]:
+            return "the review on the other tree is a stub or has no core-function terms"
         if set(thin) & ours and terms[0] != terms[1]:
             return ("the review on the flagged side is itself a stub, so the flag is an"
                     " artifact of the thin review rather than a difference between the"
@@ -246,23 +263,31 @@ def alt_comparison():
         modules' own contents, which covering_pairs records per module. Named for the
         first such row so the claim is checkable rather than entailed.
         """
+        shown = []
         for k in rows:
             a_, b_ = ROWS_HERE.get(k, {}), ROWS_THERE.get(k, {})
             pa, pb = a_.get("covering_pairs") or {}, b_.get("covering_pairs") or {}
-            # Union, not intersection: the flagged side of MODULE_NOT_COVERING has no
-            # covering pairs at all, which is itself the content difference to show.
-            for m in sorted(set(pa) | set(pb) | set(a_.get("modules") or ())
-                            & set(b_.get("modules") or ())):
+            # Either side's covering_pairs, not their intersection: the flagged side of
+            # MODULE_NOT_COVERING has no covering pairs at all, and that absence against
+            # the other side's coverage is itself the content difference to show. A third
+            # term intersecting the two `modules` lists was inert - a module in neither
+            # side's covering_pairs yields two empty term sets and is skipped - and
+            # operator precedence made it an intersection rather than part of the union.
+            for m in sorted(set(pa) | set(pb)):
                 ta = {t for t, _ in pa.get(m) or ()}
                 tb = {t for t, _ in pb.get(m) or ()}
                 if ta != tb:
                     def _f(ts):
                         return ", ".join(f"`{t}`" for t in sorted(ts)) or "nothing"
-                    return (f" - {k[1]} is the case to check: `{m}` covers {_f(ta)} here"
-                            f" and {_f(tb)} there")
-        return ""
+                    _nm = f"{k[1]} ({k[0]})" if k[1] in AMBIGUOUS_SYMS else k[1]
+                    shown.append(f"{_nm}: `{m}` covers {_f(ta)} here and {_f(tb)} there")
+                    break
+        # Every member, not the first: asserting the cause for a group and showing it for
+        # one row leaves the rest in the state the cause as a whole was in before it was
+        # read from covering_pairs. HAO1 and COQ8A both have the difference recorded.
+        return (" - " + "; ".join(shown)) if shown else ""
 
-    def show_rows(rows, ambig, cap=8):
+    def show_rows(rows, cap=8):
         """Name rows, adding the entry where the symbol alone is ambiguous.
 
         `ambig` is every symbol appearing more than once among *all* the rows this flag's
@@ -270,10 +295,14 @@ def alt_comparison():
         otherwise print the same bare symbol under "left" and under "arrived" with nothing
         to tell them apart.
 
-        The cap applies per cause rather than per side, so each group the accounting
-        reports is enumerable from the page instead of being a count with five examples.
+        The cap applies per cause rather than per side, so a small group - the
+        module-contents and module-set causes this page argues from - is enumerable
+        rather than being a count with examples. It is still a cap: six groups on this
+        run exceed eight and print the remainder ("and 70 more"), because inlining 78
+        symbols would bury the causes the section exists to separate.
         """
-        out = ", ".join(f"{g} ({e})" if g in ambig else g for e, g, _ in rows[:cap])
+        out = ", ".join(f"{g} ({e})" if g in AMBIGUOUS_SYMS else g
+                        for e, g, _ in rows[:cap])
         return out + (f", and {len(rows) - cap} more" if len(rows) > cap else "")
 
     def movement(flag):
@@ -289,8 +318,6 @@ def alt_comparison():
         left, came, shared = sorted(a_ - b_), sorted(b_ - a_), a_ & b_
         if not left and not came:
             return None
-        _syms = [g for _, g, _ in left + came]
-        ambig = {g for g in _syms if _syms.count(g) > 1}
         bits = []
         for label, rows, other_idx, mine_idx in (
                 ("left", left, ROWS_THERE, ROWS_HERE),
@@ -303,7 +330,7 @@ def alt_comparison():
                               []).append(k)
             parts = []
             for c, v in sorted(by.items(), key=lambda kv: -len(kv[1])):
-                part = f"{len(v)} because {c} ({show_rows(v, ambig)})"
+                part = f"{len(v)} because {c} ({show_rows(v)})"
                 if c == "the same modules carry different terms":
                     part += cover_evidence(flag, v)
                 parts.append(part)
@@ -388,7 +415,9 @@ def alt_comparison():
             len(modular), f"All {len(modular)} module flags are")
         line = (f"- {names(rose_mod)} cannot have either cause. {_mw} computed"
                 " only once a review has been found, so a missing review **removes** one rather"
-                " than adding it. The driver is the module files:")
+                " than adding it. Which module fact moved each row is in the accounting above,"
+                " per row, rather than asserted for the group here; what follows is only the"
+                " shape of the two module sets:")
         if mods_here and mods_there:
             # The direction is read, not assumed: a second run with more modules would have
             # printed "so fewer are available" as a fact. Same unchecked-direction shape the
