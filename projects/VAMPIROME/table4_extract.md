@@ -7,6 +7,7 @@ title: "Vampirome Table 4 Extract (DESRO)"
 Source: Table 4 and surrounding text from the Vampirome transcriptome/proteome paper on Desmodus rotundus salivary glands. [PMC3685427](https://pmc.ncbi.nlm.nih.gov/articles/PMC3685427/)
 
 Notes:
+
 - IDs below are Vampirome transcript IDs (BatTrinityAbyss-* or DrSigp-SigP-*). They are *not* HGNC/UniProt gene symbols and require mapping.
 - This is an extract focused on immune/hemostasis/host-modulating candidates. It is not the full supplemental dataset.
 - The original condensed table and supplemental spreadsheet are referenced by the paper but currently hosted on a moved NIAID portal; add them once accessible.
@@ -62,4 +63,4 @@ Notes:
 
 ## TODO
 - Retrieve and parse the full condensed table (Table4-web.xlsx) and supplemental spreadsheet (Supplemental-web.xlsx) from the moved NIAID transcriptome resources.
-- Map transcript IDs to DESRO gene symbols/UniProt accessions.
+- Resolve the 10 Table 4 transcript IDs with no TSA/UniProt hit, and continue separate `CALCA`/vCGRP peptide mapping.
