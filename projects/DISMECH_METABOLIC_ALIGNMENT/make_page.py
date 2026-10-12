@@ -51,9 +51,14 @@ def flag_counts(entries):
 def row_index(entries):
     """Map every gene row to its record, keyed by (entry, gene, nth occurrence).
 
-    The ordinal is load-bearing: a gene can hold several rows inside one entry (ABCC8
-    twice, APOB three times), so (entry, gene) alone collapses distinct rows and would
-    undercount a movement.
+    The ordinal is defensive, not load-bearing on this data: no gene holds two rows
+    inside one entry in either report, so it is always 0 today. An earlier version of
+    this docstring said otherwise and cited ABCC8 and APOB - both of which do hold
+    several rows, but each in a different entry (ABCC8 in Congenital_Isolated_
+    Hyperinsulinism and Hyperinsulinemic_Hypoglycemia; APOB in three), which
+    (entry, gene) already separates. It is kept because a duplicate would otherwise
+    collapse two rows into one silently, and REPEATED_ROWS below records whether any
+    exists rather than leaving the question to a comment.
     """
     out, seen = {}, {}
     for e in entries:
@@ -66,6 +71,13 @@ def row_index(entries):
 
 
 ROWS_HERE, ROWS_THERE = row_index(rep), row_index(ALT_REP) if ALT_REP else {}
+# Whether the ordinal in the key is doing anything, measured rather than asserted.
+REPEATED_ROWS = sorted({(e, g) for (e, g, n) in list(ROWS_HERE) + list(ROWS_THERE) if n})
+if REPEATED_ROWS:
+    # Not silent: if a duplicate ever appears, the row accounting below starts separating
+    # rows a reader cannot tell apart from the symbol and entry the page prints.
+    print("note: genes holding more than one row in one entry:",
+          ", ".join(f"{g} ({e})" for e, g in REPEATED_ROWS[:5]))
 
 
 def flag_rows(entries, flag):
@@ -176,73 +188,168 @@ def alt_comparison():
     def move_cause(flag, mine, theirs):
         """Why one row carries `flag` on one tree and not on the other.
 
-        Read from that row's own record on both sides, never from the flag's group.
+        Read from that row's own record on **both** sides, never from the flag's group.
         Group membership says where in the audit a flag is computed; it does not say why
         a given row moved, and attributing a whole movement to the group was wrong in
         both directions - PEX5 leaves PARTIAL_COVERAGE because its review is a stub while
         its covering module is present on both trees, and ABCG5, ABCG8 and POMC arrive at
         NO_MODULE_MEMBERSHIP with complete reviews because a module is absent.
 
+        `mine` is the row on the tree that carries the flag, `theirs` the tree that does
+        not. Both are consulted: a row can gain an alignment flag because the review on
+        its *own* side is a stub, which is an artifact of the missing slices, and reading
+        only the other side reported those as a substantive difference between the two
+        reviews - the artifact-versus-finding call this whole section exists to make.
+
         The order follows the audit's own control flow: a row with no review returns
         before any module test runs, so an absent review is the cause even where the
         module set also differs. The first two cases are definitional rather than
-        inferred - a flag that counts absent or thin reviews is its own explanation, and
-        reading the other side's flags for it returns nothing, which is what previously
-        printed 56 NO_AIGR_REVIEW arrivals as unestablished.
+        inferred - a flag that counts absent or thin reviews is its own explanation - and
+        are phrased without naming a side, since they fire for a departure as readily as
+        for an arrival.
         """
         ours, thrs = set(mine.get("flags") or ()), set(theirs.get("flags") or ())
         if flag in absent:
-            return "no review there at all"
+            return "the flag is itself the absence of a review on the tree carrying it"
         if flag in thin:
-            return "the review there is a stub or carries no core-function terms"
+            return "the flag is itself a stub review on the tree carrying it"
         if set(absent) & thrs:
-            return "the row's review is absent on the other tree"
+            return "the row has no review on the other tree"
         if set(thin) & thrs:
-            return "that review is a stub or has no core-function terms"
+            return "the review on the other tree is a stub or has no core-function terms"
         mods = (set(mine.get("modules") or ()), set(theirs.get("modules") or ()))
         terms = (set(mine.get("aligned_terms") or ()), set(theirs.get("aligned_terms") or ()))
         if flag in modular and mods[0] != mods[1]:
             return "the modules containing the gene differ"
-        if terms[0] != terms[1]:
-            return "the row's own aligned terms differ, so the review itself differs"
-        if flag in modular:
+        # The module causes come first and are read from the recorded module and coverage
+        # lists. A stub review is checked only where it could have done the work - where
+        # the aligned-term sets differ - because that is the only route by which a thin
+        # review changes a module verdict. HAO1 is the case that fixes the order: same
+        # modules, identical aligned terms, and glyoxylate_oxalate_metabolism covering two
+        # of them here and one there, so its PARTIAL_COVERAGE arrival is the module's own
+        # contents and its stub review is incidental.
+        if flag in modular and terms[0] == terms[1]:
             return "the same modules carry different terms"
+        if set(thin) & ours and terms[0] != terms[1]:
+            return ("the review on the flagged side is itself a stub, so the flag is an"
+                    " artifact of the thin review rather than a difference between the"
+                    " two reviews")
+        if terms[0] != terms[1]:
+            return "the row's own aligned terms differ, so the two reviews differ"
         return "a reason this comparison does not establish"
 
-    def show_rows(rows, ambig):
-        """Name up to five rows, adding the entry where the symbol alone is ambiguous.
+    def cover_evidence(flag, rows):
+        """Show a same-modules-different-coverage case from covering_pairs.
 
-        `ambig` is every symbol that appears more than once among *all* the rows this
-        flag's movement names, both sides together - not just within one side. A gene
-        holding rows on both sides would otherwise print the same bare symbol under
-        "left" and under "arrived" with nothing to tell them apart, and AGXT, ACOX1,
-        APOB and GAA all hold several rows.
+        The one cause in the chain that was reached by elimination rather than read: with
+        the same modules and the same aligned terms, a coverage difference can only be the
+        modules' own contents, which covering_pairs records per module. Named for the
+        first such row so the claim is checkable rather than entailed.
         """
-        return ", ".join(f"{g} ({e})" if g in ambig else g for e, g, _ in rows[:5])
+        for k in rows:
+            a_, b_ = ROWS_HERE.get(k, {}), ROWS_THERE.get(k, {})
+            pa, pb = a_.get("covering_pairs") or {}, b_.get("covering_pairs") or {}
+            # Union, not intersection: the flagged side of MODULE_NOT_COVERING has no
+            # covering pairs at all, which is itself the content difference to show.
+            for m in sorted(set(pa) | set(pb) | set(a_.get("modules") or ())
+                            & set(b_.get("modules") or ())):
+                ta = {t for t, _ in pa.get(m) or ()}
+                tb = {t for t, _ in pb.get(m) or ()}
+                if ta != tb:
+                    def _f(ts):
+                        return ", ".join(f"`{t}`" for t in sorted(ts)) or "nothing"
+                    return (f" - {k[1]} is the case to check: `{m}` covers {_f(ta)} here"
+                            f" and {_f(tb)} there")
+        return ""
+
+    def show_rows(rows, ambig, cap=8):
+        """Name rows, adding the entry where the symbol alone is ambiguous.
+
+        `ambig` is every symbol appearing more than once among *all* the rows this flag's
+        movement names, both sides together - a gene holding rows on both sides would
+        otherwise print the same bare symbol under "left" and under "arrived" with nothing
+        to tell them apart.
+
+        The cap applies per cause rather than per side, so each group the accounting
+        reports is enumerable from the page instead of being a count with five examples.
+        """
+        out = ", ".join(f"{g} ({e})" if g in ambig else g for e, g, _ in rows[:cap])
+        return out + (f", and {len(rows) - cap} more" if len(rows) > cap else "")
 
     def movement(flag):
-        """One sentence of row-level accounting for a flag whose rows moved."""
+        """Row-level accounting for a flag whose rows moved.
+
+        The shape of the sentence is derived, not fixed. Five of the nine flags on this
+        run move in one direction only, and for those the net count is an exact summary -
+        telling the reader it was misleading would be a finding manufactured by the
+        template. Only a flag with both departures and arrivals has a net that hides
+        something.
+        """
         a_, b_ = flag_rows(rep, flag), flag_rows(ALT_REP, flag)
         left, came, shared = sorted(a_ - b_), sorted(b_ - a_), a_ & b_
         if not left and not came:
             return None
-        bits = []
         _syms = [g for _, g, _ in left + came]
         ambig = {g for g in _syms if _syms.count(g) > 1}
-        for label, rows, other in (("left", left, ROWS_THERE), ("arrived", came, ROWS_HERE)):
+        bits = []
+        for label, rows, other_idx, mine_idx in (
+                ("left", left, ROWS_THERE, ROWS_HERE),
+                ("arrived", came, ROWS_HERE, ROWS_THERE)):
             if not rows:
                 continue
-            mine_idx = ROWS_HERE if label == "left" else ROWS_THERE
             by = {}
             for k in rows:
-                by.setdefault(move_cause(flag, mine_idx.get(k, {}), other.get(k, {})), []).append(k)
-            parts = ", ".join(f"{len(v)} because {c}"
-                              for c, v in sorted(by.items(), key=lambda kv: -len(kv[1])))
-            bits.append(f"{len(rows)} {label} ({show_rows(rows, ambig)}" +
-                        (", ..." if len(rows) > 5 else "") + f"): {parts}")
-        return (f"`{flag}` {there.get(flag, 0)} against {here.get(flag, 0)} is a movement of"
-                f" rows, not a shift of one population: {len(shared)} rows carry it on both"
-                f" trees, {'; '.join(bits)}.")
+                by.setdefault(move_cause(flag, mine_idx.get(k, {}), other_idx.get(k, {})),
+                              []).append(k)
+            parts = []
+            for c, v in sorted(by.items(), key=lambda kv: -len(kv[1])):
+                part = f"{len(v)} because {c} ({show_rows(v, ambig)})"
+                if c == "the same modules carry different terms":
+                    part += cover_evidence(flag, v)
+                parts.append(part)
+            bits.append(f"{len(rows)} {label} - " + "; ".join(parts))
+        head = (f"`{flag}` {there.get(flag, 0)} against {here.get(flag, 0)}")
+        if left and came:
+            head += (f" moves in both directions, so the net is not the movement:"
+                     f" {len(shared)} rows carry it on both trees, ")
+        else:
+            head += (f" moves in one direction only, so the net count is exact:"
+                     f" {len(shared)} rows carry it on both trees, ")
+        return head + "; ".join(bits) + "."
+
+    tree = ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
+    mods_here = (PROV.get("module_accessions") or {}).get("modules_read")
+    mods_there = (ALT_PROV.get("module_accessions") or {}).get("modules_read")
+    # Each risen flag is explained by the group it belongs to, read from the report rather
+    # than inferred by subtraction. The previous version split the rises into "module
+    # flags" and "everything else", and told the reader everything else counted *absent*
+    # reviews - wrong for AIGR_NOT_COMPLETE and NO_CORE_FUNCTION_TERMS, which fire where a
+    # review was found, and so wrong for 85 of 87 rows in the run it was written against.
+    groups = ALT_PROV.get("_flag_groups")
+    if "_flag_groups" not in ALT_PROV:
+        sys.exit("the second report has no flag_groups; it was produced by a superseded "
+                 "align_audit.py and its risen flags cannot be explained - re-run the audit")
+    if not groups:
+        # Present but empty is a separate failure from absent, and unlike term_aspects it is
+        # never legitimate: without the groups every risen flag falls through to "cause not
+        # established", which would read as a finding rather than as a broken input.
+        sys.exit("the second report's flag_groups is empty; every risen flag would be reported "
+                 "as unexplained rather than grouped - re-run the audit")
+    if "_term_aspects" not in ALT_PROV:
+        # Not read for the cross-aspect figures, which come from the primary report, but a
+        # second report missing it is a superseded one and the two are then not comparable.
+        sys.exit("the second report has no term_aspects; it was produced by a superseded "
+                 "align_audit.py - re-run the audit")
+    absent = tuple(groups.get("review_absent") or ())
+    thin = tuple(groups.get("review_present_thin") or ())
+    modular = tuple(groups.get("module_sourced") or ())
+    rose_absent = [f for f in rose if f in absent]
+    rose_thin = [f for f in rose if f in thin]
+    rose_mod = [f for f in rose if f in modular]
+    rose_other = [f for f in rose if f not in absent + thin + modular]
+
+    def names(fs):
+        return ", ".join(f"`{f}`" for f in fs)
 
     out = [
         f"The audit also runs over {tree}, and comparing the two runs shows which flags are",
@@ -250,8 +357,10 @@ def alt_comparison():
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
         "",
         "Every movement below is accounted for row by row rather than from the net counts: a"
-        " flag's total can fall while rows arrive at it, and the reason one row moved is read"
-        " from that row's flags on the other tree, not from the flag's group.",
+        " flag's total can fall while rows arrive at it, and each row's cause is read from that"
+        " row's own record on **both** trees, not from the flag's group. Where a flag moves in"
+        " one direction only the net count is exact, and the line says so rather than implying"
+        " the count was misleading.",
     ]
     for f in fell:
         line = movement(f)
@@ -304,8 +413,12 @@ def alt_comparison():
                          f" here and not there, and {len(only_there)} there and not here"
                          f" (e.g. `{only_here[0]}` and `{only_there[0]}`).")
             elif only_here:
-                line += (f" The second set is a strict subset: {len(only_here)} modules are here"
-                         f" and not there (e.g. `{only_here[0]}`), and none the other way.")
+                line += (f" The second set is a strict subset **by name**: {len(only_here)} modules"
+                         f" are here and not there (e.g. `{only_here[0]}`), and none the other way."
+                         " provenance.modules records stems, so that says nothing about the"
+                         " contents of a module present in both - and the row accounting above"
+                         " attributes some arrivals to shared modules whose own terms differ, so"
+                         " the names are nested while the contents are not.")
             elif only_there:
                 line += (f" This set is the strict subset: {len(only_there)} modules are there and"
                          f" not here (e.g. `{only_there[0]}`).")
@@ -339,13 +452,36 @@ def alt_comparison():
             (same_rows if flag_rows(rep, f) == flag_rows(ALT_REP, f) else moved_rows).append(f)
         if same_rows:
             out += ["", f"{names(same_rows)} {'are' if len(same_rows) > 1 else 'is'} identical row"
-                        " for row as well: the same (entry, gene) rows carry the flag on each"
-                        " tree."]
+                        " for row as well: the same rows, keyed by entry, gene and occurrence,"
+                        " carry the flag on each tree."]
             _sr = [f for f in same_rows if f in steady_rev]
-            if _sr:
-                out += [f"For {names(_sr)} that is either a stable property of the dismech side or"
-                        " a path these two runs do not separate; this comparison cannot tell"
-                        " which."]
+            for f in _sr:
+                # "A stable property of the dismech side" is not an available reading for a
+                # review-sourced flag - round 4 removed ALIGNED_CONTRIBUTES_ONLY from
+                # REVIEW_INDEPENDENT_FLAGS for exactly that reason - and the reports answer
+                # the question outright, so neither branch of the old hedge was needed.
+                _rows = sorted(flag_rows(rep, f))
+                _diff, _same_ctb = [], []
+                for k in _rows:
+                    _a, _b = ROWS_HERE.get(k, {}), ROWS_THERE.get(k, {})
+                    if _a.get("aigr_status") != _b.get("aigr_status"):
+                        _diff.append((k, _a.get("aigr_status"), _b.get("aigr_status")))
+                    if (_a.get("aligned_via_contributes_to") or []) == \
+                            (_b.get("aligned_via_contributes_to") or []):
+                        _same_ctb.append(k)
+                line = (f"`{f}` is review-sourced, so a stable count there cannot be a property"
+                        " of the dismech side either.")
+                if _diff:
+                    k, sa, sb = _diff[0]
+                    line += (f" The reviews are not even the same: {k[1]} is `{sa}` here and"
+                             f" `{sb}` on the second tree.")
+                if len(_same_ctb) == len(_rows) and _rows:
+                    _t = (ROWS_HERE.get(_rows[0], {}).get("aligned_via_contributes_to") or [])
+                    line += (" What is stable is the contributes-to term the row aligns on"
+                             + (f", `{_t[0]}` for {_rows[0][1]}" if _t else "")
+                             + ", which both reports record identically - so the flag survives a"
+                               " change in the review around it.")
+                out += [line]
         for f in moved_rows:
             line = movement(f)
             if line:
