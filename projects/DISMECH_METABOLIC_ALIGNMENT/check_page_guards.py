@@ -66,10 +66,13 @@ def _strip_cover(rep, genes):
 # test was taken. The three OK cases exist to prove a clause renders, so without a string to
 # look for they would still have passed with that clause deleted.
 CASES = [
-    # Deliberately NOT the drift clause: that sentence depends on whether this checkout
-    # holds the second run's recorded revision, which CI's `fetch-depth: 1` guarantees it
-    # does not. Declaring it made the suite's green depend on clone depth. The flag-count
-    # line is derived from the reports alone.
+    # Deliberately NOT the drift clause: for the *committed* revision that sentence depends
+    # on whether this checkout holds it, which CI's `fetch-depth: 1` guarantees it does not,
+    # so declaring it made the suite's green depend on clone depth. The flag-count line is
+    # derived from the reports alone. The drift sentences are covered by the three cases at
+    # the end of this list, which inject a revision whose state is the same in every
+    # checkout - absent everywhere, or not a revision at all - so what they assert is a
+    # property of the generator rather than of the clone.
     ("untampered", "OK", lambda p, a: None,
      "Flag counts on principal rows:"),
     ("audit_sha256 differs", "EXIT",
@@ -136,10 +139,42 @@ CASES = [
     # Mutates the prose, not the revision, so the case exercises the regex that reads shas
     # out of aigr_tree as well as the comparison. The sha injected is well-formed and names
     # nothing the report records.
-    ("aigr_tree prose names no revision the report records", "EXIT",
+    # Distinct expected strings for the two reports, as with the glossary cases: the check
+    # is one function applied twice, and a shared substring could not tell a primary-only
+    # version of it - which is what it was for a round - from one that reads both.
+    ("aigr_tree prose names no revision the report records, primary", "EXIT",
      lambda p, a: p["provenance"].update(
          aigr_tree="origin/main at 1234abc with the slices merged (merge commit 9f8e7d6c5)"),
-     "but not the revision it records"),
+     "the primary report's tree description names"),
+    ("aigr_tree prose names no revision the report records, second", "EXIT",
+     lambda p, a: a["provenance"].update(
+         aigr_tree="the branch at 1234abc rebased onto 9f8e7d6c5"),
+     "the second report's tree description names"),
+    # The drift sentences. Declared in full to the final period, because a double period
+    # survived rounds 15, 16 and 17 there while every declared string in this file stopped
+    # short of a sentence boundary - and because CI, at `fetch-depth: 1`, renders the
+    # `not_here` branch on every run. The injected sha is well-formed and absent from every
+    # checkout, so the clause does not depend on how deep this one is.
+    #
+    # Both declarations end with the newline, and that is the whole point of them: `expect`
+    # is tested by containment, so a string ending "either." is satisfied by a page saying
+    # "either.." - the one defect these two cases exist to catch. The tail is the end of its
+    # line, so the newline anchors it.
+    ("the second run's tree is absent from every checkout", "OK",
+     lambda p, a: a["provenance"].update(
+         aigr_revision="1234567890abcdef1234567890abcdef12345678",
+         aigr_tree="a harness tree at 1234567890abcdef"),
+     "which this checkout does not hold, so the input-drift comparison below was not made."
+     " Whether that revision is published could not be determined here, and a shallow clone"
+     " will not hold it either.\n"),
+    # A recorded value that is not a revision at all. `cat-file -e` answers 128 for it just
+    # as for an absent sha, so this used to render as "this checkout does not hold" - a
+    # claim about the object store about a string that was never an object.
+    ("the second run records a value that is not a revision", "OK",
+     lambda p, a: a["provenance"].update(aigr_revision="not-a-revision",
+                                         aigr_tree="a harness tree naming no revision"),
+     "which is not a revision git can look up, so the input-drift comparison below was not"
+     " made.\n"),
 ]
 
 

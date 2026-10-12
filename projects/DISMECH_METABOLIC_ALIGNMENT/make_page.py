@@ -138,7 +138,69 @@ ALT_TREE_SHORT = ((_alt_branch if _alt_branch and _alt_branch != "HEAD"
                   if ALT_PROV else "")
 
 
+def _check_tree_names_revision(which, text, rev):
+    """Refuse when a report's tree description names shas but not the one it records.
+
+    `aigr_tree` is operator-supplied text and routinely names a sha in prose. Nothing
+    compared it with `aigr_revision`, so the description and the sentence derived from the
+    recorded revision agreed only by coincidence. Checked rather than trusted: any 7-to-40
+    hex run in that text that looks like a sha must be a prefix of, or prefixed by, the
+    recorded revision.
+
+    The text legitimately names several revisions - the base commit, each merged branch
+    tip, the resulting merge - so the invariant is not "every sha is the recorded one",
+    which a first draft of this check asserted and which the committed text refutes. It is
+    that the revision the report records appears among them: otherwise the description and
+    the derived sentence describe different commits.
+
+    Applied to both reports. It was primary-only for a round, although the second report's
+    pair is the closer of the two on the page - the description and the sentence derived
+    from `aigr_revision` render three lines apart, agreeing by exactly the coincidence this
+    check exists to end. Run here rather than inside the section that prints either, so a
+    mismatch refuses whichever sections a given run renders.
+    """
+    # At least one digit required: a 7-to-40 character run of a-f is also an ordinary word
+    # ("defaced"), and a description naming no sha but containing one would have refused to
+    # render with a provenance-mismatch message.
+    named = [m for m in re.findall(r"\b[0-9a-f]{7,40}\b", text or "")
+             if any(c.isdigit() for c in m)]
+    if rev and named and not any(rev.startswith(m) or m.startswith(rev) for m in named):
+        sys.exit(f"the {which} report's tree description names {', '.join(named[:4])} but "
+                 f"not the revision it records (`{rev[:9]}`); the provenance block and the "
+                 "derived sentence below would describe different commits")
+
+
+_check_tree_names_revision("primary", PROV.get("aigr_tree"), PROV.get("aigr_revision") or "")
+if ALT_PROV:
+    # ALT_TREE, not the raw `aigr_tree`: that is the string the page prints, and it falls
+    # back to the branch name when the second run recorded no tree description.
+    _check_tree_names_revision("second", ALT_TREE, ALT_PROV.get("aigr_revision") or "")
+
+
 _REV_STATE = {}
+_IN_REPO = None
+
+
+def _in_repo():
+    """Whether git will answer about this directory at all. Asked once per process.
+
+    Kept out of `_rev_state`'s memo because the answer varies with neither the revision nor
+    the call: a directory either is a repository or is not. Caching it under a per-revision
+    key stored a property of the process under a key describing something else, and re-ran
+    the probe for each distinct revision.
+
+    git absent from PATH raises rather than exiting, and `_primary_drift_tail` calls
+    `_rev_state` with no guard of its own, so without the catch the generator would die
+    with a traceback instead of claiming nothing.
+    """
+    global _IN_REPO
+    if _IN_REPO is None:
+        try:
+            _IN_REPO = subprocess.run(["git", "rev-parse", "--git-dir"],
+                                      capture_output=True).returncode == 0
+        except Exception:
+            _IN_REPO = False
+    return _IN_REPO
 
 
 def _rev_state(rev):
@@ -165,8 +227,11 @@ def _rev_state(rev):
     why a re-render can say less than the committed page.
 
     Returns ``published``, ``unpublished`` (object here, on no pushed ref), ``not_here``
-    (object absent from this checkout, so nothing can be said either way) or ``unknown``
-    (git could not be asked).
+    (object absent from this checkout, so nothing can be said either way), ``malformed``
+    (the recorded value is not a revision git could look up) or ``unknown`` (git could not
+    be asked). ``unknown`` says nothing about the object store, and in particular is not a
+    weaker ``not_here``: reached from `_alt_drift_tail` it means the object is present and
+    only its publication is unanswerable.
 
     Memoized, which on this run never hits: the two callers ask about two different
     revisions, one each. It is here so that adding a caller cannot quietly multiply git
@@ -176,19 +241,19 @@ def _rev_state(rev):
     if rev in _REV_STATE:
         return _REV_STATE[rev]
     state = "unknown"
+    # A value that is not a sha cannot be looked up at all, and `cat-file -e` answers 128
+    # for it exactly as for a sha this checkout lacks - so without this it rendered as
+    # "this checkout does not hold", which is a claim about the object store about a string
+    # that was never an object. Asked before the repository probe because the shape of the
+    # recorded value has nothing to do with where we are standing.
+    if not re.fullmatch(r"[0-9a-f]{7,40}", rev or ""):
+        _REV_STATE[rev] = "malformed"
+        return "malformed"
     # `cat-file -e` exits 128 both for a missing object and for a fatal such as "not a git
     # repository", so its exit code alone cannot tell absence from failure - the distinction
-    # this docstring argues for. One `rev-parse --git-dir` settles it: without a repository
-    # nothing is claimed, and the "not_here" sentence is never printed by a run that had
-    # nothing to ask.
-    try:
-        in_repo = subprocess.run(["git", "rev-parse", "--git-dir"],
-                                 capture_output=True).returncode == 0
-    except Exception:
-        # git absent from PATH raises rather than exiting, and _primary_drift_tail calls
-        # this with no guard of its own, so the generator would die with a traceback.
-        in_repo = False
-    if not in_repo:
+    # this docstring argues for. One `rev-parse --git-dir` settles it, and `_in_repo` asks
+    # it once per process rather than once per revision.
+    if not _in_repo():
         _REV_STATE[rev] = "unknown"
         return "unknown"
     # `cat-file -e`, not `rev-parse --verify`, which exits 0 for any well-formed 40-character
@@ -211,8 +276,9 @@ def _rev_state(rev):
 
 # What each state means for a reader, as its own clause. Appended after the drift answer,
 # because publication bears on whether a reader can re-run the comparison rather than on
-# whether the inputs moved. Every state has an entry; `_alt_drift_tail` reaches all four,
-# since `not_here` and `unknown` end the drift answer rather than replacing this clause.
+# whether the inputs moved. Every state has an entry, so a new state cannot render a blank
+# clause by omission; `malformed`'s is empty because both tails answer that value with a
+# sentence of their own, there being nothing to publish.
 _REPRODUCIBLE = {
     "published": "",
     "unpublished": " That revision is on no pushed ref, so no clone holds it and this"
@@ -220,11 +286,14 @@ _REPRODUCIBLE = {
     # The one clause that names a cause, which the drift answer deliberately never does. It
     # is admissible because it is about *this* checkout, which is observable, rather than
     # about the revision - a shallow clone is the ordinary reason and naming it tells a
-    # reader why re-rendering may say less than the committed page does.
-    "not_here": " Whether that revision is published could not be determined here, since"
-                " this checkout does not hold the object - a shallow clone will not.",
+    # reader why re-rendering may say less than the committed page does. It renders only
+    # behind the `not_here` sentence, which has already said the object is absent, so the
+    # clause no longer repeats that: it said it twice in consecutive sentences.
+    "not_here": " Whether that revision is published could not be determined here, and a"
+                " shallow clone will not hold it either.",
     "unknown": " Whether that revision is published could not be determined, so nothing is"
                " claimed about re-running this elsewhere.",
+    "malformed": "",
 }
 
 
@@ -249,6 +318,9 @@ def _primary_drift_tail():
                     " is claimed about whether a clone could compare the table's own figures.",
         "unknown": f"Whether the primary run's tree (`{short}`) is published could not be"
                    " determined, so nothing is claimed about the table's own figures.",
+        "malformed": f"The primary run records `{rev[:40]}` as its tree, which is not a"
+                     " revision git can look up, so nothing is claimed about the table's"
+                     " own figures.",
     }[_rev_state(rev)]
 
 
@@ -280,15 +352,29 @@ def _alt_drift_tail():
     except Exception:
         return (f" at `{rev[:9]}`; git could not be asked where this branch is, so nothing is"
                 " claimed about whether the audit's inputs moved since.")
-    if rev == head:
-        return f" at `{rev[:9]}`, which is this branch's tip."
     state = _rev_state(rev)
-    if state in ("not_here", "unknown"):
+    if state == "malformed":
+        return (f" at `{rev[:40]}`, which is not a revision git can look up, so the"
+                " input-drift comparison below was not made.")
+    if rev == head:
+        # The reproducibility clause belongs here too: a tip committed and not yet pushed is
+        # the ordinary state while a round is being prepared, and this return used to be the
+        # one that skipped `_rev_state` and so said nothing about whether a clone has it.
+        return f" at `{rev[:9]}`, which is this branch's tip.{_REPRODUCIBLE[state]}".rstrip()
+    if state == "not_here":
         # No gloss on *why* the object is missing: a shallow clone, a pruned object and a
         # tree never committed are indistinguishable here, and earlier rounds asserted the
         # last of the three.
         return (f" at `{rev[:9]}`, which this checkout does not hold, so the input-drift"
                 f" comparison below was not made.{_REPRODUCIBLE[state]}").rstrip()
+    # `unknown` deliberately falls through to the drift answer rather than joining the
+    # branch above. Every `unknown` that can arrive here was set after `cat-file -e`
+    # succeeded, so the object *is* in this checkout and `merge-base` and `diff` will both
+    # answer; the only other `unknown` - no repository at all - cannot reach this line,
+    # because `rev-parse HEAD` returned above. Grouping the two printed "which this
+    # checkout does not hold" for the one state that proves the object is held, and threw
+    # away a drift answer git had already been asked for. What is unknown is publication
+    # alone, which is what the clause at the end of this function says.
     anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
                          capture_output=True)
     if anc.returncode == 1:
@@ -1194,25 +1280,8 @@ if PROV:
     )
     if PROV.get("aigr_tree"):
         lines.append(f"- ai-gene-review tree: {PROV['aigr_tree']}")
-    # aigr_tree is operator-supplied text and routinely names a sha in prose. Nothing
-    # compared it with aigr_revision, so the parenthetical and the derived sentence below
-    # agreed only by coincidence. Checked rather than trusted: any 7-to-40 hex run in that
-    # text that looks like a sha must be a prefix of, or prefixed by, the recorded revision.
-    # The text legitimately names several revisions - the base commit, each merged branch
-    # tip, the resulting merge - so the invariant is not "every sha is the recorded one",
-    # which a first draft of this check asserted and which the committed text refutes. It is
-    # that the revision the report records appears among them: otherwise the prose and the
-    # derived sentence below describe different commits.
-    _rev = PROV.get("aigr_revision") or ""
-    # At least one digit required: a 7-to-40 character run of a-f is also an ordinary word
-    # ("defaced"), and an aigr_tree naming no sha but containing one would have refused to
-    # render with a provenance-mismatch message.
-    _named = [m for m in re.findall(r"\b[0-9a-f]{7,40}\b", PROV.get("aigr_tree") or "")
-              if any(c.isdigit() for c in m)]
-    if _rev and _named and not any(_rev.startswith(m) or m.startswith(_rev) for m in _named):
-        sys.exit(f"the primary report's aigr_tree text names {', '.join(_named[:4])} but not "
-                 f"the revision it records (`{_rev[:9]}`); the provenance block and the "
-                 "derived sentence below would describe different commits")
+    # The description-names-its-revision guard for both reports runs at import, beside
+    # ALT_TREE, rather than here: it was primary-only while it lived in this function.
     # Outside alt_comparison(), which returns nothing without a second report: this is a
     # claim about the primary report alone, and the table renders from it either way.
     lines.append(f"- {_primary_drift_tail()}")
