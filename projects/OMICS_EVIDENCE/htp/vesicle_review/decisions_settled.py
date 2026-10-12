@@ -8,7 +8,7 @@ category constants as pass 1. Genes reviewed in both passes get the same call he
 microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT2, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, G as G1, note
+from decisions_draft import CAT1, CAT2, CAT2_GO, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, G as G1, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -23,7 +23,7 @@ G = {
     "ADIRF": note(CAT4, "UniProt places ADIRF in the nucleus only."),
     "AGRN": note(CAT5, "Secreted heparan-sulfate proteoglycan; its proteoglycan-binding annotations are by sequence similarity only (ISS)."),
     "AHCY": note(CAT2, "Cytoplasmic adenosylhomocysteinase."),
-    "AHNAK": note(CAT2, "Large scaffold protein that shuttles to the cytoplasmic face of the plasma membrane."),
+    "AHNAK": note(CAT2_GO, "Large scaffold protein that shuttles to the cytoplasmic face of the plasma membrane."),
     "AHSA1": note(CAT2, "Cytosolic HSP90 co-chaperone."),
     "AKR1C4": note(CAT2, "Cytosolic aldo-keto reductase."),
     "ALAD": note(CAT2, "Cytosolic porphobilinogen synthase."),
@@ -33,22 +33,30 @@ G = {
     "AMN": note(CAT1, "Apical plasma-membrane cubilin partner."),
     "ANKFY1": note(CAT2A, "Peripheral endosome-membrane protein."),
     "APLP2": note(CAT1, "Plasma-membrane amyloid precursor-like protein."),
-    "APOE": note(CAT2, "Not a MISEV2018 (PMID:30637094) negative marker (it names APOA1/2 and APOB), and these "
-                       "samples are urine, prostatic secretion, B-cell culture and CSF rather than plasma. van Niel "
-                       "et al. (PMID:26387950) show ApoE on endosomal intraluminal vesicles that are secreted as "
-                       "exosomes, so the location is real; it is secondary to APOE's lipoprotein role. (Confirms the "
-                       "existing KEEP_AS_NON_CORE; the plasma-microvesicle row stays over-annotated in pass 1.)"),
+    "APOE": ("KEEP_AS_NON_CORE", "Secreted apolipoprotein (UniProt). Not a MISEV2018 (PMID:30637094) negative marker (it "
+                                 "names APOA1/2 and APOB), and these samples are urine, prostatic secretion, B-cell culture "
+                                 "and CSF rather than plasma. van Niel et al. (PMID:26387950) show ApoE on endosomal "
+                                 "intraluminal vesicles that are secreted as exosomes, so the location is real; it is "
+                                 "secondary to APOE's lipoprotein role. True, but not its core location. (Confirms the "
+                                 "existing KEEP_AS_NON_CORE; the plasma-microvesicle row stays over-annotated in pass 1.)"),
     "APOH": ("KEEP_AS_NON_CORE", "Secreted plasma beta-2-glycoprotein I, which binds anionic phospholipids. MISEV2018 "
                        "(PMID:30637094) category 5 allows secreted proteins to associate with EVs through promiscuous "
                        "lipid receptors on the EV surface, so the detection is plausible. (Confirms the existing "
                        "KEEP_AS_NON_CORE.)"),
-    "ARL15": note(CAT2, "Small GTPase of the cytoplasmic face of membranes."),
-    "ARMC3": note(CAT2, "Cytoplasmic armadillo-repeat protein."),
+    "ARL15": ("KEEP_AS_NON_CORE", "Little-characterized Arf-like small GTPase: neither UniProt nor GO records a location "
+                                  "other than EV proteomes. Arf-family GTPases cycle between the cytosol and membranes, "
+                                  "and MISEV2018 (PMID:30637094) category 2 treats such proteins as expected EV contents, so "
+                                  "the detection is plausible. True, but not its core location."),
+    "ARMC3": ("KEEP_AS_NON_CORE", "Little-characterized armadillo-repeat protein: neither UniProt nor GO records a "
+                                  "location other than EV proteomes; UniProt infers two S-palmitoyl cysteines by similarity, "
+                                  "a membrane-binding modification. MISEV2018 (PMID:30637094) category 2 treats cytosolic "
+                                  "and membrane-binding proteins as expected EV contents, so the detection is plausible. "
+                                  "True, but not its core location."),
     "ARPC4": note(CAT2, "Arp2/3 complex subunit (cytoskeleton)."),
     "ARPC5": note(CAT2, "Arp2/3 complex subunit (cytoskeleton)."),
     "ARSL": note(CAT4, "Golgi-resident arylsulfatase."),
     "ASAH1": note(CAT5, "Lysosomal lumenal acid ceramidase; UniProt notes secretion is extremely low."),
-    "ASL": note(CAT2, "Cytosolic argininosuccinate lyase."),
+    "ASL": note(CAT2_GO, "Cytosolic argininosuccinate lyase."),
     "ASS1": note(CAT2, "Cytosolic argininosuccinate synthase."),
     "ATP5F1A": note(CAT4_SURFACE, "Mitochondrial ATP synthase subunit; ecto-ATP synthase plasma-membrane pool by IDA "
                                   "(PMID:10077593)."),
@@ -95,24 +103,24 @@ G = {
                                  "the surface by its transmembrane partner AMN (UniProt). Membrane proteins and their "
                                  "bound partners are expected EV contents (MISEV2018 (PMID:30637094) categories 1 and "
                                  "2a). True, but not its core location."),
-    "DDC": note(CAT2, "Cytosolic aromatic-L-amino-acid decarboxylase."),
-    "DNAJA2": note(CAT2, "Cytosolic farnesylated HSP40 co-chaperone."),
+    "DDC": note(CAT2_GO, "Cytosolic aromatic-L-amino-acid decarboxylase."),
+    "DNAJA2": note(CAT2A, "Cytosolic HSP40 co-chaperone, S-farnesylated (UniProt, PubMed:15308774)."),
     "DNAJB1": note(CAT2, "Cytoplasmic HSP40 co-chaperone."),
     "DNAJC13": note(CAT2A, "Peripheral endosome-membrane protein."),
     "DNAJC3": note(CAT4, "ER-resident co-chaperone."),
     "DPEP1": note(CAT1, "GPI-anchored apical plasma-membrane dipeptidase."),
-    "DPYS": note(CAT2, "Cytosolic dihydropyrimidinase."),
+    "DPYS": note(CAT2_GO, "Cytosolic dihydropyrimidinase."),
     "DPYSL2": note(CAT2, "Cytosolic microtubule-associated protein."),
     "EGF": note(CAT1, "Single-pass membrane pro-EGF precursor."),
     "EIF3E": note(CAT2, "Cytoplasmic translation initiation factor."),
-    "FAH": note(CAT2, "Cytosolic fumarylacetoacetase."),
+    "FAH": note(CAT2_GO, "Cytosolic fumarylacetoacetase."),
     "FAS": note(CAT1, "Plasma-membrane death receptor."),
     "FKBP4": note(CAT2, "Cytosolic HSP90 co-chaperone."),
     "FKBP5": note(CAT2, "Cytoplasmic HSP90 co-chaperone."),
     "FN1": note(CAT5_BOUND, "Secreted fibronectin with experimental proteoglycan binding (IDA). (Confirms the existing KEEP_AS_NON_CORE.)"),
     "FTH1": note(CAT2, "Cytoplasmic ferritin heavy chain."),
     "G6PD": note(CAT2, "Cytosolic glucose-6-phosphate dehydrogenase."),
-    "GALK1": note(CAT2, "Cytosolic galactokinase."),
+    "GALK1": note(CAT2_GO, "Cytosolic galactokinase."),
     "GALM": note(CAT2, "Cytoplasmic galactose mutarotase."),
     "GALNS": note(CAT5, "Lysosomal lumenal sulfatase."),
     "GAS6": ("KEEP_AS_NON_CORE", "Secreted TAM-receptor ligand whose gamma-carboxylated Gla domain binds phosphatidylserine on "
@@ -122,12 +130,12 @@ G = {
     "GBA": note(CAT5, "Lysosomal lumenal glucocerebrosidase."),
     "GBA1": note(CAT5, "Lysosomal lumenal glucocerebrosidase."),
     "GET3": note(CAT2, "Cytoplasmic tail-anchored-protein targeting ATPase."),
-    "GFPT1": note(CAT2, "Cytosolic glutamine-fructose-6-phosphate transaminase."),
+    "GFPT1": note(CAT2_GO, "Cytosolic glutamine-fructose-6-phosphate transaminase."),
     "GGT1": note(CAT1, "Plasma-membrane gamma-glutamyltransferase."),
     "GLA": note(CAT5, "Lysosomal lumenal alpha-galactosidase."),
     "GLB1": note(CAT5, "Lysosomal lumenal beta-galactosidase."),
     "GLIPR2": note(CAT4, "Golgi-membrane protein."),
-    "GLO1": note(CAT2, "Cytosolic glyoxalase."),
+    "GLO1": note(CAT2_GO, "Cytosolic glyoxalase."),
     "GLOD4": note(CAT4, "Mitochondrial glyoxalase-domain protein."),
     "GM2A": note(CAT5_BOUND, "Lysosomal GM2 activator with experimental lipid chaperone activity (IDA, PMID:11707436, "
                              "PMID:30988135): it extracts GM2 from intralysosomal luminal vesicle membranes, the "
@@ -138,20 +146,20 @@ G = {
     "GPI": note(CAT2, "Cytoplasmic glucose-6-phosphate isomerase."),
     "GRB2": note(CAT2, "Cytoplasmic signalling adapter."),
     "GSR": note(CAT2, "Glutathione reductase, cytoplasmic isoform."),
-    "GSS": note(CAT2, "Cytosolic glutathione synthetase."),
+    "GSS": note(CAT2_GO, "Cytosolic glutathione synthetase."),
     "GUSB": note(CAT5, "Lysosomal lumenal beta-glucuronidase."),
     "HEXA": note(CAT5, "Lysosomal lumenal hexosaminidase."),
-    "HGD": note(CAT2, "Cytosolic homogentisate dioxygenase."),
+    "HGD": note(CAT2_GO, "Cytosolic homogentisate dioxygenase."),
     "HPD": note(CAT2, "Cytoplasmic 4-hydroxyphenylpyruvate dioxygenase."),
     "HPRT1": note(CAT2, "Cytoplasmic purine salvage enzyme."),
     "HPX": note(CAT5, "Secreted plasma hemopexin."),
     "HSPA12A": note(CAT2, "Cytoplasmic HSP70-family protein."),
     "HSPA13": note(CAT4, "ER/microsome HSP70-family protein."),
     "HSPA1B": note(CAT2, "Cytoplasmic HSP70."),
-    "HSPA1L": note(CAT2, "Cytoplasmic HSP70."),
+    "HSPA1L": note(CAT2_GO, "Cytoplasmic HSP70."),
     "HSPA2": note(CAT2, "Cytoplasmic HSP70."),
     "HSPA4": note(CAT2, "Cytoplasmic HSP110-family chaperone."),
-    "HSPA6": note(CAT2, "Cytoplasmic HSP70."),
+    "HSPA6": note(CAT2_GO, "Cytoplasmic HSP70."),
     "HSPA8": note(CAT2A, "Cytoplasmic HSC70, which also acts at endosomal membranes."),
     "HSPA9": note(CAT4, "Mitochondrial HSP70 (mortalin)."),
     "HSPD1": note(CAT4_SURFACE, "Mitochondrial matrix HSP60; cell-surface pool by IDA (PMID:9243807, PMID:10663613, "
@@ -166,7 +174,7 @@ G = {
     "ITIH3": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor heavy chain. UniProt says only that it may carry "
                         "hyaluronan, and unlike ITIH1 and ITIH2 it has no hyaluronan-binding annotation."),
     "ITIH4": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor chain."),
-    "KHK": note(CAT2, "Cytosolic ketohexokinase."),
+    "KHK": note(CAT2_GO, "Cytosolic ketohexokinase."),
     "KL": note(CAT1, "Plasma-membrane klotho isoform."),
     "LAMP1": note(CAT1, "Lysosome/endosome-membrane glycoprotein that also cycles to the plasma membrane."),
     "LCK": note(CAT1, "Lipid-anchored plasma-membrane kinase."),
@@ -198,29 +206,29 @@ G = {
     "PAFAH1B1": note(CAT2, "Cytoplasmic dynein regulator LIS1."),
     "PARD6B": note(CAT2A, "Cytoplasmic polarity adapter recruited to the plasma membrane."),
     "PCBD1": note(CAT2, "Cytoplasmic/nuclear pterin-4a-carbinolamine dehydratase."),
-    "PDCD5": note(CAT2, "Cytoplasmic/nuclear apoptosis regulator."),
+    "PDCD5": note(CAT2_GO, "Cytoplasmic/nuclear apoptosis regulator."),
     "PDCD6IP": G1["PDCD6IP"],
     "PGK1": note(CAT2, "Cytosolic phosphoglycerate kinase."),
     "PGM1": note(CAT2, "Cytoplasmic phosphoglucomutase."),
-    "PHGDH": note(CAT2, "Cytosolic phosphoglycerate dehydrogenase."),
+    "PHGDH": note(CAT2_GO, "Cytosolic phosphoglycerate dehydrogenase."),
     "PI15": note(CAT5, "Secreted protease inhibitor."),
-    "PKLR": note(CAT2, "Cytosolic pyruvate kinase."),
+    "PKLR": note(CAT2_GO, "Cytosolic pyruvate kinase."),
     "PKM": note(CAT2, "Cytoplasmic pyruvate kinase."),
     "PLD3": note(CAT1, "Single-pass membrane protein of ER and endolysosomes."),
     "PM20D1": note(CAT5, "Secreted N-fatty-acyl-amino-acid synthase/hydrolase."),
     "PNP": note(CAT2, "Cytosolic purine nucleoside phosphorylase."),
     "PPIB": note(CAT4, "ER-lumen cyclophilin B."),
     "PPP2CA": note(CAT2, "Cytoplasmic PP2A catalytic subunit."),
-    "PPP2R1B": note(CAT2, "Cytoplasmic PP2A scaffold subunit."),
+    "PPP2R1B": note(CAT2_GO, "Cytoplasmic PP2A scaffold subunit."),
     "PRDX4": note(CAT4, "ER-lumen peroxiredoxin."),
     "PRSS23": note(CAT5, "Secreted serine protease."),
     "PSAP": note(CAT5_BOUND, "Prosaposin, lysosomal and secreted, with experimental phospholipid binding (IDA). (Confirms the existing KEEP_AS_NON_CORE.)"),
-    "PSAT1": note(CAT2, "Cytosolic phosphoserine aminotransferase."),
+    "PSAT1": note(CAT2_GO, "Cytosolic phosphoserine aminotransferase."),
     "PSMA1": note(CAT2, "Cytoplasmic/nuclear proteasome subunit."),
     "PSMB5": note(CAT2, "Cytoplasmic/nuclear proteasome subunit."),
     "PTPRC": note(CAT1, "Plasma-membrane phosphatase CD45."),
-    "QDPR": note(CAT2, "Cytosolic dihydropteridine reductase."),
-    "QPRT": note(CAT2, "Cytosolic quinolinate phosphoribosyltransferase."),
+    "QDPR": note(CAT2_GO, "Cytosolic dihydropteridine reductase."),
+    "QPRT": note(CAT2_GO, "Cytosolic quinolinate phosphoribosyltransferase."),
     "RAB15": note(CAT1, "Lipid-anchored small GTPase of the plasma membrane/endocytic system."),
     "RAB7A": note(CAT1, "Lipid-anchored late-endosome GTPase."),
     "RAB9A": note(CAT1, "Lipid-anchored late-endosome GTPase."),

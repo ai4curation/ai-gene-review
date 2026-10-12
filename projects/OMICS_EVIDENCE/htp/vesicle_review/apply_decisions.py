@@ -131,6 +131,24 @@ def has_anchor(organism: str, gene: str) -> bool:
         return bool(ANCHOR_FEATURE.search(fh.read()))
 
 
+# CAT2's attribution of the cytosolic location, checked against its stated source.
+CYTO_UNIPROT = "Cytosolic protein (UniProt)"
+CYTO_GO = "Cytosolic protein (GO cytosol or cytoplasm annotation)"
+
+
+def uniprot_cytosolic(organism: str, gene: str) -> bool:
+    with open(os.path.join(ROOT, "genes", organism, gene, f"{gene}-uniprot.txt")) as fh:
+        text = re.sub(r"\s+", " ", " ".join(line[5:] for line in fh if line.startswith("CC   ")))
+    locations = " ".join(re.findall(r"-!- SUBCELLULAR LOCATION:(.*?)(?= -!- |$)", text))
+    return bool(re.search(r"cytoplasm|cytosol", locations, re.I))
+
+
+def go_cytosolic(organism: str, gene: str) -> bool:
+    with open(os.path.join(ROOT, "genes", organism, gene, f"{gene}-goa.tsv")) as fh:
+        return any(r["GO TERM"] in ("GO:0005829", "GO:0005737") and "NOT" not in r["QUALIFIER"]
+                   for r in csv.DictReader(fh, delimiter="\t"))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -156,6 +174,10 @@ def main() -> int:
         if NO_BINDING in basis:
             hits = binding_evidence(d["organism"], d["gene"])
             assert not hits, f"{key}: CAT5 says no experimental lipid/proteoglycan binding, but found {hits}"
+        if CYTO_UNIPROT in basis:
+            assert uniprot_cytosolic(d["organism"], d["gene"]), f"{key}: CAT2 cites UniProt, which records no cytosol"
+        if CYTO_GO in basis:
+            assert go_cytosolic(d["organism"], d["gene"]), f"{key}: CAT2_GO cites GO, which records no cytosol"
         if ANCHOR_CLAIM in basis:
             assert has_anchor(d["organism"], d["gene"]), f"{key}: CAT1 says transmembrane/lipid-anchored, UniProt has no anchor"
         if SURFACE_CLAIM in basis:

@@ -474,6 +474,13 @@ own basis). All six rows were already KEEP_AS_NON_CORE and stay so; only the rec
 changed, so no review file is edited. `apply_decisions.py` now requires a UniProt
 transmembrane, intramembrane, lipidation or GPI-anchor feature for any category-1 basis.
 
+The category-2 template said "Cytosolic protein (UniProt)", but for 39 proteins UniProt
+records no cytoplasmic location and the cytosol or cytoplasm annotation is in GO; those
+now cite GO (`CAT2_GO`), and the script checks each attribution against its source. Three
+bases were rewritten because the template did not fit at all: APOE, which is secreted,
+and ARL15 and ARMC3, which have no recorded location other than EV proteomes. DNAJA2, a
+farnesylated co-chaperone, moves to category 2a. No action changed.
+
 ### 2026-10-10: third round of automated-review fixes
 
 The reviewer found that the category-5 template still claimed "none is shown" for an

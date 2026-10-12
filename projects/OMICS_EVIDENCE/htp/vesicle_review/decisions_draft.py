@@ -31,6 +31,8 @@ CAT1 = ("KEEP_AS_NON_CORE", "Transmembrane/lipid-anchored protein of the plasma 
 CAT2 = ("KEEP_AS_NON_CORE", "Cytosolic protein (UniProt); cytosolic proteins, including abundant enzymes and "
         "cytoskeletal proteins, are expected and often promiscuous EV contents (MISEV2018 (PMID:30637094) category 2b). True, but "
         "not its core location.")
+# the same, for proteins whose cytosolic location is recorded in GO rather than UniProt
+CAT2_GO = (CAT2[0], CAT2[1].replace("Cytosolic protein (UniProt)", "Cytosolic protein (GO cytosol or cytoplasm annotation)"))
 CAT2A = ("KEEP_AS_NON_CORE", "Cytosolic protein with lipid or membrane-protein binding ability; MISEV2018 (PMID:30637094) "
          "category 2a lists such proteins (ESCRT components, ALIX, annexins, HSPA8 and others) as expected EV contents. True, "
          "but not its core location.")
@@ -103,7 +105,7 @@ G = {
     "APPL2": note(CAT2A, "Peripheral early-endosome adaptor."),
     "APRT": note(CAT2, "Cytosolic salvage enzyme."),
     "ARF1": note(CAT2A, "Myristoylated cytosolic small GTPase that cycles onto membranes."),
-    "ARHGAP23": note(CAT2, "Cytosolic Rho GAP."),
+    "ARHGAP23": note(CAT2_GO, "Cytosolic Rho GAP."),
     "ARHGEF18": note(CAT2, "Cytoplasmic/cortical Rho GEF."),
     "ARL6": note(CAT2A, "Peripheral ciliary-membrane GTPase (urinary EVs carry ciliary proteins)."),
     "ARL8A": note(CAT2A, "Peripheral late-endosome/lysosome GTPase."),
@@ -133,7 +135,7 @@ G = {
     "ATP6V1H": note(CAT2A, "V-ATPase V1 subunit."),
     "AUP1": note(CAT4, "ER-membrane and lipid-droplet protein (UniProt ECO:0000269)."),
     "BLVRB": note(CAT2, "Cytoplasmic reductase."),
-    "BPGM": note(CAT2, "Cytosolic erythrocyte enzyme."),
+    "BPGM": note(CAT2_GO, "Cytosolic erythrocyte enzyme."),
     "BPTF": note(CAT4, "Nuclear chromatin-remodelling subunit."),
     "BTD": note(CAT5, "Secreted biotinidase."),
     "C1GALT1C1": note(CAT4, "ER-membrane chaperone (Cosmc)."),
@@ -145,7 +147,7 @@ G = {
     "CAND1": note(CAT2, "Cytoplasmic cullin-exchange factor."),
     "CANT1": note(CAT4, "ER/Golgi-membrane nucleotidase."),
     "CANX": note(CAT4, "ER-membrane chaperone; calnexin is a commonly used ER (non-small-EV) marker."),
-    "CAPN5": note(CAT2, "Cytosolic calpain."),
+    "CAPN5": note(CAT2_GO, "Cytosolic calpain."),
     "CARD11": note(CAT2, "Cytoplasmic/membrane-raft signalling scaffold."),
     "CC2D1A": note(CAT2, "Cytoplasmic protein that binds ESCRT-III."),
     "CD2AP": note(CAT2, "Cytoplasmic adaptor linking membrane proteins to actin."),
@@ -155,7 +157,7 @@ G = {
                       "secreted, which does not establish EV localization. Applies to the plasma microvesicle row too."),
     "CR1": note(CAT1, "Plasma-membrane complement receptor (podocyte/erythrocyte)."),
     "CRYAB": note(CAT2, "Cytoplasmic small heat-shock protein."),
-    "CSNK2B": note(CAT2, "CK2 regulatory subunit (cytoplasmic and nuclear)."),
+    "CSNK2B": note(CAT2_GO, "CK2 regulatory subunit (cytoplasmic and nuclear)."),
     "CTH": note(CAT2, "Cytoplasmic enzyme."),
     "CTNNB1": note(CAT2, "Cytoplasmic/junctional beta-catenin."),
     "CUL3": note(CAT2, "Cullin scaffold with a cytoplasmic pool."),
@@ -170,15 +172,15 @@ G = {
     "GAA": note(CAT5, "Soluble lysosomal alpha-glucosidase."),
     "GAPDH": note(CAT2, "Cytosolic glycolytic enzyme found in many EV proteomes; the exosome is a destination, not "
                         "GAPDH's core location, so the earlier ACCEPT is downgraded."),
-    "GART": note(CAT2, "Cytosolic purine-synthesis enzyme."),
+    "GART": note(CAT2_GO, "Cytosolic purine-synthesis enzyme."),
     "GATM": note(CAT4, "Mitochondrial intermembrane-space enzyme."),
-    "GBE1": note(CAT2, "Cytosolic glycogen-branching enzyme."),
-    "GGCT": note(CAT2, "Cytosolic enzyme."),
+    "GBE1": note(CAT2_GO, "Cytosolic glycogen-branching enzyme."),
+    "GGCT": note(CAT2_GO, "Cytosolic enzyme."),
     "GLUL": note(CAT2, "Cytosolic glutamine synthetase."),
     "GPC4": note(CAT1, "GPI-anchored plasma-membrane glypican."),
     "GPD1": note(CAT2, "Cytoplasmic enzyme."),
     "GPX4": note(CAT2, "Cytoplasmic isoform of the peroxidase."),
-    "GRHPR": note(CAT2, "Cytosolic reductase."),
+    "GRHPR": note(CAT2_GO, "Cytosolic reductase."),
     "GRID1": ("MARK_AS_OVER_ANNOTATED", "Postsynaptic glutamate-receptor delta subunit whose expression is essentially "
                                          "restricted to the CNS; detection in urinary exosomes is implausible for the "
                                          "native protein and more likely a peptide misassignment."),
@@ -194,13 +196,13 @@ G = {
     "MDH1": note(CAT2, "Cytosolic malate dehydrogenase."),
     "MDH2": note(CAT4, "Mitochondrial matrix malate dehydrogenase."),
     "MGAT1": note(CAT4, "Golgi-membrane glycosyltransferase."),
-    "MYH10": note(CAT2, "Non-muscle myosin II."),
+    "MYH10": note(CAT2_GO, "Non-muscle myosin II."),
     "MYH9": note(CAT2, "Non-muscle myosin II."),
-    "NAGK": note(CAT2, "Cytosolic kinase."),
-    "NANS": note(CAT2, "Cytosolic sialic-acid synthase."),
+    "NAGK": note(CAT2_GO, "Cytosolic kinase."),
+    "NANS": note(CAT2_GO, "Cytosolic sialic-acid synthase."),
     "NEU1": note(CAT5, "Lysosomal sialidase (lysosome lumen/membrane)."),
     "NRAS": note(CAT1, "Lipid-anchored plasma-membrane GTPase (cytoplasmic face)."),
-    "PAICS": note(CAT2, "Cytosolic purine-synthesis enzyme."),
+    "PAICS": note(CAT2_GO, "Cytosolic purine-synthesis enzyme."),
     "PARK7": note(CAT2, "Cytoplasmic DJ-1; its EV presence matters as a biomarker, not as its site of action, so the "
                         "earlier ACCEPT is downgraded."),
     "PDCD6IP": ("ACCEPT", "ALIX itself works in EV biogenesis: UniProt records that it sorts multivesicular-body cargo into "
@@ -210,7 +212,7 @@ G = {
     "PDXK": note(CAT2, "Cytosolic kinase."),
     "PEX1": note(CAT2, "Cytosolic AAA ATPase recruited to peroxisomes (UniProt cytosol, ECO:0000269)."),
     "PFAS": note(CAT2, "Cytoplasmic purine-synthesis enzyme."),
-    "PGAM2": note(CAT2, "Cytosolic glycolytic enzyme."),
+    "PGAM2": note(CAT2_GO, "Cytosolic glycolytic enzyme."),
     "PGD": note(CAT2, "Cytoplasmic pentose-phosphate enzyme."),
     "PGLS": note(CAT2, "Cytoplasmic pentose-phosphate enzyme."),
     "PLCG2": note(CAT2A, "Cytoplasmic/membrane-raft phospholipase."),
@@ -218,10 +220,10 @@ G = {
     "PPP2R1A": note(CAT2, "Cytoplasmic PP2A scaffold."),
     "PTPN6": note(CAT2, "Cytoplasmic tyrosine phosphatase."),
     "PYGL": note(CAT2, "Cytosolic glycogen phosphorylase."),
-    "PYGM": note(CAT2, "Cytosolic glycogen phosphorylase."),
+    "PYGM": note(CAT2_GO, "Cytosolic glycogen phosphorylase."),
     "RAB1B": note(CAT4, "Prenylated GTPase of the ER-to-Golgi pathway (early secretory compartments)."),
     "RACK1": note(CAT3B, "RACK1 is a core 40S ribosomal subunit protein as well as a signalling scaffold."),
-    "RPE": note(CAT2, "Cytosolic epimerase."),
+    "RPE": note(CAT2_GO, "Cytosolic epimerase."),
     "RPS3": note(CAT3B, "40S ribosomal protein S3."),
     "SCAMP3": note(CAT1, "Endosomal/post-Golgi membrane protein. The earlier ACCEPT said SCAMP3 is required for EV "
                          "biogenesis, but the cited work (PMID:19158374, PMID:23418353) shows it regulates ESCRT-dependent "
@@ -242,7 +244,7 @@ G = {
     "SLC25A1": note(CAT4, "Mitochondrial inner-membrane carrier."),
     "SLC25A3": note(CAT4, "Mitochondrial inner-membrane carrier."),
     "SLC3A1": note(CAT1, "Apical plasma-membrane transporter subunit."),
-    "SMS": note(CAT2, "Cytosolic spermine synthase."),
+    "SMS": note(CAT2_GO, "Cytosolic spermine synthase."),
     "STOM": note(CAT1, "Peripheral plasma-membrane raft protein (stomatin), released in microvesicles; expected EV "
                        "content but not its core location, so the earlier ACCEPT is downgraded. Applies to the plasma "
                        "microvesicle row too."),
@@ -250,11 +252,11 @@ G = {
     "TAX1BP1": note(CAT2, "Cytoplasmic autophagy adaptor."),
     "THBS1": note(CAT5_BOUND, "Secreted thrombospondin-1 with experimental heparin and phosphatidylserine binding (IDA); the earlier ACCEPT rested only on its being secreted."),
     "THBS4": note(CAT5_BOUND, "Secreted thrombospondin-4 with experimental heparin binding (IDA); the earlier ACCEPT rested only on its being secreted."),
-    "TKFC": note(CAT2, "Cytosolic kinase."),
-    "TKT": note(CAT2, "Cytosolic transketolase."),
+    "TKFC": note(CAT2_GO, "Cytosolic kinase."),
+    "TKT": note(CAT2_GO, "Cytosolic transketolase."),
     "TMEM63A": note(CAT1, "Lysosome/endosome membrane channel."),
     "TOLLIP": note(CAT2, "Cytoplasmic/endosomal adaptor."),
-    "UFC1": note(CAT2, "Cytosolic E2 enzyme."),
+    "UFC1": note(CAT2_GO, "Cytosolic E2 enzyme."),
     "UGGT1": note(CAT4, "ER-lumenal glucosyltransferase with an ER-retrieval signal."),
     "UGP2": note(CAT2, "Cytoplasmic UDP-glucose pyrophosphorylase."),
     "VPS4A": note(CAT2A, "ESCRT AAA ATPase acting on the cytosolic face of endosomes; the exosome is a destination, "
