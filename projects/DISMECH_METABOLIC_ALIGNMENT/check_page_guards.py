@@ -6,12 +6,20 @@ and the figures did not reconcile across rounds. This script is the harness thos
 came from, so the claim is now checkable rather than asserted - the same move this project
 made for the branch-local comparison, the aspect figures and the module-flag reasons.
 
-    uv run python projects/DISMECH_METABOLIC_ALIGNMENT/check_page_guards.py
+    just check-alignment-page-guards
+    just check-alignment-page-guards --case coverage
+
+`tests/test_dismech_alignment_page_guards.py` runs it under pytest, so a regression in any
+of the refusals fails the suite rather than waiting for someone to type the command.
 
 Each case copies the two committed reports, breaks one thing, and renders. A case marked
-EXIT must make the generator refuse; a case marked OK must still render, because the
-branch it exercises is a legitimate state rather than a defect. Exit status is 0 only if
-every case behaves as declared.
+EXIT must make the generator refuse **with the message it declares**, so that another
+guard firing does not pass it; a case marked OK must still render **and contain the clause
+it declares**, because those cases exist to prove a branch renders and would otherwise
+pass with that branch deleted. Exit status is 0 only if every case behaves as declared.
+
+`--case <substring>` runs the matching cases only, since each render reads the full
+183-row reports.
 """
 import copy
 import os
@@ -51,71 +59,116 @@ def _strip_cover(rep, genes):
                 g["covering_pairs"] = None
 
 
-# (name, expectation, mutation). "EXIT" means the generator must refuse.
+# (name, expectation, mutation, expect) where `expect` is a substring the refusal message
+# must contain, or - for an OK case - a substring the rendered page must contain. Exit status
+# alone was not enough: an EXIT case passed when *any* guard fired rather than the declared
+# one, and an OK case passed whenever the generator exited 0, whether or not the branch under
+# test was taken. The three OK cases exist to prove a clause renders, so without a string to
+# look for they would still have passed with that clause deleted.
 CASES = [
-    ("untampered", "OK", lambda p, a: None),
+    ("untampered", "OK", lambda p, a: None,
+     "no file under `genes/` or `modules/` changed"),
     ("audit_sha256 differs", "EXIT",
-     lambda p, a: a["provenance"].update(audit_sha256="deadbeefdead")),
-    ("row counts differ", "EXIT", lambda p, a: a.__setitem__("entries", a["entries"][:-1])),
+     lambda p, a: a["provenance"].update(audit_sha256="deadbeefdead"),
+     "produced by different align_audit.py versions"),
+    ("row counts differ", "EXIT", lambda p, a: a.__setitem__("entries", a["entries"][:-1]),
+     "report row counts differ"),
     ("review-independent flag moves", "EXIT",
-     lambda p, a: _drop_flag(a, "GENE_ON_NO_NODE")),
+     lambda p, a: _drop_flag(a, "GENE_ON_NO_NODE"),
+     "flags that do not read a gene review differ"),
     ("review_independent_flags absent", "EXIT",
-     lambda p, a: a.pop("review_independent_flags", None)),
-    ("flag_groups absent", "EXIT", lambda p, a: a.pop("flag_groups", None)),
-    ("flag_groups empty", "EXIT", lambda p, a: a.__setitem__("flag_groups", {})),
+     lambda p, a: a.pop("review_independent_flags", None),
+     "no review_independent_flags"),
+    ("flag_groups absent", "EXIT", lambda p, a: a.pop("flag_groups", None),
+     "has no flag_groups"),
+    ("flag_groups empty", "EXIT", lambda p, a: a.__setitem__("flag_groups", {}),
+     "flag_groups is empty"),
     ("module_sourced_reason_required absent", "EXIT",
-     lambda p, a: p["flag_groups"].pop("module_sourced_reason_required", None)),
-    ("soft group absent", "EXIT", lambda p, a: p["flag_groups"].pop("soft", None)),
+     lambda p, a: p["flag_groups"].pop("module_sourced_reason_required", None),
+     "no module_sourced_reason_required flag group"),
+    ("soft group absent", "EXIT", lambda p, a: p["flag_groups"].pop("soft", None),
+     "no soft flag group"),
     ("soft group loses a flag the prose names", "EXIT",
      lambda p, a: p["flag_groups"].__setitem__(
-         "soft", [f for f in p["flag_groups"]["soft"] if f != "ALIGNED_NONCORE"])),
+         "soft", [f for f in p["flag_groups"]["soft"] if f != "ALIGNED_NONCORE"]),
+     "soft flag group omits ALIGNED_NONCORE"),
     ("term_aspects absent from the primary report", "EXIT",
-     lambda p, a: p.pop("term_aspects", None)),
+     lambda p, a: p.pop("term_aspects", None),
+     "no term_aspects key at all"),
     ("term_aspects absent from the second report", "EXIT",
-     lambda p, a: a.pop("term_aspects", None)),
+     lambda p, a: a.pop("term_aspects", None),
+     "second report has no term_aspects"),
     ("term_aspects empty in both", "OK",
-     lambda p, a: (p.__setitem__("term_aspects", {}), a.__setitem__("term_aspects", {}))),
+     lambda p, a: (p.__setitem__("term_aspects", {}), a.__setitem__("term_aspects", {})),
+     "no matched pair crosses the aspects"),
     ("aspect_unresolved absent", "EXIT",
-     lambda p, a: p["provenance"].pop("aspect_unresolved", None)),
+     lambda p, a: p["provenance"].pop("aspect_unresolved", None),
+     "no aspect_unresolved key"),
     ("aspect_unresolved non-empty", "OK",
-     lambda p, a: p["provenance"].__setitem__("aspect_unresolved", ["GO:0000001"])),
+     lambda p, a: p["provenance"].__setitem__("aspect_unresolved", ["GO:0000001"]),
+     "sit under no single aspect root"),
     ("a flag with no glossary entry, primary", "EXIT",
-     lambda p, a: p["entries"][0]["genes"][0]["flags"].append("NEWLY_INVENTED_FLAG")),
+     lambda p, a: p["entries"][0]["genes"][0]["flags"].append("NEWLY_INVENTED_FLAG"),
+     "no entry in FLAG_GLOSS: NEWLY_INVENTED_FLAG"),
     ("a flag with no glossary entry, second", "EXIT",
-     lambda p, a: a["entries"][0]["genes"][0]["flags"].append("NEWLY_INVENTED_FLAG")),
+     lambda p, a: a["entries"][0]["genes"][0]["flags"].append("NEWLY_INVENTED_FLAG"),
+     "no entry in FLAG_GLOSS: NEWLY_INVENTED_FLAG"),
     ("a principal module flag with no stated reason", "EXIT",
-     lambda p, a: _add_flag_to_principal(p, "MODULE_NOT_COVERING")),
+     lambda p, a: _add_flag_to_principal(p, "MODULE_NOT_COVERING"),
+     "MODULE_REASONS has no entry for principal rows"),
     ("two rows for one gene in one entry", "EXIT",
      lambda p, a: [d["entries"][0]["genes"].append(copy.deepcopy(d["entries"][0]["genes"][0]))
-                   for d in (p, a)]),
+                   for d in (p, a)],
+     "hold more than one row inside one entry"),
     ("coverage shown for some of its group", "EXIT",
-     lambda p, a: [_strip_cover(d, {"COQ8A"}) for d in (p, a)]),
+     lambda p, a: [_strip_cover(d, {"COQ8A"}) for d in (p, a)],
+     "cover_evidence shows 1 of 2 rows"),
     ("coverage shown for none of its group", "EXIT",
-     lambda p, a: [_strip_cover(d, {"COQ8A", "HAO1", "TMEM70"}) for d in (p, a)]),
+     lambda p, a: [_strip_cover(d, {"COQ8A", "HAO1", "TMEM70"}) for d in (p, a)],
+     "cover_evidence shows 0 of 1 rows"),
 ]
 
 
-def main():
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    only = None
+    if argv and argv[0] == "--case":
+        only = argv[1]
+    cases = [c for c in CASES if only is None or only.lower() in c[0].lower()]
+    if not cases:
+        sys.exit(f"no case matches {only!r}; names are:\n  "
+                 + "\n  ".join(c[0] for c in CASES))
     primary = yaml.safe_load(open(PRIMARY))
     alt = yaml.safe_load(open(ALT))
     bad = 0
     with tempfile.TemporaryDirectory() as tmp:
-        for name, want, mutate in CASES:
+        for name, want, mutate, expect in cases:
             p, a = copy.deepcopy(primary), copy.deepcopy(alt)
             mutate(p, a)
             pp, ap = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
+            out_md = os.path.join(tmp, "out.md")
+            for f in (out_md,):
+                if os.path.exists(f):
+                    os.remove(f)
             yaml.safe_dump(p, open(pp, "w"), sort_keys=False)
             yaml.safe_dump(a, open(ap, "w"), sort_keys=False)
-            r = subprocess.run([sys.executable, GEN, pp, os.path.join(tmp, "out.md"), ap],
+            r = subprocess.run([sys.executable, GEN, pp, out_md, ap],
                                capture_output=True, text=True)
             got = "EXIT" if r.returncode else "OK"
-            ok = got == want
-            bad += not ok
-            why = (r.stdout + r.stderr).strip().splitlines()
-            print(f"{'ok  ' if ok else 'FAIL'} {name}: wanted {want}, got {got}"
-                  + (f" - {why[-1][:90]}" if why and got == "EXIT" else ""))
-    n_exit = sum(1 for _, w, _ in CASES if w == "EXIT")
-    print(f"\n{len(CASES)} cases: {n_exit} must refuse, {len(CASES) - n_exit} must render.")
+            # Exit status is necessary and not sufficient. A refusal must carry the declared
+            # message, or any other guard firing would pass the case; a render must contain
+            # the declared clause, or deleting the branch under test would pass it.
+            where = (r.stdout + r.stderr) if got == "EXIT" else (
+                open(out_md).read() if os.path.exists(out_md) else "")
+            why = "" if got == want else f"wanted {want}, got {got}"
+            if not why and expect not in where:
+                why = (f"{'refusal message' if got == 'EXIT' else 'rendered page'} does not"
+                       f" contain {expect!r}")
+            bad += bool(why)
+            print(f"{'ok  ' if not why else 'FAIL'} {name}" + (f": {why}" if why else ""))
+    n_exit = sum(1 for c in cases if c[1] == "EXIT")
+    print(f"\n{len(cases)} cases: {n_exit} must refuse, {len(cases) - n_exit} must render;"
+          " each checked for exit status and for the message or clause it declares.")
     if bad:
         sys.exit(f"{bad} case(s) did not behave as declared")
     print("every guard behaved as declared")

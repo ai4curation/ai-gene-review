@@ -20,7 +20,7 @@ conditions, plus two entries created in this work (Mitchell syndrome, SLC26A1-re
 biological processes on the pathograph nodes naming that gene are compared with the gene's
 ai-gene-review core functions. The audit script (`align_audit.py`), the page generator
 (`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this
-table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, with `check_page_guards.py` exercising the generator's refusals, together with the second report the comparison section below is derived from (`report-branch-local.yaml`), the same audit run over `claude/cool-edison-o9wvf0-alignment-project`.
+table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, with `check_page_guards.py` exercising the generator's refusals (`just check-alignment-page-guards`, also run by the pytest suite), together with the second report the comparison section below is derived from (`report-branch-local.yaml`), the same audit run over `claude/cool-edison-o9wvf0-alignment-project`.
 
 **What "aligned" does and does not claim.** Five properties of the test make it a weak
 check, and any of them can turn a row green that a curator would not:
@@ -135,6 +135,7 @@ was generated from, and those inputs live in two repositories.
 - GO release: `2026-07-26`, adapter `sqlite:obo:go`
 - audit script: `4fa69f623798` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran; **git could not be asked about: the audit script itself**, so whether the revisions above name what ran is not established either way; the companion run over claude/cool-edison-o9wvf0-alignment-project records the audit script as modified at the same sha256
 - ai-gene-review tree: origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed)
+- The primary run's tree (`897d012ae`) is a commit here but is on no pushed ref, so the same comparison can be made in this checkout and not from a clone.
 - modules read: `459`; UniProt accessions reached as parts: `4175`, against `4242` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
 Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
@@ -145,7 +146,7 @@ The audit also runs over a second tree, and comparing the two runs shows which f
 are artifacts of the missing slices rather than findings. That tree is this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts.
 Both cover the same
 183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
-That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip, with no file under `genes/` or `modules/` changed between the two - the audit's whole input surface - so the figures stand for either. The primary run's own tree (`897d012ae`) is not reachable from any pushed ref, so no clone of this repository contains it and the same comparison cannot be made for the table's own figures.
+That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip, with no file under `genes/` or `modules/` changed between the two - the audit's whole input surface - so the figures stand for either.
 
 Every movement below is accounted for row by row rather than from the net counts: a flag's total can fall while rows arrive at it, and each row's cause is read from that row's own record on **both** trees, not from the flag's group. Where a flag moves in one direction only the net count is exact, and the line says so rather than implying the count was misleading.
 
