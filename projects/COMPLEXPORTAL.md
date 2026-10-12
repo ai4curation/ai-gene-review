@@ -162,16 +162,16 @@ review rejected, compared with a base rate of 10.0% (502 of 5,005). Script:
 
 | Rule | Flagged | Rejected | Precision | Lift | Recall |
 |---|---|---|---|---|---|
-| Outcome-type BP term (regulation, response to, development) **and** subunit has ≥5 CP references | 413 | 118 | 28.6% | 2.9× | 23% |
+| Outcome-type BP term (regulation, response to, development, morphogenesis, differentiation) **and** subunit has ≥5 CP references | 396 | 116 | 29.3% | 2.9× | 23% |
 | "response to" term | 85 | 20 | 23.5% | 2.4× | 4% |
 | Regulation term not corroborated by another group | 720 | 164 | 22.8% | 2.3× | 33% |
 | Regulation term (any) | 751 | 164 | 21.8% | 2.2× | 33% |
-| Outcome-type term, paper cited only by CP | 415 | 89 | 21.4% | 2.1× | 18% |
-| Outcome-type term, paper is a review | 122 | 25 | 20.5% | 2.0× | 5% |
+| Outcome-type term, paper cited only by CP | 396 | 89 | 22.5% | 2.2× | 18% |
+| Outcome-type term, paper is a review | 119 | 25 | 21.0% | 2.1× | 5% |
 | BP, subunit has ≥5 CP references | 960 | 182 | 19.0% | 1.9× | 36% |
-| BP, gene not named in the cached full text | 468 | 87 | 18.6% | 1.9× | 17% |
+| BP, gene not named in the cached full text | 345 | 77 | 22.3% | 2.2× | 15% |
 | Any BP | 2,814 | 414 | 14.7% | 1.5× | 82% |
-| Gene not named in cached full text | 780 | 105 | 13.5% | 1.3× | 21% |
+| Gene not named in cached full text | 572 | 88 | 15.4% | 1.5× | 18% |
 | Paper is a review | 812 | 105 | 12.9% | 1.3× | 21% |
 | Paper cited only by CP anywhere in GOA | 2,121 | 229 | 10.8% | 1.1× | 46% |
 | **Same gene, term and paper also annotated by another group** | 445 | **2** | **0.4%** | 0.04× | — |
@@ -194,8 +194,10 @@ What this shows:
 - **Promiscuous subunits** (actin, shared ATPase or ubiquitin-ligase subunits) are the clearest
   gene-level signal.
 - **"Gene not named in the paper" is weak on its own.** Matching on gene symbols and UniProt
-  synonyms misses protein names, and it is uninformative for abstract-only papers. It helps only
-  in combination with BP.
+  synonyms misses protein names, and it is uninformative for abstract-only papers. A paper
+  counts as full text only if it is flagged `full_text_available` *and* at least 20,000
+  characters are cached, because some HTML extractions carry the flag but little more than the
+  abstract (PMID:20616062 is one). On that basis the rule reaches 1.5×, and 2.2× for BP terms.
 - **Corroboration is the strongest signal in the other direction.** When another group has
   annotated the same gene, term and paper, the row was almost never rejected (2 of 445). Rows
   like these could be skipped in an audit.

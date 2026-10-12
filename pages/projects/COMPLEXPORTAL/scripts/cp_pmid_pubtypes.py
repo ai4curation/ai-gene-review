@@ -12,12 +12,16 @@ ids = [p.split(":")[1] for p in d["pmids"]]
 for i in range(0, len(ids), 150):
     chunk = ids[i:i + 150]
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=" + ",".join(chunk)
+    res = None
     for attempt in range(5):
         try:
             res = json.load(urllib.request.urlopen(url, timeout=60))["result"]
             break
         except Exception:
             time.sleep(2 ** attempt)
+    if res is None:
+        print(f"chunk starting {chunk[0]}: all retries failed; left untyped", file=sys.stderr)
+        continue
     for uid in res.get("uids", []):
         d["pmids"]["PMID:" + uid]["pubtype"] = res[uid].get("pubtype", [])
         d["pmids"]["PMID:" + uid]["year"] = res[uid].get("pubdate", "")[:4]
