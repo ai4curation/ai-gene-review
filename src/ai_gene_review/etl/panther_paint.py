@@ -246,7 +246,11 @@ def loss_nodes_by_ancestor(
     return by_ancestor
 
 
-def add_loss_nodes(nodes: Set[str], by_ancestor: Dict[str, Set[str]]) -> Set[str]:
+def add_loss_nodes(
+    nodes: Set[str],
+    by_ancestor: Dict[str, Set[str]],
+    family_nodes: Optional[Set[str]] = None,
+) -> Set[str]:
     """Extend a family's node set with the loss nodes that override its gains.
 
     Family nodes are discovered from leaf IBA with/from fields, but an IRD node
@@ -256,26 +260,38 @@ def add_loss_nodes(nodes: Set[str], by_ancestor: Dict[str, Set[str]]) -> Set[str
     names a node already in the set; this repeats until nothing new is added, in
     case a loss overrides a gain placed on another loss node.
 
+    PTN ids are not always family-unique, so an ancestor shared by two families
+    would otherwise pull family B's losses into family A's slice. Pass
+    ``family_nodes`` (the family's nodes in PANTHER's TreeGrafter table) to admit
+    only loss nodes that belong to this family.
+
     >>> sorted(add_loss_nodes({"PTNb"}, {"PTNb": {"PTNa"}, "PTNa": {"PTNz"}}))
     ['PTNa', 'PTNb', 'PTNz']
     >>> sorted(add_loss_nodes({"PTNc"}, {"PTNb": {"PTNa"}}))
     ['PTNc']
+    >>> sorted(add_loss_nodes({"PTNb"}, {"PTNb": {"PTNa", "PTNother"}}, {"PTNa", "PTNb"}))
+    ['PTNa', 'PTNb']
     """
     out = set(nodes)
     frontier = set(nodes)
     while frontier:
         new = set().union(*(by_ancestor.get(n, set()) for n in frontier)) - out
+        if family_nodes is not None:
+            new &= family_nodes
         out |= new
         frontier = new
     return out
 
 
-def treegrafter_family_nodes(lines: Iterable[str]) -> Dict[str, Set[str]]:
+def treegrafter_family_nodes(
+    lines: Iterable[str], family: Optional[str] = None
+) -> Dict[str, Set[str]]:
     """Parse PANTHER's TreeGrafter annotation table into ``family -> {PTN nodes}``.
 
     Each line starts with ``PTHRnnnnn:ANn`` and ends with the node's PTN id. This
     is PANTHER's own node-to-family mapping, so it also covers nodes that no leaf
     IBA cites: a gain whose whole clade is blocked by a loss, and the loss itself.
+    With ``family`` set, only that family's rows are kept.
 
     >>> tg = treegrafter_family_nodes(["PTHR1:AN0\\tPTHR1:SF8  GO:1;  PC1;\\tPTN000000084",
     ...                                "PTHR1:AN1\\tPTHR1:SF8\\tPTN004118867", "junk"])
@@ -286,7 +302,9 @@ def treegrafter_family_nodes(lines: Iterable[str]) -> Dict[str, Set[str]]:
     for line in lines:
         cols = line.rstrip("\n").split("\t")
         if len(cols) >= 2 and cols[-1].startswith("PTN") and cols[0].startswith("PTHR"):
-            out.setdefault(cols[0].split(":", 1)[0], set()).add(cols[-1])
+            fam = cols[0].split(":", 1)[0]
+            if family is None or fam == family:
+                out.setdefault(fam, set()).add(cols[-1])
     return out
 
 
@@ -447,11 +465,12 @@ def fetch_family_paint(
     with open_text(leaf_path) as fh:
         nodes = leaf_nodes_for_members(fh, members)
     with open_text(tg_path) as fh:
-        nodes |= treegrafter_family_nodes(fh).get(family, set())
+        tg_nodes = treegrafter_family_nodes(fh, family).get(family, set())
+    nodes |= tg_nodes
 
     with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
-    nodes = add_loss_nodes(nodes, loss_nodes_by_ancestor(ibd_index))
+    nodes = add_loss_nodes(nodes, loss_nodes_by_ancestor(ibd_index), tg_nodes)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     tsv_path = write_family_paint(family, nodes, ibd_index, out_dir)
@@ -528,9 +547,10 @@ def fetch_all_family_paint(
     with open_text(leaf_path) as fh:
         family_nodes = family_nodes_from_leaf(fh, member_to_families)
     with open_text(tg_path) as fh:
-        for family, tg_nodes in treegrafter_family_nodes(fh).items():
-            if family in family_dirs:
-                family_nodes.setdefault(family, set()).update(tg_nodes)
+        tg_by_family = treegrafter_family_nodes(fh)
+    for family, tg_nodes in tg_by_family.items():
+        if family in family_dirs:
+            family_nodes.setdefault(family, set()).update(tg_nodes)
     with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
 
@@ -538,7 +558,9 @@ def fetch_all_family_paint(
     counts: Dict[str, int] = {}
     removed: List[str] = []
     for family, fdir in family_dirs.items():
-        nodes = add_loss_nodes(family_nodes.get(family, set()), by_ancestor)
+        nodes = add_loss_nodes(
+            family_nodes.get(family, set()), by_ancestor, tg_by_family.get(family, set())
+        )
         n_annotations = sum(len(ibd_index.get(n, [])) for n in nodes)
         if skip_empty and n_annotations == 0:
             stale_slice = fdir / f"{family}-paint.tsv"

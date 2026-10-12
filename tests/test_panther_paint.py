@@ -364,7 +364,7 @@ def test_fetch_family_paint_includes_ird_nodes_without_leaves(tmp_path: Path):
     cache_dir = tmp_path / ".cache"
     cache_dir.mkdir()
     (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE + "\n" + ird_on_family)
-    _seed_treegrafter(cache_dir)
+    _seed_treegrafter(cache_dir, "PTHRX:AN3\tPTHRX:SF1\tPTN000099999\n")
     with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
         fh.write(LEAF_FIXTURE)
     entries_csv = tmp_path / "PTHRX-entries.csv"
@@ -407,7 +407,9 @@ def test_fetch_family_paint_uses_treegrafter_for_leafless_nodes(tmp_path: Path):
     cache_dir = tmp_path / ".cache"
     cache_dir.mkdir()
     (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE + "\n" + orphan)
-    _seed_treegrafter(cache_dir, "PTHRX:AN7\tPTHRX:SF1\tPTN000500000\n")
+    _seed_treegrafter(
+        cache_dir, "PTHRX:AN7\tPTHRX:SF1\tPTN000500000\nPTHRX:AN8\tPTHRX:SF1\tPTN000500001\n"
+    )
     with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
         fh.write(LEAF_FIXTURE)
     entries_csv = tmp_path / "PTHRX-entries.csv"
@@ -418,3 +420,36 @@ def test_fetch_family_paint_uses_treegrafter_for_leafless_nodes(tmp_path: Path):
     )
     # the TreeGrafter-only gain node, and the IRD that names it, are both included
     assert nodes == {"PTN000019791", "PTN000500000", "PTN000500001"}
+
+
+def test_fetch_family_paint_excludes_other_family_losses(tmp_path: Path):
+    """A loss naming a shared ancestor stays out unless TreeGrafter puts it in this family.
+
+    PTN ids are not always family-unique, so the with/from closure alone would pull a
+    neighbouring family's IRD into this family's slice.
+    """
+    import gzip
+
+    from ai_gene_review.etl.panther_paint import (
+        IBD_GAF_URL,
+        LEAF_GAF_URL,
+        fetch_family_paint,
+    )
+
+    other_ird = (
+        "PANTHER\tPTN000088888\tPTN000088888\tNOT\tGO:0016538\tGO_REF:0000033\tIRD\t"
+        "PANTHER:PTN000019791\tF\t\t\tprotein\ttaxon:4751\t20260101\tGO_Central\t\t"
+    )
+    cache_dir = tmp_path / ".cache"
+    cache_dir.mkdir()
+    (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE + "\n" + other_ird)
+    _seed_treegrafter(cache_dir, "PTHRY:AN3\tPTHRY:SF1\tPTN000088888\n")
+    with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
+        fh.write(LEAF_FIXTURE)
+    entries_csv = tmp_path / "PTHRX-entries.csv"
+    entries_csv.write_text("id,name\nP14635,cyclin B1\n")
+
+    _, nodes = fetch_family_paint(
+        "PTHRX", entries_csv=entries_csv, out_dir=tmp_path / "PTHRX", cache_dir=cache_dir
+    )
+    assert nodes == {"PTN000019791"}

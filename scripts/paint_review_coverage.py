@@ -27,25 +27,24 @@ import yaml
 from ai_gene_review.etl.panther_paint import (
     IBD_GAF_URL,
     LEAF_GAF_URL,
-    PAINT_BASE,
+    TREEGRAFTER_URL,
     download_cached,
     open_text,
     parse_ptn_nodes,
+    treegrafter_family_nodes,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / ".cache" / "paint"
-TREEGRAFTER_URL = f"{PAINT_BASE}/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz"
 
 
 def node_families(path: Path) -> dict[str, set[str]]:
     """PTN node -> PANTHER families (PTN ids are not always family-unique)."""
     fams: dict[str, set[str]] = defaultdict(set)
     with open_text(path) as fh:
-        for line in fh:
-            cols = line.rstrip("\n").split("\t")
-            if len(cols) >= 2 and cols[-1].startswith("PTN"):
-                fams[cols[-1]].add(cols[0].split(":", 1)[0])
+        for family, nodes in treegrafter_family_nodes(fh).items():
+            for node in nodes:
+                fams[node].add(family)
     return fams
 
 
