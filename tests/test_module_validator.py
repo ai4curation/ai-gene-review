@@ -760,7 +760,36 @@ def test_ols_backed_taxon_label_is_checked_not_unavailable():
 
     resolve = _build_oak_resolver({"NCBITaxon": "ols:ncbitaxon"})
     status, label, _aliases = resolve("NCBITaxon:7227")
-    assert (status, label) == ("ok", "Drosophila melanogaster")
+    assert (status, label) == ("ok_no_aliases", "Drosophila melanogaster")
+
+
+def _no_alias_resolver(curie):
+    """Resolver for a source that returns a primary label but no synonyms."""
+    return ("ok_no_aliases", "ATP(4-)", set())
+
+
+def test_validate_terms_no_alias_source_accepts_primary_label():
+    errors, warnings = validate_terms(
+        [("CHEBI:30616", "ATP(4-)")], {"CHEBI": "ols:chebi"}, _no_alias_resolver
+    )
+    assert (errors, warnings) == ([], [])
+
+
+def test_validate_terms_no_alias_source_downgrades_mismatch_to_warning():
+    # 'ATP' may be a synonym the source cannot list, so it must not be an error.
+    errors, warnings = validate_terms(
+        [("CHEBI:30616", "ATP")], {"CHEBI": "ols:chebi"}, _no_alias_resolver
+    )
+    assert errors == []
+    assert len(warnings) == 1 and "synonyms unavailable" in warnings[0]
+
+
+def test_validate_terms_no_alias_source_still_errors_on_obsolete():
+    def resolver(curie):
+        return ("ok_no_aliases", "obsolete something", set())
+
+    errors, _ = validate_terms([("CHEBI:1", "something")], {"CHEBI": "ols:chebi"}, resolver)
+    assert len(errors) == 1
 
 
 # --------------------------------------------------------------------------- #
