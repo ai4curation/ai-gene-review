@@ -113,11 +113,21 @@ SURFACE_TERMS = {"GO:0009986", "GO:0005886"}
 SURFACE_EVIDENCE = {"EXP", "IDA", "IMP", "IPI"}
 
 
+@cache
+def surface_ids() -> frozenset[str]:
+    """Cell surface and plasma membrane with their is_a/part_of descendants (e.g. external side of plasma membrane)."""
+    from oaklib import get_adapter
+    from oaklib.datamodels.vocabulary import IS_A, PART_OF
+    ids = frozenset(get_adapter("sqlite:obo:go").descendants(sorted(SURFACE_TERMS), predicates=[IS_A, PART_OF]))
+    assert SURFACE_TERMS <= ids, f"GO release lacks {SURFACE_TERMS - ids}"
+    return ids
+
+
 def surface_rows(organism: str, gene: str) -> list[str]:
     path = os.path.join(ROOT, "genes", organism, gene, f"{gene}-ai-review.yaml")
     anns = yaml.load(open(path).read(), Loader=LOADER)["existing_annotations"]
     return sorted({f'{a["term"]["id"]} {a.get("evidence_type")} {a.get("original_reference_id")}' for a in anns
-                   if a["term"]["id"] in SURFACE_TERMS and a.get("evidence_type") in SURFACE_EVIDENCE
+                   if a["term"]["id"] in surface_ids() and a.get("evidence_type") in SURFACE_EVIDENCE
                    and not a.get("negated") and a["review"].get("action") in ("ACCEPT", "KEEP_AS_NON_CORE")})
 
 

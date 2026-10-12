@@ -282,17 +282,17 @@ The data and the curators are the same. The difference is the inference step.
    [`decisions_draft.py`](OMICS_EVIDENCE/htp/vesicle_review/decisions_draft.py) holds one
    decision and basis per protein, and
    [`decisions.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions.yaml) lists every row.
-   246 rows changed (excluding the two CD2AP rows; see the session notes):
+   247 rows changed (excluding the two CD2AP rows; see the session notes):
 
    | Change | Rows | Typical reason |
    |---|---:|---|
-   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 141 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase; LMAN2, an ERGIC lectin with a documented surface pool |
+   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 142 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase; LMAN2 and SYNE2, with documented surface pools |
    | UNDECIDED → KEEP_AS_NON_CORE | 47 | the same categories, previously left undecided for lack of the supplementary table |
    | ACCEPT → KEEP_AS_NON_CORE | 33 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3 |
    | UNDECIDED → MARK_AS_OVER_ANNOTATED | 19 | albumin, AK2, AUP1, BPTF, ACSL4, complement, lysosomal enzymes, ATP6AP1 |
    | ACCEPT → MARK_AS_OVER_ANNOTATED | 6 | secreted proteins accepted only for being secreted, with no recorded EV-surface binding route: CLU ×4, SCGB1A1 (its phospholipids are cavity ligands); APOE in plasma microvesicles |
 
-   Final vesicle-row actions: 223 KEEP_AS_NON_CORE, 57 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
+   Final vesicle-row actions: 224 KEEP_AS_NON_CORE, 56 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
    (PDCD6IP). For most cytosolic cargo the manual outcome matches the withdrawn rule,
    because under MISEV such proteins really are in EVs. As first applied, it differed from
    the rule on 91 rows: 52 that the rule would have made non-core are over-annotated, and 39 ACCEPTs
@@ -316,19 +316,19 @@ The data and the curators are the same. The difference is the inference step.
    every category-5 protein with experimental proteoglycan, heparin or lipid binding: FN1,
    NID1, COMP, PSAP, GM2A, ITIH1 and ITIH2 stay KEEP_AS_NON_CORE here, and THBS1, THBS4 and C1QB become
    KEEP_AS_NON_CORE in pass 1. Mitochondrial and ER proteins whose own reviews keep an
-   experimental cell-surface or plasma-membrane pool (HSPD1, ATP5F1A/B, CALR, GOT2; LMAN2 in
-   pass 1) also stay KEEP_AS_NON_CORE, since small EVs budding from the plasma membrane can
-   carry that pool. 74 rows in 46 genes
+   experimental cell-surface or plasma-membrane pool (HSPD1, ATP5F1A/B, CALR, GOT2, P4HB; LMAN2 and
+   SYNE2 in pass 1) also stay KEEP_AS_NON_CORE, since small EVs budding from the plasma membrane can
+   carry that pool. 73 rows in 45 genes
    changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
    | Change | Rows | Proteins |
    |---|---:|---|
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 50 | secreted plasma and matrix proteins with no recorded proteoglycan or lipid binding (A1BG, A2M, HPX, ITIH3, ITIH4, HSPG2, AGRN) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, SMPD1) |
-   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 23 | mitochondrial (HSPA9, ACAT1) and ER/Golgi residents (P4HB, PPIB, PRDX4, MAN1B1, LFNG) with no documented surface pool |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 22 | mitochondrial (HSPA9, ACAT1) and ER/Golgi residents (PPIB, PRDX4, MAN1B1, LFNG) with no documented surface pool |
    | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
 
-   The other 344 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   The other 345 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
    membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
    MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
    accepting ALIX alone rests on its protein-specific role in exosome biogenesis, not on
@@ -480,6 +480,12 @@ now cite GO (`CAT2_GO`), and the script checks each attribution against its sour
 bases were rewritten because the template did not fit at all: APOE, which is secreted,
 and ARL15 and ARMC3, which have no recorded location other than EV proteomes. DNAJA2, a
 farnesylated co-chaperone, moves to category 2a. No action changed.
+
+The category-4 surface check had matched only the cell surface and plasma membrane terms
+themselves. It now uses their GO descendants (is_a and part_of), which found P4HB
+(external side of plasma membrane, IDA) and SYNE2 (lamellipodium and filopodium membrane,
+IDA). Both now use `CAT4_SURFACE`: P4HB's row returns to its original text, and SYNE2's
+row moves from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE.
 
 ### 2026-10-10: third round of automated-review fixes
 

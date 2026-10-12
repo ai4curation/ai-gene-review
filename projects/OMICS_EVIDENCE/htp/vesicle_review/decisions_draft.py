@@ -248,7 +248,8 @@ G = {
     "STOM": note(CAT1, "Peripheral plasma-membrane raft protein (stomatin), released in microvesicles; expected EV "
                        "content but not its core location, so the earlier ACCEPT is downgraded. Applies to the plasma "
                        "microvesicle row too."),
-    "SYNE2": note(CAT4, "Nuclear-envelope (outer nuclear membrane) protein."),
+    "SYNE2": note(CAT4_SURFACE, "Nuclear-envelope (outer nuclear membrane) protein; lamellipodium and filopodium "
+                                "membrane pool by IDA (PMID:15671068)."),
     "TAX1BP1": note(CAT2, "Cytoplasmic autophagy adaptor."),
     "THBS1": note(CAT5_BOUND, "Secreted thrombospondin-1 with experimental heparin and phosphatidylserine binding (IDA); the earlier ACCEPT rested only on its being secreted."),
     "THBS4": note(CAT5_BOUND, "Secreted thrombospondin-4 with experimental heparin binding (IDA); the earlier ACCEPT rested only on its being secreted."),

@@ -202,7 +202,8 @@ G = {
     "NQO2": note(CAT2, "Cytoplasmic quinone reductase."),
     "NT5E": note(CAT1, "GPI-anchored plasma-membrane ecto-5'-nucleotidase (CD73)."),
     "P3H1": note(CAT4, "ER prolyl 3-hydroxylase."),
-    "P4HB": note(CAT4, "ER-lumen protein disulfide isomerase."),
+    "P4HB": note(CAT4_SURFACE, "ER-lumen protein disulfide isomerase; pool on the external side of the plasma "
+                               "membrane by IDA (PMID:21670307)."),
     "PAFAH1B1": note(CAT2, "Cytoplasmic dynein regulator LIS1."),
     "PARD6B": note(CAT2A, "Cytoplasmic polarity adapter recruited to the plasma membrane."),
     "PCBD1": note(CAT2, "Cytoplasmic/nuclear pterin-4a-carbinolamine dehydratase."),
