@@ -1,4 +1,12 @@
-"""Render the dismech<->AIGR alignment audit as a markdown project page."""
+"""Render the dismech<->AIGR alignment audit as a markdown project page.
+
+This generator refuses to render rather than publish a claim it cannot support, and those
+refusals are themselves exercised: ``check_page_guards.py`` beside it breaks one thing in a
+copy of each report and checks that the generator either refuses or, where the branch is a
+legitimate state, still renders.
+
+    uv run python projects/DISMECH_METABOLIC_ALIGNMENT/check_page_guards.py
+"""
 import os
 import subprocess
 import sys
@@ -114,16 +122,63 @@ def flag_rows(entries, flag):
 # had computed it identically.
 ALT_TREE = (ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
             ) if ALT_PROV else ""
+# The same tree in a few words. aigr_tree is a whole sentence - deliberately, it is the
+# provenance - so naming it in two places printed ~190 characters and the revision twice.
+# The comparison section carries the full description; the Method paragraph takes this.
+ALT_TREE_SHORT = ((ALT_PROV.get("aigr_branch") or ALT_TREE.split(" - ")[0].split(", so ")[0])
+                  if ALT_PROV else "")
+
+
+def _published(rev):
+    """Is `rev` reachable from a pushed ref, and so present in a reader's clone?
+
+    Not `cat-file -t`, which answers only about the local object store: the all-slices run's
+    merge commit exists on the machine whose worktree built it and in no clone, so a page
+    rendered there would carry a claim false for every reader. Reachability from a
+    remote-tracking ref is the environment-independent question. Nothing is claimed when git
+    cannot be asked.
+    """
+    r = subprocess.run(["git", "for-each-ref", "--contains", rev, "refs/remotes"],
+                       capture_output=True, text=True)
+    return None if r.returncode != 0 else bool(r.stdout.strip())
+
+
+def _primary_drift_tail():
+    """The same measurement for the primary report, whose tree the table renders from.
+
+    Hardcoded prose about it previously sat inside one of the second report's six branches,
+    so five of them said nothing, and it asserted that the primary tree "is not a commit
+    here" - which is true of a tree assembled for the run and will be false as soon as the
+    slices merge and the audit runs from an ordinary checkout. Derived, so it changes with
+    the report instead of going from stale to wrong.
+    """
+    rev = (PROV or {}).get("aigr_revision")
+    if not rev:
+        return "The primary run records no revision, so its tree cannot be located here."
+    if not _published(rev):
+        return (f"The primary run's own tree (`{rev[:9]}`) is not reachable from any pushed ref,"
+                " so no clone of this repository contains it and the same comparison cannot be"
+                " made for the table's own figures.")
+    return (f"The primary run's tree (`{rev[:9]}`) is reachable from a pushed ref, so the same"
+            " comparison can be made for the table's own figures.")
 
 
 def _alt_drift_tail():
     """Whether the audit's inputs moved between the second run's tree and the branch now.
 
-    The recorded revision is necessarily an ancestor of the branch tip, because the commit
-    that carries each round's own changes comes after the audit that fed it. That is honest
+    The recorded revision is usually an ancestor of the branch tip, because the commit that
+    carries each round's own changes comes after the audit that fed it. That is honest
     provenance and not a defect, but it leaves a reader checking the branch out on a
     different commit from the one the figures were read on - so whether it matters is
     measured here rather than assumed either way.
+
+    It is not necessarily an ancestor, which an earlier version of this docstring asserted
+    while the body below already branched on it: a run over a tree assembled for the run
+    rather than committed records a revision no clone has. So there are five states, and
+    which one holds is read from git rather than assumed - the revision is unnamed, it is
+    this branch's tip, it is absent from this repository, it is not an ancestor, or it is
+    an ancestor with or without changes to the audit's inputs since. Each failure of git
+    itself is reported as a failure and claims nothing.
     """
     rev = (ALT_PROV or {}).get("aigr_revision")
     if not rev:
@@ -135,12 +190,27 @@ def _alt_drift_tail():
         # Genuine tooling failure: nothing is claimed either way, as with the dirty flags.
         return (f" at `{rev[:9]}`; git could not be asked whether the audit's inputs moved"
                 " between that commit and this branch's tip, so nothing is claimed")
-    if head.startswith(rev[:9]) or rev.startswith(head[:9]):
+    # Full-length comparison: both reports record a 40-character revision, so a prefix test
+    # against a short recorded rev was a disjunct nothing could reach.
+    if rev == head:
         return f" at `{rev[:9]}`, which is this branch's tip"
-    # Not an ancestor is a knowable fact, not a tooling failure. --is-ancestor exits 1 for
+    # Absent from the repository is its own state, and the common one: --is-ancestor exits
+    # 128 rather than 1 for an object the repo does not have, so it fell to the generic
+    # failure branch and printed "git could not say" for a knowable fact. This is the case a
+    # reader actually hits - a run over a tree assembled for the run records a revision no
+    # clone contains - and it is checked with cat-file, since `rev-parse --verify <40-hex>`
+    # echoes any well-formed sha back at exit 0 without the object existing.
+    pub = _published(rev)
+    if pub is None:
+        return (f" at `{rev[:9]}`; git could not be asked whether that revision is published,"
+                " so nothing is claimed")
+    if not pub:
+        return (f" at `{rev[:9]}`, which is not reachable from any pushed ref - a tree assembled"
+                " for that run rather than something committed - so no clone contains it and"
+                " there is nothing to compare its inputs against")
+    # Not an ancestor is a knowable fact too, not a tooling failure. --is-ancestor exits 1 for
     # it, which check=True turned into an exception indistinguishable from git being broken -
-    # so the one state a reader would act on was reported as "could not be determined". The
-    # case is real here: the all-slices run records a merge commit local to that run.
+    # so the one state a reader would act on was reported as "could not be determined".
     anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
                          capture_output=True)
     if anc.returncode == 1:
@@ -163,8 +233,7 @@ def _alt_drift_tail():
     if not out:
         return (f" at `{rev[:9]}`, an ancestor of the branch tip, with no file under `genes/`"
                 " or `modules/` changed between the two - the audit's whole input surface - so"
-                " the figures stand for either. The primary run's own tree was built for that"
-                " run and is not a commit here, so there is nothing to compare it against")
+                " the figures stand for either")
     return (f" at `{rev[:9]}`, an ancestor of the branch tip, with **{len(out)} of the audit's"
             " input files changed between the two**, so the figures below describe the recorded"
             f" commit rather than the tip - e.g. `{out[0]}`")
@@ -459,12 +528,13 @@ def alt_comparison():
         return ", ".join(f"`{f}`" for f in fs)
 
     out = [
-        f"The audit also runs over {ALT_TREE}, and comparing the two runs shows which flags are",
-        "artifacts of the missing slices rather than findings. Both cover the same",
+        "The audit also runs over a second tree, and comparing the two runs shows which flags",
+        f"are artifacts of the missing slices rather than findings. That tree is {ALT_TREE}.",
+        "Both cover the same",
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
         # Its own sentence, not a clause appended to the tree description, where it landed
         # several clauses away from the revision it qualifies and repeated that revision.
-        f"That second run read a tree recorded{_alt_drift_tail()}." if ALT_PATH else "",
+        f"That second run read a tree recorded{_alt_drift_tail()}. {_primary_drift_tail()}",
         "",
         "Every movement below is accounted for row by row rather than from the net counts: a"
         " flag's total can fall while rows arrive at it, and each row's cause is read from that"
@@ -895,8 +965,9 @@ lines += [
     "ai-gene-review core functions. The audit script (`align_audit.py`), the page generator",
     "(`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this",
     f"table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the"
-    + (" repository, together with the second report the comparison section below is derived from"
-       f" (`{os.path.basename(ALT_PATH)}`), the same audit run over {ALT_TREE}."
+    + (" repository, with `check_page_guards.py` exercising the generator's refusals, together"
+       " with the second report the comparison section below is derived from"
+       f" (`{os.path.basename(ALT_PATH)}`), the same audit run over `{ALT_TREE_SHORT}`."
        if ALT_PATH else " repository."),
     "",
     "**What \"aligned\" does and does not claim.** Five properties of the test make it a weak",
