@@ -7,12 +7,28 @@ the gene's UniProt accession. Emits a YAML report with a provenance block.
 
 Usage, from the ai-gene-review root with a dismech checkout beside it:
 
-    DISMECH_DIR=../dismech uv run python projects/DISMECH_METABOLIC_ALIGNMENT/align_audit.py \
+    # The all-slices run. AIGR_DIR is a tree holding every themed slice of #4690; AIGR_TREE
+    # records how it was built, since a bare directory path says nothing once it is gone,
+    # and AIGR_REVISION/AIGR_REF record the revision when that tree is not itself a checkout.
+    DISMECH_DIR=../dismech AIGR_DIR=<all-slices tree> \
+    AIGR_TREE="origin/main with the ten themed slice branches of #4690 merged" \
+    uv run python projects/DISMECH_METABOLIC_ALIGNMENT/align_audit.py \
         projects/DISMECH_METABOLIC_ALIGNMENT/scope.yaml \
         projects/DISMECH_METABOLIC_ALIGNMENT/report.yaml
-    python3 projects/DISMECH_METABOLIC_ALIGNMENT/make_page.py \
+
+    # The branch-local run, whose only purpose is to be compared against the one above.
+    DISMECH_DIR=../dismech AIGR_TREE="this branch alone" \
+    uv run python projects/DISMECH_METABOLIC_ALIGNMENT/align_audit.py \
+        projects/DISMECH_METABOLIC_ALIGNMENT/scope.yaml \
+        projects/DISMECH_METABOLIC_ALIGNMENT/report-branch-local.yaml
+
+    # Both reports are passed to the renderer. The third argument is what makes the
+    # comparison section a measurement; with two arguments that section is not printed,
+    # so the two-argument form does NOT reproduce the committed page.
+    uv run python projects/DISMECH_METABOLIC_ALIGNMENT/make_page.py \
         projects/DISMECH_METABOLIC_ALIGNMENT/report.yaml \
-        projects/DISMECH_METABOLIC_ALIGNMENT.md
+        projects/DISMECH_METABOLIC_ALIGNMENT.md \
+        projects/DISMECH_METABOLIC_ALIGNMENT/report-branch-local.yaml
 
 Four properties of the comparison are deliberate, and are stated on the generated page
 because they make this a weak consistency test rather than a strong one:
@@ -65,6 +81,7 @@ does not count as membership.
 import csv
 import datetime
 import glob
+import hashlib
 import json
 import os
 import re
@@ -86,6 +103,28 @@ go = get_adapter(GO_ADAPTER)
 PRED = ["rdfs:subClassOf", "BFO:0000050"]
 _anc = {}
 _anc_failures = []
+
+
+_ASPECT_ROOTS = {"GO:0003674": "MF", "GO:0008150": "BP", "GO:0005575": "CC"}
+_aspect_cache = {}
+
+
+def aspect(t):
+    """GO aspect of a term, by is_a ancestry to the three roots.
+
+    Recorded per term in the report so the page can derive which matched pairs cross
+    between molecular function and biological process. The page used to name three
+    examples in hardcoded prose; one of them stopped being cross-aspect when the input
+    tree changed, which is the same staleness the figures had.
+    """
+    if t not in _aspect_cache:
+        try:
+            up = set(go.ancestors(t, predicates=["rdfs:subClassOf"], reflexive=True))
+        except Exception:  # noqa: BLE001 - absence is recorded, not raised
+            up = set()
+        hit = [v for k, v in _ASPECT_ROOTS.items() if k in up]
+        _aspect_cache[t] = hit[0] if len(hit) == 1 else None
+    return _aspect_cache[t]
 
 
 def anc(t):
@@ -143,13 +182,34 @@ def _go_version():
     return None
 
 
-# Flags decided before the gene review is consulted, so they are identical between two
-# runs over the same dismech tree whatever reviews are present. Everything else -- the
-# alignment flags, both module flags and ALIGNED_CONTRIBUTES_ONLY -- is computed inside
-# the `review exists` branch and so depends on the review set. Exported rather than
-# restated in prose, because the page used to list ALIGNED_CONTRIBUTES_ONLY here and it
-# is derived entirely from a review's contributes_to_molecular_function.
-REVIEW_INDEPENDENT_FLAGS = ("GENE_ON_NO_NODE", "NO_GO_ON_GENE_NODES", "NO_ORIGIN")
+# Flags grouped by *why* they fire, exported so the page can explain a count that moves
+# between two runs instead of inferring a cause from the flag's name. The groups are not
+# a taxonomy of severity; they are the three places a flag is appended relative to the
+# gene-review lookup, which is what decides whether a changed review set can move it.
+#
+# Deciding this by subtraction ("everything that is not a module flag counts absent
+# reviews") was wrong for 85 of 87 rows in one run: AIGR_NOT_COMPLETE and
+# NO_CORE_FUNCTION_TERMS both fire where a review *was* found, so they count stub reviews
+# present rather than reviews absent.
+#
+# Decided before the review lookup, so identical between two runs over the same dismech
+# tree whatever reviews are present.
+REVIEW_INDEPENDENT_FLAGS = ("GENE_ON_NO_NODE", "NO_GO_ON_GENE_NODES", "NO_ORIGIN", "UNTYPED")
+# Fires only where no review was found. This is the one flag that counts absence.
+REVIEW_ABSENT_FLAGS = ("NO_AIGR_REVIEW",)
+# Fires only where a review *was* found and is thin: a stub status, or no comparable
+# terms to align against. A rise here means more stub reviews present, not more absent.
+REVIEW_PRESENT_THIN_FLAGS = ("AIGR_NOT_COMPLETE", "NO_CORE_FUNCTION_TERMS")
+# Computed from the module files, inside the branch where a review was found. A missing
+# review removes these rather than adding them, so a rise can only come from the modules.
+MODULE_SOURCED_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING", "PARTIAL_COVERAGE")
+# Everything else is an alignment verdict, computed from the review's terms.
+FLAG_GROUPS = dict(
+    review_independent=list(REVIEW_INDEPENDENT_FLAGS),
+    review_absent=list(REVIEW_ABSENT_FLAGS),
+    review_present_thin=list(REVIEW_PRESENT_THIN_FLAGS),
+    module_sourced=list(MODULE_SOURCED_FLAGS),
+)
 
 PROVENANCE = dict(
     run_date=datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -168,6 +228,11 @@ PROVENANCE = dict(
     # it the provenance records where the bytes sat rather than what they were.
     aigr_tree=os.environ.get("AIGR_TREE") or None,
     aigr_dir=AG,
+    # Which version of this script produced the report. Without it two reports from
+    # different script versions are indistinguishable from their provenance, which is how
+    # a report predating a field could sit beside one carrying it with nothing to say so.
+    audit_revision=_git(AG, "log", "-1", "--format=%h", "--", __file__) or None,
+    audit_sha256=hashlib.sha256(open(__file__, "rb").read()).hexdigest()[:12],
     scope_entries=len(SCOPE),
 )
 # Filled in after the modules are read, so the claim that reading module files as text
@@ -363,6 +428,9 @@ MODULE_COUNTS = dict(modules_read=len(mod_terms),
                      accessions_as_parts=structural_accs,
                      accessions_in_file_text=textual_accs)
 PROVENANCE["module_accessions"] = MODULE_COUNTS
+# Separate key, since this is a list rather than a count and a reader scanning the
+# provenance block wants the counts without 450 stems in the middle of them.
+PROVENANCE["modules"] = sorted(mod_terms)
 
 # Parsed with the csv module rather than split(","): a quoted label containing a comma
 # would shift every later field and silently yield the wrong symbol.
@@ -528,6 +596,16 @@ for name in SCOPE:
                     g["covering_pairs"] = covering_pairs
                 if not covering:
                     flags.append("MODULE_NOT_COVERING")
+                else:
+                    # Coverage is existential over (aligned term x module term): one match
+                    # anywhere in any module passes the row. So record which aligned terms
+                    # no module term reached, and flag a row that is only partly covered -
+                    # the same distinction PARTIAL_ALIGNMENT draws for the review side.
+                    covered_terms = {pr.split("->")[0] for v in covering_pairs.values() for pr in v}
+                    uncovered = sorted(set(g["aligned_terms"]) - covered_terms)
+                    if uncovered:
+                        g["uncovered_aligned_terms"] = uncovered
+                        flags.append("PARTIAL_COVERAGE")
         g["flags"] = flags
         entry["genes"].append(g)
     report.append(entry)
@@ -538,10 +616,20 @@ if _anc_failures:
     sys.exit(f"{len(_anc_failures)} GO ancestor lookups failed; every comparison would "
              "degrade to exact match, so no report was written.")
 
-# review_independent_flags travels in the report so make_page can name the set from the
-# run rather than from prose that can drift out of step with the code.
+# The flag groups travel in the report so make_page names them from the run rather than
+# from prose that can drift out of step with the code.
+# Aspect of every term that appears in a matched pair, so the page can derive the
+# cross-aspect matches rather than naming examples that can stop being true.
+_paired = {t for e in report for g in e.get("genes", [])
+           for pair in [(g.get("aligned_pairs") or {})]
+           for t, v in pair.items()
+           for t in [t] + (v if isinstance(v, list) else [v])}
+TERM_ASPECTS = {t: aspect(t) for t in sorted(_paired) if aspect(t)}
+
 yaml.safe_dump(dict(provenance=PROVENANCE,
                     review_independent_flags=list(REVIEW_INDEPENDENT_FLAGS),
+                    flag_groups=FLAG_GROUPS,
+                    term_aspects=TERM_ASPECTS,
                     entries=report),
                open(OUT, "w"), sort_keys=False, width=120)
 from collections import Counter

@@ -11,7 +11,14 @@ def load(path):
     # every shape, because the all-slices report predates both and cannot be regenerated
     # from this branch.
     if isinstance(d, dict):
-        return (d.get("provenance") or {}, d.get("entries") or [],
+        prov = dict(d.get("provenance") or {})
+        # Carried on the provenance mapping so the renderer reads the groups the run
+        # recorded rather than a copy of them kept here.
+        if d.get("flag_groups"):
+            prov["_flag_groups"] = d["flag_groups"]
+        if d.get("term_aspects"):
+            prov["_term_aspects"] = d["term_aspects"]
+        return (prov, d.get("entries") or [],
                 tuple(d.get("review_independent_flags") or ()))
     return {}, d, ()
 
@@ -54,7 +61,19 @@ def alt_comparison():
         # mismatch is a bug in the scope or the trees, not something to paper over.
         sys.exit(f"report row counts differ ({n_here} vs {n_there}); the two runs do not "
                  "cover the same scope and cannot be compared flag by flag")
-    indep = ALT_INDEP or ("GENE_ON_NO_NODE", "NO_GO_ON_GENE_NODES", "NO_ORIGIN")
+    # No fallback copy of the audit's set: a second copy here is the drift the export was
+    # added to prevent, moved from prose into code. A report without the field cannot be
+    # compared, and saying so is stricter and matches how MODULE_REASONS fails.
+    if not ALT_INDEP:
+        sys.exit("the second report has no review_independent_flags; it was produced by a "
+                 "superseded align_audit.py and cannot be compared - re-run the audit")
+    if _INDEP and set(_INDEP) != set(ALT_INDEP):
+        # Otherwise two reports could disagree about which flags are review-independent and
+        # the identity guard below would silently be checking the wrong set.
+        sys.exit("the two reports disagree about which flags are review-independent "
+                 f"({sorted(set(_INDEP) ^ set(ALT_INDEP))}); they come from different "
+                 "align_audit.py versions and cannot be compared")
+    indep = ALT_INDEP
     # Enforced, not asserted: these are the flags decided before the gene review is read,
     # so they must be identical between two runs over the same dismech tree. If one moves,
     # the difference is not the review set and the explanation below would be wrong.
@@ -74,44 +93,80 @@ def alt_comparison():
     tree = ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
     mods_here = (PROV.get("module_accessions") or {}).get("modules_read")
     mods_there = (ALT_PROV.get("module_accessions") or {}).get("modules_read")
-    # The rises split by cause, and the split is the whole point: a flag that counts a
-    # missing review rises because reviews are missing, while a module flag cannot - it is
-    # computed only once a review has been found, so an absent review removes it.
-    MODULE_FLAG_NAMES = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
-    rose_mod = [f for f in rose if f in MODULE_FLAG_NAMES]
-    rose_rev = [f for f in rose if f not in MODULE_FLAG_NAMES]
+    # Each risen flag is explained by the group it belongs to, read from the report rather
+    # than inferred by subtraction. The previous version split the rises into "module
+    # flags" and "everything else", and told the reader everything else counted *absent*
+    # reviews - wrong for AIGR_NOT_COMPLETE and NO_CORE_FUNCTION_TERMS, which fire where a
+    # review was found, and so wrong for 85 of 87 rows in the run it was written against.
+    groups = ALT_PROV.get("_flag_groups")
+    if not groups:
+        sys.exit("the second report has no flag_groups; it was produced by a superseded "
+                 "align_audit.py and its risen flags cannot be explained - re-run the audit")
+    absent = tuple(groups.get("review_absent") or ())
+    thin = tuple(groups.get("review_present_thin") or ())
+    modular = tuple(groups.get("module_sourced") or ())
+    rose_absent = [f for f in rose if f in absent]
+    rose_thin = [f for f in rose if f in thin]
+    rose_mod = [f for f in rose if f in modular]
+    rose_other = [f for f in rose if f not in absent + thin + modular]
+
+    def names(fs):
+        return ", ".join(f"`{f}`" for fs_ in [fs] for f in fs_)
+
     out = [
         f"The audit also runs over {tree}, and comparing the two runs shows which flags are",
         "artifacts of the missing slices rather than findings. Both cover the same",
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
         "",
-        "Most of that movement is the reviews themselves, in both directions. A row whose review",
-        "is absent is counted `NO_AIGR_REVIEW` and then skipped by every later test, so it cannot",
-        "be found partial, shared-node-only, or outside a module - which is why the alignment",
-        "flags fall. The same absence is what raises",
-        f"{', '.join('`%s`' % f for f in rose_rev)}: those count the missing reviews rather than",
-        "describing an alignment.",
+        "The falls are the absent reviews: a row with no review is skipped by every later test,",
+        "so it cannot be found partial, shared-node-only, or outside a module. The rises have",
+        "three different causes, and only one of them is that absence.",
     ]
+    if rose_absent:
+        out += ["", f"- {names(rose_absent)} counts rows with no review at all. This is the only"
+                    " risen flag the missing slices raise directly."]
+    if rose_thin:
+        verb = "fire" if len(rose_thin) > 1 else "fires"
+        out += ["", f"- {names(rose_thin)} {verb} where a review **was** found and is thin: a stub"
+                    " status, or no core-function terms to compare against. These count stub"
+                    " reviews present on the second tree, not reviews missing from it - a"
+                    " different claim, and the larger share of the movement."]
     if rose_mod:
-        out += [
-            "",
-            f"{', '.join('`%s`' % f for f in rose_mod)} cannot have that cause, and this is the",
-            "one movement worth reading carefully. Both module flags are computed only once a",
-            "review has been found, so a missing review **removes** a module flag rather than",
-            "adding one. The driver is the module files:",
-        ]
+        line = (f"- {names(rose_mod)} cannot have either cause. Both module flags are computed"
+                " only once a review has been found, so a missing review **removes** one rather"
+                " than adding it. The driver is the module files:")
         if mods_here and mods_there:
-            out.append(
-                f"the second run reads {mods_there} modules against {mods_here} here, so there are"
-                " fewer modules available to cover a gene's aligned terms. That also means the two"
-                " trees are not nested - the second is missing modules this one has, and carries"
-                " commits this one does not."
-            )
+            line += (f" the second run reads {mods_there} modules against {mods_here} here, so"
+                     " fewer are available to cover a gene's aligned terms.")
+        # Nesting is a set question, not a count question: 448 < 451 is equally consistent
+        # with the smaller tree being a subset. Derived from the recorded module lists, and
+        # simply not claimed when a report does not carry them.
+        here_mods = set(PROV.get("modules") or ())
+        there_mods = set(ALT_PROV.get("modules") or ())
+        if here_mods and there_mods:
+            only_there = sorted(there_mods - here_mods)
+            only_here = sorted(here_mods - there_mods)
+            if only_there and only_here:
+                line += (f" The two sets are not nested either way: {len(only_here)} modules are"
+                         f" here and not there, and {len(only_there)} there and not here"
+                         f" (e.g. `{only_here[0]}` and `{only_there[0]}`).")
+            elif only_here:
+                line += (f" The second set is a strict subset: {len(only_here)} modules are here"
+                         f" and not there (e.g. `{only_here[0]}`), and none the other way.")
+            elif only_there:
+                line += (f" This set is the strict subset: {len(only_there)} modules are there and"
+                         f" not here (e.g. `{only_there[0]}`).")
+            else:
+                line += " The two runs read the same module set, so the counts above must differ for another reason."
         else:
-            out.append(
-                "the two trees hold different module sets, so they are not nested and the"
-                " difference is not only the missing reviews."
-            )
+            line += (" Whether the two module sets are nested is not derivable here, since at"
+                     " least one report does not record which modules it read.")
+        out += ["", line]
+    if rose_other:
+        # Not silently folded into one of the groups above: an unclassified flag would
+        # otherwise inherit whichever explanation it happened to land next to.
+        out += ["", f"- {names(rose_other)} is not in any group this page knows how to explain;"
+                    " its cause has not been established here."]
     out += [
         "",
         "The flags decided before any review is read are identical in both runs",
@@ -159,7 +214,7 @@ MODULE_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
 # individually below rather than folded into one "clean" figure, because each is a way
 # the test can be weaker than the row looks.
 QUALIFYING = ("PARTIAL_ALIGNMENT", "ALIGNED_CONTRIBUTES_ONLY",
-              "ALIGNED_ON_SHARED_NODE_ONLY")
+              "ALIGNED_ON_SHARED_NODE_ONLY", "PARTIAL_COVERAGE")
 SOFT = MODULE_FLAGS + ("ALIGNED_NONCORE", "ALIGNED_PROPOSED") + QUALIFYING
 
 lines = [
@@ -176,7 +231,15 @@ from collections import Counter
 # the page says how many of them align on a term the review asserts in its own right. An
 # identical node/core term means the shared node is not what earned the match.
 def _shared_node_split(entries):
-    tot = exact = 0
+    """Rows flagged shared-node-only, split by how much of the row is self-identical.
+
+    Two figures, because they license different claims. `some` counts a row with at
+    least one node term identical to a core term; `all` counts a row where every
+    aligned term is. The inference "the shared node is not doing the work" holds for
+    the identical terms only, so a row in `some` but not `all` still has partner-derived
+    matches carrying part of its verdict.
+    """
+    tot = some = every = 0
     for e in entries:
         for g in e.get("genes") or []:
             if g.get("relationship") not in (None, "CAUSATIVE"):
@@ -184,14 +247,58 @@ def _shared_node_split(entries):
             if "ALIGNED_ON_SHARED_NODE_ONLY" not in (g.get("flags") or []):
                 continue
             tot += 1
+            pairs_ = (g.get("aligned_pairs") or {}).items()
+            hits = [t in (v if isinstance(v, list) else [v]) for t, v in pairs_]
+            if any(hits):
+                some += 1
+            if hits and all(hits):
+                every += 1
+    return tot, some, every
+
+
+n_shared, n_shared_exact, n_shared_all = _shared_node_split(rep)
+def cross_aspect_rows(entries, aspects):
+    """Matched pairs whose two terms sit in different GO aspects.
+
+    Derived rather than named. The page used to cite three examples in prose; when the
+    input tree changed, one of them (SLC16A1) stopped being cross-aspect and the sentence
+    became false while reading exactly as before. A pair counts only where both aspects
+    are known and differ, and a row is only listed where it has no same-aspect pair of
+    its own, since otherwise the crossing is not what earned the row.
+    """
+    sole, any_ = [], 0
+    for e in entries:
+        for g in e.get("genes") or []:
+            crossings, same = [], False
             for t, v in (g.get("aligned_pairs") or {}).items():
-                if t in (v if isinstance(v, list) else [v]):
-                    exact += 1
-                    break
-    return tot, exact
+                for c in (v if isinstance(v, list) else [v]):
+                    a, b = aspects.get(t), aspects.get(c)
+                    if a and b and a != b:
+                        crossings.append((t, c, a, b))
+                    elif a and b:
+                        same = True
+            if crossings:
+                any_ += 1
+                if not same:
+                    sole.append((g["gene"], crossings[0]))
+    return sole, any_
 
 
-n_shared, n_shared_exact = _shared_node_split(rep)
+TERM_ASPECTS = PROV.get("_term_aspects") or {}
+_ca_sole, _ca_any = cross_aspect_rows(rep, TERM_ASPECTS)
+if _ca_sole:
+    _g, (_t, _c, _a, _b) = _ca_sole[0]
+    _cross_aspect_sentence = (
+        f"{_ca_any} rows carry at least one such pair, and on {len(_ca_sole)} of them the row has no"
+        f" same-aspect pair at all, so the crossing is what earns the verdict - {_g} matches"
+        f" `{_t}` ({_a}) to `{_c}` ({_b}).")
+elif _ca_any:
+    _cross_aspect_sentence = (
+        f"{_ca_any} rows carry at least one such pair, though every one of them also has a"
+        " same-aspect pair, so on this run the crossing never decides a row by itself.")
+else:
+    _cross_aspect_sentence = (
+        "On this run no matched pair crosses the aspects, so nothing here depends on it.")
 
 # Whitelist, so a renamed or new dismech relationship value does not silently become
 # principal and inflate the clean count.
@@ -246,11 +353,13 @@ lines += [
     "  both directions (HADH does inhibit GLUD1), which is exactly why it needs marking rather",
     "  than trusting. The flag is conservative by construction and fires on a large minority of",
     f"  rows, so read it with this alongside: of the {n_shared} principal rows it fires on,",
-    f"  {n_shared_exact} aligned on a node term **identical** to one of the gene's own core",
-    "  functions rather than merely an ancestor or descendant of one, so the review independently",
-    "  asserts that exact activity and the shared node is not doing the work. GLUD1 and its",
-    f"  `GO:0004353` are of that shape. The remaining {n_shared - n_shared_exact} are the ones",
-    "  where the shared node could be carrying the verdict.",
+    f"  {n_shared_all} align **only** on node terms identical to one of the gene's own core",
+    "  functions, so the review asserts each of those activities in its own right and the shared",
+    f"  node earned none of the match. A further {n_shared_exact - n_shared_all} have at least one",
+    "  such identical term but not all of them, so part of the verdict still rests on a",
+    f"  partner-derived term, and {n_shared - n_shared_exact} have none at all. GLUD1 and its",
+    "  `GO:0004353` are of the first shape. Only the identical terms license reading the flag as",
+    "  harmless, which is why the two figures are given separately rather than summed.",
     "- `contributes_to_molecular_function` is compared **alongside** core molecular function. A",
     "  subunit that contributes to a complex-level activity without enabling it is doing what the",
     "  dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,",
@@ -277,12 +386,12 @@ lines += [
     "row where that decides the verdict.",
     "",
     "An earlier version of this page also claimed that is_a/part_of ancestry cannot cross between",
-    "molecular function and biological process. That is false, and three rows of this table",
-    "disprove it: GO asserts `part_of` from transporter activities to the transport processes they",
-    "carry out, so MT-ND1 aligns `GO:0008137` to `GO:1902600`, SLC16A1 aligns `GO:0015650` to",
-    "`GO:0015718`, and CTNS aligns `GO:0015811` to `GO:0015184` in the other direction. What is",
-    "true is narrower and is a fact about one pair rather than about the aspects: `GO:0008137` does",
-    "not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a real source of",
+    "molecular function and biological process. That is false, and rows of this table disprove it:",
+    "GO asserts `part_of` from transporter activities to the transport processes they carry out.",
+    _cross_aspect_sentence,
+    "What is true is narrower, and is a fact about one pair rather than about the aspects:",
+    "`GO:0008137` does not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a",
+    "real source of",
     "alignment in this table, not an artefact - and since node MF and BP terms are compared against",
     "one pooled set of the review's core molecular functions and `directly_involved_in` processes,",
     "a node activity term can be satisfied by a core process and the reverse. Such a match is",
@@ -341,13 +450,14 @@ if PROV:
     ]
     if PROV.get("aigr_tree"):
         lines.append(f"The run above read {PROV['aigr_tree']}.")
-    elif not PROV.get("aigr_dir", "").startswith("/home") and PROV.get("aigr_branch"):
-        # The all-slices run predates aigr_tree and recorded only a scratch path, so say
-        # what that path was rather than printing it as if it identified a tree.
+    else:
+        # No guessing from aigr_dir. The previous version inferred "this was a scratch
+        # directory" from the path not starting with /home, which asserted two things the
+        # provenance does not record and was false for any ordinary checkout.
         lines.append(
-            f"The run above read a tree materialised from `{PROV['aigr_branch']}`, the combined"
-            " branch those ten were split from; its `aigr_dir` is the scratch directory that tree"
-            " was unpacked into, which is why that field names a path rather than a revision."
+            "That run's provenance records no `aigr_tree`, so it does not say how its tree was"
+            " built - only the revision and directory above. Set `AIGR_TREE` when running the"
+            " audit over a tree that is not a plain checkout."
         )
     lines.append("")
     lines += alt_comparison()
@@ -401,11 +511,29 @@ def modules_cell(g):
     mods = g.get("modules") or []
     if not mods:
         return "-"
-    link = lambda m: f"[{m}](../modules/{m}.html)"
-    if "MODULE_NOT_COVERING" not in (g.get("flags") or []):
-        return " ".join(link(m) for m in mods)
+    pairs_ = g.get("covering_pairs") or {}
+
+    def link(m):
+        # Which module term earned the coverage, as the Aligned column shows which core
+        # term earned the alignment. Coverage is tested against every term anywhere in a
+        # module, so without the pair a reader cannot tell a relevant match from a remote
+        # ancestor of one.
+        cell = f"[{m}](../modules/{m}.html)"
+        hits = pairs_.get(m) or []
+        if hits:
+            cell += " (" + ", ".join(hits[:2]) + (", ..." if len(hits) > 2 else "") + ")"
+        return cell
+
     cov = g.get("covering_modules") or []
-    return " ".join(link(m) if m in cov else f"{link(m)} (not covering)" for m in mods)
+    flags_ = g.get("flags") or []
+    out = " ".join(link(m) if m in cov or "MODULE_NOT_COVERING" not in flags_
+                   else f"[{m}](../modules/{m}.html) (not covering)" for m in mods)
+    if "PARTIAL_COVERAGE" in flags_:
+        # Coverage is existential, so a covered row can still leave aligned terms that no
+        # module term reached. Named here rather than left to the flag alone.
+        unc = g.get("uncovered_aligned_terms") or []
+        out += " - uncovered: " + " ".join(unc[:3]) + (" ..." if len(unc) > 3 else "")
+    return out
 
 
 c = Counter(f for e in rep for g in e.get("genes", []) if principal(g) for f in g["flags"])
