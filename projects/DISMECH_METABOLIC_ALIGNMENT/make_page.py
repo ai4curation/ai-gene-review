@@ -69,8 +69,12 @@ def alt_comparison():
                  "superseded align_audit.py and cannot be compared - re-run the audit")
     # The exact check the presence tests below were a proxy for: same script, same report
     # semantics. Two reports from different script versions cannot be compared flag by flag.
-    if PROV.get("audit_sha256") and ALT_PROV.get("audit_sha256") \
-            and PROV["audit_sha256"] != ALT_PROV["audit_sha256"]:
+    if not (PROV.get("audit_sha256") and ALT_PROV.get("audit_sha256")):
+        # Required, not optional: a conditional check lets a report without the field fall
+        # back on the presence proxies, when the other three fields are hard requirements.
+        sys.exit("a report carries no audit_sha256; it was produced by a superseded "
+                 "align_audit.py and the two cannot be shown to come from one script")
+    if PROV["audit_sha256"] != ALT_PROV["audit_sha256"]:
         sys.exit(f"the two reports were produced by different align_audit.py versions "
                  f"({PROV['audit_sha256']} vs {ALT_PROV['audit_sha256']}); their flags are "
                  "not necessarily comparable - re-run both from one script")
@@ -123,7 +127,7 @@ def alt_comparison():
     rose_other = [f for f in rose if f not in absent + thin + modular]
 
     def names(fs):
-        return ", ".join(f"`{f}`" for fs_ in [fs] for f in fs_)
+        return ", ".join(f"`{f}`" for f in fs)
 
     out = [
         f"The audit also runs over {tree}, and comparing the two runs shows which flags are",
@@ -191,10 +195,21 @@ def alt_comparison():
     steady = sorted(f for f in set(here) | set(there)
                     if f not in indep and here.get(f, 0) == there.get(f, 0) and here.get(f, 0))
     if steady:
-        out += ["", f"{names(steady)} is identical in both runs while depending on a review, so it"
-                    " appears in neither list above. Over two different review sets and two"
-                    " different module sets that is either a stable property of the dismech side"
+        steady_mod = [f for f in steady if f in modular]
+        steady_rev = [f for f in steady if f not in modular]
+        verb = "are" if len(steady) > 1 else "is"
+        out += ["", f"{names(steady)} {verb} identical in both runs while depending on a review, so"
+                    " they appear in neither list above."]
+        if steady_rev:
+            out += [f"For {names(steady_rev)} that is either a stable property of the dismech side"
                     " or a path these two runs do not separate; this comparison cannot tell which."]
+        if steady_mod:
+            # Explained by group, as the rises and falls now are: a module-sourced flag is
+            # computed from the module files, so "stable on the dismech side" is not available
+            # as a reading when the two runs read different module sets.
+            out += [f"{names(steady_mod)} is module-sourced and the two runs read different module"
+                    " sets, so a stable count there is not a property of the dismech side at all -"
+                    " it means the rows carrying it are covered by modules present in both trees."]
     out += [
         "",
         "The flags decided before any review is read are identical in both runs",
@@ -234,9 +249,22 @@ MODULE_REASONS = {
     "AIFM1": "The aligned function is the mitochondrial disulfide relay (CHCHD4 anchoring); no module covers the relay. AIFM1 is a part of apoptotic_execution_phase, whose AIFM1 annoton carries DNA binding, nucleus and positive regulation of apoptotic process: a different AIFM1 activity, and not the encephalomyopathy mechanism.",
     "APOB": "The aligned term is GO:0034379 very-low-density lipoprotein particle assembly, and there is no VLDL-assembly module. APOB is a part of chylomicron_assembly_secretion, whose scope is GO:0034378 chylomicron assembly, and of ldl_receptor_mediated_endocytosis, which is about the receptor taking the particle up. GO:0034378 and GO:0034379 are siblings, not one inside the other, so the hepatic VLDL step is genuinely unmodelled. APOB's other row, the LDL-receptor-binding one, is covered.",
     "NUBPL": "The aligned term is GO:0016226 iron-sulfur cluster assembly. NUBPL is a part of complex_i_assembly_factors, whose scope is GO:0032981 mitochondrial respiratory chain complex I assembly: NUBPL delivers an Fe-S cluster to the assembling complex, and the cluster's own assembly is a different process that no module covers.",
-    "NDUFA1": "A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The module is the right one; the cause is an asymmetry in how the two sides may say the same thing. The dismech node binds GO:0008137 NADH dehydrogenase (ubiquinone) activity, which the review carries as contributes_to_molecular_function, so the row aligns. complex_i_accessory_subunits says the identical relation the GO-idiomatic way, giving its NDUFA1 annoton GO:0005198 structural molecule activity as part of complex I, and GO:0005198 does not relate to GO:0008137 by is_a/part_of ancestry: a structural role and the activity it supports are different branches of molecular function. Coverage accepts a contributes-to term from the review but has no way to read the module\'s structural-plus-part_of idiom as the same claim. (The module also declares GO:0006120 as its process scope, which ancestry cannot reach from an activity either, since is_a/part_of does not cross between molecular function and biological process; but that aspect divide is not what decides this row.)",
+    "NDUFA1": "A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The module is the right one; the cause is an asymmetry in how the two sides may say the same thing. The dismech node binds GO:0008137 NADH dehydrogenase (ubiquinone) activity, which the review carries as contributes_to_molecular_function, so the row aligns. complex_i_accessory_subunits says the identical relation the GO-idiomatic way, giving its NDUFA1 annoton GO:0005198 structural molecule activity as part of complex I, and GO:0005198 does not relate to GO:0008137 by is_a/part_of ancestry: a structural role and the activity it supports are different branches of molecular function. Coverage accepts a contributes-to term from the review but has no way to read the module\'s structural-plus-part_of idiom as the same claim. (The module also declares GO:0006120 as its process scope, which ancestry does not reach from GO:0008137 either - but that is a fact about this particular pair, not about the aspects: is_a/part_of does cross between molecular function and biological process, and MT-ND1 in this same table aligns GO:0008137 to GO:1902600 by doing so. Either way the aspect question is not what decides this row.)",
 }
-MODULE_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
+# Read from the run rather than kept here: a hardcoded pair went stale the moment the audit
+# added PARTIAL_COVERAGE to module_sourced, leaving alt_comparison reading the triple while
+# the reasons enforcement and the "(not covering)" marker read the pair.
+MODULE_FLAGS = tuple((PROV.get("_flag_groups") or {}).get("module_sourced") or ())
+if not MODULE_FLAGS:
+    sys.exit("the report records no module_sourced flag group; it was produced by a "
+             "superseded align_audit.py - re-run the audit")
+# Which module flags oblige a hand-written reason. PARTIAL_COVERAGE does not, and the page
+# now says so rather than leaving it to be inferred from the constant: the other two are
+# verdicts about a module ("none contains this gene", "one does and misses its function")
+# that only a reader of the module can justify, whereas PARTIAL_COVERAGE reports which
+# aligned terms no module term reached, and the row prints them. The distinction is
+# obligation, not importance.
+REASON_REQUIRING_MODULE_FLAGS = tuple(f for f in MODULE_FLAGS if f != "PARTIAL_COVERAGE")
 # Flags that qualify a row rather than mark it defective. PARTIAL_ALIGNMENT,
 # ALIGNED_CONTRIBUTES_ONLY and ALIGNED_ON_SHARED_NODE_ONLY are counted and reported
 # individually below rather than folded into one "clean" figure, because each is a way
@@ -270,22 +298,37 @@ FLAG_GLOSS = {
 
 
 def flag_legend():
-    """The glossary as bullets, enforcing that every emitted flag is defined.
+    """The whole glossary as bullets, grouped, enforcing that every emitted flag is defined.
 
-    The page publishes flags in the table and the summary; a flag with no entry here is
-    published without a definition, which is what happened to PARTIAL_COVERAGE.
+    Prints every entry rather than only the emitted ones. Filtering to what the primary
+    report emits was a regression: it dropped the definitions of four flags the page's own
+    prose names, NO_GO_ALIGNMENT among them - the headline negative result - so the fix for
+    one undefined flag left four more undefined. A flag the run does not emit is still a
+    flag a reader meets in the text, and the glossary is small enough to print whole.
+
+    Enforcement runs the other way and over both reports, since a flag emitted by either
+    would be published without a definition.
     """
-    emitted = {f for e in rep for g in e.get("genes") or [] for f in g.get("flags") or []}
+    emitted = {f for src in (rep, ALT_REP) for e in src for g in e.get("genes") or []
+               for f in g.get("flags") or []}
     missing = sorted(emitted - set(FLAG_GLOSS))
     if missing:
-        sys.exit(f"flags emitted by the run with no entry in FLAG_GLOSS: {', '.join(missing)}; "
+        sys.exit(f"flags emitted by a run with no entry in FLAG_GLOSS: {', '.join(missing)}; "
                  "they would be published in the table and the summary with no definition")
+    # Ordered by the groups the comparison section argues from, not alphabetically, so the
+    # legend carries the same structure as the explanation.
+    groups = PROV.get("_flag_groups") or {}
+    order, seen = [], set()
+    for key in ("review_independent", "review_absent", "review_present_thin", "module_sourced"):
+        for f in groups.get(key) or []:
+            if f in FLAG_GLOSS and f not in seen:
+                order.append(f); seen.add(f)
+    order += [f for f in sorted(FLAG_GLOSS) if f not in seen]
     out = []
-    for f in sorted(FLAG_GLOSS):
-        if f not in emitted:
-            continue
+    for f in order:
         mark = " *(qualifying)*" if f in QUALIFYING else ""
-        out.append(f"- `{f}`{mark} - {FLAG_GLOSS[f]}")
+        note = "" if f in emitted else " - not emitted by either run"
+        out.append(f"- `{f}`{mark} - {FLAG_GLOSS[f]}{note}")
     return out
 
 
@@ -357,12 +400,16 @@ def cross_aspect_rows(entries, aspects):
 
 
 TERM_ASPECTS = PROV.get("_term_aspects")
-if not TERM_ASPECTS:
+if TERM_ASPECTS == {}:
+    # An empty map is what a run with no matched pairs legitimately produces, which is a
+    # different thing from a report that predates the field.
+    print("note: the report records term_aspects as empty, so this run matched no pairs")
+if TERM_ASPECTS is None:
     # Without aspects the cross-aspect figures are zero, and zero renders as "no matched
     # pair crosses the aspects" - a lookup failure or an old report printing as a finding.
-    sys.exit("the report has no term_aspects; it was produced by a superseded "
-             "align_audit.py and the cross-aspect figures would read as an absence "
-             "rather than as missing data - re-run the audit")
+    sys.exit("the report has no term_aspects key at all; it was produced by a superseded "
+             "align_audit.py and the cross-aspect figures would read as an absence rather "
+             "than as missing data - re-run the audit")
 _n_all_rows = sum(1 for e in rep for g in e.get('genes') or [])
 _ca_sole, _ca_any = cross_aspect_rows(rep, TERM_ASPECTS)
 if _ca_sole:
@@ -384,6 +431,9 @@ else:
 # principal and inflate the clean count.
 PRINCIPAL_RELATIONSHIPS = (None, "CAUSATIVE")
 principal = lambda g: g.get("relationship") in PRINCIPAL_RELATIONSHIPS
+# Scale of the third membership/coverage state, derived rather than written, for the bullet below.
+_n_partial_cov = sum(1 for e in rep for g in e.get("genes", [])
+                     if principal(g) and "PARTIAL_COVERAGE" in g["flags"])
 
 # Only genes the audit actually matched to a review. Listing every symbol in the report
 # would count modifier and susceptibility genes with no review (SAR1A, APOA5, SH2B1,
@@ -447,10 +497,15 @@ lines += [
     "  row's whole alignment rests on one.",
     "- Module **membership** is not module **coverage**. Membership says the gene is a part of some",
     "  module; coverage says a module is about the function the row aligned on, which is a different",
-    "  and stronger claim. They are flagged separately: `NO_MODULE_MEMBERSHIP` means no module",
-    "  contains the gene, and `MODULE_NOT_COVERING` means one does but no term anywhere in any of",
-    "  those modules is related to the aligned terms. Such a module is marked",
-    "  `(not covering)` in the Modules column. AIFM1 is the row this flag exists to catch: it sits",
+    "  and stronger claim. They are flagged separately in three states: `NO_MODULE_MEMBERSHIP` means",
+    "  no module contains the gene; `MODULE_NOT_COVERING` means one does but no term anywhere in any",
+    "  of those modules is related to the aligned terms, and such a module is marked",
+    f"  `(not covering)` in the Modules column; and `PARTIAL_COVERAGE` ({_n_partial_cov} principal",
+    "  rows) means a module covers some of the aligned terms while no module term reaches the rest,",
+    "  which the Modules column names term by term after `- uncovered:`. The third state is not a",
+    "  defect to fix: a module is scoped to a process, so it will often reach the aligned term that",
+    "  names that process and not a second term naming a different activity of the same gene.",
+    "  AIFM1 is the row `MODULE_NOT_COVERING` exists to catch: it sits",
     "  in `apoptotic_execution_phase`, whose AIFM1 annoton carries DNA binding, nucleus and",
     "  positive regulation of apoptotic process, while the aligned function is the mitochondrial",
     "  disulfide relay. No module covers the relay.",
@@ -513,6 +568,9 @@ if PROV:
     _dirt = [v for k, v in _DIRT_NAMES.items() if PROV.get(k)]
     lines.append(
         f"- audit script: `{_ah}` (sha256 of `align_audit.py`), last committed at `{_ad}`"
+        + ("; unrecorded because the project directory has no history in the tree that was"
+           " read, which is the case for a scratch tree the script was copied into, so the"
+           " sha256 is the identifier to use" if _ad == "unrecorded" else "")
         + (f"; **uncommitted changes at run time in: {', '.join(_dirt)}**, so the revisions"
            " above name commits that are not exactly what ran" if _dirt else "")
     )
@@ -691,8 +749,9 @@ lines += [
     "",
     "- **No causative row carries `NO_GO_ALIGNMENT`**, which is the flag that would mark a real",
     "  contradiction: every causative gene has at least one node term matching a core function.",
-    "  The flags causative rows do carry say something weaker. The two module flags are about",
-    "  what is modelled elsewhere in ai-gene-review, not about this gene's function.",
+    "  The flags causative rows do carry say something weaker. The three module flags",
+    "  (`NO_MODULE_MEMBERSHIP`, `MODULE_NOT_COVERING`, `PARTIAL_COVERAGE`) are about what is",
+    "  modelled elsewhere in ai-gene-review, not about this gene's function.",
     "  `PARTIAL_ALIGNMENT` marks non-overlap rather than conflict - dismech modelling a step the",
     "  gene's normal function does not include - and `ALIGNED_CONTRIBUTES_ONLY` and",
     "  `ALIGNED_ON_SHARED_NODE_ONLY` mark a match that rests on a weaker relation than the row",
@@ -722,7 +781,7 @@ flag_by_gene, principal_genes = {}, set()
 for e in rep:
     for g in e.get("genes", []):
         for f in g["flags"]:
-            if f in MODULE_FLAGS:
+            if f in REASON_REQUIRING_MODULE_FLAGS:
                 flag_by_gene.setdefault(g["gene"], set()).add(f)
         if principal(g):
             principal_genes.add(g["gene"])
@@ -730,7 +789,12 @@ for e in rep:
 lines += ["", "## Genes with a module flag, and why", "",
           "`NO_MODULE_MEMBERSHIP` means no module contains the gene; `MODULE_NOT_COVERING` means",
           "one does but nothing in it is about the function the row aligned on. Rows that are not",
-          "causative are marked, since they were never required to align.", ""]
+          "causative are marked, since they were never required to align. `PARTIAL_COVERAGE` is",
+          "the third module flag and is deliberately absent from this list: it reports which of a",
+          "row's aligned terms a module reached and which it did not, so the covering pairs and the",
+          "`- uncovered:` list in the Modules column already say everything a hand-written reason",
+          "could, and the generator",
+          "does not require one. The distinction is obligation, not importance.", ""]
 for k, v in MODULE_REASONS.items():
     names = [n.strip() for n in k.split("/")]
     fl = sorted({f for n in names for f in flag_by_gene.get(n, ())})
@@ -745,10 +809,11 @@ for k, v in MODULE_REASONS.items():
 # stopped applying lingered silently.
 covered = {g.strip() for key in MODULE_REASONS for g in key.split("/")}
 missing = sorted({g["gene"] for e in rep for g in e.get("genes", [])
-                  if principal(g) and [f for f in g["flags"] if f in MODULE_FLAGS]} - covered)
+                  if principal(g)
+                  and [f for f in g["flags"] if f in REASON_REQUIRING_MODULE_FLAGS]} - covered)
 if missing:
     sys.exit("MODULE_REASONS has no entry for principal rows flagged "
-             f"{'/'.join(MODULE_FLAGS)}: {', '.join(missing)}")
+             f"{'/'.join(REASON_REQUIRING_MODULE_FLAGS)}: {', '.join(missing)}")
 unused = sorted(covered - set(flag_by_gene))
 if unused:
     sys.exit("MODULE_REASONS names genes that carry no module flag on this run, so the "

@@ -111,6 +111,8 @@ _aspect_cache = {}
 # term_aspects, and an empty map made the page print "no matched pair crosses the
 # aspects" as a finding - a lookup failure rendering as a result.
 _aspect_failures = []
+# Terms that resolved but sat under no aspect root, or under several.
+_aspect_unresolved = []
 
 
 def aspect(t):
@@ -128,6 +130,11 @@ def aspect(t):
             _aspect_failures.append((t, f"{type(exc).__name__}: {exc}"))
             up = set()
         hit = [v for k, v in _ASPECT_ROOTS.items() if k in up]
+        if up and len(hit) != 1:
+            # Resolved, but to no aspect root or to several. Recorded rather than dropped:
+            # this was the residue of the old "absence is recorded, not raised" docstring,
+            # and a term with no aspect silently leaves term_aspects.
+            _aspect_unresolved.append((t, sorted(hit)))
         _aspect_cache[t] = hit[0] if len(hit) == 1 else None
     return _aspect_cache[t]
 
@@ -216,6 +223,19 @@ FLAG_GROUPS = dict(
     module_sourced=list(MODULE_SOURCED_FLAGS),
 )
 
+def _dirty(repo, path=None):
+    """True/False for uncommitted changes, or None when git could not answer.
+
+    Tri-state on purpose. bool(_git(...)) made a git failure indistinguishable from a
+    clean tree, so an erroring git recorded "clean" and the page's dirtiness clause
+    disappeared - a reader then takes the absence as "the revisions name what ran", which
+    is the assertion these fields exist to withhold. Same shape as aspect() swallowing a
+    lookup failure: the failure renders as a result.
+    """
+    out = _git(repo, "status", "--porcelain", *(["--", path] if path else []))
+    return None if out is None else bool(out)
+
+
 PROVENANCE = dict(
     run_date=datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     go_adapter=GO_ADAPTER,
@@ -242,10 +262,9 @@ PROVENANCE = dict(
     # Whether either tree had uncommitted changes when the run was made. Without this a
     # recorded revision can name a tree that is not what ran, which was true of both
     # committed reports: the script was edited after the commit the revision names.
-    audit_dirty=bool(_git(AG, "status", "--porcelain", "--",
-                          os.path.relpath(os.path.abspath(__file__), AG))),
-    aigr_dirty=bool(_git(AG, "status", "--porcelain")),
-    dismech_dirty=bool(_git(DM, "status", "--porcelain")),
+    audit_dirty=_dirty(AG, os.path.relpath(os.path.abspath(__file__), AG)),
+    aigr_dirty=_dirty(AG),
+    dismech_dirty=_dirty(DM),
     scope_entries=len(SCOPE),
 )
 # Filled in after the modules are read, so the claim that reading module files as text
@@ -643,6 +662,12 @@ if _aspect_failures:
     sys.exit(f"GO aspect lookups failed for {len(_aspect_failures)} terms, e.g. "
              f"{_aspect_failures[:3]}; the cross-aspect figures would read as an absence "
              "rather than as a failure")
+if _aspect_unresolved:
+    # Not fatal: a term under no aspect root is a fact about the ontology, not a failed
+    # lookup. Recorded so it cannot leave term_aspects without trace.
+    PROVENANCE["aspect_unresolved"] = [t for t, _ in _aspect_unresolved]
+    print("terms with no single GO aspect root:", _aspect_unresolved[:5],
+          f"({len(_aspect_unresolved)} total)")
 
 yaml.safe_dump(dict(provenance=PROVENANCE,
                     review_independent_flags=list(REVIEW_INDEPENDENT_FLAGS),

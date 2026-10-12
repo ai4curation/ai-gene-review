@@ -58,10 +58,15 @@ check, and any of them can turn a row green that a curator would not:
   row's whole alignment rests on one.
 - Module **membership** is not module **coverage**. Membership says the gene is a part of some
   module; coverage says a module is about the function the row aligned on, which is a different
-  and stronger claim. They are flagged separately: `NO_MODULE_MEMBERSHIP` means no module
-  contains the gene, and `MODULE_NOT_COVERING` means one does but no term anywhere in any of
-  those modules is related to the aligned terms. Such a module is marked
-  `(not covering)` in the Modules column. AIFM1 is the row this flag exists to catch: it sits
+  and stronger claim. They are flagged separately in three states: `NO_MODULE_MEMBERSHIP` means
+  no module contains the gene; `MODULE_NOT_COVERING` means one does but no term anywhere in any
+  of those modules is related to the aligned terms, and such a module is marked
+  `(not covering)` in the Modules column; and `PARTIAL_COVERAGE` (14 principal
+  rows) means a module covers some of the aligned terms while no module term reaches the rest,
+  which the Modules column names term by term after `- uncovered:`. The third state is not a
+  defect to fix: a module is scoped to a process, so it will often reach the aligned term that
+  names that process and not a second term naming a different activity of the same gene.
+  AIFM1 is the row `MODULE_NOT_COVERING` exists to catch: it sits
   in `apoptotic_execution_phase`, whose AIFM1 annoton carries DNA binding, nucleus and
   positive regulation of apoptotic process, while the aligned function is the mitochondrial
   disulfide relay. No module covers the relay.
@@ -101,27 +106,31 @@ Flags, with the qualifying ones marked - a qualifying flag says the verdict is w
 `ok` would suggest, so those are counted separately below rather than absorbed into one
 clean figure:
 
+- `GENE_ON_NO_NODE` - no pathophysiology node names the gene
+- `NO_GO_ON_GENE_NODES` - no node naming the gene carries a GO term
+- `NO_ORIGIN` - the dismech genetic record carries no variant origin
+- `UNTYPED` - the dismech genetic record carries no relationship type - not emitted by either run
+- `NO_AIGR_REVIEW` - no ai-gene-review review exists for the gene
 - `AIGR_NOT_COMPLETE` - a review exists but its status is not COMPLETE
+- `NO_CORE_FUNCTION_TERMS` - a review exists but has no core-function GO term to compare against
+- `NO_MODULE_MEMBERSHIP` - no module contains the gene's accession
+- `MODULE_NOT_COVERING` - a module contains it, but no annoton term there relates to the aligned terms
+- `PARTIAL_COVERAGE` *(qualifying)* - a module covers some aligned terms and no module term reaches the rest
 - `ALIGNED_CONTRIBUTES_ONLY` *(qualifying)* - every aligned term matched only a contributes-to function, not an enabled one
 - `ALIGNED_NONCORE` - node terms match only annotations the review keeps as non-core
 - `ALIGNED_ON_SHARED_NODE_ONLY` *(qualifying)* - every aligned term came from a node the gene shares with another gene
-- `GENE_ON_NO_NODE` - no pathophysiology node names the gene
-- `MODULE_NOT_COVERING` - a module contains it, but no annoton term there relates to the aligned terms
-- `NO_AIGR_REVIEW` - no ai-gene-review review exists for the gene
-- `NO_GO_ON_GENE_NODES` - no node naming the gene carries a GO term
-- `NO_MODULE_MEMBERSHIP` - no module contains the gene's accession
-- `NO_ORIGIN` - the dismech genetic record carries no variant origin
+- `ALIGNED_PROPOSED` - node terms match only terms the review proposes as NEW, which are not yet annotations - not emitted by either run
+- `NO_GO_ALIGNMENT` - no node term matches a core function, an annotation the review keeps, or a term it proposes - not emitted by either run
 - `PARTIAL_ALIGNMENT` *(qualifying)* - some node terms aligned and others matched nothing in the review
-- `PARTIAL_COVERAGE` *(qualifying)* - a module covers some aligned terms and no module term reaches the rest
 
 **Provenance of this run.** The table is generated, so it is only as current as the inputs it
 was generated from, and those inputs live in two repositories.
 
-- run date: `2026-10-12T11:04:41Z`
+- run date: `2026-10-12T11:24:16Z`
 - dismech revision: `c0ef3d0d5a5c519fab45d814a79709df266076e1` (c0ef3d0d5 2026-10-11 Add review records for nine unchanged entries and 16 gene pages)
-- ai-gene-review revision: `d4b13b7af409d6de052202d69fe5a890d1137495` (branch `combined: origin/main + the ten #4690 slices`)
+- ai-gene-review revision: `03960b45b0f41b3d6ac075c31320435dedb35c28` (branch `combined: origin/main + the ten #4690 slices`)
 - GO release: `2026-07-26`, adapter `sqlite:/root/.data/oaklib/go.db`
-- audit script: `407a3b8b80a2` (sha256 of `align_audit.py`), last committed at `unrecorded`; **uncommitted changes at run time in: the audit script itself, the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran
+- audit script: `cb2d75e06157` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the audit script itself, the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran
 - ai-gene-review tree: origin/main at 0222675 with these ten themed slice branches of #4690 merged in a scratch worktree: claude/cool-edison-o9wvf0-{carbohydrate, energy-balance, isoprenoid, lipid, lysosome-glycosylation, mito-translation, one-carbon-aa, oxphos, peroxisome-oxalate, vitd-minerals}; AIGR_REVISION is that merge commit, which exists only in that worktree
 - modules read: `459`; UniProt accessions reached as parts: `4175`, against `4242` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
@@ -146,7 +155,9 @@ The rises have three different causes, and only one of them is that absence.
 
 - `MODULE_NOT_COVERING` cannot have either cause. Both module flags are computed only once a review has been found, so a missing review **removes** one rather than adding it. The driver is the module files: the second run reads 448 modules against 459 here, so fewer are available to cover a gene's aligned terms. The second set is a strict subset: 11 modules are here and not there (e.g. `beta_cell_glucose_stimulated_insulin_secretion`), and none the other way.
 
-`ALIGNED_CONTRIBUTES_ONLY`, `PARTIAL_COVERAGE` is identical in both runs while depending on a review, so it appears in neither list above. Over two different review sets and two different module sets that is either a stable property of the dismech side or a path these two runs do not separate; this comparison cannot tell which.
+`ALIGNED_CONTRIBUTES_ONLY`, `PARTIAL_COVERAGE` are identical in both runs while depending on a review, so they appear in neither list above.
+For `ALIGNED_CONTRIBUTES_ONLY` that is either a stable property of the dismech side or a path these two runs do not separate; this comparison cannot tell which.
+`PARTIAL_COVERAGE` is module-sourced and the two runs read different module sets, so a stable count there is not a property of the dismech side at all - it means the rows carrying it are covered by modules present in both trees.
 
 The flags decided before any review is read are identical in both runs
 (`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `UNTYPED` 0), which is what separates
@@ -371,8 +382,9 @@ terms, all of them are shown separated by `/`.
 
 - **No causative row carries `NO_GO_ALIGNMENT`**, which is the flag that would mark a real
   contradiction: every causative gene has at least one node term matching a core function.
-  The flags causative rows do carry say something weaker. The two module flags are about
-  what is modelled elsewhere in ai-gene-review, not about this gene's function.
+  The flags causative rows do carry say something weaker. The three module flags
+  (`NO_MODULE_MEMBERSHIP`, `MODULE_NOT_COVERING`, `PARTIAL_COVERAGE`) are about what is
+  modelled elsewhere in ai-gene-review, not about this gene's function.
   `PARTIAL_ALIGNMENT` marks non-overlap rather than conflict - dismech modelling a step the
   gene's normal function does not include - and `ALIGNED_CONTRIBUTES_ONLY` and
   `ALIGNED_ON_SHARED_NODE_ONLY` mark a match that rests on a weaker relation than the row
@@ -399,7 +411,12 @@ terms, all of them are shown separated by `/`.
 
 `NO_MODULE_MEMBERSHIP` means no module contains the gene; `MODULE_NOT_COVERING` means
 one does but nothing in it is about the function the row aligned on. Rows that are not
-causative are marked, since they were never required to align.
+causative are marked, since they were never required to align. `PARTIAL_COVERAGE` is
+the third module flag and is deliberately absent from this list: it reports which of a
+row's aligned terms a module reached and which it did not, so the covering pairs and the
+`- uncovered:` list in the Modules column already say everything a hand-written reason
+could, and the generator
+does not require one. The distinction is obligation, not importance.
 
 - **TRMT10C** (`NO_MODULE_MEMBERSHIP`): RNase P partners (HSD17B10, PRORP, ELAC2) lack completed reviews.
 - **ANGPTL3** (`NO_MODULE_MEMBERSHIP`): No LPL / plasma triglyceride clearance module; LPL review still DRAFT.
@@ -418,4 +435,4 @@ causative are marked, since they were never required to align.
 - **AIFM1** (`MODULE_NOT_COVERING`): The aligned function is the mitochondrial disulfide relay (CHCHD4 anchoring); no module covers the relay. AIFM1 is a part of apoptotic_execution_phase, whose AIFM1 annoton carries DNA binding, nucleus and positive regulation of apoptotic process: a different AIFM1 activity, and not the encephalomyopathy mechanism.
 - **APOB** (`MODULE_NOT_COVERING`): The aligned term is GO:0034379 very-low-density lipoprotein particle assembly, and there is no VLDL-assembly module. APOB is a part of chylomicron_assembly_secretion, whose scope is GO:0034378 chylomicron assembly, and of ldl_receptor_mediated_endocytosis, which is about the receptor taking the particle up. GO:0034378 and GO:0034379 are siblings, not one inside the other, so the hepatic VLDL step is genuinely unmodelled. APOB's other row, the LDL-receptor-binding one, is covered.
 - **NUBPL** (`MODULE_NOT_COVERING`): The aligned term is GO:0016226 iron-sulfur cluster assembly. NUBPL is a part of complex_i_assembly_factors, whose scope is GO:0032981 mitochondrial respiratory chain complex I assembly: NUBPL delivers an Fe-S cluster to the assembling complex, and the cluster's own assembly is a different process that no module covers.
-- **NDUFA1** (`MODULE_NOT_COVERING`): A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The module is the right one; the cause is an asymmetry in how the two sides may say the same thing. The dismech node binds GO:0008137 NADH dehydrogenase (ubiquinone) activity, which the review carries as contributes_to_molecular_function, so the row aligns. complex_i_accessory_subunits says the identical relation the GO-idiomatic way, giving its NDUFA1 annoton GO:0005198 structural molecule activity as part of complex I, and GO:0005198 does not relate to GO:0008137 by is_a/part_of ancestry: a structural role and the activity it supports are different branches of molecular function. Coverage accepts a contributes-to term from the review but has no way to read the module's structural-plus-part_of idiom as the same claim. (The module also declares GO:0006120 as its process scope, which ancestry cannot reach from an activity either, since is_a/part_of does not cross between molecular function and biological process; but that aspect divide is not what decides this row.)
+- **NDUFA1** (`MODULE_NOT_COVERING`): A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The module is the right one; the cause is an asymmetry in how the two sides may say the same thing. The dismech node binds GO:0008137 NADH dehydrogenase (ubiquinone) activity, which the review carries as contributes_to_molecular_function, so the row aligns. complex_i_accessory_subunits says the identical relation the GO-idiomatic way, giving its NDUFA1 annoton GO:0005198 structural molecule activity as part of complex I, and GO:0005198 does not relate to GO:0008137 by is_a/part_of ancestry: a structural role and the activity it supports are different branches of molecular function. Coverage accepts a contributes-to term from the review but has no way to read the module's structural-plus-part_of idiom as the same claim. (The module also declares GO:0006120 as its process scope, which ancestry does not reach from GO:0008137 either - but that is a fact about this particular pair, not about the aspects: is_a/part_of does cross between molecular function and biological process, and MT-ND1 in this same table aligns GO:0008137 to GO:1902600 by doing so. Either way the aspect question is not what decides this row.)
