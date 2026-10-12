@@ -121,3 +121,26 @@ Citrulline biosynthesis is a pathway: CPS1 performs upstream precursor synthesis
 ### Historical and current source representation
 
 The reconciled review has 79 active assertions and two retired historical source forms. All 78 original assertion objects remain unchanged, including 49 omitted WITH/FROM lists; complete modern identities are separately listed in the evidence index. The retired InterPro-only metal record and aggregate Raf record are not biological removals. All three original product records and all 30 original reference identities/findings remain preserved. The evidence index supplies source provenance and literal records, not independent experimental evidence.
+
+
+## 2026-10-12: targeted evidence clarification
+
+This dated clarification supersedes the earlier calcium-binding retention and downstream-nitrogen rationale above. It preserves the historical journal and positive experimental observations. Electronic annotation methods are evaluated from their actual sources; they are neither categorically protected nor rejected. Supported non-core claims require positive evidence. UNDECIDED marks an unresolved claim and is not acceptance. The action distribution is an outcome of those decisions, not a removal quota.
+
+### Secondary binding and pathway scope
+
+The rat calcium study reports a roughly 130-kDa binding band but the accessed abstract does not explain its CPS1 identification. That is appreciably smaller than intact human CPS1. The identity or processing explanation and human transfer remain UNDECIDED; catalytic Mg/K dependence and missing calcium in particular structures do not invalidate a calcium-binding assay by themselves. [PMID:9506839](https://pubmed.ncbi.nlm.nih.gov/9506839/) remains an abstract-only source.
+
+The phospholipid annotation is refined to cardiolipin binding, GO:1901612, using the positive selective-interaction result in [PMID:1898084](https://pubmed.ncbi.nlm.nih.gov/1898084/). Other tested anionic phospholipids also interacted, so the refinement does not claim cardiolipin exclusivity. The three ligand annotations that converge on GO:0072341 retain their different original sources; this is precision of existing assertions rather than three new functions.
+
+For GO:0006541, the unresolved question is the actual human pathway step represented by the ancestral or domain-derived annotation. Direct glutamine hydrolysis is lost, and ammonia-specific catalysis supports the molecular-function replacement. That biochemical result alone does not settle every multistep process in the broader term, while a possible nitrogen origin supplies no positive participation evidence. Both process rows therefore remain UNDECIDED.
+
+The [2010 14-3-3 original](https://doi.org/10.1111/j.1742-4658.2010.07730.x), Tables 1–2 and the TAP Methods, reports mitochondrial CPS1 among the ceramide-condition isolates. Its CAD background explanation is incorrect and is not transferred to CPS1. The measured partner class supports 14-3-3 protein binding at association scope; neither direct contact nor a CPS1 apoptosis mechanism is asserted. The 2004 GST-bait observation and the 2010 TAP observation retain distinct assay descriptions.
+
+### Direct source access and ontology wording
+
+The [full publisher correction](https://doi.org/10.1038/s41586-019-1133-3), in its first body paragraph, explicitly describes the MRM 140/79 transition and the exact quotation already retained above. This full text is distinct from the shorter cached correction summary. The misidentified signal, more selective follow-up transitions and below-threshold carbamoyl-phosphate result are stated in the correction itself; the original Letter was not corrected online. No new quotation is added here.
+
+The GO:0070409 refinement rests directly on CPS1 chemistry. Raw [QuickGO GO:0090407](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0090407) and [OLS GO:0090407](https://www.ebi.ac.uk/ols4/ontologies/go/classes/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FGO_0090407) responses on 2026-10-12 both pair its organophosphate label with a deoxyribose-specific definition. This is an observed service response, not a locally combined child definition; no causal diagnosis of the ontology or API is needed for the annotation decision. The original source identifier remains unchanged.
+
+For stable navigation to the previously read originals, use [PMID:18063578 DOI](https://doi.org/10.1074/jbc.M708444200) and [PMID:23649895 DOI](https://doi.org/10.1002/humu.22349) only as authenticated identifiers where noted in the source index. The evidence index distinguishes canonical publication locators from the actual author-upload or indexed access route. Its captured records and hashes document provenance, not new experiments or independent corroboration.

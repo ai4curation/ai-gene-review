@@ -4,7 +4,9 @@ These are short literal original-source excerpts, not new experimental findings.
 
 ## PMID:18063578
 
-Public original: https://www.researchgate.net/publication/5783906_The_Layered_Structure_of_Human_Mitochondrial_DNA_Nucleoids
+Canonical publication: https://doi.org/10.1074/jbc.M708444200
+
+Actual indexed original access route: https://www.researchgate.net/publication/5783906_The_Layered_Structure_of_Human_Mitochondrial_DNA_Nucleoids
 
 Locator: Table 1, indexed original line 1142, within the class-I section. The four count columns are native TFAM/mtSSB and crosslinked TFAM/mtSSB; the final number is a cited reference column. No original figure pixels or supplementary tables were inspected.
 
