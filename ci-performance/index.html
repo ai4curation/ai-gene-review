@@ -458,6 +458,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#merge-queue-follow-up-2026-10-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Merge-queue follow-up (2026-10-12)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#remaining-opportunities" class="md-nav__link">
     <span class="md-ellipsis">
       Remaining opportunities
@@ -580,6 +589,75 @@ batching effect (both modes passed with the same schema, flags, and inputs):</p>
 </tr>
 </tbody>
 </table>
+<h2 id="merge-queue-follow-up-2026-10-12">Merge-queue follow-up (2026-10-12)</h2>
+<p>After the first speedup, the successful <a href="https://github.com/ai4curation/ai-gene-review/actions/runs/38180881453">merge-group run 38180881453</a>
+spent about 40 minutes executing. Family validation fell to 62 seconds. The
+remaining large steps were all-gene schema validation (454 seconds), module
+validation (706 seconds), and the test suite including doctests and mypy
+(834 seconds). Checkout took 117 seconds and fetching frozen benchmark snapshots
+57 seconds. A second successful integration run showed similar timings.</p>
+<p>The follow-up removes repeated work within those steps:</p>
+<ul>
+<li>Gene schema batches use libyaml's safe parser with LinkML's existing closed
+  JSON Schema plugin. Instance boundaries, diagnostics, and blocking errors are
+  retained; duplicate-key checking remains in the existing strict-YAML tests.
+  The C scanner can differ on malformed/edge-case input (for example, trailing
+  tabs and lone Unicode surrogates); it is not a byte-for-byte parser replacement.
+  Installations without libyaml fall back to PyYAML's safe Python parser.</li>
+<li>Module ontology labels and aliases are shared across files within one CLI
+  invocation, keyed by ontology adapter and term. Lookup exceptions are remembered within a file to avoid repeated timeouts,
+  then retried on the next file. Nothing is persisted across runs or skips document validation.</li>
+<li>Reaction-chaining QC resolves reactions only for steps participating in a
+  <code>PRECEDES</code> connection. Unconnected steps cannot contribute to these findings;
+  their other structural and functional checks still run.</li>
+<li>Git snapshot glob searches use a sorted path index to narrow candidates by
+  literal prefix before applying the unchanged matcher. Results are cached only
+  within the immutable snapshot; callers receive independent result lists.</li>
+<li>The ProtNLM and BioReason benchmark readers use the same safe parser. Frozen
+  inputs, ontology releases, expected scores, and test coverage are unchanged.</li>
+</ul>
+<p>Same-machine measurements on the same checkout (Python 3.12, warm ontology
+caches) show:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th style="text-align: right;">Before</th>
+<th style="text-align: right;">After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All 6,711 checked-out gene schemas</td>
+<td style="text-align: right;">251.48s</td>
+<td style="text-align: right;">62.86s</td>
+</tr>
+<tr>
+<td>First 100 sorted gene schemas</td>
+<td style="text-align: right;">2.96s</td>
+<td style="text-align: right;">1.29s</td>
+</tr>
+<tr>
+<td>First 50 sorted module files, grounding/QC phase</td>
+<td style="text-align: right;">128.15s</td>
+<td style="text-align: right;">82.53s</td>
+</tr>
+<tr>
+<td>ProtNLM + BioReason benchmark tests (26 tests)</td>
+<td style="text-align: right;">146.03s</td>
+<td style="text-align: right;">42.88s</td>
+</tr>
+</tbody>
+</table>
+<p>The module comparison produced byte-identical diagnostics. All 448 module files
+passed the new grounding/QC batch (412.83s). Benchmark timings use pytest
+reported duration; the baseline restores both the original glob and YAML loaders
+in a separate process. Both versions pass the same 26 tests against frozen inputs. These are local
+measurements with other checks running concurrently, not promised GitHub runner
+timings. Both full schema runs passed. The additional <code>DROME/Dl</code> review hidden
+by this macOS checkout's <code>Dl</code>/<code>dl</code> filename collision was exported from Git and
+validated separately. Integration runs must establish the end-to-end improvement
+after merge.</p>
 <h2 id="remaining-opportunities">Remaining opportunities</h2>
 <ul>
 <li>Queue pressure is distinct from execution time. The separate
