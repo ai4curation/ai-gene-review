@@ -31,7 +31,7 @@ G = {
     "ALDOA": note(CAT2, "Cytosolic glycolytic aldolase."),
     "ALPL": note(CAT1, "GPI-anchored plasma-membrane phosphatase; UniProt also records an EV-membrane pool."),
     "AMN": note(CAT1, "Apical plasma-membrane cubilin partner."),
-    "ANKFY1": note(CAT1, "Peripheral endosome-membrane protein."),
+    "ANKFY1": note(CAT2A, "Peripheral endosome-membrane protein."),
     "APLP2": note(CAT1, "Plasma-membrane amyloid precursor-like protein."),
     "APOE": note(CAT2, "Not a MISEV2018 (PMID:30637094) negative marker (it names APOA1/2 and APOB), and these "
                        "samples are urine, prostatic secretion, B-cell culture and CSF rather than plasma. van Niel "
@@ -57,9 +57,9 @@ G = {
     "ATP6AP2": note(CAT1, "Single-pass membrane protein of the endolysosomal V-ATPase assembly."),
     "ATP6V0A4": note(CAT1, "Plasma-membrane V-ATPase subunit."),
     "ATP6V0C": note(CAT1, "V-ATPase membrane subunit of endosomal/vesicle membranes."),
-    "ATP6V0D1": note(CAT1, "V-ATPase subunit of endolysosomal membranes."),
-    "ATP6V0D2": note(CAT1, "V-ATPase subunit of endolysosomal and plasma membranes."),
-    "ATP6V1G1": note(CAT1, "V-ATPase subunit at the apical plasma membrane."),
+    "ATP6V0D1": note(CAT2A, "Peripheral V-ATPase V0 subunit of endolysosomal membranes."),
+    "ATP6V0D2": note(CAT2A, "Peripheral V-ATPase V0 subunit of endolysosomal and plasma membranes."),
+    "ATP6V1G1": note(CAT2A, "Peripheral V-ATPase V1 subunit at the apical plasma membrane."),
     "ATRN": note(CAT1, "Plasma-membrane attractin isoform."),
     "AZGP1": note(CAT5, "Secreted zinc-alpha-2-glycoprotein."),
     "B4GALT1": note(CAT1, "Golgi galactosyltransferase whose long isoform has an evidenced cell-surface pool."),
@@ -91,11 +91,14 @@ G = {
     "COPS8": note(CAT2, "Cytoplasmic/nuclear COP9 signalosome subunit."),
     "CRISPLD1": note(CAT5, "Secreted protein."),
     "CSK": note(CAT2, "Cytoplasmic tyrosine kinase with a lipid-raft pool."),
-    "CUBN": note(CAT1, "Apical plasma-membrane endocytic receptor."),
+    "CUBN": ("KEEP_AS_NON_CORE", "Apical plasma-membrane endocytic receptor with no membrane span of its own, held at "
+                                 "the surface by its transmembrane partner AMN (UniProt). Membrane proteins and their "
+                                 "bound partners are expected EV contents (MISEV2018 (PMID:30637094) categories 1 and "
+                                 "2a). True, but not its core location."),
     "DDC": note(CAT2, "Cytosolic aromatic-L-amino-acid decarboxylase."),
     "DNAJA2": note(CAT2, "Cytosolic farnesylated HSP40 co-chaperone."),
     "DNAJB1": note(CAT2, "Cytoplasmic HSP40 co-chaperone."),
-    "DNAJC13": note(CAT1, "Peripheral endosome-membrane protein."),
+    "DNAJC13": note(CAT2A, "Peripheral endosome-membrane protein."),
     "DNAJC3": note(CAT4, "ER-resident co-chaperone."),
     "DPEP1": note(CAT1, "GPI-anchored apical plasma-membrane dipeptidase."),
     "DPYS": note(CAT2, "Cytosolic dihydropyrimidinase."),

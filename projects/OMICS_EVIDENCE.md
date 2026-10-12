@@ -466,6 +466,14 @@ resident" and that the protein's own review keeps no experimental surface pool, 
 `apply_decisions.py` checks that claim against each review. The GO closure check now also
 fails loudly if a root term is missing from the loaded GO release.
 
+Checking the category-1 template the same way found six proteins that UniProt gives no
+membrane span or lipid anchor: ANKFY1, DNAJC13, ATP6V0D1, ATP6V0D2 and ATP6V1G1 are
+peripheral proteins on the cytosolic face (now category 2a, like the other V-ATPase V1
+subunits), and CUBN is held at the cell surface by its transmembrane partner AMN (now its
+own basis). All six rows were already KEEP_AS_NON_CORE and stay so; only the recorded basis
+changed, so no review file is edited. `apply_decisions.py` now requires a UniProt
+transmembrane, intramembrane, lipidation or GPI-anchor feature for any category-1 basis.
+
 ### 2026-10-10: third round of automated-review fixes
 
 The reviewer found that the category-5 template still claimed "none is shown" for an

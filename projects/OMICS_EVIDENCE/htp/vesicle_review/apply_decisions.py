@@ -121,6 +121,16 @@ def surface_rows(organism: str, gene: str) -> list[str]:
                    and not a.get("negated") and a["review"].get("action") in ("ACCEPT", "KEEP_AS_NON_CORE")})
 
 
+# CAT1's claim that the protein spans or is lipid-anchored in a membrane, checked against UniProt features.
+ANCHOR_CLAIM = "Transmembrane/lipid-anchored protein"
+ANCHOR_FEATURE = re.compile(r"^FT   (TRANSMEM|INTRAMEM|LIPID) |GPI-anchor", re.M)
+
+
+def has_anchor(organism: str, gene: str) -> bool:
+    with open(os.path.join(ROOT, "genes", organism, gene, f"{gene}-uniprot.txt")) as fh:
+        return bool(ANCHOR_FEATURE.search(fh.read()))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -146,6 +156,8 @@ def main() -> int:
         if NO_BINDING in basis:
             hits = binding_evidence(d["organism"], d["gene"])
             assert not hits, f"{key}: CAT5 says no experimental lipid/proteoglycan binding, but found {hits}"
+        if ANCHOR_CLAIM in basis:
+            assert has_anchor(d["organism"], d["gene"]), f"{key}: CAT1 says transmembrane/lipid-anchored, UniProt has no anchor"
         if SURFACE_CLAIM in basis:
             hits = surface_rows(d["organism"], d["gene"])
             assert not hits, f"{key}: CAT4 says no kept experimental surface pool, but the review keeps {hits}"
