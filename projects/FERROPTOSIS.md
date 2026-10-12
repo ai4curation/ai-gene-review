@@ -1,6 +1,7 @@
 ---
 title: "Ferroptosis Project"
 maturity: MATURE
+last_reviewed: 2026-10-04
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [GPX4, SLC7A11, SLC3A2, ACSL4, LPCAT3, AIFM2, DHODH, GCH1, PTS, SPR, NCOA4, TFRC, FTH1, SLC40A1, GCLC, GSS, NFE2L2, KEAP1, ATF4, TP53, FADS1, ELOVL5]
@@ -18,241 +19,143 @@ manifest:
 **Bottom line:** ferroptosis is iron-dependent regulated cell death driven by
 peroxidation of polyunsaturated phospholipids, and GO treats it as an evolved
 programmed process ([GO:0097707](http://purl.obolibrary.org/obo/GO_0097707)).
-We reviewed all 22 human genes that supply its substrates and iron, the four
-parallel defence systems that suppress it (GPX4–glutathione, FSP1–CoQ10,
-DHODH–CoQ10, GCH1–BH4), and its transcriptional regulators, and captured the
-mechanism as a decomposable [ferroptosis module](../modules/ferroptosis.html).
-We did this because the defence pathways were discovered from 2019 onward and
-the question was whether GO had caught up with them. The 22 reviews cover 2,362
-existing annotations plus 10 proposed new ones (872 existing on TP53, where 344
-were removed); the core
-suppressors carry `GO:0110076` negative regulation of ferroptosis, accepted on
-GPX4, SLC7A11, AIFM2/FSP1, FTH1 and NFE2L2 and proposed as new for DHODH. A
-2026 second pass on GPX4, SLC7A11, ACSL4 and AIFM2 left a few evidence
-follow-ups open.
+The project reviewed all 22 human genes that supply the oxidizable
+PUFA-phospholipid substrate, tune the labile iron pool, suppress the execution
+step through four parallel defense systems, or reset those defenses
+transcriptionally. Those gene-level reviews are now summarized in a
+decomposable [ferroptosis module](../modules/ferroptosis.html) with production
+GO-CAM associations for AIFM2, GPX4, NFE2L2, and SLC7A11 switch models.
 
-## Overview
+The 22 reviewed gene files, 21 COMPLETE plus ACSL4 still DRAFT, cover 2,362
+seeded GOA annotations plus 10 proposed new ones as of 2026-10-04. Across those
+rows, 1,458 annotations were accepted as core, 297 were kept as non-core, 113
+were marked over-annotated, 97 were modified, 377 were removed, and 20 were left
+undecided. TP53 alone contributed 872 seeded rows, 344 of which were removed.
+The core suppressor term `GO:0110076` negative regulation of ferroptosis is
+accepted on GPX4, SLC7A11, AIFM2, FTH1, and NFE2L2 and proposed as a new
+annotation for DHODH.
 
-Ferroptosis is a form of regulated cell death characterized by iron-dependent lipid peroxidation. Distinct from apoptosis, necrosis, and autophagy, ferroptosis involves the accumulation of lipid reactive oxygen species (ROS) when glutathione-dependent lipid repair systems are compromised. The field has exploded since 2020 with discoveries of parallel defense pathways.
+## Mechanistic Scope
 
-## Model Species
+Ferroptosis is best modelled as one execution process, not as a linear cascade.
+PUFA-containing phospholipids and redox-active iron set up the chemistry; GPX4,
+CoQ10, DHODH, and BH4 arms quench the radicals or lipid hydroperoxides in
+parallel; NFE2L2, KEAP1, ATF4, and TP53 tune the balance by changing
+defense-gene expression.
 
-**Primary: Homo sapiens (human)**
-- UniProt species code: HUMAN
-- Best characterized system with therapeutic relevance
-- Cancer therapy and neurodegeneration applications
+| Layer | Reviewed genes | Ferroptosis role |
+|-------|----------------|------------------|
+| PUFA-phospholipid substrate supply | ACSL4, LPCAT3, FADS1, ELOVL5 | ACSL4 activates arachidonate/adrenate-family PUFAs, LPCAT3 remodels them into phospholipids, and FADS1 and ELOVL5 feed the upstream PUFA pool |
+| Labile-iron pool | TFRC, NCOA4, FTH1, SLC40A1 | TFRC import and NCOA4 ferritinophagy sensitize cells; FTH1 ferritin storage and SLC40A1/ferroportin export are protective |
+| GPX4-glutathione defense | GPX4, SLC7A11, SLC3A2, GCLC, GSS | system xc- supplies cysteine for glutathione, and GPX4 reduces membrane phospholipid hydroperoxides |
+| CoQ10 defenses | AIFM2, DHODH | AIFM2/FSP1 regenerates radical-trapping ubiquinol at membranes, while DHODH provides the mitochondrial inner-membrane CoQ arm |
+| GCH1-BH4 defense | GCH1, PTS, SPR | de novo BH4 synthesis supplies a radical-trapping antioxidant axis parallel to GPX4 and CoQ |
+| Transcriptional set point | NFE2L2, KEAP1, ATF4, TP53 | NRF2 and ATF4 induce defenses; KEAP1 represses NRF2; TP53 is context-dependent but canonically represses SLC7A11 |
 
-## Core Pathway Architecture
+This seed deliberately scoped out adjacent or newer partners such as `FTL`,
+GCLM, `FADS2`, `MBOAT1/2`, and the GPX4 and SLC7A11 abundance-switch regulators
+captured in production GO-CAMs.
 
-### 1. Lipid Peroxidation Substrates
-Genes that supply polyunsaturated fatty acids (PUFAs) to phospholipids:
-- **ACSL4** - Acyl-CoA synthetase long-chain family member 4 (activates PUFAs)
-- **LPCAT3** - Lysophosphatidylcholine acyltransferase 3 (incorporates PUFAs into membranes)
+## Curation Findings
 
-### 2. Iron Metabolism
-Iron is essential for lipid peroxidation:
-- **TFRC** - Transferrin receptor (iron import)
-- **SLC40A1** - Ferroportin (iron export)
-- **NCOA4** - Nuclear receptor coactivator 4 (ferritinophagy receptor)
-- **FTH1/FTL** - Ferritin heavy/light chains (iron storage)
+- **Parallel defenses are first-class biology.** AIFM2 and DHODH were key
+  test cases because their 2019-2021 discovery split the field from a
+  GPX4-only model into multiple independent suppressor arms. The DHODH review
+  proposes `GO:0110076` for the mitochondrial CoQ10 arm, and the module now
+  places that process directly on the DHODH quinone oxidoreductase annoton.
+- **p53 is not a blanket ferroptosis label.** The TP53 review retained
+  well-supported SLC7A11 repression and lipid-peroxidation contexts but removed
+  hundreds of indirect DNA-damage, apoptosis, and broad regulation rows from the
+  ferroptosis-focused interpretation.
+- **The curated module is more precise than the old pathway summary.** The
+  maintained artifact is `modules/ferroptosis.yaml`: one GO:0097707 execution
+  node fed by PUFA-phospholipid and iron drivers, negatively regulated by
+  GPX4-glutathione, AIFM2/FSP1-CoQ10, DHODH-CoQ10, and GCH1-BH4, and optionally
+  tuned by NFE2L2/NRF2, KEAP1, ATF4, and p53.
+- **GO-CAM switch models extend beyond the 22-gene seed.** The module already
+  folds in GPX4 chaperone-mediated autophagy and SLC7A11 CRL3/USP18 abundance
+  switches from reviewed production GO-CAMs, but `LAMP2`, `EGLN3`, `USP18`, and
+  related ligase/adaptor components remain second-batch review scope.
 
-### 3. GPX4-Dependent Defense (Classical Pathway)
-The glutathione peroxidase system:
-- **GPX4** - Glutathione peroxidase 4 (THE key ferroptosis suppressor)
-- **SLC7A11** - Solute carrier family 7 member 11 / xCT (cystine import)
-- **SLC3A2** - 4F2 heavy chain (xCT partner)
-- **GSS** - Glutathione synthetase
-- **GCLC/GCLM** - Glutamate-cysteine ligase (rate-limiting for GSH synthesis)
+## Key Discoveries
 
-### 4. FSP1/CoQ10 Pathway (Discovered 2019-2020)
-GPX4-independent ferroptosis suppression:
-- **FSP1** (AIFM2) - Ferroptosis suppressor protein 1 (CoQ10 reductase)
-- **DHODH** - Dihydroorotate dehydrogenase (mitochondrial CoQ10 reduction)
-
-### 5. GCH1/BH4 Pathway (Discovered 2020-2022)
-Tetrahydrobiopterin-mediated protection:
-- **GCH1** - GTP cyclohydrolase 1 (rate-limiting for BH4 synthesis)
-- **PTS** - 6-pyruvoyltetrahydropterin synthase
-- **SPR** - Sepiapterin reductase
-
-### 6. Transcriptional Regulators
-- **NFE2L2** (NRF2) - Master antioxidant regulator
-- **KEAP1** - NRF2 inhibitor
-- **ATF4** - Integrated stress response transcription factor
-- **TP53** - p53, context-dependent regulator
-
-### 7. Membrane Lipid Composition
-- **ELOVL5** - Fatty acid elongase
-- **FADS1/FADS2** - Fatty acid desaturases
-
-## Genes for Review (Priority Order)
-
-### Priority 1: Core Machinery (~8 genes)
-| Gene | UniProt | Function |
-|------|---------|----------|
-| GPX4 | P36969 | Lipid hydroperoxide reduction |
-| SLC7A11 | Q9UPY5 | Cystine/glutamate antiporter |
-| ACSL4 | O60488 | PUFA-CoA synthesis |
-| FSP1/AIFM2 | Q9BRQ8 | CoQ10-dependent lipid repair |
-| DHODH | Q02127 | Mitochondrial CoQ10 reduction |
-| GCH1 | P30793 | BH4 synthesis |
-| LPCAT3 | Q6P1A2 | PUFA incorporation |
-| NCOA4 | Q13772 | Ferritinophagy receptor |
-
-### Priority 2: Regulatory Network (~8 genes)
-| Gene | UniProt | Function |
-|------|---------|----------|
-| NFE2L2 | Q16236 | NRF2 - antioxidant response |
-| KEAP1 | Q14145 | NRF2 inhibitor |
-| TFRC | P02786 | Iron import |
-| FTH1 | P02794 | Iron storage |
-| ATF4 | P18848 | Stress response TF |
-| SLC40A1 | Q9NP59 | Iron export |
-| GCLC | P48506 | GSH synthesis |
-| TP53 | P04637 | Context-dependent regulator |
-
-### Priority 3: Supporting Genes (~6 genes)
-| Gene | UniProt | Function |
-|------|---------|----------|
-| SLC3A2 | P08195 | xCT partner (4F2hc) |
-| GSS | P48637 | GSH synthesis |
-| PTS | Q03393 | BH4 pathway |
-| SPR | P35270 | BH4 pathway |
-| FADS1 | O60427 | PUFA synthesis |
-| ELOVL5 | Q9NYP7 | PUFA elongation |
-
-## Key Recent Discoveries (2020+)
-
-1. **FSP1/CoQ10 pathway** (Nature 2019) - GPX4-independent ferroptosis suppression
-2. **DHODH in mitochondria** (Nature 2021) - Mitochondrial ferroptosis defense
-3. **GCH1/BH4 pathway** (Nature 2022) - Third parallel defense system
-4. **MBOAT1/2** (Nature 2023) - Sex hormone-regulated ferroptosis resistance
-5. **Membrane lipid remodeling** (Cell 2020+) - Role of specific phospholipids
-
-## Disease Relevance
-
-- **Cancer**: Ferroptosis induction as therapy; resistance mechanisms
-- **Neurodegeneration**: Ferroptosis in Parkinson's and Huntington's disease and amyotrophic lateral sclerosis
-- **Ischemia-reperfusion**: Organ damage
-- **Kidney disease**: Acute kidney injury
+1. **AIFM2/FSP1-CoQ10 pathway** (2019) - GPX4-independent ferroptosis
+   suppression by ubiquinol regeneration.
+2. **GCH1-BH4 pathway** (2020) - a tetrahydrobiopterin radical-trapping axis
+   parallel to GPX4 and CoQ.
+3. **DHODH in mitochondria** (2021) - mitochondrial-inner-membrane CoQ10
+   regeneration by the pyrimidine-biosynthesis enzyme DHODH.
+4. **MBOAT1/2 resistance** (2023) - sex-hormone-linked lipid remodeling that
+   should be considered with other second-batch suppressor and switch genes.
 
 ## Module
 
 The ferroptosis mechanism is captured as a recursively decomposable module
-(grounded to UniProt and GO, validated against the `ModuleReview` schema):
+grounded to UniProt and GO:
 
-- [Ferroptosis module](../modules/ferroptosis.html) — one execution node
-  (GO:0097707) fed by PUFA-phospholipid and labile-iron driver arms, and
-  redundantly suppressed by four independent defense axes (GPX4–GSH,
-  FSP1–CoQ10, DHODH–CoQ10, GCH1–BH4) plus a transcriptional regulatory layer
-  (NRF2/KEAP1, ATF4, p53). Source: [`modules/ferroptosis.yaml`](https://github.com/ai4curation/ai-gene-review/blob/main/modules/ferroptosis.yaml).
+- [Ferroptosis module](../modules/ferroptosis.html) - one execution node
+  (GO:0097707) fed by PUFA-phospholipid and labile-iron driver arms,
+  redundantly suppressed by four independent defense axes, and tuned by a
+  transcriptional regulatory layer. Source: [`modules/ferroptosis.yaml`](https://github.com/ai4curation/ai-gene-review/blob/main/modules/ferroptosis.yaml).
 
 ## Key References
 
-- Stockwell BR et al. (2017) Cell - Foundational review
+- Stockwell BR et al. (2017) Cell - foundational review
 - Doll S et al. (2019) Nature - FSP1 discovery
 - Mao C et al. (2021) Nature - DHODH
 - Kraft VAN et al. (2020) ACS Cent Sci - GCH1
-- Jiang X et al. (2021) Nat Rev Mol Cell Biol - Comprehensive review
-- Chen X et al. (2021) Signal Transduct Target Ther - Mechanisms update
+- Jiang X et al. (2021) Nat Rev Mol Cell Biol - comprehensive review
+- Chen X et al. (2021) Signal Transduct Target Ther - mechanisms update
 
 ## Project Status
 
-- [x] Create gene folders and fetch UniProt/GOA data
-- [x] Priority 1 genes review (8/8 genes)
-- [x] Priority 2 genes review (8/8 genes)
-- [x] Priority 3 genes review (6/6 genes)
-- [x] Pathway summary and integration
+- [x] Review the initial 22 human ferroptosis genes
+- [x] Validate the 22 seeded gene reviews
+- [x] Capture the integrated mechanism as `MODULE:ferroptosis`
+- [x] Attach production GO-CAM associations for reviewed GPX4, SLC7A11, AIFM2,
+  and NFE2L2 ferroptosis models
+- [ ] Complete optional switch and adjacent-gene follow-ups
+  ([#4084](https://github.com/ai4curation/ai-gene-review/issues/4084))
 
 ---
 
 # STATUS
 
-**All 22 ferroptosis genes reviewed and validated (2025-12-28)**
-
-✓ All gene folders created with UniProt/GOA data
-✓ All 22 genes have completed AI reviews
-✓ All reviews validated (0 errors)
-✓ Pathway summary document created (FERROPTOSIS-pathway.md)
-✓ Ready for PR
+**Initial 22-gene human ferroptosis seed reviewed and valid; optional switch
+scope tracked in [#4084](https://github.com/ai4curation/ai-gene-review/issues/4084)
+(2026-10-04).**
 
 # NOTES
 
-## 2026-01-19 (codex review)
+## 2026-10-04
 
-- [x] GPX4: manual second pass complete; `just validate human GPX4` clean (info-only aliases)
-- [x] GPX4: updated HTP/HDA evidence summaries for mitochondrial/nuclear/exosome entries to clarify high-throughput scope; kept ACCEPT for mitochondrion/nucleus, set exosome to UNDECIDED, and set spermatogenesis ISS to UNDECIDED pending direct cached evidence
-- [ ] GPX4: follow-up to add explicit primary evidence for nuclear/spermatogenesis localization (e.g., PMID:21618532 nGPX4 nuclear matrix; PMID:19417079 mGPX4 male infertility)
-- [x] SLC7A11: manual second pass complete; `just validate human SLC7A11` clean (info-only aliases)
-- [x] SLC7A11: added deep-research support for core antiporter activity to clear validation warning
-- [ ] SLC7A11: consider incorporating 2025–2026 disease/regulation papers if needed (e.g., HSPB1 axis in HCC; GPAT4/SLC7A11 platinum resistance in ovarian cancer; CRPC resistance studies)
-- [x] ACSL4: manual second pass complete; `just validate human ACSL4` clean (info-only aliases)
-- [x] ACSL4: added missing supporting_text for membrane/exosome HDA entries to clear validation warning
-- [x] ACSL4: folded in 2025 context papers (IBD fibroblast ACSL4; TRIM28/OPTN autophagy control after SCI; H3K27cr–SQSTM1/autophagy control in diabetic wound healing)
-- [x] AIFM2/FSP1: manual second pass complete; `just validate human AIFM2` clean (info-only aliases)
-- [x] AIFM2/FSP1: resolved missing supporting_text in references; updated iFSP1 paper findings to match abstract; refreshed deep-research-falcon
-- [x] AIFM2/FSP1: integrated new papers (RNF126 ubiquitination/localization; temsirolimus direct FSP1 inhibition and ferroptosis induction)
-- [ ] Next gene: select from remaining Priority 1 list (DHODH, GCH1, LPCAT3, NCOA4)
+- Re-audited the 22 human gene reviews: all validate, ACSL4 remains `DRAFT`,
+  and the aggregate seeded/`NEW`/action counts still match the project summary.
+- Refreshed the project page and slide deck to lead with the mechanism and the
+  concrete curation results instead of the original priority-order plan.
+- Fixed the main module so FADS2 is treated as adjacent follow-up scope, DHODH's
+  annoton carries `GO:0110076`, and the USP18 SLC7A11-stabilization role points
+  at the current GO-CAM reference-swap problem.
+- Opened [#4084](https://github.com/ai4curation/ai-gene-review/issues/4084) for
+  the remaining optional switch genes, `MBOAT1/2` and adjacent-gene scope,
+  GO-CAM evidence-reference follow-up, and the stale standalone pathway summary.
+
+## 2026-01-19
+
+- Manual second passes completed for GPX4, SLC7A11, ACSL4, and AIFM2/FSP1; each
+  review validated after its pass.
+- GPX4 HTP/HDA evidence summaries were updated for mitochondrial, nuclear, and
+  exosome entries; nuclear matrix and spermatogenesis primary-evidence follow-up
+  remains in #4084.
+- SLC7A11 deep-research support was added for the core antiporter activity;
+  optional 2025-2026 disease/regulation papers remain in #4084.
+- ACSL4 had missing HDA supporting text filled and 2025 context papers folded in.
+- AIFM2/FSP1 had missing reference support resolved and newer RNF126 and
+  temsirolimus papers integrated.
 
 ## 2025-12-28
 
-**Completion Session - Full Project Finished**
-
-### Gene Review Completion Summary
-
-**Priority 1 (Core Machinery) - COMPLETED**
-- GPX4 (P36969) ✓
-- SLC7A11 (Q9UPY5) ✓
-- ACSL4 (O60488) ✓
-- FSP1/AIFM2 (Q9BRQ8) ✓
-- DHODH (Q02127) ✓
-- GCH1 (P30793) ✓
-- LPCAT3 (Q6P1A2) ✓
-- NCOA4 (Q13772) ✓
-
-**Priority 2 (Regulatory Network) - COMPLETED**
-- NFE2L2 (Q16236) ✓
-- KEAP1 (Q14145) ✓
-- TFRC (P02786) ✓
-- FTH1 (P02794) ✓
-- ATF4 (P18848) ✓
-- SLC40A1 (Q9NP59) ✓
-- GCLC (P48506) ✓
-- TP53 (P04637) ✓
-
-**Priority 3 (Supporting Genes) - COMPLETED**
-- SLC3A2 (P08195) ✓
-- GSS (P48637) ✓
-- PTS (Q03393) ✓
-- SPR (P35270) ✓
-- FADS1 (O60427) ✓
-- ELOVL5 (Q9NYP7) ✓
-
-### Validation Results
-
-- Total files validated: 592 (across entire codebase)
-- Ferroptosis genes: 22/22 validated successfully
-- Validation errors: 0
-- Validation warnings: Present but manageable (mostly missing supporting text citations in some genes)
-- All genes pass core validation
-
-### Deliverables
-
-1. **Gene Reviews**: 22 comprehensive AI gene review YAML files
-2. **Pathway Summary**: `genes/human/FERROPTOSIS-pathway.md` created with:
-   - Comprehensive ferroptosis mechanism overview
-   - Three parallel defense systems documented (GPX4-GSH, FSP1-CoQ10, DHODH-CoQ10)
-   - Emerging GCH1-BH4 system
-   - Transcriptional regulation (NRF2/ARE pathway)
-   - p53 context-dependent roles
-   - Disease relevance and therapeutic implications
-   - Full mermaid pathway diagram
-   - 15+ peer-reviewed citations
-
-### Next Steps
-
-Ready for PR creation with branch `ferroptosis-completion` containing:
-- All 22 gene review YAML files
-- Supporting publications (PMIDs)
-- Pathway summary document
-- Updated project status
+- Completed the initial 22-gene human ferroptosis review batch across the core
+  machinery, regulatory network, and supporting genes.
+- Validated all 22 seeded gene reviews and drafted the standalone human pathway
+  summary at `genes/human/FERROPTOSIS.md`.
