@@ -490,8 +490,17 @@ row moves from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE.
 The last template claims to be checked were the compartments. UniProt gives CR1, SCAMP3
 and EGF only a generic "Membrane" location, so their category-1 basis now says the
 compartment comes from GO (`CAT1_GO`). The script checks every category-1, -2 and -5 location
-claim against the source it cites, UniProt or GO, so each factual clause in every template
-is now checked.
+claim against the source it cites, UniProt or GO.
+
+The re-review found that the category-1 location check accepted bare words such as
+"vesicle", so SYPL1, whose UniProt locations are cytoplasmic vesicle and melanosome
+membranes, passed it. The pattern now names only plasma-membrane, endosomal and lysosomal
+locations, and SYPL1, ATP6V0A1, ATP6V0C and NCSTN now cite GO for the compartment. Two more
+claims are now checked: the category-4 residency clause (a nuclear, mitochondrial, ER,
+Golgi, peroxisomal or lipid-droplet location in UniProt or GO) and the category-2a
+cytosolic clause. With these, every factual clause in every template is checked. SYNE2's
+reason now answers the earlier reviewer's point about peptide-level detection of a giant
+protein.
 
 ### 2026-10-10: third round of automated-review fixes
 

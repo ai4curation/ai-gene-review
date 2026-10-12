@@ -126,7 +126,7 @@ G = {
     "ATP6AP1": note(CAT4, "UniProt places ATP6AP1 in ER and ER-Golgi intermediate compartment membranes."),
     "ATP6AP2": note(CAT1, "Prorenin receptor / V-ATPase accessory protein, with UniProt lysosome-membrane and cell-surface "
                           "locations."),
-    "ATP6V0A1": note(CAT1, "V-ATPase V0 a1 subunit of endosomal/vesicle membranes."),
+    "ATP6V0A1": note(CAT1_GO, "V-ATPase V0 a1 subunit of endosomal/vesicle membranes."),
     "ATP6V1A": note(CAT2A, "V-ATPase V1 subunit, assembled on endosomal and apical membranes from the cytosol."),
     "ATP6V1B1": note(CAT2A, "V-ATPase V1 subunit of the apical membrane of renal intercalated cells."),
     "ATP6V1B2": note(CAT2A, "V-ATPase V1 subunit."),
@@ -252,7 +252,10 @@ G = {
                        "content but not its core location, so the earlier ACCEPT is downgraded. Applies to the plasma "
                        "microvesicle row too."),
     "SYNE2": note(CAT4_SURFACE, "Nuclear-envelope (outer nuclear membrane) protein; lamellipodium and filopodium "
-                                "membrane pool by IDA (PMID:15671068)."),
+                                "membrane pool by IDA (PMID:15671068). The earlier reason noted that a peptide-level hit on "
+                                "this giant protein does not show which isoform was detected; SYNE2 has many short "
+                                "isoforms, and the surface pool belongs to the protein, so the point does not change "
+                                "the call."),
     "TAX1BP1": note(CAT2, "Cytoplasmic autophagy adaptor."),
     "THBS1": note(CAT5_BOUND, "Secreted thrombospondin-1 with experimental heparin and phosphatidylserine binding (IDA); the earlier ACCEPT rested only on its being secreted."),
     "THBS4": note(CAT5_BOUND, "Secreted thrombospondin-4 with experimental heparin binding (IDA); the earlier ACCEPT rested only on its being secreted."),

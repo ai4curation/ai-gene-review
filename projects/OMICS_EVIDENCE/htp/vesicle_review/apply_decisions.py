@@ -162,8 +162,8 @@ def go_cytosolic(organism: str, gene: str) -> bool:
 # closure of plasma membrane, cell surface and endosome).
 CAT1_UNIPROT = "plasma membrane or endosomal system (UniProt);"
 CAT1_GO_SOURCE = "compartment from GO"
-PM_ENDOSOME_TEXT = re.compile(r"cell membrane|plasma membrane|endosom|lysosom|multivesicular|apical|basolateral|"
-                              r"cell surface|synap|vesicle|raft|clathrin", re.I)
+PM_ENDOSOME_TEXT = re.compile(r"cell membrane|plasma membrane|endosom|lysosom|multivesicular|apical cell|basolateral cell|"
+                              r"cell surface|membrane raft", re.I)
 
 
 def uniprot_locations(organism: str, gene: str) -> str:
@@ -186,6 +186,28 @@ def go_pm_endosome(organism: str, gene: str) -> bool:
     with open(os.path.join(ROOT, "genes", organism, gene, f"{gene}-goa.tsv")) as fh:
         return any(r["GO TERM"] in pm_endosome_ids() and "NOT" not in r["QUALIFIER"]
                    for r in csv.DictReader(fh, delimiter="\t"))
+
+
+# CAT4's residency claim and CAT2A's cytosolic/membrane-binding claim, checked against UniProt or GO.
+RESIDENT_CLAIM = "Mainly resident in an intracellular compartment"
+RESIDENT_TEXT = re.compile(r"nucle|mitochondri|endoplasmic|golgi|peroxisom|lipid droplet|sarcoplasmic", re.I)
+CAT2A_CLAIM = "Cytosolic protein with lipid or membrane-protein binding ability"
+CAT2A_TEXT = re.compile(r"cytoplasm|cytosol|peripheral membrane|lipid-anchor", re.I)
+
+
+@cache
+def closure(*roots: str) -> frozenset[str]:
+    from oaklib import get_adapter
+    from oaklib.datamodels.vocabulary import IS_A, PART_OF
+    ids = frozenset(get_adapter("sqlite:obo:go").descendants(list(roots), predicates=[IS_A, PART_OF]))
+    assert set(roots) <= ids, f"GO release lacks {set(roots) - ids}"
+    return ids
+
+
+def go_rows_in(organism: str, gene: str, ids: frozenset[str]) -> bool:
+    # any non-NOT row: these clauses name a compartment, not the strength of the evidence for it
+    with open(os.path.join(ROOT, "genes", organism, gene, f"{gene}-goa.tsv")) as fh:
+        return any(r["GO TERM"] in ids and "NOT" not in r["QUALIFIER"] for r in csv.DictReader(fh, delimiter="\t"))
 
 
 def main() -> int:
@@ -220,6 +242,15 @@ def main() -> int:
         if "Secreted or lumenal protein (UniProt)" in basis:
             assert re.search(r"secreted|lumen|lysosom|extracellular", uniprot_locations(d["organism"], d["gene"]), re.I), \
                 f"{key}: CAT5 cites UniProt, which records no secreted or lumenal location"
+        if RESIDENT_CLAIM in basis:
+            org, gene = d["organism"], d["gene"]
+            assert RESIDENT_TEXT.search(uniprot_locations(org, gene)) or go_rows_in(org, gene, closure(
+                "GO:0005634", "GO:0005739", "GO:0005783", "GO:0005794", "GO:0005777", "GO:0005811")), \
+                f"{key}: CAT4 says intracellular resident, but neither UniProt nor GO records such a compartment"
+        if CAT2A_CLAIM in basis:
+            org, gene = d["organism"], d["gene"]
+            assert CAT2A_TEXT.search(uniprot_locations(org, gene)) or go_rows_in(org, gene, closure(
+                "GO:0005829", "GO:0005737")), f"{key}: CAT2A says cytosolic, but neither UniProt nor GO records it"
         if CAT1_UNIPROT in basis:
             assert PM_ENDOSOME_TEXT.search(uniprot_locations(d["organism"], d["gene"])), \
                 f"{key}: CAT1 cites UniProt, which records no plasma-membrane or endosomal location"
