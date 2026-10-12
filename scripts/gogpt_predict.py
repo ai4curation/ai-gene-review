@@ -443,6 +443,20 @@ def assessment_counts(predictions: list[dict[str, Any]]) -> Counter[str]:
     )
 
 
+def format_assessment_counts(counts: Counter[str]) -> str:
+    """Format all review-category counts so manual categories are never dropped."""
+    manual_assessments = ("COR", "LSP", "PLI", "REP")
+    assessments = (
+        CONFIDENCE_BY_ASSESSMENT
+        if any(counts.get(assessment, 0) for assessment in manual_assessments)
+        else ("CNN", "NPI", "UNC")
+    )
+    return " ".join(
+        f"{assessment}:{counts.get(assessment, 0)}"
+        for assessment in assessments
+    )
+
+
 def build_prediction_review_yaml(
     gene: str,
     organism: str,
@@ -486,8 +500,8 @@ def build_prediction_review_yaml(
     description = (
         f"GO-GPT predictions for {gene} ({organism}). "
         f"{len(predicted_annotations)} non-generic terms retained. Deterministic "
-        f"exact comparison against current AIGR: CNN:{counts['CNN']} "
-        f"NPI:{counts['NPI']} UNC:{counts['UNC']}."
+        "exact comparison against current AIGR: "
+        f"{format_assessment_counts(counts)}."
     )
     return {
         "id": accession,
@@ -504,6 +518,7 @@ def build_web_export_review(
     existing_document: dict[str, Any],
     raw_export: Path,
     review_file: Path,
+    repo_root: Path,
     go_labels: dict[str, str],
     go_adapter: Any,
 ) -> dict[str, Any]:
@@ -595,13 +610,13 @@ def build_web_export_review(
         f"{raw_specific_count} non-root terms; {len(leaf_terms)} non-generic IS_A "
         f"leaf terms retained (MF:{aspect_counts['MF']} BP:{aspect_counts['BP']} "
         f"CC:{aspect_counts['CC']}). Deterministic exact comparison against "
-        f"current AIGR: CNN:{counts['CNN']} NPI:{counts['NPI']} "
-        f"UNC:{counts['UNC']}. {unresolved_note}{label_audit_note}"
+        f"current AIGR: {format_assessment_counts(counts)}. "
+        f"{unresolved_note}{label_audit_note}"
     )
 
-    source_documents = existing_document.get("source_documents") or [raw_export.name]
-    if raw_export.name not in source_documents:
-        source_documents = [*source_documents, raw_export.name]
+    source_documents = web_export_source_documents(
+        existing_document, raw_export, repo_root
+    )
 
     result = {
         "id": existing_document.get("id"),
@@ -642,6 +657,44 @@ def summarize_documents(documents: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def repo_relative_source(path: Path, repo_root: Path) -> str:
+    """Return a repository-relative source path for PredictionReview YAML."""
+    return path.resolve().relative_to(repo_root.resolve()).as_posix()
+
+
+def web_export_source_documents(
+    existing_document: dict[str, Any],
+    raw_export: Path,
+    repo_root: Path,
+) -> list[str]:
+    """Normalize BioReason raw-export provenance to repo-relative paths."""
+    raw_source = repo_relative_source(raw_export, repo_root)
+    source_documents = existing_document.get("source_documents") or []
+    if not source_documents:
+        source_documents = [raw_source]
+
+    normalized: list[str] = []
+    for source in source_documents:
+        if source == raw_export.name:
+            source = raw_source
+        if source not in normalized:
+            normalized.append(source)
+
+    if raw_source not in normalized:
+        normalized.append(raw_source)
+    return normalized
+
+
+def resolve_web_export_source(
+    repo_root: Path, review_path: Path, source: str
+) -> Path:
+    """Resolve old bare and new repo-relative BioReason raw source paths."""
+    repo_relative = repo_root / source
+    if repo_relative.is_file():
+        return repo_relative
+    return review_path.parent / source
+
+
 def refresh_web_exports(
     repo_root: Path,
     go_adapter: Any,
@@ -667,7 +720,7 @@ def refresh_web_exports(
             ),
             f"{path.parent.name}-bioreason-rl-predictions.md",
         )
-        raw_export = path.parent / raw_name
+        raw_export = resolve_web_export_source(repo_root, path, raw_name)
         review_file = path.parent / f"{path.parent.name}-ai-review.yaml"
         if not raw_export.exists():
             raise FileNotFoundError(f"Missing raw provenance: {raw_export}")
@@ -675,7 +728,7 @@ def refresh_web_exports(
             raise FileNotFoundError(f"Missing AIGR review: {review_file}")
 
         regenerated = build_web_export_review(
-            existing, raw_export, review_file, go_labels, go_adapter
+            existing, raw_export, review_file, repo_root, go_labels, go_adapter
         )
         after_documents.append(regenerated)
         if regenerated != existing:
