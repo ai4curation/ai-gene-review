@@ -50,7 +50,7 @@ check, and any of them can turn a row green that a curator would not:
   such identical term but not all of them, so part of the verdict still rests on a
   partner-derived term, and 5 have none at all. GLUD1 and its
   `GO:0004353` are of the first shape. Only the identical terms license reading the flag as
-  harmless, which is why the two figures are given separately rather than summed.
+  harmless, which is why the three figures are given separately rather than summed.
 - `contributes_to_molecular_function` is compared **alongside** core molecular function. A
   subunit that contributes to a complex-level activity without enabling it is doing what the
   dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,
@@ -79,7 +79,7 @@ row where that decides the verdict.
 An earlier version of this page also claimed that is_a/part_of ancestry cannot cross between
 molecular function and biological process. That is false, and rows of this table disprove it:
 GO asserts `part_of` from transporter activities to the transport processes they carry out.
-29 rows carry at least one such pair, and on 2 of them the row has no same-aspect pair at all, so the crossing is what earns the verdict - MT-ND1 matches `GO:0008137` (MF) to `GO:1902600` (BP).
+29 rows of all 183 - not only the principal ones - carry at least one such pair, and on 2 of them the row has no same-aspect pair at all, so the crossing is what earns the verdict - MT-ND1 matches `GO:0008137` (MF) to `GO:1902600` (BP).
 What is true is narrower, and is a fact about one pair rather than about the aspects:
 `GO:0008137` does not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a
 real source of
@@ -97,45 +97,56 @@ does not count as a part. The run records both counts in its provenance below, s
 between reading the structure and reading the file text is a measured figure rather than a
 quoted one.
 
-Flags: `UNTYPED`/`NO_ORIGIN` (genetic record lacks relationship type / variant origin),
-`NO_GO_ON_GENE_NODES` (no node naming the gene carries a GO term), `NO_AIGR_REVIEW`,
-`AIGR_NOT_COMPLETE`, `NO_CORE_FUNCTION_TERMS` (the review has no core-function GO term to
-compare against), `NO_GO_ALIGNMENT` (no node term matches a core function, an annotation the
-review keeps, or a term it proposes), `ALIGNED_NONCORE` (node terms match only annotations the
-review keeps as non-core), `ALIGNED_PROPOSED` (node terms match only terms the review proposes
-as NEW, which are not yet annotations), `PARTIAL_ALIGNMENT` (some node terms aligned and
-others matched nothing), `ALIGNED_CONTRIBUTES_ONLY`, `ALIGNED_ON_SHARED_NODE_ONLY`,
-`NO_MODULE_MEMBERSHIP`, `MODULE_NOT_COVERING`. The last seven are informational, not defects,
-but the three in the middle each say the verdict is weaker than `ok` would suggest, so they
-are counted separately below rather than absorbed into one clean figure.
+Flags, with the qualifying ones marked - a qualifying flag says the verdict is weaker than
+`ok` would suggest, so those are counted separately below rather than absorbed into one
+clean figure:
+
+- `AIGR_NOT_COMPLETE` - a review exists but its status is not COMPLETE
+- `ALIGNED_CONTRIBUTES_ONLY` *(qualifying)* - every aligned term matched only a contributes-to function, not an enabled one
+- `ALIGNED_NONCORE` - node terms match only annotations the review keeps as non-core
+- `ALIGNED_ON_SHARED_NODE_ONLY` *(qualifying)* - every aligned term came from a node the gene shares with another gene
+- `GENE_ON_NO_NODE` - no pathophysiology node names the gene
+- `MODULE_NOT_COVERING` - a module contains it, but no annoton term there relates to the aligned terms
+- `NO_AIGR_REVIEW` - no ai-gene-review review exists for the gene
+- `NO_GO_ON_GENE_NODES` - no node naming the gene carries a GO term
+- `NO_MODULE_MEMBERSHIP` - no module contains the gene's accession
+- `NO_ORIGIN` - the dismech genetic record carries no variant origin
+- `PARTIAL_ALIGNMENT` *(qualifying)* - some node terms aligned and others matched nothing in the review
+- `PARTIAL_COVERAGE` *(qualifying)* - a module covers some aligned terms and no module term reaches the rest
 
 **Provenance of this run.** The table is generated, so it is only as current as the inputs it
 was generated from, and those inputs live in two repositories.
 
-- run date: `2026-10-12T10:43:29Z`
+- run date: `2026-10-12T11:04:41Z`
 - dismech revision: `c0ef3d0d5a5c519fab45d814a79709df266076e1` (c0ef3d0d5 2026-10-11 Add review records for nine unchanged entries and 16 gene pages)
-- ai-gene-review revision: `68e09ed7c523d5f1a63bc7393a8e901338e88750` (branch `combined: origin/main + the ten #4690 slices`)
+- ai-gene-review revision: `d4b13b7af409d6de052202d69fe5a890d1137495` (branch `combined: origin/main + the ten #4690 slices`)
 - GO release: `2026-07-26`, adapter `sqlite:/root/.data/oaklib/go.db`
-- ai-gene-review tree: origin/main at 0222675 with the ten themed slice branches of #4690 merged, built in a scratch worktree; AIGR_REVISION is that merge commit
+- audit script: `407a3b8b80a2` (sha256 of `align_audit.py`), last committed at `unrecorded`; **uncommitted changes at run time in: the audit script itself, the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran
+- ai-gene-review tree: origin/main at 0222675 with these ten themed slice branches of #4690 merged in a scratch worktree: claude/cool-edison-o9wvf0-{carbohydrate, energy-balance, isoprenoid, lipid, lysosome-glycosylation, mito-translation, one-carbon-aa, oxphos, peroxisome-oxalate, vitd-minerals}; AIGR_REVISION is that merge commit, which exists only in that worktree
 - modules read: `459`; UniProt accessions reached as parts: `4175`, against `4242` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
 Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
-The run above read origin/main at 0222675 with the ten themed slice branches of #4690 merged, built in a scratch worktree; AIGR_REVISION is that merge commit.
+The run above read origin/main at 0222675 with these ten themed slice branches of #4690 merged in a scratch worktree: claude/cool-edison-o9wvf0-{carbohydrate, energy-balance, isoprenoid, lipid, lysosome-glycosylation, mito-translation, one-carbon-aa, oxphos, peroxisome-oxalate, vitd-minerals}; AIGR_REVISION is that merge commit, which exists only in that worktree.
 
-The audit also runs over this branch alone, with nine of the ten themed slices absent, and comparing the two runs shows which flags are
+The audit also runs over this branch alone, with nine of the ten themed slices of #4690 absent, and comparing the two runs shows which flags are
 artifacts of the missing slices rather than findings. Both cover the same
 183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
 
-The falls are the absent reviews: a row with no review is skipped by every later test,
-so it cannot be found partial, shared-node-only, or outside a module. The rises have
-three different causes, and only one of them is that absence.
+The falls - `ALIGNED_NONCORE`, `ALIGNED_ON_SHARED_NODE_ONLY`, `NO_MODULE_MEMBERSHIP`, `PARTIAL_ALIGNMENT` - are the absent reviews: a row with no review is skipped by
+every later test, so it cannot be found partial, shared-node-only, or outside a module.
+
+That reading is exact for the alignment flags. `NO_MODULE_MEMBERSHIP` is module-sourced, so it falls here because the rows carrying it were skipped for want of a review - but a module flag can also fall because modules were added, and this comparison does not distinguish the two.
+
+The rises have three different causes, and only one of them is that absence.
 
 - `NO_AIGR_REVIEW` counts rows with no review at all. This is the only risen flag the missing slices raise directly.
 
 - `AIGR_NOT_COMPLETE`, `NO_CORE_FUNCTION_TERMS` fire where a review **was** found and is thin: a stub status, or no core-function terms to compare against. These count stub reviews present on the second tree, not reviews missing from it - a different claim, and the larger share of the movement.
 
 - `MODULE_NOT_COVERING` cannot have either cause. Both module flags are computed only once a review has been found, so a missing review **removes** one rather than adding it. The driver is the module files: the second run reads 448 modules against 459 here, so fewer are available to cover a gene's aligned terms. The second set is a strict subset: 11 modules are here and not there (e.g. `beta_cell_glucose_stimulated_insulin_secretion`), and none the other way.
+
+`ALIGNED_CONTRIBUTES_ONLY`, `PARTIAL_COVERAGE` is identical in both runs while depending on a review, so it appears in neither list above. Over two different review sets and two different module sets that is either a stable property of the dismech side or a path these two runs do not separate; this comparison cannot tell which.
 
 The flags decided before any review is read are identical in both runs
 (`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `UNTYPED` 0), which is what separates

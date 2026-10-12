@@ -30,7 +30,7 @@ Usage, from the ai-gene-review root with a dismech checkout beside it:
         projects/DISMECH_METABOLIC_ALIGNMENT.md \
         projects/DISMECH_METABOLIC_ALIGNMENT/report-branch-local.yaml
 
-Four properties of the comparison are deliberate, and are stated on the generated page
+Five properties of the comparison are deliberate, and are stated on the generated page
 because they make this a weak consistency test rather than a strong one:
 
 * ``related()`` is **symmetric** and **unbounded in distance**. It holds when either
@@ -107,6 +107,10 @@ _anc_failures = []
 
 _ASPECT_ROOTS = {"GO:0003674": "MF", "GO:0008150": "BP", "GO:0005575": "CC"}
 _aspect_cache = {}
+# Collected and re-raised at the end, as anc() does. Swallowing these emptied
+# term_aspects, and an empty map made the page print "no matched pair crosses the
+# aspects" as a finding - a lookup failure rendering as a result.
+_aspect_failures = []
 
 
 def aspect(t):
@@ -120,7 +124,8 @@ def aspect(t):
     if t not in _aspect_cache:
         try:
             up = set(go.ancestors(t, predicates=["rdfs:subClassOf"], reflexive=True))
-        except Exception:  # noqa: BLE001 - absence is recorded, not raised
+        except Exception as exc:  # noqa: BLE001 - recorded, then re-raised in aggregate
+            _aspect_failures.append((t, f"{type(exc).__name__}: {exc}"))
             up = set()
         hit = [v for k, v in _ASPECT_ROOTS.items() if k in up]
         _aspect_cache[t] = hit[0] if len(hit) == 1 else None
@@ -231,8 +236,16 @@ PROVENANCE = dict(
     # Which version of this script produced the report. Without it two reports from
     # different script versions are indistinguishable from their provenance, which is how
     # a report predating a field could sit beside one carrying it with nothing to say so.
-    audit_revision=_git(AG, "log", "-1", "--format=%h", "--", __file__) or None,
+    audit_revision=_git(AG, "log", "-1", "--format=%h", "--",
+                        os.path.relpath(os.path.abspath(__file__), AG)) or None,
     audit_sha256=hashlib.sha256(open(__file__, "rb").read()).hexdigest()[:12],
+    # Whether either tree had uncommitted changes when the run was made. Without this a
+    # recorded revision can name a tree that is not what ran, which was true of both
+    # committed reports: the script was edited after the commit the revision names.
+    audit_dirty=bool(_git(AG, "status", "--porcelain", "--",
+                          os.path.relpath(os.path.abspath(__file__), AG))),
+    aigr_dirty=bool(_git(AG, "status", "--porcelain")),
+    dismech_dirty=bool(_git(DM, "status", "--porcelain")),
     scope_entries=len(SCOPE),
 )
 # Filled in after the modules are read, so the claim that reading module files as text
@@ -590,7 +603,7 @@ for name in SCOPE:
                                    for mt in mod_terms.get(m, ()) if related(t, mt)})
                     if hits:
                         covering.append(m)
-                        covering_pairs[m] = [f"{t}->{mt}" for t, mt in hits]
+                        covering_pairs[m] = [[t, mt] for t, mt in hits]
                 g["covering_modules"] = covering
                 if covering_pairs:
                     g["covering_pairs"] = covering_pairs
@@ -601,7 +614,7 @@ for name in SCOPE:
                     # anywhere in any module passes the row. So record which aligned terms
                     # no module term reached, and flag a row that is only partly covered -
                     # the same distinction PARTIAL_ALIGNMENT draws for the review side.
-                    covered_terms = {pr.split("->")[0] for v in covering_pairs.values() for pr in v}
+                    covered_terms = {pr[0] for v in covering_pairs.values() for pr in v}
                     uncovered = sorted(set(g["aligned_terms"]) - covered_terms)
                     if uncovered:
                         g["uncovered_aligned_terms"] = uncovered
@@ -625,6 +638,11 @@ _paired = {t for e in report for g in e.get("genes", [])
            for t, v in pair.items()
            for t in [t] + (v if isinstance(v, list) else [v])}
 TERM_ASPECTS = {t: aspect(t) for t in sorted(_paired) if aspect(t)}
+
+if _aspect_failures:
+    sys.exit(f"GO aspect lookups failed for {len(_aspect_failures)} terms, e.g. "
+             f"{_aspect_failures[:3]}; the cross-aspect figures would read as an absence "
+             "rather than as a failure")
 
 yaml.safe_dump(dict(provenance=PROVENANCE,
                     review_independent_flags=list(REVIEW_INDEPENDENT_FLAGS),

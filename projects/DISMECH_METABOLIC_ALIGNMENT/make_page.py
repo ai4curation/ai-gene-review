@@ -7,9 +7,9 @@ import yaml
 def load(path):
     """Return (provenance, entries, review-independent flag names) for a report."""
     d = yaml.safe_load(open(path))
-    # The report gained a provenance block, then a review_independent_flags list; accept
-    # every shape, because the all-slices report predates both and cannot be regenerated
-    # from this branch.
+    # Both committed reports are now produced by the current script, so the old leniency
+    # here - added when the all-slices report could not be regenerated from this branch -
+    # is gone: a missing key is a superseded report and the callers exit on it.
     if isinstance(d, dict):
         prov = dict(d.get("provenance") or {})
         # Carried on the provenance mapping so the renderer reads the groups the run
@@ -67,6 +67,13 @@ def alt_comparison():
     if not ALT_INDEP:
         sys.exit("the second report has no review_independent_flags; it was produced by a "
                  "superseded align_audit.py and cannot be compared - re-run the audit")
+    # The exact check the presence tests below were a proxy for: same script, same report
+    # semantics. Two reports from different script versions cannot be compared flag by flag.
+    if PROV.get("audit_sha256") and ALT_PROV.get("audit_sha256") \
+            and PROV["audit_sha256"] != ALT_PROV["audit_sha256"]:
+        sys.exit(f"the two reports were produced by different align_audit.py versions "
+                 f"({PROV['audit_sha256']} vs {ALT_PROV['audit_sha256']}); their flags are "
+                 "not necessarily comparable - re-run both from one script")
     if _INDEP and set(_INDEP) != set(ALT_INDEP):
         # Otherwise two reports could disagree about which flags are review-independent and
         # the identity guard below would silently be checking the wrong set.
@@ -102,6 +109,11 @@ def alt_comparison():
     if not groups:
         sys.exit("the second report has no flag_groups; it was produced by a superseded "
                  "align_audit.py and its risen flags cannot be explained - re-run the audit")
+    if not ALT_PROV.get("_term_aspects"):
+        # Not read for the cross-aspect figures, which come from the primary report, but a
+        # second report missing it is a superseded one and the two are then not comparable.
+        sys.exit("the second report has no term_aspects; it was produced by a superseded "
+                 "align_audit.py - re-run the audit")
     absent = tuple(groups.get("review_absent") or ())
     thin = tuple(groups.get("review_present_thin") or ())
     modular = tuple(groups.get("module_sourced") or ())
@@ -118,10 +130,19 @@ def alt_comparison():
         "artifacts of the missing slices rather than findings. Both cover the same",
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
         "",
-        "The falls are the absent reviews: a row with no review is skipped by every later test,",
-        "so it cannot be found partial, shared-node-only, or outside a module. The rises have",
-        "three different causes, and only one of them is that absence.",
+        f"The falls - {names(fell)} - are the absent reviews: a row with no review is skipped by",
+        "every later test, so it cannot be found partial, shared-node-only, or outside a module.",
     ]
+    # A module flag can fall for the review reason (its row was skipped) but could also fall
+    # because modules were added, and this sentence cannot tell those apart - so it says so
+    # rather than asserting the review cause for a flag whose source is the module files.
+    fell_mod = [f for f in fell if f in modular]
+    if fell_mod:
+        out += ["", f"That reading is exact for the alignment flags. {names(fell_mod)} is"
+                    " module-sourced, so it falls here because the rows carrying it were skipped"
+                    " for want of a review - but a module flag can also fall because modules were"
+                    " added, and this comparison does not distinguish the two."]
+    out += ["", "The rises have three different causes, and only one of them is that absence."]
     if rose_absent:
         out += ["", f"- {names(rose_absent)} counts rows with no review at all. This is the only"
                     " risen flag the missing slices raise directly."]
@@ -167,6 +188,13 @@ def alt_comparison():
         # otherwise inherit whichever explanation it happened to land next to.
         out += ["", f"- {names(rose_other)} is not in any group this page knows how to explain;"
                     " its cause has not been established here."]
+    steady = sorted(f for f in set(here) | set(there)
+                    if f not in indep and here.get(f, 0) == there.get(f, 0) and here.get(f, 0))
+    if steady:
+        out += ["", f"{names(steady)} is identical in both runs while depending on a review, so it"
+                    " appears in neither list above. Over two different review sets and two"
+                    " different module sets that is either a stable property of the dismech side"
+                    " or a path these two runs do not separate; this comparison cannot tell which."]
     out += [
         "",
         "The flags decided before any review is read are identical in both runs",
@@ -216,6 +244,50 @@ MODULE_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
 QUALIFYING = ("PARTIAL_ALIGNMENT", "ALIGNED_CONTRIBUTES_ONLY",
               "ALIGNED_ON_SHARED_NODE_ONLY", "PARTIAL_COVERAGE")
 SOFT = MODULE_FLAGS + ("ALIGNED_NONCORE", "ALIGNED_PROPOSED") + QUALIFYING
+
+# Flag glossary, keyed on the flag name. Checked against the flags the run actually
+# emitted rather than hand-maintained beside them: PARTIAL_COVERAGE was published on 14
+# rows and defined nowhere, because the previous legend was prose carrying its own
+# arithmetic ("the last seven are informational") that counted an older vocabulary.
+FLAG_GLOSS = {
+    "UNTYPED": "the dismech genetic record carries no relationship type",
+    "NO_ORIGIN": "the dismech genetic record carries no variant origin",
+    "GENE_ON_NO_NODE": "no pathophysiology node names the gene",
+    "NO_GO_ON_GENE_NODES": "no node naming the gene carries a GO term",
+    "NO_AIGR_REVIEW": "no ai-gene-review review exists for the gene",
+    "AIGR_NOT_COMPLETE": "a review exists but its status is not COMPLETE",
+    "NO_CORE_FUNCTION_TERMS": "a review exists but has no core-function GO term to compare against",
+    "NO_GO_ALIGNMENT": "no node term matches a core function, an annotation the review keeps, or a term it proposes",
+    "ALIGNED_NONCORE": "node terms match only annotations the review keeps as non-core",
+    "ALIGNED_PROPOSED": "node terms match only terms the review proposes as NEW, which are not yet annotations",
+    "PARTIAL_ALIGNMENT": "some node terms aligned and others matched nothing in the review",
+    "ALIGNED_CONTRIBUTES_ONLY": "every aligned term matched only a contributes-to function, not an enabled one",
+    "ALIGNED_ON_SHARED_NODE_ONLY": "every aligned term came from a node the gene shares with another gene",
+    "NO_MODULE_MEMBERSHIP": "no module contains the gene's accession",
+    "MODULE_NOT_COVERING": "a module contains it, but no annoton term there relates to the aligned terms",
+    "PARTIAL_COVERAGE": "a module covers some aligned terms and no module term reaches the rest",
+}
+
+
+def flag_legend():
+    """The glossary as bullets, enforcing that every emitted flag is defined.
+
+    The page publishes flags in the table and the summary; a flag with no entry here is
+    published without a definition, which is what happened to PARTIAL_COVERAGE.
+    """
+    emitted = {f for e in rep for g in e.get("genes") or [] for f in g.get("flags") or []}
+    missing = sorted(emitted - set(FLAG_GLOSS))
+    if missing:
+        sys.exit(f"flags emitted by the run with no entry in FLAG_GLOSS: {', '.join(missing)}; "
+                 "they would be published in the table and the summary with no definition")
+    out = []
+    for f in sorted(FLAG_GLOSS):
+        if f not in emitted:
+            continue
+        mark = " *(qualifying)*" if f in QUALIFYING else ""
+        out.append(f"- `{f}`{mark} - {FLAG_GLOSS[f]}")
+    return out
+
 
 lines = [
     "---",
@@ -284,17 +356,25 @@ def cross_aspect_rows(entries, aspects):
     return sole, any_
 
 
-TERM_ASPECTS = PROV.get("_term_aspects") or {}
+TERM_ASPECTS = PROV.get("_term_aspects")
+if not TERM_ASPECTS:
+    # Without aspects the cross-aspect figures are zero, and zero renders as "no matched
+    # pair crosses the aspects" - a lookup failure or an old report printing as a finding.
+    sys.exit("the report has no term_aspects; it was produced by a superseded "
+             "align_audit.py and the cross-aspect figures would read as an absence "
+             "rather than as missing data - re-run the audit")
+_n_all_rows = sum(1 for e in rep for g in e.get('genes') or [])
 _ca_sole, _ca_any = cross_aspect_rows(rep, TERM_ASPECTS)
 if _ca_sole:
     _g, (_t, _c, _a, _b) = _ca_sole[0]
     _cross_aspect_sentence = (
-        f"{_ca_any} rows carry at least one such pair, and on {len(_ca_sole)} of them the row has no"
+        f"{_ca_any} rows of all {_n_all_rows} - not only the principal ones - carry at least one such"
+        f" pair, and on {len(_ca_sole)} of them the row has no"
         f" same-aspect pair at all, so the crossing is what earns the verdict - {_g} matches"
         f" `{_t}` ({_a}) to `{_c}` ({_b}).")
 elif _ca_any:
     _cross_aspect_sentence = (
-        f"{_ca_any} rows carry at least one such pair, though every one of them also has a"
+        f"{_ca_any} rows of all {_n_all_rows} carry at least one such pair, though every one also has a"
         " same-aspect pair, so on this run the crossing never decides a row by itself.")
 else:
     _cross_aspect_sentence = (
@@ -359,7 +439,7 @@ lines += [
     "  such identical term but not all of them, so part of the verdict still rests on a",
     f"  partner-derived term, and {n_shared - n_shared_exact} have none at all. GLUD1 and its",
     "  `GO:0004353` are of the first shape. Only the identical terms license reading the flag as",
-    "  harmless, which is why the two figures are given separately rather than summed.",
+    "  harmless, which is why the three figures are given separately rather than summed.",
     "- `contributes_to_molecular_function` is compared **alongside** core molecular function. A",
     "  subunit that contributes to a complex-level activity without enabling it is doing what the",
     "  dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,",
@@ -406,17 +486,11 @@ lines += [
     "between reading the structure and reading the file text is a measured figure rather than a",
     "quoted one.",
     "",
-    "Flags: `UNTYPED`/`NO_ORIGIN` (genetic record lacks relationship type / variant origin),",
-    "`NO_GO_ON_GENE_NODES` (no node naming the gene carries a GO term), `NO_AIGR_REVIEW`,",
-    "`AIGR_NOT_COMPLETE`, `NO_CORE_FUNCTION_TERMS` (the review has no core-function GO term to",
-    "compare against), `NO_GO_ALIGNMENT` (no node term matches a core function, an annotation the",
-    "review keeps, or a term it proposes), `ALIGNED_NONCORE` (node terms match only annotations the",
-    "review keeps as non-core), `ALIGNED_PROPOSED` (node terms match only terms the review proposes",
-    "as NEW, which are not yet annotations), `PARTIAL_ALIGNMENT` (some node terms aligned and",
-    "others matched nothing), `ALIGNED_CONTRIBUTES_ONLY`, `ALIGNED_ON_SHARED_NODE_ONLY`,",
-    "`NO_MODULE_MEMBERSHIP`, `MODULE_NOT_COVERING`. The last seven are informational, not defects,",
-    "but the three in the middle each say the verdict is weaker than `ok` would suggest, so they",
-    "are counted separately below rather than absorbed into one clean figure.",
+    "Flags, with the qualifying ones marked - a qualifying flag says the verdict is weaker than",
+    "`ok` would suggest, so those are counted separately below rather than absorbed into one",
+    "clean figure:",
+    "",
+] + flag_legend() + [
     "",
 ]
 if PROV:
@@ -431,6 +505,17 @@ if PROV:
         + (f" (branch `{PROV['aigr_branch']}`)" if PROV.get("aigr_branch") else ""),
         f"- GO release: `{PROV.get('go_version') or 'unrecorded'}`, adapter `{PROV.get('go_adapter') or 'unrecorded'}`",
     ]
+    _ad = PROV.get("audit_revision") or "unrecorded"
+    _ah = PROV.get("audit_sha256") or "unrecorded"
+    _DIRT_NAMES = {"audit_dirty": "the audit script itself",
+                   "aigr_dirty": "the ai-gene-review tree",
+                   "dismech_dirty": "the dismech tree"}
+    _dirt = [v for k, v in _DIRT_NAMES.items() if PROV.get(k)]
+    lines.append(
+        f"- audit script: `{_ah}` (sha256 of `align_audit.py`), last committed at `{_ad}`"
+        + (f"; **uncommitted changes at run time in: {', '.join(_dirt)}**, so the revisions"
+           " above name commits that are not exactly what ran" if _dirt else "")
+    )
     if PROV.get("aigr_tree"):
         lines.append(f"- ai-gene-review tree: {PROV['aigr_tree']}")
     _ma = PROV.get("module_accessions") or {}
@@ -521,7 +606,10 @@ def modules_cell(g):
         cell = f"[{m}](../modules/{m}.html)"
         hits = pairs_.get(m) or []
         if hits:
-            cell += " (" + ", ".join(hits[:2]) + (", ..." if len(hits) > 2 else "") + ")"
+            # Formatted here rather than in the report, so the uncovered set is derived
+            # from the pairs themselves instead of by re-parsing a display string.
+            shown = [f"{t}->{mt}" for t, mt in hits[:2]]
+            cell += " (" + ", ".join(shown) + (", ..." if len(hits) > 2 else "") + ")"
         return cell
 
     cov = g.get("covering_modules") or []
