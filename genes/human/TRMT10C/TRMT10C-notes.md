@@ -23,19 +23,30 @@ curl -H 'Accept: application/json' \
 
 40 human annotations. Grouped by symbol and qualifier:
 
-| gene product | complex | qualifier | evidence |
-|---|---|---|---|
-| RPPH1 and other ncRNA entries | nuclear (the catalyst) | `enables` | IEA |
-| POP1 | nuclear | `contributes_to` | IBA, IDA |
-| POP4, POP5, POP7, RPP14, RPP21, RPP25, RPP30, RPP38, RPP40 | nuclear | `contributes_to` | IDA |
-| PRORP | **mitochondrial** (the catalyst) | `enables` | IBA, IDA, IEA |
-| `ComplexPortal:CPX-6155` mribonucleasep_human | mitochondrial, the whole complex | `enables` | IDA |
-| `ComplexPortal:CPX-2877` rnasep_human | nuclear, the whole complex | `enables` | IPI |
+| gene product | complex | qualifier | evidence | rows |
+|---|---|---|---|---|
+| POP1 | nuclear | `contributes_to` | IBA 1, IDA 2 | 3 |
+| POP4, POP7, RPP14, RPP21, RPP25 | nuclear | `contributes_to` | IDA | 1 each, 5 |
+| RPP38 | nuclear | `contributes_to` | IBA 1, IDA 1 | 2 |
+| POP5 | nuclear | `contributes_to` | IDA | 1 |
+| **POP5** | nuclear | **`enables`** | **IEA** | **1** |
+| RPP30 | nuclear | `contributes_to` | IDA | 1 |
+| **RPP30** | nuclear | **`enables`** | **TAS** | **1** |
+| RPP40 | nuclear | `contributes_to` | IBA 1, IDA 1 | 2 |
+| **RPP40** | nuclear | **`enables`** | **TAS** | **1** |
+| PRORP | **mitochondrial** (the catalyst) | `enables` | IBA 1, IDA 1, IEA 5 | 7 |
+| RPPH1 under 14 ncRNA ids (the nuclear catalyst), incl. lncRNA entries | nuclear | `enables` | IEA | 14 |
+| `ComplexPortal:CPX-6155` mribonucleasep_human, the whole complex | mitochondrial | `enables` | IDA | 1 |
+| `ComplexPortal:CPX-2877` rnasep_human, the whole complex | nuclear | `enables` | IPI | 1 |
 
-The two ComplexPortal rows are the assembled complexes rather than proteins, which is why
-they carry `enables` and why the claims below are about proteins specifically. They are listed
-because a reader re-running the query will meet them, and `CPX-6155` is the other `enables`
-row with a direct-assay code.
+Rows sum to 40, which is the hit count, so nothing was truncated at `limit=100`.
+
+The three bold rows are the exceptions, and they are in the table rather than only in the
+prose below for the same reason the ComplexPortal rows are: a reader who checks the table
+and stops there would otherwise come away with the absolute claim this file spent a round
+retracting. The two ComplexPortal rows are assembled complexes rather than proteins, which
+is why they carry `enables` and why the claims below are scoped to proteins; `CPX-6155` is
+the only `enables` row with a direct-assay code other than PRORP's.
 
 Note the complex column: PRORP (O15091) is `part_of GO:0030678`, the *mitochondrial* complex,
 not the nuclear one. The nuclear catalyst is an RNA, so the `enables` rows there belong to RPPH1
