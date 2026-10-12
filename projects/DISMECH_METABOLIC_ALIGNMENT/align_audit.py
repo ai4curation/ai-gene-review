@@ -141,6 +141,10 @@ PROVENANCE = dict(
     # reads a tree materialised from the combined branch rather than one worktree.
     aigr_revision=os.environ.get("AIGR_REVISION") or _git(AG, "rev-parse", "HEAD"),
     aigr_branch=os.environ.get("AIGR_REF") or _git(AG, "rev-parse", "--abbrev-ref", "HEAD"),
+    # AIGR_TREE says how a non-checkout tree was built, because the directory path alone
+    # is often a scratch directory that no longer exists when the report is read. Without
+    # it the provenance records where the bytes sat rather than what they were.
+    aigr_tree=os.environ.get("AIGR_TREE") or None,
     aigr_dir=AG,
     scope_entries=len(SCOPE),
 )

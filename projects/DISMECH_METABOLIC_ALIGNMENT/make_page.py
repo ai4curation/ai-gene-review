@@ -173,6 +173,8 @@ if PROV:
         + (f" (branch `{PROV['aigr_branch']}`)" if PROV.get("aigr_branch") else ""),
         f"- GO release: `{PROV.get('go_version') or 'unrecorded'}`, adapter `{PROV.get('go_adapter') or 'unrecorded'}`",
     ]
+    if PROV.get("aigr_tree"):
+        lines.append(f"- ai-gene-review tree: {PROV['aigr_tree']}")
     _ma = PROV.get("module_accessions") or {}
     if _ma:
         lines.append(
@@ -186,8 +188,24 @@ if PROV:
     lines += [
         "",
         "Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten",
-        "themed PRs split out of #4690, so on a branch without those merged the audit cannot be",
-        "re-run to reproduce these rows. `report.yaml` is committed as the record of the run above.",
+        "themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.",
+        "The run above read one materialised from `claude/cool-edison-o9wvf0`, the combined branch",
+        "those ten were split from, which is why the committed `report.yaml` records its `aigr_dir`",
+        "as the scratch directory that tree was unpacked into rather than a revision.",
+        "",
+        "The audit does run on this branch alone, and what it produces there shows which flags are",
+        "artifacts of the missing slices rather than findings. Both runs cover the same 183 gene",
+        "rows. `NO_AIGR_REVIEW` goes from 5 to 61 and `AIGR_NOT_COMPLETE` from 7 to 85, because the",
+        "reviews those rows refer to are added by the other nine PRs; the alignment flags fall with",
+        "them, since a row with no review to compare against cannot be found partial -",
+        "`PARTIAL_ALIGNMENT` 46 against 56, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48,",
+        "`NO_MODULE_MEMBERSHIP` 28 against 38. `MODULE_NOT_COVERING` moves the other way, 7 against",
+        "4, for the same reason in reverse: a module cannot be shown to cover a gene whose review is",
+        "absent. The flags that do not depend on a gene review are identical in both runs -",
+        "`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `ALIGNED_CONTRIBUTES_ONLY` 1",
+        "- which is the check that the difference is the missing reviews and not the script behaving",
+        "differently. So a branch-local run tests that the audit works; only the all-slices tree",
+        "gives the figures this table reports.",
         "",
     ]
 
