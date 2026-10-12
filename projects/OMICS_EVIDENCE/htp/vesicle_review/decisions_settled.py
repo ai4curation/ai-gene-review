@@ -8,7 +8,7 @@ category constants as pass 1. Genes reviewed in both passes get the same call he
 microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT2, CAT2A, CAT4, CAT5, CAT5_BOUND, G as G1, note
+from decisions_draft import CAT1, CAT2, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, G as G1, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -50,8 +50,10 @@ G = {
     "ASAH1": note(CAT5, "Lysosomal lumenal acid ceramidase; UniProt notes secretion is extremely low."),
     "ASL": note(CAT2, "Cytosolic argininosuccinate lyase."),
     "ASS1": note(CAT2, "Cytosolic argininosuccinate synthase."),
-    "ATP5F1A": note(CAT4, "Mitochondrial ATP synthase subunit."),
-    "ATP5F1B": note(CAT4, "Mitochondrial ATP synthase subunit."),
+    "ATP5F1A": note(CAT4_SURFACE, "Mitochondrial ATP synthase subunit; ecto-ATP synthase plasma-membrane pool by IDA "
+                                  "(PMID:10077593)."),
+    "ATP5F1B": note(CAT4_SURFACE, "Mitochondrial ATP synthase subunit; ecto-ATP synthase cell-surface pool by IDA "
+                                  "(PMID:17510399)."),
     "ATP6AP2": note(CAT1, "Single-pass membrane protein of the endolysosomal V-ATPase assembly."),
     "ATP6V0A4": note(CAT1, "Plasma-membrane V-ATPase subunit."),
     "ATP6V0C": note(CAT1, "V-ATPase membrane subunit of endosomal/vesicle membranes."),
@@ -69,7 +71,7 @@ G = {
     "CALM1": note(CAT2, "Calmodulin."),
     "CALM2": note(CAT2, "Calmodulin."),
     "CALM3": note(CAT2, "Calmodulin."),
-    "CALR": note(CAT4, "ER-lumen chaperone calreticulin."),
+    "CALR": note(CAT4_SURFACE, "ER-lumen chaperone calreticulin; cell-surface pool by EXP (PMID:10358038)."),
     "CAPG": note(CAT2, "Cytoplasmic actin-capping protein."),
     "CD14": note(CAT1, "GPI-anchored plasma-membrane receptor."),
     "CD19": note(CAT1, "B-cell plasma-membrane receptor."),
@@ -129,7 +131,7 @@ G = {
                              "precursors of exosomes."),
     "GNS": note(CAT5, "Lysosomal lumenal sulfatase."),
     "GOT1": note(CAT2, "Cytoplasmic aspartate aminotransferase."),
-    "GOT2": note(CAT1, "Mitochondrial aminotransferase with a documented plasma-membrane pool."),
+    "GOT2": note(CAT4_SURFACE, "Mitochondrial aminotransferase; plasma-membrane pool by IDA (PMID:9537447)."),
     "GPI": note(CAT2, "Cytoplasmic glucose-6-phosphate isomerase."),
     "GRB2": note(CAT2, "Cytoplasmic signalling adapter."),
     "GSR": note(CAT2, "Glutathione reductase, cytoplasmic isoform."),
@@ -149,7 +151,8 @@ G = {
     "HSPA6": note(CAT2, "Cytoplasmic HSP70."),
     "HSPA8": note(CAT2A, "Cytoplasmic HSC70, which also acts at endosomal membranes."),
     "HSPA9": note(CAT4, "Mitochondrial HSP70 (mortalin)."),
-    "HSPD1": note(CAT4, "Mitochondrial matrix HSP60."),
+    "HSPD1": note(CAT4_SURFACE, "Mitochondrial matrix HSP60; cell-surface pool by IDA (PMID:9243807, PMID:10663613, "
+                                "PMID:11807771, PMID:15784682)."),
     "HSPG2": note(CAT5, "Secreted basement-membrane perlecan, itself a proteoglycan, with no recorded binding to EV-surface receptors."),
     "IDUA": note(CAT5, "Lysosomal lumenal iduronidase."),
     "ITGB1": note(CAT1, "Plasma-membrane integrin."),

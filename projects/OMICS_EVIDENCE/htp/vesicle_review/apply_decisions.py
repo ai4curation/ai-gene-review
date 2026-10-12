@@ -83,7 +83,10 @@ def binding_ids() -> frozenset[str]:
     from oaklib import get_adapter
     from oaklib.datamodels.vocabulary import IS_A
     go = get_adapter("sqlite:obo:go")
-    return frozenset(go.descendants(BINDING_ROOTS, predicates=[IS_A])) | BINDING_EXTRA
+    ids = frozenset(go.descendants(BINDING_ROOTS, predicates=[IS_A])) | BINDING_EXTRA
+    # a root missing from the loaded GO release would silently drop its whole branch
+    assert set(BINDING_ROOTS) <= ids, f"GO release lacks {set(BINDING_ROOTS) - ids}"
+    return ids
 
 
 def binding_evidence(organism: str, gene: str) -> list[str]:
@@ -102,6 +105,20 @@ def binding_evidence(organism: str, gene: str) -> list[str]:
         hits.update(f"UniProt: {sentence}" for sentence in re.split(r"(?<=\.) ", block)
                     if UNIPROT_BINDS.search(sentence) and not HEDGE.search(sentence))
     return sorted(hits)
+
+
+# CAT4's claim that the protein's own review keeps no experimental surface pool, checked the same way.
+SURFACE_CLAIM = "its own review keeps no experimental cell-surface or plasma-membrane pool"
+SURFACE_TERMS = {"GO:0009986", "GO:0005886"}
+SURFACE_EVIDENCE = {"EXP", "IDA", "IMP", "IPI"}
+
+
+def surface_rows(organism: str, gene: str) -> list[str]:
+    path = os.path.join(ROOT, "genes", organism, gene, f"{gene}-ai-review.yaml")
+    anns = yaml.load(open(path).read(), Loader=LOADER)["existing_annotations"]
+    return sorted({f'{a["term"]["id"]} {a.get("evidence_type")} {a.get("original_reference_id")}' for a in anns
+                   if a["term"]["id"] in SURFACE_TERMS and a.get("evidence_type") in SURFACE_EVIDENCE
+                   and not a.get("negated") and a["review"].get("action") in ("ACCEPT", "KEEP_AS_NON_CORE")})
 
 
 def main() -> int:
@@ -129,6 +146,9 @@ def main() -> int:
         if NO_BINDING in basis:
             hits = binding_evidence(d["organism"], d["gene"])
             assert not hits, f"{key}: CAT5 says no experimental lipid/proteoglycan binding, but found {hits}"
+        if SURFACE_CLAIM in basis:
+            hits = surface_rows(d["organism"], d["gene"])
+            assert not hits, f"{key}: CAT4 says no kept experimental surface pool, but the review keeps {hits}"
         old = d["current_action"]
         changed = action != old
         records.append({"gene": f'{d["organism"]}/{d["gene"]}', "row_index": d["row_index"], "term": d["term"],

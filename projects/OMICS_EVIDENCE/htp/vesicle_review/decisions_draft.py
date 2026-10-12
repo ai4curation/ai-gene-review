@@ -37,9 +37,13 @@ CAT2A = ("KEEP_AS_NON_CORE", "Cytosolic protein with lipid or membrane-protein b
 CAT3 = ("MARK_AS_OVER_ANNOTATED", "MISEV2018 (PMID:30637094) category 3a covers non-EV structures that "
         "co-isolate with EVs, chiefly lipoproteins and albumin, from plasma, serum and serum-containing culture; "
         "detection does not establish EV localization.")
-CAT4 = ("MARK_AS_OVER_ANNOTATED", "Resident of an intracellular compartment that MISEV2018 (PMID:30637094) lists as not enriched in "
-        "small EVs of plasma-membrane/endosomal origin (category 4); an exosome annotation from a bulk EV proteome "
-        "is not supported.")
+CAT4 = ("MARK_AS_OVER_ANNOTATED", "Mainly resident in an intracellular compartment that MISEV2018 (PMID:30637094) lists as not "
+        "enriched in small EVs of plasma-membrane/endosomal origin (category 4), and its own review keeps no experimental "
+        "cell-surface or plasma-membrane pool; an exosome annotation from a bulk EV proteome is not supported.")
+CAT4_SURFACE = ("KEEP_AS_NON_CORE", "Mainly resident in an intracellular compartment that MISEV2018 (PMID:30637094) lists "
+                "as not enriched in small EVs (category 4), but with an experimentally documented cell-surface or "
+                "plasma-membrane pool that its own review keeps; small EVs budding from the plasma membrane can carry "
+                "that pool, so the detection is plausible. True, but not its core location.")
 CAT5 = ("MARK_AS_OVER_ANNOTATED", "Secreted or lumenal protein (UniProt). MISEV2018 (PMID:30637094) category 5 "
         "allows such proteins onto EVs through specific or promiscuous (proteoglycan, lipid) receptors on the EV "
         "surface, but asks that their identification be backed by evidence of that association. A bulk EV proteome "
@@ -186,7 +190,7 @@ G = {
     "LDHA": note(CAT2, "Cytoplasmic lactate dehydrogenase."),
     "LDHB": note(CAT2, "Cytoplasmic lactate dehydrogenase."),
     "LMAN1": note(CAT4, "ERGIC/Golgi membrane lectin."),
-    "LMAN2": note(CAT4, "ERGIC/Golgi membrane lectin."),
+    "LMAN2": note(CAT4_SURFACE, "ERGIC/Golgi membrane lectin; cell-surface and plasma-membrane pool by IDA (PMID:22016386)."),
     "MDH1": note(CAT2, "Cytosolic malate dehydrogenase."),
     "MDH2": note(CAT4, "Mitochondrial matrix malate dehydrogenase."),
     "MGAT1": note(CAT4, "Golgi-membrane glycosyltransferase."),
