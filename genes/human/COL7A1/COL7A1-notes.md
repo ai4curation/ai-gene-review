@@ -51,3 +51,16 @@ Independent bounded core and process consultations were consumed with their actu
 The genuine raw GOA file contains 55 rows; the normal seed collapsed two occurrences of the same MIA3 source assertion into one object, producing 54 preserved originals. This normal deduplication is explicitly reconstructed; neither the raw rows nor either literal interaction record was discarded. The final review adds only the independently supported collagen-binding assertion.
 
 The isolated validator added GO:0005590 to its temporary GO cache through normal lookup; both cache variants and the one-line addition are retained, without resetting runtime context. Final publication composition validates against the shared full PMID:21421911 variant and shared PTHR37456 timestamp variant while the original research inputs remain fixed. No extra full-paper read is claimed.
+
+
+## PR 4944 evidence and wording clarification
+
+The eleven extracellular-region Reactome assertions remain ACCEPT because they describe mature collagen VII secretion, matrix contacts and anchoring assemblies. The broader location need not be repeated beside the more specific basement-membrane core location. The tear-fluid HDA assertion remains non-core sample detection, with no separate tear function inferred. Identical GO terms can therefore retain different source-specific core assessments.
+
+Direct collagen binding is explicit in the single anchoring-fibril structural core. The full-chain and NC1 binding assays describe matrix contacts that help make the same extracellular structural connection. GO:0005518 remains a distinct, nonredundant MF assertion; this integration does not claim it is an ontology child of GO:0030020. A second core would repeat this biological activity, and contributes_to_molecular_function would incorrectly suggest a different relation to the directly measured binding.
+
+The external_primary_excerpt entry in [the source-evidence index](COL7A1-source-evidence.json) makes the original PMID:11274208 negative assay checkable: it contains one nine-word literal excerpt, the DOI, public author-upload route, construct composition, positive control and exact indexed-text locators. The preserved PMID cache is still abstract-only. External full-text reading does not make that cache full text, while its limited cache coverage does not mean the original was unavailable. The automatic inhibitor inference remains removed at the tested scope; no universal negative annotation is added.
+
+ER and COPII summaries now identify the individual event. Generic transport summaries are explicitly distinguished from events naming procollagen VII, and incomplete participant graphs remain incomplete. The six GO_REF assessments identify their actual evidence methods, with manual and Compara transfers distinguished from PAINT. Original annotation objects, actions, products, references, historical notes and caches are preserved.
+
+Ordinary follow-up validation, status checking and rendering passed with the same three advisories: supported MIA3 generic binding under the campaign exception, source-specific extracellular-region actions, and the unresolved NAS trimer source. No source or action was altered to suppress those advisories.
