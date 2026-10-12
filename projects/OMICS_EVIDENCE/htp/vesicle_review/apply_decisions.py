@@ -109,6 +109,8 @@ def binding_evidence(organism: str, gene: str) -> list[str]:
 
 # CAT4's claim that the protein's own review keeps no experimental surface pool, checked the same way.
 SURFACE_CLAIM = "its own review keeps no experimental cell-surface or plasma-membrane pool"
+SURFACE_POOL_CLAIM = "plasma-membrane pool that its own review keeps"
+BOUND_CLAIM = "promiscuous (proteoglycan, lipid) receptors on the EV surface, so the detection is plausible"
 SURFACE_TERMS = {"GO:0009986", "GO:0005886"}
 SURFACE_EVIDENCE = {"EXP", "IDA", "IMP", "IPI"}
 
@@ -128,12 +130,12 @@ def surface_rows(organism: str, gene: str) -> list[str]:
     anns = yaml.load(open(path).read(), Loader=LOADER)["existing_annotations"]
     return sorted({f'{a["term"]["id"]} {a.get("evidence_type")} {a.get("original_reference_id")}' for a in anns
                    if a["term"]["id"] in surface_ids() and a.get("evidence_type") in SURFACE_EVIDENCE
-                   and not a.get("negated") and a["review"].get("action") in ("ACCEPT", "KEEP_AS_NON_CORE")})
+                   and not a.get("negated") and a["review"].get("action") in ("ACCEPT", "KEEP_AS_NON_CORE", "MODIFY")})
 
 
 # CAT1's claim that the protein spans or is lipid-anchored in a membrane, checked against UniProt features.
 ANCHOR_CLAIM = "Transmembrane/lipid-anchored protein"
-ANCHOR_FEATURE = re.compile(r"^FT   (TRANSMEM|INTRAMEM|LIPID) |GPI-anchor", re.M)
+ANCHOR_FEATURE = re.compile(r"^FT   (TRANSMEM|INTRAMEM|LIPID) |^CC .*GPI-anchor", re.M)
 
 
 def has_anchor(organism: str, gene: str) -> bool:
@@ -190,6 +192,11 @@ def main() -> int:
             assert go_cytosolic(d["organism"], d["gene"]), f"{key}: CAT2_GO cites GO, which records no cytosol"
         if ANCHOR_CLAIM in basis:
             assert has_anchor(d["organism"], d["gene"]), f"{key}: CAT1 says transmembrane/lipid-anchored, UniProt has no anchor"
+        # the positive clauses of CAT5_BOUND and CAT4_SURFACE, checked the same way
+        if BOUND_CLAIM in basis:
+            assert binding_evidence(d["organism"], d["gene"]), f"{key}: CAT5_BOUND but no experimental binding found"
+        if SURFACE_POOL_CLAIM in basis:
+            assert surface_rows(d["organism"], d["gene"]), f"{key}: CAT4_SURFACE but the review keeps no surface row"
         if SURFACE_CLAIM in basis:
             hits = surface_rows(d["organism"], d["gene"])
             assert not hits, f"{key}: CAT4 says no kept experimental surface pool, but the review keeps {hits}"
