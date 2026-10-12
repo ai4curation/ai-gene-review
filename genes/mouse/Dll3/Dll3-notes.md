@@ -52,3 +52,13 @@ lysines and the PDZ-binding motif
 Primary support for the lysine-less intracellular region: [PMID:18676613 "the transmembrane/intracellular domain of Dll3, which contains no lysine"].
 Note tension: Chen et al. 2021 report MIB2-dependent DLL3 ubiquitination in oocytes [PMID:34635817], so
 lysine-independent (or ectodomain) ubiquitination, or a context-specific mechanism, remains unresolved.
+
+## 2026-10-12 Ortholog/family audit (Dll1, Dll3, Hes7, Rbpj)
+
+- GOA refreshed: no new rows; coverage is complete and there are no stale entries. No human DLL3 review exists in the repo for comparison.
+- DSL-family IBAs are shared with Dll1 (nodes PTN001170801 and PTN002371879). Each is judged against Dll3-specific divergence evidence, not donor count:
+  - Notch binding is ACCEPTed because it rests on cis binding [PMID:16144902 "in contrast to trans conditions, Dll3 stably interacts with N1, but the association requires the expression of both proteins in the same cell (cis conditions)"].
+  - Notch signaling pathway is MODIFIED to negative regulation of Notch signaling pathway (PROPAGATION_BAD, FUNCTIONAL_DIVERGENCE).
+  - Plasma membrane is KEEP_AS_NON_CORE. Dll1 ACCEPTs plasma membrane and keeps GO:0045746 as non-core; Dll3 ACCEPTs GO:0045746 as core. This is consistent with Dll3 being a cis-inhibitor that does not activate Notch in trans.
+- REMOVE of negative regulation of neurogenesis (IDA, PMID:9272948) retained. The later full-text study directly contradicts it [PMID:16144902 "Our findings that Dll3 does not activate N signaling in cultured cells are at odds with a previous report in which Dll3 was shown to activate N signaling when tested in X. laevis embryos"].
+- No action changes in this audit. Status set to COMPLETE.

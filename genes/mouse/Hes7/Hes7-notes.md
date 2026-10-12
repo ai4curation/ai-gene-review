@@ -50,3 +50,10 @@ Falcon deep research completed (Hes7-deep-research-falcon.md; wrapper reported a
 falcon client finished and wrote the file). It additionally reports Hes7-dependent oscillation of Dll1 and
 Dusp4 (citing 2024-2025 reviews; not independently verified here)
 [file:mouse/Hes7/Hes7-deep-research-falcon.md "Hes7 functions as a sequence-specific DNA-binding transcriptional repressor that recognizes and binds N-box regulatory sequences in target gene promoters"].
+
+## 2026-10-12 Ortholog/family audit (Dll1, Dll3, Hes7, Rbpj)
+
+- GOA refreshed: no new rows, coverage complete. There is no human HES7 review in the repo; compared with zebrafish her1 (a segmentation-clock Hes paralog).
+- Agreement: both have core MF GO:0001227 (Pol II-specific repressor) with negative regulation of Pol II transcription and somitogenesis. IBAs for GO:0000981, GO:0000978, GO:0000122 and nucleus (PTN004213585) are accepted in both, and A/P pattern specification (PTN000105428) is non-core in both.
+- Difference kept: IBA GO:0050767 regulation of neurogenesis (PTN000105428) is MARK_AS_OVER_ANNOTATED for Hes7 but KEEP_AS_NON_CORE for her1. Hes7 has explicit target-specific evidence of divergence [PMID:11260262 "Strikingly, Hes7 is specifically expressed in the presomitic mesoderm in a dynamic manner."]; the her1 review found no such evidence. The Hes7 reason now records this.
+- Status set to COMPLETE.
