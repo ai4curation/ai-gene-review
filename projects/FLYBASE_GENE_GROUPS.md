@@ -18,8 +18,9 @@ groups are sequence families or activity classes, which are not modules. See
 **Bottom line:** FlyBase curates 1,836 gene groups (release FB2026_03). They
 cover 8,607 *D. melanogaster* genes, and most terminal groups are small (median
 4 members). That makes them ready-made, expert-bounded batches for fly reviews.
-Our 199 DROME reviews touch 128 groups but cover only 10 completely, because
-genes were picked one at a time rather than by group. As a pilot we looked at
+Our 314 DROME reviews (counted 2026-10-12) touch 217 groups but cover only 54
+completely, mostly small complexes, because genes were picked one at a time
+rather than by group. As a pilot we looked at
 the 8-member GLUE group (`FBgg0001189`, salivary glue proteins). Its GO
 annotations are sparse and almost all rest on a single 1976 paper. The group and
 GO agree on membership. The open questions are about the evidence, not about
@@ -43,7 +44,9 @@ members are "apparently unrelated proteins" by sequence
 ## Landscape (computed)
 
 All numbers below come from
-[`fb_gene_groups.py`](FLYBASE_GENE_GROUPS/fb_gene_groups.py). The full output is in
+[`fb_gene_groups.py`](FLYBASE_GENE_GROUPS/fb_gene_groups.py), last re-run on
+2026-10-12 (the first run counted 199 reviews, 143 in some group, 128 groups
+touched and 10 fully reviewed). The full output is in
 [`fb_gene_groups_summary.yaml`](FLYBASE_GENE_GROUPS/fb_gene_groups_summary.yaml).
 
 | Measure | Value |
@@ -54,25 +57,25 @@ All numbers below come from
 | Terminal groups with ≤10 members | 1,166 |
 | Groups named "... COMPLEX" | 315 |
 | Groups named "UNCLASSIFIED ..." | 88 |
-| DROME reviews in the repo | 199 |
-| ... of which in some group | 143 |
-| Groups with at least one review | 128 |
-| Groups fully reviewed | 10 |
+| DROME reviews in the repo | 314 |
+| ... of which in some group | 257 |
+| Groups with at least one review | 217 |
+| Groups fully reviewed | 54 |
 
 The largest top-level branches are enzymes (510 terminal groups), transmembrane
 transporters (133), tRNAs (45), transmembrane receptors (36) and transcription
 factors (34).
 
 The groups we already cover completely are mostly complexes and very small
-families: GATOR1 (Iml1, Nprl2, Nprl3), the apoptosome (Dark, Dronc), the
-mitochondrial trifunctional protein (Mtpalpha, Mtpbeta), the cGAS-like
-receptors, and the IAP ubiquitin ligases. Several partly covered groups could be
-finished cheaply:
-
-- RHG proteins: 4 of 6 reviewed.
-- ACAD acyl-CoA dehydrogenases: 5 of 8 reviewed.
-- NF-κB: 2 of 3 reviewed.
-- CSL-Notch-Mastermind complex: 2 of 3 reviewed.
+families, for example GATOR1 (Iml1, Nprl2, Nprl3), the apoptosome (Dark,
+Dronc), the mitochondrial trifunctional protein (Mtpalpha, Mtpbeta), the
+cGAS-like receptors, the IAP ubiquitin ligases, the RHG proteins, NF-κB,
+GatCAB, LKB1-STRAD-MO25, ferritin and the RZZ complex. The script matches
+reviews by folder name, so a review filed under its accession rather than its
+symbol is not counted: Su(H) is reviewed (`genes/DROME/P28159`), which in fact
+completes the CSL-Notch-Mastermind complex (CNM, counted as 2 of 3). Of the
+groups named in the first run, ACAD acyl-CoA dehydrogenases is still partly
+covered (5 of 8 reviewed).
 
 ## Pilot: GLUE proteins (FBgg0001189)
 
@@ -215,9 +218,11 @@ labels again.
 
 ### Caveats
 
-- Status is DRAFT. No member gene has a gene review yet, so
-  molecular-function assertions rest on conserved, well-established activities
-  and are marked as unreviewed by the validator.
+- Status is DRAFT. Most member genes have no gene review yet; each module's
+  notes list the members that do. Molecular-function assertions rest on
+  conserved, well-established activities that the fly genes carry in GOA, and
+  modules whose complexes have no established molecular activity say so in
+  their notes.
 - Most modules cite no PMIDs. Their evidence is the FlyBase group and the GO
   terms. The histamine and cardiolipin modules cite checked PMIDs, and the glue
   module cites PMID:825230.
@@ -243,8 +248,8 @@ uv run python -m ai_gene_review.validation.module_validator modules/dmel_*.yaml
 
 ## Proposed workflow
 
-1. Pick groups by completeness gain: partly reviewed groups first (RHG, ACAD,
-   NF-κB, CNM), then small functional sets like GLUE.
+1. Pick groups by completeness gain: partly reviewed groups first (for example
+   ACAD), then small functional sets like GLUE.
 2. For each group, run `fb_gene_groups.py --detail <SYMBOL>` to get the member
    list, accessions, and GO footprint before running `just fetch-gene`.
 3. Review the members together, so that annotation decisions are consistent
@@ -257,8 +262,9 @@ uv run python -m ai_gene_review.validation.module_validator modules/dmel_*.yaml
 
 - [ ] Review the GLUE group (8 genes). This needs `just fetch-gene DROME Sgs3`
       and so on. Sgs1, Sgs5bis and Eig71Ee have TrEMBL accessions only.
-- [ ] Finish the nearly complete groups. Missing members: RHG (HtrA2, Prx4),
-      ACAD (Ivd, CG3902, CG9547), NF-κB (Rel), CNM (Su(H)).
+- [x] Finish the nearly complete groups RHG, NF-κB and CNM (done by
+      2026-10-12).
+- [ ] Finish ACAD. Missing members: Ivd, CG3902, CG9547.
 - [ ] Ask FlyBase about the evidence code on the `GO:0140073` rows from
       PMID:825230.
 - [ ] Decide whether FlyBase group membership should be recorded in reviews
