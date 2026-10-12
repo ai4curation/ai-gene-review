@@ -100,3 +100,10 @@ STAT1 E3 [PMID:12764129 "PIASx-alpha, but not PIAS1, functions as an E3 ligase"]
 
 - Which inflammatory phenotypes of Pias1-/- mice depend on E3 activity vs binding-based inhibition?
 - Is PIAS1 tethering of transcription factors (Msx1) to the nuclear periphery a general mechanism?
+
+## 2026-10-12 Ortholog/family audit
+
+- GOA refreshed: no change; all 94 GOA rows covered; NEW GO:0043124 (PMID:15657437) retained.
+- Compared with genes/human/PIAS1 (DRAFT) and family members genes/worm/gei-17, genes/yeast/SIZ1, genes/ARATH/SIZ1 (no PIAS2/3/4 or other Pias reviews exist). All use SUMO ligase activity (GO:0061665) as core MF with protein sumoylation; SUMO transferase activity, chromatin and nucleoplasm IBAs are accepted throughout. Mouse and human PIAS1 agree on every shared term, including MODIFY of transcription corepressor activity to transcription regulator inhibitor activity, JAK-STAT to its negative regulation, positive regulation of protein sumoylation to protein sumoylation, and fat cell differentiation to negative regulation of fat cell differentiation.
+- Human PIAS1 GOA file is older than the mouse ISO rows: mouse carries ISO GO:0000724 and GO:0000729 from human O75925 that are absent from genes/human/PIAS1/PIAS1-goa.tsv; the human review should be refreshed with `just fetch-gene human PIAS1` (not done here; outside assignment).
+- No changes made to the mouse review.
