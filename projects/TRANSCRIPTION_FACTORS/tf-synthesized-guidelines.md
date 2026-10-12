@@ -5,6 +5,7 @@ title: "Transcription Factor Annotation Guidelines (Synthesized)"
 # Transcription Factor Annotation Guidelines (Synthesized)
 
 Operational guidelines for GO annotation of transcription regulators, synthesized from:
+
 - GO Consortium guidelines PDF (Gaudet, Logie, Lovering, 2023)
 - BBA Gene Regulatory Mechanisms paper (PMID:34461313, 2021)
 
@@ -94,6 +95,7 @@ See evidence requirements below.
 ### For dbTF (GO:0003700)
 
 **Minimum requirements:**
+
 1. Evidence of DNA binding
 2. Evidence that binding regulates transcription of target gene(s)
 

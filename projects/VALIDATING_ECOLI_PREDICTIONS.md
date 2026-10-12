@@ -2,6 +2,7 @@
 title: "Validating E. coli ML Predictions"
 collections: [FUNCTION_PREDICTION]
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [ECOLI]
 genes: [ygfF, yciO, yegV, yjhQ, yrhB, yjdM, fepE]
@@ -14,10 +15,7 @@ sidecars:
 manifest:
   slides:
     - href: VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/TgrzGMFVcJVh62Yn7CMNLU
-      title: Project brief
+      description: Validating E. coli ML predictions slides
 ---
 
 # Validating E. coli ML Predictions
@@ -120,18 +118,18 @@ Sampling across the error taxonomy to evaluate existing GO annotations in contex
 # STATUS
 
 ## Completed Reviews
-- [x] ECOLI/ygfF - Correct novel prediction (SDR family) - glucose 1-dehydrogenase confirmed
-- [x] ECOLI/yciO - Paralog incorrect (TsaC paralog) - 10,000x weaker activity, recommends removing EC 2.7.7.87
-- [x] ECOLI/yegV - Paralog incorrect (sugar kinase) - first 3 EC digits correct, substrate unknown
-- [x] ECOLI/yjhQ - Non-paralog incorrect (mycothiol synthase) - mycothiol absent from E. coli; actually antitoxin
-- [x] ECOLI/yrhB - Non-paralog incorrect (QueD duplicate) - activity belongs to QueD; Imm35 immunity domain
-- [x] ECOLI/yjdM - Uncertain (phosphonoacetate hydrolase) - in vitro activity but no in vivo support
-- [x] ECOLI/fepE - Repetition error (histidine kinase) - frequency bias; actually Wzz O-antigen regulator
+- Done: ECOLI/ygfF - Correct novel prediction (SDR family) - glucose 1-dehydrogenase confirmed
+- Done: ECOLI/yciO - Paralog incorrect (TsaC paralog) - 10,000x weaker activity, recommends removing EC 2.7.7.87
+- Done: ECOLI/yegV - Paralog incorrect (sugar kinase) - first 3 EC digits correct, substrate unknown
+- Done: ECOLI/yjhQ - Non-paralog incorrect (mycothiol synthase) - mycothiol absent from E. coli; actually antitoxin
+- Done: ECOLI/yrhB - Non-paralog incorrect (QueD duplicate) - activity belongs to QueD; Imm35 immunity domain
+- Done: ECOLI/yjdM - Uncertain (phosphonoacetate hydrolase) - in vitro activity but no in vivo support
+- Done: ECOLI/fepE - Repetition error (histidine kinase) - frequency bias; actually Wzz O-antigen regulator
 
 ## Pending Reviews
 (none)
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 # NOTES
 
@@ -154,6 +152,7 @@ Last updated: 2026-09-26
 
 Completed reviews for all 7 E. coli genes spanning the de Crecy-Lagard et al. error taxonomy.
 Key findings:
+
 - COR (ygfF): DeepECTF prediction validated; existing GO annotations mostly appropriate
 - PLI (yciO, yegV): Paralog confusion leads to incorrect substrate/function annotations
 - NPI (yjhQ, yrhB): ML models ignore organism pathway context entirely
