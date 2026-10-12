@@ -1,5 +1,6 @@
 """Render the dismech<->AIGR alignment audit as a markdown project page."""
 import os
+import subprocess
 import sys
 
 import yaml
@@ -109,7 +110,13 @@ def flag_rows(entries, flag):
     return {k for k, g in idx.items() if flag in (g.get("flags") or ())}
 
 
-def _alt_drift():
+# One definition, consulted by both the Method paragraph and the comparison section, which
+# had computed it identically.
+ALT_TREE = (ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
+            ) if ALT_PROV else ""
+
+
+def _alt_drift_tail():
     """Whether the audit's inputs moved between the second run's tree and the branch now.
 
     The recorded revision is necessarily an ancestor of the branch tip, because the commit
@@ -120,29 +127,47 @@ def _alt_drift():
     """
     rev = (ALT_PROV or {}).get("aigr_revision")
     if not rev:
-        return ""
-    import subprocess
+        return " at a revision the report does not name"
     try:
         head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
                               check=True).stdout.strip()
-        if head.startswith(rev[:9]) or rev.startswith(head[:9]):
-            return ""
-        subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
-                       capture_output=True, check=True)
+    except Exception:
+        # Genuine tooling failure: nothing is claimed either way, as with the dirty flags.
+        return (f" at `{rev[:9]}`; git could not be asked whether the audit's inputs moved"
+                " between that commit and this branch's tip, so nothing is claimed")
+    if head.startswith(rev[:9]) or rev.startswith(head[:9]):
+        return f" at `{rev[:9]}`, which is this branch's tip"
+    # Not an ancestor is a knowable fact, not a tooling failure. --is-ancestor exits 1 for
+    # it, which check=True turned into an exception indistinguishable from git being broken -
+    # so the one state a reader would act on was reported as "could not be determined". The
+    # case is real here: the all-slices run records a merge commit local to that run.
+    anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
+                         capture_output=True)
+    if anc.returncode == 1:
+        # No gloss about what the revision is: it may be a tree built for the run and never
+        # pushed (as the all-slices run's is), or a commit on another branch. Either way the
+        # knowable fact is that it is not an ancestor, so a diff against the tip says nothing.
+        return (f" at `{rev[:9]}`, which is not an ancestor of this branch's tip, so the two"
+                " cannot be compared by diffing and the figures stand only for the recorded"
+                " tree")
+    if anc.returncode != 0:
+        return (f" at `{rev[:9]}`; git could not say whether it is an ancestor of this branch,"
+                " so nothing is claimed")
+    try:
         out = subprocess.run(["git", "diff", "--name-only", f"{rev}..HEAD", "--",
                               "genes", "modules"],
                              capture_output=True, text=True, check=True).stdout.split()
     except Exception:
-        # Tri-state, as the dirty flags are: git could not answer, so nothing is claimed.
-        return (f" (recorded at `{rev[:9]}`; whether the audit's inputs moved between that"
-                " commit and this branch's tip could not be determined here)")
+        return (f" at `{rev[:9]}`, an ancestor of the branch tip; git could not list what"
+                " changed between the two, so nothing is claimed")
     if not out:
-        return (f" (recorded at `{rev[:9]}`, an ancestor of the branch tip; no file under"
-                " `genes/` or `modules/` changed between the two, so the figures stand for"
-                " either)")
-    return (f" (recorded at `{rev[:9]}`, an ancestor of the branch tip, and **{len(out)} of the"
-            " audit's input files changed between the two**, so the figures below describe the"
-            f" recorded commit rather than the tip - e.g. `{out[0]}`)")
+        return (f" at `{rev[:9]}`, an ancestor of the branch tip, with no file under `genes/`"
+                " or `modules/` changed between the two - the audit's whole input surface - so"
+                " the figures stand for either. The primary run's own tree was built for that"
+                " run and is not a commit here, so there is nothing to compare it against")
+    return (f" at `{rev[:9]}`, an ancestor of the branch tip, with **{len(out)} of the audit's"
+            " input files changed between the two**, so the figures below describe the recorded"
+            f" commit rather than the tip - e.g. `{out[0]}`")
 
 
 def alt_comparison():
@@ -202,7 +227,6 @@ def alt_comparison():
     def pairs(fs):
         return ", ".join(f"`{f}` {there.get(f, 0)} against {here.get(f, 0)}" for f in fs)
 
-    tree = ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
     mods_here = (PROV.get("module_accessions") or {}).get("modules_read")
     mods_there = (ALT_PROV.get("module_accessions") or {}).get("modules_read")
     # Each risen flag is explained by the group it belongs to, read from the report rather
@@ -333,7 +357,11 @@ def alt_comparison():
         # Asserted, not hoped for: a member with no differing module in covering_pairs
         # would be dropped with no count, which is the show-fewer-than-claimed shape this
         # per-group change was made to remove.
-        if shown and len(shown) != len(rows):
+        # Unconditional: `shown and ...` exempted the all-empty case, which is the worst
+        # form of the defect rather than the mild one - no row having a recorded difference
+        # prints the cause for the group with nothing after it. Reachable, since load() does
+        # not require covering_pairs and a report predating it gives every row an empty map.
+        if len(shown) != len(rows):
             sys.exit(f"cover_evidence shows {len(shown)} of {len(rows)} rows attributed to "
                      f"differing module contents for {flag}; the page would assert the cause "
                      "for the group and show it for a subset")
@@ -397,7 +425,6 @@ def alt_comparison():
                      f" {len(shared)} rows carry it on both trees, ")
         return head + "; ".join(bits) + "."
 
-    tree = ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
     mods_here = (PROV.get("module_accessions") or {}).get("modules_read")
     mods_there = (ALT_PROV.get("module_accessions") or {}).get("modules_read")
     # Each risen flag is explained by the group it belongs to, read from the report rather
@@ -432,9 +459,12 @@ def alt_comparison():
         return ", ".join(f"`{f}`" for f in fs)
 
     out = [
-        f"The audit also runs over {tree}{_alt_drift()}, and comparing the two runs shows which flags are",
+        f"The audit also runs over {ALT_TREE}, and comparing the two runs shows which flags are",
         "artifacts of the missing slices rather than findings. Both cover the same",
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
+        # Its own sentence, not a clause appended to the tree description, where it landed
+        # several clauses away from the revision it qualifies and repeated that revision.
+        f"That second run read a tree recorded{_alt_drift_tail()}." if ALT_PATH else "",
         "",
         "Every movement below is accounted for row by row rather than from the net counts: a"
         " flag's total can fall while rows arrive at it, and each row's cause is read from that"
@@ -866,7 +896,7 @@ lines += [
     "(`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this",
     f"table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the"
     + (" repository, together with the second report the comparison section below is derived from"
-       f" (`{os.path.basename(ALT_PATH)}`), which is the same audit run over this branch alone."
+       f" (`{os.path.basename(ALT_PATH)}`), the same audit run over {ALT_TREE}."
        if ALT_PATH else " repository."),
     "",
     "**What \"aligned\" does and does not claim.** Five properties of the test make it a weak",
@@ -904,9 +934,8 @@ lines += [
     "  row's whole alignment rests on one.",
     "- Node MF and BP terms are compared against **one pooled set** of the review's core molecular",
     "  functions and `directly_involved_in` processes, so a node activity term can be satisfied by",
-    "  a core process and the reverse. The fifth property, stated here as a bullet so this list is",
-    "  the list the audit's docstring says the page carries; the cross-aspect paragraph below gives",
-    "  the figures and the one worked row.",
+    "  a core process and the reverse. Such a match is genuine agreement but weaker than a",
+    "  same-aspect one; the cross-aspect paragraph below gives the figures and a worked row.",
     "- Module **membership** is not module **coverage**. Membership says the gene is a part of some",
     "  module; coverage says a module is about the function the row aligned on, which is a different",
     "  and stronger claim. They are flagged separately in three states: `NO_MODULE_MEMBERSHIP` means",
@@ -1239,7 +1268,10 @@ lines += ["", "## Genes with a module flag, and why", "",
 _reason_entries = {}
 for _e in rep:
     for _g in _e.get("genes") or []:
-        if [f for f in (_g.get("flags") or ()) if f in MODULE_FLAGS]:
+        # The enforced set, not all module flags: the list this labels is enforced over
+        # REASON_REQUIRING_MODULE_FLAGS, so keying on the wider set would print an entry
+        # whose row the reason beside it does not cover.
+        if [f for f in (_g.get("flags") or ()) if f in REASON_REQUIRING_MODULE_FLAGS]:
             _reason_entries.setdefault(_g.get("gene"), []).append(_e.get("entry"))
 for k, v in MODULE_REASONS.items():
     names = [n.strip() for n in k.split("/")]

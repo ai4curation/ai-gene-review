@@ -20,7 +20,7 @@ conditions, plus two entries created in this work (Mitchell syndrome, SLC26A1-re
 biological processes on the pathograph nodes naming that gene are compared with the gene's
 ai-gene-review core functions. The audit script (`align_audit.py`), the page generator
 (`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this
-table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, together with the second report the comparison section below is derived from (`report-branch-local.yaml`), which is the same audit run over this branch alone.
+table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, together with the second report the comparison section below is derived from (`report-branch-local.yaml`), the same audit run over this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts.
 
 **What "aligned" does and does not claim.** Five properties of the test make it a weak
 check, and any of them can turn a row green that a curator would not:
@@ -57,9 +57,8 @@ check, and any of them can turn a row green that a curator would not:
   row's whole alignment rests on one.
 - Node MF and BP terms are compared against **one pooled set** of the review's core molecular
   functions and `directly_involved_in` processes, so a node activity term can be satisfied by
-  a core process and the reverse. The fifth property, stated here as a bullet so this list is
-  the list the audit's docstring says the page carries; the cross-aspect paragraph below gives
-  the figures and the one worked row.
+  a core process and the reverse. Such a match is genuine agreement but weaker than a
+  same-aspect one; the cross-aspect paragraph below gives the figures and a worked row.
 - Module **membership** is not module **coverage**. Membership says the gene is a part of some
   module; coverage says a module is about the function the row aligned on, which is a different
   and stronger claim. They are flagged separately in three states: `NO_MODULE_MEMBERSHIP` means
@@ -142,9 +141,10 @@ Many of the gene reviews and modules this table asserts `COMPLETE` for are added
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
 The run above read origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed).
 
-The audit also runs over this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts (recorded at `935e2e6d4`, an ancestor of the branch tip; no file under `genes/` or `modules/` changed between the two, so the figures stand for either), and comparing the two runs shows which flags are
+The audit also runs over this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts, and comparing the two runs shows which flags are
 artifacts of the missing slices rather than findings. Both cover the same
 183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
+That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip, with no file under `genes/` or `modules/` changed between the two - the audit's whole input surface - so the figures stand for either. The primary run's own tree was built for that run and is not a commit here, so there is nothing to compare it against.
 
 Every movement below is accounted for row by row rather than from the net counts: a flag's total can fall while rows arrive at it, and each row's cause is read from that row's own record on **both** trees, not from the flag's group. Where a flag moves in one direction only the net count is exact, and the line says so rather than implying the count was misleading.
 
