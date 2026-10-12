@@ -68,3 +68,14 @@ OpenScientist completed 2026-10-08 (~14 min): `Nudt2-deep-research-openscientist
 Most claims are orthologue-based (Drosophila Apf nuclear localization [PMID:17344088],
 human structure [PMID:23384440], LysRS-Ap4A-HINT1-MITF axis [PMID:14975237]); none
 change the curation decisions. It confirms no Nudt2 knockout mouse phenotype was found.
+
+## 2026-10-12 Ortholog/family audit
+
+GOA refetched (no new rows). Audited against human NUDT2 (COMPLETE) and worm ndx-4; PANTHER family PTHR21340:SF0 (node PTN000482012) confirmed from UniProt.
+
+Family/ortholog consistency gap found and fixed. The mouse review carried only the Ap4A-hydrolase function, but human NUDT2 also carries RNA decapping (GO:0110154) and mRNA 5'-triphosphate monophosphatase activity (GO:0140818) as core, and the mouse protein has been assayed directly for these:
+- [PMID:32432673 "two Nudix proteins (Nudt2 and Nudt16) possessing FAD cap decapping (deFADding) activity"] — recombinant mouse Nudt2, dpCoA/FAD/m7G caps; EE-QQ mutant inactive.
+- [PMID:23353937 "six additional mouse Nudix proteins--Nudt2, Nudt3, Nudt12, Nudt15, Nudt17, and Nudt19--have varying degrees of decapping activity"] — mouse m7G decapping (mixed m7GMP/m7GDP products).
+- [PMID:34824277] — previously MISSED by this review and by the OpenScientist deep-research report. This is a Nudt2-KNOCKOUT MOUSE paper: "Homozygous knockout mice were viable, bred with expected Mendelian ratios"; bone-marrow cells show 10-30x more growth of 5'-PPP-RNA viruses. Enzymology shows "NUDT2 sequentially releases two phosphates" from 5'-PPP RNA to a monophosphate end for XRN1.
+
+Changes: added GO:0110154 (NEW, IDA, non-core relative to Ap4A) and GO:0140818 (NEW, ISS — enzymology species unstated but knockout is mouse), added a second core_function (mRNA 5'-triphosphate monophosphatase / RNA decapping), added PMID:34824277 reference, expanded description, flipped the openscientist "no knockout mouse" finding to finding_status OVERTURNED superseded_by PMID:34824277, and added suggested_questions on virus-defence process and GO:0140818 mRNA-restriction. Ap4A core unchanged.
