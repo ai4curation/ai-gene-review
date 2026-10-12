@@ -39,3 +39,15 @@ The new human deletion report supports reduced complex-IV activity in patient fi
 Human-cell C15ORF48/miR-147 experiments provide direct evidence for COXFA4 abundance regulation, respiratory effects and context-dependent innate-response phenotypes. Selected actual Results/Discussion were read; detailed supplementary Methods were not inspected. The precise COXFA4-performed step connecting these effects remains unresolved, so no new immune-process annotation is manufactured from perturbation alone. [PMID:38917002](https://pmc.ncbi.nlm.nih.gov/articles/PMC11228508/)
 
 The historical Falcon report remains a preserved research lead at its original NDUFA4 identity. Clinical and regulated-abundance claims are assessed against the original papers above. Its separate in-situ cryo-EM claim remains unverified in this bounded review. The evidence index records source URLs, hashes, exact assay/table locators and the distinction between direct owner reading and independent consultations.
+
+## 2026-10-12: review follow-up
+
+Six previously absent `supporting_entities` lists now preserve the current GOA WITH/FROM values directly in the review: the complex-IV IBA sources, the proton-transport premise, the inner-membrane vocabulary identifier and the DPF1, RAB5IF and PARK7 interaction partners. The earlier reconciliation and its historical source snapshots document the pre-backfill state. The three retired records keep their original source fields. Ordinary qualifiers remain unchanged, following the annotation-reviewer instructions; they do not enter the biological judgments.
+
+The retired respiratory-electron-transport-chain annotation is now MODIFY to GO:0006123, using the same specificity criterion as cellular respiration. This identifies an already represented complex-IV step and adds no new assertion. The supported core and all physical-interaction decisions are unchanged.
+
+Two primary-reference findings now anchor the description's existing clinical and abundance-regulation statements: [PMID:38674434 "significantly reduced COX activity in primary fibroblasts from the patient"] and [PMID:38917002 "C15ORF48 and miR-147-3p cooperatively suppress NDUFA4 in colonocytes."]. The latter is an upstream regulation result, not evidence that COXFA4 itself executes an immune-signaling step. Source-exact snippets were checked in the immutable caches; the original evidence-index locators and reading limits still apply.
+
+The old UniProt reference identity and inherited quotations remain traceable to the preserved historical NDUFA4 source file. The current official COXFA4 record and original studies independently support the review. Paper-title anchors inherited from the historical review are not reinterpreted as target-level experimental evidence; target tables and access limitations are documented above and in the evidence index.
+
+The current OXPHOS gene list, row and status links now use COXFA4, with the historical NDUFA4 name retained where useful for readers. The unrelated project-wide source audit remains separate from this four-line symbol correction.
