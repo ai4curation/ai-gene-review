@@ -4,8 +4,6 @@
 
 The genuine isolated normal fetch yielded 50 original assertions, three products and 30 reference identities. All source objects, qualifiers and product order are retained. The displayed human product is P39060-3 (1754 residues), followed by P39060-1 (1519) and P39060-2 (1339). Alternative-sequence reconstruction matches each official FASTA. Their common 183-residue carboxy-terminal endostatin suffix does not establish equivalent expression or activity. The historical amino-terminal NC1-728/NC-493/NC1-303 names differ from the experimentally excised carboxy-terminal NC1 domain. Historic 1516/1336/184-residue descriptions are not silently rewritten as current product boundaries. [PMID:9503365; PMID:14614989]
 
-Falcon ran genuinely and timed out after 90 seconds; configured perplexity-lite fallback returned HTTP 401 insufficient_quota. The terminal process/output receipts are preserved. No authored text is labeled as a provider report. These notes and the source index contain manual primary-source analysis.
-
 ## Structural core and processed-product boundaries
 
 The single molecular core is the existing extracellular-matrix structural activity conferring tensile strength, in the collagen-XVIII homotrimer at basement membranes. The official term explicitly includes ECM collagens; nonfibrillar collagen XVIII is not thereby excluded. Same-role collagen XV carries the term and network-forming collagen IV has experimental support. Direct human isolated-domain structure and folding demonstrate a trimerization module; the full-NC1 ultracentrifugation assay is mouse. Mouse matrix/retinal experiments connect collagen XVIII to basement-membrane thickness and vitreoretinal anchoring. No isolated whole-human force measurement is claimed. [PMID:19631658; PMID:11927538; PMID:15254016; PMID:21421911]
@@ -42,32 +40,12 @@ Current ARBA conditions match morphology through three FunFam entries, prolifera
 
 Eight actual Reactome events and nested target reference paths support precursor or fragment locations. ER residence is biosynthesis, and secretion, cleavage and degradation events do not confer the processing enzymes’ activities on the collagen chain. One current P39060 fragment has endCoordinate 11754 despite a 1754-residue displayed sequence; this occurs in the release and laminin-dimer paths and is retained as a model limitation, never used for sequence mapping. Human circulating-fragment evidence retains broad extracellular-region scope rather than being forced into an exclusive matrix location. [PMID:10441114]
 
-## Historical review and validation provenance
-
-The following two sections record the original publication interval; their counts and quote inventory are historical, not the current follow-up state.
-
-### Whole-review boundary
-
-There are 28 ACCEPT, 16 KEEP_AS_NON_CORE, 4 UNDECIDED and 2 MODIFY decisions, with no NEW. Thirty original reference identities and all 50 source objects are preserved; 13 genuine supplemental references bring the total to 43. Only three explicit prose leaves changed after the first draft: the verified PMID:25037231 target scope and the phrase describing a collagen chain being assembled. The original draft and parsed delta are retained. Ordinary validation, final applicability and the independent whole review will be recorded separately when complete. ROOT alone handles publication and append-only history.
-
-### Final validation and application boundary
-
-Ordinary validation, status dry-run and rendering pass with one advisory: the human aortic extracellular-region assertion is refined to ECM, while other assertions retain broader circulating-fragment or event-specific locations. These source-specific decisions are intentional. DRAFT is the status confirmed by normal tooling and does not imply campaign completion.
-
-Final complete opening/closing ownership is clear at main 734ef39ed41bcf8783aa6ac9cfc212cd1fe1c301 across 347 PR inventories. Qualified reuse requires identical head and base; changed/new entries were fetched explicitly, and the large PR 2049 has the actual current-main merge-base proof for all 21,581 paths. The full queue/project/catalog blobs were authenticated by length and Git blob hash. All 28 publication additions are absent and 19 selected context paths are protected byte-for-byte. There are no shared open-PR publication collisions in this snapshot. All 15 tooling roots match the authenticated intake context; ordinary isolated runtime GO-cache additions are outside publication.
-
-The full source index is preserved in TMP. Its published projection retains complete literal-record hashes, exact raw response indices and claim fields, with long WITH/FROM/extension arrays represented by reconstructable canonical hashes. The independent raw record and edge audit checks all 50 source objects, 3 product sequences, 30 original reference identities, 314 scoped donor records and 397 target Reactome paths. Index text is below 512 KB. The only primary quotation is five words from PMID:9008168 and is not duplicated in these notes or the index.
-
-The bounded ROOT core report is a separate fixed input; BrCa owns the complete independent final review. ROOT alone will pin the live publisher, create genuine append-only history, import and publish after that review. No canonical files, history, Git metadata or remote state were changed by this owner. Later unrelated main advances do not alter the frozen science and require a relevant application check by ROOT.
-
 ## 2026-10-12 evidence-recording follow-up
 
 The biological decisions remain unchanged. Eleven short, nonduplicated primary anchors now identify the key source passages in the annotation reviews, and all 16 HIGH-relevance references have scoped findings. The human aortic and HUES1 numerical measurements are supported by their original target tables; they remain localization measurements, not mechanical assays. Sources that were available only as abstracts or separately recovered originals retain their recorded access boundaries.
 
-The construct distinction is explicit in the original oligomer study: [PMID:11257123 "Human and murine ES monomers thus produced were completely inactive"]. This statement concerns the tested motility assay, not every activity of monomeric endostatin. Human isolated-domain trimerization is separately delimited by [PMID:19631658 "trypsin stable fragment with all the triple helical residues deleted"]. Neither experiment demonstrates whole-precursor force generation. These short excerpts are distinct from the YAML anchors and share the same per-source quotation budget.
+The construct distinction is explicit in the original oligomer study: [PMID:11257123 "Human and murine ES monomers thus produced were completely inactive"]. This statement concerns the tested motility assay, not every activity of monomeric endostatin. Human isolated-domain trimerization is separately delimited by [PMID:19631658 "trypsin stable fragment with all the triple helical residues deleted"]. Neither experiment demonstrates whole-precursor force generation.
 
 The chick basement-membrane study is added as supporting ortholog evidence, with its species stated. Knobloch occipital encephalocele is explicitly considered for the skeletal IBA; the available clinical abstract does not resolve the specific skeletal contribution or the historical PAINT placement, so UNDECIDED is retained without a biological exclusion claim. Six electronic-rule reasons now point to the published index and its literal rule/target-feature comparisons.
 
-Repeated product descriptions are retained because they document exact current-sequence boundaries and shared fragment limits; no isoform-specific activity is inferred from historical names or tissue expression. A future descriptive rewrite can be scoped separately. The preceding journal provenance is retained under an explicit historical heading rather than deleted. Joined-word errors have been repaired in authored prose, while original source identifiers, numbers and fields remain exact.
-
-Ordinary validation, status and rendering passed for this follow-up with the existing single location advisory: aortic ECM specificity is retained alongside broader circulating-fragment/event locations. The status remains DRAFT. Source caches and the historical journal remain preserved; this appendix supersedes the original five-word quotation inventory. The current maximum is 16 conservative words per source across YAML and notes.
+Repeated product descriptions are retained because they document exact current-sequence boundaries and shared fragment limits; no isoform-specific activity is inferred from historical names or tissue expression.
