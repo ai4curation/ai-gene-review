@@ -276,9 +276,13 @@ second source catches a gain whose whole clade is blocked, such as the Yno1 oxid
 IBD. Refreshing the 545 affected slices added 1,340 IRD, 410 IKR and 829 IBD rows and
 removed 3 IBD rows. A review of the change then caught a leak: PTN ids are not always
 family-unique, so following with/from links alone pulled other families' losses into a
-slice. Loss nodes are now admitted only if TreeGrafter assigns them to the family. That
-removed 322 IRD, 223 IKR, 130 IBD and 11 IBA rows from 107 slices, and no node assessment
-depended on any of them.
+slice. A loss node is now rejected if TreeGrafter assigns it only to other families; a
+node TreeGrafter does not list at all is still admitted. That removed 322 IRD, 223 IKR,
+130 IBD and 11 IBA rows from 107 slices, and no node assessment depended on any of them.
+The same re-slice added 12 rows to PTHR15710 and PTHR19134, which is snapshot drift
+relative to main's last regeneration of those two slices. Today TreeGrafter lists every
+loss node, so the with/from closure adds nothing beyond it. It is kept as a fallback, so
+an IRD the table omits is not silently lost again, and a test covers that case.
 
 ## Proposed guidance (draft, for discussion)
 

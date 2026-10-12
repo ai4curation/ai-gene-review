@@ -249,7 +249,8 @@ def loss_nodes_by_ancestor(
 def add_loss_nodes(
     nodes: Set[str],
     by_ancestor: Dict[str, Set[str]],
-    family_nodes: Optional[Set[str]] = None,
+    family: Optional[str] = None,
+    node_families: Optional[Dict[str, Set[str]]] = None,
 ) -> Set[str]:
     """Extend a family's node set with the loss nodes that override its gains.
 
@@ -261,25 +262,41 @@ def add_loss_nodes(
     case a loss overrides a gain placed on another loss node.
 
     PTN ids are not always family-unique, so an ancestor shared by two families
-    would otherwise pull family B's losses into family A's slice. Pass
-    ``family_nodes`` (the family's nodes in PANTHER's TreeGrafter table) to admit
-    only loss nodes that belong to this family.
+    would otherwise pull family B's losses into family A's slice. Pass ``family``
+    and ``node_families`` (PTN -> families, from PANTHER's TreeGrafter table) to
+    reject a loss node that TreeGrafter assigns only to *other* families. A loss
+    node TreeGrafter does not list at all is still admitted, so the closure keeps
+    recovering IRDs if the table ever omits one.
 
     >>> sorted(add_loss_nodes({"PTNb"}, {"PTNb": {"PTNa"}, "PTNa": {"PTNz"}}))
     ['PTNa', 'PTNb', 'PTNz']
     >>> sorted(add_loss_nodes({"PTNc"}, {"PTNb": {"PTNa"}}))
     ['PTNc']
-    >>> sorted(add_loss_nodes({"PTNb"}, {"PTNb": {"PTNa", "PTNother"}}, {"PTNa", "PTNb"}))
-    ['PTNa', 'PTNb']
+    >>> fams = {"PTNother": {"PTHRY"}, "PTNa": {"PTHRX"}}
+    >>> sorted(add_loss_nodes({"PTNb"}, {"PTNb": {"PTNa", "PTNother", "PTNunlisted"}}, "PTHRX", fams))
+    ['PTNa', 'PTNb', 'PTNunlisted']
     """
     out = set(nodes)
     frontier = set(nodes)
     while frontier:
         new = set().union(*(by_ancestor.get(n, set()) for n in frontier)) - out
-        if family_nodes is not None:
-            new &= family_nodes
+        if family is not None and node_families is not None:
+            new = {n for n in new if family in node_families.get(n, {family})}
         out |= new
         frontier = new
+    return out
+
+
+def invert_family_nodes(family_nodes: Dict[str, Set[str]]) -> Dict[str, Set[str]]:
+    """Turn ``family -> {PTN}`` into ``PTN -> {families}``.
+
+    >>> invert_family_nodes({"PTHR1": {"PTN1"}, "PTHR2": {"PTN1", "PTN2"}})["PTN1"] == {"PTHR1", "PTHR2"}
+    True
+    """
+    out: Dict[str, Set[str]] = {}
+    for fam, nodes in family_nodes.items():
+        for node in nodes:
+            out.setdefault(node, set()).add(fam)
     return out
 
 
@@ -465,12 +482,14 @@ def fetch_family_paint(
     with open_text(leaf_path) as fh:
         nodes = leaf_nodes_for_members(fh, members)
     with open_text(tg_path) as fh:
-        tg_nodes = treegrafter_family_nodes(fh, family).get(family, set())
-    nodes |= tg_nodes
+        tg_by_family = treegrafter_family_nodes(fh)
+    nodes |= tg_by_family.get(family, set())
 
     with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
-    nodes = add_loss_nodes(nodes, loss_nodes_by_ancestor(ibd_index), tg_nodes)
+    nodes = add_loss_nodes(
+        nodes, loss_nodes_by_ancestor(ibd_index), family, invert_family_nodes(tg_by_family)
+    )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     tsv_path = write_family_paint(family, nodes, ibd_index, out_dir)
@@ -555,12 +574,11 @@ def fetch_all_family_paint(
         ibd_index = parse_ibd_gaf(fh)
 
     by_ancestor = loss_nodes_by_ancestor(ibd_index)
+    node_families = invert_family_nodes(tg_by_family)
     counts: Dict[str, int] = {}
     removed: List[str] = []
     for family, fdir in family_dirs.items():
-        nodes = add_loss_nodes(
-            family_nodes.get(family, set()), by_ancestor, tg_by_family.get(family, set())
-        )
+        nodes = add_loss_nodes(family_nodes.get(family, set()), by_ancestor, family, node_families)
         n_annotations = sum(len(ibd_index.get(n, [])) for n in nodes)
         if skip_empty and n_annotations == 0:
             stale_slice = fdir / f"{family}-paint.tsv"

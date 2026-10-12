@@ -364,7 +364,8 @@ def test_fetch_family_paint_includes_ird_nodes_without_leaves(tmp_path: Path):
     cache_dir = tmp_path / ".cache"
     cache_dir.mkdir()
     (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE + "\n" + ird_on_family)
-    _seed_treegrafter(cache_dir, "PTHRX:AN3\tPTHRX:SF1\tPTN000099999\n")
+    # TreeGrafter does not list the IRD node: the with/from closure alone must find it
+    _seed_treegrafter(cache_dir)
     with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
         fh.write(LEAF_FIXTURE)
     entries_csv = tmp_path / "PTHRX-entries.csv"
