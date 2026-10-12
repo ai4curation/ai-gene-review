@@ -8,8 +8,15 @@ expands a spec into ``modules/<module>.yaml``:
 
 * gene symbols are resolved to UniProtKB accessions (Swiss-Prot preferred) and
   protein names from ``group_index.yaml``, falling back to the D. melanogaster
-  UniProt table; genes without a protein product (snRNAs, lncRNAs) are
-  grounded to their FlyBase gene id;
+  UniProt table; genes without a usable UniProtKB entry are grounded to their
+  FlyBase gene id;
+* member genes with a gene review under ``genes/DROME/`` are listed in the
+  notes;
+* ``unit_functions`` put a molecular function on named subunits, and
+  ``complex_function`` adds a complex-level annoton (the complex as
+  participant, its catalytic subunits as active units) to a node that is
+  decomposed into parts; ``function_note`` explains in the notes why a module
+  carries no molecular function;
 * FlyBase group symbols are expanded to all members of the group's subtree;
 * the FlyBase groups that the triage assigns to the module become top-level
   evidence, and regulator-set groups of a pathway are listed in the notes.
@@ -255,6 +262,8 @@ def build_node(spec: dict, res: Resolver, default_type: str, as_complex: bool) -
                                       "node": build_node(dict(sub, module_type="MODULE"), res, default_type, False)})
         else:
             node["annotons"] = build_annotons(spec, res, complex_here)
+    if spec.get("complex_function"):
+        node.setdefault("annotons", []).append(complex_function_annoton(spec, res))
     if spec.get("connections"):
         node["connections"] = [
             {k: (fold(v) if k == "description" else v) for k, v in c.items()}
@@ -262,6 +271,60 @@ def build_node(spec: dict, res: Resolver, default_type: str, as_complex: bool) -
     if spec.get("notes"):
         node["notes"] = fold(spec["notes"])
     return node
+
+
+def subtree_symbols(spec: dict, res: Resolver) -> list[str]:
+    """Member symbols of a spec node and of all its parts and variants, in order."""
+    syms: list[str] = []
+    if spec.get("groups") or spec.get("group") or spec.get("genes"):
+        syms += member_symbols(spec, res)
+    for p in spec.get("parts", []):
+        syms += subtree_symbols(p, res)
+    for v in spec.get("variant_sets", []):
+        for var in v["variants"]:
+            syms += subtree_symbols(var, res)
+    return list(dict.fromkeys(syms))
+
+
+def complex_function_annoton(spec: dict, res: Resolver) -> dict:
+    """Annoton carrying an activity of the assembled complex on a decomposed node.
+
+    ``complex_function`` takes ``function`` (the GO molecular function),
+    optionally ``active_units`` (member symbols that carry out the activity,
+    default all members), ``role_description``, ``processes`` and ``locations``.
+    The participant is the complex itself (``complex_term`` when given), with
+    the active units listed, so the activity is not attributed to a subunit
+    acting alone while the node's parts keep the per-subunit decomposition.
+    """
+    cf = spec["complex_function"]
+    members = subtree_symbols(spec, res)
+    unit_syms = cf.get("active_units", members)
+    unknown = [s for s in unit_syms if s not in members]
+    if unknown:
+        raise ValueError(f"{spec['id']}: complex_function active_units not members: {unknown}")
+    roles = spec.get("roles", {})
+    units = []
+    for sym in unit_syms:
+        g = res.gene(sym)
+        u = {"id": slug(sym), "label": sym, "participant": participant(g)}
+        if sym in roles:
+            u["role"] = roles[sym]
+        units.append(u)
+    label = spec.get("complex_label", spec["label"])
+    pc = {"preferred_term": label}
+    if spec.get("complex_term"):
+        pc["term"] = term(spec["complex_term"])
+    pc["active_units"] = units
+    ann = {"id": f"{spec['id']}_complex_activity", "label": f"{label} activity",
+           "participant": {"selector_type": "PROTEIN_COMPLEX", "protein_complex": pc},
+           "function": descriptor(cf["function"])}
+    if cf.get("processes"):
+        ann["processes"] = [descriptor(p) for p in cf["processes"]]
+    if cf.get("locations"):
+        ann["locations"] = [descriptor(p) for p in cf["locations"]]
+    if cf.get("role_description"):
+        ann["role_description"] = fold(cf["role_description"])
+    return ann
 
 
 def build_part(p: dict, order: int, res: Resolver, default_type: str, as_complex: bool) -> dict:
@@ -309,8 +372,61 @@ def regulator_sets(doc_groups: list[dict], realized: list[dict], res: Resolver) 
     return out
 
 
+def participants_of(node) -> tuple[dict[str, str], list[str]]:
+    """Return ({symbol: accession} for gene products, [symbols of FB-gene participants])."""
+    gps: dict[str, str] = {}
+    fbs: list[str] = []
+
+    def walk(x):
+        if isinstance(x, dict):
+            if x.get("selector_type") == "GENE_PRODUCT" and "gene_product" in x:
+                gp = x["gene_product"]
+                gps.setdefault(gp["preferred_term"], gp["term"]["id"].split(":", 1)[1])
+            elif x.get("selector_type") == "GENE" and "gene" in x:
+                sym = x["gene"]["preferred_term"]
+                if sym not in fbs:
+                    fbs.append(sym)
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+
+    walk(node)
+    return gps, fbs
+
+
+def load_reviews(genes_dir: Path) -> tuple[set[str], dict[str, str]]:
+    """Folder names and {UniProt accession: folder} of D. melanogaster gene reviews."""
+    folders, by_acc = set(), {}
+    for f in sorted(genes_dir.glob("*/*-ai-review.yaml")):
+        folder = f.parent.name
+        if f.name != f"{folder}-ai-review.yaml":
+            continue
+        folders.add(folder)
+        with open(f) as fh:
+            for line in fh:
+                if line.startswith("id:"):
+                    by_acc[line.split(":", 1)[1].strip()] = folder
+                    break
+    return folders, by_acc
+
+
+def reviewed_members(gene_products: dict[str, str], fb_genes: list[str],
+                     reviews: tuple[set[str], dict[str, str]]) -> list[str]:
+    """Member symbols that have genes/DROME/<symbol>/<symbol>-ai-review.yaml, matched by
+    symbol or, for folders named differently from the FlyBase symbol, by accession."""
+    folders, by_acc = reviews
+    out = []
+    for sym, acc in gene_products.items():
+        if sym in folders or acc in by_acc:
+            out.append(sym)
+    out += [s for s in fb_genes if s in folders]
+    return sorted(set(out), key=str.lower)
+
+
 def generate(spec_path: Path, res: Resolver, triage: dict, triage_groups: list[dict],
-             out_dir: Path) -> Path:
+             out_dir: Path, reviews: tuple[set[str], dict[str, str]]) -> Path:
     spec = yaml.safe_load(spec_path.read_text())
     mod = spec["module"]
     if mod not in triage:
@@ -337,7 +453,7 @@ def generate(spec_path: Path, res: Resolver, triage: dict, triage_groups: list[d
         evidence.append({k: (fold(v) if k in ("statement", "supporting_text") else v)
                          for k, v in e.items()})
 
-    note_parts = [spec.get("notes", "")]
+    note_parts = [spec.get("notes", ""), spec.get("function_note", "")]
     covered = ", ".join(f"{r['symbol']} ({r['id']})" for r in realized)
     sub = ", ".join(f"{r['symbol']}" for r in triage[mod]["subsumed"])
     note_parts.append(f"FlyBase groups realized by this module: {covered}."
@@ -349,22 +465,33 @@ def generate(spec_path: Path, res: Resolver, triage: dict, triage_groups: list[d
             "not modelled as parts: "
             + "; ".join(f"{r['symbol']} ({r['name'].lower()}, {r['n_members']} genes)" for r in regs)
             + ".")
-    note_parts.append(
-        "Participants were generated from the FlyBase gene-group membership and mapped to "
-        "UniProtKB by projects/FLYBASE_GENE_GROUPS/generate_modules.py "
-        f"from module_specs/{mod}.yaml. Genes without a UniProtKB entry (mostly non-coding "
-        "RNAs) are grounded to their FlyBase gene ids. None of the member genes has a gene "
-        "review yet unless noted.")
 
     root_spec = {k: v for k, v in spec.items()
                  if k in ("parts", "variant_sets", "connections", "concepts", "group", "groups",
                           "genes", "exclude", "function", "processes", "locations", "roles",
                           "unit_functions", "complex_term", "complex_label", "role_description",
-                          "subunit_parts")}
+                          "subunit_parts", "complex_function")}
     root_spec.update({"id": mod, "label": spec["label"], "module_type": mtype,
                       "description": spec.get("summary"), "_root": True})
     node = build_node(root_spec, res, "PROTEIN_COMPLEX" if as_complex else mtype, as_complex)
     node["module_type"] = mtype
+
+    gene_products, fb_genes = participants_of(node)
+    provenance = (
+        "Participants were generated from the FlyBase gene-group membership and mapped to "
+        "UniProtKB by projects/FLYBASE_GENE_GROUPS/generate_modules.py "
+        f"from module_specs/{mod}.yaml.")
+    if fb_genes:
+        provenance += (" Genes without a usable UniProtKB entry are grounded to their FlyBase "
+                       "gene ids: " + ", ".join(sorted(fb_genes, key=str.lower)) + ".")
+    reviewed = reviewed_members(gene_products, fb_genes, reviews)
+    if reviewed:
+        provenance += (" Member genes with a gene review in this repository: "
+                       + ", ".join(reviewed) + ".")
+    else:
+        provenance += " None of the member genes has a gene review in this repository yet."
+    note_parts.append(provenance)
+
     ctx = {"taxa": [TAXON]}
     if spec.get("cellular_components"):
         ctx["cellular_components"] = [descriptor(c) for c in spec["cellular_components"]]
@@ -405,17 +532,20 @@ def main() -> None:
     ap.add_argument("--specs", type=Path, default=HERE / "module_specs")
     ap.add_argument("--out", type=Path, default=Path("modules"))
     ap.add_argument("--uniprot", type=Path, default=Path(".cache/flybase/uniprot_dmel.tsv"))
+    ap.add_argument("--genes", type=Path, default=Path("genes/DROME"),
+                    help="D. melanogaster gene review folder, to list reviewed members")
     args = ap.parse_args()
     index = yaml.safe_load((HERE / "group_index.yaml").read_text())
     res = Resolver(index, args.uniprot)
     triage_doc = yaml.safe_load((HERE / "group_triage.yaml").read_text())
     triage = load_triage()
+    reviews = load_reviews(args.genes)
     paths = ([args.specs / f"{m}.yaml" for m in args.modules] if args.modules
              else sorted(args.specs.glob("*.yaml")))
     failed = 0
     for p in paths:
         try:
-            out = generate(p, res, triage, triage_doc["groups"], args.out)
+            out = generate(p, res, triage, triage_doc["groups"], args.out, reviews)
             print(f"wrote {out}")
         except Exception as exc:  # report every bad spec, then fail
             failed += 1
