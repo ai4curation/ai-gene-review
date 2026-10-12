@@ -1715,7 +1715,13 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
             # entity_aliases includes synonyms; tolerate adapters lacking it.
             alias_fn = getattr(adapter, "entity_aliases", None)
             if callable(alias_fn):
-                aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                try:
+                    aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                except NotImplementedError:
+                    # e.g. the OLS adapter (NCBITaxon) has no alias map; the
+                    # label itself was resolved, so check it without aliases
+                    # instead of reporting the ontology as unavailable.
+                    aliases = set()
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())

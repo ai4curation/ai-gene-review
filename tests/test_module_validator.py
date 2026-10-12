@@ -753,6 +753,16 @@ def test_nicotine_module_terms_resolve_for_real():
     assert result.errors == [], "\n".join(result.errors)
 
 
+@pytest.mark.integration
+def test_ols_backed_taxon_label_is_checked_not_unavailable():
+    """The OLS adapter has no alias map; that must not mark NCBITaxon unavailable."""
+    from ai_gene_review.validation.module_validator import _build_oak_resolver
+
+    resolve = _build_oak_resolver({"NCBITaxon": "ols:ncbitaxon"})
+    status, label, _aliases = resolve("NCBITaxon:7227")
+    assert (status, label) == ("ok", "Drosophila melanogaster")
+
+
 # --------------------------------------------------------------------------- #
 # Conformance is enforced through validate_module_file (offline, injected resolver)
 # --------------------------------------------------------------------------- #
