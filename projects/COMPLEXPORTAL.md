@@ -2,8 +2,8 @@
 title: "Complex Portal Annotation Correctness"
 maturity: SCOPING
 tags: [PIPELINE]
-species: [SCHPO, DROME, human, yeast]
-genes: [gaa1]
+species: [human, yeast, DROME, worm, SCHPO, mouse, ECOLI, ARATH, rat]
+genes: [gaa1, CHMP3, BAK1, DFFB, ced-3, PPP3CA, SDHB, ESPL1, MBL2, PDGFA, CLCN7, TERT, CAC2, pstS, DYNC2H1, RPL18A, Actb]
 autolink_gene_symbols: false
 ---
 
@@ -90,7 +90,7 @@ These counts come from the `*-goa.tsv` files under `genes/`, filtered to `ASSIGN
 | **Total** | **5,005** (2,814 BP, 2,191 CC) |
 
 By species: human 3,820; *S. cerevisiae* 382; *D. melanogaster* 228; *C. elegans* 215;
-*S. pombe* 105; mouse 103; *E. coli* 100; *A. thaliana* 48.
+*S. pombe* 105; mouse 103; *E. coli* 100; *A. thaliana* 48; rat 4.
 
 ## First accuracy estimate from existing gene reviews
 
@@ -111,7 +111,7 @@ and all rows matched. "Acceptable" means `ACCEPT` or `KEEP_AS_NON_CORE`.
 
 By species, the acceptable share is 88.0% for human (3,820 rows), 86.6% for budding yeast (382),
 94.7% for fly (228), 90.2% for worm (215), 94.3% for pombe (105), 86.0% for *E. coli* (100),
-97.9% for *Arabidopsis* (48) and 65.0% for mouse (103). The mouse figure comes almost entirely
+97.9% for *Arabidopsis* (48), 100% for rat (4) and 65.0% for mouse (103). The mouse figure comes almost entirely
 from Actb: 27 of its 36 rejected rows are β-actin inheriting the processes of every complex it
 belongs to.
 
@@ -181,6 +181,13 @@ What this shows:
 - **No single rule is precise enough to act on automatically.** The best combination roughly
   triples the rejection rate, to about 29%. These rules are for triage: they order the review
   queue but do not replace reading.
+- **These precisions are optimistic, for two reasons.** First, about 20 rules were scored on the
+  same 5,005 rows and the best combination was chosen afterwards, with no held-out set, so the
+  top figure is biased upwards. Second, the verdicts come from AI gene reviews that probably apply
+  the same heuristics the rules encode (regulation direction, downstream outcomes, promiscuous
+  subunits). Precision here therefore partly measures agreement with the reviewers' own priors,
+  not with the truth. A curator-adjudicated sample is needed before quoting these figures as
+  rule performance.
 - **Regulation terms are the clearest content signal.** They account for a third of all
   rejections, and the failure is usually direction or target confusion: the complex regulates X,
   but a subunit is the thing being regulated.
@@ -347,6 +354,8 @@ budding yeast CPX-1275) and four predicted human complexes containing GPAA1.
 - [x] Flagging rules scored against review verdicts; papers cited only by CP characterised.
 - [ ] Re-examine human/CHMP3 against the PMID:20616062 figures (CP IMP vs UniProt NOT, same paper).
 - [ ] Confirm PubMed Review status for the 6 papers carrying experimental codes, and report them to CP.
+      Two of them (PMID:17101441, PMID:30239791) are also used by other groups, so for those the
+      feedback concerns the evidence code only, not CP being the sole route to GO.
 - [ ] Manual audit of a stratified random sample (by species, aspect and evidence), scoring
       term correctness and reference support separately.
 - [ ] Fetch CP records for every complex behind a `ComplexPortal` GOA row in reviewed genes. Cache
@@ -371,14 +380,16 @@ their output is a snapshot (2026-10-11 for the committed copy).
 
 ```bash
 D=projects/COMPLEXPORTAL
-uv run python $D/scripts/cp_review_join.py /tmp/cp_joined.json              # CP rows + review actions
+uv run python $D/scripts/cp_review_join.py /tmp/cp_joined.json $D/data/cp_rejected_rows.yaml  # CP rows + review actions
 uv run python $D/scripts/cp_pmid_usage.py $D/data/cp_pmid_usage.yaml        # GOA-wide PMID usage
 uv run python $D/scripts/cp_pmid_pubtypes.py $D/data/cp_pmid_usage.yaml     # add PubMed types
 uv run python $D/scripts/cp_flag_rules.py /tmp/cp_joined.json $D/data/cp_pmid_usage.yaml $D/data/cp_rule_eval.yaml
 ```
 
-`data/cp_rejected_rows.yaml` was extracted from the step 1 output (rows whose action is
-`MARK_AS_OVER_ANNOTATED`, `MODIFY` or `REMOVE`).
+Step 1 also writes `data/cp_rejected_rows.yaml` (rows whose action is `MARK_AS_OVER_ANNOTATED`,
+`MODIFY` or `REMOVE`). It matches review annotations on (term, evidence, reference), skips
+`negated` review rows so that a CP row cannot inherit the verdict on a NOT row with the same key,
+and reports any remaining ambiguous matches.
 
 ## Sources
 

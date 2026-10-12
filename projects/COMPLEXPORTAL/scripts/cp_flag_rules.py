@@ -23,7 +23,12 @@ import sys
 import yaml
 
 BAD = {"MARK_AS_OVER_ANNOTATED", "MODIFY", "REMOVE"}
-DEV = re.compile(r"development|morphogenesis|differentiation|formation of|maturation")
+# Developmental-process terms only; "maturation"/"formation" also match molecular processes
+# (protein maturation, heterochromatin formation) and are deliberately excluded.
+DEV = re.compile(r"development|morphogenesis|differentiation")
+# A cached paper counts as full text only if flagged so AND long enough: some HTML extractions
+# are flagged full_text_available but hold little more than the abstract (e.g. PMID:20616062).
+MIN_FULL_TEXT_CHARS = 20000
 
 
 def gene_names(org, gene):
@@ -47,7 +52,7 @@ def paper(ref):
     if ref not in _pub_cache:
         path = f"publications/PMID_{ref.split(':')[1]}.md" if ref.startswith("PMID:") else ""
         text = open(path).read() if path and os.path.exists(path) else None
-        full = bool(text and "full_text_available: true" in text[:3000])
+        full = bool(text and "full_text_available: true" in text[:3000] and len(text) >= MIN_FULL_TEXT_CHARS)
         _pub_cache[ref] = (text, full)
     return _pub_cache[ref]
 
@@ -95,7 +100,7 @@ def main(joined, usage_path, out_path):
             flags["negative_regulation_term"].append(i)
         if name.startswith("positive regulation"):
             flags["positive_regulation_term"].append(i)
-        if name.startswith("response to") or "response to" in name:
+        if "response to" in name:
             flags["response_to_term"].append(i)
         if bp and DEV.search(name):
             flags["developmental_term"].append(i)
@@ -104,7 +109,7 @@ def main(joined, usage_path, out_path):
         text, full = paper(r["ref"])
         if text is not None and not mentions(text, c["names"]):
             flags["gene_not_named_in_cached_text"].append(i)
-            flags["gene_not_named_in_full_text" if full else "gene_not_named_in_abstract_only"].append(i)
+            flags["gene_not_named_in_full_text" if full else "gene_not_named_in_abstract_or_short_text"].append(i)
         if r["term"] in c["negated"]:
             flags["conflicts_with_NOT_annotation"].append(i)
         same_paper = c["by_ref"].get(r["ref"])
