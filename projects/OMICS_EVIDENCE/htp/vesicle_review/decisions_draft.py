@@ -28,6 +28,9 @@ judgement, not as a rule:
 
 CAT1 = ("KEEP_AS_NON_CORE", "Transmembrane/lipid-anchored protein of the plasma membrane or endosomal system "
         "(UniProt); such proteins are expected EV contents (MISEV2018 (PMID:30637094) category 1). True, but not its core location.")
+# the same, for proteins whose plasma-membrane or endosomal location is recorded in GO rather than UniProt
+CAT1_GO = (CAT1[0], CAT1[1].replace("plasma membrane or endosomal system (UniProt)",
+                                    "plasma membrane or endosomal system (UniProt membrane topology; compartment from GO)"))
 CAT2 = ("KEEP_AS_NON_CORE", "Cytosolic protein (UniProt); cytosolic proteins, including abundant enzymes and "
         "cytoskeletal proteins, are expected and often promiscuous EV contents (MISEV2018 (PMID:30637094) category 2b). True, but "
         "not its core location.")
@@ -155,7 +158,7 @@ G = {
                         "ILV formation, but the exosome is a destination, not where it acts."),
     "CLU": note(CAT5, "Secreted clusterin (UniProt isoform 1: secreted); the earlier ACCEPT rested on its being "
                       "secreted, which does not establish EV localization. Applies to the plasma microvesicle row too."),
-    "CR1": note(CAT1, "Plasma-membrane complement receptor (podocyte/erythrocyte)."),
+    "CR1": note(CAT1_GO, "Plasma-membrane complement receptor (podocyte/erythrocyte)."),
     "CRYAB": note(CAT2, "Cytoplasmic small heat-shock protein."),
     "CSNK2B": note(CAT2_GO, "CK2 regulatory subunit (cytoplasmic and nuclear)."),
     "CTH": note(CAT2, "Cytoplasmic enzyme."),
@@ -225,7 +228,7 @@ G = {
     "RACK1": note(CAT3B, "RACK1 is a core 40S ribosomal subunit protein as well as a signalling scaffold."),
     "RPE": note(CAT2_GO, "Cytosolic epimerase."),
     "RPS3": note(CAT3B, "40S ribosomal protein S3."),
-    "SCAMP3": note(CAT1, "Endosomal/post-Golgi membrane protein. The earlier ACCEPT said SCAMP3 is required for EV "
+    "SCAMP3": note(CAT1_GO, "Endosomal/post-Golgi membrane protein. The earlier ACCEPT said SCAMP3 is required for EV "
                          "biogenesis, but the cited work (PMID:19158374, PMID:23418353) shows it regulates ESCRT-dependent "
                          "MVB sorting of EGFR, not EV biogenesis."),
     "SCGB1A1": ("MARK_AS_OVER_ANNOTATED", "Secreted uteroglobin (UniProt). MISEV2018 (PMID:30637094) category 5 "

@@ -487,6 +487,12 @@ themselves. It now uses their GO descendants (is_a and part_of), which found P4H
 IDA). Both now use `CAT4_SURFACE`: P4HB's row returns to its original text, and SYNE2's
 row moves from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE.
 
+The last template claims to be checked were the compartments. UniProt gives CR1, SCAMP3
+and EGF only a generic "Membrane" location, so their category-1 basis now says the
+compartment comes from GO (`CAT1_GO`). The script checks every category-1, -2 and -5 location
+claim against the source it cites, UniProt or GO, so each factual clause in every template
+is now checked.
+
 ### 2026-10-10: third round of automated-review fixes
 
 The reviewer found that the category-5 template still claimed "none is shown" for an

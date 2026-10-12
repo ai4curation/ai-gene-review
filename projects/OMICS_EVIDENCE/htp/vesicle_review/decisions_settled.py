@@ -8,7 +8,7 @@ category constants as pass 1. Genes reviewed in both passes get the same call he
 microvesicle sample, where lipoprotein co-isolation applies, while its rows here are not.
 """
 
-from decisions_draft import CAT1, CAT2, CAT2_GO, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, G as G1, note
+from decisions_draft import CAT1, CAT1_GO, CAT2, CAT2_GO, CAT2A, CAT4, CAT4_SURFACE, CAT5, CAT5_BOUND, G as G1, note
 
 G = {
     "A1BG": note(CAT5, "Secreted plasma glycoprotein."),
@@ -111,7 +111,7 @@ G = {
     "DPEP1": note(CAT1, "GPI-anchored apical plasma-membrane dipeptidase."),
     "DPYS": note(CAT2_GO, "Cytosolic dihydropyrimidinase."),
     "DPYSL2": note(CAT2, "Cytosolic microtubule-associated protein."),
-    "EGF": note(CAT1, "Single-pass membrane pro-EGF precursor."),
+    "EGF": note(CAT1_GO, "Single-pass membrane pro-EGF precursor."),
     "EIF3E": note(CAT2, "Cytoplasmic translation initiation factor."),
     "FAH": note(CAT2_GO, "Cytosolic fumarylacetoacetase."),
     "FAS": note(CAT1, "Plasma-membrane death receptor."),
