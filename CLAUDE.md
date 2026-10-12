@@ -402,6 +402,12 @@ The reference validator already catches the *mechanical* citation failures autom
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
 cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+A `supporting_text` value must contain actual verbatim source text. Editorial square
+brackets may clarify part of a real quotation; an empty string or a value consisting
+only of editorial commentary is not a quotation. Omit this optional field when no
+quotation is being asserted, and keep method commentary in the finding statement,
+review reason, or notes. Scientific notation copied from the source (such as `[4Fe-4S]`)
+is literal text, not editorial commentary.
 Quotes citing `file:` or `Reactome:` sources are checked the same way, against
 the local file (resolved under `genes/`, then the repository root) or the cached
 `reactome/R-*.md` entry; a UniProt flat-file quote may run across the file's line

@@ -2028,7 +2028,7 @@ class Finding(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     statement: Optional[str] = Field(default=None, description="""Concise statement describing an aspect of the gene""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'EvidenceItem'], 'recommended': True} })
-    supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding',
+    supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. The value must contain verbatim source text, not an empty string or editorial commentary alone. Square brackets may interpolate editorial clarification inside a real quote; bracketed scientific notation from the source remains literal. Omit this optional field when no source quotation is being asserted. For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding',
                        'SupportingTextInReference',
                        'EvidenceItem',
                        'GoCamActivityReview'],
@@ -2080,7 +2080,7 @@ class SupportingTextInReference(ConfiguredBaseModel):
 
     reference_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'SupportingTextInReference'],
          'implements': ['dcterms:references']} })
-    supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding',
+    supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. The value must contain verbatim source text, not an empty string or editorial commentary alone. Square brackets may interpolate editorial clarification inside a real quote; bracketed scientific notation from the source remains literal. Omit this optional field when no source quotation is being asserted. For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding',
                        'SupportingTextInReference',
                        'EvidenceItem',
                        'GoCamActivityReview'],

@@ -1,6 +1,5 @@
 """Regression tests for delimiter-looking values through both validation paths."""
 
-import os
 from pathlib import Path
 import subprocess
 import runpy
@@ -26,12 +25,20 @@ def isolate_reference_validator():
     build_supporting_text_validator.cache_clear()
 
 
-@pytest.fixture(params=["abstract_only", "full_text_xml", "full_text_html"])
+@pytest.fixture(params=[
+    {"content_type": "abstract_only"},
+    {"content_type": "full_text_xml"},
+    {"content_type": "full_text_html"},
+    {"full_text_available": False},
+    {"full_text_available": True},
+], ids=["legacy-abstract", "legacy-xml", "legacy-html", "modern-abstract", "modern-fulltext"])
 def cache(tmp_path, request):
     text = (
         "---\npmid: '1'\ntitle: '"
         + TITLE
-        + f"'\ncontent_type: {request.param}\njournal: Fixture\nyear: '2026'\n---\n\n## Abstract\n\n"
+        + "'\njournal: Fixture\nyear: '2026'\n"
+        + yaml.safe_dump(request.param)
+        + "---\n\n## Abstract\n\n"
         + QUOTE
         + "\n\n---\nTrailing body text.\n"
     )
@@ -74,8 +81,25 @@ def test_malformed_frontmatter_is_still_rejected(cache):
         validator.validate_title("PMID:1", TITLE)
 
 
+@pytest.mark.parametrize("metadata", ["", "plain scalar", "- item", "true"])
+def test_non_mapping_cache_fails_without_fetch_or_overwrite(tmp_path, metadata, monkeypatch):
+    cache_file = tmp_path / "PMID_1.md"
+    cache_file.write_text(f"---\n{metadata}\n---\n{QUOTE}")
+    before = cache_file.read_bytes()
+    validator, _ = build_supporting_text_validator(tmp_path)
+
+    def forbid_network(*args, **kwargs):
+        pytest.fail("Malformed cached metadata must not trigger a network request")
+
+    monkeypatch.setattr("socket.socket.connect", forbid_network)
+    monkeypatch.setattr("socket.getaddrinfo", forbid_network)
+    with pytest.raises(AttributeError):
+        validator.validate_title("PMID:1", TITLE)
+    assert cache_file.read_bytes() == before
+
+
 @pytest.mark.parametrize("bad", [None, "title", "quote", "empty", "editorial"])
-def test_normal_reference_wrapper_preserves_strict_validation(cache, tmp_path, bad):
+def test_normal_reference_wrapper_preserves_strict_validation(cache, tmp_path, bad, no_network_subprocess_env):
     title = "An unrelated title" if bad == "title" else TITLE
     quote = {
         "quote": "This invented sentence has no matching content zzqq.",
@@ -105,7 +129,7 @@ def test_normal_reference_wrapper_preserves_strict_validation(cache, tmp_path, b
     f = tmp_path / "review.yaml"
     f.write_text(yaml.safe_dump(data))
     before = (cache / "PMID_1.md").read_bytes()
-    env = os.environ.copy()
+    env, network_attempt = no_network_subprocess_env
     env.update(UV_NO_SYNC="1", UV_OFFLINE="1", PYTHONDONTWRITEBYTECODE="1")
     cmd = [
         str(PROJECT_ROOT / "scripts/run_reference_validator.sh"),
@@ -122,6 +146,7 @@ def test_normal_reference_wrapper_preserves_strict_validation(cache, tmp_path, b
         str(PROJECT_ROOT / "conf/reference_validator_config.yaml"),
     ]
     r = subprocess.run(cmd, text=True, capture_output=True, env=env, timeout=60)
+    assert not network_attempt.exists(), r.stdout + r.stderr
     assert (r.returncode == 0) == (bad is None), r.stdout + r.stderr
     if bad == "title":
         assert "Title mismatch" in r.stdout
@@ -179,8 +204,12 @@ def test_direct_utilities_trust_reviewed_cache(monkeypatch, tmp_path, script):
     calls = []
     def constructor(config):
         assert config.trust_cached_entries is True
+        expected = yaml.safe_load((PROJECT_ROOT / "conf/reference_validator_config.yaml").read_text())
+        assert config.skip_prefixes == expected["skip_prefixes"]
+        assert config.literal_bracket_patterns == expected["literal_bracket_patterns"]
+        assert config.reference_base_dir == PROJECT_ROOT / expected["reference_base_dir"]
         calls.append(config)
-        return SimpleNamespace()
+        return SimpleNamespace(config=config)
 
     monkeypatch.setattr(upstream, "SupportingTextValidator", constructor)
     monkeypatch.chdir(tmp_path)  # No real gene files or publication caches are visited.
@@ -189,3 +218,14 @@ def test_direct_utilities_trust_reviewed_cache(monkeypatch, tmp_path, script):
     if script == "mark_full_text_unavailable.py":
         module["main"]()
     assert len(calls) == 1
+
+
+def test_subprocess_network_guard_is_active(no_network_subprocess_env):
+    env, attempted = no_network_subprocess_env
+    result = subprocess.run(
+        [sys.executable, "-c", "import socket; socket.create_connection(('127.0.0.1', 9))"],
+        env=env, capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode != 0
+    assert "Network forbidden" in result.stderr
+    assert attempted.exists()
