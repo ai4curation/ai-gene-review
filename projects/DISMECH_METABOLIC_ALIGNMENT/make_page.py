@@ -3,14 +3,126 @@ import sys
 
 import yaml
 
-_loaded = yaml.safe_load(open(sys.argv[1]))
-# The report gained a provenance block; accept either shape.
-if isinstance(_loaded, dict):
-    PROV = _loaded.get("provenance") or {}
-    rep = _loaded.get("entries") or []
-else:
-    PROV, rep = {}, _loaded
+
+def load(path):
+    """Return (provenance, entries, review-independent flag names) for a report."""
+    d = yaml.safe_load(open(path))
+    # The report gained a provenance block, then a review_independent_flags list; accept
+    # every shape, because the all-slices report predates both and cannot be regenerated
+    # from this branch.
+    if isinstance(d, dict):
+        return (d.get("provenance") or {}, d.get("entries") or [],
+                tuple(d.get("review_independent_flags") or ()))
+    return {}, d, ()
+
+
+PROV, rep, _INDEP = load(sys.argv[1])
 out = sys.argv[2]
+# Optional third argument: a second report over the same scope, whose counts the
+# provenance section compares against this one's. Passing it is what makes the
+# branch-local comparison a measurement; without it the comparison is simply not printed,
+# which is the right behaviour once every slice has merged and there is nothing to compare.
+ALT_PATH = sys.argv[3] if len(sys.argv) > 3 else None
+ALT_PROV, ALT_REP, ALT_INDEP = load(ALT_PATH) if ALT_PATH else ({}, [], ())
+
+
+def flag_counts(entries):
+    """Flag -> occurrences over every gene row, and the row total."""
+    c, n = {}, 0
+    for e in entries:
+        for g in e.get("genes") or []:
+            n += 1
+            for f in g.get("flags") or []:
+                c[f] = c.get(f, 0) + 1
+    return c, n
+
+
+def alt_comparison():
+    """The second report's flag counts against this one's, derived rather than quoted.
+
+    Nothing is printed without a second report, so once every slice has merged and there
+    is no second tree to compare, the paragraph disappears instead of going stale. The
+    previous version of this section hardcoded six numbers in this file, which made the
+    one artifact added to support the disclosure the one artifact nobody could check.
+    """
+    if not ALT_REP:
+        return []
+    here, n_here = flag_counts(rep)
+    there, n_there = flag_counts(ALT_REP)
+    if n_here != n_there:
+        # The comparison's whole premise is that the two runs cover the same rows, so a
+        # mismatch is a bug in the scope or the trees, not something to paper over.
+        sys.exit(f"report row counts differ ({n_here} vs {n_there}); the two runs do not "
+                 "cover the same scope and cannot be compared flag by flag")
+    indep = ALT_INDEP or ("GENE_ON_NO_NODE", "NO_GO_ON_GENE_NODES", "NO_ORIGIN")
+    # Enforced, not asserted: these are the flags decided before the gene review is read,
+    # so they must be identical between two runs over the same dismech tree. If one moves,
+    # the difference is not the review set and the explanation below would be wrong.
+    moved = [f for f in indep if here.get(f, 0) != there.get(f, 0)]
+    if moved:
+        sys.exit("flags that do not read a gene review differ between the two reports "
+                 f"({', '.join(moved)}); the difference between the runs is not the review "
+                 "set, so the explanation on the page would be false")
+    rose = sorted(f for f in set(here) | set(there)
+                  if there.get(f, 0) > here.get(f, 0) and f not in indep)
+    fell = sorted(f for f in set(here) | set(there)
+                  if there.get(f, 0) < here.get(f, 0) and f not in indep)
+
+    def pairs(fs):
+        return ", ".join(f"`{f}` {there.get(f, 0)} against {here.get(f, 0)}" for f in fs)
+
+    tree = ALT_PROV.get("aigr_tree") or ALT_PROV.get("aigr_branch") or "a second tree"
+    mods_here = (PROV.get("module_accessions") or {}).get("modules_read")
+    mods_there = (ALT_PROV.get("module_accessions") or {}).get("modules_read")
+    # The rises split by cause, and the split is the whole point: a flag that counts a
+    # missing review rises because reviews are missing, while a module flag cannot - it is
+    # computed only once a review has been found, so an absent review removes it.
+    MODULE_FLAG_NAMES = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
+    rose_mod = [f for f in rose if f in MODULE_FLAG_NAMES]
+    rose_rev = [f for f in rose if f not in MODULE_FLAG_NAMES]
+    out = [
+        f"The audit also runs over {tree}, and comparing the two runs shows which flags are",
+        "artifacts of the missing slices rather than findings. Both cover the same",
+        f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
+        "",
+        "Most of that movement is the reviews themselves, in both directions. A row whose review",
+        "is absent is counted `NO_AIGR_REVIEW` and then skipped by every later test, so it cannot",
+        "be found partial, shared-node-only, or outside a module - which is why the alignment",
+        "flags fall. The same absence is what raises",
+        f"{', '.join('`%s`' % f for f in rose_rev)}: those count the missing reviews rather than",
+        "describing an alignment.",
+    ]
+    if rose_mod:
+        out += [
+            "",
+            f"{', '.join('`%s`' % f for f in rose_mod)} cannot have that cause, and this is the",
+            "one movement worth reading carefully. Both module flags are computed only once a",
+            "review has been found, so a missing review **removes** a module flag rather than",
+            "adding one. The driver is the module files:",
+        ]
+        if mods_here and mods_there:
+            out.append(
+                f"the second run reads {mods_there} modules against {mods_here} here, so there are"
+                " fewer modules available to cover a gene's aligned terms. That also means the two"
+                " trees are not nested - the second is missing modules this one has, and carries"
+                " commits this one does not."
+            )
+        else:
+            out.append(
+                "the two trees hold different module sets, so they are not nested and the"
+                " difference is not only the missing reviews."
+            )
+    out += [
+        "",
+        "The flags decided before any review is read are identical in both runs",
+        f"({', '.join('`%s` %d' % (f, here.get(f, 0)) for f in indep)}), which is what separates",
+        "missing inputs from the script behaving differently - and that identity is enforced",
+        "rather than stated: the generator exits if one of those counts moves, or if the two runs",
+        "do not cover the same rows. So a second run tests that the audit works; only the",
+        "all-slices tree gives the figures this table reports.",
+        "",
+    ]
+    return out
 
 # Recorded justifications for flags that are deliberate, keyed (entry, gene) or (entry, None).
 NOTES = {
@@ -59,6 +171,27 @@ lines = [
 ]
 
 from collections import Counter
+
+# Suggestion from review: ALIGNED_ON_SHARED_NODE_ONLY fires on a large minority of rows, so
+# the page says how many of them align on a term the review asserts in its own right. An
+# identical node/core term means the shared node is not what earned the match.
+def _shared_node_split(entries):
+    tot = exact = 0
+    for e in entries:
+        for g in e.get("genes") or []:
+            if g.get("relationship") not in (None, "CAUSATIVE"):
+                continue
+            if "ALIGNED_ON_SHARED_NODE_ONLY" not in (g.get("flags") or []):
+                continue
+            tot += 1
+            for t, v in (g.get("aligned_pairs") or {}).items():
+                if t in (v if isinstance(v, list) else [v]):
+                    exact += 1
+                    break
+    return tot, exact
+
+
+n_shared, n_shared_exact = _shared_node_split(rep)
 
 # Whitelist, so a renamed or new dismech relationship value does not silently become
 # principal and inflate the clean count.
@@ -111,7 +244,13 @@ lines += [
     "  which carries glutamate dehydrogenase activity and enzyme inhibitor activity together, is",
     "  the case to read: each gene is credited with both, and here that happens to be right in",
     "  both directions (HADH does inhibit GLUD1), which is exactly why it needs marking rather",
-    "  than trusting.",
+    "  than trusting. The flag is conservative by construction and fires on a large minority of",
+    f"  rows, so read it with this alongside: of the {n_shared} principal rows it fires on,",
+    f"  {n_shared_exact} aligned on a node term **identical** to one of the gene's own core",
+    "  functions rather than merely an ancestor or descendant of one, so the review independently",
+    "  asserts that exact activity and the shared node is not doing the work. GLUD1 and its",
+    f"  `GO:0004353` are of that shape. The remaining {n_shared - n_shared_exact} are the ones",
+    "  where the shared node could be carrying the verdict.",
     "- `contributes_to_molecular_function` is compared **alongside** core molecular function. A",
     "  subunit that contributes to a complex-level activity without enabling it is doing what the",
     "  dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,",
@@ -129,16 +268,26 @@ lines += [
     "",
     "Coverage reads the module's declared `concepts`, at module level and per node, as well as its",
     "annotons' terms: a module states its scope as processes while its annotons carry the molecular",
-    "functions of individual parts, so annotons alone miss what the module is about. Two limitations",
-    "survive that and are left visible rather than waived. is_a/part_of ancestry does not cross",
-    "between molecular function and biological process, so a dismech node bound to an activity and",
-    "a module scoped to the corresponding process cannot be related, however plainly they are the",
-    "same chemistry. And coverage is asymmetric about complex membership: it accepts a",
-    "`contributes_to_molecular_function` term from the review, but cannot read a module's",
-    "GO-idiomatic way of saying the same thing - a subunit given `GO:0005198` structural molecule",
-    "activity as part of the complex - as the same claim, because a structural role and the",
-    "activity it supports are unrelated branches of molecular function. NDUFA1 is the row where",
-    "the second limitation decides the verdict, not the first.",
+    "functions of individual parts, so annotons alone miss what the module is about. One limitation",
+    "survives that and is left visible rather than waived: coverage is asymmetric about complex",
+    "membership. It accepts a `contributes_to_molecular_function` term from the review, but cannot",
+    "read a module's GO-idiomatic way of saying the same thing - a subunit given `GO:0005198`",
+    "structural molecule activity as part of the complex - as the same claim, because a structural",
+    "role and the activity it supports are unrelated branches of molecular function. NDUFA1 is the",
+    "row where that decides the verdict.",
+    "",
+    "An earlier version of this page also claimed that is_a/part_of ancestry cannot cross between",
+    "molecular function and biological process. That is false, and three rows of this table",
+    "disprove it: GO asserts `part_of` from transporter activities to the transport processes they",
+    "carry out, so MT-ND1 aligns `GO:0008137` to `GO:1902600`, SLC16A1 aligns `GO:0015650` to",
+    "`GO:0015718`, and CTNS aligns `GO:0015811` to `GO:0015184` in the other direction. What is",
+    "true is narrower and is a fact about one pair rather than about the aspects: `GO:0008137` does",
+    "not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a real source of",
+    "alignment in this table, not an artefact - and since node MF and BP terms are compared against",
+    "one pooled set of the review's core molecular functions and `directly_involved_in` processes,",
+    "a node activity term can be satisfied by a core process and the reverse. Such a match is",
+    "genuine agreement but weaker than a same-aspect one, and `aligned_pairs` records which core",
+    "term each node term matched so a reader can see which shape any given row is.",
     "",
     "Membership is read from the module structure (`parts[].node.annotons[]`, following the",
     "participant whichever selector it uses - `gene_product`, `gene`, `ortholog_of`, `homolog_of`,",
@@ -189,25 +338,19 @@ if PROV:
         "",
         "Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten",
         "themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.",
-        "The run above read one materialised from `claude/cool-edison-o9wvf0`, the combined branch",
-        "those ten were split from, which is why the committed `report.yaml` records its `aigr_dir`",
-        "as the scratch directory that tree was unpacked into rather than a revision.",
-        "",
-        "The audit does run on this branch alone, and what it produces there shows which flags are",
-        "artifacts of the missing slices rather than findings. Both runs cover the same 183 gene",
-        "rows. `NO_AIGR_REVIEW` goes from 5 to 61 and `AIGR_NOT_COMPLETE` from 7 to 85, because the",
-        "reviews those rows refer to are added by the other nine PRs; the alignment flags fall with",
-        "them, since a row with no review to compare against cannot be found partial -",
-        "`PARTIAL_ALIGNMENT` 46 against 56, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48,",
-        "`NO_MODULE_MEMBERSHIP` 28 against 38. `MODULE_NOT_COVERING` moves the other way, 7 against",
-        "4, for the same reason in reverse: a module cannot be shown to cover a gene whose review is",
-        "absent. The flags that do not depend on a gene review are identical in both runs -",
-        "`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `ALIGNED_CONTRIBUTES_ONLY` 1",
-        "- which is the check that the difference is the missing reviews and not the script behaving",
-        "differently. So a branch-local run tests that the audit works; only the all-slices tree",
-        "gives the figures this table reports.",
-        "",
     ]
+    if PROV.get("aigr_tree"):
+        lines.append(f"The run above read {PROV['aigr_tree']}.")
+    elif not PROV.get("aigr_dir", "").startswith("/home") and PROV.get("aigr_branch"):
+        # The all-slices run predates aigr_tree and recorded only a scratch path, so say
+        # what that path was rather than printing it as if it identified a tree.
+        lines.append(
+            f"The run above read a tree materialised from `{PROV['aigr_branch']}`, the combined"
+            " branch those ten were split from; its `aigr_dir` is the scratch directory that tree"
+            " was unpacked into, which is why that field names a path rather than a revision."
+        )
+    lines.append("")
+    lines += alt_comparison()
 
 
 def aligned_cell(g):
@@ -273,12 +416,24 @@ n_partial = sum(1 for e in rep for g in e.get("genes", [])
                 if principal(g) and "PARTIAL_ALIGNMENT" in g["flags"])
 n_full = sum(1 for e in rep for g in e.get("genes", [])
              if principal(g) and g.get("aligned_terms") and not g.get("dismech_only"))
+n_untyped = sum(1 for e in rep for g in e.get("genes", [])
+                if principal(g) and g.get("relationship") is None)
+# The whitelist admits untyped rows defensively, but saying "causative and untyped" when a
+# run holds none of the latter describes the predicate rather than the table.
+_principal_desc = (f"causative and untyped; {n_untyped} untyped" if n_untyped
+                   else "all causative in this run; the predicate also admits untyped")
 lines += [
-    f"**Summary.** {len(rep)} entries; {n_rows} principal gene rows (causative and untyped);",
+    f"**Summary.** {len(rep)} entries; {n_rows} principal gene rows ({_principal_desc});",
     f"{n_clean} carry no flag other than a module flag or one of the qualifying flags - none"
     " carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or"
-    " `GENE_ON_NO_NODE`."
-    + (" Flag counts on principal rows: " + ", ".join(f"`{k}` {v}" for k, v in sorted(c.items())) + "."
+    " `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`,"
+    " which say a row aligned only against a retained non-core or a proposed term rather than"
+    " a core function; no principal row in this run carries either."
+    + (" Flag counts on principal rows: " + ", ".join(f"`{k}` {v}" for k, v in sorted(c.items()))
+       # Only worth saying when the provenance section printed all-row counts to compare with.
+       + (". These are principal rows only, so they are smaller than the all-row counts in the"
+          " provenance section above wherever a flag also falls on a modifier, susceptibility"
+          " or disputed row." if ALT_REP else ".")
        if c else " No principal row carries a flag."),
     "",
     f"**Agreement is partial on many rows, and the table shows both halves.** {n_full} principal",

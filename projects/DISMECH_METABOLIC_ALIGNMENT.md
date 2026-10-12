@@ -42,7 +42,13 @@ check, and any of them can turn a row green that a curator would not:
   which carries glutamate dehydrogenase activity and enzyme inhibitor activity together, is
   the case to read: each gene is credited with both, and here that happens to be right in
   both directions (HADH does inhibit GLUD1), which is exactly why it needs marking rather
-  than trusting.
+  than trusting. The flag is conservative by construction and fires on a large minority of
+  rows, so read it with this alongside: of the 48 principal rows it fires on,
+  43 aligned on a node term **identical** to one of the gene's own core
+  functions rather than merely an ancestor or descendant of one, so the review independently
+  asserts that exact activity and the shared node is not doing the work. GLUD1 and its
+  `GO:0004353` are of that shape. The remaining 5 are the ones
+  where the shared node could be carrying the verdict.
 - `contributes_to_molecular_function` is compared **alongside** core molecular function. A
   subunit that contributes to a complex-level activity without enabling it is doing what the
   dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,
@@ -60,16 +66,26 @@ check, and any of them can turn a row green that a curator would not:
 
 Coverage reads the module's declared `concepts`, at module level and per node, as well as its
 annotons' terms: a module states its scope as processes while its annotons carry the molecular
-functions of individual parts, so annotons alone miss what the module is about. Two limitations
-survive that and are left visible rather than waived. is_a/part_of ancestry does not cross
-between molecular function and biological process, so a dismech node bound to an activity and
-a module scoped to the corresponding process cannot be related, however plainly they are the
-same chemistry. And coverage is asymmetric about complex membership: it accepts a
-`contributes_to_molecular_function` term from the review, but cannot read a module's
-GO-idiomatic way of saying the same thing - a subunit given `GO:0005198` structural molecule
-activity as part of the complex - as the same claim, because a structural role and the
-activity it supports are unrelated branches of molecular function. NDUFA1 is the row where
-the second limitation decides the verdict, not the first.
+functions of individual parts, so annotons alone miss what the module is about. One limitation
+survives that and is left visible rather than waived: coverage is asymmetric about complex
+membership. It accepts a `contributes_to_molecular_function` term from the review, but cannot
+read a module's GO-idiomatic way of saying the same thing - a subunit given `GO:0005198`
+structural molecule activity as part of the complex - as the same claim, because a structural
+role and the activity it supports are unrelated branches of molecular function. NDUFA1 is the
+row where that decides the verdict.
+
+An earlier version of this page also claimed that is_a/part_of ancestry cannot cross between
+molecular function and biological process. That is false, and three rows of this table
+disprove it: GO asserts `part_of` from transporter activities to the transport processes they
+carry out, so MT-ND1 aligns `GO:0008137` to `GO:1902600`, SLC16A1 aligns `GO:0015650` to
+`GO:0015718`, and CTNS aligns `GO:0015811` to `GO:0015184` in the other direction. What is
+true is narrower and is a fact about one pair rather than about the aspects: `GO:0008137` does
+not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a real source of
+alignment in this table, not an artefact - and since node MF and BP terms are compared against
+one pooled set of the review's core molecular functions and `directly_involved_in` processes,
+a node activity term can be satisfied by a core process and the reverse. Such a match is
+genuine agreement but weaker than a same-aspect one, and `aligned_pairs` records which core
+term each node term matched so a reader can see which shape any given row is.
 
 Membership is read from the module structure (`parts[].node.annotons[]`, following the
 participant whichever selector it uses - `gene_product`, `gene`, `ortholog_of`, `homolog_of`,
@@ -102,26 +118,34 @@ was generated from, and those inputs live in two repositories.
 
 Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
-The run above read one materialised from `claude/cool-edison-o9wvf0`, the combined branch
-those ten were split from, which is why the committed `report.yaml` records its `aigr_dir`
-as the scratch directory that tree was unpacked into rather than a revision.
+The run above read a tree materialised from `claude/cool-edison-o9wvf0`, the combined branch those ten were split from; its `aigr_dir` is the scratch directory that tree was unpacked into, which is why that field names a path rather than a revision.
 
-The audit does run on this branch alone, and what it produces there shows which flags are
-artifacts of the missing slices rather than findings. Both runs cover the same 183 gene
-rows. `NO_AIGR_REVIEW` goes from 5 to 61 and `AIGR_NOT_COMPLETE` from 7 to 85, because the
-reviews those rows refer to are added by the other nine PRs; the alignment flags fall with
-them, since a row with no review to compare against cannot be found partial -
-`PARTIAL_ALIGNMENT` 46 against 56, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48,
-`NO_MODULE_MEMBERSHIP` 28 against 38. `MODULE_NOT_COVERING` moves the other way, 7 against
-4, for the same reason in reverse: a module cannot be shown to cover a gene whose review is
-absent. The flags that do not depend on a gene review are identical in both runs -
-`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `ALIGNED_CONTRIBUTES_ONLY` 1
-- which is the check that the difference is the missing reviews and not the script behaving
-differently. So a branch-local run tests that the audit works; only the all-slices tree
-gives the figures this table reports.
+The audit also runs over this branch alone, with nine of the ten themed slices absent; it is not a subset of the combined tree, having merged main since 67c18a54, and comparing the two runs shows which flags are
+artifacts of the missing slices rather than findings. Both cover the same
+183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
 
-**Summary.** 116 entries; 161 principal gene rows (causative and untyped);
-161 carry no flag other than a module flag or one of the qualifying flags - none carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or `GENE_ON_NO_NODE`. Flag counts on principal rows: `ALIGNED_CONTRIBUTES_ONLY` 1, `ALIGNED_ON_SHARED_NODE_ONLY` 48, `MODULE_NOT_COVERING` 4, `NO_MODULE_MEMBERSHIP` 26, `PARTIAL_ALIGNMENT` 56.
+Most of that movement is the reviews themselves, in both directions. A row whose review
+is absent is counted `NO_AIGR_REVIEW` and then skipped by every later test, so it cannot
+be found partial, shared-node-only, or outside a module - which is why the alignment
+flags fall. The same absence is what raises
+`AIGR_NOT_COMPLETE`, `NO_AIGR_REVIEW`, `NO_CORE_FUNCTION_TERMS`: those count the missing reviews rather than
+describing an alignment.
+
+`MODULE_NOT_COVERING` cannot have that cause, and this is the
+one movement worth reading carefully. Both module flags are computed only once a
+review has been found, so a missing review **removes** a module flag rather than
+adding one. The driver is the module files:
+the second run reads 448 modules against 451 here, so there are fewer modules available to cover a gene's aligned terms. That also means the two trees are not nested - the second is missing modules this one has, and carries commits this one does not.
+
+The flags decided before any review is read are identical in both runs
+(`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3), which is what separates
+missing inputs from the script behaving differently - and that identity is enforced
+rather than stated: the generator exits if one of those counts moves, or if the two runs
+do not cover the same rows. So a second run tests that the audit works; only the
+all-slices tree gives the figures this table reports.
+
+**Summary.** 116 entries; 161 principal gene rows (all causative in this run; the predicate also admits untyped);
+161 carry no flag other than a module flag or one of the qualifying flags - none carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`, which say a row aligned only against a retained non-core or a proposed term rather than a core function; no principal row in this run carries either. Flag counts on principal rows: `ALIGNED_CONTRIBUTES_ONLY` 1, `ALIGNED_ON_SHARED_NODE_ONLY` 48, `MODULE_NOT_COVERING` 4, `NO_MODULE_MEMBERSHIP` 26, `PARTIAL_ALIGNMENT` 56. These are principal rows only, so they are smaller than the all-row counts in the provenance section above wherever a flag also falls on a modifier, susceptibility or disputed row.
 
 **Agreement is partial on many rows, and the table shows both halves.** 105 principal
 rows align every GO term their dismech nodes carry; 56 align some and leave others

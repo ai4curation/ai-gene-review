@@ -14,7 +14,7 @@ Usage, from the ai-gene-review root with a dismech checkout beside it:
         projects/DISMECH_METABOLIC_ALIGNMENT/report.yaml \
         projects/DISMECH_METABOLIC_ALIGNMENT.md
 
-Two properties of the comparison are deliberate, and are stated on the generated page
+Four properties of the comparison are deliberate, and are stated on the generated page
 because they make this a weak consistency test rather than a strong one:
 
 * ``related()`` is **symmetric** and **unbounded in distance**. It holds when either
@@ -29,6 +29,17 @@ because they make this a weak consistency test rather than a strong one:
   on a co-named partner's activity is visible rather than assumed clean. The
   GLUD1/HADH hyperinsulinism node, which carries both glutamate dehydrogenase activity and
   enzyme inhibitor activity, is the case this field exists to expose.
+* A node's MF and BP terms are compared against **one pooled set** of the review's core
+  molecular functions and ``directly_involved_in`` processes (``core = a["mf"] | a["bp"]``),
+  so a node activity term can be satisfied by a core process and the reverse. That pooling
+  matters because ``is_a``/``part_of`` ancestry **does** cross between the MF and BP
+  aspects: GO asserts ``part_of`` from transporter activities to the transport processes
+  they carry out, so e.g. ``GO:0015184`` L-cystine transmembrane transporter activity
+  reaches ``GO:0015811`` L-cystine transport, and ``GO:0008137`` reaches ``GO:1902600``.
+  Alignments of that shape are real agreement, not artefacts, but they are weaker than a
+  same-aspect match and the page says so. Where a particular cross-aspect edge is simply
+  absent -- ``GO:0008137`` does not reach ``GO:0006120`` -- that is a fact about the pair,
+  not about the aspects.
 * ``contributes_to_molecular_function`` is compared **alongside** core molecular function,
   not folded into it: a subunit that contributes to a complex-level activity without
   enabling it is doing the thing the dismech node describes, so excluding it would lose
@@ -41,7 +52,10 @@ because they make this a weak consistency test rather than a strong one:
   ``MODULE_NOT_COVERING`` means one does but no annoton for this gene, in any of them,
   carries a GO term related to the aligned terms. AIFM1 sitting in
   ``apoptotic_execution_phase`` while the aligned function is the mitochondrial
-  disulfide relay is the case the second flag exists to catch.
+  disulfide relay is the case the second flag exists to catch. Coverage is tested against
+  every term anywhere in a module, so a large module satisfies it easily; which aligned
+  term matched which module term is recorded in ``covering_pairs``, so an earned coverage
+  can be told from one won on a remote ancestor.
 
 Module membership and module GO terms are read from the module structure
 (``module.parts[].node.annotons[]``, including protein-complex ``active_units``), not by
@@ -128,6 +142,14 @@ def _go_version():
         pass
     return None
 
+
+# Flags decided before the gene review is consulted, so they are identical between two
+# runs over the same dismech tree whatever reviews are present. Everything else -- the
+# alignment flags, both module flags and ALIGNED_CONTRIBUTES_ONLY -- is computed inside
+# the `review exists` branch and so depends on the review set. Exported rather than
+# restated in prose, because the page used to list ALIGNED_CONTRIBUTES_ONLY here and it
+# is derived entirely from a review's contributes_to_molecular_function.
+REVIEW_INDEPENDENT_FLAGS = ("GENE_ON_NO_NODE", "NO_GO_ON_GENE_NODES", "NO_ORIGIN")
 
 PROVENANCE = dict(
     run_date=datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -490,9 +512,20 @@ for name in SCOPE:
             elif g.get("aligned_terms"):
                 # Membership is not coverage: the gene may be in a module about a
                 # different one of its functions than the one this row aligned on.
-                covering = sorted(m for m in mods if any(
-                    related(t, mt) for t in g["aligned_terms"] for mt in mod_terms.get(m, ())))
+                # Which module term earned the coverage is recorded too, symmetrically
+                # with aligned_pairs: coverage tests the aligned terms against every term
+                # anywhere in a module, so a large module satisfies it easily, and without
+                # the pair a reader cannot tell a relevant match from a remote ancestor.
+                covering, covering_pairs = [], {}
+                for m in mods:
+                    hits = sorted({(t, mt) for t in g["aligned_terms"]
+                                   for mt in mod_terms.get(m, ()) if related(t, mt)})
+                    if hits:
+                        covering.append(m)
+                        covering_pairs[m] = [f"{t}->{mt}" for t, mt in hits]
                 g["covering_modules"] = covering
+                if covering_pairs:
+                    g["covering_pairs"] = covering_pairs
                 if not covering:
                     flags.append("MODULE_NOT_COVERING")
         g["flags"] = flags
@@ -505,7 +538,11 @@ if _anc_failures:
     sys.exit(f"{len(_anc_failures)} GO ancestor lookups failed; every comparison would "
              "degrade to exact match, so no report was written.")
 
-yaml.safe_dump(dict(provenance=PROVENANCE, entries=report),
+# review_independent_flags travels in the report so make_page can name the set from the
+# run rather than from prose that can drift out of step with the code.
+yaml.safe_dump(dict(provenance=PROVENANCE,
+                    review_independent_flags=list(REVIEW_INDEPENDENT_FLAGS),
+                    entries=report),
                open(OUT, "w"), sort_keys=False, width=120)
 from collections import Counter
 
