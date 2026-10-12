@@ -1,9 +1,14 @@
 """Run the DISMECH_METABOLIC_ALIGNMENT page generator's guard harness.
 
-The harness exists so that "eighteen of twenty-one cases must refuse" is a command rather
-than a claim in a history record. That only holds if something runs it: it was reachable
-only by typing the command, and it is named `check_*`, so pytest did not collect it either
-and a regression in any of the eighteen refusals would have broken nothing.
+The harness exists so that its counts are a command rather than a claim in a history
+record, and it prints them itself - so this file deliberately states none. An earlier
+version of this docstring hardcoded "eighteen of twenty-one cases must refuse", in the
+round that added the 22nd case, which made the one file whose purpose is "this count is
+not a claim" state the claim, wrongly.
+
+It is here because nothing ran the harness: it was reachable only by typing the command,
+and being named `check_*` pytest did not collect it either, so a regression in any refusal
+would have broken nothing.
 """
 import os
 import subprocess

@@ -158,6 +158,12 @@ def _rev_state(rev):
     * the drift answer itself, which needs the object present and, once computed, is a fact
       about two commits and so the same everywhere.
 
+    Reachability cannot be computed without the object, so ``unpublished`` is obtainable
+    only where the object is local: a reader re-rendering in a shallow clone gets the weaker
+    ``not_here`` sentence for a revision this page calls unpublished. That is a limit on the
+    claim's *availability*, not on its content - nothing published becomes false - but it is
+    why a re-render can say less than the committed page.
+
     Returns ``published``, ``unpublished`` (object here, on no pushed ref), ``not_here``
     (object absent from this checkout, so nothing can be said either way) or ``unknown``
     (git could not be asked).
@@ -170,14 +176,33 @@ def _rev_state(rev):
     if rev in _REV_STATE:
         return _REV_STATE[rev]
     state = "unknown"
+    # `cat-file -e` exits 128 both for a missing object and for a fatal such as "not a git
+    # repository", so its exit code alone cannot tell absence from failure - the distinction
+    # this docstring argues for. One `rev-parse --git-dir` settles it: without a repository
+    # nothing is claimed, and the "not_here" sentence is never printed by a run that had
+    # nothing to ask.
+    try:
+        in_repo = subprocess.run(["git", "rev-parse", "--git-dir"],
+                                 capture_output=True).returncode == 0
+    except Exception:
+        # git absent from PATH raises rather than exiting, and _primary_drift_tail calls
+        # this with no guard of its own, so the generator would die with a traceback.
+        in_repo = False
+    if not in_repo:
+        _REV_STATE[rev] = "unknown"
+        return "unknown"
     # `cat-file -e`, not `rev-parse --verify`, which exits 0 for any well-formed 40-character
     # sha whether or not an object matches it.
     if subprocess.run(["git", "cat-file", "-e", f"{rev}^{{commit}}"],
                       capture_output=True).returncode != 0:
         state = "not_here"
     else:
-        r = subprocess.run(["git", "for-each-ref", "--contains", rev, "refs/remotes"],
-                           capture_output=True, text=True)
+        try:
+            r = subprocess.run(["git", "for-each-ref", "--contains", rev, "refs/remotes"],
+                               capture_output=True, text=True)
+        except Exception:
+            _REV_STATE[rev] = "unknown"
+            return "unknown"
         if r.returncode == 0:
             state = "published" if r.stdout.strip() else "unpublished"
     _REV_STATE[rev] = state
@@ -192,6 +217,10 @@ _REPRODUCIBLE = {
     "published": "",
     "unpublished": " That revision is on no pushed ref, so no clone holds it and this"
                    " comparison cannot be re-run elsewhere.",
+    # The one clause that names a cause, which the drift answer deliberately never does. It
+    # is admissible because it is about *this* checkout, which is observable, rather than
+    # about the revision - a shallow clone is the ordinary reason and naming it tells a
+    # reader why re-rendering may say less than the committed page does.
     "not_here": " Whether that revision is published could not be determined here, since"
                 " this checkout does not hold the object - a shallow clone will not.",
     "unknown": " Whether that revision is published could not be determined, so nothing is"
@@ -237,26 +266,29 @@ def _alt_drift_tail():
     a revision committed here and not yet pushed answers the drift question perfectly, and
     gating on publication once printed that there was nothing to compare.
 
-    The caller closes the sentence, so nothing returned here carries a terminal period.
+    This function owns all of its punctuation, including the final period. Splitting that
+    with the caller produced a double period in three of the four states - every one whose
+    reproducibility clause is a sentence of its own - and left the docstring, a comment and
+    the code disagreeing three ways about who supplies it. The caller appends nothing.
     """
     rev = (ALT_PROV or {}).get("aigr_revision")
     if not rev:
-        return " at a revision the report does not name"
+        return " at a revision the report does not name."
     try:
         head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
                               check=True).stdout.strip()
     except Exception:
         return (f" at `{rev[:9]}`; git could not be asked where this branch is, so nothing is"
-                " claimed about whether the audit's inputs moved since")
+                " claimed about whether the audit's inputs moved since.")
     if rev == head:
-        return f" at `{rev[:9]}`, which is this branch's tip"
+        return f" at `{rev[:9]}`, which is this branch's tip."
     state = _rev_state(rev)
     if state in ("not_here", "unknown"):
         # No gloss on *why* the object is missing: a shallow clone, a pruned object and a
         # tree never committed are indistinguishable here, and earlier rounds asserted the
         # last of the three.
-        return (f" at `{rev[:9]}`, which this checkout does not hold, so the comparison was"
-                f" not made here.{_REPRODUCIBLE[state]}".rstrip())
+        return (f" at `{rev[:9]}`, which this checkout does not hold, so the input-drift"
+                f" comparison below was not made.{_REPRODUCIBLE[state]}").rstrip()
     anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
                          capture_output=True)
     if anc.returncode == 1:
@@ -265,7 +297,7 @@ def _alt_drift_tail():
                 " tree")
     elif anc.returncode != 0:
         return (f" at `{rev[:9]}`; git could not say whether it is an ancestor of this branch,"
-                " so nothing is claimed")
+                " so nothing is claimed.")
     else:
         try:
             out = subprocess.run(["git", "diff", "--name-only", f"{rev}..HEAD", "--",
@@ -273,7 +305,7 @@ def _alt_drift_tail():
                                  capture_output=True, text=True, check=True).stdout.split()
         except Exception:
             return (f" at `{rev[:9]}`, an ancestor of the branch tip; git could not list what"
-                    " changed between the two, so nothing is claimed")
+                    " changed between the two, so nothing is claimed.")
         if not out:
             base = (f" at `{rev[:9]}`, an ancestor of the branch tip, with no file under"
                     " `genes/` or `modules/` changed between the two - the audit's whole input"
@@ -282,10 +314,9 @@ def _alt_drift_tail():
             base = (f" at `{rev[:9]}`, an ancestor of the branch tip, with **{len(out)} of the"
                     " audit's input files changed between the two**, so the figures below"
                     f" describe the recorded commit rather than the tip - e.g. `{out[0]}`")
-    clause = _REPRODUCIBLE[state]
-    # The clause is a sentence of its own, so it needs the period the caller would otherwise
-    # supply after `base`; without a clause, `base` is left for the caller to close.
-    return base + ("." + clause if clause else "")
+    # `base` has no terminal period and each clause is a sentence of its own, so the period
+    # between them is always needed and the one after them always ours.
+    return (base + "." + _REPRODUCIBLE[state]).rstrip()
 
 
 def alt_comparison():
@@ -583,7 +614,7 @@ def alt_comparison():
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
         # Its own sentence, not a clause appended to the tree description, where it landed
         # several clauses away from the revision it qualifies and repeated that revision.
-        f"That second run read a tree recorded{_alt_drift_tail()}.",
+        f"That second run read a tree recorded{_alt_drift_tail()}",
         "",
         "Every movement below is accounted for row by row rather than from the net counts: a"
         " flag's total can fall while rows arrive at it, and each row's cause is read from that"
@@ -1173,7 +1204,11 @@ if PROV:
     # that the revision the report records appears among them: otherwise the prose and the
     # derived sentence below describe different commits.
     _rev = PROV.get("aigr_revision") or ""
-    _named = re.findall(r"\b[0-9a-f]{7,40}\b", PROV.get("aigr_tree") or "")
+    # At least one digit required: a 7-to-40 character run of a-f is also an ordinary word
+    # ("defaced"), and an aigr_tree naming no sha but containing one would have refused to
+    # render with a provenance-mismatch message.
+    _named = [m for m in re.findall(r"\b[0-9a-f]{7,40}\b", PROV.get("aigr_tree") or "")
+              if any(c.isdigit() for c in m)]
     if _rev and _named and not any(_rev.startswith(m) or m.startswith(_rev) for m in _named):
         sys.exit(f"the primary report's aigr_tree text names {', '.join(_named[:4])} but not "
                  f"the revision it records (`{_rev[:9]}`); the provenance block and the "
