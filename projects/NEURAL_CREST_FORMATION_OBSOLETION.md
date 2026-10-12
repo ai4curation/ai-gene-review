@@ -89,6 +89,16 @@ No production GO-CAM in the local cache (`gocams/`) uses any of the four terms.
    Pou5f3/Oct25. These are required for crest to form, but their loss causes
    progenitor arrest or death rather than a change of fate, and sustained Id3
    blocks differentiation.
+
+   *Why a stem-cell parent.* Premigratory crest cells are transient, multipotent
+   embryonic progenitors rather than lifelong stem cells, so the parent needs
+   arguing. GO already treats an equivalent pool this way: nephron progenitors
+   (cap mesenchyme) are covered by GO:0072038 *mesenchymal stem cell maintenance
+   involved in nephron morphogenesis*, which is_a GO:0035019 *somatic stem cell
+   population maintenance* (checked in QuickGO 2026-10-12). By that precedent the
+   tighter parent would be GO:0035019; the request should offer it and let GO
+   choose. The new term is needed because GO:0019827 on its own does not say
+   which population is maintained (option (c) below).
 3. **Obsolete GO:0014029.** Replacements to suggest ("consider"): neural plate
    border formation (new), neural crest progenitor maintenance (new), GO:0014033 *neural crest cell differentiation*,
    GO:0014034 *fate commitment*, GO:0014036 *fate specification*, GO:0036032
@@ -148,9 +158,11 @@ out in [NEURAL_CREST_ORIGINS](NEURAL_CREST_ORIGINS.md) and the
 **Competence factors (decided 2026-10-09).** Three options were considered:
 (a) GO:0014033 *neural crest cell differentiation*; (b) a new term; (c)
 GO:0019827 *stem cell population maintenance*. Option (b) was chosen. (a) is
-awkward for factors that hold off differentiation. (c) is too general to say
-which population is maintained, and the lin28a review judged it unsupported for
-lin28 in frog.
+awkward for factors that hold off differentiation. (c), used on its own, is too general
+to say which population is maintained, so the new term sits beneath it as a
+child. (The lin28a review marks a transferred GO:0019827 row as over-annotated
+because there is no frog evidence for any such role; it does not argue against
+the parent.)
 
 ## Remapping of every experimental annotation
 
@@ -255,7 +267,9 @@ What the remapping shows:
 >
 > Proposal: (1) new BP "neural plate border formation", part_of GO:0007398
 > ectoderm development; (2) new BP "neural crest progenitor maintenance",
-> is_a GO:0019827 stem cell population maintenance, for factors that keep
+> is_a GO:0019827 stem cell population maintenance (or its child GO:0035019
+> somatic stem cell population maintenance, following the GO:0072038 nephron
+> progenitor precedent), for factors that keep
 > border/crest progenitors undifferentiated and competent (Myc, Id3, Hairy2,
 > Pou5f3); (3) obsolete GO:0014029 with consider: the two new terms, GO:0014033,
 > GO:0014034, GO:0014036, GO:0036032; (4) obsolete GO:0090299, GO:0090300 and
@@ -301,7 +315,7 @@ the blastula program is retained or re-activated, which is still open
 re-activate a pluripotency GRN from the blastula"]. New evidence for the
 border/specifier split: pax3 and zic1 "initially promote neural crest gene
 activation but are downregulated as neural crest identity emerges"
-(Montequin & LaBonne 2026, PMID:41718037; not yet cached).
+(Montequin & LaBonne 2026, PMID:41718037; PubMed-verified and cached 2026-10-12).
 
 ## 2026-10-09 (overexpression rule, gap terms)
 
