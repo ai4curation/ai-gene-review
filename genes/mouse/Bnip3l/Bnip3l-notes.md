@@ -6,7 +6,7 @@
   InterPro IPR010548; Pfam PF06553). UniProt features: C-terminal helical TM 187-207,
   BH3 motif 125-147, N-terminal disordered region 1-66 (file:mouse/Bnip3l/Bnip3l-uniprot.txt).
 - Tail-anchored outer mitochondrial membrane protein; cytosolic N-terminus carries the LIR
-  (W35/W36 region) and the minimal essential region (MER).
+  (W35 in mouse Q9Z2F7 numbering, residues 31-40 LNSSWVELPM; W36 in human BNIP3L) and the minimal essential region (MER).
 - First described as a pro-apoptotic homolog of Nip3/BNIP3 [PMID:9867803 "We have identified
   Nix, a homolog of the E1B 19K/Bcl-2 binding and pro-apoptotic protein Nip3"], localized with
   mitochondrial HSP60 [PMID:9867803 "Nix colocalizes with the mitochondrial matrix protein HSP60,
