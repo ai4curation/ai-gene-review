@@ -7,3 +7,47 @@ Literature review was done manually from cached PubMed records; the falcon deep-
 - MRPP1/2 acts as a tRNA maturation platform for ELAC2 and TRNT1 [PMID:29040705].
 - Disease (COXPD30): variants destabilise MRPP1 and impair processing without abolishing methylation [PMID:27132592 "these variants affect MRPP1 protein stability and mt-tRNA processing without affecting m(1)R9 methyltransferase activity"].
 - Nucleus/nucleoplasm IBA come from a PANTHER node above the TRMT10A/TRMT10C split (donor TRMT10A, Q8TBZ6); removed.
+
+## Comparator check behind the proposed `contributes_to GO:0004526`
+
+CLAUDE.md requires a comparator check before a `NEW`, naming two or three gene products
+standing in the *same role*. The role here is "non-catalytic protein subunit of an RNase P
+holoenzyme", and the nuclear holoenzyme supplies ten of them: its catalytic moiety is the
+RPPH1 RNA, not any protein, so GO must say something about the proteins' relation to the
+activity. Query run 2026-10-12 against QuickGO:
+
+```
+curl -H 'Accept: application/json' \
+  'https://www.ebi.ac.uk/QuickGO/services/annotation/search?goId=GO:0004526&taxonId=9606&limit=100&goUsage=exact'
+```
+
+40 human annotations. Grouped by symbol and qualifier:
+
+| gene product | qualifier | evidence |
+|---|---|---|
+| PRORP | `enables` | IBA, IDA, IEA |
+| POP1 | `contributes_to` | IBA, IDA |
+| POP4, POP5, POP7, RPP14, RPP21, RPP25, RPP30, RPP38, RPP40 | `contributes_to` | IDA |
+| RPPH1 and other ncRNA entries | `enables` | IEA |
+
+(POP5, RPP30 and RPP40 additionally carry an `enables` row by IEA or TAS; every IDA row on a
+protein subunit other than PRORP is `contributes_to`.)
+
+So GO's convention for this complex is `enables` for the catalyst and `contributes_to` for the
+rest, which is exactly the shape of the proposed row — the comparator set supports it rather
+than contradicting it. Neither mitochondrial accessory subunit carries `GO:0004526` in GOA,
+so they are the outliers.
+
+The nuclear subunit genes have no folders in this repository, so this table is the only
+in-branch record of the query; re-run the curl above to check it.
+
+### What HSD17B10's review actually says
+
+HSD17B10/MRPP2 is the other non-catalytic subunit of the mitochondrial complex, and its
+review is not a stub despite `status: INITIALIZED` — 101 reviewed rows (49 ACCEPT, 36
+KEEP_AS_NON_CORE, 16 MARK_AS_OVER_ANNOTATED, none unreviewed), three authored core functions,
+and `proposed_new_terms: []`. Its third core function models the moonlighting role as
+`GO:0000049` tRNA binding plus `in_complex GO:0030678`, which is a recorded judgment to argue
+with rather than an absence. Under the comparator above that review warrants the same
+`contributes_to` proposal. TRMT10C also carries `GO:0000049`, so the two reviews differ only
+in this one proposed row.
