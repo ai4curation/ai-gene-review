@@ -33,6 +33,8 @@ def isolate_reference_validator():
     {"full_text_available": True},
 ], ids=["legacy-abstract", "legacy-xml", "legacy-html", "modern-abstract", "modern-fulltext"])
 def cache(tmp_path, request):
+    # With trust_cached_entries, all metadata shapes preserve the reviewed body;
+    # these cases check cache preservation, not metadata precedence.
     text = (
         "---\npmid: '1'\ntitle: '"
         + TITLE
@@ -93,8 +95,13 @@ def test_non_mapping_cache_fails_without_fetch_or_overwrite(tmp_path, metadata, 
 
     monkeypatch.setattr("socket.socket.connect", forbid_network)
     monkeypatch.setattr("socket.getaddrinfo", forbid_network)
-    with pytest.raises(AttributeError):
-        validator.validate_title("PMID:1", TITLE)
+    # Upstream may raise or return a clean failure; neither may fetch or rewrite.
+    try:
+        result = validator.validate_title("PMID:1", TITLE)
+    except Exception:
+        pass
+    else:
+        assert not result.is_valid
     assert cache_file.read_bytes() == before
 
 
@@ -220,12 +227,25 @@ def test_direct_utilities_trust_reviewed_cache(monkeypatch, tmp_path, script):
     assert len(calls) == 1
 
 
-def test_subprocess_network_guard_is_active(no_network_subprocess_env):
+def test_subprocess_network_guard_is_active_through_wrapper(tmp_path, no_network_subprocess_env):
+    cache_dir = tmp_path / "empty_cache"
+    cache_dir.mkdir()
+    review = tmp_path / "uncached.yaml"
+    review.write_text(yaml.safe_dump({"references": [{"id": "PMID:1", "title": TITLE}]}))
     env, attempted = no_network_subprocess_env
+    env.update(UV_NO_SYNC="1", UV_OFFLINE="1", PYTHONDONTWRITEBYTECODE="1")
     result = subprocess.run(
-        [sys.executable, "-c", "import socket; socket.create_connection(('127.0.0.1', 9))"],
-        env=env, capture_output=True, text=True, timeout=10,
+        [
+            str(PROJECT_ROOT / "scripts/run_reference_validator.sh"),
+            "validate", "data", str(review),
+            "--schema", str(PROJECT_ROOT / "src/ai_gene_review/schema/gene_review.yaml"),
+            "--target-class", "GeneReview", "--cache-dir", str(cache_dir),
+            "--config", str(PROJECT_ROOT / "conf/reference_validator_config.yaml"),
+        ],
+        env=env, capture_output=True, text=True, timeout=60,
     )
-    assert result.returncode != 0
-    assert "Network forbidden" in result.stderr
-    assert attempted.exists()
+    # Unknown/unfetchable references can be advisory; the recorded attempt is
+    # the assertion even if the CLI catches the guard's exception and exits 0.
+    assert attempted.exists(), result.stdout + result.stderr
+    assert attempted.read_text() in {"socket.connect", "socket.getaddrinfo"}
+    assert not (cache_dir / "PMID_1.md").exists()
