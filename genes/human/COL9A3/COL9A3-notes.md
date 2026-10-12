@@ -23,3 +23,18 @@ PMID:25037231 uses serial extraction of human colorectal tissues and liver mater
 ## Access and reproducibility
 
 The source-evidence index gives exact publication identifiers, public original-source links, selected paragraph or indexed-line locators, source hashes, literal target-table rows, donor records and Reactome edge paths. The human-cartilage and recombinant-assembly full sources were recovered as indexed author-upload/postprint text; the normal abstract caches remain unchanged. No PDF/pixel read is claimed for these articles. Source access is assessed per reference rather than inferred solely from an abstract-only cache flag.
+
+
+## PAINT placement and collagen structural scope — 2026-10-12
+
+The actual current PANTHER19 PTHR24023 tree places PTN001166351 at Metazoa-Choanoflagellida, above COL9A3, type-IV chains and other collagen branches. The sequence at the COL9A3 leaf PTN002552596 exactly matches the official 684-residue sequence after removing alignment gaps. The repository IBD slice supplies the dated GO:0030020 assertion and its two extant seeds; it is not itself a topology. WBGene00002280 is let-2/P17140 in the recovered identity record, not emb-9. Donor class does not restrict the ancestral node to collagen IV. The current [GO:0030020 definition and comment](https://www.ebi.ac.uk/QuickGO/term/GO:0030020) permit extracellular-matrix collagen proteins; native alpha3 matrix links and assembly interfaces support retaining the integrated structural core without claiming isolated-chain mechanical testing.
+
+The same target path confirms the current type-IX and matrix-organization source nodes. Current node placement is now inspected, superseding the earlier generic statement that it was uninspected. This does not recreate the historical curator session. In particular, the basement-membrane node is on the target path but its target-specific location premise remains unresolved. Raw-response URLs, hashes, exact IBD rows and a compact topology projection are in the source-evidence index; API GO-slim strings are not substituted for original GOA assertions.
+
+## Public primary anchors — 2026-10-12
+
+[PMID:8660302, original Figure4 caption, indexed lines662–664](https://www.researchgate.net/publication/14540876): “α 3(IX)COL2 was linked to an α 1(II) N-telopeptide, α 3(IX)NC1 or an α 1(II) C-telopeptide”. The caption concerns sequenced native human-cartilage cross-links, not a purified alpha3-only dimer. Results and Figure5 independently provide the chain and network context.
+
+[PMID:17880280, accepted postprint Results, indexed lines625–626](https://www.researchgate.net/publication/5963382): “both full length and NC4-NC2 chains were found mainly as monomeric and dimeric molecules”. The surrounding Results592–641 describe individual chains expressed with prolyl 4-hydroxylase in insect cells, distinguish alpha3 from the small full-length alpha1 homotrimer fraction, and distinguish the coexpressed heterotrimer from deletion constructs. The published self-association interpretation does not imply a native autonomous alpha3 complex.
+
+These anchors preserve the original indexed text with only whitespace normalization. They are external full-text excerpts, not additions to the unchanged abstract caches or fabricated cache-verifiable supporting_text. The abstract-only PMID8586434 remains an access-limited composition source; that separate limitation does not erase the verified external sections above.
