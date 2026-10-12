@@ -180,6 +180,9 @@ already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that 
 as warranted but peripheral to the core function. If the general term is already as precise as
 the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
 match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
+When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
+This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
+separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
 ### Do not overrule curators from incomplete evidence
 
