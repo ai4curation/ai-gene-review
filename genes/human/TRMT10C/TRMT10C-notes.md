@@ -35,7 +35,8 @@ curl -H 'Accept: application/json' \
 | RPP40 | nuclear | `contributes_to` | IBA 1, IDA 1 | 2 |
 | **RPP40** | nuclear | **`enables`** | **TAS** | **1** |
 | PRORP | **mitochondrial** (the catalyst) | `enables` | IBA 1, IDA 1, IEA 5 | 7 |
-| RPPH1 under 14 ncRNA ids (the nuclear catalyst), incl. lncRNA entries | nuclear | `enables` | IEA | 14 |
+| RPPH1, the nuclear catalyst, under 4 RNAcentral ids (`URS000013F331`, `URS000061A549`, `URS000071B825`, `URS0002A685AF`) | nuclear | `enables` | IEA | 4 |
+| 10 further RNAcentral ncRNA ids not named as RPPH1: 3 `HSALNT*`, 2 `LHRI_LNC*`, 3 `lnc-*` (CCNB1IP1, PDGFC), 2 unnamed (`ncRNA`, `non-coding RNA`) | nuclear | `enables` | IEA | 10 |
 | `ComplexPortal:CPX-6155` mribonucleasep_human, the whole complex | mitochondrial | `enables` | IDA | 1 |
 | `ComplexPortal:CPX-2877` rnasep_human, the whole complex | nuclear | `enables` | IPI | 1 |
 
@@ -49,8 +50,9 @@ is why they carry `enables` and why the claims below are scoped to proteins; `CP
 the only `enables` row with a direct-assay code other than PRORP's.
 
 Note the complex column: PRORP (O15091) is `part_of GO:0030678`, the *mitochondrial* complex,
-not the nuclear one. The nuclear catalyst is an RNA, so the `enables` rows there belong to RPPH1
-rather than to any subunit - but not absolutely: POP5, RPP30 and RPP40 each also carry an
+not the nuclear one. The nuclear catalyst is an RNA, so the `enables` rows there sit on ncRNA entries
+rather than on any protein subunit - four of them RPPH1 itself and ten further RNAcentral
+ids that are not named as RPPH1 - but not absolutely: POP5, RPP30 and RPP40 each also carry an
 `enables` row, POP5 by IEA and the other two by TAS. What holds without exception is the
 evidence-code version. **Every IDA row on a nuclear protein subunit is `contributes_to`**, and
 PRORP is the only protein in either complex carrying `enables` by direct assay, because the
