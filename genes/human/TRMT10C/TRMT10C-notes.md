@@ -23,22 +23,34 @@ curl -H 'Accept: application/json' \
 
 40 human annotations. Grouped by symbol and qualifier:
 
-| gene product | complex | qualifier | evidence | rows |
+| gene product | complex it is recorded in | qualifier | evidence | rows |
 |---|---|---|---|---|
-| POP1 | nuclear | `contributes_to` | IBA 1, IDA 2 | 3 |
-| POP4, POP7, RPP14, RPP21, RPP25 | nuclear | `contributes_to` | IDA | 1 each, 5 |
-| RPP38 | nuclear | `contributes_to` | IBA 1, IDA 1 | 2 |
-| POP5 | nuclear | `contributes_to` | IDA | 1 |
-| **POP5** | nuclear | **`enables`** | **IEA** | **1** |
-| RPP30 | nuclear | `contributes_to` | IDA | 1 |
-| **RPP30** | nuclear | **`enables`** | **TAS** | **1** |
-| RPP40 | nuclear | `contributes_to` | IBA 1, IDA 1 | 2 |
-| **RPP40** | nuclear | **`enables`** | **TAS** | **1** |
-| PRORP | **mitochondrial** (the catalyst) | `enables` | IBA 1, IDA 1, IEA 5 | 7 |
-| RPPH1, the nuclear catalyst, under 4 RNAcentral ids (`URS000013F331`, `URS000061A549`, `URS000071B825`, `URS0002A685AF`) | nuclear | `enables` | IEA | 4 |
-| 10 further RNAcentral ncRNA ids not named as RPPH1: 3 `HSALNT*`, 2 `LHRI_LNC*`, 3 `lnc-*` (CCNB1IP1, PDGFC), 2 unnamed (`ncRNA`, `non-coding RNA`) | nuclear | `enables` | IEA | 10 |
+| POP1 | `GO:0005655` | `contributes_to` | IBA 1, IDA 2 | 3 |
+| POP4 | `GO:0005655`, `GO:0030677` | `contributes_to` | IDA | 1 |
+| POP7, RPP21, RPP25 | `GO:0005655` | `contributes_to` | IDA | 1 each, 3 |
+| RPP14 | `GO:0005655`, `GO:0030677` | `contributes_to` | IDA | 1 |
+| RPP38 | `GO:0005655` | `contributes_to` | IBA 1, IDA 1 | 2 |
+| POP5 | `GO:0005655`, `GO:0030677` | `contributes_to` | IDA | 1 |
+| **POP5** | `GO:0005655`, `GO:0030677` | **`enables`** | **IEA** | **1** |
+| RPP30 | `GO:0005655` | `contributes_to` | IDA | 1 |
+| **RPP30** | `GO:0005655` | **`enables`** | **TAS** | **1** |
+| RPP40 | `GO:0005655`, `GO:0030677` | `contributes_to` | IBA 1, IDA 1 | 2 |
+| **RPP40** | `GO:0005655`, `GO:0030677` | **`enables`** | **TAS** | **1** |
+| PRORP | `GO:0030678` | `enables` | IBA 1, IDA 1, IEA 5 | 7 |
+| RPPH1, the nuclear catalyst, under 4 RNAcentral ids (`URS000013F331`, `URS000061A549`, `URS000071B825`, `URS0002A685AF`) | `GO:0030677` | `enables` | IEA | 4 |
+| 10 further RNAcentral ncRNA ids not named as RPPH1: 3 `HSALNT*`, 2 `LHRI_LNC*`, 3 `lnc-*` (CCNB1IP1, PDGFC), 2 unnamed (`ncRNA`, `non-coding RNA`) | `GO:0030677` | `enables` | IEA | 10 |
 | `ComplexPortal:CPX-6155` mribonucleasep_human, the whole complex | mitochondrial | `enables` | IDA | 1 |
 | `ComplexPortal:CPX-2877` rnasep_human, the whole complex | nuclear | `enables` | IPI | 1 |
+
+`GO:0005655` is nucleolar ribonuclease P complex, `GO:0030677` its generic parent
+ribonuclease P complex, `GO:0030678` the mitochondrial complex. The column records the
+term each gene product is actually annotated to rather than a nuclear/mitochondrial
+reading of it, which is a third query and is logged below. Two things it shows that
+"nuclear" would have hidden: every one of the ten protein subunits is in the nucleolar
+term, while **none** of the fourteen ncRNA ids is - they carry only the generic parent,
+RPPH1's four included. So the ncRNA `enables` rows are not recorded as nucleolar-complex
+members at all, which is consistent with reading them as a Rfam-style electronic
+propagation rather than as curated subunit annotations.
 
 Rows sum to 40, which is the hit count, so nothing was truncated at `limit=100`.
 
@@ -78,6 +90,21 @@ curl -H 'Accept: application/json' \
 4 annotations, all `PRORP | GO:0030678 | part_of`, by IBA, IDA, IPI and TAS. So PRORP is a part
 of the *mitochondrial* ribonuclease P complex, which is what makes it the counterpart rather
 than a member of the nuclear comparator set.
+
+The complex column for every other row comes from a third query, run 2026-10-12, because the
+qualifier query above returns gene product, qualifier and evidence and says nothing about
+complex membership - so filling that column from it would be an inference rather than a
+record:
+
+```
+curl -H 'Accept: application/json' \
+  'https://www.ebi.ac.uk/QuickGO/services/annotation/search?goId=GO:0005655&taxonId=9606&limit=100&goUsage=exact'
+```
+
+run for `GO:0005655`, `GO:0030677` and `GO:0030678`, plus a per-id
+`geneProductId=RNAcentral:URS..._9606` query for each of the fourteen ncRNA ids. Results:
+all ten protein subunits are in `GO:0005655`, four of them also in `GO:0030677`; PRORP is in
+`GO:0030678` only; and all fourteen ncRNA ids are in `GO:0030677` only, each by `part_of` IEA.
 
 The nuclear subunit genes have no folders in this repository, so these tables are the only
 in-branch record of the two queries; re-run the curls above to check them.
