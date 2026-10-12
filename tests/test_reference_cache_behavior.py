@@ -231,7 +231,12 @@ def test_subprocess_network_guard_is_active_through_wrapper(tmp_path, no_network
     cache_dir = tmp_path / "empty_cache"
     cache_dir.mkdir()
     review = tmp_path / "uncached.yaml"
-    review.write_text(yaml.safe_dump({"references": [{"id": "PMID:1", "title": TITLE}]}))
+    review.write_text(yaml.safe_dump({
+        "id": "P00918",
+        "gene_symbol": "CA2",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "references": [{"id": "PMID:1", "title": TITLE}],
+    }))
     env, attempted = no_network_subprocess_env
     env.update(UV_NO_SYNC="1", UV_OFFLINE="1", PYTHONDONTWRITEBYTECODE="1")
     result = subprocess.run(
