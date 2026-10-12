@@ -34,18 +34,24 @@ non-homologous alternative complex III systems.
 
 | Gene | Locus | UniProt | Review | OpenScientist |
 |---|---|---|---|---|
-| `petA` | PP_1317 | Q88N95 | Curated and validated | Running |
+| `petA` | PP_1317 | Q88N95 | Curated and validated | Complete — `genes/PSEPK/petA/petA-deep-research-openscientist.md` |
 | `petB` | PP_1318 | Q88N94 | Curated and validated | Running |
 | `petC` | PP_1319 | Q88N93 | Curated and validated | Running |
 
 ## Curation Findings
 
 The complete quinol:cytochrome c reductase reaction requires all three
-subunits. Existing `enables GO:0008121` annotations on PetA and PetB were
-therefore marked as complex-level over-annotations, while core synthesis records
-their contribution to the assembled activity. Direct electron-transfer,
-2Fe-2S, b-heme, c-heme, membrane, and complex-membership roles are retained at
-the corresponding leaves.
+subunits, so neither PetA nor PetB `enables GO:0008121` on its own. The two
+existing annotations were handled differently because the two genes are not in
+the same position. PetB already carries `GO:0009055 electron transfer activity`
+in its own GOA, so its `GO:0008121` row is `MARK_AS_OVER_ANNOTATED` and the
+subunit-level function is simply the term it already has. PetA has no
+`GO:0009055` row, so there is nothing to defer to: its row is `MODIFY` with
+`proposed_replacement_terms: GO:0009055`, following the same treatment of this
+subunit and term in `genes/human/UQCRFS1` and `genes/worm/isp-1`. In both cases
+`core_functions` records `GO:0008121` as a `contributes_to` activity of complex
+III. Direct electron-transfer, 2Fe-2S, b-heme, c-heme, membrane, and
+complex-membership roles are retained at the corresponding leaves.
 
 ## Evidence
 
