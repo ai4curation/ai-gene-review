@@ -407,6 +407,7 @@ class GoAncestors:
     def __init__(self, adapter_string: str = "sqlite:obo:go"):
         self.adapter_string = adapter_string
         self._adapter: Any = None
+        self._cache: Dict[str, FrozenSet[str]] = {}
 
     def load(self) -> "GoAncestors":
         """Build the adapter and check it returns a known ancestor; raise otherwise."""
@@ -422,14 +423,15 @@ class GoAncestors:
                 )
         return self
 
-    @lru_cache(maxsize=65536)
     def __call__(self, term_id: str) -> FrozenSet[str]:
-        if self._adapter is None:
-            self.load()
-        found = self._adapter.ancestors(
-            term_id, predicates=list(GO_PREDICATES), reflexive=False
-        )
-        return frozenset(found) - {term_id}
+        if term_id not in self._cache:
+            if self._adapter is None:
+                self.load()
+            found = self._adapter.ancestors(
+                term_id, predicates=list(GO_PREDICATES), reflexive=False
+            )
+            self._cache[term_id] = frozenset(found) - {term_id}
+        return self._cache[term_id]
 
 
 @lru_cache(maxsize=1)
@@ -642,6 +644,53 @@ def iter_negated_too_general(data: Dict[str, Any]) -> Iterator[int]:
                 yield index
 
 
+#: Actions whose (positive) term counts as asserted when justifying TOO_GENERAL.
+_ASSERTING = frozenset({"ACCEPT", "KEEP_AS_NON_CORE", "NEW"})
+
+
+def iter_unjustified_too_general(
+    data: Dict[str, Any], ancestors: Ancestors
+) -> Iterator[int]:
+    """Yield indices of TOO_GENERAL rows with no asserted, more specific term.
+
+    TOO_GENERAL means "entailed by a more specific term asserted in this review":
+    some positive ACCEPT, KEEP_AS_NON_CORE or NEW row, or a MODIFY replacement term,
+    must be a strict descendant of the row's term.
+
+    >>> toy = {"GO:C": frozenset({"GO:A"})}.get
+    >>> doc = {"existing_annotations": [
+    ...     {"term": {"id": "GO:A"}, "review": {"action": "TOO_GENERAL"}},
+    ...     {"term": {"id": "GO:B"}, "review": {"action": "TOO_GENERAL"}},
+    ...     {"term": {"id": "GO:X"}, "review": {"action": "MODIFY",
+    ...      "proposed_replacement_terms": [{"id": "GO:C"}]}}]}
+    >>> list(iter_unjustified_too_general(doc, lambda t: toy(t) or frozenset()))
+    [1]
+    """
+    asserted: Set[str] = set()
+    annotations = data.get("existing_annotations") or []
+    for ann in annotations:
+        if not isinstance(ann, dict) or ann.get("negated"):
+            continue
+        review = ann.get("review") or {}
+        action = review.get("action")
+        term_id = (ann.get("term") or {}).get("id")
+        if action in _ASSERTING and isinstance(term_id, str):
+            asserted.add(term_id)
+        if action == "MODIFY":
+            for repl in review.get("proposed_replacement_terms") or []:
+                repl_id = repl.get("id") if isinstance(repl, dict) else None
+                if isinstance(repl_id, str) and repl_id.startswith("GO:"):
+                    asserted.add(repl_id)
+    for index, ann in enumerate(annotations):
+        if not isinstance(ann, dict) or ann.get("negated"):
+            continue
+        if (ann.get("review") or {}).get("action") != "TOO_GENERAL":
+            continue
+        term_id = (ann.get("term") or {}).get("id")
+        if not any(term_id in ancestors(other) for other in asserted):
+            yield index
+
+
 def _hierarchical_rules_active() -> bool:
     """Whether the packaged table has any reportable hierarchical rule."""
     return any(
@@ -701,6 +750,22 @@ def check_action_consistency(
                 "is not in any action-consistency conflict",
                 path=f"existing_annotations[{index}].review.consistency_exception",
                 suggestion="Remove the stale exception.",
+                validation_category="BestPractices",
+                check_type="action_consistency",
+            )
+    if ancestors is not None:
+        for index in iter_unjustified_too_general(data, ancestors):
+            report.add_issue(
+                ValidationSeverity.WARNING,
+                "TOO_GENERAL but no more specific term is asserted in this review "
+                "(ACCEPT, KEEP_AS_NON_CORE, NEW or a MODIFY replacement)",
+                path=f"existing_annotations[{index}].review.action",
+                suggestion=(
+                    "TOO_GENERAL means the term is entailed by a more specific asserted "
+                    "term. If none exists, the broad term is the gene's only statement "
+                    "of this claim: use ACCEPT or KEEP_AS_NON_CORE (or MODIFY to a "
+                    "better term)."
+                ),
                 validation_category="BestPractices",
                 check_type="action_consistency",
             )

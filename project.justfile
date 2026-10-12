@@ -1135,12 +1135,12 @@ validate-gene organism gene:
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
-    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml --verbose
+    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml --verbose --ontology-checks
 
 # Validate all genes for an organism (shows detailed errors by default)
 validate-organism organism:
     @mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
+    uv run ai-gene-review validate --verbose --ontology-checks --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
 
 # Validate all genes that contain a specific top-level tag in their review YAML
 # Example: just validate-tag UPB
@@ -1165,7 +1165,7 @@ validate-tag tag:
 
     echo "Validating ${match_count} gene review file(s) with tag '{{tag}}'..."
     # shellcheck disable=SC2046
-    uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
+    uv run ai-gene-review validate --verbose --ontology-checks --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
 # Validate ONLY the given changed gene-review files (full strict per-gene stack:

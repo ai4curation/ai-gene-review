@@ -516,3 +516,44 @@ def test_go_ancestors_fails_fast_on_a_bad_adapter():
 
     with pytest.raises(Exception):
         GoAncestors("sqlite:/nonexistent/path/go.db").load()
+
+
+@pytest.mark.parametrize(
+    "specs,flagged",
+    [
+        # justified by an accepted descendant
+        ((("GO:A", "TOO_GENERAL", False), ("GO:C", "ACCEPT", False)), False),
+        # no descendant at all
+        ((("GO:A", "TOO_GENERAL", False), ("GO:X", "ACCEPT", False)), True),
+        # the only descendant is removed, so nothing more specific is asserted
+        ((("GO:A", "TOO_GENERAL", False), ("GO:C", "REMOVE", False)), True),
+        # a NOT descendant asserts nothing positive
+        ((("GO:A", "TOO_GENERAL", False), ("GO:C", "ACCEPT", True)), True),
+    ],
+)
+def test_too_general_needs_an_asserted_descendant(specs, flagged):
+    found = [
+        i
+        for i in issues(hrows(*specs), ancestors=toy)
+        if "no more specific term is asserted" in i.message
+    ]
+    assert bool(found) is flagged
+
+
+def test_too_general_precondition_needs_the_ontology():
+    data = hrows(("GO:A", "TOO_GENERAL", False))
+    assert issues(data) == []
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("gene", ["SCHPO/gaa1", "PSEAE/rhlB", "AGKCO/fibrolase"])
+def test_worked_examples_are_clean_with_real_go(gene):
+    """The docs' worked examples must pass every check, hierarchical ones included."""
+    from ai_gene_review.validation.action_consistency import go_ancestors
+
+    org, symbol = gene.split("/")
+    path = (
+        Path(__file__).parent.parent / f"genes/{org}/{symbol}/{symbol}-ai-review.yaml"
+    )
+    data = yaml.safe_load(path.read_text())
+    assert issues(data, ancestors=go_ancestors()) == []

@@ -23,6 +23,7 @@ from ai_gene_review.export.propagation_export import (
 
 ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL", "MARK_AS_OVER_ANNOTATED", "MODIFY",
            "REMOVE", "UNDECIDED"]
+# TOO_GENERAL is not negative: it holds the propagated claim true, only uninformative.
 NEGATIVE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
 IBA_BUCKETS = [
     ("SAME", "IBA to the same term"),

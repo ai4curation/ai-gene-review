@@ -55,6 +55,8 @@ from ai_gene_review.validation.supporting_text import (
 
 
 PROPAGATION_REVIEW_EVIDENCE_TYPES = {"IBA", "ISO"}
+# Actions that challenge a propagated annotation. TOO_GENERAL is deliberately absent:
+# it accepts the propagated claim as true and only judges the term uninformative.
 PROPAGATION_REVIEW_ACTIONS = {
     "REMOVE",
     "MODIFY",

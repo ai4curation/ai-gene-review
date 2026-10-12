@@ -128,7 +128,14 @@ skipped.
 
 Unlike the older `inconsistent_review_actions` warning, this check has no exemption for
 REMOVE rows that cite a different reference: REMOVE is a judgment on the claim,
-whatever paper the row cites.
+whatever paper the row cites. Until the reviews it flags are fixed and the old check is
+narrowed or retired, an unexempted ACCEPT/REMOVE pair is reported by both.
+
+### Known limitations
+
+- The pair rules compare each row's own `term.id`. MODIFY `proposed_replacement_terms`
+  are not yet part of the relation graph, so a replacement term never takes part in a
+  pair conflict. (The TOO_GENERAL precondition below does count them.)
 
 ### Baseline (October 2026)
 
@@ -164,6 +171,11 @@ means the claim is false. How it differs from the other actions:
 | MODIFY | This row's own evidence supports a better term |
 | MARK_AS_OVER_ANNOTATED | The claim goes beyond what the evidence supports |
 | TOO_GENERAL | The claim is true but subsumed by a more specific asserted term |
+
+When the ontology is loaded, a TOO_GENERAL row with no asserted strict descendant in
+the same review (a positive ACCEPT, KEEP_AS_NON_CORE or NEW row, or a MODIFY
+replacement term) is a WARNING: without one, the broad term is the review's only
+statement of the claim and should be kept.
 
 Use it sparingly. A broader term that still says something useful (a pathway-level
 process beside a specific step, `endoplasmic reticulum` from a localization screen
