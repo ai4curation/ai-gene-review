@@ -20,10 +20,9 @@ conditions, plus two entries created in this work (Mitchell syndrome, SLC26A1-re
 biological processes on the pathograph nodes naming that gene are compared with the gene's
 ai-gene-review core functions. The audit script (`align_audit.py`), the page generator
 (`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this
-table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the
-repository.
+table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, together with the second report the comparison section below is derived from (`report-branch-local.yaml`), which is the same audit run over this branch alone.
 
-**What "aligned" does and does not claim.** Four properties of the test make it a weak
+**What "aligned" does and does not claim.** Five properties of the test make it a weak
 check, and any of them can turn a row green that a curator would not:
 
 - The relation is **symmetric** and **unbounded in distance**. A node term counts as aligned
@@ -56,6 +55,11 @@ check, and any of them can turn a row green that a curator would not:
   dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,
   so a term matched only that way is marked `c` and `ALIGNED_CONTRIBUTES_ONLY` fires where a
   row's whole alignment rests on one.
+- Node MF and BP terms are compared against **one pooled set** of the review's core molecular
+  functions and `directly_involved_in` processes, so a node activity term can be satisfied by
+  a core process and the reverse. The fifth property, stated here as a bullet so this list is
+  the list the audit's docstring says the page carries; the cross-aspect paragraph below gives
+  the figures and the one worked row.
 - Module **membership** is not module **coverage**. Membership says the gene is a part of some
   module; coverage says a module is about the function the row aligned on, which is a different
   and stronger claim. They are flagged separately in three states: `NO_MODULE_MEMBERSHIP` means
@@ -138,7 +142,7 @@ Many of the gene reviews and modules this table asserts `COMPLETE` for are added
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
 The run above read origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed).
 
-The audit also runs over this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts, and comparing the two runs shows which flags are
+The audit also runs over this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts (recorded at `935e2e6d4`, an ancestor of the branch tip; no file under `genes/` or `modules/` changed between the two, so the figures stand for either), and comparing the two runs shows which flags are
 artifacts of the missing slices rather than findings. Both cover the same
 183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
 
@@ -439,18 +443,18 @@ does not require one. The distinction is obligation, not importance.
 - **TRMT10C** (`NO_MODULE_MEMBERSHIP`): RNase P partners (HSD17B10, PRORP, ELAC2) lack completed reviews.
 - **ANGPTL3** (`NO_MODULE_MEMBERSHIP`): No LPL / plasma triglyceride clearance module; LPL review still DRAFT.
 - **CTNS** (`NO_MODULE_MEMBERSHIP`): Lysosomal cystine export is a single step.
-- **SLC26A1** (`NO_MODULE_MEMBERSHIP`): Epithelial oxalate/sulfate transport has no coherent multi-part module yet; SLC26A1's oxalate role is contested.
+- **SLC26A1 (SLC26A1-Related_Hypersulfaturia, SLC26A1-Related_Oxalate_Transporter_Deficiency)** (`NO_MODULE_MEMBERSHIP`): Epithelial oxalate/sulfate transport has no coherent multi-part module yet; SLC26A1's oxalate role is contested.
 - **SLC26A6** (`NO_MODULE_MEMBERSHIP`): As SLC26A1; a two-part oxalate-transport module is possible later.
 - **DMP1** (`NO_MODULE_MEMBERSHIP`): No module contains DMP1 as a part. It is named in the notes of fgf23_klotho_phosphate_homeostasis as regulatory context, which this audit deliberately does not count as membership, and its mechanism is undefined.
 - **SLC10A7** (`NO_MODULE_MEMBERSHIP`): Single gene with unknown transported substrate.
 - **DNAJC30** (`NO_MODULE_MEMBERSHIP`): Complex I N-module repair is not assembly; no repair module exists.
 - **LCT** (`NO_MODULE_MEMBERSHIP`): Brush-border disaccharide digestion: only LCT has a completed review (SI, MGAM, TREH missing).
-- **HNF1A / HNF4A** (`NO_MODULE_MEMBERSHIP`): Transcription factors whose hyperinsulinism and MODY roles act through many target genes; no beta-cell transcriptional-network module exists yet.
-- **SLC16A1** (`NO_MODULE_MEMBERSHIP`): Disease mechanism is ectopic beta-cell expression of a transporter whose normal role (lactate/pyruvate transport) belongs to no beta-cell pathway; a monocarboxylate-transport module would not include the disease mechanism.
+- **HNF1A / HNF4A (Congenital_Isolated_Hyperinsulinism, Hyperinsulinemic_Hypoglycemia)** (`NO_MODULE_MEMBERSHIP`): Transcription factors whose hyperinsulinism and MODY roles act through many target genes; no beta-cell transcriptional-network module exists yet.
+- **SLC16A1 (Congenital_Isolated_Hyperinsulinism, Hyperinsulinemic_Hypoglycemia)** (`NO_MODULE_MEMBERSHIP`): Disease mechanism is ectopic beta-cell expression of a transporter whose normal role (lactate/pyruvate transport) belongs to no beta-cell pathway; a monocarboxylate-transport module would not include the disease mechanism.
 - **SIM1** (`NO_MODULE_MEMBERSHIP`): Transcription factor needed for paraventricular hypothalamic neuron development and function; it acts on, rather than within, the leptin_melanocortin_signaling module, whose parts are the ligand, processing and receptor steps.
 - **MT-TL1 / MT-TQ / MT-TH / MT-TK / MT-TC / MT-TS1 / MT-TS2 / MT-TV / MT-TW / MT-TM** (`NO_MODULE_MEMBERSHIP`): No mitochondrial translation module exists; in mitochondrial_trna_charging_and_initiator_formylation a tRNA would appear only as a synthetase substrate, which the substrate guidance excludes, and module parts are UniProt proteins.
 - **UCP2** (`NO_MODULE_MEMBERSHIP`, not causative): Causal role disputed (relationship DISPUTED); its transported substrate is itself contested.
 - **AIFM1** (`MODULE_NOT_COVERING`): The aligned function is the mitochondrial disulfide relay (CHCHD4 anchoring); no module covers the relay. AIFM1 is a part of apoptotic_execution_phase, whose AIFM1 annoton carries DNA binding, nucleus and positive regulation of apoptotic process: a different AIFM1 activity, and not the encephalomyopathy mechanism.
-- **APOB** (`MODULE_NOT_COVERING`): The aligned term is GO:0034379 very-low-density lipoprotein particle assembly, and there is no VLDL-assembly module. APOB is a part of chylomicron_assembly_secretion, whose scope is GO:0034378 chylomicron assembly, and of ldl_receptor_mediated_endocytosis, which is about the receptor taking the particle up. GO:0034378 and GO:0034379 are siblings, not one inside the other, so the hepatic VLDL step is genuinely unmodelled. APOB's other row, the LDL-receptor-binding one, is covered.
+- **APOB (Hypobetalipoproteinemia)** (`MODULE_NOT_COVERING`): The aligned term is GO:0034379 very-low-density lipoprotein particle assembly, and there is no VLDL-assembly module. APOB is a part of chylomicron_assembly_secretion, whose scope is GO:0034378 chylomicron assembly, and of ldl_receptor_mediated_endocytosis, which is about the receptor taking the particle up. GO:0034378 and GO:0034379 are siblings, not one inside the other, so the hepatic VLDL step is genuinely unmodelled. APOB's other row, the LDL-receptor-binding one, is covered.
 - **NUBPL** (`MODULE_NOT_COVERING`): The aligned term is GO:0016226 iron-sulfur cluster assembly. NUBPL is a part of complex_i_assembly_factors, whose scope is GO:0032981 mitochondrial respiratory chain complex I assembly: NUBPL delivers an Fe-S cluster to the assembling complex, and the cluster's own assembly is a different process that no module covers.
 - **NDUFA1** (`MODULE_NOT_COVERING`): A limitation of the coverage test rather than a modelling gap, and left flagged rather than waived. The module is the right one; the cause is an asymmetry in how the two sides may say the same thing. The dismech node binds GO:0008137 NADH dehydrogenase (ubiquinone) activity, which the review carries as contributes_to_molecular_function, so the row aligns. complex_i_accessory_subunits says the identical relation the GO-idiomatic way, giving its NDUFA1 annoton GO:0005198 structural molecule activity as part of complex I, and GO:0005198 does not relate to GO:0008137 by is_a/part_of ancestry: a structural role and the activity it supports are different branches of molecular function. Coverage accepts a contributes-to term from the review but has no way to read the module's structural-plus-part_of idiom as the same claim. (The module also declares GO:0006120 as its process scope, which ancestry does not reach from GO:0008137 either - but that is a fact about this particular pair, not about the aspects: is_a/part_of does cross between molecular function and biological process, and MT-ND1 in this same table aligns GO:0008137 to GO:1902600 by doing so. Either way the aspect question is not what decides this row.)

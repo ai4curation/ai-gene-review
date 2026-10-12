@@ -1,4 +1,5 @@
 """Render the dismech<->AIGR alignment audit as a markdown project page."""
+import os
 import sys
 
 import yaml
@@ -81,6 +82,10 @@ REPEATED_ROWS = sorted({(e, g) for (e, g, n) in list(ROWS_HERE) + list(ROWS_THER
 # threshold is "more than one row" rather than an artifact of concatenating two lists.
 _ALL_SYMS = [g for (_, g, _) in set(ROWS_HERE) | set(ROWS_THERE)]
 AMBIGUOUS_SYMS = {g for g in set(_ALL_SYMS) if _ALL_SYMS.count(g) > 1}
+# Global, but only the comparison section and the module-reason list consult it: the table
+# renders from the primary report and carries the entry in its own column, so a symbol
+# there is never ambiguous. Both reports hold the same rows, which the row-count guard in
+# alt_comparison enforces, so one set is correct for both.
 if REPEATED_ROWS:
     # Fatal rather than a console note. A true duplicate is exactly the case the page
     # cannot disambiguate - show_rows prints the entry, which would be identical - so the
@@ -102,6 +107,42 @@ def flag_rows(entries, flag):
     """
     idx = ROWS_HERE if entries is rep else ROWS_THERE if entries is ALT_REP else row_index(entries)
     return {k for k, g in idx.items() if flag in (g.get("flags") or ())}
+
+
+def _alt_drift():
+    """Whether the audit's inputs moved between the second run's tree and the branch now.
+
+    The recorded revision is necessarily an ancestor of the branch tip, because the commit
+    that carries each round's own changes comes after the audit that fed it. That is honest
+    provenance and not a defect, but it leaves a reader checking the branch out on a
+    different commit from the one the figures were read on - so whether it matters is
+    measured here rather than assumed either way.
+    """
+    rev = (ALT_PROV or {}).get("aigr_revision")
+    if not rev:
+        return ""
+    import subprocess
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
+                              check=True).stdout.strip()
+        if head.startswith(rev[:9]) or rev.startswith(head[:9]):
+            return ""
+        subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
+                       capture_output=True, check=True)
+        out = subprocess.run(["git", "diff", "--name-only", f"{rev}..HEAD", "--",
+                              "genes", "modules"],
+                             capture_output=True, text=True, check=True).stdout.split()
+    except Exception:
+        # Tri-state, as the dirty flags are: git could not answer, so nothing is claimed.
+        return (f" (recorded at `{rev[:9]}`; whether the audit's inputs moved between that"
+                " commit and this branch's tip could not be determined here)")
+    if not out:
+        return (f" (recorded at `{rev[:9]}`, an ancestor of the branch tip; no file under"
+                " `genes/` or `modules/` changed between the two, so the figures stand for"
+                " either)")
+    return (f" (recorded at `{rev[:9]}`, an ancestor of the branch tip, and **{len(out)} of the"
+            " audit's input files changed between the two**, so the figures below describe the"
+            f" recorded commit rather than the tip - e.g. `{out[0]}`)")
 
 
 def alt_comparison():
@@ -260,13 +301,17 @@ def alt_comparison():
 
         The one cause in the chain that was reached by elimination rather than read: with
         the same modules and the same aligned terms, a coverage difference can only be the
-        modules' own contents, which covering_pairs records per module. Named for the
-        first such row so the claim is checkable rather than entailed.
+        modules' own contents, which covering_pairs records per module. Every row in the
+        group is shown, not the first - asserting the cause for a group and showing it for
+        one row leaves the rest where the cause as a whole was before it was read - and the
+        count is asserted against the group's size so that cannot regress silently.
         """
         shown = []
         for k in rows:
             a_, b_ = ROWS_HERE.get(k, {}), ROWS_THERE.get(k, {})
             pa, pb = a_.get("covering_pairs") or {}, b_.get("covering_pairs") or {}
+            _nm = f"{k[1]} ({k[0]})" if k[1] in AMBIGUOUS_SYMS else k[1]
+            per_row = []
             # Either side's covering_pairs, not their intersection: the flagged side of
             # MODULE_NOT_COVERING has no covering pairs at all, and that absence against
             # the other side's coverage is itself the content difference to show. A third
@@ -279,21 +324,29 @@ def alt_comparison():
                 if ta != tb:
                     def _f(ts):
                         return ", ".join(f"`{t}`" for t in sorted(ts)) or "nothing"
-                    _nm = f"{k[1]} ({k[0]})" if k[1] in AMBIGUOUS_SYMS else k[1]
-                    shown.append(f"{_nm}: `{m}` covers {_f(ta)} here and {_f(tb)} there")
-                    break
-        # Every member, not the first: asserting the cause for a group and showing it for
-        # one row leaves the rest in the state the cause as a whole was in before it was
-        # read from covering_pairs. HAO1 and COQ8A both have the difference recorded.
+                    # No break: a row with two modules would otherwise show one
+                    # difference and read as the whole of it. Inert today, every row in
+                    # this group being single-module.
+                    per_row.append(f"`{m}` covers {_f(ta)} here and {_f(tb)} there")
+            if per_row:
+                shown.append(f"{_nm}: " + ", and ".join(per_row))
+        # Asserted, not hoped for: a member with no differing module in covering_pairs
+        # would be dropped with no count, which is the show-fewer-than-claimed shape this
+        # per-group change was made to remove.
+        if shown and len(shown) != len(rows):
+            sys.exit(f"cover_evidence shows {len(shown)} of {len(rows)} rows attributed to "
+                     f"differing module contents for {flag}; the page would assert the cause "
+                     "for the group and show it for a subset")
         return (" - " + "; ".join(shown)) if shown else ""
 
     def show_rows(rows, cap=8):
         """Name rows, adding the entry where the symbol alone is ambiguous.
 
-        `ambig` is every symbol appearing more than once among *all* the rows this flag's
-        movement names, both sides together - a gene holding rows on both sides would
-        otherwise print the same bare symbol under "left" and under "arrived" with nothing
-        to tell them apart.
+        Ambiguity is read from AMBIGUOUS_SYMS, which is every symbol holding more than one
+        row anywhere in either report - not every symbol repeated within the movement being
+        described. Scoping it to the movement left a gene with rows in three entries bare
+        wherever only one of them moved, so the same page printed HADH disambiguated under
+        one flag and bare two bullets later under another.
 
         The cap applies per cause rather than per side, so a small group - the
         module-contents and module-set causes this page argues from - is enumerable
@@ -379,7 +432,7 @@ def alt_comparison():
         return ", ".join(f"`{f}`" for f in fs)
 
     out = [
-        f"The audit also runs over {tree}, and comparing the two runs shows which flags are",
+        f"The audit also runs over {tree}{_alt_drift()}, and comparing the two runs shows which flags are",
         "artifacts of the missing slices rather than findings. Both cover the same",
         f"{n_here} gene rows. Flags that fall: {pairs(fell)}. Flags that rise: {pairs(rose)}.",
         "",
@@ -811,10 +864,12 @@ lines += [
     "biological processes on the pathograph nodes naming that gene are compared with the gene's",
     "ai-gene-review core functions. The audit script (`align_audit.py`), the page generator",
     "(`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this",
-    "table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the",
-    "repository.",
+    f"table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the"
+    + (" repository, together with the second report the comparison section below is derived from"
+       f" (`{os.path.basename(ALT_PATH)}`), which is the same audit run over this branch alone."
+       if ALT_PATH else " repository."),
     "",
-    "**What \"aligned\" does and does not claim.** Four properties of the test make it a weak",
+    "**What \"aligned\" does and does not claim.** Five properties of the test make it a weak",
     "check, and any of them can turn a row green that a curator would not:",
     "",
     "- The relation is **symmetric** and **unbounded in distance**. A node term counts as aligned",
@@ -847,6 +902,11 @@ lines += [
     "  dismech node describes, so excluding it would lose real agreement; but it is a weaker claim,",
     "  so a term matched only that way is marked `c` and `ALIGNED_CONTRIBUTES_ONLY` fires where a",
     "  row's whole alignment rests on one.",
+    "- Node MF and BP terms are compared against **one pooled set** of the review's core molecular",
+    "  functions and `directly_involved_in` processes, so a node activity term can be satisfied by",
+    "  a core process and the reverse. The fifth property, stated here as a bullet so this list is",
+    "  the list the audit's docstring says the page carries; the cross-aspect paragraph below gives",
+    "  the figures and the one worked row.",
     "- Module **membership** is not module **coverage**. Membership says the gene is a part of some",
     "  module; coverage says a module is about the function the row aligned on, which is a different",
     "  and stronger claim. They are flagged separately in three states: `NO_MODULE_MEMBERSHIP` means",
@@ -1172,8 +1232,21 @@ lines += ["", "## Genes with a module flag, and why", "",
           "`- uncovered:` list in the Modules column already say everything a hand-written reason",
           "could, and the generator",
           "does not require one. The distinction is obligation, not importance.", ""]
+# Which entries each named gene's flagged rows are in, so a multi-row gene in this list is
+# as locatable as one in the movement accounting. Hand-keyed display strings do not pass
+# through show_rows, so APOB, SLC16A1 and HNF4A were named bare here while the accounting
+# above disambiguated them.
+_reason_entries = {}
+for _e in rep:
+    for _g in _e.get("genes") or []:
+        if [f for f in (_g.get("flags") or ()) if f in MODULE_FLAGS]:
+            _reason_entries.setdefault(_g.get("gene"), []).append(_e.get("entry"))
 for k, v in MODULE_REASONS.items():
     names = [n.strip() for n in k.split("/")]
+    k = " / ".join(
+        f"{n} ({', '.join(sorted(_reason_entries.get(n, [])))})"
+        if n in AMBIGUOUS_SYMS and _reason_entries.get(n) else n
+        for n in names)
     fl = sorted({f for n in names for f in flag_by_gene.get(n, ())})
     tag = ", ".join(f"`{f}`" for f in fl) or "`no module flag on this run`"
     if names and not any(n in principal_genes for n in names):
