@@ -109,6 +109,14 @@ or a confident assertion of paralog misattribution. The report is preserved as
 provider output, including its limitations; it is not treated as verified evidence
 for the proposed rejection [PMID:20739936; OpenScientist report, Limitations].
 
+## OpenScientist citation attachment - 2026-10-10
+
+The focused report is now cited from the GO:1990758 UNDECIDED review so the
+mitotic-provenance audit is visible in the structured record. Its removal/re-scope
+lead remains non-adopted: the report strengthens the Sgo2-specific concern by
+combining figure captions with PomBase Canto metadata, but it also records that a
+buried Sgo1 assay in the Nature body or supplement cannot be excluded completely.
+
 ### 2026-09-05: source-aware refresh after wrapper fix
 
 `just fetch-gene SCHPO sgo1 --force` refreshed 35 GOA rows and restored three

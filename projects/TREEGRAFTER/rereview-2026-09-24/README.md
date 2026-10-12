@@ -7,8 +7,9 @@ rejection stands on stated biological grounds, or whether it should be relaxed
 to `ACCEPT`, `KEEP_AS_NON_CORE`, `MODIFY`, or `UNDECIDED`.
 
 Genes whose rejected rows were already re-assessed in the
-[2026-09-20 audit](../rereview-2026-09-20/) (`status: reviewed`) are excluded
-here; those decisions stand as recorded there.
+[2026-09-20 audit](https://github.com/ai4curation/ai-gene-review/tree/main/projects/TREEGRAFTER/rereview-2026-09-20)
+(`status: reviewed`) are excluded here; those decisions stand as recorded
+there.
 
 Scope is the flagged rows only (`scope: treegrafter_rejections`), not a
 full-gene re-review. Other annotations in the same gene are not re-adjudicated
