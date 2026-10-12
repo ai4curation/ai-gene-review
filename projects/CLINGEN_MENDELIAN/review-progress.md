@@ -66,6 +66,39 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 341 — 2026-10-11 23:54:55 UTC
+
+**341 complete / 2,535 remaining in the frozen 2,876-gene catalog.**
+CNOT1 is the sole new completion. It was unchecked at the actual pending tracker
+revision `7d5112b980bd82bf7af5eb2e4d99685780df40f0` and absent from its 64 completion additions.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CNOT1 | [#4820](https://github.com/ai4curation/ai-gene-review/pull/4820) | `3c61cc26ebcf933ee1318ecab60303ed71b426d6` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4820#pullrequestreview-5484483416) | 2026-10-11T23:54:55Z | `9ce0404b697131c6465edbea9af026a5a4a00cf5` |
+
+Approval was submitted at **2026-10-11T18:48:45Z** on the final head.
+The exact-head approval resolves the earlier blocking review. Remaining suggestions
+were explicitly non-blocking. The required test and reviewer workflow both succeeded before merge:
+
+- [Build and test / test (3.12)](https://github.com/ai4curation/ai-gene-review/actions/runs/38140009323/job/114471751002) completed at **2026-10-11T18:01:29Z**.
+- [Claude Code Review / claude-review](https://github.com/ai4curation/ai-gene-review/actions/runs/38140009321/job/114471751318) completed at **2026-10-11T18:49:01Z**.
+
+Merge queue integration completed at the API time above. The 27 changed PR paths,
+complete six-file gene directory, and all 35 cache/local reference objects (32 PMID
+caches, two Reactome entries and the cited source-evidence file) are identical at
+the approved head and actual merge. All 27 PR paths are also actual integration changes; none was omitted as already present. Captured main equals that merge. The JSON
+completion entry records paths, Git blob IDs and SHA-256 hashes; no scientific
+claims or new primary-source readings are added by this tracker update.
+
+Exactly one catalog checkbox changes. All 2,876 association texts, frontmatter,
+235 queue objects, 64 earlier completion entries, prior progress text and existing
+history records are preserved. Update 65 is appended to identical JSON mirrors.
+The counts `completed`, `campaign_audited_merged` and legacy `original_merged` are
+341; `pending_followups` remains zero. Neither pending reviews nor tracker commits
+add completions. Existing checkpoint scope and counter definitions remain in force.
+
+[Checkpoint 341 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T001215Z-codex-3576e4.yaml).
+
 ## Completion checkpoint 340 — 2026-10-11 23:13:41 UTC
 
 **340 complete / 2,536 remaining in the frozen 2,876-gene catalog.**

@@ -2988,21 +2988,22 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**340 of 2,876 genes are complete; 2,536 remain.**
-[CNGB3 #4768](https://github.com/ai4curation/ai-gene-review/pull/4768) adds one
-verified merged review beyond checkpoint 339. Its final revision was approved,
+**341 of 2,876 genes are complete; 2,535 remain.**
+[CNOT1 #4820](https://github.com/ai4curation/ai-gene-review/pull/4820) adds one
+verified merged review beyond checkpoint 340. Its final revision was approved,
 the required test passed, and merge queue integration completed at
-**2026-10-11 23:13:41 UTC**. All 18 changed paths, all six gene files and all
-10 referenced PMID caches match the approved revision.
+**2026-10-11 23:54:55 UTC**. All 27 changed paths, all six gene files and all
+32 referenced PMID caches match the approved revision. The two cited Reactome entries
+and cited source-evidence file are also unchanged.
 
-The frozen gene cutoff is [CNGB3 merge f6bb52a1888b](https://github.com/ai4curation/ai-gene-review/commit/f6bb52a1888bb449150cfee7bae168e1e6578570).
-This amendment starts from the actual pending [tracker #4806 revision 8e0400093727](https://github.com/ai4curation/ai-gene-review/commit/8e0400093727037c8250f2b7ec1c4536ab8ea74b).
+The frozen gene cutoff is [CNOT1 merge 9ce0404b6971](https://github.com/ai4curation/ai-gene-review/commit/9ce0404b697131c6465edbea9af026a5a4a00cf5).
+This amendment starts from the actual pending [tracker #4806 revision 7d5112b980bd](https://github.com/ai4curation/ai-gene-review/commit/7d5112b980bd82bf7af5eb2e4d99685780df40f0).
 The tracker PR remains pending; tracker publication adds no gene completion.
 Each gene counts once, including reviews with justified uncertainty.
 
-See [checkpoint 340 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-340-2026-10-11-231341-utc).
-All 235 historical queue objects, 63 previous completion updates, prior progress
-entries and existing history records are preserved. Only CNGB3 is added here.
+See [checkpoint 341 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-341-2026-10-11-235455-utc).
+All 235 historical queue objects, 64 previous completion updates, prior progress
+entries and existing history records are preserved. Only CNOT1 is added here.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3033,6 +3034,8 @@ entries and existing history records are preserved. Only CNGB3 is added here.
 [Checkpoint 339 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T125009Z-codex-dc5831.yaml).
 
 [Checkpoint 340 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T233509Z-codex-49c813.yaml).
+
+[Checkpoint 341 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T001215Z-codex-3576e4.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3461,7 +3464,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **CNKSR2** — HGNC:19701; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_420ee599-c745-43b9-b9a9-c80dfd7f68a8-2020-12-16T170000.000Z) (MONDO:0100148; XL; Definitive).
 - [ ] **CNNM2** — HGNC:103; [hypomagnesemia, seizures, and intellectual disability 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_522bb617-c817-4536-a87b-01d4302d7bf0-2024-02-15T170000.000Z) (MONDO:0020787; SD; Definitive).
 - [ ] **CNNM4** — HGNC:105; [Jalili syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e3cedd07-df9e-4838-8a6b-b24b2802f223-2021-08-06T154836.361Z) (MONDO:0009007; AR; Definitive).
-- [ ] **CNOT1** — HGNC:7877; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0684b8e2-5552-44d3-a72e-2022e273e24f-2023-09-19T100000.000Z) (MONDO:0100038; AD; Definitive); [holoprosencephaly 12 with or without pancreatic agenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91d394c9-60fe-40cb-918b-9790a08873d9-2023-09-30T160000.000Z) (MONDO:0032787; AD; Limited).
+- [x] **CNOT1** — HGNC:7877; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0684b8e2-5552-44d3-a72e-2022e273e24f-2023-09-19T100000.000Z) (MONDO:0100038; AD; Definitive); [holoprosencephaly 12 with or without pancreatic agenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91d394c9-60fe-40cb-918b-9790a08873d9-2023-09-30T160000.000Z) (MONDO:0032787; AD; Limited).
 - [ ] **CNOT3** — HGNC:7879; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_585384c5-8958-4934-af26-4040774a644c-2021-08-24T160000.000Z) (MONDO:0100038; AD; Definitive).
 - [x] **CNTN2** — HGNC:2172; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fe53f9b9-cb21-49a2-8c24-80f63fc75f0f-2023-11-07T080000.000Z) (MONDO:0100038; AR; Definitive).
 - [ ] **CNTNAP2** — HGNC:13830; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3af732e2-062d-4bb3-a3cd-2045e460dc8f-2021-06-15T160000.000Z) (MONDO:0100038; AR; Definitive).
