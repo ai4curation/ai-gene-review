@@ -1224,7 +1224,7 @@ validate-all:
     #!/usr/bin/env bash
     exit_code=0
     echo "Schema validation (batch)..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    uv run python -m ai_gene_review.validation.schema_batch --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
     echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
     # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
@@ -1554,7 +1554,7 @@ gen-all-slides:
 
 # Render a single gene review YAML as HTML (custom renderer)
 render organism gene:
-    uv run python -m ai_gene_review.render genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    uv run python -m ai_gene_review.render "genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
 
 # Render all gene reviews for an organism as HTML
 render-organism organism:
@@ -2627,7 +2627,7 @@ new-history *ARGS:
 # Validate a single history record
 [group('QC')]
 validate-history file:
-    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "{{file}}"
 
 # Validate all history records
 [group('QC')]
