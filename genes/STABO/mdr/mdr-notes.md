@@ -18,3 +18,8 @@ Current reference-tree PTN008681462 (the exact frozen TreeGrafter node) is an Em
   transporter, as directly involved in synthesis, so the experimental annotation is retained but
   not treated as core).
 - Existing UNDECIDED TreeGrafter judgments and ACCEPTs unchanged.
+
+
+## OpenScientist mitochondrial-peptide follow-up (2026-10-10)
+
+Read the focused report on mitochondrial oligopeptide-export capacity versus sophorolipid export. The report resolved the three narrow TreeGrafter claims to the same PTN008681462 source and strengthened the architecture argument: H6TB12 is a full-length MDR exporter, whereas established mitochondrial peptide exporters are half-size Mdl1/ABCB10-like proteins. Marked GO:0005743 mitochondrial inner membrane, GO:0015421 ABC-type oligopeptide transporter activity, and GO:0090374 oligopeptide export from mitochondrion for removal while leaving the experimental sophorolipid and generic ABC transporter rows accepted.

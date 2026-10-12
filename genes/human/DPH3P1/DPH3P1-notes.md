@@ -38,7 +38,11 @@
 - The problem is not phylogenetic placement or residue loss. The problem is that the leaf is a
   pseudogene with no evidence of transcription into mRNA or of translation. Following the Tier 3
   rule ("REMOVE where the product is unlikely to exist"), all five rows (3 IBA, 2 IEA
-  InterPro) are REMOVE.
+  InterPro) were first set to REMOVE.
+- Revised after PR #3680 review: the two metal-binding MF rows (GO:0005506, GO:0046872) are
+  MARK_AS_OVER_ANNOTATED, because their residue basis (the CSL zinc-finger cysteines) is intact
+  and only the product's existence is in doubt. The diphthamide process and cytosol rows stay
+  REMOVE.
 - Propagation routes: PAINT IBA from PTN000485452 (iron ion binding, cytosol, diphthamide
   modification), and InterPro2GO from IPR044248 (DPH3/4-like; diphthamide BP and metal ion
   binding).

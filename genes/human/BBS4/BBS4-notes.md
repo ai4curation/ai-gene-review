@@ -41,3 +41,86 @@ BBS4 is a core subunit of the **BBSome** (8-subunit complex: BBS1, BBS2, BBS4, B
 - nucleus / transcription factor binding: weak; UNDECIDED/non-core.
 - ISS pleiotropic developmental terms: KEEP_AS_NON_CORE.
 </content>
+
+
+## 2026-09-30 BBS4 source-complete review
+
+The normal local projection contains 130 distinct source assertions from 140 raw GOA rows. It recovers 20 omitted partner-specific assertions and fills 71 supporting-entity fields in the inherited review; ten raw rows are exact duplicate source keys. Qualifiers, references, evidence and partner/isoform support are preserved. The three UniProt alternative products remain unchanged, including their original sequence_note values. No new annotation is proposed.
+
+BBS4 directly associates with PCM1 and DCTN1/p150-glued in a pericentriolar adaptor mechanism (PMID:15107855). The primary experiments allow recruitment and retention contributions; they do not directly visualize every cargo-transport step. Generic PCM1 interactions can be refined with this independently grounded adaptor mechanism and DCTN1 interactions to dynactin binding. Other supported interactions remain non-core under the user-supplied ActionEnum unless their exact partner and assay support a specific refinement. Lack of mechanistic informativeness is not evidence of an incorrect interaction. Original interaction studies remain distinct from the independent functional grounding.
+
+The inherited BBS7-only explanation for the RNF2 row is superseded: PMID:22302990 Fig. 3C includes tagged BBS4–RNF2 co-immunoprecipitation. RNF2 supports ubiquitin protein ligase binding, while the endogenous co-IP and yeast-screen assays were BBS7 experiments. The Q8TAM2 partner in PMID:24939912 is TTC8/BBS8, not PC1; the paper’s BBS1-dependent PC1 trafficking result does not establish the same dependence on BBS4.
+
+The original nuclear-retention IGI assertion and the electronic nucleus inference remain undecided. Selected PMID:15107855 Results describe pericentriolar PCM1 positioning, but the precise curator/supplementary annotation context has not been reconstructed. Later PMID:32894499 describes XBP1/ATF6 cargo translocation into the nucleus, which does not establish BBS4 nuclear residence. Sensory processing also remains undecided because its ontology definition concerns neural interpretation and the available source abstract does not resolve the particular BBS4 assertion.
+
+Multinucleation, replicated centrioles and cell-cycle changes after BBS4 depletion support retention of cytokinesis/centrosome-cycle annotations as non-core (PMID:15107855). They are not rejected for lacking a dedicated catalytic function, nor declared uniformly secondary. Broad microtubule organization is retained because mouse olfactory-neuron evidence extends beyond centrosomal anchoring (PMID:15322545). Mouse adipocyte perturbation provides independent functional support beyond the inherited expression evidence (PMID:24500759). Species and cell-context limits are retained for the developmental, metabolic and sensory transfers.
+
+The core synthesis separates the direct pericentriolar adaptor role from a BP-only contribution to BBSome-dependent ciliary protein localization. Remaining-complex assembly and ciliary entry are distinct: much of the BBSome can remain assembled after BBS4 depletion while its entry is impaired (PMID:22072986). Cilia and cargoes have different requirements; Bbs4-null mice form many primary/motile cilia but lack sperm flagella (PMID:15173597), and BBS4 gene delivery has different effects on olfactory cilium length and number (PMID:30665891). No autonomous motor, folding, lipid-catalytic or universal cargo-recognition activity is assigned.
+
+No provider report was generated or invented. The established configured provider environment had already failed offline dependency resolution before report generation in the preceding BBS2 attempt; no identical BBS4 retry was made. This manual consultation distinguishes complete abstracts, selected original Results/Methods/captions, partial cache bodies, and uninspected images/supplements. Root’s two fixed normal-source batches each failed DNS; the eight additional references and the shared PMID:18032602 source subsequently completed their separate normal-source recovery before this integration.
+
+The requested normal sources have now been imported through Source87 and Source88 without editing cached publications. Relevant newly available evidence was reassessed with paper-specific reading limits recorded in the references. This revision supersedes the older BBS7-only RNF2 assessment, the PC1/TTC8 partner confusion, the AZI1/Bbs4 melanosome-donor confusion and the blanket secondary-phenotype interpretation. The final decisions are 42 ACCEPT, 76 KEEP_AS_NON_CORE, nine MODIFY and three UNDECIDED, with two core roles and no NEW annotation.
+
+Additional primary reading confirms that BBS4 requirements differ by tissue and cargo. Sperm flagella and olfactory cilia are affected despite preserved cilia elsewhere; tested olfactory cargoes can still enter residual cilia. Mature-neuron BBS4 rescue partly restores ciliary length and olfactory responses without restoring cilium or basal-body numbers. Early retinal opsin mislocalization coexists with preserved trafficking of selected structural proteins. Mouse preadipocyte perturbations support the existing non-core differentiation context without defining BBS4 as a transcription factor or lipid enzyme. The three unresolved annotations remain unresolved.
+
+## Validation of the 2026-09-30 revision
+
+Focused validation passed with 34 advisories for generic protein-binding assertions retained as non-core under the supplied ActionEnum. The exact interactions are preserved where a more specific activity is not established. No errors or source-projection mismatches were reported.
+
+## 2026-09-30 review follow-up: source-specific mechanisms and evidence anchors
+
+Five PCM1 IPI records (PMID:17574030, PMID:18772192, PMID:18000879, PMID:19081074 and PMID:22500027) now retain their original association as non-core. They no longer repeat the complete adaptor mechanism established by PMID:15107855. That direct mechanism remains in its own accepted/modified source records and the core function. The exact supplementary PCM1 pair in PMID:18000879 remains uninspected; its curated association is retained without claiming an independently verified construct-level assay. This supersedes the five earlier mechanism replacements without disputing the interactions.
+
+Eight short, cache-verified abstract anchors restore direct evidence on existing localization, dynactin-binding, microtubule-anchoring and BBSome annotations. Reference-section labels identify them as abstract text. Longer repeated quotations are not necessary to retain their evidence links.
+
+The RNF2 assay detail comes from separately accessed [original Results and the Fig.3C caption](https://pmc.ncbi.nlm.nih.gov/articles/PMC3283873/), which enumerate tagged BBS4 among the tested proteins. The normal publication cache is abstract-only. No complete-paper, supplement or figure-pixel inspection is claimed. Endogenous HeLa co-IP and yeast bait evidence are specific to BBS7. The more specific RNF2 binding term is also justified by the partner's E3-ligase identity. The prior figure statement therefore has an external primary source; limited local cache coverage does not make it fabricated.
+
+The revised totals are 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three UNDECIDED across all 130 source annotations. All three alternative products and both core functions are retained. Supported generic interactions remain non-core under the supplied ActionEnum; informativeness alone does not justify REMOVE. The PR's separate policy disagreement remains unresolved.
+
+
+## 2026-10-09 — binding instruction and source-record follow-up
+
+The standing explicit user instruction in the
+[ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions)
+directs supported GO:0005515 annotations to KEEP_AS_NON_CORE when no finer
+evidence-backed term is established, MODIFY when a refinement is supported, and
+UNDECIDED when the relevant evidence cannot be adjudicated. This instruction
+takes precedence over the generic-binding skill default and validator advisory.
+The earlier ActionEnum-only explanation omitted that authority. No
+repository-wide policy change or new maintainer sign-off is claimed.
+
+The five PMID:18000879 associations were checked against
+[IntAct's publication-specific records](https://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/query/pubid%3A18000879%20AND%20id%3AQ96RK4?format=tab27):
+
+| BBS4 partner | Curated yeast two-hybrid record | Additional curated co-IP record |
+| --- | --- | --- |
+| ALDOB/P05062 | [EBI-1805866](https://www.ebi.ac.uk/intact/interaction/EBI-1805866) | [EBI-1995150](https://www.ebi.ac.uk/intact/interaction/EBI-1995150) |
+| EEF1A1/P68104 | [EBI-1805886](https://www.ebi.ac.uk/intact/interaction/EBI-1805886) | — |
+| DCTN1/Q14203 | [EBI-1805881](https://www.ebi.ac.uk/intact/interaction/EBI-1805881) | — |
+| PCM1/Q15154 | [EBI-1805934](https://www.ebi.ac.uk/intact/interaction/EBI-1805934) | — |
+| EPAS1/Q99814 | [EBI-1805896](https://www.ebi.ac.uk/intact/interaction/EBI-1805896) | [EBI-1994837](https://www.ebi.ac.uk/intact/interaction/EBI-1994837) |
+
+IntAct/GOA trace the same source, so this record check is not independent
+experimental replication. These records link the five pairs to Table I; further EEF1A1 and PCM1
+records link to Table II. The ALDOB and EPAS1 co-IP records identify Figure 2D and
+Figure 2C, respectively. This verifies curated pair/source/method linkage. It is
+not a new independent reading of the full article, figures or complete
+construct/control details. The source assessment is now VERIFIED within that
+scope; the publication cache remains abstract-only. The PCM1 interaction stays
+non-core, while the DCTN1 partner supports the existing dynactin-binding
+refinement. The independently established adaptor mechanism remains attached to
+PMID:15107855. Its IPI and IMP assertions are preserved with their distinct
+evidence codes.
+
+The three PMID:23943788 localization fragments are consolidated into one
+20-word cache-verbatim clause on the cilium annotation. The satellite and
+transition-zone rows retain their source citations and section labels; the
+clause covers those locations too. It appears only once and is not repeated
+in these notes. No additional scientific quotation is introduced elsewhere.
+
+All 130 source assertions, actions, three alternative products and both core
+functions are unchanged: 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three
+UNDECIDED. The 39 generic-binding advisories remain disclosed under the explicit
+project instruction. Prior journal entries are retained; this entry supersedes
+their incomplete authority explanation and the earlier unverified
+PMID:18000879 pair-record status.
