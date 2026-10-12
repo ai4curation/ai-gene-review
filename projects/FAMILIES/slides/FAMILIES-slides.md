@@ -36,9 +36,9 @@ Where family-level annotation holds, and where it does not
 
 ## Bottom line
 
-- Many GO annotations reach a gene **through its family** (PAINT/IBA on PANTHER trees, InterPro2GO on Pfam domains).
-- We review the **family itself**: is it functionally coherent, and how far may each GO term safely descend?
-- **333 entries** catalogued (211 complete). **145 families are heterogeneous**; only **83 of 327** term calls are safe family-wide.
+- GO annotations propagate from reusable sources: **PAINT/IBA** descends from PANTHER tree nodes; **InterPro2GO** fires on InterPro/Pfam signature matches.
+- We review **PANTHER family scope** and **Pfam mapping viability**: family-wide, subfamily-only, residue-determined or not at all?
+- **353 entries** catalogued (218 complete). **151 families are heterogeneous**; only **98 of 391** term calls are safe family-wide.
 
 ---
 
@@ -74,7 +74,7 @@ Where family-level annotation holds, and where it does not
 
 ## The catalog page
 
-![h:460](family-catalog.jpg)
+![h:460](family-catalog.png)
 
 <span class="small">pages/projects/FAMILIES.html: searchable and filterable by database, review status, coherence and Pfam mapping viability.</span>
 
@@ -82,17 +82,17 @@ Where family-level annotation holds, and where it does not
 
 ## Findings so far
 
-1. **Heterogeneity is the norm**: 145 heterogeneous vs 28 coherent families.
-2. **Most term calls are still open**: 199 of 327 unresolved; 83 family-wide, 29 subfamily-only.
-3. **Residue-determined** scope (6 calls) handles mixed subfamilies: PTHR10256:SF0 holds both active *E. coli* SelD and the Arg-substituted *Drosophila* Sps1.
+1. **Heterogeneity is the norm**: 151 heterogeneous vs 33 coherent families.
+2. **Most term calls are still open**: 211 of 391 unresolved; 98 family-wide, 61 subfamily-only.
+3. **Residue-determined** scope (7 calls) handles mixed subfamilies: PTHR10256:SF0 holds both active *E. coli* SelD and the Arg-substituted *Drosophila* Sps1.
 4. **Pfam mappings**: all 9 Pfam domains reviewed were judged not viable for a domain-level GO mapping.
 
 ---
 
 ## Status and next steps
 
-- In progress: 85 PANTHER entries are drafts and 23 need review.
-- Open work: 199 unresolved term scopes; 89 entries with no coherence call yet.
+- PANTHER status: 218 complete; 85 draft, 8 in progress, 28 need review, 5 not recorded.
+- Open work: 211 unresolved term scopes; 89 entries with no coherence call yet.
 - Related: `projects/IBA_REVIEW.md`, `projects/PANTHER_IBA_REVIEW/`, `projects/CASPL_FAMILY.md`, `projects/INTERPRO.md`.
 
 **Read more:** `projects/FAMILIES.md` · `interpro/panther/<PTHR>/` · `just validate-families`

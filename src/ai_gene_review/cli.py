@@ -25,6 +25,11 @@ from ai_gene_review.etl.publication_refresh import (
     get_refresh_summary,
     find_active_review_pmids,
 )
+from ai_gene_review.evaluation.cafa import (
+    CafaInputError,
+    evaluate_cafa_predictions,
+    format_cafa_rows_tsv,
+)
 from ai_gene_review.validation import (
     BatchValidationReport,
     ValidationReport,
@@ -434,6 +439,24 @@ def _warning_lines(output: str) -> list[str]:
     ]
 
 
+# NCBITaxon label mismatches block, unlike GO label drift: the advisory policy
+# exists for GOA/GO release lag, which does not apply to NCBITaxon labels.
+BLOCKING_LABEL_MISMATCH = re.compile(r"Label mismatch for '?NCBITaxon:")
+
+
+def _split_blocking_label_warnings(warnings: list[str]) -> tuple[list[str], list[str]]:
+    """Split term-validator warnings into (blocking, advisory).
+
+    >>> _split_blocking_label_warnings([
+    ...     "WARN: Label mismatch for 'NCBITaxon:3055': expected 'X', got 'CHLRE'",
+    ...     "WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'",
+    ... ])
+    (["WARN: Label mismatch for 'NCBITaxon:3055': expected 'X', got 'CHLRE'"], ["WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'"])
+    """
+    blocking = [w for w in warnings if BLOCKING_LABEL_MISMATCH.search(w)]
+    return blocking, [w for w in warnings if not BLOCKING_LABEL_MISMATCH.search(w)]
+
+
 def _has_error_output(output: str) -> bool:
     # "❌ ERROR" is the linkml-term-validator error marker; the "❌ ... issue(s):"
     # header (also emitted for warning-only results) intentionally does not match.
@@ -507,6 +530,18 @@ def _run_validation_command(
             check_type=check_type,
         )
     else:
+        if check_type == "linkml_term_validator":
+            blocking, warnings = _split_blocking_label_warnings(warnings)
+            if blocking:
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    f"{phase}: taxon label does not match NCBITaxon: "
+                    f"{_summarize_validator_output(chr(10).join(blocking))}",
+                    path=str(report.file_path) if report.file_path else None,
+                    details=details,
+                    validation_category=validation_category,
+                    check_type=check_type,
+                )
         if warnings:
             report.add_issue(
                 ValidationSeverity.WARNING,
@@ -756,6 +791,111 @@ def _validate_multiple_files_cli(
             )
 
     return batch_report
+
+
+@app.command("cafa-evaluate")
+def cafa_evaluate(
+    prediction_file: Annotated[
+        Path,
+        typer.Argument(
+            help=(
+                "Prediction TSV with columns: gene_id, go_id, label, aspect, "
+                "score, rank. score is ignored; rank must be a precomputed "
+                "integer bin. .gz is supported."
+            )
+        ),
+    ],
+    training_annotations: Annotated[
+        Path,
+        typer.Option(
+            "--training",
+            "-t",
+            help="Pre-cutoff experimental annotations TSV.",
+        ),
+    ],
+    new_annotations: Annotated[
+        Path,
+        typer.Option(
+            "--new",
+            "-n",
+            help="Post-cutoff experimental annotations TSV used as the proxy test set.",
+        ),
+    ],
+    curated_genes: Annotated[
+        Path,
+        typer.Option(
+            "--genes",
+            "-g",
+            help="Curatable gene list with PAN-GO-style long IDs.",
+        ),
+    ],
+    go_parents: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--parents",
+            "-p",
+            help="Optional GO all-parents lookup used to expand the training exclusion set.",
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write metrics TSV to this path."),
+    ] = None,
+    max_rank: Annotated[
+        int,
+        typer.Option(
+            "--max-rank",
+            help=(
+                "Evaluate threshold pools 1..MAX_RANK from precomputed "
+                "PAN-GO decile ranks."
+            ),
+        ),
+    ] = 10,
+    no_header: Annotated[
+        bool,
+        typer.Option("--no-header", help="Omit the TSV header row."),
+    ] = False,
+):
+    """Evaluate GO predictions with the PAN-GO CAFA-style metric.
+
+    This reimplements the Human Functionome supplementary evaluation on prepared
+    files: training annotations are excluded, post-cutoff experimental
+    annotations are used as the proxy test set, and precision/recall are
+    macro-averaged per protein. Prediction scores are ignored; rank must be a
+    precomputed integer decile.
+    """
+
+    if max_rank < 1:
+        typer.echo("Error: --max-rank must be at least 1", err=True)
+        raise typer.Exit(code=1)
+
+    for path in [prediction_file, training_annotations, new_annotations, curated_genes]:
+        if not path.exists():
+            typer.echo(f"Error: file not found: {path}", err=True)
+            raise typer.Exit(code=1)
+    if go_parents is not None and not go_parents.exists():
+        typer.echo(f"Error: file not found: {go_parents}", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        rows = evaluate_cafa_predictions(
+            prediction_file,
+            training_annotations,
+            new_annotations,
+            curated_genes,
+            go_parents,
+            thresholds=tuple(range(1, max_rank + 1)),
+            threshold_fraction_denominator=10,
+        )
+        tsv = format_cafa_rows_tsv(rows, include_header=not no_header)
+        if output:
+            output.write_text(tsv)
+            typer.echo(f"CAFA metrics written to: {output}")
+        else:
+            typer.echo(tsv, nl=False)
+    except CafaInputError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -4342,6 +4482,7 @@ def refresh_panther_members(
         member_index_path,
         panther_assignments_conflict,
         load_member_overrides,
+        settle_member_alternates,
         write_member_index,
     )
     import yaml
@@ -4447,13 +4588,8 @@ def refresh_panther_members(
                 "  ⚠ overrides for accessions no longer cited: "
                 + ", ".join(sorted(set(overrides) - accessions))
             )
-        # An override that adopts UniProt's value settles that disagreement.
-        alternates = {
-            accession: family_sf
-            for accession, family_sf in alternates.items()
-            if accession not in index
-            or panther_assignments_conflict(index[accession], family_sf)
-        }
+        # A curated override settles the disagreement, in either direction.
+        alternates = settle_member_alternates(alternates, index, overrides)
 
     unresolved = accessions - set(index)
     out_path = write_member_index(

@@ -2,6 +2,7 @@
 title: "Function Knowledge Gaps"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+last_reviewed: 2026-10-04
 sidecars:
   slide_figures:
     - FUNCTION_KNOWLEDGE_GAPS/slides/dark-score-decomposed.svg
@@ -19,21 +20,21 @@ manifest:
 # Function Knowledge Gaps
 
 **Bottom line:** about a fifth of the proteins in well-studied organisms
-still have no informative functional description, and many are conserved
-from yeast to human. This project records what is *not* known about a gene
-product as a curated, sourced statement, with the same evidentiary discipline
-the rest of the repo applies to what is known. We first tested a metric for
-"darkness" and found that most genes it flagged were structural subunits GO
-cannot describe or plain curation gaps, so a gap is now a judgement made by
-reading. We wrote 23 worked prose entries spanning biology, curation and
-ontology gaps, added a fourth kind (contested functions), and made
-`KnowledgeGap` a schema class that can sit on a gene, annotation, core
-function, module or module step. Reviews have since adopted it widely: on
-2026-09-26 the YAMLs hold 1,461 structured gaps in 535 gene and module files
-(1,117 OPEN, 59 NARROWING), more than the 1,073 in the last generated
-[register](FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md). Open items are a
-deep-research PMID validator, a fourth read-list batch and curating the
-contested-function candidates.
+still have no informative functional description, and many are conserved from
+yeast to human. This project records what is *not* known about a gene product
+as a curated, sourced statement, with the same evidentiary discipline the rest
+of the repo applies to what is known. We first tested a metric for "darkness"
+and found that most genes it flagged were structural subunits GO cannot
+describe or plain curation gaps, so a gap is now a judgement made by reading.
+We wrote 23 worked prose entries spanning biology, curation and ontology gaps,
+added a fourth prose category for contested functions, and made `KnowledgeGap`
+a schema class that can sit on a gene, annotation, core function, module or
+module step. Reviews have since adopted it widely: as of 2026-10-04 the
+generated [register](FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md) holds 1,620
+structured gaps in 638 gene and module YAML files, including 1,186 OPEN and 69
+NARROWING gaps. Open items are a PMID/title consistency mode for
+`validate-deep-research`, a fourth read-list batch, curation of the
+contested-function candidates, and a conservation/disease prioritization pass.
 
 What does biology genuinely *not* know about how a gene works — and how do we state it
 rigorously enough that someone could close it?
@@ -958,14 +959,14 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
 - [x] All three gap kinds now have worked exemplars (biology = most; ontology = POLE4; curation = woven through MAP7D1/AP3B2)
 - [x] Re-sourced summary-only entries (KCTD14, AP3B2) onto verified primary literature + repo GOA data
 - [x] Documented deep-research review mechanisms (failure-mode table + layered checks)
-- [ ] Implement `validate-deep-research`: PMID resolution + title-match + per-file reliability score (extends `validate_pmid_references.py`)
+- [ ] Extend `validate-deep-research` with PMID resolution + title-match + per-file reliability score
 - [ ] Read-list deepening, batch 4: PUS3, CFAP418, SOCS4/SOCS5, RFT1, pef-1, fshr-1, alo1
 - [x] Fourth gap kind identified: the *contested-function gap*, with a 2025-2026 literature
       survey and ranked read-list ([sub-page](FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md));
       all cited PMIDs re-verified for title/journal/year and DOI
 - [ ] Curate contested-function read-list into reviews (first picks: TMEM175; TMEM65 + SLC8B1
       as a pair; MEFV update for the CDC42 mechanism)
-- [ ] Decide unit granularity (per-gap vs per-gene narrative)
+- [x] Decide unit granularity — repeatable `KnowledgeGap` rows in YAML, with prose narratives retained on project pages
 - [x] Decide home: standalone register vs `knowledge_gaps` schema element — **done**: added a first-class `KnowledgeGap` schema class (gene/annotation/core-function/module/module-node), with the structured register rendered from it
 - [ ] Conservation / disease prioritization pass over candidates
 
