@@ -126,19 +126,19 @@ clean figure:
 **Provenance of this run.** The table is generated, so it is only as current as the inputs it
 was generated from, and those inputs live in two repositories.
 
-- run date: `2026-10-12T11:24:16Z`
+- run date: `2026-10-12T11:55:14Z`
 - dismech revision: `c0ef3d0d5a5c519fab45d814a79709df266076e1` (c0ef3d0d5 2026-10-11 Add review records for nine unchanged entries and 16 gene pages)
-- ai-gene-review revision: `03960b45b0f41b3d6ac075c31320435dedb35c28` (branch `combined: origin/main + the ten #4690 slices`)
-- GO release: `2026-07-26`, adapter `sqlite:/root/.data/oaklib/go.db`
-- audit script: `cb2d75e06157` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the audit script itself, the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran
-- ai-gene-review tree: origin/main at 0222675 with these ten themed slice branches of #4690 merged in a scratch worktree: claude/cool-edison-o9wvf0-{carbohydrate, energy-balance, isoprenoid, lipid, lysosome-glycosylation, mito-translation, one-carbon-aa, oxphos, peroxisome-oxalate, vitd-minerals}; AIGR_REVISION is that merge commit, which exists only in that worktree
+- ai-gene-review revision: `897d012ae2d2f7b1371e11ac5a40b76b02caa0b0` (branch `HEAD`)
+- GO release: `2026-07-26`, adapter `sqlite:obo:go`
+- audit script: `4fa69f623798` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran; **git could not be asked about: the audit script itself**, so whether the revisions above name what ran is not established either way
+- ai-gene-review tree: origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed)
 - modules read: `459`; UniProt accessions reached as parts: `4175`, against `4242` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
 Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
-The run above read origin/main at 0222675 with these ten themed slice branches of #4690 merged in a scratch worktree: claude/cool-edison-o9wvf0-{carbohydrate, energy-balance, isoprenoid, lipid, lysosome-glycosylation, mito-translation, one-carbon-aa, oxphos, peroxisome-oxalate, vitd-minerals}; AIGR_REVISION is that merge commit, which exists only in that worktree.
+The run above read origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed).
 
-The audit also runs over this branch alone, with nine of the ten themed slices of #4690 absent, and comparing the two runs shows which flags are
+The audit also runs over this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts, and comparing the two runs shows which flags are
 artifacts of the missing slices rather than findings. Both cover the same
 183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
 
@@ -153,11 +153,14 @@ The rises have three different causes, and only one of them is that absence.
 
 - `AIGR_NOT_COMPLETE`, `NO_CORE_FUNCTION_TERMS` fire where a review **was** found and is thin: a stub status, or no core-function terms to compare against. These count stub reviews present on the second tree, not reviews missing from it - a different claim, and the larger share of the movement.
 
-- `MODULE_NOT_COVERING` cannot have either cause. Both module flags are computed only once a review has been found, so a missing review **removes** one rather than adding it. The driver is the module files: the second run reads 448 modules against 459 here, so fewer are available to cover a gene's aligned terms. The second set is a strict subset: 11 modules are here and not there (e.g. `beta_cell_glucose_stimulated_insulin_secretion`), and none the other way.
+- `MODULE_NOT_COVERING` cannot have either cause. All 3 module flags are computed only once a review has been found, so a missing review **removes** one rather than adding it. The driver is the module files: the second run reads 448 modules against 459 here, so fewer are available to cover a gene's aligned terms. The second set is a strict subset: 11 modules are here and not there (e.g. `beta_cell_glucose_stimulated_insulin_secretion`), and none the other way.
 
-`ALIGNED_CONTRIBUTES_ONLY`, `PARTIAL_COVERAGE` are identical in both runs while depending on a review, so they appear in neither list above.
+`ALIGNED_CONTRIBUTES_ONLY`, `PARTIAL_COVERAGE` are identical in **total** in both runs while depending on a review, so they appear in neither list above. An equal total is not an equal set of rows, and the difference matters here, so each is compared row by row below rather than read off the count.
+
+`ALIGNED_CONTRIBUTES_ONLY` is identical row for row as well: the same (entry, gene) rows carry the flag on each tree.
 For `ALIGNED_CONTRIBUTES_ONLY` that is either a stable property of the dismech side or a path these two runs do not separate; this comparison cannot tell which.
-`PARTIAL_COVERAGE` is module-sourced and the two runs read different module sets, so a stable count there is not a property of the dismech side at all - it means the rows carrying it are covered by modules present in both trees.
+
+`PARTIAL_COVERAGE` has the same total in both runs over **different rows**: 9 shared, 5 only here (COX4I2, ABHD5, MC4R, PEX5, LIPA) and 5 only in the second run (HADH, GLB1 (GM1_Gangliosidosis_Type_1), GLB1 (GM1_Gangliosidosis_Type_3), HAO1, COQ8A). The equal count is a coincidence of two populations, so nothing about stability follows from it. Being module-sourced, that is what a differing module set does: a row drops out where its covering module is absent and another appears where one is.
 
 The flags decided before any review is read are identical in both runs
 (`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `UNTYPED` 0), which is what separates

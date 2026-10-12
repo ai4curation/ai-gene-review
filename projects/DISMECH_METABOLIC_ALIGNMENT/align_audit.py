@@ -215,13 +215,33 @@ REVIEW_PRESENT_THIN_FLAGS = ("AIGR_NOT_COMPLETE", "NO_CORE_FUNCTION_TERMS")
 # Computed from the module files, inside the branch where a review was found. A missing
 # review removes these rather than adding them, so a rise can only come from the modules.
 MODULE_SOURCED_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING", "PARTIAL_COVERAGE")
+# Which module flags oblige a hand-written reason on the page. Declared here rather than
+# derived there by excluding a hardcoded name: the page's enforcement and this list have to
+# move together, and a module flag added here without a decision about its reason should
+# not silently inherit one. PARTIAL_COVERAGE is out because the row prints the terms no
+# module reached, so the reason is in the table; the other two are verdicts about a module
+# that only a reader of it can justify. The distinction is obligation, not importance.
+REASON_REQUIRING_MODULE_FLAGS = ("NO_MODULE_MEMBERSHIP", "MODULE_NOT_COVERING")
+# Flags the page's "clean" count tolerates: ones that qualify a row rather than say the
+# alignment failed. Declared, not derived, because deriving it from MODULE_SOURCED_FLAGS
+# made "soft" the default for any module flag added later - including one that would mark
+# a real contradiction, which would then be absorbed into the clean figure with nothing
+# failing. A new flag is hard until it is named here.
+SOFT_FLAGS = MODULE_SOURCED_FLAGS + (
+    "ALIGNED_NONCORE", "ALIGNED_PROPOSED",
+    "PARTIAL_ALIGNMENT", "ALIGNED_CONTRIBUTES_ONLY", "ALIGNED_ON_SHARED_NODE_ONLY",
+)
 # Everything else is an alignment verdict, computed from the review's terms.
 FLAG_GROUPS = dict(
     review_independent=list(REVIEW_INDEPENDENT_FLAGS),
     review_absent=list(REVIEW_ABSENT_FLAGS),
     review_present_thin=list(REVIEW_PRESENT_THIN_FLAGS),
     module_sourced=list(MODULE_SOURCED_FLAGS),
+    module_sourced_reason_required=list(REASON_REQUIRING_MODULE_FLAGS),
+    soft=list(SOFT_FLAGS),
 )
+assert set(REASON_REQUIRING_MODULE_FLAGS) <= set(MODULE_SOURCED_FLAGS)
+assert set(MODULE_SOURCED_FLAGS) <= set(SOFT_FLAGS)
 
 def _dirty(repo, path=None):
     """True/False for uncommitted changes, or None when git could not answer.
@@ -662,10 +682,12 @@ if _aspect_failures:
     sys.exit(f"GO aspect lookups failed for {len(_aspect_failures)} terms, e.g. "
              f"{_aspect_failures[:3]}; the cross-aspect figures would read as an absence "
              "rather than as a failure")
+# Not fatal: a term under no aspect root is a fact about the ontology, not a failed
+# lookup. Written unconditionally, including as an empty list, so that "this run resolved
+# every term" and "this report predates the field" are different states on the page -
+# writing it only when non-empty made an absent key mean both.
+PROVENANCE["aspect_unresolved"] = [t for t, _ in _aspect_unresolved]
 if _aspect_unresolved:
-    # Not fatal: a term under no aspect root is a fact about the ontology, not a failed
-    # lookup. Recorded so it cannot leave term_aspects without trace.
-    PROVENANCE["aspect_unresolved"] = [t for t, _ in _aspect_unresolved]
     print("terms with no single GO aspect root:", _aspect_unresolved[:5],
           f"({len(_aspect_unresolved)} total)")
 

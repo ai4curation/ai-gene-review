@@ -14,9 +14,13 @@ def load(path):
         prov = dict(d.get("provenance") or {})
         # Carried on the provenance mapping so the renderer reads the groups the run
         # recorded rather than a copy of them kept here.
-        if d.get("flag_groups"):
+        # Keyed on presence, not truthiness: an empty map is a run that matched no pairs,
+        # which is a different fact from a report that predates the key. Gating on
+        # truthiness made the two indistinguishable and left the empty-case branch below
+        # unreachable, so a legitimate empty run was told its script was superseded.
+        if "flag_groups" in d:
             prov["_flag_groups"] = d["flag_groups"]
-        if d.get("term_aspects"):
+        if "term_aspects" in d:
             prov["_term_aspects"] = d["term_aspects"]
         return (prov, d.get("entries") or [],
                 tuple(d.get("review_independent_flags") or ()))
@@ -42,6 +46,19 @@ def flag_counts(entries):
             for f in g.get("flags") or []:
                 c[f] = c.get(f, 0) + 1
     return c, n
+
+
+def flag_rows(entries, flag):
+    """The set of (entry, gene) rows carrying `flag`.
+
+    The comparison the steady branch needs. Counts are not identity: two runs can report
+    the same number of occurrences over wholly different rows, which is exactly what
+    PARTIAL_COVERAGE does here - 14 against 14, with 9 rows shared and 5 distinct on each
+    side. Any explanation attached to a steady *count* inherits that ambiguity, so the
+    page compares the row sets and says which case it is.
+    """
+    return {(e.get("entry"), g.get("gene"))
+            for e in entries for g in e.get("genes", []) if flag in (g.get("flags") or ())}
 
 
 def alt_comparison():
@@ -110,10 +127,16 @@ def alt_comparison():
     # reviews - wrong for AIGR_NOT_COMPLETE and NO_CORE_FUNCTION_TERMS, which fire where a
     # review was found, and so wrong for 85 of 87 rows in the run it was written against.
     groups = ALT_PROV.get("_flag_groups")
-    if not groups:
+    if "_flag_groups" not in ALT_PROV:
         sys.exit("the second report has no flag_groups; it was produced by a superseded "
                  "align_audit.py and its risen flags cannot be explained - re-run the audit")
-    if not ALT_PROV.get("_term_aspects"):
+    if not groups:
+        # Present but empty is a separate failure from absent, and unlike term_aspects it is
+        # never legitimate: without the groups every risen flag falls through to "cause not
+        # established", which would read as a finding rather than as a broken input.
+        sys.exit("the second report's flag_groups is empty; every risen flag would be reported "
+                 "as unexplained rather than grouped - re-run the audit")
+    if "_term_aspects" not in ALT_PROV:
         # Not read for the cross-aspect figures, which come from the primary report, but a
         # second report missing it is a superseded one and the two are then not comparable.
         sys.exit("the second report has no term_aspects; it was produced by a superseded "
@@ -157,7 +180,9 @@ def alt_comparison():
                     " reviews present on the second tree, not reviews missing from it - a"
                     " different claim, and the larger share of the movement."]
     if rose_mod:
-        line = (f"- {names(rose_mod)} cannot have either cause. Both module flags are computed"
+        _mw = {1: "The one module flag is", 2: "Both module flags are"}.get(
+            len(modular), f"All {len(modular)} module flags are")
+        line = (f"- {names(rose_mod)} cannot have either cause. {_mw} computed"
                 " only once a review has been found, so a missing review **removes** one rather"
                 " than adding it. The driver is the module files:")
         if mods_here and mods_there:
@@ -198,18 +223,56 @@ def alt_comparison():
         steady_mod = [f for f in steady if f in modular]
         steady_rev = [f for f in steady if f not in modular]
         verb = "are" if len(steady) > 1 else "is"
-        out += ["", f"{names(steady)} {verb} identical in both runs while depending on a review, so"
-                    " they appear in neither list above."]
-        if steady_rev:
-            out += [f"For {names(steady_rev)} that is either a stable property of the dismech side"
-                    " or a path these two runs do not separate; this comparison cannot tell which."]
-        if steady_mod:
-            # Explained by group, as the rises and falls now are: a module-sourced flag is
-            # computed from the module files, so "stable on the dismech side" is not available
-            # as a reading when the two runs read different module sets.
-            out += [f"{names(steady_mod)} is module-sourced and the two runs read different module"
-                    " sets, so a stable count there is not a property of the dismech side at all -"
-                    " it means the rows carrying it are covered by modules present in both trees."]
+        out += ["", f"{names(steady)} {verb} identical in **total** in both runs while depending"
+                    " on a review, so they appear in neither list above. An equal total is not an"
+                    " equal set of rows, and the difference matters here, so each is compared row"
+                    " by row below rather than read off the count."]
+        # Counts only say the totals match. Whether the same rows carry the flag is a
+        # different question, asked here rather than inferred - and asked before any
+        # interpretation is offered, because "a stable property of the dismech side" is not
+        # even available as a reading for a flag whose rows moved.
+        same_rows, moved_rows = [], []
+        for f in steady:
+            (same_rows if flag_rows(rep, f) == flag_rows(ALT_REP, f) else moved_rows).append(f)
+        if same_rows:
+            out += ["", f"{names(same_rows)} {'are' if len(same_rows) > 1 else 'is'} identical row"
+                        " for row as well: the same (entry, gene) rows carry the flag on each"
+                        " tree."]
+            _sr = [f for f in same_rows if f in steady_rev]
+            if _sr:
+                out += [f"For {names(_sr)} that is either a stable property of the dismech side or"
+                        " a path these two runs do not separate; this comparison cannot tell"
+                        " which."]
+        for f in moved_rows:
+            a_, b_ = flag_rows(rep, f), flag_rows(ALT_REP, f)
+            shared, only_a, only_b = a_ & b_, sorted(a_ - b_), sorted(b_ - a_)
+
+            def _show(rows):
+                # A gene can hold two rows in one entry or sit in two entries, so a bare
+                # symbol list would print the same name twice with nothing to tell the rows
+                # apart. The entry is added only where the symbol repeats.
+                dup = {g for g in (g for _, g in rows) if [x for _, x in rows].count(g) > 1}
+                return ", ".join(f"{g} ({e})" if g in dup else g for e, g in rows[:5])
+
+            out += ["", f"`{f}` has the same total in both runs over **different rows**:"
+                        f" {len(shared)} shared, {len(only_a)} only here"
+                        f" ({_show(only_a)}"
+                        + (", ..." if len(only_a) > 5 else "") + ") and"
+                        f" {len(only_b)} only in the second run"
+                        f" ({_show(only_b)}"
+                        + (", ..." if len(only_b) > 5 else "") + "). The equal count is a"
+                        " coincidence of two populations, so nothing about stability follows"
+                        " from it."
+                        + (" Being module-sourced, that is what a differing module set does: a"
+                           " row drops out where its covering module is absent and another"
+                           " appears where one is." if f in modular else "")]
+        if steady_mod and not moved_rows:
+            # Only sayable once the row sets have been compared, which is why it is here
+            # rather than attached to the count.
+            out += [f"{names(steady_mod)} is module-sourced, so a count stable across two"
+                    " different module sets would otherwise prove nothing; here the rows are"
+                    " the same ones, which does mean their covering modules are present in both"
+                    " trees."]
     out += [
         "",
         "The flags decided before any review is read are identical in both runs",
@@ -264,14 +327,32 @@ if not MODULE_FLAGS:
 # that only a reader of the module can justify, whereas PARTIAL_COVERAGE reports which
 # aligned terms no module term reached, and the row prints them. The distinction is
 # obligation, not importance.
-REASON_REQUIRING_MODULE_FLAGS = tuple(f for f in MODULE_FLAGS if f != "PARTIAL_COVERAGE")
+REASON_REQUIRING_MODULE_FLAGS = tuple(
+    (PROV.get("_flag_groups") or {}).get("module_sourced_reason_required") or ())
+if not REASON_REQUIRING_MODULE_FLAGS:
+    sys.exit("the report records no module_sourced_reason_required flag group; it was "
+             "produced by a superseded align_audit.py - re-run the audit")
 # Flags that qualify a row rather than mark it defective. PARTIAL_ALIGNMENT,
 # ALIGNED_CONTRIBUTES_ONLY and ALIGNED_ON_SHARED_NODE_ONLY are counted and reported
 # individually below rather than folded into one "clean" figure, because each is a way
 # the test can be weaker than the row looks.
 QUALIFYING = ("PARTIAL_ALIGNMENT", "ALIGNED_CONTRIBUTES_ONLY",
               "ALIGNED_ON_SHARED_NODE_ONLY", "PARTIAL_COVERAGE")
-SOFT = MODULE_FLAGS + ("ALIGNED_NONCORE", "ALIGNED_PROPOSED") + QUALIFYING
+# Read from the run, not built here from MODULE_FLAGS: deriving it made "soft" the
+# default for any module flag the audit added later, so a flag marking a real
+# contradiction would have been absorbed into the clean count with nothing failing.
+SOFT = tuple((PROV.get("_flag_groups") or {}).get("soft") or ())
+if not SOFT:
+    sys.exit("the report records no soft flag group; it was produced by a superseded "
+             "align_audit.py - re-run the audit")
+# The page names these three in prose, so a run whose soft set stopped containing them
+# would print a sentence its own figures contradict.
+_missing_soft = [f for f in ("ALIGNED_NONCORE", "ALIGNED_PROPOSED") + QUALIFYING
+                 if f not in SOFT]
+if _missing_soft:
+    sys.exit(f"the report's soft flag group omits {', '.join(_missing_soft)}, which this "
+             "page describes as tolerated by the clean count - re-run the audit or amend "
+             "the prose")
 
 # Flag glossary, keyed on the flag name. Checked against the flags the run actually
 # emitted rather than hand-maintained beside them: PARTIAL_COVERAGE was published on 14
@@ -327,7 +408,11 @@ def flag_legend():
     out = []
     for f in order:
         mark = " *(qualifying)*" if f in QUALIFYING else ""
-        note = "" if f in emitted else " - not emitted by either run"
+        # "either" is only true when there are two runs. With one report ALT_REP is empty,
+        # so the claim would cover a run this page has not read - and the branch-local
+        # report does emit NO_CORE_FUNCTION_TERMS, which such a page would deny.
+        _scope = "either run" if ALT_PATH else "this run"
+        note = "" if f in emitted else f" - not emitted by {_scope}"
         out.append(f"- `{f}`{mark} - {FLAG_GLOSS[f]}{note}")
     return out
 
@@ -426,6 +511,20 @@ elif _ca_any:
 else:
     _cross_aspect_sentence = (
         "On this run no matched pair crosses the aspects, so nothing here depends on it.")
+
+# The audit records terms it could place under no single aspect root. They are a gap in the
+# figures above - a pair involving one is neither crossing nor same-aspect - so the page
+# states them rather than leaving the count to read as complete. Written unconditionally by
+# the audit, so an absent key is a superseded report and an empty list is a clean run.
+_unres = PROV.get("aspect_unresolved")
+if _unres is None:
+    sys.exit("the report has no aspect_unresolved key; it was produced by a superseded "
+             "align_audit.py and the cross-aspect figures would read as covering every term")
+if _unres:
+    _cross_aspect_sentence += (
+        f" {len(_unres)} term(s) sit under no single aspect root and are outside both figures"
+        f" ({', '.join('`%s`' % t for t in _unres[:5])}"
+        + (", ..." if len(_unres) > 5 else "") + ").")
 
 # Whitelist, so a renamed or new dismech relationship value does not silently become
 # principal and inflate the clean count.
@@ -565,7 +664,11 @@ if PROV:
     _DIRT_NAMES = {"audit_dirty": "the audit script itself",
                    "aigr_dirty": "the ai-gene-review tree",
                    "dismech_dirty": "the dismech tree"}
-    _dirt = [v for k, v in _DIRT_NAMES.items() if PROV.get(k)]
+    # Three states, not two. None means git could not answer, and treating it as False -
+    # which `if PROV.get(k)` did - published an unanswerable tree as a clean one, which is
+    # the assertion the audit-side fix was made to stop. Rendered separately.
+    _dirt = [v for k, v in _DIRT_NAMES.items() if PROV.get(k) is True]
+    _unknown = [v for k, v in _DIRT_NAMES.items() if PROV.get(k) is None]
     lines.append(
         f"- audit script: `{_ah}` (sha256 of `align_audit.py`), last committed at `{_ad}`"
         + ("; unrecorded because the project directory has no history in the tree that was"
@@ -573,6 +676,8 @@ if PROV:
            " sha256 is the identifier to use" if _ad == "unrecorded" else "")
         + (f"; **uncommitted changes at run time in: {', '.join(_dirt)}**, so the revisions"
            " above name commits that are not exactly what ran" if _dirt else "")
+        + (f"; **git could not be asked about: {', '.join(_unknown)}**, so whether the revisions"
+           " above name what ran is not established either way" if _unknown else "")
     )
     if PROV.get("aigr_tree"):
         lines.append(f"- ai-gene-review tree: {PROV['aigr_tree']}")
