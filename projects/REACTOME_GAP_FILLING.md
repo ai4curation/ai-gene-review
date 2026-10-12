@@ -1,6 +1,7 @@
 ---
 title: "Reactome Black Box Event Gap-Filling"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [PIPELINE]
 species: [human]
 genes: [ABCD3]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: REACTOME_GAP_FILLING/slides/REACTOME_GAP_FILLING-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/CMwsBhXeKDFnUm7CoieU39
-      title: Project brief
 ---
 
 # Reactome Black Box Event Gap-Filling
@@ -18,16 +16,18 @@ manifest:
 **Bottom line:** Reactome has "black box events": reactions that must happen,
 often transport across an organelle membrane, but whose catalyst or transporter
 is not assigned. With Reactome curators, we are testing whether gene reviews can
-supply those missing proteins. One pilot is done: the review of human ABCD3
-(PMP70), which assessed 81 GO annotations and proposed a NEW
+supply those missing proteins. The first pilot has all 81 rows actioned: the
+in-progress review of human ABCD3 (PMP70) proposed a new annotation to
 `GO:0015125` bile acid transmembrane transporter activity, making ABCD3 the
 candidate for importing C27 bile-acid CoA esters (DHCA-CoA, THCA-CoA) into the
-peroxisome. That call rests on three independent lines of evidence: a deficient
-patient who accumulates C27 intermediates, knockout mice, and cryo-EM
-structures with the bile-acid substrates bound. Beyond this pilot the project
-is scoped, not started: no systematic Reactome query for black box events is recorded,
-and the remaining bile acid gaps (mitochondrial and peroxisomal export) have no
-candidate reviewed yet.
+peroxisome. That call rests on ABCD3-deficient human and mouse phenotypes that
+accumulate C27 intermediates, yeast and mouse work placing ABCD3 on hydrophilic
+fatty-acyl-CoA import, and cryo-EM structures of phytanoyl-CoA- and ATP-bound
+ABCD3 that define the acyl-CoA transport cycle. Beyond this pilot the project
+is scoped, not started: no systematic Reactome query for black box events is
+recorded, and the remaining bile acid gaps (mitochondrial and peroxisomal
+export) have no candidate reviewed yet. That expansion is tracked in
+[#4008](https://github.com/ai4curation/ai-gene-review/issues/4008).
 
 We are doing this because many such gaps have stayed open for decades while
 structural and genetic data that could close them accumulated, and a
@@ -40,17 +40,17 @@ Reactome, like most pathway databases, contains reactions where the biochemistry
 
 Many BBEs involve membrane transport. A metabolic intermediate needs to move between compartments (cytosol to mitochondria, cytosol to peroxisomes, ER to Golgi), and while the substrate and directionality are clear from metabolic logic, the transporter gene has not been definitively assigned. Some of these gaps have persisted for decades, even as structural genomics, cryo-EM, and human genetics have generated data that could resolve them.
 
-This project uses AI-assisted literature mining, structural analysis, and genetic evidence integration to systematically identify candidate proteins for Reactome BBEs. The approach combines the AIGR gene review pipeline with targeted deep research to converge on candidates at varying confidence levels.
+This project is meant to use AI-assisted literature mining, structural analysis, and genetic evidence integration to identify candidate proteins for Reactome BBEs. The approach combines the AIGR gene review pipeline with targeted deep research to converge on candidates at varying confidence levels.
 
 ## Collaboration Context
 
-Peter D'Eustachio and Lisa Matthews at Reactome have been exploring how Claude can assist with identifying missing catalysts and transporters in pathway reactions. Reactome curators frequently encounter reactions where metabolic logic demands a specific transport or catalytic step, but the literature does not provide a clean assignment. The traditional approach — manual literature searching and expert consultation — scales poorly across the ~2,000 human metabolic pathways in Reactome.
+Peter D'Eustachio and Lisa Matthews at Reactome have been exploring how Claude can assist with identifying missing catalysts and transporters in pathway reactions. Reactome curators frequently encounter reactions where metabolic logic demands a specific transport or catalytic step, but the literature does not provide a clean assignment. The traditional approach — manual literature searching and expert consultation — scales poorly across a pathway database the size of Reactome.
 
 The AIGR pipeline offers a complementary approach: systematic gene reviews that synthesize GO annotations, UniProt function descriptions, recent structural papers, and genetic evidence into a unified picture of gene function. When a gene review identifies a transport or catalytic activity with strong evidence, that finding can feed back into Reactome to resolve a BBE.
 
 ## Pilot Case: Bile Acid Metabolism (R-HSA-194068)
 
-The bile acid biosynthesis and transport pathway provides an ideal pilot. The pathway involves approximately 15 transport reactions moving bile acid intermediates between four compartment boundaries:
+The bile acid biosynthesis and transport pathway provides an ideal pilot. It moves cholesterol and bile-acid intermediates between cytosol, mitochondria, and peroxisomes; this scoping table still needs to be grounded in exact Reactome reaction IDs for every open gap:
 
 | Boundary | Direction | Substrates | Known Transporters | BBEs |
 |----------|-----------|------------|-------------------|------|
@@ -63,15 +63,15 @@ The bile acid biosynthesis and transport pathway provides an ideal pilot. The pa
 
 The AIGR review of ABCD3 ([PR #285](https://github.com/ai4curation/ai-gene-review/pull/285)) demonstrates the convergence of evidence that can resolve a BBE:
 
-1. **Genetic evidence (PMID:25168382)**: An ABCD3-deficient patient accumulated C27-bile acid intermediates (DHCA, THCA) in plasma, establishing that ABCD3 is required for bile acid maturation. Abcd3 knockout mice confirmed this with elevated hepatic C27 intermediates and reduced C24 bile acids.
+1. **Genetic evidence (PMID:25168382)**: An ABCD3-deficient patient accumulated C27-bile acid intermediates (DHCA, THCA) in plasma, establishing that ABCD3 is required for bile acid maturation. `Abcd3` knockout mice confirmed this with elevated hepatic C27 intermediates and reduced C24 bile acids.
 
 2. **Biochemical evidence (PMID:24333844)**: Yeast complementation assays showed ABCD3 preferentially transports hydrophilic substrates including branched-chain fatty acids and dicarboxylic acids, distinguishing it from ABCD1 (which prefers VLCFAs).
 
-3. **Structural evidence (PMID:39223112)**: Cryo-EM structures of ABCD3 captured both inward-facing (substrate-bound) and outward-facing (ATP-bound) conformations. The study identified DHCA-CoA and THCA-CoA as ABCD3-specific substrates — distinct from those of ABCD1 or ABCD2.
+3. **Structural evidence (PMID:39223112)**: Cryo-EM structures of ABCD3 captured phytanoyl-CoA-bound and ATP-bound conformations, explaining how substrate binding and ATP binding can drive acyl-CoA translocation.
 
-4. **Knockout mouse metabolomics (PMID:34564857)**: Abcd3-/- mice showed increased hepatic long-chain dicarboxylic acids, confirming ABCD3's role in dicarboxylic acid import beyond bile acids.
+4. **Knockout mouse metabolomics (PMID:34564857)**: `Abcd3`-/- mice showed increased hepatic long-chain dicarboxylic acids, confirming ABCD3's role in dicarboxylic acid import beyond bile acids.
 
-The Reactome entry R-HSA-382575 already captures ABCD3's role in LCFA transport but does not yet reflect the bile acid specificity established by these recent studies. The AIGR review proposes updating this annotation.
+The Reactome entry R-HSA-382575 already records ABCD3 in LCFA import but does not yet reflect the bile acid specificity established by these recent studies. The ABCD3 review proposes a GO bile-acid transporter annotation that should be fed back to Reactome as the C27 bile-acid CoA-ester import assignment.
 
 ### Remaining Gaps
 
@@ -81,7 +81,19 @@ Several bile acid transport steps lack assigned transporters:
 
 - **Peroxisomal export of mature bile acids**: After peroxisomal beta-oxidation shortens C27 intermediates to C24 bile acids, the products must exit the peroxisome. The export mechanism is unknown. Passive diffusion of the free acid is possible if thioesterase activity releases CoA inside the peroxisome.
 
-- **Hepatocyte canalicular export**: While ABCB11 (BSEP) is the primary canalicular bile salt export pump, the handling of conjugated vs. unconjugated species at this step has nuances that Reactome BBEs reflect.
+## Expansion Targets
+
+After the bile-acid pilot, plausible pathway areas to inventory next include:
+
+**Cholesterol biosynthesis and trafficking.** Intracellular cholesterol movement between ER, plasma membrane, and mitochondria involves multiple poorly characterized transport steps. NPC1/NPC2 handle lysosomal export, but ER-to-mitochondria cholesterol transfer for steroidogenesis has several candidate mechanisms (StAR, STARD3, membrane contact sites) without definitive transporter assignments.
+
+**Sphingolipid metabolism.** Ceramide transport from ER to Golgi (CERT/CERTL) is partially characterized, but several inter-organelle sphingolipid transport steps lack assigned proteins. The diversity of sphingolipid headgroups creates substrate-specificity questions similar to bile acid transport.
+
+**Mitochondrial metabolite transport.** The SLC25 family (~53 members in humans) includes many poorly characterized transporters. Several Reactome reactions for mitochondrial metabolite exchange cite SLC25 family members tentatively or leave the transporter unassigned. Systematic AIGR reviews of SLC25 family members could resolve multiple BBEs simultaneously.
+
+**Other ABC transporter families.** The ABCD family pilot can extend to ABCG (sterol transport), ABCA (lipid export), and ABCB (peptide/drug transport) families, each containing members with incompletely characterized substrate specificity.
+
+**SLC transporters in peroxisomal metabolism.** Beyond ABC transporters, SLC family members may handle export of peroxisomal beta-oxidation products (acetyl-CoA, shortened fatty acids). The peroxisomal membrane proteome remains incompletely catalogued.
 
 ## Methodology
 
@@ -107,35 +119,21 @@ The gap-filling workflow proceeds in stages:
 
 Not all evidence for transporter assignment carries equal weight. The following hierarchy guides confidence assessment, from strongest to weakest:
 
-**Tier 1 — Direct reconstitution.** Purified transporter reconstituted into proteoliposomes demonstrates ATP-dependent (or gradient-driven) transport of the specific substrate. This is the gold standard but exists for relatively few transporters. Example: ABCD1-4 ATPase activity in proteoliposomes (PMID:29397936).
+**Tier 1 — Direct reconstitution.** Purified transporter reconstituted into proteoliposomes demonstrates ATP-dependent (or gradient-driven) transport of the specific substrate. This is the gold standard but exists for relatively few transporters; the ABCD3 bile-acid assignment has ATPase/thioesterase support from reconstituted ABCD-family proteins (PMID:29397936), but no direct reconstitution assay with DHCA-CoA or THCA-CoA.
 
 **Tier 2 — Genetic loss-of-function with metabolite accumulation.** Patient mutations or knockout animals show accumulation of the predicted substrate on the source side of the membrane, or depletion on the destination side. Example: ABCD3-deficient patient with C27-bile acid intermediate accumulation (PMID:25168382).
 
-**Tier 3 — Structural mechanism.** Cryo-EM or X-ray structures show the substrate bound in the translocation pathway, with conformational states consistent with an alternating-access mechanism. Example: ABCD3 cryo-EM with phytanoyl-CoA and bile acid intermediates (PMID:39223112).
+**Tier 3 — Structural mechanism.** Cryo-EM or X-ray structures show substrate binding and conformational states consistent with an alternating-access mechanism. Example: ABCD3 cryo-EM with phytanoyl-CoA and ATP (PMID:39223112).
 
 **Tier 4 — Phylogenetic inference.** Ortholog in a model organism has demonstrated transport activity for the substrate class, transferred by ISS or IBA. Appropriate for well-conserved transport systems but less reliable for substrate specificity.
 
 **Tier 5 — Computational prediction.** InterPro domain-based functional prediction, machine learning classifiers, or docking simulations. Useful for generating candidates but insufficient for annotation without experimental support.
 
-Most resolved BBEs will require evidence from at least two tiers. ABCD3's assignment to bile acid CoA-ester transport draws on Tiers 2, 3, and 4 — a robust combination even without Tier 1 reconstitution data for the bile acid substrates specifically.
-
-## Expansion Targets
-
-Beyond bile acid metabolism, several Reactome pathway areas are rich in BBEs amenable to this approach:
-
-**Cholesterol biosynthesis and trafficking.** Intracellular cholesterol movement between ER, plasma membrane, and mitochondria involves multiple poorly characterized transport steps. NPC1/NPC2 handle lysosomal export, but ER-to-mitochondria cholesterol transfer for steroidogenesis has several candidate mechanisms (StAR, STARD3, membrane contact sites) without definitive transporter assignments.
-
-**Sphingolipid metabolism.** Ceramide transport from ER to Golgi (CERT/CERTL) is partially characterized, but several inter-organelle sphingolipid transport steps lack assigned proteins. The diversity of sphingolipid headgroups creates substrate-specificity questions similar to bile acid transport.
-
-**Mitochondrial metabolite transport.** The SLC25 family (~53 members in humans) includes many poorly characterized transporters. Several Reactome reactions for mitochondrial metabolite exchange cite SLC25 family members tentatively or leave the transporter unassigned. Systematic AIGR reviews of SLC25 family members could resolve multiple BBEs simultaneously.
-
-**Other ABC transporter families.** The ABCD family pilot can extend to ABCG (sterol transport), ABCA (lipid export), and ABCB (peptide/drug transport) families, each containing members with incompletely characterized substrate specificity.
-
-**SLC transporters in peroxisomal metabolism.** Beyond ABC transporters, SLC family members may handle export of peroxisomal beta-oxidation products (acetyl-CoA, shortened fatty acids). The peroxisomal membrane proteome remains incompletely catalogued.
+Most resolved BBEs will require evidence from at least two tiers. ABCD3's assignment to bile acid CoA-ester transport draws on genetic, mouse, structural, and phylogenetic support even without Tier 1 reconstitution data for the bile acid substrates specifically.
 
 ## Related Resources
 
-- [ABCD3 gene review](../genes/human/ABCD3/ABCD3-ai-review.yaml) — Full annotation review with 79 GO annotations assessed
+- [ABCD3 gene review](../genes/human/ABCD3/ABCD3-ai-review.yaml) — Full annotation review with 81 GO annotations assessed
 - [PR #285](https://github.com/ai4curation/ai-gene-review/pull/285) — ABCD3 review pull request
 - [Reactome R-HSA-382575](https://reactome.org/content/detail/R-HSA-382575) — ABCD1-3 dimers transfer LCFAs
 - [Reactome R-HSA-194068](https://reactome.org/content/detail/R-HSA-194068) — Bile acid metabolism pathway

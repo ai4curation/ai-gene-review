@@ -1,21 +1,19 @@
 ---
 title: "Retracted Literature Behind Annotations"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [PIPELINE, EVALUATION]
 manifest:
   slides:
     - href: RETRACTIONS/slides/RETRACTIONS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/EGPyig2PBuAJ92DwrZAqxG
-      title: Project brief
 ---
 
 # Retracted Literature Behind Annotations
 
-**Bottom line:** a GO annotation outlives its source paper, and nothing in this
-repository's pipeline re-checked whether a cited paper had since been retracted. We built
-`check_retractions.py`, which collects every PMID cited in the gene reviews together with
+**Bottom line:** a GO annotation outlives its source paper, and the ordinary
+fetch/validate pipeline did not re-check whether a cited paper had since been
+retracted. We built `check_retractions.py`, which collects every PMID cited in the gene reviews together with
 where it is cited (reference list, quoted `supporting_text`, or the annotation's own
 evidence line) and asks PubMed for retraction, expression-of-concern and erratum signals.
 We did this because a citation that was sound when written can go bad later, and only
@@ -24,14 +22,15 @@ PMIDs in 3,736 review files and found 7 retracted papers, 13 expressions of conc
 659 errata; the reviews had already caught 3 of the 7 by hand, and 4 of the 7 sit under
 a GO annotation. None of those four is an accepted core function: the recorded actions
 are REMOVE (TP53), KEEP_AS_NON_CORE (mouse Mtor, BACE1) and UNDECIDED (STAT3). Flagging
-those four and the expressions of concern in the reviews is still to do.
+those four and the expressions of concern in the reviews is still to do
+([#4009](https://github.com/ai4curation/ai-gene-review/issues/4009)).
 
 ## Overview
 
 A GO annotation outlives its source. Once a paper has been curated, the annotation
 persists in GOA, propagates by IBA to the rest of the family, and gets quoted as
-`supporting_text` in gene reviews — and **nothing in this repository's pipeline ever
-re-checks whether that paper is still standing**. `just fetch-gene` caches the
+`supporting_text` in gene reviews — and the ordinary fetch/validate path **does
+not re-check whether that paper is still standing**. `just fetch-gene` caches the
 publication once; `just validate` checks that a `supporting_text` is a verbatim
 substring of the cached text, not that the text it quotes has since been withdrawn.
 
@@ -159,14 +158,12 @@ Three observations from the first run:
    retraction notice, and human/TNFRSF21 goes furthest, recording that the retraction
    touches no GO annotation on the gene. That is the standard the rest should meet, and
    it is exactly the work this checker makes systematic instead of incidental.
-2. **Retraction notices arrive after the review was written.** Four of the seven
-   retraction notices are 2025-2026 records (PMID:40963457, Nov 2025; PMID:41645757,
-   Apr 2026; PMID:42642456, Aug 2026; PMID:42664430, 2026). A review can be scrupulous
-   at the time and stale a year later, which is the argument for re-running this check
-   periodically rather than treating it as a one-off audit. The BACE1 paper also shows
-   why the notice types must be kept apart: it carried a 2018 *correction*
-   (PMID:29873327) long before the 2026 retraction, and reporting the two together would
-   have dated the retraction eight years too early.
+2. **Retraction notices arrive after the review was written.** A review can be
+   scrupulous at the time and stale a year later, which is the argument for re-running
+   this check periodically rather than treating it as a one-off audit. The BACE1 paper
+   also shows why the notice types must be kept apart: the scanner sees both a
+   correction (PMID:29873327) and a later retraction notice (PMID:42664430) on the same
+   record, and reporting the two together would have dated the retraction too early.
 3. **Nothing here forces a removal.** None of the four annotation-evidence cases is an
    `ACCEPT`ed core function resting on a retracted paper: the actions already recorded
    are `REMOVE` (human/TP53), `KEEP_AS_NON_CORE` (mouse/Mtor, human/BACE1) and
@@ -174,12 +171,12 @@ Three observations from the first run:
    the retraction. The retraction is corroborating evidence for judgments already made,
    not grounds to overturn a curator.
 
-The 13 expressions of concern are all cited as annotation evidence, but seven of them
-have the same low-stakes shape: a generic `GO:0005515 protein binding` IPI row
-(human/MYC, human/EGFR, human/PTPN11, human/AGO2, human/CLU, ARATH/CIPK24, ARATH/PYR1)
-that the review had already marked `REMOVE` or `MARK_AS_OVER_ANNOTATED` for reasons
-unrelated to the notice. The one that deserves a look is PMID:19033661 (AIP1/VEGFR2,
-*J Clin Invest* 2008, EoC PMID:40955656, Sep 2025), which supports **13 `ACCEPT`ed or
+The 13 expressions of concern are all cited as annotation evidence, and seven include
+a generic `GO:0005515 protein binding` IPI row (human/MYC, human/EGFR,
+human/PTPN11, human/AGO2, human/CLU, ARATH/CIPK24, ARATH/PYR1) that the review had
+already marked `REMOVE` or `MARK_AS_OVER_ANNOTATED` for reasons unrelated to the
+notice. PMID:19033661 (AIP1/VEGFR2, *J Clin Invest* 2008, EoC PMID:40955656)
+is the densest starting point: it supports **13 `ACCEPT`ed or
 `KEEP_AS_NON_CORE` annotations** across human/DAB2IP and human/VEGFA.
 
 **The 659 errata are not a defect list.** They are dominated by large interactome and
@@ -248,15 +245,19 @@ The worked example is human/TNFRSF21, which already does all of this by hand.
 - [ ] Work the four annotation-evidence retractions (human/TP53, human/BACE1,
       human/STAT3, mouse/Mtor): set `is_invalid: true`, cite the notice, and record in
       `review.reason` whether the annotation survives on independent evidence
+      ([#4009](https://github.com/ai4curation/ai-gene-review/issues/4009))
 - [ ] Add `reference_review` entries (`correctness: DISPUTED`) for the 13 expressions of
-      concern; start with PMID:19033661, which carries 13 accepted annotations
+      concern; start with PMID:19033661, which carries 13 `ACCEPT`/`KEEP_AS_NON_CORE`
+      annotations
+      ([#4009](https://github.com/ai4curation/ai-gene-review/issues/4009))
 - [ ] Extend the scan to the cached `*-goa.tsv` reference columns, so retracted sources
       behind *unreviewed* GOA annotations are caught too (currently only the reviews are
-      scanned)
+      scanned; [#4009](https://github.com/ai4curation/ai-gene-review/issues/4009))
 - [ ] Decide whether this runs in CI. The natural hook is the existing publication-type
       backfill (`ai_gene_review/etl/publication_type.py`), which already fetches each
       PMID's PubMed PT list and simply ignores `Retracted Publication`; a
       retraction/EoC flag could ride along at no extra request cost
+      ([#4009](https://github.com/ai4curation/ai-gene-review/issues/4009))
 
 # NOTES
 

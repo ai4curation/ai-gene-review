@@ -38,7 +38,7 @@ Scoping cryptochromes and engineered flavoproteins as magnetic sensors
 
 - The best-supported quantum sensor is the **radical-pair compass** in cryptochromes: light-made spin pairs whose chemistry feels weak magnetic fields.
 - From one deep-research report we shortlisted **5 proteins** (robin CRY4, monarch CRY1, human CRY2, fly CRY, MagLOV) and **5 chassis**, and flagged contested areas.
-- **Scoped, not started.** No reviews for this project; existing fly and Arabidopsis CRY reviews keep magnetoreception as **non-core**.
+- **Scoped, not started** as a native-robin / monarch / MagLOV review set; existing fly and Arabidopsis CRY reviews keep magnetoreception as **non-core**.
 
 ---
 
@@ -67,7 +67,8 @@ Scoping cryptochromes and engineered flavoproteins as magnetic sensors
 
 - ✅ Deep-research synthesis, candidate shortlist, chassis options (Jan 2026).
 - ⬜ Triage pipeline described on the page is **not in the repo** (`projects/quantum-sensing-bioinformatics/`).
-- ⬜ Decide the goal, then review human CRY2 and the fly and plant CRYs against the chemical-stimulus term.
+- ⬜ Triage robin CRY4 and monarch CRY1 accessions; decide whether engineered MagLOV constructs belong in a gene-review project.
+- ⬜ Reassess fly and plant CRY magnetoreception rows before treating them as more than contested, non-core outputs.
 - Side note in the folder: `LIGHT_SOURCE_OPEN_DATASETS.md` (open X-ray datasets), unrelated to the review.
 
 **Read more:** `projects/QUANTUM_SENSING.md`
