@@ -9,6 +9,10 @@ autolink_gene_symbols: false
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [SCHPO, yeast, CANAL, NEUCR, EMENI, ASPNG, ASPOR, HYPJE, MYCMD, PENCH, PYROR]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/GsyMpPX1wW2DxpyurEA5Ka
+      title: Project brief
 ---
 
 # FUNG-GROWTH carbon-source phenotypes
@@ -23,7 +27,7 @@ substrate that comparable fungi use. A killer phenotype is a sharp,
 falsifiable organism-level claim. It says the strain has no working route to
 use that carbon source, which bears directly on GO annotations to
 carbohydrate catabolic processes, CAZyme activities and sugar transporters.
-The first pass finds 299 killer calls across 153 strains, 3 of them in species
+The first pass finds 299 killer calls across 153 strains, 5 of them in species
 with gene reviews here. One already agrees with a curation decision:
 *S. pombe* barely grows on starch, consistent with removing
 `carbohydrate catabolic process` from the alpha-amylase homologue aah1. Status:
