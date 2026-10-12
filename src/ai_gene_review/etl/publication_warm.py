@@ -394,8 +394,8 @@ def warm_publication(
         # routine `ReferenceFetcher.fetch` uses internally; it is not yet public
         # API — public-API request tracked in
         # https://github.com/ai4curation/ai-gene-review/issues/2789 (to be
-        # transferred to linkml-reference-validator); pyproject bounds LRV <0.3
-        # until it lands.
+        # transferred to linkml-reference-validator). The contract is tested with
+        # LRV 0.3; recheck it before lifting the next minor-version bound.
         try:  # external system boundary: symmetric with the locate guard above,
             # so one failed download still lets later providers try this record
             text, fmt, _pdf_bytes, error = fetcher._materialize(location)
