@@ -151,7 +151,9 @@ def _check_tree_names_revision(which, text, rev):
     tip, the resulting merge - so the invariant is not "every sha is the recorded one",
     which a first draft of this check asserted and which the committed text refutes. It is
     that the revision the report records appears among them: otherwise the description and
-    the derived sentence describe different commits.
+    the derived sentence describe different commits. Where the text names no sha at all -
+    `ALT_TREE` falls back to the branch name - there is nothing to disagree with and the
+    invariant is vacuously satisfied rather than checked.
 
     Applied to both reports. It was primary-only for a round, although the second report's
     pair is the closer of the two on the page - the description and the sentence derived
@@ -178,6 +180,11 @@ if ALT_PROV:
 
 
 _REV_STATE = {}
+# The full sha each resolvable recorded revision names, filled by `_rev_state` as a
+# by-product of asking git to resolve it. Kept beside the state rather than returned with
+# it, because only the branch-tip comparison needs it and most revisions are already a full
+# sha, for which it is the identity.
+_RESOLVED = {}
 _IN_REPO = None
 
 
@@ -226,12 +233,19 @@ def _rev_state(rev):
     claim's *availability*, not on its content - nothing published becomes false - but it is
     why a re-render can say less than the committed page.
 
-    Returns ``published``, ``unpublished`` (object here, on no pushed ref), ``not_here``
-    (object absent from this checkout, so nothing can be said either way), ``malformed``
-    (the recorded value is not a revision git could look up) or ``unknown`` (git could not
-    be asked). ``unknown`` says nothing about the object store, and in particular is not a
-    weaker ``not_here``: reached from `_alt_drift_tail` it means the object is present and
-    only its publication is unanswerable.
+    Returns ``published``, ``unpublished`` (resolves here, on no pushed ref), ``not_here``
+    (does not resolve here and is shaped like an object name, so most likely an object this
+    checkout lacks), ``unresolvable`` (does not resolve here and is not shaped like one) or
+    ``unknown`` (git could not be asked). ``unknown`` says nothing about the object store,
+    and in particular is not a weaker ``not_here``: reached from `_alt_drift_tail` it means
+    the revision resolved and only its publication is unanswerable.
+
+    ``not_here`` and ``unresolvable`` split one failure git reports once - `rev-parse`
+    exits 128 for an absent object and for an unusable string alike - so the shape of the
+    recorded value is the only evidence for which it is, and neither sentence claims more
+    than that. What is *not* done is to decide the state from the shape and then describe
+    the decision as git's: a shape test printing "not a revision git can look up" was false
+    for every ref, tag and short abbreviation an operator can put in ``AIGR_REVISION``.
 
     Memoized, which on this run never hits: the two callers ask about two different
     revisions, one each. It is here so that adding a caller cannot quietly multiply git
@@ -241,35 +255,46 @@ def _rev_state(rev):
     if rev in _REV_STATE:
         return _REV_STATE[rev]
     state = "unknown"
-    # A value that is not a sha cannot be looked up at all, and `cat-file -e` answers 128
-    # for it exactly as for a sha this checkout lacks - so without this it rendered as
-    # "this checkout does not hold", which is a claim about the object store about a string
-    # that was never an object. Asked before the repository probe because the shape of the
-    # recorded value has nothing to do with where we are standing.
-    if not re.fullmatch(r"[0-9a-f]{7,40}", rev or ""):
-        _REV_STATE[rev] = "malformed"
-        return "malformed"
-    # `cat-file -e` exits 128 both for a missing object and for a fatal such as "not a git
-    # repository", so its exit code alone cannot tell absence from failure - the distinction
-    # this docstring argues for. One `rev-parse --git-dir` settles it, and `_in_repo` asks
-    # it once per process rather than once per revision.
+    # Nothing about the recorded value is decided before this: `cat-file -e` exits 128 both
+    # for a missing object and for a fatal such as "not a git repository", so its exit code
+    # alone cannot tell absence from failure, and a test of the value's *shape* run ahead of
+    # this probe published a claim about what git can resolve from a process that had asked
+    # git nothing. `_in_repo` asks once per process rather than once per revision.
     if not _in_repo():
         _REV_STATE[rev] = "unknown"
         return "unknown"
-    # `cat-file -e`, not `rev-parse --verify`, which exits 0 for any well-formed 40-character
-    # sha whether or not an object matches it.
-    if subprocess.run(["git", "cat-file", "-e", f"{rev}^{{commit}}"],
-                      capture_output=True).returncode != 0:
-        state = "not_here"
+    # git is asked to resolve the value, rather than the value being matched against the
+    # shape of an abbreviated object name. The two differ for most of what gitrevisions(7)
+    # calls a revision - a ref, a tag, `HEAD~3`, an abbreviation shorter than seven - all of
+    # which resolve and all of which a shape test called unusable; `aigr_revision` comes
+    # from an environment variable, so a ref there is an operator slip rather than a
+    # hypothetical. It also separates a 40-hex object that is present but is a blob or a
+    # tree, which `cat-file -e <sha>^{commit}` failed and so reported as not held.
+    #
+    # `--verify <rev>^{commit}`, never bare `--verify`, which exits 0 for any well-formed
+    # 40-character sha whether or not an object matches it.
+    r = subprocess.run(["git", "rev-parse", "--verify", f"{rev}^{{commit}}"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        # git could not resolve it here, and git cannot say which of the two reasons it is:
+        # an absent object and an unusable string both exit 128. The shape of the value is
+        # the only evidence available, so it decides which sentence is printed - and each
+        # sentence claims only what was actually established.
+        state = "not_here" if re.fullmatch(r"[0-9a-f]{4,40}", rev or "") else "unresolvable"
     else:
+        # The full sha, so the branch-tip comparison is not defeated by an abbreviation that
+        # resolves to the tip, and so `for-each-ref` is asked about a commit rather than
+        # about whatever string the operator recorded.
+        _RESOLVED[rev] = r.stdout.strip() or rev
         try:
-            r = subprocess.run(["git", "for-each-ref", "--contains", rev, "refs/remotes"],
-                               capture_output=True, text=True)
+            f = subprocess.run(
+                ["git", "for-each-ref", "--contains", _RESOLVED[rev], "refs/remotes"],
+                capture_output=True, text=True)
         except Exception:
             _REV_STATE[rev] = "unknown"
             return "unknown"
-        if r.returncode == 0:
-            state = "published" if r.stdout.strip() else "unpublished"
+        if f.returncode == 0:
+            state = "published" if f.stdout.strip() else "unpublished"
     _REV_STATE[rev] = state
     return state
 
@@ -277,8 +302,10 @@ def _rev_state(rev):
 # What each state means for a reader, as its own clause. Appended after the drift answer,
 # because publication bears on whether a reader can re-run the comparison rather than on
 # whether the inputs moved. Every state has an entry, so a new state cannot render a blank
-# clause by omission; `malformed`'s is empty because both tails answer that value with a
-# sentence of their own, there being nothing to publish.
+# clause by omission - a missing key raises where an empty string would quietly print
+# nothing. `unresolvable`'s entry is never read: both tails return before consulting this
+# dict, because a value git could not resolve leaves nothing to say about publication. It
+# is here to keep the mapping total, not because it renders.
 _REPRODUCIBLE = {
     "published": "",
     "unpublished": " That revision is on no pushed ref, so no clone holds it and this"
@@ -293,7 +320,7 @@ _REPRODUCIBLE = {
                 " shallow clone will not hold it either.",
     "unknown": " Whether that revision is published could not be determined, so nothing is"
                " claimed about re-running this elsewhere.",
-    "malformed": "",
+    "unresolvable": "",
 }
 
 
@@ -318,9 +345,9 @@ def _primary_drift_tail():
                     " is claimed about whether a clone could compare the table's own figures.",
         "unknown": f"Whether the primary run's tree (`{short}`) is published could not be"
                    " determined, so nothing is claimed about the table's own figures.",
-        "malformed": f"The primary run records `{rev[:40]}` as its tree, which is not a"
-                     " revision git can look up, so nothing is claimed about the table's"
-                     " own figures.",
+        "unresolvable": f"The primary run records `{rev[:60]}` as its tree, which git"
+                        " cannot resolve to a commit here and which is not shaped like an"
+                        " object name, so nothing is claimed about the table's own figures.",
     }[_rev_state(rev)]
 
 
@@ -353,14 +380,21 @@ def _alt_drift_tail():
         return (f" at `{rev[:9]}`; git could not be asked where this branch is, so nothing is"
                 " claimed about whether the audit's inputs moved since.")
     state = _rev_state(rev)
-    if state == "malformed":
-        return (f" at `{rev[:40]}`, which is not a revision git can look up, so the"
-                " input-drift comparison below was not made.")
-    if rev == head:
+    if state == "unresolvable":
+        return (f" at `{rev[:60]}`, which git cannot resolve to a commit here and which is"
+                " not shaped like an object name, so the input-drift comparison below was"
+                " not made.")
+    if _RESOLVED.get(rev, rev) == head:
+        # Compared on the resolved sha, not on the recorded string: an abbreviation that is
+        # the tip took the ancestor path and printed the other of two true sentences.
+        #
         # The reproducibility clause belongs here too: a tip committed and not yet pushed is
         # the ordinary state while a round is being prepared, and this return used to be the
         # one that skipped `_rev_state` and so said nothing about whether a clone has it.
-        return f" at `{rev[:9]}`, which is this branch's tip.{_REPRODUCIBLE[state]}".rstrip()
+        # "Nothing to compare" is said rather than left to the reader: every sibling return
+        # states what the comparison found, so a bare "this branch's tip" read as an omission.
+        return (f" at `{rev[:9]}`, which is this branch's tip, so there is nothing to"
+                f" compare.{_REPRODUCIBLE[state]}").rstrip()
     if state == "not_here":
         # No gloss on *why* the object is missing: a shallow clone, a pruned object and a
         # tree never committed are indistinguishable here, and earlier rounds asserted the
@@ -372,9 +406,10 @@ def _alt_drift_tail():
     # succeeded, so the object *is* in this checkout and `merge-base` and `diff` will both
     # answer; the only other `unknown` - no repository at all - cannot reach this line,
     # because `rev-parse HEAD` returned above. Grouping the two printed "which this
-    # checkout does not hold" for the one state that proves the object is held, and threw
-    # away a drift answer git had already been asked for. What is unknown is publication
-    # alone, which is what the clause at the end of this function says.
+    # checkout does not hold" for the one state that proves the object is held, and skipped
+    # a `merge-base` and `diff` git would have answered - they never ran, so the answer was
+    # forgone rather than discarded. What is unknown is publication alone, which is what the
+    # clause at the end of this function says.
     anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
                          capture_output=True)
     if anc.returncode == 1:

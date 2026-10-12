@@ -23,6 +23,7 @@ pass with that branch deleted. Exit status is 0 only if every case behaves as de
 """
 import copy
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -59,20 +60,53 @@ def _strip_cover(rep, genes):
                 g["covering_pairs"] = None
 
 
-# (name, expectation, mutation, expect) where `expect` is a substring the refusal message
-# must contain, or - for an OK case - a substring the rendered page must contain. Exit status
-# alone was not enough: an EXIT case passed when *any* guard fired rather than the declared
-# one, and an OK case passed whenever the generator exited 0, whether or not the branch under
-# test was taken. The three OK cases exist to prove a clause renders, so without a string to
-# look for they would still have passed with that clause deleted.
+def _git_shim(tmp, mode):
+    """A `git` earlier on PATH that breaks one subcommand and delegates the rest.
+
+    `_rev_state` reaches `unknown` only when `for-each-ref` fails after the revision has
+    already resolved, and `unpublished` only when it succeeds with no output. Neither is
+    reachable by mutating a report, so both were verified with a shim that lived outside the
+    tree - evidence from an apparatus no committed artifact recorded, which is the position
+    a figure in this project's round-9 history record had to be corrected for. This builds
+    the same apparatus from the harness, so the two sentences a reader never sees can be
+    re-rendered by anyone running the suite.
+
+    Fails loudly with git absent rather than skipping: a case that cannot run is not a case
+    that passed.
+    """
+    real = shutil.which("git")
+    if not real:
+        sys.exit("the shim cases need git on PATH to delegate to; it is not there")
+    d = os.path.join(tmp, f"shim-{mode}")
+    os.makedirs(d, exist_ok=True)
+    body = ("exit 129" if mode == "fail" else "exit 0")
+    with open(os.path.join(d, "git"), "w") as fh:
+        fh.write("#!/bin/sh\n"
+                 'for a in "$@"; do [ "$a" = "for-each-ref" ] && ' + body + "; done\n"
+                 f'exec {real} "$@"\n')
+    os.chmod(os.path.join(d, "git"), 0o755)
+    return d
+
+
+# (name, expectation, mutation, expect[, shim]) where `expect` is a substring the refusal
+# message must contain, or - for an OK case - a substring the rendered page must contain; a
+# tuple of substrings requires all of them, for a sentence whose middle is a live figure.
+# The optional fifth element names a `_git_shim` mode, rendered with that shim first on
+# PATH. Exit status alone was not enough: an EXIT case passed when *any* guard fired rather
+# than the declared one, and an OK case passed whenever the generator exited 0, whether or
+# not the branch under test was taken. The OK cases exist to prove a clause renders, so
+# without a string to look for they would still have passed with that clause deleted.
 CASES = [
     # Deliberately NOT the drift clause: for the *committed* revision that sentence depends
     # on whether this checkout holds it, which CI's `fetch-depth: 1` guarantees it does not,
     # so declaring it made the suite's green depend on clone depth. The flag-count line is
     # derived from the reports alone. The drift sentences are covered by the three cases at
-    # the end of this list, which inject a revision whose state is the same in every
-    # checkout - absent everywhere, or not a revision at all - so what they assert is a
-    # property of the generator rather than of the clone.
+    # the end of this list. Two inject a revision whose state is the same in any checkout
+    # that is a git repository at all - absent everywhere, or unresolvable everywhere - so
+    # neither depends on how deep the clone is, which is what made the round-15 attempt
+    # wrong. They do still need a repository: `_alt_drift_tail` returns early when
+    # `rev-parse HEAD` fails, so a run from an export with no `.git` fails them. The last
+    # two reach the remaining states through a shim rather than through the report.
     ("untampered", "OK", lambda p, a: None,
      "Flag counts on principal rows:"),
     ("audit_sha256 differs", "EXIT",
@@ -167,14 +201,33 @@ CASES = [
      "which this checkout does not hold, so the input-drift comparison below was not made."
      " Whether that revision is published could not be determined here, and a shallow clone"
      " will not hold it either.\n"),
-    # A recorded value that is not a revision at all. `cat-file -e` answers 128 for it just
-    # as for an absent sha, so this used to render as "this checkout does not hold" - a
-    # claim about the object store about a string that was never an object.
-    ("the second run records a value that is not a revision", "OK",
+    # A recorded value git cannot resolve and that is not shaped like an object name.
+    # `rev-parse` exits 128 for it just as for an absent sha, so the sentence claims only
+    # what the shape establishes - an earlier version decided the state from the shape and
+    # then described the decision as git's.
+    ("the second run records a value git cannot resolve", "OK",
      lambda p, a: a["provenance"].update(aigr_revision="not-a-revision",
                                          aigr_tree="a harness tree naming no revision"),
-     "which is not a revision git can look up, so the input-drift comparison below was not"
-     " made.\n"),
+     "which git cannot resolve to a commit here and which is not shaped like an object"
+     " name, so the input-drift comparison below was not made.\n"),
+    # The two states no mutation can reach. Each declares the ancestor fragment as well as
+    # its own clause: the clause alone does not distinguish the fixed code from the version
+    # that grouped `unknown` with `not_here`, which printed the same clause behind "does not
+    # hold" and never ran the comparison. The fragment is only produced on the fall-through
+    # path - checked against both versions - and the file list between them is live, which
+    # is why the declaration is two substrings rather than one.
+    ("for-each-ref fails after the revision resolves", "OK",
+     lambda p, a: None,
+     ("an ancestor of the branch tip, with",
+      "Whether that revision is published could not be determined, so nothing is claimed"
+      " about re-running this elsewhere.\n"),
+     "fail"),
+    ("for-each-ref finds the revision on no remote ref", "OK",
+     lambda p, a: None,
+     ("an ancestor of the branch tip, with",
+      "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
+      " be re-run elsewhere.\n"),
+     "empty"),
 ]
 
 
@@ -206,7 +259,9 @@ def main(argv=None):
         yaml.safe_dump(primary, open(pp0, "w"), sort_keys=False)
         yaml.safe_dump(alt, open(ap0, "w"), sort_keys=False)
         on_disk_mutated = {pp0: False, ap0: False}
-        for name, want, mutate, expect in cases:
+        for case in cases:
+            name, want, mutate, expect = case[:4]
+            shim = case[4] if len(case) > 4 else None
             p, a = copy.deepcopy(primary), copy.deepcopy(alt)
             mutate(p, a)
             pp, ap = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
@@ -228,8 +283,11 @@ def main(argv=None):
                 if mutated or on_disk_mutated[path]:
                     yaml.safe_dump(obj, open(path, "w"), sort_keys=False)
                 on_disk_mutated[path] = mutated
+            env = dict(os.environ)
+            if shim:
+                env["PATH"] = _git_shim(tmp, shim) + os.pathsep + env.get("PATH", "")
             r = subprocess.run([sys.executable, GEN, pp, out_md, ap],
-                               capture_output=True, text=True)
+                               capture_output=True, text=True, env=env)
             got = "EXIT" if r.returncode else "OK"
             # Exit status is necessary and not sufficient. A refusal must carry the declared
             # message, or any other guard firing would pass the case; a render must contain
@@ -237,9 +295,15 @@ def main(argv=None):
             where = (r.stdout + r.stderr) if got == "EXIT" else (
                 open(out_md).read() if os.path.exists(out_md) else "")
             why = "" if got == want else f"wanted {want}, got {got}"
-            if not why and expect not in where:
+            # A tuple requires every substring: a sentence with a live figure in the middle
+            # cannot be declared as one string, and declaring only the half that does not
+            # vary would have passed against the code the case exists to rule out.
+            wanted = expect if isinstance(expect, tuple) else (expect,)
+            missing = [w for w in wanted if w not in where]
+            if not why and missing:
                 why = (f"{'refusal message' if got == 'EXIT' else 'rendered page'} does not"
-                       f" contain {expect!r}")
+                       f" contain {missing[0]!r}"
+                       + (f" (and {len(missing) - 1} more)" if len(missing) > 1 else ""))
             bad += bool(why)
             print(f"{'ok  ' if not why else 'FAIL'} {name}" + (f": {why}" if why else ""))
     n_exit = sum(1 for c in cases if c[1] == "EXIT")
