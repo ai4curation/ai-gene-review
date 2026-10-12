@@ -124,7 +124,9 @@ G = {
     "GLIPR2": note(CAT4, "Golgi-membrane protein."),
     "GLO1": note(CAT2, "Cytosolic glyoxalase."),
     "GLOD4": note(CAT4, "Mitochondrial glyoxalase-domain protein."),
-    "GM2A": note(CAT5, "Lysosomal lumenal GM2 activator."),
+    "GM2A": note(CAT5_BOUND, "Lysosomal GM2 activator with experimental lipid chaperone activity (IDA, PMID:11707436, "
+                             "PMID:30988135): it extracts GM2 from intralysosomal luminal vesicle membranes, the "
+                             "precursors of exosomes."),
     "GNS": note(CAT5, "Lysosomal lumenal sulfatase."),
     "GOT1": note(CAT2, "Cytoplasmic aspartate aminotransferase."),
     "GOT2": note(CAT1, "Mitochondrial aminotransferase with a documented plasma-membrane pool."),

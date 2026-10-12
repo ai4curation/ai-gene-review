@@ -22,7 +22,9 @@ Usage:  python3 projects/OMICS_EVIDENCE/htp/vesicle_review/apply_decisions.py [-
 from __future__ import annotations
 
 import argparse
+import csv
 import os
+import re
 import subprocess
 import sys
 from collections import Counter, defaultdict
@@ -60,6 +62,23 @@ def base_summary(path: str, idx: int, ann: dict) -> str | None:
     return old["review"].get("summary")
 
 
+# CAT5's last clause is a per-protein factual claim; check it against the gene's own GOA rows
+# instead of trusting the decision file.
+NO_BINDING = "record no experimental proteoglycan, heparin or lipid binding"
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "IC", "TAS", "HTP", "HDA", "HMP", "HGI", "HEP"}
+BINDING = re.compile(r"(lipid|heparin|heparan|glycosaminoglycan|proteoglycan|phosphatidyl|ganglioside|sphingo|"
+                     r"ceramide|sterol|fatty acid).*(binding|chaperone|carrier|transfer)", re.I)
+
+
+def binding_rows(organism: str, gene: str) -> list[str]:
+    path = os.path.join(ROOT, "genes", organism, gene, f"{gene}-goa.tsv")
+    with open(path) as fh:
+        return sorted({f'{r["GO TERM"]} {r["GO NAME"]} ({r["GO EVIDENCE CODE"]})'
+                       for r in csv.DictReader(fh, delimiter="\t")
+                       if r["GO ASPECT"] == "molecular_function" and "NOT" not in r["QUALIFIER"]
+                       and r["GO EVIDENCE CODE"] in EXPERIMENTAL and BINDING.search(r["GO NAME"])})
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -82,6 +101,9 @@ def main() -> int:
     for d in dossiers:
         key = (d["gene"], d["row_index"])
         action, basis = R.get(key, G[d["gene"]])
+        if NO_BINDING in basis:
+            hits = binding_rows(d["organism"], d["gene"])
+            assert not hits, f"{key}: CAT5 says no experimental lipid/proteoglycan binding, but GOA has {hits}"
         old = d["current_action"]
         changed = action != old
         records.append({"gene": f'{d["organism"]}/{d["gene"]}', "row_index": d["row_index"], "term": d["term"],
