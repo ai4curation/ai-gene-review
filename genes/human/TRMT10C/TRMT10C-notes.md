@@ -39,18 +39,27 @@ curl -H 'Accept: application/json' \
 | PRORP | `GO:0030678` | `enables` | IBA 1, IDA 1, IEA 5 | 7 |
 | RPPH1, the nuclear catalyst, under 4 RNAcentral ids (`URS000013F331`, `URS000061A549`, `URS000071B825`, `URS0002A685AF`) | `GO:0030677` | `enables` | IEA | 4 |
 | 10 further RNAcentral ncRNA ids not named as RPPH1: 3 `HSALNT*`, 2 `LHRI_LNC*`, 3 `lnc-*` (CCNB1IP1, PDGFC), 2 unnamed (`ncRNA`, `non-coding RNA`) | `GO:0030677` | `enables` | IEA | 10 |
-| `ComplexPortal:CPX-6155` mribonucleasep_human, the whole complex | mitochondrial | `enables` | IDA | 1 |
-| `ComplexPortal:CPX-2877` rnasep_human, the whole complex | nuclear | `enables` | IPI | 1 |
+| `ComplexPortal:CPX-6155` mribonucleasep_human, the whole complex | n/a, is the complex | `enables` | IDA | 1 |
+| `ComplexPortal:CPX-2877` rnasep_human, the whole complex | n/a, is the complex | `enables` | IPI | 1 |
 
-`GO:0005655` is nucleolar ribonuclease P complex, `GO:0030677` its generic parent
-ribonuclease P complex, `GO:0030678` the mitochondrial complex. The column records the
-term each gene product is actually annotated to rather than a nuclear/mitochondrial
-reading of it, which is a third query and is logged below. Two things it shows that
-"nuclear" would have hidden: every one of the ten protein subunits is in the nucleolar
-term, while **none** of the fourteen ncRNA ids is - they carry only the generic parent,
-RPPH1's four included. So the ncRNA `enables` rows are not recorded as nucleolar-complex
-members at all, which is consistent with reading them as a Rfam-style electronic
-propagation rather than as curated subunit annotations.
+`GO:0005655` is nucleolar ribonuclease P complex, `GO:0030677` ribonuclease P complex and
+`GO:0030678` mitochondrial ribonuclease P complex. Their ancestry is read from `runoak
+relationships` on 2026-10-12 rather than from memory, and it is not the flat parent/child shape
+an earlier draft of this paragraph asserted: `GO:0030677` is the direct `is_a` parent of
+`GO:0030678`, but reaches `GO:0005655` only through `GO:0030681` multimeric ribonuclease P
+complex, so it sits two levels above the nucleolar term and one above the mitochondrial one.
+The asymmetry does not change the reading below, since `GO:0030677` is still the term both
+specific complexes descend from, but "generic parent" was wrong for the nucleolar side.
+
+The column records the term each gene product is actually annotated to rather than a
+nuclear/mitochondrial reading of it, which is a third query and is logged below. It does not
+apply to the two ComplexPortal rows, which are the assembled complexes themselves rather than
+parts of one; those two cells read `n/a, is the complex` and come from no query. Two things the
+column shows that "nuclear" would have hidden: every one of the ten protein subunits is in the
+nucleolar term, while **none** of the fourteen ncRNA ids is - they carry `GO:0030677` and
+nothing below it, RPPH1's four included. So the ncRNA `enables` rows are not recorded as
+nucleolar-complex members at all, which is consistent with reading them as a Rfam-style
+electronic propagation rather than as curated subunit annotations.
 
 Rows sum to 40, which is the hit count, so nothing was truncated at `limit=100`.
 
@@ -91,7 +100,9 @@ curl -H 'Accept: application/json' \
 of the *mitochondrial* ribonuclease P complex, which is what makes it the counterpart rather
 than a member of the nuclear comparator set.
 
-The complex column for every other row comes from a third query, run 2026-10-12, because the
+The complex column for the 25 protein and ncRNA gene products in the table - the ten nuclear
+subunits, PRORP and the fourteen RNAcentral ids, which is every entity in it but the two
+ComplexPortal complexes - comes from a third query, run 2026-10-12, because the
 qualifier query above returns gene product, qualifier and evidence and says nothing about
 complex membership - so filling that column from it would be an inference rather than a
 record:
@@ -106,8 +117,19 @@ run for `GO:0005655`, `GO:0030677` and `GO:0030678`, plus a per-id
 all ten protein subunits are in `GO:0005655`, four of them also in `GO:0030677`; PRORP is in
 `GO:0030678` only; and all fourteen ncRNA ids are in `GO:0030677` only, each by `part_of` IEA.
 
+The ancestry among the three complex terms is from the ontology rather than from QuickGO:
+
+```
+uv run runoak -i sqlite:/root/.data/oaklib/go.db relationships GO:0005655 GO:0030678 GO:0030681
+```
+
+`GO:0005655 is_a GO:0030681 is_a GO:0030677` and `GO:0030678 is_a GO:0030677`, which is where the
+two-levels-versus-one asymmetry above comes from.
+
 The nuclear subunit genes have no folders in this repository, so these tables are the only
-in-branch record of the two queries; re-run the curls above to check them.
+in-branch record of the three queries logged above - `goId=GO:0004526`, 
+`geneProductId=UniProtKB:O15091&goId=GO:0030678`, and the complex-term family - plus the
+per-id ncRNA queries; re-run the curls above to check them.
 
 ### What HSD17B10's review actually says
 
