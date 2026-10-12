@@ -3,7 +3,7 @@ title: "Cuproptosis (Copper-Dependent Cell Death) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
-genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
+genes: [DLD, DLAT, PDHA1, PDHB, ATP7A, ATP7B, GLS, GCSH]
 manifest:
   slides:
     - href: CUPROPTOSIS/slides/CUPROPTOSIS-slides.html
@@ -16,30 +16,29 @@ manifest:
 # Cuproptosis (Copper-Dependent Cell Death) Project
 
 **Bottom line:** cuproptosis is a form of regulated cell death, defined in 2022,
-in which copper reduced by the ferredoxin FDX1 binds lipoylated TCA-cycle
-enzymes such as DLAT and makes them aggregate. Scoped, not yet started as a
-review campaign: this page selects 17 human genes in three priority tiers
-(copper handling, the FDX1 trigger, the lipoylation machinery and its
-lipoylated targets, and regulators), and a draft
+in which copper reduced by the ferredoxin FDX1 binds lipoylated mitochondrial
+proteins, especially DLAT in the pyruvate dehydrogenase complex, and makes them
+aggregate. Scoped, not yet started as a review campaign: this page selects 17
+human genes in three priority tiers (copper handling, the FDX1 trigger, lipoate
+installation and turnover, the PDH target complex, and regulators), and a draft
 [cuproptosis module](../modules/cuproptosis.html) grounded in the GO term
 `GO:0160119` cuproptosis was built alongside it. We chose it because the
 pathway is young, so its GO annotations are likely incomplete, and it pairs
-with the Ferroptosis project as a second metal-dependent death pathway. Seven
-of the 17 genes (DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH) already have
-reviewed annotations from other work (no pending rows, though DLD, DLAT, PDHA1,
-PDHB and GLS are still flagged `status: INITIALIZED`), none of which mentions
-cuproptosis. Of the other ten, LIPT1 has been fetched but not reviewed and nine
-have no gene folder yet.
+with the Ferroptosis project as a second metal-dependent death pathway. Eight
+of the 17 genes (DLD, DLAT, PDHA1, PDHB, ATP7A, ATP7B, GLS, GCSH) already have
+review files from other work, with all 439 current GOA rows actioned but not
+yet assessed for cuproptosis as a pathway. Of the other nine, LIPT1 has been
+fetched but not reviewed and eight have no gene folder yet.
 
 ## Overview
 
 Cuproptosis is a recently defined form of regulated cell death driven by the
-direct binding of copper to **lipoylated** proteins of the mitochondrial
-tricarboxylic acid (TCA) cycle. It is mechanistically distinct from apoptosis,
-necroptosis, ferroptosis, and pyroptosis. When intracellular Cu²⁺ is reduced to
-Cu⁺ by the ferredoxin **FDX1**, copper binds lipoylated **DLAT** (the E2
-component of the pyruvate dehydrogenase complex), triggering its disulfide-bond–
-dependent oligomerization/aggregation, alongside destabilization of Fe–S cluster
+direct binding of copper to **lipoylated** mitochondrial proteins. It is
+mechanistically distinct from apoptosis, necroptosis, ferroptosis, and
+pyroptosis. When intracellular Cu²⁺ is reduced to Cu⁺ by the ferredoxin
+**FDX1**, copper binds lipoylated **DLAT** (the E2 component of the pyruvate
+dehydrogenase complex), triggering its disulfide-bond–dependent
+oligomerization/aggregation, alongside destabilization of Fe–S cluster
 proteins. The resulting proteotoxic stress kills the cell. Because cuproptosis
 sensitivity tracks with reliance on mitochondrial respiration, it has rapidly
 become a focus in cancer therapy and copper-overload disease.
@@ -74,19 +73,23 @@ exporters and chaperones set the threshold:
   cuproptosis; also required for protein lipoylation. The single strongest hit
   in the defining CRISPR screens.
 
-### 3. Protein Lipoylation Machinery
-The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
-"bait" that copper attacks; loss of this machinery confers resistance:
+### 3. Lipoate Installation and Turnover
+
+The lipoyl post-translational modification on mitochondrial dehydrogenase E2
+domains is the "bait" that copper attacks; installing that group and turning it
+over during catalysis set the pool of lipoylated DLAT:
+
 - **LIAS** — lipoyl synthase (inserts sulfur into the lipoyl moiety)
 - **LIPT1** — lipoyl(amido)transferase 1
 - **LIPT2** — lipoyl/octanoyl transferase 2
-- **DLD** — dihydrolipoamide dehydrogenase (E3; shared component)
+- **GCSH** — glycine cleavage system H protein; lipoyl carrier and donor
+- **DLD** — dihydrolipoamide dehydrogenase (E3; regenerates oxidized lipoamide)
 
-### 4. Lipoylated Targets — the Death Effectors
+### 4. PDH Complex and Lipoylated Targets
 - **DLAT** — dihydrolipoamide S-acetyltransferase (PDH E2); copper-bound
   lipoylated DLAT oligomerizes/aggregates — a hallmark of cuproptosis
-- **PDHA1** / **PDHB** — pyruvate dehydrogenase E1 α/β subunits
-- **GCSH** — glycine cleavage system H protein (lipoylated)
+- **PDHA1** / **PDHB** — pyruvate dehydrogenase E1 α/β subunits in the same
+  target complex
 
 ### 5. Regulators and Specificity Controls
 - **MTF1** — metal-regulatory transcription factor 1; induces metallothioneins
@@ -98,7 +101,7 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 
 ## Genes for Review (Priority Order)
 
-### Priority 1: Core Execution Machinery (~7 genes)
+### Priority 1: FDX1, Lipoylation, and PDC Dependencies (7 genes)
 | Gene | UniProt | Function |
 |------|---------|----------|
 | FDX1 | P10109 | Cu²⁺→Cu⁺ reduction; master regulator; promotes lipoylation |
@@ -153,15 +156,17 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 
 ## Curation Focus / Open Questions
 
-- Is there (or should there be) a GO biological-process term for cuproptosis,
-  analogous to GO:0097707 *ferroptosis*? Scope the ontology gap.
+- How should `GO:0160119` cuproptosis be used: which gene products directly
+  execute cuproptosis, which only supply copper or lipoylation, and which are
+  upstream sensitivity modifiers?
 - Are FDX1's two roles (Cu²⁺ reduction vs. promoting protein lipoylation)
   captured by distinct, appropriately specific MF/BP terms, or over-/under-annotated?
 - DLAT: distinguish its canonical acetyltransferase MF from its
   cuproptosis-effector behavior (copper-induced aggregation) — the latter is a
   process role, not a new MF.
-- Watch for over-annotation of every lipoylation/TCA gene with a generic
-  "cell death" process term where the experimental support is indirect.
+- Watch for over-annotation of every lipoate, PDH, or copper-homeostasis gene
+  with a generic "cell death" process term where the experimental support is
+  indirect.
 
 ## Key References
 
@@ -172,9 +177,10 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 ## Project Status
 
 - [ ] Gene folder setup (`just fetch-gene human <GENE>`) — done for the reviewed
-  genes below; FDX1, LIAS, SLC31A1, ATP7A, ATOX1, MTF1, LIPT2, CDKN2A and FDX2 still
+  genes below; FDX1, LIAS, SLC31A1, ATOX1, MTF1, LIPT2, CDKN2A and FDX2 still
   need folders (LIPT1 has only a UniProt record)
 - [ ] Priority 1 genes reviewed (4/7: DLD, DLAT, PDHA1, PDHB; FDX1, LIAS, LIPT1 pending)
-- [ ] Priority 2 genes reviewed (2/6: GLS, ATP7B; SLC31A1, ATP7A, ATOX1, MTF1 pending)
+- [ ] Priority 2 genes reviewed (3/6: GLS, ATP7A, ATP7B; SLC31A1, ATOX1, MTF1 pending)
 - [ ] Priority 3 genes reviewed (1/4: GCSH; LIPT2, CDKN2A, FDX2 pending)
 - [ ] Pathway summary + ontology-gap assessment
+  ([#3967](https://github.com/ai4curation/ai-gene-review/issues/3967))

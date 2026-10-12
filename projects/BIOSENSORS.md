@@ -27,8 +27,9 @@ signalling and NLR genes worth curating, because an engineered sensor is only as
 our understanding of the receptors and pathway it borrows. Scoped, not yet started as a
 curation project: none of the TODO items below is done. Twelve of the listed Arabidopsis genes
 (FLS2, EFR, CERK1, BAK1, BIK1, RBOHD, MPK6, NPR1, EDS1, PAD4, RPS2, RPM1) already have reviews
-in `genes/ARATH/` from other work, covering 560 annotations; LYK5, LYK4, PEPR1/2, PBL27, MPK3,
-WRKY33 and RPS4 do not, and the Populus orthologs have not been mapped.
+in `genes/ARATH/` from other work, covering 596 annotations as of this audit (7 `COMPLETE`,
+3 `DRAFT`, 2 `INITIALIZED`); LYK5, LYK4, PEPR1/2, PBL27, MPK3, WRKY33 and RPS4 do not, and
+the Populus orthologs have not been mapped.
 
 Notes from SEED SFA (Secure Ecosystem Engineering and Design) at ORNL.
 
@@ -169,7 +170,7 @@ degradation     ROS burst        Transcriptional
 | BIK1 | RLCK | Central hub downstream of PRRs |
 | MPK3/6 | MAPK | Defense gene activation |
 | WRKY33 | TF | Defense transcription factor |
-| NPR1 | SA receptor/coactivator | Master regulator of SAR |
+| NPR1 | SA/SAR transcriptional cofactor | Master regulator of SAR |
 | EDS1 | Lipase-like | TNL signaling |
 | PAD4 | Lipase-like | TNL signaling |
 
@@ -434,3 +435,6 @@ RNA biosensors detect stress ~100-200 hours earlier than visible phenotypes (sto
 - [ ] Add GO annotations for pathway components
 - [ ] Cross-reference with Arabidopsis defense pathway annotations
 - [ ] Identify orthologs in Populus trichocarpa
+
+Remaining Arabidopsis receptor/signaling reviews and Populus ortholog mapping
+are tracked in [#3964](https://github.com/ai4curation/ai-gene-review/issues/3964).

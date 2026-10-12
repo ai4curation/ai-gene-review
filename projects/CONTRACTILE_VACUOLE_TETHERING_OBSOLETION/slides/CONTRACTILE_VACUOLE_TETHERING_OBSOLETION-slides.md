@@ -37,8 +37,8 @@ BP GO:0140025 → MF GO:7770067 contractile vacuole-plasma membrane tether activ
 ## Bottom line
 
 - GO **obsoleted** the process GO:0140025 and replaced it with a **new molecular function**, GO:7770067 (is_a GO:0140177 membrane-membrane adaptor activity).
-- Only **2 annotations** move, both *Dictyostelium* IMP: **rab8A** and **p2xA**.
-- **Scoped, not yet started:** neither gene is reviewed here; p2xA needs a careful look.
+- The two dictyBase **IMP rows from the obsoletion issue** have moved: **rab8A** and **p2xA**.
+- **Upstream migrated; local not yet started:** neither gene is reviewed here; p2xA needs a careful look.
 
 ---
 
@@ -73,9 +73,9 @@ BP GO:0140025 → MF GO:7770067 contractile vacuole-plasma membrane tether activ
 
 ## Status and next steps
 
-1. Confirm dictyBase has migrated the two IMP rows to GO:7770067 (upstream said they "may be automatically transferred").
-2. `just fetch-gene DICDI rab8A`, then `p2xA`.
-3. These two reviews close the whole GO:0140025 migration.
+1. `just fetch-gene DICDI rab8A`, then `p2xA`; QuickGO now seeds GO:7770067 directly.
+2. Review **rab8A** first to anchor the new MF and the exocyst/kiss-and-run mechanism.
+3. Review **p2xA** second to verify that a P2X channel phenotype directly supports tether activity.
 
 **Upstream:** go-annotation#6387 · go-ontology#31870, #31942, #31950
 **Siblings:** `ER_PM_TETHERING_OBSOLETION` · `MITO_ER_TETHERING_OBSOLETION` · `VESICLE_TETHERING_OBSOLETION`

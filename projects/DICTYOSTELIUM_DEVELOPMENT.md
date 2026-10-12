@@ -3,6 +3,62 @@ title: "Dictyostelium Development Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [DICDI]
+last_reviewed: 2026-10-04
+genes:
+  - acaA
+  - acbA
+  - acgA
+  - acrA
+  - atg1
+  - cadA
+  - carA
+  - carB
+  - carC
+  - carD
+  - chlA
+  - cmfA
+  - cotB
+  - csaA
+  - ctnA
+  - cudA
+  - dagA
+  - dhkA
+  - dimA
+  - dimB
+  - dmtA
+  - ecmA
+  - ecmB
+  - gbfA
+  - gbpC
+  - gbpD
+  - gcA
+  - gpaB
+  - grlE
+  - gtaC
+  - iplA
+  - mhcA
+  - mlcD
+  - pdsA
+  - pkaC
+  - pkaR
+  - pten
+  - pufA
+  - rasC
+  - rasG
+  - rdeA
+  - regA
+  - sgcA
+  - smlA
+  - spiA
+  - srfA
+  - statA
+  - statC
+  - stlB
+  - tagC
+  - tgrB1
+  - tgrC1
+  - tipA
+  - yakA
 manifest:
   slides:
     - href: DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html
@@ -17,25 +73,20 @@ manifest:
 **Bottom line:** starving *Dictyostelium discoideum* amoebae aggregate by
 relayed cAMP signalling and build a fruiting body of stalk and spores, which
 makes this organism the standard model for the step from single cells to
-multicellular development. We split development into 14 functional modules,
-then reviewed 52 genes across all of them (32 priority genes, 8 direct paralogs
-and 12 module-gap genes) and authored 8 Dictyostelium `ModuleReview` documents,
-all status DRAFT. We did this to get a curation-grade picture of a whole
-developmental program, and to test how IBA and IEA propagation behaves inside
-the organism's large paralog families. The 52 reviews cover 1,478 existing
-annotations: 797 accepted, 546 kept as non-core, 42 modified, 37 marked
-over-annotated, 19 removed and 37 left undecided. The paralog batch showed
-propagation inside families: an aggregation-stage adenylyl-cyclase-activator row
-was marked over-annotated on the cAR3 receptor (the paralog notes below say
-cAR4), a purinergic-receptor IEA was removed from cAR1, cAR2 and cAR3, and
-phosphorelay IEAs were removed from the ACR adenylyl cyclase. The page began as
-a scoping enumeration; the status section below records how far it has gone.
-Still open are per-gene notes, an expert second pass and the deeper paralog
-families. A further completed review, rdeA (the DhkA-to-RegA phosphotransfer
-protein), is in `genes/DICDI/` but is not yet counted here or grounded in the
-SDF-2 module. The other three DICDI reviews in the repo are also outside the
-52: mlcD (reviewed before this project) and nip7 and tlcd4b (not
-development-specific).
+multicellular development. We split development into 14 functional modules and
+used them to drive a 52-gene review batch spanning 32 priority genes, 8 direct
+paralogs and 12 module-gap genes. As of 2026-10-04, that batch covers 1,478
+existing annotations: 797 accepted, 546 kept as non-core, 42 modified, 37 marked
+over-annotated, 19 removed and 37 left undecided. Together with the pre-existing
+`mlcD` review and the newly integrated `rdeA` review, 54
+development-relevant DICDI reviews now ground 8 Dictyostelium `ModuleReview`
+documents, all status DRAFT. The paralog batch showed propagation issues inside
+families: an adenylate-cyclase-activator row was marked over-annotated on the
+cAR3 receptor, a purinergic-receptor IEA was removed from cAR1/cAR2/cAR3, and
+phosphorelay IEAs were removed from the ACR adenylyl cyclase. Still open are
+per-gene notes, an expert second pass and deeper paralog families, tracked in
+[#4064](https://github.com/ai4curation/ai-gene-review/issues/4064). The other
+DICDI reviews in the repo, `nip7` and `tlcd4b`, are not development-specific.
 
 ## Overview
 
@@ -47,11 +98,10 @@ body (sorocarp) — a cellular stalk holding aloft a mass of dormant spores. The
 whole program runs ~24 h and is driven by cell–cell signaling, chemotaxis,
 allorecognition, and a binary prestalk/prespore cell-fate decision.
 
-This project scopes the **functional modules** that a curation-grade model of
-Dictyostelium development must cover, and lists candidate genes (dictyBase
-symbols) for review in each. It is a **scoping enumeration** — UniProt accessions
-are intentionally omitted here and should be pulled at review time with
-`just fetch-gene DICDI <gene>` rather than guessed.
+This project advanced from a 14-module scoping enumeration into a
+curation-grade first pass over *Dictyostelium* development genes. The module
+lists below retain the original dictyBase-symbol scaffold; UniProt accessions
+were resolved in the per-gene reviews with `just fetch-gene DICDI <gene>`.
 
 ## Model Species
 
@@ -232,10 +282,6 @@ Behavior of the multicellular slug and tip organizer.
 - [x] Enumerate developmental modules and candidate genes (this page)
 - [x] Resolve dictyBase symbols → UniProt accessions (`fetch-gene DICDI <gene>`)
 - [x] Fetch GOA + UniProt + cached publications for all priority genes
-- [x] **Review existing GO annotations for all 32 priority genes (P1–P4)** —
-  every annotation adjudicated (ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE /
-  MARK_AS_OVER_ANNOTATED / UNDECIDED), with `description`, `core_functions`, and
-  verbatim-quoted `supported_by` evidence; all pass `ai-gene-review validate`.
 - [x] **Reviewed all 32 priority genes (P1–P4)** — every annotation adjudicated
   (ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE / MARK_AS_OVER_ANNOTATED /
   UNDECIDED), with `description`, `core_functions`, and verbatim-quoted
@@ -246,9 +292,13 @@ Behavior of the multicellular slug and tip organizer.
   DIF-1 biosynthesis, starvation, GRN, morphogenesis (see below). **All 14
   enumerated modules now have reviewed representatives.**
 - [ ] Add per-gene `GENE-notes.md` deep-research journals where missing
-- [ ] Expert sign-off / second-pass QA of the reviews
+  ([#4064](https://github.com/ai4curation/ai-gene-review/issues/4064))
+- [ ] Expert sign-off / second-pass QA of the reviews and eight DRAFT
+  Dictyostelium `ModuleReview` documents
+  ([#4064](https://github.com/ai4curation/ai-gene-review/issues/4064))
 - [ ] Deeper paralog families still open: wider *tgr* locus, other Ras/Rap,
   dhk/grl family members, ecm/cot paralogs, statB/statD, additional atg genes
+  ([#4064](https://github.com/ai4curation/ai-gene-review/issues/4064))
 
 ### Reviewed genes (52, all validated)
 
@@ -275,7 +325,7 @@ Behavior of the multicellular slug and tip organizer.
 | 6 | Prestalk/prespore patterning | ecmA, cudA, dimA, dimB, cotB |
 | 7 | Stalk differentiation & death | ecmB, cudA, tagC |
 | 8 | Spore differentiation & encapsulation | cotB, spiA, acbA, srfA |
-| 9 | Culmination signaling | acbA, tagC, grlE, dhkA |
+| 9 | Culmination signaling | acbA, tagC, grlE, dhkA, rdeA |
 | 10 | Autophagy | atg1 |
 | 11 | Cell counting / group size | smlA, ctnA |
 | 12 | Second messengers (cGMP/Ca²⁺) | gcA, sgcA, gbpC, gbpD, iplA |
@@ -298,7 +348,7 @@ modules). The QC panel on each rendered module page auto-joins these gene review
 | `dicty_allorecognition_adhesion` | 4 | staged ddCAD-1 → csA → TgrB1/TgrC1 |
 | `dicty_dif1_biosynthesis` | 5 | StlB → ChlA → DmtA (multistep) |
 | `dicty_dif1_response_prestalk_patterning` | 6 | DIF-1 → DimA/DimB → ecmA/ecmB |
-| `dicty_sdf2_encapsulation_relay` | 8/9 | AcbA → TagC → SDF-2 → DhkA ⊣ RegA ⊣ PKA |
+| `dicty_sdf2_encapsulation_relay` | 8/9 | AcbA → TagC → SDF-2 ⊣ DhkA → RdeA → RegA ⊣ PKA |
 | `dicty_counting_factor_size_control` | 11 | SmlA ⊣ counting factor (Countin) |
 | `dicty_cgmp_chemotaxis_arm` | 12 | GCA/sGC → cGMP → GbpC → myosin II |
 
@@ -345,20 +395,24 @@ three developmental adenylate cyclases (ACA/ACG/ACR), the two principal
 chemotaxis Ras proteins (RasC/RasG), the PKA holoenzyme (C+R), and a second
 STAT. All 8 reviewed and validated.
 
-This batch confirmed the predicted **intra-family IBA/IEA over-propagation**:
-the aggregation-stage "adenylate cyclase-activating cAMP receptor" role was
-mis-transferred onto the later paralogs cAR4 (MARK_AS_OVER_ANNOTATED) and the
-purinergic-receptor IEA was removed from cAR2/cAR3/cAR4; ACR's degenerate
-histidine-kinase/receiver domains carried phosphorelay/transferase IEAs refuted
-by its functional paper (REMOVE); statC carried metazoan JAK-STAT / defense /
-proliferation terms corrected to STAT signaling and removed.
+This batch confirmed the predicted **intra-family IBA/IEA propagation issues**:
+cAR3's experimentally seeded `adenylate cyclase activator activity` row was
+marked over-annotated because the receptor controls adenylyl cyclase indirectly
+through heterotrimeric G proteins; the purinergic-receptor IEA was removed from
+cAR1/cAR2/cAR3; ACR's degenerate histidine-kinase/receiver domains carried
+phosphorelay/transferase IEAs refuted by its functional paper; and statC's
+metazoan JAK-STAT row was corrected to STAT signaling.
 
 **Still open (lower priority):** wider *tgr* allorecognition locus, remaining
-Ras/Rap members, dhk/grl family members, ecm/cot paralogs, statB/statD.
+Ras/Rap members, dhk/grl family members, ecm/cot paralogs, statB/statD
+([#4064](https://github.com/ai4curation/ai-gene-review/issues/4064)).
 
-## Existing DICDI reviews in the repo
+## Additional DICDI reviews outside the 52-gene batch
 
-- `genes/DICDI/mlcD` — myosin light chain (Module 3, motility)
+- `genes/DICDI/mlcD` — myosin light chain (Module 3, motility), reviewed before
+  this project
+- `genes/DICDI/rdeA` — histidine-phosphotransfer intermediate between DhkA and
+  RegA, now grounded in `dicty_sdf2_encapsulation_relay`
 - `genes/DICDI/nip7` — ribosome biogenesis (not development-specific)
 - `genes/DICDI/tlcd4b` — TLC-domain lipid metabolism (not development-specific)
 

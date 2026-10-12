@@ -37,7 +37,7 @@ Know what a protein does before you knock it out
 ## Bottom line
 
 - Allergens are being **knocked out, neutralized and engineered**, yet many have **no known native function**.
-- We built an allergen→UniProt index, a UniProt registry worklist and an IEDB epitope ETL, then reviewed **24 genes** (cat, dog, horse, cow, mouse, rat, mite, birch + Scgb1a1): **219 existing rows (0 removed, 62 over-annotated) plus 18 new**.
+- We built an allergen→UniProt index, a UniProt registry worklist and an IEDB epitope ETL, then reviewed **24 genes** (cat, dog, horse, cow, mouse, rat, mite, birch + Scgb1a1): **219 existing rows (0 removed, 60 over-annotated) plus 18 new**.
 - The top priorities, **Bet v 1, Fel d 1, Can f 1**, are heavily IgE-targeted and their native role is **still unknown**.
 
 ---
@@ -85,5 +85,7 @@ Know what a protein does before you knock it out
 - ⬜ Registry coverage is small: 6 of 1,020 reviewed UniProt allergen entries when last counted; 1,014 on the worklist.
 - ⬜ Extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`).
 - ⬜ Continue the backlog by priority: pollens, foods, molds, insects.
+
+<span class="small">Open tracker: ai4curation/ai-gene-review#4033</span>
 
 **Read more:** `projects/ALLERGENS.md` · `projects/ALLERGENS/allergen_index.tsv`

@@ -21,12 +21,11 @@ a molecular function, and replaced it with the new MF GO:7770067
 GO:0140177 *membrane-membrane adaptor activity*). OLS shows the old term
 obsolete and the new term live as of 2026-09-26. Only two annotations are
 affected, both IMP in *Dictyostelium discoideum*: rab8A (PMID:22323285, the
-paper that anchors the new term's definition) and p2xA (PMID:24335649). We
-recorded the change, checked the repo, and queued both genes for review,
-with p2xA flagged because a P2X cation channel is an unusual tether.
-Scoped, not yet started: neither gene is reviewed here, and no review in
-`genes/` uses either term (the "3 existing reviews" count for
-*D. discoideum* below is out of date; `genes/DICDI/` now holds 56). This is the contractile-vacuole member of the
+paper that anchors the new term's definition) and p2xA (PMID:24335649).
+QuickGO lists both rows on GO:7770067 as dictyBase IMP annotations as of
+2026-10-04. The local work is still not started: neither gene is reviewed
+here, `genes/DICDI/` now holds 56 other reviews, and no local review uses
+GO:0140025 or GO:7770067. This is the contractile-vacuole member of the
 membrane-tether obsoletions that also include
 [ER-PM](ER_PM_TETHERING_OBSOLETION.md),
 [mito-ER](MITO_ER_TETHERING_OBSOLETION.md) and
@@ -34,7 +33,7 @@ membrane-tether obsoletions that also include
 
 ## Overview
 
-A GO obsoletion proposal retires **GO:0140025 contractile vacuole tethering
+A GO obsoletion proposal retired **GO:0140025 contractile vacuole tethering
 involved in discharge** (a BP term). The rationale mirrors the parallel
 membrane-tether obsoletions in this batch (ER–PM, mito–ER,
 peroxisome–chloroplast): the activity is more appropriately captured at the
@@ -53,7 +52,7 @@ This project tracks the impact on AI Gene Review and queues the two affected
 - New term PR: [geneontology/go-ontology#31942](https://github.com/geneontology/go-ontology/pull/31942) (adds GO:7770067)
 - Obsoletion PR: [geneontology/go-ontology#31950](https://github.com/geneontology/go-ontology/pull/31950) (obsoletes GO:0140025)
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
@@ -74,7 +73,7 @@ Synonyms: "contractile vacuole-plasma membrane tethering activity" (EXACT),
 
 | Group | Annotations | Status |
 |---|---:|---|
-| dictyBase | 2 | pending — "May be automatically transferred" per upstream |
+| dictyBase | 2 | migrated to GO:7770067 in QuickGO |
 
 The two annotations are:
 
@@ -90,12 +89,12 @@ UniRule mappings for GO:0140025.
 
 ## Impact on this repo
 
-Neither rab8A nor p2xA is currently reviewed in this repository
-(`genes/DICDI/` contains tlcd4b, mlcD, and nip7 — none of the contractile
-vacuole tether annotations). This means **no existing reviews need refresh**
-for the obsoletion itself, but the two affected genes represent a coherent
-small candidate set for proactive review now that the replacement MF term
-is in place.
+Neither rab8A nor p2xA is currently reviewed in this repository. The
+`genes/DICDI/` directory contains 56 other reviews, none of which use
+GO:0140025 or GO:7770067. This means **no existing reviews need refresh** for
+the obsoletion itself, but the two affected genes represent a coherent small
+candidate set now that dictyBase has migrated the IMP annotations to the
+replacement MF term.
 
 ## Scope
 
@@ -133,11 +132,10 @@ UniProt accession from the UniProt API.
 
 ## Proposed approach and priority
 
-1. **Wait for the dictyBase migration.** The issue body notes that the two
-   annotations "may be automatically transferred". If dictyBase has not yet
-   migrated them at the time of review, the new rows should appear under
-   GO:7770067; the review can then ACCEPT (rab8A) or assess (p2xA) the
-   migrated MF annotations directly.
+1. **Seed the migrated dictyBase rows.** QuickGO now lists both affected
+   annotations on GO:7770067, so `just fetch-gene DICDI rab8A` and
+   `just fetch-gene DICDI p2xA` should seed the replacement MF directly rather
+   than the obsolete BP term.
 
 2. **Anchor on rab8A.** rab8A is the direct PMID:22323285 case that motivated
    the new MF term, so it is the natural anchor review. ACCEPT GO:7770067
@@ -147,9 +145,9 @@ UniProt accession from the UniProt API.
 
 3. **Review p2xA second.** Use the rab8A review template, but verify that
    the PMID:24335649 evidence really supports a tether activity rather than a
-   channel-mediated regulatory role. If the evidence is weak,
-   MARK_AS_OVER_ANNOTATED rather than mechanically ACCEPTing the migrated
-   row.
+   channel-mediated regulatory role. If the evidence is weak, keep or modify
+   the row only to the term that its IMP phenotype directly supports rather
+   than mechanically accepting the migrated MF row.
 
 4. **Use the pair as a coherent batch** — these are the only two annotations
    to the obsoleted term, so completing both closes the loop for the entire
@@ -157,12 +155,12 @@ UniProt accession from the UniProt API.
 
 ## Priority
 
-**Low–medium.** Only 2 affected annotations, both in a non-priority organism
-for this repository (*D. discoideum* has only 3 existing reviews — tlcd4b,
-mlcD, nip7), and the upstream migration is likely to be handled directly by
-dictyBase. The review value is mainly in (a) anchoring the new GO:7770067
-term with a high-quality core_function entry for rab8A, and (b) sanity-checking
-the p2xA tether call before it propagates further.
+**Low–medium.** Only 2 affected annotations remain unreviewed here, both in
+*D. discoideum*, and the upstream dictyBase migration is already done. The
+review value is mainly in (a) anchoring the new GO:7770067 term with a
+high-quality `core_functions` entry for rab8A, and (b) sanity-checking the
+p2xA tether call before the cation-channel protein is treated as a core
+tether.
 
 ## Status
 
@@ -171,3 +169,8 @@ the p2xA tether call before it propagates further.
   has been obsoleted (PR #31950) per upstream comments by raymond91125;
   dictyBase migration of the two IMP annotations is the remaining upstream
   step. No gene reviews started in this repo yet.
+- 2026-10-04 — Re-audited the local repo and QuickGO. The two dictyBase IMP
+  annotations are now on GO:7770067, no local review uses GO:0140025 or
+  GO:7770067, and rab8A/p2xA remain absent from the 56 reviewed genes under
+  `genes/DICDI/`. GitHub issue #1041 remains the local tracker for this
+  two-gene queue.

@@ -36,9 +36,9 @@ Substrate-specific tRNA charging BPs merge into GO:0006418 and GO:0070127
 
 ## Bottom line
 
-- GO is obsoleting **43 BP terms** that name the amino acid charged onto tRNA; specificity already lives on the **`<aa>-tRNA ligase` MF** terms.
+- GO obsoleted **43 BP terms** that name the amino acid charged onto tRNA; specificity already lives on the **`<aa>-tRNA ligase` MF** terms.
 - **33 reviews** here touch the obsoleted terms, **26** inside strictly validated `core_functions`.
-- **16 reviews** argue the opposite of GO: they mark **GO:0006418** over-annotated because the specific child "already captures" the process. No review has been edited yet.
+- **16 reviews** argue the opposite of GO: they mark **GO:0006418** over-annotated because the specific child "already captures" the process. `DROME/TyrRS` has been re-argued; the rest are tracked in #2747.
 
 ---
 
@@ -53,7 +53,7 @@ Substrate-specific tRNA charging BPs merge into GO:0006418 and GO:0070127
 - Each obsoleted BP has an exact **1:1 MF counterpart** (GO:0006419 ↔ GO:0004813 alanine-tRNA ligase).
 - **Compartment** is not an MF distinction either: mitochondrial twins map to the same MF.
 - The mitochondrial block is barely used: **24 experimental annotations** across 20 terms, **6 terms with none**.
-- Surrounding hierarchy already fixed: #32537 and #32541 merged in August 2026.
+- Surrounding hierarchy and the obsoletion are done: #32537, #32541 and #32551 all merged.
 
 ---
 
@@ -89,17 +89,17 @@ Substrate-specific tRNA charging BPs merge into GO:0006418 and GO:0070127
 | human AARS1, AARS2 | 2 | AARS2 proposes GO:0070143, itself obsolete |
 | POPTR ALARS, GATC; METTP gatC | 3 | core_functions on obsoleted ids |
 | DANRE gtpbp3 | 1 | six IMP rows, over-annotated |
-| human AARSD1, DARS2; DROME TyrRS | 3 | annotation rows only |
+| human AARSD1, DARS2; DROME TyrRS | 3 | annotation rows only; TyrRS re-argued |
 
-<span class="small">Counted from genes/*/*/*-ai-review.yaml on 2026-09-26. The page's own tables predate the PSEPK batch (#2899).</span>
+<span class="small">Recounted from genes/*/*/*-ai-review.yaml on 2026-10-04. The August per-term tables predate the PSEPK batch (#2899).</span>
 
 ---
 
 ## Status and next steps
 
-1. **Wait** for go-ontology#15375 to land; module text notes QuickGO's 2026-09-22 snapshot already obsoletes GO:0006421, GO:0006425, GO:0070681.
-2. **Comment on go-annotation#6525**: withdraw the gtpbp3 cluster; confirm GO:0070681 is in the batch.
-3. **Re-argue** the 16 inverted reviews; re-point `core_functions` in 26.
+1. **Re-argue** the 16 inverted reviews; re-point `core_functions` in 26.
+2. **Manually handle GO:0070681** in the GatCAB reviews and module; it has `consider` pointers, not one safe `replaced_by`.
+3. **Follow go-annotation#6525**: withdraw the gtpbp3 cluster instead of merging it into GO:0070127.
 4. Refresh `modules/bacterial_aminoacyl_trna_charging.yaml`.
 
 **Read more:** `projects/AMINO_ACID_ACTIVATION_OBSOLETION.md`

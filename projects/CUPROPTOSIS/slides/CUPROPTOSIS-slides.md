@@ -16,7 +16,7 @@ style: |
 
 # Cuproptosis: Copper-Dependent Cell Death
 
-Copper-dependent regulated cell death via lipoylated TCA-cycle proteins
+Copper-dependent regulated cell death via lipoylated mitochondrial proteins
 
 **Chris Mungall | AI-Assisted Gene Review**
 
@@ -27,7 +27,7 @@ Copper-dependent regulated cell death via lipoylated TCA-cycle proteins
 ## Why Cuproptosis?
 
 - A **recently defined** form of regulated cell death, driven by direct binding
-  of copper to **lipoylated** mitochondrial TCA-cycle proteins.
+  of copper to **lipoylated** mitochondrial proteins.
 - Mechanistically **distinct** from apoptosis, necroptosis, ferroptosis, and pyroptosis.
 - Sensitivity tracks with **reliance on mitochondrial respiration** — making it a
   fast-growing focus in cancer therapy and copper-overload disease.
@@ -61,8 +61,8 @@ serves as the "bait" copper attacks.
 - Distinguish **core functions** from over-annotation (e.g. generic "cell death"
   terms with only indirect support).
 - Scope **ontology gaps** for this new modality.
-- Status: **SCOPING** — gene folders still need setup
-  (`just fetch-gene human <GENE>`).
+- Status: **SCOPING** — eight existing review files are from other campaigns;
+  nine candidate genes still need cuproptosis-focused review.
 
 ---
 
@@ -71,16 +71,16 @@ serves as the "bait" copper attacks.
 - **Copper delivery & homeostasis** — set the threshold for cuproptosis
   (SLC31A1, ATP7A, ATP7B, ATOX1).
 - **Copper reduction (the trigger)** — FDX1 reduces Cu²⁺ → Cu⁺.
-- **Protein lipoylation machinery** — installs the lipoyl "bait"
-  (LIAS, LIPT1, LIPT2, DLD).
-- **Lipoylated targets (death effectors)** — copper-attacked
-  (DLAT, PDHA1, PDHB, GCSH).
+- **Lipoate installation and turnover** — builds the lipoyl "bait" and cycles
+  it during catalysis (LIAS, LIPT1, LIPT2, GCSH, DLD).
+- **PDH complex and lipoylated targets** — DLAT in the copper-attacked PDH
+  complex, plus the E1 subunits PDHA1/PDHB.
 - **Regulators & specificity controls** — set sensitivity
   (MTF1, GLS, CDKN2A, FDX2).
 
 ---
 
-## Priority 1: Core Execution Machinery
+## Priority 1: FDX1, Lipoylation, and PDC Dependencies
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -92,7 +92,7 @@ serves as the "bait" copper attacks.
 | PDHA1 | P08559 | Pyruvate dehydrogenase E1 alpha |
 | PDHB | P11177 | Pyruvate dehydrogenase E1 beta |
 
-~7 genes — the direct executioners of cuproptosis.
+7 genes — the FDX1, lipoylation, and PDH core to review first.
 
 ---
 
@@ -156,26 +156,26 @@ specificity control.
 
 ## Challenges: New Modality, GO Term Gaps
 
-- Is there (or should there be) a GO biological-process term for **cuproptosis**,
-  analogous to GO:0097707 *ferroptosis*? **Scope the ontology gap.**
+- How should **GO:0160119 cuproptosis** be used: direct execution, copper or
+  lipoylation supply, or upstream sensitivity modulation?
 - Are FDX1's **two roles** (Cu²⁺ reduction vs. promoting lipoylation) captured
   by distinct, appropriately specific MF/BP terms — or over-/under-annotated?
 - **DLAT:** distinguish its canonical acetyltransferase MF from its
   cuproptosis-effector behavior (copper-induced aggregation) — the latter is a
   **process** role, not a new MF.
-- Watch for **over-annotation** of every lipoylation/TCA gene with a generic
-  "cell death" process term where experimental support is indirect.
+- Watch for **over-annotation** of every lipoate, PDH, or copper-homeostasis
+  gene with a generic "cell death" term where support is indirect.
 
 ---
 
 ## Conclusions & Future Directions
 
 - Cuproptosis: copper-dependent regulated cell death executed via **lipoylated
-  TCA-cycle proteins** and **Fe–S cluster loss** — a young, fast-moving field.
-- Curation target: **~17 genes** across 3 priority tiers (core execution,
+  mitochondrial proteins** and **Fe–S cluster loss** — a young, fast-moving field.
+- Curation target: **17 genes** across 3 priority tiers (FDX1/lipoylation/PDC,
   copper handling, specificity controls).
 - **Status: SCOPING.** Next steps:
-  - [ ] Gene folder setup (`just fetch-gene human <GENE>`)
-  - [ ] Priority 1 genes (4/7), Priority 2 (2/6), Priority 3 (1/4)
+  - [ ] Fetch FDX1, LIAS, SLC31A1, ATOX1, MTF1, LIPT2, CDKN2A, FDX2
+  - [ ] Review Priority 1 genes (4/7), Priority 2 (3/6), Priority 3 (1/4)
   - [ ] Pathway summary + ontology-gap assessment
 - Parallels the **Ferroptosis** project as a metal-dependent cell-death pathway.

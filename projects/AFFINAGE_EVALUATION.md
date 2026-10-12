@@ -53,10 +53,11 @@ molecular function for 1 of 42 genes (KRAS `GTPase activity`), usually stopping 
 a generic parent such as `oxidoreductase activity` and sometimes landing on the
 wrong catalytic branch. The narrative is much stronger: in the Fanconi cohort it
 contributed 59 primary papers and 13 new GO annotations across 10 genes without
-reversing any existing curation decision. As a literature search it supplied 52%
-of the 718 references the 91 reviews had to find, an upper bound because 56 of
-those reviews were written with the Affinage report in hand, and its
-`gates_passed` flag checks precision only.
+reversing any existing curation decision. As a literature search it supplied 48%
+of the 653 non-GOA references in the 69 non-FA PAINT-backlog reviews, an upper
+bound because 57 of those 69 reviews were written with the Affinage report in
+hand; the pooled 91-gene result is 51% of 728 and is inflated by the deliberately
+Affinage-fed FA cohort. Its `gates_passed` flag checks precision only.
 
 We did this to decide whether Affinage could serve AIGR as a GO-grounding source,
 a deep-research input, or a literature search. The answer so far: use the
@@ -125,7 +126,7 @@ Separately from the GO layer, [**Retrieval recall at scale**](#retrieval-recall-
 measures what Affinage *finds* rather than what it says. On the 69 PAINT-backlog genes whose
 reviews were not built around Affinage it supplied **48%** of the references a review had to go
 locate (an upper bound; the reviewers had read the report). The 22-gene Fanconi-anemia cohort,
-whose reviews folded Affinage's papers in by design, scores 85% and must not be pooled with
+whose reviews folded Affinage's papers in by design, scores 83% and must not be pooled with
 them. Whether recall varies with how well-studied a gene is cannot be settled on this sample.
 Its `gates_passed` flag certifies precision only — there is no recall gate, and six reports
 returned zero citations without being flagged.
@@ -169,8 +170,8 @@ first judged largely redundant with AIGR's existing deep-research step (same bio
 no independent perspective since both are Claude-generated, human-only; see
 [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md)). **Practice has
 since overtaken that judgment:** Affinage is in routine use as a deep-research provider —
-139 human gene folders carry a committed `-deep-research-affinage.md` at the time of
-writing — and the two later cohorts measure what that use delivers:
+142 human gene folders carry a committed `-deep-research-affinage.md` as of
+2026-10-04 — and the two later cohorts measure what that use delivers:
 the [FA cohort](#forward-test-affinage-as-a-deep-research-input-fa-cohort-n22) found real
 net value from the narrative, and the [PAINT campaign](#retrieval-recall-at-scale-paint-campaign-n91)
 found it supplies about half of the literature a review needs but cannot be the only
@@ -220,7 +221,7 @@ See the generated [summary](AFFINAGE_EVALUATION/results/summary.md) ·
 [per-gene JSON](AFFINAGE_EVALUATION/results/per-gene.json).
 
 - **Slim level:** core-MF bin emitted **11/12** (miss: ADA); top-supported MF is a core
-  bin **10/12** (TP53, ADA not); core-location bin **11/12**.
+  bin **10/12** (TP53, ADA not); core-location bin **10/12**.
 - **Exact core-MF captured: 2/12** (historical metric; see the vocabulary finding above).
   Only AATF and ABL1 had *any* reviewed core
   molecular-function term appear verbatim in Affinage's `molecular_activity` — and
@@ -374,18 +375,18 @@ Every cohort above asks what Affinage *says*. This one asks what it *finds*, ove
 genes that had a committed Affinage report when it was first run. **Those 91 are not one
 cohort:** 69 are PAINT-backlog genes, and 22 are the FA cohort above, whose reviews were revised
 specifically to fold Affinage's papers in. Pooling them inflates recall, so the two are reported
-separately (numbers regenerated at commit `943b98815`):
+separately (numbers rerun on 2026-10-04):
 
 | cohort | genes | novel refs | supplied by Affinage | recall |
 |--------|------:|-----------:|---------------------:|-------:|
 | **PAINT backlog (non-FA)** | 69 | 653 | 311 | **48%** |
-| FA cohort (Affinage input by design) | 22 | 73 | 62 | 85% |
-| all 91 (previously reported as 52%) | 91 | 726 | 373 | 51% |
+| FA cohort (Affinage input by design) | 22 | 75 | 62 | 83% |
+| all 91 (previously reported as 52%) | 91 | 728 | 373 | 51% |
 
 **On the non-FA genes Affinage supplies about half the references a review has to go find, and
-its trust gates cannot tell you which half is missing.** Across all 91, 908 of the 1634 cited
+its trust gates cannot tell you which half is missing.** Across all 91, 908 of the 1636 cited
 PMIDs arrive prepackaged in the GOA file and need no search at all; recall is scored only
-against the 726 the reviewer had to locate. (Scoring against all 1634 understates it at 32%.)
+against the 728 the reviewer had to locate. (Scoring against all 1636 understates it at 32%.)
 Of what Affinage returned for the non-FA genes, 59% was cited.
 
 - **`gates_passed` measures precision, and there is no recall gate.** The gates correctly certify
@@ -420,7 +421,7 @@ rules, fixed before scoring, so each score measures agreement with that review s
 Two cases need their own reading:
 
 - **The FA reviews had Affinage input by design.** Their reference lists were revised to fold
-  in Affinage-surfaced papers, so their 85% recall measures that editing step, not Affinage's
+  in Affinage-surfaced papers, so their 83% recall measures that editing step, not Affinage's
   retrieval. They are excluded from every recall headline above.
 - **Recall is an upper bound even without FA.** 57 of the 69 non-FA reviews cite the Affinage
   report as a source, so the reviewers read it before choosing references. A paper Affinage
@@ -541,6 +542,8 @@ first pass.
 
 ## Next steps
 
+Open follow-ups are tracked in [#4031](https://github.com/ai4curation/ai-gene-review/issues/4031).
+
 1. **Ontology-aware scoring — done at slim level (2026-09-27).** `compare_affinage.py`
    now maps core terms to `goslim_generic` bins over the pinned GO release. Still open:
    a per-term precision score (what fraction of emitted bins are bins of *any* accepted
@@ -560,8 +563,9 @@ first pass.
    vs the organism/protein described in `current_model` to size the ADA-type
    failure across the genome.
 5. **Integration is in use; measure it properly.** Affinage is already a routine
-   deep-research provider (139 human reports committed). What is missing is a clean
-   recall estimate. That needs reviews written blind to the report (see
+   deep-research provider (142 human reports committed as of 2026-10-04). What
+   is missing is a clean recall estimate. That needs reviews written blind to
+   the report (see
    [Reference standard](#reference-standard)), enough non-FA well-studied genes
    to test whether recall falls with curation depth (7 today), and provenance recorded
    in the review itself (a `file:` reference plus `reference_review` noting the

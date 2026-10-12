@@ -38,7 +38,7 @@ GO:0140355 is obsoleted with no replacement term
 
 - Being recognised by a receptor is not an activity. The **receptor** gets `GO:0038024 cargo receptor activity` with the ligand as **has_input**.
 - **172** annotations, but **157** are Ensembl projections from **3 seeds**. The real job is **6 experimental rows**.
-- Here, **TCN2** and **CBLIF** list the term in `core_functions` and will fail validation when it goes. Scoped, waiting upstream.
+- Here, **TCN2** and **CBLIF** list the obsolete term in `core_functions`; **TCN1** still carries a non-core row.
 
 ---
 
@@ -79,9 +79,9 @@ GO:0140355 is obsoleted with no replacement term
 
 ## Status and next steps
 
-1. **Wait** for go-ontology#32466 before editing `core_functions`; the ticket has reversed direction once.
-2. Fix **TCN2** and **CBLIF** together: `REMOVE` the rows, re-point `core_functions` to `GO:0031419` and possibly `GO:0140104 molecular carrier activity`.
-3. Decide GO:0140104 once and apply it to all three carriers.
+1. **go-ontology#32466 closed**; go-annotation#6533 remains open for Reactome + SGD cleanup.
+2. Fix **TCN2** and **CBLIF** together: `REMOVE` the rows, re-point `core_functions` to `GO:0031419` and possibly `GO:0140104`.
+3. Decide GO:0140104 once and apply the B12-carrier pattern to **TCN1** too.
 4. Flag upstream: yeast **ATG5** IDA and orphaned mouse **Hpse** ISO.
 
 **Read more:** `projects/CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION.md`

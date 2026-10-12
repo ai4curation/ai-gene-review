@@ -22,15 +22,13 @@ inflammatory bowel disease, lupus). We reviewed every existing GO annotation on
 20 of the best-replicated of these human genes, covering T cell
 co-stimulation and inhibition, cytokine receptors, Th1/Th2/Th17 transcription
 factors and NF-kB control. All 20 reviews exist, have every row actioned and
-validate: 2,291 annotations, with 1,464 ACCEPT, 390 KEEP_AS_NON_CORE, 142
-MARK_AS_OVER_ANNOTATED, 94 MODIFY, 174 REMOVE, 11 UNDECIDED and 16 NEW. Most
-removals (144 of 174) are generic `protein binding` IPI rows, 134 of them on
+validate: 2,303 annotations, with 1,464 ACCEPT, 390 KEEP_AS_NON_CORE, 142
+MARK_AS_OVER_ANNOTATED, 100 MODIFY, 180 REMOVE, 11 UNDECIDED and 16 NEW. Most
+removals (150 of 180) are generic `protein binding` IPI rows, 134 of them on
 STAT3 and SMAD3; others are propagation errors such as prolactin receptor
-activity on IL23R. The per-gene review files are not uniformly finalised (9
-COMPLETE, 6 DRAFT, 5 IN_PROGRESS), and the supporting-text warnings listed
-below remain open; the STAT3 deep-research item is stale, since
-`genes/human/STAT3/STAT3-deep-research-falcon.md` now exists. The STATUS
-section says 19 unique genes; the tables list 20.
+activity on IL23R. The per-gene review files are not uniformly finalised (10
+COMPLETE, 5 DRAFT, 5 IN_PROGRESS), and #4041 tracks that status cleanup
+together with the remaining validation warnings.
 
 We did this because these genes are shared across many autoimmune diseases and
 are among the most heavily annotated immune genes (STAT3 456 rows, SMAD3 349,
@@ -61,7 +59,7 @@ These genes harbor the most strongly replicated and functionally validated autoi
 | IL13 | P35225 | Th2 cytokine | Asthma, IBD |
 | IL23R | Q5VWK5 | IL-23 receptor | IBD, psoriasis, AS |
 | IL7R | P16871 | IL-7 receptor alpha | MS, T1D |
-| ORMDL3 | Q9P0S3 | ER membrane protein, sphingolipid regulation | Asthma, IBD |
+| ORMDL3 | Q8N138 | ER membrane protein, sphingolipid regulation | Asthma, IBD |
 | TNFAIP3 | P21580 | A20, NF-kB negative regulator | SLE, RA, IBD |
 | TNFRSF1A | P19438 | TNF receptor 1 | TRAPS, MS |
 
@@ -86,52 +84,54 @@ These genes harbor the most strongly replicated and functionally validated autoi
 3. **Th17/regulatory T cell balance**: IL23R, STAT3, SMAD3, BACH2
 4. **NF-kB/TNF signaling**: TNFAIP3, TNFRSF1A
 5. **Immune tolerance**: IL10, EGR2, IKZF1
-6. **ER stress/UPR (immune context)**: ORMDL3
+6. **ER sphingolipid control**: ORMDL3
 
 ## Review Status
 
 | Gene | Fetch | Deep Research | Review | Validates | Notes |
 |------|-------|--------------|--------|-----------|-------|
-| PTPN22 | DONE | DONE (falcon) | DONE | PASS (4w) | |
-| CTLA4 | DONE | DONE (falcon) | DONE | PASS (1w) | |
-| IL2RA | DONE | DONE (falcon) | DONE | PASS (34w) | Refs need supporting_text |
-| IL4 | DONE | DONE (falcon) | DONE | PASS (14w) | Inconsistencies resolved |
-| STAT4 | DONE | DONE (falcon) | DONE | PASS (12w) | |
-| IL13 | DONE | DONE (falcon) | DONE | PASS (17w) | |
-| IL23R | DONE | DONE (falcon) | DONE | PASS (12w) | core_functions + supporting_text fixed |
-| IL7R | DONE | DONE (falcon) | DONE | PASS (2w) | Inconsistencies resolved |
-| ORMDL3 | DONE | DONE (falcon) | DONE | PASS (1w) | |
-| TNFAIP3 | DONE | DONE (falcon) | DONE | PASS (32w) | Refs need supporting_text |
-| TNFRSF1A | DONE | DONE (falcon) | DONE | PASS (13w) | |
-| EGR2 | DONE | DONE (falcon) | DONE | PASS (3w) | |
-| BACH2 | DONE | DONE (falcon) | DONE | PASS (15w) | |
-| IRF4 | DONE | DONE (falcon) | DONE | PASS (9w) | |
+| PTPN22 | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
+| CTLA4 | DONE | DONE (falcon) | DONE | PASS (14w) | GO:0005515 policy |
+| IL2RA | DONE | DONE (falcon) | DONE | PASS (1w) | Deep research not cited |
+| IL4 | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
+| STAT4 | DONE | DONE (falcon) | DONE | PASS (3w) | GO:0005515 policy; deep research not cited |
+| IL13 | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
+| IL23R | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
+| IL7R | DONE | DONE (falcon) | DONE | PASS (3w) | GO:0005515 policy; deep research not cited |
+| ORMDL3 | DONE | DONE (falcon) | DONE | PASS (1w) | GO:0005515 policy |
+| TNFAIP3 | DONE | DONE (falcon) | DONE | PASS (21w) | GO:0005515 policy; deep research not cited |
+| TNFRSF1A | DONE | DONE (falcon) | DONE | PASS (1w) | Deep research not cited |
+| EGR2 | DONE | DONE (falcon) | DONE | PASS (2w) | Deep research/core-function coverage |
+| BACH2 | DONE | DONE (falcon) | DONE | PASS (3w) | Deep research/core-function coverage |
+| IRF4 | DONE | DONE (falcon) | DONE | PASS (3w) | GO:0005515 policy; deep research not cited |
 | STAT3 | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
-| IKZF1 | DONE | DONE (falcon) | DONE | PASS (1w) | |
-| CD28 | DONE | DONE (falcon) | DONE | PASS (2w) | Inconsistencies resolved, supporting_text added |
+| IKZF1 | DONE | DONE (falcon) | DONE | PASS (8w) | GO:0005515 policy |
+| CD28 | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
 | GATA3 | DONE | DONE | DONE | PASS (0w) | Clean |
-| SMAD3 | DONE | DONE (falcon) | DONE | PASS (2w) | |
-| IL10 | DONE | DONE (falcon) | DONE | PASS (34w) | Inconsistencies resolved |
+| SMAD3 | DONE | DONE (falcon) | DONE | PASS (1w) | Deep research not cited |
+| IL10 | DONE | DONE (falcon) | DONE | PASS (0w) | Clean |
 
 ---
 # STATUS
 
-All 19 unique genes (20 rows) fetched, deep-researched (falcon), reviewed, and validated. All pass with 0 errors.
+All 20 genes are fetched, deep-researched with Falcon, reviewed, actioned, and validated. All pass with 0 errors; 10 are COMPLETE and #4041 tracks the 5 DRAFT and 5 IN_PROGRESS reviews that still need final status cleanup.
 
 - [x] Fetch all genes
 - [x] Deep research all genes (falcon)
 - [x] Initial annotation reviews for all genes
 - [x] Fix IL23R validation error (core_functions schema + supporting_text)
 - [x] Resolve inconsistent review actions (IL4, IL7R, CD28, IL10)
-- [x] Final validation pass - all 19 genes PASS (0 errors)
-- [ ] Address remaining supporting_text warnings (mostly IL2RA, IL10, TNFAIP3)
-- [ ] STAT3 deep research (falcon)
+- [x] Final validation pass - all 20 genes PASS (0 errors)
+- [x] STAT3 deep research (falcon)
+- [ ] Finalise remaining DRAFT/IN_PROGRESS reviews (#4041)
+- [ ] Migrate remaining GO:0005515 MARK_AS_OVER_ANNOTATED calls (#4041)
+- [ ] Resolve Falcon evidence-linkage and core-function coverage warnings (#4041)
 
 # NOTES
 
 ## 2026-02-14
 
-- All 19 unique genes (20 rows including STAT3) have reviews completed with actions set
+- All reviews in the then-current duplicated-row table had actions set; the 2026-10-04 audit covers 20 unique genes
 - IL23R had invalid core_functions schema (used old format with term/statement/evidence_summary instead of molecular_function/directly_involved_in/description) - fixed
 - IL23R also has ~35 supporting_text errors (case sensitivity, paraphrasing instead of exact quotes) - fixing via annotation-reviewer agent
 - Inconsistent review actions found in IL4, IL7R, CD28, IL10 - typically UNDECIDED annotations where publications weren't cached at review time but are now available
@@ -140,10 +140,17 @@ All 19 unique genes (20 rows) fetched, deep-researched (falcon), reviewed, and v
 
 ## 2026-02-15
 
-- All validation errors resolved across all 19 genes - every gene now PASS with 0 errors
+- All validation errors resolved across the then-current review set - every gene now PASS with 0 errors
 - IL23R: Fixed core_functions schema (old format → new), fixed ~35 supporting_text errors (non-contiguous quotes, case mismatches). Now PASS (12w)
 - IL4: Resolved UNDECIDED annotations → ACCEPT/KEEP_AS_NON_CORE for GO:0045893, GO:0030335, GO:0045892. Now PASS (14w)
 - IL7R: Resolved UNDECIDED → ACCEPT for GO:0004896, MODIFY for GO:0019725. Added supporting_text to 17 refs. Now PASS (2w)
 - CD28: Resolved GO:0042110 inconsistency (IGI UNDECIDED→ACCEPT). Added supporting_text to ~40 reference findings. Down from 42w to 2w
 - IL10: Resolved UNDECIDED → ACCEPT/KEEP_AS_NON_CORE for GO:0140105, GO:0045944, GO:0045893. Now PASS (34w)
-- Remaining work: supporting_text coverage improvements (IL2RA 34w, IL10 34w, TNFAIP3 32w highest), STAT3 deep research
+- Remaining work at that point was supporting_text coverage improvements plus STAT3 deep research; superseded by the 2026-10-04 validator-warning snapshot below.
+
+## 2026-10-04
+
+- Re-audited the 20 human AUTOIMMUNE reviews against the current YAML. The cohort now has 2,303 review rows: 2,287 existing GOA annotations and 16 proposed NEW annotations.
+- Current action totals are 1,464 ACCEPT, 390 KEEP_AS_NON_CORE, 142 MARK_AS_OVER_ANNOTATED, 100 MODIFY, 180 REMOVE, 11 UNDECIDED, and 16 NEW.
+- Updated stale project/deck statistics after downstream gene-review edits, corrected the ORMDL3 UniProt accession to Q8N138, and removed the stale STAT3 deep-research TODO now that `STAT3-deep-research-falcon.md` exists.
+- Opened #4041 to track the remaining non-COMPLETE statuses (5 DRAFT, 5 IN_PROGRESS) and outstanding validation warnings: old GO:0005515 policy calls, missing Falcon evidence links, and BACH2/EGR2 core-function coverage warnings.

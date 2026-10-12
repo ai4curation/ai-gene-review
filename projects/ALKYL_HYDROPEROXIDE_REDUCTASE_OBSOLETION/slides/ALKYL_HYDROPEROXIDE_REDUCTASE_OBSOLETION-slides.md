@@ -37,8 +37,9 @@ GO:0008785 → GO:0102039 NADH-dependent peroxiredoxin activity
 ## Bottom line
 
 - GO **obsoleted GO:0008785**, a term tied to one substrate (octane hydroperoxide), and merged it into **GO:0102039** (EC 1.11.1.26).
-- The ontology change is **merged**; only **2 experimental annotations** (E. coli AhpF, P. aeruginosa PA3529) still need moving.
-- **Scoped, not yet started:** neither gene is reviewed in this repo, so no existing review is affected.
+- The ontology change is **merged**; the upstream tracker listed **2 experimental annotations** (E. coli AhpF, P. aeruginosa PA3529).
+- **AhpF is now reviewed:** GOA has GO:0102039; the review scopes AhpF itself to **GO:0047134** and contributes to the system-level activity.
+- **PA3529/Q9HY81 is still open:** it is the P. aeruginosa AhpC-type peroxiredoxin follow-on.
 
 ---
 
@@ -65,17 +66,17 @@ GO:0008785 → GO:0102039 NADH-dependent peroxiredoxin activity
 
 ## What is in the repo today
 
-- `genes/ECOLI/` and `genes/PSEAE/`: **no AhpF or PA3529 review**.
-- `genes/PSEPK/ahpC/`: the one review that touches GO:0102039. Its IEA row is **MODIFY → GO:0051920** *peroxiredoxin activity*, because AhpC alone is the peroxidase and AhpF supplies the NADH electrons.
-- Priority is **low**: the value is extending bacterial coverage, not unblocking a review.
+- `genes/ECOLI/AhpF/`: validated review of the reductase half.
+- `modules/bacterial_alkyl_hydroperoxide_reductase`: concrete AhpF electron-transfer annoton; ECOLI ahpC is the remaining half.
+- `genes/PSEPK/ahpC/`: IEA GO:0102039 **MODIFY → GO:0051920**, because AhpC alone is the peroxidase and AhpF supplies the NADH electrons.
 
 ---
 
 ## Next steps
 
-1. `just fetch-gene ECOLI` for **AhpF**; check that GOA shows GO:0008785 as obsolete and review per CLAUDE.md.
-2. Then **PA3529 / Q9HY81**; confirm the symbol UniProt uses before creating the folder.
+1. Review **PA3529 / Q9HY81**; UniProt still only exposes the ordered locus name.
+2. Review **ECOLI ahpC** and add the peroxide-attacking annoton to the AhpF module.
 3. Defer PTHR10681 IBA review until GOA reflects the obsoletion.
 
-**Upstream:** go-annotation#6396 (open) · go-ontology#31961 · PR #32015 (merged)
-**Read more:** `projects/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION.md`
+**Upstream:** go-annotation#6396 · go-ontology#31961 · PR #32015
+**Local:** `genes/ECOLI/AhpF` · `genes/PSEPK/ahpC` · #514 · #4032

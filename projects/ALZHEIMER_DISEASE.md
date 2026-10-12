@@ -27,7 +27,8 @@ MARK_AS_OVER_ANNOTATED, 124 MODIFY, 4 REMOVE, 34 UNDECIDED and 4 NEW. The low
 REMOVE count reflects a deliberate choice to leave abstract-only experimental
 rows UNDECIDED rather than overrule curators. The reusable normal-biology
 modules proposed below (APP processing, gamma-secretase proteolysis, tau
-microtubule biology and others) have not been built yet. A few per-gene action
+microtubule biology and others) have not been built yet and are tracked in
+[#4035](https://github.com/ai4curation/ai-gene-review/issues/4035). A few per-gene action
 counts in the dated notes below differ slightly from the current review files,
 which were edited after the notes were written.
 
@@ -154,8 +155,23 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
 - [x] Retire disease-project overview from `modules/`; keep Alzheimer scope as a project
 - [x] Review Priority 2 and Priority 3 genes
 - [x] Render project page and update project index
+- [ ] Build reusable normal-biology modules and resolve the 34 remaining
+  `UNDECIDED` rows ([#4035](https://github.com/ai4curation/ai-gene-review/issues/4035))
 
 # NOTES
+
+## 2026-10-04
+
+- Re-derived the current 34-review aggregate from the frontmatter genes. All 34
+  review YAMLs are present and marked `COMPLETE`; together they contain 4,332
+  original GOA rows plus 4 proposed `NEW` rows, with 2,362 ACCEPT, 1,178
+  KEEP_AS_NON_CORE, 630 MARK_AS_OVER_ANNOTATED, 124 MODIFY, 4 REMOVE, and 34
+  UNDECIDED actions.
+- Confirmed that the reusable APP-processing, gamma-secretase, tau-microtubule,
+  apolipoprotein/lipoprotein, microglial lipid-sensing and endocytic-adaptor
+  `ModuleReview` YAMLs are still absent, and opened
+  [#4035](https://github.com/ai4curation/ai-gene-review/issues/4035) to track
+  those modules plus resolution of the remaining 34 UNDECIDED rows.
 
 ## 2026-06-19
 

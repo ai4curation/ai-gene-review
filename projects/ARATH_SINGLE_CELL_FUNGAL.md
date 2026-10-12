@@ -127,6 +127,8 @@ their accessions looked up before they are fetched.
 The NLRs are the natural next batch. Many of them carry `EC 3.2.2.6` (NAD+
 hydrolase) in UniProt, so the reviews should check that TIR-domain NADase
 activity is annotated consistently across the TNLs.
+This backlog is tracked in
+[ai4curation/ai-gene-review#4039](https://github.com/ai4curation/ai-gene-review/issues/4039).
 
 ## Findings
 

@@ -3,6 +3,7 @@ title: "cGAS-STING Cytosolic DNA Sensing Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [CGAS, STING1, TBK1, IRF3, IFI16]   # reviewed genes only; full candidate list is in the table below
 manifest:
   slides:
     - href: CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.html
@@ -18,11 +19,11 @@ manifest:
 2'3'-cGAMP, which activates the ER adaptor STING1; STING1 then recruits TBK1 to
 phosphorylate IRF3 and switch on type I interferon. Scoped, not yet started as
 a project: this page lists ten candidate human genes and the pathway
-architecture, but no project-specific review work has been done. Three
-candidates already have complete reviews from other projects (STING1, TBK1 and
-IFI16, 529 annotations between them). The other seven, including the sensor
-CGAS itself, have no gene folder. The next step is `just fetch-gene human
-<GENE>` for CGAS, IRF3, TREX1, ENPP1, SAMHD1, IRF7 and IFNB1, then review.
+architecture, but no project-specific review work has been done. Five
+candidates already have complete reviews from other projects (CGAS, STING1,
+TBK1, IRF3 and IFI16, 917 annotations between them). The other five candidate
+reviews are still absent: TREX1, ENPP1, SAMHD1, IRF7 and IFNB1. The next step
+is `just fetch-gene human <GENE>` for those missing genes, then review.
 
 We scoped this because the pathway links innate immunity to autoimmune disease
 (AGS, SAVI, lupus), cancer immunotherapy and senescence, and many of its
@@ -53,7 +54,7 @@ The cGAS-STING pathway is a critical innate immune signaling system that detects
 - **STING1** (TMEM173) - ER-resident adaptor
 - **TBK1** - Tank-binding kinase 1
 - **IRF3** - Interferon regulatory factor 3
-- **NFKB1** - NF-κB pathway
+- **NF-κB branch** - inflammatory transcriptional output downstream of STING1/TBK1
 
 ### 4. Negative Regulators
 - **TREX1** - Cytosolic exonuclease (prevents self-DNA sensing)
@@ -61,10 +62,10 @@ The cGAS-STING pathway is a critical innate immune signaling system that detects
 - **Various ubiquitin regulators**
 
 ### 5. Downstream Effectors
-- **Type I interferons** - IFNA, IFNB
+- **Type I interferons** - IFNB1 and the IFNA gene family
 - **Inflammatory cytokines**
 
-## Candidate Genes (~15)
+## Candidate Genes (10)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -94,6 +95,18 @@ The cGAS-STING pathway is a critical innate immune signaling system that detects
 - Viral infection
 - Aging/senescence
 
+## Related Work
+
+Existing GO-CAMs already model pieces of this pathway, including the
+TBK1-IRF3 signaling module, CGAS regulation by PARP1 and ZDHHC18, STING1-driven
+NF-κB signaling, and poxvirus inhibition of cGAS-STING signaling. A later
+cGAS-STING module should reconcile those fragments after the remaining
+negative regulators and interferon-output genes have been reviewed.
+
 ## Project Status
 
-- [ ] Stub - needs gene folder setup
+- [x] Cross-project reviews checked for CGAS, STING1, TBK1, IRF3 and IFI16
+- [ ] Fetch and review TREX1, ENPP1, SAMHD1, IRF7 and IFNB1
+  ([#3955](https://github.com/ai4curation/ai-gene-review/issues/3955))
+- [ ] Build a cGAS-STING module once the cytosolic-DNA sensor, negative
+  regulators and interferon output have all been reviewed

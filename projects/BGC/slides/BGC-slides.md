@@ -76,15 +76,14 @@ Reviewing obligate enzyme pairs from natural-product clusters
 | eryCIII | glycosyltransferase | 6 | UDP-GT removed (donor is TDP-sugar) |
 | eryCII | pseudoenzyme activator | 5 | 4 P450 rows removed; activator NEW |
 
-<span class="small">29 rows: 15 ACCEPT, 7 REMOVE, 3 MODIFY, 3 MARK_AS_OVER_ANNOTATED, 1 NEW. Proposed terms: 2-heptyl-4(1H)-quinolone synthase activity; polyketide chain length factor activity.</span>
+<span class="small">29 rows: 15 ACCEPT, 7 REMOVE, 3 MODIFY, 3 MARK_AS_OVER_ANNOTATED, 1 NEW.<br>Proposed terms: HHQ synthase; polyketide chain length factor; EryCIII desosaminyltransferase.</span>
 
 ---
 
 ## Status and next steps
 
 - ✅ PqsBC, actinorhodin KS-CLF, EryCIII/EryCII reviewed; erythromycin cluster captured as a pathway concept (`terms/erythromycin_biosynthesis/`).
-- ⬜ Nosiheptide (RiPP) and pyoluteorin (low-ipTM control) pairs queued.
+- ⬜ Nosiheptide (RiPP) and pyoluteorin (low-ipTM control) pairs queued in #4047.
 - ⬜ Novel, non-validation predictions go to `-predictions-review.yaml` files.
-- ⬜ The status table on the project page still lists the ActVA and DEBS rows, which share PDB 1TQY and 2YJN with the reviewed pairs.
 
 **Read more:** `projects/BGC.md` · `genes/PSEAE/pqsB/` · `genes/STRCO/actI-ORF2/` · `genes/SACEN/eryCII/`

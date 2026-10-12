@@ -21,24 +21,21 @@ manifest:
 # Bacillus subtilis project
 
 **Bottom line:** *Bacillus subtilis* is the model Gram-positive bacterium for
-sporulation, competence, cell division and protein secretion. We reviewed every
-existing GO annotation on 29 of its genes in three rounds: nine genes where
-CACAO student curation had contributed heavily, ten key functional genes, and
-ten more that complete the sporulation sigma cascade and the industrial
-enzymes. That covers 343 annotation rows: 200 accepted, 28 kept as non-core,
-45 modified, 14 removed, 10 marked over-annotated, 44 proposed as `NEW`, and 2 left
-`UNDECIDED` (fliH, where the cited paper does not mention the gene). The
-recurring corrections were removing `RNA polymerase activity` from sigma
-factors, removing a fold-based acyltransferase call on spoVAD, and removing
-the fliY and swrD rows that cite PMID:25313396, a paper that does not
-examine those genes. All
-29 reviews exist and render, and a sporulation cascade pathway summary is in
-`BACSU/`. Most review files still carry `status: DRAFT` although the checklist
-below says COMPLETE, and several UniProt IDs in the tables below differ from
-the accessions the reviews use (the lipA review covers lipoyl synthase
-O32129, not lipase A). Six further *B. subtilis* reviews made outside these
-rounds (spoIIAA, spoIIAB, spoIIB, spoIIR, spoVD, yciC; 53 rows) are listed
-in the frontmatter but not counted above.
+sporulation, competence, cell division and protein secretion. We reviewed all
+GOA annotations on 35 genes: the original 29-gene set covering CACAO-heavy
+flagellar/germination genes, key regulators, cell-division/secretion genes and
+industrial enzymes, plus six follow-up reviews for the sigma-F partner switch,
+spore-cortex synthesis, and ZagA/YciC zinc metallochaperone. The current cohort
+has 396 review rows: 343 fetched GOA rows and 53 proposed `NEW` rows, with 225
+ACCEPT, 37 KEEP_AS_NON_CORE, 47 MODIFY, 15 REMOVE, 16 MARK_AS_OVER_ANNOTATED
+and 3 UNDECIDED. The recurring corrections were removing `RNA polymerase
+activity` from sigma factors, removing a fold-based acyltransferase call on
+spoVAD, and removing unsupported fliY/swrD rows that cite PMID:25313396, a
+paper that does not examine those genes. All 35 reviews exist and render, and a
+sporulation cascade pathway summary is in `BACSU/`. The remaining project work
+is status finalisation: only 5 reviews are `COMPLETE`, while 26 are `DRAFT` and
+4 are `IN_PROGRESS`; #4044 tracks those status decisions together with the
+open per-gene re-review issues.
 
 Use uniprot code BACSU
 
@@ -78,15 +75,26 @@ review these first
   | Gene   | UniProt ID                               | Protein                                 |
   |--------|------------------------------------------|-----------------------------------------|
   | sigE   | https://www.uniprot.org/uniprotkb/P06222 | RNA polymerase sigma-E factor           |
-  | sigG   | https://www.uniprot.org/uniprotkb/P11469 | RNA polymerase sigma-G factor           |
-  | sigK   | https://www.uniprot.org/uniprotkb/P28014 | RNA polymerase sigma-K factor           |
-  | spoIIE | https://www.uniprot.org/uniprotkb/P13801 | Stage II sporulation protein E          |
-  | minD   | https://www.uniprot.org/uniprotkb/P40770 | Septum site-determining protein MinD    |
-  | nprE   | https://www.uniprot.org/uniprotkb/P39899 | Extracellular neutral metalloprotease   |
-  | lipA   | https://www.uniprot.org/uniprotkb/P37957 | Lipase A                                |
+  | sigG   | https://www.uniprot.org/uniprotkb/P19940 | RNA polymerase sigma-G factor           |
+  | sigK   | https://www.uniprot.org/uniprotkb/P12254 | RNA polymerase sigma-K factor           |
+  | spoIIE | https://www.uniprot.org/uniprotkb/P37475 | Stage II sporulation protein E          |
+  | minD   | https://www.uniprot.org/uniprotkb/Q01464 | Septum site-determining protein MinD    |
+  | nprE   | https://www.uniprot.org/uniprotkb/P68736 | Extracellular neutral metalloprotease   |
+  | lipA   | https://www.uniprot.org/uniprotkb/O32129 | Lipoyl synthase                         |
   | secY   | https://www.uniprot.org/uniprotkb/P16336 | Protein translocase subunit SecY        |
-  | comGA  | https://www.uniprot.org/uniprotkb/P32390 | Competence protein ComGA                |
-  | spoIIGA| https://www.uniprot.org/uniprotkb/P13800 | Stage II sporulation protein GA         |
+  | comGA  | https://www.uniprot.org/uniprotkb/P25953 | Competence protein ComGA                |
+  | spoIIGA| https://www.uniprot.org/uniprotkb/P13801 | Stage II sporulation protein GA         |
+
+## Follow-up sporulation and cofactor genes
+
+  | Gene   | UniProt ID                               | Protein                                 |
+  |--------|------------------------------------------|-----------------------------------------|
+  | spoIIAA| https://www.uniprot.org/uniprotkb/P10727 | Anti-sigma-F antagonist                 |
+  | spoIIAB| https://www.uniprot.org/uniprotkb/P10728 | Anti-sigma-F factor/kinase              |
+  | spoIIB | https://www.uniprot.org/uniprotkb/P37575 | Stage II sporulation protein B          |
+  | spoIIR | https://www.uniprot.org/uniprotkb/P39151 | Forespore signal protein                |
+  | spoVD  | https://www.uniprot.org/uniprotkb/Q03524 | Spore cortex transpeptidase             |
+  | yciC   | https://www.uniprot.org/uniprotkb/P94400 | ZagA zinc metallochaperone              |
 
  Why it's studied:
   - Model Gram-positive bacterium - counterpart to E. coli (Gram-negative)
@@ -100,7 +108,7 @@ review these first
   Sporulation (cell differentiation cascade):
   - spo0A - master regulator, initiates sporulation
   - sigF, sigE, sigG, sigK - compartment-specific sigma factors
-  - spoIIE, spoIIGA - signaling between mother cell and forespore
+  - spoIIAA, spoIIAB, spoIIE, spoIIR, spoIIGA - compartment-coupling switch
 
   Cell division:
   - ftsZ - tubulin homolog, forms Z-ring
@@ -116,7 +124,7 @@ review these first
   - amyE - alpha-amylase - starch processing, commonly used integration locus
   - sacB - levansucrase - counter-selection marker (sucrose sensitivity)
   - nprE - neutral protease
-  - lipA - lipase
+  - lipA - lipoyl synthase
 
   Secretion system:
   - secA, secY - Sec pathway (major export route)
@@ -132,42 +140,28 @@ review these first
 ---
 # STATUS
 
-## Round 1 - CACAO annotations review
-- [x] fliW - COMPLETE (validated 2025-12-17)
-- [~] fliH - DRAFT (2 annotations UNDECIDED - PMID:25313396 doesn't mention fliH)
-- [x] fliK - COMPLETE (validated 2025-12-17, hook-length control protein)
-- [x] fliY - COMPLETE (validated 2025-12-17, bifunctional CheY-P phosphatase + C-ring component)
-- [x] gerD - COMPLETE (validated 2025-12-17, germinosome scaffold protein)
-- [x] spo0J - COMPLETE (validated 2025-12-17, ParB/CTP-dependent chromosome partition clamp)
-- [x] spoVAD - COMPLETE (validated 2025-12-17, SpoVA Ca-DPA channel plug; removed incorrect acyltransferase annotation)
-- [x] swrD - COMPLETE (validated 2025-12-17, flagellar motor power enhancer; removed erroneous PMID:25313396)
-- [x] yddE - COMPLETE (validated 2025-12-17, ConE VirB4-like conjugation ATPase; NOT uncharacterized!)
+All 35 frontmatter genes have review YAML and rendered HTML. Current YAML
+statuses:
 
-## Round 2 - Key functional genes
-- [x] spo0A - COMPLETE (validated 2025-12-18, master phosphorelay response regulator, 0A-box TF)
-- [x] sigF - COMPLETE (validated 2025-12-18, forespore sigma factor, partner-switching regulation)
-- [x] ftsZ - COMPLETE (validated 2025-12-18, tubulin-like GTPase, Z-ring scaffold for cytokinesis)
-- [x] divIVA - COMPLETE (validated 2025-12-18, coiled-coil polar landmark protein)
-- [x] comK - COMPLETE (validated 2025-12-18, competence master regulator, helix-turn-helix TF)
-- [x] aprE - COMPLETE (validated 2025-12-18, subtilisin E serine protease, industrial enzyme)
-- [x] amyE - COMPLETE (validated 2025-12-18, alpha-amylase, starch hydrolysis)
-- [x] sacB - COMPLETE (validated 2025-12-18, levansucrase, counter-selection marker)
-- [x] secA - COMPLETE (validated 2025-12-18, Sec translocase ATPase motor)
-- [x] minC - COMPLETE (validated 2025-12-18, FtsZ polymerization inhibitor)
+| Status | Genes |
+|--------|-------|
+| COMPLETE | fliK, fliW, fliY, gerD, spoIIGA |
+| IN_PROGRESS | minD, lipA, comGA, spoVD |
+| DRAFT | fliH, spo0J, spoVAD, swrD, yddE, spo0A, sigF, ftsZ, divIVA, comK, aprE, amyE, sacB, secA, minC, sigE, sigG, sigK, spoIIE, nprE, secY, spoIIAA, spoIIAB, spoIIB, spoIIR, yciC |
 
-## Round 3 - Sporulation cascade completion + biotechnology
-- [x] sigE - COMPLETE (validated 2025-12-18, mother cell sigma-E factor, SpoIIGA-cleaved precursor)
-- [x] sigG - COMPLETE (validated 2025-12-18, late forespore sigma-G factor, Gin-regulated)
-- [x] sigK - COMPLETE (validated 2025-12-18, late mother cell sigma-K factor, SpoIVFB-processed)
-- [x] spoIIE - COMPLETE (validated 2025-12-18, PP2C phosphatase + septum morphogenesis, activates SigF)
-- [x] minD - COMPLETE (validated 2025-12-18, septum site-determining ATPase, MinC partner)
-- [x] nprE - COMPLETE (validated 2025-12-18, bacillolysin zinc metalloprotease M4 family)
-- [x] lipA - COMPLETE (validated 2025-12-18, lipoyl synthase, radical SAM enzyme)
-- [x] secY - COMPLETE (validated 2025-12-18, SecYEG channel-forming subunit)
-- [x] comGA - COMPLETE (validated 2025-12-18, competence pseudopilus ATPase)
-- [x] spoIIGA - COMPLETE (validated 2025-12-18, pro-sigmaE processing aspartic protease)
+- [ ] Finalise 26 DRAFT and 4 IN_PROGRESS YAML statuses (#4044)
+- [ ] Resolve open per-gene re-review issues: #729, #736, #737, #745, #746, #748, #777, #820
 
 # NOTES
+
+## 2026-10-04
+
+- Re-audited the project against the 35 genes now listed in frontmatter. The cohort has 396 review rows: 343 fetched GOA rows and 53 proposed NEW rows.
+- Current action totals are 225 ACCEPT, 37 KEEP_AS_NON_CORE, 47 MODIFY, 15 REMOVE, 16 MARK_AS_OVER_ANNOTATED, 3 UNDECIDED, and 53 NEW.
+- Corrected stale Round 3 accessions for sigG, sigK, spoIIE, minD, nprE, lipA, comGA, and spoIIGA, and fixed the lipA description to lipoyl synthase O32129 rather than lipase A.
+- Added the six follow-up reviews missing from the body tables: spoIIAA, spoIIAB, spoIIB, spoIIR, spoVD, and yciC.
+- Updated the sporulation pathway sidecar to include the SpoIIAA/SpoIIAB/SpoIIE partner-switch upstream of SigF and the SpoIIR signal between SigF and SpoIIGA.
+- Opened #4044 to track finalising the 26 DRAFT and 4 IN_PROGRESS reviews and the open per-gene re-review issues.
 
 ## 2025-12-18 (Session 2)
 

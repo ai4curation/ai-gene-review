@@ -39,6 +39,11 @@ try:
 except ImportError:  # pragma: no cover
     raise SystemExit("PyYAML required: `uv run python ...` or `pip install pyyaml`")
 
+try:
+    from yaml import CSafeLoader as Loader
+except ImportError:  # pragma: no cover
+    from yaml import SafeLoader as Loader  # type: ignore
+
 BEHAVIOR_RE = re.compile(r"behaviou?r", re.IGNORECASE)
 
 # Reviewer actions, grouped by how strongly they signal over-annotation.
@@ -82,7 +87,7 @@ def review_pass(genes_dir: str) -> list[dict[str, str]]:
     for path in glob.glob(os.path.join(genes_dir, "**", "*-ai-review.yaml"), recursive=True):
         try:
             with open(path) as fh:
-                doc = yaml.safe_load(fh)
+                doc = yaml.load(fh, Loader=Loader)
         except Exception:
             continue
         if not isinstance(doc, dict):
@@ -111,7 +116,7 @@ def review_pass(genes_dir: str) -> list[dict[str, str]]:
 
 def write_csv(rows: list[dict[str, str]], path: str, fields: list[str]) -> None:
     with open(path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields)
+        w = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         for r in rows:
             w.writerow({k: r.get(k, "") for k in fields})

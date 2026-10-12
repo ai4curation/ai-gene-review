@@ -18,17 +18,17 @@ manifest:
 # AlphaFold Database Integration for Gene Annotation Review
 
 **Bottom line:** Scoped, not yet started as a pipeline. The AlphaFold Database
-now holds predicted protein complexes as well as monomers, which could serve as
-computational evidence when reviewing GO annotations and ARBA rules: checking
-whether a claimed binding pocket, active site, transmembrane segment or complex
-interface is actually present. This page sets out five use cases and a
-four-step workflow (fetch the model by UniProt accession, extract features,
-compare with the GO terms, flag mismatches). None of the six action items is
-done: there is no AFDB fetch step in the review pipeline and no schema field for
-structural evidence. The one worked use is in the [BGC project](BGC.md), where
-predicted complexes from a published AF3 screen corroborated three
-experimentally known enzyme complexes; AlphaFold models also appear ad hoc in a
-few per-gene bioinformatics analyses.
+now exposes predicted homomeric and heteromeric protein complexes as well as
+monomers, which gives this project a concrete retrieval target for structural
+checks while reviewing GO annotations and ARBA rules: does the claimed binding
+pocket, active site, transmembrane segment or complex interface actually exist?
+This page sets out five use cases and a four-step workflow (fetch the model by
+UniProt accession, extract features, compare with the GO terms, flag
+mismatches). None of the six action items is done: there is no AFDB fetch step
+in the review pipeline and no schema field for structural evidence. The one
+worked use is in the [BGC project](BGC.md), where predicted complexes from a
+bioRxiv AF3 screen corroborated three experimentally known enzyme complexes;
+AlphaFold models also appear ad hoc in a few per-gene bioinformatics analyses.
 
 We want this because predicted structures could test annotation claims on the
 genes that have no experimental structure (1,580 of 2,529 pipeline genes in the
@@ -37,7 +37,12 @@ experimental-structure counterpart.
 
 ## Overview
 
-The AlphaFold Database (AFDB) now includes proteome-scale quaternary structure predictions (protein complexes), not just monomers. This creates opportunities to use predicted structural information as evidence when reviewing GO annotations and ARBA rules.
+AFDB's 2026 complex releases added proteome-scale homodimer and heterodimer
+datasets from the NVIDIA workflow, plus viral protein-complex predictions.
+Those models turn AFDB from a monomer-only lookup into a source of predicted
+interfaces and oligomeric context, creating opportunities to use structural
+information as computational evidence when reviewing GO annotations and ARBA
+rules.
 
 Reference: Han, Tsenkov, Venanzi et al. "AlphaFold Database expands to proteome-scale quaternary structures" (NVIDIA Digital Biology / EBI)
 
@@ -129,12 +134,25 @@ AFDB-derived evidence would be classified as:
 
 ## Relationship to Other Projects
 
-- **BGC** (`BGC.md`): genome-scale AF3/MMseqs2 predicted BGC complexes used as PPI/complex-membership evidence in biosynthetic-gene-cluster enzyme reviews; see also `PROTEIN_COMPLEX_FUNCTIONS.md`.
-- **dismech**: AFDB structures could enrich disease mechanism entries — e.g., showing how a mutation disrupts a predicted protein interface (relevant to the STRUCTURAL_BIOLOGY project)
-- **NAM (New Approach Methodologies)**: AFDB is a computational NAM — predicted structures as alternatives to experimental structure determination
+- **BGC** (`BGC.md`): genome-scale AF3/MMseqs2 predicted BGC complexes used
+  as corroborating PPI/complex-membership evidence in biosynthetic-gene-cluster
+  enzyme reviews.
+- **PDB** (`PDB.md`): the experimental-structure counterpart; deposited
+  ligand-, cofactor- and complex-containing structures remain the higher-value
+  evidence source.
+- **PROTEIN_COMPLEX_FUNCTIONS** (`PROTEIN_COMPLEX_FUNCTIONS.md`): complex-model
+  pilots with Boltz2 and ESMFold2 were useful triage exercises, but stayed
+  hypothesis-generating because they did not produce curation-grade interfaces.
+- **STRUCTURE_FUNCTION** (`STRUCTURE_FUNCTION.md`): AlphaFold models are useful
+  starting points for Foldseek/local active-site comparisons on distant
+  homologs, especially when sequence methods fail.
+- **NAM (New Approach Methodologies)**: AFDB is a computational NAM — predicted
+  structures as alternatives to experimental structure determination
 - **linkml-term-validator**: Could potentially validate that GO MF terms are structurally plausible for the annotated protein
 
 ## Action Items
+
+Tracker: [#3959](https://github.com/ai4curation/ai-gene-review/issues/3959)
 
 - [ ] Add AFDB lookup to the gene review bioinformatics pipeline (fetch structure per UniProt ID)
 - [ ] Create a skill or script that extracts structural features relevant to GO term validation
@@ -142,3 +160,15 @@ AFDB-derived evidence would be classified as:
 - [ ] Explore using AFDB quaternary structures for complex membership validation
 - [ ] Evaluate whether pLDDT-based disorder prediction adds value for flagging incorrect domain annotations
 - [ ] Consider adding structural evidence as a field in the gene review YAML schema
+
+## Status
+
+- 2026-10-04 — Issue
+  [#3959](https://github.com/ai4curation/ai-gene-review/issues/3959) is open for
+  the structural-evidence workflow. There is still no AFDB fetch step,
+  structural-feature extractor, ARBA/rule pilot, complex-validation pilot,
+  pLDDT-disorder evaluation, or structural-evidence schema slot. The BGC
+  reviews use AF3 complex scores only as corroborating evidence for PDB-backed
+  interactions, and the PROTEIN_COMPLEX_FUNCTIONS hosted-prediction pilots
+  reinforce the same boundary: absence of a high-confidence predicted interface
+  is not negative GO evidence.
