@@ -29,14 +29,23 @@ curl -H 'Accept: application/json' \
 | POP1 | nuclear | `contributes_to` | IBA, IDA |
 | POP4, POP5, POP7, RPP14, RPP21, RPP25, RPP30, RPP38, RPP40 | nuclear | `contributes_to` | IDA |
 | PRORP | **mitochondrial** (the catalyst) | `enables` | IBA, IDA, IEA |
+| `ComplexPortal:CPX-6155` mribonucleasep_human | mitochondrial, the whole complex | `enables` | IDA |
+| `ComplexPortal:CPX-2877` rnasep_human | nuclear, the whole complex | `enables` | IPI |
+
+The two ComplexPortal rows are the assembled complexes rather than proteins, which is why
+they carry `enables` and why the claims below are about proteins specifically. They are listed
+because a reader re-running the query will meet them, and `CPX-6155` is the other `enables`
+row with a direct-assay code.
 
 Note the complex column: PRORP (O15091) is `part_of GO:0030678`, the *mitochondrial* complex,
-not the nuclear one. So no nuclear **protein** subunit carries `enables` at all - the nuclear
-catalyst is an RNA - and PRORP is the only protein in either complex that does, because the
-mitochondrial catalyst is a protein.
-
-(POP5, RPP30 and RPP40 additionally carry an `enables` row by IEA or TAS; every IDA row on a
-protein subunit other than PRORP is `contributes_to`.)
+not the nuclear one. The nuclear catalyst is an RNA, so the `enables` rows there belong to RPPH1
+rather than to any subunit - but not absolutely: POP5, RPP30 and RPP40 each also carry an
+`enables` row, POP5 by IEA and the other two by TAS. What holds without exception is the
+evidence-code version. **Every IDA row on a nuclear protein subunit is `contributes_to`**, and
+PRORP is the only protein in either complex carrying `enables` by direct assay, because the
+mitochondrial catalyst is a protein. The experimental curation lines up behind `contributes_to`
+for the subunits; only the electronic and author-statement rows do not, which is the propagation
+class this repository treats as arguable.
 
 So GO's convention for an RNase P holoenzyme is `enables` for whatever does the chemistry -
 the RPPH1 RNA in the nucleus, PRORP in mitochondria - and `contributes_to` for the other
@@ -45,8 +54,20 @@ chemistry, and the ten nuclear protein subunits in the same position all carry t
 this qualifier. Neither mitochondrial accessory subunit carries `GO:0004526` in GOA, so they
 are the outliers.
 
-The nuclear subunit genes have no folders in this repository, so this table is the only
-in-branch record of the query; re-run the curl above to check it.
+The complex assignment above is a separate query from the qualifier table, and it is the one
+this correction turned on, so it is logged rather than asserted:
+
+```
+curl -H 'Accept: application/json' \
+  'https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB:O15091&goId=GO:0030678&limit=20&goUsage=exact'
+```
+
+4 annotations, all `PRORP | GO:0030678 | part_of`, by IBA, IDA, IPI and TAS. So PRORP is a part
+of the *mitochondrial* ribonuclease P complex, which is what makes it the counterpart rather
+than a member of the nuclear comparator set.
+
+The nuclear subunit genes have no folders in this repository, so these tables are the only
+in-branch record of the two queries; re-run the curls above to check them.
 
 ### What HSD17B10's review actually says
 
