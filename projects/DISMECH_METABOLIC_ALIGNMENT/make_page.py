@@ -138,6 +138,28 @@ ALT_TREE_SHORT = ((_alt_branch if _alt_branch and _alt_branch != "HEAD"
                   if ALT_PROV else "")
 
 
+def _sha_shaped(value):
+    """Whether a string looks like an abbreviated object name, digit required.
+
+    The digit is the same precaution `_check_tree_names_revision` takes, and it matters more
+    here because this test starts at four characters: `cafe`, `facade`, `beaded` and
+    `defaced` are all a-f only, so without it a ref with such a name would be reported as an
+    object this checkout does not hold - a claim about the object store about a string that
+    was never an object, which is the defect this test exists to avoid making.
+    """
+    return bool(re.fullmatch(r"[0-9a-f]{4,40}", value or "")) and any(c.isdigit() for c in value)
+
+
+def _in_span(value, limit=60):
+    """An operator-supplied value, safe to interpolate inside a backtick code span.
+
+    Every other revision this page prints is `[:9]` of a sha git resolved. The unresolvable
+    sentences print what was recorded instead, which is whatever went into `AIGR_REVISION` -
+    a backtick would close the span and a pipe would end the surrounding table cell.
+    """
+    return re.sub(r"\s+", " ", (value or "")[:limit]).replace("`", "'").replace("|", "/")
+
+
 def _check_tree_names_revision(which, text, rev):
     """Refuse when a report's tree description names shas but not the one it records.
 
@@ -166,7 +188,13 @@ def _check_tree_names_revision(which, text, rev):
     # render with a provenance-mismatch message.
     named = [m for m in re.findall(r"\b[0-9a-f]{7,40}\b", text or "")
              if any(c.isdigit() for c in m)]
-    if rev and named and not any(rev.startswith(m) or m.startswith(rev) for m in named):
+    # Only a recorded sha is compared. `aigr_revision` may hold anything gitrevisions(7)
+    # admits - a ref, a tag, `HEAD~3` - and such a value satisfies neither `startswith`
+    # direction against a description that names a sha, so this guard refused to render the
+    # very input the resolve step was added to handle. A short abbreviation is still
+    # compared, which is the case the guard was written for.
+    if rev and _sha_shaped(rev) and named and not any(rev.startswith(m) or m.startswith(rev)
+                                                      for m in named):
         sys.exit(f"the {which} report's tree description names {', '.join(named[:4])} but "
                  f"not the revision it records (`{rev[:9]}`); the provenance block and the "
                  "derived sentence below would describe different commits")
@@ -179,12 +207,11 @@ if ALT_PROV:
     _check_tree_names_revision("second", ALT_TREE, ALT_PROV.get("aigr_revision") or "")
 
 
+# `_rev_state`'s memo: one key, holding both the state and the sha the value resolved to.
+# Two dicts keyed identically, one filled as a side effect of the other, let a reader of the
+# second get a silent fallback without having called the first - the same argument that
+# retired the duplicate flag-group copies this page used to keep.
 _REV_STATE = {}
-# The full sha each resolvable recorded revision names, filled by `_rev_state` as a
-# by-product of asking git to resolve it. Kept beside the state rather than returned with
-# it, because only the branch-tip comparison needs it and most revisions are already a full
-# sha, for which it is the identity.
-_RESOLVED = {}
 _IN_REPO = None
 
 
@@ -253,7 +280,7 @@ def _rev_state(rev):
     code either.
     """
     if rev in _REV_STATE:
-        return _REV_STATE[rev]
+        return _REV_STATE[rev][0]
     state = "unknown"
     # Nothing about the recorded value is decided before this: `cat-file -e` exits 128 both
     # for a missing object and for a fatal such as "not a git repository", so its exit code
@@ -261,7 +288,7 @@ def _rev_state(rev):
     # this probe published a claim about what git can resolve from a process that had asked
     # git nothing. `_in_repo` asks once per process rather than once per revision.
     if not _in_repo():
-        _REV_STATE[rev] = "unknown"
+        _REV_STATE[rev] = ("unknown", None, None)
         return "unknown"
     # git is asked to resolve the value, rather than the value being matched against the
     # shape of an abbreviated object name. The two differ for most of what gitrevisions(7)
@@ -275,28 +302,53 @@ def _rev_state(rev):
     # 40-character sha whether or not an object matches it.
     r = subprocess.run(["git", "rev-parse", "--verify", f"{rev}^{{commit}}"],
                        capture_output=True, text=True)
+    resolved = detail = None
     if r.returncode != 0:
-        # git could not resolve it here, and git cannot say which of the two reasons it is:
-        # an absent object and an unusable string both exit 128. The shape of the value is
-        # the only evidence available, so it decides which sentence is printed - and each
-        # sentence claims only what was actually established.
-        state = "not_here" if re.fullmatch(r"[0-9a-f]{4,40}", rev or "") else "unresolvable"
+        # `--verify <rev>^{commit}` exits 128 for three different things: an object this
+        # checkout lacks, an object it holds that is not a commit, and a string that is not
+        # a revision at all. git distinguishes the first two itself - `cat-file -t` reports
+        # the type of anything in the object store - so the one that was previously folded
+        # into "this checkout does not hold" is now asked about rather than guessed at. The
+        # reason only reached stderr before, which this code discarded.
+        t = subprocess.run(["git", "cat-file", "-t", rev], capture_output=True, text=True)
+        if t.returncode == 0:
+            # The type goes in the memo, not into the state name: the two sentence tables
+            # below are keyed exhaustively so that a new state raises rather than rendering
+            # a blank, and a name carrying a payload would defeat that.
+            state, detail = "not_a_commit", (t.stdout.strip() or "object")
+        else:
+            # Neither resolvable nor present, so the shape of the value is the only evidence
+            # left for which it was meant to be, and each sentence claims only that much.
+            state = "not_here" if _sha_shaped(rev) else "unresolvable"
     else:
         # The full sha, so the branch-tip comparison is not defeated by an abbreviation that
-        # resolves to the tip, and so `for-each-ref` is asked about a commit rather than
-        # about whatever string the operator recorded.
-        _RESOLVED[rev] = r.stdout.strip() or rev
+        # resolves to the tip, and so the three calls that follow are given a commit rather
+        # than whatever string the operator recorded.
+        resolved = r.stdout.strip() or rev
         try:
-            f = subprocess.run(
-                ["git", "for-each-ref", "--contains", _RESOLVED[rev], "refs/remotes"],
-                capture_output=True, text=True)
+            f = subprocess.run(["git", "for-each-ref", "--contains", resolved, "refs/remotes"],
+                               capture_output=True, text=True)
         except Exception:
-            _REV_STATE[rev] = "unknown"
+            _REV_STATE[rev] = ("unknown", resolved, detail)
             return "unknown"
         if f.returncode == 0:
             state = "published" if f.stdout.strip() else "unpublished"
-    _REV_STATE[rev] = state
+    _REV_STATE[rev] = (state, resolved, detail)
     return state
+
+
+def _resolved(rev):
+    """The sha `rev` resolved to, or `rev` itself where it did not resolve.
+
+    Reads the memo `_rev_state` fills, so calling it without having called `_rev_state`
+    returns the fallback. Every caller below asks for the state first.
+    """
+    return (_REV_STATE.get(rev) or (None, None, None))[1] or rev
+
+
+def _obj_type(rev):
+    """What `cat-file -t` called the object, for the `not_a_commit` sentences."""
+    return (_REV_STATE.get(rev) or (None, None, None))[2] or "object"
 
 
 # What each state means for a reader, as its own clause. Appended after the drift answer,
@@ -321,6 +373,10 @@ _REPRODUCIBLE = {
     "unknown": " Whether that revision is published could not be determined, so nothing is"
                " claimed about re-running this elsewhere.",
     "unresolvable": "",
+    # The object is here, so publication is answerable in principle - but it is not a commit,
+    # and `for-each-ref --contains` takes a commit. Nothing was asked, so nothing is claimed.
+    "not_a_commit": " Whether anything published names it could not be determined, since it"
+                    " is not a commit.",
 }
 
 
@@ -345,9 +401,12 @@ def _primary_drift_tail():
                     " is claimed about whether a clone could compare the table's own figures.",
         "unknown": f"Whether the primary run's tree (`{short}`) is published could not be"
                    " determined, so nothing is claimed about the table's own figures.",
-        "unresolvable": f"The primary run records `{rev[:60]}` as its tree, which git"
+        "unresolvable": f"The primary run records `{_in_span(rev)}` as its tree, which git"
                         " cannot resolve to a commit here and which is not shaped like an"
                         " object name, so nothing is claimed about the table's own figures.",
+        "not_a_commit": f"The primary run's tree (`{short}`) is in this checkout as a"
+                        f" {_obj_type(rev)} rather than a commit, so nothing is claimed about"
+                        " the table's own figures.",
     }[_rev_state(rev)]
 
 
@@ -381,10 +440,16 @@ def _alt_drift_tail():
                 " claimed about whether the audit's inputs moved since.")
     state = _rev_state(rev)
     if state == "unresolvable":
-        return (f" at `{rev[:60]}`, which git cannot resolve to a commit here and which is"
-                " not shaped like an object name, so the input-drift comparison below was"
+        return (f" at `{_in_span(rev)}`, which git cannot resolve to a commit here and which"
+                " is not shaped like an object name, so the input-drift comparison below was"
                 " not made.")
-    if _RESOLVED.get(rev, rev) == head:
+    if state == "not_a_commit":
+        # Previously folded into "this checkout does not hold", which was false of the one
+        # case where git knows exactly what the value is.
+        return (f" at `{rev[:9]}`, which this checkout holds as a {_obj_type(rev)} rather"
+                " than a commit, so the input-drift comparison below was not made."
+                f"{_REPRODUCIBLE[state]}").rstrip()
+    if _resolved(rev) == head:
         # Compared on the resolved sha, not on the recorded string: an abbreviation that is
         # the tip took the ancestor path and printed the other of two true sentences.
         #
@@ -410,7 +475,9 @@ def _alt_drift_tail():
     # a `merge-base` and `diff` git would have answered - they never ran, so the answer was
     # forgone rather than discarded. What is unknown is publication alone, which is what the
     # clause at the end of this function says.
-    anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
+    # The resolved sha, for the reason the resolve step records: these ask about a commit
+    # rather than about whatever string the operator recorded.
+    anc = subprocess.run(["git", "merge-base", "--is-ancestor", _resolved(rev), "HEAD"],
                          capture_output=True)
     if anc.returncode == 1:
         base = (f" at `{rev[:9]}`, which is not an ancestor of this branch's tip, so the two"
@@ -421,8 +488,8 @@ def _alt_drift_tail():
                 " so nothing is claimed.")
     else:
         try:
-            out = subprocess.run(["git", "diff", "--name-only", f"{rev}..HEAD", "--",
-                                  "genes", "modules"],
+            out = subprocess.run(["git", "diff", "--name-only", f"{_resolved(rev)}..HEAD",
+                                  "--", "genes", "modules"],
                                  capture_output=True, text=True, check=True).stdout.split()
         except Exception:
             return (f" at `{rev[:9]}`, an ancestor of the branch tip; git could not list what"

@@ -60,8 +60,14 @@ def _strip_cover(rep, genes):
                 g["covering_pairs"] = None
 
 
+# A sha no checkout holds, returned by the shim as what the recorded revision resolves to.
+# Deliberately not `HEAD`: the generator compares the resolved sha with the branch tip, and
+# the branch-tip return is a different sentence from the one these cases are about.
+_SHIM_RESOLVED = "1234567890abcdef1234567890abcdef12345678"
+
+
 def _git_shim(tmp, mode):
-    """A `git` earlier on PATH that breaks one subcommand and delegates the rest.
+    """A `git` earlier on PATH that answers the four questions the drift sentence asks.
 
     `_rev_state` reaches `unknown` only when `for-each-ref` fails after the revision has
     already resolved, and `unpublished` only when it succeeds with no output. Neither is
@@ -71,26 +77,48 @@ def _git_shim(tmp, mode):
     the same apparatus from the harness, so the two sentences a reader never sees can be
     re-rendered by anyone running the suite.
 
+    It stubs the drift answer as well as the publication lookup, which is what makes the
+    cases independent of the checkout rather than merely independent of its depth. An
+    earlier version intercepted `for-each-ref` alone and let the rest reach the real git, so
+    the sentence it asserted required the *second report's recorded revision to resolve* -
+    four commits back on this branch, and absent in the `fetch-depth: 1` clone CI tests in.
+    There `rev-parse --verify` failed before the interception was ever reached, the absence
+    sentence rendered instead, and both cases failed: the clone dependence round 16 removed
+    from `untampered`, reintroduced one layer down. Stubbing all four also makes the
+    rendered figure deterministic, so each clause can be declared as one whole string.
+
+    What is asserted is therefore the generator's assembly of the sentence from git's
+    answers, not git's answers themselves. The real answers are what the committed page is
+    rendered from, and `untampered` covers that path.
+
     Fails loudly with git absent rather than skipping: a case that cannot run is not a case
-    that passed.
+    that passed. `rev-parse --git-dir` and `rev-parse HEAD` are delegated, so the render
+    still has to be inside a repository - true of any checkout, however shallow.
     """
     real = shutil.which("git")
     if not real:
         sys.exit("the shim cases need git on PATH to delegate to; it is not there")
     d = os.path.join(tmp, f"shim-{mode}")
     os.makedirs(d, exist_ok=True)
-    body = ("exit 129" if mode == "fail" else "exit 0")
     with open(os.path.join(d, "git"), "w") as fh:
-        fh.write("#!/bin/sh\n"
-                 'for a in "$@"; do [ "$a" = "for-each-ref" ] && ' + body + "; done\n"
-                 f'exec {real} "$@"\n')
+        fh.write(
+            "#!/bin/sh\n"
+            # `rev-parse --verify <rev>^{commit}`, not the bare `rev-parse HEAD` or
+            # `--git-dir` the generator also runs, which fall through to the real git.
+            f'if [ "$1" = "rev-parse" ] && [ "$2" = "--verify" ]; then'
+            f' echo {_SHIM_RESOLVED}; exit 0; fi\n'
+            'case "$1" in\n'
+            '  merge-base) exit 0 ;;\n'          # an ancestor
+            '  diff) exit 0 ;;\n'                # with nothing changed between the two
+            f'  for-each-ref) exit {"129" if mode == "fail" else "0"} ;;\n'
+            'esac\n'
+            f'exec {real} "$@"\n')
     os.chmod(os.path.join(d, "git"), 0o755)
     return d
 
 
 # (name, expectation, mutation, expect[, shim]) where `expect` is a substring the refusal
-# message must contain, or - for an OK case - a substring the rendered page must contain; a
-# tuple of substrings requires all of them, for a sentence whose middle is a live figure.
+# message must contain, or - for an OK case - a substring the rendered page must contain.
 # The optional fifth element names a `_git_shim` mode, rendered with that shim first on
 # PATH. Exit status alone was not enough: an EXIT case passed when *any* guard fired rather
 # than the declared one, and an OK case passed whenever the generator exited 0, whether or
@@ -102,11 +130,12 @@ CASES = [
     # so declaring it made the suite's green depend on clone depth. The flag-count line is
     # derived from the reports alone. The drift sentences are covered by the three cases at
     # the end of this list. Two inject a revision whose state is the same in any checkout
-    # that is a git repository at all - absent everywhere, or unresolvable everywhere - so
-    # neither depends on how deep the clone is, which is what made the round-15 attempt
-    # wrong. They do still need a repository: `_alt_drift_tail` returns early when
-    # `rev-parse HEAD` fails, so a run from an export with no `.git` fails them. The last
-    # two reach the remaining states through a shim rather than through the report.
+    # that is a git repository at all - absent everywhere, or unresolvable everywhere. The
+    # other two stub git's four answers outright. So none of the four depends on the clone's
+    # depth, which is what made the round-15 attempt wrong, and none depends on the
+    # repository holding any particular commit, which is what a first version of the shim
+    # cases did depend on. All four still need a repository: `_alt_drift_tail` returns early
+    # when `rev-parse HEAD` fails, so a run from an export with no `.git` fails them.
     ("untampered", "OK", lambda p, a: None,
      "Flag counts on principal rows:"),
     ("audit_sha256 differs", "EXIT",
@@ -210,24 +239,59 @@ CASES = [
                                          aigr_tree="a harness tree naming no revision"),
      "which git cannot resolve to a commit here and which is not shaped like an object"
      " name, so the input-drift comparison below was not made.\n"),
-    # The two states no mutation can reach. Each declares the ancestor fragment as well as
-    # its own clause: the clause alone does not distinguish the fixed code from the version
-    # that grouped `unknown` with `not_here`, which printed the same clause behind "does not
-    # hold" and never ran the comparison. The fragment is only produced on the fall-through
-    # path - checked against both versions - and the file list between them is live, which
-    # is why the declaration is two substrings rather than one.
+    # The two states no mutation can reach, each declared whole - including the drift answer
+    # ahead of the clause, which is the part that matters. The clause alone does not
+    # distinguish the fixed code from the version that grouped `unknown` with `not_here`:
+    # that version printed the same clause behind "does not hold" and never ran the
+    # comparison. "an ancestor of the branch tip" is produced only on the fall-through path,
+    # checked against both versions.
     ("for-each-ref fails after the revision resolves", "OK",
      lambda p, a: None,
-     ("an ancestor of the branch tip, with",
-      "Whether that revision is published could not be determined, so nothing is claimed"
-      " about re-running this elsewhere.\n"),
+     "That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip,"
+     " with no file under `genes/` or `modules/` changed between the two - the audit's whole"
+     " input surface - so the figures stand for either. Whether that revision is published"
+     " could not be determined, so nothing is claimed about re-running this elsewhere.\n",
      "fail"),
     ("for-each-ref finds the revision on no remote ref", "OK",
      lambda p, a: None,
-     ("an ancestor of the branch tip, with",
-      "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
-      " be re-run elsewhere.\n"),
+     "That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip,"
+     " with no file under `genes/` or `modules/` changed between the two - the audit's whole"
+     " input surface - so the figures stand for either. That revision is on no pushed ref,"
+     " so no clone holds it and this comparison cannot be re-run elsewhere.\n",
      "empty"),
+    # A recorded ref, with the committed tree description left alone - the description names
+    # a sha, so before the guard learned to compare only a recorded sha this configuration
+    # made the generator exit instead of rendering. The shim forces the rest, so what is
+    # asserted is that the ref reaches a drift answer at all.
+    ("the second run records a ref rather than a sha", "OK",
+     lambda p, a: a["provenance"].update(aigr_revision="HEAD~3"),
+     "That second run read a tree recorded at `HEAD~3`, an ancestor of the branch tip, with"
+     " no file under `genes/` or `modules/` changed between the two - the audit's whole input"
+     " surface - so the figures stand for either. That revision is on no pushed ref, so no"
+     " clone holds it and this comparison cannot be re-run elsewhere.\n",
+     "empty"),
+    # An object this checkout holds that is not a commit. `rev-parse --verify <sha>^{commit}`
+    # fails for it exactly as for an absent object, and the reason reached only stderr, so it
+    # rendered as "this checkout does not hold" - false of the one case git can name exactly.
+    # `HEAD^{tree}` rather than a named blob: a tree object exists wherever HEAD resolves,
+    # at any clone depth and whatever the repository contains, so the case does not depend on
+    # some particular file being there. The sha is read at render time, so the declaration
+    # omits it and names the type instead.
+    ("the second run records an object that is not a commit", "OK",
+     lambda p, a: a["provenance"].update(
+         aigr_revision=subprocess.run(["git", "rev-parse", "HEAD^{tree}"], cwd=HERE,
+                                      capture_output=True, text=True).stdout.strip(),
+         aigr_tree="a harness tree"),
+     "which this checkout holds as a tree rather than a commit, so the input-drift comparison"
+     " below was not made. Whether anything published names it could not be determined, since"
+     " it is not a commit.\n"),
+    # A value of a-f characters only, which is both a plausible ref name and sha-shaped by
+    # length. Without the digit requirement this reads as an object the checkout lacks.
+    ("the second run records an a-to-f word", "OK",
+     lambda p, a: a["provenance"].update(aigr_revision="defaced",
+                                         aigr_tree="a harness tree"),
+     "at `defaced`, which git cannot resolve to a commit here and which is not shaped like an"
+     " object name, so the input-drift comparison below was not made.\n"),
 ]
 
 
@@ -295,15 +359,9 @@ def main(argv=None):
             where = (r.stdout + r.stderr) if got == "EXIT" else (
                 open(out_md).read() if os.path.exists(out_md) else "")
             why = "" if got == want else f"wanted {want}, got {got}"
-            # A tuple requires every substring: a sentence with a live figure in the middle
-            # cannot be declared as one string, and declaring only the half that does not
-            # vary would have passed against the code the case exists to rule out.
-            wanted = expect if isinstance(expect, tuple) else (expect,)
-            missing = [w for w in wanted if w not in where]
-            if not why and missing:
+            if not why and expect not in where:
                 why = (f"{'refusal message' if got == 'EXIT' else 'rendered page'} does not"
-                       f" contain {missing[0]!r}"
-                       + (f" (and {len(missing) - 1} more)" if len(missing) > 1 else ""))
+                       f" contain {expect!r}")
             bad += bool(why)
             print(f"{'ok  ' if not why else 'FAIL'} {name}" + (f": {why}" if why else ""))
     n_exit = sum(1 for c in cases if c[1] == "EXIT")
