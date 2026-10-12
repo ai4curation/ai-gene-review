@@ -28,6 +28,7 @@ import re
 import subprocess
 import sys
 from collections import Counter, defaultdict
+from functools import cache
 
 import yaml
 
@@ -66,13 +67,23 @@ def base_summary(path: str, idx: int, ann: dict) -> str | None:
 # and UniProt FUNCTION text instead of trusting the decision file.
 NO_BINDING = "record no experimental proteoglycan, heparin or lipid binding"
 EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "IC", "TAS", "HTP", "HDA", "HMP", "HGI", "HEP"}
-LIPID = (r"lipid|lipoprotein|heparin|heparan|glycosaminoglycan|proteoglycan|phosphatid|ganglioside|sphingo|"
-         r"ceramide|sterol|fatty acid|retinol|cardiolipin")
-BINDING = re.compile(rf"({LIPID}).*(binding|chaperone|carrier|transfer)", re.I)
-BINDING_IDS = {"GO:0008201", "GO:0043394", "GO:0043395", "GO:0005539", "GO:0005543", "GO:0008289", "GO:0001786",
-               "GO:7770043", "GO:0070300", "GO:0030169", "GO:0008035", "GO:0019841"}
-# an unhedged "Binds ..." sentence naming a lipid or glycosaminoglycan ("May bind" does not match)
-UNIPROT_BINDS = re.compile(rf"(?<![Mm]ay )\bbinds?\b[^.]*\b({LIPID})", re.I)
+# lipid binding, glycosaminoglycan binding, proteoglycan binding, lipoprotein particle binding,
+# lipid transfer activity, lipid chaperone activity, and their is_a descendants
+BINDING_ROOTS = ["GO:0008289", "GO:0005539", "GO:0043394", "GO:0071813", "GO:0120013", "GO:7770043"]
+# GO files these outside the roots: hyaluronic acid binding is_a carboxylic acid binding only
+BINDING_EXTRA = {"GO:0005540"}
+LIPID = (r"lipid|lipoprotein|heparin|heparan|glycosaminoglycan|proteoglycan|hyaluron|chondroitin|dermatan|"
+         r"keratan|phosphatid|ganglioside|sphingo|ceramide|sterol|fatty acid|retinol|cardiolipin")
+UNIPROT_BINDS = re.compile(rf"\bbind(s|ing)?\b[^.]*\b({LIPID})", re.I)
+HEDGE = re.compile(r"\b(may|might|probably|possibly|could|potential|putative)\b", re.I)
+
+
+@cache
+def binding_ids() -> frozenset[str]:
+    from oaklib import get_adapter
+    from oaklib.datamodels.vocabulary import IS_A
+    go = get_adapter("sqlite:obo:go")
+    return frozenset(go.descendants(BINDING_ROOTS, predicates=[IS_A])) | BINDING_EXTRA
 
 
 def binding_evidence(organism: str, gene: str) -> list[str]:
@@ -81,13 +92,15 @@ def binding_evidence(organism: str, gene: str) -> list[str]:
         hits = {f'{r["GO TERM"]} {r["GO NAME"]} ({r["GO EVIDENCE CODE"]})'
                 for r in csv.DictReader(fh, delimiter="\t")
                 if r["GO ASPECT"] == "molecular_function" and "NOT" not in r["QUALIFIER"]
-                and r["GO EVIDENCE CODE"] in EXPERIMENTAL
-                and (r["GO TERM"] in BINDING_IDS
-                     or (BINDING.search(r["GO NAME"]) and "receptor binding" not in r["GO NAME"]))}
-    with open(os.path.join(folder, f"{gene}-uniprot.txt")) as fh:
+                and r["GO EVIDENCE CODE"] in EXPERIMENTAL and r["GO TERM"] in binding_ids()}
+    uniprot = os.path.join(folder, f"{gene}-uniprot.txt")
+    assert os.path.exists(uniprot), f"{gene}: no cached UniProt entry to check the CAT5 clause against"
+    with open(uniprot) as fh:
         text = re.sub(r"\s+", " ", " ".join(line[5:] for line in fh if line.startswith("CC   ")))
     for block in re.findall(r"-!- FUNCTION: (.*?)(?= -!- |$)", text):
-        hits.update(f"UniProt: {m.group(0)}" for m in UNIPROT_BINDS.finditer(block))
+        # unhedged sentences only: "May act as a carrier of hyaluronan" does not count
+        hits.update(f"UniProt: {sentence}" for sentence in re.split(r"(?<=\.) ", block)
+                    if UNIPROT_BINDS.search(sentence) and not HEDGE.search(sentence))
     return sorted(hits)
 
 

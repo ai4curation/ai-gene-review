@@ -314,18 +314,18 @@ The data and the curators are the same. The difference is the inference step.
    KEEP_AS_NON_CORE: both bind phosphatidylserine or anionic phospholipids, the lipid-receptor
    route by which MISEV category 5 allows secreted proteins onto EVs. The same applies to
    every category-5 protein with experimental proteoglycan, heparin or lipid binding: FN1,
-   NID1, COMP, PSAP and GM2A stay KEEP_AS_NON_CORE here, and THBS1, THBS4 and C1QB become
-   KEEP_AS_NON_CORE in pass 1. 88 rows in 52 genes
+   NID1, COMP, PSAP, GM2A, ITIH1 and ITIH2 stay KEEP_AS_NON_CORE here, and THBS1, THBS4 and C1QB become
+   KEEP_AS_NON_CORE in pass 1. 83 rows in 50 genes
    changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
    | Change | Rows | Proteins |
    |---|---:|---|
-   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 55 | secreted plasma and matrix proteins with no recorded proteoglycan or lipid binding (A1BG, A2M, HPX, ITIH1–4, HSPG2, AGRN) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, SMPD1) |
+   | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 5) | 50 | secreted plasma and matrix proteins with no recorded proteoglycan or lipid binding (A1BG, A2M, HPX, ITIH3, ITIH4, HSPG2, AGRN) and lysosomal lumenal enzymes (GBA1, GLA, GUSB, HEXA, IDUA, SMPD1) |
    | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED (category 4) | 32 | mitochondrial (ATP5F1A/B, HSPA9, HSPD1, ACAT1) and ER/Golgi residents (CALR, P4HB, PPIB, PRDX4, MAN1B1, LFNG) |
    | KEEP_AS_NON_CORE → ACCEPT | 1 | PDCD6IP (CSF EVs) |
 
-   The other 330 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
+   The other 335 rows stay KEEP_AS_NON_CORE. They cover cytosolic cargo and PM/endosomal
    membrane proteins, including the ESCRT subunits (CHMP*, TSG101, VPS28, VPS37B–D,
    MVB12A/B). MISEV2018 lists TSG101 and the CHMPs in the same category 2a as ALIX, so
    accepting ALIX alone rests on its protein-specific role in exosome biogenesis, not on
@@ -440,6 +440,16 @@ unhedged "binds" sentence naming a lipid or glycosaminoglycan, and matches a lis
 ids (lipoprotein particle, phosphatidic acid and retinol binding among them) as well as
 term names. Across both passes SCGB1A1 is the only hit, and its reason no longer
 carries the clause.
+
+The next re-review found ITIH1 and ITIH2, with hyaluronan binding by IDA, which the
+name and id lists missed: GO files hyaluronic acid binding under carboxylic acid binding,
+not glycosaminoglycan binding. Both return to KEEP_AS_NON_CORE (`CAT5_BOUND`) and their
+files are back to their original text; ITIH3, which UniProt says only *may* carry
+hyaluronan and which has no hyaluronan-binding row, stays over-annotated with that stated.
+The check now takes its GO terms from the ontology itself (every is_a descendant of lipid,
+glycosaminoglycan, proteoglycan and lipoprotein particle binding, lipid transfer and lipid
+chaperone activity, plus hyaluronic acid binding), and its UniProt scan reads "binding"
+as well as "binds" but skips hedged sentences. No row carrying the clause trips it.
 
 ### 2026-10-10: third round of automated-review fixes
 

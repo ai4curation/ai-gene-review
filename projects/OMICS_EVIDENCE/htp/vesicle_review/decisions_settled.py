@@ -153,9 +153,12 @@ G = {
     "HSPG2": note(CAT5, "Secreted basement-membrane perlecan, itself a proteoglycan, with no recorded binding to EV-surface receptors."),
     "IDUA": note(CAT5, "Lysosomal lumenal iduronidase."),
     "ITGB1": note(CAT1, "Plasma-membrane integrin."),
-    "ITIH1": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor chain."),
-    "ITIH2": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor chain."),
-    "ITIH3": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor chain."),
+    "ITIH1": note(CAT5_BOUND, "Secreted plasma inter-alpha-trypsin inhibitor heavy chain with experimental hyaluronan "
+                              "binding (GO:0005540, IDA, PMID:20463016)."),
+    "ITIH2": note(CAT5_BOUND, "Secreted plasma inter-alpha-trypsin inhibitor heavy chain with experimental hyaluronan "
+                              "binding (GO:0005540, IDA, PMID:20463016)."),
+    "ITIH3": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor heavy chain. UniProt says only that it may carry "
+                        "hyaluronan, and unlike ITIH1 and ITIH2 it has no hyaluronan-binding annotation."),
     "ITIH4": note(CAT5, "Secreted plasma inter-alpha-trypsin inhibitor chain."),
     "KHK": note(CAT2, "Cytosolic ketohexokinase."),
     "KL": note(CAT1, "Plasma-membrane klotho isoform."),
