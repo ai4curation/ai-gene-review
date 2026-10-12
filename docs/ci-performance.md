@@ -63,6 +63,55 @@ batching effect (both modes passed with the same schema, flags, and inputs):
 | Schema | 9.73s | 0.85s |
 | Terms | 20.32s | 2.11s |
 
+## Merge-queue follow-up (2026-10-12)
+
+After the first speedup, the successful [merge-group run 38180881453](https://github.com/ai4curation/ai-gene-review/actions/runs/38180881453)
+spent about 40 minutes executing. Family validation fell to 62 seconds. The
+remaining large steps were all-gene schema validation (454 seconds), module
+validation (706 seconds), and the test suite including doctests and mypy
+(834 seconds). Checkout took 117 seconds and fetching frozen benchmark snapshots
+57 seconds. A second successful integration run showed similar timings.
+
+The follow-up removes repeated work within those steps:
+
+- Gene schema batches use libyaml's safe parser with LinkML's existing closed
+  JSON Schema plugin. Instance boundaries, diagnostics, and blocking errors are
+  retained; duplicate-key checking remains in the existing strict-YAML tests.
+  The C scanner can differ on malformed/edge-case input (for example, trailing
+  tabs and lone Unicode surrogates); it is not a byte-for-byte parser replacement.
+  Installations without libyaml fall back to PyYAML's safe Python parser.
+- Module ontology labels and aliases are shared across files within one CLI
+  invocation, keyed by ontology adapter and term. Lookup exceptions are remembered within a file to avoid repeated timeouts,
+  then retried on the next file. Nothing is persisted across runs or skips document validation.
+- Reaction-chaining QC resolves reactions only for steps participating in a
+  `PRECEDES` connection. Unconnected steps cannot contribute to these findings;
+  their other structural and functional checks still run.
+- Git snapshot glob searches use a sorted path index to narrow candidates by
+  literal prefix before applying the unchanged matcher. Results are cached only
+  within the immutable snapshot; callers receive independent result lists.
+- The ProtNLM and BioReason benchmark readers use the same safe parser. Frozen
+  inputs, ontology releases, expected scores, and test coverage are unchanged.
+
+Same-machine measurements on the same checkout (Python 3.12, warm ontology
+caches) show:
+
+| Check | Before | After |
+| --- | ---: | ---: |
+| All 6,711 checked-out gene schemas | 251.48s | 62.86s |
+| First 100 sorted gene schemas | 2.96s | 1.29s |
+| First 50 sorted module files, grounding/QC phase | 128.15s | 82.53s |
+| ProtNLM + BioReason benchmark tests (26 tests) | 146.03s | 42.88s |
+
+The module comparison produced byte-identical diagnostics. All 448 module files
+passed the new grounding/QC batch (412.83s). Benchmark timings use pytest
+reported duration; the baseline restores both the original glob and YAML loaders
+in a separate process. Both versions pass the same 26 tests against frozen inputs. These are local
+measurements with other checks running concurrently, not promised GitHub runner
+timings. Both full schema runs passed. The additional `DROME/Dl` review hidden
+by this macOS checkout's `Dl`/`dl` filename collision was exported from Git and
+validated separately. Integration runs must establish the end-to-end improvement
+after merge.
+
 ## Remaining opportunities
 
 - Queue pressure is distinct from execution time. The separate

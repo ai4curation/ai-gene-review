@@ -1224,7 +1224,7 @@ validate-all:
     #!/usr/bin/env bash
     exit_code=0
     echo "Schema validation (batch)..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    uv run python -m ai_gene_review.validation.schema_batch --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
     echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
     # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
