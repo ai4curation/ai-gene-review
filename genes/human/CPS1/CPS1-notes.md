@@ -74,3 +74,50 @@ UniProt (P31327), seeded GOA, cached publications, and the dismech CPS1D disorde
   (CAD), not CPS1; MODIFY/over-annotation. organophosphate is a broad ARBA mapping.
 - GO:0006541 L-glutamine metabolic process (IBA/IEA): reflects the glutamine-dependent CPS family
   ancestor; human CPS1 does NOT use glutamine. Over-annotation.
+
+
+## 2026-10-12: source-specific reassessment
+
+This dated assessment supersedes incompatible interpretations in the preserved earlier journal, especially the blanket rejection of non-mitochondrial pools, all response annotations, and all positive binding screens. The original observations remain visible; biological conclusions below distinguish measured activity, association, expression markers and unresolved source scope.
+
+### Catalysis and products
+
+CPS1 performs ammonia-dependent carbamoyl-phosphate synthesis, with two ATP-dependent phosphorylation steps, NAG activation and catalytic Mg/K. The compact functional synthesis is one GO:0004087 core in mitochondrial matrix, linked to carbamoyl-phosphate biosynthesis and the urea cycle. The structures contain ADP rather than directly imaged ATP. [PMID:26592762, "N-acetyl-L-glutamate (NAG) as essential activator"](https://pmc.ncbi.nlm.nih.gov/articles/PMC4655335/)
+
+The [2013 original author-uploaded paper](https://www.researchgate.net/publication/236643612_Molecular_Characterization_of_Carbamoyl-Phosphate_Synthetase_CPS1_Deficiency_Using_Human_Recombinant_CPS1_as_a_Key_Tool) describes residues 40–1500 plus a 28-residue His tag; the 2015 construct deletes residues 1–37. Neither is silently equated with the official alternative products. The listed 2013 corrigendum, PMID:30740827, is authenticated but its operative text remains inaccessible. Native-human and independent 2015 evidence also support the reaction. Full Methods for PMID:24813853 and PMID:6249820 remain unavailable; their positive experimental claims are retained with explicit curator deference.
+
+The official sequences reconstruct to 1500, 1049 and 1506 residues. Product 2 loses residues 1–451; product 3 replaces the initial methionine with MPQIIKM. Sequence retention does not establish equivalent import, processing or catalytic coupling. The human splice-defect paper PMID:8486760 reports 11% residual liver activity, and PMID:7416778 reports approximately half mean control duodenal activity; neither supports a universal complete-abolition statement.
+
+### Ancestral inference and specific chemistry
+
+The human leaf genuinely descends from the current cytoplasm, glutamine and ammonia IBD nodes. The target sequence and current MSA agree exactly. Off-path IRDs, including the shared-source addition at PTN000892125, are not human loss annotations. A target among its own experimental descendants is legitimate support.
+
+The glutamine-hydrolyzing MF is refined to the established ammonia reaction, explicitly considering the inherited contributes_to qualifier: a bacterial large chain can contribute without possessing a glutaminase. Human CPS1 is a single-chain ammonia enzyme, rather than an established partnered human glutamine-hydrolyzing complex. In contrast, GO:0006541 covers pathways; loss of direct hydrolysis alone does not resolve every downstream pathway participation, so the broad BP remains UNDECIDED. The retrieved GO:0090407 definition has an apparent deoxyribose-specific wording anomaly; the actual carbamoyl-phosphate biosynthetic term supplies precise positive coverage.
+
+### Cancer metabolism and the operative correction
+
+In KRAS/LKB1-mutant lung-cancer cells, CPS1 depletion/rescue and isotope tracing support a context-dependent contribution of ammonia nitrogen to pyrimidines. [PMID:28538732, "from ammonia into pyrimidines"](https://pmc.ncbi.nlm.nih.gov/articles/PMC5472349/)
+
+The [operative Nature correction](https://www.nature.com/articles/s41586-019-1133-3) must accompany that interpretation: the reported m/z 140/79 signal "was phosphorylethanolamine, not carbamoyl phosphate" [PMID:31043737]. Carbamoyl phosphate was below the assay threshold, and the original Letter was not corrected online. The correction does not withdraw the separate pyrimidine tracing and dependency results. No measured carbamoyl-phosphate accumulation is used here.
+
+### Binding, localization and conditional complexes
+
+The exact positive Raf interactions used CPS1 residues 420–771 and defined RAF1/ARAF fragments. Their known MAP kinase kinase kinase class supports a binding refinement, without making CPS1 a kinase. The 14-3-3 affinity/TAP results similarly support the partner class while leaving direct topology unresolved. PMID:20618440 Table 2 misdescribes CPS1 as CAD; the actual CPS1 identification and positive curated pair remain distinct from that background error.
+
+The [original nucleoid study](https://www.researchgate.net/publication/5783906_The_Layered_Structure_of_Human_Mitochondrial_DNA_Nucleoids) identifies CPS1 NP_001866 as "Class I" [PMID:18063578], with native TFAM/mtSSB peptide counts 5/21 and crosslinked counts 21/0. The old no-crosslink premise is incorrect. Association in these preparations does not establish autonomous DNA binding or a nucleoid-maintenance mechanism.
+
+The cell-surface transfer is supported by actual mouse hepatocyte experiments, including the "surface of non-permeabilized primary mouse hepatocytes" [PMID:34799567](https://pmc.ncbi.nlm.nih.gov/articles/PMC8604956/). The human HepG2 functional experiments and mouse surface imaging are separate. The reported ELISA uses hepatocyte lysate, so it is not relabeled as a purified-human binary-binding assay. HPA nucleolar metadata and the ethanol-study cytosolic detection are also retained at their specific assay scope. No HPA image pixels were inspected.
+
+Rat calcium/phospholipid binding and the SBTI-associated CPS1/FDH/BHMT complex are positive secondary observations, not disproven by predominant monomeric enzyme in a different preparation. PMID:17669278 Figure 4 tests FDH/SBTI directly; it does not resolve a CPS1-specific interaction with an assembled complex. The putative native proteolytic fragment in PMID:15304357 remains uncertain at human/full-length scope. Full-text access is not invented where recovery failed.
+
+### Responses, developmental markers and pathway scope
+
+The rat LPS study measures altered ureagenic output: "decreased UNSR by 40%" [PMID:17539997]. This differs from the separate observation of LPS-induced circulating CPS1 in humans and baboons, but the broad response definition accommodates both at their actual scope. The alcohol study also measures a significant 2.27-fold protein increase after eight weeks, separately from its protein-damage experiments. No repair or protective activity is inferred from those observations.
+
+The broad response terms explicitly include gene expression, enzyme production and changes of state. The observed toxicant, oleate, FGF4 and glucocorticoid-dependent CPS1 changes can therefore support existing non-core response annotations without an additional protective/signaling requirement. In contrast, the developmental terms concern progression to a mature organ or cell phenotype; abstract-only developmental expression/marker studies leave their exact participation claims UNDECIDED. This distinction preserves positive evidence without treating every expressed marker as a developmental effector.
+
+Citrulline biosynthesis is a pathway: CPS1 performs upstream precursor synthesis even though OTC performs the final citrulline-forming reaction. Vascular, nitric-oxide, homocysteine, triglyceride and monoatomic-anion claims retain explicit uncertainty where exact source/mechanistic scope remains unresolved. This does not treat all expression observations as participation or all indirect phenotypes as false.
+
+### Historical and current source representation
+
+The reconciled review has 79 active assertions and two retired historical source forms. All 78 original assertion objects remain unchanged, including 49 omitted WITH/FROM lists; complete modern identities are separately listed in the evidence index. The retired InterPro-only metal record and aggregate Raf record are not biological removals. All three original product records and all 30 original reference identities/findings remain preserved. The evidence index supplies source provenance and literal records, not independent experimental evidence.
