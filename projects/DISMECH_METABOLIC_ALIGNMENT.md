@@ -128,9 +128,9 @@ was generated from, and those inputs live in two repositories.
 
 - run date: `2026-10-12T11:55:14Z`
 - dismech revision: `c0ef3d0d5a5c519fab45d814a79709df266076e1` (c0ef3d0d5 2026-10-11 Add review records for nine unchanged entries and 16 gene pages)
-- ai-gene-review revision: `897d012ae2d2f7b1371e11ac5a40b76b02caa0b0` (branch `HEAD`)
+- ai-gene-review revision: `897d012ae2d2f7b1371e11ac5a40b76b02caa0b0` (detached checkout, so no branch name)
 - GO release: `2026-07-26`, adapter `sqlite:obo:go`
-- audit script: `4fa69f623798` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran; **git could not be asked about: the audit script itself**, so whether the revisions above name what ran is not established either way
+- audit script: `4fa69f623798` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran; **git could not be asked about: the audit script itself**, so whether the revisions above name what ran is not established either way; the companion run over claude/cool-edison-o9wvf0-alignment-project records the audit script as modified at the same sha256
 - ai-gene-review tree: origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed)
 - modules read: `459`; UniProt accessions reached as parts: `4175`, against `4242` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
@@ -142,12 +142,27 @@ The audit also runs over this branch (claude/cool-edison-o9wvf0-alignment-projec
 artifacts of the missing slices rather than findings. Both cover the same
 183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
 
-The falls - `ALIGNED_NONCORE`, `ALIGNED_ON_SHARED_NODE_ONLY`, `NO_MODULE_MEMBERSHIP`, `PARTIAL_ALIGNMENT` - are the absent reviews: a row with no review is skipped by
-every later test, so it cannot be found partial, shared-node-only, or outside a module.
+Every movement below is accounted for row by row rather than from the net counts: a flag's total can fall while rows arrive at it, and the reason one row moved is read from that row's flags on the other tree, not from the flag's group.
 
-That reading is exact for the alignment flags. `NO_MODULE_MEMBERSHIP` is module-sourced, so it falls here because the rows carrying it were skipped for want of a review - but a module flag can also fall because modules were added, and this comparison does not distinguish the two.
+- `ALIGNED_NONCORE` 0 against 1 is a movement of rows, not a shift of one population: 0 rows carry it on both trees, 1 left (UCP2): 1 because the row's review is absent on the other tree.
 
-The rises have three different causes, and only one of them is that absence.
+- `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48 is a movement of rows, not a shift of one population: 25 rows carry it on both trees, 23 left (KCNJ11 (Congenital_Isolated_Hyperinsulinism), AGA, FUCA1, HNF1A, HNF4A, ...): 23 because the row's review is absent on the other tree.
+
+- `NO_MODULE_MEMBERSHIP` 28 against 38 is a movement of rows, not a shift of one population: 14 rows carry it on both trees, 24 left (LCT, DMP1, TRMT10C, HNF4A (Congenital_Isolated_Hyperinsulinism), SLC16A1 (Congenital_Isolated_Hyperinsulinism), ...): 24 because the row's review is absent on the other tree; 14 arrived (COX4I2, ABCD3, ABCC8 (Congenital_Isolated_Hyperinsulinism), ABHD5, APOB (Familial_Defective_Apolipoprotein_B-100), ...): 14 because the modules containing the gene differ.
+
+- `PARTIAL_ALIGNMENT` 46 against 56 is a movement of rows, not a shift of one population: 38 rows carry it on both trees, 18 left (LCT, HNF4A (Congenital_Isolated_Hyperinsulinism), SLC16A1 (Congenital_Isolated_Hyperinsulinism), CTNS, AGA, ...): 17 because the row's review is absent on the other tree, 1 because that review is a stub or has no core-function terms; 8 arrived (ODC1, COX20, HSD17B4, GCK, DNAJC30, ...): 8 because the row's own aligned terms differ, so the review itself differs.
+
+The rises, on the same basis:
+
+- `AIGR_NOT_COMPLETE` 85 against 7 is a movement of rows, not a shift of one population: 7 rows carry it on both trees, 78 arrived (AHCY, ODC1, NSDHL, COQ2 (COQ2-Related_Primary_Coenzyme_Q10_Deficiency), COX18, ...): 78 because the review there is a stub or carries no core-function terms.
+
+- `MODULE_NOT_COVERING` 7 against 4 is a movement of rows, not a shift of one population: 3 rows carry it on both trees, 1 left (APOB): 1 because the modules containing the gene differ; 4 arrived (HADH (Congenital_Isolated_Hyperinsulinism), HADH (Hyperinsulinemic_Hypoglycemia), FGF23, TMEM70): 3 because the modules containing the gene differ, 1 because the same modules carry different terms.
+
+- `NO_AIGR_REVIEW` 61 against 5 is a movement of rows, not a shift of one population: 5 rows carry it on both trees, 56 arrived (LCT, PCSK9 (Autosomal_Dominant_Hypercholesterolemia_3), DMP1, SAR1B, MTFMT, ...): 56 because no review there at all.
+
+- `NO_CORE_FUNCTION_TERMS` 2 against 0 is a movement of rows, not a shift of one population: 0 rows carry it on both trees, 2 arrived (PEX7, PEX5): 2 because the review there is a stub or carries no core-function terms.
+
+The groups below say where in the audit each flag is computed, which is why those causes are the ones available to it - not why any particular row moved.
 
 - `NO_AIGR_REVIEW` counts rows with no review at all. This is the only risen flag the missing slices raise directly.
 
@@ -160,7 +175,7 @@ The rises have three different causes, and only one of them is that absence.
 `ALIGNED_CONTRIBUTES_ONLY` is identical row for row as well: the same (entry, gene) rows carry the flag on each tree.
 For `ALIGNED_CONTRIBUTES_ONLY` that is either a stable property of the dismech side or a path these two runs do not separate; this comparison cannot tell which.
 
-`PARTIAL_COVERAGE` has the same total in both runs over **different rows**: 9 shared, 5 only here (COX4I2, ABHD5, MC4R, PEX5, LIPA) and 5 only in the second run (HADH, GLB1 (GM1_Gangliosidosis_Type_1), GLB1 (GM1_Gangliosidosis_Type_3), HAO1, COQ8A). The equal count is a coincidence of two populations, so nothing about stability follows from it. Being module-sourced, that is what a differing module set does: a row drops out where its covering module is absent and another appears where one is.
+`PARTIAL_COVERAGE` 14 against 14 is a movement of rows, not a shift of one population: 9 rows carry it on both trees, 5 left (COX4I2, ABHD5, MC4R, PEX5, LIPA): 2 because the modules containing the gene differ, 2 because the row's review is absent on the other tree, 1 because that review is a stub or has no core-function terms; 5 arrived (HADH, GLB1 (GM1_Gangliosidosis_Type_1), GLB1 (GM1_Gangliosidosis_Type_3), HAO1, COQ8A): 3 because the modules containing the gene differ, 2 because the same modules carry different terms. So the equal total is a coincidence of two populations, and nothing about stability follows from it.
 
 The flags decided before any review is read are identical in both runs
 (`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `UNTYPED` 0), which is what separates
