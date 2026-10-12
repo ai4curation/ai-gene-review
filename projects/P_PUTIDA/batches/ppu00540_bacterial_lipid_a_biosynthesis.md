@@ -52,5 +52,7 @@ HtrB carries GO:0008913.
 
 - [PMID:28557109](https://pubmed.ncbi.nlm.nih.gov/28557109/) — Identification of
   two secondary acyltransferases of lipid A in *Pseudomonas putida* KT2442
-- [OpenScientist report for lpxA](../../../genes/PSEPK/lpxA/lpxA-deep-research-openscientist.md)
+- OpenScientist report for lpxA: `genes/PSEPK/lpxA/lpxA-deep-research-openscientist.md`
+  (gene-folder deep research is not rendered into `pages/`, so this is a path
+  rather than a link)
 - `modules/bacterial_lipid_a_biosynthesis.yaml`
