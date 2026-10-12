@@ -37,7 +37,7 @@ Can gene reviews name the missing transporters in pathway reactions?
 ## Bottom line
 
 - Reactome **black box events** are reactions that must happen but have **no assigned catalyst or transporter**, often at an organelle membrane.
-- **Pilot done: ABCD3** (81 annotations reviewed) gets a **NEW bile acid transmembrane transporter** term for peroxisomal import of C27 bile-acid CoA esters.
+- **ABCD3 pilot:** 81 rows actioned, with a proposed `GO:0015125` annotation for peroxisomal import of C27 bile-acid CoA esters.
 - **Scoped, not started** beyond that: no systematic black-box query yet; the other bile acid gaps have no candidate reviewed.
 
 ---
@@ -67,7 +67,7 @@ Next areas: mitochondrial SLC25 carriers, cholesterol and sphingolipid trafficki
 
 ## Status
 
-- One gene review (`genes/human/ABCD3/`), proposing NEW `GO:0015125` (IMP).
+- One in-progress review (`genes/human/ABCD3/`), with all 81 rows actioned and a proposed `GO:0015125` IMP row.
 - Reactome R-HSA-382575 lists ABCD3 for LCFA transport but not for bile-acid CoA esters: an update to propose.
 - Collaboration with Reactome curators (P. D'Eustachio, L. Matthews).
 

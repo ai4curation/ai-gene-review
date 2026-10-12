@@ -3,3 +3,22 @@
 - Core function is mitochondrial inner-membrane transport/proton leak rather than organismal cold response [file:DANRE/ucp2/ucp2-uniprot.txt "UCP are mitochondrial transporter proteins that create proton"].
 - Fatty-acid transport annotations are retained as non-core because UniProt frames them as fatty acid flipping associated with proton currents, not the central carrier function [file:DANRE/ucp2/ucp2-uniprot.txt "associated with fatty acid flipping across the inner membrane"].
 - Tightened core MF to oxidative phosphorylation uncoupler activity because UniProt describes proton leak that uncouples oxidative phosphorylation from ATP synthesis [file:DANRE/ucp2/ucp2-uniprot.txt "oxidative phosphorylation from ATP synthesis"].
+
+## Re-review 2026-09-29
+
+The previous review cited no primary literature. Four papers were located and cached, and every review block was rewritten against them.
+
+- **Not thermogenic (GO:1990845 MARK_AS_OVER_ANNOTATED).** The zebrafish/carp UCP2 sequences were reported precisely to make this point: [PMID:10524261 "presence of UCP2 in these fish thus suggests the protein may have function(s)"] ... [PMID:10524261 "not related to thermogenesis."]. The UniProt heat sentence is a By-similarity family statement [file:DANRE/ucp2/ucp2-uniprot.txt "dissipated in the form of heat (By similarity)"]. propagation_review retained: the PAINT node carries the trait from the UCP1 branch (mouse Ucp1, MGI:MGI:98894).
+- **Core molecular function re-centred on the carrier.** UniProt now names Q9W720 "Dicarboxylate carrier UCP2" and lists the antiport reactions by similarity to human P55851 [file:DANRE/ucp2/ucp2-uniprot.txt "Antiporter that exports dicarboxylate intermediates of the"]. The underlying measurement is on reconstituted human UCP2 [PMID:24395786 "exchange of malate, oxaloacetate, and aspartate for phosphate plus a proton from"]. Added a NEW ISS row GO:0005310 dicarboxylic acid transmembrane transporter activity (aspect verified MF via QuickGO); human UCP2 carries the substrate-specific children GO:0015131/GO:0015140/GO:0015183 by IDA from the same paper.
+- **GO:0015078 changed MODIFY -> ACCEPT.** The old review proposed replacing it with GO:0017077, which already exists as its own IBA row; that was incoherent. Proton transport is the measured activity; whether the proton flux is a free leak or the counter-leg of antiport is the disputed part.
+- **GO:0017077 (was PENDING) -> KEEP_AS_NON_CORE**, not removed: UniProt keeps [file:DANRE/ucp2/ucp2-uniprot.txt "May mediate inducible proton entry into the"], but the reconstitution work asks for reconsideration of "functions ascribed to its purported uncoupling properties" [PMID:24395786 "by exporting C4 compounds out of mitochondria, UCP2 limits the oxidation of"], and cold-induced zebrafish Ucp2 gave no ROS decrease [PMID:26408847 "we did not observe any significant ROS reduction"].
+- **GO:0009409 response to cold** now has direct zebrafish support: [PMID:21464954 "expression of zucp2 increased significantly by about 3-fold at 6 and 24 h of cold exposure compared to control group."] and [PMID:26408847 "led to significant increase of ucp2"]. Kept non-core: this is induction of the gene, not work the carrier performs in a cold-response pathway.
+- **Fatty-acid rows (GO:0005324 ISS, GO:0015909 IEA) KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED.** UniProt only hedges that the proton currents are [file:DANRE/ucp2/ucp2-uniprot.txt "associated with fatty acid flipping across the inner membrane"]; no long-chain fatty acid transport by UCP2 has been measured, and fatty acids are better described as regulators.
+- GO:0005743 (IEA/ISS/IBA, the IBA was PENDING) all ACCEPT with one consistent rationale; GO:0055085 stays MODIFY -> GO:1990542.
+- A stale row (GO:1902600 IEA GO_REF:0000108) was absent from the refreshed GOA and duplicated the GO_REF:0000120 row, so it was dropped. 13 rows remain (12 GOA + 1 NEW).
+- Description rewritten as standalone biology; reference_review added to all four PMIDs; validation: 0 errors, 0 warnings.
+
+### Quote cleanup (2026-10-04)
+
+- Replaced 3 ellipsis-spliced falcon deep-research quotes in the references findings (mitochondrial carrier family architecture; mild-uncoupling proton leak model; UCP2-5 cold-acclimatization induction) with the contiguous source sentences, keeping the source's `**` emphasis and non-breaking hyphens.
+- No action, reason or term changed; `just validate DANRE ucp2` passes with zero errors.
