@@ -11,6 +11,7 @@ It runs under pytest too (`tests/test_dismech_alignment_page_guards.py`), so a r
 a refusal fails the suite rather than waiting to be noticed.
 """
 import os
+import re
 import subprocess
 import sys
 
@@ -141,81 +142,84 @@ _REV_STATE = {}
 
 
 def _rev_state(rev):
-    """One definite state for a revision: absent, local, published, or unknown.
+    """Three facts about a recorded revision, kept to their own scopes.
 
-    Two separable questions were collapsed into one boolean here, and reporting the wrong
-    one cost both answers. "Did the audit's inputs move" is answerable from the local
-    object store; "can a reader reproduce this" needs reachability from a pushed ref. A
-    revision committed here but not yet pushed answers the first perfectly and the second
-    negatively, and gating the drift question on publication printed "a tree assembled for
-    that run rather than something committed - so there is nothing to compare its inputs
-    against" for it, both clauses false.
+    Rounds 13 to 15 each got this wrong by letting one fact stand in for another, so the
+    scopes are stated here rather than left to the call sites:
 
-    `absent` is its own state rather than folding into a tooling failure, which is the
-    distinction this project has now drawn in aspect(), the dirty flags, term_aspects,
-    flag_groups and twice in this function's own history. for-each-ref exits 129 with
-    "no such commit" for an absent object, so object existence is asked first and
-    separately rather than inferred from that exit code.
+    * **published** - reachable from a remote-tracking ref. Environment-independent in its
+      consequence: a revision on no pushed ref is in nobody's clone, which is a fact about
+      the revision and safe to put on a published page.
+    * **local** - the object is in *this* checkout. Purely local: CI clones at
+      ``fetch-depth: 1``, so an ordinary pushed commit is absent there. It licenses
+      *computing* a diff and licenses no claim about the revision itself - in particular
+      never a claim about *why* it is missing, which git cannot answer and which earlier
+      rounds glossed as "a tree assembled for that run".
+    * the drift answer itself, which needs the object present and, once computed, is a fact
+      about two commits and so the same everywhere.
 
-    Memoized: a render asks about two revisions and each caller asked twice.
+    Returns ``published``, ``unpublished`` (object here, on no pushed ref), ``not_here``
+    (object absent from this checkout, so nothing can be said either way) or ``unknown``
+    (git could not be asked).
+
+    Memoized, which on this run never hits: the two callers ask about two different
+    revisions, one each. It is here so that adding a caller cannot quietly multiply git
+    calls - an earlier comment claimed each caller asked twice, which was not true of that
+    code either.
     """
     if rev in _REV_STATE:
         return _REV_STATE[rev]
     state = "unknown"
+    # `cat-file -e`, not `rev-parse --verify`, which exits 0 for any well-formed 40-character
+    # sha whether or not an object matches it.
     if subprocess.run(["git", "cat-file", "-e", f"{rev}^{{commit}}"],
                       capture_output=True).returncode != 0:
-        # Not `rev-parse --verify`, which exits 0 for any well-formed 40-character sha
-        # whether or not an object matches it.
-        state = "absent"
+        state = "not_here"
     else:
         r = subprocess.run(["git", "for-each-ref", "--contains", rev, "refs/remotes"],
                            capture_output=True, text=True)
         if r.returncode == 0:
-            state = "published" if r.stdout.strip() else "local"
+            state = "published" if r.stdout.strip() else "unpublished"
     _REV_STATE[rev] = state
     return state
 
 
-def _reproducible_clause(state):
-    """What the revision's publication means for a reader, as its own clause.
-
-    Separate from the drift answer on purpose: publication bears on whether a reader can
-    re-run the comparison, not on whether the inputs moved.
-    """
-    return {
-        "published": "",
-        "local": " That revision is on no pushed ref, so a clone cannot re-run this"
-                 " comparison even though it holds here.",
-        "unknown": " Whether that revision is published could not be determined, so nothing"
-                   " is claimed about reproducing this from a clone.",
-    }.get(state, "")
+# What each state means for a reader, as its own clause. Appended after the drift answer,
+# because publication bears on whether a reader can re-run the comparison rather than on
+# whether the inputs moved. Every state has an entry; `_alt_drift_tail` reaches all four,
+# since `not_here` and `unknown` end the drift answer rather than replacing this clause.
+_REPRODUCIBLE = {
+    "published": "",
+    "unpublished": " That revision is on no pushed ref, so no clone holds it and this"
+                   " comparison cannot be re-run elsewhere.",
+    "not_here": " Whether that revision is published could not be determined here, since"
+                " this checkout does not hold the object - a shallow clone will not.",
+    "unknown": " Whether that revision is published could not be determined, so nothing is"
+               " claimed about re-running this elsewhere.",
+}
 
 
 def _primary_drift_tail():
-    """The same question for the primary report, whose tree the table renders from.
+    """What can be said about the primary report's own tree, whose figures the table shows.
 
-    Hardcoded prose about it previously sat inside one of the second report's branches, so
-    most of them said nothing, and it asserted that the primary tree "is not a commit here"
-    - true of a tree assembled for the run and false once the slices merge and the audit
-    runs from an ordinary checkout. Derived, and each state has its own sentence, including
-    the git-failure one: an earlier version tested `not _published(rev)`, under which a git
-    failure rendered as a confident claim that no clone holds the tree the table was built
-    from.
+    Leads with publication rather than with local presence. "Is a commit here" was true on
+    the machine that rendered it and false for every reader, which is the environment
+    dependence this function has now been corrected for twice; whether a revision is on a
+    pushed ref is a fact about the revision.
     """
     rev = (PROV or {}).get("aigr_revision")
     if not rev:
-        return "The primary run records no revision, so its tree cannot be located here."
+        return "The primary run records no revision, so its tree cannot be located."
     short = rev[:9]
     return {
-        "absent": f"The primary run's own tree (`{short}`) is not a commit in this repository"
-                  " - it was assembled for that run - so the same comparison cannot be made"
-                  " for the table's own figures.",
-        "local": f"The primary run's tree (`{short}`) is a commit here but is on no pushed ref,"
-                 " so the same comparison can be made in this checkout and not from a clone.",
-        "published": f"The primary run's tree (`{short}`) is published, so the same comparison"
-                     " can be made for the table's own figures.",
-        "unknown": f"Whether the primary run's tree (`{short}`) is in this repository could not"
-                   " be determined, so nothing is claimed about the table's own figures.",
+        "published": f"The primary run's tree (`{short}`) is on a pushed ref, so the same"
+                     " comparison can be made for the table's own figures.",
+        "unpublished": f"The primary run's tree (`{short}`) is on no pushed ref, so no clone"
+                       " holds it and the same comparison cannot be made from one.",
+        "not_here": f"The primary run's tree (`{short}`) is not in this checkout, so nothing"
+                    " is claimed about whether a clone could compare the table's own figures.",
+        "unknown": f"Whether the primary run's tree (`{short}`) is published could not be"
+                   " determined, so nothing is claimed about the table's own figures.",
     }[_rev_state(rev)]
 
 
@@ -226,17 +230,14 @@ def _alt_drift_tail():
     carries each round's own changes comes after the audit that fed it. That is honest
     provenance and not a defect, but it leaves a reader checking the branch out on a
     different commit from the one the figures were read on - so whether it matters is
-    measured here rather than assumed either way.
+    measured rather than assumed. It is not *necessarily* an ancestor: a run over a tree
+    assembled for the run records a revision no clone has.
 
-    It is not necessarily an ancestor, which an earlier version of this docstring asserted
-    while the body already branched on it: a run over a tree assembled for the run rather
-    than committed records a revision no clone has.
+    Ancestry is tested before publication, and publication is reported as its own clause:
+    a revision committed here and not yet pushed answers the drift question perfectly, and
+    gating on publication once printed that there was nothing to compare.
 
-    Ancestry is tested before publication, which an earlier version had the other way
-    round: a revision committed here and not yet pushed answers the drift question
-    perfectly, and gating on publication printed that there was nothing to compare. What
-    publication bears on is whether a reader can re-run the comparison, which is appended
-    as its own clause.
+    The caller closes the sentence, so nothing returned here carries a terminal period.
     """
     rev = (ALT_PROV or {}).get("aigr_revision")
     if not rev:
@@ -250,43 +251,41 @@ def _alt_drift_tail():
     if rev == head:
         return f" at `{rev[:9]}`, which is this branch's tip"
     state = _rev_state(rev)
-    if state == "absent":
-        return (f" at `{rev[:9]}`, which is not a commit in this repository - a tree assembled"
-                " for that run rather than something committed - so there is nothing here to"
-                " compare its inputs against")
-    if state == "unknown":
-        return (f" at `{rev[:9]}`; git could not be asked about that revision, so nothing is"
-                " claimed about whether the audit's inputs moved since")
+    if state in ("not_here", "unknown"):
+        # No gloss on *why* the object is missing: a shallow clone, a pruned object and a
+        # tree never committed are indistinguishable here, and earlier rounds asserted the
+        # last of the three.
+        return (f" at `{rev[:9]}`, which this checkout does not hold, so the comparison was"
+                f" not made here.{_REPRODUCIBLE[state]}".rstrip())
     anc = subprocess.run(["git", "merge-base", "--is-ancestor", rev, "HEAD"],
                          capture_output=True)
     if anc.returncode == 1:
-        # No gloss about what the revision is: it may be an unpushed tree or a commit on
-        # another branch. The knowable fact is only that it is not an ancestor.
         base = (f" at `{rev[:9]}`, which is not an ancestor of this branch's tip, so the two"
                 " cannot be compared by diffing and the figures stand only for the recorded"
                 " tree")
-        return base + ("." + _reproducible_clause(state) if _reproducible_clause(state) else "")
-    if anc.returncode != 0:
+    elif anc.returncode != 0:
         return (f" at `{rev[:9]}`; git could not say whether it is an ancestor of this branch,"
                 " so nothing is claimed")
-    try:
-        out = subprocess.run(["git", "diff", "--name-only", f"{rev}..HEAD", "--",
-                              "genes", "modules"],
-                             capture_output=True, text=True, check=True).stdout.split()
-    except Exception:
-        return (f" at `{rev[:9]}`, an ancestor of the branch tip; git could not list what"
-                " changed between the two, so nothing is claimed")
-    # Each of these ends the sentence the caller opened, then the reproducibility clause is
-    # its own sentence after it. The caller appends no period, so these carry theirs.
-    if not out:
-        base = (f" at `{rev[:9]}`, an ancestor of the branch tip, with no file under `genes/`"
-                " or `modules/` changed between the two - the audit's whole input surface - so"
-                " the figures stand for either")
     else:
-        base = (f" at `{rev[:9]}`, an ancestor of the branch tip, with **{len(out)} of the"
-                " audit's input files changed between the two**, so the figures below describe"
-                f" the recorded commit rather than the tip - e.g. `{out[0]}`")
-    return base + ("." + _reproducible_clause(state) if _reproducible_clause(state) else "")
+        try:
+            out = subprocess.run(["git", "diff", "--name-only", f"{rev}..HEAD", "--",
+                                  "genes", "modules"],
+                                 capture_output=True, text=True, check=True).stdout.split()
+        except Exception:
+            return (f" at `{rev[:9]}`, an ancestor of the branch tip; git could not list what"
+                    " changed between the two, so nothing is claimed")
+        if not out:
+            base = (f" at `{rev[:9]}`, an ancestor of the branch tip, with no file under"
+                    " `genes/` or `modules/` changed between the two - the audit's whole input"
+                    " surface - so the figures stand for either")
+        else:
+            base = (f" at `{rev[:9]}`, an ancestor of the branch tip, with **{len(out)} of the"
+                    " audit's input files changed between the two**, so the figures below"
+                    f" describe the recorded commit rather than the tip - e.g. `{out[0]}`")
+    clause = _REPRODUCIBLE[state]
+    # The clause is a sentence of its own, so it needs the period the caller would otherwise
+    # supply after `base`; without a clause, `base` is left for the caller to close.
+    return base + ("." + clause if clause else "")
 
 
 def alt_comparison():
@@ -1164,6 +1163,21 @@ if PROV:
     )
     if PROV.get("aigr_tree"):
         lines.append(f"- ai-gene-review tree: {PROV['aigr_tree']}")
+    # aigr_tree is operator-supplied text and routinely names a sha in prose. Nothing
+    # compared it with aigr_revision, so the parenthetical and the derived sentence below
+    # agreed only by coincidence. Checked rather than trusted: any 7-to-40 hex run in that
+    # text that looks like a sha must be a prefix of, or prefixed by, the recorded revision.
+    # The text legitimately names several revisions - the base commit, each merged branch
+    # tip, the resulting merge - so the invariant is not "every sha is the recorded one",
+    # which a first draft of this check asserted and which the committed text refutes. It is
+    # that the revision the report records appears among them: otherwise the prose and the
+    # derived sentence below describe different commits.
+    _rev = PROV.get("aigr_revision") or ""
+    _named = re.findall(r"\b[0-9a-f]{7,40}\b", PROV.get("aigr_tree") or "")
+    if _rev and _named and not any(_rev.startswith(m) or m.startswith(_rev) for m in _named):
+        sys.exit(f"the primary report's aigr_tree text names {', '.join(_named[:4])} but not "
+                 f"the revision it records (`{_rev[:9]}`); the provenance block and the "
+                 "derived sentence below would describe different commits")
     # Outside alt_comparison(), which returns nothing without a second report: this is a
     # claim about the primary report alone, and the table renders from it either way.
     lines.append(f"- {_primary_drift_tail()}")

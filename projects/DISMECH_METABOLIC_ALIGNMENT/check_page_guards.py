@@ -66,8 +66,12 @@ def _strip_cover(rep, genes):
 # test was taken. The three OK cases exist to prove a clause renders, so without a string to
 # look for they would still have passed with that clause deleted.
 CASES = [
+    # Deliberately NOT the drift clause: that sentence depends on whether this checkout
+    # holds the second run's recorded revision, which CI's `fetch-depth: 1` guarantees it
+    # does not. Declaring it made the suite's green depend on clone depth. The flag-count
+    # line is derived from the reports alone.
     ("untampered", "OK", lambda p, a: None,
-     "no file under `genes/` or `modules/` changed"),
+     "Flag counts on principal rows:"),
     ("audit_sha256 differs", "EXIT",
      lambda p, a: a["provenance"].update(audit_sha256="deadbeefdead"),
      "produced by different align_audit.py versions"),
@@ -107,12 +111,15 @@ CASES = [
     ("aspect_unresolved non-empty", "OK",
      lambda p, a: p["provenance"].__setitem__("aspect_unresolved", ["GO:0000001"]),
      "sit under no single aspect root"),
+    # Distinct invented names, so the assertion shows which report's injection fired: the
+    # guard reads the union of both reports' flags, and one string could not tell the two
+    # cases apart - which is the split they exist to prove.
     ("a flag with no glossary entry, primary", "EXIT",
-     lambda p, a: p["entries"][0]["genes"][0]["flags"].append("NEWLY_INVENTED_FLAG"),
-     "no entry in FLAG_GLOSS: NEWLY_INVENTED_FLAG"),
+     lambda p, a: p["entries"][0]["genes"][0]["flags"].append("INVENTED_IN_PRIMARY"),
+     "no entry in FLAG_GLOSS: INVENTED_IN_PRIMARY"),
     ("a flag with no glossary entry, second", "EXIT",
-     lambda p, a: a["entries"][0]["genes"][0]["flags"].append("NEWLY_INVENTED_FLAG"),
-     "no entry in FLAG_GLOSS: NEWLY_INVENTED_FLAG"),
+     lambda p, a: a["entries"][0]["genes"][0]["flags"].append("INVENTED_IN_SECOND"),
+     "no entry in FLAG_GLOSS: INVENTED_IN_SECOND"),
     ("a principal module flag with no stated reason", "EXIT",
      lambda p, a: _add_flag_to_principal(p, "MODULE_NOT_COVERING"),
      "MODULE_REASONS has no entry for principal rows"),
@@ -126,14 +133,27 @@ CASES = [
     ("coverage shown for none of its group", "EXIT",
      lambda p, a: [_strip_cover(d, {"COQ8A", "HAO1", "TMEM70"}) for d in (p, a)],
      "cover_evidence shows 0 of 1 rows"),
+    ("aigr_tree prose names no revision the report records", "EXIT",
+     lambda p, a: p["provenance"].update(
+         aigr_revision="deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"),
+     "but not the revision it records"),
 ]
 
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     only = None
-    if argv and argv[0] == "--case":
-        only = argv[1]
+    # Fails on a bare --case and on anything unrecognised, rather than ignoring it and
+    # reporting success over all 21 cases as though it had filtered.
+    while argv:
+        arg = argv.pop(0)
+        if arg == "--case":
+            if not argv:
+                sys.exit("--case needs a substring; names are:\n  "
+                         + "\n  ".join(c[0] for c in CASES))
+            only = argv.pop(0)
+        else:
+            sys.exit(f"unrecognised argument {arg!r}; the only option is --case <substring>")
     cases = [c for c in CASES if only is None or only.lower() in c[0].lower()]
     if not cases:
         sys.exit(f"no case matches {only!r}; names are:\n  "
@@ -142,16 +162,27 @@ def main(argv=None):
     alt = yaml.safe_load(open(ALT))
     bad = 0
     with tempfile.TemporaryDirectory() as tmp:
+        pp0, ap0 = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
+        yaml.safe_dump(primary, open(pp0, "w"), sort_keys=False)
+        yaml.safe_dump(alt, open(ap0, "w"), sort_keys=False)
+        on_disk_mutated = {pp0: False, ap0: False}
         for name, want, mutate, expect in cases:
             p, a = copy.deepcopy(primary), copy.deepcopy(alt)
             mutate(p, a)
             pp, ap = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
+            # Removed between cases so a previous render cannot satisfy this case's clause.
             out_md = os.path.join(tmp, "out.md")
-            for f in (out_md,):
-                if os.path.exists(f):
-                    os.remove(f)
-            yaml.safe_dump(p, open(pp, "w"), sort_keys=False)
-            yaml.safe_dump(a, open(ap, "w"), sort_keys=False)
+            if os.path.exists(out_md):
+                os.remove(out_md)
+            # Each report is ~100 KB of YAML and most cases mutate one of the two, so a
+            # report is re-dumped only when this case mutated it, or when the previous case
+            # left a mutation on disk. Skipping that second condition silently reused the
+            # previous case's mutation and failed three cases.
+            for obj, path, pristine in ((p, pp, primary), (a, ap, alt)):
+                mutated = obj != pristine
+                if mutated or on_disk_mutated[path]:
+                    yaml.safe_dump(obj, open(path, "w"), sort_keys=False)
+                on_disk_mutated[path] = mutated
             r = subprocess.run([sys.executable, GEN, pp, out_md, ap],
                                capture_output=True, text=True)
             got = "EXIT" if r.returncode else "OK"
