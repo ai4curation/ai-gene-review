@@ -63,20 +63,32 @@ def base_summary(path: str, idx: int, ann: dict) -> str | None:
 
 
 # CAT5's last clause is a per-protein factual claim; check it against the gene's own GOA rows
-# instead of trusting the decision file.
+# and UniProt FUNCTION text instead of trusting the decision file.
 NO_BINDING = "record no experimental proteoglycan, heparin or lipid binding"
 EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "IC", "TAS", "HTP", "HDA", "HMP", "HGI", "HEP"}
-BINDING = re.compile(r"(lipid|heparin|heparan|glycosaminoglycan|proteoglycan|phosphatidyl|ganglioside|sphingo|"
-                     r"ceramide|sterol|fatty acid).*(binding|chaperone|carrier|transfer)", re.I)
+LIPID = (r"lipid|lipoprotein|heparin|heparan|glycosaminoglycan|proteoglycan|phosphatid|ganglioside|sphingo|"
+         r"ceramide|sterol|fatty acid|retinol|cardiolipin")
+BINDING = re.compile(rf"({LIPID}).*(binding|chaperone|carrier|transfer)", re.I)
+BINDING_IDS = {"GO:0008201", "GO:0043394", "GO:0043395", "GO:0005539", "GO:0005543", "GO:0008289", "GO:0001786",
+               "GO:7770043", "GO:0070300", "GO:0030169", "GO:0008035", "GO:0019841"}
+# an unhedged "Binds ..." sentence naming a lipid or glycosaminoglycan ("May bind" does not match)
+UNIPROT_BINDS = re.compile(rf"(?<![Mm]ay )\bbinds?\b[^.]*\b({LIPID})", re.I)
 
 
-def binding_rows(organism: str, gene: str) -> list[str]:
-    path = os.path.join(ROOT, "genes", organism, gene, f"{gene}-goa.tsv")
-    with open(path) as fh:
-        return sorted({f'{r["GO TERM"]} {r["GO NAME"]} ({r["GO EVIDENCE CODE"]})'
-                       for r in csv.DictReader(fh, delimiter="\t")
-                       if r["GO ASPECT"] == "molecular_function" and "NOT" not in r["QUALIFIER"]
-                       and r["GO EVIDENCE CODE"] in EXPERIMENTAL and BINDING.search(r["GO NAME"])})
+def binding_evidence(organism: str, gene: str) -> list[str]:
+    folder = os.path.join(ROOT, "genes", organism, gene)
+    with open(os.path.join(folder, f"{gene}-goa.tsv")) as fh:
+        hits = {f'{r["GO TERM"]} {r["GO NAME"]} ({r["GO EVIDENCE CODE"]})'
+                for r in csv.DictReader(fh, delimiter="\t")
+                if r["GO ASPECT"] == "molecular_function" and "NOT" not in r["QUALIFIER"]
+                and r["GO EVIDENCE CODE"] in EXPERIMENTAL
+                and (r["GO TERM"] in BINDING_IDS
+                     or (BINDING.search(r["GO NAME"]) and "receptor binding" not in r["GO NAME"]))}
+    with open(os.path.join(folder, f"{gene}-uniprot.txt")) as fh:
+        text = re.sub(r"\s+", " ", " ".join(line[5:] for line in fh if line.startswith("CC   ")))
+    for block in re.findall(r"-!- FUNCTION: (.*?)(?= -!- |$)", text):
+        hits.update(f"UniProt: {m.group(0)}" for m in UNIPROT_BINDS.finditer(block))
+    return sorted(hits)
 
 
 def main() -> int:
@@ -102,8 +114,8 @@ def main() -> int:
         key = (d["gene"], d["row_index"])
         action, basis = R.get(key, G[d["gene"]])
         if NO_BINDING in basis:
-            hits = binding_rows(d["organism"], d["gene"])
-            assert not hits, f"{key}: CAT5 says no experimental lipid/proteoglycan binding, but GOA has {hits}"
+            hits = binding_evidence(d["organism"], d["gene"])
+            assert not hits, f"{key}: CAT5 says no experimental lipid/proteoglycan binding, but found {hits}"
         old = d["current_action"]
         changed = action != old
         records.append({"gene": f'{d["organism"]}/{d["gene"]}', "row_index": d["row_index"], "term": d["term"],

@@ -222,8 +222,14 @@ G = {
     "SCAMP3": note(CAT1, "Endosomal/post-Golgi membrane protein. The earlier ACCEPT said SCAMP3 is required for EV "
                          "biogenesis, but the cited work (PMID:19158374, PMID:23418353) shows it regulates ESCRT-dependent "
                          "MVB sorting of EGFR, not EV biogenesis."),
-    "SCGB1A1": note(CAT5, "Secreted uteroglobin; the earlier ACCEPT rested on prostate expression, which does not establish "
-                          "EV association."),
+    "SCGB1A1": ("MARK_AS_OVER_ANNOTATED", "Secreted uteroglobin (UniProt). MISEV2018 (PMID:30637094) category 5 "
+                "allows such proteins onto EVs through specific or promiscuous (proteoglycan, lipid) receptors on the EV "
+                "surface, but asks that their identification be backed by evidence of that association. A bulk EV "
+                "proteome cannot separate surface binding from co-isolation. SCGB1A1 does bind phosphatidylcholine and "
+                "phosphatidylinositol (UniProt), but as ligands held in the central hydrophobic cavity of its "
+                "antiparallel homodimer (PubMed:7664082); no binding to membrane surfaces is recorded, so this is "
+                "ligand sequestration, not the EV-surface route. The earlier ACCEPT rested on prostate expression, "
+                "which does not establish EV association."),
     "SERINC5": note(CAT1, "Plasma-membrane multipass protein."),
     "SGSH": note(CAT5, "Soluble lysosomal sulfamidase."),
     "SHMT1": note(CAT2, "Cytoplasmic serine hydroxymethyltransferase."),

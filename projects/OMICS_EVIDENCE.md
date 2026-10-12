@@ -431,6 +431,16 @@ fails if that gene's GOA has an experimental binding, chaperone, carrier or tran
 for a lipid, heparin, heparan, glycosaminoglycan or proteoglycan. No other category-5
 protein trips it.
 
+The re-review then found SCGB1A1, whose evidence is in UniProt rather than GOA: it binds
+phosphatidylcholine and phosphatidylinositol. Those are ligands held in the central
+hydrophobic cavity of its homodimer (PubMed:7664082), not an EV-surface association, so
+its exosome row stays over-annotated, but its reason now says this instead of the
+template clause. The check now also reads each gene's UniProt FUNCTION text for an
+unhedged "binds" sentence naming a lipid or glycosaminoglycan, and matches a list of GO
+ids (lipoprotein particle, phosphatidic acid and retinol binding among them) as well as
+term names. Across both passes SCGB1A1 is the only hit, and its reason no longer
+carries the clause.
+
 ### 2026-10-10: third round of automated-review fixes
 
 The reviewer found that the category-5 template still claimed "none is shown" for an
