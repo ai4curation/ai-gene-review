@@ -26,6 +26,9 @@ sidecars:
 manifest:
   slides:
     - href: TREEGRAFTER/slides/TREEGRAFTER-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/Wi9WbyuGcFMPSKNmXX1UoP
+      title: Project brief
 ---
 
 # TreeGrafter Inference Evaluation
@@ -684,6 +687,23 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   adhesion). The case study reads the cadherin set as a whole as a
   taxon-blind graft ("4-like"); row by row, only host-context reasons are
   stated explicitly enough to classify.
+- **Corpus-wide provenance (side query, 2026-10-11).** A GO-DB analysis of
+  PomBase's contribution to TreeGrafter
+  ([brief](https://claude.ai/artifact/Dgcj1MxMh8RHa8buu2MC5h); the build
+  scripts are not in this repo) walks every TreeGrafter graft node in
+  `goa_uniprot_all` up the PANTHER 19 trees to the nearest same-term IBD. Of
+  166.8M TreeGrafter annotations, 90.1% trace to a same-term IBA on an
+  ancestor, usually several steps above the graft: only 4.9M come from an IBD
+  on the graft node itself. The other 9.9% have no same-term IBA on their
+  path. For 3.0M of these an ancestor now carries an IBA to a more specific
+  term, consistent with PAINT refining the IBD after the TreeGrafter run
+  (dated 2026-07-27) while TreeGrafter still emits the coarser parent. Example:
+  PTHR28283 root `PTN002001416` now has `GO:0110034`, but 2,350 TreeGrafter
+  rows still carry the parent `GO:1902660` (negative regulation of glucose
+  mediated signaling pathway), including on bacterial proteins. This
+  run-lag is a second source of the "too coarse" and out-of-context inherited
+  terms counted above, separate from IBD placement. It is not measured in
+  this corpus.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -1087,7 +1107,3 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   outside this audit's scope) while the more specific `GO:0005829` cytosol is
   `KEEP_AS_NON_CORE`, so the less specific term currently reads as the core one.
   `pdxB` and `pdxJ` have the consistent pairing.
-
-## Slides
-
-- [Slides](TREEGRAFTER/slides/TREEGRAFTER-slides.html) (Marp source: [TREEGRAFTER-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/TREEGRAFTER/slides/TREEGRAFTER-slides.md))
