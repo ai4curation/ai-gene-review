@@ -23,6 +23,10 @@ Each ARBA process row in a reviewed gene is classified:
                            (``other_modules`` lists modules P does fill).
 * ``NO_MODULE``          - no module's process falls under T; not scored.
 
+Only modules applicable to O are considered: a module with ``context.taxa`` applies
+when O's NCBI lineage (UniProt taxonomy REST, cached) includes one of those taxa;
+a module without taxa applies everywhere.
+
 The verdict is then cross-tabulated against the gene review's action on that row.
 Oracle results are fetched live from QuickGO and cached under ``.cache/``; nothing
 is hard-coded. A failed fetch counts as "absent" and is reported in RESULTS.md.
@@ -48,7 +52,6 @@ import yaml
 from oaklib import get_adapter
 
 from ai_gene_review.module_logic import (
-    And,
     Atom,
     compile_module,
     is_satisfied,
@@ -59,6 +62,7 @@ from ai_gene_review.module_logic import (
 
 HERE = Path(__file__).parent
 CACHE = Path(".cache/arba_deployment/quickgo.json")
+LINEAGE_CACHE = Path(".cache/arba_deployment/lineage.json")
 ARBA = "GO_REF:0000117"
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 PREDS = ["rdfs:subClassOf", "BFO:0000050"]
@@ -84,10 +88,30 @@ def load_modules() -> list[dict]:
                     if str((c.get("term") or {}).get("id", "")).startswith("GO:")]
         circuit = compile_module(doc)
         atoms = list(iter_atoms(circuit))
+        taxa = {str((t.get("term") or {}).get("id", "")).split(":")[-1]
+                for t in (doc["module"].get("context") or {}).get("taxa") or []}
+        taxa.discard("")
         if concepts and any(a.function_ids for a in atoms):
-            out.append({"id": Path(path).stem, "concepts": concepts,
+            out.append({"id": Path(path).stem, "concepts": concepts, "taxa": taxa,
                         "circuit": circuit, "atoms": atoms})
     return out
+
+
+def lineage(taxon: str) -> dict:
+    """NCBI lineage ids of ``taxon`` (inclusive) from UniProt taxonomy REST."""
+    try:
+        r = requests.get(f"https://rest.uniprot.org/taxonomy/{taxon}",
+                         headers={"Accept": "application/json"}, timeout=60)
+        r.raise_for_status()
+        ids = [str(x["taxonId"]) for x in r.json().get("lineage") or []]
+        return {"ok": True, "ids": ids + [taxon]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200], "ids": [taxon]}
+
+
+def applies(module: dict, lineage_ids: set[str]) -> bool:
+    """A module applies to an organism inside any of its declared taxa (or if it has none)."""
+    return not module["taxa"] or bool(module["taxa"] & lineage_ids)
 
 
 def fills(atom: Atom, mf_closure: set[str]) -> bool:
@@ -141,15 +165,25 @@ def gene_rows() -> list[dict]:
 
 
 def main() -> None:
-    modules = load_modules()
+    all_modules = load_modules()
     genes = gene_rows()
+
+    lineages = json.loads(LINEAGE_CACHE.read_text()) if LINEAGE_CACHE.exists() else {}
+    taxa = sorted({g["taxon"] for g in genes if not lineages.get(g["taxon"], {}).get("ok")})
+    with ThreadPoolExecutor(8) as pool:
+        for t, res in zip(taxa, pool.map(lineage, taxa)):
+            lineages[t] = res
+    LINEAGE_CACHE.parent.mkdir(parents=True, exist_ok=True)
+    LINEAGE_CACHE.write_text(json.dumps(lineages, indent=0, sort_keys=True))
+    for g in genes:
+        g["modules"] = [m for m in all_modules if applies(m, set(lineages[g["taxon"]]["ids"]))]
 
     # Which modules does each protein fill a step of, and which (taxon, MF) lookups follow?
     needed: set[tuple[str, str]] = set()
     for g in genes:
-        g["filled"] = {m["id"]: [a for a in m["atoms"] if fills(a, g["closure"])] for m in modules}
+        g["filled"] = {m["id"]: [a for a in m["atoms"] if fills(a, g["closure"])] for m in g["modules"]}
         g["filled"] = {k: v for k, v in g["filled"].items() if v}
-        for m in modules:
+        for m in g["modules"]:
             if m["id"] in g["filled"]:
                 needed |= {(g["taxon"], f) for a in m["atoms"] for f in a.function_ids}
 
@@ -161,7 +195,7 @@ def main() -> None:
     CACHE.parent.mkdir(parents=True, exist_ok=True)
     CACHE.write_text(json.dumps(cache, indent=0, sort_keys=True))
 
-    by_id = {m["id"]: m for m in modules}
+    by_id = {m["id"]: m for m in all_modules}
     out = []
     for g in genes:
         def holds(atom: Atom, g=g) -> bool:
@@ -173,7 +207,7 @@ def main() -> None:
 
         for r in g["arba"]:
             t = r["GO TERM"]
-            under = [m for m in modules if any(t in ancestors(c) for c in m["concepts"])]
+            under = [m for m in g["modules"] if any(t in ancestors(c) for c in m["concepts"])]
             mine = [m for m in under if m["id"] in g["filled"]]
             detail, gaps = [], []
             if mine:
@@ -207,10 +241,10 @@ def main() -> None:
         w = csv.DictWriter(fh, fieldnames=list(out[0]), delimiter="\t")
         w.writeheader()
         w.writerows(out)
-    write_summary(out, cache)
+    write_summary(out, cache, lineages)
 
 
-def write_summary(out: list[dict], cache: dict) -> None:
+def write_summary(out: list[dict], cache: dict, lineages: dict) -> None:
     scored = [r for r in out if r["verdict"] != "NO_MODULE"]
     verdicts = ["ENTAILED", "MODULE_INCOMPLETE", "NOT_ENTAILED"]
     actions = ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "REMOVE", "UNDECIDED", ""]
@@ -225,6 +259,8 @@ def write_summary(out: list[dict], cache: dict) -> None:
         f"- ARBA biological-process rows in reviewed genes: **{len(out)}**",
         f"- rows with a module whose process falls under the row term (scored): **{len(scored)}**",
         f"- QuickGO lookups: {len(cache)} cached, {failed} failed (failed lookups count as absent)",
+        f"- taxonomy lookups: {len(lineages)}, {sum(1 for v in lineages.values() if not v['ok'])} failed "
+        "(a failed lineage keeps only taxon-free modules)",
         "",
         "## Verdict vs. gene-review action",
         "",
