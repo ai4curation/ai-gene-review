@@ -4,6 +4,10 @@ collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, PSEPK, yeast, worm, DROME, mouse, SCHPO]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/TAqNknNyGr8Rxdxobpwtfb
+      title: Project brief
 ---
 
 # ARBA Rule Review
