@@ -82,3 +82,44 @@
     isogenic correction restores engraftment in a chimeric mouse model.
   - Clinical: CSF1R inhibitors pexidartinib (ENLIVEN) and vimseltinib (MOTION) treat tenosynovial giant cell tumor.
 - These support the suggested question on haploinsufficiency vs dominant-negative mechanisms in ALSP.
+
+
+## 2026-10-13 — source-specific augmentation
+
+This dated assessment supersedes the earlier action rationales where stated below. The preceding journal remains verbatim, including its historical quotations and source-access observations. All 116 original annotation source objects match the 116 freshly fetched groups exactly; qualifiers, evidence, references and WITH/FROM are preserved. The prior successful Falcon report and artifacts remain intact.
+
+### Receptor mechanism and products
+
+The compact core is one ligand-activated receptor tyrosine kinase, with separate CSF1 and IL34 signaling branches. GO:0061514 now provides an explicit IL34 pathway term, correcting the earlier claim that none exists. Human receptor reconstitution was performed in cloned mouse macrophages, not human macrophages: [PMID:20504948](https://pmc.ncbi.nlm.nih.gov/articles/PMC2924605/), “huIL-34 stimulated macrophage proliferation” (abstract; full original Results/Methods distinguish the human construct from mouse-host experiments).
+
+Human ectodomain studies establish CSF1 binding and D4-mediated homotypic contacts. The old D4–D5 contact wording was too definite: [PMID:22153499](https://pmc.ncbi.nlm.nih.gov/articles/PMC3260422/), “the possible contribution of D5 still remains unclear” (Discussion). The named CSF1–CSF1R complex is retained and used to refine its own source row; the generic receptor-complex core accommodates both ligands. GO:1990682 is not a captured typed child of GO:0043235. The original [PMID:22483114 supplement](https://ars.els-cdn.com/content/image/1-s2.0-S0969212612000664-mmc1.pdf) supports human IL34 ectodomain assembly and BLI for both ligands; the complete main article was not recovered.
+
+Both official products reconstruct exactly, at 972 and 306 residues. Product 2 retains canonical residues 1–296, replaces 297–306, and lacks the canonical transmembrane and kinase regions. The engineered D1–D3 proteins used for structural work are not this numbered splice product. Sequence identity does not establish secretion, ligand affinity, antagonism or equivalent signaling by product 2.
+
+### Positive interactions and source precision
+
+The earlier removal of both generic screen interactions is superseded. The standing CLINGEN_MENDELIAN binding policy retains accurate positive interactions; here, the exact EPHB2 and EPHA7 partners support protein tyrosine kinase binding (GO:1990782). Four literal co-IP/AP-MS records and eight backbone ROGID matches are recorded, including tagged/pervanadate-treated HEK293 and spoke-expansion limits. No native encounter or functional cross-phosphorylation is inferred from [PMID:35384245](https://pmc.ncbi.nlm.nih.gov/articles/PMC9171411/).
+
+The [PMID:35922511 original supplement](https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-022-05028-x/MediaObjects/41586_2022_5028_MOESM4_ESM.xlsx) directly identifies the CSF1R ectodomain in Table 1 row 343 and reciprocal CSF1–CSF1R raw absorbance values in Table 2 rows 481 and 41. These are raw screen values, not affinity estimates. Table 3 row 70 imports affinity values from PMID:22483114. The [2024 author correction](https://www.nature.com/articles/s41586-024-07928-6) changes a different figure label, a concentration unit and scRNA citations; it does not report a CSF1R target-table correction.
+
+Phosphatase binding is retained at non-core scope: substrate trapping in [PMID:16705167](https://pubmed.ncbi.nlm.nih.gov/16705167/) is a real positive interaction context even though CSF1R is the phosphatase substrate. The wild-type trapping comparison is negative; stable native complex formation and direct human construct identity are not inferred.
+
+The human MCF10A source supports inhibition of cadherin adhesion rather than generic junction maintenance: [PMID:15117969](https://pubmed.ncbi.nlm.nih.gov/15117969/), “CSF-1R disrupts cell adhesion” (abstract; actual Y561/Src, internalization and motility experiments read). The cadherin–catenin complex itself remains intact. Engineered autocrine signaling is positive experimental evidence with a stated context, not an automatic reason to reject the process. Introductory mammary duct biology is distinct from performed acinar experiments.
+
+### Developmental and viral contexts
+
+Stress and ischemia definitions include expression responses. Their breadth does not make the positive responses false; they are retained as contextual roles. Mouse forebrain differentiation, survival and olfactory-bulb phenotypes remain positive within their species and intervention scope. Precise axon guidance is UNDECIDED: the actual growth-cone chemotaxis definition is not resolved by global callosal/GFAP developmental phenotypes or the human callosal association, but absence of that function is not established either.
+
+The viral source problem and target biology are separate. [PMID:20889566](https://pmc.ncbi.nlm.nih.gov/articles/PMC2966802/) deletes Igf2r using Csf1r-promoter Cre and uses human IGF2R siRNA; it does not provide the presumed Csf1r perturbation. The inherited donor citation is marked MISCITED at that source-specific scope, with the original human source tuple preserved.
+
+Later [PMID:25060299](https://link.springer.com/article/10.1007/s13365-014-0270-6) independently supports a contextual human fetal-microglial viral-output role. Its 470 nM GW2580 result lowers extracellular HIV p24 “without appreciable cell loss” (Results). No quantified viability test, receptor genetic confirmation or target-engagement assay is supplied. Ligand-only significance depends on removal of one control outlier and must not be conflated with the separately reported inhibitor contrasts. The endpoint is p24, not infectious progeny or viral entry. The manuscript cache lists three inhibitor doses whereas final publisher Methods list only 470 nM; the shared reported 470 nM result is used. Both authentic variants remain unchanged. The row is retained as non-core, with no new viral-stage term.
+
+### Propagation and access boundaries
+
+The actual 2,746-node tree, exact 972-residue target MSA and eleven on-path positive IBDs were reconstructed. A target's own experimental evidence is not circular. Current IBD donor lists differ from the historical GOA lists at rows 24, 35, 42 and 89; both are recorded rather than silently harmonized. All eleven ARBA rule outputs have genuine target-matching branches. Current source support identifies provenance, not an automatic biological verdict.
+
+HPA supports plasma membrane and vesicles with cell-line-specific additional signals; no pixels or product-specific attribution were inspected. Seven actual Reactome paths through 24 objects identify the receptor. In the VENTX transcription event, the nuclear input is the gene while membrane CSF1R is the protein output; CSF1R is not the transcription catalyst.
+
+Full-paper access is stated per source. PMID:26754294's precise CSF1R genetic panels and PMID:22902366's exact receptor pair panel remain unverified here; their positive curated assertions are retained with deference. Full original Methods/Results recovered externally are not falsely represented as present in an abstract-only cache. No cached publication, provider artifact or historical record was edited.
+
+The [portable source-evidence index](CSF1R-source-evidence.yaml) contains literal identities, interaction and donor records, current phylogenetic/rule data, target tables and access locators. Its judgment mirrors refer to quotation hashes rather than repeat excerpts. The short new excerpts above and the current review total at most 25 words per primary source; inherited journal quotations are unchanged historical content.
