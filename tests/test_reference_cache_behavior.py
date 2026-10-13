@@ -99,6 +99,7 @@ def test_non_mapping_cache_fails_without_fetch_or_overwrite(tmp_path, metadata, 
     try:
         result = validator.validate_title("PMID:1", TITLE)
     except Exception:
+        # pytest.fail raises BaseException, so a network attempt cannot be swallowed.
         pass
     else:
         assert not result.is_valid
@@ -252,5 +253,7 @@ def test_subprocess_network_guard_is_active_through_wrapper(tmp_path, no_network
     # Unknown/unfetchable references can be advisory; the recorded attempt is
     # the assertion even if the CLI catches the guard's exception and exits 0.
     assert attempted.exists(), result.stdout + result.stderr
-    assert attempted.read_text() in {"socket.connect", "socket.getaddrinfo"}
+    event, target = attempted.read_text().split(" ", 1)
+    assert event in {"socket.connect", "socket.getaddrinfo"}
+    assert target.startswith("(") and target != "()", attempted.read_text()
     assert not (cache_dir / "PMID_1.md").exists()

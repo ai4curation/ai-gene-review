@@ -32,6 +32,13 @@ it runs. Inspect and review the resulting source changes, re-quote if needed,
 and rerun validation. Warming does not guarantee that full text is available;
 never replace a missing quotation with an invented or paraphrased one.
 
+LRV 0.3.1rc1 also changes newly fetched `url:` HTML caches from markup to
+readable text. Cache trust deliberately preserves older committed markup;
+`just warm-references` opts out of trust and allows stale URL cache entries
+to refresh. Review those source changes and validate their quotations in a
+separate cache-refresh change. The upstream cache contract preserves consumer
+metadata such as `full_text_available` across refreshes.
+
 ## Tagging convention (adopted from monarch-initiative/dismech)
 
 The sweep follows the `warm-reference-cache` workflow from the

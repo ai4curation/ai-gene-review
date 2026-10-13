@@ -140,7 +140,7 @@ def no_network_subprocess_env(tmp_path):
         "import sys\nfrom pathlib import Path\n"
         "def forbid_network(event, args):\n"
         "    if event in ('socket.connect', 'socket.getaddrinfo'):\n"
-        f"        Path({str(attempted)!r}).write_text(event)\n"
+        f"        Path({str(attempted)!r}).write_text(f'{{event}} {{args!r}}')\n"
         "        raise RuntimeError('Network forbidden in offline validation test')\n"
         "sys.addaudithook(forbid_network)\n"
     )
