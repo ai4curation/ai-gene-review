@@ -183,3 +183,11 @@ active.
   not CASP1 localizing to microtubules → MARK_AS_OVER_ANNOTATED / UNDECIDED.
 - `nucleolus` (GO:0005730, NAS PMID:28263976): that paper reports NLRP1 nucleolar localization,
   not CASP1 → MARK_AS_OVER_ANNOTATED.
+
+## Note on file provenance (merge from main)
+
+`CASP1-uniprot.txt` and `CASP1-goa.tsv` were also fetched independently on `main`
+(PR #4960) so that the GO:0050729 IDA rows cited in
+`modules/canonical_nlrp3_inflammasome.yaml` (caspase-1 `role_description`) are
+checkable from the repository. That branch carried a placeholder notes file stating
+"no gene review yet"; it is superseded by this notes file and the review added here.

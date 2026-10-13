@@ -18,3 +18,8 @@ Make the molecular work or process role explicit separately for each challenged 
 ## Final evidence and annotation-action reconciliation (2026-09-23)
 
 Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+
+## OpenScientist autophagy-architecture follow-up (2026-10-10)
+
+Read the focused report on the PTHR24348 versus PTHR44167 placement issue. The report supports the same conclusion as the earlier topology snapshot that A0BFB4 is genuinely Atg1/ULK-related rather than misplaced into PTHR24348 by a donor-count artifact. Its new target-relevant argument is narrower: A0BFB4 retains the compact kinase domain but lacks the canonical C-terminal Atg1 interaction module, and ciliates lack the Atg13/Atg17/Atg101 initiation complex. Retained the kinase MF rows and broad PAINT localizations, marked the four autophagy BP/CC rows as over-annotated, and removed autophagosome assembly / phagophore assembly site from the core function pending Paramecium-specific localization or knockdown evidence.
