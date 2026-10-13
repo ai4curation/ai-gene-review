@@ -410,6 +410,19 @@ and only warn; fix them and run `just local-quote-baseline --prune`, never add t
 If `just fetch-gene` or a re-run deep-research file changes a source so that a quote
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
+
+**Quote UniProt for evidence of a different kind, not for restated annotation.** A
+UniProt record is good support when it gives something the annotation does not:
+kinetics, binding or active sites, or curated free text tied to a publication
+(evidence `ECO:0000269` with a PubMed id). It is not support when it restates a
+classification: protein names and EC numbers (`DE`), keywords, database
+cross-references (including the record's own `DR GO` lines) or "Belongs to the X
+family". Never quote a statement whose only evidence is an ARBA rule
+(`{ECO:0000256|ARBA:...}`, `IEA:UniProtKB-ARBA`): that is machine output, and citing
+it for an ARBA annotation is circular. Validation warns on both
+(`uniprot_quote_restating_field`, `uniprot_quote_arba_sourced`;
+`src/ai_gene_review/validation/uniprot_quote_source.py`).
+
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.

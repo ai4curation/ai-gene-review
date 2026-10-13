@@ -181,6 +181,22 @@ membrane, animal organ development, catalytic activity, protein-containing
 complex). Per-rule counts are in
 [ARBA_REVIEW/gene_side_rules.tsv](ARBA_REVIEW/gene_side_rules.tsv).
 
+## ARBA output used as evidence in our own reviews
+
+Our gene reviews also cite ARBA output as if it were evidence. A UniProt
+statement whose only evidence is an ARBA rule (`{ECO:0000256|ARBA:...}`) is
+quoted as support 847 times in 253 reviews: for 255 accepted electronic
+annotations, 174 core functions, 112 reference findings and 18 new annotations
+the reviews propose. Separately, 2,768 quotes in 1,006 reviews come from fields
+that restate a classification rather than giving evidence: protein names
+(1,150), "Belongs to the X family" (667) and the record's own GO lines (320).
+
+Validation now warns on both (`uniprot_quote_arba_sourced`,
+`uniprot_quote_restating_field`); a statement that a curated UniProt rule or an
+experiment also supports is not counted as ARBA-only. The inventory is in
+[ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md](ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md), from
+[ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py).
+
 ## Quality of the rule reviews themselves
 
 The rule reviews are useful but uneven, and some of their arguments do not hold:
@@ -211,6 +227,8 @@ term, reviewers kept 93% of entailed annotations and removed none.
   with ARBA00026971 (cytoplasm) and ARBA00028763 (membrane).
 - Check the keyword heuristic against a hand-labelled sample of
   over-annotation and MODIFY rows, as was done for REMOVE.
+- Re-ground the accepted annotations and core functions whose only support is
+  ARBA-only UniProt text, starting with ARBA annotations supported that way.
 - Report the role-confusion and non-catalytic-homolog cases to UniProt with
   the gene reviews as evidence, since these are wrong rather than vague.
 
@@ -223,5 +241,8 @@ term, reviewers kept 93% of entailed annotations and removed none.
   and `gene_side_rules.tsv`
 - [ARBA_REVIEW/gene_side_remove_modes.yaml](ARBA_REVIEW/gene_side_remove_modes.yaml):
   hand classification of the 133 removed annotations
+- [ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py):
+  inventory of UniProt quotes that cite ARBA output or restating fields; writes
+  `UNIPROT_QUOTE_AUDIT.md` and `uniprot_quote_findings.tsv`
 - [docs/rule_review_workflow.md](../docs/rule_review_workflow.md): how rule
   reviews are made
