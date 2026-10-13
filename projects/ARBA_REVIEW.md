@@ -185,10 +185,6 @@ complex). Per-rule counts are in
 
 The rule reviews are useful but uneven, and some of their arguments do not hold:
 
-- Several reviews say a keyword-only or subcellular-location rule "provides no
-  GO terms". That is not so: UniProt keywords and locations are converted to GO
-  by separate mappings (GO_REF:0000043 and GO_REF:0000044), so these rules do
-  reach GO, one step removed.
 - Many reviews cite a limit of 12 condition sets as best practice. The limit is
   the analysis tool's cap, not an ARBA or GO guideline.
 - One review (ARBA00022603) is UNDECIDED with no rule data. Two concern rules
@@ -215,8 +211,6 @@ term, reviewers kept 93% of entailed annotations and removed none.
   with ARBA00026971 (cytoplasm) and ARBA00028763 (membrane).
 - Check the keyword heuristic against a hand-labelled sample of
   over-annotation and MODIFY rows, as was done for REMOVE.
-- Correct the rule reviews that treat keyword and location rules as having no
-  GO output.
 - Report the role-confusion and non-catalytic-homolog cases to UniProt with
   the gene reviews as evidence, since these are wrong rather than vague.
 
