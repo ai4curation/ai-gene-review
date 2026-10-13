@@ -371,3 +371,21 @@ def test_methionine_family_gap_candidates_are_symbols():
     assert result.gap_candidates["sulfur_incorporation"] == [
         "metB", "metC", "metY", "metZ"
     ]
+
+
+def test_atom_carries_step_function_ids():
+    """Annoton function and participant required_function become the atom's activity ids."""
+    doc = {"module": {"id": "m", "annotons": [{
+        "id": "a",
+        "function": {"term": {"id": "GO:0004617"}},
+        "participant": {"required_function": {"term": {"id": "GO:0004617"}},
+                        "family": {"representative_members": []}},
+    }, {"id": "b", "participant": {"gene": {"preferred_term": "B"}}}]}}
+    a, b = list(iter_atoms(compile_module(doc)))
+    assert a.function_ids == ("GO:0004617",)
+    assert b.function_ids == ()
+
+
+def test_serine_module_steps_have_activities():
+    atoms = list(iter_atoms(compile_module_file("modules/phosphorylated_serine_biosynthesis.yaml")))
+    assert [a.function_ids for a in atoms] == [("GO:0004617",), ("GO:0004648",), ("GO:0036424",)]
