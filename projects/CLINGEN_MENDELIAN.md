@@ -2988,22 +2988,21 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**341 of 2,876 genes are complete; 2,535 remain.**
-[CNOT1 #4820](https://github.com/ai4curation/ai-gene-review/pull/4820) adds one
-verified merged review beyond checkpoint 340. Its final revision was approved,
-the required test passed, and merge queue integration completed at
-**2026-10-11 23:54:55 UTC**. All 27 changed paths, all six gene files and all
-32 referenced PMID caches match the approved revision. The two cited Reactome entries
-and cited source-evidence file are also unchanged.
+**350 of 2,876 genes are complete; 2,526 remain.**
+[CNKSR2 #4781](https://github.com/ai4curation/ai-gene-review/pull/4781) adds one
+verified merged review beyond checkpoint 349. All 12 PR paths match the exact
+approved revision and merge commit. Checkpoint 349 separately records the
+COL6A1 and COL6A2 merges. The frozen cutoff is
+[CNKSR2 merge 3f28b1714ba5](https://github.com/ai4curation/ai-gene-review/commit/3f28b1714ba53f3d9173ed69992ac335f7e92c4c),
+at **2026-10-12 17:16:33 UTC**. Each gene counts once, including reviews with
+justified uncertainty; pending reviews and tracker publication add no completion.
 
-The frozen gene cutoff is [CNOT1 merge 9ce0404b6971](https://github.com/ai4curation/ai-gene-review/commit/9ce0404b697131c6465edbea9af026a5a4a00cf5).
-This amendment starts from the actual pending [tracker #4806 revision 7d5112b980bd](https://github.com/ai4curation/ai-gene-review/commit/7d5112b980bd82bf7af5eb2e4d99685780df40f0).
-The tracker PR remains pending; tracker publication adds no gene completion.
-Each gene counts once, including reviews with justified uncertainty.
-
-See [checkpoint 341 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-341-2026-10-11-235455-utc).
-All 235 historical queue objects, 64 previous completion updates, prior progress
-entries and existing history records are preserved. Only CNOT1 is added here.
+See [checkpoint 350 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-350-2026-10-12-171633-utc).
+All 235 historical queue objects, 71 prior completion updates, previous progress
+entries and existing histories are preserved. Checkpoints 343–349 retain their
+separate evidence. Tracker checkpoint 341 merged through
+[#4806](https://github.com/ai4curation/ai-gene-review/pull/4806); its merge is
+bookkeeping and is not counted as a gene review.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3036,6 +3035,8 @@ entries and existing history records are preserved. Only CNOT1 is added here.
 [Checkpoint 340 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-11T233509Z-codex-49c813.yaml).
 
 [Checkpoint 341 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T001215Z-codex-3576e4.yaml).
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3458,14 +3459,14 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **CLPP** — HGNC:2084; [Perrault syndrome 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_15291cb2-a541-4f88-91c8-0b441e3b64cb-2018-03-27T160000.000Z) (MONDO:0013588; AR; Definitive).
 - [ ] **CLRN1** — HGNC:12605; [Usher syndrome type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8400) (MONDO:0016485; AR; Definitive).
 - [ ] **CNGA1** — HGNC:2148; [CNGA1-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdf9374a-2ec6-4852-ac0b-ec1a3e638245-2022-10-06T160000.000Z) (MONDO:0800405; AR; Definitive).
-- [ ] **CNGA3** — HGNC:2150; [CNGA3-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_39fe36b7-54c3-486b-a9f9-19bce71f096e-2022-02-03T170000.000Z) (MONDO:0800102; AR; Definitive).
-- [ ] **CNGB1** — HGNC:2151; [CNGB1-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_664a3eaa-0139-4f5a-8f97-a4a7e00ddfd3-2022-09-01T160000.000Z) (MONDO:0800403; AR; Definitive).
+- [x] **CNGA3** — HGNC:2150; [CNGA3-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_39fe36b7-54c3-486b-a9f9-19bce71f096e-2022-02-03T170000.000Z) (MONDO:0800102; AR; Definitive).
+- [x] **CNGB1** — HGNC:2151; [CNGB1-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_664a3eaa-0139-4f5a-8f97-a4a7e00ddfd3-2022-09-01T160000.000Z) (MONDO:0800403; AR; Definitive).
 - [x] **CNGB3** — HGNC:2153; [CNGB3-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa7bad05-3d4d-4a69-b4e9-82f9224a77f4-2022-05-24T171317.094Z) (MONDO:0100446; AR; Definitive).
-- [ ] **CNKSR2** — HGNC:19701; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_420ee599-c745-43b9-b9a9-c80dfd7f68a8-2020-12-16T170000.000Z) (MONDO:0100148; XL; Definitive).
+- [x] **CNKSR2** — HGNC:19701; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_420ee599-c745-43b9-b9a9-c80dfd7f68a8-2020-12-16T170000.000Z) (MONDO:0100148; XL; Definitive).
 - [ ] **CNNM2** — HGNC:103; [hypomagnesemia, seizures, and intellectual disability 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_522bb617-c817-4536-a87b-01d4302d7bf0-2024-02-15T170000.000Z) (MONDO:0020787; SD; Definitive).
 - [ ] **CNNM4** — HGNC:105; [Jalili syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e3cedd07-df9e-4838-8a6b-b24b2802f223-2021-08-06T154836.361Z) (MONDO:0009007; AR; Definitive).
 - [x] **CNOT1** — HGNC:7877; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0684b8e2-5552-44d3-a72e-2022e273e24f-2023-09-19T100000.000Z) (MONDO:0100038; AD; Definitive); [holoprosencephaly 12 with or without pancreatic agenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91d394c9-60fe-40cb-918b-9790a08873d9-2023-09-30T160000.000Z) (MONDO:0032787; AD; Limited).
-- [ ] **CNOT3** — HGNC:7879; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_585384c5-8958-4934-af26-4040774a644c-2021-08-24T160000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **CNOT3** — HGNC:7879; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_585384c5-8958-4934-af26-4040774a644c-2021-08-24T160000.000Z) (MONDO:0100038; AD; Definitive).
 - [x] **CNTN2** — HGNC:2172; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fe53f9b9-cb21-49a2-8c24-80f63fc75f0f-2023-11-07T080000.000Z) (MONDO:0100038; AR; Definitive).
 - [ ] **CNTNAP2** — HGNC:13830; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3af732e2-062d-4bb3-a3cd-2045e460dc8f-2021-06-15T160000.000Z) (MONDO:0100038; AR; Definitive).
 - [ ] **COA6** — HGNC:18025; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa58a26c-0beb-4852-9d9d-d0913cf6c045-2024-08-22T040000.000Z) (MONDO:0044970; AR; Definitive).
@@ -3473,10 +3474,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **COA8** — HGNC:20492; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7b2b04f9-275d-45e9-acc6-ee86bf20c782-2023-07-11T160000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **COCH** — HGNC:2180; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_998da390-3e32-4b80-a733-d64d87d5357b-2018-01-05T170000.000Z) (MONDO:0019497; AD; Definitive).
 - [ ] **COG4** — HGNC:18620; [COG4-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6c9f2031-7487-45a5-abbe-ca2d27f1b09c-2023-05-17T180000.000Z) (MONDO:0013281; AR; Moderate); [microcephalic osteodysplastic dysplasia, Saul-Wilson type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3eded29d-21a3-4250-b832-8e8ee2d81baa-2023-06-05T160000.000Z) (MONDO:0019407; AD; Definitive).
-- [ ] **COG5** — HGNC:14857; [COG5-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0104222e-f6a3-445c-becb-b45fa0f7f108-2024-12-15T170000.000Z) (MONDO:0013325; AR; Definitive).
-- [ ] **COG6** — HGNC:18621; [COG6-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_600a651b-6e68-40c0-a50e-f1067c5e87bb-2024-12-08T170000.000Z) (MONDO:0013810; AR; Definitive).
+- [x] **COG5** — HGNC:14857; [COG5-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0104222e-f6a3-445c-becb-b45fa0f7f108-2024-12-15T170000.000Z) (MONDO:0013325; AR; Definitive).
+- [x] **COG6** — HGNC:18621; [COG6-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_600a651b-6e68-40c0-a50e-f1067c5e87bb-2024-12-08T170000.000Z) (MONDO:0013810; AR; Definitive).
 - [ ] **COG7** — HGNC:18622; [COG7-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_398c1212-8417-499e-8427-79a752745aec-2024-10-19T170000.000Z) (MONDO:0012118; AR; Definitive).
-- [ ] **COG8** — HGNC:18623; [COG8-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6946015a-439b-4065-972c-cc7fa732ae6b-2026-03-02T170000.000Z) (MONDO:0012635; AR; Definitive).
+- [x] **COG8** — HGNC:18623; [COG8-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6946015a-439b-4065-972c-cc7fa732ae6b-2026-03-02T170000.000Z) (MONDO:0012635; AR; Definitive).
 - [ ] **COL10A1** — HGNC:2185; [Schmid metaphyseal chondrodysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5529304a-e8aa-4e44-a544-6864b8afe78a-2024-06-28T160000.000Z) (MONDO:0007983; AD; Definitive).
 - [ ] **COL11A2** — HGNC:2187; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0665772a-ba94-4561-b597-364f7db7e4ca-2023-11-15T170000.000Z) (MONDO:0019497; AD; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_561327b9-7c55-40c3-b83c-5a3ed9d75606-2023-11-15T170000.000Z) (MONDO:0019497; AR; Moderate); [otospondylomegaepiphyseal dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_177bddd8-0566-4f80-a9f1-679ca96a7c60-2018-12-20T170000.000Z) (MONDO:0008975; AD; Definitive); [otospondylomegaepiphyseal dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_27b13a91-0a04-4393-bf1c-4f8418154c9b-2018-12-20T170000.000Z) (MONDO:0008975; AR; Definitive).
 - [ ] **COL18A1** — HGNC:2195; [Knobloch syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae24ab5e-a4a9-45eb-a52d-18e6dfebae53-2023-02-28T100000.000Z) (MONDO:0800167; AR; Definitive).
@@ -3490,8 +3491,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **COL4A5** — HGNC:2207; [Alport syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0407dc2e-1cab-4043-889d-4695b043d7b3-2019-03-19T160000.000Z) (MONDO:0018965; XL; Definitive).
 - [ ] **COL5A1** — HGNC:2209; [Ehlers-Danlos syndrome, classic type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3133eacb-2ef9-4463-8031-11d10f0e91b9-2021-03-24T151331.225Z) (MONDO:0007522; AD; Definitive).
 - [ ] **COL5A2** — HGNC:2210; [Ehlers-Danlos syndrome, classic type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1901d495-d33f-4741-88fd-4b66ac43bbad-2021-03-24T184245.711Z) (MONDO:0007522; AD; Definitive).
-- [ ] **COL6A1** — HGNC:2211; [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95ee3b63-8083-49e2-9e20-a1006ac168dd-2022-09-26T160000.000Z) (MONDO:0100225; AD; Definitive); [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9de84294-8404-4bd0-a7c6-89a9a70eb408-2022-09-26T160000.000Z) (MONDO:0100225; AR; Definitive).
-- [ ] **COL6A2** — HGNC:2212; [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a7a4dad5-f179-44ac-adcb-c5e15c11a1ec-2022-06-27T160000.000Z) (MONDO:0100225; AD; Definitive); [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c523dbfa-e08e-4bdc-82d4-6bf43480697c-2022-06-27T160000.000Z) (MONDO:0100225; AR; Definitive).
+- [x] **COL6A1** — HGNC:2211; [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95ee3b63-8083-49e2-9e20-a1006ac168dd-2022-09-26T160000.000Z) (MONDO:0100225; AD; Definitive); [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9de84294-8404-4bd0-a7c6-89a9a70eb408-2022-09-26T160000.000Z) (MONDO:0100225; AR; Definitive).
+- [x] **COL6A2** — HGNC:2212; [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a7a4dad5-f179-44ac-adcb-c5e15c11a1ec-2022-06-27T160000.000Z) (MONDO:0100225; AD; Definitive); [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c523dbfa-e08e-4bdc-82d4-6bf43480697c-2022-06-27T160000.000Z) (MONDO:0100225; AR; Definitive).
 - [ ] **COL6A3** — HGNC:2213; [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37d30e5c-61f5-4e4a-9ee7-573a2ed704b3-2022-06-27T160000.000Z) (MONDO:0100225; AD; Definitive); [collagen 6-related myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_516ffd6c-c9ea-4d8a-8364-8ec4892ad464-2022-06-27T160000.000Z) (MONDO:0100225; AR; Definitive); [dystonia 27](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8a109763-6fff-4da9-b826-7c2544d3f878-2025-08-25T160000.000Z) (MONDO:0014627; AR; Limited).
 - [ ] **COL7A1** — HGNC:2214; [recessive dystrophic epidermolysis bullosa](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_940fac3e-2586-4d49-a6f3-db12e865cc65-2022-06-20T170000.000Z) (MONDO:0009179; AR; Definitive).
 - [ ] **COL9A1** — HGNC:2217; [Stickler syndrome, type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bf2ef93-7886-464c-b177-4ed189c935ff-2025-10-08T160000.000Z) (MONDO:0013590; AR; Definitive).

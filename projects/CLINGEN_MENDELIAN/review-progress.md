@@ -66,6 +66,194 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 350 — 2026-10-12 17:16:33 UTC
+
+**350 complete / 2,526 remaining in the frozen 2,876-gene catalog.**
+CNKSR2 is the sole addition beyond checkpoint 349 and was absent from all 71
+prior completion updates. It was unchecked in that preserved proposal.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CNKSR2 | [#4781](https://github.com/ai4curation/ai-gene-review/pull/4781) | `b7e2e9e807fd9e9467a9a2731ab0daff36b568ac` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4781#pullrequestreview-5486106263) | 2026-10-12T17:16:33Z | `3f28b1714ba53f3d9173ed69992ac335f7e92c4c` |
+
+All 12 complete PR paths have identical approved-head and merge blobs. The JSON
+completion entry records their hashes and actual parent-relative path accounting.
+The later merge is disjoint from every path in the two preceding collagen PRs
+and leaves all six published tracker341 preimages unchanged. This is one primary
+gene credit, not another credit for either of its genuine history records.
+
+Update 72 adds CNKSR2 alone. Update 71 preserves the separate COL6A1/COL6A2
+proofs; all 70 earlier completion updates, all 235 historical queue objects and
+all 2,876 association texts remain exact. Completed, campaign_audited_merged and
+legacy original_merged are 350; pending_followups remains zero. Tracker #4806's
+merge remains recorded in checkpoint349 and adds no gene completion. Earlier
+checkpoint observations remain historical; this is the final frozen cutoff for
+this proposal.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
+## Completion checkpoint 349 — 2026-10-12 16:50:16 UTC
+
+**349 complete / 2,527 remaining in the frozen 2,876-gene catalog.**
+COL6A1 and COL6A2 are the only additions beyond frozen checkpoint 347. Both
+were unchecked and absent from all 70 prior completion updates.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| COL6A1 | [#4941](https://github.com/ai4curation/ai-gene-review/pull/4941) | `37f1aa9535e07fb7aface73af24c1ca4e44e0044` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4941#pullrequestreview-5486015912) | 2026-10-12T16:33:15Z | `c5d3421c60bbf6ed470b5c03263ccf70186bcd49` |
+| COL6A2 | [#4942](https://github.com/ai4curation/ai-gene-review/pull/4942) | `0d765fa4a87a383ebaa301c913d6f50b79cd2c88` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4942#pullrequestreview-5486040814) | 2026-10-12T16:50:16Z | `55a60723b3369503c6b3caaee74208918278cf3d` |
+
+The complete PR inventories contain 26 COL6A1 paths and 24 COL6A2 paths. Every
+approved-head blob equals its merge blob and its blob at the frozen main cutoff.
+The JSON completion entry records each Git blob, content hash and parent-relative
+delta, including shared caches already identical in a parent. These are two
+distinct primary genes; their products, follow-ups and history records add no
+separate credit. This checkpoint does not reassess their scientific conclusions.
+
+Update 71 adds both genes. All 70 previous updates remain exact, including the
+separate staged checkpoints 343–347. All 235 historical queue objects and all
+2,876 association texts remain unchanged. Completed, campaign_audited_merged and
+legacy original_merged are 349; pending_followups remains zero.
+
+The previously published checkpoint 341 in tracker #4806 merged at
+2026-10-12T16:07:55Z as `6091dffa32318a8f33450bb4c75a240fb5aab07c`,
+from head `260cf538c0256bcd2d678e45b688d7bffc1cfbfa`. Its six publication
+files remain exact at the cutoff. Older checkpoint entries retain their original
+observations, including the then-queued tracker state. The tracker merge adds no
+gene completion. No separate checkpoint348 proposal was created; the first
+collagen merge established348 and the second established349.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
+## Completion checkpoint 347 — 2026-10-12 14:29:11 UTC
+
+**347 complete / 2,529 remaining in the frozen 2,876-gene catalog.**
+COG5 is the sole addition beyond staged checkpoint 346. It was unchecked in
+that proposal and absent from all 69 prior completion updates.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| COG5 | [#4880](https://github.com/ai4curation/ai-gene-review/pull/4880) | `e2a1c0cead5759c0e664a98556e5aa4f840ecc6d` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4880#pullrequestreview-5484859321) | 2026-10-12T14:29:11Z | `5375ac52c3f4c4ab078b8beeec63b11853088bcb` |
+
+All 14 PR paths have identical approved-head and merge blobs, including the review,
+source artifacts and two genuine gene history records. The actual merge delta has
+13 paths; PMID_27066481.md was already identical in the parent. The JSON completion
+entry retains the exact path/blob/hash evidence. This adds one distinct gene,
+not a biological reassessment or separate credits for products or follow-ups.
+
+Update 70 contains COG5 alone. All 69 previous updates remain unchanged, including
+update 69 for COG8, update 68 for COG6, update 67 for CNGA3 and update 66 for
+CNOT3/CNGB1. All 235 queue objects and 2,876 association texts remain exact; only
+COG5's checkbox changes from staged346. Completed, campaign_audited_merged and
+legacy original_merged are 347; pending_followups remains zero. Tracker #4806 was
+observed queued at 2026-10-12 14:32:13 UTC, at
+`260cf538c0256bcd2d678e45b688d7bffc1cfbfa`; this pending proposal makes no
+change to that PR. A genuine session history will be created only at publication.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
+## Completion checkpoint 346 — 2026-10-12 14:02:20 UTC
+
+**346 complete / 2,530 remaining in the frozen 2,876-gene catalog.**
+COG8 is the sole addition beyond staged checkpoint 345. It was unchecked in
+that proposal and absent from all 68 prior completion updates.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| COG8 | [#4913](https://github.com/ai4curation/ai-gene-review/pull/4913) | `cc51fff7d8ccfae688b8d14175ed88311a0a4f49` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4913#pullrequestreview-5484876526) | 2026-10-12T14:02:20Z | `1ec0b0b2fed4675003ae94a7684ac6e20296685b` |
+
+All 15 PR paths have identical approved-head and merge blobs, including the review,
+source artifacts and two genuine gene history records. The actual merge delta has
+14 paths; PMID_27066481.md was already identical in the parent. The JSON completion
+entry retains the exact path/blob/hash evidence. This adds one distinct gene,
+not a biological reassessment or separate credits for products or follow-ups.
+
+Update 69 contains COG8 alone. All 68 previous updates remain unchanged, including
+update 68 for COG6, update 67 for CNGA3 and update 66 for CNOT3/CNGB1. All 235 queue
+objects and 2,876 association texts remain exact; only COG8's checkbox changes from
+staged345. Completed, campaign_audited_merged and legacy original_merged are 346;
+pending_followups remains zero. Tracker #4806 remains queued at
+`260cf538c0256bcd2d678e45b688d7bffc1cfbfa`; this pending proposal makes no
+change to that PR. A genuine session history will be created only at publication.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
+## Completion checkpoint 345 — 2026-10-12 13:43:54 UTC
+
+**345 complete / 2,531 remaining in the frozen 2,876-gene catalog.**
+COG6 is the sole addition beyond staged checkpoint 344. It was unchecked in
+that proposal and absent from all 67 prior completion updates.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| COG6 | [#4902](https://github.com/ai4curation/ai-gene-review/pull/4902) | `8ca06f0e055f23daf52cb9324afb049301091496` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4902#pullrequestreview-5484896251) | 2026-10-12T13:43:54Z | `91cea6ec7a9a2f8a77e79ed8636148c65a9ebcf3` |
+
+All 16 PR paths have identical approved-head and merge blobs, including the review,
+source artifacts and two genuine gene history records. The JSON completion entry
+retains exact path/blob/hash evidence. This adds one distinct gene completion,
+not a biological reassessment or separate credits for products or follow-ups.
+
+Update 68 contains COG6 alone. All 67 previous updates remain unchanged, including
+update 67 for CNGA3 and update 66 for CNOT3/CNGB1. All 235 queue objects and 2,876
+association texts remain exact; only COG6's checkbox changes from staged344.
+Completed, campaign_audited_merged and legacy original_merged are 345;
+pending_followups remains zero. Tracker #4806 remains queued at
+`260cf538c0256bcd2d678e45b688d7bffc1cfbfa`; this pending proposal makes no
+change to that PR. A genuine session history will be created only at publication.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
+## Completion checkpoint 344 — 2026-10-12 13:25:41 UTC
+
+**344 complete / 2,532 remaining in the frozen 2,876-gene catalog.**
+CNGA3 is the sole addition beyond staged checkpoint 343. It was unchecked in
+that proposal and absent from all 66 prior completion updates.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CNGA3 | [#4750](https://github.com/ai4curation/ai-gene-review/pull/4750) | `d003c2986007378390e4dcd50d9f57df773d4056` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4750#pullrequestreview-5484823656) | 2026-10-12T13:25:41Z | `b55d5643c7ba3064cf073f9d7452dadcd6b1ebed` |
+
+All 26 PR paths have identical approved-head and merge blobs, including the review,
+source artifacts and three genuine gene history records. The JSON completion entry
+retains their exact path/blob/hash evidence. This adds one distinct gene completion,
+not a new biological assessment or credit for each product, follow-up or history.
+
+Update 67 appends CNGA3 while preserving update 66 for CNOT3/CNGB1 verbatim as a
+parsed object, all earlier updates, all 235 queue objects and all 2,876 association
+texts. Only the CNGA3 checkbox changes relative to the staged343 proposal.
+Completed, campaign_audited_merged and legacy original_merged are 344;
+pending_followups remains zero. The approved tracker PR #4806 remains queued at
+`260cf538c0256bcd2d678e45b688d7bffc1cfbfa`; this is a pending proposal and does
+not alter that PR. A genuine session history will be created only at publication.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
+## Completion checkpoint 343 — 2026-10-12 01:01:00 UTC
+
+**343 complete / 2,533 remaining in the frozen 2,876-gene catalog.**
+CNOT3 and CNGB1 are the only new completions beyond checkpoint 341. Both were
+unchecked in tracker revision `260cf538c0256bcd2d678e45b688d7bffc1cfbfa` and absent from its completion additions.
+
+| Gene | PR | Approved head | Approval | API merge time UTC | Merge commit |
+|---|---|---|---|---|---|
+| CNOT3 | [#4826](https://github.com/ai4curation/ai-gene-review/pull/4826) | `69afb67456dff36741d9a7726fae178bad481908` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4826#pullrequestreview-5484342518) | 2026-10-12T00:28:15Z | `5d0b91e92a2fb621ceda58b58961b06f8dfdc888` |
+| CNGB1 | [#4772](https://github.com/ai4curation/ai-gene-review/pull/4772) | `2e5deeaf8b0738188afee353988fa40e864ad03f` | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4772#pullrequestreview-5484488856) | 2026-10-12T01:01:00Z | `d9f82bb33f6e1ee2b9a65520a05263f30d6ddc13` |
+
+The accepted merge qualifications compare all 24 CNOT3 PR paths and all 29 CNGB1
+PR paths with the approved revisions. Sixteen and 27 paths, respectively, were
+new integration changes; eight and two shared paths were already identical in
+the merge parent. All 31 CNOT3 and 26 CNGB1 cached/local references were checked.
+The JSON completion entry retains exact paths, blob identities, hashes, approvals
+and successful check receipts. This tracker amendment adds no biological claims.
+
+Exactly two catalog checkboxes change. All 2,876 association texts, frontmatter,
+235 queue objects, 65 prior completion entries and previous progress text remain
+unchanged. Update 66 is appended to identical JSON mirrors. Completed,
+campaign_audited_merged and legacy original_merged are 343; pending_followups is
+zero. Existing counter definitions and earlier checkpoint scope remain in force.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-12T175402Z-codex-078897.yaml).
+
 ## Completion checkpoint 341 — 2026-10-11 23:54:55 UTC
 
 **341 complete / 2,535 remaining in the frozen 2,876-gene catalog.**
