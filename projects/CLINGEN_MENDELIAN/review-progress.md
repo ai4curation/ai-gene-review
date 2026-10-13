@@ -66,11 +66,19 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Completion checkpoint 393 — 2026-10-13 16:34:02 UTC
+## Completion checkpoint 394 — 2026-10-13 16:34:02 UTC
 
-**393 complete / 2,483 remaining in the frozen 2,876-gene catalogue.**
-This checkpoint adds 43 distinct gene reviews to the merged checkpoint 350.
+**394 complete / 2,482 remaining in the frozen 2,876-gene catalogue.**
+This checkpoint adds 44 distinct gene reviews to the merged checkpoint 350.
 The cutoff is the final CPT1A merge `a9655bc9362c58342ad7a7d077637d13d75a3d49`.
+
+The original checkpoint omitted CPAMD8 despite its actual merge at 12:58:43 UTC,
+before this cutoff. Its [final approval](https://github.com/ai4curation/ai-gene-review/pull/4961#pullrequestreview-5494780287)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/4961#issuecomment-6130393612)
+leave no blocking request. The [ordinary merge-group validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38397964845/job/115297920929)
+passed before the merge. All 15 approved modes, types and blobs match the merge;
+its complete parent delta is exactly those 15 paths. This corrects the omission
+without moving the cutoff or counting later merges.
 
 | Gene | PR | Approved head | Merge time UTC | Merge commit | Full PR paths | Parent delta |
 |---|---|---|---|---|---:|---:|
@@ -113,14 +121,15 @@ The cutoff is the final CPT1A merge `a9655bc9362c58342ad7a7d077637d13d75a3d49`.
 | COX6B1 | [#4957](https://github.com/ai4curation/ai-gene-review/pull/4957) | `b6d6eee9972a97e45df6bf4fab32d52af3804831` | 2026-10-13T08:31:27Z | [233c920c84b2](https://github.com/ai4curation/ai-gene-review/commit/233c920c84b24fa09c0a69c7f349641f0b7ed07d) | 9 | 9 |
 | COXFA4 | [#4958](https://github.com/ai4curation/ai-gene-review/pull/4958) | `3d79a3ba499e2fee22bbfdd4c766054059a1b8e3` | 2026-10-13T10:09:26Z | [44d5a199822a](https://github.com/ai4curation/ai-gene-review/commit/44d5a199822a630b2c46ac69734618094b73e352) | 17 | 17 |
 | CP | [#4959](https://github.com/ai4curation/ai-gene-review/pull/4959) | `ad2e58fbcefb3f7d3c81cbe4a7c8c0e1b0d1ba5a` | 2026-10-13T11:29:27Z | [4a1c58370745](https://github.com/ai4curation/ai-gene-review/commit/4a1c58370745fd99071dc53c531b9f4b52d62db6) | 25 | 25 |
+| CPAMD8 | [#4961](https://github.com/ai4curation/ai-gene-review/pull/4961) | `bae41e46d9198aaed97ef99219318926f6305a14` | 2026-10-13T12:58:43Z | [6e66bd1c2eed](https://github.com/ai4curation/ai-gene-review/commit/6e66bd1c2eed3ec7a1254ea6caea596d62989858) | 15 | 15 |
 | CPLANE1 | [#4964](https://github.com/ai4curation/ai-gene-review/pull/4964) | `27fb4d6bd9639dceb273d900f93c984775ab12e2` | 2026-10-13T13:25:46Z | [a87b3c1a87ed](https://github.com/ai4curation/ai-gene-review/commit/a87b3c1a87ed64ecb1906ffb048dbdbcb4fc80df) | 12 | 12 |
 | CPAP | [#4963](https://github.com/ai4curation/ai-gene-review/pull/4963) | `965cde4fa1039cb92b3fdc59544c84dcea75acf3` | 2026-10-13T15:43:04Z | [f44840baae84](https://github.com/ai4curation/ai-gene-review/commit/f44840baae84c94bf03d35f6363c26f6a5773845) | 23 | 23 |
 | CPOX | [#4965](https://github.com/ai4curation/ai-gene-review/pull/4965) | `ad948941fff6f94a4a50c77a5e23b987c5a0046c` | 2026-10-13T16:09:26Z | [df60d6da2141](https://github.com/ai4curation/ai-gene-review/commit/df60d6da21411b5820e99cad678ae4a6c2721ff3) | 16 | 16 |
 | CPT1A | [#4968](https://github.com/ai4curation/ai-gene-review/pull/4968) | `c155487423cdd4de0660a760aece8a8ea26ce54e` | 2026-10-13T16:34:02Z | [a9655bc9362c](https://github.com/ai4curation/ai-gene-review/commit/a9655bc9362c58342ad7a7d077637d13d75a3d49) | 29 | 29 |
 
-The complete approved inventories contain 903 path occurrences across these
-43 PRs. Each approved path agrees with its actual merged mode, type and blob,
-including the confirmed deletion in COXFA4; the 832 parent-relative changes
+The complete approved inventories contain 918 path occurrences across these
+44 PRs. Each approved path agrees with its actual merged mode, type and blob,
+including the confirmed deletion in COXFA4; the 847 parent-relative changes
 contain no extra paths. Parent-identical shared paths remain part of the full
 inventories but add no integration delta or gene credit. Final approvals and
 required checks were verified in the accepted merge evidence for each PR.
@@ -129,9 +138,9 @@ COXFA4 is the single catalogue gene HGNC:7687, whose retained ClinGen source
 symbol is NDUFA4. PR #4958 removes the obsolete NDUFA4 review path and retains
 the COXFA4 review; this is one gene, not two. Its association text is unchanged.
 
-Update 73 appends these 43 genes only. All 72 prior updates, all 235 historical
+Update 73 appends these 44 genes only. All 72 prior updates, all 235 historical
 queue records, all 2,876 catalogue association texts and their order are preserved.
-Completed, campaign_audited_merged and the legacy original_merged field are 393;
+Completed, campaign_audited_merged and the legacy original_merged field are 394;
 pending_followups remains zero. Products, follow-up commits and shared sources
 do not receive separate credits.
 

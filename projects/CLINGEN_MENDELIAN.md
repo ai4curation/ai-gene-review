@@ -2988,13 +2988,14 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**393 of 2,876 genes are complete; 2,483 remain.**
-Forty-three verified merged gene reviews add to checkpoint 350. The fixed cutoff is
+**394 of 2,876 genes are complete; 2,482 remain.**
+Forty-four verified merged gene reviews add to checkpoint 350. The fixed cutoff is
 [CPT1A merge a9655bc9362c](https://github.com/ai4curation/ai-gene-review/commit/a9655bc9362c58342ad7a7d077637d13d75a3d49),
 at **2026-10-13 16:34:02 UTC**. Each catalogue gene counts once; products,
 follow-up commits, shared sources and tracker publication add no completion.
+This corrects the omitted [CPAMD8 merge #4961](https://github.com/ai4curation/ai-gene-review/pull/4961), which completed before the unchanged cutoff.
 
-See the [checkpoint 393 evidence and complete 43-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-393-2026-10-13-163402-utc).
+See the [checkpoint 394 evidence and complete 44-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-394-2026-10-13-163402-utc).
 The checkpoint 350 tracker [PR #4962](https://github.com/ai4curation/ai-gene-review/pull/4962)
 merged as [fdcbaab48e51](https://github.com/ai4curation/ai-gene-review/commit/fdcbaab48e51e3ba89d9775685ff5850a3647221)
 at **2026-10-13 12:31:49 UTC**. All 235 historical queue records, 72 prior
@@ -3507,7 +3508,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **COX6B1** — HGNC:2280; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bc374fc3-050b-4985-9f2f-a2972bb795fe-2022-03-21T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [x] **COXFA4** — HGNC:7687 (ClinGen source symbol: NDUFA4); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2854d105-0d20-4a19-9dee-d7aa6a60ed99-2021-01-14T214439.481Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4f142835-c031-4885-9ed4-897b96913558-2025-03-24T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [x] **CP** — HGNC:2295; [aceruloplasminemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c54ee607-edd6-42dc-a4ac-f4060ae6b209-2025-11-26T180000.000Z) (MONDO:0011426; AR; Definitive).
-- [ ] **CPAMD8** — HGNC:23228; [anterior segment dysgenesis 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bc4d2b2a-08d6-4869-a56e-55721fd4c9dc-2022-11-18T170000.000Z) (MONDO:0015017; AR; Definitive).
+- [x] **CPAMD8** — HGNC:23228; [anterior segment dysgenesis 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bc4d2b2a-08d6-4869-a56e-55721fd4c9dc-2022-11-18T170000.000Z) (MONDO:0015017; AR; Definitive).
 - [x] **CPAP** — HGNC:17272 (ClinGen source symbol: CENPJ); [microcephaly 6 with or without short stature](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c10510c1-2c0e-466e-928a-77d896159d06-2022-05-21T104414.354Z) (MONDO:0700054; AR; Definitive).
 - [x] **CPLANE1** — HGNC:25801; [Joubert syndrome 17](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_954cdc22-7834-4876-a64e-27d56615c1ff-2022-05-20T114241.088Z) (MONDO:0013824; AR; Definitive).
 - [x] **CPOX** — HGNC:2321; [CPOX-related hereditary coproporphyria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f7cfd579-9ded-4e8a-b8be-c1a6e573e28b-2023-01-27T170000.000Z) (MONDO:0800180; SD; Definitive).
