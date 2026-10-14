@@ -181,28 +181,29 @@ membrane, animal organ development, catalytic activity, protein-containing
 complex). Per-rule counts are in
 [ARBA_REVIEW/gene_side_rules.tsv](ARBA_REVIEW/gene_side_rules.tsv).
 
-## Machine output used as evidence in our own reviews
+## Unvetted predictions used as evidence in our own reviews
 
 Our gene reviews also cite predictions as if they were evidence. Validation now
-applies two global rules to every UniProt quote, whatever it supports: the
-quoted statement must not be machine output (evidence entirely automatic, from
-ARBA, UniRule/HAMAP and the other rule systems, signature matches, imported
-submitter annotation or electronic GO lines), and must not merely restate a
-classification (names, keywords, cross-references, "Belongs to the X family").
-Kinetics, sites and curated text, especially text tied to a publication, remain
-good support.
+applies two global rules to every UniProt quote, whatever it supports:
 
-- 2,474 quotes in 625 reviews rest on entirely automatic UniProt text. ARBA is a
-  source for 1,323 of them and the only source for 856; UniRule alone accounts
-  for 637 and imported submitter annotation for 304. They support 720 accepted
-  electronic annotations, 627 core functions and 54 new annotations the reviews
-  propose.
-- 2,768 quotes in 1,006 reviews come from restating fields: protein names
-  (1,150), "Belongs to the X family" (667) and the record's own GO lines (320).
+- A quoted statement must not rest only on an unvetted prediction: an ARBA
+  association rule, annotation imported unchecked from the submitter, or an
+  electronic GO line. Family and domain classification (NCBIfam, signature
+  matches, curated UniRule rules such as HAMAP, "Belongs to the X family") is
+  not in this group: it reliably establishes membership, and membership is a
+  fair argument for function. ARBA is different in kind: its rules transfer
+  annotation from co-occurring signatures, guilt by association.
+- A quote must not be a label that restates an annotation: protein names and
+  EC numbers, keywords, or the record's own GO lines.
 
-Both are warnings (`uniprot_quote_automatic_only`,
-`uniprot_quote_restating_field`). The inventory, with the automatic sources
-broken down, is in
+Across all gene reviews, 1,303 quotes in 393 reviews rest on unvetted
+predictions; ARBA is a source for 861 of them, imported submitter annotation for
+304. They support 359 accepted electronic annotations and 300 core functions.
+Separately, 1,498 quotes in 583 reviews are labels: protein names (1,106) and
+the record's own GO lines (319).
+
+Both are warnings (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`). The inventory is in
 [ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md](ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md), from
 [ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py).
 
@@ -237,7 +238,7 @@ term, reviewers kept 93% of entailed annotations and removed none.
 - Check the keyword heuristic against a hand-labelled sample of
   over-annotation and MODIFY rows, as was done for REMOVE.
 - Re-ground the accepted annotations, core functions and new annotations whose
-  only support is automatic UniProt text, starting with ARBA annotations
+  only support is an unvetted prediction, starting with ARBA annotations
   supported by ARBA text.
 - Report the role-confusion and non-catalytic-homolog cases to UniProt with
   the gene reviews as evidence, since these are wrong rather than vague.
@@ -252,7 +253,7 @@ term, reviewers kept 93% of entailed annotations and removed none.
 - [ARBA_REVIEW/gene_side_remove_modes.yaml](ARBA_REVIEW/gene_side_remove_modes.yaml):
   hand classification of the 133 removed annotations
 - [ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py):
-  inventory of UniProt quotes that cite machine output or restating fields; writes
+  inventory of UniProt quotes that cite unvetted predictions or labels; writes
   `UNIPROT_QUOTE_AUDIT.md` and `uniprot_quote_findings.tsv`
 - [docs/rule_review_workflow.md](../docs/rule_review_workflow.md): how rule
   reviews are made

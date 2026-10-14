@@ -411,27 +411,26 @@ If `just fetch-gene` or a re-run deep-research file changes a source so that a q
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
 
-**Quote UniProt for evidence of a different kind, not for restated annotation or
-predictions.** These rules apply to every UniProt quote, whatever it supports. A UniProt
-record is good support when it gives something the annotation does not: kinetics,
-binding or active sites, or curated free text, best of all text tied to a publication
-(evidence `ECO:0000269` with a PubMed id; syncing such curated notes is part of our
-job). It is not support when it:
+**Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
+apply to every UniProt quote, whatever it supports.
 
-- restates a classification: protein names and EC numbers (`DE`), keywords, database
-  cross-references (including the record's own `DR GO` lines) or "Belongs to the X
-  family"; or
-- is machine output: a statement whose evidence is entirely automatic, from any
-  UniProt rule system (`{ECO:0000256|ARBA:...}`, UniRule/RuleBase, HAMAP, PIRNR/PIRSR),
-  a signature match (`ECO:0000259`), imported submitter annotation (`ECO:0000313`) or an
-  electronic GO line (`IEA:`). Citing it repeats a prediction; citing it for an
-  annotation from the same kind of pipeline is circular.
+- **Good support:** experimental and curated statements (kinetics, binding or active
+  sites, curated free text, best of all text tied to a publication: evidence
+  `ECO:0000269` with a PubMed id; syncing such curated notes is part of our job).
+  Family and domain classification is also good support for membership, and you may
+  use membership to argue for a function: NCBIfam, InterPro/Pfam/PROSITE signature
+  matches, the curated UniRule systems (HAMAP, PIRSR, PIRNR, RuleBase), "Belongs to
+  the X family" notes and family cross-references. Structure-derived automatic
+  evidence (`ECO:0007…`) counts too.
+- **Not support, unvetted predictions:** a statement whose only evidence is an ARBA
+  association rule (`{ECO:0000256|ARBA:...}`), annotation imported unchecked from the
+  submitter (`ECO:0000313`), or an electronic GO line (`IEA:`). Citing one repeats a
+  prediction; citing ARBA text for an ARBA annotation is circular.
+- **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
+  record's own `DR GO` lines restate an annotation rather than support it.
 
-Curator statements (`ECO:0000305`, `ECO:0000303`), curated by-similarity or
-sequence-analysis assertions (`ECO:0000250`, `ECO:0000255`) and untagged text in
-reviewed entries are fine. Validation warns on both problems
-(`uniprot_quote_restating_field`, `uniprot_quote_automatic_only`;
-`src/ai_gene_review/validation/uniprot_quote_source.py`).
+Validation warns on both (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
 
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
