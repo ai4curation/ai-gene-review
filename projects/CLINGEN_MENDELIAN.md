@@ -2988,19 +2988,22 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**394 of 2,876 genes are complete; 2,482 remain.**
-Forty-four verified merged gene reviews add to checkpoint 350. The fixed cutoff is
-[CPT1A merge a9655bc9362c](https://github.com/ai4curation/ai-gene-review/commit/a9655bc9362c58342ad7a7d077637d13d75a3d49),
-at **2026-10-13 16:34:02 UTC**. Each catalogue gene counts once; products,
+**413 of 2,876 genes are complete; 2,463 remain.**
+Nineteen distinct verified merged gene reviews add to checkpoint 394. The fixed
+completion cutoff is [CTCF merge 5e2706cd8198](https://github.com/ai4curation/ai-gene-review/commit/5e2706cd819805cc1e881da111e9418779254827),
+at **2026-10-14 01:31:47 UTC**. Each catalogue gene counts once; products,
 follow-up commits, shared sources and tracker publication add no completion.
-This corrects the omitted [CPAMD8 merge #4961](https://github.com/ai4curation/ai-gene-review/pull/4961), which completed before the unchanged cutoff.
 
-See the [checkpoint 394 evidence and complete 44-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-394-2026-10-13-163402-utc).
-The checkpoint 350 tracker [PR #4962](https://github.com/ai4curation/ai-gene-review/pull/4962)
-merged as [fdcbaab48e51](https://github.com/ai4curation/ai-gene-review/commit/fdcbaab48e51e3ba89d9775685ff5850a3647221)
-at **2026-10-13 12:31:49 UTC**. All 235 historical queue records, 72 prior
-completion updates, catalogue association texts and earlier progress sections
-remain unchanged. Older OPEN and QUEUED observations retain their historical dates.
+See the [checkpoint 413 evidence and complete 19-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-413-2026-10-14-013147-utc).
+The checkpoint 394 tracker [PR #4988](https://github.com/ai4curation/ai-gene-review/pull/4988)
+merged as [488cf4ada7bb](https://github.com/ai4curation/ai-gene-review/commit/488cf4ada7bb34f80c7bdaeeb1e8228020852bce)
+at **2026-10-14 02:23:05 UTC**. This later tracker merge is the source baseline;
+it does not move the gene-completion cutoff. Its post-main test failure and
+pre-existing ontology-cache defects are recorded in the progress log.
+All 235 historical queue records, 73 prior completion updates, catalogue
+association texts and earlier progress sections remain unchanged. CPAMD8 was
+already counted in checkpoint 394; CPS1 is one of the 19 new identities here.
+Older OPEN and QUEUED observations retain their historical dates.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3512,27 +3515,27 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CPAP** — HGNC:17272 (ClinGen source symbol: CENPJ); [microcephaly 6 with or without short stature](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c10510c1-2c0e-466e-928a-77d896159d06-2022-05-21T104414.354Z) (MONDO:0700054; AR; Definitive).
 - [x] **CPLANE1** — HGNC:25801; [Joubert syndrome 17](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_954cdc22-7834-4876-a64e-27d56615c1ff-2022-05-20T114241.088Z) (MONDO:0013824; AR; Definitive).
 - [x] **CPOX** — HGNC:2321; [CPOX-related hereditary coproporphyria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f7cfd579-9ded-4e8a-b8be-c1a6e573e28b-2023-01-27T170000.000Z) (MONDO:0800180; SD; Definitive).
-- [ ] **CPS1** — HGNC:2323; [carbamoyl phosphate synthetase I deficiency disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dbc4dbbe-8827-4d68-a396-8368f3801e78-2018-10-12T160000.000Z) (MONDO:0009376; AR; Definitive).
+- [x] **CPS1** — HGNC:2323; [carbamoyl phosphate synthetase I deficiency disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dbc4dbbe-8827-4d68-a396-8368f3801e78-2018-10-12T160000.000Z) (MONDO:0009376; AR; Definitive).
 - [x] **CPT1A** — HGNC:2328; [carnitine palmitoyl transferase 1A deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dcea255c-11e4-46fd-b0f7-2de68311a75c-2018-01-23T170000.000Z) (MONDO:0009705; AR; Definitive).
-- [ ] **CPT2** — HGNC:2330; [carnitine palmitoyltransferase II deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1a57ea10-6ca0-4311-94f1-0ad036a38ca6-2018-03-27T160000.000Z) (MONDO:0015515; AR; Definitive).
-- [ ] **CR2** — HGNC:2336; [immunodeficiency, common variable, 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9153b41e-f2ef-453d-883b-187565cf4593-2021-08-03T130056.511Z) (MONDO:0013862; AR; Definitive).
-- [ ] **CRADD** — HGNC:2340; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f64ee7f-13a7-4a2d-b1a2-ad6c9e63cab3-2021-06-16T180000.000Z) (MONDO:0000508; AR; Definitive).
-- [ ] **CRB1** — HGNC:2343; [inherited retinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37fcf532-953e-4d8e-a049-c4de537a477e-2026-03-05T170000.000Z) (MONDO:0019118; AR; Definitive).
-- [ ] **CRB2** — HGNC:18688; [focal segmental glomerulosclerosis 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_98f54e8c-a81c-4b3b-8dbb-05dd24c5dbcc-2021-10-26T013000.000Z) (MONDO:0014539; AR; Definitive).
-- [ ] **CREBBP** — HGNC:2348; [Rubinstein-Taybi syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d16df64b-26ed-4f1c-b8dc-f27be773b102-2018-04-27T100000.000Z) (MONDO:0019188; AD; Definitive).
-- [ ] **CRPPA** — HGNC:37276; [myopathy caused by variation in CRPPA](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d774637-2d63-48fc-b670-da4d9e57377c-2023-12-12T170000.000Z) (MONDO:0100530; AR; Definitive).
-- [ ] **CRX** — HGNC:2383; [cone-rod dystrophy 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_26f9f606-f3f3-45f0-b212-998bcea09765-2024-12-06T170000.000Z) (MONDO:0007362; AD; Definitive).
-- [ ] **CSDE1** — HGNC:29905; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7061e9de-d429-4d92-a8fa-e386016ab9db-2023-11-21T110000.000Z) (MONDO:0100038; AD; Definitive).
-- [ ] **CSF1R** — HGNC:2433; [brain abnormalities, neurodegeneration, and dysosteosclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6154b7e-e3e2-4052-8a1c-9af78d820f33-2026-08-13T160000.000Z) (MONDO:0032772; AR; Definitive); [leukoencephalopathy, diffuse hereditary, with spheroids 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f294b07f-569a-41f2-b63a-ad7feb7ada0d-2025-12-19T170000.000Z) (MONDO:0800027; AD; Definitive).
-- [ ] **CSF2RA** — HGNC:2435; [surfactant metabolism dysfunction, pulmonary, 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6037e055-90a1-4727-be41-fa3295982b12-2025-09-16T160000.000Z) (MONDO:0010424; AR; Definitive).
-- [ ] **CSF2RB** — HGNC:2436; [surfactant metabolism dysfunction, pulmonary, 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_820769fa-c7cb-4d98-ae3d-fb2cd0ae93b9-2024-09-17T160000.000Z) (MONDO:0013712; AR; Definitive).
-- [ ] **CSNK2A1** — HGNC:2457; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_007e16ed-7392-4050-88b1-2b2158ca2a28-2022-06-15T060000.000Z) (MONDO:0000508; AD; Definitive).
+- [x] **CPT2** — HGNC:2330; [carnitine palmitoyltransferase II deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1a57ea10-6ca0-4311-94f1-0ad036a38ca6-2018-03-27T160000.000Z) (MONDO:0015515; AR; Definitive).
+- [x] **CR2** — HGNC:2336; [immunodeficiency, common variable, 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9153b41e-f2ef-453d-883b-187565cf4593-2021-08-03T130056.511Z) (MONDO:0013862; AR; Definitive).
+- [x] **CRADD** — HGNC:2340; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f64ee7f-13a7-4a2d-b1a2-ad6c9e63cab3-2021-06-16T180000.000Z) (MONDO:0000508; AR; Definitive).
+- [x] **CRB1** — HGNC:2343; [inherited retinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37fcf532-953e-4d8e-a049-c4de537a477e-2026-03-05T170000.000Z) (MONDO:0019118; AR; Definitive).
+- [x] **CRB2** — HGNC:18688; [focal segmental glomerulosclerosis 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_98f54e8c-a81c-4b3b-8dbb-05dd24c5dbcc-2021-10-26T013000.000Z) (MONDO:0014539; AR; Definitive).
+- [x] **CREBBP** — HGNC:2348; [Rubinstein-Taybi syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d16df64b-26ed-4f1c-b8dc-f27be773b102-2018-04-27T100000.000Z) (MONDO:0019188; AD; Definitive).
+- [x] **CRPPA** — HGNC:37276; [myopathy caused by variation in CRPPA](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d774637-2d63-48fc-b670-da4d9e57377c-2023-12-12T170000.000Z) (MONDO:0100530; AR; Definitive).
+- [x] **CRX** — HGNC:2383; [cone-rod dystrophy 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_26f9f606-f3f3-45f0-b212-998bcea09765-2024-12-06T170000.000Z) (MONDO:0007362; AD; Definitive).
+- [x] **CSDE1** — HGNC:29905; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7061e9de-d429-4d92-a8fa-e386016ab9db-2023-11-21T110000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **CSF1R** — HGNC:2433; [brain abnormalities, neurodegeneration, and dysosteosclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6154b7e-e3e2-4052-8a1c-9af78d820f33-2026-08-13T160000.000Z) (MONDO:0032772; AR; Definitive); [leukoencephalopathy, diffuse hereditary, with spheroids 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f294b07f-569a-41f2-b63a-ad7feb7ada0d-2025-12-19T170000.000Z) (MONDO:0800027; AD; Definitive).
+- [x] **CSF2RA** — HGNC:2435; [surfactant metabolism dysfunction, pulmonary, 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6037e055-90a1-4727-be41-fa3295982b12-2025-09-16T160000.000Z) (MONDO:0010424; AR; Definitive).
+- [x] **CSF2RB** — HGNC:2436; [surfactant metabolism dysfunction, pulmonary, 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_820769fa-c7cb-4d98-ae3d-fb2cd0ae93b9-2024-09-17T160000.000Z) (MONDO:0013712; AR; Definitive).
+- [x] **CSNK2A1** — HGNC:2457; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_007e16ed-7392-4050-88b1-2b2158ca2a28-2022-06-15T060000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **CSNK2B** — HGNC:2460; [Poirier-Bienvenu neurodevelopmental syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_64552de0-3f81-4110-90f7-97de14b0387b-2022-04-08T050921.681Z) (MONDO:0032889; AD; Definitive).
-- [ ] **CSPP1** — HGNC:26193; [Joubert syndrome 21](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e24d1591-91b7-4c2f-bd79-d4dc8be0974d-2021-06-23T160000.000Z) (MONDO:0014288; AR; Definitive).
-- [ ] **CSRP3** — HGNC:2472; [dilated cardiomyopathy 1M](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_beaafc90-20ef-4c81-ad8f-cfcf69d269ca-2026-03-04T170000.000Z) (MONDO:0011840; AD; Limited); [hypertrophic cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_012b9b15-798a-46e2-8164-61a829ceeda1-2023-08-09T160000.000Z) (MONDO:0005045; SD; Definitive).
-- [ ] **CSTB** — HGNC:2482; [Unverricht-Lundborg syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2926506c-5b75-4340-b821-e3ac846b6621-2020-06-16T160000.000Z) (MONDO:0009698; AR; Definitive); [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_accafcd4-ba3c-4049-9285-1de877d256ec-2020-12-01T060000.000Z) (MONDO:0100062; AR; Moderate).
-- [ ] **CTC1** — HGNC:26169; [cerebroretinal microangiopathy with calcifications and cysts 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bed1ee1-971c-444e-b71a-5ad9c3664625-2026-02-02T170000.000Z) (MONDO:0024564; AR; Definitive).
-- [ ] **CTCF** — HGNC:13723; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f1cbcd7b-83e2-47c1-b708-c9052502e639-2021-07-21T160000.000Z) (MONDO:0000508; AD; Definitive).
+- [x] **CSPP1** — HGNC:26193; [Joubert syndrome 21](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e24d1591-91b7-4c2f-bd79-d4dc8be0974d-2021-06-23T160000.000Z) (MONDO:0014288; AR; Definitive).
+- [x] **CSRP3** — HGNC:2472; [dilated cardiomyopathy 1M](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_beaafc90-20ef-4c81-ad8f-cfcf69d269ca-2026-03-04T170000.000Z) (MONDO:0011840; AD; Limited); [hypertrophic cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_012b9b15-798a-46e2-8164-61a829ceeda1-2023-08-09T160000.000Z) (MONDO:0005045; SD; Definitive).
+- [x] **CSTB** — HGNC:2482; [Unverricht-Lundborg syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2926506c-5b75-4340-b821-e3ac846b6621-2020-06-16T160000.000Z) (MONDO:0009698; AR; Definitive); [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_accafcd4-ba3c-4049-9285-1de877d256ec-2020-12-01T060000.000Z) (MONDO:0100062; AR; Moderate).
+- [x] **CTC1** — HGNC:26169; [cerebroretinal microangiopathy with calcifications and cysts 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bed1ee1-971c-444e-b71a-5ad9c3664625-2026-02-02T170000.000Z) (MONDO:0024564; AR; Definitive).
+- [x] **CTCF** — HGNC:13723; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f1cbcd7b-83e2-47c1-b708-c9052502e639-2021-07-21T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **CTH** — HGNC:2501; [cystathioninuria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2f5047f7-80ba-4b8f-8009-59d7130e63be-2019-06-14T160000.000Z) (MONDO:0009058; AR; Definitive).
 - [ ] **CTLA4** — HGNC:2505; [autoimmune lymphoproliferative syndrome due to CTLA4 haploinsufficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e79675bd-3eef-4925-b4ef-3b7c48734f30-2020-12-15T050000.000Z) (MONDO:0014493; AD; Definitive).
 - [ ] **CTNNA1** — HGNC:2509; [CTNNA1-related diffuse gastric and lobular breast cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9de9839-f329-4814-94af-bcce2f5d1be4-2023-07-05T170000.000Z) (MONDO:0100256; AD; Definitive).
