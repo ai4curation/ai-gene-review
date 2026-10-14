@@ -23,19 +23,33 @@ curl -H 'Accept: application/json' \
 
 `numberOfHits` 2122 over 22 pages of 100, across **1772 distinct `geneProductId` accessions** and
 **486 distinct gene symbols**. The two counts differ because a gene is annotated under more than
-one accession, so they are not interchangeable and the review text says symbols. Three checks over
-that set:
+one accession, so they are not interchangeable and the review text says symbols. Every one of the
+2122 results carries a `symbol` (zero without), which is what makes absence from the 486 symbols
+equivalent to absence from the carrier set; without that, a 3.6-fold ratio would be equally
+consistent with some accessions returning no symbol at all. Checks over that set, each stated at
+both symbol and accession level, with accessions read from UniProt by exact gene symbol rather
+than written from memory:
 
 - the only dynamin-superfamily member is `DNM1L` itself. Checked against `DNM1`, `DNM2`, `DNM3`,
   `DNM1L`, `OPA1`, `MFN1`, `MFN2`, `MX1`, `MX2`, `EHD1`-`EHD4`, `GBP1`-`GBP7` and `ATL1`-`ATL3`;
-  only `DNM1L` matches.
+  only `DNM1L` matches, and its accession `O00429` is present among the 1772.
 - none of the four mammalian outer-membrane DRP1 receptors carries the term. `MFF`, `MIEF1`
-  (MID51), `MIEF2` (MID49) and `FIS1` are all absent from the 486.
-- the filter does exclude negated rows, so "positive enables" is accurate. `ARFGEF1` is absent
-  from the 486 symbols and its accession `Q9Y6D5` is absent from all 1772 ids, and the only
-  `qualifier` value anywhere in the 2122 results is `enables`. `ARFGEF1-goa.tsv` carries a
-  `NOT|enables GO:0005096` row by IDA and no positive row, so this is the control that ties the
-  in-corpus arithmetic (35 symbols with a row, 34 positive) to the query.
+  (MID51), `MIEF2` (MID49) and `FIS1` are all absent from the 486 symbols, and their accessions
+  `Q9GZY8`, `Q9NQG6`, `Q96C03` and `Q9Y3D6` are all absent from the 1772 ids. `L0R8F8`, the
+  AltMIEF1 alternative-ORF peptide that UniProt files under the `MIEF1` symbol, is absent too, so
+  the `MIEF1` leg holds for both entries that carry that symbol.
+- the filter does exclude negated rows, so "positive enables" is accurate. The only `qualifier`
+  value anywhere in the 2122 results is `enables`, which settles the filter's semantics on its
+  own. The gene-level control agrees: `ARFGEF1-goa.tsv` carries a `NOT|enables GO:0005096` row by
+  IDA and no positive row, and `ARFGEF1` is absent from the 486 symbols with its accession
+  `Q9Y6D6` absent from the 1772 ids. That ties the in-corpus arithmetic (35 symbols with a row,
+  34 positive) to the query.
+
+  The first version of this control cited `Q9Y6D5` as ARFGEF1's accession. `Q9Y6D5` is **ARFGEF2**
+  (`ARFGEF2-uniprot.txt:6`); ARFGEF1 is `Q9Y6D6` (`ARFGEF1-uniprot.txt:6`, and the accession on its
+  own GOA row). ARFGEF2 holds no `GO:0005096` row at all, so that leg was not a weak check but a
+  vacuous one on a gene that was never a carrier, and its negative result said nothing. Corrected
+  above; the conclusion was already carried by the `qualifier` leg.
 
 The 35 folders in this repository are not the carrier set, which is why the claim is sourced from
 the query rather than from them: `ARHGAP1`, `ARHGAP5`, `ARHGAP35`, `RACGAP1`, `RABGAP1` and `TSC2`
