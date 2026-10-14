@@ -23,3 +23,7 @@ UniProt record directly.
 ## Disease context (dismech)
 
 dismech `Combined_Oxidative_Phosphorylation_Deficiency_48` used only as a literature lead.
+
+## Claude Code deep research (2026-10-14)
+
+`NSUN3-deep-research-claude-code.md` was produced by `just deep-research-claude-code human NSUN3`. In two separate runs the provider answered in a single turn with no web search (`run_metadata` has no `web_search_requests`), so its references come from the model's own knowledge and were not retrieved. Treat its citations as unverified leads; nothing in the review rests on them.

@@ -9,3 +9,7 @@ openai key rejected). The review uses the cached literature and UniProt.
 - mt-dsRNA restriction and interferon signalling (PMID:30046113); m5C/C1QBP recruitment (PMID:39019044); G4 RNA decay with GRSF1 (PMID:29967381).
 - RNA import role (PMID:20691904), supported in COXPD13 fibroblasts (PMID:23084291) and the hearing-loss family (PMID:23084290), kept as non-core.
 - Melanoma overexpression studies (c-myc, miR-221, senescence; PMID:12721301, PMID:16055741, PMID:16410805, PMID:20547861) treated as non-core or over-annotation.
+
+## Claude Code deep research (2026-10-14)
+
+`PNPT1-deep-research-claude-code.md` was produced by `just deep-research-claude-code human PNPT1`. In two separate runs the provider answered in a single turn with no web search (`run_metadata` has no `web_search_requests`), so its references come from the model's own knowledge and were not retrieved. Treat its citations as unverified leads; nothing in the review rests on them.
