@@ -141,3 +141,15 @@ and `proposed_new_terms: []`. Its third core function models the moonlighting ro
 with rather than an absence. Under the comparator above that review warrants the same
 `contributes_to` proposal. TRMT10C also carries `GO:0000049`, so the two reviews differ only
 in this one proposed row.
+
+## The organelle-level localization rows
+
+The eight `GO:0005739` mitochondrion rows are `ACCEPT`, and that is a decision rather than an
+oversight. TRMT10C (MRPP1) is a mitochondrial matrix protein and `GO:0005759` is accepted here on
+three rows, so a reader applying the "correct but general terms are MODIFY" rule mechanically, or
+re-running an ancestor-based scan, will stop on these. They are not reached by that rule: none of
+the eight reasons says the term is less specific than the evidence supports — they give the proteome
+and localization evidence and the gene's function. Nothing else in this file refines a
+mitochondrial-location ancestor, so the file does not treat one argument two ways. Whether GOA's
+organelle-level rows should be refined wherever a compartment row exists is a real question, and it
+is a slice-wide one rather than anything specific to this gene.
