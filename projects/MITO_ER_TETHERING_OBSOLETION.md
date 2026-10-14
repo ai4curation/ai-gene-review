@@ -8,6 +8,13 @@ sidecars:
   slide_assets:
     - MITO_ER_TETHERING_OBSOLETION/slides/term-map.svg
     - MITO_ER_TETHERING_OBSOLETION/slides/tethers.svg
+manifest:
+  slides:
+    - href: MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/732CHnKMbyydt26H9ByLRQ
+      title: Project brief
 ---
 
 # Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)
@@ -178,7 +185,3 @@ than to fix outstanding GOA rows.
   it needs a real assessment when refreshed. The local
   `cache/ontologies/go.tsv` still records GO:1990456 as live, so validation
   does not flag these five reviews yet.
-
-## Slides
-
-- [Slides](MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html) (Marp source: [MITO_ER_TETHERING_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.md)) — AI generated

@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [RAMVA, SCHPO, SACEN, PSEAE, STRCO]
 genes: [RvY_13070, RvY_00650, RvY_03757, RvY_17310, RvY_15948, Epe1, eryCII, pqsB, actI-ORF2]
+manifest:
+  slides:
+    - href: PSEUDOENZYMES/slides/PSEUDOENZYMES-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Uz7bzb99at7dysAB1HZSqy
+      title: Project brief
 ---
 
 # Pseudoenzymes Project
@@ -33,10 +40,6 @@ main open task.
 
 **Project Start Date:** 2026-04-09
 **Focus:** Identification, annotation, and curation of catalytically inactive enzyme homologs
-
-## Slides
-
-- [Slides](PSEUDOENZYMES/slides/PSEUDOENZYMES-slides.html) (Marp source: [PSEUDOENZYMES-slides.md](PSEUDOENZYMES/slides/PSEUDOENZYMES-slides.md)) — AI generated
 
 ## Project Overview
 

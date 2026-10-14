@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import subprocess
 import weakref
+from bisect import bisect_left
 from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from functools import cached_property, lru_cache
@@ -116,6 +117,7 @@ class GitSnapshot:
     repo_root: Path
     commit: str
     _cache: dict[str, bytes] = field(default_factory=dict, repr=False)
+    _glob_cache: dict[str, tuple[str, ...]] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         result = subprocess.run(
@@ -179,8 +181,28 @@ class GitSnapshot:
     def is_file(self, path: str) -> bool:
         return path in self._blobs
 
+    @cached_property
+    def _paths(self) -> tuple[str, ...]:
+        return tuple(sorted(self._blobs))
+
     def glob(self, pattern: str) -> list[str]:
-        return sorted(path for path in self._blobs if match_path(path, pattern))
+        # A snapshot is immutable. Reuse each result, and narrow first-time
+        # searches to the literal prefix before applying the existing matcher.
+        # For per-gene GOA searches this avoids scanning the whole repository.
+        if pattern not in self._glob_cache:
+            end = next((i for i, char in enumerate(pattern) if char in "*?["), len(pattern))
+            prefix = pattern[:end]
+            start = bisect_left(self._paths, prefix)
+            matches = []
+            for index in range(start, len(self._paths)):
+                path = self._paths[index]
+                if not path.startswith(prefix):
+                    break
+                if match_path(path, pattern):
+                    matches.append(path)
+            self._glob_cache[pattern] = tuple(matches)
+        # Callers may edit their result without changing later searches.
+        return list(self._glob_cache[pattern])
 
 
 @lru_cache(maxsize=None)

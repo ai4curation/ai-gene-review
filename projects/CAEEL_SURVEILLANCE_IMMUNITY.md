@@ -9,6 +9,13 @@ sidecars:
     - CAEEL_SURVEILLANCE_IMMUNITY/slides/surveillance-pathway.svg
     - CAEEL_SURVEILLANCE_IMMUNITY/slides/actions-by-gene.svg
     - CAEEL_SURVEILLANCE_IMMUNITY/slides/nipi-3-review-table.jpg
+manifest:
+  slides:
+    - href: CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
+      title: Project brief
 ---
 
 # C. elegans Surveillance Immunity Project
@@ -406,7 +413,3 @@ All provide specific, actionable guidance for implementation and quality improve
 - Priority 3 implementation: 25-40 hours (4-8 weeks)
 - Validation and final review: 2-3 hours
 - Total to completion: 31-49 hours
-
-## Slides
-
-- [Slides](CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.html) (Marp source: [CAEEL_SURVEILLANCE_IMMUNITY-slides.md](CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.md)) — AI generated

@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN]
 genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII]
+manifest:
+  slides:
+    - href: OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MrmXAmcMnpxL43743j1ogb
+      title: Project brief
 ---
 
 # Over-Annotation Patterns Project
@@ -171,10 +178,6 @@ These over-annotation patterns:
 - [x] human/UBA7 - protein binding from HTP, generic ligase
 - [x] pombe/Epe1 - pseudo-demethylase
 - [x] CANAL/LPL1 - hydrolase, membrane prediction
-
-## Slides
-
-- [Slides](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html) (Marp source: [OVER_ANNOTATION_PATTERNS-slides.md](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.md)) — AI generated
 
 Last updated: 2026-01-22
 

@@ -82,4 +82,5 @@ GO:0099148 retired as docking becomes a molecular function, GO:0160321
 3. Review **tom-1** as the negative-regulator case.
 
 **Siblings:** `VESICLE_DOCKING_OBSOLETION` (parent, #6379) · `VESICLE_TETHERING_OBSOLETION` (#6375) · `VESICLE_TARGETING_OBSOLETION` (#6424)
+
 **Upstream:** go-annotation#6415 · go-ontology#31880

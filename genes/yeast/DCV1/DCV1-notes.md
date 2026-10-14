@@ -88,3 +88,31 @@ For YAR1, unanswered report questions are not positive evidence. For SSQ1, the
 located Nop1 association remains recorded while its generic binding label is removed.
 The annotation changes apply only to the relevant gene; no inherited location is
 rejected solely from its best-characterized compartment.
+
+## 2026-10-01 focused DCV1 IBA adjudication
+
+Read the cached OpenScientist report for `secondary-membrane-division-site-and-tip-localization`
+and fetched the report's new DCV1-specific primary lead, PMID:36601911. The PubMed
+abstract directly reports that Dcv1 is uniformly plasma-membrane localized in
+vegetative cells, becomes rear-localized rather than front/tip-localized in
+pheromone-responding cells, and that `dcv1Δ` mislocalizes plasma-membrane lipids
+and polarity/trafficking proteins.
+
+Consequences for the three IBA rows are asymmetric:
+
+- `GO:0005886 plasma membrane` is now accepted. The PTN001997363 plasma-membrane
+  assertion is still on the exact DCV1 target path, and direct Dcv1-GFP imaging
+  independently supports the same compartment.
+- `GO:0035838 growing cell tip` is removed. The best budding-yeast polarized-growth
+  state in the available evidence is the pheromone shmoo, and Dcv1 sits at the
+  rear of those cells, opposite the pheromone receptor and growth front.
+- `GO:0032153 cell division site` remains unresolved. PMID:36601911 resolves
+  plasma membrane and shmoo-front exclusion, but it does not test bud-neck or
+  cytokinesis-plane enrichment, so the fission-yeast-seeded IBA still needs a
+  direct Dcv1/septin or Dcv1/Myo1 imaging test.
+
+The SGD nuclear-envelope IDA from PMID:33002606 is retained. The full text is still
+not cached, but a Tos7-focused title is not evidence of a wrong-gene annotation.
+The new PM paper means the old accepted ND biological-process row is now unresolved:
+Dcv1 has target-specific evidence for a mating front-rear polarity role, but the
+full paper should be curated before proposing an exact BP term.

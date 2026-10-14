@@ -1,0 +1,299 @@
+---
+title: "Boolean models: modules as executable logic"
+maturity: SCOPING
+tags: [PIPELINE]
+species: [human]
+autolink_gene_symbols: false
+---
+
+# Boolean models
+
+**A curated module's `connections` graph is a signed regulatory graph, and a signed
+regulatory graph is one default rule away from a Boolean network. This project reads
+modules that way in both directions: published Boolean models and signed-interaction
+databases become a calibration source for the wiring the modules assert, and the
+modules themselves become executable models whose attractors can be checked against
+what the pathway is known to do.**
+
+[PATHWAY_SATISFIABILITY](PATHWAY_SATISFIABILITY.md) reads a module as a *static,
+monotone* formula over steps ("can this pathway be wired up in this context?"). This
+project is its dynamic complement: negative regulation, feedback, and what the system
+settles into. [METABOLIC_MODEL_ANALYSIS](METABOLIC_MODEL_ANALYSIS.md) and the Maud
+ingest under `models/methionine/` established the posture reused here — an external
+model is **evidence, not truth**, reduced to a canonical edge vocabulary, bridged by a
+reviewed id-mapping, and diffed rather than merged.
+
+## Bottom line (first pass, MAPK cascades)
+
+- **Translation works without schema changes.** `ai-gene-review module-to-bnet`
+  turns any module with `connections` into a BoolNet `.bnet` (and, through
+  biodivine-aeon, SBML-qual): container nodes flatten to entry/exit tiers, `CAUSES`-
+  family edges activate, `NEGATIVELY_REGULATES` inhibits, and the default rule is the
+  CaSQ convention *OR the activators, AND NOT the inhibitors*
+  ([PMID:32403123](https://pubmed.ncbi.nlm.nih.gov/32403123/)). ERK, p38, JNK, JAK-STAT
+  and NF-κB modules all translate (variable and edge counts are in the generated
+  [RESULTS](BOOLEAN_MODELS/RESULTS.md) table).
+- **The wiring the modules assert is right, and was incomplete in one specific way.**
+  Against the published Grieco 2013 MAPK model
+  ([PMID:24250280](https://pubmed.ncbi.nlm.nih.gov/24250280/), cached as BBM-070) *and*
+  against SIGNOR's EGFR pathway, the ERK module agreed on all six mapped edges
+  (GRB2→SOS→RAS→RAF→MEK→ERK→output) with **zero sign conflicts**. Both sources carried
+  two feedbacks the module lacked — **ERK ⊣ RAF** and **ERK/RSK ⊣ SOS** — and both were
+  classified automatically as *feedback loops absent from the module* because the
+  module already had the forward path. The module's own DUSP ⊣ ERK and RasGAP ⊣ RAS
+  edges are absent from both sources (neither models an ERK phosphatase or a GAP), a
+  gap in the *sources*, not the module.
+- **The feedbacks have now been curated into the modules, with primary evidence.**
+  `erk_cascade` carries ERK ⊣ RAF (Raf-1 feedback phosphorylation,
+  [PMID:15664191](https://pubmed.ncbi.nlm.nih.gov/15664191/); B-Raf,
+  [PMID:19933846](https://pubmed.ncbi.nlm.nih.gov/19933846/)), ERK output ⊣ SOS
+  (MAPK sites on hSos1 regulating Grb2 binding,
+  [PMID:8816480](https://pubmed.ncbi.nlm.nih.gov/8816480/)) and ERK output → DUSP
+  induction (MKP-1/2 induced by the p42/p44 MAPK cascade,
+  [PMID:8995446](https://pubmed.ncbi.nlm.nih.gov/8995446/)); `p38_cascade` carries
+  p38 output → DUSP1 induction ([PMID:16978838](https://pubmed.ncbi.nlm.nih.gov/16978838/));
+  `jak_stat_signaling` carries SOCS ⊣ JAK
+  ([PMID:9202126](https://pubmed.ncbi.nlm.nih.gov/9202126/),
+  [PMID:9202125](https://pubmed.ncbi.nlm.nih.gov/9202125/)). Re-run, the ERK module agrees
+  with BBM-070 on **all eight** mapped edges with nothing source-only.
+- **The feedbacks change the dynamics qualitatively, and the curated module now
+  shows it.** With its loops closed, the translated ERK module under sustained
+  adaptor recruitment has a single complex attractor in which every tier oscillates,
+  as BBM-070 does under sustained EGFR stimulus (Grieco et al.'s reading: transient
+  ERK activation). The counterfactual with the loops cut, the module's wiring before
+  this project, is a fixed point with ERK locked on. This is not a claim that cells
+  oscillate: a Boolean cyclic attractor under negative feedback means "no sustained
+  steady state", i.e. a pulse or adaptation; whether a given cell shows a pulse,
+  sustained activity or oscillation depends on receptor and context. The module
+  encodes the wiring, and the attractor is the QC read-out.
+- **Feedback is what the schema was losing, and there is now a check for it.** Every
+  signalling module inspected had modelled its negative regulation as an *input step
+  with no incoming edge* — the loop described in prose and cut in YAML. That is a
+  curation convention, not a new slot; `module_qc.feedback_loop_findings` now warns
+  (advisory, never blocking) when a negative regulator whose prose asserts feedback
+  or induction has no upstream edge, and module pages carry a "Feedback loops" card.
+  The slots that are genuinely missing (`update_rule`, `sign`, `boolean_role`,
+  `model_associations`) are laid out in
+  [What the module schema lacks](BOOLEAN_MODELS/schema_gaps.md).
+
+All numbers above are generated by
+[`run_mapk_demo.py`](BOOLEAN_MODELS/run_mapk_demo.py) into
+[RESULTS.md](BOOLEAN_MODELS/RESULTS.md); nothing is hand-copied.
+
+## Scope
+
+Two workstreams, as posed:
+
+**(a) External Boolean models as source / calibration for existing modules.**
+Published logical models (GINsim, Cell Collective, BioModels SBML-qual, aggregated
+in the BBM corpus) and signed-interaction resources (SIGNOR) carry hand-curated
+signed wiring for the same pathways the module KB describes. Reduced to signed edges
+and bridged through a reviewed mapping, they (i) confirm or contradict each module
+edge, (ii) surface feedbacks and cross-talk the module omits, and (iii) name external
+regulators of a module's tiers. The survey of what exists and what is reachable is in
+[Sources and tooling landscape](BOOLEAN_MODELS/landscape.md).
+
+**(b) Modules → Boolean models, in a common framework.** Translate modules to
+`.bnet`/SBML-qual, analyse them with a standard toolkit (biodivine-aeon here; the
+CoLoMoTo stack more generally), and use attractors as a consistency check on the
+curated wiring. Record what the schema had to be assumed to say, and propose the
+minimal additive slots.
+
+## Method in one paragraph
+
+`src/ai_gene_review/module_boolean.py` (doctested; `tests/test_module_boolean.py`)
+flattens a module's hierarchy: an edge *into* a container lands on its entry tiers
+(children with no incoming internal activating edge, excluding pure-inhibitor tiers
+such as a GAP), an edge *out of* a container leaves from its exit tiers (children with
+no outgoing internal edge). Every endpoint becomes a variable; a variable with no
+incoming edge is an input. The same module also parses `.bnet` files (inferring each
+regulator's sign by exhaustive monotonicity evaluation) and SIGNOR TSV exports, so all
+three sides live in one `SignedEdge` vocabulary. A mapping file
+(`models/boolean/*/mapping_to_modules.yaml`) defines a shared symbol namespace; the
+diff reports agreements, sign conflicts, module-only and source-only edges, classifies
+source-only edges as *collapsed path* (the module expresses it through tiers the
+source lacks), *feedback loop absent from module*, or *cross-talk/lumping artefact*,
+and lists partially-mapped edges as external regulators the module does not name.
+Dynamics use biodivine-aeon's symbolic asynchronous attractor computation with inputs
+fixed per scenario (free inputs are otherwise folded into a parametrised attractor).
+
+```bash
+ai-gene-review module-to-bnet modules/erk_cascade.yaml           # translate one module
+ai-gene-review module-to-bnet --all -o /tmp/bnets                # or all of them
+uv run --with biodivine-aeon python projects/BOOLEAN_MODELS/run_mapk_demo.py
+```
+
+## What the calibration said about the modules, and what was done
+
+| Finding | Where | Action taken |
+|---|---|---|
+| ERK ⊣ RAF negative feedback (BBM-070 `v_RAF` rule; SIGNOR `ERK1/2 -| BRAF`, Thr401 phosphorylation, direct) | `modules/erk_cascade.yaml` | **added** `erk_mapk → raf_map3k NEGATIVELY_REGULATES`, evidence PMID:15664191 (Raf-1), PMID:19933846 (B-Raf), plus the two sources |
+| ERK/RSK ⊣ SOS negative feedback (BBM-070 `v_SOS, v_GRB2 & !v_RSK`; SIGNOR `ERK1/2 -| SOS1`, Ser1132/1167/1197, direct) | `modules/erk_cascade.yaml` | **added two edges**, each sourced where its evidence puts it: `erk_mapk → ras_gef_step` (direct ERK phosphorylation, PMID:8816480, the SIGNOR row) and `erk_output → ras_gef_step` (RSK phosphorylation at Ser1134/Ser1161, PMID:22827337, PMID:9242373, the BBM-070 rule) |
+| DUSP/MKP feedback cut: `mapk_negative_regulation` had no incoming edge although its description said "many ERK-induced as feedback" | `modules/erk_cascade.yaml` | **added** `erk_output → mapk_negative_regulation CAUSES`, evidence PMID:8995446 |
+| Same cut in the p38 module ("many of them induced by p38 itself as negative feedback") | `modules/p38_cascade.yaml` | **added** `p38_output → p38_negative_regulation CAUSES`, evidence PMID:16978838 (via MK2) and the BBM-070 MSK/CREB route |
+| SOCS loop half-wired: `stat_transcription → socs_feedback` existed but SOCS inhibited nothing | `modules/jak_stat_signaling.yaml` | **added** `socs_feedback → jak_activation NEGATIVELY_REGULATES`, evidence PMID:9202126, PMID:9202125 |
+| JNK module role said "negative regulation and feedback" with no upstream edge | `modules/jnk_cascade.yaml` | **reworded**, not wired: the JNK-directed phosphatases modelled (DUSP10/16) are not JNK-induced, and DUSP1/MKP-1, which also terminates JNK, is p38/MK2-controlled (PMID:16978838, now cited on the node). The unmodelled p38-output → DUSP1 ⊣ JNK cross-cascade edge is recorded as a `knowledge_gaps` entry on the node |
+| p38 and JNK modules keep a MAP2K tier the published model compresses (MAP3K → p38 directly) | `modules/p38_cascade.yaml`, `modules/jnk_cascade.yaml` | none — reported as *collapsed path*, the module is finer-grained and correct |
+| External regulators of ERK tiers the module does not name: PP2A (PPP2CA) ⊣ MEK, AP1 ⊣ MEK, AKT ⊣ RAF, PKC → RAF, PLCγ → RAS (BBM-070); SRC ⊣ HRAS, PTPN11 → HRAS (SIGNOR) | `modules/erk_cascade.yaml` | left open: cross-talk candidates to adjudicate per edge; not all belong in a taxon-neutral core module |
+
+Two translator fixes came out of the edits. Once ERK inhibits RAF *inside* the
+relay bundle, the last tier has an outgoing edge, and the first flattener stopped
+treating it as the bundle's exit; exits are now the children with no outgoing
+*activating* internal edge, and a pure-inhibitor tier (a GAP) is neither an entry
+nor an exit. And a container with no internal wiring whose child is itself a
+connection endpoint (the JAK-STAT negative-regulation bundle, whose SOCS child is
+STAT-induced) is now expanded to its children instead of becoming a second variable
+next to the child, so the QC check and the translation agree on which loops are
+closed: SOCS is induced, the PTP and PIAS tiers stay external inputs.
+
+## Relationship to GO-CAM
+
+A GO-CAM is already a signed causal graph over activities (`directly positively
+regulates`, `provides input for`, …) and is the third source the same translator
+should read; the 2,036 cached models in `gocams/` include human MAPK slices. Not done
+in this pass: the human GO-CAMs for the ERK cascade are receptor-specific
+(GPR75/CCL5, urotensin-II, MC5R) rather than a whole-cascade model, so they calibrate
+the entry step rather than the relay.
+
+## Files
+
+- `projects/BOOLEAN_MODELS/landscape.md` — sources (SIGNOR, BioModels, BBM, GINsim,
+  Cell Collective, GO-CAM, Reactome) and tools (aeon, mpbn, PyBoolNet, bioLQM,
+  CoLoMoTo, MaBoSS, CaSQ), with what is reachable from this environment.
+- `projects/BOOLEAN_MODELS/schema_gaps.md` — six assumptions the translation makes,
+  each with a proposed additive slot or convention.
+- `projects/BOOLEAN_MODELS/run_mapk_demo.py`, `RESULTS.md`, `out/*.bnet`,
+  `out/erk_cascade.sbml` — the reproducible demo and its generated report.
+- `models/boolean/` — verbatim external snapshots (BBM-070 `.bnet` + metadata;
+  SIGNOR-EGF TSV) with provenance READMEs and the reviewed mappings.
+- `src/ai_gene_review/module_boolean.py`, `tests/test_module_boolean.py`, CLI
+  `module-to-bnet`.
+
+---
+# STATUS
+
+- [x] Survey external Boolean-model sources and check reachability (SIGNOR API ✓, BioModels REST ✓ with Accept header, BBM via raw.githubusercontent ✓; GINsim, Cell Collective API ✗ from this container)
+- [x] Survey tooling; install and exercise biodivine-aeon and mpbn
+- [x] Translator: module → `.bnet` (+ SBML-qual via aeon), with hierarchy flattening and CaSQ default rules
+- [x] Ingest: `.bnet` with sign inference; SIGNOR pathway TSV
+- [x] Reviewed mappings and calibration diff for ERK/p38/JNK vs BBM-070 and SIGNOR-EGF
+- [x] Dynamics demo: fixed points vs oscillation, with and without the calibration feedbacks
+- [x] Schema-gap analysis with proposed slots
+- [ ] Decide on and implement schema additions (`update_rule`, `sign`, `boolean_role`, `model_associations`)
+- [x] Close the feedback loops in the ERK, p38 and JAK-STAT modules with primary evidence; reword the JNK step as an external input (NF-κB has no feedback step to close: its module has no negative regulator yet)
+- [x] `module_qc` advisory check "feedback loop cut" + module-page card
+- [x] Address the PR review of [ai4curation/ai-gene-review#3494](https://github.com/ai4curation/ai-gene-review/pull/3494): counterfactual file matches its table, container/child double-counting fixed, SOS feedback split into its direct-ERK and RSK routes, JNK decision cited and its cross-cascade gap recorded, stale prose fixed, `path_sign` exhaustive and deterministic, bnet `0`/`1` constants, SIGNOR `direct`/taxon filters
+- [ ] GO-CAM as a third signed-edge source through the same translator
+- [ ] Extend calibration to JAK-STAT (BBM 166 Drosophila JAK-STAT; SIGNOR pathways), NF-κB (SIGNOR-NFKBC; BBM 136 EGF-TNFα), TCR (BBM 012/080), apoptosis (BBM 020/111)
+- [ ] `module_qc` advisory panel for the calibration diff itself (external-model agreement per module page)
+- [ ] Adjudicate the cross-talk candidates on the ERK module (PP2A ⊣ MEK, AP1 ⊣ MEK, AKT ⊣ RAF, PKC → RAF, PLCγ → RAS; SRC ⊣ RAS, PTPN11 → RAS)
+- [ ] Add a negative-regulation step (IκB resynthesis / A20) to the NF-κB module so the same check applies there
+- [ ] CoLoMoTo notebook for a shareable, reproducible run
+
+# NOTES
+
+## 2026-09-30
+
+Review round on the PR (automated reviewer). All five "important" findings held up
+and are fixed: (1) the committed counterfactual `.bnet` still carried the DUSP rule
+its caption said it dropped — `BooleanModel.as_inputs()` now strips rule and
+incoming edge so the file is the model the table simulates; (2) the JAK-STAT
+negative-regulation container and its SOCS child were both variables, SOCS appearing
+twice in the JAK rule and the container remaining a free input that subsumed the
+loop just closed — a container with no internal edges whose descendant is an
+endpoint is now expanded to its children; (3) stale "8 edges" and a wrong section
+link in prose that claims nothing is hand-copied; (4) the SOS feedback was sourced
+from the output step but cited direct-ERK evidence — it is now two edges, direct ERK
+(PMID:8816480, SIGNOR) from `erk_mapk` and RSK (PMID:22827337, PMID:9242373,
+BBM-070) from `erk_output`, so each source's edge is matched by the module edge with
+the same route; (5) the JNK non-wiring claim was uncited — PMID:16978838 is now on
+the node, and the p38-output → DUSP1 ⊣ JNK cross-cascade edge that paper implies is
+recorded as a CURATION knowledge gap rather than silently absent. Suggestions taken:
+exhaustive, sorted path search with `?` for ambiguous sign; `with_logic` drops
+non-essential regulators like `parse_bnet`; `0`/`1` constants read and written,
+`&&`/`||` rejected with a message; SIGNOR `direct_only`/`taxa` filters (the
+comparison still uses the pooled export, and says so); module-only readings now
+distinguish "source routes it via unmapped intermediates" from "absent"; tests for
+constants, SIGNOR skipping, the CLI, and `__file__`-anchored paths.
+
+Second round (the re-review approved; only suggestions remained). Taken: a real bug
+in `with_logic`, which dropped a non-essential regulator from `variables` and so
+could write a `.bnet` referencing an undeclared symbol; a cycle guard in the tree
+walk and a path-count bound on `find_paths`; the mapping notes now state the
+expected module-only SOS edge each source leaves by construction; a third
+module-only reading, "routes it via a mapped intermediate the module also wires",
+which is exactly what the split SOS feedback creates (BBM-070 has RSK ⊣ SOS, the
+module has both that and direct ERK ⊣ SOS); anchored links into RESULTS; the
+counterfactual `.bnet` linked from §3c so the page mirror carries it; and an RSK
+annoton on `erk_output` (RPS6KA1, RPS6KA3) so the RSK ⊣ SOS edge has a modelled
+actor rather than a prose one.
+
+Third round (approve again; five suggestions). The cycle guard I had just added was
+wrong in the way the reviewer said: one shared visited-set across sibling branches
+fires on a diamond, so a duplicated id would have aborted translation with a
+diagnosis naming the wrong problem; it is per-path now, with a diamond test. The
+`max_paths` valve could silently turn a truncated enumeration into a definite
+sign; it now warns and `path_sign` answers `?`. A fourth reading covers the mirror
+case (module asserts the long route, source only the shortcut), the RSK target is
+grounded to SOS1, and this project record now exists for the rounds.
+
+## 2026-09-27
+
+Acted on the first-pass calibration. Feedback loops closed in `erk_cascade` (three
+edges), `p38_cascade` (one) and `jak_stat_signaling` (one), each with a
+PubMed-verified primary paper and a verbatim `supporting_text` that the module
+validator checks against the cached abstract; the two external sources are cited as
+`file:` evidence alongside. PMIDs found by E-utilities, not memory: 15664191
+(Dougherty 2005, Raf-1 feedback sites), 19933846 (Ritt 2010, B-Raf feedback sites),
+8816480 (Corbalan-Garcia 1996, hSos1 MAPK sites), 8995446 (Brondello 1997, MKP-1/2
+induction by p42/p44 MAPK), 16978838 (Hu 2007, MKP-1 expression controlled by p38 via
+MK2), 9202126 and 9202125 (Endo and Starr 1997, JAB/SOCS). SIGNOR's own citation for
+ERK ⊣ BRAF, 21135229, is a β-cell calcineurin paper that states the T401 feedback
+site in passing; kept as the SIGNOR provenance but not used as the primary evidence.
+
+The JNK module was deliberately *not* wired: the inducible phosphatase in this
+territory is DUSP1, which Hu 2007 and the Grieco model both put downstream of p38 (via
+MK2 / MSK–CREB), not JNK. Its role text ("negative regulation and feedback") was the
+only thing asserting a JNK feedback, so the text was corrected instead.
+
+Two consequences for the tooling. (1) The flattener: with ERK ⊣ RAF inside the relay,
+ERK acquired an outgoing internal edge and stopped being the bundle exit, which made
+`erk_relay` itself a free variable and produced a spurious "output on, everything else
+off" fixed point. Exits now ignore inhibitory edges, and a pure-inhibitor tier is
+excluded from both entries and exits. (2) The new `feedback_loop_findings` check
+needed two refinements before it stopped crying wolf: a container regulator is closed
+if any *child* has an upstream edge (the SOCS step inside the JAK-STAT
+negative-regulation bundle), and a sentence that mentions feedback only to deny it
+("rather than a JNK-driven feedback") must not count as asserting it.
+
+Re-run results: ERK vs BBM-070 8/8 mapped edges agree, 0 source-only; curated ERK
+under sustained stimulus = one 94-state complex attractor (all tiers oscillate);
+counterfactual with loops cut = fixed point, ERK on. p38 and JNK calibration
+unchanged apart from the new p38 output → DUSP edge (module-only: BBM routes DUSP1 via
+CREB, an unmapped intermediate).
+
+## 2026-09-26
+
+Project created. Verified from this container: SIGNOR `getPathwayData.php`
+(CC BY 4.0) returns clean TSVs; BioModels search needs `Accept: application/json` on
+`www.ebi.ac.uk/biomodels/search` (the redirect to `biomodels.org` drops the format;
+facet-filtered queries with quoted values are rejected); BBM's `models/summary.csv`
+lists 285 models and per-model `metadata.json`/`model.bnet` are fetchable; PyPI
+installs of `biodivine-aeon`, `mpbn`, `pyboolnet`, `colomoto-jupyter` resolve.
+
+Reference PMIDs verified by E-utilities before use: Grieco 2013 (24250280, full text
+cached), SBML-qual (24321545), SIGNOR 3.0 (36243968), BioModels 2020 (31701150),
+Cell Collective (22871178; REST 26589448), GINsim 3.0 (29971008), CoLoMoTo notebook
+(29971009), PyBoolNet (27797783), MaBoSS 2.0 (28881959), CaSQ (32403123), bioLQM
+(30510517), AEON.py (36102786), GO-CAM (31548717). BBM itself is bioRxiv-only.
+
+Two aeon pitfalls worth recording: (1) `.bnet` inputs without rules become *parameters*,
+so `Attractors.attractors` on the raw model returns one coloured attractor spanning
+every input combination — fix inputs to constants per scenario first; (2) projecting an
+attractor onto a few variables should be done symbolically (intersect with
+`mk_subspace`) — iterating `vertices().items()` on a 4.8×10¹¹-state attractor was
+OOM-killed.
+
+The `just`-dependent test `test_assay_mining_wrapper.py::…shared_paths…` fails in this
+container because `just` is not installed; it fails identically on the base branch and
+is unrelated to this work.

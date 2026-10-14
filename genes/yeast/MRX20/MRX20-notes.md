@@ -135,6 +135,12 @@ NOT known (genuine knowledge gaps):
   retained as a safe non-core mitochondrial-carrier localization, and the existing
   structured over-annotation calls for the PTN000640552 citrate rows were retained.
   A newer yeast SLC25 review, PMID:40836422, still lists Mrx20/YFR045W as unknown.
+- 2026-09-30 IBA re-review: refreshed PTHR45788 PAINT and found the same three
+  IBA-bearing nodes. The structured propagation reviews now keep the ancestral
+  PAINT nodes and the curated seed donors that the transfer arguments rest on.
+  The citrate rows remain over-specific because PTN000640552 spans the
+  characterized PTHR45788:SF4 CTP1/SLC25A1 branch and the uncharacterized MRX20
+  PTHR45788:SF5 branch.
 - P: transmembrane transport (IEA InterPro) → ACCEPT (family-level; correct general process).
 - P: mitochondrial transport (ISS, PMID:10930523) → ACCEPT/KEEP (general, defensible).
 - F: citrate secondary active transmembrane transporter activity (IBA) → MARK_AS_OVER_ANNOTATED

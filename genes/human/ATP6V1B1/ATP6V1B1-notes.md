@@ -150,3 +150,54 @@ biology above and adds one mechanistically specific finding.
 
 Net: no change to calls — B1 is the kidney/inner-ear-restricted non-catalytic V1
 subunit supporting organellar and renal-luminal acidification.
+
+
+## 2026-09-29 bounded re-audit: corrections superseding earlier interpretations
+
+The earlier notes above are preserved as the historical journal, including their quotations and provider-derived claims. The following source-specific assessment supersedes the old B1/B2 attribution, tissue-exclusion arguments, broad-term downgrades and unsupported negative conclusions. The immutable Falcon report is preserved; its selected claims about cystinosin/TFEB have not been independently established here and are not adopted as new assertions.
+
+### One molecular contribution
+
+B1 supplies structural work in the V1 sector of the ATP-driven proton pump. It is not an independently ATP-hydrolyzing enzyme or a membrane proton pore. One contributes_to GO:0046961 core in the general V-type complex GO:0033176 replaces the duplicate ATP-binding, renal and auditory cores. Direct involvement in the already present proton-transport process is retained; no NEW term or redundant process ancestor is added. ATP binding remains an inferred property grounded in InterPro and immutable UniProt residue394, which is transferred from B2/P21281. It is not described as a direct B1 binding assay. Broad membrane and pump assertions are not downgraded simply because a more specific term exists.
+
+### Actual source and species boundaries
+
+[PMID:16769747](https://pubmed.ncbi.nlm.nih.gov/16769747/) reports B1 wild-type/mutant fusion proteins in a rat IMCD host, complex coassembly, ATPase activity in immunoprecipitates, pH transport and apical trafficking. The available complete abstract does not specify the species of the expressed cDNA; full Methods were not recovered in this reading. Complex activity is not relabeled as purified B1 catalysis.
+
+[PMID:33065002](https://pmc.ncbi.nlm.nih.gov/articles/PMC7655608/) has a normal full_text_available flag but its cached body contains Introduction and Discussion, without Results/Methods. The old three-A/B/E/G quotation is in the Introduction and describes the yeast model. Independently indexed original Results identify B2 in the endogenous human HEK293F preparation by mass spectrometry and structural sequence assignment. This is family-level structural context, not verified direct B1 structure. The exact B1 IDA source attribution is deferred, while B1 complex membership remains accepted through independent phylogenetic, domain and B1-functional evidence. No whole-paper or supplement exclusion claim is made.
+
+[PMID:29993276](https://pmc.ncbi.nlm.nih.gov/articles/PMC6172570/) supports human apical-domain localization by light microscopy. Its rat immunoelectron microscopy is not a human ultrastructural result. Root's independently inspected Methods specify unaffected nephrectomy tissue and antibody-specificity controls; complete images and quantitative human TAL/DCT transport were not audited. The normal cache flag is preserved even though the cached extraction lacks Results/Methods.
+
+The complete [PMID:14585495](https://pubmed.ncbi.nlm.nih.gov/14585495/) abstract establishes the mouse B1 ortholog and kidney/testis expression in the studied survey. That survey cannot exclude all neuronal B1 roles. Basolateral transfer is corroborated in immutable UniProt, but microvillus and lateral-only panels remain uninspected and are deferred. Root traced mouse synaptic donor annotations through MGI to a paper whose selected mechanistic sections use V1B2; the exact B1 transfer remains unresolved. This tracing is an explicitly attributed owner observation, not a newly cached reference or direct B1 neuronal experiment. The immutable olfactory statement is By similarity to Q91YH6, not direct evidence from the cached review article mentioned in prior discussion.
+
+### Unresolved does not mean refuted
+
+The exact PMID:32814053 interaction pairs, three extracellular-vesicle peptide tables, PMID:22982048 B1-specific macroautophagy passage, PMID:20622307 calcium endpoints and PMID:16433694 ossification endpoints were not available at the required target-specific scope. They are UNDECIDED. An extracellular-vesicle localization need not demonstrate activity in that compartment. No claim is made that the clinical papers lacked calcium or bone experiments, that all skeletal effects are secondary acidosis, or that a title foregrounding another protein establishes a wrong-gene annotation. Verified generic binding would be retained as non-core under the user's action policy.
+
+The twelve complete Reactome summaries are retained as cytosolic complex/pathway context. They do not establish independent B1 GEF/GAP activity or a separate mTOR-signaling core. Renal proton secretion/pH control is established core physiology; hearing and clinical developmental context remain non-core consequences of the same molecular contribution.
+
+### Read scope and preservation
+
+All63 existing source objects, including qualifiers, are unchanged; no products or NEW annotations are introduced. All15 cited normal PMID abstracts and all12 Reactome summaries were read, along with selected immutable UniProt/provider material and the complete original notes. Partial cached bodies and separately indexed primary passages are distinguished from whole-paper access. The normal availability flags reflect the records, not a claim to have read every section. The local GO-CAM index search had no P15313/ATP6V1B1 hit; this is not a universal absence claim. The complete prospective annotation review and root scientific peer passed before canonical application. Source caches, provider output, UniProt and GOA are preserved. Focused validation, rendering and history are recorded separately after application.
+
+
+## Validation after the reviewed annotation update
+
+Focused validation passed on 2026-09-29 with three advisories. The V1-domain actions retain their evidence-specific distinction: broad pump participation is supported, while the exact B1 attribution in the structural source remains unresolved. The historical Falcon report remains preserved without being used as annotation evidence. The core uses the general proton-transporting V-type ATPase complex term without creating a redundant NEW annotation merely to silence the complex-term advisory. All 63 source assertions, the absent products state and the single pump-contribution core are preserved. The review remains DRAFT. No new repository-wide validation pass is claimed.
+
+
+## 2026-09-29 — First-feedback clarification of evidence and core facets
+
+The B1 V1-sector IDA assertion is accepted by curator deference to an established subunit role, corroborated by the B1 coassembly study [PMID:16769747](https://pubmed.ncbi.nlm.nih.gov/16769747/). Its abstract distinguishes the rat IMCD host from an unspecified expressed cDNA species and reports ATPase activity of the coimmunoprecipitated complex. This supports a structural contribution to the ATP-dependent pump, not autonomous B1 ATPase activity. It supersedes the earlier undecided action on that V1-membership row.
+
+The B2 structural observation is independently checkable in the original [PMID:33065002 / PMC7655608](https://pmc.ncbi.nlm.nih.gov/articles/PMC7655608/), Results section “Structure Determination and Overall Architectures” and Methods section “Expression and Purification of Human V-ATPase.” Those selected sections identify the human HEK293F preparation and B2-containing V1 sector. The cached extract lacks these sections. The indexed original was read; direct PMC access encountered a browser challenge. No complete supplemental-table or figure-pixel inspection is claimed. This limits how the structural study is used but does not overturn B1 complex membership.
+
+ATP metabolism and plasma-membrane activity remain mechanistic and spatial facets of the single contributes_to pump core. Generic membrane localization is refined to plasma membrane using independent localization evidence, without claiming the original electronic donor measured only the apical domain. No additional core or NEW assertion is introduced.
+
+The three exosome detections and four microvillus/lateral-membrane transfers remain unresolved at the target or subcompartment level. An exosome located_in annotation does not require an activity inside the vesicle. Uninspected target peptides could resolve it; no B1 contamination or bystander mechanism is established. Similarly, an uninspected mouse localization panel cannot establish that a specific compartment transfer is wrong. The generic interaction-screen row remains undecided because its exact partner-level evidence is unresolved; the proposal makes no unsupported removal or future action commitment.
+
+Each of the twelve Reactome cytosol reasons now describes its own event: four acidification/association contexts and eight Rag/RHEB/mTORC1 contexts. The R-HSA-917841 title/summary compartment mismatch is stated explicitly, without editing that cache. The cytosolic placements remain contextual, not twelve independent B1 signaling mechanisms. Summaries are now concise and distinct from the detailed reasons.
+
+All 63 original source assertions, absent product field, one core, questions, experiments and four literal evidence snippets are preserved. The original journal is retained verbatim, including its historical wording; the intended spellings are “residue 394,” “all 63,” “all 15,” and “all 12.” No new provider result, full-paper claim, source-cache mutation, or global validation result is asserted.
+
+The independently reviewed follow-up passed focused validation (`just validate human ATP6V1B1`, d18854), rendering (8d8cc2), and generated EDIT history validation (`2026-09-29T202244Z-codex-73e7cc.yaml`, cd1909). Two advisories remain: the preserved Falcon report is not cited, and the general core-complex term is not duplicated as a NEW annotation. Neither warrants inventing evidence or adding a redundant assertion. No repository-wide validation success is claimed.

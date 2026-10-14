@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [ASCL1, NEUROG1, NEUROG2, NEUROD1, OLIG2, SOX9, NFIA, STAT3, NOTCH1, HES1, PAX6, SOX2, DLX1]
+manifest:
+  slides:
+    - href: NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/HF8et9f8zWj6HJupfFzNUf
+      title: Project brief
 ---
 
 # Neural and Glial Cell Fate Determination Project
@@ -644,7 +651,3 @@ Key themes across neuron-glia fate decision genes:
 5. Subtype specification (DLX1 for GABAergic) operates downstream of initial neuron fate commitment
 
 Ready to proceed with Priority 2 genes (subtype specification).
-
-## Slides
-
-- [Slides](NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.html) (Marp source: [NEURON_DEVELOPMENT-slides.md](NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.md)) — AI generated

@@ -187,5 +187,27 @@ of GXSXG serine hydrolases acting in peroxisomal/lipid metabolism (not a FSH3-sp
    is the likely reason single deletions look silent; molecular function still unassigned.
 4. Whether peroxisomal FSH3 acts directly on a glycerophospholipid (PC) / fatty-acyl ester,
    or the PC/β-oxidation effects are indirect.
+
+## 2026-09-30 IBA rereview
+
+Rechecked the three FSH3 IBA rows against the current cached PTHR48070 PAINT export:
+
+- `PTN000512658` still carries the `GO:0005634`, `GO:0005737`, and `GO:0016787`
+  rows inherited by FSH3.
+- The `GO:0005634 nucleus` row remains an unsafe localization transfer from
+  metazoan OVCA2-family seeds onto yeast Fsh3, whose direct yeast localization is
+  the peroxisomal matrix.
+- The `GO:0005737 cytoplasm` row remains plausible and non-core. FSH3 itself is
+  among the PAINT seeds for this cytoplasmic IBD, so the self-seed is valid
+  target evidence rather than circular support.
+- The `GO:0016787 hydrolase activity` row remains a correct but under-specific
+  OVCA2/FSH-family transfer, and the target-specific GXSXG/Ser-Asp-His motif and
+  activity-based protein-profiling evidence still justify replacement with
+  `GO:0017171 serine hydrolase activity`.
+- The 2026 public-literature search found a new absolute-quantitative
+  peroxisomal proteome paper, PMID:41686312, that reports Fsh3 copy numbers under
+  oleate and glucose conditions. This is useful quantitative context for Fsh3 as
+  a peroxisomal protein but does not identify its substrate or change the IBA
+  decisions.
 </content>
 </invoke>

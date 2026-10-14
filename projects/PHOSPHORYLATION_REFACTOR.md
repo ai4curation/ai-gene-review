@@ -7,9 +7,23 @@ sidecars:
   slide_figures:
     - PHOSPHORYLATION_REFACTOR/slides/phospho-results.svg
     - PHOSPHORYLATION_REFACTOR/slides/who-does-the-step.svg
+manifest:
+  slides:
+    - href: PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FZZCXiuP5Hpq5kY7s6nMFh
+      title: Project brief
 ---
 
 # Phosphorylation Annotation Refactor Project
+
+**Interactive demo shortlist (2026-09-28):** [48 unreviewed candidates](PHOSPHORYLATION_REFACTOR/demo/README.md)
+— 31 mouse, 13 rat, 2 fly, and 2 zebrafish — with current positive
+`involved_in` rows, verified identifiers, per-gene triage rationales, and a
+script to recheck annotation and review status. Human hits from this screen
+were already reviewed or were kinase/complex false positives. These are
+candidates for review, not completed curation decisions.
 
 **Bottom line:** GO often annotates proteins to "protein phosphorylation"
 (GO:0006468) and its children when they are the substrate, regulator or even
@@ -2015,7 +2029,3 @@ source databases (MGI, GOA).
 - **GOOD**: FlyBase (3 rows / 2 genes), TAIR (4 rows)
 - **MODERATE**: RGD (11 errors, mostly ISS transfers)
 - **NEEDS REVIEW**: MGI (~20 errors), GOA (~45 errors)
-
-## Slides
-
-- [Slides](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html) (Marp source: [PHOSPHORYLATION_REFACTOR-slides.md](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.md)) — AI generated

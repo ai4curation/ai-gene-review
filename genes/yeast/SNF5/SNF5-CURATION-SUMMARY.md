@@ -2,7 +2,7 @@
 ## Saccharomyces cerevisiae (UniProt P18480)
 
 ### Review Status: COMPLETE
-**Total Annotations Reviewed:** 36 existing GO annotations
+**Total Annotations Reviewed:** 36 review rows covering 44 GOA annotation rows
 
 ---
 
@@ -10,26 +10,26 @@
 
 ### Annotation Actions Breakdown
 
-**ACCEPT (20 annotations - 55.6%)**
+**ACCEPT (23 review rows - 63.9%)**
 - Core function annotations supported by experimental evidence
 - Proper localization to nuclear/chromatin compartments
 - Well-supported biological and molecular processes
 - High-quality evidence codes (IDA, IMP, IGI, IPI)
 
-**KEEP_AS_NON_CORE (10 annotations - 27.8%)**
-- Generic "protein binding" annotations (8 instances)
-  - Valid evidence but uninformative compared to specific interactions
-  - Marked as non-core in favor of more informative molecular functions
+**KEEP_AS_NON_CORE (3 review rows - 8.3%)**
 - Cytosol localization (1 annotation)
   - Minor/transient localization, not primary functional compartment
-- Specific metabolic responses (1 annotation)
+- Invasive growth and double-strand break repair processes (2 annotations)
   - Valid but pleiotropic effect of general transcriptional role
 
-**REMOVE (0 annotations - 0%)**
-No annotations were deemed incorrect or unsupported
+**REMOVE (9 review rows - 25.0%)**
+- Generic "protein binding" annotations with no specific molecular-function replacement
+  - Physical interactions are not disputed, but GO:0005515 does not describe a
+    specific SNF5 activity
 
-**MODIFY (0 annotations - 0%)**
-All core functions are appropriately termed
+**MODIFY (1 review row - 2.8%)**
+- PMID:32188938 generic "protein binding" refined to GO:0031491 nucleosome binding
+  based on cryo-EM support for Snf5 acidic-patch engagement
 
 ---
 
@@ -120,9 +120,10 @@ All core functions are appropriately termed
 ## RECOMMENDATIONS
 
 ### For Annotation Enhancement
-1. **Consolidate protein binding** into more specific terms:
-   - SNF5-histone octamer interaction (GO term needed or use more specific)
-   - SNF5-SWI/SNF subunit interaction
+1. **Retain specific replacements for protein binding** where evidence supports them:
+   - The PMID:32188938 GO:0005515 row is now refined to GO:0031491 nucleosome binding
+   - Other generic GO:0005515 rows should remain removed unless a specific,
+     evidence-backed molecular function is identified
 
 2. **Consider new annotations for:**
    - Histone acetylation sensing (SNF5-specific feature from deep research)
@@ -134,7 +135,7 @@ All core functions are appropriately termed
    - Leverage deep research on metabolic sensing role
 
 ### For Core Function Definition
-The 36 annotations cleanly support ~7 core functions:
+The 36 review rows cleanly support ~7 core functions:
 1. SWI/SNF complex membership (structural)
 2. Nucleosome anchoring (biochemical)
 3. Chromatin remodeling (catalytic)
@@ -182,10 +183,11 @@ All major findings from SNF5-deep-research-perplexity.md have been incorporated:
 ## VALIDATION NOTES
 
 The comprehensive review demonstrates that SNF5 annotations are:
-- **Well-supported:** 55.6% accepted as core functions
-- **Appropriately conservative:** 27.8% marked as non-core but evidentially valid
-- **Accurate:** 0% removed as incorrect
-- **Complete:** All 36 annotations addressed
+- **Well-supported:** 63.9% of review rows accepted as core functions
+- **Appropriately conservative:** 8.3% marked as non-core but evidentially valid
+- **Specific:** 25.0% removed and 2.8% refined to eliminate generic protein-binding assertions
+- **Complete:** 44 GOA annotation rows addressed in 36 review rows
 
-The remaining generic "protein binding" annotations should be prioritized for enhancement to more specific molecular function terms, but their retention is justified by valid experimental evidence.
-
+The generic "protein binding" annotations were removed or, where PMID:32188938
+independently supported acidic-patch engagement, refined to nucleosome binding;
+they should not be retained as standalone molecular-function annotations.

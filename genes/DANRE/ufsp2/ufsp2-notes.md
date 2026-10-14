@@ -39,3 +39,20 @@ Based on studies of mammalian orthologs, UFSP2 localizes to the ER, cytoplasm, a
 ## Zebrafish-Specific Considerations
 
 All annotations for zebrafish ufsp2 are transferred from mammalian orthologs (human UFSP2 Q9NUQ7 and mouse Ufsp2 Q99K23) by sequence similarity (ISS, IBA, IEA). No direct experimental evidence exists for zebrafish ufsp2 itself. The protein is highly conserved across vertebrates, so the transferred annotations are expected to be reliable.
+
+## Re-review 2026-09-29
+
+The prior review was already literature-grounded; this pass completed it rather than rewriting it.
+
+- Resolved the 5 PENDING rows, each graded consistently with the same term's other evidence codes: ISS deUFMylase activity -> ACCEPT; ISS and IEA (GO_REF:0000120) endoplasmic reticulum -> ACCEPT; ISS nucleus and ISS cytoplasm -> KEEP_AS_NON_CORE.
+- Dropped a stale row, GO:0005783 IEA GO_REF:0000044, which is absent from the refreshed GOA (the ER IEA is now carried under GO_REF:0000120) and duplicated it.
+- Completed the truncated ISS GO:0006508 MODIFY block (its `reason` ended mid-word) and gave it the same replacement term as the IBA row, GO:0070646 protein modification by small protein removal, whose definition covers removal of ubiquitin-like proteins [QuickGO GO:0070646 "one or more covalently attached groups of a small protein, such as ubiquitin or a ubiquitin-like protein, are removed from a target protein"]. There is still no dedicated protein deUFMylation BP term.
+- Localisation grading rests on UniProt's own transfer from mouse Ufsp2 [file:DANRE/ufsp2/ufsp2-uniprot.txt "SUBCELLULAR LOCATION: Endoplasmic reticulum"] plus the structural basis for ER recruitment [PMID:21228277 "plays a role in the recognition of its cellular substrate C20orf116 and thus in the recrui"] and the substrate's ER enrichment [PMID:30626644 "RPL26 UFMylation and de-UFMylation is catalyzed by enzyme complexes tethered to the cytoplasmic surface of the ER and UFMylated RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes."]. Nucleus and cytoplasm are kept but non-core: no nuclear deUFMylation substrate is established.
+- Two ellipsis-containing `supporting_text` quotes (PMID:30626644, PMID:38383785) were replaced with verbatim passages from the cached abstracts.
+- Added `core_functions` (deUFMylase activity GO:0071567 at the ER, feeding GO:0070646 and GO:0032790), `reference_review` for all 8 PMIDs, and suggested questions/experiments. All zebrafish annotations remain similarity-based; no zebrafish-specific experiment exists for ufsp2.
+- Validation: 0 errors, 0 warnings.
+
+### Quote cleanup (2026-10-04)
+
+- Removed stray UniProt `CC` line prefixes from the SUBCELLULAR LOCATION UniProt quote, used in 5 supported_by entries (GO:0005634, GO:0005737, GO:0005783 x2, core_functions).
+- No action, reason or term changed; `just validate DANRE ufsp2` passes with zero errors.

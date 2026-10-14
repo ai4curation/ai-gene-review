@@ -132,3 +132,72 @@ still asserts **no molecular function** on the branched-chain side of PTHR43380,
 GO:0003863 — the best-evidenced term this gene has — does not propagate. PANTHER also
 lumps bacterial pyruvate dehydrogenase E1-alpha (pdhA) into the same subfamily SF1 as
 BCKDHA, so any MF term must be placed at a PTN node rather than at SF1.
+
+
+## 2026-09-30 BCKDHA source and mechanism reassessment
+
+All 38 source assertions remain, with their 11 missing supporting-entity lists restored from GOA. The three pre-existing authored cofactor-binding annotations are retained, giving 41 total rows: 28 ACCEPT, eight KEEP_AS_NON_CORE, two MODIFY and three inherited NEW. No additional annotation or process assertion is introduced. The five BCKDHB interaction records are biologically coherent but generic, so they are retained as non-core instead of being rejected or treated as independent molecular functions.
+
+One core now represents BCKDHA's contribution to the alpha2-beta2 E1 enzyme. The alpha chain helps bind and position ThDP and its metal ions; the assembled enzyme decarboxylates branched-chain ketoacids and reductively acylates the DBT lipoyl group. DBT and DLD perform the subsequent transfer-to-CoA and redox steps. Participation in the overall complex reaction does not assign those separate chemical activities to BCKDHA. This committed oxidation follows the reversible transamination step.
+
+The magnesium and potassium contacts are grounded in the immutable UniProt record and the official human 1DTW structural record. Multiple listed coordinating residues do not constitute multiple alpha-chain potassium sites. The later 1U5B record contains manganese, so it is not used as specific magnesium-ligand evidence. Coordinates were not independently reanalyzed. Mature alpha Ser292 corresponds to precursor Ser337; phosphorylation disrupts lipoyl-domain recognition and reductive acylation more strongly than initial decarboxylation.
+
+The two machine-derived UniProt products remain unchanged. Alternative-product targeting, assembly and regulation are experimental questions, not established loss of activity. Cached human studies and their complete abstracts support the synthesis, with full-paper and pair-level screen limitations recorded per reference. The provider reports remain unchanged as research leads. The earlier gel-band subunit assignments and counting of individual potassium contacts as separate sites are superseded here.
+
+All ten normal Reactome records were recovered through Source94 after the documented initial local retrieval failed. Their recovered content was read and reassessed before this integration. Database descriptions are interpreted at their actual subunit and reaction level, including the alpha-versus-beta wording conflict in the PPM1K event. The original source assertions remain intact; a database wording discrepancy does not manufacture an experimental correction. Earlier notes are retained as history.
+
+### Final validation and independent science review
+
+The independent final biology review passed after narrowing an inherited universal activity-loss claim to severe impairment and removing an unlisted beta-specific residual-activity example from the alpha review. All 38 source annotations and three inherited cofactor-binding proposals remain in order; 11 missing supporting-entity lists were restored exactly from GOA. Both source-derived alternative products remain unchanged.
+
+`just validate human BCKDHA` passed with six advisories: five supported generic protein-binding IPI annotations remain `KEEP_AS_NON_CORE` under the supplied action definitions, and annotations do not directly cite the retained generated research report. Primary normal publication records, reviewed UniProt and the ten normal Reactome records support the synthesis. No complete primary-paper, figure, pair-specific proteomics supplement, or PAINT-tree reconstruction is claimed. The separate `pkg_resources` deprecation notice is an environment warning. `just render human BCKDHA` succeeded. These are focused checks, not a claim that the entire repository was validated.
+
+
+## 2026-09-30 — First PR feedback follow-up
+
+Reviewed the first substantive feedback on PR #3614 against the current normal sources. All 38 source annotations and the three inherited cofactor-binding proposals remain in order, including qualifiers, supporting entities and both alternative products. Actions and core terms are unchanged.
+
+The five experimentally attributed BCKDHB associations remain non-core under the user-supplied action definitions: generic binding is less informative than the shared E1 assembly, but that alone does not make a supported association false. This is an explicit application of the user's definitions, not a legacy-action exemption. The five policy advisories remain expected.
+
+Selected existing source excerpts were moved into the experimental annotation decisions they support. Core excerpts now identify the E1 complex and its coupled decarboxylation/reductive-acylation chemistry with enough context to be intelligible. New excerpts are deliberately bounded; a bare citation elsewhere does not claim a pair-level experiment or unavailable full text was re-read. The complete abstracts and existing curator attribution retain the reading limits documented per reference. Repeating the same passage in every row would not supply independent evidence.
+
+The former combined UniProt finding is split into focused statements about matrix location, transit and mature-chain ranges, shared ThDP ligand, and specific magnesium/potassium contacts. Each excerpt supports its own statement. Complete contact lists remain in the three inherited proposals, with spacing corrected. Multiple coordinating residues still do not mean multiple alpha-chain potassium sites.
+
+The ten Reactome TAS decisions now justify matrix localization directly from the reviewed human UniProt SUBCELLULAR LOCATION. The cached Reactome summaries have no explicit compartment field, so they provide reaction context rather than independent localization experiments. E1 performs decarboxylation and reductive acylation, DBT transfers the acyl group to CoA, DLD reoxidizes the lipoyl group, BCKDK phosphorylates E1 alpha, and PPM1K removes that phosphate. Those roles are not inferred from a location annotation. Reactome source findings now describe source content with short exact excerpts; subunit-wording and genotype-specific cautions remain in reference-review notes. The PPM1K event's E1-beta wording remains disputed, and severe residual-activity values remain variant-specific.
+
+The official AmiGO term page explicitly places GO:0120552 part_of GO:0009083 (BFO:0000050), confirming the existing specific core process choice. The broader source assertions remain unchanged. [AmiGO GO:0120552](https://amigo.geneontology.org/amigo/term/GO:0120552). No new process annotation is proposed.
+
+
+## Follow-up validation, 2026-09-30
+
+The independently reviewed follow-up passes focused validation (six warnings), history validation, and rendering. Five warnings concern supported generic binding retained as non-core under the supplied action definitions; the other records that primary/database sources, rather than the unchanged generated report, support annotation decisions. All 38 source assertions, three inherited NEW assertions and two products are preserved. No new global validation pass is claimed.
+
+
+## Bounded experimental-source traceability follow-up
+
+This follow-up addresses review 5373583625 against c1afcffa1530cc286455565391d77d68df53751e. Twelve non-generic experimental or inherited NEW rows (13, 15, 18, 20, 22, 23, 24, 25, 35, 36, 40 and 41; one-based) now have a local verbatim source anchor. The complete relevant cached abstracts were reread, alongside the exact UniProt alpha-chain location, subunit and metal-binding features. The high-throughput location anchors identify the human mitochondrial assay context; neither BCKDHA-specific supplementary entry nor phosphopeptide identification was newly reconstructed. The inherited caveats and the separate UniProt location citations remain in place. No complete-paper, figure or supplement read is claimed for this follow-up.
+
+The magnesium and potassium anchors name alpha precursor positions and ligands in the exact source columns. The potassium reason still distinguishes four alpha residue contacts from four sites and preserves the separate beta-site caveat. An E1 reductive-acylation excerpt from the already listed PMID15576032 is linked to row15 without attributing the complete three-reaction pathway to the alpha chain. The contributed molecular function retains its alpha-beta enzyme context.
+
+To keep repeated quotations within the per-source aggregate limit, the existing PMID7883996 row19 excerpt was shortened within the same sentence, and the PMID9582350 composition excerpt was shortened and moved from core support to row20. Both source citations remain in the core and rows. All top-level findings, including the six UniProt feature findings and the disputed Reactome beta attribution, are unchanged. The counts include every repeated excerpt occurrence in both BCKDHA and BCKDHB, with conservative inherited allowances for PMID10745006 and PMID15166214; no affected PMID exceeds 25 words. The alpha UniProt quote total is 25 words. Short anchors provide verifiable source links in conjunction with their preserved contextual reasons; they are not standalone proof of every clause.
+
+All 41 source/inherited NEW objects, two products, annotation actions, biological descriptions and core terms remain unchanged. The five generic protein-binding rows remain KEEP_AS_NON_CORE under the user's applicable action definitions. They are outside this finite traceability change; no reviewer recommendation has been converted mechanically into a removal or a stronger molecular-function assertion. Canonical application remains pending independent review.
+
+
+The traceability follow-up was independently reviewed and applied. Focused validation passed with six existing advisories (five retained non-core generic binding rows and one uncited provider report). Rendering and history validation passed. No new scientific assertion or full-repository validation result is claimed.
+
+
+## Evidence adjudication and clearer source anchors — 2026-10-01
+
+The three human E1 structural/biochemical papers (PMIDs 12902323, 15166214 and 15576032) explicitly test alpha-chain residues or phosphorylation and their effects on E1 chemistry. Their generic BCKDHB-binding annotations are therefore refined to the already supported branched-chain 2-oxo acid dehydrogenase activity, with `contributes_to` as the proposed relationship. The original source qualifiers, partners, terms and evidence codes remain intact. This is evidence-based functional refinement; binding alone would not justify it. The alpha chain positions the cofactor and lipoyl-domain recognition loop within the alpha-beta enzyme. It is not an independently active E1 enzyme or the kinase that phosphorylates it.
+
+The two BioPlex rows are now UNDECIDED because their pair-specific supplements and cell context were not independently adjudicated. Their BCKDHB association is biologically plausible and is not being rejected. This supersedes the earlier decision to retain those five generic rows as non-core. No generic interaction was removed, and no new functional annotation was created.
+
+The source excerpts now identify alpha-chain mutations in the assembly experiment, the alpha subunit affected in the activity-loss experiment, and the enzyme catalyzing reductive acylation. The composition anchor includes alpha2-beta2. The phosphorylation excerpt explicitly includes the inhibition clause, and its reason explains that it is perturbation evidence for the normal E1 step. These edits address the scientific context of the excerpts while preserving all cited papers and the biological core.
+
+The previously mentioned quotation budget is an automated-assistant source-quotation constraint, not a repository validation rule or a claim about the supporting-text validator. The request to restore longer repeated quotations cannot be followed within that constraint. Full source records remain linked, the review reasons paraphrase the relevant experimental results, and the unchanged core cites PMID:9582350 for alpha2-beta2 composition. A bare source citation there does not withdraw that evidence. Counts include repeated excerpts in both alpha and beta reviews; no BCKDHB file was edited.
+
+For this follow-up, the complete cached abstracts of PMIDs 10745006, 12902323, 15166214, 15576032, 7883996 and 9582350 were read. This does not constitute a full-paper, figure, structural-coordinate or supplement audit. The official AmiGO entry for [GO:0003863](https://amigo.geneontology.org/amigo/term/GO:0003863), checked 2026-10-01 with its displayed 2026-08-06 ontology load, describes the E1 decarboxylating reductive-acylation reaction; the replacement does not assign DBT or DLD chemistry to BCKDHA. Independent peer review and focused validation remain pending.
+
+
+This follow-up has now passed independent scientific review, focused gene validation, rendering and history validation. Validation reported one advisory that the available Falcon research report is not cited; the annotations here use primary sources. The source fields and alternative products remain unchanged. This is focused validation, not a repository-wide validation claim.

@@ -124,3 +124,17 @@ Chromatin (GO:0000785) is supported by ChIP but has no GOA row, so it was left o
 `just validate yeast SWI6` passes; the remaining warnings were removed by dropping the
 chromatin location and the non-core heat term from `core_functions` and by citing the
 deep-research file.
+
+## 2026-09-29 IBA source alignment
+
+- Rechecked the six SWI6 IBA rows against the current `PTHR24198` PAINT snapshot.
+  Added PTN-level `propagation_review` blocks for the five supported transfers, and
+  retained the enables-qualified `GO:0001228` DNA-binding transcription factor activity
+  as a `TERM_SCOPING_PROBLEM` whose source is the broad `PTN000917496` node.
+- The cytoplasm and MBF rows are intentionally asymmetric with SWI4: `GO:0005737`
+  cytoplasm is valid but non-core for Swi6 because its regulated cytoplasmic pool resets
+  SBF, and `GO:0030907` MBF transcription complex is core for Swi6 because Swi6 is shared
+  by both SBF and MBF.
+- Searched 2025-2026 PubMed and the broader web for `SWI6`/`YLR182W` papers in budding
+  yeast; the hits were gene pages, older primary literature, or broad G1/S summaries and
+  did not require new SWI6-specific curation changes.

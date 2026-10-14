@@ -43,3 +43,10 @@ The overexpression phenotype supports an osmoprotection role but does not replac
 - Accept GO:0008802 as BetB's core molecular function and glycine-betaine biosynthesis from choline as its pathway.
 - Keep metal ion binding as non-core mechanistic support.
 - Mark generic oxidoreductase activity as over-annotated.
+
+## 2026-09-27 retired process term
+
+- GO:0019285 was retired in GO release 2026-05-19, so the NEW proposal and the
+  authored core process now use GO:0031456 (glycine betaine biosynthetic process), the
+  term the bacterial_choline_to_glycine_betaine_biosynthesis module grounds the same
+  step on. The evidence and reasoning are unchanged.

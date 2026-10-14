@@ -3,6 +3,13 @@ title: "Mechanobiology Gene Review Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+manifest:
+  slides:
+    - href: MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MvFbo2qfKDeCNMKTyZ5bBd
+      title: Project brief
 ---
 
 # Mechanobiology Gene Review Project
@@ -204,7 +211,3 @@ Those may become relevant later, but the present project is first a grounded cur
 ## Source input
 
 - Key ideation source: [cmungall/stuff issue #671](https://github.com/cmungall/stuff/issues/671), fetched 2026-04-11
-
-## Slides
-
-- [Slides](MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.html) (Marp source: [MECHANOBIOLOGY-slides.md](MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.md)) — AI generated

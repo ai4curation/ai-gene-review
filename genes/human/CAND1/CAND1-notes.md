@@ -14,7 +14,7 @@
 - Crystal structure of Cand1-Cul1-Roc1: Cand1 superhelix clamps Cul1; a beta-hairpin occupies the adaptor (Skp1) binding site; HEAT repeats bury the Cul1 lysine whose neddylation blocks Cand1 association. [PMID:15537541 "a Cand1 beta hairpin protrusion partially occupies the adaptor binding site on Cul1, inhibiting its interactions with the Skp1 adaptor and the substrate-recruiting F box protein subunits."]
 
 ## In vivo dynamics / regulation
-- Although early biochemistry framed CAND1 as an inhibitor/sequester, in vivo it is a positive regulator of CRL activity that promotes substrate-receptor exchange (dynamic recycling). [PMID:21249194 "CAND1 ... has been shown to function as a positive regulator of Cullin ligases in vivo."]
+- Although early biochemistry framed CAND1 as an inhibitor/sequester, CAND1 is a protein exchange factor that promotes substrate-receptor exchange and dynamic SCF remodeling. [PMID:23453757 "Binding and ubiquitylation assays show that Cand1 is a protein exchange factor that accelerates the rate at which Cul1-Rbx1 equilibrates with multiple F box protein-Skp1 modules."]
 - In mammalian cells CAND1 is predominantly cytoplasmic and cullins are its major interactors; only small amounts bind Cul1 at steady state (consistent with transient exchange-factor action). [PMID:21249194 "we show that CAND1 is predominantly cytoplasmically localized and that cullins are the major CAND1 interacting proteins."]
 - F-box protein + substrate promote dissociation of the cullin-CAND1 complex, coupling assembly to substrate availability and neddylation. [PMID:16861300 "Skp2-Skp1 abrogates the inhibitory influence of CAND1 on the neddylation of Cul1 by promoting the dissociation of the cullin-CAND1 complex"]
 
@@ -30,3 +30,10 @@
 - NON-CORE / historical: TBP-class binding and transcription-regulation terms, cell differentiation (TIP120A era).
 - OVER-ANNOTATED / uninformative: many high-throughput "protein binding" (GO:0005515) IPI hits; extracellular region, secretory granule lumen, ficolin-1-rich granule lumen, extracellular exosome, membrane (HDA/Reactome contaminant-type localizations).
 - NOTE: CAND1 is a regulator/assembly factor, NOT a catalytic E3 or a ubiquitin-transfer enzyme; protein ubiquitination annotations are "involved_in" (regulatory) and should be read as such.
+
+## PROTEOSTASIS phase-1 follow-up (2026-09-27)
+
+- Applied the phase-1 recommendation to add GO:1990757 "ubiquitin ligase activator activity" as the
+  best existing MF for CAND1's CRL-activating exchange-factor role, supported by the cached
+  PMID:23453757 primary paper. Kept the proposed "cullin-RING ubiquitin ligase substrate receptor exchange
+  factor activity" term as the more specific ontology request.

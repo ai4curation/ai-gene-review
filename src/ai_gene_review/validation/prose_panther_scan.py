@@ -3,7 +3,8 @@
 Module validation reads ``term.id``/``term.label`` pairs, so a PANTHER id that
 appears in a ``notes``, ``description`` or ``statement`` field is invisible to
 it. That gap is not theoretical: nine such claims were contradicted by
-``interpro/panther/panther-members.tsv`` -- the same file committed to validate
+the PANTHER member index (``.cache/panther/panther-members-<release>.tsv``, built by
+``just refresh-panther-members``) -- the same index used to validate
 the structured slots -- including three naming a family none of the proteins
 belonged to. Removing a wrong id from ``term`` while leaving it asserted in prose
 is worse than leaving both, because prose is what a curator reads when deciding
@@ -14,7 +15,7 @@ Two constraints, both learned by getting them wrong first:
 * **Match ids exactly.** A fixed-width lookahead window truncates ids
   mid-number (``PTHR11157`` -> ``PTHR111``), which manufactures false positives.
   Find complete ids, then test proximity.
-* **Report what could not be checked.** ``panther-members.tsv`` indexes
+* **Report what could not be checked.** the PANTHER member index indexes
   accessions cited in ``representative_members``; prose-only accessions may be
   absent. Skipping those silently reports a clean sweep over a set that was
   partly unexamined. They are counted and listed, and ``--online`` resolves them
@@ -54,7 +55,9 @@ import yaml
 from ai_gene_review.etl.panther_families import (
     fetch_panther_from_uniprot,
     load_member_index,
+    load_member_index_alternates,
     load_member_index_gaps,
+    member_index_path,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -131,7 +134,9 @@ def collect_claims(modules_dir: Path) -> List[Claim]:
     """Collect every prose claim across a modules directory."""
     claims: List[Claim] = []
     for path in sorted(Path(modules_dir).rglob("*.yaml")):
-        document = yaml.safe_load(path.read_text())
+        # C loader when available: the scan parses every module, and the
+        # pure-Python loader made this the slowest step of a member-index refresh.
+        document = yaml.load(path.read_text(), Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
         for text in iter_prose(document):
             claims.extend(extract_claims(path.name, text))
     return claims
@@ -143,11 +148,11 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument(
         "--online",
         action="store_true",
-        help="Resolve accessions missing from panther-members.tsv via UniProt.",
+        help="Resolve accessions missing from the PANTHER member index via UniProt.",
     )
     args = parser.parse_args(argv)
 
-    members_path = REPO_ROOT / "interpro" / "panther" / "panther-members.tsv"
+    members_path = member_index_path(REPO_ROOT)
     index: Dict[str, str] = dict(load_member_index(members_path))
     claims = collect_claims(args.modules_dir)
 
@@ -162,12 +167,16 @@ def main(argv: List[str] | None = None) -> int:
     # rerunning the refresh is a real remedy -- which is why it routes with
     # "never seen" rather than with "absent".
     gaps = load_member_index_gaps(members_path)
+    # UniProt's family where it disagrees with PANTHER's own files; a prose claim
+    # matching either source is not a contradiction.
+    alternates = load_member_index_alternates(members_path)
 
     contradicted = [
         c
         for c in claims
         if c.accession in index
         and index[c.accession].split(":")[0] != c.claimed_family
+        and alternates.get(c.accession, "").split(":")[0] != c.claimed_family
     ]
     # Every claim lands in exactly one bucket. `absent` needs the not-in-index
     # guard because --online can resolve an accession the file recorded as
@@ -218,7 +227,7 @@ def main(argv: List[str] | None = None) -> int:
         )
     if unresolvable:
         print(
-            "⚠️  not in panther-members.tsv, so NOT checked "
+            "⚠️  not in the PANTHER member index, so NOT checked "
             f"(run `just refresh-panther-members`, or --online): "
             f"{', '.join(unresolvable)}"
         )

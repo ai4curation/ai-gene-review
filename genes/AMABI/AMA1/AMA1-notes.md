@@ -76,3 +76,20 @@
 - Requires full biosynthetic machinery
 - Cannot accidentally produce toxin
 - Important for mushroom identification apps
+## Re-review 2026-10-01 (GOA refresh)
+
+- The current GOA snapshot has **no rows** for A8W7M4. The two former IEA rows
+  (GO:0035821 modulation of process of another organism, GO_REF:0000108; GO:0090729
+  toxin activity, GO_REF:0000043 keyword mapping) disappeared from GOA and are now
+  marked `retired: true`; their (ACCEPT) reviews are kept, now supported by
+  PMID:18025465 / PMID:8702941 quotes.
+- Dropped four curator-authored NEW proposals that failed the participation test or had
+  no evidence: GO:0016853 isomerase activity and GO:0018377 protein myristoylation
+  (activities of processing enzymes / unrelated chemistry, not of the precursor peptide),
+  GO:0009404 toxin metabolic process (AMA1 is the substrate of amatoxin biosynthesis;
+  POPB etc. perform the steps), GO:0005576 extracellular region (no evidence; the toxin
+  is reported in intracellular compartments of hymenial cells).
+- Removed unrelated references that had been attached with fabricated quotes
+  (PMID:24646612 carpal tunnel syndrome, PMID:20138890 Thermotoga beta-glucosidase,
+  PMID:22202229 glyphosate, PMID:29233888 mitochondrial disorders). Added PMID:18025465
+  and PMID:8702941 (abstract-only caches).
