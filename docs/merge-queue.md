@@ -11,7 +11,9 @@ with **one integration build at a time**, one PR per merge, and up to **50 total
 queue entries** admitted by the shepherd. Each sweep attempts at most **50
 admissions**, including failed attempts. Waiting entries do not increase build
 concurrency. The summary distinguishes the observed entry limit from the attempt
-budget and includes the counts for whichever limit stopped admission. Manual admissions
+budget and includes the counts for whichever limit stopped admission. The scheduled
+job also stops starting new PRs after 30 minutes (`--time-budget-seconds 1800`,
+inside its 45-minute job timeout) so a long sweep still writes its summary. Manual admissions
 can exceed the shepherd's queue-size limit; GitHub's build-concurrency limit still
 applies. Existing approval and `test (3.12)` branch protection remain in force.
 

@@ -244,7 +244,7 @@ def test_full_queue_at_final_read_stops_write(monkeypatch, tmp_path, active_queu
         monkeypatch, tmp_path, args=("--execute", "--required-check", "test (3.12)"),
     )
     assert code == 0 and not merges and not active_queue
-    assert "queue filled during verification" in summary
+    assert "queue filled during verification: 50/50 observed entries" in summary
 
 
 @pytest.mark.parametrize("stage", ["enqueue", "history"])
@@ -279,3 +279,22 @@ def test_one_remaining_slot_is_filled_at_default_capacity(monkeypatch, tmp_path,
     )
     assert code == 0 and not merges and len(active_queue) == 1
     assert "Queued 1" in summary
+
+
+def test_time_budget_stops_new_admissions(monkeypatch, active_queue, capsys):
+    monkeypatch.setenv("GH_MERGE_TOKEN", "writer")
+    monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [make_pr(number=n) for n in (1, 2)])
+    monkeypatch.setattr(auto_merge, "view_pr", lambda _, n: make_pr(number=n))
+    monkeypatch.setattr(auto_merge, "list_pr_reviews", lambda *_: make_pr()["reviews"])
+    monkeypatch.setattr(auto_merge, "list_pr_files", lambda *_: auto_merge.ChangedFileInventory(
+        tuple(make_pr()["changed_files"]), (),
+    ))
+    monkeypatch.setattr(auto_merge, "view_pr_head_sha", lambda *_: HEAD_SHA)
+    clock = iter([0.0, 0.0, 120.0])
+    monkeypatch.setattr(auto_merge.time, "monotonic", lambda: next(clock))
+    code = auto_merge.main([
+        "--repo", "o/r", "--execute", "--required-check", "test (3.12)",
+        "--time-budget-seconds", "60",
+    ])
+    assert code == 0 and [args[1] for args in active_queue] == [1]
+    assert "sweep time budget reached: 120/60s" in capsys.readouterr().out

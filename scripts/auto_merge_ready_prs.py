@@ -1020,6 +1020,13 @@ def main(argv: list[str] | None = None) -> int:
         help="stop admitting when the observed queue reaches this size (default: 50)",
     )
     parser.add_argument(
+        "--time-budget-seconds", type=positive_int, default=None,
+        help=(
+            "stop starting new PRs after this many seconds so the sweep still "
+            "writes its summary before an external timeout (default: no limit)"
+        ),
+    )
+    parser.add_argument(
         "--trusted-reviewer",
         action="append",
         type=trusted_reviewer_login,
@@ -1145,8 +1152,16 @@ def main(argv: list[str] | None = None) -> int:
     failed: list[dict] = []
     enqueue_attempts = 0
     queue_size = len(queue.numbers)
+    started = time.monotonic()
     for pr in candidates:
         number = pr["number"]
+        elapsed = time.monotonic() - started
+        if args.time_budget_seconds is not None and elapsed >= args.time_budget_seconds:
+            skipped.append({
+                "number": number,
+                "reason": f"sweep time budget reached: {elapsed:.0f}/{args.time_budget_seconds}s",
+            })
+            continue
         if queue.active and queue_size >= args.max_queue_size:
             skipped.append({
                 "number": number,
