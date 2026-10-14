@@ -133,7 +133,7 @@ def test_queue_dry_run_does_not_write(monkeypatch, tmp_path, active_queue):
 
 
 @pytest.mark.parametrize("numbers,reason", [
-    ([42], "already in merge queue"), ([1, 2], "capacity reached"),
+    ([42], "already in merge queue"), (list(range(100, 150)), "queue capacity reached: 50/50 observed entries"),
 ])
 def test_existing_entries_skip_admission(monkeypatch, tmp_path, active_queue, numbers, reason):
     monkeypatch.setattr(auto_merge, "read_queue_state",
@@ -181,9 +181,10 @@ def test_configuration_change_stops_write(monkeypatch, tmp_path, active_queue):
 
 
 @pytest.mark.parametrize("dry_run,fail", [(True, False), (False, False), (False, True)])
-def test_admissions_and_failed_attempts_are_bounded(monkeypatch, active_queue, dry_run, fail):
+@pytest.mark.parametrize("limit,explicit", [(2, True), (50, False)])
+def test_admissions_and_failed_attempts_are_bounded(monkeypatch, active_queue, dry_run, fail, limit, explicit, capsys):
     monkeypatch.setenv("GH_MERGE_TOKEN", "writer")
-    monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [make_pr(number=n) for n in range(1, 5)])
+    monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [make_pr(number=n) for n in range(1, limit + 3)])
     monkeypatch.setattr(auto_merge, "view_pr", lambda _, n: make_pr(number=n))
     monkeypatch.setattr(auto_merge, "list_pr_reviews", lambda *_: make_pr()["reviews"])
     monkeypatch.setattr(auto_merge, "list_pr_files", lambda *_: auto_merge.ChangedFileInventory(
@@ -200,11 +201,13 @@ def test_admissions_and_failed_attempts_are_bounded(monkeypatch, active_queue, d
         monkeypatch.setattr(auto_merge, "enqueue_pr", fail_enqueue)
     code = auto_merge.main([
         "--repo", "o/r", "--dry-run" if dry_run else "--execute",
-        "--required-check", "test (3.12)", "--max-enqueue-per-run", "2", "--max-queue-size", "10",
+        "--required-check", "test (3.12)", "--max-queue-size", "100",
+        *(["--max-enqueue-per-run", str(limit)] if explicit else []),
     ])
     assert code == int(fail)
-    assert set(history_calls) == {1, 2}
-    assert len(active_queue) == (0 if dry_run else 2)
+    assert set(history_calls) == set(range(1, limit + 1))
+    assert len(active_queue) == (0 if dry_run else limit)
+    assert f"queue admission attempt budget reached: {limit}/{limit} attempts" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("hold", ["two failed builds", ValueError("unreadable history")])
@@ -235,7 +238,7 @@ def test_queued_draft_is_not_restored(monkeypatch, tmp_path, active_queue, added
 
 
 def test_full_queue_at_final_read_stops_write(monkeypatch, tmp_path, active_queue):
-    states = iter([auto_merge.QueueState(True), auto_merge.QueueState(True, frozenset({1, 2}))])
+    states = iter([auto_merge.QueueState(True), auto_merge.QueueState(True, frozenset(range(100, 150)))])
     monkeypatch.setattr(auto_merge, "read_queue_state", lambda *_: next(states))
     code, merges, summary = _run_main(
         monkeypatch, tmp_path, args=("--execute", "--required-check", "test (3.12)"),
@@ -266,3 +269,13 @@ def test_final_head_race_is_a_benign_skip(monkeypatch, tmp_path, active_queue, s
 def test_removal_at_commit_time_does_not_count(monkeypatch):
     respond(monkeypatch, history([("failed_checks", "2026-08-01T00:00:00Z")] * 2))
     assert auto_merge.queue_retry_hold("o/r", 42, HEAD_SHA) == ""
+
+
+def test_one_remaining_slot_is_filled_at_default_capacity(monkeypatch, tmp_path, active_queue):
+    monkeypatch.setattr(auto_merge, "read_queue_state",
+                        lambda *_: auto_merge.QueueState(True, frozenset(range(100, 149))))
+    code, merges, summary = _run_main(
+        monkeypatch, tmp_path, args=("--execute", "--required-check", "test (3.12)"),
+    )
+    assert code == 0 and not merges and len(active_queue) == 1
+    assert "Queued 1" in summary
