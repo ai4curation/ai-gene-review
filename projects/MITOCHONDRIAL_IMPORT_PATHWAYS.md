@@ -3,14 +3,12 @@ title: "Mitochondrial Import Pathways Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+last_reviewed: "2026-10-04"
 genes: [TOMM40, TOMM20, TOMM22, TOMM70, TOMM5, TOMM6, TOMM7, SAMM50, MTX1, MTX2, MTCH2, CHCHD4, GFER, TIMM23, TIMM17A, TIMM50, TIMM21, TIMM22, TIMM44, PAM16, HSPA9, PMPCA, PMPCB]
 manifest:
   slides:
     - href: MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/QQQefrEZVFhvdvALWSZA78
-      title: Project brief
 ---
 
 # Mitochondrial Import Pathways Project
@@ -23,16 +21,16 @@ grouped them inconsistently. This project follows GO issue #31711, which
 proposed one GO process term per route, and reviewed the GO annotations of the
 human machinery that runs them. All 23 priority genes (TOM, TIM23, PAM, TIM22,
 SAM, MIA, MTCH2 and the MPP processing peptidase) now have reviews in the repo
-(670 annotations: 319 accepted, 88 kept as non-core, 167 marked over-annotated,
-40 modified, 50 removed, 6 NEW); the checklist below predates most of them.
-GO has since added the proposed terms: the parent
+(670 annotations: 313 accepted, 88 kept as non-core, 166 marked over-annotated,
+47 modified, 50 removed, 6 NEW). GO has since added the proposed terms: the parent
 `GO:7770058` mitochondrial protein import pathway, `GO:7770059` (α-helical
 outer-membrane insertion), `GO:7770060` (TIM23-SORT), `GO:7770061` (TIM22) and
 `GO:7770063` (β-barrel insertion), and reworded `GO:0030150` and `GO:0160203`
 to name their routes. Among the 23 priority genes only MTCH2 carries one of the
-new terms in its review; outside that set, human MTCH1 has an accepted IMP
-annotation to `GO:7770059` and yeast MIM1 is reviewed onto it. The grouping terms proposed for obsoletion, such as `GO:0070585`, are
-still live.
+new terms in its review; outside that set, human MTCH1 already carries an
+accepted IMP annotation to `GO:7770059`, and yeast MIM1 has a draft proposal for
+the same route. The grouping terms proposed for obsoletion, such as
+`GO:0070585`, are still live.
 
 ## Overview
 
@@ -83,7 +81,7 @@ The project should review key components of each import pathway. Priority genes 
 - **Processing**: PMPCB, PMPCA (MPP), XPNPEP3 (Icp55), MIP/MIPEP (Oct1)
 - **Folding**: HSPD1 (Hsp60), HSPE1 (Hsp10)
 
-## Priority Genes (fetched)
+## Priority Genes (reviewed)
 
 ### Tier 1 — Core channel/pathway subunits
 | Gene | Complex/Pathway | Annotations |
@@ -91,44 +89,75 @@ The project should review key components of each import pathway. Priority genes 
 | TOMM40 | TOM complex central channel | 30 |
 | TIMM23 | TIM23 complex channel | 29 |
 | TIMM22 | TIM22 complex channel | 27 |
-| SAMM50 | SAM complex channel | 31 |
+| SAMM50 | SAM complex channel | 32 |
 | CHCHD4 | MIA40/disulfide relay | 31 |
 | GFER | Erv1/ALR, disulfide relay partner | 26 |
-| MTCH2 | Metazoan MIM equivalent | 22 |
+| MTCH2 | Metazoan MIM equivalent | 24 |
 
 ### Tier 2 — Receptors, regulators, and accessory subunits
 | Gene | Complex/Pathway | Annotations |
 |------|----------------|-------------|
-| TOMM20 | TOM receptor (presequence) | pre-existing |
+| TOMM20 | TOM receptor (presequence) | 52 |
 | TOMM22 | TOM receptor (cis-binding) | 27 |
 | TOMM70 | TOM receptor (carrier proteins) | 60 |
 | TOMM5 | Small TOM subunit | 11 |
 | TOMM6 | Small TOM subunit | 10 |
 | TOMM7 | Small TOM subunit (quality control) | 20 |
-| TIMM50 | TIM23 receptor | 32 |
+| TIMM50 | TIM23 receptor | 33 |
 | TIMM44 | PAM complex (tethers mtHsp70) | 24 |
 | TIMM17A | TIM23 core channel | 17 |
-| TIMM21 | TIM23-SORT pathway | 23 |
-| PAM16 | PAM complex (J-protein regulator) | 27 |
+| TIMM21 | TIM23-SORT pathway | 24 |
+| PAM16 | PAM complex (J-protein regulator) | 28 |
 | MTX1 | Metaxin-1, SAM complex partner | 16 |
 | MTX2 | Metaxin-2, SAM complex partner | 20 |
-| HSPA9 | Mortalin/mtHsp70 (PAM motor) | pre-existing |
+| HSPA9 | Mortalin/mtHsp70 (PAM motor) | 83 |
 
 ### Tier 3 — Processing enzymes
 | Gene | Function | Annotations |
 |------|----------|-------------|
-| PMPCA | MPP alpha subunit | 24 |
+| PMPCA | MPP alpha subunit | 25 |
 | PMPCB | MPP beta subunit (catalytic) | 21 |
 
 ## Status
 
 - [x] Read and understand issue #31711
 - [x] Identify priority genes for review
-- [x] Fetch gene data for all priority genes
+- [x] Fetch gene data for all 23 priority genes
 - [x] Deep research on pathway components and nomenclature
-- [ ] Begin gene reviews
+- [x] Assign review actions across all 670 rows in the 23 priority review files
   - [x] TOMM40 — TOM complex central channel (30 annotations reviewed)
+  - [x] TOMM20 — TOM receptor (52 annotations reviewed)
+  - [x] TOMM22 — TOM receptor (27 annotations reviewed)
+  - [x] TOMM70 — TOM receptor (60 annotations reviewed)
+  - [x] TOMM5 — small TOM subunit (11 annotations reviewed)
+  - [x] TOMM6 — small TOM subunit (10 annotations reviewed)
+  - [x] TOMM7 — small TOM subunit (20 annotations reviewed)
+  - [x] SAMM50 — SAM complex channel (32 annotations reviewed)
+  - [x] MTX1 — metaxin-1 (16 annotations reviewed)
+  - [x] MTX2 — metaxin-2 (20 annotations reviewed)
   - [x] CHCHD4 — MIA40/disulfide relay (31 annotations reviewed)
-  - [x] MTCH2 — metazoan MIM insertase (22 annotations reviewed)
-  - [ ] Remaining genes (TIMM23, TIMM22, SAMM50, GFER, TOMM22, TOMM70, etc.)
-- [ ] Propose GO term hierarchy
+  - [x] GFER — Erv1/ALR disulfide relay partner (26 annotations reviewed)
+  - [x] MTCH2 — metazoan MIM insertase (24 annotations reviewed)
+  - [x] TIMM23 — TIM23 complex channel (29 annotations reviewed)
+  - [x] TIMM17A — TIM23 core channel (17 annotations reviewed)
+  - [x] TIMM50 — TIM23 receptor (33 annotations reviewed)
+  - [x] TIMM21 — TIM23-SORT pathway (24 annotations reviewed)
+  - [x] TIMM22 — TIM22 complex channel (27 annotations reviewed)
+  - [x] TIMM44 — PAM complex (24 annotations reviewed)
+  - [x] PAM16 — PAM complex J-protein regulator (28 annotations reviewed)
+  - [x] HSPA9 — PAM motor mtHsp70 (83 annotations reviewed)
+  - [x] PMPCA — MPP alpha subunit (25 annotations reviewed)
+  - [x] PMPCB — MPP beta subunit (21 annotations reviewed)
+- [x] Propose GO term hierarchy; GO issue #31711 closed after adding route terms and rewording `GO:0030150` / `GO:0160203`
+- [ ] Finalize `status` on `TOMM20` and `CHCHD4` after final QA
+- [ ] Finish local migration to the new TIM23-SORT, TIM22 carrier, and TOM-SAM route terms ([#4227](https://github.com/ai4curation/ai-gene-review/issues/4227))
+- [ ] Follow open grouping-term obsoletion work for `GO:0070585`, `GO:0072656`, `GO:0070096`, and related terms ([#4227](https://github.com/ai4curation/ai-gene-review/issues/4227))
+
+## Notes
+
+### 2026-10-04
+
+- Reconciled this page with the current 23 human review YAMLs: all priority genes
+  are now present, together covering 670 annotations and 6 proposed `NEW` rows.
+- Removed stale generated-artifact frontmatter and linked the remaining route-term
+  migration / grouping-term obsoletion work to #4227.

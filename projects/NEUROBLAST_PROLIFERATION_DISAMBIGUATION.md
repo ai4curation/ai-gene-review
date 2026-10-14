@@ -1,15 +1,13 @@
 ---
 title: "Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation"
 maturity: SCOPING
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [mouse, human, rat]
 manifest:
   slides:
     - href: NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/XBdGBSK3stehfvRxFBKmU9
-      title: Project brief
 ---
 
 # Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation
@@ -21,16 +19,18 @@ We parsed the QuickGO export attached to upstream issue
 geneontology/go-annotation#6393 and found that all 42 annotations to the six
 affected terms are on vertebrate genes (35 mouse, 4 human, 3 rat), so each
 one describes a stem-cell behaviour the vertebrate cell does not have. The
-plan is a per-gene review that moves these rows to GO:0061351 *neural
+plan, tracked in [#575](https://github.com/ai4curation/ai-gene-review/issues/575),
+is a per-gene review that moves these rows to GO:0061351 *neural
 precursor cell proliferation* or a more specific child, and we scoped it
 because upstream is still deciding how to split the terms and annotation-level
-evidence can inform that decision now. Scoped, not yet started: none of the
-ten candidate genes has a review under this project. Four repo reviews made
-for other reasons touch the affected terms on vertebrate genes (human FGFR2,
-SHH and TP53, mouse Ctnnb1, whose row is now retired), and all four kept the
-row as `KEEP_AS_NON_CORE` rather than applying the `MODIFY` rule proposed here.
-The fly-sense term GO:0055059 fits both fly genes that carry it: insc keeps it
-as `ACCEPT` and Lkb1 as `KEEP_AS_NON_CORE`.
+evidence can inform that decision now. Scoped, not yet started: no candidate
+gene has been re-reviewed specifically under this project. Five repo reviews
+made for other reasons now touch the affected terms on vertebrate genes (human
+FGFR2, PAFAH1B1, SHH and TP53, plus mouse Ctnnb1, whose row is now retired),
+and all five kept the row as `KEEP_AS_NON_CORE` rather than applying the
+`MODIFY` rule proposed here. Four Drosophila reviews touch the same term family
+in the fly sense: `insc` keeps GO:0055059 as `ACCEPT`; `Lkb1`, `N` and
+`Lis-1` keep GO:0055059 or GO:0007405 as valid but non-core.
 
 ## Overview
 
@@ -120,48 +120,42 @@ Prioritised by (a) already present in this repo, (b) human ortholog directly
 annotated, (c) high-profile, well-characterised vertebrate neurogenesis genes
 where the correct term is unambiguous.
 
-| # | Gene | Acc | Taxon | Term annotated | Ev | PMID | In repo? | Likely action |
+| # | Gene | Acc | Taxon | Term annotated | Ev | Upstream ref | In repo? | Provisional action |
 |---|---|---|---|---|---|---|---|---|
-| 1 | ASCL1 (Mash1) | Q02067 | mouse | GO:0007405 | IGI | PMID:15976074 | human ortholog only (genes/human/ASCL1); human ASCL1 P50553 has no GO:0007405 annotation | MODIFY → GO:0061351 on the mouse Mash1 annotation (Mash1 drives progenitor proliferation/neurogenesis) |
+| 1 | `Ascl1` (`Mash1`) | Q02067 | mouse | GO:0007405 | IGI | PMID:15976074 | human ortholog only (`genes/human/ASCL1`); human ASCL1 P50553 has no GO:0007405 annotation | MODIFY → GO:0061351 on the mouse `Mash1` annotation (`Mash1` drives progenitor proliferation/neurogenesis) |
 | 2 | FGFR2 | P21802 | human | GO:0021847 | ISS | GO_REF:0000024 (with/from UniProtKB:P21803 mouse) | **genes/human/FGFR2** (already KEEP_AS_NON_CORE) | revisit: existing review action is KEEP_AS_NON_CORE; under this project consider MODIFY → vertebrate VZ neural-precursor proliferation |
 | 3 | SOX5 | — | human | GO:0055059 | IGI | PMID:23946438 | no (genes/human) | review — likely MODIFY/REMOVE (asymmetric *neuroblast* division is protostome) |
 | 4 | ARHGEF2 | Q60875 | human+mouse | GO:0055059 | IDA/IMP | PMID:28453519 | no | MODIFY → progenitor mitotic spindle / asymmetric progenitor division |
 | 5 | DOCK7 | — | human | GO:0045200 | IMP | PMID:16982419 | no | review progenitor-polarity context |
 | 6 | TEAD3 | — | human | GO:0055059 | IGI | PMID:23946438 | no | review (co-cited with SOX5) |
-| 7 | Pafah1b1 (LIS1) | P63005 | mouse | GO:0007405 | IMP | PMID:12629176 | no | MODIFY → neural precursor proliferation (LIS1 = classic neurogenesis/migration gene) |
-| 8 | Aspm | Q8CJ27 | mouse | GO:0021873 | IMP | PMID:16798874 | no | MODIFY → forebrain neural-precursor proliferation (ASPM = microcephaly/progenitor gene) |
-| 9 | Shh | Q62226 | mouse | GO:0007405 | IDA | PMID:15337776 | no | MODIFY → neural precursor proliferation |
-| 10 | Nde1 | Q9CZA6 | mouse | GO:0007405 | IMP | PMID:15473967 | no | MODIFY → neural precursor proliferation (NDE1 = microcephaly/progenitor) |
+| 7 | `Pafah1b1` (`Lis1`) | P63005 | mouse | GO:0007405 | IMP | PMID:12629176 | no | MODIFY → neural precursor proliferation (`Lis1` = classic neurogenesis/migration gene) |
+| 8 | `Aspm` | Q8CJ27 | mouse | GO:0021873 | IMP | PMID:16798874 | no | MODIFY → forebrain neural-precursor proliferation (`Aspm` = microcephaly/progenitor gene) |
+| 9 | `Shh` | Q62226 | mouse | GO:0007405 | IDA | PMID:15337776 | no | MODIFY → neural precursor proliferation |
+| 10 | `Nde1` | Q9CZA6 | mouse | GO:0007405 | IMP | PMID:15473967 | no | MODIFY → neural precursor proliferation (`Nde1` = microcephaly/progenitor) |
 
-Other affected mouse genes (defer to a second batch): Plxnb2, Numb, Numbl,
-Neurod4, Kcna1, Fgfr1, Lef1, Dct, Id4, Nfix, Eml1, Zzef1, Dagla, Daglb, Hhip,
-Ckap2l, Akna, Frs2, Acsl6, Racgap1, Fzd9; rat Gh1, Ifrd1, Rab10.
+Other affected mouse genes (defer to a second batch): `Plxnb2`, `Numb`, `Numbl`,
+`Neurod4`, `Kcna1`, `Fgfr1`, `Lef1`, `Dct`, `Id4`, `Nfix`, `Eml1`, `Zzef1`, `Dagla`, `Daglb`, `Hhip`,
+`Ckap2l`, `Akna`, `Frs2`, `Acsl6`, `Racgap1`, `Fzd9`; rat `Gh1`, `Ifrd1`, `Rab10`.
 
 ## Proposed approach
 
-1. **Use the two repo genes (ASCL1, FGFR2) to demonstrate the pattern**, but
-   note that neither carries the offending annotation on the human gene as
-   listed in the human GOA:
-   - `genes/human/ASCL1` has **no** GO:0007405 annotation; the upstream
-     annotation is on **mouse Mash1 (Q02067)** via IGI in PMID:15976074. The
-     `existing_annotations` block on the human ASCL1 review cannot be used
-     here; the appropriate channel is a new mouse-ASCL1 review under
-     `genes/mouse/ASCL1` (or to record the recommendation in the project doc
-     and propagate upstream via geneontology/go-annotation#6393).
-   - `genes/human/FGFR2` already reviews GO:0021847 with
-     `action: KEEP_AS_NON_CORE` (ISS via GO_REF:0000024, with/from mouse
-     P21803). Under this project the action should be revisited — the
-     candidate replacement is GO:0061351 or a VZ-specific neural-precursor
-     proliferation child confirmed via OLS — but this is an `action` update
-     on an existing review, not a new `existing_annotations` entry.
-2. **Then the four human-annotated genes** (SOX5, ARHGEF2, DOCK7, TEAD3) —
-   these live directly in `genes/human` and are the upstream-impacted
-   *human* set. `just fetch-gene human <SYMBOL>` then `/review`.
-3. **Then the high-profile mouse progenitor genes** (LIS1/Pafah1b1, Aspm,
-   Nde1, Shh) as mouse reviews (`genes/mouse/` exists). These are textbook
-   neural-precursor-proliferation genes; the MODIFY target is unambiguous and
-   they make a clean illustrative cluster.
-4. **Per-gene rule**: read the cited PMID. If it describes proliferation of a
+1. **Revisit live affected rows already in local reviews.** Human FGFR2,
+   PAFAH1B1, SHH and TP53 now each carry one of the vertebrate-misapplied terms
+   and currently keep it as `KEEP_AS_NON_CORE`; under this project, reread the
+   cited evidence and decide whether each row should instead `MODIFY` to GO:0061351
+   or a more precise vertebrate neural-precursor term.
+2. **Use retired mouse Ctnnb1 only as precedent.** Its retired GO:0007405 row is a
+   useful example of the same conceptual mismatch, but it is no longer in current
+   GOA and should not drive a fresh `existing_annotations` edit.
+3. **Fetch the still-absent upstream human set** (SOX5, ARHGEF2, DOCK7, TEAD3) —
+   these live directly in `genes/human` and are the upstream-impacted *human* set.
+   `just fetch-gene human <SYMBOL>` then `/review`.
+4. **Then fetch the mouse and rat rows.** `Ascl1` is represented locally only by a
+   human ortholog review today; the upstream row is mouse `Mash1` / Q02067 and
+   needs a new `genes/mouse/Ascl1` review. Follow with the high-profile mouse
+   progenitor genes (`Pafah1b1`, `Aspm`, `Nde1`, `Shh`) and the deferred mouse and rat
+   set.
+5. **Per-gene rule**: fetch and read the cited PMID. If it describes proliferation of a
    *progenitor/stem* population (VZ/SVZ radial glia, intermediate
    progenitors) → MODIFY to GO:0061351 or the appropriate
    neural-precursor-proliferation child. If it describes spindle
@@ -170,11 +164,11 @@ Ckap2l, Akna, Frs2, Acsl6, Racgap1, Fzd9; rat Gh1, Ifrd1, Rab10.
    the paper does not support any proliferation/neurogenesis claim →
    REMOVE. Never retain GO:0007405/GO:0055059 etc. on a vertebrate gene as
    *core*.
-5. **Do not block on upstream ontology timing.** The MODIFY/REMOVE action
+6. **Do not block on upstream ontology timing.** The MODIFY/REMOVE action
    codes are independent of whether/when GO renames the terms or re-maps the
    Cell Ontology. Record the upstream rationale in each review's
    `existing_annotations[].review.summary`.
-6. Cross-link the emerging pattern into
+7. Cross-link the emerging pattern into
    `projects/OVER_ANNOTATION_PATTERNS.md` (protostome stem-cell term applied
    wholesale to vertebrate genes) once 3–4 reviews are done.
 
@@ -182,15 +176,21 @@ Ckap2l, Akna, Frs2, Acsl6, Racgap1, Fzd9; rat Gh1, Ifrd1, Rab10.
 
 **Medium.** 42 annotations / ~33 distinct genes — larger than the typical
 obsoletion-tracking set, with a crisp, repeating conceptual error (a
-protostome neural-stem-cell term applied 100% to vertebrate genes). Two genes
-(ASCL1, FGFR2) are already in the repo, and the cluster includes textbook
-neurogenesis genes (LIS1, ASPM, NDE1, ASCL1, SHH) where the correct vertebrate
+protostome neural-stem-cell term applied 100% to vertebrate genes). Four live
+human rows and one retired mouse precedent are already in local reviews, and the cluster includes textbook
+neurogenesis genes (`LIS1`, `ASPM`, `NDE1`, `ASCL1`, `SHH`) where the correct vertebrate
 term is unambiguous, making this a strong, well-evidenced illustrative
 batch. Upstream is still in discussion, so there is no deadline pressure — but
 the annotation review is valuable input to that discussion now.
 
 ## Status
 
+- **2026-10-04** — Rechecked the six neuroblast GO ids against current review
+  YAMLs. The project still has no dedicated candidate review, but affected
+  vertebrate rows now appear in human FGFR2, PAFAH1B1, SHH and TP53 plus a
+  retired mouse Ctnnb1 row, all `KEEP_AS_NON_CORE`; fly-sense rows appear on
+  Drosophila `insc`, `Lkb1`, `N` and `Lis-1`, where the neuroblast term itself
+  is appropriate.
 - **2026-05-18** — Project file created. Tracking upstream
   geneontology/go-annotation#6393 (last upstream activity 2026-05-07). The
   attached QuickGO export (42 rows, 6 GO terms, 100% vertebrate) was fetched

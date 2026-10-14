@@ -20,7 +20,7 @@ style: |
 
 Chris Mungall | AI-Assisted Gene Review
 
-2026-06-22
+2026-10-04
 
 ---
 
@@ -30,7 +30,7 @@ Chris Mungall | AI-Assisted Gene Review
 - A parallel 2025 **bioRxiv** preprint (Schwabe et al.) shows nicotine biosynthesis is finished by a **cryptic activating glucosylation**.
 - New steps upgraded from side chemistry to **pathway core**: a **glycosylation** step and a **deglycosylation** step.
 - Provides a **minimal heterologous reconstruction** path (yeast / *N. benthamiana*).
-- Makes a transporter, **NaMATE1**, a core metabolon component rather than a peripheral annotation.
+- Makes **NaMATE1** a high-priority late-module transporter candidate rather than a peripheral annotation.
 
 ---
 
@@ -102,7 +102,7 @@ A **four-enzyme cascade** (UGT1 + A622 + BBLa + beta-GD1) reconstitutes **(S)-ni
 | `NaA622` | Ring-condensation branch point | Launch-ready |
 | `NaBBL1`, `NaBBL2` | Late oxidation after condensation | Provisional accession |
 | `NaBGL1`, `NaBGL2` | Deglycosylation NG → nicotine (new *Cell* step) | BGLU18 candidates ready |
-| `NaMATE1` | Vacuolar metabolon transporter / export | Candidate mapping |
+| `NaMATE1` | Late-module MATE candidate; substrate/membrane unresolved | Candidate mapping |
 
 Minimal heterologous set (*Cell*): `NaODC`, `NaPMT1`, `NaMPO`, `NaUGT1`, `NaA622`, `NaBBL2`, `NaBGL1`, `NaMATE1`.
 
@@ -129,21 +129,22 @@ Sequence-backed cross-release candidates (tobacco loci → NIATv7 → UniProt `N
 - **Non-model plant**: public annotation still trails the *Cell* paper's `Na...` nomenclature for several genes.
 - **Paralogs everywhere**: ODC, PMT, BBL, BGL families each expose duplicated copies — pick the real pathway member, not a housekeeping paralog.
 - **Cross-species evidence**: mechanistic/structural work is on **tobacco** enzymes + *N. benthamiana* reconstitution, strong for **role assignment** but weak for exact NICAT accession resolution.
-- **Transport / compartmentation**: `NaMATE1` (and follow-up `NaNUP`) tie biosynthesis to vacuolar export.
+- **Transport / compartmentation**: `NaMATE1` likely moves a late-pathway metabolite; the exact substrate and membrane remain unresolved.
 - **Open gap**: `NaNAMNH` has a clear function but no stable public NICAT accession yet.
 
 ---
 
 ## Status and what's left
 
-Project maturity: **MATURE**.
+Project maturity: **IN_PROGRESS**.
 
 - All 22 current `launch_ready` aliases fetched into `genes/NICAT/` and advanced to **DRAFT** review state.
+- The 22 DRAFTs cover **117** GOA-sourced rows plus **5 enzyme NEW** nicotine-biosynthesis proposals and one tentative `NaMATE1` transporter proposal.
 - `NaUGT1`, `NaMPO1`, `NaBGL2`, `NaMATE1` converted from backlog into sequence-backed candidate jobs.
 - PMT paralog pair curated beyond seeded stubs.
 
 Remaining worklist:
-- [ ] Resolve a stable public accession for `NaNAMNH`.
+- [ ] Resolve a stable public accession for `NaNAMNH` ([#4233](https://github.com/ai4curation/ai-gene-review/issues/4233)).
 - [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon is reviewed.
 
 ---

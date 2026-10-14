@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## GET1
 - **UniProt:** O00258 (WRB) · **batch:** proteostasis-batch-2026-06-11 · **review status:** COMPLETE
 - **PN placement:** `ER proteostasis|Protein transport|GET pathway component` ; **PN-node mapping:** group → GO:0006620 (post-translational protein targeting to ER membrane), scope=ok_for_propagation, **goa_status=more_specific_than_existing_goa**; class → GO:0015031 (protein transport); branch=no_mapping.

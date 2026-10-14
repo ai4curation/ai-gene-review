@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # PN dossier: FBXL22
 
 - review_batch: proteostasis-batch-2026-06-13

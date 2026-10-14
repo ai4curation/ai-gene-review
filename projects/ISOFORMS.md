@@ -1,6 +1,7 @@
 ---
 title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
 maturity: MATURE
+last_reviewed: "2026-10-04"
 tags: [PIPELINE, FLAGSHIP]
 genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, TPM3, DSCAM, FGFR2, PKM, STAT3]
 species: [human, mouse, rat, DROME]
@@ -16,7 +17,7 @@ manifest:
 ---
 # ISOFORMS: Genes with Clear Functional Differences Between Isoforms
 
-**Bottom line:** most GO annotations are made at the gene level, but alternative splicing and proteolytic cleavage can give one gene products with opposite functions, such as anti-apoptotic Bcl-xL and pro-apoptotic Bcl-xS, or neuroprotective sAPPalpha and neurotoxic amyloid-beta from APP. We reviewed every existing GO annotation on 16 paradigm genes (13 splicing cases in three tiers, plus the POMC and APP/App polyproteins), 2,774 annotation rows in all, and extended the data model to record which isoform an annotation was made on (`isoform`), NOT annotations (`negated`), and curator-defined functionally distinct products (`functional_isoforms`). We did this to measure how often gene-level annotation merges functions that belong to different products, and to give reviewers a way to say so. The conflation pattern holds across the set: 246 rows were marked over-annotated, often because one isoform's function was attached to the whole gene (8 in BCL2L1 for pro/anti-apoptotic conflation; 21 in VEGFA, whose VEGF165B isoform is anti-angiogenic; 63 in mouse App, where the page's notes attribute them to amyloid-beta-specific terms). Thirteen of the 16 reviews are marked COMPLETE; WT1 and VEGFA are still IN_PROGRESS and DSCAM is a DRAFT, and PTBP1/2 and MST1R have not been started. The checkboxes under Priority Genes predate the status section below.
+**Bottom line:** most GO annotations are made at the gene level, but alternative splicing and proteolytic cleavage can give one gene products with opposite functions, such as anti-apoptotic Bcl-xL and pro-apoptotic Bcl-xS, or neuroprotective sAPPalpha and neurotoxic amyloid-beta from APP. We reviewed existing GO annotation on 16 paradigm genes (13 splicing cases in three tiers, plus the POMC and APP/App polyproteins), 2,786 annotation rows in all, and extended the data model to record which isoform an annotation was made on (`isoform`), NOT annotations (`negated`), and curator-defined functionally distinct products (`functional_isoforms`). We did this to measure how often gene-level annotation merges functions that belong to different products, and to give reviewers a way to say so. The conflation pattern holds across the set: 258 rows were marked over-annotated, often because one isoform's function was attached to the whole gene (8 in BCL2L1 for pro/anti-apoptotic conflation; 21 in VEGFA, whose VEGF165B isoform is anti-angiogenic; 63 in mouse App for amyloid-beta-specific terms; 91 in human APP for APP-fragment terms). Twelve of the 16 paradigm reviews are marked COMPLETE; WT1 and VEGFA are still IN_PROGRESS, AGRN and DSCAM are DRAFT, and PTBP1/2 and MST1R remain not-started candidates. The sidecar also tracks five salvaged reviews (Ang2, Ghr, Myc, Akt1, Casp3) that are outside the 16-gene paradigm chart.
 
 ## Overview
 
@@ -38,26 +39,27 @@ Genes selected for this project should have:
 
 ### Tier 1: Classic Paradigms (Start Here)
 
-- [ ] **AGRN** (human) - Agrin: neuronal Z+ isoforms cluster AChRs at NMJ; muscle Z- isoforms do not
-- [ ] **BCL2L1** (human) - Bcl-x: Bcl-xL is anti-apoptotic; Bcl-xS is pro-apoptotic (antagonistic!)
-- [ ] **VEGFA** (human) - VEGF: isoforms differ in heparin binding, diffusibility, and vascular patterning
-- [ ] **FAS** (human) - CD95: membrane isoform triggers apoptosis; soluble isoform inhibits it
-- [ ] **CASP9** (human) - Caspase-9: constitutive form induces apoptosis; short isoform inhibits it
+- [ ] **AGRN** (human) - Agrin: neuronal Z+ isoforms cluster AChRs at NMJ; muscle Z- isoforms do not (DRAFT)
+- [ ] **WT1** (human) - Wilms tumor protein: +KTS vs -KTS isoforms differ in DNA binding and transcriptional activation (IN_PROGRESS)
+- [x] **BCL2L1** (human) - Bcl-x: Bcl-xL is anti-apoptotic; Bcl-xS is pro-apoptotic (antagonistic!)
+- [ ] **VEGFA** (human) - VEGF: isoforms differ in heparin binding, diffusibility, and vascular patterning (IN_PROGRESS)
+- [x] **FAS** (human) - CD95: membrane isoform triggers apoptosis; soluble isoform inhibits it
+- [x] **CASP9** (human) - Caspase-9: constitutive form induces apoptosis; short isoform inhibits it
 
 ### Tier 2: Developmental/Tissue-Specific
 
-- [ ] **FN1** (human) - Fibronectin: EDA/EDB isoforms are embryonic/wound-healing specific
-- [ ] **TPM1** (human) - Tropomyosin: striated muscle vs smooth muscle vs non-muscle isoforms
-- [ ] **TPM3** (human) - Tropomyosin 3: slow muscle fiber specific isoform
-- [ ] **DSCAM** (human) - Note: human DSCAM lacks the extreme diversity of Drosophila Dscam1
+- [x] **FN1** (human) - Fibronectin: EDA/EDB isoforms are embryonic/wound-healing specific
+- [x] **TPM1** (human) - Tropomyosin: striated muscle vs smooth muscle vs non-muscle isoforms
+- [x] **TPM3** (human) - Tropomyosin 3: slow muscle fiber specific isoform
+- [ ] **DSCAM** (human) - Note: human DSCAM lacks the extreme diversity of Drosophila Dscam1 (DRAFT)
 
 ### Tier 3: Additional Cases to Explore
 
-- [ ] **FGFR2** (human) - FGF receptor 2: IIIb vs IIIc isoforms have different ligand specificities
-- [ ] **PKM** (human) - Pyruvate kinase: PKM1 (adult muscle) vs PKM2 (embryonic, cancer)
+- [x] **FGFR2** (human) - FGF receptor 2: IIIb vs IIIc isoforms have different ligand specificities
+- [x] **PKM** (human) - Pyruvate kinase: PKM1 (adult muscle) vs PKM2 (embryonic, cancer)
 - [ ] **PTBP1/2** (human) - Master splicing regulators that control many isoform switches
 - [ ] **RON/MST1R** (human) - Proto-oncogene with motility-promoting splice variant in cancer
-- [ ] **STAT3** (human) - STAT3α vs STAT3β have distinct transcriptional activities
+- [x] **STAT3** (human) - STAT3α vs STAT3β have distinct transcriptional activities
 
 ### Special Cases: Polyproteins (Post-Translational Cleavage)
 
@@ -120,18 +122,18 @@ Key reviews and resources:
 ## Progress Tracking
 
 ### Tier 1 Genes
-- [x] AGRN - **COMPLETE** - Excellent paradigm case with detailed isoform discussion
-- [x] WT1 - **COMPLETE** - +KTS vs -KTS isoforms, NOT annotation reviewed
+- [ ] AGRN - **DRAFT** - 102 annotations | excellent paradigm case with detailed isoform discussion
+- [ ] WT1 - **IN_PROGRESS** - 138 annotations | +KTS vs -KTS isoforms, NOT annotation reviewed
 - [x] BCL2L1 - **COMPLETE** - 110 annotations | 8 OVER_ANNOTATED (pro/anti-apoptotic conflation)
-- [x] FAS - **COMPLETE** - 96 annotations | membrane vs soluble antagonism documented
-- [x] VEGFA - **COMPLETE** - 268 annotations | 21 OVER_ANNOTATED (anti-angiogenic VEGF165B)
-- [x] CASP9 - **COMPLETE** - 114 annotations | dominant-negative isoform 2 documented
+- [x] FAS - **COMPLETE** - 113 annotations | membrane vs soluble antagonism documented
+- [ ] VEGFA - **IN_PROGRESS** - 269 annotations | 21 OVER_ANNOTATED (anti-angiogenic VEGF165B)
+- [x] CASP9 - **COMPLETE** - 114 annotations | 14 OVER_ANNOTATED (dominant-negative isoform 2)
 
 ### Tier 2 Genes
-- [x] FN1 - **COMPLETE** - 193 annotations | EDA/EDB domain developmental splicing
+- [x] FN1 - **COMPLETE** - 196 annotations | EDA/EDB domain developmental splicing
 - [x] TPM1 - **COMPLETE** - 55 annotations | 9 OVER_ANNOTATED (muscle vs cytoskeletal isoforms)
 - [x] TPM3 - **COMPLETE** - 39 annotations | 17 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
-- [x] DSCAM - **COMPLETE** - 50 annotations | 4 OVER_ANNOTATED (human has only 2 isoforms, not 38,016!)
+- [ ] DSCAM - **DRAFT** - 50 annotations | 4 OVER_ANNOTATED (human has only 2 isoforms, not 38,016!)
 
 ### Tier 3 Genes
 - [x] FGFR2 - **COMPLETE** - 229 annotations | 16 OVER_ANNOTATED (IIIb vs IIIc ligand specificity)
@@ -141,13 +143,15 @@ Key reviews and resources:
 - [x] STAT3 - **COMPLETE** - 456 annotations | alpha vs beta dominant-negative documented
 
 ## Summary Stats
-- **Total genes**: 15
-- **Completed**: 13 (Tier 1 + Tier 2 + 3 Tier 3)
-- **In progress**: 0
-- **Tier 1 genes**: 6/6 COMPLETE
-- **Tier 2 genes**: 4/4 COMPLETE
+- **Paradigm genes**: 16
+- **Completed**: 12/16
+- **In progress**: 2 (WT1, VEGFA)
+- **Draft**: 2 (AGRN, DSCAM)
+- **Tier 1 genes**: 3/6 COMPLETE
+- **Tier 2 genes**: 3/4 COMPLETE
 - **Tier 3 genes**: 3/5 COMPLETE
-- **Total annotations reviewed**: 1689 across completed genes
+- **Special polyprotein cases**: 3/3 COMPLETE
+- **Total annotations reviewed**: 2,786 across the 16 paradigm files
 
 ---
 

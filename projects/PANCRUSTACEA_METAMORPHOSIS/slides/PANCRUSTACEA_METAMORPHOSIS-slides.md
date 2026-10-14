@@ -37,8 +37,8 @@ Reviewing the fly reference genes behind a convergent-evolution result
 ## Bottom line
 
 - Metamorphosis arose **four times** in Pancrustacea; a 2026 preprint finds each origin recruited **different gene families converging on the same functions**.
-- We reviewed every GO annotation on the **8 *Drosophila* reference genes** the paper names: 183 rows plus 4 NEW.
-- **108 accepted**, 24 modified, 1 removed. Propagated **receptor** terms on adhesion molecules and a ligand-less orphan NR were corrected; bare `protein binding` resolved to named partners.
+- We reviewed every GO annotation on the **8 *Drosophila* reference genes** the paper names: 183 imported GOA rows plus 4 NEW rows.
+- **108 accepted**, 24 modified, 1 removed. Propagated **receptor** terms were corrected; bare `protein binding` was made specific where GO had a faithful term.
 
 ---
 
@@ -91,15 +91,15 @@ Reviewing the fly reference genes behind a convergent-evolution result
 - **hairy**: every `protein binding` IPI resolved via WITH/FROM to STUbL ligase, Groucho/CtBP corepressor, or TF binding (Ultrabithorax); `membrane organization` flagged as over-annotation.
 - **knirps**: `protein binding` IPIs → `GO:0001222` transcription corepressor binding.
 - **insc**: `establishment of mitotic spindle localization` → **orientation**; two miscited references flagged.
-- **krz**: GPCR-binding adaptor core accepted; MAPK/Toll/Hedgehog/Notch attenuation kept non-core.
+- **krz**: GPCR-binding adaptor core accepted; ERK binding made specific; MAPK/Toll/Hedgehog/Notch attenuation kept non-core.
 
 ---
 
 ## Status and next steps
 
 - ✅ 8/8 reference genes reviewed and validated.
-- ⬜ An ecdysteroid-biosynthesis-regulation module (not started).
-- ⬜ Optional: *deadpan* (`dpn`), mentioned but not an expanding family.
+- ⬜ An ecdysteroid-biosynthesis-regulation module ([#3990](https://github.com/ai4curation/ai-gene-review/issues/3990)).
+- ⬜ Optional: *deadpan* (`dpn`), mentioned but not an expanding family ([#3990](https://github.com/ai4curation/ai-gene-review/issues/3990)).
 - Open question: do fly imaginal-disc terms over-attribute insect-specific roles to crustacean orthologues?
 
 **Read more:** `projects/PANCRUSTACEA_METAMORPHOSIS.md` · `genes/DROME/<gene>/`

@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Review Batch 8 — Gene Selection"
+species: [human]
 ---
 
 # Proteostasis Review Batch 8 — Gene Selection
@@ -61,7 +62,7 @@ F-box proteins are grouped by their substrate-recognition module:
 
 #### F-box / "other" receptors — FBXO (22)
 23. `FBXO2` — ER glycoprotein lectin F-box (N-glycan recognition, ERAD)
-24. `FBXO5` (EMI1) — APC/C inhibitor (not a canonical SCF receptor)
+24. `FBXO5` (EMI1) — `APC/C` inhibitor (not a canonical SCF receptor)
 25. `FBXO6` — ER glycoprotein lectin F-box (ERAD)
 26. `FBXO7` (PARK15) — PINK1/Parkin mitophagy; PI31 proteasome regulator
 27. `FBXO8`
@@ -80,14 +81,14 @@ F-box proteins are grouped by their substrate-recognition module:
 40. `FBXO39`
 41. `FBXO40`
 42. `FBXO41`
-43. `FBXO43` (EMI2/ERP1) — APC/C inhibitor, meiotic CSF
+43. `FBXO43` (EMI2/ERP1) — `APC/C` inhibitor, meiotic CSF
 44. `FBXO47`
 
 #### CRL4 core & CRL assembly/regulation (6)
 45. `DDB1` — CRL4 adaptor (DDB1–CUL4 scaffold for DCAF receptors)
 46. `DDB2` — CRL4 substrate receptor (UV-damaged DNA recognition)
 47. `DDA1` — DET1/DDB1-associated, CRL4 stabilizer
-48. `DTL` (CDT2) — CRL4 substrate receptor (CDT1, p21, SET8 degradation)
+48. `DTL` (CDT2) — CRL4 substrate receptor (`CDT1`, p21, SET8 degradation)
 49. `CAND2` — CAND1 paralog; cullin–RBX sequestration / CRL exchange factor
 50. `GLMN` (glomulin) — RBX1-binding CRL assembly regulator (FBXW7/CUL7 control)
 
@@ -114,13 +115,14 @@ reference `reference_review` adjudication, then `uv run linkml-validate` +
   `F-box domain binding` annotations are mechanistically central and should be
   kept (ACCEPT/non-core), but the *core* statement is substrate-specific
   ubiquitination.
-- **Lectin F-box subfamily (FBXO2/FBXO6/FBXO27, and FBXO17/FBXO44).** These bind
-  N-linked high-mannose glycans on misfolded glycoproteins and feed ERAD — use
-  carbohydrate/`high-mannose oligosaccharide binding` + ERAD/`SCF-dependent…
-  catabolic process`, a genuine proteostasis-core function.
-- **Non-canonical "F-box" members.** `FBXO5`/EMI1 and `FBXO43`/EMI2 are **APC/C
+- **FBA/F-box lectin subfamily.** FBXO2/FBXO6 are the clear N-linked
+  high-mannose-glycan receptors for misfolded glycoprotein ERAD; handle the
+  paralogs gene by gene. FBXO17, for example, was later reviewed as a
+  lectin/carbohydrate-binding F-box protein whose inherited ERAD/high-mannose
+  propagation over-reaches.
+- **Non-canonical "F-box" members.** `FBXO5`/EMI1 and `FBXO43`/EMI2 are **`APC/C`
   inhibitors**, not SCF substrate receptors despite the F-box motif — their core
-  biology is cell-cycle/meiotic APC/C regulation; treat SCF/ubiquitin-ligase
+  biology is cell-cycle/meiotic `APC/C` regulation; treat SCF/ubiquitin-ligase
   propagations skeptically.
 - **Tumor-suppressor / well-studied receptors** (`FBXW7`, `FBXL5`, `FBXL3`,
   `FBXO7`, `FBXO22`) have rich experimental annotations; ground the core

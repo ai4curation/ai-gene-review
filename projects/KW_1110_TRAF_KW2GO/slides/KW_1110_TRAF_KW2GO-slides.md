@@ -56,9 +56,9 @@ style: |
 
 ## Status
 
-- Created 2026-07-04 as a **watch-list** entry (blocker: GO:0140476 not yet minted).
-- 2026-09-26: OLS resolves GO:0140476; GO:0039527 obsolete; `uniprotkb_kw2go` (2026/07/06) maps KW-1110 → GO:0140476.
-- Re-ran `grep` for GO:0039527, GO:0140476, KW-1110 in `genes/`: **no matches**.
+- Created 2026-07-04 while **GO:0140476** and the KW2GO redirect were still pending.
+- Closed 2026-07-06 upstream; GO:0039527 is obsolete, and current `uniprotkb_kw2go` maps KW-1110 → GO:0140476.
+- Re-ran exact `rg` searches for GO:0039527, GO:0140476, KW-1110 in `genes/`: **no matches**.
 - If a TRAF-interfering effector is reviewed later: use GO:0140476 for RLR evidence, GO:0140470 for TLR evidence.
 
 **Upstream:** go-annotation#6470 · go-ontology#29238 · **Read more:** `projects/KW_1110_TRAF_KW2GO.md`

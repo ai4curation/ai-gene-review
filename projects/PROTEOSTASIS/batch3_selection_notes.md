@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Review Batch 3 — Gene Selection"
+species: [human]
 ---
 
 # Proteostasis Review Batch 3 — Gene Selection
@@ -11,7 +12,7 @@ Branch: `claude/proteostasis-gene-review-w59I5`
 
 The two prior batches are complete:
 - `proteostasis-pr-1217` (50 human genes, merged 2026-06-02)
-- `proteostasis-batch-2026-06-03` (50 human genes, alphabetical sweep AAAS..ATP6V0D1 from the PN projected candidate-additions report)
+- `proteostasis-batch-2026-06-03` (50 human genes, alphabetical sweep `AAAS..ATP6V0D1` from the PN projected candidate-additions report)
 
 All five `priority_genes.tsv` no-local-dir targets (BTF3, HSPA12A, HSPA12B,
 AARSD1, BAG6) now also have local reviews.

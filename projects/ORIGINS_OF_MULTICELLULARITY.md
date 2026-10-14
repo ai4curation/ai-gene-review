@@ -1,9 +1,10 @@
 ---
 title: "Origins of Animal Multicellularity"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
-genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK, CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1, CDH1, ABL1, MYC, NOTCH1, TP53, SrSeptin2, SrSeptin6, CoBra, coITGB2, coVIN]
+genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK, CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1, CDH1, ABL1, MYC, NOTCH1, TP53, SrSeptin2, SrSeptin6, CoBra, coITGB2, coVIN, PTSG_05882, PTSG_06458, PTSG_11235, MBCDH12, MONBRDRAFT_1233]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
@@ -26,7 +27,7 @@ relatives carry:
 | Sponges | 16 |
 | Metazoa as a whole | about 952,000 |
 
-We have 35 draft or updated reviews in four tracks:
+We have 40 draft or updated reviews in four tracks:
 
 - **Track A: 16 genes with direct genetic evidence in unicellular relatives
   and a sponge.**
@@ -39,16 +40,17 @@ We have 35 draft or updated reviews in four tracks:
 - **Track C: a propagation audit.** It found animal tissue terms (organ
   growth), junction terms and fungal pathway terms reaching unicellular
   proteins.
-  - Five TreeGrafter/PANTHER placement errors. Three of them graft
-    unicellular proteins onto animal-only nodes:
-    - choanoflagellate cadherins onto a node PAINT restricts to Bilateria;
-    - *Capsaspora* integrin betas onto the vertebrate ITGBL1 node;
-    - *Capsaspora* T-box factors onto an all-animal node carrying "cell fate
-      specification".
-
-    The other two are *Capsaspora* Warts with the ROCK/citron kinases, and
-    the *S. rosetta* yorkie candidate with the MAGI scaffolds.
-  - One PAINT node placed too deep: the organ-growth term on the LATS node.
+  - Five reviews were added for proteins selected by their propagated terms:
+    three *S. rosetta* cadherins, *M. brevicollis* MBCDH12 and
+    *M. brevicollis* LATS.
+  - Four TreeGrafter grafts place unicellular proteins onto animal-only or
+    wrong-family nodes: choanoflagellate cadherins onto a Bilateria cadherin
+    node; *Capsaspora* integrin betas onto the vertebrate ITGBL1 node;
+    *Capsaspora* T-box factors onto an all-animal node carrying "cell fate
+    specification"; and *Capsaspora* Warts with ROCK/citron kinases.
+  - Two other failure modes are PAINT process terms placed too deep, most
+    notably organ-growth terms on the LATS node, and lineage-specific
+    family terms such as fungal mannan biosynthesis on couscous.
 - **Track D: one proposed GO term**, rosette colony development.
 
 The pattern across Tracks A and B is consistent:
@@ -184,7 +186,7 @@ accessions given in the papers.
 | 1 | rosetteless (*rtls*) | SALRS | F2U5Y1 (PTSG_03555) | Forward genetic screen; essential for rosette development; the protein forms an extracellular layer that coats and connects the basal poles of rosette cells [PMID:25299189] | "Lung surfactant protein A"; no GOA rows | C-type lectin domain (PF00059), signal peptide. The UniProt name is a similarity-derived label and looks like a naming error to report |
 | 2 | jumble (*jmbl*) | SALRS | F2TWH0 (PTSG_00436; EGD72416) | Forward genetics; mutant cells aggregate into amorphous clumps instead of rosettes, with aberrant glycosylation of the basal ECM [PMID:30556809 "Predicted glycosyltransferases promote development and prevent spurious cell clumping in the choanoflagellate S. rosetta"] | "Uncharacterized protein"; no GOA rows | Predicted glycosyltransferase, one N-terminal TM helix |
 | 3 | couscous (*cous*) | SALRS | F2UJ78 (PTSG_07368; EGD77026) | Forward genetics, same study [PMID:30556809] | "Apple domain-containing protein"; 7 IEA rows incl. `GO:0000026` alpha-1,2-mannosyltransferase activity | PF11051 mannosyltransferase plus PAN/apple domain; IEA MF is plausible, check the Golgi and "mannan biosynthesis"-type process IEAs |
-| 4 | *hippo*, *warts* and *yorkie* (Hippo pathway) | SALRS | F2UQC7 (PTSG_10780), F2U943 (PTSG_04961), F2UDK1 (PTSG_06057), from the bioRxiv preprint DOI:10.1101/2024.07.13.603360 | CRISPR knockouts; warts-KO rosettes are larger than wild type, and Warts and Yorkie regulate ECM genes including couscous [PMID:41037400 "A selection-based knockout approach for a choanoflagellate reveals regulation of multicellular development by Hippo signaling."] | | Pairs with the premetazoan Hippo pathway in *Capsaspora* [PMID:22832104 "Premetazoan origin of the hippo signaling pathway"] |
+| 4 | *hippo*, *warts* and *yorkie* (Hippo pathway) | SALRS | F2UQC7 (PTSG_10780), F2U943 (PTSG_04961), F2UDK1 (PTSG_06057), from the bioRxiv preprint DOI:10.1101/2024.07.13.603360 | CRISPR knockouts; warts-KO rosettes are larger than wild type, and Warts and Yorkie regulate ECM genes including couscous [PMID:41037400 "A selection-based knockout approach for a choanoflagellate reveals regulation of multicellular development by Hippo signaling."] | | Pairs with the premetazoan Hippo pathway in *Capsaspora* [PMID:22832104 "Premetazoan origin of the Hippo signaling pathway"] |
 | 5 | SrSeptin2, SrSeptin6 | SALRS | F2UEE2 (PTSG_07215, Group 4 Cdc12-like), F2UDE9 (PTSG_06009, Group 1B SEPT6-like) | Tagged septins localise to the basal poles of single cells and rosettes [PMID:30281390 "Transfection of choanoflagellates illuminates their cell biology and the ancestry of animal septins."] | | Localisation only; a role in rosette development is a hypothesis, so CC terms at most |
 | 6 | integrin β2 (coITGB2) and vinculin (coVIN) | CAPO3 | A0A0D2WRB3 (CAOG_05058; = D7PE19, GenBank GU320673) and A0A0D2WSN3 (CAOG_05123), both named in the methods of the preprint DOI:10.1101/2020.02.27.967653 | Adherent cells attach through actin-dependent filopodia, where integrin β2 and vinculin localise as patches [PMID:32857975] | | Map the paper's "integrin β2" to a UniProt accession from its methods before fetching |
 | 7 | Brachyury (CoBra) | CAPO3 | A0A0D2VUC6 (CAOG_005512), our assignment by T-subfamily similarity plus the Brachyury-specific Arg ([capsaspora-tbox](ORIGINS_OF_MULTICELLULARITY/capsaspora-tbox/RESULTS.md)) | Functional conservation shown in *Xenopus*; DNA-binding motif similar to metazoan Brachyury [PMID:24043797 "Early evolution of the T-box transcription factor family"] | | Premetazoan T-box factor; the paper argues metazoan-specific specificity arose later |
@@ -232,7 +234,7 @@ What each review concluded is ancestral and what is an animal recruitment
 | STK3 / LATS1 / YAP1 / TEAD1 | Hippo kinase cascade that keeps Yorkie/YAP out of the nucleus; YAP-TEAD coactivation; TEA-domain DNA binding (older still, in fungi). In *Capsaspora* the cascade controls the cytoskeleton, contractility and aggregate shape | Control of proliferation, organ size, regeneration and contact inhibition; the *Capsaspora* knockouts show no proliferation effect |
 | TLN1 / VCL | Talin binds integrin NPxY motifs and activates vinculin's F-actin binding at cell-substrate contacts (sponge biochemistry; *Capsaspora* filopodia) | Vinculin's alpha/beta-catenin link to cadherin junctions, so far documented only in bilaterians, though sponge vinculin is already at cell-cell contacts; platelet and leukocyte adhesion |
 | TBXT | T-box DNA motif binding and transcriptional activation (*Capsaspora* CoBra binds a mouse-like motif) | Target selectivity, which the chimera experiments place in the N/C termini and attribute to cofactors; all developmental roles. Choanoflagellates have no T-box genes |
-| CSK | Tyrosine kinase activity on the Src C-terminal tail | Adaptor recruitment (PAG, SCIMP) and immune-receptor signalling. Whether Csk already inhibited Src before animals is disputed: two choanoflagellate studies found weak or no inhibition, and a 2017 study reports inhibition |
+| CSK | Tyrosine kinase activity on the `Src` C-terminal tail | Adaptor recruitment (PAG, SCIMP) and immune-receptor signalling. Whether `Csk` already inhibited `Src` before animals is disputed: two choanoflagellate studies found weak or no inhibition, and a 2017 study reports inhibition |
 
 **Batch 2 results (2026-10-01, all DRAFT).** Six genes with large
 annotation sets; COL4A1 is the animal-innovation control for basement-membrane function.
@@ -249,7 +251,7 @@ annotation sets; COL4A1 is the animal-innovation control for basement-membrane f
 | Gene | Ancestral | Animal-specific (on current evidence) |
 |---|---|---|
 | CTNNB1 / CTNNA1 | A catenin junction-and-polarity module without cadherins: *Dictyostelium* builds a polarized epithelium with Aardvark and an alpha-catenin (PMID:21393547) | The beta-catenin family itself (PTHR45976 is animal-only); classical-cadherin binding; TCF/LEF coactivation in Wnt signalling |
-| SRC | Tyrosine kinase activity and working SH2/SH3 domains (choanoflagellate Src) | The focal-adhesion, junction and PDZ partner network; receptor-specific pathways |
+| SRC | Tyrosine kinase activity and working SH2/SH3 domains (choanoflagellate `Src`) | The focal-adhesion, junction and PDZ partner network; receptor-specific pathways |
 | ITGB1 / PTK2 | Integrin beta receptors with cation-site ligand binding and NPxY tails, and bona fide FAK, in *Capsaspora*. Choanoflagellates lost integrins and FAK | Binding to animal matrix ligands; counter-receptor cell-cell adhesion; all tissue roles. No functional FAK data exist outside animals |
 | COL4A1 | The gene only, and only in the filasterean *Ministeria vibrans*: a canonical type IV collagen, upregulated during aggregation, in an amoeba with no basement membrane (PMID:28726632, 42265479). Absent from choanoflagellates and *Capsaspora* (PMID:28418331) | The basement membrane and the structural role of collagen IV in it; present with basement membranes in ctenophores, placozoans and homoscleromorph sponges. So COL4A1 is a valid control for function but not for gene presence (corrected 2026-10-01) |
 
@@ -279,13 +281,12 @@ judgement: the question is whether the target sits inside the clade that
 inherited the function, not how many donors there are.
 
 **Report:** [Propagation audit](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md)
-(2026-10-01). Of 36 propagated rows in the 11 Track A reviews, 7 were
-down-graded, all TreeGrafter IEAs, through three mechanisms:
-- animal-tissue IBDs on the LATS node PTN002390470 that includes
-  choanoflagellates (regulation of organ growth);
-- cross-family grafts (*Capsaspora* Warts into the citron/ROCK family; the
-  *S. rosetta* yorkie candidate into the MAGI-related family);
-- a fungal mannan term on couscous.
+(2026-10-02). The 16 Track A reviews chosen from the experimental literature
+carry 53 propagated rows; 11 were down-graded, all TreeGrafter IEAs. Five
+more reviews were added specifically because the proteins carried the terms
+found by the audit: *M. brevicollis* LATS and four choanoflagellate cadherins.
+They add another 48 propagated rows, 38 of them down-graded, and are reported
+separately in the audit because they were selected for errors.
 
 The cases are also written up for the
 [TreeGrafter evaluation](TREEGRAFTER/holozoan-hippo-case-study.md).
@@ -335,7 +336,7 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 
 # STATUS
 
-2026-09-30: Track A priorities 1–3 reviewed (DRAFT).
+Updated 2026-10-04.
 
 - [x] GOA experimental-annotation census across Holozoa
 - [x] Resolve UniProt accessions for rosetteless, jumble, couscous
@@ -352,11 +353,22 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Track B batch 2: CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1 — DRAFT
 - [x] Track B: premetazoan pass on existing CDH1, ABL1, MYC, NOTCH1, TP53 (additive; no actions changed)
 - [x] Track C propagation audit for the Track A genes: [report](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md), cross-posted to the TREEGRAFTER project
+- [x] Track C: add five propagation-focused reviews for *S. rosetta* and *M. brevicollis* proteins selected by error-prone terms
 - [x] Track C: extend the audit to the Track B human genes' IBA nodes ([Case 6 and extension table](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md))
-- [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
-- [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available
+- [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review; [#3983](https://github.com/ai4curation/ai-gene-review/issues/3983))
+- [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available ([#3983](https://github.com/ai4curation/ai-gene-review/issues/3983))
 
 # NOTES
+
+## 2026-10-04
+
+Rechecked the project against the 2026-10-02 propagation extension. The page
+now counts 40 reviews by including the five extra propagation-focused reviews
+for `PTSG_05882`, `PTSG_06458`, `PTSG_11235`, `MBCDH12` and
+`MONBRDRAFT_1233`; the Track C summary now matches the current
+`propagation-audit.md`, and the remaining ontology/deep-research tasks are
+tracked in
+[#3983](https://github.com/ai4curation/ai-gene-review/issues/3983).
 
 ## 2026-09-30
 
@@ -404,14 +416,14 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   while human LATS1/2 are in PTHR24356. Drosophila wts is also in PTHR22988, so
   the Warts/LATS clade is split across two PANTHER families. coWts therefore
   inherits cytoskeletal terms from a ROCK/citron node and misses the LATS-node
-  hippo signaling IBA. Actomyosin structure organization was removed,
-  cytoskeleton terms marked over-annotated, and hippo signaling added (IMP,
+  `GO:0035329 hippo signaling` IBA. Actomyosin structure organization was removed,
+  cytoskeleton terms marked over-annotated, and `GO:0035329 hippo signaling` added (IMP,
   coYki is nuclear in coWts-/- cells; PMID:38517944). The *S. rosetta* Warts
   (F2U943) is in PTHR24356, the LATS family.
-- **coHpo:** signal transduction modified to hippo signaling; protein
+- **coHpo:** signal transduction modified to `GO:0035329 hippo signaling`; protein
   tetramerization removed (a p53-like tetramerisation fold match on the SARAH
   domain, which forms dimers).
-- **coYki:** all five propagated rows hold, including hippo signaling and
+- **coYki:** all five propagated rows hold, including `GO:0035329 hippo signaling` and
   transcription coactivator activity; NEW DNA-binding transcription factor
   binding (IPI, co-IP with coSd). Its knockout shows no proliferation effect,
   so no proliferation term. A negative result for Track C.
@@ -429,7 +441,7 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   That node carries animal tissue-level terms: regulation of organ growth was
   removed (choanoflagellates have no organs; GO's taxon constraints do not
   exclude them), and positive regulation of apoptotic process and G1/S
-  transition were marked over-annotated. hippo signaling was accepted. *M.
+  transition were marked over-annotated. `GO:0035329 hippo signaling` was accepted. *M.
   brevicollis* Warts receives the same rows. This is a node-placement issue
   for the PAINT curators, not a family error.
 - **S. rosetta yorkie: third Track C case.** TreeGrafter grafts F2UDK1 onto an
@@ -439,7 +451,7 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   different WW protein, F2U5K0, in the YAP1 family; the preprint nonetheless
   names PTSG_06057 (F2UDK1) as yorkie. Orthology needs a proper phylogeny.
 - **S. rosetta hippo:** generic kinase and signal-transduction rows kept;
-  hippo signaling not added, since hippo knockouts do not phenocopy warts
+  `GO:0035329 hippo signaling` not added, since hippo knockouts do not phenocopy warts
   (normal rosette size) and nothing places Hippo upstream of Warts in S.
   rosetta.
 - **Track B batch 1** (eight human genes, table in Track B). Points for a
@@ -453,7 +465,7 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
     that joins the two pairs.
   - **TBXT.** NEW notochord development (IMP, sacral agenesis variant;
     mouse T carries the term).
-  - **CSK.** Choanoflagellate Src/Csk papers cached (PMID:16873552,
+  - **CSK.** Choanoflagellate `Src`/`Csk` papers cached (PMID:16873552,
     18390552, 28939764).
 - **Track B batch 2 and the re-check of existing reviews** (tables in Track B).
   - ITGB1 turned up a GOA miscitation: PMID:10676904, a bovine oocyte paper,

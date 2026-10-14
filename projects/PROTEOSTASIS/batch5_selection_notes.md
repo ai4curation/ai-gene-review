@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Review Batch 5 — Gene Selection"
+species: [human]
 ---
 
 # Proteostasis Review Batch 5 — Gene Selection
@@ -11,7 +12,7 @@ Branch: `claude/proteostasis-50-genes-xFOZK`
 
 The four prior batches are complete:
 - `proteostasis-pr-1217` (50 human genes, merged 2026-06-02)
-- `proteostasis-batch-2026-06-03` (50 human genes, alphabetical sweep AAAS..ATP6V0D1)
+- `proteostasis-batch-2026-06-03` (50 human genes, alphabetical sweep `AAAS..ATP6V0D1`)
 - `proteostasis-batch-2026-06-06` (20 human genes; V-ATPase core, ER folding/QC,
   autophagy/mitophagy receptors, co-chaperone/UPS regulation)
 - `proteostasis-batch-2026-06-07` (30 human genes; V-ATPase tissue isoforms + ClC-7,
@@ -51,7 +52,7 @@ substrate specificity and stimulate its ATPase.
 3. `DNAJB11` (ERdj3) — ER-lumenal BiP J-protein co-chaperone
 4. `DNAJB13` — flagellar/axonemal HSP40
 5. `DNAJC1` (ERdj1/MTJ1) — ER membrane J-protein
-6. `DNAJC3` (p58IPK/ERdj6) — ER J-protein, PERK/eIF2α regulation
+6. `DNAJC3` (`p58IPK`/ERdj6) — ER J-protein, PERK/eIF2α regulation
 7. `DNAJC4` — J-domain protein
 8. `DNAJC5` (CSPα) — synaptic vesicle co-chaperone (ANCL/DNAJC5)
 9. `DNAJC5B` — CSP paralog
@@ -82,7 +83,7 @@ ATP-independent holdase chaperones.
 30. `HSPB2` (MKBP) — small HSP, muscle
 31. `HSPB3` — small HSP, muscle
 32. `HSPB7` (cvHSP) — cardiovascular small HSP, aggregate handling
-33. `HSPB8` (HSP22) — CASA-pathway holdase (BAG3 partner)
+33. `HSPB8` (`HSP22`) — CASA-pathway holdase (BAG3 partner)
 34. `HSPB9` — testis small HSP
 
 ### HSP70 / HSP90 hub co-chaperones — 6

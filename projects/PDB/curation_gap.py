@@ -188,7 +188,7 @@ def write_tsv(rows: List[StructurePaperRow], out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     fields = list(StructurePaperRow.__dataclass_fields__.keys())
     with out.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(fields)
         for r in rows:
             w.writerow([getattr(r, k) for k in fields])
@@ -213,6 +213,7 @@ def summarize(rows: List[StructurePaperRow]) -> str:
     lines = [
         "---",
         'title: "Are PDB structure papers overlooked by GO/MOD curation?"',
+        "species: [ARATH, human]",
         "---",
         "# Are PDB structure papers overlooked by GO/MOD curation?",
         "",

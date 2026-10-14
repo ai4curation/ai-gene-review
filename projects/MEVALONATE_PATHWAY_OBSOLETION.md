@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [human, rat, yeast]
 genes: [HMGCS1, HMGCR, MVK, PMVK, MVD, FDPS, IDI1, Hmgcs2, ERG19]
+last_reviewed: "2026-10-04"
 sidecars:
   slide_assets:
     - MEVALONATE_PATHWAY_OBSOLETION/slides/pathway-split.svg
@@ -12,9 +13,6 @@ manifest:
   slides:
     - href: MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/RK6KkhfjZSxgQTA1pScaVR
-      title: Project brief
 ---
 
 # Mevalonate Pathway Term Cleanup — Obsoletion & Replacement
@@ -25,27 +23,26 @@ biosynthetic process via mevalonate* and GO:0010142 *farnesyl diphosphate
 biosynthetic process, mevalonate pathway*. Both are now obsolete in OLS
 (checked 2026-09-26), with annotations to be redirected to GO:0019287
 *isopentenyl diphosphate biosynthetic process, mevalonate pathway* (the steps
-up to IPP) or GO:0045337 *farnesyl diphosphate biosynthetic process* (IPP to
-FPP). We tracked the upstream lists (2 and 21 experimental annotations) and
-argued that each row needs a per-enzyme choice between the two replacements,
-not a relabel. The repo has moved past the Impact and Candidate sections
-below: the human mevalonate enzymes HMGCS1, HMGCR, MVK, PMVK, MVD, IDI1 and
-FDPS are now reviewed (PRs #1998, #2153) with `mevalonate_pathway` and
-`isoprenoid_diphosphate_biosynthesis` modules, and MVK, PMVK and MVD accept
-GO:0019287 while FDPS accepts GO:0045337. Two reviews carried
-obsolete-term rows, both resolved in #3232 (per-row outcome in Status
-below): yeast ERG19's GO:0010142 RCA row is now `REMOVE`, since its
-replacement GO:0019287 is already accepted, and rat Hmgcs2's GO:0010142 IBA
-and IEA rows stay `UNDECIDED`, with the obsoletion recorded in `reason`.
+up to IPP) or GO:0045337 *trans, trans-farnesyl diphosphate biosynthetic
+process* (IPP to FPP). We tracked the upstream lists (2 and 21 experimental
+annotations) and argued that each row needs a per-enzyme choice between the
+two replacements, not a relabel. The human mevalonate enzymes HMGCS1, HMGCR,
+MVK, PMVK, MVD, IDI1 and FDPS are now reviewed (PRs #1998, #2153) with
+`mevalonate_pathway` and `isoprenoid_diphosphate_biosynthesis` modules; MVK,
+PMVK and MVD accept GO:0019287 while FDPS accepts GO:0045337. Two reviews
+carried obsolete-term rows, both resolved in #3232: yeast ERG19's GO:0010142
+RCA row is now `REMOVE`, since its replacement GO:0019287 is already accepted,
+and rat Hmgcs2's GO:0010142 IBA and IEA rows stay `UNDECIDED`, with the
+obsoletion recorded in `reason`.
 
 ## Overview
 
-A GO ontology cleanup proposes to obsolete two overlapping "mevalonate pathway"
-terms in favour of better-scoped existing terms. The two terms describe the
-same biology already covered by `GO:0019287 isopentenyl diphosphate biosynthetic
-process, mevalonate pathway` and/or `GO:0045337 farnesyl diphosphate biosynthetic
-process`, so existing annotations need to be redirected (with evidence review)
-rather than carried on stale terms.
+GO obsoleted two overlapping "mevalonate pathway" terms in favour of
+better-scoped existing terms. The two old terms described pathway spans already
+covered by `GO:0019287 isopentenyl diphosphate biosynthetic process,
+mevalonate pathway` and/or `GO:0045337 trans,trans-farnesyl diphosphate
+biosynthetic process`, so existing annotations need to be redirected or removed
+after evidence review rather than carried on stale terms.
 
 This project tracks both obsoletions as a single piece of work because they
 share an upstream ontology ticket (geneontology/go-ontology#32082) and the
@@ -62,10 +59,9 @@ replacement target choice is the same for either source term.
 | Obsoleted term | ID | Replacement(s) |
 |---|---|---|
 | isoprenoid biosynthetic process via mevalonate | GO:1902767 | consider `GO:0019287 isopentenyl diphosphate biosynthetic process, mevalonate pathway` or `GO:0045337 farnesyl diphosphate biosynthetic process` |
-| farnesyl diphosphate biosynthetic process, mevalonate pathway | GO:0010142 | consider `GO:0019287 isopentenyl diphosphate biosynthetic process, mevalonate pathway` or `GO:0045337 farnesyl diphosphate biosynthetic process` |
+| farnesyl diphosphate biosynthetic process, mevalonate pathway | GO:0010142 | consider `GO:0019287 isopentenyl diphosphate biosynthetic process, mevalonate pathway` or `GO:0045337 trans,trans-farnesyl diphosphate biosynthetic process` |
 
-Verify all term IDs and labels in OLS before acting; the obsoletion is still
-under discussion upstream at the time of this file.
+Both terms are obsolete in the GO release dated 2026-07-26.
 
 The replacement is not a single 1:1 swap — `GO:1902767` and `GO:0010142` both
 describe a multi-step pathway that runs through mevalonate to IPP and then on
@@ -74,7 +70,7 @@ two replacement terms (or both) accurately describes the actual reaction(s)
 that the experiment supports. That is a scientific judgement, not a mechanical
 relabel.
 
-## Affected annotations — upstream counts
+## Upstream annotation counts
 
 From the ontology issue (geneontology/go-ontology#32082):
 
@@ -83,117 +79,63 @@ From the ontology issue (geneontology/go-ontology#32082):
 | GO:1902767 (this issue) | 2 | erg9, yajO |
 | GO:0010142 (companion #6439) | 21 | fps1, dps1, spo9, ERG12, ERG8, hcs1, Idi1, Hmgcr, Acat2, Hmgcs1, Fdps, Mvd, ACAT2, Pmvk, Mvk, hmgr |
 
-Per #6440's body, the GO:1902767 list is now down to "1 EcoCyc" annotation
-(the PomBase entry was already fixed). The exact remaining EcoCyc gene/PMID
-is in the linked spreadsheet, which is gated behind Google sign-in and
-should be retrieved via QuickGO when work starts.
+Per #6440's body, the GO:1902767 list was later down to "1 EcoCyc"
+annotation after the PomBase entry was fixed. Identifying that remaining
+EcoCyc row, and confirming whether it is the E. coli `yajO` entry, is tracked
+in [#1401](https://github.com/ai4curation/ai-gene-review/issues/1401).
 
 For GO:0010142 (companion #6439), the full set should be re-pulled from
 QuickGO at review time — many of the 21 listed genes will have been
 reassigned in the interim.
 
-## Impact on this repo
+## Current repo outcomes
 
-Scanning `genes/**/*-goa.tsv` for either GO ID returned a single hit:
+The repo now carries reviews for the seven human pathway enzymes plus rat
+Hmgcs2 and yeast ERG19. A 2026-10-04 check of those review YAMLs found no
+`GO:1902767` rows. The obsolete `GO:0010142` rows are limited to the two rat
+Hmgcs2 rows and the one yeast ERG19 row already handled in PR #3232.
 
-- `genes/rat/Hmgcs2/Hmgcs2-goa.tsv` — rat HMGCS2 has two existing IBA/IEA
-  annotations to `GO:0010142`, and the `Hmgcs2-notes.md` already flags both
-  as inappropriate (paralog conflation with cholesterol-pathway HMGCS1).
-  The existing review is consistent with the obsoletion direction.
+| Gene | Relevant rows | Review outcome |
+|---|---|---|
+| human MVK, PMVK, MVD | two `GO:0019287` rows each | `ACCEPT`: the enzymes perform the mevalonate-to-IPP steps |
+| human FDPS | two `GO:0045337` rows | `ACCEPT`: FDPS performs the IPP/GPP-to-FPP steps |
+| human HMGCS1, HMGCR | no `GO:0010142`, `GO:1902767`, `GO:0019287` or `GO:0045337` rows | reviewed without an obsolete-term row |
+| human IDI1 | no `GO:0010142`, `GO:1902767`, `GO:0019287` or `GO:0045337` rows | reviewed; IDI1 supports FPP synthesis indirectly by interconverting IPP and DMAPP |
+| rat Hmgcs2 | two `GO:0010142` rows | `UNDECIDED`: obsoletion recorded, no replacement proposed because native mevalonate-pathway participation is unresolved |
+| yeast ERG19 | one `GO:0010142` RCA row and one `GO:0019287` IEA row | obsolete RCA row `REMOVE`; `GO:0019287` is already `ACCEPT`ed |
 
-None of the other listed genes (erg9, yajO, fps1, dps1, spo9, ERG12, ERG8,
-hcs1, Idi1, Hmgcr, Fdps, Mvd, ACAT2, Pmvk, Mvk, hmgr, Hmgcs1, Acat2) have an
-`*-ai-review.yaml` in this repo at the time of this writing.
+## Replacement logic
 
-## Scope
+The replacement choice is grouped by the step each enzyme catalyzes, not by
+the obsolete source term:
 
-- Organism: cross-organism. Upstream lists yeast (ERG12, ERG8, Erg9, hcs1),
-  fission yeast (fps1, dps1, spo9, hcs1 paralogs), mammalian (Hmgcr / Hmgcs1
-  / Mvk / Mvd / Pmvk / Fdps / Acat2 / Idi1 / ACAT2 / hmgr / Hmgcs2), and
-  bacterial (yajO).
-- GO branch: biological process — sterol/isoprenoid precursor biosynthesis
-  via the mevalonate route.
-- Type of fix: scientific — for each annotation, decide whether the
-  experiment supports `GO:0019287 (mevalonate-pathway IPP)`,
-  `GO:0045337 (FPP biosynthesis)`, or one of the other neighbouring terms
-  (`GO:0006695 cholesterol biosynthetic process`,
-  `GO:0008299 isoprenoid biosynthetic process`,
-  `GO:0010142 → replacement`, etc.) and pick the closest fit.
+1. Upper mevalonate-pathway enzymes whose direct output is IPP belong on
+   `GO:0019287`: MVK, PMVK and MVD.
+2. FDPS belongs on `GO:0045337`, because it condenses IPP/DMAPP through GPP
+   to trans,trans-FPP.
+3. Obsolete rows that already have a valid replacement in the same review
+   should be removed rather than duplicated, as for yeast ERG19.
+4. Mitochondrial ketogenic Hmgcs2 is not simply a cytosolic HMGCS1 row that
+   needs remapping. Its native role remains unresolved with respect to
+   mevalonate-pathway flux, so the old rows stay `UNDECIDED`.
+5. E. coli uses the MEP/DXP pathway, not the mevalonate pathway, so a
+   `GO:1902767` annotation on `yajO` would be a removal candidate rather than a
+   remap candidate.
 
-## Candidate genes for initial review
+## Open follow-up
 
-Listed in priority order. Each should be set up with
-`just fetch-gene <organism> <gene>` before review begins.
-
-1. **HMGCS1 (human, Q01581)** — Cytosolic HMG-CoA synthase, canonical entry
-   to the mevalonate pathway in the cholesterol/isoprenoid branch. A clean
-   reference for what `GO:0019287` should look like and a strong candidate
-   for the `GO:0019287` replacement for any current `GO:0010142` annotation.
-2. **MVK / MVD / PMVK (human)** — The three "pure mevalonate-to-IPP"
-   enzymes. Strong candidates for `GO:0019287` replacement; useful as a
-   batch because the same logic applies to all three.
-3. **FDPS (human, P14324)** — Farnesyl diphosphate synthase. Catalyses the
-   IPP → GPP → FPP steps, so any `GO:0010142` annotation here actually
-   belongs on `GO:0045337 farnesyl diphosphate biosynthetic process` rather
-   than the obsoleting term.
-4. **HMGCR (human, P04035)** — HMG-CoA reductase. The rate-limiting step
-   of the mevalonate route; likely annotated to `GO:0010142` but really
-   covers only the upper (mevalonate-formation) half of the pathway. Worth
-   a careful review because HMGCR is also heavily studied for
-   statin/cholesterol biology and its non-pathway annotations should be
-   left untouched.
-5. **HMGCS2 (rat, P22791) — already in repo.** Two existing IBA/IEA
-   `GO:0010142` annotations are already flagged for removal in
-   `Hmgcs2-notes.md` because of paralog conflation with the cytosolic
-   HMGCS1. The review file can be updated to record the obsoletion
-   rationale in the `review.reason` for those two annotations.
-6. **ERG9 / ERG12 / ERG8 (yeast)** — Yeast mevalonate-pathway enzymes,
-   upstream-listed for both terms. Lower priority because the yeast
-   annotations are already curator-maintained.
-7. **yajO (E. coli)** — Listed under GO:1902767 in the ontology issue.
-   The yajO assignment to a mevalonate pathway is dubious (E. coli uses
-   the MEP/DXP pathway, not the mevalonate pathway). Worth a quick check
-   to confirm whether this is the remaining "1 EcoCyc" annotation flagged
-   in #6440.
-
-## Proposed approach
-
-1. **The obsoletion has landed** (GO:0010142 is obsolete in the GO release
-   2026-07-26). GOA-sourced term ids are never rewritten; record the
-   obsoletion in `action`/`reason` and, where a replacement applies,
-   `proposed_replacement_terms`. Where the correct replacement is already
-   annotated to the gene, prefer `REMOVE` over a duplicate `MODIFY`
-   (as done for yeast ERG19 in PR #3232).
-2. **Group the review by replacement target, not by the obsoleting term.**
-   Genes whose experimental evidence supports the upper half of the
-   pathway (mevalonate → IPP) want `GO:0019287`; genes covering the lower
-   half (IPP → FPP) want `GO:0045337`; some may want both. Trying to
-   review "every annotation to GO:0010142" without that split conflates
-   two different replacements.
-3. **Reuse Hmgcs2 as the worked example.** The existing
-   `genes/rat/Hmgcs2/Hmgcs2-ai-review.yaml` already records the
-   paralog-conflation logic that motivates the obsoletion. Updating its
-   `review.reason` fields with explicit reference to this project is a
-   useful first concrete step.
-4. **Watch out for the bacterial annotation.** E. coli does not use the
-   mevalonate pathway, so a `GO:1902767` annotation on yajO (or any other
-   E. coli protein) is almost certainly wrong rather than just misnamed.
-   This is a removal candidate, not a remap candidate.
-
-## Priority
-
-Low–medium — the per-annotation review work here is small (the upstream
-lists are short and several entries have already been fixed at source).
-The main repo-level effect is updating the rat HMGCS2 review to cite the
-obsoletion rationale; the rest is queueing work for when human
-HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
+Repo-local obsolete rows have been handled. The remaining follow-up is to
+identify the "1 EcoCyc" `GO:1902767` annotation still mentioned on the
+upstream GO annotation ticket, confirm whether it is the historical E. coli
+`yajO` row, and raise a GO annotation request if it still exists. That work is
+tracked in [#1401](https://github.com/ai4curation/ai-gene-review/issues/1401).
 
 ## Status
 
 - 2026-06-06 — Project file created. Tracking upstream issue #6440
   (opened 2026-05-28) and companion issue #6439. Obsoletion not yet
-  applied. No reviews started; the rat HMGCS2 entry is the only gene in
-  this repo currently carrying an annotation to either obsoleting term.
+  applied. No reviews started; the rat HMGCS2 entry was then the only gene
+  in this repo carrying an annotation to either obsoleting term.
 - 2026-09-26 — OLS lists both GO:1902767 and GO:0010142 as obsolete, each
   pointing to GO:0019287 or GO:0045337. Human HMGCS1, HMGCR, MVK, PMVK, MVD
   (PR #1998) and FDPS, IDI1 (PR #2153) are reviewed. Rows on the obsolete
@@ -206,3 +148,8 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   RCA row is `REMOVE`, because its only applicable replacement
   (GO:0019287) is already an `ACCEPT`ed row. No other review carries a
   GO:0010142 GOA row.
+- 2026-10-04 — Re-read the nine current frontmatter reviews. MVK, PMVK and
+  MVD each accept two `GO:0019287` rows; FDPS accepts two `GO:0045337` rows;
+  HMGCS1, HMGCR and IDI1 carry neither obsolete term nor either replacement
+  process; Hmgcs2 and ERG19 remain the only tracked reviews with obsolete
+  `GO:0010142` rows, already handled as above.

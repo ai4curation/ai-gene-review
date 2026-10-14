@@ -183,10 +183,10 @@ write-through caching.
   interactive MVP; single Python app reusing the engine. (Embedding into the
   Pages site, if wanted later, can be an `<iframe>` to the Space.)
 - **Hosting → Hugging Face Spaces** (Docker or native Streamlit).
-- **Sequencing → validate generality first.** Before building the app, run the
-  pipeline over several more MetaboLights studies (different biofluid / platform /
-  disease / organism) to confirm the coverage uplift and enrichment hold up. See
-  the cross-study summary linked from the [project page](../METABOLOMICS.md).
+- **Sequencing → cross-study validation is complete.** The four-study
+  MetaboLights run confirmed the coverage uplift and GO-BP enrichment across
+  biofluids and platforms; the next steps are the static showcase, engine
+  packaging and Streamlit MVP tracked from the [project page](../METABOLOMICS.md).
 
 ## Remaining open questions
 

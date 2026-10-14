@@ -1,6 +1,7 @@
 ---
 title: "Pseudoenzymes Project"
 maturity: MATURE
+last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP]
 species: [RAMVA, SCHPO, SACEN, PSEAE, STRCO]
 genes: [RvY_13070, RvY_00650, RvY_03757, RvY_17310, RvY_15948, Epe1, eryCII, pqsB, actI-ORF2]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: PSEUDOENZYMES/slides/PSEUDOENZYMES-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/Uz7bzb99at7dysAB1HZSqy
-      title: Project brief
 ---
 
 # Pseudoenzymes Project
@@ -28,9 +26,10 @@ condensing-enzyme subunits PqsB and ActI-ORF2. In those reviews, Epe1's
 electronic histone demethylase rows and EryCII's monooxygenase and heme rows are
 REMOVE; the SOD activity rows on RvY_13070 (RvSOD15), RvY_00650 and RvY_03757
 and the acyltransferase rows on PqsB and ActI-ORF2 are MARK_AS_OVER_ANNOTATED.
-Two gene reviews are more cautious than the prose below: RvY_17310's SOD rows
-are UNDECIDED, and the CCS-like RvY_15948 keeps superoxide metabolic process
-as non-core rather than removing it.
+Two edge cases deliberately stay cautious: RvY_17310's SOD rows are UNDECIDED
+after a structural/residue reassessment supported an intact active site but
+could not replace a direct assay, and the CCS-like RvY_15948 keeps superoxide
+metabolic process as non-core rather than removing it.
 
 We did this because family-based propagation never checks whether the
 catalytic residues survive, so pseudoenzymes are a systematic, predictable
@@ -141,7 +140,8 @@ without modifying the substrate:
 ### Type 6: Unknown / novel function
 The pseudoenzyme exists and is conserved under selection, but its function is
 not yet clear:
-- **RvSOD15** and 3 related *R. varieornatus* paralogs: still under investigation
+- **RvSOD15**, RvY_00650 and RvY_03757 in *R. varieornatus*: still under
+  investigation after demonstrated or probable loss of Cu/Zn-SOD activity
 - Many pseudokinases and pseudo-phosphatases in mammalian genomes
 
 ### Type 7: Degraded / decay
@@ -260,18 +260,20 @@ substantial pseudoenzyme content. See
 | **RvSOD15 (RvY_13070)** | A0A1D1VU85 | **Confirmed pseudoenzyme** | Crystal structure shows V87 replaces catalytic His; V87H rescue mutant did NOT restore activity (loop dynamics) | Sim & Inoue 2023 (PMID:37358501) |
 | RvY_00650 | A0A1D1UDY8 | Probable pseudoenzyme | All Cu His preserved but PROSITE PS00087 fails (loop context divergent) | TARDIGRADE_STRESS_RESPONSE project |
 | RvY_03757 | A0A1D1UP59 | Probable pseudoenzyme | All Cu His preserved but PROSITE PS00087 fails | TARDIGRADE_STRESS_RESPONSE project |
-| RvY_17310 | A0A1D1W3Y1 | Probable pseudoenzyme | 475 aa (3x normal); all Cu His preserved but PROSITE PS00087 fails | TARDIGRADE_STRESS_RESPONSE project |
+| RvY_17310 | A0A1D1W3Y1 | Unresolved, intact-looking Cu/Zn-SOD paralog | 475 aa with a C-terminal SOD domain; local PS00087 failure conflicts with all-residue and AlphaFold-geometry support, so the GO rows are UNDECIDED pending direct assay | RvY_17310 review |
 | RvY_15948 | A0A1D1VWP9 | **Not a SOD** - copper chaperone (CCS-like) | H46→A, H48→C; Pfam SODC but no PROSITE match; UniProt already classifies as chaperone | UniProt automatic |
 
-**Key insight:** Roughly half of the expanded Cu/Zn-SOD repertoire in this
-extremotolerant tardigrade is non-catalytic or serves chaperone roles. The
-narrative of "more SOD gene copies = more antioxidant capacity" is only
-partially correct.
+**Key insight:** The expanded Cu/Zn-SOD repertoire in this extremotolerant
+tardigrade contains confirmed pseudoenzymes, probable pseudoenzymes, a
+CCS-like chaperone copy, and at least one long paralog that should stay
+unresolved until assayed directly. The narrative of "more SOD gene copies =
+more antioxidant capacity" is only partly testable from family membership.
 
 **Annotation impact:** GO:0004784 (SOD activity), GO:0019430 (removal of
-superoxide radicals), GO:0006801 (superoxide metabolic process) should be
-MARK_AS_OVER_ANNOTATED for RvSOD15, RvY_00650, RvY_03757, RvY_17310; and
-REMOVED for RvY_15948 (which is a chaperone, not a SOD).
+superoxide radicals), GO:0006801 (superoxide metabolic process) are
+MARK_AS_OVER_ANNOTATED for RvSOD15, RvY_00650 and RvY_03757; UNDECIDED for
+RvY_17310; and kept as non-core, rather than removed, for the CCS-like
+RvY_15948 process row.
 
 ### JmjC histone demethylase pseudoenzyme (Schizosaccharomyces pombe)
 
@@ -545,22 +547,26 @@ Good template for families where the pseudoenzyme has neofunctionalized
   developed here; serves as an extended case study
 - Individual reviews:
   - `genes/RAMVA/RvY_13070/` - RvSOD15 (confirmed pseudoenzyme)
-  - `genes/RAMVA/RvY_00650/`, `genes/RAMVA/RvY_03757/`, `genes/RAMVA/RvY_17310/`
-    (PROSITE-identified impaired paralogs)
+  - `genes/RAMVA/RvY_00650/`, `genes/RAMVA/RvY_03757/` - probable impaired
+    Cu/Zn-SOD paralogs
+  - `genes/RAMVA/RvY_17310/` - unresolved long Cu/Zn-SOD paralog and
+    assay-gap cautionary case
   - `genes/RAMVA/RvY_15948/` - CCS chaperone (different pseudoenzyme type)
   - `genes/SCHPO/Epe1/` - probable JmjC pseudo-demethylase (Type 5 example)
 
 ## TODO / future work
 
-- [ ] Search existing gene reviews systematically for additional pseudoenzyme
+Tracked in [#4006](https://github.com/ai4curation/ai-gene-review/issues/4006).
+
+- **Todo:** Search existing gene reviews systematically for additional pseudoenzyme
       candidates that may have been reviewed without being identified as such
-- [ ] Add examples from human/mouse reviews (mammalian pseudokinases are
+- **Todo:** Add examples from human and mouse reviews (mammalian pseudokinases are
       the best-studied pseudoenzyme class)
-- [ ] Create a generic "pseudoenzyme-screen.py" script that takes a protein
+- **Todo:** Create a generic "pseudoenzyme-screen.py" script that takes a protein
       family Pfam ID and canonical member, and screens all paralogs in a
       given organism
-- [ ] Link to M-CSA programmatically for catalytic residue extraction
-- [ ] Consider a curated CSV/TSV database of all identified pseudoenzymes
+- **Todo:** Link to M-CSA programmatically for catalytic residue extraction
+- **Todo:** Consider a curated CSV/TSV database of all identified pseudoenzymes
       across the project (gene, family, evidence type, category, references)
-- [ ] Compare pseudoenzyme detection results to what PANTHER/IBA annotates,
+- **Todo:** Compare pseudoenzyme detection results to what PANTHER/IBA annotates,
       to quantify over-annotation rate for pseudoenzymes specifically

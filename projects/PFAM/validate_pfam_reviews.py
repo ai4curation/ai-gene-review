@@ -51,6 +51,11 @@ ASPECT_NS = {
 }
 
 
+def md_code(value: object) -> str:
+    text = str(value).replace("`", "\\`")
+    return f"`{text}`"
+
+
 def parse_interpro(path: Path):
     ipr_pfam = collections.defaultdict(set)
     pf2ipr = {}
@@ -215,10 +220,11 @@ def write_index(reviews: dict) -> None:
 
     def row(pf, r, a):
         ex = (a.get("supporting_examples") or [{}])[0].get("accession", "")
-        return (f"| {pf} | {r.get('pfam_name','')} | "
+        return (f"| {pf} | {md_code(r.get('pfam_name',''))} | "
                 f"[`{pf}-review.yaml`](../../interpro/pfam/{pf}/{pf}-review.yaml) | "
                 f"{a['relation']['label']} | {a['term']['id']} {a['term']['label']} | "
-                f"{asp.get(a['aspect'], a['aspect'])} | {a.get('confidence','')} | {ex} |")
+                f"{asp.get(a['aspect'], a['aspect'])} | {a.get('confidence','')} | "
+                f"{md_code(ex)} |")
 
     out += [f"## Proposed ({len(prop)} families)", "",
             "| Pfam | family | review | relation | proposed GO | aspect | conf. | example |",
@@ -238,10 +244,11 @@ def write_index(reviews: dict) -> None:
         for a in r.get("proposed_annotations", []) or []:
             cex = next((c for c in (a.get("counter_examples") or [])
                         if c.get("member_pfam") == f"Pfam:{r['pfam_id']}"), {})
-            out.append(f"| {r['pfam_id']} | {r.get('pfam_name','')} | "
+            example = f"{cex.get('protein_name','')} ({cex.get('ec','no EC')})"
+            out.append(f"| {r['pfam_id']} | {md_code(r.get('pfam_name',''))} | "
                        f"[`{r['pfam_id']}-review.yaml`](../../interpro/pfam/{r['pfam_id']}/{r['pfam_id']}-review.yaml) | "
                        f"{a['term']['id']} {a['term']['label']} | "
-                       f"{cex.get('protein_name','')} ({cex.get('ec','no EC')}) |")
+                       f"{md_code(example)} |")
     out.append("")
     (HERE / "PROPOSED_MAPPINGS.md").write_text("\n".join(out) + "\n")
 

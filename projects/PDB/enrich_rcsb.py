@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Enrich prioritized PDB entries with RCSB metadata (ligands + complex content).
 
-For genes that currently LACK experimental molecular-function GO (from
-pdb_gene_summary.tsv), query the RCSB Data API (GraphQL) for each deposited PDB
+For the union of dark-MF, eukaryote-sparse and contested-catalytic genes from
+pdb_gene_summary.tsv, query the RCSB Data API (GraphQL) for each deposited PDB
 entry to find what is actually *in* the structure:
   - bound non-polymer ligands / cofactors / metals (the strongest functional clue)
   - number of distinct protein / nucleic-acid entities (i.e. is it a complex?)
@@ -101,12 +101,12 @@ def main():
         key = (r["organism"], r["gene"])
         if key in cand:
             ids_for[key].append(r["pdb_id"])
-    pdb_to_gene = {}
+    pdb_to_genes = defaultdict(list)
     for key, ids in ids_for.items():
         for pid in ids[:CAP]:
-            pdb_to_gene[pid] = key
+            pdb_to_genes[pid].append(key)
 
-    all_ids = sorted(set(pdb_to_gene))
+    all_ids = sorted(pdb_to_genes)
     print(f"Candidate genes: {len(cand)} "
           f"(dark_mf={sum('dark_mf' in v for v in reasons.values())}, "
           f"euk={sum('euk' in v for v in reasons.values())}, "
@@ -125,44 +125,46 @@ def main():
     enriched = []
     for pdb_id in all_ids:
         e = results.get(pdb_id.upper())
-        org, gene = pdb_to_gene[pdb_id]
-        if not e:
-            enriched.append({"organism": org, "gene": gene, "pdb_id": pdb_id,
-                             "title": "", "pmid": "", "doi": "", "year": "",
-                             "n_protein": "", "n_nucleic": "",
-                             "ligands_all": "", "ligands_meaningful": "",
-                             "n_meaningful": 0, "has_cofactor": 0, "is_complex": 0})
-            continue
-        cit = e.get("rcsb_primary_citation") or {}
-        info = e.get("rcsb_entry_info") or {}
-        np_ent = e.get("nonpolymer_entities") or []
-        ligs = []
-        for ne in np_ent:
-            cc = (((ne or {}).get("nonpolymer_comp") or {}).get("chem_comp")) or {}
-            cid = cc.get("id")
-            if cid:
-                ligs.append((cid, cc.get("name") or ""))
-        meaningful = [(c, n) for c, n in ligs if c not in BUFFER]
-        cofactor = [(c, n) for c, n in ligs if c in RICH]
-        n_prot = info.get("polymer_entity_count_protein") or 0
-        n_nuc = info.get("polymer_entity_count_nucleic_acid") or 0
-        enriched.append({
-            "organism": org, "gene": gene, "pdb_id": pdb_id,
-            "title": (e.get("struct") or {}).get("title") or "",
-            "pmid": cit.get("pdbx_database_id_PubMed") or "",
-            "doi": cit.get("pdbx_database_id_DOI") or "",
-            "year": cit.get("year") or "",
-            "n_protein": n_prot, "n_nucleic": n_nuc,
-            "ligands_all": ",".join(c for c, _ in ligs),
-            "ligands_meaningful": ",".join(c for c, _ in meaningful),
-            "n_meaningful": len(meaningful),
-            "has_cofactor": int(bool(cofactor)),
-            "is_complex": int(n_prot > 1 or n_nuc > 0),
-        })
+        for org, gene in sorted(set(pdb_to_genes[pdb_id])):
+            if not e:
+                enriched.append({"organism": org, "gene": gene, "pdb_id": pdb_id,
+                                 "title": "", "pmid": "", "doi": "", "year": "",
+                                 "n_protein": "", "n_nucleic": "",
+                                 "ligands_all": "", "ligands_meaningful": "",
+                                 "n_meaningful": 0, "has_cofactor": 0, "is_complex": 0})
+                continue
+            cit = e.get("rcsb_primary_citation") or {}
+            info = e.get("rcsb_entry_info") or {}
+            np_ent = e.get("nonpolymer_entities") or []
+            ligs = []
+            for ne in np_ent:
+                cc = (((ne or {}).get("nonpolymer_comp") or {}).get("chem_comp")) or {}
+                cid = cc.get("id")
+                if cid:
+                    ligs.append((cid, cc.get("name") or ""))
+            meaningful = [(c, n) for c, n in ligs if c not in BUFFER]
+            cofactor = [(c, n) for c, n in ligs if c in RICH]
+            n_prot = info.get("polymer_entity_count_protein") or 0
+            n_nuc = info.get("polymer_entity_count_nucleic_acid") or 0
+            enriched.append({
+                "organism": org, "gene": gene, "pdb_id": pdb_id,
+                "title": (e.get("struct") or {}).get("title") or "",
+                "pmid": cit.get("pdbx_database_id_PubMed") or "",
+                "doi": cit.get("pdbx_database_id_DOI") or "",
+                "year": cit.get("year") or "",
+                "n_protein": n_prot, "n_nucleic": n_nuc,
+                "ligands_all": ",".join(c for c, _ in ligs),
+                "ligands_meaningful": ",".join(c for c, _ in meaningful),
+                "n_meaningful": len(meaningful),
+                "has_cofactor": int(bool(cofactor)),
+                "is_complex": int(n_prot > 1 or n_nuc > 0),
+            })
 
     out = DATA / "pdb_enriched.tsv"
     with out.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(enriched[0].keys()), delimiter="\t")
+        w = csv.DictWriter(
+            fh, fieldnames=list(enriched[0].keys()), delimiter="\t", lineterminator="\n"
+        )
         w.writeheader()
         w.writerows(enriched)
 
@@ -244,13 +246,15 @@ def main():
 
     gout = DATA / "pdb_gene_enriched.tsv"
     fields = ["priority_score", "organism", "gene", "uniprot", "is_eukaryote",
-              "candidate_reason", "length", "n_pdb", "n_pdb_sampled", "max_coverage_frac",
+              "candidate_reason", "length", "n_pdb_sampled", "max_coverage_frac",
               "best_resolution_A", "exp_mf", "exp_total",
               "pdb_with_cofactor", "pdb_with_ligand", "pdb_with_complex",
               "has_nucleic_acid", "cofactors", "ligands", "contested_cat_mf",
-              "structure_papers"]
+              "structure_papers", "n_pdb"]
     with gout.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
+        w = csv.DictWriter(
+            fh, fieldnames=fields, delimiter="\t", lineterminator="\n"
+        )
         w.writeheader()
         w.writerows(grows)
 

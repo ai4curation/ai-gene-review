@@ -1,5 +1,6 @@
 ---
 title: "PDB inventory & prioritization — results"
+species: [human]
 ---
 # PDB inventory & prioritization — results
 
@@ -34,8 +35,9 @@ enrich_rcsb.py     RCSB GraphQL for no-exp-MF candidate genes  ->  data/pdb_enri
    - `euk` — eukaryotic **and** `exp_mf <= 2`: broadens beyond the prokaryote-dominated dark
      set so eukaryotic proteins aren't lost; structure sharpens an IEA term / pins complex.
    - `contested` — ≥1 contested catalytic MF (above): structure adjudicates the disputed
-     activity. 278 genes total (union of the three cuts). To bound RCSB calls, ≤15 entries are queried per gene (the
-     rollup only needs "does *any* deposited structure carry feature X").
+     activity. 620 genes total (union of the three cuts). To bound RCSB calls, ≤15 entries
+     are queried per gene (the rollup only needs "does *any* deposited structure carry
+     feature X").
 
 3. **Enrichment (network).** For each candidate's PDB entries, query the RCSB Data API for
    `struct.title`, the **primary-citation PMID/DOI/year**, protein/nucleic-acid entity counts,
@@ -51,11 +53,13 @@ enrich_rcsb.py     RCSB GraphQL for no-exp-MF candidate genes  ->  data/pdb_enri
 
 ## Headline numbers
 
-- 949 / 2529 genes have ≥1 deposited PDB structure; 13,415 entries total; 815 eukaryotic.
-- Candidate union = 278 genes: `dark_mf` 114, `euk` 100, `contested` (catalytic MF) 130
-  (overlapping). 1,361 PDB entries queried (≤15/gene).
-- The strict `dark_mf` cut (102 resolved): 40 with a bound cofactor/metal, 66 with a
-  meaningful ligand, 36 in a complex, 6 with bound nucleic acid, 23 apo/no-partner.
+- 1,991 genes have ≥1 deposited PDB structure; 27,157 entries total; 1,744 eukaryotic.
+- Candidate union = 620 genes: `dark_mf` 206, `euk` 210, `contested` (catalytic MF) 340
+  (overlapping). 3,140 unique PDB entries queried (≤15/gene); shared complexes expand
+  to 3,460 rows after each PDB entry is assigned back to every candidate gene that
+  references it.
+- The strict `dark_mf` cut (206 genes): 84 with a bound cofactor/metal, 137 with a
+  meaningful ligand, 109 in a complex, 25 with bound nucleic acid, 37 apo/no-partner.
 - `contested` catalytic cases split into **over-general parent terms** (cofactor present →
   pick the specific child) vs **genuinely-wrong specifics** (structure/cofactor refutes the
   call, e.g. HEN1 PPIase→SAH-methyltransferase; CASP3 aspartic→cysteine protease).
@@ -99,3 +103,7 @@ and up to 3 representative structure_papers (ligand/cofactor-bearing, newest fir
 - `structure_papers` are RCSB **per-entry** primary citations and are frequently peripheral
   (inhibitor/methods) papers, not the definitive structure/function paper — verify per
   `STRUCTURE_PAPERS.md` before citing.
+- PDB entries are de-duplicated for the RCSB query, then assigned back to every candidate
+  gene that listed the entry in UniProt. This is essential for multi-subunit structures:
+  one ribosome, NatA, respiratory-chain or Fanconi-complex entry may support several target
+  rows.

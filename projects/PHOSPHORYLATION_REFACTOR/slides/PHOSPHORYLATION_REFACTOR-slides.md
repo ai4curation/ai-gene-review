@@ -88,7 +88,7 @@ Finding genes annotated to "protein phosphorylation" that are not kinases
 ## Status and next steps
 
 - ✅ Mouse (15 genes) and human (45 genes) reviews in `genes/mouse/`, `genes/human/`.
-- ⚠️ The page's per-gene lists predate later edits: Ang2, BIRC6 now **UNDECIDED**; ADM2 **REMOVE**; Egf, Ednra **over-annotated**; Drd1 **non-core**.
+- ✅ Later edge-case edits folded in: Ang2/BIRC6 **UNDECIDED**, ADM2 **REMOVE**, Egf/Ednra/Drd1 **over-annotated**.
 - ⬜ Fly, zebrafish, Arabidopsis, rat findings are **query-level only**; no reviews yet (e.g. TAIR TOPP4, RGD Ppp3cb, 29 TAIR IEA rows).
 - ⬜ Feed the taxonomy back to GO as ISS-transfer and training guidance.
 

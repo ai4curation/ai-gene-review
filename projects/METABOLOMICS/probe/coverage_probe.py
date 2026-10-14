@@ -264,9 +264,10 @@ def write_results(rows: list[Row], s: dict[str, int], out: Path | None = None,
     lines.append(f"- ChEBI access + protonation traversal: [`chebi.py`]({rel_prefix}chebi.py) (OLS4).")
     lines.append(f"- Rhea network + rhea2go: [`rhea.py`]({rel_prefix}rhea.py) (Rhea REST, GO external2go).")
     lines.append("- Caches under `.cache/` (gitignored); delete to force a fresh pull.")
-    lines.append("- This is a **coverage** probe (does the bridge connect?), not yet a")
-    lines.append(f"  statistical enrichment; GO-BP lift + ORA are the next step (see the")
-    lines.append(f"  [project page]({rel_prefix}../../METABOLOMICS.md)).")
+    lines.append("- This is a **coverage** report: it measures whether a ChEBI input can")
+    lines.append("  enter the Rhea/GO bridge. The same normalized metabolite set feeds")
+    lines.append(f"  GO-MF ORA ([`go_enrichment.py`]({rel_prefix}go_enrichment.py)) and human")
+    lines.append(f"  GO-BP ORA ([`go_bp_enrichment.py`]({rel_prefix}go_bp_enrichment.py)).")
     out.write_text("\n".join(lines) + "\n")
     print(f"\nWrote {out}", file=sys.stderr)
 

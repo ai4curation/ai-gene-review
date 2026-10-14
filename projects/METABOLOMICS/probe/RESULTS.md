@@ -112,6 +112,7 @@ conjugated/acylated form, or compounds genuinely absent from Rhea.
 - ChEBI access + protonation traversal: [`chebi.py`](chebi.py) (OLS4).
 - Rhea network + rhea2go: [`rhea.py`](rhea.py) (Rhea REST, GO external2go).
 - Caches under `.cache/` (gitignored); delete to force a fresh pull.
-- This is a **coverage** probe (does the bridge connect?), not yet a
-  statistical enrichment; GO-BP lift + ORA are the next step (see the
-  [project page](../../METABOLOMICS.md)).
+- This is a **coverage** report: it measures whether a ChEBI input can
+  enter the Rhea/GO bridge. The same normalized metabolite set feeds
+  GO-MF ORA ([`go_enrichment.py`](go_enrichment.py)) and human
+  GO-BP ORA ([`go_bp_enrichment.py`](go_bp_enrichment.py)).

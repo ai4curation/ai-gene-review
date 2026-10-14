@@ -38,7 +38,7 @@ A fly stem-cell term applied to vertebrate genes
 
 - GO's neuroblast proliferation and division terms describe the **fly** neuroblast, a dividing stem cell; the **vertebrate** neuroblast does not divide.
 - All **42** annotations to the six terms are on **vertebrate** genes (35 mouse, 4 human, 3 rat). The planned fix is per-gene **MODIFY** to GO:0061351 *neural precursor cell proliferation*.
-- **Scoped, not started.** Four existing repo reviews touching these rows kept them as non-core instead.
+- **Scoped, not started.** Five existing vertebrate reviews touching these rows kept them as non-core instead.
 
 ---
 
@@ -58,14 +58,17 @@ A fly stem-cell term applied to vertebrate genes
 
 | Gene | Term | Evidence | Action in repo |
 |---|---|---|---|
+| DROME/N | GO:0007405 neuroblast proliferation | IMP | KEEP_AS_NON_CORE |
+| DROME/Lis-1 | GO:0007405 neuroblast proliferation | IMP | KEEP_AS_NON_CORE |
 | DROME/insc | GO:0055059 asymmetric neuroblast division | IGI | ACCEPT |
 | DROME/Lkb1 | GO:0055059 asymmetric neuroblast division | IMP | KEEP_AS_NON_CORE |
 | human/FGFR2 | GO:0021847 VZ neuroblast division | ISS | KEEP_AS_NON_CORE |
+| human/PAFAH1B1 | GO:0007405 neuroblast proliferation | ISS | KEEP_AS_NON_CORE |
 | human/SHH | GO:0007405 neuroblast proliferation | ISS | KEEP_AS_NON_CORE |
 | human/TP53 | GO:0007405 neuroblast proliferation | IEA | KEEP_AS_NON_CORE |
 | mouse/Ctnnb1 | GO:0007405 neuroblast proliferation | IGI | KEEP_AS_NON_CORE |
 
-<span class="small">These reviews were made for other projects. The fly rows fit the term; the four vertebrate rows are the ones this project would revisit.</span>
+<span class="small">These reviews were made for other projects. The fly rows fit the term; the five vertebrate rows are the ones this project would revisit.</span>
 
 ---
 

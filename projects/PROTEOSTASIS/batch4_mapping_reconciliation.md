@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Batch 4 — PN mapping reconciliation"
+species: [human]
 ---
 
 # Proteostasis Batch 4 — PN mapping reconciliation

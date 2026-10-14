@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Focused function hypothesis
 
 Hypothesis: The horse protein F6TY09 participates in female pronucleus assembly.

@@ -1,37 +1,47 @@
 ---
-title: ProtNLM2 "novel" hits are mostly InterPro2GO coverage gaps
+title: ProtNLM2 novel-hit triage and InterPro2GO coverage gaps
+autolink_gene_symbols: false
 ---
-# Why the "correct novel" ProtNLM2 hits are missed by standard pipelines
+# What InterPro2GO coverage gaps explain
 
 [← back to ProtNLM2 Evaluation](../PROTNLM_EVALUATION.md)
 
 ## Bottom line
 
-The predictions we called "correct novel" for uncharacterized proteins are **likely
-correct** (they have no experimental support — the assessment is domain/orthology-based)
-and, more importantly, they are **not novel biology**. They are functions that follow
-directly from the protein's domains but that the standard **InterPro2GO** pipeline
-(`GO_REF:0000002`) does not emit. In each case the gap is an InterPro/InterPro2GO
-coverage problem, not a discovery. Three distinct mechanisms account for the three
-flagship examples — verified against the live InterPro API and the current InterPro2GO
-release (`!version date: 2025/09/01`).
+InterPro2GO absences explain why several ProtNLM2 outputs were missing from the
+cached GOA records, but they do **not** prove that the model output is correct.
+The cleanest case below is the Trichomonas APSES/KilA-N DNA-binding prediction:
+a relevant DNA-binding InterPro2GO mapping exists, but only on a superfamily
+entry the target was not assigned. The `OLFML2A` matrix prediction is supported by
+matching subfamily placement plus mouse Olfml2a experimental evidence, not by
+the generic olfactomedin domain alone. The short C. elegans MCM-4 record shows
+the opposite caution: the missing InterPro MCM assignment explains why no
+standard mapping fired, but current prediction review scores Pol II
+transcription initiation as `NPI` and nucleus as `UNC` for the 74-residue
+fragment.
+
+Three distinct InterPro/InterPro2GO mechanisms account for those examples —
+verified against the live InterPro API and the current InterPro2GO release
+(`!version date: 2025/09/01`).
 
 ## The three mechanisms
 
-### 1. No InterPro2GO mapping exists for the domain — olfactomedin (A0A8C9H4D2 / OLFML2A)
+### 1. No InterPro2GO mapping exists for the domain — olfactomedin (A0A8C9H4D2 / `OLFML2A`)
 
 The protein carries the olfactomedin domain (`InterPro:IPR003112`, Pfam `PF02191/OLF`)
 and sits in family `IPR050605` (Olfactomedin-like domain-containing protein). **Neither
 entry has any GO term** (InterPro API `go_terms: null` for both; zero lines in
-InterPro2GO). So the ECM-organization function ProtNLM2 predicts is simply not derivable
-from InterPro2GO.
+InterPro2GO). So the ECM-organization function ProtNLM2 predicts is not emitted by
+InterPro2GO.
 
-Why no mapping? The olfactomedin domain is **functionally promiscuous** — it occurs in
-myocilin, the olfactomedins/noelins, gliomedin, and the latrophilin adhesion GPCRs, whose
-functions diverge widely — so a single reliable domain→GO mapping cannot be assigned.
-(Note: the 11 "olfactomedin"-keyword lines in InterPro2GO are all *olfactory*
-receptor/marker entries — IPR000725, IPR004117, IPR009103, IPR036727 — homonyms, not the
-olfactomedin domain.)
+Why no generic mapping? The olfactomedin domain is **functionally promiscuous** — it
+occurs in myocilin, the olfactomedins/noelins, gliomedin, and the latrophilin adhesion
+GPCRs, whose functions diverge widely — so a single reliable domain→GO mapping cannot
+be assigned. The current prediction review supports matrix organization through a
+matching `OLFML2A` PANTHER subfamily and an MGI IDA annotation on mouse Olfml2a, not from
+the generic olfactomedin domain by itself. Note also that the 11 "olfactomedin"-keyword
+lines in InterPro2GO are all *olfactory* receptor/marker entries — IPR000725, IPR004117,
+IPR009103, IPR036727 — homonyms, not the olfactomedin domain.
 
 ### 2. Mapping exists only on a superfamily entry the protein was not assigned — KilA-N (A2FPI7)
 
@@ -63,6 +73,11 @@ But the *C. elegans* protein was assigned **only Pfam `PF21128` (WHD_MCM4)**, wh
 `go_terms: null`). Because it never matched the InterPro MCM entries, InterPro2GO had
 nothing to key on — even though fully-assigned MCM4 orthologs receive the whole nucleus /
 MCM-complex / replication annotation set.
+
+This explains the mapping absence, not the ProtNLM2 calls. The accession under review is
+only a 74-residue C-terminal MCM4 winged-helix fragment; the current sidecar rejects Pol
+II transcription initiation as `NPI` and leaves nuclear localization `UNC` because
+full-length MCM-4 functions cannot be assumed for the short deposited sequence.
 
 ## Was a mapping *removed*?
 
@@ -103,12 +118,15 @@ where InterPro abstained*, not from splitting lumped entries — is the flip sid
 
 ## Curation implication
 
-- ProtNLM2's value on uncharacterized proteins is largely in **filling InterPro2GO coverage
-  gaps**, not discovering unknown biology — useful, but it should be framed as "likely
-  correct, domain-derivable, currently un-emitted by InterPro2GO," and confirmed by a curator.
-- Two concrete upstream fixes worth raising with InterPro: integrate `PF21128` (or ensure
-  *C. elegans* MCM-4 matches an MCM InterPro entry), and consider whether the APSES/KilA-N
-  DNA-binding mapping should propagate from the superfamily to the domain-level entries.
+- ProtNLM2 can point at real **InterPro2GO coverage gaps**, but absence from InterPro2GO is
+  a triage lead rather than evidence that the prediction should become a GO annotation.
+- Keep domain-derived transfers and ortholog/subfamily transfers separate. A2FPI7 is the
+  cleanest DNA-binding coverage-gap case; `OLFML2A` needs subfamily-specific, experimentally
+  grounded evidence.
+- Two concrete upstream fixes worth raising with InterPro remain plausible: integrate
+  `PF21128` and review whether the APSES/KilA-N DNA-binding mapping should propagate from
+  the superfamily to the domain-level entries. The MCM-4 target still needs sequence-model
+  triage before any full-length MCM terms are transferred.
 
 ## Verification
 

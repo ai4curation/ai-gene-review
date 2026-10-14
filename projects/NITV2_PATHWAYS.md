@@ -1,7 +1,9 @@
 ---
 title: "Nitratidesulfovibrio vulgaris Pathways Project"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+autolink_gene_symbols: false
 species: [DESVH]
 genes: [Q72DT3, Q72DT2, Q72DT1, Q72DT0, Q72DS9, Q72FD5, Q72BM9, Q725U0, Q725T9, Q725T8, Q725T7, Q72F06, Q72F05, Q72BQ0, Q72BK7, Q72B50, Q727C6, Q726C4, P07598, Q72AS3, Q72AS0, Q72EY4, Q729Q8]
 sidecars:
@@ -13,9 +15,6 @@ manifest:
   slides:
     - href: NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/SYDG4JC3arG7b3fFiuq6UK
-      title: Project brief
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project
@@ -25,11 +24,12 @@ Hildenborough is the model sulfate-reducing bacterium, and its genes are
 annotated almost entirely by electronic pipelines. We reviewed genes in four
 pathways: sulfate reduction (6), potassium transport (7), sigma factors (5)
 and hydrogen metabolism (5 representative hydrogenase subunits). Twenty of
-the 23 reviews are done, covering 180 annotation rows: 80 accepted, 32
-modified, 15 removed, 11 marked over-annotated, 5 kept as non-core and 37
-proposed as `NEW`. The hysA, echA and cooH reviews are stubs with all rows
-still `PENDING`; hydA and hynA1 are reviewed, although the status checklist
-below leaves all five hydrogenases unticked. The main corrections split
+the 23 reviews have had manual action review, covering 178 non-`PENDING`
+annotation rows: 80 accepted, 32 modified, 15 removed, 11 marked
+over-annotated, 5 kept as non-core and 35 proposed as `NEW`. The hysA, echA
+and cooH reviews are still initialized stubs with all rows `PENDING`; hydA is
+`DRAFT` and hynA1 is `IN_PROGRESS`, but neither has remaining `PENDING` rows.
+The main corrections split
 catalytic from accessory subunits: AprB and KdpC lose catalytic terms in
 favour of electron transfer and ATPase activator activity, the TrkA-type RCK
 proteins become potassium channel regulators rather than transporters, sigma
@@ -38,11 +38,10 @@ factor activity, and DVU3336 turns out to carry only the KdpD sensor domain,
 with the histidine kinase on the neighbouring DVU3335. The input list also
 put rpoC, an RNA polymerase core subunit, among the sigma factors. An earlier
 reassignment of DVU0848 and DVU0849 from QmoA/QmoB to the Flx–Hdr bifurcating
-complex was wrong and is reverted in
+complex was wrong and was reverted in
 [PR #3226](https://github.com/ai4curation/ai-gene-review/pull/3226): the genes
 sit in the aprBA–qmoABC cluster (DVU0846–0850), while Flx–Hdr is encoded at
-DVU2399–2405. Once #3226 merges, QmoB loses two unsupported `NEW` rows
-(178 rows, 35 `NEW`).
+DVU2399–2405.
 
 ## Overview
 
@@ -109,7 +108,10 @@ Sigma factors regulate gene expression by directing RNA polymerase to specific p
 
 ## Pathway 4: Hydrogen Metabolism
 
-D. vulgaris Hildenborough possesses multiple hydrogenases for hydrogen cycling, which is central to its energy metabolism. The organism has four periplasmic hydrogenases for H2 uptake and two membrane-bound cytoplasmic hydrogenases for H2 production.
+*N. vulgaris* Hildenborough possesses multiple hydrogenases for hydrogen
+cycling, which is central to its energy metabolism. The initial review set
+covers three periplasmic large subunits for H2 uptake plus EchA and CooH from
+membrane-bound cytoplasmic hydrogenase complexes for H2 production.
 
 ### Periplasmic Hydrogenases (H2 Uptake)
 
@@ -126,7 +128,7 @@ D. vulgaris Hildenborough possesses multiple hydrogenases for hydrogen cycling, 
 
 | Locus     | Gene   | UniProt ID | Protein                                           |
 |-----------|--------|------------|---------------------------------------------------|
-| DVU0434   | echA   | Q72EY4     | Ech hydrogenase, subunit EchA (catalytic)         |
+| DVU0434   | echA   | Q72EY4     | Ech hydrogenase, antiporter-like membrane subunit |
 | DVU0433   | echB   | Q72EY5     | Ech hydrogenase, subunit EchB                     |
 | DVU2291   | cooH   | Q729Q8     | Coo hydrogenase, CooH subunit (catalytic)         |
 | DVU2287   | cooK   | Q729R2     | Coo hydrogenase, CooK subunit (selenocysteine)    |
@@ -138,7 +140,7 @@ D. vulgaris Hildenborough possesses multiple hydrogenases for hydrogen cycling, 
 | DVU1769   | hydA   | P07598     | [Fe] hydrogenase large subunit (catalytic)        |
 | DVU1918   | hysA   | Q72AS3     | [NiFeSe] hydrogenase large subunit (catalytic)    |
 | DVU1922   | hynA1  | Q72AS0     | [NiFe] hydrogenase 1 large subunit (catalytic)    |
-| DVU0434   | echA   | Q72EY4     | Ech hydrogenase, subunit EchA (catalytic)         |
+| DVU0434   | echA   | Q72EY4     | Ech hydrogenase, antiporter-like membrane subunit |
 | DVU2291   | cooH   | Q729Q8     | Coo hydrogenase, CooH subunit (catalytic)         |
 
 ## Key References
@@ -171,18 +173,18 @@ D. vulgaris Hildenborough possesses multiple hydrogenases for hydrogen cycling, 
 ## Potassium Transport (Priority 2) - COMPLETED
 - [x] DVU1606 (Q72BM9) - TrkA family RCK regulatory subunit
 - [x] DVU3335 (Q725U0) - KdpD-associated histidine kinase sensor
-- [x] kdpD (Q725T9) - KdpD tandem kinase (His + Ser kinase)
+- [x] kdpD (Q725T9) - KdpD-like sensor/adapter without the kinase core
 - [x] kdpC (Q725T8) - KdpC catalytic chaperone subunit
 - [x] kdpB (Q725T7) - KdpB P-type ATPase catalytic subunit
 - [x] DVU0412 (Q72F06) - TrkA-type RCK regulatory subunit
 - [x] trkH (Q72F05) - TrkH membrane channel pore
 
 ## Hydrogen Metabolism (Priority 4) - IN PROGRESS
-- [ ] hydA (P07598) - [Fe] hydrogenase large subunit (periplasmic)
-- [ ] hysA (Q72AS3) - [NiFeSe] hydrogenase large subunit (periplasmic)
-- [ ] hynA1 (Q72AS0) - [NiFe] hydrogenase 1 large subunit (periplasmic)
-- [ ] echA (Q72EY4) - Ech hydrogenase subunit A (cytoplasmic membrane-bound)
-- [ ] cooH (Q729Q8) - Coo hydrogenase CooH subunit (cytoplasmic membrane-bound)
+- [x] hydA (P07598) - [Fe] hydrogenase large subunit (periplasmic; DRAFT)
+- [ ] hysA (Q72AS3) - [NiFeSe] hydrogenase large subunit (periplasmic; tracked in #3981)
+- [x] hynA1 (Q72AS0) - [NiFe] hydrogenase 1 large subunit (periplasmic; IN_PROGRESS)
+- [ ] echA (Q72EY4) - Ech hydrogenase subunit A (cytoplasmic membrane-bound; tracked in #3981)
+- [ ] cooH (Q729Q8) - Coo hydrogenase CooH subunit (cytoplasmic membrane-bound; tracked in #3981)
 
 # NOTES
 
@@ -253,8 +255,8 @@ Key findings from annotation reviews:
 2. **KdpFABC Complex - Functional assignments**:
    - **kdpB (Q725T7)**: P-type ATPase motor - the ONLY subunit with catalytic activity. Contains the catalytic aspartate D307 that cycles through phosphorylation. Annotated with GO:0008556 (P-type K+ transporter activity).
    - **kdpC (Q725T8)**: Catalytic chaperone - does NOT have ATPase activity! Incorrectly annotated with ATP binding and hydrolase activity. Its actual function is GO:0001671 (ATPase activator activity) - it increases KdpB's ATP-binding affinity.
-   - **kdpD (Q725T9)**: Tandem serine-histidine kinase sensor that controls KdpFABC expression in response to K+ levels and turgor.
-   - **DVU3335 (Q725U0)**: KdpE-like response regulator partnered with KdpD for two-component signaling.
+   - **DVU3335 (Q725U0)**: Two-component histidine kinase carrying the HisKA/HATPase_C catalytic core.
+   - **kdpD (Q725T9)**: KdpD-like sensor/adapter; the IEA histidine-kinase calls are removed because only the KdpD N-terminal sensor domain is present here.
 
 3. **Trk/Ktr System - Pore vs Regulator distinction**:
    - **trkH (Q72F05)**: Membrane channel pore - this is the actual K+ transporter with transmembrane domains.
@@ -263,3 +265,15 @@ Key findings from annotation reviews:
 
 4. **c-di-AMP signaling**:
    - The second messenger c-di-AMP binds to RCK regulatory subunits to modulate K+ uptake capacity, linking potassium homeostasis to broader cellular signaling networks.
+
+## 2026-10-04
+
+Rechecked all 23 DESVH reviews in the project. The sulfate-reduction,
+potassium-transport and sigma-factor reviews all validate and still support the
+project summary. PR #3226 has merged, so Q72DT1/Q72DT0 are again QmoA/QmoB in
+the aprBA-qmoABC locus rather than Flx-Hdr subunits; the current reviewed
+action totals are 80 ACCEPT, 32 MODIFY, 15 REMOVE, 11 MARK_AS_OVER_ANNOTATED,
+5 KEEP_AS_NON_CORE and 35 NEW across 178 non-PENDING rows. Hydrogenase work
+remains incomplete: hydA has no pending rows but is still DRAFT, hynA1 has no
+pending rows but is still IN_PROGRESS, and hysA, echA and cooH are still
+INITIALIZED stubs with 19 PENDING rows total; finish them under #3981.

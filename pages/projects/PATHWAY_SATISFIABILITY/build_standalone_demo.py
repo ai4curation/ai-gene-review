@@ -7,7 +7,7 @@ inlines everything the notebook needs so the generated `demo_standalone.py` runs
 with **only the standard library** (no `ai_gene_review`, no `yaml`, no file reads):
 
 * the `module_logic` engine, copied verbatim from source (docstring / `__future__`
-  / local imports stripped, a tiny `as_list` re-injected);
+  / local imports stripped, tiny `as_list` and `descriptor_symbol` helpers re-injected);
 * the two module documents, pre-parsed from YAML at build time and embedded as
   base64'd JSON (so the notebook needs no YAML parser);
 * the GTEx and KEGG cache TSVs, embedded as base64 text.
@@ -57,6 +57,8 @@ def clean_engine(src: str) -> str:
             continue
         if "from ai_gene_review.render_modules import as_list" in line:
             continue
+        if "from ai_gene_review.module_gene_symbols import descriptor_symbol" in line:
+            continue
         keep.append(line)
     as_list = (
         "def as_list(value):\n"
@@ -67,7 +69,22 @@ def clean_engine(src: str) -> str:
         "        return value\n"
         "    return [value]\n"
     )
-    return as_list + "\n" + "\n".join(keep).strip() + "\n"
+    descriptor_symbol = (
+        "import re\n\n"
+        '_SYMBOL_TOKEN = r"[A-Za-z0-9][A-Za-z0-9_.:/-]*"\n'
+        "_SYMBOL_LABEL = re.compile(\n"
+        '    rf"({_SYMBOL_TOKEN})(?:\\s+/\\s+{_SYMBOL_TOKEN})*(?:\\s+\\(.*\\)(?:,\\s+.+)?)?",\n'
+        "    re.DOTALL,\n"
+        ")\n\n"
+        "def descriptor_symbol(descriptor):\n"
+        '    """Read the primary symbol from a symbol-first descriptor label."""\n'
+        '    label = descriptor.get("preferred_term")\n'
+        "    if not isinstance(label, str):\n"
+        "        return None\n"
+        "    match = _SYMBOL_LABEL.fullmatch(label.strip())\n"
+        "    return match[1].rstrip(':') if match else None\n"
+    )
+    return as_list + "\n" + descriptor_symbol + "\n" + "\n".join(keep).strip() + "\n"
 
 
 def b64_json(path: Path) -> str:
@@ -100,14 +117,16 @@ LIB_BODY = (
         import json as _json
 
         def _parse_matrix(tsv_text):
-            """First column is a key; remaining columns are floats -> {key: {col: float}}."""
+            """First column is a row key; remaining columns are floats."""
             rows = tsv_text.strip().splitlines()
             cols = rows[0].split("\\t")[1:]
+            keys = []
             matrix = {}
             for row in rows[1:]:
                 cells = row.split("\\t")
+                keys.append(cells[0])
                 matrix[cells[0]] = {c: float(v) for c, v in zip(cols, cells[1:])}
-            return cols, matrix
+            return cols, keys, matrix
 
         gluco_doc = _json.loads(_b64.b64decode(_GLUCO_B64))
         met_doc = _json.loads(_b64.b64decode(_MET_B64))
@@ -120,8 +139,8 @@ LIB_BODY = (
         met_circuit = compile_module(met_doc)
         met_routes = enumerate_routes(met_circuit)
 
-        gtex_tissues, gtex_matrix = _parse_matrix(_b64.b64decode(_GTEX_B64).decode())
-        kegg_organisms, kegg_matrix = _parse_matrix(_b64.b64decode(_KEGG_B64).decode())
+        gtex_tissues, _, gtex_matrix = _parse_matrix(_b64.b64decode(_GTEX_B64).decode())
+        _, kegg_organisms, kegg_matrix = _parse_matrix(_b64.b64decode(_KEGG_B64).decode())
 
         def resolve_gtex(circuit, routes, gate_atoms, tissues, matrix, thr):
             """Per-tissue: satisfiable? which variants? which gate atom fails?"""
@@ -203,8 +222,8 @@ NOTICE_MD = '''\
         biosynthesis — all read off data, not looked up. And when a pathway is known to run but a
         step has no candidate, that gap becomes a specific, gene-localised hypothesis to chase.
 
-        Source & context: [Methods](methods.md) · [Background](background.md) ·
-        [main project page](../PATHWAY_SATISFIABILITY.md).
+        Source & context: [Methods](methods.html) · [Background](background.html) ·
+        [main project page](../PATHWAY_SATISFIABILITY.html).
 '''
 
 

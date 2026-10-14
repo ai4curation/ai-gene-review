@@ -3,13 +3,11 @@ title: "Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsolet
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [ARATH, PETHY, MYCTU]
+last_reviewed: 2026-10-05
 manifest:
   slides:
     - href: PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/U9y2NbaW7yQxL2cifkkwzN
-      title: Project brief
 ---
 
 # Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsoletion
@@ -24,14 +22,15 @@ the four experimental annotations that must move, on three proteins:
 Arabidopsis PAT (two rows), Petunia PPA-AT and M. tuberculosis Rv0948c.
 The upstream reviewer proposes removal for three rows and a move to
 GO:0009094 only for Petunia PPA-AT, whose RNAi data show a phenylalanine
-effect. The obsoletion has now landed (OLS shows GO:0009095 obsolete),
-so the "not yet applied" notes below are out of date. Scoped, not yet
-started: none of the three proteins has a review in this repo, so no
-existing review is affected.
+effect. The obsoletion has now landed (QuickGO shows GO:0009095 obsolete), and
+the upstream annotation ticket is closed. Scoped, not yet started: none of the
+three proteins has a review in this repo, so no existing review is affected; the
+in-repo review queue is tracked in
+[#547](https://github.com/ai4curation/ai-gene-review/issues/547).
 
 ## Overview
 
-A GO obsoletion proposal will obsolete `GO:0009095 aromatic amino acid family
+GO has obsoleted `GO:0009095 aromatic amino acid family
 biosynthetic process, prephenate pathway`. The term is a pre-composed
 representation of two distinct downstream pathways (L-phenylalanine biosynthesis
 and L-tyrosine biosynthesis) and corresponds to the combined MetaCyc
@@ -52,8 +51,9 @@ coordination of the per-group cleanup.
 
 ## Upstream tickets
 
-- Annotation tracker: [geneontology/go-annotation#6395](https://github.com/geneontology/go-annotation/issues/6395)
-- Ontology ticket: [geneontology/go-ontology#32005](https://github.com/geneontology/go-ontology/issues/32005)
+- Annotation tracker: [geneontology/go-annotation#6395](https://github.com/geneontology/go-annotation/issues/6395) (closed 2026-05-20)
+- Ontology ticket: [geneontology/go-ontology#32005](https://github.com/geneontology/go-ontology/issues/32005) (closed 2026-05-04)
+- AI Gene Review tracker: [#547](https://github.com/ai4curation/ai-gene-review/issues/547)
 
 ## Obsoletion plan (per upstream)
 
@@ -61,9 +61,10 @@ coordination of the per-group cleanup.
 |---|---|---|
 | aromatic amino acid family biosynthetic process, prephenate pathway | GO:0009095 | GO:0009094 L-phenylalanine biosynthetic process and/or GO:0006571 L-tyrosine biosynthetic process |
 
-Term labels and live status verified in OLS on 2026-05-14:
+Term labels and live status verified in QuickGO on 2026-10-04:
+
 - `GO:0009095` — `aromatic amino acid family biosynthetic process, prephenate
-  pathway` (still live; obsoletion proposed but not yet applied)
+  pathway` (obsolete)
 - `GO:0009094` — `L-phenylalanine biosynthetic process` (live)
 - `GO:0006571` — `L-tyrosine biosynthetic process` (live)
 
@@ -102,11 +103,12 @@ mapping fan-out.
 ## Impact on this repo
 
 None of the three affected genes currently have an `*-ai-review.yaml` in this
-repo (verified on 2026-05-14 via `find genes -iname '*PAT*' -path '*ARATH*'`,
-`find genes -iname '*PPA*'`, and `find genes -iname '*Rv0948*'`). There is also
-no existing project covering aromatic amino acid biosynthesis or chorismate
-metabolism. This project is therefore a queueing exercise; no live reviews need
-to be updated.
+repo (verified on 2026-10-05 by exact UniProtKB accession search for Q9SIE1,
+E9L7A5 and P9WIC1 under `genes/`). A broader
+[Pseudomonas putida aromatic-amino-acid biosynthesis batch](P_PUTIDA.md) now
+exists, but it does not cover the Arabidopsis, Petunia, or M. tuberculosis
+accessions affected here. This project is therefore a queueing exercise; no
+live reviews need to be updated.
 
 ## Scope
 
@@ -148,11 +150,10 @@ Listed in priority order. Each should be set up with
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land before bulk action.** GO ontology ticket
-   #32005 is closed (Steven Marygold proposed it) but the annotation review
-   ticket #6395 is still open with reviewer assigned (Antonia Lock). Per-gene
-   AI reviews can proceed independently — the action codes (REMOVE vs MODIFY)
-   are what matter and are stable regardless of obsoletion timing.
+1. **Proceed with in-repo reviews.** The GO ontology ticket #32005 and
+   annotation review ticket #6395 are both closed upstream; #547 tracks the
+   remaining AI Gene Review work to seed the three local reviews and record the
+   REMOVE vs MODIFY decisions explicitly.
 2. **Start with Petunia PPA-AT.** It is the only annotation on the list with a
    proposed positive replacement (MODIFY → GO:0009094). The PMID:21102469
    Fig 1 RNAi check is concrete and fast.
@@ -181,3 +182,7 @@ phenylalanine-biosynthesis annotation; the rest are cleanup.
   (opened 2026-05-13) and ontology issue #32005 (closed). Obsoletion not yet
   applied. No reviews started; none of the three affected genes are in this
   repo.
+- 2026-10-04 — Refreshed status after the upstream annotation tracker closed
+  and QuickGO reported GO:0009095 as obsolete. No reviews started; #547 remains
+  the local tracker for Petunia PPA-AT, Arabidopsis PAT, and M. tuberculosis
+  Rv0948c.

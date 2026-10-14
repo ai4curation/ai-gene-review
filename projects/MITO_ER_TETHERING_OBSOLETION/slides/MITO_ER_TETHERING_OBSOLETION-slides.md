@@ -72,7 +72,7 @@ GO:1990456 (BP) → GO:0140474 mitochondrion-ER membrane tether activity (MF)
 | mouse Calm1 | IEA, ISO, ISS | KEEP_AS_NON_CORE | propagated |
 | mouse Calm2, Calm3 | IEA | KEEP_AS_NON_CORE | propagated |
 
-The project proposes **REMOVE** for the calmodulin rows at refresh: nothing shows calmodulin itself bridges the membranes. VMP1 needs a check against the GO:0140474 definition.
+Mouse Calm1/2/3 are likely **REMOVE** candidates; human CALM1 needs full-text reassessment before changing its UniProt IDA row. VMP1 needs a check against GO:0140474.
 
 ---
 

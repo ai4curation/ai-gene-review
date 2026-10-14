@@ -1,6 +1,7 @@
 ---
 title: "Miscitation Review Project"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [PIPELINE, EVALUATION]
 species: [human, ARATH]
 genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1, ITGB1, FAS, GADD45A, TNFRSF1A, MAP3K1, MAP3K2, MAP2K4, MAPK8, MAPK3, MAP2K1, CALR, CANX]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: MISCITATIONS/slides/MISCITATIONS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/B28H55M68QGuTavmzp4QAR
-      title: Project brief
 ---
 
 # Miscitation Review Project
@@ -21,8 +19,8 @@ for a claim it does not make. We built an aggregator over every `reference_revie
 in the gene reviews and re-verified six seed cases (NLRP3, ZBP1, GRID1, PEX39, SULT1B1,
 PNPLA3) against live QuickGO, NCBI, EuropePMC and UniProt. We did this because the
 validators check only internal consistency, and reviewer judgements about bad citations
-were buried one gene at a time. The register covers 14,559 adjudicated references in
-2,074 of 4,513 reviews and flags 559 (3.8%, an enriched sample rather than an error
+were buried one gene at a time. The register covers 33,255 adjudicated references in
+3,575 of 6,254 reviews and flags 1,085 (3.3%, an enriched sample rather than an error
 rate); all six seed cases stand. The main finding is structural: four of the six are
 defects in how a source database attached a correct paper (a wrong `WITH/FROM`
 interactor, an experimental code on a meeting report, a missing `NOT`), and the schema
@@ -30,10 +28,11 @@ has no field for that yet. Most defects live in GOA, IntAct or UniProt rather th
 this repo, and nothing has been reported upstream.
 
 The sibling [Miscitation Audit](MISCITATION_AUDIT.md) keys the same flags on the
-citation to find bad PMIDs copied across genes. Both count one flag per (gene,
-citation) pair; the audit's register is an earlier run over 4,467 reviews, and between
-the two runs the counts moved in both directions (`WRONG_IDENTIFIER` 28 to 26,
-`MISCITED` 257 to 274), so they do not match exactly.
+citation to find bad PMIDs copied across genes. The audit's register was last refreshed
+over 5,625 review files and reported 45 `WRONG_IDENTIFIER` rows and 360 `MISCITED`
+rows; this page's gene/reference register is a later 6,254-file snapshot with 56 and
+417, respectively, so the two generated registers should be read as complementary
+views rather than exact mirrors.
 
 ## Overview
 
@@ -85,8 +84,8 @@ miscitation:
 There is a third blind spot. The validator's `skip_prefixes`
 (`conf/reference_validator_config.yaml`) exempt every non-literature prefix —
 `GO_REF`, `Reactome`, `file`, `UniProt`, `InterPro` and others — from snippet
-checking entirely. **127 of the 559 currently flagged references carry one of those
-prefixes** (72 `file:`, 28 `GO_REF:`, 27 `Reactome:`), i.e. they were found by a
+checking entirely. **347 of the 1,085 currently flagged references carry one of those
+prefixes** (245 `file:`, 49 `GO_REF:`, 53 `Reactome:`), i.e. they were found by a
 human reading them, because no automated check was ever going to look.
 (Since 2026-10-06 `file:` and `Reactome:` quotes are checked against the local
 file and the `reactome/` cache by `validation/local_source_text.py`; quotes that
@@ -353,9 +352,9 @@ stimulus with evidence `IEP`, spread across 36 human genes that read like an
 apoptosis/inflammation expression panel:
 
 > TLR3, TLR4, TLR5, TLR7, TLR8, MYD88, IRF1, NFKB1, CD40, IL1B, TNFRSF1A, TNFRSF8,
-> TNFRSF10A, TNFRSF10B, TNFSF14, LTBR, FAS, FADD, CRADD, CASP1, CASP2, CASP5, CASP8,
-> CASP8AP2, BAK1, BAD, BNIP3, BCL10, GADD45A, CHEK1, MAP3K1, MAP3K2, MAP3K14, MAP2K4,
-> MAPK3, MAPK8
+> TNFRSF10A, TNFRSF10B, TNFSF14, LTBR, FAS, FADD, CRADD, CASP1, `CASP2`, `CASP5`,
+> CASP8, CASP8AP2, BAK1, BAD, BNIP3, BCL10, GADD45A, CHEK1, MAP3K1, MAP3K2,
+> MAP3K14, MAP2K4, MAPK3, MAPK8
 
 The paper is *"Expression of the Bcl-2 protein BAD promotes prostate cancer growth"*.
 Its cached full text contains no mechanical-stimulation experiment and mentions none
@@ -400,48 +399,56 @@ over-annotated. VRK1/2/3, KSR1, DUSP3 and GOLGB1 should get the same flag when r
 From the [register](MISCITATIONS/miscitation-register.md), regenerated from the YAML
 (see [Reproducibility](#reproducibility)):
 
-- **4513** reviewed gene files scanned; **2074 (46%)** carry at least one
+- **6254** reviewed gene files scanned; **3575 (57%)** carry at least one
   `reference_review` block
-- **14559** references have been manually adjudicated
-- **559 (3.8%)** are flagged as a citation or soundness problem
-- **586 (4.0%)** are explicitly `UNVERIFIED` — adjudication begun, this reference not
+- **33255** references have been manually adjudicated
+- **1085 (3.3%)** are flagged as a citation or soundness problem
+- **1897 (5.7%)** are explicitly `UNVERIFIED` — adjudication begun, this reference not
   yet checked
 
 | Correctness | Count | Share of adjudicated |
 |---|---:|---:|
-| VERIFIED | 13414 | 92.1% |
-| UNVERIFIED | 586 | 4.0% |
-| MISCITED | 274 | 1.9% |
-| DISPUTED | 151 | 1.0% |
-| LOW_QUALITY | 108 | 0.7% |
-| WRONG_IDENTIFIER | 26 | 0.2% |
+| VERIFIED | 29889 | 89.9% |
+| UNVERIFIED | 1897 | 5.7% |
+| MISCITED | 417 | 1.3% |
+| DISPUTED | 380 | 1.1% |
+| LOW_QUALITY | 232 | 0.7% |
+| WRONG_IDENTIFIER | 56 | 0.2% |
 
 **These figures are not a survey.** The denominator is "references a reviewer chose to
 adjudicate", and reviewers adjudicate a reference when they are already looking at it —
-frequently *because* something about it looked wrong. The 3.8% is a flag rate on an
+frequently *because* something about it looked wrong. The 3.3% is a flag rate on an
 enriched, opportunistic sample, not a background error rate for GO citations, and it
-should not be quoted as one. Nor is the register a complete list: 338 genes carry a
-flagged reference out of 2074 adjudicated out of 4513 reviewed, and the great majority
-of references in the repo have never been looked at this way at all.
+should not be quoted as one. Nor is the register a complete list: 1085 flagged
+gene/reference rows sit in 3575 adjudicated reviews out of 6254 reviewed, and the
+great majority of references in the repo have never been looked at this way at all.
 
 The distribution across organisms reflects where curation effort has gone, not where
-errors are: human accounts for 470 of the 559 flags, PSEPK for 32, DICDI 11, yeast 9,
-DROME 7, SCHPO 7, and a long tail of single flags.
+errors are: human accounts for 803 of the 1085 flags, PSEPK for 52, yeast 39,
+DICDI and mouse 20 each, ARATH and DROME 18 each, SCHPO 16, and a long tail of
+smaller counts.
 
 ## Patterns visible so far
 
-**A wrong identifier is rarely wrong once.** Of the 26 `WRONG_IDENTIFIER` rows, 11 come
-from just five PMIDs, each mis-attached to two or three related genes:
+**A wrong identifier is rarely wrong once.** Of the 56 `WRONG_IDENTIFIER` rows, 27 come
+from just twelve PMIDs, each mis-attached to two or three related genes:
 
 | PMID | Genes | Resolves to |
 |---|---|---|
-| `PMID:10970790` | ELOVL1, ELOVL2, ELOVL3 | the cloning of HELO1 (= ELOVL5) — a paralog |
+| `PMID:22572157` | CALR, CANX, MAP2K1 | a platelet-alloantibody biosensor paper instead of the VRK2/KSR1-MEK1 ER paper |
+| `PMID:19593445` | TLR5, TLR7, TLR8 | a BAD prostate-cancer paper |
+| `PMID:17340523` | ACTB, ARID1A, ARID1B | a Fumaria alkaloid-separation paper |
 | `PMID:25732826` | NAA10, NAA40 | the Naa60 study — a different N-terminal acetyltransferase |
 | `PMID:39329031` | NPLOC4, UFD1 | a clinical study of intellectual disability in Morocco |
+| `PMID:3793867` | GL1, TRY | a Campylobacter plasmid paper |
+| `PMID:34388369` | CUL1, RBX1 | the human signal-peptidase complex structure |
 | `PMID:23264731` | SERP1, SRPRB | a paper about MTR120/KIAA1383 |
+| `PMID:19037698` | TIM9, TIM10 | a colorectal-surgery paper |
 | `PMID:17469741` | UPF1, UPF2 | a melanoma serum-marker study |
+| `PMID:10970790` | ELOVL1, ELOVL3 | the cloning of HELO1 (= ELOVL5) — a paralog |
+| `PMID:10383829` | APAF1, CYCS | an RPTP-kappa neurite-outgrowth paper |
 
-Two shapes are mixed in there. ELOVL1/2/3 and NAA10/NAA40 are **paralog spread**: one
+Two shapes are mixed in there. ELOVL1/ELOVL3 and NAA10/NAA40 are **paralog spread**: one
 family member's paper attached to its relatives, the classic failure of family-level
 propagation. NPLOC4/UFD1, SERP1/SRPRB and UPF1/UPF2 are **complex-partner spread**:
 one bad identifier scattered across the members of a complex or a functional pair,
@@ -499,7 +506,7 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 # STATUS
 
 - [x] Aggregator over every `references[].reference_review` in `genes/*/*/*-ai-review.yaml`
-- [x] Generated register + TSV (14559 adjudicated, 559 flagged)
+- [x] Generated register + TSV (33255 adjudicated, 1085 flagged)
 - [x] Six seed cases independently re-verified (QuickGO, NCBI E-utilities, EuropePMC,
       UniProt REST) and written up
 - [x] Two-kind taxonomy established: reference-level vs. evidence-attachment miscitation
@@ -509,9 +516,9 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
       of `FindingReviewStatusEnum`; or an explicit `evidence_review` on
       `ExistingAnnotation`. Not yet decided — do not add a field before the shape of
       the problem is clearer than six cases.
-- [ ] Triage the 274 `MISCITED` and 26 `WRONG_IDENTIFIER` rows: confirm, classify by
+- [ ] Triage the 417 `MISCITED` and 56 `WRONG_IDENTIFIER` rows: confirm, classify by
       pattern, and split source-database defects from review defects
-- [ ] Neighbour sweep on the five recurring wrong PMIDs — check remaining ELOVL/NAA
+- [ ] Neighbour sweep on the twelve recurring wrong PMIDs — check remaining ELOVL/NAA
       family members and other complex partners
 - [x] MYH9 `PMID:2732579` → `PMID:27325790` (dropped digit) recorded; live GOA shows
       the same defect on RAB3A, SYTL4 and RAB10 (11 rows total)
@@ -528,9 +535,17 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
 
-Last updated: 2026-10-01
+Last updated: 2026-10-10
 
 # NOTES
+
+## 2026-10-10
+
+**Register refresh reconciliation.** Reconciled this page and the slide deck with the
+current generated register: 33,255 adjudicated references across 3,575 of 6,254 reviewed
+gene files, 1,085 flagged references, 56 `WRONG_IDENTIFIER` rows, and 417 `MISCITED`
+rows. Removed the stale external brief from frontmatter and left the generated register
+as the source of truth for detailed organism and correctness counts.
 
 ## 2026-10-01
 
@@ -583,7 +598,7 @@ Notes from doing so:
   PNPLA3's own note states it exactly: *"The citation itself is correct; what is wrong
   is GOA's use of it as EXP evidence for GO:0003841, a reaction this paper could not
   detect."*
-- **Recurrence was the surprise.** 11 of 26 `WRONG_IDENTIFIER` rows trace to five PMIDs.
+- **Recurrence was the surprise.** 27 of 56 `WRONG_IDENTIFIER` rows trace to twelve PMIDs.
   The complex-partner cases (UFD1/NPLOC4, SERP1/SRPRB, UPF1/UPF2) look like one import
   defect replicated across a complex rather than independent errors, which would make
   them cheap to fix upstream and worth reporting as a group.

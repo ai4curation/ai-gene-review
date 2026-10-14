@@ -1,3 +1,7 @@
+---
+autolink_gene_symbols: false
+---
+
 # PTHR43521: source excerpts
 
 Raw provenance: [family snapshot](family-sources/PTHR43521.json); [UniProt snapshot](uniprot-records.jsonl.gz), supplemented by [successful retries](uniprot-retries.jsonl.gz).
@@ -101,4 +105,3 @@ InterPro: IPR044638 [{"key": "EntryName", "value": "ALDH7A1-like"}]
 PANTHER: PTHR43521 [{"key": "EntryName", "value": "ALPHA-AMINOADIPIC SEMIALDEHYDE DEHYDROGENASE"}, {"key": "MatchStatus", "value": "1"}]
 PANTHER: PTHR43521:SF5 [{"key": "EntryName", "value": "ALPHA-AMINOADIPIC SEMIALDEHYDE DEHYDROGENASE"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF00171 [{"key": "EntryName", "value": "Aldedh"}, {"key": "MatchStatus", "value": "1"}]
-

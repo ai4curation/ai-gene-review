@@ -150,7 +150,7 @@ def main() -> None:
     rows = build(args.gap_tsv, args.gene_enriched, args.enriched, args.genes_dir)
     cols = [f.name for f in fields(H1Row)]
     with args.out_tsv.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(cols)
         for r in rows:
             w.writerow([getattr(r, c) for c in cols])

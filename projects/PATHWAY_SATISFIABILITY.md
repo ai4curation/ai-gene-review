@@ -1,6 +1,7 @@
 ---
 title: "Pathway satisfiability: context-resolved module logic"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-05"
 tags: [PIPELINE]
 autolink_gene_symbols: false
 sidecars:
@@ -14,9 +15,6 @@ manifest:
   slides:
     - href: PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/6RKzB26ZBXGu1RH5tPgmD1
-      title: Project brief
 ---
 
 # Pathway satisfiability
@@ -29,9 +27,10 @@ evaluates it against a context oracle: GTEx tissue expression, a liver
 zonation atlas, or KEGG genome content. Run on the human gluconeogenesis
 module across 54 GTEx tissues, it recovers exactly liver, kidney cortex and
 small intestine, with every other tissue failing at the same G6PC1 step; in
-the liver it confines the route to the periportal zone. The same engine
-reproduces GapMind-style methionine reconstruction across eight microbial
-genomes, and crossing its gaps with independent activity data yields
+the liver it blocks the pericentral pole and shows the satisfiable route
+retreating toward the periportal pole as the expression gate tightens. The
+same engine reproduces GapMind-style methionine reconstruction across eight
+microbial genomes, and crossing its gaps with independent activity data yields
 gene-localised leads (intestinal gluconeogenesis → G6PC1, liver ketolysis →
 OXCT1, methionine "dark matter" in *Synechocystis* and *M. jannaschii*). The
 engine lives in `src/ai_gene_review/module_logic.py` with tests; the context
@@ -230,3 +229,7 @@ exact commands to reproduce every result above are in the companion notebook:
 - Apply the engine to additional curated modules (it is module-agnostic).
 - Promote the resolvers from `modules/experimental/` into a small CLI once the oracle
   interfaces stabilise.
+- Extend `taxon_absent_component/` so it can read candidate terms directly from
+  `LINEAGE_OR_TAXON_MISMATCH` propagation-review rows and query exact
+  `PANTHER:PTN` source nodes. These remaining productisation tasks are tracked
+  in [#3995](https://github.com/ai4curation/ai-gene-review/issues/3995).

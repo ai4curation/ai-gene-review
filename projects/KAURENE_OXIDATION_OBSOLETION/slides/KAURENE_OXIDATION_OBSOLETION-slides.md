@@ -37,8 +37,9 @@ GO:0010241 → GO:0009686 gibberellin biosynthetic process (BP) · GO:0052615 en
 ## Bottom line
 
 - GO **obsoleted GO:0010241**, a process term that restated what one enzyme, ent-kaurene oxidase, does.
-- **2 experimental rows** were affected: Arabidopsis KO (IMP) remaps to **GO:0009686**; rice CYP701A6 (IDA, enzyme assay) is removed. UniProt and TAIR have both done this upstream.
-- **Scoped, not yet started:** no repo review exists for either gene; the open item is the **IPR044225** InterPro2GO mapping.
+- **2 experimental rows** were affected: QuickGO no longer returns the obsolete term for Arabidopsis KO or rice CYP701A6.
+- **1 InterPro2GO mapping** was affected: live IPR044225 now maps to **GO:0052615** and **GO:0009686**.
+- **No local migration:** no repo review exists for either directly affected gene.
 
 ---
 
@@ -59,18 +60,18 @@ GO:0010241 → GO:0009686 gibberellin biosynthetic process (BP) · GO:0052615 en
 - The definition covers **three oxidations** that "may be carried out entirely by the enzyme ent-kaurene oxidase".
 - That catalytic content already has an MF: **GO:0052615** (EC 1.14.14.86), untouched by the obsoletion.
 - The process context is **GO:0009686** gibberellin biosynthetic process.
-- SJM on go-annotation#6433: the rice paper (PMID:22487175) has **only enzyme assays**, so its BP row should simply go.
+- SJM on go-annotation#6433: the rice paper (PMID:22487175) has **only enzyme assays**, so its BP row looked removable; UniProt ultimately kept the automatic BP replacement.
 
 ---
 
 ## Affected annotations
 
-| Gene | Species | Evidence | PMID | Upstream plan | Repo review |
+| Gene | Species | Evidence | PMID | Live outcome | Repo review |
 |---|---|---|---|---|---|
-| KO / GA3 (Q93ZB2) | *A. thaliana* | IMP | 9671797 | remap to GO:0009686 | none |
-| CYP701A6 (Q5Z5R4) | *O. sativa* Japonica | IDA | 22487175 | remove | none |
+| KO / GA3 (Q93ZB2) | *A. thaliana* | IMP | 9671797 | GO:0010241 gone | none |
+| CYP701A6 (Q5Z5R4) | *O. sativa* Japonica | IDA | 22487175 | auto-remapped | none |
 
-**Mapping:** InterPro2GO `IPR044225` (Ent-kaurene oxidase, chloroplastic) → GO:0010241. Proposed redirect: **GO:0052615**, since the family is defined by catalytic activity; GO:0009686 would also be defensible.
+**Mapping:** current InterPro2GO `IPR044225` (Ent-kaurene oxidase, chloroplastic) → **GO:0052615** and **GO:0009686**; the obsolete GO:0010241 target is gone.
 
 ---
 
@@ -78,7 +79,8 @@ GO:0010241 → GO:0009686 gibberellin biosynthetic process (BP) · GO:0052615 en
 
 - **2026-05-27:** project created; UniProt and TAIR marked DONE upstream.
 - **2026-09-26:** OLS lists GO:0010241 as **obsolete**.
-- Next: comment on the IPR044225 redirect; optionally review Arabidopsis **KO** as a positive control for the GO:0009686 + GO:0052615 pairing.
+- **2026-10-04:** QuickGO has no GO:0010241 rows for either affected accession; InterPro2GO redirects IPR044225.
+- Next: optionally review Arabidopsis **KO** as a positive control for the GO:0009686 + GO:0052615 pairing.
 
 **Upstream:** go-annotation#6433 · go-ontology#32078
 **Read more:** `projects/KAURENE_OXIDATION_OBSOLETION.md`

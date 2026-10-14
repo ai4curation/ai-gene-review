@@ -37,8 +37,8 @@ Genes whose splice isoforms or cleavage products do different, sometimes opposit
 ## Bottom line
 
 - Most GO annotation is **gene-level**, but Bcl-xL/Bcl-xS and α-MSH/β-endorphin come from one gene with **opposite effects**.
-- We reviewed **2,774 annotations on 16 paradigm genes** and added `isoform`, `negated` and `functional_isoforms` to the data model.
-- Conflation is common: **246 rows marked over-annotated**, e.g. 8 in BCL2L1, 21 in VEGFA, 63 in mouse App.
+- We reviewed **2,786 annotations on 16 paradigm genes** and added `isoform`, `negated` and `functional_isoforms` to the data model.
+- Conflation is common: **258 rows marked over-annotated**, e.g. 8 in BCL2L1, 21 in VEGFA, 63 in mouse App.
 
 ---
 
@@ -87,8 +87,9 @@ Genes whose splice isoforms or cleavage products do different, sometimes opposit
 
 ## Status and next steps
 
-- 13 of 16 reviews COMPLETE; **WT1** and **VEGFA** IN_PROGRESS, **DSCAM** DRAFT.
-- Not started: PTBP1/2, MST1R.
-- Only 12 reviews repo-wide use `functional_isoforms` so far.
+- 12/16 paradigm reviews COMPLETE.
+- Finish **WT1**, **VEGFA**, **AGRN** and **DSCAM**.
+- Decide whether to review PTBP1, PTBP2 and MST1R.
+- 16 reviews repo-wide use `functional_isoforms` so far.
 
 **Read more:** `projects/ISOFORMS.md` · `projects/ISOFORMS/genes.csv` · `src/ai_gene_review/schema/gene_review.yaml`

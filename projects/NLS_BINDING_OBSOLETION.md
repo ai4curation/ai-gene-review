@@ -1,6 +1,7 @@
 ---
 title: "Nuclear Localization Sequence Binding — Obsoletion & Replacement"
 maturity: SCOPING
+last_reviewed: "2026-10-04"
 tags: [OBSOLETION]
 species: [human, yeast, rat, DROME, worm, ARATH]
 sidecars:
@@ -11,9 +12,6 @@ manifest:
   slides:
     - href: NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/F9qBEY55uKnCdC2Rd3Cvav
-      title: Project brief
 ---
 
 # Nuclear Localization Sequence Binding — Obsoletion & Replacement
@@ -27,16 +25,16 @@ source (33 open, 1 PomBase row done), checked them against QuickGO, and sorted t
 the karyopherins (KPNA2, KPNA4, KPNB1, IPO4 and five yeast importins) move
 cleanly to GO:0140142, while nucleoporins, NLS-masking proteins (IκBα, Su(fu),
 BRAP) and nucleolar proteins (NSR1, Nolc1) bind an NLS without carrying it and
-need case-by-case calls. Scoped, not yet started: none of the roughly 25
-affected gene products has a review in this repo, and no review uses
+need case-by-case calls. Scoped, not yet started: none of the 31 distinct
+affected accessions has a review in this repo, and no review uses
 GO:0008139. The page was previously marked MATURE; the analysis is thorough,
 but no curation has followed it yet.
 
 ## Overview
 
-A GO obsoletion proposal will retire **GO:0008139 nuclear localization
-sequence binding** (MF) and replace it with **GO:0140142 nucleocytoplasmic
-carrier activity**. This is part of the broader "signal sequence binding
+GO has retired **GO:0008139 nuclear localization sequence binding** (MF)
+as the same activity as **GO:0140142 nucleocytoplasmic carrier activity**.
+This is part of the broader "signal sequence binding
 and children" refactor in go-ontology#31419 (CLOSED), which moves the
 sub-tree of `GO:0005048 signal sequence binding` from a generic *binding*
 formulation to a *non-binding receptor / carrier* formulation. The sibling
@@ -52,10 +50,10 @@ fits the experimental annotations on KPNA / KPNB / TNPO / IPO / PSE1 /
 KAP104 / KAP123 / MTR10 etc. However, several GO:0008139 annotations are
 on proteins that **bind** an NLS without **carrying** it across the
 nuclear pore (e.g. nucleoporins Nup98/Nup153/Nup214/Nup58, the nucleolar
-NSR1, IκBα/NFKBIA, BRAP, Su(fu), CABP1, Nolc1). For these, the upstream
+NSR1, IκBα/NFKBIA, BRAP, Su(fu), Cabp1, Nolc1). For these, the upstream
 proposal is to evaluate case-by-case — some will move to GO:0140142,
 others to alternative MFs (e.g. structural constituent of nuclear pore,
-`GO:0050839 cell adhesion molecule binding`-style cargo-binding terms, or
+transcription-factor-binding or other cargo-specific binding terms, or
 removal when the assertion no longer holds under current evidence
 standards).
 
@@ -71,15 +69,15 @@ This project queues the affected genes for prospective review, since
   - **go-annotation#6383** ER-PM tethering (different parent, same refactor wave) → [`ER_PM_TETHERING_OBSOLETION`](ER_PM_TETHERING_OBSOLETION.md)
   - Peroxisome targeting signal binding (also under `GO:0005048`) → [`PEROXISOME_TARGETING_SIGNAL_OBSOLETION`](PEROXISOME_TARGETING_SIGNAL_OBSOLETION.md)
 - Affected annotations spreadsheet (upstream): https://docs.google.com/spreadsheets/d/1NLoo-WPT-6YpYDKVbUqrOHZSnOkIbDVtj4OB2s5Cx3M/edit?gid=779903919
-- FYPO usage: FYPO:0007070 uses GO:0008139 as a UbergraphImplementation relationship object (will need to follow the GO change).
+- FYPO usage: FYPO:0007070 uses GO:0008139 as a UbergraphImplementation relationship object and will need an upstream update.
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
 | nuclear localization sequence binding (MF) | GO:0008139 | GO:0140142 nucleocytoplasmic carrier activity (case-by-case; some annotations may map to a different MF or be removed) |
 
-Term status verified in OLS on 2026-06-01:
+Term status verified in OLS on 2026-06-01 before the obsoletion landed:
 
 - **GO:0008139** (`nuclear localization sequence binding`) — live (`isObsolete: false`); synonyms: NLS binding, nuclear localization signal binding, nuclear localisation sequence binding.
 - **GO:0140142** (`nucleocytoplasmic carrier activity`) — live, has children; synonyms: miRNA transporter activity, nucleocytoplasmic importin/exportin activity, pre-miRNA transporter activity.
@@ -203,9 +201,10 @@ which follows the human IDA and is noted below.
 
 ### IEA / IBA scope (not enumerated)
 
-QuickGO reports **18,125 total annotations** to GO:0008139 across all
-sources. The bulk are IEA ortholog projections (GO_REF:0000120 /
-GO_REF:0000117) and IBA PAINT projections (GO_REF:0000033) — the IBA
+In the 2026-06-01 QuickGO pull, GO:0008139 had **18,125 total
+annotations** across all sources. The bulk were IEA ortholog
+projections (GO_REF:0000120 / GO_REF:0000117) and IBA PAINT
+projections (GO_REF:0000033) — the IBA
 projections fan out from the experimentally annotated importin/karyopherin
 genes above. Once the manual annotations are remapped to GO:0140142, the
 IBA/IEA fanout will be regenerated automatically by PAINT and the UniProt
@@ -222,14 +221,13 @@ The upstream issue body explicitly flags **one** InterPro2GO mapping:
 No UniRule or UniProt-Keywords mappings to GO:0008139 are listed upstream.
 
 The FYPO term **FYPO:0007070** uses GO:0008139 as a relationship object
-in its UbergraphImplementation — it will need to follow the GO change
-when the obsoletion is implemented.
+in its UbergraphImplementation and needs to follow the GO change upstream.
 
 ## Impact on this repo
 
 **None of the affected genes are currently reviewed here** (searches for
 KPNA1, KPNA2, KPNA3, KPNA4, KPNB1, TNPO1, TNPO2, IPO4, IMPA1, IMPA2,
-NFKBIA, BRAP, Cabp1, Su(fu), Kap-alpha1, NSR1, PSE1, KAP104, KAP120,
+NFKBIA, BRAP, Cabp1, Kpna1, Su(fu), Kap-alpha1, NSR1, PSE1, KAP104, KAP120,
 KAP123, MTR10, ETP1, Nup58, Nup98, Nup153, Nup214, Nolc1, Lbr, cut15,
 ima-3 returned no matches under `genes/` on 2026-06-01). This means
 **no existing reviews need refresh** for the obsoletion itself; the
@@ -241,8 +239,8 @@ family for prospective review.
 - **Organisms**: Human (10 direct: KPNA1-4, KPNB1, TNPO1, TNPO2, IPO4,
   NFKBIA, BRAP), *S. cerevisiae* (7), *R. norvegicus* (6 + 2 from
   ParkinsonsUK-UCL), *D. melanogaster* (2), *C. elegans* (1: ima-3),
-  *A. thaliana* (2: IMPA1, IMPA2). Total ~28 manual/experimental
-  annotations across ~25 distinct gene products.
+  *A. thaliana* (2: IMPA1, IMPA2). Total: 34 curated rows across
+  31 distinct UniProt accessions.
 - **GO branches**: MF only. The replacement GO:0140142 sits under
   `GO:0005215 transporter activity` rather than `GO:0005488 binding`,
   which is the explicit semantic shift driving go-ontology#31419
@@ -273,8 +271,8 @@ family for prospective review.
     below; the diagnostic clusters are nucleolar cargo recognition
     (NSR1, Nolc1), nuclear-envelope / membrane tethering (Lbr), and
     cytoplasmic NLS-masking / retention (BRAP, ETP1, Cabp1).
-- **Special case (FYPO dependency)**: when GO:0008139 is obsoleted,
-  FYPO:0007070's UbergraphImplementation needs to be updated upstream;
+- **Special case (FYPO dependency)**: FYPO:0007070's
+  UbergraphImplementation still needs to be updated upstream;
   no action required from this repo.
 
 ## Candidate genes for initial review
@@ -363,13 +361,10 @@ None are currently in `genes/`.
 
 ## Proposed approach
 
-1. **No urgent action.** The ontology ticket (go-ontology#31419) is
-   CLOSED — the conceptual decision is settled — but the per-annotation
-   remapping in go-annotation#6435 is still in progress. The PomBase
-   entry (cut15) is the only one already DONE. Reviews can proceed
-   immediately using the live GO:0140142 term as the proposed
-   replacement; the formal obsoletion of GO:0008139 will follow the
-   per-annotation triage.
+1. **Record the upstream outcome.** GO:0008139 is now obsolete because it
+   represents the same activity as GO:0140142. The PomBase cut15 row was
+   already marked DONE upstream; the other curated rows still need
+   source-database triage.
 2. **Begin with KPNA2 + KPNA4 (paired).** These are the cleanest cases
    for the GO:0140142 replacement and the IDA evidence is strong and
    recent. KPNA2's two independent IDAs from different groups make
@@ -413,6 +408,11 @@ reviews) are also good candidates for evidence-code modernization.
   affected gene under `genes/`, and no review uses GO:0008139. The only
   review using GO:0140142 is human NPM1 (a core function), which is not in
   the affected set.
+- 2026-10-04 — Re-audited the project against the current repo state: no
+  review or GOA file contains GO:0008139, none of the exact KPNA/KPNB/IPO,
+  human triage, yeast importin or Arabidopsis IMPA targets has a review here,
+  and NPM1 remains the only reviewed gene using GO:0140142 outside the
+  affected obsoletion set.
 - 2026-06-02 — Review follow-up: spot-checked Q96321 (IMPA1_ARATH) and
   F4JL11 against UniProt REST, added an explanatory note for the
   MGI/Q7Z569 (human BRAP) curation pattern, added KAP120 to Tier 2,
@@ -430,5 +430,5 @@ reviews) are also good candidates for evidence-code modernization.
   ~18k IEA/IBA entries that follow automatically. One InterPro2GO
   mapping (IPR024882, Nucleoporin p58/p45/NUP49) flagged for
   redirection. No UniRule/Keywords mappings. No gene reviews started
-  yet in this repo; none of the ~25 affected gene products are present
+  yet in this repo; none of the 31 affected accessions are present
   under `genes/`.

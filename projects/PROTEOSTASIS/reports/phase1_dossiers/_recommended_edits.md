@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # Phase-1 review — consolidated recommended edits (auto-extracted)
 
 Generated from the per-gene section files in `_sections/`. Tags: **[YAML]** gene-review change · **[MAP]** PN mapping/projection · **[WB]** upstream PN workbook · **[REF]** reference hygiene. Nothing here was applied automatically — staged for curator adjudication.
@@ -345,13 +349,13 @@ Generated from the per-gene section files in `_sections/`. Tags: **[YAML]** gene
 - Verdict:** Consistent; well-evidenced verified NEW terms. ACCEPT review. **Recommended edits:** none for YAML; optionally [MAP] note FBXO41 auxiliary domain may be C2H2/coiled-coil rather than LRR in the PN workbook.
 
 ### FBXO43
-- Verdict:** Review correct; PN node mis-files FBXO43 and over-reaches with GO:1990756. **Recommended edits:** [MAP] exclude FBXO43/EMI2 from the GO:1990756 substrate-adaptor projection and flag as non-canonical F-box / APC/C inhibitor (core MF GO:1990948), mirroring FBXO5/EMI1.
+- Verdict:** Review correct; PN node mis-files FBXO43 and over-reaches with GO:1990756. **Recommended edits:** [MAP] exclude FBXO43/EMI2 from the GO:1990756 substrate-adaptor projection and flag as non-canonical F-box / `APC/C` inhibitor (core MF GO:1990948), mirroring FBXO5/EMI1.
 
 ### FBXO47
 - Verdict:** Consistent at MF label; meiotic biology appropriately added (GO:0007129) with honest UNDECIDED on SCF catabolism. ACCEPT review. **Recommended edits:** none required; optionally [REF] verify Hua 2019 / Guan 2022 / Ma 2024 PMIDs and [YAML] convert the label-only bouquet term to a real GO ID if one exists (e.g. via OLS) before promotion.
 
 ### FBXO5
-- Recommended edits:** none to FBXO5-ai-review.yaml (review is correct). [MAP] Flag FBXO5/EMI1 as a non-canonical F-box (APC/C inhibitor) so GO:1990756 is NOT propagated to it; its core MF is GO:1990948 ubiquitin ligase inhibitor activity.
+- Recommended edits:** none to FBXO5-ai-review.yaml (review is correct). [MAP] Flag FBXO5/EMI1 as a non-canonical F-box (`APC/C` inhibitor) so GO:1990756 is NOT propagated to it; its core MF is GO:1990948 ubiquitin ligase inhibitor activity.
 
 ### FBXO6
 - Recommended edits:** none to FBXO6-ai-review.yaml. [MAP] As for FBXO2, FBA-lectin subfamily nodes could carry GO:0030246 as the distinguishing MF in addition to GO:1990756.

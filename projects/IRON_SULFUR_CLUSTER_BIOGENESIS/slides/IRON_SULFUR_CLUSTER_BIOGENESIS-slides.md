@@ -36,8 +36,8 @@ GO annotation review of 15 human genes of the mitochondrial ISC and cytosolic CI
 
 ## Bottom line
 
-- **All 15 genes** in the project table are reviewed (the page's status list still says only HSCB).
-- **638 GOA rows**: 366 ACCEPT, 92 non-core, 92 over-annotated, 42 MODIFY, 24 REMOVE, 19 NEW.
+- **All 15 genes** in the project table are reviewed.
+- **637 review rows**: 367 ACCEPT, 93 non-core, 90 over-annotated, 38 MODIFY, 24 REMOVE, 18 NEW, 7 UNDECIDED.
 - Main corrections: `protein binding` **removed** on HSCB and GLRX5, heme transport **removed** from ABCB7, **NEW** Fe-S-specific chaperone and [4Fe-4S] assembly terms.
 
 ---
@@ -87,7 +87,6 @@ GO annotation review of 15 human genes of the mitochondrial ISC and cytosolic CI
 
 - ✅ 15/15 genes in the project table reviewed.
 - ⬜ Review **FDXR, FDX2, CIAO2A, CIAO2B, CIAO3** (listed in the pathway, not in the table).
-- ⬜ Build an Fe-S biogenesis module (ISC core → transfer → [4Fe-4S] → export → CIA).
-- ⬜ Update the stale status list on the project page.
+- ⬜ Build an integrated human Fe-S biogenesis module (ISC core → transfer → [4Fe-4S] → export → CIA).
 
 **Read more:** `projects/IRON_SULFUR_CLUSTER_BIOGENESIS.md` · `genes/human/HSCB/` · `genes/human/GLRX5/`

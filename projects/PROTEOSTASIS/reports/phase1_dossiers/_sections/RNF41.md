@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## RNF41
 - **UniProt:** Q9H4P4 (NRDP1/FLRF) · **batch:** proteostasis-batch-2026-06-14 · **review status:** COMPLETE (very thorough; catalytic RING E3; ErbB3/ErbB4, BRUCE, Parkin substrates; mitophagy complex; 2 PN rows)
 - **PN placement:** row1 `ALP|...|Marking substrates for selective autophagy|Mitophagy|PINK/PRKN pathway`; row2 `UPS|E3 ubiquitin and UBL ligases|RING|SIAH / SINA`. **PN-node mapping:** row1 Mitophagy type→mapped GO:0000423 mitophagy (PINK/PRKN subtype no_mapping); row2 RING group→mapped GO:0061630 ubiquitin protein ligase activity (class context_only/too_broad).

@@ -1,6 +1,7 @@
 ---
 title: "P. putida Gene Annotation Review Project"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [PSEPK]
 sidecars:
@@ -13,9 +14,6 @@ manifest:
   slides:
     - href: P_PUTIDA/slides/P_PUTIDA-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
-      title: Project brief
 ---
 
 # P. putida Gene Annotation Review Project
@@ -26,16 +24,17 @@ annotation comes from automated pipelines. The project started with selected
 genes (18, then batches of 50 and 16) and in July 2026 became a genome-wide,
 pathway-by-pathway review of the 5,527-protein reference proteome: each batch
 starts from a curated module, asks which steps KT2440 can satisfy, and reviews
-only the genes needed to fill or resolve those steps. In a September 2026 snapshot
-the repo held 921 PSEPK gene reviews (5,324 annotation rows: 2,288 accepted,
-990 kept as non-core, 857 marked over-annotated, 391 modified, 243 removed,
-470 proposed as `NEW`, 85 undecided) and 138 pathway batch pages under
-`P_PUTIDA/batches/`, from about 200 PRs; both counts grow as
-batches land. Batches record unresolved steps as explicit holes rather than forcing a
+only the genes needed to fill or resolve those steps. In an October 4, 2026
+snapshot the repo held 955 PSEPK gene reviews (5,533 annotation rows: 2,363
+accepted, 1,075 kept as non-core, 861 marked over-annotated, 406 modified, 249
+removed, 489 proposed as `NEW`, 90 undecided) and 144 pathway batch pages under
+`P_PUTIDA/batches/`; both counts grow as batches land. Batches record
+unresolved steps as explicit holes rather than forcing a
 paralog into them (for example, the cytoplasmic D-alanine source for cell-wall
 synthesis). The "Completed Reviews" tables below list only the first 84 genes,
 and the status columns in `data/psepk_pathway_worklist.tsv` have not been
-updated since the pilot.
+updated since the pilot; [#4007](https://github.com/ai4curation/ai-gene-review/issues/4007)
+tracks that status/index refresh.
 
 We did this because a module-first pass spends review effort where a pathway
 has a missing, ambiguous or over-propagated step, which scales to a whole
@@ -50,12 +49,12 @@ Systematic AI-assisted review of GO annotations for *Pseudomonas putida*, focusi
 - **Species:** *Pseudomonas putida*
 - **Primary strain:** KT2440 (UniProt taxon code: PSEPK)
 - **Other strains:** PSEPU (general *P. putida*)
-- **Genome:** ~6.2 Mb, ~5,350 protein-coding genes
+- **Genome:** ~6.2 Mb; 5,527 proteins in UniProt reference proteome UP000000556
 - **Key biology:** Aromatic compound degradation, solvent tolerance, plant root colonization, polyhydroxyalkanoate (PHA) biosynthesis, rare earth element utilization
 
 ## Genome-wide expansion
 
-The next phase expands the project from selected genes to a pathway-by-pathway
+The active phase expanded the project from selected genes to a pathway-by-pathway
 review of the KT2440 reference proteome. The working pattern is manual pathway
 hole filling: start with a curated module, ask which steps are satisfiable in
 PSEPK from lightweight UniProt metadata, then review only the genes needed to
@@ -68,7 +67,7 @@ metadata snapshot. This phase deliberately separates metadata discovery from
 full gene-review seeding: the first pass uses UniProt REST TSV metadata only,
 not full UniProt flat files, GOA downloads, PMID caches, or review YAML stubs.
 
-The current focused batch is
+One representative lipid batch is
 [phosphatidylglycerol and cardiolipin biosynthesis](P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.md).
 It curates the connected route from CDP-diacylglycerol through
 phosphatidylglycerol to alternative bacterial cardiolipin synthase reactions,
@@ -153,14 +152,14 @@ timeout or infer failure from a quiet wrapper.
 
 | Gene | Annotations | Function | Notes | PR |
 |------|-------------|----------|-------|----|
-| **BenR** | 8 | Transcriptional regulator, benzoate catabolism | AraC/XylS family | — |
+| **BenR** | 7 | Transcriptional regulator, benzoate catabolism | AraC/XylS family | — |
 | **PP_0635** | 9 | Uncharacterized protein | DUF domain analysis | — |
 | **ada** | 16 | Methyltransferase, DNA repair | Adaptive response to alkylation | — |
 | **ampC** | 5 | Beta-lactamase | Antibiotic resistance | — |
 | **ftsY** | 11 | Signal recognition particle receptor | Sec-dependent protein targeting | — |
 | **hglS** | 2 | Hydroxyglutarate synthase | Rare enzymatic function | — |
 | **mrcA** | 16 | Penicillin-binding protein 1a | Peptidoglycan biosynthesis | — |
-| **pedH** | 14 | PQQ-dependent alcohol dehydrogenase | REE/lanthanide utilization | — |
+| **pedH** | 13 | PQQ-dependent alcohol dehydrogenase | REE/lanthanide utilization | — |
 | **quiC1_qsuB** | 8 | Quinate/shikimate dehydrogenase | Aromatic compound catabolism | — |
 | **rpoS** | — | Stationary phase sigma factor | GO:0016987 core; added starvation/biofilm terms; DRAFT | [#159](https://github.com/ai4curation/ai-gene-review/pull/159) |
 | **fleQ** | — | Flagellar/biofilm master regulator | Sigma-54 associated; added flagellum assembly/biofilm terms | [#162](https://github.com/ai4curation/ai-gene-review/pull/162) |
@@ -171,12 +170,6 @@ timeout or infer failure from a quiet wrapper.
 | **phaC** | — | PHA synthase (phaC-II, Q88D23) | Corrected to PHA biosynthetic process | [#161](https://github.com/ai4curation/ai-gene-review/pull/161) |
 | **cbrB** | — | CbrA/CbrB response regulator | Carbon catabolite repression; COMPLETE | [#158](https://github.com/ai4curation/ai-gene-review/pull/158) |
 | **xylR** | — | TOL plasmid regulator (P06519) | Not native KT2440; organism mismatch noted | [#156](https://github.com/ai4curation/ai-gene-review/pull/156) |
-
-### PSEPU (general P. putida) — 1 gene
-
-| Gene | Annotations | Function |
-|------|-------------|----------|
-| **Q88CC1** | reviewed | Uncharacterized |
 
 ## Batch 2 — Selected for Review (50 new genes)
 
@@ -199,9 +192,9 @@ mdh, sdhA, groES, hfq, pvdQ; sigma-factor GO convention for rpoD/rpoH).
 | Gene | UniProt | Function |
 |------|---------|----------|
 | **dnaK** | Q88DU2 | Hsp70 chaperone (protein folding) |
-| **groEL** | Q88N55 | GroEL chaperonin |
+| **groEL** | Q88N55 | `GroEL` chaperonin |
 | **groES** | Q88N56 | GroES co-chaperonin |
-| **grpE** | Q88DU1 | DnaK nucleotide-exchange factor |
+| **grpE** | Q88DU1 | `DnaK` nucleotide-exchange factor |
 | **htpG** | Q88FB9 | Hsp90 chaperone |
 | **rpoH** | Q7CCA6 | Heat-shock sigma factor (σ32) |
 | **rpoD** | Q88QU7 | Primary/housekeeping sigma factor (σ70) |
@@ -296,7 +289,7 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 |------|---------|----------|
 | **aroH** | Q88LR3 | DAHP synthase (3-deoxy-D-arabino-heptulosonate-7-P synthase) |
 | **aroB** | Q88CV2 | 3-dehydroquinate synthase |
-| **aroQ** | Q88IJ6 | 3-dehydroquinate dehydratase (type II) |
+| **aroQ-III** | Q88IJ6 | 3-dehydroquinate dehydratase (type II) |
 | **aroE** | Q88IJ7 | Shikimate dehydrogenase |
 | **aroK** | Q88CV1 | Shikimate kinase |
 | **aroA** | Q88M05 | EPSP synthase (3-phosphoshikimate 1-carboxyvinyltransferase) |
@@ -321,7 +314,13 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 | **tyrB** | Q88LG1 | Aromatic-amino-acid aminotransferase |
 | **hisC** | Q88P86 | Histidinol-phosphate / aromatic aminotransferase |
 
-## Priority Genes for Future Review
+## Early Seed Priorities
+
+This list is retained as a record of the early selected-gene agenda, not as a
+live review queue. Many entries now have PSEPK reviews or pathway batches;
+[#4007](https://github.com/ai4curation/ai-gene-review/issues/4007) tracks
+replacing the hand-written tables and queues on this page with generated
+current indexes.
 
 ### Aromatic Catabolism (core P. putida biology)
 - **benABCD** — Benzoate dioxygenase complex
@@ -334,11 +333,10 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - **phaABCZ** — Polyhydroxyalkanoate biosynthesis
 - **glk**, **zwf**, **edd**, **eda** — Glucose catabolism (ED pathway, no EMP)
 - **gcd** — Glucose dehydrogenase (periplasmic oxidation)
-- **PP_1084** (oleC), **PP_1083** (oleD) — Olefin biosynthesis
 
 ### Rare Earth Element Biology
 - **pedE** — Ca²⁺-dependent ethanol dehydrogenase (counterpart to pedH)
-- **lanM** — Lanmodulin (lanthanide-binding protein)
+- **`lanM`** — Lanmodulin (lanthanide-binding protein)
 - **lutH/lutABCDEF** — Lanthanide uptake and transport
 
 ### Solvent Tolerance
@@ -374,25 +372,25 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 
 ## Genome-wide pathway/module curation
 
-- [x] Re-scope P_PUTIDA from selected-gene project to genome-wide pathway/module curation umbrella.
-- [x] Confirm working species/proteome: PSEPK / *P. putida* KT2440 / UniProt proteome `UP000000556`.
-- [x] Confirm research provider policy: Asta for gene-level first-pass research; Falcon for module-level research; PaperBLAST optional; `perplexity-lite` secondary fallback.
-- [x] Apply the 2026-07-20 operational override: OpenScientist for gene and module research while Edison/Falcon is unavailable, with full long-run timeouts.
-- [x] Create module-first workplan in `projects/P_PUTIDA/P_PUTIDA_MODULE_PLAN.md`.
-- [x] Refresh lightweight UniProt metadata snapshot before module clustering.
-- [x] Build whole-proteome gene list from UniProt metadata.
-- [x] Cluster all PSEPK proteins into first-pass module buckets from EC, KEGG, BioCyc, UniPathway, GO, InterPro/Pfam/PANTHER, keywords, and protein names.
-- [x] Add species-aware module/pathway deep-research wrapper for module satisfiability work.
-- [x] Select first pilot module/pathway batch: KEGG `ppu00400` with `tryptophan_biosynthesis` as the seeded neutral module.
-- [x] Complete Falcon module-level research for `tryptophan_biosynthesis`.
-- [x] Complete Falcon module + pathway + PSEPK research for `ppu00400`.
-- [x] Fetch, run Asta, curate, and validate the first pilot gene batch: 28/28 KEGG `ppu00400` members.
-- [x] Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
-- [x] Curate the `ppu00470` D-amino-acid cell-wall precursor-supply boundary,
+- **Done:** Re-scope P_PUTIDA from selected-gene project to genome-wide pathway/module curation umbrella.
+- **Done:** Confirm working species/proteome: PSEPK / *P. putida* KT2440 / UniProt proteome `UP000000556`.
+- **Done:** Confirm research provider policy: Asta for gene-level first-pass research; Falcon for module-level research; PaperBLAST optional; `perplexity-lite` secondary fallback.
+- **Done:** Apply the 2026-07-20 operational override: OpenScientist for gene and module research while Edison/Falcon is unavailable, with full long-run timeouts.
+- **Done:** Create module-first workplan in `projects/P_PUTIDA/P_PUTIDA_MODULE_PLAN.md`.
+- **Done:** Refresh lightweight UniProt metadata snapshot before module clustering.
+- **Done:** Build whole-proteome gene list from UniProt metadata.
+- **Done:** Cluster all PSEPK proteins into first-pass module buckets from EC, KEGG, BioCyc, UniPathway, GO, InterPro/Pfam/PANTHER, keywords, and protein names.
+- **Done:** Add species-aware module/pathway deep-research wrapper for module satisfiability work.
+- **Done:** Select first pilot module/pathway batch: KEGG `ppu00400` with `tryptophan_biosynthesis` as the seeded neutral module.
+- **Done:** Complete Falcon module-level research for `tryptophan_biosynthesis`.
+- **Done:** Complete Falcon module + pathway + PSEPK research for `ppu00400`.
+- **Done:** Fetch, run Asta, curate, and validate the first pilot gene batch: 28/28 KEGG `ppu00400` members.
+- **Done:** Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
+- **Done:** Curate the `ppu00470` D-amino-acid cell-wall precursor-supply boundary,
   preserving the unresolved cytoplasmic D-alanine source as a real hole.
-- [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
-- [ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
-- [x] Curate the PP_2842-PP_2849 UreA-G urease biogenesis and urea-hydrolysis batch as a separate three-stage module.
+- **Todo:** For each later module batch, full `fetch-gene` only the genes selected by module review.
+- **Todo:** Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
+- **Done:** Curate the PP_2842-PP_2849 UreA-G urease biogenesis and urea-hydrolysis batch as a separate three-stage module.
 
 # NOTES
 

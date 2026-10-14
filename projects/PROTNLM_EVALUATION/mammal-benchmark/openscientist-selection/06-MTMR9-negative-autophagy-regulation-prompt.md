@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Focused function hypothesis
 
 Hypothesis: The horse protein A0A9L0T3C1 negatively regulates autophagy.

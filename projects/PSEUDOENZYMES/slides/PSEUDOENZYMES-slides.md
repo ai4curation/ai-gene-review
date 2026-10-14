@@ -93,10 +93,11 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 | Gene (UniProt) | Status | Evidence |
 |----------------|--------|----------|
 | **RvSOD15** (A0A1D1VU85) | **Confirmed pseudoenzyme** | V87 replaces catalytic His; V87H rescue failed (loop dynamics) — PMID:37358501 |
-| RvY_00650 / 03757 / 17310 | Probable pseudoenzyme | Cu His preserved but PROSITE PS00087 fails |
+| RvY_00650 / 03757 | Probable pseudoenzyme | Cu His preserved but PROSITE PS00087 fails |
+| RvY_17310 (A0A1D1W3Y1) | Unresolved intact paralog | PS00087 failure vs AlphaFold/residue support; GO rows UNDECIDED |
 | RvY_15948 (A0A1D1VWP9) | **Not a SOD** — CCS-like chaperone | H46→A, H48→C; no PROSITE match |
 
-**Insight:** ~half the expanded repertoire is non-catalytic or chaperone — "more copies = more antioxidant capacity" is only partly true.
+**Insight:** expansion produced pseudoenzymes, a CCS-like copy and an assay-gap case; "more copies = more antioxidant capacity" is only partly true.
 
 ---
 

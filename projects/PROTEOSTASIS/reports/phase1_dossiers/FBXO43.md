@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # PN dossier: FBXO43
 
 - review_batch: proteostasis-batch-2026-06-13

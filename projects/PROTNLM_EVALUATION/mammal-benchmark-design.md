@@ -166,17 +166,17 @@ overlap separately from biological correctness and training exposure.
 
 ## Practical sequence of work
 
-- [x] Check the public accession list and inspect actual mammalian outputs.
-- [x] Verify live provenance for the 12 candidate annotation pairs above.
-- [x] Select 40 distinct horse genes with informative functional predictions and preserve their current sequences.
-- [ ] Review the selected horse claims using primary studies and reproducible
+- **Done:** Check the public accession list and inspect actual mammalian outputs.
+- **Done:** Verify live provenance for the 12 candidate annotation pairs above.
+- **Done:** Select 40 distinct horse genes with informative functional predictions and preserve their current sequences.
+- **Todo:** Review the selected horse claims using primary studies and reproducible
   sequence/structure analyses, with verified mammalian counterparts where useful.
-- [x] Preserve served predictions for all selected horse accessions.
-- [ ] Establish prediction-time sequence identity and orthology before projecting
+- **Done:** Preserve served predictions for all selected horse accessions.
+- **Todo:** Establish prediction-time sequence identity and orthology before projecting
   cases into a broader mammalian benchmark.
-- [ ] Obtain a second biological adjudication without showing predictor identity or
+- **Todo:** Obtain a second biological adjudication without showing predictor identity or
   the old AIGR action; resolve disagreements and preserve uncertainty.
-- [ ] Score and publish cohort-specific results. The public API evaluates released,
+- **Todo:** Score and publish cohort-specific results. The public API evaluates released,
   post-processed **ProtNLM2 plus Evidencer** output. Comparing the raw model with its
   filtering/corroboration requires additional outputs and cannot be inferred here.
 

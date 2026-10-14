@@ -1,3 +1,7 @@
+---
+autolink_gene_symbols: false
+---
+
 # PTHR24250: source excerpts
 
 Raw provenance: [family snapshot](family-sources/PTHR24250.json); [UniProt snapshot](uniprot-records.jsonl.gz), supplemented by [successful retries](uniprot-retries.jsonl.gz).
@@ -32,4 +36,3 @@ PANTHER: PTHR24250 [{"key": "EntryName", "value": "CHYMOTRYPSIN-RELATED"}, {"key
 PANTHER: PTHR24250:SF27 [{"key": "EntryName", "value": "ELASTASE 2 LIKE"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF18399 [{"key": "EntryName", "value": "CLIP_SPH_Scar"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF00089 [{"key": "EntryName", "value": "Trypsin"}, {"key": "MatchStatus", "value": "1"}]
-

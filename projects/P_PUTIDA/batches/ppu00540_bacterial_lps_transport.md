@@ -43,5 +43,5 @@ subunit.
 
 ## Evidence
 
-- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial-lps-transport-and-outer-membrane-assembly__ppu00540-deep-research-openscientist.md)
+- Module/pathway/taxon report: running
 - `modules/bacterial_lps_transport.yaml`

@@ -1,3 +1,7 @@
+---
+autolink_gene_symbols: false
+---
+
 # PTHR46362: source excerpts
 
 Raw provenance: [family snapshot](family-sources/PTHR46362.json); [UniProt snapshot](uniprot-records.jsonl.gz), supplemented by [successful retries](uniprot-retries.jsonl.gz).
@@ -71,4 +75,3 @@ Pfam: PF23775 [{"key": "EntryName", "value": "Beta-prop_RIG_2nd"}, {"key": "Matc
 Pfam: PF23777 [{"key": "EntryName", "value": "GEMI5_RBS"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF23774 [{"key": "EntryName", "value": "TPR_GEMI5"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF00400 [{"key": "EntryName", "value": "WD40"}, {"key": "MatchStatus", "value": "1"}]
-

@@ -1,6 +1,7 @@
 ---
 title: "Over-Annotation Patterns Project"
 maturity: MATURE
+last_reviewed: "2026-10-04"
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN]
 genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/MrmXAmcMnpxL43743j1ogb
-      title: Project brief
 ---
 
 # Over-Annotation Patterns Project
@@ -22,8 +20,8 @@ over-generalised family propagation. We catalogued the recurring shapes of this
 over-annotation that surfaced during gene review, eight categories in all, each tied to
 worked examples in real reviews. We did this so that curators and pipeline authors can
 recognise a pattern once rather than rediscovering it gene by gene; the catalogue was
-first presented at the GO Consortium meeting in October 2025. Nine exemplar reviews are
-complete (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
+first presented at the GO Consortium meeting in October 2025. Nine exemplar reviews have
+all rows adjudicated (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
 biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
 recorded actions match the patterns: all ten generic `protein binding` IPI rows on
 PHYKPL and UBA7 are REMOVE, and Epe1's electronically inferred JmjC-domain
@@ -138,7 +136,7 @@ belongs on the catalytic member (`enables`); the partner takes `contributes_to` 
 |------|---------|------------------------|--------|
 | PHYKPL | human | Protein binding, transaminase (wrong mechanism) | COMPLETE |
 | UBA7 | human | Protein binding, generic ligase | COMPLETE |
-| Epe1 | pombe | Domain-based demethylase (pseudo-enzyme) | COMPLETE |
+| Epe1 | SCHPO | Domain-based demethylase (pseudo-enzyme) | DRAFT; all rows adjudicated |
 | LPL1 | CANAL | Generic hydrolase, membrane localization | COMPLETE |
 | pqsC | PSEAE | Fatty-acid synthase terms (KAS-III fold) on a quinolone synthase | COMPLETE |
 | actI-ORF1 | STRCO | Fatty-acid biosynthesis/elongation terms on a polyketide synthase | COMPLETE |
@@ -166,22 +164,46 @@ These over-annotation patterns:
 
 # STATUS
 
+Updated 2026-10-04.
+
 ## Documented Patterns
 - [x] Generic protein binding
 - [x] Overly broad enzymatic terms
 - [x] Domain-based predictions without validation
 - [x] Indirect downstream processes
+- [x] Duplicate IEA annotations
 - [x] Predicted localization conflicts
+- [x] Fold-based pathway mis-propagation
+- [x] Catalytic function assigned to non-catalytic complex subunits
 
 ## Genes Analyzed
 - [x] human/PHYKPL - transaminase vs phospho-lyase
 - [x] human/UBA7 - protein binding from HTP, generic ligase
-- [x] pombe/Epe1 - pseudo-demethylase
+- [x] SCHPO/Epe1 - pseudo-demethylase
 - [x] CANAL/LPL1 - hydrolase, membrane prediction
+- [x] PSEAE/pqsC - fatty-acid terms on a quinolone synthase
+- [x] PSEAE/pqsB - catalytic acyltransferase MF on a non-catalytic subunit
+- [x] STRCO/actI-ORF1 - fatty-acid terms on a polyketide synthase
+- [x] STRCO/actI-ORF2 - catalytic acyltransferase MF on a chain-length factor
+- [x] SACEN/eryCII - P450 MF and cofactor terms on a heme-less activator
 
-Last updated: 2026-01-22
+## Remaining Work
+
+- [ ] Measure how often each pattern occurs across the repository ([#3985](https://github.com/ai4curation/ai-gene-review/issues/3985))
+- [ ] Turn the mechanical patterns into curator-facing flags ([#3985](https://github.com/ai4curation/ai-gene-review/issues/3985))
 
 # NOTES
+
+## 2026-10-04
+
+Revalidated the nine exemplar reviews and refreshed STATUS to match the
+current eight-pattern catalogue. The first four exemplars remain
+PHYKPL/UBA7/Epe1/LPL1; the five biosynthetic-cluster enzyme reviews now
+document fold-based fatty-acid/polyketide mis-propagation and catalytic
+activity on non-catalytic complex subunits. Epe1 is still `DRAFT` at the YAML
+level, so the table now treats it as all-rows-adjudicated rather than
+`COMPLETE`. Follow-up quantification and flagging are tracked in
+[#3985](https://github.com/ai4curation/ai-gene-review/issues/3985).
 
 ## 2026-01-22
 

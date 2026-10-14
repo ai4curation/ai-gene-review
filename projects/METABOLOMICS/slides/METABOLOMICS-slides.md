@@ -38,7 +38,7 @@ Bridging metabolite lists to GO functions and processes through ChEBI and Rhea
 
 - A working bridge: **metabolite → Rhea → GO MF → human enzymes → GO BP**, with closure-aware enrichment.
 - The obstacle is **identifiers**: exact ChEBI matching connects **8/64** MTBLS1 metabolites; protonation + structure normalization reaches **58/64**.
-- Four MetaboLights studies: **53–91%** coverage, study-specific GO processes. Gaps: complex lipids, GO-CAM causal tracing, Reactome cross-check.
+- Four MetaboLights studies: **53–91%** coverage, study-specific GO processes. Remaining lipid, Reactome, GO-CAM and demo work is tracked in #4125.
 
 ---
 
@@ -79,6 +79,6 @@ Bridging metabolite lists to GO functions and processes through ChEBI and Rhea
 
 - Done: probe pipeline (`projects/METABOLOMICS/probe/`), two-tier normalization, KEGG / GO-MF / GO-BP enrichment, 4 studies.
 - Next: complex lipids (LIPID MAPS / SwissLipids); Reactome as a curated BP cross-check; GO-CAM causal trace (Approach B); feed implicated reactions to Reactome black-box gap filling.
-- Planned: interactive demo (static showcase + FastAPI app), see `DEMO-PLAN.md`.
+- Planned: interactive demo (static showcase + Streamlit app), see `DEMO-PLAN.md`.
 
 **Read more:** `projects/METABOLOMICS.md` · `projects/METABOLOMICS/CROSS-STUDY.md`

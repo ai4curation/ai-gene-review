@@ -99,9 +99,9 @@ Testing ortholog-projected GO annotations against a species that diverged
 
 ## Status and next steps
 
-- ✅ Batch 1: 8/8 reviews, 180 rows, none pending; TreeGrafter rows re-reviewed Sept 2026.
-- ⬜ No further batches started.
-- ⬜ A way to propose an evidence-code upgrade for an existing term.
+- ✅ Batch 1 row review: 180 rows, none pending; TreeGrafter rows re-reviewed Sept 2026.
+- ⬜ Pick the next HETGA batch ([#4230](https://github.com/ai4curation/ai-gene-review/issues/4230)).
+- ⬜ Decide how to propose an evidence-code upgrade for an existing term.
 - Tip: the decisive paper is often **titled for another gene** (e.g. TMEM2 for hyaluronan degradation).
 
 **Read more:** `projects/NAKED_MOLE_RAT.md` · `genes/HETGA/<Gene>/`

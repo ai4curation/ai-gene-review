@@ -2,6 +2,7 @@
 title: "PAINT Human No-IBA Gene Review Project"
 collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 manifest:
@@ -9,8 +10,6 @@ manifest:
     - href: paint/slides/PAINT-slides.html
       description: AI generated
   artifacts:
-    - href: https://claude.ai/artifact/ARCY71E1L7Dkzoobx7WyfV
-      title: Project brief
     - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
       title: JAK-STAT briefing
       description: AI generated
@@ -18,9 +17,9 @@ manifest:
 
 # PAINT Human No-IBA Gene Review Project
 
-**Bottom line:** PAINT curators annotate ancestral nodes in PANTHER trees, and those calls reach human genes as IBA annotations; human genes with no IBA at all may be poorly characterized, divergent, or lack orthologs with experimental evidence. This project works through a list of 7,593 such genes (7,524 distinct symbols), giving each two deep research reports and a full AI-assisted review of its existing GO annotations. We did this to find where phylogenetic annotation has a gap or a wrong node, and to see what the literature supports for genes that inherit nothing. As of 2026-09-26, 715 of the listed genes have a completed review (not all written under this project), covering 24,409 annotation decisions: 11,926 ACCEPT, 5,786 KEEP_AS_NON_CORE, 2,778 MARK_AS_OVER_ANNOTATED, 1,475 MODIFY, 1,338 REMOVE, 902 NEW and 204 UNDECIDED. The status section below (635 genes, 2026-09-04) predates this count.
+**Bottom line:** PAINT curators annotate ancestral nodes in PANTHER trees, and those calls reach human genes as IBA annotations; human genes with no IBA at all may be poorly characterized, divergent, or lack orthologs with experimental evidence. This project works through a list of 7,593 such genes (7,524 distinct symbols), giving each two deep research reports and a full AI-assisted review of its existing GO annotations. We did this to find where phylogenetic annotation has a gap or a wrong node, and to see what the literature supports for genes that inherit nothing. As of 2026-10-04, 756 of the listed symbols have a completed review (not all written under this project), covering 26,506 annotation decisions: 12,668 ACCEPT, 5,993 KEEP_AS_NON_CORE, 2,790 MARK_AS_OVER_ANNOTATED, 1,840 MODIFY, 1,739 REMOVE, 896 NEW and 580 UNDECIDED.
 
-The headline lessons are that the no-IBA list is stale (most genes in the 2026-09-04 batch now receive IBAs), that the recurring real gap is families with no molecular-function IBD at all, and that gene names mislead: PLD3 and PLD4, named as phospholipases D, are 5'-3' exonucleases, and PLD5 is catalytically inactive. The 2026-09-04 batch added structured PANTHER FamilyReviews for all 19 of its families; one of them (PTHR48178, PEX2) found an IBD placed on a PEX2/PAF1 name confusion.
+The headline lessons are that the no-IBA list is stale (most genes in the 2026-09-04 batch now receive IBAs), that the recurring real gap is families with no molecular-function IBD at all, and that gene names mislead: PLD3 and PLD4, named as phospholipases D, are 5'-3' exonucleases, and PLD5 is catalytically inactive. The 2026-09-04 batch added structured PANTHER FamilyReviews for all 19 of its families; one of them (PTHR48178, PEX2) found an IBD placed through PEX2's PAF1 synonym.
 
 **Worked example for PAINT curators: JAK-STAT without JAK.** Structured family reviews of STAT (PTHR11801), JAK (PTHR45807) and PIAS (PTHR10782) found the STAT JAK-STAT IBD placed on the Unikonts node (PTN000927860, `TOO_DEEP`) although JAKs are animal-only, so worm and *Dictyostelium* STATs inherit it; a PIAS node passes negative regulation of JAK-STAT to worm GEI-17; and a TYK2 IRD contradicts TYK2's own evidence. The node edits and the matching GO taxon-constraint proposals are summarised in the public briefing [JAK-STAT Without JAK](https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM) and tracked in [TAXON_PATHWAY_VARIANCE](TAXON_PATHWAY_VARIANCE.md).
 
@@ -49,24 +48,25 @@ For each gene, the workflow generates at least 2 deep research reports (from dif
 
 ## Completed Reviews
 
-**165 genes with COMPLETE status** (as of 2026-01-25)
+The highlighted reviews below illustrate the kinds of biology surfaced by the
+756 completed no-IBA-listed genes.
 
 ### Highlighted Reviews (Notable Findings)
 
 | Gene | Function | Finding |
 |------|----------|---------|
-| PLD3/PLD4/PLD5 | 5'-3' exonuclease | Misnamed - NOT phospholipase D enzymes |
+| PLD3, PLD4, PLD5 | 5'-3' exonuclease | Misnamed - NOT phospholipase D enzymes |
 | DAB2IP | GAP, tumor suppressor | Comprehensive multi-function review |
 | RASA3 | Bifunctional RasGAP | Acts on both RAS and RAP1 |
-| ICA1/ICA1L | BAR domain proteins | Membrane curvature sensing |
-| IFIT2/IFIT3 | Antiviral effectors | Interferon-stimulated response |
-| GADD45A/B/G | Stress response | MAPK pathway regulation |
+| ICA1, ICA1L | BAR domain proteins | Membrane curvature sensing |
+| IFIT2, IFIT3 | Antiviral effectors | Interferon-stimulated response |
+| GADD45A, GADD45B, GADD45G | Stress response | MAPK pathway regulation |
 
 ## Notable Findings
 
-### PLD3/PLD4/PLD5 Misannotation
+### PLD3, PLD4 and PLD5 Misannotation
 These proteins are named "phospholipase D" but are actually:
-- **PLD3/PLD4**: 5'-3' exonucleases with immune regulatory functions
+- **PLD3 and PLD4**: 5'-3' exonucleases with immune regulatory functions
 - **PLD5**: Catalytically inactive pseudoenzyme
 
 This is a prime example of misleading gene nomenclature that AI review can flag.
@@ -93,11 +93,12 @@ just validate human GENE
 List all completed PAINT genes:
 
 ```bash
-comm -12 <(cut -d',' -f3 projects/paint/human-no-IBA-simple.csv | sort) \
-         <(grep -l "status: COMPLETE" genes/human/*/*.yaml | xargs dirname | xargs -I{} basename {} | sort)
+comm -12 <(cut -d',' -f3 projects/paint/human-no-IBA-simple.csv | sort -u) \
+         <(rg -l '^status: "?COMPLETE"?$' genes/human/*/*-ai-review.yaml \
+           | xargs dirname | xargs -I{} basename {} | sort -u)
 ```
 
-Supplementary files in `projects/PAINT/`:
+Supplementary files in `projects/paint/`:
 - `human-no-IBA-simple.csv` - Gene list (species, uniprot_id, gene_symbol)
 - `human-no-IBA.tsv` - Full annotation data
 
@@ -105,31 +106,45 @@ Supplementary files in `projects/PAINT/`:
 
 # STATUS
 
-**Project Statistics (2026-09-04):**
+**Project Statistics (2026-10-04):**
 - Total genes in project: 7,593
-- **PAINT genes completed: 635** (8.4%)
-- Ready for review (have deep research but not complete): 6
-  (ERVMER34-1, PEX11A, SUMF2, TAX1BP1, TMEM67, TMF1)
-- Structured PANTHER FamilyReviews written for reviewed genes' families: 19 of 19
+- Distinct gene symbols in project: 7,524
+- **PAINT genes completed: 756** (10.0% of distinct symbols)
+- Ready for review (have deep research but not complete): 27
+- 2026-09-04 batch PANTHER FamilyReviews: 19 of 19
   (`interpro/panther/<PTHR>/<PTHR>-review.yaml`)
 
 ## Progress
 - [x] Infrastructure setup (batch processing, parallel deep research)
-- [x] 635 PAINT gene reviews completed
-- [x] Family-level review dimension added: paired FamilyReview per reviewed gene
-- [ ] Complete reviews for remaining 6 genes with deep research
+- [x] 756 PAINT gene reviews completed
+- [x] Family-level review dimension added: paired FamilyReviews for the
+      2026-09-04 review batch
+- [ ] Complete reviews for 27 genes with deep research
+      ([#3988](https://github.com/ai4curation/ai-gene-review/issues/3988))
 - [x] FamilyReviews for all 19 families of the 2026-09-04 batch (the three
       InterPro-outage stragglers — PTHR11494, PTHR15414, PTHR48482 — recovered
       and completed the same day)
 - [ ] Re-fetch IL10 GOA: the cached snapshot still carries now-obsolete
       GO:0005615 rows that PAINT has already migrated to GO:0005576
-- [ ] Re-derive the no-IBA source list against current GOA (see 2026-09-04 note)
+      ([#3988](https://github.com/ai4curation/ai-gene-review/issues/3988))
+- [ ] Re-derive the no-IBA source list against current GOA (see 2026-09-04 note;
+      [#3988](https://github.com/ai4curation/ai-gene-review/issues/3988))
 - [ ] Scale deep research to all genes
 - [ ] Full project completion (7,593 genes)
 
-Last updated: 2026-09-04
+Last updated: 2026-10-04
 
 # NOTES
+
+## 2026-10-04
+
+Recounted `projects/paint/human-no-IBA-simple.csv` against the current local
+`genes/human/*/*-ai-review.yaml` files. The project now has 756 COMPLETE
+reviews for distinct listed symbols, covering 26,506 existing-annotation rows;
+27 additional listed genes have at least one deep-research report and remain
+ready for manual review. The follow-up batch, IL10 re-fetch, and no-IBA source
+list refresh are tracked in
+[#3988](https://github.com/ai4curation/ai-gene-review/issues/3988).
 
 ## 2026-09-04
 
@@ -140,7 +155,7 @@ for 20 genes: BCKDHA, BCKDHB, CD28, CTLA4, NDUFS2, NDUFV1, PEX2, PEX10,
 PEX11B, PEX13, PEX16, ORMDL3, MBL2, MTCH2, IL10, ERLEC1, CFAP61, LOXHD1,
 GPATCH11, NAALADL2 — and, new for this project, wrote structured FamilyReviews
 (node-level PAINT/IBD adjudication) for all 19 of their PANTHER families
-(CD28/CTLA4 share PTHR11494; the three families stalled by a multi-hour
+(CD28 and CTLA4 share PTHR11494; the three families stalled by a multi-hour
 InterPro API outage were recovered and completed the same day). Across the
 19: residue validator 506 checks pass / 0 fail, family-gene crosscheck 0
 conflicts.
@@ -148,7 +163,7 @@ conflicts.
 Key findings:
 - **The no-IBA source list is stale.** Most of the 20 "no-IBA" genes now
   receive IBAs (PAINT IBDs dated 2022–2026): PEX11B, ORMDL3, CFAP61, LOXHD1,
-  BCKDHA/B, PEX13, PEX16, MTCH2, MBL2 among them. The recurring *real* gap is
+  BCKDHA and BCKDHB, PEX13, PEX16, MTCH2, MBL2 among them. The recurring *real* gap is
   narrower and invisible to a has-IBA test: **families lacking any
   molecular-function IBD** (BCKDH E1, PEX13, PEX16, NDUFV1's eukaryotic node),
   leaving human genes with only uninformative protein-binding IPI rows as MFs.
@@ -212,4 +227,4 @@ Completed reviews for:
 - PLD3, PLD4, PLD5 - Discovered misannotation (NOT phospholipases)
 - RASA3 - Bifunctional RasGAP
 
-Key finding: PLD3/PLD4/PLD5 nomenclature is misleading - they are exonucleases, not phospholipases.
+Key finding: PLD3, PLD4 and PLD5 nomenclature is misleading - they are exonucleases, not phospholipases.

@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Paired horse–human reviews: cases 21–30
 
 All ten pairs have an initial annotation review and human research. Source-specific uncertainty is retained in the YAML; no PENDING rows remain. ProtNLM narrative and GO statements are assessed separately.

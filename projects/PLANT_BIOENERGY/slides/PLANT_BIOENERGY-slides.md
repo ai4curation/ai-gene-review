@@ -95,5 +95,6 @@ Taxon-neutral modules for cell-wall recalcitrance and seed oil
 - ⬜ Grass-specific modules: mixed-linkage glucan (CSLF/CSLH), arabinoxylan arabinosylation / feruloylation.
 - ⬜ Suberin and cutin biosynthesis.
 - ⬜ Per-gene reviews for poplar / sorghum orthologs of the exemplar enzymes.
+- Tracked in ai-gene-review#4001.
 
 **Read more:** `projects/PLANT_BIOENERGY.md` · `modules/{lignin_monolignol,xylan,seed_triacylglycerol,cellulose}_biosynthesis.yaml`

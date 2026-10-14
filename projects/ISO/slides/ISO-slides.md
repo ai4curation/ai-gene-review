@@ -37,7 +37,7 @@ Separating source defects from propagation defects
 ## Bottom line
 
 - ISO copies a GO annotation to an ortholog. It can fail at the **source** or at the **orthology edge**.
-- **4,345 ISO rows** in 201 reviews: **2,073 kept as non-core**, 1,456 accepted, only **179 removed**. ISO is mostly true but contextual.
+- **4,416 ISO-tagged rows** in 209 reviews: **2,094 kept as non-core**, 1,502 accepted, only **180 removed**.
 - A failure taxonomy, now the structured `propagation_review` field, says **where** each defect lives.
 
 ---
@@ -76,14 +76,15 @@ Separating source defects from propagation defects
 
 1. **ISO is not mostly garbage.** The risk is a cloud of true-but-contextual rows hiding a few real defects.
 2. **Where it breaks:** paralogs and diverged members (Ang2), stale or circular donor chains (Ghr), isoform context (Ghr GH-binding protein).
-3. **Most structured failures are propagation or scoping**, not bad sources: 119 `PROPAGATION_BAD` and 101 `TERM_SCOPING_PROBLEM` vs 5 `SOURCE_BAD`.
+3. **Most structured failures are propagation or scoping**, not bad sources: 120 `PROPAGATION_BAD` and 102 `TERM_SCOPING_PROBLEM` vs 5 `SOURCE_BAD`.
 
 ---
 
 ## Status and next steps
 
-- Done: case reviews, taxonomy, reviewer checklist, `propagation_review` schema.
-- Open: a reusable ISO donor-trace script generalising the Ang2 trace.
+- Done: case reviews, taxonomy, reviewer checklist, `propagation_review`, donor-trace browser.
+- Open: donor `source_entities` for 16 structured ISO rows and featured Ang2/Ghr/Calm3 examples.
+- Open: source-status suggestions from donor support; one-to-one vs one-to-many orthology calls.
 - Related: `projects/IBA_REVIEW.md` (same taxonomy), `projects/IEP.md`.
 
 **Read more:** `projects/ISO.md` · `genes/mouse/Ang2/Ang2-bioinformatics/RESULTS.md` · `genes/mouse/Ghr/Ghr-iso-donor-trace.md`

@@ -1,5 +1,6 @@
 ---
 title: "Structure papers for the prioritized candidates"
+species: [HYPJE, CHLRE, BACSU]
 ---
 # Structure papers for the prioritized candidates
 
@@ -42,9 +43,10 @@ and the (pseudo-)allosteric sites of the TCA-cycle enzyme; the holoenzyme is all
 activated by citrate/ADP and inhibited by NADH/ATP (PubMed: Chen et al. 2022, J Biol Chem,
 [DOI](https://doi.org/10.1016/j.jbc.2022.102695); Sun et al. 2019, J Biol Chem,
 [DOI](https://doi.org/10.1074/jbc.RA119.010099)).
-*GO implication*: supports `isocitrate dehydrogenase (NAD+) activity` / NAD binding **at the
-complex level** and **protein-complex membership** (IDH3 octamer); useful for distinguishing
-the catalytic vs regulatory contribution of the β subunit.
+*GO implication*: supports IDH3B membership in the **isocitrate dehydrogenase (NAD+) complex**;
+the same structures distinguish the β subunit's structural/regulatory role from the α
+subunit's catalytic NAD/metal chemistry, so they argue against assigning IDH3B intrinsic
+isocitrate dehydrogenase, NAD-binding or metal-binding activity.
 
 ### human ATAD1 (Q8NBU5) — mitochondrial AAA+ membrane-protein extractase
 IEA-leaning MF. Near-atomic cryo-EM of human ATAD1 (Msp1 ortholog) **bound to a peptide
@@ -58,7 +60,7 @@ and mitochondrial protein-quality-control BP — beyond a generic "ATP binding" 
 ### PICST XYL1 (P31867) — NADPH-dependent D-xylose reductase
 No experimental GO in cache. 1.95 Å structure, including the **NADPH-bound** closed state,
 defines an aldo-keto-reductase that reduces D-xylose; the paper also shows phylogenetically
-that bacterial/archaeal "XR" annotations likely lack true XR activity, while the yeast/fungal
+that bacterial/archaeal "XR" annotations likely lack true XR activity, while the fungal
 clade (incl. SsXR) are bona fide xylose reductases (PubMed: Son et al. 2018, Sci Rep,
 [DOI](https://doi.org/10.1038/s41598-018-35703-x)).
 *GO implication*: supports `D-xylose reductase (NADPH) activity` and xylose catabolism;
@@ -69,8 +71,9 @@ No experimental GO in cache. Cryo-EM of the *Chlamydomonas* Photosystem I superc
 psaC carrying the terminal **[4Fe-4S] clusters (F_A/F_B)** that pass electrons to ferredoxin
 (PubMed: Schwartz et al. 2023, Biomolecules,
 [DOI](https://doi.org/10.3390/biom13030537)).
-*GO implication*: supports `4 iron, 4 sulfur cluster binding`, `electron transfer activity`,
-and `photosystem I` complex membership.
+*GO implication*: supports `photosystem I` complex membership for PsaC. Older Chlamydomonas
+mutagenesis and biochemical literature, not the PSI-LHCI paper's antenna-focused headline,
+does the gene-specific work for PsaC 4Fe-4S binding and electron transfer.
 
 ### human COX6B1 (P14854) — cytochrome c oxidase (complex IV) subunit
 3.3 Å cryo-EM of the intact 14-subunit human complex IV places COX6B1 in the assembled enzyme
@@ -107,22 +110,35 @@ loop" unique to the degradative class (PubMed: Bhaskar et al. 2020, J Struct Bio
 β-ketoadipate / protocatechuate degradation pathway — a precise call the structure enables.
 
 ### METAC mcrA (Q8THH1) — methyl-coenzyme M reductase α subunit
-IEA-only MF. Structure of the Gln-methylated MCR captured with the **heterodisulfide reaction
-product** (and the F430 nickel hydrocorrinoid cofactor) supports MCR as the terminal
-methanogenesis catalyst (PubMed: Rodriguez Carrero et al. 2025, mBio,
-[DOI](https://doi.org/10.1128/mbio.03546-24)). *Note: this paper centers on the MgmA modifying
-enzyme; the canonical MCR catalytic structure is Ermler et al. 1997 — cite that for the core
-function.*
-*GO implication*: supports `coenzyme-B sulfoethylthiotransferase` (MCR) activity, F430 binding,
-and methanogenesis.
+IEA-only MF. Cryo-EM structures of the purified MCR assembly captured the αβγ enzyme with
+**F430**, coenzyme M, coenzyme B and methanogenesis-associated Fe-S/SAM cofactors (PubMed:
+Lemaire et al. 2023, *Nature*, [DOI](https://doi.org/10.1038/s41586-023-06101-5)).
+*GO implication*: supports MCR complex membership, protein heterooligomerization, nickel
+cation binding through F430, and `coenzyme-B sulfoethylthiotransferase` activity as a first
+experimental-grade source for the local mcrA review. The later MgmA paper deposited useful
+Gln-methylated MCR product-state entries but was not the primary evidence used in the review.
 
 ### PSEAI merA (P00392) — mercuric reductase
 IEA-only MF. FAD/NADP-bound catalytic-core entries support a **mercuric(II) reductase**
-(pyridine-nucleotide-disulfide oxidoreductase) reducing Hg²⁺ to Hg⁰; the NmerA N-terminal
-HMA domain (the deposited NMR entry) handles Hg²⁺ delivery to the core (PubMed: Ledwidge et al.
-2010, Biochemistry, [DOI](https://doi.org/10.1021/bi100537f)).
+(pyridine-nucleotide-disulfide oxidoreductase) reducing Hg²⁺ to Hg⁰, while the NmerA
+N-terminal HMA domain handles Hg²⁺ acquisition and delivery to the catalytic core (PubMed:
+Ledwidge et al. 2005, *Biochemistry*).
 *GO implication*: supports `mercury(II) reductase activity`, FAD/NADP binding, and mercury
 detoxification — but cite the catalytic-core structure, not only the NmerA-domain paper.
+
+### BACSU secA (P28366) — protein-translocating ATPase
+No experimental GO in cache. The ADP/Mg-bound B. subtilis SecA structure and accompanying
+biochemical interpretation show that SecA cycles between nucleotide-dependent conformations
+that power preprotein movement through SecYEG.
+*GO implication*: supports ATP/nucleotide binding, ATP hydrolysis and
+protein-translocating ATPase activity for a previously electronic-only Bacillus review.
+
+### METEA mxaI (P14775) — methanol dehydrogenase small subunit
+No experimental GO in cache, but a useful negative control for structure triage. The PQQ/Ca
+methanol-dehydrogenase structure includes MxaI because it is the small subunit of the
+α2β2 tetramer; the mechanism described in the abstract and usable exact snippets are about
+the catalytic large subunit MxaF. The mxaI review therefore kept the PDB paper as a checked
+reference but did not use it to support a GO annotation.
 
 ## How structure papers feed the review
 

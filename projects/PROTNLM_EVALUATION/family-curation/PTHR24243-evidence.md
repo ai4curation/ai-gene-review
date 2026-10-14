@@ -1,3 +1,7 @@
+---
+autolink_gene_symbols: false
+---
+
 # PTHR24243: source excerpts
 
 Raw provenance: [family snapshot](family-sources/PTHR24243.json); [UniProt snapshot](uniprot-records.jsonl.gz), supplemented by [successful retries](uniprot-retries.jsonl.gz).
@@ -46,4 +50,3 @@ InterPro: IPR017452 [{"key": "EntryName", "value": "GPCR_Rhodpsn_7TM"}]
 PANTHER: PTHR24243 [{"key": "EntryName", "value": "G-PROTEIN COUPLED RECEPTOR"}, {"key": "MatchStatus", "value": "1"}]
 PANTHER: PTHR24243:SF7 [{"key": "EntryName", "value": "GROWTH HORMONE SECRETAGOGUE RECEPTOR TYPE 1"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF00001 [{"key": "EntryName", "value": "7tm_1"}, {"key": "MatchStatus", "value": "1"}]
-

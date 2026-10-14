@@ -56,8 +56,9 @@ metabolite set through Rhea + `rhea2go`, with `is_a`/`part_of` closure from
 `k/n` = foreground metabolites annotated to the term / foreground size;
 `K/N` = same in the background universe; `Fold` = (k/n)/(K/N). Terms reached
 via `rhea2go` are GO **molecular function**; closure lifts them to more general
-function terms. BP-level lift via the enzyme/gene layer (GOA / GO-CAM) is the
-documented next step (see the [project page](../../../METABOLOMICS.md)).
+function terms. The companion human GO-BP ORA report lifts the same normalized
+metabolite set through Swiss-Prot enzymes and GOA BP closure
+([MTBLS1-GO-BP-ENRICHMENT.md](MTBLS1-GO-BP-ENRICHMENT.md)).
 
 ## Method / reproducibility
 

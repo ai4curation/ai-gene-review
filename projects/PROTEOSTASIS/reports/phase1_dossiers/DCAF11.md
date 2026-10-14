@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # PN dossier: DCAF11
 
 - review_batch: proteostasis-batch-2026-06-07

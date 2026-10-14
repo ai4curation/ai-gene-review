@@ -2,6 +2,7 @@
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [PIPELINE]
 sidecars:
   slide_charts:
@@ -11,23 +12,20 @@ manifest:
   slides:
     - href: NCBIFam/slides/NCBIFam-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
-      title: Project brief
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
 
 **Bottom line:** NCBIFAM (the PGAP/TIGRFAM HMM collection) and CDD reach GO only
 through InterPro2GO, so GOA hides which member database fired and drops every
-signature InterPro has not integrated (60% of NCBIFAM models, 75% of CDD). We
-measured both sides. Forward, NCBIFAM backs 705 (13%) of the 5,549 InterPro2GO
-rows in this repo and is the only integrating signature for 250 of them. Reverse,
-NCBIFAM's own curated metadata puts GO terms on 11,228 of 34,351 models that GO
+signature InterPro has not integrated (60% of NCBIFAM models, 72% of CDD). We
+measured both sides. In a 2026-09 repo snapshot, NCBIFAM backed 705 (13%) of the
+5,549 InterPro2GO rows and was the only integrating signature for 250 of them. Reverse,
+NCBIFAM's own curated metadata now puts GO terms on 11,480 of 38,394 models that GO
 never ingests, while CDD-proper has no GO of its own. We built a validated
-250-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
+250-row `ncbifam2go` SSSOM seed, a 2,497-model EC-bridge candidate set, and
 checked four high-gain rows structurally with OpenScientist. The gain is real
-but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
+but lands mostly in TrEMBL (a 2026-07 60-model sample: 19 reviewed vs 26,578 UniProtKB
 entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
 is a clean fill.
 
@@ -52,7 +50,7 @@ straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
 | NCBIFAM family | Proposed GO (→ `ncbifam2go`) | Net-new (all) | reviewed† | Kind | Why it's unique / high-value |
 |---|---|---:|---:|---|---|
 | NF033545 IS630 transposase | GO:0004803 transposase activity | **18,874** | 2 ~ | adopt NCBI | Mobile elements — InterPro integration lags most here; single biggest gap |
-| TIGR03542 LL-DAP aminotransferase | GO:0010285 LL-DAP transaminase | **1,185** | 2→**0** ✗ | **refine** | Large *bacterial* TrEMBL gap is real; but both reviewed "gaps" are plant ALD1 paralogs (see †) |
+| TIGR03542 `LL-DAP` aminotransferase | GO:0010285 `LL-DAP` transaminase | **1,185** | 2→**0** ✗ | **refine** | Large *bacterial* TrEMBL gap is real; but both reviewed "gaps" are plant ALD1 paralogs (see †) |
 | NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation |
 | TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1→**0** ✗ | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575; the 1 reviewed "gap" is tobacco PMT paralog (see †) |
 | NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
@@ -71,18 +69,18 @@ the reviewed story — only VirB5 survives as a clean gap-fill:**
 | VirB5 → GO:0043684 | 4 | 4 | ✅ Genuine — all 4 are *Brucella* VirB5, real T4SS subunits |
 | dGTPase → GO:0008832 | 13 | 13 | ⚠️ All 13 are "dGTPase-**like** protein", **no EC assigned** — curators deliberately withheld the specific activity; propagating GO:0008832 asserts a substrate they declined (the FtsX over-annotation pattern, within Bacteria) |
 | IS630 → GO:0004803 | 2 | 2 | ~ Both are "**uncharacterized**" IS630-element ORFs (Shigella, Sinorhizobium) — plausibly the transposase, but left uncharacterized; weak |
-| LL-DAP → GO:0010285 | 2 | **0** | ✗ Both are **plant ALD1** (Arabidopsis Q9ZQI7, rice Q6VMN7); Q9ZQI7 carries *L-lysine α-aminotransferase* (GO:0062045, pipecolate/defense), **not** DapL — cross-kingdom paralog trap |
+| `LL-DAP` → GO:0010285 | 2 | **0** | ✗ Both are **plant ALD1** (Arabidopsis Q9ZQI7, rice Q6VMN7); Q9ZQI7 carries *L-lysine α-aminotransferase* (GO:0062045, pipecolate/defense), **not** `DapL` — cross-kingdom paralog trap |
 | spermidine synthase → GO:0004766 | 1 | **0** | ✗ Tobacco **PMT1** (Q42963), neofunctionalized to *putrescine N-methyltransferase* (GO:0030750) — paralog trap |
 
 Two lessons fall out. **(1) Scope the gain to the model's lineage.** NCBI's PGAP
 NF/TIGR models are only applied to prokaryotic genomes, yet UniProt runs the HMMs
 cross-kingdom; querying all of UniProtKB inflates the *reviewed* gain with eukaryotic
-paralogs PGAP would never touch. Restricting to Bacteria+Archaea collapses the LL-DAP
+paralogs PGAP would never touch. Restricting to Bacteria+Archaea collapses the `LL-DAP`
 and spermidine reviewed gaps to **0** — the bacterial reviewed enzymes already carry
 the term; only diverged plant paralogs were missing it. **(2) "-like" is a curator
 caution flag.** Even in-scope, the dGTPase "gap" is a clade the curators declined to
 give the specific activity. So the honest reviewed tally among these eight is: **1
-clean (VirB5), 1 over-annotation-risk (dGTPase), 1 weak (IS630), 2 spurious (LL-DAP,
+clean (VirB5), 1 over-annotation-risk (dGTPase), 1 weak (IS630), 2 spurious (`LL-DAP`,
 spermidine).** The **all-UniProtKB (bacterial TrEMBL) gains remain real** — this only
 corrects the small *reviewed* number, which was the fragile part of the claim.
 
@@ -174,10 +172,10 @@ inspected per-entry and taxonomically scoped before being trusted.
 
 **Scale beyond the hand-picked eight.** The same EC-bridge standard, run over the
 whole collection ([`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)),
-yields **2,455 models (2,503 rows)** where NCBI's `go_terms` and GO's `ec2go`
+yields **2,497 models (2,550 rows)** where NCBI's `go_terms` and GO's `ec2go`
 independently agree — an automatable, ready-to-add `ncbifam2go` core (AMR-rich:
 β-lactamases, trimethoprim-resistant DHFRs, aminoglycoside acetyltransferases), plus
-**843 "refine"** models where `ec2go` supplies a specific term over NCBI's broad one.
+**856 "refine"** models where `ec2go` supplies a specific term over NCBI's broad one.
 
 **A second, different sense of "unique."** Separately, NCBIFAM is the **sole**
 integrated signature behind **250** of this repo's existing `interpro2go`
@@ -220,31 +218,31 @@ the masking/closure caveats.
 
 - **One route in, and a dedicated mapping file is missing.** NCBIFAM/CDD GO
   reaches GOA *only* via `interpro2go` / `GO_REF:0000002`; there is no
-  `ncbifam2go` or `cdd2go` (403). `interpro2go` is sizeable — **30,200 mapping
-  rows over 14,799 distinct InterPro entries** (GO release `2026-04-28`) — but a
+  `ncbifam2go` or `cdd2go` (403). `interpro2go` is sizeable — **30,122 mapping
+  rows over 14,803 distinct InterPro entries** (GO release `2026-07-06`) — but a
   member signature contributes GO only if it is *integrated* into one of those
   entries.
-- **NCBIFAM/CDD are masked by InterPro in GOA — and the contribution is now
+- **NCBIFAM/CDD are masked by InterPro in GOA — and the contribution has been
   measured.** A `GO_REF:0000002` row's `WITH/FROM` names the integrated
   `InterPro:IPRnnnnnn` entry, **never** the member signature (0 `TIGR…/NF…/cd…` ids
   in any `*-goa.tsv` `WITH/FROM`, vs 1,160 `DR NCBIfam` + 2,174 `DR CDD` in the
-  proteins' UniProt records). Re-joining each annotation to its InterPro entry's
-  member databases shows **NCBIFAM backs 705 (13%) and CDD 469 (8%)** of the repo's
+  proteins' UniProt records in the 2026-09-26 snapshot). Re-joining each annotation to its
+  InterPro entry's member databases showed **NCBIFAM backed 705 (13%) and CDD 469 (8%)** of the repo's
   5,549 InterPro2GO rows, and is the **sole** integrated signature for **250 / 116**
   — invisible in GOA (the [attribution section](#un-masking-member-db-attribution-on-this-repos-annotations)).
   This is the NCBIFAM/CDD analog of RHEA being "masked by EC".
 - **NCBIFAM carries its own NCBI-curated GO/EC that GO does not ingest.** The PGAP
-  HMM metadata (`hmm_PGAP.tsv`, **34,351 models**) assigns function directly:
-  **11,228 models (33%) carry GO terms** (3,622 distinct GO ids) and **6,417
-  (19%) carry EC numbers**. None of this propagates except where the model is
+  HMM metadata (`hmm_PGAP.tsv`, **38,394 models**) assigns function directly:
+  **11,480 models (30%) carry GO terms** (3,644 distinct GO ids) and **6,537
+  (17%) carry EC numbers**. None of this propagates except where the model is
   integrated into InterPro — a large, curated, unused mapping source.
-- **`equivalog` makes the gap-fill tractable.** **13,253 NCBIFAM models are typed
+- **`equivalog` makes the gap-fill tractable.** **13,583 NCBIFAM models are typed
   `equivalog`** (all members share one function → safe GO/EC transfer), the direct
   analog of RHEA's reviewed enzymes backing each curated mapping. `domain` /
-  `subfamily` models (10,974 / 4,564) need altitude care.
+  `subfamily` models (14,234 / 4,879) need altitude care.
 - **The coverage gap is large — most signatures are unintegrated.** Computed live
-  from the InterPro API: **NCBIFAM 7,447 / 18,511 integrated (40%); CDD 5,059 /
-  19,902 integrated (25%)**. The **11,064 unintegrated NCBIFAM** and **14,843
+  from the InterPro API: **NCBIFAM 7,622 / 18,950 integrated (40%); CDD 5,480 /
+  19,902 integrated (28%)**. The **11,328 unintegrated NCBIFAM** and **14,422
   unintegrated CDD** signatures contribute **zero** GO by construction — the
   NCBIFAM/CDD analog of RHEA's "no `rhea2go` line" reactions.
 - **CDD-proper has *no* native GO of its own; NCBIFAM does.** Checked directly
@@ -289,7 +287,8 @@ The masking claim is now **measured**, not just asserted. Every `GO_REF:0000002`
 annotation in this repo's `genes/**/*-goa.tsv` was re-joined to its InterPro entry's
 `member_databases` via the InterPro API
 ([`interpro_member_attribution.py`](NCBIFam/interpro_member_attribution.py),
-resumable). Across **5,549** resolved InterPro-citation rows (1,827 distinct entries):
+resumable). In the 2026-09-26 repo snapshot, across **5,549** resolved
+InterPro-citation rows (1,827 distinct entries):
 
 | Member DB | distinct entries | annotation rows | sole signature |
 |-----------|----------------:|----------------:|---------------:|
@@ -300,8 +299,8 @@ resumable). Across **5,549** resolved InterPro-citation rows (1,827 distinct ent
 | **cdd** | **183 (10%)** | **469 (8%)** | **116** |
 | hamap / pirsf / ssf / cathgene3d | 117–159 | 403–627 | — |
 
-**NCBIFAM contributes a signature to 705 (13%) and CDD to 469 (8%)** of the repo's
-InterPro2GO annotations — a contribution **entirely invisible in GOA**, which shows
+In that snapshot, **NCBIFAM contributed a signature to 705 (13%) and CDD to 469 (8%)**
+of the repo's InterPro2GO annotations — a contribution **entirely invisible in GOA**, which shows
 only the `InterPro:IPR…` id. Stronger still, **NCBIFAM is the *sole* integrated
 signature for 250 rows and CDD for 116** — annotations that exist *purely* because of
 an NCBIFAM/CDD model, with no other member DB in the entry. And these are not exotic:
@@ -318,11 +317,11 @@ NCBIFAM's `family_type` is a built-in altitude/quality signal absent from CDD:
 
 | family_type | N | Function-transfer safety |
 |-------------|---:|--------------------------|
-| `equivalog` | 13,253 | **High** — all members one function; GO/EC transfer safe |
-| `domain` | 10,974 | Low — domain, not whole-protein function |
-| `subfamily` | 4,564 | Medium — clade-specific; check altitude |
-| `PfamEq` / `PfamAutoEq` | 1,807 / 1,204 | Equivalent to a Pfam entry → likely already InterPro-covered |
-| `exception` / `hypoth_equivalog` | 1,341 / 434 | Curated caveat / hypothetical — review individually |
+| `equivalog` | 13,583 | **High** — all members one function; GO/EC transfer safe |
+| `domain` | 14,234 | Low — domain, not whole-protein function |
+| `subfamily` | 4,879 | Medium — clade-specific; check altitude |
+| `PfamEq` / `PfamAutoEq` | 1,860 / 1,203 | Equivalent to a Pfam entry → likely already InterPro-covered |
+| `exception` / `hypoth_equivalog` | 1,392 / 434 | Curated caveat / hypothetical — review individually |
 
 CDD models, by contrast, are domain/architecture-oriented and lack this typing,
 so CDD's forward contribution skews toward **broad domain** terms (the
@@ -361,10 +360,10 @@ Pfam→InterPro). Reproduce with `ncbifam_cdd_probe.py` and the FTP/Entrez check
 | # | Gap | Size | What it is |
 |---|-----|------|-----------|
 | G1 | InterPro masking | all `GO_REF:0000002` rows | GOA hides which member DB fired → member contribution unattributable without re-join |
-| G2 | NCBIFAM unintegrated | 11,064 / 18,511 (60%) | NCBIFAM signatures not in InterPro → contribute no GO |
-| G3 | CDD unintegrated | 14,843 / 19,902 (75%) | CDD signatures not in InterPro → contribute no GO |
-| G4 | NCBI-curated GO not ingested | 11,228 models w/ GO | NCBIFAM models carry NCBI GO that GO has no `ncbifam2go` to ingest |
-| G5 | NCBI-curated EC not ingested | 6,417 models w/ EC | Could seed EC2GO-bridged GO mappings (the RHEA EC-bridge pattern) |
+| G2 | NCBIFAM unintegrated | 11,328 / 18,950 (60%) | NCBIFAM signatures not in InterPro → contribute no GO |
+| G3 | CDD unintegrated | 14,422 / 19,902 (72%) | CDD signatures not in InterPro → contribute no GO |
+| G4 | NCBI-curated GO not ingested | 11,480 models w/ GO | NCBIFAM models carry NCBI GO that GO has no `ncbifam2go` to ingest |
+| G5 | NCBI-curated EC not ingested | 6,537 models w/ EC | Could seed EC2GO-bridged GO mappings (the RHEA EC-bridge pattern) |
 | G6 | Integrated-but-unmapped InterPro entries | staged | NCBIFAM/CDD integrated into an IPR entry that has no `interpro2go` row |
 
 G4/G5 are the high-value half: an `equivalog` with a clean NCBI `go_terms` /
@@ -410,18 +409,20 @@ resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
   PR #2214 review — the catalytic Mo subunit is the large one).
 
 **We suggest our own term where NCBI's was too broad — and that unmasks the real
-gain.** For five families NCBI's `go_terms` gave only a broad parent — twice the
-ontology **near-root** `GO:0003824 catalytic activity` (enoyl-CoA hydratase NF005804,
-spermidine synthase TIGR00417) — even though a precise, EC-bridged child already
-exists. Rather than record the useless broad term, the seed proposes the specific
-child as an `exactMatch` (dGTPase→`GO:0008832`, enoyl-CoA hydratase→`GO:0004300`,
-dihydroorotase→`GO:0004151`, spermidine synthase→`GO:0004766`, LL-DAP
+gain.** For four hand-curated families NCBI's `go_terms` gave only a broad parent —
+twice the ontology **near-root** `GO:0003824 catalytic activity` (enoyl-CoA hydratase
+NF005804, spermidine synthase TIGR00417) — even though a precise, EC-bridged child
+already exists. Rather than record the useless broad term, the seed proposes the
+specific child as an `exactMatch` (enoyl-CoA hydratase→`GO:0004300`,
+dihydroorotase→`GO:0004151`, spermidine synthase→`GO:0004766`, `LL-DAP`
 aminotransferase→`GO:0010285`). This is not cosmetic: the broad parent is
 near-universal so its propagation gain looks **~0**, but the **specific term reveals
-large gaps the parent masked** — spermidine synthase **575**, LL-DAP aminotransferase
-**1,185**, dihydroorotase **491**, and dGTPase **456 (incl. 13 reviewed/Swiss-Prot)**
-entries missing the precise activity. Proposing our own term is what turns these from
-invisible into actionable gap-fills.
+large gaps the parent masked** — spermidine synthase **575**, `LL-DAP` aminotransferase
+**1,185**, and dihydroorotase **491** entries missing the precise activity. NF002326
+was the warning case: strict dGTPase looked like the same pattern (`GO:0008832`,
+apparent gain 456), but structural verification showed substrate heterogeneity, so the
+seed keeps `GO:0016793` as the family-level `exactMatch` and records `GO:0008832` /
+`GO:0106375` only as clade-level `narrowMatch` rows.
 
 **…but more specific is not always right — the FtsX cell-division case.** The
 mirror-image judgement is `TIGR00439` (permease-like cell division protein **FtsX**),
@@ -479,20 +480,20 @@ confirms one of the model's own NCBI `go_terms`. The live funnel:
 
 | Stage | Count |
 |-------|------:|
-| GO-bearing NCBIFAM models | 11,228 |
-| …with both an EC and a GO term | 3,782 |
-| …where `ec2go(EC)` **confirms** a model GO → **exactMatch candidates** | **2,455** (2,503 rows) |
-| …where `ec2go(EC)` would **refine** NCBI's broader/absent GO (the spermidine-synthase pattern, at scale) | 843 |
-| …candidates already in the reviewed seed (cross-check) | 17 |
+| GO-bearing NCBIFAM models | 11,480 |
+| …with both an EC and a GO term | 3,865 |
+| …where `ec2go(EC)` **confirms** a model GO → **exactMatch candidates** | **2,497** (2,550 rows) |
+| …where `ec2go(EC)` would **refine** NCBI's broader/absent GO (the spermidine-synthase pattern, at scale) | 856 |
+| …candidates already in the reviewed seed (cross-check) | 243 |
 
 The generated set is [`ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv)
-(2,503 rows, clearly marked generated; `mapping_justification` would be
-`semapv:CompositeMatching`). The **17** rows that coincide with the reviewed seed are
-exactly the seed's EC-bridge enzyme rows — an automatic confirmation that the
-generator agrees with manual curation where they overlap. These 2,455 are
+(2,550 rows, clearly marked generated; `mapping_justification` would be
+`semapv:CompositeMatching`). The **243** rows that coincide with the reviewed seed
+reflect the 17 original overlaps plus most of the gain-ranked rows promoted into the
+250-row seed in batches 3–5. These 2,497 models are
 AMR-rich (trimethoprim-resistant dihydrofolate reductases → `GO:0004146`,
 β-lactamases → `GO:0008800`, aminoglycoside 6′-N-acetyltransferases → `GO:0047663`,
-…) and are the natural ready-to-add core of a real `ncbifam2go`. The **843
+…) and are the natural ready-to-add core of a real `ncbifam2go`. The **856
 "refine"** models are the scaled version of the five hand-fixed altitude rows: NCBIFAM
 gave a broad/near-root term but `ec2go` supplies the specific child — a second,
 also-automatable candidate class (propose `ec2go`'s term), pending the same
@@ -540,7 +541,7 @@ over-annotation.
 1. **Attribute before auditing.** A `GO_REF:0000002` annotation cannot be praised
    or blamed on NCBIFAM/CDD until GOA is re-joined to InterPro member integration;
    build that join first.
-2. **Mine NCBIFAM `equivalog` GO/EC as a mapping source.** The 13,253 equivalogs
+2. **Mine NCBIFAM `equivalog` GO/EC as a mapping source.** The 13,583 equivalogs
    with NCBI `go_terms`/`ec_numbers` are the cleanest gap-fill substrate — start
    the `ncbifam2go.sssom.yaml` here.
 3. **EC-bridge where only EC is given.** An equivalog with `ec_numbers` but no
@@ -554,10 +555,10 @@ over-annotation.
 
 | Target | Rationale |
 |--------|-----------|
-| ✅ GOA × InterPro member-integration re-join | **Done** ([attribution section](#un-masking-member-db-attribution-on-this-repos-annotations)): NCBIFAM backs 13% / CDD 8% of the repo's InterPro2GO rows (sole signature for 250 / 116). |
+| ✅ GOA × InterPro member-integration re-join | **Done** for the 2026-09-26 repo snapshot ([attribution section](#un-masking-member-db-attribution-on-this-repos-annotations)): NCBIFAM backed 13% / CDD 8% of the repo's InterPro2GO rows (sole signature for 250 / 116). |
 | Forward closure-filtered cross-organism scan | UniPathway-style uniqueness for member-attributed rows; needs go-db DuckDBs. Now seeded by the member-attribution join above. |
-| Promote the 2,455 EC-bridge candidates | Altitude/obsolete-check [`ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv) and fold the clean rows into the reviewed SSSOM → a near-complete ingestible `ncbifam2go`. |
-| Build the 843 "refine" class | Auto-propose `ec2go`'s specific term where NCBI's `go_terms` is broad/absent (the spermidine-synthase pattern), then altitude-review as FtsX shows is needed. |
+| Promote the remaining EC-bridge candidates | Altitude/obsolete-check [`ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv) and fold the clean rows into the reviewed SSSOM → a near-complete ingestible `ncbifam2go`; tracked in [#4231](https://github.com/ai4curation/ai-gene-review/issues/4231). |
+| Build the 856-model "refine" class | Auto-propose `ec2go`'s specific term where NCBI's `go_terms` is broad/absent (the spermidine-synthase pattern), then altitude-review as FtsX shows is needed; tracked in [#4231](https://github.com/ai4curation/ai-gene-review/issues/4231). |
 | Non-EC families (defense/secretion/transport) | The high-gain non-enzyme equivalogs (transposases, anti-phage, T4SS, encapsulins) have no EC bridge → need a different verification (literature/SPARCLE), curated like the seed's CC/BP rows. |
 | Full-collection gain run | Replace the 60-model gain sample with the complete equivalog set for a definitive reviewed-vs-TrEMBL gain figure. |
 | Exemplar gene reviews | Pick 2–3 genes whose only MF/BP support is an NCBIFAM equivalog (e.g. an anti-phage or secretion family) and run the full review workflow. |
@@ -568,17 +569,17 @@ over-annotation.
 - **Maturity**: IN_PROGRESS — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
-  250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
+  250-row `ncbifam2go` seed** in place, a **2,497-model EC-bridge candidate set**
   generated at collection scale, the **member-DB attribution re-join done** on the
   repo's annotations, and **four seed rows structurally verified via OpenScientist**
   (DUF1156, dGTPase, IS630, encapsulin).
-- **Computed live** (via [`NCBIFam/ncbifam_cdd_probe.py`](NCBIFam/ncbifam_cdd_probe.py)
-  and [`ncbifam_go_gain.py`](NCBIFam/ncbifam_go_gain.py)):
-  `interpro2go` = 30,200 rows / 14,799 InterPro ids (GO `2026-04-28`); NCBIFAM PGAP
-  = 34,351 models, 11,228 (33%) with GO, 6,417 (19%) with EC, 13,253 equivalogs;
-  InterPro integration NCBIFAM 7,447/18,511 (40%), CDD 5,059/19,902 (25%); CDD-proper
+- **Computed live** via [`NCBIFam/ncbifam_cdd_probe.py`](NCBIFam/ncbifam_cdd_probe.py),
+  with the 2026-09-26 member-attribution snapshot and 2026-07 60-model gain sample:
+  `interpro2go` = 30,122 rows / 14,803 InterPro ids (GO `2026-07-06`); NCBIFAM PGAP
+  = 38,394 models, 11,480 (30%) with GO, 6,537 (17%) with EC, 13,583 equivalogs;
+  InterPro integration NCBIFAM 7,622/18,950 (40%), CDD 5,480/19,902 (28%); CDD-proper
   carries 0 native GO (FTP + Entrez); 60-model gain Σ = 19 reviewed / 26,578
-  all-UniProtKB; member-DB attribution = NCBIFAM backs 705 (13%) / CDD 469 (8%) of
+  all-UniProtKB; 2026-09 member-DB attribution = NCBIFAM backs 705 (13%) / CDD 469 (8%) of
   5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
   repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
@@ -592,8 +593,8 @@ over-annotation.
   Spanning MF/BP/CC, each with
   live propagation gain; **passes** `just validate-ncbifam-mappings`.
 - **Scaled candidates**: [`NCBIFam/ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv)
-  — 2,503 generated EC-bridge-confirmed rows (2,455 models; `ncbifam2go_candidates.py`),
-  AMR-rich; 17 coincide with the reviewed seed as a cross-check, plus 843 "refine" models
+  — 2,550 generated EC-bridge-confirmed rows (2,497 models; `ncbifam2go_candidates.py`),
+  AMR-rich; 243 already sit in the reviewed seed, plus 856 "refine" models
   where `ec2go` supplies a specific term over NCBI's broad one.
 - **Current conclusion**: NCBIFAM/CDD reach GO only through InterPro, which
   **masks** their contribution in GOA and leaves the **majority of signatures

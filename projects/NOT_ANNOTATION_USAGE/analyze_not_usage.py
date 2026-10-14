@@ -168,6 +168,7 @@ def main() -> int:
         "---",
         'title: "NOT annotation usage: results"',
         "species: [human, rat, ARATH, SCHPO]",
+        "autolink_gene_symbols: false",
         "---",
         "# NOT annotation usage: results",
         "",

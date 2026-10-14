@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXW9
 - **UniProt:** Q5XUX1 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
 - **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|WD40` ; **PN-node mapping:** group=mapped/ok_for_propagation_to_go GO:1990756; class=context_only/too_broad GO:0061630; subtype/type/branch=no_mapping

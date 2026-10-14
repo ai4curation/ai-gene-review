@@ -1,15 +1,14 @@
 ---
 title: "NLRP3 Inflammasome Assembly Project"
 maturity: SCOPING
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [NLRP3, CASP4, GSDMD]   # reviewed genes only; full candidate list is in the table below
 manifest:
   slides:
     - href: NLRP3_INFLAMMASOME/slides/NLRP3_INFLAMMASOME-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/NjmYtfwPS1nDE8WcAWGBDN
-      title: Project brief
 ---
 
 # NLRP3 Inflammasome Assembly Project
@@ -28,8 +27,8 @@ CASP4 and GSDMD, 364 annotations between them; most removals are generic
 `protein binding` rows, 24 of 25 on NLRP3), and the NLRP3 review proposes a
 new GO term, *inflammasome sensor activity*, because GO:0140299 molecular
 sensor activity requires binding the sensed molecule. The adaptor PYCARD, the effector
-CASP1 and the licensing kinase NEK7 have since been reviewed (PR #4536); CASP5,
-IL1B, IL18 and BRCC3 still have no gene folder. The draft
+CASP1 and the licensing kinase NEK7 have since been reviewed (PR #4536); `CASP5`,
+`IL1B`, `IL18` and `BRCC3` still have no gene folder. The draft
 [metazoan NLR signaling module](../modules/nlr_signaling.html) keeps NLRP3,
 PYCARD and CASP1 as a compact pathway-level view alongside the NOD2–RIPK2
 branch; the mechanistic detail now lives in the dedicated inflammasome module.
@@ -55,39 +54,39 @@ The NLRP3 inflammasome is a multiprotein complex that activates inflammatory cas
 - **NLRP3** - NOD-like receptor, sensor component
 
 ### 2. Adaptor
-- **PYCARD** (ASC) - Adaptor with PYD and CARD domains
+- **`PYCARD`** (ASC) - Adaptor with PYD and CARD domains
 
 ### 3. Effector Caspases
-- **CASP1** - Caspase-1, cleaves pro-IL-1β
-- **CASP4/5** - Non-canonical inflammasome
+- **`CASP1`** - Caspase-1, cleaves pro-IL-1β
+- **CASP4/`CASP5`** - Non-canonical inflammasome
 
 ### 4. Substrates/Outputs
-- **IL1B** - Pro-inflammatory cytokine
-- **IL18** - Pro-inflammatory cytokine
+- **`IL1B`** - Pro-inflammatory cytokine
+- **`IL18`** - Pro-inflammatory cytokine
 - **GSDMD** - Gasdermin D, pore-forming executioner
 
 ### 5. Critical Regulators
-- **NEK7** - Essential NLRP3 activator (discovered 2016)
-- **BRCC3** - Deubiquitinase
+- **`NEK7`** - NLRP3 licensing cofactor/regulator
+- **`BRCC3`** - Deubiquitinase
 - **Various negative regulators**
 
 ### 6. Priming/Licensing
 - **NFKB pathway** - Transcriptional priming
 
-## Candidate Genes (~12-15)
+## Candidate Genes
 
 | Gene | UniProt | Function |
 |------|---------|----------|
 | NLRP3 | Q96P20 | Sensor |
-| PYCARD | Q9ULZ3 | ASC adaptor |
-| CASP1 | P29466 | Effector caspase |
+| `PYCARD` | Q9ULZ3 | ASC adaptor |
+| `CASP1` | P29466 | Effector caspase |
 | CASP4 | P49662 | Non-canonical |
-| CASP5 | P51878 | Non-canonical |
+| `CASP5` | P51878 | Non-canonical |
 | GSDMD | P57764 | Pore formation |
-| IL1B | P01584 | Cytokine |
-| IL18 | Q14116 | Cytokine |
-| NEK7 | Q8TDX7 | Essential activator |
-| BRCC3 | P46736 | Deubiquitinase |
+| `IL1B` | P01584 | Cytokine |
+| `IL18` | Q14116 | Cytokine |
+| `NEK7` | Q8TDX7 | NLRP3 licensing cofactor |
+| `BRCC3` | P46736 | Deubiquitinase |
 
 ## Mechanism as currently modelled
 
@@ -184,11 +183,12 @@ modelling:
 
 ## Project Status
 
-- [ ] Stub - needs gene folder setup
+- [x] Cross-project reviews checked for NLRP3, CASP4 and GSDMD
 - [x] Canonical assembly chain modelled and reconciled with the 2025 CMI review
 - [x] Gene reviews for PYCARD, CASP1 and NEK7 (PR #4536; the PYCARD review
       adjudicates its NAS `GO:0070269 pyroptotic inflammatory response` rows)
-- [ ] Gene folders for IL1B and IL18
+- [ ] Gene folders for `CASP5`, `IL1B`, `IL18` and `BRCC3`
+      ([#3954](https://github.com/ai4curation/ai-gene-review/issues/3954))
 - [ ] Decide whether to fold `nlrp3_inflammasome` into `canonical_nlrp3_inflammasome`
       or keep them as overview and step-level views
 - [ ] Decide whether a shared ASC→caspase-1→GSDMD effector core module is worth

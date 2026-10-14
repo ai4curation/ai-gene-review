@@ -89,7 +89,7 @@ Using genome-scale metabolic models to catch GO molecular-function errors
 ## Status and next steps
 
 - Reviews: `genes/METEA/{ecm,sucB,mdcD,gcvP}`, `genes/ECOLI/{rbsD,glgX}`, `genes/human/{HADHB,CPT1C}`.
-- Open: *M. extorquens* mdcB, ilvC, purK; remaining Recon3D CLASS_CHANGE genes.
+- Open in #4122: *M. extorquens* mdcB, ilvC, purK; remaining Recon3D CLASS_CHANGE genes; missing `models/metabolic/` artifacts.
 - Caveat: the `models/metabolic/` files and FBA scripts cited on the page are **not in this repository**.
 
 **Read more:** `projects/METABOLIC_MODEL_ANALYSIS.md`

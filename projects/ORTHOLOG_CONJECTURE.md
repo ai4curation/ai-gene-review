@@ -2,14 +2,12 @@
 title: "Ortholog Conjecture Project"
 collections: [HOMOLOGY_PROPAGATION]
 maturity: SCOPING
+last_reviewed: "2026-10-04"
 tags: [EVALUATION]
 manifest:
   slides:
     - href: ORTHOLOG_CONJECTURE/slides/ORTHOLOG_CONJECTURE-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/QSeyfbwNfcDm6KauRqS6Fx
-      title: Project brief
 ---
 
 # Ortholog Conjecture Project
@@ -22,8 +20,9 @@ started as an analysis. So far it holds a literature summary of the debate
 (PMID:21695233, PMID:22359495, PMID:22615551, PMID:23209392), a draft
 "open-world" similarity metric that treats missing annotations as unknown
 rather than absent, and a seed list of five documented divergence cases (CMAH,
-UOX, GULO, CDC14, and Arabidopsis/A. lyrata co-orthologs). No ortholog
-datasets have been assembled and no metrics have been computed.
+UOX, GULO, `CDC14`, and Arabidopsis/A. lyrata co-orthologs). No ortholog
+datasets have been assembled and no metrics have been computed; that pilot is
+tracked in [#3975](https://github.com/ai4curation/ai-gene-review/issues/3975).
 
 We are doing this because published tests of the conjecture disagree, largely
 because GO annotation bias and propagated annotations contaminate the
@@ -118,10 +117,10 @@ Case: Human and other primates lack functional GULO, preventing endogenous vitam
 Type: Loss-of-function ortholog / pseudogenization.
 Evidence: Human GULO is a pseudogene with multiple mutations; primate nonfunctionalization documented at the sequence level. [PMID:1962571; PMID:10572964]
 
-### CDC14 (Cdc14 phosphatase family)
+### `CDC14` (`Cdc14` phosphatase family)
 Case: Budding yeast Cdc14 is essential for mitotic exit, but orthologs in fission yeast and vertebrates are not required for mitotic exit and show different cellular roles.
 Type: Functional role shift across orthologs.
-Evidence: Review of conserved family with non-conserved functions, including fission yeast Clp1 roles in cytokinesis control and vertebrate CDC14 non-essentiality for mitotic exit. [PMID:20720150]
+Evidence: Review of conserved family with non-conserved functions, including fission yeast Clp1 roles in cytokinesis control and vertebrate `CDC14` non-essentiality for mitotic exit. [PMID:20720150]
 
 ### Arabidopsis - A. lyrata co-orthologs (expressolog study)
 Case: Ortholog groups with multiple A. lyrata copies show divergence in expression and functional complementation compared to Arabidopsis.
@@ -138,7 +137,7 @@ These are *boundary cases* demonstrating that orthology does not guarantee funct
 ### Human loss-of-function orthologs (UOX, GULOP/GULO)
 Case: Humans lack functional urate oxidase (UOX) and L-gulonolactone oxidase; the human locus is annotated as the pseudogene GULOP.
 Type: Lineage-specific loss-of-function with retained but inactive orthologous loci.
-Evidence: UOX inactivation in the human/great ape clade is due to nonsense mutations identified in primate comparative sequencing. [PMID:11961098] Human L-gulono-γ-lactone oxidase exists as a pseudogene with accumulated mutations, and the human GULOP locus is annotated as nonfunctional. [PMID:10572964; NCBI GTR Gene:2989]
+Evidence: UOX inactivation in humans and the great apes is due to nonsense mutations identified in primate comparative sequencing. [PMID:11961098] Human L-gulono-γ-lactone oxidase exists as a pseudogene with accumulated mutations, and the human GULOP locus is annotated as nonfunctional. [PMID:10572964; NCBI GTR Gene:2989]
 
 ## Key References
 - Nehrt NL et al. Testing the ortholog conjecture with comparative functional genomic data from mammals. PLoS Comput Biol. 2011. [PMID:21695233]
@@ -153,7 +152,7 @@ Evidence: UOX inactivation in the human/great ape clade is due to nonsense mutat
 - Oda M et al. Loss of urate oxidase activity in hominoids and its evolutionary implications. Mol Biol Evol. 2002. [PMID:11961098]
 - Nishikimi M et al. Guinea pigs possess a highly mutated gene for L-gulono-gamma-lactone oxidase. Biochem Biophys Res Commun. 1991. [PMID:1962571]
 - Ohta Y, Nishikimi M. Random nucleotide substitutions in primate nonfunctional GULO gene. J Mol Evol. 1999. [PMID:10572964]
-- Mocciaro A, Schiebel E. Cdc14: a highly conserved family of phosphatases with non-conserved functions? J Cell Sci. 2010. [PMID:20720150]
+- Mocciaro A, Schiebel E. `Cdc14`: a highly conserved family of phosphatases with non-conserved functions? J Cell Sci. 2010. [PMID:20720150]
 - NCBI GTR Gene:2989 (GULOP pseudogene locus).
 - GO evidence codes guide (Gene Ontology Consortium documentation).
 - GO_REF:0000033. Annotation inferences using phylogenetic trees.
@@ -170,10 +169,22 @@ Evidence: UOX inactivation in the human/great ape clade is due to nonsense mutat
 ## Pending
 - [ ] Define the open-world metric set and data filters
 - [ ] Select ortholog datasets and clades for pilot analysis
+- [ ] Ground the seed cases and implement a first GOA metric pilot
+  ([#3975](https://github.com/ai4curation/ai-gene-review/issues/3975))
 
-Last updated: 2026-02-09
+Last updated: 2026-10-04
 
 # NOTES
+
+## 2026-10-04
+Audited the scoping page against local review coverage: the named seed cases
+remain literature examples rather than a GOA metric pilot, and no local
+ortholog dataset or similarity implementation exists yet. Tracked that
+grounding and pilot work in
+[#3975](https://github.com/ai4curation/ai-gene-review/issues/3975).
+
+Follow-up audit made family-level and vertebrate `CDC14` mentions literal so
+they do not autolink to the local budding-yeast `CDC14` review.
 
 ## 2026-02-09
 Refocused project scope to investigate ortholog divergence science and unbiased metrics; added seed examples and open-world framing.

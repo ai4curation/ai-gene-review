@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## DCAF10
 - **UniProt:** Q5QP82 (WDR32) · **batch:** proteostasis-batch-2026-06-07 · **review status:** COMPLETE
 - **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul4A/Cul4B substrate receptor|WD40|other` ; **PN-node mapping:** group node `Cul4A/Cul4B substrate receptor` mapped → GO:1990756 ubiquitin-like ligase-substrate adaptor activity (ok_for_propagation, new_to_goa); class context_only (GO:0061630, too_broad).

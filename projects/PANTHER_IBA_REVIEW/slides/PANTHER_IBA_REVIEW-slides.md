@@ -26,7 +26,7 @@ style: |
 
 # PANTHER IBA family review
 
-Testing 160 fission yeast IBAs at the tree node they came from
+Testing 161 fission yeast IBAs at the tree node they came from
 
 <span class="small">AI Gene Review · projects/PANTHER_IBA_REVIEW · 2026</span>
 
@@ -36,9 +36,9 @@ Testing 160 fission yeast IBAs at the tree node they came from
 
 ## Bottom line
 
-- Each IBA follows from a **PAINT curator's IBD** at an ancestral PANTHER node; we rebuilt that propagation for **all 160 IBAs** on 41 reviewed *S. pombe* genes.
-- The per-gene calls **held up**: 148 kept, the 36 cross-subfamily flags were mostly conserved functions, **no new errors** among accepted rows.
-- Real over-propagations were **localization terms** and **paralog-specific functions** crossing subfamily lines (pom1, rqh1, mid1).
+- Each IBA follows from a **PAINT curator's IBD** at an ancestral PANTHER node; we rebuilt that propagation for **all 161 IBAs** on 41 reviewed *S. pombe* genes.
+- The per-gene calls **held up**: 149 kept, the 38 cross-subfamily flags were mostly conserved functions, **no new errors** among accepted rows.
+- Real failures were **localization transfers** plus a paralog-specific anillin function (pom1, rqh1, mid1).
 
 ---
 
@@ -97,7 +97,7 @@ Testing 160 fission yeast IBAs at the tree node they came from
 
 ## Status and next steps
 
-- Done: 160 IBAs analysed; written review in `REVIEW.md`.
-- PAINT loss table: **2,129** findings across 549 cached families; **63 IKR** losses fall on a reviewed member, ready for residue reconstruction with `prepare_loss_analysis.py`.
+- Done: 161 IBAs analysed; written review in `REVIEW.md`.
+- PAINT loss table: **2,498** findings across 622 cached families; **68 IKR** losses fall on a reviewed member, ready for residue reconstruction with `prepare_loss_analysis.py` ([#3991](https://github.com/ai4curation/ai-gene-review/issues/3991)).
 
 **Read more:** `projects/PANTHER_IBA_REVIEW.md` · `REVIEW.md` · `iba_propagation.tsv` · `projects/IBA_REVIEW.md`

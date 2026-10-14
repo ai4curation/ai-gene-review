@@ -1,8 +1,9 @@
 ---
 title: "PDB: Deposited Structures as Functional-Insight Evidence"
 maturity: MATURE
+last_reviewed: "2026-10-05"
 tags: [PIPELINE, EVALUATION]
-species: [METAC, BACSU, PSEAI, METEA, human]
+species: [METAC, BACSU, PSEAI, METEA, human, THET8, STRTR, CHLRE, RHOCA, 9POAL, yeast, HYPJE]
 sidecars:
   slide_charts:
     - PDB/slides/pdb-citation-gap.svg
@@ -11,26 +12,27 @@ manifest:
   slides:
     - href: PDB/slides/PDB-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/DTWWmrU3z8AaCTrCLj1TCs
-      title: Project brief
 ---
 # PDB: Deposited Structures as Functional-Insight Evidence
 
 **Bottom line:** a deposited structure that captures a bound cofactor, ligand or
 partner is direct experimental evidence for molecular function and complex
 membership. We inventoried the PDB cross-references of every gene in the
-pipeline (949 of 2,529 genes, 13,415 entries), ranked candidates by structure
+pipeline (1,991 genes, 27,157 entries), ranked candidates by structure
 richness times annotation sparsity, and measured how often structure papers
-enter the GO evidence trail: only 15% of 737 structure-paper and gene pairs are
+enter the GO evidence trail: only 19% of 1,668 structure-paper and gene pairs are
 cited in GOA. We then tested whether structures fill gaps that ordinary papers
 would not. They reliably give under-curated proteins their first
-experimental-grade evidence (about 12 annotations in round 2, and four `NEW`
-annotations across mcrA, secA and HSPB3), but new informative function is rare:
+experimental-grade evidence (more than a dozen annotations in round 2, and five
+structure-motivated `NEW` annotations across mcrA, secA and HSPB3), but new
+informative function is rare:
 two structure-unique annotations, both on merA, and one clear gain in six when
-scoring the papers' headline hypotheses. A first batch of six eukaryotic reviews
-and four frontier reviews (merA, mcrA, secA, mxaI) used structure evidence; the
-ranked worklist in `PDB/GAP_WORKLIST.md` is the next step.
+scoring the papers' headline hypotheses. A first batch of six eukaryotic
+reviews, the HSPB3 follow-up, and the frontier merA, mcrA and secA reviews used
+positive structure evidence; mxaI was the instructive null where the structure
+paper was about the partner catalytic subunit. The ranked worklist in
+`PDB/GAP_WORKLIST.md` is the next step and is tracked in
+[#3996](https://github.com/ai4curation/ai-gene-review/issues/3996).
 
 We did this because structures are an under-used evidence source for GO, and we
 wanted to know where structure-informed review pays off before spending effort
@@ -76,63 +78,59 @@ Computed offline from the cached UniProt records (`*-uniprot.txt`, `DR PDB` cros
 
 | Metric | Count |
 |--------|------:|
-| Genes with ≥1 deposited PDB structure | **949** / 2529 |
-| Total deposited PDB entries | **13,415** |
-| **Eukaryotic** genes with a structure | 815 |
-| Genes with a structure but **no experimental GO at all** | 73 |
-| Genes with a structure but **no experimental molecular-function GO** | 114 |
-| Genes where a review **disputed a catalytic MF** (REMOVE/over-annotated) | 130 |
+| Genes with ≥1 deposited PDB structure | **1,991** |
+| Total deposited PDB entries | **27,157** |
+| **Eukaryotic** genes with a structure | 1,744 |
+| Genes with a structure but **no experimental GO at all** | 131 |
+| Genes with a structure but **no experimental molecular-function GO** | 206 |
+| Genes where a review **disputed a catalytic MF** (REMOVE/over-annotated) | 340 |
 
-Top organisms by genes-with-structure: human (588), yeast (65), ARATH (53), BPT4 (32),
-mouse (30), ECOLI (23), PSEPK (19), SCHPO (17), worm (17), rat (15).
+Top organisms by genes-with-structure: human (1,437), yeast (90), ARATH (64), ECOLI (57),
+PSEPK (33), BPT4 (32), mouse (32), worm (28), SCHPO (24), DROME (18).
 
 ### Three prioritization cuts
 
-`enrich_rcsb.py` enriches the union of three candidate cuts (278 genes; each tagged in the
+`enrich_rcsb.py` enriches the union of three candidate cuts (620 genes; each tagged in the
 `candidate_reason` column), so the priority list is no longer prokaryote-dominated:
 
 | Cut | Definition | Genes | What structure adds |
 |-----|------------|------:|---------------------|
-| `dark_mf` | no experimental molecular-function GO | 114 | grounds a first experiment-grade MF |
-| `euk` | eukaryotic **and** ≤2 experimental MF terms | 100 | sharpens an IEA term / pins complex membership |
-| `contested` | review marked a **catalytic** MF `REMOVE`/over-annotated | 130 | adjudicates the disputed activity (pseudo-enzyme / over-general / wrong-specific) |
+| `dark_mf` | no experimental molecular-function GO | 206 | grounds a first experiment-grade MF |
+| `euk` | eukaryotic **and** ≤2 experimental MF terms | 210 | sharpens an IEA term / pins complex membership |
+| `contested` | review marked a **catalytic** MF `REMOVE`/over-annotated | 340 | adjudicates the disputed activity (pseudo-enzyme / over-general / wrong-specific) |
 
 Full inventory: `PDB/data/pdb_inventory.tsv` (per entry) and
 `pdb_gene_summary.tsv` (per gene).
 
 ## Prioritized candidates (first pass)
 
-The 114 genes with a structure but no experimental MF GO were enriched with RCSB metadata
-(bound ligands, entity counts, titles). Of the 105 that resolved:
+The 206 genes with a structure but no experimental MF GO were enriched with RCSB metadata
+(bound ligands, entity counts, titles). Of these:
 
-- **42** have a structure with a bound **cofactor / catalytic metal**
-- **69** have a structure with a meaningful (non-buffer) **ligand**
-- **40** are captured in a **complex**; 6 with bound **nucleic acid**
-- 23 are apo with no partner (lower structural-insight yield)
+- **84** have a structure with a bound **cofactor / catalytic metal**
+- **137** have a structure with a meaningful (non-buffer) **ligand**
+- **109** are captured in a **complex**; 25 with bound **nucleic acid**
+- 37 are apo with no partner (lower structural-insight yield)
 
 These are **IEA-only** enzymes/proteins whose function is structurally (and often
 biochemically) characterized but whose GO annotations have not been promoted beyond
-electronic inference — the sweet spot for structure-grounded review.
+electronic inference — the sweet spot for structure-grounded review. Representative
+high-scoring rows from that ranked list are:
 
 | # | Gene | Organism | UniProt | n PDB | cofactor | ligand | complex | cofactors/ligands |
 |---|------|----------|---------|------:|:--------:|:------:|:-------:|-------------------|
 | 1 | rpsD | PSEAE | O52759 | 6 | ✓ | ✓ | ✓ | GDP,ZN |
-| 2 | psaC | CHLRE | Q00914 | 17 | ✓ | ✓ | ✓ | FES,SF4 |
-| 3 | secA | BACSU | P28366 | 18 | ✓ | ✓ | ✓ | ADP |
-| 4 | (DsrAB) | DESVH | P07598 | 12 | ✓ | ✓ | ✓ | FE2,HEC,SF4,ZN |
-| 5 | mcrA | METAC | Q8THH1 | 4 | ✓ | ✓ | ✓ | COB,F430,FE,SAM,SF4 |
-| 6 | wac | BPT4 | P10104 | 117 | ✓ | ✓ | ✓ | ZN |
-| 7 | rbcL | 9POAL | P0C512 | 3 | ✓ | ✓ | ✓ | NDP (RuBisCO) |
-| 8 | algK | PSEPK | Q88NC7 | 1 | ✓ | ✓ | ✓ | NI |
-| 9 | mxaI | METEA | P14775 | 3 | ✓ | ✓ | ✓ | PQQ |
-| 10 | fae | METEA | Q9FA38 | 11 |  | ✓ | ✓ | H4MPT,DCP,CA,MG |
-| 12 | cbh1 | HYPJE | P62694 | 48 | ✓ | ✓ |  | (cellobiohydrolase) |
-| 13 | pqqB | PSEPK | Q88QV5 | 8 | ✓ | ✓ |  | CU,MN,ZN |
-| 16 | merA | PSEAI | P00392 | 6 | ✓ | ✓ |  | FAD,NADP |
-| 17 | mtdA | METEA | P55818 | 5 | ✓ | ✓ |  | NADP |
-| 18 | pcaF | PSEPK | Q88N39 | 4 | ✓ | ✓ |  | COA |
-| 23 | mdh | METEA | Q84FY8 | 2 | ✓ | ✓ |  | NAD |
-| 25 | xoxF1 | METEA | C5B120 | 2 | ✓ | ✓ |  | PQQ |
+| 2 | csm6 | THET8 | Q53W17 | 4 | ✓ | ✓ | ✓ | NI |
+| 3 | cas10 | STRTR | A0A0A7HFE1 | 4 | ✓ | ✓ | ✓ | ATP |
+| 4 | psaC | CHLRE | Q00914 | 17 | ✓ | ✓ | ✓ | FES,SF4 |
+| 5 | P07598 | DESVH | P07598 | 12 | ✓ | ✓ | ✓ | FE2,HEC,SF4,ZN |
+| 6 | secA | BACSU | P28366 | 18 | ✓ | ✓ | ✓ | ADP |
+| 7 | xdhA | RHOCA | O54050 | 6 | ✓ | ✓ | ✓ | FAD,FES |
+| 8 | xdhB | RHOCA | O54051 | 6 | ✓ | ✓ | ✓ | FAD,FES |
+| 9 | mcrA | METAC | Q8THH1 | 4 | ✓ | ✓ | ✓ | COB,F430,FE,SAM,SF4 |
+| 10 | mxaF | METEA | P16027 | 3 | ✓ | ✓ | ✓ | PQQ |
+| 11 | wac | BPT4 | P10104 | 117 | ✓ | ✓ | ✓ | ZN |
+| 12 | rbcL | 9POAL | P0C512 | 3 | ✓ | ✓ | ✓ | NDP |
 
 Full ranked list: `PDB/data/pdb_gene_enriched.tsv` (now includes the
 RCSB per-entry **structure-paper PMIDs** and an `is_eukaryote` flag).
@@ -140,32 +138,32 @@ RCSB per-entry **structure-paper PMIDs** and an `is_eukaryote` flag).
 ## Eukaryotic candidates (so they aren't drowned out)
 
 Broadening beyond the strict "no experimental MF" cut to `euk` + `contested` surfaces a
-much richer eukaryotic slice (815 eukaryotic genes have a structure). Top eukaryotic
+much richer eukaryotic slice (1,744 eukaryotic genes have a structure). Top eukaryotic
 candidates by score, with the cut(s) that flagged them:
 
 | # | Gene | Org | UniProt | reason | nPDB | cof | lig | cplx | cofactors/ligands | paper |
 |---|------|-----|---------|--------|-----:|:--:|:--:|:--:|---|---|
-| 1 | psaC | CHLRE | Q00914 | dark_mf,euk | 17 | ✓ | ✓ | ✓ | FES,SF4 (Photosystem I) | PMID:36979472 |
-| 2 | rbcL | 9POAL | P0C512 | dark_mf,euk | 3 | ✓ | ✓ | ✓ | NDP (RuBisCO) | PMID:22609438 |
-| 3 | PNO1 | yeast | Q99216 | euk | 28 | ✓ | ✓ | ✓ | GTP,ZN (ribosome assembly) | PMID:33326748 |
-| 4 | RPS3 | human | P23396 | contested | 133 | ✓ | ✓ | ✓ | ZN (ribosomal / endonuclease?) | PMID:29875412 |
-| 5 | NAA15 | human | Q9BXJ9 | contested | 10 | ✓ | ✓ | ✓ | AcCoA (NatA auxiliary) | PMID:40639378 |
-| 6 | HEN1 | ARATH | Q9C5Q8 | contested,euk | 1 | ✓ | ✓ | ✓ | SAH (RNA methyltransferase) | PMID:19812675 |
-| 7 | TERT | human | O14746 | contested | 17 | ✓ | ✓ | ✓ | (telomerase RT) | PMID:27903649 |
-| 8 | cbh1 | HYPJE | P62694 | contested,dark_mf,euk | 48 | ✓ | ✓ |  | cellobiohydrolase Cel7A | PMID:26307003 |
-| 9 | XYL1 | PICST | P31867 | contested,dark_mf,euk | 2 | ✓ | ✓ |  | NADP (xylose reductase) | PMID:30487522 |
-| 10 | UPF1 | human | Q92900 | contested | 11 | ✓ | ✓ | ✓ | ATP,Zn (NMD helicase) | PMID:38709891 |
-| 11 | BRCA2 | human | P51587 | contested | 14 | ✓ | ✓ | ✓ | ATP (HR mediator) | PMID:40441151 |
-| 12 | DOT1 | yeast | Q04089 | contested | 5 | ✓ | ✓ | ✓ | SAM/SAH (H3K79 MTase) | PMID:33479126 |
-| 13 | SIRT2 | human | Q8IXJ6 | contested | 60 | ✓ | ✓ | ✓ | NAD,Zn (deacetylase) | PMID:28286128 |
+| 1 | psaC | CHLRE | Q00914 | dark_mf,euk | 17 | ✓ | ✓ | ✓ | FES,SF4 | PMID:36979472 |
+| 2 | CG34171 | DROME | P00760 | dark_mf,euk | 607 | ✓ | ✓ | ✓ | ZN | PMID:9836602 |
+| 3 | rbcL | 9POAL | P0C512 | dark_mf,euk | 3 | ✓ | ✓ | ✓ | NDP | PMID:22609438 |
+| 4 | NCU08990 | NEUCR | Q7S2X9 | dark_mf,euk | 1 |  | ✓ | ✓ | 3HE,MG,SPD | PMID:34815343 |
+| 5 | HSD17B10 | human | Q99714 | contested | 15 | ✓ | ✓ | ✓ | CDP,GTP,NAD,SAH,SAM,ZN | PMID:39747487 |
+| 6 | RCO1 | yeast | Q04779 | dark_mf,euk | 25 | ✓ | ✓ | ✓ | ZN | PMID:37468628 |
+| 7 | PNO1 | yeast | Q99216 | euk | 28 | ✓ | ✓ | ✓ | GTP,ZN | PMID:33326748 |
+| 8 | AEBP2 | human | Q6ZN18 | dark_mf,euk | 18 | ✓ | ✓ | ✓ | SAH,ZN | PMID:39774834 |
+| 9 | RPS3 | human | P23396 | contested | 133 | ✓ | ✓ | ✓ | ZN | PMID:29875412 |
+| 10 | NAA10 | human | P41227 | contested | 10 | ✓ | ✓ | ✓ | ACO,CO,GTP,ZN | PMID:40639378 |
+| 11 | NAA15 | human | Q9BXJ9 | contested | 10 | ✓ | ✓ | ✓ | ACO,CO,GTP,ZN | PMID:40639378 |
+| 12 | RAD51C | human | O43502 | contested | 7 | ✓ | ✓ | ✓ | ADP,ANP,ATP | PMID:41196948 |
+| 13 | CWC27 | human | Q6UX04 | euk | 9 | ✓ | ✓ | ✓ | ADP,GTP,ZN | PMID:39068178 |
 
-The verified flagships (IDH3B, ATAD1, XYL1, psaC, COX6B1, SPR, COI1) are written up in
-`PDB/STRUCTURE_PAPERS.md`. For human genes the structure typically sharpens an
+The original verified flagships (IDH3B, ATAD1, XYL1, psaC, COX6B1, SPR, COI1) are written
+up in `PDB/STRUCTURE_PAPERS.md`. For human genes the structure typically sharpens an
 existing IEA term or pins **complex membership** rather than revealing function from scratch.
 
 ## Contested catalytic functions (structure adjudicates)
 
-130 genes with a structure have a review that marked a **catalytic** molecular function as
+340 genes with a structure have a review that marked a **catalytic** molecular function as
 `REMOVE` or over-annotated. A deposited structure is decisive here — it shows whether the
 cofactor/active-site pocket is actually present. **Two distinct cases (don't conflate them):**
 
@@ -182,7 +180,7 @@ cofactor/active-site pocket is actually present. **Two distinct cases (don't con
 |------|-----|-----------------------|--------|:-----------------:|-------|
 | HEN1 | ARATH | peptidyl-prolyl cis-trans isomerase | REMOVE | **SAH** (→ methyltransferase) | PMID:19812675 |
 | CASP3 | human | aspartic-type endopeptidase | REMOVE | (cysteine protease) | — |
-| mcrA | METAC | transferase activity (generic) | REMOVE | F430,SAM,Fe-S | PMID:39772843 |
+| mcrA | METAC | transferase activity (generic) | REMOVE | F430,SAM,Fe-S | PMID:37307484 |
 | APEX1 | human | deoxyribonuclease (pyrimidine dimer) | REMOVE | Mn (AP endonuclease) | PMID:25251148 |
 | BRCA2 | human | histone acetyltransferase | UNDECIDED (H3/H4); `NOT` GO:0004402 accepted | ATP | PMID:40441151 |
 | DOT1 | yeast | methyltransferase activity (generic) | over-annotated | SAM/SAH | PMID:33479126 |
@@ -205,16 +203,18 @@ disputed-term mapping and the structure PMID must both be verified before use.**
 
 A bound ligand is the clue; the **primary structure paper** carries the functional
 interpretation. `PDB/STRUCTURE_PAPERS.md` records verified, PubMed-sourced
-notes for the shortlist above (and the prokaryotic flagships mcrA, merA, pcaF), with the
-GO-annotation implication for each.
+notes for the shortlist above, the prokaryotic flagships mcrA, merA, secA and pcaF, and
+the mxaI null case, with the GO-annotation implication for each.
 
 **Caveat surfaced by doing this:** the `structure_papers` PMIDs are the RCSB *per-entry*
 primary citation — the paper that deposited *that* coordinate set, which is often a downstream
 ligand/inhibitor or methods study rather than the definitive structure/function paper. Verified
 drift cases: SPR's PMIDs are inhibitor-screening papers; cbh1's are glycosylation/propranolol
-NMR; merA's is the N-terminal NmerA-domain NMR. Others (XYL1, psaC, IDH3B, ATAD1, pcaF, COX6B1)
-*are* the definitive paper. **Each PMID must be verified against the gene before it is cited in
-a review** (the "verify, don't trust" rule), exactly as `STRUCTURE_PAPERS.md` does.
+NMR; merA's is the N-terminal NmerA-domain NMR. Others (XYL1, IDH3B, ATAD1, pcaF, COX6B1)
+*are* the definitive paper; psaC's cryo-EM paper is definitive for the PSI-LHCI assembly
+but not for the PsaC-specific electron-transfer claim. **Each PMID must be verified against
+the gene before it is cited in a review** (the "verify, don't trust" rule), exactly as
+`STRUCTURE_PAPERS.md` does.
 
 Patterns worth noting: a cluster of **methylotrophy / PQQ-dependent dehydrogenases**
 (METEA `mxaI`, `xoxF1`, `mdh`, `mtdA`, `fae`, PSEPK `pedH`, `pqqB`) and **redox cofactor
@@ -264,9 +264,9 @@ function is rare — throttled by subunit mismatch and GO expressivity.
 
 `PDB/curation_gap.py` measures, for every deposited structure with a linked primary
 publication, whether that PMID is cited in the gene's GOA `REFERENCE` column. Across
-**737** structure-paper × gene pairs (247 genes), only **15%** are cited by GOA; **65%**
+**1,668** structure-paper × gene pairs (573 genes), only **19%** are cited by GOA; **63%**
 are `GAP_OPPORTUNITY` (the paper predates the gene's last *experimental* annotation yet is
-never referenced), and **174/247** genes cite zero of their structure papers. "Not cited"
+never referenced), and **353/573** genes cite zero of their structure papers. "Not cited"
 means the structural study is absent from the evidence trail, not that the function is
 unannotated — but it quantifies how under-used the structural literature is as a GO evidence
 source. The lag boundary uses the latest *experimental* annotation year, since overall GOA
@@ -281,20 +281,24 @@ project-specific.
 `PDB/gap_worklist.py` ranks the `GAP_OPPORTUNITY` papers by gene priority
 (dark-MF / eukaryote / contested) plus the cofactor / ligand / complex richness of the
 uncited structures, collapsed to one row per gene (the review unit). Top targets:
-`yeast PNO1`, `human RPS3`, `human BIRC5`, `human GCH1`, `human SIRT2`, `human MAPK1`,
-`ARATH CRY2`. Per-paper detail in `PDB/data/gap_worklist.tsv`.
+`human FANCB`, `yeast PNO1`, `yeast RCO1`, `human RPS3`, `human ACLY`,
+`human AEBP2`, and `human AP1S3`. Per-paper detail in `PDB/data/gap_worklist.tsv`.
 
 ## Next steps
 
-- [x] First eukaryotic batch reviewed with structure evidence: `PICST XYL1`, `human IDH3B`,
+- **Done:** First eukaryotic batch reviewed with structure evidence: `PICST XYL1`, `human IDH3B`,
       `human COX6B1`, `CHLRE psaC`, `ARATH COI1`, `human ATAD1`.
-- [ ] Work down `GAP_WORKLIST.md` from the top, citing the verified structure paper + PDB
-      entry + bound cofactor as evidence; remaining shortlist includes **prokaryotic**
-      `PSEPK pcaF`, `METAC mcrA`, `PSEAI merA`.
-- [ ] Extend enrichment beyond the no-exp-MF set to genes with **contested** function
+- **Done:** Frontier reviews: `PSEAI merA`, `METAC mcrA`, and `BACSU secA` gained positive
+      structure evidence; `METEA mxaI` was a null/reference-only case.
+- **Done:** Extend enrichment beyond the no-exp-MF set to genes with **contested** function
       (cross-reference `CONTESTED_FUNCTION.md`) where a structure could adjudicate.
-- [ ] For complexes (≥2 protein entities), map partners to UniProt to support CC / complex
+- **Todo:** Work down `GAP_WORKLIST.md` and the 75-gene H1 frontier in `data/h1_testset.tsv`;
+      finish the `PSEPK pcaF` DRAFT and triage new top no-exp-GO candidates such as
+      `STRPY FbaB`, `DESVH P07598`, `BPT4 wac` and the `METEA` methanol-dehydrogenase
+      subunits.
+- **Todo:** For complexes (≥2 protein entities), map partners to UniProt to support CC / complex
       membership annotations.
-- [ ] Replace each peripheral RCSB auto-citation with the definitive structure/function paper
+- **Todo:** Replace each peripheral RCSB auto-citation with the definitive structure/function paper
       (see the caveat above) as genes go to review.
-- [ ] Consider adding a PDB-evidence field to the review schema (per `ALPHAFOLD.md` action items).
+- **Todo:** Consider adding a PDB-evidence field to the review schema (per `ALPHAFOLD.md` action items).
+- **Todo:** Track follow-up in [#3996](https://github.com/ai4curation/ai-gene-review/issues/3996).

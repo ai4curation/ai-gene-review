@@ -25,8 +25,9 @@ Five further reviews were added *because* their proteins carry the terms found
 below: *M. brevicollis* LATS (MONBRDRAFT_1233) and four choanoflagellate
 cadherins. They add 48 propagated rows, 38 of them down-graded, including IBA
 rows on the *M. brevicollis* reference genome. They were chosen for their
-errors, so they are excluded from the rates above. All 21 reviews are in
-`propagation_audit_rows.tsv` (101 rows, 49 down-graded).
+errors, so they are excluded from the rates above. Across all 21 reviews, the
+audit generated 101 rows in `propagation_audit_rows.tsv`; 17 reviews have at
+least one propagated row, and 49 rows were down-graded.
 
 The down-grades come from four mechanisms:
 
@@ -76,12 +77,12 @@ from 2026-10-01.
 | *Oscarella pearsei* (sponge) | VIN1, TLN | 6 | 1 |
 | *S. rosetta* and *M. brevicollis*, chosen for their propagated terms | PTSG_05882, PTSG_06458, PTSG_11235, MBCDH12, MONBRDRAFT_1233 | 48 | 38 |
 
-None of these organisms is a PANTHER reference genome, so none of the
-proteins gets IBA rows. Their tree-based annotations all come from
-TreeGrafter, which grafts the protein onto a reference tree and copies the
-terms on the graft node. The one reference genome among unicellular
-holozoans is *Monosiga brevicollis*, which does get IBA rows. It appears below
-because it inherits the same LATS-node terms.
+The organisms in the first three rows, plus the error-selected *S. rosetta*
+cadherins, are not PANTHER reference genomes. Their tree-based annotations all
+come from TreeGrafter, which grafts the protein onto a reference tree and
+copies the terms on the graft node. The one reference genome among unicellular
+holozoans is *Monosiga brevicollis*, which gets IBA rows. Its LATS and
+cadherin proteins appear below because they inherit the same suspect terms.
 
 ## Case 1: organ growth, apoptosis and G1/S on choanoflagellate Warts
 

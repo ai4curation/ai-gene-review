@@ -25,14 +25,14 @@ Polarity groups: supported = COR/CNN/LSP; uncertain = UNC; incorrect = NPI/PLI/R
 | 1 | WHEAT/A0A3B6RKV1 | GO:0010030 positive regulation of seed germination | Split: NPI | UNC | OVERRIDE | true | "The wheat protein's expression context, target loci, and regulatory direction during germination are not established by this sequence relationship." |
 | 1 | PHATC/B7FXQ8 | GO:0009651 response to salt stress | Over-annotated: NPI | UNC | OVERRIDE | true | "those properties do not establish a salt-triggered response in this diatom protein." |
 | 1 | PHATC/B7FXQ8 | GO:0042542 response to hydrogen peroxide | Over-annotated: NPI | UNC | OVERRIDE | true | "it does not establish involvement in a response specifically triggered by hydrogen peroxide." |
-| 1 | ORYSJ/Q6YYC5 | GO:0070534 protein K63-linked ubiquitination | Undecidable: UNC | PLI | OVERRIDE | true | override not documented |
+| 1 | ORYSJ/Q6YYC5 | GO:0070534 protein K63-linked ubiquitination | Undecidable: UNC | PLI | OVERRIDE | true | "The focused report found that Q6YYC5 clusters with RGLG4, in the RGLG3/RGLG4 degradative clade, rather than the RGLG1/RGLG2 clade tied to K63-linked ubiquitination." |
 | 1 | SOYBN/C6T1A2 | GO:0009788 negative regulation of abscisic acid-activated signaling pathway | Undecidable: UNC | UNC | AGREE | true |  |
 | 1 | ABRPR/A0A8B8L1Z3 | GO:0005783 endoplasmic reticulum | Run failed: no verdict | UNC | NO_VERDICT | false |  |
 | 2 | ARATH/F4JLB7 | GO:0016301 kinase activity | confirmed: PLI | NPI | SAME_DIRECTION | true |  |
 | 2 | ARATH/F4JLB7 | GO:0016310 phosphorylation | confirmed: PLI | UNC | OVERRIDE | true | "Those findings do not exclude participation in phosphorylation through an associated kinase or signaling complex." |
 | 2 | MYTGA/A0A8B6GS20 | GO:0004438 phosphatidylinositol-3-phosphate phosphatase activity | confirmed: NPI | NPI | AGREE | true |  |
 | 2 | ASPOR/Q2U1U6 | GO:0004553 hydrolase activity, hydrolyzing O-glycosyl compounds | confirmed: NPI | NPI | AGREE | true |  |
-| 2 | WHEAT/F6LAX4 | GO:0046982 protein heterodimerization activity | confirmed: NPI | LSP | OVERRIDE | true | override not documented |
+| 2 | WHEAT/F6LAX4 | GO:0046982 protein heterodimerization activity | confirmed: NPI | LSP | OVERRIDE | true | "This conserved interaction supports protein heterodimerization at the AC-core level, but a focused report also confirmed that the more informative description is PP2A A-subunit scaffolding for the ABC heterotrimer." |
 | 2 | WHEAT/F6LAX4 | GO:0043025 neuronal cell body | confirmed: NPI | NPI | AGREE | true |  |
 | 2 | WHEAT/F6LAX4 | GO:0007059 chromosome segregation | confirmed: NPI | UNC | OVERRIDE | true | "Chromosome segregation occurs in plants, but no specific complex or functional experiment connects this wheat product to it in the inspected sources." |
 | 2 | WHEAT/F6LAX4 | GO:0043005 neuron projection | confirmed: NPI | NPI | AGREE | true |  |

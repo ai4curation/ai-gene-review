@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # PN dossier: ANAPC2
 
 - review_batch: proteostasis-batch-2026-06-03
