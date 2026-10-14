@@ -41,7 +41,8 @@ worklist.
 
 Everything is computed live by [`cyp_go_audit.py`](CYTOCHROME_P450/cyp_go_audit.py)
 against UniProtKB, QuickGO, `rhea2go` and `ec2go`. Per-gene, per-reaction and
-per-chemistry tables are in [`data/`](CYTOCHROME_P450/data/). No result is
+per-chemistry tables are in `data/`, starting with
+[`cyp-summary.json`](CYTOCHROME_P450/data/cyp-summary.json). No result is
 hardcoded.
 
 ## How "informative" is decided
@@ -190,12 +191,20 @@ It originally attributed a group the *substrate* already carried to the enzyme, 
 pattern to match the product side and *not* the substrate side fixes that, but it
 then misses poly-hydroxylation, where the substrate already has a hydroxyl
 (`20S-hydroxycholecalciferol → 20S,25-dihydroxycholecalciferol`): **46 reactions
-now fall to `other/unclassified` despite forming a hydroxyl**, and even
-`RHEA:48672` and `RHEA:48664`, both cited above by id, land there. Two further
-corrections came out of the same pass: saturated `docosanoate`/`hexacosanoate` were
-being classed as PUFAs by a `docosa` pattern meant for docosahexaenoate, and the
-third step of ω-oxidation had no class at all until a
-`carboxylate formation (aldehyde to acid)` one was added for it.
+now fall to `other/unclassified` despite forming a hydroxyl**, including
+`RHEA:48664`, which this page cites above by id.
+
+Three further corrections came out of the same pass. Saturated
+`docosanoate`/`hexacosanoate` were being classed as PUFAs by a `docosa` pattern
+meant for docosahexaenoate. The third step of ω-oxidation had no class at all
+until a `carboxylate formation (aldehyde to acid)` one was added, and that
+pattern initially matched only `dioate`/`dicarboxylate`, so `RHEA:48672` — whose
+product is `20-carboxy-leukotriene B4` — fell to `other/unclassified` for a
+*third* reason rather than the poly-hydroxylation one. Matching `carboxy` as well
+puts it where it belongs: the step-3 class now holds **3 reactions, and the only
+mapped one is `RHEA:48672` itself**, the LTB4 template, with batch 8's
+`RHEA:39043`/`RHEA:39047` the two unmapped ones. The asymmetry this page is about
+is now visible in the classification rather than contradicted by it.
 
 Use the file to find candidate reactions, not to quantify a class. Per-reaction
 labels are emitted precisely so they can be checked.

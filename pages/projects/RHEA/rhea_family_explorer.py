@@ -291,7 +291,7 @@ def analyse(name: str, spec: dict, rhea2go, ec2go, outdir: Path | None) -> dict:
     reaction_rows = []
     for rx, r in sorted(rx_info.items(), key=lambda kv: -len(rx_entries[kv[0]])):
         go = rhea2go.get(rx)
-        ec_terms = ec2go.get(r["ec"], set()) if r["ec"] else set()
+        ec_terms = ec2go_terms(ec2go, r["ec"]) if r["ec"] else set()
         reaction_rows.append(
             [
                 f"RHEA:{rx}", r["name"], r["ec"], len(rx_entries[rx]),
@@ -320,7 +320,8 @@ def analyse(name: str, spec: dict, rhea2go, ec2go, outdir: Path | None) -> dict:
         ),
         "distinct_go_targets": len(go_targets),
         "top_go_targets": [
-            (go, labels.get(go, ""), n) for go, n in go_targets.most_common(8)
+            (go, labels.get(go, ""), n) for go, n in
+            sorted(go_targets.items(), key=lambda kv: (-kv[1], kv[0]))[:8]
         ],
         "goa_mf_rows": sum(len(v) for v in goa.values()),
         "goa_rows_from_rhea": len(rhea_rows),
@@ -346,6 +347,19 @@ def analyse(name: str, spec: dict, rhea2go, ec2go, outdir: Path | None) -> dict:
              ["accession", "gene", "missing_go", "missing_go_label", "via_reactions"], gap_rows)
         (outdir / f"{name}-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
+
+
+def ec2go_terms(ec2go: dict[str, set[str]], ec: str) -> set[str]:
+    """Union the ec2go terms for a (possibly ``;``-joined) EC field.
+
+    The reaction-level aggregation can join two ECs for one reaction, and a
+    joined string matches no ec2go key -- which would blank the column for
+    exactly the reactions whose EC evidence is richest.
+    """
+    out: set[str] = set()
+    for part in filter(None, (p.strip() for p in ec.split(";"))):
+        out |= ec2go.get(part, set())
+    return out
 
 
 def _tsv(path: Path, header: list[str], rows: list[list]) -> None:

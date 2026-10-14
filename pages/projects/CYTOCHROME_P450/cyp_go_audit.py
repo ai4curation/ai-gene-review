@@ -88,7 +88,7 @@ CHEMISTRY = [
     # The third step of omega-oxidation forms a second carboxylate, so neither
     # the "oxo" nor the "hydroxy" pattern fires on its product.
     ("carboxylate formation (aldehyde to acid)",
-     re.compile(r"dioate\b|dicarboxylate", re.I)),
+     re.compile(r"dioate\b|dicarboxylate|carboxy", re.I)),
     ("oxo-formation (alcohol to aldehyde/ketone)", re.compile(r"\d+-oxo|-oxo-|oxodocosanoate|oxohexacosanoate", re.I)),
     ("hydroxylation", re.compile(r"hydroxy", re.I)),
 ]
@@ -99,7 +99,7 @@ SUBSTRATE_CLASSES = [
     # (eicosa|icosa|docosa) must be followed by an "-enoate" to count as a PUFA:
     # docosanoate and hexacosanoate are saturated and belong to "other fatty acid".
     ("eicosanoid / PUFA", re.compile(
-        r"(?:eicosa|icosa|docosa)[a-z]*enoate|arachidon|linole|lipoxin|"
+        r"(?:eicosa|icosa|docosa)[a-z0-9,\-]*enoate|arachidon|linole|lipoxin|"
         r"prostagland|leukotriene|hydroperoxy", re.I)),
     ("other fatty acid", re.compile(
         r"anoate|enoate|fatty acid|dodecanoate|tetradecanoate|hexadecanoate|octadecanoate", re.I)),
@@ -334,7 +334,7 @@ def audit(query: str, outdir: Path, hub_threshold: int = 20,
         rx_rows.append([f"RHEA:{rx}", r["name"], r["ec"], len(rx_entries[rx]),
                         ";".join(sorted(set(rx_entries[rx]))), go,
                         terms[go]["name"] if go else "",
-                        ";".join(sorted(ec2go.get(r["ec"], set()))), chem, sub,
+                        ";".join(sorted(ec2go_terms(ec2go, r["ec"]))), chem, sub,
                         "yes" if r["experimental"] else "no"])
 
     outdir.mkdir(parents=True, exist_ok=True)
@@ -351,7 +351,7 @@ def audit(query: str, outdir: Path, hub_threshold: int = 20,
     _tsv(outdir / "cyp-chemistry.tsv",
          ["chemistry", "substrate_class", "n_reactions", "n_unmapped", "pct_unmapped"],
          [[c, s, n, chem_unmapped[(c, s)], f"{100 * chem_unmapped[(c, s)] / n:.0f}%"]
-          for (c, s), n in chem_all.most_common()])
+          for (c, s), n in sorted(chem_all.items(), key=lambda kv: (-kv[1], kv[0]))])
 
     summary = {
         "query": query,
@@ -370,7 +370,7 @@ def audit(query: str, outdir: Path, hub_threshold: int = 20,
         "hub_threshold": hub_threshold,
         "catalytic_term_descendant_counts": [
             [t, terms[t]["name"], n] for t, n in
-            sorted(desc_count.items(), key=lambda kv: -kv[1]) if n],
+            sorted(desc_count.items(), key=lambda kv: (-kv[1], kv[0])) if n],
         "hub_terms": sorted((t, terms[t]["name"]) for t in hubs),
         "substrate_naming_mf_terms": len(resolved),
         "maximally_specific_mf_terms": len(maximal),
@@ -382,7 +382,9 @@ def audit(query: str, outdir: Path, hub_threshold: int = 20,
                             for e in sorted(unresolved, key=lambda x: -len(x["reactions"]))],
         "resolved_mf_provenance": dict(prov),
         "propagation_gap_pairs": len(gap_rows),
-        "top_unmapped_chemistry": [[c, s, n] for (c, s), n in chem_unmapped.most_common(10)],
+        "top_unmapped_chemistry": [[c, s, n] for (c, s), n in
+                                   sorted(chem_unmapped.items(),
+                                          key=lambda kv: (-kv[1], kv[0]))[:10]],
     }
     (outdir / "cyp-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
@@ -394,6 +396,19 @@ def _has_review(genes_dir: Path, gene: str) -> bool:
         if (base / gene / f"{gene}-ai-review.yaml").exists():
             return True
     return False
+
+
+def ec2go_terms(ec2go: dict[str, set[str]], ec: str) -> set[str]:
+    """Union the ec2go terms for a (possibly ``;``-joined) EC field.
+
+    The reaction-level aggregation can join two ECs for one reaction, and a
+    joined string matches no ec2go key -- which would blank the column for
+    exactly the reactions whose EC evidence is richest.
+    """
+    out: set[str] = set()
+    for part in filter(None, (p.strip() for p in ec.split(";"))):
+        out |= ec2go.get(part, set())
+    return out
 
 
 def _tsv(path: Path, header: list[str], rows) -> None:

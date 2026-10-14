@@ -39,7 +39,8 @@ are the stress test:
 
 Computed live by [`rhea_family_explorer.py`](rhea_family_explorer.py) against
 UniProtKB, `rhea2go`, `ec2go` and QuickGO; per-family TSVs in
-[`families/`](families/). Nothing below is hardcoded.
+`families/` (per-family
+[`cyp-summary.json`](families/cyp-summary.json) and the TSVs beside it). Nothing below is hardcoded.
 
 ## Results
 
