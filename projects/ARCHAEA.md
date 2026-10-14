@@ -11,7 +11,7 @@ genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hs
 
 **Bottom line:** Archaea are one of the three domains of life, yet this
 repository barely covers them. Of roughly 7,200 gene folders under `genes/`,
-only 13 belong to archaea, and they cover 12 distinct proteins from seven
+only 13 belong to archaea. They hold 12 review files covering 11 distinct proteins from seven
 species (plus one archaeal virus protein). Nothing has been reviewed yet for
 the classic archaeal model organisms (*Haloferax volcanii*, *Halobacterium
 salinarum*, *Saccharolobus solfataricus*, *Pyrococcus furiosus*,
