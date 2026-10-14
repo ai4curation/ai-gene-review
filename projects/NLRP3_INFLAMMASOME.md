@@ -191,8 +191,7 @@ modelling:
       adjudicates its NAS `GO:0070269 pyroptotic inflammatory response` rows)
 - [ ] Gene folders for IL1B and IL18
 - [x] Folded the overview and step-level NLRP3 modules into one
-      `canonical_nlrp3_inflammasome` (PR #4973)
-
+      `canonical_nlrp3_inflammasome` (PR #5013)
 - [ ] Decide whether a shared ASC→caspase-1→GSDMD effector core module is worth
       factoring out before adding AIM2/NLRC4/NLRP1 sensor variants
 - [ ] Ontology follow-up: the *inflammasome sensor activity* term proposed in the
