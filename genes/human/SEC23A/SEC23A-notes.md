@@ -1,0 +1,9 @@
+## 2026-10-01 - COPII review
+
+- Generic protein binding annotations are removed because SEC23A functions as a Sec23/24 inner COPII coat subunit with SAR1-directed GAP/cargo-adaptor activity and has many real coat, receptor, and high-throughput contacts, but GO:0005515 does not capture the informative COPII activity.
+- SEC23A's supported COPII localizations are the cytosol, the cytoplasmic face of the endoplasmic reticulum membrane, endoplasmic reticulum exit sites, the COPII vesicle coat, and the ER-to-Golgi transport vesicle membrane.
+- GO:0000139, GO:0032456, and GO:0048471 in the seeded SEC23A review are Ensembl-Compara transfers from mouse or rat SEC23A ortholog annotations rather than direct human SEC23A assertions; they are removed because they are either downstream of COPII budding or too vague for the human Sec23/24 inner COPII coat role.
+- GO:0030134 COPII-coated ER to Golgi transport vesicle is less precise than SEC23A's direct structural locations in the COPII vesicle coat and ER-to-Golgi transport vesicle membrane.
+- GO:0006886 intracellular protein transport is true but too broad for a Sec23/24-family COPII subunit; ER-to-Golgi vesicle-mediated transport is the precise process represented by direct and Reactome evidence.
+- Zinc ion binding is a structural property of the N-terminal Sec23/Sec24 zinc-finger domain, with UniProt recording Zn(2+) ligands at SEC23A residues 61, 66, 85, and 88 from COPII crystal and NMR structures; it is real but is not SEC23A's core COPII GAP or cargo-loading activity.
+- Reactome TAS rows for cytosol, ER membrane, and ER-to-Golgi transport vesicle membrane repeatedly describe the same Sec23/24 inner-coat cycle from cytosolic recruitment by SAR1:GTP to ER-exit-site membranes, cargo capture, COPII budding, and later coat disassembly.
