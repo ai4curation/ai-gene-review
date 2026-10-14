@@ -405,7 +405,7 @@ of the CC rows into *retained*; read the mode-1/2/4 counts (180 annotations,
 The five rotary-ATPase rows (`fliI` ×3, `sctN` ×2, `GO:0046933`) are filed as
 mode 1 by the operational rule on the sub-page (correct export-ATPase
 subfamily, wrong term from a node above it); the
-[case study](TREEGRAFTER/rotary-atpase-leak.md) traces that term to a PAINT
+[case study](CONSERVED_FUNCTION_RECOVERY.md) traces that term to a PAINT
 IBD placed on a duplication node.
 
 Protein counts are distinct **review files**, not gene symbols — 577 files
@@ -472,7 +472,7 @@ Families with ≥60% down-graded (modes counted from
 | PTHR24027 cadherin-23 | 30 | 3 | 100% | 0 ×15, 3 ×12, 1 ×3 — choanoflagellate cadherins on a node PAINT restricts to Bilateria ([case study](TREEGRAFTER/holozoan-hippo-case-study.md)) | PTSG_05882, PTSG_06458, PTSG_11235 |
 | PTHR10543 beta-carotene dioxygenase | 8 | 4 | 100% | 4 ×8 — stilbene dioxygenases on the carotenoid-cleavage subfamily | Q53353, Saro_0802, Saro_2809, lsdB |
 | PTHR30443 "inner membrane protein" (EptA) | 8 | 4 | 100% | 1 ×8 — EptA node carries `LPS core` and `phosphotransferase` | mcr-1, mcr2, mcr-3, mcr-4 |
-| PTHR15184 ATP synthase | 5 | 5 | 100% | 1 ×5 — F-type ATP-synthase term on FliI/SctN export ATPases ([case study](TREEGRAFTER/rotary-atpase-leak.md)) | fliI ×3, sctN ×2 |
+| PTHR15184 ATP synthase | 5 | 5 | 100% | 1 ×5 — F-type ATP-synthase term on FliI/SctN export ATPases ([case study](CONSERVED_FUNCTION_RECOVERY.md)) | fliI ×3, sctN ×2 |
 | PTHR43128 L-2-hydroxycarboxylate DH | 4 | 2 | 100% | 4 ×4 — MDH on the L-LDH subfamily | METEA/mdh, PSEPK/mdh |
 | PTHR43775 fatty acid synthase | 4 | 4 | 100% | 1 ×4 — family-level FAS term on PKS subfamilies | eryAI–III, Pks1 |
 | PTHR43808 acetylornithine deacetylase (M20A) | 5 | 3 | 80% | 4 ×4 | dapE, pepV |
@@ -680,8 +680,9 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   exemplars. Key result: the placement is usually sound; the error is the GO term
   attached to the graft node, and InterPro sometimes resolves the protein better
   than PANTHER (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).
-- **[ATP-synthase terms on flagellar/T3SS export ATPases](TREEGRAFTER/rotary-atpase-leak.md)**
-  — a case study of **inherited PAINT over-placement**. The `GO:0046933` /
+- **[ATP-synthase terms on flagellar/T3SS export ATPases](CONSERVED_FUNCTION_RECOVERY.md)**
+  — now its own project, [Conserved-function recovery](CONSERVED_FUNCTION_RECOVERY.md),
+  where it is the first case. A case of **inherited PAINT over-placement**. The `GO:0046933` /
   `GO:0045259` IBD sits on the duplication node `PTN008558586` in PTHR15184, above
   both the F1-β and the FliI/SctN clades. PAINT IBA and TreeGrafter then label
   nearly every FliI/SctN protein an ATP synthase, and InterPro2GO (IPR013380,
@@ -1056,6 +1057,11 @@ Opisthokonta). Output in
   a `Pks1` `secondary metabolite biosynthetic process` row added, which moves
   the down-graded share from 26.4% to 26.9%. The headline tables stay pinned;
   the rule scripts read the committed `treegrafter_review.tsv`.
+- The FliI/SctN case study (`TREEGRAFTER/rotary-atpase-leak.md`, scripts in
+  `TREEGRAFTER/rotary_atpase/`) moved to a project of its own,
+  [Conserved-function recovery](CONSERVED_FUNCTION_RECOVERY.md), since it came
+  from an F-type ATP synthase completeness test rather than from the
+  TreeGrafter tally; the old page is a pointer.
 - New: [What TreeGrafter gets right](#what-treegrafter-gets-right), from
   `tg_versus_other_sources.py` (sole-source rows, and head-to-head outcomes
   against InterPro2GO, ARBA, UniRule and the combined IEA calls).
@@ -1251,7 +1257,7 @@ Opisthokonta). Output in
   `REMOVE` on PSEPK `fliI` `GO:0046933` (proton-transporting ATP synthase
   activity, rotational mechanism) on the grounds that phylogenetic transfer
   across homologous ATPase families produced a contradicted molecular
-  function. The [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case
+  function. The [rotary-ATPase case](CONSERVED_FUNCTION_RECOVERY.md) case
   study added the following day reaches the same conclusion from the opposite
   direction — a proteome-wide completeness test whose false positives were
   FliI/SctN export ATPases — and locates the error upstream, in a PAINT IBD on
@@ -1319,7 +1325,7 @@ Opisthokonta). Output in
   itself on `GO_REF:0000120`, and gains `--out-dir` for dry runs;
   `graft_check.py` reads `review_action` from `treegrafter_review.tsv`
   instead of hard-coding it (`--refresh-actions` updates it offline).
-- Added the [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case study.
+- Added the [rotary-ATPase case](CONSERVED_FUNCTION_RECOVERY.md) case study.
   It began as a first-principles completeness test (F-type ATP synthase across
   15,525 bacterial reference proteomes), whose false positives turned out to be
   FliI/SctN export ATPases annotated as ATP synthases. The TreeGrafter graft points

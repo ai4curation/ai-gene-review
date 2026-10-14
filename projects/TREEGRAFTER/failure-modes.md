@@ -124,7 +124,7 @@ specific (or divergent).
 |---|---|---|
 | eryAI / eryAII / eryAIII | `fatty acid synthase activity` (MODIFY) | *INACTIVE PHENOLPHTHIOCEROL SYNTHESIS **POLYKETIDE SYNTHASE*** |
 | mcr-1 / mcr2 / mcr-3 / mcr-4 | `LPS core region biosynthetic process` (OVER), `phosphotransferase activity, phosphate group as acceptor` (MODIFY) | **PHOSPHOETHANOLAMINE TRANSFERASE EptA** |
-| fliI ×3, sctN ×2 | `proton-transporting ATP synthase activity, rotational mechanism` (REMOVE) | SPI-1 TYPE 3 SECRETION SYSTEM ATPASE / FLAGELLUM-SPECIFIC ATP SYNTHASE (PTHR15184); the term comes from a PAINT IBD on the duplication node above the F1-β and FliI/SctN clades ([case study](rotary-atpase-leak.md)) |
+| fliI ×3, sctN ×2 | `proton-transporting ATP synthase activity, rotational mechanism` (REMOVE) | SPI-1 TYPE 3 SECRETION SYSTEM ATPASE / FLAGELLUM-SPECIFIC ATP SYNTHASE (PTHR15184); the term comes from a PAINT IBD on the duplication node above the F1-β and FliI/SctN clades ([case study](../CONSERVED_FUNCTION_RECOVERY.md)) |
 | ADAR2 | `tRNA-specific adenosine deaminase activity` (REMOVE) | AT07585P-RELATED (PTHR10910:SF62); the same graft node PTN000098697 supplied the **accepted** `double-stranded RNA adenosine deaminase activity`, `double-stranded RNA binding` and `adenosine to inosine editing` |
 
 The erythromycin PKS modules are the clearest case: the **family** is named

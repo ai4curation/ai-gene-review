@@ -1,7 +1,7 @@
 """Fetch bacterial reference proteomes and F-type/V-type rotary ATPase family members from UniProt REST.
 
 Writes large TSVs to ./cache (git-ignored). Run:
-  uv run --with requests projects/TREEGRAFTER/rotary_atpase/completeness_fetch.py
+  uv run --with requests projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_fetch.py
 """
 import csv, gzip, io, sys, requests
 import os, pathlib

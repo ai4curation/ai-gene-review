@@ -8,7 +8,7 @@ Historical session notes for the [InterPro mapping review](../INTERPRO.md). Thes
 
 ## 2026-09-27 — rotary-ATPase mappings from the FliI/SctN audit
 
-The TreeGrafter [rotary-ATPase leak](../TREEGRAFTER/rotary-atpase-leak.md) audit reviewed
+The [F-type ATP synthase recovery](../CONSERVED_FUNCTION_RECOVERY.md) audit reviewed
 nine flagellar (FliI) and injectisome (SctN) export ATPases, and three InterPro2GO sources
 turned up alongside the PAINT/TreeGrafter error. Seven rows were added to the
 [mapping set](interpro2go.sssom.yaml) (29 -> 36 mappings, twelve -> fifteen entries). Match

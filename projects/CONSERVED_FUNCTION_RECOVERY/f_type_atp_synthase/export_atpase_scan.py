@@ -1,4 +1,4 @@
-"""Scan for ATP-synthase GO terms leaking onto FliI/SctN export ATPases.
+"""Scan for rotary ATP-synthase GO terms carried by FliI/SctN export ATPases.
 
 Two live queries, no hard-coded results:
 1. UniProtKB counts: of entries indexed with InterPro IPR005714 (T3SS ATPase FliI/YscN),
@@ -6,7 +6,7 @@ Two live queries, no hard-coded results:
 2. QuickGO: every IBA (ECO:0000318) GO:0046933 annotation whose WITH/FROM cites the
    F1-beta PAINT node PANTHER:PTN008558586, classified by the target's InterPro family.
 
-Run: uv run --with requests projects/TREEGRAFTER/rotary_atpase/leak_scan.py
+Run: uv run --with requests projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/export_atpase_scan.py
 """
 import collections, csv, io, pathlib, requests
 

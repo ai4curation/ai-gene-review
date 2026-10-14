@@ -35,7 +35,7 @@ across every matched gene, so one fix at the mapping level is worth many
 gene-level corrections. Gene reviews also catch mappings the ranked worklist
 never reaches: three of the fifteen entries came from reading human genes one at
 a time, and three more from auditing the bacterial export ATPases FliI and SctN
-(see [ATP-synthase terms on export ATPases](TREEGRAFTER/rotary-atpase-leak.md)).
+(see [conserved-function recovery](CONSERVED_FUNCTION_RECOVERY.md)).
 
 **Start here:** [Proposed mapping edits](INTERPRO/interpro2go.sssom.yaml) ·
 [Prioritized entry worklist](INTERPRO/interpro_family_priorities.tsv) ·

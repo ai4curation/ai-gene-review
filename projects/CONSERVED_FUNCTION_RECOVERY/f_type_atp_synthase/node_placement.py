@@ -4,7 +4,7 @@ Fetches the PTHR15184 tree from the PANTHER API and reports, for the IBD node
 PTN008558586 and each TreeGrafter graft node seen in the reviewed GOA files,
 its parent chain and which subfamilies each child clade of PTN008558586 holds.
 
-Run: uv run --with requests projects/TREEGRAFTER/rotary_atpase/node_placement.py
+Run: uv run --with requests projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.py
 """
 import collections, csv, glob, pathlib, requests
 

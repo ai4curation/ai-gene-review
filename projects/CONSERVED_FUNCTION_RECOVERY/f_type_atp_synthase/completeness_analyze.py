@@ -1,7 +1,7 @@
 """Boolean completeness of the F-type ATP synthase across bacterial reference proteomes.
 
 Reads ./cache (from completeness_fetch.py). Run:
-  python3 projects/TREEGRAFTER/rotary_atpase/completeness_analyze.py > projects/TREEGRAFTER/rotary_atpase/completeness_results.txt
+  python3 projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_analyze.py > projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_results.txt
 """
 import csv, re, collections as C
 import os, pathlib
