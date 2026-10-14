@@ -3305,6 +3305,8 @@ The source tracker [#4988](https://github.com/ai4curation/ai-gene-review/pull/49
 merged later as [488cf4ada7bb](https://github.com/ai4curation/ai-gene-review/commit/488cf4ada7bb34f80c7bdaeeb1e8228020852bce),
 at 2026-10-14 02:23:05 UTC. These are deliberately different boundaries.
 
+Rendering availability is separate from completion credit. The committed main-page render changed from 1,788 to 1,769 missing-review warnings (19 cleared; none added). Sixteen cleared warnings belong to the 19 counted genes; CPS1, CPT2 and CSF1R were already linked before this render. The other three cleared warnings are ADAM17, RIPK1 and RORB: their review links became available, but they remain unchecked and receive no completion credit. Under the same frozen 2,924-review inventory, a fresh baseline render also has 1,769 warnings, equal to the checkpoint render; that fresh-render comparison does not erase the committed 1,788-to-1,769 change. The progress page has zero rendering warnings.
+
 | Gene | Review PR | Approved head | Actual merge | Merged UTC | Full PR paths / parent delta |
 | --- | --- | --- | --- | --- | --- |
 | CPS1 | [#4967](https://github.com/ai4curation/ai-gene-review/pull/4967) | `c758f4c5f7d5` | [350e9e3a9958](https://github.com/ai4curation/ai-gene-review/commit/350e9e3a995808131367317a88cba2a3580aa508) | 2026-10-13 16:55:45 | 45 / 45 |
