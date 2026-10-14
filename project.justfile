@@ -1224,7 +1224,7 @@ validate-all:
     #!/usr/bin/env bash
     exit_code=0
     echo "Schema validation (batch)..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    uv run python -m ai_gene_review.validation.schema_batch --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
     echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
     # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
@@ -1246,7 +1246,7 @@ validate-all:
     echo ""
     echo "Reference validation (batch; errors block, advisory warnings allowed)..."
     # One linkml-reference-validator process over all files (schema parsed once),
-    # rather than one process per file. Requires linkml-reference-validator >= 0.2.1.
+    # rather than one process per file. Requires linkml-reference-validator >= 0.3.0.
     {{ref_validator}} validate data genes/*/*/*-ai-review.yaml --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} || exit_code=1
     echo ""
     echo "Best practices validation..."
