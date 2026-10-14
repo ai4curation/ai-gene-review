@@ -109,3 +109,7 @@ the CoQ-pathway reaction steps.
    with contributes_to_molecular_function enzyme activator activity (GO:0008047), reflecting
    that COQ9 presents DMQ to COQ7 and increases COQ7 catalytic efficiency (~1.5-fold in vitro).
 3. Homodimerization (GO:0042803) — forms homodimers and higher-order COQ7:COQ9 tetramers/octamers.
+
+## 2026-10-11 completion pass (claude-code)
+
+Core functions reduced to lipid binding and isoprenoid binding (non-catalytic substrate presentation to COQ7). Removed contributes_to enzyme activator activity: COQ9 only modestly raises COQ7 efficiency [PMID:38425362 "addition of COQ9 increased catalytic efficiency by 1.5-fold"] and is not catalytic. Homodimerization changed to non-core. Bare protein-binding rows changed to REMOVE. Status COMPLETE.

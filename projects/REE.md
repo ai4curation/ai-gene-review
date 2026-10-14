@@ -1,15 +1,31 @@
 ---
 title: "Rare Earth Element (REE) Extraction Pathways (Biological Systems)"
 maturity: SCOPING
+last_reviewed: 2026-10-05
+autolink_gene_symbols: false
 tags: [BIOLOGY_DOMAIN]
 species: [METEA]
+genes:
+  - mluA
+  - mluR
+  - mluI
+  - mllA
+  - mllBC
+  - mllDE
+  - mllF
+  - mllG
+  - mllH
+  - mllJ
+  - lanM
+  - xoxF1
+  - xoxG
+  - xoxJ
+  - pqqA
+  - pqqE
 manifest:
   slides:
     - href: REE/slides/REE-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/DsVBv7tjfvaSfEkmp45HNM
-      title: Project brief
 ---
 
 # Rare Earth Element (REE) Extraction Pathways (Biological Systems)
@@ -17,18 +33,20 @@ manifest:
 **Bottom line:** rare earth elements are recovered today by mineral processing
 that is chemically harsh and poorly selective, while some bacteria already
 solubilize, import and store lanthanides as part of normal metabolism. This
-page is a design document for an engineered biological pipeline built from
-four modules: metal sensing and controlled leaching, selective binding and
-uptake, intracellular sequestration, and triggered export into a recovery
-solution. It names candidate genes for each module (the `mll` lanthanophore
-cluster, the `lut` uptake cluster with `lanM`, the `xoxF`/`xoxG`/`xoxJ`
-methanol dehydrogenase module, `czc`/`cnr`/`rcnA` efflux systems, `smtA`,
-`ppk`), maps the *Methylorubrum extorquens* AM1 loci where they are known, and
-scores four candidate chassis on selectivity, leaching strength and metal
-tolerance. It is scoped, not started: no experiments, no curation batch, and
-the storage and export loci in AM1 are explicitly unmapped. Related gene
-reviews for the AM1 `mll`, `lut` and `xox` genes live under `genes/METEA/` and
-are tracked by the METEA_MLL_CLUSTER project.
+page is a design document for an engineered biological pipeline built from four
+modules: metal sensing and controlled leaching, selective binding and uptake,
+intracellular sequestration, and triggered export into a recovery solution. It
+maps concrete *Methylorubrum extorquens* AM1 loci for the `mll` lanthanophore
+cluster, the `mlu` cell-surface signaling cluster, `lanM`, the
+`xoxF`/`xoxG`/`xoxJ` methanol dehydrogenase module, and `pqq` cofactor
+biosynthesis, and it keeps the `czc`/`cnr`/`rcnA` efflux systems, `smtA`, and
+`ppk` as non-METEA engineering candidates still to choose. It is scoped, not
+started: no experiments, no curation batch for the non-METEA modules, and the
+storage and export loci in AM1 are explicitly unmapped
+([#3973](https://github.com/ai4curation/ai-gene-review/issues/3973)). Related
+gene reviews for the AM1 `mll`, `mlu`, `lanM`, `xox` and `pqq` genes live
+under `genes/METEA/`; the lanthanophore subset is tracked by the
+[METEA_MLL_CLUSTER](METEA_MLL_CLUSTER.md) project.
 
 The chassis comparison is the practical output so far: AM1 wins on REE
 selectivity and loses on acid tolerance, which is why the blueprint separates
@@ -37,10 +55,12 @@ leaching from uptake rather than asking one organism to do both.
 ## Scope
 
 Targeted metal classes:
+
 - REEs: La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu, Y
 - Strategic co-occurring metals: Co, Ni, Mn, Cu, Zn, Fe
 
 System goals:
+
 1. Detect metal ions in complex matrices
 2. Mobilize metals via leaching (acidolysis, redoxolysis)
 3. Bind and sequester selectively
@@ -57,7 +77,7 @@ System goals:
 ## Chassis Focus: Methylorubrum extorquens AM1 (METEA)
 
 Mapping below uses locus tags from the METEA gene set. Locus tag format: `MexAM1_META1p####`.
-See METEA-specific notes: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
+See METEA-specific notes: [METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 
 ## High-Level Pipeline (Conceptual)
 
@@ -85,12 +105,14 @@ See METEA-specific notes: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 Objective: Sense target metal ions and induce production of leaching agents to solubilize metals through acidolysis and redoxolysis.
 
 Design elements:
+
 - Metal-responsive transcription factors (TFs) or riboswitches
 - Synthetic promoters tuned for specific metal thresholds
 - Logic-gated control (AND/OR) for multi-metal profiles
 - Feedback dampening to prevent over-acidification
 
 Leaching agent classes:
+
 - Organic acids: gluconate, citrate, oxalate, malate
 - Siderophore-like chelators (metal-agnostic mobilization)
 - Redox shuttles: quinones, flavins, phenazines
@@ -110,24 +132,27 @@ flowchart TD
   A[REE/Co/Ni/Mn signals] --> B[Metal sensor TFs / riboswitches]
   C[pH buffer status] --> D{Logic gate}
   B --> D
-  D -->|TRUE| E[Activate mll/mlu + PQQ genes<br/>META1p4129-4138, META1p1748/1751]
+  D -->|TRUE| E[Activate mll/mlu genes<br/>META1p4129-4138]
   D -->|FALSE| F[Basal leaching]
   E --> G[Methylolanthanin secretion]
   G --> H[Solubilized ions]
 ```
 
 Candidate chassis:
+
 - Acidithiobacillus ferrooxidans (Fe(II) oxidation-driven acidophilic leaching)
 - Pseudomonas chlororaphis (phenazine redox shuttles)
 
 Gene system candidates (examples to validate in chassis):
+
 - Metal-responsive regulators: NikR (nickel sensor), MntR (manganese sensor), CnrX/CnrY/CnrH (Co/Ni sensing module)
 - Acidolysis via PQQ-dependent gluconate: gcd + pqqABCDE/pqqFG
 - Redox shuttles: phenazine biosynthesis operon phzA/B/C/D/E/F/G
 - Fe(II) oxidation module for bioleaching: rus operon (cyc2, cyc1, coxBACD, rus)
 
 M. extorquens AM1 locus map (lanthanophore-driven mobilization):
-- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
+
+- METEA pathway context: [METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 - mluA: MexAM1_META1p4129 (mll/lut regulatory/auxiliary system)
 - mluR: MexAM1_META1p4130 (regulatory; mll/lanthanide response)
 - mluI: MexAM1_META1p4131 (auxiliary; mll cluster)
@@ -138,20 +163,25 @@ M. extorquens AM1 locus map (lanthanophore-driven mobilization):
 - mllG: MexAM1_META1p4136
 - mllH: MexAM1_META1p4137
 - mllJ: MexAM1_META1p4138
-- pqqA/pqqD: MexAM1_META1p1751 (PQQ cofactor biosynthesis; optional coupling to acidolysis)
-- pqqE: MexAM1_META1p1748 (PQQ cofactor biosynthesis)
+
+M. extorquens AM1 PQQ cofactor loci for XoxF/Mxa methanol dehydrogenases:
+
+- pqqA (old pqqD): MexAM1_META1p1751
+- pqqE: MexAM1_META1p1748
 
 ## Module 2: Selective Binding + Uptake
 
 Objective: Capture solubilized metals with high selectivity and transfer them into the cell.
 
 Key components:
+
 - Metal-binding proteins with tuned affinity (REE-selective EF-hand variants)
 - Metallophores/metallochaperones engineered for REE preference
 - Periplasmic binding proteins (Gram-negative) or surface display binders
 - Import systems: ABC transporters, TonB-dependent receptors, NRAMP-like transporters
 
 Selectivity strategies:
+
 - Multi-site chelation with geometry matched to REE ionic radius
 - Competitive exclusion of Fe/Cu/Zn using engineered binding pockets
 - pH-gated binding to favor REE at mildly acidic conditions
@@ -161,25 +191,28 @@ Control logic (diagram):
 flowchart TD
   A[Solubilized REE/Co/Ni/Mn] --> B[Surface/Periplasmic binders]
   B --> C{Selectivity gate}
-  C -->|REE favored| D[Lut cluster uptake<br/>META1_1778-1787]
+  C -->|REE favored| D[Lut cluster uptake<br/>META1p1778-1787]
   C -->|Competing metals| E[Reject/low uptake]
   D --> F[Intracellular pool + lanM<br/>META1p1786]
   F --> G[XoxF1 MDH utilization<br/>META1p1740-1742]
 ```
 
 Candidate chassis:
+
 - Methylorubrum extorquens AM1 and Methylobacterium aquaticum 22A (lanthanide utilization and transport)
 
 Gene system candidates (examples to validate in chassis):
+
 - Lanthanide-binding protein: lanM (lanmodulin)
-- Lanthanide uptake cluster: lutH (TonB receptor) and lut cluster genes (META1_1778 to META1_1787; includes lanM and lutD)
+- Lanthanide uptake cluster: lutH (TonB receptor) and lut cluster genes (META1p1778 to META1p1787; includes lanM and lutD)
 - Lanthanide-dependent MDH module: xoxF + xoxG + xoxJ
 - Nickel uptake: nikABCDE (ABC transporter) with NikR control
 - Manganese uptake: mntH (NRAMP-family importer)
 
 M. extorquens AM1 locus map (lanthanide uptake):
-- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
-- lut cluster: META1_1778 to META1_1787 (lanthanide utilization/transport region)
+
+- METEA pathway context: [METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
+- lut cluster: MexAM1_META1p1778 to MexAM1_META1p1787 (lanthanide utilization/transport region)
 - lanM: MexAM1_META1p1786 (lanmodulin; REE-binding protein within lut region)
 - xoxF1: MexAM1_META1p1740 (lanthanide-dependent MDH)
 - xoxG: MexAM1_META1p1741 (c-type cytochrome partner)
@@ -190,12 +223,14 @@ M. extorquens AM1 locus map (lanthanide uptake):
 Objective: Store metals safely and concentrate to useful levels.
 
 Storage strategies:
+
 - Metallothionein-like proteins or designed metal cages
 - Polyphosphate granules (nucleation for REE complexation)
 - Engineered protein nanocages with metal-binding interiors
 - Compartmentalization (bacterial microcompartments or eukaryotic organelles)
 
 Potential readouts:
+
 - Fluorescent REE reporters for in vivo quantification
 - Growth-linked selection to enrich high-accumulating strains
 
@@ -209,15 +244,18 @@ flowchart TD
 ```
 
 Candidate chassis:
+
 - Cyanobacterial metallothionein systems (SmtA as a transferable sequestration module)
 - Pseudomonas and Cupriavidus backgrounds with high metal tolerance
 
 Gene system candidates (examples to validate in chassis):
+
 - Metallothionein: smtA (high-affinity metal-binding protein)
 - Polyphosphate granule biogenesis: ppk1/ppk2 (polyphosphate kinases)
 
 M. extorquens AM1 locus map (storage):
-- Storage phenotype reported (lanthasome-like polyphosphate granules), but specific storage loci are not yet mapped in METEA files.
+
+- Storage phenotype reported (lanthasome-like polyphosphate granules), but specific storage loci are not yet mapped in METEA files; see [#3973](https://github.com/ai4curation/ai-gene-review/issues/3973).
 - Use this module to prioritize discovery of ppk-like and metal granule genes in METEA.
 
 ## Module 4: Inducible Export + Recovery
@@ -225,12 +263,14 @@ M. extorquens AM1 locus map (storage):
 Objective: Release concentrated metals into recovery solutions after biomass harvest.
 
 Trigger options:
+
 - Inducible efflux transporters (REE-export pumps)
 - Controlled lysis (chemical, thermal, or genetic kill-switch)
 - pH or chelator-triggered release
 - Light-activated export systems (optogenetic control)
 
 Purity strategies:
+
 - Sequential induction for metal-specific export
 - Chelator exchange for fractionated recovery
 - Time-gated release to separate REE from Co/Ni/Mn
@@ -257,17 +297,20 @@ flowchart TD
 ```
 
 Candidate chassis:
+
 - Cupriavidus/Ralstonia sp. CH34 (czc/cnr efflux systems)
 - Escherichia coli (rcnA efflux and regulator wiring)
 
 Gene system candidates (examples to validate in chassis):
+
 - Cobalt/Zn/Cd efflux: czcCBA (RND efflux pump)
 - Cobalt/Nickel efflux: cnrCBA with cnrYXH regulation
 - Nickel/Cobalt efflux: rcnA with rcnR regulation
 - Manganese efflux: mntP (MntR-regulated)
 
 M. extorquens AM1 locus map (export):
-- Efflux loci for REE/Co/Ni/Mn in METEA remain to be mapped; add once specific transporters are identified.
+
+- Efflux loci for REE/Co/Ni/Mn in METEA remain to be mapped; add once specific transporters are identified ([#3973](https://github.com/ai4curation/ai-gene-review/issues/3973)).
 
 ## Integrated Pathway Blueprint (Simplified)
 
@@ -311,6 +354,7 @@ M. extorquens AM1 locus map (export):
 | Pseudomonas chlororaphis | Robust secretion; phenazine redox shuttles | Redox-assisted leaching + possible siderophore support | REE selectivity weak; biosensor tuning needed | Leaching |
 
 Decision criteria (pick one axis to optimize):
+
 - If REE selectivity is top priority → METEA-centric pipeline (mll/lut/xoxF)
 - If ore is highly recalcitrant/acidic → Acidithiobacillus-first leaching, then transfer
 - If recovery purity is top priority → CH34 export modules post-harvest
@@ -328,6 +372,7 @@ Scales: 1 (low) to 5 (high). Weights (default): REE selectivity 0.45, leaching s
 | Pseudomonas chlororaphis | 2 | 4 | 3 | 2.85 |
 
 Notes:
+
 - These are heuristic placeholders; tune after pilot assays (leaching rates, uptake specificity, survival).
 - If you want different weights, re-score with: `score = 0.45*selectivity + 0.35*leaching + 0.20*tolerance`.
 

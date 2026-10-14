@@ -6,6 +6,10 @@ Systematic evaluation of BioReason-Pro SFT predictions from the HuggingFace
 Source: `data/bioreason-hf/protein_catalogue.ddb`
 Branch: `feat/bioreason-hf-catalogue`
 
+> **Status note (2026-09-27).** This 45-protein SFT sample (SFT-45) shares no genes with the ARGO139 RL cohort. Its scores must not be compared with the RL means. A matched 110-gene SFT-versus-RL comparison, scored by the same rater, is on the [project page](../projects/BIOREASON_COMPARISON.md#matched-sft-vs-rl-comparison-110-argo139-genes). Everything below was scored by LLM agents against LLM-authored AIGR references.
+>
+> The project page also corrects the mbiA scale error: mbiA is recorded here as 0/0, which is outside the 1-5 rubric. The page counts it as 1/1, which gives means of 2.96/2.71, shown as 3.0/2.7. With mbiA left at 0/0 the means are 2.93/2.69, shown below as 2.9/2.7.
+
 ## Methods
 
 For each protein:
@@ -55,7 +59,7 @@ For each protein:
 | jar | DROME | Q01989 | 4 | 3 | Missed spermatid tethering mode; hallucinated GO IDs |
 | bcp | ECOLI | P0AE52 | 4 | 3 | Oversimplified substrate preference; missed atypical 2-Cys mechanism |
 | rlmC | ECOLI | B1X800 | 4 | 3 | Missed [4Fe-4S] cluster; speculative assembly claims |
-| mbiA | ECOLI | P28697 | **0** | **0** | Fabricated InterPro domain for domainless protein; mitochondrion for E. coli |
+| mbiA | ECOLI | P28697 | **0** (outside 1-5 rubric; counted as 1 on the project page) | **0** (counted as 1) | Fabricated InterPro domain for domainless protein; mitochondrion for E. coli |
 | ppk34 | SCHPO | Q9UU87 | 3 | 3 | Fabricated aging claims; wrong mechanism (direct vs indirect) |
 | spt16 | SCHPO | O94267 | 4 | 3 | Missed heterochromatin spreading, CENP-A exclusion |
 | wsc1 | SCHPO | P87179 | 3 | 3 | Claims PKC-MAPK when actually Rho1-independent; obsolete GO term |
@@ -104,7 +108,7 @@ BioReason SFT generates a "UniProt Summary" line that does not match the actual
 UniProt record. All cases are on poorly characterized proteins: MJ1511, Rv0898c,
 Rv3660c, DCAF12L2, ppk34, mbiA, YGR117C. The model confabulates plausible-sounding
 summaries when the real UniProt entry says "Uncharacterized protein." This is the
-single most concerning systematic failure — it misrepresents an authoritative database.
+most concerning recurrent failure in this sample: it mimics an authoritative database.
 
 ### 2. Fabricated InterPro Domains (mbiA)
 For the domainless orphan gene mbiA, BioReason invented an InterPro entry
@@ -123,7 +127,7 @@ paralogs or cross-kingdom homologs:
 - DNAAF1: signaling scaffold instead of dynein assembly factor
 - MJ1511: cross-kingdom fold bias (HMF catabolism for archaeon)
 
-### 4. Organism-Specific Biology Absent (systematic)
+### 4. Organism-Specific Biology Absent (recurrent; illustrative cases, not a prevalence count)
 Even when core enzyme type is correct, BioReason misses organism-specific features:
 - clpP2: Mtb ClpP1-ClpP2 heterocomplex (drug target)
 - TDO: mosquito eye pigmentation, blood meal processing
@@ -134,8 +138,9 @@ Even when core enzyme type is correct, BioReason misses organism-specific featur
 - gcl: Torso substrate identity
 
 ### 5. Confabulation Inversely Proportional to Characterization
-Proteins with zero or minimal annotations consistently score 0-1/5:
-- mbiA (0 GOA annotations): 0/5
+Proteins with zero or minimal annotations score at the floor of the scale: 1/5, or 0 for mbiA,
+which was scored 0/0 outside the 1-5 rubric and is counted as 1 on the project page:
+- mbiA (0 GOA annotations): 0 (outside rubric; counted as 1)
 - YGR117C (3 GOA annotations): 1/5
 - MJ1511 (1 GOA annotation): 1/5
 - Rv0898c (0 GOA annotations): 1/5
@@ -174,14 +179,14 @@ Several errors involve getting the direction or mechanism exactly backwards:
    architectures (FEN1, SecF, uS4, FACT, FAN1), it provides genuinely useful
    functional summaries. For everything else, it ranges from generic to fabricated.
 
-2. **The fabricated UniProt summary problem is systematic** (7/45 = 16%). This is
-   not a rare edge case but a reproducible failure on any poorly characterized
-   protein. It is particularly dangerous because it misrepresents an authoritative
+2. **The fabricated UniProt summary problem recurs** (7/45 = 16%). In this sample it
+   is not a rare edge case: all 7 cases are proteins that UniProt describes as
+   uncharacterized. It is particularly dangerous because it misrepresents an authoritative
    database, potentially misleading users who trust BioReason's output.
 
-3. **Organism-specific biology is never captured.** Not once in 45 proteins did
-   BioReason provide organism-specific insight beyond what the domain architecture
-   predicts. Mosquito eye pigmentation, Mtb drug targets, yeast cell wall biology,
+3. **Organism-specific biology is rarely captured.** In most of the 45 proteins,
+   BioReason provided no organism-specific insight beyond what the domain architecture
+   predicts; fen1 is a counterexample credited with a zebrafish retinal-phenotype link. Mosquito eye pigmentation, Mtb drug targets, yeast cell wall biology,
    worm body size regulation, plant cold stress — all missed.
 
 4. **The inverse relationship between characterization level and BioReason quality
@@ -190,7 +195,7 @@ Several errors involve getting the direction or mechanism exactly backwards:
    worst. Well-characterized proteins where BioReason scores 4/5 already have
    extensive annotations that make BioReason's narrative redundant.
 
-5. **BioReason SFT adds modest value over InterPro2GO for ~30% of proteins** (those
-   with diagnostic multi-domain architectures). For the remaining ~70%, it either
+5. **BioReason SFT adds modest value over InterPro2GO for about a third of proteins**
+   (15/45 scored 4/5 correctness; those with diagnostic multi-domain architectures). For the remaining ~70%, it either
    recapitulates InterPro2GO in prose or introduces errors not present in the
    conservative pipeline.

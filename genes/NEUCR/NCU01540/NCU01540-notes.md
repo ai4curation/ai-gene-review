@@ -20,3 +20,10 @@ vacuolar membrane.”
 - [file:NEUCR/NCU01540/NCU01540-uniprot.txt] “DR   InterPro; IPR004680; Cit_transptr-like_dom.”
 
 Provenance: live API snapshot 2026-09-09T03:00:51.831347+00:00. Complete API prediction JSON and all emitted claim IDs, text, and original evidence are preserved in the source and provenance JSON files. Current sequence/annotation data are separate comparison snapshots. Annotation overlap records known biology, not demonstrated training membership. All seven gene-focused Falcon jobs completed; the provider reports were inspected and useful primary leads checked. Publication retrieval used Europe PMC metadata/XML when the canonical PubMed fetch returned HTTP 429.
+
+## 2026-10-01 re-review (GOA refresh)
+
+GOA refresh added no new rows and no existing rows vanished from the current snapshot. Existing
+judgments were re-audited against current curation rules and left unchanged. Added structured
+`propagation_review` blocks (with PANTHER PTN source entities) to the IBA rows reviewed as
+UNDECIDED/MODIFY, which previously lacked them.

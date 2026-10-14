@@ -37,13 +37,14 @@ All characterized PQQ-dependent alcohol dehydrogenases are soluble periplasmic:
 
 ## GO Term Recommendation
 
-**CORRECT**: GO:0042597 (periplasmic space)
-- Accurately describes soluble periplasmic localization
-- Consistent with functional data
+**SUPPORTED, PRECISE**: GO:0030288 (outer membrane-bounded periplasmic space)
+- Denotes the region between the inner and outer membranes of Gram-negative bacteria
+- Does not imply physical association with the outer membrane
+- Precisely describes the soluble periplasmic compartment occupied by PedH in P. putida KT2440
 
-**INCORRECT**: GO:0030288 (outer membrane-bounded periplasmic space)
-- Implies membrane association that doesn't exist
-- Too specific for a freely diffusible enzyme
+**SUPPORTED, BROADER**: GO:0042597 (periplasmic space)
+- Accurately describes soluble periplasmic localization
+- Consistent with signal-peptide export and absence of mature transmembrane regions
 
 ## Methods
 - Signal peptide prediction based on sequence analysis

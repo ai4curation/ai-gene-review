@@ -39,7 +39,7 @@ or substrate has ever been reported for ABHD8. UniProt's own EC number is the ma
 uninformative one — [file:human/ABHD8/ABHD8-uniprot.txt "DE            EC=3.-.-.-;"] — which is
 the signature of a protein placed in an enzyme family with nothing measured.
 
-All six are `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`, and it took a bioinformatics check
+None of these six rows is removed outright, and it took a bioinformatics check
 to establish that this is the right call rather than a hedge. `ABHD8-bioinformatics/`
 resolves all seven distinct WITH/FROM accessions against UniProt and queries each one's own GO
 evidence via QuickGO, at run time
@@ -67,7 +67,7 @@ Two counts, at two scopes, and they must not be conflated:
 | all five IBA rows | 6 of 7 (only the PANTHER node lacks it) | 5 of 6 protein sources are reviewed |
 | the two **hydrolase** rows (`GO:0004620`, `GO:0052689`) | 4 of 4 protein sources | **3** — the fourth is the unreviewed fly entry |
 
-The 3 is what matters for the hydrolase rows' `MARK_AS_OVER_ANNOTATED` reasoning, since those are
+The 3 is what matters for the hydrolase rows' `KEEP_AS_NON_CORE` reasoning, since those are
 the rows whose sources include the fly entry. Stated globally it would be wrong.
 
 That ambiguity was found only because the resolver was changed to fetch more than one hit and
@@ -195,3 +195,20 @@ No direct target assay alone does not refute an IBD, and an adaptor function can
 PAINT: {'family': 'PTHR42886', 'node': 'PTN008676419', 'finding': 'Fetched actual family membership and PAINT slice. Current hydrolase, LPAAT, PA-biosynthesis and homeostasis IBDs were checked. Human ABHD5/yeast Ict1/plant CGI-58 evidence is distinguished from mouse Abhd4/yeast Cld1 hydrolase evidence.'}
 
 All 16 rows were assessed, including experimental, electronic, negated and old proposed entries. All actual GOA rows and source fields remain unchanged. One redundant old reviewer-authored NEW proposal was deleted; the original reviewed-row count includes that proposal. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
+
+## 2026-10-05 - OpenScientist lipid-catalysis follow-up
+
+Evaluated `ABHD8-hypotheses/lipid-catalysis-versus-inflammasome-adaptor/openscientist.md`.
+The report agrees with the narrow current position that ABHD8 has a predicted
+Ser/Asp/His catalytic triad but no demonstrated lipid substrate.
+
+I did not adopt the stronger recommendation to mark the specific hydrolase IBAs
+over-annotated. Absence of direct ABHD8 substrate assays does not by itself
+refute a PAINT ancestral-function placement, and the current review already
+separates hydrolase source evidence from the unresolved ABHD5, plant CGI-58 and
+yeast Ict1 source conflicts behind LPAAT and phosphatidic-acid biosynthesis.
+
+The IBA batch record now treats the focused lipid-catalysis report as assessed:
+GO:0004620, GO:0052689 and GO:0003824 are closed as non-core rather than core
+catalytic functions, GO:0055088 remains non-core, and the specific LPAAT/PA
+biosynthesis assertions remain unresolved pending yeast Ict1 adjudication.

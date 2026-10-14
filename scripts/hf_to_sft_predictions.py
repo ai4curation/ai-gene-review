@@ -22,6 +22,7 @@ import duckdb
 import yaml
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+from ai_gene_review.taxon import review_taxon
 from ai_gene_review.sft_prediction_evidence import (
     NEGATIVE_ACTIONS,
     POSITIVE_ACTIONS,
@@ -313,7 +314,7 @@ def build_prediction_review(
     return {
         "id": protein_id,
         "gene_symbol": gene,
-        "taxon": {"id": f"uniprot:{species}", "label": species},
+        "taxon": review_taxon(gene_dir / f"{gene}-ai-review.yaml"),
         "status": "COMPLETE",
         "description": (
             f"BioReason-Pro SFT predictions for {gene} ({species}). "

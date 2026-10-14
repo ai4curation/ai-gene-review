@@ -109,4 +109,7 @@ position, yielding demethyl-ubiquinol, which is then O-methylated by COQ3 to giv
 - **GO:0009410 response to xenobiotic stimulus** (IEA, Ensembl ortholog from rat Q63619): weak
   electronic ortholog transfer, not supported for human COQ7 core function →
   MARK_AS_OVER_ANNOTATED (electronic, do not REMOVE recklessly; keep as caution).
-</content>
+
+## 2026-10-11 completion pass (claude-code)
+
+GO:0160224 is defined on the quinone: "a 5-methoxy-2-methyl-3-(all-trans-polyprenyl)benzoquinone + NADH + O2 = a 3-demethylubiquinone" (RHEA:81211). The description and core function now say DMQ (quinone) -> 3-demethylubiquinone, where they previously said demethoxyubiquinol. UniProt's recommended name says NADPH, but its catalytic-activity line says NADH [PMID:23445365 "mediates reduction of the diiron center by nicotinamide adenine dinucleotide (NADH)"]. Iron ion binding was removed from core_functions because it is cofactor binding. Status COMPLETE.
