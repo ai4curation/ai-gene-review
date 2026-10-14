@@ -85,7 +85,10 @@ CURRENCY_PATTERNS = re.compile(
 MACROMOLECULE_PATTERNS = re.compile(
     r"(\[(protein|histone|collagen|[^\]]*protein\]|DNA|RNA|mRNA|tRNA|rRNA)|"
     r"\bin (DNA|RNA|mRNA|tRNA|rRNA|.*RNA)\b|^tRNA|^a tRNA|^an? \w*-?tRNA|-tRNA|tRNA\(|"
-    r"\bDNA\b|\bRNA\b|^\[protein\]|-\[protein|ribonucleic|\(deoxyribonucleotide\))")
+    r"\bDNA\b|\bRNA\b|^\[protein\]|-\[protein|ribonucleic|\(deoxyribonucleotide\)|"
+    # any bracketed protein or enzyme ("[ribosomal protein uS12]", "[pyruvate, water dikinase]",
+    # "apo-[alkylcobalamin reductase]"): residues and enzyme-bound intermediates, not metabolites
+    r"\[[^\]]*\b(protein|[a-z]*ase)\b[^\]]*\])")
 # GO->Rhea comes from the `xref: RHEA:n {source="skos:..."}` lines of go-edit.obo, keeping
 # ONLY skos:exactMatch. go-basic.obo, rhea2go and the Rhea TSV GO column drop the predicate,
 # so narrowMatch/broadMatch xrefs there look like exact mappings (e.g. GO:0016616
@@ -317,11 +320,19 @@ def main():
 
     names, ns, parents, obsolete, alt = load_go(DATA / "go-basic.obo")
     anc = ancestors_fn(parents)
-    rhea2chebi, chebi2name, rhea2eq, rhea2sides = load_rhea(DATA / "rhea.tsv")
+    rhea2chebi, chebi2name, rhea2eq, _ = load_rhea(DATA / "rhea.tsv")
     rhea_master = load_rhea_master(DATA / "rhea-directions.tsv")
     go2rhea = load_go_rhea_exact(DATA / "go-edit.obo", rhea_master)
     currency = {c for c, n in chebi2name.items() if n in CURRENCY_NAMES or CURRENCY_PATTERNS.search(n)
                 or MACROMOLECULE_PATTERNS.search(n)}
+    # A BP term named after a currency chemical (glutamate, glutamine, ATP ...) cannot assemble
+    # by construction, because that chemical is removed from the network.
+    cur_words = sorted({re.sub(r"^[LD]-", "", n).lower() for n in CURRENCY_NAMES
+                        if re.fullmatch(r"[LD]?-?[A-Za-z0-9-]{3,}", n)}, key=len, reverse=True)
+    cur_re = re.compile(r"(?<![\w-])(" + "|".join(map(re.escape, cur_words)) + r")(?![\w-])", re.I)
+
+    def currency_term(label_):
+        return cur_re.search(re.sub(r"\b[LD]-", "", label_))
 
     genes = load_source(args.organism, args.source, rhea_master)
     if args.reviewed_genes_only:
@@ -329,6 +340,10 @@ def main():
         genes = {a: d for a, d in genes.items() if a in keep}
     label = {a: d["symbol"] for a, d in genes.items()}
     norm = lambda t: alt.get(t, t)  # noqa: E731
+    # an obsolete term has no parents, so it would silently drop out of the BP sets
+    n_obsolete = sum(norm(t) in obsolete for d in genes.values() for t in d["terms"])
+    if n_obsolete:
+        print(f"WARN {n_obsolete} gene-term pairs use obsolete GO terms and are ignored")
 
     gene_rxn, gene_bp, gene_chem = {}, {}, {}
     n_mf_genes = 0
@@ -339,7 +354,7 @@ def main():
         n_mf_genes += bool(mfs)
         if "rhea" in d:
             rx = {r for r in d["rhea"] if r in rhea2chebi}
-            n_mf_genes += bool(rx) and not mfs
+            n_mf_genes += bool(rx and not mfs)
         else:
             rx = set().union(*[go2rhea.get(t, set()) for t in mfs]) if mfs else set()
         if rx:
@@ -410,7 +425,7 @@ def main():
 
     # ---------- term-level coherence
     term_rows = []
-    for t, n in freq.items():
+    for t, n in sorted(freq.items()):  # fixed order -> --seed reproduces the null samples
         if n < 3 or n > specific_cut * 4:
             continue
         gs = [g for g in enz if t in met_bp[g]]
@@ -424,11 +439,19 @@ def main():
         isolated = [g for g in gs if sub.degree(g) == 0]
         term_rows.append({
             "term": t, "label": names.get(t, ""), "n_genes": len(gs),
+            "names_currency_chemical": bool(currency_term(names.get(t, ""))),
             "lcc_frac": round(lcc, 3), "random_lcc_mean": round(sum(rnd) / len(rnd), 3),
             "p_value": round(p, 4), "edges": sub.number_of_edges(),
             "isolated_genes": ";".join(label[g] for g in isolated), "genes": ";".join(label[g] for g in gs),
         })
     term_rows.sort(key=lambda r: (r["p_value"], -r["lcc_frac"]))
+    # Benjamini-Hochberg over the tested terms (the permutation p-value floor is 1/(n_random+1))
+    m = len(term_rows)
+    for i, r in enumerate(sorted(term_rows, key=lambda r: r["p_value"]), 1):
+        r["_bh_rank"] = i
+    bh_pass = max((r["_bh_rank"] for r in term_rows if r["p_value"] <= 0.05 * r["_bh_rank"] / m), default=0)
+    for r in term_rows:
+        r["bh_significant"] = r.pop("_bh_rank") <= bh_pass
 
     # ---------- communities vs BP
     comm_rows = []
@@ -492,6 +515,11 @@ def main():
         "random_pair_mean_bp_jaccard": round(rnd_jacc, 3),
         "bp_terms_tested": len(term_rows),
         "bp_terms_more_connected_than_random_p<0.05": sum(r["p_value"] < 0.05 for r in term_rows),
+        "bp_terms_bh_significant_fdr0.05": sum(r["bh_significant"] for r in term_rows),
+        "p_value_floor": round(1 / (args.n_random + 1), 4),
+        "bp_terms_naming_a_currency_chemical": sum(r["names_currency_chemical"] for r in term_rows),
+        "bp_terms_tested_max_genes": specific_cut * 4,
+        "obsolete_terms_ignored": n_obsolete,
         "bp_terms_fully_connected": sum(r["lcc_frac"] == 1 for r in term_rows),
         "discordant_edges": len(disc),
         "louvain_communities": len(comm_rows),
@@ -502,7 +530,8 @@ def main():
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
 
     def wtsv(name, rows):
-        if not rows:
+        if not rows:  # never leave a previous run's table behind a run that has no rows
+            (out / name).unlink(missing_ok=True)
             return
         with (out / name).open("w") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t")
@@ -516,7 +545,7 @@ def main():
                                   "metabolites": "; ".join(sorted(chebi2name.get(c, c) for c in gene_chem[g])),
                                   "metabolic_bp": "; ".join(sorted(names.get(t, t) for t in spec[g])),
                                   "degree": G.degree(g)} for g in enz])
-    wtsv("edges.tsv", [{"gene_a": label[a], "gene_b": label[b], "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in d["chems"]),
+    wtsv("edges.tsv", [{"gene_a": label[a], "gene_b": label[b], "uniprot_a": a, "uniprot_b": b, "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in d["chems"]),
                         "kind": "same_step" if gene_rxn[a] & gene_rxn[b] else "handoff",
                         "share_specific_bp": share_specific(a, b) if met_bp[a] and met_bp[b] else ""}
                        for a, b, d in G.edges(data=True)])

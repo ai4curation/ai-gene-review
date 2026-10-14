@@ -19,11 +19,14 @@ from __future__ import annotations
 
 import shutil
 import sys
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
 DATA = Path(__file__).parent / "data"
 
+# go-edit.obo has no versioned release URL; pin the commit the committed results used.
+GO_EDIT_COMMIT = "3df35ba3caea24cfe14bc8b08730b2cd76723001"
 UNIPROT_FIELDS = "accession,gene_primary,gene_oln,reviewed,rhea,ec,go_f,go_p"
 ORGANISMS = {
     # query is a UniProtKB query; gaf is a GOA download for the same proteome
@@ -51,7 +54,7 @@ def main():
     if not (DATA / "chebiId_name.tsv").exists():
         download("https://ftp.expasy.org/databases/rhea/tsv/chebiId_name.tsv", DATA / "chebiId_name.tsv")
     if not (DATA / "go-edit.obo").exists():  # carries skos predicates on RHEA xrefs
-        download("https://raw.githubusercontent.com/geneontology/go-ontology/master/src/ontology/go-edit.obo",
+        download("https://raw.githubusercontent.com/geneontology/go-ontology/" + GO_EDIT_COMMIT + "/src/ontology/go-edit.obo",
                  DATA / "go-edit.obo")
     for org in sys.argv[1:]:
         cfg = ORGANISMS[org]
@@ -71,5 +74,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import urllib.parse  # noqa: F401
     main()
