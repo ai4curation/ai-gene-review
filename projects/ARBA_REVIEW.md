@@ -41,8 +41,8 @@ anything new is only worth asking once we know where it goes wrong.
 The two barely overlap: only 26 of the 76 reviewed rules appear in any gene
 review, and the rules whose annotations gene reviewers reject most often have
 no rule review. They can also disagree for good reason. ARBA00028334
-("regulation of gene expression", 930 condition sets) is a deprecated rule, yet
-gene reviewers kept 21 of its 38 annotations as true but non-core; a badly
+("regulation of gene expression", 930 condition sets) is still live in UniProt,
+and our own rule review proposes deprecating it, yet gene reviewers kept 21 of its 38 annotations as true but non-core; a badly
 built rule can still emit many true rows.
 
 Where both exist they agree on the specific errors:
