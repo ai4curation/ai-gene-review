@@ -1057,11 +1057,11 @@ Opisthokonta). Output in
   a `Pks1` `secondary metabolite biosynthetic process` row added, which moves
   the down-graded share from 26.4% to 26.9%. The headline tables stay pinned;
   the rule scripts read the committed `treegrafter_review.tsv`.
-- The FliI/SctN case study (`TREEGRAFTER/rotary-atpase-leak.md`, scripts in
+- The FliI/SctN case study (formerly a sub-page here, with scripts in
   `TREEGRAFTER/rotary_atpase/`) moved to a project of its own,
   [Conserved-function recovery](CONSERVED_FUNCTION_RECOVERY.md), since it came
   from an F-type ATP synthase completeness test rather than from the
-  TreeGrafter tally; the old page is a pointer.
+  TreeGrafter tally.
 - New: [What TreeGrafter gets right](#what-treegrafter-gets-right), from
   `tg_versus_other_sources.py` (sole-source rows, and head-to-head outcomes
   against InterPro2GO, ARBA, UniRule and the combined IEA calls).
