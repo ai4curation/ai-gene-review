@@ -91,8 +91,7 @@ MACROMOLECULE_PATTERNS = re.compile(
     r"\[[^\]]*\b(protein|[a-z]*ase)\b[^\]]*\])")
 # go-edit.obo pinned to a go-ontology commit; the file name carries the commit so a copy
 # fetched from another commit is never picked up silently (see fetch_bulk.py).
-GO_EDIT_COMMIT = "3df35ba3caea24cfe14bc8b08730b2cd76723001"
-GO_EDIT = DATA / f"go-edit-{GO_EDIT_COMMIT[:7]}.obo"
+from fetch_bulk import GO_EDIT  # noqa: E402  (same folder; the commit is pinned there)
 # GO->Rhea comes from the `xref: RHEA:n {source="skos:..."}` lines of go-edit.obo, keeping
 # ONLY skos:exactMatch. go-basic.obo, rhea2go and the Rhea TSV GO column drop the predicate,
 # so narrowMatch/broadMatch xrefs there look like exact mappings (e.g. GO:0016616
@@ -372,7 +371,7 @@ def main():
     # bipartite gene<->metabolite and the gene projection
     chem_genes = defaultdict(set)
     for g, cs in gene_chem.items():
-        for c in cs:
+        for c in sorted(cs):  # sorted: edge order (and so Louvain) must not depend on set order
             chem_genes[c].add(g)
     G = nx.Graph()
     G.add_nodes_from(gene_rxn)
@@ -466,14 +465,14 @@ def main():
         comms = nx.community.louvain_communities(G.subgraph(giant), weight="weight", seed=args.seed)
         for i, cm in enumerate(sorted(comms, key=len, reverse=True)):
             best = None
-            for t in set().union(*[met_bp[g] for g in cm]):
+            for t in sorted(set().union(*[met_bp[g] for g in cm])):  # ties -> lowest GO id
                 tg = {g for g in enz if t in met_bp[g]}
                 tp = len(tg & cm)
                 prec, rec = tp / len(cm), tp / len(tg)
                 f1 = 2 * prec * rec / (prec + rec) if tp else 0
                 if best is None or f1 > best[0]:
                     best = (f1, t, prec, rec)
-            hub = Counter(c for g in cm for c in gene_chem[g]).most_common(5)
+            hub = Counter(c for g in sorted(cm) for c in sorted(gene_chem[g])).most_common(5)
             comm_rows.append({
                 "community": i, "size": len(cm),
                 "best_bp": best[1] if best else "", "best_bp_label": names.get(best[1], "") if best else "",
@@ -532,7 +531,7 @@ def main():
         "louvain_communities": len(comm_rows),
         "communities_best_bp_f1>=0.5": sum(r["f1"] >= 0.5 for r in comm_rows),
         "top_hub_metabolites": [(chebi2name.get(c, c), len(gs)) for c, gs in
-                                sorted(chem_genes.items(), key=lambda x: -len(x[1]))[:15]],
+                                sorted(chem_genes.items(), key=lambda x: (-len(x[1]), x[0]))[:15]],
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
 
@@ -541,7 +540,7 @@ def main():
             (out / name).unlink(missing_ok=True)
             return
         with (out / name).open("w") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t")
+            w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
             w.writeheader()
             w.writerows(rows)
 

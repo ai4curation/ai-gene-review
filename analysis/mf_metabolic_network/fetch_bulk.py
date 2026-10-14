@@ -26,7 +26,7 @@ from pathlib import Path
 DATA = Path(__file__).parent / "data"
 
 # go-edit.obo has no versioned release URL; pin the commit the committed results used
-# (keep in sync with build_network.py, which reads data/go-edit-<commit[:7]>.obo).
+# build_network.py imports GO_EDIT from here, so this is the only place to change it.
 GO_EDIT_COMMIT = "3df35ba3caea24cfe14bc8b08730b2cd76723001"
 GO_EDIT = DATA / f"go-edit-{GO_EDIT_COMMIT[:7]}.obo"
 UNIPROT_FIELDS = "accession,gene_primary,gene_oln,reviewed,rhea,ec,go_f,go_p"

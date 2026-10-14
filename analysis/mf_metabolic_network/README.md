@@ -88,8 +88,10 @@ date (2,937 human, 952 P. putida), with
 go-edit.obo pinned to go-ontology commit 3df35ba (`GO_EDIT_COMMIT`; saved as
 `data/go-edit-3df35ba.obo`, so a copy from another commit is never reused).
 The folder is a uv workspace member (`pyproject.toml` declares networkx and pyyaml).
-Term-level p-values are reproducible with `--seed` (default 42), since terms are
-processed in sorted order. The permutation p-value floor is 1/201 ≈ 0.005 with the
+Results are deterministic: term-level p-values follow `--seed` (default 42), and every
+set that feeds an ordering (edge insertion, so the Louvain partition; F1 ties between BP
+terms, broken by lowest GO id; hub-chemical ranking) is iterated in sorted order, so the
+output does not depend on Python's per-process hash seed. The permutation p-value floor is 1/201 ≈ 0.005 with the
 default `--n-random 200`. Reviews that use obsolete GO terms are reported as a warning
 and counted in `summary.json` (`obsolete_terms_ignored`: 80 human gene–term pairs). An
 obsolete term has no parents, so it contributes nothing to the BP sets.
@@ -109,6 +111,7 @@ obsolete term has no parents, so it contributes nothing to the BP sets.
 | …handoff pairs (no shared reaction) | 0.344 | 0.495 | 0.491 | 0.103 | 0.5 | 0.167 |
 | …handoffs via a non-hub chemical | 0.653 | 0.712 | 0.779 | 0.077 | 0.5 | 0.167 |
 | …random enzyme pairs | 0.044 | 0.071 | 0.05 | 0.019 | 0.03 | 0.018 |
+| "Specific" BP cutoff (≤5% of enzymes) | 28 | 44 | 11 | 3 | 4 | 3 |
 | BP terms tested (≥3 enzymes, up to the size limit below) | 384 | 742 | 214 | 63 | 55 | 67 |
 | …upper size limit (enzymes) | 112 | 176 | 44 | 12 | 16 | 12 |
 | BP terms more connected than random (p<0.05) | 301 | 563 | 144 | 39 | 33 | 36 |
@@ -123,6 +126,19 @@ the same pattern: linked pairs share a specific BP 10.7× more often than random
 handoffs 78% of the time, and 11 of its 14 communities match a BP term. Fission yeast,
 worm and Arabidopsis have under 100 mapped enzymes each and small networks (≤ 47
 edges), so their figures rest on few links.
+
+In these small organisms the edge-level fractions are also biased, in a known direction.
+The "specific" cutoff (≤5% of mapped enzymes: 4 in worm, 3 in fission yeast and
+Arabidopsis) falls below the size of an ordinary paralog family. A same-step clique
+whose genes all share one correct BP term then scores as disagreement. Worm's same-step
+figure (0.051, against 0.5 for handoffs) comes almost entirely from one clique:
+daf-11, odr-1 and seven *gcy* guanylate cyclases. They all carry *cGMP biosynthetic
+process*, but that term covers 9 enzymes, so none of the 36 pairs counts as sharing a
+specific BP. The term- and community-level tests rate the same genes as ideal:
+*cGMP biosynthetic process* is fully connected (p = 0.005), and worm's one community
+is exactly these 9 genes (F1 = 1.0 against *cGMP metabolic process* and its ancestors;
+`communities.tsv` reports the tied term with the lowest GO id). In *P. putida* (cutoff 28) and human (44),
+paralog families sit well below the cutoff.
 
 ### The network does assemble
 
@@ -274,7 +290,7 @@ That gives a like-for-like comparison with `reviews`.
 | …random pairs | 0.044 | 0.052 | 0.053 | 0.141 | 0.056 | 0.065 | 0.067 | 0.141 |
 | BP terms tested | 384 | 359 | 367 | 8 | 485 | 523 | 11 | 8 |
 | BP terms connected > random | 301 | 277 | 289 | 0 | 376 | 399 | 3 | 0 |
-| Communities | 22 | 19 | 22 | 1 | 24 | 21 | 2 | 1 |
+| Communities | 22 | 19 | 22 | 1 | 24 | 23 | 2 | 1 |
 | Communities ≈ a BP term (F1≥0.5) | 14 | 11 | 12 | 1 | 11 | 8 | 2 | 1 |
 | Enrichment over random | 8.9× | 8.1× | 7.1× | 7.1× | 7.5× | 6.1× | 14.9× | 7.1× |
 
@@ -298,8 +314,8 @@ That gives a like-for-like comparison with `reviews`.
 | …random pairs | 0.071 | 0.072 | 0.068 | 0.068 | 0.076 | 0.071 | 0.076 | 0.077 |
 | BP terms tested | 742 | 848 | 812 | 581 | 1415 | 1375 | 1262 | 939 |
 | BP terms connected > random | 563 | 649 | 605 | 380 | 1078 | 1053 | 933 | 659 |
-| Communities | 19 | 12 | 16 | 19 | 13 | 19 | 20 | 19 |
-| Communities ≈ a BP term (F1≥0.5) | 10 | 6 | 6 | 8 | 2 | 9 | 7 | 5 |
+| Communities | 19 | 12 | 15 | 19 | 13 | 19 | 20 | 19 |
+| Communities ≈ a BP term (F1≥0.5) | 10 | 6 | 5 | 8 | 2 | 9 | 7 | 5 |
 | Enrichment over random | 7.6× | 6.5× | 7.4× | 7.0× | 5.8× | 6.6× | 6.2× | 5.9× |
 
 ### Findings
@@ -311,7 +327,7 @@ That gives a like-for-like comparison with `reviews`.
   - On the same genes, reviewed annotations agree best, though in human only narrowly:
     8.9× (P. putida) and 7.6× (human), against 7.1× and 7.4× for GOA with all evidence.
   - Reviewed annotations also give the most BP-matching communities: 14/22 (P. putida)
-    and 10/19 (human), against 12/22 and 6/16 for GOA on the same genes.
+    and 10/19 (human), against 12/22 and 5/15 for GOA on the same genes.
   - **For non-hub handoffs, the sources converge.** On the same genes, 65%/71% of these
     share a BP with reviewed annotations, against 63%/71% for GOA and 65%/70% for the
     UniProt Rhea column (P. putida/human). Whole-proteome GOA is higher (74%/73%), but
