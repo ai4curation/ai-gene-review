@@ -27,6 +27,7 @@ sidecars:
   graft_path_rules: TREEGRAFTER/graft_path_rules.tsv
   tg_versus_other_sources: TREEGRAFTER/tg_versus_other_sources.tsv
   tg_versus_other_sources_summary: TREEGRAFTER/tg_versus_other_sources_summary.tsv
+  tg_versus_protnlm: TREEGRAFTER/tg_versus_protnlm.tsv
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
     - TREEGRAFTER/slides/treegrafter-graft.svg
@@ -154,6 +155,7 @@ uv run --with pyyaml projects/TREEGRAFTER/exemplar_independence.py  # exemplar c
 python3 projects/TREEGRAFTER/graft_check.py                         # live UniProt; or --refresh-actions offline
 python3 projects/TREEGRAFTER/propagation_rules.py --go-obo go-basic.obo  # rule scoring (GO from purl.obolibrary.org)
 uv run --with pyyaml projects/TREEGRAFTER/tg_versus_other_sources.py --go-obo go-basic.obo  # TreeGrafter vs other sources
+uv run --with pyyaml projects/TREEGRAFTER/tg_versus_protnlm.py --go-obo go-basic.obo        # TreeGrafter vs ProtNLM2
 python3 projects/TREEGRAFTER/ec_contradiction_scale.py              # live UniProt + QuickGO
 python3 projects/TREEGRAFTER/trace_graft_paths.py                  # examples: live PANTHER tree API + QuickGO
 python3 projects/TREEGRAFTER/trace_graft_paths.py --all --panther-trees Tree_MSF \
@@ -815,6 +817,52 @@ still true (`mdh`, `nspC`, `eryAI`–`III`, the stilbene dioxygenases, the
 PMTs, the choanoflagellate cadherins). The combined-IEA call won 13
 sibling conflicts against TreeGrafter.
 
+### Against ProtNLM2
+
+The [ProtNLM2 evaluation](PROTNLM_EVALUATION.md) and this project barely
+overlap, for a structural reason. TreeGrafter annotates only proteins outside
+PANTHER's reference genomes; reference-genome proteins get PAINT IBA rows
+instead. Most ProtNLM cohorts are reference genomes: the 44 reviewed horse
+genes carry 39 IBA rows and no TreeGrafter row, and the same holds for the
+fly, fission yeast and *Neurospora* cohorts. Of the 162 ProtNLM
+prediction-review files, 79 are on proteins with IBA rows and 10 on proteins
+with reviewed TreeGrafter rows (one has both).
+[`tg_versus_protnlm.py`](TREEGRAFTER/tg_versus_protnlm.py) pairs the two on
+those 10 ([`tg_versus_protnlm.tsv`](TREEGRAFTER/tg_versus_protnlm.tsv)). The
+scales differ: TreeGrafter rows carry a gene-review action, ProtNLM
+predictions a VDCL assessment from a prediction review.
+
+- **TreeGrafter says more, and most of it is kept.** 29 TreeGrafter rows
+  (22 kept, 4 down-graded, 3 undecided) against 12 ProtNLM GO predictions
+  (5 COR, 3 CNN, 3 LSP, 1 NPI). Two of the ten proteins (`CDK16` in blue
+  whale, a MarR regulator in *Chromobacterium*) have no ProtNLM GO output at
+  all.
+- **Where both speak, TreeGrafter is as specific or more.** Four pairs relate:
+  two share `cytoplasm`; on dog `CNNM4` TreeGrafter's magnesium ion transport
+  (`ACCEPT`) sits under ProtNLM's monoatomic ion transport (LSP); on pufferfish
+  `gas7a` TreeGrafter adds six more (clathrin-coated pit and vesicle, plasma
+  membrane, clathrin coat assembly, clathrin-dependent endocytosis, neuron
+  projection morphogenesis; five accepted, one kept as non-core) where ProtNLM
+  gives only cytoplasm.
+- **Both fall for the same pseudophosphatase.** On mussel MTMR9, ProtNLM's
+  phosphatidylinositol-3-phosphate phosphatase activity is NPI and
+  TreeGrafter's phosphatidylinositol dephosphorylation is `MODIFY`;
+  TreeGrafter's protein phosphatase binding, the regulatory-partner role, is
+  accepted.
+- **ProtNLM's correct new terms are complementary.** Its five COR calls are
+  terms TreeGrafter does not give at all: extracellular matrix and its
+  organization on primate `OLFML2A` (where TreeGrafter's only term, signal
+  transduction, is over-annotated), L-ascorbic acid binding on quail PAM,
+  autophagosome on cod `tbc1d14`, and determination of heart left/right
+  asymmetry on macaque TTC39C.
+- The LSP and CNN judgements are made against the protein's GOA record, which
+  includes the TreeGrafter rows, so ProtNLM is in part being scored against
+  TreeGrafter here.
+
+Ten proteins is too few for rates. A larger test would have to come from the
+other direction: ProtNLM2 predictions on TreeGrafter-annotated proteins, for
+example the 577 reviewed here (mostly *P. putida*).
+
 ## Propagation rules and graft paths
 
 Added 2026-10-14. Three questions about the 1,074 reviewed rows: can a
@@ -1011,6 +1059,9 @@ Opisthokonta). Output in
 - New: [What TreeGrafter gets right](#what-treegrafter-gets-right), from
   `tg_versus_other_sources.py` (sole-source rows, and head-to-head outcomes
   against InterPro2GO, ARBA, UniRule and the combined IEA calls).
+- New: "Against ProtNLM2" (`tg_versus_protnlm.py`): horse and the other
+  reference-genome ProtNLM cohorts get IBA, not TreeGrafter; 10 proteins
+  overlap.
 - "Feed the hotspot list upstream" reworded: no PAINT/PANTHER tickets are to
   be filed yet; the fix points are collected under Next steps.
 
