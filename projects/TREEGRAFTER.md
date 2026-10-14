@@ -860,10 +860,31 @@ predictions a VDCL assessment from a prediction review.
   includes the TreeGrafter rows, so ProtNLM is in part being scored against
   TreeGrafter here.
 
-Ten proteins is too few for rates. A larger test is under way as the
-[DONKEY40 cohort](PROTNLM_EVALUATION/donkey40.md): 40 donkey proteins with
-both ProtNLM2 GO output and TreeGrafter rows, each paired with a horse
-ortholog carrying PAINT IBA rows.
+Ten proteins is too few for rates, so we ran a larger test: the
+[DONKEY40 cohort](PROTNLM_EVALUATION/donkey40.md). It has 40 donkey proteins
+with both ProtNLM2 GO output and TreeGrafter rows, each paired with a horse
+ortholog carrying PAINT IBA rows, all reviewed 2026-10-14.
+
+- **TreeGrafter on a mammal reproduces IBA.** 199 of the 225 TreeGrafter rows
+  (`GO_REF:0000118` plus merged `GO_REF:0000120` rows with a PTN node) carry
+  the same term as the horse ortholog's IBA. Reviewers down-graded 9.3% of
+  them, against 26.9% for this corpus. The difference fits the corpus being
+  mostly bacteria and fungi, where the graft has far to go.
+- **Where donkey rows were down-graded or left UNDECIDED, the cause was not
+  graft placement.**
+  - The input sequence (20 rows on three proteins): a PIKFYVE fragment with
+    no kinase domain, a TNFRSF1A model missing part of its ectodomain, and a
+    truncated SNAP23. TreeGrafter does not check that the protein keeps the
+    domain the function needs.
+  - Terms inherited from the PAINT node (10 rows, the same terms horse
+    receives as IBA), such as the SNAP25 synaptic terms on SNAP23.
+  - Three TreeGrafter-only rows. One of them, ATG3 `GO:0019776`, is a release
+    lag: horse IBA already carries its replacement, `GO:0141046`.
+- **ProtNLM2 on the same proteins** (69 GO predictions) is 80% correct and 6%
+  wrong.
+  - Where it overlaps the tree-based terms, it is mostly an ancestor of them:
+    27 of 37 related predictions, all correct.
+  - All 16 of its COR calls are terms neither TreeGrafter nor IBA gives.
 
 ## Propagation rules and graft paths
 
@@ -1442,12 +1463,18 @@ Opisthokonta). Output in
 - **Test the fusion-seeded-root shape across PANTHER.** For every IBD on a
   family root, check whether all its seeds are multi-domain proteins whose
   extra domain the rest of the family lacks.
+- **Test a domain-coverage rule.** In DONKEY40, 20 down-graded or UNDECIDED
+  TreeGrafter rows are on fragmentary or truncated donkey gene models. A rule
+  that flags a TreeGrafter row when the protein lacks the InterPro domain its
+  term depends on (for example a kinase term with no kinase domain) could be
+  scored against the reviews in the same way as the other rules.
 - **Human-rated anchor.** Have a curator rate a small shared subset so that
   agreement between the agent reviews and expert judgement can be quoted.
 - **Broaden the taxon base.** 65% of the rows are *P. putida* KT2440; the 29
   HETGA rows (76% accepted) are a first mammalian batch and the 65 holozoan
   rows (63% down-graded) a first unicellular-eukaryote batch, both too small
-  and too hand-picked to generalise from.
+  and too hand-picked to generalise from. DONKEY40 adds 225 mammalian rows,
+  selected by rule rather than by hand (9.3% down-graded).
 - **File the `GO:0009329` label/axiom defect with GO.** This is the one item the
   2026-09-24 re-review turned from a suspicion into a verified finding (see the
   label-vs-definition bullet above): the term's definition is the AccA/AccD
