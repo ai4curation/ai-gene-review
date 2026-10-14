@@ -73,12 +73,23 @@ Checked against the cached full texts:
   movement, 9+2 motile cilium), PTN008951089 (inner dynein arm assembly,
   sperm flagellum assembly) and PTN008503981 (inner dynein arm).
 - Cause: the PANTHER 19 API classifies the orthologs into different families.
-  Human Q6ZR08 is PTHR46532:SF11 ("male fertility factor kl5"; 34 leaves,
-  and DNAH12 is its only human or mouse member). Mouse Q3V0Q1 is
-  PTHR10676:SF255 ("dynein heavy chain family protein"), whose tree contains
-  PTN000743491 and PTN008951089. Checked with the PANTHER treeinfo and
-  geneinfo services.
+  Human Q6ZR08 is in subfamily PTHR46532:SF11 ("DYNEIN AXONEMAL HEAVY CHAIN
+  12") of family PTHR46532 ("MALE FERTILITY FACTOR KL5"; 34 leaves, and
+  DNAH12 is its only human or mouse member). Mouse Q3V0Q1 is in subfamily
+  PTHR10676:SF255 (also "DYNEIN AXONEMAL HEAVY CHAIN 12") of family PTHR10676
+  ("DYNEIN HEAVY CHAIN FAMILY PROTEIN"), whose tree contains PTN000743491 and
+  PTN008951089. Names are from interpro/panther/panther.obo. Both subfamilies
+  are correctly named, so the anomaly is the family-level placement only.
+  Checked with the PANTHER treeinfo and geneinfo services.
+- The PTN008951089 IBD for GO:0036159 is seeded by DNAH3 (Q8TD57), DNAH7
+  (Q8WXX0) and MGI:2683040, all structural IDA heavy chains
+  (interpro/panther/PTHR10676/PTHR10676-paint.tsv). That passes the
+  comparator check for proposing GO:0036159 on DNAH12. The other
+  GO:0036159 holders in this corpus (CCDC39/CCDC40) carry it as
+  acts_upstream_of_or_within.
 - A third assignment exists: the InterPro/UniProt PANTHER cross-references
   put both in PTHR22878:SF70 (named "DYNEIN HEAVY CHAIN 2, AXONEMAL").
+  interpro/panther/PTHR22878/PTHR22878-entries.csv lists human, mouse and rat
+  DNAH12 all in SF70.
 - Human DNAH12 is listed in projects/paint/human-no-IBA.tsv under
   PTHR46532.

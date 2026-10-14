@@ -1488,9 +1488,14 @@ the sperm inner dynein arms).
 
 | | Human DNAH12 (Q6ZR08) | Mouse Dnah12 (Q3V0Q1, MGI:107720) |
 |---|---|---|
-| PANTHER 19 family (PANTHER API) | **PTHR46532:SF11**, "male fertility factor kl5" (34 leaves; the only human or mouse member) | **PTHR10676:SF255**, "dynein heavy chain family protein" |
-| InterPro/UniProt PANTHER xref | PTHR22878:SF70 | PTHR22878:SF70 |
+| PANTHER 19 family (PANTHER API) | **PTHR46532**, family "male fertility factor kl5" (34 leaves; the only human or mouse member) | **PTHR10676**, family "dynein heavy chain family protein" |
+| PANTHER 19 subfamily | PTHR46532:SF11, "dynein axonemal heavy chain 12" | PTHR10676:SF255, "dynein axonemal heavy chain 12" |
+| InterPro/UniProt PANTHER xref | PTHR22878:SF70 | PTHR22878:SF70 (rat Dnah12 also SF70; `interpro/panther/PTHR22878/PTHR22878-entries.csv`) |
 | IBA annotations | **none** | 8, from PTN000743491, PTN008951089 and PTN008503981 |
+
+Both subfamilies are correctly named for DNAH12, so PANTHER identifies the
+protein correctly. The anomaly is only that the two orthologous subfamilies
+are placed in different families.
 
 The mouse IBAs include exactly the functions the human experimental
 literature establishes: inner dynein arm (GO:0036156), **inner dynein arm
@@ -1499,7 +1504,9 @@ light intermediate chain binding (GO:0051959). Human DNAH12 has none of them.
 The human gene review independently proposed GO:0036159 as a NEW annotation
 from patient and knockout data (PMID:40146200), which is the same call PAINT
 already made at PTN008951089. That makes this a propagation gap, not an
-ontology or evidence gap.
+ontology or evidence gap. That IBD is seeded by DNAH3, DNAH7 and
+MGI:2683040, which are structural IDA heavy chains, not assembly factors
+(`interpro/panther/PTHR10676/PTHR10676-paint.tsv`).
 
 The same case also shows a **true over-propagation** for the mouse leaf.
 PTN000743491 carries minus-end-directed microtubule motor activity
