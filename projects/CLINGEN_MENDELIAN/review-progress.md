@@ -66,6 +66,93 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 394 — 2026-10-13 16:34:02 UTC
+
+**394 complete / 2,482 remaining in the frozen 2,876-gene catalogue.**
+This checkpoint adds 44 distinct gene reviews to the merged checkpoint 350.
+The cutoff is the final CPT1A merge `a9655bc9362c58342ad7a7d077637d13d75a3d49`.
+
+The original checkpoint omitted CPAMD8 despite its actual merge at 12:58:43 UTC,
+before this cutoff. Its [final approval](https://github.com/ai4curation/ai-gene-review/pull/4961#pullrequestreview-5494780287)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/4961#issuecomment-6130393612)
+leave no blocking request. The [ordinary merge-group validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38397964845/job/115297920929)
+passed before the merge. All 15 approved modes, types and blobs match the merge;
+its complete parent delta is exactly those 15 paths. This corrects the omission
+without moving the cutoff or counting later merges.
+
+| Gene | PR | Approved head | Merge time UTC | Merge commit | Full PR paths | Parent delta |
+|---|---|---|---|---|---:|---:|
+| CLN6 | [#4717](https://github.com/ai4curation/ai-gene-review/pull/4717) | `f49f0215585d9810b909d581af9526c39478872a` | 2026-10-12T17:38:25Z | [7d915faa876d](https://github.com/ai4curation/ai-gene-review/commit/7d915faa876d30e0bfb6767b7f97b5e3c0b35f1f) | 45 | 45 |
+| COL6A3 | [#4943](https://github.com/ai4curation/ai-gene-review/pull/4943) | `ba6811be38e4cc73ebb2dd37b79f3c86e7e06a62` | 2026-10-12T18:04:09Z | [e565df36bca8](https://github.com/ai4curation/ai-gene-review/commit/e565df36bca8b4576db502478a555d1bf8b81020) | 32 | 20 |
+| CLN3 | [#4704](https://github.com/ai4curation/ai-gene-review/pull/4704) | `9e12ec8e19eec2b044c0531a4395524ef42045af` | 2026-10-12T18:22:43Z | [7daf2acc4586](https://github.com/ai4curation/ai-gene-review/commit/7daf2acc4586a5a520a276b3c76245f52444afff) | 23 | 21 |
+| CLN8 | [#4722](https://github.com/ai4curation/ai-gene-review/pull/4722) | `7cc52a288ae8cebd9f4df6a09590c2c7ae1b9414` | 2026-10-12T18:43:29Z | [dc8bc5b2c884](https://github.com/ai4curation/ai-gene-review/commit/dc8bc5b2c88408ee0743bcdfa0db2d4428196680) | 17 | 14 |
+| CLPP | [#4733](https://github.com/ai4curation/ai-gene-review/pull/4733) | `09926b14b66defe050738f59887c14d26cf26408` | 2026-10-12T19:05:40Z | [8a0bae1506be](https://github.com/ai4curation/ai-gene-review/commit/8a0bae1506be4345f6da2f96e6c64e01312b6312) | 8 | 8 |
+| CNTNAP2 | [#4841](https://github.com/ai4curation/ai-gene-review/pull/4841) | `5074fc70da81979f6ef36164659d599a44eedb5c` | 2026-10-12T19:30:59Z | [d79d76cb2029](https://github.com/ai4curation/ai-gene-review/commit/d79d76cb2029578a346bbccd66ee794d7d994dbc) | 21 | 21 |
+| CNNM4 | [#4794](https://github.com/ai4curation/ai-gene-review/pull/4794) | `7aa3425f439285db4e5a0439afeb6f1f3937bee4` | 2026-10-12T19:56:02Z | [3ebf728a1d03](https://github.com/ai4curation/ai-gene-review/commit/3ebf728a1d03536be3e879f04c47da5e3358cc79) | 16 | 16 |
+| COG4 | [#4872](https://github.com/ai4curation/ai-gene-review/pull/4872) | `f65662ed586b956ebb31f3ddafd79196b35c2b5d` | 2026-10-12T20:13:55Z | [b22904f4f1d3](https://github.com/ai4curation/ai-gene-review/commit/b22904f4f1d3fcb06369bf34c28bde0c7cf4e24c) | 16 | 14 |
+| COL7A1 | [#4944](https://github.com/ai4curation/ai-gene-review/pull/4944) | `fa493c4929b48feca35eb4a638911d630bacb90c` | 2026-10-12T20:35:33Z | [3256629f18e0](https://github.com/ai4curation/ai-gene-review/commit/3256629f18e0fdbd5e6321346dd71e0f76341687) | 30 | 30 |
+| COG7 | [#4912](https://github.com/ai4curation/ai-gene-review/pull/4912) | `65c1f800ebbf4ccdff1e839f5e4fa51fb210475c` | 2026-10-12T20:59:59Z | [803eff6ca53b](https://github.com/ai4curation/ai-gene-review/commit/803eff6ca53b70018349c99195f451920972f979) | 16 | 14 |
+| COL11A2 | [#4918](https://github.com/ai4curation/ai-gene-review/pull/4918) | `08102d2ca1d0dc0ef6ea79391b63dcc6c0d6125d` | 2026-10-12T21:24:10Z | [b59857269769](https://github.com/ai4curation/ai-gene-review/commit/b59857269769c0a39fe5de480614e336c741e38a) | 19 | 19 |
+| CNNM2 | [#4791](https://github.com/ai4curation/ai-gene-review/pull/4791) | `fea62aab7284f228db1e605558f9c98d5108228e` | 2026-10-12T21:49:22Z | [69df7d3a5071](https://github.com/ai4curation/ai-gene-review/commit/69df7d3a5071f865111be4691f7d26d86018438d) | 22 | 19 |
+| COL9A1 | [#4945](https://github.com/ai4curation/ai-gene-review/pull/4945) | `81a76e778330d253be6c205b7a104b6e9c36f42e` | 2026-10-12T22:15:26Z | [81a43a71cfc9](https://github.com/ai4curation/ai-gene-review/commit/81a43a71cfc99fc205ee1e531e442f55c4817ba8) | 19 | 19 |
+| COA8 | [#4870](https://github.com/ai4curation/ai-gene-review/pull/4870) | `201df218220b05783e0056a6a57c9f841846af9a` | 2026-10-12T22:36:18Z | [0325db35893b](https://github.com/ai4curation/ai-gene-review/commit/0325db35893b793cc08a6e1c07afa4516952355c) | 16 | 16 |
+| COCH | [#4871](https://github.com/ai4curation/ai-gene-review/pull/4871) | `58ca87ff3e564c7684a6a1cf5694e400ec4061c4` | 2026-10-12T22:54:22Z | [ed000cae872f](https://github.com/ai4curation/ai-gene-review/commit/ed000cae872f15c07cf99b2fb56daefa9ac6fcba) | 23 | 23 |
+| COL2A1 | [#4931](https://github.com/ai4curation/ai-gene-review/pull/4931) | `2ada5e144cac4fdea13cb88ffdcd53fab5d7ecc4` | 2026-10-12T23:13:45Z | [f1097102f74a](https://github.com/ai4curation/ai-gene-review/commit/f1097102f74ab95ef198faf651d08b4a38d3edc6) | 34 | 29 |
+| COL18A1 | [#4919](https://github.com/ai4curation/ai-gene-review/pull/4919) | `a2d6b3f2562ded2bb812b11c6d23292138ee1928` | 2026-10-12T23:39:25Z | [c24d195707c7](https://github.com/ai4curation/ai-gene-review/commit/c24d195707c715e4e0483c8d0a667c76d1f292dd) | 31 | 30 |
+| COL1A1 | [#4921](https://github.com/ai4curation/ai-gene-review/pull/4921) | `d1d3ae87eff5bb58c2d52e9c891af4afe630fa76` | 2026-10-13T00:04:36Z | [84cdd162363b](https://github.com/ai4curation/ai-gene-review/commit/84cdd162363b825b6eb8f4a961cdf0d14436f1cf) | 47 | 47 |
+| CNGA1 | [#4746](https://github.com/ai4curation/ai-gene-review/pull/4746) | `92905a9d99d85e97c9728c2574f006bc6f7ea5be` | 2026-10-13T00:31:17Z | [c494c60261c2](https://github.com/ai4curation/ai-gene-review/commit/c494c60261c2ffbfed9a3e89d3558a44c2252179) | 20 | 11 |
+| CLRN1 | [#4736](https://github.com/ai4curation/ai-gene-review/pull/4736) | `a0bc87d865903004de6c52c9c0a5d3d0a34f8187` | 2026-10-13T00:53:00Z | [61ba4c431e43](https://github.com/ai4curation/ai-gene-review/commit/61ba4c431e435e90248eb0f12774b7c6d8562515) | 15 | 15 |
+| COA6 | [#4857](https://github.com/ai4curation/ai-gene-review/pull/4857) | `9398a5da2d1038ffb3752258e1fda2a13c9e450b` | 2026-10-13T01:11:02Z | [1e778d3c04c2](https://github.com/ai4curation/ai-gene-review/commit/1e778d3c04c230535b5348b2e356abbac6460948) | 10 | 10 |
+| COL3A1 | [#4932](https://github.com/ai4curation/ai-gene-review/pull/4932) | `bed5cc754e5f5e0f025463389118484cdc091477` | 2026-10-13T01:36:52Z | [aa2a8779acf6](https://github.com/ai4curation/ai-gene-review/commit/aa2a8779acf63d1aa325da88efc1c1b7cf0a6b9e) | 41 | 38 |
+| COL10A1 | [#4916](https://github.com/ai4curation/ai-gene-review/pull/4916) | `ac8aaeca977ec833099771024aa3c589075bc5a8` | 2026-10-13T01:58:34Z | [70e5b6140518](https://github.com/ai4curation/ai-gene-review/commit/70e5b6140518d4eb6d21222585d072569dd3cc93) | 16 | 14 |
+| COA7 | [#4866](https://github.com/ai4curation/ai-gene-review/pull/4866) | `16fa6255c3002e5a2bcb518fdf5937ad275a2b01` | 2026-10-13T02:23:37Z | [0ee74dc9812b](https://github.com/ai4curation/ai-gene-review/commit/0ee74dc9812b1ad9afe20dd7a30153f35934dca3) | 10 | 10 |
+| COL9A3 | [#4946](https://github.com/ai4curation/ai-gene-review/pull/4946) | `246a667cd9ec769d6a17c32891e44f290b9009c2` | 2026-10-13T02:48:51Z | [43b6bd2bfe31](https://github.com/ai4curation/ai-gene-review/commit/43b6bd2bfe31390c5de2d1f375d3397b913110fe) | 14 | 9 |
+| COL4A5 | [#4936](https://github.com/ai4curation/ai-gene-review/pull/4936) | `02d6ec7bad1394e8dee0b0d6baff8088122220a0` | 2026-10-13T03:11:02Z | [b15b0e0879c9](https://github.com/ai4curation/ai-gene-review/commit/b15b0e0879c93fd9c1cf46d7cbbd99cd6f7cbfd7) | 20 | 20 |
+| COL4A3 | [#4934](https://github.com/ai4curation/ai-gene-review/pull/4934) | `5f9454f5ea1201dac4686ee0d381a837c824d156` | 2026-10-13T03:31:57Z | [2b4dcaf9c440](https://github.com/ai4curation/ai-gene-review/commit/2b4dcaf9c44052a6eaffa0e1ac607822731041eb) | 28 | 24 |
+| COL5A1 | [#4937](https://github.com/ai4curation/ai-gene-review/pull/4937) | `ef531e3cb41553cdcdb55259518e366a5dd62a02` | 2026-10-13T03:58:00Z | [e3fdba00c248](https://github.com/ai4curation/ai-gene-review/commit/e3fdba00c248bfb276b36ac5c2f2faee1e0bb5f2) | 28 | 24 |
+| COL1A2 | [#4928](https://github.com/ai4curation/ai-gene-review/pull/4928) | `f2f01c7e3c1d256f7b70c46522d563e521802557` | 2026-10-13T04:21:39Z | [ff03322aaefa](https://github.com/ai4curation/ai-gene-review/commit/ff03322aaefa1fc98548241a2cf669ab82b5082f) | 12 | 11 |
+| COL4A4 | [#4935](https://github.com/ai4curation/ai-gene-review/pull/4935) | `e18da0afbb44026347921a93b05ac94e3ad9cfd5` | 2026-10-13T04:46:58Z | [63b613d7142b](https://github.com/ai4curation/ai-gene-review/commit/63b613d7142bfb955d92cd0fe9d928733e4b37e9) | 19 | 16 |
+| COL5A2 | [#4938](https://github.com/ai4curation/ai-gene-review/pull/4938) | `4711c9d5beb0df208488a18d2f05659e3cf4a97f` | 2026-10-13T05:07:20Z | [1d51d6d60861](https://github.com/ai4curation/ai-gene-review/commit/1d51d6d60861dab1f148901ba15a55d8e80ebe4f) | 22 | 12 |
+| COL4A1 | [#4933](https://github.com/ai4curation/ai-gene-review/pull/4933) | `50af702da83e1714048d0786e56207e73636c2f7` | 2026-10-13T05:57:31Z | [b4b1dae2ede9](https://github.com/ai4curation/ai-gene-review/commit/b4b1dae2ede98c83a0fba2f1e8c0aa0fe6deed08) | 12 | 12 |
+| CORO1A | [#4952](https://github.com/ai4curation/ai-gene-review/pull/4952) | `ef0febd87a4d4ae888df1ff2bdd911f72fd4ddb3` | 2026-10-13T07:02:29Z | [95c769b1c1cd](https://github.com/ai4curation/ai-gene-review/commit/95c769b1c1cd36316bd1b722e27c868c9abb3a1d) | 31 | 31 |
+| COX10 | [#4953](https://github.com/ai4curation/ai-gene-review/pull/4953) | `2023f325c91b0d9221e0e014363396598a8ab322` | 2026-10-13T07:27:37Z | [c1574b6f0d59](https://github.com/ai4curation/ai-gene-review/commit/c1574b6f0d59975ffd9fb34faa2ed8847525d67a) | 9 | 9 |
+| COMP | [#4951](https://github.com/ai4curation/ai-gene-review/pull/4951) | `0725b4c9b97b1dcb3763ef5980ee4244a4658bf4` | 2026-10-13T07:54:10Z | [4d00a6de6693](https://github.com/ai4curation/ai-gene-review/commit/4d00a6de66934299f14016e155001cb8c031a2e2) | 22 | 22 |
+| COX15 | [#4956](https://github.com/ai4curation/ai-gene-review/pull/4956) | `280c9b4d93a163e226f2a8b801b0a20342ab5aa6` | 2026-10-13T08:13:10Z | [a90e9a2afbea](https://github.com/ai4curation/ai-gene-review/commit/a90e9a2afbea1bb7911097f9ffe87736084b1161) | 8 | 8 |
+| COX6B1 | [#4957](https://github.com/ai4curation/ai-gene-review/pull/4957) | `b6d6eee9972a97e45df6bf4fab32d52af3804831` | 2026-10-13T08:31:27Z | [233c920c84b2](https://github.com/ai4curation/ai-gene-review/commit/233c920c84b24fa09c0a69c7f349641f0b7ed07d) | 9 | 9 |
+| COXFA4 | [#4958](https://github.com/ai4curation/ai-gene-review/pull/4958) | `3d79a3ba499e2fee22bbfdd4c766054059a1b8e3` | 2026-10-13T10:09:26Z | [44d5a199822a](https://github.com/ai4curation/ai-gene-review/commit/44d5a199822a630b2c46ac69734618094b73e352) | 17 | 17 |
+| CP | [#4959](https://github.com/ai4curation/ai-gene-review/pull/4959) | `ad2e58fbcefb3f7d3c81cbe4a7c8c0e1b0d1ba5a` | 2026-10-13T11:29:27Z | [4a1c58370745](https://github.com/ai4curation/ai-gene-review/commit/4a1c58370745fd99071dc53c531b9f4b52d62db6) | 25 | 25 |
+| CPAMD8 | [#4961](https://github.com/ai4curation/ai-gene-review/pull/4961) | `bae41e46d9198aaed97ef99219318926f6305a14` | 2026-10-13T12:58:43Z | [6e66bd1c2eed](https://github.com/ai4curation/ai-gene-review/commit/6e66bd1c2eed3ec7a1254ea6caea596d62989858) | 15 | 15 |
+| CPLANE1 | [#4964](https://github.com/ai4curation/ai-gene-review/pull/4964) | `27fb4d6bd9639dceb273d900f93c984775ab12e2` | 2026-10-13T13:25:46Z | [a87b3c1a87ed](https://github.com/ai4curation/ai-gene-review/commit/a87b3c1a87ed64ecb1906ffb048dbdbcb4fc80df) | 12 | 12 |
+| CPAP | [#4963](https://github.com/ai4curation/ai-gene-review/pull/4963) | `965cde4fa1039cb92b3fdc59544c84dcea75acf3` | 2026-10-13T15:43:04Z | [f44840baae84](https://github.com/ai4curation/ai-gene-review/commit/f44840baae84c94bf03d35f6363c26f6a5773845) | 23 | 23 |
+| CPOX | [#4965](https://github.com/ai4curation/ai-gene-review/pull/4965) | `ad948941fff6f94a4a50c77a5e23b987c5a0046c` | 2026-10-13T16:09:26Z | [df60d6da2141](https://github.com/ai4curation/ai-gene-review/commit/df60d6da21411b5820e99cad678ae4a6c2721ff3) | 16 | 16 |
+| CPT1A | [#4968](https://github.com/ai4curation/ai-gene-review/pull/4968) | `c155487423cdd4de0660a760aece8a8ea26ce54e` | 2026-10-13T16:34:02Z | [a9655bc9362c](https://github.com/ai4curation/ai-gene-review/commit/a9655bc9362c58342ad7a7d077637d13d75a3d49) | 29 | 29 |
+
+The complete approved inventories contain 918 path occurrences across these
+44 PRs. Each approved path agrees with its actual merged mode, type and blob,
+including the confirmed deletion in COXFA4; the 847 parent-relative changes
+contain no extra paths. Parent-identical shared paths remain part of the full
+inventories but add no integration delta or gene credit. Final approvals and
+required checks were verified in the accepted merge evidence for each PR.
+
+COXFA4 is the single catalogue gene HGNC:7687, whose retained ClinGen source
+symbol is NDUFA4. PR #4958 removes the obsolete NDUFA4 review path and retains
+the COXFA4 review; this is one gene, not two. Its association text is unchanged.
+
+Update 73 appends these 44 genes only. All 72 prior updates, all 235 historical
+queue records, all 2,876 catalogue association texts and their order are preserved.
+Completed, campaign_audited_merged and the legacy original_merged field are 394;
+pending_followups remains zero. Products, follow-up commits and shared sources
+do not receive separate credits.
+
+The baseline tracker [PR #4962](https://github.com/ai4curation/ai-gene-review/pull/4962)
+merged at 2026-10-13 12:31:49 UTC as
+[`fdcbaab48e51`](https://github.com/ai4curation/ai-gene-review/commit/fdcbaab48e51e3ba89d9775685ff5850a3647221),
+preserving its approved head `32da3e6e03e8763801f689837ace186af98eba7d`. That tracker merge adds no gene credit.
+The old checkpoint sections below retain their original observations and wording,
+including statuses that were OPEN or QUEUED when recorded.
+
+[Publication session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-13T173920Z-codex-afd312.yaml).
+
 ## Completion checkpoint 350 — 2026-10-12 17:16:33 UTC
 
 **350 complete / 2,526 remaining in the frozen 2,876-gene catalog.**
