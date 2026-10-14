@@ -83,6 +83,8 @@ def _write_gene(tmp_path: Path, symbol: str, sf: str | None, action: str,
         # gene outside the allowed subfamilies that keeps the term -> conflict
         (RECEPTOR_SF, "ACCEPT", Verdict.CONFLICT),
         (RECEPTOR_SF, "KEEP_AS_NON_CORE", Verdict.CONFLICT),
+        # TOO_GENERAL holds the claim true (only uninformative), so it still conflicts
+        (RECEPTOR_SF, "TOO_GENERAL", Verdict.CONFLICT),
         # gene outside the allowed subfamilies that already flags it -> consistent
         (RECEPTOR_SF, "REMOVE", Verdict.OK),
         (RECEPTOR_SF, "MARK_AS_OVER_ANNOTATED", Verdict.OK),
@@ -212,7 +214,9 @@ def test_remove_row_beside_a_retained_row_still_conflicts(tmp_path):
     assert result.verdict is Verdict.CONFLICT
 
 
-@pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "UNDECIDED"])
+@pytest.mark.parametrize(
+    "action", ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL", "MODIFY", "UNDECIDED"]
+)
 def test_converse_disagreement_ignores_non_disputing_actions(tmp_path, action):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
     assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []

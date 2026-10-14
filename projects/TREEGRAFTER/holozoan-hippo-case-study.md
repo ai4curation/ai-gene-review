@@ -18,11 +18,14 @@ autolink_gene_symbols: false
 
 **Bottom line:** choanoflagellates (*Salpingoeca rosetta*), *Capsaspora* and
 sponges are not PANTHER reference genomes, so every tree-based GO annotation
-they carry is a TreeGrafter IEA (`GO_REF:0000118`). Across the 16
-literature-based reviews, 11 of 53 propagated rows were down-graded, all of
-them TreeGrafter rows. Five more reviews, of proteins chosen because they
-carry the terms below, add 38 down-graded rows out of 48. They show the main page's failure modes in a new setting: genes from
-lineages that the reference trees sample thinly.
+they carry is a TreeGrafter IEA (`GO_REF:0000118`). The main TreeGrafter
+sidecars now include the 65 live `GO_REF:0000118` rows from reviewed
+*S. rosetta*, *Capsaspora* and *Oscarella* proteins, 41 of them down-graded.
+The broader Origins propagation audit also scored 101 propagated rows: 53 in
+literature-selected reviews and 48 in targeted follow-ups, the latter including
+*M. brevicollis* IBA controls outside the TreeGrafter-only denominator. Together
+they show the main page's failure modes in a new setting: genes from lineages
+that the reference trees sample thinly.
 
 | Case | Protein | Graft | Failure mode (main page numbering) | Rows down-graded |
 |---|---|---|---|---|
@@ -31,7 +34,7 @@ lineages that the reference trees sample thinly.
 | Animal-tissue IBDs inherited at a correct graft | *S. rosetta* warts, F2U943 | PTHR24356:SF418, leaf PTN001220369 under PTN002390470 | **inherited PAINT over-placement**, like the [rotary-ATPase leak](rotary-atpase-leak.md) | regulation of organ growth (removed); positive regulation of apoptotic process and G1/S transition (over-annotated) |
 | Fungal pathway term on a choanoflagellate | *S. rosetta* couscous, F2UJ78 | node PTN001270341 (MNN2 family) | **3, out-of-context process** (pathway absent in host) | mannan biosynthetic process (removed) |
 | Family node term | sponge TLN, A0A3G2LGI8 | node PTN001072690 | **1, granularity / sibling term** | cell-cell adhesion → cell-matrix adhesion |
-| Graft onto a node PAINT restricts to Bilateria | three *S. rosetta* cadherins: F2UD23, F2UFV3, F2USU1 | PTHR24027:SF422, node PTN000616280 (`taxon:33213`) | **4-like, taxon-blind graft** | 30 rows of junction, catenin and adhesion terms; none of the proteins has the beta-catenin-binding domain (PF01049). Not reviewed as gene reviews; see the audit |
+| Graft onto a node PAINT restricts to Bilateria | three *S. rosetta* cadherins: F2UD23, F2UFV3, F2USU1 | PTHR24027:SF422, node PTN000616280 (`taxon:33213`) | **4-like, taxon-blind graft** | 30 current rows, ten on each of three *S. rosetta* cadherin gene reviews; none of the proteins has the beta-catenin-binding domain (PF01049). See the audit for the node-level spread check |
 | Graft onto the vertebrate ITGBL1 node | *Capsaspora* integrin beta 2 (coITGB2, A0A0D2WRB3) and five other *Capsaspora* integrin-beta entries | PTHR10082:SF3, node PTN002560695 (Euteleostomi) | **4, mis-placement onto an animal-only node** | focal adhesion and cell-cell adhesion (over-annotated); cell-matrix adhesion → cell-substrate adhesion |
 | Developmental term from an all-animal T-box node | *Capsaspora* Brachyury (CoBra, A0A0D2VUC6) | PTHR11267, node PTN000137774 (duplication node; 34 leaf organisms, all animals) | **3, out-of-context process** | cell fate specification (removed) |
 
@@ -86,6 +89,7 @@ lineages that the reference trees sample thinly.
 
 Each down-graded row carries a `propagation_review` in its gene review YAML,
 naming the PANTHER source node with a `source_status`:
+
 - [`genes/CAPO3/coWts/coWts-ai-review.yaml`](../../genes/CAPO3/coWts/coWts-ai-review.yaml)
 - [`genes/SALRS/warts/warts-ai-review.yaml`](../../genes/SALRS/warts/warts-ai-review.yaml)
 - [`genes/SALRS/yorkie/yorkie-ai-review.yaml`](../../genes/SALRS/yorkie/yorkie-ai-review.yaml)
