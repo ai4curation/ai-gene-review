@@ -139,28 +139,28 @@ Last updated: 2026-10-01
 ## Tier 1 — Neural crest specifiers (candidates for vertebrate-specific recruitment) — COMPLETE 2026-10-01
 
 - [x] `XENLA/foxd3-a` (Q9DEN4) — FoxD3; NC specifier (repressor) with a competence face. Reviewed 2026-10-01: 25 GOA rows (14 ACCEPT, 5 non-core, 4 MODIFY, 2 over-annotated) + 1 NEW (GO:0001227). Homeolog `foxd3-b` Q9DEN3
-- [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (11 ACCEPT, 14 non-core, 6 MODIFY, 1 REMOVE)
+- [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (15 non-core, 9 ACCEPT, 7 MODIFY, 1 REMOVE)
 - [x] `XENLA/snai2` (Q91924) — Slug; NC specifier then EMT/migration effector. Reviewed 2026-10-01: 15 GOA rows (13 ACCEPT, 1 MODIFY, 1 REMOVE) + 3 NEW (GO:0001227, GO:0000122, GO:0001222)
 - [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
-- [x] `XENLA/twist1` (P13903) — Twist; late, head-only NC specifier / ectomesenchyme driver. Reviewed 2026-10-01: 12 GOA rows (9 ACCEPT, 3 MODIFY) + 2 NEW (GO:0140416 Snail2 inhibition, GO:0048701 cranial skeleton morphogenesis)
-- [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
+- [x] `XENLA/twist1` (P13903) — Twist; late, head-only NC specifier / ectomesenchyme driver. Reviewed 2026-10-01: 12 GOA rows (9 ACCEPT, 2 non-core, 1 MODIFY) + 2 NEW (GO:0140416 Snail2 inhibition, GO:0048701 cranial skeleton morphogenesis)
+- [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (13 ACCEPT, 6 non-core, 1 MODIFY, 1 over-annotated) + 4 NEW incl. NC delamination and migration
 - [x] `XENLA/myc-a` (P06171) — c-Myc; competence factor carried from the blastula. Reviewed 2026-10-01: 11 GOA rows (10 ACCEPT, 1 non-core) + 1 NEW (*neural crest progenitor maintenance* (NTR), formerly GO:0014029, IMP PMID:12791268; comparator check passed, see notes)
-- [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
+- [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (16 ACCEPT, 9 MODIFY, 2 REMOVE, 1 non-core)
 - [x] `XENLA/sox8` (Q6VVD7) — SoxE; first-wave NC specifier. Reviewed 2026-10-01: 19 GOA rows (9 ACCEPT, 8 non-core, 2 MODIFY)
 
 ## Tier 2 — Neural plate border specifiers (ancestral chordate layer) — COMPLETE 2026-10-05
 
-- [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (17 ACCEPT, 3 non-core, 4 over-annotated, 1 MODIFY) + 1 NEW (GO:0001228)
-- [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (25 ACCEPT, 6 non-core, 1 MODIFY, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
+- [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (15 ACCEPT, 4 over-annotated, 3 MODIFY, 3 non-core) + 1 NEW (GO:0001228)
+- [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (20 ACCEPT, 6 MODIFY, 6 non-core, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
 - [x] `human/MSX1` (P28360) — Msx1; border specifier upstream of Pax3/Zic. Reviewed 2026-10-05: 64 GOA rows (38 ACCEPT, 17 non-core, 5 over-annotated, 2 REMOVE, 2 UNDECIDED) + 1 NEW (*neural plate border formation* (NTR), formerly GO:0014029, ISS)
-- [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 1 NEW (*neural plate border formation* (NTR), formerly GO:0014029, ISS)
-- [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
+- [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 2 NEW (*neural plate border formation* (NTR), formerly GO:0014029, ISS)
+- [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (17 ACCEPT, 6 MODIFY, 5 non-core, 1 UNDECIDED) + 1 NEW (GO:0001227)
 - [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (*neural plate border formation* (NTR), formerly GO:0014029, GO:0001227, GO:0030917, GO:0043049)
 
 ## Tier 3 — Blastula pluripotency programme retained in the crest — COMPLETE 2026-10-07
 
 - [x] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Xenbase pou5f3.2.L); germ-layer timing factor + crest competence factor. Reviewed 2026-10-07: 51 GOA rows (37 ACCEPT, 7 non-core, 5 MODIFY, 2 over-annotated) + 2 NEW (GO:0003714, *neural crest progenitor maintenance* (NTR), formerly GO:0014029 — **flagged**, see notes)
-- [x] `XENLA/lin28a` (Q8JHC4) — Lin28; general pluripotency/timing RNA-binding factor in frog (crest role shown only in chick). Reviewed 2026-10-07: 26 GOA rows (9 ACCEPT, 12 non-core, 4 MODIFY, 1 over-annotated) + 1 NEW (GO:0070883)
+- [x] `XENLA/lin28a` (Q8JHC4) — Lin28; general pluripotency/timing RNA-binding factor in frog (crest role shown only in chick). Reviewed 2026-10-07: 26 GOA rows (12 non-core, 9 ACCEPT, 4 MODIFY, 1 over-annotated) + 1 NEW (GO:0070883)
 - [x] `XENLA/snai1` (P19382) — Snail1; blastula competence factor, then earliest crest specifier. Reviewed 2026-10-07: 21 GOA rows (15 ACCEPT, 5 MODIFY, 1 REMOVE) + 1 NEW (GO:0001227)
 - [x] `XENLA/sox2` (O42569) — SoxB1; blastula pluripotency and neural-progenitor gene, not a crest participant. Reviewed 2026-10-07: 25 GOA rows (17 ACCEPT, 7 non-core, 1 MODIFY) + 2 NEW (GO:0045665, GO:0060041)
 - [x] `XENLA/sox3-a` (P55863) — SoxB1; maternal germ-layer patterning, genome activation, neural competence; not a crest participant. Reviewed 2026-10-07: 29 GOA rows (19 ACCEPT, 10 non-core) + 2 NEW (GO:0141064, GO:0021990)
@@ -171,7 +171,7 @@ Human entries are used, as for TFAP2A: the key data are from chick, and no
 reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 
 - [x] `human/TFAP2B` (Q92481) — AP-2β; crest specifier (TFAP2A–TFAP2B heterodimer), cranial circuit. Reviewed 2026-10-08: 90 GOA rows (50 ACCEPT, 18 non-core, 11 over-annotated, 7 REMOVE, 4 MODIFY) + 1 NEW (GO:0014036, ISS)
-- [x] `human/TFAP2C` (Q92754) — AP-2γ; border induction (TFAP2A–TFAP2C), lost from crest; trophectoderm, germ cells. Reviewed 2026-10-08: 60 GOA rows (44 ACCEPT, 6 non-core, 5 MODIFY, 3 REMOVE, 1 over-annotated, 1 UNDECIDED) + 3 NEW (*neural plate border formation* (NTR), formerly GO:0014029, GO:0007281, GO:0001829)
+- [x] `human/TFAP2C` (Q92754) — AP-2γ; border induction (TFAP2A–TFAP2C), lost from crest; trophectoderm, germ cells. Reviewed 2026-10-08: 60 GOA rows (44 ACCEPT, 6 non-core, 5 MODIFY, 3 REMOVE, 1 UNDECIDED, 1 over-annotated) + 3 NEW (*neural plate border formation* (NTR), formerly GO:0014029, GO:0007281, GO:0001829)
 - [x] `human/PAX7` (P23759) — Pax7; border specifier (chick's lead Pax3/7 paralog); satellite cells. Reviewed 2026-10-08: 22 GOA rows (18 ACCEPT, 3 non-core, 1 UNDECIDED) + 4 NEW (*neural plate border formation* (NTR), formerly GO:0014029, GO:0001228, GO:0043403, GO:0021904; all ISS)
 
 ## Tier 5 — Outgroup comparators (optional)
