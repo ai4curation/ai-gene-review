@@ -201,3 +201,24 @@ Rechecked the three GPM3 IBA rows against the current cached PTHR11931 PAINT exp
   metabolic-model, and incidental high-throughput mentions but no newer primary
   study assigning a direct substrate, molecular function, or biological process
   to GPM3.
+
+## 2026-10-01 GOA / PAINT refresh
+
+Refetched `Q12326` from GOA and UniProt, refreshed the PTHR11931 PAINT export,
+and reread the cached Heinisch, Huh, and Ghaemmaghami records. The live GOA set
+is still the same ten rows: three PANTHER IBA rows, four IEA rows from
+InterPro/UniProt mappings, the Huh `GO:0005737 cytoplasm` HDA row, and the two
+SGD ND placeholders. The 2026-10-01 PTHR11931 export still places the GPM3 IBA
+activity, cytosol, and obsolete-canonical-glycolysis assertions at
+`PTN002630707`, with the functional yeast mutase `GPM1` among the descendant
+evidence.
+
+Copied the exact current GOA `WITH/FROM` lists into `supporting_entities` for
+all seven IBA/IEA rows, and updated the two labels that drifted in GOA:
+`GO:0061621` is now emitted as `obsolete canonical glycolysis`, and
+`GO:0006096` as `glycolysis`. These are label/metadata refreshes only. The
+actions remain unchanged: direct GPM3 evidence still contradicts the inferred
+mutase and glycolysis activities, while the cytoplasm/cytosol localizations and
+the no-data MF/BP placeholders remain appropriate. PubMed and Europe PMC checks
+on `GPM3`/`YOL056W`/`Q12326` did not uncover a newer primary GPM3 paper that
+assigns a substrate, molecular function, or biological process.

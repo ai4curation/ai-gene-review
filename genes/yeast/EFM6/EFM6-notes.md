@@ -157,3 +157,26 @@ methylation", DOI:10.1080/15476286.2018.1440875). Extra context NOT added to the
   eEF1A Lys390 study.
 - Searched for newer direct EFM6/YNL024C literature through 2026; no paper superseding the
   eEF1A-Lys390 assignment or establishing a downstream biological process was found.
+
+## 2026-10-01 current GOA refresh
+
+- Forced a fresh GOA/UniProt pull for EFM6. QuickGO still returns exactly the same seven
+  live rows, with one `PTHR14614` IBA row to broad `GO:0008276`, three electronic rows
+  from UniProt, one SGD ISS row to `GO:0008757`, one Huh et al. HDA cytoplasm row, and
+  the SGD ND biological-process placeholder.
+- Copied the current GOA `WITH/FROM` values into `supporting_entities` for the IBA, IEA,
+  and ISS rows. The IBA row still points at `PANTHER:PTN000378681`, the broad
+  protein-methyltransferase-family node whose descendant evidence mixes lysine,
+  histidine, and related protein methyltransferases.
+- Identified the SGD ISS donor `SGD:S000000238` as HMT1/P38074, the major yeast
+  protein-arginine methyltransferase in PTHR11006. That cross-family seven-beta-strand
+  Class I methyltransferase match supports only the broad SAM-dependent methyltransferase
+  parent `GO:0008757`, not a substrate-specific EFM6 term.
+- Refetched PTHR14614 PAINT and confirmed the all-family `GO:0008276` assertion remains at
+  `PTN000378681`; the narrower `GO:0016279` IBD assertions are still on other subclades,
+  so the existing `MODIFY` to the more specific EFM6 activity remains appropriate.
+- Updated the UniProt cache to entry version 152. UniProt no longer lists the old
+  keyword-derived `GO:0032259` methylation xref, consistent with current QuickGO and the
+  review's choice not to manufacture a generic biological-process annotation.
+- Searched again for recent direct EFM6/YNL024C literature. No newer paper superseding the
+  eEF1A-Lys390 assignment or establishing a downstream biological process was found.

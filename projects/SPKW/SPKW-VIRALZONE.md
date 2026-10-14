@@ -255,12 +255,12 @@ termed, plus provenance for why terms say what they say — not rigour GO lacks.
 
 | # | Task | Scope | Status |
 |---|------|-------|--------|
-| 1 | File the four dead `VZ:` cross-references with GO | 4 terms | TODO |
-| 2 | File the `GO:0039587` doubled-word label typo | 1 term | TODO |
-| 3 | Audit the 22 high-reuse definitions against primary literature | 24,824 chars | TODO |
-| 4 | For each, record divergences **both ways**: a ViralZone error that propagated into GO, and a ViralZone correction GO missed | 22 terms | TODO |
-| 5 | Grade the 107 dual-path pages, so SPKW inherits a per-page confidence rather than a flat `VZ-primary` boolean | 107 pages | TODO |
-| 6 | Decide whether `VZ:` should become quote-checkable (needs a page cache; see the `PMCID`/Reactome gap in the same validator) | infra | OPEN QUESTION |
+| 1 | File the four dead `VZ:` cross-references with GO | 4 terms | Not started |
+| 2 | File the `GO:0039587` doubled-word label typo | 1 term | Not started |
+| 3 | Audit the 22 high-reuse definitions against primary literature | 24,824 chars | Not started |
+| 4 | For each, record divergences **both ways**: a ViralZone error that propagated into GO, and a ViralZone correction GO missed | 22 terms | Not started |
+| 5 | Grade the 107 dual-path pages, so SPKW inherits a per-page confidence rather than a flat `VZ-primary` boolean | 107 pages | Not started |
+| 6 | Decide whether `VZ:` should become quote-checkable (needs a page cache; see the `PMCID`/Reactome gap in the same validator) | infra | Open question |
 
 Task 3 is the only one requiring literature work, and the filovirus/viroplasm case
 is the model: establish what the page claims, what GO carried over, and whether the

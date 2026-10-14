@@ -287,8 +287,8 @@ def test_pages_artifact_contains_rule_and_prediction_builds():
     for name, command in (
         ("Render cached rule reviews and index", "just render-rule-pages"),
         ("Render ProtNLM prediction evaluations from all review sidecars", "just render-prediction-eval"),
-        ("Build shared predictions browser", "just deploy-predictions-browser"),
-        ("Build homology propagation browser", "just deploy-propagation-browser"),
+        ("Build shared predictions browser", 'just deploy-predictions-browser "$BROWSER_TARGET"'),
+        ("Build homology propagation browser", 'just deploy-propagation-browser "$BROWSER_TARGET"'),
     ):
         build = _step(job, name)
         assert build["run"] == command

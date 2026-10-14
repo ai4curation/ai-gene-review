@@ -18,6 +18,13 @@ manifest:
 
 # Phosphorylation Annotation Refactor Project
 
+**Interactive demo shortlist (2026-09-28):** [48 unreviewed candidates](PHOSPHORYLATION_REFACTOR/demo/README.md)
+— 31 mouse, 13 rat, 2 fly, and 2 zebrafish — with current positive
+`involved_in` rows, verified identifiers, per-gene triage rationales, and a
+script to recheck annotation and review status. Human hits from this screen
+were already reviewed or were kinase/complex false positives. These are
+candidates for review, not completed curation decisions.
+
 **Bottom line:** GO often annotates proteins to "protein phosphorylation"
 (GO:0006468) and its children when they are the substrate, regulator or even
 the opposite enzyme of a kinase. We queried nine model organism databases for

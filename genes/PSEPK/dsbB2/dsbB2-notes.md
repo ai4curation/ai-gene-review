@@ -10,9 +10,10 @@ therefore describes this paralog as predicted rather than directly assayed
 
 The official GO definition for GO:0015035 is "Catalysis of the reaction: a
 protein with reduced sulfide groups = a protein with oxidized disulfide bonds."
-The equality is direction-neutral, so the term is retained as a valid non-core
-oxidoreductase annotation. GO:0009055 electron transfer activity is ranked as
-core because DsbB relays electrons from DsbA to quinone.
+The equality is direction-neutral, but the GO:0015035 mapping is widened to
+GO:0016672 because the quinone-coupled sulfur-donor oxidoreductase term captures
+DsbB's membrane reaction more precisely. GO:0009055 electron transfer activity
+is retained as a valid non-core description of the DsbA-to-quinone relay.
 
 Canonical *E. coli* experiments show respiratory-chain-dependent DsbA oxidation
 through DsbB [PMID:9342327] and direct DsbB-catalyzed oxidation of DsbA by

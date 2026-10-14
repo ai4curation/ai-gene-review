@@ -7,12 +7,15 @@ terms against the local AIGR reviews. Project page: [`../AFFINAGE_EVALUATION.md`
 
 | Path | What |
 |------|------|
-| `compare_affinage.py` | Fetch Affinage JSON (cached) + diff vs GOA/`core_functions`. No hard-coded numbers. |
+| `compare_affinage.py` | Fetch Affinage JSON (cached, trimmed) + diff vs GOA/`core_functions`, exact and `goslim_generic`-level (closure over the pinned GO release `cache/ontologies/go-basic-2026-03-25.obo`, fetched and checksum-verified on demand by `ai_gene_review.bioreason_ontology.ensure_frozen_go`). No hard-coded numbers. |
 | `pilot-genes.txt` | The 12-gene human pilot cohort (one symbol per line). |
-| `affinage-cache/<SYM>.json` | Cached Affinage API responses, **trimmed** to the fields we use: `narrative.mechanism_profile`, `timeline.current_model`, `prefetch_data.uniprot` (accession/name), `evaluation`, `cost.total_usd`. Two **representative** records are committed as provenance — `GPX4.json` (worked example) and `ADA.json` (the symbol-collision case). The full 12-gene cache regenerates on demand via the script; the extracted GO data for all 12 is already committed in `results/per-gene.json`. `--refresh` re-fetches the full record from the API. |
+| `affinage-cache/<SYM>.json` | Cached Affinage API responses, **trimmed** (by `trim_record`) to the fields we use: `gene`, `run_date`, `narrative.mechanism_profile`, `timeline.current_model`, `prefetch_data.uniprot` (accession/full_name), `evaluation`, `cost.total_usd`. All **42** cohort records are committed (fetched 2026-09-27; Affinage run dates 2026-06-09/10; NDUFA4's record is keyed `COXFA4` by Affinage but cached under the requested symbol). Re-fetching reproduced every previously committed GO set exactly. `--offline` never hits the API; `--refresh` re-fetches and re-trims. |
 | `results/per-gene.json` | Full per-gene comparison (GO sets, shared ids, core-MF capture). |
 | `results/summary.csv` / `results/summary.md` | Generated summary tables. |
 | `batch{2,3,4}-genes.txt` / `results/batch{2,3,4}/` | Extended, stress-test, and hard-case cohorts. |
+| `retrieval_recall.py` | Affinage retrieval recall against finished reviews (PAINT campaign). `--split-file` reports a gene subset separately. |
+| `results/paint-campaign/campaign-genes.txt` | The pinned 91-gene recall cohort (reconstructed from the first committed `per-gene.json`; `--all` now scores every committed report and is a different, growing set). |
+| `fa-cohort-genes.txt` | The 22 Fanconi-anemia genes whose reviews folded in Affinage papers; used with `--split-file` to keep them out of recall headlines. |
 | `results/narrative-vs-go.md`, `results/hard-cases.md` | The two qualitative analyses. |
 | `affinage_deep_research.py` | **HUMAN-ONLY** tool that emits an Affinage record as an AIGR `-deep-research-affinage.md` source file (see below). |
 | `results/example-<GENE>-deep-research-affinage.md` | Committed demo outputs (GPX4, ABCA1, ACADM, ADA, ACAT1). Kept under `results/` — **not** in the live `genes/` tree — so a future review can't ingest a wrong-protein record (see `results/backlog-slice.md`). |
@@ -20,12 +23,19 @@ terms against the local AIGR reviews. Project page: [`../AFFINAGE_EVALUATION.md`
 ## Rerun the comparison
 
 ```bash
-python compare_affinage.py --genes-file pilot-genes.txt   # uses cache
-python compare_affinage.py --refresh GPX4 TP53            # force re-fetch
-python compare_affinage.py --genes-file batch4-genes.txt --out-dir results/batch4
+uv run python compare_affinage.py --offline --genes-file pilot-genes.txt   # uses cache only
+uv run python compare_affinage.py --refresh GPX4 TP53                      # force re-fetch
+uv run python compare_affinage.py --offline --genes-file batch4-genes.txt --out-dir results/batch4
+uv run python compare_affinage.py --no-slim --genes-file pilot-genes.txt   # exact-id only
+
+# retrieval recall, pinned 91-gene cohort, FA reported separately
+uv run python retrieval_recall.py --genes-file results/paint-campaign/campaign-genes.txt \
+    --split-file fa-cohort-genes.txt --split-name FA
 ```
 
-Requires only Python 3 stdlib + `pyyaml` (already a repo dependency) and `curl`.
+Needs `pyyaml` and `curl`, plus the repo package (for the pinned GO release) unless
+`--no-slim` or `--go-obo PATH` is given. The GO release (~32 MB) is gitignored and is
+downloaded and SHA-256-checked on first use.
 
 ## Affinage as a deep-research source (human only)
 
@@ -79,9 +89,10 @@ research — treat it like a falcon/perplexity report, not a curated annotation.
 
 ## Caveats
 
-- Exact-GO-id agreement only; it **understates** agreement where Affinage grounds
-  to a true GO ancestor of the curated term (the dominant pattern — read
-  qualitatively on the project page).
-- The local AIGR references are mixed-maturity, not independently expert-signed
-  ground truth.
-- n=12 pilot: illustrative, not a powered benchmark.
+- Affinage emits only `goslim_generic` terms (43/43 distinct ids across the 42 genes),
+  so exact-id capture is near-impossible by construction; read the slim-level columns.
+  Slim capture counts a gene if *any* core MF's bin is emitted, which is lenient for
+  genes with many core MFs; the top-supported-MF column is the stricter check.
+- The local AIGR references are agent-made reviews, not independently expert-signed
+  ground truth; the FA-cohort reviews had Affinage input by design.
+- 42 genes across four cohorts: illustrative, not a powered benchmark.

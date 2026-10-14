@@ -8,9 +8,10 @@
 # so we pre-process the YAML to remove supporting_text from those entries.
 #
 # Accepts one OR many data files. With many files it strips them in a single
-# pass and makes a single `linkml-reference-validator validate data F1 F2 ...`
-# call (the validator builds/parses the schema once), which is dramatically
-# faster than one process per file. Requires linkml-reference-validator >= 0.2.1
+# pass and makes a single `validate data F1 F2 ...` call through the project
+# ai_gene_review.validation.reference_cli entry point. The validator builds/parses
+# the schema once, which is dramatically faster than one process per file.
+# Requires linkml-reference-validator >= 0.3.0
 # (multi-file `validate data`).
 #
 # Usage: scripts/run_reference_validator.sh validate data F1 [F2 ...] --schema S --target-class C --config CFG
@@ -19,7 +20,7 @@ set -euo pipefail
 
 run_lrv() {
     set +e
-    output="$(uv run linkml-reference-validator "$@" 2>&1)"
+    output="$(uv run python -m ai_gene_review.validation.reference_cli "$@" 2>&1)"
     exit_code=$?
     set -e
 
