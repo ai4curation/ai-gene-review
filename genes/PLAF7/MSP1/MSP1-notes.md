@@ -127,9 +127,10 @@ MSP1 nucleates a large peripheral surface complex:
 
 ## 8. Curation decisions taken
 
-- `GO:0005886 plasma membrane` kept as the core location (merozoite surface); the one row
-  whose evidence is the GPI-anchor structural analysis (PMID:8992312) is refined to
-  `GO:0031362 anchored component of external side of plasma membrane`.
+- `GO:0005886 plasma membrane` kept (ACCEPT) as the core location on all seven rows; the
+  extra specificity supported by the GPI-anchor biochemistry (PMID:8992312) is added as a
+  separate `NEW` row for `GO:0031362 anchored component of external side of plasma
+  membrane`, rather than by modifying one row and leaving the rows inconsistent.
 - `GO:0005576 extracellular region` kept but non-core: it reflects the shed complex, which
   is a real and well-documented state but not where MSP1 does its work.
 - `GO:0016020 membrane` (IEA/InterPro) marked `TOO_GENERAL` — entailed by the accepted
@@ -138,4 +139,12 @@ MSP1 nucleates a large peripheral surface complex:
   binding is neither removed nor marked too-general); the informative partners are
   RhopH3 (Q8I395), RAP1 (Q8ILZ1), CLAG9 (Q8I2G2), MSPDBL1 (PF3D7_1035700) and host S100P
   (P25815), and I add the informative MF terms separately as `NEW` rows.
+- Six `NEW` rows added: `GO:0031362` (GPI-anchored on the external face of the plasma
+  membrane), `GO:0046789 host cell surface receptor binding` (band 3, glycophorin A),
+  `GO:0030507 spectrin binding`, `GO:0140378 protein complex scaffold activity` (the
+  surface-coat platform role), `GO:0035891 exit from host cell` and
+  `GO:0052039 symbiont-mediated perturbation of host cytoskeleton` (egress mechanism), and
+  `GO:0052170 symbiont-mediated suppression of host innate immune response` (S100P).
 - No `REMOVE` anywhere: nothing in the GOA set is contradicted by the literature.
+- Validation (`just validate PLAF7 MSP1`) passes; the only remaining warnings are the
+  four expected protein-binding policy warnings on the `GO:0005515` rows.
