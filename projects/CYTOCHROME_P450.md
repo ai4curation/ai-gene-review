@@ -154,15 +154,19 @@ reason: `GO:0120250 fatty acid omega-hydroxylase activity` is the `is_a` parent
 of both chain-length children. The step-3 name follows its template's suffix
 (`GO:0097259` is a *monooxygenase*) rather than reusing step 2's "ω-oxidase".
 
-Zoomed out, the same shape recurs: of the family's **31 oxo-forming reactions,
-26 are unmapped (84%)** — across CYP24A1's vitamin-D C24 oxidation chain,
-CYP19A1's 19-oxo aromatase intermediate, CYP51A1's 32-oxolanosterol step,
-CYP26C1's 4-oxoretinoate steps and CYP11B2's 18-oxocortisol step. The sharper
-statement is that **every one of the 22 oxo-forming reactions outside the
-eicosanoid class is unmapped**: all five mapped ones are eicosanoid, being three
-hydroperoxy-icosatetraenoate dehydrations onto `GO:0106256` plus `RHEA:48668`
-and `RHEA:48672` — the LTB4 pair that is this page's own precedent. So the one
-class with GO coverage for this step is the class the template comes from.
+Zoomed out, the same shape recurs across the cascade steps, stated here from the
+reactions themselves rather than from the coarse chemistry classification below.
+Of the **22 reactions that form an oxo group, 18 are unmapped**, and **all 17 of
+them outside the eicosanoid class are unmapped (17/17)** — CYP24A1's vitamin-D
+C24 oxidation chain, CYP19A1's 19-oxo aromatase intermediate, CYP51A1's
+32-oxolanosterol step, CYP26C1's 4-oxoretinoate steps and CYP11B2's 18-oxocortisol
+step. The four that *are* mapped are all eicosanoid: three
+hydroperoxy-icosatetraenoate dehydrations onto `GO:0106256`, plus **`RHEA:48668`,
+which is step 2 of the LTB4 cascade** that this page uses as its precedent. The two
+reactions that form the second carboxylate (`RHEA:39043`, `RHEA:39047`, batch 8's
+step 3) are both unmapped, while the LTB4 equivalent `RHEA:48672` is mapped to
+`GO:0097259`. So for both cascade steps the only GO coverage that exists is on the
+one substrate the template comes from.
 
 Where GO represents a cascade with a single term it uses a *net-reaction* one —
 `GO:0070330 aromatase activity` and `GO:0008398 sterol 14-demethylase activity`
@@ -170,29 +174,31 @@ are both defined with 3 O₂ and 3 reductase equivalents, releasing formate — 
 RHEA's partial reactions have nothing to land on there. The LTB4 trio proves the
 per-step alternative is also acceptable to GO.
 
-### Unmapped chemistry: the top classes by unmapped count
+### On the chemistry classification: a triage aid, not a measurement
 
-The eight rows with the most unmapped reactions, out of 25 chemistry ×
-substrate-class rows in all; this is a selection, not the whole table, and
-per-class totals should be read from
-[`data/cyp-chemistry.tsv`](CYTOCHROME_P450/data/cyp-chemistry.tsv) rather than
-summed from here.
+`cyp_go_audit.py` also labels each reaction with a chemistry and a substrate class
+by pattern-matching its equation, emitted as
+[`data/cyp-chemistry.tsv`](CYTOCHROME_P450/data/cyp-chemistry.tsv) and per-reaction
+in [`data/cyp-reactions.tsv`](CYTOCHROME_P450/data/cyp-reactions.tsv). **No claim on
+this page rests on those aggregates**, deliberately: a regex over equation strings
+cannot reliably decide which group a reaction forms, and this one has two known
+failure modes in opposite directions.
 
-| Chemistry | Substrate class | Reactions | Unmapped | % |
-|---|---|---:|---:|---:|
-| hydroxylation | steroid / sterol | 79 | 54 | 68% |
-| hydroxylation | eicosanoid / PUFA | 36 | 28 | 78% |
-| epoxidation | eicosanoid / PUFA | 32 | 18 | 56% |
-| hydroxylation | other fatty acid | 28 | 18 | 64% |
-| oxo-formation | steroid / sterol | 10 | 10 | **100%** |
-| oxo-formation | other/unclassified | 7 | 7 | **100%** |
-| epoxidation | other fatty acid | 5 | 5 | **100%** |
-| aromatization (formate-releasing) | steroid / sterol | 10 | 5 | 50% |
+It originally attributed a group the *substrate* already carried to the enzyme, so
+ω-hydroxylation of an epoxy fatty acid (`9,10-epoxyoctadecanoate →
+18-hydroxy-9,10-epoxy-octadecanoate`) counted as an epoxidation. Requiring the
+pattern to match the product side and *not* the substrate side fixes that, but it
+then misses poly-hydroxylation, where the substrate already has a hydroxyl
+(`20S-hydroxycholecalciferol → 20S,25-dihydroxycholecalciferol`): **46 reactions
+now fall to `other/unclassified` despite forming a hydroxyl**, and even
+`RHEA:48672` and `RHEA:48664`, both cited above by id, land there. Two further
+corrections came out of the same pass: saturated `docosanoate`/`hexacosanoate` were
+being classed as PUFAs by a `docosa` pattern meant for docosahexaenoate, and the
+third step of ω-oxidation had no class at all until a
+`carboxylate formation (aldehyde to acid)` one was added for it.
 
-Chemistry and substrate classes are assigned by pattern-matching the reaction
-equation — a summary aid, with the per-reaction assignment emitted in
-[`data/cyp-reactions.tsv`](CYTOCHROME_P450/data/cyp-reactions.tsv) so it can be
-checked. The three 100% rows are the cascade-step classes above.
+Use the file to find candidate reactions, not to quantify a class. Per-reaction
+labels are emitted precisely so they can be checked.
 
 ### CYP4F22: the one enzyme GO does not describe
 
@@ -299,7 +305,9 @@ their `CC CATALYTIC ACTIVITY` RHEA cross-references and evidence codes, their
 GOA molecular-function rows from QuickGO with evidence and reference, and `is_a`
 ancestor closures for every term involved. Hub/tier classification, provenance,
 reaction coverage and the chemistry classification are computed from those
-inputs. Review coverage is read from `genes/human/<GENE>/<GENE>-ai-review.yaml`.
+inputs. The chemistry labels count a group as formed only when the pattern
+matches the product side and not the substrate side; see the caveats above
+before using them for anything but triage. Review coverage is read from `genes/human/<GENE>/<GENE>-ai-review.yaml`.
 
 ```bash
 cd projects/CYTOCHROME_P450

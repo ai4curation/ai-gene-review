@@ -85,6 +85,10 @@ CHEMISTRY = [
     ("N-oxidation/N-dealkylation", re.compile(r"\bN-oxide|N-desmethyl|N-demethyl", re.I)),
     ("O-dealkylation", re.compile(r"O-demethyl|O-desmethyl", re.I)),
     ("dehydration", re.compile(r"dehydrat", re.I)),
+    # The third step of omega-oxidation forms a second carboxylate, so neither
+    # the "oxo" nor the "hydroxy" pattern fires on its product.
+    ("carboxylate formation (aldehyde to acid)",
+     re.compile(r"dioate\b|dicarboxylate", re.I)),
     ("oxo-formation (alcohol to aldehyde/ketone)", re.compile(r"\d+-oxo|-oxo-|oxodocosanoate|oxohexacosanoate", re.I)),
     ("hydroxylation", re.compile(r"hydroxy", re.I)),
 ]
@@ -92,8 +96,11 @@ SUBSTRATE_CLASSES = [
     ("steroid / sterol", re.compile(
         r"steroid|sterol|cholesterol|progesterone|androst|estr|testosterone|cortisol|"
         r"corticosterone|aldosterone|pregnen|calcidiol|calcitriol|vitamin D|androstan", re.I)),
+    # (eicosa|icosa|docosa) must be followed by an "-enoate" to count as a PUFA:
+    # docosanoate and hexacosanoate are saturated and belong to "other fatty acid".
     ("eicosanoid / PUFA", re.compile(
-        r"eicosa|docosa|arachidon|icosa|linole|lipoxin|prostagland|leukotriene|hydroperoxy", re.I)),
+        r"(?:eicosa|icosa|docosa)[a-z]*enoate|arachidon|linole|lipoxin|"
+        r"prostagland|leukotriene|hydroperoxy", re.I)),
     ("other fatty acid", re.compile(
         r"anoate|enoate|fatty acid|dodecanoate|tetradecanoate|hexadecanoate|octadecanoate", re.I)),
     ("retinoid", re.compile(r"retino|retinal", re.I)),
@@ -212,8 +219,24 @@ def fetch_terms(go_ids: set[str]) -> dict[str, dict]:
 
 
 def classify_reaction(equation: str) -> tuple[str, str]:
-    chem = next((n for n, p in CHEMISTRY if p.search(equation)), "other/unclassified")
-    sub = next((n for n, p in SUBSTRATE_CLASSES if p.search(equation)), "other/unclassified")
+    """Heuristically label a reaction's chemistry and its substrate class.
+
+    The chemistry is decided by which group the reaction *forms*: a pattern
+    counts only when it matches the product side and does **not** already match
+    the substrate side. Without that second test, omega-hydroxylation of an
+    epoxy fatty acid (``9,10-epoxy-octadecanoate -> 18-hydroxy-9,10-epoxy-
+    octadecanoate``) is labelled an epoxidation, because the word "epoxy" is in
+    the substrate's own name. Still a heuristic -- the per-reaction labels are
+    emitted so they can be checked -- but it no longer attributes a group the
+    substrate arrived with to the enzyme.
+    """
+    lhs, _, rhs = equation.partition(" = ")
+    if not rhs:                      # no parsable product side; fall back
+        lhs, rhs = "", equation
+    chem = next((n for n, p in CHEMISTRY
+                 if p.search(rhs) and not p.search(lhs)), "other/unclassified")
+    sub = next((n for n, p in SUBSTRATE_CLASSES if p.search(equation)),
+               "other/unclassified")
     return chem, sub
 
 
