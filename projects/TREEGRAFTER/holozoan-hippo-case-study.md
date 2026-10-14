@@ -64,7 +64,7 @@ that the reference trees sample thinly.
    - Hippo signaling at the same node is supported by the *Capsaspora* data.
 
    So the node is right for the pathway term and too deep for the tissue
-   terms. This is the same shape as the rotary-ATPase leak, where an IBD on a
+   terms. This is the same shape as the FliI/SctN case, where an IBD on a
    duplication node reaches paralogs that do not share the function.
 
 3. **Conserved signalling terms transfer well.** The three TreeGrafter rows on
