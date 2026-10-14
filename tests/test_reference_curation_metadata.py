@@ -109,7 +109,7 @@ def test_replacement_cycle_rejected(tmp_path):
     ("A cofactor was required.", True),
     ("An interaction was observed.", False),
 ])
-def test_lrv_checks_finding_review_quote_against_explicit_source(tmp_path, quote, valid):
+def test_lrv_checks_finding_review_quote_against_explicit_source(tmp_path, quote, valid, no_network_subprocess_env):
     """Run real LRV offline: a quote from P2 must not pass when attributed to P3."""
     data = review_data()
     data["references"][1]["findings"][0]["finding_review"]["supported_by"][0]["supporting_text"] = quote
@@ -124,14 +124,16 @@ def test_lrv_checks_finding_review_quote_against_explicit_source(tmp_path, quote
     path = tmp_path / "review.yaml"
     path.write_text(yaml.safe_dump(data))
     config = tmp_path / "config.yaml"
-    config.write_text(yaml.safe_dump({"cache_dir": str(cache)}))
+    config.write_text(yaml.safe_dump({"cache_dir": str(cache), "trust_cached_entries": True}))
+    env, network_attempt = no_network_subprocess_env
     result = subprocess.run(
         [str(Path(sys.executable).with_name("linkml-reference-validator")),
          "validate", "data", str(path), "--schema", str(SCHEMA),
          "--target-class", "GeneReview", "--config", str(config)],
-        capture_output=True, text=True, check=False,
+        capture_output=True, text=True, check=False, env=env, timeout=60,
     )
     output = result.stdout + result.stderr
+    assert not network_attempt.exists(), output
     assert (result.returncode == 0) == valid, output
     if not valid:
         assert "finding_review.supported_by" in output
