@@ -88,10 +88,12 @@ date (2,937 human, 952 P. putida), with
 go-edit.obo pinned to go-ontology commit 3df35ba (`GO_EDIT_COMMIT`; saved as
 `data/go-edit-3df35ba.obo`, so a copy from another commit is never reused).
 The folder is a uv workspace member (`pyproject.toml` declares networkx and pyyaml).
-Results are deterministic: term-level p-values follow `--seed` (default 42), and every
-set that feeds an ordering (edge insertion, so the Louvain partition; F1 ties between BP
-terms, broken by lowest GO id; hub-chemical ranking) is iterated in sorted order, so the
-output does not depend on Python's per-process hash seed. The permutation p-value floor is 1/201 ≈ 0.005 with the
+Results are deterministic. Term-level p-values follow `--seed` (default 42). Every set
+that feeds an ordering (edge insertion, and so the Louvain partition; hub-chemical
+ranking) is iterated in sorted order, so the output does not depend on Python's
+per-process hash seed. When BP terms tie on F1 for a community, the most specific is
+reported (a tied term that is an ancestor of another tied term is dropped), then the
+lowest GO id among siblings. The permutation p-value floor is 1/201 ≈ 0.005 with the
 default `--n-random 200`. Reviews that use obsolete GO terms are reported as a warning
 and counted in `summary.json` (`obsolete_terms_ignored`: 80 human gene–term pairs). An
 obsolete term has no parents, so it contributes nothing to the BP sets.
@@ -136,9 +138,8 @@ daf-11, odr-1 and seven *gcy* guanylate cyclases. They all carry *cGMP biosynthe
 process*, but that term covers 9 enzymes, so none of the 36 pairs counts as sharing a
 specific BP. The term- and community-level tests rate the same genes as ideal:
 *cGMP biosynthetic process* is fully connected (p = 0.005), and worm's one community
-is exactly these 9 genes (F1 = 1.0 against *cGMP metabolic process* and its ancestors;
-`communities.tsv` reports the tied term with the lowest GO id). In *P. putida* (cutoff 28) and human (44),
-paralog families sit well below the cutoff.
+is exactly these 9 genes and is labelled *cGMP biosynthetic process* (F1 = 1.0). In
+*P. putida* (cutoff 28) and human (44), paralog families sit well below the cutoff.
 
 ### The network does assemble
 
@@ -162,7 +163,8 @@ paralog families sit well below the cutoff.
     L-leucine catabolism (0.89).
   - Human: 10 of 19 match. Examples are protein N-linked glycosylation (0.79), glucose
     6-phosphate metabolism (0.72), nucleotide salvage (0.60), bile-acid biosynthesis and
-    unsaturated fatty-acid elongation (0.93).
+    saturated fatty-acid elongation (0.93; tied with the unsaturated sibling term, as each
+    covers 7 of the cluster's 8 genes: ELOVL1–7 and HSD17B12).
 
 ### It agrees with BP, strongly but not completely
 

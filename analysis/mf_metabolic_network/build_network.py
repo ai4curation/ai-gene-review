@@ -30,11 +30,17 @@ import csv
 import json
 import random
 import re
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 import networkx as nx
 import yaml
+
+# fetch_bulk.py (same folder) holds the pinned go-edit commit; put the folder on the path so
+# this module also imports when run or imported from elsewhere.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fetch_bulk import GO_EDIT  # noqa: E402
 
 try:
     from yaml import CSafeLoader as Loader
@@ -91,7 +97,6 @@ MACROMOLECULE_PATTERNS = re.compile(
     r"\[[^\]]*\b(protein|[a-z]*ase)\b[^\]]*\])")
 # go-edit.obo pinned to a go-ontology commit; the file name carries the commit so a copy
 # fetched from another commit is never picked up silently (see fetch_bulk.py).
-from fetch_bulk import GO_EDIT  # noqa: E402  (same folder; the commit is pinned there)
 # GO->Rhea comes from the `xref: RHEA:n {source="skos:..."}` lines of go-edit.obo, keeping
 # ONLY skos:exactMatch. go-basic.obo, rhea2go and the Rhea TSV GO column drop the predicate,
 # so narrowMatch/broadMatch xrefs there look like exact mappings (e.g. GO:0016616
@@ -464,14 +469,20 @@ def main():
     if G.number_of_edges():
         comms = nx.community.louvain_communities(G.subgraph(giant), weight="weight", seed=args.seed)
         for i, cm in enumerate(sorted(comms, key=len, reverse=True)):
-            best = None
-            for t in sorted(set().union(*[met_bp[g] for g in cm])):  # ties -> lowest GO id
+            scored = {}
+            for t in sorted(set().union(*[met_bp[g] for g in cm])):
                 tg = {g for g in enz if t in met_bp[g]}
                 tp = len(tg & cm)
                 prec, rec = tp / len(cm), tp / len(tg)
-                f1 = 2 * prec * rec / (prec + rec) if tp else 0
-                if best is None or f1 > best[0]:
-                    best = (f1, t, prec, rec)
+                scored[t] = (2 * prec * rec / (prec + rec) if tp else 0, prec, rec)
+            best = None
+            if scored:
+                top = max(f for f, _, _ in scored.values())
+                tied = [t for t, v in scored.items() if v[0] == top]
+                # F1 ties: prefer the most specific term (drop any tied term that is an ancestor
+                # of another tied term), then the lowest GO id among the remaining siblings.
+                t = min(t for t in tied if not any(o != t and t in anc(o) for o in tied))
+                best = (top, t, scored[t][1], scored[t][2])
             hub = Counter(c for g in sorted(cm) for c in sorted(gene_chem[g])).most_common(5)
             comm_rows.append({
                 "community": i, "size": len(cm),
@@ -531,7 +542,7 @@ def main():
         "louvain_communities": len(comm_rows),
         "communities_best_bp_f1>=0.5": sum(r["f1"] >= 0.5 for r in comm_rows),
         "top_hub_metabolites": [(chebi2name.get(c, c), len(gs)) for c, gs in
-                                sorted(chem_genes.items(), key=lambda x: (-len(x[1]), x[0]))[:15]],
+                                sorted(chem_genes.items(), key=lambda x: (-len(x[1]), chebi2name.get(x[0], x[0]), x[0]))[:15]],
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
 
