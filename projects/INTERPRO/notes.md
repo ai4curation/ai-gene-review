@@ -19,8 +19,10 @@ counts are from QuickGO `withFrom` queries on 2026-09-27.
   subset. Both terms read SctN as an F1 synthase. The process and complex mappings are
   endorsed.
 - **`IPR004100` -> `GO:1902600`, `GO:0046034` — NARROW.** A domain shared by genuine
-  rotary ATPase subunits and the FliI/SctN paralogs (71,788 annotations in all). The fix
-  is conditional suppression when IPR005714 also matches, not removal.
+  rotary ATPase subunits and the FliI/SctN paralogs (71,788 annotations in all). The
+  ideal fix is suppression when IPR005714 also matches; since a per-entry InterPro2GO
+  mapping probably cannot express that, the practical fix is removing these two
+  mappings or moving them to narrower entries that exclude FliI/SctN (2026-10-14).
 - **`IPR005714` -> `GO:0009058` — REMOVE.** Present in the 2025-09 mapping file but with
   no annotations in QuickGO, so it may already be filtered downstream.
 

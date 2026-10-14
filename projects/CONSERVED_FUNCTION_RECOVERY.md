@@ -50,10 +50,14 @@ test asks how well plain GO annotation recovers it
 
 ### What the false positives were
 
-- **Almost every FliI / SctN protein in UniProt is annotated as an ATP synthase.**
-  These are the ATPases that power flagellar and injectisome (type III) protein
-  export. They are paralogs of the F1-ATP synthase β subunit, and they hydrolyse ATP
-  rather than make it. Of the 11,205 UniProtKB entries in their family (InterPro
+- **Almost every UniProtKB entry in the FliI/SctN family (IPR005714) currently
+  receives ATP-synthase GO terms.** FliI and SctN are the soluble ATPases of the
+  flagellar and injectisome (type III) export systems: they couple ATP hydrolysis
+  to substrate docking and chaperone release and stimulate export, while the
+  proton-motive-force-coupled step happens at the membrane export gate. They are
+  homologs of the F1/V1/A1 α/β catalytic subunits (FliI resembles both F1 α and
+  β; PMID:17202259), and in PTHR15184 the nearest synthase-side clade is F1-β.
+  They hydrolyse ATP rather than make it. Of the 11,205 UniProtKB entries in their family (InterPro
   IPR005714), 97% carry `GO:0046933` *proton-transporting ATP synthase activity,
   rotational mechanism* and 97% carry `GO:0015986` *proton motive force-driven ATP
   synthesis*. Among the 29 reviewed Swiss-Prot entries, all 29 carry `GO:0015986`
@@ -62,7 +66,7 @@ test asks how well plain GO annotation recovers it
   `GO:0046933` and `GO:0045259` *proton-transporting ATP synthase complex*) sit on
   `PANTHER:PTN008558586` in PTHR15184. In the live PANTHER tree that node is a
   **duplication**. Its two children are the F1-β clade `PTN008558588`, which holds
-  every seed, and the FliI/SctN export-ATPase clade `PTN000390097` (SF9 SPI-1, SF62
+  every experimental seed cited for those IBDs, and the FliI/SctN export-ATPase clade `PTN000390097` (SF9 SPI-1, SF62
   SPI-2, SF81 flagellar) ([placement](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv)).
   - PAINT IBA passes `GO:0046933` to 28 proteins with the FliI/SctN signature
     IPR005714 in the reference genomes, plus a *Chlamydia* FliI (O84722) that lacks
@@ -70,8 +74,9 @@ test asks how well plain GO annotation recovers it
     include *Salmonella* FliI, InvC and SsaN and *E. coli* FliI.
   - TreeGrafter then passes `GO:0046933` to every grafted FliI/SctN. All five graft
     nodes seen in our reviews descend from `PTN000390097`.
-  - The IBD was placed one node too deep. TreeGrafter faithfully reproduces the
-    error rather than causing it.
+  - The IBD was placed one node too high (too ancient): on the duplication
+    immediately above the F1-β / FliI–SctN split rather than on the F1-β clade.
+    TreeGrafter faithfully reproduces the error rather than causing it.
 - **Two more pipelines add errors of their own:**
   - InterPro2GO maps the **SctN-specific** entry IPR013380 to `GO:0046961` *proton-
     transporting ATPase activity, rotational mechanism* and to `GO:0006754` *ATP
@@ -79,8 +84,9 @@ test asks how well plain GO annotation recovers it
   - It maps the shared F1/V1/A1 N-terminal domain IPR004100 to `GO:1902600` *proton
     transmembrane transport* and `GO:0046034` *ATP metabolic process*.
   - GO's logical inference (`GO_REF:0000108`) then turns each wrong molecular
-    function into a wrong process: `GO:0046933` → `GO:0015986` and `GO:0046961` →
-    `GO:1902600`.
+    function into a wrong process through `part_of` links: `GO:0046933` is
+    `part_of` `GO:0015986`, and `GO:0046961` is_a `GO:0015078` proton
+    transmembrane transporter activity, which is `part_of` `GO:1902600`.
 - **Nine full reviews reject every such row:** 35 rows, 31 REMOVE and 4
   MARK_AS_OVER_ANNOTATED, with none accepted
   ([per-row table](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/review_actions.tsv)).
@@ -89,16 +95,18 @@ test asks how well plain GO annotation recovers it
 
 The reviews give the evidence with verbatim quotes. In brief:
 
-- **FliI/SctN are hydrolases.** They are soluble, peripheral ATPases that dock
-  export chaperone–substrate complexes, release the chaperones, and unfold and hand
-  on the substrates. Their EC is 7.4.2.8, protein-secreting ATPase.
+- **FliI/SctN are ATP-hydrolysing protein-export ATPases.** They are soluble,
+  peripheral ATPases that dock export chaperone–substrate complexes, release the
+  chaperones, and unfold and hand on the substrates. Their enzyme class is
+  EC 7.4.2.8, protein-secreting ATPase (a translocase class; formerly EC 3.6.3.50).
 - **FliI's ATPase is not an F-type activity.** It is insensitive to inhibitors of
   F-, V- and P-type ATPases (PMID:8943245).
-- **Protons move through the export gate, not the ATPase.** The export apparatus
-  does use the proton motive force, but the flux runs through the membrane export
-  gate, a proton–protein antiporter whose *Salmonella* `FlhA` subunit acts as the ion channel (PMID:21934659,
-  PMID:29946050). CCCP sensitivity of Ysc secretion reflects this (PMID:15213145),
-  not proton transport by SctN.
+- **Protons move through the export gate, not the ATPase.** In the flagellar
+  system the proton motive force is used at the membrane export gate, a
+  proton–protein antiporter in which *Salmonella* `FlhA` is implicated in the
+  proton path (PMID:21934659, PMID:29946050). Injectisome export is also
+  PMF-dependent, as the CCCP sensitivity of Ysc secretion shows (PMID:15213145).
+  In neither system is the soluble FliI/SctN ATPase a rotary proton pump.
 - **The resemblance to F1 is real but does not make them synthases.** FliJ/SctO is
   γ-stalk-like, and the FliI₆–FliJ ring resembles F1 (PMID:21278755, PMID:17202259).
   But the ring still hydrolyses ATP and has no Fo sector to couple to.
@@ -174,7 +182,10 @@ The reviews give the evidence with verbatim quotes. In brief:
 2. **InterPro2GO:**
    - Drop `GO:0046961` and `GO:0006754` from IPR013380. That entry is SctN-specific,
      so the mapping is wrong for every member.
-   - Suppress IPR004100 → `GO:1902600` / `GO:0046034` when IPR005714 also matches.
+   - Remove the IPR004100 → `GO:1902600` / `GO:0046034` mappings, or move them to
+     narrower entries that exclude FliI/SctN. Ideally they would be suppressed only
+     when IPR005714 also matches, but a per-entry InterPro2GO mapping probably
+     cannot express that condition.
    - Drop the stale IPR005714 → `GO:0009058` *biosynthetic process* mapping.
    - All five are recorded in the [InterPro mapping review](INTERPRO.md)
      ([mapping set](INTERPRO/interpro2go.sssom.yaml)).
