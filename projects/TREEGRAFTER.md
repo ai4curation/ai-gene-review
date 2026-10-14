@@ -860,9 +860,10 @@ predictions a VDCL assessment from a prediction review.
   includes the TreeGrafter rows, so ProtNLM is in part being scored against
   TreeGrafter here.
 
-Ten proteins is too few for rates. A larger test would have to come from the
-other direction: ProtNLM2 predictions on TreeGrafter-annotated proteins, for
-example the 577 reviewed here (mostly *P. putida*).
+Ten proteins is too few for rates. A larger test is under way as the
+[DONKEY40 cohort](PROTNLM_EVALUATION/donkey40.md): 40 donkey proteins with
+both ProtNLM2 GO output and TreeGrafter rows, each paired with a horse
+ortholog carrying PAINT IBA rows.
 
 ## Propagation rules and graft paths
 
@@ -1404,6 +1405,11 @@ Opisthokonta). Output in
   check on a fresh sample that includes accepted TreeGrafter rows as
   controls, with the review actions recorded before the reports are read;
   only then quote a sensitivity/specificity.
+- **Controlled OpenScientist batch (running).** 16 pre-registered blinded
+  hypotheses, mixing UNDECIDED rows, accepted sole-source controls and rule
+  tests, with the review actions frozen in
+  [`openscientist-controls/selection.yaml`](TREEGRAFTER/openscientist-controls/selection.yaml)
+  before any report is read.
 - **Blind the corroboration test.** Re-adjudicate a sample of `GO_REF:0000118`
   and `GO_REF:0000120` rows with `original_reference_id` withheld, to separate
   the corroboration effect from the reviewer's visibility of the label.
