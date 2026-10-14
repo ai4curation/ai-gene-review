@@ -1926,7 +1926,7 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
     warnings.extend(validate_feedback_loops(doc))
-    model_errors, model_warnings = validate_executable_models(doc)
+    model_errors, model_warnings = validate_executable_models(doc, project_root)
     errors.extend(model_errors)
     warnings.extend(model_warnings)
     warnings.extend(symbol_label_warnings(doc))
@@ -2258,8 +2258,8 @@ def validate_executable_models(
         unchecked_scenario_models,
     )
 
-    if not isinstance(doc, dict):
-        return [], []
+    if not isinstance(doc, dict) or not isinstance(doc.get("module"), dict):
+        return [], []  # schema validation reports a missing module mapping
     errors: List[str] = []
     for model in doc.get("executable_models") or []:
         if not isinstance(model, dict):
