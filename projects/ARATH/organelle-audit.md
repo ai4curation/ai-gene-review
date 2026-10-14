@@ -27,21 +27,43 @@ what is known about the protein:
    demonstrably wrong electronic inference. The exception is **MARK_AS_OVER_ANNOTATED** when
    a genuine organellar targeting signal or an unresolved organellar-import report exists
    (CYP79B3: N-terminal GUS-fusion plastid report; MKK5: predicted transit sequence,
-   paralog MKK4 is imported into the stroma).
+   paralog MKK4 is imported into the stroma). Rule 6 overrides this rule when another row
+   carries the same term.
 3. **A single high-throughput proteomics hit (HDA) for a protein localized elsewhere**:
    **MARK_AS_OVER_ANNOTATED**, not REMOVE. The detection is a real experimental observation
    and most likely contamination, but no targeted experiment excludes the organelle. This
    was already the majority practice (ERECTA, GSTF6, GSTU20, KCR1, PRR7, SUR1, TGG1/2,
-   UVR8, VAL1, CUT1, FVE).
+   UVR8, VAL1, CUT1, FVE). Review reasons point to this page rather than repeating the
+   precedent list, which would go stale.
 4. **Experimental (IDA/HDA) rows are REMOVEd only** when the full text shows an attribution
    error (LHP1: the IDA chloroplast row comes from a RIBA1-3 paper that never mentions
    LHP1), or when the same review accepts an experimental NOT for that organelle (ABCG36:
-   NOT chloroplast by IDA, which entails NOT for its sub-compartments). An IDA row is not
-   removed on abstract-only or incomplete cached text (EDS1).
+   NOT chloroplast by IDA, which entails NOT for its sub-compartments). An experimental row
+   whose supporting figures we cannot see is UNDECIDED, not removed or marked as
+   over-annotated (EDS1: the cached full text lacks the results section).
 5. **IBA** rows are judged on node placement. LCYB mitochondrion (IBA from a COQ6-clade
    placement of a plastid cyclase) stays REMOVE.
+6. **Tie-break: one action per term group.** Rules 2 to 5 are indexed on evidence code, but
+   a review judges the claim, not the code (`docs/action_consistency.md`): rows on the same
+   term in one gene, with the same polarity and isoform, take one action. When the rules
+   give different actions for rows on one term, the whole group takes the weaker one:
+   - UNDECIDED, if any row is UNDECIDED because its evidence cannot be judged. A row we
+     cannot judge cannot be overruled by a sibling's REMOVE (EDS1 chloroplast: IDA and ISM
+     both UNDECIDED).
+   - Otherwise MARK_AS_OVER_ANNOTATED, if any row takes it. This is the usual case: an ISM
+     prediction (rule 2) shares a term with an HDA hit (rule 3), and the group is
+     MARK_AS_OVER_ANNOTATED (AT5G02500 chloroplast, ABCG36 mitochondrion).
+   - REMOVE for the whole group only when rule 4 applies to the claim itself: the review
+     accepts an experimental NOT for that organelle, or the full text shows a wrong-gene
+     attribution (ABCG36 chloroplast and chloroplast envelope: HDA rows REMOVE under an
+     accepted NOT chloroplast).
 
-UNDECIDED rows (F4JLB7 chloroplast ISM, RCA stromule IDA) were not touched.
+   The sibling rows' reasons must agree. Each one names the other row and the shared
+   action, instead of one calling the claim contradicted while the other leaves it open.
+   After this rule, no gene in the audit has two different actions on the same organelle
+   term.
+
+Pre-existing UNDECIDED rows (F4JLB7 chloroplast ISM, RCA stromule IDA) were not touched.
 
 ## Counts (198 rows)
 
@@ -49,11 +71,11 @@ UNDECIDED rows (F4JLB7 chloroplast ISM, RCA stromule IDA) were not touched.
 |---|---|---|
 | ACCEPT | 111 | 111 |
 | KEEP_AS_NON_CORE | 19 | 19 |
-| MARK_AS_OVER_ANNOTATED | 21 | 27 |
+| MARK_AS_OVER_ANNOTATED | 21 | 28 |
 | MODIFY | 1 | 1 |
-| REMOVE | 44 | 37 |
+| REMOVE | 44 | 34 |
 | TOO_GENERAL | 0 | 1 |
-| UNDECIDED | 2 | 2 |
+| UNDECIDED | 2 | 4 |
 
 By evidence, for the rows that moved:
 
@@ -62,15 +84,19 @@ By evidence, for the rows that moved:
 | HDA:REMOVE | 7 | 2 |
 | HDA:MARK_AS_OVER_ANNOTATED | 19 | 24 |
 | IDA:REMOVE | 2 | 1 |
-| IDA:MARK_AS_OVER_ANNOTATED | 0 | 1 |
+| IDA:UNDECIDED | 1 | 2 |
 | IEA:REMOVE | 1 | 0 |
 | IEA:TOO_GENERAL | 0 | 1 |
+| ISM:REMOVE | 33 | 30 |
+| ISM:MARK_AS_OVER_ANNOTATED | 2 | 4 |
+| ISM:UNDECIDED | 1 | 2 |
 
-`chloroplast` (GO:0009507) alone: 95 rows. REMOVE went from 26 to 24 and
-MARK_AS_OVER_ANNOTATED from 4 to 6. The 24 remaining REMOVEs are ISM predictions on
-nuclear, cytosolic, ER or plasma-membrane proteins (rule 2), plus ABCG36 HDA (rule 4) and
-LHP1 IDA (attribution error). The two remaining HDA REMOVEs are ABCG36 chloroplast and
-chloroplast envelope, both under an accepted experimental NOT chloroplast.
+`chloroplast` (GO:0009507) alone: 95 rows. REMOVE went from 26 to 22,
+MARK_AS_OVER_ANNOTATED from 4 to 6 and UNDECIDED from 1 to 3. The 22 remaining REMOVEs
+are ISM predictions on nuclear, cytosolic, ER or plasma-membrane proteins with no sibling
+row on the term (rule 2), plus ABCG36 HDA (rule 4) and LHP1 IDA (attribution error). The
+two remaining HDA REMOVEs are ABCG36 chloroplast and chloroplast envelope, both under an
+accepted experimental NOT chloroplast.
 
 ## Changed rows
 
@@ -83,17 +109,25 @@ chloroplast envelope, both under an accepted experimental NOT chloroplast.
 | RBOHD | plastid | HDA | PMID:28887381 | REMOVE | MARK_AS_OVER_ANNOTATED | 3 |
 | SOS1 | chloroplast envelope | HDA | PMID:12938931 | REMOVE | MARK_AS_OVER_ANNOTATED | 3 |
 | ABCG36 | chloroplast envelope | HDA | PMID:12938931 | MARK_AS_OVER_ANNOTATED | REMOVE | 4 |
-| EDS1 | chloroplast | IDA | PMID:33751092 | REMOVE | MARK_AS_OVER_ANNOTATED | 4 |
+| ABCG36 | mitochondrion | ISM | GO_REF:0000122 | REMOVE | MARK_AS_OVER_ANNOTATED | 6 (sibling HDA row is MARK_AS_OVER_ANNOTATED) |
+| AT5G02500 (HSC70-1) | chloroplast | ISM | GO_REF:0000122 | REMOVE | MARK_AS_OVER_ANNOTATED | 6 (sibling HDA row is MARK_AS_OVER_ANNOTATED) |
+| EDS1 | chloroplast | IDA | PMID:33751092 | REMOVE | UNDECIDED | 4 (figures not available to us) |
+| EDS1 | chloroplast | ISM | GO_REF:0000122 | REMOVE | UNDECIDED | 6 (sibling IDA row is UNDECIDED; reason rewritten, it described the EIJ1 paper) |
 | APO1 | plastid | IEA | GO_REF:0000043 | REMOVE | TOO_GENERAL | 1 |
-| EDS1 | chloroplast | ISM | GO_REF:0000122 | REMOVE | REMOVE (summary and reason rewritten; they described the EIJ1 paper) | 2 |
 | GIP1 | mitochondrion | ISM | GO_REF:0000122 | REMOVE | REMOVE (boilerplate reason replaced with localization evidence) | 2 |
+
+The six rule-3 HDA reasons (AT1G74310 x2, AT5G02500, LYM2, RBOHD, SOS1) end with one
+sentence pointing to this page instead of a hard-coded precedent gene list. LYM2's reason
+no longer argues that the organelle is topologically impossible, which would be a case
+for REMOVE.
 
 ## Left for a human
 
-- **EDS1 chloroplast IDA (PMID:33751092)**: the cached full text has no results section, so
-  we cannot see whether a figure places EDS1 in chloroplasts (TAIR curated nucleus,
-  cytoplasm and chloroplast from the paper). Marked as over-annotated, not removed. Someone
-  with the figures should confirm.
+- **EDS1 chloroplast (IDA PMID:33751092 and ISM)**: the cached full text has no results
+  section, so we cannot see whether a figure places EDS1 in chloroplasts (TAIR curated
+  nucleus, cytoplasm and chloroplast from the paper). Both rows are UNDECIDED. Someone with
+  the figures should decide: if no figure shows EDS1 in chloroplasts, both rows become
+  REMOVE; if one does, the IDA row is kept and the ISM row follows it.
 - **CYP79B3 ISM chloroplast** and **MKK5 ISM mitochondrion** stay MARK_AS_OVER_ANNOTATED
   rather than REMOVE because organellar targeting is genuinely predicted or reported but
   untested. A targeted localization experiment would settle them.
