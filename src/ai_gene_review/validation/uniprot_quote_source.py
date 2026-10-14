@@ -10,16 +10,22 @@ record mixes evidence with restated annotation:
 * Protein names, keywords, database cross-references (including the record's
   own GO lines) and family-membership notes restate a classification. Quoting
   them supports an annotation with another form of the same claim.
-* Statements whose only evidence is an ARBA rule are machine output. Quoting
-  them as support for anything, ARBA annotations above all, is circular.
+* Statements whose evidence is entirely automatic are machine output: UniProt's
+  rule systems (ARBA, UniRule/RuleBase, HAMAP, PIRNR/PIRSR), signature matches
+  (``ECO:0000259``), imported submitter annotation (``ECO:0000313``) and
+  electronic GO lines (``IEA:``). Quoting them as support repeats a prediction;
+  for an annotation made by the same kind of pipeline it is circular.
+  Experimental evidence (``ECO:0000269``, usually with a PubMed id), curator
+  statements (``ECO:0000305``, ``ECO:0000303``), curated similarity and
+  sequence-analysis assertions (``ECO:0000250``, ``ECO:0000255``) and
+  untagged text in reviewed entries are not automatic.
 
-Two checks follow, both reported as warnings:
+Two global checks follow, both reported as warnings, whatever the quote supports:
 
-``uniprot_quote_arba_sourced``
-    The quoted statement's evidence names ARBA, and nothing else supports it:
-    every other source is automatic (``ECO:0000256``, ``ECO:0000259``,
-    ``ECO:0000313``, ``ECO:0007...``, or ``IEA:`` on a GO cross-reference) and
-    is not one of UniProt's curated rule systems (``CURATED_RULES``).
+``uniprot_quote_automatic_only``
+    Every evidence item on the quoted statement is automatic
+    (``AUTOMATIC_EVIDENCE``). The message names the sources, so ARBA output
+    can be told apart from other rule systems.
 ``uniprot_quote_restating_field``
     The quote comes from a field listed in ``RESTATING_FIELDS`` or a comment
     topic listed in ``RESTATING_CC_TOPICS``.
@@ -49,7 +55,7 @@ from ai_gene_review.validation.validation_report import (
     ValidationSeverity,
 )
 
-ARBA_CHECK = "uniprot_quote_arba_sourced"
+AUTOMATIC_CHECK = "uniprot_quote_automatic_only"
 FIELD_CHECK = "uniprot_quote_restating_field"
 
 #: Line codes whose content restates identity or classification rather than
@@ -70,9 +76,15 @@ FIELD_LABELS = {
 
 #: Evidence prefixes that mark machine-generated assertions.
 AUTOMATIC_EVIDENCE = ("ECO:0000256", "ECO:0000259", "ECO:0000313", "ECO:0007", "IEA:")
-#: UniProt rule systems written by curators (UniRule and its components). A
-#: statement these also support is not ARBA output alone.
-CURATED_RULES = ("RuleBase", "HAMAP", "PIRNR", "PIRSR", "NCBIfam", "PROSITE-ProRule", "SAM:")
+#: Source labels for automatic evidence, in the order they are reported.
+AUTOMATIC_SOURCES = (
+    ("ARBA", ("ARBA",)),
+    ("UniRule", ("RuleBase", "HAMAP", "PIRNR", "PIRSR", "PROSITE-ProRule", "SAM:")),
+    ("NCBIfam", ("NCBIfam",)),
+    ("signature match", ("ECO:0000259",)),
+    ("imported", ("ECO:0000313",)),
+    ("electronic GO", ("IEA:",)),
+)
 
 _BRACE = re.compile(r"(?:Evidence=)?\{(ECO:[^{}]*)\}")
 #: Evidence tokens left over when a quote cuts through a brace.
@@ -97,26 +109,42 @@ class Statement:
     evidence: Tuple[str, ...]
 
     @property
-    def is_arba(self) -> bool:
-        """True when ARBA is a source and nothing else supports the statement.
+    def is_automatic(self) -> bool:
+        """True when the statement has evidence and all of it is automatic.
 
-        >>> Statement("CC", "FUNCTION", "x", ("ECO:0000256|ARBA:ARBA00003800",)).is_arba
+        >>> Statement("CC", "FUNCTION", "x", ("ECO:0000256|ARBA:ARBA00003800",)).is_automatic
         True
-        >>> Statement("DR", "GO", "x", ("IEA:UniProtKB-ARBA",)).is_arba
+        >>> Statement("KW", "", "x", ("ECO:0000256|ARBA:ARBA1", "ECO:0000256|RuleBase:RU1")).is_automatic
         True
-        >>> Statement("DE", "", "x", ("ECO:0000256|ARBA:ARBA1", "ECO:0000313|EMBL:AAN1.1")).is_arba
+        >>> Statement("DR", "GO", "x", ("IEA:InterPro",)).is_automatic
         True
 
-        A curated UniProt rule or an experimental source also supports these:
+        Experimental, curator and curated-similarity evidence is not automatic,
+        and neither is untagged text:
 
-        >>> Statement("KW", "", "x", ("ECO:0000256|ARBA:ARBA00023002", "ECO:0000256|RuleBase:RU003719")).is_arba
+        >>> Statement("CC", "FUNCTION", "x", ("ECO:0000256|ARBA:ARBA1", "ECO:0000269|PubMed:1")).is_automatic
         False
-        >>> Statement("CC", "FUNCTION", "x", ("ECO:0000256|ARBA:ARBA00003800", "ECO:0000269|PubMed:1")).is_arba
+        >>> Statement("CC", "FUNCTION", "x", ("ECO:0000250|UniProtKB:P12345",)).is_automatic
+        False
+        >>> Statement("CC", "FUNCTION", "x", ()).is_automatic
         False
         """
-        arba = [e for e in self.evidence if "ARBA" in e]
-        others = [e for e in self.evidence if "ARBA" not in e]
-        return bool(arba) and not any(_independent(e) for e in others)
+        return bool(self.evidence) and all(e.startswith(AUTOMATIC_EVIDENCE) for e in self.evidence)
+
+    @property
+    def automatic_sources(self) -> Tuple[str, ...]:
+        """Labels for the automatic sources behind the statement.
+
+        >>> Statement("KW", "", "x", ("ECO:0000256|ARBA:ARBA1", "ECO:0000256|HAMAP- Rule:MF_1")).automatic_sources
+        ('ARBA', 'UniRule')
+        >>> Statement("DE", "", "x", ("ECO:0000313|EMBL:AAN1.1",)).automatic_sources
+        ('imported',)
+        """
+        found = []
+        for label, markers in AUTOMATIC_SOURCES:
+            if any(m in e.replace(" ", "") for e in self.evidence for m in markers):
+                found.append(label)
+        return tuple(found)
 
     @property
     def is_restating(self) -> bool:
@@ -134,21 +162,13 @@ class Statement:
         )
 
 
-def _independent(evidence: str) -> bool:
-    """True for evidence that is not machine output, or comes from a curated rule.
-
-    >>> _independent("ECO:0000269|PubMed:1"), _independent("ECO:0000256|HAMAP-Rule:MF_1")
-    (True, True)
-    >>> _independent("ECO:0000313|EMBL:AAN1.1"), _independent("ECO:0000259|Pfam:PF1")
-    (False, False)
-    """
-    if not evidence.startswith(AUTOMATIC_EVIDENCE):
-        return True
-    return any(rule in evidence.replace(" ", "") for rule in CURATED_RULES)
-
-
 def _split_evidence(text: str) -> Tuple[str, ...]:
-    return tuple(e.strip() for e in text.split(",") if e.strip())
+    """Split an evidence list; ids never contain spaces, so line-wrap spaces are removed.
+
+    >>> _split_evidence("ECO:0000256|PIRSR:PIRSR611612- 51, ECO:0000269|PubMed:1")
+    ('ECO:0000256|PIRSR:PIRSR611612-51', 'ECO:0000269|PubMed:1')
+    """
+    return tuple(e.replace(" ", "") for e in text.split(",") if e.strip())
 
 
 def _chunk(field: str, topic: str, text: str) -> List[Statement]:
@@ -300,7 +320,7 @@ def locate_quote(quote: str, path: Path) -> List[Statement]:
 
 
 def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[Statement]]]:
-    """``(arba_sourced, restating, statements)`` for a quote, or None if not located.
+    """``(automatic_only, restating, statements)`` for a quote, or None if not located.
 
     A flag holds only if it holds for every occurrence of every part.
     """
@@ -308,16 +328,16 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[St
     parts = _quote_parts(quote)
     if not parts:
         return None
-    arba = restating = True
+    automatic = restating = True
     first: List[Statement] = []
     for part in parts:
         occ = _occurrences(part, statements, text, starts)
         if not occ:
             return None
         first.extend(s for s in occ[0] if s not in first)
-        arba &= all(all(s.is_arba for s in o) for o in occ)
+        automatic &= all(all(s.is_automatic for s in o) for o in occ)
         restating &= all(all(s.is_restating for s in o) for o in occ)
-    return arba, restating, first
+    return automatic, restating, first
 
 
 @dataclass(frozen=True)
@@ -340,9 +360,9 @@ def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[
         result = classify_quote(quote, source)
         if result is None:
             continue
-        arba, restating, statements = result
-        if arba:
-            findings.append(QuoteFinding(path, reference_id, ARBA_CHECK, tuple(statements)))
+        automatic, restating, statements = result
+        if automatic:
+            findings.append(QuoteFinding(path, reference_id, AUTOMATIC_CHECK, tuple(statements)))
         if restating:
             findings.append(QuoteFinding(path, reference_id, FIELD_CHECK, tuple(statements)))
     return findings
@@ -355,6 +375,8 @@ def _describe(statements: Tuple[Statement, ...]) -> str:
             labels[f"comment ({s.topic})"] = None
         elif s.field == "DR":
             labels[f"{FIELD_LABELS['DR']} ({s.topic})"] = None
+        elif s.field == "FT":
+            labels[f"feature ({s.topic})"] = None
         else:
             labels[FIELD_LABELS.get(s.field, s.field)] = None
     return ", ".join(labels)
@@ -363,18 +385,20 @@ def _describe(statements: Tuple[Statement, ...]) -> str:
 def validate_uniprot_quote_sources(
     data: Any, report: ValidationReport, project_root: Path = PROJECT_ROOT
 ) -> None:
-    """Warn on UniProt quotes that are ARBA output or restate classification."""
+    """Warn on UniProt quotes that are machine output or restate classification."""
     for f in quote_source_findings(data, project_root):
         where = _describe(f.statements)
-        if f.check_type == ARBA_CHECK:
-            sources = sorted({e for s in f.statements for e in s.evidence if "ARBA" in e})
+        if f.check_type == AUTOMATIC_CHECK:
+            labels = sorted({label for s in f.statements for label in s.automatic_sources})
+            evidence = sorted({e for s in f.statements for e in s.evidence})
             message = (
-                f"Supporting text quotes a UniProt {where} whose only evidence is an ARBA rule "
-                f"({', '.join(sources)}); ARBA output is not independent evidence"
+                f"Supporting text quotes a UniProt {where} whose evidence is entirely automatic "
+                f"({', '.join(labels) or 'automatic'}: {', '.join(evidence)}); a prediction is "
+                "not independent evidence"
             )
             suggestion = (
-                "Cite an experimental or curated statement, a publication, or your own "
-                "analysis instead of rule-generated UniProt text"
+                "Cite an experimentally supported or curated statement, the publication behind "
+                "it, or your own analysis"
             )
         else:
             message = (

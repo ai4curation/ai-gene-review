@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-"""Inventory gene-review quotes that use ARBA output or restating UniProt fields as evidence.
+"""Inventory gene-review quotes that use machine-generated or restating UniProt text as evidence.
 
-Runs the two best-practice checks in
+Runs the two global best-practice checks in
 ``ai_gene_review.validation.uniprot_quote_source`` over every gene review and
 writes:
 
 * ``uniprot_quote_findings.tsv``: one row per flagged quote, with the review
   element it supports (for an existing annotation, the GO term, its GOA
   reference and the review action) and the quoted statement's evidence;
-* ``UNIPROT_QUOTE_AUDIT.md``: counts by check, UniProt field and what the quote
-  supports.
+* ``UNIPROT_QUOTE_AUDIT.md``: counts by check, by the automatic source behind
+  the quoted statement (ARBA, UniRule, imported ...), by UniProt field and by
+  what the quote supports.
 
 Usage::
 
@@ -28,7 +29,7 @@ from typing import Any
 import yaml
 
 from ai_gene_review.validation.uniprot_quote_source import (
-    ARBA_CHECK,
+    AUTOMATIC_CHECK,
     FIELD_CHECK,
     _describe,
     quote_source_findings,
@@ -61,8 +62,10 @@ def main() -> None:
         data = yaml.load(open(f), Loader=yaml.CSafeLoader) or {}
         for x in quote_source_findings(data):
             evidence = sorted({e for s in x.statements for e in s.evidence})
+            sources = sorted({label for s in x.statements for label in s.automatic_sources})
             rows.append({
                 "review": f, "path": x.path, "check": x.check_type, "uniprot_part": _describe(x.statements),
+                "automatic_sources": " + ".join(sources) if x.check_type == AUTOMATIC_CHECK else "",
                 **supported_element(data, x.path),
                 "evidence": "; ".join(evidence), "statement": " ".join(x.statements[0].text.split())[:200],
             })
@@ -83,12 +86,20 @@ def main() -> None:
         "[uniprot_quote_findings.tsv](uniprot_quote_findings.tsv).",
         "",
     ]
-    for check, title in [(ARBA_CHECK, "Quotes of ARBA-only statements"),
+    for check, title in [(AUTOMATIC_CHECK, "Quotes of statements whose evidence is entirely automatic"),
                          (FIELD_CHECK, "Quotes of fields that restate classification")]:
         sel = [r for r in rows if r["check"] == check]
         lines += [f"## {title}", "",
-                  f"**{len(sel)}** quotes in **{len({r['review'] for r in sel})}** reviews.", "",
-                  "| UniProt part | quotes |", "|---|---:|"]
+                  f"**{len(sel)}** quotes in **{len({r['review'] for r in sel})}** reviews.", ""]
+        if check == AUTOMATIC_CHECK:
+            arba = [r for r in sel if "ARBA" in r["automatic_sources"]]
+            lines += [f"ARBA is a source for **{len(arba)}** of these "
+                      f"({sum(1 for r in arba if r['automatic_sources'] == 'ARBA')} with ARBA as the only source).", "",
+                      "| automatic source | quotes |", "|---|---:|"]
+            for src, n in collections.Counter(r["automatic_sources"] or "other" for r in sel).most_common(12):
+                lines.append(f"| {src} | {n} |")
+            lines.append("")
+        lines += ["| UniProt part | quotes |", "|---|---:|"]
         for part, n in collections.Counter(r["uniprot_part"] for r in sel).most_common(15):
             lines.append(f"| {part} | {n} |")
         lines += ["", "| what the quote supports | quotes |", "|---|---:|"]

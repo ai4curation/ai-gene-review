@@ -181,19 +181,28 @@ membrane, animal organ development, catalytic activity, protein-containing
 complex). Per-rule counts are in
 [ARBA_REVIEW/gene_side_rules.tsv](ARBA_REVIEW/gene_side_rules.tsv).
 
-## ARBA output used as evidence in our own reviews
+## Machine output used as evidence in our own reviews
 
-Our gene reviews also cite ARBA output as if it were evidence. A UniProt
-statement whose only evidence is an ARBA rule (`{ECO:0000256|ARBA:...}`) is
-quoted as support 847 times in 253 reviews: for 255 accepted electronic
-annotations, 174 core functions, 112 reference findings and 18 new annotations
-the reviews propose. Separately, 2,768 quotes in 1,006 reviews come from fields
-that restate a classification rather than giving evidence: protein names
-(1,150), "Belongs to the X family" (667) and the record's own GO lines (320).
+Our gene reviews also cite predictions as if they were evidence. Validation now
+applies two global rules to every UniProt quote, whatever it supports: the
+quoted statement must not be machine output (evidence entirely automatic, from
+ARBA, UniRule/HAMAP and the other rule systems, signature matches, imported
+submitter annotation or electronic GO lines), and must not merely restate a
+classification (names, keywords, cross-references, "Belongs to the X family").
+Kinetics, sites and curated text, especially text tied to a publication, remain
+good support.
 
-Validation now warns on both (`uniprot_quote_arba_sourced`,
-`uniprot_quote_restating_field`); a statement that a curated UniProt rule or an
-experiment also supports is not counted as ARBA-only. The inventory is in
+- 2,474 quotes in 625 reviews rest on entirely automatic UniProt text. ARBA is a
+  source for 1,323 of them and the only source for 856; UniRule alone accounts
+  for 637 and imported submitter annotation for 304. They support 720 accepted
+  electronic annotations, 627 core functions and 54 new annotations the reviews
+  propose.
+- 2,768 quotes in 1,006 reviews come from restating fields: protein names
+  (1,150), "Belongs to the X family" (667) and the record's own GO lines (320).
+
+Both are warnings (`uniprot_quote_automatic_only`,
+`uniprot_quote_restating_field`). The inventory, with the automatic sources
+broken down, is in
 [ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md](ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md), from
 [ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py).
 
@@ -227,8 +236,9 @@ term, reviewers kept 93% of entailed annotations and removed none.
   with ARBA00026971 (cytoplasm) and ARBA00028763 (membrane).
 - Check the keyword heuristic against a hand-labelled sample of
   over-annotation and MODIFY rows, as was done for REMOVE.
-- Re-ground the accepted annotations and core functions whose only support is
-  ARBA-only UniProt text, starting with ARBA annotations supported that way.
+- Re-ground the accepted annotations, core functions and new annotations whose
+  only support is automatic UniProt text, starting with ARBA annotations
+  supported by ARBA text.
 - Report the role-confusion and non-catalytic-homolog cases to UniProt with
   the gene reviews as evidence, since these are wrong rather than vague.
 
@@ -242,7 +252,7 @@ term, reviewers kept 93% of entailed annotations and removed none.
 - [ARBA_REVIEW/gene_side_remove_modes.yaml](ARBA_REVIEW/gene_side_remove_modes.yaml):
   hand classification of the 133 removed annotations
 - [ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py):
-  inventory of UniProt quotes that cite ARBA output or restating fields; writes
+  inventory of UniProt quotes that cite machine output or restating fields; writes
   `UNIPROT_QUOTE_AUDIT.md` and `uniprot_quote_findings.tsv`
 - [docs/rule_review_workflow.md](../docs/rule_review_workflow.md): how rule
   reviews are made

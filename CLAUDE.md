@@ -411,16 +411,26 @@ If `just fetch-gene` or a re-run deep-research file changes a source so that a q
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
 
-**Quote UniProt for evidence of a different kind, not for restated annotation.** A
-UniProt record is good support when it gives something the annotation does not:
-kinetics, binding or active sites, or curated free text tied to a publication
-(evidence `ECO:0000269` with a PubMed id). It is not support when it restates a
-classification: protein names and EC numbers (`DE`), keywords, database
-cross-references (including the record's own `DR GO` lines) or "Belongs to the X
-family". Never quote a statement whose only evidence is an ARBA rule
-(`{ECO:0000256|ARBA:...}`, `IEA:UniProtKB-ARBA`): that is machine output, and citing
-it for an ARBA annotation is circular. Validation warns on both
-(`uniprot_quote_restating_field`, `uniprot_quote_arba_sourced`;
+**Quote UniProt for evidence of a different kind, not for restated annotation or
+predictions.** These rules apply to every UniProt quote, whatever it supports. A UniProt
+record is good support when it gives something the annotation does not: kinetics,
+binding or active sites, or curated free text, best of all text tied to a publication
+(evidence `ECO:0000269` with a PubMed id; syncing such curated notes is part of our
+job). It is not support when it:
+
+- restates a classification: protein names and EC numbers (`DE`), keywords, database
+  cross-references (including the record's own `DR GO` lines) or "Belongs to the X
+  family"; or
+- is machine output: a statement whose evidence is entirely automatic, from any
+  UniProt rule system (`{ECO:0000256|ARBA:...}`, UniRule/RuleBase, HAMAP, PIRNR/PIRSR),
+  a signature match (`ECO:0000259`), imported submitter annotation (`ECO:0000313`) or an
+  electronic GO line (`IEA:`). Citing it repeats a prediction; citing it for an
+  annotation from the same kind of pipeline is circular.
+
+Curator statements (`ECO:0000305`, `ECO:0000303`), curated by-similarity or
+sequence-analysis assertions (`ECO:0000250`, `ECO:0000255`) and untagged text in
+reviewed entries are fine. Validation warns on both problems
+(`uniprot_quote_restating_field`, `uniprot_quote_automatic_only`;
 `src/ai_gene_review/validation/uniprot_quote_source.py`).
 
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
