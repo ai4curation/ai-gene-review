@@ -1,0 +1,57 @@
+# CUL4B review notes
+
+## Scope and research record
+
+This review preserves all 159 seeded source annotations, their original evidence and qualifiers, and all three official alternative-product objects. Source selection began at main `488cf4ada7bb34f80c7bdaeeb1e8228020852bce` in an isolated workspace. The genuine gene fetch and publication caching completed. Default Falcon failed with authentication/service responses, and the configured Perplexity-lite fallback failed with a quota/authentication response. Those actual outputs are retained in the review workspace. These are manual evidence notes, not a provider research report. The runtime uses the committed dependency resolution with `UV_FROZEN=1` and its own virtual environment.
+
+The [source guide](CUL4B-source-evidence.yaml) gives public primary-source and database locators, actual access/read scope, and compact reconstruction conclusions. Raw API records, complete interaction columns, unsuccessful response bodies, hashes and reproducible scripts are retained in the fixed review workspace; they are not substituted for primary findings or embedded as an unreadable public dump. Reference confidence distinguishes identity verification from whether a particular target experiment was actually inspected. Available full text does not imply a complete-paper read.
+
+## Performed function and complex identity
+
+CUL4B organizes DDB1-associated RING E3 ubiquitin ligases. It bridges substrate-receptor assemblies to the RBX1 catalytic arm; it is not assigned an autonomous ubiquitin-transfer activity. The human RGS2 study distinguishes CUL4B from CUL4A through complex association, knockdown and substrate half-life measurements. It does not establish a separate nuclear-localization assay or a purified direct FBXO44–RGS2 interface. The selected GO-CAM model reflects the scaffold/adaptor/ligase separation and is treated as curated mechanistic interpretation, not another experiment ([PMID:25970626](https://doi.org/10.1371/journal.pone.0123581); [GO-CAM](https://amigo.geneontology.org/amigo/model/689e7a5d00003489)).
+
+The structural study examines separate CRL4A and CRL4B assemblies. Its authentic author-thesis chapter contains the published Cell manuscript and supplement; it is not mislabeled as a separately downloaded journal PDF. The CUL4B structural fragment spans residues 192–913, which is different from the official 717-aa splice product. Direct human CRL4B–DDB2 reconstitution supports damaged-DNA/nucleosome recognition and histone ubiquitination in nucleotide-excision repair. The original damaged-DNA binding annotation explicitly contributes to a complex activity rather than assigning isolated lesion recognition to the cullin ([PMID:22118460](https://doi.org/10.1016/j.cell.2011.10.035); [PMID:22334663](https://doi.org/10.1074/jbc.M111.307058)).
+
+The B-specific complex term replaces A-specific or overly broad complex terms where the biology is established. CUL4A-centered experiments remain explicitly attributed to A; they are not interpreted as proof that B lacks the same process. Conversely, established B-complex membership does not verify every developmental, stress or epigenetic phenotype in a family-level source. The one compact core represents the shared scaffold activity with its proteasomal-turnover and NER outputs. No new annotation or redundant broad molecular function is added.
+
+The actual definition of GO:0070914 describes UVDE/UVER incision immediately 5′ of UV damage. It is distinct from the mammalian NER activity tested by the human CRL4B paper; the corresponding source assertion is refined to GO:0006289. The scaffold is not described as the incision enzyme.
+
+## Products and localization
+
+All official products were reconstructed from the selected UniProt sequence and VSP operations and matched independently retrieved official FASTAs: Q13620-2 is the displayed 913-aa product, Q13620-1 is 895 aa, and Q13620-3 is 717 aa. The source’s historical NLS coordinates 37–40 refer to the 895-aa product and map to displayed positions 55–58. Neither localization nor ligase function is assumed equal across all products. The short splice form lacks the N-terminal NLS region; its experimental behavior is an open question rather than a fabricated negative result ([PMID:19801544](https://doi.org/10.1074/jbc.M109.050427)).
+
+Official HPA records support nucleoplasmic enrichment in several human cell lines, with cytosolic or vesicular observations in particular antibody/cell conditions. Mouse donor evidence also describes cell-stage-dependent nuclear/cytoplasmic distribution. The broad cytoplasmic annotations therefore remain contextual, without forcing all nonnuclear observations into cytosol. No HPA image pixels or product-specific localization assay were inspected.
+
+## Propagation and source reconstruction
+
+The actual PTHR11932 tree contains 1,235 nodes. The target MSA reconstructs the exact 913-aa sequence, and all seven literal IBD assertions lie on the target path. The target’s appearance among descendant experimental sources is legitimate PAINT grounding, not circularity. The donor reconstruction covers 28 complete queries, 31 pages, 2,450 records and 73 exact joins; original donor methods and subsequent transfers remain distinct.
+
+Five current ARBA rules match the selected target record. ARBA00026330 does not match; ARBA00085920 was unavailable and is not classified as a nonmatch. Direct nuclear and complex evidence remains independently valid. Branch indices in the source guide are zero-based identifiers, not counts of independent experiments. The selected repository PANTHER caches and pending variants remain unchanged and are not treated as interchangeable phylogenies.
+
+All 36 original Reactome nucleoplasm roots reach Q13620 through actual component/member/reference edges: 551 distinct saved objects, 868 edges and 85 positive target paths, with no unresolved object remaining in this scope. The CUL4B entity is 975973 and its UniProt reference is 53106. Defined sets can contain alternative cullins; the model is not evidence that CUL4A and CUL4B simultaneously occupy a single ligase. Localization membership is not converted into a new catalytic assertion for every pathway reaction. ComplexPortal CPX-477 explicitly describes the CUL4A variant, while its original ISS transfers are independently corroborated by human CUL4B repair experiments.
+
+## Interactions and partner classes
+
+The literal IntAct/MINT reconstruction preserves all 665 complete records, 46 curated IPI groups and 59 partner assertions. The 58 used records support 116 exact official-sequence ROGID checks. Backbone identity is not experimental proof of a particular fragment or splice form. Affinity purification, spoke expansion, co-immunoprecipitation, LUMIER, yeast two-hybrid and BRET remain distinct assay types; none universally establishes purified binary stoichiometry.
+
+Supported RBX1 associations refine to ubiquitin protein ligase binding, and HSP90AB1 associations refine to Hsp90 protein binding. CDC37 is a co-chaperone/client-recruiting partner; a folding mechanism is not inferred from binding alone. DCNL associations concern cullin neddylation, and SPOP is a substrate receptor whose mutation-sensitive proximity records are not generalized to a constitutive wild-type E3 interaction. ZMAT4-2 identity is preserved without manufacturing a transcription-factor classification from its zinc fingers.
+
+The standing [CLINGEN_MENDELIAN curation instruction](../../../projects/CLINGEN_MENDELIAN.md) retains supported generic protein-binding assertions as KEEP_AS_NON_CORE when no evidence-backed class refinement is established. This intentionally supersedes the generic informational-exclusion recommendation in the annotation-reviewer skill. It does not make unseen pairs verified: five COMMD target panels remain uncertain, while the indexed original explicitly supports COMMD1–CUL4B. Known DDB1/CAND1 associations can retain explicit curator deference when a particular screen entry is unavailable, with independent positive pair evidence named.
+
+## Context-specific process limits
+
+The ribosome-biogenesis paper contains targeted human follow-up beyond the primary screen. Individual CUL4A or CUL4B depletion had mild effects, whereas combined depletion altered RPS2/ENP1 localization and rRNA maturation. Neither cullin needs to have been a single-gene primary-screen hit for this positive follow-up to support the existing annotations. This is a redundant ligase contribution, not direct ribosomal structural membership ([PMID:26711351](https://doi.org/10.1016/j.celrep.2015.11.061)).
+
+The WDTC1 paper supports B-containing complex association, but its cullin-knockdown adipogenesis phenotypes are explicitly difficult to interpret: Cul4b depletion reduces proliferation and inhibits adipogenesis, whereas WDTC1–DDB1 disruption removes adipogenic suppression. The specific negative adipose-development assertion remains uncertain, without denying other possible CUL4B adipose mechanisms ([PMID:27113764](https://doi.org/10.15252/embr.201540500)).
+
+The neural donor source is explicitly mouse Cul4b and supports contextual PTGDS/GFAP expression and astrocyte generation in its complete indexed abstract. No human differentiation assay or full-source read is claimed. Source-specific claims about NK activation, apoptosis, stress response, miRNA silencing, embryonic development, cytokinesis, exosome detection and stem-cell maintenance remain uncertain where the exact target evidence could not be resolved. A CUL4A result, incomplete access or an uninspected supplemental target entry does not justify removal of the curated CUL4B assertion.
+
+## Independent consultation attribution
+
+ROOT independently assessed 24 core/product rows across six reserved primary sources and a further six context rows across four sources. The owner personally read both complete reports, exact recommendations and read ledgers and reproduced their read-only checkers before integration. These consultations are attributed scientific inputs, not a claim that the owner personally read every primary passage the consultant inspected. Owner source reads and their exact entry boundaries are recorded in the four saved read ledgers. An independent whole-gene review remains the final scientific gate.
+
+## Finite replication and cell-cycle clarification
+
+The saved RepID original was reread for the source-specific distinction in rows 106 and 154. It measures human CUL4B chromatin recruitment and endogenous RepID association, while individual CUL4A or CUL4B depletion leaves the measured phase distribution unchanged and increases recruitment of the remaining cullin. Combined depletion produces the reported phase, DNA-synthesis and re-replication effects, especially after RepID loss. The CDT1/RepID experiments support licensing control, but the replication-origin ChIP used CUL4A. Both existing broad process annotations remain contextual KEEP_AS_NON_CORE with a separate PMID:30018425 citation and these limits; the original PMID:16861906 CUL4B assay is still uninspected. No source object, action, product, core or excerpt changes.
+
+The first ordinary validation passed. Its status updater reported an INITIALIZED mismatch without updating the file. That terminal attempt is preserved; the status field was then omitted only in a new working candidate so the ordinary updater could derive it.
