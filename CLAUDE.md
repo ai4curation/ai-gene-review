@@ -447,8 +447,8 @@ apply to every UniProt quote, whatever it supports.
   Family and domain classification is also good support for membership, and you may
   use membership to argue for a function: NCBIfam, InterPro/Pfam/PROSITE signature
   matches, the curated UniRule systems (HAMAP, PIRSR, PIRNR, RuleBase), "Belongs to
-  the X family" notes and family cross-references. Structure-derived automatic
-  evidence (`ECO:0007…`) counts too.
+  the X family" notes (unless their only evidence is ARBA) and family
+  cross-references. Structure-derived automatic evidence (`ECO:0007…`) counts too.
 - **Not support, unvetted predictions:** a statement whose only evidence is an ARBA
   association rule (`{ECO:0000256|ARBA:...}`), annotation imported unchecked from the
   submitter (`ECO:0000313`), or an electronic GO line (`IEA:`). Citing one repeats a
