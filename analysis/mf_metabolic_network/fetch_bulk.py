@@ -6,7 +6,7 @@
                            One HTTP request returns the whole proteome.
   data/<ORG>/goa.gaf.gz    GOA GAF for the organism/proteome (carries evidence codes,
                            which the UniProt GO columns do not).
-  data/go-edit.obo         GO editors' file: the only GO release form whose RHEA xrefs keep
+  data/go-edit-<sha>.obo   GO editors' file: the only GO release form whose RHEA xrefs keep
                            their skos:exactMatch/narrowMatch/broadMatch predicate.
   data/chebiId_name.tsv    Rhea's ChEBI names (for participants that only occur in transport
                            reactions, so the currency filter can recognise them).
@@ -25,8 +25,10 @@ from pathlib import Path
 
 DATA = Path(__file__).parent / "data"
 
-# go-edit.obo has no versioned release URL; pin the commit the committed results used.
+# go-edit.obo has no versioned release URL; pin the commit the committed results used
+# (keep in sync with build_network.py, which reads data/go-edit-<commit[:7]>.obo).
 GO_EDIT_COMMIT = "3df35ba3caea24cfe14bc8b08730b2cd76723001"
+GO_EDIT = DATA / f"go-edit-{GO_EDIT_COMMIT[:7]}.obo"
 UNIPROT_FIELDS = "accession,gene_primary,gene_oln,reviewed,rhea,ec,go_f,go_p"
 ORGANISMS = {
     # query is a UniProtKB query; gaf is a GOA download for the same proteome
@@ -53,9 +55,9 @@ def main():
         download("https://ftp.expasy.org/databases/rhea/tsv/rhea-directions.tsv", DATA / "rhea-directions.tsv")
     if not (DATA / "chebiId_name.tsv").exists():
         download("https://ftp.expasy.org/databases/rhea/tsv/chebiId_name.tsv", DATA / "chebiId_name.tsv")
-    if not (DATA / "go-edit.obo").exists():  # carries skos predicates on RHEA xrefs
+    if not GO_EDIT.exists():  # carries skos predicates on RHEA xrefs
         download("https://raw.githubusercontent.com/geneontology/go-ontology/" + GO_EDIT_COMMIT + "/src/ontology/go-edit.obo",
-                 DATA / "go-edit.obo")
+                 GO_EDIT)
     for org in sys.argv[1:]:
         cfg = ORGANISMS[org]
         q = urllib.parse.quote(cfg["query"])

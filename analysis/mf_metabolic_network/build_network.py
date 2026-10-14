@@ -89,6 +89,10 @@ MACROMOLECULE_PATTERNS = re.compile(
     # any bracketed protein or enzyme ("[ribosomal protein uS12]", "[pyruvate, water dikinase]",
     # "apo-[alkylcobalamin reductase]"): residues and enzyme-bound intermediates, not metabolites
     r"\[[^\]]*\b(protein|[a-z]*ase)\b[^\]]*\])")
+# go-edit.obo pinned to a go-ontology commit; the file name carries the commit so a copy
+# fetched from another commit is never picked up silently (see fetch_bulk.py).
+GO_EDIT_COMMIT = "3df35ba3caea24cfe14bc8b08730b2cd76723001"
+GO_EDIT = DATA / f"go-edit-{GO_EDIT_COMMIT[:7]}.obo"
 # GO->Rhea comes from the `xref: RHEA:n {source="skos:..."}` lines of go-edit.obo, keeping
 # ONLY skos:exactMatch. go-basic.obo, rhea2go and the Rhea TSV GO column drop the predicate,
 # so narrowMatch/broadMatch xrefs there look like exact mappings (e.g. GO:0016616
@@ -322,13 +326,16 @@ def main():
     anc = ancestors_fn(parents)
     rhea2chebi, chebi2name, rhea2eq, _ = load_rhea(DATA / "rhea.tsv")
     rhea_master = load_rhea_master(DATA / "rhea-directions.tsv")
-    go2rhea = load_go_rhea_exact(DATA / "go-edit.obo", rhea_master)
+    go2rhea = load_go_rhea_exact(GO_EDIT, rhea_master)
     currency = {c for c, n in chebi2name.items() if n in CURRENCY_NAMES or CURRENCY_PATTERNS.search(n)
                 or MACROMOLECULE_PATTERNS.search(n)}
-    # A BP term named after a currency chemical (glutamate, glutamine, ATP ...) cannot assemble
-    # by construction, because that chemical is removed from the network.
+    # A BP term whose label names a currency chemical (glutamate, glutamine, ATP ...) may be
+    # unable to assemble, because that chemical is removed from the network. This is a string
+    # match on the label. Free ions are excluded from it: "phosphate" or "sulfate" in a label
+    # is nearly always part of a compound name ("isopentenyl diphosphate", "chondroitin sulfate").
+    ion_words = {"phosphate", "diphosphate", "sulfate", "sulfite", "chloride"}
     cur_words = sorted({re.sub(r"^[LD]-", "", n).lower() for n in CURRENCY_NAMES
-                        if re.fullmatch(r"[LD]?-?[A-Za-z0-9-]{3,}", n)}, key=len, reverse=True)
+                        if re.fullmatch(r"[LD]?-?[A-Za-z0-9-]{3,}", n)} - ion_words, key=len, reverse=True)
     cur_re = re.compile(r"(?<![\w-])(" + "|".join(map(re.escape, cur_words)) + r")(?![\w-])", re.I)
 
     def currency_term(label_):
@@ -439,7 +446,7 @@ def main():
         isolated = [g for g in gs if sub.degree(g) == 0]
         term_rows.append({
             "term": t, "label": names.get(t, ""), "n_genes": len(gs),
-            "names_currency_chemical": bool(currency_term(names.get(t, ""))),
+            "label_matches_currency_name": bool(currency_term(names.get(t, ""))),
             "lcc_frac": round(lcc, 3), "random_lcc_mean": round(sum(rnd) / len(rnd), 3),
             "p_value": round(p, 4), "edges": sub.number_of_edges(),
             "isolated_genes": ";".join(label[g] for g in isolated), "genes": ";".join(label[g] for g in gs),
@@ -517,7 +524,7 @@ def main():
         "bp_terms_more_connected_than_random_p<0.05": sum(r["p_value"] < 0.05 for r in term_rows),
         "bp_terms_bh_significant_fdr0.05": sum(r["bh_significant"] for r in term_rows),
         "p_value_floor": round(1 / (args.n_random + 1), 4),
-        "bp_terms_naming_a_currency_chemical": sum(r["names_currency_chemical"] for r in term_rows),
+        "bp_terms_label_matches_currency_name": sum(r["label_matches_currency_name"] for r in term_rows),
         "bp_terms_tested_max_genes": specific_cut * 4,
         "obsolete_terms_ignored": n_obsolete,
         "bp_terms_fully_connected": sum(r["lcc_frac"] == 1 for r in term_rows),
@@ -564,7 +571,8 @@ def main():
         "communities": [{k: r[k] for k in ("community", "size", "best_bp_label", "f1", "top_metabolites")} for r in comm_rows],
         # per-term coherence, for highlighting a BP term's genes in viewer.html
         "bp_terms": [{"id": r["term"], "label": r["label"], "n": r["n_genes"], "lcc": r["lcc_frac"],
-                      "rnd": r["random_lcc_mean"], "p": r["p_value"],
+                      "rnd": r["random_lcc_mean"], "p": r["p_value"], "bh": r["bh_significant"],
+                      "cur": r["label_matches_currency_name"],
                       "genes": [g for g in enz if r["term"] in met_bp[g]]} for r in term_rows],
         "summary": summary,
     }, (out / "graph.json").open("w"))

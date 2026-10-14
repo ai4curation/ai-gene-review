@@ -36,8 +36,8 @@ biological-process annotations?
      paralogs). They are not a handoff.
    - **handoff:** no shared reaction. A pathway handoff is a *single* intermediate
      passing from one enzyme to the next, so the number of shared chemicals is not a
-     confidence measure. Pairs sharing two or more chemicals are mostly same-step: 100 of
-     148 in P. putida and 288 of 586 in human.
+     confidence measure. Pairs sharing two or more chemicals are mostly same-step: 103 of
+     151 in P. putida and 303 of 613 in human.
    - A **non-hub handoff** goes through a chemical that at most 5 enzymes touch.
      Hub intermediates such as pyruvate and acetyl-CoA link many unrelated pathways.
 5. **BP alignment:** each gene's BP terms are propagated over is_a/part_of and restricted to
@@ -83,45 +83,50 @@ uv run --package mf-metabolic-network python analysis/mf_metabolic_network/build
 uv run --package mf-metabolic-network python analysis/mf_metabolic_network/compare_sources.py PSEPK human
 ```
 
-The downloads (`data/`) are git-ignored. Results were regenerated on 2026-10-14, with
-go-edit.obo pinned to go-ontology commit 3df35ba (`GO_EDIT_COMMIT` in `fetch_bulk.py`).
+The downloads (`data/`) are git-ignored. Results were regenerated on 2026-10-14 from the gene reviews on `main` at that
+date (2,937 human, 952 P. putida), with
+go-edit.obo pinned to go-ontology commit 3df35ba (`GO_EDIT_COMMIT`; saved as
+`data/go-edit-3df35ba.obo`, so a copy from another commit is never reused).
 The folder is a uv workspace member (`pyproject.toml` declares networkx and pyyaml).
 Term-level p-values are reproducible with `--seed` (default 42), since terms are
 processed in sorted order. The permutation p-value floor is 1/201 ≈ 0.005 with the
 default `--n-random 200`. Reviews that use obsolete GO terms are reported as a warning
-and counted in `summary.json` (`obsolete_terms_ignored`: 82 human gene–term pairs). An
+and counted in `summary.json` (`obsolete_terms_ignored`: 80 human gene–term pairs). An
 obsolete term has no parents, so it contributes nothing to the BP sets.
 
 ## Results
 
 | Metric | PSEPK | human | yeast | SCHPO | worm | ARATH |
 |---|---:|---:|---:|---:|---:|---:|
-| Reviews | 944 | 2183 | 224 | 149 | 212 | 138 |
-| Enzymes with Rhea-mapped reviewed MF | 570 | 789 | 70 | 38 | 52 | 30 |
-| Distinct Rhea reactions | 455 | 700 | 35 | 23 | 17 | 18 |
-| Gene–gene metabolite edges | 1711 | 2851 | 26 | 0 | 0 | 1 |
-| Giant component (genes) | 403 | 509 | 6 | 1 | 1 | 2 |
-| Isolated enzymes | 120 | 253 | 57 | 38 | 52 | 28 |
-| Linked pairs sharing a specific metabolic BP | 0.383 | 0.544 | 0.0 | 0.0 | 0.0 | 0.0 |
-| …same-step pairs (shared reaction) | 0.957 | 0.921 | 0.0 | – | – | – |
-| …handoff pairs (no shared reaction) | 0.337 | 0.497 | 0.0 | – | – | 0.0 |
-| …handoffs via a non-hub chemical | 0.651 | 0.707 | 0.0 | – | – | 0.0 |
-| …random enzyme pairs | 0.045 | 0.064 | 0.04 | 0.057 | 0.033 | 0.02 |
-| BP terms tested (≥3 enzymes, up to the size limit below) | 373 | 711 | 36 | 24 | 18 | 37 |
-| …upper size limit (enzymes) | 112 | 156 | 12 | 8 | 8 | 8 |
-| BP terms more connected than random (p<0.05) | 290 | 536 | 1 | 0 | 0 | 15 |
-| …significant after Benjamini–Hochberg (FDR 0.05) | 277 | 518 | 0 | 0 | 0 | 0 |
-| BP terms named after a currency chemical | 27 | 65 | 1 | 0 | 0 | 0 |
-| Louvain communities | 24 | 19 | 1 | 0 | 0 | 1 |
-| Communities matching a BP term (F1≥0.5) | 16 | 12 | 0 | 0 | 0 | 1 |
+| Reviews | 952 | 2937 | 406 | 192 | 347 | 265 |
+| Enzymes with Rhea-mapped reviewed MF | 578 | 895 | 222 | 71 | 93 | 70 |
+| Distinct Rhea reactions | 463 | 732 | 184 | 63 | 33 | 43 |
+| Gene–gene metabolite edges | 1738 | 3135 | 426 | 43 | 47 | 27 |
+| Giant component (genes) | 411 | 528 | 134 | 11 | 9 | 8 |
+| Isolated enzymes | 120 | 336 | 75 | 44 | 76 | 41 |
+| Linked pairs sharing a specific metabolic BP | 0.39 | 0.543 | 0.536 | 0.118 | 0.093 | 0.222 |
+| …same-step pairs (shared reaction) | 0.958 | 0.93 | 0.854 | 0.2 | 0.051 | 0.333 |
+| …handoff pairs (no shared reaction) | 0.344 | 0.495 | 0.491 | 0.103 | 0.5 | 0.167 |
+| …handoffs via a non-hub chemical | 0.653 | 0.712 | 0.779 | 0.077 | 0.5 | 0.167 |
+| …random enzyme pairs | 0.044 | 0.071 | 0.05 | 0.019 | 0.03 | 0.018 |
+| BP terms tested (≥3 enzymes, up to the size limit below) | 384 | 742 | 214 | 63 | 55 | 67 |
+| …upper size limit (enzymes) | 112 | 176 | 44 | 12 | 16 | 12 |
+| BP terms more connected than random (p<0.05) | 301 | 563 | 144 | 39 | 33 | 36 |
+| …significant after Benjamini–Hochberg (FDR 0.05) | 292 | 544 | 138 | 39 | 33 | 29 |
+| BP terms whose label names a currency chemical | 12 | 38 | 0 | 0 | 0 | 0 |
+| Louvain communities | 22 | 19 | 14 | 3 | 1 | 3 |
+| Communities matching a BP term (F1≥0.5) | 14 | 10 | 11 | 3 | 1 | 2 |
 
-Only *P. putida* KT2440 (near whole-metabolism coverage) and human have enough reviewed
-enzymes to form a network. In the other organisms the reviewed genes are mostly
-non-enzymes, so the numbers are not interpretable.
+*P. putida* KT2440 (near whole-metabolism coverage) and human are analysed in detail
+below. Yeast now has enough reviewed enzymes (222) for a network of its own. It shows
+the same pattern: linked pairs share a specific BP 10.7× more often than random, non-hub
+handoffs 78% of the time, and 11 of its 14 communities match a BP term. Fission yeast,
+worm and Arabidopsis have under 100 mapped enzymes each and small networks (≤ 47
+edges), so their figures rest on few links.
 
 ### The network does assemble
 
-- In PSEPK, 403 of 570 enzymes fall into one connected component. When every step of a
+- In PSEPK, 411 of 578 enzymes fall into one connected component. When every step of a
   pathway has been reviewed, the textbook route comes out of MF annotations alone:
 
   ```
@@ -135,28 +140,29 @@ non-enzymes, so the numbers are not interpretable.
 - Glucose to pyruvate comes out as the Entner–Doudoroff route (glk, zwf, pgl, edd, eda).
   That is the route *P. putida* actually uses, since it lacks phosphofructokinase.
 - Louvain communities correspond to recognisable pathways:
-  - P. putida: 16 of 24 communities match a BP term (F1 ≥ 0.5). Examples are the TCA
+  - P. putida: 14 of 22 communities match a BP term (F1 ≥ 0.5). Examples are the TCA
     cycle, benzoate catabolism, chorismate biosynthesis, fatty-acid biosynthesis, the
-    methylerythritol phosphate pathway (0.77) and L-leucine catabolism (0.89).
-  - Human: 12 of 19 match. Examples are protein N-linked glycosylation (0.81), glucose
-    6-phosphate metabolism (0.72), purine salvage, bile-acid biosynthesis, saturated
-    fatty-acid elongation (0.93) and polyamine metabolism (0.80).
+    pentose-phosphate shunt (0.74), the methylerythritol phosphate pathway (0.77) and
+    L-leucine catabolism (0.89).
+  - Human: 10 of 19 match. Examples are protein N-linked glycosylation (0.79), glucose
+    6-phosphate metabolism (0.72), nucleotide salvage (0.60), bile-acid biosynthesis and
+    unsaturated fatty-acid elongation (0.93).
 
 ### It agrees with BP, strongly but not completely
 
-- Metabolically linked enzymes share a specific metabolic BP **8.5× more often than random
-  pairs**: 38% vs 4.5% in PSEPK and 54% vs 6.4% in human.
+- Metabolically linked enzymes share a specific metabolic BP **8–9× more often than random
+  pairs**: 39% vs 4.4% in PSEPK (8.9×) and 54% vs 7.1% in human (7.6×).
 - Split by edge kind (BP-annotated pairs only):
-  - Same-step pairs agree almost always (96% and 92%), as expected for genes doing the
+  - Same-step pairs agree almost always (96% and 93%), as expected for genes doing the
     same reaction.
   - Handoffs: 34% (P. putida) and 50% (human) share a specific BP.
-  - Handoffs through a non-hub intermediate: 65% and 70%, i.e. 14× and 11× random.
+  - Handoffs through a non-hub intermediate: 65% and 71%, i.e. 15× and 10× random.
     These are the edges that behave like real pathway steps.
-- 78% (PSEPK) and 75% (human) of tested metabolic BP terms have gene sets that are
+- 78% (PSEPK) and 76% (human) of tested metabolic BP terms have gene sets that are
   significantly more connected than random (p < 0.05). After Benjamini–Hochberg
-  correction the counts are 277/373 and 518/711.
+  correction the counts are 292/384 and 544/742.
 - Terms are tested only between 3 enzymes and 4× the "specific" cutoff (112 enzymes in
-  P. putida, 156 in human). That excludes the broadest grab-bag terms.
+  P. putida, 176 in human). That excludes the broadest grab-bag terms.
 
 ### Where they disagree, and why
 
@@ -179,15 +185,22 @@ non-enzymes, so the numbers are not interpretable.
    Low connectivity here does **not** mean the BP is wrong.
 4. **Filter-induced false negatives.** This one is a property of the method, not of
    the annotations.
-   - A BP term named after a currency chemical cannot assemble, because that chemical
-     is removed: glutamate, glutamine, 2-oxoglutarate, ATP, NADH, glutathione and so on.
-     For example, human *L-glutamine metabolic process* and *L-glutamate biosynthetic
-     process* sit at their random baseline (p = 1).
-   - Such terms are flagged in `bp_term_coherence.tsv` (`names_currency_chemical`):
-     27 in P. putida and 65 in human. Excluding them, 267/346 and 491/646 terms are
-     more connected than random (77% and 76%).
+   - A BP term whose label names a currency chemical may be unable to assemble, because
+     that chemical is removed: glutamate, glutamine, 2-oxoglutarate, ATP, NADH,
+     glutathione and so on. Read such a term against its own random baseline. Human
+     *L-glutamine metabolic process*, *L-glutamate biosynthetic process*, *ATP
+     biosynthetic process* and *superoxide metabolic process* all sit at it (p = 1).
+   - Such terms are flagged in `bp_term_coherence.tsv` (`label_matches_currency_name`,
+     a string match on the label): 12 in P. putida and 38 in human. Free ions
+     (phosphate, diphosphate, sulfate, sulfite, chloride) are left out of the match,
+     because in a label they are almost always part of a compound name ("isopentenyl
+     diphosphate", "chondroitin sulfate").
+   - Many flagged terms still assemble (8/12 and 23/38 at p < 0.05), mostly nucleotide
+     terms (UMP, GMP, CTP) linked through their sugar-phosphate intermediates. Leaving
+     all flagged terms out changes the headline little: 293/372 and 540/704 (79% and
+     77%).
 5. **Gaps.** Unreviewed genes break chains, and so do reviewed MFs with no exact Rhea
-   mapping. 253 human and 120 PSEPK enzymes are isolated nodes. These are candidates for
+   mapping. 336 human and 120 PSEPK enzymes are isolated nodes. These are candidates for
    missing MF specificity, or for GO terms that need an exact Rhea xref (see
    `projects/RHEA`).
 
@@ -206,8 +219,9 @@ non-enzymes, so the numbers are not interpretable.
   fumarate, malate) each touch more than 5 enzymes. So in the viewer the cycle hangs
   together mainly through "hub" links.
 - **Exact-only costs coverage.** Dropping narrowMatch xrefs removes reactions as well as
-  noise. Human reviewed enzymes map to 700 distinct reactions, against 1,184 when narrow
-  xrefs were (wrongly) treated as exact. The same change raised agreement with BP. A
+  noise. When the switch was made (2,183 human reviews), human reviewed enzymes mapped to
+  700 distinct reactions, against 1,184 when narrow xrefs were (wrongly) treated as
+  exact. The same change raised agreement with BP. A
   reviewed MF whose only Rhea xref is a narrowMatch is an isolated node here.
 
 ## Would plain UniProt/GOA annotations work?
@@ -244,49 +258,49 @@ That gives a like-for-like comparison with `reviews`.
 
 | Metric | reviews | uniprot-rhea-reviewedset | goa-all-reviewedset | goa-exp-reviewedset | uniprot-rhea | goa-all | goa-noiea | goa-exp |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Enzymes with reactions | 570 | 488 | 595 | 17 | 917 | 1355 | 29 | 22 |
-| Distinct Rhea reactions | 455 | 477 | 505 | 20 | 843 | 891 | 33 | 26 |
-| Edges | 1711 | 1366 | 2138 | 2 | 3516 | 7432 | 6 | 3 |
-| Giant component | 403 | 354 | 439 | 2 | 565 | 872 | 5 | 2 |
+| Enzymes with reactions | 578 | 495 | 603 | 17 | 917 | 1355 | 29 | 22 |
+| Distinct Rhea reactions | 463 | 484 | 514 | 20 | 843 | 891 | 33 | 26 |
+| Edges | 1738 | 1386 | 2161 | 2 | 3516 | 7432 | 6 | 3 |
+| Giant component | 411 | 361 | 447 | 2 | 565 | 872 | 5 | 2 |
 | Isolated enzymes | 120 | 89 | 114 | 13 | 246 | 398 | 22 | 16 |
-| Enzymes with no metabolic BP | 55 | 52 | 109 | 10 | 202 | 471 | 19 | 15 |
-| Linked pairs sharing specific BP | 0.383 | 0.417 | 0.365 | 1.0 | 0.422 | 0.397 | 1.0 | 1.0 |
-| Same-step edges (shared reaction) | 115 | 98 | 161 | 0 | 257 | 479 | 0 | 0 |
-| …sharing specific BP | 0.957 | 0.959 | 0.913 | – | 0.969 | 0.885 | – | – |
-| Handoff edges (no shared reaction) | 1440 | 1058 | 1497 | 1 | 2129 | 3611 | 2 | 1 |
-| …sharing specific BP | 0.337 | 0.367 | 0.306 | 1.0 | 0.357 | 0.332 | 1.0 | 1.0 |
-| Handoffs via a non-hub chemical (≤5 enzymes) | 484 | 411 | 412 | 1 | 532 | 487 | 2 | 1 |
-| …sharing specific BP | 0.651 | 0.645 | 0.619 | 1.0 | 0.712 | 0.743 | 1.0 | 1.0 |
-| …random pairs | 0.045 | 0.049 | 0.053 | 0.141 | 0.056 | 0.065 | 0.067 | 0.141 |
-| BP terms tested | 373 | 344 | 352 | 8 | 485 | 523 | 11 | 8 |
-| BP terms connected > random | 290 | 263 | 267 | 0 | 376 | 399 | 3 | 0 |
-| Communities | 24 | 18 | 20 | 1 | 24 | 21 | 2 | 1 |
-| Communities ≈ a BP term (F1≥0.5) | 16 | 11 | 10 | 1 | 11 | 8 | 2 | 1 |
-| Enrichment over random | 8.5× | 8.5× | 6.9× | 7.1× | 7.5× | 6.1× | 14.9× | 7.1× |
+| Enzymes with no metabolic BP | 54 | 52 | 109 | 10 | 202 | 471 | 19 | 15 |
+| Linked pairs sharing specific BP | 0.39 | 0.42 | 0.376 | 1.0 | 0.422 | 0.397 | 1.0 | 1.0 |
+| Same-step edges (shared reaction) | 119 | 99 | 163 | 0 | 257 | 479 | 0 | 0 |
+| …sharing specific BP | 0.958 | 0.96 | 0.914 | – | 0.969 | 0.885 | – | – |
+| Handoff edges (no shared reaction) | 1467 | 1077 | 1517 | 1 | 2129 | 3611 | 2 | 1 |
+| …sharing specific BP | 0.344 | 0.37 | 0.318 | 1.0 | 0.357 | 0.332 | 1.0 | 1.0 |
+| Handoffs via a non-hub chemical (≤5 enzymes) | 505 | 424 | 426 | 1 | 532 | 487 | 2 | 1 |
+| …sharing specific BP | 0.653 | 0.646 | 0.627 | 1.0 | 0.712 | 0.743 | 1.0 | 1.0 |
+| …random pairs | 0.044 | 0.052 | 0.053 | 0.141 | 0.056 | 0.065 | 0.067 | 0.141 |
+| BP terms tested | 384 | 359 | 367 | 8 | 485 | 523 | 11 | 8 |
+| BP terms connected > random | 301 | 277 | 289 | 0 | 376 | 399 | 3 | 0 |
+| Communities | 22 | 19 | 22 | 1 | 24 | 21 | 2 | 1 |
+| Communities ≈ a BP term (F1≥0.5) | 14 | 11 | 12 | 1 | 11 | 8 | 2 | 1 |
+| Enrichment over random | 8.9× | 8.1× | 7.1× | 7.1× | 7.5× | 6.1× | 14.9× | 7.1× |
 
 #### human
 
 | Metric | reviews | uniprot-rhea-reviewedset | goa-all-reviewedset | goa-exp-reviewedset | uniprot-rhea | goa-all | goa-noiea | goa-exp |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Enzymes with reactions | 789 | 819 | 822 | 645 | 4140 | 3758 | 3270 | 2457 |
-| Distinct Rhea reactions | 700 | 2302 | 754 | 613 | 6151 | 1593 | 1507 | 1365 |
-| Edges | 2851 | 5158 | 3401 | 2304 | 74826 | 45813 | 37418 | 22130 |
-| Giant component | 509 | 615 | 530 | 445 | 2403 | 1960 | 1835 | 1495 |
-| Isolated enzymes | 253 | 188 | 266 | 167 | 1718 | 1749 | 1379 | 915 |
-| Enzymes with no metabolic BP | 88 | 100 | 105 | 147 | 1258 | 993 | 860 | 827 |
-| Linked pairs sharing specific BP | 0.544 | 0.458 | 0.521 | 0.48 | 0.439 | 0.469 | 0.468 | 0.457 |
-| Same-step edges (shared reaction) | 305 | 266 | 389 | 157 | 5327 | 6840 | 4913 | 2070 |
-| …sharing specific BP | 0.921 | 0.906 | 0.874 | 0.892 | 0.827 | 0.754 | 0.755 | 0.743 |
-| Handoff edges (no shared reaction) | 2457 | 4465 | 2813 | 1466 | 48922 | 30423 | 23427 | 9857 |
-| …sharing specific BP | 0.497 | 0.431 | 0.472 | 0.436 | 0.397 | 0.405 | 0.408 | 0.397 |
-| Handoffs via a non-hub chemical (≤5 enzymes) | 533 | 975 | 550 | 313 | 1688 | 589 | 584 | 422 |
-| …sharing specific BP | 0.707 | 0.698 | 0.704 | 0.607 | 0.745 | 0.727 | 0.697 | 0.675 |
-| …random pairs | 0.064 | 0.07 | 0.066 | 0.071 | 0.076 | 0.071 | 0.076 | 0.077 |
-| BP terms tested | 711 | 826 | 788 | 558 | 1415 | 1375 | 1262 | 939 |
-| BP terms connected > random | 536 | 631 | 589 | 365 | 1078 | 1053 | 933 | 659 |
-| Communities | 19 | 11 | 16 | 18 | 13 | 19 | 20 | 19 |
-| Communities ≈ a BP term (F1≥0.5) | 12 | 8 | 9 | 9 | 2 | 9 | 7 | 5 |
-| Enrichment over random | 8.5× | 6.5× | 7.9× | 6.8× | 5.8× | 6.6× | 6.2× | 5.9× |
+| Enzymes with reactions | 895 | 952 | 947 | 726 | 4140 | 3758 | 3270 | 2457 |
+| Distinct Rhea reactions | 732 | 2420 | 787 | 640 | 6151 | 1593 | 1507 | 1365 |
+| Edges | 3135 | 5790 | 3817 | 2549 | 74826 | 45813 | 37418 | 22130 |
+| Giant component | 528 | 659 | 555 | 469 | 2403 | 1960 | 1835 | 1495 |
+| Isolated enzymes | 336 | 277 | 364 | 226 | 1718 | 1749 | 1379 | 915 |
+| Enzymes with no metabolic BP | 130 | 157 | 154 | 179 | 1258 | 993 | 860 | 827 |
+| Linked pairs sharing specific BP | 0.543 | 0.468 | 0.504 | 0.477 | 0.439 | 0.469 | 0.468 | 0.457 |
+| Same-step edges (shared reaction) | 327 | 295 | 433 | 168 | 5327 | 6840 | 4913 | 2070 |
+| …sharing specific BP | 0.93 | 0.898 | 0.855 | 0.869 | 0.827 | 0.754 | 0.755 | 0.743 |
+| Handoff edges (no shared reaction) | 2633 | 4920 | 3101 | 1579 | 48922 | 30423 | 23427 | 9857 |
+| …sharing specific BP | 0.495 | 0.442 | 0.455 | 0.436 | 0.397 | 0.405 | 0.408 | 0.397 |
+| Handoffs via a non-hub chemical (≤5 enzymes) | 527 | 1016 | 545 | 331 | 1688 | 589 | 584 | 422 |
+| …sharing specific BP | 0.712 | 0.703 | 0.714 | 0.61 | 0.745 | 0.727 | 0.697 | 0.675 |
+| …random pairs | 0.071 | 0.072 | 0.068 | 0.068 | 0.076 | 0.071 | 0.076 | 0.077 |
+| BP terms tested | 742 | 848 | 812 | 581 | 1415 | 1375 | 1262 | 939 |
+| BP terms connected > random | 563 | 649 | 605 | 380 | 1078 | 1053 | 933 | 659 |
+| Communities | 19 | 12 | 16 | 19 | 13 | 19 | 20 | 19 |
+| Communities ≈ a BP term (F1≥0.5) | 10 | 6 | 6 | 8 | 2 | 9 | 7 | 5 |
+| Enrichment over random | 7.6× | 6.5× | 7.4× | 7.0× | 5.8× | 6.6× | 6.2× | 5.9× |
 
 ### Findings
 
@@ -294,30 +308,30 @@ That gives a like-for-like comparison with `reviews`.
   coherent than the one from reviewed annotations:
   - Human: whole Swiss-Prot gives a 2,403-gene giant component from the Rhea column
     (1,960 from GOA). Linked pairs share a specific BP 5.8–6.6× more often than random.
-  - On the same genes, reviewed annotations agree best: 8.5× in both organisms, against
-    6.9× (P. putida) and 7.9× (human) for GOA with all evidence. 
-  - Reviewed annotations also give the most BP-matching communities: 16/24 (P. putida)
-    and 12/19 (human), against 10/20 and 9/16 for GOA on the same genes.
+  - On the same genes, reviewed annotations agree best, though in human only narrowly:
+    8.9× (P. putida) and 7.6× (human), against 7.1× and 7.4× for GOA with all evidence.
+  - Reviewed annotations also give the most BP-matching communities: 14/22 (P. putida)
+    and 10/19 (human), against 12/22 and 6/16 for GOA on the same genes.
   - **For non-hub handoffs, the sources converge.** On the same genes, 65%/71% of these
-    share a BP with reviewed annotations, against 62%/70% for GOA and 65%/70% for the
+    share a BP with reviewed annotations, against 63%/71% for GOA and 65%/70% for the
     UniProt Rhea column (P. putida/human). Whole-proteome GOA is higher (74%/73%), but
     electronic MF and BP from the same rule agree by construction.
   - So the reviews' advantage sits in same-step pairs, which reviews get more right
-    (92% vs 87% in human), and in hub-mediated links.
+    (93% vs 86% in human), and in hub-mediated links.
 - **The UniProt Rhea column has the widest reaction coverage but the weakest BP
   agreement in human.** It needs no GO→Rhea step.
-  - On the same 819 human enzymes it lists 2,302 reactions, against 700 from the
+  - On the same 952 human enzymes it lists 2,420 reactions, against 732 from the
     reviews. Many of these are substrate-specific variants. Its BP agreement there is
-    6.5×, and its handoffs share a BP 43% of the time (50% for the reviews). Its
-    non-hub handoffs (70%) match the reviews.
-  - In P. putida it matches the reviews (8.5× on the same genes).
+    6.5×, and its handoffs share a BP 44% of the time (50% for the reviews). Its
+    non-hub handoffs (70%) match the reviews (71%).
+  - In P. putida it is close to the reviews (8.1× vs 8.9× on the same genes).
   - Its coverage is mostly Swiss-Prot: 441 of 745 reviewed P. putida entries carry Rhea
     IDs, against 476 of 4,784 unreviewed ones. Most of the benzoate pathway (benA, benC,
     benD) is unreviewed TrEMBL with no CATALYTIC ACTIVITY line. As a result, the
     benzoate→succinyl-CoA route that the reviews reconstruct is broken in
     `uniprot-rhea`.
 - **GOA MF with exact Rhea xrefs is a reasonable bulk source.** P. putida `goa-all` has
-  1,355 enzymes, against 570 from the reviews. It reconstructs the benzoate→succinyl-CoA
+  1,355 enzymes, against 578 from the reviews. It reconstructs the benzoate→succinyl-CoA
   route through benD's ec2go term (GO:0047116 ≡ RHEA:11560). Its BP agreement (6.1×)
   is lower than the reviews'.
 - **Narrow xrefs read as exact were the main source of spurious links.** For example,
