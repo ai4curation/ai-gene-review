@@ -19,9 +19,12 @@ salinarum*, *Saccharolobus solfataricus*, *Pyrococcus furiosus*,
 representative set of archaeal genes across the processes where archaea
 differ most from bacteria and eukaryotes, and (2) list the recurring ways GO
 annotation goes wrong for archaea, so that those failure patterns can be
-reported upstream. The project is at **SCOPING**: the inventory below is
-complete, and the target gene list is a proposal that has not yet been
-reviewed.
+reported upstream. The project is anchored on the **Sulfolobales**
+(CO2 fixation, bioleaching and thermostable enzymes), with **methanogens**
+(biomethane and power-to-gas) as a second DOE-facing theme and the
+haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set. The project
+is at **SCOPING**: the inventory below is complete, and the target gene list
+is a proposal that has not yet been reviewed.
 
 ## Why archaea need their own project
 
@@ -97,131 +100,171 @@ counts above stay meaningful.
    and Hsp20 reviews contain only NEW rows, which means GOA had no
    annotations for either protein when they were fetched.
 
+## Anchor organisms
+
+Chosen on 2026-10-14 for relevance to DOE missions (bioenergy, critical
+minerals, carbon management) and to industrial biotechnology. The
+rationale below is the scoping view. Each claim still needs a citation in
+the gene notes as the reviews are done.
+
+| Role | Organisms (species code) | Why |
+|---|---|---|
+| **Anchor** | Sulfolobales: *Saccharolobus solfataricus* (SACS2), *Sulfolobus acidocaldarius* (SULAC), *Metallosphaera sedula* (METS5), *Acidianus ambivalens* (ACIAM) | Thermoacidophiles used for high-temperature bioleaching of metal sulfides. *M. sedula* fixes CO2 by the 3-hydroxypropionate/4-hydroxybutyrate (3HP/4HB) cycle and has been engineered as a CO2-to-chemicals host. *S. solfataricus* is a source of thermostable glycoside hydrolases for biomass processing, and of biotech tools (Sso7d, Dpo4). *S. acidocaldarius* has genetics and crenarchaeal cell biology (Cdv division, archaellum). |
+| **Co-theme** | Methanogens: *Methanocaldococcus jannaschii* (METJA), *Methanosarcina acetivorans* (METAC), *Methanothermobacter thermautotrophicus* (METTH) | Methanogenesis underlies biogas and power-to-gas (electricity and CO2 to grid methane), and drives biogenic methane emissions. The repo already has METJA and METAC reviews. |
+| **Calibration** | Haloarchaea: *Haloferax volcanii* (HALVD), *Halobacterium salinarum* (HALSA) | The most genetically tractable archaea, and so the richest in experimental GO annotation. They show what good archaeal annotation looks like. Their industrial use (PHBV bioplastic, salt-tolerant enzymes) comes mainly from *H. mediterranei*, which is outside the current target list. |
+
 ## Proposed review targets
 
-All accessions below are reviewed (Swiss-Prot) entries, checked against
-UniProt on 2026-10-14. The themes are ordered by how much they are expected
-to expose archaea-specific annotation problems.
+Accessions were checked against UniProt on 2026-10-14. All are reviewed
+(Swiss-Prot) entries. Where UniProt gives no gene symbol, the ordered
+locus name from the UniProt record is shown and should be used as the
+folder name.
 
-### 1. Cell division and the archaeal cytoskeleton
+### Part A. DOE-facing: Sulfolobales and methanogens
+
+#### A1. CO2 fixation by the 3HP/4HB cycle (*Metallosphaera sedula*)
+
+| Code | Gene | UniProt | Protein |
+|---|---|---|---|
+| METS5 | Msed_0709 | A4YEN2 | Malonyl-CoA reductase (NADP) |
+| METS5 | Msed_1456 | A4YGR1 | 3-hydroxypropionyl-CoA synthetase |
+| METS5 | Msed_2001 | A4YI89 | 3-hydroxypropionyl-CoA dehydratase |
+| METS5 | Msed_1424 | A4YGN0 | Succinate-semialdehyde dehydrogenase (acetylating) |
+| METS5 | Msed_0406 | A4YDT1 | 4-hydroxybutyrate--CoA ligase 1 |
+
+The cycle has no GO-CAM model in the repo, and its enzymes are
+multifunctional. The two 4-hydroxybutyrate--CoA ligase paralogs (Msed_0406
+and Msed_0394) also accept acetate, butyrate and propionate. That makes them
+a test of whether GO records the physiological substrate or every substrate
+seen in vitro. The cycle is a natural first archaeal module.
+
+#### A2. Sulfur oxidation and bioleaching
+
+| Code | Gene | UniProt | Protein |
+|---|---|---|---|
+| ACIAM | sor | P29082 | Sulfur oxygenase/reductase (SOR) |
+| ACIAM | doxD | P97207 | Thiosulfate:quinone oxidoreductase large subunit |
+| ACIAM | doxA | P97224 | Thiosulfate:quinone oxidoreductase small subunit |
+
+The iron-oxidation (*fox*) proteins of *M. sedula* are all unreviewed
+TrEMBL entries. Scope them after the pilot, once it is clear whether
+unreviewed archaeal entries carry any GO annotation worth reviewing.
+
+#### A3. Thermostable carbohydrate and glycolytic enzymes
+
+| Code | Gene | UniProt | Protein |
+|---|---|---|---|
+| SACS2 | lacS | P22498 | Beta-galactosidase (broad-specificity beta-glycosidase) |
+| SACS2 | xylS | Q9P999 | Alpha-xylosidase |
+| PYRFU | gor | Q8U3K2 | Glyceraldehyde-3-phosphate:ferredoxin oxidoreductase (GAPOR) |
+| PYRFU | pfkC | Q9V2Z7 | ADP-specific phosphofructokinase |
+
+#### A4. Methanogenesis and power-to-gas
+
+| Code | Gene | UniProt | Protein |
+|---|---|---|---|
+| METTH | mcrA | O27232 | Methyl-coenzyme M reductase subunit alpha |
+| METTH | frhA | P19496 | Coenzyme F420 hydrogenase subunit alpha |
+| METJA | mcrA | Q58256 | Methyl-coenzyme M reductase I subunit alpha |
+| METJA | mtrA | Q58261 | Tetrahydromethanopterin S-methyltransferase subunit A |
+| METJA | hdrA | P60200 | CoB-CoM heterodisulfide reductase subunit A |
+| METJA | cofC | Q58297 | 2-phospho-L-lactate guanylyltransferase (F420 biosynthesis) |
+
+Together with the existing METAC mcrA review, this puts the same enzyme in
+three methanogen lineages: hydrogenotrophic (METTH, METJA) and
+methylotrophic/acetoclastic (METAC). The CO2-reduction pathway of
+*M. jannaschii* or *Methanothermobacter* would be a good first archaeal
+GO-CAM.
+
+#### A5. Sulfolobales cell biology and information processing
 
 | Code | Gene | UniProt | Protein |
 |---|---|---|---|
 | SULAC | cdvA | Q4J923 | Cell division protein A |
 | SULAC | cdvB | Q4J924 | Cell division protein B (ESCRT-III homolog) |
 | SULAC | cdvC | F2Z6D2 | Cell division protein C (Vps4 homolog) |
-| HALVD | ftsZ1 | Q48327 | Cell division protein FtsZ 1 |
-| HALVD | sepF | D4H018 | Cell division protein SepF |
-
-Question: do ESCRT-III/Vps4 homologs pick up eukaryotic endosome or
-multivesicular-body terms by orthology?
-
-### 2. Archaellum (archaeal flagellum)
-
-| Code | Gene | UniProt | Protein |
-|---|---|---|---|
 | SULAC | flaI | Q4J9L0 | Archaeal flagellar ATPase motor FlaI |
-
-Extend to the rest of the *S. acidocaldarius* *fla*/*arl* operon once the
-FlaI review has shown which flagellum terms GOA actually carries.
-
-### 3. Information processing (eukaryote-like machinery)
-
-| Code | Gene | UniProt | Protein |
-|---|---|---|---|
 | SACS2 | MCM | Q9UXG1 | Minichromosome maintenance protein MCM |
 | SACS2 | pcn1 | P57766 | DNA polymerase sliding clamp 1 (PCNA1) |
 | SACS2 | pcn2 | Q97Z84 | DNA polymerase sliding clamp 2 (PCNA2) |
 | SACS2 | pcn3 | P57765 | DNA polymerase sliding clamp 3 (PCNA3) |
+| SACS2 | dbh | Q97W02 | DNA polymerase IV (Dpo4) |
 | SACS2 | albA1 | P60849 | DNA/RNA-binding protein Alba 1 |
 | SACS2 | sso7d | P39476 | DNA-binding protein 7d (Sso7d) |
 | METFE | hmfB | P19267 | Archaeal histone B (HMf-2) |
 | PYRFU | rgy | P95479 | Reverse gyrase |
 
-Question: are there nucleus or nucleosome rows on proteins from cells that
-have no nucleus? The three PCNA paralogs form an obligate heterotrimer,
-which makes them a test of `contributes_to` handling.
+Questions to check:
+- Do the ESCRT-III/Vps4 homologs pick up eukaryotic endosome or
+  multivesicular-body terms by orthology?
+- Are there nucleus or nucleosome rows on proteins from cells that have no
+  nucleus?
+- The three PCNA paralogs form an obligate heterotrimer, so they test
+  `contributes_to` handling.
+- Extend the archaellum set to the rest of the *fla*/*arl* operon once the
+  FlaI review has shown which flagellum terms GOA carries.
 
-### 4. Protein degradation and modification
+#### A6. Ether-lipid membrane biosynthesis
 
 | Code | Gene | UniProt | Protein |
 |---|---|---|---|
+| METJA | MJ1250 | Q58647 | Geranylgeranylglyceryl phosphate synthase (GGGPS) |
+| METJA | MJ0279 | Q57727 | Digeranylgeranylglyceryl phosphate synthase (DGGGPS) |
+| METJA | carS | Q58995 | CDP-archaeol synthase |
+| METJA | MJ0044 | Q60352 | Isopentenyl phosphate kinase |
+| HALVD | mvaD | D4GXZ3 | Phosphomevalonate decarboxylase |
+
+### Part B. Calibration set: haloarchaea
+
+| Code | Gene | UniProt | Protein |
+|---|---|---|---|
+| HALSA | bop | P02945 | Bacteriorhodopsin |
+| HALSA | htr1 | P0DMI3 | Sensory rhodopsin I transducer (HTR-I) |
+| HALVD | ftsZ1 | Q48327 | Cell division protein FtsZ 1 |
+| HALVD | sepF | D4H018 | Cell division protein SepF |
 | HALVD | psmA1 | Q9V2V6 | Proteasome subunit alpha 1 |
 | HALVD | pan1 | D4GUJ7 | Proteasome-activating nucleotidase 1 |
 | HALVD | samp1 | D4GUF6 | Small archaeal modifier protein 1 (SAMP1) |
 | HALVD | ubaA | D4GSF3 | SAMP-activating enzyme E1 |
 | HALVD | aglB | D4GYH4 | Oligosaccharyltransferase AglB (N-glycosylation) |
 
-SAMP1 and UbaA have two roles: they act as ubiquitin-like protein modifiers
-and as sulfur carriers in molybdopterin and tRNA thiolation. That makes
-them good candidates for a core versus non-core split.
-
-### 5. Ether-lipid membrane biosynthesis
-
-| Code | Gene | UniProt | Protein |
-|---|---|---|---|
-| METJA | — | Q58647 | Geranylgeranylglyceryl phosphate synthase (GGGPS) |
-| METJA | — | Q57727 | Digeranylgeranylglyceryl phosphate synthase (DGGGPS) |
-| METJA | carS | Q58995 | CDP-archaeol synthase |
-| METJA | — | Q60352 | Isopentenyl phosphate kinase |
-| HALVD | mvaD | D4GXZ3 | Phosphomevalonate decarboxylase |
-
-UniProt gives no gene symbol for the rows marked "—". Take the folder
-name from the ordered locus name in the fetched UniProt record; do not
-guess it.
-
-### 6. Energy metabolism
-
-| Code | Gene | UniProt | Protein |
-|---|---|---|---|
-| METJA | mcrA | Q58256 | Methyl-coenzyme M reductase I subunit alpha |
-| METJA | mtrA | Q58261 | Tetrahydromethanopterin S-methyltransferase subunit A |
-| METJA | hdrA | P60200 | CoB-CoM heterodisulfide reductase subunit A |
-| METJA | cofC | Q58297 | 2-phospho-L-lactate guanylyltransferase (F420 biosynthesis) |
-| PYRFU | gor | Q8U3K2 | Glyceraldehyde-3-phosphate:ferredoxin oxidoreductase (GAPOR) |
-| PYRFU | pfkC | Q9V2Z7 | ADP-specific phosphofructokinase |
-
-The METJA mcrA review would pair with the existing METAC mcrA review: the
-same enzyme reviewed in two methanogen lineages.
-
-### 7. Phototrophy and sensory signalling
-
-| Code | Gene | UniProt | Protein |
-|---|---|---|---|
-| HALSA | bop | P02945 | Bacteriorhodopsin |
-| HALSA | htr1 | P0DMI3 | Sensory rhodopsin I transducer (HTR-I) |
-
-Bacteriorhodopsin is one of the best-characterized membrane proteins known,
-so it is a good calibration case for what full experimental GO coverage of
-an archaeal protein looks like.
+These are the archaeal proteins most likely to carry experimental (IDA/IMP)
+annotation. They provide a baseline for how much the Part A organisms rely
+on electronic annotation. SAMP1 and UbaA have two roles: they act as
+ubiquitin-like protein modifiers and as sulfur carriers in molybdopterin and
+tRNA thiolation, so they are good candidates for a core versus non-core
+split.
 
 ## Plan
 
 1. **Housekeeping** (above): merge the amoA duplicates, delete the stray
    `genes/188937/` folder, and move the DRAFT reviews to COMPLETE or record
    why they cannot be.
-2. **Pilot (5 genes):** bop, flaI, cdvB, MCM and psmA1, one from each of the
-   main themes. Fetch them with `just fetch-gene <CODE> <gene>`, then run deep
-   research and a full review.
-3. **Error catalogue:** after the pilot, write `ARCHAEA/annotation-patterns.md`
+2. **Pilot (5 genes, DOE-facing):** Msed_0709 (malonyl-CoA reductase), sor,
+   lacS, METTH mcrA and cdvB. Each covers a different Part A theme. Fetch
+   with `just fetch-gene <CODE> <gene>`, then run deep research and a full
+   review.
+3. **Calibration pair:** bop and psmA1 from Part B. Compare their evidence
+   code mix with the pilot genes.
+4. **Error catalogue:** after the pilot, write `ARCHAEA/annotation-patterns.md`
    to record each recurring archaea-specific error (pipeline, term,
    example rows) and cross-link it to
    [IBA_REVIEW](IBA_REVIEW.md) where the source is PAINT.
-4. **Breadth:** review the remaining targets theme by theme. Where a whole
-   complex or pathway is covered, consider a module (for example archaeal
-   ether-lipid biosynthesis or the methanogenesis core).
-5. **Coverage measure:** add a script under `ARCHAEA/` that counts GOA rows
-   by evidence code for the target species. It will show how far archaeal GO
-   coverage depends on IEA, and can be re-run as the project progresses.
+5. **Breadth and modules:** review the rest of Part A theme by theme, then
+   Part B. Candidate modules: the 3HP/4HB CO2-fixation cycle,
+   hydrogenotrophic methanogenesis, and archaeal ether-lipid biosynthesis.
+6. **Coverage measure:** add a script under `ARCHAEA/` that counts GOA rows
+   by evidence code for each target species. It will show how far archaeal
+   GO coverage depends on IEA, and can be re-run as the project progresses.
 
 ## Open questions
 
 - Which species code should a TrEMBL entry with a `9ARCH` mnemonic use
   (`9ARCH` versus a strain-specific code)? This decides where the amoA review
   ends up.
-- Should *Haloferax volcanii* (genetically tractable, the most experimental
-  annotation) or *Sulfolobus*/*Saccharolobus* (crenarchaeal cell biology) be
-  the anchor organism, in the way *B. subtilis* is for [BACSU](BACSU.md)?
 - No GO-CAM model in `gocams/index.tsv` uses any of the archaeal taxa
-  listed here (checked at scoping). Should the project build the first
-  archaeal model, for example methanogenesis from CO2 in *M. jannaschii*?
+  listed here (checked at scoping). Should the first archaeal model be the
+  3HP/4HB cycle in *M. sedula* or CO2-reducing methanogenesis?
+- Should *Haloferax mediterranei* PHBV biosynthesis (bioplastics) be added
+  as a Part A theme? It is the main industrial use of haloarchaea, but the
+  species has few reviewed UniProt entries.
