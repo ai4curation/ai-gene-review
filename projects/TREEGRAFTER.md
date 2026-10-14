@@ -19,6 +19,12 @@ sidecars:
   snapshot_drift: TREEGRAFTER/treegrafter_snapshot_drift.tsv
   exemplar_independence: TREEGRAFTER/exemplar_independence.tsv
   rejection_rereview: TREEGRAFTER/rereview-2026-09-24/summary.tsv
+  propagation_rules: TREEGRAFTER/propagation_rules.tsv
+  propagation_rule_hits: TREEGRAFTER/propagation_rule_hits.tsv
+  ec_contradiction_scale: TREEGRAFTER/ec_contradiction_scale.tsv
+  graft_paths: TREEGRAFTER/graft_paths.yaml
+  graft_paths_all: TREEGRAFTER/graft_paths_all.tsv
+  graft_path_rules: TREEGRAFTER/graft_path_rules.tsv
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
     - TREEGRAFTER/slides/treegrafter-graft.svg
@@ -48,7 +54,11 @@ of four down-graded cases (four of five of those assigned a failure mode) the
 tree placement was sound and the inherited term was the problem (too coarse, a
 sibling term, or a generic or out-of-context term). The errors cluster by
 family: 26 of the 77 PANTHER families with at least four reviewed annotations
-had half or more of their terms down-graded.
+had half or more of their terms down-graded. Two mechanical checks pick out
+down-grades well: a GO term whose EC number contradicts the protein's own
+UniProt EC (53 rows, 92% down-graded) and a query organism outside the clade
+of the PAINT node the term came from (45 rows, 69%); see
+[Propagation rules and graft paths](#propagation-rules-and-graft-paths).
 
 We did this because TreeGrafter output is routinely conflated with curated
 PAINT/IBA, and knowing where automated grafting over-reaches gives PANTHER and
@@ -135,6 +145,11 @@ uv run --with pyyaml projects/TREEGRAFTER/classify_failure_modes.py # failure mo
 python3 projects/TREEGRAFTER/snapshot_drift.py                      # drift vs the 2026-09-06 snapshot
 uv run --with pyyaml projects/TREEGRAFTER/exemplar_independence.py  # exemplar citation check
 python3 projects/TREEGRAFTER/graft_check.py                         # live UniProt; or --refresh-actions offline
+python3 projects/TREEGRAFTER/propagation_rules.py --go-obo go-basic.obo  # rule scoring (GO from purl.obolibrary.org)
+python3 projects/TREEGRAFTER/ec_contradiction_scale.py              # live UniProt + QuickGO
+python3 projects/TREEGRAFTER/trace_graft_paths.py                  # examples: live PANTHER tree API + QuickGO
+python3 projects/TREEGRAFTER/trace_graft_paths.py --all --panther-trees Tree_MSF \
+    --ibd-gaf IBD.gaf --paint-total PAINT_TreeGrafter_Annotations_TOTAL.txt.gz  # every row, offline
 ```
 
 `analyze_treegrafter.py --out-dir DIR` writes its three sidecars elsewhere, so
@@ -716,8 +731,202 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   runs can be compared with the reviews (against the actions recorded at
   selection, not the current ones).
 
+
+## Propagation rules and graft paths
+
+Added 2026-10-14. Three questions about the 1,074 reviewed rows: can a
+mechanical check, run without reading the literature, pick out the rows
+reviewers went on to down-grade; which PAINT node does each reviewed term come
+from; and how far do the clearest errors reach beyond the corpus?
+
+**Every TreeGrafter row is a TreeGrafter-only call.** GOA merges identical
+calls from several electronic pipelines into `GO_REF:0000120`, so a
+`GO_REF:0000118` row is one no other pipeline made. None of the 1,074 shares
+its GO term with another electronic annotation on the same protein (9 share
+it with an IBA, 10 with an experimental or ISS row). This is why the
+corroboration contrast above exists at all, and it means the EC-match control
+below is empty by construction.
+
+### Rules scored against the reviews
+
+[`propagation_rules.py`](TREEGRAFTER/propagation_rules.py) scores nine
+rules from UniProt records, GOA rows and GO (`go-basic.obo`, release
+2026-07-26) against the actions in
+[`treegrafter_review.tsv`](TREEGRAFTER/treegrafter_review.tsv). The base
+rate is 27.6% down-graded over 1,024 rated rows (UNDECIDED excluded).
+Results in [`propagation_rules.tsv`](TREEGRAFTER/propagation_rules.tsv),
+every hit in [`propagation_rule_hits.tsv`](TREEGRAFTER/propagation_rule_hits.tsv).
+
+| Rule | Flagged | Down-graded | Lift | Accepted |
+|---|---:|---:|---:|---:|
+| MF term's EC contradicts the protein's UniProt EC (`ec_contradiction`) | 53 | 92.5% | 3.35 | 2 |
+| catalytic MF term is a sibling of another catalytic MF term on the protein | 25 | 60.0% | 2.17 | 5 |
+| catalytic MF term shares no word with the PANTHER (sub)family name | 42 | 45.2% | 1.64 | 12 |
+| ≥2 reviewed paralogs in the same species and PANTHER family | 301 | 36.2% | 1.31 | 109 |
+| no other GOA source asserts the term or a descendant | 929 | 29.2% | 1.06 | 427 |
+| term is an ancestor of another GO term on the protein | 102 | 12.7% | 0.46 | 30 |
+| broad compartment (cytoplasm, cytosol, membrane, plasma membrane, nucleus) | 289 | 4.8% | 0.18 | 146 |
+
+Two more rules flag too few rows to read: a family or subfamily name
+containing INACTIVE (3 rows, all eryA, from the PTHR43775:SF51 name rather than
+a pseudoenzyme) and animal tissue vocabulary on a non-metazoan protein (1 row,
+*S. rosetta* `warts` `regulation of organ growth`); the eukaryote-only-CC on a
+prokaryote rule flags nothing.
+
+- **EC contradiction is the one strong signal.** The rule compares the EC
+  cross-references of the GO term with the EC numbers in the protein's
+  UniProt `DE` lines, and fires only when every pair differs at a level both
+  numbers specify, so a coarse term (`oxidoreductase activity`, 1.-.-.-) is
+  compatible with a specific EC rather than contradicted. A spot check of the
+  hits that were not down-graded found three causes. One was a rule bug, now
+  fixed: GO's `is_a` can cross EC branches (`GO:0008834`, EC 2.5.1.31, is_a
+  `GO:0045547`, EC 2.5.1.87), so a term that subsumes another GOA term whose
+  EC does match is now exempt (`uppS`). The other two are genuine false
+  positives with a stated reason: `fadB` (an EC split by chain length that the
+  reviewer accepted) and `metZ` (a lyase versus transferase EC class for the
+  same PLP chemistry); `ilvA-I`/`ilvA-II` (dual threonine/serine substrate) are
+  kept as non-core. **Not one** reviewed TreeGrafter MF term with an EC
+  cross-reference *agrees* with its protein's UniProt EC (0 of 82 across all
+  repo GOA files), which fits GOA's merging: an agreeing call would also have
+  been made by EC2GO and so would sit under `GO_REF:0000120`.
+- **Broad compartments and true-but-coarse parents are kept.** The two rules
+  that might have been expected to flag over-annotation do the opposite:
+  reviewers retain such rows, usually as `KEEP_AS_NON_CORE`.
+- **The rest are weak.** Sibling-term and name-overlap rules roughly double
+  the base rate on small numbers; the paralog rule mostly reflects the
+  paralog-rich *P. putida* batch.
+
+### How far the EC contradictions reach
+
+[`ec_contradiction_scale.py`](TREEGRAFTER/ec_contradiction_scale.py) takes
+each (UniProt EC, GO term) pair behind a corpus EC contradiction, counts the
+UniProtKB entries that have that EC and that GO term but not the term's own
+EC (which removes fused or multifunctional proteins for which the term may be
+right), and samples 40 of them in QuickGO to see where the term comes from
+([`ec_contradiction_scale.tsv`](TREEGRAFTER/ec_contradiction_scale.tsv),
+44 pairs). Restricted to the 36 pairs from single-EC proteins whose corpus
+rows were all down-graded, they add up to about 150,000 protein–term pairs,
+and in almost every sample all or nearly all of the annotations are
+TreeGrafter's:
+
+| Corpus gene | Protein (UniProt EC) | Inherited term | Entries | Share of EC | TreeGrafter in sample |
+|---|---|---|---:|---:|---:|
+| `purM` | AIR synthetase (6.3.3.1) | phosphoribosylamine–glycine ligase | 18,719 | 83% | 39/40 |
+| `trpC` | IGP synthase (4.1.1.48) | phosphoribosylanthranilate isomerase | 16,436 | 80% | 36/40 |
+| `moaA` | GTP 3′,8-cyclase (4.1.99.22) | cPMP synthase | 15,840 | 84% | 39/40 |
+| `pyrC'` | dihydroorotase (3.5.2.3) | allantoinase | 13,482 | 56% | 35/40 |
+| `dapE` | succinyl-DAP desuccinylase (3.5.1.18) | acetylornithine deacetylase | 10,950 | 72% | 40/40 |
+| `moeB` | MoaD adenylyltransferase (2.7.7.80) | thiosulfate–cyanide sulfurtransferase | 8,938 | 95% | 32/40 |
+| `mqo1`–`3` | malate:quinone oxidoreductase (1.1.5.4) | (S)-2-hydroxyglutarate dehydrogenase | 6,706 | 95% | 40/40 |
+| `mdh` | malate dehydrogenase (1.1.1.37) | L-lactate dehydrogenase (NAD+) | 5,185 | 18% | 37/40 |
+| `phnX` | phosphonoacetaldehyde hydrolase (3.11.1.1) | phosphoglycolate phosphatase | 1,941 | 94% | 40/40 |
+| `eryAI`–`III` | DEBS (2.3.1.94) | fatty acid synthase | 1,157 | 95% | 40/40 |
+
+The samples are drawn from the first 500 hits UniProt returns, not uniformly;
+the counts use UniProt's own `go:` search, which covers every evidence code.
+
+### Graft paths: which PAINT node the term came from
+
+[`trace_graft_paths.py`](TREEGRAFTER/trace_graft_paths.py) fetches the live
+PANTHER 19 tree for a family, walks up from the graft node to the nearest
+ancestor carrying an IBA for the same GO term, and summarises the clades under
+that IBD ([`graft_paths.yaml`](TREEGRAFTER/graft_paths.yaml) for seven
+examples). It reproduces the rotary-ATPase case independently: all five
+`fliI`/`sctN` grafts trace to the duplication node `PTN008558586`, 3 to 7
+steps up. The other examples:
+
+- **Fusion-seeded root IBDs** (`purM`, `moaA`, `moeB`). The IBD sits on the
+  family root (LUCA) and its only experimental seeds are multi-domain
+  proteins: trifunctional GART from fly, mouse, rat and *S. pombe* for the
+  PurD activity in PTHR10520; human and mouse MOCS1 (MoaA fused to MoaC) for
+  cPMP synthase in PTHR22960; and yeast Uba4, which carries a rhodanese
+  domain, for thiosulfate sulfurtransferase in PTHR10953. The activity
+  belongs to a domain the standalone bacterial proteins lack. In PTHR10953
+  the root spans the whole E1 superfamily, 1,090 reference leaves including
+  ubiquitin, SUMO and NEDD8 activating enzymes and ATG7. `trpC` fits by name
+  (fungal TRP1 fuses IGPS and PRAI) but was not traced.
+- **A root IBD across a duplication** (`eryAIII`). The fatty acid synthase
+  IBD is on the root of PTHR43775, seeded by animal FASN and a *Dictyostelium*
+  protein; a bacterial duplication clade of type I PKS (36 leaves) inherits it.
+- **A mixed-function node** (`dapE`). The acetylornithine deacetylase IBD sits
+  on a bacterial speciation node in PTHR43808:SF31, seeded by *E. coli* ArgE
+  and a *Xanthomonas* protein, whose other members include a DapE and several
+  dipeptidases.
+- **No same-term IBD left** (`mdh`). No ancestor of the graft node carries an
+  IBA for L-lactate dehydrogenase activity in the current tree, consistent
+  with a PAINT change since the TreeGrafter run (the same lag the PomBase
+  side query above found at scale).
+
+**All 1,074 rows, offline.** `trace_graft_paths.py --all` repeats the trace
+for every reviewed row against the PANTHER 19 trees (`Tree_MSF/*.tree` from
+PANTHER's TreeGrafter data download), PAINT's current `IBD.gaf` (PANTHER
+v19.0, created 2026-08-28) and `PAINT_TreeGrafter_Annotations_TOTAL.txt.gz`
+(the AN-to-PTN map, and the GO set TreeGrafter assigns at each node today);
+the PANTHER API times out on too many families for a full run. It reproduces
+the API results for the examples above. Each row's query organism is checked
+against the IBD node's clade using the full NCBI lineage from the UniProt
+taxonomy API (UniProt's `OC` lines omit ranks such as Bilateria and
+Opisthokonta). Output in
+[`graft_paths_all.tsv`](TREEGRAFTER/graft_paths_all.tsv), scores in
+[`graft_path_rules.tsv`](TREEGRAFTER/graft_path_rules.tsv):
+
+- 939 rows trace to a same-term IBD, a median of 4 steps above the graft node
+  (maximum 22); 543 of those IBDs are on the family root and 494 paths cross a
+  duplication. 129 rows (12%) have no same-term IBD left on the path: the term
+  is no longer in TreeGrafter's current set for that node, so the GOA row
+  predates a PAINT change. Reviewers down-graded 31% of these, close to the
+  base rate. Two `pyrC'` rows (allantoinase activity, purine nucleobase
+  catabolic process) now meet a NOT IBD on the path; both were removed. Four
+  rows have no graft node in GOA.
+
+| Tree rule (rated rows) | Flagged | Down-graded | Lift | Accepted |
+|---|---:|---:|---:|---:|
+| query organism outside the IBD node's clade | 45 | 68.9% | 2.49 | 6 |
+| query organism inside the IBD node's clade | 795 | 25.4% | 0.92 | 390 |
+| IBD on the graft node itself (0 steps) | 28 | 89.3% | 3.23 | 1 |
+| MF term, duplication between IBD and graft | 136 | 49.3% | 1.78 | 44 |
+| MF term, no duplication between IBD and graft | 87 | 36.8% | 1.33 | 35 |
+| IBD on the family root | 529 | 26.1% | 0.94 | 258 |
+| IBD below the family root | 374 | 28.3% | 1.03 | 165 |
+| IBD node is a duplication | 112 | 18.8% | 0.68 | 54 |
+| no same-term IBD on the path | 117 | 30.8% | 1.11 | 40 |
+
+- **Taxon scope is the structural signal.** The outside-clade hits are the
+  choanoflagellate cadherins on a Bilateria node, the *Capsaspora* `coITGB2`
+  integrin and *S. rosetta* `yorkie` on Eumetazoa nodes, the *N. attenuata*
+  putrescine N-methyltransferases under a bacterial spermidine-synthase IBD,
+  *P. putida* `pyrE` under a eukaryotic IBD and `davD`/`gabD-II` under a
+  Terrabacteria IBD. Accepted exceptions include organelle-derived proteins
+  that sit in bacterial clades by descent (octopus `DDO`). The 0-step rule
+  overlaps it heavily (18 of its 28 rows are the cadherins) and is not an
+  independent signal.
+- **Depth and root placement are not.** Root and non-root IBDs, and short
+  and long paths, are down-graded at about the base rate.
+- **Combined.** EC contradiction, outside-clade and a NOT IBD on the path
+  together flag 96 rated rows, 81% down-graded, catching 28% of all
+  down-grades; only 3 rows trip both of the first two.
+
 ---
 # NOTES
+
+## 2026-10-14
+
+- Brief rewritten (neutral title "Agentic review of the TreeGrafter
+  pipeline"; numbers pinned to `f81b9f300`, matching this page) and linked
+  from the manifest; it adds four tree case studies and the rule results.
+- New: [Propagation rules and graft paths](#propagation-rules-and-graft-paths)
+  with `propagation_rules.py`, `ec_contradiction_scale.py` and
+  `trace_graft_paths.py` and their sidecars. GO release 2026-07-26 for the
+  rules; PANTHER 19 trees with the 2026-08-28 PAINT IBDs for the trace.
+- Checked the corpus against `main` at `75e426908`: the same 1,074
+  TreeGrafter rows on 577 proteins (6,994 review files). Since `f81b9f300`,
+  six rows then `UNDECIDED` were adjudicated, all `REMOVE` (`PP_3394` ×3,
+  STABO `mdr` ×3), the `IRE1` `unfolded protein binding` row was retired and
+  a `Pks1` `secondary metabolite biosynthetic process` row added, which moves
+  the down-graded share from 26.4% to 26.9%. The headline tables stay pinned;
+  the rule scripts read the committed `treegrafter_review.tsv`.
+- "Feed the hotspot list upstream" reworded: no PAINT/PANTHER tickets are to
+  be filed yet; the fix points are collected under Next steps.
 
 ## 2026-10-03
 
@@ -1067,11 +1276,23 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   heuristic is sensitive to reason rewrites: the rejection re-review's
   strengthened reasons moved `PP_0312` and `scpC` from mode 1 to mode 0 and
   `benB` from mode 0 to mode 4 without any curated call.
-- **Feed the hotspot list upstream.** Concrete PAINT / PANTHER tickets: a
-  stilbene-dioxygenase subfamily in PTHR10543, the `GO:0046933` IBD on the
-  PTHR15184 duplication node (see the rotary-ATPase case), the EptA node term in
-  PTHR30443, the PMT subfamily in PTHR11558, PKS-vs-FAS in PTHR43775, the
-  M20A subfamilies in PTHR43808, and the MDH/LDH node in PTHR43128.
+- **Collect the upstream fix points; do not file tickets yet.** Candidate
+  PAINT / PANTHER fixes stay listed here until the rule and graft-path
+  analyses are complete: a stilbene-dioxygenase subfamily in PTHR10543, the
+  `GO:0046933` IBD on the PTHR15184 duplication node (see the rotary-ATPase
+  case), the EptA node term in PTHR30443, the PMT subfamily in PTHR11558,
+  PKS-vs-FAS in PTHR43775 (an IBD on the family root), the M20A subfamilies in
+  PTHR43808, the MDH/LDH node in PTHR43128, and the fusion-seeded root IBDs in
+  PTHR10520 (purM), PTHR22960 (moaA) and PTHR10953 (moeB) (see
+  [Propagation rules and graft paths](#propagation-rules-and-graft-paths)).
+- **Run the EC-contradiction rule over all of GOA.** The UniProt-wide counts
+  in [`ec_contradiction_scale.tsv`](TREEGRAFTER/ec_contradiction_scale.tsv)
+  cover only the 36 pairs seen in the corpus; a GOA × UniProt EC join would
+  give the full list of TreeGrafter MF rows whose EC contradicts the
+  protein's own.
+- **Test the fusion-seeded-root shape across PANTHER.** For every IBD on a
+  family root, check whether all its seeds are multi-domain proteins whose
+  extra domain the rest of the family lacks.
 - **Human-rated anchor.** Have a curator rate a small shared subset so that
   agreement between the agent reviews and expert judgement can be quoted.
 - **Broaden the taxon base.** 65% of the rows are *P. putida* KT2440; the 29
