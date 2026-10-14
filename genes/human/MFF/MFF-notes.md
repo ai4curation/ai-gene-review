@@ -46,7 +46,7 @@ than written from memory:
   34 positive) to the query.
 
   The first version of this control cited `Q9Y6D5` as ARFGEF1's accession. `Q9Y6D5` is **ARFGEF2**
-  (`ARFGEF2-uniprot.txt:6`); ARFGEF1 is `Q9Y6D6` (`ARFGEF1-uniprot.txt:6`, and the accession on its
+  (`ARFGEF2-uniprot.txt:2`); ARFGEF1 is `Q9Y6D6` (`ARFGEF1-uniprot.txt:2`, and the accession on its
   own GOA row). ARFGEF2 holds no `GO:0005096` row at all, so that leg was not a weak check but a
   vacuous one on a gene that was never a carrier, and its negative result said nothing. Corrected
   above; the conclusion was already carried by the `qualifier` leg.
