@@ -144,6 +144,11 @@ This will create a file like `GENE-deep-research-perplexity.md`. You can also ma
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
 
+A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
+term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
+the way to deduplicate them or to drop a true-but-broad term. Consistency rules live in
+`src/ai_gene_review/schema/action_consistency.yaml` and are explained in `docs/action_consistency.md`.
+
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
 always use a holistic synthesized picture of the gene function that you have obtained from your research.
 
@@ -163,6 +168,10 @@ ActionEnum:
           sometimes terms can also be overly specific and contorted, so in some cases you might want to generalize
       MARK_AS_OVER_ANNOTATED:
         description: The term is not entirely wrong, but likely represents an over-annotation of the gene
+      TOO_GENERAL:
+        description: The term is true of the gene but uninformative, because a more specific term asserted
+          elsewhere in this review already entails it. Judges the term, not this row's evidence; never means
+          the claim is false. Use sparingly; not for GO:0005515 protein binding.
       UNDECIDED:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
