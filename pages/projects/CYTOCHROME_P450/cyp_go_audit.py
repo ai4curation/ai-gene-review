@@ -68,6 +68,11 @@ BINDING_ROOT = "GO:0005488"
 CATALYTIC_ROOT = "GO:0003824"
 EXPERIMENTAL = {"EXP", "IDA", "IMP", "IGI", "IPI", "IEP", "HDA", "HMP", "HTP"}
 
+GOA_PAGE_LIMIT = 200       # QuickGO annotation page size we request
+UNIPROT_PAGE_SIZE = 500    # UniProt search page size we request
+
+_RELEASE = re.compile(r"data version:\s*'([^']+)'")
+
 _R2G = re.compile(r"RHEA:(\d+) > GO:(.+) ; (GO:\d+)")
 _E2G = re.compile(r"EC:(\S+) > GO:(.+) ; (GO:\d+)")
 
@@ -111,9 +116,20 @@ def _get(url: str, timeout: int = 120, retries: int = 3) -> str:
     raise RuntimeError("unreachable")
 
 
+# Populated by load_external2go() from each mapping file's own header, so the
+# emitted summary records which GO release the mappings came from; without it
+# the committed TSVs cannot be re-derived or diffed against a snapshot later.
+SOURCE_VERSIONS: dict[str, str] = {}
+
+
 def load_external2go(url: str, pattern: re.Pattern) -> dict[str, set[str]]:
     out: dict[str, set[str]] = defaultdict(set)
-    for line in _get(url).splitlines():
+    text = _get(url)
+    rel = _RELEASE.search(text)
+    key = "rhea2go_go_release" if "rhea2go" in url else "ec2go_go_release"
+    SOURCE_VERSIONS[key] = rel.group(1) if rel else "unknown"
+    SOURCE_VERSIONS["retrieved_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    for line in text.splitlines():
         m = pattern.match(line)
         if m:
             out[m.group(1)].add(m.group(3))
@@ -124,9 +140,15 @@ def fetch_entries(query: str) -> list[dict]:
     params = urllib.parse.urlencode({
         "query": query,
         "fields": "accession,gene_primary,protein_name,cc_catalytic_activity,cc_disease,protein_existence",
-        "format": "json", "size": 500,
+        "format": "json", "size": UNIPROT_PAGE_SIZE,
     })
     data = json.loads(_get(f"{UNIPROT}?{params}"))
+    if len(data.get("results", [])) >= UNIPROT_PAGE_SIZE:
+        raise RuntimeError(
+            f"UniProt returned a full page of {UNIPROT_PAGE_SIZE} entries for "
+            f"{query!r}; this script does not follow the cursor, so the family "
+            "would be truncated. Raise UNIPROT_PAGE_SIZE or add paging."
+        )
     entries = []
     for r in data.get("results", []):
         genes = r.get("genes") or [{}]
@@ -158,11 +180,21 @@ def fetch_entries(query: str) -> list[dict]:
 
 def fetch_goa_mf(acc: str) -> list[dict]:
     params = urllib.parse.urlencode(
-        {"geneProductId": acc, "aspect": "molecular_function", "limit": 200})
+        {"geneProductId": acc, "aspect": "molecular_function", "limit": GOA_PAGE_LIMIT})
     data = json.loads(_get(f"{QUICKGO}/annotation/search?{params}"))
+    results = data.get("results", [])
+    if len(results) >= GOA_PAGE_LIMIT:
+        # A full page means GOA may hold more rows than we read. Every "no gap"
+        # conclusion below depends on having seen all of an entry's MF rows, so
+        # fail loudly rather than silently understating the gap.
+        raise RuntimeError(
+            f"{acc}: GOA returned a full page of {GOA_PAGE_LIMIT} molecular-function "
+            "rows; this script does not paginate, so results would be truncated. "
+            "Raise GOA_PAGE_LIMIT or add cursor paging before trusting any gap count."
+        )
     return [{"go": a["goId"], "evidence": a.get("goEvidence", ""),
              "reference": a.get("reference", ""), "qualifier": a.get("qualifier", "")}
-            for a in data.get("results", [])
+            for a in results
             if not str(a.get("qualifier", "")).startswith("NOT")]
 
 
@@ -256,7 +288,18 @@ def audit(query: str, outdir: Path, hub_threshold: int = 20,
     rx_info: dict[str, dict] = {}
     for e in entries:
         for r in e["reactions"]:
-            rx_info.setdefault(r["rhea"], r)
+            prev = rx_info.get(r["rhea"])
+            if prev is None:
+                # Copy: a reaction shared by several proteins must not inherit
+                # the first-seen entry's EC / evidence. Aggregate instead.
+                rx_info[r["rhea"]] = dict(r)
+            else:
+                # Union the EC (the same reaction can be cited with and without
+                # one) and OR the experimental flag, so neither depends on the
+                # order UniProt happened to return the entries in.
+                if r["ec"] and r["ec"] not in prev["ec"].split(";"):
+                    prev["ec"] = ";".join(filter(None, [prev["ec"], r["ec"]]))
+                prev["experimental"] = prev["experimental"] or r["experimental"]
             rx_entries[r["rhea"]].append(e["gene"])
     rx_rows, chem_unmapped, chem_all = [], Counter(), Counter()
     for rx, r in sorted(rx_info.items(), key=lambda kv: -len(rx_entries[kv[0]])):
@@ -289,6 +332,7 @@ def audit(query: str, outdir: Path, hub_threshold: int = 20,
 
     summary = {
         "query": query,
+        **SOURCE_VERSIONS,
         "entries": len(entries),
         "entries_with_reactions": sum(1 for e in entries if e["reactions"]),
         "reaction_annotations": sum(len(e["reactions"]) for e in entries),

@@ -72,6 +72,11 @@ FAMILIES = {
     },
 }
 
+GOA_PAGE_LIMIT = 200       # QuickGO annotation page size we request
+UNIPROT_PAGE_SIZE = 500    # UniProt search page size we request
+
+_RELEASE = re.compile(r"data version:\s*'([^']+)'")
+
 _R2G = re.compile(r"RHEA:(\d+) > GO:(.+) ; (GO:\d+)")
 _E2G = re.compile(r"EC:(\S+) > GO:(.+) ; (GO:\d+)")
 
@@ -89,9 +94,19 @@ def _get(url: str, timeout: int = 120, retries: int = 3) -> str:
     raise RuntimeError("unreachable")
 
 
+# Populated by load_rhea2go() from the mapping file's own header, so every
+# emitted summary records which GO release the mapping came from. Without it
+# the committed TSVs cannot be re-derived or diffed against a snapshot later.
+SOURCE_VERSIONS: dict[str, str] = {}
+
+
 def load_rhea2go() -> dict[str, tuple[str, str]]:
     out = {}
-    for line in _get(RHEA2GO_URL).splitlines():
+    text = _get(RHEA2GO_URL)
+    rel = _RELEASE.search(text)
+    SOURCE_VERSIONS["rhea2go_go_release"] = rel.group(1) if rel else "unknown"
+    SOURCE_VERSIONS["retrieved_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    for line in text.splitlines():
         m = _R2G.match(line)
         if m:
             out[m.group(1)] = (m.group(3), m.group(2))
@@ -100,7 +115,10 @@ def load_rhea2go() -> dict[str, tuple[str, str]]:
 
 def load_ec2go() -> dict[str, set[str]]:
     out: dict[str, set[str]] = defaultdict(set)
-    for line in _get(EC2GO_URL).splitlines():
+    text = _get(EC2GO_URL)
+    rel = _RELEASE.search(text)
+    SOURCE_VERSIONS["ec2go_go_release"] = rel.group(1) if rel else "unknown"
+    for line in text.splitlines():
         m = _E2G.match(line)
         if m:
             out[m.group(1)].add(m.group(3))
@@ -114,10 +132,16 @@ def fetch_entries(query: str) -> list[dict]:
             "query": query,
             "fields": "accession,gene_primary,organism_name,cc_catalytic_activity",
             "format": "json",
-            "size": 500,
+            "size": UNIPROT_PAGE_SIZE,
         }
     )
     data = json.loads(_get(f"{UNIPROT_URL}?{params}"))
+    if len(data.get("results", [])) >= UNIPROT_PAGE_SIZE:
+        raise RuntimeError(
+            f"UniProt returned a full page of {UNIPROT_PAGE_SIZE} entries for "
+            f"{query!r}; this script does not follow the cursor, so the family "
+            "would be truncated. Raise UNIPROT_PAGE_SIZE or add paging."
+        )
     entries = []
     for r in data.get("results", []):
         genes = r.get("genes") or [{}]
@@ -158,9 +182,19 @@ def fetch_entries(query: str) -> list[dict]:
 
 def fetch_goa_mf(acc: str) -> list[dict]:
     params = urllib.parse.urlencode(
-        {"geneProductId": acc, "aspect": "molecular_function", "limit": 200}
+        {"geneProductId": acc, "aspect": "molecular_function", "limit": GOA_PAGE_LIMIT}
     )
     data = json.loads(_get(f"{QUICKGO}/annotation/search?{params}"))
+    results = data.get("results", [])
+    if len(results) >= GOA_PAGE_LIMIT:
+        # A full page means GOA may hold more rows than we read. Every "no gap"
+        # conclusion below depends on having seen all of an entry's MF rows, so
+        # fail loudly rather than silently understating the gap.
+        raise RuntimeError(
+            f"{acc}: GOA returned a full page of {GOA_PAGE_LIMIT} molecular-function "
+            "rows; this script does not paginate, so results would be truncated. "
+            "Raise GOA_PAGE_LIMIT or add cursor paging before trusting any gap count."
+        )
     return [
         {
             "go": a["goId"],
@@ -168,7 +202,7 @@ def fetch_goa_mf(acc: str) -> list[dict]:
             "reference": a.get("reference", ""),
             "qualifier": a.get("qualifier", ""),
         }
-        for a in data.get("results", [])
+        for a in results
     ]
 
 
@@ -213,7 +247,18 @@ def analyse(name: str, spec: dict, rhea2go, ec2go, outdir: Path | None) -> dict:
     rx_entries: dict[str, set[str]] = defaultdict(set)
     for e in entries:
         for r in e["reactions"]:
-            rx_info.setdefault(r["rhea"], r)
+            prev = rx_info.get(r["rhea"])
+            if prev is None:
+                # Copy: a reaction shared by several proteins must not inherit
+                # the first-seen entry's EC / evidence. Aggregate instead.
+                rx_info[r["rhea"]] = dict(r)
+            else:
+                # Union the EC (the same reaction can be cited with and without
+                # one) and OR the experimental flag, so neither depends on the
+                # order UniProt happened to return the entries in.
+                if r["ec"] and r["ec"] not in prev["ec"].split(";"):
+                    prev["ec"] = ";".join(filter(None, [prev["ec"], r["ec"]]))
+                prev["experimental"] = prev["experimental"] or r["experimental"]
             rx_entries[r["rhea"]].add(e["acc"])
     mapped = {rx for rx in rx_info if rx in rhea2go}
     go_targets = Counter(rhea2go[rx][0] for rx in mapped)
@@ -258,6 +303,7 @@ def analyse(name: str, spec: dict, rhea2go, ec2go, outdir: Path | None) -> dict:
 
     summary = {
         "family": name,
+        **SOURCE_VERSIONS,
         "title": spec["title"],
         "entries": len(entries),
         "entries_with_rhea": sum(1 for e in entries if e["reactions"]),

@@ -85,7 +85,7 @@ emitted so the choice can be checked). Each CYP then falls in one of three tiers
 | Distinct reactions | 297 |
 | …reaching a GO term via `rhea2go` | 96 |
 | …**with no GO target** | **201 (68%)** |
-| …unmapped *and* carrying no EC number | 192 |
+| …unmapped *and* carrying no EC number | 191 |
 | Distinct MF terms annotated to the family | 107 |
 | …catalytic | 89 |
 | …substrate-naming (non-hub) | 84 |
@@ -143,19 +143,40 @@ cannot receive a `rhea2go` mapping, which needs a molecular function.
 
 The `GO:0097258` / `GO:0097259` pair is therefore an in-family **template**: two
 new terms, built on a precedent from the same proteins, would close steps 2 and 3
-for the whole very-long-chain route. Added as batch 8 of the RHEA mapping set
-(below).
+for this route. Added as batch 8 of the RHEA mapping set (below).
 
-Zoomed out, the same shape recurs: **all 17 oxo-forming reactions in the family
-are unmapped (100%)**, across CYP24A1's vitamin-D C24 oxidation chain, CYP19A1's
-19-oxo aromatase intermediate, CYP51A1's 32-oxolanosterol step, CYP26C1's
-4-oxoretinoate steps and CYP11B2's 18-oxocortisol step. Where GO represents a
-cascade at all it tends to use one *net-reaction* term — `GO:0070330 aromatase
-activity` and `GO:0008398 sterol 14-demethylase activity` are both defined with
-3 O₂ and 3 reductase equivalents, releasing formate — so RHEA's partial reactions
-have nothing to land on. The LTB4 trio proves the alternative is acceptable to GO.
+**Neither proposed name carries a chain-length qualifier**, deliberately: each
+pair's anchors are docosanoate (C22) and hexacosanoate (C26), and C22 is
+*long*-chain by GO's own boundaries — `GO:0102033` is defined for 13–22 carbons
+and `GO:0140692` for more than 22 — so a "very-long-chain" term would exclude
+one anchor of each pair. GO already has an unqualified tier for exactly this
+reason: `GO:0120250 fatty acid omega-hydroxylase activity` is the `is_a` parent
+of both chain-length children. The step-3 name follows its template's suffix
+(`GO:0097259` is a *monooxygenase*) rather than reusing step 2's "ω-oxidase".
 
-### Unmapped chemistry, by class
+Zoomed out, the same shape recurs: of the family's **31 oxo-forming reactions,
+26 are unmapped (84%)** — across CYP24A1's vitamin-D C24 oxidation chain,
+CYP19A1's 19-oxo aromatase intermediate, CYP51A1's 32-oxolanosterol step,
+CYP26C1's 4-oxoretinoate steps and CYP11B2's 18-oxocortisol step. The sharper
+statement is that **every one of the 22 oxo-forming reactions outside the
+eicosanoid class is unmapped**: all five mapped ones are eicosanoid, being three
+hydroperoxy-icosatetraenoate dehydrations onto `GO:0106256` plus `RHEA:48668`
+and `RHEA:48672` — the LTB4 pair that is this page's own precedent. So the one
+class with GO coverage for this step is the class the template comes from.
+
+Where GO represents a cascade with a single term it uses a *net-reaction* one —
+`GO:0070330 aromatase activity` and `GO:0008398 sterol 14-demethylase activity`
+are both defined with 3 O₂ and 3 reductase equivalents, releasing formate — so
+RHEA's partial reactions have nothing to land on there. The LTB4 trio proves the
+per-step alternative is also acceptable to GO.
+
+### Unmapped chemistry: the top classes by unmapped count
+
+The eight rows with the most unmapped reactions, out of 25 chemistry ×
+substrate-class rows in all; this is a selection, not the whole table, and
+per-class totals should be read from
+[`data/cyp-chemistry.tsv`](CYTOCHROME_P450/data/cyp-chemistry.tsv) rather than
+summed from here.
 
 | Chemistry | Substrate class | Reactions | Unmapped | % |
 |---|---|---:|---:|---:|
@@ -164,7 +185,7 @@ have nothing to land on. The LTB4 trio proves the alternative is acceptable to G
 | epoxidation | eicosanoid / PUFA | 32 | 18 | 56% |
 | hydroxylation | other fatty acid | 28 | 18 | 64% |
 | oxo-formation | steroid / sterol | 10 | 10 | **100%** |
-| oxo-formation | other | 7 | 7 | **100%** |
+| oxo-formation | other/unclassified | 7 | 7 | **100%** |
 | epoxidation | other fatty acid | 5 | 5 | **100%** |
 | aromatization (formate-releasing) | steroid / sterol | 10 | 5 | 50% |
 
@@ -224,8 +245,8 @@ Consolidated from this audit and the RHEA family scan. All rows live in
 
 | Proposed term | Reactions | Enzymes | Precedent / sibling |
 |---|---|---|---|
-| ω-hydroxy-very-long-chain fatty acid ω-oxidase activity | RHEA:39055, RHEA:39059 | CYP4A11, CYP4F2, CYP4F3 | `GO:0097258` (same step, LTB4) |
-| ω-oxo-very-long-chain fatty acid ω-oxidase activity | RHEA:39043, RHEA:39047 | CYP4A11, CYP4F2, CYP4F3 | `GO:0097259` (same step, LTB4) |
+| ω-hydroxy fatty acid ω-oxidase activity | RHEA:39055 (C22), RHEA:39059 (C26) | CYP4A11, CYP4F2, CYP4F3 | `GO:0097258` (same step, LTB4) |
+| ω-oxo fatty acid ω-monooxygenase activity | RHEA:39043 (C22), RHEA:39047 (C26) | CYP4A11, CYP4F2, CYP4F3 | `GO:0097259` (same step, LTB4) |
 | estrogen 4-hydroxylase activity | RHEA:47280, RHEA:47292 | CYP1B1 (+5 more) | `GO:0101021` (2-), `GO:0101020` (16α-) |
 | eicosapentaenoate epoxygenase activity | RHEA:39779 (+3) | CYP2J2 (+6 more) | `GO:0008392` (arachidonate) |
 | docosahexaenoate epoxygenase activity | RHEA:52120 (+5) | CYP2J2 (+6 more) | `GO:0071614` (linoleate) |
@@ -251,7 +272,8 @@ instance reactions onto `GO:0102033` / `GO:0120319` (34 reviewed annotations).
    with a precedent. A missing term for one more substrate of an activity GO
    already names is not — per
    [RHEA-PROMISCUOUS-FAMILIES.md](RHEA/RHEA-PROMISCUOUS-FAMILIES.md), GO
-   obsoleted `GO:0018777` for exactly that reason.
+   obsoleted `GO:0018777` for exactly that reason (provenance for the
+   obsoletion is recorded there).
 4. **Review the xenobiotic CYPs.** The unreviewed half holds the promiscuity, the
    pharmacogenomics and the unmapped reactions.
 5. **`unresolved` is a worklist, not a verdict.** Three of the four unresolved
@@ -285,6 +307,12 @@ uv run python cyp_go_audit.py --out data
 uv run python cyp_go_audit.py --out data --hub-threshold 25   # move the hub cut
 ```
 
+Each run stamps the GO release it read `rhea2go`/`ec2go` from, plus a
+`retrieved_at` timestamp, into `cyp-summary.json` (`rhea2go_go_release`,
+`ec2go_go_release`), so a committed table can be tied to a known snapshot; the
+figures on this page are from `releases/2026-07-26`. The script refuses to
+report rather than silently truncate if either source API returns a full page.
+
 Outputs: `data/cyp-summary.json`, `data/cyp-entries.tsv` (per gene, with tier,
 provenance and review status), `data/cyp-reactions.tsv` (per reaction, with the
 `rhea2go`/`ec2go` comparison and chemistry class), `data/cyp-chemistry.tsv`,
@@ -297,7 +325,7 @@ provenance and review status), `data/cyp-reactions.tsv` (per reaction, with the
   proposals recorded in the RHEA SSSOM set; the exemplar gene reviews and the GO
   new-term requests are the open work.
 - **Computed live**: 60 reviewed entries, 556 reaction annotations (528
-  experimental), 297 distinct reactions, 96 mapped / 201 unmapped (192 without an
+  experimental), 297 distinct reactions, 96 mapped / 201 unmapped (191 without an
   EC), 107 MF terms (89 catalytic, 84 substrate-naming), tiers 52/4/4, provenance
   48 experimental / 4 IBA / 4 other, 0 closure-filtered propagation gaps, 13 of
   60 reviewed in this repository.

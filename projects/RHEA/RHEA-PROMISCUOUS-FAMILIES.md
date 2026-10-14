@@ -15,7 +15,7 @@ globally, one GO term absorbing many reactions. This page measures the *other*
 half of the same problem in three families chosen for substrate promiscuity —
 where one protein carries many reactions — and finds the dominant failure is not
 collapse but **drop-out**: **201 of 297 (68%)** distinct reactions annotated to
-reviewed human cytochrome P450s have no `rhea2go` target at all, and **192 of
+reviewed human cytochrome P450s have no `rhea2go` target at all, and **191 of
 those 201 carry no EC number either**, so neither `rhea2go` nor `ec2go` can route
 them. The reverse gap found in the earlier pilot does not appear here: with
 `is_a` closure applied, **zero** of the 98 entries across the three families is
@@ -51,7 +51,7 @@ UniProtKB, `rhea2go`, `ec2go` and QuickGO; per-family TSVs in
 | Distinct reactions | 3 | 8 | **297** |
 | …with a `rhea2go` target | 2 | 5 | 96 |
 | …**with no target** | 1 | 3 | **201 (68%)** |
-| …unmapped *and* with no EC number | 1 | 2 | **192** |
+| …unmapped *and* with no EC number | 1 | 2 | **191** |
 | Distinct GO terms those targets collapse onto | 1 | 4 | 59 |
 | GOA MF rows on these entries | 93 | 72 | 1,302 |
 | …contributed by `GO_REF:0000116` | 0 | 2 | 90 |
@@ -66,7 +66,7 @@ the reactions that *would* collapse are mostly not mapped in the first place.
 Two thirds of the reaction space is simply invisible to GO.
 
 **The unmapped reactions are the substrate-specific ones, and they lack an EC.**
-192 of the 201 unmapped CYP reactions have no EC number, which is the structural
+191 of the 201 unmapped CYP reactions have no EC number, which is the structural
 reason the EC bridge cannot rescue them: EC classifies at the level of
 "unspecific monooxygenase" (1.14.14.1), while RHEA records
 `(4Z,7Z,10Z,13Z,16Z,19Z)-docosahexaenoate → 19,20-epoxy-…`. These are exactly
@@ -112,6 +112,15 @@ generality is deliberate, not a collapse artifact: GO once had the
 substrate-specific term GO:0018777 for LinB's tetrachlorocyclohexadiene
 reaction, and **obsoleted it explicitly as "a specific substrate of"
 GO:0018786**, with `replaced_by: GO:0018786`.
+
+**Provenance for that obsoletion**, since it is load-bearing here and in two
+other pages and no validator checks it: read from QuickGO
+(`/ontology/go/terms/GO:0018777/complete`) against GO release
+`releases/2026-09-27`, which returns `isObsolete: true`,
+`replacements: [{id: GO:0018786, type: replaced_by}]` and the comment
+`This term was obsoleted because it represents a specific substrate of` — the
+sentence is truncated mid-clause in GO itself, so the quoted fragment is the
+whole of what the ontology says, not an excerpt we chose.
 
 That obsoletion is the single most useful datum on this page, because it is GO
 stating the convention that the CYP450 gap runs into: **GO does not create a
@@ -227,7 +236,7 @@ another on the same protein (SSSOM batch 8).
    families it is empty: 0 closure-filtered gaps across 98 entries. The value
    is in gap class **G4** (no `rhea2go` line), which this page measures at 68%
    of the reaction space for human CYPs — far above the 36% global figure.
-2. **The EC bridge fails exactly where promiscuity is highest.** 192 of 201
+2. **The EC bridge fails exactly where promiscuity is highest.** 191 of 201
    unmapped CYP reactions have no EC, because EC stops at "unspecific
    monooxygenase" where RHEA continues to the substrate. So for this family EC
    is not the masking competitor of the global analysis — it is absent.
@@ -250,6 +259,11 @@ uv run python rhea_family_explorer.py --out families             # all three fam
 uv run python rhea_family_explorer.py --family cyp --out families # one family
 just validate-rhea-mappings                                       # validate the SSSOM set
 ```
+
+Each `<family>-summary.json` records the GO release `rhea2go`/`ec2go` were read
+from and a `retrieved_at` timestamp (the figures here are from
+`releases/2026-07-26`), and the script raises rather than truncating if UniProt
+or QuickGO returns a full page.
 
 Outputs per family: `<family>-summary.json`, `-entries.tsv` (per protein),
 `-reactions.tsv` (per reaction, with the `rhea2go`/`ec2go` comparison),

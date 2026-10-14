@@ -29,7 +29,7 @@ entries; after scoring all remaining EC-bridge reactions, no cleanly mappable
 reviewed gap is left, so the remaining problem is missing GO terms rather than
 missing mappings. A per-family scan of three promiscuous families sharpens
 this: in human cytochrome P450s 68% of curated reactions have no mapping at all
-(and 96% of those carry no EC either), while the closure-filtered reverse gap is
+(and 95% of those carry no EC either), while the closure-filtered reverse gap is
 empty — so drop-out, not mis-propagation, is what is left to fix. The SSSOM set
 validates; the forward cross-organism scan is still pending.
 
@@ -203,7 +203,7 @@ The specificity-collapse result above (G5) was measured from the GO side — one
 term absorbing many reactions. Measured from the *protein* side, in three
 families picked for substrate promiscuity, the dominant failure is not collapse
 but **drop-out**: of the 297 distinct reactions annotated to reviewed human
-cytochrome P450s, **201 (68%) have no `rhea2go` target**, and **192 of those
+cytochrome P450s, **201 (68%) have no `rhea2go` target**, and **191 of those
 carry no EC number either** — EC stops at "unspecific monooxygenase" where RHEA
 continues to the substrate, so the EC bridge cannot rescue them. Human
 carboxylesterases and microbial haloalkane dehalogenases show the same shape at
@@ -218,7 +218,8 @@ annotation — and it moves the remaining value from G6 to **G4**.
 The haloalkane family supplies the rule that separates a mapping gap from a term
 gap: GO once had the substrate-specific term `GO:0018777` for LinB's
 tetrachlorocyclohexadiene reaction and **obsoleted it as "a specific substrate
-of" `GO:0018786`**. GO does not create a term per substrate, so an instance
+of" `GO:0018786`**. (Verified against QuickGO, GO release
+`releases/2026-09-27`; the GO comment is itself truncated mid-sentence.) GO does not create a term per substrate, so an instance
 reaction inside a class the term already names deserves a mapping, not a
 new-term request.
 
