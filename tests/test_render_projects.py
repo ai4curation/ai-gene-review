@@ -809,6 +809,46 @@ is an explicit link."""
         assert 'href="../../genes/human/TP53/TP53-ai-review.html"' in html_content
         assert warnings == []
 
+    def test_render_can_exclude_specific_symbols_from_autolinks(self, tmp_path):
+        """autolink_exclude keeps listed symbols as plain text; others still link."""
+        genes_dir = tmp_path / "genes"
+        _review_directory(genes_dir / "ARATH" / "RCA")
+        _review_directory(genes_dir / "human" / "GPX4")
+
+        projects_dir = tmp_path / "projects"
+        projects_dir.mkdir()
+        md_file = projects_dir / "EVIDENCE.md"
+        md_file.write_text(
+            """---
+title: Evidence
+autolink_exclude: [RCA]
+---
+# Evidence
+
+The RCA evidence code is used for GPX4 here."""
+        )
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(
+            "<!DOCTYPE html><html><head><title>{{ title }}</title></head>"
+            "<body>{{ content | safe }}</body></html>"
+        )
+
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=tmp_path / "pages" / "projects",
+            genes_dir=genes_dir,
+            template_path=template_file,
+        )
+
+        html_content = output_path.read_text()
+        assert "ARATH/RCA" not in html_content
+        assert "The RCA evidence code" in html_content
+        assert 'href="../../genes/human/GPX4/GPX4-ai-review.html"' in html_content
+        assert warnings == []
+
     def test_render_project_bundle_includes_support_pages_and_assets(self, tmp_path):
         """Rendering FOO.md also renders FOO/**/*.md and copies referenced assets."""
         genes_dir = tmp_path / "genes"
