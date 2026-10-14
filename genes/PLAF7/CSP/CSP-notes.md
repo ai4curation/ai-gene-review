@@ -42,7 +42,10 @@ The host-side relationship also motivates the BP term **GO:0044650 adhesion of s
 to host cell** ("The attachment of a symbiont to a host cell via adhesion molecules,
 general stickiness etc., either directly or indirectly.", OLS): CSP is the adhesin
 itself, so it performs the work of the adhesion step rather than merely being required
-for it. This term is currently absent from GOA for Q7K740.
+for it. This term is currently absent from GOA for Q7K740. Comparator check within P. falciparum: RH5
+(Q8IFM5) carries GO:0044650 (IEA, propagated from GO:0046789 host cell surface receptor
+binding), while AMA1 does not — the term is applied inconsistently to invasion adhesins
+rather than systematically withheld.
 
 ## Function: sporozoite motility and invasion (region II, region I)
 
