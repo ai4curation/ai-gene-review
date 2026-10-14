@@ -21,10 +21,21 @@ of PMID:33139725 (PMC7606486), which was read but is cached abstract-only.
 ## Annotation decisions
 - NEW: outer dynein arm (part_of), since DNAH11 has only the generic dynein
   complex; comparator check: DNAH5, DNAH9 and DNAH17 carry the term.
-- Regulation of cilium beat frequency IMPs kept as non-core (phenotype, not a
-  regulatory activity).
+- Regulation of cilium beat frequency IMPs modified to epithelial cilium movement
+  involved in extracellular fluid movement (GO:0003351): the hyperkinetic beat is a
+  loss-of-function phenotype of the motor, not a regulatory activity, and DNAH11
+  has no cilium movement row in GOA.
 - Sperm motility IMP (PMID:18492703) marked over-annotated.
-- protein localization to motile cilium (CFAP45) kept as non-core.
+- protein localization to motile cilium (CFAP45, IMP) marked over-annotated: CFAP45
+  depends on DNAH11 for its axonemal position [PMC7606486 full text "In contrast,
+  CFAP45 ciliary localization was abnormal or undetectable in respiratory cilia from
+  several genetically distinct DNAH11-mutant subtypes"], which does not make DNAH11
+  a participant in protein localization. The cached record is abstract-only, so
+  the full-text sentence is recorded as supporting_text_fulltext.
+- Light intermediate chain binding (IEA/IBA) removed: the outer dynein arm has no
+  light intermediate chain subunit, so the claim is unlikely to be correct.
+- microtubule-based process and microtubule-based movement (IEA) set to
+  TOO_GENERAL.
 
 ## PANTHER / IBA check
 Human DNAH11 (Q96DT5) and mouse Dnah11 (E9Q7N9) have identical IBA sets (7 terms);

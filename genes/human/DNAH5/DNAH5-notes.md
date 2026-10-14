@@ -29,9 +29,15 @@ The review is based on the cached publications and UniProt record.
   first abstract contradicts a sperm role, the second rests on heterozygous
   variants.
 - Cilium assembly IMP (PMID:16492982) modified to outer dynein arm assembly.
-- Light intermediate chain binding (IEA/IBA) marked over-annotated: LIC binding
-  is grounded only in cytoplasmic dynein 1 heavy chains (PTN000743491 donors
-  DYNC1H1/Dync1h1).
+- Light intermediate chain binding (IEA/IBA) removed: the outer dynein arm has no
+  light intermediate chain subunit (UniProt SUBUNIT: heavy, light and intermediate
+  chains), and LIC binding is grounded only in cytoplasmic dynein 1 heavy chains
+  (PTN000743491 donors DYNC1H1/Dync1h1). The claim is unlikely to be correct, not
+  just under-supported, so REMOVE rather than MARK_AS_OVER_ANNOTATED.
+- microtubule motor activity (IEA), axonemal dynein complex (IEA) and
+  microtubule-based movement (IEA) set to TOO_GENERAL: each is entailed by a more
+  specific term the review keeps (minus-end-directed microtubule motor activity,
+  outer dynein arm, cilium movement).
 - cilium movement involved in cell motility (IBA) modified to epithelial cilium
   movement involved in extracellular fluid movement.
 
