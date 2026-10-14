@@ -7,12 +7,19 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
+  merge_group:
   # Weekly full re-validation safety net: per-PR scoping can miss breakage caused by
   # upstream ontology drift (e.g. a GO term becoming obsolete), so validate everything
   # once a week and on manual dispatch.
   schedule:
     - cron: '17 6 * * 1'
   workflow_dispatch:
+
+# Cancel superseded PR/main push runs to reduce runner pressure. Queue and
+# scheduled/manual runs are unique: cancelling integration ejects its queued PR.
+concurrency:
+  group: build-${{ github.event.pull_request.number || (github.event_name == 'push' && github.ref) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
   FORCE_COLOR: "1" # Make tools pretty.
@@ -30,12 +37,11 @@ jobs:
 
     steps:
 
-      # Ontology SQLite DBs (GO, CHEBI, ...) are large; free space before downloads.
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with:
-          tool-cache: false
-          large-packages: false
+      # Like dismech, avoid deleting preinstalled SDKs on every run. The runner
+      # started with 86 GB free in run 38122109159 (2026-10-11); cleanup still
+      # spent 121 seconds reclaiming another 22 GB. Log capacity for monitoring.
+      - name: Report disk space
+        run: df -h /
 
       # https://github.com/actions/checkout
       - name: Check out repository
@@ -45,7 +51,7 @@ jobs:
           fetch-depth: 1
 
       - name: Check for source changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4 # merge_group support requires >=4.0.1
         id: changes
         with:
           list-files: shell
@@ -79,6 +85,12 @@ jobs:
               - 'genes/**/*-ai-review.yaml'
             predictions:
               - 'genes/**/*-predictions-review.yaml'
+            # BioReason/GO-GPT prediction sidecars: schema + term validation only
+            # (they carry no excerpts for the source-evidence check).
+            bioreason_predictions:
+              - 'genes/**/*-sft-predictions.yaml'
+              - 'genes/**/*-gogpt-predictions.yaml'
+              - 'genes/**/*-gogpt-leaf-predictions.yaml'
             modules:
               - 'modules/**/*.yaml'
               - 'modules/**/*.yml'
@@ -128,7 +140,7 @@ jobs:
       # commits: baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit
       # (reviews/GOA behind the GO-GPT, BioReason sidecar and ProtNLM reports).
       - name: Fetch benchmark baseline and review snapshot commits
-        if: steps.changes.outputs.src == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.src == 'true'
         shell: bash
         run: |
           policy=projects/BIOREASON_COMPARISON/benchmark-policy.yaml
@@ -232,9 +244,22 @@ jobs:
             echo "No gene-review or validation-infrastructure changes; skipping gene validation."
           fi
 
+      # Integration can expose schema incompatibilities outside the PR's paths.
+      # Full reference/ontology revalidation remains on infra changes and the
+      # weekly pass; avoid refetching the entire literature corpus per merge.
+      - name: Validate all gene schemas (merge queue)
+        if: github.event_name == 'merge_group' && steps.changes.outputs.infra != 'true'
+        run: >-
+          uv run python -m ai_gene_review.validation.schema_batch --schema src/ai_gene_review/schema/gene_review.yaml
+          --target-class GeneReview genes/*/*/*-ai-review.yaml
+
       - name: Validate changed prediction reviews and source evidence
         if: steps.changes.outputs.predictions == 'true'
         run: just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+
+      - name: Validate changed BioReason/GO-GPT prediction files
+        if: steps.changes.outputs.bioreason_predictions == 'true'
+        run: just validate-prediction-terms ${{ steps.changes.outputs.bioreason_predictions_files }}
 
       - name: Upload prediction evidence validation
         if: always() && steps.changes.outputs.predictions == 'true'
@@ -249,6 +274,7 @@ jobs:
       # full run.
       - name: Validate modules (scoped)
         if: >-
+          github.event_name == 'merge_group' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
@@ -261,6 +287,7 @@ jobs:
       # paths the layout test checks change, or on the full pass.
       - name: Validate history records (scoped)
         if: >-
+          github.event_name == 'merge_group' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
@@ -322,6 +349,7 @@ jobs:
       # broken these checks.
       - name: Validate family reviews (scoped)
         if: >-
+          github.event_name == 'merge_group' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
@@ -359,24 +387,25 @@ jobs:
         run: just verify-panther-paint
 
       - name: Test valid/invalid examples
-        if: steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
         run: just test-examples
 
       - name: Run test suite
-        if: steps.changes.outputs.src == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.src == 'true'
         run: just test
 
       # Runs even when `src` is false, so a .github-only change still gets its
       # agent-config consistency and guard-script checks.
       - name: Check agentic automation
-        if: steps.changes.outputs.agents == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.agents == 'true'
         run: |
           uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
-            tests/test_sequence_cache_persistence.py -q
+            tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
-            .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py
+            .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py \
+            tests/test_merge_group_ci.py tests/test_merge_queue.py
           just test-js

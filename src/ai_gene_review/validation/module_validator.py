@@ -1686,7 +1686,10 @@ def _get_cached_adapter(adapter_string: str):
     return _ADAPTER_CACHE[adapter_string]
 
 
-def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
+def _build_oak_resolver(
+    adapter_map: Dict[str, Optional[str]],
+    term_cache: Optional[Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]]] = None,
+) -> Resolver:
     """Build a resolver backed by real OAK adapters (lazily created, cached).
 
     Adapter creation and lookups touch external ontology databases, so failures
@@ -1698,7 +1701,8 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     def get(adapter_string: str):
         return _get_cached_adapter(adapter_string)
 
-    lookups: Dict[str, Tuple[str, Optional[str], Set[str]]] = {}
+    lookups = {} if term_cache is None else term_cache
+    unavailable: Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]] = {}
 
     def lookup(curie: str) -> Tuple[str, Optional[str], Set[str]]:
         prefix = curie.split(":", 1)[0]
@@ -1721,13 +1725,22 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
             return ("unavailable", None, set())
 
     def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
-        # One lookup per CURIE per resolver (i.e. per validated file, since
-        # validate_module_file builds one): a term cited as evidence and
-        # asserted as a grounding would otherwise hit the adapter twice and
-        # double any "ontology unavailable" warning.
-        if curie not in lookups:
-            lookups[curie] = lookup(curie)
-        return lookups[curie]
+        # The CLI shares successful lookups within one batch. Include the
+        # configured adapter in the key so different ontology sources cannot
+        # contaminate each other. Remember failures only within this file so
+        # outages do not multiply calls; the next file can retry the lookup.
+        adapter = adapter_map[curie.split(":", 1)[0]]
+        assert adapter is not None
+        key = (adapter, curie)
+        if key in unavailable:
+            return unavailable[key]
+        if key not in lookups:
+            result = lookup(curie)
+            if result[0] == "unavailable":
+                unavailable[key] = result
+                return result
+            lookups[key] = result
+        return lookups[key]
 
     return resolve
 
@@ -1805,6 +1818,7 @@ def validate_module_file(
     genes_dir: Optional[Path] = None,
     family_reviews_dir: Optional[Path] = None,
     pfam_reviews_dir: Optional[Path] = None,
+    term_cache: Optional[Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]]] = None,
 ) -> ModuleValidationResult:
     """Validate module grounding, structure, evidence, and functional agreement.
 
@@ -1816,6 +1830,8 @@ def validate_module_file(
     ``gene_index`` and review directories select the local curation corpus for
     function compliance. Missing coverage warns; applicable retained gene NOTs
     and explicit family exclusions block. Results include structured findings.
+    ``term_cache`` can share ontology lookups across one immutable batch; it
+    does not cache document validation or persist across CLI runs.
     """
     path = Path(path)
     project_root = Path(__file__).resolve().parents[3]
@@ -1830,7 +1846,7 @@ def validate_module_file(
     typed_go_terms = list(iter_typed_go_terms(doc))
     resolver_was_injected = resolver is not None
     if resolver is None:
-        resolver = _build_oak_resolver(adapter_map)
+        resolver = _build_oak_resolver(adapter_map, term_cache)
 
     if member_index is None:
         member_index = load_member_index(member_index_path(project_root))
@@ -2295,8 +2311,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     from ai_gene_review.module_qc import index_gene_reviews
 
     gene_index = index_gene_reviews(Path(__file__).resolve().parents[3] / "genes")
+    term_cache: Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]] = {}
     for path in args.files:
-        result = validate_module_file(path, config_path=args.config, gene_index=gene_index)
+        result = validate_module_file(
+            path, config_path=args.config, gene_index=gene_index, term_cache=term_cache
+        )
         ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")

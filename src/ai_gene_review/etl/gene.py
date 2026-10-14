@@ -576,34 +576,10 @@ def fetch_gene_data(
         yaml_existed = yaml_file.exists()
         result["yaml_existed"] = yaml_existed
 
-        # Get taxon ID and proper label from organism
-        organism_to_taxon = {
-            "human": ("NCBITaxon:9606", "Homo sapiens"),
-            "mouse": ("NCBITaxon:10090", "Mus musculus"),
-            "rat": ("NCBITaxon:10116", "Rattus norvegicus"),
-            "yeast": ("NCBITaxon:559292", "Saccharomyces cerevisiae"),
-            "fly": ("NCBITaxon:7227", "Drosophila melanogaster"),
-            "worm": ("NCBITaxon:6239", "Caenorhabditis elegans"),
-            "zebrafish": ("NCBITaxon:7955", "Danio rerio"),
-        }
-
-        # Check if we have a predefined mapping
-        if organism.lower() in organism_to_taxon:
-            taxon_info = organism_to_taxon[organism.lower()]
-        # Check if it's a UniProt organism code
-        elif organism.isupper() and len(organism) <= 5:
-            taxon_id = resolve_organism_code_to_taxon(organism)
-            if taxon_id:
-                # Get organism name from UniProt data if available
-                organism_name = get_organism_name_from_uniprot(uniprot_id) or organism
-                taxon_info = (f"NCBITaxon:{taxon_id}", organism_name)
-            else:
-                # Default fallback
-                taxon_info = (f"NCBITaxon:{organism}", organism.capitalize())
-        else:
-            # Default for unknown organisms
-            taxon_info = (f"NCBITaxon:{organism}", organism.capitalize())
-        taxon_id, taxon_label = taxon_info
+        # Taxon from the UniProt record's OX line, labelled from NCBITaxon. The
+        # taxon slot is bound to NCBITaxonEnum, so a placeholder is never written.
+        taxon_term = resolve_taxon_term(organism, uniprot_data)
+        taxon_id, taxon_label = taxon_term["id"], taxon_term["label"]
 
         # Create minimal YAML structure if file doesn't exist
         if not yaml_existed:
@@ -850,6 +826,64 @@ def get_organism_name_from_uniprot(uniprot_id: str) -> Optional[str]:
         return data.get("organism", {}).get("scientificName")
     except Exception:
         return None
+
+
+# Model-organism directories and their NCBITaxon terms (labels verbatim from NCBITaxon).
+MODEL_ORGANISM_TAXA: Dict[str, Tuple[str, str]] = {
+    "human": ("NCBITaxon:9606", "Homo sapiens"),
+    "mouse": ("NCBITaxon:10090", "Mus musculus"),
+    "rat": ("NCBITaxon:10116", "Rattus norvegicus"),
+    "yeast": ("NCBITaxon:559292", "Saccharomyces cerevisiae S288C"),
+    "fly": ("NCBITaxon:7227", "Drosophila melanogaster"),
+    "worm": ("NCBITaxon:6239", "Caenorhabditis elegans"),
+    "zebrafish": ("NCBITaxon:7955", "Danio rerio"),
+}
+
+
+def taxon_curie_from_uniprot_record(uniprot_data: str) -> Optional[str]:
+    r"""Return the NCBITaxon CURIE from a UniProt flat-file ``OX`` line.
+
+    >>> taxon_curie_from_uniprot_record("ID   X\nOX   NCBI_TaxID=3055;\n//")
+    'NCBITaxon:3055'
+    >>> taxon_curie_from_uniprot_record("OX   NCBI_TaxID=882 {ECO:0000313|EMBL:AAS96764.1};")
+    'NCBITaxon:882'
+    >>> taxon_curie_from_uniprot_record("ID   X\n//") is None
+    True
+    """
+    match = re.search(r"^OX   NCBI_TaxID=(\d+)", uniprot_data, re.MULTILINE)
+    return f"NCBITaxon:{match.group(1)}" if match else None
+
+
+def resolve_taxon_term(organism: str, uniprot_data: Optional[str] = None) -> Dict[str, str]:
+    """Return the ``{"id", "label"}`` NCBITaxon term for a new review.
+
+    The id comes from the UniProt record's ``OX`` line when one is given, then
+    from the model-organism table, then from the UniProt organism code. The
+    label is the NCBITaxon label. Raises instead of writing a placeholder.
+
+    >>> resolve_taxon_term("human", "OX   NCBI_TaxID=9606;")
+    {'id': 'NCBITaxon:9606', 'label': 'Homo sapiens'}
+    >>> resolve_taxon_term("yeast")
+    {'id': 'NCBITaxon:559292', 'label': 'Saccharomyces cerevisiae S288C'}
+
+    Raises:
+        ValueError: if no NCBITaxon id can be determined or its label resolved.
+    """
+    from ai_gene_review.taxon import ncbitaxon_label
+
+    known_labels = dict(MODEL_ORGANISM_TAXA.values())
+    curie = taxon_curie_from_uniprot_record(uniprot_data) if uniprot_data else None
+    if curie is None and organism.lower() in MODEL_ORGANISM_TAXA:
+        curie = MODEL_ORGANISM_TAXA[organism.lower()][0]
+    if curie is None and organism.isupper() and len(organism) <= 5:
+        taxon_id = resolve_organism_code_to_taxon(organism)
+        curie = f"NCBITaxon:{taxon_id}" if taxon_id else None
+    if curie is None:
+        raise ValueError(
+            f"Could not determine an NCBITaxon id for organism {organism!r}; "
+            "refusing to write a placeholder taxon"
+        )
+    return {"id": curie, "label": known_labels.get(curie) or ncbitaxon_label(curie)}
 
 
 def resolve_organism_code_to_taxon(organism_code: str) -> Optional[str]:
@@ -1734,29 +1768,8 @@ def fetch_gene_data_ncRNA(
         yaml_existed = yaml_file.exists()
         result["yaml_existed"] = yaml_existed
 
-        # Get taxon information
-        organism_to_taxon = {
-            "human": ("NCBITaxon:9606", "Homo sapiens"),
-            "mouse": ("NCBITaxon:10090", "Mus musculus"),
-            "rat": ("NCBITaxon:10116", "Rattus norvegicus"),
-            "yeast": ("NCBITaxon:559292", "Saccharomyces cerevisiae"),
-            "fly": ("NCBITaxon:7227", "Drosophila melanogaster"),
-            "worm": ("NCBITaxon:6239", "Caenorhabditis elegans"),
-            "zebrafish": ("NCBITaxon:7955", "Danio rerio"),
-        }
-
-        if organism.lower() in organism_to_taxon:
-            taxon_info = organism_to_taxon[organism.lower()]
-        else:
-            # Try to resolve organism code to taxon
-            taxon_id = resolve_organism_code_to_taxon(organism)
-            if taxon_id:
-                organism_name = organism  # Use organism code as name for now
-                taxon_info = (f"NCBITaxon:{taxon_id}", organism_name)
-            else:
-                taxon_info = (f"NCBITaxon:{organism}", organism.capitalize())
-
-        taxon_id, taxon_label = taxon_info
+        taxon_term = resolve_taxon_term(organism)
+        taxon_id, taxon_label = taxon_term["id"], taxon_term["label"]
 
         # Create minimal YAML structure for ncRNA if file doesn't exist
         if not yaml_existed:

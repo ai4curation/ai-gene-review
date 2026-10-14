@@ -438,6 +438,23 @@ def test_apply_member_overrides_wins_over_classification(tmp_path):
     assert merged == {"P1": "PTHR1:SF2", "P2": "PTHR2"}
 
 
+@pytest.mark.parametrize(
+    "override, expect_alternate",
+    [
+        ("PTHR1:SF2", False),  # adopts PANTHER's own placement: UniProt rejected
+        ("PTHR9:SF9", False),  # adopts UniProt's value: no conflict left
+        (None, True),  # no curated decision: both sources stay accepted
+    ],
+)
+def test_settle_member_alternates(override, expect_alternate):
+    from ai_gene_review.etl.panther_families import settle_member_alternates
+
+    overrides = {"P1": (override, "curated")} if override else {}
+    index = {"P1": override or "PTHR1:SF2"}
+    settled = settle_member_alternates({"P1": "PTHR9:SF9"}, index, overrides)
+    assert ("P1" in settled) is expect_alternate
+
+
 def test_repo_member_overrides_are_reflected_in_index():
     from ai_gene_review.etl.panther_families import load_member_overrides
 
@@ -447,6 +464,8 @@ def test_repo_member_overrides_are_reflected_in_index():
     if not members_path.exists():
         pytest.skip("member index not built (run just refresh-panther-members)")
     index = load_member_index(members_path)
+    alternates = load_member_index_alternates(members_path)
     for accession, (family_sf, _reason) in overrides.items():
         if accession in index:
             assert index[accession] == family_sf, accession
+            assert accession not in alternates, accession

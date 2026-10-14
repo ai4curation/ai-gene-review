@@ -1,5 +1,22 @@
 # BBS7 (Q8IWZ6) Gene Review Notes
 
+## Current conclusions — 2026-10-09
+
+BBS7 contributes a BBS2-binding interface to the BBSome, which supports selective membrane-protein trafficking at cilia. Direct pairwise evidence supports the BBS2 interaction, and human structural evidence resolves its coiled-coil heterodimer geometry. The six other BBS2 source records retain their association-level interpretations; a structural mechanism is not attributed to every interaction screen [PMID:22500027] [PMID:31530639].
+
+Mouse Bbs7 loss affects BBSome organization, BBS2 stability and selected ciliary receptor distributions. Zebrafish perturbation shortens Kupffer-vesicle cilia and delays retrograde melanosome transport. These contexts support the existing ciliary-process synthesis without making BBS7 an autonomous cargo receptor, transport motor or protein-folding catalyst. The adipocyte-differentiation and digestive-tract-morphogenesis transfers remain UNDECIDED because their supporting donor observations were not established [PMID:23572516] [PMID:24938409].
+
+The [standing user instruction in the CLINGEN_MENDELIAN project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions) explicitly retains supported generic protein-binding annotations as KEEP_AS_NON_CORE when a more informative molecular function is not established; supported refinements use MODIFY and unresolved evidence uses UNDECIDED. This instruction takes precedence over the general skill guidance. It is the authority for the 27 retained generic binding decisions, rather than the ActionEnum alone, warning severity, or an exemption for old reviews. The historical descriptions of a reviewer preference or unresolved policy disagreement are superseded. The single supported generic-binding refinement remains GO:0046982 for the PMID:22500027 BBS2 row; RNF2 binding separately retains its refinement to GO:0031625.
+
+The unchanged YAML contains 63 distinct source assertions covering 65 raw records, with 15 ACCEPT, 43 KEEP_AS_NON_CORE, three MODIFY and two UNDECIDED decisions. Both alternative products and the integrated core function are preserved. The core already connects heterodimerization, ciliary protein localization, cilium assembly, BBSome membership and the supported locations. No additional complex-level molecular function or new annotation is inferred here.
+
+The historical journal below preserves the earlier reasoning verbatim. Its prospective retrieval status, preliminary counts and superseded annotation decisions are not the current conclusions. PMID:23572516 is cached as an abstract and has separately documented selected external primary reads; PMID:24938409 has extracted full text. No new article reading or quotation is claimed by this presentation and policy clarification.
+
+<details style="white-space: pre-wrap">
+<summary>Historical curation journal — superseded decisions and process records preserved</summary>
+
+# BBS7 (Q8IWZ6) Gene Review Notes
+
 ## Overview
 BBS7 is a core subunit of the **BBSome** (GO:0034464), an octameric, coat/adaptor-like
 complex (BBS1, BBS2, BBS4, BBS5, BBS7, BBS8/TTC8, BBS9, BBIP10/BBIP1) that traffics
@@ -87,3 +104,47 @@ SMO, RNF2) are captured by the BBSome part_of and specific MF/process annotation
 - PMID:22302990 Gascue 2012 JCS — BBS7 nuclear role, RNF2 interaction, transcription. VERIFIED (abstract).
 - PMID:19081074 Loktev 2008 Dev Cell — BBIP10 discovery; BBSome context. VERIFIED.
 - PMID:24550735 Chamling 2014 PLoS Genet — AZI1/CEP131 regulates BBSome trafficking. VERIFIED.
+
+
+## 2026-09-30 independent BBS7 annotation consultation (prospective)
+
+The normal TMP source projection restores 15 omitted source annotations and 35 WITH/FROM lists. All 65 raw records are covered by 63 distinct source objects; two exact duplicates collapse without losing support. Two alternative-product records remain unchanged. The old authored structural-molecule NEW entry is proposed for withdrawal, separately from the source inventory.
+
+Seven exact canonical BBS2 partner records are refined to heterodimerization using independent human integrative structural evidence (PMID:31530639) and ordered-assembly evidence (PMID:22500027). The original screening evidence remains attached and its individual supplementary rows are not claimed to have been reverified. Other supported generic interactions remain non-core under the user-supplied ActionEnum; they are not rejected merely for low informativeness. BBS7 is a client of chaperonin-assisted assembly, not an independently established folding catalyst.
+
+The RNF2 source is directly about BBS7 interaction, including endogenous HeLa co-immunoprecipitation. RNF2 is an E3 ligase, so the binding replacement is ubiquitin protein ligase binding, not sequence-specific Pol II transcription-factor binding. Transcription and proteasomal-regulation annotations remain contextual; no BBS7 ligase, protease or direct DNA-binding activity is asserted. The DISC1 partner Q9NRI5 is corrected in authored prose; it is not PCM1.
+
+Mouse and zebrafish sources support ciliary, laterality and pigment-transport contexts. They do not imply universal loss of every primary cilium or every ciliary cargo. The adipogenesis transfer is unresolved because the available mouse donor is an expression-profile source. Digestive-tract morphogenesis is also unresolved because its precise donor assay has not been established. These uncertainties are not claims that unread full papers lack relevant data.
+
+Normal cached abstracts were read for all 17 inherited PMIDs, with selected body passages for the mechanistic papers and separate official primary Results/captions as recorded in the consultation. The root-owned normal cache request for PMID:23572516 and PMID:24938409 failed DNS once (actual54d8ec); their recovery remains separate and pending. No cache was fabricated. For identification, the latter DOI is 10.1016/j.ydbio.2014.05.020, correcting an unverified DOI in an earlier coordination message. The provider is absent and the unchanged configured dependency-resolution failure is documented; no provider-named manual research was authored. No new direct quotations are added.
+
+Source90 reassessment read the complete normal23572516 abstract and normal24938409 abstract plus extracted Methods, Results and Discussion. The latter confirms zebrafish retrograde pigment-transport and ciliary-length effects while preserving Bbs7 anterograde transport. Its mouse BBSome immunoprecipitation concerns Pk2-null testes. The digestive-tract donor context remains unresolved; no source action or core changed. The prior PMC access limit is superseded for24938409, but figures, movies and supplements were not audited.
+
+The two requested normal sources were subsequently imported through Source90 and explicitly reassessed before integration; the prospective consultation above records the earlier state. All 63 source assertions and two alternative products are preserved. The final synthesis identifies BBS2-BBS7 heterodimerization as the molecular core, with distinct BBS2-BBS9 organization and cargo-specific mouse outcomes. The previous authored generic structural-molecule NEW entry is withdrawn without losing a source assertion. Nine MODIFY decisions receive structured source-only support. The single new quotation contains seven words from PMID:31530639 (14 cumulatively with BBS2). No provider-named manual research or new process assertion is created.
+
+### Final focused checks
+
+The independently reviewed 63-source-annotation proposal passed focused validation and HTML rendering. Its 22 advisories comprise 21 supported generic-binding rows retained as KEEP_AS_NON_CORE under the supplied ActionEnum and one missing structured propagation-review advisory for the broad IBA localization-process refinement. The underlying phylogenetic node was not independently reconstructed, so no unsupported node-specific metadata is added. The review preserves both alternative products, all 65 raw rows and their 63 distinct source assertions; the prior authored NEW is withdrawn separately. No repository-wide validation result is claimed.
+
+## 2026-09-30 follow-up: BBSome function and source-specific binding evidence
+
+The main function is selective membrane-protein trafficking at cilia. BBS7 contributes the BBS2-binding interface within the BBSome; the structural interface and the ciliary process belong in the same core-function summary. The revised summary therefore links heterodimerization to protein localization to cilia and cilium assembly, and records ciliary-membrane and inherited basal-body locations. It does not restore a separate chaperonin-catalysis claim: BBS7 is an assembly client. The human structural evidence is PMID:31530639; mouse assembly, stability and selective receptor-localization evidence is PMID:23572516.
+
+The earlier seven heterodimer replacements are superseded. Six individual source records now retain the curated BBS2 association as non-core. Co-complex interaction screens do not establish dimer geometry; the cached abstracts of PMID:17574030 and PMID:20080638 also do not resolve the relevant binary assay. The specific source replacement is retained for PMID:22500027 because its Results explicitly describe direct pairwise BBS2-BBS7 binding, unlike BBS7-BBS9 association through BBS2. PMID:31530639 independently establishes the human coiled-coil interface. This distinction preserves valid interaction evidence without assigning each screen the structural conclusion.
+
+The requested publication caches are now available. The normal cache for PMID:23572516 is abstract-only: Bbs7-null mice have abnormal sperm flagellar axonemes, and ciliary receptor effects are selective. The earlier review also recorded separately accessed official BBSome-formation Results and displayed Figure 4–6 captions; that selected external reading remains valid and is not a claim to have audited the complete paper or figure pixels. PMID:24938409 includes full text: the reviewed Results describe shorter Kupffer-vesicle cilia in zebrafish and delayed retrograde melanosome transport, while anterograde transport remains intact. Its mouse immunoprecipitation concerns Pk2-null testes. The earlier recovery notes describe the historical fetch state; they do not limit this later reading. Figures, movies and supplemental pair-level measurements were not independently audited. Short exact evidence anchors are retained in the review YAML.
+
+All 63 distinct source annotations, covering 65 raw rows, and both alternative products remain intact. Current decisions are 15 ACCEPT, 43 KEEP_AS_NON_CORE, three MODIFY and two UNDECIDED. Existing generic interactions are retained under the supplied ActionEnum; the reviewer preference for blanket removal remains a separate policy disagreement. The earlier curation journal is preserved, with this section recording the corrected conclusions in biological terms.
+
+
+## 2026-09-30 current-state clarification of the historical consultation
+
+The earlier section headed "independent BBS7 annotation consultation (prospective)", including its later integration paragraph and "Final focused checks", is a historical journal entry. Its statements about pending publication retrieval, seven heterodimerization replacements, nine MODIFY decisions and 22 validation advisories are superseded by the follow-up above; they do not describe the current review. The original entry is retained to preserve the sequence of curation decisions.
+
+The current review contains 63 distinct source annotations, covering 65 raw records, and preserves both alternative products. Its decisions are 15 ACCEPT, 43 KEEP_AS_NON_CORE, three MODIFY and two UNDECIDED. Only the PMID:22500027 BBS2 interaction row is refined to heterodimerization; the six other source records retain their curated associations without inheriting a binary or structural assay conclusion.
+
+Both requested publication records are now available. PMID:23572516 is cached as an abstract, supplemented by the previously recorded selected external Results and figure captions. PMID:24938409 includes extracted full text. Their current reading limits and ciliary findings are described in the preceding follow-up; the earlier pending-retrieval statement is obsolete. Figure pixels, movies and supplementary pair-level measurements were not independently audited.
+
+The scientific corrections are distinct from the remaining generic-binding policy disagreement. Supported interactions remain non-core under the supplied ActionEnum. This clarification changes no annotation, core function, product, reference, or supporting quotation. It appends to the journal rather than deleting historical paragraphs.
+
+</details>
