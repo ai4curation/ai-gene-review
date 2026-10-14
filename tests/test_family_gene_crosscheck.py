@@ -155,7 +155,7 @@ def test_converse_disagreement_over_annotated_is_unresolved_not_conflict(tmp_pat
     assert result.gene_action == "MARK_AS_OVER_ANNOTATED"
 
 
-@pytest.mark.parametrize("kept", ["ACCEPT", "KEEP_AS_NON_CORE"])
+@pytest.mark.parametrize("kept", ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL"])
 def test_over_annotated_row_beside_a_retained_row_is_not_disagreement(tmp_path, kept):
     """One row flagged, another row for the same term kept: the gene retains the term.
 
