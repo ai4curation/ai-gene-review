@@ -25,6 +25,8 @@ sidecars:
   graft_paths: TREEGRAFTER/graft_paths.yaml
   graft_paths_all: TREEGRAFTER/graft_paths_all.tsv
   graft_path_rules: TREEGRAFTER/graft_path_rules.tsv
+  tg_versus_other_sources: TREEGRAFTER/tg_versus_other_sources.tsv
+  tg_versus_other_sources_summary: TREEGRAFTER/tg_versus_other_sources_summary.tsv
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
     - TREEGRAFTER/slides/treegrafter-graft.svg
@@ -59,6 +61,11 @@ down-grades well: a GO term whose EC number contradicts the protein's own
 UniProt EC (53 rows, 92% down-graded) and a query organism outside the clade
 of the PAINT node the term came from (45 rows, 69%); see
 [Propagation rules and graft paths](#propagation-rules-and-graft-paths).
+Much of what TreeGrafter says is right and said nowhere else: 622 rated rows
+are the protein's only annotation to that term or a related one, and reviewers
+kept 71% of them; where it and another pipeline give related terms and the
+review keeps only one, it keeps TreeGrafter more often (see
+[What TreeGrafter gets right](#what-treegrafter-gets-right)).
 
 We did this because TreeGrafter output is routinely conflated with curated
 PAINT/IBA, and knowing where automated grafting over-reaches gives PANTHER and
@@ -146,6 +153,7 @@ python3 projects/TREEGRAFTER/snapshot_drift.py                      # drift vs t
 uv run --with pyyaml projects/TREEGRAFTER/exemplar_independence.py  # exemplar citation check
 python3 projects/TREEGRAFTER/graft_check.py                         # live UniProt; or --refresh-actions offline
 python3 projects/TREEGRAFTER/propagation_rules.py --go-obo go-basic.obo  # rule scoring (GO from purl.obolibrary.org)
+uv run --with pyyaml projects/TREEGRAFTER/tg_versus_other_sources.py --go-obo go-basic.obo  # TreeGrafter vs other sources
 python3 projects/TREEGRAFTER/ec_contradiction_scale.py              # live UniProt + QuickGO
 python3 projects/TREEGRAFTER/trace_graft_paths.py                  # examples: live PANTHER tree API + QuickGO
 python3 projects/TREEGRAFTER/trace_graft_paths.py --all --panther-trees Tree_MSF \
@@ -732,6 +740,81 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   selection, not the current ones).
 
 
+
+## What TreeGrafter gets right
+
+Added 2026-10-14.
+[`tg_versus_other_sources.py`](TREEGRAFTER/tg_versus_other_sources.py) sets
+each reviewed TreeGrafter row beside the other annotations on the same
+protein, related by GO `is_a`/`part_of` (same term, ancestor, descendant, or a
+sibling sharing a direct parent), and records which side the review kept
+([`tg_versus_other_sources.tsv`](TREEGRAFTER/tg_versus_other_sources.tsv),
+counts in
+[`tg_versus_other_sources_summary.tsv`](TREEGRAFTER/tg_versus_other_sources_summary.tsv)).
+"Kept" is `ACCEPT` or `KEEP_AS_NON_CORE`; "down-graded" is `REMOVE`,
+`MODIFY` or `MARK_AS_OVER_ANNOTATED`.
+
+**The only source, and kept.** 622 rated TreeGrafter rows have no other
+annotation on the protein, from any source, to the same term, an ancestor or
+a descendant. Reviewers kept 439 (70.6%): 232 of 262 CC (89%), 70 of 117 MF
+(60%), 137 of 243 BP (56%). TreeGrafter overall is kept 72% of the time, so
+the statements it alone makes are not worse than the rest. Several carry the
+protein's defining activity: squid `ADAR2` (double-stranded RNA adenosine
+deaminase activity), naked mole-rat `Cgas` (2′,3′-cyclic GMP-AMP synthase
+activity), *P. putida* `relA` (GTP diphosphokinase activity), hummingbird
+`TAS1R3` (sweet taste receptor activity), *Capsaspora* `coYki`
+(transcription coactivator activity), *P. putida* `tig` (protein folding
+chaperone).
+
+**More specific than another pipeline.** 159 TreeGrafter rows are
+descendants of an InterPro2GO term on the same protein (79 of them kept), 50
+of an ARBA term (28 kept), 14 of a UniRule term (11 kept) and 141 of a
+combined-IEA term (123 kept). Where the review kept one side of a related
+pair and down-graded the other (distinct TreeGrafter rows):
+
+| Other pipeline | Proteins with both | Kept TreeGrafter, down-graded other | Kept other, down-graded TreeGrafter |
+|---|---:|---:|---:|
+| InterPro2GO (`GO_REF:0000002`) | 158 | 47 | 35 |
+| combined IEA (`GO_REF:0000120`) | 192 | 33 | 28 |
+| ARBA (`GO_REF:0000117`) | 47 | 17 | 6 |
+| UniRule (`GO_REF:0000104`) | 25 | 6 | 0 |
+| UniProt keyword / subcellular location | 30 | 4 | 5 |
+| EC2GO (`GO_REF:0000003`) | 4 | 0 | 1 |
+
+Examples where TreeGrafter is the side kept:
+
+- **Deeper than InterPro2GO.** Vampire bat `K9J287` deoxyribonuclease I
+  activity (InterPro2GO: catalytic activity, DNA nuclease activity; both
+  `MODIFY`); naked mole-rat `Scn9a` sodium ion transmembrane transport
+  (InterPro2GO: monoatomic ion transport, sodium ion transport, transmembrane
+  transport); *P. putida* `PP_1084` thioredoxin peroxidase activity
+  (antioxidant activity, oxidoreductase activity), `hpd`/`hmgB` L-tyrosine
+  catabolic process (aromatic amino acid metabolic process), `glpF` glycerol
+  transmembrane transport.
+- **A sibling InterPro2GO term the review rejected.** `ADAR2`
+  double-stranded RNA adenosine deaminase activity (InterPro2GO adenosine
+  deaminase activity, `MODIFY`); `pdxH` pyridoxal 5′-phosphate biosynthetic
+  process (InterPro2GO pyridoxine biosynthetic process, `REMOVE`); `paaJ`
+  phenylacetate catabolic process (InterPro2GO 3,4-dihydroxybenzoate
+  catabolic process, over-annotated).
+- **Against ARBA.** `PP_2320` peptidoglycan L,D-transpeptidase activity
+  `ACCEPT` against ARBA carboxypeptidase activity `REMOVE` (a GO ancestor, but
+  the wrong reaction: "The closely matched ErfK/LdtPae2 subfamily resolves the
+  YkuD reaction as lipoprotein-acceptor L,D-transpeptidation"); squid `AP180`
+  vesicle budding from membrane kept against ARBA receptor-mediated
+  endocytosis over-annotated; `dnaQ` 3′-5′ exonuclease, `visC`
+  2-polyprenylphenol 6-hydroxylase and `dinB` error-prone translesion
+  synthesis where ARBA has only exonuclease, monooxygenase or DNA metabolic
+  process. True TreeGrafter-versus-ARBA sibling conflicts are rare here:
+  three pairs across the 47 proteins that carry both.
+
+The reverse cases exist and are listed in the same file: 35 TreeGrafter rows
+down-graded where InterPro2GO's related term was kept. Most are a specific
+TreeGrafter term that is wrong under a coarse InterPro2GO parent that is
+still true (`mdh`, `nspC`, `eryAI`–`III`, the stilbene dioxygenases, the
+PMTs, the choanoflagellate cadherins). The combined-IEA call won 13
+sibling conflicts against TreeGrafter.
+
 ## Propagation rules and graft paths
 
 Added 2026-10-14. Three questions about the 1,074 reviewed rows: can a
@@ -925,6 +1008,9 @@ Opisthokonta). Output in
   a `Pks1` `secondary metabolite biosynthetic process` row added, which moves
   the down-graded share from 26.4% to 26.9%. The headline tables stay pinned;
   the rule scripts read the committed `treegrafter_review.tsv`.
+- New: [What TreeGrafter gets right](#what-treegrafter-gets-right), from
+  `tg_versus_other_sources.py` (sole-source rows, and head-to-head outcomes
+  against InterPro2GO, ARBA, UniRule and the combined IEA calls).
 - "Feed the hotspot list upstream" reworded: no PAINT/PANTHER tickets are to
   be filed yet; the fix points are collected under Next steps.
 
