@@ -120,7 +120,7 @@ all ten protein subunits are in `GO:0005655`, four of them also in `GO:0030677`;
 The ancestry among the three complex terms is from the ontology rather than from QuickGO:
 
 ```
-uv run runoak -i sqlite:/root/.data/oaklib/go.db relationships GO:0005655 GO:0030678 GO:0030681
+uv run runoak -i sqlite:obo:go relationships GO:0005655 GO:0030678 GO:0030681
 ```
 
 `GO:0005655 is_a GO:0030681 is_a GO:0030677` and `GO:0030678 is_a GO:0030677`, which is where the
