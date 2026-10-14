@@ -636,7 +636,10 @@ def _check_activation_logic(flat: "_Flattener", edges: set[SignedEdge]) -> list[
     return problems
 
 
-def activation_logic_findings(doc: dict[str, Any]) -> list[str]:
+def activation_logic_findings(
+    doc: dict[str, Any],
+    removed_connections: Optional[set[tuple[str, str]]] = None,
+) -> list[str]:
     """Problems with the ``activation_logic`` declarations of a module document.
 
     Each declaration must sit on an element that is a variable of the
@@ -644,6 +647,8 @@ def activation_logic_findings(doc: dict[str, Any]) -> list[str]:
     regulators that have a signed connection into the element (activating in a
     positive position, inhibiting under ``none_of``), and use every such
     regulator. An empty list means the declarations are consistent.
+    ``removed_connections`` checks them against the graph a counterfactual
+    scenario leaves behind.
 
     >>> doc = {"module": {"id": "m", "parts": [
     ...   {"node": {"id": "a"}}, {"node": {"id": "i"}},
@@ -658,7 +663,7 @@ def activation_logic_findings(doc: dict[str, Any]) -> list[str]:
     module = doc.get("module")
     if not isinstance(module, dict):
         return []
-    flat = _Flattener(module)
+    flat = _Flattener(module, frozenset(removed_connections or ()))
     return _check_activation_logic(flat, flat.flat_edges())
 
 

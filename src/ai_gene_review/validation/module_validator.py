@@ -1926,7 +1926,9 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
     warnings.extend(validate_feedback_loops(doc))
-    errors.extend(validate_executable_models(doc))
+    model_errors, model_warnings = validate_executable_models(doc)
+    errors.extend(model_errors)
+    warnings.extend(model_warnings)
     warnings.extend(symbol_label_warnings(doc))
 
     # Compare actual role assertions, not just protein/family membership.
@@ -2236,29 +2238,51 @@ def validate_feedback_loops(doc: object) -> List[str]:
     ]
 
 
-def validate_executable_models(doc: object) -> List[str]:
-    """Blocking: declared activation logic and model scenarios must hold.
+def validate_executable_models(
+    doc: object, repo_root: Path = Path(".")
+) -> Tuple[List[str], List[str]]:
+    """Check ``activation_logic`` and the ``executable_models`` a module declares.
 
-    ``activation_logic`` must agree with the declared connections (see
-    :func:`ai_gene_review.module_boolean.activation_logic_findings`), and every
-    scenario of a module-derived Boolean model in ``executable_models`` must
-    reach the attractors it states. Both are curator-authored claims about the
-    module's wiring, so a mismatch is an error, like a wrong term id.
+    Returns ``(errors, warnings)``. Errors (blocking): ``activation_logic`` that
+    disagrees with the declared connections (see
+    :func:`ai_gene_review.module_boolean.activation_logic_findings`), a scenario
+    of a module-derived Boolean model that does not reach the attractors it
+    states or cannot be checked, and a model file that does not exist under
+    ``repo_root``. These are curator-authored claims, so a mismatch is an error,
+    like a wrong term id. Warnings: scenarios on a model this check cannot run
+    (external or non-Boolean), which are recorded but never verified.
     """
     from ai_gene_review.module_boolean import activation_logic_findings
-    from ai_gene_review.module_dynamics import run_declared_scenarios
+    from ai_gene_review.module_dynamics import (
+        run_declared_scenarios,
+        unchecked_scenario_models,
+    )
 
     if not isinstance(doc, dict):
-        return []
-    errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
-    if errors:
-        return errors
+        return [], []
+    errors: List[str] = []
+    for model in doc.get("executable_models") or []:
+        if not isinstance(model, dict):
+            continue
+        for path in model.get("files") or []:
+            if not (repo_root / str(path)).is_file():
+                errors.append(
+                    f"Executable model {model.get('id')}: file {path} does not exist"
+                )
+    warnings = [
+        f"Executable model {model_id}: its scenarios are not checked "
+        "(only module-derived Boolean models are simulated)"
+        for model_id in unchecked_scenario_models(doc)
+    ]
+    logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
+    if logic_errors:
+        return errors + logic_errors, warnings
     for result in run_declared_scenarios(doc):
         errors.extend(
             f"Executable model {result.model_id}, scenario {result.scenario_id}: {f}"
             for f in result.failures
         )
-    return errors
+    return errors, warnings
 
 
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:

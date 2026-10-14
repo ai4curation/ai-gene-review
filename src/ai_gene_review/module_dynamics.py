@@ -43,12 +43,13 @@ from typing import Any, Optional
 
 from ai_gene_review.module_boolean import (
     BooleanModel,
+    activation_logic_findings,
     _evaluate,
     _parse,
     _tokenize,
     module_to_boolean,
 )
-from ai_gene_review.module_notation import iter_nodes
+from ai_gene_review.module_notation import iter_connections, iter_nodes
 from ai_gene_review.render_modules import as_list
 
 MAX_EXHAUSTIVE_VARIABLES = 18
@@ -242,17 +243,31 @@ def run_scenario(
     removed = _removed(scenario)
     declared = {
         (str(c.get("source")), str(c.get("target")))
-        for node in iter_nodes(doc.get("module") or {})
-        for c in as_list(node.get("connections"))
-        if isinstance(c, dict)
+        for c in iter_connections(doc.get("module") or {})
     }
     for pair in sorted(removed - declared):
         failures.append(f"removed connection {pair[0]} -> {pair[1]} is not declared")
+    # A removed connection that an activation_logic names leaves that logic
+    # inconsistent; say so rather than guess how the logic should degrade.
+    logic_problems = activation_logic_findings(doc, removed_connections=removed)
+    if logic_problems:
+        failures.extend(
+            f"removed_connections break an activation_logic: {p}"
+            for p in logic_problems
+        )
+        return ScenarioResult(model_id, sid, label, [], failures)
     model = module_to_boolean(doc, removed_connections=removed)
     settings = _settings(scenario)
     bad = sorted(set(settings) - set(model.variables))
     if bad:
         failures.append(f"settings name elements that are not model variables: {bad}")
+        return ScenarioResult(model_id, sid, label, [], failures)
+    if len(model.variables) > MAX_EXHAUSTIVE_VARIABLES:
+        failures.append(
+            f"{len(model.variables)} variables exceeds the exhaustive limit "
+            f"({MAX_EXHAUSTIVE_VARIABLES}); scenarios on this model cannot be checked "
+            "here (use biodivine-aeon)"
+        )
         return ScenarioResult(model_id, sid, label, [], failures)
     found = attractors(model, settings)
 
@@ -284,6 +299,26 @@ def run_scenario(
                     f"{element} is not {attr.replace('_', ' ')} in every attractor"
                 )
     return ScenarioResult(model_id, sid, label, found, failures)
+
+
+def unchecked_scenario_models(doc: dict[str, Any]) -> list[str]:
+    """Ids of declared models that carry scenarios this module cannot run.
+
+    Only module-derived Boolean models are simulated; scenarios on an external
+    or non-Boolean model are recorded but never checked.
+
+    >>> unchecked_scenario_models({"executable_models": [
+    ...   {"id": "ext", "model_type": "BOOLEAN", "derivation": "EXTERNAL",
+    ...    "scenarios": [{"id": "s"}]},
+    ...   {"id": "kin", "model_type": "KINETIC", "derivation": "EXTERNAL"}]})
+    ['ext']
+    """
+    checked = {id(m) for m in boolean_models(doc)}
+    return [
+        str(m.get("id"))
+        for m in as_list(doc.get("executable_models"))
+        if isinstance(m, dict) and id(m) not in checked and as_list(m.get("scenarios"))
+    ]
 
 
 def run_declared_scenarios(doc: dict[str, Any]) -> list[ScenarioResult]:

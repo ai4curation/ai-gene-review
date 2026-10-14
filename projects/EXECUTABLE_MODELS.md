@@ -113,11 +113,19 @@ JSON and recomputes the attractors whenever a box is locked.
 | [Methionine cycle](../modules/methionine_cycle.html) | Maud kinetic model (biosustain) | Kinetic | external | |
 
 The ERK scenarios encode what the curated wiring predicts: no stimulus → rest;
-sustained stimulus → no steady state (transient ERK, as in Grieco et al.,
-[PMID:24250280](https://pubmed.ncbi.nlm.nih.gov/24250280/)); feedback loops cut →
-ERK locked on; DUSP and Sprouty both knocked out → still transient (the direct ERK
-→ RAF and ERK → SOS feedbacks suffice on their own); MEK inhibited or RasGAP active
-→ ERK off.
+sustained stimulus → no steady state; feedback loops cut → ERK locked on; DUSP and
+Sprouty both knocked out → still transient (in this model the direct ERK → RAF and
+ERK → SOS feedbacks suffice on their own); MEK inhibited or RasGAP active → ERK off.
+
+The published MAPK model (Grieco et al.,
+[PMID:24250280](https://pubmed.ncbi.nlm.nih.gov/24250280/)) also has a cyclic ERK
+attractor under growth-factor input, which its authors read as transient ERK
+activation. The agreement is in attractor kind, not mechanism: Grieco et al.
+attribute their transience to feedback on the receptors (receptor degradation and
+PKC), which the ERK module does not include, and report that disrupting the
+downstream feedbacks does not qualitatively change their outcome. The module's
+transience comes entirely from those downstream feedbacks. So the scenarios test
+what the curated wiring implies; they are not a literature-validated mechanism.
 
 ## Roadmap
 

@@ -21,6 +21,7 @@ from ai_gene_review.module_boolean import (
     module_to_boolean,
 )
 from ai_gene_review.module_dynamics import (
+    MAX_EXHAUSTIVE_VARIABLES,
     attractors,
     boolean_model_payload,
     boolean_models,
@@ -138,7 +139,7 @@ def test_inconsistent_activation_logic_is_reported(logic: Any, message: str) -> 
     assert any(message in f for f in findings), findings
     with pytest.raises(ValueError):
         module_to_boolean(doc)
-    assert validate_executable_models(doc)
+    assert validate_executable_models(doc)[0]
 
 
 def test_activation_logic_on_a_flattened_container_is_rejected() -> None:
@@ -242,7 +243,7 @@ def test_erk_scenarios_hold() -> None:
     by_id = {r.scenario_id: r for r in results}
     assert [a.kind for a in by_id["sustained_stimulus"].attractors] == ["CYCLIC"]
     assert [a.kind for a in by_id["feedback_cut"].attractors] == ["FIXED_POINT"]
-    assert validate_executable_models(doc) == []
+    assert validate_executable_models(doc, ROOT) == ([], [])
 
 
 @pytest.mark.parametrize(
@@ -267,6 +268,12 @@ def test_erk_scenarios_hold() -> None:
             "is not always on",
         ),
         ("unstimulated", "expected_inactive", ["not_a_node"], "not a model variable"),
+        (
+            "unstimulated",
+            "expected_oscillating",
+            ["erk_mapk"],
+            "erk_mapk is not oscillating in every attractor",
+        ),
     ],
 )
 def test_a_wrong_expectation_is_a_validation_error(
@@ -276,7 +283,7 @@ def test_a_wrong_expectation_is_a_validation_error(
     (model,) = boolean_models(doc)
     scenario = next(s for s in model["scenarios"] if s["id"] == scenario_id)
     scenario[slot] = value
-    errors = validate_executable_models(doc)
+    errors, _ = validate_executable_models(doc, ROOT)
     assert any(scenario_id in e and message in e for e in errors), errors
 
 
@@ -286,7 +293,83 @@ def test_removing_an_undeclared_connection_is_reported() -> None:
     model["scenarios"][0]["removed_connections"] = [
         {"source": "erk_mapk", "target": "adaptor_recruitment"}
     ]
-    assert any("is not declared" in e for e in validate_executable_models(doc))
+    errors, _ = validate_executable_models(doc, ROOT)
+    assert any("is not declared" in e for e in errors)
+
+
+def _toy_with_scenario(scenario: dict[str, Any], logic: Any = None) -> dict[str, Any]:
+    doc = _toy(logic)
+    doc["executable_models"] = [
+        {
+            "id": "toy_boolean",
+            "model_type": "BOOLEAN",
+            "derivation": "DERIVED_FROM_MODULE",
+            "scenarios": [scenario],
+        }
+    ]
+    return doc
+
+
+def test_removing_a_connection_named_by_activation_logic_is_reported_not_raised() -> (
+    None
+):
+    logic = {
+        "all_of": [{"element": "a"}, {"element": "b"}, {"none_of": [{"element": "i"}]}]
+    }
+    doc = _toy_with_scenario(
+        {"id": "cut_b", "removed_connections": [{"source": "b", "target": "t"}]},
+        logic,
+    )
+    errors, _ = validate_executable_models(doc)
+    assert any(
+        "cut_b" in e
+        and "removed_connections break an activation_logic" in e
+        and "names b, which has no activating connection into t" in e
+        for e in errors
+    ), errors
+
+
+def test_a_model_too_large_to_enumerate_is_reported_not_raised() -> None:
+    ids = [f"n{i}" for i in range(MAX_EXHAUSTIVE_VARIABLES + 1)]
+    doc = {
+        "module": {
+            "id": "chain",
+            "label": "chain",
+            "parts": [{"node": {"id": n, "label": n}} for n in ids],
+            "connections": [
+                {"source": a, "target": b, "connection_type": "CAUSES"}
+                for a, b in zip(ids, ids[1:])
+            ],
+        },
+        "executable_models": [
+            {
+                "id": "chain_boolean",
+                "model_type": "BOOLEAN",
+                "derivation": "DERIVED_FROM_MODULE",
+                "scenarios": [{"id": "go", "expected_attractor_kind": "FIXED_POINT"}],
+            }
+        ],
+    }
+    errors, _ = validate_executable_models(doc)
+    assert any("exceeds the exhaustive limit" in e for e in errors), errors
+
+
+def test_scenarios_on_an_external_model_warn_and_missing_files_error() -> None:
+    doc = copy.deepcopy(yaml.safe_load(ERK.read_text()))
+    external = next(
+        m for m in doc["executable_models"] if m["derivation"] == "EXTERNAL"
+    )
+    external["scenarios"] = [{"id": "unchecked", "expected_attractor_kind": "CYCLIC"}]
+    external["files"].append("models/boolean/no_such_model.bnet")
+    errors, warnings = validate_executable_models(doc, ROOT)
+    assert errors == [
+        f"Executable model {external['id']}: file "
+        "models/boolean/no_such_model.bnet does not exist"
+    ]
+    assert warnings == [
+        f"Executable model {external['id']}: its scenarios are not checked "
+        "(only module-derived Boolean models are simulated)"
+    ]
 
 
 def test_browser_payload_carries_rules_and_scenario_overrides() -> None:

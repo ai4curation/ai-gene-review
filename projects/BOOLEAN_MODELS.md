@@ -75,9 +75,12 @@ reviewed id-mapping, and diffed rather than merged.
   with BBM-070 on **all eight** mapped edges with nothing source-only.
 - **The feedbacks change the dynamics qualitatively, and the curated module now
   shows it.** With its loops closed, the translated ERK module under sustained
-  adaptor recruitment has a single complex attractor in which every tier oscillates,
-  as BBM-070 does under sustained EGFR stimulus (Grieco et al.'s reading: transient
-  ERK activation). The counterfactual with the loops cut, the module's wiring before
+  adaptor recruitment has a single complex attractor in which every tier oscillates.
+  BBM-070 also has a cyclic attractor under sustained EGFR stimulus (Grieco et al.'s
+  reading: transient ERK activation), but the agreement is in attractor kind only:
+  Grieco et al. attribute their transience to receptor-level feedback (receptor
+  degradation, PKC), which lies outside the module, and report that the downstream
+  feedbacks do not qualitatively change their outcome. The counterfactual with the loops cut, the module's wiring before
   this project, is a fixed point with ERK locked on. This is not a claim that cells
   oscillate: a Boolean cyclic attractor under negative feedback means "no sustained
   steady state", i.e. a pulse or adaptation; whether a given cell shows a pulse,

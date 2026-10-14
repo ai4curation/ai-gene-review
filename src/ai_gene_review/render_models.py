@@ -20,7 +20,6 @@ from typing import Any, Optional
 
 from ai_gene_review.module_boolean import module_to_boolean
 from ai_gene_review.module_dynamics import (
-    MAX_EXHAUSTIVE_VARIABLES,
     boolean_model_payload,
     run_scenario,
 )
@@ -34,6 +33,10 @@ from ai_gene_review.render_modules import (
 )
 
 REPO_BLOB = "https://github.com/ai4curation/ai-gene-review/blob/main/"
+
+# The page re-enumerates all 2^n states on every lock toggle, synchronously.
+# 14 variables (16,384 states) stays instant; validation goes further (18).
+MAX_INTERACTIVE_VARIABLES = 14
 
 MODEL_TYPE_LABELS = {
     "BOOLEAN": "Boolean",
@@ -69,7 +72,7 @@ def is_interactive(model: dict[str, Any], doc: dict[str, Any]) -> bool:
         or model.get("derivation") != "DERIVED_FROM_MODULE"
     ):
         return False
-    return len(module_to_boolean(doc).variables) <= MAX_EXHAUSTIVE_VARIABLES
+    return len(module_to_boolean(doc).variables) <= MAX_INTERACTIVE_VARIABLES
 
 
 def model_summaries(
