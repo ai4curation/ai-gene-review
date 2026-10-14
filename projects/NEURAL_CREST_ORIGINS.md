@@ -153,7 +153,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (15 ACCEPT, 4 over-annotated, 3 MODIFY, 3 non-core) + 1 NEW (GO:0001228)
 - [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (20 ACCEPT, 6 MODIFY, 6 non-core, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
 - [x] `human/MSX1` (P28360) — Msx1; border specifier upstream of Pax3/Zic. Reviewed 2026-10-05: 64 GOA rows (38 ACCEPT, 17 non-core, 5 over-annotated, 2 REMOVE, 2 UNDECIDED) + 1 NEW (*neural plate border formation* (NTR), formerly GO:0014029, ISS)
-- [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 2 NEW (*neural plate border formation* (NTR), formerly GO:0014029, ISS)
+- [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 2 NEW (*neural plate border formation* (NTR), formerly GO:0014029; `GO:0014036`; both ISS)
 - [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (17 ACCEPT, 6 MODIFY, 5 non-core, 1 UNDECIDED) + 1 NEW (GO:0001227)
 - [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (*neural plate border formation* (NTR), formerly GO:0014029, GO:0001227, GO:0030917, GO:0043049)
 
@@ -225,7 +225,7 @@ reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 ## Synthesis deliverables
 
 - [ ] Layer table: for each gene, its GRN layer, the outgroup expression data, and the GO process terms kept after review
-- [ ] Decide whether to propose a "neural plate border formation/specification" term (drafted as a `proposed_terms` entry in the module's knowledge gaps)
+- [x] Decide whether to propose a "neural plate border formation/specification" term — decided 2026-10-09: proposed, with *neural crest progenitor maintenance*, alongside the obsoletion of `GO:0014029` (see the gene reviews' `proposed_new_terms` and [NEURAL_CREST_FORMATION_OBSOLETION](NEURAL_CREST_FORMATION_OBSOLETION.md))
 - [ ] Cross-check against GO-CAM (`gocams/index.tsv`) for NC models
 
 # NOTES
@@ -236,8 +236,11 @@ reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 > [NEURAL_CREST_FORMATION_OBSOLETION](NEURAL_CREST_FORMATION_OBSOLETION.md)).
 > Read `GO:0014029` in those notes as *neural plate border formation* (NTR) for
 > border specifiers and *neural crest progenitor maintenance* (NTR) for
-> competence factors. The STATUS lines and the synthesis tables use the current
-> terms.
+> competence factors. Where those notes say crest-formation rows were *kept* or
+> *accepted* (e.g. id3-a, hes4-a, zic1), the rows are now MODIFY to the proposed
+> terms, and the Tier 2 point that TFAP2A sits uneasily at one term predates its
+> getting both layers (border term + `GO:0014036`). The STATUS lines and the
+> synthesis tables use the current terms and actions.
 
 ## 2026-10-01
 
