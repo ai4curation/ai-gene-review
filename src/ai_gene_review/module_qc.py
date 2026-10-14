@@ -13,6 +13,8 @@ This module computes the derived stats surfaced on rendered module pages:
    has deep research
 5. ``module_deep_research`` -- whether the module document as a whole has an
    associated deep-research report
+6. ``function_conformance`` -- whether annoton molecular functions agree with
+   gene reviews/core functions and curated family-level function assessments
 
 The functions are deliberately pure (apart from the filesystem-scanning helpers)
 so they can be unit-tested directly against the YAML documents in ``modules/``.
@@ -804,6 +806,7 @@ def _step_coa_species(
     data: dict[str, Any],
     mf_to_reactions: MFToReactions,
     reaction_equation: ReactionEquation,
+    needed_steps: Optional[set[str]] = None,
 ) -> dict[str, set[str]]:
     """Map each step id to the union of CoA species across its reaction annotons.
 
@@ -812,6 +815,8 @@ def _step_coa_species(
     """
     species: dict[str, set[str]] = {}
     for step_id, _order, ann in _iter_reaction_annotons(data):
+        if needed_steps is not None and step_id not in needed_steps:
+            continue
         term = (ann.get("function") or {}).get("term") or {}
         go_id = term.get("id")
         if not go_id:
@@ -895,23 +900,28 @@ def reaction_chaining_findings(
     >>> f[0]["severity"], sorted(f[0]["shared"])
     ('info', ['2eenoylcoa'])
     """
+    module = data.get("module", {})
+    connections = [
+        conn for conn in as_list(module.get("connections"))
+        if conn.get("connection_type") == "PRECEDES"
+    ]
+    if not connections:
+        return []
     if mf_to_reactions is None or reaction_equation is None:
         resolvers = _default_chaining_resolvers()
         if resolvers is None:
             return []
         mf_to_reactions, reaction_equation = resolvers
 
-    module = data.get("module", {})
-    species = _step_coa_species(data, mf_to_reactions, reaction_equation)
+    needed_steps = {conn.get(key) for conn in connections for key in ("source", "target")}
+    species = _step_coa_species(data, mf_to_reactions, reaction_equation, needed_steps)
     order_of = {
         part.get("node", {}).get("id"): part.get("order")
         for part in as_list(module.get("parts"))
     }
 
     findings: list[dict[str, Any]] = []
-    for conn in as_list(module.get("connections")):
-        if conn.get("connection_type") != "PRECEDES":
-            continue
+    for conn in connections:
         src, tgt = conn.get("source"), conn.get("target")
         override = conn.get("chaining_status")
         note = conn.get("chaining_note")
@@ -1184,6 +1194,10 @@ def collect_module_qc(
     genes_dir: Path = Path("genes"),
 ) -> dict[str, Any]:
     """Collect all derived QC stats for a module document in one structure."""
+    from ai_gene_review.module_function_conformance import module_function_conformance
+
+    if gene_index is None:
+        gene_index = index_gene_reviews(genes_dir)
     try:
         data_qc = run_data_qc(yaml_path, schema_path=schema_path)
     except Exception as error:  # external tool: degrade gracefully, never crash render
@@ -1201,4 +1215,7 @@ def collect_module_qc(
             data, gene_index=gene_index, genes_dir=genes_dir
         ),
         "module_deep_research": module_deep_research(yaml_path),
+        "function_conformance": module_function_conformance(
+            data, gene_index=gene_index, genes_dir=genes_dir
+        ),
     }

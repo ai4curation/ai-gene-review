@@ -149,6 +149,14 @@ def test_build_writes_browser_and_manifest(repo: Path) -> None:
         "genes/mouse/Calm3/Calm3-ai-review.html"]
 
 
+def test_propagation_browser_honors_destination_budget(repo: Path):
+    out = repo / "app/propagation"
+    with pytest.raises(ValueError, match="configured limit is 1 bytes"):
+        build_propagation_browser(repo, out, max_bytes=1)
+    assert not out.exists()
+    assert build_propagation_browser(repo, out, max_bytes=None)["rows"] == 3
+
+
 def test_stats_render_sections(repo: Path) -> None:
     text = render(collect_propagation_data(repo)["rows"], {"generated": "2026-01-01"})
     assert "## What does ISO add on top of IBA?" in text

@@ -31,3 +31,7 @@ Deep research: no falcon report present at time of review.
 - New primary paper found via the report and verified at PubMed: PMID:34428469 (Qiu et al. 2021 Curr Biol, AAA3 nucleotide state). Cached; supports NudF bypass by the wB-AAA3 dynein mutation ["Importantly, the wB-AAA3 mutation suppressed the colony growth defect of the ΔnudF mutant"]. Added to the NEW GO:0140659 row and core function 1.
 - Added PMID:22711696 quote that Lis1 is absent from moving cargo to the GO:0072382 row; deep-research quote added to core function 1.
 - Not used: 2024 mammalian/yeast structural and force papers (Singh 2024, Kusakci 2024) - cross-species context only.
+
+## 2026-10-01 re-review (GOA refresh)
+
+- No new (PENDING) or vanished GOA rows after the refresh. Existing judgments re-audited against current guidelines (IBA reasoning, NEW participation/comparator tests, protein-binding handling, verbatim supporting text); no changes needed.

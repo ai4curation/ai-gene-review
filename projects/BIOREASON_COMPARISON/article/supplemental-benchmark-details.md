@@ -112,9 +112,18 @@ Full derived tables are in `../cafa-style/`.
 
 The HuggingFace SFT narrative sample contains 45 proteins, all with parseable 1-5 correctness/completeness scores. It is not paired to ARGO139 and is not used as a main result. It remains a useful cross-check: mean SFT scores are 3.0/5 correctness and 2.7/5 completeness, and 7/45 SFT outputs contained generated "UniProt Summary" prose for proteins that UniProt describes only as uncharacterized.
 
+The 45-protein sample shares no genes with ARGO139, so its means must not be compared with the RL means. A matched comparison was added on 2026-09-27 (`../sft-rl-matched/`). It uses the Functional Summaries of the 110 ARGO139 accessions present in the HF catalogue.
+
+- **Rater.** One LLM agent scored both SFT and RL summaries, not blinded to model identity.
+- **Correctness.** SFT and RL did not differ: 3.96 vs 4.05, Wilcoxon p=0.62.
+- **Completeness.** SFT was higher: 3.88 vs 2.75, SFT ahead on 80/110 genes, p=2.5e-15.
+- **Calibration.** The same rater's RL re-scores agreed with the first-rater RL scores with quadratic-weighted kappa 0.93 for correctness and 0.78 for completeness.
+
+Protocol, ratings and statistics are in `../sft-rl-matched/` and on the project page.
+
 ## S5. Blinded RL second review
 
-A second rater scored 20 RL Functional Summaries without access to the first-rater reviews or project metrics. The deterministic sample contains four genes from each first-rater correctness stratum. Correctness agreement was 80% exact, 100% within one point, and quadratic-weighted kappa 0.950. Completeness agreement was 55% exact, 95% within one point, and kappa 0.744. The full protocol, raw ratings, and generated metrics are in `../second-review-protocol.md`, `../second-review-ratings.csv`, and `../second-review-agreement.json`.
+A second rater scored 20 RL Functional Summaries without access to the first-rater reviews or project metrics. The deterministic sample contains four genes from each first-rater correctness stratum. Correctness agreement was 80% exact, 100% within one point, and quadratic-weighted kappa 0.950. Completeness agreement was 55% exact, 95% within one point, and kappa 0.744. The full protocol, raw ratings, and generated metrics are in `../second-review-protocol.md`, `../second-review-ratings.csv`, and `../second-review-agreement.json`. Both raters are LLM agents. The balanced sample inflates quadratic-weighted kappa relative to a prevalence-weighted sample. Reweighted to first-rater prevalence, exact agreement is 88% for correctness and 71% for completeness; this is highly uncertain, with n=4 per stratum (`../audit-followup.json`).
 
 ## S6. GO-GPT reviews
 

@@ -373,6 +373,7 @@ def test_collect_module_qc_smoke():
         "feedback_loops",
         "gene_reviews",
         "module_deep_research",
+        "function_conformance",
     }
     assert qc["module_deep_research"]["has_deep_research"] is False
 
@@ -494,6 +495,27 @@ def test_chaining_unresolvable_mf_is_not_a_warning():
         if "s2" in (f["source"], f["target"]):
             assert f["severity"] == "info"
             assert f["status"] == "NOT_CHECKED"
+
+
+def test_chaining_without_precedes_does_not_open_ontologies(monkeypatch):
+    import ai_gene_review.module_qc as qc
+    data = _chain_module()
+    for conn in data["module"]["connections"]:
+        conn["connection_type"] = "POSITIVELY_REGULATES"
+    monkeypatch.setattr(qc, "_default_chaining_resolvers", lambda: pytest.fail("unneeded lookup"))
+    assert reaction_chaining_findings(data) == []
+
+
+def test_chaining_only_queries_edge_participants():
+    data = _chain_module()
+    data["module"]["parts"].append({"node": {"id": "unconnected", "annotons": [
+        {"function": {"term": {"id": "GO:unused"}}},
+    ]}})
+    mf, eq = _resolvers()
+    def lookup(go_id):
+        assert go_id != "GO:unused"
+        return mf(go_id)
+    assert reaction_chaining_findings(data, lookup, eq) == reaction_chaining_findings(_chain_module(), mf, eq)
 
 
 # ---------------------------------------------------------------------------

@@ -24,3 +24,7 @@ respectively.”
 Provenance: live API snapshot 2026-09-09T03:00:51.831347+00:00. Complete API prediction JSON and all emitted claim IDs, text, and original evidence are preserved in the source and provenance JSON files. Current sequence/annotation data are separate comparison snapshots. Annotation overlap records known biology, not demonstrated training membership. All seven gene-focused Falcon jobs completed; the provider reports were inspected and useful primary leads checked. Publication retrieval used Europe PMC metadata/XML when the canonical PubMed fetch returned HTTP 429.
 
 PMID:29563189 lists NCU06005 as glycerol kinase GLK-1 in a cold-sensitive mutant screen. This locus-level phenotype is not a purified kinase or localization assay. The old glp-4 name is not adopted without an authoritative locus mapping. Cytoplasm SL-0086 was emitted with string_match_text GO:0005739 (mitochondrion); the original mismatch is retained and the emitted location is assessed separately.
+
+## 2026-10-01 re-review after GOA refresh
+
+GOA/UniProt sources were refreshed; no new (PENDING) rows and no vanished GOA rows for this gene. Existing judgments were re-audited and retained. Added structured `propagation_review` to the two IBA rows that lacked it: the mitochondrion IBA (UNDECIDED; PTN000023394 node placement versus classical cytosolic glycerokinase fractionation left UNRESOLVED) and the glycerol metabolic process IBA (MODIFY to glycerol catabolic process; TERM_SCOPING_PROBLEM, node transfer itself sound).

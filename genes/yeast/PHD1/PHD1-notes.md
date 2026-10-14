@@ -22,3 +22,11 @@ Newer literature search:
 
 - PubMed query for `(Saccharomyces OR yeast) AND (PHD1 OR Phd1 OR YKL043W)` in 2024-2026 returned no direct PHD1 abstracts.
 - Web searches for `Saccharomyces PHD1 Phd1 pseudohyphal 2024 2025 2026`, `YKL043W Phd1 yeast 2024 transcription factor PHD1`, and exact PHD1/pseudohyphal terms found the 2024 Cromie et al. structured-colony paper already captured in the review, older primary papers, and database/background hits, but no newer PHD1-specific evidence requiring a different annotation decision.
+
+## 2026-10-01 current-GOA refresh
+
+- Forced `just fetch-gene yeast PHD1 --force`. Current GOA has 12 rows. The four IBA assertions are unchanged biologically but the `GO:0005634` nucleus IBA now includes `UniProtKB:A0A0D1CVS5` as another descendant support.
+- Re-fetched the PTHR47792 PAINT cache. The current node table still has one annotated node, `PANTHER:PTN000917459`, carrying the same four IBDs for `GO:0005634`, `GO:0003700`, `GO:0043565`, and `GO:0045944`; no `propagation_review` action change was needed.
+- Preserved two rows that disappeared from current GOA as `retired: true`: the old UniProt combined-methods `GO:0003677` DNA-binding row from `GO_REF:0000120`, and the old UniProt keyword `GO:0006351` DNA-templated transcription row from `GO_REF:0000043`.
+- Reviewed the new InterPro `GO:0003677` DNA-binding IEA from `GO_REF:0000002` and `InterPro:IPR036887` as `KEEP_AS_NON_CORE`: the APSES/HTH-family mapping is correct for PHD1 but generic compared with the existing `GO:0043565` and `GO:0003700` molecular-function rows.
+- `just fetch-gene-pmids yeast PHD1` confirmed all nine PMID-backed references are cached. Web/PubMed searches for 2025-2026 Saccharomyces `PHD1`/`Phd1`/`YKL043W` functional literature found no newer direct PHD1 paper that changes the annotation decisions.
