@@ -96,9 +96,50 @@ completed, reproducible bioinformatics analysis in `YFH7-bioinformatics/RESULTS.
   for a soluble P-loop kinase; not core to function.
 - GO:0005575 cellular_component (ND) — this is the root "no data" placeholder. KEEP_AS_NON_CORE
   (it is the standard ND stub; nothing to remove, adds no information).
-- ATP binding (GO:0005524) is present in UniProt DR (IEA UniProtKB-KW) but NOT in the GOA TSV
-  rows. Final decision: add it explicitly as an `existing_annotation` with `action: NEW`
-  (original_reference_id GO_REF:0000043, the UniProt-keyword mapping reference) AND include it
-  in `core_functions`. Rationale: it is a genuine UniProt annotation and the mechanistic basis
-  (Walker A P-loop) of the accepted kinase/ATP-hydrolysis activities, so recording it as a NEW
-  annotation makes the provenance explicit rather than leaving it only in core_functions.
+- ATP binding (GO:0005524) was present in the 2026-06 UniProt DR xrefs as an IEA
+  UniProtKB-KW annotation but absent from the GOA TSV. UniProt entry version 155 no longer
+  exposes this GO xref, so the old proposed `NEW` ATP-binding row should not be carried
+  forward: the Walker A P-loop is mechanistically important evidence for `GO:0016301` and
+  `GO:0016887`, but current GOA/UniProt are not asserting a standalone ATP-binding
+  molecular function.
+
+## 2026-09-29 IBA re-review
+
+Re-checked the single YFH7 IBA against `projects/IBA_REVIEW.md` and the current
+`interpro/panther/PTHR10285/PTHR10285-paint.tsv` cache. The `GO:0005737`
+cytoplasm row traces to `PANTHER:PTN000032154`, a broad PTHR10285 ancestral node
+seeded by plant, bacterial and mammalian cytoplasmic members of the
+uridine-kinase/PRK-URK-PANK family. That is the correct `propagation_review`
+source entity for the IBA; the row should not enumerate the extant
+`WITH/FROM` proteins as if this were a pairwise transfer.
+
+The transfer itself is still sound. YFH7 is a solved soluble P-loop kinase with
+no transmembrane segment or organelle-targeting sequence, so the generic
+cytoplasm term is a defensible inferred site of action while the physiological
+small-molecule substrate remains unknown. I therefore added a `NO_FAILURE_CORE`
+propagation review for `PANTHER:PTN000032154` and switched the row from
+`KEEP_AS_NON_CORE` to `ACCEPT` so it lines up with the cytoplasm location already
+used in `core_functions`.
+
+Searches for recent `YFH7`, `YFR007W`, `AIM12` and `P43591` papers did not find
+a newer functional publication. The 2008 crystal-structure/enzymology paper
+(PMID:18004758) remains the only YFH7-specific mechanistic paper found in
+PubMed, and the ER-biogenesis and petite-frequency papers remain screen-level
+phenotype context rather than substrate evidence.
+
+## 2026-10-01 current GOA refresh
+
+- Forced a fresh GOA/UniProt pull for YFH7. QuickGO still returns five live rows: the
+  `PTHR10285` cytoplasm IBA, one cellular-component ND root, kinase activity and
+  phosphorylation ISS rows from the Gueguen-Chaignon structure/enzymology paper, and the
+  IDA ATP hydrolysis row from the same paper.
+- Copied the current GOA `WITH/FROM` values into `supporting_entities` for the IBA and
+  two ISS rows. The IBA row still resolves to `PANTHER:PTN000032154`; the PAINT cache
+  still places only a broad cytoplasm assertion there, so the existing `NO_FAILURE_CORE`
+  propagation review remains appropriate.
+- Updated the UniProt cache to entry version 155. UniProt no longer lists its previous
+  `GO:0005737` IBA or `GO:0005524` keyword-derived ATP-binding xrefs, matching QuickGO's
+  absence of a live ATP-binding row; the prior ATP-binding `NEW` proposal was therefore
+  removed as stale and redundant with kinase/ATP hydrolysis activity.
+- Searched again for recent direct YFH7/YFR007W/AIM12/P43591 literature. No newer paper
+  assigning the physiological phosphoacceptor or pathway was found.

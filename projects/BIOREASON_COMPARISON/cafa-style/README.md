@@ -7,25 +7,28 @@ BioReason-Pro SFT files do not contain model confidence scores.
 The score propagates predicted and reference GO terms over `is_a` and
 `part_of` ancestors from the GO 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots.
 
-## Propagated all-aspect agreement against current GOA
+Predictions and reference GOA are read at the review snapshot, as of 2026-09-27 (commit `c7551cb3db`), not the working tree;
+refresh with `just refresh-benchmark-snapshot`.
+
+## Propagated all-aspect agreement against GOA at the review snapshot
 
 | Source | genes | scored direct predictions | direct GOA terms | precision | recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
 | hf_catalogue | 95 | 952 | 2369 | 0.862 | 0.479 | 0.615 |
-| web_export | 44 | 9730 | 3885 | 0.780 | 0.533 | 0.633 |
-| all_sources | 139 | 10682 | 6254 | 0.809 | 0.511 | 0.626 |
+| web_export | 44 | 9730 | 3888 | 0.780 | 0.531 | 0.632 |
+| all_sources | 139 | 10682 | 6257 | 0.809 | 0.510 | 0.625 |
 
 ## Propagated all-aspect agreement against experimental GOA only
 
 | Source | genes | scored direct predictions | experimental GOA terms | precision | recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
 | hf_catalogue | 86 | 847 | 1196 | 0.847 | 0.691 | 0.761 |
-| web_export | 34 | 9350 | 1940 | 0.736 | 0.842 | 0.785 |
-| all_sources | 120 | 10197 | 3136 | 0.773 | 0.779 | 0.776 |
+| web_export | 34 | 9386 | 1948 | 0.735 | 0.831 | 0.780 |
+| all_sources | 120 | 10233 | 3144 | 0.772 | 0.774 | 0.773 |
 
 ## GOA agreement does not imply correctness
 
-In the HF catalogue subset, 47/147 NPI/PLI/REP terms are exact matches to current GOA, and 119/147 have propagated overlap with current GOA. A retrospective GOA-agreement metric would therefore reward some terms that the evidence-grounded review classifies as wrong or frequency-biased.
+In the HF catalogue subset, 47/147 NPI/PLI/REP terms are exact matches to snapshot GOA, and 119/147 have propagated overlap with snapshot GOA. A retrospective GOA-agreement metric would therefore reward some terms that the evidence-grounded review classifies as wrong or frequency-biased.
 
 ## HF catalogue exact GOA overlap by AI-AUGR assessment
 

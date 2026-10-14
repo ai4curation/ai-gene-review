@@ -139,3 +139,19 @@ UniProt: **P35736** (YKF0_YEAST); systematic name **YKL050C**; SGD standard name
   is an overstatement, and this strengthens the MF-unknown conclusion.
 - PMID:16467472 Slattery 2006 — AZF1 regulates LPX2 expression (UniProt-curated). MEDIUM.
 - PMID:16338374 Tang 2005 — SCF/Cdc4 substrate screen (SGD-curated turnover). LOW/MEDIUM.
+
+## 2026-09-28 IBA and literature re-review
+
+- Re-checked the PTHR28298 PAINT export. UniProt still exposes a non-GOA `GO:0070941`
+  `eisosome assembly` IBA for LPX2; the current local PAINT row is `PANTHER:PTN002001648`
+  seeded by bona fide EIS1 (`SGD:S000004633`). LPX2 remains in the same
+  `PTHR28298:SF1` subfamily as EIS1, so the failure is a paralog/function divergence
+  across the EIS1/LPX2 split rather than a bad EIS1 source annotation.
+- Re-read the now-cached full text of Ploier et al. 2013. The old note that Ykl050cp was
+  not directly checkable from cached text is superseded: Ykl050cp is named among the
+  GXSXG hydrolase candidates and the paper reports that only Lpx1p and Ayr1p were
+  confirmed as in-vivo lipases.
+- A newer-paper search found Das et al. 2026 (PMID:41686312), which detects Lpx2/YKL050C
+  in the absolute yeast peroxisomal proteome and reports higher abundance under glucose
+  than oleate among the partially peroxisomal proteins. This adds quantitative context
+  but does not establish a molecular activity or contradict the MF_DARK call.

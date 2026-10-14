@@ -76,3 +76,27 @@ consistent rather than introducing a third adjudication of one experiment.
 telomere-stabilization rationale, as the review's 🔵 item noted. These are
 hand-maintained companion artifacts outside the curation file set, and are left
 for a curator to update or delete.
+
+## 2026-09-29 Update
+
+Re-reviewed SIR4 for IBA alignment and newer literature.
+
+SIR4 has no current `GO_REF:0000033` IBA rows, so there is no PAINT propagation
+assignment to adjudicate. The validation issues were thirteen `GO:0005515
+protein binding` rows from RAP1, Yku80, Sir2/Sir3, Nup170, chaperone, and
+high-throughput interactome papers that still used `MARK_AS_OVER_ANNOTATED`.
+All thirteen now use `REMOVE`: the underlying physical interactions are
+accepted, but SIR4 already has the informative `GO:0060090 molecular adaptor
+activity`, `GO:0005677 chromatin silencing complex`, and
+`GO:0034398 telomere tethering at nuclear periphery` annotations.
+
+Two new full-text papers were checked. Teplitz et al. 2026 show that the level
+of Sir4 on TEL03L subtelomeric chromatin tunes telomere-specific length
+homeostasis through Sir4-Yku80-mediated telomerase recruitment, which
+corroborates the accepted `GO:0097695 establishment of protein-containing
+complex localization to telomere` row [PMID:41505095 "an increased level of Sir4
+at TEL03L is attracting telomerase via a Sir4-Yku80 interaction, which links the
+TEL03L telomere to the telomerase RNA"]. Wu et al. 2026 use in vivo
+methyltransferase accessibility profiling to show that Sir4, with Sir2 and Sir3,
+slows access to the mating-type loci and telomeric X-elements; this refines the
+silent-chromatin mechanism but does not require a new GO action.

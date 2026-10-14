@@ -2,7 +2,7 @@
 
 ## Identity
 - YDL008W / APC11; 165 aa; RING-H2 finger (UniProt ZN_FING 52..95, "RING-type; atypical"); InterPro IPR024991 (RING-H2_APC11), IPR051031 (RING-box E3 ligase family), Pfam PF12861. Ortholog of human ANAPC11 and pombe apc11; paralogous to the SCF RING subunit Hrt1/Rbx1.
-- Inputs used: UniProt record, GOA tsv (29 rows), falcon/Edison deep research (`APC11-deep-research-falcon.md`), cached publications. Full text in cache: PMID:10888670 (Leverson 2000), PMID:16481473 (Thornton 2006), PMID:11114178 (Cooper 2000), PMID:19822757 (Williamson 2009, used for the Ubc4/Ubc1 K48 statement). Abstract-only: PMID:9469814 (Zachariae 1998), PMID:12477395 (Yoon 2002), PMID:30358795 (Wang 2018). Cited only through the deep-research file (not cached): Vazquez-Fernandez et al. 2024 eLife (yeast APC/C cryo-EM), Arnold et al. 2015 MBoC (nuclear APC/C-Cdh1 degron reporters), McLean et al. 2011 review.
+- Inputs used: UniProt record, GOA tsv (29 rows), falcon/Edison deep research (`APC11-deep-research-falcon.md`), cached publications. Full text in cache: PMID:10888670 (Leverson 2000), PMID:16481473 (Thornton 2006), PMID:11114178 (Cooper 2000), PMID:19822757 (Williamson 2009, used for the Ubc4/Ubc1 K48 statement), PMID:39401078 (Vazquez-Fernandez 2024 yeast APC/C cryo-EM). Abstract-only: PMID:9469814 (Zachariae 1998), PMID:12477395 (Yoon 2002), PMID:30358795 (Wang 2018). Cited only through the deep-research file: Arnold et al. 2015 MBoC (nuclear APC/C-Cdh1 degron reporters), McLean et al. 2011 review.
 - Founding identification: Apc11 was found by tandem MS in the purified yeast APC/C particle [PMID:9469814 "Apc2p, Apc5p, and the RING-finger protein Apc11p are conserved from yeast to humans."]; Yoon et al. 2002 TAP/DALPC extended the yeast APC to 13 subunits [PMID:12477395 "Our data increase the total number of identified APC subunits to 13 in both yeasts and indicate that previous approaches were biased against the identification of small subunits."].
 
 ## Molecular role (Leverson et al. 2000, the key paper)
@@ -44,3 +44,9 @@
 - GO:0007346 regulation of mitotic cell cycle (ComplexPortal NAS): MODIFY -> GO:0007091 + GO:0010458, mirroring the APC2 review; the APC/C executes the metaphase/anaphase transition and mitotic exit rather than "regulating" the cycle.
 - GO:0051445 regulation of meiotic cell cycle (NAS): KEEP_AS_NON_CORE, mirroring APC2 (coactivator-defined developmental context; no Apc11-specific data).
 - Considered and rejected a NEW row for GO:0031624 ubiquitin conjugating enzyme binding (direct Ubc4 pull-down): comparator check shows human ANAPC11, RBX1, pombe apc11 and yeast Apc2 carry no such term (QuickGO, 2026-09-27); GO treats E2 engagement as part of ubiquitin protein ligase activity for RING E3s. Raised as a suggested question instead.
+
+## 2026-10-01 IBA alignment
+- Forced GOA/UniProt refresh: APC11 still has 29 current GOA annotations; no rows needed retirement and no newly seeded rows were created.
+- Cached the 2024 yeast APC/C cryo-EM paper as PMID:39401078 and moved the Apc2-Apc11 active-conformation support from the Falcon summary to that primary paper.
+- PubMed title/abstract search for 2025-2026 APC11/Apc11/YDL008W yeast updates found no newer direct Saccharomyces APC11 papers; the sole hit was a 2026 Entamoeba histolytica Apc11a study.
+- Added IBA propagation reviews for all seven live PAINT rows: PTN000129805 for the broad RING-box family transfers and PTN000129916 for the APC11-specific anaphase-promoting complex and metaphase/anaphase transition transfers.

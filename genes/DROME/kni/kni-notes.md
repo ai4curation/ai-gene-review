@@ -155,7 +155,7 @@ none of these rows needs to be left UNDECIDED:
 - **GO:0034056 estrogen response element binding (IBA)** — knirps binds its own knirps-response
   elements / gap-gene enhancers, not estrogen response elements (there is no ERE / vertebrate ER in
   the fly gap network). Over-propagation from vertebrate steroid receptors. MODIFY toward
-  GO:0000976 (transcription cis-regulatory region binding).
+  GO:0000978 (RNA polymerase II cis-regulatory region sequence-specific DNA binding).
 - **GO:0030522 intracellular receptor signaling pathway (IEA, GO_REF:0000108)** — an automated
   inter-ontology inference triggered by the "Receptor" keyword. With no LBD and no ligand, knirps
   does not transduce a receptor signal. Demonstrably inapplicable → REMOVE.
@@ -191,3 +191,26 @@ what the paper reports. The screen-scope quote is likewise re-framed in the anno
 read as evidence *about this partner* it argued against the very annotation it defended, since
 dCtBP is among the partners the screen detected. It now serves its actual purpose — showing why the
 screen's nominal TF-only scope was never a safe way to infer a partner's class.
+
+## IBA propagation audit
+
+Rechecked the five `GO_REF:0000033` rows against the GOA `WITH/FROM` values, the local
+`interpro/panther/PTHR48092/PTHR48092-paint.tsv` snapshot, and the project guidance in
+`projects/IBA_REVIEW.md`.
+
+- `GO:0005634`, `GO:0000785`, and `GO:0006357` remain acceptable family-level transfers:
+  nuclear/chromatin residency and broad Pol II transcriptional regulation are compatible with
+  Knirps' experimentally supported nuclear DNA-binding repressor function.
+- `GO:0004879` remains a `MODIFY`. The row traces through `PANTHER:PTN002377694`, a
+  steroid/nuclear-receptor node with bona fide receptor seeds; the source biology is real, but the
+  transfer oversteps for an LBD-less NR0A orphan whose curated molecular function is DNA-bound
+  transcriptional repression.
+- `GO:0034056` remains a `MODIFY`. The row traces through `PANTHER:PTN001182563`, whose seeds are
+  estrogen receptors and related vertebrate NR3 family members; the source-side estrogen response
+  element binding is not a safe transfer to a fly gap-gene factor that binds Knirps-response
+  enhancers.
+
+Neither problematic IBA row is a self-seed case: `P10734`/`kni` is absent from both
+`WITH/FROM` lists. The structured `propagation_review.source_entities` entries therefore point at
+the PANTHER PTN node, not the extant seed list, and use `SUPPORTS_SOURCE_BUT_NOT_TARGET` rather
+than `CIRCULAR_OR_REDUNDANT`.

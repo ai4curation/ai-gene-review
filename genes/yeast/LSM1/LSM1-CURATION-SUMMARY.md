@@ -8,18 +8,16 @@
 
 ## Summary of Curation
 
-This comprehensive review examined 42 existing GO annotations for LSM1, the defining component of the cytoplasmic Lsm1-7-Pat1 heptameric complex involved in mRNA decay.
+This comprehensive review examined 36 existing GO annotations for LSM1, the defining component of the cytoplasmic Lsm1-7-Pat1 heptameric complex involved in mRNA decay.
 
 ### Curation Actions Summary
 
 | Action | Count | Details |
 |--------|-------|---------|
-| ACCEPT | 23 | Core mechanistically correct annotations with strong evidence |
-| REMOVE | 2 | Mechanistically incorrect annotations (mRNA processing, chromatin binding) |
-| MARK_AS_OVER_ANNOTATED | 11 | Generic "protein binding" annotations without functional specificity |
-| KEEP_AS_NON_CORE | 2 | Lower confidence evidence or generic parent terms |
-| MODIFY | 1 | General term (mRNA catabolic process) that is redundant with specific child terms |
-| **Total** | **42** | Comprehensive review of all existing annotations |
+| ACCEPT | 17 | Core mechanistically correct annotations with strong evidence |
+| REMOVE | 12 | Mechanistically incorrect or uninformative annotations |
+| KEEP_AS_NON_CORE | 7 | Secondary, lower-confidence, or generic parent terms |
+| **Total** | **36** | Comprehensive review of all existing annotations |
 
 ---
 
@@ -61,18 +59,14 @@ LSM1 has one primary molecular function:
    - Status: ACCEPT all instances
    - Rationale: Primary functional location of LSM1
 
-5. **GO:0005634** - Nucleus (IEA, IDA)
-   - Status: ACCEPT
-   - Rationale: Documented nuclear localization, though secondary to cytoplasmic function
-
 ### Complex Component Annotation
-6. **GO:1990726** - Lsm1-7-Pat1 complex
+5. **GO:1990726** - Lsm1-7-Pat1 complex
    - Evidence: IBA, IDA (PMID:24139796 - crystal structure)
    - Status: ACCEPT all instances
    - Rationale: LSM1 is the defining subunit of this complex; crystal structure confirms architecture
 
 ### Molecular Function - RNA/Protein Binding
-7. **GO:0003729** - mRNA binding
+6. **GO:0003729** - mRNA binding
    - Evidence: IBA, IDA (PMID:23222640)
    - Status: ACCEPT both instances
    - Rationale: Direct evidence of LSM1 in mRNP complexes; structurally supported binding to poly(U) tracts
@@ -86,40 +80,43 @@ LSM1 has one primary molecular function:
 - **Reason:** Mechanistically incorrect
 - **Explanation:** mRNA processing refers to 5' capping, 3' polyadenylation, and splicing during transcription. LSM1 functions in mRNA **decay/degradation**, not processing. While the complex removes the 5' cap, this is part of degradation, not processing. This appears to result from incorrect keyword mapping in UniProt.
 
-### 2. GO:0003682 - chromatin binding
-- **Evidence:** IDA (PMID:23706738)
-- **Reason:** Mechanistically unsupported
-- **Explanation:** LSM1 is an mRNA decay protein, not a chromatin-binding protein. The Lsm1-7 complex functions in the cytoplasm and at P-bodies on mRNA transcripts, not at chromatin. LSM1 lacks characteristic chromatin-binding domains. This annotation likely represents mislocalization or experimental artifact from the "Gene expression is circular" study.
-
----
-
-## Annotations Marked as Over-Annotated (MARK_AS_OVER_ANNOTATED)
-
-### GO:0005515 - protein binding (11 instances)
+### 2. GO:0005515 - protein binding (11 instances)
 - **Evidence:** IPI (Protein-Protein Interaction)
 - **PMIDs:** 10688190, 10900456, 11780629, 11805837, 14759368, 16429126, 16554755, 18719252, 23267104, 37070168, 37968396
 - **Reason:** Generic annotation without functional specificity
 - **Explanation:** 
   - While LSM1 does bind proteins (LSM2-7, PAT1, DHH1, etc.), the generic "protein binding" term is not informative for functional annotation
-  - These interactions are comprehensively described by the complex component annotation (GO:1990726)
+  - These interactions are captured by complex-membership and mRNA-decay annotations
   - Generic protein binding terms lack mechanistic detail and functional context
-  - **Recommendation:** Retain for completeness but mark as non-core; replace in future annotations with complex membership or specific functional interactions
+  - **Recommendation:** Remove generic protein-binding rows rather than proposing a cellular-component term as a molecular-function replacement
 
 ---
 
 ## Annotations Marked as Non-Core (KEEP_AS_NON_CORE)
 
-### 1. GO:0000932 - P-body (IEA, GO_REF:0000044)
-- **Reason:** Redundant with stronger evidence types (IBA, IDA, IMP)
-- **Status:** Keep but lower priority than experimental evidence
-
-### 2. GO:0003723 - RNA binding (IEA)
+### 1. GO:0003723 - RNA binding (IEA)
 - **Reason:** Generic parent term superseded by specific GO:0003729 (mRNA binding)
 - **Status:** Keep but recognize as less informative than mRNA binding
 
-### 3. GO:0000956 - nuclear-transcribed mRNA catabolic process (IEA)
+### 2. GO:0000956 - nuclear-transcribed mRNA catabolic process (IEA)
 - **Reason:** Broad parent term; specific subprocess terms (GO:0000288, GO:0000290) are more informative
 - **Status:** Keep as contextual annotation but prioritize specific terms
+
+### 3. GO:0003682 - chromatin binding (IDA)
+- **Reason:** Nuclear "decaysome" activity is secondary to core cytoplasmic mRNA decay
+- **Status:** Keep as non-core; do not remove an experimental SGD annotation without contradictory evidence
+
+### 4. GO:0005634 - nucleus (IDA, IEA)
+- **Reason:** Nuclear localization is documented but reflects a secondary shuttling/chromatin-association role
+- **Status:** Keep as non-core
+
+### 5. GO:0032991 - protein-containing complex (IEA)
+- **Reason:** Generic cellular-component parent term superseded by GO:1990726 (Lsm1-7-Pat1 complex)
+- **Status:** Keep as non-core but prioritize the specific complex term
+
+### 6. GO:1990904 - ribonucleoprotein complex (IEA)
+- **Reason:** Generic cellular-component parent term superseded by GO:1990726 (Lsm1-7-Pat1 complex)
+- **Status:** Keep as non-core but prioritize the specific complex term
 
 ---
 
@@ -158,22 +155,22 @@ LSM1 has one primary molecular function:
 ## Data Quality Assessment
 
 ### Evidence Code Distribution
-- **High Confidence (Experimental):** IMP, IDA, IPI, HDA = 28 annotations (67%)
-- **Medium Confidence (Phylogenetic):** IBA = 4 annotations (10%)
-- **Lower Confidence (Automated):** IEA = 10 annotations (24%)
+- **High Confidence (Experimental):** IMP, IDA, IPI, HDA = 24 annotations (67%)
+- **Medium Confidence (Phylogenetic):** IBA = 4 annotations (11%)
+- **Lower Confidence (Automated):** IEA = 8 annotations (22%)
 
 ### Functional Coverage
-- **Biological Processes:** 6 core annotations (decapping, mRNA decay, catabolic processes)
-- **Molecular Functions:** 2 core annotations (mRNA binding + complex binding via protein binding)
-- **Cellular Components:** 5 core annotations (cytoplasm, nucleus, P-body, complex membership)
+- **Biological Processes:** deadenylation-dependent decapping and 5' to 3' mRNA decay
+- **Molecular Functions:** mRNA binding
+- **Cellular Components:** cytoplasm, P-body, and Lsm1-7-Pat1 complex membership
 
 ---
 
 ## Recommendations for Future Curation
 
-1. **Replace generic "protein binding" annotations** with specific complex membership (GO:1990726) or functional role annotations in future updates
+1. **Remove generic "protein binding" annotations** unless a specific binding term captures the function of the interaction
 
-2. **Clarify chromatin binding annotation** - Remove GO:0003682 as it does not represent a core LSM1 function
+2. **Treat chromatin binding and nucleus as non-core** - Retain SGD experimental evidence, but keep it separate from the core cytoplasmic decay role
 
 3. **Remove mRNA processing annotation** - GO:0006397 is mechanistically incorrect; LSM1 functions in decay, not processing
 
@@ -185,18 +182,18 @@ LSM1 has one primary molecular function:
 
 ## File Locations
 
-- **Review YAML:** `/Users/cjm/repos/ai-gene-review/genes/yeast/LSM1/LSM1-ai-review.yaml`
-- **UniProt Data:** `/Users/cjm/repos/ai-gene-review/genes/yeast/LSM1/LSM1-uniprot.txt`
-- **GOA Data:** `/Users/cjm/repos/ai-gene-review/genes/yeast/LSM1/LSM1-goa.tsv`
-- **Publications:** `/Users/cjm/repos/ai-gene-review/publications/PMID_*.md` (10 key PMIDs)
+- **Review YAML:** `genes/yeast/LSM1/LSM1-ai-review.yaml`
+- **UniProt Data:** `genes/yeast/LSM1/LSM1-uniprot.txt`
+- **GOA Data:** `genes/yeast/LSM1/LSM1-goa.tsv`
+- **Publications:** `publications/PMID_*.md`
 
 ---
 
 ## Validation Status
 
 ✓ **Valid YAML structure** - Passed schema validation  
-✓ **Complete annotations** - All 42 existing annotations reviewed  
+✓ **Complete annotations** - All 36 existing annotations reviewed
 ✓ **Supporting evidence** - All ACCEPT annotations include literature citations  
 ✓ **Mechanistic accuracy** - Annotations verified against primary literature  
 
-Last updated: 2025-12-31
+Last updated: 2026-09-28

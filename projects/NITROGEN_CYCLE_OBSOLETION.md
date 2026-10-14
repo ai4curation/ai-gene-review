@@ -8,6 +8,13 @@ sidecars:
   slide_assets:
     - NITROGEN_CYCLE_OBSOLETION/slides/n-cycle.svg
     - NITROGEN_CYCLE_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/EyvXXNbTm1E3c73sx1HTPp
+      title: Project brief
 ---
 
 # Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion
@@ -208,7 +215,3 @@ genes (see `projects/OVER_ANNOTATION_PATTERNS.md`).
 - 2026-09-26 (later) — The nifA GO:1903316 replacement is tracked in #3235
   (open), which records the per-row outcome in the nifA review. The six
   GO:0071941 annotations remain unreviewed here.
-
-## Slides
-
-- [Slides](NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.html) (Marp source: [NITROGEN_CYCLE_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.md)) — AI generated

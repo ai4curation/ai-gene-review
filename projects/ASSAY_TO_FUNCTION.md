@@ -2,6 +2,13 @@
 title: "ASSAY_TO_FUNCTION"
 maturity: MATURE
 tags: [PIPELINE]
+manifest:
+  slides:
+    - href: ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7wND9GozNPYSujxkiNtxcA
+      title: Project brief
 ---
 
 # ASSAY_TO_FUNCTION
@@ -615,7 +622,3 @@ stays `UNDECIDED` until an expert decides.
   annotations") is the conceptual cousin; this project quantifies the
   assay-specific version of it.
 - `BIOSENSORS.md` — unrelated (plant synthetic-biology biosensors).
-
-## Slides
-
-- [Slides](ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.html) (Marp source: [ASSAY_TO_FUNCTION-slides.md](ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.md)) — AI generated

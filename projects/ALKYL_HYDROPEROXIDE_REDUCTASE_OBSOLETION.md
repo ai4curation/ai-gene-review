@@ -3,6 +3,13 @@ title: "Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [ECOLI, PSEAE]
+manifest:
+  slides:
+    - href: ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/QG3qUxoDDS2zn4KB6e6ydj
+      title: Project brief
 ---
 
 # Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement
@@ -169,7 +176,11 @@ review is blocked.
   #6396 still open (no comments). Ontology obsoletion PR
   geneontology/go-ontology#32015 already merged. No gene reviews
   started in this repo.
-
-## Slides
-
-- [Slides](ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html) (Marp source: [ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.md](ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.md)) — AI generated
+- 2026-10-02 — Started the E. coli AhpF follow-on review from current GOA.
+  `just fetch-gene ECOLI AhpF` seeded 20 annotations for UniProtKB:P35340; the
+  live GOA pull has already migrated AhpF from obsolete GO:0008785 to
+  GO:0102039. Added a concrete `bacterial_alkyl_hydroperoxide_reductase` module
+  for the AhpF NADH-to-AhpC electron-transfer reaction. The review keeps
+  GO:0102039 as the whole-system peroxidase activity that AhpF contributes to,
+  but scopes AhpF's own molecular function to GO:0047134
+  *protein-disulfide reductase [NAD(P)H] activity*.

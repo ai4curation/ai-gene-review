@@ -18,6 +18,7 @@ from urllib.parse import quote, urlencode
 
 import yaml
 
+from ai_gene_review.export.gogpt_overlap_export import collect_gogpt_overlap
 from ai_gene_review.export.prediction_narratives import collect_narrative_sets
 
 ASSESSMENT_SCORES = {
@@ -492,6 +493,9 @@ def _prefer_leaf(sets: list[dict[str, Any]], claims: list[dict[str, Any]]) -> No
 def collect_prediction_data(root: Path, output_dir: Path) -> dict[str, Any]:
     """Collect separate set/claim datasets from canonical gene-side prediction files.
 
+    A third ``overlap`` dataset holds the GO-GPT three-level comparison as of
+    the declared review snapshot; it is read from its committed report.
+
     Paths under project experiments are deliberately excluded. Leaf and full views
     remain in the payload; only an explicitly equal method/version pair shares a
     default representation. The export does not infer training membership.
@@ -502,10 +506,18 @@ def collect_prediction_data(root: Path, output_dir: Path) -> dict[str, Any]:
     yaml_set_count = len(sets)
     narratives = collect_narrative_sets(root, output_dir)
     sets.extend(narratives)
+
+    def review_link(organism: str, gene: str) -> str:
+        path = root / "genes" / organism / gene / f"{gene}-ai-review.html"
+        return source_link(path, output_dir) if path.is_file() else ""
+
+    overlap, overlap_metadata = collect_gogpt_overlap(root, review_link)
     return {
         "sets": sets,
         "claims": claims,
+        "overlap": overlap,
         "metadata": {
+            **overlap_metadata,
             "schema_version": 1,
             "set_count": len(sets),
             "claim_count": len(claims),

@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [BPZF4]
 genes: [AcrF8, ACA2]
+manifest:
+  slides:
+    - href: ANTI_CRISPR/slides/ANTI_CRISPR-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/RLHL9r41LvokY2PpeEuBzu
+      title: Project brief
 ---
 
 # Anti-CRISPR Proteins Project
@@ -105,10 +112,6 @@ These proteins are excellent targets for AI-assisted curation because their mech
 
 - Phage-host interactions
 - Bacterial immune systems
-
-## Slides
-
-- [Slides](ANTI_CRISPR/slides/ANTI_CRISPR-slides.html) (Marp source: [ANTI_CRISPR-slides.md](ANTI_CRISPR/slides/ANTI_CRISPR-slides.md)) — AI generated
 
 ---
 

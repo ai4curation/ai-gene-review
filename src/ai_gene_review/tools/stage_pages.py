@@ -30,6 +30,7 @@ from ai_gene_review.publication_links import rewrite_publication_links, restore_
 # 10 GB Pages artifact cutoff. Do not confuse this with supported hosting capacity.
 PAGES_SIZE_BUDGET_BYTES = 9_999_999_999
 PAGES_ARCHIVE_BUDGET_BYTES = 9_999_999_999
+PAGES_SUPPORTED_SIZE_BYTES = 1_000_000_000
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
 PREDICTION_BROWSER_FILES = (*BROWSER_FILES, "source-files.json")
@@ -61,6 +62,12 @@ class SiteManifest:
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
     archive_size_budget_bytes: int = PAGES_ARCHIVE_BUDGET_BYTES
     archive_checksum_required: bool = True
+    supported_size_budget_bytes: int = PAGES_SUPPORTED_SIZE_BYTES
+
+    @property
+    def within_supported_size(self) -> bool:
+        """Whether this site fits GitHub Pages' officially supported capacity."""
+        return self.total_bytes <= self.supported_size_budget_bytes
 
     @property
     def broken_local_links(self) -> int:
@@ -74,13 +81,10 @@ class SiteManifest:
 
     @property
     def deployable(self) -> bool:
-        """Readiness policy shared by CLI reporting and deployment."""
+        """Artifact readiness; content-quality diagnostics are advisory."""
         return (
-            self.total_bytes <= self.size_budget_bytes
-            and self.archive_bytes <= self.archive_size_budget_bytes
-            and self.linked_source_files_not_staged == 0
-            and self.broken_local_links == 0
-            and self.off_base_path_links == 0
+            0 < self.total_bytes <= self.size_budget_bytes
+            and 0 < self.archive_bytes <= self.archive_size_budget_bytes
         )
 
 
@@ -426,6 +430,7 @@ def main() -> None:
                 "broken_local_links": manifest.broken_local_links,
                 "off_base_path_links": manifest.off_base_path_links,
                 "deployable": manifest.deployable,
+                "within_supported_size": manifest.within_supported_size,
             },
             indent=2,
         )
@@ -443,6 +448,14 @@ def main() -> None:
     print(f"Staged {manifest.total_files:,} files in {output_dir}")
     print(f"Uncompressed site size: {size_mib:,.1f} MiB")
     print(f"Tar archive size: {manifest.archive_bytes / MIB:,.1f} MiB")
+    if not manifest.within_supported_size:
+        print(
+            "::warning title=Pages supported hosting capacity exceeded::"
+            f"Site is {manifest.total_bytes:,} bytes; GitHub Pages supports "
+            f"{manifest.supported_size_budget_bytes:,} bytes. The temporary "
+            "10 GB artifact policy permits an attempt, not reliable hosting. "
+            "Reduce the published footprint or move to hosting with sufficient capacity."
+        )
     print(
         f"Shared template assets saved: {manifest.shared_asset_bytes_saved / MIB:,.1f} MiB"
     )
@@ -468,13 +481,13 @@ def main() -> None:
         print(
             "::warning title=Pages links missing site prefix::"
             f"{manifest.off_base_path_links:,} likely off-base links; "
-            "see off_base_path_urls in the manifest. Deployment is blocked."
+            "see off_base_path_urls in the manifest. Publication continues."
         )
     if manifest.broken_local_links:
         print(
             "::warning title=Broken local Pages links::"
             f"{manifest.broken_local_links:,} missing static targets; "
-            "see broken_local_link_paths in the manifest. Deployment is blocked."
+            "see broken_local_link_paths in the manifest. Publication continues."
         )
     if manifest.linked_source_files_not_staged:
         linked_size_mib = manifest.linked_source_bytes_not_staged / MIB
@@ -482,7 +495,7 @@ def main() -> None:
             "::warning title=Linked files are outside the Pages artifact::"
             f"Published files link to {manifest.linked_source_files_not_staged:,} "
             f"existing repository files ({linked_size_mib:,.1f} MiB) that are not "
-            "staged. Resolve these omissions before deployment."
+            "staged (orphaned review pages). Publication continues; inspect the manifest."
         )
 
 

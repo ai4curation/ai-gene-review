@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN]
 genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII]
+manifest:
+  slides:
+    - href: OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MrmXAmcMnpxL43743j1ogb
+      title: Project brief
 ---
 
 # Over-Annotation Patterns Project
@@ -19,9 +26,10 @@ first presented at the GO Consortium meeting in October 2025. Nine exemplar revi
 complete (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
 biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
 recorded actions match the patterns: all ten generic `protein binding` IPI rows on
-PHYKPL and UBA7 are REMOVE, and Epe1's JmjC-domain demethylase, dioxygenase and
-metal-binding rows are REMOVE (all seven in the current review; PR #3229, not yet
-merged, proposes UNDECIDED for the two experimental IDA/EXP rows). The catalogue is qualitative; it does not yet measure how
+PHYKPL and UBA7 are REMOVE, and Epe1's electronically inferred JmjC-domain
+demethylase, oxidoreductase and dioxygenase rows are REMOVE, while its two
+experimental IDA/EXP H3K9 demethylase rows and its metal ion binding row are
+UNDECIDED. The catalogue is qualitative; it does not yet measure how
 often each pattern occurs across the repository.
 
 ## Overview
@@ -45,7 +53,7 @@ These patterns emerge from multiple sources:
 **Examples from Reviews**:
 - **PHYKPL**: 4 protein binding annotations from HTP screens showing interactions with POT1, USO1, VAC14, LNX2 - none related to its metabolic function
 - **UBA7**: 6 protein binding annotations from interactome studies - UBA7 obviously binds proteins (ISG15, UBE2L6) but the generic term adds nothing
-- **Epe1**: Protein binding annotation when specific HP1/Swi6 binding and SAGA complex binding are more informative
+- **Epe1**: Protein binding IPI row (partner Cdt2) when ubiquitin protein ligase binding (GO:0031625) is more informative
 
 **Recommended Action**: REMOVE generic protein binding when more specific functional annotations exist or when interactions are from HTP screens without validation.
 
@@ -55,7 +63,7 @@ These patterns emerge from multiple sources:
 
 **Examples**:
 - **LPL1**: `GO:0016787` (hydrolase activity) when `GO:0102545` (phospholipase B activity) is more specific
-- **Epe1**: `GO:0016491` (oxidoreductase activity) assigned despite protein lacking catalytic activity
+- **Epe1**: `GO:0016491` (oxidoreductase activity) assigned although no catalytic activity has been detected and the Fe(II) triad is non-canonical
 - **UBA7**: `GO:0016874` (ligase activity) when `GO:0019782` (ISG15 activating enzyme activity) is specific
 
 **Recommended Action**: REMOVE or MODIFY to more specific child terms.
@@ -65,7 +73,7 @@ These patterns emerge from multiple sources:
 **The Problem**: IEA annotations from domain presence (InterPro, Pfam) that don't reflect actual biochemical activity.
 
 **Examples**:
-- **Epe1**: JmjC domain → histone demethylase activity, dioxygenase activity, metal ion binding (ALL INCORRECT - pseudo-enzyme)
+- **Epe1**: JmjC domain → histone demethylase activity, dioxygenase activity (REMOVE - no activity detected, non-canonical Fe(II) triad, although the divergent Tyr370 is required for function); metal ion binding left UNDECIDED (two of three iron ligands retained, binding unmeasured)
 - **PHYKPL**: Aminotransferase domain → transaminase activity (INCORRECT - functions as phospho-lyase)
 
 **Recommended Action**: REMOVE when biochemical evidence contradicts domain prediction.
@@ -170,10 +178,6 @@ These over-annotation patterns:
 - [x] human/UBA7 - protein binding from HTP, generic ligase
 - [x] pombe/Epe1 - pseudo-demethylase
 - [x] CANAL/LPL1 - hydrolase, membrane prediction
-
-## Slides
-
-- [Slides](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html) (Marp source: [OVER_ANNOTATION_PATTERNS-slides.md](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.md)) — AI generated
 
 Last updated: 2026-01-22
 

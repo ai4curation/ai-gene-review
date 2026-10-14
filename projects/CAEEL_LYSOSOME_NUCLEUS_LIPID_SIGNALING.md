@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
 genes: [lipl-4, lbp-8, nhr-80, nhr-49]
+manifest:
+  slides:
+    - href: CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING/slides/CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/GGj6w4dnuzCJ8qRJ5hhT8c
+      title: Project brief
 ---
 
 # C. elegans Lysosome-to-Nucleus Lipid Signaling (OEA Pathway)
@@ -94,7 +101,3 @@ Lysosome                        Cytoplasm                   Nucleus
 
 - Longevity/aging overlap with genes in multiple existing projects (daf-16, hlh-30)
 - Autophagy connection via omega-6 PUFA signaling (see CAEEL_PROTEOSTASIS)
-
-## Slides
-
-- [Slides](CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING/slides/CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.html) (Marp source: [CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.md](CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING/slides/CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.md)) — AI generated

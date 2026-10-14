@@ -187,5 +187,44 @@ of GXSXG serine hydrolases acting in peroxisomal/lipid metabolism (not a FSH3-sp
    is the likely reason single deletions look silent; molecular function still unassigned.
 4. Whether peroxisomal FSH3 acts directly on a glycerophospholipid (PC) / fatty-acyl ester,
    or the PC/β-oxidation effects are indirect.
-</content>
-</invoke>
+
+## 2026-09-30 IBA rereview
+
+Rechecked the three FSH3 IBA rows against the current cached PTHR48070 PAINT export:
+
+- `PTN000512658` still carries the `GO:0005634`, `GO:0005737`, and `GO:0016787`
+  rows inherited by FSH3.
+- The `GO:0005634 nucleus` row remains an unsafe localization transfer from
+  metazoan OVCA2-family seeds onto yeast Fsh3, whose direct yeast localization is
+  the peroxisomal matrix.
+- The `GO:0005737 cytoplasm` row remains plausible and non-core. FSH3 itself is
+  among the PAINT seeds for this cytoplasmic IBD, so the self-seed is valid
+  target evidence rather than circular support.
+- The `GO:0016787 hydrolase activity` row remains a correct but under-specific
+  OVCA2/FSH-family transfer, and the target-specific GXSXG/Ser-Asp-His motif and
+  activity-based protein-profiling evidence still justify replacement with
+  `GO:0017171 serine hydrolase activity`.
+- The 2026 public-literature search found a new absolute-quantitative
+  peroxisomal proteome paper, PMID:41686312, that reports Fsh3 copy numbers under
+  oleate and glucose conditions. This is useful quantitative context for Fsh3 as
+  a peroxisomal protein but does not identify its substrate or change the IBA
+  decisions.
+
+## 2026-10-01 current-GOA refresh
+
+Refreshed the UniProt/QuickGO seed from the 2026-10-01 current GOA:
+
+- Current GOA still contains the same six FSH3 rows: three IBAs at `PTN000512658`,
+  the `PMID:36164978` peroxisome IDA, and the two SGD/ND root placeholders.
+- No new `PENDING` rows were seeded and no historical rows needed `retired: true`.
+- `GO:0005634 nucleus`, `GO:0005737 cytoplasm`, and `GO:0016787 hydrolase activity`
+  keep the 2026-09-30 IBA decisions. Their `propagation_review.source_entities` retain
+  the PAINT node and the donor records needed to support the node comments; the
+  self-seeded FSH3 descendant evidence on the cytoplasmic IBD is valid and not circular.
+- The refreshed UniProt record no longer carries the `GO:0005737 cytoplasm` IBA or
+  `GO:0052689 carboxylic ester hydrolase activity` keyword cross-reference, although
+  the current GOA still retains the cytoplasm IBA dated 2025-12-21.
+- No `GO:0005515 protein binding` rows were present.
+- PMID:41686312, found in the 2026 search, was added to the review as a LOW-relevance
+  quantitative peroxisomal-proteome reference. It contextualizes Fsh3 abundance in
+  oleate/glucose conditions but does not identify a substrate or justify a BP/MF change.

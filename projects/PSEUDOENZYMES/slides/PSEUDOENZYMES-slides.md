@@ -100,15 +100,16 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 
 ---
 
-## Finding 2: Epe1 — paradigmatic Type 5 "reader"
+## Finding 2: Epe1 — probable Type 5 "reader" (case not closed)
 
-*S. pombe* Epe1 (UniProt O94603) — confirmed JmjC pseudo-demethylase.
+*S. pombe* Epe1 (UniProt O94603) — probable JmjC pseudo-demethylase.
 
-- **Defect:** degenerate Fe(II) triad H297-E299-Y370: Tyr370 replaces the third iron-ligand His.
-- **Biochemistry:** no detectable H3K9me removal in vitro; H297A phenotype is assay-dependent (loss of function at endogenous level, still active when overexpressed).
-- **Actual function:** anti-silencing factor — recruits SAGA / Bdf2 to heterochromatin boundaries; reads H3K9me, does not erase it.
-- **Removed:** GO:0032452 (demethylase), GO:0051213 (dioxygenase), GO:0005506 (iron binding), GO:0070076 (demethylation).
-- **Added:** GO:0042393 (histone binding), GO:0140030 (modification-dependent protein binding).
+- **Defect:** non-canonical Fe(II) triad H297-E299-Y370 (Tyr370 for the third His), yet Y370A loses function.
+- **Biochemistry:** no detectable H3K9me removal in vitro; Sorida 2019's H297A experiment read two ways: prevention of de novo H3K9me retained (part of the activity does not need H297); removal of established H3K9me lost (the counter-evidence).
+- **Actual function:** anti-silencing factor — associates with SAGA, recruits Bdf2 to centromere-flanking boundaries; binds H3K9-methylated histones; no eraser activity detected.
+- **Removed:** GO:0032452, GO:0140680 (demethylases), GO:0051213 (dioxygenase), GO:0016491 (oxidoreductase). **Undecided:** GO:0032454 (IDA, EXP), GO:0046872.
+- **Open:** JmjC domain essential and Y307A (2-oxoglutarate site) loss of function (Ayoub 2003, possibly one experiment); the lost Sorida arm; demethylation never measured directly.
+- **Added (NEW):** GO:0070087 (Swi6 CSD binding), GO:0062070 (SAGA complex), GO:0030674 (Bdf2 adaptor), GO:0042393 (histone binding).
 
 (Raiymbek et al. 2020; Bao et al. 2019)
 

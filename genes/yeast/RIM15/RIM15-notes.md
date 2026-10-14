@@ -88,3 +88,44 @@ Actions taken:
 - The duplicated `GO:0045959` errata prose was dropped from both `reason` fields.
   The correction is recorded above and in git history; with the replacement gone
   the erroneous id no longer appears anywhere in the file.
+
+## 2026 IBA re-review
+
+Re-checked the five current RIM15 IBA annotations against GOA and the cached
+`PTHR24356` PAINT table:
+
+- `GO:0004674 protein serine/threonine kinase activity` and `GO:0035556 intracellular
+  signal transduction` both trace to `PANTHER:PTN000683254`, a broad AGC-kinase node.
+  Both are sound for Rim15, whose direct Ser/Thr kinase activity transduces nutrient
+  signals through Igo1/Igo2, Rph1, Msn2/Hsf1, and PP2A-Cdc55 outputs.
+- `GO:0007346 regulation of mitotic cell cycle` traces to `PANTHER:PTN008614785`.
+  This is not a G1/G0 quiescence assertion; it is the conserved Greatwall-family
+  mitotic-cell-cycle placement, and budding yeast Rim15 is one of the
+  experimental seeds of the IBD through its direct evidence for promoting timely
+  mitotic entry under temperature stress through Igo1/Igo2 and PP2A(Cdc55). The
+  IBA was therefore changed from `MODIFY` to `KEEP_AS_NON_CORE`, not replaced by
+  `GO:1903452`.
+- `GO:0005634 nucleus` and `GO:0005737 cytoplasm` both trace to
+  `PANTHER:PTN001220116`, a fungal localization node seeded by SGD's direct Rim15
+  nucleo-cytoplasmic shuttling evidence. The IBA rows are sound and core.
+
+The same mitotic-cycle correction was applied to both
+`GO:1901992 positive regulation of mitotic cell cycle phase transition` rows. The
+2013 Juanes et al. paper supports that phase-transition term directly, so those rows
+should be retained as non-core rather than redirected to G1/G0 entry.
+
+A newer-paper search found a 2026 industrial adaptive-laboratory-evolution study using
+`rim15` deletion in lignocellulosic-hydrolysate adaptation [PMID:42603792 "In this
+study, we investigated the role of the stress-responsive kinase Rim15 in stress adaptation
+and robustness by subjecting Saccharomyces cerevisiae wild-type (WT) and rim15Δ strain
+to adaptive laboratory evolution (ALE) in synthetic spruce hydrolysate (SSH)."]. It did
+not change the direct kinase, signaling, localization, quiescence, or mitotic-cycle
+conclusions in the review.
+
+## PR follow-up
+
+Reviewer follow-up replaced the title-only Juanes et al. quotes on the three mitotic
+annotations with a direct sentence from the cached abstract and removed a PubMed header
+artifact from the heat-response row. `core_functions` was also populated with Rim15's
+core quiescence, nitrogen-starvation, autophagy, stress-response, nuclear and cytoplasmic
+roles instead of leaving a bare molecular-function entry under `status: COMPLETE`.

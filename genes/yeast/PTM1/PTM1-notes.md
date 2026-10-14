@@ -127,7 +127,7 @@ Golgi-localization + trafficking-context is defensible but should stay non-core 
    protein. Keep as non-core (it is a true but shallow parent of the specific CC terms).
 3. **GO:0042147 retrograde transport, endosome to Golgi** (IBA, GO_REF:0000033) — this is the
    only BP annotation with any specific content. It is IBA-transferred from mammalian
-   orthologs (with/from includes UniProtKB:Q8NBN3 GPR108, Q96K49 TMEM87B). There is no
+   orthologs (with/from includes UniProtKB:Q8NBN3 TMEM87A, Q96K49 TMEM87B). There is no
    *direct* yeast evidence that PTM1 mediates endosome-to-Golgi retrograde transport;
    however the localization (late-Golgi/endosome) is compatible and the family is
    trafficking-associated. Given no yeast experimental support and subfamily divergence,
@@ -181,3 +181,16 @@ the PANTHER PTHR21229 family data, and four cached primary/structural publicatio
 - publications/PMID_36373655.md — Hoel 2022 TMEM87A structure (full text).
 - publications/PMID_39609618.md — 2024 GPR180/GOST (full text).
 - interpro/panther/PTHR21229/ — family metadata + reviewed members (subfamily assignments).
+
+## IBA follow-up: PTHR21229 nodes checked
+
+- `GO:0005794 Golgi apparatus` and the generic `GO:0016020 membrane` IBA rows both trace
+  to `PTN000477279`. The Golgi IBD is now broadly seeded by plant, mouse, human GPR108
+  (`Q9NPR9`) and human TMEM87A (`Q8NBN3`) descendants; PTM1 also has independent yeast
+  co-purification evidence with Tlg2/Sed5 Golgi compartments.
+- `GO:0042147 retrograde transport, endosome to Golgi` traces to `PTN000477361`, seeded
+  in the local PAINT file only by human TMEM87A (`Q8NBN3`) and TMEM87B (`Q96K49`). `Q8NBN3`
+  is TMEM87A, not GPR108; GPR108 is `Q9NPR9` and appears in the Golgi/membrane IBAs.
+- The retrograde-transport row is therefore weaker because of node placement and support
+  breadth, not because PTM1 lies in fungal `PTHR21229:SF1`. PTM1 receives the IBA only if
+  it is inside the inherited `PTN000477361` clade.

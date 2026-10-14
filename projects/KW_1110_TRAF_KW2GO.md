@@ -2,6 +2,13 @@
 title: "KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping"
 maturity: COMPLETE
 tags: [PIPELINE, OBSOLETION]
+manifest:
+  slides:
+    - href: KW_1110_TRAF_KW2GO/slides/KW_1110_TRAF_KW2GO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/HpYCKxoFy6C6gRzHn7FTcp
+      title: Project brief
 ---
 
 # KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping
@@ -123,7 +130,3 @@ existing rework.
   maps KW-1110 to GO:0140476, so the mapping change has shipped.
 - **Action needed here:** none until upstream ships. This page is a watch-list
   entry so the mapping change is not silently missed when it lands.
-
-## Slides
-
-- [Slides](KW_1110_TRAF_KW2GO/slides/KW_1110_TRAF_KW2GO-slides.html) (Marp source: [KW_1110_TRAF_KW2GO-slides.md](KW_1110_TRAF_KW2GO/slides/KW_1110_TRAF_KW2GO-slides.md)) — AI generated

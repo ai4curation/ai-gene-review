@@ -56,3 +56,10 @@ Well supported: ER membrane / rough ER membrane (multiple EXP/IDA: PMID:25009997
 - NON-CORE (real but secondary): ER calcium ion homeostasis (GO:0032469), calcium ion binding (GO:0005509), ERAD pathway (GO:0036503).
 - OVER-ANNOTATED: bare protein binding, RNA binding, osteoblast differentiation, generic membrane.
 - MODIFY: GO:0045048 protein insertion into ER membrane (general) and GO:0006457 protein folding (general) -> replace with the specific multi-pass insertion term GO:0160063.
+
+## PROTEOSTASIS phase-1 follow-up (2026-09-27)
+
+- Applied the phase-1 recommendation to add GO:0160005 "PAT complex" as the exact complex term for the
+  CCDC47/Asterix heterodimer, supported by the cached PMID:32814900 abstract. The broader
+  GO:0160064 multi-pass translocon annotation remains accepted in `existing_annotations`, while the core
+  `in_complex` value is now narrowed to the PAT complex.

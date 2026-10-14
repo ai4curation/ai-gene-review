@@ -74,5 +74,40 @@ Also addressed two smaller review points:
   PMID:9501103 annotation — from one experiment assaying SIR2, SIR3 and SIR4
   together — is currently adjudicated three different ways across the repo
   (SIR2 `REMOVE`, SIR3 this entry, SIR4 `MARK_AS_OVER_ANNOTATED`). Those sibling
-  entries should be reconciled with the NEJ1 rationale above in a separate pass;
-  a note to that effect is now in the SIR3 `reason`.
+  entries should be reconciled with the NEJ1 rationale above in a separate pass.
+
+## 2026-09-29 Update
+
+Aligned SIR3 with the IBA propagation review:
+
+- The `GO:0006270` transfer from the ORC1/CDC6 PAINT family still carries a
+  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation review because Sir3
+  is an ORC1-derived silent-chromatin scaffold that suppresses, rather than
+  initiates, MCM loading at euchromatic origins. The `GO:0003688` transfer is now
+  `TERM_SCOPING_PROBLEM`: SIR3 itself is in that seed list via SGD's
+  over-scoped origin-binding IDA from PMID:29795547, whose data support Sir3
+  binding to origin-adjacent nucleosomes rather than origin DNA itself.
+- The `GO:0033314` checkpoint-signaling IBA points to the same PTN in the cached
+  GOA row but is no longer present in the local 2026 PTHR10763 PAINT export, so
+  it was marked `SOURCE_STALE_OR_MISSING`.
+- The five remaining `GO:0005515 protein binding` rows from RAP1/SIR4
+  interaction and high-throughput complex papers are now `REMOVE`: the physical
+  interactions are not disputed, but no more-specific RAP1- or Sir4-binding MF
+  term exists and generic protein binding should not be retained.
+
+The newer full-text SIR3 literature does not reopen the IBA calls. Brothers and
+Rine 2022 refine Sir3 recruitment and spread by Sir3-M.EcoGII/Nanopore mapping
+but do not support origin-DNA binding or initiation. Bordelet et al. 2022 do
+require a correction to the September NHEJ rationale: the original NEJ1
+rescue literature still shows an indirect SIR contribution through HML/HMR
+silencing, but SIR3 also has a direct Sae2-binding role that limits
+MRX-dependent resection and promotes NHEJ [PMID:34817085 "Via physical
+interaction with the Sae2 protein, Sir3 impairs Sae2-dependent functions of the
+MRX (Mre11-Rad50-Xrs2) complex, thereby limiting Mre11-mediated resection,
+delaying MRX removal from DSB ends, and promoting NHEJ"]. The existing
+`GO:0006303` action therefore remains `MODIFY`, but the replacement is now the
+directional `GO:2001034 positive regulation of double-strand break repair via
+nonhomologous end joining`. Because the same paper explicitly describes Sir3 as
+"a direct negative regulator of Sae2", the proposed Sae2-directed molecular
+function is the direction-preserving `GO:0140678 molecular function inhibitor
+activity`.

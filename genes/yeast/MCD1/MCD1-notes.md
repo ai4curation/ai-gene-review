@@ -122,7 +122,8 @@ Exemplars used for consistency: `genes/human/RAD21` and `genes/SCHPO/rad21`.
 |---|---|---|
 | GO:0007064 IBA; GO:0030892 IBA/IDA/NAS; GO:0034087 IMP/NAS; GO:0003682 x3; nucleus x6; chromosome x3; centromeric region IEA; condensed nuclear chromosome IDA | ACCEPT | Core identity/location/process, directly supported. IBA nodes PTN000971622/PTN000286904 are seeded partly by MCD1's own IDA/IMP - expected, not circular. |
 | GO:0007062 IEA, GO:0008278 IEA | MODIFY -> GO:0007064 / GO:0030892 | InterPro2GO parents subsumed by directly supported mitotic-specific children (same call as SCHPO rad21). |
-| 18 x GO:0005515 IPI (Smc1, Smc3, Scc3 partners) | MODIFY -> GO:0030674 protein-macromolecule adaptor activity | Repo policy for cohesin subunits (human RAD21 precedent). All partners are core cohesin subunits and the contacts are structurally defined; HT rows (Ho 2002, Gavin 2006, Michaelis 2023) carry the same resolution with a note that the dataset alone only shows co-complex membership. Interaction never disputed. |
+| 10 x core-cohesin GO:0005515 IPI rows (Scc3/Smc1/Smc3 contacts from Ciosk, Haering, Mc Intyre, Kurze, and Garcia-Luis) | MODIFY -> GO:0030674 protein-macromolecule adaptor activity | Current per-row protein-binding policy: bare binding is uninformative, and these rows have targeted architecture, FRET, co-IP, or targeted Mcd1 AP-MS evidence for the kleisin adaptor role. |
+| 8 x broad AP-MS/survey GO:0005515 IPI rows (Ho 2002, Gavin 2006, Michaelis 2023) | REMOVE | Current protein-binding policy: do not upgrade broad co-complex rows to a specific MF unless that row's evidence actually supports the MF. The recovered cohesin interactions are not disputed; complex membership is covered by GO:0030892 and the adaptor replacement is carried by the core-cohesin rows. |
 | GO:0000086 G2/M transition IPI (Cdc5) | MODIFY -> GO:0007091 | Paper does not assay G2->M commitment; its content is Cdc5 docking that primes separase cleavage at anaphase onset. Comparator check: human RAD21 and pombe rad21 do NOT carry GO:0007091, so the curator may prefer to drop the row (Mcd1 as substrate); flagged in suggested_questions. |
 | GO:0019901 protein kinase binding IPI (Cdc5) | KEEP_AS_NON_CORE | Defined, functionally meaningful docking site (phospho-primed middle region recruits Cdc5 to chromosomal cohesin); regulatory not core. |
 | GO:0006302 IMP x2; GO:1990414 IBA/IMP; GO:0006974 IGI/IMP | KEEP_AS_NON_CORE | Structural (scaffold) participation: cohesin holds the sister as HR template; damage-induced cohesion via Mcd1 S83. Graded non-core as for SCHPO rad21 GO:1990414. |
@@ -130,12 +131,17 @@ Exemplars used for consistency: `genes/human/RAD21` and `genes/SCHPO/rad21`.
 | GO:0005739 mitochondrion IDA; GO:0006915 apoptotic process IMP | KEEP_AS_NON_CORE | Stress-specific cleavage fragment; single study; matches ESP1 review grading. |
 | GO:0006473 protein acetylation IDA | REMOVE | Mcd1 is the acetyl-acceptor substrate; Eco1 performs the step. Substrate relation belongs on ECO1 (has_input). Interaction/PTM not disputed. |
 
-Counts: ACCEPT 20, MODIFY 21, KEEP_AS_NON_CORE 10, REMOVE 1 (52 rows).
+Counts: ACCEPT 20, MODIFY 13, KEEP_AS_NON_CORE 10, REMOVE 9 (52 rows).
 
 ## Open points
 
 - GO:0007091 for the kleisin (see above).
+- Human RAD21's proteome-scale AP-MS rows are legacy protein-binding actions that
+  should be migrated to the per-row evidence policy on re-review.
 - No yeast cohesin subunit carries GO:0140588 chromatin looping despite Hi-C
   evidence of cohesin-dependent cis loops; the 2024 extrinsic-motor model
   (deep research) makes the mechanism contentious. Not proposed as NEW.
 - Function (if any) of Mcd1 K210 acetylation.
+- 2026-09-28 spot search: newer 2024-2026 cohesin/Mcd1 papers refine the
+  chromatin-loop and Mcd1-homeostasis models, but do not change the current GOA
+  row decisions.

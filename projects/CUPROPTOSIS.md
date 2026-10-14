@@ -4,6 +4,13 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
+manifest:
+  slides:
+    - href: CUPROPTOSIS/slides/CUPROPTOSIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/85LwTAVJUnCY6yJFKHcXnh
+      title: Project brief
 ---
 
 # Cuproptosis (Copper-Dependent Cell Death) Project
@@ -156,10 +163,6 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 - Watch for over-annotation of every lipoylation/TCA gene with a generic
   "cell death" process term where the experimental support is indirect.
 
-## Slides
-
-- [Slides](CUPROPTOSIS/slides/CUPROPTOSIS-slides.html) (Marp source: [CUPROPTOSIS-slides.md](CUPROPTOSIS/slides/CUPROPTOSIS-slides.md)) — AI generated
-
 ## Key References
 
 - Tsvetkov P et al. (2019) *Nat Chem Biol* — FDX1/elesclomol (PMID:31133756)
@@ -168,8 +171,10 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 
 ## Project Status
 
-- [ ] Stub — needs gene folder setup (`just fetch-gene human <GENE>`)
-- [ ] Priority 1 genes reviewed (0/7)
-- [ ] Priority 2 genes reviewed (0/6)
-- [ ] Priority 3 genes reviewed (0/4)
+- [ ] Gene folder setup (`just fetch-gene human <GENE>`) — done for the reviewed
+  genes below; FDX1, LIAS, SLC31A1, ATP7A, ATOX1, MTF1, LIPT2, CDKN2A and FDX2 still
+  need folders (LIPT1 has only a UniProt record)
+- [ ] Priority 1 genes reviewed (4/7: DLD, DLAT, PDHA1, PDHB; FDX1, LIAS, LIPT1 pending)
+- [ ] Priority 2 genes reviewed (2/6: GLS, ATP7B; SLC31A1, ATP7A, ATOX1, MTF1 pending)
+- [ ] Priority 3 genes reviewed (1/4: GCSH; LIPT2, CDKN2A, FDX2 pending)
 - [ ] Pathway summary + ontology-gap assessment

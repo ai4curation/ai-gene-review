@@ -3,6 +3,13 @@ title: "Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambi
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [mouse, human, rat]
+manifest:
+  slides:
+    - href: NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/XBdGBSK3stehfvRxFBKmU9
+      title: Project brief
 ---
 
 # Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation
@@ -190,7 +197,3 @@ the annotation review is valuable input to that discussion now.
   and parsed for scope. GO:0007405 and the proposed replacement GO:0061351
   verified in OLS. No reviews started yet; ASCL1 and FGFR2 are the only
   affected genes currently in the repo (both `genes/human/`).
-
-## Slides
-
-- [Slides](NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.html) (Marp source: [NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.md](NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.md)) — AI generated

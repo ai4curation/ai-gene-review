@@ -24,3 +24,9 @@ Core catalytic + complex + location + process annotations (GO:0004739, GO:004525
 - GO:0032991 protein-containing complex (IEA, Ensembl Compara) -> MODIFY to the specific PDC complex GO:0045254 (already annotated).
 
 DR (falcon) not available within the 8-min poll window; grounded in UniProt, GOA, cached publications, Reactome, and the dismech disorder KB.
+
+## 2026-09: GO:0005515 rows re-actioned under the protein-binding policy
+This section supersedes the earlier MARK_AS_OVER_ANNOTATED plan for protein binding written above. The repo policy excludes that action for GO:0005515. A row goes to MODIFY where the paper supports a more informative MF, and otherwise to REMOVE. Removal does not mean the interaction is false.
+- PMID:12651851 (PDHB): REMOVE. This is the E1 alpha2beta2 assembly contact, already captured by the complex CC terms.
+- PMID:7782287 (PDK1): REMOVE. PDHA1 is the kinase's substrate, and that relationship belongs on the kinase.
+- PMID:29128334, 29568061, 33961781, 35156780 and 36012204: REMOVE. All are proteome-scale screens.

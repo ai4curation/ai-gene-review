@@ -37,8 +37,8 @@ Assembly and disassembly of stress-induced RNA-protein condensates in human: a s
 ## Bottom line
 
 - **Scoped, not started.** No stress granule module; the core nucleators **G3BP1 and G3BP2 are not reviewed**.
-- **6 of 16 listed candidates** already have reviews made for other projects (TIA1, TIAL1, USP10, TARDBP, HNRNPA2B1, VCP).
-- In those, stress-granule rows were **accepted** for TIA1, TIAL1, TARDBP and VCP; USP10's negative-regulation rows are **non-core**.
+- **7 of 16 listed candidates** already have reviews made for other projects (TIA1, TIAL1, USP10, TARDBP, HNRNPA2B1, ATXN2, VCP).
+- In those, stress-granule rows were **accepted** for TIA1, TARDBP, ATXN2 and VCP; TIAL1 adds SG assembly as **NEW**, while USP10's negative-regulation rows are **non-core**.
 
 ---
 
@@ -65,7 +65,7 @@ Assembly and disassembly of stress-induced RNA-protein condensates in human: a s
 ## Next steps
 
 1. `just fetch-gene human G3BP1` and `G3BP2`; review them, then CAPRIN1.
-2. Review FUS, HNRNPA1, ATXN2, FMR1, PABPC1, EIF2S1 and EIF4G1.
+2. Review FUS, HNRNPA1, FMR1, PABPC1, EIF2S1 and EIF4G1.
 3. Build a stress granule module distinguishing nucleators, regulators, residents and disassembly factors.
 
 **Read more:** `projects/STRESS_GRANULES.md` · `genes/human/TIA1/` · `projects/CONDENSATES.md`

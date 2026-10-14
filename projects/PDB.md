@@ -7,6 +7,13 @@ sidecars:
   slide_charts:
     - PDB/slides/pdb-citation-gap.svg
     - PDB/slides/pdb-three-layers.svg
+manifest:
+  slides:
+    - href: PDB/slides/PDB-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/DTWWmrU3z8AaCTrCLj1TCs
+      title: Project brief
 ---
 # PDB: Deposited Structures as Functional-Insight Evidence
 
@@ -291,7 +298,3 @@ uncited structures, collapsed to one row per gene (the review unit). Top targets
 - [ ] Replace each peripheral RCSB auto-citation with the definitive structure/function paper
       (see the caveat above) as genes go to review.
 - [ ] Consider adding a PDB-evidence field to the review schema (per `ALPHAFOLD.md` action items).
-
-## Slides
-
-- [Slides](PDB/slides/PDB-slides.html) (Marp source: [PDB-slides.md](PDB/slides/PDB-slides.md)) — AI generated

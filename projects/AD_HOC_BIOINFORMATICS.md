@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [SCHPO, human, CANAL, BPZF4]
 genes: [Epe1, PHYKPL, LPL1, AcrF8]
+manifest:
+  slides:
+    - href: AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/L2Sufj4t2uzGbunSeHsxvK
+      title: Project brief
 ---
 
 # Ad-Hoc Bioinformatics Analysis Project
@@ -176,7 +183,3 @@ Documented cases where ad-hoc bioinformatics resolved annotation ambiguities.
 - **Result**: All 7 enzymatic annotations marked REMOVE
 
 This demonstrates how computational analysis can systematically identify pseudo-enzymes and prevent annotation errors from propagating.
-
-## Slides
-
-- [Slides](AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.html) (Marp source: [AD_HOC_BIOINFORMATICS-slides.md](AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.md)) — AI generated

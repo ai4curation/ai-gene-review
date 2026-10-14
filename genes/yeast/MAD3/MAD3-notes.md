@@ -97,15 +97,14 @@ attributed to the deep-research file (`MAD3-deep-research-falcon.md`) with their
   nonexchange chromosome segregation; acts as a prophase timer in every meiosis.
   [PMID:15951820 "We identified a new meiotic role for MAD3; though dispensable for the segregation of exchange chromosomes, it is essential for the segregation of nonexchange chromosomes."]
   [PMID:15951820 "MAD3 acts as a crucial meiotic timer, mediating a prophase delay in every meiosis."]
-- Mukherjee, Spanos and Marston 2024 (Curr Biol, doi:10.1016/j.cub.2024.07.025, not cached):
+- Mukherjee, Spanos and Marston 2024:
   Mad3 associates with the TOGL1 domain of Stu1/CLASP and promotes homolog capture/alignment in
   meiosis I independently of checkpoint timing; achiasmate mini-chromosomes segregate randomly
   in mad3 delta.
-  [file:yeast/MAD3/MAD3-deep-research-falcon.md "The most important recent advance is the demonstration that Mad3 also promotes meiotic chromosome capture independently of its canonical MCC function."]
-  [file:yeast/MAD3/MAD3-deep-research-falcon.md "Deleting MAD2 or MAD3 shortened meiotic metaphase through the expected checkpoint defect, whereas removing Stu1 TOGL1 did not reproduce that timing phenotype."]
+  [PMID:39079532 "Mad3BUBR1 associates with the TOGL1 domain of Stu1CLASP, a conserved plus-end microtubule protein that is important for chromosome capture onto the spindle."]
+  [PMID:39079532 "the TOGL1 domain of Stu1 is not required for the canonical spindle checkpoint"]
 - GO:0032837 distributive segregation IMP therefore kept as non-core. No NEW term proposed for
-  the Stu1-dependent role because the 2024 paper is not cached and the appropriate MF is
-  unclear; raised in `suggested_questions`.
+  the Stu1-dependent role because the appropriate MF is unclear; raised in `suggested_questions`.
 
 ## 7. The GO:0051754 IBA (meiotic sister chromatid cohesion, centromeric)
 
@@ -126,16 +125,16 @@ attributed to the deep-research file (`MAD3-deep-research-falcon.md`) with their
 - Cdc20 rows from mechanistic papers (PMID:10704439, PMID:11726501, PMID:15879521) ->
   MODIFY to GO:1990948 ubiquitin ligase inhibitor activity (as for BUB1B-CDC20).
 - Bub3 and Mad2 rows from mechanistic/structural papers (PMID:10704439, PMID:11726501,
-  PMID:15879521, PMID:17227844) -> MODIFY to GO:0033597 mitotic checkpoint complex (GO has a
-  bub1-bub3 complex term, GO:1990298, but no Mad3-Bub3 term).
+  PMID:15879521, PMID:17227844) -> REMOVE. They support Mad3's MCC membership, but that is a CC
+  assertion and is already present in existing GO:0033597 rows; a protein-binding MF row should not be
+  converted into a cellular-component replacement.
 - High-throughput rows (PMID:10688190 Uetz Y2H, PMID:11805837 Ho HMS-PCI, PMID:14660704
   Graumann TAP-MudPIT, PMID:18719252 Yu Y2H) -> REMOVE as uninformative; interactions not
   disputed.
 
 ## 9. Items deliberately not done
 
-- No new publications were fetched (would write outside `genes/yeast/MAD3/`); King 2007,
-  Rancati 2005 and Mukherjee 2024 are cited through the deep-research file only.
+- King 2007 and Rancati 2005 are cited through the deep-research file only.
 - No bioinformatics folder: domain architecture is settled by UniProt/InterPro and the
   crystal structure; nothing to test computationally.
 - `proposed_new_terms: []`; no `NEW` annotations.

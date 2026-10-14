@@ -31,9 +31,12 @@
 - Transcription: Swi5-dependent SIC1 transcription in late M/early G1; SCF(Cdc4) degradation of Swi5
   terminates SIC1 transcription so Sic1 can be cleared at late G1
   [PMID:18787112 "Degradation of Sic1 is strictly required for S-phase entry ( 3 ), whereas that of Swi5 ensures efficient entry into S phase."].
-- Mitotic exit / licensing (deep research, Philip et al. 2022 eLife, Venta et al. 2020):
-  [file:yeast/SIC1/SIC1-deep-research-falcon.md "Newly synthesized Sic1 contributes to the decline of mitotic Clb–Cdk1 activity and helps establish the low-CDK state required for mitotic exit and the next G1 phase."]
-  [file:yeast/SIC1/SIC1-deep-research-falcon.md "Sic1 releases **Clb2–Cdk1–Cks1 from Cdc6**, allowing Mcm2–7 loading onto chromatin after mitotic exit."]
+- Mitotic exit / licensing: Sic1 directly inhibits late-mitotic cyclin-CDK complexes
+  [PMID:11460169 "inactivation of CDKs during late mitosis involves degradation of B-type cyclins as well as direct inhibition of cyclin-CDK complexes by the CDK-inhibitor protein Sic1"];
+  Cdc6-like mitotic-exit function is buffered by Sic1 and cyclin degradation
+  [PMID:11460169 "this delay is accentuated in the absence of Sic1 or of cyclin degradation"];
+  Sic1 also releases Clb2-Cdk1-Cks1 from Cdc6 to permit Mcm2-7 loading at mitotic exit
+  [PMID:35142288 "In addition, Cdk1 inhibitor Sic1 releases Clb2·Cdk1·Cks1 from Cdc6 to load Mcm2-7 on the chromatin upon mitotic exit."].
 - Localisation: nuclear (functional Sic1-GFP), degraded by nuclear Cdc4
   [PMID:11080155 "Consistent with this notion, a functional Sic1–GFP fusion protein was localized in the nucleus (Figure 8 E)."];
   both compartments [PMID:11792824 "A substrate of Cln2, Sic1, was also in both compartments."];
@@ -42,6 +45,9 @@
 - Stress control: Hog1 binds and phosphorylates Sic1 (Thr173) to stabilise it and arrest G1 under osmostress
   [PMID:15448699 "Hog1 interacts physically with Sic1 in vivo and in vitro, and phosphorylates a single residue at the carboxyl terminus of Sic1"];
   T173A impairs arrest (UniProt MUTAGEN).
+- Intracomplex phosphorylation: S-CDK can phosphorylate Sic1 while bound and inhibited in the
+  Clb5-Cdk1-Cks1-Sic1 complex, and pT173 acts as a diversionary Cks1-binding site
+  [PMID:32296067 "within a reconstituted complex, while being inhibited toward a control target histone H1, the S-CDK complex (Clb5–Cdk1–Cks1) still efficiently phosphorylates Sic1"].
 - Cdc14 dephosphorylates Sic1 (in vitro substrate) [PMID:11274204 "five different substrates including the physiologic targets Swi5 and Sic1"];
   Cdc14-Sic1 also in AP-MS network [PMID:20489023 abstract only, no Sic1 text].
 - Autophagy: [PMID:20417603 "Sic1 is a negative regulator of autophagy, based on the observations that overexpression of Sic1 or Sic1-Δ3P, a degradation-resistant mutant, significantly inhibited autophagy, and that loss of Sic1 dramatically upregulated autophagy"];
@@ -72,7 +78,17 @@ review), and neither p27 nor Sic1 carries a ubiquitin-dependent catabolic proces
 
 - Cip/Kip-like escort of Clb5 into the nucleus (PMID:16294029) — single abstract-only report; raised in
   suggested_questions rather than as a NEW cyclin binding / adaptor annotation.
-- Mitotic-exit role (GO:0010458) is used in core_functions on the strength of the deep-research
-  summary of Philip 2022 / Venta 2020 and the Schwob 1994 timing data; not proposed as NEW because the
-  primary papers are not in the publication cache.
-- CK2 Ser201, TORC1/Mpk1 stabilisation, Cks1 docking at pThr173 — from deep research only; notes only.
+- Mitotic-exit role (GO:0010458) is used in core_functions on the strength of Schwob 1994, Calzada 2001
+  and Philip 2022. It is not proposed as a NEW existing-annotation row because GOA has no corresponding
+  assertion to audit.
+- CK2 Ser201 and TORC1/Mpk1 stabilisation remain from deep research only; notes only.
+
+## 2026-09-29 re-review
+
+- No IBA rows are present in the current SIC1 review/GOA set.
+- The generic protein-binding rows already follow the current policy: Cdc14/Hog1 substrate contacts are
+  removed as uninformative, and Cdc4 contacts are modified to the specific SCF ubiquitin ligase complex
+  binding term.
+- A newer literature search found the 2020 Venta and 2022 Philip primary papers that had been cited only
+  through the Falcon synthesis. Both were cached, together with Calzada 2001, and the review now cites
+  PMIDs directly for intracomplex phosphorylation and mitotic-exit/origin-licensing support.

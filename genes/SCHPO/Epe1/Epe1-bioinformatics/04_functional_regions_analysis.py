@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 
+from uniprot_features import ligand_residues, parse_uniprot_json, parse_uniprot_txt
+
+EPE1_TXT = Path(__file__).parent.parent / "Epe1-uniprot.txt"
+
 def load_epe1_data():
     """Load Epe1 sequence and UniProt data."""
     data_dir = Path("data")
@@ -101,60 +105,38 @@ def compare_with_active_demethylases(epe1_seq):
     print("\nDetailed Comparison with Active JmjC Demethylases:")
     print("-" * 50)
     
-    data_dir = Path("data")
-    
-    # Load active demethylases
-    active_proteins = {}
-    for fasta_file in data_dir.glob("kdm*.fasta"):
-        with open(fasta_file) as f:
-            record = next(SeqIO.parse(f, "fasta"))
-            active_proteins[fasta_file.stem.upper()] = str(record.seq)
-    
-    # Define JmjC domain regions (approximate, based on literature)
-    jmjc_regions = {
-        "Epe1": (243, 402),
-        "KDM4A_HUMAN": (141, 313),  # Approximate based on structure
-        "KDM2A_HUMAN": (214, 374),  # Approximate
-        "KDM3A_HUMAN": (958, 1120), # Approximate
-        "KDM5B_HUMAN": (391, 513),  # Approximate
-        "KDM5C_HUMAN": (477, 601),  # Approximate
-    }
-    
-    # Extract Epe1 JmjC domain
-    epe1_jmjc_start, epe1_jmjc_end = jmjc_regions["Epe1"]
-    epe1_jmjc = epe1_seq[epe1_jmjc_start-1:epe1_jmjc_end]
-    
+    # JmjC domain boundaries and Fe(II) ligands from UniProt features:
+    # Epe1 from its flat file, comparators from data/kdm*.json
+    epe1_feats = parse_uniprot_txt(EPE1_TXT)
+    records = {"Epe1": epe1_feats}
+    for path in sorted(Path("data").glob("kdm*.json")):
+        rec = parse_uniprot_json(path)
+        if rec["jmjc"] is not None:
+            records[rec["entry_name"]] = rec
+
     print("\n  Key catalytic residues in active demethylases:")
     print("  " + "-" * 45)
     
-    comparison_data = {"Epe1": analyze_jmjc_residues(epe1_jmjc, "Epe1")}
-    
-    for protein_name, sequence in active_proteins.items():
-        if protein_name in jmjc_regions:
-            start, end = jmjc_regions[protein_name]
-            jmjc_domain = sequence[start-1:end] if len(sequence) >= end else sequence[start-1:]
-            
-            analysis = analyze_jmjc_residues(jmjc_domain, protein_name)
-            comparison_data[protein_name] = analysis
-    
+    comparison_data = {}
+    for protein_name, rec in records.items():
+        start, end = rec["jmjc"]
+        analysis = analyze_jmjc_residues(rec["sequence"][start - 1:end], protein_name)
+        analysis["jmjc"] = rec["jmjc"]
+        analysis["fe_ligands"] = ligand_residues(rec)
+        comparison_data[protein_name] = analysis
+
     # Print comparison table
     print("\n  Summary Table:")
     print("  " + "-" * 65)
-    print(f"  {'Protein':<15} {'HXD/E':<8} {'Fe-His':<8} {'αKG-K/S':<10} {'Status':<15}")
+    print(f"  {'Protein':<15} {'JmjC':<11} {'His':<5} {'K/S':<9} {'Fe ligands (UniProt)':<22}")
     print("  " + "-" * 65)
-    
+
     for protein, data in comparison_data.items():
-        hxd = "Yes" if data["has_hxd_motif"] else "No"
-        fe_his = str(data["histidine_count"])
-        akg = f"K:{data['lysine_count']}/S:{data['serine_count']}"
-        
-        if protein == "Epe1":
-            status = "Pseudo-enzyme?"
-        else:
-            status = "Active"
-        
-        print(f"  {protein:<15} {hxd:<8} {fe_his:<8} {akg:<10} {status:<15}")
-    
+        dom = f"{data['jmjc'][0]}-{data['jmjc'][1]}"
+        akg = f"{data['lysine_count']}/{data['serine_count']}"
+        ligs = ", ".join(data["fe_ligands"]) or "none"
+        print(f"  {protein:<15} {dom:<11} {data['histidine_count']:<5} {akg:<9} {ligs:<22}")
+
     return comparison_data
 
 def analyze_jmjc_residues(jmjc_seq, protein_name):
@@ -202,19 +184,12 @@ def identify_missing_residues(epe1_jmjc, comparison_data):
         # Check specific positions
         print("\n  Critical residue analysis:")
         
-        # The canonical Fe(II) binding triad
-        print("    Fe(II) binding triad:")
-        if epe1_data["has_hxd_motif"]:
-            print(f"      ✓ HXD/E motif present at position(s): {epe1_data['hxd_positions']}")
-        else:
-            print("      ✗ HXD/E motif missing")
-        
-        # Check for second histidine (usually ~20-30 residues away)
-        if epe1_data["histidine_count"] >= 2:
-            print(f"      ? Additional histidines present ({epe1_data['histidine_count']} total)")
-        else:
-            print(f"      ✗ Insufficient histidines for Fe(II) coordination")
-        
+        # Fe(II) ligands as annotated by UniProt for each protein
+        print("    Fe(II) ligands (UniProt FT BINDING):")
+        print(f"      Epe1: {', '.join(epe1_data['fe_ligands']) or 'none'}")
+        for p in active_proteins:
+            print(f"      {p}: {', '.join(comparison_data[p]['fe_ligands']) or 'none'}")
+
         # α-ketoglutarate binding
         print("    α-ketoglutarate binding:")
         if epe1_data["lysine_count"] >= 3:
@@ -241,7 +216,7 @@ def create_visualization(comparison_data):
     ax1.bar(x + width/2, lysines, width, label='Lysines', color='green', alpha=0.7)
     ax1.set_xlabel('Protein')
     ax1.set_ylabel('Count')
-    ax1.set_title('Key Catalytic Residues in JmjC Domains')
+    ax1.set_title('His and Lys counts in each UniProt JmjC domain')
     ax1.set_xticks(x)
     ax1.set_xticklabels(proteins, rotation=45, ha='right')
     ax1.legend()
@@ -251,25 +226,26 @@ def create_visualization(comparison_data):
     epe1_idx = proteins.index("Epe1")
     ax1.axvspan(epe1_idx - 0.5, epe1_idx + 0.5, alpha=0.2, color='red')
     
-    # Plot 2: HXD/E motif presence
+    # Plot 2: number of Fe(II) ligands each protein's UniProt entry annotates
     ax2 = axes[0, 1]
-    has_motif = [1 if comparison_data[p]["has_hxd_motif"] else 0 for p in proteins]
-    colors = ['red' if p == "Epe1" else 'green' if has_motif[i] else 'gray' 
-              for i, p in enumerate(proteins)]
-    ax2.bar(proteins, has_motif, color=colors, alpha=0.7)
-    ax2.set_ylabel('Has HXD/E Motif')
-    ax2.set_title('Presence of Fe(II)-binding Motif')
-    ax2.set_ylim([0, 1.2])
+    n_fe = [len(comparison_data[p]["fe_ligands"]) for p in proteins]
+    colors = ['red' if p == "Epe1" else 'green' for p in proteins]
+    ax2.bar(range(len(proteins)), n_fe, color=colors, alpha=0.7)
+    ax2.set_ylabel('Annotated Fe(II) ligands')
+    ax2.set_title('Fe(II) ligands in UniProt FT BINDING')
+    ax2.set_ylim([0, max(n_fe) + 1])
+    ax2.set_xticks(range(len(proteins)))
     ax2.set_xticklabels(proteins, rotation=45, ha='right')
     ax2.grid(True, alpha=0.3)
-    
+
     # Plot 3: Domain length comparison
     ax3 = axes[1, 0]
     lengths = [comparison_data[p]["length"] for p in proteins]
     colors = ['red' if p == "Epe1" else 'blue' for p in proteins]
-    ax3.bar(proteins, lengths, color=colors, alpha=0.7)
+    ax3.bar(range(len(proteins)), lengths, color=colors, alpha=0.7)
     ax3.set_ylabel('Domain Length (aa)')
     ax3.set_title('JmjC Domain Lengths')
+    ax3.set_xticks(range(len(proteins)))
     ax3.set_xticklabels(proteins, rotation=45, ha='right')
     ax3.grid(True, alpha=0.3)
     
@@ -280,53 +256,17 @@ def create_visualization(comparison_data):
     # Build summary based on actual analysis data
     epe1_data = comparison_data.get("Epe1", {})
     
-    summary_lines = ["Key Findings:", ""]
-    
-    # Report actual motifs found
-    if epe1_data.get('hxd_positions'):
-        pos = epe1_data['hxd_positions'][0] if epe1_data['hxd_positions'] else 'N/A'
-        motif = epe1_data.get('motif_sequence', 'HXD')
-        summary_lines.append(f"• Epe1 has {motif} motif at position {pos}")
-        if 'V' in motif:
-            summary_lines.append("  (V replaces typical small/polar residue)")
-    
-    if epe1_data.get('hxe_positions'):
-        pos = epe1_data['hxe_positions'][0] if epe1_data['hxe_positions'] else 'N/A'
-        motif_e = epe1_data.get('hxe_motif', 'HXE')
-        summary_lines.append(f"  and {motif_e} motif at position {pos}")
-    
+    summary_lines = ["Computed from UniProt features:", ""]
+    summary_lines.append(f"• Epe1 JmjC {epe1_data['jmjc'][0]}-{epe1_data['jmjc'][1]}")
+    summary_lines.append(f"  Fe ligands: {', '.join(epe1_data['fe_ligands']) or 'none'}")
+    comp_counts = [len(v["fe_ligands"]) for k, v in comparison_data.items() if k != "Epe1"]
+    if comp_counts:
+        summary_lines.append(f"• Comparators: {min(comp_counts)}-{max(comp_counts)} annotated Fe ligands")
     summary_lines.append("")
-    hist_count = epe1_data.get('histidine_count', 0)
-    summary_lines.append(f"• Epe1 has {hist_count} histidines")
-    
-    # Compare with average of active demethylases
-    active_counts = [v['histidine_count'] for k, v in comparison_data.items() 
-                     if k.startswith('KDM') and 'histidine_count' in v]
-    if active_counts:
-        avg_hist = sum(active_counts) / len(active_counts)
-        if hist_count < avg_hist:
-            summary_lines.append(f"  (fewer than avg {avg_hist:.1f} in active KDMs)")
-    
+    summary_lines.append(f"• Epe1 JmjC histidines: {epe1_data.get('histidine_count', 0)}")
     summary_lines.append("")
-    if 'V' in epe1_data.get('motif_sequence', ''):
-        summary_lines.append("• The HVD motif differs from canonical HXD")
-        summary_lines.append("  (X is typically small/polar for Fe(II) binding)")
-        summary_lines.append("")
-    
-    summary_lines.append("• C-terminal region analysis:")
-    summary_lines.append("  High basic residue content")
-    summary_lines.append("  consistent with HP1/Swi6 binding")
-    
-    summary_lines.append("")
-    summary_lines.append("Conclusion based on analysis:")
-    if 'V' in epe1_data.get('motif_sequence', ''):
-        summary_lines.append("Pseudo-demethylase with")
-        summary_lines.append("non-catalytic JmjC domain")
-    elif not epe1_data.get('has_hxd_motif'):
-        summary_lines.append("Lacks canonical catalytic motifs")
-    else:
-        summary_lines.append("Further analysis needed")
-    
+    summary_lines.append("No activity verdict is drawn from sequence alone.")
+
     summary_text = "\n".join(summary_lines)
     
     ax4.text(0.1, 0.5, summary_text, fontsize=11, verticalalignment='center')
@@ -358,8 +298,7 @@ def main():
     comparison_data = compare_with_active_demethylases(epe1_seq)
     
     # 3. Identify missing residues
-    epe1_jmjc = epe1_seq[242:402]  # JmjC domain
-    identify_missing_residues(epe1_jmjc, comparison_data)
+    identify_missing_residues(None, comparison_data)
     
     # 4. Create visualization
     fig_path = create_visualization(comparison_data)
@@ -373,15 +312,12 @@ def main():
         f.write("Functional Regions Analysis of Epe1\n")
         f.write("=" * 60 + "\n\n")
         
-        f.write("1. JmjC Domain Analysis:\n")
+        f.write("1. JmjC Domain Analysis (UniProt features):\n")
         f.write("-" * 40 + "\n")
         epe1_data = comparison_data["Epe1"]
-        f.write(f"Position: 243-402 ({epe1_data['length']} aa)\n")
+        f.write(f"Position: {epe1_data['jmjc'][0]}-{epe1_data['jmjc'][1]} ({epe1_data['length']} aa)\n")
         f.write(f"Histidines: {epe1_data['histidine_count']}\n")
-        f.write(f"HXD/E motif: {'Present' if epe1_data['has_hxd_motif'] else 'Absent'}\n")
-        if epe1_data['has_hxd_motif']:
-            f.write(f"  Positions: {epe1_data['hxd_positions']}\n")
-        
+        f.write(f"Fe(II) ligands (FT BINDING): {', '.join(epe1_data['fe_ligands']) or 'none'}\n")
         f.write("\n2. C-terminal Region Analysis:\n")
         f.write("-" * 40 + "\n")
         c100 = c_term_results["c_term_100"]
@@ -392,34 +328,19 @@ def main():
         f.write(f"  PxVxL motifs: {c100['pxvxl_motifs']}\n")
         f.write(f"  Leucine-rich regions: {c100['leucine_rich']}\n")
         
-        f.write("\n3. Comparison with Active Demethylases:\n")
+        f.write("\n3. Comparison with Active Demethylases (UniProt features):\n")
         f.write("-" * 40 + "\n")
-        f.write("Epe1 shows key differences from active JmjC demethylases:\n")
-        f.write("- HVD motif instead of canonical HXD (V is unusual)\n")
-        f.write("- Lower histidine count\n")
-        f.write("- Potentially altered Fe(II) coordination\n")
-        
-        f.write("\n4. Analysis Summary:\n")
-        f.write("-" * 40 + "\n")
-        
-        # Write data-driven conclusion based on actual findings
-        if epe1_data['has_hxd_motif']:
-            motif_seq = epe1_data.get('motif_sequence', '')
-            if 'V' in motif_seq:
-                f.write(f"Detected {motif_seq} motif instead of canonical HXD.\n")
-                f.write("The valine substitution prevents Fe(II) coordination,\n")
-                f.write("indicating Epe1 functions as a pseudo-demethylase with\n")
-                f.write("a non-catalytic JmjC domain despite retaining the fold.\n")
-            else:
-                f.write(f"Found {motif_seq} motif suggesting some conservation.\n")
-                f.write("Further biochemical analysis needed to confirm activity.\n")
-        else:
-            f.write("No canonical HXD/HXE motifs detected in JmjC domain.\n")
-            f.write("Consistent with loss of demethylase activity.\n")
-        
-        f.write("\nC-terminal region analysis reveals features consistent\n")
-        f.write("with protein-protein interactions, supporting HP1/Swi6 binding role.\n")
-    
+        for protein, data in comparison_data.items():
+            f.write(f"{protein}: JmjC {data['jmjc'][0]}-{data['jmjc'][1]}; "
+                    f"histidines {data['histidine_count']}; "
+                    f"Fe ligands {', '.join(data['fe_ligands']) or 'none'}\n")
+        comp = [len(v["fe_ligands"]) for k, v in comparison_data.items() if k != "Epe1"]
+        if comp:
+            f.write(f"\nAnnotated Fe(II) ligands: Epe1 {len(epe1_data['fe_ligands'])}; "
+                    f"comparators {min(comp)}-{max(comp)}.\n")
+        f.write("\nC-terminal composition is reported above; it is not by itself\n")
+        f.write("evidence of HP1/Swi6 binding (Raiymbek et al. 2020 map the Swi6 site to 434-600).\n")
+
     print(f"\n✓ Detailed results saved to {results_file}")
 
 if __name__ == "__main__":
