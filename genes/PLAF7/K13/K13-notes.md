@@ -106,8 +106,9 @@ the heme that activates artemisinins.
 - Caveat recorded for the review: the ubiquitin-ligase-adaptor model has not been
  corroborated by the later endocytosis work, and the independent K13 interactome of
  [PMID:32310999] recovered ER proteins and Rab GTPases rather than a cullin-RING
- ligase. I kept the interaction annotation (an IPI from a curator who read the full
- text) but did not elevate "ubiquitin-like ligase-substrate adaptor activity"
+ ligase. I accept the interaction as real but removed the bare `GO:0005515` row, since the
+ term carries no functional information and there is no supportable molecular
+ function to modify it to; in particular I did not elevate "ubiquitin-like ligase-substrate adaptor activity"
  (GO:1990756) to a core function, and raised the question in `suggested_questions`.
 
 ## Oligomerization (GO:0051260 IEA)
@@ -144,7 +145,7 @@ the heme that activates artemisinins.
 
 | Term | Evidence | Action |
 |---|---|---|
-| GO:0005515 protein binding | IPI, PMID:25874676 (PfPI3K) | KEEP_AS_NON_CORE |
+| GO:0005515 protein binding | IPI, PMID:25874676 (PfPI3K) | REMOVE (term uninformative; interaction accepted and kept in IntAct, no supportable MF to modify to) |
 | GO:0009410 response to xenobiotic stimulus | IDA, PMID:24352242 | MARK_AS_OVER_ANNOTATED |
 | GO:0051260 protein homooligomerization | IEA, InterPro IPR003131 | KEEP_AS_NON_CORE |
 | GO:0006897 endocytosis | NEW | core |
