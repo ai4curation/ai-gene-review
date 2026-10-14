@@ -163,8 +163,11 @@ not itself a GO-annotatable function and is recorded here only as context.
   (the gene already carries the descendant with EXP evidence).
 - `GO:0005515 protein binding` rows naming basigin → MODIFY to `GO:0046789 host cell
   surface receptor binding`; rows naming the parasite partners CyRPA, PfRipr and P113 →
-  kept as non-core (real, specific complex-assembly contacts, but no informative MF child
-  exists; complex membership carries the content).
+  REMOVE. The interactions are real and specific, but the bare term carries no functional
+  information and, the partners being parasite proteins, there is no informative MF child
+  to refine to. What those rows encode — RH5's place in the trimeric invasion complex — is
+  carried instead by the proposed complex term below and by the core functions, so nothing
+  is lost. (Repo policy: a protein-binding row is either MODIFYed or REMOVEd, never kept.)
 - `GO:0032991 protein-containing complex` → MODIFY to a proposed new term for the
   RH5–CyRPA–PfRipr invasion complex.
 - `GO:0008201 heparin binding` → kept, non-core (see §6).
