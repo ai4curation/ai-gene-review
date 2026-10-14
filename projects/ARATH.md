@@ -326,7 +326,7 @@ otherwise by AGI locus (e.g. `AT4G17750` for HSFA1A) or UniProt accession.
 | Reviews with a deep-research file | 197 |
 | Reviews with a bioinformatics folder | 4 |
 | Reviews with a ProtNLM prediction review | 2 (AT4G38370, F4JLB7) |
-| Modules that mention Arabidopsis | 40 |
+| Modules that mention Arabidopsis or contain a reviewed ARATH gene | 40 |
 | ... of which contain at least one reviewed ARATH gene | 29 |
 | Reviews that belong to at least one module | 211 |
 | PANTHER family reviews citing an ARATH review | 9 (10 genes) |
@@ -367,9 +367,10 @@ biology, and there the removal rate is under 3%.
 
 ## View 2: evidence type against action
 
-Evidence codes are grouped as experimental (EXP, IDA, IPI, IMP, IGI, IEP and
-the high-throughput codes), phylogenetic (IBA and relatives), electronic (IEA),
-similarity (ISS, ISO, ISA, ISM, RCA, IGC) and author/curator (TAS, NAS, IC, ND).
+Evidence codes are grouped as experimental (`EXP`, `IDA`, `IPI`, `IMP`, `IGI`,
+`IEP` and the high-throughput codes), phylogenetic (`IBA`, `IBD`, `IKR`, `IRD`),
+electronic (`IEA`), similarity (`ISS`, `ISO`, `ISA`, `ISM`, `RCA`, `IGC`) and
+author/curator (`TAS`, `NAS`, `IC`, `ND`).
 
 | Evidence class | Rows | ACCEPT | NON_CORE | MODIFY | OVER_ANN. | REMOVE | NEW | UNDECIDED |
 |---|---|---|---|---|---|---|---|---|
@@ -380,8 +381,8 @@ similarity (ISS, ISO, ISA, ISM, RCA, IGC) and author/curator (TAS, NAS, IC, ND).
 | Author/curator | 340 | 215 | 52 | 31 | 16 | 1 | 22 | 3 |
 
 Two things stand out. Experimental rows carry most removals because IPI
-`protein binding` is experimental. And IBA rows are the most often accepted
-class (73%), which fits the repo's position that an IBA carries a PAINT
+`protein binding` is experimental. And phylogenetic rows (almost all IBA) are
+the most often accepted class (73%), which fits the repo's position that an IBA carries a PAINT
 curator's considered phylogenetic judgment. Similarity rows are removed about
 as often as experimental ones (15% against 16%), but for a different reason:
 ISM organelle-targeting predictions (next section).
