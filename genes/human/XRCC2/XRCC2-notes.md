@@ -73,3 +73,27 @@ the GO:0033063 complex annotations.
 Core = BCDX2 subunit acting as RAD51-filament-assembly mediator in HR / ICL repair / replication
 fork protection. Non-core/secondary = centrosome, mitotic cell cycle, meiotic cell cycle.
 Over-annotations = protein binding (GO:0005515), ATP-dependent DNA damage sensor activity (GO:0140664).
+
+## 2026-10-06 update: X3CDX2 (trigger PMID:42682019)
+Targeted update alongside the new XRCC3 review (`genes/human/XRCC3/`).
+- XRCC2 is not only a BCDX2 subunit: with RAD51D it joins CX3 in the RAD51B-independent X3CDX2
+  (DX2-CX3) complex, where XRCC2 forms the 5' cap of RAD51 filaments
+  [PMID:41196948 "with XRCC3 directly interacting with RAD51, and XRCC2 forming the cap"];
+  confirmed independently [PMID:41772053 "RAD51B-independent DX2-CX3 complex"].
+- Strand-invasion stimulation belongs to X3CDX2, not BCDX2
+  [PMID:41196948 "The XRCC3 complex, and to a lesser extent the CX3 complex, stimulated RAD51-mediated strand invasion, whereas the RAD51B complex showed no activity"].
+  GO:0042148 DNA strand invasion annotations stay ACCEPT (XRCC2 still participates), but the
+  reasoning was corrected and the term moved from the BCDX2 core function to a new X3CDX2 core
+  function (no in_complex: GO has no X3CDX2 complex term).
+- XRCC2 is dispensable for fork restart, a CX3-specific function [PMID:26354865]; the review also
+  summarizes the DX2/ATR-XRCC2 S247 role in restraining fork progression (PMID:30566856, already cited).
+- No annotation actions were changed.
+
+## 2026-10-10 revision (PR #4409 review)
+- All 16 GO:0005515 protein binding rows changed from MARK_AS_OVER_ANNOTATED to REMOVE (uninformative
+  generic term; removal does not dispute the interactions; BCDX2 membership is captured by GO:0033063).
+  Consistent with the RAD51B, RAD51D and XRCC3 reviews.
+- X3CDX2 core function: no MF asserted, and the description now says why. XRCC3 is the
+  RAD51-contacting subunit and RAD51-X3C stimulates strand exchange without DX2
+  [PMID:42020761 "RAD51–X3C displayed significantly enhanced DNA strand exchange activity over RAD51 alone across the protein concentrations tested"],
+  so GO:0140619 (contributes_to) stays on XRCC3 only. Added PMID:42020761 to references.

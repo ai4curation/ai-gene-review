@@ -1,6 +1,7 @@
 ---
 title: "SNIPE: Membrane-Bound Nuclease Anti-Phage Defence"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [ECOLX]
 genes: [SNIPE]
@@ -12,10 +13,6 @@ sidecars:
 manifest:
   slides:
     - href: SNIPE/slides/SNIPE-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/MV5mj86PH7dB1UaTfnLYZ4
-      title: Project brief
 ---
 
 # SNIPE: Membrane-Bound Nuclease Anti-Phage Defence
@@ -30,8 +27,10 @@ activity and defense response to virus, plus two new process terms. We did this 
 SNIPE homologues occur in about a third of well-sequenced bacterial clades, and existing GO
 cannot place it: the anti-phage nucleic-acid branch is framed as clearance of *intracellular*
 DNA, and neither CRISPR-Cas nor restriction-modification sits under defense response to
-virus. A GO issue making that case is drafted in `SNIPE/` with no filed issue number recorded, the
-review is still DRAFT, and the InterPro2GO and homologue tasks under Pending have not started.
+virus. A [draft GO issue](SNIPE/go-issue-antiviral-nucleic-acid-defense.md) makes that case,
+but no filed issue number is recorded; the
+review is still DRAFT, and the homologue GO-annotation audit, DefenseFinder cross-check,
+InterPro2GO submission, and IPR025280 literature-link tasks remain open.
 
 ## Overview
 
@@ -56,7 +55,8 @@ SNIPE (Surface-associated Nuclease Inhibiting Phage Entry) is a bacterial anti-p
 
 - **IPR025280** — "SNIPE associated domain" (recently renamed from DUF4041 to reflect this paper)
 - **PF13250** — Pfam entry for DUF4041
-- 1,612 protein matches across 1,044 proteomes and 2,466 taxa
+- Local IPR025280 architecture analysis: 1,612 proteins across 17 architectures
+- GIY-YIG-like catalytic co-features in 90.94% of the IPR025280 proteins analyzed
 - ~500 curated SNIPE homologues across many bacterial phyla
 - 33% of well-sequenced bacterial clades harbour at least one SNIPE homologue
 
@@ -74,7 +74,7 @@ SNIPE (Surface-associated Nuclease Inhibiting Phage Entry) is a bacterial anti-p
 |---------|---------|------------------------|
 | ManY | P69801 | Inner membrane permease; SNIPE pre-associates with ManYZ complex |
 | ManZ | P69805 | Inner membrane permease; part of genome injection apparatus for lambda |
-| ManX | P69797 | Mannose PTS EIIAB component |
+| ManX | P69797 | Mannose `PTS` EIIAB component |
 | LamB | P02943 | Outer membrane maltoporin; lambda receptor |
 | OmpF | P02931 | Outer membrane porin; alternative receptor for generalist lambda |
 
@@ -100,31 +100,35 @@ The GIY-YIG nuclease domain is the most conserved region. The DUF4041 domain sho
 
 ## GO Annotation Considerations
 
-### Potential GO terms for SNIPE
-- **Molecular Function**: endonuclease activity (GIY-YIG family); DNA binding; protein binding (tape measure protein)
-- **Biological Process**: defence response to bacteriophage; DNA catabolic process; negative regulation of viral genome replication
-- **Cellular Component**: integral component of plasma membrane
+### GO terms proposed for SNIPE
+
+- **Molecular Function**: DNA endonuclease activity; double-stranded DNA binding
+- **Biological Process**: defense response to virus; host-mediated suppression of symbiont invasion; negative regulation of viral genome replication; DNA catabolic process
+- **Cellular Component**: plasma membrane
 
 ### Annotation challenges
 1. No existing GO term captures "cleavage of foreign DNA during membrane injection"
-2. The DUF4041 domain has dual function (DNA binding + TMP binding) — needs careful annotation
+2. The DUF4041 domain has dual function (DNA binding + TMP binding), but its TMP interaction may be better captured in GO-CAM than by a generic protein-binding annotation
 3. Direct defence vs. abortive infection distinction matters for BP annotation
 4. The ManYZ interaction is pre-infection positioning, not a canonical "protein complex"
 
-### Potential new GO terms
-- "phage genome injection site" (CC) — for membrane complexes at injection points
-- "defence response to bacteriophage via direct DNA cleavage" (BP) — to distinguish from abortive infection
-- "tape measure protein binding" (MF) — specific interaction that enables SNIPE targeting
+### Proposed new GO terms in the review
 
-## GIY-YIG InterPro-to-GO Misannotation Risk
+- **SNIPE defense system**: a mechanism-specific BP under defense response to virus
+- **antiviral defense by targeting viral nucleic acid**: an optional intermediate BP for CRISPR-Cas, R-M, SNIPE, and other nucleic acid-targeting antiviral systems
 
-The InterPro-to-GO mapping (`rules/arba/_interpro2go.txt`) contains:
+## InterPro2GO Strategy for SNIPE
 
-```
-InterPro:IPR047296 UvrC/Cho-like, GIY-YIG domain → GO:0006289 (nucleotide-excision repair)
-```
+`IPR025280` / `PF13250` captures the SNIPE-associated DUF4041 domain, not the
+complete anti-phage nuclease architecture. The architecture analysis found 1,612
+`IPR025280` proteins; 1,466 of them also carry a GIY-YIG-like catalytic co-feature
+(`PF13455` or `PF10544` / `IPR018306`), and 990 have an N-terminal TM-like signal.
 
-This mapping assumes GIY-YIG = DNA repair (as in UvrC), but SNIPE demonstrates this domain has been repurposed for antiphage defence. Automated annotation of SNIPE homologues through this InterPro entry would produce **incorrect GO annotations** for 500+ proteins. This should be flagged when proposing InterPro2GO mappings for PF13250/IPR025280.
+InterPro2GO mapping should therefore avoid direct `IPR025280`-only propagation to
+DNA endonuclease activity or plasma membrane terms. A conservative SNIPE rule should
+require `IPR025280` plus `PF13455` or `PF10544` / `IPR018306`, plus membrane-targeting
+evidence such as an N-terminal TM/signal feature, `IPR007829`, or `IPR039519`, with
+`IPR018929` treated as optional lower-confidence support.
 
 ## Cross-References to Related Genes in Repo
 
@@ -139,7 +143,7 @@ This mapping assumes GIY-YIG = DNA repair (as in UvrC), but SNIPE demonstrates t
 | darB | Phage P1 (9CAUD) | `genes/9CAUD/darB/darB-ai-review.yaml` | Antirestriction protein ejected into host to protect phage DNA from Type I R-M. SNIPE is the host-side counterpart |
 | DAM | Phage T4 (BPT4) | `genes/BPT4/DAM/DAM-ai-review.yaml` | DNA adenine methyltransferase protecting phage DNA from host restriction |
 | AcrF8 | Phage ZF40 (BPZF4) | `genes/BPZF4/AcrF8/AcrF8-ai-review.yaml` | Anti-CRISPR protein — another phage counter-defence strategy |
-| AimP | Phage phi3T (BPPHT) | `genes/BPPHT/AimP/AimP-falcon-research.md` | Phage quorum sensing peptide governing lysis-lysogeny decisions |
+| `AimP` | Phage phi3T (BPPHT) | `genes/BPPHT/AimP/AimP-falcon-research.md` | Phage quorum sensing peptide governing lysis-lysogeny decisions |
 
 ### Related projects
 
@@ -172,17 +176,14 @@ This mapping assumes GIY-YIG = DNA repair (as in UvrC), but SNIPE demonstrates t
 - [x] Read and summarize Saxton et al. 2026
 - [x] Full gene review of SNIPE (A0A8T9CRB7) — genes/ECOLX/SNIPE/SNIPE-ai-review.yaml
 - [x] Assess whether new GO terms are needed — proposed 2 new terms in review
-- [x] Draft GO issue for antiviral nucleic acid defence hierarchy — projects/SNIPE/go-issue-antiviral-nucleic-acid-defense.md
+- [x] Draft GO issue for antiviral nucleic acid defence hierarchy — [go-issue-antiviral-nucleic-acid-defense.md](SNIPE/go-issue-antiviral-nucleic-acid-defense.md)
+- [x] Run architecture-aware InterPro analysis for IPR025280 — [go-issue-antiviral-nucleic-acid-defense-bioinformatics.md](SNIPE/go-issue-antiviral-nucleic-acid-defense-bioinformatics.md)
 
 ## Pending
-- [ ] Check current GO annotations for SNIPE homologues
-- [ ] Review SNIPE homologue diversity and domain architecture annotations in InterPro
+- [ ] Check current GO annotations for `SNIPE` homologues
 - [ ] Cross-reference with DefenseFinder database entries
-- [ ] Propose InterPro2GO mappings for PF13250/IPR025280 (currently none exist)
+- [ ] Propose architecture-aware InterPro2GO mappings for PF13250/IPR025280
 - [ ] Add literature references to IPR025280 (currently none linked)
-- [ ] Flag GIY-YIG InterPro-to-GO misannotation concern (IPR047296 → GO:0006289)
-
-Last updated: 2026-03-01
 
 # NOTES
 
