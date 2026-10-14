@@ -67,7 +67,6 @@ def gene_reviews():
         anns = doc.get("existing_annotations") or []
         actions = Counter()
         ev_class = Counter()
-        aspects = Counter()
         pending = 0
         for a in anns:
             act = (a.get("review") or {}).get("action") or "NONE"
