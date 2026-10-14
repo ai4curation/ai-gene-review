@@ -60,7 +60,8 @@ record, the cached publications cited in GOA, and one additional primary paper
   Note: the full text of PMID:24108241 uses P. berghei and T. gondii mutants; I found no
   P. falciparum experiment, so the IDA `host cell surface binding` on PfAMA1 is a
   cross-species inference from a knockout adhesion phenotype. The function is still
-  plausible for PfAMA1 via RON2 binding, so I keep it as non-core rather than removing.
+  plausible for PfAMA1 via RON2 binding and is supported by the P. falciparum
+  structural work, so it is accepted as the core molecular function.
   Yap et al. discuss that residual AMA1 or compensation (e.g., by the paralog-like
   AMA1 homologues/MAEBL in the KO lines) may explain the discrepancy
   [PMID:24571085 "Since these merozoites could still invade despite not having any detectable AMA1 these authors concluded that AMA1 was not essential for tight junction formation or invasion (Bargieri et al."]
@@ -77,10 +78,14 @@ record, the cached publications cited in GOA, and one additional primary paper
 
 | Term | Evidence | Action |
 |---|---|---|
-| protein binding (RON4) | IPI | KEEP_AS_NON_CORE |
-| protein binding (RON2) | IPI | KEEP_AS_NON_CORE |
+| protein binding (RON4) | IPI | MODIFY -> host cell surface binding |
+| protein binding (RON2) | IPI | MODIFY -> host cell surface binding |
 | membrane | IEA | MODIFY -> plasma membrane |
 | apical complex | TAS | MODIFY -> microneme |
 | microneme | IDA | ACCEPT |
 | symbiont entry into host | IMP | ACCEPT |
 | host cell surface binding | IDA | ACCEPT (core MF via RON2 binding at the host membrane) |
+
+Also proposed a new cellular component term for the apicomplexan moving (tight)
+junction, since OLS returned no GO term for it and it is the structure in which AMA1
+actually acts.
