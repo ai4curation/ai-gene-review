@@ -7,6 +7,10 @@ last_reviewed: 2026-10-14
 # Bare symbols here span many species (ddb-1, Hspa8, SecA ...); prose
 # auto-linking would mis-target, so keep it off.
 autolink_gene_symbols: false
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/5Le1BXcjqJRPs26BDPuuBb
+      title: Project brief
 ---
 
 # eggNOG-mapper Evaluation
