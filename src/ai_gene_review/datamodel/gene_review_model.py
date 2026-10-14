@@ -105,6 +105,60 @@ linkml_meta = LinkMLMeta({'default_prefix': 'gene_review',
                           'prefix_reference': 'http://www.w3.org/2001/XMLSchema#'}},
      'source_file': 'src/ai_gene_review/schema/gene_review.yaml'} )
 
+class ExecutableModelTypeEnum(str, Enum):
+    """
+    The modelling formalism of an executable model.
+    """
+    BOOLEAN = "BOOLEAN"
+    """
+    Logical (Boolean or multi-valued) network.
+    """
+    KINETIC = "KINETIC"
+    """
+    Kinetic model of reaction rates (ODE or stochastic).
+    """
+    CONSTRAINT_BASED = "CONSTRAINT_BASED"
+    """
+    Constraint-based / flux-balance model, including genome-scale metabolic models.
+    """
+    AGENT_BASED = "AGENT_BASED"
+    """
+    Agent-based model of cells or molecules.
+    """
+    OTHER = "OTHER"
+    """
+    Any other executable formalism.
+    """
+
+
+class ModelDerivationEnum(str, Enum):
+    """
+    Where an executable model comes from.
+    """
+    DERIVED_FROM_MODULE = "DERIVED_FROM_MODULE"
+    """
+    Generated deterministically from the module document; never edited by hand.
+    """
+    EXTERNAL = "EXTERNAL"
+    """
+    A published or third-party model associated with the module through a reviewed mapping.
+    """
+
+
+class AttractorKindEnum(str, Enum):
+    """
+    Long-term behaviour of a dynamical model under a scenario.
+    """
+    FIXED_POINT = "FIXED_POINT"
+    """
+    A stable steady state in which no element changes.
+    """
+    CYCLIC = "CYCLIC"
+    """
+    A complex attractor in which some elements keep changing. In a Boolean model under negative feedback this reads as "no sustained steady state" (a pulse, adaptation or oscillation), not as a claim that cells oscillate.
+    """
+
+
 class ModuleScopeEnum(str, Enum):
     """
     How concrete the module document is expected to be.
@@ -1733,6 +1787,8 @@ class GeneReview(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1759,6 +1815,8 @@ class GeneReview(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -1832,6 +1890,8 @@ class AlternativeProduct(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1846,6 +1906,8 @@ class AlternativeProduct(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -1872,6 +1934,8 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1889,6 +1953,8 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -1934,6 +2000,8 @@ class Term(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1942,6 +2010,7 @@ class Term(ConfiguredBaseModel):
                        'PredictionReview']} })
     label: str = Field(default=..., description="""the term name""", json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1954,6 +2023,8 @@ class Term(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -1981,6 +2052,8 @@ class Reference(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1991,6 +2064,7 @@ class Reference(ConfiguredBaseModel):
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['Reference',
                        'EvidenceItem',
                        'ModuleReview',
+                       'ExecutableModel',
                        'GoCamAssociation',
                        'GoCamReview'],
          'slot_uri': 'dcterms:title'} })
@@ -2105,6 +2179,7 @@ class EvidenceItem(ConfiguredBaseModel):
     title: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Reference',
                        'EvidenceItem',
                        'ModuleReview',
+                       'ExecutableModel',
                        'GoCamAssociation',
                        'GoCamReview']} })
     statement: Optional[str] = Field(default=None, description="""The assertion this evidence supports in this module.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'EvidenceItem']} })
@@ -2117,6 +2192,7 @@ class EvidenceItem(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2149,6 +2225,8 @@ class Descriptor(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2162,6 +2240,8 @@ class Descriptor(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2175,6 +2255,7 @@ class Descriptor(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2207,6 +2288,8 @@ class ChemicalEntityDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2220,6 +2303,8 @@ class ChemicalEntityDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2233,6 +2318,7 @@ class ChemicalEntityDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2265,6 +2351,8 @@ class GeneDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2278,6 +2366,8 @@ class GeneDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2291,6 +2381,7 @@ class GeneDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2323,6 +2414,8 @@ class GeneProductDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2336,6 +2429,8 @@ class GeneProductDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2349,6 +2444,7 @@ class GeneProductDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2384,6 +2480,8 @@ class FamilyDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2397,6 +2495,8 @@ class FamilyDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2410,6 +2510,7 @@ class FamilyDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2442,6 +2543,8 @@ class AncestralNodeDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2455,6 +2558,8 @@ class AncestralNodeDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2468,6 +2573,7 @@ class AncestralNodeDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2500,6 +2606,8 @@ class DomainDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2513,6 +2621,8 @@ class DomainDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2526,6 +2636,7 @@ class DomainDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2558,6 +2669,8 @@ class CellularComponentDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2571,6 +2684,8 @@ class CellularComponentDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2584,6 +2699,7 @@ class CellularComponentDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2617,6 +2733,8 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2630,6 +2748,8 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2643,6 +2763,7 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2675,6 +2796,8 @@ class ComplexUnit(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2683,6 +2806,7 @@ class ComplexUnit(ConfiguredBaseModel):
                        'PredictionReview']} })
     label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2695,6 +2819,8 @@ class ComplexUnit(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2708,6 +2834,7 @@ class ComplexUnit(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2740,6 +2867,8 @@ class CellTypeDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2753,6 +2882,8 @@ class CellTypeDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2766,6 +2897,7 @@ class CellTypeDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2798,6 +2930,8 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2811,6 +2945,8 @@ class AnatomicalEntityDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2824,6 +2960,7 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2856,6 +2993,8 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2869,6 +3008,8 @@ class DevelopmentalStageDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2882,6 +3023,7 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2914,6 +3056,8 @@ class TaxonDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2927,6 +3071,8 @@ class TaxonDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -2940,6 +3086,7 @@ class TaxonDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -2979,6 +3126,8 @@ class MolecularFunctionDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -2992,6 +3141,8 @@ class MolecularFunctionDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3005,6 +3156,7 @@ class MolecularFunctionDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3042,6 +3194,8 @@ class BiologicalProcessDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3055,6 +3209,8 @@ class BiologicalProcessDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3068,6 +3224,7 @@ class BiologicalProcessDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3100,6 +3257,8 @@ class RelationDescriptor(Descriptor):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3113,6 +3272,8 @@ class RelationDescriptor(Descriptor):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3126,6 +3287,7 @@ class RelationDescriptor(Descriptor):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3158,6 +3320,8 @@ class ModuleReview(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3167,6 +3331,7 @@ class ModuleReview(ConfiguredBaseModel):
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['Reference',
                        'EvidenceItem',
                        'ModuleReview',
+                       'ExecutableModel',
                        'GoCamAssociation',
                        'GoCamReview'],
          'slot_uri': 'dcterms:title'} })
@@ -3176,6 +3341,8 @@ class ModuleReview(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3205,9 +3372,12 @@ class ModuleReview(ConfiguredBaseModel):
                        'PredictionReview']} })
     scope: Optional[ModuleScopeEnum] = Field(default=None, description="""Whether this module is a concrete biological realization or an abstract reusable motif/template. ABSTRACT modules are intentionally gene-free and are not expected to declare representative protein members for every leaf node.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview']} })
     module: ModuleNode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview']} })
+    executable_models: Optional[list[ExecutableModel]] = Field(default=None, description="""Executable models (Boolean, kinetic, constraint-based, agent-based) that realize this module, either derived from its own `connections` or associated external models. List a model only once its behaviour has been checked: each entry carries the scenarios it was run under and what the module predicts in each, so the expectation is a regression test on the curated wiring.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3221,6 +3391,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3238,6 +3409,193 @@ class ModuleReview(ConfiguredBaseModel):
                        'ConditionOverlapAssessment',
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
+
+
+class LogicExpression(ConfiguredBaseModel):
+    """
+    A Boolean expression over module element ids, written declaratively as a tree. Exactly one of `element`, `all_of`, `any_of` or `none_of` is set. `none_of: [x]` is NOT x; `none_of: [x, y]` is NOT (x OR y).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    element: Optional[str] = Field(default=None, description="""Id of a module node or annoton (a regulator of the element that owns this expression).""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting']} })
+    all_of: Optional[list[LogicExpression]] = Field(default=None, description="""Conjunction (AND) of the sub-expressions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression']} })
+    any_of: Optional[list[LogicExpression]] = Field(default=None, description="""Disjunction (OR) of the sub-expressions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression']} })
+    none_of: Optional[list[LogicExpression]] = Field(default=None, description="""Negated disjunction (NOT (a OR b ...)) of the sub-expressions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression']} })
+
+
+class ExecutableModel(ConfiguredBaseModel):
+    """
+    An executable model of a module: a Boolean network, kinetic (ODE) model, constraint-based (FBA/genome-scale) model or agent-based model, with the scenarios it has been run under. A model DERIVED_FROM_MODULE is generated from the module's own `connections` (and any `activation_logic`) and is never edited by hand; corrections go into the module. An EXTERNAL model is a published model associated with the module through a reviewed mapping, and is evidence for the module's wiring, not a replacement.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'AlternativeProduct',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Reference',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'RuleReview',
+                       'RuleReviewEntry',
+                       'PredictionReview']} })
+    title: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Reference',
+                       'EvidenceItem',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'GoCamAssociation',
+                       'GoCamReview']} })
+    model_type: ExecutableModelTypeEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExecutableModel']} })
+    derivation: ModelDerivationEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExecutableModel']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'AlternativeProduct',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Descriptor',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'GoCamAssociation',
+                       'GoCamReview',
+                       'ParticipantSelector',
+                       'ModuleConnection',
+                       'CoreFunction',
+                       'Experiment',
+                       'RuleReview',
+                       'PredictionReview']} })
+    files: Optional[list[str]] = Field(default=None, description="""Repository-relative paths of model files (e.g. an external `.bnet` or SBML snapshot, or a committed export of a derived model).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExecutableModel']} })
+    scenarios: Optional[list[ModelScenario]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExecutableModel']} })
+    evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection']} })
+    notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModuleNode',
+                       'Conformance',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'GoCamReview',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'RuleConditionSet',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment']} })
+
+
+class ModelScenario(ConfiguredBaseModel):
+    """
+    A named run of an executable model: which elements are held fixed (a stimulus, a knockout, a constitutively active mutant), which connections are removed (a counterfactual), and the behaviour the curated wiring is expected to produce. For Boolean models the expectation is checked against the asynchronous attractors.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'AlternativeProduct',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Reference',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'RuleReview',
+                       'RuleReviewEntry',
+                       'PredictionReview']} })
+    label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
+                       'ComplexUnit',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'RuleCondition',
+                       'RuleReviewEntry']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'AlternativeProduct',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Descriptor',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'GoCamAssociation',
+                       'GoCamReview',
+                       'ParticipantSelector',
+                       'ModuleConnection',
+                       'CoreFunction',
+                       'Experiment',
+                       'RuleReview',
+                       'PredictionReview']} })
+    settings: Optional[list[ScenarioSetting]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    removed_connections: Optional[list[ConnectionReference]] = Field(default=None, description="""Connections dropped for this scenario, e.g. to show what the module predicted before a feedback loop was curated in.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_attractor_kind: Optional[AttractorKindEnum] = Field(default=None, description="""The kind of every attractor the scenario is expected to reach.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_attractor_count: Optional[int] = Field(default=None, description="""The expected number of attractors (1 = no multistability).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_active: Optional[list[str]] = Field(default=None, description="""Elements expected to be active in every state of every attractor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_inactive: Optional[list[str]] = Field(default=None, description="""Elements expected to be inactive in every state of every attractor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_oscillating: Optional[list[str]] = Field(default=None, description="""Elements expected to change value within an attractor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection']} })
+
+
+class ScenarioSetting(ConfiguredBaseModel):
+    """
+    An element held at a fixed value for a scenario.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    element: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting']} })
+    active: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioSetting']} })
+
+
+class ConnectionReference(ConfiguredBaseModel):
+    """
+    A reference to a module connection by its endpoints.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    source: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'RuleReviewEntry']} })
+    target: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'ResidueClaim']} })
 
 
 class ModuleNode(ConfiguredBaseModel):
@@ -3258,6 +3616,8 @@ class ModuleNode(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3266,6 +3626,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'PredictionReview']} })
     label: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3278,6 +3639,8 @@ class ModuleNode(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3294,10 +3657,13 @@ class ModuleNode(ConfiguredBaseModel):
     variant_sets: Optional[list[ModuleVariantSet]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     connections: Optional[list[ModuleConnection]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     conforms_to: Optional[list[Conformance]] = Field(default=None, description="""Reusable template motifs that this node (together with its parts and connections) is an instance of. Conformance is a compositional, bundle-scoped consistency check: a concrete cascade may freely extend its start and end, while an inner sub-bundle node declares that its parts match a generic motif (e.g. the three-tier MAP kinase relay).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
+    activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM models (or specific activities) that realize this module node as a whole.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3311,6 +3677,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3349,6 +3716,7 @@ class Conformance(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3381,6 +3749,8 @@ class ModulePart(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3394,6 +3764,7 @@ class ModulePart(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3426,6 +3797,8 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3434,6 +3807,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'PredictionReview']} })
     label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3445,6 +3819,8 @@ class ModuleVariantSet(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3458,6 +3834,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3490,6 +3867,8 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3498,6 +3877,7 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'PredictionReview']} })
     label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3508,10 +3888,13 @@ class ModuleAnnoton(ConfiguredBaseModel):
     processes: Optional[list[BiologicalProcessDescriptor]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton']} })
     locations: Optional[list[CellularComponentDescriptor]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton', 'CoreFunction']} })
     role_description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton']} })
+    activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM model activities (annotons) that realize this module annoton. Used to ground an abstract/non-grounded module role in concrete curated causal activity models.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3525,6 +3908,7 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3555,6 +3939,7 @@ class GoCamAssociation(ConfiguredBaseModel):
     title: Optional[str] = Field(default=None, description="""Cached model title, recorded for human readability.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Reference',
                        'EvidenceItem',
                        'ModuleReview',
+                       'ExecutableModel',
                        'GoCamAssociation',
                        'GoCamReview']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
@@ -3563,6 +3948,8 @@ class GoCamAssociation(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3575,6 +3962,8 @@ class GoCamAssociation(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3588,6 +3977,7 @@ class GoCamAssociation(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3616,6 +4006,7 @@ class GoCamReview(ConfiguredBaseModel):
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['Reference',
                        'EvidenceItem',
                        'ModuleReview',
+                       'ExecutableModel',
                        'GoCamAssociation',
                        'GoCamReview'],
          'slot_uri': 'dcterms:title'} })
@@ -3625,6 +4016,8 @@ class GoCamReview(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3661,6 +4054,7 @@ class GoCamReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3702,6 +4096,8 @@ class GoCamActivityReview(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3715,6 +4111,7 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3760,6 +4157,8 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3772,6 +4171,8 @@ class ParticipantSelector(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3785,6 +4186,7 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3819,6 +4221,8 @@ class ModuleContext(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3832,6 +4236,7 @@ class ModuleContext(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -3857,8 +4262,8 @@ class ModuleConnection(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    source: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'RuleReviewEntry']} })
-    target: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'ResidueClaim']} })
+    source: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'RuleReviewEntry']} })
+    target: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'ResidueClaim']} })
     connection_type: Optional[ModuleConnectionTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection']} })
     predicate: Optional[RelationDescriptor] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'AnnotationExtension', 'TermMapping']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
@@ -3867,6 +4272,8 @@ class ModuleConnection(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -3880,6 +4287,8 @@ class ModuleConnection(ConfiguredBaseModel):
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModulePart',
                        'ModuleVariantSet',
@@ -3895,6 +4304,7 @@ class ModuleConnection(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4010,7 +4420,7 @@ class ResidueClaim(ConfiguredBaseModel):
     claim_type: ResidueClaimEnum = Field(default=..., description="""Whether the target lost, retained, or substituted the residue.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
     site_ref: Optional[str] = Field(default=None, description="""Optional reference to a curated family-level residue site, as ``<family_id>#<site_id>`` (e.g. PANTHER:PTHR11022#zn_triad). When given, the validator additionally checks that the site exists in that family review and that the anchor position is one the site declares -- which is what stops a gene review and a family review drifting apart.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
     anchor: ResiduePosition = Field(default=..., description="""The comparator: a protein known to have the functional residue, and where.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
-    target: Optional[ResiduePosition] = Field(default=None, description="""The corresponding position in this gene's own protein. Omit only when the region is unalignable, in which case say so in comment; a missing target is weaker evidence than a stated substitution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'ResidueClaim']} })
+    target: Optional[ResiduePosition] = Field(default=None, description="""The corresponding position in this gene's own protein. Omit only when the region is unalignable, in which case say so in comment; a missing target is weaker evidence than a stated substitution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'ResidueClaim']} })
     role: Optional[str] = Field(default=None, description="""Mechanistic role of the anchor residue (e.g. \"metal ligand\", \"nucleophile\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['ComplexUnit', 'ModulePart', 'ResidueClaim']} })
     method: ResidueClaimMethodEnum = Field(default=..., description="""How the correspondence between anchor and target positions was established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
     alignment_release: Optional[str] = Field(default=None, description="""Version of the alignment *resource* the correspondence was taken from, when one exists -- e.g. \"PANTHER 19.0\" or \"Pfam 37.0\". A tool name or a script path is not a release and does not belong here; put that in comment.
@@ -4087,6 +4497,8 @@ class CoreFunction(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -4218,6 +4630,8 @@ class Experiment(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -4256,6 +4670,8 @@ class RuleReview(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4268,6 +4684,8 @@ class RuleReview(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -4344,6 +4762,7 @@ class RuleConditionSet(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4375,6 +4794,7 @@ class RuleCondition(ConfiguredBaseModel):
     curie: Optional[str] = Field(default=None, description="""Normalized CURIE form (e.g., InterPro:IPR000001, NCBITaxon:4751)""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleCondition']} })
     label: Optional[str] = Field(default=None, description="""Human-readable label""", json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4436,6 +4856,8 @@ class RuleReviewEntry(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4444,6 +4866,7 @@ class RuleReviewEntry(ConfiguredBaseModel):
                        'PredictionReview']} })
     label: Optional[str] = Field(default=None, description="""Human-readable name""", json_schema_extra = { "linkml_meta": {'domain_of': ['Term',
                        'ComplexUnit',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4454,7 +4877,7 @@ class RuleReviewEntry(ConfiguredBaseModel):
                        'RuleReviewEntry']} })
     appears_in_condition_sets: Optional[list[int]] = Field(default=None, description="""Which condition sets (1-based) contain this entry (for domain conditions only)""", ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewEntry']} })
     protein_count: Optional[int] = Field(default=None, description="""Number of proteins matching this condition (from SwissProt)""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleCondition', 'RuleReviewEntry']} })
-    source: Optional[str] = Field(default=None, description="""Source of this entry if external to the rule (e.g., 'ipr2go' for InterPro entries that map to the same GO term via InterPro2GO but are not part of any condition set)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'RuleReviewEntry']} })
+    source: Optional[str] = Field(default=None, description="""Source of this entry if external to the rule (e.g., 'ipr2go' for InterPro entries that map to the same GO term via InterPro2GO but are not part of any condition set)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'RuleReviewEntry']} })
     asserted_predicted_go_terms: Optional[list[str]] = Field(default=None, description="""GO terms that this entry maps to via external mappings (e.g., ipr2go). Only populated for external entries not in the rule's condition sets.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewEntry']} })
     related_entries: Optional[list[RelatedEntry]] = Field(default=None, description="""Relationships to other entries in the rule""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewEntry']} })
 
@@ -4515,6 +4938,7 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4561,6 +4985,7 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4607,6 +5032,7 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4653,6 +5079,7 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4699,6 +5126,7 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'Descriptor',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
                        'ModuleNode',
                        'Conformance',
                        'ModulePart',
@@ -4748,6 +5176,8 @@ class PredictionReview(ConfiguredBaseModel):
                        'Reference',
                        'ComplexUnit',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4768,6 +5198,8 @@ class PredictionReview(ConfiguredBaseModel):
                        'Term',
                        'Descriptor',
                        'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
                        'ModuleNode',
                        'GoCamAssociation',
                        'GoCamReview',
@@ -4874,6 +5306,11 @@ MolecularFunctionDescriptor.model_rebuild()
 BiologicalProcessDescriptor.model_rebuild()
 RelationDescriptor.model_rebuild()
 ModuleReview.model_rebuild()
+LogicExpression.model_rebuild()
+ExecutableModel.model_rebuild()
+ModelScenario.model_rebuild()
+ScenarioSetting.model_rebuild()
+ConnectionReference.model_rebuild()
 ModuleNode.model_rebuild()
 Conformance.model_rebuild()
 ModulePart.model_rebuild()
