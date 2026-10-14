@@ -23,3 +23,13 @@ The author urinary-exosome database contains CTSA/NP_000299 with three peptides 
 All 30 seeded source objects and both product identities are preserved. The first complete draft has 19 ACCEPT, 3 MODIFY, 6 KEEP_AS_NON_CORE and 2 UNDECIDED decisions, two complementary cores and no NEW assertion. The 3 broad-to-specific refinements overlap existing serine-carboxypeptidase or negative-CMA annotations while preserving each independent source assertion. Raw GOA, tree, rule and donor dumps remain in the working evidence packet; the public index summarizes checkable source locations and limits.
 
 The lysosomal Reactome paths establish compartment and modeled complex membership. The direct activation experiment concerns NEU1, while GLB1 protection is a distinct role; CTSA-mediated activation of NEU4 is not inferred from those paths.
+
+## CTSA follow-up, 2026-10-14
+
+The missing terminal deamidase activity is now explicit. PMID:1694176 reports human platelet enzyme converting selected peptide amides to free acids; product identification and processed-chain sequence comparison were read in the indexed original. Its normal cache remains abstract-only. No physiological pathway or splice-product equivalence is inferred. PMID:2244901 also reports esterase/deamidase deficiency, not only carboxypeptidase deficiency.
+
+Current OLS/QuickGO searches did not settle a precise mapping. GO:0004040 describes monocarboxylic acid amide hydrolysis, while GO:0008242 concerns nonstandard peptide bonds and substituted amino-acid release. Broad amidase compatibility with peptide carboxamides remains an ontology question; a missing exact label is not a demonstrated gap. No NEW annotation or new term is asserted.
+
+The public index now supplies the actual Erasmus JBC PDF and Galjart thesis locators for the prior original-source reads. PMID:8591035 was genuinely cached and its complete abstract and selected indexed introduction inspected: the new structural result concerns the human CTSA precursor cleft. It does not replace PMID:37205763 as direct NEU1 activation evidence. The original methods of PMID:2244901 and 3107551 remain inaccessible.
+
+Rows 10 and 13 move from ACCEPT to KEEP_AS_NON_CORE. ER localization is a positive biosynthetic pool. The transport assertion retains the performed CTSA–GLB1 assembly/co-retention evidence, with no obligatory receptor claim; it is contextual to the two mature lysosomal core activities. Core wording now separates NEU1 activation from GLB1 stabilization. All 30 source objects, both products, eight existing excerpts and the entire previous notes prefix are preserved. No new quotation is added.
