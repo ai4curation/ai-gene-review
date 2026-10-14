@@ -91,6 +91,7 @@ SUPPORT_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW"}
 DOWNGRADE_ACTIONS = {"MARK_AS_OVER_ANNOTATED", "TOO_GENERAL", "UNDECIDED"}
 NS = {"biological_process": "BP", "molecular_function": "MF", "cellular_component": "CC"}
 ROOTS = {"GO:0008150", "GO:0003674", "GO:0005575"}
+PLACEHOLDER_REMOVALS = ROOTS | {"GO:0005488", "GO:0005515"}  # binding, protein binding
 
 
 class GO:
@@ -222,7 +223,7 @@ def review_sets(doc: dict, go: GO):
     support |= core
     # A term both supported and rejected (e.g. REMOVE on one evidence row, ACCEPT on
     # another) is a claim the review upholds; it is not counted as rejected.
-    reject -= support
+    reject -= support | PLACEHOLDER_REMOVALS
     down -= support
     return support, down, reject, core
 

@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """Tally the manual adjudication batches (batch_*.yaml) into summary.yaml:
-assessment counts per automatic category, and error-type counts."""
+assessment counts per automatic category, and error-type counts.
+
+Claims are tallied under their *current* automatic category, re-read from
+results/species_excluded_leaf_scores.tsv: the sample was drawn before
+placeholder removals (aspect roots, protein binding) stopped counting as
+rejections, so a few claims drawn as REJECTED are now in another category.
+The category at draw time stays in each batch file."""
+import csv
 import glob
 import os
 from collections import Counter, defaultdict
@@ -11,6 +18,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 claims = []
 for path in sorted(glob.glob(os.path.join(HERE, "batch_*.yaml"))):
     claims += yaml.safe_load(open(path))["claims"]
+current = {(r["accession"], r["term_id"]): r["category"] for r in csv.DictReader(
+    open(os.path.join(HERE, "..", "results", "species_excluded_leaf_scores.tsv")), delimiter="\t")}
+recategorised = []
+for c in claims:
+    now = current.get((c["accession"], c["term"]["id"]), "NOT_A_LEAF")
+    if now != c["category"]:
+        recategorised.append({"claim_id": c["claim_id"], "drawn_as": c["category"], "now": now})
+    c["category"] = now
 missing = [c["claim_id"] for c in claims if not c.get("assessment")]
 by_cat: dict[str, Counter] = defaultdict(Counter)
 errors: Counter = Counter()
@@ -21,6 +36,7 @@ for c in claims:
 out = {
     "claims": len(claims),
     "unassessed": missing,
+    "recategorised": recategorised,
     "assessment_by_category": {k: dict(sorted(v.items())) for k, v in sorted(by_cat.items())},
     "assessment_overall": dict(sorted(Counter(c.get("assessment") or "MISSING" for c in claims).items())),
     "error_types": dict(errors.most_common()),
