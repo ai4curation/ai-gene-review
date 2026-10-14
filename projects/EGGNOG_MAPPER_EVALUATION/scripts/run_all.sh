@@ -34,7 +34,7 @@ SEEDS="$W/search/cohort.emapper.seed_orthologs"
 
 RUN="$PY $P/scripts/run_emapper.py --zchunk $W/db/eggnog.db --"
 $RUN -m no_search --annotate_hits_table "$SEEDS" --data_dir "$W/db" -o default \
-    --output_dir "$P/runs/default" --cpu 1 --override --report_orthologs
+    --output_dir "$P/runs/default" --cpu 1 --mp_start_method fork --override
 
 # species-excluded: one annotation run per species
 "$PY" "$P/scripts/species_taxa.py" "$W/db/eggnog.taxa.db"
@@ -42,6 +42,18 @@ $RUN -m no_search --annotate_hits_table "$SEEDS" --data_dir "$W/db" -o default \
 for f in "$W"/search/by_species/*.seed_orthologs; do
   sp=$(basename "$f" .seed_orthologs)
   $RUN -m no_search --annotate_hits_table "$f" --data_dir "$W/db" -o "sp$sp" \
-      --output_dir "$W/search/by_species" --cpu 1 --override --excluded_taxa "$sp" >/dev/null
+      --output_dir "$W/search/by_species" --cpu 1 --mp_start_method fork --override --excluded_taxa "$sp" >/dev/null
 done
 "$PY" "$P/scripts/merge_annotations.py" "$W/search/by_species" "$P/runs/species_excluded/species_excluded.emapper.annotations"
+
+# species-excluded, experimental GO evidence only (no ISS/ISO/IBA/TAS/IC transfers)
+mkdir -p "$W/search/by_species_exp" "$P/runs/species_excluded_experimental"
+cp "$W"/search/by_species/*.seed_orthologs "$W/search/by_species_exp/"
+for f in "$W"/search/by_species_exp/*.seed_orthologs; do
+  sp=$(basename "$f" .seed_orthologs)
+  $RUN -m no_search --annotate_hits_table "$f" --data_dir "$W/db" -o "sp$sp" \
+      --output_dir "$W/search/by_species_exp" --cpu 1 --mp_start_method fork --override \
+      --excluded_taxa "$sp" --go_evidence experimental >/dev/null
+done
+"$PY" "$P/scripts/merge_annotations.py" "$W/search/by_species_exp" \
+    "$P/runs/species_excluded_experimental/species_excluded_experimental.emapper.annotations"

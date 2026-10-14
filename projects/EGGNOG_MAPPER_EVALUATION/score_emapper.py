@@ -2,9 +2,15 @@
 """Score eggNOG-mapper GO predictions against AIGR gene reviews.
 
 eggNOG-mapper reports, per query, the GO terms of its orthologs already
-propagated up the ontology. Each prediction set is first reduced to its
-**leaf terms** (no predicted term is an ancestor of another), and each leaf is
-compared, through the GO is_a/part_of closure, with the review's adjudicated
+propagated up the ontology -- with the GO release current when the eggNOG 5.0.2
+database was built, not today's. Each prediction set is first reduced to its
+**leaf terms**: a predicted term is dropped when it is an ancestor of another
+predicted term under the 2019-07-01, 2020-12-08 *or* current release. Using the
+older releases matters: grouping classes such as "heterocyclic compound binding"
+have since lost their links to specific terms and would otherwise surface as
+spurious leaves. Leaf ids are then mapped to the current release (alt_id and
+replaced_by followed; obsolete terms without a replacement are counted and
+dropped), and each leaf is compared, through the GO is_a/part_of closure, with the review's adjudicated
 terms:
 
   SUPPORTED_SET  ACCEPT / KEEP_AS_NON_CORE / NEW rows, MODIFY replacement
@@ -50,10 +56,35 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from ai_gene_review.bioreason_ontology import GO_RELEASE, ensure_frozen_go  # noqa: E402
 
+# GO releases bracketing the eggNOG 5.0.2 annotation build, used only for leaf reduction.
+LEGACY_GO = {
+    "2019-07-01": "f96adc6c08a1030fee2fcb143271d4d671fb48ac45d2a20b3b23f7d61bcf17c1",
+    "2020-12-08": "bd6474bd048a67021b2cf482b056b1074ea8f96ddd60e6ae13e24af68cbe5c46",
+}
+
+
+def legacy_go_paths() -> list[str]:
+    import hashlib
+    import urllib.request
+    paths = []
+    for rel, sha in LEGACY_GO.items():
+        path = os.path.join(ROOT, "cache", "ontologies", f"go-basic-{rel}.obo")
+        if not os.path.exists(path):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            urllib.request.urlretrieve(
+                f"https://release.geneontology.org/{rel}/ontology/go-basic.obo", path)
+        digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
+        if digest != sha:
+            raise RuntimeError(f"checksum mismatch for {path}")
+        paths.append(path)
+    return paths
+
 LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 RUNS = {
     "default": "all orthologs (emapper defaults)",
     "species_excluded": "orthologs from the query's own species excluded (--excluded_taxa)",
+    "species_excluded_experimental": ("own species excluded, experimental GO evidence only "
+                                      "(--go_evidence experimental)"),
 }
 CATEGORIES = ["EXACT", "BROADER", "NARROWER", "DOWNGRADED", "REJECTED", "UNRELATED"]
 SUPPORT_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW"}
@@ -118,11 +149,38 @@ class GO:
             self._anc[t] = frozenset(out)
         return self._anc[t]
 
-    def leaves(self, terms: set[str]) -> set[str]:
-        covered = set()
-        for t in terms:
-            covered |= self.ancestors(t) - {t}
-        return terms - covered
+
+
+def leaf_terms(raw: set[str], go: GO, legacy: list[GO]):
+    """Reduce emapper's propagated raw ids to current-release leaf terms.
+
+    Returns (leaves, closure, n_obsolete_leaves): ``closure`` is the current-release
+    ancestor closure of every mappable predicted term."""
+    covered: set[str] = set()
+    for u in raw:
+        for g in legacy:
+            covered |= g.ancestors(u) - {u}
+        n = go.norm(u)
+        if n:
+            covered |= go.ancestors(n) - {n}
+    leaves, obsolete = set(), 0
+    for t in raw - covered:
+        n = go.norm(t)
+        if n is None:
+            obsolete += 1
+        elif n not in ROOTS:
+            leaves.add(n)
+    # a raw leaf may map onto an ancestor of another leaf after replaced_by/alt_id
+    cov_now = set()
+    for t in leaves:
+        cov_now |= go.ancestors(t) - {t}
+    leaves -= cov_now
+    closure = set()
+    for u in raw:
+        n = go.norm(u)
+        if n:
+            closure |= go.ancestors(n)
+    return leaves, closure, obsolete
 
 
 def review_sets(doc: dict, go: GO):
@@ -201,6 +259,7 @@ def read_annotations(path: str) -> dict[str, dict]:
 
 def main() -> None:
     go = GO(str(ensure_frozen_go()))
+    legacy = [GO(p) for p in legacy_go_paths()]
     with open(os.path.join(HERE, "cohort.yaml")) as fh:
         cohort = yaml.safe_load(fh)["proteins"]
     reviews = {}
@@ -209,7 +268,7 @@ def main() -> None:
             reviews[rec["accession"]] = review_sets(yaml.load(fh, Loader=LOADER), go)
 
     os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
-    summary = {"go_release": GO_RELEASE, "cohort_size": len(cohort), "runs": {}}
+    summary = {"go_release": GO_RELEASE, "leaf_reduction_releases": sorted(LEGACY_GO) + [GO_RELEASE], "cohort_size": len(cohort), "runs": {}}
     for run, desc in RUNS.items():
         ann_path = os.path.join(HERE, "runs", run, f"{run}.emapper.annotations")
         if not os.path.exists(ann_path):
@@ -218,24 +277,14 @@ def main() -> None:
         ann = read_annotations(ann_path)
         leaf_rows, prot_rows = [], []
         cat_ns = Counter()
-        unmapped_terms = Counter()
+        obsolete_leaves = 0
         for rec in cohort:
             acc = rec["accession"]
             support, down, reject, core = reviews[acc]
             row = ann.get(acc)
             raw = [] if row is None or row.get("GOs", "-") in ("-", "") else row["GOs"].split(",")
-            pred = set()
-            for t in raw:
-                n = go.norm(t)
-                if n:
-                    pred.add(n)
-                else:
-                    unmapped_terms[t] += 1
-            pred -= ROOTS
-            leaves = go.leaves(pred)
-            closure = set()
-            for t in pred:
-                closure |= go.ancestors(t)
+            leaves, closure, n_obs = leaf_terms(set(raw), go, legacy)
+            obsolete_leaves += n_obs
             cats = Counter()
             for leaf in sorted(leaves):
                 c = categorize(leaf, support, down, reject, go)
@@ -252,7 +301,7 @@ def main() -> None:
                 "seed_ortholog": (row or {}).get("seed_ortholog", ""),
                 "max_annot_lvl": (row or {}).get("max_annot_lvl", ""),
                 "preferred_name": (row or {}).get("Preferred_name", ""),
-                "n_go_propagated": len(pred), "n_leaves": len(leaves),
+                "n_go_propagated": len(set(raw)), "n_leaves": len(leaves),
                 **{c.lower(): cats[c] for c in CATEGORIES},
                 "n_core_terms": len(core), "n_core_recovered": len(core_hit),
                 "core_missed": ";".join(sorted(core - core_hit))})
@@ -286,7 +335,7 @@ def main() -> None:
                 a: {c: cat_ns[(a, c)] for c in CATEGORIES} for a in ("MF", "BP", "CC")},
             "core_terms": core_total, "core_terms_recovered": core_hit,
             "core_recall": round(core_hit / core_total, 3) if core_total else None,
-            "unmapped_obsolete_terms": sum(unmapped_terms.values()),
+            "obsolete_leaves_dropped": obsolete_leaves,
             "by_stratum": by_stratum,
         }
         print(run, yaml.safe_dump(summary["runs"][run]["leaf_categories"]), core_hit, core_total)

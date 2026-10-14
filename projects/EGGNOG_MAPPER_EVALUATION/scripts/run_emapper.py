@@ -9,6 +9,14 @@ read-only to SQLite through an apsw VFS. Bytes returned to SQLite are identical
 to the original file, so emapper's queries and results are unchanged; only
 ``AnnotDB.__init__`` is replaced, to open the connection through that VFS.
 
+One emapper bug is also fixed here. ``normalize_target_taxa`` (used for
+``--excluded_taxa`` and ``--target_taxa``) expands each taxid to its
+*descendants only*, never the taxid itself: ``--excluded_taxa 9606`` excludes
+Neanderthal and Denisovan records but not human ones, and ``--target_taxa``
+likewise misses records filed at the named taxid. The patched version adds the
+taxid itself, which is what the option's help text ("taxa and all its
+descendants") describes.
+
 Usage (all ordinary emapper arguments are passed through):
   run_emapper.py --zchunk DATA_DIR/eggnog.db -- <emapper.py arguments>
 ``DATA_DIR`` must also hold ``eggnog_proteins.dmnd`` and ``eggnog.taxa.db``,
@@ -101,6 +109,20 @@ def install(base: str) -> None:
         self.conn.execute("PRAGMA cache_size=2000;")
 
     db_sqlite.AnnotDB.__init__ = __init__
+
+    from eggnogmapper.annotation import annotator
+    original = annotator.normalize_target_taxa
+
+    def normalize_target_taxa(target_taxa, ncbi):
+        expanded = original(target_taxa, ncbi)
+        for taxon in target_taxa:
+            try:
+                expanded.add(int(taxon))
+            except ValueError:
+                expanded.add(ncbi.get_name_translator([taxon])[taxon][0])
+        return expanded
+
+    annotator.normalize_target_taxa = normalize_target_taxa
 
 
 def main() -> None:
