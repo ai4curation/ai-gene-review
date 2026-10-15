@@ -53,25 +53,27 @@ fall inside this definition, but other projects already cover them (see
 
 Annotation counts from the QuickGO API, for the exact taxon of each strain
 (descendant taxa are not included). "Experimental" means evidence codes
-descending from ECO:0000269 (EXP, IDA, IPI, IMP, IGI, IEP).
+descending from ECO:0000269 (EXP, IDA, IPI, IMP, IGI, IEP). The review counts
+are current as of 2026-10-15; *T. brucei brucei* (TRYBB, taxon 5702) holds 3
+more and is not a row here because its annotations sit under the TREU927 strain.
 
 | Organism | Code | Taxon | Experimental | IBA | Our reviews |
 |---|---|---:|---:|---:|---:|
 | *Dictyostelium discoideum* | DICDI | 44689 | 10,128 | 19,137 | 62 |
-| *Trypanosoma brucei* TREU927 | TRYB2 | 185431 | 12,149 | 12,281 | 0 |
-| *Plasmodium falciparum* 3D7 | PLAF7 | 36329 | 2,830 | 9,002 | 0 |
+| *Trypanosoma brucei* TREU927 | TRYB2 | 185431 | 12,149 | 12,281 | 1 |
+| *Plasmodium falciparum* 3D7 | PLAF7 | 36329 | 2,830 | 9,002 | 11 |
 | *Chlamydomonas reinhardtii* | CHLRE | 3055 | 546 | 24,014 | 19 |
 | *Giardia intestinalis* WB | GIAIC | 184922 | 343 | 6,081 | 0 |
 | *Entamoeba histolytica* HM-1:IMSS | ENTH1 | 294381 | 197 | 13,213 | 0 |
 | *Plasmodium berghei* ANKA | PLABA | 5823 | 148 | 0 | 0 |
 | *Tetrahymena thermophila* SB210 | TETTS | 312017 | 124 | 0 | 0 |
-| *Toxoplasma gondii* ME49 | TOXGM | 508771 | 35 | 0 | 0 |
+| *Toxoplasma gondii* ME49 | TOXGM | 508771 | 35 | 0 | 2 |
 | *Trypanosoma cruzi* CL Brener | TRYCC | 353153 | 29 | 0 | 0 |
 | *Phaeodactylum tricornutum* | PHATC | 556484 | 17 | 0 | 1 |
 | *Paramecium tetraurelia* | PARTE | 5888 | 11 | 49,383 | 1 |
 | *Trichomonas vaginalis* G3 | TRIV3 | 412133 | 6 | 31,122 | 1 |
 | *Thalassiosira pseudonana* | THAPS | 35128 | 2 | 16,157 | 0 |
-| *Leishmania major* Friedlin | LEIMA | 347515 | 0 | 0 | 0 |
+| *Leishmania major* Friedlin | LEIMA | 347515 | 0 | 0 | 2 |
 
 Several counts need checking before we rely on them. The *Leishmania major*
 Friedlin taxon has only 529 annotations in total, so its curation is probably
@@ -164,6 +166,12 @@ provides a symbol by the time they are fetched.
 - [x] TOXGO SAG1 (P13664): major surface antigen; Swiss-Prot entry is at species level (taxon 5811)
 - [x] TOXGM MIC2 (S8F9G8, unreviewed): microneme adhesin, gliding motility
 - [x] TOXGM ROP18 (A0A125YQL1, unreviewed): rhoptry kinase, virulence factor
+
+*Toxoplasma* folders follow the UniProt mnemonic of each entry, so they split
+between `TOXGO` (species level, taxon 5811; SAG1's Swiss-Prot entry) and
+`TOXGM` (strain ME49, taxon 508771; the TrEMBL entries MIC2 and ROP18). Put a
+new *Toxoplasma* gene wherever its own UniProt entry sits rather than picking
+one folder for the species.
 
 ### Track B: Kinetoplastida
 
@@ -274,7 +282,11 @@ deep research later would be a useful cross-check.
 **Proposed terms to consolidate.**
 
 - `food vacuole membrane` (a child of GO:0005774): proposed independently by the
-  CRT and MDR1 reviews.
+  CRT and MDR1 reviews, which worded their definitions differently. Canonical
+  text for the eventual term request: *"The lipid bilayer surrounding the food
+  vacuole (GO:0020020), the acidic digestive compartment of intraerythrocytic
+  Plasmodium and related apicomplexans in which host haemoglobin is degraded."*
+  Parent: GO:0005774 vacuolar membrane.
 - `moving junction` (AMA1): the same structure RH5's removed `tight junction` row
   was trying to capture.
 - `RH5-CyRPA-Ripr invasion complex` (RH5).
