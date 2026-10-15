@@ -25,9 +25,10 @@ represent these reactions; nobody has requested the terms.
 We did this because the P450s are where every general claim about enzyme
 annotation quality gets tested: they are the most substrate-promiscuous family in
 the human proteome, 21 of the 60 are disease genes, and the repository's own
-coverage of them is badly skewed — **all 13 CYP reviews here are
-endogenous-substrate enzymes, and none of the drug-metabolising CYP1/2/3/4
-enzymes has been reviewed at all.**
+coverage of them was badly skewed — until this project, all 13 CYP reviews here
+were endogenous-substrate enzymes and none of the drug-metabolising CYP1/2/3/4
+enzymes had been reviewed at all. **CYP4F3 is now reviewed**, as the first of
+that half and the gene the cascade asymmetry below turns on.
 
 ## Overview
 
@@ -236,17 +237,17 @@ members resolve further.
 
 | | Reviewed here | Not reviewed |
 |---|---:|---:|
-| CYPs | 13 | 47 |
-| Median curated reactions | 9 | 5 |
-| Largest unmapped-reaction count | 14 (CYP27A1) | **35 (CYP4F3)** |
+| CYPs | 14 | 46 |
+| Median curated reactions | 9.5 | 5 |
+| Largest unmapped-reaction count | **35 (CYP4F3)** | 29 (CYP3A4) |
 
-The 13 reviewed CYPs — CYP11A1, CYP11B1, CYP11B2, CYP17A1, CYP19A1, CYP21A2,
-CYP27A1, CYP39A1, CYP46A1, CYP51A1, CYP7A1, CYP7B1, CYP8B1 — are, without
-exception, **endogenous-substrate enzymes**: steroidogenesis, bile-acid
-synthesis, sterol and vitamin-D metabolism. Not one of the
-xenobiotic-metabolising CYP1, CYP2, CYP3 or CYP4 enzymes has a review, and those
-are precisely the promiscuous ones carrying the largest unmapped reaction sets
-(CYP4F3 35, CYP3A4 29, CYP4F2 21, CYP1A1 18).
+Thirteen of the fourteen reviewed CYPs — CYP11A1, CYP11B1, CYP11B2, CYP17A1,
+CYP19A1, CYP21A2, CYP27A1, CYP39A1, CYP46A1, CYP51A1, CYP7A1, CYP7B1, CYP8B1 —
+are, without exception, **endogenous-substrate enzymes**: steroidogenesis,
+bile-acid synthesis, sterol and vitamin-D metabolism. The fourteenth is
+CYP4F3, reviewed from this project's own worklist; before it, not one of the CYP1, CYP2, CYP3 or CYP4
+enzymes had a review, and those are precisely the promiscuous ones carrying the
+largest unmapped reaction sets (CYP4F3 35, CYP3A4 29, CYP4F2 21, CYP1A1 18).
 
 This is a defensible historical accident — the endogenous CYPs arrive through
 pathway projects — but it means the family's hardest annotation questions are all
@@ -300,7 +301,8 @@ instance reactions onto `GO:0102033` / `GO:0120319` (34 reviewed annotations).
 | Target | Rationale |
 |---|---|
 | Gene review: **CYP4F22** | The one CYP with curated reactions and no informative GO MF; disease mechanism is the reaction itself. |
-| Gene review: **CYP4F3** and **CYP4F2** | Largest unmapped reaction sets; carry both sides of the cascade asymmetry, so the review can propose the two ω-oxidation terms in context. |
+| ~~Gene review: **CYP4F3**~~ — **done** | Both ω-oxidation terms are now proposed from a gene review with CYP4F3-specific experimental support (PMID:18182499 names CYP4F3A and CYP4F3B for the ω-hydroxy-VLCFA oxidation). It also found two defects: `GO:0097265` is an ω-hydroxylation named and classified as a dehydrogenase, and `GO:0052869` is obsolete while still carrying four EXP rows. |
+| Gene review: **CYP4F2** | The other half of the cascade asymmetry, and the vitamin K ω-hydroxylase whose IBAs propagate to CYP4F3 without paralog-specific evidence. |
 | Gene review: **CYP1B1** | Anchors the estrogen 4-hydroxylase proposal; glaucoma/ASGD6 disease gene. |
 | Gene review: **CYP2J2** | Anchors the EPA/DHA epoxygenase proposals. |
 | Submit the six new-term requests to GO | Each has a named sibling or precedent and a reviewed enzyme with experimental evidence. |
@@ -344,7 +346,7 @@ provenance and review status), `data/cyp-reactions.tsv` (per reaction, with the
 - **Computed live**: 60 reviewed entries, 556 reaction annotations (528
   experimental), 297 distinct reactions, 96 mapped / 201 unmapped (191 without an
   EC), 107 MF terms (89 catalytic, 84 substrate-naming), tiers 52/4/4, provenance
-  48 experimental / 4 IBA / 4 other, 0 closure-filtered propagation gaps, 13 of
+  48 experimental / 4 IBA / 4 other, 0 closure-filtered propagation gaps, 14 of
   60 reviewed in this repository.
 - **Related**: [RHEA](RHEA.md) ·
   [RHEA-PROMISCUOUS-FAMILIES.md](RHEA/RHEA-PROMISCUOUS-FAMILIES.md) ·
