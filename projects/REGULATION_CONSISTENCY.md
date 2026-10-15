@@ -21,8 +21,8 @@ It finds three recurring patterns that are worth triaging:
 Can we work out after the fact what a "regulation of X" row means? Partly.
 Reviewers' MODIFY replacements tell us directly in about 1,000 cases. Simple
 rules flag likely misfiled participants: rows the rules put in the
-misfiled-participant bucket were modified to the participant term 8% of the
-time, against at most 0.5% for rows with no participant co-annotation. Most rows
+misfiled-participant bucket were modified to the participant term 7.9% of
+the time, against at most 0.5% for rows with no participant co-annotation. Most rows
 are still kept as they are, so the rules can rank a review queue but cannot
 rewrite annotations automatically. The companion enrichment eval in
 `monarch-initiative/genesets`
@@ -73,12 +73,13 @@ uv run python projects/REGULATION_CONSISTENCY/regulation_triage.py \
    *biological_process*) only a direct annotation to X counts as
    participation.
 2. **Meaning heuristics.** Each regulation row gets an ordered rule-based
-   guess: `upstream_effect_qualifier` (an `acts_upstream_of*` qualifier),
-   `participant_misfiled_as_regulator` (co-annotated participant, + or
+   guess: `participant_misfiled_as_regulator` (co-annotated participant, + or
    unsigned, no regulator MF), `participant_with_feedback_or_modulation`,
    `indirect_via_gene_expression` (TF, X not transcription),
    `perturbation_readout` (IMP/IGI/IEP only), `direct_regulator_candidate`
-   (regulator-type MF), `propagated_unclassified`, `unclassified`.
+   (regulator-type MF), `propagated_unclassified`, `unclassified`. The GAF
+   qualifier is deliberately ignored (see "The `acts_upstream_of*` qualifier
+   is noise" below).
 3. **Review mine.** For every review, the script tallies the action on each
    regulation row. Each MODIFY is classified by where its replacement points:
    the participant term, the opposite sign, a signed child of an unsigned term,
@@ -156,34 +157,26 @@ reviewer decision:
 
 | heuristic bucket | n | ACCEPT | NON_CORE | OVER_ANN | MODIFY→participant |
 |---|---|---|---|---|---|
-| participant_misfiled_as_regulator | 570 | 43% | 34% | 5% | **8.2%** |
-| participant_with_feedback_or_modulation | 863 | 41% | 43% | 4% | 1.9% |
-| direct_regulator_candidate | 2,181 | 33% | 48% | 10% | 0% |
-| unclassified | 1,092 | 28% | 55% | 7% | 0.4% |
-| propagated_unclassified | 1,303 | 18% | 56% | **14%** | 0.1% |
-| indirect_via_gene_expression | 975 | 20% | **63%** | 9% | 0% |
-| perturbation_readout | 1,435 | 22% | **62%** | 9% | 0.1% |
-| upstream_effect_qualifier | 383 | 30% | 57% | 6% | 0.5% |
+| participant_misfiled_as_regulator | 595 | 43% | 35% | 5% | **7.9%** |
+| participant_with_feedback_or_modulation | 908 | 42% | 43% | 4% | 2.0% |
+| direct_regulator_candidate | 2,266 | 33% | 48% | 9% | 0% |
+| unclassified | 1,161 | 28% | 56% | 7% | 0.3% |
+| propagated_unclassified | 1,315 | 18% | 57% | **14%** | 0.1% |
+| indirect_via_gene_expression | 1,016 | 20% | **62%** | 9% | 0% |
+| perturbation_readout | 1,541 | 22% | **62%** | 9% | 0.1% |
 
 1. **The buckets carry signal.** Co-annotation as a participant is the
-   strongest predictor of a participant re-filing: 8% in the misfiled bucket,
+   strongest predictor of a participant re-filing: 7.9% in the misfiled bucket,
    2% for other co-annotated rows, and at most 0.5% elsewhere. Perturbation-only and indirect-via-TF rows are the most often
    demoted to non-core. Propagated rows are the most often marked
    over-annotated.
 2. **The signal is not strong enough to automate.** Even in the
-   participant-misfiled bucket, 77% of rows were accepted or kept. In many
+   participant-misfiled bucket, 78% of rows were accepted or kept. In many
    cases both readings hold: a component that also limits flux through its
    pathway. Use the buckets to order work, not to rewrite annotations.
-3. **The `acts_upstream_of*` qualifiers are not a usable meaning signal.**
-   In principle `acts_upstream_of_positive_effect` / `_negative_effect`
-   record a signed causal effect without claiming the gene regulates X. In
-   practice, use depends on the annotating group rather than the biology
-   (20–30% of regulation rows at MGI and TAIR, 3.5% in human GOA, none at
-   PomBase), and the signed forms are under 0.2% of rows. The unsigned
-   `acts_upstream_of_or_within` also folds in participation. Reviewers treat
-   these rows as true but peripheral, not wrong (see below), so they are no
-   noisier than `involved_in` rows. They just do not tell us what kind of
-   upstream role the gene plays.
+3. **The GAF qualifier does not help.** `involved_in` versus
+   `acts_upstream_of*` reflects each group's annotation policy, not the
+   biology (below), so the heuristics ignore it.
 
 ## Regulation terms versus extensions, across annotation sources
 
@@ -238,30 +231,40 @@ Two other contrasts to follow up:
 - **Pombe and yeast lean on perturbation evidence for regulation** (41% and
   55% of rows, against 18% for human). So a low regulation share does not
   mean PomBase has stricter evidence standards for these rows.
-- **MGI and TAIR use `acts_upstream_of*` qualifiers** on 20% and 30% of
-  regulation rows, against 3.5% for human and none for pombe. This reflects
-  group conventions more than biology.
+### The `acts_upstream_of*` qualifier is noise
 
-### Are `acts_upstream_of*` rows noisy?
+The qualifier was meant to separate genes that take part in a process from
+genes whose perturbation merely affects it, which is close to flagging
+over-annotation. Each group had to choose how to apply it to phenotype-driven
+annotations. MGI and TAIR default to the weaker reading; human GOA and PomBase
+default to `involved_in`. The same evidence code gets a different qualifier
+depending only on who made the annotation. Share of BP rows marked
+`acts_upstream*`, by evidence code:
 
-Reviewer actions on biological-process rows, by GAF qualifier, across all
-reviews (4,482 `acts_upstream*` rows, mostly Arabidopsis, human, zebrafish and
-mouse):
+| evidence | MGI | TAIR | human GOA |
+|---|---|---|---|
+| IMP | 63% | 69% | 5% |
+| IGI | 88% | 88% | 19% |
+| IDA | 51% | 56% | 5% |
+| ISO / ISS | 10% / 2% | — | — / 3% |
 
-| qualifier | rows | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | REMOVE |
-|---|---|---|---|---|---|
-| `acts_upstream*`, perturbation evidence | 3,202 | 33% | 58% | 3.2% | 1.0% |
-| `involved_in`, perturbation evidence | 12,474 | 43% | 41% | 4.3% | 0.5% |
-| `acts_upstream*`, other evidence | 1,280 | 42% | 41% | 5.2% | 2.7% |
-| `involved_in`, other evidence | 38,242 | 46% | 33% | 8.3% | 2.1% |
+PomBase uses it on no regulation rows at all. The signed forms
+(`_positive_effect` / `_negative_effect`) are under 0.2% of human regulation
+rows. MGI also curates some human genes, and it applies the same default
+there: MGI-assigned rows are about half (2,171 of 4,161) of the `acts_upstream*`
+BP rows in the human file. Even within one species, the qualifier varies by
+curating group.
 
-Reviewers demote `acts_upstream*` rows to non-core more often, but they mark
-them over-annotated *less* often than `involved_in` rows. In enrichment
-(genesets, recurated gold), removing the 2,438 human gene–term pairs supported
-only by `acts_upstream*` rows *lowers* recall slightly (0.549 → 0.543 for the
-current closure, 0.653 → 0.651 for regulates closure). Their contested-region
-precision is the same. So these rows are low-information but not noise. Keep
-them as data, and don't use the qualifier to infer what a row means.
+The annotations underneath are fine. Reviewers mark `acts_upstream*` rows
+over-annotated *less* often than `involved_in` rows (3.2% vs 4.3% with
+perturbation evidence, 5.2% vs 8.3% otherwise; 4,482 such rows across all
+reviews). In enrichment, dropping the 2,438 human gene–term pairs supported
+only by `acts_upstream*` rows slightly lowers recall against the recurated
+genesets gold (0.549 → 0.543). So the qualifier should be ignored in both
+directions: it is not a reason to filter an annotation out, and not evidence of
+what kind of role the gene plays. Whether a row is direct participation,
+upstream regulation or a phenotype readout has to come from the evidence, the
+gene's own activity and GO-CAM, as in the heuristics above.
 
 ## Proposed triage rules
 

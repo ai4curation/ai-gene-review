@@ -323,7 +323,6 @@ def triage_goa(onto: Ontology, genes: dict, out_dir: Path) -> dict:
                         sign,
                         bool(participant_terms),
                         ev,
-                        quals,
                         is_regulator_mf,
                         is_tf,
                         target,
@@ -411,7 +410,6 @@ def classify_meaning(
     sign: str,
     participant: bool,
     ev: str,
-    quals: set[str],
     regulator_mf: bool,
     tf: bool,
     target: str,
@@ -422,14 +420,17 @@ def classify_meaning(
     Ordered rules; first match wins. These are hypotheses to be calibrated
     against reviewer MODIFY targets, not ground truth.
 
+    The GAF qualifier (involved_in vs acts_upstream_of*) is deliberately not
+    used: it tracks each group's annotation policy rather than the biology
+    (MGI and TAIR mark most IMP/IGI process rows acts_upstream*, human GOA
+    about 5%), so it carries no information about what the row means.
+
     >>> o = Ontology(); o.name["GO:1"] = "x"
-    >>> classify_meaning("+", True, "direct_experimental", {"involved_in"}, False, False, "GO:1", o)
+    >>> classify_meaning("+", True, "direct_experimental", False, False, "GO:1", o)
     'participant_misfiled_as_regulator'
-    >>> classify_meaning("-", False, "perturbation_only", {"acts_upstream_of_or_within"}, False, False, "GO:1", o)
-    'upstream_effect_qualifier'
+    >>> classify_meaning("-", False, "perturbation_only", False, False, "GO:1", o)
+    'perturbation_readout'
     """
-    if any(q.startswith("acts_upstream_of") for q in quals):
-        return "upstream_effect_qualifier"
     if participant and sign in ("+", "0") and not regulator_mf:
         return "participant_misfiled_as_regulator"
     if participant:
