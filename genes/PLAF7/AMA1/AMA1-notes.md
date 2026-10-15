@@ -66,10 +66,17 @@ record, the cached publications cited in GOA, and one additional primary paper
   AMA1 homologues/MAEBL in the KO lines) may explain the discrepancy
   [PMID:24571085 "Since these merozoites could still invade despite not having any detectable AMA1 these authors concluded that AMA1 was not essential for tight junction formation or invasion (Bargieri et al."]
 - GO term `symbiont entry into host` (GO:0044409) is appropriately parasite-side (the
-  merozoite enters the host erythrocyte). Children are bacterium entry, viral-style
-  "symbiont entry into host cell" (GO:0046718, defined around virus/genome release),
-  appressorium and stomatal entry; none fits apicomplexan vacuole-mediated invasion
-  better, so GO:0044409 is kept.
+  merozoite enters the host erythrocyte) but is less specific than the evidence supports.
+  The child "symbiont entry into host cell" (GO:0046718) is defined around breaching the
+  membrane and releasing the symbiont or its genome into the cytoplasm, which does not fit
+  apicomplexan invasion. Its own descendant GO:0085017 "entry into host cell by a
+  symbiont-containing vacuole" does: OLS gives its definition as invasion forming "a
+  vacuole in which the symbiont resides", beginning with attachment to a host membrane
+  that invaginates and ending when that membrane closes behind the new vacuole -- the
+  moving junction AMA1 anchors, and the cited phenotype is precisely a failure to seal the
+  parasitophorous vacuole. GOA already uses GO:0085017 for P. falciparum MSP1 (IDA) and
+  CSP (IMP), so the GO:0044409 row is MODIFYed to GO:0085017 for accuracy and for
+  consistency with the rest of the invasion machinery.
 - `adhesion of symbiont to host cell` (GO:0044650) is supported by the Bargieri KO
   adhesion phenotypes in P. berghei/T. gondii but not tested directly in P. falciparum;
   not proposed as NEW (conservative).
