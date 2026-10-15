@@ -233,7 +233,16 @@ COMPLETE.
 - `GO:0080185` (effector-mediated activation of plant hypersensitive response)
   sits under a term defined as suppressing host immunity. Every avirulence
   effector annotated to it therefore also gets a suppression claim (AVR4,
-  AVR9).
+  AVR9, and from the extension AVR-Pia, whose three PHI-base rows were refined
+  to it, and AVR-Pita, which gains it as a new row).
+- No neutral pathogen-side term for an avirulence effector recognised without
+  hypersensitive cell death; is `GO:0140404` the intended term there (SIX1)?
+- No convention for cell-surface receptors of race-specific apoplastic
+  effectors, which fall between pattern recognition receptor activity and
+  innate immune receptor activity (Cf-4, Cf-9).
+- Unclear whether effector-side process terms should reach a biosynthetic
+  enzyme whose unidentified metabolite, not the protein, is what the host
+  perceives (ACE1, recognised via Pi33).
 - No GO term for the biotrophic interfacial complex.
 - No pathogen-side term for suppressing host salicylic acid biosynthesis
   (CMU1), and no camalexin-export activity (ABCG36).
@@ -373,6 +382,15 @@ running `fetch-gene`; do not guess one.
    `just new-history`
 
 # NOTES
+
+## 2026-10-15
+
+- Follow-up to the merged PR: applied the review bot's four optional suggestions.
+  Cf-4's pattern-recognition row now cites the race-specificity of AVR4
+  (PMID:14769793); MLA10's receptor row and core function note that the binding
+  data used the related Mla10 sequence GU245946; AVR-Pita's PTI-suppression row
+  names real GOA precedents for GO:0052034 (Mg3LysM, SCRE2, MGG_08054); and the
+  suggested ontology changes above now include the extension genes.
 
 ## 2026-10-10
 
