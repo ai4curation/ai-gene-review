@@ -86,11 +86,13 @@ Report: `GID1A-hypotheses/gid1a-catalytic-inactivity/openscientist.md` (3 iterat
 
 **Checked here against `GID1A-uniprot.txt`:**
 - The residue claims are correct. Positions 191/289/319 are S/D/V. Residues 113-115 are the HGG oxyanion motif. The nucleophile elbow is AGDSSGG.
-- UniProt annotates only two ACT_SITE residues, 191 and 289, so there is no catalytic His. This agrees with the Val319 finding in the PTHR23024 family review.
+- UniProt annotates only two ACT_SITE residues, 191 and 289, and no catalytic His. This corroborates the absence of an annotated general base; the Val at 319 itself comes from the sequence, not from the active-site annotation. It agrees with the Val319 finding in the PTHR23024 family review (PR #5027, not yet merged).
 - I did not re-run the alignments or the PDB distance measurements.
+- The paralog residues (GID1B Asn338, GID1C Ile317 at the AADAC His373 position) are the residue-level basis for the GID1B review's IBA hydrolase REMOVE, whose propagation_review names AADAC (P22760) as SUPPORTS_SOURCE_BUT_NOT_TARGET.
 
 **Errors in the report, not to be propagated:**
 - It says GID1B and GID1C have "no GA-binding MF" and only GO:0016787. This is false. Both GOA files and both reviews carry GO:0010331 gibberellin binding.
+- Its triad comparison table marks the GID1B acid as Asp, although its own Finding 1 footnote says the GID1B acid position fell in an alignment gap.
 - It says no primary paper reports the presence or absence of esterase activity. The original rice GID1 paper is cited as describing the protein as HSL-like "without hydrolase activity" [PMID:24961590 "GID1 was first described in rice as a nuclear localized protein similar to hormone-sensitive lipase family without hydrolase activity"]. The Falcon deep-research file reports a negative p-nitrophenyl acetate assay. So the "no residual activity" clause has at least a published negative claim behind it. I have not verified the primary assay, because PMID:16193045 has no cached text.
 
-**Curation consequence:** none. GO:0016787 hydrolase activity (IEA, GO_REF:0000002) is already REMOVE in this review. The run adds independent structural support for that decision. The proposed "gibberellin receptor activity" MF still has no GO term.
+**Curation consequence:** no action changes. GO:0016787 hydrolase activity (IEA, GO_REF:0000002) is already REMOVE in this review; the report is now cited as a reference and in that row's supported_by as residue-level support. The proposed "gibberellin receptor activity" MF still has no GO term.
