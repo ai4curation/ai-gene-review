@@ -80,8 +80,9 @@ from the UniProt record, PubMed searches and the cached publications in `publica
 | GO:0005516 calmodulin binding | IEA InterPro | KEEP_AS_NON_CORE |
 | GO:0005856 cytoskeleton | IEA SubCell | MODIFY -> GO:0097740 paraflagellar rod |
 | GO:0031514 motile cilium | IEA | ACCEPT |
-| GO:0005200 structural constituent of cytoskeleton | NEW | core MF |
-| GO:0120268 paraflagellar rod assembly | NEW | structural subunit of the polymer |
+| GO:0005198 structural molecule activity | NEW (IMP) | core MF |
+| GO:0060285 cilium-dependent cell motility | NEW (IMP) | via structural role in PFR |
+| GO:0120268 paraflagellar rod assembly | not annotated | moved to suggested_questions |
 
 - GO:0097740 paraflagellar rod is used for >170 T. brucei TREU927 gene products in QuickGO
   (IDA/HTP), so it is the established CC for PFR proteins.
@@ -91,3 +92,17 @@ from the UniProt record, PubMed searches and the cached publications in `publica
   substrate or regulator.
 - No animal/plant-only terms, no host-process terms, no organelle mismatch beyond the generic
   cytoskeleton term. PFRA (69 kDa paralog, genes/TRYBB/PFRA) carries the identical three IEA rows.
+
+## Revision (harmonisation with PFRA)
+
+- GO:0097740 paraflagellar rod has only supramolecular complex as its OLS is_a parent and is not
+  under cytoskeleton, so GO:0005200 (which occurs_in cytoskeleton) is ill-fitting; switched to
+  GO:0005198 structural molecule activity, matching genes/TRYBB/PFRA.
+- GO:0120268 is not annotated. A structural subunit incorporated into the rod is arguably what
+  is assembled rather than an agent of assembly, so this is raised as a suggested question.
+- NEW GO:0060285 cilium-dependent cell motility (IMP). PFRC-specific support is weaker than for
+  PFRA: [PMID:12798502 "PFRA and PFRC genes, which code for flagellar proteins required for cell
+  motility"], plus PFR1/PFR2 non-redundancy (PMID:34257277) and paralysis on PFR loss
+  [PMID:10954429 "PFR construction was affected, resulting in cell paralysis"].
+- The cytoskeleton -> paraflagellar rod MODIFY is a lateral correction, not a descendant
+  refinement.
