@@ -72,7 +72,8 @@ paralog-aware activity and complex checks.
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
-- [ ] CGD MYST-family member
+- [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; drafted in
+  this branch
 - [ ] `NEUCR` MYST-family member
 
 ## Later Candidates
@@ -221,3 +222,8 @@ exo-1,3-beta-glucosidase node.
   was redirected to `GO:0036410`. The direct Mst2 heterochromatin rows were
   aligned with the negative-regulation model supported by the 2011, 2015, 2024,
   and 2026 fission-yeast papers.
+- Rechecked the existing `CANAL/ESA1` CGD MYST review. The broad
+  `PANTHER:PTN004172926` MYST-root IBA rows and the fungal ESA1-node
+  `PANTHER:PTN000834946` H4 acetyltransferase row still align with the
+  PTHR10615 tree, while PMID:40988556 remains abstract-free and unresolved for
+  the CGD phenotypic-switching row.
