@@ -624,6 +624,10 @@ class ActionEnum(str, Enum):
     """
     The term is not entirely wrong, but likely represents an over-annotation of the gene
     """
+    TOO_GENERAL = "TOO_GENERAL"
+    """
+    The term is true of the gene, but so broad that it adds nothing, because a more specific term asserted elsewhere in this review (ACCEPT, KEEP_AS_NON_CORE, NEW, or a MODIFY replacement) already entails it. This is a judgment about the term's informativeness, not about this row's evidence, which is weighed separately; it never means the claim is false. Use REMOVE only for claims that are unlikely to be correct, and MODIFY when this row's own evidence supports a more specific term. Use sparingly: a broader term that still says something useful about the gene (e.g. a pathway-level process alongside a specific step) should be accepted or kept as non-core.
+    """
     UNDECIDED = "UNDECIDED"
     """
     The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS RELEVANT PUBLICATIONS
@@ -2018,7 +2022,7 @@ class ReferenceReplacement(ConfiguredBaseModel):
     reference_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'SupportingTextInReference'],
          'implements': ['dcterms:references']} })
     review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
-    reason: ReferenceReplacementReasonEnum = Field(default=..., description="""Why the source identifier should resolve to the target reference.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review']} })
+    reason: ReferenceReplacementReasonEnum = Field(default=..., description="""Why the source identifier should resolve to the target reference.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review', 'ConsistencyException']} })
 
 
 class Finding(ConfiguredBaseModel):
@@ -3945,7 +3949,8 @@ class Review(ConfiguredBaseModel):
                        'PredictionAssessment'],
          'recommended': True} })
     action: ActionEnum = Field(default=..., description="""Action to be taken""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review', 'RuleReview']} })
-    reason: Optional[str] = Field(default=None, description="""Reason for the action""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review'], 'recommended': True} })
+    reason: Optional[str] = Field(default=None, description="""Reason for the action""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review', 'ConsistencyException'],
+         'recommended': True} })
     proposed_replacement_terms: Optional[list[Term]] = Field(default=None, description="""If the action is MODIFY, then this is a list of proposed replacement terms""", json_schema_extra = { "linkml_meta": {'comments': ['note there is a separate rule that this is required IF the '
                       'action is MODIFY'],
          'domain_of': ['Review']} })
@@ -3968,6 +3973,16 @@ class Review(ConfiguredBaseModel):
                        'Review',
                        'CoreFunction']} })
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
+    consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
+
+
+class ConsistencyException(ConfiguredBaseModel):
+    """
+    A deliberate, documented exception to the action-consistency rules (src/ai_gene_review/schema/action_consistency.yaml) for this annotation. For very rare cases where two rows' actions look contradictory but both are right, e.g. a positive and a NOT annotation to the same term that reflect genuinely different biological contexts. Conflicts involving this row are still reported, at INFO with the reason, and an exception that no longer matches any conflict is flagged.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    reason: str = Field(default=..., description="""Why the apparent contradiction is correct.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review', 'ConsistencyException']} })
 
 
 class PropagationReview(ConfiguredBaseModel):
@@ -4872,6 +4887,7 @@ ModuleContext.model_rebuild()
 ModuleConnection.model_rebuild()
 ExistingAnnotation.model_rebuild()
 Review.model_rebuild()
+ConsistencyException.model_rebuild()
 PropagationReview.model_rebuild()
 ResidueClaim.model_rebuild()
 ResiduePosition.model_rebuild()
