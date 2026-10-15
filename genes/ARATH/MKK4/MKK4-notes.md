@@ -33,3 +33,8 @@ Additions from the other review:
 - Activation-loop sites T-224/S-230 [PMID:27679653 "Therefore, we substituted the S/TxxxxxS/T motif residues, T‐224/S‐230 of MKK4 and T‐215/S‐221 of MKK5 with alanine."].
 - Wound-induced ethylene (Li et al. 2018, from deep research; not cached): the mkk4 knockdown has a small effect compared with mkk5. No term was added.
 - Chloroplast stroma stays non-core (in vitro import into pea chloroplasts only). This is supported by a quote from the repo deep-research file, re-checked verbatim.
+
+## 2026-10-15 journal: QuickGO record for the PMID:32890733 row (PR #5026 follow-up)
+
+- Query (re-run 2026-10-15): QuickGO REST, `https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=PMID:32890733&limit=200` (Accept: application/json) returned 6 annotations, all GO:0009875 pollen-pistil interaction IGI acts_upstream_of_or_within, assigned by TAIR, to MKK1 (Q94A06), MKK2 (Q9S7U9), MKK4 (O80397), MKK7 (Q9LPQ3), MKK9 (Q9FX43) and MPK3 (Q39023); none to MKK3 or MPK4. The row stays UNDECIDED.
+- Full text on 2026-10-15: `fetch-pmid PMID:32890733 --force` cached abstract only (no PMC record); Europe PMC lists no PMCID (isOpenAccess N). Earlier attempts recorded in the review reason (Cell Press 403, bioRxiv 429) were not re-tested.

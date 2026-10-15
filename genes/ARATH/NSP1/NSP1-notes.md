@@ -22,3 +22,10 @@
 - mRNA binding (HDA) is UNDECIDED, because the paper is abstract-only.
 - Response to herbivore (IMP) is KEEP_AS_NON_CORE. NSP1 is required for the P. rapae-induced nitrile shift, but no protective effect has been shown.
 - No falcon deep-research file was available when this review was written.
+
+## 2026-10-15 journal: UNDECIDED rows resolved (PR #5026 follow-up)
+
+Supersedes the "seed germination and dormancy rows are UNDECIDED" and "mRNA binding (HDA) is UNDECIDED" lines above.
+
+- PMID:31850033 full text is now cached (`full_text_extraction_method: xml`). It contains no germination-rate, radicle-emergence or dormancy assay for nsp1-1; the phenotype is seed glucosinolate content over germination [PMID:31850033 "In contrast to Col-0 and tgg1 tgg2, germinating seeds of nsp1-1 did not contain higher total glucosinolate levels on day 4 relative to days 0 and 10 (Figure 7C)."]. The authors themselves call for more experiments to establish a direct NSP role in turnover. All seed germination rows (IEP, IMP, IEA) and the seed dormancy row are now MARK_AS_OVER_ANNOTATED; the metabolic phenotype is captured by the glucosinolate catabolic process IMP.
+- GO:0003729 mRNA binding (HDA, PMID:27729395 poly(A) interactome capture) is MARK_AS_OVER_ANNOTATED, matching the treatment of the same screen for PHYA. No NSP1-specific RNA-binding validation exists. Full-text access on 2026-10-15: `fetch-pmid PMID:27729395 --force` found PMC5134986 but the publisher restricts the XML, and the HTML and PDF fallbacks returned no usable content; the cache remains abstract-only, so NSP1's confidence tier in the screen was not checked.
