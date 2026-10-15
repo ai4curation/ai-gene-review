@@ -851,11 +851,11 @@ def test_seed_missing_annotations_true_noop_preserves_yaml_bytes(tmp_path):
     assert yaml_path.read_text() == original
 
 
-def test_seed_missing_annotations_uses_given_publications_dir(tmp_path):
-    """Title lookups read the given cache, not the repo's publications/.
+def test_seed_missing_annotations_uses_given_cache_dirs(tmp_path):
+    """Title lookups read the given caches, not the repo's publications/ or reactome/.
 
-    PMID:12345 is also cached in the committed publications/ with a different
-    title, so a lookup there would be visible as the wrong title.
+    PMID:12345 and R-CEL-9856612 are also cached in the committed trees with
+    different titles, so a lookup there would be visible as the wrong title.
     """
     validator = GOAValidator()
     goa_path = tmp_path / "TEST-goa.tsv"
@@ -866,6 +866,9 @@ def test_seed_missing_annotations_uses_given_publications_dir(tmp_path):
         "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
         "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
         "UniProt\tTest protein\t20180515\n"
+        "UniProtKB\tQ12345\tTEST\tinvolved_in\tGO:0005678\ttest process\tBP\t"
+        "ECO:0000304\tTAS\tReactome:R-CEL-9856612\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "Reactome\tTest protein\t20180515\n"
     )
     yaml_path = tmp_path / "TEST-ai-review.yaml"
     yaml_path.write_text(
@@ -874,6 +877,11 @@ def test_seed_missing_annotations_uses_given_publications_dir(tmp_path):
         "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
         "description: Test gene\n"
     )
+    reactome_dir = tmp_path / "reactome"
+    reactome_dir.mkdir()
+    (reactome_dir / "R-CEL-9856612.md").write_text(
+        "---\nstable_id: R-CEL-9856612\n---\n\n# Fixture-only pathway title\n"
+    )
     publications_dir = tmp_path / "publications"
     publications_dir.mkdir()
     (publications_dir / "PMID_12345.md").write_text(
@@ -881,15 +889,22 @@ def test_seed_missing_annotations_uses_given_publications_dir(tmp_path):
     )
 
     _, _, references_added, _, _ = validator.seed_missing_annotations(
-        yaml_path, goa_path, fetch_titles=True, publications_dir=publications_dir
+        yaml_path,
+        goa_path,
+        fetch_titles=True,
+        publications_dir=publications_dir,
+        reactome_dir=reactome_dir,
     )
 
-    assert references_added == 1
+    assert references_added == 2
     document = yaml.safe_load(yaml_path.read_text())
-    assert document["references"] == [
-        {"id": "PMID:12345", "title": "Fixture-only cached title", "findings": []}
-    ]
+    titles = {ref["id"]: ref["title"] for ref in document["references"]}
+    assert titles == {
+        "PMID:12345": "Fixture-only cached title",
+        "Reactome:R-CEL-9856612": "Fixture-only pathway title",
+    }
     assert sorted(publications_dir.iterdir()) == [publications_dir / "PMID_12345.md"]
+    assert sorted(reactome_dir.iterdir()) == [reactome_dir / "R-CEL-9856612.md"]
 
 
 def test_seed_missing_annotations_noop_writes_requested_output(tmp_path):

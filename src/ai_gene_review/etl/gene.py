@@ -627,6 +627,7 @@ def fetch_gene_data(
                 goa_file,
                 fetch_titles=fetch_titles,
                 publications_dir=base_path / "publications",
+                reactome_dir=base_path / "reactome",
             )
         )
         result["annotations_added"] = added_count
@@ -1814,6 +1815,7 @@ def fetch_gene_data_ncRNA(
                 goa_file,
                 fetch_titles=True,
                 publications_dir=base_path / "publications",
+                reactome_dir=base_path / "reactome",
             )
         )
         result["annotations_added"] = added_count
