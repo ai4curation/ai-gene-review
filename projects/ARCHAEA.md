@@ -1,10 +1,10 @@
 ---
 title: "Archaea"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP]
+species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB]
 ---
 
 # Archaea
@@ -22,9 +22,12 @@ annotation goes wrong for archaea, so that those failure patterns can be
 reported upstream. The project is anchored on the **Sulfolobales**
 (CO2 fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
-haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set. The project
-is at **SCOPING**: the inventory below is complete, and the target gene list
-is a proposal that has not yet been reviewed.
+haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set. The
+five-gene pilot is complete: Msed_0709, sor, lacS, *Methanothermobacter*
+mcrA and cdvB. Of their 20 GOA rows, 17 were electronic and only two were
+experimental. The pilot removed 5 rows, modified 4 and proposed 7 new
+annotations and 3 new GO terms. The recurring errors are collected in
+[annotation-patterns](ARCHAEA/annotation-patterns.md).
 
 ## Why archaea need their own project
 
@@ -99,6 +102,35 @@ counts above stay meaningful.
 4. **Status drift.** Seven of the twelve reviews are still DRAFT. The Hsp14
    and Hsp20 reviews contain only NEW rows, which means GOA had no
    annotations for either protein when they were fetched.
+
+## Pilot results (October 2026)
+
+All five reviews are COMPLETE and validated. Automated deep research was
+unavailable (both provider API keys failed authentication), so each gene
+has hand-written literature notes in `<gene>-notes.md` instead.
+
+| Code | Gene | UniProt | GOA rows | Actions | Main finding |
+|---|---|---|---|---|---|
+| METS5 | Msed_0709 | A4YEN2 | 7 | 2 ACCEPT, 1 KEEP_AS_NON_CORE, 4 REMOVE, 1 NEW | Inherits aspartate-semialdehyde dehydrogenase and threonine biosynthesis terms from its ancestral family; GO lacks terms for its activities and for the 3HP/4HB cycle (3 terms proposed) |
+| ACIAM | sor | P29082 | 2 | 2 ACCEPT, 2 NEW | Under-annotated: sulfur oxidation and iron ion binding added from experimental evidence |
+| SACS2 | lacS | P22498 | 4 | 1 ACCEPT, 2 MODIFY, 1 REMOVE | Galactosyltransferase IBA from a plant-seeded PAINT node removed; activity refined to beta-glucosidase, beta-galactosidase and beta-fucosidase; process to lactose catabolism |
+| METTH | mcrA | O27232 | 6 | 5 ACCEPT, 1 MODIFY, 1 NEW | Methanogenesis narrowed to methanogenesis from CO2; MCR complex added |
+| SULAC | cdvB | Q4J924 | 1 | 1 MODIFY, 3 NEW | Nucleoid changed to cell division site; Cdv-dependent cytokinesis, ESCRT III complex and structural molecule activity added |
+
+Follow-ups raised by the pilot:
+
+- The METAC mcrA review (DRAFT) has problems found while reviewing the
+  *Methanothermobacter* ortholog: a true but broad term (transferase
+  activity) is removed rather than marked TOO_GENERAL, one activity row
+  cites an unrelated paper (PMID:29743535), one quote is not verbatim, and
+  protein heterooligomerization is proposed as NEW. Fix it in the
+  housekeeping step.
+- Archaeal ESCRT-III homologs in other Sulfolobales (for example
+  A4YHE8 Msed_1695) carry vacuolar transport by InterPro2GO. Review one of
+  them to document the error on a gene page.
+- *M. sedula* Msed_1700 (A4YHF3), the true aspartate-semialdehyde
+  dehydrogenase, is named malonyl-CoA reductase by an ARBA rule. Review it
+  next to Msed_0709.
 
 ## Anchor organisms
 
@@ -247,16 +279,14 @@ split.
 1. **Housekeeping** (above): merge the amoA duplicates, delete the stray
    `genes/188937/` folder, and move the DRAFT reviews to COMPLETE or record
    why they cannot be.
-2. **Pilot (5 genes, DOE-facing):** Msed_0709 (malonyl-CoA reductase), sor,
-   lacS, METTH mcrA and cdvB. Each covers a different Part A theme. Fetch
-   with `just fetch-gene <CODE> <gene>`, then run deep research and a full
-   review.
+2. **Pilot (5 genes, DOE-facing): done.** Msed_0709 (malonyl-CoA
+   reductase), sor, lacS, METTH mcrA and cdvB. See Pilot results above.
 3. **Calibration pair:** bop and psmA1 from Part B. Compare their evidence
    code mix with the pilot genes.
-4. **Error catalogue:** after the pilot, write `ARCHAEA/annotation-patterns.md`
-   to record each recurring archaea-specific error (pipeline, term,
-   example rows) and cross-link it to
-   [IBA_REVIEW](IBA_REVIEW.md) where the source is PAINT.
+4. **Error catalogue: started.** [annotation-patterns](ARCHAEA/annotation-patterns.md)
+   records each recurring archaea-specific error (pipeline, term, example
+   rows). Cross-link PAINT-derived entries to [IBA_REVIEW](IBA_REVIEW.md)
+   and add new patterns as reviews are done.
 5. **Breadth and modules:** review the rest of Part A theme by theme, then
    Part B. Candidate modules: the 3HP/4HB CO2-fixation cycle,
    hydrogenotrophic methanogenesis, and archaeal ether-lipid biosynthesis.
