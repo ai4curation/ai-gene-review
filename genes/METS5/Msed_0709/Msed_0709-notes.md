@@ -55,8 +55,14 @@ UniProt REST. All PMIDs below were verified by E-utilities esummary and cached w
 Query `organism_id:399549 AND (ec:1.2.1.11 OR family:"aspartate-semialdehyde dehydrogenase")`
 returned two proteins: A4YEN2 (Msed_0709, this gene) and A4YHF3 (Msed_1700, unreviewed).
 Msed_1700 neighbours are Msed_1698 threonine synthase and Msed_1699 aspartokinase, i.e. the
-asd context described in PMID:23325803; Msed_1700 also carries NCBIfam TIGR00978 (asd_EA)
-and PRK08664, which A4YEN2 lacks. So Msed_1700 is the genuine ASD of M. sedula.
+asd context described in PMID:23325803. So Msed_1700 is the genuine ASD of M. sedula.
+
+Correction (2026-10-15, from the Msed_1700 review): an earlier version of these notes said
+that Msed_1700 carries NCBIfam TIGR00978 (asd_EA) and PRK08664 and that A4YEN2 lacks them.
+That was wrong: the A4YEN2 UniProt record (Msed_0709-uniprot.txt) also lists TIGR00978 and
+NF006416 (PRK08664.1). The paralogs are separated by CDD models instead: Msed_1700 matches the
+archaeal/fungal ASD models cd18130 and cd02315, Msed_0709 the MCR models cd23940 and cd24150
+(genes/METS5/Msed_1700/Msed_1700-bioinformatics/RESULTS.md).
 
 Both paralogs fall in PANTHER PTHR46718:SF1 and share identical InterPro signatures, so they
 receive identical GO sets (ASD activity, threonine biosynthesis, NAD binding, NADP binding,

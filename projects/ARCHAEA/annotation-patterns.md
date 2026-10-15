@@ -28,11 +28,20 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   removed. The genuine *M. sedula* ASD, Msed_1700 (A4YHF3), shares the
   PANTHER subfamily (PTHR46718:SF1) and the InterPro signatures, so both
   genes receive the same GO set.
-- **The error also runs the other way:** ARBA rule ARBA00067001 names the
-  true ASD, Msed_1700, as a malonyl-CoA reductase.
+- **The error also runs the other way:** ARBA rules ARBA00067001 (name)
+  and ARBA00052213 (EC 1.2.1.75 catalytic activity) name the true ASD,
+  Msed_1700, as a malonyl-CoA reductase. Both rules have only two
+  conditions: FunFam 3.40.50.720:FF:000411 (itself named
+  "Aspartate-semialdehyde dehydrogenase", covering both paralogs) and the
+  taxon Archaea. Of the 40 archaeal UniProt entries named EC 1.2.1.75, 19
+  match MCR-type CDD models, 17 match only ASD-type models (probably
+  misnamed true ASDs, including Msed_1700 and *Sulfurisphaera tokodaii*
+  ST1242) and 4 match neither. No GO row derives from this naming yet.
+  The Msed_1700 review (genes/METS5/Msed_1700/) accepts its ASD terms.
 - **Possible fix:** split the malonyl-CoA reductase clade into its own
-  PANTHER subfamily, and use the TIGR00978 (asd_EA) signature as a
-  negative condition in the ARBA rule.
+  PANTHER subfamily, and add the CDD models as conditions in the ARBA
+  rules: cd23940/cd24150 for MCR, cd18130/cd02315 for ASD. NCBIfam
+  TIGR00978 (asd_EA) cannot be used, because both paralogs carry it.
 - **Where else to look:** other enzymes of the 3HP/4HB cycle and other
   archaeal pathways that recruited enzymes from amino acid metabolism.
 
