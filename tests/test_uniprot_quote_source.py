@@ -30,6 +30,7 @@ TP53 = "file:human/TP53/TP53-uniprot.txt"
 GYRA = "file:PSEPK/gyrA/gyrA-uniprot.txt"
 ABI2 = "file:mouse/Abi2/Abi2-uniprot.txt"
 TOLL9 = "file:ANOGA/TOLL9/TOLL9-uniprot.txt"
+ACRIF3 = "file:9CAUD/acrIF3/acrIF3-uniprot.txt"
 
 
 def _path(reference_id: str) -> Path:
@@ -71,6 +72,27 @@ def test_arba_only_family_note_is_an_unvetted_prediction():
         "Belongs to the Toll-like receptor family.", _path(TOLL9))
     assert [(s.field, s.topic) for s in statements] == [("CC", "SIMILARITY")]
     assert unvetted and not restating
+
+
+def test_machine_generated_name_is_an_unvetted_prediction():
+    """A ProtNLM name (ECO:0008006) is a model's guess, not evidence."""
+    unvetted, restating, statements = classify_quote("RecName: Full=Phage protein", _path(ACRIF3))
+    assert [s.field for s in statements] == ["DE"]
+    assert unvetted and restating
+    assert statements[0].unvetted_sources == ("machine-generated name",)
+
+
+@pytest.mark.parametrize("reference_id,topic,tool", [
+    (TOLL9, "TRANSMEM", "SAM:Phobius"),
+    (ABI2, "REGION", "SAM:MobiDB-lite"),
+])
+def test_sequence_analysis_features_are_evidence(reference_id, topic, tool):
+    """Phobius, SignalP, MobiDB-lite and Coils features are valid computational evidence."""
+    features = [s for s in parse_uniprot_statements(_path(reference_id).read_text())
+                if s.field == "FT" and s.topic == topic and s.evidence
+                and all(tool in e for e in s.evidence)]
+    assert features
+    assert not any(s.is_unvetted for s in features)
 
 
 def test_family_membership_is_not_flagged():
