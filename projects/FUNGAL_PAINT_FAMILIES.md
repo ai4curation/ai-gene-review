@@ -68,11 +68,12 @@ separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/NuA3 placements that need
 paralog-aware activity and complex checks.
 
 - [x] `yeast/ESA1` - NuA4 catalytic subunit; drafted in PR #4604
-- [ ] `yeast/SAS2` - SAS-I catalytic subunit
-- [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
+- [x] `yeast/SAS2` - SAS-I catalytic subunit; drafted in PR #4606
+- [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
-- [ ] CGD MYST-family member
+- [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; drafted in
+  this branch
 - [ ] `NEUCR` MYST-family member
 
 ## Later Candidates
@@ -201,6 +202,10 @@ exo-1,3-beta-glucosidase node.
   broad eukaryotic MYST and fungal ESA1/H4-acetyltransferase nodes; the refresh
   mostly added current GOA rows, removed generic `protein binding`, and
   redirected a nucleosome component row to `GO:0031491 nucleosome binding`.
+- Re-reviewed `yeast/SAS2` in the MYST family. The `PANTHER:PTN007449682`
+  activity transfer to `GO:0046972 histone H4K16 acetyltransferase activity`
+  is correct for Sas2/SAS-I, but the same node leaks `GO:0035267 NuA4 histone
+  acetyltransferase complex` across the Sas2-versus-TIP60 complex boundary.
 - Started `PTHR35329` as a compact CHS7-family follow-up. Yeast `CHS7` was
   already reviewed; `NEUCR/csc-1` checks the same `PTN002175570` fungal PAINT
   ancestor against the direct CSE-7/CHS-4 trafficking paper and the newer
@@ -221,3 +226,8 @@ exo-1,3-beta-glucosidase node.
   was redirected to `GO:0036410`. The direct Mst2 heterochromatin rows were
   aligned with the negative-regulation model supported by the 2011, 2015, 2024,
   and 2026 fission-yeast papers.
+- Rechecked the existing `CANAL/ESA1` CGD MYST review. The broad
+  `PANTHER:PTN004172926` MYST-root IBA rows and the fungal ESA1-node
+  `PANTHER:PTN000834946` H4 acetyltransferase row still align with the
+  PTHR10615 tree, while PMID:40988556 remains abstract-free and unresolved for
+  the CGD phenotypic-switching row.
