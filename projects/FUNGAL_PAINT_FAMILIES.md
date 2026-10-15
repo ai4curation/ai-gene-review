@@ -138,7 +138,7 @@ exo-1,3-beta-glucosidase node.
 step-specific review in each fungus.
 
 - [ ] `yeast/BCY1` - *S. cerevisiae* PKA regulatory subunit
-- [ ] `SCHPO/cgs1` - *S. pombe* PKA regulatory subunit
+- [x] `SCHPO/cgs1` - *S. pombe* PKA regulatory subunit; merged in PR #4763
 - [x] `CANAL/BCY1` - CGD-seeded *Candida albicans* Bcy1; drafted in PR #4751
 - [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; drafted in this
   branch
