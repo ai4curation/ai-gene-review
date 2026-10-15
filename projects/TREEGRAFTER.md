@@ -1118,6 +1118,44 @@ Verdicts and their scoring:
       separated by sequence alone.
   - None of the 16 runs found a pseudo-enzyme.
 
+**Re-review (2026-10-15).** The eight rows in question were re-reviewed with
+the reports as evidence, checking each decisive claim against repo data first:
+
+| Row | Before | After |
+|---|---|---|
+| PP_1969, PP_2482 `GO:0061798` | UNDECIDED | ACCEPT |
+| eryCIV `GO:0008483` | UNDECIDED | MODIFY to `GO:0019179` |
+| PP_3571 `GO:0008777` | UNDECIDED | MODIFY to `GO:0016811` |
+| metZ `GO:0016846` | ACCEPT | REMOVE |
+| PP_4594, ptxD, gabD-II | UNDECIDED | UNDECIDED |
+
+- **PP_1969, PP_2482:** all 17 MoaA ligand positions are conserved; a new
+  site-mapping analysis in `PP_1969-bioinformatics/` backs this.
+- **eryCIV:** it is a DesI-type sugar 4-aminotransferase, and GO already has
+  the specific term.
+- **PP_3571:** the KT2440 ArgE ortholog is PP_5186, so a generic amidase
+  term replaces the specific one. The run's N-acetyl-citrulline suggestion
+  was not taken up, because 380 members of PANTHER subfamily SF31 are named
+  succinyl-diaminopimelate desuccinylase.
+- **metZ:** the reaction has no GO term, so it now has a structured term
+  request: "O-succinylhomoserine sulfhydrylase activity", parent
+  `GO:0016765`, `skos:exactMatch RHEA:27826`. The core function points to
+  that request.
+- **PP_4594, ptxD, gabD-II:** these stay open, because evidence the runs did
+  not consider points elsewhere.
+  - PP_4594 is equidistant from the gamma-synthases and gamma-lyases.
+  - ptxD sits in a *kgu* gene cluster, which suggests a 2-keto-6-phosphogluconate
+    reductase.
+  - gabD-II is as close to the ectoine-pathway DoeC as to GabD, and sits
+    between *doeD*- and *doeB*-type genes. That last finding also adds a term
+    request: "L-aspartate-4-semialdehyde dehydrogenase (non-phosphorylating)
+    activity" (`RHEA:45764`).
+
+The re-review also corrected several of the runs' claims:
+- PtxD has no Trp314.
+- Human CTH is in PANTHER subfamily SF15, not SF80.
+- The PP_2482 UniProt record has no binding-site features.
+
 Sixteen runs give no rates. What they show is how the faults split: where
 TreeGrafter errs here, the protein is usually in the right family and the
 term is the wrong depth. A wrong reaction class (metZ) is rare.
@@ -1485,10 +1523,11 @@ term is the wrong depth. A wrong reaction class (metZ) is rare.
   check on a fresh sample that includes accepted TreeGrafter rows as
   controls, with the review actions recorded before the reports are read;
   only then quote a sensitivity/specificity.
-- **Act on the OpenScientist batch.** Re-review metZ `GO:0016846`, refuted
-  as a lyase term on a transferase, and the five UNDECIDED rows the runs
-  resolved (see
-  [Controlled OpenScientist batch](#controlled-openscientist-batch-2026-10-15)).
+- **Settle the three rows still open after the OpenScientist batch** (PP_4594,
+  ptxD, gabD-II) with substrate-panel assays (see
+  [Controlled OpenScientist batch](#controlled-openscientist-batch-2026-10-15));
+  the two term requests (metZ, gabD-II) are collected with the other upstream
+  fix points, not filed.
 - **Blind the corroboration test.** Re-adjudicate a sample of `GO_REF:0000118`
   and `GO_REF:0000120` rows with `original_reference_id` withheld, to separate
   the corroboration effect from the reviewer's visibility of the label.
