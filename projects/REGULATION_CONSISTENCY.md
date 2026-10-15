@@ -174,11 +174,16 @@ reviewer decision:
    participant-misfiled bucket, 77% of rows were accepted or kept. In many
    cases both readings hold: a component that also limits flux through its
    pathway. Use the buckets to order work, not to rewrite annotations.
-3. **GAF already has the right vocabulary but rarely uses it.**
-   `acts_upstream_of_positive_effect` / `_negative_effect` record a signed
-   causal effect without claiming the gene regulates X. Fewer than 0.2% of
-   regulation rows use them. Many perturbation-only "positive/negative
-   regulation of X" rows are what those qualifiers were designed for.
+3. **The `acts_upstream_of*` qualifiers are not a usable meaning signal.**
+   In principle `acts_upstream_of_positive_effect` / `_negative_effect`
+   record a signed causal effect without claiming the gene regulates X. In
+   practice, use depends on the annotating group rather than the biology
+   (20–30% of regulation rows at MGI and TAIR, 3.5% in human GOA, none at
+   PomBase), and the signed forms are under 0.2% of rows. The unsigned
+   `acts_upstream_of_or_within` also folds in participation. Reviewers treat
+   these rows as true but peripheral, not wrong (see below), so they are no
+   noisier than `involved_in` rows. They just do not tell us what kind of
+   upstream role the gene plays.
 
 ## Regulation terms versus extensions, across annotation sources
 
@@ -234,8 +239,29 @@ Two other contrasts to follow up:
   55% of rows, against 18% for human). So a low regulation share does not
   mean PomBase has stricter evidence standards for these rows.
 - **MGI and TAIR use `acts_upstream_of*` qualifiers** on 20% and 30% of
-  regulation rows, against 3.5% for human and none for pombe. Those rows are
-  the explicit form of the "perturbation readout" reading.
+  regulation rows, against 3.5% for human and none for pombe. This reflects
+  group conventions more than biology.
+
+### Are `acts_upstream_of*` rows noisy?
+
+Reviewer actions on biological-process rows, by GAF qualifier, across all
+reviews (4,482 `acts_upstream*` rows, mostly Arabidopsis, human, zebrafish and
+mouse):
+
+| qualifier | rows | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | REMOVE |
+|---|---|---|---|---|---|
+| `acts_upstream*`, perturbation evidence | 3,202 | 33% | 58% | 3.2% | 1.0% |
+| `involved_in`, perturbation evidence | 12,474 | 43% | 41% | 4.3% | 0.5% |
+| `acts_upstream*`, other evidence | 1,280 | 42% | 41% | 5.2% | 2.7% |
+| `involved_in`, other evidence | 38,242 | 46% | 33% | 8.3% | 2.1% |
+
+Reviewers demote `acts_upstream*` rows to non-core more often, but they mark
+them over-annotated *less* often than `involved_in` rows. In enrichment
+(genesets, recurated gold), removing the 2,438 human gene–term pairs supported
+only by `acts_upstream*` rows *lowers* recall slightly (0.549 → 0.543 for the
+current closure, 0.653 → 0.651 for regulates closure). Their contested-region
+precision is the same. So these rows are low-information but not noise. Keep
+them as data, and don't use the qualifier to infer what a row means.
 
 ## Proposed triage rules
 
