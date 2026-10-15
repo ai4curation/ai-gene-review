@@ -1,14 +1,12 @@
 ---
 title: "Review Quality Audit"
 maturity: MATURE
+last_reviewed: 2026-10-05
 tags: [PIPELINE, EVALUATION]
 manifest:
   slides:
     - href: REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/UW3xrt3nFrBrQUhq3QxrsD
-      title: Project brief
 ---
 
 # Review Quality Audit
@@ -21,13 +19,13 @@ defect in three tiers (placeholder evidence; templated summary and reason; templ
 reason only), after the pattern was first found and fixed on mouse Fyn. We did this
 because a review whose reasoning is boilerplate cannot be audited, and the problem
 concentrates in large hub genes where it does the most damage. The first run flagged
-51 of 2,801 files: 4 Tier 1 (mouse Egfr, Grb2, Cbl, Egf) and 13 genuine Tier 2
+51 of 2,801 files: 4 Tier 1 (mouse/Egfr, mouse/Grb2, mouse/Cbl, mouse/Egf) and 13 genuine Tier 2
 reworks, all of which have since been re-reviewed, plus 34 low-severity Tier 3 files.
-A re-run on 2026-09-26 over 4,982 files finds Tier 1: 0, Tier 2: 0, Tier 3: 30; the
-committed [report](REVIEW_QUALITY_AUDIT/reports/REPORT.md) was regenerated after the
-reworks but still over 2,801 files (Tier 1: 0, Tier 2: 0, Tier 3: 34), so only its file
-count and Tier 3 total are stale.
-The CI smell test recommended below has not been added.
+A 2026-10-05 re-run over 5,625 files still finds Tier 1: 0, but now reports 4
+Tier 2 candidates and 31 Tier 3 files. The 4 Tier 2 hits are dominated by repeated
+`GO:0005515 protein binding` or localization rows whose duplicate rationales may be
+legitimate; detector tuning and CI gating are tracked in
+[#4010](https://github.com/ai4curation/ai-gene-review/issues/4010).
 
 ## The defect
 
@@ -53,15 +51,16 @@ widespread the pattern is.
 ## Detector
 
 [`REVIEW_QUALITY_AUDIT/scan_boilerplate.py`](REVIEW_QUALITY_AUDIT/scan_boilerplate.py)
-scans every `genes/**/*-ai-review.yaml` and flags two severities:
+scans every `genes/**/*-ai-review.yaml` and flags three tiers:
 
 - **Tier 1 (critical):** ≥ 3 annotations carry the generic placeholder
   `supporting_text`. The *evidence is fake/non-specific* — the same defect class
   as Fyn. These should be re-reviewed (or reverted to unreviewed stubs).
-- **Tier 2 (genuine rework):** *both* the `summary` and the `reason` are drawn
+- **Tier 2 (candidate rework):** *both* the `summary` and the `reason` are drawn
   from a tiny templated set (unique-summary ratio ≤ 0.15 **and** unique-reason
-  ratio ≤ 0.15). The per-annotation rationale carries no real curation signal,
-  even though the `supporting_text` may be a real quote. Needs full re-curation.
+  ratio ≤ 0.15). This usually means the per-annotation rationale carries no real
+  curation signal even though the `supporting_text` may be a real quote, but large
+  repeated imports of the same GO term can mimic the same signal.
 - **Tier 3 (reason-only, low severity):** only the one-line `reason` is
   templated; the `summary` is term-specific and `supporting_text` is a real
   quote. The substantive review is genuine — only the `reason` field is lazy.
@@ -89,18 +88,18 @@ verified `supporting_text`), so Tier 1 is now empty:
 
 | Gene | reviewed annotations | status |
 |---|---|---|
-| Egfr (receptor tyrosine kinase) | 304 | re-reviewed |
-| Grb2 (adaptor) | 188 | re-reviewed |
-| Cbl (E3 ubiquitin ligase) | 140 | re-reviewed |
-| Egf (ligand) | 129 | re-reviewed |
+| mouse/Egfr (receptor tyrosine kinase) | 304 | re-reviewed |
+| mouse/Grb2 (adaptor) | 188 | re-reviewed |
+| mouse/Cbl (E3 ubiquitin ligase) | 140 | re-reviewed |
+| mouse/Egf (ligand) | 129 | re-reviewed |
 
 (Fyn was re-reviewed first and seeded this audit.) Re-running the scanner now
 reports **Tier 1: 0**.
 
-### Tier 2 — genuine rework (13 found; **all complete**)
+### Tier 2 — genuine rework and current candidates
 
 Both `summary` and `reason` templated — no real per-annotation curation signal.
-All 13 have been re-reviewed: full per-term action/summary/reason regenerated
+The first 13 genuine hits have been re-reviewed: full per-term action/summary/reason regenerated
 with the real `supporting_text` preserved.
 
 - **Batch 1:** `mouse/Mtor` (372), `human/YWHAZ` (220), `mouse/Nf1` (195),
@@ -114,17 +113,20 @@ with the real `supporting_text` preserved.
   (adhesion/structure, Wnt/transcription, and the developmental-phenotype tail),
   then merged with exact disjoint coverage.
 
-Re-running the scanner now reports **Tier 2: 0**.
+A live 2026-10-05 scan now reports four Tier 2 candidates:
+`human/GRB2`, `human/SPRED1`, `human/CASP6`, and `human/SOS1`. All four are dominated
+by repeated rationales on duplicate `GO:0005515 protein binding`, cytosol, or
+high-throughput interactome rows, so they should drive detector tuning before
+bulk re-review ([#4010](https://github.com/ai4curation/ai-gene-review/issues/4010)).
 
-### Tier 3 — reason-only boilerplate (34 files, low severity)
+### Tier 3 — reason-only boilerplate (31 live files, low severity)
 
 Only the one-line `reason` is lazy; the `summary` is term-specific and the
 `supporting_text` is a real quote, so the substantive review is genuine. This
 group includes many large hub genes that *look* templated by reason alone but
-are actually fine — e.g. `human/AKT1`, `mouse/Bcl2`, `mouse/Pten`,
-`mouse/Hsp90aa1`, the Argonautes `AGO1–4`, the calmodulins `Calm1–3`, and the
-RAS family. Low priority. See the full split in
-[the report](REVIEW_QUALITY_AUDIT/reports/REPORT.md).
+are actually fine — e.g. `mouse/Bcl2`, `mouse/Pten`, `mouse/Hsp90aa1`, the
+calmodulins `Calm1–3`, Drosophila Notch/Delta, and human FGFR/KASH5 adaptor or
+interaction-heavy reviews. Low priority.
 
 The flagged genes are heavily weighted toward large, pleiotropic hub genes —
 exactly the genes with the most annotations, where templating saves the most
@@ -135,11 +137,13 @@ effort and where over-annotation is most likely.
 1. **Tier 1:** re-review (as was done for Fyn) — these carry no usable evidence.
    The action labels can seed the re-review, but every `reason` and
    `supporting_text` must be regenerated against real sources.
-2. **Tier 2:** lower priority; spot-check that the dominant `reason` is at least
-   defensible and that `supporting_text` is genuine. Prioritise by annotation
-   count (the largest files have the most leverage).
-3. Treat the placeholder string and a low unique-reason ratio as a **CI smell
-   test** for future review submissions.
+2. **Tier 2:** inspect the current detector hits, then tune the scan so repeated
+   rows for the same GO term or the same high-throughput source do not trip the
+   same signal as fully templated reviews ([#4010](https://github.com/ai4curation/ai-gene-review/issues/4010)).
+3. **Tier 3:** tighten the low-priority one-line reasons in bulk.
+4. Treat the placeholder string and the tuned low-ratio checks as a **CI smell
+   test** for future review submissions once the duplicate-row false positives
+   have been separated.
 
 ## Related projects
 

@@ -132,3 +132,68 @@ in its own WITH/FROM for two of them — that is the expected marker of a node s
 target's own experimental annotation, not circularity. The real gap is that PTHR42980 has
 **no molecular-function IBD at all**, so GO:0003863 — the term with three independent
 experimental annotations on this gene — does not propagate to any ortholog.
+
+
+## 2026-09-30 BCKDHB source and mechanism reassessment
+
+All 41 source assertions remain, with 15 missing supporting-entity lists restored by the normal GOA projection. Two pre-existing authored cofactor-binding annotations remain separately identifiable, giving 43 rows: 34 ACCEPT, six KEEP_AS_NON_CORE, one MODIFY and two inherited NEW. No additional process or annotation is proposed. The five supported alpha-chain interaction records are retained as non-core under the supplied ActionEnum; lack of a more specific assay-grounded replacement is not evidence that an interaction is wrong.
+
+One core describes BCKDHB's participation in the shared alpha2-beta2 E1 active sites. The beta chain contributes ThDP contacts and catalytic chemistry; His146-beta is the numbering used in PMID:12902323, not a newly asserted precursor coordinate. E1 decarboxylates branched-chain ketoacids and reductively acylates the DBT lipoyl group. DBT and DLD perform the subsequent CoA-transfer and reoxidation steps. Alpha-chain phosphorylation regulates assembled E1 and is not a separate beta-chain kinase or phosphatase function. The overall complex oxidation follows reversible transamination.
+
+Six UniProt potassium-binding features describe coordinating residues, not six separate potassium sites. ThDP binding is supported within the assembled alpha/beta active site rather than as an independently demonstrated activity of isolated beta protein. No magnesium-binding annotation is introduced. A short IBA donor list is not a weak phylogenetic argument, and inclusion of the target among experimentally grounded descendants is legitimate. No PAINT-node reconstruction is claimed here.
+
+Both UniProt products are preserved. P21953-2 replaces canonical residues 212–218 and lacks residues 219–392; matching isoform numbers do not establish equivalence to RefSeq transcripts. Its import, assembly and retained enzymatic activity remain questions. The familial leader-region frameshift in PMID:2022752 is not treated as a clean mitochondrial-import experiment, and the reported residual complex activity is approximately 6%, not universally zero. That normal cache is abstract-only despite its repeated Full Text heading.
+
+The complete cached primary abstracts and relevant UniProt features were read, along with official human 1DTW metadata; no new coordinate, density, figure, supplement or full-paper analysis is claimed. Specific interactome and mitochondrial-proteomics supplementary rows were not inspected. The generated Falcon report remains unchanged as a source of leads, not as primary verification. Its incorrect NAD+ regeneration wording and unsupported extramitochondrial generalizations are superseded by the bounded account here. Historical notes are retained.
+
+All ten normal Reactome records were imported through Source94 after the preserved original local retrieval failed. Their normal bodies were reassessed before this proposal was generated. Their reaction descriptions are interpreted at their actual subunit and complex level; database labels for other enzymes do not establish autonomous BCKDHB chemistry. The precise reading scope and any event wording discrepancy are recorded per reference. This integration adds no verbatim quotation.
+
+Reactome R-HSA-5693153 has disputed beta-subunit wording: the phosphorylation-loop evidence identifies E1 alpha. The ten recovered short caches do not expose explicit compartment fields; retained matrix annotations also rely on the independently read human UniProt/E1 evidence.
+
+
+### Validation of the integrated review
+
+The focused `just validate human BCKDHB` command passed with six advisories: five supported generic protein-binding records retained as non-core under the supplied ActionEnum, and one noting that annotations cite primary/database evidence rather than the unchanged generated Falcon report. These advisories do not indicate an unsupported interaction or require a new molecular-function claim. Rendering passed, and the generated HTML is checked against the reviewed YAML. No global validation pass is claimed.
+
+
+## 2026-09-30: evidence anchors and mitochondrial compartment
+
+The two inherited NEW cofactor/ion-binding assertions and the single core function now include short verbatim anchors. The immutable UniProt precursor152 feature identifies the beta-chain thiamine-diphosphate contact shared with alpha; the PMID10745006 abstract locates the second structural potassium ion in beta; and the PMID9582350 abstract supports the assembled wild-type alpha2beta2 enzyme. This restores machine-checkable evidence while preserving the distinction between deposited structural interpretation and an independent inspection of atomic coordinates [PMID:10745006; PMID:9582350]. The local UniProt record is also quoted for its explicit matrix location.
+
+The ten Reactome-sourced annotations concern mitochondrial matrix localization. Their reasons now lead with that compartment and its independent UniProt corroboration, rather than reaction summaries. The fetched summaries do not expose a compartment field. Five are ordinary pathway events; R-HSA-9865115, R-HSA-9865121, R-HSA-9907572, R-HSA-9912480 and R-HSA-9912527 are disease-variant events. Earlier references to normal caches meant the standard machine-fetch procedure, not that each event represented normal physiology. The existing PPM1K/E1-beta description dispute remains explicit and does not invalidate matrix localization.
+
+The biological summary restores the supported EC1.2.4.4 designation and the 24-subunit cubic DBT core. All41 source assertions, both inherited NEW entries, both alternative products and all decisions remain unchanged. Supported generic interactions retain the supplied ActionEnum's non-core treatment; no evidence-free replacement activity is introduced to suppress a policy advisory. Final focused validation and independent review are recorded separately.
+
+
+## Follow-up validation, 2026-09-30
+
+The independently reviewed follow-up passes focused validation (six warnings), history validation, and rendering. Five warnings concern supported generic binding retained as non-core under the supplied action definitions; the other records that direct primary/database sources, rather than the unchanged generated report, support annotation decisions. All 41 source assertions, two inherited NEW assertions and two products are preserved. No new global validation pass is claimed.
+
+## Generic binding policy cleanup, 2026-10-05 UTC
+
+The five bare BCKDHA GO:0005515 interaction rows are now REMOVE under the codified generic-binding policy. This removes an uninformative generic term rather than the E1 alpha/beta partnership itself: each row preserves its original reference, IPI qualifier and P12694 supporting entity, and the BCKDHA partnership remains captured by the E1 heterotetramer rows and the contributes_to GO:0003863 rows.
+
+No replacement molecular function is introduced for the physical association alone. Existing-annotation totals after this cleanup are 34 ACCEPT, 1 KEEP_AS_NON_CORE, 1 MODIFY, 5 REMOVE and 2 NEW across 43 rows; the only remaining KEEP_AS_NON_CORE row is the structural potassium-binding proposal.
+
+
+## 2026-10-09: source-specific binding review under the project instruction
+
+This entry supersedes the October 5 binding-policy removal and the earlier authority attributed to the ActionEnum alone. The user's explicit [ClinGen project instruction on published main](https://github.com/ai4curation/ai-gene-review/blob/f7dc8b60bf8be80744f75955c3c1a3c16bd73888/projects/CLINGEN_MENDELIAN.md#curation-instructions) states:
+
+> retain a supported, biologically correct `GO:0005515` (protein binding) annotation as `KEEP_AS_NON_CORE` when no evidence-backed, more specific replacement has been established.
+
+All five BCKDHA interaction assertions are restored to KEEP_AS_NON_CORE after checking their individual sources. The three structural citations were checked against their complete cached abstracts, publication-specific IntAct records and primary RCSB citation/entity metadata:
+
+| Original source | Example deposited structure | Verified human protein entities |
+| --- | --- | --- |
+| PMID:12902323 | [1OLS](https://www.rcsb.org/structure/1OLS), IntAct EBI-1036952 | P21953 / P12694 |
+| PMID:15166214 | [1V1R](https://www.rcsb.org/structure/1V1R), IntAct EBI-1039093 | P21953 / P12694 |
+| PMID:15576032 | [1X7W](https://www.rcsb.org/structure/1X7W), IntAct EBI-1041254 | P21953 / P12694 |
+
+These are checks of deposited source/partner identity and crystallographic-association provenance. They do not claim a new reading of complete articles, atomic coordinates, density, interfaces or assay controls. The alpha-chain phosphorylation mechanism remains distinct from the beta-chain contribution to the shared active site. The inspected evidence does not justify replacing all of these associations with a newly inferred heterodimerization or enzyme-regulation activity.
+
+The [official BioPlex release page](https://bioplex.hms.harvard.edu/interactions.php) assigns the directed networks to the 2017 and 2021 publications. The [BioPlex 2.0 HEK293T file](https://bioplex.hms.harvard.edu/data/BioPlex_2.0_293T_DirectedEdges.tsv) (PMID:28514442) and [BioPlex 3.0 HEK293T file](https://bioplex.hms.harvard.edu/data/BioPlex_3.0_293T_DirectedEdges.tsv) (PMID:33961781) each contain BCKDHB, GeneID 594, as bait and BCKDHA, GeneID 593, as prey. This resolves the exact pair and cell assignment left uninspected in the earlier notes. AP-MS establishes complex association without identifying a binary interface. Representation in both releases is not counted as independent experimental replication. No matching edge was found in the inspected BioPlex 3.0 HCT116 directed network; a missing reported edge does not establish absence of the biological interaction.
+
+The source linkage was checked separately for each assertion; none is restored solely because another paper establishes the alpha/beta complex. No new scientific quotation or annotation is added. All 41 original source assertions, the two inherited NEW cofactor-binding entries, both alternative products, existing supporting references and quotations, and the shared-active-site core remain intact. Current totals are 34 ACCEPT, six KEEP_AS_NON_CORE, one MODIFY and two inherited NEW across 43 entries.
+
+Correction to the October 5 journal: the pre-existing non-core contextual annotation is GO:0007584 response to nutrient. GO:0030955 potassium ion binding remains one of the two inherited NEW entries. Historical notes and source caches are preserved.

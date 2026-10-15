@@ -150,3 +150,10 @@ Discrepancies / annotations to revisit:
   already captured as ACCEPT or KEEP_AS_NON_CORE, so no action implied for those. The only candidate for a possible
   NEW supporting annotation is the CASP3-vs-CASP7 substrate-discrimination point, but this is a comparative-biochemistry
   observation rather than a new GO term for CASP3 itself; no annotation change recommended from Falcon alone.
+
+## GO:0005515 re-review (2026-09-28)
+
+- Re-reviewed all generic protein binding rows under the current policy: direct substrate-interaction papers were
+  converted to `MODIFY` with `GO:0004197` as the replacement, uninformative interactome/inhibitor/regulator bindings
+  were changed to `REMOVE`, and PMID:15246877 was left `UNDECIDED` because the cached abstract does not mention CASP3
+  and the full text is unavailable.

@@ -46,7 +46,7 @@ The four prepared commands passed dry-run checks. Each uses three OpenScientist 
 
 ## Accepted jobs
 
-All four investigations were accepted on 9 September 2026 UTC. Reports are pending; submission does not change the biological assessments. [Submission verification](fly-benchmark/openscientist-selection/submission-verification.json) confirms that each upstream job contains the prepared prompt and exact frozen sequence.
+All four investigations were accepted on 9 September 2026 UTC. Three reports have been downloaded: Dic4, ttv and TyrRS, each at `genes/DROME/<GENE>/<GENE>-hypotheses/fly41-*/openscientist.md`. The CG5611 job is recorded as `FINISHED_WITHOUT_REPORT` in the [job status snapshot](fly-benchmark/openscientist-selection/run-status.json), and no CG5611 report is present. As of 2026-10-01 all three downloaded reports are cited in the Dic4, ttv and TyrRS prediction reviews. [Submission verification](fly-benchmark/openscientist-selection/submission-verification.json) confirms that each upstream job contains the prepared prompt and exact frozen sequence.
 
 | Target | OpenScientist job ID |
 |---|---|

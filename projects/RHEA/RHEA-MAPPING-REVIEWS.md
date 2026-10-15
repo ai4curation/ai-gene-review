@@ -49,7 +49,7 @@ These reviewed enzymes catalyse a well-characterised reaction for which **QuickG
 molecular-function term**. Each is recorded in the mapping set as `sssom:NoTermFound` with a proposed
 term, and is a GO new-term-request candidate.
 
-### Phosphohydroxythreonine aminotransferase (serC P23721)
+### Phosphohydroxythreonine aminotransferase (`serC` P23721)
 - **Organism / evidence:** Escherichia coli; reviewed, PE1, catalytic activity PMID:8706854.
 - **Reaction (RHEA:16573, EC 2.6.1.52):** 4-(phosphooxy)-L-threonine + 2-oxoglutarate = (R)-3-hydroxy-2-oxo-4-phosphooxybutanoate + L-glutamate
 - **GO status:** GO:0004648 names the distinct phosphoserine reaction and is neither a parent nor an exact target. **Proposed new term:** *phosphohydroxythreonine aminotransferase activity*, anchored to RHEA:16573.
@@ -73,6 +73,11 @@ term, and is a GO new-term-request candidate.
 - **Organism / evidence:** Bacteroides thetaiotaomicron; reviewed, PE1, catalytic activity PMID:23943617.
 - **Reaction (RHEA:13145, EC 2.4.1.320):** 4-O-beta-D-mannopyranosyl-N-acetyl-D-glucosamine + phosphate = alpha-D-mannose 1-phosphate + N-acetyl-D-glucosamine
 - **GO status:** no specific MF term (QuickGO). **Proposed new term:** *1,4-beta-mannosyl-N-acetylglucosamine phosphorylase activity*, anchored to RHEA:13145 / EC 2.4.1.320.
+
+### Phosphatidylethanolamine-dependent ceramide phosphoethanolamine synthase (SMSr Q96LT4)
+- **Organism / evidence:** Homo sapiens; reviewed, PE1, catalytic activity PMID:19506037.
+- **Reaction (RHEA:36079, EC 2.7.8.-):** N-acylsphing-4-enine + 1,2-diacyl-sn-glycero-3-phosphoethanolamine = N-acylsphing-4-enine 1-phosphoethanolamine + 1,2-diacyl-sn-glycerol
+- **GO status:** `GO:0002950` names CDP-ethanolamine/CMP donor chemistry, not the phosphatidylethanolamine/DAG reaction. **Proposed new term:** *phosphatidylethanolamine-dependent ceramide phosphoethanolamine synthase activity*, anchored to RHEA:36079 and the human SAMD8 review.
 
 ## Reproduce / validate
 
