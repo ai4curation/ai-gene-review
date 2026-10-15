@@ -72,9 +72,9 @@ UniProt record, PubMed-verified primary papers cached in `publications/`, and we
 
 ## Deliberately short supporting_text (do not "complete")
 
-Two quotes in this review stop before the end of their source sentence on
-purpose, and were expanded by an automated pass twice before being restored
-both times. Leave them as they are:
+One quote in this review stops before the end of its source sentence on
+purpose, and was expanded by an automated pass twice before being restored
+both times. Leave it as it is:
 
 - PMID:19747949 `However, the enzymes trypanothione reductase and glutathione
   reductase are highly specific for their respective disulphide substrates` —
