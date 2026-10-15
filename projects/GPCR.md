@@ -133,7 +133,24 @@ Recurring function questions to resolve while reviewing:
 - Frizzled and adhesion GPCRs: whether the GPCR MF terms reflect the
   receptor's actual mechanism.
 
+## First pairing: mu-opioid receptor
+
+Chosen as the first receptor (2026-10-15) because dismech already has many
+opioid-treated entries waiting for a shared mechanism module. Gene side:
+
+- OPRM1 gene review (then OPRD1, OPRK1, OPRL1, so one family call covers
+  the classical opioid receptors; their PANTHER family is to be identified
+  from the member index, since no PANTHER family name mentions them)
+- Gi/o module: adenylyl cyclase inhibition, G beta-gamma activation of GIRK
+  channels and inhibition of voltage-gated calcium channels
+- Desensitization/arrestin module: GRK phosphorylation, beta-arrestin
+  recruitment, internalization (the tolerance-relevant arm)
+
+The dismech side builds the mu-opioid agonism and antagonism modules on top.
+
 ## Plan
+
+- [ ] OPRM1 gene review
 
 - [ ] Pull GOA term counts for all human GPCRs to size the over-annotation problem
 - [ ] Family reviews for PTHR24248, PTHR24247, PTHR24249 (aminergic)
