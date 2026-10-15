@@ -102,7 +102,9 @@ P2' and P3'" (UniProt CATALYTIC ACTIVITY). Documented substrates span host prote
   both correct; the endopeptidase term is the core MF, the generic metallopeptidase row
   is kept as the same claim at lower resolution (MODIFY → GO:0004222).
 - `GO:0005886 plasma membrane`: correct but less specific than the GPI data support →
-  MODIFY to `GO:0031362 anchored component of external side of plasma membrane`.
+  MODIFY to `GO:0009897 external side of plasma membrane`. (The anchored-component terms
+  that would state the GPI attachment directly, GO:0031362 and GO:0046658, are **obsolete**
+  in the ontology version used by validation, so they cannot be used here.)
 - `GO:0016020 membrane`: TOO_GENERAL (entailed by the plasma-membrane claim).
 - `GO:0007155 cell adhesion`: an InterPro-family electronic transfer of a generic
   (animal-flavoured) adhesion term. The real, documented adhesion claim is
