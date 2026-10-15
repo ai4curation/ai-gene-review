@@ -47,7 +47,11 @@ metazoan occluding junction that `GO:0005923 bicellular tight junction` describe
 ("An occluding cell-cell junction that is composed of a branching network of sealing
 strands that completely encircles the apical end of each cell in an epithelial sheet",
 OLS). The GOA row carrying `GO:0005923` for RH5 is an animal-specific term imported on
-the strength of that shared word, and is reviewed as REMOVE.
+the strength of that shared word. The underlying IDA observation is nevertheless real, so
+the row is reviewed as MODIFY to a proposed new `moving junction` term (parent
+`GO:0030054 cell junction`, confirmed in OLS as "a specialized region of connection
+between two or more cells"), matching the term proposed in the PLAF7 AMA1 review, rather
+than as REMOVE, which would discard a genuine localisation.
 
 ## 3. Molecular function: host receptor binding
 
@@ -165,8 +169,9 @@ not itself a GO-annotatable function and is recorded here only as context.
 
 ## 8. Curation decisions taken (summary)
 
-- `GO:0005923 bicellular tight junction` → REMOVE (animal epithelial term; the merozoite
-  "tight junction" is the apicomplexan moving junction).
+- `GO:0005923 bicellular tight junction` → MODIFY to a proposed `moving junction` term
+  (animal epithelial term; the merozoite "tight junction" is the apicomplexan moving
+  junction, but the IDA localisation itself stands).
 - `GO:0044409 symbiont entry into host` (9 rows) and `GO:0046718 symbiont entry into host
   cell` (2 EXP rows) → MODIFY to `GO:0085017 entry into host cell by a symbiont-containing
   vacuole`, the descendant that describes vacuole-mediated apicomplexan invasion and the
