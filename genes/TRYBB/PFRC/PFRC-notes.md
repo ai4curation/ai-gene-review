@@ -106,3 +106,40 @@ from the UniProt record, PubMed searches and the cached publications in `publica
   [PMID:10954429 "PFR construction was affected, resulting in cell paralysis"].
 - The cytoskeleton -> paraflagellar rod MODIFY is a lateral correction, not a descendant
   refinement.
+
+## Revision 2 (review-fix round, PR #5029)
+
+PFRC and PFRA carry row-for-row identical GOA files, so divergent actions on shared rows need
+a reason. Two were corrected.
+
+- **GO:0031514 motile cilium: ACCEPT -> MODIFY -> GO:0097740.** The earlier ACCEPT called the
+  term "non-redundant" with the paraflagellar rod assertion made in the same review. It is not:
+  QuickGO's ancestors of GO:0097740 (relations is_a + part_of) are GO:0120025, GO:0031514,
+  GO:0097740, GO:0099080, GO:0005929, GO:0110165, GO:0043226, GO:0005575, GO:0042995,
+  GO:0097729, GO:0043227 -- i.e. paraflagellar rod is part_of GO:0097729 9+2 motile cilium and
+  hence of GO:0031514 motile cilium. (The OLS `getAncestors` call returns only the is_a chain,
+  which stops at GO:0099080 supramolecular complex; that is why the part_of link is invisible
+  there and the QuickGO ancestors call is the one to use.) The row is therefore correct but
+  general, which is MODIFY, and the replacement matches what PFRA does with the identical row.
+- **core_functions.locations:** dropped GO:0031514, which was listed alongside its own
+  descendant GO:0097740. PFRA lists only GO:0097740.
+- **GO:0005516 calmodulin binding: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED.** The old reason
+  rested on "no evidence contradicts it", which is not support. What exists is (i) an
+  InterPro2GO transfer off IPR007824, a *structural* Flagellar_rod domain shared by both major
+  subunits, so protein-nonspecific; (ii) an ECO:0000255 predicted region at 317-337; (iii)
+  complex-level "direct or indirect" interactions from the PFR interaction map. The one piece
+  of biochemistry, Ridgley et al. (PMID:10960180, abstract not cached), is accessible only
+  through the Portman and Gull review, which states it was run on a bulk PFR protein pool and
+  does not resolve PFR1 from PFR2: [PMID:19879876 "This suggests that there are two pools of
+  PFR proteins that are differentiated by their ability to bind calmodulin, although the
+  presence in the preparations of proteins of similar molecular weight such as PAR1 and PAR4
+  homologues may also explain these results."]. PMID:19879876 was added to the reference list
+  and the row's supported_by so the judgement rests on that evidence rather than on absence of
+  contradiction. MARK_AS_OVER_ANNOTATED rather than REMOVE, since calmodulin is a resident,
+  assembly-critical PFR protein and the claim is plausible at the complex level; it is an
+  over-annotation only as a statement about PFRC.
+- Divergence from PFRA on the calmodulin row is deliberate: PFRA's row cites the
+  calmodulin-Sepharose experiment and UniProt's predicted 335-355 region directly and is kept
+  as KEEP_AS_NON_CORE. The pool-level caveat applies to both paralogs, so if the two reviews
+  are harmonised again this is the row to revisit; it is flagged here rather than silently
+  equalised.

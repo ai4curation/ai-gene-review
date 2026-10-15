@@ -119,3 +119,24 @@ P2' and P3'" (UniProt CATALYTIC ACTIVITY). Documented substrates span host prote
   mTOR, so it performs the step; PMID:21501832).
   AMP degradation and ECM degradation are real but I did not find a GO term that fits
   without stretching, so they are recorded as questions rather than asserted annotations.
+
+## 5. Revision (review-fix round, PR #5029)
+
+- **Truncated quotations repaired.** Two `supporting_text` values had been cut at the cached
+  file's hard line wrap and ended mid-clause ("the Leishmania protease GP63 cleaves"), so they
+  no longer stated the claim they were attached to. Both are now full clauses:
+  [PMID:21501832 "we show that the Leishmania protease GP63 cleaves the mammalian/mechanistic
+  target of rapamycin (mTOR), a serine/threonine kinase that regulates the translational
+  repressor 4E-BP1"]. The companion quote in the same row was completed likewise:
+  [PMID:21501832 "mTOR cleavage results in the inhibition of mTOR complex 1 (mTORC1) and
+  concomitant activation of 4E-BP1 to promote Leishmania proliferation."].
+- **GO:0008270 zinc ion binding (NEW) re-anchored.** It had been supported by a metzincin
+  *class* statement ("a member of the metzincin class of zinc proteinases"), which is a
+  family-level property, not an observation on P08148. It is now anchored to the three
+  explicit UniProt `BINDING` features for the catalytic Zn(2+) in P08148 itself -- residues
+  264, 268 and 334, each `/ligand="Zn(2+)" /ligand_id="ChEBI:CHEBI:29105"
+  /ligand_note="catalytic"` and evidenced to PubMed:9739094 -- cited as
+  `file:LEIMA/gp63/gp63-uniprot.txt`, the form other reviews use for UniProt features
+  (cf. genes/DANRE/asah2, genes/human/AGTPBP1). Residue identities were read off the
+  sequence in the flat file: 264 H, 265 E (catalytic base), 268 H, 334 H, i.e. the
+  HEXXH pair plus the third metzincin histidine, not a Met-turn methionine.

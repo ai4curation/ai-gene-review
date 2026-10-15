@@ -241,11 +241,11 @@ reviewed, 7 NEW rows added.
 | TRYB2 REL1 | 15 | 8 | 3 | 4 | 0 | 0 | 0 |
 | TRYBB TPR | 13 | 4 | 2 | 5 | 1 | 1 | 0 |
 | TRYBB PFRA | 3 | 0 | 1 | 2 | 0 | 0 | 2 |
-| TRYBB PFRC | 3 | 1 | 1 | 1 | 0 | 0 | 2 |
+| TRYBB PFRC | 3 | 0 | 0 | 2 | 0 | 1 | 2 |
 | LEIMA gp63 | 12 | 7 | 1 | 3 | 0 | 1 | 2 |
 | LEIMA PTR1 | 8 | 5 | 1 | 2 | 0 | 0 | 1 |
 
-"Other" is TOO_GENERAL or UNDECIDED.
+"Other" is TOO_GENERAL, UNDECIDED or MARK_AS_OVER_ANNOTATED.
 
 **Patterns, continuing Track A's list.**
 
