@@ -180,6 +180,63 @@ reviewer decision:
    regulation rows use them. Many perturbation-only "positive/negative
    regulation of X" rows are what those qualifiers were designed for.
 
+## Regulation terms versus extensions, across annotation sources
+
+Could a "regulation of X" annotation instead be a more precise statement
+about *which gene* is regulated? GO already supports that through annotation
+extensions. For a TF, the precise form is DNA-binding TF activity
+`has_input(target gene)`, or a regulation term with a gene-product extension.
+[`regulation_by_species.py`](REGULATION_CONSISTENCY/regulation_by_species.py)
+compares human GOA with six MOD GAFs from the same GO release
+([`results/regulation_by_species.yaml`](REGULATION_CONSISTENCY/results/regulation_by_species.yaml)):
+
+| | human | pombe | yeast | mouse | fly | worm | Arabidopsis |
+|---|---|---|---|---|---|---|---|
+| regulation share of BP rows | 31% | **12%** | 14% | 31% | 18% | 21% | 15% |
+| … of which transcriptional | 29% | 45% | 50% | 26% | 35% | 35% | 50% |
+| … perturbation-only evidence | 18% | 41% | 55% | 21% | 56% | 55% | 36% |
+| … with a gene-product extension | 5% | 5% | 7% | 3% | 1% | 7% | 0% |
+| TF rows on a *non*-transcriptional regulation term | 2,922 | **45** | 219 | 5,212 | 585 | 420 | 1,036 |
+| … with a gene-product extension | 1% | 2% | 0% | 0% | 0% | 1% | 0% |
+| TF activity (MF) rows naming a target gene | 5% | **75%** | 9% | 5% | 3% | 1% | 0% |
+
+**Pombe uses regulation terms sparingly, and models TF targets on the MF.**
+Regulation terms make up 12% of PomBase BP rows, against 31% for human and
+mouse. Half of PomBase's regulation rows are transcriptional, and almost none
+put a TF on regulation of a downstream process (45 rows). Instead, 75% of
+PomBase's DNA-binding TF activity rows name the target gene with `has_input`.
+Human GOA does that for 5% of TF activity rows. Its 2,922 rows placing TFs on
+"regulation of" a non-transcriptional process carry a target gene in 1% of
+cases.
+
+**So in human, a TF on "regulation of X" is usually a weaker, higher-level
+stand-in for "this TF controls gene(s) Y that act in X".** The target gene is
+almost never recorded. These rows correspond to the
+`indirect_via_gene_expression` bucket above, which reviewers most often demote
+to non-core. Converting them to the pombe pattern would mean finding the
+targets in the source papers, which is a curation task rather than a
+relabelling.
+
+**For enrichment, though, TFs are not where the valid regulation signal
+comes from.** In the genesets recuration, 145 of the 149 regulation terms
+judged core or supporting regulate non-transcriptional processes:
+proliferation, cell death, immune activation, the MAPK cascade, muscle
+contraction. Only 8% of the contributing genes are TFs, the same rate as in
+rejected regulation terms. Most of that signal comes from signaling components
+and effectors. GO-CAM would express it as causal links between activities,
+and a GAF can express it only with `causally_upstream_of` or
+`has_regulation_target` extensions. Those are rare everywhere: under 0.5% of
+human regulation rows.
+
+Two other contrasts to follow up:
+
+- **Pombe and yeast lean on perturbation evidence for regulation** (41% and
+  55% of rows, against 18% for human). So a low regulation share does not
+  mean PomBase has stricter evidence standards for these rows.
+- **MGI and TAIR use `acts_upstream_of*` qualifiers** on 20% and 30% of
+  regulation rows, against 3.5% for human and none for pombe. Those rows are
+  the explicit form of the "perturbation readout" reading.
+
 ## Proposed triage rules
 
 These are draft rules for review practice. They are not yet enforced.
