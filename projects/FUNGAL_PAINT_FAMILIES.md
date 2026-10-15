@@ -73,8 +73,8 @@ paralog-aware activity and complex checks.
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; drafted in PR
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
-- [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; drafted in
-  this branch
+- [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; merged in PR
+  #4774
 - [ ] `NEUCR` MYST-family member
 
 ## Later Candidates
@@ -139,7 +139,7 @@ step-specific review in each fungus.
 
 - [ ] `yeast/BCY1` - *S. cerevisiae* PKA regulatory subunit
 - [x] `SCHPO/cgs1` - *S. pombe* PKA regulatory subunit; merged in PR #4763
-- [x] `CANAL/BCY1` - CGD-seeded *Candida albicans* Bcy1; drafted in PR #4751
+- [x] `CANAL/BCY1` - CGD-seeded *Candida albicans* Bcy1; merged in PR #4751
 - [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; drafted in this
   branch
 
