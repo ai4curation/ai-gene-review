@@ -1063,6 +1063,65 @@ Opisthokonta). Output in
 ---
 # NOTES
 
+## Controlled OpenScientist batch (2026-10-15)
+
+Sixteen blinded hypotheses ("GENE has TERM") were pre-registered in
+[`openscientist-controls/selection.yaml`](TREEGRAFTER/openscientist-controls/selection.yaml).
+The review's action on each row was frozen at `1b7f8f330`, before any report
+was read. All 16 reports are written. Five runs timed out at OpenScientist's
+7,200 s ceiling with 3 iterations and were retried once with 2 (PP_2482, relA,
+PP_4594, metZ, pdxH), which departs from the pre-registered protocol.
+Verdicts and their scoring:
+[`openscientist-controls/results.yaml`](TREEGRAFTER/openscientist-controls/results.yaml).
+
+| Group | Runs | Supported | Partially supported | Refuted |
+|---|---|---|---|---|
+| accepted sole-source controls | 4 | 3 | 1 | 0 |
+| rule tests (all accepted) | 5 | 4 | 0 | 1 |
+| UNDECIDED rows | 7 | 2 | 5 | 0 |
+
+- **Accepted rows mostly hold up.** Of the 9 accepted rows, the run supports
+  7. ADAR2, Cgas and relA, controls whose defining activity comes only from
+  TreeGrafter, are all supported.
+  - **TAS1R3 is partially supported, and the disagreement is about the GO
+    term, not the protein.** The run argues that sweet taste is a property of
+    the receptor pair, not of the T1R3 subunit, and that hummingbirds have no
+    TAS1R2. But it also cites the finding that the hummingbird's T1R1–T1R3
+    pair senses sugar (Baldwin et al. 2014, PMID:25146290). So the question
+    is how to annotate a subunit with its complex's function.
+- **The EC-contradiction rule is 1 for 2.**
+  - The fadB row, accepted although it trips the rule, is supported.
+  - The metZ row is refuted: carbon-sulfur lyase activity on an
+    O-succinylhomoserine sulfhydrylase. The protein is 82% identical to the
+    characterised *P. aeruginosa* MetZ, an EC 2.5.1.- transferase. GO has no
+    term for that exact activity; the nearest, `GO:0003961` (EC 2.5.1.49),
+    is a transferase too. So the review's reasoning that the lyase term is
+    "a reasonable available parent" does not hold. The row is a candidate for
+    re-review; the gene review has not been changed here.
+- **The outside-clade rule's test case holds.** DDO, whose query lies outside
+  the IBD node's clade, is supported.
+- **Both "TreeGrafter over the other pipeline" calls are supported:** PP_2320
+  over ARBA, and pdxH over InterPro2GO.
+- **UNDECIDED rows: the term is right in kind but wrong in depth.**
+  - Both MoaA paralogs (PP_1969, PP_2482) are supported as GTP
+    3′,8′-cyclases.
+  - The other five fault the depth of the term, not the family placement:
+    - **eryCIV:** too general; a dTDP-sugar aminotransferase.
+    - **PP_3571:** too general. PANTHER's own subfamily call is SF31,
+      N-acetyl-L-citrulline deacetylase; the genome's ArgE ortholog is
+      PP_5186.
+    - **gabD-II:** the NAD+ in the term is too specific; the cofactor
+      pocket allows NAD(P)+.
+    - **ptxD:** keep the term and add hydroxypyruvate reductase. The run
+      also rejects the phosphite dehydrogenase reading of the gene symbol.
+    - **PP_4594:** the sibling activity within its subfamily cannot be
+      separated by sequence alone.
+  - None of the 16 runs found a pseudo-enzyme.
+
+Sixteen runs give no rates. What they show is how the faults split: where
+TreeGrafter errs here, the protein is usually in the right family and the
+term is the wrong depth. A wrong reaction class (metZ) is rare.
+
 ## 2026-10-14
 
 - Brief rewritten (neutral title "Agentic review of the TreeGrafter
@@ -1426,11 +1485,10 @@ Opisthokonta). Output in
   check on a fresh sample that includes accepted TreeGrafter rows as
   controls, with the review actions recorded before the reports are read;
   only then quote a sensitivity/specificity.
-- **Controlled OpenScientist batch (running).** 16 pre-registered blinded
-  hypotheses, mixing UNDECIDED rows, accepted sole-source controls and rule
-  tests, with the review actions frozen in
-  [`openscientist-controls/selection.yaml`](TREEGRAFTER/openscientist-controls/selection.yaml)
-  before any report is read.
+- **Act on the OpenScientist batch.** Re-review metZ `GO:0016846`, refuted
+  as a lyase term on a transferase, and the five UNDECIDED rows the runs
+  resolved (see
+  [Controlled OpenScientist batch](#controlled-openscientist-batch-2026-10-15)).
 - **Blind the corroboration test.** Re-adjudicate a sample of `GO_REF:0000118`
   and `GO_REF:0000120` rows with `original_reference_id` withheld, to separate
   the corroboration effect from the reviewer's visibility of the label.
