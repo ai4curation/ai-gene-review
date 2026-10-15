@@ -2988,22 +2988,21 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**413 of 2,876 genes are complete; 2,463 remain.**
-Nineteen distinct verified merged gene reviews add to checkpoint 394. The fixed
-completion cutoff is [CTCF merge 5e2706cd8198](https://github.com/ai4curation/ai-gene-review/commit/5e2706cd819805cc1e881da111e9418779254827),
-at **2026-10-14 01:31:47 UTC**. Each catalogue gene counts once; products,
+**425 of 2,876 genes are complete; 2,451 remain.**
+Twelve distinct verified merged gene reviews add to checkpoint 413. The fixed
+completion cutoff is [CUL3 merge 699711b0e7d1](https://github.com/ai4curation/ai-gene-review/commit/699711b0e7d1c66b75bfe0d74fcc965f035741f6),
+at **2026-10-14 07:48:59 UTC**. Each catalogue gene counts once; products,
 follow-up commits, shared sources and tracker publication add no completion.
 
-See the [checkpoint 413 evidence and complete 19-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-413-2026-10-14-013147-utc).
-The checkpoint 394 tracker [PR #4988](https://github.com/ai4curation/ai-gene-review/pull/4988)
-merged as [488cf4ada7bb](https://github.com/ai4curation/ai-gene-review/commit/488cf4ada7bb34f80c7bdaeeb1e8228020852bce)
-at **2026-10-14 02:23:05 UTC**. This later tracker merge is the source baseline;
-it does not move the gene-completion cutoff. Its post-main test failure and
-pre-existing ontology-cache defects are recorded in the progress log.
-All 235 historical queue records, 73 prior completion updates, catalogue
-association texts and earlier progress sections remain unchanged. CPAMD8 was
-already counted in checkpoint 394; CPS1 is one of the 19 new identities here.
-Older OPEN and QUEUED observations retain their historical dates.
+See the [checkpoint 425 evidence and complete 12-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-425-2026-10-14-074859-utc).
+The prior tracker [PR #4999](https://github.com/ai4curation/ai-gene-review/pull/4999)
+merged as [b9da9839c93f](https://github.com/ai4curation/ai-gene-review/commit/b9da9839c93ff74b6be6cf30102747f8973984f2).
+Its successful queue and separate main-push tests are recorded in the progress
+log; earlier historical failures remain documented in their original sections.
+All 235 historical queue records, 74 prior completion updates, catalogue
+association texts and earlier progress sections remain unchanged. Older OPEN
+and QUEUED observations retain their historical dates. Review availability is
+separate from accepted completion; CYB5A and CWC27 receive no credit here.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3537,20 +3536,20 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CTC1** — HGNC:26169; [cerebroretinal microangiopathy with calcifications and cysts 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bed1ee1-971c-444e-b71a-5ad9c3664625-2026-02-02T170000.000Z) (MONDO:0024564; AR; Definitive).
 - [x] **CTCF** — HGNC:13723; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f1cbcd7b-83e2-47c1-b708-c9052502e639-2021-07-21T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **CTH** — HGNC:2501; [cystathioninuria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2f5047f7-80ba-4b8f-8009-59d7130e63be-2019-06-14T160000.000Z) (MONDO:0009058; AR; Definitive).
-- [ ] **CTLA4** — HGNC:2505; [autoimmune lymphoproliferative syndrome due to CTLA4 haploinsufficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e79675bd-3eef-4925-b4ef-3b7c48734f30-2020-12-15T050000.000Z) (MONDO:0014493; AD; Definitive).
-- [ ] **CTNNA1** — HGNC:2509; [CTNNA1-related diffuse gastric and lobular breast cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9de9839-f329-4814-94af-bcce2f5d1be4-2023-07-05T170000.000Z) (MONDO:0100256; AD; Definitive).
-- [ ] **CTNNB1** — HGNC:2514; [CTNNB1-related neurodevelopmental disorder and/or vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e119aceb-a011-4811-9abd-6731c5b3d15d-2024-02-08T170000.000Z) (MONDO:0100571; AD; Definitive).
-- [ ] **CTNND1** — HGNC:2515; [blepharocheilodontic syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5000144a-71c1-4ae7-95a9-17ad67a388c5-2024-03-21T160000.000Z) (MONDO:0040503; AD; Definitive).
+- [x] **CTLA4** — HGNC:2505; [autoimmune lymphoproliferative syndrome due to CTLA4 haploinsufficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e79675bd-3eef-4925-b4ef-3b7c48734f30-2020-12-15T050000.000Z) (MONDO:0014493; AD; Definitive).
+- [x] **CTNNA1** — HGNC:2509; [CTNNA1-related diffuse gastric and lobular breast cancer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9de9839-f329-4814-94af-bcce2f5d1be4-2023-07-05T170000.000Z) (MONDO:0100256; AD; Definitive).
+- [x] **CTNNB1** — HGNC:2514; [CTNNB1-related neurodevelopmental disorder and/or vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e119aceb-a011-4811-9abd-6731c5b3d15d-2024-02-08T170000.000Z) (MONDO:0100571; AD; Definitive).
+- [x] **CTNND1** — HGNC:2515; [blepharocheilodontic syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5000144a-71c1-4ae7-95a9-17ad67a388c5-2024-03-21T160000.000Z) (MONDO:0040503; AD; Definitive).
 - [ ] **CTNS** — HGNC:2518; [cystinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_51c40c8e-b9e5-4f2e-a587-f75b029397af-2022-03-02T170000.000Z) (MONDO:0016239; AR; Definitive).
-- [ ] **CTPS1** — HGNC:2519; [severe combined immunodeficiency due to CTPS1 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bbdaddb-5045-4ebc-b74d-f80e7e8529fc-2024-09-17T160000.000Z) (MONDO:0014391; AR; Definitive).
-- [ ] **CTSA** — HGNC:9251; [galactosialidosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b46b7e30-216e-4f8a-a4b9-67d59b9ca655-2022-09-02T160000.000Z) (MONDO:0009737; AR; Definitive).
-- [ ] **CTSD** — HGNC:2529; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d74b1b2a-52a3-4192-b5b4-e4fd46ffc0ba-2020-11-03T180000.000Z) (MONDO:0016295; AR; Definitive).
-- [ ] **CTSF** — HGNC:2531; [adult neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9079835-78f4-4759-a43a-9786270dc02e-2022-04-21T142141.505Z) (MONDO:0019260; AR; Definitive).
-- [ ] **CTSK** — HGNC:2536; [pycnodysostosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8135617e-f334-4c22-aa9e-b1efd50e9326-2022-11-11T180000.000Z) (MONDO:0009940; AR; Definitive).
-- [ ] **CUL3** — HGNC:2553; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fb529ace-86b5-4209-9974-9c07a1c32956-2021-01-16T030942.670Z) (MONDO:0100038; AD; Definitive); [pseudohypoaldosteronism type 2E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f697fb5e-72de-4116-9cad-706e2d651268-2021-12-01T013000.000Z) (MONDO:0013782; AD; Definitive).
-- [ ] **CUL4B** — HGNC:2555; [X-linked intellectual disability, Cabezas type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cc93f3b2-3124-40f8-a86e-c929b09c6f68-2018-02-21T110000.000Z) (MONDO:0010306; XL; Definitive).
+- [x] **CTPS1** — HGNC:2519; [severe combined immunodeficiency due to CTPS1 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bbdaddb-5045-4ebc-b74d-f80e7e8529fc-2024-09-17T160000.000Z) (MONDO:0014391; AR; Definitive).
+- [x] **CTSA** — HGNC:9251; [galactosialidosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b46b7e30-216e-4f8a-a4b9-67d59b9ca655-2022-09-02T160000.000Z) (MONDO:0009737; AR; Definitive).
+- [x] **CTSD** — HGNC:2529; [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d74b1b2a-52a3-4192-b5b4-e4fd46ffc0ba-2020-11-03T180000.000Z) (MONDO:0016295; AR; Definitive).
+- [x] **CTSF** — HGNC:2531; [adult neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9079835-78f4-4759-a43a-9786270dc02e-2022-04-21T142141.505Z) (MONDO:0019260; AR; Definitive).
+- [x] **CTSK** — HGNC:2536; [pycnodysostosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8135617e-f334-4c22-aa9e-b1efd50e9326-2022-11-11T180000.000Z) (MONDO:0009940; AR; Definitive).
+- [x] **CUL3** — HGNC:2553; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fb529ace-86b5-4209-9974-9c07a1c32956-2021-01-16T030942.670Z) (MONDO:0100038; AD; Definitive); [pseudohypoaldosteronism type 2E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f697fb5e-72de-4116-9cad-706e2d651268-2021-12-01T013000.000Z) (MONDO:0013782; AD; Definitive).
+- [x] **CUL4B** — HGNC:2555; [X-linked intellectual disability, Cabezas type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cc93f3b2-3124-40f8-a86e-c929b09c6f68-2018-02-21T110000.000Z) (MONDO:0010306; XL; Definitive).
 - [ ] **CWC27** — HGNC:10664; [metaphyseal chondrodysplasia-retinitis pigmentosa syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95089ec9-1b91-4ee0-a743-a780d123aad0-2025-07-03T160000.000Z) (MONDO:0009598; AR; Definitive).
-- [ ] **CWF19L1** — HGNC:25613; [autosomal recessive cerebellar ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ebc1a4b-1a41-40df-832f-904cd4bb88f9-2025-05-14T160000.000Z) (MONDO:0015244; AR; Definitive).
+- [x] **CWF19L1** — HGNC:25613; [autosomal recessive cerebellar ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ebc1a4b-1a41-40df-832f-904cd4bb88f9-2025-05-14T160000.000Z) (MONDO:0015244; AR; Definitive).
 - [ ] **CXCR4** — HGNC:2561; [WHIM syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89723de3-8fd8-4e2c-8609-bcd924e2f349-2023-01-17T170000.000Z) (MONDO:0023880; AD; Definitive).
 - [ ] **CYB5A** — HGNC:2570; [methemoglobinemia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_895f7f88-9dcc-42fd-8773-e20dadb6756c-2024-12-13T190000.000Z) (MONDO:0009605; AR; Definitive).
 - [ ] **CYB5R3** — HGNC:2873; [methemoglobinemia due to deficiency of methemoglobin reductase](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa135949-7d13-41e7-bbee-5cefb3b77774-2024-12-13T190000.000Z) (MONDO:0009606; AR; Definitive).
