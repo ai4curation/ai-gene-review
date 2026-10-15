@@ -108,3 +108,40 @@
   heterologous aspulvinone E production; that supports the breadth of Ydj1's
   client-folding utility but is a cell-factory application and not evidence for
   a new endogenous GO term.
+
+## 2026-10-01 live-GOA refresh
+
+- Refreshed YDJ1 against current GOA. The live export now has 41 physical rows
+  rather than the old 62-row export, and the review keeps 12 exact stale rows as
+  `retired: true`: the obsolete `GO:0051082 unfolded protein binding` IBA, IEA,
+  and IDA assertions; the former UniProt keyword rows for `GO:0008270 zinc ion
+  binding`, `GO:0015031 protein transport`, and `GO:0046872 metal ion binding`;
+  and six no-longer-live IntAct `GO:0005515 protein binding` rows. The zinc
+  function itself is still live through the SGD RCA row, and ER plus
+  mitochondrial targeting are now represented more specifically than the old
+  broad `protein transport` keyword transfer.
+- Rechecked the PTHR43888 PAINT table. Current PAINT agrees with current GOA:
+  YDJ1 has five live IBA rows, for cytosol, ATPase activator activity, cellular
+  response to heat, protein refolding, and nucleus. The stale
+  `GO:0051082`/PTN001531327 row is gone from both live GOA and the local PAINT
+  export; its direct experimental support remains valid evidence for the
+  `GO:0044183 protein folding chaperone` and `GO:0140309 unfolded protein
+  holdase activity` core functions.
+- Resolved four newly seeded current-GOA rows. The second Liou et al. 2007
+  `GO:0005515 protein binding` IPI edge from PMID:17441508 was removed for the
+  same reason as the existing Sgt2 row: the Mdy2/Sgt2/Ydj1 relationship is real,
+  but generic protein binding is not an informative molecular function. The new
+  `GO:0017053 transcription repressor complex` NAS row was kept as a non-core
+  ComplexPortal HAP1/Ssa/Ydj1/Sro9 complex assertion. The ARBA and IMP
+  `GO:0070585 protein localization to mitochondrion` rows were accepted because
+  the original MAS5/YDJ1 paper directly reported mitochondrial protein import
+  defects [PMID:1729605, "The deletion mutant also displayed a modest import
+  defect at 23 degrees C and a substantial import defect at 37 degrees C."].
+- Searched 2025-2026 literature and found no new primary yeast YDJ1 paper that
+  changes the curated core Hsp40/Hsp70 co-chaperone model. The 2025 yeast hits
+  were either the already cached heterologous small-molecule production study
+  (PMID:40383781), a prion-client in vitro application, or a Cdc42 preprint.
+
+The refreshed review has 53 total rows: 41 current GOA rows and 12 retired
+historical rows. Final action counts are 27 ACCEPT, 10 KEEP_AS_NON_CORE, 10
+REMOVE, 4 MODIFY, and 2 MARK_AS_OVER_ANNOTATED.
