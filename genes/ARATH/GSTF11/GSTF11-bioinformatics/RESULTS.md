@@ -21,7 +21,7 @@ global alignment (Biopython 1.85 `PairwiseAligner`, BLOSUM62, gap open -10, gap 
 -0.5, end gaps free; EMBOSS needle defaults). Run with:
 
 ```
-/home/user/ai-gene-review/.venv/bin/python pairwise_identity.py > output.txt
+uv run python pairwise_identity.py > output.txt   # biopython is a root project dependency; run from this folder
 ```
 
 ## Output (verbatim, `output.txt`, run 2026-10-15)
