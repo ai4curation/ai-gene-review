@@ -51,8 +51,12 @@ fall inside this definition, but other projects already cover them (see
 
 ### GOA census (2026-10-14)
 
-Annotation counts from the QuickGO API, for the exact taxon of each strain
-(descendant taxa are not included). "Experimental" means evidence codes
+Annotation counts from the QuickGO API, for the exact taxon of each row
+(descendant taxa are not included), which is a strain except where the row says
+otherwise. *Toxoplasma* appears twice because its curation really is split that
+way: the species-level taxon 5811 carries SAG1's Swiss-Prot entry, while ME49
+(508771) carries the TrEMBL entries, and neither row's count includes the
+other's. "Experimental" means evidence codes
 descending from ECO:0000269 (EXP, IDA, IPI, IMP, IGI, IEP). The review counts
 are current as of 2026-10-15; *T. brucei brucei* (TRYBB, taxon 5702) holds 3
 more and is not a row here because its annotations sit under the TREU927 strain.
@@ -66,9 +70,9 @@ more and is not a row here because its annotations sit under the TREU927 strain.
 | *Giardia intestinalis* WB | GIAIC | 184922 | 343 | 6,081 | 0 |
 | *Entamoeba histolytica* HM-1:IMSS | ENTH1 | 294381 | 197 | 13,213 | 0 |
 | *Plasmodium berghei* ANKA | PLABA | 5823 | 148 | 0 | 0 |
+| *Toxoplasma gondii* (species) | TOXGO | 5811 | 133 | 0 | 1 |
 | *Tetrahymena thermophila* SB210 | TETTS | 312017 | 124 | 0 | 0 |
 | *Toxoplasma gondii* ME49 | TOXGM | 508771 | 35 | 0 | 2 |
-| *Toxoplasma gondii* (species) | TOXGO | 5811 | 133 | 0 | 1 |
 | *Trypanosoma cruzi* CL Brener | TRYCC | 353153 | 29 | 0 | 0 |
 | *Phaeodactylum tricornutum* | PHATC | 556484 | 17 | 0 | 1 |
 | *Paramecium tetraurelia* | PARTE | 5888 | 11 | 49,383 | 1 |
