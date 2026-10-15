@@ -1807,6 +1807,16 @@ classes:
         range: TaxonomicScopeAssessment
         inlined: true
         description: Assessment of taxonomic restriction appropriateness
+      annotation_assessments:
+        range: RuleAnnotationAssessment
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Per-consequent assessments: one entry for each GO term, protein name,
+          EC number or catalytic activity the rule assigns, recording whether it
+          is correct for the proteins the rule matches, with example proteins.
+          This is the structured record of a rule problem, for example a naming
+          rule whose conditions also match a paralog with a different function.
       confidence:
         range: float
         minimum_value: 0.0
@@ -1839,6 +1849,21 @@ classes:
         multivalued: true
         inlined_as_list: true
         description: GO terms assigned by this rule
+      protein_name_annotations:
+        range: RuleProteinNameAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Protein names and EC numbers assigned by this rule (UniProt
+          proteinDescription consequents). Naming rules produce no GO rows
+          directly, but a wrong name or EC number can propagate into GO via
+          EC2GO and into downstream curation.
+      catalytic_activity_annotations:
+        range: RuleCatalyticActivityAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Catalytic activity statements (Rhea reactions) assigned by this rule.
       ipr2go_redundancy:
         range: InterPro2GORedundancy
         inlined: true
@@ -1961,6 +1986,101 @@ classes:
       aspect:
         range: string
         description: GO aspect (F, P, or C)
+
+  RuleProteinNameAnnotation:
+    description: >-
+      A protein name assigned by a rule (UniProt proteinDescription).
+      A naming rule may assign only an EC number with no full name text;
+      UniProt then displays a name derived from the EC number.
+    attributes:
+      name_type:
+        range: RuleProteinNameTypeEnum
+        description: Which name slot the rule fills
+      full_name:
+        range: string
+        description: The full name text, if the rule gives one
+      short_names:
+        range: string
+        multivalued: true
+        description: Short names assigned with the full name
+      ec_numbers:
+        range: string
+        multivalued: true
+        description: EC numbers attached to this name (e.g., 1.2.1.75)
+
+  RuleCatalyticActivityAnnotation:
+    description: A catalytic activity (reaction) assigned by a rule
+    attributes:
+      reaction_name:
+        range: string
+        description: The reaction as written by UniProt
+      rhea_id:
+        range: string
+        description: Rhea reaction CURIE (e.g., RHEA:26446)
+        pattern: "^RHEA:[0-9]+$"
+      ec_number:
+        range: string
+        description: EC number of the reaction, if given
+
+  RuleAnnotationAssessment:
+    description: >-
+      Assessment of one consequent of a rule (a GO term, protein name, EC
+      number or catalytic activity) against the proteins the rule matches.
+    attributes:
+      annotation_kind:
+        range: RuleAnnotationKindEnum
+        required: true
+        description: What kind of consequent is assessed
+      value:
+        range: string
+        required: true
+        description: >-
+          The consequent itself: a GO id, a name text, an EC number, or a Rhea id
+      label:
+        range: string
+        description: Human-readable label (e.g., GO term label or reaction name)
+      assessment:
+        range: RuleAnnotationAssessmentEnum
+        required: true
+        description: Whether the consequent is correct for the matched proteins
+      matched_protein_count:
+        range: integer
+        minimum_value: 0
+        description: Number of proteins the rule annotates with this consequent
+      incorrect_protein_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of those proteins for which the consequent is judged incorrect
+          (state how this was determined in notes)
+      correct_examples:
+        range: string
+        multivalued: true
+        description: UniProt accessions for which the consequent is correct
+      incorrect_examples:
+        range: string
+        multivalued: true
+        description: UniProt accessions for which the consequent is incorrect
+      gene_reviews:
+        range: string
+        multivalued: true
+        description: >-
+          Paths of gene reviews in this repository that document the problem
+          (e.g., genes/METS5/Msed_1700/Msed_1700-ai-review.yaml)
+      discriminating_features:
+        range: string
+        multivalued: true
+        description: >-
+          Signatures that separate correct from incorrect matches and could be
+          added as rule conditions (e.g., CDD:cd23940)
+      notes:
+        range: string
+        description: Reasoning for the assessment
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Supporting text from literature or files
 
   # ============== Rule Analysis Classes ==============
 
@@ -3030,6 +3150,48 @@ enums:
         description: Association-Rule-Based Annotator rule (automatically mined)
       UNIRULE:
         description: Expert-curated UniRule
+
+  RuleProteinNameTypeEnum:
+    description: Which UniProt protein name slot a rule fills
+    permissible_values:
+      RECOMMENDED:
+        description: Recommended name
+      ALTERNATIVE:
+        description: Alternative name
+      SUBMISSION:
+        description: Submitted name (TrEMBL)
+
+  RuleAnnotationKindEnum:
+    description: Kind of rule consequent
+    permissible_values:
+      GO_TERM:
+        description: A GO annotation
+      PROTEIN_NAME:
+        description: A protein name text
+      EC_NUMBER:
+        description: An EC number (in a name or a catalytic activity)
+      CATALYTIC_ACTIVITY:
+        description: A catalytic activity (Rhea reaction)
+      KEYWORD:
+        description: A UniProt keyword
+      OTHER:
+        description: Any other consequent
+
+  RuleAnnotationAssessmentEnum:
+    description: Assessment of a rule consequent against the proteins it matches
+    permissible_values:
+      CORRECT:
+        description: Correct for all or nearly all matched proteins
+      PARTIALLY_CORRECT:
+        description: >-
+          Correct for an identifiable subset of the matched proteins and
+          incorrect for another (typically paralogs the conditions do not separate)
+      INCORRECT:
+        description: Incorrect for most matched proteins
+      TOO_GENERAL:
+        description: True but less specific than the evidence supports
+      UNDECIDED:
+        description: Not enough evidence to decide
 
   RuleReviewStatusEnum:
     description: Status of the rule review
