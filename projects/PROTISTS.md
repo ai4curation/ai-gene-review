@@ -1,10 +1,10 @@
 ---
 title: "Protists"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PLAF7, TOXGM, TOXGO, TRYB2, TRYBB, LEIMA, TETTS, PARTE, GIAIC, TRIV3, ENTH1, PHATC, THAPS, DICDI, CHLRE, SALRS, MONBE, CAPO3]
-genes: [A0BFB4, A2FPI7, B7FXQ8]
-autolink_exclude: [AMA1, TERT, rod, Sil1, sil1]
+genes: [CSP, CRT, MDR1, PMII, CDPK1, ATP4, MSP1, RH5, K13, AMA1, HAP2, SAG1, MIC2, ROP18, A0BFB4, A2FPI7, B7FXQ8]
+autolink_exclude: [TERT, rod, Sil1, sil1]
 ---
 
 # Protists: Gene Function Outside Animals, Fungi and Plants
@@ -15,7 +15,12 @@ of this repository is. Of 7,176 gene folders, about 104 (1.4%) are protists, and
 carry most protist GO curation (*Plasmodium*, *Toxoplasma*, trypanosomes,
 *Leishmania*), nor for the ciliate and diatom models. This project sets out to
 fill that gap, lineage by lineage, starting with a seed list of 27 well-studied
-genes whose UniProt accessions we have checked.
+genes whose UniProt accessions we have checked. Track A (Apicomplexa) is done:
+all 14 genes (11 *P. falciparum*, 3 *T. gondii*) have COMPLETE reviews covering
+241 existing annotations plus 26 new ones. The most common corrections were
+removing terms carried over from animal homologs and replacing generic `membrane`
+and `protein binding` rows with the compartment or binding partner each paper
+shows.
 
 "Protist" is not a clade. Here it means any eukaryote that is not an animal, a
 fungus or a land plant. Green algae and the unicellular relatives of animals
@@ -84,7 +89,7 @@ tracks by lineage, roughly following the eukaryote supergroups:
 
 | Track | Lineage | Model organisms | Status |
 |---|---|---|---|
-| A | Apicomplexa (Alveolata) | *P. falciparum*, *T. gondii* | not started |
+| A | Apicomplexa (Alveolata) | *P. falciparum*, *T. gondii* | 14/14 COMPLETE |
 | B | Kinetoplastida (Discoba) | *T. brucei*, *L. major* | not started |
 | C | Ciliates (Alveolata) | *Tetrahymena*, *Paramecium* | 1 draft (PARTE) |
 | D | Metamonads and *Entamoeba* | *Giardia*, *Trichomonas*, *E. histolytica* | 1 draft (TRIV3) |
@@ -145,20 +150,20 @@ provides a symbol by the time they are fetched.
 
 ### Track A: Apicomplexa
 
-- [ ] PLAF7 CSP (Q7K740): circumsporozoite protein, sporozoite surface coat
-- [ ] PLAF7 CRT (Q8IBZ9): chloroquine resistance transporter, digestive vacuole
-- [ ] PLAF7 MDR1 (Q7K6A5): ABC transporter, drug resistance
-- [ ] PLAF7 PMII (Q8I6V3): plasmepsin II, haemoglobin digestion
-- [ ] PLAF7 CDPK1 (P62344): calcium-dependent protein kinase 1
-- [ ] PLAF7 ATP4 (A0A143ZZK9): P-type Na+ ATPase, antimalarial drug target
-- [ ] PLAF7 MSP1 (Q8I0U8): merozoite surface protein 1
-- [ ] PLAF7 RH5 (Q8IFM5): erythrocyte invasion ligand (binds basigin)
-- [ ] PLAF7 K13 (Q8IDQ2, unreviewed): kelch13, artemisinin resistance
-- [ ] PLAF7 AMA1 (Q7KQK5, unreviewed): apical membrane antigen 1, moving junction
-- [ ] PLAF7 HAP2 (Q8IJQ3, unreviewed): gamete fusion factor
-- [ ] TOXGO SAG1 (P13664): major surface antigen; Swiss-Prot entry is at species level (taxon 5811)
-- [ ] TOXGM MIC2 (S8F9G8, unreviewed): microneme adhesin, gliding motility
-- [ ] TOXGM ROP18 (A0A125YQL1, unreviewed): rhoptry kinase, virulence factor
+- [x] PLAF7 CSP (Q7K740): circumsporozoite protein, sporozoite surface coat
+- [x] PLAF7 CRT (Q8IBZ9): chloroquine resistance transporter, digestive vacuole
+- [x] PLAF7 MDR1 (Q7K6A5): ABC transporter, drug resistance
+- [x] PLAF7 PMII (Q8I6V3): plasmepsin II, haemoglobin digestion
+- [x] PLAF7 CDPK1 (P62344): calcium-dependent protein kinase 1
+- [x] PLAF7 ATP4 (A0A143ZZK9): P-type Na+ ATPase, antimalarial drug target
+- [x] PLAF7 MSP1 (Q8I0U8): merozoite surface protein 1
+- [x] PLAF7 RH5 (Q8IFM5): erythrocyte invasion ligand (binds basigin)
+- [x] PLAF7 K13 (Q8IDQ2, unreviewed): kelch13, artemisinin resistance
+- [x] PLAF7 AMA1 (Q7KQK5, unreviewed): apical membrane antigen 1, moving junction
+- [x] PLAF7 HAP2 (Q8IJQ3, unreviewed): gamete fusion factor
+- [x] TOXGO SAG1 (P13664): major surface antigen; Swiss-Prot entry is at species level (taxon 5811)
+- [x] TOXGM MIC2 (S8F9G8, unreviewed): microneme adhesin, gliding motility
+- [x] TOXGM ROP18 (A0A125YQL1, unreviewed): rhoptry kinase, virulence factor
 
 ### Track B: Kinetoplastida
 
@@ -204,13 +209,83 @@ PiggyMac; *Phaeodactylum* aureochrome 1a; *Giardia* (strain WB) alpha-giardin.
 
 - [ ] Redo the GOA census per species (with descendant taxa) and per GO aspect;
       resolve the *Leishmania* and *Toxoplasma* taxon questions
-- [ ] Confirm `just fetch-gene` works for the new species codes
-- [ ] Review the seed genes, one track at a time, starting with Track A
+- [x] Confirm `just fetch-gene` works for the new species codes (it does; entries
+      with no UniProt gene symbol need `just fetch-gene <ORG> <ACC> --alias <NAME>`)
+- [x] Review Track A (Apicomplexa)
+- [ ] Review Track B (Kinetoplastida)
+- [ ] Decide whether to submit "food vacuole membrane" and "moving junction" as
+      GO term requests (see 2026-10-15 notes)
 - [ ] Collect protist-specific over-annotation patterns in a
       `PROTISTS/patterns.md` sub-page as reviews accumulate
 - [ ] Collect proposed GO terms for lineage-specific processes
 
 # NOTES
+
+## 2026-10-15
+
+Track A reviewed: 14 genes, one review agent each, all `status: COMPLETE`
+and passing `just validate`.
+
+| Gene | Annotations reviewed | ACCEPT | NON_CORE | MODIFY | REMOVE | Other | NEW |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| PLAF7 CSP | 11 | 9 | 2 | 0 | 0 | 0 | 2 |
+| PLAF7 CRT | 12 | 2 | 5 | 2 | 0 | 3 | 2 |
+| PLAF7 MDR1 | 14 | 5 | 0 | 9 | 0 | 0 | 0 |
+| PLAF7 PMII | 20 | 12 | 3 | 5 | 0 | 0 | 0 |
+| PLAF7 CDPK1 | 71 | 41 | 13 | 12 | 4 | 1 | 0 |
+| PLAF7 ATP4 | 16 | 4 | 1 | 7 | 4 | 0 | 2 |
+| PLAF7 MSP1 | 23 | 8 | 10 | 4 | 0 | 1 | 3 |
+| PLAF7 RH5 | 50 | 21 | 1 | 18 | 10 | 0 | 1 |
+| PLAF7 K13 | 3 | 0 | 1 | 0 | 1 | 1 | 2 |
+| PLAF7 AMA1 | 7 | 3 | 0 | 4 | 0 | 0 | 0 |
+| PLAF7 HAP2 | 2 | 1 | 1 | 0 | 0 | 0 | 2 |
+| TOXGO SAG1 | 2 | 0 | 1 | 1 | 0 | 0 | 2 |
+| TOXGM MIC2 | 1 | 0 | 1 | 0 | 0 | 0 | 7 |
+| TOXGM ROP18 | 9 | 2 | 0 | 1 | 2 | 4 | 3 |
+
+"Other" is TOO_GENERAL or MARK_AS_OVER_ANNOTATED.
+
+**No deep research.** Falcon authentication failed and the OpenAI key was
+rejected in this environment, so no `-deep-research-` files exist. Each gene's
+`-notes.md` is a manual literature review and says so at the top. Re-running
+deep research later would be a useful cross-check.
+
+**Recurring patterns** (candidates for `PROTISTS/patterns.md`):
+
+- *Animal or plant terms carried over electronically.* RH5 `bicellular tight
+  junction` (the parasite "tight junction" is the moving junction, not an
+  epithelial junction); ROP18 `nucleus` and `mitotic DNA damage checkpoint
+  signaling` (TreeGrafter, from an animal kinase family); ATP4 potassium and
+  calcium transport (inherited from ENA and SERCA nodes; the activity is
+  insensitive to both ions); CDPK1 `calmodulin binding` (CDPKs carry their own
+  calmodulin-like domain). All removed.
+- *Glutathione transport on CRT.* Comes from Arabidopsis CLT donors and from
+  mutant alleles only; marked over-annotated rather than removed.
+- *Drug-response terms.* `response to xenobiotic stimulus` (CDPK1, K13, MDR1)
+  describes inhibitor screens or resistance alleles, not a process the protein
+  carries out. It was removed, marked over-annotated, or changed to
+  `xenobiotic transmembrane transport` depending on the case.
+- *Sparse GOA.* MIC2, SAG1, HAP2 and K13 had 1 to 3 annotations each, with no
+  molecular function. Most of their core content came from NEW rows. MIC2
+  (7 NEW rows) is the heaviest and is a good candidate for a second look.
+- *Non-symbol entries.* MDR1, K13, AMA1 and HAP2 have no UniProt gene symbol,
+  so `gene_symbol` is the accession and the folder uses the PlasmoDB name.
+
+**Proposed terms to consolidate.**
+
+- `food vacuole membrane` (a child of GO:0005774): proposed independently by the
+  CRT and MDR1 reviews.
+- `moving junction` (AMA1): the same structure RH5's removed `tight junction` row
+  was trying to capture.
+- `RH5-CyRPA-Ripr invasion complex` (RH5).
+- `Kelch13 compartment` and `cytostome-mediated endocytosis of host cell
+  cytosol` (K13).
+
+**Calls to check.** AMA1 replaces its RON2 and RON4 `protein binding` rows with
+`host cell surface binding`, on the grounds that RON2 sits in the host membrane
+when AMA1 binds it. That stretches the term, since RON2 is a parasite protein.
+The open question is whether a parasite-ligand-in-host-membrane case needs
+its own term.
 
 ## 2026-10-14
 

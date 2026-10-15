@@ -127,24 +127,41 @@ MSP1 nucleates a large peripheral surface complex:
 
 ## 8. Curation decisions taken
 
-- `GO:0005886 plasma membrane` kept (ACCEPT) as the core location on all seven rows; the
-  extra specificity supported by the GPI-anchor biochemistry (PMID:8992312) is added as a
-  separate `NEW` row for `GO:0031362 anchored component of external side of plasma
-  membrane`, rather than by modifying one row and leaving the rows inconsistent.
-- `GO:0005576 extracellular region` kept but non-core: it reflects the shed complex, which
-  is a real and well-documented state but not where MSP1 does its work.
+(Revised after coordinator review; the earlier draft of this section is superseded.)
+
+- All four `GO:0005515 protein binding` rows are `MODIFY`, never kept as bare binding:
+  the PMID:21175202 (RhopH3/RAP1/CLAG9) and PMID:25074930 (MSPDBL1) rows to
+  `GO:0140378 protein complex scaffold activity`; the PMID:25157665 row (MSP1-19 with
+  RhopH3 on the band 3 5ABC segment) to `GO:0046789 host cell surface receptor binding`;
+  the PMID:22431641 row to `GO:0044548 S100 protein binding`.
+- `GO:0005886 plasma membrane` accepted on all seven rows (core location); the extra
+  specificity from the GPI-anchor biochemistry (PMID:8992312) is added as a separate `NEW`
+  row for `GO:0031362 anchored component of external side of plasma membrane`.
+- `GO:0005576 extracellular region` kept but non-core: the shed complex is real but not
+  where MSP1 does its work.
+- **Both `GO:0005774 vacuolar membrane` rows downgraded to `KEEP_AS_NON_CORE`.** The
+  localisation is directly observed by two methods, so it is not an artefact to remove or
+  mark over-annotated, but it is the *post-invasion fate* of the GPI-anchored p19 remnant,
+  carried there by endocytic uptake of the surface coat — the paper offers a functional
+  role only as a possibility ("a potential role", "may play a significant role") and
+  UniProt flags it `ECO:0000305` Probable. Not a core location.
+- The proposed new term "food vacuole membrane" has been **dropped**: with this
+  localisation judged non-core and possibly a trafficking endpoint, MSP1 is not a good
+  basis for proposing the term, and `GO:0005774` is adequate for the claim being made.
 - `GO:0016020 membrane` (IEA/InterPro) marked `TOO_GENERAL` — entailed by the accepted
   plasma membrane term.
-- Four `GO:0005515 protein binding` rows kept as non-core (per project policy, protein
-  binding is neither removed nor marked too-general); the informative partners are
-  RhopH3 (Q8I395), RAP1 (Q8ILZ1), CLAG9 (Q8I2G2), MSPDBL1 (PF3D7_1035700) and host S100P
-  (P25815), and I add the informative MF terms separately as `NEW` rows.
-- Six `NEW` rows added: `GO:0031362` (GPI-anchored on the external face of the plasma
-  membrane), `GO:0046789 host cell surface receptor binding` (band 3, glycophorin A),
-  `GO:0030507 spectrin binding`, `GO:0140378 protein complex scaffold activity` (the
-  surface-coat platform role), `GO:0035891 exit from host cell` and
-  `GO:0052039 symbiont-mediated perturbation of host cytoskeleton` (egress mechanism), and
-  `GO:0052170 symbiont-mediated suppression of host innate immune response` (S100P).
+- Three `NEW` rows only, all passing the participation test: `GO:0031362` (location),
+  `GO:0030507 spectrin binding` (two labs, orthogonal methods) and
+  `GO:0035891 exit from host cell` (MSP1 itself binds and engages the host spectrin lattice
+  that must give way; loss of surface MSP1 gives a severe egress defect).
+- **Dropped from the earlier draft:** `GO:0052170 symbiont-mediated suppression of host
+  innate immune response` (rests on a single in vitro study — now a `suggested_question`,
+  with the binding itself retained as `GO:0044548`) and
+  `GO:0052039 symbiont-mediated perturbation of host cytoskeleton` (the perturbation is
+  inferred from binding plus the rupture phenotype, never measured — now a
+  `suggested_question` paired with the membrane-mechanics experiment). The `GO:0046789`
+  and `GO:0140378` `NEW` rows were also dropped as redundant once they became
+  `proposed_replacement_terms` on the protein-binding rows.
 - No `REMOVE` anywhere: nothing in the GOA set is contradicted by the literature.
-- Validation (`just validate PLAF7 MSP1`) passes; the only remaining warnings are the
-  four expected protein-binding policy warnings on the `GO:0005515` rows.
+- Validation (`just validate PLAF7 MSP1`) passes with no errors and no protein-binding
+  warnings.
