@@ -77,3 +77,17 @@ based on the UniProt record, PubMed-verified primary papers and reviews cached i
   structural subunit the assembly phenotype is the expected necessity phenotype; left as
   a suggested question.
 - No animal/plant-only terms, no host-process terms, no RNA-editing/trypanothione issues here.
+
+## Deliberately short supporting_text (do not "complete")
+
+Two quotes in this review stop before the end of their source sentence on
+purpose, and were expanded by an automated pass twice before being restored
+both times. Leave them as they are:
+
+- PMID:34257277 `...major structural components of the PFR are two proteins,
+  PFR1 and PFR2` — the source continues `PFR259,60.` where `59,60` are
+  superscript reference markers flattened into the text. Completing the
+  sentence invents a protein called PFR259. The next sentence of the same
+  paragraph (quoted at the `GO:0060285` row) states the claim cleanly.
+- PMID:19888464 `EM analysis shows that the PFR structure is greatly reduced`
+  — the cached paragraph runs straight into a DOI and a figure caption.

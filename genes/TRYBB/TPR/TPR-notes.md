@@ -69,3 +69,15 @@ UniProt record, PubMed-verified primary papers cached in `publications/`, and we
   (OLS-verified); cellular oxidant detoxification KEEP_AS_NON_CORE (true downstream role,
   but the inference came from the incorrect GR MF).
 - CC: cytosol ACCEPT; cytoplasm MODIFY -> cytosol; mitochondrion UNDECIDED.
+
+## Deliberately short supporting_text (do not "complete")
+
+Two quotes in this review stop before the end of their source sentence on
+purpose, and were expanded by an automated pass twice before being restored
+both times. Leave them as they are:
+
+- PMID:19747949 `However, the enzymes trypanothione reductase and glutathione
+  reductase are highly specific for their respective disulphide substrates` —
+  this is the sentence backing the specificity argument. The source continues
+  with a bracketed citation and a fused next paragraph, neither of which the
+  row claims.
