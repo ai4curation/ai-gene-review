@@ -129,3 +129,63 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   (MCR I and MCR II), so the activity cannot be attributed to MCR I alone.
   The row was accepted, because the activity itself is not in doubt, and
   the caveat is recorded in the review.
+
+## 8. InterPro2GO puts catalytic activity on non-catalytic proteasome alpha subunits
+
+- **Pipeline:** InterPro2GO (GO_REF:0000002), IPR019982 (archaeal
+  proteasome alpha subunit) to threonine-type endopeptidase activity
+  (GO:0004298) with `enables`.
+- **Example:** HALVD/psmA1 (Q9V2V6). The alpha subunits form the gated
+  outer ring of the 20S core particle; the catalytic nucleophile is the
+  N-terminal threonine of the beta subunit. The InterPro row and three
+  endopeptidase rows (2 IDA, 1 ARBA IEA) were modified to structural
+  constituent of proteasome (GO:0140756), the same choice as the repo's
+  human PSMA1 review, with `contributes_to` GO:0004298 in core_functions.
+- **Scale:** about 786 archaeal GO:0004298 rows in QuickGO come from this
+  mapping.
+- **Possible fix:** drop the mapping or change it to `contributes_to`.
+
+## 9. Ubiquitin-dependent terms on organisms without ubiquitin
+
+- **Pipeline:** InterPro2GO, IPR000426 (proteasome alpha subunit N-terminal
+  domain) to ubiquitin-dependent protein catabolic process (GO:0006511).
+- **Example:** HALVD/psmA1. Archaea have no ubiquitin; *Haloferax* uses
+  SAMP conjugation, and its link to proteasomal degradation is indirect.
+  The row was removed.
+- **Scale:** about 888 of the 910 archaeal GO:0006511 rows in QuickGO come
+  from this mapping.
+- **Possible fix:** add a Eukaryota taxon restriction to the mapping.
+
+## 10. Microbial rhodopsin pumps annotated as channels
+
+- **Pipeline:** InterPro2GO, IPR018229 (rhodopsin retinal-binding site) to
+  monoatomic ion channel activity (GO:0005216); proteorhodopsin also gets
+  light-activated channel activity (GO:0010461) through IPR017402.
+- **Example:** HALSA/bop (P02945), bacteriorhodopsin, a light-driven proton
+  pump. The channel row was removed. The same row is on every microbial
+  rhodopsin pump checked: halorhodopsins P0DMH7, P15647 and P33742,
+  sensory rhodopsin II P42196 and proteorhodopsin Q9F7P4.
+- **Why it is wrong:** among microbial rhodopsins only the algal
+  channelrhodopsins are channels.
+- **Possible fix:** remove the channel mapping from IPR018229 (it is a
+  retinal-binding-site signature shared by pumps, sensors and channels).
+
+## Related findings from round 2
+
+- **Under-annotation reaches the best-studied archaeal proteins too.**
+  bop is the only gene product in GOA annotated to light-driven active
+  monoatomic ion transmembrane transporter activity (GO:0015454), with no
+  ion named; no archaeal protein in GOA has any retinal-binding term. Two
+  of its three experimental rows come from one 1973 abstract. psmA1's six
+  IDA rows come from two papers by one lab. See pattern 5.
+- **ESCRT-III vacuolar transport (pattern 3) hits paralogs arbitrarily.**
+  In *M. sedula*, only Msed_1695 (CdvB2) carries the row, because only it
+  also matches Pfam PF03357 / IPR005024; its close paralog Msed_2179
+  (CdvB1) escapes. The 41 InterPro2GO rows span about 36 archaeal taxa.
+- **Unsupported process terms on ammonia monooxygenase.** The merged NITRP
+  amoA review dropped an anammox term (anaerobic respiration, using
+  ammonium as electron donor, GO:0019331) from an aerobic ammonia
+  oxidizer, and found that GO:0019409 (aerobic respiration, using ammonia
+  as electron donor) is defined through hydrazine intermediates, which
+  does not fit aerobic nitrification.
+

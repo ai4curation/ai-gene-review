@@ -2,32 +2,36 @@
 title: "Archaea"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH]
+species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1]
 ---
 
 # Archaea
 
 **Bottom line:** Archaea are one of the three domains of life, yet this
-repository barely covers them. Of roughly 7,200 gene folders under `genes/`,
-only 13 belong to archaea. They hold 12 review files covering 11 distinct proteins from seven
-species (plus one archaeal virus protein). Nothing has been reviewed yet for
-the classic archaeal model organisms (*Haloferax volcanii*, *Halobacterium
-salinarum*, *Saccharolobus solfataricus*, *Pyrococcus furiosus*,
-*Thermococcus kodakarensis*). This project sets out to (1) review a
-representative set of archaeal genes across the processes where archaea
-differ most from bacteria and eukaryotes, and (2) list the recurring ways GO
-annotation goes wrong for archaea, so that those failure patterns can be
-reported upstream. The project is anchored on the **Sulfolobales**
-(CO2 fixation, bioleaching and thermostable enzymes), with **methanogens**
+repository barely covered them. When the project started (2026-10-14),
+only 13 of roughly 7,200 gene folders under `genes/` were archaeal,
+holding 12 review files for 11 distinct proteins, and nothing had been
+reviewed for the classic archaeal model organisms. The project (1) reviews
+a representative set of archaeal genes across the processes where archaea
+differ most from bacteria and eukaryotes, and (2) collects the recurring
+ways GO annotation goes wrong for archaea, so that those failure patterns
+can be reported upstream. It is anchored on the **Sulfolobales** (CO2
+fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
-haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set. The
-five-gene pilot is complete: Msed_0709, sor, lacS, *Methanothermobacter*
-mcrA and cdvB. Of their 20 GOA rows, 17 were electronic and only two were
-experimental. The pilot removed 5 rows, modified 4 and proposed 7 new
-annotations and 3 new GO terms. The recurring errors are collected in
-[annotation-patterns](ARCHAEA/annotation-patterns.md).
+haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
+
+So far, nine new archaeal reviews are complete (a five-gene pilot and a
+second round of four), METAC mcrA has been revised, and the duplicate
+amoA reviews have been merged. Most archaeal annotation turns out to be
+electronic: of the 20 GOA rows on the pilot genes, only two were
+experimental, and even the two best-studied haloarchaeal proteins have
+thin, old experimental coverage. Ten recurring error patterns are
+collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
+largest affect hundreds of archaeal proteins each: InterPro2GO mappings
+that put catalytic activity on non-catalytic proteasome alpha subunits
+and ubiquitin-dependent catabolism on organisms without ubiquitin.
 
 ## Why archaea need their own project
 
@@ -66,13 +70,12 @@ quality:
 | METJA | *Methanocaldococcus jannaschii* | nadX | Q58325 | COMPLETE | 7 | 1 ACCEPT, 2 KEEP_AS_NON_CORE, 3 MODIFY, 1 NEW |
 | METJA | *M. jannaschii* | thiL | Q60337 | COMPLETE | 6 | 4 ACCEPT, 1 KEEP_AS_NON_CORE, 1 NEW |
 | METJA | *M. jannaschii* | MJ1511 | Q58906 | IN_PROGRESS | 1 | 1 REMOVE |
-| METAC | *Methanosarcina acetivorans* | mcrA | Q8THH1 | DRAFT | 8 | 3 ACCEPT, 1 MODIFY, 1 REMOVE, 3 NEW |
+| METAC | *Methanosarcina acetivorans* | mcrA | Q8THH1 | COMPLETE | 11 (4 retired) | 7 ACCEPT, 1 MODIFY, 1 TOO_GENERAL, 2 NEW |
 | METTP | *Methanothrix thermoacetophila* | gatC | A0B5K3 | COMPLETE | 10 | 2 ACCEPT, 1 KEEP_AS_NON_CORE, 5 REMOVE, 2 NEW |
 | FERPA | *Ferroglobus placidus* | Ferp_0128 | D3S180 | DRAFT | 6 | 3 ACCEPT, 1 KEEP_AS_NON_CORE, 1 REMOVE, 1 UNDECIDED |
 | 9ARCH | *Nitrososphaera viennensis* | ureC1 | A0A060HK93 | DRAFT | 6 | 4 ACCEPT, 2 KEEP_AS_NON_CORE |
 | 9ARCH | *N. viennensis* | ureC2 | A0A060HQC5 | DRAFT | 6 | 4 ACCEPT, 2 KEEP_AS_NON_CORE |
-| NITRP | *Nitrosopumilus maritimus* | amoA | D9J262 | DRAFT | 4 | 1 MODIFY, 3 NEW |
-| NITRP | *N. maritimus* | D9J262 | D9J262 | COMPLETE | 3 | 1 ACCEPT, 2 NEW |
+| NITRP | *Nitrosopumilus maritimus* | amoA | D9J262 | COMPLETE | 2 | 1 MODIFY (retired GOA row), 1 NEW |
 | SULAC | *Sulfolobus acidocaldarius* | Hsp14 | Q4J8A6 | DRAFT | 4 | 4 NEW |
 | SULAC | *S. acidocaldarius* | Hsp20 | Q4JA95 | DRAFT | 4 | 4 NEW |
 
@@ -88,18 +91,23 @@ Related archaeal content also appears in [NITROGEN_CYCLE](NITROGEN_CYCLE.md)
 These are curation gaps, not biology. They should be fixed early so the
 counts above stay meaningful.
 
-1. **Duplicate amoA reviews.** `genes/NITRP/amoA/` and `genes/NITRP/D9J262/`
-   both review accession D9J262 and reach different conclusions (1 MODIFY + 3
-   NEW versus 1 ACCEPT + 2 NEW). They need merging into one folder.
+1. **Duplicate amoA reviews. Done (2026-10-15).** `genes/NITRP/D9J262/`
+   was merged into `genes/NITRP/amoA/` and retired (its history record
+   points to the successor with `superseded_by`). Conflicting actions were
+   reconciled on evidence. D9J262 is a 208-residue environmental clone
+   fragment, not the type strain's own AmoA. GOA now returns no rows for
+   it; the old row is kept as `retired: true`.
 2. **Folder code does not match the entry.** The UniProt entry name of D9J262
-   is `D9J262_9ARCH`, not `_NITRP`. Before moving anything, check which
-   species code the repo convention expects for unreviewed TrEMBL entries
-   with a `9ARCH` mnemonic.
+   is `D9J262_9ARCH`, not `_NITRP`. The folder was kept as `NITRP/amoA`
+   because PROTEOME_REMOVAL links to it (that page also had the organism
+   wrong as "Nitrobacter sp."; corrected). Still open: whether to move it.
 3. **Stray taxon-id folder.** `genes/188937/mcrA/` holds only a UniProt file
    for MCRA_METAC (Q8THH1). This duplicates `genes/METAC/mcrA/` and was
    probably left by a fetch that used a taxon id instead of a species code.
-   It can be deleted.
-4. **Status drift.** Seven of the twelve reviews are still DRAFT. The Hsp14
+   **Deleted (2026-10-15).**
+4. **Status drift.** Five of the eleven pre-project reviews are still
+   DRAFT (ureC1, ureC2, Ferp_0128, Hsp14, Hsp20); METAC mcrA was revised
+   and completed on 2026-10-15. The Hsp14
    and Hsp20 reviews contain only NEW rows, which means GOA had no
    annotations for either protein when they were fetched.
 
@@ -119,18 +127,29 @@ has hand-written literature notes in `<gene>-notes.md` instead.
 
 Follow-ups raised by the pilot:
 
-- The METAC mcrA review (DRAFT) has problems found while reviewing the
-  *Methanothermobacter* ortholog: a true but broad term (transferase
-  activity) is removed rather than marked TOO_GENERAL, one activity row
-  cites an unrelated paper (PMID:29743535), one quote is not verbatim, and
-  protein heterooligomerization is proposed as NEW. Fix it in the
-  housekeeping step.
-- Archaeal ESCRT-III homologs in other Sulfolobales (for example
-  A4YHE8 Msed_1695) carry vacuolar transport by InterPro2GO. Review one of
-  them to document the error on a gene page.
-- *M. sedula* Msed_1700 (A4YHF3), the true aspartate-semialdehyde
-  dehydrogenase, is named malonyl-CoA reductase by an ARBA rule. Review it
-  next to Msed_0709.
+All three were done in round 2 (below):
+
+- The METAC mcrA review had problems found while reviewing the
+  *Methanothermobacter* ortholog. All six were confirmed and fixed.
+- Archaeal ESCRT-III homologs carrying vacuolar transport: Msed_1695
+  reviewed.
+- *M. sedula* Msed_1700, named malonyl-CoA reductase by ARBA: reviewed.
+
+## Round 2 results (October 2026)
+
+| Code | Gene | UniProt | GOA rows | Actions | Main finding |
+|---|---|---|---|---|---|
+| METS5 | Msed_1700 | A4YHF3 | 7 | 2 ACCEPT, 2 MODIFY, 2 KEEP_AS_NON_CORE, 1 UNDECIDED | The genuine aspartate-semialdehyde dehydrogenase; its ASD terms are right, but ARBA names it malonyl-CoA reductase. No experiments exist for this protein. Showed that TIGR00978 does not separate it from Msed_0709 (the earlier claim was corrected); CDD models do |
+| METS5 | Msed_1695 | A4YHE8 | 1 | 1 REMOVE, 1 NEW | CdvB2 ortholog (identity, synteny, literature). Vacuolar transport removed; Cdv-dependent cytokinesis added by ISS from *S. acidocaldarius* CdvB2 |
+| HALSA | bop | P02945 | 8 | 3 ACCEPT, 3 MODIFY, 1 REMOVE, 1 KEEP_AS_NON_CORE, 2 NEW | Calibration: accurate but thin, mostly from one 1973 abstract. Ion channel activity (a pump, not a channel) removed; proton transporter activity and retinal binding added; a light-driven proton transporter term proposed |
+| HALVD | psmA1 | Q9V2V6 | 14 | 7 ACCEPT, 6 MODIFY, 1 REMOVE | Calibration: moderate, all IDA rows from two papers by one lab. Catalytic endopeptidase rows on the non-catalytic alpha subunit moved to structural constituent of proteasome; ubiquitin-dependent catabolism removed |
+| METAC | mcrA | Q8THH1 | 11 (4 retired) | 7 ACCEPT, 1 MODIFY, 1 TOO_GENERAL, 2 NEW | Revised: GOA refreshed; miscited and non-verbatim support replaced; NEW heterooligomerization dropped; generic methanogenesis kept because *M. acetivorans* uses several routes but not H2/CO2 |
+
+**Calibration verdict.** The two haloarchaeal proteins chosen as the
+best-annotated archaeal baseline are not well annotated either. Their
+experimental rows are correct but come from one or two old papers each,
+and decades of later work never reached GO. So the archaeal deficit is
+not only in poorly studied organisms.
 
 ## Anchor organisms
 
@@ -276,13 +295,12 @@ split.
 
 ## Plan
 
-1. **Housekeeping** (above): merge the amoA duplicates, delete the stray
-   `genes/188937/` folder, and move the DRAFT reviews to COMPLETE or record
-   why they cannot be.
+1. **Housekeeping** (above): amoA merged and stray folder deleted. Still
+   to do: move the five DRAFT reviews to COMPLETE or record why they
+   cannot be.
 2. **Pilot (5 genes, DOE-facing): done.** Msed_0709 (malonyl-CoA
    reductase), sor, lacS, METTH mcrA and cdvB. See Pilot results above.
-3. **Calibration pair:** bop and psmA1 from Part B. Compare their evidence
-   code mix with the pilot genes.
+3. **Calibration pair: done.** bop and psmA1 (see Round 2 results).
 4. **Error catalogue: started.** [annotation-patterns](ARCHAEA/annotation-patterns.md)
    records each recurring archaea-specific error (pipeline, term, example
    rows). Cross-link PAINT-derived entries to [IBA_REVIEW](IBA_REVIEW.md)
