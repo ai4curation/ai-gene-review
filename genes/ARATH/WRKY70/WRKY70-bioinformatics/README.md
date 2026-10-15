@@ -58,8 +58,9 @@ just analyze-wide   # -> results_window_3kb_plus500/
 just test-other-tf  # WRKY33_col_a as focal TF, 1 kb window -> results_test_wrky33/
 ```
 
-The default interpreter is `/home/user/ai-gene-review/.venv/bin/python` (needs `pyyaml`,
-`scipy`); override with `PYTHON=python3 just analyze`. Tested with Python 3, scipy 1.16.1.
+The default interpreter is `uv run --project . python`, which installs the pinned
+dependencies from `pyproject.toml` (pyyaml 6.0.2, scipy 1.16.1) on first use. Override with
+`PYTHON=python3 just analyze` if those packages are already installed.
 
 ## Outputs
 
