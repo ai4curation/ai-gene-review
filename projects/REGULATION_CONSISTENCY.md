@@ -178,6 +178,79 @@ reviewer decision:
    `acts_upstream_of*` reflects each group's annotation policy, not the
    biology (below), so the heuristics ignore it.
 
+## Deep dive: genes annotated to both X and regulation of X
+
+[`x_and_rox.py`](REGULATION_CONSISTENCY/x_and_rox.py) dissects the 5,167
+human gene–process pairs (3,044 genes) where a gene has a participant
+annotation to X, or to a part or subtype of X, and a regulation-of-X
+annotation. The pairs are in
+[`results/x_and_rox_pairs.tsv`](REGULATION_CONSISTENCY/results/x_and_rox_pairs.tsv)
+and the counts in
+[`results/x_and_rox_summary.yaml`](REGULATION_CONSISTENCY/results/x_and_rox_summary.yaml).
+
+**Shape of the problem.** 55% of pairs annotate X itself; the rest reach X
+through a part or subtype. Signs: 40% positive only, 35% unsigned only, 14%
+negative only, and the remainder mixed. The largest targets are
+*transcription by RNA polymerase II* (215), *apoptotic process* (203),
+*DNA-templated transcription* (199) and *cell migration* (166). For the
+transcription targets, many pairs are general transcription machinery (TAFs,
+Mediator, preinitiation-complex factors). These are annotated to initiation or
+PIC assembly, which are part of transcription, and also to *regulation of
+transcription by RNA polymerase II*. That is partly an ontology question:
+whether core machinery "regulates" the process it executes.
+
+**Patterns** (ordered rules, first match wins):
+
+| pattern | pairs | rule |
+|---|---|---|
+| own_activity_is_step_of_x | 707 | the gene's own MF reaches X via is_a/part_of, or it is an enzyme and X is a metabolic/modification process (PTGS2 → *positive regulation of prostaglandin biosynthesis*; STUB1 → *positive regulation of protein ubiquitination*) |
+| same_paper_both_readings | 609 | one reference supports both rows; the curator asserted both readings at once |
+| inhibitor_also_participant | 690 | only negative regulation of X, plus participation in X (CLU, a complement inhibitor, also annotated to *complement activation*) |
+| mixed_sources | 1,325 | one side is phylogenetic or electronic and the other is not |
+| activator_with_regulator_activity | 999 | gene has a regulator-type MF (enzyme regulator, TF, …) |
+| component_as_activator | 837 | the rest: a participant also annotated as a positive or unsigned regulator |
+
+**What reviewers did.** 1,288 pairs have reviewer decisions on both sides.
+Reviewers kept both readings in about 74% of them. These pairs are mostly
+not contradictions: a gene can be part of X and also limit or tune its rate.
+The disagreements are informative, though:
+
+| | kept participant only | kept regulation only |
+|---|---|---|
+| GO-CAM places the gene's activity *part of* X (134 reviewed) | **37** | **1** |
+| inhibitor_also_participant (188) | 15 | **40** |
+| own_activity_is_step_of_x (148) | **27** | 16 |
+| all other patterns | 107 | 83 |
+
+- **GO-CAM is the best arbiter.** When a curated model places the gene's
+  activity in X, reviewers essentially never keep the regulation reading
+  alone. GO-CAM covers only 425 of the 5,167 pairs (311 part of X, 92
+  regulates X, 22 both), so it settles about 8%.
+- **For negative-only pairs, the participant claim is the weak one.** An
+  inhibitor annotated as taking part in the process it inhibits is the
+  mirror image of the "component misfiled as activator" case, and it is
+  dropped more often.
+- **When the gene's own activity is a step of X, the regulation claim is the
+  weak one.** An enzyme "positively regulating" its own pathway restates
+  that it catalyses a step, unless the paper shows it is rate-limiting.
+- **The same paper behind both rows (721 pairs; 609 not explained by own
+  activity) is a curation-practice
+  issue.** Reviewers usually keep both, so this alone does not mark either
+  row as wrong.
+
+**Proposed rules for the triage queue** (draft):
+
+1. GO-CAM places the activity part of X → keep X; the regulation row becomes
+   `KEEP_AS_NON_CORE`, or `MODIFY` to X when it is redundant.
+2. Negative-only regulation plus participation, no GO-CAM support for
+   participation → check the participant row first, since it is the one
+   reviewers drop.
+3. Gene's own activity is a step of X → keep X as core; the
+   positive/unsigned regulation row is `KEEP_AS_NON_CORE` unless a
+   rate-limiting role is shown.
+4. Transcription machinery on *regulation of transcription* → raise as an
+   ontology question rather than triaging gene by gene.
+
 ## Regulation terms versus extensions, across annotation sources
 
 Could a "regulation of X" annotation instead be a more precise statement
