@@ -1,15 +1,12 @@
 ---
 title: "UniPathway Unique Terms Project"
 maturity: MATURE
+last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP]
 species: [human, PSEPK, RHOPA, CUPNH, FERPA, 9ARCH, DESPS, POLH7, BRADI]
 manifest:
   slides:
     - href: UNIPATHWAY/slides/UNIPATHWAY-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/U4SuDGuX6Pm3BNujvCkbuH
-      title: Project brief
 ---
 
 # UniPathway Unique Terms Project
@@ -18,11 +15,13 @@ manifest:
 (`GO_REF:0000041`) still supplies biological-process annotations in GOA. We
 asked where it is the only source for a gene-term pair, after removing rows that
 another source already supports at the same term or a more specific descendant.
-That closure filter cuts human UniPathway rows from 1,129 to 247, and we ran the
-same scan across 13 single-species databases and 6 clade aggregates. We then
-reviewed 32 exemplar genes across 9 organisms, from human E3 ligase adaptors to
-bacterial denitrification enzymes and Brachypodium cell-wall enzymes. Of the 32
-UniPathway rows reviewed, 24 were accepted and 2 kept as non-core (GK5, PM20D1),
+That closure filter cuts human UniPathway rows from 1,129 to 247 in a frozen
+local GOA snapshot, and we ran the same scan across 13 single-species databases
+and 6 clade aggregates. We then reviewed 31 TRUE-unique exemplar rows plus ELOC
+as a non-unique Elongin BC comparator, spanning 32 genes across 9 organisms,
+from human E3 ligase adaptors to bacterial denitrification enzymes and
+Brachypodium cell-wall enzymes. Of the 32 UniPathway rows reviewed, 24 were
+accepted and 2 kept as non-core (GK5, PM20D1),
 so 26 of 32 stand. The other six are specific: UBA7 is an ISG15 enzyme swept
 into `protein ubiquitination` (MODIFY), nrfA is a dissimilatory nitrite
 reductase mapped to nitrate assimilation (REMOVE), the NorR regulators (norR1,
@@ -57,9 +56,9 @@ current.
 
 ## Key Findings
 
-- **Closure filtering matters**: in human GOA, 1,129 UniPathway annotations reduce
-  to 247 true unique annotations after exact and descendant-term support from other
-  sources is removed.
+- **Closure filtering matters**: in the frozen human GOA snapshot, 1,129
+  UniPathway annotations reduce to 247 true unique annotations after exact and
+  descendant-term support from other sources is removed.
 - **Most unique annotations are plausible metabolic or protein-modification pathway
   context**, not obvious over-annotation.
 - **The largest human unique term is `protein ubiquitination`** (`GO:0016567`),
@@ -139,6 +138,11 @@ enzyme evidence for each gene:
 
 ## Cross-Organism Scan
 
+> **Count provenance.** These counts are a frozen local GOA DuckDB snapshot
+> from the 2026 pilot; the exact GOA/go-db build date was not recorded.
+> `last_reviewed` records reconciliation against current project prose, slides
+> and exemplar YAMLs, not a re-scan of those databases.
+
 | Database | UniPathway annotations | UniPathway genes | TRUE unique annotations | TRUE unique genes | TRUE unique terms |
 |----------|------------------------|------------------|-------------------------|-------------------|-------------------|
 | human (`goa_human.ddb`) | 1,129 | 1,066 | 247 | 243 | 57 |
@@ -191,7 +195,7 @@ nitrogenase annotation gaps.
 | fungi | GO:0042128 nitrate assimilation | 556 | 0 | 0 | No unique UniPathway signal after closure filtering. |
 | PSEPK | GO:0042128 nitrate assimilation | 1 | 0 | 0 | Not a useful unique term in the P. putida pilot. |
 | bacteria | GO:0043419 urea catabolic process | 6,688 | 44 | 33 | Low unique fraction but likely useful for urease subunits when the gene product is directly part of urea hydrolysis. |
-| archaea | GO:0043419 urea catabolic process | 130 | 10 | 9 | Stronger targeted signal. Examples include ureC1, ureC2 in Nitrososphaera viennensis and ureC in other ammonia-oxidizing or nitrogen-metabolizing archaea. |
+| archaea | GO:0043419 urea catabolic process | 130 | 10 | 9 | Stronger targeted signal. Examples include ureC1, ureC2 in Nitrososphaera viennensis and `ureC` in other ammonia-oxidizing or nitrogen-metabolizing archaea. |
 | bacteria | GO:0000050 urea cycle | 1,189 | 1,189 | 1,149 | High-volume unique set, but not automatically an environmental nitrogen-cycling annotation. Review as arginine/ornithine/carbamoyl-phosphate pathway context. |
 | fungi | GO:0000050 urea cycle | 790 | 682 | 646 | Similar broad pathway-context issue; likely useful for core nitrogen/amino-acid metabolism but not necessarily a nitrogen-cycle headline. |
 | Clostridium | GO:0000050 urea cycle | 49 | 49 | 49 | Clade-specific positive candidates, subject to the same term-scope check. |
@@ -212,7 +216,7 @@ nitrogenase annotation gaps.
 | Example | UniPathway term | Assessment |
 |---------|-----------------|------------|
 | Brachypodium distachyon BRADI_1g22147v3 | GO:0045490 pectin catabolic process | `ACCEPT`. The protein is a predicted pectate lyase, supported by EC 4.2.2.2 and PANTHER pectate lyase family placement, so the pathway term is direct cell-wall pectin-degradation context. |
-| Brachypodium distachyon LOC100829928 | GO:0009800 cinnamic acid biosynthetic process | `ACCEPT`. The gene encodes phenylalanine ammonia-lyase; InterPro Phe_NH3-lyase plus the PAL reaction support direct trans-cinnamate biosynthesis rather than only a broad ammonia-lyase-family call. |
+| Brachypodium distachyon LOC100829928 | GO:0009800 cinnamic acid biosynthetic process | `ACCEPT`. The gene encodes phenylalanine ammonia-lyase; InterPro Phe_NH3-lyase plus the `PAL` reaction support direct trans-cinnamate biosynthesis rather than only a broad ammonia-lyase-family call. |
 | Brachypodium distachyon BRADI_1g66227v3 | GO:0033320 UDP-D-xylose biosynthetic process | `ACCEPT`. The gene encodes UDP-glucuronate decarboxylase; PANTHER PTHR43078:SF51 and NAD(P)-binding domains support the one-step UDP-D-xylose biosynthesis annotation. Falcon found no direct BRADI_1g66227v3 paper, so the pathway call is orthology/family-supported and the Golgi localization is treated as predicted rather than experimentally established. |
 
 ## Top Human TRUE UniPathway-Unique Terms
@@ -228,7 +232,7 @@ nitrogenase annotation gaps.
 | GO:0019563 | glycerol catabolic process | 5 | Correct for glycerol kinase/dehydrogenase pathway genes |
 | GO:0016925 | protein sumoylation | 4 | Mixed; inspect SUMO vs ubiquitin specificity |
 | GO:0030210 | heparin proteoglycan biosynthetic process | 4 | Correct pathway context for NDST enzymes |
-| GO:0006506 | GPI anchor biosynthetic process | 4 | Correct for GPI transamidase components |
+| GO:0006506 | `GPI` anchor biosynthetic process | 4 | Correct for `GPI` transamidase components |
 
 ## Protein Ubiquitination Boundary Review
 
@@ -300,9 +304,9 @@ curation buckets:
 |------|----------|-----------------|--------|------------|
 | SOCS4 | human | `GO:0016567` protein ubiquitination | ACCEPT | Useful unique annotation. SOCS4 acts as a SOCS-box substrate adaptor recruiting Elongin/Cullin ubiquitin ligase machinery to targets such as EGFR. Re-review added `GO:1990756` ubiquitin-like ligase-substrate adaptor activity as the core MF. |
 | SOCS5 | human | `GO:0016567` protein ubiquitination | ACCEPT | Same boundary as SOCS4. SOCS5 is a substrate-recognition component of an Elongin BC-CUL2/5-SOCS-box E3 ligase complex; re-review added `GO:1990756`. |
-| KCTD11 | human | `GO:0016567` protein ubiquitination | ACCEPT | Useful unique annotation. KCTD11 functions as a CRL3 substrate adaptor and promotes HDAC1 ubiquitination/degradation. This shows that non-catalytic E3-complex adaptors can still be validly involved in ubiquitination. |
+| KCTD11 | human | `GO:0016567` protein ubiquitination | ACCEPT | Useful unique annotation. KCTD11 functions as a CRL3 substrate adaptor and promotes `HDAC1` ubiquitination/degradation. This shows that non-catalytic E3-complex adaptors can still be validly involved in ubiquitination. |
 | ZSWIM8 | human | `GO:0016567` protein ubiquitination | ACCEPT | Substrate-adaptor positive control. Existing review already has `GO:1990756`, matching the boundary used for SOCS4, SOCS5, and KCTD11. |
-| ELOB, ELOC | human | `GO:0016567` protein ubiquitination | ACCEPT | Direct CRL2/CRL5 module examples. These support the ubiquitination process but are not themselves substrate receptors, so the re-review explicitly does not add `GO:1990756`. |
+| ELOB, ELOC | human | `GO:0016567` protein ubiquitination | ACCEPT | Direct CRL2/CRL5 module examples; ELOB is TRUE-unique and ELOC is the local non-unique comparator. Both support the ubiquitination process but are not themselves substrate receptors, so the re-review explicitly does not add `GO:1990756`. |
 | BRCA1, RAD18, SYVN1, PEX2, PEX10, PEX12 | human | `GO:0016567` protein ubiquitination | ACCEPT | Catalytic E3 or E3-complex positive controls. The UniPathway process term is broad but correct and should coexist with more specific ubiquitin ligase, monoubiquitination, and polyubiquitination terms. |
 | UBA7 | human | `GO:0016567` protein ubiquitination | MODIFY | Mapping error. UBA7 is an ISG15-activating E1 enzyme; the correct process is `GO:0032020` ISG15-protein conjugation, not generic protein ubiquitination. This is the clearest human pilot example where `UPA00143` overgeneralizes a ubiquitin-like modifier pathway. |
 | COX5B | human | `GO:0006119` oxidative phosphorylation | ACCEPT | Useful unique annotation. COX5B is a structural Complex IV subunit, so UniPathway adds correct OXPHOS context beyond component/localization annotations. |
@@ -389,6 +393,9 @@ enzymes.
    pathway membership or only regulatory context.
 
 ## Follow-Up Targets
+
+The continuation queue for these batches is tracked in
+[ai-gene-review#4023](https://github.com/ai4curation/ai-gene-review/issues/4023).
 
 | Target | Rationale |
 |--------|-----------|
