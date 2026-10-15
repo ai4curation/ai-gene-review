@@ -42,6 +42,14 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   PANTHER subfamily, and add the CDD models as conditions in the ARBA
   rules: cd23940/cd24150 for MCR, cd18130/cd02315 for ASD. NCBIfam
   TIGR00978 (asd_EA) cannot be used, because both paralogs carry it.
+- **Structured record:** rule reviews
+  `rules/arba/ARBA00067001/ARBA00067001-review.yaml` (name) and
+  `rules/arba/ARBA00052213/ARBA00052213-review.yaml` (catalytic activity),
+  both action MODIFY, with the per-protein classification in
+  `rules/arba/ARBA00067001/RESULTS.md`: of 38 rule-annotated entries, 17
+  are MCR-type, 17 ASD-type and 4 unclassified. No GO row derives from the
+  rules yet, but a new malonyl-CoA reductase GO term would carry the error
+  into GO through Rhea-to-GO mapping, so the rules should be fixed first.
 - **Where else to look:** other enzymes of the 3HP/4HB cycle and other
   archaeal pathways that recruited enzymes from amino acid metabolism.
 

@@ -72,6 +72,21 @@ Edit `rules/arba/RULE_ID/RULE_ID-review.yaml` to replace TODO placeholders:
 - `review_summary`: Comprehensive narrative
 - `confidence`: 0.0-1.0 based on evidence strength
 - Assessment sections: parsimony, literature_support, condition_overlap, go_specificity, taxonomic_scope
+- `annotation_assessments`: one entry per consequent the rule assigns (GO term,
+  protein name, EC number, catalytic activity). Record `assessment`
+  (CORRECT / PARTIALLY_CORRECT / INCORRECT / TOO_GENERAL / UNDECIDED), the
+  `matched_protein_count` and `incorrect_protein_count`, example accessions on
+  each side, `gene_reviews` that document the problem, and
+  `discriminating_features` that could be added as conditions. This is the
+  structured record of a rule problem; derive counts from a reproducible script
+  in the rule folder, never by hand.
+
+Rules that assign only names, EC numbers or catalytic activities (no GO) are
+reviewed the same way: `init-rule-review` fills `rule.protein_name_annotations`
+and `rule.catalytic_activity_annotations`, and `go_specificity` can be omitted.
+Note that the ipr2go redundancy summary printed by `analyze-rule` is vacuous for
+such rules. Worked example: `rules/arba/ARBA00067001/` (EC 1.2.1.75 name) and
+`rules/arba/ARBA00052213/` (RHEA:26446 activity).
 
 ### Step 6: Render HTML
 

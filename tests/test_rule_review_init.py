@@ -135,3 +135,35 @@ def test_arba_client_round_trip_keeps_protein_description() -> None:
     assert annotations["protein_name_annotations"] == [
         {"name_type": "RECOMMENDED", "ec_numbers": ["1.2.1.75"]}
     ]
+
+
+def test_rendered_review_shows_name_rule_consequents_and_assessments(tmp_path: Path) -> None:
+    """A rule with no GO consequent still renders its name and assessment sections."""
+    import yaml
+
+    from ai_gene_review.etl.rule_analysis import render_rule_review_html
+
+    rule_id = "ARBA00067001"
+    stub = _create_review_stub(rule_id, "ARBA", load_rule(rule_id))
+    stub["rule"]["entries"] = []
+    stub["annotation_assessments"] = [
+        {
+            "annotation_kind": "EC_NUMBER",
+            "value": "EC:1.2.1.75",
+            "assessment": "PARTIALLY_CORRECT",
+            "matched_protein_count": 38,
+            "incorrect_protein_count": 17,
+            "incorrect_examples": ["A4YHF3"],
+            "discriminating_features": ["CDD:cd23940"],
+        }
+    ]
+    rule_dir = tmp_path / rule_id
+    rule_dir.mkdir()
+    (rule_dir / f"{rule_id}-review.yaml").write_text(yaml.safe_dump(stub))
+    html = render_rule_review_html(rule_id, tmp_path).read_text()
+    assert "Protein Name Annotations" in html
+    assert "1.2.1.75" in html
+    assert "Annotation Assessments" in html
+    assert "PARTIALLY_CORRECT" in html
+    assert "A4YHF3" in html
+    assert "CDD:cd23940" in html

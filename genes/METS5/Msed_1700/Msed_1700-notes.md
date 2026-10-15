@@ -136,3 +136,12 @@ All 7 GOA rows are IEA (2 TreeGrafter, 5 InterPro2GO).
 - Has Msed_1700 lost any malonyl-CoA reductase activity? No one has assayed it. The
   low-level ASD/MCR cross-activity of the paralogs is unknown.
 - Does it use NADH as well as NADPH, like the M. jannaschii enzyme?
+
+## Rule reviews (2026-10-15)
+
+The ARBA naming and catalytic-activity rules that misannotate this protein now have
+structured reviews: `rules/arba/ARBA00067001/ARBA00067001-review.yaml` and
+`rules/arba/ARBA00052213/ARBA00052213-review.yaml` (both MODIFY). Across all 38 archaeal
+entries the rules annotate, 17 are ASD-type like Msed_1700 (see
+`rules/arba/ARBA00067001/RESULTS.md`).
+
