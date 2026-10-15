@@ -83,6 +83,8 @@ def _write_gene(tmp_path: Path, symbol: str, sf: str | None, action: str,
         # gene outside the allowed subfamilies that keeps the term -> conflict
         (RECEPTOR_SF, "ACCEPT", Verdict.CONFLICT),
         (RECEPTOR_SF, "KEEP_AS_NON_CORE", Verdict.CONFLICT),
+        # TOO_GENERAL holds the claim true (only uninformative), so it still conflicts
+        (RECEPTOR_SF, "TOO_GENERAL", Verdict.CONFLICT),
         # gene outside the allowed subfamilies that already flags it -> consistent
         (RECEPTOR_SF, "REMOVE", Verdict.OK),
         (RECEPTOR_SF, "MARK_AS_OVER_ANNOTATED", Verdict.OK),
@@ -153,7 +155,68 @@ def test_converse_disagreement_over_annotated_is_unresolved_not_conflict(tmp_pat
     assert result.gene_action == "MARK_AS_OVER_ANNOTATED"
 
 
-@pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "UNDECIDED"])
+@pytest.mark.parametrize("kept", ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL"])
+def test_over_annotated_row_beside_a_retained_row_is_not_disagreement(tmp_path, kept):
+    """One row flagged, another row for the same term kept: the gene retains the term.
+
+    This is the qualifier split, e.g. an ``enables`` IEA marked over-annotated for a
+    non-catalytic subunit while the ``contributes_to`` ISS row is accepted. The gene
+    agrees the term belongs to it, so a family calling the term safe is not disputed.
+    """
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "qualifier": "contributes_to", "review": {"action": kept}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []
+
+
+def test_over_annotated_row_beside_an_identical_retained_row_is_still_reported(tmp_path):
+    """Same qualifier and evidence code, opposite verdicts: that is an inconsistency to surface."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "IBA",
+         "review": {"action": "ACCEPT"}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.UNRESOLVED
+
+
+def test_identical_retained_row_is_not_excused_by_a_third_differing_row(tmp_path):
+    """An identical kept row still makes the flag an inconsistency, whatever else is kept."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"] += [
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "IBA",
+         "review": {"action": "ACCEPT"}},
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "qualifier": "contributes_to", "review": {"action": "ACCEPT"}},
+    ]
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.UNRESOLVED
+
+
+def test_remove_row_beside_a_retained_row_still_conflicts(tmp_path):
+    """A REMOVE asserts the term is wrong, so a retained sibling row does not excuse it."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "review": {"action": "ACCEPT"}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.CONFLICT
+
+
+@pytest.mark.parametrize(
+    "action", ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL", "MODIFY", "UNDECIDED"]
+)
 def test_converse_disagreement_ignores_non_disputing_actions(tmp_path, action):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
     assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []
