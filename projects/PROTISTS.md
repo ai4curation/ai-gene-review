@@ -234,16 +234,16 @@ PiggyMac; *Phaeodactylum* aureochrome 1a; *Giardia* (strain WB) alpha-giardin.
 
 Track B reviewed: 6 kinetoplastid genes, one review agent each, all
 `status: COMPLETE` and passing `just validate`. 54 existing annotations
-reviewed, 6 NEW rows added.
+reviewed, 7 NEW rows added.
 
 | Gene | Annotations | ACCEPT | NON_CORE | MODIFY | REMOVE | Other | NEW |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | TRYB2 REL1 | 15 | 8 | 3 | 4 | 0 | 0 | 0 |
-| TRYBB TPR | 13 | 4 | 2 | 6 | 1 | 1 | 0 |
+| TRYBB TPR | 13 | 4 | 2 | 5 | 1 | 1 | 0 |
 | TRYBB PFRA | 3 | 0 | 1 | 2 | 0 | 0 | 2 |
 | TRYBB PFRC | 3 | 1 | 1 | 1 | 0 | 0 | 2 |
 | LEIMA gp63 | 12 | 7 | 1 | 3 | 0 | 1 | 2 |
-| LEIMA PTR1 | 8 | 6 | 1 | 2 | 0 | 0 | 1 |
+| LEIMA PTR1 | 8 | 5 | 1 | 2 | 0 | 0 | 1 |
 
 "Other" is TOO_GENERAL or UNDECIDED.
 
