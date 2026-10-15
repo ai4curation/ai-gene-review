@@ -116,7 +116,7 @@ the gene notes as the reviews are done.
 ## Proposed review targets
 
 Accessions were checked against UniProt on 2026-10-14. All are reviewed
-(Swiss-Prot) entries. Where UniProt gives no gene symbol, the ordered
+(Swiss-Prot) entries except the *M. sedula* iron-oxidation proteins in A2. Where UniProt gives no gene symbol, the ordered
 locus name from the UniProt record is shown and should be used as the
 folder name.
 
@@ -145,10 +145,17 @@ seen in vitro. The cycle is a natural first archaeal module.
 | ACIAM | sor | P29082 | Sulfur oxygenase/reductase (SOR) |
 | ACIAM | doxD | P97207 | Thiosulfate:quinone oxidoreductase large subunit |
 | ACIAM | doxA | P97224 | Thiosulfate:quinone oxidoreductase small subunit |
+| METS5 | foxA | A4YE09 | Fox terminal oxidase, subunit I (heme-copper oxidase family) |
+| METS5 | foxB | A4YE05 | Fox terminal oxidase, subunit II |
+| METS5 | foxC | A4YE03 | FoxC |
+| METS5 | foxD | A4YE02 | FoxD |
+| METS5 | Msed_0323 | A4YDJ8 | Sulfocyanin (blue copper protein) |
 
-The iron-oxidation (*fox*) proteins of *M. sedula* are all unreviewed
-TrEMBL entries. Scope them after the pilot, once it is clear whether
-unreviewed archaeal entries carry any GO annotation worth reviewing.
+The *M. sedula* iron-oxidation (*fox*) proteins and sulfocyanin are
+unreviewed (TrEMBL) entries. They are in scope: they are the proteins that
+link archaeal iron oxidation to bioleaching, and their GO annotation is
+expected to come entirely from the generic heme-copper oxidase and cupredoxin
+families.
 
 #### A3. Thermostable carbohydrate and glycolytic enzymes
 
