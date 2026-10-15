@@ -194,20 +194,31 @@ These are draft rules for review practice. They are not yet enforced.
 
 ## Enrichment consequences (genesets)
 
-On the curated genesets benchmark (126 sets, 394 CORE terms), with the current
-is_a/part_of closure as baseline (recall 0.561):
+The genesets benchmark was first scored as it stood (126 sets, 394 CORE
+terms). On that gold, dropping regulation terms looked free, because it lost
+only the gold's own regulation terms. That gold had rarely been offered
+regulation-only hits, so the contested region was recurated. Candidates were
+pooled symmetrically from all four variants (884 terms) and judged blind to
+which variant proposed them:
 
-- dropping regulation terms leaves participant recall unchanged and cuts output
-  by 30%. The only losses are the regulation terms in the gold, mostly
-  *regulation of cell population proliferation* in KEGG cancer sets;
-- regulates closure raises strict recall to 0.617 (+22 CORE terms, e.g. *T
-  cell mediated cytotoxicity*, *insulin secretion*, *EMT*, *ferroptosis*), with
-  14% more output;
-- collapsing regulation annotations onto X gets the same participant gain
-  (0.609) with 16% less output than the baseline.
+| variant | recall, recurated gold (481 CORE) | precision on judged contested hits |
+|---|---|---|
+| current is_a/part_of | 0.549 | 0.458 |
+| drop regulation terms | 0.459 | 0.356 |
+| regulates closure | **0.653** | **0.462** |
+| collapse regulation onto X | 0.555 | 0.400 |
 
-Regulates closure also propagates the inconsistent rows triaged here. Cleaning
-GOA would change those results more than any other variant.
+- **Regulation terms are not the noise for enrichment.** Judges called 50% of
+  contested regulation-term hits core or supporting, against 40% of
+  participant-term hits.
+- **Regulates closure gives the best recall** at unchanged precision. Collapse
+  is the compact option: it matches closure on participant recall with 27%
+  less output.
+- This sits alongside the annotation-level noise documented above. GOA's
+  regulation rows are internally inconsistent, but in aggregate they still
+  carry real signal about what a gene set does. Regulates closure also
+  propagates the inconsistent rows triaged here, so cleaning them should
+  improve it further.
 
 ## Next steps
 
