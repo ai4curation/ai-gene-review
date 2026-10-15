@@ -91,6 +91,16 @@ entry**, not simply whether it is well established for one member. Conversely, a
 broad term can be appropriate for a diverse family even when a more specific term
 is preferable for an individual gene.
 
+**Archaeal additions (2026-10-15).** Gene reviews in the [ARCHAEA](ARCHAEA.md)
+project added six rows to the mapping set, not counted in the totals above:
+removals for IPR019982 to threonine-type endopeptidase activity (non-catalytic
+archaeal proteasome alpha subunits), IPR018229 to ion channel activity and
+IPR017402 to light-activated ion channel activity (rhodopsin pumps); a proposed
+Eukaryota restriction for IPR000426 to ubiquitin-dependent protein catabolic
+process and IPR005024 to vacuolar transport; and narrowing IPR000534 to NAD
+binding. SSSOM has no taxon field, so the restrictions are written at the start
+of each row's comment as `TAXON RESTRICTION (NCBITaxon:2759)`.
+
 ## What curators can act on
 
 1. **Assess the four removal proposals first:** ATP binding (GO:0005524) and protein

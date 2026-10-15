@@ -197,3 +197,22 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   as electron donor) is defined through hydrazine intermediates, which
   does not fit aerobic nitrification.
 
+## Structured records
+
+The upstream-fixable patterns are recorded in machine-readable form, ready to
+send to the resource that owns them:
+
+| Pattern | Record | Verdict |
+|---|---|---|
+| 1 (ARBA naming) | `rules/arba/ARBA00067001/ARBA00067001-review.yaml`, `rules/arba/ARBA00052213/ARBA00052213-review.yaml` | MODIFY: require MCR-type CDD models |
+| 3 (ESCRT-III vacuolar transport) | `projects/INTERPRO/interpro2go.sssom.yaml`, IPR005024 to GO:0007034 | broadMatch, restrict to Eukaryota |
+| 6 (default NAD binding) | same file, IPR000534 to GO:0051287 | broadMatch, narrow |
+| 8 (catalytic activity on proteasome alpha) | same file, IPR019982 to GO:0004298 | REMOVE |
+| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch, restrict to Eukaryota |
+| 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE |
+
+Patterns 2 (plant-seeded PAINT node on lacS) and 4 (SubCell nucleoid
+mapping) are not yet in a structured record: the first belongs with PANTHER
+IBA reviews (see [IBA_REVIEW](../IBA_REVIEW.md)), the second with UniProt's
+SubCell-to-GO mapping, which has no review file in this repository yet.
+
