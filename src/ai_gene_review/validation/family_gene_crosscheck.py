@@ -59,8 +59,10 @@ PANTHER_SF_RE = re.compile(r"DR   PANTHER; (PTHR\d+:SF\d+);")
 PANTHER_FAM_RE = re.compile(r"DR   PANTHER; (PTHR\d+);")
 ACCESSION_RE = re.compile(r"^AC   (\S+?);", re.M)
 
-#: Actions where the gene review keeps the annotation in place.
-RETAINING_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
+#: Actions where the gene review holds the claim to be true. TOO_GENERAL is among them:
+#: it judges the term uninformative, not false, so a family that scopes the term out
+#: still conflicts with it, and a family that calls the term safe agrees with it.
+RETAINING_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL"}
 #: Actions short of REMOVE that still dispute a term the family calls safe. MODIFY is
 #: not among them: it keeps the essence of the annotation and only changes the term.
 SOFT_DISAGREEING_ACTIONS = {"MARK_AS_OVER_ANNOTATED"}

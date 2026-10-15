@@ -42,3 +42,55 @@ All map to uninformative "protein binding" (GO:0005515). Per curation guidelines
 2. CC: structural part of the BBSome (GO:0034464); acts at ciliary membrane (GO:0060170) and basal body (GO:0036064).
 3. BP: BBSome-mediated cilium assembly / ciliary membrane protein trafficking (GO:0060271).
 </content>
+
+
+## Source-complete BBS5 reassessment — 2026-09-30
+
+The normal GOA projection preserves all 45 distinct source assertions from 45 raw rows, restores the previously omitted KLC3 interaction, and backfills 29 supporting-entity lists. The two alternative products and raw source files remain unchanged. The judgments are 18 ACCEPT, 26 KEEP_AS_NON_CORE and 1 MODIFY, with no new annotation. Supported generic interactions remain non-core under the supplied ActionEnum; lack of a more informative activity does not establish that an interaction is wrong.
+
+The original BBS5 lipid experiment uses recombinant protein–lipid overlays, including full BBS5 and its N-terminal PH-like domain. It supports PI3P binding, but not exclusive physiological membrane anchoring or the positive binding of both domains independently. Native BBSome liposome specificity differs from isolated BBS5 overlays, and a BBS4/8/9/18 subcomplex also binds lipids without BBS5. These observations limit the inherited membrane-anchor narrative without removing the experimental binding assertion [PMID:17574030; PMID:20603001; PMID:31951201]. BBS5 RNAi reduces ciliation in human RPE cells; separate experiments show impaired BBSome ciliary entry while much of the remaining complex stays assembled. BBS5 is not assigned the scaffold mechanism of BBS2/BBS9 or direct cargo/ARL6/RAB3IP recognition [PMID:17574030; PMID:22072986].
+
+The RNF2 source does assay BBS5 by tagged co-immunoprecipitation; its inherited MISCITED judgment based on the BBS7-focused title is superseded. The proposed change is to ubiquitin protein ligase binding because of RNF2's molecular function, not rejection of the assay [PMID:22302990]. The DLEC1 interaction is measured in human HEK293F cells, separately from the mouse Dlec1 knockout phenotype [PMID:33144677]. Exact GOA partners are DISC1 for PMID:18762586 and TTC8/BBS8 for PMID:24939912; previous PCM1/PKD1 descriptions must not replace those source identities. The PC1 paper reports that BBS5 depletion does not impair PC1 ciliary trafficking in its assay [PMID:18762586; PMID:24939912].
+
+Zebrafish heart-looping and retrograde melanosome phenotypes remain transferred non-core contexts, not direct human assays or intrinsic motor functions [PMID:16399798; PMID:24559376]. Mouse photoreceptor axonemal/basal-body localization is treated as compartment evidence with its organism scope [PMID:31690665]. Read limits are recorded per annotation: several normal sources are abstract-only; selected primary Results/captions supply the specific corrections, and no image or complete supplemental reanalysis is claimed. Original PDF image requests failed. The configured provider environment's prior dependency-resolution failure is retained; no provider report was authored by hand. At the consultation stage, the two additional source caches were pending and primary reading used separately recorded official and indexed material. Their normal-source import has now closed; the completed reading below supersedes that earlier access limit.
+
+The two additional normal sources were imported through Source89 without editing publication caches. The two core roles retain the directly measured PI3P-binding activity and the BBSome contribution to cilium assembly while separating lipid-overlay results, ciliary entry and complex assembly. The original PMID:17574030 PDF was inspected separately from its abstract-only normal cache; the YAML cites that source without an unvalidated quotation or an inability-to-share claim. No new process annotation was manufactured.
+
+Normal-source primary reading confirms the zebrafish Bbs5 looping phenotype and context-specific rescue observations, and distinct BBS5 pools in mouse rod cilia. The principal STORM mutant comparisons are Bbs2/Bbs4/Bbs7, while Bbs5-null tissue validates antibody specificity. These findings retain the existing decisions without assigning autonomous motor activity or a universal ciliary transport requirement. The zebrafish rescue text reports absence of situs inversus among the rescued phenotypes; it does not provide a separately quantified cardiac-looping rescue series. No images or supplementary controls were independently reanalyzed.
+
+## Validation of the 2026-09-30 revision
+
+Focused validation passed with 14 advisories for generic protein-binding assertions retained as non-core under the supplied ActionEnum. Source-supported associations remain non-core when a more specific activity has not been established. No errors or source-projection mismatches were reported.
+
+
+## Event-specific cytosol explanations — 2026-09-30
+
+The five cytosol annotations refer to distinct events involving the BBSome: formation of the complex, association with RAB3IP, cargo recognition, targeting to the primary cilium, and regulation by LZTFL1. Their reasons now explain those individual contexts instead of repeating a general list of activities performed by other proteins. BBS5 remains a component of the complex; these location annotations do not establish a separate exchange-factor, motor, cargo-recognition or assembly-scaffold activity for BBS5 [Reactome:R-HSA-5617815; Reactome:R-HSA-5624125; Reactome:R-HSA-5624126; Reactome:R-HSA-5624127; Reactome:R-HSA-5624129].
+
+All 45 annotation decisions and source assertions, the two core functions and both alternative products are unchanged. The five complete cached event summaries were read for this clarification. No new quotation or full-text access claim is introduced.
+
+
+## Binding-policy authority and review follow-up — 2026-10-09
+
+The standing user instruction recorded in [the CLINGEN_MENDELIAN project](https://github.com/ai4curation/ai-gene-review/blob/d763bc99e4aee5c0df05fd45468e96c1da033ef9/projects/CLINGEN_MENDELIAN.md#curation-instructions) governs this review: retain biologically supported generic protein-binding annotations as KEEP_AS_NON_CORE when a more informative molecular function is not established; use MODIFY for supported refinements and UNDECIDED when the evidence cannot be adjudicated. This explicit instruction takes precedence over the general skill guidance. The earlier references to the ActionEnum alone did not explain that authority and are superseded by this clarification. Retention is not based on warning severity or a legacy-review exception, and it does not establish a repository-wide policy change.
+
+All 14 generic binding annotations retain their source-specific, non-core decisions. Six describe BBS9 associations; the other partners are CRADD, IQCB1, DLEC1, DISC1, TTC8, CEP131, CCDC28B and KLC3. The two short repeated reasons now state the project instruction explicitly. Complex membership and association assays are not promoted to a more specific autonomous BBS5 activity. The RNF2 annotation retains its supported refinement to ubiquitin protein ligase binding. No action or source assertion changed.
+
+The biological summary describes the BBSome's trafficking context. The current core process remains the directly supported cilium-assembly role, with BBSome entry and the PC1 cargo limitation distinguished in its explanation. A new question records the unresolved scope of cargo-specific BBS5 contributions before any additional trafficking-process annotation is proposed. This preserves the distinction between BBSome ciliary entry and transport of a particular cargo [PMID:22072986; PMID:24939912].
+
+The repository caches for PMID:17574030 and PMID:22302990 contain abstracts only. Their reference assessments already identify the selected primary sections read from the external article PDF and PMC full text, respectively, and the limits of those reads. A cache lacking the full text is not evidence that the article full text was unavailable. Therefore no full_text_unavailable flag is introduced solely from the cache metadata, and no claim of newly reading either article or its figures is made here.
+
+The five event-specific Reactome explanations accepted in the latest review remain unchanged. The review still has 45 source assertions: 18 ACCEPT, 26 KEEP_AS_NON_CORE and 1 MODIFY; two core functions and two alternative products are preserved. No new annotation or quotation is introduced. Earlier notes and history records remain as the append-only record of the preceding work.
+
+
+## Published policy citation correction — 2026-10-09
+
+The previous relative link resolved within this older PR branch, which did not yet contain the project's recorded instruction. It now points to the immutable published main-branch record, where the Curation instructions heading exists. The instruction states: "retain a supported, biologically correct `GO:0005515` (protein binding) annotation as `KEEP_AS_NON_CORE` when no evidence-backed, more specific replacement has been established." [Published project instruction](https://github.com/ai4curation/ai-gene-review/blob/d763bc99e4aee5c0df05fd45468e96c1da033ef9/projects/CLINGEN_MENDELIAN.md#curation-instructions).
+
+That instruction applies to all 14 supported generic-binding decisions here; evidence-backed refinements and genuinely unadjudicated evidence retain their separate MODIFY and UNDECIDED rules. The two shorter reasons again state that limited mechanistic specificity does not make the interaction incorrect. The other 12 reasons retain their partner-specific biological explanations.
+
+The project's ABCC6 entry documents earlier curation decisions. It is historical provenance, not a countermand of the subsequently recorded task instruction, and this BBS5 follow-up does not revise ABCC6. The general annotation-reviewer skill and binding validator continue to describe the repository-wide policy; the cited project section explicitly identifies this task-specific departure. No shared policy or validator change is implied. The resulting 14 warnings remain expected under the applicable instruction.
+
+All 45 source assertions and decisions, both products, both core functions, reference assessments and publication quotations are unchanged. The reference-access and cargo-specific questions accepted in the latest review remain intact. Only two reasons, the formerly unresolved policy link, this clarification and the derived status change. Source caches were not modified, and no new scientific evidence or function is asserted.
+
+The normal status checker derives DRAFT because of the 14 expected binding warnings. Its update command reports existing mismatches without rewriting them, so the single status field was aligned with the reported value and checked again. DRAFT does not indicate any PENDING annotation or a newly unresolved scientific decision.
