@@ -53,7 +53,7 @@ module uses them):
 | PTHR24247 | 5-HYDROXYTRYPTAMINE RECEPTOR | Same coupling question across 5-HT1/2/4/6/7. |
 | PTHR24249 | HISTAMINE RECEPTOR-RELATED G-PROTEIN COUPLED RECEPTOR | H1 (Gq) vs H2 (Gs) vs H3/H4 (Gi/o). |
 | PTHR24246 | OLFACTORY RECEPTOR AND ADENOSINE RECEPTOR | A mixed family name; check what the adenosine receptors share with ORs. |
-| PTHR26452, PTHR26453, PTHR26454 | OLFACTORY RECEPTOR | Is `GO:0004984` olfactory receptor activity safe family-wide, given ectopic and orphan ORs? |
+| PTHR26452, PTHR26453, PTHR26454 | OLFACTORY RECEPTOR | Deferred (see Decisions). |
 | PTHR11394 | TASTE RECEPTOR TYPE 2 | Bitter-taste receptors; extra-oral roles. |
 | PTHR24060 | METABOTROPIC GLUTAMATE RECEPTOR | Class C; glutamate vs GABA-B vs CaSR divergence. |
 | PTHR24061 | CALCIUM-SENSING RECEPTOR-RELATED | CASR, GPRC6A, taste type 1. |
@@ -138,7 +138,7 @@ Recurring function questions to resolve while reviewing:
 - [ ] Pull GOA term counts for all human GPCRs to size the over-annotation problem
 - [ ] Family reviews for PTHR24248, PTHR24247, PTHR24249 (aminergic)
 - [ ] Family reviews for PTHR12011 (adhesion) and PTHR11309 (Frizzled)
-- [ ] Olfactory/taste family call (PTHR26452–4, PTHR11394)
+- [ ] Taste receptor family call (PTHR11394)
 - [ ] Promote `gpcr_camp_pka_signaling` and `gpcr_plc_calcium_pkc_signaling`
 - [ ] New modules: Gi/o, G12/13-RhoA, desensitization/arrestin, RGS
 - [ ] Tranche 1 gene reviews (agree the list with the dismech side)
@@ -146,11 +146,14 @@ Recurring function questions to resolve while reviewing:
 - [ ] Tranche 3 gene reviews
 - [ ] Cross-link each reviewed receptor to the dismech module that uses it
 
+## Decisions
+
+- **Olfactory receptors are deferred** (decided 2026-10-15): no family or
+  per-gene review of the ~400 human ORs for now.
+
 ## Open questions
 
 - Should a GPCR family index page (like the CASPL one) be generated, or do
   family reviews live only under `interpro/panther/`?
-- How far into olfactory receptors (~400 human genes) should per-gene review
-  go, versus a family-level call alone?
 - Do we use GPCRdb / IUPHAR-Guide to Pharmacology classifications as a
   reference alongside PANTHER, and if so how are they cited?
