@@ -47,7 +47,11 @@ metazoan occluding junction that `GO:0005923 bicellular tight junction` describe
 ("An occluding cell-cell junction that is composed of a branching network of sealing
 strands that completely encircles the apical end of each cell in an epithelial sheet",
 OLS). The GOA row carrying `GO:0005923` for RH5 is an animal-specific term imported on
-the strength of that shared word, and is reviewed as REMOVE.
+the strength of that shared word. The underlying IDA observation is nevertheless real, so
+the row is reviewed as MODIFY to a proposed new `moving junction` term (parent
+`GO:0030054 cell junction`, confirmed in OLS as "a specialized region of connection
+between two or more cells"), matching the term proposed in the PLAF7 AMA1 review, rather
+than as REMOVE, which would discard a genuine localisation.
 
 ## 3. Molecular function: host receptor binding
 
@@ -121,10 +125,20 @@ the strength of that shared word, and is reviewed as REMOVE.
   al., 2016)."].
 
 **Host-vs-symbiont term use.** Every process claim here is written from the parasite's
-side: `GO:0046718 symbiont entry into host cell` (the specific term), `GO:0044650 adhesion
-of symbiont to host cell`, `GO:0141134` for the action on host signalling. The broader
-`GO:0044409 symbiont entry into host` rows are correct but less specific than the evidence
-supports, so they are MODIFYed to `GO:0046718`, which the gene already carries. Locations
+side: `GO:0085017 entry into host cell by a symbiont-containing vacuole` (the specific
+term), `GO:0044650 adhesion of symbiont to host cell`, `GO:0141134` for the action on host
+signalling. The broader `GO:0044409 symbiont entry into host` rows, and the intermediate
+`GO:0046718 symbiont entry into host cell` rows the gene already carries, are correct but
+less specific than the evidence supports, so all are MODIFYed to `GO:0085017`. OLS
+confirms `GO:0085017` is a descendant of both, and its definition is invasion that forms
+"a vacuole in which the symbiont resides", beginning with attachment to a host membrane
+that invaginates and closing when the host membrane seals behind the new vacuole -- i.e.
+exactly moving-junction merozoite invasion and formation of the parasitophorous vacuole.
+`GO:0046718` is instead framed around breaching the membrane and releasing the symbiont or
+its genome into the cytoplasm (its definition still carries a virus-specific comment), so
+it is a poorer fit. `GO:0085017` is also what GOA itself uses for the other P. falciparum
+invasion proteins in this project (MSP1 by IDA, CSP by IMP), so this aligns RH5 with
+MSP1, CSP and MIC2. Locations
 are likewise split correctly between parasite-side (`GO:0005576`, `GO:0020008`,
 `GO:0034591`) and host-side (`GO:0043655`, `GO:0020002`) terms; note that
 `GO:0043655 host extracellular region` sits under `GO:0018995 host cellular component`
@@ -155,10 +169,13 @@ not itself a GO-annotatable function and is recorded here only as context.
 
 ## 8. Curation decisions taken (summary)
 
-- `GO:0005923 bicellular tight junction` → REMOVE (animal epithelial term; the merozoite
-  "tight junction" is the apicomplexan moving junction).
-- `GO:0044409 symbiont entry into host` (7 rows) → MODIFY to `GO:0046718 symbiont entry
-  into host cell`, which the gene already carries with EXP evidence.
+- `GO:0005923 bicellular tight junction` → MODIFY to a proposed `moving junction` term
+  (animal epithelial term; the merozoite "tight junction" is the apicomplexan moving
+  junction, but the IDA localisation itself stands).
+- `GO:0044409 symbiont entry into host` (9 rows) and `GO:0046718 symbiont entry into host
+  cell` (2 EXP rows) → MODIFY to `GO:0085017 entry into host cell by a symbiont-containing
+  vacuole`, the descendant that describes vacuole-mediated apicomplexan invasion and the
+  term GOA uses for MSP1 and CSP.
 - `GO:0033644 host cell membrane` → MODIFY to `GO:0020002 host cell plasma membrane`
   (the gene already carries the descendant with EXP evidence).
 - `GO:0005515 protein binding` rows naming basigin → MODIFY to `GO:0046789 host cell

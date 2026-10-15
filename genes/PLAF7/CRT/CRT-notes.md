@@ -136,6 +136,12 @@ mutations cut chloroquine transport
 | GO:0035673 oligopeptide transmembrane transporter activity | — | NEW |
 | GO:0015833 peptide transport | — | NEW |
 
+Note on the ER row: only the abstract of PMID:20015114 is cached and it does not
+mention the endoplasmic reticulum, so no verbatim quote can be attached. The action is
+unchanged — the IDA rests on full-text trafficking data the curator read — but the
+`supported_by` entry was dropped rather than filled with the threonine-416 sorting
+quote, which names no compartment.
+
 Proposed new term: *food vacuole membrane* (the membrane bounding GO:0020020), needed
 because the DV membrane is the functional site of PfCRT, PfMDR1, PfV-type ATPase and
 several drug-resistance determinants, and GO currently forces the generic
