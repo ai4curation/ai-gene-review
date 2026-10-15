@@ -68,6 +68,7 @@ more and is not a row here because its annotations sit under the TREU927 strain.
 | *Plasmodium berghei* ANKA | PLABA | 5823 | 148 | 0 | 0 |
 | *Tetrahymena thermophila* SB210 | TETTS | 312017 | 124 | 0 | 0 |
 | *Toxoplasma gondii* ME49 | TOXGM | 508771 | 35 | 0 | 2 |
+| *Toxoplasma gondii* (species) | TOXGO | 5811 | 133 | 0 | 1 |
 | *Trypanosoma cruzi* CL Brener | TRYCC | 353153 | 29 | 0 | 0 |
 | *Phaeodactylum tricornutum* | PHATC | 556484 | 17 | 0 | 1 |
 | *Paramecium tetraurelia* | PARTE | 5888 | 11 | 49,383 | 1 |
@@ -146,9 +147,10 @@ Last updated: 2026-10-14
 
 Species codes are UniProt mnemonics and match the `genes/<CODE>/` folders.
 Accessions were checked against UniProt on 2026-10-14. Entries marked
-*unreviewed* are TrEMBL entries with no gene symbol of their own; following the
-repository convention, their folder name will be the accession unless UniProt
-provides a symbol by the time they are fetched.
+*unreviewed* are TrEMBL entries that carry no `GN Name=` in UniProt. These were
+fetched by accession with `--alias`, so the folder uses the standard
+nomenclature name; `gene_symbol` is set to that same standard symbol and the
+accession stays in `id`. Expect this for any TrEMBL-only apicomplexan gene.
 
 ### Track A: Apicomplexa
 
@@ -260,13 +262,14 @@ deep research later would be a useful cross-check.
 
 **Recurring patterns** (candidates for `PROTISTS/patterns.md`):
 
-- *Animal or plant terms carried over electronically.* RH5 `bicellular tight
-  junction` (the parasite "tight junction" is the moving junction, not an
-  epithelial junction); ROP18 `nucleus` and `mitotic DNA damage checkpoint
+- *Animal or plant terms carried over electronically.* ROP18 `nucleus` and `mitotic DNA damage checkpoint
   signaling` (TreeGrafter, from an animal kinase family); ATP4 potassium and
   calcium transport (inherited from ENA and SERCA nodes; the activity is
   insensitive to both ions); CDPK1 `calmodulin binding` (CDPKs carry their own
-  calmodulin-like domain). All removed.
+  calmodulin-like domain). All removed. A related case went the other way: RH5's
+  `bicellular tight junction` is equally an animal epithelial term imported on a
+  word match, but the parasite structure it describes is real, so that row is
+  `MODIFY` to the proposed `moving junction` term rather than a removal.
 - *Glutathione transport on CRT.* Comes from Arabidopsis CLT donors and from
   mutant alleles only; marked over-annotated rather than removed.
 - *Drug-response terms.* `response to xenobiotic stimulus` (CDPK1, K13, MDR1)
@@ -276,8 +279,11 @@ deep research later would be a useful cross-check.
 - *Sparse GOA.* MIC2, SAG1, HAP2 and K13 had 1 to 3 annotations each, with no
   molecular function. Most of their core content came from NEW rows. MIC2
   (7 NEW rows) is the heaviest and is a good candidate for a second look.
-- *Non-symbol entries.* MDR1, K13, AMA1 and HAP2 have no UniProt gene symbol,
-  so `gene_symbol` is the accession and the folder uses the PlasmoDB name.
+- *Non-symbol entries.* MDR1, K13, AMA1 and HAP2 have no `GN Name=` in UniProt,
+  so `just fetch-gene` seeded `gene_symbol` with the accession. All four were
+  set to the standard *P. falciparum* symbol, matching the folder, with the
+  accession kept in `id`. A convention note in CLAUDE.md would stop this
+  recurring; left for a maintainer.
 
 **Proposed terms to consolidate.**
 
@@ -287,8 +293,9 @@ deep research later would be a useful cross-check.
   vacuole (GO:0020020), the acidic digestive compartment of intraerythrocytic
   Plasmodium and related apicomplexans in which host haemoglobin is degraded."*
   Parent: GO:0005774 vacuolar membrane.
-- `moving junction` (AMA1): the same structure RH5's removed `tight junction` row
-  was trying to capture.
+- `moving junction` (AMA1 and RH5, parent GO:0030054 cell junction): the
+  merozoite-erythrocyte ring that RH5's `bicellular tight junction` row was
+  reaching for. Both reviews carry identical definition text.
 - `RH5-CyRPA-Ripr invasion complex` (RH5).
 - `Kelch13 compartment` and `cytostome-mediated endocytosis of host cell
   cytosol` (K13).
