@@ -20,7 +20,7 @@ conditions, plus two entries created in this work (Mitchell syndrome, SLC26A1-re
 biological processes on the pathograph nodes naming that gene are compared with the gene's
 ai-gene-review core functions. The audit script (`align_audit.py`), the page generator
 (`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this
-table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository.
+table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, with `check_page_guards.py` exercising the generator's refusals (`just check-alignment-page-guards`, also run by the pytest suite), together with the second report the comparison section below is derived from (`report-branch-local.yaml`), the same audit run over `132532cf6`.
 
 **What "aligned" does and does not claim.** Five properties of the test make it a weak
 check, and any of them can turn a row green that a curator would not:
@@ -112,38 +112,39 @@ clean figure:
 - `GENE_ON_NO_NODE` - no pathophysiology node names the gene
 - `NO_GO_ON_GENE_NODES` - no node naming the gene carries a GO term
 - `NO_ORIGIN` - the dismech genetic record carries no variant origin
-- `UNTYPED` - the dismech genetic record carries no relationship type - not emitted by this run
+- `UNTYPED` - the dismech genetic record carries no relationship type - not emitted by either run
 - `NO_AIGR_REVIEW` - no ai-gene-review review exists for the gene
 - `AIGR_NOT_COMPLETE` - a review exists but its status is not COMPLETE
-- `NO_CORE_FUNCTION_TERMS` - a review exists but has no core-function GO term to compare against - not emitted by this run
+- `NO_CORE_FUNCTION_TERMS` - a review exists but has no core-function GO term to compare against
 - `NO_MODULE_MEMBERSHIP` - no module contains the gene's accession
 - `MODULE_NOT_COVERING` - a module contains it, but no annoton term there relates to the aligned terms
 - `PARTIAL_COVERAGE` *(qualifying)* - a module covers some aligned terms and no module term reaches the rest
 - `ALIGNED_CONTRIBUTES_ONLY` *(qualifying)* - every aligned term matched only a contributes-to function, not an enabled one
 - `ALIGNED_NONCORE` - node terms match only annotations the review keeps as non-core
 - `ALIGNED_ON_SHARED_NODE_ONLY` *(qualifying)* - every aligned term came from a node the gene shares with another gene
-- `ALIGNED_PROPOSED` - node terms match only terms the review proposes as NEW, which are not yet annotations - not emitted by this run
-- `NO_GO_ALIGNMENT` - no node term matches a core function, an annotation the review keeps, or a term it proposes - not emitted by this run
+- `ALIGNED_PROPOSED` - node terms match only terms the review proposes as NEW, which are not yet annotations - not emitted by either run
+- `NO_GO_ALIGNMENT` - no node term matches a core function, an annotation the review keeps, or a term it proposes - not emitted by either run
 - `PARTIAL_ALIGNMENT` *(qualifying)* - some node terms aligned and others matched nothing in the review
 
 **Provenance of this run.** The table is generated, so it is only as current as the inputs it
 was generated from, and those inputs live in two repositories.
 
-- run date: `2026-10-16T19:42:01Z`
+- run date: `2026-10-16T19:52:02Z`
 - dismech revision: `048e13ca1cce71320ff1789f01ba353af6da6bf8` (048e13ca1 2026-10-16 curate: Add AKT3-Related Overgrowth Spectrum (MONDO:0800485) (#14361))
-- ai-gene-review revision: `96ab5d0c869f395f515ff8246e508f671df24d44` (branch `claude/cool-edison-o9wvf0-alignment-project`)
+- ai-gene-review revision: `c8848254e9e1dfa8e8c98dd2cc485d36e8750d65` (branch `claude/cool-edison-o9wvf0-alignment-project`)
 - GO release: `2026-07-26`, adapter `sqlite:obo:go`
-- audit script: `1240f7359ea1` (sha256 of `align_audit.py`), last committed at `2a9a69f0c`
-- The primary run's tree (`96ab5d0c8`) is on no pushed ref, so no clone holds it and the same comparison cannot be made from one.
+- audit script: `906bd065421d` (sha256 of `align_audit.py`), last committed at `c8848254e`
+- The primary run's tree (`c8848254e`) is on no pushed ref, so no clone holds it and the same comparison cannot be made from one.
 - modules read: `489`; UniProt accessions reached as parts: `5228`, against `5298` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
 Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
 The run above read a clean checkout, so the revision above describes its tree in full.
 
+The same audit was run a second time over a different tree, and the two runs' flag counts are reconciled row by row in [the audit self-check](DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md). That is a check on the generator rather than a finding about the two resources, so it is kept beside the page rather than in it.
 **Summary.** 116 entries; 161 principal gene rows (all causative in this run; the predicate also admits untyped), of which 105 align every GO term their dismech nodes carry and 56 align some and leave others unaligned. Read that split first: the flag-free count below is close to true by construction, because `NO_GO_ALIGNMENT` is the only hard flag while `PARTIAL_ALIGNMENT`, `ALIGNED_ON_SHARED_NODE_ONLY` and `PARTIAL_COVERAGE` are all soft, so it is not a measure of full agreement.
 
-161 principal rows carry no flag other than a module flag or one of the qualifying flags - none carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`, which say a row aligned only against a retained non-core or a proposed term rather than a core function; no principal row in this run carries either. Flag counts on principal rows: `ALIGNED_CONTRIBUTES_ONLY` 1, `ALIGNED_ON_SHARED_NODE_ONLY` 48, `MODULE_NOT_COVERING` 4, `NO_MODULE_MEMBERSHIP` 26, `PARTIAL_ALIGNMENT` 56, `PARTIAL_COVERAGE` 14.
+161 principal rows carry no flag other than a module flag or one of the qualifying flags - none carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`, which say a row aligned only against a retained non-core or a proposed term rather than a core function; no principal row in this run carries either. Flag counts on principal rows: `ALIGNED_CONTRIBUTES_ONLY` 1, `ALIGNED_ON_SHARED_NODE_ONLY` 48, `MODULE_NOT_COVERING` 4, `NO_MODULE_MEMBERSHIP` 26, `PARTIAL_ALIGNMENT` 56, `PARTIAL_COVERAGE` 14. These are principal rows only, so they are smaller than the all-row counts in the provenance section above wherever a flag also falls on a modifier, susceptibility or disputed row.
 
 **Agreement is partial on many rows, and the table shows both halves.** 105 principal
 rows align every GO term their dismech nodes carry; 56 align some and leave others
