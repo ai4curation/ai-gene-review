@@ -65,10 +65,11 @@ Where that is wrong, the curator states the logic as a tree, not as a rule strin
 
 `all_of`, `any_of` and `none_of` (NOT-OR) nest freely. Validation requires every
 named element to have a matching signed connection into the step (an activator in a
-positive position, an inhibitor under `none_of`). A regulator may be left out on
-purpose, as a modulator that tunes an already-active step rather than switching it
-(MAPK serine-phosphorylating STATs, for example); validation then warns, so the
-omission stays visible. This is the regulatory counterpart of the structural AND/OR the schema already
+positive position, an inhibitor under `none_of`), and every regulator to be used.
+A regulator may be left out on purpose, as a modulator that tunes an already-active
+step rather than switching it (MAPK serine-phosphorylating STATs, for example), but
+only by naming it under `omitted_regulators` on the same element; an unused regulator
+that is not listed is a validation error. This is the regulatory counterpart of the structural AND/OR the schema already
 had: `parts` are conjunctive and `variant_sets` disjunctive, but those say what a
 step is *made of*, not how its incoming regulation combines.
 
@@ -121,12 +122,14 @@ sustained stimulus → no steady state; feedback loops cut → ERK locked on; DU
 Sprouty both knocked out → still transient (in this model the direct ERK → RAF and
 ERK → SOS feedbacks suffice on their own); MEK inhibited or RasGAP active → ERK off.
 
-The JAK-STAT model needed `activation_logic` before its scenarios meant anything. Its
+The JAK-STAT model needed rewiring before its scenarios meant anything. Its
 negative-regulation bundle was wired with two edges, to JAK and to STAT
 transcription, and translation expanded each to every child, so SOCS, PTPs and PIAS
-all inhibited both. The module's own text is more specific, and the logic now follows
-it: SOCS and the phosphatases act on JAK, the phosphatases and PIAS on nuclear STATs,
-and ERK serine phosphorylation only tunes maximal transcription and is left out. Under
+all inhibited both. The module's own text is more specific, and the connections now
+follow it child by child: SOCS and the phosphatases act on JAK, the phosphatases and
+PIAS on nuclear STATs. The drawn graph and the update rules therefore agree. STAT
+transcription still carries `activation_logic`, because ERK serine phosphorylation
+only tunes maximal transcription; it is listed under `omitted_regulators`. Under
 sustained cytokine the SOCS loop makes the response transient (Starr et al.,
 [PMID:9202125](https://pubmed.ncbi.nlm.nih.gov/9202125/)). Without SOCS it locks on.
 With PIAS active, STATs reach the nucleus but transcription is blocked, so SOCS is
@@ -220,14 +223,20 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 Follow-up to the merged PR. JAK-STAT and p38 got derived Boolean models with curated
 scenarios; JAK-STAT also got `activation_logic` on JAK activation and STAT
 transcription, because its negative-regulation bundle's two edges expanded to every
-child and so mis-placed SOCS, PTPs and PIAS. The model page now opens on the first
+child and so mis-placed SOCS, PTPs and PIAS. On review the bundle edges were replaced
+by child-level connections, so the graph no longer contradicts the rules, and JAK
+activation went back to the default rule. The model page now opens on the first
 scenario with a cyclic outcome, and wide graphs get the full page width.
 
 `activation_logic` may now leave a declared regulator out on purpose. A Boolean rule
 can make a regulator necessary, sufficient or part of a combination, but it cannot
 say "tunes the output", and the modulators met so far (ERK on STAT Ser727, SecDF-YajC
-on SecYEG, SMA-10 on the BMP receptors, LigD end processing) are exactly that. The
-omission is a validation warning rather than an error, so it stays visible.
+on SecYEG, SMA-10 on the BMP receptors, LigD end processing) are exactly that. A
+first version made the omission a warning; on review that removed the only
+completeness check, so the omission must now be declared under `omitted_regulators`
+and an undeclared one is still an error. The type IV secretion module wires
+mating-pair stabilization as regulating the pilus, though the text reads it as
+downstream of pilus contact; that pre-existing direction is left for a curator.
 
 The activator convergence audit classifies steps from structure alone. Curated from
 the modules' own text: SsuD desulfonation (substrate AND reduced FMN), IscU cluster

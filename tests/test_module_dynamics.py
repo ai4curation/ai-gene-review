@@ -17,7 +17,6 @@ import yaml
 
 from ai_gene_review.module_boolean import (
     activation_logic_findings,
-    activation_logic_ignored_regulators,
     module_file_to_boolean,
     module_to_boolean,
 )
@@ -417,29 +416,44 @@ def test_model_files_resolve_against_the_project_root_not_the_cwd(
     assert not [e for e in result.errors if "does not exist" in e], result.errors
 
 
-def test_a_regulator_left_out_of_the_logic_is_a_warning_not_an_error() -> None:
-    """A modulator can be deliberately left out of a Boolean rule."""
+@pytest.mark.parametrize(
+    "omitted,message",
+    [
+        (None, "regulator b has a connection into t but is not used"),
+        (["b"], None),
+        (["a"], "omitted_regulators names a, which its activation_logic uses"),
+        (["zz"], "omitted_regulators names unknown element zz"),
+    ],
+)
+def test_a_regulator_left_out_must_be_declared(omitted: Any, message: Any) -> None:
+    """Leaving a modulator out is allowed only as a stated claim."""
     doc = _toy({"all_of": [{"element": "a"}, {"none_of": [{"element": "i"}]}]})
-    assert activation_logic_findings(doc) == []
-    assert module_to_boolean(doc).rules["t"] == "a & !i"
-    assert activation_logic_ignored_regulators(doc) == [
-        "t: regulator b has a connection into t but is not used by its activation_logic"
-    ]
-    errors, warnings = validate_executable_models(doc, ROOT)
-    assert errors == []
-    assert warnings == [
-        "Activation logic: t: regulator b has a connection into t but is not used "
-        "by its activation_logic (left out of the Boolean rule)"
+    if omitted is not None:
+        doc["module"]["parts"][3]["node"]["omitted_regulators"] = omitted
+    findings = activation_logic_findings(doc)
+    if message is None:
+        assert findings == []
+        assert module_to_boolean(doc).rules["t"] == "a & !i"
+        assert validate_executable_models(doc, ROOT) == ([], [])
+    else:
+        assert any(message in f for f in findings), findings
+
+
+def test_omitted_regulators_without_activation_logic_is_an_error() -> None:
+    doc = _toy()
+    doc["module"]["parts"][3]["node"]["omitted_regulators"] = ["b"]
+    assert activation_logic_findings(doc) == [
+        "t: omitted_regulators without activation_logic"
     ]
 
 
 def _modules_with_derived_boolean_models() -> list[Path]:
-    return sorted(
-        p
-        for p in (ROOT / "modules").glob("*.yaml")
-        if "DERIVED_FROM_MODULE" in p.read_text()
-        and "executable_models:" in p.read_text()
-    )
+    paths = []
+    for p in sorted((ROOT / "modules").glob("*.yaml")):
+        text = p.read_text()
+        if "DERIVED_FROM_MODULE" in text and "executable_models:" in text:
+            paths.append(p)
+    return paths
 
 
 @pytest.mark.parametrize(
@@ -453,11 +467,19 @@ def test_every_curated_scenario_holds(path: Path) -> None:
 
 
 def test_jak_stat_negative_regulators_act_where_the_module_says() -> None:
-    """SOCS and PTPs on JAK; PTP and PIAS on nuclear STATs; ERK only tunes."""
-    model = module_file_to_boolean(ROOT / "modules/jak_stat_signaling.yaml")
+    """SOCS and PTPs on JAK; PTP and PIAS on nuclear STATs; ERK only tunes.
+
+    The placement comes from child-level connections, so JAK activation needs
+    no activation_logic and the drawn graph matches the rules.
+    """
+    doc = yaml.safe_load((ROOT / "modules/jak_stat_signaling.yaml").read_text())
+    model = module_to_boolean(doc)
     assert model.rules["jak_activation"] == (
-        "ligand_receptor_engagement & !(socs_feedback | ptp_dephosphorylation)"
+        "ligand_receptor_engagement & !(ptp_dephosphorylation | socs_feedback)"
     )
+    inhibitors = {(e.source, e.target) for e in model.edges if e.sign == "-"}
+    assert ("pias_restraint", "jak_activation") not in inhibitors
+    assert ("socs_feedback", "stat_transcription") not in inhibitors
     assert model.rules["stat_transcription"] == (
         "stat_dimerization_import & !(ptp_dephosphorylation | pias_restraint)"
     )
