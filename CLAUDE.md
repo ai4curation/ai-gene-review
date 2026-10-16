@@ -181,6 +181,18 @@ ActionEnum:
           Do not use for indirect or pleiotropic effects. Be sure you have good evidence, this can be from multiple sources.
 ```      
 
+**Correct but general terms are `MODIFY`, not `KEEP_AS_NON_CORE`.** When a term is right but
+less specific than the evidence supports (e.g. `membrane` vs `plasma membrane`, `peptidase
+activity` vs `serine-type endopeptidase activity`), use `MODIFY` with `proposed_replacement_terms`
+set to the specific supported term (an `is_a`/`part_of` descendant, preferably one the gene
+already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that are as precise
+as warranted but peripheral to the core function. If the general term is already as precise as
+the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
+match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
+When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
+This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
+separate, long-standing use of `MODIFY` whose replacement is not a descendant.
+
 ### Do not overrule curators from incomplete evidence
 
 PomBase, and the GO consortium databases generally, are highly reliable. Curators
