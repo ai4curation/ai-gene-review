@@ -61,3 +61,14 @@ Added the AhpC peroxide-reduction annoton to
 `modules/bacterial_alkyl_hydroperoxide_reductase.yaml`, linked from the AhpF
 annoton with PROVIDES_INPUT_FOR (reduced AhpC), and dropped the CURATION-only
 knowledge gap that tracked the missing ahpC review.
+
+### Review follow-up (PR #5069)
+
+- GO:0033194 (IMP, PMID:7733872) refined to GO:0033195: the rescue evidence is
+  alkyl-hydroperoxide specific.
+- Siderophore biosynthesis IMP moved to MARK_AS_OVER_ANNOTATED (indirect, no
+  AhpC-performed step).
+- The AhpC/AhpF system also reduces peroxynitrite
+  [PMID:28270505 "to detoxify ROS such as hydrogen peroxide, organic
+  hydroperoxide, and peroxynitrite"]; not annotated here because no E. coli
+  AhpC-specific peroxynitrite assay is cached.
