@@ -19,6 +19,7 @@ from ai_gene_review.module_boolean import (
     activation_logic_findings,
     module_file_to_boolean,
     module_to_boolean,
+    omitted_regulators,
 )
 from ai_gene_review.module_dynamics import (
     MAX_EXHAUSTIVE_VARIABLES,
@@ -26,6 +27,7 @@ from ai_gene_review.module_dynamics import (
     boolean_model_payload,
     boolean_models,
     run_declared_scenarios,
+    run_scenario,
 )
 from ai_gene_review.validation.module_validator import validate_executable_models
 
@@ -483,3 +485,29 @@ def test_jak_stat_negative_regulators_act_where_the_module_says() -> None:
     assert model.rules["stat_transcription"] == (
         "stat_dimerization_import & !(ptp_dephosphorylation | pias_restraint)"
     )
+
+
+def test_removing_an_omitted_regulator_does_not_break_the_logic() -> None:
+    """An ERK-less counterfactual: the logic never used ERK, so cutting it is fine."""
+    doc = yaml.safe_load((ROOT / "modules/jak_stat_signaling.yaml").read_text())
+    model = boolean_models(doc)[0]
+    sustained = next(s for s in model["scenarios"] if s["id"] == "sustained_cytokine")
+    scenario = {
+        **copy.deepcopy(sustained),
+        "id": "erk_cut",
+        "removed_connections": [
+            {"source": "mapk_branch_interface", "target": "stat_transcription"}
+        ],
+    }
+    removed = {("mapk_branch_interface", "stat_transcription")}
+    assert activation_logic_findings(doc, removed_connections=removed) == []
+    result = run_scenario(doc, "jak_stat_signaling_boolean", scenario)
+    assert result.failures == []
+
+
+def test_browser_payload_marks_omitted_regulators() -> None:
+    doc = yaml.safe_load((ROOT / "modules/jak_stat_signaling.yaml").read_text())
+    assert omitted_regulators(doc) == {"stat_transcription": ["mapk_branch_interface"]}
+    payload = boolean_model_payload(doc, boolean_models(doc)[0])
+    assert payload["omitted"] == {"stat_transcription": ["mapk_branch_interface"]}
+    assert ["mapk_branch_interface", "stat_transcription", "+"] in payload["edges"]

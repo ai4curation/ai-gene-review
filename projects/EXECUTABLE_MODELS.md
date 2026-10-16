@@ -69,7 +69,10 @@ positive position, an inhibitor under `none_of`), and every regulator to be used
 A regulator may be left out on purpose, as a modulator that tunes an already-active
 step rather than switching it (MAPK serine-phosphorylating STATs, for example), but
 only by naming it under `omitted_regulators` on the same element; an unused regulator
-that is not listed is a validation error. This is the regulatory counterpart of the structural AND/OR the schema already
+that is not listed is a validation error. Model pages draw such a regulator as a faint dotted edge
+and name it beside the rule, so the asserted connection stays visible without being
+mistaken for part of the logic. A scenario may remove an omitted regulator's
+connection (an ERK-less counterfactual, say) without tripping the check. This is the regulatory counterpart of the structural AND/OR the schema already
 had: `parts` are conjunctive and `variant_sets` disjunctive, but those say what a
 step is *made of*, not how its incoming regulation combines.
 
@@ -236,7 +239,11 @@ first version made the omission a warning; on review that removed the only
 completeness check, so the omission must now be declared under `omitted_regulators`
 and an undeclared one is still an error. The type IV secretion module wires
 mating-pair stabilization as regulating the pilus, though the text reads it as
-downstream of pilus contact; that pre-existing direction is left for a curator.
+downstream of pilus contact; that pre-existing direction is left for a curator. The
+three new JAK-STAT child-level connections (PTP on JAK, PTP and PIAS on nuclear STATs)
+carry descriptions from the node text but no evidence items yet, as their nodes did
+before; since PIAS's placement decides the `pias_restraint` scenario, attaching the
+canonical references is the next curation step for that module.
 
 The activator convergence audit classifies steps from structure alone. Curated from
 the modules' own text: SsuD desulfonation (substrate AND reduced FMN), IscU cluster
