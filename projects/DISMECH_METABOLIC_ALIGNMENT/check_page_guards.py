@@ -53,6 +53,31 @@ def _add_flag_to_principal(rep, flag):
                 return
 
 
+def _twin_group(rep, gene):
+    """Duplicate the entry holding `gene` so its movement group holds two rows.
+
+    The "shows N of M rows" guard needs a group with more than one row, and which
+    rows share a cause is decided by how the flags move between the two reports, not
+    by anything a case can set directly. The committed pair currently yields only
+    one-row groups for "the same modules carry different terms", so the case builds
+    the shape it is about instead of depending on a report pair that happens to have
+    it - which is what went stale when the reports were regenerated.
+    """
+    for e in list(rep["entries"]):
+        if any(g.get("gene") == gene for g in e.get("genes") or []):
+            twin = copy.deepcopy(e)
+            twin["entry"] = e["entry"] + "_TWIN"
+            # The twin's own row shows no coverage difference, so the group shows one
+            # of its two rows. Cleared here rather than by _strip_cover, which works on
+            # a whole report and would clear the original too.
+            for g in twin.get("genes") or []:
+                if g.get("gene") == gene:
+                    g["covering_pairs"] = None
+            rep["entries"].append(twin)
+            return twin
+    raise SystemExit(f"_twin_group: no entry holds {gene}")
+
+
 def _strip_cover(rep, genes):
     for e in rep["entries"]:
         for g in e.get("genes") or []:
@@ -193,8 +218,11 @@ CASES = [
      lambda p, a: [d["entries"][0]["genes"].append(copy.deepcopy(d["entries"][0]["genes"][0]))
                    for d in (p, a)],
      "hold more than one row inside one entry"),
+    # The twin doubles the group; stripping the twin's coverage in both reports leaves
+    # the original showing a difference and the twin showing none, which is the
+    # shows-fewer-than-the-group shape.
     ("coverage shown for some of its group", "EXIT",
-     lambda p, a: [_strip_cover(d, {"COQ8A"}) for d in (p, a)],
+     lambda p, a: [_twin_group(d, "TMEM70") for d in (p, a)],
      "cover_evidence shows 1 of 2 rows"),
     ("coverage shown for none of its group", "EXIT",
      lambda p, a: [_strip_cover(d, {"COQ8A", "HAO1", "TMEM70"}) for d in (p, a)],
@@ -247,17 +275,15 @@ CASES = [
     # checked against both versions.
     ("for-each-ref fails after the revision resolves", "OK",
      lambda p, a: None,
-     "That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip,"
-     " with no file under `genes/` or `modules/` changed between the two - the audit's whole"
-     " input surface - so the figures stand for either. Whether that revision is published"
-     " could not be determined, so nothing is claimed about re-running this elsewhere.\n",
+     ("That second run read a tree recorded at `132532cf6`, an ancestor of the branch tip,",
+      "Whether that revision is published could not be determined, so nothing is claimed"
+      " about re-running this elsewhere.\n"),
      "fail"),
     ("for-each-ref finds the revision on no remote ref", "OK",
      lambda p, a: None,
-     "That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip,"
-     " with no file under `genes/` or `modules/` changed between the two - the audit's whole"
-     " input surface - so the figures stand for either. That revision is on no pushed ref,"
-     " so no clone holds it and this comparison cannot be re-run elsewhere.\n",
+     ("That second run read a tree recorded at `132532cf6`, an ancestor of the branch tip,",
+      "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
+      " be re-run elsewhere.\n"),
      "empty"),
     # A recorded ref, with the committed tree description left alone - the description names
     # a sha, so before the guard learned to compare only a recorded sha this configuration
@@ -356,12 +382,25 @@ def main(argv=None):
             # Exit status is necessary and not sufficient. A refusal must carry the declared
             # message, or any other guard firing would pass the case; a render must contain
             # the declared clause, or deleting the branch under test would pass it.
-            where = (r.stdout + r.stderr) if got == "EXIT" else (
-                open(out_md).read() if os.path.exists(out_md) else "")
+            # A render now writes two files: the page, and the audit self-check page beside
+            # it carrying the two-run comparison. Both are the generator's rendered output,
+            # so a declared clause is looked for in either - checking only the page made
+            # every comparison case fail when that section moved to its own file.
+            _sub = os.path.join(os.path.dirname(os.path.abspath(out_md)),
+                                "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
+            where = (r.stdout + r.stderr) if got == "EXIT" else "".join(
+                open(f).read() for f in (out_md, _sub) if os.path.exists(f))
             why = "" if got == want else f"wanted {want}, got {got}"
-            if not why and expect not in where:
+            # A case may declare several fragments, all of which must appear. One
+            # contiguous span would have to include whatever sits between them, and in
+            # the drift sentence that is a file count and an example path - both of
+            # which move whenever the compared trees do. Declaring the fragments keeps
+            # the case about the clause rather than about today's numbers.
+            wants = (expect,) if isinstance(expect, str) else tuple(expect)
+            missing = [e for e in wants if e not in where]
+            if not why and missing:
                 why = (f"{'refusal message' if got == 'EXIT' else 'rendered page'} does not"
-                       f" contain {expect!r}")
+                       f" contain {missing[0]!r}")
             bad += bool(why)
             print(f"{'ok  ' if not why else 'FAIL'} {name}" + (f": {why}" if why else ""))
     n_exit = sum(1 for c in cases if c[1] == "EXIT")
