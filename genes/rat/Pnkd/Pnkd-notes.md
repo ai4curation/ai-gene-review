@@ -55,3 +55,15 @@ Exact sequence mapping: [Pnkd-bioinformatics/RESULTS.md](Pnkd-bioinformatics/RES
 ## Neuronal evidence and product scope
 
 [PMID:25730884](https://pubmed.ncbi.nlm.nih.gov/25730884/), DOI [10.1073/pnas.1501364112](https://doi.org/10.1073/pnas.1501364112), reports PNKD-RIM1/2 interactions and altered release in neuronal experiments and knockout mice. It supports the gene-level neuronal context, but no experiment in the paper is identified as testing the 369-residue B4F7D2 product. The conserved beta-lactamase domain alone does not establish its synaptic localization or RIM regulation.
+
+## Re-review 2026-10-04
+
+**GOA changes.** None: the refreshed GOA carries the same two InterPro2GO (IPR017782) IEA rows, GO:0004416 hydroxyacylglutathione hydrolase activity and GO:0051596 methylglyoxal catabolic process. No new or retired rows.
+
+**Row audit.** Actions unchanged.
+- GO:0004416 stays `MARK_AS_OVER_ANNOTATED`: the overshoot is a physiological glyoxalase-II assignment from domain homology. Human PNKD-L hydrolyses S-D-lactoylglutathione only weakly [PMID:21487022 "PNKD-L has extremely low but consistent SLG hydrolysis activity"] and fails HAGH complementation [PMID:21487022 "introduction of a human PNKD-L transgene into the same null background shows no rescue of SLG metabolism"]. Added the Falcon statement that PNKD "must not be annotated as an established hydroxyacylglutathione hydrolase solely from domain homology".
+- GO:0051596 stays `UNDECIDED`; added the Falcon statement that PNKD "is not established as a canonical methylglyoxal-detoxifying glyoxalase II".
+
+**core_functions left empty (decision).** No molecular function is established for PNKD: the physiological substrate of the MBL-fold domain is unknown and the only measured hydrolysis is weak. The best-supported gene-level role, RIM1/RIM2 interaction and suppression of synaptic vesicle exocytosis [PMID:25730884 "PNKD interacts with synaptic active zone proteins Rab3-interacting molecule (RIM)1 and RIM2, localizes to synapses, and modulates neurotransmitter release"], was shown with defined neuronal PNKD isoforms. This product (B4F7D2, 369 aa) lacks reference residues 80-118 (most of the predicted helical transmembrane segment, 6/19 mapped) and has a divergent C-terminus (Pnkd-bioinformatics/RESULTS.md). Transferring that role to it would be an inference about an isoform nobody has assayed, so the "No core functions defined" warning is left.
+
+**Open question.** Is B4F7D2 an expressed isoform, and does it keep RIM binding without the membrane anchor?

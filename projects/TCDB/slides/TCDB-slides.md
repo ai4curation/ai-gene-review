@@ -81,10 +81,10 @@ Why transporter classifications never become GO annotations, and a scored starte
 
 ## Status and next steps
 
-- ✅ GO xrefs extracted and scored; `go.py` characterised; reverse gap quantified
-- ✅ Four SSSOM sets pass `just validate-tcdb-mappings`
-- ⬜ Package the 80 JUSTIFIED leads as a proposed `tc2go` pipeline for GO
-- ⬜ Push the 67 GAP_CANDIDATE leads through gene review; closure-aware reverse gap
-- ⬜ Rebuild the generated set at subfamily/system level
+- Complete: GO xrefs extracted and scored; `go.py` characterised; reverse gap quantified
+- Complete: Four SSSOM sets pass `just validate-tcdb-mappings`
+- Next: Package the 80 JUSTIFIED leads as a proposed `tc2go` pipeline for GO
+- Next: Push the 67 GAP_CANDIDATE leads through gene review; closure-aware reverse gap
+- Next: Rebuild the generated set at subfamily/system level
 
 **Read more:** `projects/TCDB.md` · `projects/TCDB/tc2go.propagation.sssom.yaml` · `projects/TCDB/TCDB-METHODOLOGY.md`

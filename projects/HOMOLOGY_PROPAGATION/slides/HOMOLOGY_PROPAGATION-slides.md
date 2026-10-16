@@ -28,7 +28,7 @@ style: |
 
 Reviewing GO annotations that a gene received from other gene products: ISO, ISS/ISA, IBA, Ensembl Compara, TreeGrafter, InterPro2GO
 
-<span class="small">AI Gene Review · projects/HOMOLOGY_PROPAGATION · 2026</span>
+<span class="small">AI Gene Review · projects/HOMOLOGY_PROPAGATION · reviewed 2026-10-04</span>
 
 ---
 
@@ -67,7 +67,7 @@ Reviewing GO annotations that a gene received from other gene products: ISO, ISS
 - **14 recurring failure patterns** plus one positive control: pseudo-enzymes keeping a catalytic term, neo-functionalized subfamilies, wrong-paralog and cross-kingdom transfers.
 - The structured `propagation_review` vocabulary is now in use: **3,580 blocks in 691 gene reviews**.
 - The gap runs both ways: in 1,015 reviewed human genes, **511 core molecular functions** (423 genes) have no IBA support.
-- **PAINT no-IBA genes:** 715 of 7,593 listed human genes have a completed review.
+- **PAINT no-IBA genes:** 756 of 7,593 listed human genes have a completed review.
 - A corpus-wide **IBA re-review** (3,427 genes, 11,829 annotations) started 2026-09-20; 81 genes reviewed so far.
 
 <span class="small">projects/IBA_REVIEW.md · projects/PAINT.md</span>
@@ -78,7 +78,7 @@ Reviewing GO annotations that a gene received from other gene products: ISO, ISS
 
 | Project | Key finding |
 |---|---|
-| **TreeGrafter** (GO_REF:0000118) | 41% accepted vs 72% for PAINT/IBA (frozen 2026-09-06 snapshot, 898 annotations); 77% accepted when another pipeline reproduces the call |
+| **TreeGrafter** (GO_REF:0000118) | 43.2% accepted, 26.4% down-graded and 11.1% removed on the 1,074-row `f81b9f300` snapshot; 77% accepted when another pipeline reproduces the call |
 | **InterPro2GO** (GO_REF:0000002) | 3,652 judged records on 1,706 genes; 36 proposed mapping edits across 15 entries, including 10 removals |
 | **NCBIFam / CDD** | NCBIFAM backs 705 (13%) of 5,549 InterPro2GO rows in the repo; a 250-row `ncbifam2go` SSSOM seed |
 | **Ortholog conjecture** | Scoped only: literature summary, draft open-world metric, five divergence cases; no metrics computed |
@@ -134,6 +134,7 @@ Reviewing GO annotations that a gene received from other gene products: ISO, ISS
 - **In progress:** IBA corpus re-review (`projects/IBA_REVIEW/rereview-2026-09-20/`); PAINT no-IBA reviews.
 - **Proposals for InterPro curators, not adopted:** InterPro2GO mapping edits (`projects/INTERPRO/interpro2go.sssom.yaml`); the worklist past the first dozen entries is not yet assessed.
 - **Not started:** the ortholog-conjecture analysis.
+- **Umbrella tracker:** #4095.
 - **Rebuild** the browser and statistics offline from the committed donor cache:
   - `just refresh-propagation-sources` (network)
   - `just deploy-propagation-browser` → `app/propagation/`
