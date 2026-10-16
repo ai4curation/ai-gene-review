@@ -260,6 +260,20 @@ were covered.
 - **Ccne1** — the full text of PMID:19056892: what cyclin E1 result supports
   the Wnt-pathway IDA?
 
+## Follow-up corrections
+
+- **2026-10-16, Akt1.** The re-review left two rows as KEEP_AS_NON_CORE under the
+  generic "pathway context" boilerplate. They are now MARK_AS_OVER_ANNOTATED:
+  GO:0036316 SREBP-SCAP complex retention in endoplasmic reticulum (ISO from
+  human AKT1, `acts_upstream_of_or_within`) and the ER location inferred from it
+  (IEA, GO_REF:0000108). Mouse Pck1 carried the same transferred row and has now
+  been reviewed for the first time. The provenance, a flattened GO-CAM causal chain
+  from one human cancer-cell study, is written up in the
+  [ISO project](ISO.md#akt1-and-pck1-a-go-cam-causal-chain-flattened-then-transferred).
+  The boilerplate reason hid a sign error, since AKT1 and PCK1 oppose retention.
+  Other KEEP_AS_NON_CORE rows that carry the same generic reason are worth a
+  second look.
+
 ## Related
 
 - [Human Genes Annotation Re-Review](HUMAN_GENES_RE_REVIEW.md) — method and
