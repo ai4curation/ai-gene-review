@@ -139,7 +139,10 @@ def _git_shim(tmp, mode):
             f'if [ "$1" = "rev-parse" ] && [ "$2" = "--verify" ]; then'
             f' echo {_SHIM_RESOLVED}; exit 0; fi\n'
             'case "$1" in\n'
-            '  merge-base) exit 0 ;;\n'          # an ancestor
+            # `notanc` is the one mode where the revision is not in this branch's
+            # history, which is what separates a genuinely unpublished revision from one
+            # that is merely not pushed yet.
+            f'  merge-base) exit {"1" if mode == "notanc" else "0"} ;;\n'
             '  diff) exit 0 ;;\n'                # with nothing changed between the two
             f'  for-each-ref) exit {"129" if mode == "fail" else "0"} ;;\n'
             'esac\n'
@@ -285,22 +288,32 @@ CASES = [
       "Whether that revision is published could not be determined, so nothing is claimed"
       " about re-running this elsewhere.\n"),
      "fail"),
-    ("for-each-ref finds the revision on no remote ref", "OK",
+    # On no remote ref *and* in this branch's history, which is the ordinary state between
+    # rendering a round and pushing it. The softer clause is the point: the flat one was
+    # written into a published page moments before the push made it false.
+    ("for-each-ref finds the revision on no remote ref, but this branch holds it", "OK",
      lambda p, a: None,
      (f"That second run read a tree recorded at `{ALT_SHORT}`, an ancestor of the branch tip,",
-      "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
-      " be re-run elsewhere.\n"),
+      "That revision is this branch's own history and not yet on a pushed ref, so a clone"
+      " holds it once this branch is pushed.\n"),
      "empty"),
+    # The flat unpublished clause, which only a revision outside this branch's history can
+    # now reach. Without this the softer branch-held sentence would be the only one tested,
+    # and the clause that says a clone cannot re-run the comparison would have no case.
+    ("for-each-ref finds no remote ref and this branch does not hold it", "OK",
+     lambda p, a: None,
+     "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
+     " be re-run elsewhere.\n",
+     "notanc"),
     # A recorded ref, with the committed tree description left alone - the description names
     # a sha, so before the guard learned to compare only a recorded sha this configuration
     # made the generator exit instead of rendering. The shim forces the rest, so what is
     # asserted is that the ref reaches a drift answer at all.
     ("the second run records a ref rather than a sha", "OK",
      lambda p, a: a["provenance"].update(aigr_revision="HEAD~3"),
-     "That second run read a tree recorded at `HEAD~3`, an ancestor of the branch tip, with"
-     " no file under `genes/` or `modules/` changed between the two - the audit's whole input"
-     " surface - so the figures stand for either. That revision is on no pushed ref, so no"
-     " clone holds it and this comparison cannot be re-run elsewhere.\n",
+     ("That second run read a tree recorded at `HEAD~3`, an ancestor of the branch tip,",
+      "That revision is this branch's own history and not yet on a pushed ref, so a clone"
+      " holds it once this branch is pushed.\n"),
      "empty"),
     # An object this checkout holds that is not a commit. `rev-parse --verify <sha>^{commit}`
     # fails for it exactly as for an absent object, and the reason reached only stderr, so it
