@@ -20,7 +20,7 @@ conditions, plus two entries created in this work (Mitchell syndrome, SLC26A1-re
 biological processes on the pathograph nodes naming that gene are compared with the gene's
 ai-gene-review core functions. The audit script (`align_audit.py`), the page generator
 (`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this
-table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, with `check_page_guards.py` exercising the generator's refusals (`just check-alignment-page-guards`, also run by the pytest suite), together with the second report the comparison section below is derived from (`report-branch-local.yaml`), the same audit run over `claude/cool-edison-o9wvf0-alignment-project`.
+table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository.
 
 **What "aligned" does and does not claim.** Five properties of the test make it a weak
 check, and any of them can turn a row green that a curator would not:
@@ -84,13 +84,13 @@ structural molecule activity as part of the complex - as the same claim, because
 role and the activity it supports are unrelated branches of molecular function. NDUFA1 is the
 row where that decides the verdict.
 
-An earlier version of this page also claimed that is_a/part_of ancestry cannot cross between
-molecular function and biological process. That is false, and rows of this table disprove it:
-GO asserts `part_of` from transporter activities to the transport processes they carry out.
+`is_a`/`part_of` ancestry does cross between molecular function and biological process, and
+that crossing is a real source of alignment here: GO asserts `part_of` from transporter
+activities to the transport processes they carry out.
 29 rows of all 183 - not only the principal ones - carry at least one such pair, and on 2 of them the row has no same-aspect pair at all, so the crossing is what earns the verdict - MT-ND1 matches `GO:0008137` (MF) to `GO:1902600` (BP).
-What is true is narrower, and is a fact about one pair rather than about the aspects:
-`GO:0008137` does not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a
-real source of
+Where a particular pair does not meet, that is a fact about the pair rather than about the
+aspects - `GO:0008137` does not reach `GO:0006120`. Two things follow. Cross-aspect
+`part_of` is a real source of
 alignment in this table, not an artefact - and since node MF and BP terms are compared against
 one pooled set of the review's core molecular functions and `directly_involved_in` processes,
 a node activity term can be satisfied by a core process and the reverse. Such a match is
@@ -112,86 +112,38 @@ clean figure:
 - `GENE_ON_NO_NODE` - no pathophysiology node names the gene
 - `NO_GO_ON_GENE_NODES` - no node naming the gene carries a GO term
 - `NO_ORIGIN` - the dismech genetic record carries no variant origin
-- `UNTYPED` - the dismech genetic record carries no relationship type - not emitted by either run
+- `UNTYPED` - the dismech genetic record carries no relationship type - not emitted by this run
 - `NO_AIGR_REVIEW` - no ai-gene-review review exists for the gene
 - `AIGR_NOT_COMPLETE` - a review exists but its status is not COMPLETE
-- `NO_CORE_FUNCTION_TERMS` - a review exists but has no core-function GO term to compare against
+- `NO_CORE_FUNCTION_TERMS` - a review exists but has no core-function GO term to compare against - not emitted by this run
 - `NO_MODULE_MEMBERSHIP` - no module contains the gene's accession
 - `MODULE_NOT_COVERING` - a module contains it, but no annoton term there relates to the aligned terms
 - `PARTIAL_COVERAGE` *(qualifying)* - a module covers some aligned terms and no module term reaches the rest
 - `ALIGNED_CONTRIBUTES_ONLY` *(qualifying)* - every aligned term matched only a contributes-to function, not an enabled one
 - `ALIGNED_NONCORE` - node terms match only annotations the review keeps as non-core
 - `ALIGNED_ON_SHARED_NODE_ONLY` *(qualifying)* - every aligned term came from a node the gene shares with another gene
-- `ALIGNED_PROPOSED` - node terms match only terms the review proposes as NEW, which are not yet annotations - not emitted by either run
-- `NO_GO_ALIGNMENT` - no node term matches a core function, an annotation the review keeps, or a term it proposes - not emitted by either run
+- `ALIGNED_PROPOSED` - node terms match only terms the review proposes as NEW, which are not yet annotations - not emitted by this run
+- `NO_GO_ALIGNMENT` - no node term matches a core function, an annotation the review keeps, or a term it proposes - not emitted by this run
 - `PARTIAL_ALIGNMENT` *(qualifying)* - some node terms aligned and others matched nothing in the review
 
 **Provenance of this run.** The table is generated, so it is only as current as the inputs it
 was generated from, and those inputs live in two repositories.
 
-- run date: `2026-10-12T11:55:14Z`
-- dismech revision: `c0ef3d0d5a5c519fab45d814a79709df266076e1` (c0ef3d0d5 2026-10-11 Add review records for nine unchanged entries and 16 gene pages)
-- ai-gene-review revision: `897d012ae2d2f7b1371e11ac5a40b76b02caa0b0` (detached checkout, so no branch name)
+- run date: `2026-10-16T19:42:01Z`
+- dismech revision: `048e13ca1cce71320ff1789f01ba353af6da6bf8` (048e13ca1 2026-10-16 curate: Add AKT3-Related Overgrowth Spectrum (MONDO:0800485) (#14361))
+- ai-gene-review revision: `96ab5d0c869f395f515ff8246e508f671df24d44` (branch `claude/cool-edison-o9wvf0-alignment-project`)
 - GO release: `2026-07-26`, adapter `sqlite:obo:go`
-- audit script: `4fa69f623798` (sha256 of `align_audit.py`), last committed at `unrecorded`; unrecorded because the project directory has no history in the tree that was read, which is the case for a scratch tree the script was copied into, so the sha256 is the identifier to use; **uncommitted changes at run time in: the ai-gene-review tree**, so the revisions above name commits that are not exactly what ran; **git could not be asked about: the audit script itself**, so whether the revisions above name what ran is not established either way; the companion run over claude/cool-edison-o9wvf0-alignment-project records the audit script as modified at the same sha256
-- ai-gene-review tree: origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed)
-- The primary run's tree (`897d012ae`) is on no pushed ref, so no clone holds it and the same comparison cannot be made from one.
-- modules read: `459`; UniProt accessions reached as parts: `4175`, against `4242` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
+- audit script: `1240f7359ea1` (sha256 of `align_audit.py`), last committed at `2a9a69f0c`
+- The primary run's tree (`96ab5d0c8`) is on no pushed ref, so no clone holds it and the same comparison cannot be made from one.
+- modules read: `489`; UniProt accessions reached as parts: `5228`, against `5298` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
 Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
 themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
-The run above read origin/main at a430dfc77 with the ten themed slice branches of #4690 merged in a scratch worktree, at these tips: oxphos 6d80ab4e6, mito-translation fffb22002, isoprenoid e9d9c2267, lipid 04887b91c, peroxisome-oxalate baf2a95fe, energy-balance 4a601e09e, carbohydrate 91ba0de9b, lysosome-glycosylation d22468c96, vitd-minerals f49cdbce7, one-carbon-aa 7317db717 (merge commit 897d012ae, local to the run and not pushed).
+The run above read a clean checkout, so the revision above describes its tree in full.
 
-The audit also runs over a second tree, and comparing the two runs shows which flags
-are artifacts of the missing slices rather than findings. That tree is this branch (claude/cool-edison-o9wvf0-alignment-project at 935e2e6d4) alone, so nine of the ten themed slices of #4690 are absent - this branch has merged main and carries only the project page and audit scripts.
-Both cover the same
-183 gene rows. Flags that fall: `ALIGNED_NONCORE` 0 against 1, `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48, `NO_MODULE_MEMBERSHIP` 28 against 38, `PARTIAL_ALIGNMENT` 46 against 56. Flags that rise: `AIGR_NOT_COMPLETE` 85 against 7, `MODULE_NOT_COVERING` 7 against 4, `NO_AIGR_REVIEW` 61 against 5, `NO_CORE_FUNCTION_TERMS` 2 against 0.
-That second run read a tree recorded at `935e2e6d4`, an ancestor of the branch tip, with no file under `genes/` or `modules/` changed between the two - the audit's whole input surface - so the figures stand for either.
+**Summary.** 116 entries; 161 principal gene rows (all causative in this run; the predicate also admits untyped), of which 105 align every GO term their dismech nodes carry and 56 align some and leave others unaligned. Read that split first: the flag-free count below is close to true by construction, because `NO_GO_ALIGNMENT` is the only hard flag while `PARTIAL_ALIGNMENT`, `ALIGNED_ON_SHARED_NODE_ONLY` and `PARTIAL_COVERAGE` are all soft, so it is not a measure of full agreement.
 
-Every movement below is accounted for row by row rather than from the net counts: a flag's total can fall while rows arrive at it, and each row's cause is read from that row's own record on **both** trees, not from the flag's group. Where a flag moves in one direction only the net count is exact, and the line says so rather than implying the count was misleading.
-
-- `ALIGNED_NONCORE` 0 against 1 moves in one direction only, so the net count is exact: 0 rows carry it on both trees, 1 left - 1 because the row has no review on the other tree (UCP2).
-
-- `ALIGNED_ON_SHARED_NODE_ONLY` 25 against 48 moves in one direction only, so the net count is exact: 25 rows carry it on both trees, 23 left - 23 because the row has no review on the other tree (KCNJ11 (Congenital_Isolated_Hyperinsulinism), AGA, FUCA1, HNF1A, HNF4A (Hyperinsulinemic_Hypoglycemia), KCNJ11 (Hyperinsulinemic_Hypoglycemia), MT-ND1, MT-ND5, and 15 more).
-
-- `NO_MODULE_MEMBERSHIP` 28 against 38 moves in both directions, so the net is not the movement: 14 rows carry it on both trees, 24 left - 24 because the row has no review on the other tree (LCT, DMP1, TRMT10C, HNF4A (Congenital_Isolated_Hyperinsulinism), SLC16A1 (Congenital_Isolated_Hyperinsulinism), CTNS, HNF1A, HNF4A (Hyperinsulinemic_Hypoglycemia), and 16 more); 14 arrived - 14 because the modules containing the gene differ (COX4I2, ABCD3, ABCC8 (Congenital_Isolated_Hyperinsulinism), ABHD5, APOB (Familial_Defective_Apolipoprotein_B-100), ABCC8 (Hyperinsulinemic_Hypoglycemia), APOB (Hypobetalipoproteinemia), APOB (MEND_Syndrome), and 6 more).
-
-- `PARTIAL_ALIGNMENT` 46 against 56 moves in both directions, so the net is not the movement: 38 rows carry it on both trees, 18 left - 17 because the row has no review on the other tree (LCT, HNF4A (Congenital_Isolated_Hyperinsulinism), SLC16A1 (Congenital_Isolated_Hyperinsulinism), CTNS, AGA, FUCA1, HNF1A, HNF4A (Hyperinsulinemic_Hypoglycemia), and 9 more); 1 because the review on the other tree is a stub or has no core-function terms (PEX7); 8 arrived - 7 because the review on the flagged side is itself a stub, so the flag is an artifact of the thin review rather than a difference between the two reviews (ODC1, COX20, HSD17B4, GCK (Hyperinsulinemic_Hypoglycemia), EBP (MEND_Syndrome), COQ8B, EBP (X-linked_Chondrodysplasia_Punctata_2)); 1 because the row's own aligned terms differ, so the two reviews differ (DNAJC30).
-
-The rises, on the same basis:
-
-- `AIGR_NOT_COMPLETE` 85 against 7 moves in one direction only, so the net count is exact: 7 rows carry it on both trees, 78 arrived - 78 because the flag is itself a stub review, or the absence of core-function terms, on the tree carrying it (AHCY, ODC1, NSDHL, COQ2 (COQ2-Related_Primary_Coenzyme_Q10_Deficiency), COX18, COX20, ABCD3, ABCC8 (Congenital_Isolated_Hyperinsulinism), and 70 more).
-
-- `MODULE_NOT_COVERING` 7 against 4 moves in both directions, so the net is not the movement: 3 rows carry it on both trees, 1 left - 1 because the modules containing the gene differ (APOB (Hypobetalipoproteinemia)); 4 arrived - 3 because the modules containing the gene differ (HADH (Congenital_Isolated_Hyperinsulinism), HADH (Hyperinsulinemic_Hypoglycemia), FGF23); 1 because the same modules carry different terms (TMEM70) - TMEM70: `mitochondrial_complex_v` covers `GO:0030674` here and nothing there.
-
-- `NO_AIGR_REVIEW` 61 against 5 moves in one direction only, so the net count is exact: 5 rows carry it on both trees, 56 arrived - 56 because the flag is itself the absence of a review on the tree carrying it (LCT, PCSK9 (Autosomal_Dominant_Hypercholesterolemia_3), DMP1, SAR1B, MTFMT, TARS2, TRMT10C, HNF4A (Congenital_Isolated_Hyperinsulinism), and 48 more).
-
-- `NO_CORE_FUNCTION_TERMS` 2 against 0 moves in one direction only, so the net count is exact: 0 rows carry it on both trees, 2 arrived - 2 because the flag is itself a stub review, or the absence of core-function terms, on the tree carrying it (PEX7, PEX5).
-
-The groups below say where in the audit each flag is computed, which is why those causes are the ones available to it - not why any particular row moved.
-
-- `NO_AIGR_REVIEW` counts rows with no review at all. This is the only risen flag the missing slices raise directly.
-
-- `AIGR_NOT_COMPLETE`, `NO_CORE_FUNCTION_TERMS` fire where a review **was** found and is thin: a stub status, or no core-function terms to compare against. These count stub reviews present on the second tree, not reviews missing from it - a different claim, and the larger share of the movement.
-
-- `MODULE_NOT_COVERING` cannot have either cause. All 3 module flags are computed only once a review has been found, so a missing review **removes** one rather than adding it. Which module fact moved each row is in the accounting above, per row, rather than asserted for the group here; what follows is only the shape of the two module sets: the second run reads 448 modules against 459 here, so fewer are available to cover a gene's aligned terms. The second set is a strict subset **by name**: 11 modules are here and not there (e.g. `beta_cell_glucose_stimulated_insulin_secretion`), and none the other way. provenance.modules records stems, so that says nothing about the contents of a module present in both - and the row accounting above attributes some arrivals to shared modules whose own terms differ, so the names are nested while the contents are not.
-
-`ALIGNED_CONTRIBUTES_ONLY`, `PARTIAL_COVERAGE` are identical in **total** in both runs while depending on a review, so they appear in neither list above. An equal total is not an equal set of rows, and the difference matters here, so each is compared row by row below rather than read off the count.
-
-`ALIGNED_CONTRIBUTES_ONLY` is identical row for row as well: the same rows, keyed by entry, gene and occurrence, carry the flag on each tree.
-`ALIGNED_CONTRIBUTES_ONLY` is review-sourced, so a stable count there cannot be a property of the dismech side either. The reviews are not even the same: NDUFA1 is `COMPLETE` here and `INITIALIZED` on the second tree. What is stable is the contributes-to term the row aligns on, `GO:0008137` for NDUFA1, which both reports record identically - so the flag survives a change in the review around it.
-
-`PARTIAL_COVERAGE` 14 against 14 moves in both directions, so the net is not the movement: 9 rows carry it on both trees, 5 left - 2 because the modules containing the gene differ (COX4I2, ABHD5); 2 because the row has no review on the other tree (MC4R, LIPA); 1 because the review on the other tree is a stub or has no core-function terms (PEX5); 5 arrived - 3 because the modules containing the gene differ (HADH (3-hydroxyacyl-CoA_Dehydrogenase_Deficiency), GLB1 (GM1_Gangliosidosis_Type_1), GLB1 (GM1_Gangliosidosis_Type_3)); 2 because the same modules carry different terms (HAO1, COQ8A) - HAO1: `glyoxylate_oxalate_metabolism` covers `GO:0003973`, `GO:0046296` here and `GO:0003973` there; COQ8A: `coenzyme_q10_biosynthesis` covers `GO:0006744`, `GO:0016887` here and `GO:0006744` there. So the equal total is a coincidence of two populations, and nothing about stability follows from it.
-
-The flags decided before any review is read are identical in both runs
-(`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `UNTYPED` 0), which is what separates
-missing inputs from the script behaving differently - and that identity is enforced
-rather than stated: the generator exits if one of those counts moves, or if the two runs
-do not cover the same rows. So a second run tests that the audit works; only the
-all-slices tree gives the figures this table reports.
-
-**Summary.** 116 entries; 161 principal gene rows (all causative in this run; the predicate also admits untyped);
-161 carry no flag other than a module flag or one of the qualifying flags - none carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`, which say a row aligned only against a retained non-core or a proposed term rather than a core function; no principal row in this run carries either. Flag counts on principal rows: `ALIGNED_CONTRIBUTES_ONLY` 1, `ALIGNED_ON_SHARED_NODE_ONLY` 48, `MODULE_NOT_COVERING` 4, `NO_MODULE_MEMBERSHIP` 26, `PARTIAL_ALIGNMENT` 56, `PARTIAL_COVERAGE` 14. These are principal rows only, so they are smaller than the all-row counts in the provenance section above wherever a flag also falls on a modifier, susceptibility or disputed row.
+161 principal rows carry no flag other than a module flag or one of the qualifying flags - none carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`, which say a row aligned only against a retained non-core or a proposed term rather than a core function; no principal row in this run carries either. Flag counts on principal rows: `ALIGNED_CONTRIBUTES_ONLY` 1, `ALIGNED_ON_SHARED_NODE_ONLY` 48, `MODULE_NOT_COVERING` 4, `NO_MODULE_MEMBERSHIP` 26, `PARTIAL_ALIGNMENT` 56, `PARTIAL_COVERAGE` 14.
 
 **Agreement is partial on many rows, and the table shows both halves.** 105 principal
 rows align every GO term their dismech nodes carry; 56 align some and leave others
@@ -216,14 +168,14 @@ terms, all of them are shown separated by `/`.
 | Entry | Gene | Relationship | AIGR | Aligned GO terms (node&rarr;core) | Unaligned node terms | Modules | Flags |
 |---|---|---|---|---|---|---|---|
 | 3-hydroxyacyl-CoA_Dehydrogenase_Deficiency | HADH | CAUSATIVE | COMPLETE | GO:0003857 GO:0004857 | - | [beta_cell_glucose_stimulated_insulin_secretion](../modules/beta_cell_glucose_stimulated_insulin_secretion.html) (GO:0004857->GO:0004857) [fatty_acid_beta_oxidation](../modules/fatty_acid_beta_oxidation.html) (GO:0003857->GO:0003857, GO:0003857->GO:0016509) | ok |
-| AHCY_Deficiency | AHCY | CAUSATIVE | COMPLETE | GO:0004013 | - | [sam_cycle](../modules/sam_cycle.html) (GO:0004013->GO:0004013) | ok |
+| AHCY_Deficiency | AHCY | CAUSATIVE | COMPLETE | GO:0004013 | - | [methionine_cycle](../modules/methionine_cycle.html) (GO:0004013->GO:0004013) [sam_cycle](../modules/sam_cycle.html) (GO:0004013->GO:0004013) | ok |
 | Adult-Type_Hypolactasia | LCT | CAUSATIVE | COMPLETE | GO:0000016 | GO:0006366 | - | PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
 | Autosomal_Dominant_Hypercholesterolemia_3 | PCSK9 | CAUSATIVE | COMPLETE | GO:0050750 | - | [ldl_receptor_mediated_endocytosis](../modules/ldl_receptor_mediated_endocytosis.html) (GO:0050750->GO:0050750) | ok |
 | Autosomal_Recessive_Hypophosphatemic_Rickets_1 | DMP1 | CAUSATIVE | COMPLETE | GO:0005509 | - | - | NO_MODULE_MEMBERSHIP |
-| Bachmann-Bupp_Syndrome | ODC1 | CAUSATIVE | COMPLETE | GO:0004586 GO:0006596&rarr;GO:0009446 | - | [polyamine_metabolism](../modules/polyamine_metabolism.html) (GO:0004586->GO:0004586, GO:0006596->GO:0006595, ...) | ok |
+| Bachmann-Bupp_Syndrome | ODC1 | CAUSATIVE | COMPLETE | GO:0004586 GO:0006596&rarr;GO:0009446 | - | [polyamine_metabolism](../modules/polyamine_metabolism.html) (GO:0004586->GO:0004586, GO:0006596->GO:0006596) | ok |
 | Biotinidase_Deficiency | BTD | CAUSATIVE | COMPLETE | GO:0006768 GO:0047708 | - | [biotin_cycle](../modules/biotin_cycle.html) (GO:0006768->GO:0006768, GO:0047708->GO:0047708) | ok |
 | CHILD_Syndrome | NSDHL | CAUSATIVE | COMPLETE | GO:0000252 | - | [cholesterol_synthesis_post_lanosterol](../modules/cholesterol_synthesis_post_lanosterol.html) (GO:0000252->GO:0000252) | ok |
-| COQ2-Related_Primary_Coenzyme_Q10_Deficiency | COQ2 | CAUSATIVE | COMPLETE | GO:0008412 | - | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0008412->GO:0008412) | ok |
+| COQ2-Related_Primary_Coenzyme_Q10_Deficiency | COQ2 | CAUSATIVE | COMPLETE | GO:0008412 | - | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0008412->GO:0008412) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0008412->GO:0008412) | ok |
 | COX18-Related_COX_Deficiency | COX18 | CAUSATIVE | COMPLETE | GO:0032977 GO:0033617 | - | [complex_iv_assembly_factors](../modules/complex_iv_assembly_factors.html) (GO:0032977->GO:0032977, GO:0033617->GO:0033617) | ok |
 | COX20-Related_COX_Deficiency | COX20 | CAUSATIVE | COMPLETE | GO:0030674 GO:0033617 | - | [mitochondrial_complex_iv](../modules/mitochondrial_complex_iv.html) (GO:0030674->GO:0030674, GO:0033617->GO:0033617) | ok |
 | COX4I2-Related_Pancreatic_Insufficiency-Anemia-Hyperostosis_Syndrome | COX4I2 | CAUSATIVE | COMPLETE | GO:0004129 <sup>c</sup> GO:0006123 | GO:0001666 | [mitochondrial_complex_iv](../modules/mitochondrial_complex_iv.html) (GO:0006123->GO:0006123) - uncovered: GO:0004129 | PARTIAL_ALIGNMENT, PARTIAL_COVERAGE |
@@ -232,7 +184,7 @@ terms, all of them are shown separated by `/`.
 | Combined_Oxidative_Phosphorylation_Defect_Type_15 | MTFMT | CAUSATIVE | COMPLETE | GO:0004479&rarr;GO:0004479/GO:0071951 | - | [mitochondrial_trna_charging_and_initiator_formylation](../modules/mitochondrial_trna_charging_and_initiator_formylation.html) (GO:0004479->GO:0004479, GO:0004479->GO:0071951) | ok |
 | Combined_Oxidative_Phosphorylation_Defect_Type_21 | TARS2 | CAUSATIVE | COMPLETE | GO:0004829 | - | [mitochondrial_trna_charging_and_initiator_formylation](../modules/mitochondrial_trna_charging_and_initiator_formylation.html) (GO:0004829->GO:0004829) | ok |
 | Combined_Oxidative_Phosphorylation_Defect_Type_30 | TRMT10C | CAUSATIVE | COMPLETE | GO:0097745 | - | - | NO_MODULE_MEMBERSHIP |
-| Congenital_Bile_Acid_Synthesis_Defect_5 | ABCD3 | CAUSATIVE | COMPLETE | GO:0015607 | GO:0007031 | [bile_acid_synthesis_sidechain_conjugation](../modules/bile_acid_synthesis_sidechain_conjugation.html) (GO:0015607->GO:0015607) [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) (GO:0015607->GO:0015607) | PARTIAL_ALIGNMENT |
+| Congenital_Bile_Acid_Synthesis_Defect_5 | ABCD3 | CAUSATIVE | COMPLETE | GO:0015607 | GO:0007031 | [bile_acid_synthesis_sidechain_conjugation](../modules/bile_acid_synthesis_sidechain_conjugation.html) (GO:0015607->GO:0015607) [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) | PARTIAL_ALIGNMENT |
 | Congenital_Isolated_Hyperinsulinism | ABCC8 | CAUSATIVE | COMPLETE | GO:0015272&rarr;GO:0071805 <sup>s</sup> GO:0050796 <sup>s</sup> GO:0071805 <sup>s</sup> | - | [beta_cell_glucose_stimulated_insulin_secretion](../modules/beta_cell_glucose_stimulated_insulin_secretion.html) (GO:0015272->GO:0015272, GO:0015272->GO:0071805, ...) | ALIGNED_ON_SHARED_NODE_ONLY |
 | Congenital_Isolated_Hyperinsulinism | KCNJ11 | CAUSATIVE | COMPLETE | GO:0015272&rarr;GO:0015272/GO:0071805 <sup>s</sup> GO:0050796&rarr;GO:0046676 <sup>s</sup> GO:0071805&rarr;GO:0015272/GO:0071805 <sup>s</sup> | - | [beta_cell_glucose_stimulated_insulin_secretion](../modules/beta_cell_glucose_stimulated_insulin_secretion.html) (GO:0015272->GO:0015272, GO:0015272->GO:0071805, ...) | ALIGNED_ON_SHARED_NODE_ONLY |
 | Congenital_Isolated_Hyperinsulinism | GLUD1 | CAUSATIVE | COMPLETE | GO:0004353 <sup>s</sup> | GO:0004857 <sup>s</sup> GO:0030073 <sup>s</sup> | [beta_cell_glucose_stimulated_insulin_secretion](../modules/beta_cell_glucose_stimulated_insulin_secretion.html) (GO:0004353->GO:0004353) [glutamate_glutamine_ammonia_hub](../modules/glutamate_glutamine_ammonia_hub.html) (GO:0004353->GO:0004353) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
@@ -243,7 +195,7 @@ terms, all of them are shown separated by `/`.
 | Congenital_Leptin_Deficiency | LEP | CAUSATIVE | COMPLETE | GO:0005179 | - | [leptin_melanocortin_signaling](../modules/leptin_melanocortin_signaling.html) (GO:0005179->GO:0005179) | ok |
 | Constitutional_Megaloblastic_Anemia_With_Severe_Neurologic_Disease | DHFR | CAUSATIVE | COMPLETE | GO:0004146 | - | [thymidylate_synthesis](../modules/thymidylate_synthesis.html) (GO:0004146->GO:0004146) | ok |
 | Cystinosis | CTNS | CAUSATIVE | COMPLETE | GO:0015184 GO:0015811&rarr;GO:0015184/GO:1904919 GO:0022857&rarr;GO:0015184/GO:0015295 GO:1904919 | GO:0080145 | - | PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
-| D-Bifunctional_Protein_Deficiency | HSD17B4 | CAUSATIVE | COMPLETE | GO:0033540 GO:0080023 GO:0106386 GO:0140493 | - | [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) (GO:0033540->GO:0006635, GO:0033540->GO:0033540, ...) - uncovered: GO:0140493 | PARTIAL_COVERAGE |
+| D-Bifunctional_Protein_Deficiency | HSD17B4 | CAUSATIVE | COMPLETE | GO:0033540 GO:0080023 GO:0106386 GO:0140493 | - | [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) (GO:0033540->GO:0006635, GO:0033540->GO:0033540, ...) - uncovered: GO:0106386 GO:0140493 | PARTIAL_COVERAGE |
 | DPM2-congenital_disorder_of_glycosylation | DPM2 | CAUSATIVE | COMPLETE | GO:0008047 | GO:0004582 | [dolichol_phosphate_sugar_donor_supply](../modules/dolichol_phosphate_sugar_donor_supply.html) (GO:0008047->GO:0008047) | PARTIAL_ALIGNMENT |
 | Developmental_And_Epileptic_Encephalopathy_116 | GLUL | CAUSATIVE | COMPLETE | GO:0004356 | - | [glutamate_glutamine_ammonia_hub](../modules/glutamate_glutamine_ammonia_hub.html) (GO:0004356->GO:0004356) | ok |
 | Developmental_And_Epileptic_Encephalopathy_50 | CAD | CAUSATIVE | COMPLETE | GO:0004070 GO:0004088 GO:0004151 | - | [de_novo_pyrimidine_synthesis](../modules/de_novo_pyrimidine_synthesis.html) (GO:0004070->GO:0004070, GO:0004088->GO:0004088, ...) | ok |
@@ -280,7 +232,7 @@ terms, all of them are shown separated by `/`.
 | Hyperphosphatemic_Familial_Tumoral_Calcinosis | FGF23 | CAUSATIVE | COMPLETE | GO:0005179 | - | [fgf23_klotho_phosphate_homeostasis](../modules/fgf23_klotho_phosphate_homeostasis.html) (GO:0005179->GO:0005179) [fgfr_signaling](../modules/fgfr_signaling.html) | ok |
 | Hyperphosphatemic_Familial_Tumoral_Calcinosis | KL | CAUSATIVE | COMPLETE | GO:0015026 | - | [fgf23_klotho_phosphate_homeostasis](../modules/fgf23_klotho_phosphate_homeostasis.html) (GO:0015026->GO:0015026) [fgfr_signaling](../modules/fgfr_signaling.html) (GO:0015026->GO:0015026) | ok |
 | Hyperprolinemia_Type_1 | PRODH | CAUSATIVE | COMPLETE | GO:0004657 GO:0006562 | - | [proline_metabolism](../modules/proline_metabolism.html) (GO:0004657->GO:0004657, GO:0006562->GO:0006562) | ok |
-| Hyperprolinemia_Type_2 | ALDH4A1 | CAUSATIVE | COMPLETE | GO:0003842 GO:0006562 | - | [proline_metabolism](../modules/proline_metabolism.html) (GO:0003842->GO:0003842, GO:0006562->GO:0006562) | ok |
+| Hyperprolinemia_Type_2 | ALDH4A1 | CAUSATIVE | COMPLETE | GO:0003842 GO:0006562 | - | [arginine_catabolism_arginase_pathway](../modules/arginine_catabolism_arginase_pathway.html) (GO:0003842->GO:0003842, GO:0006562->GO:0006562) [proline_metabolism](../modules/proline_metabolism.html) (GO:0003842->GO:0003842, GO:0006562->GO:0006562) | ok |
 | Hypobetalipoproteinemia | APOB | CAUSATIVE | COMPLETE | GO:0034379 | - | [chylomicron_assembly_secretion](../modules/chylomicron_assembly_secretion.html) (not covering) [ldl_receptor_mediated_endocytosis](../modules/ldl_receptor_mediated_endocytosis.html) (not covering) | MODULE_NOT_COVERING |
 | Hypobetalipoproteinemia | PNPLA3 | MODIFIER | COMPLETE | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
 | Hypobetalipoproteinemia | PCSK9 | CAUSATIVE | COMPLETE | GO:0050750 | - | [ldl_receptor_mediated_endocytosis](../modules/ldl_receptor_mediated_endocytosis.html) (GO:0050750->GO:0050750) | ok |
@@ -338,26 +290,26 @@ terms, all of them are shown separated by `/`.
 | Obesity_Due_to_MC4R_Pathway_Disruption | SIM1 | CAUSATIVE | COMPLETE | GO:0000981&rarr;GO:0000981/GO:0006357 <sup>s</sup> | GO:0004252 <sup>s</sup> GO:0004980 <sup>s</sup> GO:0007189 <sup>s</sup> GO:0031782 <sup>s</sup> GO:0038021 <sup>s</sup> | - | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
 | PET100-Related_COX_Deficiency | PET100 | CAUSATIVE | COMPLETE | GO:0033617 | - | [complex_iv_assembly_factors](../modules/complex_iv_assembly_factors.html) (GO:0033617->GO:0033617) | ok |
 | PGM1-Congenital_Disorder_of_Glycosylation | PGM1 | CAUSATIVE | COMPLETE | GO:0004614 | GO:0045214 | [glycogenolysis](../modules/glycogenolysis.html) (GO:0004614->GO:0004614) | PARTIAL_ALIGNMENT |
-| PNPO_Deficiency | PNPO | CAUSATIVE | COMPLETE | GO:0004733&rarr;GO:0004733/GO:0042823 | - | [vitamin_b6_plp_metabolism](../modules/vitamin_b6_plp_metabolism.html) (GO:0004733->GO:0004733, GO:0004733->GO:0042816) | ok |
+| PNPO_Deficiency | PNPO | CAUSATIVE | COMPLETE | GO:0004733&rarr;GO:0004733/GO:0042823 | - | [vitamin_b6_plp_metabolism](../modules/vitamin_b6_plp_metabolism.html) (GO:0004733->GO:0004733, GO:0004733->GO:0042816, ...) | ok |
 | Peroxisomal_Acyl-CoA_Oxidase_Deficiency | ACOX1 | CAUSATIVE | COMPLETE | GO:0003997 GO:0033540 GO:0140493 | - | [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) (GO:0003997->GO:0003997, GO:0033540->GO:0006635, ...) - uncovered: GO:0140493 | PARTIAL_COVERAGE |
 | Peroxisome_Biogenesis_Disorder_5B | PEX2 | CAUSATIVE | COMPLETE | GO:0007031&rarr;GO:0016558/GO:0016562 | - | [peroxisome-lifecycle](../modules/peroxisome-lifecycle.html) (GO:0007031->GO:0007031, GO:0007031->GO:0016558, ...) | ok |
 | Peroxisome_Biogenesis_Disorder_6A_Zellweger | PEX10 | CAUSATIVE | COMPLETE | GO:0061630 | - | [peroxisome-lifecycle](../modules/peroxisome-lifecycle.html) (GO:0061630->GO:0061630) | ok |
 | Peroxisome_Biogenesis_Disorder_6B | PEX10 | CAUSATIVE | COMPLETE | GO:0061630 | - | [peroxisome-lifecycle](../modules/peroxisome-lifecycle.html) (GO:0061630->GO:0061630) | ok |
 | Pompe_Disease | GAA | CAUSATIVE | COMPLETE | GO:0004558 GO:0005980 | GO:0007040 | [lysosomal_glycogen_degradation](../modules/lysosomal_glycogen_degradation.html) (GO:0004558->GO:0004558, GO:0005980->GO:0005980) | PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | COQ2 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0008412 <sup>s</sup> | GO:0097269 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | COQ4 | CAUSATIVE | COMPLETE | GO:0006744&rarr;GO:0006744/GO:0120539 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0120539&rarr;GO:0006744/GO:0120539 <sup>s</sup> | GO:0106364 <sup>s</sup> GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | COQ5 | CAUSATIVE | COMPLETE | GO:0006744&rarr;GO:0006744/GO:0008425 <sup>s</sup> GO:0008425&rarr;GO:0006744/GO:0008425 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> | GO:0106364 <sup>s</sup> GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | COQ6 | CAUSATIVE | COMPLETE | GO:0006744&rarr;GO:0006744/GO:0120538 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0106364 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> | GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | COQ8A | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0016887 <sup>s</sup> | - | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY |
+| Primary_Coenzyme_Q10_Deficiency | COQ2 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0008412 <sup>s</sup> | GO:0097269 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | COQ4 | CAUSATIVE | COMPLETE | GO:0006744&rarr;GO:0006744/GO:0120539 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0120539&rarr;GO:0006744/GO:0120539 <sup>s</sup> | GO:0106364 <sup>s</sup> GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | COQ5 | CAUSATIVE | COMPLETE | GO:0006744&rarr;GO:0006744/GO:0008425 <sup>s</sup> GO:0008425&rarr;GO:0006744/GO:0008425 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> | GO:0106364 <sup>s</sup> GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | COQ6 | CAUSATIVE | COMPLETE | GO:0006744&rarr;GO:0006744/GO:0120538 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0106364 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> | GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | COQ8A | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0016887 <sup>s</sup> | - | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY |
 | Primary_Coenzyme_Q10_Deficiency | COQ8B | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0016887 <sup>s</sup> | - | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY |
-| Primary_Coenzyme_Q10_Deficiency | COQ7 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> GO:0160224 <sup>s</sup> | GO:0106364 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | COQ9 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> | GO:0106364 <sup>s</sup> GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | PDSS1 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0097269 <sup>cs</sup> | GO:0008412 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Coenzyme_Q10_Deficiency | PDSS2 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0097269 <sup>cs</sup> | GO:0008412 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
-| Primary_Hyperoxaluria_Type_1 | AGXT | CAUSATIVE | COMPLETE | GO:0008453 GO:0009436 | - | [glyoxylate_oxalate_metabolism](../modules/glyoxylate_oxalate_metabolism.html) (GO:0008453->GO:0008453, GO:0009436->GO:0046487) | ok |
+| Primary_Coenzyme_Q10_Deficiency | COQ7 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> GO:0160224 <sup>s</sup> | GO:0106364 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | COQ9 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0008425&rarr;GO:0006744 <sup>s</sup> GO:0120539&rarr;GO:0006744 <sup>s</sup> | GO:0106364 <sup>s</sup> GO:0160224 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | PDSS1 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0097269 <sup>cs</sup> | GO:0008412 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Coenzyme_Q10_Deficiency | PDSS2 | CAUSATIVE | COMPLETE | GO:0006744 <sup>s</sup> GO:0097269 <sup>cs</sup> | GO:0008412 <sup>s</sup> | [coenzyme_q10_biosynthesis](../modules/coenzyme_q10_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) [ubiquinone_biosynthesis](../modules/ubiquinone_biosynthesis.html) (GO:0006744->GO:0006744, GO:0006744->GO:0008425, ...) | ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Primary_Hyperoxaluria_Type_1 | AGXT | CAUSATIVE | COMPLETE | GO:0008453 GO:0009436 | - | [glycine_serine_interconversion](../modules/glycine_serine_interconversion.html) (GO:0008453->GO:0008453) [glyoxylate_oxalate_metabolism](../modules/glyoxylate_oxalate_metabolism.html) (GO:0008453->GO:0008453, GO:0009436->GO:0046487) | ok |
 | Primary_Hyperoxaluria_Type_2 | GRHPR | CAUSATIVE | COMPLETE | GO:0016618 GO:0030267 GO:0046487 | - | [glyoxylate_oxalate_metabolism](../modules/glyoxylate_oxalate_metabolism.html) (GO:0030267->GO:0030267, GO:0046487->GO:0046487) - uncovered: GO:0016618 | PARTIAL_COVERAGE |
 | Primary_Hyperoxaluria_Type_3 | HOGA1 | CAUSATIVE | COMPLETE | GO:0008700 GO:0019470 | GO:0046487 | [glyoxylate_oxalate_metabolism](../modules/glyoxylate_oxalate_metabolism.html) (GO:0008700->GO:0008700) - uncovered: GO:0019470 | PARTIAL_ALIGNMENT, PARTIAL_COVERAGE |
-| Primary_Hyperoxaluria_Type_3 | AGXT | MODIFIER | COMPLETE | - | - | [glyoxylate_oxalate_metabolism](../modules/glyoxylate_oxalate_metabolism.html) | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
+| Primary_Hyperoxaluria_Type_3 | AGXT | MODIFIER | COMPLETE | - | - | [glycine_serine_interconversion](../modules/glycine_serine_interconversion.html) [glyoxylate_oxalate_metabolism](../modules/glyoxylate_oxalate_metabolism.html) | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
 | Purine_Nucleoside_Phosphorylase_Deficiency | PNP | CAUSATIVE | COMPLETE | GO:0004731 GO:0006152&rarr;GO:0006148/GO:0006161 | - | [purine_nucleotide_catabolism](../modules/purine_nucleotide_catabolism.html) (GO:0004731->GO:0004731, GO:0006152->GO:0072523) [purine_salvage_and_catabolism](../modules/purine_salvage_and_catabolism.html) (GO:0004731->GO:0004731) | ok |
 | Pyridoxine-Dependent_Epilepsy | ALDH7A1 | CAUSATIVE | COMPLETE | GO:0004029 GO:0004043 GO:0019477 | - | [lysine_catabolism_saccharopine](../modules/lysine_catabolism_saccharopine.html) (GO:0004043->GO:0004043, GO:0019477->GO:0019477) - uncovered: GO:0004029 | PARTIAL_COVERAGE |
 | Pyruvate_Carboxylase_Deficiency_Disease | PC | CAUSATIVE | COMPLETE | GO:0004736 GO:0006094 | GO:0006090 GO:0006099 | [gluconeogenesis_human](../modules/gluconeogenesis_human.html) (GO:0004736->GO:0004736, GO:0006094->GO:0006094) [gluconeogenesis_human_substrates](../modules/gluconeogenesis_human_substrates.html) (GO:0004736->GO:0004736, GO:0006094->GO:0006094) [pyruvate_metabolism](../modules/pyruvate_metabolism.html) (GO:0004736->GO:0004736) | PARTIAL_ALIGNMENT |
@@ -380,7 +332,7 @@ terms, all of them are shown separated by `/`.
 | Short_Stature_Amelogenesis_Imperfecta_And_Skeletal_Dysplasia_With_Scoliosis | SLC10A7 | CAUSATIVE | COMPLETE | GO:0032468&rarr;GO:0006874 GO:0051480&rarr;GO:0006874 | - | - | NO_MODULE_MEMBERSHIP |
 | Sitosterolemia | ABCG5 | CAUSATIVE | COMPLETE | GO:0015918&rarr;GO:0033344 <sup>s</sup> GO:0034041 <sup>cs</sup> | - | [intestinal_sterol_absorption_and_efflux](../modules/intestinal_sterol_absorption_and_efflux.html) (GO:0015918->GO:0030301, GO:0034041->GO:0034041) | ALIGNED_ON_SHARED_NODE_ONLY |
 | Sitosterolemia | ABCG8 | CAUSATIVE | COMPLETE | GO:0015918 <sup>s</sup> GO:0034041 <sup>cs</sup> | - | [intestinal_sterol_absorption_and_efflux](../modules/intestinal_sterol_absorption_and_efflux.html) (GO:0015918->GO:0030301, GO:0034041->GO:0034041) | ALIGNED_ON_SHARED_NODE_ONLY |
-| Snyder-Robinson_Syndrome | SMS | CAUSATIVE | COMPLETE | GO:0006597 GO:0016768 | - | [polyamine_metabolism](../modules/polyamine_metabolism.html) (GO:0006597->GO:0006595, GO:0006597->GO:0006596, ...) | ok |
+| Snyder-Robinson_Syndrome | SMS | CAUSATIVE | COMPLETE | GO:0006597 GO:0016768 | - | [polyamine_metabolism](../modules/polyamine_metabolism.html) (GO:0006597->GO:0006596, GO:0016768->GO:0016768) | ok |
 | Spastic_Paraparesis-cataracts-speech_Delay_Syndrome | FAR1 | CAUSATIVE | COMPLETE | GO:0102965 | - | [ether_lipid_plasmalogen_biosynthesis](../modules/ether_lipid_plasmalogen_biosynthesis.html) (GO:0102965->GO:0102965) | ok |
 | Sphingosine_Phosphate_Lyase_Insufficiency_Syndrome | SGPL1 | CAUSATIVE | COMPLETE | GO:0008117 | - | [sphingosine_1_phosphate_rheostat](../modules/sphingosine_1_phosphate_rheostat.html) (GO:0008117->GO:0008117) | ok |
 | Sterol_Carrier_Protein_2_Deficiency | SCP2 | CAUSATIVE | COMPLETE | GO:0050632 | - | [peroxisomal_beta_oxidation](../modules/peroxisomal_beta_oxidation.html) (GO:0050632->GO:0050632) | ok |
@@ -388,7 +340,7 @@ terms, all of them are shown separated by `/`.
 | Type_I_Diabetes | INS | SUSCEPTIBILITY | COMPLETE | - | - | [beta_cell_glucose_stimulated_insulin_secretion](../modules/beta_cell_glucose_stimulated_insulin_secretion.html) | NO_GO_ON_GENE_NODES |
 | Type_I_Diabetes | PTPN22 | SUSCEPTIBILITY | IN_PROGRESS | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
 | Type_I_Diabetes | IL2RA | SUSCEPTIBILITY | DRAFT | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
-| Type_I_Diabetes | CTLA4 | SUSCEPTIBILITY | COMPLETE | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
+| Type_I_Diabetes | CTLA4 | SUSCEPTIBILITY | DRAFT | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
 | Type_I_Diabetes | TYK2 | SUSCEPTIBILITY | - | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
 | Type_I_Diabetes | IFIH1 | SUSCEPTIBILITY | COMPLETE | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
 | Type_I_Diabetes | BACH2 | SUSCEPTIBILITY | DRAFT | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
