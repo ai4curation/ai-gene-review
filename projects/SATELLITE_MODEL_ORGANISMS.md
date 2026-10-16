@@ -117,8 +117,8 @@ may be added as gene reviews accrue.
 - De-novo support cleanup for `she-1`, `fem-3`, and `tra-2` is done
   ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)). This
   changed support and decisions on already-reviewed rows; no rows are `PENDING`.
-  For `tra-2`, the proposed adaptor activity was replaced by molecular
-  sequestering activity (`GO:0140313`), which fits TRA-2 repressing FEM-3 by binding
+  For `tra-2`, the proposed adaptor activity was replaced by protein
+  sequestering activity (`GO:0140311`), which fits TRA-2 repressing FEM-3 by binding
   it. The FEM-3 protein-binding row is MODIFY to that term with exact quotes, and
   the redundant NEW row was dropped. The TRA-1 protein-binding row is REMOVE,
   because no sourced MF says what that binding does.
