@@ -4,14 +4,14 @@ maturity: SCOPING
 last_reviewed: 2026-10-15
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
-genes: [ADRB2, ADGRV1, FZD7, GPR101, GPR161, CASR, GNAS]
+genes: [ADRB2, ADGRV1, FZD7, GPR101, GPR161, CASR, GNAS, OPRM1]
 ---
 
 # G protein-coupled receptors (GPCRs): families, modules and functions
 
 **Bottom line:** GPCRs are the largest receptor superfamily in the human genome
 and the targets of a large share of approved drugs, yet only a handful have a
-review here (human ADRB2, ADGRV1, FZD7, GPR101, GPR161 and CASR, plus the transducer GNAS). This
+review here (human ADRB2, ADGRV1, FZD7, GPR101, GPR161, CASR and OPRM1, plus the transducer GNAS). This
 project curates the superfamily on three levels: **families** (whether
 PANTHER/PAINT and InterPro propagation of GPCR terms is safe), **modules**
 (the transducer pathways downstream of the receptors), and **gene functions**
@@ -150,7 +150,7 @@ The dismech side builds the mu-opioid agonism and antagonism modules on top.
 
 ## Plan
 
-- [ ] OPRM1 gene review
+- [x] OPRM1 gene review
 
 - [ ] Pull GOA term counts for all human GPCRs to size the over-annotation problem
 - [ ] Family reviews for PTHR24248, PTHR24247, PTHR24249 (aminergic)

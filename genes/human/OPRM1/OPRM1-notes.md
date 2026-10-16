@@ -95,7 +95,7 @@ against their cached titles: PMID:8893006 (Oprm1 knockout), PMID:10617462
 ## Location
 
 - Plasma membrane (multiple EXP papers; UniProt "Cell membrane"); neuronal
-  axon, dendrite, perikaryon, endosome by similarity to rodent; "Is rapidly
+  axon, dendrite, perikaryon, endosome by similarity to guinea pig OPRM1 (P97266; the rodent ISS donor is guinea pig, while the GO_REF:0000107 IEA donor P42866 is mouse); "Is rapidly
   internalized after agonist binding".
 
 ## Annotation-review judgements (summary)
@@ -115,3 +115,15 @@ against their cached titles: PMID:8893006 (Oprm1 knockout), PMID:10617462
   craving; "regulation of cellular response to stress" left UNDECIDED.
 - ER/Golgi TAS rows from PMID:9242668 (insect-cell overexpression, abstract
   only, abstract does not mention these compartments) left UNDECIDED.
+
+## Review round 2 (PR #5042) additions
+
+- PENK peptide (P01210-PRO_0000008243) IPI row: UniProt "P35372; PRO_0000008243
+  [P01210]: PENK; NbExp=3"; MODIFY to GO:0004985 (endogenous opioid peptide
+  ligand), not REMOVE.
+- Mouse sources traced via QuickGO for P42866: GO:0050769 IMP
+  [PMID:16682964 "implicating a role for receptor-receptor interactions in
+  modulating neuritogenesis"]; GO:0098982 SynGO [PMID:31818459 "this release was
+  attenuated by presynaptic mu opioid receptors (MORs) activation"].
+- Ethanol: [PMID:10869404 "In no case did knockout mice show evidence of
+  ethanol self-administration"].
