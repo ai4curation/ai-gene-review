@@ -50,3 +50,7 @@
 - IEA carbohydrate/carbohydrate-derivative metabolic terms -> KEEP_AS_NON_CORE (generic parents).
 </content>
 </invoke>
+
+## 2026-10-03 — reference-title parser correction
+
+The earlier validator-workaround entry records the behavior of the old delimiter parser. The corrected parser recognizes standalone frontmatter delimiters, so the PMID:3099851 reference title now preserves the complete title from the unchanged publication cache. The obsolete workaround explanation has been removed from the current reference assessment. Annotation decisions, source identifiers, supporting quotations and biological interpretation are unchanged.

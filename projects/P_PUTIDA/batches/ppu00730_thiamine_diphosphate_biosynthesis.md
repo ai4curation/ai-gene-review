@@ -70,6 +70,22 @@ OpenScientist findings:
 - The single serious curation gap is ThiF-type ThiS C-terminal adenylylation (EC 2.7.7.73). KT2440 has no dedicated `thiF`; `moeB`/PP_0735 is the sole plausible but unconfirmed substitute.
 - Move TenA/PP_3185/PP_3186 and PP_1762 to a future thiamine-salvage module; do not model them as required de novo ThDP biosynthesis steps.
 
+Module repair (2026-09-01):
+
+- Replaced the broad ThiO parent-family selector `PTHR13847` with the exact
+  `PTHR13847:SF289` placement shared by KT2440 ThiO/Q88Q83 and reviewed,
+  experimentally characterized Bacillus subtilis ThiO/O31616.
+- Kept `GO:0043799` on the ThiO leaf annoton and explicitly documented that
+  SF289 is heterogeneous; family placement alone is not sufficient to infer
+  glycine oxidase activity for every SF289 member.
+- Added no ancestral node because the local PANTHER PAINT data contain no
+  glycine-oxidase IBD assertion for this family.
+- Removed the unsupported module-wide cytosol context and modeled ThiO and ThiH
+  as lineage- and oxygen-dependent alternative routes to the shared
+  2-iminoacetate input for ThiG.
+- Corrected the existing ThiO review's FAD evidence link and distinguished the
+  enzyme's imine product from its subsequent spontaneous hydrolysis products.
+
 This PR is a module-first pass with module and species/pathway OpenScientist grounding. It does not create PENDING gene-review stubs for all 13 KEGG members. Full gene reviews should prioritize `moeB`, `PP_5105`, `thiL`, `thiC`, `thiD`, `thiE`, `thiG`, and the `iscS`/`iscS-II` sulfur-donor question.
 
 PR: https://github.com/ai4curation/ai-gene-review/pull/2139

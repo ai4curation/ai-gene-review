@@ -1,0 +1,242 @@
+# Human ABCC8 / SUR1 review notes
+
+## Identity, scope and research provenance (2026-09-26 UTC)
+
+Human ABCC8 is UniProt Q09428, sulfonylurea receptor 1 (SUR1), distinct from ABCC9/SUR2. Reviewed all 64 seeded annotations without editing any original term, evidence, qualifier, supporting entity or isoform field. The seeded GO:0015272 NAS row explicitly carries `contributes_to`; its weaker complex-level assertion is retained. No NEW annotation or redundant process is proposed. The remaining unresolved rows reflect source-specific access limits, not a claim that the original curators were mistaken.
+
+Used the review, annotation-reviewer and core-function-synthesizer skills. `just fetch-gene human ABCC8` seeded the review; the Falcon job ran concurrently with `just fetch-gene-pmids human ABCC8`. The genuine Falcon report completed successfully in 592.18 seconds (2026-09-25 19:36:49–19:46:41 local report timestamps) under a 1200-second wrapper limit. No provider file was fabricated or altered, and no quota-exhausted Perplexity retry was attempted. Additional primary publications and Reactome entries were fetched through the repository caching tools. The provider report is a discovery/synthesis aid; primary evidence determines the actions.
+
+## Core function and mechanism
+
+Four SUR1 regulatory subunits associate with four Kir6.2 pore subunits. Human structures resolve ATP and ADP bound to SUR1 and a distinct ion-conduction pathway in Kir6.2 [PMID:29286281, *Molecular structure of human KATP in complex with ATP and ADP.*, “These structures support the role of SUR1 as an ADP sensor”]. Functional human SUR1 mutation assays separate surface trafficking from MgADP/diazoxide activation [PMID:24814349]. The full text uses surface-expression assays, rubidium efflux and patch clamp; most assayed mutations reach the surface yet fail normal activation. The R1419H report independently describes absent functional channels [PMID:25720052, abstract]. Human open-channel structures further support the regulator/pore distinction [PMID:34815345, abstract; PMC full-text retrieval failed].
+
+SUR1 has ATPase activity: PMID:26181369 uses human SUR1 and SUR2A constructs, point substitutions, patch clamp and direct MgATPase assays, including isolated recombinant NBD2 constructs. A SUR1-focused title does not exclude the actual SUR2A comparator experiments in the full text. PMID:29286281 also reports purified human channel ATPase measurements. These experiments do not demonstrate stoichiometric ATP-driven K+ pumping. Conversely, absence of solute pumping does not imply a catalytically dead ATPase. PMID:30587573 shows ATP binding can activate channels without hydrolysis when inhibitory Kir6.2 nucleotide effects are minimized and SUR1 ATP affinity is increased. Its result is explicitly conditional; it does not prove that native SUR1 hydrolysis is irrelevant in every setting.
+
+The core model therefore uses GO:0015459 potassium channel regulator activity, `contributes_to_molecular_function` GO:0015272, membership in GO:0008282 and plasma-membrane location, directly participating in potassium transport and regulation of insulin secretion. SUR1 directly performs regulatory work in the transport machinery. Insulin synthesis, granule proteolysis and a standalone K+ pump are not assigned.
+
+## Live ontology checks and key term-scope corrections
+
+Definitions were read from the [QuickGO term service](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0015459,GO:0015272,GO:0008282,GO:1905605) on 2026-09-26. Additional individual lookups covered GO:0019829, GO:0031004, GO:0140359, GO:0099106 and GO:1990573.
+
+| Existing assertion | Assessment |
+| --- | --- |
+| GO:0005267 potassium channel activity | Human mutant assays support SUR1 regulatory activity; MODIFY to GO:0015459. |
+| GO:0015272 ATP-activated inward rectifier potassium channel activity | The actual definition refers to ATP-sensitive inward rectification and ATP pore block. Its label is not a reason to reject SUR1 contribution. ACCEPT the explicitly qualified NAS row; refine the separate mutant-pathway MF to SUR1-specific regulation. The resulting repeated-term warning is intentional and reflects the weaker `contributes_to` claim. |
+| GO:0019829 ATPase-coupled cation transmembrane transporter activity | The definition is an ATP-coupled cation pump reaction. The primary biochemical experiment supports ATPase activity (GO:0016887), while hamster genetic channel assays support regulation (GO:0015459). |
+| GO:0031004 potassium ion-transporting ATPase complex | Definition describes a K+-importing ATPase complex, including bacterial Kdp, not the Kir6/SUR channel. MODIFY to GO:0008282, whose definition explicitly includes Kir6.x and SURx subunits. |
+| GO:0140359 ABC-type transporter activity | Definition requires primary-active solute translocation. SUR1's demonstrated role is regulation of the separate Kir pore. MODIFY to GO:0015459; do not infer catalytic-residue loss. |
+| GO:0055085 transmembrane transport | Participation remains supported but can be refined to potassium ion transmembrane transport. |
+| GO:1990573 potassium import across plasma membrane | The source complex is rat Kir6.2–SUR2B; refine to direction-independent potassium transport for human SUR1. Inward rectification does not establish physiological net influx. |
+
+## Propagation audit
+
+Read current QuickGO donor records for rat Q09429, mouse B2RUS7 and hamster A0A1S4NYG1/A0A1U7R319, and verified their UniProt identities. Every inferred row has named `source_entities` with a status and source-specific explanation. The Ensembl IDs identify the same rodent donor chains, not additional experiments. No other species' existing review for these donors was edited.
+
+For PAINT, the source is the ancestral node: PTN002795584 (plasma membrane) is retained; PTN000657997 (transmembrane transport) is refined in scope without rejecting inherited participation; PTN009085477 (ABC active transport) is challenged specifically because of target-lineage regulatory specialization documented in human structures and physiology. Neither donor count nor the presence of ABCC8 among its own experimental descendants is used as an objection.
+
+The current mouse B2RUS7 record had no experimental annotations; its negative-insulin-secretion row is inferred from rat. The positive glucose-stimulated insulin-secretion and ADP-binding donor rows were not recovered. ADP binding is independently proven on human SUR1 and retained, with the stale source chain recorded. The initial positive-secretion uncertainty is resolved by the mouse GO-CAMs described below; the original UniProt-only search missed the MGI gene record.
+
+The live [ComplexPortal CPX-185 entry](https://www.ebi.ac.uk/intact/complex-ws/complex/CPX-185) identifies “Inward rectifying potassium channel complex, Kir6.2-SUR2B”, systematic name `4xAbcc9:4xKcnj11`, in rat. A homologous-complex transfer can support shared channel biology, but this does not establish a human SUR1 direction-specific influx role. The normal beta-cell pathway described in Reactome:R-HSA-1296024 involves K+ efflux. No claim that the source study misidentified its protein is made.
+
+## Rodent source evidence and limits
+
+| Source | Finding and curation consequence |
+| --- | --- |
+| PMID:23828271 | Glibenclamide analogues in streptozotocin-treated rats alter systemic glucose/lipids; accessible abstract does not resolve intracellular glucose homeostasis or LDL-clearance mechanism. Both precise transfers UNDECIDED. |
+| PMID:21527399; PMID:25891870 | Pregnancy-dependent SUR1 expression and pharmacological uterine relaxation. Contextual non-core roles; drug subtype specificity and gestational stage limit generalization. |
+| PMID:24114458 | Rat SAH experiments include SUR1 antisense and glibenclamide, reduced IgG extravasation/TNF and better spatial learning; human autopsy tissue provides injury-associated SUR1/TRPM4 proximity. Memory/learning effects remain non-core. |
+| PMID:15613469 | Rat SUR1 pH-dependent extracellular-zinc modulation, with SUR2A comparison and mutational analysis. Retained as contextual modulation; no unperformed human residue alignment is asserted. |
+| PMID:17174476 | Risperidone changes SUR1 mRNA in rat PC12 cells, without the described rat-brain response. A xenobiotic expression response, not xenobiotic export. |
+| PMID:23149556 | Glibenclamide after rat stroke increases doublecortin-positive cell migration, later neuronal production and angiogenesis. These existing injury/repair associations are non-core. The exact glial-proliferation assay is not resolved from the abstract, so that transfer remains UNDECIDED. |
+| PMID:14645230 | Syntaxin-1A/SUR1 interaction and KATP inhibition in islet/insulinoma-related experiments do not resolve the precise synaptic-vesicle and presynaptic localization assertions from the accessible abstract. Both UNDECIDED. |
+| PMID:17285300 | Full text reports renal Abcc8 transcriptional downregulation in endotoxemia. Response to LPS is non-core and does not imply LPS transport. |
+| PMID:18854840 | Full text shows that SUR1 inhibition reduces IgG leakage and restores junctional ZO-1 after rat SAH. The transferred negative BBB-permeability sign is reversed relative to this intervention. MODIFY to positive regulation (GO:1905605), corroborated by antisense in PMID:24114458. |
+| PMID:18084728 | Hypothalamic SUR1 expression under insulin-induced hypoglycemia is a contextual insulin response, distinct from pancreatic control of secretion. |
+| PMID:15647111 | Full text includes antibody controls and rodent cardiac immunolocalization of SUR1 at sarcolemma. Retained as tissue-specific, without claiming universal dominance over SUR2A in ventricle. |
+| PMID:15962003 | Kir6.2 mutant assays show SUR1 MgATP-dependent activation and effects of SUR1 nucleotide-domain mutations; direct channel regulation supports positive regulation of K+ transport. |
+| PMID:15163199 | KATP openers inhibit insulin secretion, with additional mitochondrial effects described. Human SUR1 disease and channel data independently support its core restraint of secretion. |
+| PMID:23633925 | Rat blood-tumor barrier/glyburide study supports a contextual junctional-disruption role, corroborated by the accessible SAH full text. |
+| PMID:28842488 | Hamster donor annotations derive from genetic SUR/Kir channel experiments. Abstract describes flux and patch clamp, not a demonstrated ATP-coupled cation-pump reaction. Missing full text is not treated as wrong-gene evidence. |
+
+## Source-specific unresolved experiments and research-report limits
+
+The local PMID:20610380 cache remains abstract-only. The [indexed original Results and Figure 3](https://pmc.ncbi.nlm.nih.gov/articles/PMC2937900/) explicitly demonstrate SUR1/Kir6.2 co-immunoprecipitation. This resolves the binding row to ACCEPT. The reported ankyrin-B/SUR association requires Kir6.2; direct ankyrin-B/SUR1 binding is not inferred.
+
+Full-text retrieval attempts used cached PMC metadata, PMC/Europe PMC and publisher routes. Several articles returned restricted XML, challenge pages, empty redirect content or HTTP 403; those responses were not treated as paper evidence. The remaining five uncertain annotations are intracellular glucose homeostasis, LDL clearance, synaptic-vesicle membrane, presynaptic membrane, and negative glial proliferation. Known ATPase/channel biology permits scope corrections on independently established mechanisms even when a particular donor article is abstract-only.
+
+The report's SUR1–TRPM4 discussion is contextual. PMID:23255597 reports heterologous and rat injury-associated FRET/co-immunoprecipitation and channel effects; PMID:22291026 reports no corresponding coupling in a different heterologous system. PMID:24114458 adds human injury-tissue association but does not provide a native human complex structure. No new universal TRPM4 complex or nonselective-channel core function is manufactured from these mixed contexts. The question remains explicit in suggested follow-up work.
+
+Read all seven cached Reactome entries. Their normal, loss-of-function, activating-variant and drug-binding contexts are distinguished. In particular R-HSA-265682 describes inhibitory ATP occupancy on Kir6.2; direct human structures, rather than that event alone, establish SUR1 ATP binding.
+
+## Review completion and checks
+
+Final initial counts: 25 ACCEPT, 17 MODIFY, 15 KEEP_AS_NON_CORE, seven UNDECIDED. All 64 seeded rows and their original fields are preserved, including three alternative products and the contributes_to qualifier. The initial GO-CAM search used only the human symbol/accession and missed the mouse MGI entries; this is corrected below. No NEW biological-process term was necessary, so no comparator-based gap claim is made. Core synthesis keeps channel regulation, complex contribution and insulin control together and excludes downstream injury phenotypes.
+
+Targeted gene validation, append-only history validation, rendering and a rendered-content check are performed before PR publication. The GO:0015272 mixed-action warning is deliberate: the qualified complex-level activity and SUR1-specific replacement assess different assertion strengths. Repository-wide baseline validation is coordinated by the parent agent rather than duplicated here.
+
+## PR follow-up — 2026-09-26 UTC
+
+Read both cached mouse models [62f58d8800002184](../../../gocams/62f58d8800002184/62f58d8800002184-src.yaml) and [62f58d8800002020](../../../gocams/62f58d8800002020/62f58d8800002020-src.yaml). MGI:MGI:1352629 is Abcc8; the former model links it to GO:0035774 with IMP PMID:16924481 and MGI:MGI:2388392. The latter contains negative-secretion and zinc-binding activities. No NEW zinc-binding assertion is added solely from that mouse transfer.
+
+[PMID:16924481], abstract: complete SUR1 loss reduces glucose-stimulated secretion, whereas partial loss enhances it. The positive association is retained as non-core with dosage dependence, alongside the established negative gating role. The publication-cache fetch failed with a DNS error; its verified citation is included transparently, and the required cached publication remains unavailable until normal retrieval succeeds.
+
+Replaced the ATPase methods-only quote with result-bearing text and added ATP hydrolysis as a catalytic core subactivity. The direct 2015 biochemical assay uses GST–NBD2 dimers, not intact channels; unknown active-dimer concentration prevents comparative catalytic-rate claims. Conditional hydrolysis-independent gating remains explicitly described. The primary human evidence now supports the IBA scope correction without a provider-report quotation. Repetitive Ensembl comments have been shortened.
+
+QuickGO GO:0015272 definition, retrieved during the initial review: “Enables the transmembrane transfer of a potassium ion by an inwardly-rectifying voltage-gated channel, where the inward rectification is due to a voltage-dependent block of the channel pore by ATP.” This explains why the seed's explicit contributes_to assertion is retained despite its ATP-activated label.
+
+Current actions: 26 ACCEPT, 17 MODIFY, 16 KEEP_AS_NON_CORE and five UNDECIDED; 64 original source objects remain unchanged. These local changes are not published to PR #3136.
+
+The follow-up validation command passes with three warnings: missing PMID:16924481 cache, the intentional contributes_to action distinction, and no direct annotation citation to the Falcon report. The missing cache is an outstanding repository requirement, not a fabricated source or a claimed successful retrieval. An independent annotation reviewer found no biological blocker in these changes.
+
+## 2026-09-26 review follow-up on published head 1bf52d9
+
+This dated entry supersedes the earlier statement that the preceding local changes were not published: the coordinator confirmed they are on PR #3136 at head `1bf52d95a381d852b6a2a1dc5b44c2bceaefd329`. Their original journal entry remains unchanged as historical provenance. The three current authored-file blobs were checked against that head before this follow-up.
+
+The new review's cache flag finding is correct. PMID:20610380 has an abstract-only local cache, so its reference now has `full_text_unavailable: true`, while its reference review continues to identify the previously externally read PMC Results/Figure 3. The informative interaction annotation is **GO:0044325 transmembrane transporter binding**, not generic GO:0005515. Its ACCEPT is retained and now leads with the cached human SUR1–Kir6.2 structural interface from PMID:29286281. The externally read co-immunoprecipitation quotation from PMID:20610380 is corroboration. Channel-complex membership sourced to the same paper also leads with the cached structural evidence. No direct ankyrin-B/SUR1 binding is inferred.
+
+PMID:16924481 remains VERIFIED for identifier and abstract content, while its cache remains absent. On this follow-up, the [PubMed-indexed primary record](https://pubmed.ncbi.nlm.nih.gov/16924481/) was independently recovered by an exact PMID/author search, with the matching title, authors, journal pages and DOI; direct opening itself encountered a browser challenge. The [publisher abstract](https://link.springer.com/article/10.1007/s00125-006-0367-4) was directly readable. Both explicitly report reduced glucose-stimulated insulin secretion in complete SUR1 knockout and increased secretion in heterozygotes. The previous normal fetch and official endpoint checks still failed DNS; there is no evidence that normal cache retrieval has recovered, so it was not blindly retried or fabricated. Actual primary verification does not become unverified because the cache is missing. Nevertheless, the required cache remains an unresolved repository requirement and **PR #3136 must stay draft until normal retrieval succeeds**. Only the abstract and cached donor GO-CAM trace have been verified; no full-paper access is claimed.
+
+The memory and visual-learning entries now distinguish the actual PMID:24114458 tasks. The cached full Results describe a day-12 retention probe, incremental platform learning on days 7–11, and rapid learning on day 19. Bilateral injury impaired the memory probe and incremental learning, with glibenclamide protection; unilateral injury did not impair the memory probe. Rapid learning improved with treatment after unilateral injury but was not significantly rescued after bilateral injury. These are contextual injury/protection findings, not direct memory encoding or visual processing by ABCC8. Both actions remain non-core, with distinct source-specific reasons and checkable snippets. Ensembl donor comments now identify rat Q09429 versus mouse B2RUS7 explicitly. All 64 source assertions and all action decisions remain unchanged; no NEW annotation or source-cache edit was made.
+
+Follow-up checks: `just validate human ABCC8` passes with the same three documented warnings (uncached PMID:16924481, the intentional GO:0015272 contributes_to action distinction, and primary-evidence use without quoting the Falcon report). The new scaffolded history passes validation. No source assertions, qualifiers, alternative products, action counts or core functions changed. The missing-cache warning remains a publication gate despite being nonblocking to the validator.
+
+## 2026-09-26: identifier spacing correction
+
+The 2026-09-26 re-review accepted the curation changes and distinguished VERIFIED citation status from missing cache availability, but identified missing separators in the provenance prose. The YAML now says `DOI 10.1007/s00125-006-0367-4` and `GO-CAM 62f58d8800002184`. The published history record `2026-09-26T224656Z-codex-fae44e.yaml` is preserved byte-for-byte; a new append-only record supplies the corrected readings: head `1bf52d95a381d852b6a2a1dc5b44c2bceaefd329`, all 64 assertions, PMID:20610380, PMID:29286281, PMID:16924481 and PMID:24114458. This supersedes only the run-together spellings, with no biological change. The missing PMID:16924481 cache continues to require draft status.
+
+### Generated history actor token
+
+The record `2026-09-26T230754Z-claude-code-b5d4b5.yaml` was created by `just new-history` with its default actor name because the command supplied `--agent-tool codex` but omitted the separate `--actor-name codex` option. Codex performed the work; its actor metadata was corrected after scaffolding. The filename and session id were generated by the helper and were not hand-written. The new `2026-09-26T232040Z-codex-87b4db.yaml` record documents this error using the correct explicit actor option. The earlier published record is retained unchanged to honor append-only provenance; its default filename token is not a claim that Claude Code performed the work.
+
+
+## 2026-09-27 post-merge review follow-up
+
+The repository shepherd independently merged PR #3136 at 00:42:49 UTC before
+its documented PMID:16924481 cache requirement was resolved. The earlier draft
+instructions remain historical journal entries, but the current review no longer
+asserts a PR workflow state. The required cache is still absent from main
+(confirmed by the contents API at 01:02 UTC); citation identity verification does
+not certify local availability. A fresh normal fetch at 01:02 UTC also failed DNS and produced no cache.
+
+Post-merge review identified that the GO:0008542 supporting quote selected the
+negative day-19 rapid-learning result although its reason accurately discussed the
+positive incremental-learning result. The quote now selects the actual improved
+learning result in the same cached primary paper, PMID:24114458. No action or
+source field changes.
+
+The two core entries deliberately separate channel regulation from a distinct
+measured ATP-hydrolysis reaction. ATP/ADP binding and sulfonylurea receptor activity
+are the ligand-recognition components of the first core and are now named there
+explicitly. ATPase activity remains separate because it is chemical conversion,
+not merely ligand recognition, even though it is not obligatory for every channel
+opening. Separate repeated binding cores would not add a distinct biological role.
+All 64 source objects, action decisions and original reference identities remain
+unchanged. The missing-source follow-up remains open; merge does not resolve it.
+
+The YAML status is now DRAFT under the literal status enum: the missing publication
+and documented validation advisories prevent a COMPLETE label. This status
+correction does not change the adjudicated biological content.
+
+
+## 2026-09-27 postmerge source-cache closure
+
+PMID:16924481 is now present as exact normal-fetch output. Its abstract confirms
+the previously verified distinction between complete mouse SUR1 loss, reduced
+glucose-stimulated insulin secretion, and heterozygous loss with increased
+secretion and shifted calcium oscillation glucose dependence. It does not
+provide the full experimental paper, so full_text_unavailable remains true.
+Citation verification and the cached mouse GO-CAM donor trace remain intact.
+No annotation action, propagation assessment or core interpretation changes.
+
+The source is normal fetch Actions run 36286975328, head
+5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630. Verified ZIP
+SHA-256: `c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`.
+The per-file import receipt is
+`tmp/verified-reference-records/local-import-receipt.json`. This dated note
+supersedes the earlier missing-cache status without rewriting published history.
+The follow-up belongs to PR 3211, branch `cmungall/clingen-abcc8-postmerge`,
+with reviewed baseline head e263bb7090179ffd4e37951646c8467bbe02231f.
+All 64 source assertions and reviews, two cores, 43 reference identities and
+protected machine/provider artifacts are preserved. The exact cache remains
+unedited. Validation, rendering and history checks are recorded in the closure
+manifest; COMPLETE is used only if gene validation reports zero warnings.
+
+## 2026-09-27: postmerge source-13 evidence closure
+
+The earlier PMID:16924481 closure did not cover nine DOI-only papers retained in
+the Falcon report. This entry supersedes that narrower completeness claim. All
+nine normal records are now canonical, with exact source-13 import hashes checked
+against `tmp/source13-canonical-import-receipt.json`. Their actual article bodies,
+including primary Methods and Results where present, were read. The immutable
+report, its nested table and image, GOA, UniProt and seven published histories are
+preserved. No annotation action or core function changes follow from this read.
+
+The current-main baseline was verified at
+`2d78a0153f605fdcab542419d79d8b50f6b654e6`: all 15 gene/history files matched.
+ABCC8, previous symbols SUR/HRINS and seven HGNC aliases had no open PR overlap;
+the alias directories were absent. HGNC:59 and UniProt Q09428 identify SUR1.
+
+| Recovered source | Actual evidence and retained limits |
+| --- | --- |
+| [PMID:29685928] | Structural review, not a new experiment. ABC-exporter architecture does not establish SUR1 solute export. Nucleotide occupancy and a proposed hydrolytic cycle are distinguished from measured ATPase activity. |
+| [PMID:31343405] | Primary cryo-EM, crosslinking, maturation and patch-clamp work uses hamster SUR1 with rat Kir6.2. INS-1 and COSm6 are expression hosts. Drug-pocket densities and Kir6.2 N-terminal interactions support pharmacochaperoning and gating coupling; these are not direct human constructs or a SUR1 solute-flux assay. |
+| [PMID:31821855] | Mechanistic review of pharmacochaperones. It summarizes the preceding experiments rather than independently repeating them. Rescued surface delivery does not guarantee normal gating, and an inhibitory chaperone must dissociate for function to recover. |
+| [PMID:36170658] | Review of multiple KATP-dependent diseases and isoforms. Its neonatal-diabetes subsection heading incorrectly says loss of function, while the body correctly explains gain of function. A conflicting introductory nucleotide sentence is also not adopted. SUR2/Cantú findings concern ABCC9. |
+| [PMID:38408297] | Italian sequencing/clinical cohort: 104 individuals across several genes, comprising 96 neonatal-diabetes and eight severe-insulin-resistance cases. ABCC8 accounts for 13 transient and one permanent diabetes cases. The reported splice-variant functional test belongs to a cited earlier study, not this cohort's experiments. |
+| [PMID:38489043] | Structural/function review separating Kir6 conduction from SUR regulation. SUR2A/B differences and engineered open-state mutants are not treated as native ABCC8 isoform experiments. ATPase evidence does not establish an obligatory hydrolysis event for every opening. |
+| [PMID:38791571] | Two Romanian patients: an ABCC8 exon 20–26 homozygous deletion and a paternal p.Arg598Ter allele. Sequencing, segregation, phenotype and treatment observations are direct; channel function and allelic-expression imbalance are not measured. Focal disease in the second child is suspected, with PET declined, rather than histologically demonstrated. |
+| [PMID:39192869] | Two Chinese children with de novo p.Leu1294Phe, one presenting after six months. Clinical response and remission are uncontrolled observations; predictions are not electrophysiology. The source requests functional testing. Persistently open KATP channels hyperpolarize beta cells; the Discussion's contrary depolarization wording is not adopted. |
+| [PMID:40302972] | Retrospective Chinese cohort: 69 ABCC8 and ten KCNJ11 cases among 121 children. The 79-person KATP subgroup and 65.9% nonsurgical-response figure combine both genes. Variant sequencing and clinical outcomes do not measure channel activity. The publication date is 19 November 2024, despite the provider's January label. |
+
+The four review articles provide secondary synthesis, the pharmacochaperone paper
+provides rodent-protein mechanistic experiments, and the four clinical papers
+provide human genetic/phenotypic observations. None supplies an independent SUR1
+potassium pump, a new process annotation or a reason to collapse the distinct
+regulatory and measured ATP-hydrolysis cores. Existing dosage-dependent insulin
+findings and contextual injury judgments remain intact.
+
+The inherited public full-text excerpt for [PMID:20610380] was removed from the
+private/unshareable `supporting_text_fulltext` field. Its direct PMID support and
+the cached human structural quote from [PMID:29286281] remain. The publicly
+[indexed original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2937900/)
+was reread on this date: Methods, “KATP Constructs,” identifies human Kir6.2 and
+human SUR1; Results, “Ankyrin-B Forms a Ternary Complex with Kir6.2 and SUR1/SUR2A,”
+and Figure 3 report: “anti-Kir6.2 Ig co-immunoprecipitated both SUR1 and SUR2A from
+cotransfected cells”. The direct page was challenge-blocked, but indexed primary
+Methods/Results were returned. This is an access receipt for that same paper,
+not an independent study or a notes-based evidence source. Its local cache remains
+abstract-only. The experiment does not establish direct ankyrin-B/SUR1 binding.
+
+The recursive census covers the authored YAML/notes, Falcon report, nested artifact
+and its cited image source, DOI and PMC links, and source citations associated
+with reviewed assertions. It resolves 37 required PMIDs and seven Reactome entries,
+all now present. The generic Open Targets platform bibliography is infrastructure,
+not an additional ABCC8 experiment. Bare unrelated UniProt bibliography entries
+are not silently made new review claims. No new fetch or source fabrication was
+needed. One YAML anchor was expanded with parsed equality, and the one explicit
+PubMed Markdown link was normalized to the repository's rendering convention.
+
+All 64 source objects and actions, two cores, three alternative products and 43
+prior reference identities are preserved; nine source assessments are appended.
+The five UNDECIDED annotations retain their documented evidential limits. YAML
+DRAFT remains appropriate while intentional validation advisories remain; source
+availability no longer imposes a draft-PR gate. Targeted, history, rendering,
+exact-quote and preservation checks are recorded in the frozen follow-up receipt.
+
+## 2026-09-27 — Restore the primary co-immunoprecipitation evidence pointer
+
+Review 5330824470 identified a provenance regression in the preceding update.
+The earlier description of `supporting_text_fulltext` as a private field was
+incorrect: the field stores a short verified excerpt when the full article
+cannot be redistributed in the repository. The [original PMC article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2937900/)
+was rechecked: its copyright notice identifies ASBMB as the rights holder, and
+no license permitting redistribution of the whole article was established.
+Public readability alone does not establish that permission.
+
+The same short Results/Figure 3 excerpt is restored on the original IPI evidence
+entry for transmembrane transporter binding. The normal local cache remains
+abstract-only, and its availability flag remains true. The cached human
+structural evidence, human construct/HEK293 assay context and absence of a
+direct ankyrin-B/SUR1-binding inference are retained. All 64 decisions, two
+core functions, three alternative products and source records are unchanged.
+This correction does not require a new biological annotation or cache rewrite.

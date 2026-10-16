@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executable models - AI Gene Review</title>
+    <style>
+        :root {
+            --bg-page: #f7f8fb;
+            --bg-panel: #ffffff;
+            --bg-soft: #f2f6f8;
+            --border: #d9e1e7;
+            --text: #17212b;
+            --muted: #637282;
+            --accent: #0f766e;
+            --accent-soft: #dff4f0;
+            --blue: #2563eb;
+            --ok: #15803d;
+            --bad: #b91c1c;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg-page);
+            line-height: 1.5;
+        }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .page { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; margin-bottom: 16px; }
+        h1 { margin: 0 0 6px; font-size: 1.8rem; }
+        .muted { color: var(--muted); }
+        .small { font-size: 0.88rem; }
+        .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-soft); font-size: 0.8rem; margin: 2px 4px 2px 0; }
+        .pill.type { background: var(--accent-soft); border-color: #a7ddd3; color: var(--accent); }
+        .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+        .card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+        .card h2 { margin: 0; font-size: 1.05rem; }
+        .card .desc { font-size: 0.9rem; }
+        .open { display: inline-block; margin-top: 4px; background: var(--accent); color: #fff; border-radius: 6px; padding: 5px 12px; font-size: 0.9rem; align-self: flex-start; }
+        .open:hover { text-decoration: none; filter: brightness(1.1); }
+        .ok { color: var(--ok); font-weight: 600; }
+        .bad { color: var(--bad); font-weight: 600; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .filters button { font: inherit; font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-panel); border-radius: 999px; padding: 3px 12px; cursor: pointer; }
+        .filters button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        ul.files { margin: 0; padding-left: 18px; font-size: 0.82rem; }
+    </style>
+</head>
+<body>
+<main class="page">
+    <nav class="small muted">{% if modules_index_href %}<a href="{{ modules_index_href }}">Module KB</a> / {% endif %}Executable models</nav>
+    <section class="panel">
+        <h1>Executable models</h1>
+        <p>Modules describe pathways as curated knowledge. Some of them can also be <em>run</em>: read as a Boolean network, a kinetic model, a flux model or an agent-based simulation. Each model listed here is attached to a module under <code>executable_models</code>. A model <strong>derived from the module</strong> is generated from its curated connections and never edited by hand, so fixing the model means fixing the module. An <strong>external</strong> model is a published one that serves as evidence for the module's wiring. Derived Boolean models run in your browser, and their curated scenarios are checked in validation.</p>
+        <div class="filters" id="filters">
+            <button data-type="" aria-pressed="true">All ({{ models | length }})</button>
+            {%- for label, n in type_counts.items() %}
+            <button data-type="{{ label }}" aria-pressed="false">{{ label }} ({{ n }})</button>
+            {%- endfor %}
+        </div>
+    </section>
+
+    <div class="cards">
+        {%- for m in models %}
+        <article class="card" data-type="{{ m.type_label }}">
+            <div>
+                <span class="pill type">{{ m.type_label }}</span>
+                <span class="pill">{{ 'derived from module' if m.derivation == 'DERIVED_FROM_MODULE' else 'external' }}</span>
+            </div>
+            <h2>{% if m.page_href %}<a href="{{ m.page_href }}">{{ m.title }}</a>{% else %}{{ m.title }}{% endif %}</h2>
+            <div class="small">Module: <a href="{{ m.module_href }}">{{ m.module_title }}</a></div>
+            {%- if m.description %}<div class="desc muted">{{ m.description }}</div>{% endif %}
+            {%- if m.scenarios %}
+            <div class="small">
+                {{ m.scenarios | length }} scenario(s):
+                {%- if m.interactive %}
+                    {%- if m.scenarios_passed == m.scenarios | length %} <span class="ok">all expectations hold</span>
+                    {%- else %} <span class="bad">{{ m.scenarios | length - m.scenarios_passed }} failing</span>{% endif %}
+                {%- endif %}
+                <span class="muted">{% for s in m.scenarios %}{{ s.label }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</span>
+            </div>
+            {%- endif %}
+            {%- if m.files %}
+            <ul class="files">
+                {%- for f in m.files %}<li><a href="{{ f.url }}">{{ f.path }}</a></li>{% endfor %}
+            </ul>
+            {%- endif %}
+            {%- if m.evidence %}
+            <div class="small muted">Evidence:
+                {%- for e in m.evidence %} {% if e.url %}<a href="{{ e.url }}">{{ e.source_id }}</a>{% else %}{{ e.source_id }}{% endif %}{% if not loop.last %},{% endif %}{% endfor %}
+            </div>
+            {%- endif %}
+            {%- if m.page_href %}<a class="open" href="{{ m.page_href }}">Run in browser &rarr;</a>{% endif %}
+        </article>
+        {%- endfor %}
+    </div>
+</main>
+<script>
+    document.querySelectorAll("#filters button").forEach(button => {
+        button.addEventListener("click", () => {
+            const type = button.dataset.type;
+            document.querySelectorAll("#filters button").forEach(b => b.setAttribute("aria-pressed", String(b === button)));
+            document.querySelectorAll(".card").forEach(card => {
+                card.style.display = !type || card.dataset.type === type ? "" : "none";
+            });
+        });
+    });
+</script>
+</body>
+</html>

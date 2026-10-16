@@ -1,17 +1,45 @@
 ---
 title: "TCDB → GO Transporter-Activity Mapping & Gap Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
+autolink_gene_symbols: false
 tags: [PIPELINE]
 species: [ARATH, human]
+sidecars:
+  slide_charts:
+    - TCDB/slides/tcdb-missing-pipeline.svg
+    - TCDB/slides/tcdb-propagation-verdicts.svg
+manifest:
+  slides:
+    - href: TCDB/slides/TCDB-slides.html
 ---
 
 # TCDB → GO Transporter-Activity Mapping & Gap Project
+
+**Bottom line:** the Transporter Classification Database (TCDB) gives each
+transport system a TC number, the transport analogue of an EC number, and GO
+curators have already attached TC references to 170 molecular-function terms.
+But GO has no `tc2go` annotation pipeline, so a protein's TC number never
+becomes a GO annotation: half of the reviewed Swiss-Prot transporters with a TCDB
+cross-reference (4,431 of 8,758) carry no transporter-activity term. We
+extracted GO's 194 TC-to-GO leads and scored each against the reviewed proteins
+that carry the TC id. 80 are safe to propagate, almost all at the level of a
+single TC system; 18 would over-propagate at the family level; 67 point to
+specific systems whose members lack the specific term; the other 29 are
+whole-class leads (12), leads with no reviewed member (10) or uncertain (7). We
+also filtered TCDB's
+own noisy GO dump into 477 machine-derived candidate rows and hand-backed eight
+exemplar mappings. All four SSSOM sets validate.
+
+We did this because EC and RHEA each turn a classification into GO annotations
+through a pipeline, and transporters have no equivalent. The evidence-scored
+leads are a ready starter set for proposing a `tc2go` pipeline to GO.
 
 ## Overview
 
 This project examines the **Transporter Classification Database (TCDB) as a
 source of GO molecular-function annotations for membrane transport proteins**, in
-the same spirit as the [RHEA](RHEA.md) (reactions), [EC](RHEA.md)/`ec2go`, and
+the same spirit as the [RHEA](RHEA.md) (reactions and EC/`ec2go`) and
 [CAZy](GLYCOBIOLOGY.md) source-audit projects. TCDB is the **only transporter
 classification adopted by the IUBMB**, organising transport systems into a
 five-level **TC number** (`class.subclass.family.subfamily.system`, e.g.
@@ -89,7 +117,12 @@ probe script, and the closure caveat.
   learned. Some families *are* cleanly mono-specific (e.g. `2.A.69` auxin efflux
   carrier → `GO:0010329`).
 - **This repo already contains the exemplars.** **353 gene folders** carry a
-  `DR TCDB;` cross-reference (e.g. PIN1, AUX1, SOS1, HKT1, CHL1/NRT1.1, AQP1),
+  `DR TCDB;` cross-reference (e.g.
+  <gene species="ARATH" symbol="PIN1">PIN1</gene>,
+  <gene species="ARATH" symbol="AUX1">AUX1</gene>,
+  <gene species="ARATH" symbol="SOS1">SOS1</gene>,
+  <gene species="ARATH" symbol="HKT1">HKT1</gene>,
+  <gene species="ARATH" symbol="CHL1">CHL1</gene>/NRT1.1, AQP1),
   several with *experimental* transport-activity GO terms — ready-made backing for
   a curated `tc2go` seed and for closure-filtered gap review.
 
@@ -269,27 +302,32 @@ same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
   layer**: 8 mappings, each with an explicit *propagation verdict* and backed by a
   **reviewed Swiss-Prot transporter** read individually (deeper than the automated
   scoring). This is where a source becomes a fully-backed mapping:
-  - `exactMatch` — **propagation justified** (member set is mono-specific at the
-    cited TC level): the 5-level systems `2.A.22.1.1` SERT → `GO:0005335` (backing
-    SERT/SLC6A4 P31645) and `3.A.3.1.1` Na⁺/K⁺-ATPase → `GO:0005391` (ATP1A1
-    P05023) — both curated *up* from GO sources — plus the mono-specific family
-    `2.A.69` AEC → `GO:0010329` (PIN1 Q9C6B8, IDA/IMP).
-  - `narrowMatch` — **propagation NOT justified at that TC level** (the GO term is
-    a subfamily property): `1.A.8` MIP → `GO:0015250` water (aquaglyceroporins move
-    glycerol, not water); `2.A.17` POT/PTR → `GO:0015112` nitrate (CHL1/NRT1.1
-    Q05085, IMP — a classic too-general-family case: a *peptide* transporter family
-    whose plant NPF subfamily moves nitrate); `2.A.18` AAAP → `GO:0010328` auxin
-    influx (AUX1 Q96247, IDA); `2.A.36` CPA1 → `GO:0015385` Na⁺/H⁺ (SOS1 Q9LKW9);
-    `2.A.38` Trk → `GO:0015079` K⁺ (HKT1 Q84TI7 — see the file comment; HKT1 is the
-    counter-example, not the backing).
-  - **Corroboration by GO's own xrefs is uneven.** Six of the eight sit in a family
-    GO already xrefs (`1.A.8` and `2.A.69` do not). For `2.A.22.1.1` → `GO:0005335`,
-    `3.A.3.1.1` → `GO:0005391` and `2.A.36` → `GO:0015385`, GO's xref is the *same*
-    TC→GO pair — genuine independent corroboration. For `2.A.17`, `2.A.18` and
-    `2.A.38` only the family co-occurs: GO xrefs `2.A.17` to `GO:0015333` (peptide,
-    not nitrate), `2.A.38` to `GO:0015387`/`GO:0009674` (not `GO:0015079`), and
-    `2.A.18` only at 5-level ids for other substrates. Family co-occurrence alone is
-    not corroboration of the mapped term.
+    - `exactMatch` — **propagation justified** (member set is mono-specific at the
+      cited TC level): the 5-level systems `2.A.22.1.1` SERT → `GO:0005335` (backing
+      SERT/SLC6A4 P31645) and `3.A.3.1.1` Na⁺/K⁺-ATPase → `GO:0005391`
+      (<gene species="human" symbol="ATP1A1">ATP1A1</gene> P05023) — both
+      curated *up* from GO sources — plus the mono-specific family `2.A.69` AEC
+      → `GO:0010329` (<gene species="ARATH" symbol="PIN1">PIN1</gene> Q9C6B8,
+      IDA/IMP).
+    - `narrowMatch` — **propagation NOT justified at that TC level** (the GO term is
+      a subfamily property): `1.A.8` MIP → `GO:0015250` water (aquaglyceroporins move
+      glycerol, not water); `2.A.17` POT/PTR → `GO:0015112` nitrate
+      (<gene species="ARATH" symbol="CHL1">CHL1</gene>/NRT1.1 Q05085, IMP — a
+      classic too-general-family case: a *peptide* transporter family whose
+      plant NPF subfamily moves nitrate); `2.A.18` AAAP → `GO:0010328` auxin
+      influx (<gene species="ARATH" symbol="AUX1">AUX1</gene> Q96247, IDA);
+      `2.A.36` CPA1 → `GO:0015385` Na⁺/H⁺
+      (<gene species="ARATH" symbol="SOS1">SOS1</gene> Q9LKW9); `2.A.38` Trk →
+      `GO:0015079` K⁺ (<gene species="ARATH" symbol="HKT1">HKT1</gene> Q84TI7 —
+      see the file comment; HKT1 is the counter-example, not the backing).
+    - **Corroboration by GO's own xrefs is uneven.** Six of the eight sit in a family
+      GO already xrefs (`1.A.8` and `2.A.69` do not). For `2.A.22.1.1` → `GO:0005335`,
+      `3.A.3.1.1` → `GO:0005391` and `2.A.36` → `GO:0015385`, GO's xref is the *same*
+      TC→GO pair — genuine independent corroboration. For `2.A.17`, `2.A.18` and
+      `2.A.38` only the family co-occurs: GO xrefs `2.A.17` to `GO:0015333` (peptide,
+      not nitrate), `2.A.38` to `GO:0015387`/`GO:0009674` (not `GO:0015079`), and
+      `2.A.18` only at 5-level ids for other substrates. Family co-occurrence alone is
+      not corroboration of the mapped term.
 
 Every GO id/label is validated non-obsolete and molecular-function; the GO object
 is bound to the MF branch. Validate all four with `just validate-tcdb-mappings`
@@ -357,7 +395,7 @@ over-generality problem (prefer the subfamily-specific child term).
 ## Project Status
 
 - **Started**: 2026-07-18
-- **Maturity**: SCOPING — GO's neglected TC term-xrefs extracted (194 leads) and
+- **Maturity**: IN_PROGRESS — GO's neglected TC term-xrefs extracted (194 leads) and
   **every one scored for propagation against UniProt evidence** (80 JUSTIFIED / 67
   gap-candidate / 18 narrow / 12 class-level / 17 other); the missing piece identified as the *annotation
   pipeline*, not the mapping; TCDB's `go.py` dump characterised as a noisy second

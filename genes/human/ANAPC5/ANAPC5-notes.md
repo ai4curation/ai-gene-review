@@ -1,0 +1,36 @@
+# ANAPC5 notes
+
+## 2026-10-04 review (PAINT campaign, affinage provider)
+
+- APC5 is an APC/C platform subunit: it forms the base of the complex with APC4 and APC1 (PMID:25043029), linking APC2/11 to the TPR subunits (PMID:12956947).
+- **Other evidence:**
+  - APC5 binds E2F1 and is needed for its ubiquitination (PMID:22580462).
+  - Fly IDA/APC5 loss stabilizes cyclin B (PMID:11870214).
+- **Spindle IDA/IEA (EML3 screen, PMID:18445686):** kept as non-core, as a location of the complex.
+- **Nucleus rows:** accepted. Note that the EML3 paper is abstract-only, so the curator's view of the screen data is deferred to.
+- **PTEN protein-phosphatase-binding IPI:** kept as non-core, as for ANAPC4.
+- **Meiotic NAS:** kept as non-core; there is no human APC5-specific evidence.
+- **Not used from affinage:** the CBP/p300 and PABP/IRES claims, which rest on single studies.
+
+## 2026-10-04 core MF update
+
+- **Core MF:** GO:0140378 protein complex scaffold activity ("serves to hold the complex together") added to core_functions alongside contributes_to GO:0061630. This follows the ANAPC16 review (#4058). No NEW GOA row is proposed: no small APC/C subunit carries a scaffold MF in QuickGO, which reads as a convention.
+
+## 2026-10-04 round 2 (reviewer comments on #4060)
+
+- **Core MF changed to GO:0160072** ubiquitin ligase complex scaffold activity. This replaces the GO:0140378 added minutes earlier, and follows the in-repo convention for APC/C scaffold subunits: nuc2/APC1 (also platform), cut9, CDC27, CDC16 and ANAPC2.
+  - The platform positions the catalytic module relative to the TPR lobe that recruits the coactivator (substrate adaptor) (PMID:21307936, PMID:27601667), which is what GO:0160072 describes.
+  - APC13 and APC16 keep GO:0140378, because they hold TPR subunits in place rather than link the catalytic module to the coactivator.
+- **GO:0045842 IBA:** the reason now gives the human securin/cyclin B rationale. The contrary fly ida quote is moved out of supported_by into prose.
+- **GO:0007346:** now notes that GO:0045842 subsumes it (verified in OLS: GO:0045842 → GO:1901990 → GO:0030071 → GO:0007346).
+- **Meiotic NAS:** now cites worm such-1/gfi-3 co-depletion meiotic arrest (PMID:20944012). Still non-core for human.
+- **Other fixes:**
+  - Dropped the phosphatase-independence non-sequitur from the PTEN row.
+  - Per-aspect reasons for the BP rows.
+  - Core locations.
+  - Stronger structural anchors (PMID:21307936, PMID:27601667).
+
+## 2026-10-04 correction
+
+- **Correction to round 2:** I wrote that GO:0160072 "follows the in-repo convention for APC/C scaffold subunits: nuc2/APC1 (also platform)". That is wrong. S. pombe nuc2 is APC3, a TPR subunit, and the S. pombe APC1 ortholog is cut4, which has no review here. Every current GO:0160072 holder among APC/C subunits is a TPR subunit (CDC27, CDC16, cut9, nuc2) or the cullin (ANAPC2). ANAPC5 and ANAPC4 are the first platform subunits to carry it.
+  - This is an extension of the convention, not a precedent. It is justified by the structure: the platform positions the catalytic module relative to the TPR lobe that recruits the coactivator (PMID:21307936, PMID:27601667). The curated YAML never made the nuc2 claim.

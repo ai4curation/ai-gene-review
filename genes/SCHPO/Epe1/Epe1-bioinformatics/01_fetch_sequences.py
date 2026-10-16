@@ -52,28 +52,44 @@ def main():
             json.dump(epe1_json, f, indent=2)
         print("✓ Saved Epe1 UniProt data")
     
-    # Known active JmjC demethylases for comparison
+    # Known active JmjC demethylases for comparison. Accessions verified
+    # against UniProt (primaryAccession -> uniProtkbId); an earlier version of
+    # this table mislabelled four of five entries (P84027 is a spider toxin,
+    # Q6ZMT4 is KDM7A, Q92833 is the inactive JmjC protein JARID2, P41229 is KDM5C).
     active_demethylases = {
-        "P84027": "KDM4A_HUMAN",  # JMJD2A - H3K9me3/H3K36me3 demethylase
+        "O75164": "KDM4A_HUMAN",  # JMJD2A - H3K9me3/H3K36me3 demethylase
         "Q9Y2K7": "KDM2A_HUMAN",  # FBXL11 - H3K36me2 demethylase
-        "Q6ZMT4": "KDM5C_HUMAN",  # JARID1C - H3K4me3/me2 demethylase
-        "Q92833": "KDM3A_HUMAN",  # JMJD1A - H3K9me2/me1 demethylase
-        "P41229": "KDM5B_HUMAN",  # JARID1B - H3K4me3/me2 demethylase
+        "P41229": "KDM5C_HUMAN",  # JARID1C - H3K4me3/me2 demethylase
+        "Q9UGL1": "KDM5B_HUMAN",  # JARID1B - H3K4me3/me2 demethylase
+        "Q9Y4C1": "KDM3A_HUMAN",  # JMJD1A - H3K9me2/me1 demethylase
+        "Q6ZMT4": "KDM7A_HUMAN",  # JHDM1D - H3K9me2/H3K27me2 demethylase
     }
-    
+
+    # Remove comparator files from any earlier run so a relabelled accession
+    # cannot leave a stale, misnamed sequence behind.
+    for old in list(data_dir.glob("kdm*.fasta")) + list(data_dir.glob("kdm*.json")):
+        old.unlink()
+
     print("\nFetching active JmjC demethylases for comparison...")
     for uniprot_id, name in active_demethylases.items():
         fasta = fetch_uniprot_sequence(uniprot_id)
-        if fasta:
+        entry = fetch_uniprot_json(uniprot_id)
+        if fasta and entry:
+            # Refuse to save a record whose UniProt entry name disagrees with
+            # the label, which is how the earlier mislabelling went unnoticed.
+            if entry.get("uniProtkbId") != name:
+                sys.exit(f"{uniprot_id} is {entry.get('uniProtkbId')}, not {name}")
             with open(data_dir / f"{name.lower()}.fasta", "w") as f:
                 f.write(fasta)
-            print(f"✓ Saved {name}")
-    
+            with open(data_dir / f"{name.lower()}.json", "w") as f:
+                json.dump(entry, f, indent=2)
+            print(f"✓ Saved {name} ({uniprot_id})")
+
     # Try to find Epe1 homologs using UniProt search
     print("\nSearching for Epe1 homologs...")
     search_url = "https://rest.uniprot.org/uniprotkb/search"
     params = {
-        "query": "gene:epe1 AND taxonomy:fungi",
+        "query": "gene:epe1 AND taxonomy_name:fungi",
         "format": "json",
         "size": 10
     }

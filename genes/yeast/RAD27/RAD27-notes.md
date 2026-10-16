@@ -5,7 +5,8 @@
 - `RAD27-uniprot.txt`, `RAD27-goa.tsv`: fetched via `just fetch-gene yeast RAD27`; 41 GOA rows seeded.
 - Publications: all 15 PMIDs cited by GOA are cached under `publications/`. Abstract-only entries include
   PMID:15342630, PMID:16837458, PMID:7673186, PMID:9121462, PMID:9166764, PMID:11825897, PMID:10025407.
-  Full text is available for PMID:41140146, PMID:36672839, PMID:20967232 and PMID:16079237.
+  Full text is available for PMID:41140146, PMID:40064914, PMID:36672839, PMID:20967232 and
+  PMID:16079237. PMID:40064914 was added during the 2026 re-review after a newer-paper search.
 - **Deep research: no usable output.** `just deep-research-falcon yeast RAD27 --fallback perplexity-lite`
   failed: falcon returned HTTP 402 (no credits on the Edison Scientific platform) and the perplexity
   provider is not configured here. The asta provider ran and produced `RAD27-deep-research-asta.md`, but
@@ -51,6 +52,18 @@ synthetically lethal."]
 I into the process of Okazaki fragment joining, and this ordered entry is necessary to prevent CAG repeat
 tract expansions."]
 
+**DNA:RNA hybrids and R-loops.** A 2025 study directly tested purified yeast Rad27 on synthetic R-loop
+and 5' flap substrates. Wild-type Rad27 detectably cleaved R-loop 3' boundaries, but several orders of
+magnitude less efficiently than flaps; Rad27-E176A failed to cleave R-loop substrates while retaining
+flap cleavage. Importantly, Rad27-E176A fully suppressed DNA:RNA hybrid accumulation in Rad27-depleted
+cycling cells, and EXO1 overexpression suppressed both the growth defect and hybrid accumulation,
+supporting a model in which hybrids arise mainly after flap accumulation rather than because Rad27 is
+the limiting direct R-loop resolvase.
+[PMID:40064914 "In contrast, while the cleavage of R-loop 3′ boundaries was detectable (Fig. 3b,
+right panels), it was several orders of magnitude less efficient than for flaps (Fig. 3d, e)."]
+[PMID:40064914 "Using in vitro assays, we found that Rad27-E176A indeed failed to process R-loop substrates,
+while it cleaved flaps as efficiently as the wt protein"]
+
 **Repeat instability — the strongest in vivo phenotypes.**
 CAG tracts: [PMID:16079237 "Among replication mutations that destabilize CAG repeat tracts, mutations of
 RAD27, encoding the flap endonuclease, and CDC9, encoding DNA ligase I, increase the incidence of repeat
@@ -73,9 +86,19 @@ both yeast and mice and that Rad27p has a significant role in maintaining mtDNA 
 localization call I changed. "Active in cytoplasm" implies a cytosolic site of action, but Rad27's
 substrate is DNA; the only extranuclear compartment where it has a demonstrated substrate is the
 mitochondrion (which is part_of cytoplasm, so the parent is not *false*, just uninformative and
-misleading about site of action). The PANTHER seed set (PTN000871783, EXO1, RAD27 itself) does not
-support cytosolic activity for any member. Recorded with `propagation_review`
-(root_cause TERM_SCOPING_PROBLEM; failure modes COMPARTMENT_OR_COMPLEX_MISMATCH, GRANULARITY_MISMATCH).
+misleading about site of action). PTN000871783 is the current PTHR11081 fungal cytoplasm IBD and RAD27
+does descend from it, but the target-specific extranuclear site is mitochondrial rather than soluble
+cytosolic. Recorded with `propagation_review` (root_cause TERM_SCOPING_PROBLEM; failure modes
+COMPARTMENT_OR_COMPLEX_MISMATCH, GRANULARITY_MISMATCH).
+
+**IBA re-review.** RAD27's current GOA IBA rows all trace to `PTHR11081`: PTN000118792 for nucleus and
+DNA replication, PTN000118612 for 5'-flap endonuclease activity, PTN000118791 for 5'-3' exonuclease
+activity, PTN000871783 for cytoplasm, and PTN008960732 for DNA repair and DNA recombination. The source
+for a PAINT row is the PTN ancestral node, not every extant `WITH/FROM` member, so the revised
+`propagation_review` blocks use the PTN as the source entity while retaining the full GOA
+`supporting_entities` list for traceability. DNA replication remains a TERM_SCOPING_PROBLEM to Okazaki
+fragment processing; DNA recombination is defensible but non-core; the other IBA rows are core except
+for cytoplasm.
 
 **GO:0005829 cytosol (IDA, PMID:22932476) — KEEP_AS_NON_CORE, not REMOVE.** The source is a hypoxia
 relocalization screen whose stated focus is SWI/SNF
@@ -102,13 +125,16 @@ MMEJ flap-trimming role Reactome assigns to human FEN1.
 abstract explicitly identifies the purified protein as the RTH1/RAD27 gene product by peptide sequencing,
 so the 5'-3' exonuclease IDA is correctly attributed. Flagged as VERIFIED in `reference_review`.
 
-**No REMOVEs.** Nothing in the RAD27 set is contradicted by evidence; the weakest entries (cytosol,
-`protein binding` IPIs) are downgraded rather than deleted.
+**GO:0005515 protein binding IPIs — REMOVE.** The PCNA and Dna2 interactions are real and biologically
+important, but the four IntAct rows all use the generic `protein binding` molecular-function term. There
+is no specific PCNA-binding or Dna2-binding MF replacement term supported by the cited experiments, and
+the functional consequences are already captured by the Okazaki fragment processing, primer removal and
+flap endonuclease annotations. These were migrated from the legacy `MARK_AS_OVER_ANNOTATED` action to
+`REMOVE` during the 2026 re-review.
 
 ## Proposed new annotations
 
-Two, both from PMID:36672839 (full text cached) — but **with different evidence codes**, because the
-paper does not test the yeast enzyme equally in both settings. Reading the full text:
+One, from PMID:36672839 (full text cached), with R-loop caveats from PMID:40064914:
 
 - §3.1 and §3.2 (Figures 1–2) assay recombinant *S. cerevisiae* Rad27 alongside human FEN1 on
   lagging-strand RNA:DNA hybrid substrates — nicked RNA and RNA flaps.
@@ -123,12 +149,13 @@ Hence:
 - **GO:0004523 RNA-DNA hybrid ribonuclease activity — IDA.** Directly assayed on purified Rad27.
   [PMID:36672839 "We found that both human and yeast FEN1 efficiently cleaved an RNA flap in the
   intermediates using its endonuclease activity."]
-- **GO:0062176 R-loop processing — ISS from human FEN1 (UniProtKB:P39748), not IDA.** Rad27 has the
-  underlying RNA-flap endonuclease activity, but it was never itself tested on an R-loop, and no in vivo
-  yeast R-loop phenotype has been reported. An IDA here would misattribute human experiments to the
-  yeast enzyme. (An earlier draft of this review made exactly that error; caught in PR review.)
 
 The human FEN1 GO:0062176 annotation *is* correctly IDA — those are the human experiments.
+PMID:40064914 then assayed purified *S. cerevisiae* Rad27 on synthetic R-loop substrates and found
+detectable but very weak R-loop 3' boundary cleavage; because the same paper argues that DNA:RNA
+hybrid accumulation in cycling Rad27-depleted cells primarily follows flap accumulation rather than
+loss of direct R-loop cleavage, direct yeast R-loop processing should stay a question rather than a
+proposed process annotation.
 
 ## Citation hygiene notes
 
@@ -143,5 +170,5 @@ IDA is accepted in deference to the SGD curator's full-text reading.
 
 ## Action tally
 
-43 annotations (41 from GOA + 2 proposed NEW):
-ACCEPT 29 · MODIFY 4 · KEEP_AS_NON_CORE 4 · MARK_AS_OVER_ANNOTATED 4 · NEW 2 · REMOVE 0.
+42 annotations (41 from GOA + 1 proposed NEW):
+ACCEPT 29 · MODIFY 4 · KEEP_AS_NON_CORE 4 · REMOVE 4 · NEW 1.

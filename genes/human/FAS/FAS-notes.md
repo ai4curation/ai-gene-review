@@ -52,3 +52,25 @@ This suggests splicing regulation shifts towards the pro-apoptotic membrane form
 
 - PMID:7533181, PMID:9184224 - Soluble FAS blocks apoptosis
 - PMID:7575433 - Isoform expression patterns
+
+## 2026-09-30 APOPTOSIS generic-binding cleanup
+
+`just fetch-gene human FAS` appended 17 partner-specific `GO:0005515` rows
+that were split out from IntAct/UniProt imports already represented by older
+generic rows:
+
+- Tightened canonical DISC-context rows with CASP8 or FADD support
+  (PMIDs 11717445, 16498403, 17159907, 21382479, 21625644) to FAS
+  `GO:0005031` receptor activity, matching the existing core function.
+- Removed the NAS `cytosol` row sourced to PMID:7533181 because the paper
+  supports secreted soluble FAS splice isoforms rather than cytosolic FAS.
+- Left abstract-only rows `UNDECIDED` where the cached abstract did not verify
+  the exact partner imported by IntAct: the TNFR1-specific PMID:12887920 row,
+  the FADD/CASP8 rows from the CD95/Yes/PI3K glioblastoma paper
+  (PMID:18328427), PMLRARalpha rows whose partners were not evident in
+  PMID:21803845.
+- Removed generic `protein binding` rows for non-core inhibitory cap proteins
+  from PMID:18846110, the direct PMLRARalpha inhibitory interaction from
+  PMID:21803845, the FADD/DAXX rows from the proximity-ligation screen
+  (PMID:25241761), and the BioPlex AP-MS FAS-CASP8 row from PMID:33961781
+  because none supports a more informative FAS-side molecular function.

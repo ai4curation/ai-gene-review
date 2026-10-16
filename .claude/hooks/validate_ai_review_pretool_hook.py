@@ -18,6 +18,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hook_paths import find_repo_root, hook_script_root  # noqa: E402
+
 
 def simulate_edit(file_path: Path, old_string: str, new_string: str) -> str:
     """Simulate an Edit operation and return the resulting content."""
@@ -113,8 +116,11 @@ def main():
     if not file_path.name.endswith("-ai-review.yaml"):
         sys.exit(0)
 
-    # Determine project root (go up from .claude/hooks/)
-    project_root = Path(__file__).parent.parent.parent
+    # Resolve the root from the *edited file*, not from this script's location.
+    # A subagent works in a git worktree while the hook is invoked from
+    # $CLAUDE_PROJECT_DIR, so anchoring on __file__ validated the main checkout and
+    # reported the agent's own new files and publications as missing.
+    project_root = find_repo_root(file_path, hook_script_root(__file__))
 
     # Simulate the edit to get resulting content
     if tool_name == "Edit":

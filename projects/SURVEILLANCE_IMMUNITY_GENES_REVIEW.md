@@ -1,11 +1,25 @@
 ---
 title: "Comprehensive GO Annotation Review: C. elegans Surveillance Immunity Genes (Priority 2)"
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1]
 ---
 
 # Comprehensive GO Annotation Review: C. elegans Surveillance Immunity Genes (Priority 2)
+
+**Bottom line:** this is the gene-by-gene review of the six Priority 2
+genes in the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md) project: the ZIP-2 and CEBP-2 bZIP factors that respond
+to translation block, the IRG-1 readout gene, the ELT-2 intestinal GATA
+factor, the HLH-30/TFEB autophagy regulator and the FSHR-1 GPCR. For each
+it sorts the GOA rows into ACCEPT, MARK_AS_OVER_ANNOTATED and MODIFY
+groups, with the main calls being specific dimerization terms in place of
+ZIP-2 and CEBP-2 *protein binding*, demotion of generic transcription
+terms on ELT-2 and HLH-30, and caution about FSHR-1 immune phenotypes.
+The final YAML files kept the ZIP-2/CEBP-2 changes but left the ELT-2 and
+HLH-30 generic terms as ACCEPT. The concrete edits derived from this review
+are in [SURVEILLANCE_IMMUNITY_ANNOTATION_EDITS](SURVEILLANCE_IMMUNITY_ANNOTATION_EDITS.md).
 
 ## Executive Summary
 
@@ -614,12 +628,12 @@ These 6 genes represent the core surveillance immunity pathway in C. elegans:
 
 For each gene review in YAML:
 
-- [ ] ZIP-2: Replace 3x GO:0005515 with GO:0046983
-- [ ] CEBP-2: Address redundant protein binding annotations
-- [ ] IRG-1: Verify ND status is appropriate; consider NADAR domain follow-up
-- [ ] ELT-2: Remove 6 over-annotated generic terms
-- [ ] HLH-30: Remove 3 over-annotated generic terms; verify dual localization justification
-- [ ] FSHR-1: Run literature validation on immune annotations before finalizing
+- ZIP-2: Replace 3x GO:0005515 with GO:0046983
+- CEBP-2: Address redundant protein binding annotations
+- IRG-1: Verify ND status is appropriate; consider NADAR domain follow-up
+- ELT-2: Remove 6 over-annotated generic terms
+- HLH-30: Remove 3 over-annotated generic terms; verify dual localization justification
+- FSHR-1: Run literature validation on immune annotations before finalizing
 
 ---
 

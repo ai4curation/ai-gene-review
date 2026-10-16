@@ -69,3 +69,25 @@
   context. Set3C annotations are retained as non-core.
 - Generic `protein binding` annotations are marked over-annotated; specific
   recruitment by Rfm1 and complex membership are biologically informative.
+
+## Full-gene specificity re-review, 2026-09-20
+
+All 38 source rows were re-reviewed against the actual general OpenScientist report and primary texts. PMID:18990212 explicitly reports "Only ARS1223 and ARS1511 showed a significant higher H4 K16 acetylation level in both sum1Δ and hst1Δ yeast strains" immediately after stating that H4K16 is not a general target. Thus H4K5 predominance is not exclusivity: H4K16 IBA is retained as non-core context-dependent activity. The report's H3K9/H3K14 specificity examples largely concern Sir2/Hst2, not purified Hst1; these two activities remain UNDECIDED pending site-specific assessment, with genuine PTN000872222 IBD support acknowledged. PMID:11711434 full text was retrieved and read: Hst1 occurs in both Set3C and Sum1 complexes, which exhibit histone deacetylation. Hst1 dispensability for Set3C integrity and tested early-meiotic repression does not negate every meiotic role, and the exact negative meiotic division attribution remains unresolved. PMID:27185881's official PubMed Figure 1 caption states "Full-length HST1 mediates cohesion at HMR in a SUM1-1 background." That primary source, retained in a clearly labeled manual excerpt file, plus PMID:11313477 supports conditional HMR silencing as non-core. Current native subtelomeric, DNA-damage and recombination claims remain unresolved rather than impossible from differing Sir2 cofactors or an HML/rDNA deletion result. Nuclear lumen and direct THI transcriptional repression were restored as compatible core context; generic protein binding removed. Descriptions, reference reviews, core synthesis and suggested experiments now distinguish predominant, conditional and unresolved activities.
+
+## 2026-10-01 focused HST1 IBA adjudication
+
+Read the focused histone-site/telomere/DNA-maintenance OpenScientist report plus
+cached primary sources after refreshing the current GOA export. The report settled
+the native subtelomeric/telomeric branch more strongly than the 2026-09-20 pass:
+wild-type Hst1 is a Sum1/Rfm1-tethered promoter-local deacetylase, while Sir2
+does regional HML/telomere silencing and PMID:8810037 reports that hst1 mutants
+do not phenocopy SIR2 loss in the tested HMLalpha/rDNA contexts. SUM1-1 retargeting
+of Hst1 to HMR remains real but engineered and non-core.
+
+Changed GO:0031509 and the GO:0000781 logical derivative back to REMOVE. The focused
+report did not directly prove the PTN000872222 H3K9/H3K14 node placement wrong, so
+those two IBA molecular-function rows remain UNDECIDED instead of being demoted from
+absence of a primary site-specific Hst1 assay alone. Current GOA also added one
+Rfm1 protein-binding row, two high-throughput PMID:37968396 Sum1/Rfm1 protein-binding
+rows, and a duplicate PMID:11313477/SUM1 IGI row; the generic binding rows are REMOVE,
+while the SUM1-1/HMR IGI row is KEEP_AS_NON_CORE.

@@ -1,0 +1,89 @@
+history_version: 1
+target:
+  kind: gene
+  slug: ARHGEF15
+  organism: human
+  path: genes/human/ARHGEF15/ARHGEF15-ai-review.yaml
+session:
+  id: 2026-09-21T005807Z-claude-code-428f44
+  timestamp: '2026-09-21T00:58:07Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/3083
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  summary: 'Round 3: corrected a reference misattribution on the CDC42 row, condensed
+    repeated policy boilerplate, and added an action-versus-prose guard'
+  details: |
+    Covers commits 2ee6d331, 1c0c7ad1 and 8804eb96, which the previous record predates. The
+    reviewer noted that gap explicitly; recording it here rather than amending the earlier
+    record, which is append-only.
+
+    2ee6d331 and 1c0c7ad1, both self-found after the round-2 review. First, the PRKG1 REMOVE
+    reason claimed the partner was carried forward in suggested_questions "where the
+    experiment that would settle it is named". The first half is true; no suggested_experiments
+    entry mentions PRKG1, so the second half was written from intent rather than from the
+    file. Corrected to what the document does, without manufacturing a fourth experiment to
+    make the original sentence true. Second, the PMID:32203420 reference_review said the
+    extraction was verified by "recovering six textbook-specificity read-controls". Five
+    recover; ITSN1 recovers nothing, and that failure is what licenses reading a minus in that
+    table as not detected rather than does not act, so counting it as recovered contradicted
+    RESULTS.md and the PR body. Rewritten to state five of six and to name ITSN1.
+
+    Making the read-control claim checkable exposed a worse defect. The new comparison's
+    mutation test would not fire, because every regex in prose_number_checks ran against the
+    raw YAML, where a multi-word phrase is split by line wrapping. Those regexes never
+    matched, so they could never report. Two checks were in that state, including the
+    neuronal-row count, which had been passing since it was written by never matching. All
+    phrase regexes now run against whitespace-normalised text and the self-test proves each
+    fires; the mismatch branch returns two problems where it returned one.
+
+    8804eb96, taking the round-3 review. The blocking item was a reference misattribution:
+    in the GO:0005085 CDC42 reason the three supporting references are semicolon-separated,
+    and the clause "and its library entry for this gene is the human protein at its full 841
+    residues" sat inside the PMID:23029280 segment. That paper has no construct library; its
+    human work is siRNA knockdown in HUVEC. The 841-residue full-length human entry is
+    Mueller's Supplementary Table 1 row 56, recorded in muller2020_specificity.json as
+    species_in_library Human and construct_length_aa 841. This is the row whose whole argument
+    is which papers assayed the human protein, so the misattribution would have credited the
+    wrong one of the three. The clause was moved onto the PMID:32203420 segment and the patch
+    script asserts the move rather than assuming it, checking both that the clause now follows
+    the family-wide-screen reference and that it no longer follows the HUVEC one. Rewrapping
+    the block also removed the 19-character orphan line the earlier edit had left.
+
+    Three non-blocking suggestions taken, plus one raised by the coordinator.
+    check_action_prose.py is new: it compares review.action against the verbs in that row's
+    own summary and reason, because nothing in the repository compares an action to the prose
+    arguing for it, and a row whose action is flipped in a later round can go on arguing for
+    the action it used to have. Seven actions changed in this PR, which is precisely when that
+    failure occurs. It reports clean over all 31 rows and carries seven mutation tests
+    covering both directions plus the exempted phrasings. Relatedly, "the partner is retained
+    in this document" became "the partner identity is preserved", since on a REMOVE row a
+    retention verb reads as contradicting the action even when it refers to the partner rather
+    than the annotation.
+
+    The 45-word policy paragraph that had been repeated verbatim in five reason blocks is now
+    stated once, on the first removed row, with the others carrying a one-clause pointer plus
+    their own row-specific reasoning. The patch script asserts per row that no distinctive
+    phrase is lost and refused twice before it was correct, once because two rows carried
+    hand-written variants of the same boilerplate that the first version of the guard would
+    have treated as row-specific content.
+
+    Finally, audit_review.py's read-control mutation test now perturbs the recorded run in
+    memory rather than writing a mutated copy over the committed JSON and restoring it in a
+    finally block. That approach dirtied a tracked file on every run and made the restore
+    itself a step that could fail; a self-test should not need write access to the artifact it
+    is testing.
+
+    Gates on 8804eb96: just validate clean with no warnings; check_quotes 55 of 55 verbatim;
+    audit_review problems=0 with every mutation test firing; comparator_annotations 15 of 15;
+    check_action_prose 0 contradictions; gene_residue_claims run directly and reporting 0 of 0,
+    since this review carries no residue_claims; no line over 100 columns and no folded line
+    ending in a hyphen.

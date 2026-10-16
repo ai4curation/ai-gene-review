@@ -1,0 +1,120 @@
+# ABCG8 source and annotation audit
+
+## 2026-09-27 — initial full review
+
+Reviewed all 47 machine-seeded assertions for human ABCG8 (HGNC:13887; UniProt Q9H221; sterolin-2), including the original evidence, supporting entities and contribution qualifiers. The two alternative products Q9H221-1 and Q9H221-2 are preserved; the inspected experiments do not justify isoform-specific claims. The approved symbol and GBD4 alias were checked in the archived official HGNC subset during the source3 preflight. Root confirmed canonical/alias directory and open-PR checks before authoring. Initial source bytes and source-object snapshots were recorded before editing. The canonical UniProt and GOA files are immutable.
+
+### Research execution and source provenance
+
+The standard source3 `fetch-gene` run supplied the initialized gene and ordinary fetched references. Its exact artifact was verified before staging, followed by a separate root-controlled canonical import. Source run 36292249952 used head `3f234ebd4b540057fb287b27efc11341cfb102b1`; artifact 10924402765 was 1,206,533 bytes with SHA-256 `d8908403ad407495b26d23af7007ee4da1fc643ebd61728d99ce9755bcfacdc2`. The source3 auxiliary import receipt has SHA-256 `a7247ebf6a3223ee624d6b96cbfa41e1a9f89ddc2ce61099593abbfe27f3b273`. The eight-gene run’s ancillary source records were not silently equated with curated findings.
+
+The first research invocation inherited offline mode and failed tool resolution. A corrected, network-enabled genuine attempt used `just deep-research-falcon human ABCG8 --fallback perplexity-lite --timeout 1200` and isolated `/tmp` UV tool/cache directories. Both provider invocations failed before provider dispatch because `deep-research-client` could not be resolved from PyPI: DNS lookup of `pypi.org` failed after retries. The terminal wrapper exit was 1; no provider report was generated or fabricated. Logs are `/tmp/ABCG8-provider.log` and `/tmp/ABCG8-provider-network.log`. Concurrent standard `fetch-gene-pmids` completed with all seven seeded PMIDs already cached (`/tmp/ABCG8-fetch.log`). Manual research below supplies the evidence review.
+
+The complete PMID:12208868 cache is an intact ordinary HTML retrieval, not an authored composite. Source3 fetched two versions with the same PMID, title, DOI, PMCID and abstract: the ABCG5 run had an abstract-only record after full-text retrieval failed, while the ABCG8 run recovered the PMC body. After independent identity, body-section and run-log checks, root imported the 37,142-byte ABCG8 version. Its Methods, Results and Discussion were read. Existing differing canonical records for other references remained unchanged.
+
+### Molecular mechanism and primary assay boundaries
+
+ABCG8 contributes to an ABCG5–ABCG8 heterodimer that exports neutral sterols. The reviewed core integrates ATP binding, hydrolysis, assembly and transport instead of asserting several independent ABCG8 activities. The immutable UniProt FUNCTION section and interaction accession Q9H222 identify ABCG5 as the partner. The SUBUNIT sentence instead says “Heterodimer with ABCG8,” an apparent self-name error; it is documented here rather than editing the machine record.
+
+- **PMID:11099417**, DOI 10.1126/science.290.5497.1771: the cached abstract and primary PubMed record identify six ABCG8 mutations among patients with sitosterolemia and describe increased dietary sterol absorption and reduced biliary excretion. Full Science text was not recovered. Human genetic evidence is interpreted alongside subsequent transport experiments, not as a purified-protein assay.
+- **PMID:12208868**, DOI 10.1172/JCI16001: the complete source uses human ABCG5/ABCG8 genomic transgenes in mice. Fractional cholesterol absorption decreases while biliary cholesterol and fecal neutral-sterol loss increase. Its Discussion explicitly leaves intestinal efflux versus increased biliary cholesterol delivery unresolved. Therefore the IC intestinal-absorption assertion is refined to negative regulation, without pretending the experiment separates those tissue contributions.
+- **PMID:14504269**, DOI 10.1074/jbc.M310223200: the [full author-uploaded original](https://www.researchgate.net/publication/9085476_ABCG5_and_ABCG8_Are_Obligate_Heterodimers_for_Protein_Trafficking_and_Biliary_Cholesterol_Excretion) was read on 2026-09-27. Figure 2 localizes human ABCG8 on apical hepatic membranes in human G5/G8 transgenic mice, with compartment markers. Figure 4 includes human/mouse partner combinations and maturation. Figure 5’s in vivo rescue uses mouse G5 and G8. The local cache is abstract-only; external full-source access is recorded separately. The human efflux judgment is independently corroborated by PMID:27144356.
+- **PMID:16870176**, DOI 10.1016/j.febslet.2006.07.006: [publisher-indexed Results and Figure 7](https://www.sciencedirect.com/science/article/pii/S0014579306008398) explicitly include G5/G8 co-immunoprecipitation in the ABCG-family panel. The title concerns ABCG1, but that is not a misattribution. The direct page failed, and complete Methods were not retrieved. Generic binding can be refined to heterodimerization using this positive interaction evidence plus independent human G5G8 structure/biochemistry.
+- **PMID:16893193**, DOI 10.1021/bi0608055: the [full author-uploaded original](https://www.researchgate.net/publication/6894277_Purification_and_ATP_hydrolysis_of_the_putative_cholesterol_transporters_ABCG5_and_ABCG8) was read. Full-length tagged human proteins expressed in Pichia were purified and characterized by gel filtration, ATPase assays and nucleotide trapping. Individual preparations had low activity; the copurified pair was catalytically active. Lack of sterol stimulation under those assay conditions does not exclude transport. The local abstract-only flag remains accurate.
+- **PMID:27144356**, full cached PMC4964963: recombinant human G5G8 was purified from Pichia, retained ATPase activity, and yielded the nucleotide-free 3.9-angstrom structure. Human G5/G8 adenoviral constructs restored biliary cholesterol export in deficient mice. The active composite nucleotide site contains the ABCG5 Walker elements and ABCG8 signature region; the opposite site is different. This supports ABCG8 contribution without assuming two equivalent autonomous ATPases. The original cholesterol-like density was not unambiguous ligand assignment.
+- **PMID:16867993**, [full PMC4527585](https://pmc.ncbi.nlm.nih.gov/articles/PMC4527585/): mouse G5/G8 produced in Sf9 cells were studied in inside-out vesicles and purified proteoliposomes. ATP-dependent cholesterol/sitosterol transfer, sterol-mass measurements, substrate controls and mutant/inhibitor comparisons support conserved sterol transport. The Discussion leaves flippase versus other membrane-transfer mechanics unresolved. This is explicitly mouse donor evidence.
+- **PMID:34404721**, [primary PubMed record and figures](https://pubmed.ncbi.nlm.nih.gov/34404721/) and indexed PMC8403869 Results: human sterol-bound G5G8 structures provide later ligand evidence and explain reduced nucleotide binding at the ABCG8 Walker-containing site. ABCG1’s ATP-bound experiments are separate. No new binding annotation is proposed merely to duplicate the established transport mechanism.
+
+The last two publications were read externally but remain missing from the canonical cache after the shared normal-fetch attempt. Their identifiers are verified independently of cache availability. No external article text was fabricated into a cache or placed in a cached-quote field. Ordinary supporting snippets come from the canonical sources actually present.
+
+### Term definitions, propagation and process scope
+
+Live primary AmiGO term pages/indexed pages were checked on 2026-09-27:
+
+- [GO:0034041](https://amigo.geneontology.org/amigo/term/GO:0034041) names ATP-driven sterol export and descends from ATPase-coupled lipid transport and ABC-type transporter activity. It refines the broad transporter MFs already seeded.
+- [GO:0120020](https://amigo.geneontology.org/amigo/term/GO:0120020) instead specifies carriage of cholesterol through an aqueous phase in a hydrophobic protein pocket. The membrane-integral G5/G8 exporter is not established as that carrier. The original contribution qualifiers are preserved during the target-specific refinement.
+- [GO:0043235](https://amigo.geneontology.org/amigo/term/GO:0043235) describes ligand-initiated signaling by a receptor complex. The actual assembly/trafficking source and human structure support [GO:0043190](https://amigo.geneontology.org/amigo/term/GO:0043190), the ABC transporter complex. This is a term-role correction, not an assertion based on an incomplete abstract.
+- [GO:0030299](https://amigo.geneontology.org/amigo/term/GO:0030299) means intestinal uptake into blood; [GO:0045796](https://amigo.geneontology.org/amigo/term/GO:0045796) captures reduction of that uptake. Direct opens initially timed out, but indexed primary AmiGO definitions and parents were recovered. The replacement preserves the observed sign of the transgene experiment.
+
+Broad membrane/plasma-membrane assertions are retained at their source resolution. Broad transmembrane transport remains a valid inherited process. Generic protein binding with MESD is removed as uninformative, without rejecting the HuRI pair; no specific chaperone or adaptor function was inferred from it. The exact supplementary pair/native mechanism remains unresolved.
+
+PAINT source objects record only the PTN ancestral nodes. Their complete IBD tree/alignment placements were not inspected; node source status is therefore UNRESOLVED even where independent human evidence supports ACCEPT. Human ABCG8 among extant descendant evidence is not circular. No conclusion uses the number of donors as a proxy for confidence. ARBA rule internals are likewise not invented. InterPro domain occurrences and UniProt vocabulary mappings were checked against the immutable human record. The cached GO-CAM index had no matches for human Q9H221, mouse Q9DBM0, rat P58428 or MGI:1914720; this is a statement about the local index, not all current GO-CAMs.
+
+### Rat response assertions
+
+The [MGI comparative Abcg8 graph](https://www.informatics.jax.org/homology/GOGraph/Abcg8), historical snapshot dated 2023-03-10, identifies rat Abcg8 IEP evidence behind the Ensembl P58428/ENSRNOP00000058587 transfers. Primary PubMed identities and abstracts were inspected. Full source bodies were not recovered despite publisher/title searches. These five annotations remain UNDECIDED for source-specific reasons, not because IEP is inherently invalid or because a human assay is mandatory for orthology transfer.
+
+| Seeded process | Traced rat source | Positive evidence and remaining limit |
+|---|---|---|
+| Response to nutrient | PMID:15710224 | Diet-dependent, liver-cell-specific Abcg8 induction; full process mechanism and human conservation unresolved. |
+| Response to xenobiotic stimulus | PMID:17109865 | Pioglitazone-versus-insulin changes in diabetic-rat hepatic transcripts; no inference that ABCG8 transports the drug. |
+| Response to muscle activity | PMID:23117815 | Training-associated intestinal expression differs by diet; conserved effector participation unresolved. |
+| Response to nutrient levels | PMID:23117815; PMID:25263431 | The first abstract explicitly reports Abcg8 expression; the second gives ovariectomy/VLDL context without naming Abcg8. Its Abcg8 connection comes from the donor annotation and remains unresolved at full-assay level. |
+| Triglyceride homeostasis | PMID:23117815 | Liver triglyceride accumulation accompanies a larger expression program; correlation is not enough to assign a resolved ABCG8-dependent homeostatic step, but neutral-sterol specificity alone does not refute one. |
+
+### Cache gates and independent review
+
+The paired ABCG5 reviewer owned a single normal retrieval of shared new sources; `/tmp/ABCG5-notes-donors-fetch.log` ended with 0/11 and exit 1 after DNS failures, creating no records. The settled ABCG8 notes-inclusive missing set is **PMID:15710224, PMID:16867993, PMID:17109865, PMID:23117815, PMID:25263431 and PMID:34404721**. All seven seeded PMID records and all four cited Reactome records are present. Reactome disease summaries are interpreted as mutant-event context, not wild-type transport assays; the expression event treats ABCG8 as the regulated product.
+
+The ABCG5 reviewer independently read all 47 ABCG8 decisions, core and reference assessments and found no biological action/core blocker. Their one source-specific correction was incorporated: PMID:25263431's abstract does not name Abcg8, unlike PMID:23117815; its donor provenance and full-assay uncertainty are distinguished. The full draft was sent to the parent for independent biological review. No NEW annotation is required: the existing assertions and evidence-backed MODIFY terms cover the core transporter role. Research-provider failure, incomplete donor studies and the six cache gates remain explicit; status is DRAFT.
+
+Final author checks: 30 ACCEPT, 11 MODIFY, five UNDECIDED and one REMOVE; no PENDING or NEW. All 47 seed objects, both alternative products and all 18 original reference ID/title pairs are unchanged. All 95 supporting excerpts match their canonical source text after whitespace normalization. Full targeted validation passed with one grouped warning listing the six missing references. The final source-scope prose correction subsequently passed schema validation; history validation and HTML rendering also passed. The recursive gene-tree citation census includes notes and any genuine provider reports (none were generated), and confirms the same six gates. Publication remains a draft until those source records are recovered and independently assessed.
+
+
+## 2026-09-27 — source8 closure and current-head review follow-up
+
+This entry supersedes the earlier cache-gate and action totals without rewriting their historical record. The starting canonical review, notes, HTML, GOA, UniProt and published history were byte-for-byte identical to PR #3284 head `6f323e0fd86f2c0351e7de784fe9479968615018`. Exact copies and hashes are in `tmp/ABCG-pair-followup-baseline/`. The complete formal review and issue comment were read at that head. No source annotation, qualifier, supporting entity, alternative product or reference ID/title is changed.
+
+The previously missing 6 records were produced by the normal fetcher in **source8**, not source9. Root independently validated and imported the artifact without overwriting existing caches. The import receipt `tmp/source8-canonical-import-receipt.json` has SHA-256 `1ebe816a5f570279c1a6fe45f87dbb54841b3827e7ce090a5c53d41df3ba5bce` and source run `36301782511`. Every included publication byte matches that receipt and each added cache path is absent from this exact PR base. No new provider report, authored cache or repeat fetch was used.
+
+### Actual recovered source scope
+
+| PMID | DOI in the normal primary record | Access read in this follow-up |
+|---|---|---|
+| PMID:15710224 | 10.1016/j.jhep.2004.11.032 | Substantive primary abstract only |
+| PMID:16867993 | 10.1074/jbc.M605603200 | Substantive primary abstract only |
+| PMID:17109865 | 10.1016/j.atherosclerosis.2006.09.031 | Substantive primary abstract only |
+| PMID:23117815 | 10.1007/s00394-012-0459-5 | Substantive primary abstract only |
+| PMID:25263431 | 10.1017/S0007114514002517 | Substantive primary abstract only |
+| PMID:34404721 | 10.1073/pnas.2110483118 | Full main article: Results, Methods and captions; some XML sections repeat |
+
+PMID:34404721 now has a genuine full main-article cache. Human G5/G8 cDNAs were expressed in HEK293 cells and Pichia; human WT and mutant adenoviruses were tested in deficient mouse hosts. Figures 1–3 and their Methods support pair ATPase, inhibitory G8-binding Fab2C7, sterol-site mutations, and loss of biliary rescue despite comparable protein maturation. The G8 Walker-containing NBS1 is non-equivalent to the active NBS2, which combines G5 Walker elements with the G8 signature. Its ABCG1 ATP-bound structures, macrophage/HDL context and ABCG1 ATPase kinetics are separate experiments. The cached XML repeats some sections; neither that metadata flag nor this read certifies every supplement or original figure pixel. The corresponding `full_text_unavailable` flag is now false. Primary content was also checked through [PMC8403869](https://pmc.ncbi.nlm.nih.gov/articles/PMC8403869/).
+
+Every other recovered record remains abstract-only locally. PMID:16867993 uses recombinant **mouse** proteins in Sf9 membranes, not purified human transporter. Prior external full-text reads remain explicitly separate access routes. The recovered abstracts corroborate the recorded assay/organism boundaries, rather than supplying unseen full experiments.
+
+The rat response sources remain abstract-only. Their positive diet, drug and exercise expression findings are retained. Cache recovery does not resolve the complete source-specific experiments or conserved effector role in humans, so the existing UNDECIDED judgments remain. An IEP annotation is not rejected merely because it is expression-based, and lack of a human assay alone does not refute orthology transfer. Resolving these judgments requires the actual full experiments and a justified transfer of that particular response context. The established human sterol-export and homeostasis judgments remain supported independently.
+
+### Feedback adjudication
+
+The generic GO:0005515 IPI row on PMID:16870176 is now REMOVE because the same paper and the exact same partner are already represented by the retained GO:0046982 heterodimerization row. This is removal of an uninformative term for this verified interaction, not rejection of the interaction or a rule that duplicate GO IDs across independent sources are invalid. The source row and its evidence are preserved. The informative assembly, conserved broad compartment assertions and specific transporter refinements remain unchanged. Broad sterol transport is true at the source's resolved level even where another source supplies a narrower membrane mechanism.
+
+The reviewer proposed changing activity judgments or recommending qualifier edits on the basis of ordinary `enables`. The annotation-reviewer skill explicitly treats ordinary relationship qualifiers as inert in this review workflow: they are preserved, not added, edited or used as the reason for an action. Existing `contributes_to` assertions retain their weaker, biologically meaningful scope, and the integrated core retains contribution to the heterodimer's transport activity. Thus no artificial qualifier-change recommendation is added.
+
+The ATPase IEA remains ACCEPT after rereading full PMID:27144356 and PMID:34404721. This is supported by the human pair's actual MgATP hydrolysis and G8's physical signature component in active NBS2, not solely by an InterPro fold or a regulatory effect on an unrelated ATPase. A degenerate G8 Walker-containing NBS1 does not erase its contribution to the opposite active composite site. The reason and a new exact cached Results excerpt make this distinction explicit without claiming isolated G8 catalytic sufficiency. A bounded independent peer consultation agreed with that biological and policy interpretation; the parent also reviewed the policy boundary. The [live GO:0016887 definition/comment](https://amigo.geneontology.org/amigo/term/GO:0016887) describes energy-coupled ATP hydrolysis and asks that the overall ATP-dependent activity also be captured; the integrated transporter core already does so.
+
+The existing sterol-transport core covers neutral-sterol export, including cholesterol and plant sterols; the existing cholesterol-efflux IMP assertions remain ACCEPT. No redundant ancestor/descendant process is added solely to mirror every accepted row. The evidence-provenance sentence was removed from the core description and its source distinctions remain in these notes. The core's biological terms, roles and evidence remain unchanged.
+
+The final action totals are **30 ACCEPT, 10 MODIFY, 5 UNDECIDED and 2 REMOVE**, with zero PENDING and zero NEW. One integrated core remains. The recursive authored/provider census contains **13 distinct PMIDs and four Reactome records**, all locally present. All DOI and PMC identifiers in authored notes resolve to those same primary cache identities; no separate DOI-only or preprint gate was found. No provider, raw provider HTML or provider PDF was generated. Immutable UniProt bibliography alone is not expanded into new citations. Final validation, source-object and case-sensitive quote checks, append-only history and rendering are recorded in the follow-up manifest. Local cache closure does not imply that the unresolved rat assays are now full-text verified.
+
+Full targeted validation exited 0 with no review warnings after source recovery. All 96 ordinary supporting excerpts match canonical text case-sensitively after whitespace normalization; no quote requires case folding. The local citation census has zero missing PMID/Reactome records. Status is therefore COMPLETE; the 5 deliberately unresolved response judgments remain transparent and do not become positive biological assertions. The final status change is revalidated below the same scoped workflow; PR publication and review/CI decisions remain with the coordinator.
+
+
+## 2026-09-27 approved-head prose correction
+
+The full review comment [5855590827](https://github.com/ai4curation/ai-gene-review/pull/3284#issuecomment-5855590827)
+was read against exact head `8794cd312df2cdbae3dbb40b071696d5e0c627a3`.
+The stray radiation-response word in the earlier source-closure paragraph was
+removed: the cited rat studies concern diet, drug and exercise-related
+expression contexts, not an identified radiation experiment. This correction
+does not alter any annotation or imply a new source finding. Five repeated
+cache-recovery paragraphs in reference assessments were shortened to their
+actual access state. Each study's organism, experiment, uncertainty and primary
+verification URL is retained, including the separate external full-text route
+for PMID:16867993. The source-closure receipts remain in the existing notes.
+
+All 47 complete annotation objects and actions, the complete integrated core,
+all 25 reference identities, cached quotes and source access flags remain
+unchanged. There are no new annotations or source dependencies. Validation,
+rendering, fresh append-only history and exact source preservation are recorded
+in the follow-up manifest. This revision requires its own current-head review;
+the approval of the preceding head is not represented as approval of new bytes.

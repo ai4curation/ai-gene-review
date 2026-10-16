@@ -4,6 +4,8 @@ species:
   - human
   - mouse
 maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
+genes: [TFRC, CLTC, RAB7A, Rab7]
 priority: high
 last_reviewed: 2026-07-19
 scope: Exploratory Deliverome-to-GO project focused on delivery-address semantics, internal trafficking model systems, and a human and mouse Rab7 comparison for post-internalization routing
@@ -34,9 +36,38 @@ external_sources:
   - https://deliverome.org/platform/
   - https://deliverome.org/platform/progress/
   - https://geneontology.org/docs/go-annotations/
+manifest:
+  slides:
+    - href: DELIVEROME/slides/DELIVEROME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/6c2seZotkYZQ22pTQxPvMR
+      title: Project brief
 ---
 
 # Deliverome GO Collaboration
+
+**Bottom line:** the Deliverome Project plans an open atlas of human
+cell-surface proteins that therapeutic cargo could use as a "delivery
+address", which depends on surface abundance, internalization and where the
+receptor routes cargo after uptake. This project works out how GO could
+supply vocabulary, priors and GO-CAM route structure to that atlas, and how
+Deliverome assays could feed back into GO without mixing engineered delivery
+with endogenous biology. So far we defined what a delivery address means,
+mapped Deliverome concepts to 17 GO anchor terms, set a model-system stance,
+and compared the human RAB7A and mouse Rab7 reviews as a worked example of
+post-internalization routing. The comparison found the two reviews agree on
+conserved Rab GTPase activity, endosome maturation and retromer binding;
+mouse Rab7 adds in vivo liver evidence that Rab7 loss increases lipid
+nanoparticle escape (PMID:41814093), and its SynGO synapse rows are kept as
+non-core. Six of nine planned tasks are done; the GO-derived surfaceome
+prior, a pilot set of address proteins and a delivery-route template are not
+started.
+
+We did this because GO already annotates most of the machinery a delivery
+atlas needs (cell surface, receptor internalization, endosomal routing), and
+settling the boundary between GO annotation and delivery phenotype early
+keeps later Deliverome data from polluting normal-function annotations.
 
 ## Overview
 

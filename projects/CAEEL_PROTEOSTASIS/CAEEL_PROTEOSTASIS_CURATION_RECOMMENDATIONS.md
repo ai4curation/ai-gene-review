@@ -47,7 +47,7 @@ Transcription factors and signaling kinases linking proteostasis to lifespan ext
 | **hsp-16.2** | P52686 | 12 | 🟡 Review-Ready | Small HSP holdase; 1 MODIFY (mechanistically incorrect refolding), 7 ACCEPT |
 | **hsp-4** | Q9N2B7 | ~32 | 🟡 Review-Ready | ER-resident BiP; strong annotations, 3 clarifications needed |
 | **hsp-90** | Q18688 | 54 | ✅ Excellent | Core chaperone; 12 MODIFY generic binding terms, 42 ACCEPT |
-| **daf-21** | Q18688 | 54 | ✅ Excellent | HSP-90 (same gene); comprehensive, publication-ready |
+| **daf-21** | Q18688 | — | merged | Synonym of hsp-90 (same gene, Q18688); the duplicate `genes/worm/daf-21` review was retired in favour of `genes/worm/hsp-90` |
 | **Priority 1 Total** | | **249** | **5✅ + 1🟡** | **77% publication-ready** |
 
 ### Priority 2: Protein Degradation Systems (6 genes)
@@ -127,6 +127,7 @@ Transcription factors and signaling kinases linking proteostasis to lifespan ext
 - **HSP-90/DAF-21:** Major co-chaperone
   - Status: ✅ Excellent (54 annotations)
   - Modifications: 12 generic "protein binding" → GO:0051879 (HSP90 protein binding)
+    - **Correction (2026-09): do not apply this.** GO:0051879 means binding *to* an Hsp90 and belongs on HSP-90's partners, not on HSP-90. The current hsp-90 review has nine such rows (not 12); re-target them to protein-folding chaperone binding (GO:0051087) for co-chaperone rows, with chaperone activity covering the client rows. See the bottom line of [CAEEL_PROTEOSTASIS](../CAEEL_PROTEOSTASIS.md).
   - Strength: Comprehensive annotation of molecular chaperone complex functions
   - Note: DAF-21 is alternative gene name, same as HSP-90 (Q18688)
 

@@ -1,0 +1,8 @@
+| Enzyme | Preferred substrates | Substrate classes | Key distinguishing features |
+|---|---|---|---|
+| **AtSOT16 (AtST5a)** | Tryptophan-derived and phenylalanine-derived desulfoglucosinolates; also accepts methionine-derived C3–C8 substrates at lower activity | **Indolic:** preferred; **aromatic:** preferred; **aliphatic:** accepted | Broadest substrate spectrum of the three enzymes; strongly associated with indole-glucosinolate biosynthesis and can sulfate multiple precursor classes. (pqac-00000025, pqac-00000027, pqac-00000031) |
+| **AtSOT17 (AtST5c)** | Long-chain, methionine-derived desulfoglucosinolates, especially C6–C8; also accepts benzyl desulfoglucosinolate | **Aliphatic:** preferred, especially long-chain; **aromatic:** accepted; **indolic:** no detected activity | Most active in the reported assay toward 8-methylthiooctyl desulfoglucosinolate; more selective than SOT16 and favors long-chain aliphatic precursors. (pqac-00000000, pqac-00000001, pqac-00000011, pqac-00000027) |
+| **AtSOT18 (AtST5b)** | Methionine-derived desulfoglucosinolates, particularly long-chain methylthioalkyl substrates such as C7 and C8 precursors | **Aliphatic:** preferred; **aromatic:** some activity reported; **indolic:** little or no activity | Overlaps with SOT17 in long-chain aliphatic specificity but is distinct in substrate and PAPS affinity; substrate preferences can vary among Arabidopsis ecotypes. (pqac-00000025, pqac-00000026, pqac-00000027, pqac-00000031) |
+
+
+*Table: Comparison of the three Arabidopsis desulfoglucosinolate sulfotransferases by precursor class and preferred substrates. The table highlights SOT17’s defining preference for long-chain methionine-derived precursors and lack of detectable indolic activity.*

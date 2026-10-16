@@ -3,17 +3,48 @@ title: "Pathway satisfiability: context-resolved module logic"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 autolink_gene_symbols: false
+sidecars:
+  slide_figures:
+    - PATHWAY_SATISFIABILITY/slides/fig-abduction.svg
+    - PATHWAY_SATISFIABILITY/slides/fig-genomes.svg
+    - PATHWAY_SATISFIABILITY/slides/fig-lobule.svg
+    - PATHWAY_SATISFIABILITY/slides/fig-tissues.svg
+    - PATHWAY_SATISFIABILITY/slides/module-circuit.svg
+manifest:
+  slides:
+    - href: PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/6RKzB26ZBXGu1RH5tPgmD1
+      title: Project brief
 ---
 
 # Pathway satisfiability
 
-**We ask not "does this genome have the pathway?" but "is the pathway wired up *here* — in
-this tissue, this cell zone, this genome?" A curation module is read as a boolean formula
-over steps; a context (expression, genome content) supplies the truth values. When a pathway
-is independently known to run but the logic says it can't, the gap becomes a reviewable,
-gene-localised hypothesis.**
+**Bottom line:** pathway-completeness tools ask whether a genome encodes a
+pathway, which is the wrong question for a metazoan, where every cell carries
+the whole genome and what varies is which isozyme is expressed where. We built
+an engine that reads a curation module as a boolean formula over its steps and
+evaluates it against a context oracle: GTEx tissue expression, a liver
+zonation atlas, or KEGG genome content. Run on the human gluconeogenesis
+module across 54 GTEx tissues, it recovers exactly liver, kidney cortex and
+small intestine, with every other tissue failing at the same G6PC1 step; in
+the liver it confines the route to the periportal zone. The same engine
+reproduces GapMind-style methionine reconstruction across eight microbial
+genomes, and crossing its gaps with independent activity data yields
+gene-localised leads (intestinal gluconeogenesis → G6PC1, liver ketolysis →
+OXCT1, methionine "dark matter" in *Synechocystis* and *M. jannaschii*). The
+engine lives in `src/ai_gene_review/module_logic.py` with tests; the context
+resolvers are still in `modules/experimental/`, and a spin-off
+[taxon-absent-component detector](PATHWAY_SATISFIABILITY/taxon_absent_component/README.md)
+applies the same logic to flag IBA over-propagation (JAK-STAT in
+*Dictyostelium*).
 
-## Bottom line
+We did this because a gap between "the pathway is known to run here" and "the
+logic says it cannot" is a reviewable hypothesis that points at one gene in
+one context, which is the form a curator can act on.
+
+## Headline results
 
 - **It recovers textbook biology from data alone.** Across GTEx's 54 tissues the human
   gluconeogenesis module lights up in exactly **liver, kidney cortex, small intestine** — no

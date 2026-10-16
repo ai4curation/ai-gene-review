@@ -196,7 +196,7 @@ narrow.
 | GO:0045040 protein insertion into MOM (IDA, IMP, IBA) | PMID:32348752, PMID:15608614, GO_REF:0000033 | ACCEPT — core BP |
 | GO:0070096 MOM translocase complex assembly (IMP ×2) | PMID:15608614, PMID:17974559 | ACCEPT — core BP |
 | GO:0005741 mitochondrial outer membrane (IDA ×3, IEA) | PMID:15326197, PMID:15608614, PMID:28916712 | ACCEPT — core CC |
-| GO:0005515 protein binding (IPI) | PMID:22467864 | MARK_AS_OVER_ANNOTATED — uninformative; the real content is MIM complex membership |
+| GO:0005515 protein binding (IPI) | PMID:22467864 | REMOVE — uninformative; the real content is MIM complex membership |
 | GO:0022832 voltage-gated channel activity (IDA) | PMID:28916712 | MODIFY → GO:0022843 (substrate-correct); flag that protein conduction, not ion conduction, is the physiological role |
 | GO:0055085 transmembrane transport (IEA) | GO_REF:0000108 from GO:0022832 | REMOVE — uninformative logical by-product; misrepresents an insertase as a solute transporter |
 | **GO:0032977 membrane insertase activity** | not annotated | **PROPOSE** (contributes_to) |
@@ -244,8 +244,8 @@ with `ECO:0000255` — a sequence-analysis prediction, not experimental.
 
 **Final actions (14 GOA-derived entries + 1 NEW).** ACCEPT ×11 (GO:0140595 IBA; GO:0045040
 IBA; GO:0005741 IEA; GO:0005741 IDA ×3; GO:0045040 IMP; GO:0045040 IDA; GO:0140595 IPI;
-GO:0070096 IMP ×2) · MARK_AS_OVER_ANNOTATED ×2 (GO:0005515 IPI; GO:0022832 IDA) ·
-REMOVE ×1 (GO:0055085 IEA) · NEW ×1 (GO:0032977, contributes_to).
+GO:0070096 IMP ×2) · MARK_AS_OVER_ANNOTATED ×1 (GO:0022832 IDA) ·
+REMOVE ×2 (GO:0005515 IPI; GO:0055085 IEA) · NEW ×1 (GO:0032977, contributes_to).
 
 ---
 
@@ -501,7 +501,7 @@ and why phylogenetic propagation of MIM function should stop at the fungal clade
   `findings` and `reference_review`; all `full_text_unavailable` flags agree with the cache.
 - Two suggested questions that the new evidence had answered were rewritten rather than left
   standing (the Tom40 direct/indirect question, and the non-homologous-counterpart question).
-- Final tallies: 16 annotations (ACCEPT ×11, MARK_AS_OVER_ANNOTATED ×2, REMOVE ×1, NEW ×2),
+- Final tallies: 16 annotations (ACCEPT ×11, MARK_AS_OVER_ANNOTATED ×1, REMOVE ×2, NEW ×2),
   22 references (HIGH 13 / MEDIUM 5 / LOW 4; VERIFIED 21 / DISPUTED 1), 2 core functions,
   3 proposed new terms, 2 knowledge gaps, 10 questions, 10 experiments.
 - Schema, term-branch, GOA-consistency and compliance checks all pass; `status: COMPLETE`.
@@ -681,3 +681,17 @@ COMPLETE once semantic-sql catches up.
 
 `ComplexPortal:CPX-336` ("clb3-cdc28_yeast-1", a cyclin–CDK complex) carries an IDA to
 GO:7770059 from PMID:25378463. That looks like a data error rather than curation.
+
+## 2026-09-28 — IBA/protein-binding spot re-review
+
+Rechecked both PAINT-derived rows against the current IBA interpretation used by
+`projects/IBA_REVIEW.md`. The PTN002000670 calls still stand: the node supports conserved
+MIM-complex membership and the alpha-helical insertion row should be re-termed at the
+node rather than rejected on yeast-specific grounds. The S. cerevisiae target appearing
+in its own WITH/FROM is expected experimental grounding, not circular support.
+
+Literature search found no newer direct yeast MIM1 paper after the 2026 Ayr1/lipid-droplet
+study already folded into this review. Updated the IntAct-derived `GO:0005515 protein
+binding` row from `MARK_AS_OVER_ANNOTATED` to `REMOVE` to match the current convention
+for generic protein-binding molecular-function rows; this only removes the GO-level
+assertion, not the underlying Mim1-Mim2 interaction record.

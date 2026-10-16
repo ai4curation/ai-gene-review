@@ -1,0 +1,91 @@
+history_version: 1
+target:
+  kind: gene
+  slug: ARHGAP21
+  organism: human
+  path: genes/human/ARHGAP21/ARHGAP21-ai-review.yaml
+session:
+  id: 2026-09-19T020223Z-claude-code-498e80
+  timestamp: '2026-09-19T02:02:23Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/3059
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  summary: 'Round-3: make the reference-completeness invariant real by adding check_references
+    to the committed audit_review.py, and correct the two places that claimed it already
+    existed'
+  details: |
+    Addresses the single remaining item from the round-2 re-review of PR #3059. No
+    annotation, term, action or evidence code changed in this round; the work is a
+    tooling correction plus the prose that misdescribed it.
+
+    THE DEFECT. Round 2 stated, in two places (ARHGAP21-notes.md section 8a and the
+    round-2 history record), that the fix script "now asserts that every PMID string
+    appearing anywhere in the document resolves to a reference entry, so this cannot
+    silently regress". That was false. The assertion lived in fix6_arhgap21.py, a
+    one-shot scratchpad script that is not committed and never runs again. Nothing in
+    the repository enforced the invariant; it held by hand, on that day only.
+
+    This is the review's own thesis applied to its author: a true-sounding claim
+    attached to the wrong object, and the sharper variant because the claim was about a
+    guard. audit_review.py's docstring already anticipated it -- "a passing self-test
+    proves the guards that exist work; it cannot tell you which guard was never
+    written."
+
+    THE FIX. Written rather than retracted, since the invariant is worth having.
+    check_references is now the fifth check in the committed audit_review.py, with a
+    --self-test mutation that deletes a reference entry whose PMID is cited in content
+    and requires the check to fire. The docstring enumerates five checks.
+
+    WRITING IT WENT WRONG TWICE, BOTH CAUGHT BY THE SELF-TEST RATHER THAN BY READING.
+    1. The detector's scope included the lookup table it validates against. The first
+       version scanned the whole serialised document including references, so deleting
+       a reference removed the only occurrence of its PMID; the named set shrank in
+       step with the reference ids and the guard stayed silent. The self-test reported
+       "dropping reference PMID:12056806 was not detected". A check partly satisfied by
+       its own subject is worse than no check, because it reports success.
+    2. The obvious correction over-corrected. Excluding the whole references block
+       fixed the self-satisfaction but lost a real case: PMID:36477203, the Gogl
+       erratum, is cited only inside PMID:36115835's review_notes, so under that scope
+       it stopped counting as cited. That is precisely the citation the round-1
+       reviewer had missed, i.e. the case the check most needed to cover.
+    The working scope strips exactly the reference id fields and keeps everything else.
+    Verified directly rather than assumed: deleting PMID:36477203's entry now produces
+    "PMID:36477203 is cited in the document but has no references entry". The
+    cited-PMID count moved 24 -> 22 -> 23 across the three scopes, and the middle
+    number looked entirely reasonable.
+
+    ALSO HARDENED. Text-anchor mutations in the self-test now assert the anchor matches
+    exactly once. An anchor matching twice silently mutates whichever occurrence comes
+    first and stops testing what it was written for; a zero-match anchor "passes" by
+    changing nothing. Both look identical to a green self-test.
+
+    THE TWO NON-BLOCKING ITEMS, JUDGED NOT CHURNED.
+    - has_input (RO:0002233) on binding rows restating supporting_entities: kept, and
+      kept consistent across all three instances. The two slots answer different
+      questions -- supporting_entities is evidence provenance (what the curator used),
+      extensions is annotation semantics (what the statement is about) -- so the
+      apparent restatement is not redundancy.
+    - GO:0032956 lacking a human loss-of-function quote: declined, with the evidence
+      structure now made explicit on the row instead. The human data there is
+      gain-of-function (PMID:16184169); UniProt's MISCELLANEOUS line does record the
+      human depletion phenotype but spans a CC continuation
+      (ARHGAP21-uniprot.txt:274-275), so the only fragment quotable on one physical
+      line truncates at "induces cell spreading and" and drops the F-actin clause that
+      would make it relevant. Left uncited rather than quoted misleadingly.
+
+    Review threads: the repository requires conversation resolution to merge; a GraphQL
+    query for reviewThreads on this PR returns none, so there is nothing unresolved to
+    block it.
+
+    Counts unchanged: 47 GOA rows -> 47 non-NEW + 4 NEW = 51, 50 supporting_text quotes
+    verbatim, 23 cited PMIDs all resolving to references entries. just validate green,
+    cache_lint exit 0, no terms.csv deletions or duplicates.

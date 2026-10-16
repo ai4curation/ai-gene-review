@@ -3,9 +3,42 @@ title: "Bacillus subtilis project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [BACSU]
+genes: [fliH, fliK, fliW, fliY, gerD, spo0J, spoVAD, swrD, yddE, spo0A, sigF, ftsZ, divIVA, comK, aprE, amyE, sacB, secA, minC, sigE, sigG, sigK, spoIIE, minD, nprE, lipA, secY, comGA, spoIIGA, spoIIAA, spoIIAB, spoIIB, spoIIR, spoVD, yciC]
+sidecars:
+  slide_assets:
+    - BACSU/slides/actions-bar.svg
+    - BACSU/slides/sigG-review-table.jpg
+    - BACSU/slides/sporulation-cascade.svg
+manifest:
+  slides:
+    - href: BACSU/slides/BACSU-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/AuQCDtu8bJ3pAjSXuMRzAB
+      title: Project brief
 ---
 
 # Bacillus subtilis project
+
+**Bottom line:** *Bacillus subtilis* is the model Gram-positive bacterium for
+sporulation, competence, cell division and protein secretion. We reviewed every
+existing GO annotation on 29 of its genes in three rounds: nine genes where
+CACAO student curation had contributed heavily, ten key functional genes, and
+ten more that complete the sporulation sigma cascade and the industrial
+enzymes. That covers 343 annotation rows: 200 accepted, 28 kept as non-core,
+45 modified, 14 removed, 10 marked over-annotated, 44 proposed as `NEW`, and 2 left
+`UNDECIDED` (fliH, where the cited paper does not mention the gene). The
+recurring corrections were removing `RNA polymerase activity` from sigma
+factors, removing a fold-based acyltransferase call on spoVAD, and removing
+the fliY and swrD rows that cite PMID:25313396, a paper that does not
+examine those genes. All
+29 reviews exist and render, and a sporulation cascade pathway summary is in
+`BACSU/`. Most review files still carry `status: DRAFT` although the checklist
+below says COMPLETE, and several UniProt IDs in the tables below differ from
+the accessions the reviews use (the lipA review covers lipoyl synthase
+O32129, not lipase A). Six further *B. subtilis* reviews made outside these
+rounds (spoIIAA, spoIIAB, spoIIB, spoIIR, spoVD, yciC; 53 rows) are listed
+in the frontmatter but not counted above.
 
 Use uniprot code BACSU
 

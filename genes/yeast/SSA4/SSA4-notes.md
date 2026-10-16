@@ -71,3 +71,42 @@
   partner identities are retained, but genome-scale co-complex, prediction, paralog-
   heteromer, and affinity-enrichment datasets are not described as targeted proof of
   direct binary contact when the specific edge is absent from the narrative text.
+
+## 2026-09-29 IBA follow-up
+
+- Rechecked all eight GO_REF:0000033 IBA rows against
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The accepted nucleus,
+  cytoplasm, cytosol, ATPase, heat-shock-protein-binding, protein-folding
+  chaperone, and protein-refolding transfers all still trace to current PAINT
+  rows; the pinned plasma-membrane IBA remains stale because current
+  PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
+- Recorded the 2026 fungal PTN001065099 `GO:0042026 protein refolding` NOT/IRD
+  and retained the SSA4 transfer because SSB2/SSZ1 tracing places PTN001065099
+  on the ribosome-associated Ssb/Ssz loss branch, whereas the retained
+  PTN000452648 refolding IBD is seeded by cytosolic Ssa-family SSA1.
+- Added missing `propagation_review.source_entities` blocks for the accepted
+  IBA rows and expanded the PTN-only chaperone IBA with representative current
+  donors from PTN000452648.
+- Searched PubMed for exact `SSA4`/`Ssa4`/`YER103W` mentions in 2025-2026 and
+  found no new exact-match papers that change the Ssa4 curation.
+
+## 2026-10-01 current-GOA refresh follow-up
+
+- Forced a current `fetch-gene` refresh because live GOA for SSA4 has moved from
+  33 historical rows to 20 rows. The review now keeps all historical source
+  assertions and marks the 15 rows that no longer exactly match live GOA as
+  `retired: true`.
+- Reviewed the two newly seeded exact live rows: InterPro2GO now contributes
+  `GO:0005524 ATP binding` through Hsp70 domain IPR013126, and SGD now curates
+  direct `GO:0140662 ATP-dependent protein folding chaperone` from the abstract-only
+  Ydj1/Ssa-isoform study in PMID:32299842.
+- Rechecked exact live-row bookkeeping after the refresh. All 20 current GOA
+  signatures are represented by unretired YAML rows, including the 2026 PAINT
+  donor sets for `GO:0005737 cytoplasm`, `GO:0016887 ATP hydrolysis activity`,
+  and `GO:0044183 protein folding chaperone`.
+- Corrected the active PMID:37968396 generic protein-binding row after the live
+  IntAct set retained the Sis1 edge but not the old Ssa2/Sse1 edges. The row now
+  names Sis1 and proposes `GO:0031072 heat shock protein binding`, matching the
+  other live Sis1 row.
+- Searched PubMed for exact `SSA4`/`Ssa4`/`YER103W` mentions in 2025-2026 and
+  found no new exact-match papers that change the Ssa4 curation.

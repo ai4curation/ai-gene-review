@@ -1,19 +1,38 @@
 ---
 title: "Miscitation Audit"
 maturity: IN_PROGRESS
-tags: [PIPELINE]
+tags: [PIPELINE, EVALUATION]
 autolink_gene_symbols: false
+manifest:
+  slides:
+    - href: MISCITATION_AUDIT/slides/MISCITATION_AUDIT-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MivpKQ5kSzXjx2C5kqUYqs
+      title: Project brief
 ---
 
 # Miscitation Audit
 
-**A cited identifier that resolves to a different paper cannot support the annotation
-it is attached to. Reviewers here have flagged 27 such rows — 20 distinct citations —
-one gene at a time over the life of the repository, alongside a softer class of 257
-`MISCITED` rows where the paper is right but does not support the claim. None of it has
-ever been aggregated. This project collects both, keys them on the *citation* rather
-than the gene, and separates the ones we can fix from the ones only the assigning group
-can.**
+**Bottom line:** a citation whose identifier resolves to a different paper cannot
+support the annotation attached to it, and reviewers here had been flagging such
+cases one gene at a time without anyone aggregating them. We wrote
+`harvest_citations.py`, which collects every `reference_review.correctness` defect
+flag across the 4,467 review files and keys it on the citation rather than the gene,
+and `detect_citation_anomalies.py`, which looks for defects nobody has flagged yet. We
+keyed on the citation because one bad PMID is usually copied across paralogs or complex
+partners, so one correction clears several genes and one discovery says where else to
+look. The current register ([REPORT.md](MISCITATION_AUDIT/reports/REPORT.md)) holds 28
+`WRONG_IDENTIFIER` rows on 21 distinct citations, 6 of which carry that flag on more than one gene,
+plus 257 `MISCITED` rows (215 citations) that have not been sampled for precision; the
+prose below was written at 27 rows / 20 citations, one flag earlier. Most of the defects
+came from GOA (233 of 285 flagged citations), so the main deliverable is a bug report to
+the assigning groups, and those reports have not been filed yet.
+
+We did this because the existing validators only check internal consistency (the title
+matches the PMID, the quote is in the paper), and a wrong PMID imported together with its
+own title passes both. The unresolvable-identifier check found exactly one dead PMID
+across 24,436 cited; the paralog-mismatch check was measured and does not work.
 
 The two classes are not interchangeable and this page keeps them apart throughout:
 **`WRONG_IDENTIFIER` (27 rows / 20 citations)** is mechanically checkable and is the
@@ -26,7 +45,11 @@ A single bad citation rarely damages one gene. It is copied across paralogs of a
 family or partners in a complex, so one upstream correction clears several genes at
 once — and, more usefully, one *discovery* predicts where else to look.
 
-Seven of the twenty distinct `WRONG_IDENTIFIER` citations already span multiple genes:
+Seven of the twenty distinct `WRONG_IDENTIFIER` citations are flagged on more than one
+gene. For six the flag is `WRONG_IDENTIFIER` on every listed gene; `PMID:23209302` is
+`WRONG_IDENTIFIER` on NDUFA8 and `MISCITED` on ACOX1 and SLC25A3 (the committed
+REPORT.md lists all seven because it predates a fix that restricts that list to
+`WRONG_IDENTIFIER` genes):
 
 | Citation | Genes affected | What the paper is actually about |
 |---|---|---|
@@ -82,7 +105,7 @@ Outputs to [`MISCITATION_AUDIT/reports/`](MISCITATION_AUDIT/reports/REPORT.md):
 
 Its most useful column is **contamination spread**: citations flagged
 `WRONG_IDENTIFIER` in one review that are *still cited without a flag* elsewhere.
-Six such citations currently reach thirteen unflagged genes.
+Seven such citations currently reach twelve unflagged uses.
 
 **Spread is a triage queue, not a verdict.** The clearest illustration is
 `PMID:10970790`, flagged wrong on ELOVL1/2/3 and cited unflagged on **ELOVL5** — where
@@ -135,7 +158,7 @@ rather than literal symbols. Output is retained in `paralog_mismatches.tsv` and
 
 ## Next steps
 
-1. Adjudicate the 13 unflagged uses of the 6 spreading citations.
+1. Adjudicate the 12 unflagged uses of the 7 spreading citations.
 2. Assemble the GOA-sourced `WRONG_IDENTIFIER` set into per-database reports (MGI, SGD,
    UniProt) and file them upstream.
 3. Fix the one review-only case (`ADPRH`).

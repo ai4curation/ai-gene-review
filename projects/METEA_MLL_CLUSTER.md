@@ -3,9 +3,40 @@ title: "Methylorubrum extorquens MLL Cluster Curation Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [METEA]
+genes: [mllA, mllBC, mllDE, mllF, mllG, mllH, mllJ, mluA, mluI, mluR]
+sidecars:
+  slide_assets:
+    - METEA_MLL_CLUSTER/slides/lanthanophore-system.svg
+    - METEA_MLL_CLUSTER/slides/mluA-review-table.jpg
+manifest:
+  slides:
+    - href: METEA_MLL_CLUSTER/slides/METEA_MLL_CLUSTER-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/9sHNCzSVUdc8vmkyqRJLSh
+      title: Project brief
 ---
 
 # Methylorubrum extorquens MLL Cluster Curation Project
+
+**Bottom line:** the *mll* cluster of *Methylorubrum extorquens* AM1 makes
+and imports methylolanthanin, a small-molecule lanthanide chelator
+(lanthanophore) that supplies the lanthanide cofactor for XoxF-type methanol
+dehydrogenase. Databases annotate these genes as iron-siderophore machinery
+because of their homology to aerobactin and petrobactin enzymes. We reviewed
+all 10 genes, seven biosynthetic (*mllA*–*mllJ*) and three for uptake and
+regulation (*mluA*, *mluI*, *mluR*), to replace that iron story with the
+lanthanide one. The reviews now hold 31 annotation rows: 8 accepted, 7 kept as
+non-core, 4 removed, 3 modified, 1 over-annotated, and 8 proposed as `NEW`
+(7 of them on mllDE, mllF and mllJ, which had no GOA at all). Five of the seven removed or modified rows
+are iron-siderophore transport terms on MluA; the others are a wrong
+o-succinylbenzoate-CoA ligase EC mapping on MllBC and a generic
+acyltransferase term on MllH. GO has no term for lanthanophore biosynthesis or
+lanthanide-metallophore transport, so three reviews propose *lanthanophore
+biosynthetic process*. Work remains: the review files are still `DRAFT` or
+`INITIALIZED` apart from mllDE, and the action table and several UniProt IDs
+further down this page predate later edits (for example, MluA now has 3
+REMOVE and 2 MODIFY rows, not 6 REMOVE).
 
 **Project Completion Date:** 2024-11-06
 **Organism:** *Methylorubrum extorquens* AM1 (METEA)

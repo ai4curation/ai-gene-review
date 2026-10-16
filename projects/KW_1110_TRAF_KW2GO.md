@@ -1,10 +1,34 @@
 ---
 title: "KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping"
-maturity: SCOPING
+maturity: COMPLETE
 tags: [PIPELINE, OBSOLETION]
+manifest:
+  slides:
+    - href: KW_1110_TRAF_KW2GO/slides/KW_1110_TRAF_KW2GO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/HpYCKxoFy6C6gRzHn7FTcp
+      title: Project brief
 ---
 
 # KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping
+
+**Bottom line:** UniProt keyword KW-1110 "Inhibition of host TRAFs by virus"
+was mapped to GO:0039527, a process term GO has now obsoleted because
+"TRAF-mediated signal transduction" is not a single pathway: TRAFs act in RLR,
+TLR, TNFR and cGAS-STING signaling. The mapping has been repointed to
+GO:0140476, which ties TRAF inhibition to cytoplasmic pattern recognition
+receptor (RLR) signaling and matches the parent keyword KW-1113. As of
+2026-09-26, OLS resolves GO:0140476 and marks GO:0039527 obsolete (suggesting
+GO:0140476 or the TLR sibling GO:0140470), and the GO `uniprotkb_kw2go` file
+(version date 2026/07/06) maps KW-1110 to GO:0140476. This page was a
+watch-list entry, not a review project, and no gene review in this repository
+carries GO:0039527, GO:0140476 or KW-1110, so nothing needs rework. The
+"blocker" in the status section below predates these upstream changes.
+
+We track it so that any viral or bacterial TRAF-interfering effector reviewed
+later is moved to the right pathway-specific term rather than to the obsolete
+parent.
 
 ## Overview
 
@@ -34,12 +58,14 @@ keyword's biology.
 |---|---|
 | GO:0140476 | symbiont-mediated suppression of host cytoplasmic pattern recognition receptor signaling pathway via inhibition of TRAF activity |
 
-- **The GO:0140476 term ID does not yet resolve in OLS** (verified 2026-07-04).
-  Per the annotation tracker discussion, this term still needs to be created in
-  the ontology before the KW-1110 mapping can be repointed at it. The
-  annotation tracker ticket is waiting on confirmation before deleting the
-  existing mapping and adding the new one (the deletion is reversible if the
-  new term is delayed).
+- **Superseded (2026-09-26):** GO:0140476 now resolves in OLS and the GO
+  `uniprotkb_kw2go` file maps KW-1110 to it (see the bottom line above). The
+  rest of this item is the historical record: on 2026-07-04 the term ID did not
+  yet resolve in OLS, and per the annotation tracker discussion, the term still needed to be created in
+  the ontology before the KW-1110 mapping could be repointed at it. The
+  annotation tracker ticket was waiting on confirmation before deleting the
+  existing mapping and adding the new one (the deletion was reversible if the
+  new term was delayed).
 
 ### Nature of the change
 
@@ -98,5 +124,9 @@ existing rework.
 
 - **Created:** 2026-07-04
 - **Blocker:** GO:0140476 not yet minted; KW2GO deployment blocked on that.
+- **Update 2026-09-26:** OLS shows GO:0140476 minted and GO:0039527 obsolete
+  (consider GO:0140476 or GO:0140470). Re-ran the three greps: still no matches in
+  `genes/`. The GO `external2go/uniprotkb_kw2go` file (version date 2026/07/06)
+  maps KW-1110 to GO:0140476, so the mapping change has shipped.
 - **Action needed here:** none until upstream ships. This page is a watch-list
   entry so the mapping change is not silently missed when it lands.

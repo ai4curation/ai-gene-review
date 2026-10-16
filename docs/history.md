@@ -152,6 +152,32 @@ enforces this: a record whose `target.path` is missing passes **only** if
 slug still fails loudly. `just new-history` also warns at authoring time when
 the target path does not exist yet.
 
+## Correcting a record's prose
+
+`target.slug`/`target.path` are frozen (above). `summary` and `details` are
+narrower: they describe what one session did, so whether to append or to correct
+in place depends on whether the statement was ever true.
+
+- **Accurate for the commits the record covers, and later work moved past it →
+  append a new record.** Editing would replace a true statement about one session
+  with a retrospective summary of several, and a reader of the chain would lose
+  the intermediate state. Say in the *later* record that the earlier one is
+  superseded, since a reader can land on either first and only the later one can
+  carry the signpost.
+- **Never true → correct it in place.** A miscount, a wrong identifier, a phrase
+  that misnames the session: there is no earlier true state to preserve, so
+  appending would leave a falsehood in the chain and add a correction the reader
+  has to find. Keep the *reason* for the error in the corrected text where it is
+  the kind of thing that will be "corrected" back.
+
+A worked pair from PR #3093. A `CREATE` record listed `GO:0007266` among a gene's
+proposed terms; the review later changed the proposal to `GO:0035025`. That record
+was accurate when written, so an `EDIT` record was appended rather than editing it.
+The same session's project record said a spot-check had "53 entries" when it always
+had 52 — a counting mistake, never a state — so that was corrected in place, along
+with a note that a plain `grep` returns 53 and why.
+
+
 ## Event Types
 
 Use the smallest useful vocabulary:

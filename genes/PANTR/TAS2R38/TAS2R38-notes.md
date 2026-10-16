@@ -1,0 +1,184 @@
+# Curation notes: TAS2R38 (Pan troglodytes, UniProt Q697L5)
+
+## Session: 2026-09-06
+
+Cross-species companion review to `genes/human/TAS2R38/` (reviewed in parallel by a
+separate agent). This gene has **no chimpanzee-specific PMIDs seeded from GOA** — all
+10 GOA rows are IBA (PAINT phylogenetic inference from the PTHR11394/TAS2R family
+node) or IEA (InterPro2GO / ARBA / combined electronic methods). No experimental
+(IDA/IPI/etc.) rows exist for chimp TAS2R38 in `TAS2R38-goa.tsv`.
+
+Source used for all literature-derived claims: `TAS2R38-deep-research-falcon.md`
+(Falcon/Edison Scientific deep-research report, generated 2026-09-06). Its cited
+primary literature is real, correctly attributed, and directly relevant
+(chimpanzee-specific population genetics and functional assays), but none of the
+underlying PMIDs are cached locally in `publications/`, so this review cites the
+deep-research file directly (`file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md`)
+rather than fabricating unverifiable PMID citations. Key primary sources it
+synthesizes (not independently fetched/cached here):
+
+- Hayakawa T et al. 2012. "Eco-Geographical Diversification of Bitter Taste Receptor
+  Genes (TAS2Rs) among Subspecies of Chimpanzees (Pan troglodytes)." PLoS ONE
+  7:e43277. doi:10.1371/journal.pone.0043277 — direct chimpanzee population genetics:
+  ATG->AGG start-codon-loss allele at 76% (70/92) in western chimpanzee alleles, 0%
+  in eastern/central/Nigeria-Cameroon samples; FST=0.614 west-east differentiation.
+- Suzuki-Hashido N et al. 2015. "Rapid expansion of phenylthiocarbamide non-tasters
+  among Japanese macaques." PLoS ONE 10:e0132016. doi:10.1371/journal.pone.0132016 —
+  contains the heterologous (HEK293T + Gα16gust44 + Fluo-4 calcium imaging) functional
+  assay framework applied to chimpanzee TAS2R38 start-loss vs rescued constructs.
+- Wooding S et al. 2006. "Independent evolution of bitter-taste sensitivity in humans
+  and chimpanzees." Nature 440:930-934. doi:10.1038/nature04655 — establishes that
+  PTC-tasting was ancestral and reduced sensitivity arose independently by different
+  mutations in the human and chimpanzee lineages after ~5-6 Mya divergence.
+- Campbell MC et al. 2012. Mol Biol Evol 29:1141-53. doi:10.1093/molbev/msr293 —
+  corroborates independent human/chimp evolutionary origins of PTC insensitivity.
+- Meyerhof W et al. 2011. Flavour Fragr J 26:260-268. doi:10.1002/ffj.2041 — general
+  mammalian T2R/gustducin/PLCβ2/IP3R3/TRPM5 signaling review used for the canonical
+  pathway description.
+- Itoigawa A, Nakagita T, Toda Y. 2024. Int J Mol Sci 25:12654.
+  doi:10.3390/ijms252312654 — recent (Nov 2024) review of vertebrate T2R structural
+  class and diversity; confirms no newer chimp-TAS2R38-specific localization/structure
+  data exists beyond the 2012/2015 chimpanzee-specific studies.
+- Purba LHPS et al. 2020. Primates 61:485-494. doi:10.1007/s10329-020-00799-1 —
+  comparative colobine TAS2R38 evolution, used only as general candidate-ligand
+  context (sinigrin, allyl isothiocyanate, goitrin).
+
+## GO term hierarchy checks (via QuickGO API, 2026-09-06)
+
+Verified before assigning ACCEPT/KEEP_AS_NON_CORE, per the project's term-id
+validation guidance (existing_annotations ids are trusted/not hard-validated, but
+hierarchy claims made in `review.reason` should be checked, not asserted from
+memory):
+
+- GO:0001580 ("detection of chemical stimulus involved in sensory perception of
+  bitter taste") ancestors include GO:0050912, GO:0050913, GO:0050909 — i.e.
+  GO:0050909 ("sensory perception of taste") IS a formal ancestor/generalization of
+  GO:0001580. Confirms the GO:0050909 IEA row is a correct-but-generic restatement,
+  used to justify KEEP_AS_NON_CORE (not REMOVE — it's true, just uninformative).
+- GO:0033038 ("bitter taste receptor activity") ancestors do NOT include GO:0004930
+  ("G protein-coupled receptor activity") — the two terms are formally unrelated
+  siblings in the MF DAG (GO:0033038 sits under "taste receptor activity" ->
+  "transmembrane signaling receptor activity", not under the GPCR-activity branch).
+  So the GO:0004930 IEA row is not formally redundant with GO:0033038, but it is
+  still far less informative for this specific, well-characterized receptor —
+  KEEP_AS_NON_CORE on informativeness grounds, consistent with the project's
+  guidance to prefer specific/informative MF terms.
+- GO:0016020 ("membrane") is a formal ancestor of GO:0005886 ("plasma membrane") —
+  confirms KEEP_AS_NON_CORE for both membrane rows as strictly subsumed by the
+  plasma-membrane annotation.
+- GO:0007186 ("G protein-coupled receptor signaling pathway") is NOT a formal
+  ancestor/descendant of GO:0001580 (they sit on different BP sub-branches:
+  signal-transduction vs. sensory-perception) — so it is not simply redundant, but
+  it is a generic pan-GPCR term; kept as KEEP_AS_NON_CORE since GO:0001580 is the
+  more informative, taste-specific process annotation, and no taste-receptor-specific
+  child of GO:0007186 exists in the current ontology (checked via QuickGO search —
+  the only taste-specific MF/BP/CC terms found were GO:0033038, GO:0090682 (GPCR
+  bitter taste receptor activity), GO:0170022 (ionotropic bitter taste receptor
+  activity), GO:0050913 (sensory perception of bitter taste), GO:1904660/1/2
+  (regulation of ...), GO:0031883 (taste receptor binding), GO:1903768 (taste
+  receptor complex), GO:0008527 (taste receptor activity) — none of these is a
+  bitter-taste-specific signaling-pathway BP term).
+
+### Note on GO:0090682 ("GPCR bitter taste receptor activity")
+
+This term exists (not obsolete) and is formally a more specific descendant of BOTH
+GO:0033038 (bitter taste receptor activity) and GO:0004930 (GPCR activity) — i.e. it
+is exactly the intersection term that would most precisely describe TAS2R38, which is
+unambiguously a GPCR-type (not ionotropic) bitter taste receptor. However, GO:0033038
+is the term consistently used by GO_Central/PAINT across the entire TAS2R gene family
+(confirmed in both the human and chimp GOA files, and in TAS2R16's GOA file), so this
+review does not MODIFY the existing GO:0033038 annotations to GO:0090682 — that would
+create an inconsistency with the rest of the family's curation and is better raised as
+a broader ontology-curation question (e.g. whether GO_Central should adopt GO:0090682
+for the whole GPCR-type T2R subfamily) rather than a single-gene MODIFY call. Noted
+here for future reference / potential cross-gene follow-up.
+
+## Curation outcome summary
+
+All 10 existing_annotations rows: 5x ACCEPT (core BP GO:0001580 x2, core MF
+GO:0033038 x2, core CC GO:0005886), 5x KEEP_AS_NON_CORE (generic/subsumed terms:
+GO:0004930, GO:0007186, GO:0016020 x2, GO:0050909). No REMOVE, MODIFY, or UNDECIDED
+calls — the IBA/IEA evidence base for this gene is standard, biologically coherent
+family-level TAS2R annotation, and is independently and strongly corroborated by
+chimpanzee-specific population genetics and functional (heterologous calcium-imaging)
+literature on PTC/thiocarbamide bitter-taste detection [Hayakawa 2012; Suzuki-Hashido
+2015 — see TAS2R38-deep-research-falcon.md]. No experimental annotations exist to
+second-guess, so the "do not overrule curators from incomplete evidence" caveat did
+not come into play here.
+
+The most biologically interesting finding for this species — the western-chimpanzee
+ATG->AGG start-codon-loss non-taster allele, independently evolved from the human
+PAV/AVI polymorphism — is not itself a GOA annotation target (it's an allelic/
+population-variation fact, not a distinct molecular function) and so is captured in
+`description` and `knowledge_gaps` rather than as a new proposed GO term.
+
+## Revisions after PR review
+
+The `ai4c-reviewer` bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16) flagged
+three issues, all fixed:
+
+1. **Generic-term policy consistency**: this file's GO:0004930/GO:0007186 were
+   originally KEEP_AS_NON_CORE and GO:0016020 was KEEP_AS_NON_CORE, inconsistent
+   with the other four taste-receptor genes in this PR (where a broad-but-true term
+   coexisting with a more specific one is ACCEPT, and only a truly redundant CC term
+   like generic "membrane" alongside "plasma membrane" is downgraded). Standardized:
+   GO:0004930 and GO:0007186 changed to ACCEPT; the two GO:0016020 rows changed to
+   MARK_AS_OVER_ANNOTATED (with `propagation_review` added to the IBA-sourced row,
+   which the validator requires once its action moves off ACCEPT). GO:0050909 was
+   already KEEP_AS_NON_CORE and needed no change.
+2. **"class-T GPCR" is not a standard designation** — fixed to "class-A-like" (the
+   correct rhodopsin-like GPCR class for TAS2Rs), matching how the human TAS2R38
+   file already described it.
+3. **No primary literature was cited** — every substantive chimpanzee-specific claim
+   (start-codon-loss mechanism, 76% western-chimpanzee frequency, FST=0.614,
+   independent human/chimp origin, in vitro PTC non-response) was sourced only to
+   the falcon deep-research file, marked `correctness: VERIFIED`, which overstates
+   what was actually checked per CLAUDE.md ("an LLM-generated deep-research summary
+   asserting a citation is not sufficient"). Fetched and cached the three primary/
+   secondary papers named with DOIs in the falcon file: Hayakawa et al. 2012 PLoS
+   ONE (PMID:22916235, full text), Wooding et al. 2006 Nature (PMID:16612383,
+   abstract only), and Suzuki-Hashido et al. 2015 PLoS ONE (PMID:26201026, full
+   text — about Japanese macaques, but its Introduction restates the chimpanzee
+   76%/ATG>AGG finding in prose, citing Hayakawa 2012). Re-pointed the load-bearing
+   `supported_by` citations (GO:0033038 IBA row, core_functions) to these PMIDs
+   with verbatim quotes, and added `reference_review` entries for each.
+   - Note: Hayakawa 2012's own Table 1 (population allele-frequency table) could
+     not be reliably used for the specific 76%/9-of-92 figures because its
+     machine-extracted markdown scrambles which frequency row maps to which gene
+     (cTAS2R38 vs. the adjacent cTAS2R40 row) — its own prose text, repeated three
+     times, does unambiguously confirm cTAS2R38 as the "loss-of-start SNV...unique
+     to western chimpanzees" with FST=0.614, and Suzuki-Hashido 2015's Introduction
+     (citing Hayakawa 2012 as its source) is the place this reviewer could
+     verbatim-confirm the specific 76% figure. Flagged in that reference's
+     `review_notes` for transparency.
+
+## Re-review round 2: Hayakawa Table 1 row alignment resolved
+
+The `ai4c-reviewer` bot's re-review of commit `b1db1320b` (2026-09-16) confirmed all
+five IMPORTANT fixes from round 1, then raised one new issue (#9, the sole blocker)
+and two optional suggestions:
+
+- **#9 (fixed)**: the round-1 caution about Hayakawa 2012's Table 1 being unparseable
+  was overly conservative. The bot worked out the correct row-to-gene-label mapping:
+  the markdown extraction flattens each row's LEADING gene label onto the tail of the
+  PRECEDING row's data cells, so the literal substring `LICNon-functional70/92
+  (76%)000cTAS2R40` is actually cTAS2R38's own row (LIC = loss-of-initiation-codon,
+  matching the paper's own prose calling cTAS2R38's variant "the loss-of-start SNV";
+  the `cTAS2R40` at the end is really the NEXT row's label). Verified this
+  independently by re-deriving the full label-then-data token sequence from the raw
+  table text (matches the paper's own Methods sample sizes: 92/20/4/2 = 2x
+  46W/10E/2C/1NC chimps) before editing. Added this as a verbatim finding to the
+  PMID:22916235 reference entry, rewrote its `review_notes` to explain the resolved
+  offset, and demoted PMID:26201026 (Suzuki-Hashido 2015) from primary source of the
+  76% figure to corroboration only — its own prose says "76% of individuals" where
+  Hayakawa 2012's table is an allele frequency (70/92 sampled chromosomes); this
+  review uses "alleles" throughout per the primary source.
+- **#10 (fixed, optional)**: stale "MODIFY/NEW" wording in
+  `genes/9AVES/TAS1R1/TAS1R1-ai-review.yaml` (no `MODIFY` remains in that file after
+  round 1) corrected to "KEEP_AS_NON_CORE/NEW".
+- **#11 (fixed, optional)**: `PANTHER:PTN000149628`'s `source_status` was
+  `UNRESOLVED` in `genes/human/TAS2R38` but `SUPPORTS_TRANSFER` in this file (and
+  also in `genes/human/TAS2R16`, not flagged by the bot but the same node in the
+  same PR). Standardized all three to `UNRESOLVED` ("PANTHER internal tree node, not
+  a protein"), matching the human TAS2R38 file's convention, which the bot judged
+  more defensible.

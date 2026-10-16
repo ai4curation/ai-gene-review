@@ -64,6 +64,9 @@ def test_collect_deep_research_sections_exposes_metadata_and_artifacts(tmp_path:
         encoding="utf-8",
     )
     Path(f"{report}.citations.md").write_text("citations\n", encoding="utf-8")
+    image = gene_dir / 'TEST-deep-research-openscientist_artifacts/evidence.png'
+    image.parent.mkdir()
+    image.write_bytes(b'archived image fixture')
 
     sections = render.collect_deep_research_sections(gene_dir, output_dir=gene_dir)
 
@@ -110,6 +113,9 @@ def test_collect_deep_research_sections_includes_hypothesis_reports(
         encoding="utf-8",
     )
     Path(f"{report}.citations.md").write_text("citations\n", encoding="utf-8")
+    artifact = report_dir / 'openscientist_artifacts/final_report.html'
+    artifact.parent.mkdir()
+    artifact.write_text('<p>Archived report</p>')
 
     sections = render.collect_deep_research_sections(gene_dir, output_dir=gene_dir)
 
@@ -128,3 +134,17 @@ def test_collect_deep_research_sections_includes_hypothesis_reports(
         "openscientist_artifacts/final_report.html"
     )
     assert "GO:0008379 annotation should be removed" in section["content"]
+
+
+def test_missing_research_artifact_is_explicitly_unavailable(tmp_path: Path) -> None:
+    report = tmp_path / 'TEST-deep-research-falcon.md'
+    report.write_text('---\nprovider: falcon\nartifacts:\n- filename: figure.png\n'
+                      '  path: TEST-deep-research-falcon_artifacts/figure.png\n'
+                      '  media_type: image/png\n---\n# Report\n'
+                      '![Evidence figure](TEST-deep-research-falcon_artifacts/figure.png)\n')
+    section = render.collect_deep_research_sections(tmp_path, output_dir=tmp_path)[0]
+    assert section['artifacts'][0]['href'] is None
+    assert section['artifacts'][0]['unavailable'] is True
+    assert 'Evidence figure' in section['content']
+    assert 'not archived' in section['content']
+    assert '<img' not in section['content']

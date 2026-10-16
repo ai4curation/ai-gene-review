@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimized Faceted Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(170deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fafafa;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 50%;
+            height: 200%;
+            background: rgba(255,255,255,0.05);
+            transform: rotate(35deg);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            position: relative;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1rem;
+            font-weight: 400;
+            position: relative;
+        }
+
+        .browser-navigation, .dataset-tabs, .scope-note, .active-filters {
+            padding: 12px 30px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .browser-navigation, .dataset-tabs, .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .browser-navigation a { color: #047857; font-size: 0.9rem; }
+        .dataset-tabs a {
+            padding: 9px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #374151;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .dataset-tabs a[aria-current="page"] { background: #ecfdf5; border-color: #059669; color: #065f46; }
+        .scope-note { color: #4b5563; line-height: 1.5; font-size: 0.9rem; }
+        .active-filters button {
+            border: 1px solid #a7f3d0;
+            border-radius: 5px;
+            padding: 5px 8px;
+            background: #ecfdf5;
+            color: #065f46;
+            cursor: pointer;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            text-align: left;
+        }
+        [hidden] { display: none !important; }
+
+        .search-container {
+            padding: 24px 30px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            outline: none;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .search-box:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .performance-info {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            white-space: nowrap;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f9fafb;
+            padding: 16px;
+            border-right: 1px solid #e5e7eb;
+            transition: width 0.18s ease, padding 0.18s ease;
+            flex: 0 0 auto;
+        }
+
+        .sidebar.collapsed {
+            width: 64px !important;
+            min-width: 64px !important;
+            padding: 12px 8px;
+        }
+
+        .sidebar.collapsed #facetsSidebar {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-title {
+            display: none;
+        }
+
+        .sidebar-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-title {
+            color: #374151;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-toggle-btn {
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .sidebar-toggle-btn:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        .sidebar.collapsed .sidebar-toolbar {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .sidebar-toggle-btn {
+            padding: 6px 7px;
+        }
+
+        .facet-group {
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .facet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 11px;
+            background: white;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .facet-header:hover {
+            background: #f9fafb;
+        }
+
+        .facet-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+            letter-spacing: 0;
+        }
+
+        .facet-toggle {
+            font-size: 0.75rem;
+            color: #10b981;
+            transition: transform 0.2s ease;
+            font-weight: 600;
+        }
+
+        .facet-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .facet-content {
+            padding: 10px 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .facet-content.collapsed {
+            max-height: 0;
+            padding: 0 20px;
+            overflow: hidden;
+        }
+
+        .facet-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            font-size: 0.78rem;
+        }
+
+        .facet-item:hover {
+            background: #f3f4f6;
+        }
+
+        .facet-item.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .facet-checkbox {
+            margin-right: 7px;
+            width: 14px;
+            height: 14px;
+            accent-color: #10b981;
+            cursor: pointer;
+        }
+
+        .facet-count {
+            margin-left: auto;
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .facet-item.active .facet-count {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        .results-area {
+            flex: 1;
+            min-width: 0;
+            padding: 24px;
+            background: white;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .results-count {
+            font-size: 1rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .results-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .view-toggle {
+            display: inline-flex;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .view-toggle-btn {
+            border: 0;
+            background: white;
+            color: #374151;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-right: 1px solid #d1d5db;
+        }
+
+        .view-toggle-btn:last-child {
+            border-right: 0;
+        }
+
+        .view-toggle-btn.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .view-toggle-btn:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        .clear-filters {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .export-tsv {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 7px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .export-tsv:hover {
+            background: #e5e7eb;
+        }
+
+        .clear-filters:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .results-grid.table-view {
+            display: block;
+        }
+
+        .results-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            scrollbar-gutter: stable;
+        }
+
+        .results-table {
+            width: 100%;
+            min-width: 1220px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 11px;
+        }
+
+        .results-table th,
+        .results-table td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 5px 6px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .results-table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f9fafb;
+            color: #374151;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .results-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .results-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .table-cell-gene { width: 13%; }
+        .table-cell-go_term { width: 23%; }
+        .table-cell-evidence_type { width: 6%; }
+        .table-cell-reference { width: 16%; }
+        .table-cell-review_action { width: 8%; }
+        .table-cell-review_summary { width: 12%; }
+        .table-cell-review_reason { width: 12%; }
+        .table-cell-review_proposed_replacement_terms { width: 5%; }
+        .table-cell-status { width: 5%; }
+
+        .cell-content {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compound-cell {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .compound-primary {
+            flex: 1 1 auto;
+            font-weight: 700;
+            color: #111827;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compound-secondary {
+            flex: 0 1 auto;
+            color: #6b7280;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compound-link {
+            flex: 0 0 auto;
+        }
+
+        .empty-cell {
+            color: #9ca3af;
+        }
+
+        .action-badge {
+            display: inline-block;
+            max-width: 100%;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .action-accept {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .action-keep-as-non-core {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-remove {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-modify {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .action-mark-as-over-annotated {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .action-undecided,
+        .action-pending {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .action-new {
+            background: #ccfbf1;
+            color: #115e59;
+        }
+
+        .result-card {
+            background: #fafafa;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            padding: 16px;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #10b981;
+        }
+
+        .field-display {
+            margin-bottom: 12px;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #6b7280;
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 80px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .field-value {
+            color: #111827;
+            font-size: 0.9rem;
+        }
+
+        .array-values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .array-item {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #6ee7b7;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+            grid-column: 1 / -1;
+        }
+
+        .load-more-container {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .load-more-container.top-load-more {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 0 0 12px;
+            text-align: right;
+        }
+
+        .top-load-more .load-more-info {
+            margin-top: 0;
+            order: -1;
+            white-space: nowrap;
+        }
+
+        .top-load-more .load-more-btn {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .load-more-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .load-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .load-more-info {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .facet-show-more {
+            padding: 8px 12px;
+            margin-top: 8px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.15s ease;
+        }
+
+        .facet-show-more:hover {
+            background: #e5e7eb;
+        }
+
+        /* Numeric filter styles */
+        .numeric-filter-container {
+            padding: 10px 0;
+        }
+
+        .numeric-range-info {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .numeric-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .numeric-input {
+            width: 75px;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+            outline: none;
+            transition: all 0.15s ease;
+            background: white;
+        }
+
+        .numeric-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        }
+
+        .numeric-separator {
+            color: #718096;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                align-items: stretch;
+            }
+
+            .search-box {
+                flex-basis: 100%;
+            }
+
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .sidebar.collapsed {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            .results-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .results-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .results-table-wrap {
+                overflow-x: auto;
+            }
+
+            .results-table {
+                min-width: 980px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="appTitle">⚡ Generic Faceted Search</h1>
+            <p id="appDescription">Schema-driven search with high performance</p>
+        </div>
+
+        <nav id="browserNavigation" class="browser-navigation" aria-label="Browse related data" hidden></nav>
+        <nav id="datasetTabs" class="dataset-tabs" aria-label="Prediction datasets" hidden></nav>
+        <p id="scopeNote" class="scope-note" hidden></p>
+
+        <div class="search-container">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search products...">
+            <div class="view-toggle" role="group" aria-label="Results view">
+                <button type="button" class="view-toggle-btn active" data-view="table" aria-pressed="true">Table</button>
+                <button type="button" class="view-toggle-btn" data-view="card" aria-pressed="false">Cards</button>
+            </div>
+            <div class="performance-info" id="performanceInfo">Ready</div>
+        </div>
+
+        <div id="activeFilters" class="active-filters" aria-label="Active filters" hidden></div>
+
+        <div class="main-content">
+            <div class="sidebar" id="facetsPanel">
+                <div class="sidebar-toolbar">
+                    <span class="sidebar-title">Filters</span>
+                    <button type="button" class="sidebar-toggle-btn" id="toggleFacets" aria-expanded="true">Hide</button>
+                </div>
+                <div id="facetsSidebar">
+                    <!-- Facets will be generated here -->
+                </div>
+            </div>
+
+            <div class="results-area">
+                <div class="results-header">
+                    <div class="results-count" id="resultsCount">Loading...</div>
+                    <div class="results-controls">
+                        <button class="export-tsv" id="exportTsv">Export TSV</button>
+                        <button class="clear-filters" id="clearFilters">Clear All Filters</button>
+                    </div>
+                </div>
+                <div class="results-grid" id="resultsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load external data -->
+    <script src="data.js"></script>
+    <script src="schema.js"></script>
+
+    <script>
+        class OptimizedFacetedSearch {
+            constructor(data, schema) {
+                console.log('🏗️ OptimizedFacetedSearch constructor called');
+                console.log('Data sample:', data.slice(0, 2));
+                console.log('Schema:', schema);
+
+                this.originalData = data;
+                this.schema = schema;
+                this.currentFilters = {};
+                this.currentQuery = '';
+                this.currentView = schema.defaultView || 'table';
+                this.sidebarCollapsed = false;
+
+                // Track collapsed facets
+                this.collapsedFacets = new Set();
+
+                // Track slider timeout
+                this.sliderTimeout = null;
+
+                // Pagination settings
+                this.itemsPerPage = schema.itemsPerPage || 50;
+                this.displayedCount = this.itemsPerPage;
+                this.currentFilteredData = [];
+
+                // Facet pagination settings
+                this.facetItemsToShow = schema.facetItemsToShow || 10;
+                this.expandedFacets = new Set();
+                this.currentFacetCounts = null;
+
+                try {
+                    console.log('📚 Building search index...');
+                    this.searchIndex = this.buildSearchIndex();
+                    console.log('✅ Search index built:', this.searchIndex.size, 'tokens');
+
+                    console.log('🏷️ Building facet index...');
+                    this.facetIndex = this.buildFacetIndex();
+                    console.log('✅ Facet index built');
+
+                    console.log('🎧 Setting up event listeners...');
+                    this.setupEventListeners();
+                    if (this.schema.collapseSidebarOnMobile && window.matchMedia('(max-width: 768px)').matches) {
+                        this.toggleSidebar();
+                    }
+                    if (this.schema.syncUrl) {
+                        this.restoreUrlState();
+                        this.writeUrlState('replace');
+                    }
+
+                    console.log('🔍 Performing initial search...');
+                    this.search(false);
+                    console.log('✅ Constructor complete');
+                } catch (error) {
+                    console.error('❌ Error in constructor:', error);
+                    throw error;
+                }
+            }
+
+            // Build inverted index for fast text search
+            buildSearchIndex() {
+                console.log('Building search index for', this.originalData.length, 'items');
+                const index = new Map();
+
+                this.originalData.forEach((item, idx) => {
+                    // Get all searchable text
+                    const searchText = this.schema.searchableFields
+                        .map(field => {
+                            const value = item[field];
+                            if (value === undefined || value === null) {
+                                if (!this.schema.quietMissingFields) console.warn(`Missing field ${field} in item:`, item);
+                                return '';
+                            }
+                            if (Array.isArray(value)) {
+                                return value.join(' ');
+                            }
+                            return String(value);
+                        })
+                        .join(' ')
+                        .toLowerCase();
+
+                    // Tokenize and index
+                    const tokens = searchText.split(/\s+/).filter(token => token.length > 0);
+                    tokens.forEach(token => {
+                        if (!index.has(token)) {
+                            index.set(token, new Set());
+                        }
+                        index.get(token).add(idx);
+                    });
+                });
+
+                console.log('Search index created with', index.size, 'unique tokens');
+                return index;
+            }
+
+            // Build facet index for fast filtering
+            buildFacetIndex() {
+                console.log('Building facet index for fields:', this.schema.facets.map(f => f.field));
+                const index = {};
+
+                this.schema.facets.forEach(facet => {
+                    index[facet.field] = new Map();
+                    console.log(`Processing facet: ${facet.field} (type: ${facet.type})`);
+
+                    this.originalData.forEach((item, idx) => {
+                        const value = item[facet.field];
+
+                        if (value === undefined || value === null) {
+                            if (!this.schema.quietMissingFields) console.warn(`Missing facet field ${facet.field} in item ${idx}:`, item);
+                            return;
+                        }
+
+                        if (facet.type === 'array') {
+                            if (!Array.isArray(value)) {
+                                console.warn(`Expected array for ${facet.field} in item ${idx}, got:`, typeof value, value);
+                                // Try to convert single values to arrays
+                                const arrayValue = [value];
+                                arrayValue.forEach(val => {
+                                    if (val !== undefined && val !== null) {
+                                        const key = String(val);
+                                        if (!index[facet.field].has(key)) {
+                                            index[facet.field].set(key, new Set());
+                                        }
+                                        index[facet.field].get(key).add(idx);
+                                    }
+                                });
+                                return;
+                            }
+
+                            // Handle array case with safety check
+                            value.forEach(val => {
+                                if (val !== undefined && val !== null) {
+                                    const key = String(val);
+                                    if (!index[facet.field].has(key)) {
+                                        index[facet.field].set(key, new Set());
+                                    }
+                                    index[facet.field].get(key).add(idx);
+                                }
+                            });
+                        } else {
+                            const key = String(value);
+                            if (!index[facet.field].has(key)) {
+                                index[facet.field].set(key, new Set());
+                            }
+                            index[facet.field].get(key).add(idx);
+                        }
+                    });
+
+                    console.log(`Facet ${facet.field} indexed with`, index[facet.field].size, 'unique values');
+                });
+
+                return index;
+            }
+
+            setupEventListeners() {
+                document.getElementById('searchBox').addEventListener('input', (e) => {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.currentQuery = e.target.value;
+                        this.search();
+                    }, 150); // Debounce for better UX
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.facet-item')) {
+                        this.handleFacetClick(e.target.closest('.facet-item'));
+                    } else if (e.target.closest('.facet-header')) {
+                        this.handleFacetToggle(e.target.closest('.facet-header'));
+                    }
+                });
+
+                // Add numeric input event listeners
+                document.addEventListener('input', (e) => {
+                    if (e.target.classList.contains('numeric-input')) {
+                        this.handleNumericInputChange(e.target);
+                    }
+                });
+
+                document.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('numeric-input')) {
+                        this.handleNumericInputChange(e.target);
+                    }
+                });
+
+                document.getElementById('clearFilters').addEventListener('click', () => {
+                    this.clearAllFilters();
+                });
+
+                document.getElementById('exportTsv').addEventListener('click', () => {
+                    this.exportCurrentResultsToTsv();
+                });
+
+                document.getElementById('toggleFacets').addEventListener('click', () => {
+                    this.toggleSidebar();
+                });
+
+                document.querySelectorAll('.view-toggle-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        this.currentView = button.dataset.view;
+                        this.updateViewToggle();
+                        this.renderResults();
+                        this.writeUrlState();
+                        this.renderNavigation();
+                    });
+                });
+                this.updateViewToggle();
+                if (this.schema.syncUrl) {
+                    window.addEventListener('popstate', () => {
+                        this.restoreUrlState();
+                        this.search(false);
+                    });
+                    document.getElementById('activeFilters').addEventListener('click', (event) => {
+                        const button = event.target.closest('button[data-filter]');
+                        if (!button) return;
+                        const field = button.dataset.filter;
+                        if (field === 'q') this.currentQuery = '';
+                        else delete this.currentFilters[field];
+                        document.getElementById('searchBox').value = this.currentQuery;
+                        this.search();
+                    });
+                }
+
+                // Load more button (delegated since it's dynamically created)
+                document.addEventListener('click', (e) => {
+                    if (e.target.id === 'loadMoreBtn') {
+                        this.loadMore();
+                    }
+                    // Facet show more button
+                    if (e.target.classList.contains('facet-show-more')) {
+                        const field = e.target.dataset.field;
+                        if (this.expandedFacets.has(field)) {
+                            this.expandedFacets.delete(field);
+                        } else {
+                            this.expandedFacets.add(field);
+                        }
+                        // Re-render facets with cached counts
+                        if (this.currentFacetCounts) {
+                            this.renderFacets(this.currentFacetCounts);
+                        }
+                    }
+                });
+            }
+
+            urlFilterFields() {
+                return [...new Set([
+                    ...this.schema.facets.map(facet => facet.field),
+                    ...(this.schema.urlFilterFields || [])
+                ])];
+            }
+
+            restoreUrlState() {
+                clearTimeout(this.searchTimeout);
+                clearTimeout(this.sliderTimeout);
+                const params = new URLSearchParams(window.location.search);
+                this.currentQuery = params.get('q') || '';
+                this.currentFilters = {};
+                this.urlFilterFields().forEach(field => {
+                    const facet = this.schema.facets.find(config => config.field === field);
+                    if (facet && facet.type === 'integer') {
+                        const min = params.get(`${field}.min`);
+                        const max = params.get(`${field}.max`);
+                        if (min !== null && max !== null && Number.isFinite(Number(min)) && Number.isFinite(Number(max))) {
+                            this.currentFilters[field] = {min: Number(min), max: Number(max)};
+                        }
+                    } else {
+                        const values = params.getAll(field);
+                        if (values.length) this.currentFilters[field] = [...new Set(values)];
+                    }
+                });
+                // Explicit identity links must reach historical records too. A marker
+                // distinguishes a deliberately cleared filter set from a first visit.
+                if (!params.has('filters') && !(this.schema.defaultFilterBypassFields || []).some(field => params.has(field))) {
+                    Object.entries(this.schema.defaultFilters || {}).forEach(([field, values]) => {
+                        if (!this.currentFilters[field]) this.currentFilters[field] = [...values];
+                    });
+                }
+                const view = params.get('view');
+                this.currentView = ['table', 'card'].includes(view) ? view : (this.schema.defaultView || 'table');
+                document.getElementById('searchBox').value = this.currentQuery;
+                this.updateViewToggle();
+            }
+
+            writeUrlState(mode = 'push') {
+                if (!this.schema.syncUrl) return;
+                const url = new URL(window.location.href);
+                ['q', 'view', ...this.urlFilterFields()].forEach(field => {
+                    url.searchParams.delete(field);
+                    url.searchParams.delete(`${field}.min`);
+                    url.searchParams.delete(`${field}.max`);
+                });
+                url.searchParams.set('filters', '1');
+                if (this.currentQuery) url.searchParams.set('q', this.currentQuery);
+                if (this.currentView !== (this.schema.defaultView || 'table')) url.searchParams.set('view', this.currentView);
+                Object.entries(this.currentFilters).forEach(([field, values]) => {
+                    if (Array.isArray(values)) values.forEach(value => url.searchParams.append(field, value));
+                    else {
+                        url.searchParams.set(`${field}.min`, values.min);
+                        url.searchParams.set(`${field}.max`, values.max);
+                    }
+                });
+                if (url.href !== window.location.href) {
+                    window.history[mode === 'replace' ? 'replaceState' : 'pushState'](null, '', url.href);
+                }
+            }
+
+            renderNavigation() {
+                const navigation = document.getElementById('browserNavigation');
+                navigation.replaceChildren();
+                (this.schema.navigationLinks || []).forEach(item => {
+                    const link = document.createElement('a');
+                    link.href = item.href;
+                    link.textContent = item.label;
+                    navigation.append(link);
+                });
+                navigation.hidden = !navigation.children.length;
+                const tabs = document.getElementById('datasetTabs');
+                tabs.replaceChildren();
+                (this.schema.datasetTabs || []).forEach(tab => {
+                    const link = document.createElement('a');
+                    const url = new URL(window.location.href);
+                    const preserved = new Set(['q', 'view', 'filters', ...(this.schema.sharedFilterFields || [])]);
+                    [...url.searchParams.keys()].forEach(key => {
+                        if (!preserved.has(key)) url.searchParams.delete(key);
+                    });
+                    url.searchParams.set('dataset', tab.value);
+                    link.href = url.href;
+                    link.dataset.dataset = tab.value;
+                    link.textContent = `${tab.label} (${tab.count.toLocaleString()})`;
+                    if (tab.value === this.schema.dataset) link.setAttribute('aria-current', 'page');
+                    tabs.append(link);
+                });
+                tabs.hidden = !tabs.children.length;
+                const note = document.getElementById('scopeNote');
+                note.textContent = this.schema.scopeNote || '';
+                note.hidden = !note.textContent;
+                const active = document.getElementById('activeFilters');
+                active.replaceChildren();
+                if (this.schema.syncUrl) {
+                    const entries = Object.entries(this.currentFilters);
+                    if (this.currentQuery) entries.unshift(['q', [this.currentQuery]]);
+                    entries.forEach(([field, values]) => {
+                        const facet = this.schema.facets.find(config => config.field === field);
+                        const label = facet ? facet.label : ((this.schema.urlFilterLabels || {})[field] || (field === 'q' ? 'Search' : field));
+                        const display = Array.isArray(values)
+                            ? values.map(value => facet && facet.valueLabels ? (facet.valueLabels[value] || value) : value).join(', ')
+                            : `${values.min}–${values.max}`;
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.dataset.filter = field;
+                        button.textContent = `${label}: ${display} ×`;
+                        button.setAttribute('aria-label', `Remove ${label} filter`);
+                        active.append(button);
+                    });
+                }
+                active.hidden = !active.children.length;
+            }
+
+            toggleSidebar() {
+                this.sidebarCollapsed = !this.sidebarCollapsed;
+                const sidebar = document.getElementById('facetsPanel');
+                const button = document.getElementById('toggleFacets');
+                sidebar.classList.toggle('collapsed', this.sidebarCollapsed);
+                button.setAttribute('aria-expanded', String(!this.sidebarCollapsed));
+                button.textContent = this.sidebarCollapsed ? 'Show' : 'Hide';
+            }
+
+            updateViewToggle() {
+                document.querySelectorAll('.view-toggle-btn').forEach(button => {
+                    const isActive = button.dataset.view === this.currentView;
+                    button.classList.toggle('active', isActive);
+                    button.setAttribute('aria-pressed', String(isActive));
+                });
+            }
+
+            handleFacetClick(facetItem) {
+                const filterKey = facetItem.dataset.filter;
+                const value = facetItem.dataset.value;
+
+                if (!this.currentFilters[filterKey]) {
+                    this.currentFilters[filterKey] = [];
+                }
+
+                const index = this.currentFilters[filterKey].indexOf(value);
+                if (index > -1) {
+                    this.currentFilters[filterKey].splice(index, 1);
+                    if (this.currentFilters[filterKey].length === 0) {
+                        delete this.currentFilters[filterKey];
+                    }
+                } else {
+                    this.currentFilters[filterKey].push(value);
+                }
+
+                this.search();
+            }
+
+            handleFacetToggle(facetHeader) {
+                const field = facetHeader.dataset.field;
+                const facetContent = facetHeader.nextElementSibling;
+                const toggle = facetHeader.querySelector('.facet-toggle');
+
+                if (this.collapsedFacets.has(field)) {
+                    // Expand
+                    this.collapsedFacets.delete(field);
+                    facetContent.classList.remove('collapsed');
+                    toggle.classList.remove('collapsed');
+                } else {
+                    // Collapse
+                    this.collapsedFacets.add(field);
+                    facetContent.classList.add('collapsed');
+                    toggle.classList.add('collapsed');
+                }
+            }
+
+            clearAllFilters() {
+                clearTimeout(this.searchTimeout);
+                clearTimeout(this.sliderTimeout);
+                this.currentFilters = {};
+                this.currentQuery = '';
+                document.getElementById('searchBox').value = '';
+                this.search();
+            }
+
+            handleNumericInputChange(element) {
+                const field = element.dataset.field;
+                const type = element.dataset.type;
+                const value = parseInt(element.value);
+
+                if (!this.currentFilters[field]) {
+                    const facetConfig = this.schema.facets.find(f => f.field === field);
+                    if (!facetConfig || facetConfig.type !== 'integer') return;
+
+                    // Initialize with full range
+                    const counts = this.facetIndex[field] || new Map();
+                    const values = Array.from(counts.keys()).map(k => parseInt(k)).filter(v => !isNaN(v));
+                    if (values.length === 0) return;
+
+                    const minValue = Math.min(...values);
+                    const maxValue = Math.max(...values);
+                    this.currentFilters[field] = { min: minValue, max: maxValue };
+                }
+
+                // Update the filter value
+                this.currentFilters[field][type] = value;
+
+                // Ensure min doesn't exceed max
+                if (this.currentFilters[field].min > this.currentFilters[field].max) {
+                    if (type === 'min') {
+                        this.currentFilters[field].max = value;
+                    } else {
+                        this.currentFilters[field].min = value;
+                    }
+                }
+
+                // Update UI to reflect the change
+                this.updateSliderUI(field);
+
+                // Debounce the search
+                clearTimeout(this.sliderTimeout);
+                this.sliderTimeout = setTimeout(() => {
+                    this.search();
+                }, 150);
+            }
+
+            updateSliderUI(field) {
+                const range = this.currentFilters[field];
+                if (!range) return;
+
+                // Update all numeric inputs for this field
+                const inputs = document.querySelectorAll(`input[data-field="${field}"]`);
+                inputs.forEach(input => {
+                    const type = input.dataset.type;
+                    input.value = range[type];
+                });
+            }
+
+            search(updateUrl = true) {
+                const startTime = performance.now();
+
+                let resultIndices = new Set();
+
+                // Apply text search using inverted index
+                if (this.currentQuery.trim()) {
+                    const tokens = this.currentQuery.toLowerCase().split(/\s+/);
+
+                    if (tokens.length > 0) {
+                        // Start with results for first token
+                        const firstToken = tokens[0];
+                        const matchingIndices = new Set();
+
+                        // Find partial matches for better UX
+                        for (const [indexToken, indices] of this.searchIndex) {
+                            if (indexToken.includes(firstToken)) {
+                                indices.forEach(idx => matchingIndices.add(idx));
+                            }
+                        }
+
+                        resultIndices = matchingIndices;
+
+                        // Intersect with other tokens
+                        for (let i = 1; i < tokens.length; i++) {
+                            const token = tokens[i];
+                            const tokenMatches = new Set();
+
+                            for (const [indexToken, indices] of this.searchIndex) {
+                                if (indexToken.includes(token)) {
+                                    indices.forEach(idx => tokenMatches.add(idx));
+                                }
+                            }
+
+                            // Intersect
+                            resultIndices = new Set([...resultIndices].filter(idx => tokenMatches.has(idx)));
+                        }
+                    }
+                } else {
+                    // No search query, include all items
+                    resultIndices = new Set(Array.from({length: this.originalData.length}, (_, i) => i));
+                }
+
+                // Apply facet filters using pre-computed index
+                for (const [filterKey, filterValues] of Object.entries(this.currentFilters)) {
+                    const facetConfig = this.schema.facets.find(f => f.field === filterKey);
+
+                    if (facetConfig && facetConfig.type === 'integer') {
+                        // Handle numeric range filters
+                        const range = filterValues;
+                        console.log(`Applying range filter for ${filterKey}:`, range);
+
+                        resultIndices = new Set([...resultIndices].filter(idx => {
+                            const item = this.originalData[idx];
+                            const value = parseInt(item[filterKey]);
+                            return !isNaN(value) && value >= range.min && value <= range.max;
+                        }));
+                    } else if (filterValues.length > 0) {
+                        if (facetConfig && facetConfig.type === 'array') {
+                            // Existing schemas require all values; a facet may opt into OR.
+                            resultIndices = new Set([...resultIndices].filter(idx => {
+                                const item = this.originalData[idx];
+                                const itemValues = item[filterKey] || [];
+
+                                const matches = selectedValue => itemValues.includes(selectedValue);
+                                return facetConfig.matchMode === 'any'
+                                    ? filterValues.some(matches) : filterValues.every(matches);
+                            }));
+                        } else {
+                            // For scalar fields, use OR logic: item must match ANY selected value
+                            console.log(`Applying OR logic for scalar field ${filterKey}:`, filterValues);
+
+                            const facetMatches = new Set();
+
+                            filterValues.forEach(value => {
+                                const indices = this.facetIndex[filterKey]
+                                    ? this.facetIndex[filterKey].get(value)
+                                    : new Set([...resultIndices].filter(idx => String(this.originalData[idx][filterKey]) === value));
+                                if (indices) {
+                                    indices.forEach(idx => facetMatches.add(idx));
+                                }
+                            });
+
+                            // Intersect with current results
+                            resultIndices = new Set([...resultIndices].filter(idx => facetMatches.has(idx)));
+                        }
+                    }
+                }
+
+                // Get actual data objects
+                const filteredData = Array.from(resultIndices).map(idx => this.originalData[idx]);
+
+                // Store for pagination and reset displayed count on new search
+                this.currentFilteredData = filteredData;
+                this.displayedCount = this.itemsPerPage;
+
+                // Generate facet counts for current result set and cache them
+                this.currentFacetCounts = this.generateFacetCounts(resultIndices);
+                const facetCounts = this.currentFacetCounts;
+
+                const endTime = performance.now();
+                document.getElementById('performanceInfo').textContent =
+                    `Search: ${(endTime - startTime).toFixed(2)}ms`;
+
+                this.renderResults();
+                this.renderFacets(facetCounts);
+                if (updateUrl) this.writeUrlState();
+                this.renderNavigation();
+            }
+
+            loadMore() {
+                this.displayedCount += this.itemsPerPage;
+                this.renderResults();
+            }
+
+            generateFacetCounts(resultIndices) {
+                const counts = {};
+
+                this.schema.facets.forEach(facet => {
+                    counts[facet.field] = new Map();
+
+                    resultIndices.forEach(idx => {
+                        const item = this.originalData[idx];
+                        const value = item[facet.field];
+
+                        // Skip if value is missing
+                        if (value === undefined || value === null) {
+                            return;
+                        }
+
+                        if (facet.type === 'array') {
+                            // Handle case where array field might not be an array
+                            if (Array.isArray(value)) {
+                                value.forEach(val => {
+                                    if (val !== undefined && val !== null) {
+                                        const key = String(val);
+                                        counts[facet.field].set(key, (counts[facet.field].get(key) || 0) + 1);
+                                    }
+                                });
+                            } else {
+                                // Treat single value as array of one
+                                const key = String(value);
+                                counts[facet.field].set(key, (counts[facet.field].get(key) || 0) + 1);
+                            }
+                        } else {
+                            const key = String(value);
+                            counts[facet.field].set(key, (counts[facet.field].get(key) || 0) + 1);
+                        }
+                    });
+                });
+
+                return counts;
+            }
+
+            renderResults() {
+                const items = this.currentFilteredData;
+                const resultsCount = document.getElementById('resultsCount');
+                const resultsGrid = document.getElementById('resultsGrid');
+
+                const totalCount = items.length;
+                const showingCount = Math.min(this.displayedCount, totalCount);
+                resultsCount.textContent = `Showing ${showingCount} of ${totalCount} ${this.schema.itemLabel || 'items'}`;
+                resultsGrid.className = `results-grid ${this.currentView === 'table' ? 'table-view' : 'card-view'}`;
+
+                if (totalCount === 0) {
+                    resultsGrid.innerHTML = `
+                        <div class="no-results">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">🔍</div>
+                            <h3>No items found</h3>
+                            <p>Try adjusting your filters or search terms</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Only render up to displayedCount items
+                const itemsToRender = items.slice(0, this.displayedCount);
+                const html = this.currentView === 'table'
+                    ? this.renderTableResults(itemsToRender, totalCount)
+                    : this.renderCardResults(itemsToRender, totalCount);
+
+                resultsGrid.innerHTML = html;
+            }
+
+            getCardFields() {
+                return this.schema.displayFields || this.schema.tableFields || [];
+            }
+
+            getTableFields() {
+                return this.schema.tableFields || this.schema.displayFields || [];
+            }
+
+            escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            fieldClass(fieldName) {
+                return fieldName.replace(/[^a-zA-Z0-9_-]/g, '_');
+            }
+
+            columnClass(fieldConfig) {
+                return this.fieldClass(fieldConfig.key || fieldConfig.field || fieldConfig.label);
+            }
+
+            plainValue(value) {
+                if (Array.isArray(value)) {
+                    return value.join('; ');
+                }
+                return String(value);
+            }
+
+            tsvCell(value) {
+                if (value === undefined || value === null) {
+                    return '';
+                }
+                const text = this.plainValue(value)
+                    .replace(/\r?\n|\r/g, ' ')
+                    .replace(/\t/g, ' ')
+                    .trim();
+                return /^[=+\-@]/.test(text) ? `'${text}` : text;
+            }
+
+            exportPartText(partConfig, item) {
+                const value = item[partConfig.field];
+                if (value === undefined || value === null) {
+                    return '';
+                }
+
+                if (partConfig.linkTextField && item[partConfig.linkTextField] !== undefined && item[partConfig.linkTextField] !== null) {
+                    const label = this.plainValue(item[partConfig.linkTextField]);
+                    if (partConfig.type === 'curie') {
+                        return `${label} (${this.plainValue(value)})`;
+                    }
+                    return label;
+                }
+
+                return this.plainValue(value);
+            }
+
+            exportFieldText(fieldConfig, item) {
+                if (fieldConfig.type === 'compound') {
+                    return (fieldConfig.parts || [])
+                        .map(partConfig => this.exportPartText(partConfig, item))
+                        .filter(Boolean)
+                        .join(' | ');
+                }
+
+                if (fieldConfig.linkTextField && item[fieldConfig.linkTextField] !== undefined && item[fieldConfig.linkTextField] !== null) {
+                    const label = this.plainValue(item[fieldConfig.linkTextField]);
+                    const value = item[fieldConfig.field];
+                    if (fieldConfig.type === 'curie') {
+                        return `${label} (${this.plainValue(value)})`;
+                    }
+                    return label;
+                }
+
+                const value = item[fieldConfig.field];
+                return value === undefined || value === null ? '' : this.plainValue(value);
+            }
+
+            exportCurrentResultsToTsv() {
+                const fields = this.schema.exportFields || this.getTableFields();
+                const rows = this.currentFilteredData || [];
+                const header = fields.map(fieldConfig => this.tsvCell(fieldConfig.label)).join('\t');
+                const body = rows.map(item => fields
+                    .map(fieldConfig => this.tsvCell(this.exportFieldText(fieldConfig, item)))
+                    .join('\t')
+                );
+                const tsv = [header, ...body].join('\n') + '\n';
+                const blob = new Blob([tsv], { type: 'text/tab-separated-values;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const date = new Date().toISOString().slice(0, 10);
+                link.href = url;
+                link.download = `${this.schema.exportFilenamePrefix || 'gene-annotation-review'}-${date}.tsv`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+            }
+
+            actionClass(value) {
+                return `action-${String(value).toLowerCase().replace(/_/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+            }
+
+            renderValue(fieldConfig, value, mode, item = null) {
+                if (value === undefined || value === null) {
+                    return mode === 'table' ? '<span class="empty-cell"></span>' : '';
+                }
+                if (value === '' && fieldConfig.emptyLabel) return this.escapeHtml(fieldConfig.emptyLabel);
+
+                if (fieldConfig.type === 'array') {
+                    if (mode === 'card') {
+                        const values = Array.isArray(value) ? value : [value];
+                        return `
+                            <div class="array-values">
+                                ${values.map(v => `<span class="array-item">${this.escapeHtml(v)}</span>`).join('')}
+                            </div>
+                        `;
+                    }
+                    return this.escapeHtml(this.plainValue(value));
+                }
+
+                if (fieldConfig.field === 'review.action') {
+                    const escapedValue = this.escapeHtml(value);
+                    return `<span class="action-badge ${this.actionClass(value)}">${escapedValue}</span>`;
+                }
+
+                if (fieldConfig.type === 'curie' && String(value).includes(':')) {
+                    const escapedValue = this.escapeHtml(value);
+                    const labelValue = fieldConfig.linkTextField && item
+                        ? item[fieldConfig.linkTextField]
+                        : value;
+                    const label = labelValue === undefined || labelValue === null
+                        ? value
+                        : labelValue;
+                    const curieUrl = `https://bioregistry.io/${escapedValue}`;
+                    return `<a href="${curieUrl}" target="_blank" style="color: #10b981; text-decoration: none; border-bottom: 1px dashed #10b981;">${this.escapeHtml(label)}</a>`;
+                }
+
+                if (fieldConfig.type === 'url' && value) {
+                    const escapedUrl = this.escapeHtml(value);
+                    const labelValue = fieldConfig.linkTextField && item
+                        ? item[fieldConfig.linkTextField]
+                        : fieldConfig.label;
+                    const label = labelValue === undefined || labelValue === null
+                        ? fieldConfig.label
+                        : labelValue;
+                    const target = fieldConfig.target === '_self' ? '_self' : '_blank';
+                    return `<a href="${escapedUrl}" target="${target}" style="color: #10b981; text-decoration: none; border-bottom: 1px dashed #10b981;">${this.escapeHtml(label)}</a>`;
+                }
+
+                return this.escapeHtml(value);
+            }
+
+            renderCompoundValue(fieldConfig, item, mode) {
+                const parts = (fieldConfig.parts || [])
+                    .map((partConfig, index) => {
+                        const value = item[partConfig.field];
+                        if (value === undefined || value === null) {
+                            return '';
+                        }
+                        if (this.schema.hideEmptyFields && !partConfig.emptyLabel &&
+                            (value === '' || (Array.isArray(value) && value.length === 0))) {
+                            return '';
+                        }
+
+                        const role = partConfig.role || (index === 0 ? 'primary' : 'secondary');
+                        const displayValue = this.renderValue(partConfig, value, mode, item);
+                        return `<span class="compound-${role}">${displayValue}</span>`;
+                    })
+                    .filter(Boolean)
+                    .join('');
+
+                return parts ? `<span class="compound-cell">${parts}</span>` : '<span class="empty-cell"></span>';
+            }
+
+            renderFieldValue(fieldConfig, item, mode) {
+                if (fieldConfig.type === 'compound') {
+                    return this.renderCompoundValue(fieldConfig, item, mode);
+                }
+                return this.renderValue(fieldConfig, item[fieldConfig.field], mode, item);
+            }
+
+            tableCellTitle(fieldConfig, item) {
+                if (fieldConfig.type === 'compound') {
+                    return (fieldConfig.parts || [])
+                        .map(partConfig => {
+                            if (partConfig.linkTextField && item[partConfig.linkTextField] !== undefined) {
+                                return item[partConfig.linkTextField];
+                            }
+                            return item[partConfig.field];
+                        })
+                        .filter(value => value !== undefined && value !== null)
+                        .map(value => this.plainValue(value))
+                        .join(' ');
+                }
+                const value = item[fieldConfig.field];
+                return value === undefined || value === null ? '' : this.plainValue(value);
+            }
+
+            renderLoadMore(totalCount, placement = 'bottom') {
+                if (this.displayedCount >= totalCount) {
+                    return '';
+                }
+
+                const remaining = totalCount - this.displayedCount;
+                const placementClass = placement === 'top' ? ' top-load-more' : '';
+                return `
+                    <div class="load-more-container${placementClass}">
+                        <button class="load-more-btn" id="loadMoreBtn">
+                            Load More Results
+                        </button>
+                        <div class="load-more-info">${remaining.toLocaleString()} more items available</div>
+                    </div>
+                `;
+            }
+
+            renderTableResults(itemsToRender, totalCount) {
+                const fields = this.getTableFields();
+                const headers = fields.map(fieldConfig => {
+                    const className = this.columnClass(fieldConfig);
+                    return `<th class="table-cell-${className}">${this.escapeHtml(fieldConfig.label)}</th>`;
+                }).join('');
+
+                const rows = itemsToRender.map(item => {
+                    const cells = fields.map(fieldConfig => {
+                        const className = this.columnClass(fieldConfig);
+                        const title = this.escapeHtml(this.tableCellTitle(fieldConfig, item));
+                        const displayValue = this.renderFieldValue(fieldConfig, item, 'table');
+                        return `<td class="table-cell-${className}"><span class="cell-content" title="${title}">${displayValue}</span></td>`;
+                    }).join('');
+                    return `<tr>${cells}</tr>`;
+                }).join('');
+
+                return `
+                    ${this.renderLoadMore(totalCount, 'top')}
+                    <div class="results-table-wrap">
+                        <table class="results-table">
+                            <thead><tr>${headers}</tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            renderCardResults(itemsToRender, totalCount) {
+                let html = itemsToRender.map(item => {
+                    const fieldsHtml = this.getCardFields().map(fieldConfig => {
+                        const value = item[fieldConfig.field];
+
+                        if (value === undefined || value === null) {
+                            return '';
+                        }
+                        if (this.schema.hideEmptyFields && !fieldConfig.emptyLabel &&
+                            (value === '' || (Array.isArray(value) && value.length === 0))) {
+                            return '';
+                        }
+
+                        const displayValue = this.renderValue(fieldConfig, value, 'card', item);
+
+                        return `
+                            <div class="field-display">
+                                <span class="field-label">${this.escapeHtml(fieldConfig.label)}:</span>
+                                <span class="field-value">${displayValue}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `<div class="result-card">${fieldsHtml}</div>`;
+                }).join('');
+
+                return html + this.renderLoadMore(totalCount);
+            }
+
+            renderFacets(facetCounts) {
+                const sidebar = document.getElementById('facetsSidebar');
+
+                const facetsHtml = this.schema.facets.map(facetConfig => {
+                    const counts = new Map(facetCounts[facetConfig.field] || []);
+                    if (this.schema.keepFacetOptions && facetConfig.type !== 'integer') {
+                        this.facetIndex[facetConfig.field].forEach((_, key) => {
+                            if (!counts.has(key)) counts.set(key, 0);
+                        });
+                        (this.currentFilters[facetConfig.field] || []).forEach(key => {
+                            if (!counts.has(key)) counts.set(key, 0);
+                        });
+                    }
+
+                    if (counts.size === 0) {
+                        return '';
+                    }
+
+                    // Check if this facet is collapsed
+                    const isCollapsed = this.collapsedFacets.has(facetConfig.field);
+
+                    // Handle integer type facets with slider
+                    if (facetConfig.type === 'integer') {
+                        // Get min and max values
+                        const values = Array.from(counts.keys()).map(k => parseInt(k)).filter(v => !isNaN(v));
+                        if (values.length === 0) return '';
+
+                        const minValue = Math.min(...values);
+                        const maxValue = Math.max(...values);
+
+                        // Get current filter range
+                        const currentRange = this.currentFilters[facetConfig.field] || { min: minValue, max: maxValue };
+
+                        return `
+                            <div class="facet-group">
+                                <div class="facet-header" data-field="${facetConfig.field}">
+                                    <div class="facet-title">${facetConfig.label} (${minValue}-${maxValue})</div>
+                                    <div class="facet-toggle ${isCollapsed ? 'collapsed' : ''}">▼</div>
+                                </div>
+                                <div class="facet-content ${isCollapsed ? 'collapsed' : ''}">
+                                    <div class="numeric-filter-container">
+                                        <div class="numeric-range-info">
+                                            Range: ${minValue} to ${maxValue}
+                                        </div>
+                                        <div class="numeric-input-wrapper">
+                                            <input type="number"
+                                                   class="numeric-input numeric-input-min"
+                                                   min="${minValue}"
+                                                   max="${maxValue}"
+                                                   value="${currentRange.min}"
+                                                   placeholder="Min"
+                                                   data-field="${facetConfig.field}"
+                                                   data-type="min">
+                                            <span class="numeric-separator">-</span>
+                                            <input type="number"
+                                                   class="numeric-input numeric-input-max"
+                                                   min="${minValue}"
+                                                   max="${maxValue}"
+                                                   value="${currentRange.max}"
+                                                   placeholder="Max"
+                                                   data-field="${facetConfig.field}"
+                                                   data-type="max">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Regular facet handling for non-integer types
+                    // Convert Map to array and sort
+                    const buckets = Array.from(counts.entries())
+                        .map(([key, count]) => ({ key, doc_count: count }))
+                        .sort((a, b) => {
+                            if (facetConfig.sortBy === 'count') {
+                                return b.doc_count - a.doc_count;
+                            } else {
+                                return a.key.localeCompare(b.key);
+                            }
+                        });
+
+                    // Determine how many facet items to show
+                    const isExpanded = this.expandedFacets.has(facetConfig.field);
+                    const maxToShow = isExpanded ? buckets.length : this.facetItemsToShow;
+                    const bucketsToShow = buckets.slice(0, maxToShow);
+                    const hasMore = buckets.length > this.facetItemsToShow;
+
+                    const itemsHtml = bucketsToShow.map(bucket => {
+                        const isActive = this.currentFilters[facetConfig.field] &&
+                                        this.currentFilters[facetConfig.field].includes(bucket.key);
+
+                        // Create hyperlink for CURIE type facets
+                        const label = facetConfig.valueLabels ? (facetConfig.valueLabels[bucket.key] || bucket.key) : bucket.key;
+                        let displayValue = this.escapeHtml(label);
+                        if (facetConfig.type === 'curie' && bucket.key.includes(':')) {
+                            const curieUrl = `https://bioregistry.io/${this.escapeHtml(bucket.key)}`;
+                            displayValue = `<a href="${curieUrl}" target="_blank" style="color: inherit; text-decoration: none;" onclick="event.stopPropagation();">${this.escapeHtml(bucket.key)}</a>`;
+                        }
+
+                        return `
+                            <div class="facet-item ${isActive ? 'active' : ''}"
+                                 data-filter="${facetConfig.field}"
+                                 data-value="${this.escapeHtml(bucket.key)}">
+                                <input type="checkbox" class="facet-checkbox" aria-label="${this.escapeHtml(facetConfig.label + ': ' + label)}" ${isActive ? 'checked' : ''}>
+                                <span>${displayValue}</span>
+                                <span class="facet-count">${bucket.doc_count}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Add show more/less button if needed
+                    let showMoreBtn = '';
+                    if (hasMore) {
+                        const remaining = buckets.length - this.facetItemsToShow;
+                        showMoreBtn = `
+                            <button class="facet-show-more" data-field="${facetConfig.field}">
+                                ${isExpanded ? 'Show Less' : `Show ${remaining} More`}
+                            </button>
+                        `;
+                    }
+
+                    return `
+                        <div class="facet-group">
+                            <div class="facet-header" data-field="${facetConfig.field}">
+                                <div class="facet-title">${facetConfig.label} (${buckets.length})</div>
+                                <div class="facet-toggle ${isCollapsed ? 'collapsed' : ''}">▼</div>
+                            </div>
+                            <div class="facet-content ${isCollapsed ? 'collapsed' : ''}">
+                                ${itemsHtml}
+                                ${showMoreBtn}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                sidebar.innerHTML = facetsHtml;
+            }
+        }
+
+        // Sample data matching your structure for testing
+        const sampleData = [
+            {
+                "id": "gomodel:56170d5200000012",
+                "title": "kctd10 in heart development PMID:24430697",
+                "taxon": "NCBITaxon:7955",
+                "status": "production",
+                "model_activity_part_of_rollup_label": ["anatomical structure development"],
+                "number_of_activities": 5
+            },
+            {
+                "id": "gomodel:568b0f9600000284",
+                "title": "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)",
+                "taxon": "NCBITaxon:6239",
+                "status": "production",
+                "model_activity_part_of_rollup_label": ["immune system process", "defense response to other organism"],
+                "number_of_activities": 12
+            },
+            {
+                "id": "gomodel:test123",
+                "title": "Test model for neural development",
+                "taxon": "NCBITaxon:10090",
+                "status": "development",
+                "model_activity_part_of_rollup_label": ["nervous system development", "cell differentiation"],
+                "number_of_activities": 8
+            }
+        ];
+
+        const sampleSchema = {
+            "title": "GO Model Catalog",
+            "description": "Search and filter GO models by multiple criteria",
+            "searchPlaceholder": "Search models...",
+            "searchableFields": ["title", "model_activity_part_of_rollup_label"],
+            "facets": [
+                {
+                    "field": "taxon",
+                    "label": "Taxon",
+                    "type": "string",
+                    "sortBy": "count"
+                },
+                {
+                    "field": "status",
+                    "label": "Status",
+                    "type": "string",
+                    "sortBy": "alphabetical"
+                },
+                {
+                    "field": "model_activity_part_of_rollup_label",
+                    "label": "Biological Process",
+                    "type": "array",
+                    "sortBy": "count"
+                }
+            ],
+            "displayFields": [
+                { "field": "title", "label": "Title", "type": "string" },
+                { "field": "taxon", "label": "Taxon", "type": "string" },
+                { "field": "status", "label": "Status", "type": "string" },
+                { "field": "model_activity_part_of_rollup_label", "label": "Biological Process", "type": "array" }
+            ]
+        };
+
+        // Initialize when ready
+        function initializeSearch() {
+            console.log('🔍 Initializing search...');
+
+            const data = window.searchData || sampleData;
+            const schema = window.searchSchema || sampleSchema;
+
+            // Set title and description from schema
+            if (schema.title) {
+                document.getElementById('appTitle').textContent = schema.title;
+            }
+            if (schema.description) {
+                document.getElementById('appDescription').textContent = schema.description;
+            }
+
+            // Set search placeholder
+            if (schema.searchPlaceholder) {
+                document.getElementById('searchBox').placeholder = schema.searchPlaceholder;
+            }
+
+            // Inject custom CSS if provided
+            if (schema.customCss) {
+                const styleEl = document.createElement('style');
+                styleEl.textContent = schema.customCss;
+                document.head.appendChild(styleEl);
+            }
+
+            console.log('📊 Data check:', {
+                dataLoaded: !!window.searchData,
+                schemaLoaded: !!window.searchSchema,
+                dataLength: data ? data.length : 0,
+                dataType: typeof data,
+                isArray: Array.isArray(data),
+                sampleItem: data && data.length > 0 ? data[0] : null,
+                schemaType: typeof schema,
+                schema: schema
+            });
+
+            // Validate data structure
+            if (!data || !Array.isArray(data)) {
+                console.error('❌ Invalid data:', data);
+                document.getElementById('resultsCount').textContent = 'Error: Invalid data format';
+                return;
+            }
+
+            // Validate schema with detailed checks
+            if (!schema) {
+                console.error('❌ Schema is null/undefined');
+                document.getElementById('resultsCount').textContent = 'Error: Schema is missing';
+                return;
+            }
+
+            if (!schema.facets) {
+                console.error('❌ Schema missing facets array:', schema);
+                document.getElementById('resultsCount').textContent = 'Error: Schema missing facets';
+                return;
+            }
+
+            if (!Array.isArray(schema.facets)) {
+                console.error('❌ Schema facets is not an array:', typeof schema.facets, schema.facets);
+                document.getElementById('resultsCount').textContent = 'Error: Schema facets must be an array';
+                return;
+            }
+
+            if (!schema.searchableFields) {
+                console.error('❌ Schema missing searchableFields:', schema);
+                document.getElementById('resultsCount').textContent = 'Error: Schema missing searchableFields';
+                return;
+            }
+
+            if (!Array.isArray(schema.searchableFields)) {
+                console.error('❌ Schema searchableFields is not an array:', typeof schema.searchableFields, schema.searchableFields);
+                document.getElementById('resultsCount').textContent = 'Error: Schema searchableFields must be an array';
+                return;
+            }
+
+            // Check if searchable fields exist in data
+            const firstItem = data[0] || {};
+            console.log('🔍 First data item:', firstItem);
+            console.log('🏷️ Schema searchableFields:', schema.searchableFields);
+            console.log('📊 Schema facets:', schema.facets);
+
+            const missingFields = schema.searchableFields.filter(field => !(field in firstItem));
+            if (missingFields.length > 0) {
+                console.warn('⚠️ Missing searchable fields:', missingFields);
+            }
+
+            // Check if facet fields exist in data
+            const missingFacetFields = schema.facets.filter(facet => !(facet.field in firstItem));
+            if (missingFacetFields.length > 0) {
+                console.warn('⚠️ Missing facet fields:', missingFacetFields.map(f => f.field));
+            }
+
+            try {
+                console.log('🚀 Creating search instance...');
+                new OptimizedFacetedSearch(data, schema);
+                console.log('✅ Search initialized successfully');
+            } catch (error) {
+                console.error('❌ Error initializing search:', error);
+                document.getElementById('resultsCount').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Add more detailed event listening with better timing
+        console.log('🔧 Setting up event listeners...');
+
+        let initializationAttempted = false;
+
+        function tryInitialize() {
+            if (initializationAttempted) {
+                console.log('⏭️ Initialization already attempted, skipping');
+                return;
+            }
+
+            if (window.searchData && window.searchSchema) {
+                console.log('✅ Both data and schema available, initializing...');
+                initializationAttempted = true;
+                initializeSearch();
+            } else {
+                console.log('⏳ Still waiting...', {
+                    hasData: !!window.searchData,
+                    hasSchema: !!window.searchSchema
+                });
+            }
+        }
+
+        // Check if already loaded
+        if (window.searchData && window.searchSchema) {
+            console.log('📦 Data already loaded, initializing immediately');
+            initializeSearch();
+        } else {
+            console.log('⏳ Waiting for data to load...');
+
+            // Listen for both data and schema ready events
+            window.addEventListener('searchDataReady', () => {
+                console.log('📡 searchDataReady event received');
+                setTimeout(tryInitialize, 50); // Small delay to ensure both files are processed
+            });
+
+            // Enhanced fallback with more debugging
+            setTimeout(() => {
+                if (window.searchDataLoading) {
+                    document.getElementById('resultsCount').textContent = 'Loading annotation data…';
+                    return;
+                }
+                console.log('⏰ Timeout reached, checking status...');
+                console.log('Final state check:', {
+                    hasSearchData: !!window.searchData,
+                    searchDataType: typeof window.searchData,
+                    searchDataLength: window.searchData ? window.searchData.length : 'N/A',
+                    hasSearchSchema: !!window.searchSchema,
+                    searchSchemaType: typeof window.searchSchema,
+                    schemaHasFacets: window.searchSchema ? !!window.searchSchema.facets : 'N/A'
+                });
+
+                if (!initializationAttempted) {
+                    if (window.searchData && window.searchSchema) {
+                        console.log('🔄 Data available but not initialized, trying now...');
+                        tryInitialize();
+                    } else if (!window.searchData && !window.searchSchema) {
+                        console.log('📋 No external data found, using sample data');
+                        initializeSearch();
+                    } else {
+                        console.error('❌ Partial data loading - check your file paths');
+                        if (!window.searchData) {
+                            document.getElementById('resultsCount').textContent = 'Error: data.js not loaded';
+                        } else {
+                            document.getElementById('resultsCount').textContent = 'Error: schema.js not loaded';
+                        }
+                    }
+                }
+            }, 2000); // Increased timeout
+        }
+    </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -43,6 +44,23 @@ def uniprot_sequence(path):
     return ''.join(sequence.split())
 
 
+def go_sidecar_matches_source(
+    sidecar: dict[str, Any], accession: str, go: list[dict[str, str]],
+) -> bool:
+    """Require explicit, assessed empty output as well as coverage of emitted GO."""
+    predictions = sidecar.get('predictions')
+    if sidecar.get('id') != accession or not isinstance(predictions, list):
+        return False
+    expected = {(s['id'], s['text'].split(':', 1)[-1]) for s in go}
+    actual = {(p['predicted_term']['id'], p['predicted_term']['label']) for p in predictions}
+    if actual != expected or len(predictions) != len(go):
+        return False
+    if not go:
+        return sidecar.get('status') == 'COMPLETE' and bool((sidecar.get('description') or '').strip())
+    return all(p.get('review', {}).get('assessment') in
+               {'COR', 'CNN', 'LSP', 'UNC', 'PLI', 'NPI', 'REP'} for p in predictions)
+
+
 def main():
     with (ROOT/'functional-cohort.csv').open() as f:
         cohort = list(csv.DictReader(f))
@@ -71,10 +89,8 @@ def main():
         functions = [s for s in statements if s['accession']==accession and s['type']=='function']
         sidecar_path = directory/(gene+'-protnlm-predictions-review.yaml')
         sidecar = yaml.safe_load(sidecar_path.read_text()) if sidecar_path.exists() else {}
-        expected = {(s['id'],s['text'].split(':',1)[-1]) for s in go}
-        actual = {(p['predicted_term']['id'],p['predicted_term']['label']) for p in sidecar.get('predictions', [])}
         assessments = [p.get('review', {}).get('assessment') for p in sidecar.get('predictions', [])]
-        go_assessed = not go or (sidecar.get('id')==accession and actual==expected and len(assessments)==len(go) and all(x in {'COR','CNN','LSP','UNC','PLI','NPI','REP'} for x in assessments))
+        go_assessed = go_sidecar_matches_source(sidecar, accession, go)
         if go_assessed:
             assessment_counts.update(assessments)
         narrative_path = directory/(gene+'-protnlm-function-review.md')
@@ -92,6 +108,8 @@ def main():
                           'positive_predictions_matching_negated_goa':negative_conflicts,'pending_actions':pending,'main_actions_recorded':main_assessed,
                           'expected_go_predictions':len(go),'go_predictions_assessed':len(go) if go_assessed else 0,
                           'go_sidecar_matches_source':go_assessed,'expected_function_paragraphs':len(functions),
+                          'prediction_sidecar_present':sidecar_path.is_file(),
+                          'reviewed_without_go_predictions':bool(not go and go_assessed),
                           'function_review_present_with_original':function_present,
                           'uniprot_sequence_matches_frozen':bool(sequence and sequence == frozen_sequences[accession]),
                           'uniprot_sequence_sha256':hashlib.sha256(sequence.encode()).hexdigest() if sequence else None,
@@ -102,13 +120,17 @@ def main():
                           'history_files':[str(p.relative_to(REPO)) for p in history],
                           'research_files':reports,'ready_for_manual_validation':bool(main_assessed and go_assessed and function_present and reports)})
     summary = {'cohort_genes':len(cohort),'genes_with_all_review_outputs':sum(r['ready_for_manual_validation'] for r in inventory),
+               'prediction_review_files':sum(r['prediction_sidecar_present'] for r in inventory),
+               'genes_with_go_predictions':sum(r['expected_go_predictions'] > 0 for r in inventory),
+               'genes_without_go_predictions':sum(r['expected_go_predictions'] == 0 for r in inventory),
+               'reviewed_without_go_predictions':sum(r['reviewed_without_go_predictions'] for r in inventory),
                'go_predictions_assessed':sum(r['go_predictions_assessed'] for r in inventory),
                'go_assessment_counts':dict(sorted(assessment_counts.items())),
                'new_annotation_proposals':sum(r['new_annotation_proposals'] for r in inventory),
                'function_paragraphs_with_review_files':sum(r['expected_function_paragraphs'] for r in inventory if r['function_review_present_with_original']),
                'positive_predictions_matching_negated_goa':sum(len(r['positive_predictions_matching_negated_goa']) for r in inventory),
                'goa_rows_with_review_actions':sum(r['goa_rows'] for r in inventory if r['main_actions_recorded']),
-               'caveat':'Coverage checks exact accession, GO IDs/labels, valid assessment codes and original paragraph retention. It does not certify supporting evidence, scientific correctness, narrative atomic assessment or validation success.'}
+               'caveat':'Coverage requires an exact-accession prediction sidecar for every target, including explicit empty predictions and a completed summary when no GO was emitted. Zero-output records have no VDCL score and do not enter GO claim totals. The check also covers GO IDs/labels, valid assessment codes and original paragraph retention; it does not certify supporting evidence, scientific correctness, narrative atomic assessment or validation success.'}
     (ROOT/'review-inventory.json').write_text(json.dumps({'summary':summary,'genes':inventory},indent=2)+'\n')
     print(json.dumps(summary,indent=2))
 

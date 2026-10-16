@@ -5,56 +5,57 @@
 
 ## 1. Source annotations (from `*-goa.tsv`)
 
-- Behaviour annotations in corpus GOA files: **149**
-- Distinct genes carrying a behaviour term: **61**
-- Distinct behaviour terms used: **44**
+- Behaviour annotations in corpus GOA files: **209**
+- Distinct genes carrying a behaviour term: **87**
+- Distinct behaviour terms used: **52**
 
 Evidence-code distribution:
 
 | Evidence | Count |
 |---|---|
-| IMP | 62 |
-| IGI | 26 |
-| ISS | 19 |
-| IEA | 19 |
+| IMP | 84 |
+| IEA | 39 |
+| IGI | 30 |
+| ISS | 26 |
 | ISO | 14 |
+| IBA | 5 |
+| TAS | 5 |
 | IDA | 3 |
 | NAS | 2 |
-| IBA | 2 |
 | IEP | 1 |
-| TAS | 1 |
 
 Most-used behaviour terms:
 
 | Term | ID | Count |
 |---|---|---|
-| locomotory behavior | GO:0007626 | 23 |
-| behavioral response to pain | GO:0048266 | 9 |
-| mating behavior | GO:0007617 | 9 |
-| social behavior | GO:0035176 | 8 |
+| locomotory behavior | GO:0007626 | 26 |
+| mating behavior | GO:0007617 | 11 |
+| social behavior | GO:0035176 | 11 |
+| behavioral response to pain | GO:0048266 | 10 |
+| drinking behavior | GO:0042756 | 10 |
+| chemosensory behavior | GO:0007635 | 9 |
+| adult locomotory behavior | GO:0008344 | 9 |
+| thermosensory behavior | GO:0040040 | 8 |
 | circadian behavior | GO:0048512 | 7 |
-| adult locomotory behavior | GO:0008344 | 7 |
 | swimming behavior | GO:0036269 | 6 |
+| locomotory exploration behavior | GO:0035641 | 6 |
+| adult behavior | GO:0030534 | 6 |
+| olfactory behavior | GO:0042048 | 6 |
 | grooming behavior | GO:0007625 | 5 |
-| locomotory exploration behavior | GO:0035641 | 5 |
-| adult behavior | GO:0030534 | 5 |
 | adult walking behavior | GO:0007628 | 5 |
-| drinking behavior | GO:0042756 | 5 |
-| feeding behavior | GO:0007631 | 4 |
-| maternal behavior | GO:0042711 | 4 |
-| male mating behavior | GO:0060179 | 3 |
 
 ## 2. Reviewer actions (from `*-ai-review.yaml`)
 
-- Behaviour annotations in reviews: **155**
-- Of behaviour annotations adjudicated as core-vs-not (**146** = 127 downgraded + 19 kept core; excludes 9 NEW proposed terms and any not-yet-reviewed), **127/146 (87%)** were downgraded (non-core / over-annotated / removed); only **19** were ACCEPTed as a core function.
+- Behaviour annotations in reviews: **216**
+- Of behaviour annotations adjudicated as core-vs-not (**197** = 169 downgraded + 28 kept core; excludes 10 NEW proposed terms and any not-yet-reviewed), **169/197 (86%)** were downgraded (non-core / over-annotated / removed); only **28** were ACCEPTed as a core function.
 
 Action distribution:
 
 | Action | Count |
 |---|---|
-| KEEP_AS_NON_CORE | 105 |
-| ACCEPT | 19 |
-| MARK_AS_OVER_ANNOTATED | 13 |
-| REMOVE | 9 |
-| NEW | 9 |
+| KEEP_AS_NON_CORE | 147 |
+| ACCEPT | 28 |
+| MARK_AS_OVER_ANNOTATED | 17 |
+| NEW | 10 |
+| UNDECIDED | 9 |
+| REMOVE | 5 |

@@ -2,9 +2,45 @@
 title: "Antimicrobial Resistance (AMR) Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [ECOLX, ECO8N, ENTCL, SALSP, AERME, KLEPN, AERER, BACFG, BACAN, BACSP, STAAU, BACSU, PSEAI, PRORE, ACIBZ, ACIBA, SPHSM, STAAT, MYCSM, STAHA, STAWA]
+genes: [mphA, mphB, mcr-1, aac6-Ib, mcr2, mcr-4, mcr-3, rmtE, rmtD, rmtF, ermA, ermF, ermJ, knt, ant, aadK, hph, strB, apmA, fosA5, fosA3, blaOXA-418, blaOXA-400, blaOXA-480, tetX, fosB, arr, ereB, lnuA, cfr]
+sidecars:
+  slide_assets:
+    - ANTIMICROBIAL_RESISTANCE/slides/aro2go-pipeline.svg
+    - ANTIMICROBIAL_RESISTANCE/slides/aro2go-table.jpg
+    - ANTIMICROBIAL_RESISTANCE/slides/candidates-by-term.svg
+    - ANTIMICROBIAL_RESISTANCE/slides/cfr-review-table.jpg
+manifest:
+  slides:
+    - href: ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/96q6dgRv3WdTTC6pcCoT4z
+      title: Project brief
 ---
 
 # Antimicrobial Resistance (AMR) Project
+
+**Bottom line:** antibiotic-resistance enzymes are well characterised
+biochemically, but their GO records usually carry only a generic electronic
+term such as `transferase activity`, or nothing at all. We reviewed 30 AMR
+determinants across 21 bacterial species (140 annotation rows, 47 of them
+proposed as `NEW`), and built the first ARO→GO bridge: a validated SSSOM
+mapping set (23 mappings plus 9 recorded gaps) from CARD's Antibiotic
+Resistance Ontology to GO. A pipeline chains UniProt `DR CARD` cross-references
+through that mapping, and applied to the 4,182 UniProtKB entries with a CARD
+cross-reference it yields 630 candidate new GO annotations after a
+subsumption filter removed 104 redundant ones. A manual spot check of six
+candidates found four correct, one redundant and one questionable, so the
+candidates are curator leads, not automatic assertions.
+
+We did this because CARD already holds expert-curated mechanism, drug and
+literature data for each determinant, and mining it is a cheap way to supply
+the specific enzyme chemistry that GO annotation is missing. The recurring
+lesson is that `response to antibiotic` is usually present and true; the gain
+is the missing molecular function, and for several chemistries (tetracycline
+monooxygenase, erythromycin esterase, rifampin ADP-ribosyltransferase) GO has
+no leaf term yet.
 
 ## Overview
 

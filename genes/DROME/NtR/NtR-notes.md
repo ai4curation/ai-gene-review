@@ -7,3 +7,8 @@ The [family evidence report](NtR-family-evidence.md) includes the primary Matthe
 The ancillary ProtNLM protein name highlights a farnesoic-acid O-methyltransferase domain. The exact sequence has this N-terminal domain match and a separate neuronal-channel ligand-binding region; the label does not prove methyltransferase activity, substrate identity, or that the channel annotation is wrong. The raw original name, score, donor and location metadata remain in NtR-predictions-source.json.
 
 Falcon completed in 443.74 seconds and found no direct NtR ligand assay, but missed the target-containing published channel phylogeny and described even a generic channel role as unsupported. The primary family tree plus target architecture and current FlyBase classification support the broad conserved-function inference. ProtNLM GO:0005230 is CNN; specific cholinergic, calcium and derived synaptic calls remain UNDECIDED pending evidence about this distinct branch.
+
+
+## Full-gene re-review, 2026-09-20
+
+All 15 annotations were assessed. Ion transport and membrane MODIFY decisions were restored to ACCEPT: broad true ancestors remain valid. The nine specific ligand/ion/synaptic rows remain UNDECIDED, grounded in the separately branching Dmel NTR lineage, not absence of a native assay alone. The original Matthews2018 Extended Data10d image was inspected directly; Dmel NTR lies outside both shaded nAChR groups. The complete Falcon report was incorporated with its limitation: it missed this primary family evidence and therefore undercalled broad channel function. Root manages the new focused ligand/selectivity/synaptic adjudication. No source rows or isoform mappings changed.

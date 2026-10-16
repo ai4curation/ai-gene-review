@@ -1,10 +1,32 @@
 ---
 title: "Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [ECOLI, PSEAE]
+manifest:
+  slides:
+    - href: ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/QG3qUxoDDS2zn4KB6e6ydj
+      title: Project brief
 ---
 
 # Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted the molecular function term GO:0008785
+*alkyl hydroperoxide reductase activity*, whose definition fixed a single
+substrate (octane hydroperoxide) that no known enzyme is specific for, and
+merged it into GO:0102039 *NADH-dependent peroxiredoxin activity*
+(EC 1.11.1.26). The ontology change is merged upstream
+(geneontology/go-ontology#32015); what remains is moving two experimental
+annotations, E. coli AhpF (IGI) and P. aeruginosa PA3529 (IDA), to the new
+term. This page records that impact and queues both genes for review.
+Scoped, not yet started: neither gene has a review in this repo, so no
+existing review needs refreshing. The only repo review touching the
+replacement term is P. putida *ahpC*, which carries an IEA row for
+GO:0102039 that its review modifies to the single-subunit GO:0051920
+*peroxiredoxin activity*.
 
 ## Overview
 
@@ -154,3 +176,11 @@ review is blocked.
   #6396 still open (no comments). Ontology obsoletion PR
   geneontology/go-ontology#32015 already merged. No gene reviews
   started in this repo.
+- 2026-10-02 — Started the E. coli AhpF follow-on review from current GOA.
+  `just fetch-gene ECOLI AhpF` seeded 20 annotations for UniProtKB:P35340; the
+  live GOA pull has already migrated AhpF from obsolete GO:0008785 to
+  GO:0102039. Added a concrete `bacterial_alkyl_hydroperoxide_reductase` module
+  for the AhpF NADH-to-AhpC electron-transfer reaction. The review keeps
+  GO:0102039 as the whole-system peroxidase activity that AhpF contributes to,
+  but scopes AhpF's own molecular function to GO:0047134
+  *protein-disulfide reductase [NAD(P)H] activity*.

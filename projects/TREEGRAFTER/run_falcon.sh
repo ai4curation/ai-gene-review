@@ -2,9 +2,9 @@
 # Launch falcon deep-research for 10 TreeGrafter exemplars: a GENE run (blinded
 # function hypothesis) and a FAMILY run (family-function characterization) each.
 set -uo pipefail
-cd /home/user/ai-gene-review
-S=/tmp/claude-0/-home-user-ai-gene-review/1a22a3e6-dfb7-5df6-91cd-c7a823f9e5b7/scratchpad
-LOG=$S/falcon_logs; mkdir -p "$LOG"
+cd "$(dirname "$0")/../.."
+# Per-run logs; override with FALCON_LOG_DIR=/some/dir.
+LOG=${FALCON_LOG_DIR:-$(mktemp -d -t treegrafter-falcon-XXXXXX)}; mkdir -p "$LOG"
 MAXJOBS=8
 
 # fields: org|gene|uniprot|term_id|term_label|family_id|family_name|subfamily

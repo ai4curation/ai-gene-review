@@ -3,9 +3,30 @@ title: "PINK1-Parkin Mitophagy Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [OPTN, CALCOCO2, SQSTM1, TAX1BP1, NBR1, TBK1, BNIP3L, VCP]   # reviewed genes only; full candidate list is in the table below
+manifest:
+  slides:
+    - href: MITOPHAGY/slides/MITOPHAGY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/6cKsT95CWm1eYy7upcA6HU
+      title: Project brief
 ---
 
 # PINK1-Parkin Mitophagy Project
+
+**Bottom line:** scoped, not yet started as a project. In PINK1-Parkin
+mitophagy, the PINK1 kinase accumulates on damaged mitochondria and makes
+phospho-ubiquitin, which activates the Parkin (PRKN) E3 ligase; ubiquitin-binding
+receptors (OPTN, CALCOCO2, SQSTM1, TAX1BP1, NBR1) then link the organelle to
+the autophagosome. The candidate table below lists 14 human genes, but there is
+no mitophagy module and PINK1 and PRKN themselves have not been reviewed. Eight
+candidates already have reviews made for Proteostasis and other projects (OPTN,
+CALCOCO2, SQSTM1, TAX1BP1, NBR1, TBK1, BNIP3L, VCP). In those reviews mitophagy
+is a core function of OPTN (`type 2 mitophagy`, GO:0061734), CALCOCO2 and
+BNIP3L, and a non-core role of SQSTM1. BNIP3, FUNDC1, PHB2 and MFN2 are also
+unreviewed. The worm counterpart, [CAEEL_MITOPHAGY](CAEEL_MITOPHAGY.md), is
+much further along.
 
 ## Overview
 
@@ -46,7 +67,7 @@ PINK1/Parkin-independent:
 - **FUNDC1** - Hypoxia-induced
 - **PHB2** - Inner membrane receptor
 
-## Candidate Genes (~18)
+## Candidate Genes (14)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -56,10 +77,12 @@ PINK1/Parkin-independent:
 | CALCOCO2 | Q13137 | NDP52 receptor |
 | SQSTM1 | Q13501 | p62 receptor |
 | TAX1BP1 | Q86VP1 | Receptor |
+| NBR1 | Q14596 | Receptor |
 | TBK1 | Q9UHD2 | Kinase |
 | BNIP3 | Q12983 | Receptor |
 | BNIP3L | O60238 | NIX receptor |
 | FUNDC1 | Q8IVP5 | Receptor |
+| PHB2 | Q99623 | Inner membrane receptor |
 | VCP | P55072 | Extraction |
 | MFN2 | O95140 | Parkin substrate |
 

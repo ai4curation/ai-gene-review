@@ -2,9 +2,36 @@
 title: "Parasite Immune Modulators"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
+species: [DESRO]
+sidecars:
+  slide_figures:
+    - PARASITE_IMMUNE_MODULATORS/slides/candidate-funnel.svg
+    - PARASITE_IMMUNE_MODULATORS/slides/host-targets.svg
+manifest:
+  slides:
+    - href: PARASITE_IMMUNE_MODULATORS/slides/PARASITE_IMMUNE_MODULATORS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/JJLDmMgBcefBkHqhR9iHiA
+      title: Project brief
 ---
 
 # Parasite Immune Modulators
+
+**Bottom line:** blood-feeders and parasites secrete proteins that blunt host
+clotting, inflammation and immunity. This project set out to curate them, starting with vampire bat
+(*Desmodus rotundus*, DESRO) saliva. So far the work has been scoping: we
+summarised the Vampirome salivary transcriptome, extracted its Table 4
+candidates, and mapped 45 transcripts to UniProt, of which 35 matched an
+accession (all unreviewed TrEMBL entries). The gene reviews themselves were
+done under the sibling [VAMPIROME](VAMPIROME.md) project, which now holds 14
+DESRO reviews (13 salivary candidates plus K9IMD0, the lactotransferrin
+entry mapped to Draculin), 11 of them with a written description and core
+functions; CALCA has a folder but no review. The checkboxes
+below were not updated to reflect that. Non-bat parasites have not been
+started here; nematode parasites are tracked under the
+[PARASITES](PARASITES.md) umbrella, which treats this project as its
+host-modulation sub-topic.
 
 ## Overview
 

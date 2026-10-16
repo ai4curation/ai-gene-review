@@ -24,11 +24,25 @@ autolink_gene_symbols: false
 - [x] Separate meso-diaminopimelate use in peptidoglycan from L-lysine formation.
 - [x] Finish fetching and reviewing the ten selected PSEPK proteins.
 - [x] Attempt OpenScientist research for the module and all ten genes; eight
-  gene reports completed and two provider timeouts are documented in notes.
+  gene reports completed in the first pass and two provider timeouts were
+  documented in notes.
 - [x] Complete initial module validation.
 - [x] Validate and render module, gene, and project pages after evidence integration.
-- [x] Open one draft PR for this module/pathway: [PR #2177](https://github.com/ai4curation/ai-gene-review/pull/2177).
-- [ ] Shepherd the PR through review, CI, and merge readiness.
+- [x] Merge the first-pass module/pathway curation in [PR #2177](https://github.com/ai4curation/ai-gene-review/pull/2177).
+
+### Repair wave107
+
+- [x] Remove KT2440-specific evidence, paralog gaps, and candidate exclusions
+  from the reusable module.
+- [x] Replace the module's PSEPK-only representative sets with reviewed
+  non-PSEPK reaction exemplars.
+- [x] Verify exact PANTHER labels and representative-member containment.
+- [x] Add only PAINT nodes with explicit local IBD rows for the leaf activity.
+- [x] Complete the two previously timed-out OpenScientist gene reports with a
+  7200-second allowance and no cancellation.
+- [x] Complete annotation-reviewer consultation and address its blocking findings.
+- [x] Validate and render all changed outputs.
+- [x] Open one PR and request review.
 
 ## Satisfiability
 
@@ -64,27 +78,35 @@ pathway holes.
 | `PP_4473`, `asd__Q88LE4` | Shared upstream aspartate-pathway precursor supply rather than dedicated DAP-route membership |
 | `PP_0664`, `hom` | Homoserine dehydrogenases serving threonine/methionine-family metabolism, not the DAP route |
 | `murE`, `murF` | Downstream peptidoglycan assembly enzymes that consume meso-diaminopimelate-containing precursors |
-| `aruC`, `aspC` | Broad aminotransferases not substituted for the DapC-specific family without physiological evidence |
-| `PP_2036` | DapA-like EC/name call but lacks the DapA-specific InterPro/HAMAP and lysine-pathway signatures present on Q88NH2 and Q88JL0 |
+| `aruC`, `aspC` | Broad aminotransferases not substituted for the DapC-specific family without physiological evidence; the module report's DapL-like `aspC` mapping is treated as likely pathway-map over-propagation |
+| `PP_2036` | DapA-like EC/name call in the metadata, but no lysine-pathway assignment or target review establishes it as a third pathway DapA |
 
 ## Module Decisions
 
 - The module contains seven ordered reaction parts; it is not a one-enzyme
   wrapper around LysA.
-- DapA, DapF, and LysA are family-selected steps with two exact PSEPK UniProt
-  exemplars each. Current evidence supports the chemistry of both copies but
-  does not establish their relative in-vivo flux.
+- DapA, DapB, DapF, and LysA use exact PANTHER parent families with reviewed
+  E. coli reaction exemplars. DapA additionally carries the function-specific
+  InterPro IPR005263 grounding because PTHR12128 is a broad aldolase parent.
+  The PSEPK paralog sets remain part of this concrete satisfiability record
+  rather than the reusable family definitions.
 - DapD, DapC, and DapE explicitly model the succinylated route rather than
   collapsing all taxonomic DAP-pathway variants into one ambiguous step.
-- No PAINT ancestral node is asserted. PTN tokens in the selected local GOA
-  rows occur in combined-IEA or TreeGrafter evidence rather than canonical
-  `GO_REF:0000033` IBD seeds; the DapE-associated PTN also carries the rejected
-  ArgE/arginine propagation.
+- DapA PTN000252718, DapB PTN000464618, DapE PTN000110566, DapF
+  PTN000784348, and LysA PTN000159906 are asserted from explicit
+  `GO_REF:0000033` IBD rows in the local PAINT exports. No uncertain PANTHER or
+  PTN identifier is asserted for DapD or DapC, but their exact local equivalog
+  groundings are retained: DapD NCBIfam TIGR03536 and dedicated DapC NCBIfam
+  TIGR03538 plus InterPro IPR019878. DapE retains both NCBIfam TIGR01246 and its
+  exact activity PTN.
 - Molecular functions occur only on leaf annotons, and no module-level
   cytoplasm/cytosol pair is asserted.
-- The UniProt GO:0009089 cross-reference is not authored as a new core term.
-  Gene reviews consistently use GO:0009085 for L-lysine biosynthesis while
-  preserving machine-sourced existing IDs for review.
+- GO:0009089 is not used as the justification for a new core term. Local
+  resources disagree about its status: the current local OAK snapshot labels
+  it obsolete, while `rules/_labels.json` and UniProt-derived metadata retain
+  the unprefixed label. The reviews therefore keep their current GOA-backed
+  GO:0009085 L-lysine biosynthetic-process term, which safely covers the full
+  route, while preserving machine-sourced existing IDs for review.
 
 ## Research Interpretation
 
@@ -94,15 +116,18 @@ pathway holes.
   sequence-identity-based rankings of DapA, DapF, and LysA copies are therefore
   retained as hypotheses, not used to exclude exact UniProt-supported
   paralogs from this first-pass reusable module.
-- The gene-level DapF reports resolve the Q88GD4 UniProt sequence caution as a
-  putative paired-serine DapF-SS signature (Ser70/Ser205), alongside the
+- The gene-level DapF reports interpret the Q88GD4 UniProt CAUTION about
+  conserved residues missing for HAMAP feature propagation as a putative
+  paired-serine DapF-SS signature (Ser70/Ser205), alongside the
   canonical paired-cysteine Q88CF3 DapF-CC copy (Cys75/Cys219). PMID:40774471
   establishes the DapF-SS class, but neither KT2440 paralog has a direct assay;
   activity partitioning and gene-specific essentiality remain open.
-- Eight gene-level OpenScientist reports completed and were integrated
-  conservatively. The DapA-II (`dapA__Q88JL0`) and DapB runs timed out; their
-  failed retrievals are recorded in the corresponding notes files rather than
-  represented as provider reports.
+- PTHR31689's official parent label is chloroplast-biased, but its verified
+  member set and PAINT evidence include bacterial DapF; the official label is
+  therefore retained with an explicit caveat rather than rewritten.
+- Eight gene-level OpenScientist reports completed in the first pass. The
+  previously timed-out DapA-II (`dapA__Q88JL0`) and DapB reports completed in
+  this repair with a 7200-second provider allowance and without cancellation.
 - Both LysA reports support EC 4.1.1.20, but neither establishes the relative
   in-vivo contribution of Q88L58 and Q88CF4. The LysA-II report's inference
   from adjacency to `dapF` is retained as context, not as evidence that Q88CF4
@@ -110,16 +135,18 @@ pathway holes.
 - PP_1588 has DapC-specific InterPro/NCBIfam signatures and remains the selected
   step-4 enzyme. The possible contribution of the broader ArgD/AruC family is a
   physiological flux question rather than a pathway hole.
+- Reviewed UniProt searches found characterized bifunctional ArgD/DapC proteins
+  and a dedicated mycobacterial DapC, but no reviewed exemplar in the exact
+  beta/gammaproteobacterial IPR019878/TIGR03538 lineage. E. coli P18335 is kept
+  only as a reaction exemplar and is explicitly not asserted as an ortholog or
+  shared family member.
 
 ## Validation
 
-All ten targeted `just validate PSEPK <gene>` checks pass after evidence
-integration. The module passes LinkML and the dedicated module validator, with
-only the expected advisory warnings for unconfigured InterPro and NCBIfam
-prefixes, and the module and project pages render successfully.
-
-The settled-tree `just validate-all` run passes: 3,692/3,692 reviews are valid,
-with zero invalid files and zero errors. Term validation has no errors (four
-repository-wide files retain advisory label warnings), reference validation
-has no blocking errors (29 files retain advisory warnings), and all 53 pathway
-files with PMID references pass.
+All ten pathway-gene reviews pass `just validate`; the five edited reviews were
+revalidated after evidence corrections. The module passes LinkML validation and
+semantic validation. The sole semantic advisory is intentional: the verified
+DapA exemplar belongs to PTHR12128:SF66, whose official label names a different
+aldolase, so the exact parent PTHR12128 label is retained instead of asserting a
+misleading subfamily ID. The changed gene, module, and project pages render
+successfully, and cache-only validation noise is excluded from the repair.

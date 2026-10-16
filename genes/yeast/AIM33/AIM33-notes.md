@@ -75,8 +75,9 @@ section plus domain/orthology-grounded (not invented) reasoning.
   mitochondrial genome maintenance. (These are HTP/large-scale phenotypes, not deep mechanism.)
 
 ### Family / paralog / ortholog context
-- **Paralog**: PGA3 (arose from the whole-genome duplication). PGA3 = plasma-membrane-associated
-  NADH:coenzyme-Q6 reductase (the PANTHER SF143 exemplar). [WebSearch: SGD/Wikidata]
+- **Paralog**: PGA3 (arose from the whole-genome duplication). PANTHER subfamily SF143 is named
+  for plasma membrane-associated coenzyme Q6 reductase PGA3, while GO/PAINT still uses PGA3 as a
+  donor for cytochrome-b5 reductase activity at PTN000452207.
 - Related family members in yeast: **MCR1** (YKL150W; mitochondrial OMM/IMS NADH-cytochrome b5
   reductase; electron donor to sterol-biosynthetic cytochrome P450s Erg11/Erg5/Erg1 and to
   fatty-acid/sterol desaturation; oxidative-stress response), **CBR1** (ER NADH-cytochrome b5
@@ -85,6 +86,27 @@ section plus domain/orthology-grounded (not invented) reasoning.
   orthologs. The mapping is family-level, not an unambiguous 1:1 ortholog. Human CYB5R4 is a
   soluble flavohemoprotein (extra cytochrome-b5 and p23 domains) important for beta-cell/oxidative-
   stress protection — a different domain architecture from the polytopic yeast AIM33.
+
+### 2026-09-29 PAINT / IBA re-check
+- Re-read `interpro/panther/PTHR19370/PTHR19370-paint.tsv` and the GOA `WITH/FROM` strings for
+  all three AIM33 IBA rows.
+- The current plasma-membrane assertion is `PTN001064672 / GO:0005886`, a Saccharomycetaceae
+  AIM33/PGA3-branch IBD seeded only by **PGA3** (`SGD:S000004594`, 2025-04-08). That same node
+  carries an explicit negated `GO:0005739` mitochondrial IRD from the broader `PTN000452207`
+  node. The negation shows that PAINT made a clade-specific call against propagating
+  the upstream mitochondrial site; the plasma-membrane site still rests on PGA3,
+  so neither site should be assigned to AIM33 before direct localization.
+- `PTN000452207 / GO:0004128` remains current and is seeded by **MCR1** and **PGA3**. The
+  ancestral flavin reductase fold is real, but the mixed donor biology still leaves AIM33's
+  acceptor unresolved: MCR1 is a cytochrome-b5 reductase, whereas the PGA3 PANTHER subfamily is
+  named for plasma membrane-associated coenzyme Q6 reductase.
+- `PTN000452208 / GO:0006696` remains current as a broad MCR1-seeded ergosterol-biosynthesis
+  assertion. No AIM33-specific sterol-biosynthesis evidence was found, so this remains a
+  paralog over-propagation rather than a core process for AIM33.
+- Current PAINT now has a very broad `PTN001833551 / GO:0016491 oxidoreductase activity` IBD
+  seeded by MCR1, PGA3, CBR1 and many non-yeast CYB5R family members. That IBD is not in AIM33's
+  current GOA rows, but it agrees with the retained InterPro `GO:0016491` row and is the safest
+  molecular-function level for AIM33 until its acceptor is measured directly.
 
 ## NOT known (the real knowledge gaps)
 1. **Catalytic activity of AIM33 itself.** No enzyme assay demonstrates cytochrome-b5 reductase
@@ -136,3 +158,21 @@ section plus domain/orthology-grounded (not invented) reasoning.
   PubMed-verified secondary sources (SGD S000004552, NCBI Gene 854887); it does not depend on the
   deep-research file. If the falcon retry produced `AIM33-deep-research-falcon.md`, it is included
   for the record but was not the basis for any specific claim.
+
+## 2026-10-01 current GOA refresh
+- Refreshed UniProt/GOA: AIM33 still has 9 live rows, with the same three IBA rows, three
+  UniProt/InterPro IEA rows, and three SGD ND roots. The UniProt and InterPro rows advanced from
+  `20260616` to `20260727`; no rows were added or removed.
+- Copied current GOA `WITH/FROM` strings into `supporting_entities` for the six computational
+  rows: `PTN001064672|PGA3` for plasma membrane, `PTN000452207|MCR1|PGA3` for cytochrome-b5
+  reductase, `PTN000452208|MCR1` for ergosterol biosynthesis, `ARBA00027922`,
+  `UniProtKB-SubCell:SL-0162`, and the four InterPro reductase-domain signatures.
+- Refetched `PTHR19370`; the family currently has 16 node-level PAINT assertions. The tree carries
+  a broad mitochondrial `GO:0005739` IBD at `PTN000452207`, and still carries a
+  negated `GO:0005739` IRD at the AIM33/PGA3 `PTN001064672` node, so current GOA still omits
+  mitochondrial localization for AIM33. The three existing IBA judgments therefore remain valid:
+  generalize the PGA3-seeded plasma-membrane IBA to membrane, and keep cytochrome-b5 reductase
+  activity and ergosterol biosynthesis marked as over-specific paralog transfers.
+- Searched newer `AIM33` / `YML087C` / `Q04516` literature after the refresh. No direct paper was
+  found that identifies AIM33's endogenous membrane, physiological electron acceptor, or
+  mitochondrial/sterol-pathway mechanism, so no literature-backed action changed.

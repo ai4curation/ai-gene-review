@@ -11,7 +11,7 @@ doi: 10.1091/mbc.e21-10-0491
 content_type: full_text_html
 full_text_attempted: true
 full_text_provider: openalex
-full_text_url: "https://www.ncbi.nlm.nih.gov/pmc/articles/9250357"
+full_text_url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9250357"
 oa_status: green
 ---
 

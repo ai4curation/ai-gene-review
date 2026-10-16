@@ -1,10 +1,40 @@
 ---
 title: "Pfam → GO Mapping: A Precision Gap-Filling Experiment"
 maturity: MATURE
-tags: [PIPELINE]
+tags: [PIPELINE, EVALUATION]
+sidecars:
+  slide_charts:
+    - PFAM/slides/pfam-coverage.svg
+    - PFAM/slides/pfam-hypothesis.svg
+manifest:
+  slides:
+    - href: PFAM/slides/PFAM-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/W4798uw5yzf3XeGei7Mvp4
+      title: Project brief
 ---
 
 # Pfam → GO Mapping: A Precision Gap-Filling Experiment
+
+**Bottom line:** Pfam publishes its own GO mapping (pfam2go) beside
+InterPro2GO, and because one InterPro entry can lump several Pfam families, we
+tested whether pfam2go carries more specific GO terms that InterPro drops. It does
+not: of 9,871 pfam2go assertions on integrated families, 9,844 are identical to
+the parent InterPro entry's terms and none is more specific, because pfam2go is
+now generated from InterPro2GO. We then measured headroom for new mappings
+against all 30,134 Pfam-A families. Splitting lumped entries offers almost
+nothing (only 76 GO-bearing entries have two or more Pfam members), but 24,888
+families (82.6%) get no GO term through InterPro at all, including well-known
+domains such as SH2 and EGF. We curated nine Pfam families as their own entries
+under `interpro/pfam/`: five proposed mappings verified against reviewed
+SwissProt members, and four rejected because a same-family member contradicts
+the term.
+
+We did this because gene reviews consume InterPro2GO heavily, and we needed to
+know whether a second domain-level mapping file was a cheap source of extra
+precision. The answer redirects effort toward coverage of unmapped families and
+toward subfamily-grained sources such as PANTHER and NCBIfam.
 
 ## Motivation
 
@@ -79,12 +109,14 @@ Pfam-specific GO curation was discontinued; modern `pfam2go` is a **derived
 projection** of `interpro2go` down to member signatures. ~99.7% of its assertions
 are byte-identical to the parent entry's terms; the rest are explained by:
 
-- **The one genuine difference runs the *other* way.** For `PF08214` (HAT_KAT11,
+- **The one specificity difference (MORE_GENERAL) runs the *other* way.** For `PF08214` (HAT_KAT11,
   sole member of `IPR016849` *Histone acetyltransferase Rtt109*), `interpro2go` is
   **more** precise — it has *histone **H3** acetyltransferase activity*
   (GO:0010484) where `pfam2go` only has the parent *histone acetyltransferase
   activity* (GO:0004402). The InterPro curator added specificity the Pfam mapping
-  lacks. This is the opposite of the hypothesis.
+  lacks. This is the opposite of the hypothesis. The one genuine `DISJOINT` row
+  is the same family's `pfam2go` process term *regulation of DNA-templated
+  transcription* (GO:0006355), which is unrelated to the entry's terms.
 - **Release skew, not signal.** The 25 remaining "disjoint" assertions (13
   families) all map to brand-new InterPro entries (`IPR06xxxx`) that carry *no*
   GO at all. Cause: the membership file is InterPro **release 109.0 (11 Jun 2026)**
@@ -231,7 +263,7 @@ entry level is more plausibly found by:
 3. **Per-protein curation** (UniProt, GOA experimental) — outside the scope of
    domain→GO mappings entirely.
 
-See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW/) and
+See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW.md) and
 [IBA_REVIEW.md](IBA_REVIEW.md) for the subfamily-level direction.
 
 ## Reproducing

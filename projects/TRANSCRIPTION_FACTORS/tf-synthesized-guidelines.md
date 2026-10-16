@@ -5,6 +5,7 @@ title: "Transcription Factor Annotation Guidelines (Synthesized)"
 # Transcription Factor Annotation Guidelines (Synthesized)
 
 Operational guidelines for GO annotation of transcription regulators, synthesized from:
+
 - GO Consortium guidelines PDF (Gaudet, Logie, Lovering, 2023)
 - BBA Gene Regulatory Mechanisms paper (PMID:34461313, 2021)
 
@@ -55,9 +56,13 @@ BP: GO:0006355 regulation of transcription, DNA-templated
 
 ### dbTF Inhibitors
 ```
-MF: GO:0140416 DNA-binding transcription factor inhibitor activity
+MF: GO:0140416 transcription regulator inhibitor activity
 ```
-Use when protein sequesters dbTF away from chromatin (does NOT act at target gene locus).
+Definition: "A molecular function regulator that inhibits the activity of a transcription
+regulator via direct binding and/or post-translational modification." The classic case is
+sequestering a dbTF away from chromatin (PIAS1 blocking STAT1 DNA binding), but inhibition by
+covalent modification of the regulator (e.g. inhibitory SUMOylation by a SUMO E3) is also within
+the term. The inhibitor does not itself act at the target gene locus.
 
 ---
 
@@ -90,6 +95,7 @@ See evidence requirements below.
 ### For dbTF (GO:0003700)
 
 **Minimum requirements:**
+
 1. Evidence of DNA binding
 2. Evidence that binding regulates transcription of target gene(s)
 

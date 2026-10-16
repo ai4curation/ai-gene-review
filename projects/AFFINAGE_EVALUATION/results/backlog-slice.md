@@ -55,7 +55,7 @@ that a naive import would have silently accepted:
   mitochondrial acetyl-CoA acetyltransferase (thiolase, P24752). A textbook symbol
   collision the organism scan alone would have missed.
 - **ADA** — the organism-token gate + `pairwise = loss` flagged the multi-entity chimera
-  (see the [project page](../AFFINAGE_EVALUATION.md) §3).
+  (see the [project page](../../AFFINAGE_EVALUATION.md) §3).
 
 Every example file is a **faithful, unedited rendering** of the Affinage record — clearly
 marked in its frontmatter as

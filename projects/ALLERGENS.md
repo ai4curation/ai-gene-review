@@ -1,19 +1,39 @@
 ---
 title: "Allergens Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [FELCA, CANLF, HORSE, BOVIN, DERPT, BETPN, mouse, rat, human]
 genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Canf1, Canf2, Canf6, Equc1, Equc2, Equc4, Bosd2, Musm1, Ratn1, Derp1, Derp2, Derp23, Betv1, Betv2, Scgb1a1]
+sidecars:
+  slide_figures:
+    - ALLERGENS/slides/ch1-review-table.jpg
+    - ALLERGENS/slides/priority-quadrant.svg
+    - ALLERGENS/slides/triage-pipeline.svg
+manifest:
+  slides:
+    - href: ALLERGENS/slides/ALLERGENS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/3mEMoeKTFksZXuPqF9xaif
+      title: Project brief
 ---
 
 # Allergens Project
 
-> Allergenicity is a **cross-species immunological property** — IgE reactivity in
-> a sensitized human — **not** the protein's evolved molecular function. GO, and
-> this project's reviews, stay focused on evolved function in the source organism.
-> The "allergen" label is used here only as a **prioritization bucket**: a cohort
-> of proteins worth reviewing because their function is medically actionable and
-> often poorly understood.
+**Bottom line:** allergens are being knocked out (CRISPR Fel d 1 cats), neutralized with
+antibodies and used in immunotherapy, yet for many of them nobody knows what the protein does
+in its source organism. We use the allergen label only as a prioritization bucket: being an
+allergen is an IgE property of a sensitized human, not an evolved function, so the reviews
+stay on native function. We built an allergen-to-UniProt index (32 genes, 31 molecules), a
+registry snapshot and worklist from UniProt's Allergen keyword (1,020 reviewed entries), and
+an IEDB epitope ETL, then ranked targets by epitope load times function uncertainty. So far 24
+genes are reviewed (the full cat set, dog, horse, cow, mouse, rat, house dust mite and birch
+allergens, plus the uteroglobin comparator Scgb1a1): 219 existing annotations, none removed, 62 marked
+over-annotated (40 of them, mostly ISS metabolic and insulin-signalling terms, on the mouse and rat MUPs) plus 18 new terms
+proposed. The headline is that the top-priority allergens (Bet v 1, Fel d 1, Can f 1) are
+heavily IgE-targeted and still have no known native function. Coverage of the registry is
+small and the reviews are still marked DRAFT; the status list at the end has the most current
+counts, and the "16 genes" figures in the middle sections predate the later cohorts.
 
 ## Why an allergens cohort
 

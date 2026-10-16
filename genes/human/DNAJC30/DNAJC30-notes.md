@@ -33,3 +33,7 @@
 - brain development (ISS/IEA) — KEEP_AS_NON_CORE; reflects neurodevelopmental phenotype/high brain expression but is a downstream pleiotropic outcome, not the molecular core.
 - protein binding (IPI) — the MT-ATP6/ATP5MC2 interactions (PMID:30318146) are biologically meaningful (ATP synthase) — could MODIFY toward a specific term; the HuRI set (PMID:32296183) is uninformative -> KEEP_AS_NON_CORE.
 - Core MF: chaperone/co-chaperone activity in complex I subunit exchange + ATP synthase auxiliary subunit. Best MF terms: protein-folding chaperone binding / unfolded protein binding not directly shown; the gene acts as a holdase/chaperone facilitating subunit exchange. The clearest experimentally-grounded MF for the ATP-synthase role is enzyme/structural association; for complex I it's chaperone activity. Use GO:0051082 unfolded protein binding? Not demonstrated. Better core: biological processes (complex I repair / ATP synthesis regulation). For MF, GO:0140662? (ATP-dependent protein folding chaperone) is not apt (it's not ATP-dependent foldase). Will use a chaperone-binding/holdase framing carefully.
+
+## GO:0051082 migration (2026-09-27)
+
+The complex I repair core function carries no molecular-function term. GO:0051082 is obsolete, and whether DNAJC30 binds damaged N-module subunits directly or acts through HSP70 has not been established, so no holdase or carrier term is supported.

@@ -1,12 +1,43 @@
 ---
 title: Human Genes Annotation Re-Review
-maturity: IN_PROGRESS
+maturity: MATURE
+tags: [EVALUATION]
 autolink_gene_symbols: true
 species:
   - human
+last_reviewed: 2026-10-04
+sidecars:
+  slide_figures:
+    - HUMAN_GENES_RE_REVIEW/slides/not-audit.svg
+    - HUMAN_GENES_RE_REVIEW/slides/sweep-funnel.svg
+manifest:
+  slides:
+    - href: HUMAN_GENES_RE_REVIEW/slides/HUMAN_GENES_RE_REVIEW-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Gu6CuxB6PcEA9pzAh8hfzV
+      title: Project brief
 ---
 
 # Human Genes Annotation Re-Review
+
+**Bottom line:** each gene review assigns an action (ACCEPT, REMOVE, MODIFY
+and so on) to every existing GO annotation, and those actions are only as
+good as the reviewer who set them. We re-read the actions in every human
+review file then in the repo, 1,323 genes from AAAS to ZSWIM8, and asked of
+each one whether we agreed, using the YAML and cached publications without
+new literature searches. Agreement was about 99.7%: only three actions were
+changed (ABL1 UNDECIDED → REMOVE, ADRM1 REMOVE → UNDECIDED, BRCA2 NOT-row
+REMOVE → ACCEPT), and all three edits are in the current YAMLs. We also
+adjudicated all 143 NOT annotations and logged four fence cases (AGO3/AGR2,
+ATP23, GAPDH, HSPA1B) and two literature questions (ASCL1, ATF3) for a
+curator. The sweep finished in July 2026; since then TRA2B, flagged below as
+never reviewed, has been reviewed, and the human set has grown to 2,812
+review files, so 1,489 newer reviews have not had this second pass.
+
+We did this to measure how far the first-pass actions can be trusted before
+building summaries and modules on them, and to find any systematic reviewer
+errors worth a guideline change.
 
 ## Purpose
 
@@ -49,10 +80,13 @@ per-annotation-action level. Bottom line:
   inappropriate term removal, and legacy-TF de-annotation of proteins later shown to
   be ESCRT/Golgi/vesicle machinery (TSG101, TMF1, USO1).
 - **Residual follow-ups** (not action errors, just outstanding work):
-  - `TRA2B` — 67 annotations still at `PENDING`; needs a *full initial* review, out of
-    scope for this re-review pass.
   - A handful of **Needs literature** items (below) where I declined to adjudicate
     without full-text access (e.g. `ASCL1`, `ATF3`).
+  - Fence cases where the existing action was left in place but would benefit from
+    curator review (`AGO3`/`AGR2`, `ATP23`, `GAPDH`, `HSPA1B`).
+  - A second pass across the 1,489 human review files added after the original
+    A-to-Z sweep. These are tracked in
+    [#4097](https://github.com/ai4curation/ai-gene-review/issues/4097).
 
 The per-batch progress log is retained below as the audit trail.
 
@@ -191,10 +225,11 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
 | V-01 | VBP1 VCP VEGFA VMP1 VOPP1 VPS28 VPS37A VPS37B VPS37C VPS37D VPS4A VPS4B VTI1A WDR6 WFS1 WIPF1 WT1 XDH XIST YWHAZ | agree; 0 edits (VEGFA REMOVE 'cellular response to VEGF'[ligand≠responder]+cautious UNDECIDED on ligand→process; VCP/YWHAZ-14-3-3ζ big moonlighting/adaptor cleanup[14-3-3 not a kinase→MODIFY phos]; XDH pathway-step precision; WT1 IDA-transcription-activation REMOVE=documented isoform-repressor case[ISOFORMS/PMID:9815658]+taxon-inappropriate Drosophila terms removed) |
 | Z-01 | ZFYVE26 ZNF598 ZSWIM8 | agree; 0 edits (ZFYVE26/spastizin autophagosome-maturation NEW; ZNF598 RQC-E3 clean; ZSWIM8 MODIFY→specific target-directed-miRNA-decay terms) — **END OF ALPHABET; sweep complete** |
 
-## Genes needing a full (not re-) review
+## Follow-ups resolved after the sweep
 
-- **TRA2B** — 67 annotations all still `action: PENDING`; never reviewed. Needs a
-  full annotation-reviewer pass, out of scope for this re-review but flagged here.
+- **TRA2B** — flagged during the July A-to-Z sweep because all 67 seeded
+  annotations were still `action: PENDING`. The file is now `status: COMPLETE`
+  with no PENDING rows.
 
 ## Edits made
 

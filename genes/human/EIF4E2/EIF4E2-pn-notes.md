@@ -94,3 +94,12 @@
 ## Note
 
 This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.
+
+
+## 2026-09-21: focused eIF4F report incorporated; older categorical statements superseded
+
+The earlier statements that EIF4E2 cannot form a productive eIF4F complex or cannot associate with any eIF4G paralog are too broad. PMID:26854219 full-text Results and Fig2C/S2D report endogenous human EIF4E2/eIF4A/eIF4G3 pull-downs, with eIF4G3 depletion impairing hypoxic translation and polysome recruitment. PMID:22678294 explicitly reports eIF4A recruitment. These primary observations support the retained GO:0016281 complex annotation and hypoxic initiation function alongside GIGYF-mediated repression; no new ribosome-binding claim is inferred from polysome association.
+
+Read the entire `eif4f-complex-under-hypoxia/openscientist.md` report and its plot provenance JSON. It supports context-dependent initiation and repression but incorrectly treats complex composition as untested. Lack of a separately curated Complex Portal entry or experimental GO row is not a negative assay. PMID:28698298 analyzes GIGYF/4E-BP interfaces and cites earlier work for lack of eIF4G interaction; it does not test hypoxic EIF4G3 complex assembly. Its dorsal partner-binding surface lies opposite the cap pocket, contrary to the report's conflation of cap-stacking Trp/Tyr with a proposed dorsal binding defect. Binary binding and complex membership are separate questions.
+
+Delivered plot code hard-codes claimed alignment identities and labels IBA/ISS 'weak'; it supplies no reproducible alignment supporting those numerical claims. They are not adopted as independently verified sequence results. The report is marked DISPUTED, while its supported dual-function findings are incorporated. The complex annotation stays ACCEPT; no new broad or redundant process annotation is added.

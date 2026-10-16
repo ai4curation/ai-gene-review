@@ -119,3 +119,20 @@ Chromosome 6. MANE-Select NM_017770.4 / NP_060240.3.
   TECR interaction is the one with a defined biological role (elongation-cycle partner).
 </content>
 </invoke>
+
+
+## Full re-review 2026-09-20
+
+All 44 original rows were assessed; no source fields or source files were changed and no NEW annotations were added. See [ELOVL2-primary-assessment.md](ELOVL2-primary-assessment.md) for primary figure/assay access and limitations, and [ELOVL2-source-and-term-check.json](ELOVL2-source-and-term-check.json) for exact PAINT ancestry, term definitions and interaction records. This entry supersedes earlier claims that preferential substrate use excludes other capacities, that only terminal elongases participate in a pathway, or that generic binding is biologically incorrect. Three saturated/monounsaturated rows remain UNDECIDED pending the focused neutral substrate question; all other capacities are retained, including sphingolipid synthesis, broad membrane/elongation and omega-3/omega-6 pathway work. Earlier confident citation-misattribution claims based on abstracts were withdrawn.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:32296183: KEEP_AS_NON_CORE -> REMOVE
+- PMID:38422897: KEEP_AS_NON_CORE -> UNDECIDED
+- PMID:20937905: KEEP_AS_NON_CORE -> REMOVE

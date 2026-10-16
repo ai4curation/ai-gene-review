@@ -48,6 +48,6 @@
 ## Core function (synthesis)
 - MF: **GO:0005198 structural molecule activity** (honest, non-catalytic).
 - contributes_to: **GO:0008137 NADH dehydrogenase (ubiquinone) activity** (complex-level).
-- BP: **GO:0006120 mitochondrial electron transport, NADH to ubiquinone** and **GO:0032981 mitochondrial respiratory chain complex I assembly** (structural role in a mature, functional complex).
+- BP: **GO:0006120 mitochondrial electron transport, NADH to ubiquinone** only (structural role in a mature, functional complex; the process counterpart of the contributes_to MF above). **GO:0032981 mitochondrial respiratory chain complex I assembly is NOT asserted** — revised 2026-09-28, following the reasoning already given at the top of this file: assembly is unaffected in NDUFA12-knockout cells because NDUFAF2 substitutes at the same site, so NDUFA12 is dispensable for assembly per se, unlike the other accessory subunits (which do carry GO:0032981 alongside GO:0006120, e.g. NDUFA11). This is the one place NDUFA12 should differ from its paralogous accessory subunits.
 - location: **GO:0005743 mitochondrial inner membrane** (matrix-side peripheral).
 - in_complex: **GO:0045271 respiratory chain complex I**.

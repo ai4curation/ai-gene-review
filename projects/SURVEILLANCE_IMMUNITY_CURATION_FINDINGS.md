@@ -1,11 +1,27 @@
 ---
 title: "GO Annotation Curation Review: C. elegans Surveillance Immunity Genes"
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
 ---
 
 # GO Annotation Curation Review: C. elegans Surveillance Immunity Genes
+
+**Bottom line:** this is the executive summary of the Priority 3 review
+in the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md) project, covering six genes (daf-16, dbl-1, sta-2, nipi-3,
+lys-7, clec-60) and 238 GOA rows as counted on 2025-12-29. Its main
+finding is that domain-based electronic annotation assigned catalytic
+activity to proteins that lack it: lysozyme activity on LYS-7, whose
+lysozyme domain lacks the active-site residues, and protein kinase activity
+on the NIPI-3 Tribbles pseudokinase. It also flags generic protein-binding
+rows, IBA transfers that do not fit worm biology (STA-2 JAK-STAT), heavy
+redundancy in DAF-16, and the difficulty of separating developmental from
+immune roles, and it lays out a four-phase fix plan. The final reviews
+adopted the pseudoenzyme and JAK-STAT calls (NIPI-3 kinase and STA-2
+JAK-STAT rows REMOVE; LYS-7 enzymatic rows MARK_AS_OVER_ANNOTATED).
+
 ## Executive Summary of Findings
 
 **Date:** 2025-12-29
@@ -274,35 +290,35 @@ species: [worm]
 ## Implementation Path Forward
 
 ### Step 1: Preparation (1-2 hours)
-- [ ] Review this summary document
-- [ ] Review detailed curation summary and checklist
-- [ ] Identify tools/resources needed (publication PDFs, UniProt records)
+- Review this summary document
+- Review detailed curation summary and checklist
+- Identify tools/resources needed (publication PDFs, UniProt records)
 
 ### Step 2: CLEC-60 Implementation (1-2 hours)
-- [ ] Add 3 new annotations
-- [ ] Validate file structure
-- [ ] Commit changes
+- Add 3 new annotations
+- Validate file structure
+- Commit changes
 
 ### Step 3: Critical Fixes (4-6 hours)
-- [ ] LYS-7 and NIPI-3 critical errors
-- [ ] DBL-1 duplicates
-- [ ] DAF-16 protein binding cleanup
-- [ ] Staggered commits
+- LYS-7 and NIPI-3 critical errors
+- DBL-1 duplicates
+- DAF-16 protein binding cleanup
+- Staggered commits
 
 ### Step 4: Consolidation (8-12 hours)
-- [ ] Working through lifespan, localization, DNA binding consolidation
-- [ ] Systematic approach to avoid losing information
+- Working through lifespan, localization, DNA binding consolidation
+- Systematic approach to avoid losing information
 
 ### Step 5: Categorization (6-10 hours)
-- [ ] Mark developmental/pleiotropic roles as non-core
-- [ ] Update core_functions sections
-- [ ] Validation
+- Mark developmental/pleiotropic roles as non-core
+- Update core_functions sections
+- Validation
 
 ### Step 6: Final Polish (4-6 hours)
-- [ ] Mechanism clarifications
-- [ ] Cross-gene consistency check
-- [ ] Final validation run
-- [ ] Comprehensive commit
+- Mechanism clarifications
+- Cross-gene consistency check
+- Final validation run
+- Comprehensive commit
 
 **Total estimated effort:** 25-40 hours
 **Recommended pace:** 5-10 hours per week over 4-8 weeks
@@ -341,18 +357,18 @@ species: [worm]
 
 ## Support Materials Available
 
-**Summary Document:** `/Users/cjm/repos/ai-gene-review/SURVEILLANCE_IMMUNITY_GENE_REVIEW_SUMMARY.md`
+**Summary Document:** `projects/SURVEILLANCE_IMMUNITY_GENE_REVIEW_SUMMARY.md`
 - Gene-by-gene detailed analysis (80+ pages)
 - Specific issue identification
 - Recommended actions with evidence
 
-**Implementation Checklist:** `/Users/cjm/repos/ai-gene-review/SURVEILLANCE_IMMUNITY_CURATION_CHECKLIST.md`
+**Implementation Checklist:** `projects/SURVEILLANCE_IMMUNITY_CURATION_CHECKLIST.md`
 - Line-by-line actionable checklist
 - ROW-BY-ROW analysis for each gene
 - Action tables for easy reference
 - Success metrics
 
-**This Document:** `/Users/cjm/repos/ai-gene-review/SURVEILLANCE_IMMUNITY_CURATION_FINDINGS.md`
+**This Document:** `projects/SURVEILLANCE_IMMUNITY_CURATION_FINDINGS.md`
 - Executive summary
 - Key findings and patterns
 - Implementation priorities
