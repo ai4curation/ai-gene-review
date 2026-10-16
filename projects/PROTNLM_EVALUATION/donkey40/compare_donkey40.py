@@ -53,7 +53,9 @@ ASPECT_PRED = {"GO_MF": "molecular_function", "GO_BP": "biological_process",
 ASPECT_QG = {"molecular_function": "molecular_function", "biological_process": "biological_process",
              "cellular_component": "cellular_component", "F": "molecular_function",
              "P": "biological_process", "C": "cellular_component"}
-DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+# TOO_GENERAL (true but entailed by a more specific term in the same review)
+# counts as down-graded, like MODIFY: the review did not keep the term as is.
+DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY", "TOO_GENERAL"}
 CORRECT, WRONG = {"COR", "CNN", "LSP"}, {"NPI", "PLI", "REP"}
 HORSE_TSV = os.path.join(HERE, "horse_iba.tsv")
 

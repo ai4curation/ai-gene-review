@@ -9,7 +9,7 @@ down-grade? Each rule is scored as a classifier against the review
 actions: how many rows it flags, the down-grade rate among them, and
 the lift over the base rate.
 
-"Down-graded" means REMOVE, MODIFY or MARK_AS_OVER_ANNOTATED (as elsewhere on
+"Down-graded" means REMOVE, MODIFY, MARK_AS_OVER_ANNOTATED or TOO_GENERAL (as elsewhere on
 the project page). UNDECIDED rows are excluded from the rates.
 
 Rules (all computed from files already in the repo, plus GO itself):
@@ -71,7 +71,9 @@ from collections import Counter, defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 TREEGRAFTER_REF = "GO_REF:0000118"
-DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+# TOO_GENERAL (true but entailed by a more specific term in the same review)
+# counts as down-graded, like MODIFY: the review did not keep the term as is.
+DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY", "TOO_GENERAL"}
 
 GENERIC_CC = {
     "GO:0005737": "cytoplasm",

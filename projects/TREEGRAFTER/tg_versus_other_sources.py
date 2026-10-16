@@ -20,7 +20,7 @@ using GO is_a/part_of ancestry, and with the reviewer's action on each side:
 
 Each pair keeps both reviewer actions, so the summary can say who the review
 sided with. "Kept" means ACCEPT or KEEP_AS_NON_CORE; "down-graded" means
-REMOVE, MODIFY or MARK_AS_OVER_ANNOTATED. Retired rows are skipped.
+REMOVE, MODIFY, MARK_AS_OVER_ANNOTATED or TOO_GENERAL. Retired rows are skipped.
 
 Outputs (next to this script):
   tg_versus_other_sources.tsv          one row per TreeGrafter row x relation
@@ -55,7 +55,9 @@ PIPELINES = {
     "GO_REF:0000120": "combined IEA",
 }
 KEPT = {"ACCEPT", "KEEP_AS_NON_CORE"}
-DOWN = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED"}
+# TOO_GENERAL (true but entailed by a more specific term in the same review)
+# counts as down-graded, like MODIFY: the review did not keep the term as is.
+DOWN = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"}
 
 
 def outcome(action: str) -> str:

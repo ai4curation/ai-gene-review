@@ -3,7 +3,7 @@ title: "Conserved-function recovery: can GO annotation find a function every gen
 maturity: IN_PROGRESS
 tags: [EVALUATION]
 collections: [HOMOLOGY_PROPAGATION]
-autolink_gene_symbols: false
+autolink_exclude: [fliI, sctN]
 ---
 
 # Conserved-function recovery
@@ -35,7 +35,9 @@ A function that nearly every organism in a clade carries gives a truth set that
 does not depend on GO: "does this proteome encode a complete F-type ATP
 synthase?", decided from InterPro family membership of all eight subunits. The
 test asks how well plain GO annotation recovers it
-([`completeness_*.py`](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/), [results](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_results.txt)).
+([`completeness_fetch.py`](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_fetch.py),
+[`completeness_analyze.py`](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_analyze.py),
+[results](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/completeness_results.txt)).
 
 - **Proteomes:** 15,525 bacterial reference proteomes with BUSCO completeness ≥ 95%.
   Of these, 14,959 encode all eight F-type subunit families.
@@ -55,26 +57,27 @@ test asks how well plain GO annotation recovers it
   flagellar and injectisome (type III) export systems: they couple ATP hydrolysis
   to substrate docking and chaperone release and stimulate export, while the
   proton-motive-force-coupled step happens at the membrane export gate. They are
-  homologs of the F1/V1/A1 α/β catalytic subunits (FliI resembles both F1 α and
-  β; PMID:17202259), and in PTHR15184 the nearest synthase-side clade is F1-β.
-  They hydrolyse ATP rather than make it. Of the 11,205 UniProtKB entries in their family (InterPro
-  IPR005714), 97% carry `GO:0046933` *proton-transporting ATP synthase activity,
+  homologs of the F1/V1/A1 α/β subunits (FliI resembles both F1 α and β;
+  PMID:17202259), and in PTHR15184 the nearest synthase-side clade is F1-β.
+  They hydrolyse ATP rather than make it. Of the 11,205 UniProtKB entries in
+  their family (InterPro IPR005714), 97% carry `GO:0046933` *proton-transporting ATP synthase activity,
   rotational mechanism* and 97% carry `GO:0015986` *proton motive force-driven ATP
   synthesis*. Among the 29 reviewed Swiss-Prot entries, all 29 carry `GO:0015986`
   and 20 carry `GO:0046933` ([counts](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/fliI_sctN_go_counts.tsv)).
 - **One misplaced PAINT node explains the synthase terms.** Both IBDs (for
   `GO:0046933` and `GO:0045259` *proton-transporting ATP synthase complex*) sit on
   `PANTHER:PTN008558586` in PTHR15184. In the live PANTHER tree that node is a
-  **duplication**. Its two children are the F1-β clade `PTN008558588`, which holds
-  every experimental seed cited for those IBDs, and the FliI/SctN export-ATPase clade `PTN000390097` (SF9 SPI-1, SF62
-  SPI-2, SF81 flagellar) ([placement](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv)).
+  **duplication**. Its two children are the F1-β clade `PTN008558588`, which
+  holds every experimental seed cited for those IBDs, and the FliI/SctN
+  export-ATPase clade `PTN000390097` (SF9 SPI-1, SF62 SPI-2, SF81 flagellar) ([placement](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv)).
   - PAINT IBA passes `GO:0046933` to 28 proteins with the FliI/SctN signature
     IPR005714 in the reference genomes, plus a *Chlamydia* FliI (O84722) that lacks
     the signature ([targets](CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/ptn008558586_iba_targets.tsv)). They
     include *Salmonella* FliI, InvC and SsaN and *E. coli* FliI.
   - TreeGrafter then passes `GO:0046933` to every grafted FliI/SctN. All five graft
     nodes seen in our reviews descend from `PTN000390097`.
-  - The IBD was placed one node too high (too ancient): on the duplication
+  - The IBD was placed one node too high (too ancient; the family review's
+    `TOO_DEEP`, below, says the same): on the duplication
     immediately above the F1-β / FliI–SctN split rather than on the F1-β clade.
     TreeGrafter faithfully reproduces the error rather than causing it.
 - **Two more pipelines add errors of their own:**
@@ -169,7 +172,8 @@ The reviews give the evidence with verbatim quotes. In brief:
   the export-ATPase subfamilies (updated 2026-09-27).
 - **In the headline figures since 2026-10-01.** All five TreeGrafter rows (`fliI`
   in CAUVC, HELPJ and PSEPK; `sctN` in SHIFL and YEREN) are in the main page's
-  tables refreshed at `943b98815`, all `REMOVE`. In its four-mode classification
+  tables, pinned at `f81b9f300` (and in the earlier `943b98815` refresh), all
+  `REMOVE`. In its four-mode classification
   they are filed as mode 1 by the operational rule there (correct subfamily,
   wrong term from a node above it); this page identifies that node term as an
   inherited PAINT IBD.

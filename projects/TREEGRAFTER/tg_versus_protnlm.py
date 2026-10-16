@@ -114,6 +114,29 @@ def main() -> None:
     print(Counter(r["relation"] for r in rows))
     print("TreeGrafter actions:", Counter(r["tg_action"] for r in rows if r["tg_action"] and r["relation"] in ("treegrafter_only",)) )
     print("ProtNLM-only assessments:", Counter(r["protnlm_assessment"] for r in rows if r["relation"] == "protnlm_only"))
+    # How the ProtNLM cohorts split between IBA (PANTHER reference proteomes)
+    # and TreeGrafter, from each protein's own GOA file.
+    pr_files = sorted(glob.glob(os.path.join(ROOT, "genes/*/*/*protnlm-predictions-review.yaml")))
+    with_iba = with_tg = 0
+    for pr in pr_files:
+        refs = set()
+        for goa in glob.glob(os.path.join(os.path.dirname(pr), "*-goa.tsv")):
+            refs |= {r["REFERENCE"] for r in csv.DictReader(open(goa), delimiter="\t")}
+        with_iba += "GO_REF:0000033" in refs
+        with_tg += "GO_REF:0000118" in refs
+    reviewed_tg = sum(os.path.relpath(os.path.dirname(pr), ROOT) in tg for pr in pr_files)
+    print(f"ProtNLM prediction-review files: {len(pr_files)}; on proteins with IBA rows: {with_iba}; "
+          f"with TreeGrafter rows in GOA: {with_tg}; with reviewed TreeGrafter rows in the snapshot: {reviewed_tg}")
+    horse = [r for goa in glob.glob(os.path.join(ROOT, "genes/HORSE/*/*-goa.tsv"))
+             for r in csv.DictReader(open(goa), delimiter="\t")]
+    print(f"HORSE: {len(glob.glob(os.path.join(ROOT, 'genes/HORSE/*/')))} genes, "
+          f"{sum(r['REFERENCE'] == 'GO_REF:0000033' for r in horse)} IBA rows, "
+          f"{sum(r['REFERENCE'] == 'GO_REF:0000118' for r in horse)} TreeGrafter rows")
+    for rel in ("same_term", "protnlm_deeper", "protnlm_shallower", "sibling", "protnlm_only"):
+        rs = [r for r in rows if r["relation"] == rel]
+        if rs:
+            print(f"  {rel}: {len(rs)} pairs, ProtNLM correct {sum(r['protnlm_assessment'] in CORRECT for r in rs)}, "
+                  f"wrong {sum(r['protnlm_assessment'] in WRONG for r in rs)}")
 
 
 if __name__ == "__main__":

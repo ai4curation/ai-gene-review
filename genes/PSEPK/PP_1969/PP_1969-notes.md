@@ -50,3 +50,40 @@ from the activity); GO:0003824 UNDECIDED -> TOO_GENERAL. GO:0061799 stays REMOVE
 Not verified / leads only: the run's literature (PMID:16632608, PMID:41183211) is
 not cached; its AlphaFold SG-SG distances were not re-run. In-vivo division of
 labour between the three MoaA paralogs remains unknown.
+
+## 2026-10-16 Re-examination of GO:0061798 against TIGR02666 / MF_01225
+
+Reviewer objection: both paralogs lack NCBIfam TIGR02666 and HAMAP MF_01225, the
+models behind the GTP 3',8-cyclase name and EC 4.1.99.22 of Q88E69; the ACCEPT
+leaned on shared PANTHER PTHR22960:SF0, which the PP_3571, gabD-II and PP_4594
+re-reviews treated as non-discriminative; and the previous RESULTS.md had not
+examined why the models fail.
+
+New analysis (`PP_1969-bioinformatics/model_scores.py`, `context_lookups.py`,
+outputs in `model_scores_out/` and `model_scores.out`; dated section in RESULTS.md):
+
+- TIGR02666 (TC 284.05, NC 270.95): Q88E69 375.6 bits; Q88LG4 269.2; Q88K11 268.1;
+  reviewed E. coli, S. aureus, both P. aeruginosa MoaA and human MOCS1 370-403;
+  KT2440 PqqE 81.0 [file:PSEPK/PP_1969/PP_1969-bioinformatics/RESULTS.md, "Both paralogs score just below the noise cutoff and about 15-16 bits below the trusted cutoff."].
+- HAMAP MF_01225_B (level 0 N_SCORE 35.254): Q88E69 39.9; Q88LG4 30.5; Q88K11 30.6;
+  all reviewed MoaA pass; the rule's 14 Bacteria FT conditions and size range are
+  met by both paralogs [file:PSEPK/PP_1969/PP_1969-bioinformatics/RESULTS.md, "So the HAMAP non-match is a profile-score failure only."].
+- Position mapping: all 17 Q88E69 ligand positions on confident match states and
+  identical (except V266/Leu); the score loss is spread along the protein, largest
+  in model 1-60 and 281-336, with eight positions conserved in all canonical MoaA
+  and replaced in both paralogs (Q88E69 F29, R30, E52, V56, R78, P254, K287, H315)
+  [file:PSEPK/PP_1969/PP_1969-bioinformatics/RESULTS.md, "None of the score loss is at an annotated ligand position."];
+  [file:PSEPK/PP_1969/PP_1969-bioinformatics/RESULTS.md, "The TIGR02666 and MF_01225 non-matches are not explained by a missing non-catalytic segment."].
+- InterPro API: TIGR02666, MF_01225_B, PS01305 and CDD cd21117 match Q88E69 and
+  E. coli MoaA only.
+- Gene context (KEGG, +/- 6 loci): no molybdenum-cofactor or molybdoenzyme gene
+  near PP_1969 [file:PSEPK/PP_1969/PP_1969-bioinformatics/RESULTS.md, "PP_1969: no molybdenum-cofactor or molybdoenzyme gene in the window"].
+
+Decision: GO:0061798 ACCEPT -> UNDECIDED; GO:0006777 ACCEPT -> UNDECIDED;
+GO:0003824 TOO_GENERAL -> UNDECIDED. GO:0061799 stays REMOVE. The non-match is not
+explained as benign, ligand-site conservation does not discriminate a MoaA-derived
+paralog [file:PSEPK/PP_1969/PP_1969-bioinformatics/RESULTS.md, "Ligand-site conservation is expected of a MoaA-derived paralog whatever its present substrate, so it cannot by itself separate a GTP 3',8-cyclase from a diverged MoaA-like enzyme."],
+and PANTHER SF0 membership is treated as non-discriminative as for PP_3571, gabD-II
+and PP_4594. The blinded OpenScientist verdict did not consider these models and is
+not adopted. Not done: phylogeny, structure comparison of the eight divergent
+positions, any wet-lab test.

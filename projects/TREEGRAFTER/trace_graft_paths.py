@@ -23,10 +23,12 @@ first. Needs network access (PANTHER API and QuickGO).
 Output: ``graft_paths.yaml`` next to this script.
 
 ``--all`` instead traces every reviewed TreeGrafter annotation in
-``treegrafter_review.tsv`` offline, against the PANTHER 19 trees (the
+``treegrafter_review.tsv`` against local copies of the PANTHER 19 trees (the
 ``Tree_MSF/*.tree`` files of PANTHER's TreeGrafter data download), PAINT's
 current ``IBD.gaf`` and ``PAINT_TreeGrafter_Annotations_TOTAL.txt.gz`` (AN to
-PTN map, and the GO set TreeGrafter now assigns at each node). It writes one
+PTN map, and the GO set TreeGrafter now assigns at each node). Only the
+taxonomy is fetched live: query lineages and the check that a PANTHER clade
+name is an NCBI taxon name use the UniProt taxonomy API (cached per run). It writes one
 row per annotation to ``graft_paths_all.tsv``: the nearest same-term IBD
 ancestor (a NOT IBD met first blocks inheritance), the tree steps from it to
 the graft node, its event type and taxon, whether it is the family root,
@@ -341,7 +343,12 @@ def trace_all(panther_dir: str, ibd_gaf: str, paint_total: str) -> None:
             if line.startswith("!"):
                 continue
             c = line.rstrip("\n").split("\t")
-            ibd.setdefault(c[1], {}).setdefault(c[4], {"not": "NOT" in c[3], "seeds": c[7]})
+            rec = {"not": "NOT" in c[3], "seeds": c[7]}
+            prev = ibd.setdefault(c[1], {}).get(c[4])
+            # a NOT IBD on the same node and term wins over a positive one,
+            # whatever their order in the file
+            if prev is None or (rec["not"] and not prev["not"]):
+                ibd[c[1]][c[4]] = rec
     trees: dict = {}
     out_rows = []
     for r in rows:
@@ -414,7 +421,7 @@ def trace_all(panther_dir: str, ibd_gaf: str, paint_total: str) -> None:
 def score_path_rules(rows: list) -> None:
     """Score tree-structure rules against reviewer actions -> graft_path_rules.tsv."""
     import csv
-    dg_set = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED"}
+    dg_set = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"}  # TOO_GENERAL counts as down-graded
     rated = [r for r in rows if r["action"] != "UNDECIDED"]
     ok = [r for r in rated if r["status"] == "ok"]
     base = sum(r["action"] in dg_set for r in rated) / len(rated)
@@ -473,16 +480,47 @@ def lineage(taxid: str) -> list[str]:
     return _LINEAGE[taxid]
 
 
+_NCBI_NAME: dict = {}
+
+
+def is_ncbi_name(name: str):
+    """True/False if UniProt taxonomy knows a taxon by this exact scientific
+    name; None if the lookup fails (cached)."""
+    if name not in _NCBI_NAME:
+        try:
+            q = urllib.parse.urlencode({"query": f'scientific:"{name}"', "fields": "scientific_name",
+                                        "format": "tsv", "size": 50})
+            got = _get(f"https://rest.uniprot.org/taxonomy/search?{q}").splitlines()[1:]
+            _NCBI_NAME[name] = name in [g.strip() for g in got]
+        except Exception:
+            _NCBI_NAME[name] = None
+    return _NCBI_NAME[name]
+
+
 def in_clade(panther_taxon: str, names: list[str]):
-    """True/False when decidable, None when the clade name is unknown."""
+    """True/False when decidable, None when it is not.
+
+    Undecidable means the lineage is unknown, or part of the PANTHER clade name
+    is neither mapped in PANTHER_TAXA nor a known NCBI taxon name (so its
+    absence from the lineage says nothing).
+    """
     if panther_taxon == "LUCA":
         return True
     if not names:
         return None
-    wanted = []
+    wanted, undecidable = [], False
     for part in panther_taxon.split("-"):
-        wanted += PANTHER_TAXA.get(part, [part])
-    return any(w in names for w in wanted)
+        if part in PANTHER_TAXA:
+            wanted += PANTHER_TAXA[part]
+        elif part in names:
+            return True
+        elif is_ncbi_name(part):
+            wanted.append(part)
+        else:
+            undecidable = True
+    if any(w in names for w in wanted):
+        return True
+    return None if undecidable else False
 
 
 def _under(t: dict, x: str, anc: str) -> bool:
@@ -502,6 +540,10 @@ def main() -> None:
     ap.add_argument("--paint-total", help="PAINT_TreeGrafter_Annotations_TOTAL.txt[.gz]")
     args = ap.parse_args()
     if args.all:
+        missing = [f"--{n.replace('_', '-')}" for n in ("panther_trees", "ibd_gaf", "paint_total")
+                   if not getattr(args, n)]
+        if missing:
+            ap.error("--all needs " + ", ".join(missing))
         trace_all(args.panther_trees, args.ibd_gaf, args.paint_total)
         return
     results = []

@@ -396,3 +396,12 @@ accepted 77% of the time (an upper bound — reviewers could see the label).
   node-term errors (mcr-1's EptA/SF0 TAS) as direct GO_Central corrections.
 - **Cross-check against InterPro2GO** where InterPro out-resolves PANTHER
   (`IPR011803 AprA`, `IPR003083 S-crystallin`, `IPR058128 Mcr1`).
+- **Check subfamily names before trusting them as labels.** PANTHER subfamily
+  names are not always about their members. `PTHR45664:SF12` is named
+  "PANCREAS_DUODENUM HOMEOBOX PROTEIN 1" (PDX1) but holds *Drosophila* `zen`
+  and `zen2` (P09089, P09090), which are not PDX1 homologs
+  (`interpro/panther/PTHR45664/PTHR45664-entries.csv`, fetched for the
+  DONKEY40 HOXA2 review). Three families fetched in that batch (`PTHR16484`,
+  `PTHR45664`, `PTHR45889`) also carry InterPro names flagged `is_llm: true`
+  and not reviewed, which differ from PANTHER's own names in `panther.obo`;
+  use the `panther.obo` name for any module `term.label`.
