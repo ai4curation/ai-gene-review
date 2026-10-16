@@ -305,7 +305,10 @@ class _Flattener:
 
         The guard is per path: only a genuine cycle (an element that contains
         itself) raises. An id reachable from two sibling branches (a diamond, or a
-        duplicated id) is merely collected once.
+        duplicated id) is merely collected once. A duplicated id cannot create a
+        cycle: the index keeps the last occurrence in a pre-order walk, which is
+        never an ancestor of another occurrence, so the raise guards an invariant
+        rather than a reachable input.
         """
         if element in _path:
             raise ValueError(f"cyclic module tree at {element!r}")
@@ -480,7 +483,7 @@ def module_to_boolean(
         )
         if activators or inhibitors:
             rules[var] = _default_rule(activators, inhibitors)
-    problems = _check_activation_logic(flat, edges)
+    problems, _ignored = _check_activation_logic(flat, edges)
     if problems:
         raise ValueError("; ".join(problems))
     for element, expr in _declared_logic(flat):
@@ -595,9 +598,16 @@ def _declared_logic(flat: "_Flattener") -> list[tuple[str, Any]]:
     ]
 
 
-def _check_activation_logic(flat: "_Flattener", edges: set[SignedEdge]) -> list[str]:
-    """Consistency of declared ``activation_logic`` with the declared graph."""
+def _check_activation_logic(
+    flat: "_Flattener", edges: set[SignedEdge]
+) -> tuple[list[str], list[str]]:
+    """Consistency of declared ``activation_logic`` with the declared graph.
+
+    Returns ``(problems, ignored)``: problems make the declaration unusable;
+    ``ignored`` lists declared regulators the logic leaves out on purpose.
+    """
     problems: list[str] = []
+    ignored: list[str] = []
     for element, expr in _declared_logic(flat):
         if flat.entries(element) != [element] or flat.exits(element) != [element]:
             problems.append(
@@ -629,11 +639,11 @@ def _check_activation_logic(flat: "_Flattener", edges: set[SignedEdge]) -> list[
                     )
         for source, _sign in sorted(incoming):
             if source not in used:
-                problems.append(
+                ignored.append(
                     f"{element}: regulator {source} has a connection into {element} "
                     "but is not used by its activation_logic"
                 )
-    return problems
+    return problems, ignored
 
 
 def activation_logic_findings(
@@ -645,8 +655,9 @@ def activation_logic_findings(
     Each declaration must sit on an element that is a variable of the
     translation, set exactly one operator per expression node, name only
     regulators that have a signed connection into the element (activating in a
-    positive position, inhibiting under ``none_of``), and use every such
-    regulator. An empty list means the declarations are consistent.
+    positive position, inhibiting under ``none_of``). An empty list means the
+    declarations are consistent. A declared regulator the logic leaves out is
+    not a problem (see :func:`activation_logic_ignored_regulators`).
     ``removed_connections`` checks them against the graph a counterfactual
     scenario leaves behind.
 
@@ -658,13 +669,39 @@ def activation_logic_findings(
     ...     {"source": "i", "target": "t", "connection_type": "NEGATIVELY_REGULATES"}]}}
     >>> for p in activation_logic_findings(doc): print(p)
     t: activation_logic names i, which has no activating connection into t
-    t: regulator a has a connection into t but is not used by its activation_logic
     """
     module = doc.get("module")
     if not isinstance(module, dict):
         return []
     flat = _Flattener(module, frozenset(removed_connections or ()))
-    return _check_activation_logic(flat, flat.flat_edges())
+    return _check_activation_logic(flat, flat.flat_edges())[0]
+
+
+def activation_logic_ignored_regulators(doc: dict[str, Any]) -> list[str]:
+    """Declared regulators that an ``activation_logic`` deliberately leaves out.
+
+    A Boolean rule can only make a regulator necessary, sufficient or part of a
+    combination; it cannot say "tunes the output". A modulator such as a kinase
+    that enhances an already-active transcription factor is therefore left out
+    of the logic, and its connection stays in the module for every other use.
+    These are reported (as validation warnings) so the omission stays visible.
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"node": {"id": "a"}}, {"node": {"id": "mod"}},
+    ...   {"node": {"id": "t", "activation_logic": {"element": "a"}}}],
+    ...   "connections": [
+    ...     {"source": "a", "target": "t", "connection_type": "CAUSES"},
+    ...     {"source": "mod", "target": "t", "connection_type": "POSITIVELY_REGULATES"}]}}
+    >>> activation_logic_findings(doc), module_to_boolean(doc).rules["t"]
+    ([], 'a')
+    >>> activation_logic_ignored_regulators(doc)
+    ['t: regulator mod has a connection into t but is not used by its activation_logic']
+    """
+    module = doc.get("module")
+    if not isinstance(module, dict):
+        return []
+    flat = _Flattener(module)
+    return _check_activation_logic(flat, flat.flat_edges())[1]
 
 
 def module_file_to_boolean(

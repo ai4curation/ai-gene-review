@@ -17,6 +17,7 @@ import yaml
 
 from ai_gene_review.module_boolean import (
     activation_logic_findings,
+    activation_logic_ignored_regulators,
     module_file_to_boolean,
     module_to_boolean,
 )
@@ -113,10 +114,6 @@ def test_activation_logic_becomes_the_rule(logic: Any, expected: str) -> None:
             "names a, which has no inhibiting connection into t",
         ),
         (
-            {"all_of": [{"element": "a"}, {"none_of": [{"element": "i"}]}]},
-            "regulator b has a connection into t but is not used",
-        ),
-        (
             {
                 "all_of": [
                     {"element": "a"},
@@ -139,7 +136,7 @@ def test_inconsistent_activation_logic_is_reported(logic: Any, message: str) -> 
     assert any(message in f for f in findings), findings
     with pytest.raises(ValueError):
         module_to_boolean(doc)
-    assert validate_executable_models(doc)[0]
+    assert validate_executable_models(doc, ROOT)[0]
 
 
 def test_activation_logic_on_a_flattened_container_is_rejected() -> None:
@@ -320,7 +317,7 @@ def test_removing_a_connection_named_by_activation_logic_is_reported_not_raised(
         {"id": "cut_b", "removed_connections": [{"source": "b", "target": "t"}]},
         logic,
     )
-    errors, _ = validate_executable_models(doc)
+    errors, _ = validate_executable_models(doc, ROOT)
     assert any(
         "cut_b" in e
         and "removed_connections break an activation_logic" in e
@@ -350,7 +347,7 @@ def test_a_model_too_large_to_enumerate_is_reported_not_raised() -> None:
             }
         ],
     }
-    errors, _ = validate_executable_models(doc)
+    errors, _ = validate_executable_models(doc, ROOT)
     assert any("exceeds the exhaustive limit" in e for e in errors), errors
 
 
@@ -402,3 +399,65 @@ def test_exhaustive_search_agrees_with_biodivine_aeon() -> None:
     graph = aeon.AsynchronousGraph(bn)
     theirs = sorted(int(a.cardinality()) for a in aeon.Attractors.attractors(graph))
     assert ours == theirs
+
+
+def test_a_document_without_a_module_mapping_is_left_to_schema_validation() -> None:
+    assert validate_executable_models({"id": "MODULE:x"}, ROOT) == ([], [])
+
+
+def test_model_files_resolve_against_the_project_root_not_the_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from ai_gene_review.validation.module_validator import validate_module_file
+
+    monkeypatch.chdir(tmp_path)  # nothing under models/ exists here
+    result = validate_module_file(
+        ERK, resolver=lambda curie: ("unavailable", None, set())
+    )
+    assert not [e for e in result.errors if "does not exist" in e], result.errors
+
+
+def test_a_regulator_left_out_of_the_logic_is_a_warning_not_an_error() -> None:
+    """A modulator can be deliberately left out of a Boolean rule."""
+    doc = _toy({"all_of": [{"element": "a"}, {"none_of": [{"element": "i"}]}]})
+    assert activation_logic_findings(doc) == []
+    assert module_to_boolean(doc).rules["t"] == "a & !i"
+    assert activation_logic_ignored_regulators(doc) == [
+        "t: regulator b has a connection into t but is not used by its activation_logic"
+    ]
+    errors, warnings = validate_executable_models(doc, ROOT)
+    assert errors == []
+    assert warnings == [
+        "Activation logic: t: regulator b has a connection into t but is not used "
+        "by its activation_logic (left out of the Boolean rule)"
+    ]
+
+
+def _modules_with_derived_boolean_models() -> list[Path]:
+    return sorted(
+        p
+        for p in (ROOT / "modules").glob("*.yaml")
+        if "DERIVED_FROM_MODULE" in p.read_text()
+        and "executable_models:" in p.read_text()
+    )
+
+
+@pytest.mark.parametrize(
+    "path", _modules_with_derived_boolean_models(), ids=lambda p: p.stem
+)
+def test_every_curated_scenario_holds(path: Path) -> None:
+    doc = yaml.safe_load(path.read_text())
+    results = run_declared_scenarios(doc)
+    assert results, f"{path.stem} declares a derived Boolean model without scenarios"
+    assert [(r.scenario_id, r.failures) for r in results if not r.passed] == []
+
+
+def test_jak_stat_negative_regulators_act_where_the_module_says() -> None:
+    """SOCS and PTPs on JAK; PTP and PIAS on nuclear STATs; ERK only tunes."""
+    model = module_file_to_boolean(ROOT / "modules/jak_stat_signaling.yaml")
+    assert model.rules["jak_activation"] == (
+        "ligand_receptor_engagement & !(socs_feedback | ptp_dephosphorylation)"
+    )
+    assert model.rules["stat_transcription"] == (
+        "stat_dimerization_import & !(ptp_dephosphorylation | pias_restraint)"
+    )

@@ -2239,7 +2239,7 @@ def validate_feedback_loops(doc: object) -> List[str]:
 
 
 def validate_executable_models(
-    doc: object, repo_root: Path = Path(".")
+    doc: object, repo_root: Path
 ) -> Tuple[List[str], List[str]]:
     """Check ``activation_logic`` and the ``executable_models`` a module declares.
 
@@ -2250,9 +2250,13 @@ def validate_executable_models(
     states or cannot be checked, and a model file that does not exist under
     ``repo_root``. These are curator-authored claims, so a mismatch is an error,
     like a wrong term id. Warnings: scenarios on a model this check cannot run
-    (external or non-Boolean), which are recorded but never verified.
+    (external or non-Boolean), which are recorded but never verified, and
+    regulators an ``activation_logic`` deliberately leaves out.
     """
-    from ai_gene_review.module_boolean import activation_logic_findings
+    from ai_gene_review.module_boolean import (
+        activation_logic_findings,
+        activation_logic_ignored_regulators,
+    )
     from ai_gene_review.module_dynamics import (
         run_declared_scenarios,
         unchecked_scenario_models,
@@ -2273,6 +2277,9 @@ def validate_executable_models(
         f"Executable model {model_id}: its scenarios are not checked "
         "(only module-derived Boolean models are simulated)"
         for model_id in unchecked_scenario_models(doc)
+    ] + [
+        f"Activation logic: {p} (left out of the Boolean rule)"
+        for p in activation_logic_ignored_regulators(doc)
     ]
     logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
     if logic_errors:

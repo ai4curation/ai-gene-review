@@ -235,6 +235,14 @@ module:
       node:
         id: jak_activation
         label: Receptor-associated JAK activation
+        activation_logic:
+          # SOCS proteins inhibit JAK catalysis and SHP1/SHP2/PTPN2 dephosphorylate
+          # JAKs; PIAS acts only on nuclear STATs and is left out of this rule.
+          all_of:
+            - element: ligand_receptor_engagement
+            - none_of:
+                - element: socs_feedback
+                - element: ptp_dephosphorylation
         module_type: REACTION
         description: >-
           Ligand-induced receptor reorganization brings two receptor-bound Janus
@@ -649,6 +657,15 @@ module:
       node:
         id: stat_transcription
         label: STAT-dependent transcription
+        activation_logic:
+          # Transcription needs the nuclear STAT dimer and is restrained by PTPN2 and
+          # PIAS. SOCS acts upstream on JAK/receptor, and ERK serine phosphorylation
+          # (mapk_branch_interface) only tunes maximal activity, so both are left out.
+          all_of:
+            - element: stat_dimerization_import
+            - none_of:
+                - element: ptp_dephosphorylation
+                - element: pias_restraint
         module_type: REGULATORY_STEP
         description: >-
           Nuclear STAT dimers bind specific DNA elements - GAS (gamma-activated
@@ -1022,3 +1039,165 @@ module:
       target: stat_recruitment_phosphorylation
       connection_type: PROVIDES_INPUT_FOR
       description: RTK/Src/GPCR tyrosine kinases can phosphorylate STATs independently of cytokine-receptor JAKs.
+executable_models:
+  - id: jak_stat_signaling_boolean
+    title: JAK-STAT signaling as a Boolean network
+    model_type: BOOLEAN
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      The module's connections read as a signed regulatory graph and
+      translated by ai-gene-review module-to-bnet. JAK activation and STAT
+      transcription carry activation_logic so that each negative regulator acts
+      where the module says it does: SOCS and the phosphatases on JAK, the
+      phosphatases and PIAS on nuclear STATs. ERK serine phosphorylation of
+      STATs only tunes maximal transcription, so it is left out of the rule. In
+      every scenario the phosphatase, PIAS and JAK-independent STAT inputs are
+      held off unless stated.
+    scenarios:
+      - id: unstimulated
+        label: No cytokine
+        description: No ligand engagement; the pathway rests with every step off.
+        settings:
+          - element: ligand_receptor_engagement
+            active: false
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - jak_activation
+          - stat_transcription
+      - id: sustained_cytokine
+        label: Sustained cytokine
+        description: >-
+          Ligand engagement held on. STAT-driven transcription induces SOCS,
+          which inhibits JAK, so there is no steady state with STAT
+          transcription on: the single attractor is cyclic, which in a Boolean
+          model reads as a transient (pulsed or adapting) response rather than
+          literal oscillation.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+        expected_attractor_kind: CYCLIC
+        expected_attractor_count: 1
+        expected_oscillating:
+          - jak_activation
+          - stat_transcription
+          - socs_feedback
+        evidence:
+          - source_id: PMID:9202125
+            statement: >-
+              SOCS genes are cytokine-induced and proposed to act in a classic
+              negative feedback loop on cytokine signalling.
+            supporting_text: >-
+              Transcription of all four SOCS genes is increased rapidly in
+              response to interleukin-6, in vitro and in vivo, suggesting they
+              may act in a classic negative feedback loop to regulate cytokine
+              signal transduction.
+      - id: socs_lost
+        label: SOCS knocked out
+        description: >-
+          SOCS held off under sustained cytokine. With nothing else wired to
+          terminate JAK, the pathway locks on with STAT transcription
+          sustained: in this module SOCS is the only loop that makes the
+          response transient.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+          - element: socs_feedback
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - jak_activation
+          - stat_transcription
+        evidence:
+          - source_id: PMID:9202125
+            statement: SOCS-1 inhibits receptor phosphorylation and STAT activation.
+            supporting_text: >-
+              Expression of SOCS-1 inhibited both interleukin-6-induced
+              receptor phosphorylation and STAT activation.
+      - id: jak_inhibited
+        label: JAK inhibited
+        description: >-
+          JAK held off, as by a JAK inhibitor. Receptor and STAT
+          phosphorylation cannot occur and STAT transcription stays off.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+          - element: jak_activation
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - receptor_phosphorylation
+          - stat_transcription
+      - id: pias_restraint
+        label: PIAS active
+        description: >-
+          PIAS held on under sustained cytokine. STATs are still activated and
+          imported, but nuclear transcription is blocked; because SOCS is then
+          never induced, JAK stays on. The nuclear brake stops the output
+          without terminating the upstream signal.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: true
+          - element: alt_stat_inputs
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - jak_activation
+          - stat_dimerization_import
+        expected_inactive:
+          - stat_transcription
+          - socs_feedback
+      - id: jak_independent_input
+        label: JAK-independent STAT input
+        description: >-
+          No cytokine, but STATs phosphorylated by a JAK-independent kinase
+          (RTK, Src). STAT transcription comes on and induces SOCS, but SOCS
+          acts only on JAK, so in this wiring it cannot terminate the response.
+          A property of the module's wiring, not a curated biological claim.
+        settings:
+          - element: ligand_receptor_engagement
+            active: false
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: true
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - stat_transcription
+          - socs_feedback
+        expected_inactive:
+          - jak_activation
