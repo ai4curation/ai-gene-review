@@ -412,6 +412,9 @@ with links to the commit and that exact source revision. Stamps omit names,
 emails and commit messages. Local edits are marked; incomplete shallow history
 is labelled instead of assigning a misleading date. Standalone Markdown exports
 without Git history can still be rendered, without a source stamp.
+The maintained `index.html` must contain exactly one `<!-- site-build-info -->`
+marker; staging fails if it is missing or duplicated, and audits the injected
+link along with the other published links.
 
 The legacy regeneration PR path is retained only when artifact publication is
 disabled; artifact-build failures do not block that path. It still enforces Git's

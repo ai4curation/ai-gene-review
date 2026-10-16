@@ -20,7 +20,7 @@ def _git(directory: Path, *args: str) -> str | None:
     """Read Git metadata; standalone source exports need not have Git installed."""
     try:
         result = subprocess.run(
-            ["git", "--literal-pathspecs", "-C", str(directory), *args],
+            ["git", "--no-optional-locks", "--literal-pathspecs", "-C", str(directory), *args],
             capture_output=True, text=True, check=False,
         )
     except FileNotFoundError:
@@ -76,6 +76,10 @@ class SourceHistory:
     Only hashes, committer timestamps and paths are read. An unrelated repository
     commit must not change a page's stamp. Shallow boundary commits are not
     trustworthy evidence of when a file last changed, so their dates are omitted.
+    The committer date records the revision's integration time (which rebases
+    and squashes can reset), rather than the original author's writing time.
+    Queries retain Git's per-path history simplification: a directory-wide log
+    can attribute a discarded side-branch edit to unchanged published content.
     """
 
     def __init__(self, directory: Path) -> None:
@@ -93,10 +97,12 @@ class SourceHistory:
             if changed is None:
                 self.root = None
                 return
-            self.changed.update(changed.split("\0"))
+            self.changed.update(filter(None, changed.split("\0")))
         untracked = _git(self.root, "ls-files", "--others", "--exclude-standard", "-z")
-        if untracked:
-            self.changed.update(untracked.split("\0"))
+        if untracked is None:
+            self.root = None
+            return
+        self.changed.update(filter(None, untracked.split("\0")))
         shallow_path = _git(self.root, "rev-parse", "--git-path", "shallow")
         if shallow_path:
             path = self.root / shallow_path
@@ -109,8 +115,10 @@ class SourceHistory:
         if self.root is None or not path.is_relative_to(self.root):
             return None
         relative = path.relative_to(self.root).as_posix()
+        # The latest change already includes a rename to this path. Following
+        # older names adds rename detection without changing this single result.
         record = _git(
-            self.root, "log", "-1", "--format=%H%x00%cI", "--follow",
+            self.root, "log", "-1", "--format=%H%x00%cI",
             self.head, "--", relative,
         ) if self.head else ""
         if record is None:
@@ -153,7 +161,8 @@ def collect_build_info(
 def stamp_site_build(output_dir: Path, info: Mapping[str, str | None]) -> None:
     """Stamp only the disposable site; no browser fetch or GitHub API is needed."""
     timestamp = info["built_at"]
-    assert timestamp is not None
+    if timestamp is None:
+        raise ValueError("Build provenance requires a built_at timestamp")
     details = info.get("run_url") or "build-info.json"
     stamp = (
         '<p class="build-info">Site built: '
@@ -162,6 +171,8 @@ def stamp_site_build(output_dir: Path, info: Mapping[str, str | None]) -> None:
     )
     homepage = output_dir / "index.html"
     original = homepage.read_text(encoding="utf-8")
+    if original.count(SITE_BUILD_MARKER) != 1:
+        raise ValueError(f"Expected exactly one {SITE_BUILD_MARKER} in {homepage}")
     homepage.write_text(original.replace(SITE_BUILD_MARKER, stamp), encoding="utf-8")
     (output_dir / "build-info.json").write_text(
         json.dumps(dict(info), indent=2) + "\n", encoding="utf-8",

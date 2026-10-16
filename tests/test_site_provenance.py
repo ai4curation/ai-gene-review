@@ -88,6 +88,23 @@ def test_rename_links_to_the_path_that_exists_at_the_recorded_commit(repo):
     assert "2026-10-02T10:00:00Z" in text
 
 
+def test_discarded_side_branch_change_is_not_published_as_source_revision(repo):
+    """A directory-wide first-seen log can incorrectly select an unmerged edit."""
+    original = git(repo, "rev-parse", "HEAD")
+    branch = git(repo, "symbolic-ref", "--short", "HEAD")
+    git(repo, "switch", "-c", "discarded-edit")
+    source = repo / "projects/nested/A λ.md"
+    source.write_text("# This source is discarded by the merge\n")
+    git(repo, "add", "projects")
+    git(repo, "commit", "-qm", "Discarded change", date="2026-10-02T10:00:00Z")
+    git(repo, "switch", branch)
+    git(repo, "merge", "--no-ff", "-s", "ours", "-m", "Keep published content", "discarded-edit")
+    revision = SourceHistory(repo).for_file(source)
+    assert revision is not None
+    assert revision.commit == original
+    assert "Some evidence." in source.read_text()
+
+
 def test_shallow_boundary_does_not_masquerade_as_source_change(repo, tmp_path):
     (repo / "unrelated.txt").write_text("another commit")
     git(repo, "add", "unrelated.txt")
@@ -136,3 +153,24 @@ def test_stamped_artifact_is_self_contained_and_preserves_source(repo):
     assert (repo / "index.html").read_text() == source
     assert "fetch(" not in text
     assert "hidden-person@" not in text
+
+
+@pytest.mark.parametrize("content", ["<h1>No marker</h1>", "<!-- site-build-info -->" * 2])
+def test_stamp_requires_exactly_one_marker(repo, content):
+    output = repo / "_site"
+    output.mkdir()
+    (output / "index.html").write_text(content)
+    with pytest.raises(ValueError, match="site-build-info"):
+        stamp_site_build(output, collect_build_info(repo, environ={}))
+    assert (output / "index.html").read_text() == content
+    assert not (output / "build-info.json").exists()
+
+
+def test_stamp_rejects_missing_timestamp(repo):
+    output = repo / "_site"
+    output.mkdir()
+    (output / "index.html").write_text("<!-- site-build-info -->")
+    info = collect_build_info(repo, environ={})
+    info["built_at"] = None
+    with pytest.raises(ValueError, match="built_at"):
+        stamp_site_build(output, info)

@@ -368,16 +368,16 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         compact_gene_page(output_dir, output_dir / page.relative_to(repo_root))
         for page in gene_pages
     ) + compact_browser_data(output_dir)
+    # Stamp after content transformations but before the final audit and sizing.
+    # Recovery uploads the same artifact without restamping it.
+    stamp_site_build(output_dir, collect_build_info(repo_root))
     # Check the URLs actually emitted by sharing/minification/compaction too.
     # The first audit above checks links inside panels before they are compressed.
     published_resolver = DependencyResolver(output_dir)
-    for page in generated_pages:
+    for page in [output_dir / "index.html", *generated_pages]:
         links = published_resolver.scan(page.relative_to(output_dir), page.read_text())
         broken_links.update(links.missing)
         audit.off_base_urls.update(links.off_base)
-    # Record the build after content transformations, before final sizing and
-    # checksums. Recovery uploads the same artifact without restamping it.
-    stamp_site_build(output_dir, collect_build_info(repo_root))
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
     manifest = SiteManifest(
         shared_asset_bytes_saved=shared_asset_bytes_saved,
