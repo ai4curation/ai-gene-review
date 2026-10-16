@@ -222,6 +222,28 @@ From the 2026-10-16 run, mitochondrion only:
 
 # NOTES
 
+## 2026-10-16 (human mitochondrion cases)
+
+Human reviews carry 1,699 existing rows to `GO:0005739 mitochondrion` across
+534 genes. In 244 rows (135 genes) the review gives no mitochondrial
+sub-compartment. Worked examples, grouped by what the policy says to do:
+
+- **Be bold (direct evidence is fine, biology says matrix):** AARS2 (5 rows,
+  all ACCEPT; transit peptide; aminoacylates mitochondrial tRNA), CLYBL (the
+  reviewer's own reason says "all of CLYBL's substrates ... are matrix
+  species", yet there is no matrix term), PYCR2, MMADHC.
+- **IBA red flags from paralog propagation, already caught:** SHMT1 (the
+  mitochondrial paralog is SHMT2), ACACA, LDHA; all MARK_AS_OVER_ANNOTATED.
+- **IEA red flags from ortholog projection (GO_REF:0000107):** CRY1 (from
+  mouse, REMOVE), CALR (from rat), MAPK1, BRAF.
+- **Recruited to the outer membrane or ER-mitochondria contacts (case 3):**
+  IRF3, NLRP3; KEEP_AS_NON_CORE.
+- **Assay-limited, ACCEPT is right:** SMIM8 (MitoCoP proteomics only). It has
+  a predicted TM segment, so `GO:0031966 mitochondrial membrane` (which
+  membrane unknown) would be a bolder call that the evidence supports.
+- **Dual location:** AMACR (peroxisome and mitochondrion), GPX4
+  (isoform-specific).
+
 ## 2026-10-16 (policy)
 
 Decided with cjm. TOO_GENERAL is wrong here, because the organelle is still
