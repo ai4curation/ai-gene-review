@@ -87,3 +87,46 @@
 - NEW: `GO:0062177 radial spoke assembly` (comparator LRRC23, an RS3 subunit that CFAP91
   co-immunoprecipitates with, carries it by IMP/IBA); `GO:0005200 structural constituent of
   cytoskeleton` (consistent with the CFAP61 review).
+
+## Review follow-up (2026-10-16, PR #5064 review)
+
+- GO:0120316 sperm flagellum assembly ancestry, checked by an OLS hierarchicalAncestors
+  query and the term graph endpoint (2026-10-16):
+  `https://www.ebi.ac.uk/ols4/api/ontologies/go/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FGO_0120316/hierarchicalAncestors`.
+  Direct parents: is_a GO:0044458 motile cilium assembly; is_a GO:0003006 developmental
+  process involved in reproduction; part_of GO:0030317 flagellated sperm motility;
+  part_of GO:0007286 spermatid development. GO:0030317 is_a GO:0060294 cilium movement
+  involved in cell motility, which is_a GO:0003341 cilium movement. GO:0007286 is part_of
+  GO:0048515 spermatid differentiation, which is part_of GO:0007283 spermatogenesis.
+  So GO:0120316 is a descendant of cilium movement, flagellated sperm motility and
+  spermatogenesis; the PR reviewer's doubt about the cilium movement and spermatogenesis
+  paths was not borne out.
+- GO:0062177 radial spoke assembly comparators, QuickGO annotation search
+  (`/QuickGO/services/annotation/search?goId=GO:0062177&goUsage=exact&taxonId=9606,10090`,
+  2026-10-16, 16 hits): LRRC23 human Q53EV4 (IMP PMID:37804054, IBA, IEA) and mouse
+  O35125 (IMP PMID:34585727 and PMID:38091523, IBA, IEA, ISO); RSPH4A human Q5TD94 (ISS,
+  IEA) and mouse Q8BYM7 (IMP PMID:32203505); RSPH9 human Q9H1X1 (ISS, IEA) and mouse
+  Q9D9V4 (IMP PMID:30383886). The LRRC23 claim (IMP and IBA in human and mouse) holds;
+  RSPH4A and RSPH9 carry the term but not by IBA, so the review text was corrected to say
+  so.
+- No GO term exists for the calmodulin- and spoke-associated complex (OLS search of GO,
+  2026-10-16: "calmodulin and spoke associated complex", "calmodulin- and spoke-associated
+  complex", "CSC complex", "spoke-associated", "calmodulin complex" returned no CSC term).
+  Added a proposed_new_terms entry with the same name as the one in the CFAP61 review, so
+  in_complex stays unset. GO:0120341 radial spoke base 2 and GO:0120342 radial spoke base 3
+  labels confirmed verbatim in OLS the same day.
+- core_functions now records GO:0120342 radial spoke base 3 as in_complex. The radial
+  spoke base terms are is_a GO:0032991 protein-containing complex, so validation rejects
+  them in locations, and in_complex holds a single term; GO:0120341 radial spoke base 2
+  stays in the radial spoke stalk MODIFY row and is named in the core function
+  description. The core function also drops GO:0003341 cilium movement because GO:0120316 entails it. The
+  spermatogenesis -> sperm flagellum assembly MODIFY is a refinement (descendant via
+  spermatid development), as now stated in its reason.
+- Isoform fields on the cytoplasm/mitochondrion rows were not set. UniProt ALTERNATIVE
+  PRODUCTS maps AAT-1L to Q7Z4T9-7, AAT-1M to Q7Z4T9-1 and AAT1-beta to Q7Z4T9-5, but has
+  no synonym for AAT-1alpha or AAT-1S, which are the isoforms behind the mitochondrion
+  rows. The PMID:15863901 cytoplasm row covers two isoforms (AAT-1L and AAT-1M), and all
+  six GOA rows are on the canonical accession (no isoform column value), so setting a
+  single isoform would misstate the GOA row. Left as prose.
+- Also corrected an older line above: the cytoplasm rows are TOO_GENERAL in the review
+  file (entailed by axoneme), not KEEP_AS_NON_CORE.

@@ -84,3 +84,26 @@
   was preferred because the airway and Chlamydomonas data are direct measurements of
   ciliary beating. Raised as a question.
 - NEW `GO:0005200 structural constituent of cytoskeleton`, consistent with CFAP61 review.
+
+## Review follow-up (2026-10-16, PR #5064 review)
+
+- GO:0120316 sperm flagellum assembly ancestry, checked by an OLS hierarchicalAncestors
+  query and the term graph endpoint (2026-10-16):
+  `https://www.ebi.ac.uk/ols4/api/ontologies/go/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FGO_0120316/hierarchicalAncestors`.
+  Direct parents: is_a GO:0044458 motile cilium assembly; is_a GO:0003006 developmental
+  process involved in reproduction; part_of GO:0030317 flagellated sperm motility;
+  part_of GO:0007286 spermatid development. GO:0030317 is_a GO:0060294 cilium movement
+  involved in cell motility, which is_a GO:0003341 cilium movement. GO:0007286 is part_of
+  GO:0048515 spermatid differentiation, which is part_of GO:0007283 spermatogenesis.
+  So GO:0120316 is a descendant of cilium movement, flagellated sperm motility and
+  spermatogenesis; the PR reviewer's doubt about the cilium movement and spermatogenesis
+  paths was not borne out.
+- Restored the full PMID:36752199 quote ("...a normal 9 + 2 structure with only IDAs'
+  absence", curly apostrophe as in the cache); the earlier cut at "with only IDAs"
+  inverted its meaning. Rechecked every supporting_text in the CFAP251, CFAP91 and CFAP57
+  reviews against the text that follows it in the cache; no other meaning-changing
+  truncation found.
+- The GO:0120316 rationale in the cilium movement NEW row and in the suggested question
+  now names the path explicitly (is_a motile cilium assembly; part_of flagellated sperm
+  motility, which is_a cilium movement involved in cell motility, which is_a cilium
+  movement).
