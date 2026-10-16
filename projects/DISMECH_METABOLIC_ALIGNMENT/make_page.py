@@ -1463,6 +1463,13 @@ if PROV:
     ]
     if PROV.get("aigr_tree"):
         lines.append(f"The run above read {PROV['aigr_tree']}.")
+    elif PROV.get("aigr_dirty") is False:
+        # A clean checkout needs no tree description: the revision above is the whole
+        # answer, and saying otherwise would report a complete provenance as incomplete.
+        lines.append(
+            "The run above read a clean checkout, so the revision above describes its tree"
+            " in full."
+        )
     else:
         # No guessing from aigr_dir. The previous version inferred "this was a scratch
         # directory" from the path not starting with /home, which asserted two things the
