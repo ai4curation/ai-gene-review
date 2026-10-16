@@ -25,6 +25,10 @@ Rechecked for direct sequence evidence before deciding:
 Decision: removed the NEW cytoplasm row rather than keep a localization that
 rests only on the absence of targeting features (the default-localization
 pattern). Biosynthesis of NIS/NRPS-type metallophores is generally cytosolic,
-so cytoplasm remains plausible; it can be re-proposed if a reproducible
-signal-peptide/TM prediction (e.g. SignalP 6 / DeepTMHMM run on the C5B1I6
-sequence) or a fractionation/tagging experiment is added.
+so cytoplasm remains plausible. A clean negative from a signal-peptide/TM
+predictor (e.g. SignalP 6 / DeepTMHMM on the C5B1I6 sequence) would still be
+an argument from absent features and should not on its own re-open the
+proposal. Positive grounds would be a fractionation/tagging experiment on
+MllDE, or a primary publication placing the AsbD/AsbE homologs (petrobactin
+NIS assembly machinery) in the cytoplasm, which the perplexity report asserts
+but does not anchor to a resolvable citation.
