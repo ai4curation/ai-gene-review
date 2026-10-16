@@ -703,13 +703,13 @@ if _symbol_failures:
              f"{DM}/cache/hgnc/terms.csv, e.g. {_symbol_failures[:3]}; each would have "
              "read as NO_AIGR_REVIEW, so no report was written.")
 
-# A rename entry is only correct while the old symbol has no review folder of its own and
-# the new one does. Either half going stale would send a real review to NO_AIGR_REVIEW.
-_rename_bad = [f"{o}->{n}: "
-               + ("old symbol now has its own review folder" if os.path.isdir(f"{AG}/genes/human/{o}")
-                  else f"no review folder for {n}")
-               for o, n in HGNC_RENAMES.items()
-               if os.path.isdir(f"{AG}/genes/human/{o}") or not os.path.isdir(f"{AG}/genes/human/{n}")]
+# A rename entry is wrong once the old symbol has a review folder of its own: the map
+# would then redirect a real review somewhere else. The new symbol having no folder is
+# *not* an error - it means that gene is not reviewed in this tree, which is an ordinary
+# NO_AIGR_REVIEW. Requiring it broke the run over any tree predating the review, which is
+# exactly the second tree this audit is compared against.
+_rename_bad = [f"{o}->{n}: {o} now has its own review folder"
+               for o, n in HGNC_RENAMES.items() if os.path.isdir(f"{AG}/genes/human/{o}")]
 if _rename_bad:
     sys.exit("HGNC_RENAMES is out of step with the review folders: " + "; ".join(_rename_bad))
 
