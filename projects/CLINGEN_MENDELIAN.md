@@ -2988,21 +2988,20 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**426 of 2,876 genes are complete; 2,450 remain.**
-CWC27 adds one verified merged gene review to checkpoint 425. The fixed
-completion cutoff is [CWC27 merge 8b87c39aea83](https://github.com/ai4curation/ai-gene-review/commit/8b87c39aea838985bfff03d14cc3bb13ac93f582),
-at **2026-10-16 10:41:28 UTC**. Each catalogue gene counts once; products,
+**427 of 2,876 genes are complete; 2,449 remain.**
+CYB5A adds one verified merged gene review to checkpoint 426. The fixed
+completion cutoff is [CYB5A merge 782b3b5a78c7](https://github.com/ai4curation/ai-gene-review/commit/782b3b5a78c788e9c88c99b98aae2baa0af3dba0),
+at **2026-10-16 11:40:12 UTC**. Each catalogue gene counts once; products,
 follow-up commits, shared sources and tracker publication add no completion.
 
-See the [checkpoint 426 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-426-2026-10-16-104128-utc).
-The prior tracker [PR #5034](https://github.com/ai4curation/ai-gene-review/pull/5034)
-merged as [56a970dd16a3](https://github.com/ai4curation/ai-gene-review/commit/56a970dd16a33e4685edc8b23bd9d1303d7e7e6a);
-its 425-gene source records remain unchanged beneath this increment.
-All 235 historical queue records, 75 prior completion updates, catalogue
-association texts and earlier progress sections are preserved. Older OPEN,
-QUEUED and earlier CWC27 exclusions retain their historical checkpoint scope.
-Review availability remains separate from accepted completion. No other gene
-receives credit in this update.
+See the [checkpoint 427 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-427-2026-10-16-114012-utc).
+This is a finite follow-up to tracker [PR #5053](https://github.com/ai4curation/ai-gene-review/pull/5053)
+at checkpoint 426, not a competing tracker PR. Its entire checkpoint 426
+progress section, all 235 historical queue records, all 76 prior completion
+updates, catalogue association texts and existing history records are preserved.
+Earlier exclusions of CYB5A retain their historical checkpoint scope.
+Review availability remains separate from accepted completion; no availability
+change or other gene completion is introduced by this update.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3551,7 +3550,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CWC27** — HGNC:10664; [metaphyseal chondrodysplasia-retinitis pigmentosa syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95089ec9-1b91-4ee0-a743-a780d123aad0-2025-07-03T160000.000Z) (MONDO:0009598; AR; Definitive).
 - [x] **CWF19L1** — HGNC:25613; [autosomal recessive cerebellar ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ebc1a4b-1a41-40df-832f-904cd4bb88f9-2025-05-14T160000.000Z) (MONDO:0015244; AR; Definitive).
 - [ ] **CXCR4** — HGNC:2561; [WHIM syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89723de3-8fd8-4e2c-8609-bcd924e2f349-2023-01-17T170000.000Z) (MONDO:0023880; AD; Definitive).
-- [ ] **CYB5A** — HGNC:2570; [methemoglobinemia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_895f7f88-9dcc-42fd-8773-e20dadb6756c-2024-12-13T190000.000Z) (MONDO:0009605; AR; Definitive).
+- [x] **CYB5A** — HGNC:2570; [methemoglobinemia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_895f7f88-9dcc-42fd-8773-e20dadb6756c-2024-12-13T190000.000Z) (MONDO:0009605; AR; Definitive).
 - [ ] **CYB5R3** — HGNC:2873; [methemoglobinemia due to deficiency of methemoglobin reductase](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa135949-7d13-41e7-bbee-5cefb3b77774-2024-12-13T190000.000Z) (MONDO:0009606; AR; Definitive).
 - [ ] **CYFIP2** — HGNC:13760; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af61bf34-00d4-4867-9a0b-415e4f6bcfa8-2025-05-06T160000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **CYLD** — HGNC:2584; [Brooke-Spiegler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_434ddb72-ee88-47af-9fa2-8dee9fa0a388-2019-04-19T160000.000Z) (MONDO:0011512; AD; Definitive); [frontotemporal dementia and/or amyotrophic lateral sclerosis 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6e9998d4-d6e3-4bdc-8de6-038928edbb60-2023-02-23T170000.000Z) (MONDO:0030872; AD; Limited).

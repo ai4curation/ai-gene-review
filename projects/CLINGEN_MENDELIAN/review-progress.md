@@ -3466,3 +3466,56 @@ remain append-only and no gene annotation or source file changes.
 Rendering availability remains separate from completion credit. The committed main-page render contains 1,751 missing-review warnings; the fresh baseline and checkpoint 426 render under the same frozen 2,966-human-review inventory contain 1,733 (18 cleared; none added). The cleared genes are CYB5A, DNAH17, DNAH8, FBXL4, MT-TC, MT-TH, MT-TK, MT-TL1, MT-TM, MT-TQ, MT-TS1, MT-TS2, MT-TV, MT-TW, MTFMT, SUCLA2, TARS2, TRMT10C. All remain unchecked and receive no completion credit here. CWC27 was already linked; its newly recorded completion follows the accepted merge evidence. The progress page has zero rendering warnings.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T114448Z-codex-51b38b.yaml)
+
+## Completion checkpoint 427 — 2026-10-16 11:40:12 UTC
+
+**427 complete; 2,449 remaining out of 2,876 primary catalogue genes.**
+Only CYB5A is added to the 426 checked genes in tracker [#5053](https://github.com/ai4curation/ai-gene-review/pull/5053),
+using its exact checkpoint-426 head `7173ebea8f29d62fb2f17eeb755e8f0c0f225d38` as the preimage.
+This is a follow-up on that existing tracker PR. Tracker publication itself
+adds no gene credit. ROOT, the coordinating AI agent, accepted the independent
+completion proof; this is not a human maintainer sign-off.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CYB5A | [#5033](https://github.com/ai4curation/ai-gene-review/pull/5033) | `a0cbfb16972e` | [782b3b5a78c7](https://github.com/ai4curation/ai-gene-review/commit/782b3b5a78c788e9c88c99b98aae2baa0af3dba0) | 2026-10-16 11:40:12 | 21 / 21 |
+
+The [final formal approval](https://github.com/ai4curation/ai-gene-review/pull/5033#pullrequestreview-5535363788)
+and [complete detailed review](https://github.com/ai4curation/ai-gene-review/pull/5033#issuecomment-6195231459)
+clear the four prior scientific blockers on that exact head. Three residual
+presentation/exception suggestions are explicitly optional; there are no open
+review threads. Required [PR validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38756453055)
+passed. The [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/38892124958)
+passed scoped gene/history validation, all-gene schema validation, examples,
+the full test suite and automation checks. The separate
+[actual-main push run](https://github.com/ai4curation/ai-gene-review/actions/runs/38895302561)
+then materialized the same merged commit and passed scoped CYB5A and history
+validation, completing at 11:45:27 UTC. Its full test suite was skipped by the
+workflow; it is not represented as a full-suite rerun.
+
+All 21 approved file modes, types and blobs equal the merged full PR paths,
+and the actual parent delta contains exactly those 21 additions. All four final
+review/notes/source-guide/render artifacts are exact, as are 24 protected
+scientific paths. The accepted science preserves 21 original annotation source
+objects, 23 reference identities, all three official product identities and
+three exact quotations, with one explicitly homolog-inferred electron-transfer
+assertion. The review's DRAFT status and three justified UNDECIDED annotations
+remain biological/source-access statements, not outstanding required feedback.
+The seven documented validation advisories are unchanged and nonblocking.
+
+All 2,876 catalogue identities and association texts, all 235 historical queue
+records, all 76 prior completion updates, the entire preceding progress text
+(including checkpoint 426), and all existing project histories remain unchanged.
+Only the previously unchecked CYB5A identity becomes checked. Earlier statements
+excluding CYB5A retain their historical checkpoint scope. No gene annotations,
+source caches or earlier histories change.
+
+The rendering inventory remains frozen at main `782b3b5a78c788e9c88c99b98aae2baa0af3dba0`:
+7,824 total review YAMLs and 2,966 human review YAMLs. The checkpoint-426 baseline
+has 1,733 main-page missing-review warnings and zero progress-page warnings.
+No availability change is proposed here; ROOT will derive the two updated HTML
+pages in this same inventory and record their actual results separately.
+
+The final render passed all eight frontmatter checks and reproduced exactly the baseline warning lists: 1,733 for the main page and zero for the progress page. The completion counts are 427 checked and 2,449 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T120914Z-codex-756f94.yaml)
