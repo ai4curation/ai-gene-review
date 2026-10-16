@@ -3519,3 +3519,70 @@ pages in this same inventory and record their actual results separately.
 The final render passed all eight frontmatter checks and reproduced exactly the baseline warning lists: 1,733 for the main page and zero for the progress page. The completion counts are 427 checked and 2,449 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T120914Z-codex-756f94.yaml)
+
+## Completion checkpoint 428 — 2026-10-16 12:05:50 UTC
+
+**428 complete; 2,448 remaining out of 2,876 primary catalogue genes.**
+Only CXCR4 is added to checkpoint 427 in tracker [#5053](https://github.com/ai4curation/ai-gene-review/pull/5053).
+The exact prior tracker head is `d69551859e986bbcb2e37d44ae14daebf7fd9851`. ROOT, the coordinating
+AI agent, accepted the independent completion audit; this is not a human
+maintainer sign-off. The entire prior checkpoint 426 and 427 record is preserved.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CXCR4 | [#5035](https://github.com/ai4curation/ai-gene-review/pull/5035) | `f019a43cbb9c` | [9cff2a2e29e9](https://github.com/ai4curation/ai-gene-review/commit/9cff2a2e29e9221d04e45143abb00951b0277a49) | 2026-10-16 12:05:50 | 54 / 54 |
+
+The [final formal approval](https://github.com/ai4curation/ai-gene-review/pull/5035#pullrequestreview-5536596991)
+and [complete detailed review](https://github.com/ai4curation/ai-gene-review/pull/5035#issuecomment-6197047569)
+resolve the six prior review requests on that exact head. There are no open
+review threads; the remaining presentation suggestions are optional.
+[Required PR validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38769178578)
+passed. The [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/38895306397)
+passed scoped gene/history validation, all-gene schema validation, examples,
+3,889 tests and 251 automation tests. The separate
+[actual-main push run](https://github.com/ai4curation/ai-gene-review/actions/runs/38898166465)
+validated the merged CXCR4 and history files, completing at 12:12:56 UTC.
+The full suite was skipped on that push; its successful execution belongs to
+the merge-group run.
+
+All 54 approved file modes, types and blobs equal the merged full PR paths
+and the complete actual parent delta. The accepted science preserves all 117
+annotation source objects, both official products, 79 reference identities,
+19 exact excerpts and one core. The original 118 GOA rows deterministically
+seeded 117 objects through one duplicate collapse. All 84 protected scientific
+paths remain exact. Five justified UNDECIDED decisions, DRAFT status and two
+nonblocking validation advisories remain explicit; none is unresolved required
+feedback. The review comment's count of eight new excerpts is an arithmetic
+slip: the verified inventory is 12 prior plus seven new, totaling 19.
+
+### Current render inventory and correction of the prior freeze
+
+The checkpoint-427 render was frozen at main `782b3b5a78c788e9c88c99b98aae2baa0af3dba0` even though its
+branch had already incorporated the CXCR4 merge. Its 7,824 total / 2,966 human
+inventory and 1,733 warnings describe that historical render only. They do not
+describe the current branch. This appended disclosure corrects the current
+state without rewriting either earlier checkpoint or history record.
+
+The branch now has **7,825 review YAMLs, including 2,967 human reviews**, exactly
+matching main `9cff2a2e29e9221d04e45143abb00951b0277a49`. CXCR4 is the sole added review since the
+checkpoint-427 inventory and must become a link instead of a missing-review
+warning. The complete tracker PR therefore has **19 cumulative availability
+gains**, reducing the prior-main warning list from 1,751 to **1,732**, with no
+new missing reviews. The 19 are CXCR4, CYB5A, DNAH17, DNAH8, FBXL4, MT-TC, MT-TH, MT-TK, MT-TL1, MT-TM, MT-TQ, MT-TS1, MT-TS2, MT-TV, MT-TW, MTFMT, SUCLA2, TARS2, TRMT10C.
+The incremental change since checkpoint 427 is one link and one removed warning,
+CXCR4. These are exact Git-inventory and frontmatter-path results; ROOT will
+regenerate both HTML pages against the current branch and record the actual
+1,732 / zero warning results before publication.
+
+Availability and accepted completion are separate. CXCR4 is checked here only
+because its independent audit and separate actual-main validation are now
+accepted, not because its YAML is present. The earlier request to leave it
+unchecked correctly described the pre-audit boundary. No other available review
+receives credit. All 2,876 catalogue identities and association texts, all 235
+historical queue objects, all 77 prior completion updates, the full preceding
+progress text and all 166 prior project histories remain unchanged. Existing
+cosmetic spacing in historical queue/history text remains preserved.
+
+The final render passed all eight frontmatter checks and cleared exactly the stale CXCR4 availability warning: 1,732 warnings remain for the main page and zero for the progress page. The actual branch inventory contains 7,825 reviews, including 2,967 human reviews. The completion counts are 428 checked and 2,448 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T124217Z-codex-d73d47.yaml)
