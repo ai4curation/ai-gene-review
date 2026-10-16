@@ -299,7 +299,7 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
         d = yaml.safe_load(open(p))
     except Exception:
         continue
-    mf, mf_contributes, bp, cc = set(), set(), set(), set()
+    mf, mf_contributes, bp = set(), set(), set()
     for cf in d.get("core_functions") or []:
         # Kept apart: enabling an activity and contributing to a complex that has it are
         # different claims, and a row that aligns only on the weaker one says so.
@@ -308,7 +308,7 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
             v = cf.get(k)
             if isinstance(v, dict) and v.get("id"):
                 dest.add(v["id"])
-        for k, dest in (("directly_involved_in", bp), ("locations", cc), ("in_complex", cc)):
+        for k, dest in (("directly_involved_in", bp),):
             v = cf.get(k) or []
             if isinstance(v, dict):
                 v = [v]
@@ -329,7 +329,7 @@ for p in glob.glob(f"{AG}/genes/human/*/*-ai-review.yaml"):
         elif act == "NEW":
             proposed.add(tid_)
     aigr[sym] = dict(uniprot=d.get("id"), status=d.get("status"),
-                     mf=mf, mf_contributes=mf_contributes, bp=bp, cc=cc,
+                     mf=mf, mf_contributes=mf_contributes, bp=bp,
                      kept=kept, proposed=proposed)
 
 
@@ -493,6 +493,15 @@ with open(f"{DM}/cache/hgnc/terms.csv", newline="") as fh:
             hgnc_sym[row[0].lower()] = row[1]
 
 
+# HGNC symbols whose AIGR review folder uses a newer symbol than the dismech HGNC cache
+# reports. Checked below against the folders actually present, so an entry that has become
+# wrong fails the run instead of quietly sending the row to NO_AIGR_REVIEW.
+HGNC_RENAMES = {"TMEM251": "LYSET"}
+
+# gid values the dismech HGNC cache cannot resolve to a symbol.
+_symbol_failures = []
+
+
 def tid(x):
     if isinstance(x, dict):
         t = x.get("term") or {}
@@ -516,9 +525,16 @@ for name in SCOPE:
     if not genes:
         entry["problem"] = "NO_GENE_RECORD"
     for gid, rel, origin in genes:
-        sym = hgnc_sym.get(gid, gid)
-        sym = {"TMEM251": "LYSET"}.get(sym, sym)  # HGNC rename; AIGR folder uses current symbol
-        node_mf, node_bp, node_cc, nodes = set(), set(), set(), []
+        if gid not in hgnc_sym:
+            # Collected and re-raised at the end, as anc() and aspect() are. Falling back
+            # to the raw CURIE made an unresolvable id read as NO_AIGR_REVIEW - a lookup
+            # failure rendering as a curation gap, which is the one way this table can be
+            # wrong without looking wrong.
+            _symbol_failures.append((gid, name))
+            continue
+        sym = hgnc_sym[gid]
+        sym = HGNC_RENAMES.get(sym, sym)
+        node_mf, node_bp, nodes = set(), set(), []
         # A node binds its GO terms at node level and may name several genes, and dismech
         # has no per-gene attribution inside a node. So terms on a shared node are read
         # for every gene on it, and the two provenances are tracked apart: `shared_terms`
@@ -541,16 +557,13 @@ for name in SCOPE:
                 node_mf.add(tid(x)); here.add(tid(x))
             for x in n.get("biological_processes") or []:
                 node_bp.add(tid(x)); here.add(tid(x))
-            for k in ("cellular_components", "locations"):
-                for x in n.get(k) or []:
-                    node_cc.add(tid(x))
             here.discard(None)
             if len({x for x in ng if x}) > 1:
                 shared_terms |= here
                 shared_nodes.append(n.get("name"))
             else:
                 sole_terms |= here
-        node_mf.discard(None); node_bp.discard(None); node_cc.discard(None)
+        node_mf.discard(None); node_bp.discard(None)
         a = aigr.get(sym)
         g = dict(gene=sym, hgnc=gid, relationship=rel, origin=origin, nodes=len(nodes))
         flags = []
@@ -613,6 +626,11 @@ for name in SCOPE:
                     prop = sorted(t for t in dm if any(related(t, k) for k in a["proposed"]))
                     if noncore:
                         g["aligned_noncore_terms"] = noncore
+                        # Which retained non-core term each one matched. aligned_pairs does
+                        # this for core matches; without the same record here the page can
+                        # name the matched term in prose and nothing can check it.
+                        g["aligned_noncore_pairs"] = {
+                            t: sorted(k for k in a["kept"] if related(t, k)) for t in noncore}
                         flags.append("ALIGNED_NONCORE")
                     elif prop:
                         g["aligned_proposed_terms"] = prop
@@ -677,6 +695,23 @@ _paired = {t for e in report for g in e.get("genes", [])
            for t, v in pair.items()
            for t in [t] + (v if isinstance(v, list) else [v])}
 TERM_ASPECTS = {t: aspect(t) for t in sorted(_paired) if aspect(t)}
+
+if _symbol_failures:
+    for gid, ent in _symbol_failures[:5]:
+        print(f"unresolvable HGNC id: {gid} ({ent})", file=sys.stderr)
+    sys.exit(f"{len(_symbol_failures)} HGNC id(s) did not resolve to a symbol in "
+             f"{DM}/cache/hgnc/terms.csv, e.g. {_symbol_failures[:3]}; each would have "
+             "read as NO_AIGR_REVIEW, so no report was written.")
+
+# A rename entry is only correct while the old symbol has no review folder of its own and
+# the new one does. Either half going stale would send a real review to NO_AIGR_REVIEW.
+_rename_bad = [f"{o}->{n}: "
+               + ("old symbol now has its own review folder" if os.path.isdir(f"{AG}/genes/human/{o}")
+                  else f"no review folder for {n}")
+               for o, n in HGNC_RENAMES.items()
+               if os.path.isdir(f"{AG}/genes/human/{o}") or not os.path.isdir(f"{AG}/genes/human/{n}")]
+if _rename_bad:
+    sys.exit("HGNC_RENAMES is out of step with the review folders: " + "; ".join(_rename_bad))
 
 if _aspect_failures:
     sys.exit(f"GO aspect lookups failed for {len(_aspect_failures)} terms, e.g. "

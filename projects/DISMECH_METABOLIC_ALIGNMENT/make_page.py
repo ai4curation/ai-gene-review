@@ -85,6 +85,65 @@ def row_index(entries):
 
 
 ROWS_HERE, ROWS_THERE = row_index(rep), row_index(ALT_REP) if ALT_REP else {}
+
+
+# Worked examples named in the prose below, re-checked against the report that is
+# rendering this page. The figures on this page are all derived; these examples were not,
+# and the aspect() docstring records one of them having silently stopped being true when
+# the input tree changed. Asserting them turns that into a render failure rather than a
+# published claim. Each tuple is (symbol, terms that must be aligned, terms that must be
+# unaligned, pairs that must hold as node->core).
+# UCP2 aligns only against a term the review keeps as non-core, so its match is recorded
+# in aligned_noncore_terms/-_pairs rather than in aligned_terms, and the node term stays
+# in dismech_only. The prose says exactly that, so the guard checks it that way.
+PROSE_EXAMPLES = [
+    ("DMP1", ["GO:0005509"], [], {}, [], {}),
+    ("GLUD1", ["GO:0004353"], [], {"GO:0004353": "GO:0004353"}, [], {}),
+    ("LCT", ["GO:0000016"], ["GO:0006366"], {}, [], {}),
+    ("NDUFA1", ["GO:0008137"], [], {}, [], {}),
+    ("UCP2", [], ["GO:0050796"], {}, ["GO:0050796"], {"GO:0050796": "GO:0061179"}),
+]
+
+
+def _check_prose_examples():
+    """Fail the render when a hardcoded example no longer matches the report."""
+    by_sym = {}
+    for (_entry, sym, _n), g in ROWS_HERE.items():
+        by_sym.setdefault(sym, []).append(g)
+    bad = []
+    for sym, must_align, must_not_align, pairs, must_noncore, noncore_pairs in PROSE_EXAMPLES:
+        rows = by_sym.get(sym)
+        if not rows:
+            bad.append(f"{sym}: named in the prose but holds no row in this report")
+            continue
+        aligned, unaligned, noncore = set(), set(), set()
+        pairmap, ncpairmap = {}, {}
+        for g in rows:
+            aligned |= set(g.get("aligned_terms") or [])
+            unaligned |= set(g.get("dismech_only") or [])
+            noncore |= set(g.get("aligned_noncore_terms") or [])
+            for src, dest in ((g.get("aligned_pairs") or {}, pairmap),
+                              (g.get("aligned_noncore_pairs") or {}, ncpairmap)):
+                for k, v in src.items():
+                    dest.setdefault(k, set()).update(v if isinstance(v, list) else [v])
+        for terms, have, what in ((must_align, aligned, "aligned"),
+                                  (must_not_align, unaligned, "unaligned"),
+                                  (must_noncore, noncore, "aligned against a non-core term")):
+            for t in terms:
+                if t not in have:
+                    bad.append(f"{sym}: prose calls {t} {what}; report does not")
+        for prs, have, what in ((pairs, pairmap, "pairs"),
+                                (noncore_pairs, ncpairmap, "non-core pairs")):
+            for k, v in prs.items():
+                if v not in have.get(k, set()):
+                    bad.append(f"{sym}: prose {what} {k}->{v}; report has "
+                               f"{sorted(have.get(k, set())) or 'no such pair'}")
+    if bad:
+        sys.exit("prose examples no longer match the report, so the page would publish a "
+                 "stale claim:\n  " + "\n  ".join(bad))
+
+
+_check_prose_examples()
 # Whether the ordinal in the key is doing anything, measured rather than asserted.
 REPEATED_ROWS = sorted({(e, g) for (e, g, n) in list(ROWS_HERE) + list(ROWS_THERE) if n})
 # Symbols holding more than one row anywhere in either report. Scoped to the reports, not
@@ -1301,13 +1360,13 @@ lines += [
     "role and the activity it supports are unrelated branches of molecular function. NDUFA1 is the",
     "row where that decides the verdict.",
     "",
-    "An earlier version of this page also claimed that is_a/part_of ancestry cannot cross between",
-    "molecular function and biological process. That is false, and rows of this table disprove it:",
-    "GO asserts `part_of` from transporter activities to the transport processes they carry out.",
+    "`is_a`/`part_of` ancestry does cross between molecular function and biological process, and",
+    "that crossing is a real source of alignment here: GO asserts `part_of` from transporter",
+    "activities to the transport processes they carry out.",
     _cross_aspect_sentence,
-    "What is true is narrower, and is a fact about one pair rather than about the aspects:",
-    "`GO:0008137` does not reach `GO:0006120`. Two things follow. Cross-aspect `part_of` is a",
-    "real source of",
+    "Where a particular pair does not meet, that is a fact about the pair rather than about the",
+    "aspects - `GO:0008137` does not reach `GO:0006120`. Two things follow. Cross-aspect",
+    "`part_of` is a real source of",
     "alignment in this table, not an artefact - and since node MF and BP terms are compared against",
     "one pooled set of the review's core molecular functions and `directly_involved_in` processes,",
     "a node activity term can be satisfied by a core process and the reverse. Such a match is",
@@ -1414,7 +1473,17 @@ if PROV:
             " audit over a tree that is not a plain checkout."
         )
     lines.append("")
-    lines += alt_comparison()
+    # The two-run comparison is a statement about this generator, not about dismech/AIGR
+    # agreement, and it names individual rows and stub statuses. It goes to its own page
+    # under the projects/FOO/ convention; only a link to it belongs here.
+    if alt_comparison():
+        lines.append(
+            "The same audit was run a second time over a different tree, and the two runs'"
+            " flag counts are reconciled row by row in"
+            " [the audit self-check](DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md). That"
+            " is a check on the generator rather than a finding about the two resources, so"
+            " it is kept beside the page rather than in it."
+        )
 
 
 def aligned_cell(g):
@@ -1508,8 +1577,15 @@ n_untyped = sum(1 for e in rep for g in e.get("genes", [])
 _principal_desc = (f"causative and untyped; {n_untyped} untyped" if n_untyped
                    else "all causative in this run; the predicate also admits untyped")
 lines += [
-    f"**Summary.** {len(rep)} entries; {n_rows} principal gene rows ({_principal_desc});",
-    f"{n_clean} carry no flag other than a module flag or one of the qualifying flags - none"
+    f"**Summary.** {len(rep)} entries; {n_rows} principal gene rows ({_principal_desc}), of"
+    f" which {n_full} align every GO term their dismech nodes carry and {n_partial} align some"
+    " and leave others unaligned. Read that split first: the flag-free count below is close to"
+    " true by construction, because `NO_GO_ALIGNMENT` is the only hard flag while"
+    " `PARTIAL_ALIGNMENT`, `ALIGNED_ON_SHARED_NODE_ONLY` and `PARTIAL_COVERAGE` are all soft,"
+    " so it is not a measure of full agreement.",
+    "",
+    f"{n_clean} principal rows carry no flag other than a module flag or one of the qualifying"
+    " flags - none"
     " carries `NO_GO_ALIGNMENT`, `NO_CORE_FUNCTION_TERMS`, `NO_GO_ON_GENE_NODES` or"
     " `GENE_ON_NO_NODE`. That count also tolerates `ALIGNED_NONCORE` and `ALIGNED_PROPOSED`,"
     " which say a row aligned only against a retained non-core or a proposed term rather than"
@@ -1647,4 +1723,25 @@ if unused:
              f"stated reason no longer applies: {', '.join(unused)}")
 
 open(out, "w").write("\n".join(lines) + "\n")
+
+# The self-check page, written beside the project page under the projects/FOO/ convention.
+# Written only when there is a second report: with nothing to compare there is no page to
+# write, and a stale one left behind would outlive its input.
+_self_check = alt_comparison()
+if _self_check:
+    _sc_path = os.path.join(os.path.dirname(os.path.abspath(out)),
+                            "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
+    os.makedirs(os.path.dirname(_sc_path), exist_ok=True)
+    open(_sc_path, "w").write("\n".join([
+        "# DISMECH metabolic alignment: audit self-check",
+        "",
+        "[Back to the project page](../DISMECH_METABOLIC_ALIGNMENT.md)",
+        "",
+        "This page reconciles two runs of the same audit over different trees. It is a check"
+        " on the generator - that the flags which should not depend on which gene reviews"
+        " exist do not - and not a finding about how dismech and ai-gene-review agree. It"
+        " names individual rows and review statuses for that reason.",
+        "",
+    ] + _self_check) + "\n")
+    print("wrote", _sc_path)
 print("wrote", out, n_rows, n_clean)
