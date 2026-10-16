@@ -22,7 +22,7 @@ adhesive signalling cues. This project actioned every row in a ten-gene human
 ECM pilot spanning basement-membrane proteoglycans (`AGRN`, `HSPG2`, `NID1`),
 interstitial matrix components (`FN1`, `DCN`, `EPYC`, `SPARC`) and the three
 testicans (`SPOCK1`, `SPOCK2`, `SPOCK3`). As of 2026-10-16, those files contain
-638 review rows: 284 ACCEPT, 187 KEEP_AS_NON_CORE, 71 REMOVE, 63 MODIFY, 16 NEW,
+638 review rows: 283 ACCEPT, 187 KEEP_AS_NON_CORE, 71 REMOVE, 64 MODIFY, 16 NEW,
 11 MARK_AS_OVER_ANNOTATED and 6 UNDECIDED. All ten review YAMLs are `COMPLETE`,
 and `DCN` now has `core_functions`. The first basement-membrane `ModuleReview`
 remains to be drafted; that follow-up is tracked in
@@ -73,7 +73,7 @@ The pilot deliberately mixed three slices of ECM biology:
 | `AGRN` | 102 | COMPLETE | 54 ACCEPT · 34 KEEP_AS_NON_CORE · 6 MODIFY · 1 REMOVE · 3 MARK_AS_OVER_ANNOTATED · 4 UNDECIDED |
 | `DCN` | 75 | COMPLETE | 17 ACCEPT · 41 KEEP_AS_NON_CORE · 8 MODIFY · 5 REMOVE · 3 NEW · 1 MARK_AS_OVER_ANNOTATED |
 | `SPARC` | 43 | COMPLETE | 29 ACCEPT · 7 KEEP_AS_NON_CORE · 1 MODIFY · 5 REMOVE · 1 NEW |
-| `NID1` | 40 | COMPLETE | 32 ACCEPT · 7 KEEP_AS_NON_CORE · 1 REMOVE |
+| `NID1` | 40 | COMPLETE | 31 ACCEPT · 7 KEEP_AS_NON_CORE · 1 MODIFY · 1 REMOVE |
 | `SPOCK1` | 32 | COMPLETE | 18 ACCEPT · 8 KEEP_AS_NON_CORE · 3 REMOVE · 2 NEW · 1 UNDECIDED |
 | `SPOCK2` | 17 | COMPLETE | 10 ACCEPT · 2 KEEP_AS_NON_CORE · 4 MODIFY · 1 REMOVE |
 | `SPOCK3` | 17 | COMPLETE | 14 ACCEPT · 3 NEW |
