@@ -68,4 +68,7 @@ prose (it appears in the proteome dataset), consistent with an HTP localization 
   demonstrated in the cached sources → kept as non-core.
 - Metal ion binding (GO:0046872) is in the UniProt DR block (IEA KW) but absent from the GOA TSV,
   so it is not among the 19 seeded annotations; the Mg2+ cofactor is noted here for completeness.
-</content>
+
+## 2026-10-11 completion pass (claude-code)
+
+Core MF now contributes_to GO:0097269, matching the curated IDA qualifier and PDSS2. The activity is a property of the PDSS1/PDSS2 heterotetramer [PMID:16262699 "indicates that they consist of heterotetramers"]. Note that GO:0008412 is the COQ2 4-hydroxybenzoate polyprenyltransferase, not PDSS. Status COMPLETE.

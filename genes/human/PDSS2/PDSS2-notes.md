@@ -102,3 +102,7 @@ synthase subunit 2 (a.k.a. DLP1, hDLP1, C6orf210). HGNC:23041. Gene on chr 6q21.
   (2x PDSS1 + 2x PDSS2).
 - BP: GO:0006744 ubiquinone biosynthetic process.
 - Location: GO:0005759 mitochondrial matrix (mitochondrion, GO:0005739).
+
+## 2026-10-11 completion pass (claude-code)
+
+Kept core contributes_to GO:0097269 in GO:0032478 (consistent with PDSS1). Added propagation_review to the IBA MODIFY rows. Bare protein binding changed to REMOVE. Status COMPLETE.

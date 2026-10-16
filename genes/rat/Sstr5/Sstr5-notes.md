@@ -92,3 +92,17 @@ The BioReason SFT report (Sstr5-deep-research-bioreason-sft.md) contains several
 ## Summary of Core Biology
 
 Sstr5 encodes somatostatin receptor type 5, a Gi/o-coupled GPCR that preferentially binds somatostatin-28 with high affinity. It is prominently expressed in the rat pituitary anterior lobe and small intestine, with lower levels in pancreatic islets. Upon ligand binding, it inhibits adenylyl cyclase, reducing intracellular cAMP. Through this signaling, SSTR5 acts as a negative regulator of insulin secretion from pancreatic beta cells and participates in glucose homeostasis. SSTR5 expression in pituitary is upregulated by glucocorticoids (dexamethasone), providing a link between the stress axis and somatostatinergic tone. The receptor can heterodimerize with SSTR2, enhancing the growth-inhibitory signaling of SSTR2. SSTR5 is palmitoylated at Cys-320 by the palmitoyltransferase ZDHHC5, which may regulate its membrane localization and G-protein coupling efficiency.
+
+## Re-review 2026-10-10
+
+GOA refresh: one new row (GO:0005886 plasma membrane, ISO, GO_REF:0000121, donor human SSTR5 UniProtKB:P35346), a donor-split sibling of the existing mouse-derived (MGI:894282) ISO plasma membrane row. No rows retired. Resolved as ACCEPT with its own propagation_review entry. Status set to COMPLETE.
+
+Actions re-audited (no action changed; reasoning corrected on two rows):
+
+- GO:0060124 positive regulation of growth hormone secretion (ISO, donor RGD:14121952): kept MARK_AS_OVER_ANNOTATED, but the previous review mislabelled the donor as human SSTR5 and called it a sign inversion. RGD's REST API shows RGD:14121952 is the pig SSTR5 record (speciesTypeKey 9), annotated IMP from PMID:16543371 (cached, abstract-only): [PMID:16543371 "These results indicate that in the pig, sst1 and sst2 are the primary mediators of the inhibitory effects of somatostatin, whereas sst5 or an sst5-related mechanism mediates the stimulatory action of somatostatin on GH release."] The donor evidence is real but pig- and somatotrope-subpopulation-specific; failure mode changed to CONTEXT_OR_TISSUE_MISMATCH only.
+- GO:0032467 positive regulation of cytokinesis (ISO, donor human SSTR5 P35346): kept MARK_AS_OVER_ANNOTATED, but the old "sign inversion" argument was wrong. The donor IMP is from a 516-gene GPCR siRNA screen in HeLa (PMID:22888021, full text cached), where SSTR5 knockdown increased binucleation: [PMID:22888021 "RNAi knockdown of these GPCRs caused increased binucleated cell formation, and live cell imaging showed that most formed midbodies but failed at the abscission stage."] Knockdown was partial ([PMID:22888021 "All of the GPCRs showed knockdown, but were only partially depleted."]) and SSTR5 got no specific follow-up. Root cause re-classified as SOURCE_WEAK_OR_INFERRED.
+- Added positive `supported_by` (UniProt FUNCTION / SUBCELLULAR LOCATION CC lines, PMID:1362243, PMID:14512709, PMID:12511609) to 11 ACCEPT/KEEP_AS_NON_CORE rows that had none.
+- IBA rows for GO:0004994 and GO:0071385 list RGD:3765 (rat Sstr5 itself) in WITH/FROM; noted as expected descendant evidence, not circularity.
+- No stale UniProt quotes (checker: 0).
+
+Open questions: whether rat Sstr5 shows any of the pig-type stimulatory GH action in a somatotrope subpopulation has not been tested in the cached literature.
