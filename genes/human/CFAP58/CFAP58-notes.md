@@ -75,3 +75,17 @@ publications. Every cited PMID was cached with `just fetch-pmid` / `just fetch-g
 - protein localization to motile cilium (IMP) -> MARK_AS_OVER_ANNOTATED (marker-depletion
   evidence shows necessity, not transport).
 - extracellular region (HDA tears proteome) -> MARK_AS_OVER_ANNOTATED.
+
+## Review round 2 (PR 5062 automated review)
+
+- `sperm principal piece` (IDA, GO_REF:0000052) ACCEPT: the reason now states the
+  inference explicitly. The HPA-type source is not quotable; whole-flagellum staining in
+  control sperm [PMID:32791035 "Immunofluorescence assays showed that CFAP58 localized at
+  the entire flagella of control sperm and predominantly concentrated in the mid-piece."]
+  includes the principal piece.
+- core_functions keeps both `sperm axoneme assembly` (GO:0007288) and `sperm flagellum
+  assembly` (GO:0120316); the description now spells out why: the requirement is
+  flagellum-wide (mitochondrial sheath malformation and HSP60 depletion in the midpiece,
+  where CFAP58 is concentrated, as well as axonemal defects), while whether the sheath
+  contribution is direct remains open, so `sperm mitochondrial sheath assembly` itself
+  stays non-core.

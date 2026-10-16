@@ -80,3 +80,35 @@ reflects the 2018 model.
   whereas sperm flagellum biogenesis fails.
 - `ciliary basal body` (IDA, abstract-only PMID:31621862) -> UNDECIDED.
 - `extracellular exosome` (HDA urine proteomics) -> MARK_AS_OVER_ANNOTATED.
+
+## Review round 2 (PR 5062 automated review)
+
+### Why no molecular function is asserted
+
+CFAP43 and CFAP47 receive NEW `GO:0005200 structural constituent of cytoskeleton` in this
+repository because their structures resolve the protein's own contacts within the
+axoneme (CFAP47: domain-by-domain contacts with C1, HYDIN and C2 in PMID:40473901).
+CFAP70 has no equivalent contact map: the mouse in situ model places a homodimer in C2a
+[PMID:40473901 "We identified two major components of the C2a projections: CFAP65 and
+CFAP70; the latter forms a homodimer involved in CA"], the dimer was built with
+AlphaFold-assisted modelling, and in Chlamydomonas only the N-terminus has been placed
+[PMID:33988244 "Additional experiments, such as localization of the C-terminus of FAP70 or
+higher resolution single-particle cryo-electron microscopy, will be necessary to delimit
+FAP70 within the C2 microtubule."]. The knockout data (C2a collapse) are interdependent
+across CFAP70, CFAP65, MYCBPAP and CCDC108 and so show necessity rather than which
+subunit supplies structure. GO:0005200 is therefore plausible but not asserted; this is
+recorded in the first core function description.
+
+### Cilium row made consistent with axoneme rows
+
+`cilium` (IEA) changed from TOO_GENERAL to MODIFY -> GO:1990718 axonemal central pair
+projection, matching the axoneme rows, since the same specific term entails both.
+
+### Comparator checks (QuickGO annotation search, exact term, run 2026-10-16)
+
+Query: `https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB:<acc>&goId=<term>&goUsage=exact`.
+
+- GO:1990716: CFAP65 (Q6ZU64) ISS + IEA; MYCBPAP (Q8TBZ2) ISS; HYDIN (Q4G0P3) ISS + IEA.
+- GO:1990718: HYDIN (Q4G0P3) IEA only (GO_REF:0000107, Ensembl); CFAP65, MYCBPAP, SPAG16,
+  SPAG17 have none. CFAP70 (Q5T0N1) has neither term. The review's claims hold; the
+  HYDIN GO:1990718 support is electronic only, which the reason now states.
