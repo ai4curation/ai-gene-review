@@ -2,7 +2,7 @@
 
 `just warm-publications [limit]` upgrades abstract-only records in the
 `publications/` cache to full text by driving the
-**linkml-reference-validator (LRV ≥ 0.2.1) full-text provider chain**:
+**linkml-reference-validator (LRV ≥ 0.3.0) full-text provider chain**:
 
 1. **pmc** — PMC XML, then PMC HTML (resolves a PMC id from the PMID when the
    cache has none)
@@ -16,6 +16,28 @@ without a PMC id** (roughly two-thirds of the backlog), which previously were
 never retried at all — their DOI lets Unpaywall/OpenAlex locate open text.
 Note the sweep targets `PMID_*.md` records only; the small number of
 `DOI_*.md`-keyed records in the cache are not candidates.
+
+## Validation uses the committed evidence
+
+Repository validation enables LRV's `trust_cached_entries`: an existing cache
+entry is checked as committed, without a staleness refresh or a full-text retry.
+Missing references can still be fetched. Validation does not promote an
+abstract-only record to full text just because a quote needs it.
+
+If a full-text quote fails against an abstract-only record, first inspect the
+cached text. Run an explicit warming command (`just warm-publications [limit]`,
+or `just warm-references` for the references used by gene reviews) when new
+source text is needed. `warm-references` explicitly disables cache trust while
+it runs. Inspect and review the resulting source changes, re-quote if needed,
+and rerun validation. Warming does not guarantee that full text is available;
+never replace a missing quotation with an invented or paraphrased one.
+
+LRV 0.3.1rc1 also changes newly fetched `url:` HTML caches from markup to
+readable text. Cache trust deliberately preserves older committed markup;
+`just warm-references` opts out of trust and allows stale URL cache entries
+to refresh. Review those source changes and validate their quotations in a
+separate cache-refresh change. The upstream cache contract preserves consumer
+metadata such as `full_text_available` across refreshes.
 
 ## Tagging convention (adopted from monarch-initiative/dismech)
 

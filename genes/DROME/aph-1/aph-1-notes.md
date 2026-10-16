@@ -11,3 +11,7 @@
 ## Curation thoughts
 - protein-macromolecule adaptor activity (IBA) fits the scaffolding role; core.
 - Decisions on shared gamma-secretase terms made consistently with Nct and pen-2 (ectodomain proteolysis -> MODIFY; amyloid-beta formation -> non-core).
+
+## 2026-10-12: why core_functions asserts no location
+- The core location is given by `in_complex: GO:0070765 gamma-secretase complex`, which is part_of membrane. The two generic `membrane` rows are MODIFY'd to that complex.
+- The only plasma membrane annotation is a NAS row (PMID:12110170), kept as non-core: gamma-secretase acts at the plasma membrane and in endosomes. A core location would have to come from a retained core row, and there is no experimental one. So, unlike Nct (which has IBA and HDA plasma membrane rows), no location is asserted rather than over-stating a non-core one.

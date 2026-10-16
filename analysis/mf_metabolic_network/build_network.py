@@ -1,0 +1,593 @@
+#!/usr/bin/env python3
+"""Assemble a per-organism metabolic network from reviewed MF annotations and
+test how well its topology agrees with reviewed BP annotations.
+
+Pipeline
+  1. For every gene review in genes/<ORG>/, collect the *reviewed* MF and BP terms:
+       - core_functions[].molecular_function / directly_involved_in
+       - existing_annotations[] whose review.action is ACCEPT or KEEP_AS_NON_CORE
+       - proposed_replacement_terms of MODIFY actions, and NEW annotations
+  2. Map each MF to Rhea reactions using only the skos:exactMatch RHEA xrefs in
+     go-edit.obo (a general MF such as "oxidoreductase activity" is NOT expanded
+     to its descendants' reactions).
+  3. Reaction -> ChEBI participants; currency metabolites (H2O, ATP, NAD(P)H ...)
+     are removed so that edges reflect pathway intermediates rather than cofactors.
+  4. Gene-gene edge  <=>  the two genes' reactions share a non-currency metabolite.
+  5. Compare with BP (propagated over is_a/part_of, restricted to metabolic process):
+       a. edge-level: do metabolically linked genes share a specific BP more than
+          random gene pairs?
+       b. term-level: is the gene set of each BP term connected in the network,
+          compared with random gene sets of the same size?
+       c. community-level: Louvain communities vs best-matching BP term.
+
+Inputs are downloaded into data/ (see README.md); nothing is hard-coded.
+Outputs go to results/<ORG>/<source>/.
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import random
+import re
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+import networkx as nx
+import yaml
+
+# fetch_bulk.py (same folder) holds the pinned go-edit commit; put the folder on the path so
+# this module also imports when run or imported from elsewhere.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fetch_bulk import GO_EDIT  # noqa: E402
+
+try:
+    from yaml import CSafeLoader as Loader
+except ImportError:  # pragma: no cover
+    from yaml import SafeLoader as Loader
+
+HERE = Path(__file__).parent
+ROOT = HERE.parent.parent
+DATA = HERE / "data"
+
+KEEP_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
+METABOLIC_PROCESS = "GO:0008152"
+
+# Currency / cofactor metabolites, matched against Rhea participant *names*
+# (resolved to ChEBI ids from the Rhea equations, so no ChEBI id is hand-typed).
+CURRENCY_NAMES = {
+    "H2O", "H(+)", "O2", "CO2", "hydrogencarbonate", "NH4(+)", "phosphate", "diphosphate",
+    "ATP", "ADP", "AMP", "GTP", "GDP", "GMP", "CTP", "CDP", "CMP", "UTP", "UDP", "UMP",
+    "ITP", "IDP", "dATP", "dADP",
+    "NAD(+)", "NADH", "NADP(+)", "NADPH", "FAD", "FADH2", "FMN", "FMNH2",
+    "CoA", "H2O2", "S-adenosyl-L-methionine", "S-adenosyl-L-homocysteine",
+    "an oxidized [electron-transfer flavoprotein]", "a reduced [electron-transfer flavoprotein]",
+    "AH2", "A", "a ubiquinone", "a ubiquinol", "a quinone", "a quinol", "a menaquinone",
+    "a menaquinol", "Fe(III)-[cytochrome c]", "Fe(II)-[cytochrome c]",
+    "oxidized [thioredoxin]", "reduced [thioredoxin]",
+    "L-glutathione", "glutathione disulfide",
+    "Na(+)", "K(+)", "Mg(2+)", "Ca(2+)", "Zn(2+)", "Fe(2+)", "Fe(3+)", "Cu(+)", "Cu(2+)",
+    "Mn(2+)", "chloride", "hydrogen sulfide", "sulfite", "sulfate", "superoxide",
+    "[thioredoxin]-dithiol", "[thioredoxin]-disulfide",
+    "reduced 2[4Fe-4S]-[ferredoxin]", "oxidized 2[4Fe-4S]-[ferredoxin]",
+    "2 reduced [2Fe-2S]-[ferredoxin]", "2 oxidized [2Fe-2S]-[ferredoxin]",
+    "reduced [2Fe-2S]-[ferredoxin]", "oxidized [2Fe-2S]-[ferredoxin]",
+    "an [apo-acyl-carrier-protein]",
+    "L-glutamate", "2-oxoglutarate",  # amino-group shuttle; huge hubs in transaminations
+    "L-glutamine",
+}
+
+
+# Electron-carrier pools (quinones of any prenyl length, cytochromes, flavodoxins,
+# NADPH--hemoprotein reductase) are also treated as currency.
+CURRENCY_PATTERNS = re.compile(
+    r"(ubiquinon|ubiquinol|menaquinon|menaquinol|plastoquinon|plastoquinol|cytochrome|"
+    r"flavodoxin|ferredoxin|hemoprotein reductase|electron-transfer flavoprotein)", re.I)
+# Macromolecular residues ("L-seryl-[protein]", "a 5'-end ... in mRNA", "tRNA(Leu)") link
+# kinases, methyltransferases, aaRSs etc. through polymers, not through small-molecule
+# metabolism; they are excluded from the metabolite layer. Acyl-carrier-protein
+# intermediates ("-[ACP]") are kept: they are genuine pathway intermediates.
+MACROMOLECULE_PATTERNS = re.compile(
+    r"(\[(protein|histone|collagen|[^\]]*protein\]|DNA|RNA|mRNA|tRNA|rRNA)|"
+    r"\bin (DNA|RNA|mRNA|tRNA|rRNA|.*RNA)\b|^tRNA|^a tRNA|^an? \w*-?tRNA|-tRNA|tRNA\(|"
+    r"\bDNA\b|\bRNA\b|^\[protein\]|-\[protein|ribonucleic|\(deoxyribonucleotide\)|"
+    # any bracketed protein or enzyme ("[ribosomal protein uS12]", "[pyruvate, water dikinase]",
+    # "apo-[alkylcobalamin reductase]"): residues and enzyme-bound intermediates, not metabolites
+    r"\[[^\]]*\b(protein|[a-z]*ase)\b[^\]]*\])")
+# go-edit.obo pinned to a go-ontology commit; the file name carries the commit so a copy
+# fetched from another commit is never picked up silently (see fetch_bulk.py).
+# GO->Rhea comes from the `xref: RHEA:n {source="skos:..."}` lines of go-edit.obo, keeping
+# ONLY skos:exactMatch. go-basic.obo, rhea2go and the Rhea TSV GO column drop the predicate,
+# so narrowMatch/broadMatch xrefs there look like exact mappings (e.g. GO:0016616
+# CH-OH oxidoreductase -> RHEA:25968 benzil reductase, which is a narrowMatch).
+EXACT_XREF = re.compile(r'^xref: (RHEA:\d+) \{source="skos:exactMatch"\}')
+
+
+# A handoff through a chemical touched by at most this many enzymes counts as "specific".
+HANDOFF_HUB = 5
+
+
+# ---------------------------------------------------------------- GO ontology
+def load_go(path: Path):
+    names, ns, parents, obsolete = {}, {}, defaultdict(set), set()
+    cur = None
+    for line in path.open():
+        line = line.rstrip("\n")
+        if line == "[Term]":
+            cur = {}
+        elif line.startswith("[") and line.endswith("]"):
+            cur = None
+        elif cur is not None and line.startswith("id: "):
+            cur["id"] = line[4:]
+        elif cur is not None and "id" in cur:
+            tid = cur["id"]
+            if line.startswith("name: "):
+                names[tid] = line[6:]
+            elif line.startswith("namespace: "):
+                ns[tid] = line[11:]
+            elif line.startswith("is_a: "):
+                parents[tid].add(line[6:].split(" ")[0])
+            elif line.startswith("relationship: part_of "):
+                parents[tid].add(line.split(" ")[2])
+            elif line.startswith("is_obsolete: true"):
+                obsolete.add(tid)
+            elif line.startswith("alt_id: "):
+                names.setdefault("ALT:" + line[8:], tid)
+    alt = {k[4:]: v for k, v in names.items() if k.startswith("ALT:")}
+    return names, ns, parents, obsolete, alt
+
+
+def ancestors_fn(parents):
+    cache = {}
+
+    def anc(t):
+        if t in cache:
+            return cache[t]
+        out = {t}
+        for p in parents.get(t, ()):
+            out |= anc(p)
+        cache[t] = out
+        return out
+
+    return anc
+
+
+# ---------------------------------------------------------------- Rhea
+def split_participants(side: str):
+    return [re.sub(r"^\d+ ", "", t.strip()) for t in side.split(" + ")]
+
+
+def load_go_rhea_exact(path: Path, rhea_master: dict):
+    """go-edit.obo -> {GO id: {Rhea master id}} for skos:exactMatch xrefs of live terms."""
+    go2rhea, obsolete, tid = defaultdict(set), set(), None
+    for line in path.open():
+        if line.startswith("[Term]") or line.startswith("[Typedef]"):
+            tid = None
+        elif line.startswith("id: GO:"):
+            tid = line[4:].strip()
+        elif tid and line.startswith("is_obsolete: true"):
+            obsolete.add(tid)
+        elif tid and line.startswith("xref: RHEA:"):
+            m = EXACT_XREF.match(line)
+            if m:
+                go2rhea[tid].add(rhea_master.get(m.group(1), m.group(1)))
+    for t in obsolete:
+        go2rhea.pop(t, None)
+    print(f"GO terms with an exactMatch Rhea xref: {len(go2rhea)}")
+    return go2rhea
+
+
+def load_rhea(path: Path):
+    """Return rhea2chebi, chebi2name, rhea2eq, rhea2sides."""
+    rhea2chebi, rhea2eq, rhea2sides, chebi_names = {}, {}, {}, defaultdict(Counter)
+    rhea_chebis = set()
+    for r in csv.DictReader(path.open(), delimiter="\t"):
+        rid = r["Reaction identifier"]
+        eq = r["Equation"]
+        chebis = [c for c in r["ChEBI identifier"].split(";") if c]
+        rhea2chebi[rid] = set(chebis)
+        rhea_chebis.update(chebis)
+        rhea2eq[rid] = eq
+        sides = [split_participants(s) for s in eq.split(" = ")]
+        names = [n for s in sides for n in s]
+        if len(names) == len(chebis):
+            for n, c in zip(names, chebis):
+                chebi_names[c][n] += 1
+            k = len(sides[0])
+            rhea2sides[rid] = (set(chebis[:k]), set(chebis[k:]))
+    chebi2name = {c: cnt.most_common(1)[0][0] for c, cnt in chebi_names.items()}
+    # Participants that only occur in transport reactions (e.g. "K(+)(out) = K(+)(in)",
+    # where one ChEBI id is listed once for two equation tokens) never get a name above,
+    # so they would escape the currency filter. Fall back to Rhea's ChEBI name table.
+    names_tsv = path.parent / "chebiId_name.tsv"
+    if names_tsv.exists():
+        for line in names_tsv.open():
+            cid, _, name = line.partition("\t")
+            if cid in rhea_chebis:
+                chebi2name.setdefault(cid, name.strip())
+    return rhea2chebi, chebi2name, rhea2eq, rhea2sides
+
+
+# ---------------------------------------------------------------- reviews
+def term_ids(obj):
+    if isinstance(obj, dict) and obj.get("id"):
+        return [obj["id"]]
+    if isinstance(obj, list):
+        return [t for o in obj for t in term_ids(o)]
+    return []
+
+
+def load_reviews(org: str):
+    genes = {}
+    for f in sorted((ROOT / "genes" / org).glob("*/*-ai-review.yaml")):
+        try:
+            doc = yaml.load(f.open(), Loader=Loader)
+        except Exception as e:  # noqa: BLE001
+            print(f"WARN cannot parse {f}: {e}")
+            continue
+        if not isinstance(doc, dict):
+            continue
+        sym = doc.get("gene_symbol") or f.parent.name
+        acc = doc.get("id") or sym
+        mf_core, terms = set(), set()
+        for cf in doc.get("core_functions") or []:
+            mf_core |= set(term_ids(cf.get("molecular_function")))
+            mf_core |= set(term_ids(cf.get("contributes_to_molecular_function")))
+            terms |= set(term_ids(cf.get("directly_involved_in")))
+        for ea in doc.get("existing_annotations") or []:
+            rv = ea.get("review") or {}
+            act = rv.get("action")
+            if ea.get("negated"):
+                continue
+            if act in KEEP_ACTIONS or act == "NEW":
+                terms |= set(term_ids(ea.get("term")))
+            elif act == "MODIFY":
+                terms |= {t for t in term_ids(rv.get("proposed_replacement_terms")) if t.startswith("GO:")}
+        genes[acc] = {"symbol": sym, "terms": terms | mf_core}
+    return genes
+
+
+# ---------------------------------------------------------------- bulk sources
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+
+
+def load_uniprot(org: str, rhea_master: dict):
+    """data/<ORG>/uniprot.tsv from fetch_bulk.py -> acc -> symbol, Rhea master ids."""
+    genes = {}
+    for r in csv.DictReader((DATA / org / "uniprot.tsv").open(), delimiter="\t"):
+        acc = r["Entry"]
+        sym = r["Gene Names (primary)"] or (r["Gene Names (ordered locus)"].split() or [acc])[0]
+        rx = {rhea_master.get(x, x) for x in r["Rhea ID"].split()}
+        genes[acc] = {"symbol": sym, "rhea": rx, "terms": set()}
+    return genes
+
+
+def load_gaf(org: str, evidence: str):
+    """GOA GAF -> acc -> GO ids. evidence: all | noiea | exp. NOT rows are skipped."""
+    import gzip
+    out = defaultdict(set)
+    with gzip.open(DATA / org / "goa.gaf.gz", "rt") as fh:
+        for line in fh:
+            if line.startswith("!"):
+                continue
+            c = line.rstrip("\n").split("\t")
+            if c[0] != "UniProtKB" or "NOT" in c[3].split("|"):
+                continue
+            ev = c[6]
+            if evidence == "noiea" and ev == "IEA":
+                continue
+            if evidence == "exp" and ev not in EXPERIMENTAL:
+                continue
+            out[c[1]].add(c[4])
+    return out
+
+
+def load_rhea_master(path: Path):
+    m = {}
+    for r in csv.DictReader(path.open(), delimiter="\t"):
+        for k in ("RHEA_ID_LR", "RHEA_ID_RL", "RHEA_ID_BI", "RHEA_ID_MASTER"):
+            m["RHEA:" + r[k]] = "RHEA:" + r["RHEA_ID_MASTER"]
+    return m
+
+
+SOURCES = ("reviews", "uniprot-rhea", "goa-all", "goa-noiea", "goa-exp")
+
+
+def load_source(org: str, source: str, rhea_master: dict):
+    """Return acc -> {symbol, terms, [rhea]} for the chosen annotation source."""
+    if source == "reviews":
+        return load_reviews(org)
+    up = load_uniprot(org, rhea_master)
+    ev = {"uniprot-rhea": "all", "goa-all": "all", "goa-noiea": "noiea", "goa-exp": "exp"}[source]
+    gaf = load_gaf(org, ev)
+    for acc, d in up.items():
+        d["terms"] = gaf.get(acc, set())
+        if source != "uniprot-rhea":
+            d.pop("rhea")
+    return up
+
+
+# ---------------------------------------------------------------- analysis
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("organism")
+    ap.add_argument("--n-random", type=int, default=200)
+    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--source", choices=SOURCES, default="reviews",
+                    help="reviews = curated gene reviews; uniprot-rhea = UniProt CATALYTIC ACTIVITY "
+                         "Rhea ids (BP from GOA, all evidence); goa-* = GOA MF->rhea2go and GOA BP, "
+                         "filtered by evidence")
+    ap.add_argument("--reviewed-genes-only", action="store_true",
+                    help="restrict a bulk source to the accessions that have a gene review")
+    args = ap.parse_args()
+    random.seed(args.seed)
+    tag = args.source + ("-reviewedset" if args.reviewed_genes_only else "")
+    out = HERE / "results" / args.organism / tag
+    out.mkdir(parents=True, exist_ok=True)
+
+    names, ns, parents, obsolete, alt = load_go(DATA / "go-basic.obo")
+    anc = ancestors_fn(parents)
+    rhea2chebi, chebi2name, rhea2eq, _ = load_rhea(DATA / "rhea.tsv")
+    rhea_master = load_rhea_master(DATA / "rhea-directions.tsv")
+    go2rhea = load_go_rhea_exact(GO_EDIT, rhea_master)
+    currency = {c for c, n in chebi2name.items() if n in CURRENCY_NAMES or CURRENCY_PATTERNS.search(n)
+                or MACROMOLECULE_PATTERNS.search(n)}
+    # A BP term whose label names a currency chemical (glutamate, glutamine, ATP ...) may be
+    # unable to assemble, because that chemical is removed from the network. This is a string
+    # match on the label. Free ions are excluded from it: "phosphate" or "sulfate" in a label
+    # is nearly always part of a compound name ("isopentenyl diphosphate", "chondroitin sulfate").
+    ion_words = {"phosphate", "diphosphate", "sulfate", "sulfite", "chloride"}
+    cur_words = sorted({re.sub(r"^[LD]-", "", n).lower() for n in CURRENCY_NAMES
+                        if re.fullmatch(r"[LD]?-?[A-Za-z0-9-]{3,}", n)} - ion_words, key=len, reverse=True)
+    cur_re = re.compile(r"(?<![\w-])(" + "|".join(map(re.escape, cur_words)) + r")(?![\w-])", re.I)
+
+    def currency_term(label_):
+        return cur_re.search(re.sub(r"\b[LD]-", "", label_))
+
+    genes = load_source(args.organism, args.source, rhea_master)
+    if args.reviewed_genes_only:
+        keep = set(load_reviews(args.organism))
+        genes = {a: d for a, d in genes.items() if a in keep}
+    label = {a: d["symbol"] for a, d in genes.items()}
+    norm = lambda t: alt.get(t, t)  # noqa: E731
+    # an obsolete term has no parents, so it would silently drop out of the BP sets
+    n_obsolete = sum(norm(t) in obsolete for d in genes.values() for t in d["terms"])
+    if n_obsolete:
+        print(f"WARN {n_obsolete} gene-term pairs use obsolete GO terms and are ignored")
+
+    gene_rxn, gene_bp, gene_chem = {}, {}, {}
+    n_mf_genes = 0
+    for g, d in genes.items():
+        terms = {norm(t) for t in d["terms"]}
+        mfs = {t for t in terms if ns.get(t) == "molecular_function"}
+        bps = {t for t in terms if ns.get(t) == "biological_process"}
+        n_mf_genes += bool(mfs)
+        if "rhea" in d:
+            rx = {r for r in d["rhea"] if r in rhea2chebi}
+            n_mf_genes += bool(rx and not mfs)
+        else:
+            rx = set().union(*[go2rhea.get(t, set()) for t in mfs]) if mfs else set()
+        if rx:
+            gene_rxn[g] = rx
+            gene_chem[g] = set().union(*[rhea2chebi[r] for r in rx]) - currency
+        gene_bp[g] = set().union(*[anc(t) for t in bps]) if bps else set()
+
+    # bipartite gene<->metabolite and the gene projection
+    chem_genes = defaultdict(set)
+    for g, cs in gene_chem.items():
+        for c in sorted(cs):  # sorted: edge order (and so Louvain) must not depend on set order
+            chem_genes[c].add(g)
+    G = nx.Graph()
+    G.add_nodes_from(gene_rxn)
+    edge_chems = defaultdict(set)
+    for c, gs in chem_genes.items():
+        gs = sorted(gs)
+        for i in range(len(gs)):
+            for j in range(i + 1, len(gs)):
+                edge_chems[(gs[i], gs[j])].add(c)
+    for (a, b), cs in edge_chems.items():
+        G.add_edge(a, b, chems=sorted(cs), weight=len(cs))
+
+    enz = sorted(gene_rxn)
+    comps = sorted(nx.connected_components(G), key=len, reverse=True)
+    giant = comps[0] if comps else set()
+
+    # ---------- BP: metabolic-process descendants, frequency within enzyme set
+    met_bp = {g: {t for t in gene_bp[g] if METABOLIC_PROCESS in anc(t) and t != METABOLIC_PROCESS} for g in enz}
+    freq = Counter(t for g in enz for t in met_bp[g])
+    n_enz_bp = sum(1 for g in enz if met_bp[g])
+    specific_cut = max(2, int(0.05 * len(enz)))  # term on <=5% of enzymes = "specific"
+    spec = {g: {t for t in met_bp[g] if freq[t] <= specific_cut} for g in enz}
+
+    def share_specific(a, b):
+        return bool(spec[a] & spec[b])
+
+    def jacc(a, b):
+        u = met_bp[a] | met_bp[b]
+        return len(met_bp[a] & met_bp[b]) / len(u) if u else 0.0
+
+    with_bp = [g for g in enz if met_bp[g]]
+    edges_bp = [(a, b) for a, b in G.edges() if met_bp[a] and met_bp[b]]
+    obs_share = sum(share_specific(a, b) for a, b in edges_bp) / max(1, len(edges_bp))
+    obs_jacc = sum(jacc(a, b) for a, b in edges_bp) / max(1, len(edges_bp))
+    rnd_pairs = [tuple(random.sample(with_bp, 2)) for _ in range(20000)] if len(with_bp) > 1 else []
+    rnd_share = sum(share_specific(a, b) for a, b in rnd_pairs) / max(1, len(rnd_pairs))
+    rnd_jacc = sum(jacc(a, b) for a, b in rnd_pairs) / max(1, len(rnd_pairs))
+    # Edge classes. A pathway handoff is ONE intermediate passing from one enzyme to the
+    # next, so the number of shared chemicals is not a confidence measure: pairs sharing
+    # >=2 are mostly genes catalysing the same reaction (subunits, isozymes, paralogs).
+    #   same_step : the two genes share a Rhea reaction
+    #   handoff   : no shared reaction, linked through >=1 non-currency chemical
+    #   specific handoff : a handoff through a chemical touched by <= HANDOFF_HUB genes
+    #                      (pyruvate/acetyl-CoA-type hubs link many unrelated pathways)
+    def kind(a, b):
+        return "same_step" if gene_rxn[a] & gene_rxn[b] else "handoff"
+
+    def frac(pairs):
+        return round(sum(share_specific(a, b) for a, b in pairs) / len(pairs), 3) if pairs else None
+
+    same_step = [(a, b) for a, b in edges_bp if kind(a, b) == "same_step"]
+    handoff = [(a, b) for a, b in edges_bp if kind(a, b) == "handoff"]
+    spec_handoff = [(a, b) for a, b in handoff
+                    if any(len(chem_genes[c]) <= HANDOFF_HUB for c in G[a][b]["chems"])]
+    multi = [(a, b) for a, b in edges_bp if G[a][b]["weight"] >= 2]
+    multi_same = sum(kind(a, b) == "same_step" for a, b in multi)
+
+    # ---------- term-level coherence
+    term_rows = []
+    for t, n in sorted(freq.items()):  # fixed order -> --seed reproduces the null samples
+        if n < 3 or n > specific_cut * 4:
+            continue
+        gs = [g for g in enz if t in met_bp[g]]
+        sub = G.subgraph(gs)
+        lcc = max((len(c) for c in nx.connected_components(sub)), default=0) / len(gs)
+        rnd = []
+        for _ in range(args.n_random):
+            rs = random.sample(enz, len(gs))
+            rnd.append(max((len(c) for c in nx.connected_components(G.subgraph(rs))), default=0) / len(gs))
+        p = (1 + sum(r >= lcc for r in rnd)) / (1 + len(rnd))
+        isolated = [g for g in gs if sub.degree(g) == 0]
+        term_rows.append({
+            "term": t, "label": names.get(t, ""), "n_genes": len(gs),
+            "label_matches_currency_name": bool(currency_term(names.get(t, ""))),
+            "lcc_frac": round(lcc, 3), "random_lcc_mean": round(sum(rnd) / len(rnd), 3),
+            "p_value": round(p, 4), "edges": sub.number_of_edges(),
+            "isolated_genes": ";".join(label[g] for g in isolated), "genes": ";".join(label[g] for g in gs),
+        })
+    term_rows.sort(key=lambda r: (r["p_value"], -r["lcc_frac"]))
+    # Benjamini-Hochberg over the tested terms (the permutation p-value floor is 1/(n_random+1))
+    m = len(term_rows)
+    for i, r in enumerate(sorted(term_rows, key=lambda r: r["p_value"]), 1):
+        r["_bh_rank"] = i
+    bh_pass = max((r["_bh_rank"] for r in term_rows if r["p_value"] <= 0.05 * r["_bh_rank"] / m), default=0)
+    for r in term_rows:
+        r["bh_significant"] = r.pop("_bh_rank") <= bh_pass
+
+    # ---------- communities vs BP
+    comm_rows = []
+    if G.number_of_edges():
+        comms = nx.community.louvain_communities(G.subgraph(giant), weight="weight", seed=args.seed)
+        for i, cm in enumerate(sorted(comms, key=len, reverse=True)):
+            scored = {}
+            for t in sorted(set().union(*[met_bp[g] for g in cm])):
+                tg = {g for g in enz if t in met_bp[g]}
+                tp = len(tg & cm)
+                prec, rec = tp / len(cm), tp / len(tg)
+                scored[t] = (2 * prec * rec / (prec + rec) if tp else 0, prec, rec)
+            best = None
+            if scored:
+                top = max(f for f, _, _ in scored.values())
+                tied = [t for t, v in scored.items() if v[0] == top]
+                # F1 ties: prefer the most specific term (drop any tied term that is an ancestor
+                # of another tied term), then the lowest GO id among the remaining siblings.
+                t = min(t for t in tied if not any(o != t and t in anc(o) for o in tied))
+                best = (top, t, scored[t][1], scored[t][2])
+            hub = Counter(c for g in sorted(cm) for c in sorted(gene_chem[g])).most_common(5)
+            comm_rows.append({
+                "community": i, "size": len(cm),
+                "best_bp": best[1] if best else "", "best_bp_label": names.get(best[1], "") if best else "",
+                "f1": round(best[0], 3) if best else 0, "precision": round(best[2], 3) if best else 0,
+                "recall": round(best[3], 3) if best else 0,
+                "top_metabolites": "; ".join(f"{chebi2name.get(c, c)}({n})" for c, n in hub),
+                "genes": ";".join(sorted(label[g] for g in cm)), "_acc": sorted(cm),
+            })
+
+    # ---------- discordant edges: strong metabolic link, no shared metabolic BP at all
+    disc = []
+    for a, b in G.edges():
+        if met_bp[a] and met_bp[b] and not (met_bp[a] & met_bp[b] - {METABOLIC_PROCESS}):
+            disc.append({"gene_a": label[a], "gene_b": label[b], "n_shared": G[a][b]["weight"],
+                         "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in G[a][b]["chems"])})
+    disc.sort(key=lambda r: -r["n_shared"])
+
+    # enzymes with no metabolic BP at all
+    no_bp = [g for g in enz if not met_bp[g]]
+
+    summary = {
+        "organism": args.organism,
+        "reviews": len(genes),
+        "genes_with_reviewed_mf": n_mf_genes,
+        "genes_with_rhea_reactions": len(enz),
+        "distinct_reactions": len(set().union(*gene_rxn.values())) if gene_rxn else 0,
+        "distinct_noncurrency_metabolites": len(chem_genes),
+        "network_edges": G.number_of_edges(),
+        "connected_components": len(comps),
+        "giant_component_size": len(giant),
+        "isolated_enzymes": sum(1 for g in enz if G.degree(g) == 0),
+        "enzymes_with_metabolic_bp": n_enz_bp,
+        "enzymes_without_metabolic_bp": len(no_bp),
+        "specific_bp_cutoff_genes": specific_cut,
+        "edge_share_specific_bp": round(obs_share, 3),
+        "random_pair_share_specific_bp": round(rnd_share, 3),
+        "same_step_edges": len(same_step),
+        "same_step_share_specific_bp": frac(same_step),
+        "handoff_edges": len(handoff),
+        "handoff_share_specific_bp": frac(handoff),
+        "specific_handoff_edges": len(spec_handoff),
+        "specific_handoff_share_specific_bp": frac(spec_handoff),
+        "edges_sharing_2plus_chemicals": len(multi),
+        "edges_sharing_2plus_that_are_same_step": multi_same,
+        "edge_mean_bp_jaccard": round(obs_jacc, 3),
+        "random_pair_mean_bp_jaccard": round(rnd_jacc, 3),
+        "bp_terms_tested": len(term_rows),
+        "bp_terms_more_connected_than_random_p<0.05": sum(r["p_value"] < 0.05 for r in term_rows),
+        "bp_terms_bh_significant_fdr0.05": sum(r["bh_significant"] for r in term_rows),
+        "p_value_floor": round(1 / (args.n_random + 1), 4),
+        "bp_terms_label_matches_currency_name": sum(r["label_matches_currency_name"] for r in term_rows),
+        "bp_terms_tested_max_genes": specific_cut * 4,
+        "obsolete_terms_ignored": n_obsolete,
+        "bp_terms_fully_connected": sum(r["lcc_frac"] == 1 for r in term_rows),
+        "discordant_edges": len(disc),
+        "louvain_communities": len(comm_rows),
+        "communities_best_bp_f1>=0.5": sum(r["f1"] >= 0.5 for r in comm_rows),
+        "top_hub_metabolites": [(chebi2name.get(c, c), len(gs)) for c, gs in
+                                sorted(chem_genes.items(), key=lambda x: (-len(x[1]), chebi2name.get(x[0], x[0]), x[0]))[:15]],
+    }
+    (out / "summary.json").write_text(json.dumps(summary, indent=2))
+
+    def wtsv(name, rows):
+        if not rows:  # never leave a previous run's table behind a run that has no rows
+            (out / name).unlink(missing_ok=True)
+            return
+        with (out / name).open("w") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
+            w.writeheader()
+            w.writerows(rows)
+
+    wtsv("bp_term_coherence.tsv", term_rows)
+    wtsv("communities.tsv", [{k: v for k, v in r.items() if k != "_acc"} for r in comm_rows])
+    wtsv("discordant_edges.tsv", disc)
+    wtsv("gene_reactions.tsv", [{"gene": label[g], "uniprot": g, "reactions": ";".join(sorted(gene_rxn[g])),
+                                  "metabolites": "; ".join(sorted(chebi2name.get(c, c) for c in gene_chem[g])),
+                                  "metabolic_bp": "; ".join(sorted(names.get(t, t) for t in spec[g])),
+                                  "degree": G.degree(g)} for g in enz])
+    wtsv("edges.tsv", [{"gene_a": label[a], "gene_b": label[b], "uniprot_a": a, "uniprot_b": b, "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in d["chems"]),
+                        "kind": "same_step" if gene_rxn[a] & gene_rxn[b] else "handoff",
+                        "share_specific_bp": share_specific(a, b) if met_bp[a] and met_bp[b] else ""}
+                       for a, b, d in G.edges(data=True)])
+    # graph for visualisation
+    comm_of = {g: r["community"] for r in comm_rows for g in r["_acc"]}
+    json.dump({
+        "nodes": [{"id": g, "label": label[g], "deg": G.degree(g), "comm": comm_of.get(g, -1),
+                   "bp": sorted(names.get(t, t) for t in spec[g])[:6],
+                   "rxn": [rhea2eq[r] for r in sorted(gene_rxn[g])][:4]} for g in enz if G.degree(g)],
+        "links": [{"source": a, "target": b, "w": d["weight"],
+                   "m": [chebi2name.get(c, c) for c in d["chems"]][:5],
+                   "bp": share_specific(a, b) if met_bp[a] and met_bp[b] else None,
+                   "k": "s" if gene_rxn[a] & gene_rxn[b] else "h",  # same-step / handoff
+                   "nh": any(len(chem_genes[c]) <= HANDOFF_HUB for c in d["chems"])}
+                  for a, b, d in G.edges(data=True)],
+        "communities": [{k: r[k] for k in ("community", "size", "best_bp_label", "f1", "top_metabolites")} for r in comm_rows],
+        # per-term coherence, for highlighting a BP term's genes in viewer.html
+        "bp_terms": [{"id": r["term"], "label": r["label"], "n": r["n_genes"], "lcc": r["lcc_frac"],
+                      "rnd": r["random_lcc_mean"], "p": r["p_value"], "bh": r["bh_significant"],
+                      "cur": r["label_matches_currency_name"],
+                      "genes": [g for g in enz if r["term"] in met_bp[g]]} for r in term_rows],
+        "summary": summary,
+    }, (out / "graph.json").open("w"))
+    print(json.dumps(summary, indent=2))
+
+
+if __name__ == "__main__":
+    main()
