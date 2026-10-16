@@ -30,10 +30,10 @@ factor is now represented by RLF2 (alias CAC1), CAC2 and MSI1. `CLR4`, an
 early checklist entry, has been dropped from scope: it is the fission yeast
 H3K9 methyltransferase, and budding yeast has neither H3K9 methylation nor a
 Clr4/SUV39 ortholog, so there is no *S. cerevisiae* gene to substitute for it
-(its fission yeast review is at `genes/SCHPO/clr4/`). PHD1, filed below as a histone reader, is not one: the
-name means "pseudohyphal determinant", it has no PHD finger, and its review
-describes an APSES-family transcription factor that controls pseudohyphal
-growth.
+(its fission yeast review is SCHPO/clr4). PHD1, filed below as a histone
+reader, is not one: the name means "pseudohyphal determinant", it has no PHD
+finger, and its review describes an APSES-family transcription factor that
+controls pseudohyphal growth.
 
 The dated notes below are retained for provenance and predate later re-reviews;
 the manifest and Progress section are recounted from the current review files.
@@ -100,6 +100,7 @@ Last updated: 2026-10-16
 - Done: SET1 - Histone methyltransferase (H3K4 methylation, COMPASS complex)
 - Done: DOT1 - Disruptor of telomeric silencing (H3K79 methyltransferase)
 - Dropped: `CLR4` - fission yeast H3K9 methyltransferase; *S. cerevisiae* has no H3K9 methylation and no Clr4/SUV39 ortholog, so no budding yeast replacement was added
+- Future work: `SET2` (H3K36 methyltransferase) is not yet reviewed; it is not a Clr4 substitute, but its H3K36me mark is read (via Eaf3) by Rpd3S, the complex of in-scope RCO1
 
 ### Histone Chaperones & Recycling (FACT Complex & Associated)
 - Done: SPT16 - Facilitates chromatin transcription (FACT component, H2A/H2B transfer)
