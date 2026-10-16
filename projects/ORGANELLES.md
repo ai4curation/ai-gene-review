@@ -7,20 +7,21 @@ tags: [BIOLOGY_DOMAIN]
 # Organelles
 
 **Bottom line:** this project sets how reviews should treat cellular-component
-(CC) annotations to organelles. The first question is whether an annotation to
+(CC) annotations to organelles. The first question was whether an annotation to
 a **root organelle term** (`GO:0005739 mitochondrion`, `GO:0005783 endoplasmic
 reticulum`, `GO:0005777 peroxisome`, ...) is ever informative for a
-membrane-bounded organelle. Every protein in such an organelle sits somewhere
-in its topology, either in a bounding membrane or in the lumen (and, for
-mitochondria and plastids, in the intermembrane space or an internal membrane
-too). So the root term is always a disjunction of more specific places. Our
-working answer is that the root term is **never the best biological summary**,
-but it is often the **most precise claim one piece of evidence supports**.
-Root terms should therefore be fine as evidence-level rows in
-`existing_annotations` and wrong as `core_functions.locations`. A first survey
-of the corpus (below) shows that reviews do not work this way now: in about
-1,600 cases a review ACCEPTs `mitochondrion` for a gene to which it also gives
-a mitochondrial sub-compartment.
+membrane-bounded organelle, given that every protein in one sits either in a
+membrane or in a lumen. The decision (2026-10-16) is that **the organelle is
+informative, and the call depends on the evidence**. A root term from an
+experiment that could not resolve the sub-compartment is ACCEPTed. A root term
+from synthesis (IBA, IC, IEA and the other propagation codes) is a red flag
+that the review must examine. Either way, a review should boldly propose the
+membrane, lumen or matrix term when the gene has none and several lines of
+evidence (a membrane domain, a targeting signal, a known function) point to
+one. The red-flag worklist is
+[root_organelle_red_flags.md](ORGANELLES/root_organelle_red_flags.md): 1,007
+synthesis rows for mitochondrion that were not REMOVEd, 266 of them in reviews
+that give the gene no mitochondrial sub-compartment.
 
 ## The question
 
@@ -103,10 +104,8 @@ What the survey shows so far:
 - **When a sub-compartment is known, the root is still ACCEPTed.** For
   mitochondrial genes that also have a sub-compartment, 1,576 of 2,134 root
   rows are ACCEPT, 438 KEEP_AS_NON_CORE, and only 43 MODIFY. No review uses
-  TOO_GENERAL for a root organelle row, although that is exactly what the
-  action is for ("a more specific term asserted elsewhere in this review
-  already entails it"). The pattern is the same for nucleus (2,576 ACCEPT) and
-  ER (694 ACCEPT).
+  TOO_GENERAL for a root organelle row, and under the policy below none should.
+  The pattern is the same for nucleus (2,576 ACCEPT) and ER (694 ACCEPT).
 - **Membrane and lumen split as expected.** The mitochondrial genes divide into
   membrane (284), lumen (239) and both (108). ER genes are overwhelmingly
   membrane (310 of 398), Golgi genes are membrane or "other" (mostly
@@ -126,38 +125,79 @@ What the survey shows so far:
 These are counts, not judgments. The "candidates" above are genes to examine,
 not findings.
 
-## Working proposal (to be tested)
+## Policy
 
-1. **`core_functions.locations` should not use a root membrane-bounded
-   organelle term** when the review's own evidence or the gene's sequence
-   resolves the sub-compartment. Use the membrane, lumen or matrix term, or
-   list several. Make an exception, recorded in the gene notes, where the
-   sub-compartment really is unknown.
-2. **When the review has a descendant, a root organelle row in
-   `existing_annotations`** should be `TOO_GENERAL` (the claim is true, but
-   entailed) or `MODIFY` to that descendant. It should not be `ACCEPT`.
-   Which of the two is still open (see questions).
-3. **When the review has no descendant, a root organelle row** stays at the
-   root (ACCEPT or KEEP_AS_NON_CORE) only if nothing known resolves the
-   sub-compartment. Otherwise it is `MODIFY` to the supported sub-compartment
-   or sub-compartments.
-4. Leave the nucleus, the endosome and autophagy series, and plastids out of
-   the first pass (cases 4 and 5 above).
+Decided 2026-10-16. It applies to the first-pass organelles (mitochondrion, ER,
+Golgi apparatus, peroxisome, lysosome); the nucleus, the series organelles and
+plastids come later.
+
+1. **The root organelle term is informative. Never use `TOO_GENERAL` for it.**
+   Knowing that a protein is in the mitochondrion is a real claim even when a
+   sub-compartment is also known. The term is not made redundant by its
+   descendants in the way that, say, `catalytic activity` is.
+2. **Direct evidence (IDA, EXP, IMP, HDA, HTP, ...):** if the assay cannot
+   resolve the sub-compartment (organelle proteomics, whole-organelle
+   co-staining, GFP fusion), the row is `ACCEPT` (or `KEEP_AS_NON_CORE` if
+   the location is peripheral to the gene's function). It says what the
+   experiment showed. Use `MODIFY` only if the paper itself resolved a
+   sub-compartment and the curator stopped short.
+3. **Synthesis (IBA, IC, IEA, ISS, ISO, ISA, ISM, RCA, ...): a red flag.**
+   Examine the row rather than accepting it by default. A propagation or an
+   inference has no assay limit to excuse the coarse term. Either the source
+   knew the sub-compartment and the term lost it, or the source did not know
+   the location at all. For IBA, check what the PAINT node's descendants
+   actually show. For IEA, check the mapping (UniProt subcellular-location
+   keyword, InterPro2GO, ARBA) and whether the gene really has the feature
+   the mapping assumes. Possible outcomes: `MODIFY` to the sub-compartment
+   the evidence supports, `ACCEPT` if the whole-organelle claim is all anyone
+   can support, or `MARK_AS_OVER_ANNOTATED`/`REMOVE` if the organelle itself
+   is not supported.
+4. **Be bold about the sub-compartment.** If the gene has no annotation to a
+   sub-compartment of the organelle and several lines of evidence agree, add
+   one (`NEW`, or `MODIFY` on a red-flag row). Lines of evidence include
+   predicted TM segments or a membrane anchor, a cleavable matrix-targeting
+   sequence or a PTS1/PTS2, an ER signal peptide with or without a retention
+   motif, and a function that only makes sense on one side (a matrix TCA
+   enzyme, an inner-membrane carrier). Record the lines of evidence in
+   `review.reason`. If they disagree or there is only one, stay at the root.
+5. **`core_functions.locations`** should name the sub-compartment where it is
+   known, and may also carry the root if the organelle-level claim is
+   independently supported.
+
+## Survey under this policy
+
+From the 2026-10-16 run, mitochondrion only:
+
+| evidence class | rows, gene also has a sub-compartment | rows, root only |
+|---|---|---|
+| direct | 1,308 | 339 |
+| synthesis | 742 | 266 (after leaving out REMOVEd rows) |
+
+- The 266 root-only synthesis rows (141 IEA, 73 IBA, 34 ISS, 15 ISO) are the
+  first worklist. 137 are ACCEPT and 78 KEEP_AS_NON_CORE; under rule 3 each
+  needs a reason, and many should probably become a sub-compartment term
+  under rule 4.
+- The 741 synthesis rows in reviews that do have a sub-compartment (345 IEA,
+  307 IBA) are lower priority. The fine-grained location is already recorded,
+  so the question is only whether the propagated organelle claim stands.
+- The 339 root-only direct rows are mostly fine under rule 2, but rule 4
+  still applies to the gene: AARS2, CLYBL, PYCR2 and MMADHC are among the
+  candidates where function suggests the matrix.
 
 ## Open questions
 
-- In point 2, TOO_GENERAL or MODIFY? TOO_GENERAL judges the term without
-  overriding the row. MODIFY tells GOA what the row should have said. For an
-  HDA row whose paper resolved only the whole organelle, MODIFY overstates
-  what that paper showed.
-- Should validation warn about a root organelle term in
-  `core_functions.locations`, or about ACCEPT on a root row when a descendant
-  is present? Either check is mechanical, using the script's ancestor test.
+- Should validation warn about root-only synthesis rows that are ACCEPTed
+  with no reason that mentions the sub-compartment? Or should
+  `core_functions.locations` warn when it uses only a root term? Both checks
+  are mechanical, using the script's ancestor test.
 - How should we say "peripheral, cytosolic face" now that intrinsic-component
   terms are obsolete? Is the bare membrane term enough, or is this a
   `proposed_new_terms` or GO-ticket question?
-- Is there GO consortium guidance on CC annotation granularity that already
-  answers this? Check before writing a rule of our own.
+- For IBA red flags with a consistent pattern (a PAINT node at the root term
+  whose experimental descendants all show the same sub-compartment), should
+  we raise this with PAINT rather than fixing gene by gene?
+- Is there GO consortium guidance on CC annotation granularity to cite in
+  support of this policy?
 
 ---
 # STATUS
@@ -166,16 +206,31 @@ not findings.
 
 - [x] Create project page and survey script
 - [x] First corpus survey of root organelle terms (10 organelles)
+- [x] Decide policy: evidence-based; no TOO_GENERAL; synthesis is a red flag;
+      be bold about sub-compartments (see Policy)
+- [x] Red-flag worklist generated (`root_organelle_red_flags.md`)
+- [ ] Work through the 266 root-only mitochondrial synthesis rows, starting
+      with human; apply rules 3 and 4 in the gene reviews
+- [ ] Check the 339 root-only direct mitochondrial rows for rule 4 candidates
+      (AARS2, CLYBL, PYCR2, MMADHC first)
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
-- [ ] Stratified hand check of about 50 mitochondrial rows with only the root
-      term: classify each as assay-limited (case 1), multi-compartment (2),
-      peripheral (3), or curation gap
-- [ ] Decide TOO_GENERAL vs MODIFY for entailed root rows
 - [ ] Decide on a validation warning
+- [ ] Add the policy to CLAUDE.md / the annotation-reviewer guidance once it
+      has been tried on a batch of genes
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-10-16 (policy)
+
+Decided with cjm. TOO_GENERAL is wrong here, because the organelle is still
+informative. The call is evidence-based: direct evidence that cannot resolve
+the sub-compartment is ACCEPT; IBA, IC and propagation IEA are red flags to
+examine; and reviews should propose a sub-compartment when the gene has none
+and several lines of evidence agree. The script now classes evidence codes as
+direct, synthesis or author (TAS/NAS) and writes the red-flag worklist for the
+first-pass organelles.
 
 ## 2026-10-16
 
