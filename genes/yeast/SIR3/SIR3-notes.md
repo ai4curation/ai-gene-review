@@ -136,3 +136,17 @@ participation, and Sir3 is a nuclear heterochromatin protein with no known
 activity in cytoplasmic mRNA surveillance. An indirect route through loss of
 silencing is plausible (compare the indirect NEJ1/HML-HMR contribution to NHEJ
 discussed above) but untested.
+
+Follow-up after PR #5072 review (2026-10-16): the reason now quotes and answers
+the authors' own reading of the eleven RNA-increased strains [PMID:17660569
+"Importantly, these data showed that suppression in these 11 strains was not
+specific to the his3 -nonstop reporter, but was most likely due to a general
+defect in the nonstop mRNA decay pathway."]. sir3-null passed the heterologous
+Protein A reporter control, so the HIS3-promoter caveat (which the paper raises
+for SSN2/SSN3/MED1) was dropped as support. The reviewer suggested sir3-null
+must be one of the "eight other mutants" with a longer Protein A-nonstop
+half-life in Figure 6. The count does not close: SGD's eight non-SKI,
+non-proteasome RNA-increased strains (SIR3, YGR122W, HTZ1, SSN2, SSN3, NUP2,
+MED1, IPK1) plus ylr021w, which the text puts in Figure 6 but SGD does not list
+in that phenotype set, give nine candidates for eight slots. Either way the
+action stands, because a half-life increase is also a necessity readout.
