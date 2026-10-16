@@ -22,11 +22,11 @@ reviewed them to see whether the comparative inference holds up. We reviewed
 tra-2, fem-3 and she-1, and five other protein-level entries) and oaz, the only
 Swiss-Prot entry for *P. pacificus*. All 11 have review decisions with no
 PENDING or UNDECIDED rows. They cover 115 existing annotation rows (52 ACCEPT,
-43 KEEP_AS_NON_CORE, 8 MARK_AS_OVER_ANNOTATED, 8 MODIFY, 4 REMOVE) and propose
-3 NEW terms. Support for the de-novo sex-determination calls was tightened in
+43 KEEP_AS_NON_CORE, 8 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 5 REMOVE) and propose
+2 NEW terms. Support for the de-novo sex-determination calls was tightened in
 [#4258](https://github.com/ai4curation/ai-gene-review/issues/4258): the fem-3
 substrate-adaptor proposal was withdrawn, and she-1's SCF adaptor call is now
-explicitly provisional. Remaining follow-up is to decide whether to add the TrEMBL-only *P. pacificus* plasticity genes such
+explicitly provisional, with no SCF complex id asserted. Remaining follow-up is to decide whether to add the TrEMBL-only *P. pacificus* plasticity genes such
 as eud-1 ([#4257](https://github.com/ai4curation/ai-gene-review/issues/4257)).
 
 ## Overview
@@ -117,13 +117,16 @@ may be added as gene reviews accrue.
 - De-novo support cleanup for `she-1`, `fem-3`, and `tra-2` is done
   ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)). This
   changed support and decisions on already-reviewed rows; no rows are `PENDING`.
-  `tra-2`'s NEW adaptor row now carries the same exact quotes as its core
-  function, and its two bare protein-binding rows are MODIFY to that term.
+  For `tra-2`, the proposed adaptor activity was replaced by molecular
+  sequestering activity (`GO:0140313`), which fits TRA-2 repressing FEM-3 by binding
+  it. The FEM-3 protein-binding row is MODIFY to that term with exact quotes, and
+  the redundant NEW row was dropped. The TRA-1 protein-binding row is REMOVE,
+  because no sourced MF says what that binding does.
   `fem-3`'s NEW `GO:1990756` substrate-adaptor row was withdrawn, because the
   primary C. elegans study (PMID:17609115) assigns substrate recognition to
   FEM-1 and a cofactor role to FEM-3. FEM-3 is now modelled as contributing to
   the CRL2-FEM ligase. `she-1`'s primary paper was verified, and its SCF adaptor
-  call is kept as explicitly provisional.
+  call is kept as explicitly provisional, without an SCF complex id.
 - At the 2026-06 UniProt snapshot used for this page, *C. briggsae* had 582
   reviewed entries; the protein-level (PE=1)
   experimentally-characterized ones cluster on sex determination, which is why
