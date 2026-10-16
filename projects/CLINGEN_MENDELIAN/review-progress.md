@@ -3421,3 +3421,48 @@ checked. CYB5A, CWC27 and other published or available reviews receive no
 completion credit in this snapshot. No gene annotation or source is changed.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-425-20261015/history/projects/CLINGEN_MENDELIAN/2026-10-15T143837Z-codex-94c5f2.yaml)
+
+## Completion checkpoint 426 — 2026-10-16 10:41:28 UTC
+
+**426 complete; 2,450 remaining out of 2,876 primary catalogue genes.**
+Only CWC27 is added to the 425 checked genes in tracker [#5034](https://github.com/ai4curation/ai-gene-review/pull/5034),
+whose exact approved head was `48efb320877bcbe219856ddcef8c5af42c8bbe5e` and which subsequently
+merged as [56a970dd16a3](https://github.com/ai4curation/ai-gene-review/commit/56a970dd16a33e4685edc8b23bd9d1303d7e7e6a).
+Tracker publication itself does not add gene credit. The completion cutoff is
+the CWC27 merge below; this is not an exhaustive claim about every repository
+review merge. ROOT, the coordinating AI agent, accepted this completion proof.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CWC27 | [#5003](https://github.com/ai4curation/ai-gene-review/pull/5003) | `c75d783131ad` | [8b87c39aea83](https://github.com/ai4curation/ai-gene-review/commit/8b87c39aea838985bfff03d14cc3bb13ac93f582) | 2026-10-16 10:41:28 | 9 / 9 |
+
+The [final formal approval](https://github.com/ai4curation/ai-gene-review/pull/5003#pullrequestreview-5534904007)
+and [complete detailed review](https://github.com/ai4curation/ai-gene-review/pull/5003#issuecomment-6194574317)
+clear all prior scientific blockers on that exact head. Required
+[PR validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38751823079)
+passed. The [ordinary merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/38885535910)
+passed all-gene schema validation, examples and the full test suite before merge.
+The separate [post-main push run](https://github.com/ai4curation/ai-gene-review/actions/runs/38888888905)
+then materialized the exact merged commit and passed scoped CWC27 and history
+validation. Its full test suite was skipped for the source-only push, not rerun.
+
+All nine approved file modes, types and blobs equal the merged full PR paths,
+and the actual parent delta contains exactly nine paths. Prior substantive
+source review, the final Figure S1 locator correction, all 16 original source
+objects, two official products and the explicit isoform-scoped new molecular
+function are retained. Derived DRAFT reflects a nonblocking secondary-research
+citation advisory, not an unresolved action or outstanding scientific blocker.
+This completion follows validated final review, cleared actionable feedback and
+merger; it does not infer completion from a status label alone.
+
+All 2,876 catalogue identities and association texts, all 235 historical queue
+records, all 75 prior completion updates and the entire previous progress text
+remain unchanged. Only the previously unchecked CWC27 identity becomes checked.
+Earlier statements excluding CWC27 remain historical checkpoint records.
+Review-link availability and rendering warnings remain separate from completion;
+no other gene is counted by this update. All earlier project history records
+remain append-only and no gene annotation or source file changes.
+
+Rendering availability remains separate from completion credit. The committed main-page render contains 1,751 missing-review warnings; the fresh baseline and checkpoint 426 render under the same frozen 2,966-human-review inventory contain 1,733 (18 cleared; none added). The cleared genes are CYB5A, DNAH17, DNAH8, FBXL4, MT-TC, MT-TH, MT-TK, MT-TL1, MT-TM, MT-TQ, MT-TS1, MT-TS2, MT-TV, MT-TW, MTFMT, SUCLA2, TARS2, TRMT10C. All remain unchecked and receive no completion credit here. CWC27 was already linked; its newly recorded completion follows the accepted merge evidence. The progress page has zero rendering warnings.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T114448Z-codex-51b38b.yaml)

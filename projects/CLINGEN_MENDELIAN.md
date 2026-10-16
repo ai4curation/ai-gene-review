@@ -2988,21 +2988,21 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**425 of 2,876 genes are complete; 2,451 remain.**
-Twelve distinct verified merged gene reviews add to checkpoint 413. The fixed
-completion cutoff is [CUL3 merge 699711b0e7d1](https://github.com/ai4curation/ai-gene-review/commit/699711b0e7d1c66b75bfe0d74fcc965f035741f6),
-at **2026-10-14 07:48:59 UTC**. Each catalogue gene counts once; products,
+**426 of 2,876 genes are complete; 2,450 remain.**
+CWC27 adds one verified merged gene review to checkpoint 425. The fixed
+completion cutoff is [CWC27 merge 8b87c39aea83](https://github.com/ai4curation/ai-gene-review/commit/8b87c39aea838985bfff03d14cc3bb13ac93f582),
+at **2026-10-16 10:41:28 UTC**. Each catalogue gene counts once; products,
 follow-up commits, shared sources and tracker publication add no completion.
 
-See the [checkpoint 425 evidence and complete 12-gene list](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-425-2026-10-14-074859-utc).
-The prior tracker [PR #4999](https://github.com/ai4curation/ai-gene-review/pull/4999)
-merged as [b9da9839c93f](https://github.com/ai4curation/ai-gene-review/commit/b9da9839c93ff74b6be6cf30102747f8973984f2).
-Its successful queue and separate main-push tests are recorded in the progress
-log; earlier historical failures remain documented in their original sections.
-All 235 historical queue records, 74 prior completion updates, catalogue
-association texts and earlier progress sections remain unchanged. Older OPEN
-and QUEUED observations retain their historical dates. Review availability is
-separate from accepted completion; CYB5A and CWC27 receive no credit here.
+See the [checkpoint 426 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-426-2026-10-16-104128-utc).
+The prior tracker [PR #5034](https://github.com/ai4curation/ai-gene-review/pull/5034)
+merged as [56a970dd16a3](https://github.com/ai4curation/ai-gene-review/commit/56a970dd16a33e4685edc8b23bd9d1303d7e7e6a);
+its 425-gene source records remain unchanged beneath this increment.
+All 235 historical queue records, 75 prior completion updates, catalogue
+association texts and earlier progress sections are preserved. Older OPEN,
+QUEUED and earlier CWC27 exclusions retain their historical checkpoint scope.
+Review availability remains separate from accepted completion. No other gene
+receives credit in this update.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3548,7 +3548,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CTSK** — HGNC:2536; [pycnodysostosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8135617e-f334-4c22-aa9e-b1efd50e9326-2022-11-11T180000.000Z) (MONDO:0009940; AR; Definitive).
 - [x] **CUL3** — HGNC:2553; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fb529ace-86b5-4209-9974-9c07a1c32956-2021-01-16T030942.670Z) (MONDO:0100038; AD; Definitive); [pseudohypoaldosteronism type 2E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f697fb5e-72de-4116-9cad-706e2d651268-2021-12-01T013000.000Z) (MONDO:0013782; AD; Definitive).
 - [x] **CUL4B** — HGNC:2555; [X-linked intellectual disability, Cabezas type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cc93f3b2-3124-40f8-a86e-c929b09c6f68-2018-02-21T110000.000Z) (MONDO:0010306; XL; Definitive).
-- [ ] **CWC27** — HGNC:10664; [metaphyseal chondrodysplasia-retinitis pigmentosa syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95089ec9-1b91-4ee0-a743-a780d123aad0-2025-07-03T160000.000Z) (MONDO:0009598; AR; Definitive).
+- [x] **CWC27** — HGNC:10664; [metaphyseal chondrodysplasia-retinitis pigmentosa syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95089ec9-1b91-4ee0-a743-a780d123aad0-2025-07-03T160000.000Z) (MONDO:0009598; AR; Definitive).
 - [x] **CWF19L1** — HGNC:25613; [autosomal recessive cerebellar ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ebc1a4b-1a41-40df-832f-904cd4bb88f9-2025-05-14T160000.000Z) (MONDO:0015244; AR; Definitive).
 - [ ] **CXCR4** — HGNC:2561; [WHIM syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89723de3-8fd8-4e2c-8609-bcd924e2f349-2023-01-17T170000.000Z) (MONDO:0023880; AD; Definitive).
 - [ ] **CYB5A** — HGNC:2570; [methemoglobinemia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_895f7f88-9dcc-42fd-8773-e20dadb6756c-2024-12-13T190000.000Z) (MONDO:0009605; AR; Definitive).
