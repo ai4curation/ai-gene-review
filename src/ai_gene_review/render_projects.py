@@ -1440,6 +1440,7 @@ def render_project(
     projects_dir: Optional[Path] = None,
     source_ref: str = "main",
     source_history: SourceHistory | None = None,
+    symbol_index: Optional[Dict[str, List[str]]] = None,
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
 
@@ -1460,6 +1461,7 @@ def render_project(
             file is rendered flat as ``output_dir/<stem>.html``.
         source_ref: Git revision for catalog GitHub links; defaults to main.
         source_history: Shared checkout metadata for a batch of source files.
+        symbol_index: Shared gene-symbol index for a batch of source files.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -1489,7 +1491,8 @@ def render_project(
     frontmatter, content = parse_frontmatter(raw_content)
 
     # Build symbol index
-    symbol_index = build_symbol_to_species_index(genes_dir)
+    if symbol_index is None:
+        symbol_index = build_symbol_to_species_index(genes_dir)
 
     # Get species hints from frontmatter
     species_hints = frontmatter.get("species", [])
@@ -1714,6 +1717,7 @@ def render_project_bundle(
     output_paths: List[Path] = []
     all_warnings: List[str] = []
     source_history = SourceHistory(md_path.parent)
+    symbol_index = build_symbol_to_species_index(genes_dir)
 
     for bundle_file in md_files:
         output_path, warnings = render_project(
@@ -1724,6 +1728,7 @@ def render_project_bundle(
             projects_dir=projects_dir,
             source_ref=source_ref,
             source_history=source_history,
+            symbol_index=symbol_index,
         )
         output_paths.append(output_path)
         index_path = write_readme_index_alias(bundle_file, output_path, projects_dir)
@@ -1995,6 +2000,7 @@ def render_all_projects(
 
     print(f"Found {len(md_files)} project files to render")
     source_history = SourceHistory(projects_dir)
+    symbol_index = build_symbol_to_species_index(genes_dir)
 
     for md_file in md_files:
         try:
@@ -2005,6 +2011,7 @@ def render_all_projects(
                 projects_dir=projects_dir,
                 source_ref=source_ref,
                 source_history=source_history,
+                symbol_index=symbol_index,
             )
             output_paths.append(output_path)
             index_path = write_readme_index_alias(md_file, output_path, projects_dir)
