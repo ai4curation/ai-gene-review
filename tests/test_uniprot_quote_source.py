@@ -29,6 +29,7 @@ SERA_METEA = "file:METEA/serA/serA-uniprot.txt"
 TP53 = "file:human/TP53/TP53-uniprot.txt"
 GYRA = "file:PSEPK/gyrA/gyrA-uniprot.txt"
 ABI2 = "file:mouse/Abi2/Abi2-uniprot.txt"
+TOLL9 = "file:ANOGA/TOLL9/TOLL9-uniprot.txt"
 
 
 def _path(reference_id: str) -> Path:
@@ -62,6 +63,14 @@ def test_locate_quote_finds_field_and_evidence(reference_id, quote, field, topic
     assert all(s.is_unvetted for s in statements) is unvetted
     if unvetted:
         assert {label for s in statements for label in s.unvetted_sources} == sources
+
+
+def test_arba_only_family_note_is_an_unvetted_prediction():
+    """A "Belongs to" note is classification evidence unless ARBA alone asserts it."""
+    unvetted, restating, statements = classify_quote(
+        "Belongs to the Toll-like receptor family.", _path(TOLL9))
+    assert [(s.field, s.topic) for s in statements] == [("CC", "SIMILARITY")]
+    assert unvetted and not restating
 
 
 def test_family_membership_is_not_flagged():

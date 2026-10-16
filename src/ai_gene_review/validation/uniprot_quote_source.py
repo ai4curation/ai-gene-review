@@ -10,7 +10,8 @@ record mixes evidence with labels and with unvetted predictions:
   agent may use membership to argue for a function: NCBIfam, InterPro/Pfam/
   PROSITE signature matches (``ECO:0000259``), the curated UniRule systems
   (HAMAP, PIRSR, PIRNR, RuleBase), family-membership notes ("Belongs to the X
-  family") and family cross-references. Structure-derived automatic evidence
+  family") and family cross-references. A family note whose only evidence is
+  an ARBA rule is still an unvetted prediction. Structure-derived automatic evidence
   (``ECO:0007...``, e.g. sites from a PDB entry) is also evidence.
 * Unvetted predictions are not evidence: ARBA's association rules ("guilt by
   association" from co-occurring signatures), annotation imported unchecked

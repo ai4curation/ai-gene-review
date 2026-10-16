@@ -27,6 +27,10 @@ from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-un
 from ai_gene_review.validation.folded_scalar import (
     check_folded_scalar_hyphens,
 )
+from ai_gene_review.validation.action_consistency import (
+    check_action_consistency,
+    go_ancestors,
+)
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -52,6 +56,8 @@ from ai_gene_review.validation.supporting_text import (
 
 
 PROPAGATION_REVIEW_EVIDENCE_TYPES = {"IBA", "ISO"}
+# Actions that challenge a propagated annotation. TOO_GENERAL is deliberately absent:
+# it accepts the propagated claim as true and only judges the term uninformative.
 PROPAGATION_REVIEW_ACTIONS = {
     "REMOVE",
     "MODIFY",
@@ -314,6 +320,7 @@ def validate_gene_review(
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
     publications_dir: Optional[Path] = None,
+    check_ontology: bool = False,
 ) -> ValidationReport:
     """Run custom best-practices checks on a gene review YAML file.
 
@@ -329,6 +336,8 @@ def validate_gene_review(
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
         publications_dir: Optional publication-cache directory for quote and availability checks
+        check_ontology: Whether to run checks that need the GO hierarchy (loads the
+            local GO database)
 
     Returns:
         ValidationReport with detailed validation results
@@ -378,6 +387,7 @@ def validate_gene_review(
             check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
             publications_dir=publications_dir,
+            check_ontology=check_ontology,
         )
         # Local sources need no network, so this runs even when reference
         # validation is off (validate-all's best-practices pass): the external
@@ -443,6 +453,7 @@ def check_best_practices_rules(
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
     publications_dir: Optional[Path] = None,
+    check_ontology: bool = False,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -457,6 +468,7 @@ def check_best_practices_rules(
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
         publications_dir: Optional publication-cache directory for quote and availability checks
+        check_ontology: Whether to run checks that need the GO hierarchy
     """
     if progress_callback:
         progress_callback("Running best-practices checks")
@@ -468,6 +480,9 @@ def check_best_practices_rules(
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
     check_protein_binding_policy(data, report)
+    check_action_consistency(
+        data, report, ancestors=go_ancestors() if check_ontology else None
+    )
     if yaml_file is not None:
         # Source-level check: a folded scalar turns a newline into a space, so a
         # hyphenated compound split across lines renders as two words. Invisible to
