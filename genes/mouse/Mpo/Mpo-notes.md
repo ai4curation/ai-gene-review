@@ -17,8 +17,9 @@ experimental annotation in scope was the MGI IMP of mouse Mpo to GO:0002149
 That obsoletion rationale is the key to the review: the HOCl chemistry belongs
 in the molecular-function aspect, and in this GOA set it is already there —
 `GO:0004601 peroxidase activity` IDA and IMP, both from PMID:10085024, the same
-paper that backed the obsoleted BP term. The freshly fetched GOA (84 rows) no
-longer contains GO:0002149 at all, so the migration has already happened
+paper that backed the obsoleted BP term. The freshly fetched GOA (85 data rows, 84
+distinct annotations - the `GO:0140644` ISO `located_in` row appears twice,
+differing only in date) no longer contains GO:0002149 at all, so the migration has already happened
 upstream; nothing in this repo had to be rewritten to drop it.
 
 ## The MF-term question (issue item 2)
@@ -147,6 +148,26 @@ GO:0140644 neutrophil extracellular trap).
   PMID:11980719) are ACCEPTed with the caveat recorded in
   `reference_review`: the claim (peroxidase activity) is independently
   established, and the curator read the full text.
+
+## Review bookkeeping
+
+The review has 84 `existing_annotations` entries against 85 TSV data rows: the
+`GO:0140644 neutrophil extracellular trap` ISO `located_in` row is duplicated in
+the download (same term, evidence, reference and qualifier; different date), so
+it is reviewed once.
+
+All twelve `GO:0004601` rows are `ACCEPT`. Three of them do resolve the specific
+chloride-to-HOCl reaction - the IDA and IMP from PMID:10085024 (HOCl measured in
+neutrophils; abolished in the knockout) and the IDA from PMID:23306200 (purified
+enzyme, chloride + H2O2) - while the other nine (tissue MPO assay, MPO staining
+as a myeloid marker, the peroxisome-paper peroxidase control, and the
+IBA/IEA/ISO/ISS transfers) show only generic turnover. Splitting them, with
+`MODIFY` to an `NTR` replacement on the specific three, was tried and reverted:
+the review guidance is that rows sharing a term must take consistent actions,
+and the validator flags the split (`inconsistent_review_actions`). The
+distinction is not lost - those three rows are named in the `justification` of
+the `proposed_new_terms` entry and two of their quotes are in its `supported_by`,
+which is where a GO editor weighing the term request will look.
 
 ## Follow-ups that are not in-repo
 

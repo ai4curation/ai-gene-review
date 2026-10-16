@@ -23,7 +23,7 @@ giving the reason "this BP term represents a MF term"; the originating ticket
 (go-ontology#22891) had instead flagged the wrong `is_a` parent (see Overview).
 The affected annotation was a single MGI IMP on mouse Mpo (PMID:10085024), plus
 a rat ISO copy. **Both are already gone:** a fresh `just fetch-gene mouse Mpo`
-returns 84 GOA rows with no GO:0002149, and QuickGO returns 65 rat Mpo rows
+returns 85 GOA rows (84 distinct annotations) with no GO:0002149, and QuickGO returns 65 rat Mpo rows
 with none to GO:0002149, so the migration landed upstream and the rat row
 followed the mouse one as predicted. Mouse **Mpo** is now fully reviewed here
 (`genes/mouse/Mpo/`), which closes the deferred-review item and settles the MF
@@ -32,7 +32,8 @@ question: GO has **no** term for the myeloperoxidase reaction
 *not* RHEA:43232, which is isatin hydrolase), and the review therefore accepts
 GO:0004601 *peroxidase activity* — which carries "myeloperoxidase activity" as a
 narrow synonym and the Reactome xref for MPO-dependent HOCl production — while
-proposing a child term for the reaction itself. GO:0016691 is organic
+proposing a child term for the reaction itself (*hypochlorous acid synthase
+activity*, named so as not to read as a child of GO:0016691). GO:0016691 is organic
 chlorination and GO:0140825 is lactoperoxidase activity, as suspected.
 Remaining work is upstream (create the MF term) or optional (a human MPO review).
 
@@ -113,8 +114,8 @@ chlorination ("2 R-H + 2 chloride + H2O2 = 2 R-Cl + 2 H2O").
    Reactome xrefs R-HSA-6789126 / R-HSA-6789031 ("Myeloperoxidase (MPO)
    produces hypochlorous acid (HOCl)"). The Mpo review therefore accepts
    GO:0004601 as the most precise existing term and proposes a child,
-   *hypochlorous acid-forming chloride peroxidase activity*
-   (skos:exactMatch RHEA:28218), modelled on the sibling term GO:0036393
+   *hypochlorous acid synthase activity* (skos:exactMatch RHEA:28218) - named to
+   avoid reading as a child of GO:0016691 - modelled on the sibling term GO:0036393
    *thiocyanate peroxidase activity* (RHEA:69416), which already exists for the
    pseudohalide version of the same reaction and is annotated to Mpo by the Rhea
    pipeline. Creating the term is an upstream GO request.
@@ -145,7 +146,7 @@ so this remains passive tracking until the upstream decision lands.
 ## Impact on this repo
 
 - Mouse **Mpo** (P11247) is now reviewed: `genes/mouse/Mpo/Mpo-ai-review.yaml`
-  (84 GOA rows, status COMPLETE) with working notes in
+  (84 distinct GOA annotations, status COMPLETE) with working notes in
   `genes/mouse/Mpo/Mpo-notes.md`.
 - The obsoleted terms are **not** in the current GOA download for mouse Mpo, nor
   in QuickGO's 65 rows for rat Mpo, so no review in this repo carries
@@ -167,7 +168,7 @@ so this remains passive tracking until the upstream decision lands.
 
 | Tier | Gene | Organism | UniProt | Reviewed here? | Status |
 |---|---|---|---|---|---|
-| 1 | Mpo (myeloperoxidase) | Mus musculus | P11247 | **Yes (2026-10-16)** | The only gene that had a direct IMP to GO:0002149. Full review of all 84 GOA rows; HOCl chemistry retained as MF + H2O2 catabolism; a child of GO:0004601 proposed for the reaction. |
+| 1 | Mpo (myeloperoxidase) | Mus musculus | P11247 | **Yes (2026-10-16)** | The only gene that had a direct IMP to GO:0002149. Full review of all 84 distinct GOA annotations (85 TSV rows, one duplicated); HOCl chemistry retained as MF + H2O2 catabolism; a child of GO:0004601 proposed for the reaction. |
 | (follow-on) | Mpo | Rattus norvegicus | A0A0G2K1A2 | No | ISO descendant; verified in QuickGO this session to carry no GO:0002149 row, so it followed the mouse migration. No residual RGD follow-up. |
 | (follow-on) | MPO | Homo sapiens | P05164 | No | Human ortholog; optional review, not required by the obsoletion. |
 
