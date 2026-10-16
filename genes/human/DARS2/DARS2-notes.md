@@ -32,3 +32,38 @@ The following annotation scopes need source-specific follow-up: aspartate-tRNA(A
 
 
 Research provenance: external Falcon/Edison was attempted with Perplexity fallback. Some requests returned HTTP 429 and fallback returned insufficient-quota HTTP 401; successful external reports are preserved separately. Primary-source manual synthesis is explicitly labeled manual where no external report was available.
+
+
+## 2026-10-16 source-specific augmentation
+
+All 54 original annotation source objects were manually assessed with their source identifiers, evidence, partners and qualifiers retained. The resulting decisions are 21 ACCEPT, 16 MODIFY, eight TOO_GENERAL, six KEEP_AS_NON_CORE and three UNDECIDED; no NEW assertion is proposed. The [source-evidence guide](DARS2-source-evidence.yaml) records the reconstructed raw sources and the exact assay/access limits. The earlier human–horse notes above are historical; this augmentation concerns the human record and does not change the separate horse review.
+
+### Catalysis, products and compartments
+
+The defining activity remains ATP-dependent attachment of aspartate to mitochondrial tRNA(Asp). The recovered [2007 original](https://doi.org/10.1038/ng2013) uses E. coli tRNA(Asp), while the [2013 study](https://pubmed.ncbi.nlm.nih.gov/23275545/) directly compares bacterial and human mitochondrial tRNA(Asp). Its non-cognate terminology is a species comparison, not evidence of tRNA(Asn) charging. The full [2005 original](https://pubmed.ncbi.nlm.nih.gov/15779907/) remains inaccessible after bounded attempts. Its specific tRNA(Asn) and YARS2 claims are therefore unresolved; later Asp assays do not establish an absolute inability to use Asn tRNA.
+
+The official 645-residue precursor and annotated 48–645 chain (598 residues) were reconstructed exactly. The targeting peptide is predicted; the experimental I41 truncation is a different construct. The [2018 fractionation study](https://pubmed.ncbi.nlm.nih.gov/30006346/) supports soluble and electrostatically attached peripheral membrane pools, but its soluble fraction combines matrix and intermembrane space and its membrane fraction combines inner and outer membranes. The matrix core uses the established translation context rather than claiming a resolved measurement of charging flux. The [2025 imaging and lysate assays](https://pubmed.ncbi.nlm.nih.gov/40814755/) support mitochondrial localization and DARS2-dependent charging; confocal colocalization alone does not resolve a membrane face. Original [MitoCoP Table S1](https://pubmed.ncbi.nlm.nih.gov/34800366/) contains direct DARS2 subtractive, spatial and importomics measurements and classifies membrane association as Peripheral.
+
+### Interactions and propagation
+
+The exact partner identities, products, 123 interaction records and 90 scoped reference-sequence hashes were checked. [BioPlex](https://pubmed.ncbi.nlm.nih.gov/28514442/) co-purification, [crosslinking](https://pubmed.ncbi.nlm.nih.gov/30021884/), [MAC-tag](https://pubmed.ncbi.nlm.nih.gov/29568061/) proximity, [HuRI](https://pubmed.ncbi.nlm.nih.gov/32296183/) binary assays and [CFTR MaMTH](https://pubmed.ncbi.nlm.nih.gov/35156780/) are distinguished. Positive associations support enzyme, chaperone, collagen or transporter partner classes where warranted. The remaining positive generic associations are retained as contextual under the standing project policy, without converting proximity into purified binding or transferring a partner's catalytic role to DARS2. The [CFTR proximity study](https://pubmed.ncbi.nlm.nih.gov/36012204/) uses mutant constructs; it does not establish wild-type DARS2 regulation of CFTR.
+
+The actual 844-node PTHR22594 tree, 22-node target path, three on-path IBD records, 37 current donor records and two complete ARBA rule objects were reconstructed. Human self evidence is legitimate descendant grounding. The current ARBA00026908 lacks a complete target match; this boundary is explicit and does not negate independently supported ligase chemistry. ARBA00026971 has a complete match. The obsolete process term is refined without alleging a failed evolutionary placement.
+
+### Scope and provenance
+
+Independent annotation/core input covered the four substrate claims (ROOT), all 11 HuRI claims (Bloc) and a separate critique of the substrate assessment (Bloc). The remaining judgments and cross-source synthesis were performed here. Original source caches, all source dictionaries, UniProt, provider output and this notes prefix were preserved. Four missing publications were genuinely cached; the shared PMID:24275569 bytes match the qualified pending source exactly. No pending family-cache variant was silently adopted. Inherited excerpts are retained as supplied evidence; no new external quotation was added. Actual source scopes are recorded even where a cache claims full text but omits Methods or target tables.
+
+The [2024 immune experiments](https://pubmed.ncbi.nlm.nih.gov/39039092/) motivate a question about extracellular DARS2, but delivery-assisted recombinant-protein experiments do not establish a physiological receptor or a separate secreted-ligand core. Ordinary validation and independent whole review remain pending at this scientific freeze; subsequent results will be appended.
+
+
+### Whole-review refinement before validation
+
+The independent whole read identified two accepted associations whose known partner classes were already sufficiently established: the HSPD1 proximity source and CFTR mutant proximity source now receive the same chaperone/transporter class refinements as their corroborating assays. Their proximity, variant and direct-contact limits remain explicit. This changes two review actions only; every historical source field remains exact. The source-evidence file is explicitly an authored synthesis, not independent primary evidence.
+
+
+### Final independent review and validation outcome
+
+The complete 54-row review, all 22 reference assessments and the single catalytic core were independently read. A separate saved-source core/product assessment checked the operative 2007, 2013, 2018 and 2025 evidence, the original MitoCoP cells and the delivery limits of the 2024 immune experiments. No further scientific correction was requested. These are AI-agent reviews, not a human expert sign-off. Public evidence locators now use actual interaction accession identifiers and primary section/table locations; the guide remains an authored synthesis.
+
+All six final normal phases passed: schema/source/reference/best-practice validation, the CI-equivalent validation command, ordinary status initialization/check, term checks and rendering. The ordinary updater derived DRAFT after the inherited COMPLETE mismatch was preserved. Three unresolved assertions remain explicit. Nine advisories are disclosed: six positive generic-binding exceptions under the standing project policy, two source-specific action differences for the Asn-related terms, and one retained but uncited provider-report advisory. All 53 protected source/context files and 291 isolated runtime files remained exact; no ontology-cache drift occurred. The final HTML was regenerated after this append and the public-locator correction.
