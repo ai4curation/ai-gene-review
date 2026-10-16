@@ -71,23 +71,27 @@ class SourceRevision:
 
 
 class SourceHistory:
-    """Snapshot Git state once per rendering batch, then query individual sources.
+    """Snapshot Git state and source revisions in one history walk per batch.
 
     Only hashes, committer timestamps and paths are read. An unrelated repository
     commit must not change a page's stamp. Shallow boundary commits are not
     trustworthy evidence of when a file last changed, so their dates are omitted.
     The committer date records the revision's integration time (which rebases
     and squashes can reset), rather than the original author's writing time.
-    Queries retain Git's per-path history simplification: a directory-wide log
-    can attribute a discarded side-branch edit to unchanged published content.
+    First-parent history records changes on the branch being published, including
+    merge changes relative to the first parent. It never attributes a discarded
+    side-branch edit to unchanged published content. A merged edit is stamped
+    with its integration commit, not the earlier commit on the side branch.
     """
 
     def __init__(self, directory: Path) -> None:
-        root = _git(directory.resolve(), "rev-parse", "--show-toplevel")
+        self.directory = directory.resolve()
+        root = _git(self.directory, "rev-parse", "--show-toplevel")
         self.root = Path(root) if root else None
         self.head: str | None = None
         self.changed: set[str] = set()
         self.shallow: set[str] = set()
+        self.revisions: dict[str, tuple[str, str]] = {}
         if self.root is None:
             return
         self.head = _git(self.root, "rev-parse", "--verify", "HEAD")
@@ -108,28 +112,41 @@ class SourceHistory:
             path = self.root / shallow_path
             if path.is_file():
                 self.shallow = set(path.read_text().splitlines())
+        if self.head:
+            scope = self.directory.relative_to(self.root).as_posix()
+            history = _git(
+                self.root, "log", "--first-parent", "--diff-merges=first-parent",
+                "--no-renames", "--format=%x00%H%x00%cI", "--name-only", "-z",
+                self.head, "--", scope,
+            )
+            if history is None:
+                self.root = None
+                return
+            # NUL framing preserves spaces, tabs and newlines in filenames.
+            # Each record starts with an extra NUL before its hash and date;
+            # Git inserts one newline before the first name, not every name.
+            for record in history.removeprefix("\0").split("\0\0"):
+                if not record:
+                    continue
+                commit, timestamp, names = record.split("\0", 2)
+                timestamp = _utc(datetime.fromisoformat(timestamp))
+                for name in filter(None, names.removeprefix("\n").split("\0")):
+                    self.revisions.setdefault(name, (commit, timestamp))
 
     def for_file(self, path: Path) -> SourceRevision | None:
         """Describe this Markdown source, not its renderer or generated assets."""
         path = path.resolve()
-        if self.root is None or not path.is_relative_to(self.root):
+        if self.root is None or not path.is_relative_to(self.directory):
             return None
         relative = path.relative_to(self.root).as_posix()
-        # The latest change already includes a rename to this path. Following
-        # older names adds rename detection without changing this single result.
-        record = _git(
-            self.root, "log", "-1", "--format=%H%x00%cI",
-            self.head, "--", relative,
-        ) if self.head else ""
-        if record is None:
-            return None
+        record = self.revisions.get(relative)
         if not record:
             return SourceRevision(relative, None, None, local_changes=True)
-        commit, timestamp = record.split("\0")
+        commit, timestamp = record
         dirty = relative in self.changed
         if commit in self.shallow:
             return SourceRevision(relative, None, None, dirty, history_incomplete=True)
-        return SourceRevision(relative, commit, _utc(datetime.fromisoformat(timestamp)), dirty)
+        return SourceRevision(relative, commit, timestamp, dirty)
 
 
 def collect_build_info(

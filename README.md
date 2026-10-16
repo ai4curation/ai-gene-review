@@ -409,7 +409,11 @@ commit and the run URL. These describe the artifact: redeploying an older
 artifact preserves its original build date. Project HTML separately shows
 **Source last changed**, using the last commit touching its Markdown source,
 with links to the commit and that exact source revision. Stamps omit names,
-emails and commit messages. Local edits are marked; incomplete shallow history
+emails and commit messages. Source history follows the published branch's first
+parents: merged edits use the merge commit that introduced them on that branch,
+while discarded side-branch edits do not affect the stamp. History and the gene
+symbol index are each collected once per rendering batch.
+Local edits are marked; incomplete shallow history
 is labelled instead of assigning a misleading date. Standalone Markdown exports
 without Git history can still be rendered, without a source stamp.
 The maintained `index.html` must contain exactly one `<!-- site-build-info -->`

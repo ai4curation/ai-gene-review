@@ -174,3 +174,50 @@ def test_stamp_rejects_missing_timestamp(repo):
     info["built_at"] = None
     with pytest.raises(ValueError, match="built_at"):
         stamp_site_build(output, info)
+
+
+def test_merged_source_is_stamped_when_it_changes_on_the_published_branch(repo):
+    branch = git(repo, "symbolic-ref", "--short", "HEAD")
+    source = repo / "projects/nested/A λ.md"
+    git(repo, "switch", "-c", "source-edit")
+    source.write_text("# Published change\n")
+    git(repo, "add", "projects")
+    git(repo, "commit", "-qm", "Edit", date="2026-10-02T00:00:00Z")
+    git(repo, "switch", branch)
+    git(repo, "merge", "--no-ff", "-m", "Publish edit", "source-edit", date="2026-10-03T00:00:00Z")
+    revision = SourceHistory(repo / "projects").for_file(source)
+    assert revision is not None
+    assert revision.commit == git(repo, "rev-parse", "HEAD")
+    assert revision.committed_at == "2026-10-03T00:00:00Z"
+
+
+def test_batch_history_preserves_unusual_paths_and_captures_a_snapshot(repo):
+    source = repo / "projects/\nodd\tname.md"
+    source.write_text("# Unusual path\n")
+    git(repo, "add", "projects")
+    git(repo, "commit", "-qm", "Add unusual path")
+    history = SourceHistory(repo / "projects")
+    original = git(repo, "rev-parse", "HEAD")
+    source.write_text("# Later content\n")
+    git(repo, "add", "projects")
+    git(repo, "commit", "-qm", "Later content")
+    revision = history.for_file(source)
+    assert revision is not None
+    assert revision.commit == original
+    assert revision.path == "projects/\nodd\tname.md"
+
+
+def test_batch_uses_one_history_walk_for_all_sources(repo, monkeypatch):
+    """Measure real Git invocations, including both snapshot and page lookups."""
+    (repo / "projects/second.md").write_text("# Another source\n")
+    git(repo, "add", "projects")
+    git(repo, "commit", "-qm", "Another source")
+    trace = repo / "git-trace.jsonl"
+    monkeypatch.setenv("GIT_TRACE2_EVENT", str(trace))
+    history = SourceHistory(repo / "projects")
+    for source in (repo / "projects").rglob("*.md"):
+        assert history.for_file(source) is not None
+        assert history.for_file(source) is not None
+    starts = [json.loads(line) for line in trace.read_text().splitlines()]
+    walks = [event for event in starts if event["event"] == "start" and "log" in event["argv"]]
+    assert len(walks) == 1
