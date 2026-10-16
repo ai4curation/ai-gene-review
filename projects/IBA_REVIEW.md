@@ -5,6 +5,7 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
 genes:
+  - DNAH12
   - cao-1
   - NQO2
   - Epe1
@@ -1387,6 +1388,7 @@ and a representative seed) in the corresponding
 | pten | DICDI | Compartment mismatch: nucleus on a membrane/cortex PtdIns(3,4,5)P3 phosphatase | LOW | COMPLETE |
 | spiA | DICDI | Compartment mismatch: SCAMP TGN/recycling-endosome on a spore-coat protein | LOW | COMPLETE |
 | acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
+| DNAH12 / Dnah12 | human, mouse | **Ortholog split across PANTHER families** (human PTHR46532, mouse PTHR10676 in PANTHER 19): human gets no IBA, while mouse inherits inner dynein arm assembly (PTN008951089). Mouse also over-inherits microtubule motor activity, although DNAH12 lacks a microtubule-binding domain | MEDIUM | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 
@@ -1471,6 +1473,66 @@ table for all 423 genes); the raw keep-only TSVs come from
 *under*-annotated, not fully annotated. When IBA supplies only a broad
 molecular-function term, treat it as a prompt to look for the specific
 experimentally defined activity rather than as a finished call.
+
+### C. Orthologs split across PANTHER families (classification-driven absence)
+
+A third mechanism has nothing to do with how conservative PAINT is. The leaf
+is simply **not in the tree that carries the annotations**, because PANTHER
+classifies it into a different family from its own one-to-one ortholog. The
+biology is annotated in the ancestor; the human gene is never a descendant of
+that ancestor.
+
+**DNAH12 (dynein axonemal heavy chain 12) is the worked example.** It is the
+gene behind spermatogenic failure 100 (asthenoteratozoospermia with loss of
+the sperm inner dynein arms).
+
+| | Human DNAH12 (Q6ZR08) | Mouse Dnah12 (Q3V0Q1, MGI:107720) |
+|---|---|---|
+| PANTHER 19 family (PANTHER API) | **PTHR46532**, family "male fertility factor kl5" (34 leaves; the only human or mouse member) | **PTHR10676**, family "dynein heavy chain family protein" |
+| PANTHER 19 subfamily | PTHR46532:SF11, "dynein axonemal heavy chain 12" | PTHR10676:SF255, "dynein axonemal heavy chain 12" |
+| InterPro/UniProt PANTHER xref | PTHR22878:SF70 | PTHR22878:SF70 (rat Dnah12 also SF70; `interpro/panther/PTHR22878/PTHR22878-entries.csv`) |
+| IBA annotations | **none** | 8, from PTN000743491, PTN008951089 and PTN008503981 |
+
+Both subfamilies are correctly named for DNAH12, so PANTHER identifies the
+protein correctly. The anomaly is only that the two orthologous subfamilies
+are placed in different families.
+
+The mouse IBAs include exactly the functions the human experimental
+literature establishes: inner dynein arm (GO:0036156), **inner dynein arm
+assembly (GO:0036159)**, sperm flagellum assembly (GO:0120316), and dynein
+light intermediate chain binding (GO:0051959). Human DNAH12 has none of them.
+The human gene review independently proposed GO:0036159 as a NEW annotation
+from patient and knockout data (PMID:40146200), which is the same call PAINT
+already made at PTN008951089. That makes this a propagation gap, not an
+ontology or evidence gap. That IBD is seeded by DNAH3, DNAH7 and
+MGI:2683040, which are structural IDA heavy chains, not assembly factors
+(`interpro/panther/PTHR10676/PTHR10676-paint.tsv`).
+
+The same case also shows a **true over-propagation** for the mouse leaf.
+PTN000743491 carries minus-end-directed microtubule motor activity
+(GO:0008569), which is right for the family. But DNAH12 is the shortest
+DNAH and **lacks the microtubule-binding domain** (PMID:40146200), so it is
+probably a recruitment scaffold for DNAH1 and DNALI1 rather than a motor.
+That is a lineage-specific loss after the annotated node (taxonomy: partial
+sub-activity loss, pattern 8). So one gene pair shows both failure modes:
+the human leaf gets nothing, and the mouse leaf gets one term too many.
+
+**How to spot this class:**
+
+- The human gene appears in `projects/paint/human-no-IBA.tsv` but its
+  one-to-one ortholog in mouse or rat has IBAs. Comparing IBA counts across
+  an ortholog pair is a cheap screen.
+- The PANTHER API (`geneinfo`) returns different `family_id` values for the
+  two orthologs.
+- The InterPro-derived PANTHER cross-reference in UniProt disagrees with the
+  PANTHER API. That disagreement is itself a signal; see the PANTHER section
+  of `CLAUDE.md` on the two classification sources.
+
+**Remedy:** report the split to PANTHER rather than annotating around it. In
+the meantime, review the human gene's missing terms from the ortholog's IBA
+set, citing the PTN node as evidence of the ancestral assertion. Do not
+assume that every term transfers: in this case the motor-activity term
+should not.
 
 ## Recommendations for IBA Curation
 
