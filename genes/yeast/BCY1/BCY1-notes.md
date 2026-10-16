@@ -44,8 +44,8 @@
 - Confirmed that the PTHR11635 PAINT placements are the same as for `cgs1` and
   `mcb`: root `PTN004280545` carries the core inhibitor, cAMP-binding,
   catalytic-subunit-binding, and PKA-complex assertions; fungal `PTN000908765`
-  carries nucleus; Opisthokonta `PTN000180782` carries cytosol and the legacy
-  GPCR-pathway process row.
+  carries nucleus; the broad `PTN000180782` node carries cytosol and the
+  legacy GPCR-pathway process row.
 - Inspected high-throughput interaction and localization references. Most
   IntAct rows are generic `protein binding` assertions to TPK1/TPK2/TPK3 or to
   the prolyl isomerase ESS1; only the catalytic-subunit interactors can be

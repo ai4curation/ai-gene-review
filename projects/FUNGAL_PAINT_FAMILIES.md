@@ -135,9 +135,9 @@ exo-1,3-beta-glucosidase node.
 `PTHR11635` contains the root PKA regulatory-chain node
 `PANTHER:PTN004280545`, which carries the conserved cAMP binding, PKA
 catalytic-subunit binding, PKA inhibitor, and PKA-complex assertions; fungal
-node `PANTHER:PTN000908765`, which carries nuclear localization; and broad
-opisthokont node `PANTHER:PTN000180782`, which carries cytosol and an
-over-scoped GPCR/adenylate-cyclase pathway assertion.
+node `PANTHER:PTN000908765`, which carries nuclear localization; and the broad
+cAMP-signaling/cytosol node `PANTHER:PTN000180782`, which carries cytosol and
+an over-scoped GPCR/adenylate-cyclase pathway assertion.
 
 - [x] `CANAL/BCY1` - *Candida albicans* PKA regulatory subunit; merged in PR
   #4751
