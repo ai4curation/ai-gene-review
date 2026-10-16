@@ -1,5 +1,16 @@
 # AHDC1 — claim audit and ENCODE replication metadata
 
+## Audit Note
+
+This report is retained as a historical QA artifact. It describes guards written
+for an earlier AHDC1 review shape with standalone `NEW` rows and older literal
+prose requirements; after the 2026-09-27 ClinGen Mendelian substantive
+re-review, `AHDC1-notes.md` records that `audit_ahdc1_claims.py` no longer
+passes and was not used to preserve the obsolete assertions it expected. The
+ENCODE replication-metadata notes remain provenance for how
+`fetch_encode_ahdc1.py` derived the cached tag-status facts, but this report is
+not cited as biological evidence in `AHDC1-ai-review.yaml`.
+
 Two things, both in service of making this review's load-bearing claims re-derivable rather
 than transcribed:
 
@@ -80,16 +91,26 @@ uv run python genes/human/AHDC1/AHDC1-bioinformatics/audit_ahdc1_claims.py
 uv run python genes/human/AHDC1/AHDC1-bioinformatics/audit_ahdc1_claims.py --self-test
 ```
 
-Current state: `0 problems`, with `GOA rows=15  entries=20  NEW=5` and the action tally
-`ACCEPT 9 · MODIFY 2 · KEEP_AS_NON_CORE 2 · MARK_AS_OVER_ANNOTATED 2 · NEW 5`. These
-numbers are **not** hand-maintained here — the script derives both sides and fails if they
-disagree, so this table cannot drift away from the file without the check going red.
+**Historical state (pre-2026-09-27 re-review; no longer true).** At the time
+this audit was written it reported `0 problems`, with
+`GOA rows=15  entries=20  NEW=5` and the action tally
+`ACCEPT 9 · MODIFY 2 · KEEP_AS_NON_CORE 2 · MARK_AS_OVER_ANNOTATED 2 · NEW 5`.
+The review now has 15 entries and no `NEW` rows
+(`5 ACCEPT · 4 KEEP_AS_NON_CORE · 3 MODIFY · 3 REMOVE`), and this legacy audit
+exits 1 with eight failures; see `AHDC1-notes.md`, "Legacy checks and current
+validation boundary". The drift is now the point: the derive-both-sides
+guarantee held only while the script passed.
 
-All seven self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
-`retracted_phrasing`, `required_claim_missing`, `paired_claim_one_side_removed`,
-`paired_claim_row_deleted`, `regression_stale_reference_review`. The paired-claim mutations go **through the YAML parser** so
-exactly one side is thinned, and each asserts the mutation landed before running the check
-— a guard whose mutation silently no-ops "proves" itself against nothing.
+In the earlier review shape, all seven self-test guards fired:
+`coverage_on_deleted_entry`, `duplicate_key`, `retracted_phrasing`,
+`required_claim_missing`, `paired_claim_one_side_removed`,
+`paired_claim_row_deleted`, `regression_stale_reference_review`. Three of
+those guards assume a standalone `GO:0003682` row and stale reference-review
+prose that no longer exist, so `--self-test` now aborts before the later
+mutation checks can run. Historically, the paired-claim mutations went
+**through the YAML parser** so exactly one side was thinned, and each asserted
+the mutation landed before running the check — a guard whose mutation silently
+no-ops "proves" itself against nothing.
 
 Each case also asserts **which** problem appeared, not merely that one did. `bool(run())`
 would have been satisfied by any failure, and three of the six mutations share a YAML
@@ -119,10 +140,13 @@ The lint did not catch it, and the reason is structural, not an oversight in one
    patterns. Of the seven phrasings in the previous version, **zero** could match anything
    in the review file at all.
 
-Proof, not assertion: splicing the historical sentence back into a copy now fails on **two
-independent patterns**, and that splice is committed as the `regression_stale_reference_review`
-self-test guard — the only case here taken from a real defect rather than from a mutation I
-invented.
+At the time, proof rather than assertion: splicing the historical sentence
+back into a copy failed on **two independent patterns**, and that splice was
+committed as the `regression_stale_reference_review` self-test guard — the
+only case taken from a real defect rather than from a mutation I invented.
+That guard now belongs to the same legacy shape as the paired-claim checks,
+because the sentence fragment it splices against is absent from the current
+YAML.
 
 **The general lesson:** a regression lint seeded from the diff of a fix inherits the fix's
 vocabulary, not the claim's meaning. Seed it from what the claim *asserts* — preferably a
