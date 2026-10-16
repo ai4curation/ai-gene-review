@@ -35,6 +35,12 @@ PRIMARY = os.path.join(HERE, "report.yaml")
 ALT = os.path.join(HERE, "report-branch-local.yaml")
 GEN = os.path.join(HERE, "make_page.py")
 
+# The second report's own recorded revision, short, read from the file rather than written
+# here. Two cases quote the generator's sentence about it, and hardcoding the sha is what
+# made them fail the moment that report was regenerated - the same staleness the prose
+# examples were guarded against. Only the wording stays declared.
+ALT_SHORT = (yaml.safe_load(open(ALT))["provenance"].get("aigr_revision") or "")[:9]
+
 
 def _drop_flag(rep, flag):
     for e in rep["entries"]:
@@ -275,13 +281,13 @@ CASES = [
     # checked against both versions.
     ("for-each-ref fails after the revision resolves", "OK",
      lambda p, a: None,
-     ("That second run read a tree recorded at `132532cf6`, an ancestor of the branch tip,",
+     (f"That second run read a tree recorded at `{ALT_SHORT}`, an ancestor of the branch tip,",
       "Whether that revision is published could not be determined, so nothing is claimed"
       " about re-running this elsewhere.\n"),
      "fail"),
     ("for-each-ref finds the revision on no remote ref", "OK",
      lambda p, a: None,
-     ("That second run read a tree recorded at `132532cf6`, an ancestor of the branch tip,",
+     (f"That second run read a tree recorded at `{ALT_SHORT}`, an ancestor of the branch tip,",
       "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
       " be re-run elsewhere.\n"),
      "empty"),

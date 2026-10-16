@@ -4,6 +4,8 @@
 
 This page reconciles two runs of the same audit over different trees. It is a check on the generator - that the flags which should not depend on which gene reviews exist do not - and not a finding about how dismech and ai-gene-review agree. It names individual rows and review statuses for that reason.
 
+The second run records no answer for whether `align_audit.py` was modified when it ran, having been run from outside the repository. The primary run answers it for the same script (`906bd065421d`): clean.
+
 The audit also runs over a second tree, and comparing the two runs shows which flags
 are artifacts of the missing slices rather than findings. That tree is this branch (claude/cool-edison-o9wvf0-alignment-project at 132532cf6) alone, before main was merged in, so the gene reviews and modules added by the ten themed slice PRs of #4690 are absent.
 Both cover the same
@@ -49,6 +51,7 @@ The flags decided before any review is read are identical in both runs
 (`GENE_ON_NO_NODE` 18, `NO_GO_ON_GENE_NODES` 19, `NO_ORIGIN` 3, `UNTYPED` 0), which is what separates
 missing inputs from the script behaving differently - and that identity is enforced
 rather than stated: the generator exits if one of those counts moves, or if the two runs
-do not cover the same rows. So a second run tests that the audit works; only the
-all-slices tree gives the figures this table reports.
+do not cover the same rows. So a second run tests that the audit works; the figures
+on the project page come from the tree holding every reviewed gene, which with all
+ten slices merged is this branch itself.
 

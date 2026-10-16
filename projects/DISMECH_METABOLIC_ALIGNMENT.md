@@ -20,7 +20,7 @@ conditions, plus two entries created in this work (Mitchell syndrome, SLC26A1-re
 biological processes on the pathograph nodes naming that gene are compared with the gene's
 ai-gene-review core functions. The audit script (`align_audit.py`), the page generator
 (`make_page.py`), the entry list (`scope.yaml`) and the committed report of the run behind this
-table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, with `check_page_guards.py` exercising the generator's refusals (`just check-alignment-page-guards`, also run by the pytest suite), together with the second report the comparison section below is derived from (`report-branch-local.yaml`), the same audit run over `132532cf6`.
+table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the repository, with `check_page_guards.py` exercising the generator's refusals (`just check-alignment-page-guards`, also run by the pytest suite), together with the second report the audit self-check page beside this one ([audit-self-check](DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md)) is derived from (`report-branch-local.yaml`), the same audit run over `132532cf6`.
 
 **What "aligned" does and does not claim.** Five properties of the test make it a weak
 check, and any of them can turn a row green that a curator would not:
@@ -134,11 +134,11 @@ was generated from, and those inputs live in two repositories.
 - ai-gene-review revision: `c8848254e9e1dfa8e8c98dd2cc485d36e8750d65` (branch `claude/cool-edison-o9wvf0-alignment-project`)
 - GO release: `2026-07-26`, adapter `sqlite:obo:go`
 - audit script: `906bd065421d` (sha256 of `align_audit.py`), last committed at `c8848254e`
-- The primary run's tree (`c8848254e`) is on no pushed ref, so no clone holds it and the same comparison cannot be made from one.
+- The primary run's tree (`c8848254e`) is on a pushed ref, so the same comparison can be made for the table's own figures.
 - modules read: `489`; UniProt accessions reached as parts: `5228`, against `5298` matching the accession pattern anywhere in the module file text. Both are sums over modules of that module's distinct accessions, so a protein in several modules counts once per module; the difference is accessions mentioned in notes or evidence of a module they are not a part of, which this audit does not count as membership.
 
-Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten
-themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.
+The gene reviews and modules this table asserts `COMPLETE` for are on `main`: the ten
+themed PRs split out of #4690 have all merged, so an ordinary checkout holds them.
 The run above read a clean checkout, so the revision above describes its tree in full.
 
 The same audit was run a second time over a different tree, and the two runs' flag counts are reconciled row by row in [the audit self-check](DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md). That is a check on the generator rather than a finding about the two resources, so it is kept beside the page rather than in it.

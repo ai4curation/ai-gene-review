@@ -391,7 +391,18 @@ def _rev_state(rev):
             _REV_STATE[rev] = ("unknown", resolved, detail)
             return "unknown"
         if f.returncode == 0:
-            state = "published" if f.stdout.strip() else "unpublished"
+            if f.stdout.strip():
+                state = "published"
+            else:
+                # A revision that is this branch's own history but not yet on a remote is
+                # the ordinary state while a round is being prepared: the page is rendered,
+                # then committed, then pushed, and the flat "no clone holds it" was written
+                # into the artifact moments before the push made it false. Reported as its
+                # own state so the sentence is true on both sides of that push.
+                anc = subprocess.run(
+                    ["git", "merge-base", "--is-ancestor", resolved, "HEAD"],
+                    capture_output=True)
+                state = "unpushed_here" if anc.returncode == 0 else "unpublished"
     _REV_STATE[rev] = (state, resolved, detail)
     return state
 
@@ -421,6 +432,10 @@ _REPRODUCIBLE = {
     "published": "",
     "unpublished": " That revision is on no pushed ref, so no clone holds it and this"
                    " comparison cannot be re-run elsewhere.",
+    # True before and after the push that follows rendering, which the flat `unpublished`
+    # sentence was not: it is this branch's history either way.
+    "unpushed_here": " That revision is this branch's own history and not yet on a pushed"
+                     " ref, so a clone holds it once this branch is pushed.",
     # The one clause that names a cause, which the drift answer deliberately never does. It
     # is admissible because it is about *this* checkout, which is observable, rather than
     # about the revision - a shallow clone is the ordinary reason and naming it tells a
@@ -456,6 +471,9 @@ def _primary_drift_tail():
                      " comparison can be made for the table's own figures.",
         "unpublished": f"The primary run's tree (`{short}`) is on no pushed ref, so no clone"
                        " holds it and the same comparison cannot be made from one.",
+        "unpushed_here": f"The primary run's tree (`{short}`) is this branch's own history"
+                         " and not yet on a pushed ref, so the same comparison can be made"
+                         " from a clone once this branch is pushed.",
         "not_here": f"The primary run's tree (`{short}`) is not in this checkout, so nothing"
                     " is claimed about whether a clone could compare the table's own figures.",
         "unknown": f"Whether the primary run's tree (`{short}`) is published could not be"
@@ -1012,8 +1030,9 @@ def alt_comparison():
         f"({', '.join('`%s` %d' % (f, here.get(f, 0)) for f in indep)}), which is what separates",
         "missing inputs from the script behaving differently - and that identity is enforced",
         "rather than stated: the generator exits if one of those counts moves, or if the two runs",
-        "do not cover the same rows. So a second run tests that the audit works; only the",
-        "all-slices tree gives the figures this table reports.",
+        "do not cover the same rows. So a second run tests that the audit works; the figures",
+        "on the project page come from the tree holding every reviewed gene, which with all",
+        "ten slices merged is this branch itself.",
         "",
     ]
     return out
@@ -1294,7 +1313,8 @@ lines += [
     f"table (`report.yaml`) are in the `projects/DISMECH_METABOLIC_ALIGNMENT/` directory of the"
     + (" repository, with `check_page_guards.py` exercising the generator's refusals"
        " (`just check-alignment-page-guards`, also run by the pytest suite), together"
-       " with the second report the comparison section below is derived from"
+       " with the second report the audit self-check page beside this one"
+       " ([audit-self-check](DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md)) is derived from"
        f" (`{os.path.basename(ALT_PATH)}`), the same audit run over `{ALT_TREE_SHORT}`."
        if ALT_PATH else " repository."),
     "",
@@ -1458,8 +1478,8 @@ if PROV:
         )
     lines += [
         "",
-        "Many of the gene reviews and modules this table asserts `COMPLETE` for are added by the ten",
-        "themed PRs split out of #4690, so reproducing these rows needs a tree holding all of them.",
+        "The gene reviews and modules this table asserts `COMPLETE` for are on `main`: the ten",
+        "themed PRs split out of #4690 have all merged, so an ordinary checkout holds them.",
     ]
     if PROV.get("aigr_tree"):
         lines.append(f"The run above read {PROV['aigr_tree']}.")
@@ -1732,12 +1752,17 @@ if unused:
 open(out, "w").write("\n".join(lines) + "\n")
 
 # The self-check page, written beside the project page under the projects/FOO/ convention.
-# Written only when there is a second report: with nothing to compare there is no page to
-# write, and a stale one left behind would outlive its input.
+# With no second report there is nothing to compare, and the page's link to it is dropped
+# too - so any committed copy is removed rather than left behind. Not writing one was not
+# enough: render-projects walks the whole projects/ tree, so the stale file kept publishing
+# its previous run's row-level figures with nothing linking to it.
 _self_check = alt_comparison()
+_sc_path = os.path.join(os.path.dirname(os.path.abspath(out)),
+                        "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
+if not _self_check and os.path.exists(_sc_path):
+    os.remove(_sc_path)
+    print("removed stale", _sc_path, "- no second report to compare")
 if _self_check:
-    _sc_path = os.path.join(os.path.dirname(os.path.abspath(out)),
-                            "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
     os.makedirs(os.path.dirname(_sc_path), exist_ok=True)
     open(_sc_path, "w").write("\n".join([
         "# DISMECH metabolic alignment: audit self-check",
@@ -1749,6 +1774,19 @@ if _self_check:
         " exist do not - and not a finding about how dismech and ai-gene-review agree. It"
         " names individual rows and review statuses for that reason.",
         "",
+    ] + ([
+        # The mirror of the clause the provenance section uses for the primary: the second
+        # run ran from outside the repository, so git could not be asked about its script,
+        # and leaving "not established" to stand next to a run that holds the answer for
+        # the same sha256 says less than is known.
+        f"The second run records no answer for whether `align_audit.py` was modified when it"
+        f" ran, having been run from outside the repository. The primary run answers it for"
+        f" the same script (`{PROV.get('audit_sha256')}`):"
+        f" {'modified' if PROV.get('audit_dirty') else 'clean'}.",
+        "",
+    ] if ALT_PROV.get("audit_dirty") is None
+         and PROV.get("audit_dirty") is not None
+         and ALT_PROV.get("audit_sha256") == PROV.get("audit_sha256") else []) + [
     ] + _self_check) + "\n")
     print("wrote", _sc_path)
 print("wrote", out, n_rows, n_clean)
