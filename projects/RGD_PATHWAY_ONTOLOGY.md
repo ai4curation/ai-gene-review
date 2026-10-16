@@ -215,6 +215,8 @@ protein's experimental GO annotations, not from the diagram. The edge types
 needed curator judgment. RGD's `---->` is "positively affects", which covers
 causation, provision of a substrate and regulation alike.
 
+After the first pass, each step was given quote-checked support from the primary papers that defined it (13 PubMed abstracts). It was also cross-checked against an independent human GO-CAM, `6205c24300000880`, which models six of the seven gene products with the same molecular functions. That model omits SCAP, and it includes KPNB1 for SREBP nuclear import, a step the RGD description mentions but the module does not yet model. A curator-built GO-CAM for the same pathway is the strongest check available on a diagram-derived module, so the seeds' `best_gocam` field is worth reading before modelling the next candidates.
+
 The pilot shows two limits of the route. The diagram has no step-level GO
 terms, so every activity needs separate grounding. SCAP's escort role also has
 no specific GO molecular-function term. None of the seven genes has a gene
