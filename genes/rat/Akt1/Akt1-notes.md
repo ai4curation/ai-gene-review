@@ -55,4 +55,24 @@ which AKT1 binds and inhibits a protein serine/threonine kinase.
 - GO:0045907 positive regulation of vasoconstriction (IMP, PMID:21532183): the abstract's conclusion runs opposite to the term. Is the RGD annotation a direction error that should be GO:0045906?
 - GO:0045792 negative regulation of cell size (IDA, PMID:16286931): this needs a full-text check. It is inconsistent with AKT1's growth-promoting role.
 - PMID:7488143 PKC binding rows: should RGD fix the WITH fields (RGD:62390 = Akt3, RGD:2802 = Hmgb1)?
-- Many legacy ISO rows use REMOVE for donor phenotypes judged too context-specific (e.g. inflammatory response, neuron projection development). MARK_AS_OVER_ANNOTATED may describe these better, since the donor evidence is experimental. They were left unchanged in this pass for consistency.
+- Many legacy ISO rows use REMOVE for donor phenotypes judged too context-specific (e.g. inflammatory response, neuron projection development). MARK_AS_OVER_ANNOTATED may describe these better, since the donor evidence is experimental. They were left unchanged in this pass for consistency. (Resolved 2026-10-17; see "Review follow-up 2026-10-17" below.)
+
+### Review follow-up 2026-10-17
+
+Changes made in response to the PR #4628 review:
+
+- **MODIFY reasons:** the four GO:0004672 MODIFY rows that are not ISO (IEA GO_REF:0000002; IDA PMID:9112399, PMID:7774014, PMID:12084817) no longer say "transferred ISO term". Each reason now states the actual basis: an InterPro domain mapping, or a rat assay of a serine/threonine kinase. Their title-only quotes were replaced with abstract sentences. The three genuine ISO rows keep the original reason.
+- **Open question 4 resolved:** the 38 legacy ISO REMOVE rows with the boilerplate "too narrow" reason (plus the two donor-split siblings) were re-reviewed one by one:
+  - 27 contextual donor phenotypes became MARK_AS_OVER_ANNOTATED, with a per-row reason naming the donor study. They now use `root_cause: NO_FAILURE_NON_CORE` and `SUPPORTS_TRANSFER`, because the donor evidence is experimental and no rat divergence is argued.
+  - GO:0010629 became MARK_AS_OVER_ANNOTATED for GRANULARITY_MISMATCH, consistent with GO:0010628.
+  - Locations no longer carry CONTEXT_OR_TISSUE_MISMATCH. Ciliary basal body is KEEP_AS_NON_CORE (activated Akt-1 seen at the basal body, PMID:19596798). Cell-cell junction and spindle are MARK_AS_OVER_ANNOTATED (one immunological-synapse study; a phospho-epitope survey).
+  - Five rows stay REMOVE with a participation argument (TERM_SCOPING_PROBLEM / ROLE_CONFLATION). Protein ubiquitination and protein catabolic process: Mdm2 does the ubiquitination, and AKT1 regulates Mdm2. Execution phase of apoptosis: AKT1 is a caspase substrate cleaved at Asp-462. Apoptotic mitochondrial changes: AKT1 opposes them. Gene expression: AKT1 is a regulator, not a participant.
+  - Re-grounding moved three rows to KEEP_AS_NON_CORE. GO:1903898: Akt phosphorylates PERK Thr-799 (PMID:21954288). GO:2000010: GLUT4 translocation in rat adipose cells (PMID:9415393). GO:0010975 (ISO, ISS and the donor split): UniProt FUNCTION text plus PMID:19778506.
+- **Re-grounding of the self-referential rows the reviewer named:**
+  - GO:0099104 potassium channel activator activity (ISO and ISS) is now KEEP_AS_NON_CORE. PMID:33505021 shows TMEM175 is opened by a conformational change in AKT, not by its catalytic activity, which contradicts the earlier "kinase-substrate event recast as activator" reasoning.
+  - GO:1902018 is now KEEP_AS_NON_CORE, grounded on the WDR44/Rab11 mechanism (PMID:31204173). The uncited "opposite signs" claim was dropped.
+  - GO:0150033 is now KEEP_AS_NON_CORE, grounded on Akt-mediated TSC2 phosphorylation (PMID:24529379).
+  - GO:0060416 stays MARK_AS_OVER_ANNOTATED. It is now grounded on the bovine donor IDA (PMID:16698222, fetched for this pass), in which GH acts indirectly through IGFBP-5.
+- **GO:0045907:** changed from REMOVE to MODIFY with GO:0045906 negative regulation of vasoconstriction (verified on QuickGO), because PMID:21532183 supports the negative direction.
+- **suggested_questions:** a new section holds the GO:0045907 direction question, the PMID:7488143 WITH-field question (RGD:62390 = Akt3, RGD:2802 = Hmgb1) and the GO:0045792 cell-size question.
+- **Remaining work:** 108 rows, mostly the KEEP_AS_NON_CORE ISO tail, still cite only the UniProt DR GO line. Re-grounding them is left for a later pass, as the reviewer allowed.
