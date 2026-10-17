@@ -545,9 +545,53 @@ def test_feedback_loops_cut_is_a_warning_not_an_error():
 
 
 def test_feedback_loop_closed_through_child_of_container():
-    """jak_stat: the SOCS child of the negative-regulation bundle is STAT-induced, so the bundle is closed."""
+    """A negative-regulation bundle is closed when one of its children is pathway-induced."""
+    data = {
+        "module": {
+            "id": "m",
+            "parts": [
+                {"node": {"id": "jak"}},
+                {"node": {"id": "stat"}},
+                {
+                    "role": "negative regulation",
+                    "node": {
+                        "id": "negreg",
+                        "parts": [
+                            {
+                                "node": {
+                                    "id": "socs",
+                                    "description": "SOCS induced as feedback",
+                                }
+                            },
+                            {
+                                "node": {
+                                    "id": "ptp",
+                                    "description": "constitutive phosphatase",
+                                }
+                            },
+                        ],
+                    },
+                },
+            ],
+            "connections": [
+                {"source": "jak", "target": "stat", "connection_type": "CAUSES"},
+                {"source": "stat", "target": "socs", "connection_type": "CAUSES"},
+                {
+                    "source": "negreg",
+                    "target": "jak",
+                    "connection_type": "NEGATIVELY_REGULATES",
+                },
+            ],
+        }
+    }
+    by_source = {f["source"]: f for f in feedback_loop_findings(data)}
+    assert by_source["negreg"]["status"] == "closed"
+    assert "via socs" in by_source["negreg"]["message"]
+
+
+def test_jak_stat_socs_feedback_is_closed():
+    """jak_stat wires SOCS, PTP and PIAS as separate regulators; only SOCS is STAT-induced."""
     data = load_module("jak_stat_signaling.yaml")
     by_source = {f["source"]: f for f in feedback_loop_findings(data)}
-    assert by_source["jak_stat_negative_regulation"]["status"] == "closed"
-    assert "via socs_feedback" in by_source["jak_stat_negative_regulation"]["message"]
     assert by_source["socs_feedback"]["status"] == "closed"
+    assert not [f for f in by_source.values() if f["severity"] == "warning"]
