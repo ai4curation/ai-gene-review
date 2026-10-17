@@ -34,3 +34,34 @@
 ## core_functions
 - MF GO:0043754 (E2 acyltransferase) + directly_involved_in GO:0009083 (BCAA catabolic process) + locations GO:0005759 (mito matrix) + in_complex GO:0160157 (BCKDH complex).
 - Second: same MF, directly_involved_in GO:0120552 (BCKA decarboxylation to branched-chain acyl-CoA).
+
+
+## 2026-10-16 source-based augmentation
+
+The enzyme is one integrated E2 functional unit, not two distinct enzymes with the same molecular activity. DBT transfers the three branched-chain acyl groups to CoA as part of the three-component oxidation sequence. Ile, Leu and Val catabolism are core substrate pathways. Human liver kinetics are measurements of the assembled complex and must not be presented as isolated E2 turnover or autonomous NAD reduction [PMID:3593587]. The mobile lipoyl domain and oligomeric organization connect substrate channeling with component assembly [PMID:11839747; PMID:22291014].
+
+The 482-residue precursor has a predicted 1–61 transit peptide and 62–482 mature chain. The native part of the 2002 NMR construct maps exactly to residues 62–145, including Lys105. A later human 62–482 construct was used in an AlphaLISA BDK proximity assay [PMID:11839747; PMID:37558654]. The 1994 abstract explicitly reports human E2 microsequencing and Gly at its N terminus; the current 47–81 reference-position metadata cannot be interpreted as present-coordinate cleavage proof because current residue 47 is Tyr [PMID:7918575]. These are distinct evidence scopes.
+
+The matrix assignment is retained. MitoCoP identifies DBT in its high-confidence mitochondrial set and assigns operational Peripheral membrane association. That fractionation class does not establish a membrane face, contradict matrix residence or demonstrate an exclusively soluble matrix enzyme [PMID:34800366]. The earlier blanket acceptance of the broad mitochondrion term is superseded by TOO_GENERAL with the original positive evidence retained; the already accepted matrix annotations provide greater specificity.
+
+The earlier generic-binding overannotation rationales are superseded. BioPlex source-specific positive associations remain non-core, with the actual partners and sequence/taxon hashes checked; the 2025 source pairs were not recovered in the current interaction query and retain explicit curator-deference limits [PMID:28514442; PMID:33961781; PMID:40205054]. Actual E2b linker binding supports a phosphatase-binding refinement for PPM1K, which remains the entity that performs dephosphorylation [PMID:22291014]. Parkin-associated DBT is explicitly present in the abstract, but direct binding, ubiquitination and native regulation are not thereby established [PMID:19725078].
+
+The previous nucleoid exclusion was factually wrong. Original Table 1 puts DBT/BCKD E2 in Class I, with native peptide counts 0/3 and cross-linked counts 12/2. The non-core localization is retained; direct DNA contact and a DNA-maintenance activity are not inferred [PMID:18063578]. The unrelated ATAD3 exclusion excerpt was removed from the DBT assertion. Detailed locators and the preserved cache/access distinction are in [the primary-source notes](DBT-primary-source-notes.md).
+
+Literal propagation evidence was reconstructed. P11181 is bovine DBT, not rat. Three IBDs are on the actual human family-tree path, and the target appearing as a descendant source is valid. The current target MSA differs from the displayed sequence at the documented S384G variant; it is not an exact canonical match. The original 42 assertion objects, old GOA and notes above remain unchanged. New fetch drift is documented separately rather than silently replacing historical assertions. Current raw graph models are used to distinguish DBT chemistry from modification by other enzymes and from loss-of-function variant contexts; no new process annotation is proposed for being a substrate.
+
+The prior genuine Falcon report was read and retained as a literature lead, not substituted for primary evidence. Repeated 1987 and phosphatase excerpts were consolidated; the positive interaction anchors remain. The [evidence guide](DBT-source-evidence.yaml) provides public source locators, product mappings and a compact row index.
+
+
+### Source-specific interaction clarification
+
+The preceding general retention statement is superseded for the PMID:40205054 assertion only. Its original AP-MS Methods were read, but the DBT-GRPEL2/MMAB target measurements were not adjudicated and the current literal source query recovered neither pair. Earlier BioPlex association evidence belongs to separate experiments. Row 10 is therefore UNDECIDED, with the original positive IPI preserved and no negative-binding inference. The normal Reactome localization and transfer reactions are also described without unrelated defective-variant caveats; the caveats remain on actual disease events.
+
+
+## 2026-10-16: public provenance and biological description clarification
+
+The retained GOA snapshot contains the GO:0120552 ARBA00095351 assertion. A separately generated research snapshot was not imported; its differences do not negate the retained source or the independently supported E2 participation in the complex reaction [PMID:3593587].
+
+The 2025 U2OS binding judgment remains source-specific UNDECIDED [PMID:40205054]. The guide now records the exact IntAct/MINT endpoints, target filter, retrieval timestamps, counts, hashes and matching procedure. Both positive imported GOA pairs are preserved. Failure to recover the exact records in those dated responses is not evidence of nonbinding. Earlier BioPlex measurements remain positive corroboration in their own experimental contexts [PMID:28514442; PMID:33961781].
+
+The description again identifies the cubic 24-subunit E2 core and lipoyl Lys105. These are supported by the curated subunit model and the independently mapped lipoyl-domain construct, without assigning E1/E3 catalytic activities to DBT [PMID:22291014; PMID:11839747]. The PMID:11839747 full_text_unavailable flag describes the abstract-only standard cache; the separately accessed original Sample Preparation and selected Results remain explicitly documented in DBT-primary-source-notes.md. No original text, assay access, source object, action, quotation, product mapping or core function was withdrawn.
