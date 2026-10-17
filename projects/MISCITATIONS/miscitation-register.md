@@ -9,29 +9,29 @@ autolink_gene_symbols: false
 
 This register is rendered directly from the `references[].reference_review` blocks curated in the gene-review YAML (see the [Reference schema class](../../src/ai_gene_review/schema/gene_review.yaml)). It is the structured, queryable counterpart to the worked cases on the [parent project page](../MISCITATIONS.md).
 
-**42487 adjudicated reference(s)** across **4490** of **7895** reviewed gene files.
+**42948 adjudicated reference(s)** across **4511** of **8005** reviewed gene files.
 
-- **Flagged as a citation problem** (WRONG_IDENTIFIER / MISCITED / DISPUTED / LOW_QUALITY): **1266 (3.0%)**
-- **Not yet checked** (UNVERIFIED): 2599
+- **Flagged as a citation problem** (WRONG_IDENTIFIER / MISCITED / DISPUTED / LOW_QUALITY): **1281 (3.0%)**
+- **Not yet checked** (UNVERIFIED): 2645
 
 ## By correctness
 
 | Correctness | Count | Share |
 |---|---:|---:|
 | WRONG_IDENTIFIER | 62 | 0.1% |
-| MISCITED | 475 | 1.1% |
-| DISPUTED | 447 | 1.1% |
-| LOW_QUALITY | 282 | 0.7% |
-| UNVERIFIED | 2599 | 6.1% |
-| VERIFIED | 38108 | 89.7% |
+| MISCITED | 478 | 1.1% |
+| DISPUTED | 448 | 1.0% |
+| LOW_QUALITY | 293 | 0.7% |
+| UNVERIFIED | 2645 | 6.2% |
+| VERIFIED | 38501 | 89.6% |
 
 ## By relevance
 
 | Relevance | Count |
 |---|---:|
-| HIGH | 21238 |
-| MEDIUM | 14185 |
-| LOW | 6873 |
+| HIGH | 21492 |
+| MEDIUM | 14377 |
+| LOW | 6887 |
 | NONE | 175 |
 
 ## By organism
@@ -40,14 +40,14 @@ Organisms with at least one adjudicated reference, ranked by the number of flagg
 
 | Organism | Adjudicated | Flagged | WRONG_IDENTIFIER | MISCITED | DISPUTED | LOW_QUALITY | UNVERIFIED |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| human | 31978 | 878 | 43 | 342 | 305 | 188 | 1954 |
-| PSEPK | 1349 | 80 | 0 | 27 | 11 | 42 | 281 |
-| yeast | 1873 | 56 | 6 | 12 | 25 | 13 | 89 |
+| human | 32396 | 880 | 43 | 344 | 305 | 188 | 1997 |
+| PSEPK | 1349 | 91 | 0 | 27 | 11 | 53 | 283 |
+| yeast | 1897 | 57 | 6 | 12 | 26 | 13 | 91 |
 | DROME | 596 | 39 | 3 | 18 | 14 | 4 | 44 |
+| ARATH | 1172 | 21 | 4 | 4 | 10 | 3 | 39 |
 | mouse | 207 | 21 | 1 | 16 | 3 | 1 | 27 |
-| ARATH | 1172 | 20 | 4 | 3 | 10 | 3 | 40 |
 | DICDI | 494 | 20 | 1 | 9 | 10 | 0 | 19 |
-| DANRE | 786 | 18 | 0 | 4 | 10 | 4 | 12 |
+| DANRE | 805 | 18 | 0 | 4 | 10 | 4 | 12 |
 | SCHPO | 651 | 17 | 1 | 4 | 9 | 3 | 21 |
 | worm | 924 | 15 | 1 | 2 | 8 | 4 | 27 |
 | ECOLI | 363 | 10 | 1 | 7 | 2 | 0 | 24 |
@@ -240,12 +240,13 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | yeast | TIM10 | PMID:23267104 | Proteome-wide protein interaction measurements of bacterial proteins of unknown function. | NONE | Full-text inspection found an E. coli-only interaction study with no yeast, Tim10, or Tim12 mention; it cannot support the TIM10-TIM12 IPI row. |
 | yeast | TIM9 | PMID:19037698 | The Dutch multicenter experience of the endo-sponge treatment for anastomotic leakage after colorectal surgery. | NONE | The cached full text is an unrelated colorectal-surgery paper and cannot support TIM9 IMS localization. The term is independently correct; PMID:19037098 is the plausible transposed identifier. |
 
-### MISCITED (475)
+### MISCITED (478)
 
 | Organism | Gene | Reference | Title | Rel. | Notes |
 |---|---|---|---|---|---|
 | ARATH | ABCG36 | PMID:16877699 | A gain-of-function mutation in the Arabidopsis pleiotropic drug resistance transporter PDR9 confers resistance to auxin… | LOW | Paper characterizes PDR9/ABCG37; atpdr8 is mentioned only as background, so it does not directly support export from cell for ABCG36. |
 | ARATH | DREB2A | PMID:18266923 | Identification of a novel cis-regulatory element for UV-B-induced transcription in Arabidopsis. | LOW | Abstract concerns the ANAC13 UV-B cis-elements (MRE/UVBox) and does not mention DREB2A; it does not directly support a DREB2A UV-B function. The GO:0010224 IEP annotation citing it is weakly supported (expression-based). |
+| ARATH | SUR1 | PMID:32213638 | REVERSAL OF RDO5 1, a Homolog of Rice Seed Dormancy4, Interacts with bHLH57 and Controls ABA Biosynthesis and Seed Dorm… | NONE | Full text cached (PMC7268807, HTML extraction, 2026-10-15). The paper is real and correctly identified, but it does not support the IDA defense response to fungus annotation keyed to it for SUR1; likely a mis-keyed reference in the TAIR record. |
 | ARATH | VRN2 | PMID:11118137 | Arabidopsis transcription factors: genome-wide comparative analysis among eukaryotes. | LOW | Genome-wide TF catalog; does not support VRN2 being a DNA-binding TF. |
 | CANAL | CEK1 | PMID:40531863 | Mitochondrial anchor protein Num11 is key to pathogenicity of Candida albicans by affecting mitochondrial function and… | MEDIUM | The Num11 study is useful Cdc42-Cek1 pathway context, but it perturbs NUM11 and uses phospho-Cek1 as a downstream readout; it does not directly support a CEK1 IMP annotation to cell wall modification. |
 | DANRE | col1a1a | PMID:19757382 | Zebrafish grainyhead-like1 is a common marker of different non-keratinocyte epidermal cell lineages, which segregate fr… | LOW | Full text read. Supports col1a1a mRNA expression in basal keratinocytes, not protein localization to cytoplasm (the GOA IDA claim). |
@@ -492,7 +493,9 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | human | CTSK | Reactome:R-HSA-1604752 | Initial activation of proMMP13 by MMP3 | HIGH | The actual event contains a positive extracellular CTSK membership path, but its shared serine-type catalyst activity does not support the CTSK serine-mechanism assertion. This flag is specific to the molecular-function transfer; the compartment is retained. |
 | human | CTSK | Reactome:R-HSA-2514772 | Fibrillin-1 degradation by MMP3, CTSK, CTSL2 | HIGH | The actual event contains a positive extracellular CTSK membership path, but its shared serine-type catalyst activity does not support the CTSK serine-mechanism assertion. This flag is specific to the molecular-function transfer; the compartment is retained. |
 | human | CYP17A1 | PMID:2808364 | Deletion of a phenylalanine in the N-terminal region of human cytochrome P-450(17 alpha) results in partial combined 17… | MEDIUM | Correctly cited for the AH5 variant and (via UniProt) subcellular location, but it is the original_reference for a GO:0019825 "oxygen binding" annotation that the paper does not address; that annotation is marked over-annotated. |
-| human | CYP27A1 | PMID:15465040 | Metabolism of vitamin D by human microsomal CYP2R1. | MEDIUM | Cited as support for CYP27A1 vitamin D 25-hydroxylase activity, but the paper's conclusion is that CYP2R1 (not CYP27A1) is the physiological 25-hydroxylase and that CYP27A1 hydroxylates vitamin D2 at C-24/C-27; supports the over-annotation flag rather than a core CYP27A1 function. |
+| human | CYP2U1 | Reactome:R-HSA-211958 | Miscellaneous substrates | MEDIUM | The real Miscellaneous substrates pathway includes CYP2U1 acting on arachidonate, not metabolism of a cytochrome protein. Its mapping to GO:1903604 is over-scoped; the underlying catalytic reaction is valid. |
+| human | CYP4V2 | Reactome:R-HSA-211976 | Endogenous sterols | MEDIUM | Actual child is CYP4V2 DHA hydroxylation. The pathway-to-sterol-process mapping exceeds that reaction’s chemical scope. The real parent-child topology is retained. MISCITED records insufficient support for this specific GO-process assertion; MARK_AS_OVER_ANNOTATED conservatively flags the inherited mapping scope. |
+| human | CYP4V2 | Reactome:R-HSA-2453902 | The canonical retinoid cycle in rods (twilight vision) | MEDIUM | Actual child is DHA hydroxylation, not retinoid conversion; retinal context alone does not establish that GO process. The real parent-child topology is retained. MISCITED records insufficient support for this specific GO-process assertion; MARK_AS_OVER_ANNOTATED conservatively flags the inherited mapping scope. |
 | human | DGAT1 | Reactome:R-HSA-6799350 | Exocytosis of specific granule membrane proteins | LOW | Reactome neutrophil-degranulation pathway; used to place DGAT1 at the plasma membrane and specific granule membrane. These localizations do not reflect the physiological ER-membrane site of DGAT1 catalysis and drive over-annotated CC terms. |
 | human | DPAGT1 | PMID:6289658 | Demonstration of the heterozygous state for I-cell disease and pseudo-Hurler polydystrophy by assay of N-acetylglucosam… | LOW | PubMed-verified, but the paper is about the DISTINCT lysosomal-enzyme GlcNAc-1-phosphotransferase (GNPTAB/GNPTG; I-cell disease / mucolipidosis II-III), not DPAGT1. It does not support a DPAGT1 function; used to support the GO:0003976 annotation that has been flagged as over-annotation (wrong enzyme). |
 | human | DPM1 | PMID:21630459 | Proteomic characterization of the human sperm nucleus. | LOW | Sperm-nucleus proteome catalogue used to annotate DPM1 to nucleus; the nuclear localization is a likely co-purifying contaminant and contradicts established ER localization (basis for REMOVE). |
@@ -720,7 +723,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | yeast | TSA2 | PMID:9888818 | Purification and characterization of a second type thioredoxin peroxidase (type II TPx) from Saccharomyces cerevisiae. | LOW | Abstract describes 'type II TPx' (176 aa, Cys62/Cys120, no homology to TPx I) = AHP1, not TSA2 (196 aa, TSA1 paralog). UniProt cites it only for the TSA2 alias 'TPx type Ib'. The TSA2 IDA/IMP rows from this paper probably reflect the TSA II/AHP1 naming confusion; full text not available to confirm. |
 | yeast | YDJ1 | PMID:10811660 | Crystal structure and activity of human p23, a heat shock protein 90 co-chaperone. | NONE | The cached abstract is exclusively about human p23 and its Hsp90/progesterone-receptor chaperoning assays; it contains no YDJ1 experiment and does not support direct IDA provenance for the YDJ1 annotation. The reference is retained because the existing GOA annotation cites it. |
 
-### DISPUTED (447)
+### DISPUTED (448)
 
 | Organism | Gene | Reference | Title | Rel. | Notes |
 |---|---|---|---|---|---|
@@ -1159,6 +1162,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | yeast | ILT1 | file:yeast/ILT1/ILT1-deep-research-falcon.md | Falcon literature report for yeast ILT1 | MEDIUM | Full body reviewed. Its identity/domain and comparative transporter synthesis is informative, but its assertion of no target localization and its naming history miss PMID:30045857. Primary PM microscopy supplements rather than excludes the inherited vacuolar role. No exact cached OpenScientist report was found. |
 | yeast | JJJ3 | PMID:22367199 | Structure and mechanistic insights into novel iron-mediated moonlighting functions of human J-protein cochaperone, Dph4. | HIGH | Iron binding by Jjj3/Dph4 is reported here but Dong et al. 2014 (PMID:24422557) found Dph4 does not readily bind iron. |
 | yeast | KDX1 | file:yeast/KDX1/KDX1-hypotheses/cell-cycle-complex-and-nucleotide-binding-functions/openscientist.md | OpenScientist focused report on KDX1 cell-cycle, CDK-complex and ATP-binding assignments | HIGH | Focused report read. Its CDK-complex and cell-cycle overpropagation conclusions, and its recommendation to keep ATP binding unresolved, agree with the primary CWI/SBF literature and cached bioinformatics analysis. The report repeats the rule-based interpretation of KDX1 K55 as the retained beta3 ATP-site lysine; the local SLT2/KDX1 alignment instead shows that canonical SLT2 Lys54 aligns to KDX1… |
+| yeast | KGD4 | PMID:2693936 | Cloning and analysis of the nuclear genes for two mitochondrial ribosomal proteins in yeast. | LOW | Original ribosomal-protein assignment of YMR-31; contradicted by PMID:25165143, which attributes it to KGDH contamination of ribosome preparations. |
 | yeast | MDM10 | PMID:22409400 | Gem1 and ERMES do not directly affect phosphatidylserine transport from ER to mitochondria or mitochondrial inheritance. | MEDIUM | Full text available. Its conclusion that ERMES has no direct role in PS transport is contested by later in vitro and in vivo (METALIC) data; its finding that inheritance defects are secondary to morphology is consistent with later work. |
 | yeast | MDM12 | PMID:22409400 | Gem1 and ERMES do not directly affect phosphatidylserine transport from ER to mitochondria or mitochondrial inheritance. | MEDIUM | Full text available. Its conclusion that ERMES has no direct role in PS transport is contested by later in vitro and in vivo (METALIC) data; its finding that inheritance defects are secondary to morphology is consistent with later work. |
 | yeast | MIM1 | PMID:19345216 | The three domains of the mitochondrial outer membrane protein Mim1 have discrete functions in assembly of the TOM compl… | HIGH | Not in the GOA. Corroborates the topology, but its central claim is in direct tension with PMID:18177669 from the same period: this paper assigns "discrete functions" to the three domains and attributes regulation of the SAM early reaction to the N-terminal domain, whereas Popov-Celeketic et al. found that deleting either soluble domain caused no growth or TOM-assembly phenotype and concluded the… |
@@ -1172,7 +1176,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | yeast | SSZ1 | file:yeast/SSZ1/SSZ1-hypotheses/refolding-and-secondary-compartments/openscientist.md | OpenScientist hypothesis investigation - SSZ1 refolding and secondary compartments | HIGH | Read in full. The localization conclusions were adopted: the nucleus IBA is a live over-propagation and the plasma-membrane IBA is stale. The refolding biology is directionally consistent, but the report's statement that no GO:0042026 NOT/IRD was deployed anywhere is stale relative to the local PTHR45639 snapshot, which already places NOT/IRD at PTN001065099 and generalizes the target to GO:00064… |
 | yeast | YAR1 | file:yeast/YAR1/YAR1-hypotheses/function-hypothesis-go-0001228/openscientist.md | OpenScientist hypothesis review of YAR1 GO:0001228 | HIGH | The domain distinction informs GO:0001228, but domain absence and bulk acidity were not by themselves sufficient for the BP and MBF/SBF rows because non-DNA-binding subunits need not carry APSES. The REMOVE conclusion is now independently corroborated by the recovered PTHR24198 PAINT table, Complex Portal CPX-946/CPX-950, and IntAct. |
 
-### LOW_QUALITY (282)
+### LOW_QUALITY (293)
 
 | Organism | Gene | Reference | Title | Rel. | Notes |
 |---|---|---|---|---|---|
@@ -1201,6 +1205,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | ORYSJ | Pi-ta | PMID:36050368 | Analysis of a rice blast resistance gene Pita-Fuhui2663 and development of selection marker. | HIGH | PubMed-verified; full text. Two CRISPR knockout lines of the Fuhui 2663 allele were susceptible to isolate KJ201. There was no complementation, and neither the AVR status of KJ201 nor the Ptr genotype was tested. It is the only support for a defense role of the NLR. |
 | PSEPK | PP_0075 | file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md | OpenScientist deep-research report for PSEPK PP_0075 | MEDIUM | Architecture and absence-of-direct-assay observations were retained. The report's proposed sulfate cargo and assignment of intact COS uptake to an unspecified ABC route are speculative and are not adopted. |
 | PSEPK | PP_0076 | file:PSEPK/PP_0076/PP_0076-deep-research-openscientist.md | OpenScientist deep-research report for PSEPK PP_0076 | MEDIUM | The explicit knowledge gaps were retained. The report's definitive ABC complex model is rejected because it incorrectly identifies PP_0074/Q88RQ5 as an ABC ATPase; PP_0074 is shikimate dehydrogenase AroE, and PP_0075 has SLC26A/SulP-STAS rather than ABC-permease architecture. |
+| PSEPK | PP_1806 | file:projects/P_PUTIDA/deep-research/PSEPK__kdo-biosynthesis__ppu00541-deep-research-openscientist.md | OpenScientist PSEPK KDO-biosynthesis synthesis | MEDIUM | Useful species-aware synthesis for the two-API architecture and PP_1806/kdsA2 cluster context, but the report itself notes that all KT2440 KDO enzymes are homology-only predictions and that PP_1806 remains physiologically unresolved. |
 | PSEPK | PP_2325 | file:PSEPK/PP_2325/PP_2325-deep-research-openscientist.md | OpenScientist gene research for PP_2325 | MEDIUM | Reviewed against UniProt, the manual OrtholugeDB notes, and PaKPR2 biochemistry. The report is useful for generic ApbA/KPR mechanism and records that Q88KG5 has not been assayed, but it recapitulates the electronic PanE-like ketopantoate assignment without evaluating the closer Pseudomonas PaKPR2 ortholog that argues against that specific substrate. |
 | PSEPK | PP_2589 | file:projects/P_PUTIDA/deep-research/PSEPK__gamma-glutamyl-putrescine-catabolism__ppu00330-deep-research-openscientist.md | OpenScientist PSEPK gamma-glutamyl putrescine catabolism synthesis | HIGH | The sidecar identifies PP_2589 as the K09472 PuuC candidate but is internally inconsistent about whether the PuuC step is resolved; this review uses only the cautious leading-candidate point and preserves the lack of direct KT2440 gamma-glutamyl aminoaldehyde substrate evidence. |
 | PSEPK | PP_2839 | file:projects/P_PUTIDA/deep-research/PSEPK__bacterial-nucleotide-excision-repair__ppu03420-deep-research-openscientist.md | OpenScientist PSEPK bacterial nucleotide-excision repair synthesis | HIGH | Verified species-aware synthesis that treats PP_2839 as a DinG-family iron-sulfur helicase and rejects its KEGG ERCC2/XPD mapping as a eukaryotic-map artifact. The report's GO inventory and recommendation are not sound for this target: it says PP_2839 carries GO:0006281 even though the fetched GOA table has only molecular-function annotations, and it recommends GO:0004386 and GO:0051880/GO:000073… |
@@ -1216,8 +1221,18 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | PSEPK | argE | file:PSEPK/argE/argE-deep-research-openscientist.md | OpenScientist functional synthesis for PSEPK ArgE | MEDIUM | The report identifies the exact ArgE accession and the acetylornithine-deacetylase reaction, but its route-dominance, backup-only, and PP_3571-paralog claims are not adopted, and it missed the direct KT2440 argE-mutant evidence that keeps ArgE/ArgJ flux unresolved. |
 | PSEPK | argJ | file:PSEPK/argJ/argJ-deep-research-openscientist.md | OpenScientist functional synthesis for PSEPK ArgJ | MEDIUM | The report retrieves both defining ArgJ reactions for P59612, but its cyclic-route dominance, target-specific regulation, and no-knockout claims are unsupported or superseded by direct KT2440 mutant data and are not used here. |
 | PSEPK | betC | file:PSEPK/betC/betC-deep-research-openscientist.md | OpenScientist deep-research report for PSEPK betC | HIGH | Exact target identity, motif, direct KT2440 phenotype, and absence of target-protein kinetics were retained. The report's assertion that the adjacent proteins form the importer is rejected: current PP_0075 architecture is SLC26A/SulP-STAS, and no cognate local ABC ATPase or target-specific transport assay is established. |
+| PSEPK | gcvH1 | file:projects/P_PUTIDA/deep-research/PSEPK__glycine_cleavage_system__ppu00260-deep-research-openscientist.md | OpenScientist PSEPK glycine cleavage system synthesis | MEDIUM | Useful species-aware synthesis for grouping gcvH1 with gcvP1 and gcvT-I as one KT2440 glycine-cleavage P/H/T set, but the report itself states that all KT2440 gcv calls are homology-based and that operon division of labor is inferred from P. aeruginosa. |
+| PSEPK | gcvH2 | file:projects/P_PUTIDA/deep-research/PSEPK__glycine_cleavage_system__ppu00260-deep-research-openscientist.md | OpenScientist PSEPK glycine cleavage system synthesis | MEDIUM | Useful species-aware synthesis for grouping gcvH2 with gcvP2 and gcvT as the second KT2440 glycine-cleavage P/H/T set, but the report itself states that all KT2440 gcv calls are homology-based and that operon division of labor is inferred from P. aeruginosa. |
+| PSEPK | gcvP1 | file:projects/P_PUTIDA/deep-research/PSEPK__glycine_cleavage_system__ppu00260-deep-research-openscientist.md | OpenScientist PSEPK glycine cleavage system synthesis | MEDIUM | Useful species-aware synthesis for grouping gcvP1 with gcvH1 and gcvT-I as one KT2440 glycine-cleavage P/H/T set while keeping the shared L-protein assignment unresolved, but the KT2440 component calls remain homology-based. |
+| PSEPK | gcvP2 | file:projects/P_PUTIDA/deep-research/PSEPK__glycine_cleavage_system__ppu00260-deep-research-openscientist.md | OpenScientist PSEPK glycine cleavage system synthesis | MEDIUM | Useful species-aware synthesis for grouping gcvP2 with gcvH2 and gcvT as the second KT2440 glycine-cleavage P/H/T set while keeping the shared L-protein assignment unresolved, but the KT2440 component calls remain homology-based. |
+| PSEPK | gcvT | file:projects/P_PUTIDA/deep-research/PSEPK__glycine_cleavage_system__ppu00260-deep-research-openscientist.md | OpenScientist PSEPK glycine cleavage system synthesis | MEDIUM | Useful species-aware synthesis for grouping gcvT with gcvP2 and gcvH2 as the second KT2440 glycine-cleavage P/H/T set, but the report itself states that all KT2440 gcv calls are homology-based and that operon division of labor is inferred from P. aeruginosa. |
+| PSEPK | gcvT-I | file:projects/P_PUTIDA/deep-research/PSEPK__glycine_cleavage_system__ppu00260-deep-research-openscientist.md | OpenScientist PSEPK glycine cleavage system synthesis | MEDIUM | Useful species-aware synthesis for grouping gcvT-I with gcvP1 and gcvH1 as one KT2440 glycine-cleavage P/H/T set, but the report itself states that all KT2440 gcv calls are homology-based and that operon division of labor is inferred from P. aeruginosa. |
+| PSEPK | gmhA | file:projects/P_PUTIDA/deep-research/PSEPK__adp-heptose-biosynthesis__ppu00541-deep-research-openscientist.md | OpenScientist PSEPK ADP-heptose biosynthesis synthesis | MEDIUM | Useful species-aware synthesis for placing PP_1323/K03271 in step 1 and separating it from the unresolved terminal HldD epimerase question, but the report's step assignment still rests on KEGG/UniProt orthology rather than direct KT2440 enzymology. |
+| PSEPK | gmhB | file:projects/P_PUTIDA/deep-research/PSEPK__adp-heptose-biosynthesis__ppu00541-deep-research-openscientist.md | OpenScientist PSEPK ADP-heptose biosynthesis synthesis | MEDIUM | Useful species-aware genome analysis for showing that no credible HldD ortholog is resolved in KT2440 and for keeping the L,D-heptose endpoint separate from the upstream ADP-D,D-heptose reactions, but the generated synthesis is treated as preliminary until manually rederived. |
 | PSEPK | guaD | file:PSEPK/guaD/guaD-deep-research-openscientist.md | OpenScientist deep-research report for Pseudomonas putida KT2440 guaD | MEDIUM | Useful retrieval synthesis for target identity and the family-level reaction, but it promotes inferred residues, localization, regulation, and promiscuity to target-specific claims without direct Q88F18 experiments. |
+| PSEPK | hldE | file:projects/P_PUTIDA/deep-research/PSEPK__adp-heptose-biosynthesis__ppu00541-deep-research-openscientist.md | OpenScientist PSEPK ADP-heptose biosynthesis synthesis | MEDIUM | Useful species-aware synthesis for placing bifunctional PP_4934 in the HldE kinase and adenylyltransferase steps while separating those secure reactions from the unresolved terminal HldD epimerase, but the report's PP_4934 assignment still rests on KEGG/UniProt orthology rather than direct KT2440 enzymology. |
 | PSEPK | iscS | file:projects/P_PUTIDA/deep-research/PSEPK__bacterial-mnma-trna-wobble-uridine-thiolation-sulfur-relay__ppu04122-deep-research-openscientist.md | OpenScientist review of the PSEPK MnmA sulfur relay | HIGH | I checked that Q88PK8 is UniProt-reviewed IscS with MF_00331/IscS-family support; the sidecar's choice of PP_0842 over PP_2435 also uses target-sequence and isc-operon evidence but remains an E. coli transfer without direct Pseudomonas relay biochemistry. |
+| PSEPK | kdsD | file:projects/P_PUTIDA/deep-research/PSEPK__kdo-biosynthesis__ppu00541-deep-research-openscientist.md | OpenScientist PSEPK KDO-biosynthesis synthesis | MEDIUM | Useful species-aware synthesis for separating PP_0957/kdsD from the divergent PP_1806 paralog, but the report itself notes that the KT2440 KDO enzymes have not been directly characterized and rests on ortholog transfer plus local sequence/genomic-context analysis. |
 | PSEPK | mnmA | file:projects/P_PUTIDA/deep-research/PSEPK__bacterial-mnma-trna-wobble-uridine-thiolation-sulfur-relay__ppu04122-deep-research-openscientist.md | OpenScientist review of the PSEPK MnmA sulfur relay | HIGH | I checked UniProt's reviewed mnmA/MF_00144 tRNA-specific 2-thiouridylase assignment and the sidecar's PP-loop/cysteine motif call; no direct KT2440 enzymology is cited, so this review treats the sidecar as homology-based support. |
 | PSEPK | moaA | file:PSEPK/moaA/moaA-deep-research-openscientist.md | OpenScientist gene research for moaA | HIGH | The conserved GTP cyclase reaction and division of labor with MoaC agree with reviewed target UniProt. The report explicitly acknowledges that its mechanistic and structural evidence comes from orthologs, but presents unsaved target residue/motif analysis, target homodimer and structural transfer, heterologous xanthine-oxidase production, and rate-defining or nonredundant physiological claims as… |
 | PSEPK | moaB-I | file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md | OpenScientist gene research for moaB-I | HIGH | The report correctly identifies the MoaB family and acknowledges the absence of a Q88L15 assay, but then overstates synteny and family homology as a robust MogA-equivalent catalytic assignment. That conclusion conflicts with the target UniProt no-adenylyltransferase statement and is not used here. |
