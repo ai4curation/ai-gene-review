@@ -19,6 +19,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
 from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+from ai_gene_review.site_provenance import SourceHistory
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
 NOTEBOOK_SUFFIXES = {".ipynb"}
@@ -1438,6 +1439,8 @@ def render_project(
     template_path: Optional[Path] = None,
     projects_dir: Optional[Path] = None,
     source_ref: str = "main",
+    source_history: SourceHistory | None = None,
+    symbol_index: Optional[Dict[str, List[str]]] = None,
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
 
@@ -1457,6 +1460,8 @@ def render_project(
             mirrors ``md_path``'s location relative to it. When ``None`` the
             file is rendered flat as ``output_dir/<stem>.html``.
         source_ref: Git revision for catalog GitHub links; defaults to main.
+        source_history: Shared checkout metadata for a batch of source files.
+        symbol_index: Shared gene-symbol index for a batch of source files.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -1486,7 +1491,8 @@ def render_project(
     frontmatter, content = parse_frontmatter(raw_content)
 
     # Build symbol index
-    symbol_index = build_symbol_to_species_index(genes_dir)
+    if symbol_index is None:
+        symbol_index = build_symbol_to_species_index(genes_dir)
 
     # Get species hints from frontmatter
     species_hints = frontmatter.get("species", [])
@@ -1623,6 +1629,7 @@ def render_project(
         title=title,
         content=html_content,
         source_file=md_path.name,
+        source_provenance=(source_history or SourceHistory(md_path.parent)).for_file(md_path),
         family_rows=family_rows,
         source_ref=quote(source_ref, safe=""),
         warnings=warnings,
@@ -1713,6 +1720,8 @@ def render_project_bundle(
     md_files = project_bundle_markdown_files(md_path, projects_dir)
     output_paths: List[Path] = []
     all_warnings: List[str] = []
+    source_history = SourceHistory(md_path.parent)
+    symbol_index = build_symbol_to_species_index(genes_dir)
 
     for bundle_file in md_files:
         output_path, warnings = render_project(
@@ -1722,6 +1731,8 @@ def render_project_bundle(
             template_path=template_path,
             projects_dir=projects_dir,
             source_ref=source_ref,
+            source_history=source_history,
+            symbol_index=symbol_index,
         )
         output_paths.append(output_path)
         index_path = write_readme_index_alias(bundle_file, output_path, projects_dir)
@@ -1992,6 +2003,8 @@ def render_all_projects(
         return output_paths, all_warnings
 
     print(f"Found {len(md_files)} project files to render")
+    source_history = SourceHistory(projects_dir)
+    symbol_index = build_symbol_to_species_index(genes_dir)
 
     for md_file in md_files:
         try:
@@ -2001,6 +2014,8 @@ def render_all_projects(
                 genes_dir=genes_dir,
                 projects_dir=projects_dir,
                 source_ref=source_ref,
+                source_history=source_history,
+                symbol_index=symbol_index,
             )
             output_paths.append(output_path)
             index_path = write_readme_index_alias(md_file, output_path, projects_dir)

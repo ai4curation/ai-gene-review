@@ -96,3 +96,7 @@ demonstrated nuclear function; keep as non-core.
 
 The GTP binding IEA (GO:0005525) and GTPase activity IEA (GO:0003924) are redundant with the
 IDA GTPase annotations; the IDA (experimental) versions are the primary evidence.
+
+## 2026-10-09 review completion (claude-code)
+
+Re-reviewed the INITIALIZED review against the disease literature (see history/genes/human/EEFSEC/). Status set COMPLETE; changes are summarized in the history record.
