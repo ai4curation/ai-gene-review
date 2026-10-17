@@ -47,30 +47,32 @@ the row's term itself (`True`) rather than a descendant of it.
 ## Results
 
 Current output is in [RESULTS.md](RESULTS.md); per-row detail is in
-[results.tsv](results.tsv). The interpretation below is from the run committed
-with this README (3,697 ARBA process rows in reviewed genes; 1,416 scored).
+[results.tsv](results.tsv). The figures below are from the run of 2026-10-17
+(4,058 ARBA process rows in reviewed genes; 1,617 scored), and RESULTS.md
+emits the same table on every run.
 
 Share of rows the gene review kept (ACCEPT or KEEP_AS_NON_CORE) or rejected
-(REMOVE or MARK_AS_OVER_ANNOTATED), by verdict:
+(REMOVE, MARK_AS_OVER_ANNOTATED or TOO_GENERAL), by verdict:
 
 | Verdict | Module concept | Rows | Kept | Rejected |
 |---|---|---:|---:|---:|
-| ENTAILED | exact | 187 | 93% | 4% |
-| ENTAILED | ancestor of concept | 544 | 61% | 22% |
-| MODULE_INCOMPLETE | exact | 22 | 91% | 5% |
-| MODULE_INCOMPLETE | ancestor of concept | 55 | 75% | 15% |
-| NOT_ENTAILED | exact | 93 | 77% | 11% |
-| NOT_ENTAILED | ancestor of concept | 515 | 61% | 28% |
+| ENTAILED | exact | 220 | 93% | 4% |
+| ENTAILED | ancestor of concept | 655 | 62% | 19% |
+| MODULE_INCOMPLETE | exact | 26 | 92% | 4% |
+| MODULE_INCOMPLETE | ancestor of concept | 56 | 77% | 7% |
+| NOT_ENTAILED | exact | 119 | 80% | 10% |
+| NOT_ENTAILED | ancestor of concept | 541 | 59% | 27% |
 
 What the numbers say:
 
 - **An exact entailment is a strong positive signal.** When the protein fills a
   step of a satisfiable module whose process is exactly the ARBA term, reviewers
-  kept 93% of the rows and removed none outright. These rows could be generated
-  from the activity call plus the module, which states the grounds for the call.
+  kept 93% of the rows and removed none outright (8 of 220 were marked
+  over-annotated). These rows could be generated from the activity call plus the
+  module, which states the grounds for the call.
 - **Inherited entailment is true but often uninformative.** A protein that fills
   a step of a satisfiable module is involved in every ancestor of that module's
-  process. Reviewers still reject 22% of these rows, mostly as over-annotation
+  process. Reviewers still reject 19% of these rows, mostly as over-annotation
   of vague terms (system development, response to stress, animal organ
   development). This check tests whether a call is grounded, not whether the term
   is specific enough; a specificity filter has to be applied separately.

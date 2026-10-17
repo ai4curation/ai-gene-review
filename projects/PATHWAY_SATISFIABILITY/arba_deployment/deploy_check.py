@@ -264,7 +264,8 @@ def main() -> None:
 def write_summary(out: list[dict], cache: dict, lineages: dict, modules: list[dict]) -> None:
     scored = [r for r in out if r["verdict"] != "NO_MODULE"]
     verdicts = ["ENTAILED", "MODULE_INCOMPLETE", "NOT_ENTAILED"]
-    actions = ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "REMOVE", "UNDECIDED", ""]
+    actions = ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL", "REMOVE",
+               "UNDECIDED", "PENDING", ""]
     xt = collections.Counter((r["verdict"], r["review_action"]) for r in scored)
     failed = sum(1 for v in cache.values() if not v["ok"])
     ungrounded = sorted(m["id"] for m in modules if m["ungrounded"])
@@ -292,10 +293,10 @@ def write_summary(out: list[dict], cache: dict, lineages: dict, modules: list[di
         row = [xt[(v, a)] for a in actions]
         lines.append(f"| {v} | " + " | ".join(map(str, row)) + f" | {sum(row)} |")
     lines += ["", "## Kept and rejected, by verdict and module concept", "",
-              "Kept is ACCEPT or KEEP_AS_NON_CORE; rejected is REMOVE or MARK_AS_OVER_ANNOTATED. "
-              "Shares are of reviewed rows.", "",
+              "Kept is ACCEPT or KEEP_AS_NON_CORE; rejected is REMOVE, MARK_AS_OVER_ANNOTATED or "
+              "TOO_GENERAL. Shares are of reviewed rows.", "",
               "| verdict | module concept | rows | kept | rejected |", "|---|---|---:|---:|---:|"]
-    kept, rejected = {"ACCEPT", "KEEP_AS_NON_CORE"}, {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
+    kept, rejected = {"ACCEPT", "KEEP_AS_NON_CORE"}, {"REMOVE", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"}
     for v in verdicts:
         for exact, name in [(True, "exact"), (False, "ancestor of concept")]:
             sel = [r for r in scored if r["verdict"] == v and r["exact_concept"] == exact and r["review_action"]]
