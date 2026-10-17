@@ -399,10 +399,25 @@ def _rev_state(rev):
                 # then committed, then pushed, and the flat "no clone holds it" was written
                 # into the artifact moments before the push made it false. Reported as its
                 # own state so the sentence is true on both sides of that push.
-                anc = subprocess.run(
-                    ["git", "merge-base", "--is-ancestor", resolved, "HEAD"],
-                    capture_output=True)
-                state = "unpushed_here" if anc.returncode == 0 else "unpublished"
+                # Three outcomes, not two. `merge-base --is-ancestor` exits 1 for "not an
+                # ancestor" and 128 for a genuine error - an unborn HEAD among them, which
+                # this function does not rule out before asking. Reading everything non-zero
+                # as "not an ancestor" would publish the definite claim that no clone holds
+                # the revision on the strength of a git failure, which is the failure the
+                # sibling `_alt_drift_tail` splits these exact codes to avoid.
+                try:
+                    anc = subprocess.run(
+                        ["git", "merge-base", "--is-ancestor", resolved, "HEAD"],
+                        capture_output=True)
+                except Exception:
+                    state = "unknown"
+                else:
+                    if anc.returncode == 0:
+                        state = "unpushed_here"
+                    elif anc.returncode == 1:
+                        state = "unpublished"
+                    else:
+                        state = "unknown"
     _REV_STATE[rev] = (state, resolved, detail)
     return state
 
@@ -1316,7 +1331,11 @@ lines += [
        " with the second report the audit self-check page beside this one"
        " ([audit-self-check](DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md)) is derived from"
        f" (`{os.path.basename(ALT_PATH)}`), the same audit run over `{ALT_TREE_SHORT}`."
-       if ALT_PATH else " repository."),
+       if ALT_PATH else
+       " repository. Run with only the report, as here, the generator deletes any"
+       " self-check page beside this one: with no second run there is nothing to"
+       " reconcile, and a left-behind copy would keep publishing an earlier run's"
+       " figures with nothing linking to it."),
     "",
     "**What \"aligned\" does and does not claim.** Five properties of the test make it a weak",
     "check, and any of them can turn a row green that a curator would not:",
@@ -1408,6 +1427,11 @@ lines += [
 ] + flag_legend() + [
     "",
 ]
+# The two-run comparison, computed once and read twice: by the provenance section's link
+# below and by the self-check write at the end. Bound here rather than at either use so it
+# exists whether or not PROV does.
+_self_check = alt_comparison()
+
 if PROV:
     lines += [
         "**Provenance of this run.** The table is generated, so it is only as current as the inputs it",
@@ -1503,7 +1527,12 @@ if PROV:
     # The two-run comparison is a statement about this generator, not about dismech/AIGR
     # agreement, and it names individual rows and stub statuses. It goes to its own page
     # under the projects/FOO/ convention; only a link to it belongs here.
-    if alt_comparison():
+    #
+    # Computed once, here rather than at the write below, for two reasons. It is the whole
+    # row-level accounting, so asking it twice to answer "is there a second report" repeats
+    # that work; and its own guards exit on a report that cannot be compared, which has to
+    # happen before the page is written rather than after.
+    if _self_check:
         lines.append(
             "The same audit was run a second time over a different tree, and the two runs'"
             " flag counts are reconciled row by row in"
@@ -1756,7 +1785,6 @@ open(out, "w").write("\n".join(lines) + "\n")
 # too - so any committed copy is removed rather than left behind. Not writing one was not
 # enough: render-projects walks the whole projects/ tree, so the stale file kept publishing
 # its previous run's row-level figures with nothing linking to it.
-_self_check = alt_comparison()
 _sc_path = os.path.join(os.path.dirname(os.path.abspath(out)),
                         "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
 if not _self_check and os.path.exists(_sc_path):
@@ -1765,6 +1793,17 @@ if not _self_check and os.path.exists(_sc_path):
 if _self_check:
     os.makedirs(os.path.dirname(_sc_path), exist_ok=True)
     open(_sc_path, "w").write("\n".join([
+        # The same `species:` the project page carries. Without it render-projects cannot
+        # resolve a symbol that exists in more than one species and leaves it unlinked -
+        # ODC1, COX20 and COQ2 are all human and yeast - so moving this content to a
+        # sub-page silently dropped three links the project page renders.
+        "---",
+        "title: 'dismech metabolic alignment: audit self-check'",
+        "description: Two runs of the same audit reconciled flag by flag, as a check on the"
+        " generator",
+        "species: [human]",
+        "---",
+        "",
         "# DISMECH metabolic alignment: audit self-check",
         "",
         "[Back to the project page](../DISMECH_METABOLIC_ALIGNMENT.md)",
@@ -1775,18 +1814,31 @@ if _self_check:
         " names individual rows and review statuses for that reason.",
         "",
     ] + ([
-        # The mirror of the clause the provenance section uses for the primary: the second
-        # run ran from outside the repository, so git could not be asked about its script,
-        # and leaving "not established" to stand next to a run that holds the answer for
-        # the same sha256 says less than is known.
-        f"The second run records no answer for whether `align_audit.py` was modified when it"
-        f" ran, having been run from outside the repository. The primary run answers it for"
-        f" the same script (`{PROV.get('audit_sha256')}`):"
-        f" {'modified' if PROV.get('audit_dirty') else 'clean'}.",
+        # The mirror of the clause the provenance section uses for the primary: leaving
+        # "not established" to stand next to a run holding the answer for the same sha256
+        # says less than is known.
+        #
+        # No gloss on *why* the second run has no answer. `_dirty` returns None for any git
+        # failure, so the absence alone cannot name its cause - the same reason the
+        # `not_here` branch refuses to say why an object is missing. What the report does
+        # establish is narrower and is stated instead: `aigr_dirty` is an answer from the
+        # same `git status` in the same directory, differing only in the pathspec that
+        # names the script, so git answered for the audited tree and not for the script.
+        f"The second run records no answer for whether `align_audit.py` was modified when"
+        f" it ran"
+        + ("" if ALT_PROV.get("aigr_dirty") is None else
+           f", though git answered for the audited tree itself at the same path"
+           f" (`{ALT_PROV.get('aigr_dir')}`):"
+           f" {'modified' if ALT_PROV.get('aigr_dirty') else 'clean'}. The two answers come"
+           f" from the same command differing only in the pathspec naming the script, which"
+           f" is why `audit_revision` is unrecorded for that run as well")
+        + f". The primary run answers it for the same script"
+          f" (`{PROV.get('audit_sha256')}`):"
+          f" {'modified' if PROV.get('audit_dirty') else 'clean'}.",
         "",
     ] if ALT_PROV.get("audit_dirty") is None
          and PROV.get("audit_dirty") is not None
-         and ALT_PROV.get("audit_sha256") == PROV.get("audit_sha256") else []) + [
-    ] + _self_check) + "\n")
+         and ALT_PROV.get("audit_sha256") == PROV.get("audit_sha256") else [])
+    + _self_check) + "\n")
     print("wrote", _sc_path)
 print("wrote", out, n_rows, n_clean)

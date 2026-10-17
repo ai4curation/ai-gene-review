@@ -97,6 +97,11 @@ def _strip_cover(rep, genes):
 _SHIM_RESOLVED = "1234567890abcdef1234567890abcdef12345678"
 
 
+# Exit codes the shim's `merge-base --is-ancestor` reports, by mode. Anything not named
+# here answers 0, which is "is an ancestor".
+MERGE_BASE_EXIT = {"notanc": "1", "ancerr": "128"}
+
+
 def _git_shim(tmp, mode):
     """A `git` earlier on PATH that answers the four questions the drift sentence asks.
 
@@ -139,10 +144,14 @@ def _git_shim(tmp, mode):
             f'if [ "$1" = "rev-parse" ] && [ "$2" = "--verify" ]; then'
             f' echo {_SHIM_RESOLVED}; exit 0; fi\n'
             'case "$1" in\n'
-            # `notanc` is the one mode where the revision is not in this branch's
-            # history, which is what separates a genuinely unpublished revision from one
-            # that is merely not pushed yet.
-            f'  merge-base) exit {"1" if mode == "notanc" else "0"} ;;\n'
+            # `notanc` is the one mode where the revision is not in this branch's history
+            # (exit 1), which is what separates a genuinely unpublished revision from one
+            # merely not pushed yet. `ancerr` is a git failure (128), which
+            # `merge-base --is-ancestor` reports for an unborn HEAD among other things.
+            # The two are different answers and the generator must not collapse them:
+            # reading every non-zero code as not-an-ancestor published the definite claim
+            # that no clone holds the revision on the strength of a git error.
+            '  merge-base) exit ' + MERGE_BASE_EXIT.get(mode, '0') + ' ;;\n'
             '  diff) exit 0 ;;\n'                # with nothing changed between the two
             f'  for-each-ref) exit {"129" if mode == "fail" else "0"} ;;\n'
             'esac\n'
@@ -291,19 +300,26 @@ CASES = [
     # On no remote ref *and* in this branch's history, which is the ordinary state between
     # rendering a round and pushing it. The softer clause is the point: the flat one was
     # written into a published page moments before the push made it false.
-    ("for-each-ref finds the revision on no remote ref, but this branch holds it", "OK",
+    ("for-each-ref finds no remote ref, but this branch holds it (both tails)", "OK",
      lambda p, a: None,
      (f"That second run read a tree recorded at `{ALT_SHORT}`, an ancestor of the branch tip,",
       "That revision is this branch's own history and not yet on a pushed ref, so a clone"
-      " holds it once this branch is pushed.\n"),
+      " holds it once this branch is pushed.\n",
+      # The primary tail's own wording for the same state. The shim answers for every
+      # revision, so both tails take this branch; declaring both keeps the primary's
+      # sentence covered on purpose rather than incidentally.
+      "is this branch's own history and not yet on a pushed ref, so the same comparison"
+      " can be made from a clone once this branch is pushed."),
      "empty"),
     # The flat unpublished clause, which only a revision outside this branch's history can
     # now reach. Without this the softer branch-held sentence would be the only one tested,
     # and the clause that says a clone cannot re-run the comparison would have no case.
-    ("for-each-ref finds no remote ref and this branch does not hold it", "OK",
+    ("for-each-ref finds no remote ref and this branch does not hold it (both tails)", "OK",
      lambda p, a: None,
-     "That revision is on no pushed ref, so no clone holds it and this comparison cannot"
-     " be re-run elsewhere.\n",
+     ("That revision is on no pushed ref, so no clone holds it and this comparison cannot"
+      " be re-run elsewhere.\n",
+      "is on no pushed ref, so no clone holds it and the same comparison cannot be made"
+      " from one."),
      "notanc"),
     # A recorded ref, with the committed tree description left alone - the description names
     # a sha, so before the guard learned to compare only a recorded sha this configuration
@@ -337,6 +353,23 @@ CASES = [
                                          aigr_tree="a harness tree"),
      "at `defaced`, which git cannot resolve to a commit here and which is not shaped like an"
      " object name, so the input-drift comparison below was not made.\n"),
+    # The documented two-argument form. With no second report there is nothing to compare,
+    # so a committed self-check page would otherwise keep publishing its previous run's
+    # row-level figures with nothing linking to it - render-projects walks the whole tree.
+    # This is the generator's only branch that deletes a file, so it is the one most worth
+    # a case: the declared message and the deletion are both checked.
+    # The failure/absence split on the same probe the two cases above exercise. git has not
+    # said the revision is unpublished; it has not said anything, and the page must claim
+    # only that much.
+    ("merge-base errors rather than answering (primary tail)", "OK",
+     lambda p, a: None,
+     "is published could not be determined, so nothing is claimed about the table's own"
+     " figures",
+     "ancerr"),
+    ("no second report, so a stale self-check page is removed", "OK",
+     lambda p, a: None,
+     "removed stale",
+     None, True),
 ]
 
 
@@ -364,20 +397,38 @@ def main(argv=None):
     alt = yaml.safe_load(open(ALT))
     bad = 0
     with tempfile.TemporaryDirectory() as tmp:
-        pp0, ap0 = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
-        yaml.safe_dump(primary, open(pp0, "w"), sort_keys=False)
-        yaml.safe_dump(alt, open(ap0, "w"), sort_keys=False)
-        on_disk_mutated = {pp0: False, ap0: False}
+        # The two paths every case writes its (possibly mutated) report to. Dumped once
+        # up front so the first case need not, and tracked so a case re-dumps only what
+        # the previous one left mutated.
+        pp, ap = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
+        yaml.safe_dump(primary, open(pp, "w"), sort_keys=False)
+        yaml.safe_dump(alt, open(ap, "w"), sort_keys=False)
+        on_disk_mutated = {pp: False, ap: False}
         for case in cases:
             name, want, mutate, expect = case[:4]
             shim = case[4] if len(case) > 4 else None
+            # A solo case runs the documented two-argument form, with no second report.
+            # That is the only way to reach the generator's one destructive branch, which
+            # deletes a stale self-check page rather than leaving it to publish unlinked.
+            solo = case[5] if len(case) > 5 else False
             p, a = copy.deepcopy(primary), copy.deepcopy(alt)
             mutate(p, a)
-            pp, ap = os.path.join(tmp, "p.yaml"), os.path.join(tmp, "a.yaml")
             # Removed between cases so a previous render cannot satisfy this case's clause.
             out_md = os.path.join(tmp, "out.md")
             if os.path.exists(out_md):
                 os.remove(out_md)
+            # The self-check page is removed between cases for the same reason as the page
+            # itself: it is not rewritten on every render, so a previous case's copy could
+            # satisfy this case's clause, and the solo case below needs to control whether
+            # one exists at all.
+            sub_md = os.path.join(tmp, "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
+            if os.path.exists(sub_md):
+                os.remove(sub_md)
+            if solo:
+                # Seeded so the branch under test has something to delete. Its content is
+                # the previous run's figures standing in for a committed copy.
+                os.makedirs(os.path.dirname(sub_md), exist_ok=True)
+                open(sub_md, "w").write("# stale self-check from an earlier run\n")
             # Each report is ~100 KB of YAML and most cases mutate one of the two, so a
             # report is re-dumped only when this case mutated it, or when the previous case
             # left a mutation on disk. Skipping that second condition silently reused the
@@ -395,7 +446,7 @@ def main(argv=None):
             env = dict(os.environ)
             if shim:
                 env["PATH"] = _git_shim(tmp, shim) + os.pathsep + env.get("PATH", "")
-            r = subprocess.run([sys.executable, GEN, pp, out_md, ap],
+            r = subprocess.run([sys.executable, GEN, pp, out_md] + ([] if solo else [ap]),
                                capture_output=True, text=True, env=env)
             got = "EXIT" if r.returncode else "OK"
             # Exit status is necessary and not sufficient. A refusal must carry the declared
@@ -407,9 +458,21 @@ def main(argv=None):
             # every comparison case fail when that section moved to its own file.
             _sub = os.path.join(os.path.dirname(os.path.abspath(out_md)),
                                 "DISMECH_METABOLIC_ALIGNMENT", "audit-self-check.md")
-            where = (r.stdout + r.stderr) if got == "EXIT" else "".join(
-                open(f).read() for f in (out_md, _sub) if os.path.exists(f))
+            if got == "EXIT":
+                where = r.stdout + r.stderr
+            else:
+                where = "".join(open(f).read() for f in (out_md, _sub)
+                                if os.path.exists(f))
+                # A solo render's declared evidence is what it reports doing, not what it
+                # wrote: the branch under test deletes a file, so there is no rendered text
+                # to carry the clause.
+                if solo:
+                    where += r.stdout + r.stderr
             why = "" if got == want else f"wanted {want}, got {got}"
+            # Declaring the message is not enough for the destructive branch: printing it
+            # while leaving the file would pass. The deletion itself is asserted.
+            if not why and solo and os.path.exists(_sub):
+                why = "the stale self-check page was reported removed but is still there"
             # A case may declare several fragments, all of which must appear. One
             # contiguous span would have to include whatever sits between them, and in
             # the drift sentence that is a file count and an example path - both of

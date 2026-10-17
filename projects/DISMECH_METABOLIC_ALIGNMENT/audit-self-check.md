@@ -1,10 +1,16 @@
+---
+title: 'dismech metabolic alignment: audit self-check'
+description: Two runs of the same audit reconciled flag by flag, as a check on the generator
+species: [human]
+---
+
 # DISMECH metabolic alignment: audit self-check
 
 [Back to the project page](../DISMECH_METABOLIC_ALIGNMENT.md)
 
 This page reconciles two runs of the same audit over different trees. It is a check on the generator - that the flags which should not depend on which gene reviews exist do not - and not a finding about how dismech and ai-gene-review agree. It names individual rows and review statuses for that reason.
 
-The second run records no answer for whether `align_audit.py` was modified when it ran, having been run from outside the repository. The primary run answers it for the same script (`906bd065421d`): clean.
+The second run records no answer for whether `align_audit.py` was modified when it ran, though git answered for the audited tree itself at the same path (`.`): clean. The two answers come from the same command differing only in the pathspec naming the script, which is why `audit_revision` is unrecorded for that run as well. The primary run answers it for the same script (`906bd065421d`): clean.
 
 The audit also runs over a second tree, and comparing the two runs shows which flags
 are artifacts of the missing slices rather than findings. That tree is this branch (claude/cool-edison-o9wvf0-alignment-project at 132532cf6) alone, before main was merged in, so the gene reviews and modules added by the ten themed slice PRs of #4690 are absent.
