@@ -44,3 +44,25 @@
   S. pombe Mst1. The 2-hydroxyisobutyryltransferase row is plausible by
   conserved MYST chemistry, but the butyryltransferase row is not directly
   supported by the cached paper.
+
+## 2026-10-11
+
+- Rebased from `origin/main` on `codex/schpo-mst1-fungal-myst-20261011` and
+  re-ran `UV_FROZEN=1 just fetch-gene SCHPO mst1`; the O94446 UniProt/GOA
+  inputs were current.
+- `UV_FROZEN=1 just fetch-gene-pmids SCHPO mst1` found all GOA PMIDs already
+  cached locally: PMID:10759889, PMID:16199868, PMID:16823372, PMID:19040720,
+  PMID:19915592, PMID:20299449, PMID:29192674, PMID:33723569, and the newer
+  PMID:38662722 follow-up.
+- Deep research again failed because neither `agentapi` nor supported provider
+  API keys were available. I did not create a provider-named deep-research file.
+- A fresh PubMed/web search found no newer direct fission-yeast Mst1/KAT5 paper
+  beyond the cached 2024 `mst1-W66R` chromodomain study.
+- Re-audited the PTHR10615 PAINT transfers. The broad eukaryotic
+  `PANTHER:PTN004172926` rows and the fungal ESA1 H4-acetyltransferase node
+  `PANTHER:PTN000834946` remain appropriate for the S. pombe ESA1 subfamily.
+- No annotation action changed; this pass tightened support snippets for
+  Mst1-dependent Pht1 acetylation and transcription regulation, direct Mst1
+  enrichment at pericentric repeats, NuA4 complex membership, UniProt
+  nucleus/chromosome location statements, and the UniProt catalytic blocks for
+  protein-lysine and crotonyltransferase activity.
