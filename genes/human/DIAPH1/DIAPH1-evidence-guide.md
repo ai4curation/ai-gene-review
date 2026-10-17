@@ -20,13 +20,13 @@ The older names mDia1, hDia1, DIAP1 and DFNA1 require species and construct chec
 
 ## Binding evidence and its limits
 
-The specific partner terms describe the verified partner class. They do not assert a new enzymatic activity, direct contact where only association was measured, physiological stoichiometry or equal behavior of all products.
+Specific binding refinements require evidence for the corresponding recognition. Co-complex association alone does not establish a narrower partner-class molecular function. None of these annotations assigns the partner’s enzymatic activity, physiological stoichiometry or equal behavior of all DIAPH1 products.
 
 | Source | Evidence inspected | Review scope |
 | --- | --- | --- |
 | [PMID:18230650](https://doi.org/10.1242/jcs.013557) | Public author-posted original: cellular co-immunoprecipitation and GST-POPX2/His-mDia1 261–571 overlay | [PPM1F/P49593](https://www.uniprot.org/uniprotkb/P49593/entry) supports protein phosphatase binding. The host cell does not establish the species of an otherwise unspecified construct. |
 | [PMID:18922799](https://pmc.ncbi.nlm.nih.gov/articles/PMC2590709/) | Human RAGE tail and human lung DIAPH1 library/constructs; two-hybrid, pull-down and cellular co-immunoprecipitation | [AGER/Q15109](https://www.uniprot.org/uniprotkb/Q15109/entry) supports signaling receptor binding. Rat C6 signaling results remain distinct. The pull-down used an in-vitro-translated DIAPH1 fragment, not two purified proteins. |
-| [PMID:22190034](https://pmc.ncbi.nlm.nih.gov/articles/PMC3310911/) | Original AP-MS Methods and exact IntAct records EBI-6176962 and EBI-6178643 for O60610/Q9Q2G4 | HIV retropepsin supports protease binding as a partner class. The bait carries a catalytic-site D25 mutation; no native proteolytic or antiviral mechanism is inferred. |
+| [PMID:22190034](https://pmc.ncbi.nlm.nih.gov/articles/PMC3310911/) | Original AP-MS Methods and exact IntAct records EBI-6176962 and EBI-6178643 for O60610/Q9Q2G4 | Retain the supported association as non-core protein binding. The bait carries a catalytic-site D25 mutation; AP-MS/pull-down does not establish direct protease recognition or a native proteolytic or antiviral mechanism. |
 | [PMID:33961781](https://pmc.ncbi.nlm.nih.gov/articles/PMC8165030/) | Genuine PMC original Methods and exact records EBI-54908625 (RHOD) and EBI-54651993 (RHOC) | Small GTPase binding. BioPlex uses tagged baits and gene-level aggregation; the AP-MS associations do not independently prove direct contact. |
 | [PMID:22658674](https://doi.org/10.1016/j.cell.2012.04.031) | Institutional original plus supplement and Table S1: DIAPH1, ENSG00000131504, in the HeLa mRNA interactome | UV crosslinking and stringent oligo(dT) capture support RNA contact. Protein groups were aggregated by gene; specific RNA targets, domains and product differences remain unresolved. |
 
