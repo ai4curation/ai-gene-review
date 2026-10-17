@@ -11,7 +11,8 @@
   (PLoS Genet), Talarek 2017 (eLife) and Hollenstein 2021 (EMBO Rep) are NOT
   cached; their content is taken from the Falcon report only and is used for
   context (description, core-function narrative), never as `supported_by` for an
-  existing annotation.
+  existing annotation. Superseded 2026-10-01: Talarek 2010, Sarkar 2014,
+  Talarek 2017 and Hollenstein 2021 are now full-text cached.
 - Comparators: human ENSA / ARPP19 / MASTL / PPP2R2A reviews (complete); yeast
   RIM15 review; `modules/g2_m_transition.yaml` (cites IGO1 as the budding-yeast
   endosulfine exemplar in the optional Greatwall-endosulfine part).
@@ -51,10 +52,10 @@ Nature Communications translation/tRNA-modification paper (Falcon flags this).
    associate with the mRNA decapping activator Dhh1, shelters newly expressed
    mRNAs from degradation via the 5'-3' mRNA decay pathway"]. UniProt records
    interactions with RIM15, DHH1, PBP1, PBP4, LSM12. Caveats: (a) the 2013 PP2A
-   mechanism could account for the effect indirectly; (b) per the Falcon report,
-   Sarkar 2014 did not reproduce dhh1/ccr4 suppression in its background
-   ["The mRNA-decay role is supported, but it is context-dependent and does not
-   account for every Igo1 phenotype."]. Kept as ACCEPT with caveats recorded;
+   mechanism could account for the effect indirectly; (b) Sarkar 2014 did not
+   reproduce dhh1/ccr4 suppression in the SK1 background [PMID:24968058 "We
+   also found that dhh1Δ and ccr4Δ did not suppress the G0 entry defect of
+   igo1Δ igo2Δ cells"]. Kept as ACCEPT with caveats recorded;
    the curator read the full text and the finding is the paper's central claim.
 4. **Mitotic role (Juanes 2013, full text).** Paradoxical: phospho-Igo1 is an
    inhibitor in vitro, but in vivo igo1 igo2 cells have LOWER PP2A-Cdc55
@@ -128,12 +129,35 @@ cached publications, the Falcon report and the UniProt record.
 
 ### Follow-ups
 
-- Fetch full text for PMID:20471941 (PMC2919320) and PMID:23273919 to verify
-  the P-body/nucleus IDA rows and the dhh1/ccr4 IGI rows directly.
-- Cache PMID:24968175 (Sarkar 2014), PMID:28612689 (Talarek 2017) and
-  PMID:34558777 (Hollenstein 2021) so the START, sporulation and osmostress
-  roles can be cited as primary literature (ids taken from the Falcon report's
-  DOIs; verify before use).
-- A history record (`just new-history --kind gene --organism yeast --slug IGO1
-  --event CREATE ...`) was not created in this session because the task
-  restricted edits to `genes/yeast/IGO1/`; add it with the PR.
+- Completed 2026-10-01: fetched full text for PMID:20471941 (PMC2919320) to
+  verify the P-body/nucleus IDA rows and the dhh1/ccr4 IGI rows directly.
+  PMID:23273919 remains abstract-only.
+- Completed 2026-10-01: cached PMID:24968058 (Sarkar 2014), PMID:28600888
+  (Talarek 2017) and PMID:34558777 (Hollenstein 2021) so the START,
+  sporulation and osmostress roles can be cited as primary literature. The
+  previously listed candidate PMIDs for Sarkar 2014 and Talarek 2017 were
+  wrong; these are the PubMed-verified records for those papers.
+- Completed 2026-10-01: added
+  `history/genes/yeast/IGO1/2026-10-01T221113Z-codex-447b74.yaml` to record the
+  IGO1 refresh.
+
+## 2026-10-01 refresh
+
+- Rebased from `origin/main` and reran `just fetch-gene yeast IGO1 --force`;
+  the current GOA import still has the same 16 annotation rows reviewed on
+  2026-09-26.
+- Fetched current PAINT rows for `PTHR10358`. `PTN001309504` is the IBD node for
+  both `GO:0004864` protein phosphatase inhibitor activity and `GO:0005737`
+  cytoplasm; both IBA rows still point to this node, and IGO1 being present in
+  its own `WITH/FROM` is target experimental grounding rather than circularity.
+- Searched 2024-2026 papers for newer *S. cerevisiae* IGO1 work and found no
+  newer direct budding-yeast IGO1 functional paper than Hollenstein et al. 2021.
+  The 2024 *Nature Communications* `igo1` paper remains a fission-yeast study.
+- Cached full text for PMID:24968058 (Sarkar et al. 2014), PMID:28600888
+  (Talarek et al. 2017), and PMID:34558777 (Hollenstein et al. 2021), and
+  upgraded PMID:20471941 to full text. The Sarkar and Talarek IDs listed as
+  fetch candidates on 2026-09-26 were wrong; the IDs above are the
+  PubMed-verified records for those papers.
+- Updated `IGO1-ai-review.yaml` to cite Talarek et al. 2010 directly for P-body
+  and nuclear/cytoplasmic localisation, and to replace Falcon-only START,
+  gametogenesis and osmotic-stress context with cached primary citations.
