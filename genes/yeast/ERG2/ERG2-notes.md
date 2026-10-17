@@ -103,7 +103,8 @@ The Erg24 `protein binding` rows describe a real interaction between two
 ergosterol enzymes but should be removed because bare protein binding is not
 an informative Erg2p molecular function. The YeastPathways ergosterol
 biosynthesis RCA rows can be accepted for pathway membership, while the three
-cytosol RCA rows should be removed as pathway-conversion compartment errors.
+cytosol RCA rows should be modified to GO:0005789 endoplasmic reticulum
+membrane to correct the pathway-conversion compartment error.
 
 No new GO rows are proposed. Organic-acid tolerance, catechol sensitivity,
 adipic-acid sensitivity, and plasma-membrane endocytosis phenotypes are
