@@ -14,3 +14,5 @@
 - Added a UniProt FUNCTION quote as positive support to the four rows citing PMID:17447164 (abstract-only, does not mention LDH); actions unchanged (ACCEPT/KEEP_AS_NON_CORE deferring to the curator).
 - Description rewritten as standalone biology. UniProt quotes verified (0 stale; this entry still has DR GO lines).
 - Open question: should GO capture readthrough-isoform peroxisomal localization (LDHBx, MDH1x) at all, and on which gene product?
+
+Review follow-up 2026-10-17: reworded the PMID:25247702 reference finding, which still said the LDHBx readthrough evidence "supports a new GO:0005777 (peroxisome) annotation" after that NEW row had been withdrawn. The finding now keeps the LDHBx biology [PMID:25247702 "at least 1.6% of the total cellular LDHB is targeted to the peroxisome by a conserved hidden PTS1"] and states that it is kept as a suggested question, not asserted, for the comparator reasons above.
