@@ -79,3 +79,20 @@ p53+/- background (synthetic lethality, loss-of-function direction), so the "ina
 activation" mechanism was removed; MARK_AS_OVER_ANNOTATED is kept on necessity-vs-participation
 grounds (and the lethality is largely postnatal). The other nine rows with the shared comment
 have IGI donors that fit it and were left unchanged.
+
+Review follow-up 2026-10-17 (second round, PR #4629): GO:0001756 somitogenesis still carried
+the shared "compound-mutant" mechanism and the borrowed Jmjd5 quote (PMID:26334721). The mouse
+IGI's recorded reference, PMID:17320900, is a Dlk1/Notch adipogenesis cell-culture paper
+(abstract only; no p53, no somites), so no mechanism is taken from it; MGI records the IGI
+partner as Kat2a (MGI:1343101). The nearest readable Kat2a/p53 somite evidence is PMID:17325035
+["We show here that elimination of the p53 tumor suppressor allows Gcn5 −/− embryos to survive
+longer and to develop somites"], which is quoted as such, not as the confirmed source. The row
+keeps MARK_AS_OVER_ANNOTATED on the participation argument (p53 acts upstream of presomitic
+mesoderm survival under either reading), the source entity is marked UNRESOLVED, PMID:17320900
+is listed in references with a MISCITED reference_review, and the reference mismatch is raised
+as a suggested question for MGI. GO:0007417 central nervous system development now quotes its
+own donor, PMID:16199867 (Npm1 knockout: p53 activation, apoptosis, p53-null rescue), instead
+of the generic Jmjd5 sentence; MGI records the IGI partner as Lig4 (MGI:1335098). The
+GO:0001701 summary no longer says all three donors show lethality from p53 activation: the
+Msh2 donor (PMID:9288110) reports lethality in Msh2/p53 double-null mice, the loss-of-function
+direction. Validation: 0 errors; the pre-existing GO:0001701 consistency warning remains.
