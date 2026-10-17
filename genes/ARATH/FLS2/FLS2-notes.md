@@ -28,3 +28,9 @@ Reconsidered the earlier Rhea decision: serine phosphorylation remains chemicall
 Restored endosome membrane in the receptor core with explicit trafficking scope [PMID:23085733, “FLS2 localizes to bona fide endosomes via two distinct endocytic trafficking routes depending on its activation status.”]. This does not claim a separately measured endosomal kinase reaction. Restored family/subfamily provenance using the actual cached PTHR48056-entries.csv Q9FL28 row and UniProt SF83 cross-reference. No ancestral-node assertion was guessed, and the InterPro metadata's unchecked LLM family description was not used as evidence. The primary paper and deterministic family membership serve different purposes.
 
 All 51 original annotation identities were preserved. No research jobs, publication refreshes, or renders were run for this bounded follow-up.
+
+## 2026-10-15 journal: CLV3p-context IPI row resolved (PR #5026 follow-up)
+
+Supersedes the statements above that the PMID:21499263 IPI row "is UNDECIDED" / "remains UNDECIDED because the ligand interpretation is experimentally disputed".
+
+- The GO:0005515 protein binding IPI row from PMID:21499263 is now REMOVE, consistent with the other 19 generic GO:0005515 IPI rows in this review (annotation-reviewer policy: generic binding is uninformative). The cached full text shows the interaction is the ligand-induced FLS2-BAK1 association detected by reciprocal co-IP [PMID:21499263 "Like flg22, CLV3p also induced the immediate interaction between FLS2 and BAK1 detected by reciprocal co-immunoprecipitation (co-IP)"]. Removing the row does not deny the FLS2-BAK1 association; the CLV3p ligand context remains disputed (PMID:22923673), and the informative receptor activity is carried by GO:0038187 (MODIFY on the PMID:24114786 row).
