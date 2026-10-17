@@ -64,8 +64,10 @@ matching, and lifecycle stages are processes.
 The pilot showed that most existing organelle-related modules are descriptive
 pathway modules, scoped to a clade, with every part required:
 
-- `mitophagy` (Eumetazoa) requires PINK1/Parkin, FBXL4, the nematode FIS-1
-  disposal step and all five receptors together, including nematode ALLO-1.
+- `mitophagy` (Eumetazoa) requires PINK1/Parkin marking, FBXL4 receptor
+  turnover, and a disposal step grounded only on worm FIS-1 and FIS-2.
+  Receptor choice is already modelled as alternatives (any one of OPTN/NDP52,
+  BNIP3/NIX, FUNDC1 or ALLO-1).
 - `mitochondrial_dynamics` (Opisthokonta) requires mitofusin, which plants lack,
   and its fission node requires the metazoan MFF adaptor.
 - `mitochondrial_upr` is metazoan.
