@@ -9,6 +9,22 @@ legitimate state, still renders.
 
 It runs under pytest too (`tests/test_dismech_alignment_page_guards.py`), so a regression in
 a refusal fails the suite rather than waiting to be noticed.
+
+Usage::
+
+    make_page.py <report.yaml> <out.md> [<second-report.yaml>]
+
+With a second report, the two runs are reconciled flag by flag onto a self-check page
+written beside <out.md>, and the page links to it.
+
+WITHOUT one, that self-check page is DELETED if it exists. Run from the repository the
+two-argument form therefore removes the committed
+``projects/DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md``, leaving an uncommitted
+deletion of curated content. That is deliberate - with no second run there is nothing to
+reconcile, and render-projects walks the whole tree, so a file left behind keeps
+publishing an earlier run's figures with nothing linking to it - but it is stated here
+because the Method paragraph that also states it is written by the run that does the
+deleting, which is too late to warn anyone.
 """
 import os
 import re
@@ -359,8 +375,16 @@ def _rev_state(rev):
     #
     # `--verify <rev>^{commit}`, never bare `--verify`, which exits 0 for any well-formed
     # 40-character sha whether or not an object matches it.
-    r = subprocess.run(["git", "rev-parse", "--verify", f"{rev}^{{commit}}"],
-                       capture_output=True, text=True)
+    #
+    # Wrapped, as the two calls below it are. Unreachable in practice - `_in_repo()` has
+    # already run git successfully - but two of the four being wrapped and two not is the
+    # kind of inconsistency that reads as a decision when it is an oversight.
+    try:
+        r = subprocess.run(["git", "rev-parse", "--verify", f"{rev}^{{commit}}"],
+                           capture_output=True, text=True)
+    except Exception:
+        _REV_STATE[rev] = ("unknown", None, None)
+        return "unknown"
     resolved = detail = None
     if r.returncode != 0:
         # `--verify <rev>^{commit}` exits 128 for three different things: an object this
@@ -369,7 +393,12 @@ def _rev_state(rev):
         # the type of anything in the object store - so the one that was previously folded
         # into "this checkout does not hold" is now asked about rather than guessed at. The
         # reason only reached stderr before, which this code discarded.
-        t = subprocess.run(["git", "cat-file", "-t", rev], capture_output=True, text=True)
+        try:
+            t = subprocess.run(["git", "cat-file", "-t", rev],
+                               capture_output=True, text=True)
+        except Exception:
+            _REV_STATE[rev] = ("unknown", None, None)
+            return "unknown"
         if t.returncode == 0:
             # The type goes in the memo, not into the state name: the two sentence tables
             # below are keyed exhaustively so that a new state raises rather than rendering
@@ -1184,12 +1213,19 @@ def flag_legend():
     return out
 
 
+# Written into both this page's frontmatter and the self-check sub-page's. render-projects
+# reads `species_hints` from each page's own frontmatter, so a sub-page without it leaves
+# every symbol that exists in more than one species unlinked - ODC1, COX20 and COQ2 are all
+# human and yeast. One constant rather than two literals, so the two cannot diverge and
+# silently unlink those symbols again.
+SPECIES_FRONTMATTER = "species: [human]"
+
 lines = [
     "---",
     "title: dismech metabolic disorders aligned with ai-gene-review",
     "maturity: IN_PROGRESS",
     "description: Per-entry check that dismech metabolic disease mechanisms agree with ai-gene-review core functions and modules",
-    "species: [human]",
+    SPECIES_FRONTMATTER,
 ]
 
 from collections import Counter
@@ -1793,15 +1829,15 @@ if not _self_check and os.path.exists(_sc_path):
 if _self_check:
     os.makedirs(os.path.dirname(_sc_path), exist_ok=True)
     open(_sc_path, "w").write("\n".join([
-        # The same `species:` the project page carries. Without it render-projects cannot
-        # resolve a symbol that exists in more than one species and leaves it unlinked -
-        # ODC1, COX20 and COQ2 are all human and yeast - so moving this content to a
-        # sub-page silently dropped three links the project page renders.
+        # No `maturity:`, unlike the project page: render_projects_table collects
+        # top-level pages only, so a sub-page is not a row in the all-projects table and
+        # has no status column to fill. `species:` is shared with the page above through
+        # one constant, for the reason recorded there.
         "---",
         "title: 'dismech metabolic alignment: audit self-check'",
         "description: Two runs of the same audit reconciled flag by flag, as a check on the"
         " generator",
-        "species: [human]",
+        SPECIES_FRONTMATTER,
         "---",
         "",
         "# DISMECH metabolic alignment: audit self-check",
@@ -1827,11 +1863,11 @@ if _self_check:
         f"The second run records no answer for whether `align_audit.py` was modified when"
         f" it ran"
         + ("" if ALT_PROV.get("aigr_dirty") is None else
-           f", though git answered for the audited tree itself at the same path"
-           f" (`{ALT_PROV.get('aigr_dir')}`):"
+           f", though git answered for the audited tree itself:"
            f" {'modified' if ALT_PROV.get('aigr_dirty') else 'clean'}. The two answers come"
-           f" from the same command differing only in the pathspec naming the script, which"
-           f" is why `audit_revision` is unrecorded for that run as well")
+           f" from the same command in the same directory, differing only in the pathspec"
+           f" naming the script, which is why `audit_revision` is unrecorded for that run"
+           f" as well")
         + f". The primary run answers it for the same script"
           f" (`{PROV.get('audit_sha256')}`):"
           f" {'modified' if PROV.get('audit_dirty') else 'clean'}.",

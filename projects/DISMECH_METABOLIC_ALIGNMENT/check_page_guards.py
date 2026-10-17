@@ -100,6 +100,11 @@ _SHIM_RESOLVED = "1234567890abcdef1234567890abcdef12345678"
 # Exit codes the shim's `merge-base --is-ancestor` reports, by mode. Anything not named
 # here answers 0, which is "is an ancestor".
 MERGE_BASE_EXIT = {"notanc": "1", "ancerr": "128"}
+# `diff` and `rev-parse HEAD` each guard a drift sentence of their own, reachable only by
+# making that one verb fail. Everything else answers 0 so the failure under test is the
+# only one in the render.
+DIFF_EXIT = {"differr": "128"}
+HEAD_EXIT = {"headerr": "128"}
 
 
 def _git_shim(tmp, mode):
@@ -143,7 +148,13 @@ def _git_shim(tmp, mode):
             # `--git-dir` the generator also runs, which fall through to the real git.
             f'if [ "$1" = "rev-parse" ] && [ "$2" = "--verify" ]; then'
             f' echo {_SHIM_RESOLVED}; exit 0; fi\n'
-            'case "$1" in\n'
+            # Only in the mode that tests it, and kept out of the `case` below because
+            # `rev-parse` must still be delegated for `--git-dir`, which `_in_repo()`
+            # needs to succeed. Emitting it in every mode would answer HEAD with an empty
+            # string on a zero exit, which is a different failure from the one under test.
+            + (f'if [ "$1" = "rev-parse" ] && [ "$2" = "HEAD" ]; then exit'
+               f' {HEAD_EXIT[mode]}; fi\n' if mode in HEAD_EXIT else "")
+            + 'case "$1" in\n'
             # `notanc` is the one mode where the revision is not in this branch's history
             # (exit 1), which is what separates a genuinely unpublished revision from one
             # merely not pushed yet. `ancerr` is a git failure (128), which
@@ -152,7 +163,7 @@ def _git_shim(tmp, mode):
             # reading every non-zero code as not-an-ancestor published the definite claim
             # that no clone holds the revision on the strength of a git error.
             '  merge-base) exit ' + MERGE_BASE_EXIT.get(mode, '0') + ' ;;\n'
-            '  diff) exit 0 ;;\n'                # with nothing changed between the two
+            '  diff) exit ' + DIFF_EXIT.get(mode, "0") + ' ;;\n'   # else nothing changed
             f'  for-each-ref) exit {"129" if mode == "fail" else "0"} ;;\n'
             'esac\n'
             f'exec {real} "$@"\n')
@@ -353,19 +364,46 @@ CASES = [
                                          aigr_tree="a harness tree"),
      "at `defaced`, which git cannot resolve to a commit here and which is not shaped like an"
      " object name, so the input-drift comparison below was not made.\n"),
+    # The failure/absence split on the same probe the two `for-each-ref` cases exercise -
+    # four and three entries up, with the ref, not-a-commit and a-to-f-word cases between.
+    # git has not said the revision is unpublished; it has not said anything, and the page
+    # must claim only that much. This mode answers 128 for every revision, so both tails
+    # take their error path and both sentences are declared - and the self-check tail's is
+    # the only clause in the drift family reporting a `merge-base` failure, which no other
+    # mode reaches: `fail` leaves `merge-base` at 0 and lands on the drift answer instead.
+    ("merge-base errors rather than answering (both tails)", "OK",
+     lambda p, a: None,
+     ("is published could not be determined, so nothing is claimed about the table's own"
+      " figures",
+      "git could not say whether it is an ancestor of this branch, so nothing is"
+      " claimed."),
+     "ancerr"),
+    # The sub-page's frontmatter, which nothing else checks. render-projects reads
+    # `species_hints` per page, so without it every symbol existing in more than one
+    # species goes unlinked - which is what happened when this content moved off the
+    # project page. A render warning is the only other signal, and it is not committed.
+    ("the self-check page carries the project page's species frontmatter", "OK",
+     lambda p, a: None,
+     ("---\ntitle: 'dismech metabolic alignment: audit self-check'",
+      "species: [human]"),
+     None),
+    # The last two drift sentences with no mode of their own. Each guards a different git
+    # call inside the same function, and each says only that the question was not answered
+    # - which is the distinction this file exists to keep: a git failure is not a finding.
+    ("diff fails after the revision resolves", "OK",
+     lambda p, a: None,
+     "git could not list what changed between the two, so nothing is claimed.",
+     "differr"),
+    ("rev-parse HEAD fails, so the branch tip is unknown", "OK",
+     lambda p, a: None,
+     "git could not be asked where this branch is, so nothing is claimed about whether the"
+     " audit's inputs moved since.",
+     "headerr"),
     # The documented two-argument form. With no second report there is nothing to compare,
     # so a committed self-check page would otherwise keep publishing its previous run's
     # row-level figures with nothing linking to it - render-projects walks the whole tree.
     # This is the generator's only branch that deletes a file, so it is the one most worth
     # a case: the declared message and the deletion are both checked.
-    # The failure/absence split on the same probe the two cases above exercise. git has not
-    # said the revision is unpublished; it has not said anything, and the page must claim
-    # only that much.
-    ("merge-base errors rather than answering (primary tail)", "OK",
-     lambda p, a: None,
-     "is published could not be determined, so nothing is claimed about the table's own"
-     " figures",
-     "ancerr"),
     ("no second report, so a stale self-check page is removed", "OK",
      lambda p, a: None,
      "removed stale",
