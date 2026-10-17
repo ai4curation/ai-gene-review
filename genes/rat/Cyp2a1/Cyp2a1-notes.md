@@ -20,3 +20,11 @@
   ("a molecular modelling evaluation of CYP2A interactions", title) although coded IDA; the
   coumarin process is still accepted and oxidoreductase activity still MODIFY.
 - Open questions are unchanged (see suggested_questions in the review).
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer suggestion. The GO:0016491 MODIFY row listed both GO:0008395
+steroid hydroxylase activity and GO:0004497 monooxygenase activity as replacement terms.
+QuickGO confirms GO:0008395 is_a GO:0004497, so the parent is redundant; removed GO:0004497
+and kept only the specific child GO:0008395, with a note in review.reason. Revalidated and
+re-rendered.

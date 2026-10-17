@@ -33,3 +33,12 @@
   way to challenge an IBA.
 - Open question: no direct enzymology on rat CYP2D10 substrate specificity is available;
   the xenobiotic MF/BP rest on CYP2D-family inference.
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer suggestions. Rewrote the GO:0019369 IBA reason so it leads with
+the node-placement argument (deep CYP2D ancestral node PTN000670525, fastest-diverging
+substrate specificity) rather than the seed count, per the CLAUDE.md IBA guidance; substance
+unchanged. Removed blank lines inside quoted YAML scalars (8) that were leaking hard newlines
+into the rendered HTML. The self-referential DR GO; supporting_text quotes were left as-is
+(see cross-gene note); revalidated and re-rendered.

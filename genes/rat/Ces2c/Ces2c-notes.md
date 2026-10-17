@@ -30,3 +30,10 @@
   rate measured for the AB010635 (Ces2c) protein.
 
 **Stale UniProt quotes (2026-10-10):** replaced 6 `UniProtKB:O70631` supporting_text quotes (legacy `DR GO;` lines with evidence codes no longer present in the refreshed flat file) with verbatim SUBCELLULAR LOCATION, CATALYTIC ACTIVITY (acylcarnitine hydrolysis) and FUNCTION text from the current `Ces2c-uniprot.txt`.
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer suggestion: removed blank lines inside quoted YAML scalars (7)
+that were leaking hard newlines into the rendered HTML. The self-referential DR GO;
+supporting_text quotes were left as-is (see cross-gene note). No action changed. Revalidated
+and re-rendered.

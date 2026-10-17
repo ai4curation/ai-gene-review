@@ -17,7 +17,23 @@
 - GO:0016020 membrane rows (IEA, ISS) stay MODIFY -> GO:0060170 ciliary membrane (label
   verified in QuickGO); UniProt itself only says "Membrane" by similarity to P0DTE4, so the
   ciliary refinement rests on the immunogold EM summarized in the falcon deep research.
+  (Updated 2026-10-17: the primary immunolocalization source is now cited directly —
+  see the Review follow-up below.)
 - Open question for a human: the human UGT2A1 IDA for GO:0009608 (PMID:19858781) has no
   evident experimental basis in the cited paper and may merit review on the human side.
 
 **Stale UniProt quotes (2026-10-10):** replaced 10 `UniProtKB:P36510` supporting_text quotes (an abridged FUNCTION text no longer in the refreshed flat file) with verbatim sentences from the current FUNCTION comment in `Ugt2a1-uniprot.txt`, matched to each row (glucuronidation, xenobiotic detoxification, bile acid detoxification, olfaction).
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer finding (IMPORTANT 2). The two GO:0016020 -> GO:0060170
+ciliary membrane MODIFY rows previously rested only on a file: deep-research quote. Added
+the primary immunolocalization source PMID:33765098 (Neiers et al., PLoS One 2021,
+"The odorant metabolizing enzyme UGT2A1: Immunolocalization and impact of the modulation
+of its activity on the olfactory response"; PMID verified against PubMed, full text fetched
+from PMC7993815) to references with a reference_review and to both rows' supported_by, with
+a verbatim immunogold-EM localization quote. Added a topology caveat to both review.reason
+blocks noting that UGT family enzymes are canonically type-I ER membrane proteins with a
+lumen-facing catalytic domain, so the olfactory-ciliary plasma-membrane assignment is the
+non-default claim and rests on this single immunolocalization study. Action unchanged
+(MODIFY). Revalidated and re-rendered.

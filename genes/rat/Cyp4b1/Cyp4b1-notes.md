@@ -17,7 +17,7 @@
 - What genuinely *is* unestablished for rat is the **relative** contribution of the two regiochemistries. The ω/ω-1 ratios in the falcon report (23 for C7, 1.6 for C10) are **rabbit** CYP4B1 [file:rat/Cyp4b1/Cyp4b1-deep-research-falcon.md "n-alkane turnover from ~11 min−1 (C10) to ~33 min−1 (C7); ω/ω-1 ratio 23 for C7 and 1.6 for C10"], and the chain-length-dependence clause has been dropped from the rat `core_functions` description. Suggested question 1 and experiment 1 are scoped to the ratio, not to whether both occur.
 - Species scope in `description` tightened: medium-chain fatty acid ω/ω-1 hydroxylation is rat-demonstrated (PMID:2229008), whereas fatty alcohol and n-alkane hydroxylation is family/rabbit evidence, explicitly labelled "Mostly non-rat evidence" in the falcon report [file:rat/Cyp4b1/Cyp4b1-deep-research-falcon.md "Rabbit CYP4B1 hydroxylates medium-chain fatty acids, n-alkanes, and fatty alcohols"]. The YAML now attributes it to the rabbit orthologue rather than to the rat enzyme.
 - The two IDA `existing_annotations` (`GO:0120503`, `GO:0140981`) previously quoted the purification sentence of PMID:2229008, which establishes the protein but not the activity. Both now quote the activity sentence, as does `core_functions`.
-- `GO:0120502 fatty acid omega-1 hydroxylase activity` (IEA, GO_REF:0000116) changed `ACCEPT` → `MODIFY` with replacement `GO:0120503`. It is the over-general parent of a term the same record already carries by IDA, and its previous supporting text was rabbit-derived; this now matches how the other over-general parent in this file (`GO:0016705`) was handled.
+- `GO:0120502 fatty acid omega-1 hydroxylase activity` (IEA, GO_REF:0000116) changed `ACCEPT` → `MODIFY` with replacement `GO:0120503`. It is the over-general parent of a term the same record already carries by IDA, and its previous supporting text was rabbit-derived; this is the same over-general-parent → specific-child pattern applied to the `GO:0016705` MODIFY (retargeted to `GO:0016712` in the 2026-10-17 review follow-up).
 - OLS pass on the xenobiotic branch MF (review suggestion 5): searched GO for `arylamine N-hydroxylase activity` and `amine N-hydroxylase` — no such term exists (hits are unrelated specific monooxygenases such as GO:0018670, GO:0019135, GO:0004500). `GO:0004497 monooxygenase activity` is therefore retained for that entry as the closest non-invented term.
 - Species caveat worth keeping in view: [file:rat/Cyp4b1/Cyp4b1-deep-research-falcon.md "native human CYP4B1 has <1% of rabbit 4-IPO activity"]. Rat-vs-rabbit equivalence is *not* established either, so the 4-IPO bioactivation claim in `core_functions` rests on the rat lung/liver microsome evidence, not on the rabbit kinetics.
 - `description` rewritten to remove curation commentary per CLAUDE.md; `suggested_questions` and `suggested_experiments` added (both were absent).
@@ -45,8 +45,9 @@ binding, ER membrane) remain valid; only the GO:0016712 "GO; GO:0016712;..." quo
 stale (that DR line was dropped) and was replaced with the EC 1.14.14.1 CATALYTIC ACTIVITY
 reaction string.
 
-**Actions.** No existing action changed. The two MODIFY rows (GO:0016705 -> GO:0004497;
-GO:0120502 -> GO:0120503) were re-checked and left as-is. No GO:0005515 protein-binding
+**Actions.** No existing action changed. The two MODIFY rows (GO:0016705; GO:0120502
+-> GO:0120503) were re-checked; the GO:0016705 replacement was corrected in the
+2026-10-17 review follow-up (see below). No GO:0005515 protein-binding
 rows and no IBA rows are present. The three core_functions entries (omega-hydroxylase
 GO:0140981, omega-1 GO:0120503, monooxygenase GO:0004497 with xenobiotic/biphenyl process)
 are mutually coherent and consistent with the assigned actions; left unchanged.
@@ -54,3 +55,15 @@ are mutually coherent and consistent with the assigned actions; left unchanged.
 **Open questions.** omega:(omega-1) product ratio and chain-length dependence not
 established for the rat enzyme (rabbit data only); species difference in 4-ipomeanol
 activation unexplained.
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer finding (IMPORTANT 1). The GO:0016705 MODIFY row was
+retargeted from GO:0004497 monooxygenase activity to GO:0016712, the direct is_a child
+of both GO:0016705 and GO:0004497 (confirmed via QuickGO ancestors) and therefore the
+true refinement; GO:0004497 is a sibling branch, not a descendant of GO:0016705, and the
+gene already carries both GO:0004497 and GO:0016712 as separate ACCEPTed rows. The reason
+text was rewritten to match the Cyp2d10 wording (EC 1.14.14.1, RHEA:17149). The load-bearing
+anchor line that tied the GO:0120502 MODIFY to the GO:0016705 handling was updated
+accordingly. No other action changed. Also removed blank lines inside quoted YAML scalars
+(11) that were leaking hard newlines into the rendered HTML. Revalidated and re-rendered.

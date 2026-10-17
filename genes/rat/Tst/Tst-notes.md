@@ -30,9 +30,20 @@ All 15 stale UniProt quotes were replaced with current FUNCTION, SUBCELLULAR LOC
 curation commentary, and status was set to COMPLETE.
 
 **Open questions.**
-- GO:0016226 iron-sulfur cluster assembly (NAS, PMID:2018478) is still ACCEPTed and listed
-  in core_functions. UniProt has dropped the Fe-S wording from FUNCTION, and the support is
-  a 1991 statement in an introduction plus in vitro Fe-S reconstitution literature. A
-  curator could consider whether Tst actually participates in cellular Fe-S cluster
-  assembly, or only donates sulfide in vitro.
+- GO:0016226 iron-sulfur cluster assembly (NAS, PMID:2018478): resolved in the 2026-10-17
+  review follow-up (see below). Changed ACCEPT -> MARK_AS_OVER_ANNOTATED and removed from
+  core_functions: the support is an NAS 1991 introduction statement plus in vitro Fe-S
+  reconstitution, UniProt dropped the Fe-S wording, and in vitro sulfur donation does not
+  establish participation in the cellular ISC assembly pathway (NFS1/ISCU machinery).
 - The 5S rRNA import role (GO:0008097, GO:0035928) is By-similarity from human TST only.
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer suggestion on GO:0016226 iron-sulfur cluster assembly. Changed
+ACCEPT -> MARK_AS_OVER_ANNOTATED and removed it from the GO:0004792 core-function
+directly_involved_in list. Rationale: support is NAS (a 1991 cDNA-characterization
+introduction statement, PMID:2018478) plus in vitro Fe-S reconstitution, UniProt has dropped
+the Fe-S wording from FUNCTION, and in vitro sulfane-sulfur donation / sulfur extraction does
+not establish that Tst performs a step of the cellular ISC assembly pathway (carried out by
+NFS1/ISCU and associated factors) - the participation test is not met. Also removed blank
+lines inside quoted YAML scalars (4). Revalidated and re-rendered.

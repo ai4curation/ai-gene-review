@@ -94,3 +94,9 @@ on the annotation:
   relationship rather than participation in the developmental process.
 
 **Stale UniProt quotes (2026-10-10):** replaced 14 `UniProtKB:P10868` supporting_text quotes that no longer matched the refreshed flat file (the FUNCTION line now wraps at "S-/adenosylmethionine"): 13 with verbatim PATHWAY, CATALYTIC ACTIVITY or FUNCTION text from the current `Gamt-uniprot.txt`, and the cytoplasm IBA row with a verbatim deep-research quote on cytosolic localization (UniProt has no SUBCELLULAR LOCATION line).
+
+## Review follow-up 2026-10-17
+
+Addressed PR #4615 reviewer suggestion: removed blank lines inside quoted YAML scalars (3)
+that were leaking hard newlines into the rendered HTML. No action changed. Revalidated and
+re-rendered.
