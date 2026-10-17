@@ -113,7 +113,7 @@ def main() -> None:
         pairs.append({"gene_symbol": rec["gene_symbol"], "donkey_accession": rec["donkey_accession"],
                       "donkey_panther": dfam, "horse_accession": rec["horse_accession"],
                       "horse_panther": hfam,
-                      "same_family": bool(set(dfam.split(";")) & set(hfam.split(";")) - {"", "?"})})
+                      "same_family": bool((set(dfam.split(";")) & set(hfam.split(";"))) - {"", "?"})})
         time.sleep(0.1)
     with open(os.path.join(HERE, "donkey40_pair_panther.tsv"), "w", newline="") as fh:
         fh.write(f"# reference_proteome_check.py run {run}; PANTHER families from UniProt xrefs; "

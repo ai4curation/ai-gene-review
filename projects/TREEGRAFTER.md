@@ -761,8 +761,10 @@ from the live reviews, after `TOO_GENERAL` was first counted as down-graded.
 **The only source, and kept.** 623 rated TreeGrafter rows have no other
 annotation on the protein, from any source, to the same term, an ancestor or
 a descendant. The reviews kept 439 (70.5%): 232 of 262 CC (89%), 70 of 118 MF
-(59%), 137 of 243 BP (56%). TreeGrafter overall is kept 72% of the time, so
-the statements it alone makes are not worse than the rest. Several carry the
+(59%), 137 of 243 BP (56%). TreeGrafter overall was kept 72% of the time in
+the pinned `f81b9f300` snapshot (this sole-source figure is from the live
+reviews, so the two are close rather than a measured gap): the statements it
+alone makes are not worse than the rest. Several carry the
 protein's defining activity: squid `ADAR2` (double-stranded RNA adenosine
 deaminase activity), naked mole-rat `Cgas` (2′,3′-cyclic GMP-AMP synthase
 activity), *P. putida* `relA` (GTP diphosphokinase activity), hummingbird

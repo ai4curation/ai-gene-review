@@ -53,6 +53,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import time
 import urllib.parse
 import urllib.request
@@ -492,7 +493,9 @@ def is_ncbi_name(name: str):
                                         "format": "tsv", "size": 50})
             got = _get(f"https://rest.uniprot.org/taxonomy/search?{q}").splitlines()[1:]
             _NCBI_NAME[name] = name in [g.strip() for g in got]
-        except Exception:
+        except Exception as e:
+            print(f"warning: taxonomy lookup failed for clade name {name!r} ({e}); "
+                  "rows under it count as undecidable", file=sys.stderr)
             _NCBI_NAME[name] = None
     return _NCBI_NAME[name]
 

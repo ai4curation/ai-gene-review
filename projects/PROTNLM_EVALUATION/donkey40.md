@@ -139,7 +139,7 @@ independent ground truth.
 The 41 rows that are down-graded (29) or UNDECIDED (12) fall into five groups:
 
 - **The donkey sequence model, not the graft (16 rows on three proteins:
-  8 down-graded, 8 UNDECIDED).**
+  6 down-graded, 10 UNDECIDED).**
   - The PIKFYVE entry is a short isoform-3 fragment with no kinase domain:
     6 REMOVE, 2 UNDECIDED.
   - The TNFRSF1A model lacks part of the ligand-binding ectodomain:
