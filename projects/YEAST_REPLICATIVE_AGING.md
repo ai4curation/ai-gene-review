@@ -3,7 +3,7 @@ title: "Yeast Replicative Aging & mRNA Processing"
 maturity: COMPLETE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
-last_reviewed: '2026-10-05'
+last_reviewed: '2026-10-16'
 genes: [SIR2, SIR3, SIR4, HST2, HST3, PNC1, HAP4, SOD2, CAT2, CYC1, LSM1, DBP5, NMD3, SUI2, RAS2, TOR1, RIM15, SPA2, UBP3, ATG7]
 manifest:
   slides:
@@ -19,15 +19,18 @@ NAD+/sirtuin silencing, respiration and ROS defence, mRNA decay and
 translation, nutrient signalling, and proteostasis. We reviewed every existing
 GO annotation on 20 *S. cerevisiae* genes chosen across those five areas, to
 check how well GO captures the mechanism of each gene rather than its lifespan
-phenotype. All 20 reviews are complete. The current review files hold 732
-existing GOA rows plus 4 proposed NEW rows: 483 ACCEPT, 89 KEEP_AS_NON_CORE,
-109 REMOVE, 34 MODIFY, 12 MARK_AS_OVER_ANNOTATED, 5 UNDECIDED and 4 NEW. None
-of the 98 generic `protein binding` rows was accepted, and mechanistically wrong
+phenotype. All 20 reviews are complete. The current review files hold 764
+existing GOA rows plus 5 proposed NEW rows: 488 ACCEPT, 96 KEEP_AS_NON_CORE,
+132 REMOVE, 34 MODIFY, 13 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED and 5 NEW. None
+of the 120 generic `protein binding` rows was accepted, and mechanistically wrong
 electronic terms were removed (SPA2 actomyosin contractile ring, DBP5 protein
 transport, LSM1 mRNA processing) or reclassified as non-core when valid but
 conditional (RIM15 mitotic phase-transition). The dated December 2025 notes
 below were recorded during curation, when the project stood at 842 rows and 510
 ACCEPT calls; they are retained for provenance but predate the current recount.
+
+How the five areas connect, and how strong the aging evidence is for each, is
+summarised in the [pathway summary](YEAST_REPLICATIVE_AGING/YEAST_REPLICATIVE_AGING-pathway.md).
 
 ## Overview
 
@@ -61,7 +64,7 @@ This project reviews *Saccharomyces cerevisiae* genes central to **replicative a
 
 # STATUS
 
-Last updated: 2026-10-05
+Last updated: 2026-10-16
 
 ## Genes to Review
 
@@ -101,7 +104,10 @@ Last updated: 2026-10-05
 - **Completed Reviews: 20** ✓ PROJECT COMPLETE
 - **In Progress: None**
 - **Remaining: 0**
-- **Follow-up:** [#4027](https://github.com/ai4curation/ai-gene-review/issues/4027)
+- **Follow-up:** [#4027](https://github.com/ai4curation/ai-gene-review/issues/4027) -
+  the HST2 (3) and SIR3 (1) UNDECIDED rows are resolved and the pathway summary
+  is written; the RAS2 `GO:0000411` row stays UNDECIDED until someone can read
+  the paywalled full text of PMID:16292676.
 
 **STATUS: ALL 20 GENES REVIEWED AND CURATED**
 
@@ -111,10 +117,26 @@ All current rows were recounted from `genes/yeast/<GENE>/<GENE>-ai-review.yaml`.
 Proposed `NEW` rows are reported separately from the GOA-seeded existing rows.
 
 - NAD+/Sirtuin pathway: 6 genes - 213 existing annotations, 4 proposed NEW rows, 129 ACCEPT
-- mRNA processing and translation: 4 genes - 130 existing annotations, 76 ACCEPT
-- Mitochondrial function and ROS: 4 genes - 76 existing annotations, 62 ACCEPT
-- Growth control and signaling: 4 genes - 216 existing annotations, 153 ACCEPT
+- mRNA processing and translation: 4 genes - 156 existing annotations, 78 ACCEPT
+- Mitochondrial function and ROS: 4 genes - 82 existing annotations, 65 ACCEPT
+- Growth control and signaling: 4 genes - 216 existing annotations, 1 proposed NEW row, 153 ACCEPT
 - Protein degradation and autophagy: 2 genes - 97 existing annotations, 63 ACCEPT
+
+### Row-level follow-up (2026-10-16, issue #4027)
+
+- **HST2** `GO:0045950` negative regulation of mitotic recombination (IMP; IGI
+  with SIR2; IGI with FOB1; PMID:16051752): UNDECIDED to KEEP_AS_NON_CORE. The
+  abstract states Hst2 promotes rDNA stability, which is suppression of
+  recombination between rDNA repeats; kept non-core like the sibling rDNA
+  heterochromatin row from the same paper.
+- **SIR3** `GO:0070481` nonstop mRNA decay (IMP, PMID:17660569): UNDECIDED to
+  MARK_AS_OVER_ANNOTATED. SGD's phenotype record for the paper confirms sir3-null
+  raised nonstop reporter mRNA, but a deletion-screen hit for a heterochromatin
+  protein shows necessity, not participation in cytoplasmic decay.
+- **RAS2** `GO:0000411` positive regulation of transcription by galactose (IMP,
+  PMID:16292676): still UNDECIDED. The paywalled full text could not be read;
+  the visible evidence concerns the hyperactive RAS2(val19) allele, whose GAL1
+  expression defect does not obviously support a positive role.
 
 ---
 
