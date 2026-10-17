@@ -121,7 +121,7 @@ Every GO ID and label below has been verified against the current Gene Ontology 
 | To flagellum | `GO:0098931` virion attachment to host cell flagellum | Flagellotropic phage χ (chi) |
 | Entry (general) | `GO:0046718` symbiont entry into host cell | General parent (prefer specific ejection/disruption child when known) |
 | Genome ejection (parent) | `GO:0039678` symbiont genome ejection through host cell envelope | General ejection across bacterial envelope |
-| — Contractile tail | `GO:0099000` symbiont genome ejection through host cell envelope, contractile tail mechanism | T4 (`gp18`/`gp19`/`gp20`), P2, Mu (myoviruses) |
+| — Contractile tail | `GO:0099000` symbiont genome ejection through host cell envelope, contractile tail mechanism | T4 (`gp18`/`gp19`/`gp5`), P2, Mu (myoviruses) |
 | — Long flexible tail | `GO:0099001` symbiont genome ejection through host cell envelope, long flexible tail mechanism | λ (`gpH`/`gpJ`), T5, L5 (siphoviruses) |
 | — Short tail | `GO:0099002` symbiont genome ejection through host cell envelope, short tail mechanism | T7 (`gp14`/`gp15`/`gp16`), P22, φ29 (podoviruses) |
 | Cell wall degradation during entry | `GO:0098932` symbiont entry into host cell via disruption of host cell wall peptidoglycan | T4 baseplate central spike lysozyme (`gp5`); T7 internal core (`gp16`); φ6 `P5` |
@@ -261,3 +261,8 @@ Rather than attempting all ~288 genes of T4 upfront, we can cover **every branch
 - [`PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md`](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md) — Ontology gap analysis for prokaryotic defense and phage counter-defense systems.
 - [`modules/viral_factory.yaml`](../modules/viral_factory.yaml) — Viral replication compartments, including the *Chimalliviridae* (`201φ2-1` / `ΦKZ`) `chmA` phage nucleus.
 - [`P_PUTIDA/P_PUTIDA_MODULE_PLAN.md`](P_PUTIDA/P_PUTIDA_MODULE_PLAN.md) — Template for lightweight whole-proteome metadata partitioning and module-first batch curation.
+- [`modules/phage_attachment_and_genome_ejection.yaml`](../modules/phage_attachment_and_genome_ejection.yaml) — Bacteriophage host receptor recognition and envelope genome ejection mechanisms.
+- [`modules/phage_genome_replication_and_transcription.yaml`](../modules/phage_genome_replication_and_transcription.yaml) — Bacteriophage genome replication, transcriptional takeover, and anti-restriction/counter-defense.
+- [`modules/phage_temperate_latency_switch.yaml`](../modules/phage_temperate_latency_switch.yaml) — Temperate phage lysis-lysogeny decision, prophage integration/excision, and episomal latency.
+- [`modules/phage_capsid_packaging_and_tail_assembly.yaml`](../modules/phage_capsid_packaging_and_tail_assembly.yaml) — Bacteriophage procapsid morphogenesis, genome packaging motors, and tail assembly.
+- [`modules/phage_virion_release_and_lysis.yaml`](../modules/phage_virion_release_and_lysis.yaml) — Bacteriophage host lysis (holin-endolysin-spanin, single-gene lysis) and chronic filamentous extrusion.
