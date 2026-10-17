@@ -529,6 +529,62 @@ def check_panther_ids(
     return results
 
 
+GAIN_VERDICTS = frozenset({"SOUND", "TOO_DEEP", "WRONG_NODE", "NEEDS_PRUNING"})
+LOSS_VERDICTS = frozenset({"LOSS_SUPPORTED", "LOSS_CONTRADICTED", "LOSS_TOO_BROAD", "LOSS_STALE"})
+
+
+def node_polarity_problem(assessment: dict, term_rows: list) -> str | None:
+    """Return why a node assessment's evidence/negation/verdict disagree with PAINT, or None.
+
+    ``term_rows`` are the family's PAINT rows for this node and term. A PAINT loss (IRD,
+    IKR or a rare NOT|IBD) must be declared ``negated: true`` with its evidence code and
+    judged with a LOSS_* verdict; a gain must not be. Without this an IRD can be assessed
+    as though it were an IBD, and a "WRONG_NODE" on a loss reads, to the family/gene
+    cross-check, as the opposite of what the reviewer meant.
+
+    >>> class Row:
+    ...     def __init__(self, evidence, negated):
+    ...         self.evidence, self.negated = evidence, negated
+    >>> ird = [Row("IRD", True)]
+    >>> node_polarity_problem({"assessment": "LOSS_SUPPORTED", "negated": True,
+    ...                        "evidence": "IRD"}, ird) is None
+    True
+    >>> node_polarity_problem({"assessment": "WRONG_NODE"}, ird)
+    'PAINT records this as a loss (IRD); declare negated: true and evidence: IRD'
+    >>> node_polarity_problem({"assessment": "SOUND", "negated": True, "evidence": "IRD"}, ird)
+    "verdict SOUND is for gain rows; a loss row needs one of ['LOSS_CONTRADICTED', 'LOSS_STALE', 'LOSS_SUPPORTED', 'LOSS_TOO_BROAD'] or UNRESOLVED"
+    >>> node_polarity_problem({"assessment": "SOUND"}, [Row("IBD", False)]) is None
+    True
+    >>> node_polarity_problem({"assessment": "SOUND", "evidence": "IKR"}, [Row("IBD", False)])
+    "declared evidence IKR, but PAINT records ['IBD'] for this node and term"
+    """
+    paint_negated = {bool(getattr(r, "negated", False)) for r in term_rows}
+    paint_evidence = sorted({getattr(r, "evidence", "") for r in term_rows} - {""})
+    declared_negated = bool(assessment.get("negated", False))
+    declared_evidence = assessment.get("evidence")
+    verdict = assessment.get("assessment", "")
+
+    if declared_evidence and paint_evidence and declared_evidence not in paint_evidence:
+        return (
+            f"declared evidence {declared_evidence}, but PAINT records {paint_evidence} "
+            "for this node and term"
+        )
+    if True in paint_negated and False not in paint_negated:
+        if not declared_negated or not declared_evidence:
+            ev = "/".join(paint_evidence) or "IRD/IKR"
+            return f"PAINT records this as a loss ({ev}); declare negated: true and evidence: {ev}"
+    elif declared_negated and paint_negated == {False}:
+        return "declared negated: true, but PAINT records a gain (not a NOT) here"
+    if declared_negated and verdict in GAIN_VERDICTS:
+        return (
+            f"verdict {verdict} is for gain rows; a loss row needs one of "
+            f"{sorted(LOSS_VERDICTS)} or UNRESOLVED"
+        )
+    if not declared_negated and verdict in LOSS_VERDICTS:
+        return f"verdict {verdict} is for loss rows; declare negated: true and evidence"
+    return None
+
+
 def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck]:
     """Check every ``node_assessment`` against the family's own cached PAINT rows.
 
@@ -622,6 +678,16 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
                     family_id, node, term, 0, [], None, Outcome.PASS,
                     f"PAINT records {term} at this node in {bare_family}",
                     kind="NODE_ASSERTION",
+                )
+            )
+            term_rows = [r for r in family_rows if getattr(r, "go_id", "") == term]
+            problem = node_polarity_problem(assessment, term_rows)
+            results.append(
+                ResidueCheck(
+                    family_id, node, term, 0, [], None,
+                    Outcome.FAIL if problem else Outcome.PASS,
+                    problem or "evidence, negation and verdict agree with PAINT",
+                    kind="NODE_POLARITY",
                 )
             )
         else:
