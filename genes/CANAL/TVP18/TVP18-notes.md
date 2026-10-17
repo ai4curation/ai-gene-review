@@ -41,4 +41,7 @@
   the same opisthokont ancestor used for `GO:0016192`. I did not accept a
   calcium-channel activity for Candida TVP18 because that MF placement is seeded
   only by Drosophila `fwe`, while the corresponding calcium-import process
-  `GO:0070588` is restricted to Eumetazoa node PTN000999743.
+  `GO:0070588` is restricted to Eumetazoa node PTN000999743. The K. phaffii
+  knockout abstract links TVP18-family Golgi-cisternae phenotypes to calcium
+  concentration, homeostasis, or signalling, but still does not assay direct
+  calcium channel activity in a fungal TVP18 protein [PMID:33263222].
