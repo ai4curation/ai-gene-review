@@ -34,16 +34,16 @@ subset of the entry's GOA terms; "specific term exists?" is a QuickGO search.
 |------|---------|-----------------|----|---------------|--------------------------|--------|
 | **PHYKPL** | Q8IUZ5 | RHEA:34091 | 4.2.3.134 | only `lyase activity` (GO:0016829, **root**) | **No** | MODIFY off root + **propose NEW** term |
 | **B3GALNT2** | Q8NCR0 | RHEA:37667 | 2.4.1.313 | only class-level GalNAc-T terms | **No** (no β1,3-specific term) | **propose NEW** term |
-| **SAMD8** (SMSr) | Q96LT4 | RHEA:36079* | 2.7.8.- | `hydrolase activity` + SM-synthase terms | **Yes — GO:0002950 exists, not applied** | **ADD GO:0002950**; drop `hydrolase activity` |
+| **SAMD8** (SMSr) | Q96LT4 | RHEA:36079* | 2.7.8.- | `hydrolase activity` + SM-synthase terms | **No**; `GO:0002950` has the wrong donor | **propose NEW** term |
 | **SULT6B1** | Q6IMI4 | RHEA:26422 | 2.8.2.n2 | only `sulfotransferase activity` (GO:0008146, class) | partial (`aryl sulfotransferase` GO:0004062) | MODIFY (cautious) / UNDECIDED |
 
 \* SAMD8 carries several unmapped RHEA reactions; RHEA:36079 is the
 ceramide-phosphoethanolamine synthase reaction that defines its function.
 
-These four span the gap taxonomy: a **GO granularity gap** where no term exists
-(PHYKPL, B3GALNT2), a **clean propagation gap** where the right term already
-exists but never reached the protein (SAMD8), and an **evidence-limited** gap
-where the fill is real but the confidence is lower (SULT6B1).
+These four span the gap taxonomy: **GO granularity gaps** where no exact term
+exists (PHYKPL, B3GALNT2), a **lookalike-term gap** where the existing term's
+definition specifies the wrong donor chemistry (SAMD8), and an **evidence-limited**
+gap where the fill is real but the confidence is lower (SULT6B1).
 
 ---
 
@@ -127,28 +127,34 @@ Medically important and mechanistically precise — a strong gap-fill candidate.
 - **Current GO MF:** `hydrolase activity` (ultra-high-level), `sphingomyelin
   synthase activity`, `ceramide cholinephosphotransferase activity`. It does
   **not** carry the term for its principal activity.
-- **Specific term EXISTS:** `GO:0002950 ceramide phosphoethanolamine synthase
-  activity` is already in GO — but is **not annotated** to SMSr.
+- **Specific term:** no exact term exists. `GO:0002950 ceramide phosphoethanolamine
+  synthase activity` has the right-looking label, but its definition specifies
+  CDP-ethanolamine and CMP rather than the phosphatidylethanolamine donor and
+  diacylglycerol product in `RHEA:36079`.
 - **Evidence:** SMSr characterised as the ER ceramide-phosphoethanolamine synthase
   (PubMed:19506037) with later mechanistic work (e.g. PubMed:33621517).
 
-**Assessment.** This is the **clean propagation gap**: unlike PHYKPL/B3GALNT2 the
-correct GO term already exists, yet the protein carries everything *except* it —
-two SM-synthase-flavoured terms (SMSr is at best a weak SM synthase) and a bare
-`hydrolase activity`. The RHEA reaction that would have delivered `GO:0002950` is
-unmapped, so the term fell through the cracks even though no new term is needed.
+**Assessment.** This initially looked like a clean propagation gap, but the live
+`GO:0002950` definition uses the nucleotide donor
+`CDP-ethanolamine + ceramide = CMP + H+ + ceramide phosphoethanolamine`. The
+RHEA and SMSr reaction instead transfers phosphoethanolamine from
+phosphatidylethanolamine onto ceramide, producing diacylglycerol. The protein
+therefore carries everything *except* an exact term for its PE-dependent CPE
+synthase activity: two SM-synthase-flavoured terms and a bare `hydrolase
+activity`.
 
 **Action.**
-- **`NEW` (add) `GO:0002950 ceramide phosphoethanolamine synthase activity`** as
-  the core molecular function — the term exists; this is pure gap-filling.
+- **`NEW` phosphatidylethanolamine-dependent ceramide phosphoethanolamine synthase
+  activity** as the core molecular function — do not use `GO:0002950` unless GO
+  corrects or broadens its donor definition.
 - `MARK_AS_OVER_ANNOTATED` / `MODIFY` the bare `GO:0016787 hydrolase activity`
   (uninformative; the PE-PLC activity, if kept, should use a specific
   phospholipase-C-type term, not the root).
 - Review `sphingomyelin synthase activity`: keep only as non-core if supported,
   since SMSr's mammalian activity is predominantly CPE synthase, not SM synthase.
 
-The highest-value action of the four because it requires **no ontology work** —
-just apply an existing term the RHEA mapping should already carry.
+This is still a high-value gap, but it requires a GO term request before RHEA can
+map the reaction cleanly.
 
 ---
 
@@ -191,9 +197,9 @@ quality gates how specific the proposed GO term should be.
    reaction is the only place the *specific* activity is recorded, and the
    unmapped reaction is why it never reaches GO. This matches the project-level
    finding that G4/G5 are specificity gaps, not coverage gaps.
-2. **Two fixes, picked by whether the GO term exists.** SAMD8 needs only an
-   *existing* term applied (propagation gap). PHYKPL and B3GALNT2 need a *new*
-   term (granularity gap) — these are `proposed_new_terms` for GO, and good
+2. **Existing labels are not enough.** SAMD8 shows that a tempting GO label can
+   still encode the wrong reaction in its definition. PHYKPL, B3GALNT2 and SAMD8
+   all need *new* exact terms — these are `proposed_new_terms` for GO, and good
    candidates for the RHEA team to add to `rhea2go` once the term exists.
 3. **Evidence gates specificity.** SULT6B1 shows that an unmapped RHEA on a
    by-similarity annotation justifies only a cautious parent-level refinement.
@@ -204,10 +210,9 @@ quality gates how specific the proposed GO term should be.
 ## Curated mappings
 
 Each case is recorded as a row in the curated SSSOM mapping set
-[`rhea2go.sssom.yaml`](rhea2go.sssom.yaml): SAMD8 as a `skos:exactMatch`
-(`RHEA:36079`→`GO:0002950`, ready to add to `rhea2go`); PHYKPL, B3GALNT2 and
-SULT6B1 as `skos:broadMatch` rows whose comments name the narrower GO term to
-request. Validate with `just validate-rhea-mappings`.
+[`rhea2go.sssom.yaml`](rhea2go.sssom.yaml): SAMD8 as `sssom:NoTermFound`;
+PHYKPL, B3GALNT2 and SULT6B1 as `skos:broadMatch` rows whose comments name the
+narrower GO term to request. Validate with `just validate-rhea-mappings`.
 
 ## Reproduce
 

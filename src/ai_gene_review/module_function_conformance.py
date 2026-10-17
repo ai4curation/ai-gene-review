@@ -27,7 +27,8 @@ from ai_gene_review.module_qc import (
 )
 
 SubclassPredicate = Callable[[str, str], bool]
-_RETAINED = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW"}
+# TOO_GENERAL holds the claim true (just uninformative), so it retains, not disputes.
+_RETAINED = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW", "TOO_GENERAL"}
 _DISPUTED = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED"}
 
 

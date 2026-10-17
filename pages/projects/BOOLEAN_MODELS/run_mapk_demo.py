@@ -25,6 +25,8 @@ from pathlib import Path
 
 import biodivine_aeon as ba
 
+import yaml
+
 from ai_gene_review.module_boolean import (
     BooleanModel,
     SignedEdge,
@@ -34,6 +36,7 @@ from ai_gene_review.module_boolean import (
     iter_mapping_pairs,
     load_mapping,
     module_file_to_boolean,
+    module_to_boolean,
     parse_bnet_file,
     path_sign,
     project_edges,
@@ -47,14 +50,21 @@ MODULES = ["erk_cascade", "p38_cascade", "jnk_cascade", "jak_stat_signaling"]
 BBM = ROOT / "models" / "boolean" / "bbm-070-mapk-cancer-cell-fate"
 SIGNOR = ROOT / "models" / "boolean" / "signor"
 
-# Counterfactual: the ERK module *before* its feedback loops were closed (the
-# wiring the calibration originally found, PR history). Expressed as logic
-# overrides on the module's own element ids; the DUSP step is additionally
-# reduced to a free input by fixing it in the scenario.
-PRE_CALIBRATION_LOGIC = {
-    "raf_map3k": "ras_active",  # drop ERK -| RAF
-    "ras_gef_step": "adaptor_recruitment",  # drop ERK output -| SOS
-}
+# Counterfactual: the ERK module *before* its feedback loops were closed. It is
+# not defined here but read from the module's own curated `feedback_cut`
+# scenario (executable_models), so this report and module validation simulate
+# the same counterfactual. Removing the inducing connections turns the induced
+# steps (DUSP, Sprouty) into free inputs, which the scenarios below hold off.
+COUNTERFACTUAL_MODEL = "erk_cascade_boolean"
+COUNTERFACTUAL_SCENARIO = "feedback_cut"
+
+
+def counterfactual_removed_connections() -> list[tuple[str, str]]:
+    """The connections the module's curated feedback_cut scenario removes."""
+    doc = yaml.safe_load((ROOT / "modules" / "erk_cascade.yaml").read_text())
+    model = next(m for m in doc["executable_models"] if m["id"] == COUNTERFACTUAL_MODEL)
+    scenario = next(s for s in model["scenarios"] if s["id"] == COUNTERFACTUAL_SCENARIO)
+    return [(r["source"], r["target"]) for r in scenario["removed_connections"]]
 
 
 def md_table(header: list[str], rows: list[list[str]]) -> str:
@@ -322,6 +332,7 @@ def dynamics(models: dict[str, BooleanModel]) -> str:
         "erk_mapk",
         "erk_output",
         "mapk_negative_regulation",
+        "sprouty_spred_feedback",
     ]
     scenarios = {
         "no stimulus": {"adaptor_recruitment": False, "rasgap_step": False},
@@ -391,26 +402,29 @@ def dynamics(models: dict[str, BooleanModel]) -> str:
         "Model file: [`out/erk_cascade_pre_calibration.bnet`](out/erk_cascade_pre_calibration.bnet)."
     )
     lines.append("")
+    removed = counterfactual_removed_connections()
     lines.append(
-        "This is the wiring the module had before the calibration (no ERK -| RAF, no ERK output -| SOS, "
-        "DUSP as a free input). Overrides applied (prototype `update_rule` values on the module's own ids):"
+        "This is the wiring the module had before the calibration: no direct ERK feedback "
+        "onto RAF or SOS, and the DUSP and Sprouty steps as uninduced free inputs. It is the "
+        f"module's own curated `{COUNTERFACTUAL_SCENARIO}` scenario "
+        f"(`executable_models` → `{COUNTERFACTUAL_MODEL}`), which removes these connections:"
     )
     lines.append("")
-    for var, rule in PRE_CALIBRATION_LOGIC.items():
-        lines.append(f"- `{var}, {rule}`")
+    for source, target in removed:
+        lines.append(f"- `{source}` → `{target}`")
+    lines.append("")
     lines.append(
-        "- `mapk_negative_regulation` made a free input again (rule and incoming edge dropped; "
-        "0, or 1 in the constitutive-DUSP scenario)"
+        "The induced steps are held off (0), or DUSP at 1 in the constitutive-DUSP scenario."
     )
     lines.append("")
-    # DUSP becomes a free input again (rule and incoming edge dropped), so the
-    # committed file is exactly the model the table below simulates.
-    pre = erk.with_logic(PRE_CALIBRATION_LOGIC).as_inputs("mapk_negative_regulation")
+    doc = yaml.safe_load((ROOT / "modules" / "erk_cascade.yaml").read_text())
+    pre = module_to_boolean(doc, removed_connections=set(removed))
     (OUT / "erk_cascade_pre_calibration.bnet").write_text(pre.to_bnet() + "\n")
     pre_scenarios = {
         label: {
             **scen,
             "mapk_negative_regulation": scen.get("mapk_negative_regulation", False),
+            "sprouty_spred_feedback": False,
         }
         for label, scen in scenarios.items()
     }
