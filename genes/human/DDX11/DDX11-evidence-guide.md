@@ -34,3 +34,19 @@ The source paths in the private audit packet retain the raw responses, source id
 | [IntAct](https://www.ebi.ac.uk/intact/) and official partner UniProt records | Exact FUZ bait/DDX11 prey source record for PMID 33961781; partner identity/function checks for RAD21, SMC3, TIMELESS, POLR1A, UBTF and E2. Co-purification is not represented as purified binary binding. |
 
 No NEW annotation is proposed. The three source-specific undecided assertions are explicit evidence limits, not removal decisions. The source dictionaries, NOT flag and alternative products remain intact.
+
+
+## 2026-10-17 follow-up source locators
+
+The current annotation reasons supersede earlier coupled-activity retention based on ATPase synonyms. GO:0008094 requires ATP-driven DNA modification; GO:0008186 requires RNA-dependent ATP hydrolysis that drives another reaction. The measured turnover therefore maps to GO:0016887. GO:0033677 expressly covers DNA/RNA-hybrid unwinding; no NEW annotation is needed.
+
+| Original source | Locator and scope |
+| --- | --- |
+| [PMID:10648783](https://pubmed.ncbi.nlm.nih.gov/10648783/) | Helicase Methods, Fig.5B and substrate-specificity Results. The hybrid assay's labeling limitation is retained in the review; no native R-loop role is inferred. |
+| [PMID:18499658](https://pubmed.ncbi.nlm.nih.gov/18499658/) | Directionality and Substrate Specificity; Fig.4. DNA loading-strand directionality; the additional hybrid observation is explicitly data not shown. |
+| [PMID:26089203](https://pubmed.ncbi.nlm.nih.gov/26089203/) | Fig.7B–C; ATPase Methods. Human FLAG-DDX11 from HEK293 cells; rDNA fragment −410 to +81; turnover and mutant comparison. |
+| [PMID:27477908](https://pubmed.ncbi.nlm.nih.gov/27477908/) | Figs.5–6 and associated Results. CONCR association and ATP turnover; wild-type/K50R cohesion rescue is a separate cellular experiment. |
+| [PMID:26503245](https://pubmed.ncbi.nlm.nih.gov/26503245/) | DNA-fiber Methods; Fig.7A–C. HU treatment/removal and fork restart in depleted HeLa cells. |
+| [PMID:20124417](https://pubmed.ncbi.nlm.nih.gov/20124417/) | Fig.5A–D; plasmid and RNAi Methods. Human ChlR1 association, depletion and partial cohesion rescue. |
+
+The one nuclear helicase core includes already represented GO:0031297 and GO:0034085; G4 substrate capacity alone does not establish a second evolved core. Original product, antibody, access and interaction limitations remain applicable. The table adds locators, not publication quotations.

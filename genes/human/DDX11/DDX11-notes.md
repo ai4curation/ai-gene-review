@@ -19,3 +19,12 @@ This initial scientific packet is subject to independent ROOT review and ordinar
 ### Independent review refinement
 
 The CONCR-associated RNA-dependent ATPase assertion is retained as non-core. The current term's exact synonyms include RNA-dependent ATPase; the source measures RNA-stimulated ATP turnover. Unresolved coupling does not, by itself, contradict that curator-backed scope. No RNA-helicase activity or separate RNA core is asserted. Explicit reference links were added to nine already-supported rows without adding quotations or changing their judgments.
+
+
+## 2026-10-17 — source-specific activity and core clarification
+
+This follow-up supersedes earlier retention of the rDNA/CONCR ATP-dependent activity rows: their assays establish ATP turnover without identifying the coupled reaction required by the current GO definitions. The review now uses GO:0016887 for those measurements and retains RNA/DNA stimulation in the reasons. It also preserves the historical positive hybrid-unwinding result through GO:0033677 replacements, without adding a native R-loop process.
+
+Supported directional DNA-helicase refinements retain the original PAINT, domain and TAS provenance. The inspected PAINT node is valid (NO_FAILURE_CORE); target biochemistry supplies precision. MODIFY follows the explicit [project curation instructions](https://github.com/ai4curation/ai-gene-review/blob/a87ae568676c4012ea4abe5393967aeff1b52ae7/projects/CLINGEN_MENDELIAN.md#curation-instructions) and the user's instruction for a sound but overly general term. Repeated source support does not create new coverage.
+
+The single motor core now connects to the already accepted fork-processing and cohesion-establishment processes, with unresolved in-cell substrate and catalytic-versus-association contributions retained as questions. Source-specific locators and limits appear in the [follow-up evidence guide](DDX11-evidence-guide.md#2026-10-17-follow-up-source-locators). All five products, 87 source objects, NOT assertion, eight binding non-core decisions and three inaccessible-source UNDECIDED decisions are unchanged. No NEW annotation or publication quotation was added. Normal-cache access flags remain literal despite separately recovered originals.
