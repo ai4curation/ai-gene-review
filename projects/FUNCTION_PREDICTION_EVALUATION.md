@@ -77,6 +77,7 @@ orthology, phylogeny, and family membership have their own index,
 | Project | Focus |
 |---------|-------|
 | [TreeGrafter](TREEGRAFTER.md) | Automated placement onto PANTHER trees and transfer of ancestral GO annotations. |
+| [eggNOG-mapper](EGGNOG_MAPPER_EVALUATION.md) | Orthology-based GO transfer by eggNOG-mapper 2.1, run on 520 reviewed proteins with and without the query's own species. |
 | [InterPro2GO](INTERPRO.md) | GO mappings attached to domain and family signatures, including specificity and propagation limits. |
 | [NCBIFam](NCBIFam.md) | Functional-family mappings and opportunities or risks in extending GO coverage. |
 | [PAINT / IBA](IBA_REVIEW.md) | Curator-assessed phylogenetic function inheritance and the evidence for individual transfers. |
