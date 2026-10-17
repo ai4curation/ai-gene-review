@@ -92,7 +92,7 @@ unicode: β-catenin
 def test_queue_and_full_gene_validation_use_fast_schema_loader():
     root = Path(__file__).resolve().parents[1]
     workflow = yaml.safe_load((root / ".github/workflows/main.yaml").read_text())
-    step = next(s for s in workflow["jobs"]["test"]["steps"] if s.get("name") == "Validate all gene schemas (merge queue)")
+    step = next(s for s in workflow["jobs"]["validation"]["steps"] if s.get("name") == "Validate all gene schemas (merge queue)")
     assert "ai_gene_review.validation.schema_batch" in step["run"]
     recipe = (root / "project.justfile").read_text().split("\nvalidate-all:\n", 1)[1].split("\nvalidate-all-summary:", 1)[0]
     assert "ai_gene_review.validation.schema_batch" in recipe
