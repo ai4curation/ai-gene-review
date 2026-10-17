@@ -68,11 +68,13 @@ def _new_reason(reason: str, previous: str) -> str:
 def _row_spans(lines: List[Optional[str]]) -> List[Tuple[int, int]]:
     """Line ranges of the top-level ``existing_annotations`` rows."""
     start = next(i for i, line in enumerate(lines) if line and line.startswith("existing_annotations:"))
+    first = next(lines[i] for i in range(start + 1, len(lines)) if (lines[i] or "").strip())
+    item = " " * (len(first) - len(first.lstrip(" "))) + "- "
     starts = []
     end = len(lines)
     for i in range(start + 1, len(lines)):
         line = lines[i] or ""
-        if line.startswith("- "):
+        if line.startswith(item):
             starts.append(i)
         elif line.strip() and not line.startswith((" ", "#")):
             end = i

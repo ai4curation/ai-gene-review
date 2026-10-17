@@ -146,7 +146,9 @@ NEVER write your own content and name it `-deep-research-{provider}.md`. If deep
 
 A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
 term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
-the way to deduplicate them or to drop a true-but-broad term. Consistency rules live in
+the way to deduplicate them or to drop a true-but-broad term. (The one sanctioned exception is bare `GO:0005515` protein
+binding, which the protein-binding policy removes as uninformative; see
+`src/ai_gene_review/validation/protein_binding_policy.py`.) Consistency rules live in
 `src/ai_gene_review/schema/action_consistency.yaml` and are explained in `docs/action_consistency.md`.
 
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
