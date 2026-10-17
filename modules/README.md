@@ -212,3 +212,44 @@ Design notes:
           activity: gomodel:568b0f9600000284/57ec3a7e00000079
           title: "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)"
   ```
+
+### Composing modules by reference (`module_ref`)
+
+An umbrella module (for example an organelle lifecycle) composes existing modules
+instead of copying their annotons. A node with `module_ref` stands in for another
+module, written like a conformance template: `<stem>` for the whole module, or
+`<stem>#<node_id>` for one node in it.
+
+```yaml
+parts:
+  - order: 5
+    role: turnover
+    node:
+      id: mitochondrial_turnover
+      label: Mitophagy (see MODULE:mitophagy)
+      module_ref: mitophagy
+  - order: 4
+    optional: true          # not every lineage has it; does not gate the umbrella
+    node:
+      id: respiration
+      label: Oxidative phosphorylation
+      module_ref: mitochondrial_complex_iv
+```
+
+`module_ref` means inclusion, which is different from `conforms_to` (an instance
+of a motif):
+
+- **Satisfiability.** `module_logic` compiles the referenced module in place, so
+  the umbrella node is satisfied exactly when the referenced module or node is.
+  Gaps are reported at the umbrella step. Atoms reached through a reference are
+  namespaced `<stem>#<annoton_id>`, so a step reached twice is one atom.
+  Mark the enclosing part `optional` when a lineage may lack the referenced
+  module.
+- **Validation (blocking).** The reference must resolve, references must not
+  form a cycle, and the referencing node must not carry its own `annotons`,
+  `parts` or `variant_sets`; label, description, concepts, context and
+  evidence are allowed.
+- **Rendering.** The node links to the referenced module page or node anchor,
+  and it is not counted as an ungrounded leaf.
+
+The Boolean-network translator (`module-to-bnet`) does not follow references yet.

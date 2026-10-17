@@ -11,6 +11,9 @@ as a tree of nodes. Read as logic, that tree is a *monotone boolean formula* ove
 * a leaf ``annoton`` is an :class:`Atom` whose truth value is supplied externally
   by a per-context predicate (e.g. "is this participant gene expressed in this
   tissue / cell-zone?").
+* a node with a ``module_ref`` is replaced by the compiled referenced module (or
+  node), so an umbrella module is satisfied exactly when the modules it composes
+  are. Atoms reached through a reference are namespaced ``<module>#<annoton>``.
 
 Separating the *logic* (this module) from the *oracle* (the predicate) lets the
 same engine resolve a module against any context source - microbial genome
@@ -54,6 +57,7 @@ import yaml
 
 from ai_gene_review.render_modules import as_list
 from ai_gene_review.module_gene_symbols import descriptor_symbol
+from ai_gene_review.module_qc import DEFAULT_MODULES_DIR, resolve_template_node
 
 
 @dataclass(frozen=True)
@@ -132,8 +136,8 @@ def _uniprot_from_gene(gene: dict) -> Optional[str]:
     return None
 
 
-def _atom_from_annoton(annoton: dict) -> Atom:
-    """Build an :class:`Atom` from an annoton dict."""
+def _atom_from_annoton(annoton: dict, namespace: str = "") -> Atom:
+    """Build an :class:`Atom` from an annoton dict, prefixing its id with ``namespace#``."""
     participant = annoton.get("participant") or {}
     gene = participant.get("gene") or {}
     representatives = ((participant.get("family") or {}).get("representative_members") or [])
@@ -149,8 +153,9 @@ def _atom_from_annoton(annoton: dict) -> Atom:
         if (accession := _uniprot_from_gene(member))
     )
     uniprot = _uniprot_from_gene(gene)
+    annoton_id = annoton.get("id", "?")
     return Atom(
-        node_id=annoton.get("id", "?"),
+        node_id=f"{namespace}#{annoton_id}" if namespace else annoton_id,
         label=annoton.get("label", annoton.get("id", "?")),
         gene_symbol=gene_symbol or (representative_symbols[0] if representative_symbols else None),
         uniprot=uniprot or (representative_uniprots[0] if representative_uniprots else None),
@@ -159,13 +164,40 @@ def _atom_from_annoton(annoton: dict) -> Atom:
     )
 
 
-def compile_node(node: dict) -> And:
-    """Compile a ModuleNode dict into an AND over its atoms, parts, and variant sets."""
+def _compile_reference(
+    node: dict, modules_dir: Path, chain: tuple[str, ...]
+) -> And:
+    """Compile a ``module_ref`` node as an AND wrapping the referenced module."""
+    module_ref = str(node["module_ref"])
+    if module_ref in chain:
+        raise ValueError(f"module_ref cycle: {' -> '.join([*chain, module_ref])}")
+    target = resolve_template_node(module_ref, modules_dir)
+    if target is None:
+        raise ValueError(f"module_ref '{module_ref}' of node {node.get('id')!r} not found")
+    namespace = module_ref.partition("#")[0]
+    sub = compile_node(target, modules_dir, (*chain, module_ref), namespace)
+    return And(node_id=node.get("id", "?"), children=[sub])
+
+
+def compile_node(
+    node: dict,
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    chain: tuple[str, ...] = (),
+    namespace: str = "",
+) -> And:
+    """Compile a ModuleNode dict into an AND over its atoms, parts, and variant sets.
+
+    ``module_ref`` nodes are resolved against ``modules_dir``; ``chain`` holds
+    the references being expanded (for cycle detection) and ``namespace`` the
+    referenced module whose atoms are being compiled.
+    """
+    if node.get("module_ref"):
+        return _compile_reference(node, Path(modules_dir), chain)
     children: list[Circuit] = []
     for annoton in as_list(node.get("annotons")):
-        children.append(_atom_from_annoton(annoton))
+        children.append(_atom_from_annoton(annoton, namespace))
     for part in as_list(node.get("parts")):
-        sub = compile_node(part["node"])
+        sub = compile_node(part["node"], modules_dir, chain, namespace)
         if part.get("optional"):
             # An optional part is an OR of (filled, empty) -> always satisfiable.
             empty: Circuit = And(node_id="empty", children=[])
@@ -174,21 +206,35 @@ def compile_node(node: dict) -> And:
         else:
             children.append(sub)
     for vs in as_list(node.get("variant_sets")):
-        branches: list[Circuit] = [compile_node(v) for v in as_list(vs.get("variants"))]
+        branches: list[Circuit] = [
+            compile_node(v, modules_dir, chain, namespace) for v in as_list(vs.get("variants"))
+        ]
         children.append(Or(set_id=vs.get("id", "?"),
                            selection=vs.get("selection", "ONE_OR_MORE"),
                            children=branches))
     return And(node_id=node.get("id", "?"), children=children)
 
 
-def compile_module(doc: dict) -> And:
-    """Compile a loaded ModuleReview document (its ``module``) into a circuit."""
-    return compile_node(doc["module"])
+def compile_module(
+    doc: dict,
+    modules_dir: Union[str, Path] = DEFAULT_MODULES_DIR,
+    stem: Optional[str] = None,
+) -> And:
+    """Compile a loaded ModuleReview document (its ``module``) into a circuit.
+
+    ``module_ref`` nodes resolve against ``modules_dir``; ``stem`` (the
+    document's own file stem) lets a reference back to it be caught as a cycle.
+    """
+    return compile_node(doc["module"], Path(modules_dir), (stem,) if stem else ())
 
 
 def compile_module_file(path: Union[str, Path]) -> And:
-    """Load a ModuleReview YAML file and compile its root module node."""
-    return compile_module(yaml.safe_load(Path(path).read_text()))
+    """Load a ModuleReview YAML file and compile its root module node.
+
+    References resolve against the file's own directory.
+    """
+    path = Path(path)
+    return compile_module(yaml.safe_load(path.read_text()), path.parent, path.stem)
 
 
 def iter_atoms(circuit: Circuit) -> Iterator[Atom]:
