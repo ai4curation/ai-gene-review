@@ -309,9 +309,9 @@ and in all three cases the obsoletion improves the annotation.
 
 | Gene | Row source | Current review action | Recommended on obsoletion |
 |---|---|---|---|
-| FEN1 | `Reactome:R-HSA-110373` | `ACCEPT` | Move to `GO:7770138 long-patch base-excision repair`. A clean precision gain: the review's own reason already says "the standard GO term for participants in the long-patch BER sub-pathway". **Also fix `core_functions`** — the 5'-flap endonuclease activity entry lists *both* `GO:0006287` and `GO:0006284` under `directly_involved_in`, so swapping the id in place would leave a term and its own parent side by side. Replace the pair with `GO:7770138` alone. |
-| APEX1 | `Reactome:R-HSA-73933` | `ACCEPT` | Move to `GO:0006284 base-excision repair`, which APEX1 already carries twice (IBA `GO_REF:0000033`, IDA PMID:8932386), so the row collapses into existing annotation. Both the row's `summary` ("participates in BER gap-filling by coordinating with DNA polymerase beta") and its `reason` ("APEX1's role in the downstream steps of BER where the gap is filled") need rewriting while we are in the file — but **not** to "APEX1 does not fill the gap", which under the new sub-pathway terms would argue against `GO:0006284` too, a term APEX1 holds by IDA. The correct reason is that `R-HSA-73933` is the branch-agnostic parent pathway, so this evidence does not resolve patch length; APEX1 in fact incises in both branches, which is an independent argument for the parent. |
-| ADPRS | `Reactome:R-HSA-110373` | `MARK_AS_OVER_ANNOTATED` | **Drop, do not remap** — i.e. mint no replacement row. The review traced this row to a compartment mismatch in Reactome's pathway nesting, which is the one argument here that is unaffected by the scope shift; `GO:0006281 DNA repair` (IMP, human experimental) carries ADPRS's real involvement at the right granularity. Leave the `MARK_AS_OVER_ANNOTATED` action as it stands: that review considered and declined `REMOVE` on reasoned grounds. |
+| FEN1 | `Reactome:R-HSA-110373` | `ACCEPT` | `MODIFY` with `proposed_replacement_terms: [GO:7770138 long-patch base-excision repair]` — the row's own GOA-sourced id is not rewritten (see *Proposed approach*). A clean precision gain: the review's own reason already says "the standard GO term for participants in the long-patch BER sub-pathway". **Also fix `core_functions`** — the 5'-flap endonuclease activity entry lists *both* `GO:0006287` and `GO:0006284` under `directly_involved_in`, so swapping the id in place would leave a term and its own parent side by side. Replace the pair with `GO:7770138` alone. |
+| APEX1 | `Reactome:R-HSA-73933` | `ACCEPT` | `MODIFY` with `proposed_replacement_terms: [GO:0006284 base-excision repair]` — a generalisation rather than a refinement, and a term APEX1 already carries twice (IBA `GO_REF:0000033`, IDA PMID:8932386), which CLAUDE.md asks be stated in the reason. Both the row's `summary` ("participates in BER gap-filling by coordinating with DNA polymerase beta") and its `reason` ("APEX1's role in the downstream steps of BER where the gap is filled") need rewriting while we are in the file — but **not** to "APEX1 does not fill the gap", which under the new sub-pathway terms would argue against `GO:0006284` too, a term APEX1 holds by IDA. The correct reason is that `R-HSA-73933` is the branch-agnostic parent pathway, so this evidence does not resolve patch length; APEX1 in fact incises in both branches, which is an independent argument for the parent. |
+| ADPRS | `Reactome:R-HSA-110373` | `MARK_AS_OVER_ANNOTATED` | **Propose no replacement**, and keep the action as it stands. When GOA drops the row, set `retired: true` and keep the row and its review rather than deleting either. The review traced this row to a compartment mismatch in Reactome's pathway nesting, which is the one argument here that is unaffected by the scope shift; `GO:0006281 DNA repair` (IMP, human experimental) carries ADPRS's real involvement at the right granularity. That review considered and declined `REMOVE` on reasoned grounds, and retirement is not a `REMOVE`. |
 
 Of the gene products named above, only these three are reviewed here (the
 term's full 9,941 rows span thousands of orthologs). RAD27 is reviewed and is named in
@@ -362,38 +362,63 @@ assignment is the whole question; none has a review here.
 
 ## Proposed approach
 
-**The upstream steps gate the in-repo ones, not the other way round.** All
-three affected rows are Reactome TAS, so their term is whatever Reactome's
-pathway-to-GO mapping emits — it is not ours to choose. And
-`existing_annotations` is validated against the regenerated `*-goa.tsv`, where
-a row with no matching GOA entry is a blocking `ERROR` ("Found N annotations
-not in GOA", `validate_against_goa` in
-`src/ai_gene_review/validation/validator.py`). So editing a review file ahead
-of the GOA pull does not just jump the gun — it fails validation. The
-`ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION` project sequences on the GOA pull
-for the same reason. Hence the ordering below.
+**A GOA-sourced term id is never rewritten, so the in-repo work splits into
+three phases with different gates.** The previous version of this page said to
+"change the row id" once the new terms were in a GO release. Both halves of that
+were wrong. CLAUDE.md is explicit — "do not rewrite an existing-annotation id
+just to satisfy validation" — because those ids are GOA provenance, not
+curator-chosen values; the obsoletion-specific form is stated in
+[Entner-Doudoroff](ENTNER_DOUDOROFF_OBSOLETION.md), where "the change is carried
+in `action` plus `proposed_replacement_terms` instead", and `genes/PSEPK/edd`
+still carries the obsolete `GO:0009255` as its row id with `action: MODIFY` and
+`proposed_replacement_terms: [GO:0061678]`. The row's own term only ever changes
+when GOA changes, which for a Reactome TAS row means Reactome remapping its
+pathway export and a fresh `just fetch-gene` — at which point the old row is
+**retired**, not deleted (`docs/goa_source_refresh.md`: set `retired: true`,
+"retain its original source and review", "do not delete the historical record";
+`GOAValidator` skips retired rows, so an orphaned retired row is not an error).
+
+| Phase | Edit | Gate |
+|---|---|---|
+| 1 | `action: MODIFY` + `proposed_replacement_terms` on the FEN1 and APEX1 rows | **none** — doable now |
+| 2 | FEN1 `core_functions` `directly_involved_in` → `GO:7770138` | a GO release `linkml-term-validator` resolves (author-supplied ids are hard validated) |
+| 3 | the rows' own terms | Reactome remap + `just fetch-gene`, then `retired: true` on the old rows and review of the reseeded `PENDING` ones |
+
+Phase 1 was verified locally rather than assumed: adding `action: MODIFY` with
+`proposed_replacement_terms: [{id: GO:7770138, label: long-patch base-excision
+repair}]` to the FEN1 row leaves `just validate human FEN1` passing (`✓ Valid`),
+even though `GO:7770138` is not yet in our ontology cache —
+`proposed_replacement_terms` has a plain `Term` range and is not enum-bound. It
+adds exactly one new warning, and usefully so: *"Process term GO:0006287 ... is
+not reflected in existing_annotations"*, pointing at the `core_functions` entry
+that still names the old term. That is phase 2's job, so the two phases are
+coupled: expect that warning to stand between them.
 
 1. **Send upstream the Reactome mapping table.** The four pathway-to-GO
    mappings are the highest-leverage fix in this obsoletion (12 TAS rows, three
    of them already self-describing as single- or multiple-nucleotide), and
    go-annotation#6627 lists them as needing review without proposing
    destinations. Carry over the ADPRS drop recommendation, but send PARG as
-   "parent term pending review" rather than as a second drop.
+   "parent term pending review" rather than as a second drop. This is also what
+   unblocks phase 3.
 2. **Raise the two MGI data queries** (the `P54098`/`P54099` accession and the
    pol λ–from–pol γ `WITH/FROM`) before the remap runs.
-3. **Then fix the three in-repo reviews**, once *all three* gates are open: the
-   new terms are in a GO release our validation resolves, Reactome has remapped
-   its pathway exports, and `just fetch-gene human FEN1` / `APEX1` / `ADPRS`
-   has pulled the new GOA rows. None of the three edits is purely mechanical:
-   - **FEN1** — change the row id *and* collapse the `core_functions`
-     `directly_involved_in` pair to `GO:7770138` alone.
-   - **APEX1** — rewrite both the `summary` and the `reason` against the
-     sub-pathway definition, per the table above.
-   - **ADPRS** — once GOA drops the row, **delete it** rather than retaining it
-     with a note, since an orphaned row is itself the validation error. Move
-     the compartment reasoning to `ADPRS-notes.md` so the analysis is not lost;
-     it is the record of why this export route was wrong, and is worth keeping
-     whether or not Reactome fixes the nesting.
+3. **Work the three phases above.** Per gene:
+   - **FEN1** — phase 1 `MODIFY` → `GO:7770138`; phase 2 collapse the
+     `core_functions` `directly_involved_in` pair (it holds `GO:0006287` *and*
+     `GO:0006284`) to `GO:7770138` alone, which also clears the warning phase 1
+     introduces.
+   - **APEX1** — phase 1 `MODIFY` → `GO:0006284`, a term APEX1 already holds by
+     IBA and IDA, so say so in the reason as CLAUDE.md asks. Rewrite both the
+     `summary` and the `reason` against the sub-pathway definition, per the
+     table above. No phase 2 work: `GO:0006284` is already in the ontology.
+   - **ADPRS** — no `proposed_replacement_terms`, because the recommendation is
+     that no replacement be minted; keep `MARK_AS_OVER_ANNOTATED` and note the
+     obsoletion in the reason. At phase 3, set `retired: true` and **keep the
+     row and its review** — the compartment analysis is the record of why this
+     export route was wrong, and retirement records disappearance from the
+     current snapshot rather than a biological `REMOVE`. Explain the retirement
+     in `ADPRS-notes.md` as `docs/goa_source_refresh.md` directs.
 
    `grep` each file rather than editing the tabled line alone — FEN1 names
    `GO:0006287` in a third place (inside the `reason` of its `GO:0006281 DNA
@@ -416,8 +441,8 @@ for the same reason. Hence the ordering below.
 ## Priority
 
 **Medium-high.** The in-repo work is small — three files, none of them a large
-edit, and all three blocked on upstream until Reactome remaps and the GOA pull
-reflects it — but the upstream leverage is unusually good: a handful of
+edit, and the first phase (`MODIFY` plus `proposed_replacement_terms`) needs no
+upstream change at all — but the upstream leverage is unusually good: a handful of
 Reactome mapping decisions and two PAINT node decisions determine where 9,941
 annotations land, and the obsoletion ticket is open right now with those
 decisions unmade. The gap-filling polymerases and ligases are also a coherent,
@@ -426,15 +451,13 @@ makes the exemplar reviews worth doing on their own terms.
 
 ## Status
 
-Scoped on 2026-10-17 from go-annotation#6627. No reviews started, and the
-in-repo edits are blocked on three separate upstream events — see the ordering
-note under *Proposed approach*. The two replacement terms exist in the merged
-ontology edit file but are not yet in a release OLS serves, so the id swaps in
-FEN1 and APEX1 need a release that `linkml-term-validator` can resolve
-(`core_functions` term ids are hard validated, and FEN1's `GO:0006287` sits in
-exactly such a slot) **and** a Reactome remap reflected in a fresh
-`just fetch-gene` pull, since all three rows are Reactome TAS and are validated
-against `*-goa.tsv`. While waiting,
+Scoped on 2026-10-17 from go-annotation#6627. No reviews started. The in-repo
+work is phased rather than wholly blocked — see the table under *Proposed
+approach*: the `MODIFY` plus `proposed_replacement_terms` edits can be made now,
+FEN1's `core_functions` entry waits on a GO release that
+`linkml-term-validator` resolves (author-supplied ids are hard validated), and
+only the rows' own terms wait on Reactome remapping its exports and a fresh
+`just fetch-gene`. While waiting,
 confirm the `GO:77701xx` allocation with the ontology editors: the ids here are
 reported verbatim from the merged `go-edit.obo` patch, but the range is
 unusual for GO, and it is cheap insurance before writing them into a
