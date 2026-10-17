@@ -11,7 +11,7 @@ The family PAINT cache has three relevant nodes that reach S. pombe `mon1`:
 - `PTN000989606`, at Fungi, places `GO:0000329 fungal-type vacuole membrane`
   and `GO:0006623 protein targeting to vacuole` from the S. cerevisiae `MON1`
   seed.
-- `PTN000315021`, at Opisthokonta, places the `contributes_to`
+- `PTN000315021`, at Eukaryota, places the `contributes_to`
   `GO:0005085 guanyl-nucleotide exchange factor activity` call from
   S. cerevisiae and Drosophila Mon1.
 - `PTN000315023`, at Opisthokonta, places `GO:0035658 Mon1-Ccz1 complex` from
@@ -51,9 +51,10 @@ Review decisions:
 - Accept the PTN000989606 fungal vacuolar membrane and vacuolar protein-targeting
   IBAs as correct, core fungal Mon1 inheritances.
 - Accept the PTN000315021 contributes_to GEF activity and the PTN000315023
-  Mon1-Ccz1 complex placement as correct broader Opisthokonta inheritances.
-- Keep the InterPro longin-domain `GO:0016192 vesicle-mediated transport`
-  mapping as a broad but true non-core process.
-- Keep PomBase cytosol and autophagy orthology calls as non-core; they are
-  plausible from the S. cerevisiae source but are secondary to the vacuolar
-  Mon1-Ccz1/Ypt7 exchange function.
+  Mon1-Ccz1 complex placement as correct broader PAINT inheritances.
+- Mark the InterPro longin-domain `GO:0016192 vesicle-mediated transport`
+  mapping as over-general beside the accepted late endosome-to-vacuole transport
+  row.
+- Keep the autophagy orthology call as non-core because it is a pathway using the
+  vacuolar Mon1-Ccz1/Ypt7 exchange module; leave the cytosol orthology transfer
+  undecided until the SGD source row is checked.
