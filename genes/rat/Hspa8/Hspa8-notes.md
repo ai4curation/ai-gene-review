@@ -85,3 +85,14 @@ Open questions:
 - GO:0019899 enzyme binding (IPI PMID:21958194, alpha-enolase) and GO:0031686 A1 adenosine
   receptor binding are both kept as non-core. Neither is clearly a client versus regulatory
   interaction.
+
+Review follow-up 2026-10-17: In response to the PR #4627 review, the GO:1904593 prostaglandin
+binding summary no longer says Hspa8 is modified "via Cys603". PMID:21445266 identified Hspa8 by
+2D gel and MS (Table 2, spots 1-3), but the Cys603 site came only from a sequence-homology search
+against IkB-kinase beta Cys179 (5/16 identity), and Hspa8 is not in the Figure 10 pull-down set.
+The summary now says this, and the homology sentence is quoted. The action (MARK_AS_OVER_ANNOTATED)
+is unchanged. The GO:0007519 skeletal muscle tissue development IEP reason now explains why
+MARK_AS_OVER_ANNOTATED was kept rather than REMOVE: the abstract reports HSC73 rising to adult
+levels by postnatal day 3, and the paper is abstract-only. The three open questions above, plus the
+VMAT2 inhibition observation (PMID:19457116; candidate GO:0141110 transporter inhibitor activity,
+not asserted), are now suggested_questions in the review YAML.
