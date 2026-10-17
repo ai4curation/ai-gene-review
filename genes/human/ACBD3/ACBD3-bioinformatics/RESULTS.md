@@ -1,5 +1,16 @@
 # ACBD3 claim-consistency audit
 
+## Audit Note
+
+This report is retained as a review-regression QA artifact, not as curated
+biological evidence for `ACBD3-ai-review.yaml`. It documents
+`audit_acbd3_claims.py`, a hand-maintained lexicon that guards the final review
+and notes against reintroducing previously retracted ACBD3 claims or losing
+required scope qualifiers. The 2026-10-05 follow-up in `ACBD3-notes.md` records
+the current clean run; use the cited primary papers, Reactome entry, UniProt
+record, and curated YAML text for ACBD3 molecular function, localization, and
+partner biology.
+
 `audit_acbd3_claims.py` is a regression test over this review's *claims*, not its quotes.
 
 ## Why it exists
