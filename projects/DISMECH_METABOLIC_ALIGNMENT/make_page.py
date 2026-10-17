@@ -15,7 +15,8 @@ Usage::
     make_page.py <report.yaml> <out.md> [<second-report.yaml>]
 
 With a second report, the two runs are reconciled flag by flag onto a self-check page
-written beside <out.md>, and the page links to it.
+written to DISMECH_METABOLIC_ALIGNMENT/audit-self-check.md in <out.md>'s directory, and
+the page links to it.
 
 WITHOUT one, that self-check page is DELETED if it exists. Run from the repository the
 two-argument form therefore removes the committed
@@ -1864,12 +1865,12 @@ if _self_check:
         f" it ran"
         + ("" if ALT_PROV.get("aigr_dirty") is None else
            f", though git answered for the audited tree itself:"
-           f" {'modified' if ALT_PROV.get('aigr_dirty') else 'clean'}. The two answers come"
-           f" from the same command in the same directory, differing only in the pathspec"
-           f" naming the script, which is why `audit_revision` is unrecorded for that run"
-           f" as well")
-        + f". The primary run answers it for the same script"
-          f" (`{PROV.get('audit_sha256')}`):"
+           f" {'modified' if ALT_PROV.get('aigr_dirty') else 'clean'}. Both runs record the"
+           f" same script (`{PROV.get('audit_sha256')}`), in which the two answers come"
+           f" from one command in one directory differing only in the pathspec that names"
+           f" the script - which is why `audit_revision` is unrecorded for that run as"
+           f" well")
+        + f". The primary run answers it:"
           f" {'modified' if PROV.get('audit_dirty') else 'clean'}.",
         "",
     ] if ALT_PROV.get("audit_dirty") is None

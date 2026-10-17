@@ -190,8 +190,23 @@ CASES = [
     # repository holding any particular commit, which is what a first version of the shim
     # cases did depend on. All four still need a repository: `_alt_drift_tail` returns early
     # when `rev-parse HEAD` fails, so a run from an export with no `.git` fails them.
+    #
+    # It also carries the sub-page's frontmatter, which nothing else checks.
+    # render-projects reads `species_hints` per page, so without it every symbol existing
+    # in more than one species goes unlinked - which is what happened when this content
+    # moved off the project page, and a render warning was the only signal. Declared as
+    # one contiguous span rather than as a `species: [human]` fragment, because `where` is
+    # the two rendered files concatenated and the project page's own frontmatter carries
+    # that line: as separate fragments the assertion passed whether or not the sub-page
+    # had it, which is the one thing it exists to prevent. The exception to this file's
+    # declare-the-fragments rule is deliberate - what sits between these lines is fixed
+    # text, not a figure that moves with the trees.
     ("untampered", "OK", lambda p, a: None,
-     "Flag counts on principal rows:"),
+     ("Flag counts on principal rows:",
+      "title: 'dismech metabolic alignment: audit self-check'\n"
+      "description: Two runs of the same audit reconciled flag by flag, as a check on the"
+      " generator\n"
+      "species: [human]\n")),
     ("audit_sha256 differs", "EXIT",
      lambda p, a: a["provenance"].update(audit_sha256="deadbeefdead"),
      "produced by different align_audit.py versions"),
@@ -364,8 +379,11 @@ CASES = [
                                          aigr_tree="a harness tree"),
      "at `defaced`, which git cannot resolve to a commit here and which is not shaped like an"
      " object name, so the input-drift comparison below was not made.\n"),
-    # The failure/absence split on the same probe the two `for-each-ref` cases exercise -
-    # four and three entries up, with the ref, not-a-commit and a-to-f-word cases between.
+    # The failure/absence split on the same probe as the two cases where `merge-base`
+    # answers 0 and answers 1. Named by what they test rather than by position: three case
+    # names begin with `for-each-ref`, the third of them is the `fail` mode and not one of
+    # these two, and a positional reference goes stale the next time a case is inserted -
+    # which it had, by the time it was read.
     # git has not said the revision is unpublished; it has not said anything, and the page
     # must claim only that much. This mode answers 128 for every revision, so both tails
     # take their error path and both sentences are declared - and the self-check tail's is
@@ -378,15 +396,6 @@ CASES = [
       "git could not say whether it is an ancestor of this branch, so nothing is"
       " claimed."),
      "ancerr"),
-    # The sub-page's frontmatter, which nothing else checks. render-projects reads
-    # `species_hints` per page, so without it every symbol existing in more than one
-    # species goes unlinked - which is what happened when this content moved off the
-    # project page. A render warning is the only other signal, and it is not committed.
-    ("the self-check page carries the project page's species frontmatter", "OK",
-     lambda p, a: None,
-     ("---\ntitle: 'dismech metabolic alignment: audit self-check'",
-      "species: [human]"),
-     None),
     # The last two drift sentences with no mode of their own. Each guards a different git
     # call inside the same function, and each says only that the question was not answered
     # - which is the distinction this file exists to keep: a git failure is not a finding.
