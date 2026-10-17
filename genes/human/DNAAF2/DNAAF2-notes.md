@@ -32,3 +32,10 @@ A short positive Hsp70 anchor now accompanies the broad chaperone-complex judgme
 The original CFAP300 Results and Figure S12 in PMID:29727693 show a controlled DNAAF2 Y2H and tagged co-immunoprecipitation result. UniProt independently cites that paper for the same pair. This corroboration supports the retained interaction but does not establish a transcription error in GOA's original PMID:29727692 attribution; that identifier and its source dictionary remain unchanged. Resolving the source attribution is a curation task, now kept here rather than among biological expert questions [PMID:29727693](https://pubmed.ncbi.nlm.nih.gov/29727693/), [UniProt Q9NVR5](https://www.uniprot.org/uniprotkb/Q9NVR5/entry).
 
 All 22 source identities, annotation actions, both natural products and the assembly core remain unchanged. The standalone description now states biology directly. The two new short quotations appear only in annotation support, totaling 15 newly reproduced words from PMID:19052621; inherited quotations and all prior notes remain intact.
+
+
+## Follow-up: basal-body source assignment
+
+The HPA basal-body observation is now represented once as a new location annotation from GO_REF:0000052 and the unchanged [official HPA XML snapshot](DNAAF2-hpa.xml). It is removed from the three cytoplasm replacement lists, whose PAINT, respiratory-fractionation and sequence-rule sources do not make that distinct claim. The HPA record uses one antibody across three human cell models; the assembly function of this pool remains unresolved. The core continues to locate dynein assembly in cytosol and DynAPs. This supersedes the preceding placement of basal body among cytoplasm replacements.
+
+The two natural products retain their exact identities and sequence notes. The source experiments do not resolve their separate preassembly contributions or map the respiratory Western doublet to accessions. These limits remain explicit here while the product descriptions state the biological distinctions. The curated UniProt CFAP300 statement now has its own short source anchor; the original GOA PMID is preserved.
