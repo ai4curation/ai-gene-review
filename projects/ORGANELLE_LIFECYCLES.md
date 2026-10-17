@@ -2,6 +2,7 @@
 title: "Organelle Lifecycle Modules"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
+species: [human]
 autolink_exclude: [ftsZ, FtsZ]
 ---
 
@@ -55,8 +56,12 @@ matching, and lifecycle stages are processes.
    selective autophagy (one shared receptor-to-Atg8 module plus organelle-specific
    receptors), reversible mitotic disassembly (nuclear envelope, Golgi), and
    programmed developmental elimination.
-4. **A stage is required only when its referenced module is rule-ready.** Until
-   then it is linked as optional, so it is visible but cannot produce false
+4. **A stage is required only when its referenced module is rule-shaped.** That
+   means `RULE_READY`, or `RULE_CANDIDATE` with its lineage exceptions named in
+   the module (`coverage.yaml` defines both). Genomes from a named exception
+   lineage are then reported as gaps, which the engine's abduction step flags
+   for explanation rather than treating as absence. Clade-scoped `DESCRIPTIVE`
+   modules are linked as optional, so they are visible but cannot produce false
    negatives.
 
 ## Finding: existing modules are not yet rules
@@ -83,7 +88,8 @@ The organelle-by-stage matrix lives in
 ## Plan
 
 - [x] `module_ref` schema slot, engine, validator and rendering (PR #5108)
-- [x] `mitochondrial_protein_import` (eukaryote-wide, PAINT-grounded)
+- [x] `mitochondrial_protein_import` (eukaryote-wide, PAINT-grounded; `RULE_CANDIDATE`)
+- [ ] Model the kinetoplastid inner-membrane translocase as a lineage `variant_set` in `mitochondrial_protein_import`, then mark it `RULE_READY`
 - [x] `mitochondrion_lifecycle` umbrella (import required; other stages optional)
 - [ ] Make mitochondrial division rule-ready (Mff / Mdv1-Fis1 / FtsZ variants), then make it required
 - [ ] Mitochondrial iron-sulfur cluster assembly module (universal to mitochondrion-related organelles)
