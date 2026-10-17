@@ -26,3 +26,9 @@
 
 ## PANTHER / IBA
 - UniProt PANTHER xref: PTHR45703:SF4 (DYNEIN AXONEMAL HEAVY CHAIN 17), same as mouse Dnah17 (Q69Z23). GOA IBAs come from PTHR10676 nodes (PTN000743491, PTN000073047). Human and mouse both have 7 IBAs in QuickGO (checked 2026-10-14); no human/mouse IBA gap. Unlike DNAH8, DNAH17 gets no IBA for outer dynein arm or sperm flagellum (it has IDA for both instead).
+
+## 2026-10-17 — consolidate duplicate sperm-motility coverage
+
+The earlier standalone NEW GO:0030317 proposal duplicated the same term already proposed as the replacement for the imported GO:0060285/NAS/PMID:9373155 annotation. The functional participation argument remains supported: DNAH17 is a force-generating component of the sperm outer dynein arm. This correction removes only the redundant authored proposal and consolidates its unique supporting citations into that existing MODIFY review. All 28 genuine source annotations, their original identities, every other review decision, the integrated core, products and reference list are preserved. No additional verbatim excerpts were introduced; the earlier proposal remains available in the append-only Git/history record.
+
+The prior PR #5009 approval remains part of the provenance. This correction addresses duplicate coverage, not a withdrawal of the positive motility evidence or a new completion-credit decision.
