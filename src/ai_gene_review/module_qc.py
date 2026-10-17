@@ -6,6 +6,7 @@ This module computes the derived stats surfaced on rendered module pages:
 1. ``run_data_qc`` -- LinkML recommended-field compliance (via ``linkml-data-qc``)
 2. ``leaf_nodes_missing_representatives`` -- terminal nodes in concrete modules
    that do not ground to any concrete protein (a "representative member")
+   unless explicitly marked as intentionally distributed/open-ended
 3. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
    template motif, whether the bundle's tiers and connection topology match it
 4. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
@@ -122,6 +123,17 @@ def is_leaf_node(node: dict[str, Any]) -> bool:
     return not as_list(node.get("parts")) and not as_list(node.get("variant_sets"))
 
 
+def is_intentionally_ungrounded_node(node: dict[str, Any]) -> bool:
+    """Return True when a terminal node deliberately has no representative.
+
+    >>> is_intentionally_ungrounded_node({"intentionally_ungrounded": True})
+    True
+    >>> is_intentionally_ungrounded_node({})
+    False
+    """
+    return bool(node.get("intentionally_ungrounded"))
+
+
 def module_scope(data: dict[str, Any]) -> Optional[str]:
     """Return the normalized module scope, if declared."""
     scope = data.get("scope")
@@ -207,7 +219,9 @@ def leaf_nodes_missing_representatives(
     participants resolve to a concrete protein -- e.g. abstract ``FAMILY`` or
     ``ANY_WITH_FUNCTION`` selectors with no ``representative_members``. Documents
     declared as ``scope: ABSTRACT`` are reusable motifs and skip this grounding
-    completeness check.
+    completeness check. Individual leaf nodes marked
+    ``intentionally_ungrounded`` are also skipped when a concrete module needs a
+    distributed or open-ended role instead of a false single exemplar.
     """
     if is_abstract_module(data):
         return []
@@ -215,6 +229,8 @@ def leaf_nodes_missing_representatives(
     flagged: list[dict[str, Any]] = []
     for node in iter_nodes(data):
         if not is_leaf_node(node):
+            continue
+        if is_intentionally_ungrounded_node(node):
             continue
         groundings = node_representative_groundings(node)
         if not groundings:
