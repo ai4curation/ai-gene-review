@@ -32,9 +32,7 @@ FgRab7.
 
 PMID:35793146 characterizes VmMon1-Ccz1 in Valsa mali. Only the abstract is
 cached, but the newer fungal result is consistent with conserved Mon1-Ccz1
-function in conidiation, autophagy, and virulence. The open article notes that
-the Neurospora XP_959164.3 sequence was included in the Mon1 comparison and
-shared 63.31% amino-acid identity with VmMon1.
+function in conidiation, autophagy, and virulence.
 
 Web/PubMed searches for `"NCU09220"`, `"Q870Q4"`, and Neurospora MON1 did not
 find a direct N. crassa experimental paper. The main Neurospora autophagy hit,
@@ -50,7 +48,12 @@ not this Mon1-family gene.
   rows are accepted as broader, well-scoped PAINT calls.
 - `GO:0005774 vacuolar membrane` is correct but less specific than the accepted
   fungal-type vacuole membrane child, so it is marked `MODIFY`.
-- The InterPro longin-domain `GO:0016192 vesicle-mediated transport` and the
-  SubCell `GO:0032585 multivesicular body membrane` rows are retained as
-  defensible non-core context; they should not displace the fungal vacuole
-  membrane and protein-targeting PAINT rows as the core assertions.
+- The InterPro longin-domain `GO:0016192 vesicle-mediated transport` row is
+  marked `MODIFY` toward late endosome-to-vacuole MVB transport because the
+  existing term is true but too broad.
+- The SubCell `GO:0032585 multivesicular body membrane` row is retained as
+  defensible non-core context; it should not displace the fungal vacuole membrane
+  and protein-targeting PAINT rows as core assertions.
+- Add `GO:0006914 autophagy` as a conservative new annotation: Mon1-Ccz1 performs
+  a conserved Rab7/Ypt7 activation step needed for autophagosome-vacuole fusion,
+  and that role is experimentally visible in yeast and filamentous fungi.
