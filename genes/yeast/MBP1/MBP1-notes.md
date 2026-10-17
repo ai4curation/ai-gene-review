@@ -125,3 +125,15 @@ Inline citations are `[PMID:NNN "verbatim text"]` where the publication is cache
 - 10747782 Taylor et al. 2000 Biochemistry — Mbp1/Swi4 DBDs.
 - 18160399 Ashe et al. 2008 JBC — Msa1.
 - 39285615 Ros-Carrero et al. 2024 Cell Cycle — WHI7 promoter.
+
+## 2026-10-01 IBA alignment refresh
+
+- Rebased from `origin/main` and reran `just fetch-gene yeast MBP1 --force`;
+  the current 24-row GOA import matched the review.
+- Fetched current PTHR43828 PAINT. All live MBP1 IBA rows still trace to the
+  APSES G1/S transcription-regulator node `PTN000917496`: five accepted MBF
+  molecular-function, complex and process rows, plus the cytoplasm row already
+  marked as a bad Swi6-specific propagation. Added structured
+  `propagation_review` blocks for the accepted IBA rows.
+- Rechecked 2025-2026 web search results and did not find a newer direct
+  *S. cerevisiae* MBP1 functional paper requiring changes.
