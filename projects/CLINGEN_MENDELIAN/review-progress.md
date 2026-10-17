@@ -3739,3 +3739,43 @@ exhaustive queue census.
 The actual branch inventory remains 7,857 reviews, including 2,998 human reviews. All eight frontmatter checks and both ordinary renders passed. The warning lists are unchanged from checkpoint 431: 1,715 missing-review warnings on the catalogue and zero on the progress page. Counts are 432 checked and 2,444 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T064927Z-codex-6f8b44.yaml)
+
+## Completion checkpoint 433 — 2026-10-17 07:07:09 UTC
+
+**433 complete; 2,443 remaining out of 2,876 primary catalogue genes.**
+CYP27A1 is the only addition to checkpoint 432. Its approved head
+`930aefe5b3b095210095b09bb33f425a815a3cb6` in
+[#5047](https://github.com/ai4curation/ai-gene-review/pull/5047) merged as
+[`1f2d0f4c42bd`](https://github.com/ai4curation/ai-gene-review/commit/1f2d0f4c42bde7e51deeed7d0486ef015657404b).
+All eleven approved file modes, types and blobs match the merge, all eleven paths
+form the actual parent-to-merge delta, and all 38 protected scientific source
+paths remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5047#pullrequestreview-5545111481)
+applies to that exact head; all required review findings were resolved.
+
+The separate actual-main push [run 39012439782](https://github.com/ai4curation/ai-gene-review/actions/runs/39012439782)
+and [test job 117337633319](https://github.com/ai4curation/ai-gene-review/actions/runs/39012439782/job/117337633319)
+completed successfully at 2026-10-17T07:13:32Z. Scoped gene validation passed
+without gene-validation warnings. All 12,011 history records had
+no issues, and all 42 history tests passed. The full test suite was skipped on
+this push job; the completion check does not claim a full-suite run.
+The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 81 earlier completion updates, the complete
+preceding progress text and 170 earlier project history records. The catalogue
+changes only CYP27A1 from unchecked to checked. Earlier queue values and literal UTF-8 formatting are unchanged. The completion
+cutoff is also stated directly on the main project page.
+
+DCC [#5080](https://github.com/ai4curation/ai-gene-review/pull/5080) is approved
+at `08e1797356e01101c5de7091b61dd1b61c97e92b` and entered the normal merge
+queue. DCDC2 [#5082](https://github.com/ai4curation/ai-gene-review/pull/5082)
+is approved at `6d095b754e8d53597421072c84270e86e1329603` and queued.
+DCLRE1C [#5083](https://github.com/ai4curation/ai-gene-review/pull/5083) and
+DDB2 [#5084](https://github.com/ai4curation/ai-gene-review/pull/5084) await review.
+The DCX follow-up is undergoing validation; DDC and DDHD1 source assessment continues.
+These selected status observations add no completion credit and are not a new
+exhaustive queue census.
+
+The actual branch inventory remains 7,857 reviews, including 2,998 human reviews. All eight frontmatter checks and both ordinary renders passed. The warning lists are unchanged from checkpoint 432: 1,715 missing-review warnings on the catalogue and zero on the progress page. Counts are 433 checked and 2,443 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T071959Z-codex-6bbe43.yaml)

@@ -2988,12 +2988,12 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**432 of 2,876 genes are complete; 2,444 remain.**
-CYP11B2 is the verified addition since checkpoint 431.
-[Checkpoint 432](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-432-2026-10-17-063524-utc)
+**433 of 2,876 genes are complete; 2,443 remain.**
+CYP27A1 is the verified addition since checkpoint 432.
+[Checkpoint 433](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-433-2026-10-17-063524-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`a87ae568676c`](https://github.com/ai4curation/ai-gene-review/commit/a87ae568676c4012ea4abe5393967aeff1b52ae7),
-merged at 2026-10-17 06:35:24 UTC.
+cutoff is [`1f2d0f4c42bd`](https://github.com/ai4curation/ai-gene-review/commit/1f2d0f4c42bde7e51deeed7d0486ef015657404b),
+merged at 2026-10-17 07:07:09 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
 The current branch has 7,857 reviews, including 2,998 human reviews. Review
@@ -3554,7 +3554,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CYLD** — HGNC:2584; [Brooke-Spiegler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_434ddb72-ee88-47af-9fa2-8dee9fa0a388-2019-04-19T160000.000Z) (MONDO:0011512; AD; Definitive); [frontotemporal dementia and/or amyotrophic lateral sclerosis 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6e9998d4-d6e3-4bdc-8de6-038928edbb60-2023-02-23T170000.000Z) (MONDO:0030872; AD; Limited).
 - [x] **CYP11B2** — HGNC:2592; [familial hyperreninemic hypoaldosteronism type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a81c6c87-34bc-4ec4-8c31-91d2c9be4095-2023-11-16T013000.000Z) (MONDO:0011754; AR; Definitive).
 - [ ] **CYP1B1** — HGNC:2597; [CYP1B1-related glaucoma with or without anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_107502fc-115b-4ee0-ba83-7081a17d1ebc-2023-01-19T170000.000Z) (MONDO:0800472; AR; Definitive).
-- [ ] **CYP27A1** — HGNC:2605; [cerebrotendinous xanthomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84f4b8c1-a978-49ab-a21c-578e5d4fcdec-2024-09-23T160000.000Z) (MONDO:0008948; AR; Definitive).
+- [x] **CYP27A1** — HGNC:2605; [cerebrotendinous xanthomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84f4b8c1-a978-49ab-a21c-578e5d4fcdec-2024-09-23T160000.000Z) (MONDO:0008948; AR; Definitive).
 - [ ] **CYP27B1** — HGNC:2606; [vitamin D-dependent rickets, type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dadf4f9a-281f-4e34-bdde-d44c28e572d6-2025-06-04T040000.000Z) (MONDO:0020723; AR; Definitive).
 - [ ] **CYP2U1** — HGNC:20582; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e2d550d2-5653-45dc-a8a3-2dccf4bb49f6-2023-01-16T020000.000Z) (MONDO:0019064; AR; Definitive).
 - [ ] **CYP4V2** — HGNC:23198; [Bietti crystalline corneoretinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_da577a4b-5c65-43fa-9a03-b275eaacb6eb-2021-04-01T160000.000Z) (MONDO:0008865; AR; Definitive).
