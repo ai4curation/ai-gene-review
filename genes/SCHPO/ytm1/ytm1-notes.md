@@ -19,10 +19,10 @@
   cells, Ytm1 is not detectable on chromatin" [PMID:36423630]. That supports
   accepting the PomBase NOT chromatin row and removing the older abstract-only
   high-throughput positive chromatin row from PMID:22146723.
-- The original PomBase nucleolar IDA row cites the Rbin/Mdn1 paper. Its cached
-  full text only exposes the Ytm1-GFP nucleolar quantitation in the methods, but
-  it is consistent with later cryo-EM recovery of Ytm1 in nucleolar nascent
-  60S particles.
+- The original PomBase nucleolar IDA row cites the Rbin/Mdn1 paper, whose
+  results directly report that Ytm1 predominantly localizes to the nucleolus in
+  growing fission-yeast cells. The same paper provides direct Mdn1-MIDAS/Ytm1-MIDO
+  evidence for conservation of the Rea1/Mdn1 release-handle mechanism.
 - I did not propose the S. cerevisiae `GO:0110136 protein-RNA complex
   remodeling` row de novo for fission yeast. The Rea1/Mdn1-Ytm1 mechanism is
   conserved, but the existing PomBase surface already captures the direct
