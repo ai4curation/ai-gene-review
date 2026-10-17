@@ -57,7 +57,7 @@ You can run the underlying commands (with `uv run ...`) but in general justfile 
 - **mkdocs.yml** - Index of docs
 
 ### Technology Stack
-- **Python 3.10+** with `uv` for dependency management
+- **Python 3.12+** with `uv` for dependency management (see `requires-python` in `pyproject.toml`)
 - **LinkML** for data modeling (linkml-runtime)
 - **Typer** for CLI interface
 - **pytest** for testing
