@@ -1,0 +1,13 @@
+# DLG3 review notes
+
+## 2026-10-17 — Evidence-based annotation review
+
+The normal fetch supplied 456 annotations, including 423 literal protein-binding pairs. All source dictionaries, accession/isoform fields, qualifiers and references remain intact. The completed review contains 295 MODIFY, 33 KEEP_AS_NON_CORE, 122 UNDECIDED and 6 ACCEPT decisions, with one integrated postsynaptic scaffold core and no NEW annotations. Three official human products were reconstructed from sequence features and independently matched to official FASTA sequences.
+
+The [public evidence guide](DLG3-evidence-guide.md) gives original-source URLs, assay/construct limitations, the fragmentomics crosswalk, exact AP-MS edges and propagation provenance. The [project binding policy](https://github.com/ai4curation/ai-gene-review/blob/36c9a4b4daf165c450123e3df8362da202075c8c/projects/CLINGEN_MENDELIAN.md#curation-instructions) is applied to supported associations. Generic binding is not removed merely for being generic. Different literal partners can have different actions; no disagreement is based solely on evidence code.
+
+The full SD1 workbook was reconstructed independently. Zero/below-threshold peptide measurements do not establish biological noninteraction. Positive measurements support fragment-specific peptide binding, including modification and sequence-mapping limits. The RPS6KA1 -1 result is qualified as composite-positive; the discordant -3 LYSC value is retained. ARHGAP17 and DLGAP4 remain non-core associations because independent co-complex evidence survives the undetected-tail result. AP-MS-only KCNA4 and ARHGEF26 are likewise retained without unsupported direct-recognition refinements.
+
+The sole core integrates structural contribution to the postsynaptic density and receptor localization to synapse. Actual original human/rodent constructs, rodent splice experiments, and the current short human isoforms are distinguished. Epithelial polarity, kinase/phosphatase associations and developmental outcomes remain contextual. The 1997 proliferation original was not recovered; the publisher response was an abstract-only HTML preview despite the attempted PDF filename. The tear-proteomics target-specific identification also remains unresolved. Neither uncertainty is a removal or a claim of curator error.
+
+Configured provider attempts and their failures are retained in the ordinary bootstrap provenance. No provider-named research content was invented. The protected main publication caches remain unchanged; separately recovered originals are used only with explicit access descriptions. The existing repository and legacy workspace content were untouched by this TMP review.
