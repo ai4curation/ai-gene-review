@@ -26,3 +26,5 @@
 
 **Open questions:**
 - Should the Notch IMP be re-expressed by the curator as a regulation-of-expression or response annotation rather than involvement?
+
+Review follow-up 2026-10-17 (PR #4617 reviewer findings): No row changes. CC convention for this batch: a location row is ACCEPTed only when that location is part of a core_functions entry (Pnlip extracellular region for luminal digestion, Arsb lysosome for GAG degradation); otherwise location rows are KEEP_AS_NON_CORE. Batch policy for broad parents (applied to all eight genes in PR #4617): an uninformative broad parent of a specific activity or process the gene already carries is MODIFIED to that specific term; experimental rows stay at the curator's breadth unless the cited assay itself identifies the specific substrate. (Cfd's GO:0004175 IEA MODIFY already followed it; the PMID:1953671 IDA row was narrowed in the original re-review because factor D is a well-characterised trypsin-family serine protease, not because the PMID:1953671 abstract names the catalytic class, so it is the one exception to the experimental-breadth rule in this batch, retained as previously reviewed.)
