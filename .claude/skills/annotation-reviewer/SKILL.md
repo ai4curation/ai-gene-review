@@ -33,7 +33,7 @@ For each annotation you will create or update the `review` section of the `exist
         supporting_text: DIRECT TEXT QUOTE FROM PUBLICATION HERE [EDITORIAL NOTES IN SQUARE BRACKETS ARE IGNORED]
 
 
-Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`.
+Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`. Never cite the gene's own `-goa.tsv` in `supported_by`: it records the annotation under review, not evidence for it, and validation rejects it. If no independent source supports a row, set the action to `UNDECIDED`.
 
 Note that there should be an entry under `existing_annotations` for every line in the GOA tsv.
 
