@@ -65,7 +65,7 @@
 
         .toolbar {
             display: grid;
-            grid-template-columns: minmax(180px, 1fr) auto;
+            grid-template-columns: minmax(180px, 1fr) auto auto;
             gap: 10px;
             margin: 18px 0;
         }
@@ -282,10 +282,21 @@
         <p class="muted">Reusable biological module sketches rendered from YAML. Columns
             with numeric counts are derived by recursively walking each module document.
             Click a column header to sort; counts and concepts come straight from the YAML.</p>
+        <p>Some modules can also be run: see the <a href="../models/index.html">executable models</a>
+            (Boolean networks you can run in the browser, and associated kinetic models), or use the
+            model filter below.</p>
     </header>
 
     <section class="toolbar">
         <input class="search" type="search" placeholder="Filter modules" data-module-search>
+        <select class="search" data-model-filter aria-label="Filter by executable model">
+            <option value="">All modules</option>
+            <option value="*">With an executable model</option>
+            <option value="BOOLEAN">Boolean model</option>
+            <option value="KINETIC">Kinetic model</option>
+            <option value="CONSTRAINT_BASED">Constraint-based model</option>
+            <option value="AGENT_BASED">Agent-based model</option>
+        </select>
         <div class="count"><span data-visible-count>{{ total_modules }}</span> / {{ total_modules }} modules</div>
     </section>
 
@@ -308,6 +319,7 @@
                     <th class="num" data-sort="num">Genes&nbsp;rev. <span class="arrow"></span></th>
                     <th class="num" data-sort="num">Leaf&nbsp;gaps <span class="arrow"></span></th>
                     <th data-sort="text">Module&nbsp;DR <span class="arrow"></span></th>
+                    <th data-sort="text">Models <span class="arrow"></span></th>
                     <th data-sort="text">Source <span class="arrow"></span></th>
                 </tr>
             </thead>
@@ -374,6 +386,9 @@
                     <td class="num" data-sort-value="0"></td>
                     <td data-sort-value="no"></td>
                     {%- endif %}
+                    <td data-sort-value="{{ module.model_types | join(' ') }}" data-model-types="{{ module.model_types | join(' ') }}">
+                        {%- for t in module.model_types %}<span class="pill type">{{ t | enum_label }}</span>{% endfor -%}
+                    </td>
                     <td><span class="source">{{ module.source_path }}</span></td>
                 </tr>
                 {%- endfor %}
@@ -389,21 +404,31 @@
     const tbody = table ? table.querySelector("tbody") : null;
     const rows = tbody ? Array.from(tbody.querySelectorAll("[data-module-row]")) : [];
 
-    if (input) {
-        input.addEventListener("input", () => {
-            const query = input.value.trim().toLowerCase();
-            let visible = 0;
-            rows.forEach((row) => {
-                const matches = !query || row.textContent.toLowerCase().includes(query);
-                row.classList.toggle("is-hidden", !matches);
-                if (matches) {
-                    visible += 1;
-                }
-            });
-            if (count) {
-                count.textContent = String(visible);
+    const modelFilter = document.querySelector("[data-model-filter]");
+    const applyFilters = () => {
+        const query = input ? input.value.trim().toLowerCase() : "";
+        const modelType = modelFilter ? modelFilter.value : "";
+        let visible = 0;
+        rows.forEach((row) => {
+            const cell = row.querySelector("[data-model-types]");
+            const types = (cell ? cell.dataset.modelTypes : "").split(" ").filter(Boolean);
+            const modelMatch = !modelType
+                || (modelType === "*" ? types.length > 0 : types.includes(modelType));
+            const matches = modelMatch && (!query || row.textContent.toLowerCase().includes(query));
+            row.classList.toggle("is-hidden", !matches);
+            if (matches) {
+                visible += 1;
             }
         });
+        if (count) {
+            count.textContent = String(visible);
+        }
+    };
+    if (input) {
+        input.addEventListener("input", applyFilters);
+    }
+    if (modelFilter) {
+        modelFilter.addEventListener("change", applyFilters);
     }
 
     if (table && tbody) {

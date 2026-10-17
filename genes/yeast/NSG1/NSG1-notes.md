@@ -49,3 +49,30 @@
   client whose interaction is captured by the GO:0044183 replacement and the
   proposed SSD-chaperone term; the UniProtKB:Q8N6L0 row is a human KASH5
   cross-species hit that UniProt marks `Xeno`.
+
+## 2026-10-01 current GOA refresh
+
+- Refreshed NSG1 against live GOA and UniProt. GOA now carries 18 rows: the 13
+  still-live historical assertions plus five new rows for `GO:0006457` protein
+  folding, `GO:0031965` nuclear membrane, two exact `GO:0044183` protein
+  folding chaperone rows that replace the former `GO:0051082` assertions from
+  PMID:16270032, and a second `GO:0071561` NVJ row from PMID:42227952.
+- Preserved every exact historical assertion. The stale human KASH5
+  `GO:0005515` row from PMID:27107014 and both old `GO:0051082` rows from
+  PMID:16270032 are no longer present in the live source and are now retained
+  with `retired: true`.
+- Fetched the current `PTHR15301` PAINT node slice. The two live NSG1 IBA rows
+  are both supported by `PANTHER:PTN000393022`; current IBD data propagate
+  `GO:0005783` and `GO:0016126` at that node, matching the accepted yeast
+  ER/sterol-pathway biology. The row-level `propagation_review.source_entities`
+  now name that PTN node only; the extant `WITH/FROM` descendants remain as
+  deterministic `supporting_entities`.
+- Searched PubMed/Web for newer yeast NSG1/Nsg1 literature. The newest direct
+  paper found was Fujimoto and Tamura 2026, PMID:42227952; its full text was
+  gated at JCB/Rockefeller University Press, but the PubMed/JCB abstract
+  directly supports glucose-starvation recruitment of Nsg1/Nsg2/Hmg1/Hmg2 to
+  the NVJ and Hmg1 activation when Nsg1 is destabilized.
+- Accepted the new logical `GO:0006457` and SGD `GO:0044183` rows. Kept the
+  new 2026 nuclear-membrane and NVJ rows as non-core localizations because
+  they capture conditional starvation remodeling rather than replacing the core
+  Hmg2 sterol-sensing-domain chaperone role.
