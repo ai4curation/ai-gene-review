@@ -13,3 +13,11 @@ Mismatch repair and nucleotide-excision repair were therefore added as direct
 IMP-supported processes, with wording that preserves the observed redundancy.
 Generic helicase, hydrolase, and nucleotide-binding parents were marked
 over-annotated rather than duplicated in the core function.
+
+## OpenScientist adjudication
+
+The OpenScientist report corroborated the UvrD-family identity and
+ATP-dependent 3'-to-5' DNA helicase assignment. It missed the direct P. putida
+deletion paper already used in the review and therefore understated the
+organism-specific evidence; the report is used only for conserved molecular
+function support, not for process assertions.

@@ -25,6 +25,12 @@ auto_merge = importlib.util.module_from_spec(_SPEC)
 sys.modules[_SPEC.name] = auto_merge
 _SPEC.loader.exec_module(auto_merge)
 
+@pytest.fixture(autouse=True)
+def no_merge_queue(monkeypatch):
+    """These existing policy tests exercise direct mode; queue tests are separate."""
+    monkeypatch.setattr(auto_merge, "read_queue_state", lambda *_: auto_merge.QueueState(False))
+
+
 NOW = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
 HEAD_SHA = "cafe1234"
 REQUIRED_CHECK = "test (3.12)"
