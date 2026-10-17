@@ -111,6 +111,8 @@ def load_rules() -> list[Rule]:
             sets.append(ConditionSet(frozenset(sig), frozenset(tax), frozenset(neg)))
         for term in terms:
             rules.append(Rule(raw["uniRuleId"], term, sets))
+    ids = [r.id for r in rules]
+    assert len(ids) == len(set(ids)), "a rule asserts several GO terms; results are keyed by rule id"
     return rules
 
 
@@ -178,7 +180,9 @@ def subsumption(rules: list[Rule], ancestors: dict[str, set[str]]) -> dict[str, 
 def gene_side(rules_of_interest: set[str]) -> dict[str, dict]:
     """For each rule's rows in gene reviews: actions, and whether a strict descendant is present."""
     rows = list(csv.DictReader(open(HERE / "gene_side_rows.tsv"), delimiter="\t"))
-    rows = [r for r in rows if r["rules"].replace("ARBA:", "") in rules_of_interest]
+    for r in rows:
+        r["rule_ids"] = [x.replace("ARBA:", "") for x in r["rules"].split("|") if x]
+    rows = [r for r in rows if set(r["rule_ids"]) & rules_of_interest]
     genes = {r["gene"] for r in rows}
     annotations: dict[str, list[tuple[str, bool]]] = {}
     for g in genes:
@@ -192,13 +196,13 @@ def gene_side(rules_of_interest: set[str]) -> dict[str, dict]:
     ancestors, _ = go_tables(terms)
     out: dict[str, dict] = collections.defaultdict(lambda: collections.Counter())
     for r in rows:
-        rid = r["rules"].replace("ARBA:", "")
-        c = out[rid]
-        c["rows"] += 1
-        c[r["action"]] += 1
         desc = [arba for t, arba in annotations.get(r["gene"], []) if r["term"] in ancestors.get(t, ())]
-        c["descendant_any"] += bool(desc)
-        c["descendant_arba"] += any(desc)
+        for rid in set(r["rule_ids"]) & rules_of_interest:
+            c = out[rid]
+            c["rows"] += 1
+            c[r["action"]] += 1
+            c["descendant_any"] += bool(desc)
+            c["descendant_arba"] += any(desc)
     return out
 
 

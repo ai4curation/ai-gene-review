@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import collections
 import csv
+import datetime
 import functools
 import glob
 import json
@@ -88,11 +89,12 @@ def load_modules() -> list[dict]:
                     if str((c.get("term") or {}).get("id", "")).startswith("GO:")]
         circuit = compile_module(doc)
         atoms = list(iter_atoms(circuit))
-        taxa = {str((t.get("term") or {}).get("id", "")).split(":")[-1]
-                for t in (doc["module"].get("context") or {}).get("taxa") or []}
+        declared = (doc["module"].get("context") or {}).get("taxa") or []
+        taxa = {str((t.get("term") or {}).get("id", "")).split(":")[-1] for t in declared}
         taxa.discard("")
         if concepts and any(a.function_ids for a in atoms):
             out.append({"id": Path(path).stem, "concepts": concepts, "taxa": taxa,
+                        "ungrounded": bool(declared) and not taxa,
                         "circuit": circuit, "atoms": atoms})
     return out
 
@@ -110,7 +112,20 @@ def lineage(taxon: str) -> dict:
 
 
 def applies(module: dict, lineage_ids: set[str]) -> bool:
-    """A module applies to an organism inside any of its declared taxa (or if it has none)."""
+    """A module applies to an organism inside any of its declared taxa, or everywhere if it declares none.
+
+    A module whose taxa are declared only as free text (no NCBITaxon id) has a
+    scope that cannot be checked, so it applies nowhere rather than everywhere.
+
+    >>> applies({"taxa": set(), "ungrounded": False}, {"9606"})
+    True
+    >>> applies({"taxa": set(), "ungrounded": True}, {"9606"})
+    False
+    >>> applies({"taxa": {"33090"}, "ungrounded": False}, {"9606", "2759"})
+    False
+    """
+    if module["ungrounded"]:
+        return False
     return not module["taxa"] or bool(module["taxa"] & lineage_ids)
 
 
@@ -237,19 +252,22 @@ def main() -> None:
                 "review_action": g["actions"].get(t, ""),
             })
 
+    if not out:
+        raise SystemExit("no ARBA biological-process rows found")
     with open(HERE / "results.tsv", "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(out[0]), delimiter="\t")
         w.writeheader()
         w.writerows(out)
-    write_summary(out, cache, lineages)
+    write_summary(out, cache, lineages, all_modules)
 
 
-def write_summary(out: list[dict], cache: dict, lineages: dict) -> None:
+def write_summary(out: list[dict], cache: dict, lineages: dict, modules: list[dict]) -> None:
     scored = [r for r in out if r["verdict"] != "NO_MODULE"]
     verdicts = ["ENTAILED", "MODULE_INCOMPLETE", "NOT_ENTAILED"]
     actions = ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "REMOVE", "UNDECIDED", ""]
     xt = collections.Counter((r["verdict"], r["review_action"]) for r in scored)
     failed = sum(1 for v in cache.values() if not v["ok"])
+    ungrounded = sorted(m["id"] for m in modules if m["ungrounded"])
     lines = [
         "# ARBA process rows scored by module deployment",
         "",
@@ -261,6 +279,9 @@ def write_summary(out: list[dict], cache: dict, lineages: dict) -> None:
         f"- QuickGO lookups: {len(cache)} cached, {failed} failed (failed lookups count as absent)",
         f"- taxonomy lookups: {len(lineages)}, {sum(1 for v in lineages.values() if not v['ok'])} failed "
         "(a failed lineage keeps only taxon-free modules)",
+        f"- modules with activity-typed steps: {len(modules)}; {len(ungrounded)} declare taxa only as "
+        "free text (no NCBITaxon id) and are excluded, since their scope cannot be checked",
+        f"- snapshot: {datetime.date.today().isoformat()}",
         "",
         "## Verdict vs. gene-review action",
         "",
@@ -270,6 +291,20 @@ def write_summary(out: list[dict], cache: dict, lineages: dict) -> None:
     for v in verdicts:
         row = [xt[(v, a)] for a in actions]
         lines.append(f"| {v} | " + " | ".join(map(str, row)) + f" | {sum(row)} |")
+    lines += ["", "## Kept and rejected, by verdict and module concept", "",
+              "Kept is ACCEPT or KEEP_AS_NON_CORE; rejected is REMOVE or MARK_AS_OVER_ANNOTATED. "
+              "Shares are of reviewed rows.", "",
+              "| verdict | module concept | rows | kept | rejected |", "|---|---|---:|---:|---:|"]
+    kept, rejected = {"ACCEPT", "KEEP_AS_NON_CORE"}, {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
+    for v in verdicts:
+        for exact, name in [(True, "exact"), (False, "ancestor of concept")]:
+            sel = [r for r in scored if r["verdict"] == v and r["exact_concept"] == exact and r["review_action"]]
+            if sel:
+                k = sum(r["review_action"] in kept for r in sel) / len(sel)
+                x = sum(r["review_action"] in rejected for r in sel) / len(sel)
+                lines.append(f"| {v} | {name} | {len(sel)} | {k:.0%} | {x:.0%} |")
+    if ungrounded:
+        lines += ["", "Excluded modules (taxa declared without an id): " + ", ".join(ungrounded)]
     lines += ["", "## Rows where the verdict and the review disagree", ""]
     neg = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
     for title, pick in [

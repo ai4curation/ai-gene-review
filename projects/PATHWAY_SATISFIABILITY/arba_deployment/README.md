@@ -105,6 +105,17 @@ rather than being asserted without stated grounds.
   inference), but a wrong activity call propagates into the verdict.
 - Steps without a GO activity term cannot be tested and are assumed present.
 - Presence is not flux: a satisfiable module is permitted, not shown to run.
+- Taxon scope comes from each module's `context.taxa`. A module that declares
+  no taxa is scored for every organism, so a lineage-specific module without
+  taxa can be matched across kingdoms; this affects ENTAILED and NOT_ENTAILED as
+  well as MODULE_INCOMPLETE. A module that declares taxa only as free text (no
+  NCBITaxon id) is excluded, and RESULTS.md lists those modules; grounding their
+  taxa would bring them back.
+- The organism-level oracle is stricter than the gene-level test: it asks
+  QuickGO for is_a descendants of the step activity with an exact taxon match,
+  while the protein's own activity is matched through is_a and part_of
+  ancestors. A step can therefore read as absent when its enzyme is annotated
+  only at strain level or through part_of.
 - Competing modules are not yet weighed. `other_modules` lists modules outside
   T that the protein also fills (e.g. a dehydrogenase that also fits vitamin B6
   biosynthesis), for manual review.

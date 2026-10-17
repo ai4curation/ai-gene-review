@@ -41,9 +41,10 @@ anything new is only worth asking once we know where it goes wrong.
 The two barely overlap: only 26 of the 76 reviewed rules appear in any gene
 review, and the rules whose annotations gene reviewers reject most often have
 no rule review. They can also disagree for good reason. ARBA00028334
-("regulation of gene expression", 930 condition sets) is still live in UniProt,
-and our own rule review proposes deprecating it, yet gene reviewers kept 21 of its 38 annotations as true but non-core; a badly
-built rule can still emit many true rows.
+("regulation of gene expression", 930 condition sets when reviewed; 932 in the
+current download) is still live in UniProt, and our own rule review proposes
+deprecating it, yet gene reviewers kept 21 of its 38 annotations as true but
+non-core; a badly built rule can still emit many true rows.
 
 Where both exist they agree on the specific errors:
 
@@ -231,10 +232,11 @@ applies two global rules to every UniProt quote, whatever it supports:
 - A quoted statement must not rest only on an unvetted prediction: an ARBA
   association rule, annotation imported unchecked from the submitter, or an
   electronic GO line. Family and domain classification (NCBIfam, signature
-  matches, curated UniRule rules such as HAMAP, "Belongs to the X family") is
-  not in this group: it reliably establishes membership, and membership is a
-  fair argument for function. ARBA is different in kind: its rules transfer
-  annotation from co-occurring signatures, guilt by association.
+  matches, curated UniRule rules such as HAMAP, "Belongs to the X family"
+  notes) is not in this group: it reliably establishes membership, and
+  membership is a fair argument for function. A family note whose only evidence
+  is ARBA is still an unvetted prediction. ARBA is different in kind: its rules
+  transfer annotation from co-occurring signatures, guilt by association.
 - A quote must not be a label that restates an annotation: protein names and
   EC numbers, keywords, or the record's own GO lines.
 
@@ -263,11 +265,12 @@ The rule reviews are useful but uneven, and some of their arguments do not hold:
 
 ## What ARBA adds
 
-Only after the failures: 95% of the ARBA annotations reviewers accepted repeat a
-term already present from curation, PAINT or another pipeline. The remaining
-5% (127 annotations) occur almost only in poorly curated organisms, and being
-the only source is not evidence of being right; in those organisms a review's
-acceptance often rests on the UniProt record that ARBA itself wrote.
+Only after the failures: 96% of the ARBA annotations reviewers accepted repeat
+the same or a more specific term already present from curation, PAINT or another
+pipeline. The remaining 112 annotations ([UNIQUE_ACCEPTS.md](ARBA_REVIEW/UNIQUE_ACCEPTS.md),
+from `unique_accepts.py`) are mostly in less-curated organisms (32 in
+*P. putida* alone), and being the only source is not evidence of being right;
+some of those acceptances rest only on UniProt text that ARBA itself generated.
 
 For process annotations specifically, the
 [ARBA deployment check](PATHWAY_SATISFIABILITY/arba_deployment/README.md)
