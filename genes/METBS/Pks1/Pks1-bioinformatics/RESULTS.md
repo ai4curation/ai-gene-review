@@ -1,5 +1,21 @@
 # PKS1 Bioinformatics Analysis Report
 
+## Audit Note
+
+This report is retained as a stale wrong-input analysis artifact, not as curated
+evidence for `Pks1-ai-review.yaml`. The embedded `PKS1_SEQUENCE` used by the
+analysis was 2137 aa, while the cached UniProt record is 2148 aa and diverges by
+residue 40; the current UniProt `ACT_SITE` and `MOD_RES` coordinates were
+therefore indexed into the wrong sequence. The failed `KS_DTACSS_motif`,
+`ACP1_Ser1712`, and TE `Ser1973` checks are coordinate artifacts and carry no
+information about the real Pks1 residues; in particular, they do not impeach the
+UniProt `MOD_RES` 1712/1830 evidence supporting the accepted GO:0031177
+phosphopantetheine binding annotation. The "all essential catalytic residues are
+conserved" conclusion below was a hard-coded string, not a result read from the
+computed `conservation` dictionary. Use the cached UniProt record and
+PMID:29958281 for the curated Pks1 domain architecture, product, and phenotype
+support.
+
 ## Protein Overview
 - **Length**: 2137 amino acids
 - **Molecular Weight**: 233,136 Da (~234 kDa)
@@ -90,16 +106,21 @@
 - Phylogenetic relationship with melanin PKS proteins supports role in fungal pigmentation
 - Dual ACP configuration enhances processivity for complex polyketide assembly
 
-## Quality Checklist
+## Invalidated Quality Checklist
 
-- [x] Scripts present and executable
-- [x] Scripts accept command-line arguments (✅ REFACTORED: analyze_pks_generic.py)
-- [x] Scripts can analyze other proteins (✅ REFACTORED: generic PKS analyzer)
-- [x] Results are reproducible
-- [x] Methods clearly documented
-- [x] Conclusions supported by evidence
-- [x] No hardcoded values (✅ REFACTORED: fully parameterized with --uniprot or --fasta)
-- [x] Output files generated as described
+The generated checklist below is part of the stale report and has been
+invalidated by the audit: the active-site coordinates were applied to the wrong
+sequence, the homolog identities were hand-entered, and several prose
+conclusions were hard-coded rather than recomputed.
+
+- [ ] Scripts present and executable
+- [ ] Scripts accept command-line arguments (STUBBED: `analyze_pks_generic.py` is separate from the stale PKS1 run)
+- [ ] Scripts can analyze other proteins (STUBBED: generic behavior was not used for these PKS1 results)
+- [ ] Results are reproducible
+- [ ] Methods clearly documented
+- [ ] Conclusions supported by evidence
+- [ ] No hardcoded values
+- [ ] Output files generated as described
 
 ## Refactored Script Usage
 
