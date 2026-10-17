@@ -1,13 +1,13 @@
-"""Reject the gene's own GOA file as support.
+"""Reject GOA files as support.
 
 ``GENE-goa.tsv`` is the list of annotations under review: it says what is
 annotated, never why it is true. Citing it in any ``supported_by`` list cites
 an annotation as evidence for itself, so it is an error whatever the review
-action. Listing the file under ``references`` (to describe what was fetched)
-is not a claim of support and is not checked.
-
-Only the review's own GOA file is checked. Another gene's GOA rows are a
-different (and weaker) kind of argument, handled separately.
+action. Another gene's GOA file is rejected too: that a paralog or partner
+carries a term is the state of its annotation, not evidence about this gene;
+cite the evidence behind that annotation instead. Listing a GOA file under
+``references`` (to describe what was fetched) is not a claim of support and is
+not checked.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from ai_gene_review.validation.validation_report import (
     ValidationSeverity,
 )
 
-SELF_GOA_CHECK = "supporting_text_self_goa"
+GOA_SUPPORT_CHECK = "supporting_text_goa_file"
 
 
 def _gene_dir(yaml_file: Path, project_root: Path) -> Optional[str]:
@@ -57,6 +57,21 @@ def is_self_goa(reference_id: Any, gene_dir: str) -> bool:
     return parent == gene_dir and name.endswith("-goa.tsv")
 
 
+def is_goa_file(reference_id: Any) -> bool:
+    """Whether ``reference_id`` names any gene's GOA file.
+
+    >>> is_goa_file("file:PSEPK/coaE/coaE-goa.tsv")
+    True
+    >>> is_goa_file("file:PSEPK/coaD/coaD-uniprot.txt")
+    False
+    >>> is_goa_file("GO_REF:0000120")
+    False
+    """
+    if not isinstance(reference_id, str) or not reference_id.startswith("file:"):
+        return False
+    return reference_id.split(":", 1)[1].strip().endswith("-goa.tsv")
+
+
 def iter_supports(data: Any) -> Iterator[Tuple[str, Any]]:
     """Yield ``(path, reference_id)`` for every ``supported_by`` item in the document."""
 
@@ -77,33 +92,48 @@ def iter_supports(data: Any) -> Iterator[Tuple[str, Any]]:
     yield from walk(data, "")
 
 
-def self_goa_paths(data: Any, yaml_file: Path, project_root: Path = PROJECT_ROOT) -> List[str]:
-    """Paths of support items that cite the review's own GOA file."""
-    gene_dir = _gene_dir(yaml_file, project_root)
-    if gene_dir is None:
-        return []
-    return [path for path, ref in iter_supports(data) if is_self_goa(ref, gene_dir)]
+def goa_support_paths(
+    data: Any, yaml_file: Optional[Path], project_root: Path = PROJECT_ROOT
+) -> List[Tuple[str, bool]]:
+    """``(path, is_own)`` for every support item citing a GOA file.
+
+    ``is_own`` says whether it is the review's own GOA file (False when the
+    review's location is unknown).
+    """
+    gene_dir = _gene_dir(yaml_file, project_root) if yaml_file is not None else None
+    return [
+        (path, gene_dir is not None and is_self_goa(ref, gene_dir))
+        for path, ref in iter_supports(data)
+        if is_goa_file(ref)
+    ]
 
 
-def validate_self_goa_support(
+def validate_goa_support(
     data: Any,
     report: ValidationReport,
     yaml_file: Optional[Path],
     project_root: Path = PROJECT_ROOT,
 ) -> None:
-    """Error on every citation of the review's own ``-goa.tsv`` as support."""
-    if yaml_file is None:
-        return
-    for path in self_goa_paths(data, yaml_file, project_root):
+    """Error on every citation of a ``-goa.tsv`` file as support."""
+    for path, own in goa_support_paths(data, yaml_file, project_root):
+        if own:
+            message = (
+                "Supporting text cites this gene's own GOA file, which records the annotation "
+                "under review rather than evidence for it"
+            )
+        else:
+            message = (
+                "Supporting text cites another gene's GOA file, which records that gene's "
+                "annotation rather than evidence for it"
+            )
         report.add_issue(
             ValidationSeverity.ERROR,
-            "Supporting text cites this gene's own GOA file, which records the annotation "
-            "under review rather than evidence for it",
+            message,
             path=path,
             suggestion=(
-                "Cite the annotation's publication, a curated UniProt statement, or your own "
-                "analysis; if nothing independent supports the row, use UNDECIDED"
+                "Cite the publication or curated UniProt statement behind the annotation, or "
+                "your own analysis; if nothing independent supports the row, use UNDECIDED"
             ),
             validation_category="BestPractices",
-            check_type=SELF_GOA_CHECK,
+            check_type=GOA_SUPPORT_CHECK,
         )

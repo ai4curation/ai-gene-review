@@ -1,14 +1,14 @@
-"""Tests for rejecting a review's own GOA file as supporting evidence."""
+"""Tests for rejecting GOA files as supporting evidence."""
 
 from pathlib import Path
 
 import pytest
 
 from ai_gene_review.validation import ValidationSeverity
-from ai_gene_review.validation.self_goa_support import (
-    SELF_GOA_CHECK,
-    self_goa_paths,
-    validate_self_goa_support,
+from ai_gene_review.validation.goa_support import (
+    GOA_SUPPORT_CHECK,
+    goa_support_paths,
+    validate_goa_support,
 )
 from ai_gene_review.validation.validation_report import ValidationReport
 
@@ -51,18 +51,29 @@ def test_own_goa_is_flagged_for_every_action(tmp_path, action, reference_id):
         ],
         action,
     )
-    assert self_goa_paths(data, _review_file(tmp_path), tmp_path) == [
-        "existing_annotations[0].review.supported_by[0]"
+    assert goa_support_paths(data, _review_file(tmp_path), tmp_path) == [
+        ("existing_annotations[0].review.supported_by[0]", True)
     ]
 
 
 @pytest.mark.parametrize(
     "reference_id",
-    [UNIPROT, "file:PSEPK/coaE/coaE-goa.tsv", "PMID:27041211", "GO_REF:0000120"],
+    [UNIPROT, "PMID:27041211", "GO_REF:0000120", "file:PSEPK/coaD/coaD-notes.md"],
 )
 def test_other_sources_are_not_flagged(tmp_path, reference_id):
     data = _review([{"reference_id": reference_id, "supporting_text": "x"}])
-    assert self_goa_paths(data, _review_file(tmp_path), tmp_path) == []
+    assert goa_support_paths(data, _review_file(tmp_path), tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    "reference_id",
+    ["file:PSEPK/coaE/coaE-goa.tsv", "file:genes/human/AMN/AMN-goa.tsv"],
+)
+def test_another_genes_goa_is_flagged(tmp_path, reference_id):
+    data = _review([{"reference_id": reference_id, "supporting_text": "x"}])
+    assert goa_support_paths(data, _review_file(tmp_path), tmp_path) == [
+        ("existing_annotations[0].review.supported_by[0]", False)
+    ]
 
 
 def test_core_functions_are_checked_but_reference_listings_are_not(tmp_path):
@@ -73,15 +84,21 @@ def test_core_functions_are_checked_but_reference_listings_are_not(tmp_path):
             {"id": OWN_GOA, "title": "GOA", "findings": []},
         ],
     }
-    assert self_goa_paths(data, _review_file(tmp_path), tmp_path) == [
-        "core_functions[0].supported_by[0]",
+    assert goa_support_paths(data, _review_file(tmp_path), tmp_path) == [
+        ("core_functions[0].supported_by[0]", True),
     ]
 
 
-def test_reported_as_error(tmp_path):
-    data = _review([{"reference_id": OWN_GOA, "supporting_text": "GO:0005737\tcytoplasm"}])
+def test_reported_as_errors(tmp_path):
+    data = _review(
+        [
+            {"reference_id": OWN_GOA, "supporting_text": "GO:0005737\tcytoplasm"},
+            {"reference_id": "file:PSEPK/coaE/coaE-goa.tsv", "supporting_text": "x"},
+        ]
+    )
     report = ValidationReport(file_path=tmp_path, is_valid=True)
-    validate_self_goa_support(data, report, _review_file(tmp_path), tmp_path)
-    issues = [i for i in report.issues if i.check_type == SELF_GOA_CHECK]
-    assert len(issues) == 1
-    assert issues[0].severity == ValidationSeverity.ERROR.value
+    validate_goa_support(data, report, _review_file(tmp_path), tmp_path)
+    issues = [i for i in report.issues if i.check_type == GOA_SUPPORT_CHECK]
+    assert [i.severity for i in issues] == [ValidationSeverity.ERROR.value] * 2
+    assert "own GOA file" in issues[0].message
+    assert "another gene's GOA file" in issues[1].message

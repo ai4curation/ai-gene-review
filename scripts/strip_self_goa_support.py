@@ -1,7 +1,7 @@
 """Remove a gene's own GOA file from the ``supported_by`` lists of its review.
 
 The GOA table records the annotations under review, so it is never evidence for
-one (see ``ai_gene_review.validation.self_goa_support``). For each review this
+one (see ``ai_gene_review.validation.goa_support``). For each review this
 script deletes every ``supported_by`` item citing the review's own
 ``-goa.tsv``. When that leaves an existing annotation's review with no support
 at all, the action becomes ``UNDECIDED`` and the reason records the previous
@@ -28,7 +28,7 @@ from typing import Any, List, Optional, Tuple
 import yaml
 
 from ai_gene_review.validation.local_source_text import PROJECT_ROOT
-from ai_gene_review.validation.self_goa_support import _gene_dir, is_self_goa
+from ai_gene_review.validation.goa_support import _gene_dir, is_self_goa
 
 NOTE = (
     "Previously {action}; set to UNDECIDED because the only cited support was the GOA row "

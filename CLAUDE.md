@@ -438,13 +438,15 @@ If `just fetch-gene` or a re-run deep-research file changes a source so that a q
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
 
-**Never cite the gene's own GOA file as support.** `GENE-goa.tsv` lists the
-annotations under review: it says what is annotated, never why it is true, so a
+**Never cite a GOA file as support.** `GENE-goa.tsv` lists the annotations
+under review: it says what is annotated, never why it is true, so a
 `supported_by` entry pointing at it cites an annotation as evidence for itself.
-This is a blocking error whatever the action (`supporting_text_self_goa`,
-`src/ai_gene_review/validation/self_goa_support.py`). Quote the annotation's
-publication, a curated UniProt statement or your own analysis instead; if nothing
-independent supports the row, use `UNDECIDED`.
+Another gene's GOA file is no better: that a paralog or partner carries a term is
+the state of its annotation, not evidence. This is a blocking error whatever the
+action (`supporting_text_goa_file`, `src/ai_gene_review/validation/goa_support.py`).
+Quote the publication or curated UniProt statement behind the annotation, or your
+own analysis; if nothing independent supports the row, use `UNDECIDED`. A
+comparator argument ("paralog X carries this term") belongs in `reason`.
 
 **Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
 apply to every UniProt quote, whatever it supports.
