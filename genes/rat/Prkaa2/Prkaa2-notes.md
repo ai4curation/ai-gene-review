@@ -179,6 +179,21 @@ Re-review after the GOA/UniProt refresh (commit a3cf70b6d). 193 rows in total.
 - Two advisory validator warnings remain because retired GO_REF:0000096 rows keep their legacy
   MARK_AS_OVER_ANNOTATED actions while the active GO_REF:0000121 rows were re-judged.
 
+### Review follow-up 2026-10-17
+
+In response to the PR #4625 review, the GO:0047322 EXP (PMID:9029219) ACCEPT no longer depends
+on a remembered obsoletion. It now rests on checkable mappings: the Prkaa2 GOA IEA GO_REF:0000120
+row maps ARBA:ARBA00098394|RHEA:20333|RHEA:23172|EC:2.7.11.31 onto GO:0047322; the UniProt
+CATALYTIC ACTIVITY line for RHEA:20333 is the ACC reaction, with evidence PubMed:9029219; and
+QuickGO (checked 2026-10-17) lists RHEA:20333 among the GO:0047322 xrefs and shows GO:0050405
+as obsolete ("this term was based on EC:2.7.11.27 which has been transferred to EC:2.7.11.31").
+OLS gives term_replaced_by GO:0047322, so ACCEPT stands and there is no live ACC-specific term
+to MODIFY to. The core_functions wording "merged into it" was replaced by the xref statement.
+The boilerplate "Generated using OpenAI Deep Research API" quote on the IBA protein
+serine/threonine kinase activity row was replaced by a real quote, plus PMID:9029219, and the
+row now has a reason. The earlier Judgments bullet stated the obsoletion without a source; it
+is now confirmed against QuickGO/OLS.
+
 ## 2026-10-10 - OpenScientist adaptor-activity follow-up
 
 The focused OpenScientist report for `prediction-adaptor-activity` resolves the
