@@ -66,3 +66,16 @@
 - See suggested_questions for the three donor-side checks behind the UNDECIDED rows.
 - Whether the many cell-type-specific apoptosis/proliferation ISO terms from mouse should
   transfer to rat at all remains a judgment call; they were kept as non-core.
+
+Review follow-up 2026-10-17: in response to PR #4629 review, two rows that had inherited the
+shared "compound-mutant (or sensitized) genotype" rationale were rewritten against their own
+donor papers. GO:0021549 cerebellum development: the donor PMID:24013501 (Hamard et al. 2013,
+mouse IDA) is a single-locus Trp53(deltaCTD/deltaCTD) knock-in, not a compound mutant; reason
+and source comment now argue from that paper (the deleted C-terminal domain mis-regulates p53
+output, cerebellar p53 levels unchanged), the unrelated Jmjd5 quote (PMID:26334721) was replaced
+by verbatim quotes from PMID:24013501, and the reference was added. GO:0009792 embryo development
+ending in birth or egg hatching: the donor PMID:16702401 (ASPP2) shows lethality enhanced on a
+p53+/- background (synthetic lethality, loss-of-function direction), so the "inappropriate p53
+activation" mechanism was removed; MARK_AS_OVER_ANNOTATED is kept on necessity-vs-participation
+grounds (and the lethality is largely postnatal). The other nine rows with the shared comment
+have IGI donors that fit it and were left unchanged.
