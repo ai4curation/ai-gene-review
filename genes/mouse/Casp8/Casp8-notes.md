@@ -87,6 +87,11 @@ annotation-reviewer sidecar for a systematic pass over mouse-specific GO rows.
     the human UNDECIDED verdict on its electronic transfer.
   - `GO:0005123` death receptor binding and `GO:0044297` cell body (rat-donor ISO)
     REMOVE -> UNDECIDED, matching human CASP8; donor assays not traced.
+  - `GO:0005164` tumor necrosis factor receptor binding (rat-donor ISO, same
+    RGD:620945) REMOVE -> UNDECIDED (PR #5079 review suggestion 10). TNFR1 is a
+    death receptor, so this row stands or falls with GO:0005123; the audit did
+    not reach it in the first pass because it has no human CASP8 counterpart to
+    align against (human CASP8 carries only the GO:0005123 IEA).
 - No human CASP8 edits: no donor-side row was clearly wrong.
 - PR #5079 review follow-up: after demoting GO:0006915 apoptotic process,
   GO:0097190 apoptotic signaling pathway and GO:0006508 proteolysis to
