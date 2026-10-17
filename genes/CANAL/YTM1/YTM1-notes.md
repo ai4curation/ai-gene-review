@@ -23,7 +23,9 @@
 - The direct CGD filamentation rows come from the Uhl et al. haploinsufficiency
   screen, which used "haploinsufficiency and transposon mutagenesis to perform
   large-scale loss-of-function genetic screen in this organism" [PMID:12773383].
-  I kept these as non-core Candida perturbation phenotypes.
+  I kept the Spider-medium and serum-induced descendants as non-core Candida
+  perturbation phenotypes and marked their shared `GO:0030447 filamentous
+  growth` ancestor for replacement by those more specific terms.
 - I marked the EnsemblFungi `GO:0051276 chromosome organization` row
   over-annotated because it derives from a budding-yeast dosage phenotype, not
   from conserved Ytm1 execution of chromosome organization.
