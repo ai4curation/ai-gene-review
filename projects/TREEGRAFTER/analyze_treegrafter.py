@@ -73,7 +73,9 @@ TREEGRAFTER_REF = "GO_REF:0000118"  # IEA / assigned-by TreeGrafter / with-from 
 PAINT_REF = "GO_REF:0000033"        # IBA / GO_Central — contrast only, NOT TreeGrafter
 UNIPROT_IEA_REF = "GO_REF:0000120"  # IEA / UniProt combined methods; PANTHER subset only
 INTERPRO2GO_REF = "GO_REF:0000002"  # IEA / InterPro signature -> GO transfer
-PROBLEM_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+# TOO_GENERAL (true but entailed by a more specific term in the same review)
+# counts as down-graded, like MODIFY: the review did not keep the term as is.
+PROBLEM_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY", "TOO_GENERAL"}
 # "Retained" = the annotation stays in some form without a term change.
 # MARK_AS_OVER_ANNOTATED is in BOTH this set and PROBLEM_ACTIONS on purpose: the
 # term is not wrong, but it is flagged. Report the two rates side by side.

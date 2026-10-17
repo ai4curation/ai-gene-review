@@ -1,0 +1,10 @@
+# FOXJ3 (donkey, A0A9L0JKH1) notes
+
+## 2026-10-14 DONKEY40 review
+
+- Record: TrEMBL, 580 aa, "Forkhead box J3", Ensembl gene model from the donkey genome project (PMID:33293529; genome sequencing, no FOXJ3 experiment). 8 GOA rows, all IEA: TreeGrafter (GO_REF:0000118, PTN000215310) x3, InterPro2GO x3, UniRule x1, combined x1.
+- Sequence: [file:EQUAS/FOXJ3/FOXJ3-bioinformatics/RESULTS.md "The donkey sequence A0A9L0JKH1 (580 residues) aligns to human Q9UPW0 (622 residues) with 98.1% identity among 579 paired residues."]; lacks human 211-253 (disordered region); fork-head domain intact.
+- Human FOXJ3 function is by similarity to mouse Foxj3: [file:EQUAS/FOXJ3/FOXJ3-bioinformatics/human-Q9UPW0-uniprot.txt "Transcriptional activator of MEF2C involved in the regulation"]; spermatogenesis role [same file, "Plays an important role in spermatogenesis (By"]. Human GO (from the UniProt DR lines) includes IDA sequence-specific DNA binding and IDA DNA-binding transcription activator activity, RNA polymerase II-specific (NTNU_SB), IBA nucleus and RNA polymerase II cis-regulatory region sequence-specific DNA binding.
+- Forkhead (FOX) domain proteins are sequence-specific RNA polymerase II transcription factors; the TreeGrafter MF/BP terms are at the right level. The generic InterPro2GO/UniRule terms (DNA binding, sequence-specific DNA binding, DNA-binding TF activity, regulation of DNA-templated transcription) are ancestors of accepted terms -> TOO_GENERAL.
+- Not added: positive regulation of transcription by RNA pol II / activator activity (supported in human by IDA) and spermatogenesis/muscle fiber type (mouse). Left as suggested questions rather than NEW, because the donkey record carries no tissue or target-gene information and the specific developmental roles are inferred from mouse knockouts.
+- ProtNLM2 GO: sequence-specific DNA binding and DNA-binding transcription factor activity; both exact terms are in GOA (InterPro2GO), and both are less specific than the TreeGrafter RNA pol II-specific terms -> LSP. No ProtNLM2 function or location text for this accession.
