@@ -57,3 +57,10 @@ Machine source files and cache availability flags are preserved. Normal caches f
 This chaperone-binding function belongs to the existing assembly core. It is grounded in the actual HSP partners, not obtained by relabeling the DNAAF2, DNAAF6 or ZMYND10 source pairs. Those assembly/co-chaperone partners are not automatically equivalent to the defined nascent/unfolded-client-binding class. A residual biological gap remains over direct client recognition, chaperone-cycle modulation and the step that enables productive dynein assembly. The review pairs that gap with a reconstitution and airway-cell rescue experiment; it does not borrow the PIH1D2/R2SP client assays as DNAAF4 evidence.
 
 The original-section locators above remain applicable when the normal cache is abstract-only. This guide is retained for navigation and is not cited as experimental support. Original notes are preserved, with the superseding binding rationale appended separately.
+
+
+## Explicit binding assertion and project policy
+
+One authored IPI annotation now records GO:0051087 from the human LUMIER evidence in [PMID:29844425](https://doi.org/10.1038/s41467-018-04431-1), Results/Figure 4b and cloning/LUMIER Methods. This makes the established core claim available as an annotation while retaining its cellular-association and construct limits. The 42 imported assertions, core and three products are preserved. No partner from another experiment is substituted into those source records.
+
+The DNAAF2, DNAAF6 and ZMYND10 generic-binding rows follow the [project's explicit user instruction](https://github.com/ai4curation/ai-gene-review/blob/892df26b8431488c000fcd9c85197d0d8644622e/projects/CLINGEN_MENDELIAN.md#curation-instructions): supported interactions remain non-core when no evidence-backed more informative class is established. The general validator still reports advisory warnings for that deliberate project-level choice. The original notes and source provenance remain intact.
