@@ -18,9 +18,10 @@
   the nascent 60S pathway: "the biogenesis complex Ytm1-Erb1-Ppp1
   (Ytm1-Erb1-Nop7 in S. cerevisiae) is incorporated" [PMID:36423630].
 - The EnsemblFungi `GO:0110136 protein-RNA complex remodeling` row is a
-  reasonable orthology transfer from budding yeast: Ytm1 is the Rea1-recognized
-  MIDO/UBL ligand required for ATP-dependent release of the Ytm1-Erb1-Nop7
-  subcomplex [PMID:20542003].
+  reasonable orthology transfer: the Neurospora HAMAP record specifically
+  predicts that the Ytm1 UBL domain interacts with rbg-35/mdn1 via the Mdn1
+  VWFA/MIDAS domain, matching the conserved Rea1/Mdn1 release-handle mechanism
+  seen in budding yeast [PMID:20542003].
 - I marked the EnsemblFungi `GO:0051276 chromosome organization` row
-  over-annotated because it derives from a budding-yeast dosage phenotype, not
-  from conserved Ytm1 execution of chromosome organization.
+  over-annotated because the conserved PTHR19855:SF11 function is pre-60S
+  assembly, not direct execution of chromosome organization.
