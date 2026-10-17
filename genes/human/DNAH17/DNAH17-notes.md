@@ -40,3 +40,8 @@ The human study reported DNAH17 along sperm axonemes but not the examined respir
 The earlier comparator rationale is now independently checked against a [QuickGO exact-term mouse query](https://www.ebi.ac.uk/QuickGO/services/annotation/search?goId=GO%3A0030317&goUsage=exact&taxonId=10090&limit=200&page=1), retrieved on 2026-10-17. The first 200 of 458 returned annotations contain all five previously named examples: Dnah1 (E9Q8T7) and Dnah11 (E9Q7N9) include IMP records, while the recovered Dnah7a (E9Q0T8), Dnah7b (A0A571BD48/L7N1Y0), and Dnah7c (A0A087WR13) records are electronic. This verifies positive comparator annotation presence, not equivalent experimental support for all five or an independent demonstration of the human function. The remaining query pages and the comparator primary papers were not inspected for this bounded check. The biological human evidence remains the basis for the replacement; no duplicate NEW assertion is needed.
 
 The existing mouse loss-of-function excerpt was moved from the core's support entry to the imported cell-motility review, where it anchors the specific process replacement. The core retains reference-only support from the same paper. No new verbatim publication text was added, and the inherited notes and reference assessments remain unchanged.
+
+
+## 2026-10-17: local mouse-phenotype anchor
+
+The integrated motor/structural core now includes a concise local abstract anchor for the mouse axonemal phenotype in [PMID:33070343](https://pubmed.ncbi.nlm.nih.gov/33070343/). The process-row anchor remains in place. This does not add a purified motor assay or change the human-versus-mouse evidence distinction. All earlier annotation decisions, products and biological core statements are retained.
