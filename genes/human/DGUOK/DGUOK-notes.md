@@ -69,3 +69,16 @@ the seeded GOA TSV, and the cached publications.
   interaction in the UniProt INTERACTION block.
 </content>
 </invoke>
+
+
+## 2026-10-17 evidence reassessment
+
+This entry supersedes the earlier action rationale while preserving it as a record. The [source guide](DGUOK-source-guide.md) gives public originals, figure/table locators, source-role distinctions and access limits.
+
+The full original [PMID:8692979, Table 1](https://pmc.ncbi.nlm.nih.gov/articles/PMC38970/) reports low dCyd phosphorylation. The earlier absolute purine-specificity and paralog-leakage claims are therefore withdrawn. The actual PAINT lineage contains the relevant ancestral nodes, and target self-evidence is legitimate. The inherited dCyd activity remains non-core. Human mitochondrial-enriched fibroblast assays ([PMID:17073823](https://pmc.ncbi.nlm.nih.gov/articles/PMC1798436/)) and muscle assays ([PMID:23043144](https://pmc.ncbi.nlm.nih.gov/articles/PMC3501975/)) corroborate dA/dG phosphorylation without proving equal activity of all six products. dIno yields dIMP; it is not another source of dGMP or dAMP.
+
+The sperm-nucleus contamination rationale is also withdrawn. The coauthor's original supporting catalogue in thesis Appendix 8.2/Table 8.1 identifies Q16854 with two peptides and 13.4% coverage. The specialized nuclear detection is retained as non-core; no nuclear catalytic mechanism is inferred. Broad cytoplasm includes organelles and is compatible with matrix residence. Matrix-specific replacements cite independent human evidence and the explicit Reactome catalyst, rather than claiming each localization source resolved that compartment.
+
+The two DCK interactions are retained with the supported kinase-binding partner class. Exact BioPlex records and the released U2OS edge establish co-complex associations, not purified direct binding, native mitochondrial heterodimers or activation. Rat-source tracing recovers genuine neurite and respiratory phenotype experiments. The neurite effect is retained as context-specific; electron-transport assignment is marked as mechanistically over-annotated because DGUOK supplies nucleotide precursors rather than performing electron transfer.
+
+All 32 historical source dictionaries and six product objects remain intact. Current QuickGO source-version differences are described separately. The two core entries represent two reactions of one enzyme; no new annotation is proposed. Existing publication and provider files remain unchanged. The current provider attempt failed authentication/quota checks, and the source guide records the manual evidence used instead.
