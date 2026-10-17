@@ -4160,3 +4160,63 @@ credit from this update.
 All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,863 reviews, including 3,004 human reviews. The catalogue has 1,709 missing-review warnings and the progress page has no warnings, reflecting the new DCAF17 review. Counts are 441 checked and 2,435 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T113125Z-codex-90e568.yaml)
+
+## Completion checkpoint 442 — 2026-10-17 13:46:17 UTC
+
+**442 complete; 2,434 remaining out of 2,876 primary catalogue genes.**
+DNAH12 is the sole addition to checkpoint 441. Its approved head
+`d9a78ab63b0da51e49b3f80341668c68e2599efd` in
+[#4877](https://github.com/ai4curation/ai-gene-review/pull/4877) merged as
+[`298fede2212a`](https://github.com/ai4curation/ai-gene-review/commit/298fede2212a4d540865542e5e8b396bec69107c).
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/4877#pullrequestreview-5517454210)
+resolves the required review changes. All 27 approved path modes and types are
+preserved. Twenty-six blobs are identical; `cache/go/terms.csv` contains exactly
+the approved GO:0036156 insertion applied to the newer parent. Removing that
+single line reproduces the parent cache byte for byte. The actual merge delta
+has 25 additions and two modifications. Its 17 machine-source/provider additions
+and six history additions are exact approved blobs; all other tracked paths are
+unchanged by this merge. These additions are not pre-existing protected files.
+
+The separate actual-main push [run 39037932465](https://github.com/ai4curation/ai-gene-review/actions/runs/39037932465)
+and [job 117411414646](https://github.com/ai4curation/ai-gene-review/actions/runs/39037932465/job/117411414646)
+completed successfully at 2026-10-17T14:07:58Z. Scoped DNAH12 validation passed
+with zero gene curation advisories. All 12,200 history records validated, 42
+history tests passed and 705 family files validated. The full suite actually ran
+on this push: 3,912 tests passed, one skipped and 83 deselected; 252 doctests
+passed and 37 skipped. All 12 valid/invalid examples, mypy and lint passed.
+
+The distinct successful [merge-group run 39035866797](https://github.com/ai4curation/ai-gene-review/actions/runs/39035866797)
+and [job 117405388809](https://github.com/ai4curation/ai-gene-review/actions/runs/39035866797/job/117405388809)
+tested the same merge SHA. They independently passed the full suite and doctests
+with the same counts, plus all-gene schemas, modules, 415 automation tests and
+19 JavaScript tests. All-gene schemas, modules and agentic automation were skipped
+on the main push. Standalone changed prediction/source-evidence steps were
+skipped in both events and are not claimed as executed.
+
+Zero DNAH12 curation advisories does not mean every check was warning-free.
+The passing suites reported nine test warnings and eight doctest warnings;
+family checks retained unrelated unresolved membership/residue cases and skipped
+snippet checks. The approving reviewer left three nonblocking notes: attribute
+the mouse expression panel precisely, move a curation-framed phylogeny sentence
+out of the description, and investigate a prior DuplicateKeyError as tooling.
+The review remains COMPLETE with one UNDECIDED binding assertion. Completion
+records finished, approved and merged curation; it does not resolve all scientific
+uncertainty or imply a human maintainer sign-off by the coordinating AI agent.
+
+Repository availability is now 7,965 reviews, including 3,005 human reviews.
+DNAH12 accounts for the one new human review since checkpoint 441; other net
+review-file additions receive no completion credit here. Of 1,168 catalogue
+genes with available reviews, 442 are credited and 726 remain uncredited;
+1,708 catalogue genes still lack reviews. The later publication source main
+`bff21ea8eb90bc3e07bb2fbedf14c25d37080161` has the same inventory; the completion
+cutoff remains the DNAH12 merge at 13:46:17 UTC.
+
+This update preserves all 2,876 catalogue identities and association texts, all
+235 historical queue objects, all 90 earlier completion updates, the complete
+preceding progress text and 181 prior project history records. Only the DNAH12
+checkbox changes; completion update 91 is appended. No gene annotation, source
+cache or earlier history record is edited by this tracker update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,965 reviews, including 3,005 human reviews. The catalogue has 1,708 missing-review warnings and the progress page has no warnings, reflecting the new DNAH12 review. Counts are 442 checked and 2,434 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T142405Z-codex-a230e1.yaml)

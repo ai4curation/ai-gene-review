@@ -2988,20 +2988,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**441 of 2,876 genes are complete; 2,435 remain.**
-DCAF17 is the verified addition since checkpoint 440.
-[Checkpoint 441](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-441-2026-10-17-105801-utc)
+**442 of 2,876 genes are complete; 2,434 remain.**
+DNAH12 is the verified addition since checkpoint 441.
+[Checkpoint 442](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-442-2026-10-17-134617-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`1b47f6653c7f`](https://github.com/ai4curation/ai-gene-review/commit/1b47f6653c7fa96e61b6a6ac5fe76b989961b59c),
-merged at 2026-10-17 10:58:01 UTC.
+cutoff is [`298fede2212a`](https://github.com/ai4curation/ai-gene-review/commit/298fede2212a4d540865542e5e8b396bec69107c),
+merged at 2026-10-17 13:46:17 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-At that main commit, 7,863 reviews are available, including 3,004 human
-reviews. DCAF17 adds one available human review as well as one verified completion.
-The tracker publication integrates this main commit. Review availability alone
-does not establish completion. Earlier checkpoints, queue records and histories
-remain preserved. Pending gene reviews remain unchecked until their approvals,
-merged files and actual-main validation are verified.
+At that cutoff, 7,965 reviews are available, including 3,005 human reviews.
+Of 1,168 catalogue genes with reviews, 442 are credited and 726 remain uncredited;
+1,708 catalogue genes still lack a review file. DNAH12 adds one available human
+review and the sole new completion. Availability and completion remain separate.
+The publication source main `bff21ea8eb90bc3e07bb2fbedf14c25d37080161`
+has the same review inventory; its later changes add no completion credit here.
+Earlier checkpoints, queue records and histories remain preserved. Pending gene
+reviews remain unchecked until their approvals, merged files and actual-main
+validation are verified.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3608,7 +3611,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **DNAAF6** — HGNC:28570; [ciliary dyskinesia, primary, 36, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5de9de15-2c09-48f5-bcaf-08c42b97700e-2024-08-17T190000.000Z) (MONDO:0010517; XL; Definitive).
 - [ ] **DNAH1** — HGNC:2940; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a07c8b6e-a558-498b-975c-b12e96878a44-2025-10-16T160000.000Z) (MONDO:0016575; AR; Limited); [spermatogenic failure 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4a5dff5a-ff66-4e80-9eca-cb5f924edb73-2022-05-26T160000.000Z) (MONDO:0054615; AR; Definitive).
 - [ ] **DNAH11** — HGNC:2942; [primary ciliary dyskinesia 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84088c46-0763-4ed6-9352-530d846e8b24-2021-10-25T190427.941Z) (MONDO:0012748; AR; Definitive).
-- [ ] **DNAH12** — HGNC:2943; [spermatogenic failure](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2911f00b-c01b-40fb-a82e-38e004eda251-2025-05-08T160000.000Z) (MONDO:0004983; AR; Definitive).
+- [x] **DNAH12** — HGNC:2943; [spermatogenic failure](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2911f00b-c01b-40fb-a82e-38e004eda251-2025-05-08T160000.000Z) (MONDO:0004983; AR; Definitive).
 - [ ] **DNAH17** — HGNC:2946; [spermatogenic failure 39](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ef0cbb29-220d-45ae-828c-ab233dcf4824-2022-09-08T110000.000Z) (MONDO:0032845; AR; Definitive).
 - [ ] **DNAH5** — HGNC:2950; [primary ciliary dyskinesia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4390dba1-012d-4e08-a841-ffc08ebdc737-2022-01-07T190607.723Z) (MONDO:0012085; AR; Definitive).
 - [ ] **DNAH9** — HGNC:2953; [ciliary dyskinesia, primary, 40](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7d4c2324-1f4e-48d6-b7e9-cc66f7a9dda3-2026-06-11T100000.000Z) (MONDO:0032664; AR; Definitive).
