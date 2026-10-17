@@ -2988,21 +2988,20 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**440 of 2,876 genes are complete; 2,436 remain.**
-DARS2 is the verified addition since checkpoint 439.
-[Checkpoint 440](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-440-2026-10-17-103217-utc)
+**441 of 2,876 genes are complete; 2,435 remain.**
+DCAF17 is the verified addition since checkpoint 440.
+[Checkpoint 441](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-441-2026-10-17-105801-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`6328c89e41e0`](https://github.com/ai4curation/ai-gene-review/commit/6328c89e41e0cc646e4a1437079844d87ad7e3b7),
-merged at 2026-10-17 10:32:17 UTC.
+cutoff is [`1b47f6653c7f`](https://github.com/ai4curation/ai-gene-review/commit/1b47f6653c7fa96e61b6a6ac5fe76b989961b59c),
+merged at 2026-10-17 10:58:01 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-At that main commit, 7,862 reviews are available, including 3,003 human
-reviews. DARS2 augments an existing review, so availability is unchanged from
-checkpoint 439 while verified completions increase by one. The tracker publication
-integrates this main commit. Review availability alone does not establish completion.
-Earlier checkpoints, queue records and histories remain preserved. Pending gene
-reviews remain unchecked until their approvals, merged files and actual-main
-validation are verified.
+At that main commit, 7,863 reviews are available, including 3,004 human
+reviews. DCAF17 adds one available human review as well as one verified completion.
+The tracker publication integrates this main commit. Review availability alone
+does not establish completion. Earlier checkpoints, queue records and histories
+remain preserved. Pending gene reviews remain unchecked until their approvals,
+merged files and actual-main validation are verified.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3566,7 +3565,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **DAG1** — HGNC:2666; [neuromuscular disease caused by qualitative or quantitative defects of alpha-dystroglycan](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_61b73fd7-5578-447b-9482-ea64d62dae1d-2024-08-13T190000.000Z) (MONDO:0018282; AR; Definitive).
 - [x] **DARS2** — HGNC:25538; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c3fc3cd8-48aa-4e02-8324-b3412fcfa64f-2022-05-04T160000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **DBT** — HGNC:2698; [maple syrup urine disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cfd1ebde-e447-4877-977e-f5b9fe434adc-2018-10-30T160000.000Z) (MONDO:0009563; AR; Definitive).
-- [ ] **DCAF17** — HGNC:25784; [Woodhouse-Sakati syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6a1d7719-4261-494d-87aa-745518580673-2021-07-27T153526.827Z) (MONDO:0009419; AR; Definitive).
+- [x] **DCAF17** — HGNC:25784; [Woodhouse-Sakati syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6a1d7719-4261-494d-87aa-745518580673-2021-07-27T153526.827Z) (MONDO:0009419; AR; Definitive).
 - [ ] **DCC** — HGNC:2701; [mirror movements 1 and/or agenesis of the corpus callosum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f923f025-a973-4af8-b2c2-00dc39ed3026-2022-07-26T160000.000Z) (MONDO:0100515; AD; Definitive).
 - [ ] **DCDC2** — HGNC:18141; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_477c8aba-eeba-43dc-a5e2-f6f84b127b8f-2021-10-13T160000.000Z) (MONDO:0005308; AR; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86802e37-e2a5-43b9-8538-e104859b4c55-2020-08-31T170000.000Z) (MONDO:0019497; AR; Limited).
 - [ ] **DCLRE1C** — HGNC:17642; [severe combined immunodeficiency due to DCLRE1C deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_603e0855-2b57-4463-a9b7-1c5d70089a4f-2021-02-18T154301.245Z) (MONDO:0011225; AR; Definitive).

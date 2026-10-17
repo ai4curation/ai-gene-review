@@ -4101,3 +4101,56 @@ credit from this update.
 All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,862 reviews, including 3,003 human reviews. The catalogue has 1,710 missing-review warnings and the progress page has no warnings, unchanged from checkpoint 439. Counts are 440 checked and 2,436 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T104628Z-codex-760612.yaml)
+
+## Completion checkpoint 441 — 2026-10-17 10:58:01 UTC
+
+**441 complete; 2,435 remaining out of 2,876 primary catalogue genes.**
+DCAF17 is the sole addition to checkpoint 440. Its approved head
+`87bf8aa55fa996cd5b729b279b0e7870efec7228` in
+[#5073](https://github.com/ai4curation/ai-gene-review/pull/5073) merged as
+[`1b47f6653c7f`](https://github.com/ai4curation/ai-gene-review/commit/1b47f6653c7fa96e61b6a6ac5fe76b989961b59c).
+All 13 approved PR file modes and blobs match the merge. The actual parent delta
+contains 12 paths; `publications/PMID_15815621.md` was already identical on the parent.
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/5073#pullrequestreview-5550019338)
+and separate actual-main validation establish this completion.
+
+The actual-main push [run 39026890723](https://github.com/ai4curation/ai-gene-review/actions/runs/39026890723)
+and [job 117379542492](https://github.com/ai4curation/ai-gene-review/actions/runs/39026890723/job/117379542492)
+succeeded at 2026-10-17T11:03:25Z. Scoped gene, history and family validation
+passed; the full test suite was skipped on this push. The separate successful
+[merge-group run 39025277296](https://github.com/ai4curation/ai-gene-review/actions/runs/39025277296)
+and [job 117374929386](https://github.com/ai4curation/ai-gene-review/actions/runs/39025277296/job/117374929386)
+tested the same merge SHA and ran the full test suite, examples, all-gene schemas
+and automation checks. The standalone prediction/source-evidence step was skipped
+and is not claimed as executed. Completion records the finished, approved and
+merged review; it is not a human maintainer sign-off by the coordinating AI agent.
+
+The 46 protected positions are distinct from the 13 approved paths and 12 actual
+parent changes. Their explicit categories and paths are:
+
+- tracker source records (2): `projects/CLINGEN_MENDELIAN.md`, `projects/CLINGEN_MENDELIAN/publication-queue.json`.
+- pathway and model sources (6): `gocams/index.tsv`, `reactome/R-HSA-8952638.md`, `reactome/R-HSA-8952639.md`, `reactome/R-HSA-8955245.md`, `reactome/R-HSA-8955285.md`, `reactome/R-HSA-8956045.md`.
+- repository runtime and build context (25): `CLAUDE.md`, `AGENTS.md`, `docs/history.md`, `genes/human/RBFOX3/RBFOX3-bioinformatics/rbfox3_analysis/pyproject.toml`, `genes/human/RBFOX3/RBFOX3-bioinformatics/rbfox3_analysis/README.md`, `genes/yeast/MTC7/MTC7-bioinformatics/pyproject.toml`, `genes/yeast/MTC7/MTC7-bioinformatics/README.md`, `genes/human/CFAP418/CFAP418-bioinformatics/pyproject.toml`, `genes/human/CFAP418/CFAP418-bioinformatics/README.md`, `genes/PSEPK/pedH/pedH-bioinformatics/pyproject.toml`, `genes/PSEPK/pedH/pedH-bioinformatics/README.md`, `genes/human/C18orf21/C18orf21-bioinformatics/pyproject.toml`, `genes/human/C18orf21/C18orf21-bioinformatics/README.md`, `genes/human/C18orf21/C18orf21-bioinformatics/genes/human/C18orf21/C18orf21-bioinformatics/pyproject.toml`, `genes/human/C18orf21/C18orf21-bioinformatics/genes/human/C18orf21/C18orf21-bioinformatics/README.md`, `genes/PENCH/aatA/aatA-bioinformatics/pyproject.toml`, `genes/PENCH/aatA/aatA-bioinformatics/README.md`, `genes/METBS/Pks1/Pks1-bioinformatics/pyproject.toml`, `genes/METBS/Pks1/Pks1-bioinformatics/README.md`, `genes/human/GATA3/GATA3-bioinformatics/pyproject.toml`, `genes/human/GATA3/GATA3-bioinformatics/README.md`, `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/pyproject.toml`, `projects/THLAR_OILSEED/ortholog_mapping/pyproject.toml`, `analysis/mf_metabolic_network/pyproject.toml`, `src/ai_gene_review/schema/gene_review.yaml`.
+- publication caches (10): `publications/PMID_14702039.md`, `publications/PMID_15489334.md`, `publications/PMID_16949367.md`, `publications/PMID_17974005.md`, `publications/PMID_29907856.md`, `publications/PMID_15815621.md`, `publications/PMID_19026396.md`, `publications/PMID_30068992.md`, `publications/PMID_36509865.md`, `publications/PMID_40449516.md`.
+- DCAF17 machine source files (2): `genes/human/DCAF17/DCAF17-goa.tsv`, `genes/human/DCAF17/DCAF17-uniprot.txt`.
+- prior DCAF17 session history (1): `history/genes/human/DCAF17/2026-10-16T144134Z-codex-bd0f40.yaml`.
+
+DCAF17 publication preserved these positions. This checkpoint separately updates
+the two tracker source records listed above and their related project files;
+the other positions retain their accepted merge contents. No gene annotation is
+edited by this tracker update.
+
+DCAF17 adds a review file. Repository availability is now 7,863 reviews,
+including 3,004 human reviews. Of 1,167 catalogue genes with available
+reviews, 441 are credited and 726 remain uncredited; 1,709 still lack
+review files. Availability and completion remain different measures.
+
+This update preserves all 2,876 catalogue identities and association texts, 235
+historical queue objects, all 89 earlier completion updates, the complete preceding
+progress text and 179 prior project histories. Only the DCAF17 checkbox changes;
+completion update 90 is appended. Other available and pending reviews receive no
+credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,863 reviews, including 3,004 human reviews. The catalogue has 1,709 missing-review warnings and the progress page has no warnings, reflecting the new DCAF17 review. Counts are 441 checked and 2,435 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T113125Z-codex-90e568.yaml)
