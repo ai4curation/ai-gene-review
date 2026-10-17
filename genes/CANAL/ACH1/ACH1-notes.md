@@ -18,7 +18,10 @@
   in environmental alkalinization and confirmed that ach1 loss delays
   neutralization of acidic amino-acid medium. This supports the CGD pH-response
   process row as a real phenotype, but the phenotype is downstream of ACH1
-  carbon metabolism rather than a distinct molecular activity. [PMID:21586647]
+  carbon metabolism rather than a distinct molecular activity. Current GO has
+  `GO:0045852 pH elevation` under `GO:0006885 regulation of pH`, but existing
+  pH-elevation terms cover internal pH changes rather than fungal
+  alkalinization of the extracellular medium. [PMID:21586647]
 - UniProt curates C. albicans ACH1 as cytoplasmic from Pitarch et al. 2004
   proteomics, while CGD and PAINT carry mitochondrial and cytosolic placements
   inferred from S. cerevisiae Ach1. The mitochondrial call best matches the
