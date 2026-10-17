@@ -2988,15 +2988,15 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**433 of 2,876 genes are complete; 2,443 remain.**
-CYP27A1 is the verified addition since checkpoint 432.
-[Checkpoint 433](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-433-2026-10-17-070709-utc)
+**434 of 2,876 genes are complete; 2,442 remain.**
+CYP2U1 is the verified addition since checkpoint 433.
+[Checkpoint 434](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-434-2026-10-17-073848-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`1f2d0f4c42bd`](https://github.com/ai4curation/ai-gene-review/commit/1f2d0f4c42bde7e51deeed7d0486ef015657404b),
-merged at 2026-10-17 07:07:09 UTC.
+cutoff is [`e32937e9a43d`](https://github.com/ai4curation/ai-gene-review/commit/e32937e9a43d197137f795d76417027d318843f0),
+merged at 2026-10-17 07:38:48 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-The current branch has 7,857 reviews, including 2,998 human reviews. Review
+The current branch has 7,858 reviews, including 2,999 human reviews. Review
 availability alone does not establish completion. Earlier checkpoints, queue
 records and histories remain preserved. Pending gene reviews remain unchecked
 until their approvals, merged files and actual-main validation are verified.
@@ -3556,7 +3556,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **CYP1B1** — HGNC:2597; [CYP1B1-related glaucoma with or without anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_107502fc-115b-4ee0-ba83-7081a17d1ebc-2023-01-19T170000.000Z) (MONDO:0800472; AR; Definitive).
 - [x] **CYP27A1** — HGNC:2605; [cerebrotendinous xanthomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84f4b8c1-a978-49ab-a21c-578e5d4fcdec-2024-09-23T160000.000Z) (MONDO:0008948; AR; Definitive).
 - [ ] **CYP27B1** — HGNC:2606; [vitamin D-dependent rickets, type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dadf4f9a-281f-4e34-bdde-d44c28e572d6-2025-06-04T040000.000Z) (MONDO:0020723; AR; Definitive).
-- [ ] **CYP2U1** — HGNC:20582; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e2d550d2-5653-45dc-a8a3-2dccf4bb49f6-2023-01-16T020000.000Z) (MONDO:0019064; AR; Definitive).
+- [x] **CYP2U1** — HGNC:20582; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e2d550d2-5653-45dc-a8a3-2dccf4bb49f6-2023-01-16T020000.000Z) (MONDO:0019064; AR; Definitive).
 - [ ] **CYP4V2** — HGNC:23198; [Bietti crystalline corneoretinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_da577a4b-5c65-43fa-9a03-b275eaacb6eb-2021-04-01T160000.000Z) (MONDO:0008865; AR; Definitive).
 - [ ] **CYP7B1** — HGNC:2652; [CYP7B1-related disorder of oxysterol accumulation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e000ae1c-93a3-4f6b-bdf0-afd04603d407-2025-02-28T170000.000Z) (MONDO:1060107; AR; Definitive).
 - [ ] **D2HGDH** — HGNC:28358; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_90674a82-f43e-4435-88c8-121a57b8ab19-2023-10-02T040000.000Z) (MONDO:0044970; AR; Definitive).
