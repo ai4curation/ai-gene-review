@@ -9,6 +9,8 @@ species:
   - worm
   - yeast
   - ARATH
+# Gene products holding GO:0006287, i.e. the scope of the remap --
+# not a coverage claim: only APEX1, FEN1 and ADPRS have reviews here.
 genes:
   - APEX1
   - FEN1
@@ -174,7 +176,7 @@ projections.** The reference is UniProt's *combined* automated annotation from
 multiple IEA methods, so membership does not by itself say the row came from an
 ortholog; this repo's own classifier only counts such a row as electronic
 orthology when its `WITH/FROM` names an Ensembl protein or a PANTHER node
-(`src/ai_gene_review/export/propagation_rows.py:125`). Checked rather than
+(the `ensembl|PANTHER` gate in `classify()`, `src/ai_gene_review/export/propagation_rows.py`). Checked rather than
 assumed: all 120 rows are UniProt-assigned and **every one** carries all three
 — a UniProtKB donor, an `ensembl` protein id, and a `PANTHER` node — and the
 donors are only two accessions, `Q07864` (human POLE, 64 rows) and `P28340`
@@ -360,24 +362,44 @@ assignment is the whole question; none has a review here.
 
 ## Proposed approach
 
-1. **Fix the three in-repo reviews** as tabled above, as soon as the new terms
-   appear in a GO release our validation resolves. Only ADPRS is mechanical:
-   FEN1 needs the parent/child pair in `core_functions` collapsed as well as
-   the row id changed, and APEX1 needs both its `summary` and its `reason`
-   re-derived against the sub-pathway definition. `grep` each file rather than
-   editing the tabled line alone — FEN1 names `GO:0006287` in a third place
-   (inside the `reason` of its `GO:0006281 DNA repair` row) and ADPRS has a
-   dozen occurrences. Most of the ADPRS prose is *about* the historical
-   Reactome mapping, so the id should stay there; mark it as obsoleted wherever
-   the prose reads as a live term.
-2. **Send upstream the Reactome mapping table.** The four pathway-to-GO
+**The upstream steps gate the in-repo ones, not the other way round.** All
+three affected rows are Reactome TAS, so their term is whatever Reactome's
+pathway-to-GO mapping emits — it is not ours to choose. And
+`existing_annotations` is validated against the regenerated `*-goa.tsv`, where
+a row with no matching GOA entry is a blocking `ERROR` ("Found N annotations
+not in GOA", `validate_against_goa` in
+`src/ai_gene_review/validation/validator.py`). So editing a review file ahead
+of the GOA pull does not just jump the gun — it fails validation. The
+`ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION` project sequences on the GOA pull
+for the same reason. Hence the ordering below.
+
+1. **Send upstream the Reactome mapping table.** The four pathway-to-GO
    mappings are the highest-leverage fix in this obsoletion (12 TAS rows, three
    of them already self-describing as single- or multiple-nucleotide), and
    go-annotation#6627 lists them as needing review without proposing
    destinations. Carry over the ADPRS drop recommendation, but send PARG as
    "parent term pending review" rather than as a second drop.
-3. **Raise the two MGI data queries** (the `P54098`/`P54099` accession and the
+2. **Raise the two MGI data queries** (the `P54098`/`P54099` accession and the
    pol λ–from–pol γ `WITH/FROM`) before the remap runs.
+3. **Then fix the three in-repo reviews**, once *all three* gates are open: the
+   new terms are in a GO release our validation resolves, Reactome has remapped
+   its pathway exports, and `just fetch-gene human FEN1` / `APEX1` / `ADPRS`
+   has pulled the new GOA rows. None of the three edits is purely mechanical:
+   - **FEN1** — change the row id *and* collapse the `core_functions`
+     `directly_involved_in` pair to `GO:7770138` alone.
+   - **APEX1** — rewrite both the `summary` and the `reason` against the
+     sub-pathway definition, per the table above.
+   - **ADPRS** — once GOA drops the row, **delete it** rather than retaining it
+     with a note, since an orphaned row is itself the validation error. Move
+     the compartment reasoning to `ADPRS-notes.md` so the analysis is not lost;
+     it is the record of why this export route was wrong, and is worth keeping
+     whether or not Reactome fixes the nesting.
+
+   `grep` each file rather than editing the tabled line alone — FEN1 names
+   `GO:0006287` in a third place (inside the `reason` of its `GO:0006281 DNA
+   repair` row) and ADPRS has a dozen occurrences. Most of the ADPRS prose is
+   *about* the historical Reactome mapping, so the id should stay there; mark it
+   as obsoleted wherever the prose reads as a live term.
 4. **Read PMID:15177179 once** and settle rows 5–8 together; then
    PMID:19806195 and PMID:38217735 for the two pol λ rows. **None of the ten
    experimental PMIDs is cached** in `publications/` — only PMID:17983848, a
@@ -394,7 +416,8 @@ assignment is the whole question; none has a review here.
 ## Priority
 
 **Medium-high.** The in-repo work is small — three files, none of them a large
-edit — but the upstream leverage is unusually good: a handful of
+edit, and all three blocked on upstream until Reactome remaps and the GOA pull
+reflects it — but the upstream leverage is unusually good: a handful of
 Reactome mapping decisions and two PAINT node decisions determine where 9,941
 annotations land, and the obsoletion ticket is open right now with those
 decisions unmade. The gap-filling polymerases and ligases are also a coherent,
@@ -403,11 +426,15 @@ makes the exemplar reviews worth doing on their own terms.
 
 ## Status
 
-Scoped on 2026-10-17 from go-annotation#6627. No reviews started. The two
-replacement terms exist in the merged ontology edit file but are not yet in a
-release OLS serves, so the id swaps in FEN1 and APEX1 should wait for a release
-that `linkml-term-validator` can resolve — `core_functions` term ids are hard
-validated, and FEN1's `GO:0006287` sits in exactly such a slot. While waiting,
+Scoped on 2026-10-17 from go-annotation#6627. No reviews started, and the
+in-repo edits are blocked on three separate upstream events — see the ordering
+note under *Proposed approach*. The two replacement terms exist in the merged
+ontology edit file but are not yet in a release OLS serves, so the id swaps in
+FEN1 and APEX1 need a release that `linkml-term-validator` can resolve
+(`core_functions` term ids are hard validated, and FEN1's `GO:0006287` sits in
+exactly such a slot) **and** a Reactome remap reflected in a fresh
+`just fetch-gene` pull, since all three rows are Reactome TAS and are validated
+against `*-goa.tsv`. While waiting,
 confirm the `GO:77701xx` allocation with the ontology editors: the ids here are
 reported verbatim from the merged `go-edit.obo` patch, but the range is
 unusual for GO, and it is cheap insurance before writing them into a

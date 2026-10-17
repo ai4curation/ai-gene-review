@@ -643,7 +643,7 @@ projections.</strong> The reference is UniProt's <em>combined</em> automated ann
 multiple IEA methods, so membership does not by itself say the row came from an<br />
 ortholog; this repo's own classifier only counts such a row as electronic<br />
 orthology when its <code>WITH/FROM</code> names an Ensembl protein or a PANTHER node<br />
-(<code>src/ai_gene_review/export/propagation_rows.py:125</code>). Checked rather than<br />
+(the <code>ensembl|PANTHER</code> gate in <code>classify()</code>, <code>src/ai_gene_review/export/propagation_rows.py</code>). Checked rather than<br />
 assumed: all 120 rows are UniProt-assigned and <strong>every one</strong> carries all three<br />
 — a UniProtKB donor, an <code>ensembl</code> protein id, and a <code>PANTHER</code> node — and the<br />
 donors are only two accessions, <a href="https://www.uniprot.org/uniprotkb/Q07864/entry">Q07864</a> (human POLE, 64 rows) and <a href="https://www.uniprot.org/uniprotkb/P28340/entry">P28340</a><br />
@@ -994,17 +994,17 @@ assignment is the whole question; none has a review here.</p>
     gap-filling candidate rather than a remap.</li>
 </ol>
 <h2 id="proposed-approach">Proposed approach</h2>
+<p><strong>The upstream steps gate the in-repo ones, not the other way round.</strong> All<br />
+three affected rows are Reactome TAS, so their term is whatever Reactome's<br />
+pathway-to-GO mapping emits — it is not ours to choose. And<br />
+<code>existing_annotations</code> is validated against the regenerated <code>*-goa.tsv</code>, where<br />
+a row with no matching GOA entry is a blocking <code>ERROR</code> ("Found N annotations<br />
+not in GOA", <code>validate_against_goa</code> in<br />
+<code>src/ai_gene_review/validation/validator.py</code>). So editing a review file ahead<br />
+of the GOA pull does not just jump the gun — it fails validation. The<br />
+<code>ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION</code> project sequences on the GOA pull<br />
+for the same reason. Hence the ordering below.</p>
 <ol>
-<li><strong>Fix the three in-repo reviews</strong> as tabled above, as soon as the new terms<br />
-   appear in a GO release our validation resolves. Only <a href="../../genes/human/ADPRS/ADPRS-ai-review.html">ADPRS</a> is mechanical:<br />
-<a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a> needs the parent/child pair in <code>core_functions</code> collapsed as well as<br />
-   the row id changed, and <a href="../../genes/human/APEX1/APEX1-ai-review.html">APEX1</a> needs both its <code>summary</code> and its <code>reason</code><br />
-   re-derived against the sub-pathway definition. <code>grep</code> each file rather than<br />
-   editing the tabled line alone — <a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a> names <code>GO:0006287</code> in a third place<br />
-   (inside the <code>reason</code> of its <code>GO:0006281 DNA repair</code> row) and <a href="../../genes/human/ADPRS/ADPRS-ai-review.html">ADPRS</a> has a<br />
-   dozen occurrences. Most of the <a href="../../genes/human/ADPRS/ADPRS-ai-review.html">ADPRS</a> prose is <em>about</em> the historical<br />
-   Reactome mapping, so the id should stay there; mark it as obsoleted wherever<br />
-   the prose reads as a live term.</li>
 <li><strong>Send upstream the Reactome mapping table.</strong> The four pathway-to-GO<br />
    mappings are the highest-leverage fix in this obsoletion (12 TAS rows, three<br />
    of them already self-describing as single- or multiple-nucleotide), and<br />
@@ -1013,33 +1013,56 @@ assignment is the whole question; none has a review here.</p>
    "parent term pending review" rather than as a second drop.</li>
 <li><strong>Raise the two MGI data queries</strong> (the <a href="https://www.uniprot.org/uniprotkb/P54098/entry">P54098</a>/<a href="https://www.uniprot.org/uniprotkb/P54099/entry">P54099</a> accession and the<br />
    pol λ–from–pol γ <code>WITH/FROM</code>) before the remap runs.</li>
-<li><strong>Read PMID:15177179 once</strong> and settle rows 5–8 together; then<br />
+<li><strong>Then fix the three in-repo reviews</strong>, once <em>all three</em> gates are open: the<br />
+   new terms are in a GO release our validation resolves, Reactome has remapped<br />
+   its pathway exports, and <code>just fetch-gene human FEN1</code> / <code>APEX1</code> / <code>ADPRS</code><br />
+   has pulled the new GOA rows. None of the three edits is purely mechanical:</li>
+<li><strong><a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a></strong> — change the row id <em>and</em> collapse the <code>core_functions</code><br />
+<code>directly_involved_in</code> pair to <code>GO:7770138</code> alone.</li>
+<li><strong><a href="../../genes/human/APEX1/APEX1-ai-review.html">APEX1</a></strong> — rewrite both the <code>summary</code> and the <code>reason</code> against the<br />
+     sub-pathway definition, per the table above.</li>
+<li><strong><a href="../../genes/human/ADPRS/ADPRS-ai-review.html">ADPRS</a></strong> — once GOA drops the row, <strong>delete it</strong> rather than retaining it<br />
+     with a note, since an orphaned row is itself the validation error. Move<br />
+     the compartment reasoning to <code>ADPRS-notes.md</code> so the analysis is not lost;<br />
+     it is the record of why this export route was wrong, and is worth keeping<br />
+     whether or not Reactome fixes the nesting.</li>
+</ol>
+<p><code>grep</code> each file rather than editing the tabled line alone — <a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a> names<br />
+<code>GO:0006287</code> in a third place (inside the <code>reason</code> of its <code>GO:0006281 DNA
+   repair</code> row) and <a href="../../genes/human/ADPRS/ADPRS-ai-review.html">ADPRS</a> has a dozen occurrences. Most of the <a href="../../genes/human/ADPRS/ADPRS-ai-review.html">ADPRS</a> prose is<br />
+<em>about</em> the historical Reactome mapping, so the id should stay there; mark it<br />
+   as obsoleted wherever the prose reads as a live term.<br />
+4. <strong>Read PMID:15177179 once</strong> and settle rows 5–8 together; then<br />
    PMID:19806195 and PMID:38217735 for the two pol λ rows. <strong>None of the ten<br />
    experimental PMIDs is cached</strong> in <code>publications/</code> — only PMID:17983848, a<br />
    synonym source for the new terms, is — so cache them first. The branch<br />
    assignments in the table above come from PubMed titles, which is enough to<br />
    call the two rows whose titles say "long patch" and "single-nucleotide"<br />
-   outright and is not enough for the rest.</li>
-<li><strong>Review POLB, POLD1, POLE</strong> as the exemplar trio: short-patch, long-patch,<br />
+   outright and is not enough for the rest.<br />
+5. <strong>Review POLB, POLD1, POLE</strong> as the exemplar trio: short-patch, long-patch,<br />
    long-patch. Their reviews determine both PAINT node placements and<br />
-   therefore the destination of ~97% of all rows.</li>
-<li><strong>Confirm the IEA snapshot basis</strong> with upstream so the mechanical remap is<br />
-   sized correctly (85 rows vs the 9,689 QuickGO returns today).</li>
-</ol>
+   therefore the destination of ~97% of all rows.<br />
+6. <strong>Confirm the IEA snapshot basis</strong> with upstream so the mechanical remap is<br />
+   sized correctly (85 rows vs the 9,689 QuickGO returns today).</p>
 <h2 id="priority">Priority</h2>
 <p><strong>Medium-high.</strong> The in-repo work is small — three files, none of them a large<br />
-edit — but the upstream leverage is unusually good: a handful of<br />
+edit, and all three blocked on upstream until Reactome remaps and the GOA pull<br />
+reflects it — but the upstream leverage is unusually good: a handful of<br />
 Reactome mapping decisions and two PAINT node decisions determine where 9,941<br />
 annotations land, and the obsoletion ticket is open right now with those<br />
 decisions unmade. The gap-filling polymerases and ligases are also a coherent,<br />
 well-characterised gene set that this repo has no coverage of at all, which<br />
 makes the exemplar reviews worth doing on their own terms.</p>
 <h2 id="status">Status</h2>
-<p>Scoped on 2026-10-17 from go-annotation#6627. No reviews started. The two<br />
-replacement terms exist in the merged ontology edit file but are not yet in a<br />
-release OLS serves, so the id swaps in <a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a> and <a href="../../genes/human/APEX1/APEX1-ai-review.html">APEX1</a> should wait for a release<br />
-that <code>linkml-term-validator</code> can resolve — <code>core_functions</code> term ids are hard<br />
-validated, and <a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a>'s <code>GO:0006287</code> sits in exactly such a slot. While waiting,<br />
+<p>Scoped on 2026-10-17 from go-annotation#6627. No reviews started, and the<br />
+in-repo edits are blocked on three separate upstream events — see the ordering<br />
+note under <em>Proposed approach</em>. The two replacement terms exist in the merged<br />
+ontology edit file but are not yet in a release OLS serves, so the id swaps in<br />
+<a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a> and <a href="../../genes/human/APEX1/APEX1-ai-review.html">APEX1</a> need a release that <code>linkml-term-validator</code> can resolve<br />
+(<code>core_functions</code> term ids are hard validated, and <a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a>'s <code>GO:0006287</code> sits in<br />
+exactly such a slot) <strong>and</strong> a Reactome remap reflected in a fresh<br />
+<code>just fetch-gene</code> pull, since all three rows are Reactome TAS and are validated<br />
+against <code>*-goa.tsv</code>. While waiting,<br />
 confirm the <code>GO:77701xx</code> allocation with the ontology editors: the ids here are<br />
 reported verbatim from the merged <code>go-edit.obo</code> patch, but the range is<br />
 unusual for GO, and it is cheap insurance before writing them into a<br />
@@ -1063,9 +1086,9 @@ distinct children, rather than merging a redundant one away, so the<br />
     <strong>Local changes</strong> ·
 
     Last committed source:
-    <time datetime="2026-10-17T13:39:54Z">17 Oct 2026, 13:39 UTC</time>
-    · <a href="https://github.com/ai4curation/ai-gene-review/commit/2a6bccd4e49fd7f09f8fa0e20c40df4c8a02e0b2" aria-label="View source change 2a6bccd4e49fd7f09f8fa0e20c40df4c8a02e0b2">2a6bccd4e49f</a>
-    · <a href="https://github.com/ai4curation/ai-gene-review/blob/2a6bccd4e49fd7f09f8fa0e20c40df4c8a02e0b2/projects/BASE_EXCISION_REPAIR_GAP_FILLING_OBSOLETION.md">View committed source</a>
+    <time datetime="2026-10-17T13:56:15Z">17 Oct 2026, 13:56 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/68ff075a87c92a008090cbe54a827fd3e8c68c76" aria-label="View source change 68ff075a87c92a008090cbe54a827fd3e8c68c76">68ff075a87c9</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/68ff075a87c92a008090cbe54a827fd3e8c68c76/projects/BASE_EXCISION_REPAIR_GAP_FILLING_OBSOLETION.md">View committed source</a>
 
 </small>
 
