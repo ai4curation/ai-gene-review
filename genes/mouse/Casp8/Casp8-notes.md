@@ -62,15 +62,19 @@ annotation-reviewer sidecar for a systematic pass over mouse-specific GO rows.
   `genes/mouse/Casp9`, `genes/human/CASP9`, `genes/DROME/Dronc`, `genes/worm/ced-3`.
 - Resolved mouse/human disagreements by aligning mouse to the human CASP8
   treatment (48 rows changed, each `review.reason` prefixed "Ortholog audit 2026-10-12"):
-  - `GO:0006915` apoptotic process (IBA/IEA/ISO) MODIFY -> ACCEPT. Casp8 acts in
-    death-receptor, complex II/ripoptosome and TLR-associated contexts, so the
-    caspase-wide IBA is retained as for human CASP8 and mouse Casp3 rather than
-    narrowed to GO:0008625. (Casp9/CASP9 still MODIFY to intrinsic signaling;
-    Casp9 is essentially restricted to the apoptosome pathway, so the difference
-    is biological, not inconsistent.)
-  - `GO:0097190` apoptotic signaling (IEA/ISO), `GO:0097191` extrinsic apoptotic
-    signaling (all rows), `GO:0036462` TRAIL pathway, `GO:0006508` proteolysis,
-    `GO:0016485` protein processing, `GO:0097110` scaffold protein binding -> ACCEPT.
+  - `GO:0097191` extrinsic apoptotic signaling (all rows), `GO:0036462` TRAIL
+    pathway, `GO:0016485` protein processing, `GO:0097110` scaffold protein
+    binding -> ACCEPT. The previous MODIFY (narrowing to GO:0008625) was dropped
+    because it would exclude the non-receptor activation platforms, matching
+    human CASP8.
+  - `GO:0006915` apoptotic process, `GO:0097190` apoptotic signaling pathway and
+    `GO:0006508` proteolysis: not narrowed to GO:0008625 (which would lose the
+    non-receptor platforms) but, after PR #5079 review, kept as KEEP_AS_NON_CORE
+    rather than ACCEPT. These are true but broad parents strictly entailed by the
+    accepted GO:0097191/GO:0008625/GO:0016485 rows, so they are correct-but-not-core.
+    (Casp9/CASP9 MODIFY their apoptotic rows to intrinsic signaling; Casp9 is
+    essentially restricted to the apoptosome pathway, so the difference is
+    biological, not inconsistent.)
   - `GO:0097194` execution phase (MODIFY -> KEEP_AS_NON_CORE; experimental rows no
     longer recast), `GO:0043065`, `GO:0042981`, `GO:0045862`, plasma membrane IEA,
     `GO:0042802` identical protein binding (ACCEPT -> non-core, binding term),
