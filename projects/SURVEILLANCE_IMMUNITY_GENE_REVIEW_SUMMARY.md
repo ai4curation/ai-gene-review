@@ -1,13 +1,10 @@
 ---
 title: "GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes"
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
 genes: [daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
-manifest:
-  artifacts:
-    - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
-      title: Project brief (C. elegans surveillance immunity)
 ---
 
 # GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes
@@ -672,25 +669,25 @@ The clec-60-ai-review.yaml file proposes 3 NEW annotations worth implementing:
 ## File Paths for Review Updates
 
 ### GOA TSV Files (Read-only reference):
-- `/Users/cjm/repos/ai-gene-review/genes/worm/daf-16/daf-16-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/dbl-1/dbl-1-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/sta-2/sta-2-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/nipi-3/nipi-3-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/lys-7/lys-7-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/clec-60/clec-60-goa.tsv`
+- `genes/worm/daf-16/daf-16-goa.tsv`
+- `genes/worm/dbl-1/dbl-1-goa.tsv`
+- `genes/worm/sta-2/sta-2-goa.tsv`
+- `genes/worm/nipi-3/nipi-3-goa.tsv`
+- `genes/worm/lys-7/lys-7-goa.tsv`
+- `genes/worm/clec-60/clec-60-goa.tsv`
 
 ### AI Review YAML Files (To be updated):
-- `/Users/cjm/repos/ai-gene-review/genes/worm/daf-16/daf-16-ai-review.yaml` (2765 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/dbl-1/dbl-1-ai-review.yaml` (827 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/sta-2/sta-2-ai-review.yaml` (527 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/nipi-3/nipi-3-ai-review.yaml` (521 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/lys-7/lys-7-ai-review.yaml` (492 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/clec-60/clec-60-ai-review.yaml` (207 lines)
+- `genes/worm/daf-16/daf-16-ai-review.yaml` (3198 lines)
+- `genes/worm/dbl-1/dbl-1-ai-review.yaml` (898 lines)
+- `genes/worm/sta-2/sta-2-ai-review.yaml` (572 lines)
+- `genes/worm/nipi-3/nipi-3-ai-review.yaml` (576 lines)
+- `genes/worm/lys-7/lys-7-ai-review.yaml` (541 lines)
+- `genes/worm/clec-60/clec-60-ai-review.yaml` (235 lines)
 
 ### Supporting Resources:
 - Deep research files: `*-deep-research-falcon.md` for each gene
 - UniProt records: `*-uniprot.txt` for each gene
-- Publication files: `/Users/cjm/repos/ai-gene-review/publications/PMID_*.md`
+- Publication files: `publications/PMID_*.md`
 
 ---
 

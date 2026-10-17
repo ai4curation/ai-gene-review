@@ -1,6 +1,7 @@
 ---
 title: "Satellite Model Organisms"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [CAEBR, PRIPA]
 genes: [drd-5, tra-1, tra-2, fem-3, she-1, cep-1, trr-1, kin-1, peb-1, ubl-1, oaz]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/KpzGoG9pcLXFud2YtDLotZ
-      title: Project brief
 ---
 
 # Satellite Model Organisms
@@ -22,11 +20,13 @@ comparators to a reference model organism; here, the nematodes
 reviewed them to see whether the comparative inference holds up. We reviewed
 11 genes: 10 *C. briggsae* genes (drd-5, the sex-determination set tra-1,
 tra-2, fem-3 and she-1, and five other protein-level entries) and oaz, the only
-Swiss-Prot entry for *P. pacificus*. All 11 have been reviewed (the files still carry `status: INITIALIZED`). They cover 115
-existing annotation rows (52 ACCEPT, 43 KEEP_AS_NON_CORE, 11
-MARK_AS_OVER_ANNOTATED, 6 MODIFY, 3 REMOVE) and propose 4 NEW terms; she-1 had
-no GO annotations and was curated from the literature. The open question is
-whether to add the TrEMBL-only *P. pacificus* plasticity genes such as eud-1.
+Swiss-Prot entry for *P. pacificus*. All 11 have review decisions with no
+PENDING or UNDECIDED rows. They cover 115 existing annotation rows (52 ACCEPT,
+43 KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 6 MODIFY, 3 REMOVE) and propose
+4 NEW terms. Remaining follow-up is to tighten support on several de-novo
+sex-determination calls ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258))
+and decide whether to add the TrEMBL-only *P. pacificus* plasticity genes such
+as eud-1 ([#4257](https://github.com/ai4curation/ai-gene-review/issues/4257)).
 
 ## Overview
 
@@ -86,7 +86,9 @@ may be added as gene reviews accrue.
     experimental annotations).
   - [x] **she-1** (`A8XDR5`) — F-box "spermless hermaphrodites" protein, a
     *C. briggsae*-lineage-specific gene required for hermaphrodite spermatogenesis;
-    **no GO annotations yet** (annotation gap — a good de-novo curation target).
+    **no GO annotations yet**. The review drafts de-novo SCF/adaptor core
+    functions, pending full-text support cleanup
+    ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)).
 - **`CAEBR` other protein-level (PE=1) genes** — the remaining *C. briggsae*
   entries with experimental protein-level evidence; reviewed:
   - [x] **cep-1** (`A8WW61`) — p53/p63/p73-family transcription factor
@@ -108,7 +110,10 @@ may be added as gene reviews accrue.
 - **IN_PROGRESS.** All 11 seeded genes are reviewed: *C. briggsae* `drd-5`, the
   sex-determination set (`tra-1`, `tra-2`, `fem-3`, `she-1`), five other PE=1
   genes, and *P. pacificus* `oaz`.
-- *C. briggsae* has 582 reviewed entries; the protein-level (PE=1)
+- De-novo support cleanup remains for `she-1`, `fem-3`, and `tra-2`
+  ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)).
+- At the 2026-06 UniProt snapshot used for this page, *C. briggsae* had 582
+  reviewed entries; the protein-level (PE=1)
   experimentally-characterized ones cluster on sex determination, which is why
   that set was chosen as the first comparative batch.
 - **Annotation availability (UniProt, 2026-06):** `PRIPA` has just **1 reviewed
@@ -116,8 +121,9 @@ may be added as gene reviews accrue.
   142 aa), now seeded as `genes/PRIPA/oaz/` — alongside ~26,000 unreviewed TrEMBL
   entries. The classic developmental-plasticity / predatory-morph genes are all
   TrEMBL-only, so seeding those means working from unreviewed accessions.
-- Next: decide whether to pull in TrEMBL plasticity genes (e.g. the *eud-1*/sulfatase morph
-  switch) backed by literature + bioinformatics.
+- Next: decide whether to pull in TrEMBL plasticity genes (e.g. the
+  *eud-1*/sulfatase morph switch) backed by literature + bioinformatics
+  ([#4257](https://github.com/ai4curation/ai-gene-review/issues/4257)).
 - Where a satellite gene is annotated only by orthology to the reference MOD,
   record in the review whether the comparative inference is supported by direct
   evidence in the satellite species.
