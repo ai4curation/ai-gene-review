@@ -393,16 +393,19 @@ def output_path_for_module(
 
 def collect_module_ref_hrefs(
     data: dict[str, Any],
+    yaml_path: Path,
     output_path: Path,
     output_dir: Path = Path("pages/modules"),
     modules_dir: Path = Path("modules"),
 ) -> dict[str, str]:
     """Map each ``module_ref`` in a document to the href of the referenced page.
 
-    A ``<stem>#<node>`` reference links to that node's anchor on the page.
+    The referenced module is resolved from the referencing file's own
+    directory, as the satisfiability engine and the validator resolve it. A
+    ``<stem>#<node>`` reference links to that node's anchor on the page.
 
     >>> doc = {"module": {"id": "u", "parts": [{"node": {"id": "s", "module_ref": "mitophagy#atg8_capture"}}]}}
-    >>> collect_module_ref_hrefs(doc, Path("pages/modules/u.html"))
+    >>> collect_module_ref_hrefs(doc, Path("modules/u.yaml"), Path("pages/modules/u.html"))
     {'mitophagy#atg8_capture': 'mitophagy.html#node-atg8_capture'}
     """
     hrefs: dict[str, str] = {}
@@ -411,7 +414,8 @@ def collect_module_ref_hrefs(
         if not module_ref:
             continue
         stem, _, node_id = str(module_ref).partition("#")
-        target = output_path_for_module(modules_dir / f"{stem}.yaml", output_dir, modules_dir)
+        target_yaml = yaml_path.parent / f"{stem}.yaml"
+        target = output_path_for_module(target_yaml, output_dir, modules_dir)
         href = relative_href(output_path, target)
         hrefs[str(module_ref)] = f"{href}#node-{slugify(node_id)}" if node_id else href
     return hrefs
@@ -573,7 +577,9 @@ def render_module(
         output_path=output_path.as_posix(),
         index_href=relative_href(output_path, index_path),
         anchor_map=anchor_map,
-        module_ref_hrefs=collect_module_ref_hrefs(data, output_path, output_dir, modules_dir),
+        module_ref_hrefs=collect_module_ref_hrefs(
+            data, yaml_path, output_path, output_dir, modules_dir
+        ),
         warnings=warnings,
     )
 

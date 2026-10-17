@@ -246,31 +246,73 @@ def iter_atoms(circuit: Circuit) -> Iterator[Atom]:
             yield from iter_atoms(child)
 
 
-def enumerate_routes(circuit: Circuit) -> list[list[Atom]]:
-    """Enumerate minimal satisfying routes.
+#: Default cap on :func:`enumerate_routes`; umbrella modules multiply route counts.
+DEFAULT_MAX_ROUTES = 10_000
+
+
+def count_routes(circuit: Circuit) -> int:
+    """Count the routes :func:`enumerate_routes` would return, without building them.
+
+    >>> count_routes(Or("vs", "ONE_OR_MORE", [Atom("a", "a", "A", None), Atom("b", "b", "B", None)]))
+    2
+    """
+    if isinstance(circuit, Atom):
+        return 1
+    if isinstance(circuit, And):
+        total = 1
+        for child in circuit.children:
+            total *= count_routes(child)
+        return total
+    return sum(count_routes(c) for c in circuit.children) or 1
+
+
+def enumerate_routes(circuit: Circuit, max_routes: int = DEFAULT_MAX_ROUTES) -> list[list[Atom]]:
+    """Enumerate satisfying routes.
 
     Each route picks exactly one branch per :class:`Or` node and includes every
-    atom on the conjunctive backbone. Returns one atom-list per route.
+    atom on the conjunctive backbone, each atom once. Returns one atom-list per
+    route.
 
-    Note: route count is the Cartesian product of branch counts across all OR
-    nodes, so it grows multiplicatively. Curated modules are small (<= tens of
-    routes); if this engine is ever applied to deeply nested / genome-scale module
-    sets, prefer satisfiability/gap queries (which do not materialise all routes)
-    over enumerating them, or add a route-count guard.
+    Route count is the Cartesian product of branch counts across all OR nodes,
+    and ``module_ref`` inlining multiplies the counts of every referenced
+    module, so this raises ``ValueError`` past ``max_routes``. For umbrella
+    modules prefer :func:`is_satisfied`, :func:`unsatisfied_steps` and
+    :func:`core_atoms`, which do not materialise routes. When two steps
+    reference the same module, each copy's variant sets are enumerated
+    independently, so routes may mix different branches of one referenced
+    variant set; every such route is still a satisfying set, but routes are
+    then not guaranteed minimal.
     """
+    total = count_routes(circuit)
+    if total > max_routes:
+        raise ValueError(
+            f"circuit has {total} routes, more than max_routes={max_routes}; "
+            "use is_satisfied/unsatisfied_steps/core_atoms instead"
+        )
+    return _enumerate(circuit)
+
+
+def _enumerate(circuit: Circuit) -> list[list[Atom]]:
+    """Unguarded route enumeration behind :func:`enumerate_routes`."""
     if isinstance(circuit, Atom):
         return [[circuit]]
     if isinstance(circuit, And):
         routes: list[list[Atom]] = [[]]
         for child in circuit.children:
-            child_routes = enumerate_routes(child)
-            routes = [r + cr for r in routes for cr in child_routes]
+            child_routes = _enumerate(child)
+            routes = [_merge_route(r, cr) for r in routes for cr in child_routes]
         return routes
     # Or
     routes = []
     for child in circuit.children:
-        routes.extend(enumerate_routes(child))
+        routes.extend(_enumerate(child))
     return routes or [[]]
+
+
+def _merge_route(left: list[Atom], right: list[Atom]) -> list[Atom]:
+    """Concatenate two partial routes, keeping each atom (by ``node_id``) once."""
+    seen = {a.node_id for a in left}
+    return left + [a for a in right if a.node_id not in seen]
 
 
 def is_satisfied(circuit: Circuit, holds: Predicate) -> bool:
@@ -292,19 +334,27 @@ def core_atoms(circuit: Circuit) -> list[Atom]:
     """Atoms required by *every* route (the AND-core; gate candidates).
 
     If any core atom is unsatisfied no route can succeed, so these are exactly the
-    atoms whose absence gates the whole module.
+    atoms whose absence gates the whole module. Computed structurally (an AND
+    unions its children's cores, an OR intersects them), so it does not
+    enumerate routes and stays cheap for umbrella modules.
     """
-    routes = enumerate_routes(circuit)
-    if not routes:
-        return []
-    common: set[str] = set(a.node_id for a in routes[0])
-    for r in routes[1:]:
-        common &= set(a.node_id for a in r)
+    common = _core_ids(circuit)
     seen: dict[str, Atom] = {}
     for a in iter_atoms(circuit):
         if a.node_id in common:
             seen[a.node_id] = a
     return list(seen.values())
+
+
+def _core_ids(circuit: Circuit) -> set[str]:
+    """Return the ids of atoms present in every route of ``circuit``."""
+    if isinstance(circuit, Atom):
+        return {circuit.node_id}
+    if isinstance(circuit, And):
+        return set().union(*(_core_ids(c) for c in circuit.children))
+    if not circuit.children:
+        return set()
+    return set.intersection(*(_core_ids(c) for c in circuit.children))
 
 
 def step_id(circuit: Circuit) -> str:

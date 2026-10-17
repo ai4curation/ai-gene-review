@@ -1294,6 +1294,9 @@ def collect_module_qc(
         "conformance_violations": conformance_violations(
             data, modules_dir=yaml_path.parent
         ),
+        "module_ref_violations": module_ref_violations(
+            data, modules_dir=yaml_path.parent, self_stem=yaml_path.stem
+        ),
         "reaction_chaining": reaction_chaining_findings(data),
         "feedback_loops": feedback_loop_findings(data),
         "gene_reviews": module_gene_review_summary(
