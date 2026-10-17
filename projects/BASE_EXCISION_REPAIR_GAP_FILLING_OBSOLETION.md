@@ -68,6 +68,23 @@ repair synthesis. So the obsoletion is not a redundancy cleanup with a clean
 to `GO:7770137`, to `GO:7770138`, or (where the evidence does not resolve
 patch length) up to the parent `GO:0006284`.
 
+### The replacement is also a change of scope, not just of granularity
+
+This is easy to miss and it changes several of the per-row judgments below.
+`GO:0006287` named a **step** — its definition is the combined action of an AP
+endonuclease and a polymerase synthesising a patch. Both replacements name a
+**sub-pathway**: each is `is_a GO:0006284`, each definition runs from the
+incised abasic site through ligation, and their shared `comment` states that
+the two branches "share the initial glycosylase and abasic-site incision steps
+and diverge at repair DNA synthesis". Incision is therefore *inside* both new
+terms, where it was the upstream boundary of the old one.
+
+Consequently, "this gene product does not perform the gap-filling step" is an
+argument against the **old** term that does not automatically transfer to the
+new ones. Anywhere that reasoning appears in an existing review — and it
+appears in two of the three reviews affected here — it has to be re-derived
+against the sub-pathway definition rather than carried across.
+
 This project tracks the impact on AI Gene Review, proposes per-mapping
 destinations for the Reactome rows, and queues the gap-filling polymerases and
 ligases for review, since almost none of them are reviewed here yet.
@@ -126,7 +143,7 @@ complete set): **9,941 annotations**, all biological_process.
 | IEA | ECO:0007826 | 9,437 | TreeGrafter (GO_REF:0000118) |
 | IBA | ECO:0000318 | 214 | GO_Central PAINT (GO_REF:0000033) |
 | IEA | ECO:0000265 | 132 | Ensembl Compara (GO_REF:0000107) |
-| IEA | ECO:0000501 | 120 | GO_REF:0000120 |
+| IEA | ECO:0000501 | 120 | UniProt combined multi-method IEA (GO_REF:0000120) |
 | TAS | ECO:0000304 | 14 | Reactome (12) + MGI (2) |
 | ISO | ECO:0000266 | 10 | RGD (7, GO_REF:0000121) + GO_Central (3, GO_REF:0000119) |
 | IDA | ECO:0000314 | 7 | UniProt, MGI, TAIR |
@@ -135,7 +152,8 @@ complete set): **9,941 annotations**, all biological_process.
 | ISA | ECO:0000247 | 1 | MGI |
 
 By assigning group: TreeGrafter 9,437; GO_Central 217; UniProt 127; Ensembl
-114; EnsemblPlants 17; Reactome 12; MGI 7; RGD 7; CACAO 1; EnsemblMetazoa 1.
+114; EnsemblPlants 17; Reactome 12; MGI 7; RGD 7; CACAO 1; EnsemblMetazoa 1;
+TAIR 1 — 9,941 in total.
 
 **The experimental count matches upstream exactly** (10 = MGI 4 + UniProt 4 +
 TAIR 1 + CACAO 1), as does the Reactome tally (12 TAS from 4 pathway mappings).
@@ -143,23 +161,36 @@ TAIR 1 + CACAO 1), as does the Reactome tally (12 TAS from 4 pathway mappings).
 **One discrepancy to confirm with upstream.** The tracker states "All 85 IEA
 annotations are phylogenetic projections: Ensembl Compara (GO_REF:0000107, 34)
 and TreeGrafter (GO_REF:0000118, 51)". QuickGO today returns 9,689 IEA rows
-(9,437 TreeGrafter + 132 Compara + 120 GO_REF:0000120), i.e. two orders of
-magnitude more, and does not return GO_REF:0000120 under either of the two
-references named. The upstream figure was presumably taken from a filtered or
+(9,437 TreeGrafter + 132 Compara + 120 `GO_REF:0000120`), i.e. two orders of
+magnitude more, and adds a third reference the tracker does not name. The
+upstream figure was presumably taken from a filtered or
 reference-proteome-restricted snapshot. The *shape* of the upstream conclusion
-holds — the IEA tail is entirely phylogenetic projection and will follow the
-IBA/ortholog decisions — but the volume matters for whoever executes the
-mechanical remap, so the snapshot basis is worth pinning down.
+holds for this term's rows — see the `GO_REF:0000120` check below — but the
+volume matters for whoever executes the mechanical remap, so the snapshot basis
+is worth pinning down.
+
+**`GO_REF:0000120` is not itself a projection pipeline, but these 120 rows are
+projections.** The reference is UniProt's *combined* automated annotation from
+multiple IEA methods, so membership does not by itself say the row came from an
+ortholog; this repo's own classifier only counts such a row as electronic
+orthology when its `WITH/FROM` names an Ensembl protein or a PANTHER node
+(`src/ai_gene_review/export/propagation_rows.py:125`). Checked rather than
+assumed: all 120 rows are UniProt-assigned and **every one** carries all three
+— a UniProtKB donor, an `ensembl` protein id, and a `PANTHER` node — and the
+donors are only two accessions, `Q07864` (human POLE, 64 rows) and `P28340`
+(human POLD1, 56 rows). So these rows do follow the POLD1/POLE decisions, by
+the same logic as the IBA and TreeGrafter tails, though the PANTHER nodes they
+cite are per-protein grafted nodes rather than the two IBD nodes below.
 
 ### The whole IEA/IBA tail reduces to two PAINT nodes
 
-The 214 IBA rows come from exactly **two** PAINT ancestral nodes, read from
-their `WITH/FROM` fields:
+The 214 IBA rows — all of them, across both result pages — come from exactly
+**two** PAINT ancestral nodes, read from their `WITH/FROM` fields:
 
 | PAINT node | Seeded from | IBA rows |
 |---|---|---|
-| `PANTHER:PTN000035478` | `MGI:97741` (mouse Pold1) + `UniProtKB:P28340` (human POLD1) | 115 |
-| `PANTHER:PTN000072300` | `UniProtKB:Q07864` (human POLE) | 85 |
+| `PANTHER:PTN000035478` | `MGI:97741` (mouse Pold1) + `UniProtKB:P28340` (human POLD1) | 121 |
+| `PANTHER:PTN000072300` | `UniProtKB:Q07864` (human POLE) | 93 |
 
 Both seeds are **long-patch** polymerases, and the TreeGrafter tail tracks the
 same families: in a 800-row sample across four pages of the 9,437 IEA rows,
@@ -192,14 +223,33 @@ mapping was read from the pathway's own `goBiologicalProcess` field via the
 Reactome ContentService on 2026-10-17, and all four currently point at
 `GO:0006287`.
 
-Two rows in this set should be **dropped rather than remapped**: `PARG` and
-`ADPRS` receive `R-HSA-110373`'s term by pathway containment, not because
-either performs a gap-filling step. The ADPRS case is worked out in detail in
-the ADPRS review — Reactome nests a
-mitochondrial-matrix PAR hydrolase reaction inside a nucleoplasmic long-patch
-BER pathway, and the compartment mismatch makes the export route invalid
-independently of the obsoletion. Transferring these two to `GO:7770138` would
-carry a known over-annotation into the new term on day one.
+Two rows in this set are PAR-turnover enzymes rather than gap-filling
+machinery, `ADPRS` and `PARG`, and they need **different** treatment — the
+scope shift described above separates them.
+
+- **ADPRS: drop, do not remap.** The argument that survives the scope shift is
+  the compartment one, worked out in detail in the ADPRS review: Reactome nests
+  a mitochondrial-matrix PAR hydrolase reaction inside a nucleoplasmic
+  long-patch BER pathway, so the *export route* is invalid regardless of how
+  the destination term is scoped. "Drop" here means do not mint a replacement
+  row; it is not a recommendation to change that review's action, which
+  deliberately chose `MARK_AS_OVER_ANNOTATED` over `REMOVE` on the reasoned
+  ground that the route is invalid while the biology is not false.
+  `GO:0006281 DNA repair` (IMP, human experimental) already carries ADPRS's
+  real involvement at the right granularity.
+- **PARG: needs review; fall back to `GO:0006284` meanwhile.** There is no
+  compartment argument here — PARG is nucleoplasmic — and the only argument
+  against the row was that PARG performs no gap-filling step, which is exactly
+  the reasoning the scope shift invalidates. `R-HSA-110373`'s own summary puts
+  PAR metabolism inside the sub-pathway: long-patch BER "can be completed by
+  continued POLB-mediated DNA strand displacement synthesis in the presence of
+  PARP1 or PARP2, FEN1 and DNA ligase I". That names the PAR *writers* rather
+  than PARG the eraser, so it does not settle the question — but it does mean
+  the sub-pathway term cannot be ruled out a priori, and the honest
+  recommendation is the parent term pending a review of PARG itself
+  (candidate 8 below).
+
+So do not send a blanket "drop both" to upstream.
 
 The two MGI TAS rows (mouse Polb, PMID:10197627 and PMID:10655502) are
 knockout-phenotype papers on alkylation sensitivity and immunoglobulin
@@ -257,12 +307,12 @@ and in all three cases the obsoletion improves the annotation.
 
 | Gene | Row source | Current review action | Recommended on obsoletion |
 |---|---|---|---|
-| FEN1 | `Reactome:R-HSA-110373` | `ACCEPT` | Move to `GO:7770138 long-patch base-excision repair`. A clean precision gain: the review's own reason already says "the standard GO term for participants in the long-patch BER sub-pathway". **Also update `core_functions`** — the 5'-flap endonuclease activity entry lists `GO:0006287` under `directly_involved_in` and needs the new id. |
-| APEX1 | `Reactome:R-HSA-73933` | `ACCEPT` | Move to `GO:0006284 base-excision repair`, which APEX1 already carries twice (IBA `GO_REF:0000033`, IDA PMID:8932386), so the row collapses into existing annotation. The review's reason ("participates in BER gap-filling by coordinating with DNA polymerase beta") should be revised while we are in the file: APEX1 incises the AP site and does not fill the gap, which is exactly why the parent pathway mapping is the right export for it. |
-| ADPRS | `Reactome:R-HSA-110373` | `MARK_AS_OVER_ANNOTATED` | **Drop, do not remap.** The review already traced this row to a compartment mismatch in Reactome's pathway nesting; `GO:0006281 DNA repair` (IMP, human experimental) carries ADPRS's real involvement at the right granularity. Obsoletion is the cheapest moment to retire it. |
+| FEN1 | `Reactome:R-HSA-110373` | `ACCEPT` | Move to `GO:7770138 long-patch base-excision repair`. A clean precision gain: the review's own reason already says "the standard GO term for participants in the long-patch BER sub-pathway". **Also fix `core_functions`** — the 5'-flap endonuclease activity entry lists *both* `GO:0006287` and `GO:0006284` under `directly_involved_in`, so swapping the id in place would leave a term and its own parent side by side. Replace the pair with `GO:7770138` alone. |
+| APEX1 | `Reactome:R-HSA-73933` | `ACCEPT` | Move to `GO:0006284 base-excision repair`, which APEX1 already carries twice (IBA `GO_REF:0000033`, IDA PMID:8932386), so the row collapses into existing annotation. Both the row's `summary` ("participates in BER gap-filling by coordinating with DNA polymerase beta") and its `reason` ("APEX1's role in the downstream steps of BER where the gap is filled") need rewriting while we are in the file — but **not** to "APEX1 does not fill the gap", which under the new sub-pathway terms would argue against `GO:0006284` too, a term APEX1 holds by IDA. The correct reason is that `R-HSA-73933` is the branch-agnostic parent pathway, so this evidence does not resolve patch length; APEX1 in fact incises in both branches, which is an independent argument for the parent. |
+| ADPRS | `Reactome:R-HSA-110373` | `MARK_AS_OVER_ANNOTATED` | **Drop, do not remap** — i.e. mint no replacement row. The review traced this row to a compartment mismatch in Reactome's pathway nesting, which is the one argument here that is unaffected by the scope shift; `GO:0006281 DNA repair` (IMP, human experimental) carries ADPRS's real involvement at the right granularity. Leave the `MARK_AS_OVER_ANNOTATED` action as it stands: that review considered and declined `REMOVE` on reasoned grounds. |
 
-Of the 14 gene products holding the term, only these three are reviewed here.
-RAD27 is reviewed and is named in
+Of the gene products named above, only these three are reviewed here (the
+term's full 9,941 rows span thousands of orthologs). RAD27 is reviewed and is named in
 go-ontology#32759 as a gene product to annotate with long-patch BER; it
 currently carries `GO:0006284` (IEA) and no `GO:0006287`, so it is a candidate
 for a `NEW` long-patch row rather than a remap — subject to the usual
@@ -281,11 +331,11 @@ assignment is the whole question; none has a review here.
    to split short- from long-patch participation explicitly, so it is the
    natural exemplar for this project.
 2. **POLD1** (human, `P28340`) — long-patch polymerase and the seed of PAINT
-   node `PTN000035478`, hence of 115 IBA rows and the bulk of the 9,437
+   node `PTN000035478`, hence of 121 IBA rows and the bulk of the 9,437
    TreeGrafter projections. Reviewing it grounds the single largest remap
    decision.
 3. **POLE** (human, `Q07864`) — long-patch polymerase and seed of
-   `PTN000072300` (85 IBA rows). Same argument as POLD1.
+   `PTN000072300` (93 IBA rows). Same argument as POLD1.
 4. **LIG3** (human, `P49916`) — ligase for both single-nucleotide pathways,
    including the APEX1-independent one; pairs with POLB.
 5. **LIG1** (human, `P18858`) — the long-patch ligase, and PMID:10559260 casts
@@ -297,9 +347,11 @@ assignment is the whole question; none has a review here.
 7. **PNKP** (human, `Q96T60`) and **NEIL1** (human, `Q96FI4`) — the
    APEX1-independent short-patch route; worth reviewing as a pair because that
    pathway's whole point is bypassing AP endonuclease.
-8. **PARG** (human, `Q86W56`) — the other Reactome row we propose dropping
-   rather than remapping. Reviewing it would confirm or overturn that call with
-   the same method already applied to ADPRS.
+8. **PARG** (human, `Q86W56`) — the Reactome row we deliberately leave
+   unresolved, recommending the parent term pending review. The question is
+   whether PAR erasure is inside the long-patch sub-pathway; the method already
+   applied to ADPRS would settle it, without the compartment shortcut that
+   case had.
 9. **RAD27** (yeast) — already reviewed; revisit to consider a `NEW`
    `GO:7770138` row, as go-ontology#32759 proposes.
 10. **POL4** (yeast) — named upstream as the short-patch example
@@ -309,18 +361,30 @@ assignment is the whole question; none has a review here.
 ## Proposed approach
 
 1. **Fix the three in-repo reviews** as tabled above, as soon as the new terms
-   appear in a GO release our validation resolves. FEN1 and ADPRS are
-   mechanical; APEX1 needs its reason rewritten, not just its id changed.
+   appear in a GO release our validation resolves. Only ADPRS is mechanical:
+   FEN1 needs the parent/child pair in `core_functions` collapsed as well as
+   the row id changed, and APEX1 needs both its `summary` and its `reason`
+   re-derived against the sub-pathway definition. `grep` each file rather than
+   editing the tabled line alone — FEN1 names `GO:0006287` in a third place
+   (inside the `reason` of its `GO:0006281 DNA repair` row) and ADPRS has a
+   dozen occurrences. Most of the ADPRS prose is *about* the historical
+   Reactome mapping, so the id should stay there; mark it as obsoleted wherever
+   the prose reads as a live term.
 2. **Send upstream the Reactome mapping table.** The four pathway-to-GO
    mappings are the highest-leverage fix in this obsoletion (12 TAS rows, three
    of them already self-describing as single- or multiple-nucleotide), and
    go-annotation#6627 lists them as needing review without proposing
-   destinations. Include the recommendation that PARG and ADPRS be dropped
-   rather than carried over.
+   destinations. Carry over the ADPRS drop recommendation, but send PARG as
+   "parent term pending review" rather than as a second drop.
 3. **Raise the two MGI data queries** (the `P54098`/`P54099` accession and the
    pol λ–from–pol γ `WITH/FROM`) before the remap runs.
 4. **Read PMID:15177179 once** and settle rows 5–8 together; then
-   PMID:19806195 and PMID:38217735 for the two pol λ rows.
+   PMID:19806195 and PMID:38217735 for the two pol λ rows. **None of the ten
+   experimental PMIDs is cached** in `publications/` — only PMID:17983848, a
+   synonym source for the new terms, is — so cache them first. The branch
+   assignments in the table above come from PubMed titles, which is enough to
+   call the two rows whose titles say "long patch" and "single-nucleotide"
+   outright and is not enough for the rest.
 5. **Review POLB, POLD1, POLE** as the exemplar trio: short-patch, long-patch,
    long-patch. Their reviews determine both PAINT node placements and
    therefore the destination of ~97% of all rows.
@@ -329,8 +393,8 @@ assignment is the whole question; none has a review here.
 
 ## Priority
 
-**Medium-high.** The in-repo work is small — three files, two of them
-one-line changes — but the upstream leverage is unusually good: a handful of
+**Medium-high.** The in-repo work is small — three files, none of them a large
+edit — but the upstream leverage is unusually good: a handful of
 Reactome mapping decisions and two PAINT node decisions determine where 9,941
 annotations land, and the obsoletion ticket is open right now with those
 decisions unmade. The gap-filling polymerases and ligases are also a coherent,
@@ -343,7 +407,11 @@ Scoped on 2026-10-17 from go-annotation#6627. No reviews started. The two
 replacement terms exist in the merged ontology edit file but are not yet in a
 release OLS serves, so the id swaps in FEN1 and APEX1 should wait for a release
 that `linkml-term-validator` can resolve — `core_functions` term ids are hard
-validated, and FEN1's `GO:0006287` sits in exactly such a slot.
+validated, and FEN1's `GO:0006287` sits in exactly such a slot. While waiting,
+confirm the `GO:77701xx` allocation with the ontology editors: the ids here are
+reported verbatim from the merged `go-edit.obo` patch, but the range is
+unusual for GO, and it is cheap insurance before writing them into a
+hard-validated slot.
 
 ## Related obsoletions
 
