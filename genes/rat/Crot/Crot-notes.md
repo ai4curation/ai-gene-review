@@ -16,4 +16,10 @@ GOA changes: three new ISO rows from human CROT (UniProtKB:Q9UKG9) for GO:000577
 - The UniProt FUNCTION quote ("Beta-oxidation of fatty acids. The highest activity concerns the C6 to C10 chain length substrate.") is still present in the refreshed flat file (checker reports 0 stale). On the localization and experimental rows it was replaced with the SUBCELLULAR LOCATION line or with paper quotes, because it does not support those claims.
 - Description rewritten as standalone biology. Status COMPLETE.
 
-Open question: the transport annotations (GO:0001579 accepted, GO:0015908/GO:0015909 MODIFY to it) treat acylcarnitine formation as part of medium-chain fatty acid transport out of peroxisomes. That matches the TAS source wording, but the membrane carrier that moves the acylcarnitine is a different protein.
+Open question (now also in `suggested_questions`): the transport annotations (GO:0001579 accepted, GO:0015908 MODIFY to it; GO:0015909 now MARK_AS_OVER_ANNOTATED, see 2026-10-17 follow-up) treat acylcarnitine formation as part of medium-chain fatty acid transport out of peroxisomes. That matches the TAS source wording, but the membrane carrier that moves the acylcarnitine is a different protein.
+
+Review follow-up 2026-10-17 (PR #4619):
+- The carnitine metabolic process (GO:0009437) and coenzyme A metabolic process (GO:0015936) rows (ISS, ISO) now cite the UniProt reaction "Reaction=octanoyl-CoA + (R)-carnitine = O-octanoyl-(R)-carnitine + CoA;" instead of the generic FUNCTION quote.
+- Long-chain fatty acid transport (GO:0015909, TAS PMID:11790793) went from MODIFY -> GO:0001579 to MARK_AS_OVER_ANNOTATED. The long-chain half of the source sentence describes CPT I. GO:0001579 is a sibling term that the gene already carries from the same paper. Purified COT is active up to C20 [PMID:6630173], so the row is marked rather than removed.
+- The conflict over malonyl-CoA is now recorded. PMID:6630173 has a finding "Malonyl-CoA inhibited CPT but not COT." with finding_review DISPUTED, superseded_by PMID:11790793.
+- The open question about the acylcarnitine carrier was moved to suggested_questions.

@@ -13,7 +13,7 @@ GOA refresh (commit a3cf70b6d) changes:
 
 Action changes:
 - ER (IBA) and ER membrane (IEA, ISO): KEEP_AS_NON_CORE -> ACCEPT. The ER membrane is where the enzyme acts [UniProtKB:P52020 "SUBCELLULAR LOCATION: Microsome membrane"; "Endoplasmic reticulum membrane; Peripheral membrane protein"]. Added ER membrane to core_functions.locations.
-- Zymosterol biosynthetic process (IEA, ISO): MODIFY -> KEEP_AS_NON_CORE. Sqle does catalyze an upstream step toward zymosterol; the earlier MODIFY pointed to a term the gene already carries. This now matches the treatment of the same term in the Lss review.
+- Zymosterol biosynthetic process (IEA, ISO): MODIFY -> KEEP_AS_NON_CORE. Sqle does catalyze an upstream step toward zymosterol; the earlier MODIFY pointed to a term the gene already carries. (As first pushed, this sentence claimed the Lss review matched; it did not. Fixed in the 2026-10-17 follow-up below.)
 - Response to biphenyl (IDA, PMID:11520216): stays REMOVE, but the reason was rewritten. The old text said the paper "does not mention biphenyl", which is wrong: HHDP esters are biphenyl derivatives. The real problem is that the paper reports in vitro inhibition of the recombinant enzyme [PMID:11520216 "were evaluated as enzyme inhibitors of recombinant rat squalene epoxidase"]. That is not a response-to-stimulus process carried out by Sqle.
 - Location, FAD-binding and lipid-droplet-formation rows now cite specific UniProt CC text (COFACTOR "Name=FAD", SUBUNIT "Interacts with SMIM22; this interaction modulates lipid droplet formation.") instead of the generic FUNCTION quote.
 - 2 stale UniProt quotes fixed (core_functions and the biphenyl row).
@@ -21,3 +21,5 @@ Action changes:
 
 Open questions:
 - Regulation of cell population proliferation (IEA/ISS/ISO from human SQLE) stays MARK_AS_OVER_ANNOTATED as an indirect, cholesterol-dependent consequence. A human curator may prefer REMOVE.
+
+Review follow-up 2026-10-17 (PR #4619): the claim above that Sqle matched Lss was false when first pushed, because Lss had the zymosterol and branch rows at ACCEPT. Lss now uses the Sqle policy: obsolete GO:0033489/GO:0033490 retired rows are MODIFY -> GO:0006695, and GO:0036197 is KEEP_AS_NON_CORE. In the four retired branch rows here, the reason no longer lists zymosterol among the terms to replace, since zymosterol is kept as non-core. Those reasons now record the QuickGO replaced_by GO:0006695 (checked 2026-10-17).

@@ -14,3 +14,5 @@ Action changes:
 
 Open questions:
 - Is there direct evidence that mammalian OSC is active on lipid droplets, or only that it co-fractionates with them?
+
+Review follow-up 2026-10-17 (PR #4619): Lss and Sqle now apply one policy to the sterol-branch terms, since both enzymes act upstream of the Bloch/Kandutsch-Russell branch point and of zymosterol. The two retired rows for GO:0033490 (via lathosterol) and GO:0033489 (via desmosterol) changed from ACCEPT to MODIFY -> GO:0006695 cholesterol biosynthetic process. Both terms are obsolete in QuickGO (checked 2026-10-17) with replaced_by GO:0006695, and the reasons now say so. The live GO:0036197 zymosterol biosynthetic process row changed from ACCEPT to KEEP_AS_NON_CORE. Its reason now states the pathway relation: lanosterol is converted to zymosterol by the downstream C14 demethylation, C14 reduction and C4 demethylation steps. It now cites the UniProt PATHWAY line rather than the generic FUNCTION quote.
