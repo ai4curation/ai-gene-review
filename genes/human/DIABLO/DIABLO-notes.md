@@ -58,3 +58,18 @@
   with `GO:1990525 BIR domain binding` after the Drosophila overannotation
   reviews landed on the same branch and exposed the exact same BIR-surface
   antagonism already using `GO:1990525` in `hid` and `grim`.
+
+
+## 2026-10-17 source-based review update
+
+The [evidence guide](DIABLO-source-guide.md) records the original passages, public interaction and pathway identifiers, actual access limits and product scope used for this update. All 83 imported annotation dictionaries and three splice-product identities are retained. Decisions are 42 MODIFY, 30 KEEP_AS_NON_CORE and 11 ACCEPT, with no NEW annotations. The explicit [ClinGen project instructions](https://github.com/ai4curation/ai-gene-review/blob/98ae322b9bb97f58c6f12c093c97f645ca33da76/projects/CLINGEN_MENDELIAN.md#curation-instructions) govern positive generic binding and supported specificity refinements.
+
+One IAP-antagonism core replaces the overlapping BIR-binding entries. Its active location is cytosol; intermembrane-space storage and MPP/PARL processing remain in the description and localization annotations. A processed canonical chain is not an additional splice product, and DIABLO is not assigned the proteases' processing work. The independently studied Diablo-S and SMAC3 constructs qualify any blanket claim that all alternative products lack activity.
+
+This update supersedes the older generic-binding removals: positive pairs are retained or refined using actual partner function and assay context. Yeast two-hybrid capacity does not establish a native interaction across compartment boundaries. AP–MS is co-complex evidence, with independent domain assays supporting the IAP-specific refinements. The unresolved FADS6 source-sequence discrepancy is retained, rather than explained speculatively.
+
+The original mouse CD40 capture experiments support contextual ISS complex/location assertions; species transfer alone is not a reason to reject them. Actual PAINT placement and donor experiments support the oxidative-stress and neuronal-apoptosis inferences as non-core. Mature-SMAC overexpression in human leukemia cells independently supports the contextual cell-cycle annotation, while the imported structural paper's particular cell-cycle linkage remains unverified.
+
+The older assertion that all four N-terminal residues are indispensable is too absolute: PMID:10972280 Table 2 and deletion experiments retain weak binding and partial activity for del4. The first-residue replacement result and the importance of the motif remain valid. The old PMID:15200957 substrate-only excerpt does not establish antagonism by itself; the paper's abstract separately reports antagonism. These qualifications preserve the earlier notes as a historical record.
+
+Publication cache flags remain literal. Separately recovered original papers, the genuine 2017 publisher supplement and the separately identified 2022 BIRC6 preprint are distinguished in the guide. Normal provider attempts failed through authentication/quota responses; the scientific synthesis here is manual, with no fabricated provider report.
