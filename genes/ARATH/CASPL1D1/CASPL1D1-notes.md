@@ -29,3 +29,7 @@ The report's numerical sequence-identity claims are not independently reproduced
 ## 2026-09-12: PR review follow-up
 
 Removed the OpenScientist conclusion as sole support of ND and removed assay-context quotations from the five unresolved HDA reviews. The reports and assay context remain in references/findings; neither substitutes for gene-level evidence. No biological decision was changed. Made summaries source-specific and corrected the description punctuation.
+
+## 2026-10-14 — UNDECIDED rows resolved
+
+The five Golgi/TGN/endosome HDA rows are now KEEP_AS_NON_CORE rather than UNDECIDED. The At4g15610 supplementary rows remain unretrieved. However, the curated HDA rows record the curators' reading of those tables, and three methodologically independent proteomic approaches (purified Golgi, label-free gradient profiling, LOPIT) agree. That makes an endomembrane transit pool credible for this plasma-membrane protein. The endosome and TGN rows reflect LOPIT's combined Golgi/TGN class; in plants the TGN acts as the early endosome. This supersedes the 'All five HDA rows are now UNDECIDED' entry above.
