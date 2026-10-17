@@ -17,3 +17,11 @@ The retained XRN1 protein-binding row follows the explicit project instruction; 
 ## Figure-specific control qualification
 
 PMID:27974621 Figure 3B compares mature miR-1010 with precursor RNA using wild-type Drosophila Dis3L2 immunoprecipitates. The catalytic-dead comparison is the separate Figure 3A experiment with an artificial 77-nt substrate. The rationale and source guide distinguish these controls explicitly; the phylogenetic annotation decision is unchanged.
+
+## 2026-10-17 — PR review follow-up
+
+The four miRNA-catabolism annotations now share KEEP_AS_NON_CORE, judging the combined gene-level claim. The valid phylogenetic assertion and fly mature-miRNA assay support that claim; human and mouse precursor experiments retain their stated limits. This supersedes the earlier validation paragraph's defense of differing actions. The two broader RNA-catabolism replacements are removed because they are ancestors of the retained miRNA process.
+
+Core representation now includes polyuridylation-dependent mRNA catabolism and explicitly represents oligo(U) recognition as a coupled substrate-selection component. Human U30 mobility-shift binding, performed without added magnesium, and catalytically inactive substrate trapping distinguish binding from cleavage. The two core entries describe coupled molecular activities, not independent pathways. Magnesium binding remains a supported non-core cofactor property. The description retains biology; product counts and assay-product scope remain in the product section.
+
+Primary sources are now linked directly from the annotation support lists as well as through the prose guide. The separately read publisher original for PMID:23756462 remains distinct from its abstract-only normal cache; the access flag is not falsified. Existing quotations are unchanged and are not duplicated. No source annotation, reference identity, product identity or new annotation is introduced.
