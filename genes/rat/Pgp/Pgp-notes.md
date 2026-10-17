@@ -25,3 +25,5 @@ Decisions:
 
 Open questions:
 - GO:0140401 4-phosphoerythronate phosphatase activity is not yet annotated to rat Pgp; recorded as a suggested question.
+
+Review follow-up 2026-10-17: In response to PR #4622 review (suggestion to move the in-vitro tyrosine and ADP phosphatase rows to MARK_AS_OVER_ANNOTATED), the KEEP_AS_NON_CORE calls were kept but the boilerplate reasons were replaced with positive evidence from the mouse orthologue [PMID:24338473 "Interestingly, AUM acts as a tyrosine phosphatase, whereas chronophin dephosphorylates serine/threonine-phosphorylated proteins"; "AUM also dephosphorylates adenine and guanine nucleotide di- and triphosphates"]. The activities are experimentally demonstrated, so not over-annotations, but they are of unclear physiological relevance and non-core.

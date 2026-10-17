@@ -21,3 +21,5 @@ Decisions:
 
 Open questions:
 - Should the mouse Spr IMP to GO:0141151 (PMID:19429835) be reported to MGI as a sign error? The paper supports a positive effect on NO bioavailability.
+
+Review follow-up 2026-10-17: In response to PR #4622 review, the GO:0141151 REMOVE reason now states that the donor reference was traced rather than read off the rat ISO row: QuickGO shows mouse Spr (UniProtKB:Q64105) carries GO:0141151 as an MGI IMP citing PMID:19429835. Action unchanged.

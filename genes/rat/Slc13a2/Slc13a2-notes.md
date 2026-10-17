@@ -14,3 +14,5 @@ Decisions:
 
 Open questions:
 - The IDA for cellular response to lithium ion cites PMID:9691021, whose abstract does not mention Li+ (the Li+ data in UniProt are attributed to PMID:9694847). A curator with the full text could confirm which paper reports the Li+ effect.
+
+Review follow-up 2026-10-17: In response to PR #4622 review, five IDA rows citing PMID:9691021 now quote the abstract instead of the title [PMID:9691021 "rNaDC-1 mediated sodium-dependent uptake of di- and tricarboxylates"; "succinate, alpha-ketoglutarate, and glutarate were relatively high-affinity substrates, and citrate was a low-affinity substrate of rNaDC-1"; "rNaDC-1 is localized exclusively in the luminal membrane of S2 and S3"]. The cached abstract never mentions fumarate, so the two fumarate IDA rows say so and lean on the UniProt fumarate Rhea reaction; ACCEPT kept (curator's full text not cached). Apical plasma membrane added as the core-function location and the three GO:0016324 rows moved KEEP_AS_NON_CORE -> ACCEPT, consistent with Slc5a1. Suggested questions (Li+ source paper, fumarate substrate) and experiments added.
