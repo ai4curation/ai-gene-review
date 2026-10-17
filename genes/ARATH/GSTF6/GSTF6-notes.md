@@ -34,3 +34,7 @@
 
 ## Not anthocyanin carrier
 - gstf6-1 has no anthocyanin defect; TT19 binds C3G 8.4x better (deep research; Wangwattana 2008, Sun 2012).
+
+## 2026-10-15 journal: QuickGO record for the PMID:21631432 rows (PR #5026 follow-up)
+
+- Query (re-run 2026-10-15): QuickGO REST, `https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=PMID:21631432&limit=200` (Accept: application/json) returned 4 annotations, all IDA enables, assigned by TAIR: GSTF2 (P46422) GO:2001147 camalexin binding and GO:2001227 quercitrin binding; GSTF6 (P42760) the same two terms. Nothing for GSTF3 (Q9SLM6, At2g02930). This fits the abstract's "GSTF2 and GSTF3" being mapped to P42760 via its legacy alias AtGSTF3. Both GSTF6 rows remain UNDECIDED (full text not readable), with a question to TAIR. GSTF6's own role in camalexin biosynthesis (GS-IAN formation) means camalexin binding is not biologically implausible; the concern is the name mapping.
