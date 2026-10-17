@@ -45,3 +45,13 @@ The existing mouse loss-of-function excerpt was moved from the core's support en
 ## 2026-10-17: local mouse-phenotype anchor
 
 The integrated motor/structural core now includes a concise local abstract anchor for the mouse axonemal phenotype in [PMID:33070343](https://pubmed.ncbi.nlm.nih.gov/33070343/). The process-row anchor remains in place. This does not add a purified motor assay or change the human-versus-mouse evidence distinction. All earlier annotation decisions, products and biological core statements are retained.
+
+
+### DNAH17 movement specificity follow-up (2026-10-17)
+
+The broad PAINT cilium-movement assertion is retained biologically and refined to flagellated sperm motility. Human sperm axonemal localization and selective sperm outer-arm defects, with preservation of the examined respiratory cilia, support the sperm context [PMID:31178125]. The mouse phenotype corroborates the requirement but does not measure purified motor kinetics [PMID:33070343]. Current [GO:0030317](https://www.ebi.ac.uk/QuickGO/term/GO:0030317) is an is_a child of both [GO:0060294](https://www.ebi.ac.uk/QuickGO/term/GO:0060294) and [GO:0060285](https://www.ebi.ac.uk/QuickGO/term/GO:0060285); GO:0060294 is part_of GO:0060285. The IBA row therefore uses MODIFY with GO:0030317, matching the supported replacement already present on the NAS row. No NEW row is added, and the previous pointer to one is corrected. These typed relationships were retrieved from official QuickGO on 2026-10-17; the previously recorded mouse comparator evidence is unchanged.
+
+
+### Specificity metadata for the movement annotation
+
+The structured propagation assessment on GO:0060294 records a term-granularity refinement to its verified child GO:0030317, consistent with the human sperm evidence (PMID:31178125) and the existing sperm-motility replacement. It does not allege a faulty PAINT ancestor or a loss of the inherited movement function. No newly inspected donor or ancestral-node evidence is asserted by this metadata-only addition.
