@@ -20,9 +20,12 @@ matures IL-1β and IL-18 and cleaves gasdermin D to open pyroptotic pores.
 Scoped, with the pathway now modelled: this page lists ten candidate human genes
 and the pathway architecture, and the assembly chain has been built as
 [canonical NLRP3 inflammasome](../modules/canonical_nlrp3_inflammasome.html),
-a four-part module (licensed sensor → ASC filament → caspase-1 → GSDMD pore)
-aligned with GO-CAM
-[gomodel:635b1e3e00001811](https://bioregistry.io/go.model:635b1e3e00001811).
+a seven-part module (NLRP3 sensor activation → optional NEK7 licensing → ASC
+speck → caspase-1 autoprocessing → caspase-1 substrate cleavage → GSDMD pore →
+NINJ1 rupture) built from the NLRP3, PYCARD, CASP1, NEK7, GSDMD and NINJ1 gene
+reviews and aligned with GO-CAMs
+[gomodel:635b1e3e00001811](https://bioregistry.io/go.model:635b1e3e00001811) and
+[gomodel:663d668500001246](https://bioregistry.io/go.model:663d668500001246).
 Three candidates already had complete reviews from other work (NLRP3,
 CASP4 and GSDMD, 364 annotations between them; most removals are generic
 `protein binding` rows, 24 of 25 on NLRP3), and the NLRP3 review proposes a
@@ -168,16 +171,14 @@ modelling:
 ## Modules
 
 - [Canonical NLRP3 inflammasome](../modules/canonical_nlrp3_inflammasome.html) —
-  the assembly chain, four parts, grounded on GO-CAM gomodel:635b1e3e00001811 and
-  the NLRP3/GSDMD/CASP4 gene reviews.
+  the assembly chain in seven parts (NLRP3 sensor activation, optional NEK7
+  licensing, ASC speck, caspase-1 autoprocessing, caspase-1 substrate cleavage,
+  GSDMD pore, NINJ1 rupture), built from the NLRP3, PYCARD, CASP1, NEK7, GSDMD and
+  NINJ1 gene reviews and grounded on GO-CAMs gomodel:635b1e3e00001811 and
+  gomodel:663d668500001246. This is the fold of the former four-part overview and
+  the seven-part step-level decomposition into one module.
 - [Metazoan NLR signaling](../modules/nlr_signaling.html) — compact pathway-level
   view, NOD2–RIPK2 plus NLRP3–ASC–caspase-1.
-- [NLRP3 inflammasome (concrete)](../modules/nlrp3_inflammasome.html) — the same
-  canonical chain in seven parts, built from the PYCARD, CASP1, NEK7, GSDMD and
-  NINJ1 gene reviews: NEK7 licensing as an optional part, caspase-1
-  autoprocessing separated from substrate cleavage, and NINJ1 membrane rupture.
-  The canonical module above stays the pathway-level overview; this one carries
-  the step-level gene functions. Whether to fold the two together is open.
 - [Plant NLR resistosome signalling](../modules/plant_nlr_resistosome_signaling.html)
   — the plant counterpart, split out so the metazoan module's scope is unambiguous.
   Not part of this project, listed because the scope boundary was drawn here.
@@ -189,8 +190,8 @@ modelling:
 - [x] Gene reviews for PYCARD, CASP1 and NEK7 (PR #4536; the PYCARD review
       adjudicates its NAS `GO:0070269 pyroptotic inflammatory response` rows)
 - [ ] Gene folders for IL1B and IL18
-- [ ] Decide whether to fold `nlrp3_inflammasome` into `canonical_nlrp3_inflammasome`
-      or keep them as overview and step-level views
+- [x] Folded the overview and step-level NLRP3 modules into one
+      `canonical_nlrp3_inflammasome` (PR #5013)
 - [ ] Decide whether a shared ASC→caspase-1→GSDMD effector core module is worth
       factoring out before adding AIM2/NLRC4/NLRP1 sensor variants
 - [ ] Ontology follow-up: the *inflammasome sensor activity* term proposed in the
