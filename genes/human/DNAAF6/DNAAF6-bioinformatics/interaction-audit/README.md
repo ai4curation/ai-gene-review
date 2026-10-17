@@ -19,7 +19,7 @@ The 2014 and HuRI records include pooled, array and validated two-hybrid stages.
 
 ## Interpretation limits
 
-A matching ROGID authenticates a reference sequence and taxon. It does not establish that the experimental protein lacked tags, that every unrecorded modification is known, that full-length native topology was reproduced, or that a native complex exists in the same cell. In particular, binary P2RX4 association does not demonstrate binding to an active channel in a native membrane. ARID4B-3, PIDI1-3 and Q8IY57-5 are literal partner products; the last is named YAF2 isoform 2 in UniProt, despite its accession suffix.
+A matching ROGID authenticates a reference sequence and taxon. It does not establish that the experimental protein lacked tags, that every unrecorded modification is known, that full-length native topology was reproduced, or that a native complex exists in the same cell. In particular, binary P2RX4 association does not demonstrate binding to an active channel in a native membrane. ARID4B-3, PID1-3 and Q8IY57-5 are literal partner products; the last is named YAF2 isoform 2 in UniProt, despite its accession suffix.
 
 The script does not infer molecular function, regulation, endogenous coexistence or false-positive rates. The biological review separately evaluates each partner's class and the source-specific assay limits. The original 2014 map reports a three-of-four retesting criterion; that threshold is not imported into the separate HuRI study.
 
