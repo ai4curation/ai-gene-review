@@ -6,14 +6,17 @@ This module computes the derived stats surfaced on rendered module pages:
 1. ``run_data_qc`` -- LinkML recommended-field compliance (via ``linkml-data-qc``)
 2. ``leaf_nodes_missing_representatives`` -- terminal nodes in concrete modules
    that do not ground to any concrete protein (a "representative member")
-3. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
+   unless explicitly marked as intentionally distributed/open-ended
+3. ``intentionally_ungrounded_leaf_nodes`` -- leaf nodes explicitly left
+   distributed/open-ended after curator review
+4. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
    template motif, whether the bundle's tiers and connection topology match it
-4. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
+5. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
    whether the gene has a review, whether that review is complete, and whether it
    has deep research
-5. ``module_deep_research`` -- whether the module document as a whole has an
+6. ``module_deep_research`` -- whether the module document as a whole has an
    associated deep-research report
-6. ``function_conformance`` -- whether annoton molecular functions agree with
+7. ``function_conformance`` -- whether annoton molecular functions agree with
    gene reviews/core functions and curated family-level function assessments
 
 The functions are deliberately pure (apart from the filesystem-scanning helpers)
@@ -131,6 +134,17 @@ def is_leaf_node(node: dict[str, Any]) -> bool:
     )
 
 
+def is_intentionally_ungrounded_node(node: dict[str, Any]) -> bool:
+    """Return True when a terminal node deliberately has no representative.
+
+    >>> is_intentionally_ungrounded_node({"intentionally_ungrounded": True})
+    True
+    >>> is_intentionally_ungrounded_node({})
+    False
+    """
+    return bool(node.get("intentionally_ungrounded"))
+
+
 def module_scope(data: dict[str, Any]) -> Optional[str]:
     """Return the normalized module scope, if declared."""
     scope = data.get("scope")
@@ -207,6 +221,39 @@ def node_representative_groundings(node: dict[str, Any]) -> list[dict[str, Any]]
     return groundings
 
 
+def _leaf_grounding_summary(node: dict[str, Any]) -> dict[str, Any]:
+    selector_types = sorted(
+        {
+            str(annoton.get("participant", {}).get("selector_type"))
+            for annoton in as_list(node.get("annotons"))
+            if isinstance(annoton, dict)
+            and isinstance(annoton.get("participant"), dict)
+        }
+    )
+    return {
+        "id": node.get("id"),
+        "label": node.get("label") or node.get("id"),
+        "annoton_count": len(as_list(node.get("annotons"))),
+        "selector_types": selector_types,
+    }
+
+
+def intentionally_ungrounded_leaf_nodes(
+    data: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Return terminal nodes deliberately left without representative proteins."""
+    if is_abstract_module(data):
+        return []
+
+    flagged: list[dict[str, Any]] = []
+    for node in iter_nodes(data):
+        if not is_leaf_node(node):
+            continue
+        if is_intentionally_ungrounded_node(node):
+            flagged.append(_leaf_grounding_summary(node))
+    return flagged
+
+
 def leaf_nodes_missing_representatives(
     data: dict[str, Any],
 ) -> list[dict[str, Any]]:
@@ -216,7 +263,9 @@ def leaf_nodes_missing_representatives(
     participants resolve to a concrete protein -- e.g. abstract ``FAMILY`` or
     ``ANY_WITH_FUNCTION`` selectors with no ``representative_members``. Documents
     declared as ``scope: ABSTRACT`` are reusable motifs and skip this grounding
-    completeness check.
+    completeness check. Individual leaf nodes marked
+    ``intentionally_ungrounded`` are also skipped when a concrete module needs a
+    distributed or open-ended role instead of a false single exemplar.
     """
     if is_abstract_module(data):
         return []
@@ -225,24 +274,11 @@ def leaf_nodes_missing_representatives(
     for node in iter_nodes(data):
         if not is_leaf_node(node):
             continue
+        if is_intentionally_ungrounded_node(node):
+            continue
         groundings = node_representative_groundings(node)
         if not groundings:
-            selector_types = sorted(
-                {
-                    str(annoton.get("participant", {}).get("selector_type"))
-                    for annoton in as_list(node.get("annotons"))
-                    if isinstance(annoton, dict)
-                    and isinstance(annoton.get("participant"), dict)
-                }
-            )
-            flagged.append(
-                {
-                    "id": node.get("id"),
-                    "label": node.get("label") or node.get("id"),
-                    "annoton_count": len(as_list(node.get("annotons"))),
-                    "selector_types": selector_types,
-                }
-            )
+            flagged.append(_leaf_grounding_summary(node))
     return flagged
 
 
@@ -1291,6 +1327,9 @@ def collect_module_qc(
     return {
         "data_qc": data_qc,
         "leaf_nodes_missing_representatives": leaf_nodes_missing_representatives(data),
+        "intentionally_ungrounded_leaf_nodes": intentionally_ungrounded_leaf_nodes(
+            data
+        ),
         "conformance_violations": conformance_violations(
             data, modules_dir=yaml_path.parent
         ),

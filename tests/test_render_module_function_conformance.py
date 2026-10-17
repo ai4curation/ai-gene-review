@@ -35,6 +35,7 @@ def template_context() -> dict[str, Any]:
             "data_qc": {"global_compliance": 100, "missing": []},
             "module_deep_research": {"has_deep_research": False},
             "leaf_nodes_missing_representatives": [],
+            "intentionally_ungrounded_leaf_nodes": [],
             "conformance_violations": [],
             "gene_reviews": {"with_review": 0, "total_genes": 0, "genes": []},
         },
@@ -45,6 +46,26 @@ def render_context(context: dict[str, Any]) -> str:
     """Use the same Jinja environment and template as module page rendering."""
     path = Path("src/ai_gene_review/templates/module.html.j2")
     return _environment(path).get_template(path.name).render(**context)
+
+
+def test_intentionally_ungrounded_leaf_nodes_render_as_open_ended_qc(
+    template_context: dict[str, Any],
+) -> None:
+    template_context["qc"]["intentionally_ungrounded_leaf_nodes"] = [
+        {
+            "id": "distributed_step",
+            "label": "Distributed step",
+            "annoton_count": 1,
+            "selector_types": ["ANY_WITH_FUNCTION"],
+        }
+    ]
+
+    html = render_context(template_context)
+
+    assert "no unreviewed leaf grounding gaps" in html
+    assert "1 leaf node(s) intentionally left open-ended" in html
+    assert 'href="#node-distributed_step"' in html
+    assert "every leaf node grounds to a representative protein" not in html
 
 
 def test_function_conformance_renders_support_conflicts_and_gaps(

@@ -12,6 +12,7 @@ from ai_gene_review.module_qc import (
     collect_module_qc,
     collect_uniprot_groundings,
     index_gene_reviews,
+    intentionally_ungrounded_leaf_nodes,
     is_leaf_node,
     iter_nodes,
     leaf_nodes_missing_representatives,
@@ -198,15 +199,12 @@ def test_homology_selector_anchor_is_grounded(selector_type, slot):
 
 
 def test_bbsome_leaf_grounding():
-    # bbsome.yaml grounds most subunits to concrete UniProt accessions, but the
-    # cargo-trafficking leaf references the BBSome only by its GO complex term
-    # (no active_units / representative members), so it is correctly flagged.
+    # The completed BBSome module should ground every terminal role to concrete
+    # UniProt accessions, including BBSome-as-cargo-adaptor leaves that also
+    # carry the GO complex term.
     data = load_module("bbsome.yaml")
     flagged = leaf_nodes_missing_representatives(data)
-    flagged_ids = {item["id"] for item in flagged}
-    assert "bbsome_cargo_trafficking" in flagged_ids
-    # The octamer leaf lists concrete subunits, so it must not be flagged.
-    assert "bbsome_core_octamer" not in flagged_ids
+    assert flagged == []
 
 
 def test_ras_mapk_flags_abstract_family_leaves():
@@ -238,6 +236,46 @@ def test_abstract_scope_skips_leaf_representative_grounding():
         },
     }
     assert leaf_nodes_missing_representatives(data) == []
+
+
+def test_intentionally_ungrounded_leaf_skips_representative_grounding():
+    data = {
+        "module": {
+            "id": "cycle",
+            "parts": [
+                {
+                    "node": {
+                        "id": "distributed_step",
+                        "label": "Distributed step",
+                        "intentionally_ungrounded": True,
+                        "annotons": [
+                            {
+                                "participant": {
+                                    "selector_type": "ANY_WITH_FUNCTION",
+                                    "required_function": {
+                                        "term": {
+                                            "id": "GO:0008757",
+                                            "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                                        }
+                                    },
+                                }
+                            }
+                        ],
+                    }
+                }
+            ],
+        }
+    }
+
+    assert leaf_nodes_missing_representatives(data) == []
+    assert intentionally_ungrounded_leaf_nodes(data) == [
+        {
+            "id": "distributed_step",
+            "label": "Distributed step",
+            "annoton_count": 1,
+            "selector_types": ["ANY_WITH_FUNCTION"],
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -368,6 +406,7 @@ def test_collect_module_qc_smoke():
     assert set(qc) == {
         "data_qc",
         "leaf_nodes_missing_representatives",
+        "intentionally_ungrounded_leaf_nodes",
         "conformance_violations",
         "module_ref_violations",
         "reaction_chaining",
@@ -377,6 +416,7 @@ def test_collect_module_qc_smoke():
         "function_conformance",
     }
     assert qc["module_deep_research"]["has_deep_research"] is False
+    assert qc["intentionally_ungrounded_leaf_nodes"] == []
     assert qc["module_ref_violations"] == []
 
 
