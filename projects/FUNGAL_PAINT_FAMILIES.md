@@ -36,7 +36,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
-| `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | fungal WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
+| `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 
 ---
 
@@ -168,19 +168,20 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
 
 ## Family 8: WDR12/Ytm1 Pre-60S Assembly Factors
 
-`PTHR19855` contains a fungal WDR12/Ytm1 ancestor,
+`PTHR19855` contains an Ascomycota WDR12/Ytm1 ancestor,
 `PANTHER:PTN000458086`, with PAINT assertions for the large-subunit
 preribosome, PeBoW complex, and ribosomal large subunit biogenesis. The node is
-seeded by curated *S. cerevisiae* YTM1 and *S. pombe* `ytm1` evidence, and sits
-separately from the sibling fungal mitochondrial-division MDV1 node.
+seeded by curated *S. cerevisiae* YTM1 evidence, with additional *S. pombe*
+`ytm1` support for `GO:0042273 ribosomal large subunit biogenesis`, and sits
+separately from the sibling fungal mitochondrial/peroxisome-fission adaptor
+node `PANTHER:PTN002336496`.
 
-- [x] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; drafted in
-  this YTM1 batch
-- [x] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; drafted in this YTM1 batch
-- [x] `CANAL/YTM1` - *Candida albicans* CGD member with direct filamentation
-  phenotypes; drafted in this YTM1 batch
-- [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; drafted in this
-  YTM1 batch
+- [ ] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; review in
+  PR #5118
+- [ ] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; review in PR #5121
+- [ ] `CANAL/YTM1` - *Candida albicans* CGD member; review in PR #5120
+- [ ] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; review in PR
+  #5117
 
 ---
 
@@ -188,12 +189,9 @@ separately from the sibling fungal mitochondrial-division MDV1 node.
 
 ## 2026-10-17
 
-- Drafted the compact WDR12/Ytm1 set in `PTHR19855` across
-  `yeast/YTM1`, `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`. All three
-  `PANTHER:PTN000458086` IBAs are accepted in each review as correctly placed
-  on the fungal Ytm1 node. The only bad propagation shape in the batch was
-  EnsemblFungi transfer of the old budding-yeast dosage/chromosome-stability
-  phenotype to Candida and Neurospora chromosome organization.
+- Started the compact WDR12/Ytm1 set in `PTHR19855` across `yeast/YTM1`,
+  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`, with individual gene-review
+  drafts open in PRs #5117, #5118, #5120, and #5121.
 
 ## 2026-10-11
 
