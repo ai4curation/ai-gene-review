@@ -1,0 +1,55 @@
+# DNAAF6 evidence and source guide
+
+This review retains all 40 source annotations, including their original identifiers, evidence codes, qualifiers and partner lists. It distinguishes positive binding in a defined assay from a demonstrated physiological role. The [project's explicit binding instruction](https://github.com/ai4curation/ai-gene-review/blob/864cafe6233e8f9ba6edf74a76c053bc31f6c4cf/projects/CLINGEN_MENDELIAN.md#curation-instructions) permits supported generic binding to remain non-core when no defensible narrower term is established. A generic label or an unexpected partner is not a reason to discard positive evidence.
+
+## Identity and protein scope
+
+[HGNC:28570](https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:28570) identifies DNAAF6, formerly PIH1D3/CXorf41. The reviewed [Q9NQM4 record](https://www.uniprot.org/uniprotkb/Q9NQM4/entry) and independent FASTA both describe a 214-residue protein. No natural alternative products are recorded. The two transcripts discussed in the 2017 study differ in an untranslated exon; the experimental disease truncations are not a natural isoform catalogue. InterPro places the DNAAF6 family match at residues 27–213 and the CS-like domain match at 110–203. The original structural comparison predicts a CS fold over approximately 128–214 and explicitly distinguishes this from a PIH domain. Different prediction boundaries are not evidence for a solved DNAAF6 structure.
+
+## Human assembly, binding and localization
+
+[Paff et al., 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5223094/) establish human respiratory-ciliary dynein-arm defects and impaired sperm motility. The Results and Figure 4 Methods identify human sequence-confirmed DNAAF2 and DNAAF4 constructs in a binary Y2H experiment, followed by reciprocal tagged co-immunoprecipitation in HEK293T cells. HSP90 was tested with fragments. These positive associations support the assembly context; they do not establish that DNAAF2/DNAAF4 are themselves folding enzymes or that DNAAF6 has a separately resolved adaptor activity. Dynein intermediate-chain stabilization is a mechanistic proposal, not a purified folding assay.
+
+[Olcese et al., 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5309803/) provide the specific DNAI2 and TGN evidence. Figure 5c,d and the accompanying Results use human tagged DNAAF6 and DNAI2 in HEK293 cells, with swapped tags and empty-vector controls. Wild type associates; p.Asp133Tyr and three truncating DNAAF6 variants lose this signal. This supports the existing curated intermediate-chain-binding function, without resolving purified affinity or attributing every mutant effect exclusively to a contact residue. Figure 5a compares endogenous human nasal-cell staining with TGN46 and GM130, supporting late-Golgi enrichment; supplementary overexpression staining corroborates it. Neither Golgi-luminal topology nor an independent secretory function follows from these experiments.
+
+Human arm loss varies between individuals: some retain residual outer and inner arms and dysmotile cilia. The zebrafish mutant loses arms and motility; fish mRNA rescue is strong, whereas low-dose human mRNA produces partial body-curvature rescue and higher doses are detrimental. The core therefore combines DNAI2 association, outer/inner arm assembly and the observed cytoplasmic/TGN locations without implying a universal all-or-none phenotype or a known complete complex at that location.
+
+## Mouse donor and propagation
+
+[Dong et al., 2014](https://pmc.ncbi.nlm.nih.gov/articles/PMC3897177/) directly assay mouse Pih1d3/Dnaaf6, the literal [Q3KNI6 donor](https://www.uniprot.org/uniprotkb/Q3KNI6/entry). Results, Figure 5 and the co-immunoprecipitation Methods support native testis association with Hsp70, Hsp90 and Dnaic2. Wild-type/knockout tissue comparisons localize the protein in spermatocytes and round spermatids. Knockout sperm are immotile and have severe outer-arm and partial inner-arm defects. The intermediate-chain complex still forms, so neither total loss of early association nor autonomous folding catalysis is asserted. Mouse respiratory sparing and germ-cell expression do not define an exclusive human tissue distribution.
+
+The actual [PTHR21083 tree](https://www.pantherdb.org/panther/family.do?clsAccession=PTHR21083) places human leaf PTN002501283 below PTN000472342 and the more recent PTN002721091 node. The saved IBD records ground cytoplasm, intermediate-chain binding and axonemal dynein assembly at the former node, and sperm motility at the latter. Human experimental support is legitimate grounding for an inherited assertion. The reviewed source includes direct mouse experimental annotations for all four literal mouse transfers. No donor-count or target-circularity objection is made.
+
+[IPR026697](https://www.ebi.ac.uk/interpro/entry/InterPro/IPR026697/) is the actual target-matching DNAAF6 family and maps to chaperone binding and axonemal dynein complex assembly. The distinct [IPR041442](https://www.ebi.ac.uk/interpro/entry/InterPro/IPR041442/) CS-like domain does not itself establish a PIH domain, motor ATPase or autonomous folding activity. Existing broad assembly annotations are refined to the verified outer- and inner-arm assembly children. Chaperone binding remains a positive non-core association.
+
+## Binary interaction screens and partner classes
+
+The actual [2014 map Methods/Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC4266588/) describe independent screens, quadruplicate pair retesting and sequence confirmation. The [HuRI generation and characterization section](https://pmc.ncbi.nlm.nih.gov/articles/PMC7169983/) describes three Y2H assay configurations, quadruplicate retesting and clone confirmation. Orthogonal validation was sampled; it is not claimed for every pair.
+
+The complete target [IntAct query](https://www.ebi.ac.uk/intact/search?query=Q9NQM4) contains 49 matching records for the 16 screen-derived source rows. Every group includes a validated two-hybrid record and has a positive rather than negative interaction flag. GAS2L2 additionally has a positive MAPPIT record. All 98 participant reference-sequence ROGID checks match. These checks authenticate reference sequences, not unannotated experimental modifications; explicit Gal4 fusion features remain part of the assay context.
+
+| Partner | Evidence-based disposition |
+| --- | --- |
+| [BTAF1](https://www.uniprot.org/uniprotkb/O14981/entry), literal Q2M1V9 | ATPase binding. The 1,849-residue clone is exactly identical to O14981; the [primary human biochemical abstract](https://pubmed.ncbi.nlm.nih.gov/9488487/) explicitly establishes ATP hydrolysis. |
+| [CDKL3](https://www.uniprot.org/uniprotkb/Q8IVW4/entry), [PRKAA2](https://www.uniprot.org/uniprotkb/P54646/entry) | Protein kinase binding from the official protein-phosphorylation activities. |
+| [CCAR1](https://www.uniprot.org/uniprotkb/Q8IX12/entry), [YAF2](https://www.uniprot.org/uniprotkb/Q8IY57/entry) | Transcription coregulator binding from positive coactivator/corepressor evidence. This assigns a partner class, not a transcriptional function to DNAAF6. |
+| [KAT5](https://www.uniprot.org/uniprotkb/Q92993/entry), two studies | Histone acetyltransferase binding, without assigning a substrate relationship or NuA4 membership. |
+| [P2RX4](https://www.uniprot.org/uniprotkb/Q99571/entry) | Transmembrane transporter binding. An ATP-gated channel is not an ATPase; physiological channel regulation is not asserted. |
+| [KIF13A](https://www.uniprot.org/uniprotkb/Q9H1H9/entry) | Kinesin binding; no DNAAF6 cargo-transport role is inferred. |
+| [GAS2L2](https://www.uniprot.org/uniprotkb/Q8NHY3/entry) | Cytoskeletal regulatory protein binding from its established microtubule-dynamics and actin-coupling role. |
+| [RNF39](https://www.uniprot.org/uniprotkb/Q9H2S5/entry) | Ubiquitin protein ligase binding from its E3 activity; no DNAAF6 ubiquitination claim. |
+| [QRICH1](https://www.uniprot.org/uniprotkb/Q2TAL8/entry), [ARID4B](https://www.uniprot.org/uniprotkb/Q4LE39/entry), [PID1](https://www.uniprot.org/uniprotkb/Q7Z2X4/entry), [TSEN15](https://www.uniprot.org/uniprotkb/Q8WW01/entry), [POLDIP2](https://www.uniprot.org/uniprotkb/Q9Y2S7/entry) | Positive generic binding retained non-core. Transcriptional context, a PTB domain, a non-catalytic enzyme-complex subunit, or polymerase regulation does not automatically establish the suggested narrower partner classes. |
+
+The literal ARID4B-3, PID1-3 and YAF2-5 partners reconstruct to 1,153, 168 and 204 residues, respectively, and match independent FASTAs and interaction checksums. They are partner products, not DNAAF6 isoforms. Assay-confirmed binding does not demonstrate every natural product's activity or endogenous coexistence.
+
+## Localization and ontology scope
+
+The current [HPA record](https://www.proteinatlas.org/ENSG00000080572-DNAAF6/subcellular) has approved localization including Golgi, primary cilium and acrosome, with additional pools. Only its structured annotation text was inspected; no new image-level adjudication is claimed. The existing Golgi rows are positively supported. Their TGN refinement rests on independent human TGN46 imaging, not on claiming that HPA resolves that subcompartment. Other HPA pools are not rejected because airway-cell experiments show a different distribution, and no additional annotations are manufactured from them.
+
+Current QuickGO definitions and typed `is_a`/`part_of` ancestry were checked for the authored replacements: [outer arm assembly](https://www.ebi.ac.uk/QuickGO/term/GO:0036158) and [inner arm assembly](https://www.ebi.ac.uk/QuickGO/term/GO:0036159) descend from axonemal dynein complex assembly; [TGN](https://www.ebi.ac.uk/QuickGO/term/GO:0005802) is part of the Golgi apparatus. Broad cytoplasm is retained because it describes an additional observed pool, not merely an imprecise name for TGN. Existing ciliary/sperm movement involvement remains non-core; the factor's direct work is assembly.
+
+## Source access and quotation provenance
+
+The canonical caches for both screen papers are preserved from main. Genuine normal fetch supplied the two 2017 human papers and mouse 2014 paper; all report `full_text_available: true`, with no `content_type` key. Independent original JATS recoveries for the human studies support selected Results, Methods and captions. Figure pixels were not independently inspected. The BTAF1 cache also contains full text, but the partner-class assessment uses its actual primary abstract and the official reviewed record; a full-paper read is not claimed.
+
+Each short quotation in the YAML occurs once and was checked literally against its own genuine cache. Other evidence is cited without repeating those excerpts. The public notes and this guide paraphrase the evidence. Provider authentication/quota failures are documented in the notes; no research-provider output was invented.
