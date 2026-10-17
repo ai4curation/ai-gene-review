@@ -2988,16 +2988,17 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**428 of 2,876 genes are complete; 2,448 remain.**
-CWC27, CYB5A and CXCR4 are the three verified additions since checkpoint 425.
-[Checkpoint 428](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-428-2026-10-16-120550-utc)
-adds CXCR4 after approval, merge and successful validation on main.
+**430 of 2,876 genes are complete; 2,446 remain.**
+CYFIP2 and CYB5R3 are the two verified additions since checkpoint 428.
+[Checkpoint 430](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-430-2026-10-17-054220-utc)
+records their approved files, merges and successful validation on main.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-This tracker update also makes 19 previously unlinked reviews available from
-this page, including CXCR4. Availability alone does not establish completion;
-only the separately verified genes above receive new credit. The prior
-checkpoints, queue records and histories remain preserved.
+The current-main inventory makes 16 additional catalogue reviews available since
+checkpoint 428. Availability alone does not establish completion; only the two
+separately verified genes receive new credit. Prior checkpoints, queue records
+and histories remain preserved. Selected ongoing reviews, including approved
+DCAF17 and revised DBT, remain unchecked pending verified completion.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3547,8 +3548,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CWF19L1** — HGNC:25613; [autosomal recessive cerebellar ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ebc1a4b-1a41-40df-832f-904cd4bb88f9-2025-05-14T160000.000Z) (MONDO:0015244; AR; Definitive).
 - [x] **CXCR4** — HGNC:2561; [WHIM syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89723de3-8fd8-4e2c-8609-bcd924e2f349-2023-01-17T170000.000Z) (MONDO:0023880; AD; Definitive).
 - [x] **CYB5A** — HGNC:2570; [methemoglobinemia type 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_895f7f88-9dcc-42fd-8773-e20dadb6756c-2024-12-13T190000.000Z) (MONDO:0009605; AR; Definitive).
-- [ ] **CYB5R3** — HGNC:2873; [methemoglobinemia due to deficiency of methemoglobin reductase](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa135949-7d13-41e7-bbee-5cefb3b77774-2024-12-13T190000.000Z) (MONDO:0009606; AR; Definitive).
-- [ ] **CYFIP2** — HGNC:13760; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af61bf34-00d4-4867-9a0b-415e4f6bcfa8-2025-05-06T160000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **CYB5R3** — HGNC:2873; [methemoglobinemia due to deficiency of methemoglobin reductase](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa135949-7d13-41e7-bbee-5cefb3b77774-2024-12-13T190000.000Z) (MONDO:0009606; AR; Definitive).
+- [x] **CYFIP2** — HGNC:13760; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af61bf34-00d4-4867-9a0b-415e4f6bcfa8-2025-05-06T160000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **CYLD** — HGNC:2584; [Brooke-Spiegler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_434ddb72-ee88-47af-9fa2-8dee9fa0a388-2019-04-19T160000.000Z) (MONDO:0011512; AD; Definitive); [frontotemporal dementia and/or amyotrophic lateral sclerosis 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6e9998d4-d6e3-4bdc-8de6-038928edbb60-2023-02-23T170000.000Z) (MONDO:0030872; AD; Limited).
 - [ ] **CYP11B2** — HGNC:2592; [familial hyperreninemic hypoaldosteronism type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a81c6c87-34bc-4ec4-8c31-91d2c9be4095-2023-11-16T013000.000Z) (MONDO:0011754; AR; Definitive).
 - [ ] **CYP1B1** — HGNC:2597; [CYP1B1-related glaucoma with or without anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_107502fc-115b-4ee0-ba83-7081a17d1ebc-2023-01-19T170000.000Z) (MONDO:0800472; AR; Definitive).

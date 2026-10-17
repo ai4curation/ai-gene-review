@@ -3586,3 +3586,75 @@ cosmetic spacing in historical queue/history text remains preserved.
 The final render passed all eight frontmatter checks and cleared exactly the stale CXCR4 availability warning: 1,732 warnings remain for the main page and zero for the progress page. The actual branch inventory contains 7,825 reviews, including 2,967 human reviews. The completion counts are 428 checked and 2,448 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T124217Z-codex-d73d47.yaml)
+
+## Completion checkpoint 430 — 2026-10-17 05:42:20 UTC
+
+**430 complete; 2,446 remaining out of 2,876 primary catalogue genes.**
+CYFIP2 and CYB5R3 are the only additions to checkpoint 428 on tracker
+[#5053](https://github.com/ai4curation/ai-gene-review/pull/5053), whose prior head is
+`2409002e46c2034acd6d9fcabd7b7d76c3b3fae9`. ROOT accepted both completion audits at 2026-10-17T05:52:50.199573+00:00.
+ROOT is the coordinating AI agent; this records verified provenance and is not
+a human maintainer sign-off. All earlier checkpoint text remains unchanged.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths | Actual-main validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| CYFIP2 | [#5037](https://github.com/ai4curation/ai-gene-review/pull/5037) | `3184ce0f9edd` | [74290d411a6f](https://github.com/ai4curation/ai-gene-review/commit/74290d411a6ff4e547b9454a373c9677c963c22e) | 2026-10-17T00:11:09Z | 19 / 19 | [run 38985181650](https://github.com/ai4curation/ai-gene-review/actions/runs/38985181650) |
+| CYB5R3 | [#5036](https://github.com/ai4curation/ai-gene-review/pull/5036) | `2ce15d1c9773` | [04ba970bf897](https://github.com/ai4curation/ai-gene-review/commit/04ba970bf8973abdda90bf8bbf3349870ee014ef) | 2026-10-17T05:42:20Z | 22 / 21 | [run 39007238786](https://github.com/ai4curation/ai-gene-review/actions/runs/39007238786) |
+
+The [CYFIP2 approval](https://github.com/ai4curation/ai-gene-review/pull/5037#pullrequestreview-5537492723)
+applies to the exact 19-file approved head, and all 19 merged files match it.
+Its separate main push [test job](https://github.com/ai4curation/ai-gene-review/actions/runs/38985181650/job/117254874615)
+completed successfully at 2026-10-17T00:16:42Z.
+All 28 protected scientific source paths remained exact. Five documented
+validation advisories remain; they are not unresolved required feedback.
+
+The [CYB5R3 approval](https://github.com/ai4curation/ai-gene-review/pull/5036#pullrequestreview-5543953732)
+applies to all 22 final PR paths. The actual merge changes 21 paths because the
+identical shared `reactome/R-HSA-198824.md` cache was already on parent main.
+All 22 final modes, types and blobs still equal the approved files, and all 37
+protected scientific source paths remained exact. The separate main push
+[test job](https://github.com/ai4curation/ai-gene-review/actions/runs/39007238786/job/117322091749) completed
+successfully at 2026-10-17T05:48:10Z.
+Its 33 documented validation advisories remain explicit. The completion audits
+check the scoped gene and history validation in these actual-main jobs; the job
+name is not used to claim a full-suite run.
+
+### Current review availability
+
+The tracker head contains 7,825 review YAMLs, including 2,967 human reviews.
+Current main `04ba970bf8973abdda90bf8bbf3349870ee014ef` contains **7,856 review YAMLs,
+including 2,997 human reviews**. The tracker branch has no gene changes since
+its merge base, and main has not changed the selected tracker target files.
+ROOT will incorporate current main and render the project against that actual
+inventory. The exact frontmatter/path comparison predicts **1,716 missing-review
+warnings**, down from 1,732 at checkpoint 428, and zero progress-page warnings.
+These are expected results from Git paths, not a claim that this owner ran the
+renderer. ROOT records the actual render results before publication.
+
+The 16 newly available catalogue reviews are AGA, CTNS, CYB5R3, CYFIP2, CYP27B1, FBP1, FUCA1, GALNT3, GNPTAB, HNF1A, HNF4A, KCNJ11, MT-ND1, MT-ND5, MT-ND6, NAGA.
+No new missing review appears in the comparison. Only CYFIP2 and CYB5R3 earn
+completion credit here; the other available reviews remain at their existing
+checkbox states until separately accepted completion evidence is available.
+
+### Pending reviews remain uncredited
+
+At the saved 2026-10-17 05:42:59 UTC queue observation, CYLD, CYP11B2, CYP27A1,
+CYP1B1, CYP2U1, CYP4V2, CYP7B1, D2HGDH, DAG1 and DARS2 were approved and open in
+the merge queue. The newer selected observation at 2026-10-17T05:56:13.253237+00:00 confirms
+[DCAF17 #5073](https://github.com/ai4curation/ai-gene-review/pull/5073) remains
+approved and queued at `87bf8aa55fa996cd5b729b279b0e7870efec7228`.
+[DBT #5074](https://github.com/ai4curation/ai-gene-review/pull/5074) has the revised
+head `2a70bf366aca76c6eba7686b4d987df75ab7cfc4` and awaits fresh review; the
+previous changes-requested decision remains visible. No pending PR receives
+completion credit. These timestamped observations are not an exhaustive new
+queue census or a guarantee of later queue positions.
+
+All 2,876 catalogue identities and association texts, 235 historical queue
+objects, 78 previous completion updates, the full preceding progress text and
+167 prior project history records are preserved. This appends one completion
+update containing two distinct genes. Products and follow-up commits are not
+additional campaign genes.
+
+ROOT incorporated main `b17aa10c2915a7ed409475664718fbfff9e03dfe`, including the newly merged CYLD review, before rendering. The final render passed all eight frontmatter checks: 1,715 missing-review warnings remain for the main page and zero for the progress page. Seventeen warnings cleared since checkpoint 428, including CYLD beyond the sixteen predicted above; no warnings were added. The actual branch inventory contains 7,857 reviews, including 2,998 human reviews. CYLD remains uncredited here pending its separate completion audit. The completion counts are 430 checked and 2,446 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T060834Z-codex-e7f969.yaml)
