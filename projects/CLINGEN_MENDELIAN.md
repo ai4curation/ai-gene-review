@@ -2990,7 +2990,7 @@ generic-binding guidance.
 
 **433 of 2,876 genes are complete; 2,443 remain.**
 CYP27A1 is the verified addition since checkpoint 432.
-[Checkpoint 433](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-433-2026-10-17-063524-utc)
+[Checkpoint 433](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-433-2026-10-17-070709-utc)
 records its approved files, merge and successful validation on main. The completion
 cutoff is [`1f2d0f4c42bd`](https://github.com/ai4curation/ai-gene-review/commit/1f2d0f4c42bde7e51deeed7d0486ef015657404b),
 merged at 2026-10-17 07:07:09 UTC.
