@@ -4055,3 +4055,49 @@ receive no credit from this update.
 All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,862 reviews, including 3,003 human reviews. The catalogue has 1,710 missing-review warnings and the progress page has no warnings, one fewer than checkpoint 438. Counts are 439 checked and 2,437 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T102135Z-codex-3dcc7e.yaml)
+
+## Completion checkpoint 440 — 2026-10-17 10:32:17 UTC
+
+**440 complete; 2,436 remaining out of 2,876 primary catalogue genes.**
+DARS2 is the sole addition to checkpoint 439. Its approved head
+`722a2bd80bba55a3b3b34067d0a7d8ec6b0196bb` in
+[#5060](https://github.com/ai4curation/ai-gene-review/pull/5060) merged as
+[`6328c89e41e0`](https://github.com/ai4curation/ai-gene-review/commit/6328c89e41e0cc646e4a1437079844d87ad7e3b7).
+All 11 approved PR file modes and blobs match the merge. The actual parent delta
+contains 10 paths because PMID_24275569.md was already present with identical bytes.
+The separate set of 59 protected positions comprises 28 machine-source/provider
+files, 28 other context files and three earlier PR histories. All remain exact.
+The 54 source annotation dictionaries, 35 inherited quotations, 3,446-byte notes
+prefix and previously merged target history are preserved. The exact-head
+[approval](https://github.com/ai4curation/ai-gene-review/pull/5060#pullrequestreview-5549390951)
+and [final discussion](https://github.com/ai4curation/ai-gene-review/pull/5060#issuecomment-6217890878)
+resolve the blockers and record the remaining nonblocking collagen-refinement judgment.
+
+The actual-main push [run 39025275210](https://github.com/ai4curation/ai-gene-review/actions/runs/39025275210)
+and [job 117374923665](https://github.com/ai4curation/ai-gene-review/actions/runs/39025275210/job/117374923665)
+passed at 2026-10-17T10:39:12Z. Scoped DARS2 validation passed with 11 accepted
+advisories; all 12,030 histories validated, 42 history tests passed and 695 family
+files validated. The full suite was skipped on this push. The separate successful
+[merge-group run 39023336329](https://github.com/ai4curation/ai-gene-review/actions/runs/39023336329)
+and [job 117369347335](https://github.com/ai4curation/ai-gene-review/actions/runs/39023336329/job/117369347335)
+tested the exact same merge SHA: 3,912 tests passed, one skipped, 83 deselected;
+252 doctests passed, 37 skipped; 415 automation tests and 19 JavaScript tests passed.
+All-gene schemas, 12 valid/invalid examples, mypy and lint also passed. The standalone
+prediction/source-evidence step was skipped and is not claimed as executed.
+
+DARS2 retains DRAFT status and three UNDECIDED source assertions. Completion means
+the review was finished, approved and merged; it does not resolve all scientific
+uncertainty or imply a human maintainer sign-off by the coordinating AI agent.
+DARS2 was already available as a review: repository availability remains 7,862
+reviews, including 3,003 human reviews. Of 1,166 catalogue genes with available
+reviews, 440 are credited and 726 remain uncredited; 1,710 still lack review files.
+
+This update preserves all 2,876 catalogue identities and association texts, 235
+historical queue objects, all 88 earlier completion updates, the complete preceding
+progress text and 178 prior project histories. Only the DARS2 checkbox changes;
+completion update 89 is appended. Other available and pending reviews receive no
+credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,862 reviews, including 3,003 human reviews. The catalogue has 1,710 missing-review warnings and the progress page has no warnings, unchanged from checkpoint 439. Counts are 440 checked and 2,436 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T104628Z-codex-760612.yaml)
