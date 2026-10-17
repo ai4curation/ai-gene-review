@@ -76,3 +76,19 @@ Changes made in response to the PR #4628 review:
 - **GO:0045907:** changed from REMOVE to MODIFY with GO:0045906 negative regulation of vasoconstriction (verified on QuickGO), because PMID:21532183 supports the negative direction.
 - **suggested_questions:** a new section holds the GO:0045907 direction question, the PMID:7488143 WITH-field question (RGD:62390 = Akt3, RGD:2802 = Hmgb1) and the GO:0045792 cell-size question.
 - **Remaining work:** 108 rows, mostly the KEEP_AS_NON_CORE ISO tail, still cite only the UniProt DR GO line. Re-grounding them is left for a later pass, as the reviewer allowed.
+
+### Review follow-up 2 (2026-10-17)
+
+Changes made in response to the second review on PR #4628:
+
+- **Non-ISO rows with the ISO boilerplate:** three rows still had the reason "the transferred term is too specific to retain as a general rat ISO annotation", and none of them is ISO. All three are fixed:
+  - GO:1901653 (IEP, PMID:18772167) and GO:0019901 (IPI, PMID:24583056, WITH mTOR RGD:68371) now give their rat-direct basis. Both stay MARK_AS_OVER_ANNOTATED: one is a generic stimulus class, the other a generic binding MF.
+  - GO:0042981 (ISS) and its ISO sibling are now MODIFY to GO:0043066 negative regulation of apoptotic process. The summary had argued the term was too general while the reason said too specific. Both rows' support is anti-apoptotic (UniProt IGF1 line; donor IDA PMID:18977203).
+  - No reason string anywhere in the file still describes non-ISO evidence as a transfer. All 12 copies of that boilerplate are gone.
+- **CONTEXT_OR_TISSUE_MISMATCH on terms that are not contexts:**
+  - Relabelled GO:0050821, GO:0045944, GO:0010628 (both rows), GO:1901653 (ISO) and GO:0019901 (ISO). They are now TERM_SCOPING_PROBLEM / GRANULARITY_MISMATCH or NO_FAILURE_NON_CORE, with `SUPPORTS_TRANSFER`.
+  - Osteoblast differentiation (both rows) keeps CONTEXT_OR_TISSUE_MISMATCH, because it is a genuine cell-type context, but now uses NO_FAILURE_NON_CORE.
+  - Re-grounding moved GO:1904515 positive regulation of TORC2 signaling to KEEP_AS_NON_CORE (MAPKAP1/SIN1 feedback, UniProt).
+  - It also moved GO:0032436 (both rows) to KEEP_AS_NON_CORE (Akt phosphorylation of Mdm2, PMID:12145204). The removed ubiquitination and catabolism rows therefore now point at a kept regulation row.
+- **GO:0032991 protein-containing complex:** I tried TOO_GENERAL, but the validator showed that no more specific complex term is asserted in this review, so the action's definition is not met. The row stays MARK_AS_OVER_ANNOTATED.
+- **Smaller fixes:** the GO:0005829 cytosol title-only quote is now the fractionation sentence from PMID:9112399. The capitalisation typo is fixed, and 4 cited references were added.
