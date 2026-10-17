@@ -14,8 +14,7 @@ child counts as covered).
 
 | Scope | New GO MF annotations |
 |-------|----------------------:|
-| **Swiss-Prot (reviewed)** | **42** |
-| all UniProtKB (secondary, mostly TrEMBL) | 26,074 |
+| **Swiss-Prot (reviewed)** | **36** |
 
 ## Swiss-Prot coverage status
 
@@ -34,7 +33,7 @@ whose EC is absent from `ec2go`):
 - **~2,331** such reactions exist; **~1,942** appear on at least one reviewed entry
   (150-reaction sample: 125/150 had a reviewed entry).
 - These cannot be closed by adding `rhea2go` rows -- each needs a **new GO molecular-function
-  term** (a GO term-request effort). We have seeded **7** such proposals (`sssom:NoTermFound`);
+  term** (a GO term-request effort). We have seeded **19** such proposals (`sssom:NoTermFound`);
   the remainder is the backlog to full reviewed coverage.
 
 So: full Swiss-Prot coverage **via existing GO terms is achieved**; full coverage *period* is
@@ -44,7 +43,6 @@ gated on creating ~1,900 new GO terms, not on more mappings.
 
 | RHEA | GO term | Swiss-Prot gain |
 |------|---------|----------------:|
-| RHEA:36079 | GO:0002950 ceramide phosphoethanolamine synthase activity | 6 |
 | RHEA:26422 | GO:0004062 aryl sulfotransferase activity | 5 |
 | RHEA:43620 | GO:0031132 serine 3-dehydrogenase activity | 5 |
 | RHEA:49072 | GO:0018640 dibenzothiophene monooxygenase activity | 5 |
@@ -59,7 +57,7 @@ gated on creating ~1,900 new GO terms, not on more mappings.
 | RHEA:59352 | GO:0047979 hexose oxidase activity | 1 |
 | RHEA:68796 | GO:0004575 sucrose alpha-glucosidase activity | 1 |
 
-Total: **42** reviewed annotations across 14 mappings.
+Total: **36** reviewed annotations across 13 mappings.
 
 ## Reproduce
 
@@ -103,7 +101,7 @@ binding`). None is a good non-redundant annotation.
 reaction has a *correct* existing GO term is already covered (the EC-bridge work
 above), and the reactions that remain genuinely **lack a correct GO term** —
 GO distinguishes the cofactor/stereochemistry variants they represent. So closing
-the rest is strictly a **new-GO-term** effort (the 7 seeded `sssom:NoTermFound`
+the rest is strictly a **new-GO-term** effort (the 19 seeded `sssom:NoTermFound`
 rows are the start), not more mapping. This holds the line on the litmus test:
 we do not add a mapping unless a Swiss-Prot entry would gain a *correct*,
 non-redundant annotation.
@@ -112,10 +110,12 @@ non-redundant annotation.
 
 The reactions the litmus hunt surfaced are precisely the **new-term backlog**: a
 reviewed enzyme carries the reaction, Swiss-Prot lacks a correct term, and GO has
-only a *sibling* term for a different variant. Batch 6 promotes 10 of these to
+only a *sibling* or misleadingly similar term for a different variant. Batch 6 promotes 11 of these to
 verified `sssom:NoTermFound` proposals (definition-checked against the sibling),
 e.g. **ferredoxin-dependent protochlorophyllide reductase** (EC 1.3.7.7, ~327
 reviewed entries; GO has only the NADPH POR GO:0016630), **alcohol dehydrogenase
 (quinone)** (EC 1.1.5.5), **2-methylcitrate dehydratase (trans-forming)** (vs the
 cis GO:0047547), and **UDP-N-acetylglucosamine 2-epimerase (hydrolysing)** (human
-GNE; vs the non-hydrolysing GO:0008761). The proposal set is now 17.
+GNE; vs the non-hydrolysing GO:0008761). The proposal set is now 19, including
+SAMD8/SMSr's PE-dependent CPE synthase reaction after definition review showed
+that `GO:0002950` uses CDP-ethanolamine instead.
