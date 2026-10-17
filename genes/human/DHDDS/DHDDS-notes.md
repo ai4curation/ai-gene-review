@@ -88,3 +88,28 @@ CC:
 All labels confirmed current. GO:0006486 "protein glycosylation" is obsolete; current N-glyc term
 is GO:0006487 (not added to core_functions — glycosylation is downstream of DHDDS's direct role).
 Branch checks: GO:0045547∈MF; GO:0043048,GO:0006489∈BP; GO:0005789∈CC; GO:1904423∈protein-containing complex.
+
+
+## 2026-10-17 source reassessment
+
+This entry supersedes the earlier scientific/action rationale while preserving the original notes. The [source guide](DHDDS-source-guide.md) supplies public sources, section locators, assay and construct limits.
+
+The active-site description is corrected: DHDDS contains the substrate pocket, but the NUS1 C-terminal tail completes the catalytic interface. NUS1 is not chemically irrelevant. The imported enables and contributes_to assertions remain intact; retained activity does not mean isolated DHDDS reproduces the full physiological complex. PMID:32817466 contains IPP in both crystal sites; the FPP-bound structure is PMID:33077723. The human complex forms a 2:2 assembly of heterodimeric units. The NPC2 binding observation does not establish DHDDS cholesterol transport.
+
+The immediate product is unsaturated polyprenyl diphosphate, not literally saturated dolichyl diphosphate. Existing biosynthetic-process annotations are evaluated as precursor-producing catalytic participation. The core uses GO:0043048; GO:0006489 remains an accepted source assertion, without claiming that the two are ancestor and descendant. The older compressed downstream pathway description should not be read as a complete enzyme-by-enzyme account. GO:0006486 remains officially obsolete in the current checked ontology; no protein-glycosylation annotation is added solely because glycosylation depends on dolichol supply.
+
+The broad ER, transferase and prenyltransferase rows receive supported specific replacements. Both NUS1 interaction rows are refined to protein heterodimerization using the direct structural/interface evidence, with the BioPlex association assay clearly distinguished. The positive NPC2 interaction stays non-core under the project policy. All 24 imported source dictionaries and four product objects are preserved; no new annotation is added.
+
+The four natural products are 333, 334, 294 and 299 residues. PMID:28842490 reports rescue by isoforms 1 and 2 but not 3 in its yeast assay (data not shown); isoform 4 was not tested. These limited results do not establish universal inactivity of isoform 3 or equivalent activity of every product. Later structural work uses full-length 333-residue DHDDS with engineered NUS1 constructs.
+
+Original access is recorded separately from normal-cache flags in the source guide. Prior machine files are preserved. The current provider attempt failed authentication/quota checks; the scientific assessment uses the original and curated sources identified above.
+
+## 2026-10-17 review follow-up: pathway coverage and evidence anchors
+
+This entry supersedes the prior compact-core omission of GO:0006489. Both GO:0006489 and GO:0043048 are now represented in the catalytic core. Neither is an ancestor of the other in the checked ontology. DHDDS performs the precursor-chain synthesis step in these pathways; the distinction between its unsaturated immediate product and subsequent dolichol derivatives does not remove that catalytic participation. No downstream reductase, kinase or glycosylation activity is assigned, and no NEW annotation is added.
+
+The original active-site quotation is preserved in [Catalytic subunit vs partner](#catalytic-subunit-vs-partner-important-curation-caveat), and the [source guide](DHDDS-source-guide.md#2026-10-17-review-follow-up) now links it to the precise Results and figures. The active-site pocket resides in DHDDS, with a direct contribution from the NUS1 C-terminal RxG motif. This supports the DHDDS molecular-function assignment without asserting independent physiological-complex activity for isolated DHDDS. The earlier phrase about correction addressed the absolute wording, not the presence of the DHDDS pocket itself.
+
+The new core excerpt uses five additional words from PMID:33077723. Together with the 19 words already quoted above, the total is 24; the former process/activity fragments are removed. PMID:25066056 now has one substantive 18-word co-translation excerpt on the specific activity row and reference-only support on the broader row. Other reference links reuse these anchors without duplicating quotations. The inherited UniProt quotations are unchanged and no additional UniProt excerpt is introduced.
+
+All 24 imported annotation identities and actions, four product objects, and source-cache bytes remain unchanged. The description now names the supported glycan-carrier uses and heterotetrameric assembly. Product-length distributions and construct limits remain in the source guide; no invariant C95–C100 product range is asserted.
