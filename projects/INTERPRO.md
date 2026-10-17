@@ -35,7 +35,7 @@ across every matched gene, so one fix at the mapping level is worth many
 gene-level corrections. Gene reviews also catch mappings the ranked worklist
 never reaches: three of the fifteen entries came from reading human genes one at
 a time, and three more from auditing the bacterial export ATPases FliI and SctN
-(see [ATP-synthase terms on export ATPases](TREEGRAFTER/rotary-atpase-leak.md)).
+(see [conserved-function recovery](CONSERVED_FUNCTION_RECOVERY.md)).
 
 **Start here:** [Proposed mapping edits](INTERPRO/interpro2go.sssom.yaml) ·
 [Prioritized entry worklist](INTERPRO/interpro_family_priorities.tsv) ·
@@ -62,7 +62,7 @@ experimental evidence.
 | IPR045122 — Calcium permeable stress-gated cation channel 1-like | The entry name says calcium *permeable*, but `GO:0005227` is defined as a channel that opens when calcium binds it — opposite directions of causation. The TMEM63/OSCA members are stretch- and osmolarity-gated. | Remove the calcium-activated mapping; assess mechanosensitive cation-channel and calcium-channel terms in its place. |
 | IPR042371 — Z-binding domain | A catalytic activity is mapped onto a binding domain: the deaminase belongs to ADAR1's separate domain, so ZBP1 inherits an activity it has no domain for. | Remove the deaminase mapping and restrict it to entries carrying the catalytic domain; retain RNA binding. |
 | IPR013380 — Type 3 secretion system ATPase SctN | An SctN-specific entry mapped to rotational proton-transporting ATPase activity and ATP biosynthesis. SctN is a soluble protein-exporting ATPase with no Fo partner; the terms are wrong for every member (915 annotations). | Remove `GO:0046961` and `GO:0006754`; retain the type III secretion process and complex mappings; consider adding `GO:0008564` protein-exporting ATPase activity. |
-| IPR004100 — ATPase, F1/V1/A1 α/β, N-terminal domain | Sound for rotary ATPase subunits, but the domain is shared by the FliI/SctN export ATPases, which do not transport protons. | Narrow `GO:1902600` and `GO:0046034`: suppress when IPR005714 (FliI/YscN) also matches. |
+| IPR004100 — ATPase, F1/V1/A1 α/β, N-terminal domain | Sound for rotary ATPase subunits, but the domain is shared by the FliI/SctN export ATPases, which do not transport protons. | Narrow `GO:1902600` and `GO:0046034`: ideally suppress when IPR005714 (FliI/YscN) also matches; if per-entry mappings cannot express that, remove them or move them to narrower entries that exclude FliI/SctN. |
 | IPR005714 — ATPase, type III secretion system, FliI/YscN | `GO:0009058` biosynthetic process remains in the 2025-09 mapping file, a remnant of the ATP synthase ancestry. | Remove it; the entry's other four mappings are sound. |
 | IPR006935 — Helicase/UvrB, N-terminal | The entry is dominated by DNA-acting enzymes, but the same fold occurs in the RNA-sensing RIG-I-like receptors, so IFIH1 (MDA5) inherits DNA binding. | Replace the DNA-binding mapping with `GO:0003676` nucleic acid binding, as on the sibling helicase entries IPR011545 and IPR006555; the nucleic-acid substrate is a property of the enzyme, not of the shared fold. ATP binding and hydrolase activity are unaffected. |
 

@@ -483,7 +483,7 @@ The [pombe cohort](PROTNLM_EVALUATION/pombe.md) includes every GO/function-beari
 
 The [fly cohort](PROTNLM_EVALUATION/fly.md) includes every Drosophila melanogaster gene with GO or function-text predictions in the published species subset, plus a separate tier of location/keyword-only records. Its census preserves exact sequences, current FlyBase identifiers and original prediction provenance.
 
-The horse cohort contains [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads.
+The horse cohort contains [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads. Because horse is a PANTHER reference proteome, its genes carry PAINT IBA and no TreeGrafter rows; the [DONKEY40 cohort](PROTNLM_EVALUATION/donkey40.md) pairs 40 donkey proteins (TreeGrafter + ProtNLM2) with their horse orthologs (IBA) to compare all three on the same genes.
 
 ## ARGO-ProtNLM-50 benchmark design
 

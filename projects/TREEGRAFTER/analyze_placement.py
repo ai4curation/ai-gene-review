@@ -7,7 +7,7 @@ of the PANTHER tree, or because the placement was fine but the propagated GO
 term was too general / assumed a catalysis the protein has lost?*
 
 For every reviewed TreeGrafter annotation that was down-graded
-(REMOVE / MARK_AS_OVER_ANNOTATED / MODIFY) we join three pieces of
+(REMOVE / MARK_AS_OVER_ANNOTATED / MODIFY / TOO_GENERAL) we join three pieces of
 already-recorded placement evidence — no TreeGrafter re-run needed:
 
   * graft node      : the PANTHER ancestral node (PTN...) the term was
@@ -43,7 +43,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 REVIEW_TSV = os.path.join(HERE, "treegrafter_review.tsv")
 TREEGRAFTER_REF = "GO_REF:0000118"
-DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+# TOO_GENERAL (true but entailed by a more specific term in the same review)
+# counts as down-graded, like MODIFY: the review did not keep the term as is.
+DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY", "TOO_GENERAL"}
 
 PANTHER_FAM = re.compile(r"PANTHER;\s*(PTHR\d+);\s*([^;]+?)\s*;?\s*\d*\.?$")
 PANTHER_SF = re.compile(r"PANTHER;\s*(PTHR\d+:SF\d+);\s*([^;]+?)\s*;?\s*\d*\.?$")
