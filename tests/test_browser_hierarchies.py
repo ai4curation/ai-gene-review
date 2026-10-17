@@ -110,22 +110,35 @@ def test_cycle_fails_instead_of_emitting_partial_mapping(ontology):
         build_go_hierarchy(terms, {"GO:0006629"})
 
 
-def test_cached_taxonomy_and_unmapped_data_remain_browsable(tmp_path):
+@pytest.mark.parametrize("bad_id", ["NCBITaxon:DESVH", "9606", "taxon:9606"])
+def test_cached_taxonomy_and_unmapped_data_remain_browsable(tmp_path, bad_id):
     """Malformed existing IDs do not acquire invented biological ancestry."""
     (tmp_path / "9606.json").write_text(
-        json.dumps({"taxonId": 9606, "scientificName": "Homo sapiens", "lineage": []})
+        json.dumps(
+            {
+                "taxonId": 9606,
+                "scientificName": "Homo sapiens",
+                "lineage": [{"taxonId": 33208, "scientificName": "Metazoa"}],
+            }
+        )
     )
     with pytest.warns(UserWarning, match="Unmapped taxonomy"):
         records = fetch_taxonomy(
-            {"NCBITaxon:9606": "human", "NCBITaxon:DESVH": "Unresolved organism"},
+            {"NCBITaxon:9606": "human", bad_id: "Unresolved organism"},
             tmp_path,
         )
     facet = build_taxonomy_hierarchy(records)
-    assert facet["memberships"]["NCBITaxon:DESVH"] == [
+    assert facet["memberships"][bad_id] == [
         "unmapped-taxonomy",
-        "NCBITaxon:DESVH",
+        bad_id,
     ]
-    assert facet["nodes"]["NCBITaxon:DESVH"]["label"] == "Unresolved organism"
+    assert facet["nodes"][bad_id]["label"] == "Unresolved organism"
+    assert facet["nodes"]["NCBITaxon:9606"]["parents"] == ["NCBITaxon:33208"]
+    assert facet["nodes"]["NCBITaxon:9606"]["label"] == "Homo sapiens"
+    assert facet["memberships"]["NCBITaxon:9606"] == [
+        "NCBITaxon:33208",
+        "NCBITaxon:9606",
+    ]
 
 
 def test_schema_metadata_is_idempotent_and_does_not_rewrite_base(tmp_path):

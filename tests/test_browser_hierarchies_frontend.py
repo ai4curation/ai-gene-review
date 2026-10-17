@@ -126,3 +126,51 @@ def test_hierarchy_search_escapes_text_and_mobile_fits(page, hierarchy_page):
     expect(page.locator(".hierarchy-body")).to_contain_text("No matching categories")
     assert page.evaluate("window.bad") is None
     assert page.evaluate("document.documentElement.scrollWidth") == 390
+
+
+def test_focus_stays_on_second_parent_path(page, hierarchy_page):
+    page.goto(hierarchy_page)
+    page.get_by_role("button", name="Expand All processes", exact=True).click()
+    page.get_by_role("button", name="Expand Branch A", exact=True).click()
+    page.get_by_role("button", name="Expand Branch B", exact=True).click()
+    copies = page.locator('.facet-item[data-value="leaf"] input')
+    copies.nth(1).focus()
+    copies.nth(1).press("Space")
+    expect(copies.nth(1)).to_be_focused()
+    expect(copies.nth(0)).to_be_checked()
+    expect(copies.nth(1)).to_be_checked()
+
+
+def test_category_search_has_no_inert_collapse_buttons(page, hierarchy_page):
+    page.goto(hierarchy_page)
+    page.get_by_role("searchbox", name="Search GO slim categories").fill("Shared")
+    expect(page.locator('.facet-item[data-value="leaf"]')).to_have_count(2)
+    expect(page.locator("[data-hierarchy-expand]")).to_have_count(0)
+    page.get_by_role("searchbox", name="Search GO slim categories").fill("")
+    page.get_by_role("button", name="Expand All processes", exact=True).click()
+    expect(page.locator('.facet-item[data-value="a"]')).to_have_count(1)
+
+
+def test_unmapped_new_data_and_default_source_field(page, hierarchy_page, tmp_path):
+    """Stale hierarchy metadata cannot hide new source values from the facet."""
+    schema = tmp_path / "schema.js"
+    with schema.open("a") as stream:
+        stream.write("""
+            const facet = window.searchSchema.hierarchies.facets[0];
+            facet.field = 'term_id';
+            delete facet.sourceField;
+            delete facet.memberships.unknown;
+            delete facet.nodes.unmapped;
+        """)
+    page.goto(hierarchy_page)
+    expect(page.locator('.facet-item[data-value="root"] .facet-count')).to_have_text(
+        "3"
+    )
+    expect(
+        page.locator('.facet-item[data-value="unmapped"] .facet-count')
+    ).to_have_text("1")
+    page.locator('.facet-item[data-value="unmapped"] input').check()
+    expect(page.locator("#resultsCount")).to_have_text("Showing 1 of 1 items")
+    expect(page.locator("#resultsGrid")).to_contain_text("D")
+    page.reload()
+    expect(page.locator("#resultsCount")).to_have_text("Showing 1 of 1 items")

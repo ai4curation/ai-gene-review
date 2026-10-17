@@ -17,6 +17,8 @@ from typing import Any
 import warnings
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 GO_URL = "https://current.geneontology.org/ontology/go-basic.obo"
@@ -131,6 +133,8 @@ def build_go_hierarchy(
         "type": "hierarchy",
         "nodes": nodes,
         "memberships": memberships,
+        "unmappedNode": "unmapped",
+        "unmappedLabel": "Unmapped / obsolete GO terms",
         "description": "Includes detailed terms beneath each category. Groups annotation terms, including negated and rejected annotations; use the review and negation filters to refine.",
     }
 
@@ -139,7 +143,7 @@ def build_taxonomy_hierarchy(records: list[dict[str, Any]]) -> dict[str, Any]:
     """Keep selected clades and each observed taxon, preserving source ancestry."""
     nodes: dict[str, dict[str, Any]] = {}
     memberships = {}
-    observed = {record["taxonId"] for record in records}
+    observed = {record["taxonId"] for record in records if not record.get("unmapped")}
     for record in sorted(records, key=lambda item: str(item["taxonId"])):
         lineage = [
             node
@@ -151,7 +155,9 @@ def build_taxonomy_hierarchy(records: list[dict[str, Any]]) -> dict[str, Any]:
             nodes["unmapped-taxonomy"] = {"label": "Unmapped taxa", "parents": []}
             path.append("unmapped-taxonomy")
         for node in lineage:
-            key = f"NCBITaxon:{node['taxonId']}"
+            key = (
+                node["key"] if node.get("unmapped") else f"NCBITaxon:{node['taxonId']}"
+            )
             if key in path:
                 continue
             nodes[key] = {"label": node["scientificName"], "parents": path[-1:]}
@@ -165,6 +171,8 @@ def build_taxonomy_hierarchy(records: list[dict[str, Any]]) -> dict[str, Any]:
         "type": "hierarchy",
         "nodes": nodes,
         "memberships": memberships,
+        "unmappedNode": "unmapped-taxonomy",
+        "unmappedLabel": "Unmapped taxa",
         "description": "Selecting a group includes all represented species beneath it.",
     }
 
@@ -182,7 +190,8 @@ def fetch_taxonomy(
                 stacklevel=2,
             )
             return {
-                "taxonId": taxon_id.removeprefix("NCBITaxon:"),
+                "key": taxon_id,
+                "taxonId": taxon_id,
                 "scientificName": taxon_labels[taxon_id] or taxon_id,
                 "lineage": [],
                 "unmapped": True,
@@ -191,11 +200,9 @@ def fetch_taxonomy(
         path = cache_dir / f"{number}.json"
         if path.exists():
             return json.loads(path.read_text())
-        response = requests.get(
-            f"https://rest.uniprot.org/taxonomy/{number}", timeout=60
+        record = json.loads(
+            download_source(f"https://rest.uniprot.org/taxonomy/{number}", timeout=60)
         )
-        response.raise_for_status()
-        record = response.json()
         if str(record["taxonId"]) != number:
             raise ValueError(
                 f"Taxonomy source redirected {taxon_id}; review its mapping"
@@ -205,6 +212,29 @@ def fetch_taxonomy(
 
     with ThreadPoolExecutor(max_workers=6) as pool:
         return list(pool.map(fetch, sorted(taxon_labels)))
+
+
+def download_source(url: str, *, timeout: float) -> bytes:
+    """Retry transient GET failures at most three times, with bounded backoff.
+
+    A separate session per request is safe for the taxonomy thread pool.
+    Retry-After is ignored so an upstream response cannot suspend a build for
+    an unbounded interval. Permanent errors (including 404) fail immediately.
+    """
+    retries = Retry(
+        total=3,
+        backoff_factor=0.5,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET"}),
+        respect_retry_after_header=False,
+    )
+    with requests.Session() as session:
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
+        response = session.get(url, timeout=timeout)
+        response.raise_for_status()
+        return response.content
 
 
 def append_hierarchies(
@@ -250,9 +280,7 @@ def main() -> None:
         if args.go_obo:
             raise FileNotFoundError(go_path)
         go_path.parent.mkdir(parents=True, exist_ok=True)
-        response = requests.get(GO_URL, timeout=120)
-        response.raise_for_status()
-        go_path.write_bytes(response.content)
+        go_path.write_bytes(download_source(GO_URL, timeout=120))
     terms, version = read_go_obo(go_path)
     facets = [
         build_taxonomy_hierarchy(
