@@ -2988,18 +2988,20 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**434 of 2,876 genes are complete; 2,442 remain.**
-CYP2U1 is the verified addition since checkpoint 433.
-[Checkpoint 434](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-434-2026-10-17-073848-utc)
+**435 of 2,876 genes are complete; 2,441 remain.**
+CYP4V2 is the verified addition since checkpoint 434.
+[Checkpoint 435](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-435-2026-10-17-081020-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`e32937e9a43d`](https://github.com/ai4curation/ai-gene-review/commit/e32937e9a43d197137f795d76417027d318843f0),
-merged at 2026-10-17 07:38:48 UTC.
+cutoff is [`40c8c08b26b8`](https://github.com/ai4curation/ai-gene-review/commit/40c8c08b26b8ba217b428bcbbaf11935991afb5d),
+merged at 2026-10-17 08:10:20 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-The current branch has 7,858 reviews, including 2,999 human reviews. Review
-availability alone does not establish completion. Earlier checkpoints, queue
-records and histories remain preserved. Pending gene reviews remain unchecked
-until their approvals, merged files and actual-main validation are verified.
+At incorporated main [`a3bfd308b643`](https://github.com/ai4curation/ai-gene-review/commit/a3bfd308b6432eac0114cae92f702bb5e2edf39e),
+7,860 reviews are available, including 3,001 human reviews. CYP1B1 is newly
+available but remains unchecked pending completion verification. Review availability alone does not establish completion. Earlier
+checkpoints, queue records and histories remain preserved. Pending gene reviews
+remain unchecked until their approvals, merged files and actual-main validation
+are verified.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3557,7 +3559,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CYP27A1** — HGNC:2605; [cerebrotendinous xanthomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84f4b8c1-a978-49ab-a21c-578e5d4fcdec-2024-09-23T160000.000Z) (MONDO:0008948; AR; Definitive).
 - [ ] **CYP27B1** — HGNC:2606; [vitamin D-dependent rickets, type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dadf4f9a-281f-4e34-bdde-d44c28e572d6-2025-06-04T040000.000Z) (MONDO:0020723; AR; Definitive).
 - [x] **CYP2U1** — HGNC:20582; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e2d550d2-5653-45dc-a8a3-2dccf4bb49f6-2023-01-16T020000.000Z) (MONDO:0019064; AR; Definitive).
-- [ ] **CYP4V2** — HGNC:23198; [Bietti crystalline corneoretinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_da577a4b-5c65-43fa-9a03-b275eaacb6eb-2021-04-01T160000.000Z) (MONDO:0008865; AR; Definitive).
+- [x] **CYP4V2** — HGNC:23198; [Bietti crystalline corneoretinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_da577a4b-5c65-43fa-9a03-b275eaacb6eb-2021-04-01T160000.000Z) (MONDO:0008865; AR; Definitive).
 - [ ] **CYP7B1** — HGNC:2652; [CYP7B1-related disorder of oxysterol accumulation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e000ae1c-93a3-4f6b-bdf0-afd04603d407-2025-02-28T170000.000Z) (MONDO:1060107; AR; Definitive).
 - [ ] **D2HGDH** — HGNC:28358; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_90674a82-f43e-4435-88c8-121a57b8ab19-2023-10-02T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **DAG1** — HGNC:2666; [neuromuscular disease caused by qualitative or quantitative defects of alpha-dystroglycan](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_61b73fd7-5578-447b-9482-ea64d62dae1d-2024-08-13T190000.000Z) (MONDO:0018282; AR; Definitive).
