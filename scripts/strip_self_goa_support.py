@@ -1,9 +1,9 @@
-"""Remove a gene's own GOA file from the ``supported_by`` lists of its review.
+"""Remove GOA files from the ``supported_by`` lists of a review.
 
-The GOA table records the annotations under review, so it is never evidence for
-one (see ``ai_gene_review.validation.goa_support``). For each review this
-script deletes every ``supported_by`` item citing the review's own
-``-goa.tsv``. When that leaves an existing annotation's review with no support
+A GOA table records annotations, so it is never evidence for one (see
+``ai_gene_review.validation.goa_support``). For each review this script deletes
+every ``supported_by`` item citing a ``-goa.tsv`` file, the review's own or
+another gene's. When that leaves an existing annotation's review with no support
 at all, the action becomes ``UNDECIDED`` and the reason records the previous
 action. An emptied ``supported_by`` key is dropped.
 
@@ -28,7 +28,7 @@ from typing import Any, List, Optional, Tuple
 import yaml
 
 from ai_gene_review.validation.local_source_text import PROJECT_ROOT
-from ai_gene_review.validation.goa_support import _gene_dir, is_self_goa
+from ai_gene_review.validation.goa_support import _gene_dir, is_goa_file
 
 NOTE = (
     "Previously {action}; set to UNDECIDED because the only cited support was the GOA row "
@@ -54,7 +54,7 @@ def transform_data(data: Any, gene_dir: str) -> Tuple[Any, int]:
         if isinstance(node, dict):
             sb = node.get("supported_by")
             if isinstance(sb, list):
-                kept = [s for s in sb if not (isinstance(s, dict) and is_self_goa(s.get("reference_id"), gene_dir))]
+                kept = [s for s in sb if not (isinstance(s, dict) and is_goa_file(s.get("reference_id")))]
                 removed += len(sb) - len(kept)
                 if len(kept) != len(sb):
                     if kept:
@@ -148,7 +148,7 @@ def transform_text(text: str, gene_dir: str) -> str:
     i = 0
     while i < len(lines):
         m = item.match(lines[i])
-        if not (m and is_self_goa(m.group(2), gene_dir)):
+        if not (m and is_goa_file(m.group(2))):
             i += 1
             continue
         indent = len(m.group(1))

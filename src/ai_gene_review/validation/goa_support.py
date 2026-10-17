@@ -7,7 +7,10 @@ action. Another gene's GOA file is rejected too: that a paralog or partner
 carries a term is the state of its annotation, not evidence about this gene;
 cite the evidence behind that annotation instead. Listing a GOA file under
 ``references`` (to describe what was fetched) is not a claim of support and is
-not checked.
+not checked; neither are ``references[].findings``, where a quoted GAF row is a
+statement about the GOA table itself. That is the one place a GOA quote can
+still appear, so keep such findings descriptive. Only dict items are inspected;
+the schema makes every ``supported_by`` item a mapping.
 """
 
 from __future__ import annotations
