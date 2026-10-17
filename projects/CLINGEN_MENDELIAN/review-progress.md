@@ -4125,8 +4125,11 @@ and automation checks. The standalone prediction/source-evidence step was skippe
 and is not claimed as executed. Completion records the finished, approved and
 merged review; it is not a human maintainer sign-off by the coordinating AI agent.
 
-The 46 protected positions are distinct from the 13 approved paths and 12 actual
-parent changes. Their explicit categories and paths are:
+The 46 inspected positions overlap the 13 approved PR paths: seven were added
+among the 12 merge changes, one approved cache was already identical on the parent,
+and 38 pre-existing context paths were unchanged. These are the selected
+post-publication preservation inventory, not 46 files that all predated the merge.
+Their explicit categories and paths are:
 
 - tracker source records (2): `projects/CLINGEN_MENDELIAN.md`, `projects/CLINGEN_MENDELIAN/publication-queue.json`.
 - pathway and model sources (6): `gocams/index.tsv`, `reactome/R-HSA-8952638.md`, `reactome/R-HSA-8952639.md`, `reactome/R-HSA-8955245.md`, `reactome/R-HSA-8955285.md`, `reactome/R-HSA-8956045.md`.
@@ -4135,10 +4138,13 @@ parent changes. Their explicit categories and paths are:
 - DCAF17 machine source files (2): `genes/human/DCAF17/DCAF17-goa.tsv`, `genes/human/DCAF17/DCAF17-uniprot.txt`.
 - prior DCAF17 session history (1): `history/genes/human/DCAF17/2026-10-16T144134Z-codex-bd0f40.yaml`.
 
-DCAF17 publication preserved these positions. This checkpoint separately updates
-the two tracker source records listed above and their related project files;
-the other positions retain their accepted merge contents. No gene annotation is
-edited by this tracker update.
+The runtime/build category records the exact historical DCAF17 execution inventory
+listed above; it is not an exhaustive inventory of repository runtime. The merge
+preserved the 38 pre-existing context paths and the already-identical cache, and
+introduced the seven remaining listed paths. This checkpoint separately updates
+the two tracker source records and their related project files; other positions
+retain their accepted merge contents. DCAF17 had zero validation advisories.
+No gene annotation is edited by this tracker update.
 
 DCAF17 adds a review file. Repository availability is now 7,863 reviews,
 including 3,004 human reviews. Of 1,167 catalogue genes with available
