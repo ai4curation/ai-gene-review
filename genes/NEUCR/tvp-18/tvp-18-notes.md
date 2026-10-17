@@ -13,3 +13,10 @@
   channel in synaptic-vesicle biology, but the Neurospora record only supports
   the conserved fungal Golgi membrane localization and broad vesicle-mediated
   transport role.
+- PTHR13314 now places `GO:0005262` calcium channel activity on PTN001779219,
+  the same opisthokont node whose `GO:0016192` vesicle-mediated transport IBD
+  is accepted here. I did not propagate that molecular-function claim to
+  Neurospora because the row is seeded by Drosophila `fwe` alone, the
+  ascomycete PTN001779222 subnode carries only Golgi membrane, and the
+  metazoan calcium terms `GO:0070588` and `GO:0150008` sit on Eumetazoa node
+  PTN000999743.
