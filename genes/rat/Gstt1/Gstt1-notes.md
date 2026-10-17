@@ -22,3 +22,6 @@
 - Description rewritten as standalone biology (removed "The review accepts ..." commentary).
 
 **Open questions.** None new.
+
+
+**Review follow-up 2026-10-17 (PR #4616 review).** Finding 2: all twelve `DR GO;` cross-reference quotes replaced with the relevant UniProt CC line (CATALYTIC ACTIVITY RX+glutathione, SUBCELLULAR LOCATION Cytoplasm for the cytoplasm/cytosol rows); the circular `DR GO;` entry removed from both GO:0004602 glutathione-peroxidase rows, which retain the Falcon cumene-hydroperoxide peroxidase-activity quote. Validates clean; 0 stale.

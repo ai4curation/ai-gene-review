@@ -22,3 +22,6 @@
 - Description rewritten to remove curation commentary.
 
 **Open questions.** Whether GSTA4-4's reversible retro-Michael chemistry (see suggested_questions) merits a homeostasis-type BP term remains open.
+
+
+**Review follow-up 2026-10-17 (PR #4616 review).** Finding 2: all twelve `DR GO;` cross-reference quotes replaced with the relevant UniProt CC line (CATALYTIC ACTIVITY RX+glutathione, FUNCTION conjugation line, SUBUNIT Homodimer for identical-protein-binding/homodimerization, SUBCELLULAR LOCATION Cytoplasm); the circular `DR GO;` entry removed from the response-to-caloric-restriction MARK row and from the mitochondrion KEEP row (which retains its PMID:9774145 and Falcon mitochondrial-import support). Validates clean; 0 stale.

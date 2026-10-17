@@ -67,3 +67,6 @@ protein and states the effect on activity "is not known".
 - No action changed on existing rows. Donors are now named on the cytosol, GST ISO and GST ISS (mouse Gsta2, P10648) siblings; IDA rows from PMID:17112229 now quote the Cys-111/cytosolic A1/A2 sentence rather than a background sentence; UniProt FUNCTION / SUBCELLULAR LOCATION lines added as positive support.
 
 **Open questions.** Has selenium-independent peroxidase activity toward phospholipid hydroperoxides been measured for purified rat GST A2-2 (Ya2 homodimer)? Which mouse alpha-class gene is the true one-to-one orthologue of rat Gsta2 (both mouse Gsta1 and Gsta2 donate ISO rows)?
+
+
+**Review follow-up 2026-10-17 (PR #4616 review).** Finding 1: the GO:0004364 and GO:0042178 ACCEPT rows citing the PMID:17112229 Cys-111 arylation quote now carry positive UniProt support (CATALYTIC ACTIVITY RX+glutathione, FUNCTION conjugation line) with the reason noting retention by deferral to the RGD curator. Finding 2: all fifteen `DR GO;` cross-reference quotes on ACCEPT/KEEP rows replaced with the relevant UniProt CC line, and the circular `DR GO;` entries removed from the caloric-restriction/mitochondrion/response-to-bacterium/epithelial/stilbenoid MARK_AS_OVER_ANNOTATED rows. Validates clean; 0 stale.

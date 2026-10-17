@@ -30,3 +30,6 @@ hormones, including 3,3'-diiodothyronine, triidothyronine (T3) and reverse triio
 
 **Open questions.** RGD:12388849 is a rat RGD identifier used as an ISO donor into rat
 Sult1b1; a curator may wish to confirm which rat gene/paralog it denotes.
+
+
+**Review follow-up 2026-10-17 (PR #4616 review).** Suggestion 11: the `core_functions` substrate CHEBI:33853 was mislabelled "phenol"; corrected to its official ChEBI name "phenols" (the chemical class; CHEBI:15882 is the single compound phenol), consistent with the GO:0018958 phenol-containing-compound-metabolic-process context. No existing-annotation actions changed. Validates clean.

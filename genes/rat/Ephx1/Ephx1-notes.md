@@ -32,3 +32,6 @@ annotations that overshoot participation, and were left. No GO:0005515 protein-b
 "GO; ..." UniProt quotes remain valid (0 stale). Description was rewritten to remove the
 curation commentary ("The review accepts...") and expanded with standalone biology
 (2-AG hydrolysis, 20(S)-OHC binding, lipid-epoxide substrates). status COMPLETE.
+
+
+**Review follow-up 2026-10-17 (PR #4616 review).** Addressed the reviewer's findings. All sixteen UniProt `DR GO;` cross-reference `supporting_text` lines (which restate the annotation under review) were replaced with the relevant UniProt CC evidence: FUNCTION (epoxide hydrolysis), CATALYTIC ACTIVITY (cis-stilbene oxide reaction), SUBCELLULAR LOCATION (ER membrane), the "Binds 20(S)-hydroxycholesterol" line for oxysterol binding, and the "metabolism of endogenous lipids such as epoxide-containing fatty acids" FUNCTION line for the arachidonate-metabolic-process rows. GO:0047372 monoacylglycerol lipase activity changed ACCEPT -> KEEP_AS_NON_CORE, matching its own reason (secondary to the defining epoxide hydrolase activity) and the notes that it was not added to core_functions. Validates clean; 0 stale UniProt quotes.
