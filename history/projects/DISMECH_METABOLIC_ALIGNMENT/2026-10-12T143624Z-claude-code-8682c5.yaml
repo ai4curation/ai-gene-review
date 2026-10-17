@@ -1,0 +1,37 @@
+history_version: 1
+target:
+  kind: project
+  slug: DISMECH_METABOLIC_ALIGNMENT
+  path: projects/DISMECH_METABOLIC_ALIGNMENT.md
+session:
+  id: 2026-10-12T143624Z-claude-code-8682c5
+  timestamp: '2026-10-12T14:36:24Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/4819
+  urls: []
+events:
+- type: REVIEW
+  outcome: changed
+  sections:
+  - provenance
+  - validation
+  summary: 'Round 19: ask git to resolve the recorded revision instead of testing
+    its shape, and cover the two unreachable drift states with a built shim'
+  details: |
+    Round 19 of PR 4819, answering the round-18 review: three IMPORTANT findings and six suggestions.
+
+    Finding 1, the malformed state tested the recorded value shape and then printed a claim about what git can look up. Those differ for most of what gitrevisions(7) calls a revision, and aigr_revision comes from an environment variable (align_audit.py line 269), so a ref there is an operator slip rather than a hypothetical. git is now asked: "git rev-parse --verify <rev>^{commit}" replaces both the shape test and "cat-file -e". A value that resolves is present, whatever its form, so a short abbreviation gets a real drift answer, and so does a ref or a tag in _rev_state - although, corrected in place per docs/history.md, not yet end to end this round: the import-time tree-description guard still compared the recorded value as a sha, so a recorded ref against either committed aigr_tree text made the generator exit instead of rendering. The HEAD~3 render recorded here was made against a tree text naming no sha. Round 20 confines that comparison to a recorded sha - rendering with aigr_revision HEAD~3 now gives "an ancestor of the branch tip, with no file under genes/ or modules/ changed between the two", where the shape test called it unusable. Corrected in place per docs/history.md: this round claimed it also separated a 40-hex object that is present but is a blob or a tree, and it did not - "rev-parse --verify <sha>^{commit}" fails for such an object exactly as for an absent one, with the reason only on stderr, which the code discarded, so the page still called it not held. Round 20 asks "cat-file -t" and names the type. A value that does not resolve leaves git reporting one failure for two causes (exit 128 for an absent object and for an unusable string alike), so the shape of the value decides which sentence prints and each sentence claims only that: not_here keeps the absence wording, and the renamed unresolvable state says git cannot resolve it here and it is not shaped like an object name. The probe now runs behind _in_repo(), so a run with no repository asserts nothing about what git can resolve.
+
+    Finding 2, the state this round split out was the one with no harness case, and the only evidence for it was an uncommitted PATH shim - evidence from an apparatus no committed artifact records, the position the round-9 record had to be corrected for. The harness now builds the shim itself: _git_shim(tmp, mode) writes a two-line git wrapper that exits 129 (or 0 with no output) for for-each-ref and delegates everything else, passed to the render through env PATH. That covers unknown and unpublished, the two states no report mutation can reach, so all four states _alt_drift_tail renders now have a case. Each declares the ancestor fragment as well as its own clause, because the clause alone does not distinguish the fixed code from the grouped version: rendering the committed round-17 generator under the same shim contains the unknown clause and does not contain "an ancestor of the branch tip, with", so the fragment is what rules that version out. The file list between the two substrings is a live figure, which is why expect now accepts a tuple requiring all of its members. With git absent the shim cases exit with a message rather than skipping, a case that cannot run not being a case that passed.
+
+    Finding 3, "Three cases added" in the round-18 record sat under finding 2 and counted finding 3 EXIT case as well, while the paragraph own list and its "Both" said two. Corrected in place per docs/history.md lines 167 to 171: three was right for the round and wrong for the paragraph, so there is no earlier true state.
+
+    Suggestions taken: the unreachable _REPRODUCIBLE entry is now described as unread rather than framed as a deliberate empty (4); the comment saying the grouped version threw away an answer git had already been asked for now says it skipped a merge-base and diff git would have answered, since neither ever ran (5); the branch-tip return says there is nothing to compare, rather than leaving a reader to infer it from a sentence every sibling makes explicit (6); the tip comparison is made on the resolved sha, so an abbreviation that is the tip no longer takes the ancestor path - rendering an 8-character abbreviation of HEAD now gives "which is this branch tip, so there is nothing to compare" (7); the guard docstring records that the invariant is vacuously satisfied where the text names no sha, which is ALT_TREE branch-name fallback (8); and the harness comment no longer calls the injected-revision cases a property of the generator rather than of the clone, since they do need a repository - _alt_drift_tail returns early when rev-parse HEAD fails (9).
+
+    Validation: 27 harness cases, 20 refusals, all behave as declared; the pytest wrapper passes; the page is byte-identical to the committed one; align_audit.py untouched, sha256 4fa69f623798 matching audit_sha256 in both reports.

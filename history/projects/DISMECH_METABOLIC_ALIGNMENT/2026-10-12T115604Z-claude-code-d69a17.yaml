@@ -1,0 +1,40 @@
+history_version: 1
+target:
+  kind: project
+  slug: DISMECH_METABOLIC_ALIGNMENT
+  path: projects/DISMECH_METABOLIC_ALIGNMENT.md
+session:
+  id: 2026-10-12T115604Z-claude-code-d69a17
+  timestamp: '2026-10-12T11:56:04Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/4819
+  urls: []
+events:
+- type: REVIEW
+  outcome: changed
+  sections:
+  - description
+  summary: 'Round 8: compare steady flags by row set rather than by count, and land
+    the rendering half of two audit-side fixes'
+  details: |
+    Round 8 for PR 4819: three qualifying and five optional findings, answered in one push.
+
+    The qualifying finding this round was a claim round 7 added that the committed data falsifies. The steady branch of the two-run comparison is computed from here.get(f) == there.get(f) on counts, and round 7 attached an explanation to it: that a stable PARTIAL_COVERAGE count means the rows carrying it are covered by modules present in both trees. Equal totals are not equal row sets. Pairing each flag occurrence with its gene row shows the 14 are 9 shared genes plus 5 only in the all-slices run (COX4I2, ABHD5, MC4R, PEX5, LIPA) and 5 only in the branch-local one (HADH, GLB1 in two entries, HAO1, COQ8A) - LIPA among the first set, so the row that round 1's rebuttal turned on is in one population and not the other. Corrected in place per docs/history.md, because the reason given for LIPA was never true: this record said its covering module is one of the eleven absent from this branch, which is so but is not what moved the row - LIPA carries NO_AIGR_REVIEW on this branch, and the audit returns before any module test runs, so the absent review removes the flag first. Round 9 computes each moved row's cause from that row's own record on both trees instead of from the flag's group, and reports LIPA and MC4R as review-absent, PEX5 as a stub, and only COX4I2 and ABHD5 as module-set departures. ALIGNED_CONTRIBUTES_ONLY is the same row in both (NDUFA1), which is why the sentence was true of one of its two subjects and false of the other.
+
+    The fix is a flag_rows() helper returning the set of (entry, gene) rows carrying a flag, and the page now compares those sets before offering any interpretation. A flag identical row for row says so; a flag whose rows moved gets the shared and only-here and only-there counts with the genes named, and the statement that nothing about stability follows from the equal count. The "stable property of the dismech side" reading is emitted only for flags whose rows did match, because for a flag whose rows moved it is not an available reading at all. Where a gene holds more than one of the named rows the entry is printed beside it, since GLB1 appeared twice with nothing to tell the two rows apart.
+
+    Two round-7 fixes had landed on the audit side and not on the page, and both were recorded in the round-7 history record as done. Both statements are corrected in place per docs/history.md as never-true. First, _dirty() returning None for an unanswerable git was discarded by its only consumer: the renderer filtered with if PROV.get(k), under which None is falsy and indistinguishable from False, so a run whose provenance could not be read printed with no dirtiness clause and read as clean - the exact assertion the tri-state was introduced to stop. The unanswerable case now renders as its own clause. Second, load() gated the carried term_aspects on truthiness, so an empty map was never stored, the == {} branch could never fire, and a legitimate run matching no pairs still got told its script was superseded. Both carried fields are now keyed on presence in the document rather than on truthiness. The guard-tampering tests had not caught this because deleting the key and emptying it produced identical behaviour, so no test could reach the dead branch; the suite now covers the empty case explicitly and it renders the note rather than exiting.
+
+    A present-but-empty flag_groups is a third state and is now fatal with its own message, unlike term_aspects where empty is legitimate: without the groups every risen flag falls through to "cause not established", which would read as a finding rather than as a broken input.
+
+    Five optional findings, all taken. The prose that said "Both module flags" now derives the count from the group, since the group holds three. REASON_REQUIRING_MODULE_FLAGS and SOFT are exported from align_audit.py rather than built in the page: the first had re-hardcoded a flag name one level below the literal round 7 removed, and the second derived the clean count's tolerance from module_sourced membership, which made "soft" the default for any module flag added later - including one that would mark a real contradiction, which would then have been absorbed into the clean figure with nothing failing. A new flag is now hard until it is named, and the page exits if the exported soft set stops containing the three flags its prose describes as tolerated. The legend's "not emitted by either run" note says "this run" when no second report is passed, since the two-argument form leaves the second report empty and would otherwise deny that the branch-local run emits NO_CORE_FUNCTION_TERMS. And aspect_unresolved is written unconditionally, including as an empty list, and consumed on the page: terms under no single aspect root are outside both cross-aspect figures, so they are stated rather than left to make the count read as complete, and an absent key is now a superseded report.
+
+    A regression of my own, caught by reading the page diff rather than the source: the AIGR_TREE string passed to the first re-run reduced the provenance from "origin/main at <sha> with these ten themed slice branches" plus the branch names to a bare "worktree at 897d012ae", which is a merge commit local to the run and unresolvable by any reader. Both audits were re-run with provenance naming origin/main at a430dfc77, all ten branch tips, and the fact that the merge commit is not pushed.
+
+    Sixteen generator guards were tested against tampered reports, including the four new ones and the two branches that were previously unreachable. Fourteen exit 1; the untampered run and the empty-term_aspects run exit 0, the latter printing the note that was the point of the branch.
