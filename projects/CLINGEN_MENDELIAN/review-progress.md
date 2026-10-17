@@ -3860,3 +3860,46 @@ pending completion verification; its availability adds no completion credit.
 The actual branch inventory remains 7,860 reviews, including 3,001 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,712 missing-review warnings, two fewer than checkpoint 434 because CYP4V2 and CYP1B1 now have reviews; CYP1B1 remains unchecked. The progress page has no warnings. Counts are 435 checked and 2,441 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T084245Z-codex-8e6cce.yaml)
+
+## Completion checkpoint 436 — 2026-10-17 08:31:18 UTC
+
+**436 complete; 2,440 remaining out of 2,876 primary catalogue genes.**
+CYP1B1 is the only addition to checkpoint 435. Its approved head
+`e46195e4fbeb664c4ef8cd6438662b34968a2142` in
+[#5048](https://github.com/ai4curation/ai-gene-review/pull/5048) merged as
+[`a3bfd308b643`](https://github.com/ai4curation/ai-gene-review/commit/a3bfd308b6432eac0114cae92f702bb5e2edf39e).
+All 49 approved file modes, types and blobs match the merge. The actual
+parent-to-merge delta contains 46 paths; three shared Reactome files were already
+identical on parent main. All 49 protected source and provenance positions remain
+exact. These 49 protected paths comprise 42 machine sources, four prior history
+records and three accepted authored review artifacts; this protection set is
+distinct from the PR delta. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5048#pullrequestreview-5547093134)
+applies to that exact head.
+
+The separate actual-main push [run 39017675880](https://github.com/ai4curation/ai-gene-review/actions/runs/39017675880)
+and [test job 117353019495](https://github.com/ai4curation/ai-gene-review/actions/runs/39017675880/job/117353019495)
+completed successfully at 2026-10-17T08:38:15Z. Scoped CYP1B1 validation passed
+without annotation advisories. All 12,020 history records were valid, all 42
+history tests passed, and all 695 family files validated. The full test suite
+was skipped on the main push. The separate successful
+[merge-group run 39016362284](https://github.com/ai4curation/ai-gene-review/actions/runs/39016362284)
+and [job 117349183993](https://github.com/ai4curation/ai-gene-review/actions/runs/39016362284/job/117349183993)
+provide full-suite evidence for the exact merge candidate: 3,912 tests passed
+with one skipped and 83 deselected, 252 passed with 37 skipped in the separate
+suite, and 415 automation checks passed. These remain distinct validation events.
+The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 84 earlier completion updates, the complete
+preceding progress text and 174 earlier project history records. The catalogue
+changes only CYP1B1 from unchecked to checked. Update 85 is appended; earlier
+queue values and literal UTF-8 formatting are unchanged. Review availability at incorporated main
+`66f848da36501873b7f42e8edff5226bdff2702a` is 7,860 review files, including 3,001 human
+reviews. CYP7B1 was updated on main and remains unchecked pending completion
+verification. CYP1B1 now
+receives completion credit because its approval, merge and actual-main checks
+have been verified; availability alone did not establish that credit.
+
+The actual branch inventory contains 7,860 reviews, including 3,001 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,712 missing-review warnings, unchanged from checkpoint 435; CYP7B1 remains unchecked. The progress page has no warnings. Counts are 436 checked and 2,440 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T090405Z-codex-4ae10d.yaml)

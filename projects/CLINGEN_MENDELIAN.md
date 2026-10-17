@@ -2988,17 +2988,17 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**435 of 2,876 genes are complete; 2,441 remain.**
-CYP4V2 is the verified addition since checkpoint 434.
-[Checkpoint 435](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-435-2026-10-17-081020-utc)
+**436 of 2,876 genes are complete; 2,440 remain.**
+CYP1B1 is the verified addition since checkpoint 435.
+[Checkpoint 436](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-436-2026-10-17-083118-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`40c8c08b26b8`](https://github.com/ai4curation/ai-gene-review/commit/40c8c08b26b8ba217b428bcbbaf11935991afb5d),
-merged at 2026-10-17 08:10:20 UTC.
+cutoff is [`a3bfd308b643`](https://github.com/ai4curation/ai-gene-review/commit/a3bfd308b6432eac0114cae92f702bb5e2edf39e),
+merged at 2026-10-17 08:31:18 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-At incorporated main [`a3bfd308b643`](https://github.com/ai4curation/ai-gene-review/commit/a3bfd308b6432eac0114cae92f702bb5e2edf39e),
-7,860 reviews are available, including 3,001 human reviews. CYP1B1 is newly
-available but remains unchecked pending completion verification. Review availability alone does not establish completion. Earlier
+At incorporated main [`66f848da3650`](https://github.com/ai4curation/ai-gene-review/commit/66f848da36501873b7f42e8edff5226bdff2702a),
+7,860 reviews are available, including 3,001 human reviews. CYP7B1 was updated on main and
+remains unchecked pending completion verification. Review availability alone does not establish completion. Earlier
 checkpoints, queue records and histories remain preserved. Pending gene reviews
 remain unchecked until their approvals, merged files and actual-main validation
 are verified.
@@ -3555,7 +3555,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CYFIP2** — HGNC:13760; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af61bf34-00d4-4867-9a0b-415e4f6bcfa8-2025-05-06T160000.000Z) (MONDO:0100038; AD; Definitive).
 - [x] **CYLD** — HGNC:2584; [Brooke-Spiegler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_434ddb72-ee88-47af-9fa2-8dee9fa0a388-2019-04-19T160000.000Z) (MONDO:0011512; AD; Definitive); [frontotemporal dementia and/or amyotrophic lateral sclerosis 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6e9998d4-d6e3-4bdc-8de6-038928edbb60-2023-02-23T170000.000Z) (MONDO:0030872; AD; Limited).
 - [x] **CYP11B2** — HGNC:2592; [familial hyperreninemic hypoaldosteronism type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a81c6c87-34bc-4ec4-8c31-91d2c9be4095-2023-11-16T013000.000Z) (MONDO:0011754; AR; Definitive).
-- [ ] **CYP1B1** — HGNC:2597; [CYP1B1-related glaucoma with or without anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_107502fc-115b-4ee0-ba83-7081a17d1ebc-2023-01-19T170000.000Z) (MONDO:0800472; AR; Definitive).
+- [x] **CYP1B1** — HGNC:2597; [CYP1B1-related glaucoma with or without anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_107502fc-115b-4ee0-ba83-7081a17d1ebc-2023-01-19T170000.000Z) (MONDO:0800472; AR; Definitive).
 - [x] **CYP27A1** — HGNC:2605; [cerebrotendinous xanthomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84f4b8c1-a978-49ab-a21c-578e5d4fcdec-2024-09-23T160000.000Z) (MONDO:0008948; AR; Definitive).
 - [ ] **CYP27B1** — HGNC:2606; [vitamin D-dependent rickets, type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dadf4f9a-281f-4e34-bdde-d44c28e572d6-2025-06-04T040000.000Z) (MONDO:0020723; AR; Definitive).
 - [x] **CYP2U1** — HGNC:20582; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e2d550d2-5653-45dc-a8a3-2dccf4bb49f6-2023-01-16T020000.000Z) (MONDO:0019064; AR; Definitive).
