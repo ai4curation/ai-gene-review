@@ -138,7 +138,7 @@ Kenny (key); Drosophila IKKepsilon already has a folder from another project.
 
 ### Rel/NF-kappaB and IkappaB
 
-RELA and NFKB1 with the inhibitor NFKBIA in human; Dorsal (dl) and Dif with
+RELA and NFKB1 with the inhibitor NFKBIA in human; Dorsal (<gene species="DROME" symbol="dl__P15330">dl</gene>) and Dif with
 the inhibitor Cactus (cact) downstream of Toll, and Relish (Rel) downstream of
 Imd, in Drosophila; REL2 in *Anopheles*; a single NF-kappaB in Nematostella.
 *C. elegans* has no NF-kappaB; its immune transcriptional output runs through
@@ -369,7 +369,7 @@ proposals added by the reviewer.
 | DROME | tub | P22812 | 55 | 38 | 1 | 10 | 4 | 0 | 1 | 1 |
 | DROME | pll | Q05652 | 76 | 56 | 4 | 9 | 3 | 2 | 1 | 1 |
 | DROME | cact | Q03017 | 47 | 33 | 5 | 4 | 3 | 0 | 2 | 0 |
-| DROME | dl | P15330 | 114 | 79 | 20 | 6 | 7 | 0 | 0 | 2 |
+| DROME | <gene species="DROME" symbol="dl__P15330">dl</gene> | P15330 | 114 | 79 | 20 | 6 | 7 | 0 | 0 | 2 |
 | DROME | Dif | P98149 | 81 | 63 | 11 | 4 | 3 | 0 | 0 | 0 |
 | CHICK | TLR15 | A0A8V0Z0H8 | 7 | 2 | 3 | 1 | 1 | 0 | 0 | 0 |
 | CHICK | TLR21 | A0A8V0ZKW5 | 6 | 0 | 2 | 3 | 0 | 0 | 0 | 1 |
@@ -562,7 +562,7 @@ yet covered (`tlr3`, `tlr4ba`, `tlr5a`, `tlr18`, `tlr19.1`, `tlr20.2`; chicken `
 - [x] DROME: tub (P22812)
 - [x] DROME: pll (Q05652)
 - [x] DROME: cact (Q03017)
-- [x] DROME: dl (P15330)
+- [x] DROME: <gene species="DROME" symbol="dl__P15330">dl</gene> (P15330)
 - [x] DROME: Dif (P98149)
 
 ### Drosophila Imd pathway (0/11 reviewed)

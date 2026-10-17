@@ -36,8 +36,8 @@ AI Gene Review · `projects/TRANSCRIPTION_FACTORS/`
 
 ## Bottom line
 
-- GOA gives a dbTF annotation to **1,448** human Swiss-Prot proteins (`GO:0003700` and descendants); the GREEKC curated set lists **1,449**, and the two agree on **1,385**, or **95.6%**
-- Seven of the 62 GOA-only proteins were reviewed in detail and **all seven were over-annotated**; NTN1 and NTN3 trace to one bad PAINT node
+- A February 2026 comparison used **1,447** GOA dbTF proteins (`GO:0003700` and descendants) and **1,449** GREEKC dbTFs; the two agree on **1,385**, or **95.6%**
+- Seven of the 62 GOA-only proteins were reviewed in detail: six carried dbTF/cis-regulatory over-annotations and NME2 was retained as a non-core G-quadruplex regulator
 - The false-negative direction is clean: ID1-4, the NCOA coactivators and homeobox-fold ceramide synthases are all correctly excluded
 
 ---
@@ -61,19 +61,19 @@ And a **DBD alone proves nothing**: ceramide synthases carry a homeobox-like fol
 
 ---
 
-## Where the over-annotations are
+## What the seven reviews found
 
-The 62 proteins GOA calls dbTF and GREEKC does not: enzymes (HDAC4, NME2, ABHD2), a ribosomal protein (RPS3), RFX complex scaffolding subunits (RFXAP, RFXANK), and two secreted guidance molecules (NTN1, NTN3).
+The 62 proteins GOA calls dbTF and GREEKC does not include enzymes (HDAC4, ABHD2), a noncanonical G-quadruplex regulator (NME2), a ribosomal protein (RPS3), RFX complex scaffolding subunits (RFXAP, RFXANK), and two secreted guidance molecules (NTN1, NTN3).
 
 Reviewed outcomes:
 
 | Gene | Row | Action |
 |---|---|---|
 | NTN1, NTN3 | dbTF activity, cis-regulatory DNA binding (IBA) | REMOVE |
-| HDAC4 | DNA-binding transcription activator activity (IDA) | MODIFY → `GO:0003713` |
+| HDAC4 | activator; cis-regulatory DNA binding (IDA) | MODIFY → `GO:0003713`; MODIFY → `GO:0000976` |
 | RPS3 | DNA-binding transcription activator activity (IMP) | MODIFY → `GO:0003713` |
-| RFXAP | RNAP II regulatory region DNA binding (IDA) | MODIFY → `GO:0003713` |
-| RFXANK | RNAP II regulatory region DNA binding (IDA) | REMOVE |
+| RFXAP | activator and regulatory-region DNA binding (IDA) | MODIFY → `GO:0003713` |
+| RFXANK | activator; regulatory-region DNA binding (IDA) | MODIFY → `GO:0003713`; REMOVE |
 | NME2 | DNA-binding transcription activator activity (IDA) | KEEP_AS_NON_CORE |
 
 ---
@@ -88,9 +88,9 @@ Reviewed outcomes:
 
 The IBA `WITH/FROM` list is entirely POU domain proteins: POU2F1, POU1F1, POU5F1, POU4F1-3 and their fly, mouse, rat and worm orthologs.
 
-- Netrins sit in **PTHR10574** (netrin/laminin); the donors sit in **PTHR11636** (POU domain)
+- Netrins sit in **PTHR10574**; the verified POU5F1 seed sits in **PTHR11636**
 - Netrins are secreted axon-guidance cues with laminin N, EGF and NTR domains and **no DNA-binding domain**
-- The error is in the **node placement**, not in any single annotation, so it is fixed once at `PTN000180816` rather than per gene
+- The POU-seeded rows are present in the cached **PTHR10574** export; whether the mismatch came from tree placement, identifier mapping or export assembly still needs upstream tracing
 
 Recorded in the family review `interpro/panther/PTHR10574/PTHR10574-review.md`.
 
@@ -98,7 +98,7 @@ Recorded in the family review `interpro/panther/PTHR10574/PTHR10574-review.md`.
 
 ## Evidence, and what is left to check
 
-Of the 1,448 dbTF-annotated proteins, **945 have IEA-only support**. That is the pool where a machine-learning second pass could add something.
+Of the 1,448 dbTF-annotated proteins in the raw QuickGO extraction, **945 have IEA-only support**. That is the pool where a machine-learning second pass could add something.
 
 Planned but not run:
 
