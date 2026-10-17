@@ -151,9 +151,9 @@ Re-review after the GOA/UniProt refresh (commit a3cf70b6d). 193 rows in total.
   interactions are false.
 - Action changes on previously reviewed rows: protein kinase activity (IEA InterPro and IDA
   PMID:12065578) REMOVE -> MODIFY to AMP-activated protein kinase activity (too general, not wrong);
-  protein-macromolecule adaptor activity (IDA PMID:15695819) REMOVE -> UNDECIDED (the earlier
-  removal rested on the paper being about the beta subunit, which is not a valid basis for removing
-  an experimental row); regulation of stress granule assembly (ISO mouse) MARK_AS_OVER_ANNOTATED ->
+  protein-macromolecule adaptor activity (IDA PMID:15695819) REMOVE -> UNDECIDED on this branch
+  (the earlier removal rested on the paper being about the beta subunit); superseded on merge with
+  main by the later OpenScientist follow-up below, which restores REMOVE; regulation of stress granule assembly (ISO mouse) MARK_AS_OVER_ANNOTATED ->
   KEEP_AS_NON_CORE [PMID:27430620 "Our studies identified multiple steps of de novo SG assembly that
   are controlled by the kinase."]; cellular response to prostaglandin E stimulus (ISO mouse)
   MARK_AS_OVER_ANNOTATED -> UNDECIDED (cached abstract of PMID:23479225 does not describe the AMPK
@@ -178,3 +178,20 @@ Re-review after the GOA/UniProt refresh (commit a3cf70b6d). 193 rows in total.
   check of the AMPK experiment.
 - Two advisory validator warnings remain because retired GO_REF:0000096 rows keep their legacy
   MARK_AS_OVER_ANNOTATED actions while the active GO_REF:0000121 rows were re-judged.
+
+## 2026-10-10 - OpenScientist adaptor-activity follow-up
+
+The focused OpenScientist report for `prediction-adaptor-activity` resolves the
+GO:0030674 `protein-macromolecule adaptor activity` row as a subunit-level
+misassignment. PMID:15695819 shows that the AMPK beta subunit's conserved
+C-terminal 85 residues tether alpha and gamma into the heterotrimer; Prkaa2 is
+the alpha-2 catalytic subunit being tethered, not the adaptor. The existing
+GO:0044877 `protein-containing complex binding` row remains the correct MF
+shape for alpha-subunit incorporation into AMPK.
+
+Merge note (2026-10-17): this section arrived from main (PR #4647) while the re-review branch
+had independently moved the same row to UNDECIDED. On merge the main-side judgment (REMOVE,
+with PMID:15695819, PMID:18079111 and the OpenScientist report as support) was kept as the more
+recent and more informative one; the rest of the row ordering and formatting follows the
+re-review branch. Both cached sources are abstract-only, so the full-text check listed under
+open questions still applies.

@@ -1,7 +1,9 @@
 ---
 title: "Function Prediction Evaluation"
 maturity: IN_PROGRESS
+collections: [FUNCTION_PREDICTION]
 tags: [EVALUATION, PIPELINE, FLAGSHIP]
+last_reviewed: 2026-10-04
 autolink_gene_symbols: false
 sidecars:
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
@@ -42,7 +44,7 @@ are facet counts in the browser. Useful starting views:
 [DeepECTF claims](../app/predictions/index.html?dataset=claims&source_method=DeepECTF), and the
 [GO-GPT three-level overlap](../app/predictions/index.html?dataset=overlap), which is fixed at the review snapshot.
 
-**[Cross-project review (2026-09-26)](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md)** — consistency, independence, and reproducibility audit of the evaluations below, with prioritized fixes.
+**[Cross-project review (2026-09-26)](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md)** — consistency, independence, and reproducibility audit of the evaluations below, with 2026-10-04 fix status and remaining follow-ups.
 
 ## Model and agent evaluations
 
@@ -53,8 +55,8 @@ are facet counts in the browser. Useful starting views:
 | **[DeepECTransformer / E. coli](VALIDATING_ECOLI_PREDICTIONS.md)** | Enzyme-function predictions for selected E. coli proteins, with attention to substrate specificity, paralogs, and physiological context. | [Prediction reviews](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html) · [Blinded recapitulation](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md) ([table](BIOREASON_COMPARISON/deepectf-eval.html); 4/7 match) |
 | **[Affinage](AFFINAGE_EVALUATION.md)** | Literature-derived functional narratives, GO grounding, and retrieval of relevant publications. | [Pilot results](AFFINAGE_EVALUATION/results/summary.md) · [Narrative versus GO analysis](AFFINAGE_EVALUATION/results/narrative-vs-go.md) · [Project findings](AFFINAGE_EVALUATION.md) |
 | **[Structure-based prediction](STRUCTURE_FUNCTION.md)** | Fold, active-site and structure-aware learned methods for distant homologs, tested against cases from existing reviews. | [Project page](STRUCTURE_FUNCTION.md) |
-| **[OpenScientist co-scientist](COSCIENTIST.md)** | An autonomous research agent used as an independent bioinformatician to test gene-function hypotheses; its verdicts also serve as adjudicators in the ProtNLM2 and TreeGrafter evaluations. | [Project page](COSCIENTIST.md) |
-| **[Prokaryotic immunity term prediction](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md)** | Scoping: translating family-level defense-system calls into review-ready GO term suggestions. | [Project page](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md) |
+| **[OpenScientist co-scientist](COSCIENTIST.md)** | An autonomous research agent used for focused blinded bioinformatics investigations; its reports are advisory evidence in ProtNLM2 and illustrative exemplars in TreeGrafter. | [Project page](COSCIENTIST.md) |
+| **[Prokaryotic immunity term prediction](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md)** | Scoping: translating family-level defense-system calls into review-ready GO term suggestions. | [Project page](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md) · [Tracker #3962](https://github.com/ai4curation/ai-gene-review/issues/3962) |
 
 BioReason-Pro SFT, RL narratives, and upstream GO-GPT outputs are separate
 evaluation targets. The GO-GPT review includes unresolved predictions; its table
