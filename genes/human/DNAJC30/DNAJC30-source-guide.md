@@ -64,3 +64,17 @@ The mouse donor [P59041](https://www.uniprot.org/uniprotkb/P59041/entry) carries
 [Q96LL9](https://www.uniprot.org/uniprotkb/Q96LL9/entry) records one 226-residue precursor. Transit peptide 1–38, mature chain 39–226, J-domain 49–114 and membrane segment 208–225 are predicted features. Cleavage does not establish alternative splice products, and a J-domain does not by itself establish HSP70 activation.
 
 The existing [GO:0034367](https://www.ebi.ac.uk/QuickGO/term/GO:0034367) NEW proposal originated in [merged PR #4809](https://github.com/ai4curation/ai-gene-review/pull/4809); it is not one of the nine imported GOA triples. Its parent terms concern organization of an existing macromolecular complex. Neither brain development nor ATP-synthesis regulation is its ancestor or descendant. No DNAJC30 activity was found in the captured GO-CAM index. Current CLPX/O76031, CLPP/Q16740 and NDUFAF2/Q8N183 annotations lack this exact term; their proteolysis or assembly roles are not identical to the proposed accessory repair role. That absence is not evidence that curators overlooked a function. The proposal is retained on the independent physical-participation and selective-turnover evidence, with the biochemical step left unresolved. No additional NEW assertion is introduced.
+
+## Regulatory scope and reproducible MitoCoP data
+
+The ATP-synthase core now includes the already accepted [GO:1905706](https://www.ebi.ac.uk/QuickGO/term/GO:1905706) regulatory process. Figure 4F and the ATP-production Methods of the [2018 original](https://pmc.ncbi.nlm.nih.gov/articles/PMC6459420/) use mouse cortical mitochondria, malate, pyruvate, ADP and a kinetic luciferase assay. This supports ATP-output regulation but does not isolate direct complex-V catalytic modulation from respiratory-chain effects. The native human binding evidence and negative complex-V findings in the later human study retain their distinct scopes.
+
+The [factual target extract](DNAJC30-bioinformatics/MitoCoP-DNAJC30.json) retains accession/gene identity, source worksheet/row/column coordinates, classifications, replicate measurements and summary values. It excludes unrelated narrative database fields. It is cited only for the underlying proteomic observations; inner-membrane interpretation still requires independent localization. The workbook identifies a protein group and does not resolve a natural alternative product.
+
+[Source provenance](DNAJC30-bioinformatics/source-manifest.json) gives the original public URL, capture time, byte count and SHA256. The [reader](DNAJC30-bioinformatics/reproduce.py) checks that hash before joining Q96LL9 and DNAJC30 and extracting the named fields. From this gene directory, with `uv` available:
+
+```sh
+uv run DNAJC30-bioinformatics/reproduce.py --download --check DNAJC30-bioinformatics/MitoCoP-DNAJC30.json
+```
+
+With a previously saved original workbook, replace `--download` with `--workbook /path/to/1-s2.0-S1550413121005295-mmc2.xlsx`. Use `--output /path/to/extract.json` instead of `--check` to regenerate. The saved-workbook reproduction was executed and matched the committed extract. The public-download option is implemented but was not rerun for this follow-up; a changed publisher file fails the hash check rather than being silently substituted. No key or private service is required.
