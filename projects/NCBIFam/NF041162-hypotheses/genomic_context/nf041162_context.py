@@ -3,7 +3,7 @@
 
 Question: do any UniProtKB entries carrying NF041162 sit in a phage/prophage
 context rather than an encapsulin operon? Aguilar et al. 2026 (Nat Commun,
-doi:10.1038/s41467-026-78136-1) report HK97-fold viral major capsid proteins
+PMID:42875451) report HK97-fold viral major capsid proteins
 that carry the SrpI-like (family 2) encapsulin Pfam domain, so a blanket
 NF041162 -> GO:0140737 (encapsulin nanocompartment) propagation could reach
 viral capsids if the equivalog model does not separate them.

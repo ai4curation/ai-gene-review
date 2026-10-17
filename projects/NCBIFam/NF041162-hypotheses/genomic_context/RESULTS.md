@@ -1,7 +1,7 @@
 # NF041162 (family 2A encapsulin shell) — viral/prophage contamination check
 
 **Question.** Aguilar et al. 2026 (Nat Commun 17:10571,
-doi:10.1038/s41467-026-78136-1, "Small viruses reveal bidirectional evolution
+PMID:42875451, "Small viruses reveal bidirectional evolution
 between HK97-fold viruses and encapsulins via procapsids") show that the
 SrpI-like (family 2) encapsulin domain is shared by encapsulins **and** by
 HK97-fold major capsid proteins of phages infecting *Xanthomonas*,
