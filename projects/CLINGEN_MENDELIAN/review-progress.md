@@ -3658,3 +3658,42 @@ additional campaign genes.
 ROOT incorporated main `b17aa10c2915a7ed409475664718fbfff9e03dfe`, including the newly merged CYLD review, before rendering. The final render passed all eight frontmatter checks: 1,715 missing-review warnings remain for the main page and zero for the progress page. Seventeen warnings cleared since checkpoint 428, including CYLD beyond the sixteen predicted above; no warnings were added. The actual branch inventory contains 7,857 reviews, including 2,998 human reviews. CYLD remains uncredited here pending its separate completion audit. The completion counts are 430 checked and 2,446 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T060834Z-codex-e7f969.yaml)
+
+## Completion checkpoint 431 — 2026-10-17 06:04:48 UTC
+
+**431 complete; 2,445 remaining out of 2,876 primary catalogue genes.**
+CYLD is the only addition to checkpoint 430. Its approved head
+`5186f4184ce6e35e4e86343ef3829c0cadc641e3` in
+[#5045](https://github.com/ai4curation/ai-gene-review/pull/5045) merged as
+[`b17aa10c2915`](https://github.com/ai4curation/ai-gene-review/commit/b17aa10c2915a7ed409475664718fbfff9e03dfe).
+All 28 approved file modes, types and blobs match the merge, all 28 paths form
+the actual parent-to-merge delta, and all 56 protected scientific source paths
+remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5045#pullrequestreview-5544095962)
+applies to that exact head; all required review findings were resolved.
+
+The separate actual-main push [run 39008579742](https://github.com/ai4curation/ai-gene-review/actions/runs/39008579742)
+and [test job 117326023627](https://github.com/ai4curation/ai-gene-review/actions/runs/39008579742/job/117326023627)
+completed successfully at 2026-10-17T06:11:58Z. The scoped gene validation passed
+with nine documented generic-binding advisories; 12,007 history records had no
+issues, and all 42 history tests passed. This records scoped validation, not a
+claim that the full repository test suite ran. ROOT is the coordinating AI
+agent; its provenance acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 79 earlier completion updates, the complete
+preceding progress text and 168 earlier project history records. The catalogue
+changes only CYLD from unchecked to checked. The branch already contained the
+CYLD review for checkpoint 430 rendering; its availability now gains completion
+credit because the separate completion audit has passed.
+
+DBT [#5074](https://github.com/ai4curation/ai-gene-review/pull/5074) is approved
+at `2a70bf366aca76c6eba7686b4d987df75ab7cfc4` and was confirmed in the normal
+merge queue in the saved selected observation. DCC [#5080](https://github.com/ai4curation/ai-gene-review/pull/5080)
+has passed checks at `63405caa5b9be2ccde240f170ea4149f40697717` and is undergoing
+review follow-up. DCDC2 source review and DCLRE1C preparation are ongoing.
+These selected status observations add no completion credit and are not a new
+exhaustive queue census.
+
+The actual branch inventory remains 7,857 reviews, including 2,998 human reviews. All eight frontmatter checks and both ordinary renders passed. The warning lists are unchanged from checkpoint 430: 1,715 missing-review warnings on the catalogue and zero on the progress page. Counts are 431 checked and 2,445 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T062231Z-codex-665f41.yaml)
