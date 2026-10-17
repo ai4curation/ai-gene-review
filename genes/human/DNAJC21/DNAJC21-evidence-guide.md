@@ -1,6 +1,6 @@
 # DNAJC21 evidence guide
 
-The review retains all 15 historical source annotations and all three official product identities. The current QuickGO snapshot contains the same 15 term/evidence/reference assertions. New fetch metadata supplies eight supporting-entity backfills, retained in the evidence record without rewriting historical source dictionaries. No new annotation is proposed. The two cores distinguish nucleolar RNA association from cytoplasmic Hsp70-partner activity within ribosome biogenesis.
+The review retains all 15 historical source annotations and all three official product identities. The current QuickGO snapshot contains the same 15 term/evidence/reference assertions. New fetch metadata supplies eight supporting-entity backfills, retained in the evidence record without rewriting historical source dictionaries. No new annotation is proposed. The two cores distinguish nucleolar RNA association from cytoplasmic Hsp70-partner activity. GO:0042273 ribosomal large subunit biogenesis is attached to the latter core based on the combined partner-association, PA2G4 traffic/retention and rescue evidence. The 45S-association assay alone does not identify a large-subunit-specific RNA step.
 
 ## Human mechanistic evidence
 
@@ -39,7 +39,7 @@ The [HPA DNAJC21 record](https://www.proteinatlas.org/ENSG00000168724-DNAJC21/su
 
 [Qiu et al., 2006, PMID:16952052](https://pmc.ncbi.nlm.nih.gov/articles/PMC11136209/) is the correct DnaJ/Hsp40 family review and explicitly names DnaJC21 in the accessible abstract. The protected cache is abstract-only. Europe PMC XML retrieval failed; the PMC HTML is abstract-only and PDF requests returned an interstitial; the publisher PDF route returned an abstract landing page. The target-specific full article was therefore **not read**.
 
-The historical NAS ribosome and protein-folding assertions are UNDECIDED. Later assembly evidence does not settle every possible meaning of the original ribosome claim. The folding term includes assistance with polypeptide or multisubunit assembly, so an autonomous-foldase requirement would be incorrect. These are source-access uncertainties, not claims that the paper lacks relevant target experiments or that DNAJC21 cannot participate in folding.
+The historical NAS ribosome location remains UNDECIDED: the later gradient blots follow PA2G4 and RPL7, not DNAJC21, and neither precursor-rRNA association nor assembly-factor function alone settles localization in a mature ribosome or free mature subunit. The broad protein-folding assertion is retained as non-core, using the integrated human co-chaperone/assembly evidence and the definition that includes assisted multisubunit assembly. HSPA8 binding alone is insufficient, and no defined folding substrate or direct human ATPase assay is asserted. The original family-review access limitation remains explicit; it does not override the independent positive assembly evidence.
 
 ## Product boundaries and access record
 
@@ -48,3 +48,16 @@ The historical NAS ribosome and protein-folding assertions are UNDECIDED. Later 
 [Chen et al., 2004, PMID:15067379](https://doi.org/10.3892/ijmm.13.5.735) reports a human fetal-brain 531-residue clone in its accessible abstract. The genuine newly fetched cache is abstract-only; the publisher PDF is purchase-gated. UniProt maps this source to isoform 1 but records a residue-509 A/V conflict for AAP81807. Neither identical length nor shared domains identifies all experimental constructs with all present-day products.
 
 The genuine normal fetch and publication caching succeeded. Falcon authentication failed and the configured fallback returned a quota error; no provider report was fabricated. Downloaded publications, UniProt, GOA, PAINT sources and earlier notes remain unchanged. The new notes appendix supersedes earlier unsupported ATPase and genericity wording. Primary full originals and supplementary tables were read only to the scopes stated above; no original figure pixels or unaccessed supplementary experiments are claimed.
+
+## Reproduce the source extracts
+
+The [source extract](DNAJC21-bioinformatics/source-extracts.json) contains literal data, not a second biological opinion: the four original workbooks' target rows and headers, eight selected MITAB records, three target/donor PAINT paths plus the positive IBD, HPA location/reliability fields, and the InterPro domain match. Workbook row numbers are one-based Excel rows. MITAB `source_line` is one-based; its field arrays retain the complete original records, including expansion, negative and feature fields. These data support the precise claims above without implying full-length constructs, orthogonal validation, or current-isoform mapping.
+
+The [source manifest](DNAJC21-bioinformatics/source-manifest.json) records each original URL, capture time, byte count and SHA-256. The [reproduction script](DNAJC21-bioinformatics/reproduce.py) accepts either public downloads or a JSON map from source filenames to supplied saved raw paths. It computes the extracts and rejects changed input hashes; it does not hardcode measurements or require credentials. Example from the bioinformatics directory:
+
+```sh
+uv run reproduce.py --input-map /path/to/saved-paths.json --check source-extracts.json
+uv run reproduce.py --download /tmp/dnajc21-source-inputs --check source-extracts.json
+```
+
+Public APIs can change. A changed download fails the exact historical check and must not silently replace the preserved measurement. The supplied-snapshot mode was actually run successfully against all nine saved originals. Once the declared xlrd dependency is installed, the supplied-snapshot mode requires only those local files and makes no network request. This guide remains a locator and access record, not independent evidence in the YAML's `supported_by` lists.
