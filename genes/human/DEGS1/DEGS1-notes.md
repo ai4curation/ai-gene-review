@@ -101,3 +101,14 @@ The broad electron-transfer annotation is retained non-core under the current de
 
 
 The four broad catalytic, lipid-metabolic and membrane rows now use MODIFY with their already-supported specific replacements, following the current curation instruction. This changes decision representation without adding a biological assertion: catalytic activity maps to sphingolipid delta-4 desaturase activity, lipid metabolism to ceramide biosynthesis, and the two membrane rows to ER membrane. The final counts are 19 ACCEPT, 15 KEEP_AS_NON_CORE, 5 MODIFY and 1 UNDECIDED across the same 40 sources.
+
+
+## Quotation follow-up and current decisions — 2026-10-17
+
+This dated entry supersedes the earlier evidence-reassessment paragraph that left the ER-face and historical plasma-membrane rows unresolved. Both GO:0098554 rows are ACCEPT, corroborated by the explicit DEGS1 reaction model in Reactome R-HSA-428259; both GO:0005886 rows are KEEP_AS_NON_CORE on contextual localization evidence. Their inaccessible original assays remain unverified. Only the source-specific sphingomyelin annotation from PMID:24209621 remains UNDECIDED. The current total is 19 ACCEPT, 15 KEEP_AS_NON_CORE, 5 MODIFY and 1 UNDECIDED across the same 40 source annotations. Earlier TOO_GENERAL wording has been superseded by MODIFY with the established specific replacements.
+
+Short quotations are placed once where they support the claim directly: the core carries the Reactome ER-face statement, the official UniProt catalytic reaction and the PMID:36951944 MAM-enrichment observation. The electron-transfer row cites the PMID:23143414 cytochrome-b5 coupling statement; the existing positive retinol assay excerpt remains with that paper's retinol row. Other occurrences use reference-only support. Coupling to cytochrome b5 does not itself demonstrate a separate mobile-carrier role, and the accepted non-core interpretation is unchanged. The paper's species and assay limits remain explicit in the review and evidence guide.
+
+The mitochondrial GO:0005739 row relies on the Human Protein Atlas target/antibody ICC/IF record, with GO_REF:0000052 and the official links in the evidence guide. Its former MAM excerpt has moved to the core because ER-contact enrichment does not by itself establish mitochondrial localization. HPA record inspection is not a new microscopy-image analysis.
+
+All existing note paragraphs, including their historical spelling and spacing, are preserved byte for byte. This appendix supplies the current interpretation without rewriting the dated record. Quotation totals for the current review and newly authored guide remain at most 25 words per source; unchanged inherited notes are historical text, not newly repeated quotations. Source caches, source identities, actions, products and core biological assertions are unchanged.
