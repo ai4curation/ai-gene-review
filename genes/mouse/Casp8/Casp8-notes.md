@@ -88,3 +88,9 @@ annotation-reviewer sidecar for a systematic pass over mouse-specific GO rows.
   - `GO:0005123` death receptor binding and `GO:0044297` cell body (rat-donor ISO)
     REMOVE -> UNDECIDED, matching human CASP8; donor assays not traced.
 - No human CASP8 edits: no donor-side row was clearly wrong.
+- PR #5079 review follow-up: after demoting GO:0006915 apoptotic process,
+  GO:0097190 apoptotic signaling pathway and GO:0006508 proteolysis to
+  KEEP_AS_NON_CORE (strictly-entailed broad parents of accepted descendants),
+  these three parents now *intentionally* differ from human CASP8, which still
+  has them ACCEPT. This is a new, deliberate mouse/human divergence: human CASP8
+  is DRAFT and should be demoted the same way when it leaves DRAFT.
