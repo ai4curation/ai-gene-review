@@ -2988,18 +2988,17 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**437 of 2,876 genes are complete; 2,439 remain.**
-CYP7B1 is the verified addition since checkpoint 436.
-[Checkpoint 437](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-437-2026-10-17-085831-utc)
+**438 of 2,876 genes are complete; 2,438 remain.**
+D2HGDH is the verified addition since checkpoint 437.
+[Checkpoint 438](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-438-2026-10-17-092948-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`66f848da3650`](https://github.com/ai4curation/ai-gene-review/commit/66f848da36501873b7f42e8edff5226bdff2702a),
-merged at 2026-10-17 08:58:31 UTC.
+cutoff is [`9db646fd4209`](https://github.com/ai4curation/ai-gene-review/commit/9db646fd420946e2c8a9f325be9cd5b62b2c3d4c),
+merged at 2026-10-17 09:29:48 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-At incorporated main [`9db646fd4209`](https://github.com/ai4curation/ai-gene-review/commit/9db646fd420946e2c8a9f325be9cd5b62b2c3d4c),
-7,861 reviews are available, including 3,002 human reviews. D2HGDH is newly
-available and remains unchecked pending completion verification. CYP7B1 updates
-an existing review and adds no review inventory item.
+At that incorporated main commit, 7,861 reviews are available, including 3,002
+human reviews. D2HGDH's new review was already included in checkpoint 437's
+availability count; this update adds its verified completion credit.
 Review availability alone does not establish completion. Earlier checkpoints,
 queue records and histories remain preserved. Pending gene reviews remain
 unchecked until their approvals, merged files and actual-main validation are
@@ -3563,7 +3562,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CYP2U1** — HGNC:20582; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e2d550d2-5653-45dc-a8a3-2dccf4bb49f6-2023-01-16T020000.000Z) (MONDO:0019064; AR; Definitive).
 - [x] **CYP4V2** — HGNC:23198; [Bietti crystalline corneoretinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_da577a4b-5c65-43fa-9a03-b275eaacb6eb-2021-04-01T160000.000Z) (MONDO:0008865; AR; Definitive).
 - [x] **CYP7B1** — HGNC:2652; [CYP7B1-related disorder of oxysterol accumulation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e000ae1c-93a3-4f6b-bdf0-afd04603d407-2025-02-28T170000.000Z) (MONDO:1060107; AR; Definitive).
-- [ ] **D2HGDH** — HGNC:28358; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_90674a82-f43e-4435-88c8-121a57b8ab19-2023-10-02T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **D2HGDH** — HGNC:28358; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_90674a82-f43e-4435-88c8-121a57b8ab19-2023-10-02T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **DAG1** — HGNC:2666; [neuromuscular disease caused by qualitative or quantitative defects of alpha-dystroglycan](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_61b73fd7-5578-447b-9482-ea64d62dae1d-2024-08-13T190000.000Z) (MONDO:0018282; AR; Definitive).
 - [ ] **DARS2** — HGNC:25538; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c3fc3cd8-48aa-4e02-8324-b3412fcfa64f-2022-05-04T160000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **DBT** — HGNC:2698; [maple syrup urine disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cfd1ebde-e447-4877-977e-f5b9fe434adc-2018-10-30T160000.000Z) (MONDO:0009563; AR; Definitive).

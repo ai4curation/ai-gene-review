@@ -3955,3 +3955,53 @@ no credit from this update.
 The actual branch inventory contains 7,861 reviews, including 3,002 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,711 missing-review warnings, one fewer than checkpoint 436 because D2HGDH is newly available but remains unchecked; CYP7B1 is now checked. The progress page has no warnings. Counts are 437 checked and 2,439 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T093348Z-codex-4a0537.yaml)
+
+## Completion checkpoint 438 — 2026-10-17 09:29:48 UTC
+
+**438 complete; 2,438 remaining out of 2,876 primary catalogue genes.**
+D2HGDH is the only addition to checkpoint 437. Its approved head
+`50483db1f01e0e791d3a08ef907b39d287813714` in
+[#5052](https://github.com/ai4curation/ai-gene-review/pull/5052) merged as
+[`9db646fd4209`](https://github.com/ai4curation/ai-gene-review/commit/9db646fd420946e2c8a9f325be9cd5b62b2c3d4c).
+All 17 approved file modes, types and blobs match the merge, and all 17 paths
+are actual parent-to-merge changes. The separate protection set contains 41
+positions: 13 machine source files, 27 other context files and one prior PR
+history record. All remain exact. These counts describe distinct sets. The
+historical GOA snapshot is preserved byte for byte, and both approved curation
+histories match the merge. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5052#pullrequestreview-5547556150)
+and [final discussion](https://github.com/ai4curation/ai-gene-review/pull/5052#issuecomment-6215129827)
+cover that exact head.
+
+The separate actual-main push [run 39021341700](https://github.com/ai4curation/ai-gene-review/actions/runs/39021341700)
+and [test job 117363611688](https://github.com/ai4curation/ai-gene-review/actions/runs/39021341700/job/117363611688)
+completed successfully at 2026-10-17T09:36:40Z. Scoped D2HGDH validation passed
+with zero gene advisories. All 12,024 history records were valid, all 42 history
+tests passed, and all 695 family files validated. The full test suite was skipped
+on the main push. The separate successful
+[merge-group run 39019362379](https://github.com/ai4curation/ai-gene-review/actions/runs/39019362379)
+and [job 117357899592](https://github.com/ai4curation/ai-gene-review/actions/runs/39019362379/job/117357899592)
+provide full-suite evidence for the exact same merge SHA: 3,912 tests passed
+with one skipped and 83 deselected, 252 doctests passed with 37 skipped,
+415 automation tests and 19 JavaScript tests passed. The all-gene schema,
+12 valid/invalid examples, mypy and lint checks also passed. The standalone
+changed-source-evidence step was skipped; it is not reported as passed.
+These remain distinct validation events. The review retains COMPLETE status
+and two UNDECIDED negated source assertions; project completion means the review
+was finished, approved and merged, not that every scientific uncertainty was
+resolved. The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 86 earlier completion updates, the complete
+preceding progress text and 176 earlier project history records. The catalogue
+changes only D2HGDH from unchecked to checked. Update 87 is appended; earlier
+queue values and literal UTF-8 formatting are unchanged. Review availability is
+unchanged from checkpoint 437: 7,861 review files, including 3,002 human reviews,
+against incorporated main 9db646fd420946e2c8a9f325be9cd5b62b2c3d4c. D2HGDH
+added one review at that merge; checkpoint 437 already recorded its availability
+without credit. This update supplies the verified completion credit without
+counting that inventory addition again. Other available and pending reviews
+receive no credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,861 reviews, including 3,002 human reviews. The catalogue has 1,711 missing-review warnings and the progress page has no warnings, unchanged from checkpoint 437. Counts are 438 checked and 2,438 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T095628Z-codex-07f7ee.yaml)
