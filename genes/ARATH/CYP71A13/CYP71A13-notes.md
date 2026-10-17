@@ -60,3 +60,22 @@ CYP71A12, CYP71A13 and CYP71B15 fusions colocalizing with the ER lumenal marker 
 the catalytic centre facing the cytosol. The ER lumen IDA was therefore changed from UNDECIDED to
 MODIFY -> GO:0005789 endoplasmic reticulum membrane: the organelle call is sound, the lumen call
 over-reads a confocal colocalization.
+
+## 2026-10-09: combined with independent review
+
+Reconciled with an independent review (PR 4451; all 24 GOA rows matched one-to-one, no GOA drift, no NEW rows in either).
+
+Decisions changed relative to the merged review:
+- GO:1902494 catalytic complex (NAS, PMID:31511315): ACCEPT -> KEEP_AS_NON_CORE, and `in_complex` dropped from core_functions. The metabolon association is real, but it is a dynamic, pathogen-induced assembly; CYP71A13 is active alone with reductase [PMID:24151049]. This matches the CYP71A12, CYP71B15 and CYP79B2 reviews.
+
+Decisions kept from the merged review where the two differed:
+- GO:0005788 ER lumen IDA (PMID:33831160 -> PMID:31511315): kept MODIFY -> GO:0005789 ER membrane. The independent review used UNDECIDED because it could not read Mucha 2019. The merged review's MODIFY rests on a later full-text reading of PMC6881122 (RFP-HDEL colocalization, Suppl. Fig. 4; the text says P450 catalytic centres face the cytosol), recorded in the 2026-10-02 section above. The sibling CYP71A12 review does the same. On 2026-10-09 the PubMed full-text tool returned the abstract only, so the full text was not re-read.
+- GO:0009682 ISR (IBA and IMP): kept MARK_AS_OVER_ANNOTATED (the independent review used KEEP_AS_NON_CORE). QuickGO definition checked 2026-10-09: "...systemic resistance to disease that does not depend upon salicylic acid signaling". PMID:23073694 reports that the SS101-induced resistance is SA-dependent.
+- GO:0016020 membrane (IEA, NAS): kept ACCEPT (the independent review used MODIFY -> ER membrane). The ER membrane term is already supplied by the ER lumen MODIFY.
+- GO:0004497 monooxygenase (ACCEPT vs non-core), GO:0005506 iron ion binding (non-core vs over-annotated), GO:0020037 heme binding (non-core vs ACCEPT): kept the merged decisions. Both versions are defensible, and the sibling reviews are themselves mixed. Added the 18O2-incorporation quote [PMID:24151049] to the monooxygenase row.
+
+Added from the independent review:
+- PMID:26352477 (Rajniak 2015, full text cached): cyp71A13 mutants are more susceptible to Pst ("Notably, the adult leaves and seedlings of the camalexin pathway mutants cyp71A13 and pad3 are also more susceptible to Pst infection compared to WT"). Added as support on the defense response to bacterium IMP row. The same paper shows 4-OH-ICN is made by CYP71A12, not CYP71A13.
+- A suggested question on CYP71A12 compensation per tissue, and a kinetic product-partitioning experiment.
+- Both reviews independently raised the missing GO term for the cyanohydrin/dehydro-IAN-forming activity [PMID:24151049]. It is kept as a single suggested question.
+- The independent review's deep-research quotes cited a falcon file that is not in the repo. None were carried over.

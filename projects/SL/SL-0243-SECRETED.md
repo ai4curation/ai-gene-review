@@ -8,8 +8,8 @@ autolink_gene_symbols: false
 
 # SL-0243 Secreted → GO:0005576
 
-89 SL-unique annotations reviewed, **13 with a hard issue (15%)** — the largest location
-outside the generic ones. Unlike [SL-0162](SL-0162-MEMBRANE.md) and
+As of 2026-10-05, 107 SL-unique `Secreted` annotations have been reviewed and **16 carry a
+hard issue (15%)**. Unlike [SL-0162](SL-0162-MEMBRANE.md) and
 [SL-0090](SL-0090-CYTOSKELETON.md), granularity is only part of the story here. This location
 exposes a **third failure mode**, and it is the one with the clearest fix.
 
