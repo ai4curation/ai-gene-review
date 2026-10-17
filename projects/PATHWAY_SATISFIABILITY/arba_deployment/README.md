@@ -59,9 +59,9 @@ Share of rows the gene review kept (ACCEPT or KEEP_AS_NON_CORE) or rejected
 | ENTAILED | exact | 220 | 93% | 4% |
 | ENTAILED | ancestor of concept | 655 | 62% | 19% |
 | MODULE_INCOMPLETE | exact | 26 | 92% | 4% |
-| MODULE_INCOMPLETE | ancestor of concept | 56 | 77% | 7% |
+| MODULE_INCOMPLETE | ancestor of concept | 55 | 78% | 5% |
 | NOT_ENTAILED | exact | 119 | 80% | 10% |
-| NOT_ENTAILED | ancestor of concept | 541 | 59% | 27% |
+| NOT_ENTAILED | ancestor of concept | 542 | 59% | 27% |
 
 What the numbers say:
 
@@ -110,7 +110,10 @@ rather than being asserted without stated grounds.
 - Taxon scope comes from each module's `context.taxa`. A module that declares
   no taxa is scored for every organism, so a lineage-specific module without
   taxa can be matched across kingdoms; this affects ENTAILED and NOT_ENTAILED as
-  well as MODULE_INCOMPLETE. A module that declares taxa only as free text (no
+  well as MODULE_INCOMPLETE. Before the `dicty_*` and `pqq_biosynthesis` modules
+  were given taxa, zebrafish shha was ENTAILED for regulation of developmental
+  process solely by the *Dictyostelium* counting-factor module, and human
+  CYP21A2 was scored against bacterial PQQ biosynthesis. A module that declares taxa only as free text (no
   NCBITaxon id) is excluded, and RESULTS.md lists those modules; grounding their
   taxa would bring them back.
 - The organism-level oracle is stricter than the gene-level test: it asks

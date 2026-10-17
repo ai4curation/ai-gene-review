@@ -112,7 +112,8 @@ def load_rules() -> list[Rule]:
         for term in terms:
             rules.append(Rule(raw["uniRuleId"], term, sets))
     ids = [r.id for r in rules]
-    assert len(ids) == len(set(ids)), "a rule asserts several GO terms; results are keyed by rule id"
+    if len(ids) != len(set(ids)):
+        raise ValueError("a rule asserts several GO terms; results are keyed by rule id")
     return rules
 
 
