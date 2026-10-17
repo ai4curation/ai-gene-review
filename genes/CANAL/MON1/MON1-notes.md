@@ -34,12 +34,12 @@ interface, has highest activity on membranes" [PMID:24413168].
 - `GO:0035658 Mon1-Ccz1 complex` and `GO:0005085 guanyl-nucleotide exchange
   factor activity`: ACCEPT. These trace to broader opisthokont PAINT nodes and
   match the conserved complex and contributed Rab7/Ypt7 GEF function.
-- `GO:0005774 vacuolar membrane`: MODIFY to fungal-type vacuole membrane because
-  it is true but less specific than the fungal-specific IBA in the same review.
-- `GO:0016192 vesicle-mediated transport`: MODIFY to the GOA-supported
-  `GO:0006623 protein targeting to vacuole`, rather than retain the generic
-  InterPro longin-domain process.
+- `GO:0005774 vacuolar membrane`: TOO_GENERAL because it is true but less
+  specific than the fungal-type vacuole membrane IBA in the same review.
+- `GO:0016192 vesicle-mediated transport`: MODIFY to `GO:0032511 late endosome
+  to vacuole transport via multivesicular body sorting pathway`, rather than
+  retain the generic InterPro longin-domain process.
 - `GO:0032585 multivesicular body membrane`: ACCEPT as a conserved prevacuolar
   endosome location.
-- CGD ND rows on `molecular_function` and `cellular_component`: keep only as
-  uninformative root placeholders; they do not change the biological summary.
+- CGD ND rows on `molecular_function` and `cellular_component`: REMOVE as stale
+  root placeholders because specific MF and CC assertions now exist for MON1.
