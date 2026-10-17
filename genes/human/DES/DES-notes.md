@@ -30,3 +30,10 @@ Normal skeletal-muscle MTM1–desmin colocalization at the sarcolemma is reporte
 Binding to an established partner class does not mean that DES performs or regulates that partner's activity. The validated binary pairs and their tested constructs remain positive evidence with native-context limits (PMID:25416956; PMID:32296183). The DUX4 pull-down supports a DNA-binding transcription-factor partner, not a DES transcriptional mechanism (PMID:26816005). The structured source-evidence file supplies exact pair links, public original locators and bounded quotations. Original-only passages are distinguished from abstract-only caches.
 
 Mitochondrial positioning remains an explicit mechanistic question: perturbing the MTM1–desmin connection changes the filament system and mitochondrial dynamics, but physical tethering should be separated from secondary architectural or metabolic effects (PMID:21135508). No new process annotation is proposed.
+
+
+## 2026-10-17 sarcolemma consistency follow-up
+
+All three GO:0042383 annotations now ACCEPT the established gene-level peripheral sarcolemmal location, consistent with the structural core. The PMID:25394388 row retains its human R350P biopsy, mutation-specific antibody and subsarcolemmal-aggregate scope; it is not recast as normal membrane-insertion evidence. Independently recovered PMID:21135508 supports normal skeletal-muscle localization, with its abstract-only cache and mouse/human figure distinctions preserved in the source evidence.
+
+The evidence guide now links the structured source-assessment table instead of duplicating it, removes the prior round’s changelog and avoids undated live-database record counts. The structured sarcolemma interpretation is aligned with the gene-level action. All 108 source dictionaries, partner-class refinements, core terms, product scope and existing quotations are unchanged. Counts are 24 ACCEPT, 39 KEEP_AS_NON_CORE and 45 MODIFY; no NEW annotation is added.
