@@ -29,3 +29,16 @@ The [source evidence guide](DCLRE1C-source-evidence.yaml) provides exact lineage
 ## Annotation scope
 
 The supported LIG4 and PRKDC associations are refined by the demonstrated enzyme classes, without assigning either partner’s catalysis to Artemis. The [ClinGen project instruction in main](https://github.com/ai4curation/ai-gene-review/blob/a87ae56867/projects/CLINGEN_MENDELIAN.md#L2974-L2978) permits supported non-core generic binding when a narrower class is not established; uncertainty still requires source-specific assessment. Here all six existing generic-binding assertions have evidence-backed class refinements. The interstrand-cross-link assertion remains unresolved on the actual human and chicken experiments, independently of whether the paper bodies were accessible.
+
+
+## 2026-10-17 PR review follow-up
+
+The three required changes in [review 5556788610](https://github.com/ai4curation/ai-gene-review/pull/5083#pullrequestreview-5556788610) and the suggested qualifier correction are applied without altering the 31 imported source assertions, four products, core or references.
+
+The inherited GO:0035312 DNA-exonuclease assertion is now TOO_GENERAL: GO:0045145, already the supported MODIFY replacement on the GO:0008409 row, directly entails it through an is_a edge confirmed in [QuickGO](https://www.ebi.ac.uk/QuickGO/term/GO:0045145). This aligns the action with the existing substrate-specific evidence; it does not dispute the PAINT placement, the measured weak activity, or the unresolved physiological contribution.
+
+GO:0003684 damaged DNA binding is retained as non-core because it is a broad inherited recognition descriptor distinct from the established catalytic end-processing core. The exact ancestral PAINT placement, experimentally grounded PSO2 source and separately inspected target structural contact remain valid evidence. The action change does not reject the inference based on donor count or lack of a direct assay in the donor paper.
+
+For the PMID:33961781 PRKDC pair, the generic AP-MS methods supporting_text is removed while its reference identifier, class-specific refinement and complete literal-pair reason remain unchanged. The source guide already records the exact interaction accession, publication, host, bait feature and sequence-identity checks; the generic methods sentence was not pair-level evidence. No new quote or source-cache change is needed.
+
+The existing NEW V(D)J recombination annotation receives qualifier involved_in. This records its intended process relation and does not create another annotation or change the participation evidence. Other optional suggestions are kept separate from these accepted corrections.
