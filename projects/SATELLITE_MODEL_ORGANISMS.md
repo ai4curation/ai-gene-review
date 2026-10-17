@@ -1,7 +1,7 @@
 ---
 title: "Satellite Model Organisms"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-05
+last_reviewed: 2026-10-16
 tags: [BIOLOGY_DOMAIN]
 species: [CAEBR, PRIPA]
 genes: [drd-5, tra-1, tra-2, fem-3, she-1, cep-1, trr-1, kin-1, peb-1, ubl-1, oaz]
@@ -22,10 +22,11 @@ reviewed them to see whether the comparative inference holds up. We reviewed
 tra-2, fem-3 and she-1, and five other protein-level entries) and oaz, the only
 Swiss-Prot entry for *P. pacificus*. All 11 have review decisions with no
 PENDING or UNDECIDED rows. They cover 115 existing annotation rows (52 ACCEPT,
-43 KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 6 MODIFY, 3 REMOVE) and propose
-4 NEW terms. Remaining follow-up is to tighten support on several de-novo
-sex-determination calls ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258))
-and decide whether to add the TrEMBL-only *P. pacificus* plasticity genes such
+43 KEEP_AS_NON_CORE, 8 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 5 REMOVE) and propose
+2 NEW terms. Support for the de-novo sex-determination calls was tightened in
+[#4258](https://github.com/ai4curation/ai-gene-review/issues/4258): the fem-3
+substrate-adaptor proposal was withdrawn, and she-1's SCF adaptor call is now
+explicitly provisional, with no SCF complex id asserted. Remaining follow-up is to decide whether to add the TrEMBL-only *P. pacificus* plasticity genes such
 as eud-1 ([#4257](https://github.com/ai4curation/ai-gene-review/issues/4257)).
 
 ## Overview
@@ -86,8 +87,11 @@ may be added as gene reviews accrue.
     experimental annotations).
   - [x] **she-1** (`A8XDR5`) — F-box "spermless hermaphrodites" protein, a
     *C. briggsae*-lineage-specific gene required for hermaphrodite spermatogenesis;
-    **no GO annotations yet**. The review drafts de-novo SCF/adaptor core
-    functions, pending full-text support cleanup
+    **no GO annotations yet**. Its germline sex-determination core function is
+    quoted from the verified primary abstract (PMID:19836240: she-1 acts upstream of
+    tra-2). The SCF substrate-adaptor call rests only on the two F-box domains and
+    is marked provisional, because the full text is not openly cached and the
+    abstract reports no SCF partner or substrate
     ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)).
 - **`CAEBR` other protein-level (PE=1) genes** — the remaining *C. briggsae*
   entries with experimental protein-level evidence; reviewed:
@@ -110,8 +114,19 @@ may be added as gene reviews accrue.
 - **IN_PROGRESS.** All 11 seeded genes are reviewed: *C. briggsae* `drd-5`, the
   sex-determination set (`tra-1`, `tra-2`, `fem-3`, `she-1`), five other PE=1
   genes, and *P. pacificus* `oaz`.
-- De-novo support cleanup remains for `she-1`, `fem-3`, and `tra-2`
-  ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)).
+- De-novo support cleanup for `she-1`, `fem-3`, and `tra-2` is done
+  ([#4258](https://github.com/ai4curation/ai-gene-review/issues/4258)). This
+  changed support and decisions on already-reviewed rows; no rows are `PENDING`.
+  For `tra-2`, the proposed adaptor activity was replaced by protein
+  sequestering activity (`GO:0140311`), which fits TRA-2 repressing FEM-3 by binding
+  it. The FEM-3 protein-binding row is MODIFY to that term with exact quotes, and
+  the redundant NEW row was dropped. The TRA-1 protein-binding row is REMOVE,
+  because no sourced MF says what that binding does.
+  `fem-3`'s NEW `GO:1990756` substrate-adaptor row was withdrawn, because the
+  primary C. elegans study (PMID:17609115) assigns substrate recognition to
+  FEM-1 and a cofactor role to FEM-3. FEM-3 is now modelled as contributing to
+  the CRL2-FEM ligase. `she-1`'s primary paper was verified, and its SCF adaptor
+  call is kept as explicitly provisional, without an SCF complex id.
 - At the 2026-06 UniProt snapshot used for this page, *C. briggsae* had 582
   reviewed entries; the protein-level (PE=1)
   experimentally-characterized ones cluster on sex determination, which is why
