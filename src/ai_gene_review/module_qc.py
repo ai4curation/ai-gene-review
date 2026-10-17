@@ -112,14 +112,23 @@ def iter_nodes(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def is_leaf_node(node: dict[str, Any]) -> bool:
-    """Return True when a node has no child parts and no variant sets.
+    """Return True when a node has no child parts, no variant sets and no module_ref.
+
+    A ``module_ref`` node is not terminal: the referenced module supplies its
+    content (and its grounding).
 
     >>> is_leaf_node({"id": "a"})
     True
     >>> is_leaf_node({"id": "a", "parts": [{"node": {"id": "b"}}]})
     False
+    >>> is_leaf_node({"id": "a", "module_ref": "mitophagy"})
+    False
     """
-    return not as_list(node.get("parts")) and not as_list(node.get("variant_sets"))
+    return (
+        not as_list(node.get("parts"))
+        and not as_list(node.get("variant_sets"))
+        and not node.get("module_ref")
+    )
 
 
 def module_scope(data: dict[str, Any]) -> Optional[str]:
@@ -359,7 +368,7 @@ def resolve_template_node(
     template_ref: str,
     modules_dir: Path = DEFAULT_MODULES_DIR,
 ) -> Optional[dict[str, Any]]:
-    """Resolve a conformance ``template`` reference to its module node.
+    """Resolve a conformance ``template`` (or a ``module_ref``) to its module node.
 
     The reference is ``<stem>`` (the module file ``<stem>.yaml``, whose root
     ``module`` node is the motif) or ``<stem>#<node_id>`` to select a nested
@@ -509,6 +518,82 @@ def conformance_violations(
                         node, conformance, Path(modules_dir), subclass_of
                     )
                 )
+    return violations
+
+
+# A reference node is a pure stand-in for the module it names.
+_MODULE_REF_EXCLUSIVE_SLOTS = ("annotons", "parts", "variant_sets")
+
+
+def module_ref_cycle(
+    module_ref: str,
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    chain: tuple[str, ...] = (),
+) -> Optional[list[str]]:
+    """Return the reference chain closing a cycle through ``module_ref``, if any.
+
+    ``chain`` holds the references already being expanded (seed it with the
+    referencing document's own file stem). References that do not resolve are
+    not followed; they are reported against the document that makes them.
+    """
+    if module_ref in chain:
+        return [*chain, module_ref]
+    target = resolve_template_node(module_ref, modules_dir)
+    if target is None:
+        return None
+    for node in iter_nodes({"module": target}):
+        nested = node.get("module_ref")
+        if nested:
+            cycle = module_ref_cycle(str(nested), modules_dir, (*chain, module_ref))
+            if cycle:
+                return cycle
+    return None
+
+
+def module_ref_violations(
+    data: dict[str, Any],
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    self_stem: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    """Return ``module_ref`` problems across a module document.
+
+    Each referencing node must resolve, must not carry its own annotons, parts
+    or variant sets, and must not lead back to itself through other
+    references. ``self_stem`` (the document's file stem) lets a reference back
+    to this document be recognised as a cycle.
+
+    >>> module_ref_violations({"module": {"id": "u", "parts": [
+    ...     {"node": {"id": "x", "module_ref": "no_such_module"}}]}})[0]["message"]
+    "module_ref 'no_such_module' not found"
+    """
+    violations: list[dict[str, Any]] = []
+    for node in iter_nodes(data):
+        module_ref = node.get("module_ref")
+        if not module_ref:
+            continue
+        module_ref = str(module_ref)
+
+        def violation(message: str) -> dict[str, Any]:
+            return {
+                "node_id": node.get("id"),
+                "module_ref": module_ref,
+                "message": message,
+                "severity": "error",
+            }
+
+        for slot in _MODULE_REF_EXCLUSIVE_SLOTS:
+            if as_list(node.get(slot)):
+                violations.append(violation(
+                    f"module_ref node also carries {slot}; a reference node "
+                    "must be a pure stand-in for the referenced module"
+                ))
+        if resolve_template_node(module_ref, Path(modules_dir)) is None:
+            violations.append(violation(f"module_ref '{module_ref}' not found"))
+            continue
+        seed = (self_stem,) if self_stem else ()
+        cycle = module_ref_cycle(module_ref, Path(modules_dir), seed)
+        if cycle:
+            violations.append(violation("module_ref cycle: " + " -> ".join(cycle)))
     return violations
 
 
@@ -1208,6 +1293,9 @@ def collect_module_qc(
         "leaf_nodes_missing_representatives": leaf_nodes_missing_representatives(data),
         "conformance_violations": conformance_violations(
             data, modules_dir=yaml_path.parent
+        ),
+        "module_ref_violations": module_ref_violations(
+            data, modules_dir=yaml_path.parent, self_stem=yaml_path.stem
         ),
         "reaction_chaining": reaction_chaining_findings(data),
         "feedback_loops": feedback_loop_findings(data),

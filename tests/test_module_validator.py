@@ -864,6 +864,42 @@ def test_validate_module_file_flags_bad_conformance(tmp_path):
     )
 
 
+def _umbrella_doc(module_ref: str) -> dict:
+    return {
+        "id": "MODULE:umbrella",
+        "title": "umbrella",
+        "module": {
+            "id": "umbrella",
+            "label": "umbrella",
+            "parts": [{"node": {"id": "stage", "label": "stage", "module_ref": module_ref}}],
+        },
+    }
+
+
+def test_validate_module_file_accepts_resolvable_module_ref(tmp_path):
+    (tmp_path / "leaf.yaml").write_text(
+        yaml.safe_dump({"id": "MODULE:leaf", "title": "leaf",
+                        "module": {"id": "leaf", "label": "leaf"}}),
+        encoding="utf-8",
+    )
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc("leaf")), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not [e for e in result.errors if "module_ref" in e], result.errors
+
+
+@pytest.mark.parametrize(
+    ("module_ref", "message"),
+    [("no_such_module", "not found"), ("umbrella", "cycle: umbrella -> umbrella")],
+)
+def test_validate_module_file_flags_bad_module_ref(tmp_path, module_ref, message):
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc(module_ref)), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not result.is_valid
+    assert any("module_ref [stage" in e and message in e for e in result.errors), result.errors
+
+
 # --------------------------------------------------------------------------- #
 # supporting_text snippet validation
 # --------------------------------------------------------------------------- #
