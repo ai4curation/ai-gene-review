@@ -21,10 +21,13 @@ import pytest
 import yaml
 
 from ai_gene_review.datamodel.gene_review_model import ModuleNode
+from ai_gene_review.module_boolean import module_to_boolean
 from ai_gene_review.module_logic import (
     compile_module,
     compile_module_file,
     core_atoms,
+    count_routes,
+    enumerate_routes,
     is_satisfied,
     step_id,
     unsatisfied_steps,
@@ -33,6 +36,7 @@ from ai_gene_review.module_qc import (
     leaf_nodes_missing_representatives,
     module_ref_violations,
 )
+from ai_gene_review.render_modules import collect_module_ref_hrefs
 
 
 def _annoton(aid: str, symbol: str) -> dict:
@@ -155,3 +159,61 @@ def test_cycle_violation_names_the_cycle(modules_dir: Path):
 
 def test_reference_node_is_not_an_ungrounded_leaf(modules_dir: Path):
     assert leaf_nodes_missing_representatives(_umbrella()) == []
+
+
+def test_diamond_reference_routes_have_no_duplicate_atoms(modules_dir: Path):
+    """Two steps referencing one module: each route lists a shared atom once."""
+    doc = {"module": {"id": "u", "parts": [
+        {"node": {"id": "first", "module_ref": "fission"}},
+        {"node": {"id": "second", "module_ref": "fission"}},
+    ]}}
+    circuit = compile_module(doc, modules_dir=modules_dir)
+    routes = enumerate_routes(circuit)
+    assert all(len(r) == len({a.node_id for a in r}) for r in routes)
+    # Independent copies still enumerate their branches independently
+    # (documented limitation), so mixed-branch routes appear.
+    assert sorted(sorted(a.node_id for a in r) for r in routes) == [
+        ["fission#drp"], ["fission#drp", "fission#ftz"],
+        ["fission#drp", "fission#ftz"], ["fission#ftz"],
+    ]
+
+
+def test_route_count_guard(modules_dir: Path):
+    doc = {"module": {"id": "u", "parts": [
+        {"node": {"id": f"s{i}", "module_ref": "fission"}} for i in range(3)
+    ]}}
+    circuit = compile_module(doc, modules_dir=modules_dir)
+    assert count_routes(circuit) == 8
+    assert len(enumerate_routes(circuit)) == 8
+    with pytest.raises(ValueError, match="8 routes"):
+        enumerate_routes(circuit, max_routes=4)
+
+
+def test_core_atoms_does_not_enumerate_routes(modules_dir: Path):
+    """core_atoms stays exact for a circuit far past the route-count guard."""
+    doc = {"module": {"id": "u", "parts": [
+        {"node": {"id": f"s{i}", "module_ref": "fission"}} for i in range(20)
+    ] + [{"node": {"id": "imp", "module_ref": "import"}}]}}
+    circuit = compile_module(doc, modules_dir=modules_dir)
+    assert count_routes(circuit) == 2 ** 20
+    assert sorted(a.node_id for a in core_atoms(circuit)) == ["import#rec", "import#tom"]
+
+
+def test_render_href_resolves_from_the_referencing_file(tmp_path: Path):
+    """A module in a subdirectory links to its sibling, as the engine resolves it."""
+    sub = tmp_path / "modules" / "experimental"
+    sub.mkdir(parents=True)
+    _write(sub, "sibling", {"id": "sibling", "annotons": [_annoton("a", "A")]})
+    umbrella = _write(sub, "umbrella", {"id": "umbrella", "parts": [
+        {"node": {"id": "x", "module_ref": "sibling#a_node"}}]})
+    doc = yaml.safe_load(umbrella.read_text())
+    out = tmp_path / "pages" / "modules" / "experimental" / "umbrella.html"
+    hrefs = collect_module_ref_hrefs(
+        doc, umbrella, out, tmp_path / "pages" / "modules", tmp_path / "modules")
+    assert hrefs == {"sibling#a_node": "sibling.html#node-a_node"}
+
+
+def test_boolean_export_warns_on_module_ref():
+    doc = {"module": {"id": "u", "parts": [{"node": {"id": "x", "module_ref": "fission"}}]}}
+    with pytest.warns(UserWarning, match="module_ref"):
+        module_to_boolean(doc)
