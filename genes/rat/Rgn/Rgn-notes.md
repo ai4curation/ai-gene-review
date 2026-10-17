@@ -49,3 +49,24 @@ Regucalcin is found in:
 ## Clinical Significance
 
 The protein is also known as Senescence Marker Protein 30 (SMP30) because its expression decreases with aging. Given its role in vitamin C synthesis and multiple regulatory functions, reduced expression with age may contribute to age-related dysfunction in calcium homeostasis, oxidative stress management, and metabolic regulation.
+## Re-review 2026-10-10
+
+GOA refresh changes (large turnover):
+- 14 new rows seeded: gluconolactonase activity ISO (mouse MGI:108024; human Q15493) and ISS (mouse Q64374); calcium ion binding ISO (human); nucleus IBA and ISO (mouse); cytoplasm IBA, IEA (GO_REF:0000044) and ISO (mouse); zinc ion binding ISO (human); L-ascorbic acid biosynthetic process ISO (mouse); regulation of calcium-mediated signaling IBA (PTN004208435); GO:0017148 negative regulation of translation IDA (PMID:2280766); GO:0045732 positive regulation of protein catabolic process IDA (PMID:1513338).
+- 14 rows retired, mostly older ISO (GO_REF:0000096), IEA (GO_REF:0000043/0000120) and two IBA rows, plus the IDA rows for GO:0010558 (now GO:0017148) and obsolete GO:1903052 (now GO:0045732). Retired rows kept with a note.
+
+Decisions:
+- Validator error "action=NEW exists in GOA: GO:0017148": the NEW row was folded into the seeded IDA row (ACCEPT) and deleted [PMID:2280766 "the protein caused a remarkable decrease in hepatic protein synthesis"]. Caveat recorded: single-lab in vitro addition of purified protein; direct versus Ca2+-mediated mechanism unresolved.
+- NEW GO:0005739 mitochondrion withdrawn: the only support was activation of mitochondrial Ca2+-ATPase by added regucalcin [PMID:16786169 "Regucalcin increases Ca2+-ATPase activity in the heart mitochondria of normal and regucalcin transgenic rats."], which does not show localization. Moved to suggested_questions; mitochondrion removed from the Ca2+-ATPase core function's locations.
+- NEW GO:0004857 enzyme inhibitor activity withdrawn: it is a descendant of GO:0030234 enzyme regulator activity, which the gene already carries, and the mechanism is unresolved. Moved to suggested_questions.
+- GO:0030234 enzyme regulator activity (IEA): MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (generic, not overreaching; regucalcin is reported to activate Ca2+-ATPases and suppress other enzymes).
+- GO:0045732 (IDA, PMID:1513338): KEEP_AS_NON_CORE (in vitro proteinase activation).
+- All other PENDING rows ACCEPT, consistent with existing rows for the same terms.
+- Added supported_by (UniProt CC lines or deep-research text) to 7 live rows and the retired rows that lacked it.
+- core_functions: six entries became five. The two entries that used the withdrawn enzyme inhibitor activity (translation suppression; DNA/RNA synthesis suppression) were merged into one entry with no molecular_function and with verbatim quotes in place of the previous paraphrases.
+
+Open questions:
+- Is regucalcin mitochondrial? Does it inhibit enzymes directly?
+- Many regulatory annotations (translation, DNA/RNA synthesis, apoptosis, NO synthesis) rest on one laboratory's in vitro and cell-line work; independent confirmation would strengthen them.
+
+Review follow-up 2026-10-17: In response to PR #4622 review: (1) GO:0007283 and GO:1901318 (PMID:23615721) no longer quote the author list; they now quote [PMID:23615721 "Tg-RGN animals displayed an altered morphology of epididymis and lower sperm counts and motility"] and "suggest a role for RGN in sperm maturation". (2) The calcium ion binding core function now cites the UniProt cofactor line instead of the PMID:699201 title. (3) Title-only quotes on 13 rows were replaced by evidential abstract sentences (PMID:16786169, 2280766, 12239582, 16817230, 8794449, 16167335, 7759556, 9546611); PMID:699201 (no abstract) and the PMID:11129957 row (where the title documents the mismatch) keep their titles. (4) GO:0032781 positive regulation of ATP-dependent activity moved MODIFY (to the MF GO:0060590, cross-aspect) -> ACCEPT, and the Ca2+-ATPase core function no longer asserts GO:0060590; the effect is abolished by ruthenium red, lanthanum and digitonin [PMID:16786169 "The effect of regucalcin in increasing mitochondrial Ca2+-ATPase activity was not observed in the presence of ruthenium red"], so direct ATPase regulator activity is unproven and is raised as a suggested question. This makes the KEEP_AS_NON_CORE call on the generic GO:0030234 consistent with the core functions.
