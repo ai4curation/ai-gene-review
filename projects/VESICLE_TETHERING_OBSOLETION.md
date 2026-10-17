@@ -1,16 +1,14 @@
 ---
 title: "Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [OBSOLETION]
 species: [human]
-genes: [TMF1, TRAPPC1, TRAPPC3, TRAPPC4, TRAPPC5, TRAPPC8, TRAPPC11, TRAPPC12, TRAPPC13]
+genes: [TMF1, USO1, TRAPPC1, TRAPPC3, TRAPPC4, TRAPPC5, TRAPPC8, TRAPPC11, TRAPPC12, TRAPPC13]
 manifest:
   slides:
     - href: VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/4gpN5w7vVbudek27XV5L7C
-      title: Project brief
+      description: Vesicle tethering obsoletion slides
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)
@@ -22,21 +20,18 @@ has obsoleted GO:0099022 *vesicle tethering* and four children because
 tethering is a binding activity, and minted the MF GO:7770062 *vesicle
 membrane tethering activity* in its place; the recommended pattern is
 that MF with a `part_of` link to the transport process it serves. We
-recorded the upstream plan, the InterPro and UniRule mappings already
-removed, and the reviews in this repo that touch the terms. The
-obsoletion has landed: OLS shows GO:0099022 and GO:0099041 obsolete and
-GO:7770062 minted, so the "placeholder", "not yet minted" and "not yet applied" notes
-below are out of date, and the "Impact on this repo" table predates and
-omits the eight TRAPP reviews. Partly done: eight human TRAPP subunit reviews
-(TRAPPC1, 3, 4, 5, 8, 11, 12, 13), written after this page, already
-MODIFY their NAS row on the obsolete GO:0099022 to GO:0006888 *ER to
-Golgi vesicle-mediated transport*. TMF1 is fixed in #3237 (merged): its
-NEW MF row and core MF move from the stand-in GO:0060090 to GO:7770062,
-the obsolete GO:0099041 NEW row and core BP are removed, and the
-"vesicle tethering activity" `proposed_new_terms` entry is dropped now
-that GO has minted it. The same PR moves USO1's docking row to
-GO:7770062. The tether-subunit new reviews (Tier 2 onward) have not
-started.
+recorded the upstream plan, the flagged InterPro and UniRule mappings,
+and the reviews in this repo that touch the terms. The
+obsoletion has landed: the 2026-09-26 audit found GO:0099022 and
+GO:0099041 obsolete and GO:7770062 live. Eight human TRAPP subunit reviews
+(TRAPPC1, 3, 4, 5, 8, 11, 12, 13) already MODIFY their NAS row on the
+obsolete GO:0099022 to GO:0006888 *ER to Golgi vesicle-mediated
+transport*. TMF1 is fixed in PR #3237 (merged): its NEW MF row and core
+MF move from the stand-in GO:0060090 to GO:7770062, the obsolete
+GO:0099041 NEW row and core BP are removed, and the "vesicle tethering
+activity" `proposed_new_terms` entry is dropped now that GO has minted
+it. The same PR moves USO1's docking row to GO:7770062. The
+tether-subunit new reviews (Tier 2 onward) have not started.
 
 This is the tethering step of the vesicle refactor. The docking step is
 tracked in [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
@@ -47,12 +42,10 @@ tracked in [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
 
 ## Overview
 
-A GO obsoletion proposal will retire **`GO:0099022 vesicle tethering` and four
+A GO obsoletion proposal retired **`GO:0099022 vesicle tethering` and four
 children** (BPs), redirecting the biology to a single molecular-function term:
 
-- **GO:7770062 vesicle membrane tethering activity** (proposed MF; placeholder —
-  not yet resolvable in OLS as of 2026-05-25; same state noted in the parallel
-  vesicle-docking tracker).
+- **GO:7770062 vesicle membrane tethering activity**.
 
 The rationale matches the parallel
 [vesicle docking](VESICLE_DOCKING_OBSOLETION.md),
@@ -77,26 +70,30 @@ full tethering→docking→fusion pathway.
 - Annotation tracker: [geneontology/go-annotation#6375](https://github.com/geneontology/go-annotation/issues/6375)
   — *"Review annotations to GO:0099022 vesicle tethering and children"*
 - Ontology tickets (from upstream body):
-  - [geneontology/go-ontology#31868](https://github.com/geneontology/go-ontology/issues/31868)
-  - [geneontology/go-ontology#31871](https://github.com/geneontology/go-ontology/issues/31871)
-  - [geneontology/go-ontology#31872](https://github.com/geneontology/go-ontology/issues/31872)
-  - [geneontology/go-ontology#31881](https://github.com/geneontology/go-ontology/issues/31881)
+    - [geneontology/go-ontology#31868](https://github.com/geneontology/go-ontology/issues/31868)
+    - [geneontology/go-ontology#31871](https://github.com/geneontology/go-ontology/issues/31871)
+    - [geneontology/go-ontology#31872](https://github.com/geneontology/go-ontology/issues/31872)
+    - [geneontology/go-ontology#31881](https://github.com/geneontology/go-ontology/issues/31881)
 - Annotation review spreadsheet (not machine-accessible):
   `https://docs.google.com/spreadsheets/d/1PN2Z6gl1XhUsNHs3eJXpm8ZkQCJYtfPDj3ogLWxgAa8`
+- Local follow-up: [ai4curation/ai-gene-review#646](https://github.com/ai4curation/ai-gene-review/issues/646)
+  — tracks the remaining EXOC4, EXOC6, C17orf75/Njmu-R1, TRIP11, GOLGA5,
+  GORAB and RAB6A review queue
 
 ## Obsoletion plan (per upstream)
 
 | Obsoleted term | ID | Replacement (consider) |
 |---|---|---|
-| vesicle tethering | GO:0099022 | MF: GO:7770062 vesicle membrane tethering activity (placeholder) |
+| vesicle tethering | GO:0099022 | MF: GO:7770062 vesicle membrane tethering activity |
 | synaptic vesicle tethering involved in synaptic vesicle exocytosis | GO:0099069 | MF: GO:7770062 |
 | vesicle tethering involved in exocytosis | GO:0090522 | MF: GO:7770062 |
 | vesicle tethering to endoplasmic reticulum | GO:0099044 | MF: GO:7770062 |
 | vesicle tethering to Golgi | GO:0099041 | MF: GO:7770062 |
 
-OLS check (2026-05-25): all five BP terms are still **active** (not yet
-obsoleted). The replacement MF **GO:7770062** is not yet resolvable in OLS —
-the obsoletion has not landed yet.
+At project creation, all five BP terms were still **active** in OLS on
+2026-05-25 and the replacement MF **GO:7770062** was not yet resolvable. By
+the 2026-09-26 audit, GO:0099022 and GO:0099041 were obsolete and GO:7770062
+had been minted.
 
 ### Affected upstream groups (from issue body, 2026-04-15)
 
@@ -121,31 +118,30 @@ Mappings flagged by upstream for review (InterPro2GO / UniRule):
 | GO:0090522 | UniRule | UniRule:UR001419783 → GO:0090522 |
 | GO:0099041 | InterPro2GO | InterPro:IPR028280 Protein Njmu-R1 → GO:0099041 |
 
-InterPro has already removed the GO:0090522 mappings from IPR007225, IPR039682
-and the UniRule entries (per @sarach06's 2026-04-22 comment); the new GO term
-will be added once minted.
+The pinned local `rules/arba/_interpro2go.txt` still lists all three obsolete
+InterPro2GO mappings above, so recheck InterPro2GO before starting EXOC4,
+EXOC6 or C17orf75 to confirm whether GO:7770062 has been added. Recheck
+UniRule2GO separately for UR000459766 and UR001419783.
 
 ## Impact on this repo
 
-Two genes currently in the repo have annotation-level or core_function-level
-references to the obsoleted terms:
+The first local impact scan found TMF1 and the vesicle-docking gene USO1. The
+later TRAPP reviews added eight more direct GO:0099022 rows:
 
 | Gene | Organism | File | Affected row | Notes |
 |---|---|---|---|---|
 | **TMF1** | human | `genes/human/TMF1/TMF1-ai-review.yaml` | GO:0099041 NEW row; also in `core_functions` and `proposed_new_terms` (GO:0099022 / GO:7770062) | Fixed in #3237 (merged): NEW MF row and core MF GO:0060090 → GO:7770062; GO:0099041 NEW row, core BP and the `proposed_new_terms` entry removed. |
 | **USO1** | human | `genes/human/USO1/USO1-ai-review.yaml` | No direct rows under the 5 obsoleted IDs; its GO:0048211 IBA row is tracked under [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md) (#6379). | That row now MODIFYs to the tethering MF GO:7770062, fixed in #3237 (merged). |
+| **TRAPP subunits** | human | `TRAPPC1`, `TRAPPC3`, `TRAPPC4`, `TRAPPC5`, `TRAPPC8`, `TRAPPC11`, `TRAPPC12`, `TRAPPC13` | GO:0099022 NAS row in each review | All eight already MODIFY the obsolete BP to GO:0006888 *endoplasmic reticulum to Golgi vesicle-mediated transport*. The reviews deliberately do not assert the new MF because direct mammalian TRAPP membrane-tethering evidence remains inconclusive. |
 
-Verified by `grep -r "GO:00990(22\|41\|44\|69)\|GO:0090522" genes/` across
-`-goa.tsv` and `-ai-review.yaml` files.
+A 2026-10-05 audit of the live YAML found TMF1 fixed, USO1 carrying one
+GO:0048211 docking row that now MODIFYs to GO:7770062, and TRAPPC1/3/4/5/8/11/12/13
+each carrying a GO:0099022 NAS row that MODIFYs to GO:0006888.
 
-**TMF1 was the highest-priority follow-up here; fixed in #3237 (merged).** The
-paragraph records the original plan. Its review explicitly cites
-this obsoletion plan and uses GO:0060090 *molecular adaptor activity* as a
-stand-in for the not-yet-minted tether MF (see `TMF1-ai-review.yaml:600-668`).
-Once GO:7770062 lands, TMF1 should be refreshed to (a) update the
-`proposed_new_terms` entry to reference the minted MF, (b) replace or annotate
-the GO:0099041 NAS row, and (c) reconsider whether GO:0060090 is still the
-best stand-in MF for `core_functions`.
+**TMF1 was the highest-priority follow-up here and is fixed in #3237
+(merged).** The review now uses the minted GO:7770062 MF directly. The remaining
+work is new review coverage for Tier 2 and later tether subunits, especially
+EXOC4/EXOC6 and the C17orf75/Njmu-R1 family from the upstream InterPro2GO list.
 
 ## Scope
 
@@ -189,13 +185,12 @@ spreadsheet will name them explicitly.
    Tier 2 candidate in the sibling [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md);
    pick *one* tracker to host the review when it is started.
 3. **EXOC6 / Sec15** (human, UniProt **Q8TAG9**) — exocyst component. Flagged
-   in #6375 via InterPro2GO mapping IPR007225 → GO:0090522.
-4. **NJMU-R1 / RIPPLY3** family — flagged in #6375 via InterPro2GO mapping
-   IPR028280 → GO:0099041. The InterPro family is small and rodent/human-only;
-   pick a representative once UniProt accessions are checked. (Note: confirm
-   the human gene symbol before fetch — the InterPro family name "Protein
-   Njmu-R1" is older; current HGNC symbol is **RIPPLY3** if matched, but the
-   identification needs verification at fetch time.)
+   in #6375 via InterPro2GO mapping IPR007225 → GO:0090522. Also listed as a
+   Tier 2 candidate in the sibling [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md).
+4. **C17orf75 / Njmu-R1** (human, UniProt **Q9HAS0**) — flagged in #6375 via
+   InterPro2GO mapping IPR028280 → GO:0099041. The current human symbol for
+   Protein Njmu-R1 is **C17orf75**, also known as **SRI2**; fetch this gene as
+   `C17orf75`.
 
 ### Tier 3 — canonical golgin / tether complex subunits
 
@@ -216,28 +211,23 @@ the new MF with high-quality experimental anchors.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land.** The replacement MF **GO:7770062** is
-   not yet minted (OLS check 2026-05-25). The cluster of ontology tickets
-   (#31868, #31871, #31872, #31881) is open and shared with the wider
-   tether/docking refactor.
-2. **Refresh `TMF1` first** (Tier 1). It is the only existing review in this
-   repo with a direct annotation to one of the five obsoleted terms, and the
-   review's `proposed_new_terms` block already names this exact obsoletion
-   plan — so a refresh will close the loop cleanly.
-3. **Coordinate with sibling trackers**:
-   - [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md) (#6379) —
-     EXOC4 is a shared Tier 2 candidate; pick one tracker to host the new
-     review when started.
-   - [ER_PM_TETHERING_OBSOLETION](ER_PM_TETHERING_OBSOLETION.md) (#6383),
-     [MITO_ER_TETHERING_OBSOLETION](MITO_ER_TETHERING_OBSOLETION.md) (#6397),
-     [CILIARY_BASAL_BODY_DOCKING_OBSOLETION](CILIARY_BASAL_BODY_DOCKING_OBSOLETION.md) (#6405),
-     [SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md) (#6415) —
-     parallel BP→MF refactors; review-text wording should stay consistent
-     across the cluster.
-4. **Then queue Tier 2** (EXOC4, EXOC6, NJMU-R1/RIPPLY3) as new reviews —
+1. **Tier 1 refreshes are done.** #3237 closed the loop for TMF1 and USO1
+   after GO:7770062 was minted, and the TRAPPC1/3/4/5/8/11/12/13 reviews
+   already carry the correct MODIFY calls for their obsolete GO:0099022 rows.
+2. **Queue Tier 2** (EXOC4, EXOC6, C17orf75/Njmu-R1) as new reviews —
    these are the genes upstream curators will inevitably touch when working
    through the InterPro2GO mapping fix.
-5. **Re-validate each affected review** with
+3. **Coordinate with sibling trackers**:
+    - [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md) (#6379) —
+      EXOC4 and EXOC6 are shared Tier 2 candidates; pick one tracker to host
+      each new review when started.
+    - [ER_PM_TETHERING_OBSOLETION](ER_PM_TETHERING_OBSOLETION.md) (#6383),
+      [MITO_ER_TETHERING_OBSOLETION](MITO_ER_TETHERING_OBSOLETION.md) (#6397),
+      [CILIARY_BASAL_BODY_DOCKING_OBSOLETION](CILIARY_BASAL_BODY_DOCKING_OBSOLETION.md) (#6405),
+      [SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md) (#6415) —
+      parallel BP→MF refactors; review-text wording should stay consistent
+      across the cluster.
+4. **Re-validate each affected review** with
    `just validate <organism> <gene>` after editing.
 
 ## Related obsoletions
@@ -259,14 +249,12 @@ activity" obsoletions. Cross-reference the parallel trackers:
 
 ## Priority
 
-**Medium.** Higher than purely-queueing obsoletion trackers because one
-existing repo review (`TMF1`) explicitly references this obsoletion plan in
-its `proposed_new_terms` and will need a follow-up edit once GO:7770062 is
-minted. Lower than `SYNAPTIC_VESICLE_DOCKING_OBSOLETION` because the affected
-existing-review count is small (1 vs 2+), and TMF1 is likely a clean `MODIFY`
-onto the new MF (TMF1 *is* a Golgi vesicle tether), with no awkward
-regulator-vs-effector judgment calls of the kind that complicate the docking
-trackers.
+**Medium.** The direct in-repo refreshes are done, and the TRAPP rows now
+avoid an unsupported mammalian tethering-MF assertion. The project remains a
+useful queue for EXOC4, EXOC6 and C17orf75/Njmu-R1 because those families are
+named by the upstream InterPro2GO and UniRule cleanup, and later golgin/RAB
+reviews would help populate the new MF with well-supported experimental
+anchors.
 
 ## Status
 
