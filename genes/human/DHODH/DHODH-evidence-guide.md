@@ -1,6 +1,6 @@
 # DHODH source evidence and assay-scope guide
 
-The review retains 23 imported source annotations and three historical proposals. All 23 imported source dictionaries and every historical term/evidence/reference/qualifier are unchanged. The old ferroptosis proposal is retired as an active assertion while its claim is UNDECIDED; the old quinone-binding proposal is retired as replaced by the specific ubiquinone-binding recommendation. These two explicit proposal-state flags do not assert prior GOA retirement. It adds no new annotation row. A single catalytic unit combines quinone-dependent dihydroorotate oxidation, de novo UMP synthesis and mitochondrial inner-membrane location. The official human record is [Q02127](https://www.uniprot.org/uniprotkb/Q02127/entry), 395 residues with no listed alternative products. The targeting segment is not annotated as cleaved; precise topology features carry homology evidence.
+The review retains 23 imported source annotations and the three historical proposal positions. All 23 imported source dictionaries are unchanged. The ferroptosis proposal remains retired UNDECIDED as a genuinely withdrawn, uncertain assertion. The historical quinone-binding proposal is refined in place to active NEW GO:0048039 with direct human substrate evidence; its prior term/evidence/reference is preserved in appended notes and history. No annotation row is added. One catalytic unit combines quinone-dependent dihydroorotate oxidation, de novo UMP and UDP pathway participation, and mitochondrial inner-membrane location. The official human record is [Q02127](https://www.uniprot.org/uniprotkb/Q02127/entry), 395 residues with no listed alternative products. The targeting segment is not annotated as cleaved; precise topology features carry homology evidence.
 
 ## Catalysis, binding and localization
 
@@ -34,7 +34,9 @@ Actual target matches include IPR005719 (39–394), IPR005720 (77–377), IPR001
 
 The GO definitions and typed ancestry were inspected. Cytoplasm includes mitochondria and differs from cytosol; the inner-membrane path reaches mitochondrion and cytoplasm. Specific quinone-dependent oxidation descends from the general dehydrogenase and CH-CH oxidoreductase classes. De novo UMP biosynthesis supplies the specific replacement for broad nucleotide-process assertions.
 
-Historical GO:0004151 is a different hydrolytic reaction. Its mouse O35435 donor no longer carries that assertion, and the original donor experiment was not recovered. The verdict is UNDECIDED with stale-source propagation scope, not a conjectured naming error. For UDP biosynthesis, current O35435 annotations cite [30449682](https://pubmed.ncbi.nlm.nih.gov/30449682/) and [6249586](https://pubmed.ncbi.nlm.nih.gov/6249586/). The former full original uses mouse 4T1/B16 knockout and mouse-cDNA rescue with DHODH activity, orotate and labelled UMP readouts; the latter is accessible only as a positive tumour-cell inhibitor/rescue abstract. GO's pathway scope allows an upstream enzyme to participate. Retention does not attribute terminal UDP phosphorylation to DHODH.
+Historical GO:0004151 is now REMOVE. Its hydrolytic ring reaction differs from the demonstrated FMN/quinone oxidation and class-2 DHODH domain/structure. The official [human CAD record](https://www.uniprot.org/uniprotkb/P27708/entry) assigns EC 3.5.2.3 to DHOase-family machinery with zinc cofactors, supporting the distinct enzyme chemistry. The absence of this assertion from the complete mouse O35435 snapshot (2026-10-17 12:34:11 UTC) is corroborating provenance; the exact historical donor cause remains unknown. No name-confusion or wrong-paralog mechanism is inferred.
+
+For UDP biosynthesis, that mouse snapshot contains experimental annotations citing [30449682](https://pubmed.ncbi.nlm.nih.gov/30449682/) and [6249586](https://pubmed.ncbi.nlm.nih.gov/6249586/). The former full original uses mouse 4T1/B16 knockout and mouse-cDNA rescue, with DHODH activity, orotate and labelled UMP readouts (Results Figures 4–5; Methods on DHODH reconstitution, enzyme activity and glutamine-to-UMP flux). The latter is accessible only as a positive tumour-cell inhibitor/rescue abstract. GO:0006225 includes pathways; DHODH performs the upstream orotate-producing catalytic step. Both existing UDP and UMP process assertions are represented in the same core, preserving the UMP assay endpoint and excluding any DHODH kinase claim. Neither process is an ontology ancestor of the other; UMP is not treated as a narrower UDP descendant.
 
 ## Ferroptosis: preserve the dispute and access limits
 
@@ -47,3 +49,20 @@ The [reply, 37407682](https://doi.org/10.1038/s41586-023-06270-7), was accessibl
 ## Provenance
 
 The earlier PR 827 formal approval and PR 1990 human-authorized merge are retained in the audit record. Existing notes remain a byte-identical prefix, followed by a dated superseding assessment. Existing publication caches, UniProt, GOA, Falcon and Reactome files are unchanged. Newly fetched caches accurately retain their own access flags; separately recovered originals never turn an abstract-only cache into an invented full text. The [19915526 original](https://pubmed.ncbi.nlm.nih.gov/19915526/) supplies the cited Miller syndrome genetics, not an additional enzyme function. Short verbatim anchors occur once in the YAML and are reused by reference; repeated quotation is not repeated evidence.
+
+## 2026-10-17 review follow-up
+
+The protected historical `DHODH-goa.tsv` contains 23 rows. An independent complete [QuickGO API query for Q02127](https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB%3AQ02127&limit=200&page=1), captured on 2026-10-17 at 12:25:19 UTC, returned 21 rows on one page. This is an observation at that time, not a statement that the historical cache was refreshed.
+
+| Term/evidence/reference/qualifier key | Historical TSV | Separate timestamped API snapshot |
+|---|---|---|
+| GO:0004151 / IEA / GO_REF:0000107 / enables | Present | Absent |
+| GO:0006221 / IEA / GO_REF:0000043 / involved_in | Present | Absent |
+| GO:0016491 / IEA / GO_REF:0000043 / enables | Present | Absent |
+| GO:0044210 / IEA / GO_REF:0000107 / involved_in | Absent | Present |
+
+GO:0044210 is de novo CTP biosynthesis. No CTP annotation is added, and this key-level comparison does not assert full WITH/FROM equality. The protected TSV, historical source dictionaries and prior notes are unchanged.
+
+The active ubiquinone-binding proposal uses PMID:8925840 for direct positive human kinetics with ubiquinone-50/decylubiquinone; the verified abstract explicitly provides those findings even though the full original was unavailable. PMID:10673429 remains structural context with a modeled quinone position. The broad historical proposal is refined within its existing position, so there is no duplicate quinone-parent/ubiquinone-child assertion. The ferroptosis proposal is separately withdrawn and uncertain; its retired flag is appropriate under the schema's retirement-or-replacement definition and intentionally excludes it from positive function coverage. Its public reason and dispute remain visible.
+
+No new quotation is introduced. Existing short anchors are reused by reference. The inherited notes contain 26 quoted words from PMID:8925840 and remain byte-identical; zero words are added from that source.
