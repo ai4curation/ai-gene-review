@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [AGRN, HSPG2, EPYC, SPOCK1, SPOCK2, SPOCK3, NID1, FN1, DCN, SPARC]
-last_reviewed: 2026-10-04
+last_reviewed: 2026-10-16
 manifest:
   slides:
     - href: ECM/slides/ECM-slides.html
@@ -21,12 +21,11 @@ network that gives tissues mechanical support, basement-membrane polarity and
 adhesive signalling cues. This project actioned every row in a ten-gene human
 ECM pilot spanning basement-membrane proteoglycans (`AGRN`, `HSPG2`, `NID1`),
 interstitial matrix components (`FN1`, `DCN`, `EPYC`, `SPARC`) and the three
-testicans (`SPOCK1`, `SPOCK2`, `SPOCK3`). As of 2026-10-04, those files contain
-635 review rows: 284 ACCEPT, 193 KEEP_AS_NON_CORE, 70 REMOVE, 63 MODIFY, 13 NEW,
-5 MARK_AS_OVER_ANNOTATED and 7 UNDECIDED. Eight review YAMLs are `COMPLETE`;
-`AGRN` is still `DRAFT`, `NID1` is still `INITIALIZED`, `DCN` still needs
-`core_functions`, and the first basement-membrane `ModuleReview` remains to be
-drafted. Those follow-ups are tracked in
+testicans (`SPOCK1`, `SPOCK2`, `SPOCK3`). As of 2026-10-16, those files contain
+638 review rows: 283 ACCEPT, 187 KEEP_AS_NON_CORE, 71 REMOVE, 64 MODIFY, 16 NEW,
+11 MARK_AS_OVER_ANNOTATED and 6 UNDECIDED. All ten review YAMLs are `COMPLETE`,
+and `DCN` now has `core_functions`. The first basement-membrane `ModuleReview`
+remains to be drafted; that follow-up is tracked in
 [#4070](https://github.com/ai4curation/ai-gene-review/issues/4070).
 
 The largest single clean-up was `FN1`: its review removed 52 generic IPI
@@ -61,24 +60,24 @@ The pilot deliberately mixed three slices of ECM biology:
 
 | Phase | Genes | Current state | Main curation signal |
 | --- | --- | --- | --- |
-| 1 — basement-membrane proteoglycans + EPYC | `AGRN`, `HSPG2`, `EPYC` | `HSPG2`/`EPYC` complete; `AGRN` row review actioned but still `DRAFT` | Agrin/perlecan core basement-membrane functions; EPYC gained explicit collagen/matrix terms |
+| 1 — basement-membrane proteoglycans + EPYC | `AGRN`, `HSPG2`, `EPYC` | Complete | Agrin/perlecan core basement-membrane functions; EPYC gained explicit collagen/matrix terms |
 | 2 — testican/SPOCK paralogs | `SPOCK1`, `SPOCK2`, `SPOCK3` | Complete | SPOCK1/3 inhibit metalloendopeptidases; SPOCK2 counter-inhibits SPOCK1/3 rather than sharing the same MF |
-| 3 — diverse ECM components | `NID1`, `FN1`, `DCN`, `SPARC` | `FN1`/`DCN`/`SPARC` complete; `NID1` row review actioned but still `INITIALIZED` | FN1 generic interaction cleanup; nidogen basement-membrane bridging; decorin/SPARC collagen regulation |
+| 3 — diverse ECM components | `NID1`, `FN1`, `DCN`, `SPARC` | Complete | FN1 generic interaction cleanup; nidogen basement-membrane bridging; decorin/SPARC collagen regulation |
 
-### 2026-10-04 action snapshot
+### 2026-10-16 action snapshot
 
 | Gene | Rows | Status | Action mix |
 | --- | ---: | --- | --- |
 | `FN1` | 196 | COMPLETE | 62 ACCEPT · 39 KEEP_AS_NON_CORE · 38 MODIFY · 54 REMOVE · 3 NEW |
-| `HSPG2` | 106 | COMPLETE | 45 ACCEPT · 52 KEEP_AS_NON_CORE · 6 MODIFY · 2 MARK_AS_OVER_ANNOTATED · 1 UNDECIDED |
-| `AGRN` | 102 | DRAFT | 54 ACCEPT · 36 KEEP_AS_NON_CORE · 6 MODIFY · 1 REMOVE · 5 UNDECIDED |
-| `DCN` | 72 | COMPLETE | 17 ACCEPT · 41 KEEP_AS_NON_CORE · 8 MODIFY · 4 REMOVE · 2 MARK_AS_OVER_ANNOTATED |
+| `HSPG2` | 106 | COMPLETE | 45 ACCEPT · 48 KEEP_AS_NON_CORE · 6 MODIFY · 6 MARK_AS_OVER_ANNOTATED · 1 UNDECIDED |
+| `AGRN` | 102 | COMPLETE | 54 ACCEPT · 34 KEEP_AS_NON_CORE · 6 MODIFY · 1 REMOVE · 3 MARK_AS_OVER_ANNOTATED · 4 UNDECIDED |
+| `DCN` | 75 | COMPLETE | 17 ACCEPT · 41 KEEP_AS_NON_CORE · 8 MODIFY · 5 REMOVE · 3 NEW · 1 MARK_AS_OVER_ANNOTATED |
 | `SPARC` | 43 | COMPLETE | 29 ACCEPT · 7 KEEP_AS_NON_CORE · 1 MODIFY · 5 REMOVE · 1 NEW |
-| `NID1` | 40 | INITIALIZED | 32 ACCEPT · 7 KEEP_AS_NON_CORE · 1 REMOVE |
+| `NID1` | 40 | COMPLETE | 31 ACCEPT · 7 KEEP_AS_NON_CORE · 1 MODIFY · 1 REMOVE |
 | `SPOCK1` | 32 | COMPLETE | 18 ACCEPT · 8 KEEP_AS_NON_CORE · 3 REMOVE · 2 NEW · 1 UNDECIDED |
 | `SPOCK2` | 17 | COMPLETE | 10 ACCEPT · 2 KEEP_AS_NON_CORE · 4 MODIFY · 1 REMOVE |
 | `SPOCK3` | 17 | COMPLETE | 14 ACCEPT · 3 NEW |
-| `EPYC` | 10 | COMPLETE | 3 ACCEPT · 1 KEEP_AS_NON_CORE · 1 MARK_AS_OVER_ANNOTATED · 1 REMOVE · 4 NEW |
+| `EPYC` | 10 | COMPLETE | 3 ACCEPT · 1 KEEP_AS_NON_CORE · 1 REMOVE · 4 NEW · 1 MARK_AS_OVER_ANNOTATED |
 
 ## Key Findings
 
@@ -93,8 +92,11 @@ The pilot deliberately mixed three slices of ECM biology:
   and `extracellular matrix organization`.
 - **NID1 connects the basement-membrane network.** Its core functions center on
   structural matrix activity plus laminin and collagen binding.
-- **DCN remains structurally unfinished.** The 72 annotation rows are all
-  actioned, but the review still needs a `core_functions` synthesis.
+- **DCN core functions are collagen binding and TGF-beta sequestration.** Its
+  `core_functions` pair collagen binding with collagen fibril organization,
+  TGF-beta binding with negative regulation of TGF-beta receptor signaling,
+  and fibronectin binding. Three NEW rows add the TGF-beta binding, TGF-beta
+  signalling regulation and collagen fibril organization terms that GOA lacked.
 
 ## Status and Next Steps
 
@@ -102,10 +104,8 @@ The pilot deliberately mixed three slices of ECM biology:
 - [x] Phase 2 row review: SPOCK1, SPOCK2, SPOCK3
 - [x] Phase 3 row review: NID1, FN1, DCN, SPARC
 - [x] Validate all ten current review files
-- [ ] Finalize the `AGRN` and `NID1` review statuses
-  ([#4070](https://github.com/ai4curation/ai-gene-review/issues/4070))
-- [ ] Add `DCN` core functions
-  ([#4070](https://github.com/ai4curation/ai-gene-review/issues/4070))
+- [x] Finalize the `AGRN` and `NID1` review statuses
+- [x] Add `DCN` core functions
 - [ ] Draft a basement-membrane ECM `ModuleReview` for NID1/HSPG2/AGRN plus
   laminin/collagen IV context
   ([#4070](https://github.com/ai4curation/ai-gene-review/issues/4070))
