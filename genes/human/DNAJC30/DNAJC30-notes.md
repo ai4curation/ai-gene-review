@@ -37,3 +37,20 @@
 ## GO:0051082 migration (2026-09-27)
 
 The complex I repair core function carries no molecular-function term. GO:0051082 is obsolete, and whether DNAJC30 binds damaged N-module subunits directly or acts through HSP70 has not been established, so no holdase or carrier term is supported.
+
+
+## Evidence audit — 2026-10-17
+
+This addition supersedes the earlier statements that the HuRI interactions are likely artifacts, that inner-membrane immunogold was a human experiment, and that isolated DNAJC30 loss universally disrupts ATP-synthase dimers. The prior notes remain above as a historical record. The [source guide](DNAJC30-source-guide.md) gives public primary-source and measurement locators.
+
+The two functional units remain distinct: transient participation in repair of assembled complex I, and binding to mitochondrial ATP synthase. The first has no assigned molecular-function term because the extraction, delivery or chaperone step has not been directly resolved. The second is refined to GO:0140260. No ATPase, protease or HSP70-stimulatory activity is inferred from the J-domain. The ATP-production phenotype is supported in mouse knockout conditions; the 2021 human-cell study did not reproduce complex-V defects. The earlier dimer/supercomplex claim arose from multigene Williams-Beuren samples and is not established as an isolated DNAJC30 effect. [PMID:30318146](https://pmc.ncbi.nlm.nih.gov/articles/PMC6459420/), [PMID:33465056](https://pmc.ncbi.nlm.nih.gov/articles/PMC7954600/).
+
+The human MitoCoP identification is resolved to Q96LL9, Table S1A worksheet row 322. It supports mitochondrial membrane association; the inner-membrane refinement also uses independent localization. This replaces the unsupported historical attribution of that HTP observation to FlyBase. The 2018 immunogold specimen was macaque brain; human tissue association/fractionation and mouse functional experiments remain separately identified.
+
+All 23 current HuRI partner products have positive validated two-hybrid records. Their diverse classes and construct limitations are recorded in the guide. A membrane-protein annotation alone is not evidence of an artifact. The grouped protein-binding assertion remains non-core; no common physiological mechanism or activity is assigned to the entire panel.
+
+One official 226-residue precursor is represented. The predicted transit peptide (1–38), mature chain (39–226), J-domain (49–114) and membrane segment (208–225) are sequence features, not additional splice products. There is no demonstrated HSP70-activation assay in the sources used here.
+
+The nine historical GOA assertion triples match the current 32 participant-resolved rows. Every historical source dictionary is retained, including the separately authored GO:0034367 proposal inherited from [PR #4809](https://github.com/ai4curation/ai-gene-review/pull/4809). The proposal is retained on physical participation and selective subunit-turnover evidence, not on absence of an annotation from other proteins. No additional NEW assertion or source retirement is introduced. The original GOA, UniProt, publication caches, generated PN notes and three history records remain unchanged; fresh machine exports are retained as provenance. The PN notes are a historical generated snapshot, not the updated functional assessment.
+
+Ordinary deep research was attempted: Falcon authentication failed and the configured fallback returned an insufficient-quota error. No provider report was fabricated. Manual primary-source and official-record review supplies the evidence above. Duplicate YAML quotations were removed; this addition introduces no new publication quotation and preserves the earlier notes verbatim.
