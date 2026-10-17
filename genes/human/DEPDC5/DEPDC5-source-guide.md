@@ -12,7 +12,7 @@ This guide distinguishes machine caches, separately recovered originals, literal
 | [28199306](https://pubmed.ncbi.nlm.nih.gov/28199306/) | Original Results, Methods and controls for KICSTOR–GATOR1 association and lysosomal recruitment | Some imaging uses NPRL2 as the GATOR1 marker; do not call every image direct DEPDC5 localization. |
 | [25457612](https://pubmed.ncbi.nlm.nih.gov/25457612/) | Original Results, Figures 3/5 and Methods: DEPDC5 knockdown weakens Sestrin-dependent mTORC1 inhibition | Human and mouse experiments distinguished; no direct Sestrin–DEPDC5 interaction inferred. |
 | [25263562](https://pmc.ncbi.nlm.nih.gov/articles/PMC4223866/) | Main Results and Methods: Sestrin/GATOR2 co-IP, GATOR1 constructs and epistasis | Full original recovered; FLAG-DEPDC5 does not co-IP endogenous Sestrin2 in the reported experiment. |
-| [17897319](https://doi.org/10.1111/j.1600-0854.2007.00643.x) | Publisher-indexed original Methods and Table 1 DEPDC5 row | Normal cache is abstract-only. Native human placental membranes; 20 peptides, 18.4% coverage, enrichment ratio 4.13. Historical IPI00005665/1572-residue designation is not unique-product peptide proof. |
+| [17897319](https://doi.org/10.1111/j.1600-0854.2007.00643.x) | Publisher-indexed original Methods and **main Table 1** DEPDC5 row | Normal cache is abstract-only. Native human placental membranes; 20 peptides, 18.4% coverage, enrichment ratio 4.13. Historical IPI00005665/1572-residue designation is not unique-product peptide proof. |
 | [23542697](https://doi.org/10.1038/ng.2599) | Original Results and online Methods: mouse neuronal and human neural-culture staining | Genuine public original PDF recovered; D19 peptide-blocking and no-primary controls. Authors describe localization as preliminary. Supplement downloaded but no claim to full supplementary reading. |
 | [32296183](https://pmc.ncbi.nlm.nih.gov/articles/PMC7169983/) | Main Results paragraph introducing the nine-screen reference map; exact IntAct pair rows | Main original reports quadruplicate retesting and sequence confirmation. No supplementary Methods or pair-specific MAPPIT/GPCA validation claimed. |
 | [22206000](https://doi.org/10.1371/journal.pone.0029099) | Original Methods and Results/Figures 3/4: MEOX2 promoter EMSA, mutant controls and reporter assays | Partner-class evidence; no DEPDC5 experiment. One-residue clone difference is kept explicit. |
@@ -56,18 +56,14 @@ The official eight product identities and source sequence notes are preserved. V
 
 Positive binding without a supported finer term is retained as non-core under the standing [project curation instructions](https://github.com/ai4curation/ai-gene-review/blob/a87ae568676c4012ea4abe5393967aeff1b52ae7/projects/CLINGEN_MENDELIAN.md#curation-instructions). No NEW process or molecular-function row was added: the existing source assertions and explicit complex-contribution core cover the supported functions. The user’s process-redundancy rule is not interpreted as a blanket ban on new molecular functions.
 
-## Fixed evidence digests
+## Core evidence and regulatory context
 
-These SHA-256 values identify the inspected raw bodies or literal source reconstructions. Indexed entries are read locators, not claims that every line or figure was examined. The dated manual ledger separately records exact selected windows and attribution to the independent core consultation. No new publication quotation is used in the YAML.
+The YAML uses short literal cached anchors once each: PMID35338845 Results/Figure 4 for the NPRL2 catalytic residue and the following RagC subsection for DEPDC5 engagement; PMID23723238 Abstract for the starvation response; PMID28199306 Abstract for KICSTOR recruitment. The abstracts are concise anchors, while the separately read original passages in the table above provide the experimental context. Core GAP contribution is distinct from autonomous catalysis.
 
-| Evidence | SHA-256 |
-| --- | --- |
-| 24 oriented interaction records | `5ac82e26ff6cecff79d60a664b68eedc6702e99cbc74a558dec31fba3fed3d8d` |
-| PAINT target lineage and IBD | `7f3a113fafbe1556e1dfb3e26a7b87de4af1323826bca2151ae64ace8c58c6e8` |
-| Native lysosomal target-table indexed response | `a6174fe19e3b846e755828b09387d781fac9d10795f11ab5beaac3156f938d3b` |
-| Neuronal localization original PDF | `471d3f05593f87f8a8028f0c9b4b1c4fa0dba18db1f71f5c5701a7b80bb520ce` |
-| 2018 public publisher body/extended data | `d9448d2a9d0f9ccc16318c15beb00075572dc46888dc7cf77dcf1c5c98b81652` |
-| 2025 challenge Figure1 | `5f927a96223599c6587d37b85db181bef1cb78e3eb5f9d9a04da44be69f9c864` |
-| 2025 reply Figure1 | `219935deb83819397c641c0eaa99939338d5b34bc2b143d9c57dbf801156e7a3` |
-| Manual owner read ledger | `50d412eb761d9ad24880ee9a4e58f511f24e8337a4e9423c06e32b9778811315` |
-| Independent core synthesis | `64a2bf53621c5d851b28f9cf7d686926b1129a7c7b9ab50e188989eaa04bda73` |
+Original [PMID29590090](https://doi.org/10.1038/nature26158), Results on GATOR1 subunit interactions and Extended Data Figure 7, supports DEPDC5 association with SAMTOR/KICSTOR and identifies NPRL3-mediated GATOR2 association. It does not establish the methionine-direction statement in the UniProt SUBUNIT note. The dedicated [SAMTOR study](https://pmc.ncbi.nlm.nih.gov/articles/PMC5747364/), Figures 1, 3 and 4 and corresponding Results, directly shows stronger association after methionine starvation and weaker association after methionine or SAM restoration. These selected original passages were read; separate supplementary Methods and figure pixels were not inspected. This is regulation through the SAM sensor SAMTOR, not DEPDC5 metabolite sensing.
+
+For AKT1/PIM1 regulation, the [PMID31548394 abstract](https://pubmed.ncbi.nlm.nih.gov/31548394/) and [UniProt PTM section](DEPDC5-uniprot.txt) support phosphorylation-mediated relief of DEPDC5 inhibition in the tested cancer-cell models. The full original was not independently read for this follow-up, and the result is not transferred to all alternative products.
+
+## Curated pathway roles
+
+Both [GO-CAM 646ff70100001312](https://amigo.geneontology.org/amigo/model/646ff70100001312) and [GO-CAM 646ff70100001561](https://amigo.geneontology.org/amigo/model/646ff70100001561) represent DEPDC5 small GTPase binding at the lysosomal membrane within TORC1 inhibition and an enclosing amino acid starvation response. The relevant activity identifiers are `646ff70100001542` and `646ff70100001735`. Model 646ff70100001561 additionally uses DEPDC5 as an input to a KLHL22-enabled activity. The distinction between an enabled activity and its input is preserved. These cached curated models corroborate role representation; they do not resolve the disputed degradation mechanism or supply independent experimental replication.
