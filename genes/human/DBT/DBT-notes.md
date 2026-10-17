@@ -56,3 +56,12 @@ The prior genuine Falcon report was read and retained as a literature lead, not 
 ### Source-specific interaction clarification
 
 The preceding general retention statement is superseded for the PMID:40205054 assertion only. Its original AP-MS Methods were read, but the DBT-GRPEL2/MMAB target measurements were not adjudicated and the current literal source query recovered neither pair. Earlier BioPlex association evidence belongs to separate experiments. Row 10 is therefore UNDECIDED, with the original positive IPI preserved and no negative-binding inference. The normal Reactome localization and transfer reactions are also described without unrelated defective-variant caveats; the caveats remain on actual disease events.
+
+
+## 2026-10-16: public provenance and biological description clarification
+
+The retained GOA snapshot contains the GO:0120552 ARBA00095351 assertion. A separately generated research snapshot was not imported; its differences do not negate the retained source or the independently supported E2 participation in the complex reaction [PMID:3593587].
+
+The 2025 U2OS binding judgment remains source-specific UNDECIDED [PMID:40205054]. The guide now records the exact IntAct/MINT endpoints, target filter, retrieval timestamps, counts, hashes and matching procedure. Both positive imported GOA pairs are preserved. Failure to recover the exact records in those dated responses is not evidence of nonbinding. Earlier BioPlex measurements remain positive corroboration in their own experimental contexts [PMID:28514442; PMID:33961781].
+
+The description again identifies the cubic 24-subunit E2 core and lipoyl Lys105. These are supported by the curated subunit model and the independently mapped lipoyl-domain construct, without assigning E1/E3 catalytic activities to DBT [PMID:22291014; PMID:11839747]. The PMID:11839747 full_text_unavailable flag describes the abstract-only standard cache; the separately accessed original Sample Preparation and selected Results remain explicitly documented in DBT-primary-source-notes.md. No original text, assay access, source object, action, quotation, product mapping or core function was withdrawn.
