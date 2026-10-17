@@ -37,3 +37,13 @@ blocks noting that UGT family enzymes are canonically type-I ER membrane protein
 lumen-facing catalytic domain, so the olfactory-ciliary plasma-membrane assignment is the
 non-default claim and rests on this single immunolocalization study. Action unchanged
 (MODIFY). Revalidated and re-rendered.
+
+Update (2026-10-17, re-review follow-up 2): PMID:33765098 reports a second location
+besides the olfactory-ciliary plasma membrane - the endoplasmic reticulum of the
+sustentacular cells (its S1 Fig immunogold EM). Per the "list all supported specific
+descendants" guidance, added GO:0005789 endoplasmic reticulum membrane (QuickGO-verified
+label; is_a descendant of GO:0016020) as a second proposed_replacement_term on both
+GO:0016020 MODIFY rows, with the verbatim ER sentence in supported_by. Adjusted both
+reason blocks so the ER pool (the canonical, expected UGT location) discharges the
+type-I ER membrane topology caveat, leaving only the ciliary plasma-membrane pool as the
+non-default claim.

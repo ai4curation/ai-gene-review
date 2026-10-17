@@ -47,3 +47,13 @@ the Fe-S wording from FUNCTION, and in vitro sulfane-sulfur donation / sulfur ex
 not establish that Tst performs a step of the cellular ISC assembly pathway (carried out by
 NFS1/ISCU and associated factors) - the participation test is not met. Also removed blank
 lines inside quoted YAML scalars (4). Revalidated and re-rendered.
+
+Update (2026-10-17, re-review follow-up 2): (1) The PMID:2018478 reference finding that
+asserted the paper "supports direct annotations to iron-sulfur cluster assembly" was
+rewritten to describe the literal (NAS introduction) statement and tagged with
+finding_review (finding_status: DISPUTED) explaining that the GO:0016226 row was demoted
+to MARK_AS_OVER_ANNOTATED, so the reference finding and the annotation row no longer
+contradict. (2) Both remaining "iron-sulfur cluster homeostasis" phrasings (top-level
+description and the core_functions description) now carry a clause distinguishing
+homeostasis (sulfane-sulfur exchange with Fe-S centers) from the dedicated cellular Fe-S
+cluster assembly pathway (ISC machinery) that Tst does not carry out.
