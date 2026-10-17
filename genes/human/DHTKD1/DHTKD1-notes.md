@@ -53,3 +53,23 @@ labels/aspects/obsolescence were verified directly against the QuickGO REST API.
 - BP `GO:0006091` generation of precursor metabolites and energy IMP (PMID:23141294):
   the paper shows DHTKD1 silencing impairs ATP/NAD(H); this is a downstream/indirect
   physiological readout, not the gene's direct process → MARK_AS_OVER_ANNOTATED.
+
+
+## Evidence reconciliation — 2026-10-17
+
+The earlier sections remain as the original review record. The current decisions supersede their annotation-action summaries where explained below.
+
+The E1 oxidoreductase class is chemically valid: DHTKD1 reduces and acylates DLST-bound lipoamide, so the broad term is refined to the specific 2-oxoadipate activity. DLST makes glutaryl-CoA and DLD carries out lipoamide reoxidation; these later reactions are not assigned to DHTKD1 alone. ThDP binding belongs to the same catalytic core. The human activity and crystallography constructs are engineered preparations of the 919-residue protein, not evidence for natural short isoforms. The official record supplies no alternative-product set.
+
+Human patient-fibroblast rescue and labeled-lysine experiments support the lysine pathway. Tryptophan participation follows convergence on the same substrate and its catalyzed step, not a recovered tryptophan tracer experiment. The specific lysine and tryptophan terms replace the existing broad amino-acid-catabolism annotation. The historical NEW tryptophan record is retained as retired because it is redundant with that refinement and the existing ancestor; its original source identity is preserved.
+
+Human imaging and HPA support mitochondria. The finer matrix replacement comes from the explicit human Reactome protein/complex entities together with a curated mouse matrix IDA. Neither fluorescence nor the main MitoCoP methods are presented as direct matrix resolution. The mouse full original and the target MitoCoP spreadsheet entry could not be recovered; these limits do not negate independently supported location. Exact source and public event/entity links are in the [source guide](DHTKD1-source-guide.md).
+
+The positive PGLYRP3 co-complex associations are non-core. The validated BMAL1 isoform-8 Y2H interaction supports a transcription-factor-binding refinement with a preserved DNA-binding domain, while its endogenous role remains unresolved. No DHTKD1 transcriptional, circadian or immune activity is inferred. The ATP/NAD(H) perturbation result is retained as non-core; the GO process is not restricted to the TCA cycle. Lower oxoglutarate activity and reported hybrid complexes also rule out an absolute claim that DHTKD1 can never process that substrate.
+
+This follows the [project curation instructions](https://github.com/ai4curation/ai-gene-review/blob/a87ae568676c4012ea4abe5393967aeff1b52ae7/projects/CLINGEN_MENDELIAN.md#curation-instructions): preserve supported generic interactions when no more specific function is justified, and use evidence-backed specificity refinements. The current ordinary Falcon request failed authentication and the configured fallback returned a quota error. No provider output was fabricated. Publication caches and the historical GOA/UniProt sources were preserved; separately recovered originals are identified in the source guide.
+
+
+### MitoCoP supplement reconciliation
+
+The earlier access limitation for the DHTKD1 spreadsheet entry is resolved by the original publisher Table S1. In sheet (A), row 305, Q96HY7 is the majority/simplified protein identifier and is included in MitoCoP with positive subtractive, spatial and importomics classifications. Sheet (B), row 278 confirms the gene entry. The membrane-association category is Ambiguous; the matrix label is compiled from GO annotations. This strengthens the existing mitochondrial evidence without changing the matrix refinement or claiming a new direct matrix assay. The source guide now identifies the exact original workbook and rows.
