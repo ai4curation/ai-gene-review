@@ -118,6 +118,11 @@ propagated annotations; 81 genes are reviewed and 65 await adjudication
 >
 > Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
 > [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
+>
+> External check: [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examines Wei *et al.* 2020
+> (PMID:32470107), which reported IBA as the leading non-IEA source of taxon-inconsistent
+> annotations. Most of its 290 flagged pairs are now gone from GOA; its plant lipid A flags
+> are refuted by experiment.
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
 
