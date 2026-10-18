@@ -61,3 +61,7 @@ PTHR14773 captures a WDR76-related repeat family with broad nuclear DNA/chromati
 ## Evidence limits
 
 The DRS1/AraNet paper, the DWD-family paper and the Arabidopsis 5hmC study have cached full text. The genuine Falcon report missed the direct DRS1 paper and therefore its “no target-specific publication” conclusion is not adopted. The direct evidence supports physiology, while the proposed mechanistic connection through chromatin or a DDB1-CUL4 ligase remains open. The 2013 modified-base-reader study (PMID:23434322) is abstract-only in the cache and is not treated as a direct assay of DRS1.
+
+## 2026-10-14 — UNDECIDED rows resolved
+
+Heterochromatin (IBA), Cul4-RING E3 ubiquitin ligase complex (ISS) and regulation of DNA damage checkpoint (IBA) are now KEEP_AS_NON_CORE. There is no target-specific evidence of divergence from the WDR76/CMR1 node. DRS1 carries the DWD motif, and the cached WDR76 paper states that WDR76 associates with Cul4-DDB1 and that yeast CMR1 is involved in a DNA damage checkpoint. All three remain untested in Arabidopsis.

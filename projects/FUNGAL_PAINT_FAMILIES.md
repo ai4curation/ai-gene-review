@@ -34,6 +34,8 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10615` HISTONE ACETYLTRANSFERASE | fungal MYST acetyltransferase nodes | `ESA1`/`SAS` paralogs/`mst` paralogs |
 | `PTHR43762` L-GULONOLACTONE OXIDASE | fungal `ALO1` node | `ALO1`/`alo1`/`ALO1`/`alo-1` |
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
+| `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
+| `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
 
 ---
 
@@ -72,8 +74,8 @@ paralog-aware activity and complex checks.
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
 - [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
-- [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; drafted in
-  this branch
+- [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; merged in PR
+  #4774
 - [ ] `NEUCR` MYST-family member
 
 ## Later Candidates
@@ -127,6 +129,39 @@ exo-1,3-beta-glucosidase node.
   exo-1,3-beta-glucosidase; review in PR #4596
 - [ ] `NEUCR/NCU09652` - *Neurospora crassa* PTHR31297 member to place against
   the yeast, PomBase, and CGD subtrees
+
+## Family 6: PKA Regulatory Subunits
+
+`PTHR11635` contains the root PKA regulatory-chain node
+`PANTHER:PTN004280545`, which carries the conserved cAMP binding, PKA
+catalytic-subunit binding, PKA inhibitor, and PKA-complex assertions; fungal
+node `PANTHER:PTN000908765`, which carries nuclear localization; and the broad
+cAMP-signaling/cytosol node `PANTHER:PTN000180782`, which carries cytosol and
+an over-scoped GPCR/adenylate-cyclase pathway assertion.
+
+- [x] `CANAL/BCY1` - *Candida albicans* PKA regulatory subunit; merged in PR
+  #4751
+- [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; merged in PR
+  #4756
+- [x] `SCHPO/cgs1` - fission-yeast PKA regulatory subunit; merged in PR #4763
+- [x] `yeast/BCY1` - budding-yeast PKA regulatory-subunit anchor; drafted in
+  this branch
+
+## Family 7: Sterol C-8 Isomerases
+
+`PTHR10868` contains a fungal ERG2 ancestor, `PANTHER:PTN001280219`,
+with PAINT assertions for C-8 sterol isomerase activity and ergosterol
+biosynthetic process. The family also has a broader ER-localization IBD on
+`PANTHER:PTN001328958`; animal Sigma-receptor signaling annotations are on
+separate descendant PTNs and do not propagate to the fungal ERG2 genes.
+
+- [x] `yeast/ERG2` - *S. cerevisiae* sterol C-8 isomerase anchor; drafted in
+  PR #4725
+- [x] `SCHPO/erg2` - fission yeast sterol C-8 isomerase; drafted in PR #4723
+- [x] `CANAL/ERG2` - *Candida albicans* CGD seed for the
+  `GO:0000247 C-8 sterol isomerase activity` IBD; drafted in this branch
+- [x] `NEUCR/erg-1` - *Neurospora crassa* sterol C-8 isomerase; merged in PR
+  #4719
 
 ---
 
@@ -231,3 +266,25 @@ exo-1,3-beta-glucosidase node.
   `PANTHER:PTN000834946` H4 acetyltransferase row still align with the
   PTHR10615 tree, while PMID:40988556 remains abstract-free and unresolved for
   the CGD phenotypic-switching row.
+- Added PTHR11635, the cAMP-dependent protein kinase regulatory-subunit family,
+  as a fungal PAINT family. The first two reviews check the conserved PKA-R
+  node, the fungal nuclear node, and the broad cAMP-signaling node in
+  *C. albicans* `BCY1` and *N. crassa* `mcb`.
+- Drafted `NEUCR/mcb`. The four `PTN004280545` activity/complex IBAs were
+  accepted, `PTN000908765` nucleus was accepted as a fungal inference without
+  contrary Neurospora localization data, and the over-specific `GO:0007189`
+  GPCR pathway row from `PTN000180782` was redirected to neutral
+  `GO:0141156` cAMP/PKA signal transduction.
+- Drafted the `yeast/BCY1` anchor review. It keeps Bcy1's starvation, P-body,
+  chromatin, and plasma-membrane rows as non-core contexts, narrows TPK
+  `protein binding` rows to `protein kinase A catalytic subunit binding`,
+  removes the Ess1 generic binding rows, leaves an abstract-only
+  Siva/PMP22-cited self-interaction row undecided, and removes Ras/Lte1
+  bud-neck localization rows where `bcy1` was only a bypass background.
+- Added `PTHR10868` as a compact sterol C-8 isomerase family after sibling
+  `yeast/ERG2`, `SCHPO/erg2`, and `NEUCR/erg-1` reviews had checked the same
+  fungal node placements. The `CANAL/ERG2` follow-up accepts the fungal
+  `PTN001280219` C-8 sterol isomerase and ergosterol-biosynthesis IBAs,
+  accepts the broader `PTN001328958` ER localization IBA, and verifies that
+  animal Sigma-receptor signaling assertions are confined to descendant PTNs
+  outside the fungal ERG2 rows.
