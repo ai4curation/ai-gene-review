@@ -1,0 +1,52 @@
+---
+title: DSE source and assay guide
+gene: DSE
+annotation_scope:
+  imported_annotations: 21
+  new_annotations: 0
+---
+
+# DSE source and assay guide
+
+All 21 raw annotation contexts produce 21 preserved source assertions. The review identifies one direct epimerase mechanism, distinguishes dermatan/chondroitin from heparan substrates, and retains the source-specific limits of tagged localization and phylogenetic inference.
+
+## Primary originals and actual access
+
+| Source | Original location and inspected scope |
+|---|---|
+| [PMID:7092807](https://pmc.ncbi.nlm.nih.gov/articles/PMC1163673/) | All original scanned pages 489–493 were visually inspected. Page 490 Methods specifies cultured human skin fibroblasts as the enzyme source; pages 491–493 contain the activity and substrate/cofactor comparisons. Table 1 on page 492 resolves membrane fractions, not individual organelles. Figure 4 and the surrounding Results compare the dermatan and heparan systems. The normal cache is abstract-only. |
+| [PMID:10679095](https://pubmed.ncbi.nlm.nih.gov/10679095/) — [indexed author-uploaded original](https://www.researchgate.net/publication/12636558_Identification_of_a_Gene_Coding_for_a_New_Squamous_Cell_Carcinoma_Antigen_Recognized_by_the_CTL) | Original cloning/construct Methods, microscopy and fractionation Methods, localization Results, Figure 5 caption and Discussion windows were inspected. Human AF098066/SART2-GFP and terminal deletions were expressed in COS7 and MCF-7 cells. Predominant ER and partial Golgi localization are positive; the vesicle pattern differs by host. Native untagged localization and membrane topology remain unresolved. No figure-pixel or complete original-PDF read is claimed. A publisher PDF route returned a client challenge, not a paper. |
+| [PMID:16505484](https://pubmed.ncbi.nlm.nih.gov/16505484/) — [Lund author manuscript](https://lup.lub.lu.se/search/files/2691025/625379.pdf) | Operative original Methods and Results were independently read. Bovine spleen discovery is separate from sequence-verified human IMAGE5272885 full-length cDNA with a C-terminal His tag. Tritium-release assays and carbon-14 product mapping establish GlcA-to-IdoA conversion; cellular labeling establishes altered CS/DS composition. No substrate depolymerization is inferred. The normal cache remains abstract-only. |
+| [PMID:19004833](https://pubmed.ncbi.nlm.nih.gov/19004833/) — [indexed author original](https://www.researchgate.net/publication/23469275_Identification_of_the_Active_Site_of_DS-epimerase_1_and_Requirement_of_N-Glycosylation_for_Enzyme_Function) | Original Methods and Results were independently read. Human NM_001080976 tagged wild-type and mutant proteins were isolated from mammalian expression systems and assayed for epimerase activity. Mutagenesis and glycosylation findings are experimental; the proposed His450-base/cleavage-religation mechanism is a homology-based model subsequently revised. The normal cache remains abstract-only. |
+| [PMID:33815739](https://pmc.ncbi.nlm.nih.gov/articles/PMC8006597/) — [full XML](https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8006597/fullTextXML) | The genuine full original was independently read. Human 23–775 protein yielded a 2.41 Å crystal; 23–894 is a separate soluble experimental construct. H452/E470/N481 coordinate the metal, and the revised catalytic proposal involves H205/Y261/Y473. No substrate cocrystal or measured net glycan-degrading lyase activity is claimed. The normal additional cache contains full XML. |
+| [PMID:22496542](https://pubmed.ncbi.nlm.nih.gov/22496542/) — [institutional abstract](https://portal.research.lu.se/sv/publications/mouse-development-is-not-obviously-affected-by-the-absence-of-der/) | Complete abstract and current mouse donor records were inspected. Mouse Dsel loss alters brain CS/DS iduronic acid and sulfation. Publisher full-text access failed; no detailed Methods or supplementary read is claimed. The normal additional cache is abstract-only. |
+
+The [official Q9UL01 sequence record](https://www.uniprot.org/uniprotkb/Q9UL01/entry) and FASTA agree on 958 residues and contain no alternative-products block. The predicted signal peptide and annotated processed chain do not establish separate functions. Structural constructs remove native sequence and are not natural isoforms. These distinctions apply to all activity and localization conclusions.
+
+## Reaction identity and the electronic pathway correction
+
+[GO:0047757](https://www.ebi.ac.uk/QuickGO/term/GO:0047757), [EC 5.1.3.19](https://iubmb.qmul.ac.uk/enzyme/EC5/1/3/19.html) and [RHEA:21084](https://www.rhea-db.org/rhea/21084) identify DSE's chondroitin-to-dermatan epimerization. The actual [Rhea TSV query](https://www.rhea-db.org/rhea/?query=rhea:21084&format=tsv&columns=rhea-id,equation,ec) links the chondroitin 4′-sulfate/dermatan 4′-sulfate equation to that EC identifier. Primary assays using unsulfated chondroitin show that the registry equation is not an exclusive substrate-sulfation rule.
+
+[EC 5.1.3.17](https://iubmb.qmul.ac.uk/enzyme/EC5/1/3/17.html) and [GLCE/O94923](https://www.uniprot.org/uniprotkb/O94923/entry) instead concern N-sulfated heparosan epimerization in heparan/heparin biosynthesis. The original 1982 substrate/pH/cofactor comparisons distinguish the two enzyme systems. The source UPA00756 heparan assignment is actually present in DSE's current UniProt pathway annotation, but this target mapping conflicts with the reaction evidence. The electronic annotation is rejected on that biological ground. The standalone UniPathway endpoint and mapping download were unavailable; no claim is made to have read their absent responses. No experimental annotation is removed.
+
+[GO:0050651 dermatan-sulfate proteoglycan biosynthesis](https://www.ebi.ac.uk/QuickGO/term/GO:0050651) is a descendant of [GO:0050655 dermatan-sulfate metabolism](https://www.ebi.ac.uk/QuickGO/term/GO:0050655). The corresponding IBA refinement adds supported specificity. [GO:0050654 chondroitin-sulfate proteoglycan metabolism](https://www.ebi.ac.uk/QuickGO/term/GO:0050654) remains biologically appropriate because DSE modifies the chain directly; it is not treated as an ancestor of the dermatan biosynthetic term.
+
+## Localization and pathway records
+
+[GO:0005789 ER membrane](https://www.ebi.ac.uk/QuickGO/term/GO:0005789) and [GO:0000139 Golgi membrane](https://www.ebi.ac.uk/QuickGO/term/GO:0000139) refine their respective organelle terms. The refinement combines original tagged-protein microscopy/fractionation, existing curated membrane assertions and reaction-compartment evidence. It does not claim exclusive occupancy or measured membrane topology. The COS7 vesicle observation is retained at its host/construct-dependent scope. The [HPA DSE XML](https://www.proteinatlas.org/ENSG00000111817.xml) has no subcellular assay section in the inspected record; tissue expression is not substituted for localization.
+
+The exact public Reactome chain is [R-HSA-2022923 pathway](https://reactome.org/content/detail/R-HSA-2022923) → [R-HSA-2022052 reaction](https://reactome.org/content/detail/R-HSA-2022052) → [2022049 catalyst](https://reactome.org/content/detail/2022049) → [R-HSA-3734047 DSE/DSEL set](https://reactome.org/content/detail/R-HSA-3734047) → [R-HSA-2022047 DSE entity](https://reactome.org/content/detail/R-HSA-2022047). The catalyst specifies GO:0047757; the member identifies Q9UL01 residues 23–958 at the Golgi membrane. The corresponding [ContentService](https://reactome.org/ContentService/data/query/2022047) records were inspected. Set membership denotes alternative enzymes, not an obligatory heteromer. No target activity was found in the inspected GO-CAM index, and no annotation is added on the basis of absence.
+
+## Phylogeny and rule scope
+
+The [PANTHER PTHR15532 family](https://www.pantherdb.org/panther/family.do?clsAccession=PTHR15532) tree contains 95 nodes. Human DSE leaf PTN002496188 has a 17-node path through PTN001036588; its ungapped alignment exactly matches the 958-residue official sequence. Three literal [PAINT IBD records](https://data.pantherdb.org/ftp/downloads/paint/current/IBD.gaf) at that node cover GO:0047757, GO:0050655 and GO:0050654. This is an ancestral placement, not a pairwise similarity transfer.
+
+The source identities are [human Q9UL01](https://www.uniprot.org/uniprotkb/Q9UL01/entry), [bovine P0C2H4](https://www.uniprot.org/uniprotkb/P0C2H4/entry), and [mouse Dsel Q0VBN2](https://www.uniprot.org/uniprotkb/Q0VBN2/entry)/[MGI:2442948](https://www.informatics.jax.org/marker/MGI:2442948). Mouse Dsel is distinct from mouse Dse/Q8BLI4. Its [current QuickGO annotations](https://www.ebi.ac.uk/QuickGO/annotations?geneProductId=UniProtKB%3AQ0VBN2) supply IMP evidence from PMID:22496542 for the three shared functions. Human recombinant activity and bovine discovery are supported by PMID:16505484. The common ancestral judgment is compatible with these paralog-specific observations; target self-inclusion is legitimate experimental grounding.
+
+[ARBA00095326](https://www.uniprot.org/arba/ARBA00095326) requires FunFam 1.50.10.100:FF:000001, FunFam 2.70.98.70:FF:000001 and Primates/NCBITaxon:9443. All three conditions match the official DSE record. The independent biochemical evidence supports the emitted dermatan-sulfate biosynthesis term; a matching rule is not treated as independent experimental evidence.
+
+## Cache and preservation scope
+
+The normal caches for PMID:7092807, PMID:10679095, PMID:16505484 and PMID:19004833 remain abstract-only, even where separately recovered originals were inspected. PMID:33815739 has a genuine full XML cache; PMID:22496542 is abstract-only. The pre-existing sequence-resource cache PMID:15489334 is preserved without a new functional or full-original-read claim. The two pre-existing Reactome caches and GO-CAM index are unchanged. Failed routes and client challenges are retained as access provenance, not biological evidence.
+
+The 21 source dictionaries, one official sequence boundary and all machine source bytes are preserved. Fifteen assertions are accepted, three refined, two retained as contextual locations and one electronic pathway assertion rejected; there are no new annotations. Genuine configured research-provider attempts failed and yielded no report. One seven-word excerpt is used only once in the core, and this guide adds no quotations.
