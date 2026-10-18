@@ -35,3 +35,15 @@ New quotations appear once each in the YAML: 10 words from PMID:21220045, 9 from
 ## Final source reconciliation
 
 The existing main-branch publication caches for PMID:29999492 and PMID:15775979 are retained byte-for-byte instead of the later fetch variants. The entire preserved PMID:15775979 HTML extract was inspected: its full-text flag is true, but it contains only the abstract, Introduction and selected Results/Discussion sections, omitting the operative Figure 2/3 Results and Methods. The corresponding reference flag follows that cache metadata; the unresolved adherens-junction decision still reflects incomplete target-specific evidence. No annotation source, action, replacement, product, core or quotation changes in this reconciliation.
+
+## Follow-up: partner class and complementary membrane pools
+
+The PKP2 interaction retains the broad cytoskeletal-protein binding refinement. This class includes non-filament-forming structural components; it is not synonymous with binding an assembled intermediate filament. The measured partner is rat plakophilin-2, while the DSC2 tails are human. Partner annotations and documented plaque/intermediate-filament interactions support the component class, with ortholog-based localization provenance kept distinct from the target lysate-association assay. The [public source guide](DSC2-source-evidence.yaml) links the literal partner records and ontology definition.
+
+The broad membrane refinement now explicitly includes desmosome alongside the independently broader plasma-membrane and additional ER observations. HPA labels the ICC/IF record supported and names ER in HaCaT and SuSa. The observation does not establish permanent ER residence or an ER-specific function; trafficking or antibody-background explanations are hypotheses, not measurements that negate the localization. The selected merged image was inspected, but no new marker-colocalization or antibody-specificity conclusion is drawn from it.
+
+Both DSG2-binding rows now use the adhesion-specific term with their assays distinguished. The 2011 co-IP establishes association; independent human ectodomain experiments establish adhesive function for the same pair. The existing single core already describes calcium-binding ectodomains and natural-tail-dependent plaque coupling as one integrated adhesive mechanism; no extra core or annotation is added merely to mirror accepted binding rows.
+
+Current reference notes and source navigation describe the actual reading scope without internal agent labels. Earlier note entries remain an append-only historical record; the biological conclusions and the unchanged experimental limitations above are the current account.
+
+Full-text access is distinguished from cache format: PMID:27298358 has a separately recovered complete original despite its preserved abstract-only cache, so its reference access flag is false. PMID:2037591 remains access-limited, while PMID:21062920 has available full text. No publication cache bytes were changed.
