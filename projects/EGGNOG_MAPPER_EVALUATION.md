@@ -84,8 +84,11 @@ more than the disk where this was run, so
 streamed it into a store of independently compressed 256 KiB chunks (6.5 GB).
 [`run_emapper.py`](EGGNOG_MAPPER_EVALUATION/scripts/run_emapper.py) serves that
 store to SQLite through a read-only VFS. The bytes SQLite sees are identical to
-the original; the store's length matched the page count in the SQLite header
-exactly. emapper's own code is unchanged apart from the connection and the
+the original:
+[`verify_zchunk.py`](EGGNOG_MAPPER_EVALUATION/scripts/verify_zchunk.py)
+re-streamed `eggnog.db.gz` and decompressed the store. Both gave SHA-256
+`4d6857c129423889edcd607995b28d97944787a588224f31dd7f745fe9ef1e4f` over
+41,370,988,544 bytes. emapper's own code is unchanged apart from the connection and the
 taxon fix below. The seed search used emapper defaults (DIAMOND sensitive mode
 with iteration, e-value 0.001) against `eggnog_proteins.dmnd`, and GO transfer
 used the default `--go_evidence non-electronic`. The full pipeline is
