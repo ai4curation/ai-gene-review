@@ -251,6 +251,22 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 # NOTES
 
+## 2026-10-18 (MMADHC core-function location)
+
+Asked OpenScientist whether MMADHC's mitochondrial pool does part of the core
+AdoCbl-supply job in the matrix (report in
+`genes/human/MMADHC/MMADHC-hypotheses/mmadhc-mitochondrial-pool-adocbl/`). The
+verdict was "partially supported": the matrix location is well supported, but
+no matrix-side partner or step has been shown, and a cytosolic branch-point
+model fits the data equally well. A cached mouse paper (PMID:41411131), which
+the report did not use, ties mitochondrial Mmadhc accumulation to more AdoCbl.
+So the pool matters, but where its step happens is unknown. Outcome: the matrix
+stays as the NEW location row but is removed from the core function's
+locations; the mitochondrion rows stay non-core; the open question is a
+knowledge gap with a compartment-restricted rescue experiment. This is a useful
+general point for the worklist: a sub-compartment can be a well-supported
+location without being where the gene's core activity is shown to happen.
+
 ## 2026-10-18 (revision: add, don't substitute)
 
 Agreed with cjm after the PR #5208 review. The pilot's IBA/IEA mitochondrion
@@ -289,7 +305,8 @@ What the pilot showed:
   root-level annotation. The IBA cannot be finer than its seed. Fixing the
   seed (a matrix annotation on the human gene) is the way to improve the
   propagation.
-- **The action-consistency check warns on the policy's own pattern.** ACCEPT
+- (Superseded by the revision entry above: the MODIFY split was dropped, so no
+  exception is needed.) **The action-consistency check warns on the policy's own pattern.** ACCEPT
   or KEEP_AS_NON_CORE on direct rows alongside MODIFY on synthesis rows for
   the same root term gives "Inconsistent review actions for term
   GO:0005739". The warning is expected under this policy. It needs an

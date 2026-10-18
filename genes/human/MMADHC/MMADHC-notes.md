@@ -87,8 +87,29 @@ annotation) and IEA (GO_REF:0000044, SL-0173) KEEP_AS_NON_CORE -> MODIFY to GO:0
 HTP (PMID:34800366) and IDA (PMID:23270877) stay KEEP_AS_NON_CORE with reasons noting the
 assays resolve only the organelle; NEW IC GO:0005759 row; core_functions locations now
 cytosol + mitochondrial matrix (the single branch-point core function spans both pools).
-Expected validator warning: mixed actions on GO:0005739 (policy-driven: direct vs synthesis rows).
+Expected validator warning: mixed actions on GO:0005739 (policy-driven: direct vs synthesis rows). (Superseded 2026-10-18: the synthesis rows are no longer MODIFYed, so this warning no longer occurs.)
 
 ## 2026-10-18 (ORGANELLES revision)
 
 After the PR #5208 review, the IBA/IEA mitochondrion rows are kept (not MODIFYed to the matrix): their sources correctly assert the organelle and could not resolve further. The mitochondrial matrix stays as the NEW IC row, added alongside the root rows as GO does for DARS2 and MMUT.
+
+## 2026-10-18 (core-function location, after OpenScientist)
+
+Question put to OpenScientist: does the mitochondrial pool perform part of the core
+AdoCbl-supply function in the matrix, or is the decisive activity cytosolic? Report:
+`MMADHC-hypotheses/mmadhc-mitochondrial-pool-adocbl/openscientist.md`. Verdict "partially
+supported": the matrix location is well supported, the matrix-side function is unresolved
+[file:human/MMADHC/MMADHC-hypotheses/mmadhc-mitochondrial-pool-adocbl/openscientist.md "No
+direct physical interaction between MMADHC and any mitochondrial cobalamin enzyme (MMAB,
+MMUT, MMAA) has been demonstrated in any assay."]. Checked its key citations:
+[PMID:24722857 "null mutations N-terminal to Met116 cause isolated"] and [PMID:26364851 "the
+globular C-terminal domain of human CblD, which is sufficient for its"]. It missed the
+mouse Afg3l2 paper, which links mitochondrial Mmadhc accumulation to increased AdoCbl
+[PMID:41411131 "Loss of Afg3l2 leads to Mmadhc accumulation, driving excessive"].
+
+Decision: the mitochondrial pool matters for the AdoCbl branch, but where its molecular
+step happens is unknown. So the matrix stays on the NEW location row and is removed from
+the core function's `locations` (which records where the characterized activity occurs:
+the cytosol, with MMACHC). The mitochondrion rows stay KEEP_AS_NON_CORE. The open question
+is recorded as a core-function knowledge gap, with a compartment-restricted rescue and
+matrix proximity labelling as suggested experiments.
