@@ -91,6 +91,8 @@ LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 RUNS = {
     "default": "all orthologs (emapper defaults)",
     "species_excluded": "orthologs from the query's own species excluded (--excluded_taxa)",
+    "narrow_scope": "default, with --tax_scope all_narrow (narrowest pre-configured clade)",
+    "species_excluded_narrow": "own species excluded, with --tax_scope all_narrow",
     "species_excluded_experimental": ("own species excluded, experimental GO evidence only "
                                       "(--go_evidence experimental)"),
 }
