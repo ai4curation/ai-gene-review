@@ -1,7 +1,7 @@
 # Bacteriophage P2 Gene B (Replication protein B / gpB; UniProt P07696)
 
 ## Overview
-Gene **B** of *Escherichia phage P2* (`BPP2`) encodes the 166-amino-acid early replication protein gpB (19.0 kDa; `UniProt:P07696`), required for phage-specific lagging-strand DNA synthesis (`PMID:3475531`). gpB belongs to the phage P2 B replication protein family (`InterPro:IPR009652` / `PF06841`) and functions as a replicative helicase loader/interactor that interacts with the *Escherichia coli* host DnaB helicase (`PMID:3475531`, `file:BPP2/B/B-uniprot.txt`).
+Gene **B** of *Escherichia phage P2* (`BPP2`) encodes the 166-amino-acid early replication protein gpB (19.0 kDa; `UniProt:P07696`), required for phage-specific lagging-strand DNA synthesis (`PMID:3475531`). gpB belongs to the phage P2 B replication protein family (`InterPro:IPR059576` / `Pfam:PF26815` `Phage_RepB`) and functions as a replicative helicase loader/interactor that interacts with the *Escherichia coli* host DnaB helicase (`PMID:3475531`, `file:BPP2/B/B-uniprot.txt`).
 
 ## Key Literature & Experimental Evidence
 - **PMID:3475531** (*DNA sequences of bacteriophage P2 early genes cox and B and their regulatory sites.*):

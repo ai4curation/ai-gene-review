@@ -3,7 +3,7 @@
 ## Identity & Genomic Context
 - **UniProt**: `P05461` (`SID_BPP4`, 244 aa, ~27.3 kDa).
 - **Locus**: First gene of the P4 late `sid-delta-psu` operon transcribed from the late promoter `Psid` ([PMID:6095206], [PMID:3295254], [PMID:2183201]).
-- **InterPro**: `IPR009383` / `PF06299` (Bacteriophage P4 Sid protein family).
+- **Domains**: Coiled-coil / α-helical external capsid scaffolding protein (no InterPro or Pfam accession is cross-referenced in `sid-uniprot.txt`).
 
 ## Molecular Function & Biological Role
 - Satellite phage P4 lacks genes for structural virion components and parasitizes the morphogenetic proteins of its helper phage P2 ([PMID:3295254], [PMID:7643390]).

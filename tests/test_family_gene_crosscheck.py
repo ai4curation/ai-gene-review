@@ -352,9 +352,10 @@ def test_exception_for_member_without_gene_review_is_only_anchor_checked():
     assert check_member_exceptions(review, {FAMILY: []}) == []
 
 
-def test_index_genes_by_family_excludes_viral_records(tmp_path):
-    """PANTHER phylogenetic trees are restricted to cellular organisms; viral UniProt
-    records carrying out-of-tree InterPro DR PANTHER HMM hits are skipped."""
+def test_viral_records_are_indexed_as_out_of_paint_tree(tmp_path):
+    """Viral UniProt records carry out-of-tree InterPro DR PANTHER HMM hits: they are
+    indexed with in_paint_tree=False so PAINT-tree subfamily scope/pruning checks skip
+    them while check_member_exceptions can still verify explicit member_exceptions."""
     _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "REMOVE")
     viral_dir = tmp_path / "genes" / "BPT7" / "3.5"
     viral_dir.mkdir(parents=True)
@@ -365,10 +366,20 @@ def test_index_genes_by_family_excludes_viral_records(tmp_path):
         "DR   PANTHER; PTHR11022:SF41; PEPTIDOGLYCAN-RECOGNITION PROTEIN LC-RELATED; 1.\n"
     )
     (viral_dir / "3.5-ai-review.yaml").write_text(
-        yaml.safe_dump({"id": "P00806", "existing_annotations": []})
+        yaml.safe_dump({
+            "id": "P00806",
+            "existing_annotations": [
+                {"term": {"id": TERM, "label": "amidase"}, "evidence_type": "IDA", "review": {"action": "ACCEPT"}}
+            ],
+        })
     )
     index = index_genes_by_family(tmp_path / "genes")
-    assert [g.symbol for g in index.get(FAMILY, [])] == ["PGRPLC"]
+    refs = {g.symbol: g for g in index.get(FAMILY, [])}
+    assert refs["PGRPLC"].in_paint_tree is True
+    assert refs["3.5"].in_paint_tree is False
+    review = _family_review(node_affects=(RECEPTOR_SF,))
+    assert [r.gene for r in check_scope_violations(review, index)] == ["PGRPLC"]
+    assert [r.gene for r in check_pruning_conflicts(review, index)] == ["PGRPLC"]
 
 
 # --------------------------------------------------------------------------

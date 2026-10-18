@@ -5,7 +5,7 @@
 - **UniProtKB accession**: `P03728` (`PORTL_BPT7`, Portal protein / Head-to-tail joining protein / Connector protein)
 - **Length**: 536 amino acids (~59.1 kDa)
 - **Structures**: `PDB:3J4A`, `PDB:6QWP`, `PDB:6R21`, `PDB:9JYZ` (high-resolution cryo-EM structures of the dodecameric portal ring in open and closed conformations and within the portal-tail complex).
-- **Domains**: `HAMAP:MF_04120` (`Phage_portal_T7`), `InterPro:IPR038995` / `Pfam:PF05136` (`Phage_T7_portal`).
+- **Domains**: `HAMAP:MF_04120` (`Phage_portal_T7`), `InterPro:IPR020991` (`Connector_podovirus`) / `InterPro:IPR038995` (`Portal_prot_Caudovirale`) / `Pfam:PF12236` (`Head-tail_con`).
 
 ## Literature & Function Summary
 - **Homododecameric portal connector at the unique 5-fold vertex of the T=7 capsid** (`PMID:15784250`, `PMID:23580619`, `PMID:23632014`, `PMID:23884409`):

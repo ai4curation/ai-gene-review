@@ -2,8 +2,8 @@
 
 ## Identity & Genomic Context
 - **UniProt**: `P68666` (`Y106_BPP4`, historical annotation: `Uncharacterized 11.7 kDa protein`, 106 aa, ~11.7 kDa).
-- **Locus**: `ORF106` (`cnr`), located immediately upstream of the `alpha` replication primase-helicase gene in the P4 replication operon ([PMID:3309336], [PMID:2183201], [PMID:11929357] / [PMID:11929537]).
-- **Domains**: `IPR005528` / `PF03864` (Bacteriophage P4 Cnr / Peptidase S24/S26B-like winged-helix domain).
+- **Locus**: `ORF106` (`cnr`), located immediately upstream of the `alpha` replication primase-helicase gene in the P4 replication operon ([PMID:3309336], [PMID:2183201], [PMID:11929537]).
+- **Domains**: `InterPro:IPR035317` / `Pfam:PF17345` (`DUF5375`, Bacteriophage P4 Cnr winged-helix domain).
 
 ## Molecular Function & Biological Role
 - First sequenced as a 106-codon open reading frame (`ORF106`) immediately upstream of the 777-codon `alpha` gene ([PMID:3309336], [PMID:2183201]), this protein was subsequently identified genetically and structurally as **Cnr** (copy number regulation), an essential negative regulator of P4 plasmid DNA replication that maintains plasmid copy number within a viable physiological window ([PMID:11929537]).

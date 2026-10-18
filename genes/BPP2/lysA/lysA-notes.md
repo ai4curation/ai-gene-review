@@ -1,7 +1,7 @@
 # Bacteriophage P2 Gene lysA (Antiholin LysA; UniProt P51769)
 
 ## Overview
-Gene **lysA** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes a 141-amino-acid four-transmembrane inner-membrane protein (15.5 kDa; `UniProt:P51769`, `InterPro:IPR009218` / `PF05929`) that acts as a specific antiholin regulating the P2 class I holin gpY (`PMID:8051010`, `PMID:23335412`). An amber mutation in `lysA` causes accelerated lysis (`PMID:8051010`), and co-expression of `lysA` in trans with a chimeric $\lambda\text{-}Y$ phage specifically delays gpY-mediated host lysis by ~10 minutes and increases progeny phage burst size (PFU/ml) by ~50% without altering gpY protein accumulation (`PMID:23335412`).
+Gene **lysA** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes a 141-amino-acid four-transmembrane inner-membrane protein (15.5 kDa; `UniProt:P51769`, `InterPro:IPR047759` `LysA-like` / `Pfam:PF28015` `LysA`) that acts as a specific antiholin regulating the P2 class I holin gpY (`PMID:8051010`, `PMID:23335412`). An amber mutation in `lysA` causes accelerated lysis (`PMID:8051010`), and co-expression of `lysA` in trans with a chimeric $\lambda\text{-}Y$ phage specifically delays gpY-mediated host lysis by ~10 minutes and increases progeny phage burst size (PFU/ml) by ~50% without altering gpY protein accumulation (`PMID:23335412`).
 
 ## Key Literature & Experimental Evidence
 - **PMID:8051010** (*Functions involved in bacteriophage P2-induced host cell lysis and identification of a new tail gene.*):

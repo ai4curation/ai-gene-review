@@ -1,7 +1,7 @@
 # Bacteriophage P2 Gene P (Terminase, ATPase subunit gpP; UniProt P25479)
 
 ## Overview
-Gene **P** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes the 590-amino-acid large ATPase subunit gpP (66.5 kDa; `UniProt:P25479`, `InterPro:IPR004921` / `PF03237` Terminase_6) of the viral DNA packaging terminase complex (`PMID:1837355`, `file:BPP2/P/P-uniprot.txt`). Together with the small endonuclease subunit gpM (`UniProt:P25476`), gpP docks at the dodecameric gpQ portal vertex of the empty procapsid and hydrolyzes ATP to power translocation of the linearized P2 (or satellite P4) dsDNA genome into the capsid (`PMID:1837355`, `file:BPP2/P/P-uniprot.txt`).
+Gene **P** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes the 590-amino-acid large ATPase subunit gpP (66.5 kDa; `UniProt:P25479`, `InterPro:IPR010332` `ATPase_terminase-su_N` / `InterPro:IPR027417` `P-loop_NTPase` / `InterPro:IPR035421` `Terminase_6C` / `Pfam:PF03237` `Terminase_6`) of the viral DNA packaging terminase complex (`PMID:1837355`, `file:BPP2/P/P-uniprot.txt`). Together with the small endonuclease subunit gpM (`UniProt:P25476`), gpP docks at the dodecameric gpQ portal vertex of the empty procapsid and hydrolyzes ATP to power translocation of the linearized P2 (or satellite P4) dsDNA genome into the capsid (`PMID:1837355`, `file:BPP2/P/P-uniprot.txt`).
 
 ## Key Literature & Experimental Evidence
 - **PMID:1837355** (*Nucleotide sequence of the DNA packaging and capsid synthesis genes of bacteriophage P2.*):

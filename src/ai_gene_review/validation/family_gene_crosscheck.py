@@ -86,6 +86,7 @@ class GeneRef:
     family: str
     subfamily: str | None
     review_path: Path
+    in_paint_tree: bool = True
 
 
 @dataclass
@@ -114,14 +115,16 @@ def index_genes_by_family(genes_dir: Path) -> dict[str, list[GeneRef]]:
     Built by scanning UniProt records line-wise rather than parsing the review YAMLs, so
     the index over the whole corpus is cheap; only genes in a family that actually has a
     review are loaded in full later. Viral UniProt records (``OC   Viruses;``) are
-    excluded because PANTHER phylogenetic trees and PAINT annotations are restricted to
-    cellular organisms; viral ``DR   PANTHER`` lines are out-of-tree InterPro HMM hits.
+    indexed with ``in_paint_tree=False``: InterPro's PANTHER HMM scan (reflected in
+    UniProt ``DR   PANTHER`` lines and ``PTHR*-entries.csv``) assigns viral proteins to
+    PANTHER subfamilies, but PANTHER phylogenetic trees and PAINT annotations
+    (``PTHR*-paint.tsv``) cover only cellular reference proteomes. Keeping viral genes in
+    the index allows ``check_member_exceptions`` to verify explicit ``member_exceptions``
+    while PAINT-tree subfamily scope and node-pruning checks skip ``not gene.in_paint_tree``.
     """
     index: dict[str, list[GeneRef]] = {}
     for uniprot_path in sorted(genes_dir.glob("*/*/*-uniprot.txt")):
         text = uniprot_path.read_text(errors="replace")
-        if VIRAL_OC_RE.search(text):
-            continue
         acc_match = ACCESSION_RE.search(text)
         if not acc_match:
             continue
@@ -139,6 +142,7 @@ def index_genes_by_family(genes_dir: Path) -> dict[str, list[GeneRef]]:
             family=f"PANTHER:{fam_match.group(1)}",
             subfamily=f"PANTHER:{sf_match.group(1)}" if sf_match else None,
             review_path=review_path,
+            in_paint_tree=not bool(VIRAL_OC_RE.search(text)),
         )
         index.setdefault(ref.family, []).append(ref)
     return index
@@ -240,6 +244,8 @@ def check_scope_violations(
         allowed = {sf for sf, _ in _term_ids(assessment.get("applicable_subfamilies"))}
 
         for gene in gene_index.get(family, []):
+            if not gene.in_paint_tree:
+                continue
             if scope == "SUBFAMILY_ONLY" and gene.subfamily in allowed:
                 continue
             actions = gene_actions_for_term(gene.review_path).get(term)
@@ -302,7 +308,7 @@ def check_pruning_conflicts(
             continue
 
         for gene in gene_index.get(family, []):
-            if gene.subfamily not in affected:
+            if not gene.in_paint_tree or gene.subfamily not in affected:
                 continue
             actions = gene_actions_for_term(gene.review_path).get(term)
             if not actions:
@@ -347,6 +353,8 @@ def check_family_gene_disagreement(
         excepted = _excepted_accessions(assessment)
 
         for gene in gene_index.get(family, []):
+            if not gene.in_paint_tree:
+                continue
             covered = scope == "FAMILY_WIDE" or (
                 scope == "SUBFAMILY_ONLY" and gene.subfamily in allowed
             )

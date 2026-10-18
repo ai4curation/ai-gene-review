@@ -5,9 +5,9 @@
 - **Gene symbol**: `4` (DNA primase/helicase, gp4, EC 5.6.2.3 / EC 2.7.7.101)
 - **Length**: 566 AA (Class II protein; produces two overlapping isoforms from in-frame initiation codons: 63-kDa full-length gp4A, 566 AA, and 56-kDa N-terminally truncated gp4B, 503 AA initiated at Met-64)
 - **Domains**:
-  - `InterPro:IPR013237` / `Pfam:PF08273` (Zinc-binding domain of primase-helicase, residues 6-57; present in 63-kDa gp4A, absent in 56-kDa gp4B)
-  - `InterPro:IPR006172` / `Pfam:PF01726` (Toprim RNA polymerase domain of primase, residues 70-245)
-  - `InterPro:IPR007694` / `Pfam:PF00271` (DnaB-like replicative helicase C-terminal domain, residues 272-566)
+  - `InterPro:IPR013237` / `Pfam:PF08273` (`Zn_Ribbon_Prim`, Zinc-binding domain of primase-helicase, residues 6-57; present in 63-kDa gp4A, absent in 56-kDa gp4B) and `InterPro:IPR048774` / `Pfam:PF21268` (`Helic-prim_T7_N`)
+  - `InterPro:IPR006171` (`TOPRIM_dom`) / `InterPro:IPR034154` (`TOPRIM_DnaG/twinkle`) / `Pfam:PF13155` (`Toprim_2`, Toprim RNA polymerase domain of primase, residues 70-245)
+  - `InterPro:IPR007694` (`DNA_helicase_DnaB-like_C`) / `InterPro:IPR046394` (`Helic_Prim_T7`) / `InterPro:IPR027417` (`P-loop_NTPase`) / `Pfam:PF03796` (`DnaB_C`, DnaB-like replicative helicase C-terminal domain, residues 272-566)
 
 ## Functional Evidence
 - **Two overlapping isoforms (gp4A 63-kDa and gp4B 56-kDa), zinc finger, ssDNA binding, dTTPase/ATPase, and 5'-3' DNA helicase**:
@@ -22,11 +22,11 @@
 ## GO Annotation Review Summary
 - `GO:0043139` (`5'-3' DNA helicase activity`, IDA `PMID:2829184`, IDA `PMID:9185573`, IEA `GO_REF:0000120`) -> `ACCEPT` (core function).
 - `GO:0003899` (`DNA-directed RNA polymerase activity`, IDA `PMID:11279245`, IEA `GO_REF:0000104`) -> `ACCEPT` (core primase function; note that in GO `DNA-directed RNA primase activity` or `DNA primase activity` is represented here by `GO:0003899` in GOA).
-- `GO:0016887` (`ATP hydrolysis activity`, EXP `PMID:2829184`, IEA `GO_REF:0000116`) -> `ACCEPT` (core NTPase/dTTPase activity fueling helicase translocation).
+- `GO:0016887` (`ATP hydrolysis activity`, EXP `PMID:2829184`, IEA `GO_REF:0000116`) -> `MODIFY` to `GO:0043139` (`5'-3' DNA helicase activity`, as NTP/ATP hydrolysis directly powers the 5'-3' DNA helicase activity).
 - `GO:0003697` (`single-stranded DNA binding`, IEA `GO_REF:0000002`) -> `ACCEPT`.
 - `GO:0005524` (`ATP binding`, IEA `GO_REF:0000120`) -> `ACCEPT`.
 - `GO:0008270` (`zinc ion binding`, IEA `GO_REF:0000120`) -> `ACCEPT`.
-- `GO:0005515` (`protein binding` with `UniProtKB:P00581`, IPI `PMID:30679383`, IPI `PMID:8528255`) -> `ACCEPT`.
+- `GO:0005515` (`protein binding` with `UniProtKB:P00581`, IPI `PMID:30679383`, IPI `PMID:8528255`) -> `REMOVE` (bare `protein binding` removed per GO curation policy; the physical complex with gp5 is captured in `core_functions`).
 - `GO:0042802` (`identical protein binding` with `UniProtKB:P03692`, IPI `PMID:30679383`, IPI `PMID:8528255`) -> `ACCEPT`.
 - `GO:0039693` (`viral DNA genome replication`, IEA `GO_REF:0000120`) -> `ACCEPT`.
 - `GO:0006269` (`DNA replication, synthesis of primer`, IEA `GO_REF:0000043`) -> `ACCEPT`.

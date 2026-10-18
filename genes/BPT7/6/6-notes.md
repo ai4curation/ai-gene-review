@@ -4,7 +4,7 @@
 - **Gene symbol**: `6`
 - **UniProtKB accession**: `P00638` (`EXRN_BPT7`, Exonuclease, EC 3.1.11.3)
 - **Length**: 300 amino acids (~34.5 kDa)
-- **InterPro / Pfam**: `InterPro:IPR020046` / `Pfam:PF02739` (`5_3_exonuc_N`, 5'-3' exonuclease, N-terminal resolvase-like domain); `InterPro:IPR036397` (`RNase_H_sf`).
+- **InterPro / Pfam**: `InterPro:IPR020046` / `Pfam:PF02739` (`5_3_exonuc_N`, 5'-3' exonuclease, N-terminal resolvase-like domain); `InterPro:IPR029060` (`PIN-like_dom_sf`).
 
 ## Literature & Function Summary
 - **Dual 5'-3' dsDNA exonuclease and RNase H (RNA-DNA hybrid ribonuclease) activities** (`PMID:364424`, `PMID:2170664`, `PMID:1325707`):
