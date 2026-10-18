@@ -72,3 +72,12 @@ The table below is generated from the actual selected cache headers. A true flag
 | [28485711](https://pubmed.ncbi.nlm.nih.gov/28485711/) | true | `ace6fb4adfdd002a068aeee7e8fd1f1def73a3942cdf730f265b9855bd1ad8e9` |
 
 The source audit includes exact input URLs, hashes, a locked dependency and executed saved outputs. Reference-only links from the review distinguish primary support, computed source joins and this locator guide. The normal research-provider failures are documented in the notes; they are not represented as completed research reports.
+
+
+## Follow-up source access
+
+[PMID:24967968](https://pubmed.ncbi.nlm.nih.gov/24967968/): normal full-text cache; Results on patient myoblasts and Methods on cell origin/laser injury were read. The human comparison uses one patient and an unmatched control; mechanistic lysosome experiments use mouse cells.
+
+[PMID:27226605](https://pmc.ncbi.nlm.nih.gov/articles/PMC4938179/): normal cache is abstract-only; the original PMC HTML Results and Methods were read independently. The experiment measures lipid mixing, including an inner-leaflet control, rather than directly measuring wound closure. The soluble human construct is reported as residues 1–1965; no current natural-product identity is assigned.
+
+The [repair audit](DYSF-bioinformatics/repair-audit/README.md) preserves the current ontology and comparator query results. No newly authored quotation or machine-cache flag change was introduced.

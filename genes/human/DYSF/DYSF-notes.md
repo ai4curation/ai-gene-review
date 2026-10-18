@@ -31,3 +31,10 @@ The PAINT target path and literal IBD assertions are valid. The actual PANTHER g
 Urinary-exosome Table 1 directly identifies DYSF by one unique peptide and one spectrum, with the source's manual and database-disambiguation safeguards. The EPS-urine main paper was read, but its target supplement was not recovered. Both positive high-throughput annotations remain non-core detection claims; no contamination conclusion follows from low peptide count or membrane topology. [PMID:19056867](https://pmc.ncbi.nlm.nih.gov/articles/PMC2637050/), [PMID:23533145](https://pmc.ncbi.nlm.nih.gov/articles/PMC3773505/)
 
 Existing shared publication bytes and their flags remain unchanged. Separately recovered originals are described as such, and fresh variants remain acquisition provenance. The portable analysis publishes only lossless machine-source responses and original supplementary data, not whole article bodies. It reproduces actual target joins and includes independent partner-class locators. No newly authored publication quotation is introduced.
+
+
+## Follow-up: membrane repair and titin specificity
+
+The participation/comparator audit supersedes the initial decision to omit a repair process. [PMID:24967968](https://pubmed.ncbi.nlm.nih.gov/24967968/) supplies human-cell repair evidence; [PMID:27226605](https://pubmed.ncbi.nlm.nih.gov/27226605/) supplies direct biochemical participation. Dysferlin contributes to the repair machinery rather than being the membrane lesion acted upon. The [saved-source audit](DYSF-bioinformatics/repair-audit/README.md) records the comparator, ancestry, redundancy and GO-CAM checks. GO:0001778 is added once and linked to the existing lipid-binding core. Bansal et al. (PMID:12736685) is HIGH relevance, with its mouse and abstract-only access scope retained.
+
+The PMID:23414517 titin row now proposes GO:0031432, the verified child of GO:0008092. Other cytoskeletal partners retain their original class refinements. The fragment-interaction and tissue-proximity limits remain explicit.
