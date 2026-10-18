@@ -3,7 +3,8 @@
 (eggnog.taxa.db), so that ``--excluded_taxa`` removes every strain of the
 query's species. Writes ``cohort_species_taxa.yaml`` (accession -> species taxid).
 
-Usage: species_taxa.py EGGNOG_DATA_DIR/eggnog.taxa.db
+Usage: species_taxa.py EGGNOG_DATA_DIR/eggnog.taxa.db [BASE_DIR]
+BASE_DIR holds cohort.yaml (default: the project directory).
 """
 import os
 import sqlite3
@@ -11,7 +12,7 @@ import sys
 
 import yaml
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 db = sqlite3.connect(sys.argv[1])
 cohort = yaml.safe_load(open(os.path.join(HERE, "cohort.yaml")))["proteins"]
 

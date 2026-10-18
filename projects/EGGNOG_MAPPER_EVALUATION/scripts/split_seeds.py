@@ -4,13 +4,15 @@
 
 Queries whose taxon is absent from eggNOG's taxonomy (``not_resolved``) are
 grouped under the seed ortholog's own taxon instead, which still removes the
-query's own eggNOG record from transfer."""
+query's own eggNOG record from transfer.
+
+Usage: split_seeds.py SEEDS OUT_DIR [BASE_DIR]  (BASE_DIR holds cohort_species_taxa.yaml)"""
 import os
 import sys
 
 import yaml
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = sys.argv[3] if len(sys.argv) > 3 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 meta = yaml.safe_load(open(os.path.join(HERE, "cohort_species_taxa.yaml")))
 sp, unresolved = meta["species_taxid"], set(meta["not_resolved"])
 seeds, out_dir = sys.argv[1], sys.argv[2]

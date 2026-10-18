@@ -40,10 +40,18 @@ Outputs (in ``results/``):
   <run>_protein.tsv       one row per protein (counts, recall)
   summary.yaml            aggregate tables for the project page
 
-Run: uv run python projects/EGGNOG_MAPPER_EVALUATION/score_emapper.py
+GOA baseline: each protein's cached ``*-goa.tsv`` (non-NOT rows, any evidence)
+is also closed over the ontology, so per protein and per stratum the summary
+reports how many core_functions terms GOA already covered and how many emapper
+adds that GOA did not.
+
+Run: uv run python projects/EGGNOG_MAPPER_EVALUATION/score_emapper.py [--base DIR] [--runs a,b]
+``--base`` is a directory holding cohort.yaml and runs/ (default: this
+project directory; e.g. ``deep_dive``); results go to ``<base>/results``.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import os
 import sys
@@ -258,20 +266,44 @@ def read_annotations(path: str) -> dict[str, dict]:
     return out
 
 
+def goa_closure(rec: dict, go: GO) -> set[str]:
+    """Ontology closure of the gene's cached GOA terms (NOT rows excluded)."""
+    path = os.path.join(ROOT, os.path.dirname(rec["review"]), f"{rec['gene']}-goa.tsv")
+    out: set[str] = set()
+    if not os.path.exists(path):
+        return out
+    with open(path) as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            if "NOT" in (row.get("QUALIFIER") or "").split("|"):
+                continue
+            t = go.norm(row.get("GO TERM", ""))
+            if t:
+                out |= go.ancestors(t)
+    return out
+
+
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--base", default=HERE)
+    ap.add_argument("--runs", default=",".join(RUNS))
+    args = ap.parse_args()
+    base = os.path.abspath(args.base)
+    run_names = [r for r in args.runs.split(",") if r]
     go = GO(str(ensure_frozen_go()))
     legacy = [GO(p) for p in legacy_go_paths()]
-    with open(os.path.join(HERE, "cohort.yaml")) as fh:
+    with open(os.path.join(base, "cohort.yaml")) as fh:
         cohort = yaml.safe_load(fh)["proteins"]
-    reviews = {}
+    reviews, goa = {}, {}
     for rec in cohort:
         with open(os.path.join(ROOT, rec["review"])) as fh:
             reviews[rec["accession"]] = review_sets(yaml.load(fh, Loader=LOADER), go)
+        goa[rec["accession"]] = goa_closure(rec, go)
 
-    os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
+    os.makedirs(os.path.join(base, "results"), exist_ok=True)
     summary = {"go_release": GO_RELEASE, "leaf_reduction_releases": sorted(LEGACY_GO) + [GO_RELEASE], "cohort_size": len(cohort), "runs": {}}
-    for run, desc in RUNS.items():
-        ann_path = os.path.join(HERE, "runs", run, f"{run}.emapper.annotations")
+    for run in run_names:
+        desc = RUNS.get(run, run)
+        ann_path = os.path.join(base, "runs", run, f"{run}.emapper.annotations")
         if not os.path.exists(ann_path):
             print(f"skip {run}: {ann_path} missing")
             continue
@@ -296,6 +328,7 @@ def main() -> None:
                     "stratum": rec["stratum"], "aspect": go.ns.get(leaf, "?"),
                     "term_id": leaf, "term_label": go.name.get(leaf, ""), "category": c})
             core_hit = {c for c in core if c in closure}
+            core_goa = {c for c in core if c in goa[acc]}
             prot_rows.append({
                 "accession": acc, "gene": rec["gene"], "organism_dir": rec["organism_dir"],
                 "stratum": rec["stratum"], "annotated": int(row is not None),
@@ -305,9 +338,10 @@ def main() -> None:
                 "n_go_propagated": len(set(raw)), "n_leaves": len(leaves),
                 **{c.lower(): cats[c] for c in CATEGORIES},
                 "n_core_terms": len(core), "n_core_recovered": len(core_hit),
+                "n_core_in_goa": len(core_goa), "n_core_emapper_only": len(core_hit - core_goa),
                 "core_missed": ";".join(sorted(core - core_hit))})
         for name, rows in (("leaf_scores", leaf_rows), ("protein", prot_rows)):
-            with open(os.path.join(HERE, "results", f"{run}_{name}.tsv"), "w", newline="") as fh:
+            with open(os.path.join(base, "results", f"{run}_{name}.tsv"), "w", newline="") as fh:
                 w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t")
                 w.writeheader()
                 w.writerows(rows)
@@ -325,7 +359,10 @@ def main() -> None:
                 "proteins": len(ps), "with_go": sum(1 for p in ps if p["n_leaves"]),
                 "leaves": len(ls),
                 **{c.lower(): sum(1 for r in ls if r["category"] == c) for c in CATEGORIES},
-                "core_recall": round(sum(p["n_core_recovered"] for p in ps) / ct, 3) if ct else None}
+                "core_recall": round(sum(p["n_core_recovered"] for p in ps) / ct, 3) if ct else None,
+                "core_terms": ct,
+                "core_in_goa": sum(p["n_core_in_goa"] for p in ps),
+                "core_emapper_only": sum(p["n_core_emapper_only"] for p in ps)}
         summary["runs"][run] = {
             "description": desc,
             "proteins_annotated": sum(p["annotated"] for p in prot_rows),
@@ -336,11 +373,13 @@ def main() -> None:
                 a: {c: cat_ns[(a, c)] for c in CATEGORIES} for a in ("MF", "BP", "CC")},
             "core_terms": core_total, "core_terms_recovered": core_hit,
             "core_recall": round(core_hit / core_total, 3) if core_total else None,
+            "core_in_goa": sum(p["n_core_in_goa"] for p in prot_rows),
+            "core_emapper_only": sum(p["n_core_emapper_only"] for p in prot_rows),
             "obsolete_leaves_dropped": obsolete_leaves,
             "by_stratum": by_stratum,
         }
         print(run, yaml.safe_dump(summary["runs"][run]["leaf_categories"]), core_hit, core_total)
-    with open(os.path.join(HERE, "results", "summary.yaml"), "w") as fh:
+    with open(os.path.join(base, "results", "summary.yaml"), "w") as fh:
         fh.write("# Generated by score_emapper.py; do not edit by hand.\n")
         yaml.safe_dump(summary, fh, sort_keys=False)
 
