@@ -105,7 +105,7 @@ Last updated: 2026-10-18
 ## Phase 1: human (9)
 
 - [x] LIAS (O43766): lipoyl synthase, mitochondrial. 21 rows: 11 ACCEPT, 6 MODIFY (incl. 3 obsolete GO:0009107 → GO:0009249), 3 MARK_AS_OVER_ANNOTATED (mouse phenotype ISS), 1 NEW (SAM binding)
-- [ ] RSAD2 (Q8WXG1): viperin, CTP → ddhCTP dehydratase
+- [x] RSAD2 (Q8WXG1): viperin, CTP → ddhCTP dehydratase. 59 rows: 26 ACCEPT, 17 KEEP_AS_NON_CORE (infection-driven mitochondrial/Golgi pools, mouse T-cell rows), 8 REMOVE (protein binding), 3 TOO_GENERAL, 2 MODIFY, 1 MARK_AS_OVER_ANNOTATED, 2 NEW (SAM binding; protein-macromolecule adaptor for IRAK1–TRAF6). Proposed new term: SAM-dependent CTP dehydratase activity (RHEA:65944)
 - [x] MOCS1 (Q9NZB8): GTP 3',8-cyclase (MOCS1A) + cPMP synthase (MOCS1B). Reviewed earlier; include in Phase 3
 - [x] CDKAL1 (Q5VV42): cytosolic tRNA t6A37 → ms2t6A methylthiotransferase. 23 rows: 8 ACCEPT, 9 MODIFY, 2 KEEP_AS_NON_CORE, 3 REMOVE (protein binding), 1 NEW (SAM binding). No insulin-secretion terms: upstream necessity, not participation
 - [x] CDK5RAP1 (Q96SZ6): mitochondrial tRNA i6A37 → ms2i6A methylthiotransferase. 28 rows: 12 ACCEPT, 6 MODIFY, 4 MARK_AS_OVER_ANNOTATED (nuclear/cytosolic pool, refuted by PMID:28981754), 2 KEEP_AS_NON_CORE, 2 REMOVE (NAS brain development/neuron differentiation), 1 UNDECIDED, 1 NEW (SAM binding)
@@ -184,3 +184,25 @@ Paralogs and uncharacterised, where the risk is over-annotation:
   Phase 1 reviews so they are consistent from the start.
 - Phase 1 reviews dispatched: LIAS, RSAD2, ELP3, RSAD1, TYW1 + TYW1B (one
   reviewer, paralogs), CDKAL1 + CDK5RAP1 (one reviewer, MTTase paralogs).
+- **Phase 1 complete** (all 8 validate with 0 errors). Cross-cutting findings:
+  - The asta files contained nothing on any of the 8 genes (all 20 retrieved
+    papers per gene were generic database/methods papers). Every review was
+    built from cached primary literature, PubMed and UniProt. Each review
+    carries the harmless "deep research not cited" warning for this reason.
+  - The generic-row rule applied cleanly everywhere; no gene needed an
+    exception. `GO:0046872` did not occur in any human GOA set.
+  - `GO:1904047` S-adenosyl-L-methionine binding is absent from GOA for every
+    human radical SAM enzyme. Added as NEW to the 7 with established catalysis
+    (LIAS, RSAD2, ELP3, CDKAL1, CDK5RAP1, TYW1; MOCS1 already had it as core
+    function). Not added to RSAD1 or TYW1B. Worth raising with GO/UniProt as a
+    systematic gap: the curated PROSITE/HAMAP cofactor note ("exchangeable
+    S-adenosyl-L-methionine") could drive it.
+  - Homology over-annotation found in both uncharacterised members: RSAD1
+    carried HemN coproporphyrinogen-oxidase and porphyrin-biosynthesis rows
+    (removed; the HemW subfamily lacks that activity, PMID:22142238); TYW1B
+    carries TYW1 activity by ECO:0000250 transfer although it lacks the FMN
+    loop and auxiliary-cluster cysteines (left UNDECIDED, alignment in
+    `genes/human/TYW1B/TYW1B-bioinformatics/`).
+  - Ontology gap: no GO MF term for viperin's ddhCTP synthase reaction
+    (checked QuickGO/OLS 2026-10-18); proposed in the RSAD2 review.
+- Next: Phase 2 (E. coli K-12), starting with bioB, lipA, moaA.
