@@ -103,7 +103,9 @@ from ai_gene_review.validation.supporting_text import (
 )
 
 # A resolver answers: given a CURIE, return (status, primary_label, aliases).
-# status is "ok" when the id resolved, "not_found" when the ontology was
+# status is "ok" when the id resolved, "ok_no_aliases" when it resolved but the
+# ontology source cannot list synonyms (e.g. the OLS adapter), so only the
+# primary label is known, "not_found" when the ontology was
 # consulted but the id is absent, and "unavailable" when the ontology itself
 # could not be loaded/queried (e.g. transient download failure) - the latter is
 # advisory so CI does not go red on flaky ontology fetches. Implemented as a
@@ -1487,6 +1489,14 @@ def validate_terms(
                 f"the {where} quotes the retired label verbatim, which is "
                 f"allowed when the entry documents the retirement"
             )
+        if err and status == "ok_no_aliases":
+            # The ontology source cannot list synonyms, so a non-primary label
+            # may be a synonym: advisory, as it was before ids resolved here.
+            warnings.append(
+                f"{err} (synonyms unavailable from this ontology source; "
+                f"label not validated against synonyms)"
+            )
+            continue
         if err:
             errors.append(err)
 
@@ -1719,7 +1729,14 @@ def _build_oak_resolver(
             # entity_aliases includes synonyms; tolerate adapters lacking it.
             alias_fn = getattr(adapter, "entity_aliases", None)
             if callable(alias_fn):
-                aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                try:
+                    aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                except NotImplementedError:
+                    # e.g. the OLS adapter has no alias map. The id and its
+                    # primary label did resolve, so do not report the ontology
+                    # as unavailable; but synonyms are unknown, so a label that
+                    # differs from the primary may still be a valid synonym.
+                    return ("ok_no_aliases", primary, set())
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())
@@ -1926,6 +1943,9 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
     warnings.extend(validate_feedback_loops(doc))
+    model_errors, model_warnings = validate_executable_models(doc, project_root)
+    errors.extend(model_errors)
+    warnings.extend(model_warnings)
     warnings.extend(symbol_label_warnings(doc))
 
     # Compare actual role assertions, not just protein/family membership.
@@ -2233,6 +2253,53 @@ def validate_feedback_loops(doc: object) -> List[str]:
         for f in feedback_loop_findings(doc)
         if f.get("severity") == "warning"
     ]
+
+
+def validate_executable_models(
+    doc: object, repo_root: Path = Path(".")
+) -> Tuple[List[str], List[str]]:
+    """Check ``activation_logic`` and the ``executable_models`` a module declares.
+
+    Returns ``(errors, warnings)``. Errors (blocking): ``activation_logic`` that
+    disagrees with the declared connections (see
+    :func:`ai_gene_review.module_boolean.activation_logic_findings`), a scenario
+    of a module-derived Boolean model that does not reach the attractors it
+    states or cannot be checked, and a model file that does not exist under
+    ``repo_root``. These are curator-authored claims, so a mismatch is an error,
+    like a wrong term id. Warnings: scenarios on a model this check cannot run
+    (external or non-Boolean), which are recorded but never verified.
+    """
+    from ai_gene_review.module_boolean import activation_logic_findings
+    from ai_gene_review.module_dynamics import (
+        run_declared_scenarios,
+        unchecked_scenario_models,
+    )
+
+    if not isinstance(doc, dict) or not isinstance(doc.get("module"), dict):
+        return [], []  # schema validation reports a missing module mapping
+    errors: List[str] = []
+    for model in doc.get("executable_models") or []:
+        if not isinstance(model, dict):
+            continue
+        for path in model.get("files") or []:
+            if not (repo_root / str(path)).is_file():
+                errors.append(
+                    f"Executable model {model.get('id')}: file {path} does not exist"
+                )
+    warnings = [
+        f"Executable model {model_id}: its scenarios are not checked "
+        "(only module-derived Boolean models are simulated)"
+        for model_id in unchecked_scenario_models(doc)
+    ]
+    logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
+    if logic_errors:
+        return errors + logic_errors, warnings
+    for result in run_declared_scenarios(doc):
+        errors.extend(
+            f"Executable model {result.model_id}, scenario {result.scenario_id}: {f}"
+            for f in result.failures
+        )
+    return errors, warnings
 
 
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:

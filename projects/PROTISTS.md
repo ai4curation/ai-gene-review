@@ -11,16 +11,17 @@ autolink_exclude: [TERT, rod, Sil1, sil1]
 
 **Bottom line:** most of the diversity of eukaryotes is protist, but very little
 of this repository is. Of 7,176 gene folders, about 104 (1.4%) are protists, and
-62 of those are *Dictyostelium*. We have no reviews at all for the parasites that
-carry most protist GO curation (*Plasmodium*, *Toxoplasma*, trypanosomes,
-*Leishmania*), nor for the ciliate and diatom models. This project sets out to
-fill that gap, lineage by lineage, starting with a seed list of 27 well-studied
-genes whose UniProt accessions we have checked. Track A (Apicomplexa) is done:
-all 14 genes (11 *P. falciparum*, 3 *T. gondii*) have COMPLETE reviews covering
-241 existing annotations plus 26 new ones. The most common corrections were
-removing terms carried over from animal homologs and replacing generic `membrane`
-and `protein binding` rows with the compartment or binding partner each paper
-shows.
+62 of those are *Dictyostelium*. Before this project there were no reviews at
+all for the parasites that carry most protist GO curation (*Plasmodium*,
+*Toxoplasma*, trypanosomes, *Leishmania*), nor for the ciliate and diatom
+models. This project sets out to fill that gap, lineage by lineage, starting
+with a seed list of 27 well-studied genes whose UniProt accessions we have
+checked. Tracks A (Apicomplexa) and B (Kinetoplastida) are done: 20 genes
+(11 *P. falciparum*, 3 *T. gondii*, 4 *T. brucei*, 2 *L. major*) have COMPLETE
+reviews covering 295 existing annotations plus 33 new ones. The most common
+corrections were removing terms carried over from animal homologs and replacing
+generic `membrane` and `protein binding` rows with the compartment or binding
+partner each paper shows.
 
 "Protist" is not a clade. Here it means any eukaryote that is not an animal, a
 fungus or a land plant. Green algae and the unicellular relatives of animals
@@ -51,8 +52,12 @@ fall inside this definition, but other projects already cover them (see
 
 ### GOA census (2026-10-14)
 
-Annotation counts from the QuickGO API, for the exact taxon of each strain
-(descendant taxa are not included). "Experimental" means evidence codes
+Annotation counts from the QuickGO API, for the exact taxon of each row
+(descendant taxa are not included), which is a strain except where the row says
+otherwise. *Toxoplasma* appears twice because its curation really is split that
+way: the species-level taxon 5811 carries SAG1's Swiss-Prot entry, while ME49
+(508771) carries the TrEMBL entries, and neither row's count includes the
+other's. "Experimental" means evidence codes
 descending from ECO:0000269 (EXP, IDA, IPI, IMP, IGI, IEP). The review counts
 are current as of 2026-10-15; *T. brucei brucei* (TRYBB, taxon 5702) holds 3
 more and is not a row here because its annotations sit under the TREU927 strain.
@@ -66,6 +71,7 @@ more and is not a row here because its annotations sit under the TREU927 strain.
 | *Giardia intestinalis* WB | GIAIC | 184922 | 343 | 6,081 | 0 |
 | *Entamoeba histolytica* HM-1:IMSS | ENTH1 | 294381 | 197 | 13,213 | 0 |
 | *Plasmodium berghei* ANKA | PLABA | 5823 | 148 | 0 | 0 |
+| *Toxoplasma gondii* (species) | TOXGO | 5811 | 133 | 0 | 1 |
 | *Tetrahymena thermophila* SB210 | TETTS | 312017 | 124 | 0 | 0 |
 | *Toxoplasma gondii* ME49 | TOXGM | 508771 | 35 | 0 | 2 |
 | *Trypanosoma cruzi* CL Brener | TRYCC | 353153 | 29 | 0 | 0 |
@@ -140,15 +146,16 @@ normal guidelines in `CLAUDE.md`; they do not replace them.
 ---
 # STATUS
 
-Last updated: 2026-10-14
+Last updated: 2026-10-15
 
 ## Seed gene list
 
 Species codes are UniProt mnemonics and match the `genes/<CODE>/` folders.
 Accessions were checked against UniProt on 2026-10-14. Entries marked
-*unreviewed* are TrEMBL entries with no gene symbol of their own; following the
-repository convention, their folder name will be the accession unless UniProt
-provides a symbol by the time they are fetched.
+*unreviewed* are TrEMBL entries that carry no `GN Name=` in UniProt. These were
+fetched by accession with `--alias`, so the folder uses the standard
+nomenclature name; `gene_symbol` is set to that same standard symbol and the
+accession stays in `id`. Expect this for any TrEMBL-only apicomplexan gene.
 
 ### Track A: Apicomplexa
 
@@ -312,13 +319,14 @@ deep research later would be a useful cross-check.
 
 **Recurring patterns** (candidates for `PROTISTS/patterns.md`):
 
-- *Animal or plant terms carried over electronically.* RH5 `bicellular tight
-  junction` (the parasite "tight junction" is the moving junction, not an
-  epithelial junction); ROP18 `nucleus` and `mitotic DNA damage checkpoint
+- *Animal or plant terms carried over electronically.* ROP18 `nucleus` and `mitotic DNA damage checkpoint
   signaling` (TreeGrafter, from an animal kinase family); ATP4 potassium and
   calcium transport (inherited from ENA and SERCA nodes; the activity is
   insensitive to both ions); CDPK1 `calmodulin binding` (CDPKs carry their own
-  calmodulin-like domain). All removed.
+  calmodulin-like domain). All removed. A related case went the other way: RH5's
+  `bicellular tight junction` is equally an animal epithelial term imported on a
+  word match, but the parasite structure it describes is real, so that row is
+  `MODIFY` to the proposed `moving junction` term rather than a removal.
 - *Glutathione transport on CRT.* Comes from Arabidopsis CLT donors and from
   mutant alleles only; marked over-annotated rather than removed.
 - *Drug-response terms.* `response to xenobiotic stimulus` (CDPK1, K13, MDR1)
@@ -328,8 +336,11 @@ deep research later would be a useful cross-check.
 - *Sparse GOA.* MIC2, SAG1, HAP2 and K13 had 1 to 3 annotations each, with no
   molecular function. Most of their core content came from NEW rows. MIC2
   (7 NEW rows) is the heaviest and is a good candidate for a second look.
-- *Non-symbol entries.* MDR1, K13, AMA1 and HAP2 have no UniProt gene symbol,
-  so `gene_symbol` is the accession and the folder uses the PlasmoDB name.
+- *Non-symbol entries.* MDR1, K13, AMA1 and HAP2 have no `GN Name=` in UniProt,
+  so `just fetch-gene` seeded `gene_symbol` with the accession. All four were
+  set to the standard *P. falciparum* symbol, matching the folder, with the
+  accession kept in `id`. A convention note in CLAUDE.md would stop this
+  recurring; left for a maintainer.
 
 **Proposed terms to consolidate.**
 
@@ -339,8 +350,9 @@ deep research later would be a useful cross-check.
   vacuole (GO:0020020), the acidic digestive compartment of intraerythrocytic
   Plasmodium and related apicomplexans in which host haemoglobin is degraded."*
   Parent: GO:0005774 vacuolar membrane.
-- `moving junction` (AMA1): the same structure RH5's removed `tight junction` row
-  was trying to capture.
+- `moving junction` (AMA1 and RH5, parent GO:0030054 cell junction): the
+  merozoite-erythrocyte ring that RH5's `bicellular tight junction` row was
+  reaching for. Both reviews carry identical definition text.
 - `RH5-CyRPA-Ripr invasion complex` (RH5).
 - `Kelch13 compartment` and `cytostome-mediated endocytosis of host cell
   cytosol` (K13).
