@@ -47,3 +47,10 @@ Both DSG2-binding rows now use the adhesion-specific term with their assays dist
 Current reference notes and source navigation describe the actual reading scope without internal agent labels. Earlier note entries remain an append-only historical record; the biological conclusions and the unchanged experimental limitations above are the current account.
 
 Full-text access is distinguished from cache format: PMID:27298358 has a separately recovered complete original despite its preserved abstract-only cache, so its reference access flag is false. PMID:2037591 remains access-limited, while PMID:21062920 has available full text. No publication cache bytes were changed.
+
+
+## Correction of HPA location-specific confidence
+
+The earlier localization account incorrectly generalized HPA's overall supported gene score to the additional ER observation. The same saved public page and the downloadable location record distinguish supported plasma membrane from uncertain ER. HaCaT and SuSa retain the reported ER staining, but it is no longer proposed as an established replacement compartment. Desmosome and the independently supported broader plasma-membrane pool remain. This correction follows the per-location source assessment, not absence from the GOA import or an assumed transit mechanism. The previous notes are preserved as historical provenance.
+
+The PKP2 partner classification remains supported by explicitly traced component annotations: rat ISO and human ISS GO:0005882 assertions trace to mouse Q9CQ73's IDA assertion from PMID:16917092. The donor-specific experiment was not independently recovered; the transfers are not presented as direct rat or human microscopy. A protein can contribute to cytoskeletal structure without itself forming the filament. The calcium-dependent adhesion and tail-mediated plaque-coupling mechanism remains integrated in the existing core.
