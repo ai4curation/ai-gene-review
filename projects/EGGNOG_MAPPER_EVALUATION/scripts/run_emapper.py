@@ -44,8 +44,9 @@ class ZChunkFile:
         self.get = functools.lru_cache(maxsize=cache_chunks)(self._load)
 
     def _load(self, i: int) -> bytes:
-        self.fh.seek(self.offs[i])
-        return self.dctx.decompress(self.fh.read(self.offs[i + 1] - self.offs[i]))
+        # pread: atomic positional read, safe if forked workers share the descriptor
+        raw = os.pread(self.fh.fileno(), self.offs[i + 1] - self.offs[i], self.offs[i])
+        return self.dctx.decompress(raw)
 
     def read(self, amount: int, offset: int) -> bytes:
         out = bytearray()

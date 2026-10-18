@@ -10,14 +10,14 @@ autolink_gene_symbols: false
 eggNOG-mapper is mostly used on genomes nobody has curated, so this page tests
 it where that is true. It covers every completed review for three non-model
 organisms in the corpus:
-- ***Pseudomonas putida* KT2440** (PSEPK, 850 proteins), a bacterial chassis
+- ***Pseudomonas putida* KT2440** (PSEPK, 847 proteins), a bacterial chassis
   with almost no experimental GO;
 - **horse** (HORSE, 30 proteins), a mammal absent from eggNOG 5;
 - **poplar** (POPTR, 113 proteins), a tree whose proteins are in eggNOG but
   carry almost no GO.
 
 **Field pennycress** (THLAR) has only four reviewed genes, so it appears as
-case studies rather than statistics. In total that is 997 proteins
+case studies rather than statistics. In total that is 994 proteins
 ([`deep_dive/cohort.yaml`](deep_dive/cohort.yaml)).
 
 The same pipeline as the main evaluation was used: emapper 2.1.13 with
@@ -28,12 +28,12 @@ database 5.0.2 and default settings, the same scoring, plus a manual check of
 
 | Genome | Seed ortholog | Median seed identity | Level used for transfer | Proteins given GO |
 |---|---|---|---|---|
-| *P. putida* | KT2440 itself (801 of 850) | 100% | Gammaproteobacteria | 484 of 850 (57%) |
+| *P. putida* | KT2440 itself (798 of 847) | 100% | Gammaproteobacteria | 483 of 847 (57%) |
 | Horse | other mammals (horse is not in eggNOG 5) | 92% | Metazoa (all 30) | 29 of 30 |
 | Poplar | poplar for 44, otherwise other plants | 96% | Streptophyta (109 of 113) | 84 of 113 (74%) |
 | Pennycress | other Brassicales and *Arabidopsis* (not in eggNOG) | 84% | Streptophyta | 4 of 4 |
 
-Hiding each genome's own species changed almost nothing (*P. putida* 484 → 466
+Hiding each genome's own species changed almost nothing (*P. putida* 483 → 465
 proteins with GO; horse unchanged). eggNOG holds essentially no GO for these
 organisms, so every transferred term comes from other species. Unlike the
 model organisms in the main cohort, the default run here is already an
@@ -48,12 +48,15 @@ moss and algae.
 
 Default run, as % of predicted leaf terms:
 
-| Genome | Leaf terms | Median per protein | EXACT | BROADER | NARROWER | DOWNGRADED | REJECTED | UNRELATED | Core recall |
-|---|---|---|---|---|---|---|---|---|---|
-| *P. putida* | 2,237 | 4 | 54.9 | 3.8 | 7.4 | 5.4 | 1.6 | 27.0 | 0.41 |
-| Horse | 631 | 18 | 12.5 | 0.5 | 10.9 | 5.7 | 0.3 | 70.0 | 0.69 |
-| Poplar | 388 | 4 | 26.8 | 7.0 | 16.2 | 5.4 | 0.0 | 44.6 | 0.35 |
-| Pennycress | 12 | 2 | 25.0 | 0 | 8.3 | 16.7 | 0 | 50.0 | 0.27 |
+| Genome | Leaf terms | Median per protein | EXACT | BROADER | NARROWER | DOWNGRADED | REJECTED | UNDECIDED | UNRELATED | Core recall |
+|---|---|---|---|---|---|---|---|---|---|---|
+| *P. putida* | 2,232 | 4 | 54.7 | 3.8 | 7.4 | 4.9 | 1.6 | 0.4 | 27.1 | 0.41 |
+| Horse | 631 | 18 | 12.5 | 0.5 | 10.9 | 1.4 | 0.3 | 4.3 | 70.0 | 0.69 |
+| Poplar | 388 | 4 | 26.8 | 7.0 | 16.2 | 5.4 | 0.0 | 0.0 | 44.6 | 0.35 |
+| Pennycress | 12 | 2 | 25.0 | 0 | 8.3 | 16.7 | 0 | 0 | 50.0 | 0.27 |
+
+UNDECIDED marks leaves related only to terms the review left UNDECIDED, which
+records an absence of judgment rather than a negative one.
 
 Two very different profiles appear.
 
@@ -78,7 +81,7 @@ covers:
 
 | Genome | Core terms | Already covered by GOA | Recovered by emapper | emapper only (not in GOA) |
 |---|---|---|---|---|
-| *P. putida* | 2,467 | 1,886 (76%) | 1,009 (41%) | 85 |
+| *P. putida* | 2,455 | 1,878 (76%) | 1,004 (41%) | 85 |
 | Horse | 45 | 38 | 31 | 1 |
 | Poplar | 442 | 371 | 156 | 6 |
 | Pennycress | 11 | 4 | 3 | 1 |
@@ -189,7 +192,7 @@ Brassicales.
 
 | Genome | Proteins with GO, default → narrow | Core recall, default → narrow | EXACT % of leaves, default → narrow |
 |---|---|---|---|
-| *P. putida* | 484 → 57 | 0.41 → 0.04 | 55 → 60 |
+| *P. putida* | 483 → 57 | 0.41 → 0.04 | 55 → 60 |
 | Horse | 29 → 12 | 0.69 → 0.22 | 13 → 29 |
 | Poplar | 84 → 61 | 0.35 → 0.25 | 27 → 36 |
 

@@ -94,10 +94,10 @@ anchor or organelle that location requires.
 
 ## What goes right
 
-32 of the 152 claims were correct additions. Most were specific and
+31 of the 152 claims were correct additions. Most were specific and
 mechanistic, and many filled gaps in GOA:
 - macroautophagy for the fly VMP1 ortholog Tango5;
-- site of double-strand break for mouse Trp53;
+- site of double-strand break for rat Tp53;
 - peptidyl-prolyl isomerization for SurA;
 - allantoin biosynthesis for zebrafish uox;
 - mitochondrial inner–outer membrane contact site for Ckmt2;

@@ -101,12 +101,17 @@ def main() -> None:
             cohort.append(dict(rec, stratum=stratum))
         print(f"{stratum:8s} eligible={len(pool):5d} sampled={len(pick)}")
 
+    # One record per accession (two review folders can share one, e.g. the
+    # HOST__ACC and paralog conventions); keep the first, for both outputs.
     seen = set()
+    unique = []
+    for rec in cohort:
+        if rec["accession"] not in seen:
+            seen.add(rec["accession"])
+            unique.append(rec)
+    cohort = unique
     with open(os.path.join(HERE, "cohort.fasta"), "w") as fa:
         for rec in cohort:
-            if rec["accession"] in seen:
-                continue
-            seen.add(rec["accession"])
             fa.write(f">{rec['accession']}\n")
             s = rec["_seq"]
             for i in range(0, len(s), 60):

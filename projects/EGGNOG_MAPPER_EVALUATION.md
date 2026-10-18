@@ -24,11 +24,11 @@ most-specific term with what the review concluded. Run normally, 40% of
 predicted leaf terms match a supported claim exactly and two thirds of
 reviewed core-function terms are recovered. That run is flattered, because
 eggNOG already holds GOA annotations for most of these proteins and returns
-them. To simulate a newly sequenced organism we hid the query's own species.
-Exact matches then fell to 33% of leaves and core-function recall to 44%. A
-further 44% of leaves were related to nothing in the review. In a manual check
-of 45 of those unrelated terms, about half were wrong and one in five was a
-correct, informative addition. The errors are characteristic: process terms
+them. To approximate a newly sequenced organism we hid the query's own species
+from annotation transfer. Exact matches then fell to 33% of leaves and
+core-function recall to 44%. A further 44% of leaves were related to nothing
+in the review. In a manual check of 76 of those unrelated terms, about half
+(39) were wrong and one in six (12) was a correct, informative addition. The errors are characteristic: process terms
 that came from an ortholog's mutant phenotype, terms that cannot apply in the
 query's lineage (eye development on a worm protein), activities that belong to
 a paralog or a complex partner, and source annotations that were wrong.
@@ -98,7 +98,7 @@ Three annotation runs were made from the same seed orthologs:
 | Run | Orthologs used for transfer |
 |---|---|
 | `default` | all (what a user annotating these proteins gets) |
-| `species_excluded` | all except those from the query's own species (`--excluded_taxa <species>`); simulates a new genome |
+| `species_excluded` | all except those from the query's own species (`--excluded_taxa <species>`); approximates a new genome (see [Caveats](#caveats)) |
 | `species_excluded_experimental` | as above, and only experimentally supported GO terms (`--go_evidence experimental`), removing ISS/ISO/IBA terms that may themselves descend from the query |
 
 `--excluded_taxa` has a bug in emapper 2.1.13. `normalize_target_taxa` expands
@@ -129,11 +129,13 @@ subclasses ("heterocyclic compound binding", "multi-organism reproductive
 process") surface as 2,500 spurious leaves. Obsolete leaf terms without a
 replacement are dropped (447 in the default run).
 
-The review side has three sets:
+The review side has four sets:
 - **Supported:** ACCEPT, KEEP_AS_NON_CORE and NEW rows, MODIFY replacements,
   and all `core_functions` terms.
-- **Downgraded:** MARK_AS_OVER_ANNOTATED, TOO_GENERAL and UNDECIDED rows, and
-  the original MODIFY term.
+- **Downgraded:** MARK_AS_OVER_ANNOTATED and TOO_GENERAL rows, and the
+  original MODIFY term.
+- **Undecided:** UNDECIDED rows, kept apart because they record that the
+  reviewer reached no judgment, not a negative one.
 - **Rejected:** REMOVE rows and upheld NOT annotations. Removals of
   placeholders (aspect roots, `binding`, `protein binding`) are not counted,
   since they mean "uninformative" rather than "false".
@@ -145,6 +147,7 @@ The review side has three sets:
 | BROADER | an ancestor of a supported term (true, less precise) |
 | NARROWER | a descendant of a supported term (more specific than the review; unverified) |
 | DOWNGRADED | related to a downgraded term |
+| UNDECIDED | related only to an undecided term |
 | UNRELATED | related to nothing in the review |
 
 Core-function recall counts a `core_functions` term as recovered when it lies
@@ -158,11 +161,14 @@ for manual review.
 
 ### Automatic comparison
 
-| Run | Proteins with GO | Leaf terms | EXACT % | BROADER % | NARROWER % | DOWNGRADED % | REJECTED % | UNRELATED % | Core recall % |
-|---|---|---|---|---|---|---|---|---|---|
-| default | 449 | 9,050 | 39.9 | 1.7 | 11.4 | 6.5 | 1.7 | 38.7 | 66.2 (1583/2391) |
-| species_excluded | 332 | 6,674 | 33.1 | 2.2 | 12.4 | 6.4 | 1.8 | 44.2 | 43.5 (1040/2391) |
-| species_excluded_experimental | 288 | 4,941 | 31.6 | 2.4 | 11.4 | 6.3 | 1.9 | 46.5 | 32.1 (767/2391) |
+| Run | Proteins with GO | Leaf terms | EXACT % | BROADER % | NARROWER % | DOWNGRADED % | REJECTED % | UNDECIDED % | UNRELATED % | Core recall % |
+|---|---|---|---|---|---|---|---|---|---|---|
+| default | 449 | 9,050 | 39.9 | 1.7 | 11.4 | 6.0 | 1.7 | 0.5 | 38.7 | 66.2 (1583/2391) |
+| species_excluded | 332 | 6,674 | 33.1 | 2.2 | 12.4 | 6.1 | 1.8 | 0.3 | 44.2 | 43.5 (1040/2391) |
+| species_excluded_experimental | 288 | 4,941 | 31.6 | 2.4 | 11.4 | 6.0 | 1.9 | 0.2 | 46.5 | 32.1 (767/2391) |
+
+Scores are computed against the reviews as of commit `b9da9839c`
+(`--reviews-at` in the scorer), so they do not drift as the corpus changes.
 
 The 515 proteins with a seed ortholog received a median of 10 leaf terms each
 (up to 243). Large sets come from big, heavily annotated mammalian orthologous
@@ -172,11 +178,11 @@ with the own species excluded.
 
 By aspect, in the species-excluded run (% of leaves):
 
-| Aspect | Leaves | EXACT | BROADER | NARROWER | DOWNGRADED | REJECTED | UNRELATED |
-|---|---|---|---|---|---|---|---|
-| MF | 1,095 | 50.9 | 2.6 | 4.6 | 12.5 | 2.6 | 26.9 |
-| BP | 4,309 | 25.5 | 2.2 | 10.8 | 5.6 | 1.6 | 54.3 |
-| CC | 1,270 | 43.3 | 2.1 | 24.5 | 3.8 | 1.6 | 24.7 |
+| Aspect | Leaves | EXACT | BROADER | NARROWER | DOWNGRADED | REJECTED | UNDECIDED | UNRELATED |
+|---|---|---|---|---|---|---|---|---|
+| MF | 1,095 | 50.9 | 2.6 | 4.6 | 12.3 | 2.6 | 0.2 | 26.9 |
+| BP | 4,309 | 25.5 | 2.2 | 10.8 | 5.3 | 1.6 | 0.3 | 54.3 |
+| CC | 1,270 | 43.3 | 2.1 | 24.5 | 3.4 | 1.6 | 0.4 | 24.7 |
 
 Biological-process terms are two thirds of all leaves and over half of them
 are UNRELATED. Molecular-function leaves match exactly twice as often. MF
@@ -211,7 +217,8 @@ eggNOG (proteins with GO / core recall):
   almost entirely from themselves: no other amoebozoan has GO annotations, and
   experimental annotation of other gammaproteobacteria is sparse.
 - **Arabidopsis falls from 0.50 to 0.14.** For a newly sequenced plant,
-  bacterium or protist, the leave-species-out numbers are the ones that apply.
+  bacterium or protist, the leave-species-out numbers are the closer guide,
+  though still optimistic (see [Caveats](#caveats)).
 - ***P. putida* barely changes.** Even the default run gave GO terms to only
   20 of its 40 proteins, so little of its coverage came from its own records.
 
@@ -222,22 +229,24 @@ UNRELATED, 20 REJECTED and 20 NARROWER, at most one per protein
 ([`adjudication/`](EGGNOG_MAPPER_EVALUATION/adjudication/draw_sample.py)).
 AI reviewers judged each against the gene's review, UniProt record and notes,
 using the COR/LSP/UNC/PLI/NPI/REP scheme of de Crécy-Lagard et al. 2025
-(PMID:40703034). Eight claims drawn as REJECTED moved category once
-placeholder removals stopped counting
-([`summary.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml)), so
-counts below use the current category:
+(PMID:40703034). Each stratum below is a random sample of the category it
+was drawn from. Eight claims drawn as REJECTED changed category once
+placeholder removals stopped counting. They are not a random slice of their
+new categories, so they are tallied separately
+([`summary.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml)):
 
-| Category | n | COR | LSP | UNC | Wrong (NPI/PLI/REP) |
+| Drawn as | n | COR | LSP | UNC | Wrong (NPI/PLI/REP) |
 |---|---|---|---|---|---|
-| UNRELATED | 45 | 9 | 7 | 7 | 22 |
+| UNRELATED | 40 | 6 | 5 | 7 | 22 |
 | NARROWER | 20 | 9 | 0 | 6 | 5 |
-| REJECTED | 12 | 1 | 0 | 3 | 8 |
-| BROADER / DOWNGRADED | 3 | 1 | 1 | 0 | 1 |
+| REJECTED (still rejected) | 12 | 1 | 0 | 3 | 8 |
+| REJECTED, since recategorised | 8 | 3 | 4 | 0 | 1 |
 
-- **UNRELATED: about half are wrong, and one in five is a real gap.**
+- **UNRELATED: 55% are wrong, and about one in seven is a real gap.**
   Correct additions included macroautophagy for the fly VMP1 ortholog Tango5,
-  site of double-strand break for mouse Trp53, xenobiotic metabolism for
-  Ephx1, and peptidyl-prolyl isomerization for SurA.
+  site of double-strand break for rat Tp53, xenobiotic metabolism for Ephx1,
+  and peptidyl-prolyl isomerization for SurA. A second round of 36 UNRELATED
+  claims gave 17 wrong and 6 correct (pooled: 39 of 76 wrong, 12 correct).
 - **NARROWER: under half are confirmed.** For example, mRNA splicing via
   spliceosome for CBP80 and TGN membrane for worm clic-1. Most of the rest are
   plausible compartments with no evidence either way.
@@ -312,13 +321,13 @@ other. Neither setting gets a broad scope's coverage without its errors.
 ### Non-model genomes
 
 The [deep dive](EGGNOG_MAPPER_EVALUATION/deep-dive.md) ran every completed
-review for *P. putida* KT2440 (850), horse (30), poplar (113) and pennycress
+review for *P. putida* KT2440 (847), horse (30), poplar (113) and pennycress
 (4). eggNOG holds essentially no GO for these organisms, so the default run is
 already independent.
 
 | Genome | Proteins with GO | Median leaves | EXACT % | UNRELATED % | Core recall | Manual check: correct / wrong |
 |---|---|---|---|---|---|---|
-| *P. putida* | 484 / 850 | 4 | 54.9 | 27.0 | 0.41 | 8 / 14 of 24 |
+| *P. putida* | 483 / 847 | 4 | 54.7 | 27.1 | 0.41 | 8 / 14 of 24 |
 | Horse | 29 / 30 | 18 | 12.5 | 70.0 | 0.69 | 7 / 5 of 16 |
 | Poplar | 84 / 113 | 4 | 26.8 | 44.6 | 0.35 | 4 / 11 of 16 |
 | Pennycress | 4 / 4 | 2 | 25.0 | 50.0 | 0.27 | 1 / 4 of 9 |
@@ -340,7 +349,17 @@ one *P. putida* protein in ten.
   claims on the main cohort, 65 on the deep dive) and were judged by AI
   reviewers, not curators.
 - **UNRELATED is not "wrong".** Reviews cover GOA, so a correct term GOA lacks
-  lands here. The adjudication gives the rate: roughly 20% correct.
+  lands here. The adjudication gives the rate: about 15% correct (12 of 76),
+  51% wrong.
+- **Leave-species-out is only partly blind, and the bias favours emapper.**
+  `--excluded_taxa` filters the annotation step only. The DIAMOND search still
+  finds the query's own eggNOG record as its seed ortholog (human queries seed
+  on `9606.ENSP…`). That record then fixes the orthologous group, the
+  taxonomic level and the preferred name. A protein from a genuinely new
+  genome has no such record, so its seed is a more distant homolog and its
+  group assignment can be worse. The species-excluded numbers are therefore an
+  upper bound on what a new genome gets. The deep-dive genomes, which have
+  little or no own-species GO, are a closer test.
 - **Transfer is not independent of the reviewed annotations.** Even with the
   own species excluded, orthologs' terms can be ISO/ISS copies of the query's.
   The experimental-only run bounds this.

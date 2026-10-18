@@ -15,8 +15,10 @@ terms:
 
   SUPPORTED_SET  ACCEPT / KEEP_AS_NON_CORE / NEW rows, MODIFY replacement
                  terms, and every core_functions term (MF, BP, location, complex)
-  DOWNGRADED     MARK_AS_OVER_ANNOTATED / TOO_GENERAL / UNDECIDED rows, and the
-                 original term of MODIFY rows
+  DOWNGRADED     MARK_AS_OVER_ANNOTATED / TOO_GENERAL rows, and the original
+                 term of MODIFY rows
+  UNDECIDED_SET  UNDECIDED rows: the reviewer reached no judgment, so these are
+                 kept apart from DOWNGRADED rather than read as a negative signal
   REJECTED       REMOVE rows, and curated NOT annotations not overturned by review
 
 Leaf categories, assigned in this order:
@@ -26,6 +28,7 @@ Leaf categories, assigned in this order:
   NARROWER     the leaf descends from a SUPPORTED_SET term (more specific than curated;
                unverified)
   DOWNGRADED   the leaf equals, descends from, or is an ancestor of a DOWNGRADED term
+  UNDECIDED    likewise related to an UNDECIDED_SET term (and to nothing above)
   UNRELATED    none of the above: not supported by the review (novel or wrong)
 
 Recall: a core_functions term counts as recovered when it is in the
@@ -45,7 +48,10 @@ is also closed over the ontology, so per protein and per stratum the summary
 reports how many core_functions terms GOA already covered and how many emapper
 adds that GOA did not.
 
-Run: uv run python projects/EGGNOG_MAPPER_EVALUATION/score_emapper.py [--base DIR] [--runs a,b]
+Reviews and GOA files are read as of a pinned commit (``--reviews-at``, default
+REVIEW_SNAPSHOT), so the scores do not drift as the corpus keeps changing.
+
+Run: uv run python projects/EGGNOG_MAPPER_EVALUATION/score_emapper.py [--base DIR] [--runs a,b] [--reviews-at REV]
 ``--base`` is a directory holding cohort.yaml and runs/ (default: this
 project directory; e.g. ``deep_dive``); results go to ``<base>/results``.
 """
@@ -53,7 +59,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import os
+import subprocess
 import sys
 from collections import Counter, defaultdict
 
@@ -88,6 +96,18 @@ def legacy_go_paths() -> list[str]:
     return paths
 
 LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+# The corpus commit whose reviews this evaluation was scored against (the main
+# commit the evaluation branch started from). "WORKTREE" reads the working tree.
+REVIEW_SNAPSHOT = "b9da9839c"
+
+
+def read_repo_file(rel: str, rev: str) -> str | None:
+    """Text of a repository file at ``rev`` (or the working tree), None if absent."""
+    if rev == "WORKTREE":
+        path = os.path.join(ROOT, rel)
+        return open(path).read() if os.path.exists(path) else None
+    r = subprocess.run(["git", "-C", ROOT, "show", f"{rev}:{rel}"], capture_output=True, text=True)
+    return r.stdout if r.returncode == 0 else None
 RUNS = {
     "default": "all orthologs (emapper defaults)",
     "species_excluded": "orthologs from the query's own species excluded (--excluded_taxa)",
@@ -96,9 +116,9 @@ RUNS = {
     "species_excluded_experimental": ("own species excluded, experimental GO evidence only "
                                       "(--go_evidence experimental)"),
 }
-CATEGORIES = ["EXACT", "BROADER", "NARROWER", "DOWNGRADED", "REJECTED", "UNRELATED"]
+CATEGORIES = ["EXACT", "BROADER", "NARROWER", "DOWNGRADED", "REJECTED", "UNDECIDED", "UNRELATED"]
 SUPPORT_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW"}
-DOWNGRADE_ACTIONS = {"MARK_AS_OVER_ANNOTATED", "TOO_GENERAL", "UNDECIDED"}
+DOWNGRADE_ACTIONS = {"MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"}
 NS = {"biological_process": "BP", "molecular_function": "MF", "cellular_component": "CC"}
 ROOTS = {"GO:0008150", "GO:0003674", "GO:0005575"}
 PLACEHOLDER_REMOVALS = ROOTS | {"GO:0005488", "GO:0005515"}  # binding, protein binding
@@ -195,7 +215,7 @@ def leaf_terms(raw: set[str], go: GO, legacy: list[GO]):
 
 
 def review_sets(doc: dict, go: GO):
-    support, down, reject, core = set(), set(), set(), set()
+    support, down, undecided, reject, core = set(), set(), set(), set(), set()
 
     def add(dest, term):
         if isinstance(term, dict) and term.get("id"):
@@ -216,6 +236,8 @@ def review_sets(doc: dict, go: GO):
             add(support, term)
         elif action in DOWNGRADE_ACTIONS:
             add(down, term)
+        elif action == "UNDECIDED":
+            add(undecided, term)
         elif action == "MODIFY":
             add(down, term)
             for rep in (ann.get("review") or {}).get("proposed_replacement_terms") or []:
@@ -235,10 +257,11 @@ def review_sets(doc: dict, go: GO):
     # another) is a claim the review upholds; it is not counted as rejected.
     reject -= support | PLACEHOLDER_REMOVALS
     down -= support
-    return support, down, reject, core
+    undecided -= support | down | reject
+    return support, down, undecided, reject, core
 
 
-def categorize(leaf: str, support, down, reject, go: GO) -> str:
+def categorize(leaf: str, support, down, undecided, reject, go: GO) -> str:
     anc = go.ancestors(leaf)
     if leaf in support:
         return "EXACT"
@@ -250,6 +273,8 @@ def categorize(leaf: str, support, down, reject, go: GO) -> str:
         return "NARROWER"
     if anc & down or any(leaf in go.ancestors(d) for d in down):
         return "DOWNGRADED"
+    if anc & undecided or any(leaf in go.ancestors(u) for u in undecided):
+        return "UNDECIDED"
     return "UNRELATED"
 
 
@@ -263,24 +288,25 @@ def read_annotations(path: str) -> dict[str, dict]:
             if line.startswith("#query"):
                 header = line[1:].rstrip("\n").split("\t")
                 continue
+            if header is None:
+                raise ValueError(f"{path}: data line before the #query header")
             row = dict(zip(header, line.rstrip("\n").split("\t")))
             out[row["query"]] = row
     return out
 
 
-def goa_closure(rec: dict, go: GO) -> set[str]:
+def goa_closure(rec: dict, go: GO, rev: str) -> set[str]:
     """Ontology closure of the gene's cached GOA terms (NOT rows excluded)."""
-    path = os.path.join(ROOT, os.path.dirname(rec["review"]), f"{rec['gene']}-goa.tsv")
+    text = read_repo_file(f"{os.path.dirname(rec['review'])}/{rec['gene']}-goa.tsv", rev)
     out: set[str] = set()
-    if not os.path.exists(path):
+    if text is None:
         return out
-    with open(path) as fh:
-        for row in csv.DictReader(fh, delimiter="\t"):
-            if "NOT" in (row.get("QUALIFIER") or "").split("|"):
-                continue
-            t = go.norm(row.get("GO TERM", ""))
-            if t:
-                out |= go.ancestors(t)
+    for row in csv.DictReader(io.StringIO(text), delimiter="\t"):
+        if "NOT" in (row.get("QUALIFIER") or "").split("|"):
+            continue
+        t = go.norm(row.get("GO TERM", ""))
+        if t:
+            out |= go.ancestors(t)
     return out
 
 
@@ -288,6 +314,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default=HERE)
     ap.add_argument("--runs", default=",".join(RUNS))
+    ap.add_argument("--reviews-at", default=REVIEW_SNAPSHOT)
     args = ap.parse_args()
     base = os.path.abspath(args.base)
     run_names = [r for r in args.runs.split(",") if r]
@@ -295,14 +322,22 @@ def main() -> None:
     legacy = [GO(p) for p in legacy_go_paths()]
     with open(os.path.join(base, "cohort.yaml")) as fh:
         cohort = yaml.safe_load(fh)["proteins"]
+    seen_acc = set()
+    for rec in cohort:
+        if rec["accession"] in seen_acc:
+            raise ValueError(f"duplicate accession {rec['accession']} in cohort.yaml; "
+                             "each accession must be scored against one review")
+        seen_acc.add(rec["accession"])
     reviews, goa = {}, {}
     for rec in cohort:
-        with open(os.path.join(ROOT, rec["review"])) as fh:
-            reviews[rec["accession"]] = review_sets(yaml.load(fh, Loader=LOADER), go)
-        goa[rec["accession"]] = goa_closure(rec, go)
+        text = read_repo_file(rec["review"], args.reviews_at)
+        if text is None:
+            raise FileNotFoundError(f"{rec['review']} not found at {args.reviews_at}")
+        reviews[rec["accession"]] = review_sets(yaml.load(text, Loader=LOADER), go)
+        goa[rec["accession"]] = goa_closure(rec, go, args.reviews_at)
 
     os.makedirs(os.path.join(base, "results"), exist_ok=True)
-    summary = {"go_release": GO_RELEASE, "leaf_reduction_releases": sorted(LEGACY_GO) + [GO_RELEASE], "cohort_size": len(cohort), "runs": {}}
+    summary = {"review_snapshot": args.reviews_at, "go_release": GO_RELEASE, "leaf_reduction_releases": sorted(LEGACY_GO) + [GO_RELEASE], "cohort_size": len(cohort), "runs": {}}
     for run in run_names:
         desc = RUNS.get(run, run)
         ann_path = os.path.join(base, "runs", run, f"{run}.emapper.annotations")
@@ -315,14 +350,14 @@ def main() -> None:
         obsolete_leaves = 0
         for rec in cohort:
             acc = rec["accession"]
-            support, down, reject, core = reviews[acc]
+            support, down, undecided, reject, core = reviews[acc]
             row = ann.get(acc)
             raw = [] if row is None or row.get("GOs", "-") in ("-", "") else row["GOs"].split(",")
             leaves, closure, n_obs = leaf_terms(set(raw), go, legacy)
             obsolete_leaves += n_obs
             cats = Counter()
             for leaf in sorted(leaves):
-                c = categorize(leaf, support, down, reject, go)
+                c = categorize(leaf, support, down, undecided, reject, go)
                 cats[c] += 1
                 cat_ns[(go.ns.get(leaf, "?"), c)] += 1
                 leaf_rows.append({
@@ -342,7 +377,11 @@ def main() -> None:
                 "n_core_terms": len(core), "n_core_recovered": len(core_hit),
                 "n_core_in_goa": len(core_goa), "n_core_emapper_only": len(core_hit - core_goa),
                 "core_missed": ";".join(sorted(core - core_hit))})
+        if not leaf_rows:
+            print(f"warning: {run} produced no GO leaf terms")
         for name, rows in (("leaf_scores", leaf_rows), ("protein", prot_rows)):
+            if not rows:
+                continue
             with open(os.path.join(base, "results", f"{run}_{name}.tsv"), "w", newline="") as fh:
                 w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t")
                 w.writeheader()

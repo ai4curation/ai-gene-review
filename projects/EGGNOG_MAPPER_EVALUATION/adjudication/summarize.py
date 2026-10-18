@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Tally the manual adjudication batches (batch_*.yaml) into summary.yaml:
-assessment counts per automatic category, and error-type counts.
+"""Tally the manual adjudication batches into summary.yaml and failure_modes.yaml.
 
-Claims are tallied under their *current* automatic category, re-read from
-results/species_excluded_leaf_scores.tsv: the sample was drawn before
-placeholder removals (aspect roots, protein binding) stopped counting as
-rejections, so a few claims drawn as REJECTED are now in another category.
-The category at draw time stays in each batch file.
+Round 1 (batch_*.yaml, 80 claims: 40 UNRELATED, 20 REJECTED, 20 NARROWER) and
+round 2 (round2_batch_*.yaml, 72 claims: per aspect 12 UNRELATED, 6 REJECTED,
+6 NARROWER) were drawn from the species-excluded run.
 
-Round 1 (batch_*.yaml, 80 claims) and round 2 (round2_batch_*.yaml, 72 claims
-stratified by GO aspect) are both tallied, overall and per aspect. Every claim
-judged wrong (NPI/PLI/REP) is also written to failure_modes.yaml, grouped by
-aspect and error type, with the reviewer's rationale."""
+Rates are reported by the stratum each claim was **drawn** from, so every
+denominator is a random sample of one automatic category. Some claims have since
+changed category (round 1 was drawn before placeholder removals such as
+``protein binding`` stopped counting as rejections, and UNDECIDED rows now form
+their own category). Those claims are not a random slice of their new category,
+so they are listed and tallied separately under ``recategorised`` instead of
+being folded into it. Current categories are re-read from
+results/species_excluded_leaf_scores.tsv.
+
+Every claim judged wrong (NPI/PLI/REP) is written to failure_modes.yaml, grouped
+by aspect and error type, with the reviewer's rationale."""
 import csv
 import glob
 import os
@@ -21,56 +25,72 @@ import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WRONG = {"NPI", "PLI", "REP"}
+
+
+def tally(claims) -> dict:
+    a = Counter(c.get("assessment") or "MISSING" for c in claims)
+    return {"n": len(claims), **dict(sorted(a.items())), "wrong": sum(a[k] for k in WRONG)}
+
+
 claims = []
 for rnd, pattern in (("round1", "batch_*.yaml"), ("round2", "round2_batch_*.yaml")):
     for path in sorted(glob.glob(os.path.join(HERE, pattern))):
         for c in yaml.safe_load(open(path))["claims"]:
             c["round"] = rnd
+            c["drawn_as"] = c["category"]
             claims.append(c)
+
 current = {(r["accession"], r["term_id"]): r["category"] for r in csv.DictReader(
     open(os.path.join(HERE, "..", "results", "species_excluded_leaf_scores.tsv")), delimiter="\t")}
-recategorised = []
 for c in claims:
-    now = current.get((c["accession"], c["term"]["id"]), "NOT_A_LEAF")
-    if now != c["category"]:
-        recategorised.append({"claim_id": c["claim_id"], "drawn_as": c["category"], "now": now})
-    c["category"] = now
-missing = [c["claim_id"] for c in claims if not c.get("assessment")]
-by_cat: dict[str, Counter] = defaultdict(Counter)
-errors: Counter = Counter()
-for c in claims:
-    by_cat[c["category"]][c.get("assessment") or "MISSING"] += 1
-    if c.get("error_type"):
-        errors[c["error_type"]] += 1
-by_aspect: dict[str, Counter] = defaultdict(Counter)
+    c["now"] = current.get((c["accession"], c["term"]["id"]), "NOT_A_LEAF")
+moved = [c for c in claims if c["now"] != c["drawn_as"]]
+stay = [c for c in claims if c["now"] == c["drawn_as"]]
+
+by_round_stratum = defaultdict(list)
+for c in stay:
+    by_round_stratum[(c["round"], c["drawn_as"])].append(c)
+by_aspect_r2 = defaultdict(list)
+for c in stay:
+    if c["round"] == "round2":
+        by_aspect_r2[c["aspect"]].append(c)
+
+errors = Counter(c["error_type"] for c in claims if c.get("assessment") in WRONG and c.get("error_type"))
 by_aspect_err: dict[str, Counter] = defaultdict(Counter)
 catalog: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
 for c in claims:
-    by_aspect[c["aspect"]][c.get("assessment") or "MISSING"] += 1
     if c.get("assessment") in WRONG:
         et = c.get("error_type") or "UNSPECIFIED"
         by_aspect_err[c["aspect"]][et] += 1
         catalog[c["aspect"]][et].append({
             "claim_id": c["claim_id"], "gene": c["gene"], "organism_dir": c["organism_dir"],
-            "term": f"{c['term']['id']} {c['term']['label']}", "category": c["category"],
+            "term": f"{c['term']['id']} {c['term']['label']}", "category": c["now"],
             "assessment": c["assessment"], "rationale": c.get("rationale")})
+
 out = {
     "claims": len(claims),
     "claims_by_round": dict(Counter(c["round"] for c in claims)),
-    "unassessed": missing,
-    "recategorised": recategorised,
-    "assessment_by_category": {k: dict(sorted(v.items())) for k, v in sorted(by_cat.items())},
-    "assessment_overall": dict(sorted(Counter(c.get("assessment") or "MISSING" for c in claims).items())),
+    "unassessed": [c["claim_id"] for c in claims if not c.get("assessment")],
+    "as_drawn": {f"{r}/{s}": tally(v) for (r, s), v in sorted(by_round_stratum.items())},
+    "round2_by_aspect_as_drawn": {a: tally(v) for a, v in sorted(by_aspect_r2.items())},
+    "recategorised": {
+        "summary": tally(moved),
+        "claims": [{"claim_id": c["claim_id"], "round": c["round"], "drawn_as": c["drawn_as"],
+                    "now": c["now"], "assessment": c.get("assessment")} for c in moved]},
+    "all_claims_by_aspect": {a: tally([c for c in claims if c["aspect"] == a]) for a in ("MF", "BP", "CC")},
+    "assessment_overall": tally(claims),
     "error_types": dict(errors.most_common()),
-    "assessment_by_aspect": {a: dict(sorted(v.items())) for a, v in sorted(by_aspect.items())},
     "error_types_by_aspect": {a: dict(v.most_common()) for a, v in sorted(by_aspect_err.items())},
 }
+with open(os.path.join(HERE, "summary.yaml"), "w") as fh:
+    fh.write("# Generated by summarize.py; do not edit by hand.\n")
+    yaml.safe_dump(out, fh, sort_keys=False)
 with open(os.path.join(HERE, "failure_modes.yaml"), "w") as fh:
     fh.write("# Generated by summarize.py; do not edit by hand.\n"
              "# Every adjudicated claim judged wrong (NPI/PLI/REP), by GO aspect and error type.\n")
     yaml.safe_dump({a: {et: v for et, v in sorted(d.items(), key=lambda kv: -len(kv[1]))}
                     for a, d in sorted(catalog.items())}, fh, sort_keys=False, width=100)
-with open(os.path.join(HERE, "summary.yaml"), "w") as fh:
-    fh.write("# Generated by summarize.py; do not edit by hand.\n")
-    yaml.safe_dump(out, fh, sort_keys=False)
-print(yaml.safe_dump(out, sort_keys=False))
+print(yaml.safe_dump({k: out[k] for k in ("as_drawn", "round2_by_aspect_as_drawn",
+                                           "all_claims_by_aspect", "assessment_overall")}, sort_keys=False))
+print(yaml.safe_dump(out["recategorised"]["summary"]),
+      [(c["claim_id"], c["drawn_as"], c["now"], c["assessment"]) for c in out["recategorised"]["claims"]])
