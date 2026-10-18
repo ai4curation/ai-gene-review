@@ -24,3 +24,43 @@ The [source guide](EDAR-source-guide.md) distinguishes cache availability from s
 The [ClinGen project policy](../../../projects/CLINGEN_MENDELIAN.md) retains supported generic binding when a specific replacement is not established. The non-retracted EDAR binding assertions have independently justified cytokine or signaling-receptor partner classes; no claim is removed simply for being generic or lacking a demonstrated native pathway. Receptor binding is distinct from receptor agonism.
 
 The official record describes 448- and 480-residue products. The longer product replaces Ala219 with a 33-residue segment in the cytoplasmic region. Signal-peptide processing does not define a third splice product. Binding experiments using the shared extracellular region do not demonstrate equivalent trafficking or signaling by both complete natural products.
+
+
+## Follow-up: placode resolution and source access
+
+The two broad epidermis-development assertions are now refined to hair follicle placode formation
+(GO:0060789). The separately recovered [PMID:19619491 original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2859042/)
+shows that mouse Edar-null/downless embryos retain early Wnt prepatterns but fail to refine placode
+boundaries and maintain focal Wnt activity through E15.5. Constitutive EDAR signaling does not bypass
+Wnt. These experiments establish participation in primary hair placode formation; the human genetics
+in PMID:10431241 corroborates the conserved appendage role without supplying a human placode assay.
+The original TAS in PMID:12270937 remains an EDAR background statement, separate from that paper's
+new XEDAR experiments. The current ontology places GO:0060789 beneath epidermis development,
+hair follicle development and ectodermal placode development; only the informative child is retained.
+
+The earlier note that the normal PMID:19619491 cache omits Methods and Results remains an accurate
+description of that preserved cache, but it no longer describes overall source access. The separate
+complete original supplies the Methods and Results used here. Likewise, separately accessed originals
+for PMID:10431241, PMID:11035039 and PMID:12270937 support reference-level availability while their
+normal abstract-only caches remain unchanged. The [source guide](EDAR-source-guide.md) gives original
+URLs, section locators and the limits of the selected text reads; no figure-pixel inspection is claimed.
+
+EDAR–LILRB1 remains a signaling-receptor-binding refinement. Sequence-authenticated human extracellular
+reagents gave control-normalized positive measurements in both orientations and triplicate retests.
+That physical-binding evidence plus the independently established receptor class supports the binding
+term without requiring receptor agonism or SPR. The absent EDAR SPR entry limits affinity and native
+physiology claims; it does not negate the controlled positive screen. This evidence is distinct from
+the binding panel specifically questioned in the retracted PMID:27144394.
+
+The complete abstract of [PMID:11780064](https://pubmed.ncbi.nlm.nih.gov/11780064/) corroborates the
+Edar–Edaradd death-domain association and downstream signaling mechanism in the mouse discovery
+context, with human EDARADD disease genetics. It does not establish uninspected human constructs or
+a purified binary assay. Its authentic normal cache and reference-only core citation have been added.
+The receptor mechanism, both product descriptions and all 23 imported source dictionaries are unchanged.
+The resulting actions are 8 ACCEPT, 12 MODIFY, 2 KEEP_AS_NON_CORE and one source-specific REMOVE;
+the earlier action-count paragraph records the preceding assessment. No NEW annotation or new
+publication excerpt is introduced. Evidence is provided through source references and explicit locators.
+
+The portable replay now uses explicit input-validation errors that remain active under optimized
+Python execution. Normal and optimized executions produced the same saved results, and an altered
+input was rejected. The 21-input archive, source manifest and derived result bytes remain unchanged.
