@@ -184,3 +184,16 @@ The binding index above identifies the exact partner accession for every row. Th
 - [Q9ULU4: MYND-type zinc finger-containing chromatin reader ZMYND8](https://www.uniprot.org/uniprotkb/Q9ULU4/entry).
 - [Q9Y6M1: Insulin-like growth factor 2 mRNA-binding protein 2](https://www.uniprot.org/uniprotkb/Q9Y6M1/entry).
 - [Q13627: Dual specificity tyrosine-phosphorylation-regulated kinase 1A](https://www.uniprot.org/uniprotkb/Q13627/entry).
+
+
+## Review-response source locators
+
+The [author-uploaded original of PMID:25556849](https://www.researchgate.net/publication/270513402_A_Novel_DYRK1A_Dual_Specificity_Tyrosine_Phosphorylation-Regulated_Kinase_1A_Inhibitor_for_the_Treatment_of_Alzheimer%27s_Disease_Effect_on_Tau_and_Amyloid_Pathologies_in_Vitro) is identified by DOI 10.1111/jnc.13018 and the matching article title. The Methods for recombinant kinase activity and Figure 2 support the human kinase/Tau assay; cortical-neuron culture, insoluble-Tau extraction and Figure 5 define the rat aggregation endpoint; Figure 6 defines the human HEK293-APP Aβ40 experiment. The indexed original text was inspected, including the captions, but no original PDF download or figure-pixel inspection is claimed. The preserved normal cache is abstract-only. Access to the original, rather than the cache flag alone, grounds the source-specific decisions.
+
+For [PMID:30773093](https://pmc.ncbi.nlm.nih.gov/articles/PMC6464593/), the Results distinguish kinase-dependent RNF169/53BP1 experiments from DYRK1A knockout and DR-GFP repair measurements. The production [GO-CAM source](../../../gocams/617b481400003575/617b481400003575-src.yaml) explicitly links DYRK1A activity 617b481400003576 to RNF169 activity 617b481400003584 by positive regulation. That curator model is consistent with the measured branch, not an independent experiment or a replacement for the opposing knockout result. [PMID:31024071](https://pmc.ncbi.nlm.nih.gov/articles/PMC6483993/) supplies the separate early recruitment, abundance and inhibitor-control context.
+
+[PMID:24327345](https://pubmed.ncbi.nlm.nih.gov/24327345/) Methods specify human frontal cortex, controlled subcellular fractionation and immunoprecipitation from the human brain cytoskeletal fraction. Figures 2 and 3 distinguish the cytoskeleton-associated pool from a claim of purified filament binding. The original colocalizes_with qualifier remains unchanged. Later murine phosphorylation experiments are not relabeled human.
+
+The [current official USP54 record](https://www.uniprot.org/uniprotkb/Q70EL1/entry) provides the partner-class evidence through its experimentally supported FUNCTION and CATALYTIC ACTIVITY sections, rather than through the protein name or GO annotations. The cited enzymology is curated evidence; those underlying original bodies were not independently reread for this review. The positive DYRK1A–USP54 associations and their original bait/fragment limitations are separately documented above.
+
+[PMID:29849146](https://pmc.ncbi.nlm.nih.gov/articles/PMC6475116/) Figure 3 compares DYRK1A CTD targeting with a histidine-region deletion. Extended Data Figure 6 tests a GFP-tagged DYRK1A IDR fragment in vitro, while the live-cell phase-separation experiments predominantly concern cyclin T1. The new questions distinguish these assays from unresolved endogenous intact-DYRK1A and natural-product behavior.

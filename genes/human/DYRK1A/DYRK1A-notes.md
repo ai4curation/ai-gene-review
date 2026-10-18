@@ -50,3 +50,12 @@ Ordinary fetch produced genuine machine records and publication caches. The conf
 Machine cache flags remain unchanged. Separate authentic originals materially extended several abstract-only caches, including PMC originals for the SPRED, SIRT1, histone and splicing studies, an institutional PDF for the CTD-kinase study, and indexed original access for the inhibitor/Tau study. Bibliographic verification is distinguished from access to a specific target measurement. Each reference's full_text_unavailable flag records the actual source-specific body-access assessment, not a copied cache-wide flag. A false flag does not imply that every page, supplement or image was inspected; the source guide specifies the operative scope.
 
 No new supporting-text quotation is introduced in the annotation rows, core or reference findings. The entire evidence assessment is paraphrased with reference anchors; the portable extractor reproduces source measurements rather than authored scientific conclusions.
+
+
+## Bounded follow-up to the review of PR #5202
+
+This follow-up preserves all 125 imported assertions and all existing actions, replacements, products and core terms. It clarifies the positive RNF169-dependent repair branch separately from the opposing knockout reporter result, and exposes a mechanistic knowledge gap plus targeted questions and experiments. It does not neutralize the signed branch simply because whole-cell perturbations have additional effects.
+
+The source guide now gives the actual author-upload route and Methods/Figure locators for PMID:25556849. The abstract-only machine cache remains unchanged; no supporting-text quotation is fabricated from it. The tangle-assembly over-annotation judgment rests on the measured aggregation endpoint rather than on source inaccessibility or an automatic rejection of nonhuman evidence. Human-brain fractionation and immunoprecipitation support the cytoskeleton-associated pool. USP54's current official experimental function statements support its partner class without transferring protease activity to DYRK1A.
+
+One exact ten-word caption anchor from PMID:30773093 is added once to the repair review. No new source assertion, process annotation or core function is introduced. The concise disease sentence repeats the already recorded official human disease relationship. The earlier source-access and construct limitations remain operative. No publication cache, imported source dictionary or prior note text is rewritten.
