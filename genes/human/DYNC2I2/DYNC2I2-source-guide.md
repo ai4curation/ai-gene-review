@@ -179,3 +179,10 @@ Every target path ends at Q96EX3 residues 1–536 in the cilium (5624900) or cil
 ## Access and attribution
 
 The independent core consultation read the reserved 30320547 and 31451806 bodies. The owner read the other operative sources and performed the raw-data checks. Failed 30649997 supplement routes remain failures; full main-text availability does not imply supplemental construct tables were read. The genuine 36973253 supplement was read at its mouse Wdr34 screen panel, and the nuclear uncertainty is deliberately preserved. Neither prior report availability nor successful workflow status alone establishes biological completion.
+
+
+## Review follow-up: binding definitions and localization scope
+
+The current [ubiquitin protein ligase binding definition](https://www.ebi.ac.uk/QuickGO/term/GO:0031625) classifies the bound E3 protein; [DNA-binding transcription factor binding](https://www.ebi.ac.uk/QuickGO/term/GO:0140297) likewise classifies the bound transcription factor. Positive literal interactions plus independent partner-class evidence support these refinements without transferring either partner's enzymatic or regulatory activity. The project-specific generic-binding instruction governs the positive coilin row.
+
+For the electronic filopodium row, the positive tagged-mouse observation is retained, but the reported filopodia-like morphology and experimental context do not resolve endogenous human membership in the actin-based compartment. The updated action limits that transfer (PMID:28379358). The direct retrograde-transport support comes from WDR34 binding/rescue and dynein-2 structural experiments, while the older bidirectional excerpt describes the consequences of disturbing the coupled system (PMID:30649997; PMID:31451806; PMID:30320547).
