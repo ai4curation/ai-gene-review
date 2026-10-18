@@ -70,3 +70,10 @@ The 400-residue historical clone in PMID:9451016 is traceable through the primar
 The new Golgi source remains UNDECIDED. Its mouse donor is traceable to an MGI IPI annotation citing PMID:36074821, but target-specific supplementary evidence could not be inspected. Main-text LYSET–GNPTAB experiments do not by themselves settle DPAGT1 attribution, and established ER residence does not exclude a Golgi pool. No new process or localization is invented to fill this uncertainty.
 
 The [source evidence guide](DPAGT1-source-evidence.md) distinguishes actual original reads from abstract-only and unavailable supplementary material. Genuine Falcon and fallback attempts failed authentication/quota checks; no provider report was authored or substituted. Previously cached source text, prior histories and the original UniProt record remain unchanged. The only newly reproduced source excerpt is the nine-word noncovalent-dimer anchor in the finding assessment; historical quotations remain a separate inventory and are not represented as collectively below 25 words per source.
+
+
+## HTT interaction evidence anchor (2026-10-18)
+
+The non-core protein-binding row now includes a short target-specific excerpt from the existing UniProt interaction record. It identifies DPAGT1 and HTT alongside the reported experiment count. The three public IntAct records and the original automated Y2H Methods remain the evidence for the assay interpretation described in the [source guide](DPAGT1-source-evidence.md). The earlier fly-screen excerpt is retained as general study context; it does not identify the target pair by itself. Table S2 was not separately recovered, and no target-specific mammalian or native ER interaction is claimed.
+
+This follow-up reproduces four additional words from the existing UniProt source once. It preserves all prior quoted passages and their separately recorded historical totals; it adds no publication quotation or biological assertion.
