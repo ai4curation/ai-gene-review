@@ -85,3 +85,12 @@
   the positive-regulation terms, since SREBF1 is a transcriptional regulator and not an enzyme.
 - GO-CAM gocams/6205c24300000880 models SREBF1 as GO:0000981 part_of GO:0045542; the review
   accepts both.
+
+## Isoform modelling decision (2026-10-18)
+
+The functional differences between SREBF1 forms (1a, 1c, the anchorless Delta
+variants and the nuclear fragment) are preferences of target choice and regulation,
+not exclusive activities, so the related GO terms are annotated to the gene as a
+whole and `functional_isoforms` carries no `isoform_specific_terms`. The third core
+function (the ER/Golgi precursor as pathway substrate) deliberately has no molecular
+function, matching SREBF2: the precursor does not bind DNA.
