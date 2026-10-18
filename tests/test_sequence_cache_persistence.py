@@ -134,9 +134,9 @@ def test_cli_does_not_write_save_outputs_on_invalid_data(tmp_path):
     assert (cache / "P12345.seq").read_text() == "error503"
 
 
-def test_workflow_retains_failure_and_saves_only_valid_growth_before_tests():
+def test_workflow_retains_failure_and_isolates_cache_saving_from_tests():
     workflow = yaml.safe_load((ROOT / ".github/workflows/main.yaml").read_text())
-    steps = workflow["jobs"]["test"]["steps"]
+    steps = workflow["jobs"]["validation"]["steps"]
     by_name = {step["name"]: step for step in steps}
     family = by_name["Validate family reviews (scoped)"]
     assert family["run"] == "just validate-families"
@@ -148,7 +148,14 @@ def test_workflow_retains_failure_and_saves_only_valid_growth_before_tests():
     assert "outputs.changed == 'true'" in save["if"]
     assert save["uses"] == "actions/cache/save@v6"
     assert "outputs.digest" in save["with"]["key"]
-    assert steps.index(family) < steps.index(after) < steps.index(save) < steps.index(by_name["Run test suite"])
+    assert steps.index(family) < steps.index(after) < steps.index(save)
+    suite_steps = workflow["jobs"]["suite"]["steps"]
+    assert not any(step.get("run") == "just test" for step in steps)
+    assert any(step.get("run") == "just test" for step in suite_steps)
+    # Test fixtures may mutate restored data; only the validation runner saves it.
+    for step in suite_steps:
+        if step.get("uses", "").startswith("actions/cache"):
+            assert step["uses"] == "actions/cache/restore@v6"
     restore = by_name["Restore UniProt sequences"]
     assert restore["uses"] == "actions/cache/restore@v6"
     assert restore["if"] == "github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'"
