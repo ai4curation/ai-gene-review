@@ -35,6 +35,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR43762` L-GULONOLACTONE OXIDASE | fungal `ALO1` node | `ALO1`/`alo1`/`ALO1`/`alo-1` |
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
+| `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
 
 ---
 
@@ -142,6 +143,22 @@ step-specific review in each fungus.
 - [x] `CANAL/BCY1` - CGD-seeded *Candida albicans* Bcy1; merged in PR #4751
 - [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; drafted in this
   branch
+
+## Family 7: Sterol C-8 Isomerases
+
+`PTHR10868` contains a fungal ERG2 ancestor, `PANTHER:PTN001280219`,
+with PAINT assertions for C-8 sterol isomerase activity and ergosterol
+biosynthetic process. The family also has a broader ER-localization IBD on
+`PANTHER:PTN001328958`; animal Sigma-receptor signaling annotations are on
+separate descendant PTNs and do not propagate to the fungal ERG2 genes.
+
+- [x] `yeast/ERG2` - *S. cerevisiae* sterol C-8 isomerase anchor; drafted in
+  PR #4725
+- [x] `SCHPO/erg2` - fission yeast sterol C-8 isomerase; drafted in PR #4723
+- [x] `CANAL/ERG2` - *Candida albicans* CGD seed for the
+  `GO:0000247 C-8 sterol isomerase activity` IBD; drafted in this branch
+- [x] `NEUCR/erg-1` - *Neurospora crassa* sterol C-8 isomerase; merged in PR
+  #4719
 
 ---
 
@@ -255,3 +272,10 @@ step-specific review in each fungus.
   contrary Neurospora localization data, and the over-specific `GO:0007189`
   GPCR pathway row from `PTN000180782` was redirected to neutral
   `GO:0141156` cAMP/PKA signal transduction.
+- Added `PTHR10868` as a compact sterol C-8 isomerase family after sibling
+  `yeast/ERG2`, `SCHPO/erg2`, and `NEUCR/erg-1` reviews had checked the same
+  fungal node placements. The `CANAL/ERG2` follow-up accepts the fungal
+  `PTN001280219` C-8 sterol isomerase and ergosterol-biosynthesis IBAs,
+  accepts the broader `PTN001328958` ER localization IBA, and verifies that
+  animal Sigma-receptor signaling assertions are confined to descendant PTNs
+  outside the fungal ERG2 rows.

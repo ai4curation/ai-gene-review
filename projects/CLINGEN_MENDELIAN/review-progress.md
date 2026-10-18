@@ -3370,3 +3370,54 @@ preserved separately; it was not a published tracker checkpoint. The completion
 cutoff remains CTCF, and the later CTLA4 merge is outside this snapshot.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-413-20261014/history/projects/CLINGEN_MENDELIAN/2026-10-14T032418Z-codex-815c48.yaml)
+
+## Completion checkpoint 425 — 2026-10-14 07:48:59 UTC
+
+**425 complete; 2,451 remaining out of 2,876 primary catalogue genes.**
+The 12 distinct additions below extend merged checkpoint 413. The completion
+cutoff is [CUL3 699711b0e7d1](https://github.com/ai4curation/ai-gene-review/commit/699711b0e7d1c66b75bfe0d74fcc965f035741f6);
+this is a receipt-based snapshot, not an exhaustive claim about every repository
+review merge. Source and rendering context are frozen at main `99a36bd05946bbd4d66a3a7e47b3260072c2e9c7`.
+ROOT, the coordinating AI agent, accepted each complete merge proof; this is
+not a claim of human maintainer review.
+
+Rendering availability is separate from completion credit. The committed main-page render has 1,769 missing-review warnings; the fresh baseline and checkpoint renders under the same frozen 2,946-review inventory have 1,751 (18 cleared; none added). Eight cleared warnings belong to these 12 counted genes. CTLA4, CTNNA1, CTNNB1, CUL3 were already linked. The other ten cleared warnings are CHM, CHST3, CIC, LDLR, LIPA, MSX1, PAX7, PCSK9, PNPLA2, TFAP2B: their review links became available, but they remain unchecked and receive no completion credit. This same-context comparison does not erase the committed-to-fresh change. The progress page has zero rendering warnings.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CTLA4 | [#4989](https://github.com/ai4curation/ai-gene-review/pull/4989) | `57752c15ea12` | [de285b1f26a4](https://github.com/ai4curation/ai-gene-review/commit/de285b1f26a49ab92ef3493c96186873be1718ef) | 2026-10-14 02:48:02 | 10 / 10 |
+| CTNNB1 | [#4991](https://github.com/ai4curation/ai-gene-review/pull/4991) | `6fcafcde4ce0` | [4ad9a0175d31](https://github.com/ai4curation/ai-gene-review/commit/4ad9a0175d31b7c85bda696abfaf414c413b8a75) | 2026-10-14 03:16:44 | 12 / 12 |
+| CTNND1 | [#4992](https://github.com/ai4curation/ai-gene-review/pull/4992) | `f0d2744ed575` | [7d5c823e80e3](https://github.com/ai4curation/ai-gene-review/commit/7d5c823e80e375030346000b5c8bf882c9dc5d29) | 2026-10-14 03:44:07 | 36 / 36 |
+| CTPS1 | [#4993](https://github.com/ai4curation/ai-gene-review/pull/4993) | `cdc7baa1e1ab` | [22a69a66d01f](https://github.com/ai4curation/ai-gene-review/commit/22a69a66d01fb20ab1131fa48a251f4f39b97d16) | 2026-10-14 04:11:24 | 22 / 22 |
+| CTNNA1 | [#4990](https://github.com/ai4curation/ai-gene-review/pull/4990) | `1bcc46b740d1` | [1a622391f31c](https://github.com/ai4curation/ai-gene-review/commit/1a622391f31c5ae8b75b639a9fb5165dcb7feb3a) | 2026-10-14 04:30:33 | 18 / 18 |
+| CTSA | [#4994](https://github.com/ai4curation/ai-gene-review/pull/4994) | `036501714ac7` | [08e2a9d6fda7](https://github.com/ai4curation/ai-gene-review/commit/08e2a9d6fda7fbb0ab2f6becc30c63a47f70d92a) | 2026-10-14 04:50:11 | 17 / 17 |
+| CTSF | [#4996](https://github.com/ai4curation/ai-gene-review/pull/4996) | `3eb0187853a4` | [9d1bdc6f9151](https://github.com/ai4curation/ai-gene-review/commit/9d1bdc6f9151f1c28406d62a1e4a37ca3ea549c1) | 2026-10-14 05:17:16 | 19 / 19 |
+| CTSD | [#4995](https://github.com/ai4curation/ai-gene-review/pull/4995) | `8629b15c70da` | [4d4ed80803ac](https://github.com/ai4curation/ai-gene-review/commit/4d4ed80803ac7c79b4fc6125b23ced29dca6e1a5) | 2026-10-14 05:37:16 | 24 / 23 |
+| CTSK | [#4997](https://github.com/ai4curation/ai-gene-review/pull/4997) | `1ec38baa28f8` | [cb8992c9155e](https://github.com/ai4curation/ai-gene-review/commit/cb8992c9155ed1e77dc9e56e0662743d696417b9) | 2026-10-14 06:26:56 | 23 / 22 |
+| CUL4B | [#5000](https://github.com/ai4curation/ai-gene-review/pull/5000) | `b1ff3a07748d` | [f4ad933c9bc4](https://github.com/ai4curation/ai-gene-review/commit/f4ad933c9bc45503afa2035b14da90c8315e1f4b) | 2026-10-14 06:53:48 | 9 / 9 |
+| CWF19L1 | [#5002](https://github.com/ai4curation/ai-gene-review/pull/5002) | `fd2ac6bba817` | [6f3803683c26](https://github.com/ai4curation/ai-gene-review/commit/6f3803683c260f80cad882798cdb1edbac8d8fe4) | 2026-10-14 07:20:56 | 13 / 13 |
+| CUL3 | [#5001](https://github.com/ai4curation/ai-gene-review/pull/5001) | `757d855a65ce` | [699711b0e7d1](https://github.com/ai4curation/ai-gene-review/commit/699711b0e7d1c66b75bfe0d74fcc965f035741f6) | 2026-10-14 07:48:59 | 12 / 12 |
+
+Every listed gene has final approval on its exact head, a successful ordinary
+merge-queue test and a separate successful post-merge main-push test. Queue
+jobs passed the full test suite. Post-main scopes are recorded per gene in the
+[queue JSON](publication-queue.json); successful scoped-only runs are not
+represented as full-suite runs. All 215 full PR-path occurrences match the
+approved modes, types and blobs at merge. The exact parent deltas contain
+213 changed-path occurrences; 2 PR paths were already identical in
+their respective parents. No unaccounted parent changes were accepted.
+
+The prior checkpoint 413 tracker [#4999](https://github.com/ai4curation/ai-gene-review/pull/4999)
+merged at `b9da9839c93ff74b6be6cf30102747f8973984f2` with its eight approved paths exact.
+Its queue and separate main-push full suites succeeded after the independent
+GO-cache repair. This later success does not rewrite the failed historical
+checkpoint 394 post-main test recorded above.
+
+All 235 historical queue records, all 74 prior completion updates, the complete
+previous progress text, all 163 existing project history records and the frozen
+catalogue source files remain unchanged. The 2,876 HGNC identities and their
+association text are preserved; only these 12 unchecked identities become
+checked. CYB5A, CWC27 and other published or available reviews receive no
+completion credit in this snapshot. No gene annotation or source is changed.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-425-20261015/history/projects/CLINGEN_MENDELIAN/2026-10-15T143837Z-codex-94c5f2.yaml)
