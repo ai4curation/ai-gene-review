@@ -21,3 +21,14 @@ Full original access was not obtained for every narrow assertion. Purkinje devel
 The automated research attempt failed at Falcon authentication and the fallback quota. The present decisions instead use saved primary-source readings, independent core consultation, official records and explicit source-access limits; no provider report was fabricated. Public source locators and reproducible identity/proteomics checks are supplied separately.
 
 Human DSG2 variants are associated with arrhythmogenic cardiomyopathy and altered desmosomal structure. The human genotype/biopsy and patient-protein observations supply disease context without establishing every narrow His–Purkinje, heart-rate or action-potential step. Those source-specific uncertainties remain explicit. [PMID:16505173; PMID:23381804]
+
+
+## 2026-10-18: review follow-up on compartment and receptor scope
+
+The cell-surface observation is retained as non-core, preserving the external-accessibility result from human endothelial progenitor-cell flow cytometry. Context exceptions distinguish a released cytosolic apoptotic fragment from unresolved diffuse/variant cytoplasmic pools, and desmosomal junctions from non-desmosomal junction contexts. The abstract explicitly states that the processed fragment was released into cytosol. [PMID:17559062, "which was released into the cytosol."] The final action totals are 38 ACCEPT, 15 MODIFY, 33 KEEP_AS_NON_CORE and 8 UNDECIDED across the same 94 source assertions.
+
+The cornified-envelope assignment remains a non-core curated model claim: Reactome explicitly assigns human DSG2 residues 50–1118 to that compartment in R-HSA-8847737. A direct DSG2-specific corneocyte experiment was not reconstructed, and a tissue-restricted location is not equated with enzymatic cornification. PKP2 binding retains its informative cytoskeletal-protein class, with the original positive/negative assay distinctions and literal human-to-mouse curator chain; this does not require PKP2 to be a filament-forming subunit. [PMID:11790773; PMID:16917092]
+
+HPA individually rates cell junctions and plasma membrane Supported and vesicles Approved. The A-431 vesicle observation is retained as a positive compartment observation, but it does not establish whether DSG2 occupies the vesicle membrane or lumen. It is therefore omitted from the membrane replacement set; no new localization annotation or trafficking mechanism is inferred.
+
+The virus-receptor summary includes the tested Ad3, Ad7, Ad11 and Ad14/Ad14a attachment scope. The Ad11 competition assay blocks CD46, whereas receptor-negative-cell gain and GFP-vector transduction provide stronger entry evidence specifically for Ad3. This does not generalize receptor usage to every species B adenovirus or to mouse DSG2. [PMID:21151137]
