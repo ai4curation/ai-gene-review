@@ -19,9 +19,10 @@ that the review must examine. Either way, a review should boldly propose the
 membrane, lumen or matrix term when the gene has none and several lines of
 evidence (a membrane domain, a targeting signal, a known function) point to
 one. The red-flag worklist is
-[root_organelle_red_flags.md](ORGANELLES/root_organelle_red_flags.md): 1,007
-synthesis rows for mitochondrion that were not REMOVEd, 266 of them in reviews
-that give the gene no mitochondrial sub-compartment.
+[root_organelle_red_flags.md](ORGANELLES/root_organelle_red_flags.md). In the
+2026-10-18 run it lists 1,081 synthesis rows for mitochondrion that were not
+REMOVEd, 283 of them in reviews that give the gene no mitochondrial
+sub-compartment.
 
 ## The question
 
@@ -85,22 +86,24 @@ MB); re-run the script to get it. The script scans every
 root organelle terms, and asks whether the same review also has a more specific
 part of that organelle (an `is_a`/`part_of` descendant, from GO via OAK). The
 descendant can be another kept annotation, a proposed replacement or a
-`core_functions` location. Run of 2026-10-16:
+`core_functions` location. Run of 2026-10-18 (after merging main; the
+generated files are authoritative):
 
 | organelle | rows | genes | genes also given a sub-compartment | rows with only the root |
 |---|---|---|---|---|
-| mitochondrion | 2798 | 992 | 662 (67%) | 664 |
-| nucleus | 5588 | 2040 | 825 (40%) | 2538 |
-| endoplasmic reticulum | 1097 | 578 | 398 (69%) | 279 |
-| Golgi apparatus | 483 | 308 | 169 (55%) | 194 |
-| peroxisome | 304 | 116 | 51 (44%) | 115 |
-| lysosome | 265 | 112 | 70 (62%) | 70 |
+| mitochondrion | 3037 | 1051 | 702 (67%) | 720 |
+| nucleus | 5657 | 2076 | 829 (40%) | 2587 |
+| endoplasmic reticulum | 1103 | 584 | 401 (69%) | 282 |
+| Golgi apparatus | 493 | 311 | 172 (55%) | 194 |
+| peroxisome | 317 | 121 | 53 (44%) | 123 |
+| lysosome | 280 | 118 | 75 (64%) | 73 |
 | endosome | 198 | 131 | 86 (66%) | 71 |
-| chloroplast | 144 | 98 | 22 (22%) | 94 |
+| chloroplast | 144 | 98 | 21 (21%) | 95 |
 | autophagosome | 88 | 50 | 16 (32%) | 48 |
-| vacuole | 26 | 24 | 7 (29%) | 17 |
+| vacuole | 29 | 25 | 7 (28%) | 20 |
 
-What the survey shows so far:
+What the survey showed (first run, 2026-10-16; counts in these bullets are
+from that run, and the proportions are the same in the later one):
 
 - **When a sub-compartment is known, the root is still ACCEPTed.** For
   mitochondrial genes that also have a sub-compartment, 1,576 of 2,134 root
@@ -162,10 +165,12 @@ plastids come later.
    enzyme, an inner-membrane carrier). Record the lines of evidence in
    `review.reason`. If they disagree or there is only one, stay at the root.
 5. **Validation.** On a root organelle term, the inconsistent-review-actions
-   check accepts this split: every MODIFY row has synthesis evidence and a
-   proposed replacement, and every other row is direct or author evidence
-   with one shared kept action (ACCEPT or KEEP_AS_NON_CORE). Any other mix
-   still warns. See `_is_organelle_policy_split` in
+   check accepts this split: every MODIFY row has synthesis evidence and
+   proposes only sub-compartments of that organelle, and every other row is
+   direct or author evidence with one shared kept action (ACCEPT or
+   KEEP_AS_NON_CORE). Any other mix still warns, including a MODIFY to the
+   sub-compartment plus a second location outside the organelle (cases 2
+   and 3): that warning is expected, not a bug. See `_is_organelle_policy_split` in
    `src/ai_gene_review/validation/validator.py`, which covers the first-pass
    organelles.
 6. **`core_functions.locations`** should name the sub-compartment where it is
@@ -174,21 +179,21 @@ plastids come later.
 
 ## Survey under this policy
 
-From the 2026-10-16 run, mitochondrion only:
+From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 | evidence class | rows, gene also has a sub-compartment | rows, root only |
 |---|---|---|
-| direct | 1,308 | 339 |
-| synthesis | 742 | 266 (after leaving out REMOVEd rows) |
+| direct | 1,433 | 365 |
+| synthesis | 798 | 283 |
 
-- The 266 root-only synthesis rows (141 IEA, 73 IBA, 34 ISS, 15 ISO) are the
-  first worklist. 137 are ACCEPT and 78 KEEP_AS_NON_CORE; under rule 3 each
+- The 283 root-only synthesis rows (149 IEA, 76 IBA, 37 ISS, 15 ISO) are the
+  first worklist. 143 are ACCEPT and 87 KEEP_AS_NON_CORE; under rule 3 each
   needs a reason, and many should probably become a sub-compartment term
   under rule 4.
-- The 741 synthesis rows in reviews that do have a sub-compartment (345 IEA,
-  307 IBA) are lower priority. The fine-grained location is already recorded,
+- The 798 synthesis rows in reviews that do have a sub-compartment (361 IEA,
+  333 IBA) are lower priority. The fine-grained location is already recorded,
   so the question is only whether the propagated organelle claim stands.
-- The 339 root-only direct rows are mostly fine under rule 2, but rule 4
+- The 365 root-only direct rows are mostly fine under rule 2, but rule 4
   still applies to the gene: AARS2, CLYBL, PYCR2 and MMADHC are among the
   candidates where function suggests the matrix.
 
@@ -223,12 +228,12 @@ From the 2026-10-16 run, mitochondrion only:
 - [x] Decide policy: evidence-based; no TOO_GENERAL; synthesis is a red flag;
       be bold about sub-compartments (see Policy)
 - [x] Red-flag worklist generated (`root_organelle_red_flags.md`)
-- [ ] Work through the 266 root-only mitochondrial synthesis rows, starting
+- [ ] Work through the 283 root-only mitochondrial synthesis rows, starting
       with human; apply rules 3 and 4 in the gene reviews
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Exempt the policy split from the inconsistent-review-actions check
       (`_is_organelle_policy_split` in `validation/validator.py`)
-- [ ] Check the rest of the 339 root-only direct mitochondrial rows for rule 4
+- [ ] Check the rest of the 365 root-only direct mitochondrial rows for rule 4
       candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
 - [ ] Decide on a validation warning

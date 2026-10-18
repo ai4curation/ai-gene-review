@@ -67,11 +67,13 @@ def _has_inconsistent_action_warning(report) -> bool:
     )
 
 
-def _validate(yaml_data: dict) -> object:
+def _validate(yaml_data: dict, check_ontology: bool = False) -> object:
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "TEST-ai-review.yaml"
         path.write_text(yaml.dump(yaml_data))
-        return validate_gene_review(path, check_best_practices=True)
+        return validate_gene_review(
+            path, check_best_practices=True, check_ontology=check_ontology
+        )
 
 
 def test_ipi_distinct_pmid_divergence_suppressed():
@@ -343,3 +345,31 @@ def test_non_organelle_term_synthesis_modify_still_warns():
     ]
     report = _validate(_build_yaml("GO:0005737", rows))
     assert _has_inconsistent_action_warning(report)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "replacement,warns",
+    [
+        ({"id": "GO:0005759", "label": "mitochondrial matrix"}, False),
+        ({"id": "GO:0005634", "label": "nucleus"}, True),
+    ],
+)
+def test_root_organelle_split_with_go_hierarchy(replacement, warns):
+    """The production path: with the GO hierarchy loaded, ancestry decides.
+
+    ``just validate`` runs with ontology checks, so the exemption must fire for
+    a real sub-compartment (mitochondrial matrix part_of mitochondrion) and not
+    for a term outside the organelle.
+    """
+    rows = [
+        {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
+        {
+            "evidence_type": "IBA",
+            "pmid": "GO_REF:0000033",
+            "action": "MODIFY",
+            "replacements": [replacement],
+        },
+    ]
+    report = _validate(_build_yaml("GO:0005739", rows), check_ontology=True)
+    assert _has_inconsistent_action_warning(report) is warns

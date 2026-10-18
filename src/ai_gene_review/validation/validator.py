@@ -482,9 +482,14 @@ def _is_subcompartment(
     False
     >>> _is_subcompartment("GO:0005739", matrix, lambda t: frozenset())
     False
+    >>> _is_subcompartment("GO:0005739", matrix, lambda t: frozenset({"GO:0005739"}))
+    True
+    >>> _is_subcompartment("GO:0005739", {"label": "mitochondrial matrix"}, lambda t: frozenset({"GO:0005739"}))
+    False
     """
     if ancestors is not None:
-        return root in ancestors(str(replacement.get("id", "")))
+        replacement_id = str(replacement.get("id") or "")
+        return bool(replacement_id) and root in ancestors(replacement_id)
     return ROOT_ORGANELLE_TERMS[root] in str(replacement.get("label", "")).lower()
 
 
