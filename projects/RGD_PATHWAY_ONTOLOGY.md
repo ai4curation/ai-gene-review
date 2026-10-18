@@ -23,8 +23,8 @@ genes of a pathway, and only 69 of the 144 have any GO-CAM model whose process
 falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 735 modules. Seventy already have a matching module, 19 are
-ready to model, 33 lack a GO process term, and 56 are disease or drug pathways
+triaged against our 672 modules. Seventy-two already have a matching module, 13 are
+ready to model, 32 lack a GO process term, and 56 are disease or drug pathways
 and out of scope. One pilot module, `srebp_signaling`, was derived from the
 RGD SREBP diagram and passes schema and module validation.
 
@@ -94,10 +94,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 70 |
-| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 19 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 15 |
-| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 33 |
+| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 72 |
+| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 13 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 20 |
+| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 32 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
 
@@ -126,7 +126,7 @@ split along their sub-pathways before modelling.
   angiotensin II and vasopressin signaling, renin-angiotensin, and
   mitochondrial and cytosolic iron-sulfur cluster assembly. Some do have a GO
   term under another name, for example `GO:0072331` (signal transduction by p53
-  class mediator). These 33 `needs_go_mapping` seeds are a curation list for
+  class mediator). These 32 `needs_go_mapping` seeds are a curation list for
   manual mapping or for `proposed_new_terms`.
 
 ### GO-CAM completeness
@@ -161,30 +161,29 @@ members. The completeness table therefore reports both counts
 
 ### Module seeds
 
-The 19 `candidate` seeds, ordered by number of curated genes, are the
+The 13 `candidate` seeds, ordered by number of curated genes, are the
 modelling queue for normal-biology pathways without a module:
 
 | PW | Pathway | Curated human genes | Mapped GO | Note |
 |----|---------|--------------------:|-----------|------|
-| PW:0000127 | RNA polymerase II transcription | 281 | GO:0006366 | broad; split first |
-| PW:0000128 | RNA polymerase III transcription | 58 | GO:0006383 | |
-| PW:0001962 | mitochondrial protein import | 43 | GO:7770058 | |
 | PW:0000841 | acetylcholine signaling | 40 | GO:0095500 | |
 | PW:0000394 | dopamine signaling | 38 | GO:0007212 | |
-| PW:0000126 | RNA polymerase I transcription | 37 | GO:0006360 | |
-| PW:0000808 | microRNA pathway | 35 | GO:0035196 | |
 | PW:0000962 | visual phototransduction | 33 | GO:0007602 | |
 | PW:0000840 | protein kinase C signaling | 32 | GO:0070528 | |
 | PW:0001340 | DNA modification | 28 | GO:0006304 | |
 | PW:0000474 | coagulation cascade | 21 | GO:0072378 | |
 | PW:0000526 | kallikrein-kinin cascade | 19 | GO:0002255 | |
 | PW:0000843 | muscarinic acetylcholine signaling | 19 | GO:0007213 | |
-| PW:0000674 | insulin secretion | 18 | GO:0030073 | |
 | PW:0000388 | reelin signaling | 15 | GO:0038026 | |
 | PW:0001243 | prostanoid biosynthesis | 14 | GO:0046457 | |
 | PW:0000481 | fibrinolysis | 12 | GO:0042730 | |
 | PW:0000682 | TRAIL signaling | 9 | GO:0036462 | |
 | PW:0000515 | IL-10 signaling | 7 | GO:0140105 | |
+
+Re-running the triage after merging `main` on 2026-10-18 moved six former candidates. Five now
+match only by GO term to Drosophila or plant modules: RNA polymerase I, II and III
+transcription, mitochondrial protein import, and the microRNA pathway. The sixth, insulin
+secretion, now has a mammalian module. These five are still worth modelling for mammals.
 
 Several `related_module_only` seeds are mammalian pathways whose only module
 match is a bacterial one: nucleotide excision repair, mismatch repair,
@@ -228,7 +227,7 @@ review yet.
   definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
 - Send RGD the 45 obsolete GO citations, with GO's replacement where one
   exists (the SSSOM `comment` column).
-- Map the 33 `needs_go_mapping` seeds by hand, or record missing terms as
+- Map the 32 `needs_go_mapping` seeds by hand, or record missing terms as
   `proposed_new_terms`.
 - Review the seven SREBP genes, then model the next candidates. Coagulation,
   fibrinolysis and kallikrein-kinin form a linked set on the RGD diagrams.

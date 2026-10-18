@@ -327,8 +327,9 @@ def main() -> int:
                         "match_source": f"lexical:{src}->{gsrc}" + ("" if verbatim else ":pathway->process"),
                         "object_status": "ok", "comment": "",
                     })
+    # ``comment`` is often empty, so it is not the last column (no trailing tab).
     mcols = ["subject_id", "subject_label", "predicate_id", "object_id", "object_label",
-             "object_namespace", "mapping_justification", "match_source", "object_status", "comment"]
+             "object_namespace", "mapping_justification", "comment", "match_source", "object_status"]
     with open(args.out / "pw_go_mappings.sssom.tsv", "w", newline="") as fh:
         fh.write("# curie_map:\n#   PW: http://purl.obolibrary.org/obo/PW_\n#   GO: http://purl.obolibrary.org/obo/GO_\n"
                  "#   skos: http://www.w3.org/2004/02/skos/core#\n#   semapv: https://w3id.org/semapv/vocab/\n"
@@ -407,7 +408,11 @@ def main() -> int:
             "frac_basis_in_matched_gocams": round(len(in_matched) / len(gene_basis), 3),
             "gocam_models_for_mapped_go": "|".join(bp_models[:20]),
         })
-    cols = list(rows[0].keys())
+    # Keep the often-empty model list away from the end of the row (no trailing tab).
+    cols = [c for c in rows[0] if c != "gocam_models_for_mapped_go"]
+    cols.insert(cols.index("n_gocam_models_for_mapped_go") + 1, "gocam_models_for_mapped_go")
+    cols.remove("frac_basis_in_matched_gocams")
+    cols.append("frac_basis_in_matched_gocams")
     with open(args.out / "pw_gocam_completeness.tsv", "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", lineterminator="\n")
         w.writeheader()
