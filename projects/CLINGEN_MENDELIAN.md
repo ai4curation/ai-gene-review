@@ -2988,20 +2988,19 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**442 of 2,876 genes are complete; 2,434 remain.**
-DNAH12 is the verified addition since checkpoint 441.
-[Checkpoint 442](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-442-2026-10-17-134617-utc)
+**443 of 2,876 genes are complete; 2,433 remain.**
+DCC is the verified addition since checkpoint 442.
+[Checkpoint 443](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-443-2026-10-18-151414-utc)
 records its approved files, merge and successful validation on main. The completion
-cutoff is [`298fede2212a`](https://github.com/ai4curation/ai-gene-review/commit/298fede2212a4d540865542e5e8b396bec69107c),
-merged at 2026-10-17 13:46:17 UTC.
+cutoff is [`7bbbe4f59c5b`](https://github.com/ai4curation/ai-gene-review/commit/7bbbe4f59c5b14d9b053d691deba3a8c5726d9bf),
+merged at 2026-10-18 15:14:14 UTC.
 Each catalogue gene counts once; products and follow-up commits add no credit.
 
-At that cutoff, 7,965 reviews are available, including 3,005 human reviews.
-Of 1,168 catalogue genes with reviews, 442 are credited and 726 remain uncredited;
-1,708 catalogue genes still lack a review file. DNAH12 adds one available human
-review and the sole new completion. Availability and completion remain separate.
-The publication source main `bff21ea8eb90bc3e07bb2fbedf14c25d37080161`
-has the same review inventory; its later changes add no completion credit here.
+At that cutoff, 7,981 reviews are available, including 3,006 human reviews.
+Of 1,169 catalogue genes with reviews, 443 are credited and 726 remain uncredited;
+1,707 catalogue genes still lack a review file. DCC adds one available human
+review and the sole new completion. Other review-file additions receive no credit
+here. Availability and completion remain separate.
 Earlier checkpoints, queue records and histories remain preserved. Pending gene
 reviews remain unchecked until their approvals, merged files and actual-main
 validation are verified.
@@ -3569,7 +3568,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **DARS2** — HGNC:25538; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c3fc3cd8-48aa-4e02-8324-b3412fcfa64f-2022-05-04T160000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **DBT** — HGNC:2698; [maple syrup urine disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cfd1ebde-e447-4877-977e-f5b9fe434adc-2018-10-30T160000.000Z) (MONDO:0009563; AR; Definitive).
 - [x] **DCAF17** — HGNC:25784; [Woodhouse-Sakati syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6a1d7719-4261-494d-87aa-745518580673-2021-07-27T153526.827Z) (MONDO:0009419; AR; Definitive).
-- [ ] **DCC** — HGNC:2701; [mirror movements 1 and/or agenesis of the corpus callosum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f923f025-a973-4af8-b2c2-00dc39ed3026-2022-07-26T160000.000Z) (MONDO:0100515; AD; Definitive).
+- [x] **DCC** — HGNC:2701; [mirror movements 1 and/or agenesis of the corpus callosum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f923f025-a973-4af8-b2c2-00dc39ed3026-2022-07-26T160000.000Z) (MONDO:0100515; AD; Definitive).
 - [ ] **DCDC2** — HGNC:18141; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_477c8aba-eeba-43dc-a5e2-f6f84b127b8f-2021-10-13T160000.000Z) (MONDO:0005308; AR; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86802e37-e2a5-43b9-8538-e104859b4c55-2020-08-31T170000.000Z) (MONDO:0019497; AR; Limited).
 - [ ] **DCLRE1C** — HGNC:17642; [severe combined immunodeficiency due to DCLRE1C deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_603e0855-2b57-4463-a9b7-1c5d70089a4f-2021-02-18T154301.245Z) (MONDO:0011225; AR; Definitive).
 - [ ] **DCX** — HGNC:2714; [lissencephaly spectrum disorders](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b0d23d1-5ca6-4584-9d74-cf78ca21b0e1-2021-02-23T150911.296Z) (MONDO:0018838; XL; Definitive).

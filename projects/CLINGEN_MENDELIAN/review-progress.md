@@ -4220,3 +4220,69 @@ cache or earlier history record is edited by this tracker update.
 All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,965 reviews, including 3,005 human reviews. The catalogue has 1,708 missing-review warnings and the progress page has no warnings, reflecting the new DNAH12 review. Counts are 442 checked and 2,434 unchecked catalogue genes.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T142405Z-codex-a230e1.yaml)
+
+## Completion checkpoint 443 — 2026-10-18 15:14:14 UTC
+
+**443 complete; 2,433 remaining out of 2,876 primary catalogue genes.**
+DCC is the sole addition to checkpoint 442. Its approved head
+`08e1797356e01101c5de7091b61dd1b61c97e92b` in
+[#5080](https://github.com/ai4curation/ai-gene-review/pull/5080) merged as
+[`7bbbe4f59c5b`](https://github.com/ai4curation/ai-gene-review/commit/7bbbe4f59c5b14d9b053d691deba3a8c5726d9bf).
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/5080#pullrequestreview-5556675186)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5080#issuecomment-6230751438)
+close the required changes. The reviewer explicitly retracts the earlier
+generic-binding objection after verifying the project's binding instruction and
+accepts the revised core representation. There are no inline comments or review
+threads. The older changes-requested review belongs to an earlier revision.
+
+All 18 approved files have identical blobs and modes in the merge. Its sole
+parent is `23a506fc6b8bd5a2822d76bc2151276fa7bddac4`; the complete delta contains
+exactly those 18 additions, including two DCC history records and ten publication
+caches. All 158,727 paths outside the delta are unchanged.
+Complete saved tree listings were reconstructed and authenticated against the
+Git commit tree hashes, and the 18 captured file contents were checked against
+their Git blob identifiers.
+
+The actual-main push [run 39139563867](https://github.com/ai4curation/ai-gene-review/actions/runs/39139563867)
+and [test job 117710997259](https://github.com/ai4curation/ai-gene-review/actions/runs/39139563867/job/117710997259)
+completed successfully at 2026-10-18T15:21:25Z. The complete raw job log is retained
+in the merge audit. Its operative sections identify this main revision and its
+parent, detect the exact 18-file delta, and execute strict changed-gene validation
+on DCC. That validation passed with six generic-binding policy warnings, whose
+scientific dispositions were accepted in the approving review. All 12,956 history
+records validated, 42 history tests passed, and 708 family files validated. Family
+checks reported no failures while retaining unrelated unresolved membership and
+residue cases and skipped snippet checks.
+
+This was a scoped main-push workflow: the general test suite, example validation,
+agentic checks and standalone source-evidence validation were skipped. No fresh
+full-suite run is claimed. All test-job steps and its three annotations were
+read; the annotations concern Node.js migration, scoped validation and the future
+runner image, not DCC scientific failures. The separate main-push documentation
+run 39139563863 also succeeded. The distinct [merge-group run 39137566672](https://github.com/ai4curation/ai-gene-review/actions/runs/39137566672)
+completed successfully at the same merge SHA; its run metadata is preserved, but
+its full job log was not re-audited and is not substituted for actual-main proof.
+
+The review file remains DRAFT, with three UNDECIDED annotations and the six
+acknowledged policy warnings. The approving reviewer left only nonblocking
+suggestions about provenance wording, comparator interpretation and a structured
+knowledge gap. Completion records approved and merged curation, not resolution
+of every biological uncertainty or a human maintainer sign-off by the
+coordinating AI agent.
+
+Repository availability at this actual-main cutoff is 7,981 reviews,
+including 3,006 human reviews. Of 1,169 catalogue genes with
+available reviews, 443 are credited and 726 remain uncredited;
+1,707 catalogue genes still lack reviews. These counts were recomputed
+from the complete main tree and the unchanged catalogue, not copied from the
+preceding checkpoint. DCC alone receives new completion credit.
+
+This update preserves all 2,876 catalogue identities and association texts,
+all 235 historical queue objects, all 91 earlier completion updates, the complete
+preceding progress text and 182 prior project history records. Only the DCC
+checkbox changes; completion update 92 is appended. No gene review, source cache,
+runtime file or earlier history record is edited by this tracker update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,981 reviews, including 3,006 human reviews. The catalogue has 1,707 missing-review warnings and the progress page has no warnings, reflecting the new DCC review. Counts are 443 checked and 2,433 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-18T153706Z-codex-1e95f8.yaml)
