@@ -446,6 +446,62 @@ def _check_proposed_molecular_function(
         )
 
 
+#: Root membrane-bounded organelle CC terms covered by the ORGANELLES policy
+#: (projects/ORGANELLES.md).
+ROOT_ORGANELLE_TERMS = frozenset(
+    {
+        "GO:0005739",  # mitochondrion
+        "GO:0005783",  # endoplasmic reticulum
+        "GO:0005794",  # Golgi apparatus
+        "GO:0005777",  # peroxisome
+        "GO:0005764",  # lysosome
+    }
+)
+
+#: Evidence codes that synthesise or propagate rather than observe the gene.
+SYNTHESIS_EVIDENCE_CODES = frozenset(
+    {"IBA", "IBD", "IKR", "IRD", "IEA", "ISS", "ISO", "ISA", "ISM", "IGC", "RCA", "IC"}
+)
+
+
+def _is_organelle_policy_split(rows: List[Tuple[str, str, Any]]) -> bool:
+    """Return True if rows on one root organelle term follow the ORGANELLES split.
+
+    The split is: every MODIFY row has synthesis evidence and a proposed
+    replacement, and every other row is a non-synthesis row with the same
+    kept action (ACCEPT or KEEP_AS_NON_CORE).
+
+    Each row is ``(action, evidence_code, annotation_dict)``.
+
+    >>> sub = {"review": {"proposed_replacement_terms": [{"id": "GO:0005759"}]}}
+    >>> _is_organelle_policy_split([("ACCEPT", "IDA", {}), ("MODIFY", "IBA", sub)])
+    True
+    >>> _is_organelle_policy_split([("ACCEPT", "IDA", {}), ("MODIFY", "IDA", sub)])
+    False
+    >>> _is_organelle_policy_split([("ACCEPT", "IDA", {}), ("MODIFY", "IBA", {})])
+    False
+    >>> _is_organelle_policy_split([("ACCEPT", "IEA", {}), ("MODIFY", "IBA", sub)])
+    False
+    """
+    modified = [r for r in rows if r[0] == "MODIFY"]
+    kept = [r for r in rows if r[0] != "MODIFY"]
+    if not modified or not kept:
+        return False
+    if len({action for action, _, _ in kept}) != 1 or kept[0][0] not in {
+        "ACCEPT",
+        "KEEP_AS_NON_CORE",
+    }:
+        return False
+    if any(ec in SYNTHESIS_EVIDENCE_CODES for _, ec, _ in kept):
+        return False
+    return all(
+        ec in SYNTHESIS_EVIDENCE_CODES
+        and isinstance(ann, dict)
+        and (ann.get("review") or {}).get("proposed_replacement_terms")
+        for _, ec, ann in modified
+    )
+
+
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -782,6 +838,18 @@ def check_best_practices_rules(
                                 and not (remove_refs & kept_refs)
                             ):
                                 continue
+
+                    # Special case: the ORGANELLES policy split on a root
+                    # organelle term (projects/ORGANELLES.md). Direct rows
+                    # keep the root term, synthesis rows are refined to a
+                    # sub-compartment with MODIFY.
+                    if term_id in ROOT_ORGANELLE_TERMS and _is_organelle_policy_split(
+                        [
+                            (action, ec, data["existing_annotations"][idx])
+                            for idx, action, ec in actions_list
+                        ]
+                    ):
+                        continue
 
                     # Get the term label for better error messages
                     term_label = None

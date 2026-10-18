@@ -160,7 +160,14 @@ plastids come later.
    motif, and a function that only makes sense on one side (a matrix TCA
    enzyme, an inner-membrane carrier). Record the lines of evidence in
    `review.reason`. If they disagree or there is only one, stay at the root.
-5. **`core_functions.locations`** should name the sub-compartment where it is
+5. **Validation.** On a root organelle term, the inconsistent-review-actions
+   check accepts this split: every MODIFY row has synthesis evidence and a
+   proposed replacement, and every other row is direct or author evidence
+   with one shared kept action (ACCEPT or KEEP_AS_NON_CORE). Any other mix
+   still warns. See `_is_organelle_policy_split` in
+   `src/ai_gene_review/validation/validator.py`, which covers the first-pass
+   organelles.
+6. **`core_functions.locations`** should name the sub-compartment where it is
    known, and may also carry the root if the organelle-level claim is
    independently supported.
 
@@ -212,8 +219,8 @@ From the 2026-10-16 run, mitochondrion only:
 - [ ] Work through the 266 root-only mitochondrial synthesis rows, starting
       with human; apply rules 3 and 4 in the gene reviews
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
-- [ ] Decide how action consistency should treat direct ACCEPT plus synthesis
-      MODIFY on one root term
+- [x] Exempt the policy split from the inconsistent-review-actions check
+      (`_is_organelle_policy_split` in `validation/validator.py`)
 - [ ] Check the rest of the 339 root-only direct mitochondrial rows for rule 4
       candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
