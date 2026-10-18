@@ -5,13 +5,14 @@ Round 1 (batch_*.yaml, 80 claims: 40 UNRELATED, 20 REJECTED, 20 NARROWER) and
 round 2 (round2_batch_*.yaml, 72 claims: per aspect 12 UNRELATED, 6 REJECTED,
 6 NARROWER) were drawn from the species-excluded run.
 
-Rates are reported by the stratum each claim was **drawn** from, so every
-denominator is a random sample of one automatic category. Some claims have since
+Rates are reported by the stratum each claim was **drawn** from. Some claims have since
 changed category (round 1 was drawn before placeholder removals such as
 ``protein binding`` stopped counting as rejections, and UNDECIDED rows now form
 their own category). Those claims are not a random slice of their new category,
 so they are listed and tallied separately under ``recategorised`` instead of
-being folded into it. Current categories are re-read from
+being folded into it. The ``as_drawn`` strata therefore hold only claims that
+kept their category: round-1 REJECTED is conditioned on the claim still being
+rejected, and is not a random sample of everything drawn as REJECTED. Current categories are re-read from
 results/species_excluded_leaf_scores.tsv.
 
 Every claim judged wrong (NPI/PLI/REP) is written to failure_modes.yaml, grouped

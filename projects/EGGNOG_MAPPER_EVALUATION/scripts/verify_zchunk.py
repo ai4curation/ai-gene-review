@@ -40,8 +40,8 @@ while not dec.eof:
                 data = r.read(4 << 20)
                 if not data:
                     break
-                pos += len(data)
                 b = dec.decompress(data)
+                pos += len(data)  # only after the bytes were consumed, so a retry resumes here
                 h_orig.update(b)
                 n_orig += len(b)
         if not dec.eof:

@@ -318,6 +318,12 @@ def main() -> None:
     args = ap.parse_args()
     base = os.path.abspath(args.base)
     run_names = [r for r in args.runs.split(",") if r]
+    if args.reviews_at != "WORKTREE":
+        ok = subprocess.run(["git", "-C", ROOT, "rev-parse", "--verify", "--quiet",
+                             f"{args.reviews_at}^{{commit}}"], capture_output=True)
+        if ok.returncode != 0:
+            raise SystemExit(f"--reviews-at {args.reviews_at}: commit not found in this checkout "
+                             "(a shallow clone may lack it; fetch it or pass --reviews-at WORKTREE)")
     go = GO(str(ensure_frozen_go()))
     legacy = [GO(p) for p in legacy_go_paths()]
     with open(os.path.join(base, "cohort.yaml")) as fh:

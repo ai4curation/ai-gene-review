@@ -227,48 +227,58 @@ eggNOG (proteins with GO / core recall):
 
 ### Manual adjudication
 
-80 leaves from the species-excluded run were drawn with a fixed seed: 40
-UNRELATED, 20 REJECTED and 20 NARROWER, at most one per protein
-([`adjudication/`](EGGNOG_MAPPER_EVALUATION/adjudication/draw_sample.py)).
+Two rounds of leaves were drawn from the species-excluded run with fixed
+seeds, at most one per protein per stratum
+([`adjudication/`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml)):
+- **Round 1:** 80 leaves (40 UNRELATED, 20 REJECTED, 20 NARROWER).
+- **Round 2:** 72 leaves, 24 per GO aspect (12 UNRELATED, 6 REJECTED,
+  6 NARROWER each), from proteins not used in round 1.
+
 AI reviewers judged each against the gene's review, UniProt record and notes,
 using the COR/LSP/UNC/PLI/NPI/REP scheme of de Crécy-Lagard et al. 2025
-(PMID:40703034). Each stratum below is a random sample of the category it
-was drawn from. Eight claims drawn as REJECTED changed category once
-placeholder removals stopped counting. They are not a random slice of their
-new categories, so they are tallied separately
-([`summary.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml)):
+(PMID:40703034). Counts below pool both rounds by the category each claim was
+drawn from. Eight round-1 claims drawn as REJECTED changed category once
+placeholder removals stopped counting. They are tallied in their own row,
+since they are not a random slice of their new categories. The REJECTED row
+is therefore conditioned on the claim still being rejected.
 
 | Drawn as | n | COR | LSP | UNC | Wrong (NPI/PLI/REP) |
 |---|---|---|---|---|---|
-| UNRELATED | 40 | 6 | 5 | 7 | 22 |
-| NARROWER | 20 | 9 | 0 | 6 | 5 |
-| REJECTED (still rejected) | 12 | 1 | 0 | 3 | 8 |
+| UNRELATED | 76 | 12 | 11 | 14 | 39 |
+| NARROWER | 38 | 15 | 0 | 11 | 12 |
+| REJECTED (still rejected) | 30 | 1 | 1 | 6 | 22 |
 | REJECTED, since recategorised | 8 | 3 | 4 | 0 | 1 |
 
-- **UNRELATED: 55% are wrong, and about one in seven is a real gap.**
-  Correct additions included macroautophagy for the fly VMP1 ortholog Tango5,
-  site of double-strand break for rat Tp53, xenobiotic metabolism for Ephx1,
-  and peptidyl-prolyl isomerization for SurA. A second round of 36 UNRELATED
-  claims gave 17 wrong and 6 correct (pooled: 39 of 76 wrong, 12 correct).
-- **NARROWER: under half are confirmed.** For example, mRNA splicing via
-  spliceosome for CBP80 and TGN membrane for worm clic-1. Most of the rest are
-  plausible compartments with no evidence either way.
-- **REJECTED: the curators were usually right.** In 8 of 12 genuine
+- **UNRELATED: about half (39 of 76) are wrong, and one in six (12) is a
+  real gap.** Correct additions included macroautophagy for the fly VMP1
+  ortholog Tango5, site of double-strand break for rat Tp53, xenobiotic
+  metabolism for Ephx1, and peptidyl-prolyl isomerization for SurA.
+- **NARROWER: under half (15 of 38) are confirmed.** Examples are mRNA
+  splicing via spliceosome for CBP80 and TGN membrane for worm clic-1. Most of
+  the rest are plausible compartments with no evidence either way.
+- **REJECTED: the curators were usually right.** In 22 of 30 genuine
   rejections the transferred term was wrong again. In one case, Golgi
   apparatus for zebrafish procollagen col1a1a, the reviewer judged the
   removal too strict.
 
-Error types among the 36 wrong calls:
+Error types among all 74 wrong calls (both rounds):
 
-| Error type | n | Examples |
-|---|---|---|
-| CURATION_MISTAKE (source annotation wrong) | 11 | insulin receptor activity on a lipocalin; guanyl-nucleotide exchange factor activity on KRAS; DNA recombination on Rbpj, a leftover of its old name |
-| TAXON_CONSTRAINT_VIOLATION | 7 | mushroom body development and camera-type-eye development on worm proteins; Candida phenotypic switching on budding-yeast HST2; Cul7-RING complex in yeast |
-| MULTIPLE_FUNCTIONS (phenotype-derived process) | 6 | exit from mitosis on SKP1; feeding behaviour on UCK2; filamentous growth on HSC82 |
-| PARALOG_OVERANNOTATION | 4 | RSC complex on SWI3 (yeast uses the paralog Rsc8); aconitate hydratase on an AcnD-family enzyme; ANG localization on Ang2 |
-| DOMAIN_ARCHITECTURE_MISMATCH | 2 | ABC-type transporter on the SecA motor ATPase; protein-transporting ATPase on the TPR receptor TOMM70 |
-| COMPLEX_ACTIVITY_TRANSFER | 1 | damaged DNA binding (a DDB2 function) on worm ddb-1 |
-| others | 5 | frequency bias, in vitro-only autophosphorylation, default cytosol, pathway target mistaken for participant |
+| Error type | n |
+|---|---|
+| CURATION_MISTAKE (source annotation wrong) | 23 |
+| TAXON_CONSTRAINT_VIOLATION | 13 |
+| MULTIPLE_FUNCTIONS (phenotype-derived process) | 9 |
+| DOMAIN_ARCHITECTURE_MISMATCH | 7 |
+| PARALOG_OVERANNOTATION | 6 |
+| FREQUENCY_BIAS | 4 |
+| LOCALIZATION_DEFAULT | 4 |
+| COMPLEX_ACTIVITY_TRANSFER | 3 |
+| IN_VITRO_NOT_IN_VIVO | 2 |
+| PATHWAY_CONTEXT_IGNORED | 2 |
+| PSEUDOENZYME_OVERANNOTATION | 1 |
+
+Examples for every row, split by GO aspect, are on the
+[failure-modes page](EGGNOG_MAPPER_EVALUATION/failure-modes.md).
 
 The pattern follows from the method. emapper takes the union of everything
 any ortholog in the group carries, so one ortholog's mutant phenotype, one
@@ -352,20 +362,25 @@ one *P. putida* protein in ten.
   claims on the main cohort, 65 on the deep dive) and were judged by AI
   reviewers, not curators.
 - **UNRELATED is not "wrong".** Reviews cover GOA, so a correct term GOA lacks
-  lands here. The adjudication gives the rate: about 15% correct (12 of 76),
-  51% wrong.
+  lands here. The adjudication gives the rate: one in six correct (12 of 76),
+  about half wrong (39 of 76).
 - **The first adjudications were not blind to the automatic category.** The
   reviewer files showed each claim's category, so a verdict could anchor on
   it. A [blinded re-check](EGGNOG_MAPPER_EVALUATION/adjudication/blind_recheck/summary.yaml)
   re-judged all 43 claims drawn as REJECTED, mixed with 43 other claims as
   distractors, without categories and under opaque ids.
   - Claims drawn as REJECTED: 67% wrong blinded, against 65% before.
-  - Overall agreement on wrong / correct / undecided was 91% (Cohen's
-    κ = 0.84).
-  - No verdict flipped between wrong and correct among the REJECTED claims.
+  - Overall agreement was 91% (Cohen's κ = 0.84). For this comparison,
+    "correct" groups COR with LSP, against wrong and undecided.
+  - No REJECTED claim moved between wrong and correct.
 
-  Both passes were AI reviewers reading the same review files, so this rules
-  out anchoring on the label, not shared blind spots.
+  Only the displayed label was blinded. The reviewers still had to read the
+  gene's review, and for a claim drawn as REJECTED that review contains the
+  curator's REMOVE row for the same term, with its reason. The stability of
+  the wrong verdicts is therefore partly expected. The re-check rules out
+  anchoring on the displayed category, not deference to the curator's
+  visible verdict or blind spots shared by two AI passes over the same
+  files.
 - **Leave-species-out is only partly blind, and the bias favours emapper.**
   `--excluded_taxa` filters the annotation step only. The DIAMOND search still
   finds the query's own eggNOG record as its seed ortholog (human queries seed
