@@ -264,6 +264,12 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 2. **Check reaction mechanism**: Domain family doesn't guarantee mechanism
 3. **Distinguish promiscuity from core function**: Secondary activities → KEEP_AS_NON_CORE
 4. **Propose specific terms**: When existing terms are too broad or narrow
+5. **Check family membership against a trusted cutoff**: For electronic enzyme rows,
+   score the protein against the NCBIfam family models for the annotated reaction
+   (`just enzyme-cutoff-check ACC --go GO:...`). A score below the trusted cutoff,
+   especially when a family for a different reaction passes, is the overprediction
+   pattern of Schnoes et al. 2009 [PMID:20011109]. See the
+   [trusted-cutoff check](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
 
 ---
 
@@ -278,9 +284,24 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-10-04
+Last updated: 2026-10-18
 
 # NOTES
+
+## 2026-10-18
+
+**Added a trusted-cutoff check from Schnoes et al. 2009 [PMID:20011109].**
+
+`ai_gene_review.validation.enzyme_family_cutoff` scores a protein against the NCBIfam
+models for an annotated EC/GO activity and compares each score with the model's
+trusted and noise cutoffs (Schnoes steps 2 and 4). It also reports function-level
+families for other reactions that the protein passes. On 38 electronic enzyme rows
+from 20 *P. putida* reviews plus human HADH, 11 of 12 ACCEPT rows with a model passed
+and 11 of 14 REMOVE rows with a model failed. The three passing REMOVE rows were a
+pseudoenzyme (pyrC′, which needs a residue check), overlapping MetX donor families
+(metXS) and a paralog with ortholog biochemistry (PP_2325). The failing ACCEPT row was
+human HADH, below prokaryote-calibrated cutoffs. Details:
+[cutoff-check/RESULTS.md](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
 
 ## 2026-10-04
 
