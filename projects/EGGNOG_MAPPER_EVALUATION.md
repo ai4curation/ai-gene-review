@@ -351,6 +351,18 @@ one *P. putida* protein in ten.
 - **UNRELATED is not "wrong".** Reviews cover GOA, so a correct term GOA lacks
   lands here. The adjudication gives the rate: about 15% correct (12 of 76),
   51% wrong.
+- **The first adjudications were not blind to the automatic category.** The
+  reviewer files showed each claim's category, so a verdict could anchor on
+  it. A [blinded re-check](EGGNOG_MAPPER_EVALUATION/adjudication/blind_recheck/summary.yaml)
+  re-judged all 43 claims drawn as REJECTED, mixed with 43 other claims as
+  distractors, without categories and under opaque ids.
+  - Claims drawn as REJECTED: 67% wrong blinded, against 65% before.
+  - Overall agreement on wrong / correct / undecided was 91% (Cohen's
+    κ = 0.84).
+  - No verdict flipped between wrong and correct among the REJECTED claims.
+
+  Both passes were AI reviewers reading the same review files, so this rules
+  out anchoring on the label, not shared blind spots.
 - **Leave-species-out is only partly blind, and the bias favours emapper.**
   `--excluded_taxa` filters the annotation step only. The DIAMOND search still
   finds the query's own eggNOG record as its seed ortholog (human queries seed
