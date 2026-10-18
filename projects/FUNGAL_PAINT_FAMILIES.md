@@ -133,17 +133,20 @@ exo-1,3-beta-glucosidase node.
 
 ## Family 6: PKA Regulatory Subunits
 
-`PTHR11635` contains the conserved PKA regulatory-subunit node
-`PANTHER:PTN004280545`, a fungal nuclear-localization node
-`PANTHER:PTN000908765`, and a broad cAMP-signaling/cytosol node
-`PANTHER:PTN000180782` whose `GO:0007189` GPCR-pathway assertion needs
-step-specific review in each fungus.
+`PTHR11635` contains the root PKA regulatory-chain node
+`PANTHER:PTN004280545`, which carries the conserved cAMP binding, PKA
+catalytic-subunit binding, PKA inhibitor, and PKA-complex assertions; fungal
+node `PANTHER:PTN000908765`, which carries nuclear localization; and the broad
+cAMP-signaling/cytosol node `PANTHER:PTN000180782`, which carries cytosol and
+an over-scoped GPCR/adenylate-cyclase pathway assertion.
 
-- [ ] `yeast/BCY1` - *S. cerevisiae* PKA regulatory subunit
-- [x] `SCHPO/cgs1` - *S. pombe* PKA regulatory subunit; merged in PR #4763
-- [x] `CANAL/BCY1` - CGD-seeded *Candida albicans* Bcy1; merged in PR #4751
-- [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; drafted in this
-  branch
+- [x] `CANAL/BCY1` - *Candida albicans* PKA regulatory subunit; merged in PR
+  #4751
+- [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; merged in PR
+  #4756
+- [x] `SCHPO/cgs1` - fission-yeast PKA regulatory subunit; merged in PR #4763
+- [x] `yeast/BCY1` - budding-yeast PKA regulatory-subunit anchor; drafted in
+  this branch
 
 ## Family 7: Sterol C-8 Isomerases
 
@@ -273,6 +276,12 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
   contrary Neurospora localization data, and the over-specific `GO:0007189`
   GPCR pathway row from `PTN000180782` was redirected to neutral
   `GO:0141156` cAMP/PKA signal transduction.
+- Drafted the `yeast/BCY1` anchor review. It keeps Bcy1's starvation, P-body,
+  chromatin, and plasma-membrane rows as non-core contexts, narrows TPK
+  `protein binding` rows to `protein kinase A catalytic subunit binding`,
+  removes the Ess1 generic binding rows, leaves an abstract-only
+  Siva/PMP22-cited self-interaction row undecided, and removes Ras/Lte1
+  bud-neck localization rows where `bcy1` was only a bypass background.
 - Rechecked `NEUCR/esa-1` as the filamentous-fungal ESA1 representative in
   `PTHR10615:SF218`. The fungal `PANTHER:PTN000834946` H4-acetyltransferase
   row and the broad eukaryotic `PANTHER:PTN004172926` MYST-root rows remain
