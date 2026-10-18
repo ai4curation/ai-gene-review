@@ -325,3 +325,42 @@ These checksums identify the publication bytes used for this review. An abstract
 | PMID:25885889 | [PMID_25885889.md](../../../publications/PMID_25885889.md) | `2b15d9f267380d515999cf2896b4697e586c4795afb9a0029388b7cb7de379d7` | Full-text cache; section limits still apply | 33, 92 | [DOI](https://doi.org/10.1186/s12885-015-1100-9) |
 | PMID:27339457 | [PMID_27339457.md](../../../publications/PMID_27339457.md) | `da8c5f41db74c69cbc7618888b58904ecd32c5632f5a8531628882432ec44395` | Abstract only | 31 | [DOI](https://doi.org/10.1016/j.matbio.2016.06.003) |
 | PMID:28327460 | [PMID_28327460.md](../../../publications/PMID_28327460.md) | `a021b53941828f6e09153db1bf711ce0ddd15601b10db91603cbfba0206d5d89` | Full-text cache; section limits still apply | 30, 98 | [DOI](https://doi.org/10.1016/j.biomaterials.2017.03.008) |
+
+## Second-review evidence clarification
+
+The records below separate measured association, partner identity and native-context uncertainty. Annotation indices are zero-based in the review YAML. The original source fields, actions, replacement terms, core and product are unchanged.
+
+| Issue | Evidence and boundary | Disposition |
+|---|---|---|
+| Hoxa1, row 18 | [PMID:23088713 original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3514159/), Tables 1/2 EFEMP2/O95967 rows and Methods for mouse Hoxa1 cloning, GST human-ORF expression and pull-downs. Both screen configurations list EFEMP2; co-purification is positive and BiFC is not determined. Tagged proteins were coexpressed in COS-7 or HEK293T cells and recovered from lysates. | Human EFEMP2 is measured directly with a mouse transcription-factor partner. Retain the binding-class refinement while making explicit that an endogenous human HOXA1 complex, physiological co-localization and purified binary affinity are not established. |
+| PITX2/LOX, row 17 | [PMID:22919265](https://pubmed.ncbi.nlm.nih.gov/22919265/) concerns the PITX2 association, including the EFEMP2 ΔN36 construct and COS-7 co-IP. Its imported partner is P28300/LOX. | This partner mismatch is different from a documented cross-species experiment. The generic non-core result and original partner provenance remain; independent LOX evidence is not refuted. |
+| SGTA and SGTB | [SGTA O43765](https://www.uniprot.org/uniprotkb/O43765/entry) FUNCTION specifies client binding and targeting; [SGTB Q96EQ0](https://www.uniprot.org/uniprotkb/Q96EQ0/entry) FUNCTION specifies HSC70/HSP70 association and regulation, with additional IBA adaptor/TRC/ER-targeting context. [GO:0051087](https://www.ebi.ac.uk/QuickGO/term/GO:0051087) includes nascent or unfolded polypeptide binding for folding or transport. | Retain SGTA class refinements and SGTB non-core associations. The missing resolution is SGTB's narrower partner-class property, not the validity of phylogenetic inference or a requirement that EFEMP2 be a chaperone client. |
+| Basement membrane, rows 149/150 | [PMID:25885889 original](https://doi.org/10.1186/s12885-015-1100-9), immunohistochemistry Methods and expression Results/Figure 1; separate ARBA rule and target-feature audit described above. | Retain both UNDECIDED. The positive staining is not compartment-resolved support for GO:0140144 and does not establish exclusion from that compartment. |
+
+### HuRI denominator and ascertainment
+
+The 86 published GOA-linked PMID:32296183 assertions contain the following dispositions. This is an annotation subset, not all screened ORFs or a nuclear-localization census.
+
+| Subset | Rows |
+|---|---:|
+| DNA-binding transcription-factor binding refinement | 20 |
+| Corepressor-binding refinement | 3 |
+| Other partner-class refinements | 16 |
+| Generic binding retained non-core | 47 |
+| Total | 86 |
+
+The 23 TF/corepressor refinements are 26.7% of this defined subset. Selecting rows by a transcription-factor or corepressor class cannot independently test nuclear enrichment. No matched assay-background comparison is available here, so neither enrichment nor its absence, and no false-positive rate, is estimated. The source snapshot contains 276 PMID:32296183 records: 93 array, 93 prey-pooling and 90 validated-two-hybrid records. These are records across assay configurations, not independent biological replications. They span 89 primary partner identifiers; 265 records join the 86 imported partners, while 11 records carry three additional IntAct identifiers (EBI-14123856, EBI-16439879 and EBI-22367043). These additional identifiers are retained without forcing a gene assignment. A partner's class is grounded separately from its pair detection; neither establishes the endogenous compartment in which the interaction occurs.
+
+### Exact locators without additional quotations
+
+The committed cache remains distinct from a separately recovered original. The source hashes below identify unchanged bytes; a hash authenticates the file, while the locator identifies the evidence to inspect.
+
+| Claim | Exact source and locator |
+|---|---|
+| Parotid target measurement | PMID:19199708 supplementary Table 2 workbook `pr800658c_si_002.xls`, SHA-256 `400bc2387e70720f3b2ee7c17830f98cf1fa5ad0329bc1c3fee97887ee8ea6b3`; sheet `Paratid Exosomes` [sic], physical row 284, columns A:J. C:E hold sequence count, spectrum count and coverage; the coverage cell is 0.063. The existing [workbook projection](EFEMP2-evidence/workbooks.json) and [replay instructions](EFEMP2-evidence/README.md) reproduce the values. |
+| Historical fibulin-4 constructs and knockdown | [PMID:19570982 cache](../../../publications/PMID_19570982.md), SHA-256 `c9e9b1dff9639cc3350a81e9e8fabe8f5b6589f1ef4180bec52c4e5670723d46`, Methods lines 81–95 and Results lines 129–149. Historical 26–418/26–217/98–303 construct labels remain unreconciled to the current 443-aa reference. Human ARPE-19 fibulin-4 knockdown and rat RFL6 fibulin-5 experiments remain distinct. |
+| Positive staining and its resolution | [PMID:25885889 cache](../../../publications/PMID_25885889.md), SHA-256 `2b15d9f267380d515999cf2896b4697e586c4795afb9a0029388b7cb7de379d7`, immunohistochemistry Methods lines 134–142 and expression Results line 178; original Methods and Figure 1 are linked above. This is a full-text cache, not an access failure. |
+| Human EFEMP2/mouse Hoxa1 | The [normal cache](../../../publications/PMID_23088713.md), SHA-256 `454acbc564312ac549cc16829eed9bcf95fa08b08647f8673364e87ebd85a457`, is abstract-only. The separately recovered original linked above contains Tables 1/2 and operative Methods. Its original XML SHA-256 is `c23822772a64d253222ef9f0e904808f4fedafd3dcfd343d8db8252e202a8881`; the independent PMC HTML SHA-256 is `e3be16778ad7d547be562c1a549bcf50216694752c317c109defa2e915af6fdf`. |
+| Mixed extracellular interaction report | [PMID:27339457 cache](../../../publications/PMID_27339457.md), SHA-256 `da8c5f41db74c69cbc7618888b58904ecd32c5632f5a8531628882432ec44395`, abstract begins line 31. The curated SUBUNIT evidence and the unavailable target-specific Methods remain distinguished as above; no original-access upgrade is implied. |
+
+The raw interaction snapshot used for the denominator has SHA-256 `3691cf639909b3d201496e7c21d03ce495f8b49b71a256739bde0ab636e343be`. Its source URL and all original fields remain in the existing [source manifest](EFEMP2-evidence/source-manifest.json) and [interaction projection](EFEMP2-evidence/interactions.json). The prior 39-row table remains the construct/method index; the new counts do not reinterpret every partner as nuclear or infer a native complex.
