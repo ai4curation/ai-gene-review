@@ -23,7 +23,6 @@ PMIDs → no warning. Every other configuration still warns.
 from pathlib import Path
 import tempfile
 
-import pytest
 import yaml
 
 from ai_gene_review.validation import validate_gene_review
@@ -42,11 +41,6 @@ def _build_yaml(term_id: str, rows: list[dict]) -> dict:
                 "review": {
                     "action": row["action"],
                     "reason": row.get("reason", "test"),
-                    **(
-                        {"proposed_replacement_terms": row["replacements"]}
-                        if "replacements" in row
-                        else {}
-                    ),
                 },
             }
         )
@@ -67,13 +61,11 @@ def _has_inconsistent_action_warning(report) -> bool:
     )
 
 
-def _validate(yaml_data: dict, check_ontology: bool = False) -> object:
+def _validate(yaml_data: dict) -> object:
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "TEST-ai-review.yaml"
         path.write_text(yaml.dump(yaml_data))
-        return validate_gene_review(
-            path, check_best_practices=True, check_ontology=check_ontology
-        )
+        return validate_gene_review(path, check_best_practices=True)
 
 
 def test_ipi_distinct_pmid_divergence_suppressed():
@@ -236,140 +228,3 @@ def test_remove_with_inconsistent_kept_actions_still_warns():
         "Divergent actions among the kept rows should still warn even when a "
         "distinct-citation REMOVE row is present"
     )
-
-
-MATRIX = [{"id": "GO:0005759", "label": "mitochondrial matrix"}]
-
-
-@pytest.mark.parametrize(
-    "kept_action,synthesis_codes",
-    [
-        ("ACCEPT", ["IBA", "IEA"]),
-        ("KEEP_AS_NON_CORE", ["IBA", "IEA"]),
-        ("ACCEPT", ["IEA"]),
-        ("ACCEPT", ["ISS", "IC"]),
-    ],
-)
-def test_root_organelle_synthesis_modify_suppressed(kept_action, synthesis_codes):
-    """The ORGANELLES policy pattern on a root organelle term (AARS2, CLYBL, MMADHC).
-
-    Direct rows (IDA, HTP) keep the root term, because the assay resolved the
-    organelle and no more. Synthesis rows (IBA, IEA, ...) are refined with
-    MODIFY to the sub-compartment. Splitting by evidence class is the policy,
-    not curator inconsistency (projects/ORGANELLES.md).
-    """
-    rows = [
-        {"evidence_type": "IDA", "pmid": "PMID:1", "action": kept_action},
-        {"evidence_type": "HTP", "pmid": "PMID:2", "action": kept_action},
-    ] + [
-        {
-            "evidence_type": code,
-            "pmid": f"GO_REF:000003{i}",
-            "action": "MODIFY",
-            "replacements": MATRIX,
-        }
-        for i, code in enumerate(synthesis_codes)
-    ]
-    report = _validate(_build_yaml("GO:0005739", rows))
-    assert not _has_inconsistent_action_warning(report)
-
-
-@pytest.mark.parametrize(
-    "rows",
-    [
-        # MODIFY on a direct row: not the policy split.
-        [
-            {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-            {
-                "evidence_type": "IDA",
-                "pmid": "PMID:2",
-                "action": "MODIFY",
-                "replacements": MATRIX,
-            },
-        ],
-        # Synthesis MODIFY to a term outside the organelle.
-        [
-            {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-            {
-                "evidence_type": "IBA",
-                "pmid": "GO_REF:0000033",
-                "action": "MODIFY",
-                "replacements": [{"id": "GO:0005634", "label": "nucleus"}],
-            },
-        ],
-        # Synthesis MODIFY without a replacement term.
-        [
-            {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-            {"evidence_type": "IBA", "pmid": "GO_REF:0000033", "action": "MODIFY"},
-        ],
-        # Kept rows disagree among themselves.
-        [
-            {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-            {"evidence_type": "HTP", "pmid": "PMID:2", "action": "KEEP_AS_NON_CORE"},
-            {
-                "evidence_type": "IBA",
-                "pmid": "GO_REF:0000033",
-                "action": "MODIFY",
-                "replacements": MATRIX,
-            },
-        ],
-        # A synthesis row is kept rather than modified.
-        [
-            {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-            {"evidence_type": "IEA", "pmid": "GO_REF:0000044", "action": "ACCEPT"},
-            {
-                "evidence_type": "IBA",
-                "pmid": "GO_REF:0000033",
-                "action": "MODIFY",
-                "replacements": MATRIX,
-            },
-        ],
-    ],
-)
-def test_root_organelle_other_divergence_still_warns(rows):
-    """Only the exact policy split is exempt; other divergence still warns."""
-    report = _validate(_build_yaml("GO:0005739", rows))
-    assert _has_inconsistent_action_warning(report)
-
-
-def test_non_organelle_term_synthesis_modify_still_warns():
-    """The exemption is limited to root organelle terms."""
-    rows = [
-        {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-        {
-            "evidence_type": "IBA",
-            "pmid": "GO_REF:0000033",
-            "action": "MODIFY",
-            "replacements": [{"id": "GO:0005829", "label": "cytosol"}],
-        },
-    ]
-    report = _validate(_build_yaml("GO:0005737", rows))
-    assert _has_inconsistent_action_warning(report)
-
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "replacement,warns",
-    [
-        ({"id": "GO:0005759", "label": "mitochondrial matrix"}, False),
-        ({"id": "GO:0005634", "label": "nucleus"}, True),
-    ],
-)
-def test_root_organelle_split_with_go_hierarchy(replacement, warns):
-    """The production path: with the GO hierarchy loaded, ancestry decides.
-
-    ``just validate`` runs with ontology checks, so the exemption must fire for
-    a real sub-compartment (mitochondrial matrix part_of mitochondrion) and not
-    for a term outside the organelle.
-    """
-    rows = [
-        {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
-        {
-            "evidence_type": "IBA",
-            "pmid": "GO_REF:0000033",
-            "action": "MODIFY",
-            "replacements": [replacement],
-        },
-    ]
-    report = _validate(_build_yaml("GO:0005739", rows), check_ontology=True)
-    assert _has_inconsistent_action_warning(report) is warns

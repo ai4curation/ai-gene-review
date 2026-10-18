@@ -88,3 +88,7 @@ HTP (PMID:34800366) and IDA (PMID:23270877) stay KEEP_AS_NON_CORE with reasons n
 assays resolve only the organelle; NEW IC GO:0005759 row; core_functions locations now
 cytosol + mitochondrial matrix (the single branch-point core function spans both pools).
 Expected validator warning: mixed actions on GO:0005739 (policy-driven: direct vs synthesis rows).
+
+## 2026-10-18 (ORGANELLES revision)
+
+After the PR #5208 review, the IBA/IEA mitochondrion rows are kept (not MODIFYed to the matrix): their sources correctly assert the organelle and could not resolve further. The mitochondrial matrix stays as the NEW IC row, added alongside the root rows as GO does for DARS2 and MMUT.

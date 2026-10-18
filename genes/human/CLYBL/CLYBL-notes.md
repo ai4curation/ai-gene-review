@@ -133,3 +133,7 @@ search "CLYBL mitochondrial matrix" returned nothing), so the new row is IC, not
 Changes: IEA GO_REF:0000044 mitochondrion ACCEPT -> MODIFY (to GO:0005759); IDA (PMID:24334609)
 and HTP (PMID:34800366) mitochondrion rows left ACCEPT (organelle-level assays); NEW IC row
 GO:0005759 mitochondrial matrix; core_functions locations mitochondrion -> mitochondrial matrix.
+
+## 2026-10-18 (ORGANELLES revision)
+
+After the PR #5208 review, the IBA/IEA mitochondrion rows are kept (not MODIFYed to the matrix): their sources correctly assert the organelle and could not resolve further. The mitochondrial matrix stays as the NEW IC row, added alongside the root rows as GO does for DARS2 and MMUT.

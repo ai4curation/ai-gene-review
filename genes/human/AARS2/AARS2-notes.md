@@ -148,3 +148,7 @@ and IEA (GO_REF:0000044, SL-0173) mitochondrion rows ACCEPT -> MODIFY to GO:0005
 the three direct rows (HPA IDA, HTP PMID:34800366, IDA PMID:21549344) stay ACCEPT; a NEW
 IC GO:0005759 row was added; the aminoacylation and both editing core functions now
 locate to mitochondrial matrix.
+
+## 2026-10-18 (ORGANELLES revision)
+
+After the PR #5208 review, the IBA/IEA mitochondrion rows are kept (not MODIFYed to the matrix): their sources correctly assert the organelle and could not resolve further. The mitochondrial matrix stays as the NEW IC row, added alongside the root rows as GO does for DARS2 and MMUT.

@@ -18,7 +18,7 @@ Example:
 """
 
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple, Callable, FrozenSet
+from typing import List, Dict, Any, Optional, Tuple, Callable
 import yaml
 import time
 from contextlib import contextmanager
@@ -446,105 +446,6 @@ def _check_proposed_molecular_function(
         )
 
 
-#: Root membrane-bounded organelle CC terms covered by the ORGANELLES policy
-#: (projects/ORGANELLES.md), each with the label stem its sub-compartment
-#: terms share. The stem is the fallback test for "is a sub-compartment of
-#: this organelle" when the GO hierarchy is not loaded.
-ROOT_ORGANELLE_TERMS: Dict[str, str] = {
-    "GO:0005739": "mitochondri",  # mitochondrion
-    "GO:0005783": "endoplasmic reticulum",
-    "GO:0005794": "golgi",  # Golgi apparatus
-    "GO:0005777": "peroxisom",  # peroxisome
-    "GO:0005764": "lysosom",  # lysosome
-}
-
-#: Evidence codes that synthesise or propagate rather than observe the gene.
-SYNTHESIS_EVIDENCE_CODES = frozenset(
-    {"IBA", "IBD", "IKR", "IRD", "IEA", "ISS", "ISO", "ISA", "ISM", "IGC", "RCA", "IC"}
-)
-
-
-def _is_subcompartment(
-    root: str,
-    replacement: Dict[str, Any],
-    ancestors: Optional[Callable[[str], FrozenSet[str]]],
-) -> bool:
-    """Return True if a replacement term is a sub-compartment of a root organelle.
-
-    With the GO hierarchy loaded, the root must be a strict is_a/part_of
-    ancestor of the replacement. Without it, the replacement's label must
-    contain the organelle's stem from ``ROOT_ORGANELLE_TERMS``.
-
-    >>> matrix = {"id": "GO:0005759", "label": "mitochondrial matrix"}
-    >>> _is_subcompartment("GO:0005739", matrix, None)
-    True
-    >>> _is_subcompartment("GO:0005739", {"id": "GO:0005634", "label": "nucleus"}, None)
-    False
-    >>> _is_subcompartment("GO:0005739", matrix, lambda t: frozenset())
-    False
-    >>> _is_subcompartment("GO:0005739", matrix, lambda t: frozenset({"GO:0005739"}))
-    True
-    >>> _is_subcompartment("GO:0005739", {"label": "mitochondrial matrix"}, lambda t: frozenset({"GO:0005739"}))
-    False
-    """
-    if ancestors is not None:
-        replacement_id = str(replacement.get("id") or "")
-        return bool(replacement_id) and root in ancestors(replacement_id)
-    return ROOT_ORGANELLE_TERMS[root] in str(replacement.get("label", "")).lower()
-
-
-def _is_organelle_policy_split(
-    root: str,
-    rows: List[Tuple[str, str, Any]],
-    ancestors: Optional[Callable[[str], FrozenSet[str]]] = None,
-) -> bool:
-    """Return True if rows on one root organelle term follow the ORGANELLES split.
-
-    The split is: every MODIFY row has synthesis evidence and proposes only
-    sub-compartments of the root organelle, and every other row is a
-    non-synthesis row with the same kept action (ACCEPT or KEEP_AS_NON_CORE).
-
-    Each row is ``(action, evidence_code, annotation_dict)``.
-
-    >>> sub = {"review": {"proposed_replacement_terms": [
-    ...     {"id": "GO:0005759", "label": "mitochondrial matrix"}]}}
-    >>> nuc = {"review": {"proposed_replacement_terms": [
-    ...     {"id": "GO:0005634", "label": "nucleus"}]}}
-    >>> root = "GO:0005739"
-    >>> _is_organelle_policy_split(root, [("ACCEPT", "IDA", {}), ("MODIFY", "IBA", sub)])
-    True
-    >>> _is_organelle_policy_split(root, [("ACCEPT", "IDA", {}), ("MODIFY", "IDA", sub)])
-    False
-    >>> _is_organelle_policy_split(root, [("ACCEPT", "IDA", {}), ("MODIFY", "IBA", {})])
-    False
-    >>> _is_organelle_policy_split(root, [("ACCEPT", "IEA", {}), ("MODIFY", "IBA", sub)])
-    False
-    >>> _is_organelle_policy_split(root, [("ACCEPT", "IDA", {}), ("MODIFY", "IBA", nuc)])
-    False
-    """
-    modified = [r for r in rows if r[0] == "MODIFY"]
-    kept = [r for r in rows if r[0] != "MODIFY"]
-    if not modified or not kept:
-        return False
-    if len({action for action, _, _ in kept}) != 1 or kept[0][0] not in {
-        "ACCEPT",
-        "KEEP_AS_NON_CORE",
-    }:
-        return False
-    if any(ec in SYNTHESIS_EVIDENCE_CODES for _, ec, _ in kept):
-        return False
-    for _, ec, ann in modified:
-        if ec not in SYNTHESIS_EVIDENCE_CODES or not isinstance(ann, dict):
-            return False
-        replacements = (ann.get("review") or {}).get("proposed_replacement_terms")
-        if not replacements or not all(
-            isinstance(r, dict) and _is_subcompartment(root, r, ancestors)
-            for r in replacements
-        ):
-            return False
-    return True
-
-
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -579,8 +480,9 @@ def check_best_practices_rules(
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
     check_protein_binding_policy(data, report)
-    ancestors = go_ancestors() if check_ontology else None
-    check_action_consistency(data, report, ancestors=ancestors)
+    check_action_consistency(
+        data, report, ancestors=go_ancestors() if check_ontology else None
+    )
     if yaml_file is not None:
         # Source-level check: a folded scalar turns a newline into a space, so a
         # hyphenated compound split across lines renders as two words. Invisible to
@@ -880,20 +782,6 @@ def check_best_practices_rules(
                                 and not (remove_refs & kept_refs)
                             ):
                                 continue
-
-                    # Special case: the ORGANELLES policy split on a root
-                    # organelle term (projects/ORGANELLES.md). Direct rows
-                    # keep the root term, synthesis rows are refined to a
-                    # sub-compartment with MODIFY.
-                    if term_id in ROOT_ORGANELLE_TERMS and _is_organelle_policy_split(
-                        term_id,
-                        [
-                            (action, ec, data["existing_annotations"][idx])
-                            for idx, action, ec in actions_list
-                        ],
-                        ancestors,
-                    ):
-                        continue
 
                     # Get the term label for better error messages
                     term_label = None

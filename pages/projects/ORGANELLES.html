@@ -576,7 +576,8 @@ from that run, and the proportions are the same in the later one):</p>
 <p>These are counts, not judgments. The "candidates" above are genes to examine,<br />
 not findings.</p>
 <h2 id="policy">Policy</h2>
-<p>Decided 2026-10-16. It applies to the first-pass organelles (mitochondrion, ER,<br />
+<p>Decided 2026-10-16, revised 2026-10-18 (add the sub-compartment alongside the<br />
+root rather than substituting it). It applies to the first-pass organelles (mitochondrion, ER,<br />
 Golgi apparatus, peroxisome, lysosome); the nucleus, the series organelles and<br />
 plastids come later.</p>
 <ol>
@@ -597,27 +598,32 @@ plastids come later.</p>
    the location at all. For IBA, check what the PAINT node's descendants<br />
    actually show. For IEA, check the mapping (UniProt subcellular-location<br />
    keyword, InterPro2GO, ARBA) and whether the gene really has the feature<br />
-   the mapping assumes. Possible outcomes: <code>MODIFY</code> to the sub-compartment<br />
-   the evidence supports, <code>ACCEPT</code> if the whole-organelle claim is all anyone<br />
-   can support, or <code>MARK_AS_OVER_ANNOTATED</code>/<code>REMOVE</code> if the organelle itself<br />
-   is not supported.</li>
+   the mapping assumes. If the organelle claim is right, the row is <code>ACCEPT</code><br />
+   (or <code>KEEP_AS_NON_CORE</code>) with a reason that records the check, even when<br />
+   the source could not see the sub-compartment: the row's claim is the<br />
+   organelle, and that claim is true. If the organelle itself is not<br />
+   supported, the row is <code>MARK_AS_OVER_ANNOTATED</code> or <code>REMOVE</code>. The<br />
+   sub-compartment never replaces the root on such a row; it is added under<br />
+   rule 4.</li>
 <li><strong>Be bold about the sub-compartment.</strong> If the gene has no annotation to a<br />
    sub-compartment of the organelle and several lines of evidence agree, add<br />
-   one (<code>NEW</code>, or <code>MODIFY</code> on a red-flag row). Lines of evidence include<br />
+   one as a <code>NEW</code> row (usually IC), alongside the root rows. Lines of evidence include<br />
    predicted TM segments or a membrane anchor, a cleavable matrix-targeting<br />
    sequence or a PTS1/PTS2, an ER signal peptide with or without a retention<br />
    motif, and a function that only makes sense on one side (a matrix TCA<br />
    enzyme, an inner-membrane carrier). Record the lines of evidence in<br />
 <code>review.reason</code>. If they disagree or there is only one, stay at the root.</li>
-<li><strong>Validation.</strong> On a root organelle term, the inconsistent-review-actions<br />
-   check accepts this split: every MODIFY row has synthesis evidence and<br />
-   proposes only sub-compartments of that organelle, and every other row is<br />
-   direct or author evidence with one shared kept action (ACCEPT or<br />
-   KEEP_AS_NON_CORE). Any other mix still warns, including a MODIFY to the<br />
-   sub-compartment plus a second location outside the organelle (cases 2<br />
-   and 3): that warning is expected, not a bug. See <code>_is_organelle_policy_split</code> in<br />
-<code>src/ai_gene_review/validation/validator.py</code>, which covers the first-pass<br />
-   organelles.</li>
+<li><strong>Add, don't substitute.</strong> This follows GO's own practice for matrix<br />
+   proteins with sub-mitochondrial evidence. DARS2 and <a href="../../genes/human/MMUT/MMUT-ai-review.html">MMUT</a> carry<br />
+<code>GO:0005759 mitochondrial matrix</code> and keep their <code>mitochondrion</code> rows<br />
+   (IBA, IDA, HTP, TAS) alongside it. It also keeps the review judging claims<br />
+   rather than evidence codes: every row on the root term gets the same<br />
+   kind of action, so the inconsistent-review-actions check needs no<br />
+   exception. (A first version of the pilot MODIFYed the synthesis rows and<br />
+   added a validator exemption for that split; both were dropped in review<br />
+   of PR #5208.) For the IEA rows, the lasting fix is upstream: a UniProt<br />
+   location keyword of <code>SL-0170</code> (Mitochondrion matrix) instead of <code>SL-0173</code><br />
+   (Mitochondrion) maps to the matrix term directly.</li>
 <li><strong><code>core_functions.locations</code></strong> should name the sub-compartment where it is<br />
    known, and may also carry the root if the organelle-level claim is<br />
    independently supported.</li>
@@ -646,12 +652,12 @@ plastids come later.</p>
 </tbody>
 </table>
 <ul>
-<li>The 283 root-only synthesis rows (149 IEA, 76 IBA, 37 ISS, 15 ISO) are the<br />
+<li>The 283 root-only synthesis rows (main codes: 149 IEA, 76 IBA, 37 ISS, 15 ISO) are the<br />
   first worklist. 143 are ACCEPT and 87 KEEP_AS_NON_CORE; under rule 3 each<br />
-  needs a reason, and many should probably become a sub-compartment term<br />
-  under rule 4.</li>
-<li>The 798 synthesis rows in reviews that do have a sub-compartment (361 IEA,<br />
-  333 IBA) are lower priority. The fine-grained location is already recorded,<br />
+  needs a reason recording the check, and for many of these genes rule 4<br />
+  should add a sub-compartment row.</li>
+<li>The 798 synthesis rows in reviews that do have a sub-compartment (main<br />
+  codes: 361 IEA, 333 IBA) are lower priority. The fine-grained location is already recorded,<br />
   so the question is only whether the propagated organelle claim stands.</li>
 <li>The 365 root-only direct rows are mostly fine under rule 2, but rule 4<br />
   still applies to the gene: <a href="../../genes/human/AARS2/AARS2-ai-review.html">AARS2</a>, <a href="../../genes/human/CLYBL/CLYBL-ai-review.html">CLYBL</a>, <a href="../../genes/human/PYCR2/PYCR2-ai-review.html">PYCR2</a> and <a href="../../genes/human/MMADHC/MMADHC-ai-review.html">MMADHC</a> are among the<br />
@@ -690,8 +696,9 @@ plastids come later.</p>
 <li>[ ] Work through the 283 root-only mitochondrial synthesis rows, starting<br />
       with human; apply rules 3 and 4 in the gene reviews</li>
 <li>[x] Pilot rule 4 on <a href="../../genes/human/AARS2/AARS2-ai-review.html">AARS2</a>, <a href="../../genes/human/CLYBL/CLYBL-ai-review.html">CLYBL</a>, <a href="../../genes/human/PYCR2/PYCR2-ai-review.html">PYCR2</a>, <a href="../../genes/human/MMADHC/MMADHC-ai-review.html">MMADHC</a> (3 matrix, 1 unresolved)</li>
-<li>[x] Exempt the policy split from the inconsistent-review-actions check<br />
-      (<code>_is_organelle_policy_split</code> in <code>validation/validator.py</code>)</li>
+<li>[x] Revise to "add, don't substitute" after PR #5208 review: synthesis<br />
+      root rows ACCEPT, sub-compartment as a NEW row; validator exemption<br />
+      dropped</li>
 <li>[ ] Check the rest of the 365 root-only direct mitochondrial rows for rule 4<br />
       candidates</li>
 <li>[ ] Look up GO consortium CC annotation guidance on granularity and sidedness</li>
@@ -702,6 +709,19 @@ plastids come later.</p>
 <li>[ ] Separate sections for nucleus, endosome and autophagy series, and plastids</li>
 </ul>
 <h1 id="notes">NOTES</h1>
+<h2 id="2026-10-18-revision-add-dont-substitute">2026-10-18 (revision: add, don't substitute)</h2>
+<p>Agreed with cjm after the PR #5208 review. The pilot's IBA/IEA mitochondrion<br />
+rows on <a href="../../genes/human/AARS2/AARS2-ai-review.html">AARS2</a>, <a href="../../genes/human/CLYBL/CLYBL-ai-review.html">CLYBL</a> and <a href="../../genes/human/MMADHC/MMADHC-ai-review.html">MMADHC</a> no longer MODIFY to the matrix: their sources<br />
+correctly assert the organelle and could not see further, so the row's claim<br />
+is true and they are kept (ACCEPT for <a href="../../genes/human/AARS2/AARS2-ai-review.html">AARS2</a> and <a href="../../genes/human/CLYBL/CLYBL-ai-review.html">CLYBL</a>; KEEP_AS_NON_CORE for<br />
+<a href="../../genes/human/MMADHC/MMADHC-ai-review.html">MMADHC</a>, matching its other mitochondrion rows). The matrix term stays as the<br />
+NEW IC row on each gene. The <a href="../../genes/human/AARS2/AARS2-ai-review.html">AARS2</a> and <a href="../../genes/human/MMADHC/MMADHC-ai-review.html">MMADHC</a> IBA propagation reviews go back<br />
+to NO_FAILURE (the GRANULARITY_MISMATCH label meant "true but uninformative",<br />
+which contradicts rule 1). With every root row on one action, the validator<br />
+exemption for the MODIFY split is no longer needed and was removed. The<br />
+comparator that decided it: DARS2 and <a href="../../genes/human/MMUT/MMUT-ai-review.html">MMUT</a> carry the matrix term alongside<br />
+their mitochondrion rows in GOA. The pilot table below records the first<br />
+version.</p>
 <h2 id="2026-10-18-pilot-four-human-matrix-candidates">2026-10-18 (pilot: four human matrix candidates)</h2>
 <p>Applied the policy to <a href="../../genes/human/AARS2/AARS2-ai-review.html">AARS2</a>, <a href="../../genes/human/CLYBL/CLYBL-ai-review.html">CLYBL</a>, <a href="../../genes/human/PYCR2/PYCR2-ai-review.html">PYCR2</a> and <a href="../../genes/human/MMADHC/MMADHC-ai-review.html">MMADHC</a>. Three were moved to the<br />
 matrix and one was held at the root.</p>
@@ -811,9 +831,9 @@ more.</p>
     <strong>Local changes</strong> ·
 
     Last committed source:
-    <time datetime="2026-10-18T15:24:25Z">18 Oct 2026, 15:24 UTC</time>
-    · <a href="https://github.com/ai4curation/ai-gene-review/commit/b03dacfef7f22811acb3b908e96e06cea806d3ef" aria-label="View source change b03dacfef7f22811acb3b908e96e06cea806d3ef">b03dacfef7f2</a>
-    · <a href="https://github.com/ai4curation/ai-gene-review/blob/b03dacfef7f22811acb3b908e96e06cea806d3ef/projects/ORGANELLES.md">View committed source</a>
+    <time datetime="2026-10-18T15:35:14Z">18 Oct 2026, 15:35 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/7a2c0053849e2e7a18158d525f46f597828e334d" aria-label="View source change 7a2c0053849e2e7a18158d525f46f597828e334d">7a2c0053849e</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/7a2c0053849e2e7a18158d525f46f597828e334d/projects/ORGANELLES.md">View committed source</a>
 
 </small>
 
