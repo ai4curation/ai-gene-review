@@ -4,8 +4,9 @@ maturity: SCOPING
 last_reviewed: 2026-10-18
 tags: [PIPELINE]
 species: [human]
-genes: [human/SCAP, human/INSIG1, human/INSIG2, human/MBTPS1, human/MBTPS2, human/SREBF1,
-  human/SREBF2]
+# genes: list deferred until the seven SREBP-pathway reviews (ai4curation/ai-gene-review#5215)
+# are on main; forward references render as reader-visible warnings. Then add
+# [SCAP, INSIG1, INSIG2, MBTPS1, MBTPS2, SREBF1, SREBF2] and drop SCAP and PCK1 below.
 # PID is the NCI Pathway Interaction Database here, not Arabidopsis PINOID; the
 # others would otherwise link to non-human reviews (ACO2 matches the fission-yeast
 # directory aco2, and human PCK1 is not on main yet).
@@ -123,12 +124,14 @@ split along their sub-pathways before modelling.
   cited GO term an ancestor of the lexical match. This supports treating PW's
   definition citations as closer to exact than `relatedMatch`, after spot
   checks. The GO ids typed on RGD's diagram pages are less reliable. 4 of 45
-  disagree with the other sources for the same pathway: urea cycle is cited as
-  GO:0000076, a DNA replication term whose local id repeats the PW id; ERK5
-  signaling as the JNK cascade; Toll-like receptor signaling as the
-  *Drosophila* Toll pathway; and de novo pyrimidine synthesis as UMP
-  synthesis. The script now demotes such rows to `relatedMatch` and leaves
-  them out of GO-CAM and module matching.
+  disagree with the other sources for the same pathway, and three of these look
+  wrong: urea cycle is cited as GO:0000076, a DNA replication term whose local id
+  repeats the PW id; ERK5 signaling as the JNK cascade; and Toll-like receptor
+  signaling as the *Drosophila* Toll pathway. The fourth, de novo pyrimidine
+  synthesis cited as 'de novo' UMP biosynthesis, is defensible, since the
+  mammalian route ends at UMP; it is not in an `is_a` chain with the lexical
+  match, so it is flagged as non-equivalent. The script demotes all four to
+  `relatedMatch` and leaves them out of GO-CAM and module matching.
 - **PW cites retired GO terms.** 44 definition citations point at obsolete GO
   terms, and one at an id that no longer resolves. Several are amino-acid "metabolic process" terms that GO has since
   obsoleted, such as cysteine, histidine, tyrosine, phenylalanine and
@@ -243,7 +246,7 @@ in a separate PR.
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
   definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
-- Send RGD the 44 obsolete GO citations, the unresolvable one and the 4 disagreeing page citations, with GO's replacement where one
+- Send RGD the 44 obsolete GO citations, the unresolvable one and the 3 wrong page citations, with GO's replacement where one
   exists (the SSSOM `comment` column).
 - Map the 32 `needs_go_mapping` seeds by hand, or record missing terms as
   `proposed_new_terms`.

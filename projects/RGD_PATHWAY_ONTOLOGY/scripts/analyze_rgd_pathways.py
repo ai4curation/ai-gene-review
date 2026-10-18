@@ -338,7 +338,7 @@ def main() -> int:
     for m in mappings:
         if m["match_source"] != "rgd_page_go_xref" and m["object_status"] == "ok":
             others[m["subject_id"]].add(m["object_id"])
-    page_flagged = {"disagrees": 0, "id_echo": 0}
+    page_flagged = {"disagrees": 0, "id_echo": 0, "rows": 0}
     for m in mappings:
         if m["match_source"] != "rgd_page_go_xref":
             continue
@@ -356,6 +356,7 @@ def main() -> int:
             m["predicate_id"] = "skos:relatedMatch"
             m["comment"] += "; QA: " + "; ".join(notes) + "; not used for matching"
             m["qa_flag"] = True
+            page_flagged["rows"] += 1
 
     mcols = ["subject_id", "subject_label", "predicate_id", "object_id", "object_label",
              "object_namespace", "mapping_justification", "comment", "match_source", "object_status"]
@@ -416,11 +417,15 @@ def main() -> int:
         genes_cur = closure_genes(tid, direct_cur)
         gene_basis = genes_cur if genes_cur else genes_all
         in_gocam = gene_basis & gocam_syms
-        model_counts = Counter(m for s in gene_basis for m in sym_models.get(s, ()))
-        best = model_counts.most_common(1)
+        model_counts = Counter(m for s in sorted(gene_basis) for m in sorted(sym_models.get(s, ())))
         go_ids = sorted({m["object_id"] for m in by_pw_go.get(tid, [])})
         gclos = go_closure(go_ids)
         bp_models = sorted(m for m, bps in model_bps.items() if bps & gclos)
+        # Deterministic choice of the best-overlapping model: most shared genes,
+        # then a model whose process falls under the mapped GO term, then lowest id.
+        bp_set = set(bp_models)
+        ranked = sorted(model_counts.items(), key=lambda kv: (-kv[1], kv[0] not in bp_set, kv[0]))
+        best = ranked[:1]
         in_matched = gene_basis & set().union(*(model_syms[m] for m in bp_models)) if bp_models else set()
         rows.append({
             "pw_id": tid, "pw_label": t["name"], "branch": branch(tid),
@@ -569,6 +574,8 @@ def main() -> int:
         "def_xref_is_ancestor_of_lexical_match": def_broader,
         "def_xref_go_obsolete": sum(1 for m in mappings if m["match_source"] == "pw_def_xref" and m["object_status"] == "obsolete"),
         "def_xref_go_missing": sum(1 for m in mappings if m["match_source"] == "pw_def_xref" and m["object_status"] == "missing"),
+        # A row can trip both checks, so the flagged total is not their sum.
+        "rgd_page_go_xref_flagged": page_flagged["rows"],
         "rgd_page_go_xref_disagreeing": page_flagged["disagrees"],
         "rgd_page_go_xref_id_echo": page_flagged["id_echo"],
         "def_xref_go_not_bp": sum(1 for m in mappings if m["match_source"] == "pw_def_xref" and m["object_status"] == "ok" and m["object_namespace"] != "biological_process"),
