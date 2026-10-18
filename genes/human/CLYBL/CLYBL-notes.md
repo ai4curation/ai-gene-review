@@ -106,3 +106,30 @@ real and important work in a specific inflammatory context.
 - Does the rs41281112 null allele show any B12 phenotype modulation by inflammatory state,
   which would be the direct test of itaconate vs malyl-CoA as the dominant driver?
 - Should EC 2.3.3.9 (malate synthase) be retained on the UniProt entry at all?
+
+## 2026-10-18 ORGANELLES pilot: mitochondrial sub-compartment
+
+Applied the ORGANELLES policy (projects/ORGANELLES.md, "Policy") to the three GO:0005739
+mitochondrion rows. Lines of evidence for the matrix, all agreeing:
+
+1. Targeting: UniProt annotates a mitochondrial transit peptide, residues 1-22 (ECO:0000255,
+   predicted), with the mature chain at 23-340, and the entry has no TRANSMEM/INTRAMEM feature
+   [file:human/CLYBL/CLYBL-uniprot.txt "FT   TRANSIT         1..22"]. Cleavable presequence plus
+   no membrane anchor is the matrix signature.
+2. Structure: the mature, MTS-less chain is a soluble Mg(2+)-bound homotrimer
+   [PMID:29056341 "lacking the predicted mitochondrial targeting sequence (aa 23 – 340),"].
+3. Literature statement (secondary, citing MitoCarta2.0/Calvo 2016)
+   [PMID:29056341 "CLYBL is a ubiquitously expressed mitochondrial matrix soluble enzyme of"].
+4. Function: substrates are matrix CoA esters - malyl-CoA from citric acid cycle side reactions
+   [PMID:40108300 "a side product of promiscuous citric acid cycle enzymes"] and itaconate-derived
+   citramalyl-CoA - and the protected B12 enzyme MUT is a matrix enzyme
+   [PMID:29056341 "mitochondrial matrix enzyme that uses coenzyme B12 or"]; CLYBL loss causes a
+   cell-autonomous defect in mitochondrial B12 metabolism [PMID:29056341].
+
+Nothing argues for another sub-compartment (no TM segment, no IMS/outer-membrane report). No
+direct sub-mitochondrial fractionation / protease-protection experiment was found (PubMed
+search "CLYBL mitochondrial matrix" returned nothing), so the new row is IC, not IDA.
+
+Changes: IEA GO_REF:0000044 mitochondrion ACCEPT -> MODIFY (to GO:0005759); IDA (PMID:24334609)
+and HTP (PMID:34800366) mitochondrion rows left ACCEPT (organelle-level assays); NEW IC row
+GO:0005759 mitochondrial matrix; core_functions locations mitochondrion -> mitochondrial matrix.
