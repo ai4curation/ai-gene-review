@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PLAF7, TOXGM, TOXGO, TRYB2, TRYBB, LEIMA, TETTS, PARTE, GIAIC, TRIV3, ENTH1, PHATC, THAPS, DICDI, CHLRE, SALRS, MONBE, CAPO3]
 genes: [REL1, TPR, PFRA, PFRC, gp63, PTR1, CSP, CRT, MDR1, PMII, CDPK1, ATP4, MSP1, RH5, K13, AMA1, HAP2, SAG1, MIC2, ROP18, A0BFB4, A2FPI7, B7FXQ8]
-autolink_exclude: [TERT, rod, Sil1, sil1]
+autolink_exclude: [TERT, rod, Sil1, sil1, GPI]
 ---
 
 # Protists: Gene Function Outside Animals, Fungi and Plants
