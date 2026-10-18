@@ -54,8 +54,15 @@ Discussion of the prospective ligand relationship, and the Methods section. The 
 original was inspected for construct and ligand-binding Methods, ligand-binding and NF-kappaB
 Results, TRAF/NIK association and corresponding captions. The PMID:12270937 original was inspected
 for the Introduction's EDAR disease/ligand background, Methods and Results concerning XEDAR.
-These are selected text and caption reads, not figure-pixel examination. Reference-level availability
-records the separately accessed originals; the normal abstract-only cache files remain exact.
+These are selected text and caption reads, not figure-pixel examination. The normal caches for
+PMID:10431241, PMID:11035039 and PMID:12270937 remain abstract-only. Their optional reference-level
+availability flags are omitted; the reference assessments and these original locators retain the
+separate access account. All cache bytes and flags remain exact.
+
+Ligand recognition and downstream signaling use reference-only support at the documented assay
+scope. PMID:11035039 supplies the selected ligand-binding and NF-kappaB experiments, while
+PMID:11039935 supplies the positive ligand-specificity abstract. The original URLs and section
+locators above identify the evidence; no publication passage is asserted as a quotation.
 
 The [complete PMID:19619491 original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2859042/) provides
 Results on early Wnt activity and placode borders in downless/Edar-null embryos, maintenance of focal

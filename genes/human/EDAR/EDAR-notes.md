@@ -64,3 +64,14 @@ publication excerpt is introduced. Evidence is provided through source reference
 The portable replay now uses explicit input-validation errors that remain active under optimized
 Python execution. Normal and optimized executions produced the same saved results, and an altered
 input was rejected. The 21-input archive, source manifest and derived result bytes remain unchanged.
+
+
+## Current annotation scope and reference access
+
+The initial action-count paragraph above records the assessment before the placode refinements. The current assessment is 8 ACCEPT, 12 MODIFY, 2 KEEP_AS_NON_CORE and one source-specific REMOVE across the same 23 imported assertions. There are no NEW annotations. The later placode follow-up supersedes the initial counts; the earlier notes remain part of the evidence history.
+
+For PMID:10431241, PMID:11035039 and PMID:12270937, the normal publication caches remain abstract-only. Selected original sections were accessed separately, as documented in the reference assessments and the [source guide](EDAR-source-guide.md). Their optional reference-level availability flags are omitted to avoid compressing these two distinct access states into a single Boolean. This omission does not withdraw the documented original reads or change the cache flags. PMID:11039935 remains supported at abstract scope, with the full original unavailable.
+
+Support for ligand recognition and downstream signaling remains reference-only. PMID:11035039 supplies the separately inspected ligand-binding and NF-kappaB experiments at their stated construct and conditioned-medium scope; PMID:11039935 supplies the positive abstract-level ligand specificity. The source guide links the original records and identifies the inspected sections. No passage is presented as a quotation or substituted for an unavailable cache passage.
+
+The two hair-placode refinements describe the process resolved in the mouse experiments of PMID:19619491. They do not exhaustively encode the broader tooth and sweat-gland roles described in the biological summary, and they do not add unassayed organ-specific steps. The source identities, evidence codes, actions, receptor core and both natural-product descriptions remain unchanged.
