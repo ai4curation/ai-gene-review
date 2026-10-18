@@ -211,8 +211,11 @@ From the 2026-10-16 run, mitochondrion only:
 - [x] Red-flag worklist generated (`root_organelle_red_flags.md`)
 - [ ] Work through the 266 root-only mitochondrial synthesis rows, starting
       with human; apply rules 3 and 4 in the gene reviews
-- [ ] Check the 339 root-only direct mitochondrial rows for rule 4 candidates
-      (AARS2, CLYBL, PYCR2, MMADHC first)
+- [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
+- [ ] Decide how action consistency should treat direct ACCEPT plus synthesis
+      MODIFY on one root term
+- [ ] Check the rest of the 339 root-only direct mitochondrial rows for rule 4
+      candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
 - [ ] Decide on a validation warning
 - [ ] Add the policy to CLAUDE.md / the annotation-reviewer guidance once it
@@ -221,6 +224,37 @@ From the 2026-10-16 run, mitochondrion only:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-10-18 (pilot: four human matrix candidates)
+
+Applied the policy to AARS2, CLYBL, PYCR2 and MMADHC. Three were moved to the
+matrix and one was held at the root.
+
+| gene | outcome | synthesis rows | direct rows | lines of evidence |
+|---|---|---|---|---|
+| AARS2 | NEW matrix (IC) | IBA, IEA: ACCEPT -> MODIFY | 3 kept ACCEPT | predicted MTS, no TM; charges mt-tRNA(Ala); matrix amino-acid pool for editing; matrix lactylation substrate PDHA1 |
+| CLYBL | NEW matrix (IC) | IEA: ACCEPT -> MODIFY | 2 kept ACCEPT | predicted MTS, no TM; soluble trimer (structure); matrix CoA-ester substrates; protects matrix MMUT |
+| MMADHC | NEW matrix (IC) | IBA, IEA: KEEP_AS_NON_CORE -> MODIFY | 2 kept KEEP_AS_NON_CORE | MTS (deletion relocates it to cytosol); import needs membrane potential; degraded by matrix LONP1; feeds matrix MMAB/MMUT |
+| PYCR2 | stays at root | IEA kept ACCEPT, with reason | 3 kept ACCEPT, reasons added | no presequence (N-terminus sequenced), cytoplasmic pool, only two-way fractionation: rule 4 not met |
+
+What the pilot showed:
+
+- **None of the matrix calls rests on a direct sub-mitochondrial assay.**
+  All three NEW rows are IC built from several agreeing lines. That is what
+  rule 4 asks for, and it is why PYCR2, with only a functional hint, stayed at
+  the root.
+- **The IBA red flag is often structural.** For AARS2 and MMADHC, the PAINT
+  node that gives the mitochondrion IBA is seeded only by the gene's own
+  root-level annotation. The IBA cannot be finer than its seed. Fixing the
+  seed (a matrix annotation on the human gene) is the way to improve the
+  propagation.
+- **The action-consistency check warns on the policy's own pattern.** ACCEPT
+  or KEEP_AS_NON_CORE on direct rows alongside MODIFY on synthesis rows for
+  the same root term gives "Inconsistent review actions for term
+  GO:0005739". The warning is expected under this policy. It needs an
+  exception (or a different rule) before the policy is rolled out.
+- PYCR1's matrix term is Reactome TAS only; there is no sub-mitochondrial
+  assay for either PYCR paralog.
 
 ## 2026-10-16 (human mitochondrion cases)
 

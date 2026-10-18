@@ -57,3 +57,34 @@ biologically meaningful partners (MMACHC, MTR, MTRR) are captured by the molecul
 
 ## Reference for file: quote
 Add file:human/MMADHC/MMADHC-uniprot.txt to references for the UniProt FUNCTION/SUBCELLULAR quote support.
+
+## 2026-10-18 — ORGANELLES pilot: mitochondrial sub-compartment
+
+Applied projects/ORGANELLES.md Policy to the four GO:0005739 rows. Question: is the
+mitochondrial pool of MMADHC in the matrix (GO:0005759)? Lines of evidence:
+
+1. **MTS, no TM segment.** UniProt TRANSIT 1..38 (ECO:0000255), no TRANSMEM feature;
+   [PMID:18385497 "a putative mitochondrial targeting"];
+   [PMID:42709793 "Human MMADHC has an N-terminal mitochondrial targeting sequence (MTS)"].
+   The MTS-less deltaN38 variant [PMID:42709793 "was localized almost exclusively in the cytosol"].
+2. **PMF-dependent import** (presequence pathway across the inner membrane):
+   [PMID:42709793 "its short half-life is driven by its continual import into energized mitochondria and degradation by LONP1"];
+   accumulates in the cytosol upon depolarization.
+3. **Matrix protease turnover.** LONP1 inhibition enriches MMADHC in the mitochondrial fraction:
+   [PMID:42709793 "consistent with MMADHC being degraded primarily by LONP1 in the mitochondrial matrix"].
+   In mouse HSCs the m-AAA protease Afg3l2 also turns it over:
+   [PMID:41411131 "Loss of Afg3l2 leads to Mmadhc accumulation"] (abstract only).
+4. **Function on the matrix side.** The mitochondrial branch feeds the AdoCbl pathway
+   (MMAB, MMUT); MMUT [file:human/MMUT/MMUT-uniprot.txt "Mitochondrion matrix {ECO:0000269|PubMed:24458}."].
+
+Caveat: no sub-mitochondrial fractionation or protease-protection assay exists for MMADHC
+(PMID:23270877 is abstract-only here: IF + subcellular fractionation; PMID:42709793 used
+crude mitochondria). Matrix is therefore a curator inference (IC). Four lines agree, so
+policy rule 4 applies.
+
+Changes: IBA (GO_REF:0000033; PAINT PTN008546602 seeded only by Q9H3L0's own root
+annotation) and IEA (GO_REF:0000044, SL-0173) KEEP_AS_NON_CORE -> MODIFY to GO:0005759;
+HTP (PMID:34800366) and IDA (PMID:23270877) stay KEEP_AS_NON_CORE with reasons noting the
+assays resolve only the organelle; NEW IC GO:0005759 row; core_functions locations now
+cytosol + mitochondrial matrix (the single branch-point core function spans both pools).
+Expected validator warning: mixed actions on GO:0005739 (policy-driven: direct vs synthesis rows).
