@@ -1,0 +1,11 @@
+# DOCK11 review notes
+
+The 17 imported assertions were reviewed individually. Ten are accepted, two are refined to the CDC42 signaling branch, and five are retained as contextual non-core functions. Source identifiers, evidence codes, qualifiers and supporting entities are unchanged. No NEW annotation is proposed.
+
+The single molecular core is CDC42-directed guanine-nucleotide exchange, with positive filopodium assembly in the demonstrated human T-cell spreading context. Historical human construct activity, mouse ortholog experiments and modern patient-cell/rescue assays are distinguished. The historical AY692226 clone is not sequence-identical to current Q5JSL3, and the original exchange assay used immunoprecipitated protein. The normal abstract-only cache flags remain unchanged even where separately recovered originals were read.
+
+Positive filopodium regulation does not mean every immune-cell state responds identically. The two 2023 human studies show differing protrusion outcomes in defined contexts. The marginal-zone B-cell phenotype remains valid mouse-grounded contextual biology. RCC2 co-complex recovery is retained without transferring the paper's separate direct RAC1/coronin interfaces or inventing a DOCK11 adaptor activity.
+
+The [source and assay guide](DOCK11-source-guide.md) identifies original Methods, figures, public data records and the historical clone comparison. The primary references support the review; the guide is a locator. The [ClinGen project policy](https://github.com/ai4curation/ai-gene-review/blob/50db4d61a99d7a30369f7bae9c38845894441872/projects/CLINGEN_MENDELIAN.md#curation-instructions) retains a supported generic association as non-core when a justified more specific function has not been established.
+
+Normal fetching and publication caching completed in an isolated workspace. The configured Falcon research attempt failed authentication, and the configured fallback returned an insufficient-quota response. No provider report was fabricated. Manual primary-source review and independent core consultation supplied the evidence. Three donor publication caches already present on main were preserved exactly, and separately retrieved versions were kept distinct. The four added publication caches are genuine normal fetch results.

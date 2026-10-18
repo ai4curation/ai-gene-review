@@ -1,0 +1,51 @@
+---
+title: DOCK11 source and assay guide
+gene: DOCK11
+annotation_scope:
+  imported_annotations: 17
+  new_annotations: 0
+---
+
+# DOCK11 source and assay guide
+
+DOCK11 has one CDC42 exchange-factor core. The review preserves 17 imported assertions and distinguishes catalytic mechanism, context-dependent cellular effects, and curated source propagation. The primary references support the biological claims; this guide provides their locations and assay boundaries.
+
+## Human mechanism and cell context
+
+| Source and locator | Evidence and limits |
+|---|---|
+| [PMID:16968698](https://doi.org/10.1074/jbc.M606248200), Methods and Results Figures 4–7; [author-uploaded original](https://www.researchgate.net/publication/6821726_Identification_of_a_DOCK180-related_Guanine_Nucleotide_Exchange_Factor_That_Is_Capable_of_Mediating_a_Positive_Feedback_Activation_of_Cdc42) | Endogenous discovery used mouse P19 cells. A historical human brain/IMAGE-derived DOCK11 clone was expressed in COS7; immunoprecipitated HA-tagged protein promoted CDC42 nucleotide exchange. This is an immunocomplex assay, not purified soluble DOCK11. DHR2 and N-terminal deletions distinguish exchange and active-CDC42 feedback contacts. |
+| [PMID:37342957](https://doi.org/10.1056/NEJMoa2210054), main Figure 2 and supplementary Figure S15; [author-hosted article and complete appendix](https://opendata.cemm.at/phd-alumni/Block_Jana_Boztug_2024.pdf) | The article occupies PDF pages 55–67. Appendix pages 14, 18–21 and 27–28 (PDF pages 81, 85–88 and 94–95) describe human cells, knock-in, two Jurkat shRNAs, wild-type/W1707S reconstitution, CCL19-stimulated B-LCL CDC42 pull-down, and T-cell spreading on fibronectin. Figure 2 (PDF page 61) and Figure S15 (PDF page 120) support the positive filopodium role. Wild-type rescue was partial; W1707S failed in the tested Jurkat context. These are cellular assays, not purified exchange measurements. |
+| [PMID:36952639](https://pubmed.ncbi.nlm.nih.gov/36952639/), platelet and immune-cell Results and supplementary functional Methods; [accepted manuscript with supplementary material](https://pure.manchester.ac.uk/ws/portalfiles/portal/255404274/DOCK11_paper_Blood.pdf) | Patient platelets show reduced CDC42 activation and altered filopodial-stage responses. Activated patient T cells/B-LCLs and DOCK11-depleted healthy-donor monocyte-derived dendritic cells can instead display excessive abnormal fine protrusions. These outcomes restrict universal claims about the direction of morphology changes; they do not erase the positive filopodium result in the other defined context. |
+
+The current [UniProt Q5JSL3 sequence](https://www.uniprot.org/uniprotkb/Q5JSL3/entry) is 2073 residues and has no alternative-products block. The historical [AY692226.1 clone](https://www.ncbi.nlm.nih.gov/nuccore/AY692226.1) is also 2073 residues but its translation has L376, K740 and E1984 where current Q5JSL3 has F376, N740 and K1984. This is a historical human full-length construct, not an exact current-reference assay. The differences alone do not establish functional loss. Engineered deletions and disease variants are not natural splice products.
+
+## Ortholog and comparative experiments
+
+[PMID:15710388](https://doi.org/10.1016/j.febslet.2005.01.006) is available here as a complete abstract. It reports Zizimin2 binding and activation of CDC42 versus TC10/TCL. The donor identity is independently verified as mouse Dock11 [A2AF47](https://www.uniprot.org/uniprotkb/A2AF47/entry); unreported construct details are not reconstructed from the abstract.
+
+[PMID:22494997](https://pmc.ncbi.nlm.nih.gov/articles/PMC3359169/), Results on full-length/CZH2 constructs and Methods on BMDCs, CDC42 activation and microscopy, provides mouse immune-cell context. The human 293T expression host does not establish the species of every introduced construct. The exact existing repository cache remains abstract-only; a separate genuine full-text retrieval supplied the inspected original passages.
+
+[PMID:25729399](https://pmc.ncbi.nlm.nih.gov/articles/PMC4343071/), Figures 3–5 and conditional-knockout Methods, compares global and B-cell-specific mouse Dock11 deletion. The marginal-zone B-cell compartment decreases while mature follicular B cells are comparatively preserved. Tested LPS proliferation and chemotaxis were unchanged. These observations support contextual B-cell homeostasis and development, without resolving every differentiation-versus-retention step or proving an equivalent human mechanism.
+
+[PMID:25851601](https://pmc.ncbi.nlm.nih.gov/articles/PMC4472020/), comparative GTPase-specificity Results and GST–DHR2 exchange Methods, directly includes DOCK11 controls despite the DOCK10-focused title. The DOCK11 DHR2 preparation activates CDC42 in the tested comparison; the DOCK10 neuronal phenotype is separate. The inspected gift-construct Methods do not establish the DOCK11 template species merely through the provider's name. The existing full repository cache is preserved; selected original passages were read from a separately retrieved full version.
+
+## RCC2 association and cytosol
+
+[PMID:25074804 Figure 3](https://pmc.ncbi.nlm.nih.gov/articles/PMC4179493/#f03), especially the [original panel image](https://cdn.ncbi.nlm.nih.gov/pmc/blobs/0dde/4179493/25f381283d3a/jcs-127-19-4292-f03.jpg), identifies DOCK11 in the GFP–RCC2 versus GFP SILAC pull-down from HEK293T cells. Panel B reports score 42.35, two peptides and enrichment ratio 7.5. The Methods describe GFP-Trap isolation and mass-spectrometry identification with a false-discovery threshold below 1%. This establishes positive co-complex recovery, not a purified direct DOCK11–RCC2 interface. Subsequent direct RCC2–RAC1/coronin experiments concern different pairs. The current IntAct response did not resolve this particular paper/partner join; that missing service record is not treated as a negative assay.
+
+The cytosol annotation follows the exact Reactome chain: [event R-HSA-1011598](https://reactome.org/content/detail/R-HSA-1011598) → [DOCK-GEFs set 1012978](https://reactome.org/content/detail/1012978) → [DOCK11 entity 1012996](https://reactome.org/content/detail/1012996). The target member is Q5JSL3 residues 1–2073 in cytosol. This is curated modeled localization, not independent microscopy or an exhaustive distribution claim.
+
+## Propagation and term specificity
+
+The [PANTHER PTHR23317 tree](https://www.pantherdb.org/panther/family.do?clsAccession=PTHR23317) contains target leaf PTN002511212, and the ungapped target alignment matches all 2073 current residues. The literal PAINT IBDs are at PTN000593987 for GEF activity and Rho-signal regulation, and PTN002762089 for positive filopodium assembly. Human Q5JSL3 in the latter descendant-evidence set is legitimate target experimental grounding, not circularity. Each source-specific propagation assessment preserves that ancestral interpretation.
+
+[InterPro IPR026791](https://www.ebi.ac.uk/interpro/entry/InterPro/IPR026791/) supplies the verified GEF and small-GTPase-signaling mappings. Target evidence permits [GO:0032488 Cdc42 protein signal transduction](https://www.ebi.ac.uk/QuickGO/term/GO:0032488) as a descendant refinement of GO:0007264, and [GO:0032489 regulation of Cdc42 protein signal transduction](https://www.ebi.ac.uk/QuickGO/term/GO:0032489) as a descendant refinement of GO:0035023. The two refinements respect the separate process and regulation branches. GO:0043547 covers GTPase activation through nucleotide exchange; it does not assert that DOCK11 accelerates GTP hydrolysis as a GAP.
+
+The supported generic RCC2 association remains non-core under the [ClinGen project instruction](https://github.com/ai4curation/ai-gene-review/blob/50db4d61a99d7a30369f7bae9c38845894441872/projects/CLINGEN_MENDELIAN.md#curation-instructions). A more informative activity is not manufactured from co-purification. The four B-cell assertions remain contextual non-core functions. No new annotation is proposed.
+
+## Source access and remaining questions
+
+The effective caches for PMID:16968698, PMID:37342957 and PMID:36952639 remain abstract-only, despite the separately recovered originals described above. PMID:15710388 remains abstract-only with no full-original assay claim. The existing PMID:22494997 abstract and PMID:25851601 full cache are preserved unchanged; their separate retrieved versions remain distinguished. PMID:25074804 and PMID:25729399 provide full text, with the RCC2 figure additionally inspected as an image. The review's short quotations occur once each in the YAML; the access labels are not silently upgraded.
+
+The main unresolved biology is how cell state selects the morphology response to DOCK11–CDC42 perturbation, and whether the RCC2-associated pool involves direct binding with a functional effect on exchange. Matched perturbation/rescue and controlled interaction assays are proposed in the review.
