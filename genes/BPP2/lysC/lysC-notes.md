@@ -12,7 +12,7 @@ Gene **lysC** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes the 
 
 ## Curation Decisions
 - **Molecular Function**:
-  - `GO:0003674` (`molecular_function`) in `core_functions`.
+  - No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.
 - **Biological Process**:
   - `GO:0031640` (`killing of cells of another organism`, IEA): **MODIFY** to `GO:0044659` (`viral release from host cell by cytolysis`).
   - `GO:0044659` (`viral release from host cell by cytolysis`): **NEW** supported by `file:BPP2/lysC/lysC-uniprot.txt`.

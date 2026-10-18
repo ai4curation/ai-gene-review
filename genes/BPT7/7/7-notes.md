@@ -9,4 +9,4 @@
 ## Literature & Function Summary
 - Historically designated as a "host-range" gene based on classical T7 amber mutants in gene `7`.
 - However, Kemp et al. (2005) (`PMID:16054667`) demonstrated that classical amber mutations in gene `7` are strongly polar on the immediately downstream essential tail assembly gene `7.3` (whose translation is coupled to gene `7`), and that when gp7.3 is supplied in trans, gp7 itself is non-essential and not incorporated into mature T7 virions (`PMID:16054667`, `file:genes/BPT7/7/7-uniprot.txt`).
-- Consequently, the specific molecular function of gp7 remains unknown; annotated with root `GO:0003674` (`molecular_function`) with `ND` (`GO_REF:0000015`).
+- No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.

@@ -8,4 +8,4 @@ Enterobacteria satellite phage P4 gene *cII* (`P13059`, 264 aa, ~30.1 kDa) is lo
 - Although originally named `cII` based on the mapping of a clear-plaque mutation (`cII` mutation, Calendar et al. 1981), Ghisotti et al. (1990) showed that loss-of-function mutations in `cII` do not impair lysogenization, and that the original mutation caused a temperature-sensitive lethal phenotype rather than a true defect in lysogenic maintenance [PMID:2403440]. Its molecular function remains unknown (`PF11191` / `IPR020964`, `DUF2977`).
 
 ## GO Annotation Review
-- No existing GOA annotations are present. Root `ND` annotations (`GO:0003674` `molecular_function` and `GO:0008150` `biological_process`) are added with supporting context from `PMID:2403440`.
+- No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.

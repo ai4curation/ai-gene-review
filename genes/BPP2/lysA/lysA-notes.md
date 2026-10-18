@@ -12,7 +12,7 @@ Gene **lysA** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes a 14
 
 ## Curation Decisions
 - **Molecular Function**:
-  - `GO:0003674` (`molecular_function`) in `core_functions` (since `GO:0005515` `protein binding` must not be added as `NEW`).
+  - No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.
 - **Biological Process**:
   - `GO:0031640` (`killing of cells of another organism`, IEA): **MODIFY** to `GO:0044659` (`viral release from host cell by cytolysis`).
   - `GO:0044659` (`viral release from host cell by cytolysis`): **NEW** supported by `PMID:8051010` and `PMID:23335412` (regulates the timing of holin-mediated cytolytic viral release to maximize burst size).

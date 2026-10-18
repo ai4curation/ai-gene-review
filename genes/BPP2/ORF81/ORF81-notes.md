@@ -9,4 +9,4 @@
 
 ## Curation Decisions
 - **Existing GOA Annotations**: None (`[]`).
-- **Core Functions**: Use root ontology terms (`GO:0003674` `molecular_function`, `GO:0008150` `biological_process`) supported by `PMID:8510152`.
+- No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.

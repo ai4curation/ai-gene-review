@@ -8,4 +8,4 @@ Enterobacteria satellite phage P4 gene *beta* (`P13057`, 354 aa, ~39.9 kDa) is l
 - **Predicted Fold**: Contains the conserved domain `PF09848` / `IPR019175` (`DUF2075`, Calcineurin-like phosphoesterase superfamily domain), and together with Gop forms an anti-phage defense / toxin-antitoxin-like module in the P4 prophage lifestyle. However, its direct enzymatic substrate or biochemical mode of Gop neutralization has not been experimentally defined in the cached literature [PMID:2403440].
 
 ## GO Annotation Review
-- No existing GOA annotations are present. Because the direct biochemical mechanism of Beta is not experimentally established in the literature, root `ND` annotations (`GO:0003674` `molecular_function` and `GO:0008150` `biological_process`) are recorded alongside the genetic characterization from `PMID:2403440`.
+- No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.

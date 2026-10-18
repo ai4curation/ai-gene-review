@@ -11,4 +11,4 @@
 
 ## Curation Summary
 - `existing_annotations` in the GOA stub is empty.
-- Added root `ND` annotations (`GO:0003674` `molecular_function` and `GO:0008150` `biological_process` with `GO_REF:0000015`) and referenced them in `core_functions`.
+- No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.

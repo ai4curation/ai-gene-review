@@ -8,4 +8,4 @@ Enterobacteria satellite phage P4 gene *gop* (`P13058`, 146 aa, ~16.6 kDa) is th
 - **Domain Architecture**: Contains the conserved domain `PF09849` / `IPR019176` (`Phage_gop`). Mutations in `gop` were originally isolated as suppressors allowing growth of P4 `beta` temperature-sensitive or amber mutants (`gop` = **g**rowth **o**f **P**4 *beta* mutants) [PMID:2403440].
 
 ## GO Annotation Review
-- No existing GOA annotations are present. We add `GO:0031640` (`killing of cells of another organism`, `IMP`, `PMID:2403440`) and `GO:0003674` (`molecular_function`, `ND`, `GO_REF:0000015`).
+- No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.

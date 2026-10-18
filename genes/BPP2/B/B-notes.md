@@ -13,7 +13,7 @@ Gene **B** of *Escherichia phage P2* (`BPP2`) encodes the 166-amino-acid early r
 
 ## Curation Decisions
 - **Molecular Function**:
-  - `GO:0003674` (`molecular_function`): Use root MF in `core_functions` (since `GO:0005515` `protein binding` must not be added as `NEW`, and no specific non-binding catalytic/helicase-loader MF term is directly assayed in the cached reference).
+  - No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.
 - **Biological Process**:
   - `GO:0006260` (`DNA replication`, IEA) and `GO:0071897` (`DNA biosynthetic process`, IEA): **MODIFY** to `GO:0039693` (`viral DNA genome replication`).
   - `GO:0039693` (`viral DNA genome replication`): **NEW** supported by `PMID:3475531` and `file:BPP2/B/B-uniprot.txt`.
