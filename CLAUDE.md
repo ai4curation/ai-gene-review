@@ -181,6 +181,18 @@ ActionEnum:
           Do not use for indirect or pleiotropic effects. Be sure you have good evidence, this can be from multiple sources.
 ```      
 
+**Correct but general terms are `MODIFY`, not `KEEP_AS_NON_CORE`.** When a term is right but
+less specific than the evidence supports (e.g. `membrane` vs `plasma membrane`, `peptidase
+activity` vs `serine-type endopeptidase activity`), use `MODIFY` with `proposed_replacement_terms`
+set to the specific supported term (an `is_a`/`part_of` descendant, preferably one the gene
+already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that are as precise
+as warranted but peripheral to the core function. If the general term is already as precise as
+the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
+match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
+When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
+This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
+separate, long-standing use of `MODIFY` whose replacement is not a descendant.
+
 ### Do not overrule curators from incomplete evidence
 
 PomBase, and the GO consortium databases generally, are highly reliable. Curators
@@ -425,6 +437,28 @@ and only warn; fix them and run `just local-quote-baseline --prune`, never add t
 If `just fetch-gene` or a re-run deep-research file changes a source so that a quote
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
+
+**Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
+apply to every UniProt quote, whatever it supports.
+
+- **Good support:** experimental and curated statements (kinetics, binding or active
+  sites, curated free text, best of all text tied to a publication: evidence
+  `ECO:0000269` with a PubMed id; syncing such curated notes is part of our job).
+  Family and domain classification is also good support for membership, and you may
+  use membership to argue for a function: NCBIfam, InterPro/Pfam/PROSITE signature
+  matches, the curated UniRule systems (HAMAP, PIRSR, PIRNR, RuleBase), "Belongs to
+  the X family" notes (unless their only evidence is ARBA) and family
+  cross-references. Structure-derived automatic evidence (`ECO:0007…`) counts too.
+- **Not support, unvetted predictions:** a statement whose only evidence is an ARBA
+  association rule (`{ECO:0000256|ARBA:...}`), annotation imported unchecked from the
+  submitter (`ECO:0000313`), or an electronic GO line (`IEA:`). Citing one repeats a
+  prediction; citing ARBA text for an ARBA annotation is circular.
+- **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
+  record's own `DR GO` lines restate an annotation rather than support it.
+
+Validation warns on both (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
+
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.
