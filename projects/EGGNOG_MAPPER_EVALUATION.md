@@ -28,8 +28,8 @@ them. To approximate a newly sequenced organism we hid the query's own species
 from annotation transfer. Exact matches then fell to 33% of leaves and
 core-function recall to 44%. A further 44% of leaves were related to nothing
 in the review. In a manual check of 76 of those unrelated terms, about half
-(39) were wrong and one in six (12) was a correct, informative addition. The errors are characteristic: process terms
-that came from an ortholog's mutant phenotype, terms that cannot apply in the
+(39) were wrong and one in six (12) was a correct, informative addition. The
+errors are characteristic: process terms that came from an ortholog's mutant phenotype, terms that cannot apply in the
 query's lineage (eye development on a worm protein), activities that belong to
 a paralog or a complex partner, and source annotations that were wrong.
 Molecular-function terms most often match the review exactly. But in a
@@ -237,7 +237,12 @@ seeds, at most one per protein per stratum
 AI reviewers judged each against the gene's review, UniProt record and notes,
 using the COR/LSP/UNC/PLI/NPI/REP scheme of de Crécy-Lagard et al. 2025
 (PMID:40703034). Counts below pool both rounds by the category each claim was
-drawn from. Eight round-1 claims drawn as REJECTED changed category once
+drawn from. Round 2 is balanced across aspects by design, whereas round 1
+follows the population, in which BP makes up 79% of UNRELATED leaves. The
+pooled rates therefore over-weight MF and CC. Round 1 alone is the
+population estimate: 22 of 40 UNRELATED wrong (55%) and 6 correct (15%).
+Reweighting round 2 to the population's aspect mix moves the pooled figures
+only slightly, to about 50% wrong and 19% correct. Eight round-1 claims drawn as REJECTED changed category once
 placeholder removals stopped counting. They are tallied in their own row,
 since they are not a random slice of their new categories. The REJECTED row
 is therefore conditioned on the claim still being rejected.
@@ -278,7 +283,9 @@ Error types among all 74 wrong calls (both rounds):
 | PSEUDOENZYME_OVERANNOTATION | 1 |
 
 Examples for every row, split by GO aspect, are on the
-[failure-modes page](EGGNOG_MAPPER_EVALUATION/failure-modes.md).
+[failure-modes page](EGGNOG_MAPPER_EVALUATION/failure-modes.md). The three
+low-count types (frequency bias, in vitro only, pathway context) are grouped
+there under "others".
 
 The pattern follows from the method. emapper takes the union of everything
 any ortholog in the group carries, so one ortholog's mutant phenotype, one
@@ -289,9 +296,8 @@ rather than outvoted, because the output keeps no ortholog-support threshold.
 
 ### Failure modes by ontology
 
-A second round of 72 claims, 24 per aspect, was drawn to compare the three
-ontologies like for like. Of each aspect's 24 claims, 16 MF, 12 BP and 10 CC
-were wrong. Each ontology fails in its own way:
+Round 2 (above) compares the three ontologies like for like. Of each
+aspect's 24 claims, 16 MF, 12 BP and 10 CC were wrong. Each ontology fails in its own way:
 
 - **MF: the molecule differs.**
   - Domain missing: ABC transporter on SecA.
@@ -367,8 +373,12 @@ one *P. putida* protein in ten.
 - **The first adjudications were not blind to the automatic category.** The
   reviewer files showed each claim's category, so a verdict could anchor on
   it. A [blinded re-check](EGGNOG_MAPPER_EVALUATION/adjudication/blind_recheck/summary.yaml)
-  re-judged all 43 claims drawn as REJECTED, mixed with 43 other claims as
-  distractors, without categories and under opaque ids.
+  re-judged 43 claims drawn as REJECTED, mixed with 43 other claims as
+  distractors, without categories and under opaque ids. The 43 are all 38
+  main-cohort claims drawn as REJECTED (the 30 still rejected plus the 8
+  recategorised) and the 5 *P. putida* REJECTED claims from the deep dive.
+  That mix is why its original rate, 65% (28 of 43), differs from the
+  table's 73% for still-rejected claims.
   - Claims drawn as REJECTED: 67% wrong blinded, against 65% before.
   - Overall agreement was 91% (Cohen's κ = 0.84). For this comparison,
     "correct" groups COR with LSP, against wrong and undecided.
