@@ -142,3 +142,8 @@ The entries below record operative source access separately from immutable norma
 **[PMID:19825938](https://pubmed.ncbi.nlm.nih.gov/19825938/)** — Original mouse NIH3T3 Methods/Results were read. Two DHC1 RNAi reagents and DHC2 controls support stress-induced granule/P-body accumulation, with opposing-kinesin rescue; resting P bodies and global translational silencing were not equivalently affected. This is contextual motor-dependent assembly evidence, not direct human proof of every granule outcome.
 
 **[PMID:16496424](https://pubmed.ncbi.nlm.nih.gov/16496424/)** — Authenticated source identity and complete abstract; the current mouse IDA filopodium attribution is genuine. The target-specific original imaging could not be recovered. Failed thesis routes returned HTML rather than a PDF. The narrow filopodium claim remains UNDECIDED rather than being rejected from the abstract or confirmed by generic cytoplasmic localization.
+
+
+## Review-follow-up clarification
+
+The positive PSEN2 Y2H/co-IP reports above remain part of the evidence record. Their assignment to the full DYNC1H1 product is now UNDECIDED because the 140-kDa band, antibody identity and clone extent remain unresolved. No wrong-gene attribution is asserted. See the [source-record audit results](DYNC1H1-evidence/RESULTS.md) for the unchanged computational extracts and separately sourced partner-class evidence.

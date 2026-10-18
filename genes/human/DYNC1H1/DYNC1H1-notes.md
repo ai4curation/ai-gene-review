@@ -31,3 +31,12 @@ The official record contains one 4,646-residue Q14204 product and no alternative
 Existing machine inputs, seven histories, provider artifacts and all preexisting main publication caches remain byte-identical. Genuine normal-fetch variants are retained privately and are not substituted for protected caches. The configured provider attempt and fallback failed; no provider text was fabricated. New publication additions are restricted to genuinely fetched references needed by the reviewed evidence.
 
 See the [source evidence guide](DYNC1H1-source-evidence.md) and [portable source-record package](DYNC1H1-evidence/README.md) for public locators, original-access limits, measurements and reproducible extraction. These authored files organize evidence and are not cited as independent primary experiments.
+
+
+## 2026-10-18 review follow-up
+
+The PSEN2 row is now UNDECIDED because the identity of the reported 140-kDa species remains unresolved; the positive experiment is preserved without alleging a wrong-gene result. The 15 source-specific PMID:32814053 refinements remain bounded partner-class binding claims, with independently cited functional classifications and explicit isoform/fragment and ATP23 inference limits. The original screen included pairwise retesting; its orthogonal validation of a subset is not assigned to every DYNC1H1 pair.
+
+The single motor core now represents retrograde axonal transport rather than its broad ancestor, and includes spindle positioning alongside spindle organization. Current typed ancestry finds no redundant pair among the five processes. Human heavy-chain siRNA/recruitment evidence supports positioning; the checkpoint mechanism remains explicitly LIC1-dependent dynein-complex evidence. These changes do not add annotation rows.
+
+Local reference-only links expose the already derived source records and their independent classification evidence. The displayed 4,646-residue product is now explicit. Citation verification for three incompletely recovered studies is scoped to identity and the inspected portions. All 159 imported source objects and all 185 annotation quotation occurrences remain exact; no new quotation is introduced. The current action totals are 75 ACCEPT, 54 KEEP_AS_NON_CORE, 27 MODIFY and three UNDECIDED.
