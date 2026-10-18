@@ -1,6 +1,6 @@
 # DOK7 source and assay guide
 
-The review preserves 16 source assertions and four official products. Its final actions are four ACCEPT, five KEEP_AS_NON_CORE and seven MODIFY; there are no new annotations. This guide distinguishes underlying observations from their interpretation.
+The review preserves 16 imported source assertions and four official products. Their actions are four ACCEPT, five KEEP_AS_NON_CORE and seven MODIFY. One additional proposed molecular-function annotation uses ISS evidence from the mouse ortholog. This guide distinguishes underlying observations from their interpretation.
 
 | Source | Actual access and decisive scope | Limits |
 |---|---|---|
@@ -28,3 +28,8 @@ Receptor tyrosine kinase binding GO:0030971 is a verified descendant of protein 
 PMIDs [16917026](https://pubmed.ncbi.nlm.nih.gov/16917026/), [17439981](https://pubmed.ncbi.nlm.nih.gov/17439981/), [19261599](https://pubmed.ncbi.nlm.nih.gov/19261599/), [20012313](https://pubmed.ncbi.nlm.nih.gov/20012313/) and [22661499](https://pubmed.ncbi.nlm.nih.gov/22661499/) were verified and read at abstract level. They support human synaptopathy, variable severity and reported variant assays; detailed constructs or Methods are not invented. PMIDs 14702039, 15489334 and 15815621 are sequence-resource context, assessed through their abstracts and official UniProt provenance. Available full caches were not treated as fully read simply because their metadata says full text.
 
 The only newly reproduced publication excerpts are in the review YAML: eight words from PMID:32296183, nine from PMID:20603078 and eight from PMID:21041412, each used once. Reference-only support elsewhere reuses the same underlying evidence without repeating quotation text.
+
+
+## Review follow-up
+
+The review proposes GO:0030296 protein tyrosine kinase activator activity by ISS from the verified mouse ortholog Q18PE0. The direct activation assay and the human binding/oligomerization experiments retain their distinct construct species. This adds the annotation recommendation already represented by the first core function; it does not claim direct human kinase-rate measurements or equal activity for all four products. The 16 imported assertions and their source fields remain unchanged.
