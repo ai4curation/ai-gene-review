@@ -80,6 +80,23 @@ always correct for the radical SAM cluster. Whether `GO:0051539` belongs in
 core function (it is the catalytic cofactor) or is non-core is the main
 judgement call to fix in Phase 3.
 
+### Treatment rule for the generic rows
+
+Adopted 2026-10-18 for all new reviews in this project, and to be applied in
+the Phase 3 pass. Hierarchy checked in QuickGO: `GO:0051539` is_a `GO:0051536`
+is_a `GO:0051540` metal cluster binding; `GO:0046872` metal ion binding is
+**not** an ancestor of either.
+
+| Term | Action | Replacement / note |
+|---|---|---|
+| `GO:0003824` catalytic activity | `MODIFY` | The specific reaction MF the gene carries or is shown to have. If no reaction is known (e.g. RSAD1), `KEEP_AS_NON_CORE`: it is already as precise as the evidence allows. |
+| `GO:0051536` iron-sulfur cluster binding | `MODIFY` | `GO:0051539`, the descendant the radical SAM cluster always satisfies. |
+| `GO:0051539` 4 iron, 4 sulfur cluster binding | `ACCEPT` | The radical SAM cluster is the catalytic cofactor, so it is core for every active member. `KEEP_AS_NON_CORE` only where catalysis is not established. |
+| `GO:0046872` metal ion binding | `MODIFY` | `GO:0051539` (lateral correction: the iron is bound as a cluster). Keep only if the protein binds a separate metal ion. |
+| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT` | Cosubstrate binding, true for every active member. |
+
+Never `MARK_AS_OVER_ANNOTATED` for these rows: none of them is false.
+
 ---
 # STATUS
 
@@ -157,5 +174,13 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 - InterPro2GO for IPR007197 and IPR006638: `GO:0003824` + `GO:0051536`. For
   IPR005839 (MTTase) and IPR006463 (MiaB): `GO:0016740`, `GO:0051539`,
   `GO:0006400`.
-- Next: `just fetch-gene` for the Phase 1 human genes, then deep research
-  (default provider falcon) and annotation review, starting with LIAS and RSAD2.
+- Fetched all 8 Phase 1 human genes (`just fetch-gene`).
+- **Falcon deep research is unavailable**: the Edison API returns 403 at
+  `/auth/login` (host reachable, key rejected). Ran `just deep-research-asta`
+  for all 8 instead. Asta is literature retrieval, not a synthesis, so reviewers
+  lean more on the cached papers and UniProt. Re-run falcon once the key is
+  fixed.
+- Adopted the treatment rule for the generic rows (see Overview) before the
+  Phase 1 reviews so they are consistent from the start.
+- Phase 1 reviews dispatched: LIAS, RSAD2, ELP3, RSAD1, TYW1 + TYW1B (one
+  reviewer, paralogs), CDKAL1 + CDK5RAP1 (one reviewer, MTTase paralogs).
