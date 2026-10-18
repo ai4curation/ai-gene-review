@@ -109,7 +109,7 @@ Last updated: 2026-10-18
 - [x] MOCS1 (Q9NZB8): GTP 3',8-cyclase (MOCS1A) + cPMP synthase (MOCS1B). Reviewed earlier; include in Phase 3
 - [ ] CDKAL1 (Q5VV42): cytosolic tRNA t6A37 → ms2t6A methylthiotransferase
 - [ ] CDK5RAP1 (Q96SZ6): mitochondrial tRNA i6A37 → ms2i6A methylthiotransferase
-- [ ] ELP3 (Q9H9T3): Elongator catalytic subunit, tRNA U34 acetyltransferase
+- [x] ELP3 (Q9H9T3): Elongator catalytic subunit, tRNA U34 acetyltransferase. 42 rows: 12 ACCEPT, 12 MODIFY, 11 KEEP_AS_NON_CORE, 3 MARK_AS_OVER_ANNOTATED (Pol II transcription, cell migration), 4 REMOVE (protein binding), 1 UNDECIDED (nucleolus), 1 NEW (SAM binding)
 - [ ] TYW1 (Q9NV66): tRNA 4-demethylwyosine synthase
 - [ ] TYW1B (Q6NUM6): TYW1 paralog. Check whether activity is demonstrated or inferred
 - [ ] RSAD1 (Q9HA92): uncharacterised; "putative heme chaperone" by homology to HemW
