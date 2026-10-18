@@ -193,6 +193,13 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+**Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
+went: `review.proposed_replacement_extensions` (e.g. `part_of(Y)`, predicate `BFO:0000050`) and/or
+`review.decomposed_into` (`gocam_associations`, `module_associations`, `in_core_functions`, or
+`context_dropped: true` when Y was itself the over-annotation). Do not split the term into two unrelated
+annotations, and do not apply GO's `replaced_by`/`consider` without checking each half against the evidence.
+See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
+
 ### Do not overrule curators from incomplete evidence
 
 PomBase, and the GO consortium databases generally, are highly reliable. Curators

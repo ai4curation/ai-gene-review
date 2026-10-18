@@ -359,6 +359,10 @@ def main() -> None:
                 "qualifier": ea.get("qualifier"),
                 "has_extensions": bool(ea.get("extensions")),
                 "action": review.get("action"),
+                "decomposition_recorded": bool(
+                    review.get("proposed_replacement_extensions")
+                    or review.get("decomposed_into")
+                ),
                 "proposed_replacement_terms": [
                     f"{r.get('id')} {r.get('label', '')}".strip()
                     for r in review.get("proposed_replacement_terms") or []
@@ -410,6 +414,9 @@ def main() -> None:
             "by_evidence": count(ann_rows, "evidence_type"),
             "rows_nested": sum(
                 bool((r.get("decomposition") or {}).get("nested")) for r in ann_rows
+            ),
+            "rows_decomposition_recorded": sum(
+                r["decomposition_recorded"] for r in ann_rows
             ),
             "rows_with_extensions": sum(r["has_extensions"] for r in ann_rows),
             "rows_gene_in_any_gocam": sum(
