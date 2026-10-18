@@ -106,3 +106,10 @@ Supported generic binding is retained as non-core where no justified specific cl
 The review preserves 40 historical assertions and adds 172 genuine normal-source contexts, mostly individual interaction contexts. None is an authored NEW annotation. The genuine current GOA export has 210 raw contexts. Only historical indices 5 and14 are retired because their exact source contexts are absent from that export; their positive biological reviews remain visible. The exact prior 209-context export is retained in [source snapshots](source-snapshots/source-provenance.json). Every original publication, family and GO-CAM cache remains unchanged, as do inherited excerpts and this notes prefix.
 
 Configured Falcon research failed with HTTP 403 authentication, and the genuine perplexity-lite fallback failed with HTTP 401 insufficient quota. No provider report was fabricated. Manual source reading and database analyses supply the documented evidence. Access limits, exact original locators and the distinction between cache availability and separately read originals are recorded in the [source guide](EBP-source-guide.md).
+
+
+## 2026-10-18 review follow-up
+
+Rechecked the disputed partner classes against the saved official definitions and source records. ODF4 and BMP10 retain their positive binding evidence as non-core generic associations because the proposed cytoskeletal class or mature signaling-product contact is unresolved. Receptor and transcription-factor binding refinements remain restricted to partner identity; their definitions do not require receptor activation or transcription-complex function by EBP. The GO receptor comment is now exposed by the portable replay.
+
+All four fecosterol reasons now distinguish the inspected original tables from the abstract-only cache. Added an endogenous ERG28/INSIG2 association and sterol-flux question and experiment, and anchored the oligomer question to the published 107 kDa estimate. The sterol-isomerase core, source dictionaries, inherited quotations and raw evidence archive are unchanged.

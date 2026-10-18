@@ -78,7 +78,7 @@ def replay(root):
  terms=[]
  for name in sorted(data):
   if re.fullmatch(r'GO\d{7}\.json',name):
-   for t in J(name).get('results',[]):terms.append({k:t.get(k)for k in ['id','name','definition','aspect','isObsolete','children']})
+   for t in J(name).get('results',[]):terms.append({k:t.get(k)for k in ['id','name','definition','comment','aspect','isObsolete','children']})
  return {'all_intact_records':len(raw),'selected_intact_records':len(selected),'annotation_joins':joins,'selected_records':[{'physical_line_1based':n,'fields':r}for n,r in selected],'sequence_checks':sequence_checks,'sequence_summary':{'exact':sum(x['matches']is True for x in sequence_checks),'mismatch':sum(x['matches']is False for x in sequence_checks),'unresolved':sum(x['matches']is None for x in sequence_checks)},'historical_SLC3A2':{'entry_version':253,'canonical_length':len(primary),'product_length':len(historical),'assayed_133_661_equals_current_P08195_2':historical[132:661]==sequences['P08195-2']},'paint':{'tree_nodes':len(nodes),'msa_sequences':len(aligned),'target_node':target,'target_path':paths[target],'target_length':len(sequences['Q15125']),'family_assertions':gaf},'reactome':{'reactions':reactions,'catalyst':cat,'entity':{k:entity.get(k)for k in ['stId','displayName','speciesName','compartment','startCoordinate','endCoordinate','referenceEntity']}},'terms':terms}
 
 def main():

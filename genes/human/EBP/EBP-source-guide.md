@@ -55,3 +55,9 @@ Current [GO:0047750](https://www.ebi.ac.uk/QuickGO/term/GO:0047750), [GO:0000247
 ## Source lifecycle and quotation scope
 
 The [source provenance](source-snapshots/source-provenance.json) preserves the exact historical GOA, complete current/historical key comparison and the two absent historical contexts. All 40 original source dictionaries remain unchanged except the explicit retirement flag at indices 5 and 14; 172 additions are imported source contexts. The original notes are an exact prefix. The 49 inherited row excerpt occurrences and 2 inherited core excerpts are preserved. No new supporting-text quotation is introduced.
+
+## Clarifications after review
+
+The fecosterol panels in PMID:12133002 Tables 3–4 were inspected in the linked author-uploaded original; they are absent from the preserved abstract-only repository cache. The annotation reasons now state this access boundary explicitly. The same abstract supplies the 107 kDa tetramer estimate used in the oligomer question.
+
+Current GO definitions distinguish binding to a signaling receptor from receptor agonism, and binding to a DNA-binding transcription factor from regulation of transcription. The raw saved GO records include these definitions and the receptor term's explanatory comment. The replay now exposes the comments alongside definitions. These terms are used only for binding to an independently established partner class; they do not promote the screen to a native mechanism or establish an additional core function. The unresolved BMP10 precursor-region binding and uncertain ODF4 cytoskeletal class remain non-core generic associations.

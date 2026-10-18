@@ -12,7 +12,6 @@ These are manual biological classifications of independently identified partners
 | 51 | STX6 (O43752) | GO:0019905 syntaxin binding | [UniProt](https://www.uniprot.org/uniprotkb/O43752/entry) | STX6 is a syntaxin-family SNARE. |
 | 53 | VAMP4 (O75379) | GO:0000149 SNARE binding | [UniProt](https://www.uniprot.org/uniprotkb/O75379/entry) | VAMP4 is a vesicular SNARE. |
 | 54 | SEC22B (O75396) | GO:0000149 SNARE binding | [UniProt](https://www.uniprot.org/uniprotkb/O75396/entry) | SEC22B is an ER/Golgi trafficking SNARE. |
-| 59 | BMP10 (O95393) | GO:0019955 cytokine binding | [UniProt](https://www.uniprot.org/uniprotkb/O95393/entry) | BMP10 is a TGF-beta-family cytokine precursor containing the signaling ligand domain. The pair does not identify a processed ligand product or native extracellular interface. |
 | 60 | GJB6 (O95452) | GO:0044325 transmembrane transporter binding | [UniProt](https://www.uniprot.org/uniprotkb/O95452/entry) | GJB6 is a gap-junction channel protein. |
 | 61 | ABHD16A (O95870) | GO:0019899 enzyme binding | [UniProt](https://www.uniprot.org/uniprotkb/O95870/entry) | ABHD16A is a phosphatidylserine lipase. |
 | 64 | C2 (P06681) | GO:0002020 protease binding | [UniProt](https://www.uniprot.org/uniprotkb/P06681/entry) | C2 contains the serine-protease catalytic component of complement convertases. The screen does not establish proteolytic activation or a particular cleaved product. |
@@ -35,7 +34,6 @@ These are manual biological classifications of independently identified partners
 | 94 | FKBP8 (Q14318) | GO:0019899 enzyme binding | [UniProt](https://www.uniprot.org/uniprotkb/Q14318/entry) | FKBP8 is a peptidyl-prolyl isomerase; the assayed 58–412 region retains its catalytic domain. |
 | 96 | VAMP3 (Q15836) | GO:0000149 SNARE binding | [UniProt](https://www.uniprot.org/uniprotkb/Q15836/entry) | VAMP3 is a vesicular SNARE. |
 | 98 | LTC4S (Q16873) | GO:0019899 enzyme binding | [UniProt](https://www.uniprot.org/uniprotkb/Q16873/entry) | LTC4S catalyzes leukotriene-C4 synthesis. |
-| 99 | ODF4 (Q2M2E3) | GO:0008092 cytoskeletal protein binding | [UniProt](https://www.uniprot.org/uniprotkb/Q2M2E3/entry) | ODF4 is a structural component of the sperm-tail outer-dense-fiber cytoskeleton. |
 | 100 | SLC35G1 (Q2M3R5) | GO:0044325 transmembrane transporter binding | [UniProt](https://www.uniprot.org/uniprotkb/Q2M3R5/entry) | SLC35G1 is classified as a chloride-sensitive citrate transporter. |
 | 112 | SLC48A1 (Q6P1K1) | GO:0044325 transmembrane transporter binding | [UniProt](https://www.uniprot.org/uniprotkb/Q6P1K1/entry) | SLC48A1 transports heme across membranes. |
 | 118 | FA2H (Q7L5A8) | GO:0019899 enzyme binding | [UniProt](https://www.uniprot.org/uniprotkb/Q7L5A8/entry) | FA2H is a fatty-acid hydroxylase. The assayed 93–372 region retains the hydroxylase domain while excluding the N-terminal cytochrome-b5 domain; full catalytic equivalence of that fragment is not claimed. |
@@ -65,3 +63,7 @@ These are manual biological classifications of independently identified partners
 | 200 | STX8 (Q9UNK0) | GO:0019905 syntaxin binding | [UniProt](https://www.uniprot.org/uniprotkb/Q9UNK0/entry) | STX8 is a syntaxin-family SNARE. |
 | 203 | UBE2J1 (Q9Y385) | GO:0031624 ubiquitin conjugating enzyme binding | [UniProt](https://www.uniprot.org/uniprotkb/Q9Y385/entry) | UBE2J1 is an E2 ubiquitin-conjugating enzyme. |
 | 208 | UBIAD1 (Q9Y5Z9) | GO:0019899 enzyme binding | [UniProt](https://www.uniprot.org/uniprotkb/Q9Y5Z9/entry) | UBIAD1 is a prenyltransferase. |
+
+ODF4 and BMP10 remain positive non-core associations. ODF4 is not established as a component of the cytoskeletal classes specified by GO:0008092. For BMP10, the available pair record does not resolve the mature cytokine versus the large separately processed prodomain. Their source identities and positive assay records remain unchanged. CCL4L1 has a short signal peptide and a complete chemokine domain; its partner-class refinement does not require chemotaxis by EBP or a mapped interface.
+
+The signaling-receptor-binding and DNA-binding-transcription-factor-binding refinements identify independently established partner classes. They do not assert receptor agonism, transcriptional regulation by EBP or a native transcription complex. GO:0005102 explicitly treats receptor agonist activity as a separate annotation to consider where appropriate.

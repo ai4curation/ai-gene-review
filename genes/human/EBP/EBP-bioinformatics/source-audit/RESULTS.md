@@ -8,4 +8,6 @@ The 263-node PTHR14207 tree and 263-sequence MSA contain the exact 230-aa human 
 
 Both modeled Reactome reactions join through catalyst 195674 and entity 195697 to human Q15125 residues 2–230 at the ER membrane. Explicit substrates/products describe sterol Delta8-to-Delta7 chemistry even where the catalyst carries a broader or mismatched GO label. The companion term projection preserves the current exact definitions used in the review.
 
-The 61 partner-class refinements are documented in [the manual classification table](partner-classes.md). The assay establishes association to an independently classified partner, not transfer of that partner's catalytic or signaling activity to EBP. Generic positive associations remain non-core under the explicit project policy when no warranted specific class was established.
+The 59 partner-class refinements are documented in [the manual classification table](partner-classes.md). The assay establishes association to an independently classified partner, not transfer of that partner's catalytic or signaling activity to EBP. Generic positive associations remain non-core under the explicit project policy when no warranted specific class was established.
+
+The partner-class refinements describe the limited specificity of positive binding assays, not a ranking of physiological importance. Sterol-pathway partners such as ERG28 and INSIG2 remain positive non-core associations and motivate explicit follow-up questions and experiments. The core remains the directly established sterol-isomerase reaction.
