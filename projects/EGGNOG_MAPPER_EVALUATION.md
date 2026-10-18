@@ -3,7 +3,7 @@ title: "eggNOG-mapper Evaluation"
 collections: [FUNCTION_PREDICTION, HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE]
-last_reviewed: 2026-10-14
+last_reviewed: 2026-10-18
 # Bare symbols here span many species (ddb-1, Hspa8, SecA ...); prose
 # auto-linking would mis-target, so keep it off.
 autolink_gene_symbols: false
@@ -32,8 +32,22 @@ correct, informative addition. The errors are characteristic: process terms
 that came from an ortholog's mutant phenotype, terms that cannot apply in the
 query's lineage (eye development on a worm protein), activities that belong to
 a paralog or a complex partner, and source annotations that were wrong.
-Molecular-function transfers are the most reliable aspect; biological-process
-transfers are the least.
+Molecular-function terms most often match the review exactly. But in a
+24-claim sample per aspect of terms going beyond what the review supports, two
+in three MF terms were wrong, against half or fewer for process and location
+terms
+([failure modes by ontology](EGGNOG_MAPPER_EVALUATION/failure-modes.md)).
+
+On three non-model genomes the profile depends on the lineage
+([deep dive](EGGNOG_MAPPER_EVALUATION/deep-dive.md)):
+- ***P. putida* and poplar:** few terms per protein, mostly matching GOA's
+  electronic annotation.
+- **Horse:** absent from eggNOG and annotated from all of Metazoa, so each
+  protein gets a long list. That list holds real mammalian knowledge that
+  horse GOA lacks, mixed with mouse-phenotype errors.
+
+Restricting transfer to a narrow clade raises precision but leaves most
+proteins with no GO at all.
 
 We also found and fixed an emapper bug: `--excluded_taxa` never excludes the
 named taxon itself (see [Methods](#leave-species-out)).
@@ -251,11 +265,80 @@ every member. Transfer at a deep level (Metazoa, Eukaryota) adds terms that
 belong to one paralog or one complex partner. Single wrong rows are amplified
 rather than outvoted, because the output keeps no ortholog-support threshold.
 
+### Failure modes by ontology
+
+A second round of 72 claims, 24 per aspect, was drawn to compare the three
+ontologies like for like. Of each aspect's 24 claims, 16 MF, 12 BP and 10 CC
+were wrong. Each ontology fails in its own way:
+
+- **MF: the molecule differs.**
+  - Domain missing: ABC transporter on SecA.
+  - Non-catalytic subunit: phosphatase activity on calcineurin B.
+  - Sister subfamily: glutathione transferase on *S. aureus* FosB.
+  - Pseudoenzyme: protease inhibitor on HSP47.
+- **BP: the context differs.**
+  - Anatomy the target lacks: nail development on a fly protein; telomerase
+    on fly Mre11.
+  - Phenotypes read as processes: negative regulation of locomotion on fly
+    dunce.
+- **CC: the protein's own sorting differs.**
+  - Missing targeting signals: peroxisomal matrix on fly Idh.
+  - Generic defaults: nucleus on a mitochondrial tRNA synthetase.
+  - Structures absent in the lineage: polytene chromosome puff on mouse
+    Ccnt1.
+
+Across all 152 adjudicated claims, 23 of the wrong calls copied a mistaken
+source annotation. The full catalog, with examples and rationale for every
+wrong call, is on the
+[failure-modes page](EGGNOG_MAPPER_EVALUATION/failure-modes.md).
+
+### Narrowing the taxonomic scope
+
+emapper's default `auto` scope transfers at broad clades: Metazoa, Fungi,
+Streptophyta, Gammaproteobacteria. The pre-configured `--tax_scope all_narrow`
+list reaches Mammalia, Brassicales and similar clades. Re-running the
+species-excluded cohort with it:
+
+| Run | Proteins with GO | Leaf terms | EXACT % | REJECTED % | UNRELATED % | Core recall |
+|---|---|---|---|---|---|---|
+| species_excluded (default scope) | 332 | 6,674 | 33.1 | 1.8 | 44.2 | 43.5% |
+| species_excluded_narrow | 92 | 1,723 | 51.7 | 3.9 | 27.2 | 11.8% |
+
+The leaves that remain match better, but three quarters of the proteins lose
+all GO. The narrowest clade around the seed usually has no annotated member,
+and nearly all that survive are rat and mouse proteins borrowing from each
+other. Neither setting gets a broad scope's coverage without its errors.
+
+### Non-model genomes
+
+The [deep dive](EGGNOG_MAPPER_EVALUATION/deep-dive.md) ran every completed
+review for *P. putida* KT2440 (850), horse (30), poplar (113) and pennycress
+(4). eggNOG holds essentially no GO for these organisms, so the default run is
+already independent.
+
+| Genome | Proteins with GO | Median leaves | EXACT % | UNRELATED % | Core recall | Manual check: correct / wrong |
+|---|---|---|---|---|---|---|
+| *P. putida* | 484 / 850 | 4 | 54.9 | 27.0 | 0.41 | 8 / 14 of 24 |
+| Horse | 29 / 30 | 18 | 12.5 | 70.0 | 0.69 | 7 / 5 of 16 |
+| Poplar | 84 / 113 | 4 | 26.8 | 44.6 | 0.35 | 4 / 11 of 16 |
+| Pennycress | 4 / 4 | 2 | 25.0 | 50.0 | 0.27 | 1 / 4 of 9 |
+
+The characteristic errors differ by lineage:
+- ***P. putida*:** *E. coli* phenotypes and paralog pooling (GABA shunt on
+  DavD).
+- **Horse:** mouse knockout phenotypes.
+- **Poplar:** *Arabidopsis* chloroplast proteomics and paralog merges.
+
+For genomes already in UniProt, emapper recovered fewer reviewed core
+functions than GOA already held, and added a core term GOA lacked for about
+one *P. putida* protein in ten.
+
 ## Caveats
 
 - **The reference is the AI reviews, not ground truth.** EXACT and REJECTED
-  inherit any errors in those reviews. The manual sample is small (80 claims)
-  and was judged by AI reviewers, not curators.
+  inherit any errors in those reviews. The manual samples are small (152
+  claims on the main cohort, 65 on the deep dive) and were judged by AI
+  reviewers, not curators.
 - **UNRELATED is not "wrong".** Reviews cover GOA, so a correct term GOA lacks
   lands here. The adjudication gives the rate: roughly 20% correct.
 - **Transfer is not independent of the reviewed annotations.** Even with the
@@ -276,8 +359,11 @@ rather than outvoted, because the output keeps no ortholog-support threshold.
 | `results/<run>_leaf_scores.tsv` | one row per predicted leaf, with category |
 | `results/<run>_protein.tsv` | per-protein counts, core recall and missed core terms |
 | [`results/summary.yaml`](EGGNOG_MAPPER_EVALUATION/results/summary.yaml) | all aggregate tables |
-| `adjudication/batch_*.yaml` | the 80 adjudicated claims with rationale |
-| [`adjudication/summary.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml) | adjudication tallies |
+| `adjudication/batch_*.yaml`, `adjudication/round2_batch_*.yaml` | the 80 + 72 adjudicated claims with rationale |
+| [`adjudication/summary.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml) | adjudication tallies, overall and by aspect |
+| [`adjudication/failure_modes.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/failure_modes.yaml) | every wrong call, by aspect and error type |
+| [`failure-modes.md`](EGGNOG_MAPPER_EVALUATION/failure-modes.md) | failure modes by ontology, with examples |
+| [`deep-dive.md`](EGGNOG_MAPPER_EVALUATION/deep-dive.md), `deep_dive/` | non-model genome cohort, runs, results and adjudication |
 
 To reproduce: `projects/EGGNOG_MAPPER_EVALUATION/scripts/run_all.sh WORK_DIR`
 (about 17 GB of disk and two hours, mostly the DIAMOND search), then
@@ -287,8 +373,8 @@ To reproduce: `projects/EGGNOG_MAPPER_EVALUATION/scripts/run_all.sh WORK_DIR`
 ## Next steps
 
 - Report the `--excluded_taxa`/`--target_taxa` bug upstream.
-- Test the mitigations emapper already offers: `--target_orthologs one2one`
-  and narrower `--tax_scope`.
+- Test `--target_orthologs one2one`, and an intermediate scope list (for
+  example Vertebrata or eudicots) between `auto` and `all_narrow`.
 - Score the KEGG KO and EC outputs.
 - Feed the correct UNRELATED terms back to the gene reviews as candidate
   `NEW` annotations, after a curator check.

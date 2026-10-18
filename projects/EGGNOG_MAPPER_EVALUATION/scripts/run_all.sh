@@ -57,3 +57,34 @@ for f in "$W"/search/by_species_exp/*.seed_orthologs; do
 done
 "$PY" "$P/scripts/merge_annotations.py" "$W/search/by_species_exp" \
     "$P/runs/species_excluded_experimental/species_excluded_experimental.emapper.annotations"
+
+# species-excluded with the narrowest pre-configured taxonomic scope
+mkdir -p "$W/search/by_species_narrow" "$P/runs/species_excluded_narrow"
+cp "$W"/search/by_species/*.seed_orthologs "$W/search/by_species_narrow/"
+for f in "$W"/search/by_species_narrow/*.seed_orthologs; do
+  sp=$(basename "$f" .seed_orthologs)
+  $RUN -m no_search --annotate_hits_table "$f" --data_dir "$W/db" -o "sp$sp" \
+      --output_dir "$W/search/by_species_narrow" --cpu 1 --mp_start_method fork --override \
+      --excluded_taxa "$sp" --tax_scope all_narrow >/dev/null
+done
+"$PY" "$P/scripts/merge_annotations.py" "$W/search/by_species_narrow" \
+    "$P/runs/species_excluded_narrow/species_excluded_narrow.emapper.annotations"
+
+# deep dive: non-model genomes (default, species-excluded, narrow scope)
+D="$P/deep_dive"; mkdir -p "$W/deep/by_species" "$D/runs/default" "$D/runs/species_excluded" "$D/runs/narrow_scope"
+DSEEDS="$W/deep/deep.emapper.seed_orthologs"
+[ -s "$DSEEDS" ] || "$EM" -m diamond --no_annot -i "$D/cohort.fasta" --data_dir "$W/db" \
+    -o deep --output_dir "$W/deep" --temp_dir "$W/deep" --cpu 4 --override
+$RUN -m no_search --annotate_hits_table "$DSEEDS" --data_dir "$W/db" -o default \
+    --output_dir "$D/runs/default" --cpu 1 --mp_start_method fork --override
+$RUN -m no_search --annotate_hits_table "$DSEEDS" --data_dir "$W/db" -o narrow_scope \
+    --output_dir "$D/runs/narrow_scope" --cpu 1 --mp_start_method fork --override --tax_scope all_narrow
+"$PY" "$P/scripts/species_taxa.py" "$W/db/eggnog.taxa.db" "$D"
+"$PY" "$P/scripts/split_seeds.py" "$DSEEDS" "$W/deep/by_species" "$D"
+for f in "$W"/deep/by_species/*.seed_orthologs; do
+  sp=$(basename "$f" .seed_orthologs)
+  $RUN -m no_search --annotate_hits_table "$f" --data_dir "$W/db" -o "sp$sp" \
+      --output_dir "$W/deep/by_species" --cpu 1 --mp_start_method fork --override --excluded_taxa "$sp" >/dev/null
+done
+"$PY" "$P/scripts/merge_annotations.py" "$W/deep/by_species" "$D/runs/species_excluded/species_excluded.emapper.annotations"
+# then: score_emapper.py [--runs ...] and score_emapper.py --base deep_dive --runs default,species_excluded,narrow_scope
