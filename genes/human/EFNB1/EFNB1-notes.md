@@ -17,3 +17,41 @@ The urinary-exosome table from PMID:19056867 records one EFNB1 peptide; its fina
 The final decisions cover 66 imported source contexts: 45 ACCEPT, 9 MODIFY and 12 KEEP_AS_NON_CORE. There are no NEW annotations or newly quoted passages. Reference-only citations retain their primary identifiers, while the [source guide](EFNB1-source-guide.md) and [executed evidence replay](EFNB1-bioinformatics/RESULTS.md) expose the exact locators and data joins.
 
 The automated deep-research attempts failed with a Falcon authentication error and a fallback quota error. No provider report was invented. Manual literature and source review proceeded with explicit access scopes. Cached full-text flags and existing cache bytes remain unchanged; independently recovered original text is identified separately from abstract-only caches. The public analysis contains original datasets, not republished article bodies.
+
+## Adhesion specificity and evidence boundaries
+
+The PMID:8798744 adhesion assertion is refined from GO:0007155 to its specific
+descendant GO:0098609, cell-cell adhesion. Receptor- and ligand-expressing cells
+formed aggregates, and soluble ligand inhibited the contact. EFNB1 provides the
+receptor-binding ligand in this attachment, rather than merely being required
+for an unrelated adhesive mechanism. This remains a source-specific TAS assertion;
+the complete abstract is available but full Methods were not recovered. Adhesion
+in this assay does not imply the same outcome in every receptor, cell or ligand
+presentation context. The updated counts are 44 ACCEPT, 10 MODIFY and 12
+KEEP_AS_NON_CORE across the same 66 source contexts, superseding the earlier
+count paragraph without changing its historical text.
+
+The single integrated core distills extracellular Eph receptor engagement. It
+does not deny reverse signaling through the cytoplasmic tail. The processing and
+localization findings in PMID:16930449 and the mouse cortical/tagged-domain context
+in PMID:19515908 remain represented at their measured scope. They do not establish
+a direct human DNA-binding or transcription-factor activity, and no separate
+transcriptional core is assigned from intracellular-fragment localization alone.
+
+The source-measured EFNB1–EPHA2 dissociation constant in PMID:35922511 is about
+41 µM, a low-affinity interaction in that soluble recombinant ectodomain assay.
+It supports the receptor partner class, without establishing native membrane
+affinity, receptor activation or physiological importance. The same source
+measured the EPHA4 value of 25 µM; its EPHB2 value of 0.66 nM was taken from
+published literature. These values are not interchangeable native-context
+measurements or independent repetitions of one assay.
+
+The craniofrontonasal-syndrome sentence follows the official EFNB1 UniProt disease
+record. It does not add a cellular-interference mechanism that was not established
+by the disease passage inspected for this clarification.
+
+Reference-only primary citations and explicit locators are retained; no new
+quotations are introduced. The unchanged dataset archive preserves the original
+inputs needed to reproduce the published selections and context counts offline.
+It contains data rather than main article bodies or PDFs. Its existing hashes,
+source receipts and executed replay remain the evidence for those calculations.

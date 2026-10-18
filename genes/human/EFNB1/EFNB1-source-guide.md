@@ -44,3 +44,34 @@ All 66 source dictionaries, evidence codes and qualifiers remain intact. The gen
 ## Reproducible calculations
 
 [RESULTS.md](EFNB1-bioinformatics/RESULTS.md) gives the independently verified partner-class table and measured values. [README.md](EFNB1-bioinformatics/README.md), [source-manifest.json](EFNB1-bioinformatics/source-manifest.json) and [source-projections.json](EFNB1-bioinformatics/source-projections.json) supply exact inputs, URLs, hashes, complete selected fields and the saved-path replay. The dataset-only archive includes no main article text or PDF. Normal caches and external-original availability are reported separately; no existing source flags are rewritten.
+
+## Adhesion refinement and interpretation locators
+
+- [PMID:8798744](https://pubmed.ncbi.nlm.nih.gov/8798744/), the Abstract in
+  `publications/PMID_8798744.md`, lines 47–56: receptor/ligand cell aggregation,
+  inhibition by soluble ligand and the presentation-context comparison. The cache
+  SHA-256 remains `8bab9c09663ea065b0e9e9336f7c6b30e5b78a77f2e5fdf55fa26b163bec7133`.
+  Full Methods remain unavailable. The
+  [current GO:0098609 record](https://www.ebi.ac.uk/QuickGO/term/GO:0098609) and
+  [GO:0007155 record](https://www.ebi.ac.uk/QuickGO/term/GO:0007155) identify
+  cell-cell adhesion as a direct is_a child of cell adhesion. The refinement
+  concerns attachment between the receptor- and ligand-expressing cells, not a
+  new process assertion or a universal adhesive outcome.
+- Reverse-signaling interpretation uses the existing PMID:16930449 and
+  PMID:19515908 locators above, with human-fragment and mouse-context limits
+  retained. Positive intracellular localization alone is not a direct
+  transcription-factor assay; the integrated extracellular ligand core remains.
+- The PMID:35922511 Figure2_network EPHA2 row 120 records 41,000 nM from the
+  source's SPR experiment. This is a low-affinity soluble ectodomain interaction,
+  not native membrane affinity or demonstrated receptor agonism. EPHA4 row 116
+  is also source-measured, while EPHB2 row 112 is labeled as published literature.
+- Craniofrontonasal syndrome and X-linked inheritance are recorded in the
+  [official UniProt entry P98172](https://www.uniprot.org/uniprotkb/P98172/entry),
+  reproduced in [EFNB1-uniprot.txt](EFNB1-uniprot.txt), CC DISEASE lines 269–276.
+  This is an official-record attribution; the cited disease-paper bodies were not
+  newly read, and no additional disease mechanism is inferred here.
+
+The existing dataset archive and replay files remain unchanged. They retain the
+complete saved inputs used for the reported selections and context denominators;
+URLs and hashes identify those snapshots but do not themselves supply their bytes
+for offline replay. No article body is added by this clarification.
