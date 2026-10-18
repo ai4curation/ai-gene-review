@@ -32,3 +32,11 @@ The cornified-envelope assignment remains a non-core curated model claim: Reacto
 HPA individually rates cell junctions and plasma membrane Supported and vesicles Approved. The A-431 vesicle observation is retained as a positive compartment observation, but it does not establish whether DSG2 occupies the vesicle membrane or lumen. It is therefore omitted from the membrane replacement set; no new localization annotation or trafficking mechanism is inferred.
 
 The virus-receptor summary includes the tested Ad3, Ad7, Ad11 and Ad14/Ad14a attachment scope. The Ad11 competition assay blocks CD46, whereas receptor-negative-cell gain and GFP-vector transduction provide stronger entry evidence specifically for Ad3. This does not generalize receptor usage to every species B adenovirus or to mouse DSG2. [PMID:21151137]
+
+## 2026-10-18: consistent retention of broad intracellular and junction contexts
+
+Cytoplasm and cell-cell junction are retained as non-core across their source rows. This keeps the combined biological locations while preserving the more specific source observations: the apoptotic 70-kDa fragment is released into cytosol, and the historical junction source localizes DSG2 to desmosomes. The first observation does not place every intracellular DSG2 pool in organelle-free cytosol; the second is already represented by eight accepted desmosome annotations and the adhesive core. Non-desmosomal progenitor and endothelial contexts remain distinct. [PMID:17559062; PMID:27338829; PMID:38375917; PMID:8143788]
+
+The earlier reference to context exceptions described differences in the row rationales, not an active schema exception field. The present action changes replace the former two refinements while retaining their true localization observations. All prior notes and history remain unchanged. The current totals are 38 ACCEPT, 13 MODIFY, 35 KEEP_AS_NON_CORE and 8 UNDECIDED for the same 94 source assertions, with no NEW annotation.
+
+The virus-receptor summary now states the biological activity concisely. Attachment covers the tested Ad3, Ad7, Ad11 and Ad14/Ad14a set; the stronger gain-of-entry evidence is specific to Ad3 in human cells. The existing source guide retains the Ad11 CD46-blocking condition and the separate assay and species limits. No new source excerpt is introduced. [PMID:21151137]
