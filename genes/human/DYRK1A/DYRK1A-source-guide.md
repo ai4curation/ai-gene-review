@@ -197,3 +197,8 @@ For [PMID:30773093](https://pmc.ncbi.nlm.nih.gov/articles/PMC6464593/), the Resu
 The [current official USP54 record](https://www.uniprot.org/uniprotkb/Q70EL1/entry) provides the partner-class evidence through its experimentally supported FUNCTION and CATALYTIC ACTIVITY sections, rather than through the protein name or GO annotations. The cited enzymology is curated evidence; those underlying original bodies were not independently reread for this review. The positive DYRK1A–USP54 associations and their original bait/fragment limitations are separately documented above.
 
 [PMID:29849146](https://pmc.ncbi.nlm.nih.gov/articles/PMC6475116/) Figure 3 compares DYRK1A CTD targeting with a histidine-region deletion. Extended Data Figure 6 tests a GFP-tagged DYRK1A IDR fragment in vitro, while the live-cell phase-separation experiments predominantly concern cyclin T1. The new questions distinguish these assays from unresolved endogenous intact-DYRK1A and natural-product behavior.
+
+
+## Cached evidence anchors
+
+The review now includes brief literal excerpts for the decisive kinase, scaffold-partner, exon-choice, cytoskeletal and Tau-aggregation statements. Selected reference findings provide the biological interpretation once; related source rows retain their individual evidence contexts. The final paragraph of the [preserved PMID:25556849 abstract](../../../publications/PMID_25556849.md) explicitly reports Tau aggregation, so a phosphorylation-only account of that paper would be incomplete. Its separately accessed original remains the source for the detailed insoluble-Tau assay described above. Aggregation does not, by itself, demonstrate neurofibrillary-tangle assembly.

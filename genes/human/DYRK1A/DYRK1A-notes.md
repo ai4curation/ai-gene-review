@@ -59,3 +59,10 @@ This follow-up preserves all 125 imported assertions and all existing actions, r
 The source guide now gives the actual author-upload route and Methods/Figure locators for PMID:25556849. The abstract-only machine cache remains unchanged; no supporting-text quotation is fabricated from it. The tangle-assembly over-annotation judgment rests on the measured aggregation endpoint rather than on source inaccessibility or an automatic rejection of nonhuman evidence. Human-brain fractionation and immunoprecipitation support the cytoskeleton-associated pool. USP54's current official experimental function statements support its partner class without transferring protease activity to DYRK1A.
 
 One exact ten-word caption anchor from PMID:30773093 is added once to the repair review. No new source assertion, process annotation or core function is introduced. The concise disease sentence repeats the already recorded official human disease relationship. The earlier source-access and construct limitations remain operative. No publication cache, imported source dictionary or prior note text is rewritten.
+
+
+## Evidence excerpts and endpoint clarification
+
+Short cache-exact excerpts now anchor dual-specificity catalysis, Han11 scaffold binding, alternative Tau exon choice, cytoskeletal association, and the Tau aggregation endpoint. Selected reference findings record the corresponding biological scope; repeated interactions with the same partner cite the same source without duplicating quotations. The DYRK1A IDR experiment remains distinct from intact-protein or live-cell cyclin-T1 condensation.
+
+PMID:25556849 already mentions Tau aggregation in its cached abstract. The source is therefore not limited to a phosphorylation endpoint. The retained over-annotation judgment distinguishes aggregation from demonstrated neurofibrillary-tangle assembly; the original assay details remain in the source guide. Shorter annotation reasons retain the original evidence while separating cache-verifiable statements from source-specific Methods. All 125 source records, decisions, product identities, and the core function remain unchanged.
