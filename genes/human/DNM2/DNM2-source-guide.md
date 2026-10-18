@@ -23,7 +23,30 @@ This guide locates the evidence supporting the review. Reference assessments dis
 | [PMID:29437695](https://pmc.ncbi.nlm.nih.gov/articles/PMC5891424/), SNX18 WT/W38K, ATG9A and recycling-endosome Results | Human-cell association and trafficking support the recruitment context. The gifted dynamin template species is unresolved. |
 | [PMID:35620056](https://pmc.ncbi.nlm.nih.gov/articles/PMC9127447/), Protein purification and actin/lipid reconstitution Methods/Results | Rat recombinant/transfected DNM2 and human podocytes are separate. K562E disrupts lipid interaction while retaining ring/actin properties in the reported assays. |
 
-The core uses GO:0061791 GTPase motor activity. PH-domain phospholipid binding and partner recruitment are mechanisms within this motor unit. Existing process coverage includes scission, receptor-mediated endocytosis, autophagy and actin-bundle organization. No additional process annotation is manufactured from necessity alone.
+The core uses GO:0061791 GTPase motor activity. PH-domain phospholipid binding and partner recruitment are mechanisms within this motor unit. Existing process coverage includes scission, receptor-mediated endocytosis, macroautophagy and actin-bundle organization. No additional process annotation is manufactured from necessity alone.
+
+
+### Current ontology and comparator check (2026-10-18 UTC)
+
+[The is_a-only QuickGO ancestry query](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0061791/ancestors?relations=is_a) places GTPase motor activity below GTPase activity. The definition requires mechanical activity driven by GTP hydrolysis. DNM2 human hydrolysis/fission and membrane-polymer evidence supports that refinement; rat and human assays retain their source boundaries. The narrower GO:1990606 definition additionally specifies twisting, which is not assumed from every fission assay.
+
+The following complete current human queries used the verified UniProt accession and the indicated term plus is_a/part_of descendants. Counts are records, not independent experiments:
+
+| Human gene | Accession | GTPase activity branch | Motor activity branch |
+|---|---|---:|---:|
+| DNM1 | Q05193 | 7 | 0 |
+| DNM2 | P50570 | 8 | 0 |
+| DNM3 | Q9UQ16 | 3 | 0 |
+| DNM1L | O00429 | 6 | 0 |
+| OPA1 | O60313 | 12 | 0 |
+| MFN1 | Q8IWA4 | 4 | 0 |
+| MFN2 | O95140 | 3 | 0 |
+
+[Reproduce the DNM2 motor query](https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB:P50570&goId=GO:0061791&goUsage=descendants&goUsageRelationships=is_a,part_of&limit=200); substitute each accession and GO:0003924 for the paired comparison. [The complete all-taxon motor query](https://www.ebi.ac.uk/QuickGO/services/annotation/search?goId=GO:0061791&goUsage=descendants&goUsageRelationships=is_a,part_of&limit=200) returns four PomBase records on this date: msp1/P87320 (TAS) and fzo1/Q9USY7 (ISM) to GO:0061791, plus dnm1/Q09748 and vps1/Q9URZ5 (both TAS) to GO:1990606. Official identities confirm dynamin-family comparators. These records demonstrate real use of the motor branch in this protein family while preserving the observed absence in the human records. The query is not itself biochemical evidence for DNM2, and human non-use is not claimed to be a curator mistake.
+
+The two autophagy sources resolve different stages. The [2020 accepted manuscript](https://www.repository.cam.ac.uk/items/9d75f0e3-c39a-4b5c-9a59-0dd1f3325530), Results section on DNM2-mutant accumulation and Figure 5D–E, reports unchanged numbers of open phagophores but accumulation of completed autophagosomes and fewer autolysosomes. Live imaging shows failure to detach LC3 vesicles from RAB11A-positive tubules. The adjacent ATG9A/ATG16L1 and SNX18 controls explicitly distinguish this release step from early ATG9A trafficking. Row 121 is therefore refined to [GO:0016236 macroautophagy](https://www.ebi.ac.uk/QuickGO/term/GO:0016236), without assigning double-membrane formation or closure. The [2018 original](https://pmc.ncbi.nlm.nih.gov/articles/PMC5891424/), Figures 3/4 and WT/W38K experiments, independently supports DNM2-dependent ATG9A carrier generation and ATG16L1 delivery for [GO:0000045 autophagosome assembly](https://www.ebi.ac.uk/QuickGO/term/GO:0000045) in row 122. The core uses macroautophagy once and describes both stages. Neither route is claimed to supply every autophagosome.
+
+The current [GO:0097352 maturation definition](https://www.ebi.ac.uk/QuickGO/term/GO:0097352) specifies removal of PI3P and Atg8/LC3 after closure, which was not established here. [GO:0061906 localization](https://www.ebi.ac.uk/QuickGO/term/GO:0061906) concerns transport to or maintenance at a cellular location; detachment alone does not demonstrate that process. [GO:1905037 organization](https://www.ebi.ac.uk/QuickGO/term/GO:1905037) concerns constituent assembly, arrangement or disassembly, which would still infer an organizational step from the 2020 release endpoint. These terms are not substituted merely because their names sound like later stages.
 
 ## Interactions and repeated partners
 
@@ -36,13 +59,14 @@ The core uses GO:0061791 GTPase motor activity. PH-domain phospholipid binding a
 | SNX33 | Positive association remains generic non-core binding in all three source contexts. |
 | GABARAP, GABARAPL1, GABARAPL2 and LC3B | Official ubiquitin-like modifier identity plus positive association supports GO:0032182. This does not assign conjugating activity to DNM2. |
 | BAG3 and SDCBP | Documented scaffold function informs the partner class. DNM2 is not assigned their client-folding or adaptor roles. |
+| QARS1 and FLAD1-2 | Positive sequence-resolved HuRI pairs bind proteins with independently established catalytic activity. GO:0019899 means binding to an enzyme; it does not require regulation of its catalysis. DNM2 is not assigned tRNA charging or FAD metabolism. |
 | UBASH3A-2, SEC23A, CTNND2, Nef and PSTPIP1 | Positive interactions are retained with source-specific limits; no unsupported enzymatic, receptor or adaptor class is substituted. CTNND2 is not beta-catenin. |
 
 PMID:16696976 is especially qualified: MINT identifies PRD/SH3 fragments, but some original protein taxids were unspecified and human homolog accessions were supplied by curation. This does not authenticate a human recombinant template. In PMID:22022388, a sequenced human SH-SY5Y-derived clone supports NPRAP/CTNND2 association; its historical isoform label is not automatically a modern UniProt product ID.
 
 ## Localization, processes and propagation
 
-[HPA DNM2 localization](https://www.proteinatlas.org/ENSG00000079805-DNM2/subcellular) supports cytosol and Golgi. Selected membrane pools are supported by the original trafficking studies. Cytoplasm replacements are a target-level synthesis, not a claim that the complete distribution in every cited cell was measured. Urinary-vesicle proteomics and focal-adhesion proteomics retain their contextual detections despite incomplete recovery of the target supplementary rows.
+[HPA DNM2 localization](https://www.proteinatlas.org/ENSG00000079805-DNM2/subcellular) supports cytosol and Golgi. Selected membrane pools are supported by the original trafficking studies. Cytoplasm replacements retain cytosol and recycling-endosome membrane. Clathrin-coated pits are plasma-membrane invaginations outside the defined cytoplasm and remain in their own positive rows/core. The cytoskeleton mapping is refined to microtubule; focal adhesions are junctions and retain their separate positive detection. This is a source-specific compartment distinction, not exhaustive distribution in every cited cell. Urinary-vesicle proteomics and focal-adhesion proteomics retain their contextual detections despite incomplete recovery of the target supplementary rows.
 
 The [PANTHER family PTHR11566](https://www.pantherdb.org/panther/family.do?clsAccession=PTHR11566) path to DNM2 contains all eight literal PAINT ancestral assertions. PTN000170013 grounds the GTPase/cytoplasm/microtubule placements; PTN008520579 the plasma-membrane placement; PTN000902093 the synaptic-vesicle-budding/synapse placements; PTN002611550 receptor internalization. These are ancestral placements, not pairwise transfers or donor-count scores.
 
@@ -111,7 +135,7 @@ The table below reports effective publication-cache availability, not a claim th
 | [PMID:21210813](https://pmc.ncbi.nlm.nih.gov/articles/PMC3278041/) | Full text available | Selected passages only; see reference assessment. |
 | [PMID:35620056](https://pmc.ncbi.nlm.nih.gov/articles/PMC9127447/) | Full text available | Selected passages only; see reference assessment. |
 
-Positive generic binding without an evidenced finer class remains non-core under the [explicit ClinGen project instruction](https://github.com/ai4curation/ai-gene-review/blob/57106c38a03129a6c24f833761f784cbed11a98a/projects/CLINGEN_MENDELIAN.md#curation-instructions). The biological review is independent of provider availability; failed provider attempts did not produce a substitute provider-named report. Two brief primary quotes occur once in the YAML core support; this guide adds no publication quotations.
+Positive generic binding without an evidenced finer class remains non-core under the [explicit ClinGen project instruction](https://github.com/ai4curation/ai-gene-review/blob/57106c38a03129a6c24f833761f784cbed11a98a/projects/CLINGEN_MENDELIAN.md#curation-instructions). The biological review is independent of provider availability; failed provider attempts did not produce a substitute provider-named report. The two inherited core quotes remain unchanged. Three additional short assay excerpts appear once each in YAML rows 119, 122 and 156; this guide adds no publication quotations.
 
 ### Shared publication reconciliation
 
