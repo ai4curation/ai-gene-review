@@ -15,3 +15,12 @@ The mouse positive-transcription donor assertion was traced to the original ATP1
 HPA's location-specific score supports cytosol and labels vesicles uncertain. The nuclear pool is independently supported, and source-specific broad cytoplasm statements retain their measured resolution. Five Reactome roots yield nine literal paths to Q9GZT9 in cytosol; these modeled paths do not confer VHL ligase or proteasome activity on EGLN1. PAINT target ancestry, literal IBDs and metal-binding residues are verified. The unavailable ARBA predicate set remains explicitly unresolved while the enzyme reaction is independently established.
 
 [The source guide](EGLN1-source-evidence.yaml) supplies public original locators, stable interaction IDs, assay/organism/construct limits and twenty unresolved source contexts. [The reproducible analysis](EGLN1-bioinformatics/README.md) recomputes literal database and original-table joins. The large supplement remains an external hash-verified input; article bodies are not bundled. Exact normal caches and availability flags remain unchanged, and separately recovered original text is distinguished from cache representation. Genuine research-provider attempts failed and no provider report was fabricated. This review adds no new annotation or quotation.
+
+
+## Review follow-up, 2026-10-18
+
+The core now names HIF1A and EPAS1 as substrates. PMID:19208626 supplies direct mass-spectrometric HIF-2alpha peptide hydroxylation evidence; construct limits remain in the source guide. The biological description omits the product-record commentary already covered by the product section and questions.
+
+The historical SM-20 cytosol row is now ACCEPT, using the independently established human location and curator deference while preserving the unavailable-original caveat. This supersedes the earlier twenty-unresolved-context count: 19 remain unresolved. The broad dioxygenase row now explains its measured reaction-class support and distinguishes coupled hydroxylation from uncoupled 2-oxoglutarate turnover.
+
+Three reference findings summarize inspected evidence without quotations. The source guide now maps the substrate, PDZ-table, deposited-structure and transcription-direction claims to their exact public inputs or source sections. These locators and replay checks improve traceability; they do not replace a verbatim-quote check on unquoted biological prose. The standing zero-new-publication-quotation constraint remains in effect.
