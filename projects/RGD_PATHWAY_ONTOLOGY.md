@@ -151,7 +151,8 @@ GO-CAM coverage of these pathways is scattered rather than pathway-shaped. The
 144 in-scope diagram pathways have a median of 29% of their RGD-curated human
 genes in some human GO-CAM, and 42 reach half. Those genes are spread over many
 unrelated models. The best single model covers a median of 2 genes, and the
-median share of genes in GO-CAMs about the mapped process is 0. Examples:
+median share of genes in GO-CAMs about the mapped process is 0. That last
+number undercounts modelled pathways (see the caveat below the table). Examples:
 
 | PW pathway | Curated human genes | In any GO-CAM | In GO-CAMs for the mapped GO process |
 |------------|--------------------:|--------------:|-------------------------------------:|
@@ -161,9 +162,25 @@ median share of genes in GO-CAMs about the mapped process is 0. Examples:
 | mTOR signaling (PW:0000180) | 43 | 56% | 44% |
 | IL-10 signaling (PW:0000515) | 7 | 100% | 86% |
 | TRAIL signaling (PW:0000682) | 9 | 100% | 67% |
+| SREBP signaling (PW:0000753) | 7 | 86% | 0% (see below) |
 
-The process-level column is the better completeness measure. A gene that
-appears in a GO-CAM about something else does not make the pathway modelled.
+The two columns fail in opposite directions, so neither is a completeness
+measure on its own. A gene that appears in a GO-CAM about something else does
+not make the pathway modelled, so the "any GO-CAM" column overcounts. The
+process-level column only counts models in which some activity is annotated to
+the mapped GO process or a descendant. GO-CAMs usually annotate each activity to
+the step it performs, not to the whole pathway, so this column undercounts.
+
+The SREBP row shows the undercount. The human GO-CAM `6205c24300000880`
+contains six of the seven curated genes and models the pathway step by step.
+Its activities carry step-level process terms: `GO:0036316` (SREBP-SCAP complex
+retention in ER), `GO:0051604`, `GO:0045542`, `GO:0006607`, `GO:0046889` and
+`GO:1905552`. None of these is under the mapped term `GO:0032933` (SREBP
+signaling pathway), so the pathway scores 0%. A 0 in the process-level column
+therefore does not tell an unmodelled pathway apart from one modelled with
+step-level terms. The Wnt and citric acid cycle zeros need the same check
+before they are read as gaps. `best_gocam_overlap`, read together with the
+model title, separates the two cases for SREBP.
 
 The citric acid cycle row also shows a limit of the gene basis. Eleven GO-CAMs
 carry the TCA-cycle term: mouse, fission-yeast and one human model (SIRT3
@@ -235,7 +252,7 @@ processing. The module models that link as `NEGATIVELY_REGULATES`. Anyone
 reusing `diagram_edges` from the other 199 records should check every sign
 against the literature.
 
-After the first pass, each step was given quote-checked support from the primary papers that defined it (13 PubMed abstracts). It was also cross-checked against an independent human GO-CAM, `6205c24300000880`, which models six of the seven gene products with matching molecular functions (it uses the parent GO:0000981 for SREBF1/2, where the module uses GO:0001228). The model also contains AKT1 and PCK1, which the module leaves out: their reported effect on INSIG opposes retention and rests on one cancer-cell study (corrected separately in ai4curation/ai-gene-review#5055). That model omits SCAP, and it includes KPNB1 for SREBP nuclear import, a step the RGD description mentions but the module does not yet model. A curator-built GO-CAM for the same pathway is the strongest check available on a diagram-derived module, so the seeds' `best_gocam` field is worth reading before modelling the next candidates.
+After the first pass, each step was given quote-checked support from the primary papers that defined it (13 PubMed abstracts). It was also cross-checked against an independent human GO-CAM, `6205c24300000880`, which models six of the seven gene products with matching molecular functions (it uses the parent GO:0000981 for SREBF1/2, where the module uses GO:0001228). The model also contains AKT1 and PCK1, which the module leaves out: their reported effect on INSIG opposes retention and rests on one cancer-cell study (corrected separately in ai4curation/ai-gene-review#5055). That model omits SCAP, and it includes KPNB1 for SREBP nuclear import, a step the RGD description mentions but the module does not yet model. A curator-built GO-CAM for the same pathway is the strongest check available on a diagram-derived module, so the seeds' `best_gocam` field is worth reading before modelling the next candidates. It is a lead, not a ranking. For most pathways no model carries the mapped process, and ties between equally overlapping models then go to the lowest model id.
 
 The pilot shows two limits of the route. The diagram has no step-level GO
 terms, so every activity needs separate grounding. SCAP's escort role also has
