@@ -6,6 +6,7 @@ import sys
 
 import pytest
 
+from ai_gene_review.site_provenance import SITE_BUILD_MARKER
 from ai_gene_review.tools.stage_pages import _safe_clean_output, stage_pages
 
 
@@ -14,9 +15,14 @@ def _write(path: Path, content: str = "fixture") -> None:
     path.write_text(content)
 
 
+def _write_homepage(root: Path, content: str = "fixture") -> None:
+    """Keep ordinary staging fixtures consistent with the maintained homepage."""
+    _write(root / "index.html", content + SITE_BUILD_MARKER)
+
+
 def _site_fixture(root: Path) -> None:
     subprocess.run(["git", "init", "--quiet", str(root)], check=True)
-    _write(root / "index.html")
+    _write_homepage(root)
     _write(root / ".nojekyll", "")
     _write(root / "genes" / "human" / "ABC1" / "ABC1-ai-review.yaml")
     _write(
@@ -60,13 +66,79 @@ def test_stage_pages_preserves_urls_and_copies_linked_sources(tmp_path: Path) ->
     assert manifest.linked_source_bytes_not_staged == 0
 
 
+def test_staging_publishes_build_metadata_without_changing_homepage_source(tmp_path):
+    """The timestamp belongs to the artifact and is counted in its byte budget."""
+    _site_fixture(tmp_path)
+    original = '<html><body><h1>Site</h1><!-- site-build-info --></body></html>'
+    _write(tmp_path / "index.html", original)
+    output = tmp_path / "_site"
+    manifest = stage_pages(tmp_path, output)
+    info = json.loads((output / "build-info.json").read_text())
+    assert info["built_at"] in (output / "index.html").read_text()
+    assert "Site built:" in (output / "index.html").read_text()
+    assert (tmp_path / "index.html").read_text() == original
+    assert manifest.total_bytes == sum(p.stat().st_size for p in output.rglob("*") if p.is_file())
+
+
+def test_repository_homepage_has_build_marker():
+    """Check the maintained homepage independently of pytest's working directory."""
+    repo_root = Path(__file__).resolve().parents[1]
+    assert (repo_root / "index.html").read_text().count(SITE_BUILD_MARKER) == 1
+
+
+def test_staging_rejects_homepage_without_build_marker(tmp_path):
+    _site_fixture(tmp_path)
+    _write(tmp_path / "index.html", "<h1>Missing marker</h1>")
+    with pytest.raises(ValueError, match="site-build-info"):
+        stage_pages(tmp_path, tmp_path / "_site")
+    assert not (tmp_path / "_site/build-info.json").exists()
+
+
+def test_staging_audits_injected_build_link(tmp_path, monkeypatch):
+    """A base element that breaks the injected JSON link is visible in the audit."""
+    _site_fixture(tmp_path)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    _write_homepage(tmp_path, '<base href="/ai-gene-review/docs/">')
+    manifest = stage_pages(tmp_path, tmp_path / "_site")
+    assert "docs/build-info.json" in manifest.broken_local_link_paths
+
+
+def test_stage_pages_includes_prediction_browser_and_dynamic_sources(tmp_path: Path) -> None:
+    """Sources linked through exported rows survive deployment, not just file://."""
+    _site_fixture(tmp_path)
+    browser = tmp_path / "app/predictions"
+    _write(browser / "index.html", '<script src="data.js"></script><script src="schema.js"></script>')
+    _write(browser / "data.js", "window.predictionData = {sets: [], claims: []};")
+    _write(browser / "schema.js", "window.searchSchema = {};")
+    source = "genes/human/ABC1/ABC1-predictions-review.yaml"
+    _write(tmp_path / source, "predictions: []\n")
+    _write(browser / "source-files.json", json.dumps([source]))
+
+    manifest = stage_pages(tmp_path, tmp_path / "_site")
+
+    assert (tmp_path / "_site/app/predictions/data.js").is_file()
+    assert (tmp_path / "_site" / source).read_text() == "predictions: []\n"
+    assert manifest.broken_local_links == 0
+
+
+@pytest.mark.parametrize("source", ["../outside.txt", ".git/config", "_site/private.txt"])
+def test_prediction_browser_manifest_cannot_publish_private_paths(tmp_path: Path, source: str) -> None:
+    """Treat a generated dependency list with the same boundary as static links."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js", "schema.js"):
+        _write(tmp_path / "app/predictions" / filename)
+    _write(tmp_path / "app/predictions/source-files.json", json.dumps([source]))
+    with pytest.raises(ValueError, match="Invalid prediction browser source"):
+        stage_pages(tmp_path, tmp_path / "_site")
+
+
 def test_stage_pages_includes_transitive_publication_dependencies(
     tmp_path: Path,
 ) -> None:
     """Reports and their styles, images, downloads, and directory URLs still work."""
     _site_fixture(tmp_path)
-    _write(
-        tmp_path / "index.html",
+    _write_homepage(
+        tmp_path,
         """<a href="docs/stats_report.html">Stats</a>
         <a href="/ai-gene-review/evaluation/?view=all&amp;sort=name">Evaluation</a>""",
     )
@@ -140,8 +212,8 @@ def test_stage_pages_does_not_follow_private_or_external_dependencies(
     """Only public repository paths can enter the publication tree."""
     _site_fixture(tmp_path)
     _write(tmp_path / ".private/secret.txt", "secret")
-    _write(
-        tmp_path / "index.html",
+    _write_homepage(
+        tmp_path,
         """<a href=".git/config">Git</a>
         <a href="_site/index.html">Staging</a>
         <a href=".private/secret.txt">Private</a>
@@ -161,8 +233,8 @@ def test_stage_pages_respects_base_urls_and_static_script_downloads(
 ) -> None:
     """Resolve browser-relative URLs without rewriting the document."""
     _site_fixture(tmp_path)
-    _write(
-        tmp_path / "index.html",
+    _write_homepage(
+        tmp_path,
         """<base href="/ai-gene-review/docs/">
         <script src="report.js"></script><a href="report.html">Report</a>""",
     )
@@ -183,7 +255,7 @@ def test_stage_pages_respects_base_urls_and_static_script_downloads(
 def test_script_fetch_uses_document_url_not_script_url(tmp_path: Path) -> None:
     """An external script fetches relative to the page, not its own directory."""
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<script src="scripts/report.js"></script>')
+    _write_homepage(tmp_path, '<script src="scripts/report.js"></script>')
     _write(tmp_path / "scripts/report.js", 'fetch("data.json");')
     _write(tmp_path / "data.json", "public data")
     _write(tmp_path / "scripts/data.json", "wrong data")
@@ -199,8 +271,8 @@ def test_stage_pages_reports_linked_orphan_review_instead_of_copying(
 ) -> None:
     """A stale navigation link must not resurrect a deleted gene review."""
     _site_fixture(tmp_path)
-    _write(
-        tmp_path / "index.html",
+    _write_homepage(
+        tmp_path,
         '<a href="genes/human/OLD1/OLD1-ai-review.html">Old</a>',
     )
 
@@ -209,7 +281,7 @@ def test_stage_pages_reports_linked_orphan_review_instead_of_copying(
     assert not (tmp_path / "_site/genes/human/OLD1/OLD1-ai-review.html").exists()
     assert manifest.linked_source_files_not_staged == 1
     assert manifest.linked_source_bytes_not_staged == len("fixture")
-    assert not manifest.deployable
+    assert manifest.deployable
 
 
 def test_stage_pages_removes_stale_output(tmp_path: Path) -> None:
@@ -328,29 +400,39 @@ def test_cleanup_supports_linked_git_worktrees(tmp_path: Path) -> None:
     assert (worktree / ".git").is_file()
 
 
-def test_broken_links_block_deployment(tmp_path: Path) -> None:
+def test_broken_links_are_reported_without_blocking_deployment(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<a href="missing.pdf">Missing</a>')
+    _write_homepage(tmp_path, '<a href="missing.pdf">Missing</a>')
     manifest = stage_pages(tmp_path, tmp_path / "_site")
     assert manifest.broken_local_links == 1
     assert manifest.broken_local_link_paths == ["missing.pdf"]
     assert manifest.linked_source_files_not_staged == 0
-    assert not manifest.deployable
+    assert manifest.deployable
 
 
 @pytest.mark.parametrize(
-    "size,deployable", [(1_000_000_000, True), (1_000_000_001, False)]
+    "size,deployable", [(0, False), (1_000_000_001, True), (9_999_999_999, True), (10_000_000_000, False)]
 )
 def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
     _site_fixture(tmp_path)
     manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
-    assert manifest.size_budget_bytes == 1_000_000_000
+    assert manifest.size_budget_bytes == 9_999_999_999
     assert manifest.deployable is deployable
+
+
+@pytest.mark.parametrize("size,supported", [(1_000_000_000, True), (1_000_000_001, False)])
+def test_supported_capacity_is_separate_from_absolute_cutoff(tmp_path, size, supported):
+    """A deployment permitted by policy can still exceed supported hosting capacity."""
+    _site_fixture(tmp_path)
+    manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
+    assert manifest.supported_size_budget_bytes == 1_000_000_000
+    assert manifest.within_supported_size is supported
+    assert manifest.deployable
 
 
 def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<a href="missing.pdf">Missing</a>')
+    _write_homepage(tmp_path, '<a href="missing.pdf">Missing</a>')
     result = subprocess.run(
         [
             sys.executable,
@@ -366,8 +448,8 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
         check=True,
     )
     manifest = json.loads((tmp_path / "manifest.json").read_text())
-    assert manifest["deployable"] is False
-    assert manifest["size_budget_bytes"] == 1_000_000_000
+    assert manifest["deployable"] is True
+    assert manifest["size_budget_bytes"] == 9_999_999_999
     assert manifest["broken_local_links"] == 1
     assert manifest["off_base_path_links"] == 0
     assert manifest["off_base_path_urls"] == []
@@ -375,9 +457,9 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
     assert "Broken local Pages links" in result.stdout
 
 
-def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
+def test_off_base_link_is_advisory(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<script>fetch("/research/report.html")</script>')
+    _write_homepage(tmp_path, '<script>fetch("/research/report.html")</script>')
     _write(tmp_path / "research/report.md")
     manifest = stage_pages(tmp_path, tmp_path / "_site")
     assert not (tmp_path / "_site/research/report.md").exists()
@@ -387,12 +469,12 @@ def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
         "https://ai4curation.io/research/report.html"
     ]
     assert manifest.broken_local_links == 0
-    assert not manifest.deployable
+    assert manifest.deployable
 
 
 def test_known_off_base_html_link_is_repaired_and_copied(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
+    _write_homepage(tmp_path, '<a href="/research/report.html">Report</a>')
     _write(tmp_path / "research/report.md", 'The existing report')
     manifest = stage_pages(tmp_path, tmp_path / '_site')
     assert (tmp_path / '_site/research/report.md').read_text() == 'The existing report'
@@ -464,5 +546,18 @@ def test_archive_size_accounts_for_headers_padding_and_hidden_exclusions(tmp_pat
 def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
     _site_fixture(tmp_path)
     manifest = stage_pages(tmp_path, tmp_path / '_site')
-    assert replace(manifest, archive_bytes=1_073_741_824).deployable
-    assert not replace(manifest, archive_bytes=1_073_741_825).deployable
+    assert replace(manifest, archive_bytes=9_999_999_999).deployable
+    assert not replace(manifest, archive_bytes=10_000_000_000).deployable
+
+
+def test_stage_pages_includes_propagation_browser_rows(tmp_path: Path) -> None:
+    """The propagation browser and the review pages its rows link to are staged."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js"):
+        _write(tmp_path / "app/propagation" / filename)
+    review = "genes/mouse/Calm3/Calm3-ai-review.html"
+    _write(tmp_path / review)
+    _write(tmp_path / "app/propagation/source-files.json", json.dumps([review]))
+    stage_pages(tmp_path, tmp_path / "_site")
+    assert (tmp_path / "_site/app/propagation/data.js").is_file()
+    assert (tmp_path / "_site" / review).is_file()

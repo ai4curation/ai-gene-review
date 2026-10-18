@@ -46,3 +46,43 @@ PTHR44252 includes related small-carbonyl reductases whose substrate boundaries 
 No purified Q567K5 assay or target-specific compartment study was found. The 2002 mammalian biochemical report is abstract-only in the cache but explicitly states the assayed substrates. The genuine Falcon synthesis is useful for ortholog enzymology, with cofactor preference, tetramerization and tissue distribution kept distinct from direct zebrafish measurements. No kinetic constants or exclusive physiological substrate are assigned.
 
 Exact sequence mapping: [dcxr-bioinformatics/RESULTS.md](dcxr-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
+
+## Re-review 2026-09-28
+
+Audit of the existing review rather than a rewrite: the six GOA rows, their actions and their
+supporting quotes were re-checked against the refreshed goa.tsv and uniprot.txt and all were
+sustained (GO:0004090 ACCEPT, GO:0050038 ACCEPT, GO:0005997 ACCEPT, GO:0006006
+KEEP_AS_NON_CORE, GO:0016616 MODIFY -> GO:0050038, GO:0005575 ND ACCEPT). No action changed
+and no new GOA rows had appeared. What was missing was the argument, so each review block now
+carries an explicit `reason` alongside its summary.
+
+- The four IBA rows are argued on node placement rather than donor count, per the IBA policy.
+  The node is PANTHER:PTN001211870; the activity behind it was measured on purified ortholog
+  enzymes [PMID:11882650 "homotetramers with NADPH-linked reductase activity for alpha-dicarbonyl
+  compounds, catalyzed the oxidoreduction between xylitol and l-xylulose"], and the zebrafish
+  protein sits inside the clade that inherited it - gap-free alignment to human DCXR over 244
+  residues with 169 identities and the catalytic positions retained (dcxr-bioinformatics/RESULTS.md).
+  Absence of a zebrafish assay is not evidence of divergence.
+- GO:0006006 glucose metabolic process stays non-core with the indirection spelled out: the
+  enzyme acts on L-xylulose, not on glucose, and reaches glucose metabolism only through the
+  uronate cycle [PMID:11882650 "which is involved in the uronate cycle of glucose metabolism"].
+- GO:0005997 xylulose metabolic process is justified on the participation test: the gene product
+  performs the L-xylulose-to-xylitol step itself, so it does work in the process rather than
+  merely being required for it.
+- The ND row for GO:0005575 is accepted with the reason stated: no zebrafish localization
+  evidence exists [file:DANRE/dcxr/dcxr-deep-research-falcon.md "No direct zebrafish
+  immunolocalization, cell fractionation, proximity-labeling, or fluorescent-tag study was
+  found."], and the mammalian renal-tubule and liver-fraction observations are ortholog data
+  that should not be transferred as a compartment annotation.
+- reference_review on PMID:11882650 was already present and the HIGH/VERIFIED judgment is
+  correct, but the note claimed the paper had been checked against "the cached abstract/full
+  text" while the cache is abstract-only (full_text_available: false). The note now states the
+  limit explicitly and records what the abstract does and does not support.
+- Deep-research citations added where they carry information not already in UniProt (the
+  absence of zebrafish localization data, the uronate-cycle pathway placement, the
+  monocarbonyl-versus-dicarbonyl substrate preference, the unresolved cofactor preference).
+- suggested_experiments added (the file had none): recombinant kinetics to fix the zebrafish
+  substrate ranking and cofactor preference, given that reported diacetyl specific activities
+  differ more than fiftyfold among mammalian orthologs; and a loss-of-function metabolomic test
+  for L-xylulose accumulation.
+- Validation: zero errors, zero warnings. Status already COMPLETE and unchanged.

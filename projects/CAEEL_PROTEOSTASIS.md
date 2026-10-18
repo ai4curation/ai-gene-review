@@ -3,9 +3,45 @@ title: "C. elegans Proteostasis Network Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
+genes: [hsf-1, hsp-1, hsp-16.2, hsp-90, hsp-4, cdc-48, bec-1, lgg-1, rpn-10, ufd-1, atg-18, daf-16, daf-2, skn-1, sir-2.1, aak-2, hlh-30]
+manifest:
+  slides:
+    - href: CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NzeqEauDrdbesCvTHPj76c
+      title: Project brief
 ---
 
 # C. elegans Proteostasis Network Project
+
+**Bottom line:** the proteostasis network folds proteins, holds them
+soluble and clears them when they fail, and in *C. elegans* its capacity
+falls with age under control of the insulin/FOXO longevity pathway. We
+reviewed every existing GO annotation on 17 genes in three tiers: the heat
+shock response and chaperones (HSF-1, HSP70s, HSP90, a small HSP), the
+degradation systems (CDC-48, proteasome, autophagy) and the longevity
+regulators (DAF-2, DAF-16, SKN-1, SIR-2.1, AAK-2, HLH-30). All 17 reviews
+are complete: 773 rows, 597 ACCEPT, 94 KEEP_AS_NON_CORE, 9
+MARK_AS_OVER_ANNOTATED, 56 MODIFY, 4 REMOVE, 3 UNDECIDED and 10 NEW. Most
+changes replace generic `protein binding` with more specific terms. One
+set of these is itself wrong and is still to be corrected: nine IPI rows on
+HSP-90 (partners include UNC-45, STI-1, FKB-6, DAF-1 and EBAX-1) propose Hsp90
+protein binding (GO:0051879), but that term means binding *to* an Hsp90
+and belongs on the partners, not on HSP-90. For HSP-90 itself,
+protein-folding chaperone binding (GO:0051087) fits the co-chaperone rows
+and its chaperone activity covers the client rows. The removals include
+*protein refolding* on the HSP-16.2 holdase and *GABA receptor binding* on
+LGG-1. The worm has a single HSP90 gene, hsp-90 (Q18688); daf-21 is its
+historical mutant name, not a paralog, and PR #3225 (approved, not yet
+merged) retires the duplicate review filed under that name. The dated
+status log below predates that change: its totals (18 genes, 868 rows,
+626 ACCEPT) count Q18688 twice.
+
+We did this because the worm is the main model for how proteostasis decline
+drives age-related protein aggregation, and a network review tests whether
+chaperone, degradation and longevity annotations stay mechanistically
+precise, for example separating holdase from foldase activity.
 
 ## Overview
 
@@ -30,8 +66,7 @@ Master regulator and chaperones:
 - **hsp-70** - Inducible HSP70
 - **hsp-4** - BiP/GRP78 (ER-resident HSP70)
 - **hsp-16.1/16.2** - Small HSPs (sHSP, alpha-crystallin family)
-- **hsp-90** - HSP90 ortholog
-- **daf-21** - HSP90 ortholog
+- **hsp-90** - HSP90 ortholog; the only worm HSP90 (daf-21 is its old mutant name)
 
 ### 2. Chaperonins
 Protein folding chambers:
@@ -84,14 +119,13 @@ Transgenic models:
 
 ## Genes for Review (Priority Order)
 
-### Priority 1: Core HSR Machinery (~6 genes)
+### Priority 1: Core HSR Machinery (5 genes)
 | Gene | UniProt | Human Ortholog | Function |
 |------|---------|----------------|----------|
 | hsf-1 | G5EFQ9 | HSF1 | Master heat shock TF |
 | hsp-1 | P09446 | HSPA8 | Constitutive HSP70 |
 | hsp-16.2 | P06582 | HSPB1 | Small HSP |
 | hsp-90 | Q18688 | HSP90AA1 | HSP90 |
-| daf-21 | P41887 | HSP90AB1 | HSP90 |
 | hsp-4 | Q966C6 | HSPA5/BiP | ER HSP70 |
 
 ### Priority 2: Degradation Systems (~6 genes)
@@ -158,7 +192,7 @@ Transgenic models:
 ## Project Status
 
 - [x] Create gene folders and fetch UniProt/GOA data
-- [x] Priority 1 genes review (HSR) - 6/6 COMPLETE (234 annotations)
+- [x] Priority 1 genes review (HSR) - 5/5 COMPLETE (234 annotations in the 2025-12-30 count, which included the duplicate daf-21 file)
 - [x] Priority 2 genes review (degradation) - 6/6 COMPLETE (213 annotations)
 - [x] Priority 3 genes review (longevity link) - 6/6 COMPLETE (421 annotations)
 - [x] Pathway summary and integration - COMPLETE
@@ -171,6 +205,8 @@ Transgenic models:
 
 All 18 C. elegans proteostasis genes have been comprehensively reviewed and documented.
 
+> **Correction (2026-09):** this log counts daf-21 as a separate gene. It is not: daf-21 is the historical mutant name of hsp-90 (UniProt Q18688; `GN Name=hsp-90; Synonyms=daf-21`), and the accession P41887 given for it below is the *S. pombe* HSP90 Swo1. The project has 17 genes; PR #3225 retires the duplicate daf-21 review. The Priority 1 and total figures in this log double-count Q18688, and the per-gene figures (e.g. hsp-90 "52 annotations, 28 ACCEPT, 10 MODIFY"; the review now has 51 rows, 31 ACCEPT, 11 MODIFY) are a dated snapshot; current totals are in the bottom line at the top of this page.
+
 ### Priority 1: Heat Shock Response (6/6 COMPLETE)
 
 **Core HSR Machinery - 234 annotations reviewed**
@@ -178,8 +214,8 @@ All 18 C. elegans proteostasis genes have been comprehensively reviewed and docu
 - **hsf-1** (G5EFQ9): Heat Shock Factor 1 master regulator - 68 annotations, 43 ACCEPT, 16 KEEP_AS_NON_CORE
 - **hsp-1** (P09446): Constitutive HSP70 chaperone - 26 annotations, 14 ACCEPT, 1 NEW (unfolded protein binding)
 - **hsp-16.2** (P06582): Small HSP holdase - 11 annotations, REMOVE mechanistically incorrect "protein refolding", ADD GO:0044183 (protein folding chaperone)
-- **hsp-90** (Q18688): HSP90 signaling chaperone - 52 annotations, 28 ACCEPT, 10 MODIFY (generic protein binding → GO:0051879)
-- **daf-21** (P41887): HSP90 paralog, dauer-specialized - 52 annotations, 21 ACCEPT, 8 MODIFY (protein binding → GO:0051879)
+- **hsp-90** (Q18688): HSP90 signaling chaperone - 52 annotations, 28 ACCEPT, 10 MODIFY (generic protein binding → GO:0051879; this direction is wrong, see bottom line)
+- ~~**daf-21** (P41887): HSP90 paralog, dauer-specialized~~ - duplicate review of hsp-90 (Q18688), retired in PR #3225; not a paralog, and P41887 is *S. pombe* Swo1
 - **hsp-4** (Q966C6): ER BiP/GRP78 - 25 annotations, 17 ACCEPT, 1 MARK_AS_OVER_ANNOTATED (generic "membrane")
 
 ### Priority 2: Degradation Systems (6/6 COMPLETE)
@@ -261,7 +297,7 @@ All 18 C. elegans proteostasis genes have been comprehensively reviewed and docu
 - CAEEL_P_GRANULES (19 genes, ✅ COMPLETE)
 
 **Just Completed**:
-- CAEEL_PROTEOSTASIS (18 genes, ✅ COMPLETE)
+- CAEEL_PROTEOSTASIS (17 genes, ✅ COMPLETE)
 
 **Total CAEEL Coverage**: 110 genes, 5000+ annotations, comprehensive systems biology coverage
 
@@ -284,7 +320,7 @@ Completed comprehensive review of all 18 C. elegans proteostasis genes across 3 
 - hsp-1: Constitutive HSP70 chaperone, 26 annotations with new unfolded protein binding annotation
 - hsp-16.2: Small HSP holdase, REMOVED mechanistically incorrect "protein refolding" term
 - hsp-90: HSP90 signaling chaperone, 52 annotations with 10 protein binding modifications
-- daf-21: HSP90 paralog with dauer specialization, 52 annotations
+- ~~daf-21: HSP90 paralog with dauer specialization, 52 annotations~~ (duplicate of hsp-90, retired in PR #3225; see correction above)
 - hsp-4: ER-resident BiP/GRP78, 25 annotations with clear UPR-ER marker role
 
 **Priority 2 - Degradation Systems (6 genes)**:

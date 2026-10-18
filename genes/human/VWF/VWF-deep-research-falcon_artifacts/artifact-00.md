@@ -1,0 +1,13 @@
+| Structural module | Status or location | Mechanistic role in human VWF P04275 |
+|---|---|---|
+| **D1–D2** | Propeptide, also called von Willebrand antigen II; removed before secretion of mature VWF | Supports intracellular assembly and multimerization; it is **not** the FVIII-binding region. A1 also contributes structurally to correctly configured VWF storage tubules. (pqac-00000008, pqac-00000019) |
+| **D′D3** | N-terminus of secreted mature VWF | Forms intermolecular disulfide bonds during N-terminal multimerization. It binds FVIII with high affinity and protects FVIII from rapid clearance and proteolysis. Its VWD, C8, TIL and E modules are structural folds; TIL annotation alone does not establish protease-inhibitor activity. (pqac-00000019, pqac-00000034) |
+| **A1** | Mature VWF | Binds platelet GPIbα. Flanking sequences form an autoinhibitory module that hydrodynamic force opens, enabling shear-controlled platelet capture. A1 can also contribute to collagen binding, whereas A3 is the principal site emphasized for collagens I and III. (pqac-00000020, pqac-00000034) |
+| **A2** | Force-sensitive regulatory domain in mature VWF | Mechanical unfolding exposes the **Tyr1605–Met1606** bond for cleavage by ADAMTS13, limiting multimer size and thrombogenicity. VWF is **not an enzyme**, and A2 does not catalyse this reaction. (pqac-00000020) |
+| **A3** | Mature VWF | Principal binding domain for fibrillar collagens **I and III**, anchoring VWF at exposed subendothelium. (pqac-00000018, pqac-00000034) |
+| **D4** | D assembly in mature VWF | Contains VWD, C8, TIL and E structural modules and contributes to the multidomain scaffold; no specific ligand is assigned here without direct evidence. TIL annotation alone does not establish serine-protease inhibition. (pqac-00000019) |
+| **C4** | One of six C domains in mature VWF | Presents an exposed **RGD** motif that binds platelet integrin αIIbβ3, helping stabilize platelet–platelet interactions and the developing thrombus. (pqac-00000018, pqac-00000034) |
+| **CK** | C-terminal cystine-knot domain of mature VWF | Mediates C-terminal disulfide-linked dimerization, the first stage of multimer assembly. Cystine knot denotes a structural fold, not catalytic activity. (pqac-00000019, pqac-00000034) |
+
+
+*Table: Domain-to-function map for human VWF P04275, distinguishing the cleaved D1–D2 propeptide from mature secreted VWF and avoiding enzymatic over-interpretation of structural folds. Primary structural review: [Lenting et al., Blood, published November 2024](https://doi.org/10.1182/blood.2023023277).*

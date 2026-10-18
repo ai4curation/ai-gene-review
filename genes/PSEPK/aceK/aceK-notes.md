@@ -89,3 +89,8 @@ acetate/fatty acids.
   studies of AceK in the cached corpus. Confidence rests on strong family-level
   conservation (HAMAP MF_00747, conserved active site Ser374 region and ATP-binding
   residues).
+
+
+## 2026-09-20 TreeGrafter re-review
+
+Reviewed all ten annotations. Accepted the correctly broad phosphoprotein phosphatase, phosphatase, ester hydrolase and ATP-binding annotations. The existing OpenScientist/Falcon verdicts explicitly support the phosphatase chemistry; their preference for a more specific term is not a refutation. The specific IDH phosphatase remains in core_functions. AMP binding is now accepted as a positively supported conserved allosteric role: [PMID:20505668](https://pubmed.ncbi.nlm.nih.gov/20505668/) places AMP in an interdomain allosteric site in E. coli AceK. This is homolog evidence, not a new P. putida binding measurement. Retained the glucose-metabolism challenge because AceK regulates IDH rather than transforming glucose itself; retained the established TCA/glyoxylate annotations with the regulatory role explicit. No duplicate phosphatase adjudication was launched.

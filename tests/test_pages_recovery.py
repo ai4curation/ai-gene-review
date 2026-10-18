@@ -30,6 +30,21 @@ def test_legacy_pr_failure_does_not_disqualify_validated_artifact():
     }
 
 
+@pytest.mark.parametrize('upload_name', [
+    'Upload GitHub Pages artifact', 'Upload shadow GitHub Pages artifact',
+])
+@pytest.mark.parametrize('conclusion', ['success', 'failure'])
+def test_upload_step_rename_preserves_validation_of_existing_builds(upload_name, conclusion):
+    run, jobs, artifacts = source_inputs()
+    step = next(s for s in jobs['jobs'][0]['steps'] if 'GitHub Pages artifact' in s['name'] and s['name'].startswith('Upload'))
+    step.update(name=upload_name, conclusion=conclusion)
+    if conclusion == 'success':
+        assert validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)['github-pages'] == 2
+    else:
+        with pytest.raises(ValueError, match='did not succeed'):
+            validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)
+
+
 @pytest.mark.parametrize('field,value', [
     ('status', 'in_progress'), ('conclusion', 'cancelled'), ('event', 'pull_request'), ('workflow_id', 999),
     ('path', '.github/workflows/other.yaml'), ('head_branch', 'untrusted'),
@@ -70,8 +85,7 @@ def good_manifest():
 
 @pytest.mark.parametrize('field,value', [
     ('deployable', False), ('size_budget_bytes', BUDGET + 1), ('total_bytes', BUDGET + 1),
-    ('total_bytes', True), ('linked_source_files_not_staged', 1),
-    ('broken_local_link_paths', ['missing.html']), ('off_base_path_urls', ['/genes/x']),
+    ('total_bytes', True),
 ])
 def test_rechecks_publication_policy(tmp_path, field, value):
     archive = tmp_path / 'artifact.tar'
@@ -109,10 +123,10 @@ def test_deployment_still_requires_opt_in_and_manifest_after_legacy_failure():
 
 
 def test_recovery_is_manual_default_branch_only_and_verifies_before_upload():
-    workflow = yaml.safe_load(Path('.github/workflows/recover-pages.yaml').read_text())
+    workflow = yaml.safe_load(Path('.github/workflows/deploy-existing-pages.yaml').read_text())
     triggers = workflow.get('on', workflow.get(True))
     assert set(triggers) == {'workflow_dispatch'}
-    job = workflow['jobs']['recover-pages']
+    job = workflow['jobs']['deploy-existing-pages']
     assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['if']
     assert 'github.event.repository.default_branch' in job['if']
     assert job['environment']['name'] == 'github-pages'
@@ -123,8 +137,8 @@ def test_recovery_is_manual_default_branch_only_and_verifies_before_upload():
 
 
 def test_recovery_upload_name_matches_pages_deployment():
-    workflow = yaml.safe_load(Path('.github/workflows/recover-pages.yaml').read_text())
-    steps = workflow['jobs']['recover-pages']['steps']
+    workflow = yaml.safe_load(Path('.github/workflows/deploy-existing-pages.yaml').read_text())
+    steps = workflow['jobs']['deploy-existing-pages']['steps']
     upload = next(step for step in steps if step.get('name') == 'Upload validated archive for deployment')
     deploy = next(step for step in steps if step.get('name') == 'Deploy validated Pages artifact')
     assert upload['with']['name'] == deploy['with']['artifact_name'] == 'github-pages'
@@ -170,10 +184,10 @@ def test_record_binds_manifest_to_the_actual_archive(tmp_path):
     validate_manifest(recorded, archive)
 
 
-def test_archive_cap_allows_tar_overhead_without_raising_site_limit(tmp_path):
+def test_artifact_over_one_gb_is_allowed_but_absolute_limit_is_rejected(tmp_path):
     archive = tmp_path / 'artifact.tar'
     with archive.open('wb') as stream:
-        stream.truncate(BUDGET + 1)
+        stream.truncate(1_073_741_825)
     validate_manifest(good_manifest(), archive)
     manifest = good_manifest()
     manifest['total_bytes'] = BUDGET + 1
@@ -184,10 +198,73 @@ def test_archive_cap_allows_tar_overhead_without_raising_site_limit(tmp_path):
 def test_source_records_checksum_before_uploading_diagnostics_and_deploying():
     job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['generate-pages']
     names = [step.get('name') for step in job['steps']]
-    assert names.index('Upload shadow GitHub Pages artifact') < names.index('Record uploaded archive checksum')
+    assert names.index('Upload GitHub Pages artifact') < names.index('Record uploaded archive checksum')
     assert names.index('Record uploaded archive checksum') < names.index('Upload Pages diagnostics')
     assert "steps.archive-check.outcome == 'success'" in job['outputs']['deployable']
     record = next(step for step in job['steps'] if step.get('id') == 'archive-check')
-    assert "steps.shadow-summary.outputs.deployable == 'true'" in record['if']
+    assert "steps.pages-summary.outputs.deployable == 'true'" in record['if']
     assert 'if [ ! -f "$PAGES_ARCHIVE_PATH" ]' in record['run']
     assert '::error title=Pages archive missing::' in record['run']
+
+
+def test_explicit_legacy_size_retry_keeps_integrity_checks(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'original uploaded bytes')
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    manifest = dict(good_manifest(), deployable=False, size_budget_bytes=1_000_000_000,
+                    archive_size_budget_bytes=1_073_741_824, total_bytes=1_001_898_215,
+                    archive_checksum_required=True)
+    with pytest.raises(ValueError):
+        validate_manifest(manifest, archive)
+    validate_manifest(manifest, archive, digest)
+    with pytest.raises(ValueError, match='checksum'):
+        validate_manifest(manifest, archive, '0' * 64)
+    validate_manifest(dict(manifest, broken_local_link_paths=['missing.pdf']), archive, digest)
+    validate_manifest(dict(manifest, linked_source_files_not_staged=1), archive, digest)
+
+
+def test_enabled_publication_cannot_silently_skip_deployment():
+    job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['publication-status']
+    assert job['needs'] == ['generate-pages', 'deploy-pages']
+    assert 'always()' in job['if']
+    assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['if']
+    script = job['steps'][0]['run']
+    assert '"$DEPLOY_RESULT" != success' in script and 'exit 1' in script
+
+
+def test_artifact_publication_does_not_depend_on_generated_git_commits():
+    """Artifact-only builds bypass Git budgets and every PR credential step."""
+    job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['generate-pages']
+    steps = {step['name']: step for step in job['steps']}
+    browser = steps['Deploy browser app (data.js + index.html)']
+    assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['env']['BROWSER_TARGET']
+    assert "'pages'" in job['env']['BROWSER_TARGET']
+    assert "'git'" in job['env']['BROWSER_TARGET']
+    assert browser['run'] == 'just deploy-browser "$BROWSER_TARGET"'
+    assert steps['Build shared predictions browser']['run'] == 'just deploy-predictions-browser "$BROWSER_TARGET"'
+    assert steps['Build homology propagation browser']['run'] == 'just deploy-propagation-browser "$BROWSER_TARGET"'
+    assert steps['Check for changes']['if'] == "vars.PAGES_ARTIFACT_DEPLOY_ENABLED != 'true'"
+    assert steps['Generate ai4c-agent token']['if'] == "steps.check-changes.outputs.has_changes == 'true'"
+    for name in ('Create or update regeneration PR', 'Approve exact generated commit',
+                 'Validate protection and arm generated auto-merge'):
+        assert "steps.check-changes.outputs.has_changes == 'true'" in steps[name]['if']
+
+
+def test_content_quality_diagnostics_do_not_block_valid_archive(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'valid uploaded archive')
+    manifest = dict(good_manifest(), linked_source_files_not_staged=1,
+                    broken_local_link_paths=['missing.pdf'], off_base_path_urls=['/genes/example'],
+                    archive_checksum_required=True, archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
+    validate_manifest(manifest, archive)
+    archive.write_bytes(b'corrupted archive')
+    with pytest.raises(ValueError, match='checksum'):
+        validate_manifest(manifest, archive)
+
+
+def test_source_validation_is_independent_of_biological_validation():
+    run, jobs, artifacts = source_inputs()
+    jobs['jobs'][0]['steps'] = [step for step in jobs['jobs'][0]['steps']
+                                 if step['name'] != 'Validate module YAML files']
+    jobs['jobs'][0]['steps'].append({'name': 'Validate module YAML files', 'conclusion': 'failure'})
+    assert validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)['github-pages'] == 2

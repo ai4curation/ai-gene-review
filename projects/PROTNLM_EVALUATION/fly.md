@@ -37,6 +37,30 @@ Like the horse cohort, this benchmark is constructed **after the predictions wer
 
 The 13 function paragraphs are assessed claim by claim in separate linked reviews; they are not assigned an artificial single GO score. CNN records established prior biology, not independently verified membership in the model's training data. [Validation summary](fly-benchmark/validation-summary.json) and [prediction evidence checks](fly-benchmark/prediction-evidence-validation.json) accompany the coverage audit.
 
+### Records without GO predictions
+
+All **41 cohort genes have prediction-review YAMLs**: 33 contain the 50 emitted GO
+claims, and eight explicitly contain `predictions: []`. The eight are **Lcp3, awd,
+Gfat1, ftz-f1, CG32706, CG5611, CG5565 and Dic4**. Each empty record preserves the
+exact accession and source snapshot and summarizes whether the available evidence
+supports an expected function that ProtNLM omitted. Their function-text reviews
+remain available separately.
+
+These omissions carry useful coverage information. Lcp3, for example, is identical
+to reviewed P07188, which has experimental annotations for larval-cuticle structure
+and extracellular cuticle matrix, yet the source emits no GO term. An empty output
+is less clearly a missed function for CG5611, whose specific reaction remains
+unresolved, or for the short Gfat1-PF product, which lacks the architecture required
+for the full glutamine-dependent reaction. The per-gene summaries retain those
+distinctions instead of treating every omission as a biological error.
+
+The eight zero-GO-output records receive no VDCL category or confidence score and
+do not change the 50-claim table above. The **33 of 41** figure measures the presence
+of GO output in this selected cohort; it is not recall against a defined set of
+expected annotations. A missing YAML indicates unrecorded review, while a completed
+empty-list YAML records an assessed absence. The separate next-20 selection is
+outside this 41-gene accounting.
+
 Four unresolved mechanisms are selected for [focused OpenScientist investigations](fly-openscientist-selection.md): Dic4 substrate specificity, CG5611 reaction assignment, ttv-PC catalytic competence and TyrRS resveratrol recognition. These investigations target evidence gaps that structural or comparative analysis could help resolve.
 
 The [next 20-gene selection](fly-next20.md) emphasizes metabolic enzymes and transport, drawing on remaining published records and additional original-export accessions. It includes GO/function, localization and name-only tiers and is separate from the completed results below.

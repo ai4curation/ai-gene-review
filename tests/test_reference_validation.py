@@ -132,8 +132,21 @@ def test_reference_finding_supporting_text_is_validated(tmp_path):
     assert quote_errors[0].path == "references[0].findings[1].supporting_text"
 
 
-def test_abstract_only_finding_mismatch_is_warning(tmp_path):
-    """A quote absent from an abstract-only cache does not block validation."""
+def test_abstract_only_undeclared_finding_mismatch_is_error(tmp_path):
+    """An *undeclared* quote absent from an abstract-only cache now blocks.
+
+    This reverses the prior behaviour, which this test asserted as a WARNING. The
+    reasoning for the change: the old rule made an unverifiable quote indistinguishable
+    from a verified one, and 47% of the publication cache is abstract-only, so the silent
+    case is common rather than marginal.
+
+    There is no longer an escape hatch, so "undeclared" in this test's name describes the
+    fixture, not a condition of the error: declaring ``full_text_unavailable: true`` gets
+    the same ERROR, which is what
+    ``test_full_text_unavailable_flag_no_longer_downgrades_mismatch`` asserts for both
+    placements of the flag. An earlier version of this docstring said the hatch was
+    "unchanged" and named two tests that assert the opposite or do not exist.
+    """
     _write_cached_publication(tmp_path, full_text_available=False)
     review_path = tmp_path / "review.yaml"
     review_path.write_text(
@@ -158,14 +171,21 @@ def test_abstract_only_finding_mismatch_is_warning(tmp_path):
         if issue.check_type == "reference_finding_supporting_text"
     ]
     assert len(quote_issues) == 1
-    assert quote_issues[0].severity == ValidationSeverity.WARNING
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
 @pytest.mark.parametrize("flag_location", ["reference", "finding"])
-def test_full_text_unavailable_flag_downgrades_mismatch(
+def test_full_text_unavailable_flag_no_longer_downgrades_mismatch(
     tmp_path, flag_location
 ):
-    """Reference- and finding-level escape hatches prevent false hard errors."""
+    """The escape hatch is gone: a snippet must be checkable, and a mismatch is an error.
+
+    This test previously asserted the opposite, under the name
+    ``test_full_text_unavailable_flag_downgrades_mismatch``. The flag let an author
+    silence the one signal separating a verified quote from an unverified one, by
+    asserting the very thing that made it unverifiable. It remains meaningful as metadata
+    about the cached record; it just no longer excuses a failure to match.
+    """
     _write_cached_publication(tmp_path, full_text_available=True)
     finding = {
         "statement": "Full-text result.",
@@ -191,7 +211,7 @@ def test_full_text_unavailable_flag_downgrades_mismatch(
         if issue.check_type == "reference_finding_supporting_text"
     ]
     assert len(quote_issues) == 1
-    assert quote_issues[0].severity == ValidationSeverity.WARNING
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
 @pytest.mark.parametrize(
@@ -220,8 +240,12 @@ def test_legacy_cache_content_type_is_recognized(
     )
 
 
-def test_legacy_doi_abstract_only_mismatch_is_warning(tmp_path):
-    """A DOI quote absent from a legacy abstract-only cache remains advisory."""
+def test_legacy_doi_abstract_only_undeclared_mismatch_is_error(tmp_path):
+    """Same reversal for a legacy DOI-keyed abstract-only cache.
+
+    The reference prefix does not change the argument: an unverifiable quote that nobody
+    has declared unverifiable is indistinguishable from a checked one.
+    """
     reference_id = "DOI:10.1234/example"
     _write_cached_publication(
         tmp_path,
@@ -252,7 +276,41 @@ def test_legacy_doi_abstract_only_mismatch_is_warning(tmp_path):
         if issue.check_type == "reference_finding_supporting_text"
     ]
     assert len(quote_issues) == 1
-    assert quote_issues[0].severity == ValidationSeverity.WARNING
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
+
+
+def test_abstract_only_declared_finding_mismatch_is_still_an_error(tmp_path):
+    """Declaring the limitation does not make the quote checkable.
+
+    Written while the design still had an escape hatch; kept, inverted, because it is the
+    case most likely to be re-introduced by someone restoring "kindness" to the rule.
+    """
+    _write_cached_publication(tmp_path, full_text_available=False)
+    review_path = tmp_path / "review.yaml"
+    review_path.write_text(
+        yaml.safe_dump(
+            _finding_quote_review(
+                {
+                    "statement": "Full-text result.",
+                    "supporting_text": "A sentence available only in full text.",
+                    "full_text_unavailable": True,
+                }
+            )
+        )
+    )
+
+    report = validate_gene_review(
+        review_path,
+        check_goa=False,
+        publications_dir=tmp_path / "publications",
+    )
+    quote_issues = [
+        issue
+        for issue in report.issues
+        if issue.check_type == "reference_finding_supporting_text"
+    ]
+    assert len(quote_issues) == 1
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
 def test_invalid_reference_id():

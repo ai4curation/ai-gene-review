@@ -12,9 +12,32 @@ genes:
   - CYP24A1
   - CYP27A1
   - CYP3A4
+manifest:
+  slides:
+    - href: CALCITRIOL_BIOSYNTHESIS_OBSOLETION/slides/CALCITRIOL_BIOSYNTHESIS_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/4zG7wZUT7XK17Bdaocsw2b
+      title: Project brief
 ---
 
 # Calcitriol Biosynthesis from Calciol — Obsoletion & Replacement
+
+**Bottom line:** GO is obsoleting `GO:0036378 calcitriol biosynthetic process
+from calciol` and replacing it with `GO:1901755 vitamin D3 biosynthetic
+process`, after redefining the replacement to have calcitriol as its primary
+output. The change affects 24 curated annotations on five cytochrome P450
+enzymes (CYP27B1, CYP2R1, CYP27A1, CYP3A4, CYP24A1) across human, mouse, rat
+and zebrafish. We pulled those 24 annotations from QuickGO, matched each enzyme
+to its hydroxylation step, and checked the repo for affected reviews, so that
+we know which reviews will need refreshing and which unreviewed genes are about
+to change. Four of the five enzymes catalyse a vitamin D activation step;
+CYP24A1 is an inactivating 24-hydroxylase and is the one case where a
+mechanical `replaced_by` may be wrong. Status: scoped, not started as a project. When the page was
+written no affected gene had a review; since then human CYP27A1 has been
+reviewed (bile-acid module, #2003), and its GOA file already carries the IDA
+row from PMID:15465040 under `GO:1901755`, which the review keeps as
+non-core. The other four genes still have no review here.
 
 ## Overview
 
@@ -225,3 +248,8 @@ hydroxylase partners. Skip if higher-priority obsoletions are still open.
   five affected CYP genes (CYP27B1, CYP2R1, CYP27A1, CYP3A4, CYP24A1) has a
   review here yet. CYP24A1 flagged as the one annotation whose successor
   term needs confirmation (catabolic vs biosynthetic vitamin D).
+- 2026-09-26 — Repo check: human CYP27A1 now has a review
+  (`genes/human/CYP27A1/CYP27A1-ai-review.yaml`, added in #2003). Its GOA file
+  has the PMID:15465040 IDA row as `GO:1901755` (no `GO:0036378` row remains),
+  reviewed as `KEEP_AS_NON_CORE`. CYP27B1, CYP2R1, CYP3A4 and CYP24A1 still
+  have no review.

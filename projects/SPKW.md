@@ -1,10 +1,37 @@
 ---
 title: "SwissProt Keywords (SPKW) Unique Terms Project"
 maturity: MATURE
-tags: [PIPELINE, FLAGSHIP]
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
+species: [human, SCHPO, ANOGA, DROME, PSEPK, ARATH, BPT4, ECO57]
+autolink_gene_symbols: false
+last_reviewed: 2026-10-05
+manifest:
+  slides:
+    - href: SPKW/slides/SPKW-slides.html
 ---
 
 # SwissProt Keywords (SPKW) Unique Terms Project
+
+**Bottom line:** UniProt keywords were mapped to GO terms (`GO_REF:0000043`),
+and for many genes a keyword was the only source of an annotation. We reviewed
+genes whose annotation rested solely on such a keyword, in 12 downstream
+gene-review subprojects that cover human apoptosis, rhythm and autophagy terms,
+five model or vector organisms, phages, viruses and non-Arabidopsis plants (137
+genes by the results table below). Eukaryotic process keywords were the
+problem: 79 to 100% of reviewed apoptosis, autophagy, rhythm and *S. pombe*
+meiosis rows were over-annotations, mostly because a gene that regulates or is
+merely active during a process was annotated as participating in it. Bacterial
+keyword rows were mostly sound (one of four *P. putida* cases flagged). GOA
+retired the SPKW pipeline for all cellular organisms around April 2026, so this
+work is now retrospective. The plant subproject shows the cost of that blanket
+removal: only about 15% of plant SPKW-unique terms carried real over-annotation
+risk, and correct facts such as DELLA gibberellin signaling (RHT1) and patatin
+storage activity (PATB1) were lost with the bad ones.
+
+We did this to find which keyword-to-GO mappings are systematically unsafe and
+why, so that the same checks can be applied to other mapping sources (the
+UniPathway project reuses its closure filter), and to give GOA evidence about
+what its retirement discarded.
 
 ## Overview
 
@@ -41,6 +68,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PLANTS](SPKW/SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 38 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW/SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW/SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
+| [ViralZone](SPKW/SPKW-VIRALZONE.md) | Upstream source | 152 GO terms | 0 of 22 queued | n/a | Definition+keyword dual path |
 
 ## Methods
 
@@ -76,28 +104,29 @@ Not all SPKW-unique annotations are over-annotations:
 ## Project Status
 
 - **Started**: 2025-12-23
-- **Last updated**: 2026-05-30
-- **Total genes reviewed**: 133 across 11 subprojects
+- **Total genes reviewed**: 137 across 12 downstream gene-review subprojects
+  (sum of the results table above; ViralZone is a separate upstream-source audit)
 - **Compiled data**: `spkw_reviewed_genes.csv` was not archived in this repository; the reviewed-gene summary is retained below.
 
 ### Phase 1 (Original)
-- [x] MAP3K5 - COMPLETE
-- [x] PHF23 - COMPLETE
-- [x] SIRT2 - COMPLETE
+- Complete: MAP3K5
+- Complete: PHF23
+- Complete: SIRT2
 
 ### Subprojects
-- [x] [Apoptosis](SPKW/SPKW-APOPTOSIS.md) - 23/280 reviewed
-- [x] [Rhythmic Process](SPKW/SPKW-RHYTHMIC.md) - 5/146 reviewed
-- [x] [Autophagy](SPKW/SPKW-AUTOPHAGY.md) - 14/123 reviewed
-- [x] [ANOGA](SPKW/SPKW-ANOGA.md) - D7 + immune genes
-- [x] [SCHPO](SPKW/SPKW-SCHPO.md) - ATG-meiosis pattern
-- [x] [DROME](SPKW/SPKW-DROME.md) - Case studies
-- [x] [PSEPK](SPKW/SPKW-PSEPK.md) - Bacterial control
-- [x] [ARATH](SPKW/SPKW-ARATH.md) - Plant patterns
-- [x] [Virus clades](SPKW/SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW/SPKW-PLANTS.md) - Non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
-- [x] [BPT4](SPKW/SPKW-BPT4.md) - Phage semantics
-- [x] [ECO57](SPKW/SPKW-ECO57.md) - Toxin/effector
+- Complete: [Apoptosis](SPKW/SPKW-APOPTOSIS.md) - 23/280 reviewed
+- Complete: [Rhythmic Process](SPKW/SPKW-RHYTHMIC.md) - 5/146 reviewed
+- Complete: [Autophagy](SPKW/SPKW-AUTOPHAGY.md) - 14/123 reviewed
+- Complete: [ANOGA](SPKW/SPKW-ANOGA.md) - D7 + immune genes
+- Complete: [SCHPO](SPKW/SPKW-SCHPO.md) - ATG-meiosis pattern
+- Complete: [DROME](SPKW/SPKW-DROME.md) - case studies
+- Complete: [PSEPK](SPKW/SPKW-PSEPK.md) - bacterial control
+- Complete: [ARATH](SPKW/SPKW-ARATH.md) - plant patterns
+- Complete: [Virus clades](SPKW/SPKW-VIRUS.md) - virus-wide and clade-specific patterns
+- Complete: [PLANTS](SPKW/SPKW-PLANTS.md) - non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
+- Complete: [BPT4](SPKW/SPKW-BPT4.md) - phage semantics
+- Complete: [ECO57](SPKW/SPKW-ECO57.md) - toxin/effector
+- Active: [ViralZone](SPKW/SPKW-VIRALZONE.md) - upstream-source audit: ViralZone feeds GO twice (152 definition xrefs, 147 primary keywords, 107 pages on both routes); measures definition text reuse, found 4 dead xrefs + 1 label typo; per-definition literature audit has not started
 
 ## Curation Recommendations
 
@@ -135,10 +164,11 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
   SPKW-unique GO terms to their source UniProt keywords via the public `keyword2go`
   (external2go) mapping (the GAF stores only the GO term). Produced a tier-annotated
   watch-list of the ~30 process/role keywords that drive plant over-annotation; it is
-  organism-independent (same keywords drove the human/pombe/Arabidopsis subprojects).
+  organism-independent (same keywords drove the human, *S. pombe*, and Arabidopsis subprojects).
 - Reviewed the largest unreviewed Tier A keyword, **`Methyltransferase` → *methylation*
   (GO:0032259)** (92 plant genes), across 4 substrate classes: MET1A (rice, DNA),
-  EZ1 (maize, histone H3K27), CCOAOMT (potato, lignin caffeoyl-CoA), COQ5 (rice, ubiquinone).
+  EZ1 (maize, histone H3K27), CCOAOMT (potato, lignin caffeoyl-CoA),
+  <gene species="ORYSJ" symbol="COQ5">COQ5</gene> (rice, ubiquinone).
 - **Finding: `Methyltransferase → methylation` is a reliable, mechanistically-explained
   over-annotation** (4/4 flagged; 3 MARK_OVER, 1 MODIFY). GO keeps methylation
   substrate-specificity on the molecular-function branch and has **obsoleted** the specific
@@ -155,7 +185,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
   - *Defense/killing* (`Plant defense`/toxin): XA21 R-gene (MODIFY→defense response to
     bacterium), CPS4 phytoalexin synthase (MARK_OVER, STS3 enzyme-vs-product), O6/b-32 RIP
     (toxin activity **legitimate**, kept→rRNA N-glycosylase), CHIB chitinase (mixed).
-  - *Nodulation*: NSP1 (ACCEPT — legitimate core Nod-signaling TF, removal=collateral damage),
+  - *Nodulation*: <gene species="MEDTR" symbol="NSP1">NSP1</gene> (ACCEPT — legitimate core Nod-signaling TF, removal=collateral damage),
     CCAMK (MODIFY→arbuscular mycorrhizal association — rice doesn't nodulate; PPC16-style
     organism-context error), LBA leghemoglobin (O2-carrier ACCEPT, nodulation MARK_OVER),
     ENOD2A (MARK_OVER, expression marker).
@@ -209,7 +239,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 - **New finding — hormone-signaling keywords cut both ways.** Tier alone does not decide a
   hormone-signaling term; the gene's pathway position does. RHT1 (DELLA, a transduction
   *component*) refines the earlier ARF19/PARA rule (those were merely hormone-*responsive*).
-  Running collateral-damage tally now five: CASP1, EME1, PR1B1, RHT1, PATB1.
+  Running collateral-damage tally now five: <gene species="SORBI" symbol="CASP1">CASP1</gene>, EME1, PR1B1, RHT1, PATB1.
 
 ### 2026-05-21
 
@@ -230,9 +260,12 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
   (6%). Only ~15% carry real over-annotation risk; ~79% (B+C) are correct — "SPKW-unique"
   is not a synonym for "over-annotation".
 - Reviewed 5 more genes across broader taxa (grape STS3, Medicago NFP, poplar METK1,
-  Chlamydomonas psaC, sorghum CASP1) — 9 genes / 9 species total, sampling all 4 tiers.
+  Chlamydomonas <gene species="CHLRE" symbol="psaC">psaC</gene>, sorghum
+  <gene species="SORBI" symbol="CASP1">CASP1</gene>) — 9 genes / 9 species total,
+  sampling all 4 tiers.
   The tier predicts the verdict: every Tier A removal was justified; the Tier C removal
-  (CASP1, cell wall organization) discarded correct plant-specific biology.
+  (<gene species="SORBI" symbol="CASP1">CASP1</gene>, cell wall organization)
+  discarded correct plant-specific biology.
 
 ### 2026-02-04
 

@@ -1,5 +1,6 @@
 ---
 title: ProtNLM2 Evaluation
+collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags:
 - EVALUATION
@@ -340,30 +341,91 @@ genes:
 - worm/C28G1.2
 - worm/dpm-1
 - worm/wdr-23
+manifest:
+  slides:
+    - href: PROTNLM_EVALUATION/protnlm_evaluation_slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/XSJYGbkxkq6cVsDY6ifBQb
+      title: Project brief
 ---
 # ProtNLM2 Evaluation
 
+**Bottom line:** ProtNLM2 is Google DeepMind's sequence-to-text model that
+writes protein names, GO terms and function paragraphs straight from sequence,
+and UniProt ships its output on unreviewed entries. We assessed it the way a
+curator would, protein by protein, using the COR/CNN/LSP/UNC/NPI/PLI/REP
+categories of de Crécy-Lagard et al. 2025 (PMID:40703034). As of the review
+snapshot (2026-09-27, commit `c7551cb3db`), the assessment covers 242 prediction
+targets and 288 GO-term assessments, plus separate reviews of the narrative
+function text.
+Correct novel predictions outnumber correct but already-known ones, because the
+purposive cohorts favour proteins without existing annotation, and contradicted
+predictions are a small minority. Narrative text behaves differently from GO
+terms: paralog confusion is common in the function paragraphs and nearly absent
+from the GO claims.
+
+The recurring failure is not a wrong family but a claim pitched above what the
+sequence supports: a catalytic activity where the deposited sequence lacks the
+catalytic region (wheat patatin A0A3B6GK97, Arabidopsis LRR F4JLB7), or a
+localization that cannot exist in the organism (neuron projection in wheat
+F6LAX4). The most common single verdict is uncertain, which is the honest
+result for TrEMBL proteins with no direct characterization.
+
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
-Evaluation of Google's ProtNLM2 predictions across **242 prediction targets and 40 paired human reference records**, with **288 GO-term assessments** and **57 narrative function-review records**. The cross-species cohorts examine biological support, substrate and paralog specificity, domain completeness, and transfer of annotations across species. Narrative records may contain multiple claims with different judgments; they are reported separately from GO terms.
+**[Browse all ProtNLM predictions](../app/predictions/index.html?source_method=ProtNLM2)** — filter prediction sets, narrative reviews, and individual GO claims by species, cohort, and assessment. [Fly records](../app/predictions/index.html?source_method=ProtNLM2&species=DROME) include reviewed empty GO outputs.
 
-**[Cross-cohort results and narrative review index](PROTNLM_EVALUATION/benchmark-results.md)** — deduplicated totals and links to the underlying claim assessments. Thirteen narrative review records contain a PLI judgment; zero PLI among the GO terms does not describe the narrative predictions.
+**Where the numbers are.** The dated counts, deduplicated across overlapping
+cohorts, are in the [cross-cohort results](PROTNLM_EVALUATION/benchmark-results.md)
+and [`benchmark-summary.json`](PROTNLM_EVALUATION/benchmark-summary.json). The
+browser gives the same breakdowns as facet counts over the current reviews:
+[all GO claims](../app/predictions/index.html?dataset=claims&source_method=ProtNLM2), one cohort at a time
+([ARGO-50](../app/predictions/index.html?dataset=claims&cohorts=ARGO50),
+[HORSE40](../app/predictions/index.html?dataset=claims&cohorts=HORSE40),
+[FLY41](../app/predictions/index.html?dataset=claims&cohorts=FLY41),
+[POMBE20](../app/predictions/index.html?dataset=claims&cohorts=POMBE20),
+[NEUROSPORA20](../app/predictions/index.html?dataset=claims&cohorts=NEUROSPORA20),
+[MOD_EVOLUTION20](../app/predictions/index.html?dataset=claims&cohorts=MOD_EVOLUTION20)), or only the
+[contradicted claims](../app/predictions/index.html?dataset=claims&source_method=ProtNLM2&assessment=NPI&assessment=PLI).
+Narrative records can hold several judgments each and are counted separately from
+GO terms. Not every selected target has been reviewed yet; the cross-cohort results
+state how many have, and their per-cohort table should be read with the COR caveat in
+[Reference standard and novelty](#reference-standard-and-novelty).
 
-The original **ARGO-ProtNLM-50** subset contains 50 protein records across 14 taxonomic groups: 41 records contribute 77 GO assessments, and nine have empty GO prediction lists. Its GO results and illustrative case studies are presented below.
+The cross-species cohorts examine biological support, substrate and paralog
+specificity, domain completeness, and transfer of annotations across species. The
+original **ARGO-ProtNLM-50** subset samples 14 taxonomic groups; its findings and
+illustrative case studies are below.
 
-**[Interactive prediction evaluation table](PROTNLM_EVALUATION/protnlm-eval.html)** — filterable/sortable assessments, rationales, and links to all 50 protein reviews.
+**[Interactive prediction evaluation table](PROTNLM_EVALUATION/protnlm-eval.html)** — filterable/sortable assessments, rationales and review links for all 162 prediction-review files across the cohorts. It has 288 GO assessments plus 17 reviewed empty outputs, not only the ARGO-50 subset.
 
-**Independent adjudication, both directions.** Focused [OpenScientist](https://www.openscientist.io) investigations evaluate both uncertain predictions and predictions disputed by the review. Their integration of sequence, structure, comparative biology, and literature provides substantial evidence for adjudication. Examples include the missing kinase domain in ARATH/F4JLB7 and experimental autophagosome localization in the human ortholog of GADMO/A0A8C5FPT8. See the [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) for the individual investigations and their findings.
+**COR is not model novelty.** Here COR means *biologically supported and absent from the target's cached GOA/UniProt record*. It does not mean absent from ProtNLM2's training data (the sense used by de Crécy-Lagard et al.). The COR share differs sharply by cohort:
+
+- 33/89 GO claims (37%) for horse and 18/77 (23%) for ARGO-50;
+- 1/50 for fly;
+- 0/32 for pombe, 0/21 for Neurospora and 0/19 for MOD-evolution.
+
+These differences reflect the targets' existing annotation, which terms each cohort's predictions emit, and how the LSP/COR boundary was applied, as much as the model. They should not be pooled into a single novelty rate. A mechanical GO-closure check finds 3 of the 52 COR calls already entailed by an existing target annotation (HORSE/WDPCP cytoplasm, cilium and cytoskeleton, via an IEA axoneme annotation). See the [per-cohort table](PROTNLM_EVALUATION/benchmark-results.md) and [entailment check](PROTNLM_EVALUATION/cor-goa-entailment.tsv).
+
+**OpenScientist investigations are advisory evidence; the reviews adopted many of their verdicts and departed from others.** Focused [OpenScientist](https://www.openscientist.io) investigations examined the ARGO-50 predictions that were uncertain or disputed at the time. They surfaced useful evidence, such as the missing kinase domain in ARATH/F4JLB7 and the experimental autophagosome annotation on the human ortholog of GADMO/A0A8C5FPT8. The [reconciliation against the current reviews](PROTNLM_EVALUATION/openscientist-reconciliation.md) covers 31 GO terms in 21 genes:
+
+- 13 agree with the current YAML;
+- 5 differ only within the same polarity group (COR vs CNN, or PLI vs NPI);
+- 12 are decided differently by the current reviews, 9 of them NPI → UNC;
+- 1 run failed.
+
+All 12 differing reviews cite the investigation they depart from. Most apply the project's evidence rule that an unestablished transfer is UNC rather than NPI. See the [investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) for the original verdicts.
 
 ## ARGO-ProtNLM-50 key findings
 
 1. **Useful additional annotations can follow from established biology and mapping gaps.** Supported family transfers include chloroplastic EF4 localization for ARTAN/A0A2U1PS28 and a laterality role for MACFA/A0A2K5UJ34. The [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) identifies absent mappings, mappings on unassigned superfamily entries, and unintegrated Pfam signatures as routes by which plausible functions can be absent from GOA. A mapping gap alone does not establish the predicted function: nuclear localization for the 74-residue CAEEL/A0A061AL94 record remains uncertain. Matrix organization for 9PRIM/A0A8C9H4D2 is supported by an experimentally grounded mouse OLFML2A annotation, providing a basis for ortholog transfer beyond localization alone.
 
-2. **Exact matches often lack specificity.** Of the 19 predictions classified as EXACT in the GOA comparison, 13 are LSP and six are CNN. The predicted term can already be present while a more informative, supported annotation is also available.
+2. **Exact matches often lack specificity.** Most predictions classified as EXACT in the GOA comparison are LSP rather than CNN: the predicted term is already present, but a more informative, supported annotation is also available.
 
 3. **Catalytic-domain completeness matters.** Shared domains or family membership can support an inference while missing catalytic regions contradict a specific activity. The wheat patatin and Arabidopsis LRR protein below illustrate why the deposited sequence needs to be examined.
 
-4. **Cross-kingdom localization errors occur.** Neuronal cell body and neuron projection are incompatible with wheat F6LAX4. Its other predictions require separate assessment: protein antigen binding is not restricted to adaptive immunity, and heterodimerization is supported by the conserved PP2A core complex.
+4. **Cross-kingdom errors occur.** Neuronal cell body and neuron projection are incompatible with wheat F6LAX4, and its protein antigen binding prediction transfers an animal immune term from mammalian PP2A literature. Its other predictions require separate assessment: heterodimerization is supported by the conserved PP2A core complex, though less informatively than the existing scaffold annotations.
 
 5. **Core functions transfer more readily than regulatory context.** JMJ22-related sequence and experimental evidence support epigenetic regulation for WHEAT/A0A3B6RKV1, while its four specific light, hormone, and germination predictions remain uncertain. For COLLI/A0A2I0M3K7, TRUB2 family membership does not establish the predicted tRNA substrate.
 
@@ -371,46 +433,11 @@ The original **ARGO-ProtNLM-50** subset contains 50 protein records across 14 ta
 
 ## ARGO-ProtNLM-50 GO results
 
-This table covers only the 77 GO claims in the original ARGO-50 subset. Expanded-cohort GO totals and narrative judgments are in the [cross-cohort results](PROTNLM_EVALUATION/benchmark-results.md).
+Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/), with the project's GO prediction guidelines. About half of the ARGO-50 GO claims are supported, most of the rest are uncertain, and a minority are contradicted. The [ARGO-50 claims view](../app/predictions/index.html?dataset=claims&cohorts=ARGO50) gives the category counts; the dated counts are in the [cross-cohort results](PROTNLM_EVALUATION/benchmark-results.md). The mean assessment score is an ordinal summary, not a calibrated estimate of model accuracy: the stratified sample is small, and many proteins lack direct experimental characterization.
 
-Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/), with the project's GO prediction guidelines.
+The [closure-based GOA comparison](PROTNLM_EVALUATION/bench50_evaluation_results.csv) classifies each prediction's overlap with existing annotation (EXACT, MORE_SPECIFIC, LESS_SPECIFIC, NO_OVERLAP, NOT_IN_GOA). Overlap categories describe the comparison dataset, while assessment categories express biological judgments, and the two diverge in both directions: an exact match can still be less precise than another supported annotation on the same protein, and a prediction with no ontology overlap can still be a sound biological inference across GO aspects.
 
-| Category | Code | CS | Count | Percentage |
-|----------|------|----|-------|------------|
-| Correct novel | COR | 2 | 19 | 24.7% |
-| Correct not novel | CNN | 2 | 8 | 10.4% |
-| Less precise | LSP | 2 | 13 | 16.9% |
-| Uncertain | UNC | 1 | 30 | 39.0% |
-| Nonparalog incorrect | NPI | 0 | 7 | 9.1% |
-| Paralog incorrect | PLI | 0 | 0 | 0.0% |
-| Repetition | REP | 0 | 0 | 0.0% |
-| **Total** | | | **77** | **100%** |
-
-**Supported:** 40/77 (51.9%). **Uncertain:** 30/77 (39.0%). **Contradicted:** 7/77 (9.1%). The mean assessment score is **110/77 = 1.43 out of 2**. This ordinal score is not a calibrated estimate of model accuracy. The stratified sample is small, and many proteins lack direct experimental characterization.
-
-### Results by GOA overlap category
-
-The [closure-based GOA comparison](PROTNLM_EVALUATION/bench50_evaluation_results.csv) classifies annotation overlap for 75 predictions. The table below joins those categories to the current biological assessments by accession and GO term; two additional reviewed predictions have no row in that comparison. Overlap categories describe the comparison dataset, while assessment categories express biological judgments.
-
-| Match category | n | Current assessments |
-|----------------|---|---------------------|
-| EXACT | 19 | CNN: 6, LSP: 13 |
-| MORE_SPECIFIC | 6 | COR: 2, UNC: 4 |
-| LESS_SPECIFIC | 1 | NPI: 1 |
-| NO_OVERLAP | 26 | COR: 10, UNC: 11, NPI: 5 |
-| NOT_IN_GOA | 23 | COR: 7, UNC: 15, NPI: 1 |
-| Not in overlap snapshot | 2 | CNN: 2 |
-
-**Total: 77 predictions.** An exact match can still be less precise than another supported annotation on the same protein; no ontology overlap can still accompany a sound biological inference across GO aspects.
-
-### Error analysis (7 incorrect predictions)
-
-| Biological contradiction | Count | Examples |
-|--------------------------|-------|----------|
-| Neuronal localization in a plant | 2 | Neuronal cell body and neuron projection for WHEAT/F6LAX4 |
-| Intrinsic activity incompatible with the deposited sequence or domain architecture | 5 | Kinase activity for ARATH/F4JLB7; ligase activity for the short RCC1-like DROPS/A0A6I8W8A2 record; PI3P phosphatase activity for MYTGA/A0A8B6GS20; lipase activity for WHEAT/A0A3B6GK97; ligand-gated channel activity for XENNA/D3VIU4 |
-
-These seven predictions are assessed as NPI. The table groups biological contradictions; it does not infer a model error mechanism where the optional `error_type` field is unset. The evidence identifies biological incompatibilities; frequency bias and training-data contamination are not established as their causes.
+The [contradicted ARGO-50 claims](../app/predictions/index.html?dataset=claims&cohorts=ARGO50&assessment=NPI&assessment=PLI) show three patterns. Some are impossible for the organism, such as neuronal localizations and protein antigen binding for the wheat PP2A scaffold F6LAX4. Most assert an intrinsic activity that the deposited sequence or domain architecture cannot support, for example kinase activity for ARATH/F4JLB7, lipase activity for WHEAT/A0A3B6GK97, and dephosphorylation by the auxilin pseudophosphatase region of DANRE/dnajc6. A few transfer a function from the wrong paralog subfamily, such as pollen maturation for the rice BURP protein ORYSI/B8BAB0. These are biological incompatibilities; frequency bias and training-data contamination are not established as their causes, and no error mechanism is inferred where the optional `error_type` field is unset.
 
 ## Illustrative case studies
 
@@ -432,7 +459,7 @@ The [RIC7 locus-identity report](PROTNLM_EVALUATION/F4JLB7-RIC7-locus-identity.m
 
 ### Cross-kingdom error: F6LAX4 (wheat PP2A scaffold)
 
-ProtNLM2 predicts `neuron projection` and `neuronal cell body` for WHEAT/F6LAX4. Wheat has no neurons, so **both localizations are NPI**. The remaining predictions have different evidential standing: **protein heterodimerization is COR**, supported by the PP2A A-C core complex; **chromosome segregation, centromeric localization, and protein antigen binding are UNC**. Protein antigen binding is not an animal-specific function by definition, but binding of the viral small-t antigen inhibitor to human PP2A A scaffolds does not establish antigen-recognition activity. There is no positive evidence for that activity in this wheat protein. This example separates clear taxonomic errors from plausible but unverified transfers.
+ProtNLM2 predicts `neuron projection` and `neuronal cell body` for WHEAT/F6LAX4. Wheat has no neurons, so **both localizations are NPI**. **Protein antigen binding is also NPI**: binding of the viral small-t antigen inhibitor to human PP2A A scaffolds does not establish antigen-recognition activity, and a focused report traced the term to text transfer from mammalian PP2A literature. The remaining predictions have different evidential standing: **protein heterodimerization is LSP**, supported by the PP2A A-C core complex but less informative than the existing PP2A scaffold annotations; **chromosome segregation and centromeric localization are UNC**. This example separates clear taxonomic errors from plausible but unverified transfers.
 
 ### Ontology gap: Q9KZ33 (S. coelicolor sigma factor)
 
@@ -448,13 +475,13 @@ Predictions are post-processed by the **Evidencer**, which applies exclusion cri
 
 The [cross-benchmark family curation](PROTNLM_EVALUATION/family-curation.md) covers all 282 selected protein records and paired references, with 211 structured family reviews and individual assessments for 18 inputs without exact-record PANTHER assignments. The gene-to-family index distinguishes direct sequence assignments from verified canonical gene context.
 
-The [human and model-organism challenge set](PROTNLM_EVALUATION/mod-evolution20.md) selects twenty additional prediction-bearing genes across seven species, with priorities for evolutionary analysis of substrate specificity, catalytic divergence and complex participation. The cohort complements the fly and pombe selections with substrate-specificity, catalytic-divergence and complex-participation cases.
+The [human and model-organism challenge set](PROTNLM_EVALUATION/mod-evolution20.md) selects twenty additional prediction-bearing genes across seven species, with priorities for evolutionary analysis of substrate specificity, catalytic divergence and complex participation.
 
-The [Neurospora cohort](PROTNLM_EVALUATION/neurospora.md) covers 20 genes: all 16 GO/function-bearing entries in the published species subset and four selected localization cases. Its 21 GO predictions, three function paragraphs and ten localization claims are reviewed separately, with a full 51-record source census.
+The [Neurospora cohort](PROTNLM_EVALUATION/neurospora.md) covers every GO/function-bearing entry in the published species subset plus selected localization cases; GO predictions, function paragraphs and localization claims are reviewed separately against a full source census.
 
-The [pombe cohort](PROTNLM_EVALUATION/pombe.md) includes all 20 GO/function-bearing entries among 28 fission-yeast accessions identified in the original export: 32 GO claims and 11 function paragraphs. These currently reviewed/Swiss-Prot entries are API-accessible despite being absent from the published pilot accession list.
+The [pombe cohort](PROTNLM_EVALUATION/pombe.md) includes every GO/function-bearing entry among the fission-yeast accessions identified in the original export. These currently reviewed/Swiss-Prot entries are API-accessible despite being absent from the published pilot accession list.
 
-The [fly cohort](PROTNLM_EVALUATION/fly.md) includes all 41 Drosophila melanogaster genes with GO or function-text predictions in the published species subset, plus a separate tier of 29 location/keyword-only records. Its full 94-record census preserves exact sequences, current FlyBase identifiers and original prediction provenance.
+The [fly cohort](PROTNLM_EVALUATION/fly.md) includes every Drosophila melanogaster gene with GO or function-text predictions in the published species subset, plus a separate tier of location/keyword-only records. Its census preserves exact sequences, current FlyBase identifiers and original prediction provenance.
 
 The horse cohort contains [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads.
 
@@ -469,7 +496,7 @@ The selection covers:
 - Multiple corroboration methods: string match, phmmer, and TM-align.
 - Five case studies from exploratory analysis, described above.
 
-All 50 proteins have AIGR gene reviews and prediction-review YAMLs. The 41 records with GO predictions contribute 77 assessments; nine prediction lists are empty. The [benchmark CSV](PROTNLM_EVALUATION/argo_protnlm_50.csv) records selection metadata. Each protein's `*-protnlm-predictions-review.yaml` preserves the prediction and source-method metadata alongside its assessment, rationale, and supporting sources.
+All 50 proteins have AIGR gene reviews and prediction-review YAMLs; nine prediction lists are empty. The [benchmark CSV](PROTNLM_EVALUATION/argo_protnlm_50.csv) records selection metadata. Each protein's `*-protnlm-predictions-review.yaml` preserves the prediction and source-method metadata alongside its assessment, rationale, and supporting sources.
 
 ## Overlap with existing AIGR reviews
 
@@ -479,11 +506,37 @@ The exploratory comparison against the 1,334-review AIGR collection found eight 
 
 Prediction sidecars are checked with `just validate-predictions`, including publication titles, source excerpts, local paths, and assessment scores. The CI artifact `prediction-evidence-validation` records those checks.
 
-The [function-prediction review skill](https://github.com/ai4curation/ai-gene-review/blob/main/.claude/skills/review-function-prediction/SKILL.md) defines the review criteria. Assessments integrate primary literature, sequence and domain evidence, structural analyses, experimentally grounded curated annotations, and focused OpenScientist investigations. These investigations synthesize multiple lines of evidence and carry substantial weight when their findings address the prediction. Reviews cite the relevant analyses and their limitations, distinguishing computational inference from experimental validation. A well-supported family transfer can establish a reasonable function or localization inference without a new experiment on every target; the rationale identifies the characterized relative, the target's family evidence, and the limits of transfer.
+The [function-prediction review skill](https://github.com/ai4curation/ai-gene-review/blob/main/.claude/skills/review-function-prediction/SKILL.md) defines the review criteria. Assessments integrate primary literature, sequence and domain evidence, structural analyses, experimentally grounded curated annotations, and focused OpenScientist investigations. OpenScientist reports are treated as evidence to weigh, not as verdicts. The per-gene review YAML is the call of record, and the [reconciliation](PROTNLM_EVALUATION/openscientist-reconciliation.md) shows that most ARGO-50 OpenScientist verdicts were not adopted. Reviews cite the relevant analyses and their limitations, distinguishing computational inference from experimental validation. A well-supported family transfer can establish a reasonable function or localization inference without a new experiment on every target; the rationale identifies the characterized relative, the target's family evidence, and the limits of transfer.
 
 Each prediction is assessed at the specificity of its actual GO term. Extracellular localization does not establish matrix organization, and a catalytic fold does not establish a substrate. Conversely, absence of intrinsic catalytic activity does not exclude participation in the corresponding biological process through a regulatory complex. Missing evidence leads to uncertainty unless there is contrary evidence. Broad but true annotations are not biological errors.
 
 COR and CNN distinguish absence versus presence of an equivalent annotation in the **target's cached GOA/UniProt records**, after biological support has been established. LSP requires an existing, supported, more specific annotation. These labels do not establish whether an example was in the model's training data. The assessment uses the available evidence, including studies published after the prediction release; it is not a time-restricted prospective benchmark.
+
+**PLI versus NPI.** One rule applies:
+
+- **PLI:** the target retains the domain and catalytic architecture of its family, and the prediction names the activity or substrate of a *different paralogous subfamily*. Examples are the wrong modifier for an E2 enzyme and the wrong substrate for a carrier.
+- **NPI:** the prediction is refuted for reasons other than paralog confusion. Examples are a missing catalytic domain or residue, a taxon-impossible term, or a pseudoenzyme.
+- **Both reasons apply:** a truncated record would also carry the wrong subfamily's activity. Here the architecture defect decides the call (NPI), and the review should say that the subfamily error is secondary.
+
+**Known inconsistency, not yet resolved.** Two E2 cases are handled differently:
+
+- human/UBE2F (F8WDQ9) ubiquitin-protein transferase activity is NPI. Its rationale combines the missing catalytic Cys116 in the 101-residue record with NEDD8-not-ubiquitin specificity.
+- NEUCR/NCU04302, a SUMO E2, has its ubiquitin-specific narrative claims scored PLI.
+
+Under the rule above, UBE2F stays NPI on architecture grounds. Its NEDD8 argument is a PLI-type reason, and the review does not separate the two. There are 0 PLI among the 288 GO claims and 13 narrative records with a PLI judgment, so the boundary has so far mostly been applied to narrative text.
+
+**Fragment-driven NPIs.** Both MOD-evolution GO NPIs rest partly on the selected TrEMBL product being short or incomplete:
+
+- UBE2F F8WDQ9: 101 residues;
+- mouse Spcs2 A0A140LHW5: 74 residues, lacking the reference transmembrane architecture.
+
+These NPIs judge the deposited sequence, not the gene. They would not transfer to the full-length product.
+
+### Reference standard and novelty
+
+- **Who made the reference calls.** Every assessment is an AI-agent review (coding agents following the function-prediction review skill), grounded in cited literature, cached GOA/UniProt records and reproducible sequence analyses. The categories therefore measure biological validity as judged by that review standard, fixed in each review file before it is counted here. No human curator has re-scored a subset.
+- **OpenScientist's role.** OpenScientist is a separate AI agent run on blinded, neutral hypotheses. Its reports are evidence inputs, not a second rater. Of the 30 ARGO-50 terms it gave a verdict on, the current reviews agree with 13, fall in the same polarity group for 5 and decide 12 differently, citing the report in each case. Horse and fly OpenScientist audits have since been incorporated into the reviews of five horse and five fly genes.
+- **GOA snapshot for COR/CNN.** Novelty is judged against each target's cached `*-goa.tsv`. The latest annotation date in 134 of the 162 files is in 2026; 24 files are empty. ProtNLM2 was trained on UniProt 2023_04. COR therefore means absent from a 2026 target record, not from the training data. A COR term may still have been learnable from annotated orthologs in the training release.
 
 ## References
 
@@ -496,13 +549,17 @@ COR and CNN distinguish absence versus presence of an equivalent annotation in t
 | Resource | Role |
 |----------|------|
 | [Benchmark CSV](PROTNLM_EVALUATION/argo_protnlm_50.csv) | Sampling metadata for all 50 proteins |
-| [GOA overlap comparison](PROTNLM_EVALUATION/bench50_evaluation_results.csv) | Closure-based comparison for 75 predictions |
-| [Prediction evaluation table](PROTNLM_EVALUATION/protnlm-eval.html) | Current 77 GO assessments across all 50 records |
+| [GOA overlap comparison](PROTNLM_EVALUATION/bench50_evaluation_results.csv) | Closure-based overlap comparison for the ARGO-50 predictions |
+| [Prediction evaluation table](PROTNLM_EVALUATION/protnlm-eval.html) | Current GO assessments across all ProtNLM2 prediction-review files and cohorts, including reviewed empty outputs |
+| [Cross-cohort summary generator](PROTNLM_EVALUATION/build_benchmark_summary.py) | Computes the assessed-target counts, totals and per-cohort table |
+| [COR entailment check](PROTNLM_EVALUATION/cor_goa_entailment.py) | is_a/part_of check of COR calls against each target's cached GOA ([TSV](PROTNLM_EVALUATION/cor-goa-entailment.tsv)) |
 | [UniProt ProtNLM documentation](https://www.uniprot.org/help/ProtNLM) | Prediction method and corroboration pipeline |
 | [REST API fetch pipeline](PROTNLM_EVALUATION/fetch_protnlm_api.py) | Retrieval of raw prediction and corroboration records |
 | [Exploratory notebook](PROTNLM_EVALUATION/protnlm_summary.ipynb) | Dataset exploration |
 | [Benchmark notebook](PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb) | Benchmark overlap analysis |
-| [Slide deck](PROTNLM_EVALUATION/protnlm_evaluation_slides.md) | Exploratory presentation; assessment totals and case judgments on this page reflect the current reviews |
-| [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) | Focused investigations integrating multiple lines of evidence to inform prediction assessments |
+| [Slide deck](PROTNLM_EVALUATION/protnlm_evaluation_slides.html) (Marp source: [protnlm_evaluation_slides.md](PROTNLM_EVALUATION/protnlm_evaluation_slides.md)) — AI generated | Exploratory presentation; assessment totals and case judgments on this page reflect the current reviews |
+| [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) | Original ARGO-50 OpenScientist verdicts (advisory evidence) |
+| [OpenScientist reconciliation](PROTNLM_EVALUATION/openscientist-reconciliation.md) | Term-by-term comparison of those verdicts with the current reviews ([generator](PROTNLM_EVALUATION/reconcile_openscientist.py)) |
+| [Archive](PROTNLM_EVALUATION/archive/README.md) | Superseded bootstrap script and early triage CSV; do not run |
 | [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) | Domain-to-GO mapping coverage across the benchmark |
 | [Data history](PROTNLM_EVALUATION/data_history.md) | XML/API source provenance |

@@ -77,3 +77,38 @@
 - Interaction language should be assay-calibrated: use "co-immunoprecipitates with" or
   "associates with" for TMC1, CIB2, LHFPL5 and PCDH15 unless direct binding is separately
   demonstrated. Do not imply a single stable complex containing every partner.
+
+## Finishing pass (2026-09-04, PAINT no-IBA project)
+
+Final quality pass over LOXHD1-ai-review.yaml for the PAINT "human no-IBA" project.
+
+- Re-checked all six GOA-derived entries (all ACCEPT) and the two proposed NEW ISO
+  refinements (GO:0050910 detection of mechanical stimulus involved in sensory
+  perception of sound; GO:0032426 stereocilium tip); all actions were found justified
+  and retained. The mouse-vs-human evidence boundary is consistently stated
+  [PMID:33707295 "Using two mouse mutants of LOXHD1-PLAT10, we demonstrated here that
+  inner hair cell (IHC) mechanotransduction currents were drastically reduced at P11,
+  in contrast to the wild-type (WT)-like MET currents observed at P7."].
+- Cleared the last validation warning by adding
+  file:human/LOXHD1/LOXHD1-deep-research-falcon.md as a reference and citing it in the
+  GO:0050910 NEW entry. The reliance is genuine: the deep-research synthesis
+  independently supports the no-molecular-function decision
+  [file:human/LOXHD1/LOXHD1-deep-research-falcon.md "No catalytic residues, reaction,
+  substrate specificity, kinetic constants, or small-molecule products have been
+  established."] and the ISO framing
+  [file:human/LOXHD1/LOXHD1-deep-research-falcon.md "equivalent nanoscale localization
+  in human cochlear tissue has not been demonstrated in the retrieved sources"]. Its
+  reference_review notes that it is grounded chiefly in the Research Square preprint of
+  the Wang et al. work whose peer-reviewed version (PMID:39256406) this review cites
+  directly.
+- Validation now clean (0 errors, 0 warnings); status advanced DRAFT -> COMPLETE (set
+  by hand to the update-status tool's expected value; the tool only reports mismatches).
+- Notable curation finding: the "no-IBA" premise does not hold. PTHR45901-paint.tsv
+  carries IBDs at PTN000093787 (GO:0032420 and GO:0007605, taxon Amniota, dated
+  20220323) and the human GOA contains the matching IBA rows since 2022. Both were
+  adjudicated SOUND in the new family review
+  (interpro/panther/PTHR45901/PTHR45901-review.yaml); the finer 2021/2024-era terms
+  (GO:0050910, GO:0032426) are recorded there as subfamily-scoped term_assessments for
+  the LOXHD1 clade (PTHR45901:SF3), with the explicit warning that auditory terms must
+  never migrate to the family root - PANTHER's official family name ("PROTEIN
+  CBG12474") comes from an uncharacterized nematode member.

@@ -431,6 +431,13 @@ def make_summary(
         "ptn_ids": collect_ptn_ids(data),
         "stats": collect_module_stats(data),
         "qc": qc,
+        "model_types": sorted(
+            {
+                str(m.get("model_type"))
+                for m in as_list(data.get("executable_models"))
+                if isinstance(m, dict) and m.get("model_type")
+            }
+        ),
     }
 
 
@@ -516,12 +523,26 @@ def render_module(
         for duplicate_id in collect_duplicate_ids(data)
     ]
 
+    from ai_gene_review.render_models import (
+        model_summaries,
+        models_dir_for,
+        render_model_pages,
+    )
+
+    models_dir = models_dir_for(output_dir)
+    executable_models = model_summaries(
+        data, yaml_path, output_path, models_dir, from_file=output_path
+    )
+    render_model_pages(data, yaml_path, output_path, models_dir)
+
     template = _environment(template_path).get_template(template_path.name)
     html = template.render(
         data=data,
         module=data.get("module", {}),
         stats=stats,
         qc=qc,
+        executable_models=executable_models,
+        models_index_href=relative_href(output_path, models_dir / "index.html"),
         source_file=yaml_path.as_posix(),
         output_path=output_path.as_posix(),
         index_href=relative_href(output_path, index_path),
@@ -594,7 +615,17 @@ def render_all_modules(
     # Build the gene-review index once and reuse it across all modules.
     gene_index = index_gene_reviews(genes_dir)
 
+    from ai_gene_review.render_models import (
+        clean_model_html,
+        model_summaries,
+        models_dir_for,
+        render_models_index,
+    )
+
+    models_dir = models_dir_for(output_dir)
+    model_rows: list[dict[str, Any]] = []
     clean_module_html(output_dir)
+    clean_model_html(models_dir)
     print(f"Found {len(yaml_files)} module files to render")
     for yaml_file in yaml_files:
         try:
@@ -613,6 +644,15 @@ def render_all_modules(
             summaries.append(
                 make_summary(data, yaml_file, output_path, index_path, qc=qc)
             )
+            model_rows.extend(
+                model_summaries(
+                    data,
+                    yaml_file,
+                    output_path,
+                    models_dir,
+                    from_file=models_dir / "index.html",
+                )
+            )
             output_paths.append(output_path)
 
             if warnings:
@@ -627,6 +667,12 @@ def render_all_modules(
 
     index_output = render_modules_index(sorted(summaries, key=lambda item: item["title"]), output_dir)
     output_paths.append(index_output)
+    models_index = render_models_index(
+        sorted(model_rows, key=lambda m: (m["module_title"], m["title"])),
+        models_dir,
+        modules_index=index_path,
+    )
+    print(f"Rendered {len(model_rows)} executable model(s); index at {models_index}")
     print(f"\nRendered {len(output_paths) - 1}/{len(yaml_files)} modules to {output_dir}")
     print(f"Rendered module index to {index_output}")
 

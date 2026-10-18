@@ -126,3 +126,7 @@ UniProt DR: Reactome R-HSA-2408557 "Selenocysteine synthesis."
    the 40S ribosome to enable EEFSEC-mediated Sec-tRNA(Sec) delivery.
 </content>
 </invoke>
+
+## 2026-10-09 review completion (claude-code)
+
+Re-reviewed the INITIALIZED review against the disease literature (see history/genes/human/SECISBP2/). Status set COMPLETE; changes are summarized in the history record.

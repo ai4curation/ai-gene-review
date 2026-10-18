@@ -106,3 +106,15 @@ Journal of research for the AI GO-annotation review of *Saccharomyces cerevisiae
 - falcon deep-research launched via `just deep-research-falcon yeast NVJ3 --fallback perplexity-lite`.
 - Independently grounded review in UniProt + GOA + cached primary literature (PMID:26283797,
   PMID:29146766) + PubMed metadata for the 2026 preprint (PMID:41542480). No fabrication.
+
+## 2026-09-28 IBA/new-literature re-review
+
+- Current QuickGO/GOA has no `GO_REF:0000033` IBA rows for Nvj3, so there is no PAINT node
+  placement to review.
+- UniProt similarly carries no PANTHER/IBA rows; its only unsupported-by-direct-yeast-evidence
+  rows are the existing PI3P-binding ISS transfer from Mdm1 and an ISS vacuole-ER tethering row
+  that is not present in the current GOA TSV.
+- PMID:41542480 is still a 2026 bioRxiv preprint and is already present only as cautious
+  context for the Dga1/DAG axis.
+- PMID:42375028 is a 2026 J Cell Sci review on the nucleus-vacuole junction; it is useful
+  background, but the cached abstract does not add a new direct Nvj3 molecular function.

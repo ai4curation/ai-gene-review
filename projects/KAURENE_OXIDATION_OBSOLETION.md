@@ -1,10 +1,35 @@
 ---
 title: "Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
+species: [ARATH, ORYSJ]
+sidecars:
+  slide_assets:
+    - KAURENE_OXIDATION_OBSOLETION/slides/ko-reaction.svg
+    - KAURENE_OXIDATION_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/5BmmH5Vkxba1QVEiczUKnU
+      title: Project brief
 ---
 
 # Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted the process term GO:0010241 *ent-kaurene
+oxidation to kaurenoic acid*, which restated the three oxidations carried out
+by one enzyme, ent-kaurene oxidase. Its process content maps to GO:0009686
+*gibberellin biosynthetic process*, and its catalytic content already has the
+function term GO:0052615 *ent-kaurene oxidase activity*. We recorded the two
+experimental annotations the change touches (Arabidopsis KO, IMP, to be
+remapped to GO:0009686; rice CYP701A6, IDA from an enzyme assay, to be
+removed) and the one InterPro2GO mapping (IPR044225) that still points at the
+old term. UniProt and TAIR have already actioned both annotations upstream,
+and OLS now lists GO:0010241 as obsolete (checked 2026-09-26). Scoped, not yet
+started: neither gene has a review in this repo, and the only open item is
+redirecting the IPR044225 mapping, preferably to GO:0052615.
 
 ## Overview
 
@@ -144,3 +169,5 @@ the upstream issue.
   AI Gene Review files exist for either gene. OLS confirms GO:0010241,
   GO:0009686, and GO:0052615 are all currently live; InterPro IPR044225
   confirmed via REST.
+- 2026-09-26 — OLS now returns GO:0010241 as obsolete, with the reason
+  pointing to GO:0009686. Still no AI Gene Review files for either gene.

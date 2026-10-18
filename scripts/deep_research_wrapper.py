@@ -58,14 +58,17 @@ def deep_research_client_command() -> list[str]:
     """Return the command prefix for invoking deep-research-client.
 
     Use uvx by default so research jobs do not need to sync this repository's
-    large Python environment. Set DEEP_RESEARCH_CLIENT_CMD to override, e.g.
-    DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
+    large Python environment. Request Python >=3.12,<4.0 explicitly, overriding
+    the ambient/UV_PYTHON default. DEEP_RESEARCH_CLIENT_UVX_FROM overrides the
+    package; DEEP_RESEARCH_CLIENT_CMD replaces the whole command (including
+    interpreter selection), e.g. DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
     """
     override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
     if override:
         return shlex.split(override)
     package = os.environ.get("DEEP_RESEARCH_CLIENT_UVX_FROM", DEFAULT_DRC_PACKAGE)
-    return ["uvx", "--from", package, "deep-research-client"]
+    # The client requires Python >=3.12; do not use an older ambient interpreter.
+    return ["uvx", "--python", ">=3.12,<4.0", "--from", package, "deep-research-client"]
 
 
 def parse_uniprot_gene_name(uniprot_file: Path) -> str:
@@ -316,7 +319,7 @@ def run_deep_research(
         )
 
         label = f"[fallback {i}/{len(providers_to_try)-1}] " if is_fallback else ""
-        print(f"{label}Running: {' '.join(cmd)}")
+        print(f"{label}Running: {shlex.join(cmd)}")
         print(f"{label}Timeout: {timeout}s")
 
         try:

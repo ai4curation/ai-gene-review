@@ -8,9 +8,11 @@ autolink_gene_symbols: false
 
 # SL-0090 Cytoskeleton → GO:0005856
 
-59 SL-unique annotations reviewed, **16 with a hard issue (27%)**. This is where the SL and
-[SPKW](../SPKW.md) failure modes meet: the flagged cases split cleanly into two patterns, one
-of which is SPKW's regulatory conflation wearing a cellular-component costume.
+As of 2026-10-05, 110 SL-unique cytoskeleton annotations have been reviewed and **18 carry a
+hard issue (16%)**. The focused 2026-08 snapshot had 59 reviewed rows and 16 hard issues (27%).
+This is where the SL and [SPKW](../SPKW.md) failure modes meet: the flagged cases split
+cleanly into two patterns, one of which is SPKW's regulatory conflation wearing a
+cellular-component costume.
 
 ## Pattern A — under-specification (the SL-0162 pattern)
 

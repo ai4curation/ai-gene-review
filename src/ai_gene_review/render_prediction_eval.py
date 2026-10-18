@@ -8,13 +8,13 @@ Usage::
 
     # Render all ProtNLM prediction reviews
     python -m ai_gene_review.render_prediction_eval \\
-        'genes/*/*-protnlm-predictions-review.yaml' \\
+        'genes/*/*/*-protnlm-predictions-review.yaml' \\
         -o pages/protnlm-eval.html \\
-        --title 'ARGO-ProtNLM-50 Prediction Evaluation'
+        --title 'ProtNLM Prediction Evaluation'
 
     # Render DeepECTF reviews from a specific project
     python -m ai_gene_review.render_prediction_eval \\
-        'projects/BIOREASON_COMPARISON/**/genes/*/*-det-predictions-review.yaml' \\
+        'projects/BIOREASON_COMPARISON/**/genes/*/*/*-det-predictions-review.yaml' \\
         -o pages/deepectf-eval.html
 
     # Default: all *-predictions-review.yaml under genes/
@@ -176,8 +176,8 @@ def main() -> None:
     parser.add_argument(
         "pattern",
         nargs="?",
-        default="genes/*/*-predictions-review.yaml",
-        help="Glob pattern for prediction review YAMLs (default: genes/*/*-predictions-review.yaml)",
+        default="genes/*/*/*-predictions-review.yaml",
+        help="Glob pattern for prediction review YAMLs (default: genes/*/*/*-predictions-review.yaml)",
     )
     parser.add_argument(
         "-o", "--output",

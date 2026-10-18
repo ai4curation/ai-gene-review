@@ -14,7 +14,7 @@
 
 ## Executive Summary
 
-PTHR44167 is a broad family of **serine/threonine protein kinases** whose major characterized clades are the **CHK2/Rad53/Cds1 DNA-damage and replication checkpoint kinases** and the **CDC7/DDK (Dbf4-dependent kinase) replication-initiation kinases**. The unifying activity is **protein serine/threonine kinase activity**; the family's defining biology centers on cell-cycle and genome-integrity control. The representative structure (6ya7) is a Cdc7-Dbf4 (DDK) complex, reflecting one of the two principal clades.
+PTHR44167 is a broad family of **serine/threonine protein kinases** whose major characterized clades are the **CHK2/Rad53/Cds1 DNA-damage and replication checkpoint kinases** and the **CDC7/DDK (Dbf4-dependent kinase) replication-initiation kinases**. Catalytically competent members have **protein serine/threonine kinase activity**, but the retrieved sequence-classifier group also includes divergent and probable inactive kinase-like members. Cell-cycle and genome-integrity roles characterize particular branches and are not a universal family function. The representative structure (6ya7) is a Cdc7-Dbf4 (DDK) complex, reflecting one of the two principal clades.
 
 The S. pombe anchor gene, **cds1** (Q09170), is the fission-yeast **DNA-replication (intra-S) checkpoint effector kinase** and ortholog of human CHEK2, and is placed in subfamily **PTHR44167:SF24 (SERINE/THREONINE-PROTEIN KINASE CHK2)** by its UniProt PANTHER cross-reference. The CHK2 subfamily (SF24) is clearly distinct from the CDC7 subfamily (SF23) within the same PANTHER family — an important distinction, because Cds1 (CHK2-type checkpoint effector) and Hsk1 (CDC7-type DDK) have entirely different functions despite sharing the family. For cds1, the catalytic Ser/Thr-kinase MF and the checkpoint/DNA-damage BP transfer well within SF24; localization terms warrant the usual scrutiny.
 
@@ -54,18 +54,20 @@ This is the subfamily of the S. pombe anchor gene **cds1 (Q09170)**, confirmed b
 
 ## IBA Annotation Assessment
 
+This table preserves the historical 2026-06-07 Cds1 assessment; the focused A0BFB4 update below does not re-review Cds1 or independently establish these node placements.
+
 Cds1 receives the following IBA (GO_REF:0000033, PANTHER node PTN005196447) annotations. Seeds for the kinase/process terms include strong orthologs: human CHEK2 (UniProtKB:O96017), Drosophila lok (FB:FBgn0019686), mouse Chek2 (MGI:MGI:2152419), and PomBase entries.
 
 | GO ID | Label | Aspect | Flags | Our action | Assessment |
 |-------|-------|--------|-------|------------|------------|
-| GO:0004674 | protein serine/threonine kinase activity | MF | (none) | ACCEPT | Correct and core. Family-wide catalytic activity, strongly seeded (2 seeds, same-subfamily). Cds1 kinase activity is experimentally established (Thr328 activation-loop autophosphorylation). |
+| GO:0004674 | protein serine/threonine kinase activity | MF | (none) | ACCEPT | Correct and core. Target catalytic activity is directly supported; donor count does not determine the validity of the ancestral assertion. Cds1 kinase activity is experimentally established (Thr328 activation-loop autophosphorylation). |
 | GO:0005634 | nucleus | CC | LOCALIZATION | ACCEPT | Correct. Cds1 acts in the nucleus at chromatin/stalled forks; multiple same-subfamily seeds support nuclear localization. |
 | GO:0044773 | mitotic DNA damage checkpoint signaling | BP | (none) | MODIFY | Essence correct but term placement refined. Cds1's primary role is the **DNA replication / intra-S (S/M) checkpoint**; the curated review prefers a replication-checkpoint term (e.g. GO:0033314) over the generic DNA-damage checkpoint phrasing, hence MODIFY rather than plain ACCEPT. |
 | GO:0005737 | cytoplasm | CC | LOCALIZATION | KEEP_AS_NON_CORE | Reasonable but non-core. Cds1 is an abundant soluble kinase; its functionally relevant site is the nucleus, so cytoplasm is retained as non-core. |
 
 **CROSS_SUBFAMILY risk**: None of cds1's IBAs are flagged CROSS_SUBFAMILY; they originate within the CHK2 subfamily (PTN005196447) with several same-subfamily seeds. There is no leakage from the CDC7/DDK subfamily.
 
-**Curatorial note**: The key risk in this family is not the cds1 IBAs themselves (which are sound for a CHK2-type checkpoint kinase) but cross-clade confusion between the CHK2 checkpoint-effector subfamily (SF24) and the CDC7/DDK replication-initiation subfamily (SF23). The MF (kinase activity) is family-wide and correct; the checkpoint BP is appropriate for SF24 and was refined (MODIFY) to the replication-checkpoint sense for cds1; the localization terms are accepted (nucleus) or kept non-core (cytoplasm) in line with the curated review.
+**Curatorial note**: The key risk in this family is not the cds1 IBAs themselves (which are sound for a CHK2-type checkpoint kinase) but cross-clade confusion between the CHK2 checkpoint-effector subfamily (SF24) and the CDC7/DDK replication-initiation subfamily (SF23). Kinase activity is supported for catalytically competent members; the checkpoint BP is appropriate for SF24 and was refined (MODIFY) to the replication-checkpoint sense for cds1; the localization terms are accepted (nucleus) or kept non-core (cytoplasm) in line with the curated review.
 
 ## Review Status
 
@@ -73,3 +75,13 @@ Cds1 receives the following IBA (GO_REF:0000033, PANTHER node PTN005196447) anno
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER family metadata/members, UniProt, the cds1 gene review (genes/SCHPO/cds1), and the PANTHER IBA propagation table.
+
+## Focused A0BFB4 update — 2026-09-20
+
+The current UniProt/InterPro sequence classification and the local membership index place the Paramecium kinase A0BFB4 in **PTHR44167:SF18 (PROTEIN KINASE DOMAIN-CONTAINING PROTEIN)**. That verified identifier remains unchanged in the structured family record. It does not establish which PAINT ancestral node supplied the gene's annotations.
+
+The actual PANTHER tree obtained through the `treeinfo` POST endpoint for **PTHR24348** explicitly identifies A0BFB4/GSPATT00028266001 as leaf **PTN002805316**, with propagated subfamily PTHR24348:SF22. The inspected path is PTN002805221 → **PTN000681272** → PTN007795585 → PTN008401646 → PTN001218730 → PTN007795752 → PTN002805316. The four autophagy process/location annotations originate at PTN000681272. This confirms descent from the annotated ancestor and supports the inherited functions. The compact target architecture and differing sequence-classifier family do not demonstrate loss of autophagy.
+
+The gene review therefore accepts autophagosome assembly, regulation of autophagy, phagophore assembly site and autophagosome annotations. A focused adjudication remains requested to explain the cross-resource classification discrepancy. This update neither assigns autophagy to all PTHR44167 members nor substitutes the PAINT-tree family for the verified HMM-family identifier. Family-wide protein phosphorylation remains unresolved in the structured record because the broader member set includes probable inactive kinases. Exact A0BFB4 substrates remain unknown.
+
+Evidence: [target placement record](../../../genes/PARTE/A0BFB4/A0BFB4-placement-evidence.md), [retained actual lineage and live classification checks](../../../projects/TREEGRAFTER/rereview-2026-09-20/a0bfb4-paint-classification-check.json), and [current gene review](../../../genes/PARTE/A0BFB4/A0BFB4-ai-review.yaml). Other family branches and historical Cds1 action choices were outside this focused update.

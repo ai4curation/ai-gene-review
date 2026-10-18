@@ -69,3 +69,30 @@ The Falcon deep-research report (`GID1A-deep-research-falcon.md`) corroborates a
 - **New mechanistic detail (2025)**: GA–GID1A binding to the DELLA GRAS region can compete with IDD transcription-factor binding (Y3H attenuation of IDD1–RGA), extending DELLA neutralization beyond degradation. Captured as context; no new GO ID added.
 
 No `UNDECIDED` annotations were present, so none required resolution. No new GO annotation could be added with a verifiable GOA/UniProt ID (a dedicated "gibberellin receptor activity" MF still does not exist in GO and remains in `proposed_new_terms`). The report does not contradict the negated `response to gibberellin` annotation (redundancy masking) or the hypoxia HEP over-annotation call. New references: Shani et al. 2024 (Plant Physiol), Alabadí & Sun 2025 (Annu Rev Plant Biol), Dahal et al. 2025 (PNAS) — cited within the falcon report rather than added as standalone PMIDs.
+
+## 2026-10-06 re-review (consistency with GID1B/GID1C)
+- Fixed the PMID:18827182 IGI row: the WITH locus AT4G02780 is GA1 (ent-copalyl diphosphate synthase, ga1-3 background), not SLY1.
+- Fixed the PMID:17194763 protein-binding summary: Q9STX3 is SLY1/GID2, not RGL2.
+- The NOT|involved_in response to gibberellin row (IGI with GID1B, PMID:24961590) is now REMOVE, as on GID1B/GID1C. It is contradicted by receptor biochemistry [PMID:16709201 "These results demonstrate that all three AtGID1s functioned as GA receptors in Arabidopsis"] and by the same paper [PMID:24961590 "the gid1a gid1c pistils displayed little or no GA response"].
+- All GO:0005515 rows changed from KEEP_AS_NON_CORE to REMOVE under the protein-binding policy. No informative MF exists for receptor-DELLA binding, and being a GARU substrate is not a GID1A molecular function.
+
+## 2026-10-15 OpenScientist hypothesis run: catalytic inactivity
+
+Report: `GID1A-hypotheses/gid1a-catalytic-inactivity/openscientist.md` (3 iterations, ~21 min). The hypothesis was: "GID1A is a catalytically inactive HSL/AADAC-family alpha/beta-hydrolase whose catalytic His position is a Val." Its local bioinformatics was withheld from the prompt. GID1A has no `-bioinformatics/` folder; the comparison point is the PTHR23024 (GID1) family review in PR #5027.
+
+**Verdict from the run:** supported (strongly).
+- Needleman-Wunsch alignments against human AADAC (P22760) and HSL (Q05469) both place the active enzymes' catalytic His on GID1A **Val319**. The equivalent residues are GID1B Asn338 and GID1C Ile317.
+- Parsing PDB 2ZSH, the run reports that no His nitrogen lies within 8.5 Å of the Ser191 Oγ.
+
+**Checked here against `GID1A-uniprot.txt`:**
+- The residue claims are correct. Positions 191/289/319 are S/D/V. Residues 113-115 are the HGG oxyanion motif. The nucleophile elbow is AGDSSGG.
+- UniProt annotates only two ACT_SITE residues, 191 and 289, and no catalytic His. This corroborates the absence of an annotated general base; the Val at 319 itself comes from the sequence, not from the active-site annotation. It agrees with the Val319 finding in the PTHR23024 family review (PR #5027, not yet merged).
+- I did not re-run the alignments or the PDB distance measurements.
+- The paralog residues (GID1B Asn338, GID1C Ile317 at the AADAC His373 position) are the residue-level basis for the GID1B review's IBA hydrolase REMOVE, whose propagation_review names AADAC (P22760) as SUPPORTS_SOURCE_BUT_NOT_TARGET.
+
+**Errors in the report, not to be propagated:**
+- It says GID1B and GID1C have "no GA-binding MF" and only GO:0016787. This is false. Both GOA files and both reviews carry GO:0010331 gibberellin binding.
+- Its triad comparison table marks the GID1B acid as Asp, although its own Finding 1 footnote says the GID1B acid position fell in an alignment gap.
+- It says no primary paper reports the presence or absence of esterase activity. The original rice GID1 paper is cited as describing the protein as HSL-like "without hydrolase activity" [PMID:24961590 "GID1 was first described in rice as a nuclear localized protein similar to hormone-sensitive lipase family without hydrolase activity"]. The Falcon deep-research file reports a negative p-nitrophenyl acetate assay. So the "no residual activity" clause has at least a published negative claim behind it. I have not verified the primary assay, because PMID:16193045 has no cached text.
+
+**Curation consequence:** no action changes. GO:0016787 hydrolase activity (IEA, GO_REF:0000002) is already REMOVE in this review; the report is now cited as a reference and in that row's supported_by as residue-level support. The proposed "gibberellin receptor activity" MF still has no GO term.

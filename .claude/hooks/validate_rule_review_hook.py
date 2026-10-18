@@ -14,8 +14,10 @@ https://docs.claude.com/en/docs/claude-code/hooks#exit-code-2-behavior
 import sys
 import json
 import subprocess
-import os
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hook_paths import find_repo_root, hook_script_root  # noqa: E402
 
 
 def main():
@@ -47,9 +49,9 @@ def main():
         sys.exit(0)
 
     # Run the validation command
-    project_root = os.path.dirname(
-        os.path.dirname(os.path.dirname(__file__))
-    )
+    # Root derived from the validated file, so a worktree validates itself rather than
+    # whichever checkout this hook script lives in.
+    project_root = str(find_repo_root(Path(file_path), hook_script_root(__file__)))
 
     cmd = ["uv", "run", "ai-gene-review", "rules-validate", str(file_path)]
 

@@ -193,7 +193,7 @@ This distinction — dockerin-anchored vs. free CBM-targeted — is exactly what
 
 # Status and future directions
 
-**Status — complete:**
+**Status — all annotations decided (none PENDING); 21 of 22 review files still `DRAFT`:**
 
 - 17 *A. thermocellus* genes reviewed and validated
 - 5 *C. cellulovorans* genes reviewed and validated (after pruning mis-mapped IDs)

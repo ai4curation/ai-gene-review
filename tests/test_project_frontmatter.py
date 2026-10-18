@@ -14,6 +14,12 @@ import re
 import pytest
 import yaml
 
+from ai_gene_review.render_projects import (
+    MANIFEST_ENTRY_KEYS,
+    MANIFEST_KINDS,
+    manifest_errors,
+)
+
 PROJECTS_DIR = Path(__file__).resolve().parents[1] / "projects"
 
 #: Controlled vocabulary for the project lifecycle ``maturity`` field.
@@ -34,6 +40,12 @@ VALID_REVIEW_STATUS = {"READY", "CHANGES_REQUESTED"}
 
 #: Allowed keys inside a single ``manual_reviews`` entry.
 REVIEW_KEYS = {"reviewed_by", "date", "notes", "todos", "status"}
+
+#: Resource lists allowed under ``manifest`` (defined once, in the renderer).
+VALID_MANIFEST_KINDS = set(MANIFEST_KINDS)
+
+#: Allowed keys inside a single ``manifest`` entry.
+MANIFEST_KEYS = MANIFEST_ENTRY_KEYS
 
 #: YYYY-MM-DD date strings (YAML may also parse these into ``datetime.date``).
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -233,3 +245,118 @@ def test_project_manual_reviews_are_well_formed(md_path: Path) -> None:
             assert isinstance(notes, str), (
                 f"{rel} manual_reviews[{i}] 'notes' must be a string."
             )
+
+
+#: Registry of project collections (key -> title/index/description).
+COLLECTIONS = yaml.safe_load((PROJECTS_DIR / "collections.yaml").read_text()) or {}
+
+
+@pytest.mark.parametrize("key", sorted(COLLECTIONS))
+def test_collection_index_page_exists(key: str) -> None:
+    """Every registered collection names an existing top-level index page."""
+    index = COLLECTIONS[key].get("index")
+    assert index, f"collection {key} must declare an 'index' project slug"
+    assert (PROJECTS_DIR / f"{index}.md").is_file(), (
+        f"collection {key} index projects/{index}.md does not exist"
+    )
+
+
+@pytest.mark.parametrize(
+    "md_path",
+    _project_markdown_files(),
+    ids=lambda p: str(p.relative_to(PROJECTS_DIR)),
+)
+def test_project_collections_are_registered(md_path: Path) -> None:
+    """``collections`` must be a list of keys from ``projects/collections.yaml``."""
+    fm = _parse_frontmatter(md_path.read_text())
+    collections = fm.get("collections")
+    if collections is None:
+        return
+    rel = md_path.relative_to(PROJECTS_DIR)
+    assert isinstance(collections, list), f"{rel} 'collections' must be a list."
+    unknown = sorted(set(map(str, collections)) - set(COLLECTIONS))
+    assert not unknown, (
+        f"{rel} has unregistered collection(s) {unknown}; "
+        f"register them in projects/collections.yaml ({sorted(COLLECTIONS)})."
+    )
+
+
+@pytest.mark.parametrize(
+    "md_path",
+    _project_markdown_files(),
+    ids=lambda p: str(p.relative_to(PROJECTS_DIR)),
+)
+def test_project_manifest_is_well_formed(md_path: Path) -> None:
+    """If a project declares ``manifest`` its resource links must be valid.
+
+    ``manifest`` is an optional mapping of typed resource lists::
+
+        manifest:
+          slides:
+            - href: FOO/slides/FOO-slides.html   # relative to projects/, or https
+              title: Project deck                # optional
+          artifacts:
+            - href: https://claude.ai/artifact/XXXX
+              title: Project brief
+
+    Allowed lists are ``VALID_MANIFEST_KINDS``; each entry needs ``href`` and
+    may carry ``title``/``description`` (``MANIFEST_KEYS``). A local slides
+    href must be an existing deck under projects/ with its Marp ``.md``
+    source beside it; artifact hrefs must be https URLs.
+    """
+    fm = _parse_frontmatter(md_path.read_text())
+    if "manifest" not in fm:
+        return
+    errors = manifest_errors(fm["manifest"], PROJECTS_DIR)
+    assert not errors, f"{md_path.relative_to(PROJECTS_DIR)}: " + "; ".join(errors)
+
+
+@pytest.fixture
+def deck_projects(tmp_path: Path) -> Path:
+    """A projects/ dir holding one Marp deck (html + md) and one orphan html."""
+    slides = tmp_path / "projects" / "FOO" / "slides"
+    slides.mkdir(parents=True)
+    (slides / "FOO-slides.html").write_text("<html></html>")
+    (slides / "FOO-slides.md").write_text("---\nmarp: true\n---\n")
+    (slides / "orphan.html").write_text("<html></html>")
+    (tmp_path / "outside.html").write_text("<html></html>")
+    return tmp_path / "projects"
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        {},
+        {"slides": [{"href": "FOO/slides/FOO-slides.html"}]},
+        {"slides": [{"href": "FOO/slides/FOO-slides.html", "title": "Deck",
+                     "description": "Overview deck"}]},
+        {"slides": [{"href": "https://example.org/deck.html"}]},
+        {"artifacts": [{"href": "https://claude.ai/artifact/abc", "title": "Project brief"}]},
+        {"slides": [], "artifacts": []},
+    ],
+)
+def test_manifest_good(deck_projects: Path, manifest: dict) -> None:
+    assert manifest_errors(manifest, deck_projects) == []
+
+
+@pytest.mark.parametrize(
+    "manifest,expected",
+    [
+        ([], "must be a mapping"),
+        ({"decks": []}, "unknown key(s) ['decks']"),
+        ({"slides": {"href": "FOO/slides/FOO-slides.html"}}, "manifest.slides must be a list"),
+        ({"slides": ["FOO/slides/FOO-slides.html"]}, "slides[0] must be a mapping"),
+        ({"slides": [{"title": "Deck"}]}, "needs a non-empty string 'href'"),
+        ({"slides": [{"href": "FOO/slides/FOO-slides.html", "url": "x"}]}, "unknown key(s) ['url']"),
+        ({"slides": [{"href": "FOO/slides/FOO-slides.html", "title": 3}]}, "'title' must be a string"),
+        ({"slides": [{"href": "FOO/slides/missing.html"}]}, "does not exist under projects/"),
+        ({"slides": [{"href": "FOO/slides/orphan.html"}]}, "no sibling orphan.md source"),
+        ({"slides": [{"href": "../outside.html"}]}, "path under projects/"),
+        ({"slides": [{"href": "http://example.org/deck.html"}]}, "path under projects/"),
+        ({"artifacts": [{"href": "FOO/slides/FOO-slides.html"}]}, "must be an https URL"),
+        ({"artifacts": [{"href": "http://claude.ai/artifact/abc"}]}, "must be an https URL"),
+    ],
+)
+def test_manifest_bad(deck_projects: Path, manifest, expected: str) -> None:
+    errors = manifest_errors(manifest, deck_projects)
+    assert any(expected in e for e in errors), errors

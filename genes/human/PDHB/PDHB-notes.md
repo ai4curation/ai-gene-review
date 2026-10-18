@@ -63,3 +63,8 @@ review grounded in the UniProtKB entry, the seeded GOA TSV, the PDC-deficiency d
 - Reactome TAS mitochondrial-matrix lines (R-HSA-*): correct localization; several are generic
   matrix-protein degradation reactions (LONP1/CLPXP) rather than PDC function — accept as
   location evidence, non-core for the degradation-reaction ones.
+
+## 2026-09: GO:0005515 rows re-actioned under the protein-binding policy
+This section supersedes the earlier MARK_AS_OVER_ANNOTATED plan for protein binding written above. The repo policy excludes that action for GO:0005515. A row goes to MODIFY where the paper supports a more informative MF, and otherwise to REMOVE. Removal does not mean the interaction is false.
+- PMID:12651851 (PDHA1) and PMID:18206651 (DLAT): REMOVE. Both are E1 and E1-E2 assembly contacts, already captured by the complex CC terms.
+- PMID:29128334 and PMID:33961781: REMOVE. Both are proteome-scale screens.

@@ -48,3 +48,47 @@ Recessive gain-of-function MEFV mutations (mostly B30.2/SPRY) cause Familial Med
 - MARK_AS_OVER_ANNOTATED / REMOVE: ubiquitin protein ligase activity (GO:0061630 IBA) — pyrin lacks a canonical functional RING and is not established as an active ubiquitin ligase; this is a TRIM-family phylogenetic over-propagation. Mark over-annotated (defer rather than hard REMOVE, since TRIM27 paper PMID:22829933 in refs concerns a paralog and family E3 activity is debated). regulation of gene expression (GO:0010468 IBA) — generic TRIM-family propagation, not a core pyrin function -> MARK_AS_OVER_ANNOTATED.
 - protein binding (GO:0005515) — KEEP_AS_NON_CORE (uninformative bare term, but records real interactions).
 - response to other organism (GO:0051707 IEA/ARBA) — KEEP_AS_NON_CORE (consistent with sensing of bacterial toxin effects).
+
+## 2026 update: CDC42 as a direct pyrin ligand
+
+Added during the contested-functions pass
+(`projects/FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md`). The review as it stood was
+built entirely on the canonical indirect model — RhoA inactivation removes PKN1/2-mediated
+phosphorylation, 14-3-3 is released, pyrin activates — and contained no mention of CDC42.
+
+Three simultaneous *Sci Immunol* papers (2026-08-07) plus a commentary report a direct
+protein-protein interaction instead:
+
+[PMID:42566498 "We demonstrate that the region surrounding residue T43 of CDC42 interacts with the
+carboxyl-terminal B30.2 domain of pyrin and regulates its localization and activation."] and
+[PMID:42566498 "These findings identify CDC42 as a pyrin ligand and provide critical insights into
+the role of the pyrin B30.2 domain in inflammasome activation, suggesting dual regulation of pyrin
+by two RHO family GTPases, RHOA and CDC42."]
+
+A genotype-first screen of 265 missense MEFV variants adds an important qualification — the
+mechanism is not universal:
+[PMID:42566500 "We found that classical familial Mediterranean fever (FMF)-related variants bind
+tightly to CDC42 to induce pyrin hyperactivation, whereas certain non-FMF variants induce pyrin
+hyperactivation independently of CDC42, indicating involvement of multiple pathways in pyrin
+activation."]
+
+Companion papers: PMID:42566497 (CDC42 M45L variant), PMID:42566502 (commentary, "Misfirin' pyrin").
+
+### What was changed
+- **NEW** `GO:0031267` small GTPase binding (IDA). GO has no CDC42- or Rho-specific binding MF term,
+  so this is the most specific applicable term — worth noting as a minor ontology gap.
+- **NEW** `GO:0141087` positive regulation of inflammasome-mediated signaling pathway (IDA), to carry
+  the direction of effect that the generic regulation term cannot.
+- A third `core_functions` entry for the CDC42-binding function, explicitly stating it sits
+  *alongside* rather than replacing the RhoA/PKN route.
+- `description` extended with the dual-GTPase mechanism.
+
+### Ontology gap proposed
+GO has dedicated complex terms for the NLRP1 (GO:0072558), NLRP3 (GO:0072559), NLRP6 (GO:0140738),
+CARD8 (GO:0140634), AIM2 (GO:0097169) and IPAF (GO:0072557) inflammasomes but **none for the pyrin
+inflammasome**, so MEFV can only be annotated to regulation of *other* inflammasomes. Added a
+`proposed_new_terms` entry for "pyrin inflammasome complex" under GO:0061702.
+
+### Open question
+Whether CDC42 binding is an additional input alongside the RhoA/PKN1/2/14-3-3 route or supersedes
+part of it, and by what route the non-FMF variants hyperactivate pyrin CDC42-independently.

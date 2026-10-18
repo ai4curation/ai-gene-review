@@ -69,3 +69,21 @@
   full texts are the unrelated PMID:19037698 paper, PMID:23267104, and
   PMID:27107014. Experimental annotations were not rejected merely because assay
   detail was unavailable from an abstract.
+
+## 2026-09-29 IBA alignment
+
+- Rechecked `PTHR11038` PAINT for the three TIM10 IBA rows. `PTN000113167`
+  still carries `GO:0042721` TIM22 mitochondrial import inner membrane insertion
+  complex and `GO:0045039` protein insertion into mitochondrial inner membrane.
+- The stale insertase IBA has been superseded at the PAINT node itself: current
+  `PTN000113167` no longer carries `GO:0032977` and now carries the same
+  `GO:0140309` unfolded protein holdase activity term proposed as the repair for
+  TIM10.
+- Normalized IBA `propagation_review.source_entities` to the ancestral
+  `PANTHER:PTN000113167` node rather than extant descendant donors. Target-in-own-
+  evidence remains valid experimental grounding of the node, not circular support.
+- Migrated the five remaining generic `GO:0005515` rows from
+  `MARK_AS_OVER_ANNOTATED` to `REMOVE`.
+- Searched 2025-2026 PubMed and the broader web for S. cerevisiae TIM10/MRS11
+  and Tim9-Tim10/TIM22 mitochondrial import papers. Newer hits were review-level
+  or concerned IMS proteostasis and did not alter the yeast TIM10 GO decisions.

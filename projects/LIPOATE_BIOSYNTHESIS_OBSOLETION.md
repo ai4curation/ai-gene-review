@@ -3,9 +3,36 @@ title: "Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoyla
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [BACSU, PSEPK, POPTR, METEA, human, mouse, yeast]
+sidecars:
+  slide_assets:
+    - LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/lipoylation-routes.svg
+    - LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/PXWTPryxRQnYCr1b89XoEc
+      title: Project brief
 ---
 
 # Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoylation
+
+**Bottom line:** Lipoate is not made as a free pool: the octanoyl group is
+attached to a lipoyl domain first and then sulfurated in place, so GO's
+*lipoate biosynthetic process* (GO:0009107) and *protein lipoylation*
+(GO:0009249) described the same reactions and were used inconsistently. GO
+merged the first into the second on 2026-08-22, broadening the definition of
+GO:0009249 to cover both assembly and attachment. We recorded the 12
+experimental annotations and 11 InterPro2GO/UniRule mappings the merge
+touches, then migrated the five reviews in this repo that carried GO:0009107
+(POPTR LIP1, LIP1P-1, LIP1P-2; BACSU lipA; PSEPK lipA). All nine affected
+`existing_annotations` rows are now MODIFY → GO:0009249, and none of the four
+`core_functions` blocks that listed GO:0009107 still does (PR #2784). What
+remains is an upstream comment on the orphaned `GO:0016992 part_of GO:0009107`
+edge, a GOA re-fetch once GOA catches up, and optional reviews of the
+*B. subtilis* GcvH-relay genes (lipM, lipL, gcvH). The Priority paragraph
+below predates the merge landing.
 
 ## Overview
 

@@ -1,0 +1,5 @@
+# IL23R notes
+
+## Evidence re-review, 2026-09-20: context and family transfer
+
+Prolactin-receptor activity remains REMOVE because the established IL-23p19 recognition mechanism and PRLR-seeded source do not support that ligand-specific transfer [PMID:29287995, structural IL-23 receptor evidence]. PMID:12023369 compares IL-23 with IL-12; it is not a negative prolactin-binding assay. GO:0005143 interleukin-12 receptor binding refers here to the experimentally identified IL12RB1/P42701 receptor-subunit association, not to IL-12 cytokine binding. The target in its own IBA WITH/FROM list is valid descendant experimental grounding. The broader peptide-hormone-binding call is UNDECIDED because cytokine versus hormone is not an absolute molecular exclusion and GO:0017046 requires a separate hormonal-scope judgment. The existing OpenScientist prolactin report explicitly accepts this broader term; its substantive finding and limitations were incorporated without a duplicate query. Core wording now distinguishes constitutive JAK2 association from ligand-dependent STAT3 recruitment.

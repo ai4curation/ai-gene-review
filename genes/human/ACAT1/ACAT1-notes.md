@@ -61,7 +61,7 @@ metabolic process (GO:1902224, IC) [GOA / UniProt GO xrefs].
 
 ## Isoleucine catabolism + 3-ketothiolase / beta-ketothiolase deficiency (3KTD)
 
-T2 catalyzes the final thiolytic step of isoleucine catabolism (2-methylacetoacetyl-CoA -> 
+T2 catalyzes the final thiolytic step of isoleucine catabolism (2-methylacetoacetyl-CoA ->
 propionyl-CoA + acetyl-CoA). Loss causes "beta-ketothiolase deficiency" / 3KTD (MIM:203750).
 - PMID:9744475 (Fukao et al. 1998): "Mitochondrial acetoacetyl-CoA thiolase (T2) deficiency is an
   inborn error of ketone body and isoleucine catabolisms." [PMID:9744475 abstract].
@@ -173,3 +173,286 @@ this gene. KEEP_AS_NON_CORE.
   exosome CC, CoA/acetyl-CoA reaction-level BP terms, fatty acid beta-oxidation.
 </content>
 </invoke>
+
+## 2026-09-26 complete re-review — supersedes the historical decisions above
+
+The earlier notes are retained as history. Their confident SOAT1-only attribution,
+protein-acetyltransferase conclusions, blanket developmental rejections, and broad-term
+non-core designations are superseded by this source audit.
+
+Identity and baseline: approved human ACAT1, HGNC:93, UniProt P24752; aliases ACAT,
+MAT, T2 and THIL. The HGNC-sourced [Ensembl record](https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000075239)
+and [ORDO](https://www.orpha.net/ORDO/Orphanet_117724) corroborate identity. Parent independently
+verified main `488555581d3642ba24843fc05bcb6d6517dabcd9`: the YAML, notes and HTML
+matched the local baseline, with no overlapping open ACAT1 PR. All 49 seeded source
+assertions, including evidence, terms, references and flags, are preserved.
+
+### Research execution and access
+
+A genuine default Falcon attempt with Perplexity-lite fallback used writable per-process
+UV tool/cache directories. Both invocations failed during dependency installation with
+PyPI DNS errors after three retries (Falcon subprocess exit 2 after 8.5 seconds;
+fallback exit 2 after 4.6 seconds; wrapper exit 1). No provider was reached, no provider
+report was produced, and these notes are manual research. The concurrently run normal
+publication command confirmed all eleven original PMIDs already cached. Logs:
+`/tmp/ACAT1-falcon.log` and `/tmp/ACAT1-publications.log`.
+
+All original cached PMID records and eight Reactome summaries were read. Abstract-only
+records are not treated as full-text reviews. The [JCI primary PDF for PMID:1979337](https://www.jci.org/articles/view/114946/files/pdf)
+exposed methods, results and discussion: pulse-labeled T2 was in the particulate fraction
+while LDH was cytosolic; the authors interpreted this as mitochondrial import. This
+supports the organelle term without assuming matrix resolution. The local cache remains
+abstract-only. The original PMID:17371050 full article was not recovered. Its
+[primary PubMed abstract](https://pubmed.ncbi.nlm.nih.gov/17371050/) and the corresponding
+results/discussion in [Meriläinen's author thesis](https://oulurepo.oulu.fi/bitstream/10024/35950/1/isbn978-951-42-9198-2.pdf)
+were read: both reaction directions were measured, and mass spectrometry identified
+acetyl-CoA and propionyl-CoA after branched-substrate cleavage. Racemate consumption
+alone cannot establish recognition of both stereoisomers because the thesis discusses
+possible interconversion under assay conditions. This thesis is not claimed as the
+full original article. Correction to the earlier residue note: position 413 is Cys,
+not His; the cached UniProt ACT_SITE annotation at 413 identifies proton transfer.
+
+### Cholesterol-paper conflict: retain uncertainty, not a confident gene swap
+
+PMID:32944968 full methods report the exact target sequence
+`GCCACTAAGCTTGGTTCCATT`. The independent annotation-reviewer consultation recovered,
+and this review independently checked, [Broad GPP's transcript/reagent table](https://portals.broadinstitute.org/gpp/public/trans/details?transName=NM_000019.4):
+TRCN0000035583 has that target and a perfect SDR match to human ACAT1 transcript
+NM_000019.4, gene 38. Broad reports no equal-or-better other-human-gene match for this
+construct. This identifies the reported sequence, not independent verification of the
+reagent actually used, its knockdown specificity, or an absence of off-target effects.
+
+Thus the older claim that the paper only perturbed SOAT1/SOAT2 is not justified.
+The human Calu-3 viral-entry and lipid-droplet findings do not alone show purified
+mitochondrial thiolase catalyzing cholesterol esterification or acting in the ER.
+Both experimental rows are now UNDECIDED. [GO:0034736](https://amigo.geneontology.org/amigo/term/GO%3A0034736)
+requires the acyl-CoA/cholesterol esterification reaction. Cached model
+`gocams/6796b94c00004996/6796b94c00004996-src.yaml` explicitly carries P24752 with
+this MF and ER location from the same paper: shared provenance, not another assay.
+No source or GO-CAM file was edited.
+
+### Moonlighting and reference precision
+
+PMID:27867011 full cached text was assessed with independent consultation. Its purified
+ACAT1 assay follows acetoacetyl-CoA thiolysis at 303 nm; cellular Y407F and substrate
+acetylation-site experiments link tetramer regulation to the PDHA1/PDP1 axis. Those
+experiments are not themselves a direct purified protein-lysine transfer assay.
+The paper attributes the earlier direct assignment to prior work. Reactome 9854415
+instead cites Chen et al. 2021 for IDH2 K413; this is not the 2016 PDHA1/PDP1 source.
+The 2021 primary experiment was not recovered. Matrix location can remain accepted
+without endorsing all event mechanisms. The proposed gene-specific GO term was withdrawn:
+[GO:0061733 protein-lysine-acetyltransferase activity](https://amigo.geneontology.org/amigo/term/GO%3A0061733)
+already describes the chemistry. A question preserves the evidence gap; no NEW MF or
+process is asserted from incomplete catalytic assessment.
+
+### Propagation audit
+
+Sixteen IBA/IEA rows have source-specific propagation assessments. GOA was consulted
+only for provenance and joined by term, evidence and reference, not row number.
+PAINT source entries contain PTN ancestors 000432378 (thiolase) and 000432235
+(mitochondrion). Human descendants appearing in WITH/FROM are not circular evidence.
+ARBA and InterPro rule internals were not reconstructed and are explicitly unresolved;
+independent human evidence supports the accepted biochemical annotations.
+
+Rat P17764 / ENSRNOP00000010573 is Acat1, RGD:2016, NCBI Gene 25014, as established
+by the [NCBI/RGD record](https://www.ncbi.nlm.nih.gov/gene/25014) and
+[Reactome cross-references](https://www.reactome.org/content/detail/R-RNO-70838).
+Mouse Q8QZT1 / ENSMUSP00000034547 is Acat1, MGI:87870, as established by
+[Reactome](https://www.reactome.org/content/detail/R-MMU-70838).
+The rat record links specific donor terms to these primary records:
+
+| Donor term | Evidence | Primary source | Access and assessment |
+| --- | --- | --- | --- |
+| CoA binding | IPI | [PMID:1672610](https://pubmed.ncbi.nlm.nih.gov/1672610/) | Abstract describes tight/covalent CoA modification of thiolase; human CoA-complex structures independently support ligand binding, without assuming the donor modification mechanism transfers. |
+| Enzyme binding | IPI | [PMID:1684101](https://pubmed.ncbi.nlm.nih.gov/1684101/) | Partner and experiment inaccessible; UNDECIDED. |
+| Identical protein binding; matrix | IPI; IDA | [PMID:11988101](https://pmc.ncbi.nlm.nih.gov/articles/PMC1222570/) | Abstract explicitly identifies matrix thiolase and oligomeric forms; full PDF not inspected. Human tetramer and curated matrix reactions corroborate. |
+| Liver development | IEP | [PMID:5166591](https://pubmed.ncbi.nlm.nih.gov/5166591/) | Full source unavailable; donor identity resolved, participation unresolved. |
+| Hormone response | IEP | [PMID:6144148](https://pubmed.ncbi.nlm.nih.gov/6144148/) | Experiment unavailable; UNDECIDED. |
+| Starvation response | IEP | [PMID:2985752](https://pubmed.ncbi.nlm.nih.gov/2985752/) | Full primary source not recovered; a plausible fasting connection does not settle the transfer. |
+| Adipose development | IEP | [PMID:2866764](https://pubmed.ncbi.nlm.nih.gov/2866764/) | Abstract measures developmental enzyme activity and tissue acetoacetate oxidation; full participation evidence unavailable. |
+| Metanephric proximal convoluted tubule development | IEP | [PMID:7733320](https://pubmed.ncbi.nlm.nih.gov/7733320/) | Abstract measures postnatal enzyme activities and thyroid perturbation; it does not by itself establish thiolase-driven morphogenesis. |
+
+All five contextual process transfers remain UNDECIDED pending primary interpretation.
+This supersedes earlier confident judgments made without the term-specific donor chain.
+One normal batch fetch was attempted for these eight additional PMIDs; its terminal
+outcome is recorded below. No source text was manually placed in the publication cache.
+
+### Core chemistry and localization decisions
+
+Broad C-acetyltransferase/acyltransferase, mitochondrial and direct acetyl-/propionyl-CoA
+product-process annotations describe genuine core activity at their source resolution.
+They are accepted rather than called peripheral simply because more specific terms exist.
+The two previous enzyme-core entries are consolidated, with both ketone-body catabolism
+and L-isoleucine catabolism. The exact [GO:0003985 reaction](https://www.informatics.jax.org/vocab/gene_ontology/GO%3A0003985)
+encodes the unbranched acetyl-CoA reaction; branched substrate specificity is stated
+separately in core prose and the Reactome 70844 evidence.
+
+CoA consumption/release direction is corrected: thiolysis consumes free CoA;
+condensation releases it. [GO:0015937](https://flybase.org/reports/GO%3A0015937) does
+not explicitly say de novo biosynthesis. The existing experimental biosynthetic-process
+annotation is UNDECIDED pending clarification of cofactor regeneration versus biosynthesis,
+rather than rejected on an invented definition. The broad CoA metabolic process is accepted.
+The cached UniProt beta-oxidation statement is retained as a secondary short-chain
+contribution, without claiming long-chain thiolysis. No redundant NEW process was added.
+
+The urinary-exosome detections remain non-core with curator deference. Individual ACAT1
+supplementary entries were not re-extracted; neither contamination nor a special
+extracellular catalytic function was established. MitoCoP supports the curated HTP
+mitochondrial assertion, without claiming independent re-extraction of its ACAT1 entry.
+CLPXP/LONP1 event summaries describe broad substrate sets: location is accepted, but
+ACAT1-specific degradation and protease function are not inferred. All reference findings
+were reconciled with these source limits, including the prior misleading SOAT1-only and
+IDH2/PDHA1 conflations.
+
+Additional-source cache result: the normal eight-PMID batch exited 1 with
+`<urlopen error [Errno 8] nodename nor servname provided, or not known>` for each
+record; cached 0/8. The missing donor records are 1672610, 1684101, 11988101,
+2866764, 5166591, 7733320, 6144148 and 2985752. Public primary reads described above
+remain manual access, not local publication-cache contents. The unresolved rows do
+not treat inaccessible donor papers as negative evidence. Targeted validation passes,
+but it does not check these PubMed links in the notes; cache recovery remains explicit
+follow-up. Original PMID and Reactome caches were unchanged.
+
+## 2026-09-26 PR #3158 follow-up — current decisions
+
+This section supersedes the earlier decision summaries, including both the historical
+SOAT1-only removal rationale and the initial re-review's two UNDECIDED outcomes.
+The source assertions remain unchanged; this follow-up addresses review 5850496113
+against published head `dc50e2714d5edbaf79e0fcf32d5488d9351cbb89`.
+
+### Cholesterol chemistry and ER assignment
+
+The full cached PMID:32944968 was re-read through Figure 4/EV4, Results, Discussion
+and Methods. The readouts are LipidSpot lipid droplets, ALOD4-accessible surface
+cholesterol, inhibitor effects, and viral-entry responses after shRNA treatment.
+The source itself says it used a lipid-droplet stain to monitor ACAT activity.
+These assays do not identify mitochondrial ACAT1 as the catalyst of cholesterol
+esterification. The ER location is part of the SOAT-type mechanistic interpretation,
+not an assay localizing the P24752 gene product or its activity there. Both GO
+assignments are therefore REMOVE on their actual evidential scope.
+
+The [Broad GPP reagent mapping](https://portals.broadinstitute.org/gpp/public/trans/details?transName=NM_000019.4)
+remains a real caveat: the reported hairpin matches mitochondrial ACAT1. Neither a
+proven SOAT1-only perturbation nor absence of an ACAT1-dependent cellular effect is
+claimed. This finding does not establish the annotated catalysis or its compartment.
+The corresponding GO-CAM reuses that same interpretation. PMID:32944968 is MISCITED
+for these two assertions, with paper identity and methods verified; this does not
+mean that the paper identifier is wrong or that its cellular results are disproved.
+The earlier proposed functional/localization questions now ask what additional
+experiments could support a future assignment, rather than deferring these actions.
+
+### Product chemistry, CoA regeneration and specificity
+
+The three broad transferase MFs are now MODIFY to GO:0003985 on the human biochemical
+source; InterPro predicates remain unresolved, and independent corroboration is
+clearly distinguished from the original domain mapping. The existing acetyl-CoA
+production/consumption and propionyl-CoA-production BPs describe steps the enzyme
+actually catalyzes. They remain accepted; replacing a BP with an MF would cross
+ontology aspects, and substituting an already present pathway solely for tidiness
+would not improve its chemical meaning.
+
+Thiolysis consumes free CoA; acetyl-CoA condensation releases it. The
+[GO:0015937 definition and parents](https://flybase.org/reports/GO%3A0015937)
+were rechecked: the term does not explicitly say de novo, but sits under nucleoside-phosphate,
+purine-containing compound and sulfur-compound biosynthesis. The interpretation must follow the measured
+reaction rather than insert a narrower definition. A comparator check of
+[ACOT1/ACOT2](https://www.informatics.jax.org/homology/GOGraph/Acot1) and
+[ACOT8](https://www.informatics.jax.org/homology/GOGraph/Acot8) found experimental
+CoA-releasing enzyme annotations to acyl-CoA metabolism without GO:0015937.
+These MGI graphs were generated **2023-03-10**; they are historical experimental
+snapshots, not a complete current GOA survey. ACAT2 and ACAA2 graph requests and
+QuickGO annotation access failed, and no absence is inferred from those failures.
+
+Combined with the thiolase reaction measured in the original abstract and the
+separately read author-thesis account, the comparator evidence favors treating
+free-CoA regeneration as metabolism, not an independent cofactor-biosynthetic role.
+GO:0015937 is MARK_AS_OVER_ANNOTATED; GO:0015936 remains ACCEPT. No new annotation
+or process was added. The original article is still abstract-only locally; the
+thesis is not relabeled as full access to the original article.
+
+### Rat transfers and retained uncertainty
+
+The rat matrix and self-association donor assessments now say UNRESOLVED for the
+full donor experiment/transfer chain. Their accessible PMID:11988101 abstract is
+consistent with the annotation, but the accepted human conclusions rest on
+independent human structural and Reactome evidence. CoA-binding donor internals
+were already UNRESOLVED; that action still has independent human CoA-complex support.
+
+The five contextual IEA process transfers remain UNDECIDED. An IEP code is not
+intrinsically incapable of supporting a process. For
+[PMID:2866764](https://pmc.ncbi.nlm.nih.gov/articles/PMC1152816/), the primary abstract
+shows metabolic enzyme activities during development and tissue-slice acetoacetate
+oxidation. PMC offered three scanned pages and a PDF, but the web reader did not
+expose their contents; a normal direct image request failed DNS. Full-paper access
+is not claimed. For [PMID:7733320](https://pubmed.ncbi.nlm.nih.gov/7733320/), the abstract
+shows postnatal enzyme activities and thyroid perturbations, with thiolase excepted
+from the decrease in the other enzymes in day-21 hypothyroid rats. The publisher
+full-text URL failed. Neither abstract establishes a thiolase-driven morphogenetic
+mechanism, but neither provides a sufficient basis to assert what the unread full
+paper excludes. The other three primary experiments remain inaccessible. The
+reviewer recommendation for blanket rejection based on IEP was therefore not adopted.
+
+The eight missing donor caches remain the draft gate: 1672610, 1684101, 11988101,
+2866764, 5166591, 7733320, 6144148 and 2985752. No cached publication, GOA, UniProt,
+Reactome or GO-CAM artifact was edited. Reference full_text_unavailable flags describe
+local-cache availability, irrespective of separate web access. Stale YAML section
+comments were removed without changing parsed source fields. A focused independent
+consultation agreed with the cholesterol-assay and CoA-regeneration distinctions;
+it was not a new full-file peer signoff.
+
+Follow-up verification: `just validate human ACAT1`, history validation and
+`just render human ACAT1` all passed. All 49 parsed source objects and any
+alternative-product metadata match the published baseline; trailing-space cleanup
+was checked for parsed-YAML identity. The eight donor-cache draft gate remains.
+
+
+## 2026-09-27 post-merge publication-cache closure
+
+The eight donor records missing at PR #3158 publication are now present as genuine
+machine-generated PubMed caches from GitHub Actions run
+[36286975328](https://github.com/ai4curation/ai-gene-review/actions/runs/36286975328),
+artifact 10920674630. Each local file was compared byte-for-byte with the recovered
+`tmp/verified-reference-artifact.zip` member. No cache text was authored or edited.
+This closes the historical missing-cache gate; it does not turn abstracts into
+full experimental access. All eight records have `full_text_available: false`.
+
+The recovered records were read: PMID:1672610 covers rat mitochondrial CoA
+modification; PMID:1684101 identifies glutamate dehydrogenase as the partner in
+co-immunoprecipitation and cross-linking of CoA-modified rat thiolase;
+PMID:11988101 covers matrix-protein turnover and oligomeric enzyme;
+PMID:2866764 concerns developing rat brown-adipose enzyme activities and tissue
+acetoacetate oxidation; PMID:5166591 measures enzyme activities during postnatal
+rat development; PMID:7733320 examines postnatal rat proximal-tubule enzyme
+activities under thyroid perturbation; PMID:6144148 tests neonatal L-thyroxine and
+reports unchanged thiolase activity in rat brain; PMID:2985752 measures brain
+mitochondrial enzyme responses to chronic prenatal/postnatal rat undernutrition.
+
+The three previous statements that the binding partner, hormone, or nutritional
+experiment was unidentified are updated to these positive abstract findings.
+Their human annotations remain UNDECIDED because full-source interpretation and
+transfer of the specific context remain unresolved. The recovered abstracts do
+not justify converting the other source-limited decisions into confident
+acceptances or rejections. Every one of the 49 seeded assertions, all 49 actions,
+all alternative-product metadata and the integrated catalytic core are retained.
+The three newly quoted donor abstracts are separately listed in references;
+all 25 original reference identifiers/titles and assessments are unchanged.
+
+The review/notes citation census has no missing PMID files. Final validation,
+schema status and render results are recorded below after the targeted checks.
+
+Targeted `just validate human ACAT1` passed with zero gene-validation warnings;
+`just validate-history` passed. The schema status remains COMPLETE, now with the
+publication-cache gate closed and no validation warnings. All 19 PMID citations
+in the review and notes have local records; abstract-only availability is preserved.
+The generated HTML was refreshed after these final notes.
+
+
+## 2026-09-27 — PR #3250 recovered-source follow-up
+
+Read formal review 5329543865 and detailed comment 5854249827 at the exact published head 4c29b5ebfa2088dcbb6580d6a8af1b3ff1786f49, and verified all five canonical gene-file blobs before editing. The recovered PMID:5166591 abstract is now attached directly to GO:0001889 and receives a reference assessment. It measures developmental **enzyme activity**, not directly expression abundance or a liver-development mechanism. Both rat-source comments now describe the positive activity profile. UNDECIDED remains appropriate because the full source interpretation and transfer of a developmental process role to human ACAT1 remain unresolved. The earlier notes' unavailable-source statements describe historical access and are superseded by this recovery.
+
+The optional evidence refinements are also incorporated: PMID:1684101 confines co-purification of the glutamate-dehydrogenase partner to CoA-modified thiolase; PMID:1672610 describes transient acid-stable, thiol-labile CoA modification of partially active rat forms, distinct from the independently supported human reversible cosubstrate interaction. The latter abstract now has an exact supporting quote and reference assessment. The PMID:6144148 quote is extended to a complete sentence and both donor comments explicitly describe the null thiolase-activity readout alongside increases in other enzymes.
+
+The UNRESOLVED propagation statuses are retained: the donor identities and reported experiments are established, but the full source interpretation and human transfer are not settled. One null abstract readout does not demonstrate absence of every hormone-response role, and a modification-dependent rat interaction does not establish either presence or loss of that interaction in human ACAT1. No action, core function, source object, machine cache, or published history record is changed. The two added reference assessments verify the intended primary records and bounded abstract-level support, without claiming full-text access.
+
+Full targeted validation passed without review warnings. All 49 source objects and actions, the cores and 28 previous reference objects are preserved; the two new reference identities/titles and all four touched cached excerpts were checked. History validation, HTML rendering and exact manifest checks also passed.

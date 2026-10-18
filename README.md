@@ -397,9 +397,43 @@ python -m ai_gene_review.render --all genes/    # Alternative rendering command
 preserves current public URL paths, writes an ignored `_site/` directory, and
 reports the uncompressed publication size. Cleanup is restricted to the repository's
 `_site/` directory, and the root is verified with Git before cleanup. The CLI always
-uses `<repo-root>/_site`. Shadow build failures warn
-without blocking regeneration PRs. With Actions deployment enabled, the live site uses the validated artifact built
-from `main`. Regeneration PRs separately maintain the committed HTML.
+uses `<repo-root>/_site`. With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, the live site
+uses the validated artifact built from `main`. In this mode no regeneration PR
+is created: committed generated HTML is not refreshed and is not the live site.
+The repository's Pages source must separately be set to **GitHub Actions**.
+Artifact failures preserve the previous deployment and fail publication status.
+
+The published homepage shows **Site built** in UTC and links to the originating
+Actions run. `_site/build-info.json` records that timestamp, the checked-out
+commit and the run URL. These describe the artifact: redeploying an older
+artifact preserves its original build date. Project HTML separately shows
+**Source last changed**, using the last commit touching its Markdown source,
+with links to the commit and that exact source revision. Stamps omit names,
+emails and commit messages. Source history follows the published branch's first
+parents: merged edits use the merge commit that introduced them on that branch,
+while discarded side-branch edits do not affect the stamp. History and the gene
+symbol index are each collected once per rendering batch.
+Local edits are marked; incomplete shallow history
+is labelled instead of assigning a misleading date. Standalone Markdown exports
+without Git history can still be rendered, without a source stamp.
+The maintained `index.html` must contain exactly one `<!-- site-build-info -->`
+marker; staging fails if it is missing or duplicated, and audits the injected
+link along with the other published links.
+
+The legacy regeneration PR path is retained only when artifact publication is
+disabled; artifact-build failures do not block that path. It still enforces Git's
+100 MiB blob limit and cannot handle the current browser payload, so disabling
+the flag is not a working rollback. Use the verified-artifact recovery workflow
+below instead. Disabling the flag does not change the repository's Pages source.
+
+For disposable builds use `just deploy-browser pages`,
+`just update-browser-data pages`, `just deploy-predictions-browser pages`, or
+`just deploy-propagation-browser pages`. `just build-pages` selects this target
+for all three browsers. The default `git` target keeps the blob guard for output
+intended to be committed; `BROWSER_TARGET=pages` also selects artifact mode.
+Staging compresses the main annotation payload, but prediction and propagation
+payloads are still uncompressed. Total artifact limits do not guarantee browser
+memory or load-time performance.
 
 Staging also follows local links from published HTML and CSS, plus literal
 JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
@@ -453,7 +487,7 @@ Research-provider metadata can reference files that were never archived. These
 are explicitly labelled **not archived**, retaining their descriptions instead
 of presenting broken download/image links. The full list remains visible in
 `unavailable_source_artifact_paths` in the manifest. This is distinct from an
-existing source file omitted from the artifact, which still blocks deployment.
+orphaned review HTML omitted from the artifact, which is reported separately.
 
 The publication boundary is reachable, non-hidden files inside this repository
 at the existing site paths. Navigation and dependencies are followed transitively,
@@ -464,13 +498,25 @@ silently pruned. If a referenced rendered document is absent but its Markdown
 source exists, the link serves that source rather than a nonexistent HTML page.
 The separate MkDocs build on `gh-pages` is not part of this publication artifact;
 linked docs such as the subtraction report use their repository Markdown source.
-The complete rebuilt artifact must meet the budget before the live switch.
+Every rebuilt artifact must meet the budget before publication.
+
+Publication assumes the contents of `main` are accepted. Biological validation
+(including module GO labels and obsoletion checks) runs independently in PR CI
+and the weekly validation workflow, not in `build-pages` or daily publication.
+Upstream ontology drift with no repository changes is therefore detected weekly,
+not daily. This is an accepted tradeoff: publishing updates does not wait for
+biological revalidation; an independent validation run can be dispatched when needed.
+Missing supporting links, suspected site-prefix errors, and links to orphaned
+review HTML remain warnings with full diagnostic lists in `pages-diagnostics`;
+they do not freeze the whole site. Rendering failures, missing required build
+outputs, invalid archives/checksums, and deployment failures remain blocking.
+This change does not add incremental rendering or fallback to older pages.
+
 
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
-1,000,000,000 site-content bytes and a separately measured GNU tar no larger than
-1,073,741,824 bytes (1 GiB, including headers and padding), no excluded orphan review pages, and no missing
-static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
+site content and a separately measured GNU tar below
+10,000,000,000 bytes (including headers and padding), and a verified archive checksum. The CLI and CI use the same manifest `deployable` decision
 and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
 `broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
 `/ai-gene-review/` that match a safe repository file (including an existing
@@ -482,28 +528,40 @@ processing rather than truncated; the workflow summary shows only counts.
 This static audit does not guarantee dynamically constructed JavaScript URLs or
 fragment anchors work.
 
-Keep the current Pages source until the artifact meets those checks and passes
-browser smoke checks. Then change the repository's Pages source to **GitHub
-Actions** (for example, `gh api --method PUT repos/ai4curation/ai-gene-review/pages -f build_type=workflow`), set `PAGES_ARTIFACT_DEPLOY_ENABLED=true` in repository
-Actions variables, and dispatch Generate Pages. Both settings are required.
+The live site uses **GitHub Actions** as its Pages source and
+`PAGES_ARTIFACT_DEPLOY_ENABLED=true`. **Build and deploy site**
+([generate-pages.yaml](.github/workflows/generate-pages.yaml)) builds and publishes
+from `main`; these settings are required for deployment.
 
-If the legacy regeneration-PR step fails after a validated upload, artifact
-deployment can still proceed. To recover an already completed build without
-rendering everything again, run:
+**Deploy existing Pages artifact**
+([deploy-existing-pages.yaml](.github/workflows/deploy-existing-pages.yaml)) is a
+manual shortcut when rendering, validation, and uploads succeeded but deployment
+failed or was skipped, or when intentionally redeploying a known-good build.
+It is not part of normal daily publishing and does not restore lost data.
+Select a completed build run ID and dispatch it on `main`:
 
 ```bash
-gh workflow run recover-pages.yaml --ref main -f source_run_id=RUN_ID
+gh workflow run deploy-existing-pages.yaml --ref main -f source_run_id=RUN_ID
 ```
 
-Recovery is manual, requires Actions deployment to be enabled, and only accepts
-a completed Generate Pages run from this repository's default branch. It checks
-that rendering, validation, staging, and both uploads succeeded, downloads the
-specific validated artifact IDs, rechecks the manifest, actual tar size, and recorded SHA-256, and deploys
-the unchanged archive. The original Pages archive is retained for **3 days**
-(the diagnostic manifest for 7); expired archives require a new full build.
-Both ordinary builds and recovery enforce a 1,000,000,000-byte site-content
-budget and a separate 1 GiB archive budget, allowing tar headers/padding without
-raising the published-site limit. The manifest reports estimated `archive_bytes`
+It verifies the original build and artifact, then publishes that exact snapshot,
+not current `main`. Choosing an older run publishes older content. For new
+content, failed builds, an expired artifact, or an older manifest marked
+nondeployable under the former link policy, run **Build and deploy site**
+instead. The Pages archive is retained for **3 days** (diagnostics for 7).
+Only validated default-branch builds are accepted; checks include successful
+rendering and uploads, artifact provenance, actual archive size, and its recorded SHA-256.
+The former self-imposed 1 GB site / 1 GiB tar gates are removed. Both paths
+retain a strict less-than-10-GB ceiling matching the action's absolute archive
+cutoff. GitHub officially supports only 1 GB sites: larger deployments are an
+explicit temporary operational choice, not a promise of support or scalability.
+When deployment is enabled, a skipped or failed deployment fails the workflow.
+
+To retry a retained build blocked solely by the old 1 GB policy, supply
+`-f legacy_size_sha256=SHA256` to the manual workflow, using the SHA-256 of its
+original downloaded `artifact.tar`. This explicit override rechecks
+provenance and actual archive-size gates and verifies the supplied
+checksum. It does not permit failed integrity checks or rebuild the site. The manifest reports estimated `archive_bytes`
 and `archive_size_budget_bytes`. After upload, diagnostics record the actual
 `archive_actual_bytes` and `archive_sha256`; deployment requires that check to
 succeed. Recovery verifies that checksum, not exact equality with the estimate.
@@ -511,13 +569,14 @@ Older validated builds without a checksum declaration remain recoverable using
 the trusted run/artifact provenance and the actual archive size.
 
 Once enabled, the artifact built from the checked-out source on `main` is
-authoritative for the live site. It deploys without waiting for the legacy
-regeneration PR to merge; that PR only commits derived output back to `main`.
+authoritative for the live site. Generated-file commits, App tokens, reviews and
+PR merges are skipped entirely in this mode. Git-tracked output is not updated.
 
-The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
-GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
-content currently appears after the next daily regeneration PR is merged. With
-Actions deployment enabled, it appears after the next successful daily deployment.
+The Build and deploy site workflow runs daily at 08:23 UTC and can also be started with
+GitHub Actions' **Run workflow** button. Each run rebuilds the full site; merged
+content appears after the next successful deployment. Generated-files PRs are
+only attempted in the disabled-artifact legacy mode, subject to the Git size
+limit described above.
 Agent cron profiles do not control this publication schedule. Manual runs wait for
 an active build to finish instead of cancelling it. Gene review validation remains
 in PR CI and the weekly full validation workflow.

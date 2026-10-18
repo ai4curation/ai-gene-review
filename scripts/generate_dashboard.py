@@ -22,7 +22,7 @@ def collect_stats(base_dir: str = "genes"):
 
         try:
             with open(f) as fh:
-                data = yaml.safe_load(fh)
+                data = yaml.load(fh, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
             if data and "existing_annotations" in data and data["existing_annotations"]:
                 for ann in data["existing_annotations"]:
                     total_annotations += 1

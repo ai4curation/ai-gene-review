@@ -69,3 +69,12 @@ was fabricated.
   showing GCDH donates electrons to ETFβ. It does NOT support the fatty-acid beta-oxidation term.
 - PMID:34800366 is a large mitochondrial-proteome dataset (HTP); GCDH identity is in supplementary
   data, consistent with mitochondrial localization.
+
+
+## Full IBA re-review, 2026-09-20 (supersedes earlier exclusions)
+
+All 26 source rows reviewed and preserved. The old claims that crotonyl-CoA is not a fatty-acyl-CoA and that catabolism cannot produce a biosynthetic product are withdrawn. ChEBI:15473 has ancestor ChEBI:37554; ChEBI:57378 has parent ChEBI:177898. PMID:17176108 identifies enzyme-product release as turnover-limiting. PMID:37198486 Results directly describe GCDH production of crotonyl-CoA used by CBP. Both binding rows and both fatty-acyl-CoA biosynthesis rows become ACCEPT. GCDH supplies the acyl-CoA; CBP writes the histone mark, so no NEW histone-modification term is proposed.
+
+Actual PTHR42807 target Q92947/PTN002533783 descends from PTN005130278 for all five IBAs. The beta-oxidation IBD uses human GCDH itself, correctly reflecting target experimental grounding. Neither donor count nor a supposed lipid-enzyme wrong branch explains this case. Both beta-oxidation rows and broad fatty-acid oxidation become UNDECIDED pending focused adjudication. PMID:25416781 cache lacks Methods/Results; indexed Figure5 distinguishes glutaryl-CoA/GCDH and octanoyl-CoA/MCAD. PMID:21974953 is a relevant rat specificity study, available only as abstract here. Do not turn this access limit into a claim of absent alternative activity. Existing mitochondrial, nuclear, lysine, catalytic and cofactor assignments remain; the nucleus is a context-specific pool. Exact source metadata are untouched.
+
+No existing human-hypothesis OpenScientist report was found: the three exact-symbol cache hits are bacterial Pseudomonas module briefs. A focused human oxidation request is registered. Live ontology and actual-lineage checks are recorded in the project evidence artifact.

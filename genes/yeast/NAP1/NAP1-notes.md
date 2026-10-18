@@ -115,3 +115,83 @@ were exactly the PMID:37177996 abstract-only quote warnings). The remaining 9 ar
 pre-existing and unrelated (PMID:12788058 / PMID:38571760 abstract-only quotes,
 nucleus locations not mirrored in `existing_annotations`, and three ACCEPT annotations
 lacking `supported_by`).
+
+## 2026-09-28 - IBA propagation re-review and generic binding policy cleanup
+
+- Re-reviewed all five IBA annotations against the current `PTHR11875` PAINT slice. `PTN000221934` carries chromatin, nucleus, chromatin binding, and histone binding for the broad NAP-family node, while `PTN000221935` carries the eukaryotic nucleosome-assembly process; both placements are compatible with budding-yeast Nap1, and no target-specific loss or wrong-paralog propagation was found.
+- Fetched `interpro/panther/PTHR11875/` because the NAP-family PAINT slice was not cached locally. The official family label is "TESTIS-SPECIFIC Y-ENCODED PROTEIN", but the fetched entries include *S. cerevisiae* NAP1 and VPS75 and the relevant PTN rows.
+- Re-read the cached Nap1 primary publications that anchor the current core model: PMID:39601790 for the Nap1-Kap114-H2A-H2B-RanGTP handoff complex, PMID:37177996 for H2A-H2B eviction from partially unwrapped nucleosomes, and PMID:31062022 for the Rps6/eS6 chaperone activity.
+- Searched PubMed/web hits for 2025-2026 `Saccharomyces` NAP1/YKR048C papers. The 2025-2026 hits were broad reviews, theses, database pages, or unrelated mentions; no newer primary paper superseded the 2024 Fung et al. Nap1-Kap114 structure or changed the H2A-H2B/Rps6/septin curation calls.
+- Added structured `propagation_review` blocks for the IBA rows, using the PTN node rather than the extant WITH/FROM donor list as the IBA source entity.
+- Updated all `GO:0005515 protein binding` IntAct rows from legacy `MARK_AS_OVER_ANNOTATED` to `REMOVE`, following the current policy that generic protein binding is uninformative rather than over-annotated. The specific H2A-H2B, histone, homodimerization, and cyclin-binding rows are retained separately.
+- Cleaned two pre-existing abstract-only reference findings so PMID:12788058 and PMID:38571760 now quote exact cached abstract text.
+
+## 2026-09-29 - PR #3439 follow-up
+
+- Swapped the relative IBA weighting of `GO:0000785 chromatin` and `GO:0005634
+  nucleus`. Both rows still trace to `PTN000221934`, but the chromatin IBD is
+  seeded only by PomBase:SPBC36B7.08c and the budding-yeast VPS75 paralog
+  (SGD:S000005190), whereas the nucleus IBD includes direct budding-yeast NAP1
+  evidence (SGD:S000001756). Chromatin is now `KEEP_AS_NON_CORE` and nucleus is
+  `ACCEPT`.
+- Kept the IBA `GO:0042393 histone binding` row as core and explicitly recorded
+  that its PTN000221934 descendant evidence includes NAP1 itself plus VPS75.
+- Demoted the IBA `GO:0003682 chromatin binding` row to `KEEP_AS_NON_CORE` and
+  recorded `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`: the current PAINT
+  row is seeded by plant and mammalian entries rather than fungal evidence, and
+  GO:0000511 is the more specific molecular-function description for Nap1.
+- Clarified that Nap1 identical-protein-binding rows describe the stable
+  homodimeric implementation of H2A-H2B chaperoning, not a separate core
+  molecular output.
+- Removed a duplicate bare `GO:0042393 histone binding` core function whose
+  nucleosome-assembly biology is already covered by the specific GO:0000511
+  H2A-H2B chaperone core function.
+- Corrected the PMID:12788058 finding to the abstract-supported single
+  microarray experiment and added a `reference_review` to PMID:38571760 noting
+  that Lorton et al. 2024 is Xenopus/family-level acidic-IDR support rather than
+  yeast TTLL4 pathway evidence.
+
+## 2026-10-01 - Current GOA refresh for the IBA campaign
+
+- Forced a current GOA/UniProt refresh for NAP1. The export now has 90 rows,
+  representing 89 exact source assertions plus one duplicated cytoplasm row from
+  SGD and UniProt.
+- Rechecked the PTHR11875 PAINT slice. The current rows still place chromatin,
+  nucleus, chromatin binding, and histone binding at PTN000221934 and
+  nucleosome assembly at PTN000221935, so the September propagation reviews and
+  actions remain aligned with current PAINT.
+- Preserved seven no-longer-live historical rows with `retired: true`: the old
+  UniProt `GO:0003677 DNA binding` keyword row, five former IntAct
+  `GO:0005515 protein binding` exact sources from PMID:14645854, PMID:14759368,
+  PMID:15045029, PMID:16554755, and PMID:19536198, and the older
+  PMID:31062022 `GO:0051082 unfolded protein binding` row.
+- Reviewed the 36 rows newly exposed by the current GOA export. The direct
+  Bowman et al. H3-H4 row was kept as non-core, the D'Arcy et al. H2A-H2B row
+  was accepted as core, all 26 newly split IntAct `GO:0005515 protein binding`
+  rows were removed as uninformative generic interactions, the CK2 paper's
+  nucleus/cytoplasm/bud-neck locations were reviewed, and the Rps6/eS6 and Gin4
+  rows were retained as peripheral functions.
+- Searched 2025-2026 PubMed/web results for newer Saccharomyces
+  NAP1/Nap1/YKR048C literature. Fung et al. 2025 was already cached and cited;
+  no newer yeast-specific primary paper changed the H2A-H2B, H3-H4, Rps6/eS6,
+  or bud-neck calls.
+
+## 2026-10-01 - PR #3771 follow-up
+
+- Changed the retired UniProt keyword `GO:0003677 DNA binding` row from non-core
+  retention to `REMOVE`: the keyword is gone from current UniProt and Nap1's
+  defining chemistry is acidic DNA mimicry shielding H2A-H2B, not a standalone
+  DNA-binding activity.
+- Changed the retired PMID:31062022 `GO:0051082 unfolded protein binding` row to
+  `MODIFY` with replacement `GO:0044183 protein folding chaperone`, matching
+  GOA's current live Rps6/eS6 chaperone row.
+- Replaced every remaining placeholder review reason with Nap1-specific support,
+  using cached exact quotes for the bud-neck, septin/Gin4, nucleosome-assembly,
+  Rps6/eS6, mitotic microtubule, bud-growth, and histone-binding rows.
+- Marked the near-root `GO:0008047 enzyme activator activity` row as
+  `UNDECIDED`, because the abstract-only RSC/Nap1 paper does not expose the
+  enzyme-activation assay needed to decide whether the row should stay generic
+  or be modified to a specific ATPase-activation term.
+- Trimmed donor-composition language out of the chromatin and chromatin-binding
+  IBA reviews, and removed the misleading nucleosome substrate from the core
+  H2A-H2B deposition activity.

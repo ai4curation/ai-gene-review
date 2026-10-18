@@ -1,10 +1,40 @@
 ---
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
-maturity: SCOPING
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - NCBIFam/slides/ncbifam-flow.svg
+    - NCBIFam/slides/ncbifam-gain.svg
+manifest:
+  slides:
+    - href: NCBIFam/slides/NCBIFam-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
+      title: Project brief
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
+
+**Bottom line:** NCBIFAM (the PGAP/TIGRFAM HMM collection) and CDD reach GO only
+through InterPro2GO, so GOA hides which member database fired and drops every
+signature InterPro has not integrated (60% of NCBIFAM models, 75% of CDD). We
+measured both sides. Forward, NCBIFAM backs 705 (13%) of the 5,549 InterPro2GO
+rows in this repo and is the only integrating signature for 250 of them. Reverse,
+NCBIFAM's own curated metadata puts GO terms on 11,228 of 34,351 models that GO
+never ingests, while CDD-proper has no GO of its own. We built a validated
+250-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
+checked four high-gain rows structurally with OpenScientist. The gain is real
+but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
+entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
+is a clean fill.
+
+We did this because NCBIFAM is a large curated source of family-level function
+for prokaryotic proteins that GO does not use directly, and because its
+contribution to existing annotations is invisible without re-joining GOA to
+InterPro member integration.
 
 ## The value question, answered first: yes — and here are the mappings
 
@@ -535,7 +565,7 @@ over-annotation.
 ## Project Status
 
 - **Started**: 2026-06-20
-- **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
+- **Maturity**: IN_PROGRESS — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
   250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**

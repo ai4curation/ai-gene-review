@@ -13,6 +13,7 @@ from ai_gene_review.export.browser_payload import (
     DATA_JS_ASSIGNMENT_PREFIX,
     DATA_JS_READY_EVENT,
     GITHUB_FILE_SIZE_LIMIT_BYTES,
+    browser_data_size_limit,
     compact_browser_rows,
     validate_browser_data_js_size,
     write_browser_data_js,
@@ -31,8 +32,9 @@ def compact_rows(data: object) -> object:
 def minify_data_js(
     path: Path,
     *,
-    max_bytes: int = GITHUB_FILE_SIZE_LIMIT_BYTES,
+    max_bytes: int | None = GITHUB_FILE_SIZE_LIMIT_BYTES,
 ) -> int:
+    """Compact data with an optional destination-specific byte budget."""
     text = path.read_text(encoding="utf-8")
     if text.startswith(COLUMNAR_DATA_JS_PREFIX):
         size = path.stat().st_size
@@ -67,20 +69,31 @@ def main() -> None:
         help="Path to data.js, default: app/data.js",
     )
     parser.add_argument(
+        "--target",
+        choices=("git", "pages"),
+        default="git",
+        help="git enforces the Git blob cap; pages checks size later during staging",
+    )
+    parser.add_argument(
         "--max-bytes",
         type=int,
-        default=GITHUB_FILE_SIZE_LIMIT_BYTES,
-        help="Reject output at or above this byte size",
+        default=None,
+        help="Override the target's per-file budget; reject at or above this byte size",
     )
     args = parser.parse_args()
+    if args.max_bytes is not None and args.max_bytes <= 0:
+        parser.error("--max-bytes must be positive")
+    max_bytes = args.max_bytes
+    if max_bytes is None:
+        max_bytes = browser_data_size_limit(args.target)
 
-    size = minify_data_js(args.path, max_bytes=args.max_bytes)
+    size = minify_data_js(args.path, max_bytes=max_bytes)
     print(f"Encoded {args.path} to {size:,} bytes ({size / 1024 / 1024:.2f} MiB)")
     if size >= BROWSER_DATA_WARNING_BYTES:
         print(
             "Warning: browser data exceeds "
             f"{BROWSER_DATA_WARNING_BYTES / 1024 / 1024:.0f} MiB; "
-            "consider further compaction before it reaches GitHub's file limit"
+            "monitor browser load time and the compressed Pages site size"
         )
 
 

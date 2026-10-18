@@ -87,6 +87,17 @@ Two things this implies, both easy to get backwards:
   itself a propagated annotation with no experimental grounding anywhere in the chain, or a
   source that adds nothing because the target already has stronger direct evidence.
 
+**Removing an IBA that a family review scopes onto your gene.** If the gene's PANTHER
+family has a FamilyReview (`interpro/panther/<PTHR>/<PTHR>-review.yaml`) whose term
+assessment covers your gene's subfamily, a gene-level `REMOVE` is reported as a
+family/gene disagreement by `just validate-families`. When the loss is real but on a branch
+the subfamily does not split (e.g. C. elegans GEI-17 in PTHR10782:SF94, no JAK), record it
+in the family review as a `member_exceptions` entry on that term assessment, with
+evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a negative
+`node_assessment`. The exception is the family's judgement on that member, so the gene
+review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
+`MARK_AS_OVER_ANNOTATED` just to silence the check.
+
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
@@ -152,10 +163,18 @@ You should make use of:
    - **REMOVE**: Remove as likely incorrect based on combined evidence
    - **MODIFY**: Essence is sound but better terms exist (provide proposed_replacement_terms). Use this if the term is too deep or too shallow
    - **MARK_AS_OVER_ANNOTATED**: Not wrong but likely over-annotation
+   - **TOO_GENERAL**: True of the gene but uninformative, because a more specific term asserted elsewhere in this review (ACCEPT, KEEP_AS_NON_CORE, NEW, or a MODIFY replacement) already entails it — e.g. `hydrolase activity` beside an accepted `metalloendopeptidase activity`. Judges the term, not this row's evidence, and never means the claim is false. Use sparingly: a broader term that still says something (a pathway-level process beside a specific step, `endoplasmic reticulum` from a localization screen beside `ER membrane`) stays ACCEPT/KEEP_AS_NON_CORE. Not for `GO:0005515` protein binding, which has its own policy below
    - **UNDECIDED**: Unclear annotation requiring more evidence (always use if unable to access relevant publications)
    - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it does some of the work of it (catalysing a step, or contributing structure or cofactor activity a step depends on), and not merely because it is required for, consumed by, or acted on by it
 
 Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need to favor one evidence code over another.
+A review judges claims about the gene, not evidence codes: rows sharing a term reinforce each other, and their
+actions must not contradict each other. Never REMOVE a row as a "duplicate" of another row to the same term, and
+never REMOVE a true-but-broad term (use TOO_GENERAL). Validation enforces this from the table in
+`src/ai_gene_review/schema/action_consistency.yaml` (see `docs/action_consistency.md`).
+Do not keep both a term and a NOT annotation to it: decide which the evidence supports (REMOVE or UNDECIDED
+the other). Only in the very rare case where both genuinely hold (e.g. different tissues or conditions), add
+`review.consistency_exception: {reason: ...}` to the row, citing the evidence for each context.
 
 It may also be OK for IEAs to be broader than what is determined by IBA or literature, you can just mark these as accept,
 unless you think the mapping is too general.

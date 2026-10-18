@@ -1,11 +1,27 @@
 ---
 title: "GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes"
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
 ---
 
 # GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes
+
+**Bottom line:** this is the detailed gene-by-gene analysis behind the
+Priority 3 review in the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md) project: daf-16, dbl-1, sta-2, nipi-3, lys-7
+and clec-60, 238 GOA rows as counted on 2025-12-29. For each gene it lists
+numbered issues with suggested actions: DAF-16 protein-binding,
+lifespan-redundancy and developmental rows; DBL-1 growth versus immune
+roles; STA-2 IBA JAK-STAT and hemidesmosome rows; NIPI-3 pseudokinase
+activity rows; LYS-7 enzymatic and signal-transduction rows; and the
+single-row CLEC-60. It closes with eight cross-gene patterns, the most
+important being that domain-based inference misassigns catalytic activity
+to inactive proteins and that IBA transfers must fit worm biology. The
+companion [findings summary](SURVEILLANCE_IMMUNITY_CURATION_FINDINGS.md)
+and [checklist](SURVEILLANCE_IMMUNITY_CURATION_CHECKLIST.md) condense this
+document; the gene YAML files hold the final decisions.
 
 **Date:** 2025-12-29
 **Reviewer:** AI Gene Review Curator
@@ -653,25 +669,25 @@ The clec-60-ai-review.yaml file proposes 3 NEW annotations worth implementing:
 ## File Paths for Review Updates
 
 ### GOA TSV Files (Read-only reference):
-- `/Users/cjm/repos/ai-gene-review/genes/worm/daf-16/daf-16-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/dbl-1/dbl-1-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/sta-2/sta-2-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/nipi-3/nipi-3-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/lys-7/lys-7-goa.tsv`
-- `/Users/cjm/repos/ai-gene-review/genes/worm/clec-60/clec-60-goa.tsv`
+- `genes/worm/daf-16/daf-16-goa.tsv`
+- `genes/worm/dbl-1/dbl-1-goa.tsv`
+- `genes/worm/sta-2/sta-2-goa.tsv`
+- `genes/worm/nipi-3/nipi-3-goa.tsv`
+- `genes/worm/lys-7/lys-7-goa.tsv`
+- `genes/worm/clec-60/clec-60-goa.tsv`
 
 ### AI Review YAML Files (To be updated):
-- `/Users/cjm/repos/ai-gene-review/genes/worm/daf-16/daf-16-ai-review.yaml` (2765 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/dbl-1/dbl-1-ai-review.yaml` (827 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/sta-2/sta-2-ai-review.yaml` (527 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/nipi-3/nipi-3-ai-review.yaml` (521 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/lys-7/lys-7-ai-review.yaml` (492 lines)
-- `/Users/cjm/repos/ai-gene-review/genes/worm/clec-60/clec-60-ai-review.yaml` (207 lines)
+- `genes/worm/daf-16/daf-16-ai-review.yaml` (3198 lines)
+- `genes/worm/dbl-1/dbl-1-ai-review.yaml` (898 lines)
+- `genes/worm/sta-2/sta-2-ai-review.yaml` (572 lines)
+- `genes/worm/nipi-3/nipi-3-ai-review.yaml` (576 lines)
+- `genes/worm/lys-7/lys-7-ai-review.yaml` (541 lines)
+- `genes/worm/clec-60/clec-60-ai-review.yaml` (235 lines)
 
 ### Supporting Resources:
 - Deep research files: `*-deep-research-falcon.md` for each gene
 - UniProt records: `*-uniprot.txt` for each gene
-- Publication files: `/Users/cjm/repos/ai-gene-review/publications/PMID_*.md`
+- Publication files: `publications/PMID_*.md`
 
 ---
 
