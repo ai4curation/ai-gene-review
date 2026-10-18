@@ -131,6 +131,17 @@ REMOVE rows that cite a different reference: REMOVE is a judgment on the claim,
 whatever paper the row cites. Until the reviews it flags are fixed and the old check is
 narrowed or retired, an unexempted ACCEPT/REMOVE pair is reported by both.
 
+The older `inconsistent_review_actions` warning also exempts one pattern on root
+membrane-bounded organelle terms (mitochondrion, endoplasmic reticulum, Golgi
+apparatus, peroxisome, lysosome), from the
+[ORGANELLES](https://ai4curation.io/ai-gene-review/projects/ORGANELLES.html) policy.
+Direct-evidence rows keep the root term with one shared action (ACCEPT or
+KEEP_AS_NON_CORE), and every synthesis row (IBA, IEA, ISS, IC, ...) is MODIFYed
+to a sub-compartment of that organelle. A replacement counts as a sub-compartment
+when the organelle is its `is_a`/`part_of` ancestor; without the GO hierarchy loaded,
+when its label contains the organelle's name. Any other mix still warns. See
+`_is_organelle_policy_split` in `src/ai_gene_review/validation/validator.py`.
+
 ### Known limitations
 
 - The pair rules compare each row's own `term.id`. MODIFY `proposed_replacement_terms`

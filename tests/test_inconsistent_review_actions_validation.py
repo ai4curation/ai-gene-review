@@ -285,6 +285,16 @@ def test_root_organelle_synthesis_modify_suppressed(kept_action, synthesis_codes
                 "replacements": MATRIX,
             },
         ],
+        # Synthesis MODIFY to a term outside the organelle.
+        [
+            {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},
+            {
+                "evidence_type": "IBA",
+                "pmid": "GO_REF:0000033",
+                "action": "MODIFY",
+                "replacements": [{"id": "GO:0005634", "label": "nucleus"}],
+            },
+        ],
         # Synthesis MODIFY without a replacement term.
         [
             {"evidence_type": "IDA", "pmid": "PMID:1", "action": "ACCEPT"},

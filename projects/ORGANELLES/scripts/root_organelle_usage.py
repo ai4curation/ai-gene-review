@@ -74,7 +74,9 @@ def terms_in_review(doc: dict) -> set[str]:
     for ann in doc.get("existing_annotations") or []:
         rev = ann.get("review") or {}
         tid = (ann.get("term") or {}).get("id")
-        if tid and rev.get("action") != "REMOVE" and not ann.get("negated"):
+        if rev.get("action") == "REMOVE" or ann.get("negated"):
+            continue
+        if tid:
             ids.add(tid)
         for rep in rev.get("proposed_replacement_terms") or []:
             if rep.get("id"):

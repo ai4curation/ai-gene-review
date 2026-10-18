@@ -8,97 +8,97 @@ is_a/part_of descendant of the same organelle.
 
 | organelle | rows | genes | genes w/ sub-compartment | % | rows w/o sub-compartment |
 |---|---|---|---|---|---|
-| mitochondrion (GO:0005739) | 2798 | 992 | 662 | 67 | 664 |
-| nucleus (GO:0005634) | 5588 | 2040 | 825 | 40 | 2538 |
-| endoplasmic reticulum (GO:0005783) | 1097 | 578 | 398 | 69 | 279 |
-| Golgi apparatus (GO:0005794) | 483 | 308 | 169 | 55 | 194 |
-| lysosome (GO:0005764) | 265 | 112 | 70 | 62 | 70 |
-| peroxisome (GO:0005777) | 304 | 116 | 51 | 44 | 115 |
+| mitochondrion (GO:0005739) | 3037 | 1051 | 702 | 67 | 720 |
+| nucleus (GO:0005634) | 5657 | 2076 | 829 | 40 | 2587 |
+| endoplasmic reticulum (GO:0005783) | 1103 | 584 | 401 | 69 | 282 |
+| Golgi apparatus (GO:0005794) | 493 | 311 | 172 | 55 | 194 |
+| lysosome (GO:0005764) | 280 | 118 | 75 | 64 | 73 |
+| peroxisome (GO:0005777) | 317 | 121 | 53 | 44 | 123 |
 | endosome (GO:0005768) | 198 | 131 | 86 | 66 | 71 |
-| chloroplast (GO:0009507) | 144 | 98 | 22 | 22 | 94 |
-| vacuole (GO:0005773) | 26 | 24 | 7 | 29 | 17 |
+| chloroplast (GO:0009507) | 144 | 98 | 21 | 21 | 95 |
+| vacuole (GO:0005773) | 29 | 25 | 7 | 28 | 20 |
 | autophagosome (GO:0005776) | 88 | 50 | 16 | 32 | 48 |
 
 ## mitochondrion (GO:0005739)
 
-- Actions (all rows): {'ACCEPT': 1893, 'KEEP_AS_NON_CORE': 606, 'MARK_AS_OVER_ANNOTATED': 163, 'REMOVE': 54, 'MODIFY': 43, 'UNDECIDED': 34, 'NEW': 5}
-- Evidence (all rows): {'IDA': 690, 'IEA': 493, 'HDA': 479, 'IBA': 398, 'HTP': 393, 'ISS': 91, 'EXP': 62, 'TAS': 61, 'NAS': 44, 'ISO': 33, 'IMP': 21, 'ISM': 17, 'IC': 9, 'RCA': 5, 'IPI': 1, 'IGI': 1}
-- Sub-compartment kinds, by gene: {'membrane': 284, 'lumen': 239, 'lumen+membrane': 108, 'lumen+other': 14, 'membrane+other': 14, 'lumen+membrane+other': 2, 'other': 1}
-- Rows with no sub-compartment, actions: {'ACCEPT': 317, 'KEEP_AS_NON_CORE': 168, 'MARK_AS_OVER_ANNOTATED': 93, 'REMOVE': 53, 'UNDECIDED': 28, 'NEW': 5}
-- Rows with no sub-compartment, evidence: {'HDA': 180, 'IEA': 148, 'IDA': 97, 'IBA': 90, 'ISS': 37, 'HTP': 37, 'EXP': 19, 'ISO': 15, 'ISM': 13, 'TAS': 12, 'NAS': 9, 'IMP': 6, 'IC': 1}
+- Actions (all rows): {'ACCEPT': 2050, 'KEEP_AS_NON_CORE': 668, 'MARK_AS_OVER_ANNOTATED': 166, 'REMOVE': 53, 'MODIFY': 48, 'UNDECIDED': 35, 'TOO_GENERAL': 12, 'NEW': 5}
+- Evidence (all rows): {'IDA': 735, 'HDA': 578, 'IEA': 517, 'IBA': 428, 'HTP': 400, 'ISS': 96, 'EXP': 63, 'TAS': 62, 'NAS': 44, 'ISO': 33, 'IMP': 27, 'RCA': 20, 'ISM': 17, 'IC': 9, 'IPI': 7, 'IGI': 1}
+- Sub-compartment kinds, by gene: {'membrane': 297, 'lumen': 261, 'lumen+membrane': 112, 'membrane+other': 15, 'lumen+other': 14, 'lumen+membrane+other': 2, 'other': 1}
+- Rows with no sub-compartment, actions: {'ACCEPT': 330, 'KEEP_AS_NON_CORE': 205, 'MARK_AS_OVER_ANNOTATED': 99, 'REMOVE': 52, 'UNDECIDED': 29, 'NEW': 5}
+- Rows with no sub-compartment, evidence: {'HDA': 207, 'IEA': 156, 'IDA': 109, 'IBA': 94, 'ISS': 40, 'HTP': 35, 'EXP': 19, 'ISO': 15, 'ISM': 13, 'TAS': 12, 'NAS': 9, 'IMP': 6, 'RCA': 2, 'IPI': 2, 'IC': 1}
 - Example genes with only the root term: ARATH/ABCG36, ARATH/BIK1, ARATH/CER1, ARATH/CLV3, ARATH/CRN, ARATH/CUT1, ARATH/CYP71A13, ARATH/ERECTA, ARATH/FLD, ARATH/FVE, ARATH/GIP1, ARATH/GSTF6, ARATH/GSTU20, ARATH/HKT1, ARATH/KAO2, ARATH/KCR1, ARATH/LCYB, ARATH/LYM2, ARATH/MKK5, ARATH/PAS2, ARATH/PRR7, ARATH/SUR1, ARATH/VAL1, CHICK/GLDC, DANRE/agxtb
 
 ## nucleus (GO:0005634)
 
-- Actions (all rows): {'ACCEPT': 4072, 'KEEP_AS_NON_CORE': 1218, 'MARK_AS_OVER_ANNOTATED': 104, 'UNDECIDED': 73, 'REMOVE': 60, 'MODIFY': 34, 'NEW': 27}
-- Evidence (all rows): {'IDA': 1733, 'IEA': 1517, 'IBA': 830, 'EXP': 409, 'HDA': 386, 'ISS': 186, 'NAS': 144, 'ISM': 131, 'ISO': 92, 'TAS': 82, 'IC': 38, 'IMP': 27, 'IPI': 9, 'IGI': 3, 'IEP': 1}
-- Sub-compartment kinds, by gene: {'lumen': 459, 'lumen+other': 193, 'other': 126, 'membrane': 15, 'lumen+membrane+other': 13, 'lumen+membrane': 11, 'membrane+other': 8}
-- Rows with no sub-compartment, actions: {'ACCEPT': 1496, 'KEEP_AS_NON_CORE': 813, 'MARK_AS_OVER_ANNOTATED': 91, 'REMOVE': 57, 'UNDECIDED': 55, 'NEW': 23, 'MODIFY': 3}
-- Rows with no sub-compartment, evidence: {'IEA': 785, 'IDA': 568, 'IBA': 465, 'HDA': 286, 'EXP': 117, 'ISM': 109, 'ISS': 98, 'ISO': 36, 'TAS': 31, 'NAS': 23, 'IC': 10, 'IMP': 4, 'IPI': 3, 'IGI': 2, 'IEP': 1}
+- Actions (all rows): {'ACCEPT': 4100, 'KEEP_AS_NON_CORE': 1256, 'MARK_AS_OVER_ANNOTATED': 110, 'UNDECIDED': 70, 'REMOVE': 60, 'MODIFY': 34, 'NEW': 27}
+- Evidence (all rows): {'IDA': 1749, 'IEA': 1533, 'IBA': 841, 'EXP': 415, 'HDA': 405, 'ISS': 186, 'NAS': 144, 'ISM': 131, 'ISO': 92, 'TAS': 82, 'IC': 38, 'IMP': 28, 'IPI': 9, 'IGI': 3, 'IEP': 1}
+- Sub-compartment kinds, by gene: {'lumen': 460, 'lumen+other': 194, 'other': 127, 'membrane': 15, 'lumen+membrane+other': 13, 'lumen+membrane': 12, 'membrane+other': 8}
+- Rows with no sub-compartment, actions: {'ACCEPT': 1504, 'KEEP_AS_NON_CORE': 851, 'MARK_AS_OVER_ANNOTATED': 97, 'REMOVE': 57, 'UNDECIDED': 52, 'NEW': 23, 'MODIFY': 3}
+- Rows with no sub-compartment, evidence: {'IEA': 797, 'IDA': 575, 'IBA': 473, 'HDA': 305, 'EXP': 119, 'ISM': 109, 'ISS': 98, 'ISO': 36, 'TAS': 31, 'NAS': 23, 'IC': 10, 'IMP': 5, 'IPI': 3, 'IGI': 2, 'IEP': 1}
 - Example genes with only the root term: 9POAL/NCGR_LOCUS1765, 9POAL/NCGR_LOCUS27674, ARATH/ABCB19, ARATH/ABI1, ARATH/ABI5, ARATH/AFB2, ARATH/AG, ARATH/AGO1, ARATH/AHK3, ARATH/AHK4, ARATH/AHP1, ARATH/AP1, ARATH/AP2, ARATH/AP3, ARATH/ARF19, ARATH/ARF5, ARATH/ARF7, ARATH/ARR1, ARATH/ARR12, ARATH/ARR5, ARATH/AT1G32330, ARATH/AT1G74310, ARATH/AT2G26150, ARATH/AT3G02990, ARATH/AT4G17750
 
 ## endoplasmic reticulum (GO:0005783)
 
-- Actions (all rows): {'ACCEPT': 812, 'KEEP_AS_NON_CORE': 232, 'MARK_AS_OVER_ANNOTATED': 19, 'MODIFY': 14, 'UNDECIDED': 12, 'NEW': 5, 'REMOVE': 3}
-- Evidence (all rows): {'IDA': 365, 'IEA': 254, 'IBA': 167, 'HDA': 159, 'ISS': 47, 'TAS': 35, 'EXP': 33, 'ISO': 16, 'NAS': 12, 'IMP': 5, 'IGI': 2, 'IC': 2}
-- Sub-compartment kinds, by gene: {'membrane': 310, 'lumen': 27, 'membrane+other': 27, 'lumen+other': 16, 'lumen+membrane+other': 7, 'lumen+membrane': 7, 'other': 4}
-- Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 131, 'ACCEPT': 118, 'MARK_AS_OVER_ANNOTATED': 13, 'UNDECIDED': 9, 'NEW': 5, 'REMOVE': 3}
-- Rows with no sub-compartment, evidence: {'IEA': 101, 'IDA': 81, 'IBA': 32, 'HDA': 21, 'EXP': 17, 'ISS': 15, 'TAS': 6, 'ISO': 4, 'IGI': 1, 'IC': 1}
+- Actions (all rows): {'ACCEPT': 814, 'KEEP_AS_NON_CORE': 235, 'MARK_AS_OVER_ANNOTATED': 19, 'MODIFY': 15, 'UNDECIDED': 12, 'NEW': 5, 'REMOVE': 3}
+- Evidence (all rows): {'IDA': 368, 'IEA': 255, 'IBA': 169, 'HDA': 159, 'ISS': 47, 'TAS': 35, 'EXP': 33, 'ISO': 16, 'NAS': 12, 'IMP': 5, 'IGI': 2, 'IC': 2}
+- Sub-compartment kinds, by gene: {'membrane': 313, 'membrane+other': 27, 'lumen': 27, 'lumen+other': 16, 'lumen+membrane': 7, 'lumen+membrane+other': 7, 'other': 4}
+- Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 134, 'ACCEPT': 118, 'MARK_AS_OVER_ANNOTATED': 13, 'UNDECIDED': 9, 'NEW': 5, 'REMOVE': 3}
+- Rows with no sub-compartment, evidence: {'IEA': 101, 'IDA': 83, 'IBA': 33, 'HDA': 21, 'EXP': 17, 'ISS': 15, 'TAS': 6, 'ISO': 4, 'IGI': 1, 'IC': 1}
 - Example genes with only the root term: ARATH/AGO1, ARATH/FAE1, ARATH/FT, ARATH/GA3, ARATH/PIN2, ASPRC/fogD, CANAL/JEM1, DANRE/prom1a, DANRE/tlr21, DANRE/tomt, DANRE/ufsp2, DERPT/Derp23, DESRO/K9J287, DICDI/acrA, DICDI/pdsA, DICDI/tlcd4b, DROME/Buffy, DROME/CG3631, DROME/Kpc2, DROME/P58IPK, DROME/Prx4, DROME/Tango5, DROME/alpha-Man-Ia, HETGA/Cd44, HORSE/MTMR9
 
 ## Golgi apparatus (GO:0005794)
 
-- Actions (all rows): {'ACCEPT': 237, 'KEEP_AS_NON_CORE': 181, 'MARK_AS_OVER_ANNOTATED': 22, 'MODIFY': 20, 'UNDECIDED': 14, 'NEW': 7, 'REMOVE': 2}
-- Evidence (all rows): {'IDA': 171, 'IEA': 168, 'IBA': 45, 'ISS': 28, 'HDA': 25, 'EXP': 17, 'TAS': 15, 'ISO': 8, 'IMP': 3, 'NAS': 2, 'IPI': 1}
-- Sub-compartment kinds, by gene: {'membrane': 101, 'membrane+other': 35, 'other': 30, 'lumen+other': 1, 'lumen+membrane+other': 1, 'lumen+membrane': 1}
+- Actions (all rows): {'ACCEPT': 247, 'KEEP_AS_NON_CORE': 184, 'MARK_AS_OVER_ANNOTATED': 22, 'MODIFY': 20, 'UNDECIDED': 11, 'NEW': 7, 'REMOVE': 2}
+- Evidence (all rows): {'IDA': 178, 'IEA': 169, 'IBA': 47, 'ISS': 28, 'HDA': 25, 'EXP': 17, 'TAS': 15, 'ISO': 8, 'IMP': 3, 'NAS': 2, 'IPI': 1}
+- Sub-compartment kinds, by gene: {'membrane': 103, 'membrane+other': 36, 'other': 30, 'lumen+membrane+other': 1, 'lumen+membrane': 1, 'lumen+other': 1}
 - Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 109, 'ACCEPT': 46, 'MARK_AS_OVER_ANNOTATED': 21, 'UNDECIDED': 10, 'NEW': 6, 'REMOVE': 2}
 - Rows with no sub-compartment, evidence: {'IEA': 70, 'IDA': 67, 'IBA': 12, 'TAS': 11, 'HDA': 10, 'EXP': 8, 'ISS': 7, 'ISO': 5, 'NAS': 2, 'IMP': 1, 'IPI': 1}
 - Example genes with only the root term: ARATH/AT5G02500, ARATH/AUX1, ARATH/BIK1, ARATH/MLO2, ARATH/RBOHD, ARATH/RCA, DANRE/tomt, DORPE/AP180, DROME/BicD, DROME/CG33116, DROME/CG3631, DROME/Fer1HCH, DROME/Fer2LCH, DROME/NTPase, PANPA/A0A2R9CAF4, SALRS/jumble, SCHPO/ade3, SCHPO/alg6, SCHPO/ayr1, SCHPO/dca7, SCHPO/erg26, SCHPO/erg31, human/ABCA1, human/ACTL7A, human/ADRB2
 
 ## lysosome (GO:0005764)
 
-- Actions (all rows): {'ACCEPT': 205, 'KEEP_AS_NON_CORE': 43, 'MODIFY': 13, 'MARK_AS_OVER_ANNOTATED': 2, 'NEW': 2}
-- Evidence (all rows): {'IDA': 100, 'IEA': 74, 'IBA': 27, 'EXP': 14, 'TAS': 13, 'ISS': 11, 'ISO': 10, 'NAS': 7, 'IMP': 7, 'IPI': 2}
-- Sub-compartment kinds, by gene: {'membrane': 27, 'lumen': 18, 'lumen+membrane': 10, 'other': 8, 'lumen+other': 4, 'membrane+other': 3}
-- Rows with no sub-compartment, actions: {'ACCEPT': 39, 'KEEP_AS_NON_CORE': 28, 'NEW': 2, 'MARK_AS_OVER_ANNOTATED': 1}
-- Rows with no sub-compartment, evidence: {'IEA': 27, 'IDA': 20, 'IBA': 7, 'ISS': 5, 'EXP': 5, 'ISO': 4, 'TAS': 1, 'NAS': 1}
-- Example genes with only the root term: ANOGA/psidin, DANRE/fgf8a, DANRE/tpp1, DROME/N, HETGA/Has2, HETGA/Hyal2, human/ADA, human/ADRB2, human/ANK2, human/AP5Z1, human/APP, human/ARRDC3, human/ARSI, human/BACE1, human/BCL10, human/CRYAB, human/EPG5, human/GABARAP, human/IL4I1, human/LRIG1, human/MYO5A, human/NBR1, human/PLD4, human/RAB7B, human/RAB8A
+- Actions (all rows): {'ACCEPT': 216, 'KEEP_AS_NON_CORE': 46, 'MODIFY': 14, 'MARK_AS_OVER_ANNOTATED': 2, 'NEW': 2}
+- Evidence (all rows): {'IDA': 106, 'IEA': 79, 'IBA': 29, 'EXP': 16, 'TAS': 13, 'ISS': 11, 'ISO': 10, 'NAS': 7, 'IMP': 7, 'IPI': 2}
+- Sub-compartment kinds, by gene: {'membrane': 28, 'lumen': 21, 'lumen+membrane': 10, 'other': 9, 'lumen+other': 4, 'membrane+other': 3}
+- Rows with no sub-compartment, actions: {'ACCEPT': 39, 'KEEP_AS_NON_CORE': 31, 'NEW': 2, 'MARK_AS_OVER_ANNOTATED': 1}
+- Rows with no sub-compartment, evidence: {'IEA': 28, 'IDA': 22, 'IBA': 7, 'ISS': 5, 'EXP': 5, 'ISO': 4, 'TAS': 1, 'NAS': 1}
+- Example genes with only the root term: ANOGA/psidin, DANRE/fgf8a, DANRE/tpp1, DROME/N, HETGA/Has2, HETGA/Hyal2, human/ADA, human/ADRB2, human/ANK2, human/AP5Z1, human/APP, human/ARRDC3, human/ARSI, human/BACE1, human/BCL10, human/CRYAB, human/CXCR4, human/EPG5, human/GABARAP, human/IL4I1, human/LRIG1, human/MYO5A, human/NBR1, human/PLD4, human/RAB7B
 
 ## peroxisome (GO:0005777)
 
-- Actions (all rows): {'ACCEPT': 213, 'KEEP_AS_NON_CORE': 49, 'MARK_AS_OVER_ANNOTATED': 17, 'REMOVE': 8, 'MODIFY': 8, 'UNDECIDED': 7, 'NEW': 2}
-- Evidence (all rows): {'IDA': 143, 'IEA': 61, 'IBA': 42, 'ISS': 20, 'EXP': 10, 'ISO': 7, 'HDA': 6, 'ISM': 6, 'IMP': 4, 'NAS': 4, 'TAS': 1}
-- Sub-compartment kinds, by gene: {'lumen': 24, 'membrane': 22, 'lumen+membrane': 5}
-- Rows with no sub-compartment, actions: {'ACCEPT': 44, 'KEEP_AS_NON_CORE': 37, 'MARK_AS_OVER_ANNOTATED': 17, 'REMOVE': 8, 'UNDECIDED': 7, 'NEW': 2}
-- Rows with no sub-compartment, evidence: {'IDA': 35, 'IBA': 25, 'IEA': 25, 'ISS': 11, 'HDA': 6, 'ISM': 5, 'ISO': 3, 'EXP': 2, 'IMP': 2, 'TAS': 1}
+- Actions (all rows): {'ACCEPT': 225, 'KEEP_AS_NON_CORE': 49, 'MARK_AS_OVER_ANNOTATED': 17, 'REMOVE': 9, 'MODIFY': 8, 'UNDECIDED': 7, 'NEW': 2}
+- Evidence (all rows): {'IDA': 150, 'IEA': 64, 'IBA': 43, 'ISS': 20, 'EXP': 12, 'ISO': 7, 'HDA': 6, 'ISM': 6, 'IMP': 4, 'NAS': 4, 'TAS': 1}
+- Sub-compartment kinds, by gene: {'lumen': 26, 'membrane': 22, 'lumen+membrane': 5}
+- Rows with no sub-compartment, actions: {'ACCEPT': 51, 'KEEP_AS_NON_CORE': 37, 'MARK_AS_OVER_ANNOTATED': 17, 'REMOVE': 9, 'UNDECIDED': 7, 'NEW': 2}
+- Rows with no sub-compartment, evidence: {'IDA': 38, 'IEA': 27, 'IBA': 26, 'ISS': 11, 'HDA': 6, 'ISM': 5, 'EXP': 4, 'ISO': 3, 'IMP': 2, 'TAS': 1}
 - Example genes with only the root term: ARATH/TGG1, ARATH/TGG2, ARATH/UGT74C1, CANAL/GND1, DANRE/agxta, DANRE/agxtb, DANRE/uox, DANRE/urad, DROME/Acat1, DROME/Ccs, DROME/Ech1, DROME/Got1, DROME/Idh, DROME/Mdh1, DROME/Mtpalpha, NICAT/NaMPO1_candidate_AMO_3, SCHPO/SPCC1223.09, SCHPO/cbl1, SCHPO/erg8, SCHPO/pik3, SCHPO/pmp20, SCHPO/pnc1, human/ABCD4, human/ARL10, human/CD33
 
 ## endosome (GO:0005768)
 
-- Actions (all rows): {'ACCEPT': 126, 'KEEP_AS_NON_CORE': 57, 'MODIFY': 7, 'UNDECIDED': 6, 'NEW': 1, 'MARK_AS_OVER_ANNOTATED': 1}
+- Actions (all rows): {'ACCEPT': 126, 'KEEP_AS_NON_CORE': 58, 'MODIFY': 7, 'UNDECIDED': 5, 'NEW': 1, 'MARK_AS_OVER_ANNOTATED': 1}
 - Evidence (all rows): {'IDA': 70, 'IEA': 66, 'IBA': 23, 'ISS': 17, 'EXP': 8, 'ISO': 7, 'TAS': 5, 'HDA': 2}
-- Sub-compartment kinds, by gene: {'membrane': 33, 'membrane+other': 32, 'other': 16, 'lumen+membrane': 2, 'lumen': 1, 'lumen+membrane+other': 1, 'lumen+other': 1}
-- Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 36, 'ACCEPT': 27, 'UNDECIDED': 6, 'NEW': 1, 'MARK_AS_OVER_ANNOTATED': 1}
+- Sub-compartment kinds, by gene: {'membrane': 33, 'membrane+other': 32, 'other': 16, 'lumen+membrane': 2, 'lumen': 1, 'lumen+other': 1, 'lumen+membrane+other': 1}
+- Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 37, 'ACCEPT': 27, 'UNDECIDED': 5, 'NEW': 1, 'MARK_AS_OVER_ANNOTATED': 1}
 - Rows with no sub-compartment, evidence: {'IEA': 24, 'IDA': 22, 'IBA': 11, 'ISS': 6, 'TAS': 3, 'EXP': 2, 'ISO': 2, 'HDA': 1}
 - Example genes with only the root term: ARATH/AUX1, ARATH/CASPL1D1, ARATH/STM, DICDI/ptpC, DROME/AMPKalpha, DROME/Lkb1, DROME/Vps26, DROME/hbs, DROME/hh, DROME/neur, SCHPO/lsb6, SCHPO/pik3, SCHPO/vas2, human/ABCA1, human/ANKRD50, human/AP4E1, human/ARRDC5, human/ASTN1, human/ATP1A2, human/ATP6V1E1, human/BACE2, human/BIN1, human/BIRC6, human/C9orf72, human/CBLIF
 
 ## chloroplast (GO:0009507)
 
-- Actions (all rows): {'ACCEPT': 101, 'REMOVE': 26, 'KEEP_AS_NON_CORE': 9, 'MARK_AS_OVER_ANNOTATED': 4, 'UNDECIDED': 2, 'MODIFY': 2}
+- Actions (all rows): {'ACCEPT': 101, 'REMOVE': 23, 'KEEP_AS_NON_CORE': 9, 'MARK_AS_OVER_ANNOTATED': 6, 'UNDECIDED': 3, 'MODIFY': 2}
 - Evidence (all rows): {'IEA': 58, 'ISM': 44, 'HDA': 21, 'IDA': 10, 'IBA': 5, 'TAS': 4, 'ISS': 2}
-- Sub-compartment kinds, by gene: {'other': 14, 'membrane+other': 4, 'membrane': 4}
-- Rows with no sub-compartment, actions: {'ACCEPT': 60, 'REMOVE': 25, 'MARK_AS_OVER_ANNOTATED': 4, 'KEEP_AS_NON_CORE': 4, 'UNDECIDED': 1}
-- Rows with no sub-compartment, evidence: {'IEA': 48, 'ISM': 29, 'IDA': 6, 'HDA': 5, 'IBA': 3, 'ISS': 2, 'TAS': 1}
-- Example genes with only the root term: 9POAL/NCGR_LOCUS29329, ARATH/APO1, ARATH/ARR1, ARATH/AT5G02500, ARATH/At1g67980, ARATH/BES1, ARATH/CYP79B2, ARATH/CYP79B3, ARATH/CYP79F1, ARATH/CYP79F2, ARATH/EBF2, ARATH/EDS1, ARATH/ESP, ARATH/F4JLB7, ARATH/FAE1, ARATH/FLD, ARATH/GA1, ARATH/GSTF6, ARATH/GSTU20, ARATH/ICS1, ARATH/KCR1, ARATH/LCYB, ARATH/LHP1, ARATH/LYK4, ARATH/MAM1
+- Sub-compartment kinds, by gene: {'other': 13, 'membrane': 4, 'membrane+other': 4}
+- Rows with no sub-compartment, actions: {'ACCEPT': 60, 'REMOVE': 23, 'MARK_AS_OVER_ANNOTATED': 6, 'KEEP_AS_NON_CORE': 4, 'UNDECIDED': 2}
+- Rows with no sub-compartment, evidence: {'IEA': 48, 'ISM': 29, 'HDA': 6, 'IDA': 6, 'IBA': 3, 'ISS': 2, 'TAS': 1}
+- Example genes with only the root term: 9POAL/NCGR_LOCUS29329, ARATH/ABCG36, ARATH/APO1, ARATH/ARR1, ARATH/AT5G02500, ARATH/At1g67980, ARATH/BES1, ARATH/CYP79B2, ARATH/CYP79B3, ARATH/CYP79F1, ARATH/CYP79F2, ARATH/EBF2, ARATH/EDS1, ARATH/ESP, ARATH/F4JLB7, ARATH/FAE1, ARATH/FLD, ARATH/GA1, ARATH/GSTF6, ARATH/GSTU20, ARATH/ICS1, ARATH/KCR1, ARATH/LCYB, ARATH/LHP1, ARATH/LYK4
 
 ## vacuole (GO:0005773)
 
-- Actions (all rows): {'KEEP_AS_NON_CORE': 11, 'MARK_AS_OVER_ANNOTATED': 5, 'ACCEPT': 5, 'REMOVE': 3, 'MODIFY': 2}
-- Evidence (all rows): {'IEA': 12, 'NAS': 6, 'IBA': 3, 'EXP': 2, 'IDA': 2, 'HDA': 1}
-- Sub-compartment kinds, by gene: {'lumen+other': 3, 'other': 2, 'membrane': 1, 'membrane+other': 1}
-- Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 8, 'MARK_AS_OVER_ANNOTATED': 5, 'REMOVE': 3, 'ACCEPT': 1}
-- Rows with no sub-compartment, evidence: {'IEA': 8, 'NAS': 6, 'IDA': 2, 'HDA': 1}
-- Example genes with only the root term: ARATH/JAR1, ARATH/TFL1, GADMO/A0A8C5FPT8, NICAT/NaBBL1_candidate_FOX1_0, NICAT/NaBBL2_candidate_FOX1_2, NICAT/NaBBL_candidate_FOX1_4, NICAT/NaBBL_candidate_FOX2_2, NICAT/NaBBL_candidate_FOX2_4, SCHPO/ayr1, SOLTU/PATB1, yeast/ERG10, yeast/ERG19, yeast/ERG20, yeast/ERG8, yeast/IDI1, yeast/MVD1, yeast/PAH1
+- Actions (all rows): {'KEEP_AS_NON_CORE': 14, 'MARK_AS_OVER_ANNOTATED': 5, 'ACCEPT': 5, 'REMOVE': 3, 'MODIFY': 2}
+- Evidence (all rows): {'IEA': 13, 'NAS': 6, 'EXP': 4, 'IBA': 3, 'IDA': 2, 'HDA': 1}
+- Sub-compartment kinds, by gene: {'lumen+other': 3, 'other': 2, 'membrane+other': 1, 'membrane': 1}
+- Rows with no sub-compartment, actions: {'KEEP_AS_NON_CORE': 11, 'MARK_AS_OVER_ANNOTATED': 5, 'REMOVE': 3, 'ACCEPT': 1}
+- Rows with no sub-compartment, evidence: {'IEA': 9, 'NAS': 6, 'IDA': 2, 'EXP': 2, 'HDA': 1}
+- Example genes with only the root term: ARATH/JAR1, ARATH/TFL1, GADMO/A0A8C5FPT8, NICAT/NaBBL1_candidate_FOX1_0, NICAT/NaBBL2_candidate_FOX1_2, NICAT/NaBBL_candidate_FOX1_4, NICAT/NaBBL_candidate_FOX2_2, NICAT/NaBBL_candidate_FOX2_4, SCHPO/ayr1, SOLTU/PATB1, yeast/ERG10, yeast/ERG19, yeast/ERG20, yeast/ERG8, yeast/ICL1, yeast/IDI1, yeast/MVD1, yeast/PAH1
 
 ## autophagosome (GO:0005776)
 
