@@ -11,7 +11,7 @@ Gene **lysB** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes the 
 
 ## Curation Decisions
 - **Molecular Function**:
-  - No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.
+  - No specific catalytic or molecular function term applies to the non-enzymatic inner-membrane spanin subunit; `core_functions` records its biological process (`GO:0044659`) and host plasma membrane location (`GO:0020002`).
 - **Biological Process**:
   - `GO:0031640` (`killing of cells of another organism`, IEA): **MODIFY** to `GO:0044659` (`viral release from host cell by cytolysis`).
   - `GO:0044659` (`viral release from host cell by cytolysis`): **NEW** supported by `PMID:8051010` and `file:BPP2/lysB/lysB-uniprot.txt`.

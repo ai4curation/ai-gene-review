@@ -22,7 +22,7 @@
 ## GO Annotation Review Summary
 - `GO:0043139` (`5'-3' DNA helicase activity`, IDA `PMID:2829184`, IDA `PMID:9185573`, IEA `GO_REF:0000120`) -> `ACCEPT` (core function).
 - `GO:0003899` (`DNA-directed RNA polymerase activity`, IDA `PMID:11279245`, IEA `GO_REF:0000104`) -> `ACCEPT` (core primase function; note that in GO `DNA-directed RNA primase activity` or `DNA primase activity` is represented here by `GO:0003899` in GOA).
-- `GO:0016887` (`ATP hydrolysis activity`, EXP `PMID:2829184`, IEA `GO_REF:0000116`) -> `ACCEPT` (note: in GO ontology, `5'-3' DNA helicase activity` `GO:0043139` is an isomerase/translocase under `GO:0003678`, and check whether `GO:0016887` is an ancestor of `GO:0043139`; if `GO:0016887` is an ancestor of `GO:0043139`, `MODIFY` to `GO:0043139`! Wait—let's check the validation script on `GO:0016887` vs `GO:0043139`).
+- `GO:0016887` (`ATP hydrolysis activity`, EXP `PMID:2829184`, IEA `GO_REF:0000116`) -> `ACCEPT` (core NTPase/dTTPase activity fueling helicase translocation).
 - `GO:0003697` (`single-stranded DNA binding`, IEA `GO_REF:0000002`) -> `ACCEPT`.
 - `GO:0005524` (`ATP binding`, IEA `GO_REF:0000120`) -> `ACCEPT`.
 - `GO:0008270` (`zinc ion binding`, IEA `GO_REF:0000120`) -> `ACCEPT`.

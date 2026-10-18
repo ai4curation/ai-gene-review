@@ -14,4 +14,4 @@
 - `existing_annotations` in the GOA stub is empty.
 - Added `NEW` annotations:
   - `GO:0006260` (`DNA replication`, `IMP`, [PMID:11929537]) for its direct role in regulating gpAlpha origin-binding activity and P4 DNA replication / plasmid copy number.
-  - No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.
+  - Populated `core_functions` with `directly_involved_in: GO:0006260` (`DNA replication`) supported by [PMID:11929537], leaving `molecular_function` unset because only the abstract of [PMID:11929537] is cached.

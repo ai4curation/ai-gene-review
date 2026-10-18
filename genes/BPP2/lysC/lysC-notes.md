@@ -12,9 +12,9 @@ Gene **lysC** of temperate myovirus *Escherichia phage P2* (`BPP2`) encodes the 
 
 ## Curation Decisions
 - **Molecular Function**:
-  - No experimental or computational GO annotations are currently assigned in GOA; `existing_annotations` and `core_functions` are therefore left empty pending experimental characterization.
+  - No specific catalytic or molecular function term applies to the non-enzymatic outer-membrane spanin lipoprotein; `core_functions` records its biological process (`GO:0044659`) and host membrane location (`GO:0020002`).
 - **Biological Process**:
   - `GO:0031640` (`killing of cells of another organism`, IEA): **MODIFY** to `GO:0044659` (`viral release from host cell by cytolysis`).
   - `GO:0044659` (`viral release from host cell by cytolysis`): **NEW** supported by `file:BPP2/lysC/lysC-uniprot.txt`.
 - **Cellular Component**:
-  - `GO:0020002` (`host cell plasma membrane`, IEA from `GO_REF:0000044` with `supporting_entities: [UniProtKB-SubCell:SL-0376]`): Note that `GO_REF:0000044` maps `SL-0376` (`Host cell outer membrane`) conservatively to `GO:0020002` (`host cell plasma membrane`) or `GO:0044163` (`host cell outer membrane` — let's check if `GO:0044163` is in the ontology or if `GO:0020002` is the standard GO term; let's check via `validate_batch.py`!).
+  - `GO:0020002` (`host cell plasma membrane`, IEA from `GO_REF:0000044` with `supporting_entities: [UniProtKB-SubCell:SL-0376]`): **ACCEPT** (conservative UniProt subcellular location mapping from `SL-0376` `Host cell outer membrane`).

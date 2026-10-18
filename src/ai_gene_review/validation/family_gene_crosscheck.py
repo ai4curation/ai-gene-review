@@ -58,6 +58,7 @@ from yaml import CSafeLoader as _Loader  # libyaml; ~10x faster over the gene co
 PANTHER_SF_RE = re.compile(r"DR   PANTHER; (PTHR\d+:SF\d+);")
 PANTHER_FAM_RE = re.compile(r"DR   PANTHER; (PTHR\d+);")
 ACCESSION_RE = re.compile(r"^AC   (\S+?);", re.M)
+VIRAL_OC_RE = re.compile(r"^OC   Viruses;", re.M)
 
 #: Actions where the gene review holds the claim to be true. TOO_GENERAL is among them:
 #: it judges the term uninformative, not false, so a family that scopes the term out
@@ -112,11 +113,15 @@ def index_genes_by_family(genes_dir: Path) -> dict[str, list[GeneRef]]:
 
     Built by scanning UniProt records line-wise rather than parsing the review YAMLs, so
     the index over the whole corpus is cheap; only genes in a family that actually has a
-    review are loaded in full later.
+    review are loaded in full later. Viral UniProt records (``OC   Viruses;``) are
+    excluded because PANTHER phylogenetic trees and PAINT annotations are restricted to
+    cellular organisms; viral ``DR   PANTHER`` lines are out-of-tree InterPro HMM hits.
     """
     index: dict[str, list[GeneRef]] = {}
     for uniprot_path in sorted(genes_dir.glob("*/*/*-uniprot.txt")):
         text = uniprot_path.read_text(errors="replace")
+        if VIRAL_OC_RE.search(text):
+            continue
         acc_match = ACCESSION_RE.search(text)
         if not acc_match:
             continue

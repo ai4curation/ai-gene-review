@@ -352,6 +352,25 @@ def test_exception_for_member_without_gene_review_is_only_anchor_checked():
     assert check_member_exceptions(review, {FAMILY: []}) == []
 
 
+def test_index_genes_by_family_excludes_viral_records(tmp_path):
+    """PANTHER phylogenetic trees are restricted to cellular organisms; viral UniProt
+    records carrying out-of-tree InterPro DR PANTHER HMM hits are skipped."""
+    _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "REMOVE")
+    viral_dir = tmp_path / "genes" / "BPT7" / "3.5"
+    viral_dir.mkdir(parents=True)
+    (viral_dir / "3.5-uniprot.txt").write_text(
+        "AC   P00806;\n"
+        "OC   Viruses; Duplodnaviria; Heunggongvirae; Uroviricota.\n"
+        "DR   PANTHER; PTHR11022; PEPTIDOGLYCAN RECOGNITION PROTEIN; 1.\n"
+        "DR   PANTHER; PTHR11022:SF41; PEPTIDOGLYCAN-RECOGNITION PROTEIN LC-RELATED; 1.\n"
+    )
+    (viral_dir / "3.5-ai-review.yaml").write_text(
+        yaml.safe_dump({"id": "P00806", "existing_annotations": []})
+    )
+    index = index_genes_by_family(tmp_path / "genes")
+    assert [g.symbol for g in index.get(FAMILY, [])] == ["PGRPLC"]
+
+
 # --------------------------------------------------------------------------
 # Against the real corpus
 # --------------------------------------------------------------------------
