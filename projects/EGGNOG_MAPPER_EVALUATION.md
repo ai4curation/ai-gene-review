@@ -29,8 +29,8 @@ from annotation transfer. Exact matches then fell to 33% of leaves and
 core-function recall to 44%. A further 44% of leaves were related to nothing
 in the review. In a manual check of 76 of those unrelated terms, about half
 (39) were wrong and one in six (12) was a correct, informative addition. The
-errors are characteristic: process terms that came from an ortholog's mutant phenotype, terms that cannot apply in the
-query's lineage (eye development on a worm protein), activities that belong to
+errors are characteristic: process terms that came from an ortholog's mutant
+phenotype, terms that cannot apply in the query's lineage (eye development on a worm protein), activities that belong to
 a paralog or a complex partner, and source annotations that were wrong.
 Molecular-function terms most often match the review exactly. But in a
 24-claim sample per aspect of terms going beyond what the review supports, two
@@ -228,22 +228,35 @@ eggNOG (proteins with GO / core recall):
 ### Manual adjudication
 
 Two rounds of leaves were drawn from the species-excluded run with fixed
-seeds, at most one per protein per stratum
-([`adjudication/`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml)):
-- **Round 1:** 80 leaves (40 UNRELATED, 20 REJECTED, 20 NARROWER).
+seeds ([`adjudication/`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml)).
+Each draw picked proteins at random from those with a leaf in the stratum,
+then one leaf at random within each protein:
+- **Round 1:** 80 leaves (40 UNRELATED, 20 REJECTED, 20 NARROWER), at most
+  one per protein per stratum.
 - **Round 2:** 72 leaves, 24 per GO aspect (12 UNRELATED, 6 REJECTED,
-  6 NARROWER each), from proteins not used in round 1.
+  6 NARROWER each), from proteins not used in round 1. The limit was one per
+  protein per aspect and stratum, so the round-2 NARROWER and REJECTED
+  strata each repeat one protein.
 
 AI reviewers judged each against the gene's review, UniProt record and notes,
 using the COR/LSP/UNC/PLI/NPI/REP scheme of de Crécy-Lagard et al. 2025
 (PMID:40703034). Counts below pool both rounds by the category each claim was
-drawn from. Round 2 is balanced across aspects by design, whereas round 1
-follows the population, in which BP makes up 79% of UNRELATED leaves. The
-pooled rates therefore over-weight MF and CC. Round 1 alone is the
-population estimate: 22 of 40 UNRELATED wrong (55%) and 6 correct (15%).
-Reweighting round 2 to the population's aspect mix moves the pooled figures
-only slightly, to about 50% wrong and 19% correct. Eight round-1 claims drawn as REJECTED changed category once
-placeholder removals stopped counting. They are tallied in their own row,
+drawn from.
+
+The rates are **per protein**: "for a random protein, is a random term of
+this kind wrong?" They are not per term. A protein with 100 unrelated terms
+had the same chance of being drawn as one with 2, so neither round is
+proportional to terms, and whether the term-level rate is higher or lower
+is untested. The two rounds also differ in aspect mix:
+- **Round 1** follows the protein-level population. Its 40 UNRELATED leaves
+  are BP 27, CC 8, MF 5, whereas BP is 79% of UNRELATED terms.
+- **Round 2** is balanced across aspects by design.
+
+Round 1 alone gives 22 of 40 UNRELATED wrong (55%) and 6 correct (15%).
+The pooled UNRELATED stratum is 76 distinct proteins, one leaf each.
+
+Eight round-1 claims drawn as REJECTED changed category once placeholder
+removals stopped counting. They are tallied in their own row,
 since they are not a random slice of their new categories. The REJECTED row
 is therefore conditioned on the claim still being rejected.
 
@@ -285,7 +298,7 @@ Error types among all 74 wrong calls (both rounds):
 Examples for every row, split by GO aspect, are on the
 [failure-modes page](EGGNOG_MAPPER_EVALUATION/failure-modes.md). The three
 low-count types (frequency bias, in vitro only, pathway context) are grouped
-there under "others".
+there, under "others" for MF and CC and "generic or out-of-context" for BP.
 
 The pattern follows from the method. emapper takes the union of everything
 any ortholog in the group carries, so one ortholog's mutant phenotype, one
@@ -297,7 +310,8 @@ rather than outvoted, because the output keeps no ortholog-support threshold.
 ### Failure modes by ontology
 
 Round 2 (above) compares the three ontologies like for like. Of each
-aspect's 24 claims, 16 MF, 12 BP and 10 CC were wrong. Each ontology fails in its own way:
+aspect's 24 claims, 16 MF, 12 BP and 10 CC were wrong. Each ontology fails in
+its own way:
 
 - **MF: the molecule differs.**
   - Domain missing: ABC transporter on SecA.
@@ -421,6 +435,7 @@ one *P. putida* protein in ten.
 | `adjudication/batch_*.yaml`, `adjudication/round2_batch_*.yaml` | the 80 + 72 adjudicated claims with rationale |
 | [`adjudication/summary.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/summary.yaml) | adjudication tallies, overall and by aspect |
 | [`adjudication/failure_modes.yaml`](EGGNOG_MAPPER_EVALUATION/adjudication/failure_modes.yaml) | every wrong call, by aspect and error type |
+| [`adjudication/blind_recheck/`](EGGNOG_MAPPER_EVALUATION/adjudication/blind_recheck/summary.yaml) | blinded re-check: batches, key, comparison script and summary |
 | [`failure-modes.md`](EGGNOG_MAPPER_EVALUATION/failure-modes.md) | failure modes by ontology, with examples |
 | [`deep-dive.md`](EGGNOG_MAPPER_EVALUATION/deep-dive.md), `deep_dive/` | non-model genome cohort, runs, results and adjudication |
 
