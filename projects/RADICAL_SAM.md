@@ -104,7 +104,7 @@ Last updated: 2026-10-18
 
 ## Phase 1: human (9)
 
-- [ ] LIAS (O43766): lipoyl synthase, mitochondrial
+- [x] LIAS (O43766): lipoyl synthase, mitochondrial. 21 rows: 11 ACCEPT, 6 MODIFY (incl. 3 obsolete GO:0009107 → GO:0009249), 3 MARK_AS_OVER_ANNOTATED (mouse phenotype ISS), 1 NEW (SAM binding)
 - [ ] RSAD2 (Q8WXG1): viperin, CTP → ddhCTP dehydratase
 - [x] MOCS1 (Q9NZB8): GTP 3',8-cyclase (MOCS1A) + cPMP synthase (MOCS1B). Reviewed earlier; include in Phase 3
 - [ ] CDKAL1 (Q5VV42): cytosolic tRNA t6A37 → ms2t6A methylthiotransferase
