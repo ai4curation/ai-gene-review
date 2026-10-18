@@ -105,7 +105,9 @@ from ai_gene_review.validation.supporting_text import (
 )
 
 # A resolver answers: given a CURIE, return (status, primary_label, aliases).
-# status is "ok" when the id resolved, "not_found" when the ontology was
+# status is "ok" when the id resolved, "ok_no_aliases" when it resolved but the
+# ontology source cannot list synonyms (e.g. the OLS adapter), so only the
+# primary label is known, "not_found" when the ontology was
 # consulted but the id is absent, and "unavailable" when the ontology itself
 # could not be loaded/queried (e.g. transient download failure) - the latter is
 # advisory so CI does not go red on flaky ontology fetches. Implemented as a
@@ -1489,6 +1491,14 @@ def validate_terms(
                 f"the {where} quotes the retired label verbatim, which is "
                 f"allowed when the entry documents the retirement"
             )
+        if err and status == "ok_no_aliases":
+            # The ontology source cannot list synonyms, so a non-primary label
+            # may be a synonym: advisory, as it was before ids resolved here.
+            warnings.append(
+                f"{err} (synonyms unavailable from this ontology source; "
+                f"label not validated against synonyms)"
+            )
+            continue
         if err:
             errors.append(err)
 
@@ -1721,7 +1731,14 @@ def _build_oak_resolver(
             # entity_aliases includes synonyms; tolerate adapters lacking it.
             alias_fn = getattr(adapter, "entity_aliases", None)
             if callable(alias_fn):
-                aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                try:
+                    aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                except NotImplementedError:
+                    # e.g. the OLS adapter has no alias map. The id and its
+                    # primary label did resolve, so do not report the ontology
+                    # as unavailable; but synonyms are unknown, so a label that
+                    # differs from the primary may still be a valid synonym.
+                    return ("ok_no_aliases", primary, set())
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())

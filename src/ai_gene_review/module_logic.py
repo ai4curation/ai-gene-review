@@ -70,6 +70,9 @@ class Atom:
     uniprot: Optional[str]
     representative_gene_symbols: tuple[str, ...] = ()
     representative_uniprots: tuple[str, ...] = ()
+    #: GO molecular-function ids the step requires (annoton ``function`` and
+    #: participant ``required_function``), for activity-based oracles.
+    function_ids: tuple[str, ...] = ()
 
     @property
     def gene_symbols(self) -> tuple[str, ...]:
@@ -154,6 +157,10 @@ def _atom_from_annoton(annoton: dict, namespace: str = "") -> Atom:
     )
     uniprot = _uniprot_from_gene(gene)
     annoton_id = annoton.get("id", "?")
+    function_ids = tuple(dict.fromkeys(
+        tid for descriptor in (annoton.get("function"), participant.get("required_function"))
+        if (tid := ((descriptor or {}).get("term") or {}).get("id", "")).startswith("GO:")
+    ))
     return Atom(
         node_id=f"{namespace}#{annoton_id}" if namespace else annoton_id,
         label=annoton.get("label", annoton.get("id", "?")),
@@ -161,6 +168,7 @@ def _atom_from_annoton(annoton: dict, namespace: str = "") -> Atom:
         uniprot=uniprot or (representative_uniprots[0] if representative_uniprots else None),
         representative_gene_symbols=representative_symbols,
         representative_uniprots=representative_uniprots,
+        function_ids=function_ids,
     )
 
 
