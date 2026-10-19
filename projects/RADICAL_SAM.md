@@ -92,6 +92,7 @@ is_a `GO:0051540` metal cluster binding; `GO:0046872` metal ion binding is
 | `GO:0003824` catalytic activity | `MODIFY` | The specific reaction MF the gene carries or is shown to have. If no reaction is known (e.g. RSAD1), `KEEP_AS_NON_CORE`: it is already as precise as the evidence allows. |
 | `GO:0051536` iron-sulfur cluster binding | `MODIFY` | `GO:0051539`, the descendant the radical SAM cluster always satisfies. |
 | `GO:0051539` 4 iron, 4 sulfur cluster binding | `ACCEPT` | The radical SAM cluster is the catalytic cofactor, so it is core for every active member. `KEEP_AS_NON_CORE` only where catalysis is not established. |
+| `GO:0005506` iron ion binding | `MODIFY` | Same as `GO:0046872`: the iron is bound as a cluster, so replace with `GO:0051539`. |
 | `GO:0046872` metal ion binding | `MODIFY` | `GO:0051539` (lateral correction: the iron is bound as a cluster). Keep only if the protein binds a separate metal ion. |
 | `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT` | Cosubstrate binding, true for every active member. |
 
@@ -137,10 +138,10 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 - [x] pflC (P32675): "PFL-activating enzyme 2". Partner PflD is a 1,5-anhydromannitol-6-P lyase, not a PFL (PMID:39283600), so GO:0043365 REMOVEd; core MF GO:0043364. 8 rows: 3 ACCEPT, 3 MODIFY, 1 REMOVE, 1 KEEP_AS_NON_CORE. Genome-context analysis in pflC-bioinformatics/ covers all five activase–GRE pairs
 - [x] ybiY (P75794): putative PFL-activating enzyme 3. Partner YbiW is a 1,5-anhydroglucitol-6-P lyase (PMID:39283600); GO:0043365 REMOVEd; core MF GO:0043364. 8 rows, same split as pflC
 - [x] yjjW (P39409): putative glycyl-radical enzyme activase. Partner YjjI reaction unknown. 10 rows: 3 ACCEPT, 3 MODIFY, 3 REMOVE (protein binding), 1 KEEP_AS_NON_CORE; core MF GO:0043364
-- [ ] aslB (P25550): anaerobic sulfatase-maturating enzyme homolog
+- [x] aslB (P25550): anSME homolog. 5 rows: 2 KEEP_AS_NON_CORE, 1 MODIFY, 2 UNDECIDED (substrate untested; conflicting reports). No core functions. Residue mapping in aslB-bioinformatics/: 16/17 anSME catalytic features retained
 - [ ] ydeM (P76134): anaerobic sulfatase-maturating enzyme homolog
-- [ ] ygiQ (Q46861): UPF0313
-- [ ] yhcC (P0ADW6): uncharacterised
+- [x] ygiQ (Q46861): UPF0313. 4 rows: 2 KEEP_AS_NON_CORE, 2 MODIFY (incl. GO:0005506 iron ion binding). No core functions. An openscientist report claims ygiQ = rlmX (PMID:41380683) but the paper's abstract never names ygiQ and the full text is paywalled; recorded as UNVERIFIED, not annotated
+- [x] yhcC (P0ADW6): no longer uncharacterised. PMID:42239373 (preprint, full text) shows YhcC is the MnmL orthologue doing the anaerobic cmnm5s2U->nm5s2U demodification at tRNA position 34. 6 rows: 1 ACCEPT, 2 MODIFY, 3 NEW (tRNA binding, SAM binding, wobble uridine modification). Proposed new term for the demodifying activity
 
 ## Phase 3: consistency pass over existing reviews
 
