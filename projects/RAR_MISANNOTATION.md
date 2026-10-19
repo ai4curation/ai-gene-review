@@ -5,6 +5,8 @@ last_reviewed: 2026-10-18
 tags: [EVALUATION]
 collections: [HOMOLOGY_PROPAGATION]
 species: [ARATH, worm, DROME, mouse, human, CHICK]
+autolink_exclude: [ddl]
+genes: [At3g08840, KDTA, cec-10, npp-20, CG3226, Gprc5c, BTBD3]
 ---
 
 # Re-examining the RAR misannotation study (Wei et al. 2020)
@@ -100,6 +102,27 @@ ligase activity`, which is untested for the Arabidopsis protein. This is the
 same "inside the clade, lost the function" question IBA_REVIEW asks, and is a
 candidate for a gene review.
 
+## Gene reviews of the surviving cases
+
+One full review per surviving case (2026-10-19). Each one checks the flagged
+annotation against the literature and, for IBA rows, the PAINT node.
+
+| Gene | Flagged term | Review action | Paper's flag |
+|---|---|---|---|
+| ARATH/KDTA | lipid A biosynthetic process (IBA) | ACCEPT, core | **Wrong.** Lipid IVA, KdtA's substrate, accumulates only in *atkdta* mutants; the enzyme is mitochondrial. |
+| ARATH/At3g08840 | peptidoglycan biosynthetic process (IBA, now gone); D-Ala-D-Ala ligase activity (IBA) | MF ACCEPT; no BP proposed | **Holds for the process, for plastid reasons.** Catalytic residues are conserved, matching the moss enzyme, so the MF stays (untested). |
+| worm/cec-10 | MBF transcription complex (IBA) | REMOVE (with four other MBF-derived IBAs) | **Holds.** cec-10 lacks the KilA-N DNA-binding domain; PTN000917496 is placed too deep over metazoan Swi6-family members. |
+| worm/npp-20 | positive regulation of division septum assembly (IMP) | MODIFY → mitotic cytokinesis, non-core | **Holds for the term, not the experiment.** The full text reports that RNAi "blocked cytokinesis"; the curator chose a fungal septum term. |
+| DROME/CG3226 | S100 protein binding (InterPro2GO) | REMOVE | **Holds.** No S100 proteins outside chordates; the IPR037893 mapping carries a vertebrate partner to flies. |
+| mouse/Gprc5c | sevenless binding (InterPro2GO) | REMOVE (also visual perception from the same entry) | **Holds, for a different reason.** IPR002956 is a BOSS PRINTS signature matching two transmembrane segments; no GPRC5–ROS1 link is known. |
+| CHICK/BTBD3 | cerebral cortex development (IBA) | MODIFY → pallium development | **Holds, weakly.** The node is sound; the anatomy term doesn't fit birds. About 1,760 bird annotations use it, constrained only to Bilateria. |
+
+Taken together, the paper was wrong about one family (plant lipid A). It was right
+about five, but for three of those the cause was not the one it suggested (plastid
+loss for DDL, a mis-scoped experimental term for npp-20, a bad InterPro signature
+for Gprc5c). Only one of the five (cec-10) is the IBA node-depth problem the paper
+emphasised. The other is too broad an anatomy term (BTBD3).
+
 ## The neXtProt claim
 
 The paper says, citing personal communication with Lydie Lane, that neXtProt
@@ -138,10 +161,12 @@ IBA is low quality.
 
 ## Next steps
 
-- [ ] Gene review: Arabidopsis DDL (A0A1I9LPE3), on the MF IBA.
-- [ ] Family check of PTN000917496 (MBF / worm cec-10).
-- [ ] Read the full text of PMID:12937276 for the npp-20 IMP row.
-- [ ] Decide whether chicken `cerebral cortex development` is a homology question to raise with GO.
+- [x] Gene review: Arabidopsis DDL (At3g08840), on the MF IBA.
+- [x] Family check of PTN000917496 (MBF / worm cec-10), from domain and pairwise evidence; the PANTHER tree was not re-inferred.
+- [x] Read the full text of PMID:12937276 for the npp-20 IMP row.
+- [x] Chicken `cerebral cortex development`: reviewed in BTBD3.
+- [ ] Raise with GO: taxon constraints on `GO:0030907`/`GO:0033309` (Fungi), `GO:0044548` (Chordata) and a narrower one for `GO:0021987`; an IRD on PTN000917496; and review of the IPR002956 and IPR037893 InterPro2GO mappings.
+- [ ] Ask TAIR for experimental lipid A (PMID:21709257) and mitochondrion annotations on the Arabidopsis Lpx/KdtA genes.
 - [ ] Rerun RAR on current GOA for our reviewed species (script not yet written).
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
 
