@@ -21,8 +21,10 @@ N-formimidoyl-L-glutamate (= N-formimino-L-glutamate).
   [file:human/AMDHD1/AMDHD1-uniprot.txt]
 
 The catalytic-activity and EC assignments in the human entry are propagated by
-similarity (ECO:0000250|UniProtKB:P42084, the characterised *Agrobacterium/*bacterial
-HutI ortholog); hence UniProt labels the human protein "**Probable**
+similarity (ECO:0000250|UniProtKB:P42084 = HUTI_BACSU, the characterised *Bacillus
+subtilis* HutI ortholog; the other two donors in the feature table are A0KF84 =
+HUTI_AERHH, *Aeromonas hydrophila*, and Q8U8Z6 = HUTI_AGRFC, *Agrobacterium fabrum*);
+hence UniProt labels the human protein "**Probable**
 imidazolonepropionase" and Reactome notes the human enzyme's existence is inferred
 from high-throughput screening (Yamada et al. 2004) rather than direct human enzyme
 assay [reactome:R-HSA-70906]. The activity is nonetheless strongly supported by
@@ -33,19 +35,27 @@ family membership and phylogeny (IBA to GO:0050480 by GO_Central).
 - COFACTOR: "Name=Zn(2+) ... Name=Fe(3+) ... Note=Binds 1 zinc or iron ion per
   subunit." [file:human/AMDHD1/AMDHD1-uniprot.txt]
 - Metal-coordinating residues by similarity: BINDING 260 and BINDING 334 each ligate
-  Fe(3+)/Zn(2+) [file:human/AMDHD1/AMDHD1-uniprot.txt]. Substrate-binding residues
-  159, 192, 263, 336 [file:human/AMDHD1/AMDHD1-uniprot.txt].
+  Fe(3+)/Zn(2+) — the Zn lines carry `ECO:0000250|UniProtKB:P42084`, the Fe lines
+  `ECO:0000250|UniProtKB:A0KF84` [file:human/AMDHD1/AMDHD1-uniprot.txt].
+  Substrate-binding residues 159, 192, 263; residues 159 and 336 bind the *product*
+  N-formimidoyl-L-glutamate (`ECO:0000250|UniProtKB:Q8U8Z6`)
+  [file:human/AMDHD1/AMDHD1-uniprot.txt].
 - SIMILARITY: "Belongs to the metallo-dependent hydrolases superfamily. HutI family."
   [file:human/AMDHD1/AMDHD1-uniprot.txt]
 
 So the enzyme is a **Zn/Fe metal-dependent amidohydrolase** (metallo-dependent
 hydrolase superfamily, cd01296 Imidazolone-5PH; Pfam PF01979 Amidohydro_1). Metal
-ion binding is well supported → **GO:0008270 zinc ion binding** is used in
-core_functions (Zn is the primary catalytic metal, per P42084 evidence). GOA
-carries *no* metal-binding term for AMDHD1 at all — neither GO:0008270 nor the
-parent GO:0046872 — so as of 2026-10-09 GO:0008270 is also proposed as an
-`action: NEW` annotation with ISS evidence (see the compliance-pass entry below
-for the comparator check that justifies it).
+ion binding is well supported, but the *identity* of the metal is not: UniProt lists
+Zn(2+) and Fe(3+) as two `COFACTOR` entries at equal evidential strength (both
+`ECO:0000250|UniProtKB:P42084`), the Note reads "Binds 1 zinc or iron ion per
+subunit", and residues 260/334 each carry a BINDING line for either metal. COFACTOR
+order is not a ranking, so **GO:0046872 metal ion binding** is the term used in
+core_functions rather than GO:0008270 zinc ion binding or GO:0005506 iron ion
+binding — it asserts exactly what the source asserts. GOA carries *no* metal-binding
+term for AMDHD1 at all — neither GO:0046872 nor either child — so as of 2026-10-09
+GO:0046872 is also proposed as an `action: NEW` annotation with ISS evidence (see the
+compliance-pass entry below for the comparator check that justifies it). Substitute
+the specific child term once the human enzyme's metal content is measured.
 
 ## Localization
 
@@ -128,7 +138,7 @@ protein binding).
 ## Core functions selected
 
 1. GO:0050480 imidazolonepropionase activity (catalytic MF)
-2. GO:0008270 zinc ion binding (catalytic metal cofactor)
+2. GO:0046872 metal ion binding (catalytic metal cofactor; Zn or Fe, see above)
 3. GO:0006548 L-histidine catabolic process (BP)
 
 ## 2026-10-09 — weekly compliance pass
@@ -153,7 +163,7 @@ biology. Changes:
   evidence. The one paper that gives AMDHD1 a protein-stabilising role names
   SMAD2/3/4, *not* KLHL23, so it licenses nothing here either. Reasons state
   explicitly that removal does not assert the interaction is false (NbExp=3).
-- **NEW annotation: GO:0008270 zinc ion binding (ISS).** This closes the
+- **NEW annotation: GO:0046872 metal ion binding (ISS).** This closes the
   pre-existing `just validate` warning that `core_functions[1]` was not reflected
   in `existing_annotations`. The NEW bar is met on the cofactor reading: AMDHD1's
   own side chains hold the metal (BINDING 260, BINDING 334, each annotated for
@@ -166,9 +176,7 @@ biology. Changes:
   ×2. Metal binding is the family convention, so AMDHD1's absence is a coverage gap
   in the UniProt cofactor pipeline for this entry, not a curatorial decision.
   Evidence is ISS, not IDA: cofactor and both ligating residues are
-  ECO:0000250|UniProtKB:P42084. Zinc rather than iron because it is the first
-  cofactor listed and the one with P42084-derived site evidence; the Zn-vs-Fe
-  question is raised explicitly under `suggested_questions`.
+  ECO:0000250 by similarity (Zn sites from P42084, Fe sites from A0KF84).
 - **`findings` added to all 9 references**, including four on the UniProt entry
   itself. Verbatim `supporting_text` where a source exists; the four GO_REF
   findings are statement-only because GO_REF documents are not cached and any
@@ -187,3 +195,49 @@ warnings resolved). Remaining gaps are deliberate: four GO_REF
 the three Reactome TAS rows — the rule requires a `PMID:`/`DOI:` quote and no
 primary paper in this review assays the human enzyme or its localization. Padding
 either would mean inventing provenance.
+
+## 2026-10-19 — review response (PR #4448)
+
+The `CHANGES_REQUESTED` review raised one blocking item and three suggestions. All
+four are addressed; every claim below was re-derived from the sources rather than
+taken from the review.
+
+- **Blocking — the metal was over-specified.** The `NEW` row and
+  `core_functions[1]` asserted **GO:0008270 zinc ion binding**, resolved from
+  UniProt's two `COFACTOR` entries by treating the listed order as a ranking. It is
+  not. `Name=Zn(2+)` and `Name=Fe(3+)` both carry `ECO:0000250|UniProtKB:P42084`,
+  the Note reads "Binds 1 zinc or iron ion per subunit", and residues 260 and 334
+  each have a `BINDING` line for *either* metal (Zn from P42084, Fe from A0KF84)
+  [file:human/AMDHD1/AMDHD1-uniprot.txt]. The review also noted that the comparator
+  argued against the narrower claim: the *P. putida* HutI ortholog carries **both**
+  GO:0008270 and GO:0005506, so if family convention is the warrant it covers both
+  metals. Both slots now assert **GO:0046872 metal ion binding**, which is exactly
+  what the source asserts, with the Zn-vs-Fe specifics kept in `review.reason` and
+  in `suggested_questions`. `supporting_entities` gained `UniProtKB:A0KF84`
+  alongside P42084, since the Fe site assignments come from A0KF84. GOA carries
+  neither GO:0046872 nor either child, so `action: NEW` still stands.
+- **Suggestion 1 — the Q9HU91 genus.** Resolved against UniProt: **Q9HU91 =
+  HUTI_PSEAE, *Pseudomonas aeruginosa* PAO1** imidazolonepropionase. The
+  "Pseudomonas/Agrobacterium enzyme" phrasing in the GO:0006548 reason was wrong —
+  one accession cannot be both — and is now pinned to *P. aeruginosa*. While
+  checking, the same error turned up in these notes: P42084 was described as the
+  "*Agrobacterium*/bacterial" ortholog, but **P42084 = HUTI_BACSU, *Bacillus
+  subtilis***. *Agrobacterium fabrum* is **Q8U8Z6 = HUTI_AGRFC**, the donor for the
+  product-binding sites, and **A0KF84 = HUTI_AERHH, *Aeromonas hydrophila***
+  supplies the Fe sites. All three are now named correctly above.
+- **Suggestion 2 — residue 336 binds the product, not the substrate.** Confirmed
+  from the `FT` block: 159 and 336 bind `N-formimidoyl-L-glutamate`
+  (`ECO:0000250|UniProtKB:Q8U8Z6`), so the substrate-only sites are 159, 192 and
+  263. The GO:0050480 reason and the metal-cofactor section are corrected.
+- **Suggestion 3 — provenance for "liver and skeletal muscle".** It does exist, in
+  the UniProt cross-references rather than in a `TISSUE SPECIFICITY` line:
+  `DR   HPA; ENSG00000139344; Tissue enhanced (liver, skeletal muscle).`
+  [file:human/AMDHD1/AMDHD1-uniprot.txt]. Recording it here, as the review asked,
+  so the qualifier in `description` and `suggested_questions[0]` is anchored. Note
+  this is an expression-atlas cross-reference, not a curated statement tied to a
+  publication, so it supports where the transcript is enriched and nothing about
+  where the enzyme is catalytically active.
+- **Suggestion 4** (follow up on the uncached Reactome "Yamada et al. 2004"
+  citation and backfill the three TAS `literature_support` slots) agrees with the
+  existing deliberate gap and is left for a follow-up PR; nothing here invents a
+  PMID for it.
