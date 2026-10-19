@@ -14,3 +14,8 @@ as non-core.
 
 GO-CAM: no production GO-CAM model includes SCIMP in any species (checked the local
 `gocams/index.tsv` and the GO API `gp/<id>/models` for human and mouse on 2026-10-16).
+
+Toll-like receptor 4 binding (GO:0035662) is proposed for human SCIMP by similarity to mouse but
+not for rat. The human UniProt entry carries curated SUBUNIT text recording the TLR4 interaction
+(By similarity); the rat entry is unreviewed TrEMBL with no SUBUNIT text, and conservation of the
+interaction-relevant residues in rat has not been checked (see the first suggested question).
