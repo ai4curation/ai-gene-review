@@ -134,9 +134,9 @@ Characterised, in priority order:
 
 Paralogs and uncharacterised, where the risk is over-annotation:
 
-- [ ] pflC (P32675): PFL-activating enzyme 2
-- [ ] ybiY (P75794): putative PFL-activating enzyme 3
-- [ ] yjjW (P39409): putative glycyl-radical enzyme activase
+- [x] pflC (P32675): "PFL-activating enzyme 2". Partner PflD is a 1,5-anhydromannitol-6-P lyase, not a PFL (PMID:39283600), so GO:0043365 REMOVEd; core MF GO:0043364. 8 rows: 3 ACCEPT, 3 MODIFY, 1 REMOVE, 1 KEEP_AS_NON_CORE. Genome-context analysis in pflC-bioinformatics/ covers all five activase–GRE pairs
+- [x] ybiY (P75794): putative PFL-activating enzyme 3. Partner YbiW is a 1,5-anhydroglucitol-6-P lyase (PMID:39283600); GO:0043365 REMOVEd; core MF GO:0043364. 8 rows, same split as pflC
+- [x] yjjW (P39409): putative glycyl-radical enzyme activase. Partner YjjI reaction unknown. 10 rows: 3 ACCEPT, 3 MODIFY, 3 REMOVE (protein binding), 1 KEEP_AS_NON_CORE; core MF GO:0043364
 - [ ] aslB (P25550): anaerobic sulfatase-maturating enzyme homolog
 - [ ] ydeM (P76134): anaerobic sulfatase-maturating enzyme homolog
 - [ ] ygiQ (Q46861): UPF0313
