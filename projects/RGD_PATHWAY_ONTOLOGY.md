@@ -176,9 +176,12 @@ retention in ER), `GO:0051604`, `GO:0045542`, `GO:0006607`, `GO:0046889` and
 signaling pathway), so the pathway scores 0%. A 0 in the process-level column
 therefore does not tell an unmodelled pathway apart from one modelled with
 step-level terms. `best_gocam_overlap`, read together with the model title,
-separates the two cases for SREBP. The Wnt and citric acid cycle zeros have a
-third cause: GO-CAMs carrying the mapped term exist (1 and 11), but none
-contains a curated gene.
+separates the two cases for SREBP. The Wnt and citric acid cycle zeros have
+other causes. The model count (`n_gocam_models_for_mapped_go`) covers every
+species, while the gene overlap is human only. The one GO-CAM carrying the Wnt
+term is a Drosophila model, so canonical Wnt signaling has no human model at
+all. Of the 11 carrying the TCA-cycle term, one is human, and its genes fall
+outside RGD's curated set (below).
 
 The citric acid cycle row also shows a limit of the gene basis. Eleven GO-CAMs
 carry the TCA-cycle term: mouse, fission-yeast and one human model (SIRT3
