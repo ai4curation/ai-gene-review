@@ -19,7 +19,7 @@ All claims come from the run that hid the query's own species. Two samples
 were drawn:
 
 - **Round 1:** 80 leaves (40 UNRELATED, 20 REJECTED, 20 NARROWER), at most
-  one per protein.
+  one per protein per stratum.
 - **Round 2:** 72 leaves stratified by aspect. For each of MF, BP and CC it
   took 12 UNRELATED, 6 REJECTED and 6 NARROWER leaves, from proteins not used
   in round 1.

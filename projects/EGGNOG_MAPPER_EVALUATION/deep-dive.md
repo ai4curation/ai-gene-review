@@ -95,9 +95,19 @@ addition to GOA.
 
 ## Manual check
 
-Terms were sampled from the default run: 24 for *P. putida* (14 UNRELATED,
-5 NARROWER, 5 REJECTED), 16 each for horse and poplar, and all 9 non-exact
-terms for pennycress.
+Terms were sampled from the default run, as in the main evaluation: proteins
+at random, then one term per protein. The rates are therefore per protein.
+- *P. putida:* 24 terms (14 UNRELATED, 5 NARROWER, 5 REJECTED).
+- Horse: 16 terms (12 UNRELATED, 4 NARROWER).
+- Poplar: 16 terms (10 UNRELATED, 6 NARROWER).
+- Pennycress: all 9 non-exact terms, a census of its 4 genes rather than a
+  sample.
+
+The mix of strata differs by genome, and NARROWER terms are the safest, so
+the rows are not directly comparable. The UNRELATED terms alone compare like
+for like: wrong in 8 of 14 for *P. putida*, 5 of 12 for horse, 8 of 10 for
+poplar and 3 of 6 for pennycress. Unlike the main cohort's blinded
+re-check, these reviewers saw each term's automatic category.
 
 | Genome | Claims | Correct (COR) | True but vague (LSP) | Undecided (UNC) | Wrong (NPI/PLI/REP) |
 |---|---|---|---|---|---|

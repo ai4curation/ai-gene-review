@@ -30,8 +30,8 @@ core-function recall to 44%. A further 44% of leaves were related to nothing
 in the review. In a manual check of 76 of those unrelated terms, about half
 (39) were wrong and one in six (12) was a correct, informative addition. The
 errors are characteristic: process terms that came from an ortholog's mutant
-phenotype, terms that cannot apply in the query's lineage (eye development on a worm protein), activities that belong to
-a paralog or a complex partner, and source annotations that were wrong.
+phenotype, terms that cannot apply in the query's lineage (eye development on
+a worm protein), activities that belong to a paralog or a complex partner, and source annotations that were wrong.
 Molecular-function terms most often match the review exactly. But in a
 24-claim sample per aspect of terms going beyond what the review supports, two
 in three MF terms were wrong, against half or fewer for process and location
@@ -166,9 +166,9 @@ for manual review.
 
 | Run | Proteins with GO | Leaf terms | EXACT % | BROADER % | NARROWER % | DOWNGRADED % | REJECTED % | UNDECIDED % | UNRELATED % | Core recall % |
 |---|---|---|---|---|---|---|---|---|---|---|
-| default | 449 | 9,050 | 39.9 | 1.7 | 11.4 | 6.0 | 1.7 | 0.5 | 38.7 | 66.2 (1583/2391) |
+| default | 449 | 9,050 | 39.9 | 1.8 | 11.4 | 6.0 | 1.7 | 0.5 | 38.7 | 66.2 (1583/2391) |
 | species_excluded | 332 | 6,674 | 33.1 | 2.2 | 12.4 | 6.1 | 1.8 | 0.3 | 44.2 | 43.5 (1040/2391) |
-| species_excluded_experimental | 288 | 4,941 | 31.6 | 2.4 | 11.4 | 6.0 | 1.9 | 0.2 | 46.5 | 32.1 (767/2391) |
+| species_excluded_experimental | 288 | 4,941 | 31.6 | 2.5 | 11.4 | 6.0 | 1.9 | 0.2 | 46.5 | 32.1 (767/2391) |
 
 Scores are computed against the reviews as of commit `b9da9839c`
 (`--reviews-at` in the scorer), so they do not drift as the corpus changes.
@@ -235,8 +235,8 @@ then one leaf at random within each protein:
   one per protein per stratum.
 - **Round 2:** 72 leaves, 24 per GO aspect (12 UNRELATED, 6 REJECTED,
   6 NARROWER each), from proteins not used in round 1. The limit was one per
-  protein per aspect and stratum, so the round-2 NARROWER and REJECTED
-  strata each repeat one protein.
+  protein per aspect, across strata. A protein could recur only in a
+  different aspect, which happened once each in NARROWER and REJECTED.
 
 AI reviewers judged each against the gene's review, UniProt record and notes,
 using the COR/LSP/UNC/PLI/NPI/REP scheme of de Crécy-Lagard et al. 2025
@@ -382,8 +382,8 @@ one *P. putida* protein in ten.
   claims on the main cohort, 65 on the deep dive) and were judged by AI
   reviewers, not curators.
 - **UNRELATED is not "wrong".** Reviews cover GOA, so a correct term GOA lacks
-  lands here. The adjudication gives the rate: one in six correct (12 of 76),
-  about half wrong (39 of 76).
+  lands here. The adjudication gives the per-protein rate: one in six correct
+  (12 of 76), about half wrong (39 of 76).
 - **The first adjudications were not blind to the automatic category.** The
   reviewer files showed each claim's category, so a verdict could anchor on
   it. A [blinded re-check](EGGNOG_MAPPER_EVALUATION/adjudication/blind_recheck/summary.yaml)

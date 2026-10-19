@@ -23,8 +23,9 @@ terms:
 
 Leaf categories, assigned in this order:
   EXACT        the leaf is in SUPPORTED_SET
+  BROADER      the leaf is an ancestor of a SUPPORTED_SET term (correct, less precise;
+               true by entailment, so it wins even under a REJECTED term)
   REJECTED     the leaf equals, or descends from, a REJECTED term
-  BROADER      the leaf is an ancestor of a SUPPORTED_SET term (correct, less precise)
   NARROWER     the leaf descends from a SUPPORTED_SET term (more specific than curated;
                unverified)
   DOWNGRADED   the leaf equals, descends from, or is an ancestor of a DOWNGRADED term
@@ -265,10 +266,10 @@ def categorize(leaf: str, support, down, undecided, reject, go: GO) -> str:
     anc = go.ancestors(leaf)
     if leaf in support:
         return "EXACT"
-    if anc & reject:
-        return "REJECTED"
     if any(leaf in go.ancestors(s) for s in support):
         return "BROADER"
+    if anc & reject:
+        return "REJECTED"
     if anc & support:
         return "NARROWER"
     if anc & down or any(leaf in go.ancestors(d) for d in down):
