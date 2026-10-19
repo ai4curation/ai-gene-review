@@ -16,7 +16,7 @@ Outputs (``projects/RGD_PATHWAY_ONTOLOGY/data/``):
 * ``pw_gocam_completeness.tsv`` -- one row per PW term with human gene
   annotations: gene counts by evidence tier, how many of those genes appear in
   any human GO-CAM / have a gene review, the best-overlapping GO-CAM model, and
-  GO-CAM models whose biological process falls under a mapped GO term.
+  human GO-CAM models whose biological process falls under a mapped GO term.
 * ``module_seeds.yaml`` -- one seed per RGD diagram pathway, joining the diagram
   structure (sub-pathways, labels), RGD-curated human genes, GO mappings,
   GO-CAM coverage and existing-module matches into a triage tier for module
@@ -204,9 +204,12 @@ def load_gocams(path: Path) -> tuple[dict[str, set[str]], dict[str, str], dict[s
     with open(path) as fh:
         for r in csv.DictReader(fh, delimiter="\t"):
             titles[r["model_id"]] = r["model_title"]
+            # Gene overlap is human only, so the process match must be too.
+            if r["taxon"] != "NCBITaxon:9606":
+                continue
             if r["biological_process"]:
                 model_bps[r["model_id"]].add(r["biological_process"])
-            if r["taxon"] == "NCBITaxon:9606" and r["gene_label"].endswith(" Hsap"):
+            if r["gene_label"].endswith(" Hsap"):
                 sym_models[r["gene_label"][: -len(" Hsap")]].add(r["model_id"])
     return sym_models, titles, model_bps
 
@@ -595,6 +598,7 @@ def main() -> int:
         "in_scope_with_any_gocam_for_mapped_go": sum(1 for i in in_scope if i in row_by and row_by[i]["n_gocam_models_for_mapped_go"] > 0),
         "in_scope_median_best_single_gocam_overlap": median([row_by[i]["best_gocam_overlap"] for i in in_scope if i in row_by]),
         "human_gocam_gene_symbols": len(gocam_syms),
+        "modules_compared": len(modules),
     }
     with open(args.out / "summary.yaml", "w") as fh:
         yaml.safe_dump(summary, fh, sort_keys=False)

@@ -22,11 +22,11 @@ Separately, 44 GO ids cited in PW definitions are obsolete and one no longer res
 yardstick for GO-CAM completeness. Across the 144 diagram pathways that
 describe normal biology, the median pathway has only 29% of its RGD-curated
 human genes in any human GO-CAM. The best single GO-CAM covers a median of 2
-genes of a pathway, and only 69 of the 144 have any GO-CAM model whose process
-falls under the mapped GO term. Third, as a source of module seeds. We parsed
+genes of a pathway, and only 48 of the 144 have any human GO-CAM model whose
+process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 672 modules. Seventy-two already have a matching module, 13 are
+triaged against our 678 modules. Seventy-two already have a matching module, 13 are
 ready to model, 32 lack a GO process term, and 56 are disease or drug pathways
 and out of scope. One pilot module, `srebp_signaling`, was derived from the
 RGD SREBP diagram and passes schema and module validation.
@@ -176,17 +176,16 @@ retention in ER), `GO:0051604`, `GO:0045542`, `GO:0006607`, `GO:0046889` and
 signaling pathway), so the pathway scores 0%. A 0 in the process-level column
 therefore does not tell an unmodelled pathway apart from one modelled with
 step-level terms. `best_gocam_overlap`, read together with the model title,
-separates the two cases for SREBP. The Wnt and citric acid cycle zeros have
-other causes. The model count (`n_gocam_models_for_mapped_go`) covers every
-species, while the gene overlap is human only. The one GO-CAM carrying the Wnt
-term is a Drosophila model, so canonical Wnt signaling has no human model at
-all. Of the 11 carrying the TCA-cycle term, one is human, and its genes fall
-outside RGD's curated set (below).
+separates the two cases for SREBP. Both columns count human GO-CAMs only. The
+Wnt and citric acid cycle zeros have other causes. The only GO-CAM carrying the
+Wnt term is a Drosophila model, so canonical Wnt signaling has no human model
+at all. The one human model carrying the TCA-cycle term contains none of RGD's
+curated genes (below).
 
 The citric acid cycle row also shows a limit of the gene basis. Eleven GO-CAMs
-carry the TCA-cycle term: mouse, fission-yeast and one human model (SIRT3
-regulation, with CS and MDH2). None of them contains the 11 RGD-curated human
-genes. RGD's curated human set lists the succinyl-CoA, succinate dehydrogenase,
+carry the TCA-cycle term: one mouse, one fly, eight fission-yeast and one human
+model (SIRT3 regulation, with CS and MDH2). The human model contains none of the
+11 RGD-curated human genes. RGD's curated human set lists the succinyl-CoA, succinate dehydrogenase,
 fumarase and 2-oxoglutarate dehydrogenase steps but omits CS, ACO2, the IDH3
 subunits and MDH2, which reach the human term only through the KEGG and SMPDB imports.
 The curated basis avoids KEGG's over-broad lists, but it can also miss core
