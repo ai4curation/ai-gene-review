@@ -120,16 +120,16 @@ Characterised, in priority order:
 
 - [x] bioB (P12996): biotin synthase. 16 rows: 8 ACCEPT, 3 MODIFY, 2 REMOVE (protein binding), 1 KEEP_AS_NON_CORE, 1 NEW (SAM binding, IDA from SAM-bound structure). [2Fe-2S] binding treated as core (sacrificial S donor)
 - [ ] lipA (P60716): lipoyl synthase. Notes written; review YAML not started (reviewer stopped; see notes 2026-10-19)
-- [ ] moaA (P30745): GTP 3',8-cyclase
+- [x] moaA (P30745): GTP 3',8-cyclase. 17 rows: 11 ACCEPT, 4 MODIFY, 1 KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED (response to heat), 1 REMOVE (cPMP synthase IBA: MoaC's activity, transferred from MOCS1 fusion proteins)
 - [x] nrdG (P0A9N8): anaerobic RNR (class III) activase. 23 rows: 8 ACCEPT, 4 MODIFY, 4 MARK_AS_OVER_ANNOTATED (dNTP synthesis: upstream), 4 REMOVE (protein binding; GO:0043365 PflB-activase IEA from IPR012837; GO:0004748 thioredoxin RDP reductase, wrong RNR class), 3 NEW (SAM binding, peptidyl-glycine modification, protein maturation). Proposed new term: anaerobic RNR-activating enzyme activity
 - [x] pflA (P0A9N4): pyruvate formate-lyase activase. 22 rows: 12 ACCEPT, 6 MODIFY, 1 KEEP_AS_NON_CORE (K+ binding), 1 MARK_AS_OVER_ANNOTATED (DNA damage response IEP), 2 REMOVE (protein binding), 1 NEW (SAM binding). Sets the activase pattern: MF GO:0043365/GO:0043364, BP GO:0018201 + GO:0051604
 - [x] rlmN (P36979): 23S rRNA m2A2503 / tRNA m2A37 methyltransferase. 32 rows: 17 ACCEPT, 7 MODIFY, 3 KEEP_AS_NON_CORE, 7 REMOVE (protein binding), 1 NEW (SAM binding, IDA PMID:21527678)
 - [x] miaB (P0AEI1): tRNA ms2i6A37 methylthiotransferase. 19 rows: 9 ACCEPT, 7 MODIFY, 1 REMOVE (protein binding), 1 NEW (SAM binding, ISS: source organism of PMID:15339930 not stated in abstract)
 - [x] rimO (P0AEI4): ribosomal protein uS12 Asp89 methylthiotransferase. 17 rows: 10 ACCEPT, 5 MODIFY, 1 REMOVE (tRNA modification IEA from MTTase-wide InterPro; RimO modifies protein), 1 NEW (SAM binding). Core MF GO:0103039; no BP (specific terms obsolete)
-- [ ] thiH (P30140): 2-iminoacetate synthase (tyrosine lyase)
+- [x] thiH (P30140): 2-iminoacetate synthase (tyrosine lyase). 19 rows: 12 ACCEPT, 3 MODIFY, 1 REMOVE (protein binding), 1 MARK_AS_OVER_ANNOTATED (DNA damage response IEP), 1 NEW (SAM binding). Thiazole synthase left to ThiG
 - [x] hemN (P32131): oxygen-independent coproporphyrinogen III oxidase. 14 rows: 8 ACCEPT, 5 MODIFY (GO:0004109 is the O2-dependent HemF reaction → GO:0051989), 1 NEW (SAM binding, IDA structure). InterPro2GO IPR004558 → GO:0004109 should be GO:0051989
 - [x] hemW (P52062): heme chaperone. 15 rows: 4 ACCEPT, 6 KEEP_AS_NON_CORE, 1 MODIFY, 4 REMOVE (HemN-derived CPDH + porphyrin biosynthesis; same PTN000358281 IBA as RSAD1). Proposed new term: heme chaperone activity
-- [ ] queE (P64554): 7-carboxy-7-deazaguanine synthase
+- [x] queE (P64554): 7-carboxy-7-deazaguanine synthase. 14 rows: 5 ACCEPT, 7 MODIFY, 2 KEEP_AS_NON_CORE (Mg2+; division-inhibitor moonlighting). Proposed new term: 7-carboxy-7-deazaguanine synthase activity (RHEA:27974)
 - [x] epmB (P39280): L-lysine 2,3-aminomutase (EF-P modification). 9 rows: 2 ACCEPT, 4 MODIFY, 1 MARK_AS_OVER_ANNOTATED (post-translational protein modification: EpmA/EpmC do the work), 2 NEW (SAM, PLP binding). Proposed new term: (R)-beta-lysine-forming aminomutase (RHEA:44148); GO:0050066 is the (3S) clostridial reaction
 
 Paralogs and uncharacterised, where the risk is over-annotation:
