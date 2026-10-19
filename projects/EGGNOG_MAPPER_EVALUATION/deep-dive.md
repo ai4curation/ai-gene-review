@@ -106,8 +106,9 @@ at random, then one term per protein. The rates are therefore per protein.
 The mix of strata differs by genome, and NARROWER terms are the safest, so
 the rows are not directly comparable. The UNRELATED terms alone compare like
 for like: wrong in 8 of 14 for *P. putida*, 5 of 12 for horse, 8 of 10 for
-poplar and 3 of 6 for pennycress. Unlike the main cohort's blinded
-re-check, these reviewers saw each term's automatic category.
+poplar and 3 of 6 for pennycress. These reviewers saw each term's automatic
+category. The five *P. putida* REJECTED claims are the exception: they were
+also re-judged in the main cohort's blinded re-check.
 
 | Genome | Claims | Correct (COR) | True but vague (LSP) | Undecided (UNC) | Wrong (NPI/PLI/REP) |
 |---|---|---|---|---|---|

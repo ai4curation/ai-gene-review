@@ -31,7 +31,8 @@ in the review. In a manual check of 76 of those unrelated terms, about half
 (39) were wrong and one in six (12) was a correct, informative addition. The
 errors are characteristic: process terms that came from an ortholog's mutant
 phenotype, terms that cannot apply in the query's lineage (eye development on
-a worm protein), activities that belong to a paralog or a complex partner, and source annotations that were wrong.
+a worm protein), activities that belong to a paralog or a complex partner,
+and source annotations that were wrong.
 Molecular-function terms most often match the review exactly. But in a
 24-claim sample per aspect of terms going beyond what the review supports, two
 in three MF terms were wrong, against half or fewer for process and location
@@ -141,13 +142,19 @@ The review side has four sets:
   reviewer reached no judgment, not a negative one.
 - **Rejected:** REMOVE rows and upheld NOT annotations. Removals of
   placeholders (aspect roots, `binding`, `protein binding`) are not counted,
-  since they mean "uninformative" rather than "false".
+  since they mean "uninformative" rather than "false". When a review removes
+  a term but supports one of its descendants, the review is internally
+  inconsistent, and BROADER wins by entailment. This overrides the
+  curator's stated reason for the removal. It affects 1 leaf in the default
+  and species-excluded runs and 3 in the experimental-only run. In each
+  case the review removed a parent term (e.g. response to heat on rat Akt1)
+  while keeping a child of it.
 
 | Category | Leaf term is… |
 |---|---|
 | EXACT | a supported term |
+| BROADER | an ancestor of a supported term (true, less precise). It takes precedence over REJECTED, since a broader term is true by entailment |
 | REJECTED | a rejected term or one of its descendants |
-| BROADER | an ancestor of a supported term (true, less precise) |
 | NARROWER | a descendant of a supported term (more specific than the review; unverified) |
 | DOWNGRADED | related to a downgraded term |
 | UNDECIDED | related only to an undecided term |
@@ -236,7 +243,10 @@ then one leaf at random within each protein:
 - **Round 2:** 72 leaves, 24 per GO aspect (12 UNRELATED, 6 REJECTED,
   6 NARROWER each), from proteins not used in round 1. The limit was one per
   protein per aspect, across strata. A protein could recur only in a
-  different aspect, which happened once each in NARROWER and REJECTED.
+  different aspect: 9 proteins did, so round 2 covers 63 distinct proteins.
+  Two of them recur within a stratum (once each in NARROWER and REJECTED);
+  the other seven span two strata. The strata in the table below are
+  therefore not drawn from fully disjoint protein sets.
 
 AI reviewers judged each against the gene's review, UniProt record and notes,
 using the COR/LSP/UNC/PLI/NPI/REP scheme of de Crécy-Lagard et al. 2025
