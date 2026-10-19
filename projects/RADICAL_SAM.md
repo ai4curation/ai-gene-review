@@ -118,8 +118,8 @@ Last updated: 2026-10-18
 
 Characterised, in priority order:
 
-- [ ] bioB (P12996): biotin synthase
-- [ ] lipA (P60716): lipoyl synthase
+- [x] bioB (P12996): biotin synthase. 16 rows: 8 ACCEPT, 3 MODIFY, 2 REMOVE (protein binding), 1 KEEP_AS_NON_CORE, 1 NEW (SAM binding, IDA from SAM-bound structure). [2Fe-2S] binding treated as core (sacrificial S donor)
+- [ ] lipA (P60716): lipoyl synthase. Notes written; review YAML not started (reviewer stopped; see notes 2026-10-19)
 - [ ] moaA (P30745): GTP 3',8-cyclase
 - [ ] nrdG (P0A9N8): anaerobic RNR (class III) activase
 - [ ] pflA (P0A9N4): pyruvate formate-lyase activase
