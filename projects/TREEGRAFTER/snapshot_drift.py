@@ -5,7 +5,7 @@ Reads ``treegrafter_review.tsv`` as committed at ``--base`` (via ``git show``)
 and as currently on disk (or ``--current PATH``), joins on ``(file, term_id)``
 and reports what drifted: annotations added / dropped, actions that changed,
 and rows that crossed into or out of the down-graded population
-(REMOVE / MODIFY / MARK_AS_OVER_ANNOTATED) the failure-mode analysis is built on.
+(REMOVE / MODIFY / MARK_AS_OVER_ANNOTATED / TOO_GENERAL) the failure-mode analysis is built on.
 
 Writes ``treegrafter_snapshot_drift.tsv`` (one row per added, dropped or
 changed annotation) next to this script, or into ``--out-dir``.
@@ -28,7 +28,9 @@ from collections import Counter
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 REL = "projects/TREEGRAFTER/treegrafter_review.tsv"
-DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+# TOO_GENERAL (true but entailed by a more specific term in the same review)
+# counts as down-graded, like MODIFY: the review did not keep the term as is.
+DOWNGRADE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY", "TOO_GENERAL"}
 
 
 def _index(text: str) -> dict:

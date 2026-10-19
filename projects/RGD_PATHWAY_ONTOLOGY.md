@@ -4,13 +4,10 @@ maturity: SCOPING
 last_reviewed: 2026-10-18
 tags: [PIPELINE]
 species: [human]
-# genes: list deferred until the seven SREBP-pathway reviews (ai4curation/ai-gene-review#5215)
-# are on main; forward references render as reader-visible warnings. Then add
-# [SCAP, INSIG1, INSIG2, MBTPS1, MBTPS2, SREBF1, SREBF2] and drop SCAP and PCK1 below.
-# PID is the NCI Pathway Interaction Database here, not Arabidopsis PINOID; the
-# others would otherwise link to non-human reviews (ACO2 matches the fission-yeast
-# directory aco2, and human PCK1 is not on main yet).
-autolink_exclude: [PID, SCAP, SREBP, ACO2, aco2, PCK1]
+genes: [SCAP, INSIG1, INSIG2, MBTPS1, MBTPS2, SREBF1, SREBF2]
+# PID is the NCI Pathway Interaction Database here, not Arabidopsis PINOID; ACO2
+# would otherwise link to the fission-yeast directory aco2.
+autolink_exclude: [PID, SREBP, ACO2, aco2]
 ---
 
 # RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds
@@ -178,9 +175,10 @@ retention in ER), `GO:0051604`, `GO:0045542`, `GO:0006607`, `GO:0046889` and
 `GO:1905552`. None of these is under the mapped term `GO:0032933` (SREBP
 signaling pathway), so the pathway scores 0%. A 0 in the process-level column
 therefore does not tell an unmodelled pathway apart from one modelled with
-step-level terms. The Wnt and citric acid cycle zeros need the same check
-before they are read as gaps. `best_gocam_overlap`, read together with the
-model title, separates the two cases for SREBP.
+step-level terms. `best_gocam_overlap`, read together with the model title,
+separates the two cases for SREBP. The Wnt and citric acid cycle zeros have a
+third cause: GO-CAMs carrying the mapped term exist (1 and 11), but none
+contains a curated gene.
 
 The citric acid cycle row also shows a limit of the gene basis. Eleven GO-CAMs
 carry the TCA-cycle term: mouse, fission-yeast and one human model (SIRT3
