@@ -1,0 +1,27 @@
+# DNAAF1 review notes
+
+## 2026-10-17 — source review and synthesis
+
+Reviewed all 27 genuine seeded annotations for human DNAAF1 (HGNC:30539; UniProt Q8NEP3). All source terms, evidence, references and supporting entities are preserved. There were no prior main-branch gene notes or sign-offs to replace at the frozen source boundary.
+
+The review uses one dynein-arm assembly core, with outer and inner arm processes and cytoplasmic location. The positive association evidence supports retention of the imported dynein-binding claims as non-core, while an exact human interface remains unresolved. This is not a negative binding claim or a donor-count objection. No NEW annotation or guessed chaperone mechanism is introduced. See the [evidence guide](DNAAF1-evidence-guide.md) for public original-source locators and assay limits.
+
+The 2008 human construct, canine host, human renal knockdown and zebrafish rescue are distinguished. Cytoplasmic preassembly measurements in the 2009 study were made in protists; human evidence establishes loss of both arm classes. Existing ciliary localization and primary-cilium phenotypes are retained. Lung morphogenesis is left unresolved rather than inferred from chronic airway pathology. Electronic extracellular-region inference is rejected for conflating the location of fluid movement with that of the intracellular assembly factor.
+
+Three predicted products were independently reconstructed from UniProt features and matched to official FASTAs. No functional equivalence was inferred for the shorter products. The original caches remain byte-identical and abstract-only despite separately inspected original text.
+
+Normal fetch and publication caching succeeded in an isolated workspace. The configured Falcon attempt failed authentication (403); the genuine perplexity-lite fallback failed for insufficient quota (401). No provider report was fabricated. Source and runtime provenance, failed access receipts and the exact original read scope were retained. Canonical validation, rendering and scaffolded history are performed by the publication owner after scientific review.
+
+An early intake sentence incorrectly stated that the seed had no molecular-function annotation. The genuine seed contains two GO:0070840 annotations; this was corrected before verdict drafting and both source objects remain present.
+
+## 2026-10-17 — assembly partners and the motile-cilium claim
+
+DNAAF1 contributes both dynein-arm classes to the motile axoneme. The existing motile-cilium assembly assertion is retained: absence of arms within recognizable cilia is an assembly defect, not evidence that the process is irrelevant. Fresh [QuickGO](https://www.ebi.ac.uk/QuickGO/term/GO:0036158) is_a/part_of closures place outer- and inner-arm assembly under axoneme assembly, but do not place them under GO:0044458. The specific arm terms therefore refine the axoneme and dynein-complex assertions without replacing the distinct motile-cilium claim.
+
+Human interaction experiments identify more than an unspecified binding possibility. [PMID:29228333, DNAAF1 links heart laterality with the AAA+ ATPase RUVBL1 and ciliary intraflagellar transport](https://pmc.ncbi.nlm.nih.gov/articles/PMC5886296/) reports “DNAAF1 interacted with both full length and N’-terminally truncated IFT88”. The retinal-library screen was followed by one-to-one Y2H and human HEK293 co-immunoprecipitation (Figure 3A–C; Yeast two-hybrid and Co-immunoprecipitation Methods). IFT88 residues 442–833 retained interaction while 1–449 did not. SF-TAP and endogenous-partner co-IP also support RUVBL1/RUVBL2 association (Figure 3D, Table 1 and accompanying Results). Reduced p.Leu191Phe protein abundance prevents attributing every diminished signal to a selective affinity defect.
+
+Endogenous DNAAF1 localizes at the basal body in human hTERT-RPE1 cells. RUVBL1 depletion perturbs DNAAF1/IFT88 colocalization (Figure 4), supporting a connection between the assembly factor and transport machinery. The authors' R2TP-like assembly-to-IFT handoff is a model, rather than a demonstrated stoichiometric complex or reconstituted transfer reaction. These findings narrow the open question to direct dynein-client interfaces and the coupling mechanism. They do not establish an autonomous ATPase/chaperone activity or the functions of the shorter predicted products.
+
+The Discussion of [PMID:29601588](https://pmc.ncbi.nlm.nih.gov/articles/PMC5895051/) provides related preassembly context, but its DNAAF1 statements cite prior studies; they are not additional direct human DNAAF1 assays. Its cited 2012 original distinguishes ODA7/LRRC50 and PF13/KTU despite historical DNAAF1/2 labels differing from current nomenclature. The cited 2016 C21ORF59 original was not recovered by the attempted XML route. Separately, [PMID:29959317](https://pmc.ncbi.nlm.nih.gov/articles/PMC6026120/) Figure 5D–E shows murine Dnaaf1 co-precipitation with Ruvbl1 and Dpcd; its Methods specify a murine clone. These observations corroborate mammalian assembly-factor association without supplying a purified human interface.
+
+The original notes, source records, products and quotations remain unchanged. The single action correction is motile-cilium assembly MODIFY to ACCEPT; no NEW annotation is added. The axoneme IBA retains the curator's inherited activity context, with the distinction between localization and a directly measured axonemal reaction made explicit.
