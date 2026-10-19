@@ -102,6 +102,8 @@ the existing reviews that violate it have been fixed.
 | [ACCEPT, KEEP_AS_NON_CORE], negated_1 | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a kept NOT row is on an ancestor of a kept positive term |
 | TOO_GENERAL | ANCESTOR_OF | ACCEPT | OK | the TOO_GENERAL term is more general than an ACCEPTed term |
 | TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
+| REMOVE | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a REMOVEd term is an ancestor of a term the review keeps |
+| REMOVE (term_1 exactly GO:0005515) | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | OK | exception: protein binding is tracked by its own policy |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
 REMOVEd rows are mostly TAS, IDA, IMP and IPI); with the protein binding exception,

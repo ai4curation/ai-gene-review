@@ -183,10 +183,13 @@ def test_same_direction_with_swapped_actions_is_a_different_rule():
 
 
 def test_packaged_table_puts_too_general_on_the_broader_term():
+    """TOO_GENERAL goes on the broader term; only under a REMOVE (a contradiction
+    rule) is a TOO_GENERAL row the narrower side."""
     rules = [
         r
         for r in load_rules()
         if r.relation is not Relation.SAME_TERM
+        and "REMOVE" not in r.side_1.actions | r.side_2.actions
         and not (r.negated_1 or r.negated_2)
         and "TOO_GENERAL" in r.side_1.actions | r.side_2.actions
     ]
@@ -448,6 +451,32 @@ def hrows(*specs):
 def test_packaged_not_ancestor_rule(specs, expected):
     conflicts = [c for c in iter_conflicts(hrows(*specs), ancestors=toy) if c.term_id_2]
     assert [(c.index_1, c.index_2) for c in conflicts] == expected
+
+
+@pytest.mark.parametrize(
+    "specs,expected",
+    [
+        # REMOVE on an ancestor of a kept positive term: conflict
+        ((("GO:A", "REMOVE", False), ("GO:C", "ACCEPT", False)), [(0, 1)]),
+        ((("GO:B", "REMOVE", False), ("GO:C", "TOO_GENERAL", False)), [(0, 1)]),
+        ((("GO:C", "NEW", False), ("GO:A", "REMOVE", False)), [(1, 0)]),
+        # REMOVE on the more specific term is consistent
+        ((("GO:C", "REMOVE", False), ("GO:A", "ACCEPT", False)), []),
+        # REMOVE on a NOT row only doubts the negative claim
+        ((("GO:A", "REMOVE", True), ("GO:C", "KEEP_AS_NON_CORE", False)), []),
+        # over-annotation is not a claim that the term is false
+        ((("GO:A", "MARK_AS_OVER_ANNOTATED", False), ("GO:C", "ACCEPT", False)), []),
+    ],
+)
+def test_packaged_remove_ancestor_rule(specs, expected):
+    conflicts = [c for c in iter_conflicts(hrows(*specs), ancestors=toy) if c.term_id_2]
+    assert [(c.index_1, c.index_2) for c in conflicts] == expected
+
+
+def test_packaged_remove_ancestor_rule_exempts_protein_binding():
+    pb = {"GO:0042802": frozenset({"GO:0005515"})}
+    data = hrows(("GO:0005515", "REMOVE", False), ("GO:0042802", "ACCEPT", False))
+    assert list(iter_conflicts(data, ancestors=lambda t: pb.get(t, frozenset()))) == []
 
 
 def test_hierarchical_rules_need_an_ancestor_lookup():
