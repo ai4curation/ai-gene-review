@@ -125,3 +125,13 @@ Actions: every existing annotation unchanged; one `NEW` row added. Other changes
 `description`, `core_functions` (one process term, two new supporting quotes), one new
 `supported_by` quote on the rRNA-binding row and four new references (three PMIDs plus the Falcon
 file).
+
+## 2026-10-12 Ortholog/family audit (no change)
+
+GOA refreshed via `just fetch-gene mouse Tlr13`: unmodified, all 20 GOA rows already covered; the 21st review row (GO:0050830 defense response to Gram-positive bacterium) is a proposed NEW annotation not in GOA, as expected. Status already COMPLETE.
+
+Ortholog consistency: TLR13 is absent from the human genome, so there is no human ortholog review; the open question of a human bacterial-rRNA sensor is already recorded in suggested_questions.
+
+Family consistency (vs Tlr11, Tlr12, human TLR3/7/8/9): consistent. GO:0002224 IBA ACCEPT, GO:0038023 IBA -> MODIFY to GO:0038187 (matching human TLR8 and the two paralogues), GO:0038187 as core MF, and the IEA GO:0007165 KEEP_AS_NON_CORE all follow the family convention. Endosomal localisation: the plasma-membrane IBA is MODIFY -> GO:0010008 endosome membrane, consistent with human TLR3/7/8/9 which carry endosome-membrane rows; here that is additionally supported by an experimental endosome row and UniProt. Protein-binding IPI rows are handled by MODIFY to informative terms (GO:0051087 chaperone binding for UNC93B1, GO:0070976 TIR domain binding for MyD88) rather than REMOVE as on the human TLRs, because these specific interactions are mechanistically load-bearing and identified on this gene product; this is a justified, defensible difference.
+
+Core 23S rRNA recognition [PMID:22821982 "the orphan receptor TLR13 in mice recognizes a conserved 23S ribosomal RNA"] is captured as GO:0019843 rRNA binding ACCEPT and a second core_function. Unlike the TLR11/TLR12 pair, the receptor identity is unambiguous, so the numbered child GO:0034178 is used with confidence. No defects; outcome no_change.
