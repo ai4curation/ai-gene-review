@@ -457,6 +457,13 @@ def module_to_boolean(
     ...
     ValueError: c: activation_logic names b, which has no activating connection into c
     """
+    if any(node.get("module_ref") for node in iter_nodes(doc.get("module") or {})):
+        warnings.warn(
+            "module_to_boolean does not follow module_ref: a referencing node is "
+            "treated as an opaque element and the referenced module is not exported",
+            UserWarning,
+            stacklevel=2,
+        )
     module = doc.get("module")
     if not isinstance(module, dict):
         raise ValueError("module document is missing a top-level 'module' mapping")
