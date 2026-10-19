@@ -140,7 +140,7 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 - [x] yjjW (P39409): putative glycyl-radical enzyme activase. Partner YjjI reaction unknown. 10 rows: 3 ACCEPT, 3 MODIFY, 3 REMOVE (protein binding), 1 KEEP_AS_NON_CORE; core MF GO:0043364
 - [x] aslB (P25550): anSME homolog. 5 rows: 2 KEEP_AS_NON_CORE, 1 MODIFY, 2 UNDECIDED (substrate untested; conflicting reports). No core functions. Residue mapping in aslB-bioinformatics/: 16/17 anSME catalytic features retained
 - [ ] ydeM (P76134): anaerobic sulfatase-maturating enzyme homolog
-- [x] ygiQ (Q46861): UPF0313. 4 rows: 2 KEEP_AS_NON_CORE, 2 MODIFY (incl. GO:0005506 iron ion binding). No core functions. An openscientist report claims ygiQ = rlmX (PMID:41380683) but the paper's abstract never names ygiQ and the full text is paywalled; recorded as UNVERIFIED, not annotated
+- [x] ygiQ (Q46861) = **rlmX**. Settled by the PMID:41380683 full text (supplied 2026-10-19): a cobalamin-dependent radical SAM methyltransferase installing hypoxia-induced 5'(S)-ribose C5' methylations at 23S rRNA D2449 and Cm2498. 8 rows: 1 ACCEPT, 3 MODIFY, 4 NEW (SAM, cobalamin, rRNA binding; rRNA methylation). Proposed new term: 23S rRNA ribose-5'-C-methyltransferase activity (no EC/RHEA; all existing GO ribose-MTase terms are 2'-O)
 - [x] yhcC (P0ADW6): no longer uncharacterised. PMID:42239373 (preprint, full text) shows YhcC is the MnmL orthologue doing the anaerobic cmnm5s2U->nm5s2U demodification at tRNA position 34. 6 rows: 1 ACCEPT, 2 MODIFY, 3 NEW (tRNA binding, SAM binding, wobble uridine modification). Proposed new term for the demodifying activity
 
 ## Phase 3: consistency pass over existing reviews
@@ -221,3 +221,9 @@ Paralogs and uncharacterised, where the risk is over-annotation:
   - Ontology gap: no GO MF term for viperin's ddhCTP synthase reaction
     (checked QuickGO/OLS 2026-10-18); proposed in the RSAD2 review.
 - Next: Phase 2 (E. coli K-12), starting with bioB, lipA, moaA.
+- 2026-10-19: ygiQ re-reviewed as rlmX once the user supplied the Mol Cell PDF;
+  full text now cached in publications/PMID_41380683.md. The openscientist
+  report's central claim (ygiQ = rlmX) was right, but its two-[4Fe-4S]-cluster
+  model is contradicted (3.69 Fe/protein = one cluster; the C453/C458/C464
+  surface triad is a putative zinc/RNA-recognition site). Nothing was annotated
+  from the machine report; the file is marked LOW_QUALITY.
