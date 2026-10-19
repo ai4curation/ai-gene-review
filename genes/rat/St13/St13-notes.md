@@ -33,3 +33,13 @@ Action changes:
 Open questions:
 - Whether GO:0140309 unfolded protein holdase activity would describe the isolated,
   refolding-inhibiting behaviour of Hip better than GO:0044183.
+
+Review follow-up 2026-10-19: the merge-queue integration run for PR #4624 failed in the
+repository test suite (not in gene validation). The BioReason-Pro SFT prediction review for
+GO:0032991 protein-containing complex (St13-sft-predictions.yaml, added on main after this
+branch was cut) had been audited to NPI on the basis of the earlier MARK_AS_OVER_ANNOTATED
+actions; this re-review keeps both GO:0032991 rows as KEEP_AS_NON_CORE, so the deterministic
+cross-check flagged the prediction as NPI against a positive AIGR action. Re-ran
+scripts/auto_review_sft_predictions.py --apply on the branch merged with main; it reclassified
+that one prediction NPI -> CNN (confidence 0 -> 2) with the audit note updated. Changes the
+script proposed to other genes outside this PR were not taken.
