@@ -127,8 +127,8 @@ Characterised, in priority order:
 - [x] miaB (P0AEI1): tRNA ms2i6A37 methylthiotransferase. 19 rows: 9 ACCEPT, 7 MODIFY, 1 REMOVE (protein binding), 1 NEW (SAM binding, ISS: source organism of PMID:15339930 not stated in abstract)
 - [x] rimO (P0AEI4): ribosomal protein uS12 Asp89 methylthiotransferase. 17 rows: 10 ACCEPT, 5 MODIFY, 1 REMOVE (tRNA modification IEA from MTTase-wide InterPro; RimO modifies protein), 1 NEW (SAM binding). Core MF GO:0103039; no BP (specific terms obsolete)
 - [ ] thiH (P30140): 2-iminoacetate synthase (tyrosine lyase)
-- [ ] hemN (P32131): oxygen-independent coproporphyrinogen III oxidase
-- [ ] hemW (P52062): heme chaperone. Check for over-annotation from HemN
+- [x] hemN (P32131): oxygen-independent coproporphyrinogen III oxidase. 14 rows: 8 ACCEPT, 5 MODIFY (GO:0004109 is the O2-dependent HemF reaction → GO:0051989), 1 NEW (SAM binding, IDA structure). InterPro2GO IPR004558 → GO:0004109 should be GO:0051989
+- [x] hemW (P52062): heme chaperone. 15 rows: 4 ACCEPT, 6 KEEP_AS_NON_CORE, 1 MODIFY, 4 REMOVE (HemN-derived CPDH + porphyrin biosynthesis; same PTN000358281 IBA as RSAD1). Proposed new term: heme chaperone activity
 - [ ] queE (P64554): 7-carboxy-7-deazaguanine synthase
 - [x] epmB (P39280): L-lysine 2,3-aminomutase (EF-P modification). 9 rows: 2 ACCEPT, 4 MODIFY, 1 MARK_AS_OVER_ANNOTATED (post-translational protein modification: EpmA/EpmC do the work), 2 NEW (SAM, PLP binding). Proposed new term: (R)-beta-lysine-forming aminomutase (RHEA:44148); GO:0050066 is the (3S) clostridial reaction
 
