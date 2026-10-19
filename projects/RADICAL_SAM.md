@@ -163,6 +163,20 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 
 # NOTES
 
+## 2026-10-19
+
+- Phase 2 started. Fetched all 20 E. coli K-12 genes (`just fetch-gene ECOLI
+  <gene>`, standard lower-case-first symbols); every accession matches the
+  UniProt scope query.
+- Deep research: falcon still 403; perplexity not configured; asta was empty
+  for all of Phase 1, so not re-run. openscientist is being tried on ygiQ
+  (slow, >10 min). Reviews proceed from primary literature, as in Phase 1.
+- 8 reviewers by subfamily: bioB + lipA (sulfur insertion); moaA + queE + thiH
+  (cofactor rearrangements); nrdG + pflA (characterised glycyl-radical
+  activases, which set the pattern); pflC + ybiY + yjjW (activase paralogs);
+  miaB + rimO (MTTases, matched to CDKAL1/CDK5RAP1); rlmN + epmB; hemN + hemW
+  (matched to RSAD1); aslB + ydeM + ygiQ + yhcC (uncharacterised).
+
 ## 2026-10-18
 
 - Created the project. Membership pulled live from UniProt (IPR007197, reviewed):
