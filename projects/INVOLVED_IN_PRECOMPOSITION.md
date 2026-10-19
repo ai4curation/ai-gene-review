@@ -85,9 +85,12 @@ lightest to heaviest:
 
 1. **Annotation extension** (GAF column 16 / GPAD): `involved_in GO:0006622`
    with extension `part_of(GO:0061684)`. This is single-gene and
-   single-hop, and exactly equivalent to the precomposed class. It is what
-   GO's own `replaced_by`/`consider` migration produces when it is done
-   carefully.
+   single-hop, and exactly equivalent to the precomposed class. GO's
+   `replaced_by` cannot produce this: it names a single term, which is
+   applied to existing annotations automatically, so an obsoleted
+   precomposition necessarily keeps one half and drops the other. `consider`
+   lists both halves, but it is advice for a curator, not an automated
+   mapping.
 2. **`core_functions`** in the gene review. These are already a gene-local
    GO-CAM: `molecular_function` + `directly_involved_in` + `locations` +
    `in_complex`. An MF-`part_of`-BP term maps one-to-one onto a core function
@@ -282,10 +285,10 @@ in `data/summary.yaml`).
 | Gene (rows) | Obsolete term | Outcome | What we did |
 |---|---|---|---|
 | human/GATA3 (IEA, ISS) | GO:2000607 neg. reg. of cell proliferation involved in mesonephros development | `DECOMPOSE_EXTENSION` | MODIFY → GO:0008285 negative regulation of cell population proliferation + `part_of(GO:0001823 mesonephros development)`, GO's own `consider` pair re-joined. Supported by Grote et al. 2008 (PMID:19112489) citing Gata3's role in pro/mesonephric proliferation control. |
-| human/GATA3 (IEA, ISS ×2) | GO:2000703 / GO:2000734 neg. reg. of FGFR / GDNF-receptor signaling involved in ureteric bud formation | keep Y, drop X | **Decomposition exposed a bad genus.** In PMID:19112489, Gata3 acts *upstream of Ret* and maintains its expression. The ectopic buds of the mutant *require* GDNF/Ret and FGF signaling, so nothing shows Gata3 inhibiting those pathways. Moving to GO's `consider` genus (GO:0040037) would carry the unsupported half forward. MODIFY → GO:0072106 regulation of ureteric bud formation, which is sign-neutral because the evidence points both ways. |
+| human/GATA3 (IEA, ISS ×2) | GO:2000703 / GO:2000734 neg. reg. of FGFR / GDNF-receptor signaling involved in ureteric bud formation | keep Y, drop X | **Decomposition exposed a bad genus.** In PMID:19112489, Gata3 acts *upstream of Ret* and maintains its expression. The ectopic buds of the mutant *require* GDNF/Ret and FGF signaling, so nothing shows Gata3 inhibiting those pathways. GO's `consider` list is advice for a curator, and on reading the evidence its genus (GO:0040037) is unsupported for GATA3. MODIFY → GO:0072106 regulation of ureteric bud formation, which is sign-neutral because the evidence points both ways. |
 | human/NOTCH1 (IEA, ISS) | GO:0003252 neg. reg. of cell proliferation involved in heart valve morphogenesis | `DECOMPOSE_EXTENSION` | MODIFY → GO:0008285 + `part_of(GO:0003179 heart valve morphogenesis)`. GO gave no replacement. The claim was not re-judged, because the mouse source was not inspected. |
 | human/DNMT1 (IMP), mouse/Dnmt1 (IEA, ISO) | GO:1905931 neg. reg. of VSMC differentiation involved in phenotypic switching | `DECOMPOSE_EXTENSION` | MODIFY → GO:1905064 + `part_of(GO:0036166 phenotypic switching)`. GO gave no replacement. The reason spells out the GO-CAM it abbreviates: DNMT1 methyltransferase activity silences *SOD2*, upstream of VSMC differentiation, which is indirect and non-core. |
-| yeast/GET3 (IMP) | GO:0000750 pheromone-dependent signal transduction involved in conjugation with cellular fusion | lateral, better than `replaced_by` | **GO's automatic `replaced_by` would be wrong here.** It points at GO:0071507 pheromone response MAPK cascade, which suits the kinases. Arr4/Get3 is a non-receptor GEF for Gpa1 (PMID:18261907), upstream of the cascade. Following the GO-CAM idiom in the *S. pombe* pheromone model `693b3c0900000536` (GEF activity positively regulates the cascade), MODIFY → GO:0062038 positive regulation of pheromone response MAPK cascade. |
+| yeast/GET3 (IMP) | GO:0000750 pheromone-dependent signal transduction involved in conjugation with cellular fusion | lateral; `replaced_by` is wrong for this gene | **A real upstream problem.** `replaced_by` is applied automatically, so GOA will move this IMP annotation to GO:0071507 pheromone response MAPK cascade. That suits the kinases, not GET3. Arr4/Get3 is a non-receptor GEF for Gpa1 (PMID:18261907), upstream of the cascade. Following the GO-CAM idiom in the *S. pombe* pheromone model `693b3c0900000536` (GEF activity positively regulates the cascade), MODIFY → GO:0062038 positive regulation of pheromone response MAPK cascade. |
 | SCHPO/cps1 (IBA), rat/Rgn (IDA) | GO:0051603 / GO:1903052 (pos. reg. of) proteolysis involved in protein catabolic process | no change | These already MODIFY to GO's `replaced_by`, which keeps Y (protein catabolic process). Nothing is lost, because proteolysis is annotated separately where it applies. |
 
 ### Pilot: chaperone-mediated autophagy (GO:0061740)
@@ -315,10 +318,15 @@ in `data/summary.yaml`).
 
 ### Lessons from round 1
 
-1. **GO's `replaced_by` / `consider` are not safe to apply blindly.** For
-   GET3, `replaced_by` names the wrong participant role. For GATA3, `consider`
-   names a genus the evidence does not support. Each row needs a reading of
-   the evidence, which is what this project is for.
+1. **`replaced_by` is automated by design, so a wrong one is a GO bug, not a
+   curator choice.** For GO:0000750, the automated migration moves an upstream
+   GEF (Arr4/Get3) onto the MAPK cascade itself. A precomposed term's
+   `replaced_by` is only safe when one term is true of *every* annotated
+   participant. Otherwise the term should carry `consider` only, or its
+   annotations should be migrated to the genus with a `part_of(Y)` extension.
+   `consider` is a different thing: it is curator advice and is never applied
+   automatically. The GATA3 case (its `consider` genus is unsupported for this
+   gene) is that advice working as intended.
 2. **Decomposing is a review, not a reformat.** Splitting the term into X and
    Y forces each half to be justified separately. In 2 of 7 genes (GATA3
    ureteric bud, CLU), one half failed. The precomposed class had hidden that.
@@ -353,9 +361,13 @@ in `data/summary.yaml`).
 6. **Modules** — sprouting angiogenesis, ureteric bud branching, and cardiac
    conduction coupling, as the cases reach them.
 7. **Upstream** — collect class D-iii terms and GO-CAM process nodes that
-   still use precomposed BPs for go-ontology tickets. From round 1, also
-   report the GO:0000750 `replaced_by` (GEF-type participants should go to
-   GO:0062038).
+   still use precomposed BPs for go-ontology tickets. From round 1, file a
+   ticket on GO:0000750: its automated `replaced_by` GO:0071507 moves
+   non-kinase participants such as the Gpa1 GEF Arr4/Get3 onto the MAPK
+   cascade. Ask for those annotations to go to GO:0062038 positive regulation
+   of pheromone response MAPK cascade, or for the `replaced_by` to become
+   `consider`. More generally, ask GO to check that a precomposed term's
+   `replaced_by` holds for all annotated participants before obsoletion.
 
 ## Reproducing
 

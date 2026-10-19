@@ -197,7 +197,9 @@ separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 went: `review.proposed_replacement_extensions` (e.g. `part_of(Y)`, predicate `BFO:0000050`) and/or
 `review.decomposed_into` (`gocam_associations`, `module_associations`, `in_core_functions`, or
 `context_dropped: true` when Y was itself the over-annotation). Do not split the term into two unrelated
-annotations, and do not apply GO's `replaced_by`/`consider` without checking each half against the evidence.
+annotations. GO's `consider` is curator advice: check each half against the evidence before using it. Its
+`replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
+`replaced_by` upstream.
 See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
 
 ### Do not overrule curators from incomplete evidence
