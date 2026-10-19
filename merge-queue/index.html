@@ -514,7 +514,7 @@ that dismiss approval and trigger another review. It does not accelerate an
 individual validation job or supply missing reviews, and integration builds still
 consume Actions capacity.</p>
 <p>This follows <a href="https://github.com/monarch-initiative/dismech/blob/main/.github/workflows/main.yaml">dismech's queue implementation</a>,
-with <strong>one integration build at a time</strong>, one PR per merge, and up to <strong>50 total
+with <strong>up to eight concurrent integration builds</strong>, one PR per merge, and up to <strong>50 total
 queue entries</strong> admitted by the shepherd. Each sweep attempts at most <strong>50
 admissions</strong>, including failed attempts. Waiting entries do not increase build
 concurrency. The summary distinguishes the observed entry limit from the attempt
@@ -574,20 +574,42 @@ earn review/check approval again. Already queued PRs are left alone by the agent
      --required-check 'test (3.12)' --dry-run</code></p>
 <ol>
 <li>Apply <a href="../.github/merge-queue-ruleset.yaml">the ruleset</a> through GitHub's repository
-   rulesets API/UI, preserving existing branch protection. Its initial build
-   concurrency is one, <code>ALLGREEN</code>, squash merges, with a 360-minute check timeout
+   rulesets API/UI, preserving existing branch protection and live bypass actors.
+   Build concurrency is eight, <code>ALLGREEN</code>, squash merges, with a 360-minute check timeout
    to accommodate runner waits that have already exceeded two hours. This bounds
    waiting; it does not guarantee completion during a prolonged backlog.
    Before creating it, check for an existing <code>merge-queue-main</code> rule to avoid duplicates.</li>
 <li>Verify an approved PR enters the queue, receives <code>test (3.12)</code> on its merge-group
    SHA, and merges after success. Watch queue-build duration, ejections and Actions
-   backlog before increasing concurrency. Dismech uses additional merge-integrity
-   monitoring for speculative parallel builds; evaluate that before raising ours.</li>
+   backlog when tuning concurrency. Eight groups can use up to sixteen runners
+   for <code>validation (3.12)</code> and <code>suite (3.12)</code>. Each short-lived <code>test (3.12)</code>
+   gate starts only after both workers finish, so it does not add a third
+   simultaneous runner per group. Superseded builds still finishing and other
+   Actions workloads can consume additional runners.
+   Earlier failures or queue jumps can require rebuilding later speculative groups.</li>
 </ol>
-<p>The rule deliberately has no bypass actors, as in dismech. Administrators therefore
-cannot use <code>gh pr merge --admin</code> to skip this queue rule. An emergency direct merge
-requires explicitly disabling the ruleset first. The removal-reason string for a
-queue timeout has not yet been observed here: inspect it on the first timeout
+<p>The eight-build rollout relies on GitHub's native merge-queue checks:
+<code>ALLGREEN</code> requires passing checks for every entry, and <code>max_entries_to_merge: 1</code>
+keeps merges to one PR each. GitHub's documented failure handling rebuilds later
+groups without a failed earlier entry. This covers ordinary speculative-build
+failures; it does not independently verify the content GitHub ultimately merges.
+DisMech's <a href="https://github.com/monarch-initiative/dismech/blob/main/.github/workflows/verify-merge-integrity.yaml">post-merge integrity monitor</a>
+recomputes expected merge trees to detect content-corrupting merge anomalies that
+can escape CI. We evaluated that distinction and are proceeding with eight builds
+without porting this monitor in this change. The residual risk is explicit:
+ai-gene-review has no equivalent independent merge-tree audit, and green checks
+alone do not rule out such anomalies. <code>ALLGREEN</code> and single-PR merges do not
+replace that additional detection.</p>
+<p>As of 2026-10-19, the organization API reports ai4curation's plan as Free.
+GitHub <a href="https://docs.github.com/en/actions/reference/limits#job-concurrency-limits-for-github-hosted-runners">documents a default limit of 20 concurrent standard hosted jobs</a>
+for that plan, leaving nominal headroom of four when all sixteen queue workers
+are running. A support-granted limit increase has not been verified. PR checks,
+reviews, other repositories, and lingering superseded builds share that headroom;
+watch runner wait times and lower build concurrency if admission checks starve.</p>
+<p>The template has no bypass actors; the live repository ruleset separately allows
+administrators to bypass the queue. Preserve those live bypass actors when updating
+build concurrency rather than replacing the whole ruleset with the template.</p>
+<p>The removal-reason string for a queue timeout has not yet been observed here: inspect it on the first timeout
 before changing retry policy. Currently only <code>failed_checks</code> removals count toward
 the automated retry hold; manual re-enqueue after investigation does not require
 pushing a new commit or dismissing an otherwise valid approval.</p>
