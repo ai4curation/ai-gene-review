@@ -41,7 +41,7 @@ Terms obsoleted since 2013 are mapped through `replaced_by`, and parent/child re
 is_a and part_of in current GO (oaklib `sqlite:obo:go`).
 
 Overlap with the repo:
-- BC4GO: 24 paper-gene pairs in 22 folders (66 BC4GO terms). Of the 43 annotations with
+- BC4GO: 24 paper-gene pairs in 24 folders (66 BC4GO terms). Of the 43 annotations with
   experimental evidence: 20 have the same term in GOA from the same paper, 6 a parent/child term,
   and 17 have no GOA row from that paper. Of these 17, 9 are car-1 (below).
 - Keseler: none. Its 181 genes do not overlap our 89 ECOLI and CANAL folders.
