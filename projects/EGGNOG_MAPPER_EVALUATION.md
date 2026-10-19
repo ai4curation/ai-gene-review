@@ -146,9 +146,12 @@ The review side has four sets:
   a term but supports one of its descendants, the review is internally
   inconsistent, and BROADER wins by entailment. This overrides the
   curator's stated reason for the removal. It affects 1 leaf in the default
-  and species-excluded runs and 3 in the experimental-only run. In each
-  case the review removed a parent term (e.g. response to heat on rat Akt1)
-  while keeping a child of it.
+  and species-excluded runs, 3 in the experimental-only run and none in the
+  narrow-scope run. Two shapes occur. In one, the review removed a parent
+  term while keeping a child of it (response to heat on rat Akt1). In the
+  other, the review removed a generic binding class two steps up (enzyme
+  binding), so a narrower class inherited the removal (protein kinase
+  binding on Akt1).
 
 | Category | Leaf term is… |
 |---|---|

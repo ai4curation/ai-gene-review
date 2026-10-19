@@ -107,8 +107,10 @@ The mix of strata differs by genome, and NARROWER terms are the safest, so
 the rows are not directly comparable. The UNRELATED terms alone compare like
 for like: wrong in 8 of 14 for *P. putida*, 5 of 12 for horse, 8 of 10 for
 poplar and 3 of 6 for pennycress. These reviewers saw each term's automatic
-category. The five *P. putida* REJECTED claims are the exception: they were
-also re-judged in the main cohort's blinded re-check.
+category. Ten *P. putida* claims are the exception, so 55 of the 65 saw it.
+They were also re-judged in the main cohort's blinded re-check: the five
+REJECTED claims, plus two NARROWER and three UNRELATED claims used there as
+distractors.
 
 | Genome | Claims | Correct (COR) | True but vague (LSP) | Undecided (UNC) | Wrong (NPI/PLI/REP) |
 |---|---|---|---|---|---|
