@@ -18,3 +18,10 @@ Endocytosis remains UNDECIDED: PMID:10526320 is abstract-only, interprets rapid 
 - Audited the prior careful review (19 ACCEPT, 1 UNDECIDED); no rewrite needed. Actions and evidence quotes verified against cached publications.
 - Retained the UNDECIDED on GO:0006897 endocytosis (IMP, PMID:10526320): the source is abstract-only and there is a genuine assay-interpretation conflict (reduced FM1-43 loading may reflect MET-channel dysfunction rather than defective vesicle uptake), consistent with [PMID:11549711 "FM1-43 behaves as a permeant blocker of the mechanotransducer channel."] and [PMID:28534737 "Tomt-deficient hair cells have no evoked MET current and do not label with MET channel permeant FM dyes"]. UNDECIDED is the correct action per the incomplete-evidence rule.
 - Added the three missing reference_review objects: PMID:28534737 (HIGH/VERIFIED, primary MET-complex paper), PMID:9491988 (MEDIUM/VERIFIED, abstract-only genetic screen), PMID:11549711 (MEDIUM/VERIFIED, FM1-43 permeant-blocker). PMID:10526320 already flagged DISPUTED. Validation: zero errors, zero warnings.
+
+
+## OpenScientist endocytosis follow-up (2026-10-10)
+
+Reviewed `tomt-hypotheses/endocytosis-versus-met-dye-permeation/openscientist.md`. The report strengthens the negative side of the assay interpretation: later work establishes rapid FM1-43 loading as MET-channel permeation, and the mercury/tomt phenotype is therefore parsimoniously downstream of Tomt-dependent Tmc trafficking rather than a direct endocytosis defect.
+
+The report recommended removing `GO:0006897 endocytosis`; kept the review action at `UNDECIDED` instead. The original IMP source, PMID:10526320, remains abstract-only in the local cache, so the full-text curation rule still applies: do not overrule the curator until the original paper can be checked for independent vesicle-uptake evidence beyond FM1-43 loading.

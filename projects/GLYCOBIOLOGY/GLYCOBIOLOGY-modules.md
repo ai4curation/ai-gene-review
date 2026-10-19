@@ -1,6 +1,7 @@
 ---
 title: "Glycobiology pathway modules"
 species: [human]
+autolink_gene_symbols: false
 ---
 
 # Glycobiology pathway modules
@@ -8,8 +9,8 @@ species: [human]
 Index of the `modules/` entries that belong to the
 [Glycobiology project](../GLYCOBIOLOGY.md). The **17 core modules** below, plus
 `lysosomal_glycogen_degradation`, were curated independently of the project's
-[seven exemplar gene reviews](../GLYCOBIOLOGY.md#exemplar-reviews-calibration-set)
-and were linked from **no** project page at all; this page wires them in.
+[single-gene exemplar reviews](../GLYCOBIOLOGY.md#exemplar-reviews-calibration-set)
+and are wired back into this page as a second glycobiology evidence cohort.
 `galactose_leloir_pathway` and the non-animal modules in the last section already
 belong to other projects and are listed only as cross-references.
 
@@ -106,43 +107,42 @@ outside the animal GO-usage audit.
 ## The module gene cohort — a second, independent verdict baseline
 
 The 17 core modules cite **100 distinct human gene reviews**, all present in
-`genes/human/`, with **no overlap at all** with the seven exemplars. That is a
-substantially larger reviewed glycogene corpus than the project page previously
-claimed, and it gives a second verdict distribution to compare against the
-calibration set.
+`genes/human/`, with **no overlap at all** with the 11 single-gene exemplars.
+That gives a second verdict distribution to compare against the calibration and
+mucin-type extension sets.
 
 Counts below are computed from the `existing_annotations[].review.action` fields
-of the 100 YAMLs (not transcribed from prose), over **2,735 annotations** — every
+of the 100 YAMLs (not transcribed from prose), over **2,748 annotations** — every
 one adjudicated, none left `PENDING`.
 
-| Cohort | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
-|--------|--:|-------:|---------:|-----:|-------:|-------:|----:|
-| Module genes (100) | 2735 | 1729 (63.2%) | 486 (17.8%) | 422 (15.4%) | 73 (2.7%) | 13 (0.5%) | 12 (0.4%) |
-| Exemplars (7) | 303 | 137 (45.2%) | 100 (33.0%) | 42 (13.9%) | 22 (7.3%) | 1 (0.3%) | 1 (0.3%) |
+| Cohort | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | UNDECIDED |
+|--------|--:|-------:|---------:|-----:|-------:|-------:|----:|----------:|
+| Module genes (100) | 2748 | 1740 (63.3%) | 483 (17.6%) | 384 (14.0%) | 93 (3.4%) | 23 (0.8%) | 11 (0.4%) | 14 (0.5%) |
+| Exemplars (7) | 303 | 140 (46.2%) | 102 (33.7%) | 34 (11.2%) | 24 (7.9%) | 1 (0.3%) | 1 (0.3%) | 1 (0.3%) |
 
 Three things the comparison shows:
 
 - **The project's central claim holds, and holds harder on the larger cohort.**
-  REMOVE is 0.5% and 0.3% respectively; ~99.5% of annotations are retained in
+  REMOVE is 0.8% and 0.3% respectively; ~99.2% of annotations are retained in
   some form. Mis-annotation really is altitude/specificity and pleiotropy rather
-  than wrong function, and that is now supported by 3,038 annotations rather
+  than wrong function, and that is now supported by 3,051 annotations rather
   than 303.
 - **The exemplar set is NON_CORE- and MODIFY-skewed by design, and the skew is
-  mostly one gene.** LGALS3 alone contributes 62 of the exemplars' 100 NON_CORE.
+  mostly one gene.** LGALS3 alone contributes 62 of the exemplars' 102 NON_CORE.
   The module cohort is dominated by narrow biosynthetic enzymes with little
-  pleiotropy, so it lands 18 points higher on ACCEPT. Neither distribution is
+  pleiotropy, so it lands 17 points higher on ACCEPT. Neither distribution is
   "the" glycogene baseline — the difference between them is a gene-class effect,
   which is worth stating explicitly before the GOA closure query produces a third
   number.
-- **The module cohort is under-proposing new terms.** 100 genes yielded **1**
-  top-level `proposed_new_terms` entry between them; the 7 exemplars yielded 8.
+- **The module cohort is under-proposing new terms.** 100 genes yielded **2**
+  top-level `proposed_new_terms` entries between them; the 7 Phase 1/2
+  exemplars yielded 8.
   (This is a different field from the `NEW` column above, which counts
-  annotations proposed against existing GO terms.) A 1-vs-8 split is unlikely to
+  annotations proposed against existing GO terms.) A 2-vs-8 split is unlikely to
   be a real difference in GO coverage, and more likely reflects that the
   module-driven reviews were not run with new-term proposal in view. It is a
   concrete re-review target.
 
-**Caveat on `status`.** 97 of the 100 carry `status: INITIALIZED` despite being
-fully adjudicated (2 `COMPLETE`, 1 `IN_PROGRESS`). The status field is stale
-rather than the reviews being incomplete, but it means the cohort cannot be
-selected by status; it is selected here by module citation.
+**Caveat on `status`.** Module citation, not YAML status, is what defines this
+cohort: the 100 files span 86 `INITIALIZED`, 12 `COMPLETE`, 1 `IN_PROGRESS`, and
+1 `DRAFT` record despite every existing annotation being adjudicated.

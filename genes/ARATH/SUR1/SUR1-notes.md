@@ -15,3 +15,12 @@
 - mitochondrion HDA -> MARK_AS_OVER_ANNOTATED.
 - defense response to fungus IDA (PMID:32213638) -> UNDECIDED: cited paper is about ODR1/bHLH57 seed dormancy; abstract-only, no full text retrievable from Europe PMC; cannot verify.
 - No NEW terms.
+
+## 2026-10-15 journal: defense response to fungus row resolved (PR #5026 follow-up)
+
+Supersedes the "-> UNDECIDED ... abstract-only, no full text retrievable" line above.
+
+- Full text now cached: `ai-gene-review fetch-pmid PMID:32213638 --force` on 2026-10-15 retrieved PMC7268807 (publisher restricts the PMC XML; the pipeline's HTML fallback succeeded; `full_text_available: true`, `full_text_extraction_method: html`).
+- A search of the cached full text for SUR1, SUPERROOT, At2g20610, glucosinol, fung and pathogen returns no hits. The Accession Numbers section lists every gene studied: ODR1, ABI3, bHLH57, NCED2/3/5/6/9, CYP707A1-4, ABI4, DREB2C, TTG1, MYB5, DOG1, RDO5 and PP2A; At2g20610 is absent.
+- Query (re-run 2026-10-15): QuickGO REST, `https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=PMID:32213638&limit=200` returned 1 annotation: SUR1 (Q9SIV0) GO:0050832 IDA acts_upstream_of_or_within, assigned by TAIR; nothing for ODR1 or bHLH57.
+- Action: GO:0050832 IDA is REMOVE (unsupported by its reference; likely a mis-keyed reference in the TAIR record). Supporting quote from the accession list added to the row; the reference is now marked MISCITED, and a suggested question asks TAIR which paper was intended. This does not deny an indirect role of SUR1-derived indole glucosinolates in antifungal defense.

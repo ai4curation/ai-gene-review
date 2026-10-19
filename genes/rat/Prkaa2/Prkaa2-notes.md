@@ -111,3 +111,13 @@ This analysis synthesized:
 **Validation Status**: After marking these annotations as retired, the gene should pass GOA validation checks since retired annotations are now excluded from validation.
 
 **Note**: These annotations represent legitimate functional information that was previously transferred from experimentally verified mouse/human data. The retirement only reflects changes in the GOA annotation pipeline, not changes in the underlying biology.
+
+## 2026-10-10 - OpenScientist adaptor-activity follow-up
+
+The focused OpenScientist report for `prediction-adaptor-activity` resolves the
+GO:0030674 `protein-macromolecule adaptor activity` row as a subunit-level
+misassignment. PMID:15695819 shows that the AMPK beta subunit's conserved
+C-terminal 85 residues tether alpha and gamma into the heterotrimer; Prkaa2 is
+the alpha-2 catalytic subunit being tethered, not the adaptor. The existing
+GO:0044877 `protein-containing complex binding` row remains the correct MF
+shape for alpha-subunit incorporation into AMPK.

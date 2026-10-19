@@ -91,3 +91,15 @@ The kidney screen’s [original XML](Ptk7-PMC4804176-fulltext.xml), DOI [10.1038
 The coronary-vasculature annotation traces to PMID:25807483. Its available full-text extraction does not expose a Ptk7-specific row; Europe PMC returned 404 for the full-text XML and the PMC page was blocked by browser verification. This narrow phenotype remains UNDECIDED, without inferring a curator error. The accessible chuzhoi paper independently establishes heart and ventricular-septum defects, so those broader annotations are retained.
 
 PMID:17910947 is a kinase RNAi screen whose accessible abstract highlights twinfilin-2; this is not evidence that the PTK7 annotation is misattributed. Its PTK7 neurite/retinoic-acid result remains unverified. The apical-basal term similarly traces to an abstract-only original PTK7 paper and remains distinct from the clearly established planar-polarity axis.
+
+## Re-review 2026-10-10
+
+GOA refresh: no new rows, no retired rows (37 rows). Pure re-audit; no action changed.
+
+- Kinase-activity rows checked against the pseudokinase evidence. The three NOT rows (GO:0004714, GO:0016301 from mouse MGI:1918711; GO:0005524 from human Q13308) stay ACCEPT. Added the donors' own primary evidence: [PMID:15019986 "Mouse PTK7 was shown to be phosphorylated neither by itself nor by other protein tyrosine kinases."] (source of the MGI NOT IDA rows) and [PMID:24107129 "CCK4 (colon carcinoma kinase 4)/PTK7 (protein tyrosine kinase 7) [56], BubR1 [35], IRAK3/IRAK-M [57] and MviN [28] were not catalytically active in vitro in previously published studies, consistent with our observations that they do not bind ATP."] (source of the human NOT ATP binding IDA row).
+- GO:0004715 IBA (REMOVE) and GO:0016740 IEA (REMOVE) retained: the objection is target-lineage catalytic loss, not donor count. Added a propagation_review (PROPAGATION_BAD / PSEUDO_OR_SUBACTIVITY_LOSS) naming PANTHER:PTN001231168 and FB:FBgn0262081, plus the falcon statement that PTK7 "is a **pseudokinase**, not an active tyrosine kinase".
+- GO:0060976 coronary vasculature development (ISO, UNDECIDED): confirmed via QuickGO that the mouse donor row is MGI IMP from PMID:25807483; the cached full text does not mention Ptk7, so it stays UNDECIDED. Added the reference and a quote describing the screen.
+- Added propagation_review blocks to the remaining UNDECIDED/MODIFY ISO rows (GO:0010976, GO:0071300 from human PMID:17910947 screen; GO:0045198 from mouse PMID:15229603; GO:0016020 granularity).
+- No stale UniProt quotes (checker: 0).
+
+Open questions (UNDECIDED rows needing full text): PMID:17910947 (neurite outgrowth / RA response), PMID:15229603 (apical-basal polarity), PMID:25807483 supplementary data (coronary vasculature). The core-function MF GO:0060090 molecular adaptor activity is not carried by any GOA row; it is left as a core-function statement rather than a NEW row.

@@ -257,11 +257,20 @@ def _descendant_map(module: dict[str, Any]) -> dict[str, str]:
 class _Flattener:
     """Resolve hierarchical connection endpoints to atomic variables."""
 
-    def __init__(self, module: dict[str, Any]):
+    def __init__(
+        self,
+        module: dict[str, Any],
+        removed: frozenset[tuple[str, str]] = frozenset(),
+    ):
         self.module = module
+        self.removed = removed
         self.index = _element_index(module)
         self.parent = _descendant_map(module)
-        self.connections = list(iter_connections(module))
+        self.connections = [
+            c
+            for c in iter_connections(module)
+            if (str(c.get("source")), str(c.get("target"))) not in removed
+        ]
 
     def _ancestor_child(self, element: str, container: str) -> Optional[str]:
         """The direct child of ``container`` that contains ``element`` (or is it)."""
@@ -297,7 +306,10 @@ class _Flattener:
 
         The guard is per path: only a genuine cycle (an element that contains
         itself) raises. An id reachable from two sibling branches (a diamond, or a
-        duplicated id) is merely collected once.
+        duplicated id) is merely collected once. A duplicated id cannot create a
+        cycle: the index keeps the last occurrence in a pre-order walk, which is
+        never an ancestor of another occurrence, so the raise guards an invariant
+        rather than a reachable input.
         """
         if element in _path:
             raise ValueError(f"cyclic module tree at {element!r}")
@@ -417,13 +429,38 @@ def _default_rule(activators: list[str], inhibitors: list[str]) -> str:
 
 
 def module_to_boolean(
-    doc: dict[str, Any], logic: Optional[dict[str, str]] = None
+    doc: dict[str, Any],
+    logic: Optional[dict[str, str]] = None,
+    removed_connections: Optional[set[tuple[str, str]]] = None,
 ) -> BooleanModel:
-    """Compile a loaded :class:`ModuleReview` document into a :class:`BooleanModel`."""
+    """Compile a loaded :class:`ModuleReview` document into a :class:`BooleanModel`.
+
+    Each variable gets the default rule unless its element declares
+    ``activation_logic``, which then becomes its rule (see
+    :func:`activation_logic_findings` for the consistency checks; an
+    inconsistent declaration raises ``ValueError``). ``removed_connections``
+    (``(source, target)`` pairs) drops connections before translation, for
+    counterfactual scenarios. ``logic`` overrides rules by variable name after
+    everything else.
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"node": {"id": "a"}}, {"node": {"id": "b"}},
+    ...   {"node": {"id": "c", "activation_logic": {"all_of": [
+    ...       {"element": "a"}, {"element": "b"}]}}}],
+    ...   "connections": [
+    ...     {"source": "a", "target": "c", "connection_type": "CAUSES"},
+    ...     {"source": "b", "target": "c", "connection_type": "CAUSES"}]}}
+    >>> module_to_boolean(doc).rules["c"]
+    'a & b'
+    >>> module_to_boolean(doc, removed_connections={("b", "c")}).rules["c"]
+    Traceback (most recent call last):
+    ...
+    ValueError: c: activation_logic names b, which has no activating connection into c
+    """
     module = doc.get("module")
     if not isinstance(module, dict):
         raise ValueError("module document is missing a top-level 'module' mapping")
-    flat = _Flattener(module)
+    flat = _Flattener(module, frozenset(removed_connections or ()))
     edges = flat.flat_edges()
     # Preserve document order for variables.
     order: list[str] = []
@@ -447,12 +484,268 @@ def module_to_boolean(
         )
         if activators or inhibitors:
             rules[var] = _default_rule(activators, inhibitors)
+    problems, _omitted = _check_activation_logic(flat, edges)
+    if problems:
+        raise ValueError("; ".join(problems))
+    for element, expr in _declared_logic(flat):
+        rules[element] = _logic_to_bnet(expr, flat.exits)
     model = BooleanModel(
         variables, rules, edges, source=str(doc.get("id") or module.get("id"))
     )
     if logic:
         model = model.with_logic(logic)
     return model
+
+
+# --------------------------------------------------------------------------
+# Declarative activation logic (the module's ``activation_logic`` slot)
+# --------------------------------------------------------------------------
+
+_LOGIC_KEYS = ("element", "all_of", "any_of", "none_of")
+
+
+def _logic_operator(expr: Any) -> str:
+    """The one operator key set on a ``LogicExpression`` mapping.
+
+    >>> _logic_operator({"any_of": [{"element": "a"}]})
+    'any_of'
+    >>> _logic_operator({"element": "a", "all_of": []})
+    'element'
+    >>> _logic_operator({"element": "a", "none_of": [{"element": "b"}]})
+    Traceback (most recent call last):
+    ...
+    ValueError: a LogicExpression sets exactly one of element/all_of/any_of/none_of, got ['element', 'none_of']
+    """
+    if not isinstance(expr, dict):
+        raise ValueError(f"a LogicExpression must be a mapping, got {expr!r}")
+    keys = [k for k in _LOGIC_KEYS if expr.get(k) not in (None, "", [])]
+    if len(keys) != 1:
+        raise ValueError(
+            "a LogicExpression sets exactly one of element/all_of/any_of/none_of, "
+            f"got {keys}"
+        )
+    return keys[0]
+
+
+def logic_leaves(expr: Any, negated: bool = False) -> Iterator[tuple[str, bool]]:
+    """Yield ``(element, negated)`` for every leaf of a ``LogicExpression``.
+
+    ``negated`` is the polarity: True when the leaf sits under an odd number of
+    ``none_of``.
+
+    >>> list(logic_leaves({"all_of": [{"element": "a"},
+    ...                               {"none_of": [{"element": "b"}]}]}))
+    [('a', False), ('b', True)]
+    """
+    op = _logic_operator(expr)
+    if op == "element":
+        yield str(expr["element"]), negated
+        return
+    for sub in as_list(expr[op]):
+        yield from logic_leaves(sub, negated ^ (op == "none_of"))
+
+
+def _strip_outer(text: str) -> str:
+    """Drop one pair of parentheses enclosing the whole expression.
+
+    >>> _strip_outer("(a | b)"), _strip_outer("(a) | (b)")
+    ('a | b', '(a) | (b)')
+    """
+    if not (text.startswith("(") and text.endswith(")")):
+        return text
+    depth = 0
+    for i, ch in enumerate(text):
+        depth += {"(": 1, ")": -1}.get(ch, 0)
+        if depth == 0 and i < len(text) - 1:
+            return text
+    return text[1:-1]
+
+
+def _logic_to_bnet(expr: Any, resolve: Any) -> str:
+    """Render a ``LogicExpression`` as a bnet expression.
+
+    ``resolve`` maps an element id to the variables it stands for (a container
+    resolves to its exit tiers, OR-ed).
+
+    >>> e = {"any_of": [{"all_of": [{"element": "a"}, {"element": "b"}]},
+    ...                 {"none_of": [{"element": "c"}, {"element": "d"}]}]}
+    >>> _logic_to_bnet(e, lambda x: [x])
+    '(a & b) | !(c | d)'
+    >>> _logic_to_bnet({"element": "box"}, lambda x: ["t1", "t2"])
+    't1 | t2'
+    """
+
+    def render(node: Any) -> str:
+        op = _logic_operator(node)
+        if op == "element":
+            names = list(resolve(str(node["element"])))
+            return names[0] if len(names) == 1 else "(" + " | ".join(names) + ")"
+        parts = [render(sub) for sub in as_list(node[op])]
+        if op == "none_of":
+            inner = parts[0] if len(parts) == 1 else "(" + " | ".join(parts) + ")"
+            return "!" + inner
+        joined = (" & " if op == "all_of" else " | ").join(parts)
+        return parts[0] if len(parts) == 1 else f"({joined})"
+
+    return _strip_outer(render(expr))
+
+
+def _declared_logic(flat: "_Flattener") -> list[tuple[str, Any]]:
+    """``(element id, activation_logic)`` for every element that declares one."""
+    return [
+        (eid, element["activation_logic"])
+        for eid, element in flat.index.items()
+        if isinstance(element, dict) and element.get("activation_logic")
+    ]
+
+
+def _check_activation_logic(
+    flat: "_Flattener", edges: set[SignedEdge]
+) -> tuple[list[str], dict[str, list[str]]]:
+    """Consistency of declared ``activation_logic`` with the declared graph.
+
+    Returns ``(problems, omitted)``: problems make the declaration unusable;
+    ``omitted`` maps each element to the regulator variables it declares under
+    ``omitted_regulators`` and whose connection into it is present. A declared
+    omission whose connection a scenario removed is not a problem: removing an
+    edge the logic never used cannot break the logic.
+    """
+    problems: list[str] = []
+    omitted_found: dict[str, list[str]] = {}
+    for element, expr in _declared_logic(flat):
+        if flat.entries(element) != [element] or flat.exits(element) != [element]:
+            problems.append(
+                f"{element}: activation_logic on a container that is flattened to "
+                "its tiers; declare it on the tier"
+            )
+            continue
+        try:
+            leaves = list(logic_leaves(expr))
+        except ValueError as exc:
+            problems.append(f"{element}: {exc}")
+            continue
+        incoming = {(e.source, e.sign) for e in edges if e.target == element}
+        used: set[str] = set()
+        for leaf, negated in leaves:
+            if leaf not in flat.index:
+                problems.append(
+                    f"{element}: activation_logic names unknown element {leaf}"
+                )
+                continue
+            want = "-" if negated else "+"
+            kind = "inhibiting" if negated else "activating"
+            for var in flat.exits(leaf):
+                used.add(var)
+                if (var, want) not in incoming:
+                    problems.append(
+                        f"{element}: activation_logic names {leaf}, which has no "
+                        f"{kind} connection into {element}"
+                    )
+        declared_omitted: set[str] = set()
+        for name in as_list(flat.index[element].get("omitted_regulators")):
+            name = str(name)
+            if name not in flat.index:
+                problems.append(
+                    f"{element}: omitted_regulators names unknown element {name}"
+                )
+                continue
+            for var in flat.exits(name):
+                if var in used:
+                    problems.append(
+                        f"{element}: omitted_regulators names {name}, which its "
+                        "activation_logic uses"
+                    )
+                elif var not in {src for src, _ in incoming}:
+                    if (name, element) in flat.removed:
+                        continue
+                    problems.append(
+                        f"{element}: omitted_regulators names {name}, which has no "
+                        f"connection into {element}"
+                    )
+                else:
+                    declared_omitted.add(var)
+                    omitted_found.setdefault(element, []).append(var)
+        for source, _sign in sorted(incoming):
+            if source not in used and source not in declared_omitted:
+                problems.append(
+                    f"{element}: regulator {source} has a connection into {element} "
+                    "but is not used by its activation_logic (list it under "
+                    "omitted_regulators if that is deliberate)"
+                )
+    for eid, el in flat.index.items():
+        if (
+            isinstance(el, dict)
+            and el.get("omitted_regulators")
+            and not el.get("activation_logic")
+        ):
+            problems.append(f"{eid}: omitted_regulators without activation_logic")
+    return problems, omitted_found
+
+
+def activation_logic_findings(
+    doc: dict[str, Any],
+    removed_connections: Optional[set[tuple[str, str]]] = None,
+) -> list[str]:
+    """Problems with the ``activation_logic`` declarations of a module document.
+
+    Each declaration must sit on an element that is a variable of the
+    translation, set exactly one operator per expression node, name only
+    regulators that have a signed connection into the element (activating in a
+    positive position, inhibiting under ``none_of``), and use every such
+    regulator except those listed under ``omitted_regulators``. An empty list
+    means the declarations are consistent. ``removed_connections`` checks them
+    against the graph a counterfactual scenario leaves behind.
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"node": {"id": "a"}}, {"node": {"id": "i"}},
+    ...   {"node": {"id": "t", "activation_logic": {"element": "i"}}}],
+    ...   "connections": [
+    ...     {"source": "a", "target": "t", "connection_type": "CAUSES"},
+    ...     {"source": "i", "target": "t", "connection_type": "NEGATIVELY_REGULATES"}]}}
+    >>> for p in activation_logic_findings(doc): print(p)
+    t: activation_logic names i, which has no activating connection into t
+    t: regulator a has a connection into t but is not used by its activation_logic (list it under omitted_regulators if that is deliberate)
+
+    A modulator left out on purpose is declared, which keeps the check strict:
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"node": {"id": "a"}}, {"node": {"id": "mod"}},
+    ...   {"node": {"id": "t", "activation_logic": {"element": "a"},
+    ...             "omitted_regulators": ["mod"]}}],
+    ...   "connections": [
+    ...     {"source": "a", "target": "t", "connection_type": "CAUSES"},
+    ...     {"source": "mod", "target": "t", "connection_type": "POSITIVELY_REGULATES"}]}}
+    >>> activation_logic_findings(doc), module_to_boolean(doc).rules["t"]
+    ([], 'a')
+    """
+    module = doc.get("module")
+    if not isinstance(module, dict):
+        return []
+    flat = _Flattener(module, frozenset(removed_connections or ()))
+    return _check_activation_logic(flat, flat.flat_edges())[0]
+
+
+def omitted_regulators(doc: dict[str, Any]) -> dict[str, list[str]]:
+    """Regulator variables each element's ``activation_logic`` leaves out on purpose.
+
+    These connections stay in the graph (the module asserts them) but play no
+    part in the element's update rule, so renderers can show them as such.
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"node": {"id": "a"}}, {"node": {"id": "mod"}},
+    ...   {"node": {"id": "t", "activation_logic": {"element": "a"},
+    ...             "omitted_regulators": ["mod"]}}],
+    ...   "connections": [
+    ...     {"source": "a", "target": "t", "connection_type": "CAUSES"},
+    ...     {"source": "mod", "target": "t", "connection_type": "POSITIVELY_REGULATES"}]}}
+    >>> omitted_regulators(doc)
+    {'t': ['mod']}
+    """
+    module = doc.get("module")
+    if not isinstance(module, dict):
+        return {}
+    flat = _Flattener(module)
+    return _check_activation_logic(flat, flat.flat_edges())[1]
 
 
 def module_file_to_boolean(

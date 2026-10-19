@@ -19,3 +19,12 @@
 
 ### Action tally
 - ACCEPT 7, KEEP_AS_NON_CORE 3, UNDECIDED 1, NEW 0 (11 rows).
+
+## 2026-10-15 journal: response to oxidative stress row resolved (PR #5026 follow-up)
+
+Supersedes the "IEP response to oxidative stress (PMID:9449849) ... -> UNDECIDED" line and the action tally above (now ACCEPT 7, KEEP_AS_NON_CORE 3, REMOVE 1).
+
+- GO:0006979 IEP (PMID:9449849) is REMOVE. The cached full text identifies the Al-induced clone only by >98% identity to the "GST ( Kiyosue et al., 1993 )", in the singular, without saying which Kiyosue clone. Kiyosue et al. 1993 (PMID:8253194) described two cDNAs, ERD11 and ERD13.
+- Clone identities (UniProt): ERD11 = GSTF6 (P42760, At1g02930; GSTF6-uniprot.txt `Synonyms=ERD11, GST1, GSTF3`); ERD13 = GSTF10 (P42761, At2g30870; downloaded 2026-10-15 from https://rest.uniprot.org/uniprotkb/P42761.txt, `Synonyms=ERD13`). GSTF11 is At3g03190 (Q96324), legacy alias AtGSTF6.
+- Sequence check (GSTF11-bioinformatics/pairwise_identity.py, output in RESULTS.md): global identity GSTF11 vs GSTF6/ERD11 39.6% (over alignment), GSTF11 vs GSTF10/ERD13 42.7%. Neither is compatible with a >98%-identical clone, so the clone is GSTF6 or GSTF10, not GSTF11. (An earlier "~42%" figure in the review reason was not recorded; it is replaced by these reproducible numbers.)
+- The oxidative-stress link in the paper is by citation of ozone work, not measured for this clone.

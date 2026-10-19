@@ -61,6 +61,8 @@ Testing protein-function predictors claim by claim against reviewed genes
 
 ![h:480](prediction-results.svg)
 
+<span class="small">Snapshots: BioReason/ProtNLM2 2026-09-27 `c7551cb3`; TreeGrafter 2026-10-03 `f81b9f300`.</span>
+
 ---
 
 ## Headlines by project
@@ -68,10 +70,12 @@ Testing protein-function predictors claim by claim against reviewed genes
 | Project | Cohort | Headline |
 |---|---|---|
 | BioReason-Pro | 139 genes | correctness 4.0/5, completeness 2.9/5; 23 of 955 SFT terms correct and novel |
-| ProtNLM2 | 242 targets | 288 GO terms: 53 COR, 83 LSP, 103 UNC, 17 NPI |
+| ProtNLM2 | 186/242 targets assessed | 288 GO terms: 52 COR, 84 LSP, 98 UNC, 20 NPI |
 | DeepECTransformer | 7 E. coli genes | one gene per error category; paper found 3/453 correct novel |
-| Affinage | 42 + 22 + 91 genes | GO layer 1/42 specific; narrative added 13 annotations |
-| TreeGrafter | 898 IEA rows | 41% accepted vs 72% for PAINT/IBA |
+| Affinage | 42 GO-layer + 91 PAINT genes | 38/42 core-MF slim bins; non-FA PAINT recall 48% |
+| TreeGrafter | 1,074 IEA rows | 43% accepted; 26% down-graded |
+
+<span class="small">Snapshots: BioReason/ProtNLM2 2026-09-27 `c7551cb3`; TreeGrafter 2026-10-03 `f81b9f300`.</span>
 
 ---
 
@@ -87,8 +91,8 @@ Testing protein-function predictors claim by claim against reviewed genes
 
 ## Status and next steps
 
-- ✅ BioReason-Pro, Affinage, TreeGrafter and the E. coli DeepECTF set have results; ProtNLM2 cohorts are in progress.
-- ⬜ Provenance-blinded re-test of the TreeGrafter corroboration effect.
-- ⬜ Ontology-aware (ancestor-distance) scoring for Affinage.
+- Done: BioReason-Pro, Affinage, TreeGrafter and the E. coli DeepECTF set have results; ProtNLM2 has 186 of 242 targets assessed.
+- Next: human anchor subset across BioReason-Pro, ProtNLM2 and TreeGrafter.
+- Next: second-pass TreeGrafter mode-0 / keyword-placed rows; per-term Affinage slim precision.
 
 **Read more:** `projects/FUNCTION_PREDICTION_EVALUATION.md` · shared browser `app/predictions/` · each project's own page

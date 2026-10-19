@@ -58,3 +58,18 @@ UniProt: P11498 (PYC_HUMAN); HGNC:8636; EC 6.4.1.1; 1178 aa precursor, mitochond
   No PC-deep-research-falcon.md produced. Grounded review in UniProt, GOA, cached
   publications, disorders KB, and cached Reactome entries instead.
 </content>
+
+## 2026-10-09 completion pass (dismech alignment, GLUCONEO group)
+- Protein binding (GO:0005515) IPIs switched from MARK_AS_OVER_ANNOTATED to REMOVE, per
+  the repository policy that excludes MARK_AS_OVER_ANNOTATED for bare protein binding
+  (the interactions themselves are real: HCV NS5A [PMID:23861867]; ME1 in the HTC
+  [PMID:34547241]).
+- The proposed oxaloacetate metabolic process (GO:0006107) NEW row was labelled IBA /
+  GO_REF:0000033, which would imply a PAINT annotation that does not exist in GOA;
+  re-labelled TAS / Reactome:R-HSA-70501.
+- Alignment with dismech `Pyruvate_Carboxylase_Deficiency_Disease`: dismech marks
+  pyruvate carboxylase activity (GO:0004736), gluconeogenesis (GO:0006094) and pyruvate
+  metabolic process (GO:0006090) DECREASED in the mitochondrial matrix (GO:0005759);
+  anaplerosis is bound there to tricarboxylic acid cycle (GO:0006099). These agree with
+  core_functions here (GO:0004736 in GO:0005759; gluconeogenesis; oxaloacetate
+  metabolic process). Status set to COMPLETE.
