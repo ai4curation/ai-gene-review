@@ -179,9 +179,119 @@ def camon():
     return pairs
 
 
+def bc4go_annotations():
+    """(pmid, gene symbol upper) -> list of BC4GO gold annotations (training + development sets)."""
+    import xml.etree.ElementTree as ET
+
+    out = defaultdict(list)
+    base = os.path.join(RAW, "bc4go")
+    paths = glob.glob(os.path.join(base, "BC4GO Corpus Training Set v1", "Annotations", "*.xml"))
+    paths += glob.glob(os.path.join(base, "bc4go_dev_v081213", "annotations", "*.xml"))
+    for p in paths:
+        split = "training" if "Training" in p else "development"
+        for doc in ET.parse(p).getroot().iter("document"):
+            pmid = doc.findtext("id")
+            for ann in doc.iter("annotation"):
+                inf = {i.get("key"): (i.text or "") for i in ann.findall("infon")}
+                gene = inf.get("gene", "")
+                symbol, _, geneid = gene.rpartition("(")
+                label, _, goid = inf.get("go-term", "").rpartition("|")
+                out[(pmid, symbol.strip().upper())].append({
+                    "split": split,
+                    "gene": gene,
+                    "ncbi_gene": geneid.rstrip(")"),
+                    "go_term": goid,
+                    "go_name": label,
+                    "evidence": inf.get("goevidence"),
+                    "sentence": ann.findtext("text"),
+                })
+    return out
+
+
+def bc4go():
+    from oaklib import get_adapter
+    from oaklib.datamodels.vocabulary import IS_A, PART_OF
+
+    go = get_adapter("sqlite:obo:go")
+    preds = [IS_A, PART_OF]
+    anc = {}
+
+    def ancestors(t):
+        if t not in anc:
+            anc[t] = set(go.ancestors(t, predicates=preds, reflexive=False)) if t.startswith("GO:") else set()
+        return anc[t]
+
+    def current(t):
+        """Follow replaced_by for terms obsoleted since 2013 (e.g. GO:0030529 -> GO:1990904)."""
+        repl = go.entity_metadata_map(t).get("IAO:0100001") if t.startswith("GO:") else None
+        return repl[0] if repl else t
+
+    def relation(a, b):
+        a = current(a)
+        if a == b:
+            return "exact"
+        if b in ancestors(a):
+            return "bc4go_more_specific"
+        if a in ancestors(b):
+            return "goa_more_specific"
+        return None
+
+    # BC4GO genes carry NCBI Gene ids; join on those, not symbols (fly Cdc42 is not mouse Cdc42)
+    gold = defaultdict(list)
+    for (pmid, _sym), anns in bc4go_annotations().items():
+        for a in anns:
+            gold[(pmid, a["ncbi_gene"])].append(a)
+    folders = defaultdict(list)
+    for d in glob.glob(os.path.join(ROOT, "genes", "*", "*")):
+        up = os.path.join(d, f"{os.path.basename(d)}-uniprot.txt")
+        if os.path.exists(up):
+            with open(up) as fh:
+                for line in fh:
+                    if line.startswith("DR   GeneID;"):
+                        folders[line.split(";")[1].strip()].append(d)
+
+    results = []
+    for (pmid, geneid), anns in sorted(gold.items()):
+        sym = anns[0]["gene"]
+        for d in folders.get(geneid, []):
+            goa_rows = rows_for(d, pmid)
+            if not goa_rows:
+                continue
+            bc_terms = {}
+            for a in anns:
+                bc_terms.setdefault(a["go_term"], {**a, "sentences": []})["sentences"].append(a["sentence"])
+            comparisons = []
+            for t, a in bc_terms.items():
+                best = [(relation(t, r["go_term"]), r) for r in goa_rows]
+                best = [x for x in best if x[0]]
+                comparisons.append({
+                    "bc4go_term": t,
+                    "bc4go_term_current": current(t),
+                    "bc4go_name": a["go_name"],
+                    # NONE marks a "summary type" sentence: states what was found, not how,
+                    # so it cannot support a complete annotation on its own (Van Auken 2014)
+                    "bc4go_evidence": a["evidence"],
+                    "bc4go_sentences": a["sentences"],
+                    "goa_matches": [
+                        {"relation": rel, "go_term": r["go_term"], "go_name": r["go_name"],
+                         "evidence": r["evidence"], "our_action": r["our_action"]}
+                        for rel, r in best
+                    ],
+                })
+            goa_only = [r for r in goa_rows if not any(relation(t, r["go_term"]) for t in bc_terms)]
+            results.append({
+                "pmid": pmid,
+                "gene": sym,
+                "gene_folder": os.path.relpath(d, ROOT),
+                "bc4go_terms": comparisons,
+                "goa_rows_not_in_bc4go": goa_only,
+            })
+    return results
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, fn in [("keseler2014", keseler), ("cusick2009", cusick), ("camon2005", camon)]:
+    for name, fn in [("keseler2014", keseler), ("cusick2009", cusick), ("camon2005", camon), ("bc4go", bc4go)]:
         data = fn()
         with open(os.path.join(OUT, f"{name}.yaml"), "w") as fh:
             yaml.safe_dump(data, fh, sort_keys=False, allow_unicode=True, width=120)
