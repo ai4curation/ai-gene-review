@@ -58,6 +58,13 @@ differentiation.
 transition. GO has no regulation-of-crest-delamination term. If GO wants a crest-specific
 term, "negative regulation of neural crest cell delamination" would be an NTR.
 
+**Re-decided 2026-10-19: OVER_ANNOTATED.** The block on migration is shown only by
+extending Tspan18 expression (and by FoxD3 knockdown, which also leaves Tspan18 on).
+Tspan18 knockdown loses Cad6B protein early, yet emigration timing, basal lamina
+breakdown and Cad7 upregulation are normal. Under the overexpression rule, neither
+GO:0010719 nor a delamination-regulation NTR is supported. Knockdown supports only
+maintenance of Cad6B protein levels.
+
 ## Fuz (mouse Q3UYI6, IMP PMID:23806618; rat Q3B756 ISS + ISO; human Q9BT04 ISS)
 Full text read. Fuz mutants have excess cranial crest with no increase in mitosis or
 apoptosis. The defect is non-cell-autonomous: the paper reports "Fuz requirements in the

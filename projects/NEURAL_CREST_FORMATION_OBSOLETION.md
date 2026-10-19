@@ -177,8 +177,8 @@ a `.notes.md`) and from the gene reviews already in this repo.
 
 | Action | Rows | Distinct decisions |
 |---|---:|---:|
-| REPLACE | 83 | 52 |
-| OVER_ANNOTATED (overexpression only) | 3 | 3 |
+| REPLACE | 82 | 51 |
+| OVER_ANNOTATED (overexpression only) | 4 | 4 |
 | REMOVE (expression only) | 3 | 2 |
 | UNDECIDED | 5 | 5 |
 
@@ -195,8 +195,8 @@ Decisions by gene (species; paper):
 | GO:0014033 differentiation (nothing more specific supported) | zeb2a, zeb2b, cnbpa, chd7 (zebrafish) |
 | Regulation of NC fate specification (GO:1905295/6/7) | parp3; rgs2 (negative); hsbp1b (negative); bmper (positive, + GO:0030513 positive regulation of BMP signaling) |
 | Regulation of NC differentiation (GO:1905292/3/4) | hdac4; Fuz/FUZ (negative; mouse IMP plus rat/human transfers); LRP6 (human, positive) |
-| Other existing terms | TSPAN18 (chicken) → GO:0010719 negative regulation of epithelial to mesenchymal transition; polr1b (zebrafish) → GO:0006360 transcription by RNA polymerase I |
-| OVER_ANNOTATED (overexpression only) | zic2-a (PMID:9634234, PMID:9739105), zic4 (PMID:16871625) (X. laevis) |
+| Other existing terms | polr1b (zebrafish) → GO:0006360 transcription by RNA polymerase I |
+| OVER_ANNOTATED (overexpression only) | zic2-a (PMID:9634234, PMID:9739105), zic4 (PMID:16871625) (X. laevis); TSPAN18 (chicken, PMID:23418345; re-decided 2026-10-19) |
 | REMOVE (expression only) | grem1 (X. laevis, IEP); Id2 (chicken, IEP, on both GO:0014029 and GO:0090300) |
 | UNDECIDED | KLHL12, PEF1, PDCD6 (human; PMID:27716508 full text not accessible); Chrd (mouse; the cached abstract concerns vascular patterning); hes4-a NOT row (contradicted by PMID:25997789) |
 
@@ -204,19 +204,22 @@ What the remapping shows:
 - **Only 14 of 94 rows land on a precise crest-cell term** (fate
   specification or delamination): the SoxE genes, the ubiquitin group and SOX9.
   The rest move to the border term (11), the progenitor term (11), a regulation
-  term (14), the general differentiation term (32, of which 28 are zeb2
-  accessions from one paper) or a non-crest term (polr1b), or are removed or left
-  undecided. The obsoleted term was carrying all of these meanings.
+  term (13), the general differentiation term (32, of which 28 are zeb2
+  accessions from one paper) or a non-crest term (polr1b), or are removed,
+  marked over-annotated or left undecided. The obsoleted term was carrying all of these meanings.
 - **Ribosome biogenesis is split on purpose.** polr1b knockdown makes crest
   precursors die from a ribosome shortage, which is a requirement, not a crest
   step. TCOF1 and NOLC1 knockdown switches cells from crest to CNS identity
   without affecting rRNA output or survival, which is participation in
   specification [PMID:26399832].
-- **GO lacks regulation terms for crest migration and delamination.** TSPAN18
-  therefore goes to a generic EMT term. That row needs a second look under
-  the overexpression rule: knockdown shows Tspan18 keeps Cad6B protein levels
-  up, but not that it delays emigration (see *Gaps considered but not
-  proposed*).
+- **GO lacks regulation terms for crest migration and delamination.** The
+  one candidate, TSPAN18, was first sent to the generic EMT term GO:0010719.
+  Re-decided 2026-10-19 under the overexpression rule: knockdown shows
+  Tspan18 keeps Cad6B protein levels up, but emigration timing is normal, so
+  the hold on EMT rests on overexpression alone and the row is now
+  over-annotation (see *Gaps considered but not proposed*). The
+  loss-of-function result is a Cad6B protein-stabilisation claim, outside this
+  remapping.
 - **Overexpression alone is not participation (rule added 2026-10-09).** A
   factor that induces crest markers when overexpressed shows it *can* drive the
   program, not that it does. Rows resting only on such data are marked
@@ -279,7 +282,7 @@ What the remapping shows:
 ---
 # STATUS
 
-Last updated: 2026-10-09
+Last updated: 2026-10-19
 
 - [x] Defect documented (text vs placement), checked in QuickGO and OLS
 - [x] Inventory of all annotations to the four terms (`inventory.py`, `annotations.tsv`, `summary.md`)
@@ -291,14 +294,37 @@ Last updated: 2026-10-09
 - [x] Review the remaining experimental annotations (four batches; 2026-10-09)
 - [x] Review the 17 regulation-term annotations (12 distinct)
 - [x] Per-annotation remapping table for GO (`remapping.tsv`, 94 rows, checker clean)
-- [ ] Resolve the 5 UNDECIDED rows (needs PMID:27716508 full text; Chrd full text; hes4-a NOT row)
+- [ ] Resolve the 5 UNDECIDED rows (needs PMID:27716508 full text; Chrd full text; hes4-a NOT row). Rechecked 2026-10-19: still blocked, see notes
 - [x] Gap terms checked (2026-10-09): delamination regulation, migration regulation and crest apoptosis are absent from GO; none proposed yet (no annotation clears the bar)
-- [ ] Re-decide TSPAN18 (GO:0010719 rests on overexpression; knockdown supports Cad6B stabilisation only)
+- [x] Re-decide TSPAN18 (2026-10-19): OVER_ANNOTATED; GO:0010719 rested on overexpression, and knockdown supports Cad6B stabilisation only
 - [x] Overexpression-only rule applied: zic2-a and zic4 marked over-annotated; zic1 and sox10 kept because they have loss-of-function evidence
 - [ ] Report ARBA00027170 to UniProt (see the rule-reviewer workflow)
 - [ ] Submit the GO request (needs sign-off)
 
 # NOTES
+
+## 2026-10-19 (follow-up from issue #5031)
+
+- **TSPAN18 re-decided: OVER_ANNOTATED** (`remap/D_regulation.tsv`, merged
+  into `remapping.tsv`; checker clean). Rereading the full text
+  [PMID:23418345]: extending Tspan18 expression keeps Cad6B protein and blocks
+  migration, and FoxD3 knockdown (which leaves Tspan18 on) also blocks
+  migration. Both are gain-of-function for Tspan18. Its own knockdown loses
+  Cad6B protein early, but "the timing of neural crest emigration, basal
+  lamina breakdown and Cad7 upregulation proceed normally in
+  Tspan18-deficient cells". So no loss-of-function result shows that Tspan18
+  regulates crest formation, delamination or EMT, and GO:0010719 rested on
+  the same overexpression data. The remapping now has 51 replace, 4
+  over-annotated, 2 remove and 5 undecided decisions.
+- **UNDECIDED rows still blocked.** None of the papers has a PMC copy
+  (PubMed ID converter, 2026-10-19): PMID:27716508 (Cell; publisher page
+  returns 403), PMID:17685487 (Chrd, Dev Dyn), and for hes4-a both
+  PMID:17724611 and PMID:25997789. Under the rule against overruling
+  curators from abstracts, all five stay UNDECIDED. For hes4-a, the question
+  for GO is whether the NOT row should be carried to *neural crest progenitor
+  maintenance* at all: it rests on a single-homeolog morpholino result, which
+  shows hes4-a is dispensable when hes4-b is present, and PMID:25997789
+  reports functional equivalence of the hairy genes.
 
 ## 2026-10-09 (OpenScientist checks)
 
