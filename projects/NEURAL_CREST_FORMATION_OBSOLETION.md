@@ -319,7 +319,11 @@ Last updated: 2026-10-19
 - **UNDECIDED rows still blocked.** None of the papers has a PMC copy
   (PubMed ID converter, 2026-10-19): PMID:27716508 (Cell; publisher page
   returns 403), PMID:17685487 (Chrd, Dev Dyn), and for hes4-a both
-  PMID:17724611 and PMID:25997789. Under the rule against overruling
+  PMID:17724611 and PMID:25997789; Europe PMC has no PMCID for any of them.
+  Three are free (bronze OA) on the publisher site per Unpaywall:
+  PMID:27716508 (cell.com PDF), PMID:17685487 and PMID:25997789 (Wiley
+  pdfdirect). Automated download hits a Cloudflare bot check, so a person
+  needs to fetch them. PMID:17724611 (Dev Genes Evol) is closed. Under the rule against overruling
   curators from abstracts, all five stay UNDECIDED. For hes4-a, the question
   for GO is whether the NOT row should be carried to *neural crest progenitor
   maintenance* at all: it rests on a single-homeolog morpholino result, which
