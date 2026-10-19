@@ -123,14 +123,14 @@ Characterised, in priority order:
 - [ ] moaA (P30745): GTP 3',8-cyclase
 - [ ] nrdG (P0A9N8): anaerobic RNR (class III) activase
 - [ ] pflA (P0A9N4): pyruvate formate-lyase activase
-- [ ] rlmN (P36979): 23S rRNA m2A2503 / tRNA m2A37 methyltransferase
+- [x] rlmN (P36979): 23S rRNA m2A2503 / tRNA m2A37 methyltransferase. 32 rows: 17 ACCEPT, 7 MODIFY, 3 KEEP_AS_NON_CORE, 7 REMOVE (protein binding), 1 NEW (SAM binding, IDA PMID:21527678)
 - [x] miaB (P0AEI1): tRNA ms2i6A37 methylthiotransferase. 19 rows: 9 ACCEPT, 7 MODIFY, 1 REMOVE (protein binding), 1 NEW (SAM binding, ISS: source organism of PMID:15339930 not stated in abstract)
 - [x] rimO (P0AEI4): ribosomal protein uS12 Asp89 methylthiotransferase. 17 rows: 10 ACCEPT, 5 MODIFY, 1 REMOVE (tRNA modification IEA from MTTase-wide InterPro; RimO modifies protein), 1 NEW (SAM binding). Core MF GO:0103039; no BP (specific terms obsolete)
 - [ ] thiH (P30140): 2-iminoacetate synthase (tyrosine lyase)
 - [ ] hemN (P32131): oxygen-independent coproporphyrinogen III oxidase
 - [ ] hemW (P52062): heme chaperone. Check for over-annotation from HemN
 - [ ] queE (P64554): 7-carboxy-7-deazaguanine synthase
-- [ ] epmB (P39280): L-lysine 2,3-aminomutase (EF-P modification)
+- [x] epmB (P39280): L-lysine 2,3-aminomutase (EF-P modification). 9 rows: 2 ACCEPT, 4 MODIFY, 1 MARK_AS_OVER_ANNOTATED (post-translational protein modification: EpmA/EpmC do the work), 2 NEW (SAM, PLP binding). Proposed new term: (R)-beta-lysine-forming aminomutase (RHEA:44148); GO:0050066 is the (3S) clostridial reaction
 
 Paralogs and uncharacterised, where the risk is over-annotation:
 
