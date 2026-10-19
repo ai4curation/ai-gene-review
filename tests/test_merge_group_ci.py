@@ -41,7 +41,7 @@ def test_queue_rollout_is_bounded_and_does_not_bypass_protection():
     assert config["conditions"]["ref_name"]["include"] == ["refs/heads/main"]
     rule, = config["rules"]
     assert rule["type"] == "merge_queue"
-    assert rule["parameters"]["max_entries_to_build"] == 1
+    assert rule["parameters"]["max_entries_to_build"] == 8
     assert rule["parameters"]["max_entries_to_merge"] == 1
     assert rule["parameters"]["grouping_strategy"] == "ALLGREEN"
     assert rule["parameters"]["check_response_timeout_minutes"] == 360

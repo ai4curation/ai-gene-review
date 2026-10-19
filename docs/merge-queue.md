@@ -7,7 +7,7 @@ individual validation job or supply missing reviews, and integration builds stil
 consume Actions capacity.
 
 This follows [dismech's queue implementation](https://github.com/monarch-initiative/dismech/blob/main/.github/workflows/main.yaml),
-with **one integration build at a time**, one PR per merge, and up to **50 total
+with **up to eight concurrent integration builds**, one PR per merge, and up to **50 total
 queue entries** admitted by the shepherd. Each sweep attempts at most **50
 admissions**, including failed attempts. Waiting entries do not increase build
 concurrency. The summary distinguishes the observed entry limit from the attempt
@@ -77,19 +77,21 @@ earn review/check approval again. Already queued PRs are left alone by the agent
    ```
 
 3. Apply [the ruleset](../.github/merge-queue-ruleset.yaml) through GitHub's repository
-   rulesets API/UI, preserving existing branch protection. Its initial build
-   concurrency is one, `ALLGREEN`, squash merges, with a 360-minute check timeout
+   rulesets API/UI, preserving existing branch protection and live bypass actors.
+   Build concurrency is eight, `ALLGREEN`, squash merges, with a 360-minute check timeout
    to accommodate runner waits that have already exceeded two hours. This bounds
    waiting; it does not guarantee completion during a prolonged backlog.
    Before creating it, check for an existing `merge-queue-main` rule to avoid duplicates.
 4. Verify an approved PR enters the queue, receives `test (3.12)` on its merge-group
    SHA, and merges after success. Watch queue-build duration, ejections and Actions
-   backlog before increasing concurrency. Dismech uses additional merge-integrity
-   monitoring for speculative parallel builds; evaluate that before raising ours.
+   backlog when tuning concurrency. Eight groups can use up to sixteen runners
+   for their validation and test jobs, in addition to other Actions workloads.
+   Earlier failures or queue jumps can require rebuilding later speculative groups.
 
-The rule deliberately has no bypass actors, as in dismech. Administrators therefore
-cannot use `gh pr merge --admin` to skip this queue rule. An emergency direct merge
-requires explicitly disabling the ruleset first. The removal-reason string for a
+The template has no bypass actors; the live repository ruleset separately allows
+administrators to bypass the queue. Preserve those live bypass actors when updating
+build concurrency rather than replacing the whole ruleset with the template.
+The removal-reason string for a
 queue timeout has not yet been observed here: inspect it on the first timeout
 before changing retry policy. Currently only `failed_checks` removals count toward
 the automated retry hold; manual re-enqueue after investigation does not require
