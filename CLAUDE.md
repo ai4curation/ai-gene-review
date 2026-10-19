@@ -144,6 +144,13 @@ This will create a file like `GENE-deep-research-perplexity.md`. You can also ma
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
 
+A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
+term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
+the way to deduplicate them or to drop a true-but-broad term. (The one sanctioned exception is bare `GO:0005515` protein
+binding, which the protein-binding policy removes as uninformative; see
+`src/ai_gene_review/validation/protein_binding_policy.py`.) Consistency rules live in
+`src/ai_gene_review/schema/action_consistency.yaml` and are explained in `docs/action_consistency.md`.
+
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
 always use a holistic synthesized picture of the gene function that you have obtained from your research.
 
@@ -163,6 +170,10 @@ ActionEnum:
           sometimes terms can also be overly specific and contorted, so in some cases you might want to generalize
       MARK_AS_OVER_ANNOTATED:
         description: The term is not entirely wrong, but likely represents an over-annotation of the gene
+      TOO_GENERAL:
+        description: The term is true of the gene but uninformative, because a more specific term asserted
+          elsewhere in this review already entails it. Judges the term, not this row's evidence; never means
+          the claim is false. Use sparingly; not for GO:0005515 protein binding.
       UNDECIDED:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
@@ -171,6 +182,18 @@ ActionEnum:
           not covered by the existing GO annotations. Use this conservatively, do not over-annotate, especially for biological process.
           Do not use for indirect or pleiotropic effects. Be sure you have good evidence, this can be from multiple sources.
 ```      
+
+**Correct but general terms are `MODIFY`, not `KEEP_AS_NON_CORE`.** When a term is right but
+less specific than the evidence supports (e.g. `membrane` vs `plasma membrane`, `peptidase
+activity` vs `serine-type endopeptidase activity`), use `MODIFY` with `proposed_replacement_terms`
+set to the specific supported term (an `is_a`/`part_of` descendant, preferably one the gene
+already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that are as precise
+as warranted but peripheral to the core function. If the general term is already as precise as
+the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
+match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
+When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
+This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
+separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
 ### Do not overrule curators from incomplete evidence
 
@@ -402,6 +425,12 @@ The reference validator already catches the *mechanical* citation failures autom
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
 cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+A `supporting_text` value must contain actual verbatim source text. Editorial square
+brackets may clarify part of a real quotation; an empty string or a value consisting
+only of editorial commentary is not a quotation. Omit this optional field when no
+quotation is being asserted, and keep method commentary in the finding statement,
+review reason, or notes. Scientific notation copied from the source (such as `[4Fe-4S]`)
+is literal text, not editorial commentary.
 Quotes citing `file:` or `Reactome:` sources are checked the same way, against
 the local file (resolved under `genes/`, then the repository root) or the cached
 `reactome/R-*.md` entry; a UniProt flat-file quote may run across the file's line
@@ -410,6 +439,38 @@ and only warn; fix them and run `just local-quote-baseline --prune`, never add t
 If `just fetch-gene` or a re-run deep-research file changes a source so that a quote
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
+
+**Never cite a GOA file as support.** `GENE-goa.tsv` lists the annotations
+under review: it says what is annotated, never why it is true, so a
+`supported_by` entry pointing at it cites an annotation as evidence for itself.
+Another gene's GOA file is no better: that a paralog or partner carries a term is
+the state of its annotation, not evidence. This is a blocking error whatever the
+action (`supporting_text_goa_file`, `src/ai_gene_review/validation/goa_support.py`).
+Quote the publication or curated UniProt statement behind the annotation, or your
+own analysis; if nothing independent supports the row, use `UNDECIDED`. A
+comparator argument ("paralog X carries this term") belongs in `reason`.
+
+**Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
+apply to every UniProt quote, whatever it supports.
+
+- **Good support:** experimental and curated statements (kinetics, binding or active
+  sites, curated free text, best of all text tied to a publication: evidence
+  `ECO:0000269` with a PubMed id; syncing such curated notes is part of our job).
+  Family and domain classification is also good support for membership, and you may
+  use membership to argue for a function: NCBIfam, InterPro/Pfam/PROSITE signature
+  matches, the curated UniRule systems (HAMAP, PIRSR, PIRNR, RuleBase), "Belongs to
+  the X family" notes (unless their only evidence is ARBA) and family
+  cross-references. Structure-derived automatic evidence (`ECO:0007…`) counts too.
+- **Not support, unvetted predictions:** a statement whose only evidence is an ARBA
+  association rule (`{ECO:0000256|ARBA:...}`), annotation imported unchecked from the
+  submitter (`ECO:0000313`), or an electronic GO line (`IEA:`). Citing one repeats a
+  prediction; citing ARBA text for an ARBA annotation is circular.
+- **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
+  record's own `DR GO` lines restate an annotation rather than support it.
+
+Validation warns on both (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
+
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.
@@ -725,6 +786,8 @@ driven:
   text differs from the symbol (e.g. `E/P00720`).
 - Set `autolink_gene_symbols: false` in frontmatter for paper-like pages where prose
   symbols should not become links.
+- List symbols that are ordinary words on the page under `autolink_exclude: [...]`
+  (e.g. `RCA`, the evidence code, vs the Arabidopsis gene *RCA*); the rest still link.
 
 ### Browser app
 ```bash

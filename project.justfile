@@ -191,6 +191,12 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Report how much of PAINT's IBD.gaf (IBD/IRD/IKR node rows) our family reviews cover.
+# Prints markdown; writes no files. --leaf also weights by leaf IBA rows (slower).
+# Example: just paint-review-coverage --leaf
+paint-review-coverage *args="":
+    uv run python scripts/paint_review_coverage.py {{args}}
+
 # Regenerate the PANTHER IBA project tables through public wrapper recipes.
 # These may download cached PAINT source data on the first run.
 [group('QC')]
@@ -1135,12 +1141,12 @@ validate-gene organism gene:
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
-    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml --verbose
+    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml --verbose --ontology-checks
 
 # Validate all genes for an organism (shows detailed errors by default)
 validate-organism organism:
     @mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
+    uv run ai-gene-review validate --verbose --ontology-checks --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
 
 # Validate all genes that contain a specific top-level tag in their review YAML
 # Example: just validate-tag UPB
@@ -1165,7 +1171,7 @@ validate-tag tag:
 
     echo "Validating ${match_count} gene review file(s) with tag '{{tag}}'..."
     # shellcheck disable=SC2046
-    uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
+    uv run ai-gene-review validate --verbose --ontology-checks --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
 # Validate ONLY the given changed gene-review files (full strict per-gene stack:
@@ -1224,7 +1230,7 @@ validate-all:
     #!/usr/bin/env bash
     exit_code=0
     echo "Schema validation (batch)..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    uv run python -m ai_gene_review.validation.schema_batch --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
     echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
     # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
@@ -1246,12 +1252,12 @@ validate-all:
     echo ""
     echo "Reference validation (batch; errors block, advisory warnings allowed)..."
     # One linkml-reference-validator process over all files (schema parsed once),
-    # rather than one process per file. Requires linkml-reference-validator >= 0.2.1.
+    # rather than one process per file. Requires linkml-reference-validator >= 0.3.0.
     {{ref_validator}} validate data genes/*/*/*-ai-review.yaml --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} || exit_code=1
     echo ""
     echo "Best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --no-schema --no-references --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --no-schema --no-references --ontology-checks --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
@@ -1554,7 +1560,7 @@ gen-all-slides:
 
 # Render a single gene review YAML as HTML (custom renderer)
 render organism gene:
-    uv run python -m ai_gene_review.render genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    uv run python -m ai_gene_review.render "genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
 
 # Render all gene reviews for an organism as HTML
 render-organism organism:
@@ -2627,7 +2633,7 @@ new-history *ARGS:
 # Validate a single history record
 [group('QC')]
 validate-history file:
-    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "{{file}}"
 
 # Validate all history records
 [group('QC')]

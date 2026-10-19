@@ -19,7 +19,8 @@ Three checks, all deterministic joins over data already in the repo:
     violation. ``NOT_APPLICABLE`` is the stronger form: no member may retain it.
 
 ``check_pruning_conflicts``
-    A ``node_assessment`` of ``NEEDS_PRUNING`` / ``TOO_DEEP`` / ``WRONG_NODE`` names the
+    A ``node_assessment`` of ``NEEDS_PRUNING`` / ``TOO_DEEP`` / ``WRONG_NODE`` (or
+    ``LOSS_SUPPORTED`` on an IRD/IKR row) names the
     subfamilies that wrongly inherit a term. A gene in one of those subfamilies that
     retains the term is a conflict.
 
@@ -55,12 +56,19 @@ from pathlib import Path
 import yaml
 from yaml import CSafeLoader as _Loader  # libyaml; ~10x faster over the gene corpus
 
+# Node verdicts that say the named subfamilies should NOT carry the term: a gain placed
+# too deep or needing pruning, or a loss (IRD/IKR) judged correct. LOSS_CONTRADICTED and
+# LOSS_TOO_BROAD are deliberately absent: they say members below the loss keep the term.
+PRUNING_VERDICTS = frozenset({"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE", "LOSS_SUPPORTED"})
+
 PANTHER_SF_RE = re.compile(r"DR   PANTHER; (PTHR\d+:SF\d+);")
 PANTHER_FAM_RE = re.compile(r"DR   PANTHER; (PTHR\d+);")
 ACCESSION_RE = re.compile(r"^AC   (\S+?);", re.M)
 
-#: Actions where the gene review keeps the annotation in place.
-RETAINING_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
+#: Actions where the gene review holds the claim to be true. TOO_GENERAL is among them:
+#: it judges the term uninformative, not false, so a family that scopes the term out
+#: still conflicts with it, and a family that calls the term safe agrees with it.
+RETAINING_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL"}
 #: Actions short of REMOVE that still dispute a term the family calls safe. MODIFY is
 #: not among them: it keeps the essence of the annotation and only changes the term.
 SOFT_DISAGREEING_ACTIONS = {"MARK_AS_OVER_ANNOTATED"}
@@ -156,6 +164,44 @@ def gene_actions_for_term(review_path: Path) -> dict[str, set[str]]:
     return actions
 
 
+def soft_rows_excused(review_path: Path, term: str) -> bool:
+    r"""True when the gene keeps ``term`` on rows that differ from every over-annotated row.
+
+    A gene review can flag one row and keep another for the same term because the rows make
+    different claims: an ``enables`` IEA beside an accepted ``contributes_to`` ISS for a
+    non-catalytic subunit, say. The flag is then about that row's qualifier or evidence, and
+    the gene agrees the term is its own. A flagged row with a kept twin (same qualifier and
+    evidence code, opposite verdict) is never excused, whatever other rows are kept: that is
+    an inconsistency to surface.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> p = d / "g-ai-review.yaml"
+    >>> _ = p.write_text(
+    ...     "existing_annotations:\n"
+    ...     "- {term: {id: GO:1}, evidence_type: IEA, qualifier: enables,"
+    ...     " review: {action: MARK_AS_OVER_ANNOTATED}}\n"
+    ...     "- {term: {id: GO:1}, evidence_type: ISS, qualifier: contributes_to,"
+    ...     " review: {action: ACCEPT}}\n")
+    >>> soft_rows_excused(p, "GO:1")
+    True
+    >>> soft_rows_excused(p, "GO:2")
+    False
+    """
+    doc = yaml.load(review_path.read_text(), Loader=_Loader)
+    soft, kept = [], []
+    for ann in (doc or {}).get("existing_annotations") or []:
+        if ann.get("negated") or (ann.get("term") or {}).get("id") != term:
+            continue
+        action = ((ann.get("review") or {}).get("action")) or ""
+        row = (ann.get("qualifier"), ann.get("evidence_type"))
+        if action in SOFT_DISAGREEING_ACTIONS:
+            soft.append(row)
+        elif action in RETAINING_ACTIONS:
+            kept.append(row)
+    return bool(soft) and bool(kept) and all(s not in kept for s in soft)
+
+
 def _term_ids(entries) -> list[tuple[str, str]]:
     """Extract (id, label) from a list of inlined Term objects."""
     out = []
@@ -244,7 +290,7 @@ def check_pruning_conflicts(
 ) -> list[CrossCheck]:
     """Genes retaining a term whose node assessment says their subfamily should be pruned."""
     family = review.get("family_id", "?")
-    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    negative = PRUNING_VERDICTS
     results: list[CrossCheck] = []
 
     for assessment in review.get("node_assessments") or []:
@@ -320,10 +366,14 @@ def check_family_gene_disagreement(
                         f"but the gene review removes it",
                     )
                 )
-            elif actions & SOFT_DISAGREEING_ACTIONS:
+            elif actions & SOFT_DISAGREEING_ACTIONS and not soft_rows_excused(
+                gene.review_path, term
+            ):
                 # A softer push-back still disagrees with a family that calls the term
                 # safe here, but it does not assert the term is wrong, so it is surfaced
-                # for adjudication rather than failing validation.
+                # for adjudication rather than failing validation. It is excused only
+                # when a kept row with a different qualifier or evidence code shows the
+                # gene agrees the term is its own (see soft_rows_excused).
                 results.append(
                     CrossCheck(
                         "FAMILY_GENE_DISAGREEMENT", family, gene.symbol, gene.subfamily,
@@ -347,7 +397,7 @@ def check_member_exceptions(
     member's gene review, which must not keep the term.
     """
     family = review.get("family_id", "?")
-    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    negative = PRUNING_VERDICTS
     pruned_nodes = {
         (a.get("node_id"), (a.get("asserted_term") or {}).get("id"))
         for a in review.get("node_assessments") or []

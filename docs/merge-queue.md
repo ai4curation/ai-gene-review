@@ -7,9 +7,13 @@ individual validation job or supply missing reviews, and integration builds stil
 consume Actions capacity.
 
 This follows [dismech's queue implementation](https://github.com/monarch-initiative/dismech/blob/main/.github/workflows/main.yaml),
-with a conservative initial capacity: **one integration build at a time**, one PR
-per merge, and at most two observed queue entries admitted by the shepherd. Each
-sweep attempts at most two admissions, including failed attempts. Manual admissions
+with **one integration build at a time**, one PR per merge, and up to **50 total
+queue entries** admitted by the shepherd. Each sweep attempts at most **50
+admissions**, including failed attempts. Waiting entries do not increase build
+concurrency. The summary distinguishes the observed entry limit from the attempt
+budget and includes the counts for whichever limit stopped admission. The scheduled
+job also stops starting new PRs after 30 minutes (`--time-budget-seconds 1800`,
+inside its 45-minute job timeout) so a long sweep still writes its summary. Manual admissions
 can exceed the shepherd's queue-size limit; GitHub's build-concurrency limit still
 applies. Existing approval and `test (3.12)` branch protection remain in force.
 
@@ -22,6 +26,20 @@ example tests, automation checks, all gene schemas, module/family checks and his
 validation. Validation-infrastructure changes retain full gene validation.
 Repo-wide literature/ontology revalidation and upstream PAINT verification retain
 their scheduled/manual coverage. This avoids refetching all literature per merge.
+
+Validation and tests run concurrently in the `validation (3.12)` and
+`suite (3.12)` jobs, each with its own checkout. Both use the same path rules in
+`.github/ci-path-filters.yaml`. The test job skips dependency setup when no tests
+are selected; merge groups always run the full suite. Only the validation job
+saves ontology, PANTHER and UniProt data caches; the test job can restore them
+but cannot publish data modified by fixtures.
+
+The final `test (3.12)` job retains the existing branch-protection context and
+requires **both** jobs to succeed. It runs even if a worker fails, is cancelled,
+or is skipped, and rejects all those outcomes. No branch-protection setting
+needs to change. Splitting adds a second checkout and runner, trading some
+Actions minutes for a shorter critical path; compare merge-group wall time
+before and after rollout rather than adding the two job durations.
 
 Superseded PR and main-push runs are cancelled. Integration, scheduled and manual
 runs have unique concurrency groups. Queue CI failure is blocking; GitHub removes
