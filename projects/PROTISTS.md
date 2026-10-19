@@ -3,24 +3,25 @@ title: "Protists"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PLAF7, TOXGM, TOXGO, TRYB2, TRYBB, LEIMA, TETTS, PARTE, GIAIC, TRIV3, ENTH1, PHATC, THAPS, DICDI, CHLRE, SALRS, MONBE, CAPO3]
-genes: [CSP, CRT, MDR1, PMII, CDPK1, ATP4, MSP1, RH5, K13, AMA1, HAP2, SAG1, MIC2, ROP18, A0BFB4, A2FPI7, B7FXQ8]
-autolink_exclude: [TERT, rod, Sil1, sil1]
+genes: [REL1, TPR, PFRA, PFRC, gp63, PTR1, CSP, CRT, MDR1, PMII, CDPK1, ATP4, MSP1, RH5, K13, AMA1, HAP2, SAG1, MIC2, ROP18, A0BFB4, A2FPI7, B7FXQ8]
+autolink_exclude: [TERT, rod, Sil1, sil1, GPI]
 ---
 
 # Protists: Gene Function Outside Animals, Fungi and Plants
 
 **Bottom line:** most of the diversity of eukaryotes is protist, but very little
 of this repository is. Of 7,176 gene folders, about 104 (1.4%) are protists, and
-62 of those are *Dictyostelium*. We have no reviews at all for the parasites that
-carry most protist GO curation (*Plasmodium*, *Toxoplasma*, trypanosomes,
-*Leishmania*), nor for the ciliate and diatom models. This project sets out to
-fill that gap, lineage by lineage, starting with a seed list of 27 well-studied
-genes whose UniProt accessions we have checked. Track A (Apicomplexa) is done:
-all 14 genes (11 *P. falciparum*, 3 *T. gondii*) have COMPLETE reviews covering
-241 existing annotations plus 26 new ones. The most common corrections were
-removing terms carried over from animal homologs and replacing generic `membrane`
-and `protein binding` rows with the compartment or binding partner each paper
-shows.
+62 of those are *Dictyostelium*. Before this project there were no reviews at
+all for the parasites that carry most protist GO curation (*Plasmodium*,
+*Toxoplasma*, trypanosomes, *Leishmania*), nor for the ciliate and diatom
+models. This project sets out to fill that gap, lineage by lineage, starting
+with a seed list of 27 well-studied genes whose UniProt accessions we have
+checked. Tracks A (Apicomplexa) and B (Kinetoplastida) are done: 20 genes
+(11 *P. falciparum*, 3 *T. gondii*, 4 *T. brucei*, 2 *L. major*) have COMPLETE
+reviews covering 295 existing annotations plus 33 new ones. The most common
+corrections were removing terms carried over from animal homologs and replacing
+generic `membrane` and `protein binding` rows with the compartment or binding
+partner each paper shows.
 
 "Protist" is not a clade. Here it means any eukaryote that is not an animal, a
 fungus or a land plant. Green algae and the unicellular relatives of animals
@@ -97,7 +98,7 @@ tracks by lineage, roughly following the eukaryote supergroups:
 | Track | Lineage | Model organisms | Status |
 |---|---|---|---|
 | A | Apicomplexa (Alveolata) | *P. falciparum*, *T. gondii* | 14/14 COMPLETE |
-| B | Kinetoplastida (Discoba) | *T. brucei*, *L. major* | not started |
+| B | Kinetoplastida (Discoba) | *T. brucei*, *L. major* | 6/6 COMPLETE |
 | C | Ciliates (Alveolata) | *Tetrahymena*, *Paramecium* | 1 draft (PARTE) |
 | D | Metamonads and *Entamoeba* | *Giardia*, *Trichomonas*, *E. histolytica* | 1 draft (TRIV3) |
 | E | Stramenopiles | *Phaeodactylum*, *Thalassiosira*; oomycetes later | 1 draft (PHATC) |
@@ -145,7 +146,7 @@ normal guidelines in `CLAUDE.md`; they do not replace them.
 ---
 # STATUS
 
-Last updated: 2026-10-14
+Last updated: 2026-10-15
 
 ## Seed gene list
 
@@ -181,12 +182,12 @@ one folder for the species.
 
 ### Track B: Kinetoplastida
 
-- [ ] TRYB2 REL1 (P86927): RNA-editing ligase 1, mitochondrial RNA editing
-- [ ] TRYBB TPR (P39051): trypanothione reductase; Swiss-Prot entry at subspecies level (taxon 5702)
-- [ ] TRYBB PFRA (P22225): 69 kDa paraflagellar rod protein (PFR-A/PFR-B)
-- [ ] TRYBB PFRC (Q26789): 73 kDa paraflagellar rod protein (PFR-C/PFR-D)
-- [ ] LEIMA gp63 (P08148): leishmanolysin, surface metalloprotease
-- [ ] LEIMA PTR1 (Q01782): pteridine reductase 1, antifolate resistance
+- [x] TRYB2 REL1 (P86927): RNA-editing ligase 1, mitochondrial RNA editing
+- [x] TRYBB TPR (P39051): trypanothione reductase; Swiss-Prot entry at subspecies level (taxon 5702)
+- [x] TRYBB PFRA (P22225): 69 kDa paraflagellar rod protein (PFR-A/PFR-B)
+- [x] TRYBB PFRC (Q26789): 73 kDa paraflagellar rod protein (PFR-C/PFR-D)
+- [x] LEIMA gp63 (P08148): leishmanolysin, surface metalloprotease
+- [x] LEIMA PTR1 (Q01782): pteridine reductase 1, antifolate resistance
 
 ### Track C: Ciliates
 
@@ -226,7 +227,8 @@ PiggyMac; *Phaeodactylum* aureochrome 1a; *Giardia* (strain WB) alpha-giardin.
 - [x] Confirm `just fetch-gene` works for the new species codes (it does; entries
       with no UniProt gene symbol need `just fetch-gene <ORG> <ACC> --alias <NAME>`)
 - [x] Review Track A (Apicomplexa)
-- [ ] Review Track B (Kinetoplastida)
+- [x] Review Track B (Kinetoplastida)
+- [ ] Review Track C (ciliates): finish the PARTE draft, add Tetrahymena TERT and TAP65
 - [ ] Decide whether to submit "food vacuole membrane" and "moving junction" as
       GO term requests (see 2026-10-15 notes)
 - [ ] Collect protist-specific over-annotation patterns in a
@@ -234,6 +236,57 @@ PiggyMac; *Phaeodactylum* aureochrome 1a; *Giardia* (strain WB) alpha-giardin.
 - [ ] Collect proposed GO terms for lineage-specific processes
 
 # NOTES
+
+## 2026-10-15 (Track B)
+
+Track B reviewed: 6 kinetoplastid genes, one review agent each, all
+`status: COMPLETE` and passing `just validate`. 54 existing annotations
+reviewed, 7 NEW rows added.
+
+| Gene | Annotations | ACCEPT | NON_CORE | MODIFY | REMOVE | Other | NEW |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRYB2 REL1 | 15 | 8 | 3 | 4 | 0 | 0 | 0 |
+| TRYBB TPR | 13 | 4 | 2 | 5 | 1 | 1 | 0 |
+| TRYBB PFRA | 3 | 0 | 1 | 2 | 0 | 0 | 2 |
+| TRYBB PFRC | 3 | 0 | 0 | 2 | 0 | 1 | 2 |
+| LEIMA gp63 | 12 | 7 | 1 | 3 | 0 | 1 | 2 |
+| LEIMA PTR1 | 8 | 5 | 1 | 2 | 0 | 0 | 1 |
+
+"Other" is TOO_GENERAL, UNDECIDED or MARK_AS_OVER_ANNOTATED.
+
+**Patterns, continuing Track A's list.**
+
+- *Family-level transfer onto a diverged enzyme.* TPR's `glutathione-disulfide
+  reductase activity` is a TreeGrafter transfer from the wider flavoprotein
+  family. The purified enzyme strongly prefers trypanothione disulfide, and
+  kinetoplastids have no glutathione reductase, so the row was removed and the
+  generic oxidoreductase terms were narrowed to `GO:0015042`. The same logic
+  moved `glutathione metabolic process` to `trypanothione metabolic process`.
+- *Lineage-specific compartments beat generic ones.* `cytoplasm` became
+  `cytosol` (TPR), `cytoplasm` became `mitochondrion` (REL1, where a TrypTag
+  cytosolic call conflicts with a transit peptide), and `cytoskeleton` became
+  `paraflagellar rod` (both PFR subunits).
+- *Paralog pairs must be decided together.* PFRA (69 kDa, called PFR2 in the
+  literature) and PFRC (73 kDa, PFR1) are partner subunits whose reviews first
+  diverged: one proposed `structural constituent of cytoskeleton` plus
+  `paraflagellar rod assembly`, the other `structural molecule activity` plus
+  `cilium-dependent cell motility`. OLS settles it: `GO:0097740 paraflagellar
+  rod` is a supramolecular complex and is **not** under cytoskeleton, so
+  `GO:0005200` does not fit. Both now use `GO:0005198` and `GO:0060285`, with
+  rod assembly left as a question, since a subunit incorporated into the rod is
+  arguably what is assembled rather than an agent of assembly. The naming
+  inversion is a live trap: UniProt's mnemonic for the 73 kDa entry is
+  `PFR2_TRYBB`.
+- *No GO term for RNA editing.* REL1's editing role had to go under
+  `mitochondrial mRNA modification`; GO has no term for guide-RNA-directed
+  U-insertion/deletion editing. Raised as a question rather than a proposed term.
+- *Obsolete anchored-component terms.* gp63's GPI anchoring could not use
+  `GO:0031362`/`GO:0046658` (both obsolete); `GO:0009897 external side of plasma
+  membrane` carries it instead.
+
+**One row left UNDECIDED:** TPR `mitochondrion`, from a 1991 fractionation
+paper with no cached abstract or full text, against a protein with no
+mitochondrial targeting sequence.
 
 ## 2026-10-15
 
