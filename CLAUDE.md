@@ -146,7 +146,9 @@ NEVER write your own content and name it `-deep-research-{provider}.md`. If deep
 
 A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
 term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
-the way to deduplicate them or to drop a true-but-broad term. Consistency rules live in
+the way to deduplicate them or to drop a true-but-broad term. (The one sanctioned exception is bare `GO:0005515` protein
+binding, which the protein-binding policy removes as uninformative; see
+`src/ai_gene_review/validation/protein_binding_policy.py`.) Consistency rules live in
 `src/ai_gene_review/schema/action_consistency.yaml` and are explained in `docs/action_consistency.md`.
 
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
@@ -437,6 +439,16 @@ and only warn; fix them and run `just local-quote-baseline --prune`, never add t
 If `just fetch-gene` or a re-run deep-research file changes a source so that a quote
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
+
+**Never cite a GOA file as support.** `GENE-goa.tsv` lists the annotations
+under review: it says what is annotated, never why it is true, so a
+`supported_by` entry pointing at it cites an annotation as evidence for itself.
+Another gene's GOA file is no better: that a paralog or partner carries a term is
+the state of its annotation, not evidence. This is a blocking error whatever the
+action (`supporting_text_goa_file`, `src/ai_gene_review/validation/goa_support.py`).
+Quote the publication or curated UniProt statement behind the annotation, or your
+own analysis; if nothing independent supports the row, use `UNDECIDED`. A
+comparator argument ("paralog X carries this term") belongs in `reason`.
 
 **Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
 apply to every UniProt quote, whatever it supports.

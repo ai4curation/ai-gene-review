@@ -27,6 +27,20 @@ validation. Validation-infrastructure changes retain full gene validation.
 Repo-wide literature/ontology revalidation and upstream PAINT verification retain
 their scheduled/manual coverage. This avoids refetching all literature per merge.
 
+Validation and tests run concurrently in the `validation (3.12)` and
+`suite (3.12)` jobs, each with its own checkout. Both use the same path rules in
+`.github/ci-path-filters.yaml`. The test job skips dependency setup when no tests
+are selected; merge groups always run the full suite. Only the validation job
+saves ontology, PANTHER and UniProt data caches; the test job can restore them
+but cannot publish data modified by fixtures.
+
+The final `test (3.12)` job retains the existing branch-protection context and
+requires **both** jobs to succeed. It runs even if a worker fails, is cancelled,
+or is skipped, and rejects all those outcomes. No branch-protection setting
+needs to change. Splitting adds a second checkout and runner, trading some
+Actions minutes for a shorter critical path; compare merge-group wall time
+before and after rollout rather than adding the two job durations.
+
 Superseded PR and main-push runs are cancelled. Integration, scheduled and manual
 runs have unique concurrency groups. Queue CI failure is blocking; GitHub removes
 the failing entry.

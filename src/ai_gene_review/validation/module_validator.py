@@ -2259,7 +2259,7 @@ def validate_feedback_loops(doc: object) -> List[str]:
 
 
 def validate_executable_models(
-    doc: object, repo_root: Path = Path(".")
+    doc: object, repo_root: Path
 ) -> Tuple[List[str], List[str]]:
     """Check ``activation_logic`` and the ``executable_models`` a module declares.
 
