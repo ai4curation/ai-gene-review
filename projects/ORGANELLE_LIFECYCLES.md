@@ -2,7 +2,6 @@
 title: "Organelle Lifecycle Modules"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [human]
 autolink_exclude: [ftsZ, FtsZ]
 ---
 
@@ -26,7 +25,10 @@ eukaryote-wide `MODULE:mitochondrial_protein_import`.
 - **Rules, not compendia.** A non-optional part asserts "every eukaryote with
   this organelle has this". That is a stronger claim than a descriptive pathway
   module makes, and it is what lets the satisfiability engine
-  (`ai_gene_review.module_logic`) find gaps in a new genome.
+  (`ai_gene_review.module_logic`) find gaps in a new genome. Clade-specific
+  compendia of the same stage (for example the Drosophila
+  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules, but
+  the umbrella does not reference them.
 
 ## Stage skeleton
 
@@ -72,7 +74,7 @@ pathway modules, scoped to a clade, with every part required:
 - `mitophagy` (Eumetazoa) requires PINK1/Parkin marking, FBXL4 receptor
   turnover, and a disposal step grounded only on worm FIS-1 and FIS-2.
   Receptor choice is already modelled as alternatives (any one of OPTN/NDP52,
-  BNIP3/NIX, FUNDC1 or ALLO-1).
+  <gene species="human" symbol="BNIP3">BNIP3</gene>/NIX, FUNDC1 or ALLO-1).
 - `mitochondrial_dynamics` (Opisthokonta) requires mitofusin, which plants lack,
   and its fission node requires the metazoan MFF adaptor.
 - `mitochondrial_upr` is metazoan.
@@ -92,7 +94,7 @@ The organelle-by-stage matrix lives in
 - [ ] Model the kinetoplastid inner-membrane translocase as a lineage `variant_set` in `mitochondrial_protein_import`, then mark it `RULE_READY`
 - [x] `mitochondrion_lifecycle` umbrella (import required; other stages optional)
 - [ ] Make mitochondrial division rule-ready (Mff / Mdv1-Fis1 / FtsZ variants), then make it required
-- [ ] Mitochondrial iron-sulfur cluster assembly module (universal to mitochondrion-related organelles)
+- [ ] Mitochondrial iron-sulfur cluster assembly module (universal to mitochondrion-related organelles; start from the Drosophila-only `dmel_iron_sulfur_cluster_assembly`)
 - [ ] Extract a shared receptor-to-Atg8 capture module from `mitophagy`
 - [ ] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus referenced modules; add pexophagy
 - [ ] Lysosome/endosome, ER, Golgi, nucleus, lipid droplet, autophagosome
