@@ -48,3 +48,13 @@ Notch-module role: **canonical activating Delta-class (DSL) Notch ligand** (sign
 Falcon deep research completed (Dll1-deep-research-falcon.md; the wrapper reported a 600 s timeout but the
 orphaned falcon client finished and wrote the file). Also notes cis-inhibition by Dll1
 [file:mouse/Dll1/Dll1-deep-research-falcon.md "Dll1 also mediates cis-inhibition when present in the same cell as Notch"].
+
+## 2026-10-12 Ortholog/family audit (Dll1, Dll3, Hes7, Rbpj)
+
+- GOA refreshed (`just fetch-gene mouse Dll1`): no new rows; every GOA row has a review entry and no stale entries remain.
+- Compared with human DLL1, Drosophila Dl and sea urchin Delta reviews. Core MFs (Notch binding, receptor ligand activity), Notch signaling pathway, plasma membrane, lateral inhibition and the IBA cis-inhibition term (GO:0045746, KEEP_AS_NON_CORE) agree across all four.
+- Changed: GO:0045747 positive regulation of Notch signaling pathway (9 rows) from ACCEPT to KEEP_AS_NON_CORE, matching human DLL1. The ligand is part of the Notch pathway itself (GO:0007219), so the regulation term is correct but not the core statement.
+- Changed: GO:0030957 Tat protein binding (IEA and ISO rows, transferred from human O00548) from REMOVE to MODIFY, with GO:0030165 PDZ domain binding as the replacement. The human source IPI is a study of Delta binding to MAGI PDZ4 [PMID:15509766 "through a direct interaction between the C termini of the Deltas and a specific PDZ domain (PDZ4) of the MAGIs"]. The human review already MODIFYs it the same way, so the earlier mouse reason (an HIV-1 Tat interaction) was wrong.
+- Donor-side fix: human DLL1 GO:0005509 calcium ion binding changed from ACCEPT to KEEP_AS_NON_CORE. Its own reason already called it non-core, and mouse Dll1, fly Dl and sea urchin Delta all treat it that way.
+- Family (Dll3): both genes receive identical IBAs from PTN001170801 and PTN002371879. The differences in treatment rest on evidence specific to Dll3 [PMID:16144902 "Although Dll3 did not bind or activate N when presented in trans, it cell autonomously inhibited N signaling"]: for Dll3, Notch signaling pathway is MODIFIED to negative regulation, plasma membrane is non-core, and cis-inhibition is core.
+- Status set to COMPLETE.
