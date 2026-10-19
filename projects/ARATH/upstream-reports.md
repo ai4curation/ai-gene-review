@@ -119,3 +119,20 @@ the question is about the name mapping.
 
 Review: [`genes/ARATH/GSTF6/GSTF6-ai-review.yaml`](../../genes/ARATH/GSTF6/GSTF6-ai-review.yaml)
 (both rows UNDECIDED pending this answer).
+
+## Candidates from the 2026-10-19 reviews (not yet written up)
+
+These rows came out of the new reviews. Each needs a write-up like those above
+before it can be filed. The reasoning is in each review's `reason` field.
+
+| Gene | Annotation | Suggested change |
+|------|------------|------------------|
+| CBL4 (O81223) | GO:0004723 calcium-dependent protein serine/threonine phosphatase activity, ISS, PMID:9632394 | withdraw; SOS3 is a calcineurin-B-like regulatory subunit, and its effector is the kinase SOS2 |
+| CBL4 (O81223) | GO:0005955 calcineurin complex, ISS, PMID:9632394 | withdraw, for the same reason |
+| CBL4 (O81223) | GO:0042539 hypotonic salinity response, IMP, PMID:9405721 | sos3 is hypersensitive to high NaCl, so GO:0042538 hyperosmotic salinity response |
+| SnRK2.3 (Q39193) | NOT located_in GO:0005829 cytosol, RCA, PMID:21166475 | withdraw; contradicted by BiFC and IDA cytoplasm evidence |
+| SnRK2.2 (Q39192) | GO:0009738 abscisic acid-activated signaling pathway is missing | add; OST1 and SnRK2.3 carry it, and the evidence is shared (PMID:19420218) |
+| SLAC1 (Q9LD83) | GO:0090333 regulation of stomatal closure, IMP, PMID:29463779 | GO:0090332 stomatal closure; SLAC1 carries out the anion efflux that closes the pore |
+| SLAC1 (Q9LD83) | GO:0005634 nucleus, ISM (AtSubP) | withdraw; SLAC1 is a plasma-membrane channel |
+| SERRATE (Q9ZVD0) | GO:0003677 DNA binding and GO:0003700 DNA-binding transcription factor activity, ISS | withdraw; the zinc finger binds RNA and DCL1 |
+| SERRATE (Q9ZVD0) | part_of GO:0005846 nuclear cap binding complex, PMID:24137006 | SE binds CBP20/CBP80 but is not a subunit; GO:0140262 mRNA cap binding complex binding |
