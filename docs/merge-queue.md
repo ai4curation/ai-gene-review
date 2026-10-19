@@ -85,14 +85,37 @@ earn review/check approval again. Already queued PRs are left alone by the agent
 4. Verify an approved PR enters the queue, receives `test (3.12)` on its merge-group
    SHA, and merges after success. Watch queue-build duration, ejections and Actions
    backlog when tuning concurrency. Eight groups can use up to sixteen runners
-   for their validation and test jobs, in addition to other Actions workloads.
+   for `validation (3.12)` and `suite (3.12)`. Each short-lived `test (3.12)`
+   gate starts only after both workers finish, so it does not add a third
+   simultaneous runner per group. Superseded builds still finishing and other
+   Actions workloads can consume additional runners.
    Earlier failures or queue jumps can require rebuilding later speculative groups.
+
+The eight-build rollout relies on GitHub's native merge-queue checks:
+`ALLGREEN` requires passing checks for every entry, and `max_entries_to_merge: 1`
+keeps merges to one PR each. GitHub's documented failure handling rebuilds later
+groups without a failed earlier entry. This covers ordinary speculative-build
+failures; it does not independently verify the content GitHub ultimately merges.
+DisMech's [post-merge integrity monitor](https://github.com/monarch-initiative/dismech/blob/main/.github/workflows/verify-merge-integrity.yaml)
+recomputes expected merge trees to detect content-corrupting merge anomalies that
+can escape CI. We evaluated that distinction and are proceeding with eight builds
+without porting this monitor in this change. The residual risk is explicit:
+ai-gene-review has no equivalent independent merge-tree audit, and green checks
+alone do not rule out such anomalies. `ALLGREEN` and single-PR merges do not
+replace that additional detection.
+
+As of 2026-10-19, the organization API reports ai4curation's plan as Free.
+GitHub [documents a default limit of 20 concurrent standard hosted jobs](https://docs.github.com/en/actions/reference/limits#job-concurrency-limits-for-github-hosted-runners)
+for that plan, leaving nominal headroom of four when all sixteen queue workers
+are running. A support-granted limit increase has not been verified. PR checks,
+reviews, other repositories, and lingering superseded builds share that headroom;
+watch runner wait times and lower build concurrency if admission checks starve.
 
 The template has no bypass actors; the live repository ruleset separately allows
 administrators to bypass the queue. Preserve those live bypass actors when updating
 build concurrency rather than replacing the whole ruleset with the template.
-The removal-reason string for a
-queue timeout has not yet been observed here: inspect it on the first timeout
+
+The removal-reason string for a queue timeout has not yet been observed here: inspect it on the first timeout
 before changing retry policy. Currently only `failed_checks` removals count toward
 the automated retry hold; manual re-enqueue after investigation does not require
 pushing a new commit or dismissing an otherwise valid approval.

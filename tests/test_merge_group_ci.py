@@ -35,7 +35,7 @@ def test_queue_runs_required_check_without_cancelling_other_groups():
     assert "merge_group" not in paint["if"]
 
 
-def test_queue_rollout_is_bounded_and_does_not_bypass_protection():
+def test_queue_template_bounds_builds_and_introduces_no_bypass_actors():
     config = yaml.safe_load((ROOT / ".github/merge-queue-ruleset.yaml").read_text())
     assert config["bypass_actors"] == []
     assert config["conditions"]["ref_name"]["include"] == ["refs/heads/main"]
