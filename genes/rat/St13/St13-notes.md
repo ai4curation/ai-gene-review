@@ -43,3 +43,10 @@ cross-check flagged the prediction as NPI against a positive AIGR action. Re-ran
 scripts/auto_review_sft_predictions.py --apply on the branch merged with main; it reclassified
 that one prediction NPI -> CNN (confidence 0 -> 2) with the audit note updated. Changes the
 script proposed to other genes outside this PR were not taken.
+
+Review follow-up 2026-10-19 (second pass, PR #4624): the GOA refresh retired every GO:0051082
+unfolded protein binding row for St13 (replaced by GO:0044183 protein folding chaperone), so the
+BioReason-Pro SFT prediction rationale "Term is in GOA" for GO:0051082 was no longer true; the CNN
+assessment stands (the concept is a known curated annotation via GO:0044183) and the rationale now
+says so. Also replaced the title-only quote on GO:0009617 response to bacterium with the abstract
+sentence that establishes PMID:23012479 as a transcriptomic expression screen.

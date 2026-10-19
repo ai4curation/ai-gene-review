@@ -49,3 +49,10 @@ Action changes:
 Open questions:
 - Whether GO should have an activity term for glycoprotein folding-sensor recognition;
   for now it is treated as intrinsic to GO:0003980.
+
+Review follow-up 2026-10-19 (PR #4624): the GOA refresh retired the IDA GO:0051082 unfolded protein
+binding row (PMID:10764828) for Uggt1, so the manual BioReason-Pro SFT adjudication rationale
+"GOA carries the exact term with IDA" was no longer true. The CNN assessment stands; the rationale
+in Uggt1-sft-predictions.yaml and its frozen copy in scripts/auto_review_sft_predictions.py
+(MANUAL_OVERRIDES) now say GOA carried the term until the 2026-10 refresh retired the row, a
+curation-status change that does not refute the binding.

@@ -56,3 +56,11 @@ Open questions:
   does, IEP is the more usual code.
 - GO:0071353 cellular response to interleukin-4 (ISO from MGI IDA PMID:9798653) rests on a
   cDNA-subtraction expression screen; kept non-core, but it is an expression observation.
+
+Review follow-up 2026-10-19 (PR #4624): the GOA refresh retired every GO:0051082 unfolded protein
+binding row for Hspa5 (GOA now carries GO:0044183 protein folding chaperone), so the BioReason-Pro
+SFT prediction rationale "Term is in GOA" for GO:0051082 was no longer true; the CNN assessment
+stands and the rationale now says so. Updated the GO:0036503 label to the current ontology label
+"ERAD quality control pathway" (QuickGO and the refreshed GOA; the local ontology cache still
+carries the old label, hence an advisory validator warning). Removed evidence-code commentary from
+two core_functions descriptions and added a VERIFIED reference_review for PMID:11854325.
