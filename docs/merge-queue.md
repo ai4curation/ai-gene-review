@@ -84,8 +84,18 @@ earn review/check approval again. Already queued PRs are left alone by the agent
    Before creating it, check for an existing `merge-queue-main` rule to avoid duplicates.
 4. Verify an approved PR enters the queue, receives `test (3.12)` on its merge-group
    SHA, and merges after success. Watch queue-build duration, ejections and Actions
-   backlog before increasing concurrency. Dismech uses additional merge-integrity
-   monitoring for speculative parallel builds; evaluate that before raising ours.
+   backlog before increasing concurrency. Before raising `max_entries_to_build` above
+   one, confirm the `Verify merge integrity` workflow has been running green on pushes
+   to `main` (see below): speculative builds contain several PRs, which is the shape of
+   the merge-queue incident it detects.
+
+**Merge-integrity verification.** `.github/workflows/verify-merge-integrity.yaml`
+(ported from dismech) runs `scripts/verify_merge_integrity.py` on every push to
+`main`. For each single-parent squash commit it recomputes
+`git merge-tree --write-tree <parent> <pr-head>` and compares it with the pushed tree;
+a mismatch fails the run and opens or comments on a `merge-integrity` issue. Merge
+commits and direct pushes are reported as skipped. The script needs git 2.38 or newer,
+which `ubuntu-latest` provides and the macOS system git does not.
 
 The rule deliberately has no bypass actors, as in dismech. Administrators therefore
 cannot use `gh pr merge --admin` to skip this queue rule. An emergency direct merge
