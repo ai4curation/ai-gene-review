@@ -99,12 +99,18 @@ The deficit was missing justification/provenance, not wrong biology. Changes:
 
 - **`review.reason` added to all 8 annotations** (only the GO:0005515 row had
   one). The IBA reasons now argue the node placement rather than restating the
-  term: the `WITH/FROM` for GO:0004305 carries fourteen descendant evidences
-  spanning fungi, nematode, fly, rodent and human (node PANTHER:PTN000503516,
-  with SGD:S000002554/S000004123, FB:FBgn0000536, WB:WBGene00000510,
-  MGI:MGI:2443760, RGD:61944, and human ETNK1 UniProtKB:Q9Y259), so ethanolamine
-  kinase activity is ancestral to the family, not a recent acquisition that might
-  not have reached ETNK2.
+  term: the `WITH/FROM` for GO:0004305 holds fourteen entries, of which one is
+  the node itself (PANTHER:PTN000503516) and thirteen are descendant evidences
+  spanning fungi, nematode, fly, rodent and human (SGD:S000002554/S000004123,
+  FB:FBgn0000536, WB:WBGene00000510, MGI:MGI:2443760, RGD:61944, and three
+  distinct human family members - UniProtKB:Q9HBU6 = ETNK1, UniProtKB:Q9Y259 =
+  CHKB and UniProtKB:P35790 = CHKA), so ethanolamine kinase activity is ancestral
+  to the family, not a recent acquisition that might not have reached ETNK2.
+  (Accessions re-checked against the repo's own UniProt records: `Q9Y259` is
+  `CHKB_HUMAN` [genes/human/CHKB/CHKB-uniprot.txt:1], human ETNK1 is `Q9HBU6` /
+  `EKI1_HUMAN` [genes/human/ETNK1/ETNK1-uniprot.txt:1] and `P35790` is
+  `CHKA_HUMAN` [genes/human/CHKA/CHKA-uniprot.txt:1]; an earlier pass had
+  mis-attributed `Q9Y259` to ETNK1.)
 - **GO:0005515 migrated `MARK_AS_OVER_ANNOTATED` → `REMOVE`.** `just validate`
   warned on it; the generic-protein-binding policy excludes that action for
   GO:0005515 by name. MODIFY was checked against the actual partner list and
