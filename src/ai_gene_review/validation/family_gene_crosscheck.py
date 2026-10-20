@@ -5,11 +5,14 @@ see it. The family review says "this term is only safe for these subfamilies"; a
 review in a different subfamily says "ACCEPT". Both files are individually valid, both
 pass their own validators, and the disagreement is invisible.
 
-That is exactly the PGRP case. PTHR11022's single PAINT node asserts amidase activity at
-Bilateria, so every descendant inherits it -- including the PGRP-LC receptors that have
-demonstrably lost the zinc site. The family review records that; a gene review that
+That is the PGRP case among cellular PAINT-tree members. PTHR11022's single PAINT node
+asserts amidase activity at Bilateria, so every cellular tree descendant inherits it --
+including the PGRP-LC receptors that have demonstrably lost the zinc site. The family
+review records that; a cellular PAINT-tree gene review (`in_paint_tree=True`) that
 accepted the amidase term anyway would be in direct conflict, and this module is what
-notices.
+notices (whereas viral entries with `OC   Viruses;`, which receive out-of-tree InterPro
+PANTHER HMM subfamily assignments but do not participate in PAINT trees, are skipped by
+the propagation checks and checked only against explicit `member_exceptions`).
 
 Three checks, all deterministic joins over data already in the repo:
 
