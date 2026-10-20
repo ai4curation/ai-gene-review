@@ -100,9 +100,15 @@ cached in `publications/`.
 - WP_010871340.1: name "N(1)-aminopropylagmatine ureohydrolase", EC 3.5.3.24,
   BlastRule NBR017633, no GO. Correct; EC matches UniProt's experimentally
   supported EC (likely the rule was built from this very protein: CNN).
-- Genome record RS_2026_01_07 carried GO:0008783 agmatinase activity and GO:0008295
-  spermidine biosynthetic process, which come from TIGR01230 (agmatinase equivalog;
-  GO:0008295, GO:0008783; EC 3.5.3.11) per `pgap_models.yaml`. Agmatinase is
+- Genome record NC_000911.1 (annotation GCF_000009725.1-RS_2026_01_07) carries, on the
+  sll0228 CDS (locus_tag SGL_RS02550, gene "speB"), EC 3.5.3.24 and the product name
+  above, plus GO:0008783 agmatinase activity and GO:0008295 spermidine biosynthetic
+  process (both IEA) [file:SYNY3/speB1/speB1-pgap-prediction-evidence/genome_record_CDS_sll0228.txt
+  '/GO_function="GO:0008783 - agmatinase activity [Evidence']. The WP_ record has no GO.
+  These two terms are exactly the model GO of TIGR01230 (agmatinase equivalog;
+  GO:0008295, GO:0008783; EC 3.5.3.11) per `pgap_models.yaml`, which is the most likely
+  source; the record shows the GO but not which model supplied it. The CDS is internally
+  inconsistent (EC 3.5.3.24 with agmatinase GO). Agmatinase is
   wrong (PLI, paralog over-annotation); spermidine biosynthesis is right by
   coincidence (the TIGR01230 logic assumes agmatine -> putrescine -> spermidine,
   which is not this enzyme's route).
