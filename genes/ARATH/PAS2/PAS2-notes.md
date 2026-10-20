@@ -15,3 +15,9 @@
 - MARK_AS_OVER_ANNOTATED: cytosol (IDA), negative regulation of developmental growth (IMP, overexpression phenotype).
 - KEEP_AS_NON_CORE: cell differentiation (IMP), regulation of cell division (IMP).
 - ACCEPT: dehydratase activities, elongase complex (IPI), ER/ER membrane, cytoplasm (general), FA elongation, VLCFA biosynthesis, sphingolipid biosynthesis (IBA), FA biosynthesis (IEA).
+
+## 2026-10-15 journal: nucleus rows resolved (PR #5026 follow-up)
+
+Supersedes the "UNDECIDED: nucleus (IDA and IEA)" line above.
+
+- GO:0005634 nucleus IDA (PMID:16698944) and the matching IEA (UniProt subcellular location derived from the same study) are both MARK_AS_OVER_ANNOTATED. The cached full text shows the nuclear signal came from a 35S-driven C-terminal GFP fusion in lines selected for high GFP [PMID:16698944 "High GFP-producing plants were retained for further analysis"], with perinuclear accumulation in dividing cells consistent with nuclear envelope/ER. PAS2 is a multi-pass ER-membrane 3-hydroxyacyl-CoA dehydratase; ER membrane is the supported location. Not removed, because nuclear GFP signal was genuinely recorded.

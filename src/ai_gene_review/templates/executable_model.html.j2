@@ -67,6 +67,7 @@
         .scenario-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
         .scenario-text { min-height: 3em; }
         .layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+        .layout.wide { grid-template-columns: 1fr; }
         @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
         .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
         .controls button {
@@ -88,6 +89,7 @@
         .edge.act { stroke: var(--act); }
         .edge.inh { stroke: var(--inh); }
         .edge.removed { stroke: #b5c0ca; stroke-dasharray: 4 4; }
+        .edge.omitted { stroke-dasharray: 2 3; opacity: 0.55; }
         .verdict { border-left: 4px solid var(--accent); background: var(--bg-soft); padding: 10px 12px; border-radius: 4px; }
         .verdict.cyclic { border-left-color: #7c3aed; }
         .verdict strong { display: block; margin-bottom: 4px; }
@@ -155,6 +157,9 @@
                 <span><svg width="26" height="10"><line x1="1" y1="5" x2="20" y2="5" stroke="#5b6b7a" stroke-width="1.6"/><path d="M20,1 L25,5 L20,9 z" fill="#5b6b7a"/></svg>activates</span>
                 <span><svg width="26" height="10"><line x1="1" y1="5" x2="22" y2="5" stroke="#c2410c" stroke-width="1.6"/><line x1="23" y1="0" x2="23" y2="10" stroke="#c2410c" stroke-width="2.4"/></svg>inhibits</span>
                 <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="#9aa8b4" stroke-width="1.6" stroke-dasharray="4 4"/></svg>removed&nbsp;in&nbsp;scenario</span>
+                {%- if payload.omitted %}
+                <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="#5b6b7a" stroke-width="1.6" stroke-dasharray="2 3" opacity="0.55"/></svg>asserted,&nbsp;not&nbsp;in&nbsp;the&nbsp;rule</span>
+                {%- endif %}
             </div>
         </section>
 
@@ -172,7 +177,7 @@
 
     <section class="panel">
         <h2>Update rules</h2>
-        <p class="small muted">Generated from the module's <code>connections</code>. A step is ON when any activator is ON and no inhibitor is (the default), unless the module declares <code>activation_logic</code> for it.</p>
+        <p class="small muted">Generated from the module's <code>connections</code>. A step is ON when any activator is ON and no inhibitor is (the default), unless the module declares <code>activation_logic</code> for it. A regulator that logic deliberately leaves out (<code>omitted_regulators</code>, a modulator rather than a switch) stays in the graph as a faint dotted edge and is named beside the rule.</p>
         <table class="rules" id="rules"></table>
         <details style="margin-top: 10px">
             <summary>BoolNet (.bnet) export</summary>
@@ -192,6 +197,8 @@
     const label = Object.fromEntries(data.variables.map(v => [v.id, v.label]));
     const isInput = Object.fromEntries(data.variables.map(v => [v.id, v.input]));
     const declared = new Set(data.declared_logic || []);
+    const omitted = data.omitted || {};
+    const isOmitted = (s, t) => (omitted[t] || []).includes(s);
     const NS = "http://www.w3.org/2000/svg";
     const MAX_COLS = 70;
 
@@ -322,6 +329,8 @@
     const W = 232, H = 34, GX = 34, GY = 40;
     const maxRank = Math.max(...Object.values(data.layout).map(p => p[0]));
     const maxSlot = Math.max(...Object.values(data.layout).map(p => p[1]));
+    // a graph with three or more columns gets the full page width
+    if (maxSlot >= 2) document.querySelector(".layout").classList.add("wide");
     const width = 20 + (maxSlot + 1) * (W + GX) + 130;
     const height = 24 + (maxRank + 1) * (H + GY);
     const pos = {};
@@ -377,9 +386,9 @@
             const cx = Math.max(x1, x2) + off;
             d = `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2 + 3},${y2}`;
         }
-        const path = el("path", { d, class: "edge " + (sign === "-" ? "inh" : "act"), "marker-end": sign === "-" ? "url(#bar)" : "url(#arrow)" }, edgeLayer);
+        const path = el("path", { d, class: "edge " + (sign === "-" ? "inh" : "act") + (isOmitted(s, t) ? " omitted" : ""), "marker-end": sign === "-" ? "url(#bar)" : "url(#arrow)" }, edgeLayer);
         const title = el("title", {}, path);
-        title.textContent = `${label[s]} ${sign === "-" ? "inhibits" : "activates"} ${label[t]}`;
+        title.textContent = `${label[s]} ${sign === "-" ? "inhibits" : "activates"} ${label[t]}` + (isOmitted(s, t) ? " (asserted; deliberately left out of the rule)" : "");
         return { key: `${s}|${t}|${sign}`, path, sign };
     });
 
@@ -512,6 +521,12 @@
             tr.children[0].textContent = label[v];
             tr.children[0].title = v;
             tr.querySelector("code").textContent = r ? r.text : "(held at its starting value)";
+            if (r && omitted[v]) {
+                const note = document.createElement("div");
+                note.className = "small muted";
+                note.textContent = "leaves out: " + omitted[v].map(o => label[o] || o).join(", ");
+                tr.children[1].appendChild(note);
+            }
             const tag = tr.querySelector(".tag");
             tag.textContent = how;
             if (how === "activation_logic") tag.classList.add("declared");
@@ -536,7 +551,9 @@
     document.getElementById("bnet").textContent = data.bnet;
     document.getElementById("bnet-download").href = URL.createObjectURL(new Blob([data.bnet + "\n"], { type: "text/plain" }));
 
-    const preferred = data.scenarios.find(s => s.id === "sustained_stimulus") || data.scenarios[0] || null;
+    // open on the first scenario whose outcome is dynamic, else the first one
+    const preferred = data.scenarios.find(s => s.attractors.some(a => a.kind === "CYCLIC"))
+        || data.scenarios[0] || null;
     selectScenario(preferred);
 })();
 </script>
