@@ -10,11 +10,11 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 
 | organelle | synthesis rows | root only | with sub-compartment |
 |---|---|---|---|
-| mitochondrion (GO:0005739) | 1081 | 283 | 798 |
-| endoplasmic reticulum (GO:0005783) | 487 | 152 | 335 |
-| Golgi apparatus (GO:0005794) | 251 | 93 | 158 |
-| peroxisome (GO:0005777) | 133 | 65 | 68 |
-| lysosome (GO:0005764) | 129 | 44 | 85 |
+| mitochondrion (GO:0005739) | 1114 | 297 | 817 |
+| endoplasmic reticulum (GO:0005783) | 518 | 167 | 351 |
+| Golgi apparatus (GO:0005794) | 257 | 97 | 160 |
+| peroxisome (GO:0005777) | 137 | 65 | 72 |
+| lysosome (GO:0005764) | 131 | 48 | 83 |
 
 ## mitochondrion (GO:0005739): root only
 
@@ -22,6 +22,9 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 |---|---|---|---|
 | ARATH/ABCG36 | ISM | MARK_AS_OVER_ANNOTATED |  |
 | ARATH/MKK5 | ISM | MARK_AS_OVER_ANNOTATED |  |
+| CANAL/ACH1 | IBA | ACCEPT |  |
+| CANAL/ACH1 | IEA | ACCEPT |  |
+| CANAL/ACH1 | ISA | ACCEPT |  |
 | CHICK/GLDC | IBA | ACCEPT |  |
 | CHICK/GLDC | IEA | ACCEPT |  |
 | CHICK/GLDC | ISS | ACCEPT |  |
@@ -67,6 +70,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | HORSE/MYL10 | IBA | KEEP_AS_NON_CORE |  |
 | HORSE/MYL10 | IEA | KEEP_AS_NON_CORE |  |
 | NEUCR/NCU06005 | IBA | UNDECIDED |  |
+| NEUCR/acu-8 | IBA | ACCEPT |  |
+| NEUCR/acu-8 | IEA | ACCEPT |  |
 | NEUCR/cia30 | IBA | ACCEPT |  |
 | NEUCR/cia30 | IEA | ACCEPT |  |
 | POPTR/ALARS | IEA | ACCEPT |  |
@@ -106,6 +111,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | SCHPO/sel0 | ISS | ACCEPT |  |
 | SCHPO/trr1 | ISS | UNDECIDED |  |
 | SCHPO/tsc13 | ISO | MARK_AS_OVER_ANNOTATED |  |
+| TRYBB/TPR | IEA | UNDECIDED |  |
 | human/ABCC9 | IEA | KEEP_AS_NON_CORE |  |
 | human/ABHD18 | IEA | ACCEPT |  |
 | human/ABL1 | IEA | KEEP_AS_NON_CORE |  |
@@ -139,6 +145,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/CAVIN1 | IEA | UNDECIDED |  |
 | human/CCN6 | IEA | KEEP_AS_NON_CORE |  |
 | human/CFAP410 | IEA | KEEP_AS_NON_CORE |  |
+| human/CFAP91 | IEA | MARK_AS_OVER_ANNOTATED |  |
 | human/CKB | IEA | MARK_AS_OVER_ANNOTATED |  |
 | human/CKB | ISS | MARK_AS_OVER_ANNOTATED |  |
 | human/CKB | ISS | MARK_AS_OVER_ANNOTATED |  |
@@ -178,6 +185,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/MAP2K2 | IEA | UNDECIDED |  |
 | human/MAPK1 | IEA | MARK_AS_OVER_ANNOTATED |  |
 | human/MAPK3 | IEA | MARK_AS_OVER_ANNOTATED |  |
+| human/MBTPS1 | IEA | KEEP_AS_NON_CORE |  |
 | human/MLDHR | IEA | ACCEPT |  |
 | human/MT-RNR1__A0A0C5B5G6 | IEA | ACCEPT |  |
 | human/MT-RNR2__Q8IVG9 | IEA | ACCEPT |  |
@@ -224,20 +232,23 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | rat/Amacr | IBA | KEEP_AS_NON_CORE |  |
 | rat/Amacr | IEA | KEEP_AS_NON_CORE |  |
 | rat/Amacr | ISO | KEEP_AS_NON_CORE |  |
+| rat/Amacr | ISO | KEEP_AS_NON_CORE |  |
 | rat/Araf | IBA | KEEP_AS_NON_CORE |  |
 | rat/Araf | IEA | KEEP_AS_NON_CORE |  |
 | rat/Araf | ISO | KEEP_AS_NON_CORE |  |
 | rat/Gsta1 | ISO | MARK_AS_OVER_ANNOTATED |  |
 | rat/Gsta2 | ISO | MARK_AS_OVER_ANNOTATED |  |
+| rat/Gsta2 | ISO | MARK_AS_OVER_ANNOTATED |  |
 | rat/Gsta4 | ISO | KEEP_AS_NON_CORE |  |
 | rat/Hspa5 | ISO | KEEP_AS_NON_CORE |  |
 | rat/Mapk1 | ISO | KEEP_AS_NON_CORE |  |
-| rat/Rgn | IEA | NEW |  |
 | worm/ced-3 | IEA | KEEP_AS_NON_CORE |  |
 | worm/ced-4 | IEA | ACCEPT |  |
 | worm/pink-1 | IBA | ACCEPT |  |
 | worm/pink-1 | IEA | ACCEPT |  |
 | worm/skn-1 | IEA | ACCEPT |  |
+| yeast/ACH1 | IBA | ACCEPT |  |
+| yeast/ACH1 | IEA | ACCEPT |  |
 | yeast/ACO2 | IBA | ACCEPT |  |
 | yeast/ACO2 | IEA | ACCEPT |  |
 | yeast/ACS1 | IEA | KEEP_AS_NON_CORE |  |
@@ -246,6 +257,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/ALD6 | IBA | MARK_AS_OVER_ANNOTATED |  |
 | yeast/BIO2 | IEA | ACCEPT |  |
 | yeast/BIO3 | IBA | MARK_AS_OVER_ANNOTATED |  |
+| yeast/BNA3 | IBA | ACCEPT |  |
+| yeast/BNA3 | IEA | ACCEPT |  |
 | yeast/CDC21 | IBA | MARK_AS_OVER_ANNOTATED |  |
 | yeast/CEM1 | IBA | ACCEPT |  |
 | yeast/CEM1 | IEA | ACCEPT |  |
@@ -262,6 +275,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/GCV2 | IEA | ACCEPT |  |
 | yeast/GCV3 | IBA | ACCEPT |  |
 | yeast/GCV3 | IEA | ACCEPT |  |
+| yeast/GDB1 | IEA | MARK_AS_OVER_ANNOTATED |  |
 | yeast/GLR1 | IBA | ACCEPT |  |
 | yeast/GLR1 | IEA | ACCEPT |  |
 | yeast/GPD2 | IEA | ACCEPT |  |
@@ -364,6 +378,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | DROME/sea | IBA | ACCEPT | GO:0005743, GO:0031966 |
 | DROME/shop | IBA | MODIFY | GO:0005758 |
 | DROME/shop | IEA | MODIFY | GO:0005758 |
+| EQUAS/NADK2 | IEA | ACCEPT | GO:0005759 |
 | MISSI/MnSOD | IEA | KEEP_AS_NON_CORE | GO:0005759 |
 | NEUCR/alo-1 | IBA | ACCEPT | GO:0005741, GO:0031966, GO:0032473 |
 | NEUCR/alo-1 | IEA | ACCEPT | GO:0005741, GO:0031966, GO:0032473 |
@@ -385,6 +400,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | SCHPO/SPCC1259.09c | IEA | ACCEPT | GO:0005759 |
 | SCHPO/SPCC1620.08 | IBA | ACCEPT | GO:0005759 |
 | SCHPO/SPCC1620.08 | IEA | ACCEPT | GO:0005759 |
+| SCHPO/ach1 | IBA | ACCEPT | GO:0005759 |
+| SCHPO/ach1 | IEA | ACCEPT | GO:0005759 |
 | SCHPO/aco2 | IBA | ACCEPT | GO:0005762 |
 | SCHPO/aco2 | IEA | ACCEPT | GO:0005762 |
 | SCHPO/alo1 | IBA | KEEP_AS_NON_CORE | GO:0005741, GO:0031966 |
@@ -477,10 +494,13 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | SCHPO/vms1 | IEA | KEEP_AS_NON_CORE | GO:0032473, GO:0036266 |
 | SCHPO/vms1 | ISS | KEEP_AS_NON_CORE | GO:0032473, GO:0036266 |
 | SCHPO/yml6 | IEA | ACCEPT | GO:0005762 |
+| TRYB2/REL1 | IEA | ACCEPT | GO:0020023, GO:0031019 |
+| TRYB2/REL1 | ISS | ACCEPT | GO:0020023, GO:0031019 |
+| TRYB2/REL1 | RCA | ACCEPT | GO:0020023, GO:0031019 |
 | human/AADAT | IBA | ACCEPT | GO:0005759 |
 | human/AADAT | IEA | ACCEPT | GO:0005759 |
-| human/AARS2 | IBA | MODIFY | GO:0005759 |
-| human/AARS2 | IEA | MODIFY | GO:0005759 |
+| human/AARS2 | IBA | ACCEPT | GO:0005759 |
+| human/AARS2 | IEA | ACCEPT | GO:0005759 |
 | human/AASS | IEA | ACCEPT | GO:0005759 |
 | human/ABAT | IBA | ACCEPT | GO:0005759 |
 | human/ABAT | ISS | ACCEPT | GO:0005759 |
@@ -611,7 +631,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/CLPP | IEA | ACCEPT | GO:0005759, GO:0009841 |
 | human/CLPX | IEA | KEEP_AS_NON_CORE | GO:0005743, GO:0005759, GO:0009841, GO:0042645 |
 | human/CLU | IEA | KEEP_AS_NON_CORE | GO:0005743, GO:0031966 |
-| human/CLYBL | IEA | MODIFY | GO:0005759 |
+| human/CLYBL | IEA | ACCEPT | GO:0005759 |
 | human/COA4 | IEA | KEEP_AS_NON_CORE | GO:0005758 |
 | human/COA5 | IBA | ACCEPT | GO:0005743, GO:0005758 |
 | human/COA6 | IBA | MODIFY | GO:0005758 |
@@ -655,24 +675,27 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/D2HGDH | IEA | TOO_GENERAL | GO:0005759 |
 | human/D2HGDH | ISS | TOO_GENERAL | GO:0005759 |
 | human/DARS2 | IBA | ACCEPT | GO:0005759, GO:0031966 |
-| human/DBT | IBA | ACCEPT | GO:0005759, GO:0042645 |
+| human/DBT | IBA | TOO_GENERAL | GO:0005759, GO:0042645 |
 | human/DELE1 | IBA | ACCEPT | GO:0005741, GO:0005743 |
 | human/DELE1 | IEA | ACCEPT | GO:0005741, GO:0005743 |
-| human/DGUOK | IBA | ACCEPT | GO:0005759 |
-| human/DGUOK | IEA | ACCEPT | GO:0005759 |
-| human/DGUOK | ISS | ACCEPT | GO:0005759 |
-| human/DHTKD1 | IEA | ACCEPT | GO:0005759 |
-| human/DIABLO | IBA | ACCEPT | GO:0005758 |
-| human/DIABLO | IEA | ACCEPT | GO:0005758 |
+| human/DGUOK | IBA | MODIFY | GO:0005759 |
+| human/DGUOK | IEA | MODIFY | GO:0005759 |
+| human/DGUOK | ISS | MODIFY | GO:0005759 |
+| human/DHTKD1 | IEA | MODIFY | GO:0005759 |
+| human/DHX30 | IEA | ACCEPT | GO:0005759, GO:0042645 |
+| human/DIABLO | IBA | MODIFY | GO:0005743, GO:0005758 |
+| human/DIABLO | IEA | MODIFY | GO:0005743, GO:0005758 |
 | human/DLAT | IBA | KEEP_AS_NON_CORE | GO:0005759 |
-| human/DLD | IBA | ACCEPT | GO:0005759 |
-| human/DLD | IEA | ACCEPT | GO:0005759 |
+| human/DLD | IBA | MODIFY | GO:0005759 |
+| human/DLD | IEA | MODIFY | GO:0005759 |
 | human/DLST | IBA | ACCEPT | GO:0005759 |
 | human/DNAJC11 | IEA | ACCEPT | GO:0005741, GO:0140275 |
 | human/DNAJC15 | IEA | KEEP_AS_NON_CORE | GO:0001405, GO:0005743, GO:0005744 |
-| human/DNM1L | IBA | ACCEPT | GO:0005741 |
-| human/DNM1L | IEA | ACCEPT | GO:0005741 |
-| human/ECHS1 | IBA | KEEP_AS_NON_CORE | GO:0005759 |
+| human/DNM1L | IBA | MODIFY | GO:0005741 |
+| human/DNM1L | IEA | MODIFY | GO:0005741 |
+| human/EARS2 | IBA | MODIFY | GO:0005759 |
+| human/EARS2 | IEA | MODIFY | GO:0005759 |
+| human/ECHS1 | IBA | ACCEPT | GO:0005759 |
 | human/ENDOG | IEA | ACCEPT | GO:0005743 |
 | human/ETFA | IBA | KEEP_AS_NON_CORE | GO:0005759 |
 | human/ETFA | IEA | KEEP_AS_NON_CORE | GO:0005759 |
@@ -771,8 +794,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/MIEF1__L0R8F8 | IEA | ACCEPT | GO:0005759 |
 | human/MMAA | IEA | ACCEPT | GO:0005759 |
 | human/MMAB | IEA | ACCEPT | GO:0005759 |
-| human/MMADHC | IBA | MODIFY | GO:0005759 |
-| human/MMADHC | IEA | MODIFY | GO:0005759 |
+| human/MMADHC | IBA | KEEP_AS_NON_CORE | GO:0005759 |
+| human/MMADHC | IEA | KEEP_AS_NON_CORE | GO:0005759 |
 | human/MMUT | IBA | ACCEPT | GO:0005759 |
 | human/MMUT | IEA | ACCEPT | GO:0005759 |
 | human/MT-ND6 | IBA | ACCEPT | GO:0005743 |
@@ -972,8 +995,11 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | rat/Hmgcs2 | ISO | ACCEPT | GO:0005759 |
 | rat/Ldhb | IBA | KEEP_AS_NON_CORE | GO:0005743 |
 | rat/Nat8l | IEA | KEEP_AS_NON_CORE | GO:0005759, GO:0031966 |
-| rat/Tp53 | ISO | KEEP_AS_NON_CORE | GO:0005741, GO:0005759 |
-| rat/Tp53 | ISS | KEEP_AS_NON_CORE | GO:0005741, GO:0005759 |
+| rat/Tp53 | ISO | KEEP_AS_NON_CORE | GO:0005759 |
+| rat/Tp53 | ISO | KEEP_AS_NON_CORE | GO:0005759 |
+| rat/Tp53 | ISS | KEEP_AS_NON_CORE | GO:0005759 |
+| rat/Tst | IBA | KEEP_AS_NON_CORE | GO:0005759 |
+| rat/Tst | IEA | KEEP_AS_NON_CORE | GO:0005759 |
 | rat/Tst | IEA | KEEP_AS_NON_CORE | GO:0005759 |
 | rat/Tst | ISO | KEEP_AS_NON_CORE | GO:0005759 |
 | worm/clk-1 | IEA | ACCEPT | GO:0005743, GO:0031314 |
@@ -1001,6 +1027,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/ACP1 | IBA | ACCEPT | GO:0099128 |
 | yeast/ACP1 | IEA | ACCEPT | GO:0099128 |
 | yeast/ADK1 | IBA | ACCEPT | GO:0005758 |
+| yeast/ADK2 | IEA | ACCEPT | GO:0005743, GO:0005759 |
 | yeast/ALD4 | IBA | ACCEPT | GO:0005759, GO:0042645 |
 | yeast/ALD5 | IBA | ACCEPT | GO:0005759 |
 | yeast/ALO1 | IBA | KEEP_AS_NON_CORE | GO:0005741, GO:0031966, GO:0032473 |
@@ -1013,6 +1040,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/BAT1 | IBA | ACCEPT | GO:0005759 |
 | yeast/CAB5 | IEA | ACCEPT | GO:0031315 |
 | yeast/CAT2 | IBA | ACCEPT | GO:0005743 |
+| yeast/CHA1 | IEA | ACCEPT | GO:0042645 |
 | yeast/CIT1 | RCA | ACCEPT | GO:0005759 |
 | yeast/CIT2 | RCA | MARK_AS_OVER_ANNOTATED | GO:0005759 |
 | yeast/CIT3 | IEA | ACCEPT | GO:0005759 |
@@ -1046,6 +1074,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/IDH1 | RCA | ACCEPT | GO:0005759, GO:0042645 |
 | yeast/IDH2 | IBA | ACCEPT | GO:0005759 |
 | yeast/IDH2 | RCA | ACCEPT | GO:0005759 |
+| yeast/IDP1 | IBA | ACCEPT | GO:0042645 |
+| yeast/IDP1 | IEA | ACCEPT | GO:0042645 |
 | yeast/ILV5 | IBA | ACCEPT | GO:0005759, GO:0042645 |
 | yeast/ILV5 | IEA | ACCEPT | GO:0005759, GO:0042645 |
 | yeast/ILV6 | IEA | ACCEPT | GO:0042645 |
@@ -1064,6 +1094,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/LSC1 | IBA | ACCEPT | GO:0042645 |
 | yeast/LSC1 | IEA | ACCEPT | GO:0042645 |
 | yeast/LSC1 | RCA | ACCEPT | GO:0042645 |
+| yeast/MAE1 | RCA | ACCEPT | GO:0005759 |
+| yeast/MAE1 | RCA | ACCEPT | GO:0005759 |
 | yeast/MCR1 | IBA | ACCEPT | GO:0005741, GO:0005758 |
 | yeast/MDH1 | IBA | ACCEPT | GO:0005759 |
 | yeast/MDH1 | RCA | ACCEPT | GO:0005759 |
@@ -1105,6 +1137,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/TAM41 | IBA | ACCEPT | GO:0005743, GO:0005759 |
 | yeast/YAH1 | IBA | ACCEPT | GO:0005759 |
 | yeast/YAT1 | IBA | ACCEPT | GO:0005743 |
+| yeast/YJL045W | IBA | ACCEPT | GO:0005743 |
 | yeast/YNK1 | IBA | ACCEPT | GO:0005758 |
 
 ## endoplasmic reticulum (GO:0005783): root only
@@ -1132,6 +1165,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | DROME/P58IPK | IEA | ACCEPT |  |
 | DROME/Prx4 | IBA | ACCEPT |  |
 | DROME/Tango5 | IEA | ACCEPT |  |
+| EQUAS/APP | IEA | ACCEPT |  |
 | HORSE/MTMR9 | IEA | KEEP_AS_NON_CORE |  |
 | HORSE/ZDHHC23 | IBA | ACCEPT |  |
 | NEUCR/vtc-4 | IBA | KEEP_AS_NON_CORE |  |
@@ -1179,6 +1213,10 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/CAVIN1 | IEA | UNDECIDED |  |
 | human/CERKL | IEA | KEEP_AS_NON_CORE |  |
 | human/CGRRF1 | IEA | ACCEPT |  |
+| human/DDX41 | IEA | KEEP_AS_NON_CORE |  |
+| human/DLG4 | IEA | UNDECIDED |  |
+| human/DLG4 | ISS | UNDECIDED |  |
+| human/DNASE1L3 | IEA | KEEP_AS_NON_CORE |  |
 | human/FGFR3 | IEA | KEEP_AS_NON_CORE |  |
 | human/FGFR4 | IEA | KEEP_AS_NON_CORE |  |
 | human/GBA | IEA | KEEP_AS_NON_CORE |  |
@@ -1207,6 +1245,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/NRXN1 | ISS | MARK_AS_OVER_ANNOTATED |  |
 | human/NT5C3A | IEA | KEEP_AS_NON_CORE |  |
 | human/PARK7 | IEA | ACCEPT |  |
+| human/PCK1 | IEA | KEEP_AS_NON_CORE |  |
 | human/PGRMC2 | IBA | ACCEPT |  |
 | human/PGRMC2 | IEA | ACCEPT |  |
 | human/PINK1 | IEA | KEEP_AS_NON_CORE |  |
@@ -1244,16 +1283,22 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/UVRAG | IEA | KEEP_AS_NON_CORE |  |
 | human/VEGFA | IEA | KEEP_AS_NON_CORE |  |
 | human/ZDHHC23 | IBA | ACCEPT |  |
-| mouse/Akt1 | IEA | KEEP_AS_NON_CORE |  |
+| mouse/Akt1 | IEA | MARK_AS_OVER_ANNOTATED |  |
 | mouse/Bnip3l | IBA | KEEP_AS_NON_CORE |  |
 | mouse/Bnip3l | IEA | KEEP_AS_NON_CORE |  |
 | mouse/Bnip3l | ISO | KEEP_AS_NON_CORE |  |
+| mouse/Pck1 | IEA | KEEP_AS_NON_CORE |  |
+| mouse/Pck1 | ISO | KEEP_AS_NON_CORE |  |
+| mouse/Pck1 | ISO | KEEP_AS_NON_CORE |  |
+| mouse/Pck1 | ISS | KEEP_AS_NON_CORE |  |
 | mouse/Trp53 | IEA | KEEP_AS_NON_CORE |  |
 | rat/Aga | ISO | KEEP_AS_NON_CORE |  |
 | rat/Ces2c | IEA | KEEP_AS_NON_CORE |  |
 | rat/Ces2c | ISS | KEEP_AS_NON_CORE |  |
 | rat/Hsd11b2 | IEA | KEEP_AS_NON_CORE |  |
 | rat/Tp53 | IEA | MARK_AS_OVER_ANNOTATED |  |
+| rat/Tp53 | ISO | MARK_AS_OVER_ANNOTATED |  |
+| rat/Tp53 | ISS | MARK_AS_OVER_ANNOTATED |  |
 | worm/pdr-1 | IBA | UNDECIDED |  |
 | yeast/AVT2 | IBA | ACCEPT |  |
 | yeast/AYR1 | IBA | ACCEPT |  |
@@ -1261,7 +1306,10 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/CAB5 | IEA | KEEP_AS_NON_CORE |  |
 | yeast/CPR4 | IBA | KEEP_AS_NON_CORE |  |
 | yeast/ERG6 | IBA | ACCEPT |  |
+| yeast/FAA1 | IBA | ACCEPT |  |
 | yeast/FAA2 | IBA | MARK_AS_OVER_ANNOTATED |  |
+| yeast/FAA3 | IBA | KEEP_AS_NON_CORE |  |
+| yeast/FAA4 | IBA | ACCEPT |  |
 | yeast/FMN1 | IEA | ACCEPT |  |
 
 ## endoplasmic reticulum (GO:0005783): with sub-compartment
@@ -1304,6 +1352,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | DROME/rasp | IBA | ACCEPT | GO:0005789 |
 | DROME/sws | IBA | ACCEPT | GO:0005789 |
 | DROME/twr | ISS | MODIFY | GO:0005787, GO:0005789 |
+| EQUAS/PDIA4 | IEA | TOO_GENERAL | GO:0005788 |
+| EQUAS/SLC27A5 | IEA | ACCEPT | GO:0005789 |
 | NEUCR/erg-1 | IBA | ACCEPT | GO:0005789 |
 | SCHPO/SPAC1851.02 | IBA | ACCEPT | GO:0005789 |
 | SCHPO/SPBC1718.04 | IBA | ACCEPT | GO:0005789 |
@@ -1315,6 +1365,9 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | SCHPO/bst1 | IBA | ACCEPT | GO:0005789 |
 | SCHPO/bst1 | IEA | ACCEPT | GO:0005789 |
 | SCHPO/cho1 | IBA | ACCEPT | GO:0005789 |
+| SCHPO/dfg10 | IBA | ACCEPT | GO:0005789 |
+| SCHPO/dpm1 | IEA | ACCEPT | GO:0005789 |
+| SCHPO/dpm2 | IBA | ACCEPT | GO:0005789 |
 | SCHPO/elo1 | IEA | ACCEPT | GO:0005789 |
 | SCHPO/elo2 | IEA | ACCEPT | GO:0005789 |
 | SCHPO/erg1 | IBA | ACCEPT | GO:0005789 |
@@ -1389,7 +1442,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/CYP19A1 | IBA | ACCEPT | GO:0005789 |
 | human/DDRGK1 | IEA | ACCEPT | GO:0005789 |
 | human/DGAT2 | IEA | ACCEPT | GO:0005789, GO:1990578 |
-| human/DHDDS | IBA | KEEP_AS_NON_CORE | GO:0005789 |
+| human/DHDDS | IBA | MODIFY | GO:0005789 |
 | human/DNAJB11 | IBA | ACCEPT | GO:0005788, GO:0034663 |
 | human/DNAJC1 | IEA | ACCEPT | GO:0005789 |
 | human/DNAJC1 | ISS | ACCEPT | GO:0005789 |
@@ -1397,9 +1450,10 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/DNAJC3 | IBA | ACCEPT | GO:0005788 |
 | human/DNAJC3 | IEA | ACCEPT | GO:0005788 |
 | human/DNAJC3 | ISS | ACCEPT | GO:0005788 |
-| human/DPM1 | IEA | ACCEPT | GO:0005789 |
+| human/DPM1 | IEA | MODIFY | GO:0005789 |
 | human/DPM2 | IBA | ACCEPT | GO:0000506, GO:0005789 |
-| human/EBP | IBA | KEEP_AS_NON_CORE | GO:0005789 |
+| human/DTNBP1 | IEA | MODIFY | GO:0005789 |
+| human/EBP | IBA | MODIFY | GO:0005789 |
 | human/EDEM1 | IEA | ACCEPT | GO:0005789, GO:0044322 |
 | human/EDEM3 | IEA | ACCEPT | GO:0005788, GO:0044322 |
 | human/EIF2AK3 | IC | MODIFY | GO:0005789 |
@@ -1441,6 +1495,8 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/HSPA5 | IEA | ACCEPT | GO:0005788, GO:0005789, GO:0034663 |
 | human/ICMT | IBA | KEEP_AS_NON_CORE | GO:0005789 |
 | human/ICMT | IEA | KEEP_AS_NON_CORE | GO:0005789 |
+| human/INSIG1 | IBA | MODIFY | GO:0005789, GO:0032937 |
+| human/INSIG2 | IBA | MODIFY | GO:0005789, GO:0032937 |
 | human/LPCAT1 | IBA | ACCEPT | GO:0005789 |
 | human/LPCAT1 | IEA | ACCEPT | GO:0005789 |
 | human/LPCAT1 | ISS | ACCEPT | GO:0005789 |
@@ -1565,12 +1621,18 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | rat/Elovl7 | ISO | KEEP_AS_NON_CORE | GO:0005789 |
 | rat/Hspa5 | ISO | ACCEPT | GO:0005788, GO:0005789, GO:0005790, GO:0034663 |
 | rat/Hspa5 | ISO | ACCEPT | GO:0005788, GO:0005789, GO:0005790, GO:0034663 |
-| rat/Sqle | IBA | KEEP_AS_NON_CORE | GO:0005789, GO:0098554 |
+| rat/Sqle | IBA | ACCEPT | GO:0005789, GO:0098554 |
 | rat/Uggt1 | IBA | ACCEPT | GO:0005788 |
 | rat/Uggt1 | ISO | ACCEPT | GO:0005788 |
 | worm/ire-1 | IBA | ACCEPT | GO:0005789 |
 | yeast/ALE1 | IBA | ACCEPT | GO:0005789 |
+| yeast/ALG1 | IBA | ACCEPT | GO:0005789, GO:0098554 |
+| yeast/ALG13 | IEA | ACCEPT | GO:0043541, GO:0098554 |
+| yeast/ALG3 | IBA | ACCEPT | GO:0005789, GO:0098553 |
 | yeast/CNE1 | IEA | ACCEPT | GO:0005789 |
+| yeast/DFG10 | IBA | ACCEPT | GO:0005789 |
+| yeast/DIE2 | IBA | ACCEPT | GO:0005789, GO:0098553 |
+| yeast/DPL1 | IBA | ACCEPT | GO:0005789, GO:0032541, GO:0097038 |
 | yeast/ELO1 | IEA | ACCEPT | GO:0005789 |
 | yeast/ELO2 | IEA | ACCEPT | GO:0005789 |
 | yeast/ELO3 | IEA | ACCEPT | GO:0005789 |
@@ -1585,6 +1647,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/IFA38 | IBA | ACCEPT | GO:0005789 |
 | yeast/IFA38 | IEA | ACCEPT | GO:0005789 |
 | yeast/IRE1 | IBA | MODIFY | GO:0005789 |
+| yeast/ISC1 | IBA | ACCEPT | GO:0005789 |
 | yeast/JEM1 | IBA | ACCEPT | GO:0005789 |
 | yeast/LAC1 | IBA | ACCEPT | GO:0005789 |
 | yeast/LAG1 | IBA | ACCEPT | GO:0005789 |
@@ -1597,6 +1660,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | yeast/OPI3 | IBA | ACCEPT | GO:0005789 |
 | yeast/PDI1 | IBA | ACCEPT | GO:0005788, GO:0106055 |
 | yeast/ROT1 | IEA | ACCEPT | GO:0005789 |
+| yeast/SAC1 | IBA | ACCEPT | GO:0005789, GO:0032541 |
 | yeast/SCS7 | IBA | ACCEPT | GO:0005789 |
 | yeast/SCT1 | IBA | ACCEPT | GO:0005789 |
 | yeast/SLC1 | IBA | ACCEPT | GO:0005789 |
@@ -1615,6 +1679,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | DROME/Fer1HCH | IEA | ACCEPT |  |
 | DROME/Fer2LCH | IEA | ACCEPT |  |
 | DROME/NTPase | IEA | UNDECIDED |  |
+| EQUAS/APP | IEA | ACCEPT |  |
 | PANPA/A0A2R9CAF4 | IEA | MARK_AS_OVER_ANNOTATED |  |
 | SCHPO/ayr1 | IEA | KEEP_AS_NON_CORE |  |
 | SCHPO/dca7 | IEA | KEEP_AS_NON_CORE |  |
@@ -1648,6 +1713,9 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/CSNK1D | IEA | ACCEPT |  |
 | human/CUL3 | IEA | KEEP_AS_NON_CORE |  |
 | human/DNM1L | IEA | KEEP_AS_NON_CORE |  |
+| human/DPAGT1 | IEA | UNDECIDED |  |
+| human/DRC4 | IBA | KEEP_AS_NON_CORE |  |
+| human/DRC4 | IEA | KEEP_AS_NON_CORE |  |
 | human/DYNC2LI1 | IEA | KEEP_AS_NON_CORE |  |
 | human/DYNLT1 | IEA | KEEP_AS_NON_CORE |  |
 | human/FBXW8 | IEA | ACCEPT |  |
@@ -1789,6 +1857,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/CLN3 | IEA | KEEP_AS_NON_CORE | GO:0000139, GO:0005795, GO:0005802 |
 | human/COPG1 | IEA | ACCEPT | GO:0000139, GO:0030126 |
 | human/COPG2 | IEA | ACCEPT | GO:0000139, GO:0030126 |
+| human/DNAAF6 | IEA | MODIFY | GO:0005802 |
 | human/FTCD | IEA | KEEP_AS_NON_CORE | GO:0000139 |
 | human/FTCD | ISS | KEEP_AS_NON_CORE | GO:0000139 |
 | human/GABARAP | IEA | KEEP_AS_NON_CORE | GO:0000139 |
@@ -1812,6 +1881,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/LRRK2 | IEA | ACCEPT | GO:0000139, GO:0005802 |
 | human/LRRK2 | ISS | ACCEPT | GO:0000139, GO:0005802 |
 | human/LYSET | IEA | ACCEPT | GO:0000139, GO:0031985 |
+| human/MBTPS1 | IBA | MODIFY | GO:0000139, GO:0005795 |
 | human/MGAT1 | IBA | ACCEPT | GO:0000139 |
 | human/MMGT1 | IBA | KEEP_AS_NON_CORE | GO:0000139 |
 | human/MMGT1 | IEA | KEEP_AS_NON_CORE | GO:0000139 |
@@ -1894,7 +1964,6 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | SCHPO/pnc1 | IEA | KEEP_AS_NON_CORE |  |
 | SCHPO/pnc1 | ISS | KEEP_AS_NON_CORE |  |
 | human/CD33 | IEA | KEEP_AS_NON_CORE |  |
-| human/DNM1L | IEA | ACCEPT |  |
 | human/IDI1 | IBA | ACCEPT |  |
 | human/IDI1 | IEA | ACCEPT |  |
 | human/IDI1 | ISS | ACCEPT |  |
@@ -1914,10 +1983,11 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | rat/Acot1 | IBA | MARK_AS_OVER_ANNOTATED |  |
 | rat/Amacr | IEA | KEEP_AS_NON_CORE |  |
 | rat/Amacr | ISO | KEEP_AS_NON_CORE |  |
-| rat/Crot | IBA | KEEP_AS_NON_CORE |  |
-| rat/Crot | IEA | KEEP_AS_NON_CORE |  |
-| rat/Crot | ISO | KEEP_AS_NON_CORE |  |
-| rat/Ldhb | ISS | NEW |  |
+| rat/Amacr | ISO | KEEP_AS_NON_CORE |  |
+| rat/Crot | IBA | ACCEPT |  |
+| rat/Crot | IEA | ACCEPT |  |
+| rat/Crot | ISO | ACCEPT |  |
+| rat/Crot | ISO | ACCEPT |  |
 | worm/mff-1 | IEA | KEEP_AS_NON_CORE |  |
 | worm/mff-2 | IEA | ACCEPT |  |
 | worm/vps-34 | IBA | MARK_AS_OVER_ANNOTATED |  |
@@ -1965,6 +2035,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/BAAT | IBA | ACCEPT | GO:0005782 |
 | human/BAAT | IEA | ACCEPT | GO:0005782 |
 | human/BAAT | ISS | ACCEPT | GO:0005782 |
+| human/DNM1L | IEA | MODIFY | GO:0005778 |
 | human/EHHADH | IBA | ACCEPT | GO:0005782 |
 | human/EHHADH | IEA | ACCEPT | GO:0005782 |
 | human/EHHADH | ISS | ACCEPT | GO:0005782 |
@@ -1995,7 +2066,10 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | rat/Ddo | ISO | KEEP_AS_NON_CORE | GO:0005782 |
 | rat/Ddo | ISO | KEEP_AS_NON_CORE | GO:0005782 |
 | yeast/CTA1 | IBA | ACCEPT | GO:0005782 |
+| yeast/DCI1 | IEA | ACCEPT | GO:0005782 |
 | yeast/ECI1 | IEA | ACCEPT | GO:0005782 |
+| yeast/FAT1 | IBA | ACCEPT | GO:0005778 |
+| yeast/FAT1 | IEA | ACCEPT | GO:0005778 |
 | yeast/IDP3 | IBA | ACCEPT | GO:0005782 |
 | yeast/LYS1 | IEA | ACCEPT | GO:0005782 |
 | yeast/MDH3 | IEA | ACCEPT | GO:0005782 |
@@ -2055,6 +2129,10 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | rat/Aga | IBA | KEEP_AS_NON_CORE |  |
 | rat/Aga | IEA | KEEP_AS_NON_CORE |  |
 | rat/Aga | ISO | KEEP_AS_NON_CORE |  |
+| rat/Aga | ISO | KEEP_AS_NON_CORE |  |
+| rat/Arsb | IEA | ACCEPT |  |
+| rat/Arsb | ISO | ACCEPT |  |
+| rat/Arsb | ISO | ACCEPT |  |
 | worm/lbp-8 | IEA | ACCEPT |  |
 
 ## lysosome (GO:0005764): with sub-compartment
@@ -2135,6 +2213,7 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | human/TLR9 | IEA | ACCEPT | GO:0036019, GO:0036020 |
 | human/TLR9 | ISS | ACCEPT | GO:0036019, GO:0036020 |
 | human/TMEM175 | IBA | ACCEPT | GO:0005765 |
+| mouse/Mpo | IEA | MODIFY | GO:0042582, GO:0044194 |
 | mouse/Mtor | IEA | MODIFY | GO:0005765 |
 | mouse/Mtor | ISO | MODIFY | GO:0005765 |
 | mouse/Mtor | ISS | MODIFY | GO:0005765 |
@@ -2143,6 +2222,3 @@ candidates for a bold MODIFY to a membrane, lumen or matrix term.
 | mouse/Rab7 | ISO | ACCEPT | GO:0005765 |
 | mouse/Rab7 | ISO | ACCEPT | GO:0005765 |
 | mouse/Rab7 | ISO | ACCEPT | GO:0005765 |
-| rat/Arsb | IEA | ACCEPT | GO:0043202 |
-| rat/Arsb | ISO | ACCEPT | GO:0043202 |
-| rat/Arsb | ISO | ACCEPT | GO:0043202 |
