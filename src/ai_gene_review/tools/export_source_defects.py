@@ -46,6 +46,8 @@ COLUMNS = [
     "gene_symbol",
     "subject_id",
     "record",
+    "slot",
+    "requested_change",
     "term_id",
     "term_label",
     "evidence_type",
@@ -77,7 +79,8 @@ def _row(source_path: str, context: dict[str, Any], defect: dict[str, Any]) -> d
     row = {c: "" for c in COLUMNS}
     row.update({k: "" if v is None else str(v) for k, v in context.items()})
     for key in (
-        "defect_type", "resource", "record", "asserted_value", "corrected_value",
+        "defect_type", "resource", "record", "slot", "requested_change",
+        "asserted_value", "corrected_value",
         "corrected_label", "cause", "confidence", "explanation", "report_url",
     ):
         if defect.get(key) is not None:
@@ -137,6 +140,31 @@ def collect(root: Path) -> list[dict[str, str]]:
     return rows
 
 
+def _describe_change(r: dict[str, str]) -> str:
+    """Describe the requested change in one line.
+
+    >>> base = {"asserted_value": "A:1", "corrected_value": "", "corrected_label": "",
+    ...         "slot": "has_input", "requested_change": "DELETE_VALUE"}
+    >>> _describe_change(base)
+    'remove A:1 from has_input'
+    >>> _describe_change({**base, "requested_change": "", "corrected_value": "A:2"})
+    'A:1 → A:2'
+    """
+    asserted, corrected = r["asserted_value"], r["corrected_value"]
+    label = f" ({r['corrected_label']})" if r["corrected_label"] else ""
+    action = r["requested_change"]
+    if action == "DELETE_VALUE":
+        where = f" from {r['slot']}" if r["slot"] else ""
+        return f"remove {asserted}{where}"
+    if action == "DELETE_ROW":
+        return f"delete the record asserting {asserted}"
+    if action == "CHECK":
+        return f"check {asserted} (alternatives in the explanation)"
+    if corrected:
+        return f"{asserted} → {corrected}{label}"
+    return f"{asserted} (no replacement value; see explanation)"
+
+
 def render_report(resource: str, rows: list[dict[str, str]]) -> str:
     """Render a Markdown report of open defects for one resource.
 
@@ -161,19 +189,17 @@ def render_report(resource: str, rows: list[dict[str, str]]) -> str:
             f"{r['subject_id']} {r['qualifier']} {r['term_id']} {r['term_label']} "
             f"({r['evidence_type']}, {r['original_reference_id']})"
         ).strip()
-        change = r["asserted_value"]
-        if r["corrected_value"]:
-            label = f" ({r['corrected_label']})" if r["corrected_label"] else ""
-            change += f" → {r['corrected_value']}{label}"
-        else:
-            change += " (no replacement value; see explanation)"
         lines += [
             "",
             f"## {i}. {r['defect_type']} ({r['confidence']}, {r['report_status']})",
             "",
             f"- **Record:** {target}",
-            f"- **Change:** {change}",
         ]
+        if r["record"] and r["subject_id"]:
+            lines.append(f"- **Subject:** {r['subject_id']}")
+        if r["slot"]:
+            lines.append(f"- **Field:** {r['slot']}")
+        lines.append(f"- **Change:** {_describe_change(r)}")
         if r["cause"]:
             lines.append(f"- **Likely cause:** {r['cause']}")
         lines.append(f"- **Recorded in:** `{r['source_path']}`")

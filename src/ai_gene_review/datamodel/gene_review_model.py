@@ -233,6 +233,28 @@ class SourceDefectConfidenceEnum(str, Enum):
     """
 
 
+class SourceDefectRequestedChangeEnum(str, Enum):
+    """
+    The change a source defect asks the responsible resource to make.
+    """
+    REPOINT = "REPOINT"
+    """
+    Replace asserted_value with corrected_value in the same slot.
+    """
+    DELETE_VALUE = "DELETE_VALUE"
+    """
+    Remove asserted_value from the slot and keep the rest of the record (e.g. drop one has_input from a GO-CAM activity).
+    """
+    DELETE_ROW = "DELETE_ROW"
+    """
+    Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+    """
+    CHECK = "CHECK"
+    """
+    The value is wrong or doubtful, but the right change depends on information the reviewer could not see (e.g. a full text). The explanation gives the alternatives.
+    """
+
+
 class SourceDefectReportStatusEnum(str, Enum):
     """
     Progress of an upstream report.
@@ -2253,6 +2275,8 @@ class SourceDefect(ConfiguredBaseModel):
     defect_type: SourceDefectTypeEnum = Field(default=..., description="""What is wrong with the source record.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     resource: SourceResourceEnum = Field(default=..., description="""The resource that holds the defective record and would need to fix it (for a GOA row, the assigned_by group, not the GOA aggregator).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     record: Optional[str] = Field(default=None, description="""Identifier of the defective record where one exists, e.g. a GO-CAM activity id (gomodel:.../...), a UniProt accession, or an IntAct interaction id. For a GOA row, which is identified by the enclosing annotation, leave unset.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    slot: Optional[str] = Field(default=None, description="""The field of the record that holds asserted_value, using the source's own name for it, e.g. enabled_by or has_input for a GO-CAM activity, or DB_Object_ID, DB:Reference, With/From, Evidence_Code or Qualifier for a GAF row. Needed when one record has several fields that could carry the same value.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    requested_change: Optional[SourceDefectRequestedChangeEnum] = Field(default=None, description="""What the resource is asked to do. Distinguishes re-pointing a value from removing it, which an absent corrected_value cannot.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     asserted_value: str = Field(default=..., description="""What the source currently says, as a CURIE where possible (e.g. AGI_LocusCode:AT2G45160 for the gene product, PMID:32213638 for the reference, IDA for the evidence code).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     corrected_value: Optional[str] = Field(default=None, description="""What the source should say instead, as a CURIE, when it can be established (e.g. AGI_LocusCode:AT5G64610). Leave unset when the value is wrong but the right one is unknown (e.g. a mis-keyed reference whose intended paper cannot be identified).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     corrected_label: Optional[str] = Field(default=None, description="""Human-readable label for corrected_value (e.g. \"HAM1 MYST histone acetyltransferase\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })

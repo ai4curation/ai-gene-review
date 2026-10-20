@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_gene_review.tools.export_source_defects import collect, render_report, write_outputs
+from ai_gene_review.tools.export_source_defects import COLUMNS, collect, render_report, write_outputs
 
 GENE_REVIEW = """
 id: P42760
@@ -56,6 +56,13 @@ activity_reviews:
     confidence: CONFIRMED
     explanation: Symbol collision.
     report_status: FIXED
+  - defect_type: WRONG_GENE_PRODUCT
+    resource: GO_CAM
+    slot: has_input
+    requested_change: DELETE_VALUE
+    asserted_value: AGI_LocusCode:AT2G45160
+    confidence: CONFIRMED
+    explanation: Drop the input.
 """
 
 
@@ -75,8 +82,8 @@ def repo(tmp_path: Path) -> Path:
 
 def test_collect_reads_gene_and_gocam_defects(repo: Path) -> None:
     rows = collect(repo)
-    assert [r["resource"] for r in rows] == ["GO_CAM", "TAIR"]
-    gocam, tair = rows
+    assert [r["resource"] for r in rows] == ["GO_CAM", "GO_CAM", "TAIR"]
+    gocam, _, tair = rows
     assert gocam["record"] == "gomodel:1/2"
     assert gocam["subject_id"] == "AGI_LocusCode:AT2G45160"
     assert tair["subject_id"] == "UniProtKB:P42760"
@@ -88,7 +95,9 @@ def test_collect_reads_gene_and_gocam_defects(repo: Path) -> None:
 def test_report_omits_fixed_defects(repo: Path) -> None:
     rows = collect(repo)
     gocam_md = render_report("GO_CAM", [r for r in rows if r["resource"] == "GO_CAM"])
-    assert "0 open defect(s)" in gocam_md
+    assert "1 open defect(s)" in gocam_md
+    assert "remove AGI_LocusCode:AT2G45160 from has_input" in gocam_md
+    assert "**Subject:** AGI_LocusCode:AT2G45160" in gocam_md
     tair_md = render_report("TAIR", [r for r in rows if r["resource"] == "TAIR"])
     assert "UniProtKB:P42760 → UniProtKB:Q9SLM6 (GSTF3)" in tair_md
     assert "> GSTF2 and GSTF3" in tair_md
@@ -99,5 +108,31 @@ def test_write_outputs_writes_tsv_and_one_report_per_resource(repo: Path) -> Non
     report_dir = repo / "out" / "reports"
     write_outputs(repo, tsv, report_dir)
     with tsv.open(encoding="utf-8") as fh:
-        assert len(list(csv.DictReader(fh, delimiter="\t"))) == 2
+        assert len(list(csv.DictReader(fh, delimiter="\t"))) == 3
     assert sorted(p.name for p in report_dir.iterdir()) == ["GO_CAM.md", "TAIR.md"]
+
+
+@pytest.mark.parametrize(
+    "change,corrected,expected",
+    [
+        ("", "", "A:1 (no replacement value; see explanation)"),
+        ("", "A:2", "A:1 → A:2"),
+        ("REPOINT", "A:2", "A:1 → A:2"),
+        ("DELETE_ROW", "", "delete the record asserting A:1"),
+        ("CHECK", "", "check A:1 (alternatives in the explanation)"),
+    ],
+)
+def test_change_line(change: str, corrected: str, expected: str) -> None:
+    rows = [{**{c: "" for c in COLUMNS}, "resource": "TAIR", "report_status": "NOT_REPORTED",
+             "defect_type": "OTHER", "confidence": "SUSPECTED", "asserted_value": "A:1",
+             "corrected_value": corrected, "requested_change": change, "supported_by": "[]"}]
+    assert f"**Change:** {expected}" in render_report("TAIR", rows)
+
+
+def test_committed_reports_are_current() -> None:
+    """The committed TSV must match what the exporter produces from the repo."""
+    root = Path(__file__).resolve().parents[1]
+    tsv = root / "reports" / "source-defects.tsv"
+    with tsv.open(encoding="utf-8") as fh:
+        committed = list(csv.DictReader(fh, delimiter="\t"))
+    assert committed == collect(root), "run `just export-source-defects`"

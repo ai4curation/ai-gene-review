@@ -5,6 +5,8 @@
 ## 1. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
 - **Record:** gomodel:67e5e74400000148/67e5e74400000172
+- **Subject:** AGI_LocusCode:AT2G45160
+- **Field:** enabled_by
 - **Change:** AGI_LocusCode:AT2G45160 → AGI_LocusCode:AT5G64610 (HAM1, MYST histone acetyltransferase 1 (UniProtKB:Q9FLF7))
 - **Likely cause:** SYMBOL_COLLISION
 - **Recorded in:** `gocams/67e5e74400000148/67e5e74400000148-review.yaml`
@@ -17,7 +19,9 @@ The histone H4K5 acetyltransferase activity (GO:0043995) is enabled_by AT2G45160
 ## 2. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
 - **Record:** gomodel:67e5e74400000148/67e5e74400000149
-- **Change:** AGI_LocusCode:AT2G45160 (no replacement value; see explanation)
+- **Subject:** AGI_LocusCode:AT1G02740
+- **Field:** has_input
+- **Change:** remove AGI_LocusCode:AT2G45160 from has_input
 - **Likely cause:** SYMBOL_COLLISION
 - **Recorded in:** `gocams/67e5e74400000148/67e5e74400000148-review.yaml`
 

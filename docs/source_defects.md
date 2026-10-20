@@ -27,6 +27,8 @@ should fix, in a form from which a report to that resource can be generated.
 | `defect_type` | yes | `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`, `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`, `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `OTHER` |
 | `resource` | yes | Who must fix it. For a GOA row this is the `assigned_by` group (`TAIR`, `MGI`, ...), not GOA. A GO-CAM model is `GO_CAM`. |
 | `record` | no | Id of the defective record when it is not the enclosing annotation. |
+| `slot` | no | The field holding `asserted_value`, in the source's own terms: `enabled_by` or `has_input` for a GO-CAM activity; `DB_Object_ID`, `DB:Reference`, `With/From`, `Evidence_Code` or `Qualifier` for a GAF row. |
+| `requested_change` | no | `REPOINT` (replace with `corrected_value`), `DELETE_VALUE` (drop the value, keep the record), `DELETE_ROW`, or `CHECK` (the right change depends on information we could not see; the explanation gives the alternatives). |
 | `asserted_value` | yes | What the source says now, as a CURIE (`AGI_LocusCode:AT2G45160`, `PMID:32213638`). |
 | `corrected_value` / `corrected_label` | no | What it should say, when known. Leave unset when the value is wrong but the right one is unknown. |
 | `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OTHER`, `UNKNOWN` |
@@ -42,6 +44,8 @@ source_defects:
 - defect_type: WRONG_GENE_PRODUCT
   resource: GO_CAM
   record: gomodel:67e5e74400000148/67e5e74400000172
+  slot: enabled_by
+  requested_change: REPOINT
   asserted_value: AGI_LocusCode:AT2G45160      # SCL27, alias HAM1 (HAIRY MERISTEM 1)
   corrected_value: AGI_LocusCode:AT5G64610     # HAM1, MYST acetyltransferase
   corrected_label: HAM1, MYST histone acetyltransferase 1 (UniProtKB:Q9FLF7)
