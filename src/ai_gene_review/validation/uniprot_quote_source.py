@@ -25,7 +25,8 @@ record mixes evidence with labels and with unvetted predictions:
 * Labels restate an annotation rather than support it: protein names and EC
   numbers, keywords, and the record's own GO cross-references.
 
-Two global checks follow, both reported as warnings, whatever the quote supports:
+Three checks follow, all reported as warnings; the first two apply whatever the
+quote supports:
 
 ``uniprot_quote_unvetted_prediction``
     Every evidence item on the quoted statement is an unvetted prediction
@@ -34,6 +35,11 @@ Two global checks follow, both reported as warnings, whatever the quote supports
 ``uniprot_quote_restating_field``
     The quote comes from a label field (``RESTATING_FIELDS``) or a GO
     cross-reference.
+``uniprot_quote_existence_as_support``
+    The quote is the protein existence (``PE``) line, cited for an ACCEPT row or
+    a core function. Existence says nothing about function; it can argue that an
+    annotation rests on prediction, but not support accepting one. An accepted
+    ND annotation needs evidence that the literature was searched instead.
 
 A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
@@ -65,13 +71,17 @@ from ai_gene_review.validation.validation_report import (
 
 UNVETTED_CHECK = "uniprot_quote_unvetted_prediction"
 FIELD_CHECK = "uniprot_quote_restating_field"
+EXISTENCE_CHECK = "uniprot_quote_existence_as_support"
 
 #: Line codes that are labels for the entry rather than evidence about it:
 #: identifiers, names, gene names, taxonomy, keywords and the sequence.
+#: Protein existence (``PE``) is not a label: it is a fair argument that an
+#: annotation rests on prediction, though never support for accepting one
+#: (``EXISTENCE_CHECK``).
 #: Cross-references are labels only for GO (``RESTATING_DR``); family and
 #: domain cross-references are classification evidence.
 RESTATING_FIELDS = frozenset(
-    {"ID", "AC", "DT", "DE", "GN", "OS", "OG", "OC", "OX", "OH", "KW", "PE", "SQ"}
+    {"ID", "AC", "DT", "DE", "GN", "OS", "OG", "OC", "OX", "OH", "KW", "SQ"}
 )
 RESTATING_DR = frozenset({"GO"})
 
@@ -403,6 +413,45 @@ class QuoteFinding:
     statements: Tuple[Statement, ...]
 
 
+_ELEMENT = re.compile(r"^(existing_annotations|core_functions)\[(\d+)\]")
+
+
+def _accepts(data: Any, path: str) -> bool:
+    """Whether the quote at *path* supports accepting a function: an ACCEPT row or a core function.
+
+    >>> data = {"existing_annotations": [{"review": {"action": "ACCEPT"}},
+    ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}}]}
+    >>> _accepts(data, "existing_annotations[0].review.supported_by[0].supporting_text")
+    True
+    >>> _accepts(data, "existing_annotations[1].review.supported_by[0].supporting_text")
+    False
+    >>> _accepts(data, "core_functions[0].supported_by[0].supporting_text")
+    True
+    >>> _accepts(data, "references[0].findings[0].supporting_text")
+    False
+    """
+    m = _ELEMENT.match(path)
+    if not m:
+        return False
+    if m.group(1) == "core_functions":
+        return True
+    try:
+        element = data["existing_annotations"][int(m.group(2))]
+    except (KeyError, IndexError, TypeError):
+        return False
+    return ((element or {}).get("review") or {}).get("action") == "ACCEPT"
+
+
+def _is_nd(data: Any, path: str) -> bool:
+    m = _ELEMENT.match(path)
+    if not m or m.group(1) != "existing_annotations":
+        return False
+    try:
+        return data["existing_annotations"][int(m.group(2))].get("evidence_type") == "ND"
+    except (KeyError, IndexError, TypeError, AttributeError):
+        return False
+
+
 def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[QuoteFinding]:
     """Flagged UniProt quotes in a review document."""
     findings: List[QuoteFinding] = []
@@ -418,6 +467,8 @@ def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[
             findings.append(QuoteFinding(path, reference_id, UNVETTED_CHECK, tuple(statements)))
         if restating:
             findings.append(QuoteFinding(path, reference_id, FIELD_CHECK, tuple(statements)))
+        if all(s.field == "PE" for s in statements) and _accepts(data, path):
+            findings.append(QuoteFinding(path, reference_id, EXISTENCE_CHECK, tuple(statements)))
     return findings
 
 
@@ -438,10 +489,25 @@ def _describe(statements: Tuple[Statement, ...]) -> str:
 def validate_uniprot_quote_sources(
     data: Any, report: ValidationReport, project_root: Path = PROJECT_ROOT
 ) -> None:
-    """Warn on UniProt quotes that are unvetted predictions or labels."""
+    """Warn on UniProt quotes that are unvetted predictions or labels, or that cite protein existence for an ACCEPT."""
     for f in quote_source_findings(data, project_root):
         where = _describe(f.statements)
-        if f.check_type == UNVETTED_CHECK:
+        if f.check_type == EXISTENCE_CHECK:
+            message = (
+                "Supporting text quotes UniProt protein existence, which says whether the protein "
+                "exists, not what it does; it cannot support accepting a function"
+            )
+            if _is_nd(data, f.path):
+                suggestion = (
+                    "Accepting an ND (no data) annotation needs evidence that the literature was "
+                    "searched and found nothing, not the protein's existence level"
+                )
+            else:
+                suggestion = (
+                    "Cite evidence for the function itself; protein existence can support "
+                    "MARK_AS_OVER_ANNOTATED or UNDECIDED, not ACCEPT"
+                )
+        elif f.check_type == UNVETTED_CHECK:
             labels = sorted({label for s in f.statements for label in s.unvetted_sources})
             evidence = sorted({e for s in f.statements for e in s.evidence})
             message = (

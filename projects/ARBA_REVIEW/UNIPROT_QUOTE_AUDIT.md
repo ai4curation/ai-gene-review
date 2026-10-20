@@ -59,14 +59,13 @@ ARBA is a source for **1045** of these.
 
 ## Quotes of label fields (names, keywords, GO cross-references)
 
-**3289** quotes in **988** reviews.
+**3252** quotes in **971** reviews.
 
 | UniProt part | quotes |
 |---|---:|
 | protein name or EC number | 2430 |
 | database cross-reference (GO) | 680 |
 | keyword | 68 |
-| protein existence | 37 |
 | entry identifier | 36 |
 | sequence | 20 |
 | gene name | 16 |
@@ -75,13 +74,13 @@ ARBA is a source for **1045** of these.
 
 | what the quote supports | quotes |
 |---|---:|
-| existing annotation from IEA, ACCEPT | 806 |
-| core_functions | 522 |
+| existing annotation from IEA, ACCEPT | 803 |
+| core_functions | 521 |
 | existing annotation from IBA, ACCEPT | 348 |
-| references | 298 |
+| references | 279 |
 | existing annotation from IEA, KEEP_AS_NON_CORE | 275 |
-| existing annotation from IEA, MODIFY | 132 |
-| existing annotation from IEA, MARK_AS_OVER_ANNOTATED | 100 |
+| existing annotation from IEA, MODIFY | 131 |
+| existing annotation from IEA, MARK_AS_OVER_ANNOTATED | 99 |
 | existing annotation from ISS, ACCEPT | 79 |
 | existing annotation from IBA, KEEP_AS_NON_CORE | 68 |
 | existing annotation from ISO, ACCEPT | 43 |
@@ -90,3 +89,18 @@ ARBA is a source for **1045** of these.
 | existing annotation from IEA, REMOVE | 40 |
 | existing annotation from ISS, NEW | 38 |
 | existing annotation from ISS, KEEP_AS_NON_CORE | 35 |
+
+## Protein existence cited to accept a function
+
+**9** quotes in **6** reviews.
+
+| UniProt part | quotes |
+|---|---:|
+| protein existence | 9 |
+
+| what the quote supports | quotes |
+|---|---:|
+| existing annotation from ND, ACCEPT | 4 |
+| existing annotation from IEA, ACCEPT | 3 |
+| core_functions | 1 |
+| existing annotation from ISS, ACCEPT | 1 |

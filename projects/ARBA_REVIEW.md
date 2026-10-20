@@ -240,19 +240,24 @@ applies two global rules to every UniProt quote, whatever it supports:
   co-occurring signatures, guilt by association.
 - A quote must not be a label that restates an annotation: protein names and
   EC numbers, keywords, or the record's own GO lines.
+- Protein existence (`PE`) is not evidence of function: it may argue that an
+  annotation rests on prediction, but not support accepting one. An accepted ND
+  annotation needs evidence that the literature was searched.
 
 Across all gene reviews (as of 2026-10-20), 1,795 quotes in 600 reviews rest
 on unvetted predictions; ARBA is a source for 1,045 of them, electronic GO lines
 for 399 and imported submitter annotation for 354. They support 505 accepted
-electronic annotations and 388 core functions. Separately, 3,289 quotes in 988
+electronic annotations and 388 core functions. Separately, 3,252 quotes in 971
 reviews are labels: mostly protein names (2,430) and the record's own GO lines
 (680). Most of the rise since the 2026-10-16 counts comes from a fix to the
 check: it now locates quotes copied with their flat-file line code
 (`DR   GO; ...`), about a tenth of all UniProt quotes, which it had skipped
-silently. The rest is new reviews.
+silently. The rest is new reviews. Nine quotes cite protein existence to accept
+a function or support a core function, four of them for ND root terms.
 
-Both are warnings (`uniprot_quote_unvetted_prediction`,
-`uniprot_quote_restating_field`). The inventory is in
+All three are warnings (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`, `uniprot_quote_existence_as_support`). The
+inventory is in
 [ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md](ARBA_REVIEW/UNIPROT_QUOTE_AUDIT.md), from
 [ARBA_REVIEW/uniprot_quote_audit.py](ARBA_REVIEW/uniprot_quote_audit.py).
 

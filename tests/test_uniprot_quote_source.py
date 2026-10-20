@@ -16,6 +16,7 @@ import yaml
 from ai_gene_review.validation import ValidationSeverity, validate_gene_review
 from ai_gene_review.validation.uniprot_quote_source import (
     UNVETTED_CHECK,
+    EXISTENCE_CHECK,
     classify_quote,
     FIELD_CHECK,
     PROJECT_ROOT,
@@ -201,3 +202,43 @@ def test_literal_bracket_notation_stays_in_the_quote():
     """[2Fe-2S] is quoted text, not an editorial gap, so the quote stays in one statement."""
     statements = locate_quote("Name=[2Fe-2S] cluster", _path("file:PSEPK/benC/benC-uniprot.txt"))
     assert [(s.field, s.topic) for s in statements] == [("CC", "COFACTOR")]
+
+
+FBL22 = "file:ARATH/FBL22/FBL22-uniprot.txt"
+
+
+def _annotation(action: str, evidence_type: str = "ISM") -> dict:
+    data = _review([])
+    data["existing_annotations"] = [{
+        "term": {"id": "GO:0005634", "label": "nucleus"},
+        "evidence_type": evidence_type,
+        "review": {"action": action, "supported_by": [
+            {"reference_id": FBL22, "supporting_text": "PE   4: Predicted;"}]},
+    }]
+    return data
+
+
+@pytest.mark.parametrize("action,flagged", [
+    ("ACCEPT", True),
+    ("MARK_AS_OVER_ANNOTATED", False),
+    ("UNDECIDED", False),
+])
+def test_protein_existence_cannot_support_accept(action, flagged):
+    """PE says whether the protein exists, not what it does: fair to argue an annotation
+    rests on prediction, never support for accepting one. It is not a restating label."""
+    checks = [f.check_type for f in quote_source_findings(_annotation(action))]
+    assert FIELD_CHECK not in checks
+    assert (EXISTENCE_CHECK in checks) is flagged
+
+
+def test_protein_existence_cannot_support_core_function():
+    data = _review([{"reference_id": FBL22, "supporting_text": "PE   4: Predicted;"}])
+    assert [f.check_type for f in quote_source_findings(data)] == [EXISTENCE_CHECK]
+
+
+def test_nd_accept_backed_by_protein_existence_asks_for_a_literature_search(tmp_path):
+    path = tmp_path / "TEST-ai-review.yaml"
+    path.write_text(yaml.safe_dump(_annotation("ACCEPT", evidence_type="ND"), sort_keys=False))
+    report = validate_gene_review(path, check_best_practices=True, check_goa=False, check_supporting_text=False)
+    issues = [i for i in report.issues if i.check_type == EXISTENCE_CHECK]
+    assert len(issues) == 1 and "literature was searched" in issues[0].suggestion
