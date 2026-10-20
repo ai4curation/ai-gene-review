@@ -176,11 +176,11 @@ seeded by curated *S. cerevisiae* YTM1 evidence, with additional *S. pombe*
 separately from the sibling fungal mitochondrial/peroxisome-fission adaptor
 node `PANTHER:PTN002336496`.
 
-- [ ] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; review in
+- [x] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; merged in
   PR #5118
-- [ ] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; review in PR #5121
-- [ ] `CANAL/YTM1` - *Candida albicans* CGD member; review in PR #5120
-- [ ] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; review in PR
+- [x] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; merged in PR #5121
+- [x] `CANAL/YTM1` - *Candida albicans* CGD member; merged in PR #5120
+- [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; merged in PR
   #5117
 
 ---
