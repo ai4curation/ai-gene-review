@@ -62,6 +62,11 @@ The abstract does not say whether pectate lyase activity was assayed on GLH3 pro
   and the three Ca2+-binding Asp residues of the A. nidulans pectate lyases plyA and plyB
   (the PAINT IBD seeds), at about 35% identity. No sign of a pseudoenzyme.
 - PAINT: IBD for GO:0030570 at PTN001271105, seeded by A. nidulans plyA/plyB.
+- PMR6 (PMID:12215508, abstract only) is another Arabidopsis pectate lyase-like gene,
+  cached as a candidate plant comparator. It was set aside: the abstract reports changed
+  cell wall composition and powdery mildew resistance in pmr6 mutants, but no measured
+  enzyme activity, so it does not give the plant PL1 activity reference that
+  `GLH3-bioinformatics/RESULTS.md` asks for.
 
 ## GO term checks (OLS, 2026-10-19)
 
@@ -71,10 +76,14 @@ The abstract does not say whether pectate lyase activity was assayed on GLH3 pro
   acts_upstream_of_or_within). These are the regulators and a wax/VLCFA enzyme. GLH3 is the
   secreted effector found in the papillae, so it does some of the work of building
   the structure, which the participation test requires.
-- GO:0090396 "leaf papilla" is a PO-defined epidermal papilla cell, not a trichome
-  cell-wall papilla. It is not used.
-- GO:0009505 plant-type cell wall and GO:0048046 apoplast are both is_a descendants of
-  GO:0005576 extracellular region.
+- GO:0090396 "leaf papilla" is a GO cellular component term defined as part of the
+  leaf papilla cell (PO:0025167), an epidermal outgrowth cell. It is not a trichome
+  cell-wall papilla, so it is not used.
+- GO:0009505 plant-type cell wall and GO:0048046 apoplast are both part_of descendants
+  of GO:0005576 extracellular region (checked in the local go.db, 2026-10-20). Apoplast
+  is part_of extracellular region directly. Plant-type cell wall is_a cell wall, is_a
+  external encapsulating structure, part_of extracellular region. Neither is an is_a
+  descendant. Cell wall is not part_of apoplast in GO, so both are listed.
 - No "cell wall pectin catabolic process" term exists. GO:0045490 pectin catabolic
   process is the most specific catabolic term.
 
