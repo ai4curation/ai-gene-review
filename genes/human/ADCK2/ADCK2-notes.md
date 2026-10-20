@@ -398,3 +398,13 @@ Two claims in #2310 that I could not check from my own data and am deliberately 
 as fact: that mouse ADCK1 was localised to the inner membrane in primary brain endothelial
 cells (PMID:40884816), and that the Yoon kinase-independence result is a gain-of-function
 readout. Both are ADCK1-specific and neither bears on ADCK2.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- All five GO:0005739 rows kept ACCEPT (IBA, IEA, HTP, 2x IDA); the IBA and IEA reasons now record that their sources assert only the organelle.
+- NEW GO:0005743 mitochondrial inner membrane (IC), from three agreeing lines:
+  - one predicted TM helix 103-123 (UniProt, ECO:0000255), placed where COQ8A has its anchor; COQ8A is in the inner membrane [PMID:27499294 "endogenous COQ8A is partially buried in the inner mitochondrial membrane with its C-terminus facing the matrix"];
+  - protease protection of endogenous ADCK2 in intact mitochondria [PMID:31480808 "the inner mitochondrial membrane protein OPA1, the matrix protein ornithine aminotransferase, and ADCK2 were resistant to this treatment"; "consistent with its presence in the mitochondrial matrix or bound to the inner mitochondrial membrane"];
+  - the yeast orthologue Cqd1 is an inner-membrane protein [PMID:37073556 "formed by the inner membrane protein Cqd1"].
+- I chose IC rather than IDA because no carbonate extraction or sub-fractionation of human ADCK2 has been done. This adds the term as a separate row. It does not change the GO:0016020 row, whose reason (written earlier) declines to MODIFY membrane to a specific term.
+- core_functions locations stay at mitochondrion. The CoQ-pool role has not been shown to happen at the inner membrane.
