@@ -142,7 +142,6 @@ except for four rows. The SnRK2.2 GO:0009738 gap is a missing annotation, not a 
 record. The SnRK2.3 RCA NOT-cytosol row and the SLAC1 AtSubP nucleus row are computational
 predictions that the reviews REMOVE, not curation errors to report. The SLAC1 GO:0090333
 → GO:0090332 change is a term-choice judgement, which the review records as a MODIFY. The
-recorded defects sit alongside
-with the CBL4, SnRK2.2 and SERRATE defects found later. The generated per-resource
+recorded set also includes the CBL4, SnRK2.2 and SERRATE defects found later. The generated per-resource
 reports are in [`reports/source-defects/`](../../reports/source-defects/) (`TAIR.md`,
 `INTACT.md`, `GO_CAM.md`), regenerated with `just export-source-defects`.

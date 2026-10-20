@@ -1,6 +1,6 @@
 # Source-record defects for TAIR
 
-12 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+13 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
@@ -124,10 +124,10 @@ PMID:21631432 reports heterocyclic-ligand binding "uniquely" for GSTF2 and GSTF3
 > GSTF2 also selectively bound the indole-derived phytoalexin camalexin, as well as the flavonol quercetin-3-O-rhamnoside
 > — PMID:21631432
 
-## 9. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 9. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9ZVD0 enables GO:0003677 DNA binding (ISS, PMID:11402159)
-- **Field:** Evidence_Code
+- **Field:** GO_ID
 - **Change:** delete the record asserting ECO:0000250
 - **Recorded in:** `genes/ARATH/SERRATE/SERRATE-ai-review.yaml`
 
@@ -139,10 +139,10 @@ This 2003 TAIR row asserts DNA binding for SERRATE (Q9ZVD0, AT2G27100) by ISS, c
 > SE uses its N-terminal domain to bind to RNA and requires both N-terminal and ZnF domains to bind to DCL1.
 > — PMID:23921632
 
-## 10. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 10. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9ZVD0 enables GO:0003700 DNA-binding transcription factor activity (ISS, PMID:11118137)
-- **Field:** Evidence_Code
+- **Field:** GO_ID
 - **Change:** delete the record asserting ECO:0000250
 - **Recorded in:** `genes/ARATH/SERRATE/SERRATE-ai-review.yaml`
 
@@ -169,7 +169,16 @@ This IPI row makes SERRATE (Q9ZVD0, AT2G27100) part_of the nuclear cap binding c
 > SE/ARS2 executes its function in conjunction with the nuclear cap-binding complex (CBC), which consists of two subunits (CBP20 and CBP80)
 > — PMID:30152752
 
-## 12. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 12. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9ZVD0 part_of GO:0005846 nuclear cap binding complex (IPI, PMID:24137006)
+- **Field:** Qualifier
+- **Change:** part_of → enables
+- **Recorded in:** `genes/ARATH/SERRATE/SERRATE-ai-review.yaml`
+
+Companion to the GO_ID correction on this row. Replacing the cellular component GO:0005846 nuclear cap binding complex with the molecular function GO:0140262 mRNA cap binding complex binding also needs the qualifier changed from part_of to enables.
+
+## 13. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9SIV0 acts_upstream_of_or_within GO:0050832 defense response to fungus (IDA, PMID:32213638)
 - **Field:** DB:Reference
