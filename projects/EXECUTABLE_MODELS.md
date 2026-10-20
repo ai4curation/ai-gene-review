@@ -65,8 +65,14 @@ Where that is wrong, the curator states the logic as a tree, not as a rule strin
 
 `all_of`, `any_of` and `none_of` (NOT-OR) nest freely. Validation requires every
 named element to have a matching signed connection into the step (an activator in a
-positive position, an inhibitor under `none_of`), and every such regulator to be
-used. This is the regulatory counterpart of the structural AND/OR the schema already
+positive position, an inhibitor under `none_of`), and every regulator to be used.
+A regulator may be left out on purpose, as a modulator that tunes an already-active
+step rather than switching it (MAPK serine-phosphorylating STATs, for example), but
+only by naming it under `omitted_regulators` on the same element; an unused regulator
+that is not listed is a validation error. Model pages draw such a regulator as a faint dotted edge
+and name it beside the rule, so the asserted connection stays visible without being
+mistaken for part of the logic. A scenario may remove an omitted regulator's
+connection (an ERK-less counterfactual, say) without tripping the check. This is the regulatory counterpart of the structural AND/OR the schema already
 had: `parts` are conjunctive and `variant_sets` disjunctive, but those say what a
 step is *made of*, not how its incoming regulation combines.
 
@@ -110,12 +116,33 @@ JSON and recomputes the attractors whenever a box is locked.
 |---|---|---|---|---|
 | [ERK cascade](../modules/erk_cascade.html) | [ERK cascade as a Boolean network](../models/erk_cascade_boolean.html) | Boolean | derived | 6, all hold |
 | [ERK cascade](../modules/erk_cascade.html) | MAPK network and cancer cell fate (Grieco 2013, BBM-070) | Boolean | external | |
+| [JAK-STAT signaling](../modules/jak_stat_signaling.html) | [JAK-STAT signaling as a Boolean network](../models/jak_stat_signaling_boolean.html) | Boolean | derived | 6, all hold |
+| [p38 cascade](../modules/p38_cascade.html) | [p38 cascade as a Boolean network](../models/p38_cascade_boolean.html) | Boolean | derived | 4, all hold |
 | [Methionine cycle](../modules/methionine_cycle.html) | Maud kinetic model (biosustain) | Kinetic | external | |
 
 The ERK scenarios encode what the curated wiring predicts: no stimulus → rest;
 sustained stimulus → no steady state; feedback loops cut → ERK locked on; DUSP and
 Sprouty both knocked out → still transient (in this model the direct ERK → RAF and
 ERK → SOS feedbacks suffice on their own); MEK inhibited or RasGAP active → ERK off.
+
+The JAK-STAT model needed rewiring before its scenarios meant anything. Its
+negative-regulation bundle was wired with two edges, to JAK and to STAT
+transcription, and translation expanded each to every child, so SOCS, PTPs and PIAS
+all inhibited both. The module's own text is more specific, and the connections now
+follow it child by child: SOCS and the phosphatases act on JAK, the phosphatases and
+PIAS on nuclear STATs. The drawn graph and the update rules therefore agree. STAT
+transcription still carries `activation_logic`, because ERK serine phosphorylation
+only tunes maximal transcription; it is listed under `omitted_regulators`. Under
+sustained cytokine the SOCS loop makes the response transient (Starr et al.,
+[PMID:9202125](https://pubmed.ncbi.nlm.nih.gov/9202125/)). Without SOCS it locks on.
+With PIAS active, STATs reach the nucleus but transcription is blocked, so SOCS is
+never induced and JAK stays on. A JAK-independent STAT input is not terminated at all,
+because SOCS acts only on JAK; that is a property of this wiring, recorded as such.
+
+The p38 model has one loop, p38 output inducing MKP-1/DUSP1. Under sustained stress
+p38 activity is transient. With MKP-1 lost it locks on, matching the prolonged p38
+activation Hu et al. report when MKP-1 expression is blocked
+([PMID:16978838](https://pubmed.ncbi.nlm.nih.gov/16978838/)).
 
 The published MAPK model (Grieco et al.,
 [PMID:24250280](https://pubmed.ncbi.nlm.nih.gov/24250280/)) also has a cyclic ERK
@@ -129,18 +156,18 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 
 ## Roadmap
 
-1. **More Boolean modules.** JAK-STAT, p38 and NF-κB translate already. Each
-   needs curated scenarios before it is listed. NF-κB first needs its
-   negative-regulation step (IκB resynthesis, A20).
-2. **Audit the default rule across the corpus.** Translating all 364 modules
-   with connections (`module-to-bnet --all`, 2026-10-05) gives 159 steps in 100
-   modules with two or more activators, each defaulting to OR. Some are genuine
-   OR: two routes to one intermediate, as in purine oxidation, where guanine
-   deamination and hypoxanthine oxidation both yield xanthine. Others plainly
-   need every input: complex assembly and transport steps such as the Pst
-   transporter above, or Fe-S cluster assembly on IscU, which needs both
-   sulfur delivery and electron delivery. Each is a curation decision for
-   `activation_logic`, not a bulk change.
+1. **More Boolean modules.** JAK-STAT and p38 are done. NF-κB translates but
+   first needs its negative-regulation step (IκB resynthesis, A20).
+2. **Audit the default rule across the corpus.** The
+   [activator convergence audit](EXECUTABLE_MODELS/activator_convergence_audit.md)
+   (generated by `audit_activator_convergence.py`) lists every step with two or
+   more activators, which the translation ORs by default: 274 steps on
+   2026-10-16. 40 are settled by structure, because their activators are
+   alternative variants of one `variant_set`, so OR is right by construction.
+   8 now carry `activation_logic`. 226 still need a curator to read the module.
+   Some of those are genuine OR (two routes to one intermediate, as in purine
+   oxidation). Others need every input, like the complex assembly and
+   transport steps curated so far. Each is a decision, not a bulk change.
 3. **External models per node.** `executable_models` attaches an external model to
    the module as a whole; the variable-level mapping still lives in sidecar files
    (`models/boolean/*/mapping_to_modules.yaml`). A node-level `model_associations`
@@ -185,13 +212,55 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [x] Methionine cycle: Maud kinetic model as external model
 - [x] Pst phosphate transporter: first curated `activation_logic` (capture AND ATPase)
 - [x] Interactive model page, models index, module-page card, module-index filter
-- [ ] Curated scenarios for JAK-STAT and p38
-- [ ] Corpus audit of multi-activator steps for `activation_logic`
+- [x] Curated scenarios for JAK-STAT and p38 (JAK-STAT with `activation_logic` placing each negative regulator)
+- [x] Corpus audit of multi-activator steps for `activation_logic`: generated, 40 settled by structure, 8 curated
+- [ ] Curate the 226 undecided steps in the audit
 - [ ] Node-level `model_associations` for external model variables
 - [ ] First constraint-based model type
 - [ ] First agent-based model, following the dismech layout
 
 # NOTES
+
+## 2026-10-16
+
+Follow-up to the merged PR. JAK-STAT and p38 got derived Boolean models with curated
+scenarios; JAK-STAT also got `activation_logic` on JAK activation and STAT
+transcription, because its negative-regulation bundle's two edges expanded to every
+child and so mis-placed SOCS, PTPs and PIAS. On review the bundle edges were replaced
+by child-level connections, so the graph no longer contradicts the rules, and JAK
+activation went back to the default rule. The model page now opens on the first
+scenario with a cyclic outcome, and wide graphs get the full page width.
+
+`activation_logic` may now leave a declared regulator out on purpose. A Boolean rule
+can make a regulator necessary, sufficient or part of a combination, but it cannot
+say "tunes the output", and the modulators met so far (ERK on STAT Ser727, SecDF-YajC
+on SecYEG, SMA-10 on the BMP receptors, LigD end processing) are exactly that. A
+first version made the omission a warning; on review that removed the only
+completeness check, so the omission must now be declared under `omitted_regulators`
+and an undeclared one is still an error. The type IV secretion module wires
+mating-pair stabilization as regulating the pilus, though the text reads it as
+downstream of pilus contact; that pre-existing direction is left for a curator. The
+three new JAK-STAT child-level connections (PTP on JAK, PTP and PIAS on nuclear STATs)
+carry descriptions from the node text but no evidence items yet, as their nodes did
+before; since PIAS's placement decides the `pias_restraint` scenario, attaching the
+canonical references is the next curation step for that module.
+
+The activator convergence audit classifies steps from structure alone. Curated from
+the modules' own text: SsuD desulfonation (substrate AND reduced FMN), IscU cluster
+assembly (persulfide sulfur AND ferredoxin electrons), the type IV secretion pilus
+(core platform AND VirB4 ATPase; mating-pair stabilization left out), SecYEG
+translocation (SecA; SecDF-YajC left out), SMA-6/DAF-4 receptor activation (DBL-1;
+SMA-10 left out) and LigD end sealing (Ku end recognition; conditional processing left
+out). The chemotaxis motor output was left undecided: its C-ring node models the bias
+switch, not the rotor, so whether rotation needs it is not settled by the module.
+
+Review leftovers from the PR: `validate_executable_models` now requires a
+`repo_root` (the validator passes the project root), and there are tests for the
+working-directory independence and the missing-`module` guard. The suggested guard
+for a "cyclic module tree" was not added: element ids are indexed by their last
+occurrence in a pre-order walk, which is never an ancestor of another occurrence, so a
+duplicated id cannot create a cycle and the raise in `_descendants` guards an
+invariant rather than a reachable input. That reasoning is now in its docstring.
 
 ## 2026-10-05
 

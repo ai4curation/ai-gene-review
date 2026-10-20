@@ -25,7 +25,9 @@ It also enforces **bundle-scoped conformance**: any node declaring
 ``conforms_to`` a template motif is checked (via ``module_qc``) so that an
 ``error``-severity mismatch -- a wrong/missing tier, a broken relay topology,
 or an unresolvable template -- blocks validation, while declared
-``WITH_DEVIATIONS`` deviations surface as advisory warnings.
+``WITH_DEVIATIONS`` deviations surface as advisory warnings. Likewise every
+``module_ref`` must resolve, must not form a cycle, and its node must not carry
+its own annotons, parts or variant sets.
 
 For direct terms in slots whose GO aspect is known, this validator also checks
 the expected GO branch: molecular-function slots (``function`` and
@@ -1936,6 +1938,7 @@ def validate_module_file(
     conformance_errors, conformance_warnings = validate_conformance(doc, path.parent)
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
+    errors.extend(validate_module_refs(doc, path.parent, path.stem))
 
     # Reaction chaining: advisory only (never blocks). A `chaining_status`
     # override on a connection acknowledges a known gap and suppresses its
@@ -2256,7 +2259,7 @@ def validate_feedback_loops(doc: object) -> List[str]:
 
 
 def validate_executable_models(
-    doc: object, repo_root: Path = Path(".")
+    doc: object, repo_root: Path
 ) -> Tuple[List[str], List[str]]:
     """Check ``activation_logic`` and the ``executable_models`` a module declares.
 
@@ -2328,6 +2331,23 @@ def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], Lis
         else:
             warnings.append(message)
     return errors, warnings
+
+
+def validate_module_refs(doc: object, modules_dir: Path, self_stem: str) -> List[str]:
+    """Return blocking errors for unresolved, cyclic or impure ``module_ref`` nodes.
+
+    References are resolved, like conformance templates, from the document's
+    own directory; ``self_stem`` lets a reference back to it count as a cycle.
+    """
+    from ai_gene_review.module_qc import module_ref_violations
+
+    if not isinstance(doc, dict):
+        return []
+    return [
+        f"module_ref [{violation['node_id']} -> {violation['module_ref']}]: "
+        f"{violation['message']}"
+        for violation in module_ref_violations(doc, modules_dir, self_stem)
+    ]
 
 
 def main(argv: Optional[List[str]] = None) -> int:
