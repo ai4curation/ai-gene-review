@@ -170,7 +170,7 @@ Every GO ID and label below has been verified against the current Gene Ontology 
 - `GO:0098689` latency-replication decision (λ `CI`, `Cro`, `CII`, `CIII`; arbitrium `AimP`/`AimR`/`AimX` in phi3T/SPβ)
 - `GO:0019042` viral latency $\to$ `GO:0019043` establishment of viral latency
   - `GO:0075713` establishment of integrated proviral latency (λ `Int`, P22 `Int`, L5 `Int`)
-  - `GO:0075720` establishment of episomal latency (P1 plasmid prophage; N15 $\to$ `GO:0075530` latency as a linear episome)
+  - `GO:0075720` establishment of episomal latency (P1 plasmid prophage; N15 $\to$ `GO:0075530` establishment of latency as a linear episome)
 - `GO:0019044` maintenance of viral latency (λ `CI`, P1 `ParA`/`ParB` + `C1`)
 - `GO:0019046` release from viral latency (prophage induction)
 - `GO:0032359` provirus excision (λ `Xis`/`Int`)
@@ -222,7 +222,7 @@ When `abduce()` flags an unsatisfied step in a phage module (and the step is not
 | **Head-tail neck adaptors (`gpW`/`gpFII`, `gp13`/`gp14`)** | Immediately downstream of `major_capsid` | Small (10–20 kDa) dodecameric/hexameric rings identifiable via AlphaFold/Foldseek ([`STRUCTURAL_REASONING.md`](STRUCTURAL_REASONING.md)) even below 15% sequence identity. |
 | **Tail assembly frameshift chaperone (`gpG`/`gpGT`)** | Between `major_tail_protein` (`gpV`) and `tape_measure_protein` (`gpH`) in siphoviruses and myoviruses | Overlapping $-1$ programmed ribosomal frameshift cassette producing a shorter (`gpG`) and longer (`gpGT`) isoform at ~30:1 stoichiometry. |
 | **Prophage excisionase (`xis`)** | Immediately adjacent to prophage integrase (`int`) | Tiny (50–90 aa) basic winged-HTH DNA architectural protein required for `GO:0032359` provirus excision. |
-| **dCTPase/dUTPase sanitation enzyme (`gp56`, `gp23`)** | Co-inherited in phages encoding a pyrimidine hydroxymethylase (`gp42` dCMP HMase or `gp29` dUMP HMase) or PurZ | Pyrophosphohydrolase that purges canonical dCTP/dTTP/dATP so the viral polymerase incorporates only the modified nucleotide. |
+| **dCTPase/dUTPase sanitation enzyme (T4 `gp56`)** | Co-inherited in phages encoding a pyrimidine hydroxymethylase (T4 `gp42` dCMP HMase or SPO1 dUMP HMase) or PurZ | Pyrophosphohydrolase that purges canonical dCTP/dTTP/dATP so the viral polymerase incorporates only the modified nucleotide. |
 
 ---
 
@@ -231,7 +231,7 @@ When `abduce()` flags an unsatisfied step in a phage module (and the step is not
 Rather than attempting all ~288 genes of T4 upfront, we can cover **every branch of every phage lifecycle module** in roughly **160 genes across 5 core reference genomes** (plus targeted completion of the already-seeded T4 and specialty phage genes):
 
 ### Step 1: Start with Phage λ (`LAMBD`, Taxon `2681611` — 62/67 Reviewed)
-- **Why first:** At ~67 proteins (93% Swiss-Prot reviewed) and the highest literature density per gene in virology, complete end-to-end curation of λ is achievable in a few focused batches and immediately populates **all seven lifecycle modules** (`phage_attachment_and_ejection`, `phage_counter_defense`, `phage_transcription_cascade`, `phage_genome_replication`, `phage_lysogeny_and_induction_switch`, `phage_capsid_and_tail_morphogenesis`, and `phage_virion_egress_and_lysis`).
+- **Why first:** At ~67 proteins (93% Swiss-Prot reviewed) and the highest literature density per gene in virology, complete end-to-end curation of λ is achievable in a few focused batches and immediately populates **all five core lifecycle modules** (`phage_attachment_and_genome_ejection`, `phage_genome_replication_and_transcription`, `phage_temperate_latency_switch`, `phage_capsid_packaging_and_tail_assembly`, and `phage_virion_release_and_lysis`).
 - **Action:** Verify `just fetch-gene LAMBD <gene>` (or taxon `2681611`) pipeline handling, partition the ~67 genes into 4 operon batches (*immunity & latency switch*, *early recombination & replication*, *head & tail morphogenesis*, *lysis & accessory b2/nin regions*), and draft the core YAML modules.
 
 ### Step 2: Add Micro-Genomes φX174 (`BPPHS`, 10/10), MS2 (`BPMS2`, 4/33), and Qβ (`BPQBE`, 4/92)
