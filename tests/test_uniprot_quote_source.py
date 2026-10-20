@@ -159,3 +159,28 @@ def test_validation_reports_both_checks_as_warnings(tmp_path):
     issues = [i for i in report.issues if i.check_type in (UNVETTED_CHECK, FIELD_CHECK)]
     assert sorted(i.check_type for i in issues) == sorted([UNVETTED_CHECK, FIELD_CHECK])
     assert all(i.severity == ValidationSeverity.WARNING.value for i in issues)
+
+
+@pytest.mark.parametrize("quote,unvetted,restating", [
+    ("DR   GO; GO:0009070; P:serine family amino acid biosynthetic process; IEA:UniProtKB-ARBA.", True, True),
+    ("DR   InterPro; IPR006139; D-isomer_2_OHA_DH_cat_dom.", False, False),
+])
+def test_quote_with_line_code_is_located(quote, unvetted, restating):
+    """A quote copied with its flat-file line code is located, not skipped."""
+    reference_id = SERA_METEA if "GO:" in quote else SERA_PSEPK
+    result = classify_quote(quote, _path(reference_id))
+    assert result is not None
+    assert result[:2] == (unvetted, restating)
+
+
+def test_quote_spanning_line_wrap_with_codes_is_located():
+    quote = ("CC   -!- FUNCTION: Multifunctional transcription factor that induces cell cycle\n"
+             "CC       arrest, DNA repair or apoptosis")
+    statements = locate_quote(quote, _path(TP53))
+    assert [(s.field, s.topic) for s in statements] == [("CC", "FUNCTION")]
+
+
+def test_feature_quote_with_key_and_location_is_located():
+    quote = 'FT   DNA_BIND        102..292'
+    statements = locate_quote(quote, _path(TP53))
+    assert statements and {s.topic for s in statements} == {"DNA_BIND"}

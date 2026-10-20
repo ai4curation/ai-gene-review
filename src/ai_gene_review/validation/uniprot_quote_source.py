@@ -90,6 +90,14 @@ UNVETTED_MARKERS = (
 _BRACE = re.compile(r"(?:Evidence=)?\{(ECO:[^{}]*)\}")
 #: Evidence tokens left over when a quote cuts through a brace.
 _STRAY_EVIDENCE = re.compile(r"(?:Evidence=)?\{?ECO:\d{7}(?:\|[^\s,;}]*)?[,;}]?|[{}]")
+#: A flat-file line code (``DR   ``, ``CC       ``) copied into a quote; the
+#: parsed statements drop it, so it must go before a quote can be located.
+_LINE_CODE = re.compile(r"(?:^|(?<=\s))[A-Z]{2} {3,}")
+#: Bracketed text, which the verbatim check drops as editorial; it is a gap
+#: here, since dropping it would join words that are not adjacent in the record.
+_BRACKETED = re.compile(r"\[[^\[\]]*\]")
+#: A feature range (``102..292``), which must not be read as an ellipsis.
+_RANGE = re.compile(r"(?<=\d)\.\.(?=[<>?]?\d)")
 _FT_EVIDENCE = re.compile(r'/evidence="([^"]*)"')
 _REFERENCE_CODES = frozenset({"RN", "RP", "RC", "RX", "RG", "RA", "RT", "RL"})
 
@@ -249,7 +257,7 @@ def parse_uniprot_statements(raw: str) -> List[Statement]:
                 start("CC", "", body)
         elif code == "FT":
             if line[5:6] != " ":
-                start("FT", line[5:21].strip(), line[21:].strip())
+                start("FT", line[5:21].strip(), body)
             elif blocks and blocks[-1][0] == "FT":
                 blocks[-1][2].append(body)
         elif code == "DR":
@@ -319,9 +327,16 @@ def _quote_parts(quote: str) -> List[str]:
 
     >>> _quote_parts("Oxidoreductase {ECO:0000256|ARBA:ARBA00023002, ... NAD {ECO:0000256|ARBA:ARBA1};")
     ['oxidoreductase', 'nad']
+    >>> _quote_parts("DR   GO; GO:0003677; F:DNA binding; IEA:InterPro.")
+    ['go go 0003677 f dna binding iea interpro']
+    >>> _quote_parts("CC       Reaction=L-seryl-[protein] + ATP")
+    ['reaction l seryl', 'atp']
+    >>> _quote_parts("FT   DNA_BIND        102..292")
+    ['dna_bind 102 292']
     """
     validator = _validator()
-    stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", quote))
+    stripped = _BRACKETED.sub(" ... ", _RANGE.sub(" ", _LINE_CODE.sub(" ", quote)))
+    stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", stripped))
     return [p for p in (validator.normalize_text(x) for x in validator._split_query(stripped)) if p]
 
 
