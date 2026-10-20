@@ -161,13 +161,13 @@ def test_validation_reports_both_checks_as_warnings(tmp_path):
     assert all(i.severity == ValidationSeverity.WARNING.value for i in issues)
 
 
-@pytest.mark.parametrize("quote,unvetted,restating", [
-    ("DR   GO; GO:0009070; P:serine family amino acid biosynthetic process; IEA:UniProtKB-ARBA.", True, True),
-    ("DR   InterPro; IPR006139; D-isomer_2_OHA_DH_cat_dom.", False, False),
+@pytest.mark.parametrize("reference_id,quote,unvetted,restating", [
+    (SERA_METEA, "DR   GO; GO:0009070; P:serine family amino acid biosynthetic process; IEA:UniProtKB-ARBA.",
+     True, True),
+    (SERA_PSEPK, "DR   InterPro; IPR006139; D-isomer_2_OHA_DH_cat_dom.", False, False),
 ])
-def test_quote_with_line_code_is_located(quote, unvetted, restating):
+def test_quote_with_line_code_is_located(reference_id, quote, unvetted, restating):
     """A quote copied with its flat-file line code is located, not skipped."""
-    reference_id = SERA_METEA if "GO:" in quote else SERA_PSEPK
     result = classify_quote(quote, _path(reference_id))
     assert result is not None
     assert result[:2] == (unvetted, restating)
@@ -180,7 +180,24 @@ def test_quote_spanning_line_wrap_with_codes_is_located():
     assert [(s.field, s.topic) for s in statements] == [("CC", "FUNCTION")]
 
 
-def test_feature_quote_with_key_and_location_is_located():
-    quote = 'FT   DNA_BIND        102..292'
-    statements = locate_quote(quote, _path(TP53))
-    assert statements and {s.topic for s in statements} == {"DNA_BIND"}
+@pytest.mark.parametrize("reference_id,quote,topic", [
+    (TP53, "FT   DNA_BIND        102..292", "DNA_BIND"),
+    ("file:human/APOC4/APOC4-uniprot.txt",
+     'FT   SIGNAL          1..27\nFT                   /evidence="ECO:0000250|UniProtKB:P55057"', "SIGNAL"),
+])
+def test_feature_quote_with_key_and_location_is_located(reference_id, quote, topic):
+    statements = locate_quote(quote, _path(reference_id))
+    assert [(s.field, s.topic) for s in statements] == [("FT", topic)]
+
+
+def test_editorial_bracket_is_a_gap():
+    """[protein] is dropped as editorial; the words either side are not adjacent in the record."""
+    quote = "CC       Reaction=L-seryl-[protein] + ATP = O-phospho-L-seryl-[protein] + ADP +"
+    statements = locate_quote(quote, _path("file:human/AURKB/AURKB-uniprot.txt"))
+    assert {(s.field, s.topic) for s in statements} == {("CC", "CATALYTIC ACTIVITY")}
+
+
+def test_literal_bracket_notation_stays_in_the_quote():
+    """[2Fe-2S] is quoted text, not an editorial gap, so the quote stays in one statement."""
+    statements = locate_quote("Name=[2Fe-2S] cluster", _path("file:PSEPK/benC/benC-uniprot.txt"))
+    assert [(s.field, s.topic) for s in statements] == [("CC", "COFACTOR")]

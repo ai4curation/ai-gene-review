@@ -37,7 +37,11 @@ Two global checks follow, both reported as warnings, whatever the quote supports
 
 A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
-reported. Quotes that cannot be located are left to the verbatim check.
+reported. Before matching, a quote loses any flat-file line codes and feature
+keys copied with it; feature ranges (``102..292``) are positions, not an
+ellipsis; and brackets the verbatim check treats as editorial are gaps, while
+literal notation such as ``[2Fe-2S]`` stays. Quotes that cannot be located are
+left to the verbatim check.
 """
 
 from __future__ import annotations
@@ -90,14 +94,16 @@ UNVETTED_MARKERS = (
 _BRACE = re.compile(r"(?:Evidence=)?\{(ECO:[^{}]*)\}")
 #: Evidence tokens left over when a quote cuts through a brace.
 _STRAY_EVIDENCE = re.compile(r"(?:Evidence=)?\{?ECO:\d{7}(?:\|[^\s,;}]*)?[,;}]?|[{}]")
-#: A flat-file line code (``DR   ``, ``CC       ``) copied into a quote; the
-#: parsed statements drop it, so it must go before a quote can be located.
-_LINE_CODE = re.compile(r"(?:^|(?<=\s))[A-Z]{2} {3,}")
-#: Bracketed text, which the verbatim check drops as editorial; it is a gap
-#: here, since dropping it would join words that are not adjacent in the record.
-_BRACKETED = re.compile(r"\[[^\[\]]*\]")
+#: A flat-file line code (``DR   ``, ``CC       ``) copied into a quote, with
+#: a feature key after ``FT``; the parsed statements drop both (the key is the
+#: statement's topic), so they must go before a quote can be located.
+_LINE_CODE = re.compile(r"(?:^|(?<=\s))(?:FT {3}\w+ +|[A-Z]{2} {3,})")
+#: Bracketed text. What the verbatim check drops as editorial (``[protein]``)
+#: is a gap here, since dropping it would join words that are not adjacent in
+#: the record; literal notation (``[2Fe-2S]``) is kept as quoted text.
+_BRACKETED = re.compile(r"\[[^\]\n]*\]")
 #: A feature range (``102..292``), which must not be read as an ellipsis.
-_RANGE = re.compile(r"(?<=\d)\.\.(?=[<>?]?\d)")
+_RANGE = re.compile(r"(?<=[\d<>?])\.\.(?=[<>?]?[\d?])")
 _FT_EVIDENCE = re.compile(r'/evidence="([^"]*)"')
 _REFERENCE_CODES = frozenset({"RN", "RP", "RC", "RX", "RG", "RA", "RT", "RL"})
 
@@ -257,7 +263,7 @@ def parse_uniprot_statements(raw: str) -> List[Statement]:
                 start("CC", "", body)
         elif code == "FT":
             if line[5:6] != " ":
-                start("FT", line[5:21].strip(), body)
+                start("FT", line[5:21].strip(), line[21:].strip())
             elif blocks and blocks[-1][0] == "FT":
                 blocks[-1][2].append(body)
         elif code == "DR":
@@ -331,11 +337,20 @@ def _quote_parts(quote: str) -> List[str]:
     ['go go 0003677 f dna binding iea interpro']
     >>> _quote_parts("CC       Reaction=L-seryl-[protein] + ATP")
     ['reaction l seryl', 'atp']
+    >>> _quote_parts("Name=[2Fe-2S] cluster")
+    ['name 2fe 2s cluster']
     >>> _quote_parts("FT   DNA_BIND        102..292")
-    ['dna_bind 102 292']
+    ['102 292']
+    >>> _quote_parts("FT   CHAIN           ?..649")
+    ['649']
     """
     validator = _validator()
-    stripped = _BRACKETED.sub(" ... ", _RANGE.sub(" ", _LINE_CODE.sub(" ", quote)))
+
+    def gap(m: re.Match) -> str:
+        inner = m.group(0)[1:-1]
+        return m.group(0) if any(p.search(inner) for p in validator._literal_bracket_regexes) else " ... "
+
+    stripped = _BRACKETED.sub(gap, _RANGE.sub(" ", _LINE_CODE.sub(" ", quote)))
     stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", stripped))
     return [p for p in (validator.normalize_text(x) for x in validator._split_query(stripped)) if p]
 

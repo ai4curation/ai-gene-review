@@ -233,19 +233,20 @@ applies two global rules to every UniProt quote, whatever it supports:
   association rule, annotation imported unchecked from the submitter, a
   machine-generated protein name (ProtNLM), or an electronic GO line. Family
   and domain classification (NCBIfam, signature matches, curated UniRule rules
-  such as HAMAP, "Belongs to the X family" notes) is not in this group: it reliably establishes membership, and
-  membership is a fair argument for function. A family note whose only evidence
-  is ARBA is still an unvetted prediction. ARBA is different in kind: its rules
-  transfer annotation from co-occurring signatures, guilt by association.
+  such as HAMAP, "Belongs to the X family" notes) is not in this group: it
+  reliably establishes membership, and membership is a fair argument for
+  function. A family note whose only evidence is ARBA is still an unvetted
+  prediction. ARBA is different in kind: its rules transfer annotation from
+  co-occurring signatures, guilt by association.
 - A quote must not be a label that restates an annotation: protein names and
   EC numbers, keywords, or the record's own GO lines.
 
-Across all gene reviews (as of 2026-10-20), 1,794 quotes in 600 reviews rest
-on unvetted predictions; ARBA is a source for 1,044 of them, electronic GO lines
-for 399 and imported submitter annotation for 364. They support 505 accepted
-electronic annotations and 388 core functions. Separately, 3,242 quotes in 984
-reviews are labels: mostly protein names (2,383) and the record's own GO lines
-(678). Most of the rise since the 2026-10-16 counts comes from a fix to the
+Across all gene reviews (as of 2026-10-20), 1,795 quotes in 600 reviews rest
+on unvetted predictions; ARBA is a source for 1,045 of them, electronic GO lines
+for 399 and imported submitter annotation for 354. They support 505 accepted
+electronic annotations and 388 core functions. Separately, 3,289 quotes in 988
+reviews are labels: mostly protein names (2,430) and the record's own GO lines
+(680). Most of the rise since the 2026-10-16 counts comes from a fix to the
 check: it now locates quotes copied with their flat-file line code
 (`DR   GO; ...`), about a tenth of all UniProt quotes, which it had skipped
 silently. The rest is new reviews.
