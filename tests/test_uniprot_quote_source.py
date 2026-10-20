@@ -137,3 +137,32 @@ def test_validation_reports_both_checks_as_warnings(tmp_path):
     issues = [i for i in report.issues if i.check_type in (UNVETTED_CHECK, FIELD_CHECK)]
     assert sorted(i.check_type for i in issues) == sorted([UNVETTED_CHECK, FIELD_CHECK])
     assert all(i.severity == ValidationSeverity.WARNING.value for i in issues)
+
+
+def test_snapshot_flatfile_quotes_keep_provenance_checks(tmp_path):
+    source = tmp_path / 'genes/X/g/g-record-evidence.yaml'
+    source.parent.mkdir(parents=True)
+    source.write_text(yaml.safe_dump({
+        'unisave_records': [{'record_text': (
+            'DE   RecName: Full=Predicted kinase;\n'
+            'CC   -!- FUNCTION: Binds unusual lipids. {ECO:0000256|ARBA:ARBA1}.\n'
+            'CC   -!- ACTIVITY: Hydrolyzes ATP. {ECO:0000269|PubMed:1}.\n'
+        )}],
+        'observations': {'computed_note': 'Metadata is not a protein statement'},
+    }))
+    reference = 'file:X/g/g-record-evidence.yaml'
+    data = _review([{'reference_id': reference, 'supporting_text': quote} for quote in [
+        'RecName: Full=Predicted kinase', 'Binds unusual lipids', 'Hydrolyzes ATP',
+        'Metadata is not a protein statement',
+    ]])
+    found = quote_source_findings(data, project_root=tmp_path)
+    assert {(f.path, f.check_type) for f in found} == {
+        ('core_functions[0].supported_by[0].supporting_text', FIELD_CHECK),
+        ('core_functions[0].supported_by[1].supporting_text', UNVETTED_CHECK),
+    }
+    # A newer curated occurrence of the same statement prevents an all-unvetted flag.
+    snapshot = yaml.safe_load(source.read_text())
+    snapshot['unisave_records'].append({'record_text':
+        'CC   -!- FUNCTION: Binds unusual lipids. {ECO:0000269|PubMed:2}.\n'})
+    source.write_text(yaml.safe_dump(snapshot))
+    assert not any(f.check_type == UNVETTED_CHECK for f in quote_source_findings(data, project_root=tmp_path))

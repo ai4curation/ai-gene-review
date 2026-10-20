@@ -1,6 +1,7 @@
 """Checks on *what kind* of UniProt statement a supporting_text quotes.
 
-``local_source_text`` checks that a quote from a ``-uniprot.txt`` file is
+``local_source_text`` checks that a quote from a ``-uniprot.txt`` file or
+``-record-evidence.yaml`` snapshot is
 verbatim. This module asks what the quoted statement is, because a UniProt
 record mixes evidence with labels and with unvetted predictions:
 
@@ -33,7 +34,9 @@ Two global checks follow, both reported as warnings, whatever the quote supports
 
 A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
-reported. Quotes that cannot be located are left to the verbatim check.
+reported. Quotes that cannot be located are left to the verbatim check. Snapshot
+support covers embedded UniSave ``record_text`` flat files; JSON fields and
+computed observations are not classified as UniProt flat-file statements.
 """
 
 from __future__ import annotations
@@ -43,6 +46,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import yaml
 
 from ai_gene_review.validation.local_source_text import (
     PROJECT_ROOT,
@@ -274,7 +279,20 @@ def parse_uniprot_statements(raw: str) -> List[Statement]:
 @lru_cache(maxsize=256)
 def _indexed(path: Path, mtime_ns: int, size: int) -> Tuple[Tuple[Statement, ...], str, Tuple[int, ...]]:
     """Statements of *path*, their normalised concatenation, and each one's start offset."""
-    statements = tuple(parse_uniprot_statements(path.read_text(encoding="utf-8")))
+    raw = path.read_text(encoding="utf-8")
+    if path.name.endswith("-record-evidence.yaml"):
+        snapshot = yaml.safe_load(raw)
+        records = snapshot.get("unisave_records", []) if isinstance(snapshot, dict) else []
+        # Parse each archived entry separately: a field must not continue into
+        # another entry, and JSON metadata must not masquerade as flat-file text.
+        statements = tuple(
+            statement
+            for record in records
+            if isinstance(record, dict) and isinstance(record.get("record_text"), str)
+            for statement in parse_uniprot_statements(record["record_text"])
+        )
+    else:
+        statements = tuple(parse_uniprot_statements(raw))
     normalize = _validator().normalize_text
     starts: List[int] = []
     pieces: List[str] = []
@@ -369,7 +387,7 @@ def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[
     findings: List[QuoteFinding] = []
     for path, reference_id, quote in iter_local_quotes(data):
         source = resolve_local_source(reference_id, project_root)
-        if source is None or not source.name.endswith("-uniprot.txt"):
+        if source is None or not source.name.endswith(("-uniprot.txt", "-record-evidence.yaml")):
             continue
         result = classify_quote(quote, source)
         if result is None:

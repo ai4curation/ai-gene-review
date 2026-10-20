@@ -2606,6 +2606,21 @@ scan-prose-panther *args="": ensure-panther-members
 panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
 
+# Audit Swiss-Prot reviews outside their exact taxon's reference proteome.
+# Default writes CSV + issue-ready Markdown; use --format csv/markdown, --species POPTR,
+# --refresh, --offline, or --output-dir PATH. See projects/ORPHAN_CURATED.md.
+[group('QC')]
+[positional-arguments]
+orphan-curated *ARGS:
+    uv run python -m ai_gene_review.analysis.orphan_curated "$@"
+
+# Render counterpart assessments from project frontmatter genes and curated review YAML.
+# Defaults to ORPHAN_CURATED; accepts --project PATH, --output-dir PATH and --check.
+[group('QC')]
+[positional-arguments]
+project-counterparts *ARGS:
+    uv run python -m ai_gene_review.analysis.project_counterparts "$@"
+
 # ============ History records (ported from dismech) ============
 # Append-only curation session history under history/. See docs/history.md.
 
