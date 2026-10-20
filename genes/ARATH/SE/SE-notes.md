@@ -77,3 +77,26 @@ own reading of the cached publications and the UniProt record (`SE-uniprot.txt`)
   behind the existing dicing-body and miRNA-processing annotations.
 - The IBA nuclear body row (PTN000323018) is a refinement (MODIFY to nuclear dicing
   body and nuclear speck), not a propagation failure.
+
+## PR #5242 review follow-up
+
+- PMID:29982637 (full text cached, not abstract-only) protein binding row, partners DCL1
+  (AT1G01040) and SMA1: changed REMOVE to MODIFY -> GO:0030674 protein-macromolecule adaptor
+  activity, matching the HYL1 rows. The paper describes the DCL1 complex as "composed of the
+  RNase III enzyme DCL1, the Zinc-finger protein SERRATE (SE) and the double-stranded RNA
+  (dsRNA)-binding protein HYPONASTIC LEAVES 1 (HYL1)" and says "SE and HYL1 improve the
+  efficiency and accuracy of DCL1 activity" [PMID:29982637]. Its own experiments are SMA1-DCL1 and
+  SMA1-SE BiFC/co-IP ("After IP, both DCL1 and SE were detected in the GFP-SMA1 precipitates").
+- GO:0005846 nuclear cap binding complex (part_of, IPI PMID:24137006): GO defines the term as the
+  CBP20/CBP80 heterodimer, and the paper shows binary SE-CBP20 and SE-CBP80 binding ("using
+  Bimolecular Fluorescence Complementation (BiFC), pull-down and co-immunoprecipitation experiments,
+  we show that both subunits of AtCBC, AtCBP20 and AtCBP80 interact with AtSE"). Changed
+  KEEP_AS_NON_CORE to MODIFY -> GO:0140262 mRNA cap binding complex binding (non-core).
+- PMID:26227967 (RS40, RS41, HOS5) and PMID:34449907 (SEAP1) protein binding rows: still REMOVE,
+  but reasons now state the full-text evidence (co-IP, BiFC, co-localization; for SEAP1 also an
+  in vitro MBP-SEAP1/His-SE assay). In both papers the functional consequence belongs to the
+  partner (the splicing factors are required for miRNA biogenesis; SEAP1 "may act as their
+  co-factors or accessory factors"), and neither shows SE recruiting or bridging the partner.
+- Dropped nucleus from the adaptor core function's locations (nuclear speck is its descendant).
+  Added the RIP quote from PMID:24137006 ("AtSE can directly bind selected target RNAs") to the
+  RNA binding row and reworded its reason; RNA binding was not added to core_functions.

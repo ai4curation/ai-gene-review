@@ -75,3 +75,13 @@ These notes come from my own reading of the cached publications in
 - The CPK6 protein kinase binding row (PMID:20385816) cannot be checked from the
   abstract-only cache. The abstract names only CPK21/23. CPK6 binding and activation
   of SLAC1 is independently established (PMID:22689970), so the row is kept.
+
+## PR #5242 review follow-up
+
+- Extended the PMID:29463779 quote to include the dependency clause ("this response depended on
+  the function of genes encoding the ROS-generating NADPH oxidase RBOHD and various stomatal
+  regulators, such as the anion channel SLAC1").
+- Not changed: the two voltage-gated promotions (UniProt already asserts GO:0008308 by IDA and
+  SLAC1 is weakly voltage-dependent), and the potassium channel inhibitor term (KAT1 and AKT2 are
+  Shaker-family channels, so GO:0070320 inward rectifier potassium channel inhibitor activity was
+  not adopted without a closer check).
