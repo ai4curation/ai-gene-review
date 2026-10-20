@@ -120,3 +120,39 @@ biological `description` field was corrected. Per CLAUDE.md the `description`
 is a standalone biological summary, so the supporting identifiers (eggNOG KOG,
 EC numbers) and the explicit "not PDIA3" negation are kept here rather than in
 that field.
+
+## IBA re-review 2026-09-28
+
+Rechecked the four current PDI1 IBA rows against the cached PANTHER family data
+for `PTHR18929`. All four rows (`GO:0005783`, `GO:0006457`, `GO:0034976`,
+`GO:0003756`) are IBD placements on the same ancestral node,
+`PANTHER:PTN000432607`, which covers the catalytically active ER protein
+disulfide-isomerase family that includes budding-yeast Pdi1p. I recorded
+`NO_FAILURE_CORE` propagation reviews for the protein-disulfide-isomerase and
+protein-folding rows, and `NO_FAILURE_NON_CORE` reviews for the generic ER
+localization and contextual ER-stress-response rows, with `PTN000432607` as the
+PAINT source.
+
+`PTHR18929-paint.tsv` also has a 2026 `GO:0003756` IKR on descendant node
+`PANTHER:PTN002553919`; the family function-loss table maps that loss to
+`PTHR18929:SF193`/`PTHR18929:SF93` branches. Yeast PDI1 is not in that loss
+clade, so the active PDI ancestral assignment remains valid for this target.
+
+Searched newer literature and cached the final 2025 Nature Structural &
+Molecular Biology article, PMID:39930008, which supersedes the 2024 bioRxiv
+version. This paper gives direct cryo-EM, biochemical, and in vivo support for
+the model that the Mnl1/Htm1-Pdi1 complex first demannosylates misfolded
+globular glycoproteins and then uses Pdi1 as the disulfide reductase to unfold
+the substrates before ERAD retrotranslocation.
+
+Migrated all seven generic `GO:0005515` IPI rows from the legacy
+`MARK_AS_OVER_ANNOTATED` action to `REMOVE`. The Htm1/Mnl1 interaction rows are
+better represented by the existing `GO:1904382` glycoprotein-ERAD process and
+`GO:0106055` complex biology; the Eps1 and broad interactome rows do not state
+a distinct Pdi1p molecular activity. These removals only reject an
+uninformative molecular-function term, not the reported interactions.
+
+Added a `NEW` complex-membership annotation for `GO:0106055` and two
+synthesized core functions: the canonical ER-lumen protein-disulfide-isomerase
+activity used for oxidative folding, and the Mnl1/Htm1-associated
+protein-disulfide reductase activity that initiates glycoprotein ERAD.

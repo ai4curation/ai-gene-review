@@ -1,18 +1,41 @@
 ---
 title: "InterPro Mapping Review Project"
-maturity: SCOPING
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - INTERPRO/slides/interpro-pipeline.svg
+    - INTERPRO/slides/interpro-review-actions.svg
+manifest:
+  slides:
+    - href: INTERPRO/slides/INTERPRO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NaAEVgdB1TnJUKnBWWt69N
+      title: Project brief
 ---
 
-**This project identifies InterPro-to-GO mappings that need correction, narrower
-scope, or additional evidence.** It combines gene-level annotation reviews with
-family-level evidence to distinguish functions shared across an InterPro entry
-from functions restricted to particular members.
+# InterPro Mapping Review Project
 
-**The current deliverable contains 29 mapping assessments across twelve InterPro
-entries:** seven removal proposals, ten proposals to narrow or qualify a mapping,
-and twelve endorsements or additions. These are proposals for curator assessment;
-they do not establish that InterPro has adopted the changes.
+**Bottom line:** InterPro2GO (GO_REF:0000002) attaches GO terms to every protein
+that matches an InterPro entry, so a term that holds for only some members of a
+family is copied onto all of them. We harvested every InterPro2GO annotation our
+gene reviews had already judged (3,652 records on 1,706 genes, joined to 1,826
+source entries), ranked the entries by how often reviewers flagged them, and ran
+family-level deep research on the top of that list. The result so far is a set of
+36 proposed mapping edits across fifteen entries: ten removals (for example ATP
+binding and protein phosphorylation on the protein kinase domain, IPR000719), twelve
+proposals to narrow or qualify a mapping, and fourteen endorsements. These are
+proposals for InterPro curators, not changes InterPro has adopted, and the
+worklist below the first dozen entries is not yet assessed.
+
+We did this because a wrong InterPro2GO mapping is a single error that repeats
+across every matched gene, so one fix at the mapping level is worth many
+gene-level corrections. Gene reviews also catch mappings the ranked worklist
+never reaches: three of the fifteen entries came from reading human genes one at
+a time, and three more from auditing the bacterial export ATPases FliI and SctN
+(see [conserved-function recovery](CONSERVED_FUNCTION_RECOVERY.md)).
 
 **Start here:** [Proposed mapping edits](INTERPRO/interpro2go.sssom.yaml) ·
 [Prioritized entry worklist](INTERPRO/interpro_family_priorities.tsv) ·
@@ -29,7 +52,7 @@ experimental evidence.
 |----------------|----------------------------------|-----------------|
 | IPR000719 — Protein kinase domain | Pseudokinase members challenge the assumption that every domain match binds ATP and phosphorylates proteins. | Remove the blanket ATP-binding and protein-phosphorylation mappings; assess narrower catalytic entries. |
 | IPR001128 — Cytochrome P450 | The assessment supports cofactor-binding mappings but questions uniform catalytic assignments across functionally diverse members. | Retain the binding mappings; review the scope of monooxygenase and oxidoreductase mappings. |
-| IPR001424 — Cu/Zn superoxide dismutase domain | Copper-chaperone members challenge a domain-wide superoxide-metabolism assignment. | Remove the blanket process mapping; assess metal binding separately. |
+| IPR001424 — Cu/Zn superoxide dismutase domain | Copper-chaperone members make the domain-wide superoxide-metabolism assignment too broad, while fungal Cu-only SODs show the term still needs cover outside the canonical Cu/Zn SOD rule. | Remove the blanket process mapping and request process-term cover on both the Cu/Zn SOD UniRule and a fungal Cu-only SOD rule or narrower entry; assess metal binding separately. |
 | IPR000276 — Rhodopsin-like GPCRs | The assessment flags atypical receptors as exceptions to canonical G-protein coupling. | Review receptor-activity and signaling mappings at subfamily level, verifying evidence for the proposed exceptions. |
 | IPR001046 — NRAMP / SLC11 | The assessment supports broad metal-transport terms rather than substrate-specific assignments across the entry. | Retain broad transport mappings; evaluate more specific functions on individual members. |
 | IPR012724 — Chaperone DnaJ | The assessment attributes ATP binding to the Hsp70 partner rather than DnaJ. | Remove the ATP-binding mapping; retain protein folding and review the scope of the heat-response mapping. |
@@ -38,7 +61,30 @@ experimental evidence.
 | IPR002100 — MADS-box domain | The assessment distinguishes domain-level DNA binding and dimerization from whole-protein transcription-factor function. | Retain the two domain-level mappings; do not infer transcription-factor activity from the domain alone. |
 | IPR045122 — Calcium permeable stress-gated cation channel 1-like | The entry name says calcium *permeable*, but `GO:0005227` is defined as a channel that opens when calcium binds it — opposite directions of causation. The TMEM63/OSCA members are stretch- and osmolarity-gated. | Remove the calcium-activated mapping; assess mechanosensitive cation-channel and calcium-channel terms in its place. |
 | IPR042371 — Z-binding domain | A catalytic activity is mapped onto a binding domain: the deaminase belongs to ADAR1's separate domain, so ZBP1 inherits an activity it has no domain for. | Remove the deaminase mapping and restrict it to entries carrying the catalytic domain; retain RNA binding. |
-| IPR006935 — Helicase/UvrB, N-terminal | The entry is dominated by DNA-acting enzymes, but the same fold occurs in the RNA-sensing RIG-I-like receptors, so IFIH1 (MDA5) inherits DNA binding. | Remove the DNA-binding mapping; the nucleic-acid substrate is a property of the enzyme, not of the shared fold. ATP binding and hydrolase activity are unaffected. |
+| IPR013380 — Type 3 secretion system ATPase SctN | An SctN-specific entry mapped to rotational proton-transporting ATPase activity and ATP biosynthesis. SctN is a soluble protein-exporting ATPase with no Fo partner; the terms are wrong for every member (915 annotations). | Remove `GO:0046961` and `GO:0006754`; retain the type III secretion process and complex mappings; consider adding `GO:0008564` protein-exporting ATPase activity. |
+| IPR004100 — ATPase, F1/V1/A1 α/β, N-terminal domain | Sound for rotary ATPase subunits, but the domain is shared by the FliI/SctN export ATPases, which do not transport protons. | Narrow `GO:1902600` and `GO:0046034`: ideally suppress when IPR005714 (FliI/YscN) also matches; if per-entry mappings cannot express that, remove them or move them to narrower entries that exclude FliI/SctN. |
+| IPR005714 — ATPase, type III secretion system, FliI/YscN | `GO:0009058` biosynthetic process remains in the 2025-09 mapping file, a remnant of the ATP synthase ancestry. | Remove it; the entry's other four mappings are sound. |
+| IPR006935 — Helicase/UvrB, N-terminal | The entry is dominated by DNA-acting enzymes, but the same fold occurs in the RNA-sensing RIG-I-like receptors, so IFIH1 (MDA5) inherits DNA binding. | Replace the DNA-binding mapping with `GO:0003676` nucleic acid binding, as on the sibling helicase entries IPR011545 and IPR006555; the nucleic-acid substrate is a property of the enzyme, not of the shared fold. ATP binding and hydrolase activity are unaffected. |
+
+### Rule cover for the removals
+
+Each removal row in the mapping set ends with a note on what still supplies the term to the members
+that should keep it. Where a term is right for only part of an entry, a conditional UniProt rule is
+often the better carrier than a mapping, because a rule can require a site, exclude a domain, or limit
+the taxon. The notes were checked against the UniProt UniRule API and the current interpro2go file on
+2026-10-10.
+
+| Removal | What still supplies the term | Request |
+|---------|------------------------------|---------|
+| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; all 7 reviewed sole-source losses were accepted or kept, so family rules are needed |
+| IPR000719 protein phosphorylation | Active-site entries IPR008271 and IPR008266 | Remove |
+| IPR001424 superoxide metabolic process | UniRule UR000000113 selects canonical Cu/Zn SODs and excludes CCS, but assigns only the EC number; Candida albicans SOD5 lacks its PS00332 condition and needs separate Cu-only SOD cover | Remove; add `GO:0019430` to the Cu/Zn rule and to a fungal Cu-only SOD rule or narrower entry |
+| IPR012724 ATP binding | Nothing needed; the HAMAP DnaJ rule MF_01152 also assigns no ATP-binding or zinc-ion-binding GO term | Remove |
+| IPR042371 dsRNA adenosine deaminase activity | IPR002466 gives ADARs a deaminase term; no rule assigns the specific one | Remove; a rule conditioned on IPR002466 could restore it |
+| IPR006935 DNA binding | HAMAP UvrB rule MF_00204; nothing for RIG-I-like receptors or Dicer | Replace with `GO:0003676` |
+| IPR045122, IPR013380 (two), IPR005714 | Not needed; the terms are wrong for every member | Remove; for IPR045122 and IPR013380, add the correct family-wide terms as mappings |
+
+The checks themselves are described in [Before proposing a removal](INTERPRO/README.md#before-proposing-a-removal).
 
 A recurring curation question is **whether a function holds across the matched
 entry**, not simply whether it is well established for one member. Conversely, a
@@ -50,6 +96,9 @@ is preferable for an individual gene.
 1. **Assess the four removal proposals first:** ATP binding (GO:0005524) and protein
    phosphorylation (GO:0006468) for IPR000719, superoxide metabolic process
    (GO:0006801) for IPR001424, and ATP binding (GO:0005524) for IPR012724. Verify the cited exceptions and the current entry scope.
+   Each removal row ends with a rule-cover note; check it before forwarding the removal.
+   The IPR013380 removals (GO:0046961, GO:0006754) are simpler: the entry is SctN-specific, so
+   they are wrong for every member rather than for an exception subset.
 2. **Resolve the proposed GTPase-activity (GO:0003924) addition for IPR020849.** Confirm that the
    assignment is supported across the entry, including divergent members.
 3. **Separate gene-level refinement from mapping-level error.** A `MODIFY` or
@@ -109,8 +158,8 @@ breakdowns, example genes, and affected GO terms.
 
 ## Supporting material
 
-- [Proposed InterPro2GO edits](INTERPRO/interpro2go.sssom.yaml) — 29 mapping assessments,
-  25 dated 2026-06-20 and 4 added 2026-09-17, with term identifiers and rationales. In this project's encoding,
+- [Proposed InterPro2GO edits](INTERPRO/interpro2go.sssom.yaml) — 36 mapping assessments,
+  25 dated 2026-06-20, 4 added 2026-09-17 and 7 added 2026-09-27, with term identifiers and rationales. In this project's encoding,
   `exactMatch` endorses or proposes a mapping, `broadMatch` flags a scope or specificity
   issue, and `exactMatch` with `predicate_modifier: Not` proposes removal.
 - [Methods, data, and reproducibility](INTERPRO/README.md) — extraction, family research,
@@ -119,3 +168,4 @@ breakdowns, example genes, and affected GO terms.
   workstream checklists, and session chronology.
 - [Protein families](FAMILIES.md) · [IBA annotation review](IBA_REVIEW.md) ·
   [Over-annotation patterns](OVER_ANNOTATION_PATTERNS.html) — related collections.
+- [Slides](INTERPRO/slides/INTERPRO-slides.html) (Marp source: [INTERPRO-slides.md](INTERPRO/slides/INTERPRO-slides.md)) — AI generated

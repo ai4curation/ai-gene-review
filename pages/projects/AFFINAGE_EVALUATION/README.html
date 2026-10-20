@@ -281,6 +281,15 @@
         .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
         .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
 
+        /* Project resource bar (manifest: slides, artifacts) */
+        .resource-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
+        .resource-bar a { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.8rem; border-radius: 9999px; border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+        .resource-bar a:hover { background: #dbeafe; text-decoration: none; }
+        .resource-bar a.rk-artifacts { border-color: #e9d5ff; background: #faf5ff; color: #6b21a8; }
+        .resource-bar a.rk-artifacts:hover { background: #f3e8ff; }
+        .resource-bar .ext { font-size: 0.8em; opacity: 0.8; }
+        .resource-bar .note { font-size: 0.75em; font-weight: 500; opacity: 0.75; }
+
         /* Manual reviews */
         .manual-reviews {
             background-color: var(--bg-light);
@@ -353,6 +362,8 @@
 
 
 
+
+
     </header>
 
 
@@ -374,7 +385,7 @@ terms against the local AIGR reviews. Project page: <a href="../AFFINAGE_EVALUAT
 <tbody>
 <tr>
 <td><code>compare_affinage.py</code></td>
-<td>Fetch Affinage JSON (cached) + diff vs GOA/<code>core_functions</code>. No hard-coded numbers.</td>
+<td>Fetch Affinage JSON (cached, trimmed) + diff vs GOA/<code>core_functions</code>, exact and <code>goslim_generic</code>-level (closure over the pinned GO release <code>cache/ontologies/go-basic-2026-03-25.obo</code>, fetched and checksum-verified on demand by <code>ai_gene_review.bioreason_ontology.ensure_frozen_go</code>). No hard-coded numbers.</td>
 </tr>
 <tr>
 <td><code>pilot-genes.txt</code></td>
@@ -382,7 +393,7 @@ terms against the local AIGR reviews. Project page: <a href="../AFFINAGE_EVALUAT
 </tr>
 <tr>
 <td><code>affinage-cache/&lt;SYM&gt;.json</code></td>
-<td>Cached Affinage API responses, <strong>trimmed</strong> to the fields we use: <code>narrative.mechanism_profile</code>, <code>timeline.current_model</code>, <code>prefetch_data.uniprot</code> (accession/name), <code>evaluation</code>, <code>cost.total_usd</code>. Two <strong>representative</strong> records are committed as provenance — <code>GPX4.json</code> (worked example) and <code>ADA.json</code> (the symbol-collision case). The full 12-gene cache regenerates on demand via the script; the extracted GO data for all 12 is already committed in <code>results/per-gene.json</code>. <code>--refresh</code> re-fetches the full record from the API.</td>
+<td>Cached Affinage API responses, <strong>trimmed</strong> (by <code>trim_record</code>) to the fields we use: <code>gene</code>, <code>run_date</code>, <code>narrative.mechanism_profile</code>, <code>timeline.current_model</code>, <code>prefetch_data.uniprot</code> (accession/full_name), <code>evaluation</code>, <code>cost.total_usd</code>. All <strong>42</strong> cohort records are committed (fetched 2026-09-27; Affinage run dates 2026-06-09/10; <a href="../../../genes/human/NDUFA4/NDUFA4-ai-review.html">NDUFA4</a>'s record is keyed <code>COXFA4</code> by Affinage but cached under the requested symbol). Re-fetching reproduced every previously committed GO set exactly. <code>--offline</code> never hits the API; <code>--refresh</code> re-fetches and re-trims.</td>
 </tr>
 <tr>
 <td><code>results/per-gene.json</code></td>
@@ -395,6 +406,18 @@ terms against the local AIGR reviews. Project page: <a href="../AFFINAGE_EVALUAT
 <tr>
 <td><code>batch{2,3,4}-genes.txt</code> / <code>results/batch{2,3,4}/</code></td>
 <td>Extended, stress-test, and hard-case cohorts.</td>
+</tr>
+<tr>
+<td><code>retrieval_recall.py</code></td>
+<td>Affinage retrieval recall against finished reviews (PAINT campaign). <code>--split-file</code> reports a gene subset separately.</td>
+</tr>
+<tr>
+<td><code>results/paint-campaign/campaign-genes.txt</code></td>
+<td>The pinned 91-gene recall cohort (reconstructed from the first committed <code>per-gene.json</code>; <code>--all</code> now scores every committed report and is a different, growing set).</td>
+</tr>
+<tr>
+<td><code>fa-cohort-genes.txt</code></td>
+<td>The 22 Fanconi-anemia genes whose reviews folded in Affinage papers; used with <code>--split-file</code> to keep them out of recall headlines.</td>
 </tr>
 <tr>
 <td><code>results/narrative-vs-go.md</code>, <code>results/hard-cases.md</code></td>
@@ -411,12 +434,19 @@ terms against the local AIGR reviews. Project page: <a href="../AFFINAGE_EVALUAT
 </tbody>
 </table>
 <h2 id="rerun-the-comparison">Rerun the comparison</h2>
-<div class="codehilite"><pre><span></span><code>python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--genes-file<span class="w"> </span>pilot-genes.txt<span class="w">   </span><span class="c1"># uses cache</span>
-python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--refresh<span class="w"> </span>GPX4<span class="w"> </span>TP53<span class="w">            </span><span class="c1"># force re-fetch</span>
-python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--genes-file<span class="w"> </span>batch4-genes.txt<span class="w"> </span>--out-dir<span class="w"> </span>results/batch4
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--offline<span class="w"> </span>--genes-file<span class="w"> </span>pilot-genes.txt<span class="w">   </span><span class="c1"># uses cache only</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--refresh<span class="w"> </span>GPX4<span class="w"> </span>TP53<span class="w">                      </span><span class="c1"># force re-fetch</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--offline<span class="w"> </span>--genes-file<span class="w"> </span>batch4-genes.txt<span class="w"> </span>--out-dir<span class="w"> </span>results/batch4
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>compare_affinage.py<span class="w"> </span>--no-slim<span class="w"> </span>--genes-file<span class="w"> </span>pilot-genes.txt<span class="w">   </span><span class="c1"># exact-id only</span>
+
+<span class="c1"># retrieval recall, pinned 91-gene cohort, FA reported separately</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>retrieval_recall.py<span class="w"> </span>--genes-file<span class="w"> </span>results/paint-campaign/campaign-genes.txt<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--split-file<span class="w"> </span>fa-cohort-genes.txt<span class="w"> </span>--split-name<span class="w"> </span>FA
 </code></pre></div>
 
-<p>Requires only Python 3 stdlib + <code>pyyaml</code> (already a repo dependency) and <code>curl</code>.</p>
+<p>Needs <code>pyyaml</code> and <code>curl</code>, plus the repo package (for the pinned GO release) unless<br />
+<code>--no-slim</code> or <code>--go-obo PATH</code> is given. The GO release (~32 MB) is gitignored and is<br />
+downloaded and SHA-256-checked on first use.</p>
 <h2 id="affinage-as-a-deep-research-source-human-only">Affinage as a deep-research source (human only)</h2>
 <p>The AIGR review workflow already ingests any <code>genes/&lt;sp&gt;/&lt;GENE&gt;/&lt;GENE&gt;-deep-research-*.md</code><br />
 file, so no pipeline change is needed to "wire in" Affinage — this tool just writes one:</p>
@@ -463,12 +493,13 @@ numbers) is recorded in the file frontmatter. It is external, LLM-generated prel
 research — treat it like a falcon/perplexity report, not a curated annotation.</p>
 <h2 id="caveats">Caveats</h2>
 <ul>
-<li>Exact-GO-id agreement only; it <strong>understates</strong> agreement where Affinage grounds<br />
-  to a true GO ancestor of the curated term (the dominant pattern — read<br />
-  qualitatively on the project page).</li>
-<li>The local AIGR references are mixed-maturity, not independently expert-signed<br />
-  ground truth.</li>
-<li>n=12 pilot: illustrative, not a powered benchmark.</li>
+<li>Affinage emits only <code>goslim_generic</code> terms (43/43 distinct ids across the 42 genes),<br />
+  so exact-id capture is near-impossible by construction; read the slim-level columns.<br />
+  Slim capture counts a gene if <em>any</em> core MF's bin is emitted, which is lenient for<br />
+  genes with many core MFs; the top-supported-MF column is the stricter check.</li>
+<li>The local AIGR references are agent-made reviews, not independently expert-signed<br />
+  ground truth; the FA-cohort reviews had Affinage input by design.</li>
+<li>42 genes across four cohorts: illustrative, not a powered benchmark.</li>
 </ul>
     </div>
 

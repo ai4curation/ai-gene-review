@@ -161,6 +161,35 @@
             align-items: start;
         }
 
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .model-card {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .model-open {
+            align-self: flex-start;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 6px;
+            padding: 4px 11px;
+            font-size: 0.88rem;
+        }
+
+        .model-open:hover {
+            text-decoration: none;
+            filter: brightness(1.1);
+        }
+
         .panel {
             background: var(--bg-panel);
             border: 1px solid var(--border);
@@ -514,6 +543,11 @@
             font-weight: 700;
         }
 
+        .qc-warning {
+            color: #855600;
+            font-weight: 700;
+        }
+
         @media (max-width: 960px) {
             .page {
                 padding: 14px;
@@ -822,6 +856,10 @@
         {%- if node.get('description') %}
             <p class="node-description">{{ node.get('description') }}</p>
         {%- endif -%}
+        {%- if node.get('module_ref') %}
+            <p class="node-module-ref">Realized by module
+                <a href="{{ module_ref_hrefs.get(node.get('module_ref'), '#') }}"><code>{{ node.get('module_ref') }}</code></a></p>
+        {%- endif -%}
         {{ descriptor_list(node.get('concepts')) }}
         {{ context_block(node.get('context')) }}
         {{ evidence_list(node.get('evidence')) }}
@@ -912,6 +950,36 @@
         <div class="stat"><span class="stat-value">{{ stats.connections }}</span><span class="stat-label">Connections</span></div>
     </section>
 
+    {%- if executable_models %}
+    <section class="panel models-panel" aria-label="Executable models">
+        <div class="panel-header">
+            <h2>Executable models <span class="muted small"><a href="{{ models_index_href }}">all models</a></span></h2>
+        </div>
+        <div class="panel-body models-grid">
+            {%- for m in executable_models %}
+            <div class="model-card">
+                <div>
+                    <span class="pill type">{{ m.type_label }}</span>
+                    <span class="pill">{{ 'derived from this module' if m.derivation == 'DERIVED_FROM_MODULE' else 'external' }}</span>
+                </div>
+                <strong>{% if m.page_href %}<a href="{{ m.page_href }}">{{ m.title }}</a>{% else %}{{ m.title }}{% endif %}</strong>
+                {%- if m.scenarios %}
+                <div class="small">
+                    {%- for s in m.scenarios %}
+                        {%- if s.passed is defined %}<span class="{{ 'ok' if s.passed else 'warn' }}">{{ '&#10003;' | safe if s.passed else '&#10007;' | safe }}</span> {% endif %}{{ s.label }}{% if s.kinds %} <span class="muted">({{ s.kinds | map('lower') | map('replace', '_', ' ') | join(', ') }})</span>{% endif %}{% if not loop.last %}<br>{% endif %}
+                    {%- endfor %}
+                </div>
+                {%- endif %}
+                {%- if m.files %}
+                <div class="small muted">{% for f in m.files %}<a href="{{ f.url }}">{{ f.path.split('/')[-1] }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}</div>
+                {%- endif %}
+                {%- if m.page_href %}<a class="model-open" href="{{ m.page_href }}">Run in browser &rarr;</a>{% endif %}
+            </div>
+            {%- endfor %}
+        </div>
+    </section>
+    {%- endif %}
+
     {%- if qc %}
     <section class="qc-panel panel" aria-label="Derived QC">
         <div class="panel-header">
@@ -990,6 +1058,18 @@
                 {%- else %}
                     <p><span class="ok">&#10003;</span> <span class="small">every declared <code>conforms_to</code> bundle matches its template motif.</span></p>
                 {%- endif %}
+                {%- if qc.module_ref_violations %}
+                    <p class="small">{{ qc.module_ref_violations | length }} module reference issue(s):</p>
+                    <ul class="qc-list small">
+                        {%- for v in qc.module_ref_violations %}
+                            <li>
+                                <a href="#node-{{ anchor_id(v.node_id) }}">{{ v.node_id }}</a>
+                                <span class="muted">&rarr; {{ v.module_ref }}</span> <span class="warn">[error]</span>
+                                <br><span class="small">{{ v.message }}</span>
+                            </li>
+                        {%- endfor %}
+                    </ul>
+                {%- endif %}
             </div>
 
             {%- if qc.reaction_chaining %}
@@ -1009,6 +1089,78 @@
                             {%- else %} <span class="muted">[{{ f.status }}]</span>{% endif %}
                             {%- if f.shared %} <br><span class="small">shared: {{ f.shared | join(', ') }}</span>{% endif %}
                             {%- if f.note %} <br><span class="small muted">{{ f.note }}</span>{% endif %}
+                        </li>
+                    {%- endfor %}
+                </ul>
+            </div>
+            {%- endif %}
+
+            {%- if qc.function_conformance is defined %}
+            {%- set functions = qc.function_conformance %}
+            <div class="qc-card qc-card-wide">
+                <h3>Function consistency and core coverage</h3>
+                {%- if functions.rows %}
+                    <p class="small">
+                        {{ functions.core_supported }} gene-function check(s) reflected in core functions &middot;
+                        {{ functions.conflicts }} conflict(s) &middot;
+                        {{ functions.gaps }} evidence or coverage gap(s)
+                        <span class="muted">({{ functions.total }} comparison(s))</span>
+                    </p>
+                    <p class="small muted">Retained noncore functions are reported separately; they do not require promotion to core functions.
+                        Support from representative genes does not establish conservation across the whole family.
+                        Missing reviews or identifiers leave a claim unverified.</p>
+                    <table class="qc-table small">
+                        <thead>
+                            <tr><th>Annoton</th><th>Participant</th><th>Function</th><th>Assessment</th></tr>
+                        </thead>
+                        <tbody>
+                            {%- for row in functions.rows %}
+                                <tr data-status="{{ row.status }}" data-severity="{{ row.severity }}">
+                                    <td>{% if row.annoton_id in anchor_map %}<a href="{{ anchor_href(row.annoton_id, anchor_map) }}">{{ row.annoton_id }}</a>{% else %}{{ row.annoton_id }}{% endif %}</td>
+                                    <td>
+                                        {%- set participant_url = term_url({'id': row.participant_id}) %}
+                                        {%- if participant_url %}<a href="{{ participant_url }}">{{ row.participant_label or row.participant_id }}</a>
+                                        {%- else %}{{ row.participant_label or row.participant_id or 'Unresolved participant' }}{% endif %}
+                                        {%- if row.participant_id %}<br><span class="muted term-id">{{ row.participant_id }}</span>{% endif %}
+                                        <br><span class="muted">{{ row.scope | enum_label }}</span>
+                                    </td>
+                                    <td>
+                                        {%- set function_url = term_url({'id': row.function_id}) %}
+                                        {%- if function_url %}<a href="{{ function_url }}">{{ row.function_label or row.function_id }}</a>
+                                        {%- else %}{{ row.function_label or 'Unresolved function' }}{% endif %}
+                                        {%- if row.function_id %}<br><span class="muted term-id">{{ row.function_id }}</span>
+                                        {%- else %}<br><span class="muted">No function ID</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="{% if row.severity == 'error' %}warn{% elif row.severity == 'warning' %}qc-warning{% else %}muted{% endif %}">{{ row.status | enum_label }}</span>
+                                        <br>{{ row.message }}
+                                    </td>
+                                </tr>
+                            {%- endfor %}
+                        </tbody>
+                    </table>
+                {%- else %}
+                    <p class="small muted">No functional claims were checked. This does not establish consistency with gene or family reviews.</p>
+                {%- endif %}
+            </div>
+            {%- endif %}
+
+            {%- if qc.feedback_loops %}
+            <div class="qc-card">
+                <h3>Feedback loops <span class="muted small">(advisory, prose-driven: a regulator counts as "feedback" when its own description says so)</span></h3>
+                {%- set fb_warns = qc.feedback_loops | selectattr('severity', 'equalto', 'warning') | list %}
+                {%- if fb_warns %}
+                    <p class="small">{{ fb_warns | length }} negative regulator(s) described as feedback but with no upstream edge (loop cut):</p>
+                {%- else %}
+                    <p><span class="ok">&#10003;</span> <span class="small">every negative regulator described as feedback has an upstream edge closing the loop.</span></p>
+                {%- endif %}
+                <ul class="qc-list small">
+                    {%- for f in qc.feedback_loops %}
+                        <li>
+                            <span class="muted">{{ f.source }} &#8867; {{ f.target }}</span>
+                            {%- if f.severity == 'warning' %} <span class="warn">[{{ f.status }}]</span>
+                            {%- else %} <span class="muted">[{{ f.status }}]</span>{% endif %}
+                            <br><span class="small muted">{{ f.message }}</span>
                         </li>
                     {%- endfor %}
                 </ul>

@@ -90,7 +90,9 @@ slots:
     range: string
     description: Supporting text from the publication.
       This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual
-      text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say
+      text of the paper. The value must contain verbatim source text, not an empty string or editorial commentary alone.
+      Square brackets may interpolate editorial clarification inside a real quote; bracketed scientific notation from the source remains literal.
+      Omit this optional field when no source quotation is being asserted. For example, you can say
       '...[CFAP300 shows] transport within cilia is IFT dependent...'
     implements:
       - oa:exact
@@ -120,6 +122,14 @@ slots:
     range: Term
     inlined: true
     required: true
+    description: >-
+      The NCBI Taxonomy term for the organism. The id must be a real NCBITaxon
+      id and the label must be its NCBITaxon label, verbatim (term validation
+      checks both via the NCBITaxonEnum binding).
+    bindings:
+      - binds_value_of: id
+        range: NCBITaxonEnum
+        obligation_level: REQUIRED
   alternative_products:
     range: AlternativeProduct
     multivalued: true
@@ -299,6 +309,12 @@ slots:
       everywhere else the schema records what IS known; here it records, with the
       same evidentiary discipline, what is not. See the Function Knowledge Gaps
       project (projects/FUNCTION_KNOWLEDGE_GAPS.md).
+  consistency_exception:
+    range: ConsistencyException
+    description: >-
+      Use only on very rare occasions: records why this annotation's action is
+      deliberately allowed to contradict another row's action under the
+      action-consistency rules. See docs/action_consistency.md.
   propagation_review:
     range: PropagationReview
     description: >-
@@ -799,12 +815,159 @@ classes:
         range: ModuleNode
         inlined: true
         required: true
+      executable_models:
+        range: ExecutableModel
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Executable models (Boolean, kinetic, constraint-based, agent-based)
+          that realize this module, either derived from its own `connections`
+          or associated external models. List a model only once its behaviour
+          has been checked: each entry carries the scenarios it was run under
+          and what the module predicts in each, so the expectation is a
+          regression test on the curated wiring.
       evidence:
         range: EvidenceItem
         multivalued: true
         inlined_as_list: true
       notes:
         range: string
+
+  LogicExpression:
+    description: >-
+      A Boolean expression over module element ids, written declaratively as a
+      tree. Exactly one of `element`, `all_of`, `any_of` or `none_of` is set.
+      `none_of: [x]` is NOT x; `none_of: [x, y]` is NOT (x OR y).
+    attributes:
+      element:
+        range: string
+        description: >-
+          Id of a module node or annoton (a regulator of the element that owns
+          this expression).
+      all_of:
+        range: LogicExpression
+        multivalued: true
+        inlined_as_list: true
+        description: Conjunction (AND) of the sub-expressions.
+      any_of:
+        range: LogicExpression
+        multivalued: true
+        inlined_as_list: true
+        description: Disjunction (OR) of the sub-expressions.
+      none_of:
+        range: LogicExpression
+        multivalued: true
+        inlined_as_list: true
+        description: Negated disjunction (NOT (a OR b ...)) of the sub-expressions.
+
+  ExecutableModel:
+    description: >-
+      An executable model of a module: a Boolean network, kinetic (ODE) model,
+      constraint-based (FBA/genome-scale) model or agent-based model, with the
+      scenarios it has been run under. A model DERIVED_FROM_MODULE is generated
+      from the module's own `connections` (and any `activation_logic`) and is
+      never edited by hand; corrections go into the module. An EXTERNAL model
+      is a published model associated with the module through a reviewed
+      mapping, and is evidence for the module's wiring, not a replacement.
+    attributes:
+      id:
+        range: string
+        required: true
+      title:
+        range: string
+      model_type:
+        range: ExecutableModelTypeEnum
+        required: true
+      derivation:
+        range: ModelDerivationEnum
+        required: true
+      description:
+        range: string
+      files:
+        range: string
+        multivalued: true
+        description: >-
+          Repository-relative paths of model files (e.g. an external `.bnet` or
+          SBML snapshot, or a committed export of a derived model).
+      scenarios:
+        range: ModelScenario
+        multivalued: true
+        inlined_as_list: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModelScenario:
+    description: >-
+      A named run of an executable model: which elements are held fixed (a
+      stimulus, a knockout, a constitutively active mutant), which connections
+      are removed (a counterfactual), and the behaviour the curated wiring is
+      expected to produce. For Boolean models the expectation is checked
+      against the asynchronous attractors.
+    attributes:
+      id:
+        range: string
+        required: true
+      label:
+        range: string
+      description:
+        range: string
+      settings:
+        range: ScenarioSetting
+        multivalued: true
+        inlined_as_list: true
+      removed_connections:
+        range: ConnectionReference
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Connections dropped for this scenario, e.g. to show what the module
+          predicted before a feedback loop was curated in.
+      expected_attractor_kind:
+        range: AttractorKindEnum
+        description: The kind of every attractor the scenario is expected to reach.
+      expected_attractor_count:
+        range: integer
+        description: The expected number of attractors (1 = no multistability).
+      expected_active:
+        range: string
+        multivalued: true
+        description: Elements expected to be active in every state of every attractor.
+      expected_inactive:
+        range: string
+        multivalued: true
+        description: Elements expected to be inactive in every state of every attractor.
+      expected_oscillating:
+        range: string
+        multivalued: true
+        description: Elements expected to change value within an attractor.
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+
+  ScenarioSetting:
+    description: An element held at a fixed value for a scenario.
+    attributes:
+      element:
+        range: string
+        required: true
+      active:
+        range: boolean
+        required: true
+
+  ConnectionReference:
+    description: A reference to a module connection by its endpoints.
+    attributes:
+      source:
+        range: string
+        required: true
+      target:
+        range: string
+        required: true
 
   ModuleNode:
     description: >-
@@ -858,6 +1021,49 @@ classes:
           bundle-scoped consistency check: a concrete cascade may freely extend
           its start and end, while an inner sub-bundle node declares that its
           parts match a generic motif (e.g. the three-tier MAP kinase relay).
+      module_ref:
+        range: string
+        description: >-
+          Reference to another module that realizes this node, as the stem of a
+          module file in the same directory as the referencing module, with an
+          optional node id after a hash (e.g. "mitophagy" or
+          "mitophagy#atg8_capture"). This is the same form, resolved the same
+          way, as a conformance template. Unlike conforms_to (instance-of a motif),
+          module_ref is inclusion: the node is a stand-in for the referenced
+          module, so umbrella modules (e.g. organelle lifecycles) can compose
+          existing modules without copying their annotons. A referencing node
+          carries no annotons, parts or variant_sets of its own; it may carry
+          label, description, concepts, context and evidence. For
+          satisfiability the node is satisfied exactly when the referenced
+          module or node is satisfied; mark the enclosing part optional when
+          the referenced module is not required (e.g. a function that some
+          lineages lack). References must resolve and must not form cycles.
+      activation_logic:
+        range: LogicExpression
+        inlined: true
+        description: >-
+          Declarative Boolean logic stating when this element is active, as a
+          function of the elements that regulate it through `connections`.
+          Omit it to use the default (active when any activating regulator is
+          active and no inhibiting regulator is; the CaSQ convention). State it
+          only where that default is wrong, e.g. a step that needs ALL of
+          several inputs, or an activator that overrides an inhibitor. Every
+          element named must be the source of a signed connection into this
+          element: an activating connection in a positive position, an
+          inhibiting one inside `none_of`. Every regulator must be used unless
+          it is listed under `omitted_regulators`. Read by the Boolean
+          translator (`ai-gene-review module-to-bnet`), which exports it as the
+          update rule.
+      omitted_regulators:
+        range: string
+        multivalued: true
+        description: >-
+          Elements with a signed connection into this element that its
+          `activation_logic` deliberately leaves out, typically a modulator
+          that tunes an already-active step rather than switching it on or
+          off, which a Boolean rule cannot express. Listing an omission makes
+          it a stated claim; an unused regulator that is not listed is a
+          validation error. Only meaningful alongside `activation_logic`.
       gocam_associations:
         range: GoCamAssociation
         multivalued: true
@@ -981,6 +1187,32 @@ classes:
         inlined_as_list: true
       role_description:
         range: string
+      activation_logic:
+        range: LogicExpression
+        inlined: true
+        description: >-
+          Declarative Boolean logic stating when this element is active, as a
+          function of the elements that regulate it through `connections`.
+          Omit it to use the default (active when any activating regulator is
+          active and no inhibiting regulator is; the CaSQ convention). State it
+          only where that default is wrong, e.g. a step that needs ALL of
+          several inputs, or an activator that overrides an inhibitor. Every
+          element named must be the source of a signed connection into this
+          element: an activating connection in a positive position, an
+          inhibiting one inside `none_of`. Every regulator must be used unless
+          it is listed under `omitted_regulators`. Read by the Boolean
+          translator (`ai-gene-review module-to-bnet`), which exports it as the
+          update rule.
+      omitted_regulators:
+        range: string
+        multivalued: true
+        description: >-
+          Elements with a signed connection into this element that its
+          `activation_logic` deliberately leaves out, typically a modulator
+          that tunes an already-active step rather than switching it on or
+          off, which a Boolean rule cannot express. Listing an omission makes
+          it a stated claim; an unused regulator that is not listed is a
+          validation error. Only meaningful alongside `activation_logic`.
       gocam_associations:
         range: GoCamAssociation
         multivalued: true
@@ -1283,6 +1515,7 @@ classes:
       - supported_by
       - knowledge_gaps
       - propagation_review
+      - consistency_exception
     rules:
       - preconditions:
           slot_conditions:
@@ -1292,6 +1525,21 @@ classes:
           slot_conditions:
             proposed_replacement_terms:
               required: true
+
+  ConsistencyException:
+    description: >-
+      A deliberate, documented exception to the action-consistency rules
+      (src/ai_gene_review/schema/action_consistency.yaml) for this annotation.
+      For very rare cases where two rows' actions look contradictory but both are
+      right, e.g. a positive and a NOT annotation to the same term that reflect
+      genuinely different biological contexts. Conflicts involving this row are
+      still reported, at INFO with the reason, and an exception that no longer
+      matches any conflict is flagged.
+    attributes:
+      reason:
+        range: string
+        required: true
+        description: Why the apparent contradiction is correct.
 
   PropagationReview:
     description: >-
@@ -1496,6 +1744,14 @@ classes:
           - binds_value_of: id
             range: GOMolecularActivityEnum
             obligation_level: REQUIRED
+      proposed_molecular_function:
+        range: string
+        description: >-
+          The core activity when GO has no term for it yet: the proposed_name of an
+          entry in this review's top-level proposed_new_terms. Use it instead of
+          putting an obsolete or ill-fitting GO id in molecular_function (e.g. in-situ
+          holdase chaperones after GO:0051082 was obsoleted with no replacement).
+          When GO creates the term, move its id to molecular_function and drop this.
       contributes_to_molecular_function:
         range: Term
         inlined: true
@@ -2318,6 +2574,40 @@ classes:
 
 
 enums:
+  ExecutableModelTypeEnum:
+    description: The modelling formalism of an executable model.
+    permissible_values:
+      BOOLEAN:
+        description: Logical (Boolean or multi-valued) network.
+      KINETIC:
+        description: Kinetic model of reaction rates (ODE or stochastic).
+      CONSTRAINT_BASED:
+        description: Constraint-based / flux-balance model, including genome-scale metabolic models.
+      AGENT_BASED:
+        description: Agent-based model of cells or molecules.
+      OTHER:
+        description: Any other executable formalism.
+
+  ModelDerivationEnum:
+    description: Where an executable model comes from.
+    permissible_values:
+      DERIVED_FROM_MODULE:
+        description: Generated deterministically from the module document; never edited by hand.
+      EXTERNAL:
+        description: A published or third-party model associated with the module through a reviewed mapping.
+
+  AttractorKindEnum:
+    description: Long-term behaviour of a dynamical model under a scenario.
+    permissible_values:
+      FIXED_POINT:
+        description: A stable steady state in which no element changes.
+      CYCLIC:
+        description: >-
+          A complex attractor in which some elements keep changing. In a Boolean
+          model under negative feedback this reads as "no sustained steady
+          state" (a pulse, adaptation or oscillation), not as a claim that cells
+          oscillate.
+
   ModuleScopeEnum:
     description: How concrete the module document is expected to be.
     permissible_values:
@@ -2698,6 +2988,18 @@ enums:
         description: The term is not entirely wrong, but likely represents an over-annotation of the gene
         see_also:
           - https://github.com/ai4curation/ai-gene-review/blob/main/.claude/skills/annotation-reviewer/SKILL.md
+      TOO_GENERAL:
+        description: >-
+          The term is true of the gene, but so broad that it adds nothing, because a more specific
+          term asserted elsewhere in this review (ACCEPT, KEEP_AS_NON_CORE, NEW, or a MODIFY
+          replacement) already entails it. This is a judgment about the term's informativeness,
+          not about this row's evidence, which is weighed separately; it never means the claim is
+          false. Use REMOVE only for claims that are unlikely to be correct, and MODIFY when this
+          row's own evidence supports a more specific term. Use sparingly: a broader term that
+          still says something useful about the gene (e.g. a pathway-level process alongside a
+          specific step) should be accepted or kept as non-core.
+        see_also:
+          - https://github.com/ai4curation/ai-gene-review/blob/main/docs/action_consistency.md
       UNDECIDED:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
@@ -2772,6 +3074,18 @@ enums:
       relationship_types:
         - rdfs:subClassOf
   
+  NCBITaxonEnum:
+    description: >-
+      Any taxon in the NCBI Taxonomy. Checked lazily (progressive caching), so
+      the full taxonomy is never expanded.
+    reachable_from:
+      source_nodes:
+        - NCBITaxon:1
+      is_direct: false
+      include_self: true
+      relationship_types:
+        - rdfs:subClassOf
+
   GOMolecularActivityEnum:
     description: A molecular activity term in the GO ontology
     reachable_from:

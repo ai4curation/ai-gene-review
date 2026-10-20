@@ -3,9 +3,43 @@ title: "P. putida Gene Annotation Review Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PSEPK]
+sidecars:
+  slide_assets:
+    - P_PUTIDA/slides/actions-bar.svg
+    - P_PUTIDA/slides/d-ala-hole.svg
+    - P_PUTIDA/slides/module-first-workflow.svg
+    - P_PUTIDA/slides/ppu00470-batch-page.jpg
+manifest:
+  slides:
+    - href: P_PUTIDA/slides/P_PUTIDA-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
+      title: Project brief
 ---
 
 # P. putida Gene Annotation Review Project
+
+**Bottom line:** *Pseudomonas putida* KT2440 is a metabolically versatile soil
+bacterium used for bioremediation and biotechnology, and almost all of its GO
+annotation comes from automated pipelines. The project started with selected
+genes (18, then batches of 50 and 16) and in July 2026 became a genome-wide,
+pathway-by-pathway review of the 5,527-protein reference proteome: each batch
+starts from a curated module, asks which steps KT2440 can satisfy, and reviews
+only the genes needed to fill or resolve those steps. In a September 2026 snapshot
+the repo held 921 PSEPK gene reviews (5,324 annotation rows: 2,288 accepted,
+990 kept as non-core, 857 marked over-annotated, 391 modified, 243 removed,
+470 proposed as `NEW`, 85 undecided) and 138 pathway batch pages under
+`P_PUTIDA/batches/`, from about 200 PRs; both counts grow as
+batches land. Batches record unresolved steps as explicit holes rather than forcing a
+paralog into them (for example, the cytoplasmic D-alanine source for cell-wall
+synthesis). The "Completed Reviews" tables below list only the first 84 genes,
+and the status columns in `data/psepk_pathway_worklist.tsv` have not been
+updated since the pilot.
+
+We did this because a module-first pass spends review effort where a pathway
+has a missing, ambiguous or over-propagated step, which scales to a whole
+bacterial genome where gene-by-gene review would not.
 
 ## Overview
 
@@ -356,6 +390,8 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - [x] Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
 - [x] Curate the `ppu00470` D-amino-acid cell-wall precursor-supply boundary,
   preserving the unresolved cytoplasmic D-alanine source as a real hole.
+- [ ] Publish the focused five-part `bacterial_aspartate_to_threonine_biosynthesis`
+  batch with eight reviewed PSEPK pathway/paralog candidates.
 - [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
 - [ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
 - [x] Curate the PP_2842-PP_2849 UreA-G urease biogenesis and urea-hydrolysis batch as a separate three-stage module.
@@ -388,6 +424,19 @@ tested conditions. Q88CB2 DadX is cytoplasmic and alanine-specific, but its
 direct contribution to cell-wall D-alanine has not been tested. The batch
 therefore records DadX as `candidate_uncertain` and does not force either
 racemase into the species-specific module assignment.
+
+Started the focused bacterial aspartate-to-threonine batch from current
+`origin/main`. The new boundary contains five ordered reactions: two shared
+aspartate-family trunk reactions, homoserine formation shared with methionine,
+and the ThrB/ThrC threonine-specific pair. Exact PSEPK representatives are
+Q88EI9, Q88LE4, Q88MU8, Q88RK8, and Q88MU7. Q88LE2, Q88Q34, and Q88Q36 are
+reviewed as paralog candidates without assuming equivalent in-vivo flux.
+
+OpenScientist jobs were started for all eight genes, the reusable module, and
+the module + ppu00260 + PSEPK satisfiability question with the full 8100/7200
+allowances. The annotation-reviewer was consulted explicitly. Historical
+commit `86cf4fd8e9` was inspected read-only; no giant cherry-pick or old broad
+module restoration was used.
 
 ## 2026-07-05
 

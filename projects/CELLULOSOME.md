@@ -1,10 +1,37 @@
 ---
 title: "Cellulosome Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [ACET2, CLOCL]
+genes: [cipA, Q01866, ancA, sdbA, celA, celC, celD, celK, celS, P10477, P55742, P15329, Q70DK5, Q84C00, P38535, P51584, P10478, P38058, Q9RGE8, Q9RGE6, Q6DTY2, Q9RGE7]
+manifest:
+  slides:
+    - href: CELLULOSOME/slides/CELLULOSOME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/VHttoJK4pkrUE9GQEEFGYM
+      title: Project brief
 ---
 
 # Cellulosome Project
+
+**Bottom line:** the cellulosome is an extracellular multi-enzyme complex in
+which dockerin-bearing cellulases and hemicellulases dock onto cohesins of a
+non-catalytic scaffoldin, which is in turn anchored to the bacterial cell
+surface. We reviewed the GO annotations of 22 cellulosomal proteins: 17 from
+the thermophile *Acetivibrio thermocellus* (ACET2) and 5 from the mesophile
+*Clostridium cellulovorans* (CLOCL), covering 177 existing annotations plus 57
+proposed new ones. We chose this system because its annotations mix up the
+two kinds of subunit: glycosyl hydrolase and carbohydrate-catabolism terms had
+been propagated onto the non-catalytic scaffoldins. The reviews remove
+`GO:0004553` hydrolase activity from the CipA and CipB scaffoldins, give them
+cellulosome assembly (`GO:0044575`) and specific cohesin-dockerin binding terms
+(`GO:1990308`, `GO:1990311`, `GO:1990312`, `GO:1990309`) instead of `protein
+binding`, and add `GO:0043263` cellulosome to the docking enzymes. No
+annotation in the 22 reviews is left at `action: PENDING`, but only one review
+file (xghA, `Q70DK5`) is marked `status: COMPLETE`; the other 21 are still
+`status: DRAFT`, pending a final sign-off. *Ruminococcus flavefaciens* is noted
+as a possible extension.
 
 ## Overview
 
@@ -129,10 +156,6 @@ or have only TrEMBL entries with incorrect/unverified taxonomy. Focus on the 5 g
 - [Global View of the C. thermocellum Cellulosome](https://jb.asm.org/content/189/19/6787.full)
 - [Enzymatic diversity of the C. thermocellum cellulosome](https://www.nature.com/articles/srep35709)
 - [Cellulosome Wikipedia](https://en.wikipedia.org/wiki/Cellulosome)
-
-## Slides
-
-- [Slides](CELLULOSOME/slides/CELLULOSOME-slides.html) (Marp source: [CELLULOSOME-slides.md](CELLULOSOME/slides/CELLULOSOME-slides.md)) — AI generated
 
 ---
 # STATUS

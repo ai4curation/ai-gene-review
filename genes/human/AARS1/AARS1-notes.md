@@ -74,3 +74,71 @@ The late Falcon report was read and used as a research aid. It agrees on canonic
 Independent review on PR #3129 correctly identified a missed inhibitor-selectivity experiment and an overly broad self-association statement. The current YAML and the matching notes above now report the actual XY353-1 concentration window and re-anchor mutant/wild-type co-expression evidence to full-text PMID:40491354. The purified monomer result and heterologous-cell limits are both explicit. The source comments for cytoplasm InterPro signatures now distinguish unresolved domain-to-location inference from the supported SL-0086 location mapping; alanine-ligation EC/Rhea comments no longer carry an unrelated lactylation caveat.
 
 The optional action suggestions were considered. Exosome remains UNDECIDED because the target-specific proteomics row is inaccessible, without disputing the original curator; its peripheral status if verified is stated separately. Amino-acid binding remains ACCEPT as substrate recognition within the canonical core catalytic function, consistently with other true mechanistic parent terms. The Hippo row remains MARK_AS_OVER_ANNOTATED because it overextends a real YAP/TEAD effect to kinase-cascade regulation; its reason now points to the direct lactylation process proposal. No new GOA assertions or source tuples were changed.
+
+## 2026-09-27 post-merge source12 provider-citation closure
+
+Fresh API preflight found main `96c7e74615eb393c220e10f372f7396a0598a3a0`, no open AARS1 or AARS title overlap, and no `cmungall/clingen-aars1-source12` branch. All six top-level gene files and the nested genuine Falcon artifact match current-main blobs. The five cache paths below were absent on that exact main. Baseline files and live receipts are retained under `tmp/AARS1-source12-followup/` and `tmp/AARS1-source12-*-preflight.json`.
+
+The coordinator imported exact normal source12 outputs after run/artifact/identity verification (`tmp/source12-canonical-import-receipt.json`). These five DOI-only provider citations were missing in the earlier explicit-PMID census. Their actual records have now been read; no cache or generated report was edited. All 50 existing annotation objects, actions/source fields, both alternative products, original reference objects, description and three cores remain unchanged. Five source assessments are added. DRAFT replaces COMPLETE because the intentional unused-provider advisory is incompatible with the schema's warning-free COMPLETE definition; this is separate from source closure and PR readiness.
+
+| PMID and DOI | Actual access | Bounded assessment |
+| --- | --- | --- |
+| [34446925](https://pubmed.ncbi.nlm.nih.gov/34446925/), `10.1038/s41436-021-01286-8` | Abstract only | Eleven individuals with biallelic variants; the later-onset subgroup begins after the first year of life, rather than establishing adult onset. Reduced fibroblast AlaRS activity was measured in five affected individuals. Full body was not read for this closure. |
+| [40156251](https://pubmed.ncbi.nlm.nih.gov/40156251/), `10.1002/iub.70017` | Full review, PMC11953622 | The AARS1/yeast-ALA1 section explains model/allele limits. Its physiological-monomer generalization is not adopted over the existing preparation-specific monomer and heterologous interference evidence. This is not a new direct human activity assay. |
+| [41008630](https://pubmed.ncbi.nlm.nih.gov/41008630/), `10.3390/biom15091323` | Full review, PMC12467997 | Secondary synthesis of both AARS1 and AARS2. Tumor/high-lactate global-lactylation language does not supersede the untreated-HEK293T counterexample or transfer AARS2-specific substrates/localization to AARS1. |
+| [41639505](https://pubmed.ncbi.nlm.nih.gov/41639505/), `10.1007/s12672-026-04549-5` | Full review, PMC12961078 | Identifier is verified, but Figure 1 and the body expand ALSP differently. The detailed disease/ER-stress narrative is not adopted as independently verified mechanism. This concern is attached to the review, without denying original charging/lactylation assays. |
+| [41952148](https://pubmed.ncbi.nlm.nih.gov/41952148/), `10.1186/s12935-026-04288-1` | Full primary text, PMC13214215 | Pan-cancer associations are distinct from renal-cancer-cell perturbations and lactylation assays. Wild-type versus five-alanine rescue is positive evidence, but the examined study does not independently measure retained aminoacylation by that mutant. Rescue cell-line names differ between Methods, Results prose and Figure 12 caption, so the assessment retains a bounded renal-cancer-cell description. |
+
+The last paper's non-rescue result is not discarded: it supports a construct-dependent functional difference. It does not by itself establish complete separation of lactyltransferase and canonical tRNA-charging functions. The original direct lactylation experiments, basal-state counterexample and bounded inhibitor selectivity remain the mechanistic basis of the existing review. No new tumor-process assertion is manufactured from expression correlations, enrichment analyses or proliferation phenotypes.
+
+The recursive audit includes the YAML, these notes, the genuine Falcon report and its nested artifact, normalizing escaped and URL-encoded DOIs and matching actual cached PMID/DOI metadata. The quoted `10.1172/JCI174587DS1` is a supplementary-link context within PMID:38512451, not a separate paper assigned an invented PMID; complete supplementary recovery is not claimed. All five added titles retain exact machine metadata. Final census, validation, unchanged-source/quotation checks, history and rendering are captured in the manifest. No fresh fetch was needed for records already recovered normally.
+
+The recursive audit also found an older uncached citation, [PMID:2040280](https://pubmed.ncbi.nlm.nih.gov/2040280/), in five unchanged rat-donor propagation comments. Its primary PubMed identity and abstract were verified by indexed primary access on 2026-09-27: the 1991 Dignam study compares bacterial, insect and rat-liver alanyl-tRNA synthetases using aminoacylation, pyrophosphate exchange and limited proteolysis. The abstract supports this source context but does not expose every binding assay underlying the donor annotations; no full body was recovered or read in this follow-up. One normal `fetch-pmid 2040280` attempt ended with exit 1, cached 0/1 and DNS failure (`/tmp/AARS1-donor2040280-fetch.log`). The source remains a required cache gate. This closure therefore supplies the five recovered provider records, not complete closure of every citation: the recursive census contains 29 PMIDs and two cached Reactome records, with PMID:2040280 still missing. DRAFT and a draft publication recommendation are retained. The existing donor judgments and all annotation actions remain unchanged.
+
+
+## 2026-09-27 source17 legacy donor closure and review follow-up
+
+The exact open PR #3301 head `67b7d2872fc611269fd60ff5f64500f82a647fce`
+was verified before editing, including every canonical gene/provider file and
+published history. Formal review 5330279421 and comment 5855778122 approved
+the prior source assessments and offered three non-blocking suggestions.
+
+The coordinator imported the exact normally fetched [PMID:2040280] record from
+source17, run 36315912888, head `a50f934ce43976a6dc79ec6b21bd1e0ce8b99042`.
+Its immutable cache SHA-256 is
+`02c5eecf8e1a9baf5fa58ada15580c986d63529c3cc6331c24bc7eed6da8c4a7`;
+the import receipt is `tmp/source17-canonical-import-receipt.json`.
+The [primary PubMed record](https://pubmed.ncbi.nlm.nih.gov/2040280/) and recovered
+abstract were read separately. Bacterial, silkworm and rat-liver enzymes were
+compared; this is not a human AARS1 experiment. The abstract reports loss of
+charging after proteolysis with retained pyrophosphate exchange and joint
+alanine/ATP protection. Detailed donor binding assays remain outside the
+available abstract. No full body was recovered or read. A structured reference
+now records this scope without changing any of the five donor comments or
+their independent human support.
+
+This entry supersedes the preceding missing-cache status. The earlier gate
+was the campaign's recursive citation requirement, not a warning emitted by
+the gene validator for a PMID appearing only in prose comments. The newly
+structured reference is now subject to ordinary reference validation. The
+recursive authored/provider census, including the genuine nested Falcon
+artifact and decoded DOI/PMCID links, contains 29 PMIDs and two Reactome
+records, all cached. The JCI supplementary DOI suffix remains a documented
+supplementary link rather than a new article identifier.
+
+The relevance of [PMID:41639505] changes from LOW to MEDIUM because it is an
+AARS1-focused secondary review. Its DISPUTED correctness and specific
+ALSP-nomenclature/mechanism caveats remain unchanged; relevance is not a
+quality score. The suggestion to cite Falcon as core evidence was considered.
+It remains a research aid, while independently checked primary studies support
+the biological assertions; no provider quotation is added solely to remove
+the advisory. YAML remains DRAFT under the warning-free COMPLETE convention,
+while the recovered source closes the citation gate for normal PR review.
+
+All 50 annotation objects/actions, three core functions, two alternative
+products, description, existing primary-reference identities, immutable
+machine/provider bytes and published histories are preserved. This follow-up
+changes only the one relevance rating, adds the donor reference assessment,
+appends these notes and a scaffolded session record, and refreshes rendering.
+Targeted validation, history and render outcomes and exact hashes are recorded
+in the follow-up manifest. No cache, Git or remote state was edited.

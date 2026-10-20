@@ -1,3 +1,9 @@
+# ASAH1 review notes
+
+The opening record below is preserved as historical work. Its original action choices, isoform-2 attribution, absolute saposin-D requirement and unqualified substrate/secretion statements are superseded by the dated reassessment that follows. The historical heading "verified" does not describe the current evidence scope.
+
+## Historical review record (superseded where corrected below)
+
 # ASAH1 (acid ceramidase / N-acylsphingosine amidohydrolase 1) review notes
 
 UniProt: Q13510 (ASAH1_HUMAN). 395 aa precursor. EC 3.5.1.23 (acid ceramidase),
@@ -96,3 +102,62 @@ luminal hydrolase, so lysosomal lumen (GO:0043202) is the precise location.
 - regulation of steroid biosynthetic process (GO:0050810 IMP PMID:22261821) &
   transcription corepressor / NR5A1 binding: adrenocortical isoform-2 moonlighting
   role; KEEP_AS_NON_CORE.
+
+
+## 2026-09-28: source restoration and updated evidence assessment
+
+The existing review has 53 authored decisions and three alternative products. A deterministic seed into a separate working file restores 16 WITH/FROM lists and one additional IC source assertion (GO:0036021, PMID:27498570, GO:0036019 in WITH/FROM). It changes the working status from INITIALIZED to IN_PROGRESS. All previous decisions and other source fields are preserved at this preparatory stage. The superficially similar original IC row remains present. No canonical source cache was edited.
+
+The complete abstracts of all 18 cached papers were read. Most caches are abstract-only; PMID:23533145, PMID:27498570 and PMID:29692406 carry fuller text. Availability metadata is not a claim that the entire article or its supplements was inspected. Below, experimental details from selected body sections are distinguished from abstract-level evidence.
+
+The 2018 structure study uses inactive C143A proenzymes from naked mole rat and minke whale and an autocleaved human enzyme, all expressed in insect cells. The selected Results, figure captions, expression methods and liposome-assay methods inspected support the catalytic and maturation model. The human assay used anionic ceramide-containing liposomes at pH 4. Saposin D increases activity, but enzyme activity is present without it; "requires saposin D" is too absolute. The Discussion explicitly says the biochemical and mutational results suggest that saposin D does not form a complex with acid ceramidase. Neither a complex membership assertion nor a substrate-bound crystal structure should be inferred: the ceramide positioning is modeled. Full supplement and image-pixel inspection has not been performed. [PMID:29692406](https://pubmed.ncbi.nlm.nih.gov/29692406/).
+
+Secretion depends on the experimental context. Normal fibroblasts and the 2001 COS expression system show low secretion, whereas the 2003 amplified CHO overexpression system secreted most enzyme into medium for purification. The latter observation does not establish an extracellular physiological core, but it rules out an unqualified claim that secretion is always extremely low. [PMID:7744740](https://pubmed.ncbi.nlm.nih.gov/7744740/), [PMID:11451951](https://pubmed.ncbi.nlm.nih.gov/11451951/), [PMID:12815059](https://pubmed.ncbi.nlm.nih.gov/12815059/).
+
+The broad amide-hydrolase annotation cites a comparative study that explicitly assayed acid ceramidase as well as NAAA. It reports N-lauroylethanolamine hydrolysis by acid ceramidase. Its NAAA-focused title is not evidence of paralog confusion, and narrowing this row only to ceramide hydrolysis would omit the distinct assayed substrate. The earlier over-annotation rationale therefore needs revision. [PMID:15655246](https://pubmed.ncbi.nlm.nih.gov/15655246/).
+
+The nuclear SF-1 study reports a receptor interaction in H295R cells; generic binding can be refined to a supported receptor-binding function. A general nuclear location does not on its own prove which endogenous splice product was present. The new review must keep any isoform assignment at the actual experimental or UniProt-inference level. [PMID:22927646](https://pubmed.ncbi.nlm.nih.gov/22927646/).
+
+Two additional primary sources were independently identified. Ferraz et al. (2016) reports genetic and pharmacological evidence for acid-ceramidase-dependent formation of glucosylsphingosine and globotriaosylsphingosine when lysosomal glycosidases are deficient. Its complete official PubMed abstract was read; this is a substrate-overload pathway, not evidence that every glycosphingolipid is normally degraded this way. [PMID:26898341](https://pubmed.ncbi.nlm.nih.gov/26898341/).
+
+Nobumoto et al. (2026) uses differentiated human keratinocytes and ASAH1-containing HEK293T culture supernatant to investigate ceramide-class selectivity. The indexed primary Results and captions for figures 6–8, selected Discussion and cell-culture Methods were read. Differentiation markers were largely comparable after 14 days in knockout and control cells despite altered ceramide profiles. This does not by itself overturn the earlier calcium-induced differentiation experiment, which used different conditions. The enzyme assay used culture supernatant, not purified enzyme, and omitted saposin D. Its substrate preferences and limits should be described at that scope. No complete-body, image-pixel or supplement inspection is claimed. [PMID:41570988](https://pubmed.ncbi.nlm.nih.gov/41570988/), [PMID:17713573](https://pubmed.ncbi.nlm.nih.gov/17713573/).
+
+The required falcon/fallback research attempt in this session failed on network resolution. The current manual notes do not masquerade as a provider report. Each additional paper was requested once through the normal fetcher; both attempts failed on DNS resolution with no cache output. Source recovery is needed before final validation and publication of a review citing them.
+
+### Current annotation decisions and source limits
+
+All 54 source objects are retained, including both distinct endolysosome IC assertions and both NOT localization assertions; all three alternative products remain unchanged. The working review has 25 ACCEPT, 25 KEEP_AS_NON_CORE, two MODIFY and two UNDECIDED decisions. There are no NEW rows. The generic SF-1 interaction is refined to GO:0016922 nuclear receptor binding, and the N-lauroylethanolamine experiment refines the broad linear-amide hydrolase class to GO:0017064 fatty acid amide hydrolase activity. Both current GO definitions were checked. These are existing-row refinements, not additional redundant assertions.
+
+The two exosome target inventories (PMID:23533145 and PMID:19056867) remain unverified and are explicitly UNDECIDED. The separate PMID:25645918 extracellular row is retained with curator deference and independent secretion evidence, while its exact target glycopeptide/sputum context remains unverified. Neither missing table establishes contamination or a false annotation.
+
+The PAINT node PANTHER:PTN002005684 is preserved. Direct human biochemistry supports the inherited activity, and human Q13510 in the descendant evidence is expected, not circular. Exact ancestral scope and alignment were not replayed; its source status remains UNRESOLVED rather than implying a reconstructed phylogeny.
+
+A third additional primary source, Strelow et al. (2000), expresses full-length human acid ceramidase in mouse L929 cells and reports protection from TNF-induced caspase-independent death. Official PubMed identity, the complete abstract and selected original plasmid/assay Results were inspected independently. This is independent target-construct corroboration for the existing TNF/death regulation rows, not reconstruction of the mouse Q9WV54 donor chain, a human-tissue experiment, direct TNF binding or a demonstrated RIPK/MLKL mechanism. The current GO:0062098 definition describes regulation of programmed necrotic death; it does not require a particular necroptosis pathway. [PMID:10974027](https://pubmed.ncbi.nlm.nih.gov/10974027/), [GO:0062098](https://amigo.geneontology.org/amigo/term/GO:0062098).
+
+The independent original-paper consultation also inspected PMID:22927646 Fig. 3/Methods, PMID:15655246 human constructs and comparative substrate assays, PMID:12764132 fibroblast localization Results/Fig. 7, and the Reactome Q13510 processed-chain participant hierarchy. The root read every existing cached abstract and selected 2018 structural and 2026 keratinocyte paper sections. This division of actual reading is recorded without claiming every complete body, figure image or supplement was read. Cache availability flags describe the normal cache, not the completeness of external reading.
+
+Each of PMID:26898341, PMID:41570988 and PMID:10974027 had exactly one ordinary fetch attempt, which failed on network resolution and produced no normal cache. Raw diagnostics were discarded; structured attempt records retain error categories and hashes. All three identities were independently verified. A fixed recovery batch is pending; this working draft is not a published or fully validated final review.
+
+
+### Source53 closure and final evidence attachments
+
+The three additional normal publication records are now imported without overwrite. PMID:10974027 and PMID:41570988 contain XML-derived body text; PMID:26898341 remains abstract-only. The complete metadata and abstracts were reread against these exact records. Selected original Methods/Results for the human-ASAH1/mouse-L929 experiment and the human keratinocyte/supernatant assays agree with the bounded interpretations above. The earlier pending-cache statements record the preparation stage and are now resolved. This source closure does not resolve the two source-specific exosome inventories.
+
+The final draft attaches literal normal-cache passages for the TNF construct, the saposin-D omission and the 14-day differentiation interpretation. A reference finding records glycosphingolipid deacylation under glycosidase deficiency with an abstract-only flag. All 50 quoted passages are literal substrings of their designated normal cache, all availability flags match cache metadata, and all 21 PMID titles match their records. The 54 original/restored source objects, three alternative products and two NOT flags are preserved. Validation, rendering and independent final consultation are recorded separately.
+
+The final source-boundary check further distinguishes the necrotic-death donor annotation from the independent TNF experiment. PMID:10974027 describes atypical apoptosis and explicitly reports no cell swelling or membrane rupture. Its human-construct evidence corroborates general TNF/caspase-independent death regulation, not the exact programmed-necrotic-death class; retention of that class defers to the preserved mouse donor annotation. No action changes follow from this clarification.
+
+
+## PR 3383 evidence-linkage follow-up (2026-09-28)
+
+The TNF-response rows now quote the observed protection result rather than construct preparation. The exact programmed-necrotic-death rows retain their original mouse transfer and carry PMID:10974027 only as a contextual reference: atypical apoptosis in that paper does not independently establish the annotated death class.
+
+The normal local cache and external reading are separate. Selected externally accessible text was read for three abstract-only caches; this does not mean that every section, figure pixel or supplement was read. The reference assessments now give exact URLs and sections. The independent reviewer inspected the original localization Results and Fig. 7 caption for [PMID:12764132](https://www.sciencedirect.com/science/article/pii/S002192582084263X), and human-AC expression and comparative-substrate sections in the [PMID:15655246 author-paper transcription](https://www.researchgate.net/publication/8076692_Molecular_Characterization_of_N-Acylethanolamine-hydrolyzing_Acid_Amidase_a_Novel_Member_of_the_Choloylglycine_Hydrolase_Family_with_Structural_and_Functional_Similarity_to_Acid_Ceramidase). For [PMID:22927646](https://pmc.ncbi.nlm.nih.gov/articles/PMC3486137/), the independent reviewer inspected selected Methods and Fig. 3 caption; the root subsequently read the indexed Results describing receptor interaction. These are direct article sections, not a claim that missing text was present in the normal cache.
+
+Extracellular region and extracellular exosome are different localization claims. Independent secretion evidence supports the former. It does not by itself establish the latter. The two exosome annotations remain preserved and UNDECIDED while their exact inventory evidence is investigated; this is not a contamination claim or removal of the experimental assertions.
+
+The conditional glycosphingolipid deacylation finding remains in the biological description and has a new curation question. No process annotation is manufactured without checking term ancestry, redundancy and disease-context scope. The established ceramidase row retains a directly relevant corroborating quotation from PMID:8955159; the NAAA-centered abstract is not forced to support a ceramide assay that it does not describe.
+
+### Direct exosome target evidence resolves the uncertainty
+
+The preceding investigation is now resolved for the urinary study. The [study-authored NHLBI Urinary Exosome Protein Database](https://esbl.nhlbi.nih.gov/UrinaryExosomes/) explicitly lists ASAH1 NP_808592 and NP_004306, with 7 and 9 peptides respectively, both citing reference 2 (PMID:19056867). The root and independent reviewer read these actual rows and the source-reference mapping. Both existing exosome assertions are therefore KEEP_AS_NON_CORE: one directly verified in its source table, the other corroborated for the same compartment with curator deference. The PMID:23533145 target inventory remains unread. Detection is not evidence of a catalytic role in exosomes or a modern isoform-specific assignment. No raw source or GOA field is changed.

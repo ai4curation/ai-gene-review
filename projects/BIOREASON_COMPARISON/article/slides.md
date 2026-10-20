@@ -168,7 +168,7 @@ Mouse has the highest selected-case mean (4.7), followed by ***B. subtilis*** (4
 
 ---
 
-## Eight reproducible model failure modes
+## Eight recurrent model failure modes
 
 Immediately diagnostic to a reader of the narrative.
 
@@ -180,10 +180,10 @@ Immediately diagnostic to a reader of the narrative.
 | 4 | **Organism-specific biology absent** | daf-16 generic FoxO, no IIS/dauer/longevity |
 | 5 | **Neo-functionalisation / moonlighting missed** | Nmnat NAD⁺ enzyme; chaperone role lost |
 | 6 | **Narrative–GO disconnect** | RidA: `protein binding` not deaminase activity |
-| 7 | **Cross-kingdom fold bias** | aprE subtilisin → "human blood coagulation" |
+| 7 | **Cross-kingdom fold bias** | PGRPLB (*Anopheles*) → "fruit fly" protein |
 | 8 | **Generated UniProt-style fabrication** | Slc5a1 → steroid-sulfate transporter |
 
-**The biases are architectural — they predict *where* the model will fail on deployment.**
+**The biases are architectural — they predict *where* the model will fail on deployment.** (Modes are illustrated by selected cases; counts with denominators are on the project page. As presented at ISMB 2026 on 14 July 2026, row 7 cited aprE, but aprE's coagulation terms come from GO-GPT/SFT, not the RL narrative. Corrected on 2026-09-27.)
 
 ---
 
@@ -193,7 +193,7 @@ Immediately diagnostic to a reader of the narrative.
 > <span class="bad">✗</span> Actually the primary activator of the **cAMP/PKA** pathway.
 
 > **Epe1** *(S. pombe, 1/5)* — "a nuclear **histone demethylase** … JmjC oxygenase core"
-> <span class="bad">✗</span> A **pseudoenzyme** (HVD not HXD); anti-silencing factor via HP1/Swi6.
+> <span class="bad">✗</span> A **pseudoenzyme** (Fe(II) triad H297-E299-Y370: Tyr in place of the third His); anti-silencing factor via HP1/Swi6.
 
 > **TOR1** *(yeast, 4/4)* — "PIKK serine/threonine kinase … HEAT repeats scaffold regulatory assemblies … integrates nutrient & stress cues"
 > <span class="good">✓</span> Correct — the **FRB + multi-domain architecture** enabled pathway-level inference.
@@ -213,11 +213,11 @@ TOR1 · NOTCH1 · PTEN · EGFR · spo0A · (informative family names: Uggt1, KAR
 
 ## Supplemental review: GOA agreement ≠ biological validity
 
-GO-GPT run directly on 299 canonical genes; overlap measured against three progressively stricter references:
+GO-GPT run directly on 296 canonical genes (as of 2026-09-27, commit c7551cb3db); overlap measured against three progressively stricter references:
 
 ![h:380](figures/three_level_overlap.png)
 
-The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (4.0%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
+The **3-fold gap** between raw-GOA agreement (11.6%) and agent-adjudicated core-function agreement (4.0%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
 
 ---
 

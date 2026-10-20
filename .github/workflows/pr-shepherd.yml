@@ -272,8 +272,8 @@ jobs:
 
             Classify each candidate into one of these states:
             - APPROVED + CLEAN: formal reviewDecision is approval and branch is mergeable.
-            - APPROVED + DIRTY: formal reviewDecision is approval but branch is behind or
-              conflicted.
+            - APPROVED + CONFLICTING: formal reviewDecision is approval and GitHub reports
+              mergeable == CONFLICTING. Merely being behind main is not a conflict.
             - CHANGES_REQUESTED: latest effective review has genuinely blocking issues.
             - REVIEW_REQUIRED + review gap: no formal verdict exists for the current head,
               and the latest review was cancelled, is missing, or succeeded without posting
@@ -282,20 +282,23 @@ jobs:
               reviews need no duplicate dispatch.
 
             Prioritize the most stuck PRs in this order:
-            1. APPROVED + DIRTY PRs that can be updated without a rebase or force-push.
+            1. APPROVED + CONFLICTING PRs that can be repaired without a rebase or force-push.
             2. Stale CHANGES_REQUESTED PRs, oldest updated first.
             3. REVIEW_REQUIRED PRs with a review gap, oldest updated first.
 
             Then process only the highest-ranked PRs up to MAX_PRS.
 
+            Never update an approved PR merely because it is behind main, or alter a PR
+            already in the merge queue. Queue CI tests integration without changing the
+            reviewed head; a branch refresh would dismiss approval and restart review.
+
             Allowed actions by state:
             - APPROVED + CLEAN:
               - Take no action. Do not mark a draft ready, merge, or enable auto-merge. The
                 deterministic controller owns this state and enforces its own rollout flag.
-            - APPROVED + DIRTY:
-              - First try GitHub's update-branch API with the current head SHA.
-              - If update-branch reports conflicts, you may attempt a local merge from the base
-                branch into the PR branch, but never rebase and never force-push.
+            - APPROVED + CONFLICTING:
+              - Attempt a local merge from the base branch into the PR branch to resolve
+                actual conflicts, but never rebase and never force-push.
               - If conflicts are not safely resolvable, post a concise comment explaining the
                 blocker and leave the PR otherwise untouched.
             - CHANGES_REQUESTED:
@@ -388,7 +391,9 @@ jobs:
     concurrency:
       group: pr-shepherd-merge-ready
       cancel-in-progress: false
-    timeout-minutes: 15
+    # Up to 50 admissions, each with ~12 serial gh calls. The controller's
+    # --time-budget-seconds stops before this so the summary is still written.
+    timeout-minutes: 45
     env:
       # Scheduled execution remains feature-gated even with strict main
       # protection installed. With no/false variable, schedules audit.
@@ -467,6 +472,8 @@ jobs:
           uv run --python 3.12 --no-project python scripts/auto_merge_ready_prs.py \
             --repo "$GITHUB_REPOSITORY" \
             --min-age-days "$MIN_AGE_DAYS" \
+            --max-enqueue-per-run 50 --max-queue-size 50 \
+            --time-budget-seconds 1800 \
             --required-check "test (3.12)" \
             "${draft_args[@]}" \
             --dry-run
@@ -493,6 +500,8 @@ jobs:
           uv run --python 3.12 --no-project python scripts/auto_merge_ready_prs.py \
             --repo "$GITHUB_REPOSITORY" \
             --min-age-days "$MIN_AGE_DAYS" \
+            --max-enqueue-per-run 50 --max-queue-size 50 \
+            --time-budget-seconds 1800 \
             --required-check "test (3.12)" \
             "${draft_args[@]}" \
             --execute

@@ -1,11 +1,33 @@
 ---
 title: "Iron-Sulfur Cluster Biogenesis Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [NFS1, ISCU, FXN, LYRM4, HSPA9, HSCB, GLRX5, ISCA1, ISCA2, IBA57, NFU1, BOLA3, ABCB7, CIAO1, MMS19]
+manifest:
+  slides:
+    - href: IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/5tZjqRb2tFMCKoamGFVLKA
+      title: Project brief
 ---
 
 # Iron-Sulfur Cluster Biogenesis Project
+
+**Bottom line:** iron-sulfur clusters are built in the mitochondrion by the
+ISC machinery (the NFS1-LYRM4-ISCU-FXN core, the HSPA9/HSCB/GLRX5 transfer
+chaperones, and late [4Fe-4S] factors), exported via ABCB7, and delivered to
+cytosolic and nuclear proteins by the CIA system. All 15 genes in the candidate
+table below now have complete reviews, not just HSCB as the status list at the
+bottom still says. Together they assess 638 GOA rows: 366 ACCEPT, 92
+KEEP_AS_NON_CORE, 92 MARK_AS_OVER_ANNOTATED, 42 MODIFY, 24 REMOVE, 19 NEW and 3
+UNDECIDED. The recurring corrections are generic `protein binding` rows
+removed on HSCB and GLRX5, heme-transport rows removed from ABCB7, and NEW
+Fe-S-specific terms such as `iron-sulfur cluster chaperone activity`
+(GO:0140132) for GLRX5 and ISCA1 and `[4Fe-4S] cluster assembly` (GO:0044572)
+for ISCA1 and IBA57. FDXR, FDX2, CIAO2A, CIAO2B and CIAO3 are not yet reviewed,
+and no Fe-S module has been built.
 
 ## Overview
 

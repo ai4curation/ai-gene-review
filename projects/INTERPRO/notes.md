@@ -6,6 +6,27 @@ autolink_gene_symbols: false
 Historical session notes for the [InterPro mapping review](../INTERPRO.md). These preserve the original chronology and provisional interpretations; consult the project page and linked mapping set for the current summary.
 
 
+## 2026-09-27 — rotary-ATPase mappings from the FliI/SctN audit
+
+The [F-type ATP synthase recovery](../CONSERVED_FUNCTION_RECOVERY.md) audit reviewed
+nine flagellar (FliI) and injectisome (SctN) export ATPases, and three InterPro2GO sources
+turned up alongside the PAINT/TreeGrafter error. Seven rows were added to the
+[mapping set](interpro2go.sssom.yaml) (29 -> 36 mappings, twelve -> fifteen entries). Match
+counts are from QuickGO `withFrom` queries on 2026-09-27.
+
+- **`IPR013380` -> `GO:0046961`, `GO:0006754` — REMOVE.** The entry is specific to SctN,
+  so a wrong term is wrong for all 915 annotated members rather than for an exception
+  subset. Both terms read SctN as an F1 synthase. The process and complex mappings are
+  endorsed.
+- **`IPR004100` -> `GO:1902600`, `GO:0046034` — NARROW.** A domain shared by genuine
+  rotary ATPase subunits and the FliI/SctN paralogs (71,788 annotations in all). The
+  ideal fix is suppression when IPR005714 also matches; since a per-entry InterPro2GO
+  mapping probably cannot express that, the practical fix is removing these two
+  mappings or moving them to narrower entries that exclude FliI/SctN (2026-10-14).
+- **`IPR005714` -> `GO:0009058` — REMOVE.** Present in the 2025-09 mapping file but with
+  no annotations in QuickGO, so it may already be filtered downstream.
+
+
 ## 2026-09-17 — three mappings found gene-first rather than family-first
 
 The contested-function review ([Contested gene functions, 2025-2026](../FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md))

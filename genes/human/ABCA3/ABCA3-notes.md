@@ -57,3 +57,109 @@ The first complete review contains 39 ACCEPT, 23 KEEP_AS_NON_CORE, 16 MODIFY and
 The reviewer correctly identified that tear-fluid proteomic detection is insufficient to retain a physiological extracellular location: change this HDA assessment to MARK_AS_OVER_ANNOTATED. The publisher Table I does explicitly contain ABCA3_HUMAN; its short row and URL are now attached as full-text support because the cached article omits that table. No cache was edited. The requested late-endosome consistency change was already present at submitted head 57ea574: both GO:0005770 and GO:0031902 are KEEP_AS_NON_CORE, so no action change is warranted.
 
 Added direct PMID:17574245 support to its transport row, source-specific location rationales, and explicit Reactome reference assessments distinguishing pathway-level ER-to-lamellar-body language from a molecular interorganelle transfer assay. Free-cholesterol reduction in PMID:25817392 cannot alone distinguish sequestration from efflux to an acceptor; this is now explicit. Existing phospholipid homeostasis is included in the core synthesis. No new process annotation or proposed ontology term is needed: organelle assembly plus the alveolar lamellar-body membrane location already conveys the supported role. Final counts are 39 ACCEPT, 22 KEEP_AS_NON_CORE, 16 MODIFY, one MARK_AS_OVER_ANNOTATED and four UNDECIDED.
+
+## 2026-09-27: post-merge source13 and bibliography follow-up
+
+The original full audit was merged in PR #3134. Its 82 source assertions, all annotation actions, two alternative products, description, questions and single integrated core remain unchanged. Fresh main `fba6fe56078f46c326f465ae5a68a9ac18a23422` has exactly the same seven gene/raw/provider blobs as the verified local publication base `39b086a55856ca2f2287036a5ab43280add1ee90`; canonical and four historical/alias title searches found no open review. The follow-up includes four exact normal source13 cache records. Twenty-five already-published PMID caches, three Reactome records and both original history records were absent from this workspace and were restored exclusively from verified main blobs, without overwriting or refetching them. Those restorations are not new publication changes.
+
+### Actual recovered evidence
+
+- [PMID:22068586] is an abstract-only normal cache, independently checked against [PubMed and its figure captions](https://pubmed.ncbi.nlm.nih.gov/22068586/). The 47-child cohort and D253H/T1173R cellular experiments support disease and variant context. Figures 5 and 7 explicitly identify A549 cells; the cached abstract does not specify the expression host, and no full Methods section was newly recovered. Abnormal lamellar bodies and mutant-associated IL-8 production do not establish a new normal ABCA3 substrate or intrinsic inflammatory activity. Independent peer reading confirmed this scope.
+- [PMID:26295388] has an actual XML body, including the structural-analysis and conclusion sections. It is a 2015 mini-review with preliminary predictions and a partial Phyre2 model using a *Caenorhabditis elegans* P-glycoprotein template. Its comparison with ABC domains in other organisms is not an experimental human ABCA3 structure or transport assay. The historical lack-of-structure discussion does not displace the existing 2022 human cryo-EM evidence.
+- [PMID:36808083] has Methods, Results and Discussion in the restored record. The retrospective Kids Lung Register cohort selected 44 biallelic patients surviving beyond one year from 79 registered patients. Twenty-one of those survivors had neonatal onset. Sparse longitudinal observations, survivor selection and partly predicted variant classes bound interpretation. The investigators could not reliably estimate treatment effects; this is natural-history evidence, not proof of a drug effect or new transporter chemistry.
+- [PMID:38203821] is a full-body review of several surfactant genes, developmental pathways and candidate treatments. Its therapeutic section discusses SFTPB replacement in surfactant-protein-B-deficient mice; that is not an ABCA3 gene-therapy experiment. ABCA3 trafficking and disease summaries are useful context but do not independently assign new molecular functions or establish clinical efficacy.
+
+### The two DOI-only provider works
+
+The official LMU records and linked original PDFs were read on 2026-09-27. A dissertation has its own identity; a related journal article is not substituted for the entire thesis.
+
+1. [Xiaohua Yang, *Quantifying ABCA3 deficiency and ABCA3 variant-specific response to hydroxychloroquine*](https://edoc.ub.uni-muenchen.de/33410/) (2024; DOI 10.5282/edoc.33410) is a 27-page cumulative dissertation. Its public PDF contains background, contribution statements and summaries; printed pages 21–22 identify Paper I and Paper II but do not reproduce their full Methods/Results. The summary describes variant assays and retrospective HCQ-treated cases while retaining clinical uncertainty. These directly relevant component works are [PMID:37108718] and [PMID:37175887], newly resolved here rather than fabricated replacements for the dissertation.
+2. [Yang Li, *Probe the transport function of ABCA3 by metabolic labelling of choline phospholipids*](https://edoc.ub.uni-muenchen.de/26783/) (2020; DOI 10.5282/edoc.26783) is an accessible 89-page dissertation. Methods, printed pages 27–29, specify the human ABCA3-HA construct and A549 host. Discussion pages 63–67 distinguish label synthesis, vesicle accumulation, mutant effects and limitations of the carcinoma-cell model. Miltefosine's other effects on membrane lipids and synthesis are explicitly acknowledged. This corroborates the existing bounded transport synthesis; it does not provide purified leaflet-resolved flux. The provider's pages 82–85 are bibliography pages, not the experimental passages. The separate journal article [PMID:31473345] retains its own abstract-only cache and source identity.
+
+[PMID:37108718] was verified at [PubMed](https://pubmed.ncbi.nlm.nih.gov/37108718/) and its public [PMC body](https://pmc.ncbi.nlm.nih.gov/articles/PMC10141231/). Results, Discussion and Methods 4.1–4.5 combine HA-tagged ABCA3 A549 measurements with prior heterogeneous assays and patient data. Vesicle lipid readouts corroborate transport; the integrated score and clinical correlations do not establish a universal functional threshold or a new substrate. [PMID:37175887] was verified through the primary indexed [PMC body](https://pmc.ncbi.nlm.nih.gov/articles/PMC10179277/), including Results, limitations and Methods. WT/16 mutant A549 models and 39 retrospective cases support variant-dependent cellular HCQ responses, with uncontrolled treatment, co-medication and compound-heterozygote extrapolation limiting clinical inference. Neither study changes the retained annotation decisions. A single normal two-ID fetch returned exit 1, 0/2 records, with DNS errors; both caches remain required and the follow-up remains DRAFT.
+
+### Evidence representation and complete citation census
+
+The public tear-proteomics [Table I](https://www.spandidos-publications.com/10.3892/or.2012.1849) was reread: its row identifies `ABCA3_HUMAN` / `ABCA3` as human ATP-binding cassette sub-family A member 3. The local XML record contains the study body but omits that table cell. The annotation retains the primary PMID and its existing over-annotation decision; an ordinary exact cached quote describes pooled tear sampling, while the target identification is explicitly attributed to this external table. The old special full-text field is removed because public accessibility alone does not justify a field reserved for full text that cannot be shared. No quote is routed through this notes file as surrogate primary evidence. This also supersedes the earlier notes sentence calling the tear row non-core: the published final decision was already MARK_AS_OVER_ANNOTATED.
+
+For [PMID:27352740] and [PMID:28887056], `full_text_unavailable` now reflects their abstract-only normal caches. The original external publisher/full-paper-in-dissertation reads remain explicitly distinguished. The latter paper is reproduced in the previously inspected [Kinting dissertation, pages 71–76](https://edoc.ub.uni-muenchen.de/25392/1/Kinting_Susanna.pdf); that document is an access route to the identified journal paper, not an invented PMID or a newly recovered cache. All original source IDs and fetched titles remain unchanged.
+
+The recursive census includes the YAML, complete notes, genuine Falcon report and its nested artifact, decoded DOI/PMC URLs and title-only bibliography. The provider's repeated bibliography entries resolve to seven distinct journal works and the two LMU dissertations. Its title-only Open Targets platform citation resolves to [the database-methods publication](https://pubmed.ncbi.nlm.nih.gov/39657122/) (DOI 10.1093/nar/gkae1128); it credits the search service and supplies no ABCA3-specific experimental evidence, so it is explicitly excluded from the biological cache requirement. Unused bibliography inside external dissertations and source articles is not recursively promoted into new gene citations. The two component articles above are included because they are the actual works underlying the dissertation's substantive variant/HCQ summaries. At this checkpoint all previously required references are cached, and the only new required PMID gaps are the two failed normal requests. No DOI-only dissertation is represented as a missing PubMed record, and no provider or source file was rewritten.
+
+## 2026-09-27 — PR #3303 evidence-attachment follow-up
+
+The current published head was checked before editing. All 82 source assertions
+and actions, the integrated core and two alternative products are retained.
+This follow-up removes the off-topic pooled-tear sampling quote from the
+[PMID:22664934] annotation while preserving its direct primary reference and
+the explicit externally read identification evidence. The local record contains
+article body sections, but omits the ABCA3 table cell; its general sampling
+sentence cannot substitute for that target-specific result.
+
+A fresh direct read of the [publisher article](https://www.spandidos-publications.com/10.3892/or.2012.1849)
+on 2026-09-27 locates the row in **Table II**, captioned *Proteins identified
+from tear proteomes of CA and CTRL*. It lists `ABCA3_HUMAN`, ATP-binding cassette
+sub-family A member 3, Homo sapiens and ABCA3. The earlier Table I pointer is
+corrected. Detection in pooled tear fluid is retained as evidence; the existing
+`MARK_AS_OVER_ANNOTATED` decision addresses the stronger physiological
+extracellular-location interpretation and does not deny the proteomics hit or
+establish soluble secretion. The earlier note's shorthand about retaining
+non-core detection does not replace that explicit annotation action.
+
+The table is publicly accessible. No public-sharing restriction was established,
+so absence from the normal extraction does not justify repopulating the special
+`supporting_text_fulltext` field. The source is attributed directly to the PMID
+and publisher URL, without using this notes file as an independent evidence
+source. Previously verified identities for [PMID:37108718] and [PMID:37175887]
+remain verified independently of cache presence. Their recovered normal records
+now contain actual Results, Discussion and Methods; those sections were read
+in the verified source20 staging area before import.
+
+
+### Actual recovered variant-study evidence
+
+[PMID:37108718] combines stable HA-tagged WT or patient-associated ABCA3 A549
+experiments with prior heterogeneous assays and clinical data. The Methods
+separate calnexin/CD63 localization, glycosylation and cleavage from vesicle
+volume and lipid labeling. TopF-PC and propargyl-choline follow different
+cellular routes; their accumulation is not a purified, leaflet-resolved flux
+measurement. Earlier ATPase assays contribute to the integrated score. The
+clinical correlation has discordant cases and a composite outcome that treats
+transplantation as death, so no universal residual-function threshold is adopted.
+
+[PMID:37175887] studies WT and 16 mutant ABCA3-HA A549 models with HCQ,
+measuring morphology, cleavage, vesicle volume and lipid accumulation. The
+variant- and concentration-dependent cellular effects are real, but no direct
+HCQ binding to ABCA3 is measured. The 39 retrospective treated cases, a small
+subset of an earlier blinded trial, co-medication and discordant outcomes are
+kept distinct. Summing responses from separate variant cell lines is an
+extrapolation for compound heterozygotes. These findings do not establish
+general therapeutic efficacy or warrant a new molecular function or core.
+
+Both primary PMC pages independently confirm the respective title, PMID and
+DOI. The normal files contain full scientific sections with duplicate flattened
+text; availability is not a claim that every supplementary table or raw dataset
+has been recovered. The two dissertation identities and access boundaries above
+remain unchanged. No source, provider report, source assertion, annotation
+action or core function is rewritten.
+
+### Source20 closure checkpoint
+
+The root's verified source20 import supplied both normal files unchanged;
+canonical bytes match the staged records and import receipt. The required
+recursive census is now **34 PMIDs and four Reactome records, all present**.
+This explicitly supersedes the earlier two-missing-cache checkpoint above.
+The complete YAML, notes, genuine Falcon report and nested artifact were
+rescanned, including decoded DOI/PMC links and the prior title-only bibliography
+resolutions. The two independently identified LMU dissertations retain their own
+access assessments; the unrelated Open Targets infrastructure citation remains
+excluded for the stated reason. The recovered papers add no new annotation or
+core. Published source assertions, actions, reference identities, two alternative
+products, all provider/raw files and earlier history remain unchanged.
+
+Target validation passed with three existing source-specific action advisories
+(plasma membrane, cytoplasmic vesicle membrane and phosphatidylcholine-process
+regulation). Those distinctions retain their evidence/access reasons. YAML
+status remains DRAFT under the schema's no-warning COMPLETE rule; there is no
+remaining required source-cache gate. History, exact cached quotations and
+source preservation are checked separately.

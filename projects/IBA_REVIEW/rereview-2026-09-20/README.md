@@ -45,7 +45,11 @@ uv run python projects/IBA_REVIEW/rereview-2026-09-20/inventory.py
 `verify_sources.py` compares every changed review named in the manual audit records
 with the frozen Git baseline (excluding unrelated changes that arrive on main)
 and checks that all original non-NEW source assertions (term, evidence,
-reference, isoform, NOT, and qualifier) survive unchanged. The sole registered
+reference, isoform, NOT, and qualifier) survive unchanged. Qualifiers added by
+a current GOA reseed are matched generically for older frozen signatures that
+lacked a qualifier; explicit, signature-level exceptions are registered in the
+script only for source assertions genuinely retired by current-GOA refreshes.
+The sole registered
 identity migration is worm/csr-1: its frozen review mixed a deleted LARP-1
 accession with NHR-47 source annotations. The checker verifies that the original
 review and source files equal the frozen baseline in their archive, that the
@@ -53,7 +57,11 @@ canonical H2KZD5 sources equal the official fetch snapshots, and that all 21
 replacement source assertions equal the preserved unreviewed seed. The 16
 archived NHR-47 assertions are reported separately, not silently counted as
 canonical CSR-1 annotations. See the [migration manifest](../../../genes/worm/csr-1/csr-1-provenance/identity-migration-manifest.json).
-It does not assess biological correctness or count as a manual review.
+Current-GOA refreshes with genuinely retired source assertions are registered as
+narrow signature-level exceptions in `verify_sources.py`, while qualifier-only
+backfills remain matched and reported generically. As of this batch, explicit
+exceptions cover APJ1, CPS1, HSC82, HSP82, SSQ1, and YAR1. It does not assess
+biological correctness or count as a manual review.
 
 Scientific review checks whether the claimed activity, participation, or
 location is supported. Primary location does not establish exclusivity; broad

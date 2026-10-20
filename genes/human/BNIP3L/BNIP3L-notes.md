@@ -182,3 +182,10 @@ captured. PMIDs below were resolved from the report DOIs via PubMed and verified
 Net: the most material, citable NEW additions are the receptor-turnover axis (FBXL4/PPTC7; PMID:37161784,
 37102372, 38991726, 38992176), the WIPI2/MER initiation mechanism (PMID:37621214), and pexophagy
 (PMID:36215693). These augment but do not contradict any existing annotation action.
+
+## PROTEOSTASIS phase-1 follow-up (2026-09-27)
+
+- Applied the phase-1 recommendation to use existing GO:0140580 "mitochondrion autophagosome adaptor
+  activity" for the core NIX mitophagy-receptor MF instead of keeping a bespoke "mitophagy receptor
+  activity" `proposed_new_terms` request. The cached PMID:20010802 primary paper directly supports the
+  LC3/GABARAP-bridging role.

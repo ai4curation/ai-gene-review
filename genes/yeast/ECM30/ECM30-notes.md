@@ -173,3 +173,15 @@ PMID:40899782 full text provides a new, substantive divergence lead: the budding
 The existing Falcon narrative and artifact were read and their useful primary leads followed. Contrary to the earlier statement that Ecm30 has no validated specific partner, [Benschop et al., PMID:20620961](https://www.sciencedirect.com/science/article/pii/S109727651000417X) includes the Results section “The Ubp15-Ecm30 Ubiquitin Protease Complex Is Involved in Methionine Metabolism” and validates the complex. [Costanzo et al., PMID:20093466](https://csbweb.csb.pitt.edu/Faculty/roth/publications/Costanzo_Science_2010.pdf) directly links deletion to Gap1 sorting/transport defects and describes the complex. The local caches for those two papers are abstract-only; primary publisher/author text was checked separately. No protease activity is attributed to Ecm30, no generic protein-binding annotation is added, and perturbation phenotypes are not used to manufacture additional process annotations.
 
 Actual tree lineages, IBD/IRD rows and GO definitions are retained in `projects/IBA_REVIEW/rereview-2026-09-20/ecm30-fun19-paint-and-terms.json`. The full-gene assessment retains specific experimental questions without treating them as disproof of positive ancestry.
+
+## 2026-10-01 focused HID1/Golgi report adjudication
+
+Read the focused OpenScientist report that was launched after the 2026-09-21 ECM30
+pass. It correctly centers the same target-divergence caveats: budding yeast has an
+unstacked Golgi, direct target Golgi localization has not been measured, and
+PMID:40899782 assays fission-yeast SPAC17A5.16/Hid1 rather than Ecm30. The report's
+recommended demotion was not adopted because it largely argues from missing
+S. cerevisiae target-specific experiments and a metazoan dense-core-vesicle specialization,
+not from target-specific loss of the broader PTN000491103 Golgi/membrane/cytosol
+ancestral assertions. No existing annotation action changed. The current GOA WITH/FROM
+supporting entities were backfilled for all IBA and UniProt SubCell rows.

@@ -20,3 +20,8 @@ Corrected local-file quotations or matched supporting text to its claim where ap
 ## Final evidence and annotation-action reconciliation (2026-09-23)
 
 Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+
+## Focused OpenScientist CCR6 follow-up
+
+The focused defensin report adjudicated the pending CCR6 row. It reconstructs K9IFT7 as a canonical beta-defensin 1-like peptide and treats CCR6 binding as plausible by homology, but it found no direct K9IFT7 or bat defensin receptor assay and emphasized variable beta-defensin receptor usage. The GO:0031731 row is therefore no longer UNDECIDED, but it is kept as a non-core TreeGrafter inference rather than promoted into the antimicrobial salivary core.

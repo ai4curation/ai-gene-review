@@ -256,3 +256,8 @@ Final ontology check: GO:0038001 requires transmission through intercellular flu
 ## Recovery PR specificity follow-up (2026-09-22)
 
 Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.
+
+
+## Focused OpenScientist dsRNA follow-up
+
+The focused dsRNA-versus-dsDNA report resolved the pending GO:0071360 row. It checked all four mouse Cgas donor references behind the inherited cellular response to exogenous dsRNA term and found DNA/cGAMP assays rather than an exogenous dsRNA experiment. This is therefore a donor-side stimulus term-selection error that propagates through PTN002579681, not a naked-mole-rat-specific loss or an open indirect dsRNA-response question. The row now proposes GO:1990786 cellular response to dsDNA as the replacement.

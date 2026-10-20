@@ -28,6 +28,20 @@ so a project can link to a saved selection. For example:
 - [BioReason comparison records](../app/predictions/index.html?projects=BIOREASON_COMPARISON)
 - [DeepECTF claims](../app/predictions/index.html?dataset=claims&source_method=DeepECTF)
 
+The **GO-GPT overlap** view is a dated snapshot rather than a live catalog. Each
+row is one specific (non-generic) GO-GPT term predicted for one of the genes in
+the BioReason comparison's three-level overlap, flagged by whether the term is
+in raw GOA, in the post-review AIGR annotations, and in the AIGR core functions.
+Rows come from the committed `reports/gogpt-comparison-levels.json`, which
+`scripts/gogpt_compare_levels.py` computes from the repository at the
+`review_snapshot_commit` in `projects/BIOREASON_COMPARISON/benchmark-policy.yaml`;
+the tab label and scope note give that snapshot's date. The facet counts are the
+overlap totals reported in the manuscript, and they change only when the snapshot
+is deliberately refreshed. For example,
+[GO-GPT terms that match an AIGR core function](../app/predictions/index.html?dataset=overlap&in_core=true).
+The Prediction sets and Claims views read the current reviews, so their counts
+can differ from dated figures quoted in project pages.
+
 The visible **Current representation** filter prefers a leaf-term file only
 when a full-term file identifies the same gene, method, and source version.
 Clearing that filter reveals both; distinct versions remain separate. Copied
