@@ -3,6 +3,7 @@ title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, NEUCR]
+autolink_exclude: [Ser]
 ---
 
 # Fungal PAINT Family Reviews
