@@ -190,8 +190,8 @@ node `PANTHER:PTN002336496`.
 ## 2026-10-17
 
 - Started the compact WDR12/Ytm1 set in `PTHR19855` across `yeast/YTM1`,
-  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`, with individual gene-review
-  drafts open in PRs #5117, #5118, #5120, and #5121.
+  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`; the individual gene reviews
+  merged in PRs #5117, #5118, #5120, and #5121.
 
 ## 2026-10-11
 
