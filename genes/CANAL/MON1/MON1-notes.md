@@ -32,10 +32,12 @@ interface, has highest activity on membranes" [PMID:24413168].
 - `GO:0000329 fungal-type vacuole membrane` and `GO:0006623 protein targeting to
   vacuole`: ACCEPT. Both trace to the fungal PAINT node `PTN000989606`.
 - `GO:0035658 Mon1-Ccz1 complex` and `GO:0005085 guanyl-nucleotide exchange
-  factor activity`: ACCEPT. These trace to broader opisthokont PAINT nodes and
-  match the conserved complex and contributed Rab7/Ypt7 GEF function.
-- `GO:0005774 vacuolar membrane`: TOO_GENERAL because it is true but less
-  specific than the fungal-type vacuole membrane IBA in the same review.
+  factor activity`: ACCEPT. The GEF activity traces to the broad Eukaryota
+  `PTN000315021` node, while the complex traces to the opisthokont
+  `PTN000315023` node; both match the conserved complex and contributed
+  Rab7/Ypt7 GEF function.
+- `GO:0005774 vacuolar membrane`: MODIFY to `GO:0000329 fungal-type vacuole
+  membrane`, the organism-appropriate child term in the same review.
 - `GO:0016192 vesicle-mediated transport`: MODIFY to `GO:0032511 late endosome
   to vacuole transport via multivesicular body sorting pathway`, rather than
   retain the generic InterPro longin-domain process.
