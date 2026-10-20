@@ -86,10 +86,21 @@ These notes were compiled manually from cached PubMed/PMC records in
   protein-binding policy).
 - GO:0005515 IPI rows with SOS2 MODIFY -> GO:0043539 where the paper shows
   activation (PMID:10725350, 11006339, 11402167, 21262798), otherwise ->
-  GO:0019901 protein kinase binding (CIPK1 rows; PMID:17449811, 17785451).
+  GO:0019901 protein kinase binding (remaining SOS2/CIPK24 row PMID:17785451, and the CIPK1 rows);
+  the PMID:17449811 SOS2 row goes to GO:0043539, since its abstract states activation.
 - GO:0019900 kinase binding (IEA) MODIFY -> GO:0019901.
 - Suspected source-record error: GO:0042539 hypotonic salinity response (IMP,
   PMID:9405721, TAIR) should be GO:0042538 hyperosmotic salinity response; the
   paper tests increased NaCl/LiCl. Recorded as MODIFY (the `source_defects`
   schema slot was not yet available in this branch).
 - No NEW annotations proposed.
+
+## PR #5243 review follow-up
+
+- NEW GO:0006883 intracellular sodium ion homeostasis (IMP, PMID:9405721), threaded with GO:0030007
+  into core function 1. SOS3 is the Ca2+-sensing subunit of the SOS2-SOS3 complex that activates
+  SOS1-mediated Na+ efflux, so it does part of the work. The partner kinase CIPK24 carries the same
+  proposal, and GO:0006883 was chosen to match it. [PMID:9405721 "Under NaCl stress, sos3 seedlings
+  accumulated more Na+ and less K+ than the wild type."]
+- The PMID:17449811 SOS2 protein-binding row now goes to GO:0043539, because the abstract states
+  activation. The cytoplasm IEA row now cites the UniProt subcellular-location line.

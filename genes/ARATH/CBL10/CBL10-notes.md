@@ -67,3 +67,13 @@ cached PubMed/PMC records in `publications/`.
   GO:0055078; protein-binding IPI rows -> GO:0043539 (SOS2, PMID:17449811),
   GO:0019901 (SOS2, PMID:17825054), GO:0070320 (AKT1, PMID:23331977).
 - No suspected source-record errors. No NEW annotations proposed.
+
+## PR #5243 review follow-up
+
+- The second core function's MF is now GO:0043495 protein-membrane adaptor activity, not GO:0019901.
+  The row-level MODIFY to GO:0019901 stands. The adaptor role is a NEW IDA row on the CBL targeting
+  paper. [PMID:19832944 "distinct targeting signals located in the N-terminal domain of CBL proteins
+  determine the spatially discrete localization of CBL/CIPK complexes"]
+- Sodium ion homeostasis stays at GO:0055078 here, while CBL4 and CIPK24 use GO:0006883. The cbl10
+  phenotype is altered whole-plant Na+ content (lower, unlike other SOS mutants), and GOA's own row
+  is the generic ion homeostasis term.
