@@ -241,7 +241,7 @@ Rather than attempting all ~288 genes of T4 upfront, we can cover **every branch
 ### Step 3: Curate Phage T7 (`BPT7`, Taxon `10760` — 57/157 Reviewed)
 - **Why third:** The ~57 Swiss-Prot reviewed genes of T7 provide the **obligately lytic tailed contrast to λ**: short-tail podovirus ejection (`GO:0099002`), autonomous single-subunit RNAP (`gp1`), host transcription shutoff (`gp2`, `GO:0039653`), `Ocr` anti-restriction DNA mimicry (`GO:0099018`), self-contained 4-protein DNA replisome, and an amidase endolysin (`gp3.5`, `GO:0008745`).
 
-### Step 4: Completed the 46 Falcon-Seeded T4 Genes (`BPT4`, Taxon `10665` — 269/288 Reviewed)
+### Step 4: Completed the 46 Falcon-Seeded T4 Genes (`BPT4`, Taxon `10665` — 46/49 Curated; 269/288 Swiss-Prot Reviewed in Proteome)
 - **Why fourth:** 49 T4 genes are in `genes/BPT4/` (46 now `COMPLETE` with UniProt, GOA, and Falcon deep-research reports, plus 3 prior `DRAFT` reviews: `DAM`, `E`, `frd`).
 - **Module payoff:** These 46 completed reviews give immediate coverage of the **contractile myovirus tail/baseplate branch** (`GO:0099000`, `GO:0098025`, `GO:0098027`), **hmC glucosylation & R-M/CRISPR evasion** (`DAM`, `agt`, `bgt`, `arn`, `stp`), **DNA-end protection** (`gp2`, `GO:0099016`), and **lysis inhibition** (`rI`, `GO:0039639`) without blocking on the remaining ~240 T4 genes.
 
