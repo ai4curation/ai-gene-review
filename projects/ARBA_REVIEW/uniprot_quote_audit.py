@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 """Inventory gene-review quotes that use unvetted predictions or labels from UniProt as evidence.
 
-Runs the two global best-practice checks in
+Runs the global best-practice checks in
 ``ai_gene_review.validation.uniprot_quote_source`` over every gene review and
 writes:
 
 * ``uniprot_quote_findings.tsv``: one row per flagged quote, with the review
   element it supports (for an existing annotation, the GO term, its GOA
   reference and the review action) and the quoted statement's evidence;
-* ``UNIPROT_QUOTE_AUDIT.md``: counts by check, by the unvetted source behind
+* ``UNIPROT_QUOTE_AUDIT.md``: counts by check (including protein existence
+  cited for an ACCEPT row or a core function), by the unvetted source behind
   the quoted statement (ARBA, imported, electronic GO), by UniProt field and
   by what the quote supports.
 
@@ -31,6 +32,7 @@ import yaml
 from ai_gene_review.validation.uniprot_quote_source import (
     UNVETTED_CHECK,
     FIELD_CHECK,
+    EXISTENCE_CHECK,
     _describe,
     quote_source_findings,
 )
@@ -87,7 +89,8 @@ def main() -> None:
         "",
     ]
     for check, title in [(UNVETTED_CHECK, "Quotes of statements supported only by unvetted predictions"),
-                         (FIELD_CHECK, "Quotes of label fields (names, keywords, GO cross-references)")]:
+                         (FIELD_CHECK, "Quotes of label fields (names, keywords, GO cross-references)"),
+                         (EXISTENCE_CHECK, "Protein existence cited to accept a function")]:
         sel = [r for r in rows if r["check"] == check]
         lines += [f"## {title}", "",
                   f"**{len(sel)}** quotes in **{len({r['review'] for r in sel})}** reviews.", ""]

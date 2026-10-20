@@ -471,9 +471,14 @@ apply to every UniProt quote, whatever it supports.
   prediction; citing ARBA text for an ARBA annotation is circular.
 - **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
   record's own `DR GO` lines restate an annotation rather than support it.
+- **Protein existence (`PE`) is not evidence of function.** Quote it to argue that an
+  annotation rests on prediction (e.g. `MARK_AS_OVER_ANNOTATED`, `KEEP_AS_NON_CORE`,
+  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function. An accepted `ND` annotation needs evidence
+  that the literature was searched, not the existence level.
 
-Validation warns on both (`uniprot_quote_unvetted_prediction`,
-`uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
+Validation warns on all three (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`, `uniprot_quote_existence_as_support`;
+`src/ai_gene_review/validation/uniprot_quote_source.py`).
 
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
