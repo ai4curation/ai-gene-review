@@ -9,3 +9,4 @@ Bacteriophage T4 gene `51` encodes the baseplate hub assembly chaperone gp51 (Un
 
 ## Annotation Review Notes
 - `GO:0098003` (`viral tail assembly`, IEA from `GO_REF:0000043`): Directly supported by genetic, biochemical, and morphogenesis evidence establishing that gp51 is an essential chaperone required for formation of the central hub of the T4 tail baseplate (`ACCEPT`).
+- **Omission of `molecular_function` in `core_functions`**: Although classic dilution-kinetics studies described gp51 as acting "catalytically" (i.e. sub-stoichiometrically) and UniProt describes it as a hub assembly chaperone, neither a specific enzymatic reaction nor direct polypeptide-folding chaperone activity (`GO:0044183`) has been biochemically demonstrated for gp51 (see `suggested_questions`). Therefore `molecular_function` is intentionally left unset in `core_functions`, with the core role captured by `directly_involved_in: GO:0098003` (`viral tail assembly`).

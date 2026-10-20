@@ -15,4 +15,4 @@
 - `GO:0098025` (`virus tail, baseplate`, IDA from PubMed 27193680 and IEA from ARBA `GO_REF:0000120`): Core localization (`ACCEPT`).
 - `GO:0098015` (`virus tail`, IEA from `GO_REF:0000043`): True but overly broad compared to `GO:0098025` (`virus tail, baseplate`) (`MODIFY`).
 - `GO:0098003` (`viral tail assembly`, IEA from `GO_REF:0000043`): Core biological process (`ACCEPT`), as gp10 initiates assembly of the baseplate outer wedge and recruits gp7, gp11, and gp12.
-- `GO:0019076` (`viral release from host cell`, IEA from `GO_REF:0000002` via InterPro `IPR024466`): False positive automated mapping (`REMOVE`). gp10 is a virion baseplate structural protein that functions in tail assembly and host attachment/entry conformational switching, not in host cell lysis or viral egress.
+- `GO:0019076` (`viral release from host cell`, IEA from `GO_REF:0000002` via InterPro `IPR008987` `Baseplate_struct_prot_Gp9/10_N`): False positive automated mapping (`REMOVE`). gp10 is a virion baseplate structural protein that functions in tail assembly and host attachment/entry conformational switching, not in host cell lysis or viral egress.
