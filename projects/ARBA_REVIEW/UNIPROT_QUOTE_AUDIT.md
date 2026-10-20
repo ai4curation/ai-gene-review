@@ -92,15 +92,14 @@ ARBA is a source for **1045** of these.
 
 ## Protein existence cited to accept a function
 
-**9** quotes in **6** reviews.
+**8** quotes in **5** reviews.
 
 | UniProt part | quotes |
 |---|---:|
-| protein existence | 9 |
+| protein existence | 8 |
 
 | what the quote supports | quotes |
 |---|---:|
 | existing annotation from ND, ACCEPT | 4 |
 | existing annotation from IEA, ACCEPT | 3 |
 | core_functions | 1 |
-| existing annotation from ISS, ACCEPT | 1 |

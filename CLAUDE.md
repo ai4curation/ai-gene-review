@@ -472,8 +472,8 @@ apply to every UniProt quote, whatever it supports.
 - **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
   record's own `DR GO` lines restate an annotation rather than support it.
 - **Protein existence (`PE`) is not evidence of function.** Quote it to argue that an
-  annotation rests on prediction (`MARK_AS_OVER_ANNOTATED`, `UNDECIDED`), never to
-  support an `ACCEPT` or a core function. An accepted `ND` annotation needs evidence
+  annotation rests on prediction (e.g. `MARK_AS_OVER_ANNOTATED`, `KEEP_AS_NON_CORE`,
+  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function. An accepted `ND` annotation needs evidence
   that the literature was searched, not the existence level.
 
 Validation warns on all three (`uniprot_quote_unvetted_prediction`,

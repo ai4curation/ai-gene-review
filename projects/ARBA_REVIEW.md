@@ -252,7 +252,7 @@ reviews are labels: mostly protein names (2,430) and the record's own GO lines
 (680). Most of the rise since the 2026-10-16 counts comes from a fix to the
 check: it now locates quotes copied with their flat-file line code
 (`DR   GO; ...`), about a tenth of all UniProt quotes, which it had skipped
-silently. The rest is new reviews. Nine quotes cite protein existence to accept
+silently. The rest is new reviews. Eight quotes cite protein existence to accept
 a function or support a core function, four of them for ND root terms.
 
 All three are warnings (`uniprot_quote_unvetted_prediction`,

@@ -36,8 +36,8 @@ quote supports:
     The quote comes from a label field (``RESTATING_FIELDS``) or a GO
     cross-reference.
 ``uniprot_quote_existence_as_support``
-    The quote is the protein existence (``PE``) line, cited for an ACCEPT row or
-    a core function. Existence says nothing about function; it can argue that an
+    The quote is the protein existence (``PE``) line, cited for an ACCEPT or NEW
+    row or a core function. Existence says nothing about function; it can argue that an
     annotation rests on prediction, but not support accepting one. An accepted
     ND annotation needs evidence that the literature was searched instead.
 
@@ -352,7 +352,7 @@ def _quote_parts(quote: str) -> List[str]:
     >>> _quote_parts("FT   DNA_BIND        102..292")
     ['102 292']
     >>> _quote_parts("FT   CHAIN           ?..649")
-    ['649']
+    []
     """
     validator = _validator()
 
@@ -362,7 +362,9 @@ def _quote_parts(quote: str) -> List[str]:
 
     stripped = _BRACKETED.sub(gap, _RANGE.sub(" ", _LINE_CODE.sub(" ", quote)))
     stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", stripped))
-    return [p for p in (validator.normalize_text(x) for x in validator._split_query(stripped)) if p]
+    # A lone number (what ``?..649`` leaves) would match any position in the record.
+    parts = (validator.normalize_text(x) for x in validator._split_query(stripped))
+    return [p for p in parts if p and not p.isdigit()]
 
 
 def _index(path: Path):
@@ -382,8 +384,8 @@ def locate_quote(quote: str, path: Path) -> List[Statement]:
     return located
 
 
-def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[Statement]]]:
-    """``(unvetted, restating, statements)`` for a quote, or None if not located.
+def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, bool, List[Statement]]]:
+    """``(unvetted, restating, existence, statements)`` for a quote, or None if not located.
 
     A flag holds only if it holds for every occurrence of every part.
     """
@@ -391,7 +393,7 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[St
     parts = _quote_parts(quote)
     if not parts:
         return None
-    unvetted = restating = True
+    unvetted = restating = existence = True
     first: List[Statement] = []
     for part in parts:
         occ = _occurrences(part, statements, text, starts)
@@ -400,7 +402,8 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[St
         first.extend(s for s in occ[0] if s not in first)
         unvetted &= all(all(s.is_unvetted for s in o) for o in occ)
         restating &= all(all(s.is_restating for s in o) for o in occ)
-    return unvetted, restating, first
+        existence &= all(all(s.field == "PE" for s in o) for o in occ)
+    return unvetted, restating, existence, first
 
 
 @dataclass(frozen=True)
@@ -417,7 +420,7 @@ _ELEMENT = re.compile(r"^(existing_annotations|core_functions)\[(\d+)\]")
 
 
 def _accepts(data: Any, path: str) -> bool:
-    """Whether the quote at *path* supports accepting a function: an ACCEPT row or a core function.
+    """Whether the quote at *path* supports asserting a function: an ACCEPT or NEW row, or a core function.
 
     >>> data = {"existing_annotations": [{"review": {"action": "ACCEPT"}},
     ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}}]}
@@ -439,7 +442,7 @@ def _accepts(data: Any, path: str) -> bool:
         element = data["existing_annotations"][int(m.group(2))]
     except (KeyError, IndexError, TypeError):
         return False
-    return ((element or {}).get("review") or {}).get("action") == "ACCEPT"
+    return ((element or {}).get("review") or {}).get("action") in ("ACCEPT", "NEW")
 
 
 def _is_nd(data: Any, path: str) -> bool:
@@ -447,9 +450,10 @@ def _is_nd(data: Any, path: str) -> bool:
     if not m or m.group(1) != "existing_annotations":
         return False
     try:
-        return data["existing_annotations"][int(m.group(2))].get("evidence_type") == "ND"
-    except (KeyError, IndexError, TypeError, AttributeError):
+        element = data["existing_annotations"][int(m.group(2))]
+    except (KeyError, IndexError, TypeError):
         return False
+    return (element or {}).get("evidence_type") == "ND"
 
 
 def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[QuoteFinding]:
@@ -462,12 +466,12 @@ def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[
         result = classify_quote(quote, source)
         if result is None:
             continue
-        unvetted, restating, statements = result
+        unvetted, restating, existence, statements = result
         if unvetted:
             findings.append(QuoteFinding(path, reference_id, UNVETTED_CHECK, tuple(statements)))
         if restating:
             findings.append(QuoteFinding(path, reference_id, FIELD_CHECK, tuple(statements)))
-        if all(s.field == "PE" for s in statements) and _accepts(data, path):
+        if existence and _accepts(data, path):
             findings.append(QuoteFinding(path, reference_id, EXISTENCE_CHECK, tuple(statements)))
     return findings
 
@@ -491,7 +495,6 @@ def validate_uniprot_quote_sources(
 ) -> None:
     """Warn on UniProt quotes that are unvetted predictions or labels, or that cite protein existence for an ACCEPT."""
     for f in quote_source_findings(data, project_root):
-        where = _describe(f.statements)
         if f.check_type == EXISTENCE_CHECK:
             message = (
                 "Supporting text quotes UniProt protein existence, which says whether the protein "
@@ -508,6 +511,7 @@ def validate_uniprot_quote_sources(
                     "MARK_AS_OVER_ANNOTATED or UNDECIDED, not ACCEPT"
                 )
         elif f.check_type == UNVETTED_CHECK:
+            where = _describe(f.statements)
             labels = sorted({label for s in f.statements for label in s.unvetted_sources})
             evidence = sorted({e for s in f.statements for e in s.evidence})
             message = (
@@ -519,6 +523,7 @@ def validate_uniprot_quote_sources(
                 "the publication behind it, or your own analysis"
             )
         else:
+            where = _describe(f.statements)
             message = (
                 f"Supporting text quotes a UniProt {where}, a label that restates an "
                 "annotation rather than giving evidence for it"
