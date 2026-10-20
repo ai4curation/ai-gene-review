@@ -18,6 +18,17 @@ The original exploratory analysis used a pre-release XML export (`post-processed
 
 ## Dataset statistics
 
+**Current public release** (counted 2026-10-19 by
+[`build_benchmark_funnel.py`](build_benchmark_funnel.py), stored in
+[`benchmark-funnel.json`](benchmark-funnel.json)): the published list has 26,856 accessions in
+416 taxa. The API serves 26,855 of them (A0A8K0EP25 returns 404). 10,268 records carry GO
+predictions or function text, 6,291 of them GO predictions; the rest carry only names,
+locations or keywords. Off-list, the API also serves the 28 S. pombe Swiss-Prot entries of the
+[pombe cohort](pombe.md).
+
+The table below describes the **pre-release XML export** (28,553 entries) used in the first
+exploratory analysis. It is kept for provenance and does not describe the public release.
+
 | Type | Count | Description |
 |------|-------|-------------|
 | Protein name | 28,553 | Every entry gets a predicted name (22,467 recommended, 6,086 submitted) |
@@ -48,6 +59,17 @@ Each prediction has a model score (0–1, threshold 0.05) and post-hoc corrobora
 | `taxonomy.tsv` | Accession -> species mapping from UniProt |
 
 ## Change log
+
+### 2026-10-19 — benchmark provenance figures
+
+- Added `build_benchmark_funnel.py`. `compute` counts each stage from UniProtKB (2026_03) to
+  the pilot list, the pilot records with GO/function output (from a full API fetch) and our
+  cohorts, and writes `benchmark-funnel.json`; `render` draws `figures/benchmark-funnel.svg`,
+  `figures/benchmark-cohorts.svg` and `figures/benchmark-outcomes.svg` from that file.
+- `fetch_protnlm_api.py` gained `--workers` (default 8). Requests take about 0.7 s each, so the
+  serial fetch ran at about 1.4 per second rather than the intended 10.
+- The project page, the new HTML slide deck (linked from the page's manifest) and the project
+  brief now open with these figures. The XML-era Marp deck moved to `archive/`.
 
 ### 2026-10-01 — rebase onto the frozen review snapshot
 

@@ -9,7 +9,7 @@ Produces the same 3 TSV files as the XML parser:
   - evidence.tsv: one row per evidence block (model score, match provenance)
 
 Usage:
-    # Fetch all public entries (from FTP accession list) — ~45 min at 10 req/s
+    # Fetch all public entries (from FTP accession list) — ~45 min at 10 req/s with 8 workers
     python fetch_protnlm_api.py
 
     # Fetch specific accessions from a file (one per line)
@@ -30,6 +30,7 @@ import json
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 API_BASE = "https://rest.uniprot.org/uniprotkb/protnlm"
@@ -95,7 +96,7 @@ def fetch_one(accession: str) -> dict | None:
     return None
 
 
-def fetch_all(accessions: list[str], jsonl_path: Path, resume: bool = False) -> None:
+def fetch_all(accessions: list[str], jsonl_path: Path, resume: bool = False, workers: int = 8) -> None:
     done = set()
     if resume and jsonl_path.exists():
         with open(jsonl_path) as f:
@@ -108,23 +109,24 @@ def fetch_all(accessions: list[str], jsonl_path: Path, resume: bool = False) -> 
     print(f"Fetching {len(remaining)} entries from {API_BASE}/...")
 
     mode = "a" if resume and jsonl_path.exists() else "w"
+    # Requests are latency-bound (~0.7 s each), so a small pool is needed to
+    # approach the rate cap; submissions are still paced at REQUESTS_PER_SECOND.
     interval = 1.0 / REQUESTS_PER_SECOND
     errors = []
 
-    with open(jsonl_path, mode) as f:
-        for i, acc in enumerate(remaining):
-            start = time.monotonic()
-            data = fetch_one(acc)
+    with open(jsonl_path, mode) as f, ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {}
+        for acc in remaining:
+            futures[pool.submit(fetch_one, acc)] = acc
+            time.sleep(interval)
+        for i, fut in enumerate(as_completed(futures)):
+            data = fut.result()
             if data is None:
-                errors.append(acc)
+                errors.append(futures[fut])
             else:
                 f.write(json.dumps(data) + "\n")
-
             if (i + 1) % 500 == 0:
-                print(f"  {i + 1}/{len(remaining)} fetched ({len(errors)} errors)")
-            elapsed = time.monotonic() - start
-            if elapsed < interval:
-                time.sleep(interval - elapsed)
+                print(f"  {i + 1}/{len(remaining)} fetched ({len(errors)} errors)", flush=True)
 
     print(f"Done: {len(remaining) - len(errors)} fetched, {len(errors)} errors")
     if errors:
@@ -317,6 +319,7 @@ def main():
     parser.add_argument("--accessions", help="File with accessions (one per line). Default: FTP list")
     parser.add_argument("--convert-only", action="store_true", help="Convert existing JSONL, skip fetching")
     parser.add_argument("--resume", action="store_true", help="Resume interrupted fetch")
+    parser.add_argument("--workers", type=int, default=8, help="Concurrent requests (default 8)")
     parser.add_argument("--out-dir", default=str(Path(__file__).parent), help="Output directory")
     args = parser.parse_args()
 
@@ -329,7 +332,7 @@ def main():
             accessions = load_accession_file(args.accessions)
         else:
             accessions = fetch_accession_list()
-        fetch_all(accessions, jsonl_path, resume=args.resume)
+        fetch_all(accessions, jsonl_path, resume=args.resume, workers=args.workers)
 
     if not jsonl_path.exists():
         print(f"Error: {jsonl_path} not found. Run fetch first.")
