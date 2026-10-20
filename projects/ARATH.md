@@ -471,6 +471,25 @@ WRKY70, RPM1, RPS2), salt tolerance (SOS1, CIPK24, HKT1), indolic glucosinolate
 regulation (MYB34, MYB51, MYB122) and the heat-stress set from
 [ARATH_HEAT_STRESS](ARATH_HEAT_STRESS.md).
 
+Since this snapshot, modules have been drafted for ABA signaling, miRNA
+biogenesis, pattern-triggered immunity, salicylic acid / NPR1, the SOS
+pathway and heat stress. Of the groups above, only indolic glucosinolate
+regulation still has no module. The counts in this section will change when
+the stats script is next re-run.
+
+### Pathways not yet curated
+
+[Arabidopsis pathways not yet curated](ARATH/ARATH-pathway-gaps.md) checks 107
+Arabidopsis pathways against the modules. The pathway list comes from KEGG's
+*A. thaliana* maps plus plant processes that KEGG has no map for. 33 pathways
+have a module with a reviewed Arabidopsis gene. The other 74 do not: 36 have
+no module, 21 have only a cross-kingdom module that never mentions
+Arabidopsis, and 17 have a module with no reviewed Arabidopsis gene. The
+largest gap is plant-specific metabolism: hormone biosynthesis (all but GA and
+SA), starch and sucrose, photorespiration, flavonoids and anthocyanins,
+cuticle and plastid lipids, phytosterols, and nitrate and ammonium
+assimilation.
+
 ## View 5: families
 
 | Family | PANTHER name | Coherence call | ARATH reviews |
@@ -513,7 +532,7 @@ studies) list ARATH among their species; the stats file names them all.
 ---
 # STATUS
 
-Last updated: 2026-10-14
+Last updated: 2026-10-19
 
 ## Phase 1: summarize the corpus
 
@@ -540,11 +559,23 @@ Last updated: 2026-10-14
 
 ## Phase 3: modules
 
-- [ ] Draft modules for the unmodularized groups: ABA signaling, small-RNA
-      biogenesis, pattern-triggered immunity, salicylic acid / NPR1, SOS salt
-      tolerance, indolic glucosinolate regulation, heat-stress response
-- [ ] Decide whether the 11 modules with no reviewed Arabidopsis gene need
-      Arabidopsis reviews (cellulose, xylan and photosynthesis first)
+- [x] Draft modules for ABA signaling, miRNA biogenesis, pattern-triggered
+      immunity, salicylic acid / NPR1, SOS salt tolerance and heat-stress response
+- [ ] Draft a module for indolic glucosinolate biosynthesis and its MYB regulation
+- [x] Map Arabidopsis pathways to modules and list the uncurated ones
+      ([ARATH-pathway-gaps](ARATH/ARATH-pathway-gaps.md))
+- [ ] Draft modules for plant-specific pathways that have none, starting with
+      those that already have reviewed genes: ABA biosynthesis (NCED3),
+      flavonoids/anthocyanins (TT8), cuticle lipids (CER1), UV-B (UVR8), cold
+      acclimation (CBF1)
+- [ ] Draft the remaining hormone biosynthesis modules (auxin, cytokinin,
+      brassinosteroid, jasmonate, ethylene, strigolactone)
+- [ ] Draft starch, sucrose and photorespiration modules
+- [ ] Review Arabidopsis genes for modules that mention Arabidopsis but have no
+      reviewed gene (photosynthesis, cellulose and xylan first)
+- [ ] Add Arabidopsis representatives to the 21 cross-kingdom modules that
+      never mention it (TCA cycle, pentose phosphate, MEP pathway and others)
+- [ ] Compare the pathway map with AraCyc/PMN
 - [ ] Move the 29 populated modules from `DRAFT` toward review
 
 ## Phase 4: families
@@ -570,3 +601,13 @@ rows include `NEW` rows, since those live in `existing_annotations`. Module
 membership is found by matching module UniProt accessions to review ids, plus
 explicit `genes/ARATH/<GENE>/` paths; family membership by `genes/ARATH/` paths
 in PANTHER family reviews.
+
+## 2026-10-19
+
+Added the pathway gap analysis: a hand-curated pathway-to-module map
+(`ARATH/ARATH-pathway-map.yaml`), a script that checks it against `modules/`
+and `genes/ARATH/` (`ARATH/scripts/arath_pathway_gaps.py`), its output
+(`ARATH/ARATH-pathway-gaps.yaml`) and a write-up
+([ARATH-pathway-gaps](ARATH/ARATH-pathway-gaps.md)). The corpus stats file was
+not regenerated in this change, so the other numbers on this page are still
+from the 2026-10-14 snapshot.
