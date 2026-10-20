@@ -8,11 +8,11 @@ species:
 
 Back to [the Arabidopsis corpus project](../ARATH.md).
 
-**Bottom line:** of 107 Arabidopsis pathways checked, 33 have a module that
+**Bottom line:** of 107 Arabidopsis pathways checked, 34 have a module that
 contains a reviewed Arabidopsis gene. These are mostly hormone signaling,
-flowering, development and immunity. The other 74 are not curated for
+flowering, development and immunity. The other 73 are not curated for
 Arabidopsis. 35 have no module at all. 21 have only a cross-kingdom module that
-never mentions Arabidopsis. 18 have a module that mentions Arabidopsis but holds
+never mentions Arabidopsis. 17 have a module that mentions Arabidopsis but holds
 none of our reviewed genes. Plant-specific metabolism is the largest gap: seven
 of the nine hormone biosynthesis pathways, starch and sucrose,
 flavonoids and anthocyanins, cuticle lipids, plastid lipids,
@@ -44,8 +44,8 @@ Coverage calls:
 |---|---|---|
 | `NO_MODULE` | No module covers the pathway | 35 |
 | `MODULE_WITHOUT_ARABIDOPSIS` | Module exists but never mentions Arabidopsis | 21 |
-| `MODULE_WITHOUT_ARATH_GENES` | Module mentions Arabidopsis, has no reviewed ARATH gene | 18 |
-| `MODULE_WITH_ARATH_GENES` | At least one reviewed ARATH gene is a module member | 33 |
+| `MODULE_WITHOUT_ARATH_GENES` | Module mentions Arabidopsis, has no reviewed ARATH gene | 17 |
+| `MODULE_WITH_ARATH_GENES` | At least one reviewed ARATH gene is a module member | 34 |
 
 Limits. The pathway list is not exhaustive and has not been compared with
 AraCyc/PMN. Of the 162 KEGG maps, 69 are assigned to a pathway and 32 are set
@@ -91,13 +91,10 @@ be added without writing new modules.
 - Sulfate assimilation (APS reduction and PAPS activation)
 - Peroxisome biogenesis and matrix protein import
 
-## 3. Module mentions Arabidopsis but holds no reviewed ARATH gene (18)
+## 3. Module mentions Arabidopsis but holds no reviewed ARATH gene (17)
 
 - Photosynthesis: light reactions and antenna, Calvin-Benson-Bassham cycle,
   chlorophyll biosynthesis (all parts of one `photosynthesis` module)
-- Photorespiration: the `photorespiration_c2_cycle` module (drafted
-  2026-10-20) uses Arabidopsis proteins as representatives, none of which has
-  a gene review yet
 - Cell wall: cellulose, xylan
 - Amino acids: shikimate and aromatic amino acids, aspartate family (Thr,
   Met), proline and arginine catabolism, GABA shunt
@@ -105,7 +102,7 @@ be added without writing new modules.
 - Other: glyoxylate cycle, Leloir galactose pathway, alcoholic fermentation,
   ureide catabolism, ER unfolded protein response
 
-## 4. Curated: module with reviewed ARATH genes (33)
+## 4. Curated: module with reviewed ARATH genes (34)
 
 These are hormone signaling (auxin, cytokinin, gibberellin, ABA, ethylene,
 brassinosteroid, jasmonate, strigolactone, SA/NPR1), light and clock
@@ -114,7 +111,9 @@ vernalization, autonomous pathway, floral meristem and organ identity,
 CLV-WUS, SHR-SCR, stomata, trichomes), immunity (FLS2/EFR, chitin, NLR), heat
 and salt stress, and some metabolism (aliphatic glucosinolates, camalexin,
 carotenes, gibberellin biosynthesis, fatty acid elongation, seed oil, lignin),
-plus miRNA biogenesis and the LINC complex.
+plus miRNA biogenesis, the LINC complex and photorespiration (the
+`photorespiration_c2_cycle` module, with 18 reviewed Arabidopsis members as of
+2026-10-20).
 
 The thinnest are lignin (PAL1 only), seed oil (DGAT1 only), NLR immunity (EDS1
 and PAD4; RPM1 and RPS2 are reviewed but are not members), the SOS pathway
@@ -130,5 +129,5 @@ which leaves out xanthophylls.
 2. Hormone biosynthesis as a set, so that every signaling module has its
    matching biosynthesis module.
 3. Starch and sucrose, together with Arabidopsis reviews for the
-   `photosynthesis` and `photorespiration_c2_cycle` modules (section 3).
+   `photosynthesis` module (section 3).
 4. Add Arabidopsis representatives to the section 2 modules.

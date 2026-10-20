@@ -481,10 +481,10 @@ the stats script is next re-run.
 
 [Arabidopsis pathways not yet curated](ARATH/ARATH-pathway-gaps.md) checks 107
 Arabidopsis pathways against the modules. The pathway list comes from KEGG's
-*A. thaliana* maps plus plant processes that KEGG has no map for. 33 pathways
-have a module with a reviewed Arabidopsis gene. The other 74 do not: 35 have
+*A. thaliana* maps plus plant processes that KEGG has no map for. 34 pathways
+have a module with a reviewed Arabidopsis gene. The other 73 do not: 35 have
 no module, 21 have only a cross-kingdom module that never mentions
-Arabidopsis, and 18 have a module with no reviewed Arabidopsis gene. The
+Arabidopsis, and 17 have a module with no reviewed Arabidopsis gene. The
 largest gap is plant-specific metabolism: hormone biosynthesis (all but GA and
 SA), starch and sucrose, flavonoids and anthocyanins,
 cuticle and plastid lipids, phytosterols, and nitrate and ammonium
@@ -572,9 +572,15 @@ Last updated: 2026-10-20
       brassinosteroid, jasmonate, ethylene, strigolactone)
 - [x] Draft a photorespiration module
       ([photorespiration_c2_cycle](../modules/photorespiration_c2_cycle.html))
-- [ ] Review the Arabidopsis representatives of the photorespiration module:
-      PGLP1, PLGG1, GOX1, GOX2, CAT2, GGAT1, SHM1, SGAT/AGT1, HPR1, HPR2, GLYK,
-      GLN2, GLU1, and the glycine decarboxylase subunits
+- [x] Review the Arabidopsis representatives of the photorespiration module
+      (18 genes: PGLP1, PLGG1, GLO1, GLO2, CAT2, GGAT1, AGT1, HPR, HPR2, GLYK,
+      GLN2, GLU1, SHM1, GLDP1, GLDP2, GDCH, GDCST, mtLPD2)
+- [ ] Review mtLPD1 (At1g48030), the main leaf glycine decarboxylase L protein,
+      and GGAT2 (At1g70580)
+- [ ] Consider reviewer suggestions for the photorespiration module: BASS6 as a
+      second glycolate exporter, the shade-induced cytosolic GLYK isoform, viable
+      Arabidopsis gln2 mutants, and the H-protein MF term in
+      `glycine_cleavage_system` (lipoic acid binding vs molecular carrier activity)
 - [ ] Draft starch and sucrose modules
 - [ ] Review Arabidopsis genes for modules that mention Arabidopsis but have no
       reviewed gene (photosynthesis, cellulose and xylan first)
@@ -625,3 +631,12 @@ decarboxylase is included by reference to `glycine_cleavage_system`).
 Representatives are Arabidopsis proteins checked against UniProt; none has a
 gene review yet, so photorespiration now counts as "module without reviewed
 ARATH genes" in the gap analysis.
+
+Reviewed the 18 Arabidopsis members of the photorespiration module; the
+reviews were written by parallel agents, then checked and committed in batches. Deep research
+could not be run in this environment (no provider API keys), so each gene's
+notes file is built from cached publications and UniProt. Two corrections came
+out of the reviews: the module now names mtLPD1 (At1g48030) rather than mtLPD2
+as the main leaf L protein, and proteomics-only location rows follow the
+organelle audit (marked over-annotated, not removed). Photorespiration now
+counts as curated in the gap analysis (34 of 107 pathways).
