@@ -51,6 +51,27 @@ reclassified as an over-annotation and retained in core synthesis through
 `contributes_to_molecular_function`. Complex membership is recorded with
 GO:0045273. SdhE is an assembly factor, not a stoichiometric complex subunit.
 
+## Cross-Review Notes
+
+Two decisions in this batch have consequences outside it and are recorded here
+so they are discoverable without reading a single gene's notes file.
+
+- **SdhE core MF diverges from `genes/human/SDHAF2`.** PSEPK SdhE takes
+  GO:0050660 flavin adenine dinucleotide binding as its core molecular
+  function, and the module annoton now matches. `genes/human/SDHAF2` keeps
+  GO:0044183 protein folding chaperone. The divergence is deliberate:
+  PMID:22474332 describes the bacterial factor as a soluble monomer that
+  interacts with SdhA "weakly and/or transiently" and shows FAD binding
+  directly, which does not meet the holdase/folding reading that the human IDA
+  structural evidence supports. Both reviews share GO:0018293 protein-FAD
+  linkage as the process. The reasoning is set out in
+  `genes/PSEPK/sdhE/sdhE-notes.md`; the human side is unchanged by this batch.
+- **GO:0160308 is load-bearing here and is flagged for possible obsoletion.**
+  It is `sdhA`'s core molecular function and the module's SdhA annoton
+  function. `genes/human/SDHA/SDHA-ai-review.yaml` records the term as under
+  consideration for obsolescence, so both uses will need revisiting if GO
+  retires it.
+
 ## Evidence
 
 - Existing PSEPK SdhA, SdhB, SdhC, and SdhD OpenScientist reports
