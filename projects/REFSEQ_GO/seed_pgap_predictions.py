@@ -2,11 +2,14 @@
 """Seed a ``GENE-pgap-predictions-review.yaml`` that treats NCBI PGAP GO as predictions.
 
 For one UniProt accession, using the outputs of ``compare_refseq_goa.py``, this
-writes into ``--out-dir``:
+writes into the gene folder ``genes/<ORGANISM>/<GENE>/`` (``--out-dir`` overrides
+it, but the paths declared in the file always point at the gene folder, so files
+written elsewhere must be moved there before ``just validate-predictions``):
 
-* ``<GENE>-pgap-predictions-review.yaml``: a PredictionReview scaffold with one
-  prediction per PGAP GO term and per PGAP EC number. Every ``review`` is a
-  placeholder (``summary: "TODO ..."``) for the curator to replace.
+* ``<GENE>-pgap-predictions-review.yaml``: a PredictionReview scaffold
+  (``status: INITIALIZED``) with one prediction per PGAP GO term and per PGAP EC
+  number. Every ``review`` is a placeholder (``summary: "TODO ..."``) for the
+  curator to replace.
 * ``<GENE>-pgap-prediction-evidence/``: the WP_ GenPept record (naming
   evidence, product, GO, EC) and ``pgap_models.yaml`` listing the naming
   model and every other NCBI HMM the protein matches with its GO, so the
@@ -24,8 +27,7 @@ Usage::
     uv run python projects/REFSEQ_GO/seed_pgap_predictions.py \\
         --results-dir projects/REFSEQ_GO/results/PSEPK --accession Q88Q37 \\
         --gene PP_0661 --organism PSEPK --taxon-id 160488 \\
-        --taxon-label "Pseudomonas putida KT2440" \\
-        --out-dir /tmp/seeds/PP_0661
+        --taxon-label "Pseudomonas putida KT2440"
 """
 
 from __future__ import annotations
@@ -37,7 +39,12 @@ from pathlib import Path
 import typer
 import yaml
 
-from compare_refseq_goa import Closure, parse_genpept, read_hmm_pgap
+from compare_refseq_goa import (
+    Closure,
+    parse_genpept,
+    read_hmm_pgap,
+    read_uniprot_models,
+)
 
 app = typer.Typer(add_completion=False)
 
@@ -47,13 +54,16 @@ TERM_TYPE = {"F": "GO_MF", "P": "GO_BP", "C": "GO_CC"}
 def genpept_record(text: str, wp: str) -> str:
     """The raw GenPept record for one WP_ accession from a multi-record file.
 
+    Records are split on a line holding only ``//``, as in ``parse_genpept``; a
+    missing record is an error, not an empty string.
+
     >>> genpept_record("LOCUS A\\nVERSION     WP_1.1\\n//\\nLOCUS B\\nVERSION     WP_2.1\\n//", "WP_2.1")
     'LOCUS B\\nVERSION     WP_2.1\\n//\\n'
     """
-    for record in text.split("//"):
+    for record in text.split("\n//"):
         if re.search(rf"^VERSION\s+{re.escape(wp)}\s*$", record, re.M):
             return record.strip("\n") + "\n//\n"
-    return ""
+    raise ValueError(f"{wp} not found in the cached GenPept records")
 
 
 def ec_numbers(record: str) -> list[str]:
@@ -73,9 +83,12 @@ def main(
     organism: str = typer.Option(..., help="genes/<ORGANISM> folder, e.g. PSEPK"),
     taxon_id: int = typer.Option(...),
     taxon_label: str = typer.Option(...),
-    out_dir: Path = typer.Option(..., help="Where to write the seed files"),
+    out_dir: Path | None = typer.Option(
+        None, help="Where to write the seed files (default: genes/<ORGANISM>/<GENE>)"
+    ),
     cache_dir: Path = typer.Option(Path(".cache/refseq_go")),
 ) -> None:
+    out_dir = out_dir or Path("genes") / organism / gene
     summary = yaml.safe_load((results_dir / "summary.yaml").open())
     loci = {}
     with (results_dir / "loci.tsv").open() as fh:
@@ -117,14 +130,12 @@ def main(
     with (cache_dir / "hmm_PGAP.tsv").open() as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
             hmm_rows[row["#ncbi_accession"].split(".")[0]] = row
-    matched = set()
     models_path = cache_dir / assembly / "uniprot_models.tsv"
-    if models_path.exists():
-        with models_path.open() as fh:
-            for row in csv.DictReader(fh, delimiter="\t"):
-                if row["Entry"] == accession:
-                    ids = (row["NCBIfam"] or "") + ";" + (row["Pfam"] or "")
-                    matched = {x.strip() for x in ids.split(";") if x.strip()}
+    matched = (
+        read_uniprot_models(models_path).get(accession, set())
+        if models_path.exists()
+        else set()
+    )
 
     def model_entry(acc: str) -> dict:
         r = hmm_rows.get(acc, {})
@@ -187,7 +198,10 @@ def main(
                 "source_method": "NCBI PGAP",
                 "source_version": version,
                 "source_reference_id": "PMID:33270901",
-                "predicted_term": {"id": term, "label": labels(term) or term},
+                "predicted_term": {
+                    "id": term,
+                    "label": labels(term) or f"{term} (label not in local GO)",
+                },
                 "predicted_term_type": TERM_TYPE[aspect],
                 "review": {
                     "assessment": "UNC",
@@ -201,22 +215,22 @@ def main(
         if summary["ncbi_source"] != "wp"
         else []
     )
-    for wp in wps:
-        for ec in ec_numbers(records[wp]):
-            predictions.append(
-                {
-                    "source_method": "NCBI PGAP",
-                    "source_version": version,
-                    "source_reference_id": "PMID:33270901",
-                    "predicted_term": {"id": f"EC:{ec}", "label": f"EC {ec}"},
-                    "predicted_term_type": "EC",
-                    "review": {
-                        "assessment": "UNC",
-                        "confidence_score": 1,
-                        "summary": "TODO: assess.",
-                    },
-                }
-            )
+    ecs = sorted({ec for wp in wps for ec in ec_numbers(records[wp])})
+    for ec in ecs:
+        predictions.append(
+            {
+                "source_method": "NCBI PGAP",
+                "source_version": version,
+                "source_reference_id": "PMID:33270901",
+                "predicted_term": {"id": f"EC:{ec}", "label": f"EC {ec}"},
+                "predicted_term_type": "EC",
+                "review": {
+                    "assessment": "UNC",
+                    "confidence_score": 1,
+                    "summary": "TODO: assess.",
+                },
+            }
+        )
     # Repo-root paths for source_documents; file: references are relative to genes/.
     evidence_files = [
         f"genes/{organism}/{gene}/{gene}-pgap-prediction-evidence/{name}"
@@ -226,10 +240,15 @@ def main(
         "id": accession,
         "gene_symbol": gene,
         "taxon": {"id": f"NCBITaxon:{taxon_id}", "label": taxon_label},
-        "status": "DRAFT",
+        "status": "INITIALIZED",
         "locus_tag": sorted(loci)[0],
         "description": "TODO: summary of how NCBI PGAP's GO and EC predictions for this gene "
         "compare with the evidence."
+        + (
+            f" (This accession maps to {len(loci)} loci: {', '.join(sorted(loci))}.)"
+            if len(loci) > 1
+            else ""
+        )
         + (
             f" (The genome record also carries {', '.join(genome_only)}, absent from the newer WP_ record.)"
             if genome_only

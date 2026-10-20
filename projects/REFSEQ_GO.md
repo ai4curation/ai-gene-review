@@ -4,6 +4,7 @@ collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [PSEPK]
+autolink_exclude: [degP, DegP, dnaA, ftsI, FtsI]
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/LEUxu7VHiPqHcJGm1EcYFq
@@ -24,10 +25,11 @@ attribute of the single protein family model that *names* the protein, so every
 protein gets terms from exactly one evidence source. **UniProt/GOA is a union** of
 InterPro2GO, TreeGrafter, UniRule, ARBA, EC/Rhea2GO, SubCell and others. On
 *Pseudomonas putida* KT2440, scored against 956 curated gene reviews, **NCBI is
-more precise and much less complete.** Reviewers rejected 12% of the NCBI terms
-they judged, against 21% of GOA's electronic terms. But NCBI covers only half of
-the reviewed core molecular functions (51%, against 81%) and a third of core
-processes (36%, against 67%), and it has almost no cellular-component
+about as accurate and much less complete.** Wrong terms (REMOVE) are rare on both
+sides: 3.2% of the NCBI terms reviewers could judge, against 4.8% of GOA's
+electronic terms, and NCBI has fewer true-but-too-general terms (5.9% against
+11.6%). But NCBI covers only half of the reviewed core molecular functions (52%,
+against 81%) and about a third of core processes (37%, against 67%), and it has almost no cellular-component
 annotation. The biggest NCBI-specific source is **CDD domain architectures
 (SPARCLE)**, not the CDD `cd` models that InterPro integrates. They name 47% of
 GO-bearing proteins and are the least concordant source. Each pipeline has its
@@ -147,7 +149,7 @@ annotation:
 |---|---:|---:|
 | shared loci with NCBI GO | 3,413 | 3,513 |
 | exact agreement with GOA: NCBIFam / TIGRFAM / architecture | 90% / 79% / 69% | 91% / 80% / 66% |
-| NCBI terms rejected by reviewers | 12.3% | 13.4% |
+| NCBI terms reviewers REMOVEd (wrong) | 3.3% | 3.2% |
 | core MF covered, NCBI (GOA electronic 81%) | 51% | 52% |
 | core BP covered, NCBI (GOA electronic 67%) | 36% | 37% |
 | genes with GOA GO and no NCBI GO | 780 | 699 |
@@ -271,10 +273,11 @@ uv run python projects/REFSEQ_GO/analyze_refseq_goa.py \
 From the NCBI side, agreement falls in this order: BlastRules (100% exact),
 NCBIFam (90%), TIGRFAM (79%), then architectures (69%; 18% NCBI-only); see
 [Agreement by NCBI evidence source](#agreement-by-ncbi-evidence-source). From the
-GOA side, the terms NCBI least often supports are UniRule BP (69% have no NCBI
-counterpart), TreeGrafter BP (50%) and MF (40%), and GO inter-ontology links
-(51%). InterPro2GO MF terms usually have a *more specific* NCBI counterpart (27%)
-rather than none (18%).
+GOA side (with combined GO_REF:0000120 rows credited to each contributing
+pipeline), the terms NCBI least often supports are GO inter-ontology links (55%
+have no NCBI counterpart), TreeGrafter BP (35%) and UniRule BP (33%). InterPro2GO
+MF terms more often have a *more specific* NCBI counterpart (19%) than none
+(14%).
 
 ### Level 3: against 956 curated reviews
 
@@ -283,24 +286,27 @@ inherits the reviewer's verdict, and an NCBI term absent from GOA is judged only
 by its relation to the accepted and removed terms. Terms with no such relation
 are `unassessed`, and these were checked by hand (below).
 
-| | terms | accepted, or implied by accepted | modified | over-annotated | removed | unassessed |
-|---|---:|---:|---:|---:|---:|---:|
-| **NCBI, all** | 2,078 | 69.5% | 6.1% | 9.1% | 3.2% | 10.8% |
-| NCBI TIGRFAM | 1,071 | 75.9% | 4.9% | 6.5% | 2.0% | 9.7% |
-| NCBI NCBIFam | 661 | 67.2% | 7.3% | 13.6% | 5.1% | 5.4% |
-| NCBI architecture | 346 | 54.1% | 7.5% | 8.7% | 3.5% | 24.3% |
-| **GOA electronic, all** | 4,926 | 68.4% | 7.9% | 16.6% | 4.8% | 0.5% |
-| GOA InterPro2GO | 1,385 | 45.0% | 13.3% | 33.3% | 6.9% | 0.1% |
-| GOA TreeGrafter | 701 | 73.8% | 7.0% | 6.4% | 9.6% | 0% |
-| GOA UniRule | 388 | 64.2% | 7.5% | 19.3% | 4.9% | 3.1% |
-| GOA ARBA | 216 | 56.5% | 11.1% | 22.7% | 4.6% | 4.2% |
+| | terms | correct (accepted or implied) | modified | too general | over-annotated (other) | wrong (REMOVE) | unassessed |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **NCBI, all** | 2,078 | 69.5% | 6.1% | 4.7% | 4.5% | 3.2% | 10.8% |
+| NCBI TIGRFAM | 1,071 | 75.9% | 4.9% | 2.9% | 3.6% | 2.1% | 9.7% |
+| NCBI NCBIFam | 661 | 67.2% | 7.3% | 6.5% | 7.1% | 5.1% | 5.4% |
+| NCBI architecture | 346 | 54.1% | 7.5% | 6.6% | 2.0% | 3.5% | 24.3% |
+| **GOA electronic, all** | 4,926 | 68.4% | 7.9% | 11.6% | 5.0% | 4.8% | 0.5% |
+| GOA InterPro2GO | 2,690 | 62.5% | 9.3% | 17.2% | 5.4% | 4.3% | 0.1% |
+| GOA TreeGrafter | 1,486 | 81.0% | 5.4% | 2.2% | 4.2% | 4.7% | 0% |
+| GOA UniRule | 1,658 | 83.8% | 4.1% | 4.7% | 3.7% | 2.2% | 0.8% |
+| GOA ARBA | 592 | 69.9% | 7.3% | 15.4% | 2.7% | 2.2% | 1.5% |
 
-The "implied" column adds terms that are proper ancestors or descendants of an
-accepted term. Rows do not sum to 100% because `undecided` (1–3%) is omitted. Among NCBI's HMM sources, **NCBI-native equivalogs are rejected
-2.6 times as often as TIGRFAM equivalogs** (19.4% against 7.4% of terms). This
-is mostly over-annotation from broad cofactor and category terms (`carbohydrate
-metabolic process`, `membrane`, `metal ion binding`, `ATP binding`) attached to
-otherwise specific models.
+"Correct" adds terms that are proper ancestors or descendants of an accepted
+term. "Too general" is a term the reviewer marked over-annotated that is an
+ancestor of a term the reviewer accepted: true, just less specific. Rows do not
+sum to 100% because `undecided` (1–3%) is omitted. GOA terms agreed by several
+pipelines (GO_REF:0000120) count for each of them. Among NCBI's HMM sources,
+NCBI's own NCBIfam models have more wrong (5.1% against 2.1%) and more
+too-general terms (6.5% against 2.9%) than TIGRFAM, mostly broad cofactor and
+category terms (`carbohydrate metabolic process`, `membrane`, `metal ion
+binding`, `ATP binding`) attached to otherwise specific models.
 
 **Core-function coverage** (terms in the reviews' `core_functions`):
 
@@ -314,10 +320,10 @@ otherwise specific models.
 NCBI covers a core function that GOA's electronic pipelines miss in only 7 MF
 and 31 BP cases. The reverse happens in 211 MF and 266 BP cases.
 
-**GOA errors and NCBI.** Of the 95 InterPro2GO terms that reviewers removed, NCBI
-asserts the same term in 52. That much overlap suggests the two share
-provenance for part of their family→GO mappings. Of the 67 TreeGrafter terms
-removed, NCBI asserts none.
+**GOA errors and NCBI.** Of the 115 InterPro2GO terms that reviewers removed, NCBI
+asserts the same term in 66. That much overlap suggests the two share
+provenance for part of their family→GO mappings. Of the 70 TreeGrafter terms
+removed, NCBI asserts one.
 
 ### Failure modes
 
