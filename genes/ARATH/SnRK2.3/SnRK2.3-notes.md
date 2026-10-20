@@ -123,4 +123,4 @@
 - Core function 1 now names FREE1 phosphorylation (curated UniProt line, PMID:30962512) and TOPP1/AtI-2 negative regulation [PMID:26943172 "TOPP1 and AtI-2 negatively regulated the SnRK2.2/3/6-mediated activation of the ABA responsive reporter gene RD29B"].
 - The eight GO:0005515 rows with clade A PP2C partners changed from REMOVE to MODIFY to GO:0019903, as for SnRK2.2 and matching the OST1 GO:0019903 IPI row. The bHLH122 row stays REMOVE.
 - GO:0009737 rows: reason explains why the term is kept alongside GO:0009738.
-- Source defect recorded on the NOT located_in cytosol RCA row (PMID:21166475): contradicted by BiFC and IDA cytoplasm evidence.
+- The NOT located_in cytosol RCA row (PMID:21166475) stays REMOVE: it is contradicted by BiFC and IDA cytoplasm evidence. It is not recorded as a source defect, because it is a computational prediction rather than a curation error.

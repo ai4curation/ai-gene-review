@@ -1,6 +1,6 @@
 # Source-record defects for TAIR
 
-14 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+12 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
@@ -169,19 +169,7 @@ This IPI row makes SERRATE (Q9ZVD0, AT2G27100) part_of the nuclear cap binding c
 > SE/ARS2 executes its function in conjunction with the nuclear cap-binding complex (CBC), which consists of two subunits (CBP20 and CBP80)
 > — PMID:30152752
 
-## 12. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9LD83 located_in GO:0005634 nucleus (ISM, GO_REF:0000122)
-- **Field:** GO_ID
-- **Change:** delete the record asserting GO:0005634
-- **Recorded in:** `genes/ARATH/SLAC1/SLAC1-ai-review.yaml`
-
-This ISM row (AtSubP prediction, GO_REF:0000122) places SLAC1 (Q9LD83, AT1G12480) in the nucleus. SLAC1 is a ten-transmembrane-helix guard-cell anion channel that GFP fusions and BiFC localize to the plasma membrane, and no study reports nuclear SLAC1. We suggest withdrawing the predicted nuclear localization.
-
-> is localized specifically to the plasma membrane of guard cells
-> — PMID:18305482
-
-## 13. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 12. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9SIV0 acts_upstream_of_or_within GO:0050832 defense response to fungus (IDA, PMID:32213638)
 - **Field:** DB:Reference
@@ -193,15 +181,3 @@ This SUR1 (At2g20610, Q9SIV0) IDA for defense response to fungus (GO:0050832) is
 
 > we report the characterization of two ABA-related seed dormancy regulators in Arabidopsis
 > — PMID:32213638
-
-## 14. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q39193 located_in GO:0005829 cytosol (RCA, PMID:21166475)
-- **Field:** Qualifier
-- **Change:** delete the record asserting NOT|located_in
-- **Recorded in:** `genes/ARATH/SnRK2.3/SnRK2.3-ai-review.yaml`
-
-This RCA row asserts that SnRK2.3 (Q39193, AT5G66880) is NOT located in the cytosol, based on its absence from a cytosolic proteome of Arabidopsis cell suspensions (PMID:21166475). Non-detection of a low-abundance kinase in one proteomic dataset does not establish absence, and BiFC places SnRK2-ABI1 complexes in the cytosol as well as the nucleus; SnRK2.3 also has an IDA cytoplasm annotation (PMID:19880399). We suggest withdrawing the negative row.
-
-> ABI1 interacts with the SnRK2s in the nucleus as well as the cytosol
-> — PMID:19924127
