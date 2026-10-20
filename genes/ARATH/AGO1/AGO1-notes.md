@@ -31,3 +31,7 @@ Research refresh outcome: Falcon timed out after 600 seconds; automatic perplexi
 ## 2026-09-12: PR review follow-up
 
 Generalized the author-proposed translational-repressor MF and matching core function to QuickGO-verified GO:0030371. This preserves the established guide-dependent repression while avoiding a stronger implication of independent cis-element recognition. [PMID:34192539 "ribosome stalling caused by the Argonaute-microRNA-SGS3 complex regulates production of secondary small interfering RNAs (siRNAs) in plants."] Removed a duplicated summary sentence from its reason. All GOA-sourced rows are unchanged.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+Core function 1 MF set back to the parent GO:0004521 RNA endonuclease activity. AGO1 also loads ta-siRNAs and transgene siRNAs [PMID:16081530 "AGO1 is physically associated with miRNAs, transacting siRNAs, and transgene-derived siRNAs"], so its slicer activity is not restricted to miRNA-paired targets. The PMID:16081530 IDA row stays MODIFY to GO:0090624, since that paper's assay is miR165-guided PHV cleavage; its reason now spells this out.

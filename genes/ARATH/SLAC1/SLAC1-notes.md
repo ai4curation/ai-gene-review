@@ -92,3 +92,7 @@ PMID:30361234; the others are abstract-only.
   10-TM plasma-membrane channel.
 - GO:0090333 regulation of stomatal closure (IMP, PMID:29463779): SLAC1 executes
   closure (the anion efflux step) rather than regulating it; GO:0090332 fits.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+Source defects recorded for GO:0090333 regulation of stomatal closure (IMP, PMID:29463779, UniProt; should be GO:0090332) and the AtSubP-predicted nucleus row (ISM). GOA's DOI:10.1038/nature09487 key for Chen et al. 2010 is the same paper as PMID:20981093 and is not a defect.
