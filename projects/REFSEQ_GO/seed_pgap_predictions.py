@@ -23,7 +23,8 @@ Usage::
 
     uv run python projects/REFSEQ_GO/seed_pgap_predictions.py \\
         --results-dir projects/REFSEQ_GO/results/PSEPK --accession Q88Q37 \\
-        --gene PP_0661 --taxon-id 160488 --taxon-label "Pseudomonas putida KT2440" \\
+        --gene PP_0661 --organism PSEPK --taxon-id 160488 \\
+        --taxon-label "Pseudomonas putida KT2440" \\
         --out-dir /tmp/seeds/PP_0661
 """
 
@@ -69,6 +70,7 @@ def main(
     results_dir: Path = typer.Option(..., help="Output dir of compare_refseq_goa.py"),
     accession: str = typer.Option(..., help="UniProt accession"),
     gene: str = typer.Option(..., help="Gene folder name / symbol"),
+    organism: str = typer.Option(..., help="genes/<ORGANISM> folder, e.g. PSEPK"),
     taxon_id: int = typer.Option(...),
     taxon_label: str = typer.Option(...),
     out_dir: Path = typer.Option(..., help="Where to write the seed files"),
@@ -215,6 +217,11 @@ def main(
                     },
                 }
             )
+    # Repo-root paths for source_documents; file: references are relative to genes/.
+    evidence_files = [
+        f"genes/{organism}/{gene}/{gene}-pgap-prediction-evidence/{name}"
+        for name in [f"{wp}.gp" for wp in wps] + ["pgap_models.yaml"]
+    ]
     doc = {
         "id": accession,
         "gene_symbol": gene,
@@ -228,8 +235,11 @@ def main(
             if genome_only
             else ""
         ),
-        "source_documents": [f"{gene}-pgap-prediction-evidence/{wp}.gp" for wp in wps]
-        + [f"{gene}-pgap-prediction-evidence/pgap_models.yaml"],
+        "source_documents": evidence_files,
+        "references": [
+            {"id": "file:" + f.removeprefix("genes/"), "title": Path(f).name}
+            for f in evidence_files
+        ],
         "predictions": predictions,
     }
     out = out_dir / f"{gene}-pgap-predictions-review.yaml"
