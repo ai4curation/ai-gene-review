@@ -11,11 +11,11 @@ Back to [the Arabidopsis corpus project](../ARATH.md).
 **Bottom line:** of 107 Arabidopsis pathways checked, 33 have a module that
 contains a reviewed Arabidopsis gene. These are mostly hormone signaling,
 flowering, development and immunity. The other 74 are not curated for
-Arabidopsis. 36 have no module at all. 21 have only a cross-kingdom module that
-never mentions Arabidopsis. 17 have a module that mentions Arabidopsis but holds
+Arabidopsis. 35 have no module at all. 21 have only a cross-kingdom module that
+never mentions Arabidopsis. 18 have a module that mentions Arabidopsis but holds
 none of our reviewed genes. Plant-specific metabolism is the largest gap: seven
 of the nine hormone biosynthesis pathways, starch and sucrose,
-photorespiration, flavonoids and anthocyanins, cuticle lipids, plastid lipids,
+flavonoids and anthocyanins, cuticle lipids, plastid lipids,
 phytosterols, and nitrate and ammonium assimilation.
 
 ## Method
@@ -42,9 +42,9 @@ Coverage calls:
 
 | Call | Meaning | Pathways |
 |---|---|---|
-| `NO_MODULE` | No module covers the pathway | 36 |
+| `NO_MODULE` | No module covers the pathway | 35 |
 | `MODULE_WITHOUT_ARABIDOPSIS` | Module exists but never mentions Arabidopsis | 21 |
-| `MODULE_WITHOUT_ARATH_GENES` | Module mentions Arabidopsis, has no reviewed ARATH gene | 17 |
+| `MODULE_WITHOUT_ARATH_GENES` | Module mentions Arabidopsis, has no reviewed ARATH gene | 18 |
 | `MODULE_WITH_ARATH_GENES` | At least one reviewed ARATH gene is a module member | 33 |
 
 Limits. The pathway list is not exhaustive and has not been compared with
@@ -55,11 +55,11 @@ repair, N-glycosylation) or minor metabolic maps, and the output file lists
 them. A `MODULE_WITH_ARATH_GENES` call does not mean the pathway is finished:
 every module is still `DRAFT`, and some hold only one or two Arabidopsis genes.
 
-## 1. No module (36)
+## 1. No module (35)
 
 | Area | Pathways | Reviewed ARATH genes waiting for a module |
 |---|---|---|
-| Photosynthesis and carbon | Starch synthesis and degradation; sucrose synthesis and degradation; photorespiration | |
+| Photosynthesis and carbon | Starch synthesis and degradation; sucrose synthesis and degradation | |
 | Hormone biosynthesis | Abscisic acid; auxin (TAA/YUCCA); cytokinin; brassinosteroid; jasmonate (oxylipin); ethylene; strigolactone | NCED3 |
 | Lipids | Plastid type II fatty acid synthesis; fatty acid desaturation; cutin, suberin and wax; galactolipids; phytosterols (cycloartenol route) | FAD2, CER1 |
 | Specialised metabolism | Flavonoids, flavonols and anthocyanins; indolic glucosinolates and their MYB regulation; mono-, sesqui- and triterpenoids | TT8, MYB34, MYB51, MYB122 |
@@ -91,10 +91,13 @@ be added without writing new modules.
 - Sulfate assimilation (APS reduction and PAPS activation)
 - Peroxisome biogenesis and matrix protein import
 
-## 3. Module mentions Arabidopsis but holds no reviewed ARATH gene (17)
+## 3. Module mentions Arabidopsis but holds no reviewed ARATH gene (18)
 
 - Photosynthesis: light reactions and antenna, Calvin-Benson-Bassham cycle,
   chlorophyll biosynthesis (all parts of one `photosynthesis` module)
+- Photorespiration: the `photorespiration_c2_cycle` module (drafted
+  2026-10-20) uses Arabidopsis proteins as representatives, none of which has
+  a gene review yet
 - Cell wall: cellulose, xylan
 - Amino acids: shikimate and aromatic amino acids, aspartate family (Thr,
   Met), proline and arginine catabolism, GABA shunt
@@ -126,6 +129,6 @@ which leaves out xanthophylls.
    glucosinolates (MYB34/51/122), UV-B (UVR8), cold (CBF1).
 2. Hormone biosynthesis as a set, so that every signaling module has its
    matching biosynthesis module.
-3. Starch, sucrose and photorespiration, together with Arabidopsis reviews for
-   the `photosynthesis` module (section 3).
+3. Starch and sucrose, together with Arabidopsis reviews for the
+   `photosynthesis` and `photorespiration_c2_cycle` modules (section 3).
 4. Add Arabidopsis representatives to the section 2 modules.

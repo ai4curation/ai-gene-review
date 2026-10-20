@@ -482,11 +482,11 @@ the stats script is next re-run.
 [Arabidopsis pathways not yet curated](ARATH/ARATH-pathway-gaps.md) checks 107
 Arabidopsis pathways against the modules. The pathway list comes from KEGG's
 *A. thaliana* maps plus plant processes that KEGG has no map for. 33 pathways
-have a module with a reviewed Arabidopsis gene. The other 74 do not: 36 have
+have a module with a reviewed Arabidopsis gene. The other 74 do not: 35 have
 no module, 21 have only a cross-kingdom module that never mentions
-Arabidopsis, and 17 have a module with no reviewed Arabidopsis gene. The
+Arabidopsis, and 18 have a module with no reviewed Arabidopsis gene. The
 largest gap is plant-specific metabolism: hormone biosynthesis (all but GA and
-SA), starch and sucrose, photorespiration, flavonoids and anthocyanins,
+SA), starch and sucrose, flavonoids and anthocyanins,
 cuticle and plastid lipids, phytosterols, and nitrate and ammonium
 assimilation.
 
@@ -532,7 +532,7 @@ studies) list ARATH among their species; the stats file names them all.
 ---
 # STATUS
 
-Last updated: 2026-10-19
+Last updated: 2026-10-20
 
 ## Phase 1: summarize the corpus
 
@@ -570,7 +570,12 @@ Last updated: 2026-10-19
       acclimation (CBF1)
 - [ ] Draft the remaining hormone biosynthesis modules (auxin, cytokinin,
       brassinosteroid, jasmonate, ethylene, strigolactone)
-- [ ] Draft starch, sucrose and photorespiration modules
+- [x] Draft a photorespiration module
+      ([photorespiration_c2_cycle](../modules/photorespiration_c2_cycle.html))
+- [ ] Review the Arabidopsis representatives of the photorespiration module:
+      PGLP1, PLGG1, GOX1, GOX2, CAT2, GGAT1, SHM1, SGAT/AGT1, HPR1, HPR2, GLYK,
+      GLN2, GLU1, and the glycine decarboxylase subunits
+- [ ] Draft starch and sucrose modules
 - [ ] Review Arabidopsis genes for modules that mention Arabidopsis but have no
       reviewed gene (photosynthesis, cellulose and xylan first)
 - [ ] Add Arabidopsis representatives to the 21 cross-kingdom modules that
@@ -611,3 +616,12 @@ and `genes/ARATH/` (`ARATH/scripts/arath_pathway_gaps.py`), its output
 ([ARATH-pathway-gaps](ARATH/ARATH-pathway-gaps.md)). The corpus stats file was
 not regenerated in this change, so the other numbers on this page are still
 from the 2026-10-14 snapshot.
+
+## 2026-10-20
+
+Drafted the `photorespiration_c2_cycle` module (ten parts from 2-phosphoglycolate
+phosphatase to D-glycerate 3-kinase, plus ammonia refixation; glycine
+decarboxylase is included by reference to `glycine_cleavage_system`).
+Representatives are Arabidopsis proteins checked against UniProt; none has a
+gene review yet, so photorespiration now counts as "module without reviewed
+ARATH genes" in the gap analysis.
