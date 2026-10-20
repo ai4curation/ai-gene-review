@@ -34,5 +34,12 @@
 
 ### Decisions
 - Response to abscisic acid (IEP): MARK_AS_OVER_ANNOTATED changed to MODIFY → GO:0009788 negative regulation of abscisic acid-activated signaling pathway, based on the Tang et al. 2025 abstract. Full text still to be checked.
-- Kept NEW GO:0009266 response to temperature stimulus rather than GO:0016048 detection of temperature stimulus. Comparator check: TAIR annotates PHYB (the canonical thermosensor) to GO:0009266, and no ARATH gene in this repo carries GO:0016048. Raised as a suggested question instead.
+- Kept NEW GO:0009266 response to temperature stimulus rather than GO:0016048 detection of temperature stimulus. Comparator check: TAIR annotates PHYB (the canonical plant thermosensor) to GO:0009266, and no ARATH gene in this repo carries GO:0016048. Outside plants, the C. elegans AFD thermoreceptor guanylyl cyclases gcy-8, gcy-18 and gcy-23 do carry GO:0016048 (accepted and core in their reviews), which is a precedent pointing towards GO:0016048 for direct thermosensors. Kept GO:0009266 for consistency with PHYB and raised the choice as a suggested question.
 - Added supporting evidence to: DNA-binding TF → corepressor MODIFY (JMJ17/18), entrainment IMP (Zhu et al. 2022), and the thermosensor NEW row and core function (PNAS 2023, Plant Cell 2022).
+
+### 2026-10-20: PR review follow-up (ai4curation/ai-gene-review#5221)
+- Moved the PMID:34698833 quote out of the EC corepressor core function into a new core function for EC-independent temperature input to the oscillator (GO:0009649).
+- Qualified the description: chromatin-based repression has been shown at PIF4, PIF5 and GI only.
+- Cited PMID:35191492 (light-quality-dependent ELF3 localization) on the nucleus IDA row.
+- Checked OLS: GO:0009788 is not an is_a/part_of descendant of GO:0009737 (its ancestors are under regulation of signal transduction and regulation of response to alcohol), so the ABA MODIFY is a lateral move rather than a refinement. Decision on restructuring (KEEP_AS_NON_CORE on GO:0009737 plus NEW GO:0009788) left to the curator.
+- GO:0034720 histone H3-K4 demethylation is obsolete; raised the ELF3-JMJ targeting question without a term id.
