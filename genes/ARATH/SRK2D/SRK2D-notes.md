@@ -88,3 +88,15 @@ predominate in seeds and roots (germination, dormancy, root growth inhibition, h
 SnRK2.2 does not carry the SLAC1 regulator (ion channel regulator activity) or stomatal terms in
 GOA, and I did not add them: the evidence for SnRK2.2 in guard cells is mainly redundancy in
 higher-order mutants.
+
+## Review follow-up (PR #5240)
+
+- UniProt (ECO:0000269) records two items first missed here: SnRK2.2 phosphorylates the ESCRT-I
+  component FREE1, required for its ABA-induced nuclear import (PubMed:30962512, not cached), and
+  interacts with I-2, TOPP1 and TOPP2 (PubMed:26943172). [PMID:26943172 "TOPP1 and AtI-2 negatively
+  regulated the SnRK2.2/3/6-mediated activation of the ABA responsive reporter gene RD29B"]. Both are
+  now in the description and core function; no new GOA row is needed.
+- Autophosphorylation (GO:0046777) is proposed as NEW for SRK2I only. The SnRK2.3 and OST1 crystal
+  structures (PMID:22160701) and SRK2I's UniProt activity-regulation line support it directly; Q39192
+  has no equivalent curated line and SnRK2.2 was not crystallised, so it is not asserted here even
+  though the activation mechanism is presumably shared.

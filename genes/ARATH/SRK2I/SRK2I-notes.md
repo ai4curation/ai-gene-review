@@ -59,3 +59,11 @@ shared SnRK2.2/2.3 literature.
 
 As for SRK2D: seed/root role rather than guard-cell role. SnRK2.3 has lower autophosphorylation
 efficiency and stability than SnRK2.6 in vitro (PMID:22160701).
+
+## Review follow-up (PR #5240)
+
+- UniProt (ECO:0000269) records that SnRK2.3 phosphorylates the ESCRT-I component FREE1, required
+  for its ABA-induced nuclear import (PubMed:30962512, not cached), and interacts with I-2 and TOPP1
+  (PubMed:26943172). [PMID:26943172 "TOPP1 and AtI-2 negatively regulated the SnRK2.2/3/6-mediated
+  activation of the ABA responsive reporter gene RD29B"]. Both are now in the description and core
+  function; no new GOA row is needed.
