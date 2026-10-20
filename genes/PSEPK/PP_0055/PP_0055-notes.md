@@ -91,9 +91,20 @@ pathway context is recorded only in prose. Negative autoregulation is plausible 
 
 ## Annotation decisions
 
-- GO:0003677 DNA binding (IEA): TOO_GENERAL (entailed by GO:0043565 and GO:0001216).
+- GO:0003677 DNA binding (IEA): TOO_GENERAL (entailed by GO:0000987 and GO:0001216).
 - GO:0003700 DNA-binding TF activity (IEA): MODIFY -> GO:0001216.
-- GO:0006351 DNA-templated transcription (IEA): MARK_AS_OVER_ANNOTATED (a TF regulates transcription;
-  it is not part of the transcription process itself).
+- GO:0006351 DNA-templated transcription (IEA): MODIFY -> GO:0045893 (a TF regulates transcription;
+  it is not part of the transcription process itself; lateral redirect, precedent genes/DANRE/pax6b).
 - GO:0006355 regulation of DNA-templated transcription (IEA): MODIFY -> GO:0045893.
-- GO:0043565 sequence-specific DNA binding (IEA): ACCEPT (EMSA on the hpdH promoter).
+- GO:0043565 sequence-specific DNA binding (IEA): MODIFY -> GO:0000987 cis-regulatory region
+  sequence-specific DNA binding (EMSA on the hpdH promoter; CRE1/CRE2 mutagenesis).
+  Note the HpdR CREs are atypical: [PMID:28496205 "neither CRE1 nor CRE2 contains the typical
+  LysR T-N11-A binding motif"].
+
+## Revision 2026-10-20 (PR #5231 review)
+
+- Corrected the GO:0043565 rationale, which wrongly said the CRE fits the LTTR T-N11-A motif.
+- Refined GO:0043565 to GO:0000987; changed GO:0006351 from MARK_AS_OVER_ANNOTATED to MODIFY.
+- Removed evidence-provenance sentences from the description (the provenance caveats, i.e.
+  heterologous reporter assays rather than a KT2440 knockout, and the inferred PP_0055 = hpdR
+  locus assignment, are recorded above).
