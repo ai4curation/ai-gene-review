@@ -9,9 +9,16 @@ Output: `B_ubiquitin.tsv`. Checker: 7 rows, 0 errors (2026-10-09).
 | kbtbd8 (X. tropicalis) | PMID:26399832 | FULL_TEXT | REPLACE → GO:0014036 |
 | TCOF1 (human) | PMID:26399832 | FULL_TEXT | REPLACE → GO:0014036 |
 | NOLC1 (human) | PMID:26399832 | FULL_TEXT | REPLACE → GO:0014036 |
-| KLHL12 (human) | PMID:27716508 | ABSTRACT | UNDECIDED (candidate GO:0014036) |
-| PEF1 (human) | PMID:27716508 | ABSTRACT | UNDECIDED (candidate GO:0014036) |
-| PDCD6 / ALG2 (human) | PMID:27716508 | ABSTRACT | UNDECIDED (candidate GO:0014036) |
+| KLHL12 (human) | PMID:27716508 | FULL_TEXT | REMOVE (no crest data; 2026-10-20) |
+| PEF1 (human) | PMID:27716508 | FULL_TEXT | REMOVE (no crest data; 2026-10-20) |
+| PDCD6 / ALG2 (human) | PMID:27716508 | FULL_TEXT | REMOVE (no crest data; 2026-10-20) |
+
+**2026-10-20.** The full text of PMID:27716508 was read from a publisher PDF the
+project lead supplied (bronze OA, not cached). It contains no neural crest
+experiments. All assays are in cultured human cells and read out SEC31
+ubiquitylation, COPII coat size and collagen secretion. Crest is mentioned only
+as background citing Jin et al. 2012 and Werner et al. 2015. The three rows are
+REMOVE, and the UNDECIDED notes below are superseded.
 
 ## PMID:26399832 (Werner et al. 2015, Nature): full text cached (PMC4602398)
 

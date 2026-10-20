@@ -127,8 +127,27 @@
 - Repression / DNA binding / nucleus rows: ACCEPT; GO:0045892 IMPs → MODIFY to GO:0000122.
 - NEW GO:0001227 (repressor activity).
 - GO:0014029 positive IMP rows ×3: ACCEPT (broad level, homeolog-ambiguous evidence noted).
-- GO:0014029 NOT row: UNDECIDED (conflicts with positive rows on the same protein and with
-  Vega-López 2015; needs curator resolution).
+- GO:0014029 NOT row: REMOVE (re-decided 2026-10-20 from the full texts; see below).
 - BMP signaling pathway IMP → MODIFY GO:0030514 negative regulation of BMP signaling pathway.
 - Floor plate ×2, prechordal plate: ACCEPT (the best homeolog-resolved hes4-a functions).
 - Lens, anti-apoptosis, A/P pattern IBA, neurogenesis IBA: KEEP_AS_NON_CORE.
+
+## 2026-10-20: NOT row re-decided from the full texts
+
+Full texts of Murato 2007 [PMID:17724611] and Vega-López 2015 [PMID:25997789] were
+read from PDFs the project lead supplied. They are not cached: the first is closed
+access and the second bronze OA, which the cache policy excludes.
+- Murato Fig. 1: foxd3 repression in 20% of embryos with the hairy2a MO (n=39), 14%
+  with control MO (n=37), 55% with the hairy2b MO (n=40) and 69% with both (n=45). The
+  hairy2a single-knockdown effect is barely above control, and the double knockdown is
+  stronger than hairy2b alone.
+- Murato Fig. S2: the two proteins are "virtually identical" repressors in luciferase
+  assays, and the authors attribute the crest difference to expression level. Fig. 5:
+  hairy2a and hairy2b are equally expressed at the anterior neural border, while
+  hairy2b dominates in the crest proper.
+- Vega-López Fig. 5L: hairy2a-GR rescues the hairy2b-MO crest phenotype (60%, n=25).
+  Fig. 1O: hairy2a overlaps foxd3 in prospective crest. Fig. 6: DN-hairy2a reduces the
+  crest territory, but dominant-negative constructs are not homeolog-specific.
+- Decision: the NOT row is REMOVE. Low expression plus redundancy explains the weak
+  single-knockdown phenotype, and it does not show that hairy2a lacks the function.
+  The positive rows stay MODIFY → *neural crest progenitor maintenance* (NTR).

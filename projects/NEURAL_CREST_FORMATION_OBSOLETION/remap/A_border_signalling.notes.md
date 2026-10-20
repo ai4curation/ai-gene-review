@@ -56,3 +56,11 @@ A dominant-negative LRP6 blocks crest. The more specific GO:0044335 (canonical W
 The paper is about vascular patterning. It mentions crest only as background
 [PMID:17685487 "Genetic inactivation of Chordin, an inhibitor of the Bone Morphogenetic Protein signaling pathway, results in neural crest defects affecting heart and neck organs"].
 Those defects are in crest derivatives (pharyngeal and cardiac), which suggests cardiac or pharyngeal crest terms (e.g. GO:0061308) rather than border or crest formation. The cached text is abstract-only, and the MGI curator may have used data in the full text, so this row needs curator input rather than removal.
+
+**Re-decided 2026-10-20: REMOVE.** The full text was read from a publisher PDF
+the project lead supplied (bronze OA, not cached). The paper is a resin-injection
+imaging study of the vasculature, with no crest experiments. Every crest
+statement cites Bachiller et al. 2003 (PMID:12810603), where crest fails to
+migrate through Chordin-deficient pharyngeal endoderm. Any crest annotation for
+that finding belongs on PMID:12810603, as a cardiac/pharyngeal crest migration
+term rather than crest formation.

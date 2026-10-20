@@ -179,8 +179,8 @@ a `.notes.md`) and from the gene reviews already in this repo.
 |---|---:|---:|
 | REPLACE | 82 | 51 |
 | OVER_ANNOTATED (overexpression only) | 4 | 4 |
-| REMOVE (expression only) | 3 | 2 |
-| UNDECIDED | 5 | 5 |
+| REMOVE (expression only, or no crest data in the cited paper; one NOT row) | 8 | 7 |
+| UNDECIDED | 0 | 0 |
 
 Decisions by gene (species; paper):
 
@@ -198,15 +198,16 @@ Decisions by gene (species; paper):
 | Other existing terms | polr1b (zebrafish) → GO:0006360 transcription by RNA polymerase I |
 | OVER_ANNOTATED (overexpression only) | zic2-a (PMID:9634234, PMID:9739105), zic4 (PMID:16871625) (X. laevis); TSPAN18 (chicken, PMID:23418345; re-decided 2026-10-19) |
 | REMOVE (expression only) | grem1 (X. laevis, IEP); Id2 (chicken, IEP, on both GO:0014029 and GO:0090300) |
-| UNDECIDED | KLHL12, PEF1, PDCD6 (human; PMID:27716508 full text not accessible); Chrd (mouse; the cached abstract concerns vascular patterning); hes4-a NOT row (contradicted by PMID:25997789) |
+| REMOVE (no crest data in the cited paper; full text read 2026-10-20) | KLHL12, PEF1, PDCD6 (human; PMID:27716508); Chrd (mouse; PMID:17685487) |
+| REMOVE (NOT row; full text read 2026-10-20) | hes4-a (PMID:17724611; contradicted by PMID:25997789) |
 
 What the remapping shows:
 - **Only 14 of 94 rows land on a precise crest-cell term** (fate
   specification or delamination): the SoxE genes, the ubiquitin group and SOX9.
   The rest move to the border term (11), the progenitor term (11), a regulation
   term (13), the general differentiation term (32, of which 28 are zeb2
-  accessions from one paper) or a non-crest term (polr1b), or are removed,
-  marked over-annotated or left undecided. The obsoleted term was carrying all of these meanings.
+  accessions from one paper) or a non-crest term (polr1b), or are removed
+  or marked over-annotated. The obsoleted term was carrying all of these meanings.
 - **Ribosome biogenesis is split on purpose.** polr1b knockdown makes crest
   precursors die from a ribosome shortage, which is a requirement, not a crest
   step. TCOF1 and NOLC1 knockdown switches cells from crest to CNS identity
@@ -282,7 +283,7 @@ What the remapping shows:
 ---
 # STATUS
 
-Last updated: 2026-10-19
+Last updated: 2026-10-20
 
 - [x] Defect documented (text vs placement), checked in QuickGO and OLS
 - [x] Inventory of all annotations to the four terms (`inventory.py`, `annotations.tsv`, `summary.md`)
@@ -294,7 +295,7 @@ Last updated: 2026-10-19
 - [x] Review the remaining experimental annotations (four batches; 2026-10-09)
 - [x] Review the 17 regulation-term annotations (12 distinct)
 - [x] Per-annotation remapping table for GO (`remapping.tsv`, 94 rows, checker clean)
-- [ ] Resolve the 5 UNDECIDED rows (needs PMID:27716508 full text; Chrd full text; hes4-a NOT row). Rechecked 2026-10-19: still blocked, see notes
+- [x] Resolve the 5 UNDECIDED rows (2026-10-20, from full texts supplied by the project lead): all five REMOVE
 - [x] Gap terms checked (2026-10-09): delamination regulation, migration regulation and crest apoptosis are absent from GO; none proposed yet (no annotation clears the bar)
 - [x] Re-decide TSPAN18 (2026-10-19): OVER_ANNOTATED; GO:0010719 rested on overexpression, and knockdown supports Cad6B stabilisation only
 - [x] Overexpression-only rule applied: zic2-a and zic4 marked over-annotated; zic1 and sox10 kept because they have loss-of-function evidence
@@ -302,6 +303,39 @@ Last updated: 2026-10-19
 - [ ] Submit the GO request (needs sign-off)
 
 # NOTES
+
+## 2026-10-20 (UNDECIDED rows resolved from full texts)
+
+The project lead supplied publisher PDFs of all four papers. The text is not
+cached in `publications/`: the papers are bronze OA or closed, and the cache
+policy (`docs/publication_fulltext_warming.md`) excludes them. Quotes in the
+remapping therefore stay on the cached abstracts. The full-text findings are
+recorded here and in the row rationales, with figure numbers.
+
+- **KLHL12, PEF1, PDCD6 → REMOVE** [PMID:27716508]. The paper has no neural
+  crest experiments. Every assay is in cultured human cells (293T,
+  osteosarcoma) and reads out SEC31 monoubiquitylation, COPII coat size or
+  collagen secretion. All its crest statements are background citing Jin et
+  al. 2012 and Werner et al. 2015 (CUL3-KBTBD8). No candidate crest term
+  survives. UniProt's "required for neural crest specification" echoes the
+  paper's framing; report it with the ARBA item.
+- **Chrd → REMOVE** [PMID:17685487]. A resin-injection imaging study of
+  venous and arterial patterning in Chrd-/- embryos. Its crest statements
+  cite Bachiller et al. 2003 (PMID:12810603), where crest fails to migrate
+  through Chordin-deficient pharyngeal endoderm. That is a non-autonomous
+  effect on cardiac/pharyngeal crest, and any annotation for it belongs on
+  PMID:12810603.
+- **hes4-a NOT row → REMOVE** [PMID:17724611, PMID:25997789]. The hairy2a
+  morpholino repressed foxd3 in 20% of embryos against 14% for the control,
+  and the double knockdown (69%) was stronger than hairy2b alone (55%). Murato
+  et al. find the two proteins equivalent as repressors and attribute the
+  difference to expression level. Vega-López et al. show hairy2a-GR rescuing
+  hairy2b loss. Redundancy explains the weak phenotype, so the negative claim
+  is not carried to any replacement term. The decision is made in the gene
+  review (`genes/XENLA/hes4-a/`) and flows into `remapping.tsv` via
+  `merge_remap.py`.
+- The remapping now has 51 replace, 4 over-annotated, 7 remove and 0
+  undecided decisions (94 rows); `check_remap.py` is clean.
 
 ## 2026-10-19 (follow-up from issue #5031)
 

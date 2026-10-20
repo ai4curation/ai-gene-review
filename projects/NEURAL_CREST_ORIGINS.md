@@ -154,7 +154,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (20 ACCEPT, 6 MODIFY, 6 non-core, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
 - [x] `human/MSX1` (P28360) — Msx1; border specifier upstream of Pax3/Zic. Reviewed 2026-10-05: 64 GOA rows (38 ACCEPT, 17 non-core, 5 over-annotated, 2 REMOVE, 2 UNDECIDED) + 1 NEW (*neural plate border formation* (NTR), formerly GO:0014029, ISS)
 - [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 2 NEW (*neural plate border formation* (NTR), formerly GO:0014029; GO:0014036; both ISS)
-- [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (17 ACCEPT, 6 MODIFY, 5 non-core, 1 UNDECIDED) + 1 NEW (GO:0001227)
+- [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (17 ACCEPT, 6 MODIFY, 5 non-core, 1 REMOVE; the NOT row was UNDECIDED until 2026-10-20) + 1 NEW (GO:0001227)
 - [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (*neural plate border formation* (NTR), formerly GO:0014029, GO:0001227, GO:0030917, GO:0043049)
 
 ## Tier 3 — Blastula pluripotency programme retained in the crest — COMPLETE 2026-10-07
@@ -237,7 +237,7 @@ reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 | Border and crest | TFAP2A | *neural plate border formation* (NTR) + `GO:0014036` (both NEW, ISS) | Amphioxus AP-2 non-neural only: co-opted |
 | Competence | myc-a | *neural crest progenitor maintenance* (NTR) (NEW) | Frog c-Myc vs chick N-Myc at the border |
 | Competence | id3-a | *neural crest progenitor maintenance* (NTR) (GOA rows MODIFY from `GO:0014029`) | Border expression from lamprey; old protein, new expression |
-| Competence | hes4-a | *neural crest progenitor maintenance* (NTR) (one NOT row UNDECIDED) | No outgroup data found |
+| Competence | hes4-a | *neural crest progenitor maintenance* (NTR) (NOT row removed 2026-10-20) | No outgroup data found |
 | Competence | pou5f1.1 (Oct25) | *neural crest progenitor maintenance* (NTR) (NEW, flagged) | pou5 vertebrate-new; lamprey pou5 absent from crest yet rescues frog crest |
 | Competence, then specifier | snai1 | `GO:0014036`, `GO:0001755` | Snail border expression ancestral (amphioxus); lamprey's single snail flat across stages |
 | Specifier | sox8 | `GO:0014036` | Leading SoxE paralog differs by lineage |
@@ -574,7 +574,7 @@ Cross-cutting findings:
 | MSX1 | Border specifier (BMP-responsive; upstream of pax3/zic) | *neural plate border formation* (NTR) (NEW, ISS, flagged) | Border expression ancestral (amphioxus) |
 | pax3-a | Border specifier; with Zic1, necessary and sufficient for crest | *neural plate border formation* (NTR), `GO:0014034` | Border expression ancestral (amphioxus) |
 | zic1 | Border specifier; also preplacodal | *neural plate border formation* (NTR), `GO:0014034` | Border expression ancestral (amphioxus) |
-| hes4-a | Competence / progenitor maintenance | *neural crest progenitor maintenance* (NTR) (one NOT row UNDECIDED) | No outgroup data found |
+| hes4-a | Competence / progenitor maintenance | *neural crest progenitor maintenance* (NTR) (one NOT row UNDECIDED; REMOVE from 2026-10-20) | No outgroup data found |
 | TFAP2A | Spans border and crest | *neural plate border formation* (NTR) + `GO:0014036` (both NEW, ISS) | Amphioxus AP-2 is non-neural only: **co-opted** |
 
 Cross-cutting findings:
