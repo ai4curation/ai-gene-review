@@ -7,8 +7,9 @@ genomic neighbours in P. putida KT2440.
 
 Run: uv run compare_lysr.py > compare_lysr_output.txt
 
-Fetches sequences from UniProt and gene neighbourhood from KEGG REST at run time;
-nothing is hard-coded except the accessions and locus tags queried.
+Fetches sequences from UniProt and gene neighbourhoods and KO memberships from
+KEGG REST at run time; nothing is hard-coded except the accessions, KO ids and
+locus tags queried.
 """
 
 import io
@@ -26,6 +27,22 @@ REFERENCES = {
 }
 NEIGHBOURS = [f"PP_{i:04d}" for i in range(656, 666)]
 AMPC_CANDIDATE_NEIGHBOURS = ["PP_2875", "PP_2876", "PP_2877"]
+GCV_KOS = {
+    "K00605": "gcvT aminomethyltransferase",
+    "K02437": "gcvH glycine cleavage system H protein",
+    "K00281": "gcvP glycine dehydrogenase",
+}
+
+
+def kegg_ko_genes(ko: str) -> list[str]:
+    """Return KT2440 (ppu) locus tags linked to a KEGG orthology id."""
+    r = requests.get(f"https://rest.kegg.jp/link/ppu/ko:{ko}", timeout=60)
+    r.raise_for_status()
+    return [
+        line.split("\t")[1].removeprefix("ppu:")
+        for line in r.text.strip().splitlines()
+        if "\t" in line
+    ]
 
 
 def fetch_seq(acc: str):
@@ -69,11 +86,17 @@ def main() -> None:
         print(f"{locus}\t{kegg_summary(locus)}")
 
     print("\n# Neighbourhood of the KT2440 class C beta-lactamase gene (K01467)")
-    r = requests.get("https://rest.kegg.jp/link/ppu/ko:K01467", timeout=60)
-    r.raise_for_status()
-    print(f"K01467 genes in ppu: {r.text.strip()}")
+    print(f"K01467 genes in ppu: {kegg_ko_genes('K01467')}")
     for locus in AMPC_CANDIDATE_NEIGHBOURS:
         print(f"{locus}\t{kegg_summary(locus)}")
+
+    print("\n# All KT2440 genes in KEGG KO K03566 (GcvA-like LysR regulator)")
+    for locus in kegg_ko_genes("K03566"):
+        print(f"{locus}\t{kegg_summary(locus)}")
+
+    print("\n# KT2440 glycine cleavage system genes (GcvA targets in E. coli)")
+    for ko, name in GCV_KOS.items():
+        print(f"{ko} ({name}): {kegg_ko_genes(ko)}")
 
 
 if __name__ == "__main__":
