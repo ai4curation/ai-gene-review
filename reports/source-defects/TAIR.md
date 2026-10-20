@@ -128,10 +128,10 @@ PMID:21631432 reports heterocyclic-ligand binding "uniquely" for GSTF2 and GSTF3
 
 - **Record:** UniProtKB:Q9ZVD0 enables GO:0003677 DNA binding (ISS, PMID:11402159)
 - **Field:** GO_ID
-- **Change:** delete the record asserting ECO:0000250
+- **Change:** delete the record asserting GO:0003677
 - **Recorded in:** `genes/ARATH/SERRATE/SERRATE-ai-review.yaml`
 
-This 2003 TAIR row asserts DNA binding for SERRATE (Q9ZVD0, AT2G27100) by ISS, citing the SE cloning paper (PMID:11402159), but has no With/From entry naming a characterized homolog. The cloning paper noted a single C2H2-type zinc finger and speculated about chromatin modification; a motif observation of this kind is not a sequence-similarity transfer. Later biochemical work shows that the SE N-terminal and zinc-finger regions bind RNA and DCL1, and SE associates with chromatin through RNA polymerase II complexes rather than by binding DNA itself. We suggest withdrawing the row.
+This 2003 TAIR row asserts DNA binding for SERRATE (Q9ZVD0, AT2G27100), which the evidence does not support. Biochemical work shows that the SE N-terminal and zinc-finger regions bind RNA and DCL1, and SE associates with chromatin through RNA polymerase II complexes rather than by binding DNA itself. The row is ISS, citing the SE cloning paper (PMID:11402159), but has no With/From entry naming a characterized homolog; the cloning paper only noted a single C2H2-type zinc finger and speculated about chromatin modification, which is not a sequence-similarity transfer. We suggest withdrawing the row.
 
 > suggests a role for the SE gene product in regulating changes in gene expression via chromatin modification
 > — PMID:11402159
@@ -143,10 +143,10 @@ This 2003 TAIR row asserts DNA binding for SERRATE (Q9ZVD0, AT2G27100) by ISS, c
 
 - **Record:** UniProtKB:Q9ZVD0 enables GO:0003700 DNA-binding transcription factor activity (ISS, PMID:11118137)
 - **Field:** GO_ID
-- **Change:** delete the record asserting ECO:0000250
+- **Change:** delete the record asserting GO:0003700
 - **Recorded in:** `genes/ARATH/SERRATE/SERRATE-ai-review.yaml`
 
-This 2003 TAIR row asserts DNA-binding transcription factor activity for SERRATE (Q9ZVD0, AT2G27100) by ISS, but it has no With/From entry, so no characterized homolog is named and the sequence-similarity inference cannot be checked. The cited reference (Riechmann et al. 2000) is a genome-wide census of Arabidopsis transcription-factor families, not a characterization of an SE homolog; SE was presumably counted because of its single C2H2-type zinc finger. SE belongs to the ARS2 family of RNA effector proteins, whose characterized members act in RNA processing, not as sequence-specific DNA-binding transcription factors, so no valid ISS source for this activity exists. We suggest deleting the row (or, if TAIR wishes to keep it, supplying the With/From homolog so it can be assessed).
+This 2003 TAIR row asserts DNA-binding transcription factor activity for SERRATE (Q9ZVD0, AT2G27100), but SE belongs to the ARS2 family of RNA effector proteins, whose characterized members act in RNA processing, not as sequence-specific DNA-binding transcription factors. The row is ISS with no With/From entry, so no characterized homolog is named, and the cited reference (Riechmann et al. 2000) is a genome-wide census of Arabidopsis transcription-factor families; SE was presumably counted because of its single C2H2-type zinc finger. No valid ISS source for this activity exists. We suggest deleting the row (or, if TAIR wishes to keep it, supplying the With/From homolog so it can be assessed).
 
 > Belongs to the ARS2 family.
 > — file:ARATH/SERRATE/SERRATE-uniprot.txt
