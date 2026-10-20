@@ -549,6 +549,13 @@ over-annotation.
    contribution skews broad; prefer the specific child the curated entry supports.
 5. **Unintegrated signatures with a real function are `proposed_new_terms` /
    InterPro-integration requests**, not silent gaps.
+6. **Do not adopt NCBI `go_terms` that are known to be wrong.** NF016349
+   (Linocin_M18, PfamEq; encapsulin shell) carries GO:0008233 peptidase activity
+   and GO:0042742 defense response to bacterium in hmm_PGAP/20.0, left over from
+   Linocin M18's original misidentification as a bacteriocin. Exclude it from any
+   candidate round. Likewise, never map the SrpI-like domain (PF19307 / IPR045641 /
+   NF040250) to GO:0140737, because it also matches phage major capsid proteins
+   ([NF041162 check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)).
 
 ## Follow-Up Targets
 

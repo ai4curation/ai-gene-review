@@ -17,6 +17,8 @@ Steps (all live queries, raw downloads cached under --cache):
        phage_structural  portal / terminase / tail / baseplate / head-tail ...
        integrase         integrase / excisionase (weak: also genomic islands)
        cargo             cysteine desulfurase / terpene cyclase / encapsulin cargo
+Each entry is tried with at most its first two EMBL protein ids (the first
+with a resolvable CDS location and nucleotide features is used).
 Outputs a per-entry TSV and a summary YAML. Nothing is hardcoded; entries
 whose context could not be retrieved are reported as such.
 
@@ -39,9 +41,12 @@ UNIPROT = "https://rest.uniprot.org/uniprotkb/stream"
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 UA = "ai-gene-review-ncbifam/1.0"
 
+# "holin-like" is excluded on purpose: in bacterial genomes it names the
+# LrgA/CidA murein-hydrolase regulators (paired with LrgB/CidB), not phage
+# holins. A bare word-boundary "holin" also avoids matching "choline".
 PHAGE_STRUCT = re.compile(
     r"\bportal\b|terminase|\btail\b|baseplate|head[- ]tail|prohead|head morphogenesis|"
-    r"phage (?:major )?capsid|virion|\bholin\b(?!-like protein Cid)|tape measure",
+    r"phage (?:major )?capsid|virion|\bholin\b(?!-like)|tape measure",
     re.I,
 )
 INTEGRASE = re.compile(r"integrase|excisionase|recombinase", re.I)
@@ -171,14 +176,19 @@ def main() -> None:
             fh.write("\t".join(
                 "; ".join(r.get(c, [])) if isinstance(r.get(c), list) else str(r.get(c, ""))
                 for c in cols) + "\n")
-    flagged = [r["accession"] for r in rows if r.get("phage_structural")]
     with open(a.out / "nf041162_context_summary.yaml", "w") as fh:
         fh.write(f"flank_bp: {a.flank}\n")
         for k, v in sorted(counts.items()):
             fh.write(f"{k}: {v}\n")
-        fh.write("phage_structural_neighbour_entries:\n")
-        for acc in flagged:
-            fh.write(f"  - {acc}\n")
+        for key in ("phage_structural", "integrase", "phage_word"):
+            fh.write(f"{key}_neighbour_entries:\n")
+            for r in rows:
+                if r.get(key):
+                    fh.write(f"  - {r['accession']}\n")
+        fh.write("mobile_element_neighbour_without_cargo:\n")
+        for r in rows:
+            if (r.get("phage_structural") or r.get("integrase")) and not r.get("cargo"):
+                fh.write(f"  - {r['accession']}\n")
     print(dict(counts))
 
 
