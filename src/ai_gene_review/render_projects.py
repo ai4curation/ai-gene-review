@@ -1508,7 +1508,13 @@ def render_projects_table(
     # Stable, meaningful ordering for the controlled vocabularies so the
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
-    tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    tag_order = [
+        "FLAGSHIP",
+        "BIOLOGY_DOMAIN",
+        "PIPELINE",
+        "OBSOLETION",
+        "ANNOTATION_REVIEW",
+    ]
     review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [
         m for m in maturity_order if any(r["maturity"] == m for r in rows)

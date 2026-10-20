@@ -142,13 +142,28 @@ QuickGO, 2026-09-26, `GO:0036503` exact term (not descendants):
 For calibration, the largest single contributor is `PTN000267874` (RNF5 /
 RNF185, uncontroversially ERAD ligases) at 482 rows.
 
-So the six fission-yeast rows the ticket lists are a **0.9% sample** of what the
-two nodes assert. If the curator's reasoning is right, the fix belongs at the
-IBD placements for `PTN000117401` and `PTN001834223`, and re-terming six
-species-level rows leaves 640+ untouched assertions saying the opposite. This is
-the same node-level-vs-row-level pattern documented for `PTHR16036` in
-[#2659](https://github.com/ai4curation/ai-gene-review/issues/2659) and
-`projects/PANTHER_IBA_REVIEW`.
+The six rows the ticket lists do **not** form one population against that
+denominator, and the two halves need separating before any remediation is
+planned:
+
+- **Three are IBA from these nodes** — `bip1` from `PTN001834223`, `cal1` and
+  `cnx2` from `PTN000117401` (see the table at the top). Those three are a
+  **0.46% sample** (3 of 648) of what the two nodes assert. If the curator's
+  reasoning is right, the fix belongs at the **IBD placements** for
+  `PTN000117401` and `PTN001834223`: re-terming the three species-level rows
+  leaves **645** untouched assertions saying the opposite. This is the same
+  node-level-vs-row-level pattern documented for `PTHR16036` in
+  [#2659](https://github.com/ai4curation/ai-gene-review/issues/2659) and
+  `projects/PANTHER_IBA_REVIEW`.
+- **Three are ISO rows the nodes do not assert** — `spj1` (from `SGD:S000004827`
+  = SCJ1) and `pdi4`/`pdi5` (both from `SGD:S000001267` = EPS1). These are not in
+  the 648 and are not reachable by an IBD edit at all; they are a **separate
+  remediation path** that runs through the budding-yeast donor annotations and
+  the ISO projections off them. Re-terming the PAINT nodes would leave all three
+  standing.
+
+Conflating the two is what produced the earlier "0.9% of 648" framing: it
+divided all six rows by an IBA-only denominator.
 
 ## Where this repository already stands
 
@@ -169,6 +184,26 @@ that CLGN lacks — but it is worth noting that the CANX/CALR reasons assert
 pathway *participation* from a triage/delivery role, which is exactly the
 inference the ticket disputes.
 
+**Members of `PTN001834223`, all carrying the identical IBA (`GO_REF:0000033`) — all three `ACCEPT`:**
+
+| Gene | Action on GO:0036503 IBA | Recorded reason (abridged) |
+|---|---|---|
+| `genes/rat/Hspa5` | `ACCEPT` | "BiP plays a well-documented role in ERAD"; cites the DNAJC10/ERdj5 interaction and ERLEC1/OS9/SEL1L/SYVN1 complexes |
+| `genes/worm/hsp-3` | `ACCEPT` | "The actual BiP node PTN001834223 carries ERAD inference from experimentally characterized BiP descendants. Client recognition/handling is mechanistic work in quality control, not merely a downstream stress phenotype" |
+| `genes/worm/hsp-4` | `ACCEPT` | "BiP functions in ERAD by recognizing and retaining misfolded proteins for degradation"; cites PMID:12186849 (hsp-4/sel-1 genetic interaction) |
+
+So the node the ticket would re-term **already has unanimous in-repo precedent
+across three genes in two species** (rat and *C. elegans*, the latter from the
+`hsp-3`/`hsp-4` BiP pair), and `hsp-3`'s recorded reason argues the node-level case
+explicitly — recognition and retention is mechanistic participation, not a
+downstream stress phenotype. That is the counter-argument the ticket has to beat,
+and it is already written down here. Two of the three (`genes/rat/Hspa5`, two
+blocks; `genes/worm/hsp-4`, one block) also place GO:0036503 in
+`core_functions.directly_involved_in`, so accepting the ticket means editing
+core-function blocks, not just annotation actions. `genes/worm/hsp-3` does not,
+despite its `ACCEPT` — an internal inconsistency worth fixing either way the
+boundary falls.
+
 **Budding-yeast donors, both `ACCEPT`:**
 
 - `genes/yeast/KAR2` accepts IBA, NAS and IMP to GO:0036503, citing
@@ -177,6 +212,30 @@ inference the ticket disputes.
 - `genes/yeast/CNE1` accepts IBA and IMP, citing direct yeast evidence for
   binding unstable glycosylated clients and contributing to their ER retention
   and elimination.
+
+**The `pdi4`/`pdi5` ISO donor is also already reviewed, and it is the sharpest
+case on the page:**
+
+`genes/yeast/EPS1` carries GO:0036503 by **IMP** from PMID:12881414 and is
+`ACCEPT`ed as "the best biological-process annotation for Eps1", on this
+supporting text:
+
+> "Genetic interactions with other mutants of the ERAD machinery and induction of
+> the unfolded protein response in eps1Delta cells support a general role for
+> Eps1 as a recognition component of the ERAD pathway."
+
+That matters for two reasons. First, **recognition is explicitly inside the
+`GO:0036503` definition** — "It *begins with recognition of the ER-resident
+protein*, includes retrotranslocation (dislocation) of the protein from the ER
+to the cytosol…" (GO definition, verified via OLS 2026-10-20). The donor's ERAD
+row is therefore not a triage-role inference of the kind the ticket disputes: it
+is substrate recognition, shown experimentally, in the term's own terms.
+Second, it narrows the question
+for `pdi4`/`pdi5` precisely: the challenge is *not* "do PDIs belong in ERAD"
+(the ticket's blanket framing) but "does Eps1's **substrate-specific recognition**
+role, demonstrated on Pma1-D378N, transfer by ISO to two generic fission-yeast
+PDIs?" The same EPS1 review also proposes `GO:0036503` as a
+`proposed_replacement_term` elsewhere, so it is doubly committed to the term.
 
 Other already-reviewed genes in the neighbourhood: DNAJC10 (`ACCEPT` on both
 GO:0034975 and GO:0036503), P4HB (`KEEP_AS_NON_CORE` on GO:0034975 only,
@@ -290,10 +349,17 @@ listed as re-checks.
    justification for `bip1`'s row. Re-check only the GO:0036503 rows.
 10. **`genes/yeast/CNE1`** — likewise the donor for `cal1`/`cnx2`.
 
-Also worth a look but lower priority: **HSPA5** (no review here yet; the sole
-human member of `PTN001834223`) and **`genes/yeast/JEM1`** / **`genes/CANAL/JEM1`**
-(Jem1p is the third protein in the Nishikawa result and is not named in the
-ticket at all).
+11. **`genes/rat/Hspa5`**, **`genes/worm/hsp-3`**, **`genes/worm/hsp-4`** — the
+    three existing `PTN001834223` reviews, all `ACCEPT` on the identical IBA. If
+    `bip1` resolves against the node, these are the rows that have to move with
+    it, and `hsp-3`'s reason (recognition/retention is mechanistic participation)
+    is the argument that would have to be retracted.
+
+Also worth a look but lower priority: **HSPA5** (no review here yet, despite
+being the sole human member of `PTN001834223` — note that the node *does* have
+in-repo precedent via the rat and worm reviews above) and
+**`genes/yeast/JEM1`** / **`genes/CANAL/JEM1`** (Jem1p is the third protein in
+the Nishikawa result and is not named in the ticket at all).
 
 ## Proposed approach
 
