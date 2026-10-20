@@ -69,3 +69,10 @@ No UNDECIDED actions existed in the review (all annotations already adjudicated)
 
 ## Validation
 `uv run ai-gene-review validate genes/ARATH/RGA/RGA-ai-review.yaml` -> Valid (1 non-blocking warning about mixed actions on GO:0010029, which reflects the genuine distinction between negated NOT-annotations and the positive non-core germination role).
+
+## 2026-10-20: GOA refresh (IBA rows)
+
+`just fetch-gene ARATH RGA --force` refreshed the UniProt and GOA files. The review had no quotes from the UniProt file, so nothing needed re-quoting. Seven PAINT IBA rows (GO_REF:0000033) were missing from the review and were added. Each action matches the same-term rows already in the review:
+
+- From the deep GRAS-family node PTN000780710: GO:0003700 DNA-binding transcription factor activity is MODIFY to GO:0003712 transcription coregulator activity (as on the three other GO:0003700 rows). DELLAs have no DNA-binding domain. The propagation_review is TERM_SCOPING_PROBLEM/ROLE_CONFLATION, with the node marked UNRESOLVED. GO:0005634 nucleus (is_active_in) is ACCEPT. GO:0006355 regulation of DNA-templated transcription is ACCEPT, because DELLAs both coactivate and inhibit partner TFs.
+- From the DELLA-subfamily node PTN004849723 (WITH: GAI AT1G14920, RGA AT2G01570): GO:0009739 response to gibberellin and GO:0009938 negative regulation of GA-mediated signaling are ACCEPT. GO:1900033 negative regulation of trichome patterning and GO:2000033 regulation of seed dormancy process are KEEP_AS_NON_CORE.

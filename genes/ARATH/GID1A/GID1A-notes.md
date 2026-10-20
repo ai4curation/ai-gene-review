@@ -88,7 +88,7 @@ Report: `GID1A-hypotheses/gid1a-catalytic-inactivity/openscientist.md` (3 iterat
 - The residue claims are correct. Positions 191/289/319 are S/D/V. Residues 113-115 are the HGG oxyanion motif. The nucleophile elbow is AGDSSGG.
 - UniProt annotates only two ACT_SITE residues, 191 and 289, and no catalytic His. This corroborates the absence of an annotated general base; the Val at 319 itself comes from the sequence, not from the active-site annotation. It agrees with the Val319 finding in the PTHR23024 family review (PR #5027, not yet merged).
 - I did not re-run the alignments or the PDB distance measurements.
-- The paralog residues (GID1B Asn338, GID1C Ile317 at the AADAC His373 position) are the residue-level basis for the GID1B review's IBA hydrolase REMOVE, whose propagation_review names AADAC (P22760) as SUPPORTS_SOURCE_BUT_NOT_TARGET.
+- The paralog residues (GID1B Asn338, GID1C Ile317 at the AADAC His373 position) are the residue-level basis for the GID1B review's IBA hydrolase REMOVE, whose propagation_review marks the deep PAINT node PANTHER:PTN009058710 as SUPPORTS_SOURCE_BUT_NOT_TARGET. AADAC (UniProtKB:P22760) is only one of that IBA row's supporting entities (the WITH list), and the node's comment refers to "human/mouse AADAC-like" seed enzymes in prose; AADAC itself carries no source_status.
 
 **Errors in the report, not to be propagated:**
 - It says GID1B and GID1C have "no GA-binding MF" and only GO:0016787. This is false. Both GOA files and both reviews carry GO:0010331 gibberellin binding.
@@ -96,3 +96,10 @@ Report: `GID1A-hypotheses/gid1a-catalytic-inactivity/openscientist.md` (3 iterat
 - It says no primary paper reports the presence or absence of esterase activity. The original rice GID1 paper is cited as describing the protein as HSL-like "without hydrolase activity" [PMID:24961590 "GID1 was first described in rice as a nuclear localized protein similar to hormone-sensitive lipase family without hydrolase activity"]. The Falcon deep-research file reports a negative p-nitrophenyl acetate assay. So the "no residual activity" clause has at least a published negative claim behind it. I have not verified the primary assay, because PMID:16193045 has no cached text.
 
 **Curation consequence:** no action changes. GO:0016787 hydrolase activity (IEA, GO_REF:0000002) is already REMOVE in this review; the report is now cited as a reference and in that row's supported_by as residue-level support. The proposed "gibberellin receptor activity" MF still has no GO term.
+
+## 2026-10-20: GOA refresh
+
+`just fetch-gene ARATH GID1A --force` refreshed the UniProt (entry version 155) and GOA files. The review had no quotes from the UniProt file, so nothing needed re-quoting. Changes:
+
+- Four IBA rows (GO_REF:0000033) were added. Nucleus and cytoplasm (is_active_in) and gibberellin binding, all from the GID1-clade node PTN000546395, are ACCEPT, matching the same-term experimental rows. Hydrolase activity, from the deep PTHR23024 node PTN009058710, is REMOVE, matching the IEA row and the GID1B review. The propagation_review marks the node as SUPPORTS_SOURCE_BUT_NOT_TARGET with PSEUDO_OR_SUBACTIVITY_LOSS: the GID1 clade has lost the catalytic His (Val319).
+- Two ARBA IEA rows (GO_REF:0000117) are no longer in GOA, so they were dropped from existing_annotations. These were GO:0009939 positive regulation of GA-mediated signaling (ACCEPT) and GO:0048444 floral organ morphogenesis (KEEP_AS_NON_CORE). GO:0009939 is used by a core function, so it was restored as a NEW row on the primary genetic paper [PMID:17194763 "GID1a-1c act as positive regulators of GA signaling, consistent with a role in perceiving bioactive GAs"].

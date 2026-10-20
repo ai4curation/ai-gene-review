@@ -79,3 +79,10 @@ nuclear negative regulators (repressors) of the gibberellin (GA) signaling pathw
 - Core CC: nucleus (GO:0005634), strongly supported (IDA multiple).
 - GO:0003700 DNA-binding transcription factor activity (TAS/ISS x4): over-annotation; DELLAs lack a DNA-binding domain (see above). Recommend MARK_AS_OVER_ANNOTATED / MODIFY.
 - Many GO:0005515 "protein binding" IPI: real interactions but uninformative as a core MF; KEEP_AS_NON_CORE.
+
+## 2026-10-20: GOA refresh (IBA rows)
+
+`just fetch-gene ARATH GAI --force` refreshed the UniProt and GOA files. The review had no quotes from the UniProt file, so nothing needed re-quoting. Seven PAINT IBA rows (GO_REF:0000033) were missing from the review and were added. Each action matches the same-term rows already in the review:
+
+- From the deep GRAS-family node PTN000780710: GO:0003700 DNA-binding transcription factor activity is MARK_AS_OVER_ANNOTATED (replacement GO:0003713 transcription coactivator activity, as on the four other GO:0003700 rows). DELLAs have no DNA-binding domain. The propagation_review is TERM_SCOPING_PROBLEM/ROLE_CONFLATION, with the node marked UNRESOLVED. GO:0005634 nucleus (is_active_in) is ACCEPT. GO:0006355 regulation of DNA-templated transcription is ACCEPT, because DELLAs both coactivate and inhibit partner TFs.
+- From the DELLA-subfamily node PTN004849723 (WITH: GAI AT1G14920, RGA AT2G01570): GO:0009739 response to gibberellin and GO:0009938 negative regulation of GA-mediated signaling are ACCEPT. GO:1900033 negative regulation of trichome patterning and GO:2000033 regulation of seed dormancy process are KEEP_AS_NON_CORE.

@@ -31,3 +31,7 @@ Research refresh outcome: Falcon timed out after 600 seconds; automatic perplexi
 ## 2026-09-12: PR review follow-up
 
 Generalized the author-proposed translational-repressor MF and matching core function to QuickGO-verified GO:0030371. This preserves the established guide-dependent repression while avoiding a stronger implication of independent cis-element recognition. [PMID:34192539 "ribosome stalling caused by the Argonaute-microRNA-SGS3 complex regulates production of secondary small interfering RNAs (siRNAs) in plants."] Removed a duplicated summary sentence from its reason. All GOA-sourced rows are unchanged.
+
+## 2026-10-20: slicer MF refined to GO:0090624
+
+The plant miRNA biogenesis module (PR #5019 follow-up) uses GO:0090624 "endoribonuclease activity, cleaving miRNA-paired mRNA" (QuickGO-verified; is_a descendant of GO:0004521 via GO:0016891) for the AGO1 slicer annoton. The gene review still had the GO:0004521 RNA endonuclease activity IDA row (PMID:16081530) as ACCEPT, so the two disagreed. The paper's slicer assay is miR165-programmed FLAG-AGO1 cleaving the PHV mRNA [PMID:16081530 "the WT protein was correctly programmed by endogenous miR165 as it cleaved the PHV RNA in vitro into the predicted 5′ and 3′ fragments"]. Cleavage is lost with a target mismatch and with the D760A/H798P PIWI mutations, which is exactly GO:0090624. The row is now MODIFY to GO:0090624, and the first core function's MF now uses it too. siRNA-guided slicing (GO:0070551) was not directly assayed in this paper and was not proposed.
