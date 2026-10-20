@@ -515,6 +515,14 @@ For a statement from P1 contradicted by P2, use P1's
 `supported_by` containing P2's exact snippet. See
 [Reference Curation](docs/reference_curation.md) for examples and validation rules.
 
+**Errors that live in the source record** (an annotation or GO-CAM activity on
+the wrong gene, a mis-keyed reference, a wrong evidence code) go in
+`review.source_defects` (or `activity_reviews[].source_defects` for GO-CAMs), with
+`asserted_value` → `corrected_value`, the responsible `resource` and a
+`confidence`. That is how "that gene, not this gene" is recorded;
+`just export-source-defects` turns them into per-resource upstream reports. See
+`docs/source_defects.md`.
+
 ## Tools
 
 Use the OLS MCP to find relevant ontology terms, if the terms you need are not in existing_annotations.
