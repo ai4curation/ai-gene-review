@@ -1,7 +1,7 @@
 # Gene 2 (DNA polymerase, P03680) — Curation Notes
 
 ## Summary of Function
-Gene `2` of *Bacillus phage phi29* (`NCBITaxon:2884424`) encodes the 575-amino-acid protein-primed family B DNA-directed DNA polymerase (gp2, p2; UniProt `P03680`, EC `2.7.7.7`). It is a monomeric polymerase that catalyzes all phases of phi29 protein-primed viral DNA replication (`GO:0039685`):
+Gene `2` of *Bacillus phage phi29* (`NCBITaxon:2884424`) encodes the 575-amino-acid protein-primed family B DNA-directed DNA polymerase (gp2, p2; UniProt `P03680`, EC `2.7.7.7`). It is a monomeric polymerase that catalyzes all phases of phi29 protein-primed viral DNA genome replication (`GO:0039693`):
 1. **Initiation (terminal protein deoxynucleotidylation)**: Forms a heterodimer with the viral terminal protein gp3 (`P03681`) and catalyzes the template-directed covalent linkage (phosphoester bond) between the hydroxyl group of Ser232 of gp3 and 5'-dAMP, directed by the second thymidine at the 3' end of the template strand via a sliding-back mechanism (`PMID:6402761`, `PMID:3863101`).
 2. **Elongation and intrinsic strand displacement**: Dissociates from the parental/primer gp3 after synthesizing a short transition oligonucleotide and elongates the nascent DNA chain with exceptionally high processivity (>70 kb) and intrinsic strand-displacement activity without requiring an accessory helicase (`PMID:3863101`).
 3. **Proofreading (`3'-5'` exonuclease)**: Contains an N-terminal `3'-5'` exonuclease domain (`GO:0008408`) that excises misincorporated deoxynucleotides to ensure high replication fidelity (`file:BPPH2/2/2-uniprot.txt`).
@@ -20,5 +20,5 @@ Gene `2` of *Bacillus phage phi29* (`NCBITaxon:2884424`) encodes the 575-amino-a
 - `PMID:820555`: Classical genetic characterization showing gene 2 mutants fail to synthesize phage DNA.
 - **GO Annotation Decisions**:
   - Core MF terms: `GO:0003887` (`DNA-directed DNA polymerase activity`), `GO:0008408` (`3'-5' exonuclease activity`), `GO:0003677` (`DNA binding`), and `GO:0000287` (`magnesium ion binding`).
-  - Core BP term: `GO:0039685` (`protein-primed viral DNA replication`), which is the specific descendant of `GO:0039693` (`viral DNA genome replication`), `GO:0006260` (`DNA replication`), and captures the unified initiation/elongation mechanism of gp2.
-  - Broad enzymatic and binding IEA terms (`GO:0000166`, `GO:0001882`, `GO:0016740`, `GO:0016779`, `GO:0016787`) are marked `TOO_GENERAL` as they are entailed by `GO:0003887` and `GO:0008408`. Intermediate terms (`GO:0034061`, `GO:0004518`, `GO:0004527`, `GO:0003676`, `GO:0046872`, `GO:0006260`, `GO:0006270`, `GO:0039693`) are refined via `MODIFY` to their specific experimentally supported descendants.
+  - Core BP term: `GO:0039693` (`viral DNA genome replication`), which is `ACCEPT`ed on its experimental and electronic rows and serves as the replacement target for `GO:0006260` (`DNA replication`) and `GO:0006270` (`DNA replication initiation`).
+  - Broad enzymatic and binding IEA terms (`GO:0000166`, `GO:0001882`, `GO:0016740`, `GO:0016779`, `GO:0016787`) are marked `TOO_GENERAL` as they are entailed by `GO:0003887` and `GO:0008408`. Intermediate terms (`GO:0034061`, `GO:0004518`, `GO:0004527`, `GO:0003676`, `GO:0046872`, `GO:0006260`, `GO:0006270`) are refined via `MODIFY` to their specific experimentally supported descendants.

@@ -12,6 +12,6 @@
 
 ## Curation Decisions
 - **ACCEPT**: `GO:0003887` (DNA-directed DNA polymerase activity, IDA from PMID:1655759 and IEA), `GO:0003677` (DNA binding, IEA), `GO:0039693` (viral DNA genome replication, IEA).
-- **MODIFY**: `GO:0004527` (exonuclease activity) -> `GO:0008408` (3'-5' exonuclease activity), supported by biochemical characterization in [PMID:1655759].
-- **TOO_GENERAL**: Broad parent terms (`GO:0000166`, `GO:0003676`, `GO:0003824`, `GO:0004518`, `GO:0006260`, `GO:0016740`, `GO:0016779`, `GO:0016787`, `GO:0034061`, `GO:0071897`, `GO:0140640`).
+- **MODIFY**: `GO:0004527` (exonuclease activity) -> `GO:0008408` (3'-5' exonuclease activity) and `GO:0006260` (DNA replication) -> `GO:0039693` (viral DNA genome replication), supported by biochemical characterization in [PMID:1655759].
+- **TOO_GENERAL**: Broad parent terms (`GO:0000166`, `GO:0003676`, `GO:0003824`, `GO:0004518`, `GO:0016740`, `GO:0016779`, `GO:0016787`, `GO:0034061`, `GO:0071897`, `GO:0140640`).
 - **NEW**: `GO:0030430` (host cell cytoplasm) as the site of viral DNA replication in the Gram-negative bacterial host.
