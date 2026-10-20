@@ -11,8 +11,8 @@ The PTHR31814 family review is the right frame for the IBA rows. PTN001274235
 places phosphomevalonate kinase activity and IPP biosynthesis on the
 fungal/plant GHMP branch; PTN001274236 places ergosterol biosynthesis on the
 fungal branch; both apply to Candida ERG8. PTN000781523 is different: it is a
-plant peroxisome node seeded by Arabidopsis AT1G31910, and the PTHR31814 family
-review already marks it NEEDS_PRUNING for fungal ERG8 proteins.
+Eukaryota-level peroxisome node seeded only by Arabidopsis AT1G31910, and the
+PTHR31814 family review already marks it NEEDS_PRUNING for fungal ERG8 proteins.
 
 The CGD ND cellular_component row is a root no-data placeholder, not evidence
 for a real location. I removed it while accepting the UniProt/SubCell
