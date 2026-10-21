@@ -92,11 +92,14 @@ Key cached papers used to review the seeded GOA rows:
 
 Most `GO:0005515 protein binding` rows were real S. cerevisiae interactions or
 large-scale physical-interaction calls, but the term itself is uninformative for
-Atg8. Five rows from ParkinsonsUK-UCL or IntAct transfer human or mammalian
-LC3/GABARAP receptor interactions onto yeast ATG8; those were also removed, but
-as wrong-species transfers rather than as SGD yeast Atg8 interactions.
-Mechanistic yeast interaction evidence was retained through process-level
-annotations such as Cvt, ER-phagy, Atg1 targeting, and autophagosome assembly.
+Atg8. Five rows from IntAct or ParkinsonsUK-UCL cite human selective-autophagy
+receptor work with p62/NBR1 (PMID:19250911), Nix/BNIP3L (PMID:20010802 and
+PMID:20200478), and OPTN (PMID:21617041); the cached full text confirms that
+ScAtg8 was genuinely assayed in these heterologous two-hybrid screens, so these
+are not wrong-gene rows, but they still do not establish endogenous yeast Atg8
+functions. Mechanistic yeast interaction evidence was retained through
+process-level annotations such as Cvt, ER-phagy, Atg1 targeting, and
+autophagosome assembly.
 
 ## 2024-2026 literature search
 
