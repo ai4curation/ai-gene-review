@@ -27,3 +27,11 @@ The RNA-binding annotation remains UNDECIDED. This is uncertainty about contribu
 The resulting 34-row tally is 21 ACCEPT, 5 MODIFY, 4 KEEP_AS_NON_CORE, 3 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED. This supersedes the earlier four-UNDECIDED tally; all three natural products and the single exchange-factor core remain unchanged. No quotation is asserted. Optional supporting_text fields remain absent under the standing zero-new-quotation instruction and the repository's explicit allowance for reference-only evidence.
 
 The two UniProt relation queries remain bounded to the experimentally attributed records and their source-specific assay context. They request CHECK rather than claiming a curator error is proved by complex architecture. The PAINT/ARBA rows preserve their separate propagation provenance; this follow-up does not manufacture additional source-defect submissions merely to make the number of queries symmetrical.
+
+## Follow-up: current ontology and evidence display
+
+The RNA-binding claim remains UNDECIDED after checking the live GO hierarchy. QuickGO's history records deletion of the GO:0003743 → GO:0008135 is_a relation on 2025-02-12. The current ancestor sets instead place both terms under GO:0180051. Consequently, accepting contribution to initiation-factor activity does not entail contribution to the separate RNA-binding function. This correction concerns the review's ontology premise; the source term and its contributes_to qualifier remain intact, as do the positive observations and the unresolved earlier preparation details.
+
+The exact official ancestor responses and dated relation history are bundled in [ontology-review.json](EIF2B3-evidence/ontology-review.json), with source URLs and hashes. The 34 actions remain 21 ACCEPT, 5 MODIFY, 4 KEEP_AS_NON_CORE, 3 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED. No publication quotation or new annotation is added.
+
+The source-defect report uses the separately reviewed reference-only renderer correction from [PR #5285](https://github.com/ai4curation/ai-gene-review/pull/5285). Entries without a quotation display their evidence reference as text; no empty quotation or manufactured excerpt is needed.

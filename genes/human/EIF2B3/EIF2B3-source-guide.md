@@ -155,3 +155,9 @@ The existing locator inventory distinguishes partial normal caches from separate
 | Gamma patient exchange defect | [PMID:15054402 original](https://doi.org/10.1038/sj.ejhg.5201189), EBV-transformed-cell Methods and Table 1 patient 823 | Normal cache remains abstract-only; selected original Methods, Results and Table 1 were assessed separately. |
 
 Exact cache/extract SHA-256 values and the original access scopes remain in [original-locators.json](EIF2B3-evidence/original-locators.json). A source URL or cache flag does not itself imply that complete operative text was recovered. The three unresolved annotations are RNA-binding activity, oligodendrocyte development and T-cell-receptor signaling; none is relabeled as biologically false.
+
+## Current ontology and Reactome entity roles
+
+The official [GO:0003743 history](https://www.ebi.ac.uk/QuickGO/term/GO:0003743) records removal of its is_a relation to GO:0008135 on 2025-02-12. Current is_a ancestors for both terms are captured in [ontology-review.json](EIF2B3-evidence/ontology-review.json). Both retain GO:0180051 as an ancestor; accepting initiation-factor activity therefore does not automatically resolve the separate RNA-binding assertion. The contribution qualifier remains respected.
+
+The Reactome links identify different levels of the same saved path: R-HSA-72670 is the reaction, R-HSA-72526 is its input complex, and R-HSA-72525 is the gamma component whose reference entity is Q9NR50. The [saved source projections](EIF2B3-evidence/source-projections.json) explicitly retain this input → hasComponent → referenceEntity chain and cytosol compartment. The component link in this guide and the reaction source in the review are therefore compatible rather than interchangeable identifiers.

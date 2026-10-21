@@ -42,3 +42,7 @@ python3 reproduce.py --input-dir downloaded-inputs --output reproduced.json
 ```
 
 These are live source endpoints, not guaranteed historical archives. If any source has changed or is unavailable, obtain the recorded responses from the evidence depositor and place them under the names in `inputs.json`; a fresh checkout alone does not contain those external bytes. Preserve a newer download as a separate version for a new assessment. Do not alter the recorded hashes merely to make the historical replay run. Full IBD input is required because selected output rows cannot reproduce the path-wide loss check. The fetch example is an acquisition recipe, not a claim that today's endpoints still return the captured versions.
+
+## Current ontology check
+
+`ontology-review.json` separately preserves the official QuickGO is_a ancestor responses for GO:0003743 and GO:0008135 and the dated GO:0003743 relation history retrieved on 2026-10-21. URLs, original byte counts and SHA-256 hashes identify each response. This bounded supplement is independent of the older 16-input projection replay. The GO:0003743 → GO:0008135 edge was deleted on 2025-02-12; neither the accepted initiation-factor contribution nor a sibling term's name settles the unresolved RNA-binding contribution.
