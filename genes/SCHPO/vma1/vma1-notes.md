@@ -55,6 +55,10 @@ the conserved catalytic V1 A subunit of the vacuolar V-ATPase.
 - Accepted the PAINT `GO:0046961` and `GO:1902600` root-node assertions.
   Vma1 contributes the catalytic A subunit to the V1/V0 proton pump, and the
   2004 disruption phenotypes support a direct role in vacuolar acidification.
+- Added `GO:0007035` vacuolar acidification as a `NEW` row because Iwaki et
+  al. directly observed loss of vacuolar acidification after vma1 deletion and
+  the term is complementary to, rather than an ancestor of, the existing
+  `GO:1902600` proton transmembrane transport rows.
 - Accepted `GO:0000221` V1-domain membership from the Eukaryota PAINT node and
   from PomBase ISO to budding yeast. The cached PMID is abstract-only, so the
   review defers to PomBase for the exact full-text support.
