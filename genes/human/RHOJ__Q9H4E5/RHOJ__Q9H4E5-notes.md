@@ -34,3 +34,7 @@ Scope: the reviewed canonical RHOJ product Q9H4E5 (214 aa, ENST00000316754). The
 - REMOVE: the remaining bare protein-binding rows (CRIB effectors WASL, CDC42EP1, PARD6B, TRIP10; screen hits; GLUL). These are removed under the GO:0005515 policy, not because the interactions are false. Effector binding is captured as NEW GBD domain binding.
 - NEW: GBD domain binding (IDA, PMID:10967094), focal adhesion (IDA, PMID:21148427), positive regulation of focal adhesion disassembly (IMP, PMID:24928894), semaphorin-plexin signaling pathway (IMP, PMID:32347571; RHOJ binds the PlexinD1 cytoplasmic domain and transduces the signal, so it participates and is not merely required).
 - Not proposed: lumen formation and phenotype-level angiogenesis terms beyond the existing rows. I did not add early endosome, because the evidence is HeLa overexpression, and recorded the trafficking question in suggested_questions instead.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The NEW GO:0071526 semaphorin-plexin signaling pathway row (PMID:32347571) no longer ends with an unresolved "full-text checking is needed" caveat. The abstract shows transducer participation: GTP-dependent binding to the PlexinD1 cytoplasmic domain and Sema3E-triggered release that drives contraction. That is enough for the term. Europe PMC returned no full text for PMC7298304 (not open access), so the species and cell type of the mechanistic experiments are still unknown. That question (IMP on human RHOJ vs ISS from mouse) is now a suggested_questions entry.

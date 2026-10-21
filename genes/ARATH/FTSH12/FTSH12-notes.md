@@ -115,3 +115,9 @@ stroma) on this accession. GOA already carries both terms on the canonical FTSH1
 so adding them to a second product fills a convention, not a curation gap. The rows were withdrawn under the
 rule applied across the ProtNLM2 re-review cohorts, first raised in the PR #5303 review. The gene-level
 function is unchanged.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The first core function (Ycf2/FtsHi motor subunit: contributes_to GO:0016464, GO:0045037, in_complex GO:0062091) now says in its description why these terms have no annotation row here. The import-motor annotations are TAIR IDA/IMP on the canonical product Q9SAJ3 and are reviewed in genes/ARATH/FTSH12__Q9SAJ3. The NEW rows were withdrawn because of GOA's one-product-per-gene convention, not because of doubt about the biology. The two best-practice warnings for GO:0045037 and GO:0062091 are expected.
+- Protease verdicts reconciled: the canonical Q9SAJ3 review now marks its five protease rows (GO:0004176 IEA and ISS, GO:0004222 IBA and IEA, GO:0006508 IEA) MARK_AS_OVER_ANNOTATED, matching the three rows here.
+- History: the 2026-10-21T113916Z record described NEW GO:0062091/GO:0045037 rows that were withdrawn in the same commit. A new append-only record documents the withdrawal.

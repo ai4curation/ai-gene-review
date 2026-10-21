@@ -49,3 +49,8 @@ was consulted only as a pointer to papers, and every claim was checked against t
 - General plastid/chloroplast/envelope/cytoplasm rows MODIFY -> chloroplast inner membrane.
 - For transfer to A0A1P8ARD2: only complex membership, inner-envelope location and import-motor
   role are experimentally established; peptidase and ATP hydrolysis are sequence inferences.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The protease rows (GO:0004176 IEA and TAIR ISS, GO:0004222 PAINT IBA and IEA, GO:0006508 IEA) changed from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED, so that they match the A0A1P8ARD2 gene-model review (genes/ARATH/FTSH12). The reasons are the same in both files. The HEAGH zinc site and Asp849 are intact, but the activity has never been measured, H769Y complements the null, the pore-loop residues are missing and no substrate is known. The rows are kept, not removed, because a minor or conditional activity cannot be excluded. The IBA row now has a propagation_review (root cause UNRESOLVED, failure mode FUNCTIONAL_DIVERGENCE, source PTN008683692).
+- GO:0016464 chloroplast protein-transporting ATPase activity (TAIR IDA, PMID:30309901) stays ACCEPT as the core activity. The reason now separates the term from the qualifier. The evidence is at the level of the complex, so contributes_to is the better relation, and core_functions uses it. Following the EIF2B2 precedent, the imported `enables` is kept and a WRONG_QUALIFIER source defect (TAIR, CHECK, PROBABLE) is recorded rather than changed silently.

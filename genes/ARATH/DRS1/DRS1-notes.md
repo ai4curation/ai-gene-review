@@ -99,3 +99,8 @@ Human WDR76 (Q9H967), same PANTHER subfamily (PTHR14773:SF0) and PAINT donor for
 ### Family review / modules
 
 interpro/panther/PTHR14773/PTHR14773-review.yaml lists DRS1 as the SF0 representative; no disagreement on subfamily placement. Its SF0 description could add WDR76 and Cmr1 as experimentally characterized representatives. No module in modules/ covers DRS1, WDR76 or Cmr1.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The drought/ABA water-loss entry was removed from `core_functions`. It described a loss-of-function phenotype with no molecular function and an unknown mechanism, which is necessity, not participation. The conserved nuclear DNA-binding WD40 role (WDR76/CMR1 subfamily, PTHR14773:SF0) is now the only core function.
+- The two IMP rows (GO:0009414 response to water deprivation, GO:0009737 response to abscisic acid; acts_upstream_of_or_within, PMID:20118918) changed from ACCEPT to KEEP_AS_NON_CORE. The genetic evidence is sound and the terms are as precise as it allows, so they are kept, but they are not core. The phenotype stays in the description and in the suggested question about the DRS1 mechanism.

@@ -104,3 +104,7 @@ Scope: re-examined all 26 GOA rows, the description and the core functions again
 - `interpro/panther/PTHR10985/PTHR10985-review.yaml` lists zebrafish Hes6 under a subfamily entry that says "No unverified PANTHER subfamily identifier is assigned". The PANTHER 19.0 classification files do assign it: PTHR10985:SF11. This is a disagreement of omission to raise with the family reviewer; the family file was not edited.
 - Modules: `modules/notch_signaling.yaml` covers HES/E(spl) repressors as Notch outputs. Its framing does not fit hes6, which is FGF-induced and not Notch-regulated [PMID:15905406 "These results indicate that her13.2 functions downstream of FGF signaling in the PSM, but is not under direct regulation by Notch signaling"]. No segmentation-clock module exists.
 - Relative to review next: mouse Hes6 (Q9JHE6), the same-subfamily (SF11) ortholog with the developmental experimental literature. No repo review exists for mouse Hes6 or human HES6 (Q96HZ4).
+
+## 2026-10-21: PR #5308 review follow-up
+
+- Fixed the summary of the REMOVE'd GO:0005515 IPI row with Myod1 (Q90477; PMID:22911291). It still said "Retain the measured binding as non-core", left over from an earlier KEEP_AS_NON_CORE. It now matches the REMOVE rationale: bare protein binding is removed under the protein-binding policy, and there is no specific MF for the pair.

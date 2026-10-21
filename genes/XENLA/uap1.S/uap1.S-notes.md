@@ -82,3 +82,8 @@ Closest characterised relative by phylogeny: human UAP1 (Q16222), the same PANTH
 ### Family / module notes
 - interpro/panther/PTHR11952/PTHR11952-review.yaml lists Q6DCZ6 under SF4. That placement agrees with this review, so there is no conflict.
 - modules/hexosamine_biosynthesis.yaml (uap1_activity) uses the whole family PANTHER:PTHR11952 as the participant. That family includes UDP-glucose pyrophosphorylases, so SF4 would be the more accurate grounding. This is recorded here only; the module was not edited.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The NEW GO:0005829 cytosol row previously cited only an incidental mention of pig-liver cytosol (PMID:11707391). It now cites the actual grounds: the PTHR11952 PAINT row (PTN000237224, GO:0005829, IBD, seeds AT5G52560 and Q16222) and the human UAP1 UniProt statement "SUBCELLULAR LOCATION: Cytoplasm, cytosol {ECO:0000269|PubMed:8025165}" (file:human/UAP1/UAP1-uniprot.txt).
+- Correction to the earlier PAINT note above: the IKR NOT at PTN000237286 is not the only recorded negation. The PAINT file also has an IRD NOT cytosol at PTN007553518. I checked the PANTHER treeinfo service for PTHR11952 on 2026-10-21: PTN007553518 subtends 165 protist leaves (Leishmania, Trypanosoma, Giardia, Trichomonas, Plasmodium, Paramecium, Thalassiosira, Phytophthora and others). uap1.S (Q6DCZ6) descends from PTN000237224 via PTN008986934 and is not under PTN007553518; human UAP1 and UAP1L1 are not under it either. The NEW cytosol row therefore does not contradict that negation.
