@@ -20,6 +20,12 @@
   and ro-6 (NCU9142) mutants have been verified by complementation and RIP
   experiments". This supports an apg-6 loss phenotype but does not establish a
   direct APG-6 activity in cell fusion, so I did not add a cell-fusion GO term.
+- The UniProt record also transfers by-similarity nucleophagy, ER-specific
+  autophagy/survival, early secretory-pathway membrane fusion, and Atg8-PE
+  tethering/hemifusion statements from S. cerevisiae. These statements were not
+  promoted to new N. crassa annotations because the organism-specific evidence
+  is absent and the current GOA/PAINT rows already cover the conserved
+  autophagosome-membrane function.
 - PubMed/open-web searches for `Neurospora crassa apg-6 Atg8 autophagy
   NCU01545` and 2024-2026 ATG8 papers found NCBI/FungiDB-style gene pages and
   papers that use NCU01545 as an ortholog in comparative figures, but no newer
