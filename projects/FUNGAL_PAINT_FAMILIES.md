@@ -2,7 +2,8 @@
 title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
-species: [yeast, SCHPO, CANAL, NEUCR]
+species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
+autolink_exclude: [Ser]
 ---
 
 # Fungal PAINT Family Reviews
@@ -36,12 +37,14 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
+| `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
+| `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-10-11
+Last updated: 2026-10-21
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -165,9 +168,65 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
 - [x] `NEUCR/erg-1` - *Neurospora crassa* sterol C-8 isomerase; merged in PR
   #4719
 
+## Family 8: WDR12/Ytm1 Pre-60S Assembly Factors
+
+`PTHR19855` contains an Ascomycota WDR12/Ytm1 ancestor,
+`PANTHER:PTN000458086`, with PAINT assertions for the large-subunit
+preribosome, PeBoW complex, and ribosomal large subunit biogenesis. The node is
+seeded by curated *S. cerevisiae* YTM1 evidence, with additional *S. pombe*
+`ytm1` support for `GO:0042273 ribosomal large subunit biogenesis`, and sits
+separately from the sibling fungal mitochondrial/peroxisome-fission adaptor
+node `PANTHER:PTN002336496`.
+
+- [x] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; merged in
+  PR #5118
+- [x] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; merged in PR #5121
+- [x] `CANAL/YTM1` - *Candida albicans* CGD member; merged in PR #5120
+- [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; merged in PR
+  #5117
+
+## Family 9: ATG8/LC3/GABARAP Autophagy Modifiers
+
+`PTHR10969` contains the compact eukaryotic ATG8/LC3/GABARAP ancestor,
+`PANTHER:PTN000103522`, with PAINT assertions for autophagosome membrane,
+phosphatidylethanolamine binding, autophagosome assembly, mitophagy,
+nitrogen-starvation response, and autophagosome maturation. It also contains
+the fungal `PANTHER:PTN000861115` node for fungal-type vacuole membrane,
+seeded by budding- and fission-yeast Atg8 annotations.
+
+- [x] `yeast/ATG8` - *S. cerevisiae* Atg8 anchor with extensive Cvt,
+  mitophagy, nucleophagy, ER-phagy, vacuole-membrane, and lipid-droplet rows;
+  opened in PR #5258
+- [x] `SCHPO/atg8` - fission-yeast Atg8 seed with direct PAS, Hfl1,
+  Atg38, mitophagy, ER-phagy, and nucleophagy evidence; opened in PR #5256
+- [x] `CANAL/ATG8` - CGD-seeded *Candida albicans* Atg8 ortholog with
+  autophagy and ER-stress genetic-interaction evidence; opened in PR #5257
+- [x] `NEUCR/apg-6` - *Neurospora crassa* ATG8-family member; opened in PR
+  #5255
+- [x] `ASPFU/atg8` - *Aspergillus fumigatus* ATG8-family member with direct
+  GFP/RFP-AfAtg8 literature; opened in PR #5260
+- [x] `EMENI/atg8` - *Aspergillus nidulans* ATG8-family member with direct
+  PAS and GFP-Atg8 imaging literature; opened in PR #5261
+
 ---
 
 # NOTES
+
+## 2026-10-21
+
+- Drafted the compact `PTHR10969` ATG8 set across `yeast/ATG8`,
+  `SCHPO/atg8`, `CANAL/ATG8`, `NEUCR/apg-6`, `ASPFU/atg8`, and
+  `EMENI/atg8`. All six reviews endorse the eukaryotic `PTN000103522`
+  ATG8/LC3/GABARAP PAINT placements and the fungal `PTN000861115`
+  fungal-type vacuole membrane placement. The reviews handled generic
+  `GO:0005774` vacuolar-membrane rows as broad source annotations that
+  should not add a second core location beside fungal-type vacuole membrane.
+
+## 2026-10-17
+
+- Started the compact WDR12/Ytm1 set in `PTHR19855` across `yeast/YTM1`,
+  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`; the individual gene reviews
+  merged in PRs #5117, #5118, #5120, and #5121.
 
 ## 2026-10-11
 
