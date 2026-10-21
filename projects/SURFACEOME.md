@@ -9,6 +9,10 @@ sidecars:
   gaf_per_gene: SURFACEOME/results/gaf_per_gene.tsv
   review_per_gene: SURFACEOME/results/review_per_gene.tsv
   catalog_overlap: SURFACEOME/results/catalog_overlap.tsv
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/WCjRqayPU7HqmNMi6YwR78
+      title: Project brief
 ---
 
 # Accessible Surfaceome (SurfaceBench) Comparison
