@@ -56,6 +56,8 @@ The generic `GO:0005515 protein binding` IPI rows to Hfl1, Atg38, Epr1, and Atg4
 
 The `GO:0005737 cytoplasm` rows were marked `TOO_GENERAL` because accepted cytosol, PAS, autophagosome membrane, and fungal-type vacuole membrane rows capture the functional sites more precisely.
 
-The generic `GO:0005774 vacuolar membrane` rows and broad `GO:0000324 fungal-type vacuole` row were refined to `GO:0000329 fungal-type vacuole membrane`, which is directly supported by the Hfl1 paper and by the fungal PAINT node.
+The generic `GO:0005774 vacuolar membrane` rows were refined to `GO:0000329 fungal-type vacuole membrane`, which is directly supported by the Hfl1 paper and by the fungal PAINT node. The broad `GO:0000324 fungal-type vacuole` row from PomBase was kept as a non-core vacuole-proper localization because the cached abstract is insufficient to re-interpret the 2009 GFP-Atg8 processing evidence as a membrane observation.
+
+The high-throughput `GO:0005634 nucleus` row was marked over-annotated because the ORFeome localization screen is not supported by directed Atg8 studies; the 2026 nucleophagy paper places Atg8 on outer-nuclear-membrane protrusions rather than in the nucleus interior.
 
 `GO:0044804 nucleophagy` was added as a conservative `NEW` assertion from the 2026 Npr1/Epr1 paper. This passes the participation test: Atg8 is recruited by outer-nuclear-membrane receptors to nuclear-envelope protrusions that become autophagosomes containing nucleophagy cargo; Atg8 is part of the machinery that builds/captures cargo into the autophagosome rather than a cargo substrate.
