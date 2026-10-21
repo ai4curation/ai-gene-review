@@ -55,10 +55,14 @@ Candida-level annotation set.
 `SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11` subfamily. The root
 `peptidase activity` assertion is biologically right but deliberately generic,
 so I refined the IBA and UniProt/InterPro peptidase rows to the already present
-`GO:0009003 signal peptidase activity` term. I accepted the eukaryotic
-`PTN000086750` rows for signal peptidase complex membership and protein
-maturation because `C. albicans` SEC11 is inside that eukaryotic placement and
-there is no Candida-specific loss evidence.
+`GO:0009003 signal peptidase activity` term. The serine-type endopeptidase row
+is retained because `GO:0004252` and `GO:0009003` are sibling terms that record
+the catalytic mechanism and substrate class, respectively. I accepted the
+eukaryotic `PTN000086750` row for signal peptidase complex membership because
+`C. albicans` SEC11 is inside that eukaryotic placement and there is no
+Candida-specific loss evidence; its protein-maturation row is modified to
+`GO:0016485 protein processing`, the live process term for SPC-catalyzed signal
+peptide cleavage after obsoletion of `GO:0006465 signal peptide processing`.
 
 The one biological-process row I removed is the EnsemblFungi transfer to
 `GO:0045047 protein targeting to ER`. ER targeting is carried out by the signal
