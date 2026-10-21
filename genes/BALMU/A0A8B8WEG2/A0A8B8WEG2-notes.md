@@ -74,3 +74,12 @@ PAINT node placements), and a new sequence comparison in `A0A8B8WEG2-bioinformat
 
 Canonical full-length product of the same whale gene, A0A8B8WEF1 (496 aa), has no review. The
 nearest characterised ortholog, human CDK16 Q00536 (same subfamily SF174), also has no review.
+
+## 2026-10-21 — Characterised comparator (PR #5304 review)
+
+The same-gene relative reviewed in this batch now lives in `genes/BALMU/CDK16__A0A8B8WEF1/` (renamed from the
+bare-symbol folder so it does not shadow this accession's folder). That relative has no experimental data of its
+own, so the experimentally characterised comparator is human CDK16 (PCTAIRE-1), now reviewed in
+`genes/human/CDK16/`. It sits in the same PANTHER subfamily (PTHR24056:SF174) as this target. In human, the core
+activity, cyclin Y-dependent serine/threonine kinase activity, is shown directly. The secretion, neurite and
+spermatogenesis roles rest on rodent data, and the review records them as regulation or as non-core.

@@ -147,3 +147,11 @@ The same-gene relative reviewed in this batch now lives in `genes/DANRE/dnajc6__
 folder so it does not shadow this accession's folder). That relative has no experimental data of its own, so the
 experimentally characterised comparator for this gene is human DNAJC6 (auxilin), already reviewed in `genes/human/DNAJC6/`. It sits in the same
 PANTHER subfamily (PTHR23172:SF4) as this target.
+
+## 2026-10-21 — NEW rows withdrawn: already annotated on another product of the same gene
+
+The re-review proposed NEW rows (GO:0030276) on this accession. GOA already carries the same terms on
+another product of the same gene, reviewed in `genes/DANRE/dnajc6__A0A8M9Q6X2/`. GOA propagates gene-level
+annotations to one representative product per gene, so adding them to a second product fills a
+convention rather than a curation gap. The rows were withdrawn, following the rule applied across the
+ProtNLM2 re-review cohorts (first raised in the review of PR #5303). The gene-level function is unchanged.
