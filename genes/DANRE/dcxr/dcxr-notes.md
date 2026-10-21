@@ -86,3 +86,77 @@ carries an explicit `reason` alongside its summary.
   differ more than fiftyfold among mammalian orthologs; and a loss-of-function metabolomic test
   for L-xylulose accumulation.
 - Validation: zero errors, zero warnings. Status already COMPLETE and unchanged.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+This re-review did not open or use any ProtNLM file or prediction-evidence folder. Sequences were
+fetched directly from UniProt (`dcxr-bioinformatics/compare_sequences_rereview.py`, results in
+`dcxr-bioinformatics/RESULTS-rereview.md`). The earlier `RESULTS.md` is left unchanged and its numbers
+agree (169/244 identities to human DCXR).
+
+### Identity of the benchmark accession
+
+Q567K5 is the full-length 244-aa zebrafish dcxr product (TrEMBL, PE 2), the same length as human
+DCXR Q7Z4W1 (244 aa). It is not a fragment, isoform or alternative gene model. It has the TGAGKGIG
+Rossmann motif (residues 14-21) and the S136/Y149/K153 catalytic triad. Zebrafish has only one
+PTHR44252 gene in PANTHER 19.0, and so does human.
+
+### Evolutionary placement (the SF2/SF3 question)
+
+- PANTHER 19.0 puts Q567K5 in PTHR44252:SF3 ("D-erythrulose reductase-related"). Human, mouse, rat
+  and bovine DCXR are in SF2 ("L-xylulose reductase"). Mouse Cbr2 (lung tetrameric carbonyl
+  reductase) is in SF1.
+- The other SF3 members are Xenopus tropicalis dcxr (Q6P630), X. laevis dcxr.L, chicken DCXR
+  (A0A8V1AB26) and chicken DER D-erythrulose reductase (Q8JIS3), C. elegans dhs-21 (Q21929) and
+  Drosophila CG7322. SF3 is therefore the non-mammalian DCXR group (vertebrate and invertebrate),
+  and SF2 is the mammalian lineage. It is not a clade with a different function.
+- Pairwise identities of Q567K5: 69-70% to mammalian SF2 DCXR, 70-72% to the SF3 vertebrates, 61.5%
+  to SF1 Cbr2, and 48-51% to the SF3 invertebrates (RESULTS-rereview.md). This is pairwise only, not a tree.
+- The PAINT node PTN001211870 lists donors from all three subfamilies: MGI:107200 Cbr2 (SF1), the
+  mammalian Dcxr/DCXR (SF2) and WB dhs-21 (SF3). The node is above the subfamily split.
+- A same-subfamily characterised ortholog exists. Recombinant DHS-21 reduces L-xylulose with NADPH
+  [PMID:21477590 "Recombinant DHS-21 was shown to convert L-xylulose to xylitol using NADPH as a cofactor."],
+  and it was identified as the DCXR ortholog by substrate comparison [PMID:21300042 "revealed that SDR20C18
+  is the DCXR-orthologue enzyme to the human enzyme"]. L-xylulose reductase activity is therefore
+  established on both sides of the SF2/SF3 boundary and is not a subfamily-specific transfer.
+- Chicken DER (SF3) is a purified NADPH-preferring D-erythrulose reductase [PMID:7358641 "was highly
+  specific to D-erythrulose with an apparent Km of 0.38 mM"]. I did not propose erythrulose reductase
+  activity (GO:0047880) as NEW. PAINT did not propagate it and chicken DER is not a donor. It is recorded
+  as a suggested question.
+
+### Changes to annotations
+
+- GO:0050038 L-xylulose reductase (NADPH): ACCEPT (core). The reason now argues the SF2/SF3 placement
+  explicitly.
+- GO:0004090 carbonyl reductase (NADPH): ACCEPT. The donors span SF1 and SF3, and the activity is
+  established in SF2 and SF3.
+- GO:0005997 xylulose metabolic process: ACCEPT. The enzyme performs the step itself.
+- GO:0006006 glucose metabolic process: changed from KEEP_AS_NON_CORE to MODIFY -> GO:0042840 D-glucuronate
+  catabolic process. DCXR has no glucose substrate. It works in the pentose branch of glucuronate
+  catabolism [PMID:40737316 "L-xylulose is then converted into D-xylulose-5P by the subsequent action of
+  L-xylulose reductase (DCXR), sorbitol dehydrogenase (SORD), and xylulokinase (XYLB)."], and the mouse
+  GO-CAM 6246724f00000078 models Dcxr L-xylulose reductase as part of GO:0042840. This is a lateral
+  correction. The previous KEEP_AS_NON_CORE argued that the term tells a reader nothing about what the
+  enzyme does, which is inconsistent with keeping it.
+- GO:0016616 (ARBA IEA): MODIFY -> GO:0050038, unchanged.
+- GO:0005575 ND: ACCEPT. The reason now notes that ortholog localizations conflict (mammalian renal
+  brush-border membrane and cytosol in the mouse GO-CAM; spermatid plasma membrane for DHS-21).
+- core_functions: a second core function was added for carbonyl reductase (NADPH). D-glucuronate
+  catabolic process was added to directly_involved_in for the L-xylulose reductase function.
+- Description rewritten to make the orthology and the evidence base explicit.
+- References added: PMID:21477590, PMID:21300042, PMID:40737316, PMID:12200544, PMID:7358641, and
+  file RESULTS-rereview.md. The two ProtNLM/FabG file references and RESULTS.md are kept, with
+  review_notes saying they are no longer used as support.
+
+### Relative, family review, modules
+
+- Relative: human DCXR (Q7Z4W1), the 1:1 ortholog (a single PTHR44252 gene in each genome) and an
+  experimental donor to PTN001211870. It is in SF2, not SF3. The closest same-subfamily characterised
+  ortholog is C. elegans dhs-21 (Q21929). The repo has no review of DCXR, Dcxr or dhs-21.
+- Family review interpro/panther/PTHR44252/PTHR44252-review.yaml agrees on the SF3 placement. It lists
+  only Q567K5 as the SF3 representative. It could add dhs-21 and chicken DER as characterised SF3
+  members, which would show that SF3 is the non-mammalian DCXR group rather than a functionally
+  distinct one. I did not edit it.
+- Modules: no animal glucuronate/pentose-pathway module exists. modules/xylose_oxidoreductase_pathway.yaml
+  covers fungal and bacterial D-xylose catabolism; it is related chemistry but does not include DCXR.
+  Mouse GO-CAM 6246724f00000078 (glucuronate catabolism to xylulose 5-phosphate) contains Dcxr.
