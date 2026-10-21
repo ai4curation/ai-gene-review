@@ -60,8 +60,9 @@ ATP-hydrolyzing A subunit that contributes to the proton-transporting ATPase
 activity of the complete V1-V0 pump.
 
 The `GO:0006897` endocytosis and `GO:0034599` cellular response to oxidative
-stress IMP rows from Jia et al. 2014 look phenotype-driven. They are useful
-readouts of failed vacuolar/endosomal acidification and pH-ion homeostasis, but
-the abstract does not support Tfp1 directly executing an endocytic trafficking
-step or the oxidative-stress response. I marked both over-annotated rather than
-removing the rows.
+stress IMP rows from Jia et al. 2014 look phenotype-driven. Endocytosis was
+marked over-annotated because the abstract supports it as a readout of failed
+vacuolar/endosomal acidification rather than a direct V1 A-subunit process.
+Cellular response to oxidative stress was kept as non-core because both CGD and
+Swiss-Prot curate Tfp1-dependent oxidative-stress physiology from the full Jia
+et al. paper, but this remains downstream of the core V-ATPase function.
