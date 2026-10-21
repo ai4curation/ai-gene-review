@@ -56,22 +56,24 @@ The PTHR10806 PAINT export has three IBD rows:
 - `PTN000086750` at Eukaryota: `GO:0051604 protein maturation`.
   This is the conservative process assertion for eukaryotic Sec11-mediated
   signal peptide removal. The historically tempting `GO:0006465 signal
-  peptide processing` process term is obsolete, so no replacement process
-  term was proposed.
+  peptide processing` process term is obsolete; the live process-level
+  replacement used here is `GO:0016485 protein processing`.
 
 ## Annotation decisions
 
 The core conserved annotations are accepted: `signal peptidase activity`,
-`signal peptidase complex`, `endoplasmic reticulum membrane`, broad
-`endoplasmic reticulum`, and `protein maturation`.
+`signal peptidase complex`, and `endoplasmic reticulum membrane`.
 
-`GO:0004252 serine-type endopeptidase activity` is correct but less specific
-than the supported Sec11 catalytic activity, so it is modified to
-`GO:0009003 signal peptidase activity`.
+`GO:0004252 serine-type endopeptidase activity` and `GO:0009003 signal
+peptidase activity` are both retained because they capture different aspects of
+the Sec11 reaction: the Ser/His/Asp mechanism and the signal-peptide substrate
+class.
 
-Both `GO:0008233 peptidase activity` rows and the `GO:0016020 membrane` row
-are true but too general beside accepted specific activity and ER membrane
-terms.
+Both `GO:0051604 protein maturation` rows are modified to `GO:0016485 protein
+processing`, the live process-level term for SPC-catalyzed signal peptide
+cleavage. Both `GO:0008233 peptidase activity` rows, the `GO:0005783
+endoplasmic reticulum` row, and the `GO:0016020 membrane` row are true but too
+general beside accepted specific process, activity, and ER membrane terms.
 
 `GO:0045047 protein targeting to ER` is removed. The SPC catalytic subunit
 cleaves signal peptides once nascent chains have engaged or crossed the ER
