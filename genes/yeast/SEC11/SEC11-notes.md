@@ -88,8 +88,9 @@ the accepted `GO:0005787` rows.
 
 The broad CC rows were refined rather than dropped: `GO:0005783 endoplasmic
 reticulum` and `GO:0016020 membrane` were modified to `GO:0005789 endoplasmic
-reticulum membrane`. The `GO:0045047 protein targeting to ER` row was modified
-to `GO:0051604 protein maturation` because the original sec11 phenotype shows
-that the assayed precursors entered the ER and became core-glycosylated; the
-defect was signal-peptide cleavage after entry, not the upstream targeting
+reticulum membrane`. The `GO:0045047 protein targeting to ER` and
+`GO:0051604 protein maturation` rows were modified to `GO:0016485 protein
+processing` because the original sec11 phenotype shows that the assayed
+precursors entered the ER and became core-glycosylated; the defect was
+proteolytic signal-peptide cleavage after entry, not the upstream targeting
 reaction.
