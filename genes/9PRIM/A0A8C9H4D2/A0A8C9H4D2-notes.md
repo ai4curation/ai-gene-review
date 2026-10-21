@@ -36,3 +36,5 @@ The same-gene relative reviewed in this batch now lives in `genes/9PRIM/OLFML2A_
 folder so it does not shadow this accession's folder). That relative has no experimental data of its own, so the
 experimentally characterised comparator for this gene is human OLFML2A, already reviewed in `genes/human/OLFML2A/`. It sits in the same
 PANTHER subfamily (PTHR23192:SF29) as this target. Its review is still IN_PROGRESS on main, so its experimental findings should be checked there before any transfer.
+
+Correction (2026-10-21): the earlier statement in these notes that the human OLFML2A review "is already complete" is superseded; that review is IN_PROGRESS on main.
