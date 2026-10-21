@@ -23,14 +23,15 @@ cellular response to nitrogen starvation and `GO:0097352` autophagosome
 maturation. These rows are plausible for A. nidulans: Pinar et al. directly
 followed GFP-Atg8 from PAS puncta into phagophores and autophagosomes, and the
 Swiss-Prot record retains the conserved mature glycine that is lipidated with
-phosphatidylethanolamine [PMID:23722157, "Atg8 puncta correspond to the PAS"].
+phosphatidylethanolamine [PMID:23722157, "Initially, GFP-Atg8 puncta give rise
+to expanding phagophores engulfing a portion of cytoplasm."].
 
 The fungal-specific `PTN000861115` node places `GO:0000329` fungal-type vacuole
-membrane from S. cerevisiae and S. pombe Atg8 evidence. This is also a sound
-transfer for A. nidulans Atg8 because this is a fungal member of PTHR10969 and
-GFP-Atg8 is delivered to the vacuolar lumen during autophagy
-[PMID:23722157, "GFP accumulation following vacuolar GFP-Atg8 proteolysis is a
-bona fide indicator of autophagy"].
+membrane from S. cerevisiae and S. pombe Atg8 evidence. This is a sound PAINT
+transfer for A. nidulans Atg8 because this is a fungal member of PTHR10969.
+Direct GFP-Atg8 proteolysis shows delivery into the vacuolar lumen rather than
+stable vacuolar-membrane action [PMID:23722157, "GFP accumulation following
+vacuolar GFP-Atg8 proteolysis is a bona fide indicator of autophagy"].
 
 ## Cached Publication Findings
 
