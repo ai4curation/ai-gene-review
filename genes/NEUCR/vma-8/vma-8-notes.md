@@ -17,11 +17,15 @@
   `contributes_to` rotary proton-transporting ATPase activity, each seeded by
   Saccharomyces VMA8 and O59941
   [file:interpro/panther/PTHR11671/PTHR11671-paint.tsv].
+- The UniProt ISS row to `GO:0000221` V1 domain is correct for Neurospora
+  vma-8, but its `WITH/FROM` donor is `UniProtKB:P16140`, the S. cerevisiae
+  VMA2/B subunit rather than the direct VMA8/D ortholog P32610.
 - The only rows that look overstated rather than merely broad are the
   EnsemblFungi `membrane raft` transfer from budding yeast and the automated
-  UniProt `enables GO:0046961` row. VMA8 is a peripheral V1 subunit of the
-  assembled V-ATPase; the appropriate MF assertion is `contributes_to` the
-  holoenzyme's proton-transporting ATPase activity, as in the IDA and IBA rows.
+  UniProt `enables GO:0046961` row. VMA8 is the D subunit of the V1 central
+  rotor stalk in the assembled V-ATPase; the appropriate MF assertion is
+  `contributes_to` the holoenzyme's proton-transporting ATPase activity, as in
+  the IDA and IBA rows.
 - Bounded PubMed/PMC searches for `Neurospora vma-8`, `O59941`, `subunit D`,
   and the 1999 title did not turn up another vma-8-specific experimental paper
   that would justify a nonredundant `NEW` annotation. Later Neurospora vacuole
