@@ -2988,24 +2988,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**544 of 2,876 genes are complete; 2,332 remain.**
-This checkpoint adds only EGR2, EHMT1 and EGFR to the merged 541 checkpoint.
-[Checkpoint 544](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-544-2026-10-21-023541-utc)
-links their approved heads, exact merged files and accepted CI evidence. The
-inventory is pinned to main [`81298ef287da`](https://github.com/ai4curation/ai-gene-review/commit/81298ef287dae81220ae068a10a524f17628bf7d),
-captured 2026-10-21 02:35:41 UTC. Each catalogue gene counts once; products,
+**545 of 2,876 genes are complete; 2,331 remain.**
+This checkpoint adds only EIF2B2 to the merged 544 checkpoint.
+[Checkpoint 545](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-545-2026-10-21-165933-utc)
+links its approved head, exact merged files and accepted CI evidence. The
+inventory is pinned to main [`613523bf19bb`](https://github.com/ai4curation/ai-gene-review/commit/613523bf19bba276b9ea72840a06c56e606897f2),
+captured 2026-10-21 16:59:33 UTC. Each catalogue gene counts once; products,
 follow-ups and the tracker publication itself add no credit.
 
-At this snapshot, 8,473 reviews are available, including 3,103 human reviews.
-Of 1,249 catalogue genes with reviews, 544 are credited and 705 remain uncredited;
-1,627 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,550 reviews are available, including 3,109 human reviews.
+Of 1,252 catalogue genes with reviews, 545 are credited and 707 remain uncredited;
+1,624 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-EGR2 and EHMT1 passed their approved-head, merge-group and scoped main checks.
-EGFR passed its final approved-head and merge-group checks. Its immediate main
-build was cancelled; the successful tracker successor preserved all EGFR files
-and runtime roots, ran broad tests and history checks, and skipped scoped gene
-validation. Cancelled and skipped checks are not reported as passes.
+EIF2B2 passed exact approved-head checks and its actual merge-group and main
+validation. The merge-group ran the full test suite; the main push skipped that
+suite after change filtering. Its documentation workflow succeeded. Skipped
+checks are not reported as executed tests.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3681,7 +3680,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EHMT1** — HGNC:24650; [Kleefstra syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db91a861-6a88-4848-b6d5-4772bdef52ff-2018-06-06T100000.000Z) (MONDO:0012455; AD; Definitive).
 - [ ] **EIF2AK4** — HGNC:19687; [pulmonary veno-occlusive disease and/or pulmonary capillary haemangiomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d20386c-ad1a-4c88-9f43-4ca3cedbfd6f-2022-12-02T170000.000Z) (MONDO:0018554; AR; Definitive).
 - [ ] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
-- [ ] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
+- [x] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
 - [ ] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
 - [ ] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
 - [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
