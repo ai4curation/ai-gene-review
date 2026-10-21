@@ -11,7 +11,7 @@
 - Retain V1-domain and vacuolar V-ATPase complex membership as the central cellular-component assertions for vma8.
 - Retain `contributes_to GO:0046961`, `GO:0007035`, and `GO:1902600`: Vma8 contributes to ATP-driven proton transport through the V-ATPase complex and thereby to vacuolar acidification.
 - Treat broad `GO:0005774` vacuolar membrane as `TOO_GENERAL` because `GO:0000329` fungal-type vacuole membrane is the informative supported term in this fungal review.
-- Accept the InterPro `GO:0046961` term while recording its `enables` qualifier as over-strong, and mark the IC `enables GO:0016887` row as over-annotated. Subunit D is not the independent ATP-hydrolytic motor; it contributes to the V-ATPase complex activity.
-- Mark cytosol and cell division site HDA `is_active_in` calls as over-annotations rather than core localizations. A soluble or high-throughput fluorescent signal is compatible with a peripheral V1 subunit, but Vma8's established proton-pump role is at the vacuolar V-ATPase.
+- Accept the InterPro `GO:0046961` term while recording its `enables` qualifier as over-strong, and treat the IC `GO:0016887` row as too general beside the more specific rotary proton-pumping ATPase activity. Subunit D is not the independent ATP-hydrolytic motor; it contributes with subunit F to the central rotor stalk of the V-ATPase complex.
+- Keep cytosol as a non-core localization because reversible V1-V0 dissociation can produce a soluble V1 pool, and mark the cell division site HDA `is_active_in` call as over-annotated because the abstract-only cached localization paper does not establish that Vma8 executes proton-pump activity at the division site. Vma8's established proton-pump role is at the vacuolar V-ATPase.
 
 No nonredundant NEW rows are needed. The generic `GO:0033176` V-type ATPase complex node in the PAINT export is an ancestor of the more precise accepted vacuolar V-ATPase complex term.
