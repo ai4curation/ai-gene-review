@@ -50,3 +50,67 @@
   intracellular signalling module is intact).
 - Non-GO: subcellular_location "Cell membrane", "Membrane", "Golgi apparatus membrane" (not
   scored).
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Deep research: `just deep-research-falcon EQUAS TNFRSF1A --fallback perplexity-lite` failed
+(falcon and the perplexity-lite fallback both exited with an error; no deep-research file was
+written). The re-review uses the cached publications, the human P19438 record and new sequence and
+exon-structure analysis.
+
+### Identity of the benchmark accession (alternative gene model)
+
+- New analysis `TNFRSF1A-bioinformatics/compare_isoforms_rereview.py` -> `RESULTS-rereview.md`,
+  `results-isoforms-rereview.json`. Both donkey entries map to Ensembl gene ENSEASG00005016176.
+  A0A9L0JKX4 (410 aa, ENSEAST00005054546, non-canonical transcript) equals the canonical
+  A0A8C4MD74 (453 aa, ENSEAST00005025834, Ensembl canonical) minus one contiguous 43-residue block
+  (A0A8C4MD74 65-107)
+  [file:EQUAS/TNFRSF1A/TNFRSF1A-bioinformatics/RESULTS-rereview.md "The 410-aa transcript lacks exactly one exon of the canonical transcript: exon 3 (ENSEASE00005153555, 129 nt = 43 codons, in frame)."].
+- So the benchmark accession is an exon-3-skipping splice-variant model of TNFRSF1A, 43 aa shorter
+  than the canonical product. Missing: second half of CRD1 and most of CRD2 (human 64-106 equivalent,
+  disulfides 62-81 and 84-99). Retained: signal peptide, first half of CRD1, CRD3/CRD4 region,
+  transmembrane helix, death domain (aligns gap-free to human). No catalytic residues are relevant
+  (receptor, not enzyme). The exon-3-skipped form is not among the five human P19438 isoforms;
+  expression of the donkey transcript is unverified.
+- Neither donkey entry is Swiss-Prot reviewed; A0A8C4MD74 is the canonical product. No review for it
+  exists in the repo.
+
+### Evolutionary grounding
+
+- Both donkey entries are PANTHER PTHR46861:SF1 (TNFRSF1A). PAINT places TNF receptor activity,
+  TNF binding, signaling receptor complex, membrane raft and inflammatory response by IBD at the
+  Euteleostomi node PTN002930098 (seeds human P19438 and/or mouse MGI:1314884;
+  `interpro/panther/PTHR46861/PTHR46861-paint.tsv`). The donkey TreeGrafter rows are these terms.
+  PAINT did not place TNF-mediated signaling, apoptosis or NF-kB terms at this node; the
+  TNF-mediated signaling row here is a GO_REF:0000108 inference from the receptor-activity row, not a
+  PAINT decision. No disagreement on subfamily placement: the family review
+  (`interpro/panther/PTHR46861/PTHR46861-review.md`) describes PTHR46861 as a narrow TNFR1 ortholog
+  family, consistent with both donkey entries.
+
+### Decisions (unchanged in substance from the earlier review)
+
+- Ligand-dependent rows (TNF receptor activity, TNF binding, TNF-mediated signaling, signaling
+  receptor complex, inflammatory response): UNDECIDED. Correct for the gene and its canonical
+  product; not confirmable for a product lacking most of CRD2. Reasons now name the exon-3 skip,
+  the PAINT node and the canonical accession.
+- Signal transduction (InterPro death domain): ACCEPT; death domain intact.
+- Membrane raft: KEEP_AS_NON_CORE. Plasma membrane NEW (ISS from human) kept.
+- Quote fixes: replaced the bare "Death" feature quote with the TNFRSF1A_death InterPro xref, and the
+  "Transmembrane helix" keyword quote with the Phobius TRANSMEM feature line.
+- Description rewritten to state the alternative-transcript identity.
+
+### Relative to review next
+
+- Same-gene canonical product A0A8C4MD74 (donkey TNFRSF1A, 453 aa); no review exists. Folder would
+  be genes/EQUAS/TNFRSF1A__A0A8C4MD74 because genes/EQUAS/TNFRSF1A is keyed to A0A9L0JKX4.
+- Characterised orthologs already reviewed: genes/human/TNFRSF1A (P19438), genes/mouse/Tnfrsf1a (P25118).
+- Modules mentioning TNFRSF1A: modules/tnf_signaling.yaml, modules/nfkb_canonical_signaling.yaml,
+  modules/death_receptor_apoptotic_signaling.yaml.
+
+## 2026-10-21 — NEW rows withdrawn: already annotated on another product of the same gene
+
+The re-review proposed NEW rows (GO:0005886 plasma membrane) on this accession. GOA already carries the same terms on
+another product of the same gene, reviewed in `genes/EQUAS/TNFRSF1A__A0A8C4MD74/`. GOA propagates gene-level
+annotations to one representative product per gene, so adding them to a second product fills a
+convention rather than a curation gap. The rows were withdrawn under the rule applied across the
+ProtNLM2 re-review cohorts, first raised in the review of PR #5303. The gene-level function is unchanged.
