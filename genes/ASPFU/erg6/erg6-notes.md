@@ -23,11 +23,15 @@
   lanosterol"]. Elsaman et al. independently use Erg6A depletion and put the
   reaction at the lanosterol-to-eburicol step [PMID:39060235 "Partial repression
   of Erg6A, which converts lanosterol into eburicol, increases azole resistance."].
-- The two `GO:0005739 mitochondrion` rows are bad propagation. The seeded ISS row
-  and the UniProt SubCell IEA both trace to `UniProtKB:P32352`; the Q4W9V1
-  UniProt record makes that explicit for both "Microsome" and "Mitochondrion".
-  P32352 is the budding-yeast Erg2 sterol C8 isomerase, not an Erg6/SMT-family
-  protein. The direct Aspergillus localization data put Erg6 on lipid droplets:
+- The two `GO:0005739 mitochondrion` rows should be treated as
+  over-annotation from the old budding-yeast Erg6 location evidence. The
+  seeded ISS row and the UniProt SubCell IEA both trace to `UniProtKB:P32352`;
+  the Q4W9V1 UniProt record makes that explicit for both "Microsome" and
+  "Mitochondrion". That accession is likely a mis-key for the budding-yeast
+  Erg6 accession `P25087`: P25087 has the same two subcellular-location lines,
+  in the same order, from PubMed:6363386. The direct Aspergillus localization
+  data put Erg6 on lipid droplets, but do not rule out or establish a
+  mitochondrial pool:
   [PMID:38769341 "the GFP-labeled puncta overlapped with the red BODIPY staining
   completely"].
 - PubMed/NCBI searches for `Aspergillus fumigatus` with `erg6`, `sterol
