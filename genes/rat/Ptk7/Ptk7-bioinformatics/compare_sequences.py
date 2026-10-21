@@ -8,7 +8,14 @@ from pathlib import Path
 from Bio.Align import PairwiseAligner, substitution_matrices
 HERE=Path(__file__).resolve().parent
 GENE=HERE.parent.name
-selected=json.loads((HERE.parent/f'{GENE}-protnlm-source.json').read_text())['uniprot']
+def read_uniprot_flatfile(path):
+ """Return accession and sequence from a UniProt flat file."""
+ text=path.read_text().splitlines()
+ acc=next(l.split()[1].rstrip(';') for l in text if l.startswith('AC   '))
+ i=next(k for k,l in enumerate(text) if l.startswith('SQ   '))
+ seq=''.join(''.join(l.split()) for l in text[i+1:] if not l.startswith('//'))
+ return {'primaryAccession':acc,'sequence':{'value':seq}}
+selected=read_uniprot_flatfile(HERE.parent/f'{GENE}-uniprot.txt')
 reference=json.loads((HERE.parent/f'{GENE}-human-ortholog.json').read_text())
 a=reference['sequence']['value']; b=selected['sequence']['value']
 aligner=PairwiseAligner(); aligner.substitution_matrix=substitution_matrices.load('BLOSUM62')
@@ -34,7 +41,7 @@ lines=[f'# {GENE}: exact selected product and human ortholog reference', '',f"Se
 for s in segments:lines.append(f"| {s['reference_start']}–{s['reference_end']} | {s['target_start']}–{s['target_end']} | {s['identical']} |")
 lines+=['','Reference feature mapping (sequence coverage does not establish retained function):','', '| Reference feature | Interval | Mapped / length | Identical |','|---|---|---|---|']
 for f in features:lines.append(f"| {f['type']}: {f['description']} | {f['reference_start']}–{f['reference_end']} | {f['mapped_count']} / {f['length']} | {f['identical_count']} |")
-lines+=['',out['caveat'],'','Inputs are the sibling frozen ProtNLM source and human ortholog reference JSON files. Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.','']
+lines+=['',out['caveat'],'','Inputs are the sibling UniProt flat file for the selected product (`Ptk7-uniprot.txt`) and the human ortholog reference JSON (Q13308 UniProt record). Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.','']
 (HERE/'RESULTS.md').write_text('\n'.join(lines))
 
 # Structural landmarks specified by PMID:32619402, human PTK7 numbering.

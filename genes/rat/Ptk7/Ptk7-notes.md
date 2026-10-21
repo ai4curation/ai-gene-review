@@ -103,3 +103,29 @@ GOA refresh: no new rows, no retired rows (37 rows). Pure re-audit; no action ch
 - No stale UniProt quotes (checker: 0).
 
 Open questions (UNDECIDED rows needing full text): PMID:17910947 (neurite outgrowth / RA response), PMID:15229603 (apical-basal polarity), PMID:25807483 supplementary data (coronary vasculature). The core-function MF GO:0060090 molecular adaptor activity is not carried by any GOA row; it is left as a core-function statement rather than a NEW row.
+
+## Full re-review 2026-10-20 (independent of ProtNLM output)
+
+This re-review did not use any ProtNLM prediction or prediction-evidence file; the earlier sections above that assess ProtNLM text are historical. The sequence-comparison script (`Ptk7-bioinformatics/compare_sequences.py`) now reads the selected sequence from `Ptk7-uniprot.txt` instead of the frozen ProtNLM source JSON; rerunning it reproduced identical alignment and landmark results.
+
+### Identity of the benchmark accession
+
+- A0A8I6ALM9 is an unreviewed (TrEMBL) Ensembl-derived model (ENSRNOP00000094722.1, gene ENSRNOG00000039976, RGD:1310472) of rat Ptk7, 1,079 aa vs 1,070 aa for human Q13308.
+- Residues 35–1079 align to human 26–1070 with 972 identities: all seven Ig-like domains, the transmembrane helix (21/21 identical) and the pseudokinase domain (257/271) are complete, including the pocket-occluding L837/Y886 and ALG957–959 (human L828/Y877/ALG948–950; PMID:32619402).
+- The first ~34 residues (MGRAWRGALLPMPARRARVPPCKFRGKAGTPDGPTG...) are Arg/Pro/Gly-rich and lack the hydrophobic signal-peptide core of human/mouse PTK7 (human 1–30 signal peptide maps with only 12 identities); UniProt calls no signal peptide. This is most likely an N-terminal gene-model (first exon / start codon) problem rather than a biologically distinct isoform. Without a signal peptide the predicted type I topology is not guaranteed for this exact product; the functional core is otherwise intact. Not a fragment; not a catalytic-residue loss relative to the PTK7 ortholog (PTK7 is a pseudokinase in all mammals).
+
+### Evolutionary placement
+
+- UniProt DR: PTHR45080:SF21 (INACTIVE TYROSINE-PROTEIN KINASE 7), same subfamily as human PTK7 Q13308 (official PANTHER human row; see `interpro/panther/PTHR45080/PTHR45080-review.yaml`).
+- Disagreement: PANTHER's own classification row for this rat entry is PTHR24418:SF399 (MATK-like non-receptor tyrosine kinase). This explains the rat-only IBA GO:0004715 (node PANTHER:PTN001231168, which occurs in the PTHR24416/PTHR24418 kinase PAINT files, not in PTHR45080). Human PTK7 does not get that IBA. The PTK7-clade node PANTHER:PTN000701324 (PTHR45080, Amniota, seeded by Q13308) propagates only cell-cell junction (GO:0005911) and the unsigned regulation of canonical Wnt signaling (GO:0060828); rat Ptk7 misses these IBAs because of the misclassification.
+- Closest characterised relative: human PTK7 (Q13308, same subfamily SF21; donor of the ISO/IEA process rows) and mouse Ptk7 (Q8BKG3; MGI IMP/IDA donor). Neither has a review in this repo.
+
+### Changes in this re-review
+
+- Description rewritten as a standalone biological summary (no product-specific commentary).
+- GO:0004715 IBA REMOVE retained; reason now records the PANTHER family misassignment (WRONG_ORTHOLOG_OR_PARALOG added to failure modes) in addition to pseudokinase catalytic loss.
+- GO:0090263 positive regulation of canonical Wnt signaling (IEA + ISO): KEEP_AS_NON_CORE -> MODIFY to GO:0060828, following the PAINT curator's deliberate choice of the unsigned term at PTN000701324 and the context-dependent sign in the literature.
+- Planar polarity, axis elongation, convergent extension and cochlea morphogenesis rows now cite the actual mouse IMP source, the chuzhoi paper [PMID:20704721 "we demonstrate disruption in the orientation of outer hair cells in the inner ear"; "have characteristics consistent with defective convergent extension"].
+- Correction to the 2026-10-10 entry: the cached full text of PMID:25807483 does mention Ptk7 ["WNT/planar cell polarity (Ptk7,Prickle 1,Fuz)"] among recovered CHD genes; it is the MGI source for the heart development and ventricular septum rows as well as coronary vasculature. Coronary stays UNDECIDED (phenotype detail not in cached text).
+- Removed the ProtNLM source JSON and Off-track prediction-donor files from `references`.
+- Developmental rows (kidney, heart, lung mesenchyme, neural tube, wound healing) remain KEEP_AS_NON_CORE as curator-made acts_upstream_of_or_within mouse phenotypes; no NEW process terms added.

@@ -29,7 +29,7 @@ Reference feature mapping (sequence coverage does not establish retained functio
 
 A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.
 
-Inputs are the sibling frozen ProtNLM source and human ortholog reference JSON files. Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.
+Inputs are the sibling UniProt flat file for the selected product (`Ptk7-uniprot.txt`) and the human ortholog reference JSON (Q13308 UniProt record). Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.
 
 ## Structural landmarks from PMID:32619402
 

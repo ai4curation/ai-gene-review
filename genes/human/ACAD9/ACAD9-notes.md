@@ -55,3 +55,38 @@ The requested comparator check inspected the unchanged human ACADVL curated reco
 The assembly core now records its unresolved precise molecular-function assignment under knowledge_gaps. The boundary is the established assembly dependence, ACAD9-centered stability hierarchy and ECSIT-mediated connection/deflavination; the examined studies do not by themselves establish a direct ACAD9 adaptor/scaffold action. This is scoped to the evidence examined, without claiming that all molecular details of MCIA are unknown. The existing Falcon file is declared in references as a genuine secondary research artifact, and the description's closing rebuttal clause was removed to leave a standalone biological summary.
 
 Final action counts are 28 ACCEPT, four KEEP_AS_NON_CORE, three MODIFY, three REMOVE and two UNDECIDED. All 40 seeded assertions and all evidence/source files remain unchanged; the change adds no assertion and does not amend the earlier history record. Validation and render results are recorded in the new follow-up history and publication manifest.
+
+## 2026-10-20 ProtNLM2 benchmark re-review (A0A7P0T7Z1, cohort MOD_EVOLUTION20)
+
+This was an independent full re-review; no ProtNLM2 prediction output was opened or used.
+
+### Identity of the benchmark accession
+
+A0A7P0T7Z1 is an unreviewed TrEMBL entry (626 aa, sequence version 1) for the same HGNC gene, derived from the Ensembl transcript model ENST00000680636.1 / ENSP00000504886.1 of ENSG00000177646. It is an **alternative gene model (C-terminal splice/reading-frame variant) of ACAD9, not a separate gene**, so it is reviewed in this host folder against the canonical Swiss-Prot product Q9H845 (621 aa). A pairwise comparison (difflib, scratch analysis) shows:
+
+- Residues 1-521 are identical to Q9H845 1-521. This retains the mitochondrial transit peptide (1-37), the three ACAD domains (Pfam N-terminal 68-173, middle 177-277, C-terminal 290-437 on the TrEMBL record), the catalytic proton acceptor Glu426 (UniProt ACT_SITE, E426Q abolishes dehydrogenase activity but not assembly), and the ECSIT-contacting residues Lys228 and Arg446 [PMID:38086790 "ECSIT Glu323 makes a salt bridge with ACAD9 Lys228 ... a second salt bridge between ECSIT Asp333 and ACAD9 Arg446"].
+- Canonical residues 522-621 are replaced by a divergent 105-residue tail (526-626 in A0A7P0T7Z1), with only scattered identities; MobiDB-lite predicts 527-599 as disordered.
+- The lost segment contains the C-terminal helix-loops that stabilise the active dimer [PMID:38086790 "the C-terminal regions (residues 600–621) form helix loops that are positioned around the neighbouring protomer thereby stabilising the active dimer"] and the sites of pathogenic variants R532W, S602F, L606H and Y611C, several of which destabilise the protein [PMID:34646991].
+
+Consequently the benchmark product keeps catalytic and FAD-binding machinery and the ECSIT interface, but lacks the canonical vestigial-domain C-terminus required for dimer stability. No evidence was found that this transcript is translated into a stable protein, and no experiment has been done on it. Gene-level functions (below) describe the canonical product; their transfer to the A0A7P0T7Z1 protein is unverified, especially for dimer-dependent activity and MCIA assembly. The TrEMBL record's own electronic GO lines (mitochondrion IDA:HPA, inner membrane, FAD binding, GO:0004466 via EC, fatty acid metabolic process via ARBA) are gene-level propagations, not sequence-specific evidence.
+
+### Evolutionary grounding
+
+- PANTHER: both Q9H845 and A0A7P0T7Z1 are in PTHR43884:SF9 "COMPLEX I ASSEMBLY FACTOR ACAD9, MITOCHONDRIAL", which also holds mouse Acad9 (Q8JZN5), rat Acad9 (B1WC61) and Drosophila Egm (Q5U117) (interpro/panther/PTHR43884/PTHR43884-entries.csv). VLCAD (ACADVL) is in a separate subfamily, so VLCAD-specific substrate claims are not transferred.
+- PAINT: GO:0003995 is placed at the deep node PTN000744030 (ACAD family; human Q9H845 is among the seeds, as expected). A Bilateria node PTN000856878 carries GO:0160295 MCIA complex, GO:0032981 complex I assembly, GO:0001676 and GO:0051791, seeded only from Q9H845. PAINT did not place a long-chain MF term at the ACAD9 node; the gene-level GO:0004466 rests on direct human assays.
+- Closest experimentally characterised relative outside human: Drosophila Egm (Q5U117), same PANTHER subfamily SF9 (the Egm GOA snapshot does not yet carry PTN000856878-derived IBA rows, so its placement under that node is not confirmed here); complete review exists at genes/DROME/Egm/Egm-ai-review.yaml. The family review interpro/panther/PTHR43884/PTHR43884-review.yaml lists A0A7P0T7Z1 as the SF9 representative; no disagreement about subfamily placement (UniProt cross-reference and PANTHER file agree on SF9).
+
+### GOA refresh and changes
+
+`just fetch-gene human ACAD9 --force` refreshed UniProt (more curated unsaturated-substrate Rhea reactions, ECO:0000305 to PMID:16020546/PMID:17564966) and GOA (44 rows). GOA no longer has the GO:0016491 UniProt-keyword row (GO_REF:0000043 retired), so that row was dropped; it has a new GO:0017099 ARBA IEA row and four additional per-partner protein-binding IPI rows; the IBA, EC/Rhea long-chain and medium-chain rows have new WITH/FROM sets (reviews carried over to the refreshed rows).
+
+Action changes, applying the "correct but general -> MODIFY" rule (previous review ACCEPTed several terms while arguing they were broader):
+
+- GO:0003995 (IBA, IEA InterPro, IDA PMID:38086790) and GO:0016627 -> MODIFY to GO:0004466 (C16:0 assay in PMID:38086790; C16-C22 substrates in PMID:16020546).
+- GO:0031966 mitochondrial membrane (IEA ARBA, IDA PMID:16020546) -> MODIFY to GO:0005743.
+- New GO:0017099 IEA ARBA -> MODIFY to GO:0004466, consistent with the two FlyBase IDA rows.
+- Four new GO:0005515 IPI rows -> REMOVE (protein-binding policy).
+
+Unchanged: complex I assembly, MCIA membership, long-chain dehydrogenase and beta-oxidation core functions; nucleus UNDECIDED; adaptor activity UNDECIDED; dendrite and medium-chain rows NON_CORE. Final counts: see history record.
+
+Related modules (not edited): modules/complex_i_assembly_factors.yaml, modules/fatty_acid_beta_oxidation.yaml, modules/electron_transfer_flavoprotein_system.yaml, modules/oxphos.yaml.

@@ -86,3 +86,50 @@ carries an explicit `reason` alongside its summary.
   differ more than fiftyfold among mammalian orthologs; and a loss-of-function metabolomic test
   for L-xylulose accumulation.
 - Validation: zero errors, zero warnings. Status already COMPLETE and unchanged.
+
+## Full re-review 2026-10-20 (independent of ProtNLM output)
+
+This pass was done without consulting any ProtNLM prediction file. The two prediction-related
+references (`dcxr-protnlm-source.json`, `dcxr-fabg-prediction-donor.json`) were dropped from the
+review's reference list. The bioinformatics script now reads the Q567K5 sequence from
+`dcxr-uniprot.txt` instead of the frozen ProtNLM source.
+
+### Identity
+Q567K5 is the canonical full-length zebrafish dcxr product (244 aa; ZFIN ZDB-GENE-030131-7002).
+It is not an isoform, fragment or alternative gene model. It aligns end to end with human DCXR
+Q7Z4W1 (244 aa; 169 identical residues). The Ser136/Tyr149/Lys153 triad and 12 of 14 NADP-contact
+positions are identical; the other two are conservative (S38T) or surface (S185E) changes
+(dcxr-bioinformatics/RESULTS.md).
+
+### Evolutionary placement
+- PANTHER: PTHR44252:SF3 "D-ERYTHRULOSE REDUCTASE-RELATED". Its Swiss-Prot members in the family
+  entries list are chicken DER Q8JIS3 and C. elegans dhs-21 Q21929. SF2 "L-XYLULOSE REDUCTASE" holds the
+  mammalian DCXRs; SF1 holds mammalian CBR2.
+- Pairwise identity to Q567K5: chicken DER 0.701, human DCXR 0.693, mouse Dcxr 0.689, pig/mouse CBR2
+  0.635/0.615, worm DHS-21 0.510. A neighbour-joining tree (rooted on SF1) groups Q567K5 with DER and
+  DHS-21, consistent with PANTHER. SF3 therefore looks like the non-mammalian DCXR branch, not a
+  functionally distinct paralog group.
+- The IBA node PTN001211870 has donors from SF1 (MGI:107200 Cbr2), SF2 (human/mouse/rat DCXR) and SF3
+  (WB dhs-21), so the propagated terms are ancestral to the clade containing Q567K5.
+- SF3 has its own experimental anchor for the core activity: recombinant DHS-21 converts L-xylulose to xylitol
+  with NADPH [PMID:21477590 "Recombinant DHS-21 was shown to convert L-xylulose to xylitol using NADPH as a cofactor."],
+  and its carbonyl-reductase profile matches human DCXR [PMID:21300042 "revealed that SDR20C18 is the DCXR-orthologue enzyme to the human enzyme"].
+- Chicken DER (closest characterized relative by placement and identity) reduces D-erythrulose and,
+  per UniProt, may also reduce L-xylulose [PMID:12200544; PMID:7358641]. PAINT did not propagate a tetrose
+  reductase term, and that omission is treated as deliberate; no NEW term is proposed.
+
+### Annotation decisions (unchanged actions, re-argued)
+- GO:0050038 L-xylulose reductase (NADPH) activity IBA: ACCEPT (core).
+- GO:0004090 carbonyl reductase (NADPH) activity IBA: ACCEPT (core).
+- GO:0005997 xylulose metabolic process IBA: ACCEPT. The enzyme catalyses the step itself.
+- GO:0006006 glucose metabolic process IBA: KEEP_AS_NON_CORE. This is a uronate-cycle association. No valid
+  more-specific descendant exists (GO:0019640 is obsolete; GO:0042840 is in another branch).
+- GO:0016616 IEA (ARBA): MODIFY -> GO:0050038.
+- GO:0005575 ND: ACCEPT. Relatives' compartments disagree (renal membranes and liver fractions in
+  mammals, cytoplasm in chicken, spermatid plasma membrane in worm [PMID:21477590 "on the plasma membrane of spermatids"]).
+  Second core function (GO:0004090) added.
+- Worm dhs-21 longevity/reproduction phenotypes are organismal and were not transferred.
+
+### Modules
+No module in modules/ covers the uronate (glucuronate-xylulose) cycle. modules/xylose_oxidoreductase_pathway.yaml
+is the fungal D-xylose route and does not include DCXR.
