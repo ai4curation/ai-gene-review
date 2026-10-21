@@ -110,23 +110,29 @@ def fetch_all(accessions: list[str], jsonl_path: Path, resume: bool = False, wor
 
     mode = "a" if resume and jsonl_path.exists() else "w"
     # Requests are latency-bound (~0.7 s each), so a small pool is needed to
-    # approach the rate cap; submissions are still paced at REQUESTS_PER_SECOND.
+    # approach the rate cap. Work is submitted in chunks and each chunk is
+    # written before the next is submitted, so results stream to disk and an
+    # interrupted run can be continued with --resume.
     interval = 1.0 / REQUESTS_PER_SECOND
+    chunk = workers * 4
     errors = []
 
     with open(jsonl_path, mode) as f, ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {}
-        for acc in remaining:
-            futures[pool.submit(fetch_one, acc)] = acc
-            time.sleep(interval)
-        for i, fut in enumerate(as_completed(futures)):
-            data = fut.result()
-            if data is None:
-                errors.append(futures[fut])
-            else:
-                f.write(json.dumps(data) + "\n")
-            if (i + 1) % 500 == 0:
-                print(f"  {i + 1}/{len(remaining)} fetched ({len(errors)} errors)", flush=True)
+        for start in range(0, len(remaining), chunk):
+            futures = {}
+            for acc in remaining[start : start + chunk]:
+                futures[pool.submit(fetch_one, acc)] = acc
+                time.sleep(interval)
+            for fut in as_completed(futures):
+                data = fut.result()
+                if data is None:
+                    errors.append(futures[fut])
+                else:
+                    f.write(json.dumps(data) + "\n")
+            f.flush()
+            n_done = min(start + chunk, len(remaining))
+            if n_done % 500 < chunk:
+                print(f"  {n_done}/{len(remaining)} fetched ({len(errors)} errors)", flush=True)
 
     print(f"Done: {len(remaining) - len(errors)} fetched, {len(errors)} errors")
     if errors:

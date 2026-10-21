@@ -6,7 +6,8 @@ Two steps:
     Counts every stage from UniProtKB to our cohorts and writes
     ``benchmark-funnel.json``. It needs the live UniProt REST API, the
     published ProtNLM2 accession list, and a full ProtNLM2 API dump made by
-    ``fetch_protnlm_api.py`` (``protnlm_api.jsonl``, not committed).
+    ``fetch_protnlm_api.py`` (``protnlm_api.jsonl``, not committed). How each
+    cohort was drawn is curated in ``benchmark-cohorts.yaml``.
 
 ``render``
     Draws ``figures/benchmark-funnel.svg``, ``figures/benchmark-cohorts.svg``
@@ -37,6 +38,7 @@ import yaml
 
 HERE = Path(__file__).parent
 FUNNEL_JSON = HERE / "benchmark-funnel.json"
+COHORTS_YAML = HERE / "benchmark-cohorts.yaml"
 FIGURES = HERE / "figures"
 ACCESSION_LIST_URL = (
     "https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/"
@@ -44,63 +46,10 @@ ACCESSION_LIST_URL = (
 )
 UNIPROT_SEARCH = "https://rest.uniprot.org/uniprotkb/search"
 
-FLY, HORSE, DONKEY, NEUROSPORA = 7227, 9796, 9793, 367110
-
-# How each cohort was drawn. Counts are derived in compute(); only the
-# selection method and its wording are curated here.
-COHORTS = [
-    {
-        "id": "ARGO50",
-        "label": "ARGO-50",
-        "drawn_from": "whole pilot, 14 taxon groups",
-        "method": "hand-picked",
-        "detail": "stratified by taxon group and output type",
-    },
-    {
-        "id": "HORSE40",
-        "label": "HORSE40",
-        "drawn_from": "Equus caballus",
-        "method": "hand-picked",
-        "detail": "informative claims and biological diversity",
-    },
-    {
-        "id": "FLY41",
-        "label": "FLY41",
-        "drawn_from": "Drosophila melanogaster",
-        "method": "census",
-        "detail": "every record with GO or function text",
-    },
-    {
-        "id": "NEUROSPORA20",
-        "label": "NEUROSPORA20",
-        "drawn_from": "Neurospora crassa",
-        "method": "census",
-        "detail": "all 16 GO/function records, plus 4 localization cases",
-    },
-    {
-        "id": "POMBE20",
-        "label": "POMBE20",
-        "drawn_from": "S. pombe, not on the list",
-        "method": "off-list",
-        "detail": "Swiss-Prot, from the pre-release export",
-    },
-    {
-        "id": "MOD_EVOLUTION20",
-        "label": "MOD_EVOLUTION20",
-        "drawn_from": "7 model species",
-        "method": "hand-picked",
-        "detail": "evolutionary questions: substrate, catalysis, complexes",
-    },
-    {
-        "id": "DONKEY40",
-        "label": "DONKEY40",
-        "drawn_from": "Equus asinus",
-        "method": "ranked rule",
-        "detail": "most GO terms; needs TreeGrafter and horse IBA",
-    },
-]
-
-CATEGORIES = ["COR", "CNN", "LSP", "UNC", "NPI", "PLI"]
+# Assessment categories of de Crécy-Lagard et al. 2025, in display order.
+CATEGORIES = ["COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP"]
+# Taxa named in the project prose; their pilot counts are recorded so the text is reproducible.
+NAMED_TAXA = {"wheat": 4565, "horse": 9796, "donkey": 9793, "fly": 7227, "human": 9606, "mouse": 10090, "rat": 10116}
 
 app = typer.Typer(add_completion=False, help=__doc__)
 
@@ -129,10 +78,32 @@ def output_flags(record: dict) -> tuple[bool, bool]:
     return has_go, has_fn
 
 
+def count_categories(codes: list[str]) -> dict[str, int]:
+    """Count assessment codes, refusing any code outside CATEGORIES.
+
+    >>> count_categories(["COR", "UNC", "COR"])["COR"]
+    2
+    >>> count_categories(["XYZ"])
+    Traceback (most recent call last):
+    ...
+    ValueError: unknown assessment code 'XYZ'; expected one of COR, CNN, LSP, UNC, NPI, PLI, REP
+    """
+    counts = {k: 0 for k in CATEGORIES}
+    for code in codes:
+        if code not in counts:
+            raise ValueError(f"unknown assessment code {code!r}; expected one of {', '.join(CATEGORIES)}")
+        counts[code] += 1
+    return counts
+
+
+def load_cohort_spec() -> dict:
+    return yaml.safe_load(COHORTS_YAML.read_text())
+
+
 @app.command()
 def compute(
     jsonl: Path = typer.Option(..., help="Full ProtNLM2 API dump from fetch_protnlm_api.py"),
-    accession_list: Path = typer.Option(None, help="Local copy of the published accession list"),
+    accession_list: Path | None = typer.Option(None, help="Local copy of the published accession list"),
 ) -> None:
     """Count every stage and write benchmark-funnel.json."""
     total, release = uniprot_total("*")
@@ -169,61 +140,104 @@ def compute(
     pilot = census(None)
     summary = json.loads((HERE / "benchmark-summary.json").read_text())
     by_cohort = {c["cohort"]: c for c in summary["cohorts"]}
+    spec = load_cohort_spec()
+    spec_ids = {c["id"] for c in spec["cohorts"]}
+    unlisted = sorted(set(by_cohort) - spec_ids - set(spec["not_drawn_from_release"]))
+    if unlisted:
+        raise typer.BadParameter(f"benchmark-summary.json cohorts missing from {COHORTS_YAML.name}: {', '.join(unlisted)}")
+
     mod_taxa = {int(r["taxon_id"]) for r in read_csv(HERE / "mod-evolution-benchmark/cohort.csv")}
     pombe_inventory = read_csv(HERE / "pombe-benchmark/inventory.csv")
     pombe_cohort = read_csv(HERE / "pombe-benchmark/functional-cohort.csv")
 
-    pools = {
-        "ARGO50": pilot,
-        "HORSE40": census({HORSE}),
-        "FLY41": census({FLY}),
-        "NEUROSPORA20": census({NEUROSPORA}),
-        "POMBE20": {
-            "records": len(pombe_inventory),
-            "with_go": None,
-            "with_go_or_function": len(pombe_cohort),
-        },
-        "MOD_EVOLUTION20": census(mod_taxa),
-        "DONKEY40": census({DONKEY}),
-    }
+    def pool(name: str) -> dict:
+        if name == "pilot":
+            return pilot
+        if name == "mod_species":
+            return census(mod_taxa)
+        if name == "pombe_export":
+            return {"records": len(pombe_inventory), "with_go": None, "with_go_or_function": len(pombe_cohort)}
+        if name.startswith("taxon:"):
+            return census({int(name.split(":", 1)[1])})
+        raise typer.BadParameter(f"unknown pool {name!r} in {COHORTS_YAML.name}")
+
     donkey_selected = len(yaml.safe_load((HERE / "donkey40/selection.yaml").read_text())["records"])
     # DONKEY40 was reviewed after the snapshot; its per-claim verdicts live in its own table.
-    donkey_counts = {k: 0 for k in ["COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP"]}
-    with open(HERE / "donkey40/donkey40_protnlm_vs.tsv", newline="") as f:
-        for row in csv.DictReader(f, delimiter="\t"):
-            donkey_counts[row["assessment"]] += 1
+    donkey_counts = count_categories([r["assessment"] for r in read_csv_tsv(HERE / "donkey40/donkey40_protnlm_vs.tsv")])
 
     cohorts = []
-    for c in COHORTS:
+    for c in spec["cohorts"]:
         stats = by_cohort.get(c["id"])
+        if stats is None and not c.get("post_snapshot"):
+            raise typer.BadParameter(f"cohort {c['id']} is not in benchmark-summary.json and is not marked post_snapshot")
+        go_counts = {k: stats["go_counts"].get(k, 0) for k in CATEGORIES} if stats else donkey_counts
         cohorts.append(
             {
-                **c,
-                "pool": pools[c["id"]],
+                "id": c["id"],
+                "label": c["label"],
+                "drawn_from": c["drawn_from"],
+                "method": c["method"],
+                "detail": c["detail"],
+                "pool": pool(c["pool"]),
                 "selected": stats["records"] if stats else donkey_selected,
-                "go_claims": sum(stats["go_counts"].values()) if stats else sum(donkey_counts.values()),
-                "go_counts": stats["go_counts"] if stats else donkey_counts,
+                "go_claims": sum(go_counts.values()),
+                "go_counts": go_counts,
                 "in_snapshot": stats is not None,
             }
         )
 
+    # Benchmark targets that are not among the pilot records with GO or function
+    # text: off-list accessions, and listed records with only names/locations/keywords.
+    scope = [r for r in read_csv(HERE / "family-curation/scope.csv") if r["role"] == "prediction_target"]
+    targets = {r["accession"] for r in scope}
+    species_of = {r["accession"]: r["species"] for r in scope}
+    off_list = sorted(t for t in targets if t not in taxon_of)
+    off_list_by_species: dict[str, int] = {}
+    for t in off_list:
+        off_list_by_species[species_of[t]] = off_list_by_species.get(species_of[t], 0) + 1
+    no_go_or_function = sorted(t for t in targets if t in taxon_of and not any(flags[t]))
+    if len(targets) != summary["prediction_targets"]:
+        raise typer.BadParameter(f"scope.csv has {len(targets)} prediction targets, benchmark-summary.json {summary['prediction_targets']}")
+
+    taxon_counts: dict[int, int] = {}
+    for t in taxon_of.values():
+        taxon_counts[t] = taxon_counts.get(t, 0) + 1
+    names = {int(r["Organism (ID)"]): r["Organism"] for r in rows}
+    top = sorted(taxon_counts.items(), key=lambda kv: -kv[1])[:10]
+
     funnel = {
         "built": date.today().isoformat(),
+        "api_fetched": date.fromtimestamp(jsonl.stat().st_mtime).isoformat(),
         "uniprot_release": release,
         "review_snapshot": summary["review_snapshot"],
         "uniprotkb": total,
         "swissprot": swissprot,
         "trembl": trembl,
-        "pilot": {**pilot, "taxa": len(set(taxon_of.values())), "listed_but_not_served": missing},
+        "pilot": {**pilot, "taxa": len(taxon_counts), "listed_but_not_served": missing},
+        "pilot_taxa": {
+            "top": [{"taxon": t, "organism": names[t], "records": n} for t, n in top],
+            "named": {k: taxon_counts.get(t, 0) for k, t in NAMED_TAXA.items()},
+        },
         "prediction_targets": summary["prediction_targets"],
         "prediction_targets_with_any_review": summary["prediction_targets_with_any_review"],
-        "go_counts": summary["go_counts"],
+        "prediction_targets_outside_go_set": {
+            "total": len(off_list) + len(no_go_or_function),
+            "not_on_list": len(off_list),
+            "not_on_list_by_species": dict(sorted(off_list_by_species.items(), key=lambda kv: -kv[1])),
+            "listed_without_go_or_function": len(no_go_or_function),
+        },
+        "go_counts": {k: summary["go_counts"].get(k, 0) for k in CATEGORIES},
         "narrative_records": len(summary["narrative_reviews"]),
         "narrative_counts": summary["narrative_counts"],
         "cohorts": cohorts,
     }
     FUNNEL_JSON.write_text(json.dumps(funnel, indent=2) + "\n")
     typer.echo(f"Wrote {FUNNEL_JSON}")
+
+
+def read_csv_tsv(path: Path) -> list[dict[str, str]]:
+    with open(path, newline="") as f:
+        return list(csv.DictReader(f, delimiter="\t"))
 
 
 # ---------------------------------------------------------------- rendering
@@ -250,6 +264,7 @@ STYLE = """
 .c-COR { fill: var(--accept, #1d8a4b); } .c-CNN { fill: var(--keep, #4f7c3a); }
 .c-LSP { fill: var(--accent, #0e6b66); } .c-UNC { fill: var(--undecided, #6b6f76); }
 .c-NPI { fill: var(--remove, #bd3a30); } .c-PLI { fill: var(--over, #7657a3); }
+.c-REP { fill: var(--modify, #b8620f); }
 </style>
 """
 
@@ -261,6 +276,27 @@ def fmt(n: int | None) -> str:
     ('26,856', '—')
     """
     return "—" if n is None else f"{n:,}"
+
+
+def plural(n: int, word: str) -> str:
+    """Count plus a noun, pluralised with -s.
+
+    >>> plural(1, "record"), plural(2, "record")
+    ('1 record', '2 records')
+    """
+    return f"{n} {word}" if n == 1 else f"{n} {word}s"
+
+
+SPECIES_NAMES = {"SCHPO": "S. pombe", "DROME": "fly"}
+
+
+def species_breakdown(counts: dict[str, int]) -> str:
+    """Render per-species counts as prose.
+
+    >>> species_breakdown({"SCHPO": 28, "DROME": 9})
+    '28 S. pombe, 9 fly'
+    """
+    return ", ".join(f"{n} {SPECIES_NAMES.get(sp, sp)}" for sp, n in counts.items())
 
 
 def text(x: float, y: float, s: str, cls: str = "t", size: float = 14, anchor: str = "start") -> str:
@@ -276,12 +312,13 @@ def svg(width: int, height: int, body: list[str], title: str) -> str:
 
 
 def render_funnel(d: dict) -> str:
+    outside = d["prediction_targets_outside_go_set"]
     stages = [
         ("UniProtKB", f"release {d['uniprot_release']}", d["uniprotkb"], False),
         ("Unreviewed (TrEMBL)", f"Swiss-Prot is the other {fmt(d['swissprot'])}", d["trembl"], False),
         ("ProtNLM2 public pilot", f"{d['pilot']['taxa']} taxa", d["pilot"]["records"], False),
         ("With GO or function text", "the rest: names, locations, keywords", d["pilot"]["with_go_or_function"], False),
-        ("Our prediction targets", f"{d['prediction_targets_with_any_review']} reviewed so far", d["prediction_targets"], True),
+        ("Our prediction targets", f"{d['prediction_targets_with_any_review']} reviewed; {outside['total']} outside the set above", d["prediction_targets"], True),
     ]
     width, top, row, bar_h = 960, 40, 66, 40
     cx, max_w = 455, 300
@@ -294,7 +331,8 @@ def render_funnel(d: dict) -> str:
         w = max_w * math.log10(n) / log_max
         y = top + i * row
         geom.append((cx - w / 2, y, w))
-    for i in range(len(geom) - 1):
+    # The last stage is not nested inside the one above it, so it gets no connector.
+    for i in range(len(geom) - 2):
         x0, y0, w0 = geom[i]
         x1, y1, w1 = geom[i + 1]
         body.append(
@@ -325,23 +363,23 @@ def render_funnel(d: dict) -> str:
 
     foot = top + len(stages) * row + 8
     body.append(f'<line class="rule" x1="20" y1="{foot}" x2="940" y2="{foot}"/>')
-    pombe = next(c for c in d["cohorts"] if c["id"] == "POMBE20")
     body.append(
         text(
             20,
             foot + 22,
-            f"Not on the list but served by the API: {pombe['pool']['records']} S. pombe Swiss-Prot entries "
-            "from the pre-release export (the POMBE20 cohort).",
+            f"Targets outside the GO/function set: {outside['not_on_list']} served by the API but not on the list "
+            f"({species_breakdown(outside['not_on_list_by_species'])}), and {outside['listed_without_go_or_function']} listed with only names, locations or keywords.",
             "t m",
             12.5,
         )
     )
+    n_missing = len(d["pilot"]["listed_but_not_served"])
     body.append(
         text(
             20,
             foot + 40,
-            f"Counts: UniProt {d['uniprot_release']}; reviews frozen at {d['review_snapshot']['date']}; "
-            f"{len(d['pilot']['listed_but_not_served'])} listed record not served by the API.",
+            f"Counts: UniProt {d['uniprot_release']}; API fetched {d['api_fetched']}; reviews frozen at {d['review_snapshot']['date']}; "
+            f"{plural(n_missing, 'listed record')} not served by the API.",
             "t m",
             12.5,
         )
@@ -353,47 +391,49 @@ CHIP = {"census": ("census", "Census"), "hand-picked": ("hand", "Hand-picked"), 
 
 
 def render_cohorts(d: dict) -> str:
-    width, top, row = 960, 62, 50
+    width, top, row = 960, 32, 50
     cols = {"pool": 410, "elig": 530, "picked": 610, "chip": 640, "go": 940}
-    o = -30
     body = [
-        text(cols["pool"], 70 + o, "Records", "t m b", 12, "end"),
-        text(cols["elig"], 70 + o, "GO/function", "t m b", 12, "end"),
-        text(cols["picked"], 70 + o, "Picked", "t m b", 12, "end"),
-        text(cols["chip"], 70 + o, "How picked", "t m b", 12),
-        text(cols["go"], 70 + o, "GO claims", "t m b", 12, "end"),
-        f'<line class="rule" x1="20" y1="{top - 14}" x2="940" y2="{top - 14}"/>',
+        text(cols["pool"], 40, "Records", "t m b", 12, "end"),
+        text(cols["elig"], 40, "GO/function", "t m b", 12, "end"),
+        text(cols["picked"], 40, "Picked", "t m b", 12, "end"),
+        text(cols["chip"], 40, "How picked", "t m b", 12),
+        text(cols["go"], 40, "GO claims", "t m b", 12, "end"),
+        '<line class="rule" x1="20" y1="48" x2="940" y2="48"/>',
     ]
     for i, c in enumerate(d["cohorts"]):
-        y = top + i * row
-        body.append(text(20, y + 8, c["label"], "t b", 14.5))
-        body.append(text(20, y + 26, c["drawn_from"], "t m", 12.5))
-        body.append(text(cols["pool"], y + 8, fmt(c["pool"]["records"]), "t num", 14, "end"))
-        body.append(text(cols["elig"], y + 8, fmt(c["pool"]["with_go_or_function"]), "t num", 14, "end"))
-        body.append(text(cols["picked"], y + 8, fmt(c["selected"]), "t b num", 14, "end"))
+        y = top + 38 + i * row
+        body.append(text(20, y, c["label"], "t b", 14.5))
+        body.append(text(20, y + 18, c["drawn_from"], "t m", 12.5))
+        body.append(text(cols["pool"], y, fmt(c["pool"]["records"]), "t num", 14, "end"))
+        body.append(text(cols["elig"], y, fmt(c["pool"]["with_go_or_function"]), "t num", 14, "end"))
+        body.append(text(cols["picked"], y, fmt(c["selected"]), "t b num", 14, "end"))
         cls, label = CHIP[c["method"]]
         chip_w = 9 + 6.6 * len(label)
-        body.append(f'<rect class="{cls}" x="{cols["chip"]}" y="{y - 7}" width="{chip_w:.0f}" height="19" rx="3"/>')
-        body.append(text(cols["chip"] + 5, y + 7, label, "t chip-t", 11.5))
-        body.append(text(cols["chip"], y + 26, c["detail"], "t m", 12))
-        body.append(text(cols["go"], y + 8, fmt(c["go_claims"]) if c["in_snapshot"] else f"{c['go_claims']} (post-snapshot)", "t num" if c["in_snapshot"] else "t m num", 14 if c["in_snapshot"] else 12.5, "end"))
+        body.append(f'<rect class="{cls}" x="{cols["chip"]}" y="{y - 15}" width="{chip_w:.0f}" height="19" rx="3"/>')
+        body.append(text(cols["chip"] + 5, y - 1, label, "t chip-t", 11.5))
+        body.append(text(cols["chip"], y + 18, c["detail"], "t m", 11.5))
+        go = fmt(c["go_claims"]) if c["in_snapshot"] else f"{c['go_claims']} (post-snapshot)"
+        body.append(text(cols["go"], y, go, "t num" if c["in_snapshot"] else "t m num", 14 if c["in_snapshot"] else 12.5, "end"))
         if i < len(d["cohorts"]) - 1:
-            body.append(f'<line class="rule" x1="20" y1="{y + 38}" x2="940" y2="{y + 38}"/>')
-    foot = top + len(d["cohorts"]) * row
+            body.append(f'<line class="rule" x1="20" y1="{y + 30}" x2="940" y2="{y + 30}"/>')
+    foot = top + 38 + len(d["cohorts"]) * row
+    snapshot_picked = sum(c["selected"] for c in d["cohorts"] if c["in_snapshot"])
     body.append(
         text(
             20,
-            foot + 4,
-            "Records and GO/function are counts in the released pool the cohort was drawn from. Overlapping cohort members are counted once in project totals.",
+            foot - 4,
+            f"Records and GO/function count the released pool each cohort was drawn from. In-snapshot cohorts pick {snapshot_picked} memberships, "
+            f"{d['prediction_targets']} distinct targets.",
             "t m",
             12,
         )
     )
-    return svg(width, foot + 20, body, "Selection method and size of each ProtNLM2 benchmark cohort")
+    return svg(width, foot + 12, body, "Selection method and size of each ProtNLM2 benchmark cohort")
 
 
 def render_outcomes(d: dict) -> str:
-    rows = [(c["label"], c["go_counts"]) for c in d["cohorts"] if c["in_snapshot"] and sum(c["go_counts"].values())]
+    rows = [(c["label"], c["go_counts"]) for c in d["cohorts"] if c["in_snapshot"] and c["go_claims"]]
     rows.append(("All cohorts", d["go_counts"]))
     width, top, row, bar_x, bar_w = 960, 52, 34, 190, 640
     body = []
@@ -408,7 +448,7 @@ def render_outcomes(d: dict) -> str:
         body.append(text(20, y + 15, label, "t b" if label == "All cohorts" else "t", 14))
         x = bar_x
         for cat in CATEGORIES:
-            w = bar_w * counts[cat] / n
+            w = bar_w * counts[cat] / n if n else 0
             if w > 0:
                 body.append(f'<rect class="c-{cat}" x="{x:.1f}" y="{y}" width="{w:.1f}" height="22"/>')
                 if w >= 26:
@@ -439,14 +479,22 @@ def render_outcomes(d: dict) -> str:
     return svg(width, foot + 54, body, "Assessment categories of ProtNLM2 GO claims by cohort")
 
 
+RENDERERS = {"benchmark-funnel": render_funnel, "benchmark-cohorts": render_cohorts, "benchmark-outcomes": render_outcomes}
+
+
+def render_all(d: dict) -> dict[str, str]:
+    """Render every figure from a funnel dict, keyed by file stem."""
+    return {name: fn(d) for name, fn in RENDERERS.items()}
+
+
 @app.command()
 def render() -> None:
     """Draw the three SVG figures from benchmark-funnel.json."""
     d = json.loads(FUNNEL_JSON.read_text())
     FIGURES.mkdir(exist_ok=True)
-    for name, fn in [("benchmark-funnel", render_funnel), ("benchmark-cohorts", render_cohorts), ("benchmark-outcomes", render_outcomes)]:
+    for name, content in render_all(d).items():
         path = FIGURES / f"{name}.svg"
-        path.write_text(fn(d))
+        path.write_text(content)
         typer.echo(f"Wrote {path}")
 
 

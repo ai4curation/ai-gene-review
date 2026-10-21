@@ -18,7 +18,7 @@ The original exploratory analysis used a pre-release XML export (`post-processed
 
 ## Dataset statistics
 
-**Current public release** (counted 2026-10-19 by
+**Current public release** (API fetched 2026-10-19; counted by
 [`build_benchmark_funnel.py`](build_benchmark_funnel.py), stored in
 [`benchmark-funnel.json`](benchmark-funnel.json)): the published list has 26,856 accessions in
 416 taxa. The API serves 26,855 of them (A0A8K0EP25 returns 404). 10,268 records carry GO
@@ -59,6 +59,25 @@ Each prediction has a model score (0–1, threshold 0.05) and post-hoc corrobora
 | `taxonomy.tsv` | Accession -> species mapping from UniProt |
 
 ## Change log
+
+### 2026-10-20 — provenance figures: review fixes
+
+- The cohort figure now lists all ten cohorts, including the queued FLY location/keyword,
+  FLY_NEXT20 and POMBE remaining-8 tiers, so in-snapshot memberships (248) reconcile with the
+  242 distinct targets. Cohort wording moved to `benchmark-cohorts.yaml`; `compute` fails if
+  `benchmark-summary.json` has a cohort the sidecar does not describe.
+- The funnel no longer draws the targets as nested inside the GO/function set: 86 of the 242
+  targets lie outside it (37 off the list, 28 *S. pombe* and 9 fly; 49 listed with only names,
+  locations or keywords). `benchmark-funnel.json` records the breakdown, the pilot counts of the
+  taxa named in the prose (`pilot_taxa`), and the API fetch date (`api_fetched`).
+- REP is included in the outcome categories, and unknown assessment codes raise.
+- `fetch_protnlm_api.py` writes each chunk of results before submitting the next, so a long
+  fetch streams to disk and `--resume` works after an interruption.
+- `tests/test_protnlm_benchmark_funnel.py` checks that the committed SVGs match the renderer
+  and that cohort counts reconcile.
+- `figures/overclaim-cases.svg` is hand-drawn rather than generated. It is used by the project
+  brief and the slide deck; its verdicts (A0A3B6GK97, F6LAX4, A0A3B6RKV1) were re-checked
+  against the prediction reviews on 2026-10-20.
 
 ### 2026-10-19 — benchmark provenance figures
 
