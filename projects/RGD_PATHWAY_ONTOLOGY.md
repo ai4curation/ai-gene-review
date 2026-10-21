@@ -1,13 +1,14 @@
 ---
 title: "RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds"
 maturity: SCOPING
-last_reviewed: 2026-10-18
+last_reviewed: 2026-10-20
 tags: [PIPELINE]
 species: [human]
 genes: [SCAP, INSIG1, INSIG2, MBTPS1, MBTPS2, SREBF1, SREBF2]
 # PID is the NCI Pathway Interaction Database here, not Arabidopsis PINOID; ACO2
-# would otherwise link to the fission-yeast directory aco2.
-autolink_exclude: [PID, SREBP, ACO2, aco2]
+# would otherwise link to the fission-yeast directory aco2, and "RNA polymerase I, II
+# and III" to the phage gene III.
+autolink_exclude: [PID, SREBP, ACO2, aco2, III]
 ---
 
 # RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds
@@ -26,10 +27,11 @@ genes of a pathway, and only 48 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 678 modules. Seventy-two already have a matching module, 13 are
-ready to model, 32 lack a GO process term, and 56 are disease or drug pathways
-and out of scope. One pilot module, `srebp_signaling`, was derived from the
-RGD SREBP diagram and passes schema and module validation.
+triaged against our 687 modules. Seventy-seven already have a matching module, 10 are
+ready to model, 30 lack a GO process term, and 56 are disease or drug pathways
+and out of scope. Four modules have now been derived from RGD diagrams: the pilot
+`srebp_signaling`, and the linked blood set `coagulation_cascade`, `fibrinolysis`
+and `kallikrein_kinin_cascade`. All four pass schema and module validation.
 
 ## Why this source
 
@@ -99,10 +101,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 72 |
-| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 13 |
+| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 77 |
+| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 10 |
 | `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 20 |
-| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 32 |
+| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 30 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
 
@@ -139,7 +141,7 @@ split along their sub-pathways before modelling.
   angiotensin II and vasopressin signaling, renin-angiotensin, and
   mitochondrial and cytosolic iron-sulfur cluster assembly. Some do have a GO
   term under another name, for example `GO:0072331` (signal transduction by p53
-  class mediator). These 32 `needs_go_mapping` seeds are a curation list for
+  class mediator). These 30 `needs_go_mapping` seeds are a curation list for
   manual mapping or for `proposed_new_terms`.
 
 ### GO-CAM completeness
@@ -194,7 +196,7 @@ members. The completeness table therefore reports both counts
 
 ### Module seeds
 
-The 13 `candidate` seeds, ordered by number of curated genes, are the
+The 10 `candidate` seeds, ordered by number of curated genes, are the
 modelling queue for normal-biology pathways without a module:
 
 | PW | Pathway | Curated human genes | Mapped GO | Note |
@@ -204,12 +206,9 @@ modelling queue for normal-biology pathways without a module:
 | PW:0000962 | visual phototransduction | 33 | GO:0007602 | |
 | PW:0000840 | protein kinase C signaling | 32 | GO:0070528 | |
 | PW:0001340 | DNA modification | 28 | GO:0006304 | |
-| PW:0000474 | coagulation cascade | 21 | GO:0072378 | |
-| PW:0000526 | kallikrein-kinin cascade | 19 | GO:0002255 | |
 | PW:0000843 | muscarinic acetylcholine signaling | 19 | GO:0007213 | |
 | PW:0000388 | reelin signaling | 15 | GO:0038026 | |
 | PW:0001243 | prostanoid biosynthesis | 14 | GO:0046457 | |
-| PW:0000481 | fibrinolysis | 12 | GO:0042730 | |
 | PW:0000682 | TRAIL signaling | 9 | GO:0036462 | |
 | PW:0000515 | IL-10 signaling | 7 | GO:0140105 | |
 
@@ -254,10 +253,70 @@ against the literature.
 
 After the first pass, each step was given quote-checked support from the primary papers that defined it (13 PubMed abstracts). It was also cross-checked against an independent human GO-CAM, `6205c24300000880`, which models six of the seven gene products with matching molecular functions (it uses the parent GO:0000981 for SREBF1/2, where the module uses GO:0001228). The model also contains AKT1 and PCK1, which the module leaves out: their reported effect on INSIG opposes retention and rests on one cancer-cell study (corrected separately in ai4curation/ai-gene-review#5055). That model omits SCAP, and it includes KPNB1 for SREBP nuclear import, a step the RGD description mentions but the module does not yet model. A curator-built GO-CAM for the same pathway is the strongest check available on a diagram-derived module, so the seeds' `best_gocam` field is worth reading before modelling the next candidates. It is a lead, not a ranking. For most pathways no model carries the mapped process, and ties between equally overlapping models then go to the lowest model id.
 
-The pilot shows two limits of the route. The diagram has no step-level GO
-terms, so every activity needs separate grounding. SCAP's escort role also has
-no specific GO molecular-function term. Reviews of all seven member genes are
-in a separate PR.
+The pilot shows a limit of the route: the diagram has no step-level GO terms,
+so every activity needs separate grounding. SCAP's escort role has only the
+generic cargo receptor activity (GO:0038024), which the module now uses along
+with sterol sensor activity (GO:0032935), matching SCAP's gene review. Reviews of
+all seven member genes merged in ai4curation/ai-gene-review#5215.
+
+### Blood set: coagulation, fibrinolysis, kallikrein-kinin
+
+The next three candidates were modelled together, because their RGD diagrams
+link to each other
+([PW:0000474](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000474.yaml),
+[PW:0000481](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000481.yaml),
+[PW:0000526](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000526.yaml)). Members shared
+between diagrams were given one home each:
+
+- [`modules/kallikrein_kinin_cascade.yaml`](../modules/kallikrein_kinin_cascade.yaml)
+  (`GO:0002254` kinin cascade) owns contact activation. Factor XII and plasma
+  kallikrein activate each other, and kallikrein releases bradykinin from
+  high-molecular-weight kininogen. Tissue kallikrein releases kallidin. The
+  module also covers the B1 and B2 receptors, the kininases and the inhibitors
+  C1-inhibitor, alpha-2-macroglobulin and kallistatin.
+- [`modules/coagulation_cascade.yaml`](../modules/coagulation_cascade.yaml)
+  (`GO:0072378` blood coagulation, fibrin clot formation) starts where contact
+  activation hands off, at factor XI activation. Its parts are extrinsic
+  initiation, intrinsic amplification, thrombin feedback, prothrombinase,
+  fibrin formation, factor XIIIa cross-linking, and the natural anticoagulants:
+  antithrombin, TFPI, the protein C/protein S/thrombomodulin system and protein
+  Z/ZPI.
+- [`modules/fibrinolysis.yaml`](../modules/fibrinolysis.yaml) (`GO:0042730`)
+  takes the cross-linked clot as its input. It covers plasminogen activation by
+  tPA and uPA, plasmin degradation of fibrin, and inhibition by PAI-1 and the
+  other serpins, alpha-2-antiplasmin and TAFI.
+
+The triage re-run counts five seeds as `has_module` that were not before: the
+three pathways, the protein C anticoagulant pathway (PW:0000480) and kinin
+signaling (PW:0001480).
+
+Most of the curation work was in the non-enzymatic members, because the RGD
+diagrams draw them as plain nodes:
+
+- **Substrates.** Kininogen is the substrate the kallikreins cut. It gets only
+  the hormone activity of the released kinin, which its own experimental
+  annotations and the human GO-CAM `6246724f00000632` both use. It gets no
+  kallikrein-kinin process term. A comparator check in QuickGO found no
+  kininogen among the annotations to either kallikrein-kinin cascade term.
+- **Fibrinogen.** In coagulation fibrinogen is thrombin's substrate, but it
+  polymerises itself, so it gets structural molecule activity and fibrin
+  polymerisation. In fibrinolysis, fibrin is the template that speeds up its own
+  lysis (the cofactor case in CLAUDE.md). GO has no molecular-function term for
+  that template role, so the participant is given processes and no molecular
+  function.
+- **Protease cofactors.** Tissue factor and factors Va and VIIIa get
+  endopeptidase activator activity, and protein S peptidase activator activity.
+  These are curator judgments, because these proteins have no experimental
+  molecular-function annotation that fits. Protein Z and the factor XIII B
+  subunit are left without a molecular function rather than given one GO cannot
+  support.
+
+GO-CAM support is thin. Curated models cover protein C activation (THBD, F2,
+PROC: `666b894f00000232`), bradykinin degradation and receptor binding (ACE,
+KNG1, BDKRB2: `6246724f00000632`) and plasminogen's role in matrix breakdown
+(PLAU, PLAUR, PLG: `68fac5ed00001527`). The procoagulant steps, tissue
+kallikrein and every inhibitor step have no curated model. Of the roughly 50
+member gene products, only VWF, A2M and APOH have gene reviews.
 
 ## Next steps
 
@@ -265,10 +324,12 @@ in a separate PR.
   definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
 - Send RGD the 44 obsolete GO citations, the unresolvable one and the 3 wrong page citations, with GO's replacement where one
   exists (the SSSOM `comment` column).
-- Map the 32 `needs_go_mapping` seeds by hand, or record missing terms as
+- Map the 30 `needs_go_mapping` seeds by hand, or record missing terms as
   `proposed_new_terms`.
-- Review the seven SREBP genes, then model the next candidates. Coagulation,
-  fibrinolysis and kallikrein-kinin form a linked set on the RGD diagrams.
+- Review the blood-set member genes, starting with the proteases and cofactors
+  that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
+- Model the next candidates: acetylcholine and dopamine signaling, visual
+  phototransduction and prostanoid biosynthesis.
 - Repeat the completeness measure with rat and mouse GO-CAMs. The index holds
   59 rat and 2,209 mouse activity rows.
 - Consider citing PW ids in module `evidence` when a module is derived from or

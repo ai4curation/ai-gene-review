@@ -3,6 +3,7 @@ title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, NEUCR]
+autolink_exclude: [Ser]
 ---
 
 # Fungal PAINT Family Reviews
@@ -36,12 +37,13 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
+| `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-10-11
+Last updated: 2026-10-17
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -165,9 +167,32 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
 - [x] `NEUCR/erg-1` - *Neurospora crassa* sterol C-8 isomerase; merged in PR
   #4719
 
+## Family 8: WDR12/Ytm1 Pre-60S Assembly Factors
+
+`PTHR19855` contains an Ascomycota WDR12/Ytm1 ancestor,
+`PANTHER:PTN000458086`, with PAINT assertions for the large-subunit
+preribosome, PeBoW complex, and ribosomal large subunit biogenesis. The node is
+seeded by curated *S. cerevisiae* YTM1 evidence, with additional *S. pombe*
+`ytm1` support for `GO:0042273 ribosomal large subunit biogenesis`, and sits
+separately from the sibling fungal mitochondrial/peroxisome-fission adaptor
+node `PANTHER:PTN002336496`.
+
+- [x] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; merged in
+  PR #5118
+- [x] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; merged in PR #5121
+- [x] `CANAL/YTM1` - *Candida albicans* CGD member; merged in PR #5120
+- [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; merged in PR
+  #5117
+
 ---
 
 # NOTES
+
+## 2026-10-17
+
+- Started the compact WDR12/Ytm1 set in `PTHR19855` across `yeast/YTM1`,
+  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`; the individual gene reviews
+  merged in PRs #5117, #5118, #5120, and #5121.
 
 ## 2026-10-11
 

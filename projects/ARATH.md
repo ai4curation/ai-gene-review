@@ -64,6 +64,8 @@ genes:
 - CASPL1D2
 - CASPL4C1
 - CBF1
+- CBL10
+- CBL4
 - CCA1
 - CDF1
 - CER1
@@ -240,12 +242,16 @@ genes:
 - SEP2
 - SEP3
 - SEP4
+- SERRATE
 - SHR
 - SIZ1
+- SLAC1
 - SLY1
 - SMXL6
 - SMXL7
 - SMXL8
+- SnRK2.2
+- SnRK2.3
 - SOC1
 - SOS1
 - SOT17
@@ -556,6 +562,12 @@ Last updated: 2026-10-20
 - [ ] Check that sibling genes in the same module received consistent actions
       for shared terms (e.g. the three GID1s, the SEPALLATAs, the AHKs)
 - [ ] Add deep research for the 85 reviews that have none
+- [ ] File the draft reports in [upstream-reports.md](ARATH/upstream-reports.md)
+      (GO-CAM HAM1/SCL27; TAIR SUR1, F4JLB7/RIC7, GSTF6) and record the tickets
+- [ ] Bring OST1 in line with SnRK2.2/SnRK2.3: they MODIFY protein kinase
+      activity (GO:0004672) and kinase activity (GO:0016301) to GO:0004674,
+      while OST1 ACCEPTs GO:0004672 and marks GO:0016301 over-annotated
+- [ ] Re-run the corpus statistics after the 2026-10-19 additions
 
 ## Phase 3: modules
 
@@ -614,6 +626,25 @@ explicit `genes/ARATH/<GENE>/` paths; family membership by `genes/ARATH/` paths
 in PANTHER family reviews.
 
 ## 2026-10-19
+
+Followed up the handoff from the previous session.
+
+- New reviews: CBL4 (SOS3), CBL10 (SCaBP8), SLAC1, SnRK2.2 (SRK2D), SnRK2.3
+  (SRK2I) and SERRATE (SE). No deep-research provider worked in this session
+  (Edison authentication failed and the OpenAI key was rejected), so each review
+  rests on hand-written notes in its `-notes.md`. None has a deep-research file.
+  All validate; all are `DRAFT`.
+- Paralogs were aligned on shared terms. CBL4 and CBL10 both use GO:0043539 for
+  CIPK24 activation. SnRK2.2 and SnRK2.3 both MODIFY GO:0004672 to GO:0004674
+  and GO:0010029 to GO:0010187.
+- GAI, RGA and GID1A: GOA was re-fetched, and their IBA rows (7, 7 and 4) were
+  reviewed against the PTHR31636 and PTHR23024 family reviews. GID1A lost two
+  ARBA rows; GO:0009939 was re-proposed as NEW because a core function cites it.
+- AGO1: the RNA endonuclease activity IDA row is now MODIFY to GO:0090624.
+- GID1A notes: the source status in the GID1B cross-reference now refers to
+  PTN009058710, not AADAC.
+- Draft upstream reports are in [upstream-reports.md](ARATH/upstream-reports.md).
+  None has been filed.
 
 Added the pathway gap analysis: a hand-curated pathway-to-module map
 (`ARATH/ARATH-pathway-map.yaml`), a script that checks it against `modules/`
