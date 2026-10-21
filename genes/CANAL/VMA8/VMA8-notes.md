@@ -50,11 +50,11 @@ term is right and noted the source-side donor problem in the row review.
 
 The EnsemblFungi `GO:0045121` membrane raft row was marked
 `MARK_AS_OVER_ANNOTATED`. The source yeast IDA row is grounded in
-PMID:23836928, which shows that S. cerevisiae vacuolar membrane proteins can
-enter visible lipid domains in stationary phase, starvation, and other stresses
+PMID:23836928, which shows that the S. cerevisiae vacuole membrane can form
+visible lipid domains in stationary phase, starvation, and other stresses
 [PMID:23836928, "micrometer-scale, stable lipid domains formed in the yeast
 vacuole membrane in response to nutrient deprivation"]. That supports a
-condition-specific S. cerevisiae location, not automatic transfer as a
+condition-specific S. cerevisiae context, not automatic transfer as a
 constitutive C. albicans Vma8 location.
 
 The UniProt IEA row to `GO:0046961` uses `enables`, which overstates a
