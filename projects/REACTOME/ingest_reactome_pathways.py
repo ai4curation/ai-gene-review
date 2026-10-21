@@ -17,6 +17,15 @@ REACTION_LIKE = {
     "Reaction",
     "ReactionLikeEvent",
 }
+CATALYST_SET_SCHEMA_CLASSES = {"CandidateSet", "DefinedSet", "OpenSet"}
+EXACT_EXECUTOR_SCHEMA_CLASS = "EntityWithAccessionedSequence"
+ORGANISM_SPECIES = {
+    "Homo sapiens": "human",
+    "Mus musculus": "mouse",
+    "Rattus norvegicus": "rat",
+    "Caenorhabditis elegans": "worm",
+    "Saccharomyces cerevisiae": "yeast",
+}
 
 
 class NoAliasDumper(yaml.SafeDumper):
@@ -423,12 +432,62 @@ def normalize_event(
     return normalized
 
 
-def event_uniprots(event: dict[str, Any]) -> list[str]:
+def catalyst_physical_entity(catalyst: dict[str, Any]) -> dict[str, Any]:
+    return catalyst.get("physical_entity") or {}
+
+
+def catalyst_schema_class(catalyst: dict[str, Any]) -> str:
+    return str(catalyst_physical_entity(catalyst).get("schema_class") or "")
+
+
+def catalyst_members(catalyst: dict[str, Any]) -> set[str]:
+    return set(catalyst_physical_entity(catalyst).get("members") or [])
+
+
+def event_uniprots(
+    event: dict[str, Any], schema_classes: set[str] | None = None
+) -> list[str]:
     uniprots = []
     for catalyst in event.get("catalysts", []):
-        physical_entity = catalyst.get("physical_entity") or {}
-        uniprots.extend(physical_entity.get("members", []))
+        if (
+            schema_classes is not None
+            and catalyst_schema_class(catalyst) not in schema_classes
+        ):
+            continue
+        uniprots.extend(catalyst_members(catalyst))
     return stable_sort(uniprots)
+
+
+def event_exact_uniprots(event: dict[str, Any]) -> list[str]:
+    return event_uniprots(event, {EXACT_EXECUTOR_SCHEMA_CLASS})
+
+
+def event_has_set_catalyst(event: dict[str, Any]) -> bool:
+    return any(
+        catalyst_schema_class(catalyst) in CATALYST_SET_SCHEMA_CLASSES
+        for catalyst in event.get("catalysts", [])
+    )
+
+
+def executor_match_bases(row: dict[str, str], event: dict[str, Any]) -> list[str]:
+    module_participants = activity_participants(row)
+    bases = []
+    for catalyst in event.get("catalysts", []):
+        if not (module_participants & catalyst_members(catalyst)):
+            continue
+
+        schema_class = catalyst_schema_class(catalyst)
+        if schema_class == EXACT_EXECUTOR_SCHEMA_CLASS:
+            bases.append("executor_match_exact")
+        elif schema_class == "Complex":
+            bases.append("executor_match_via_complex")
+        elif schema_class in CATALYST_SET_SCHEMA_CLASSES:
+            bases.append("executor_match_via_set")
+        else:
+            raise ValueError(
+                f"unsupported catalyst physical_entity schema_class: {schema_class}"
+            )
+    return stable_sort(bases)
 
 
 def activity_label(row: dict[str, Any]) -> str:
@@ -528,11 +587,7 @@ def build_import(config: dict[str, Any], client: ReactomeClient) -> dict[str, An
 
 
 def match_basis_for_source(row: dict[str, str], event: dict[str, Any]) -> list[str]:
-    basis = ["cited_reactome_id"]
-    module_participants = activity_participants(row)
-    event_participants = set(event_uniprots(event))
-    if module_participants and module_participants & event_participants:
-        basis.append("executor_match")
+    basis = ["cited_reactome_id", *executor_match_bases(row, event)]
     if row["function_id"] and any(
         row["function_id"] == (catalyst.get("activity") or {}).get("id")
         for catalyst in event.get("catalysts", [])
@@ -543,7 +598,9 @@ def match_basis_for_source(row: dict[str, str], event: dict[str, Any]) -> list[s
 
 def exact_match_verdict(row: dict[str, Any], event: dict[str, Any]) -> str:
     basis = set(match_basis_for_source(row, event))
-    if "executor_match" not in basis:
+    if "executor_match_exact" not in basis:
+        if any(item.startswith("executor_match_via_") for item in basis):
+            return "same_reaction_executor_unconfirmed"
         return "same_reaction_missing_executor"
     if row["function_id"] and "mf_match" not in basis:
         return "same_reaction_mf_unconfirmed"
@@ -557,7 +614,7 @@ def reactome_only_verdict(
         return "black_box_event"
     if candidate_module_activities:
         return "same_executor_different_reaction"
-    if len(event_uniprots(event)) > 1:
+    if event_has_set_catalyst(event):
         return "unmatched_family_event"
     return "reactome_only_event"
 
@@ -584,6 +641,29 @@ def same_executor_reactome_events(
     )
 
 
+def alignment_override_key(value: dict[str, str]) -> tuple[str, str, str]:
+    return (
+        value["reactome_event"],
+        value["module_node"],
+        value["module_annoton"],
+    )
+
+
+def alignment_overrides(
+    config: dict[str, Any],
+) -> dict[tuple[str, str, str], dict[str, str]]:
+    overrides: dict[tuple[str, str, str], dict[str, str]] = {}
+    for override in config.get("manual_verdicts", []):
+        key = alignment_override_key(override)
+        if key in overrides:
+            raise ValueError(f"duplicate manual alignment verdict key: {key}")
+        overrides[key] = {
+            "verdict": str(override["verdict"]),
+            "verdict_note": clean(override.get("reason")),
+        }
+    return overrides
+
+
 def align_module(
     config: dict[str, Any],
     imported: dict[str, Any],
@@ -599,20 +679,32 @@ def align_module(
     rows_by_reactome: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in activity_rows:
         rows_by_reactome[row["reactome_id"]].append(row)
+    manual_verdicts = alignment_overrides(config)
+    used_manual_verdicts = set()
 
     matches = []
     for reactome_id in sorted(reaction_ids & module_activity_ids):
         event = events[reactome_id]
         for row in rows_by_reactome[reactome_id]:
+            match = {
+                "module_node": row["node_id"],
+                "module_annoton": row["annoton_id"],
+                "reactome_event": reactome_id,
+                "verdict": exact_match_verdict(row, event),
+                "match_basis": match_basis_for_source(row, event),
+            }
+            override_key = alignment_override_key(match)
+            if manual_verdict := manual_verdicts.get(override_key):
+                used_manual_verdicts.add(override_key)
+                match.update(manual_verdict)
             matches.append(
-                {
-                    "module_node": row["node_id"],
-                    "module_annoton": row["annoton_id"],
-                    "reactome_event": reactome_id,
-                    "verdict": exact_match_verdict(row, event),
-                    "match_basis": match_basis_for_source(row, event),
-                }
+                {key: value for key, value in match.items() if value not in ("", [])}
             )
+
+    unused_manual_verdicts = set(manual_verdicts) - used_manual_verdicts
+    if unused_manual_verdicts:
+        keys = ", ".join(str(key) for key in sorted(unused_manual_verdicts))
+        raise ValueError(f"manual alignment verdicts did not match rows: {keys}")
 
     reactome_only_events = []
     for reactome_id in sorted(reaction_ids - module_activity_ids):
@@ -764,6 +856,11 @@ def write_alignment_report(
     ]
 
     title = str(config["id"]).replace("_", " ")
+    species = str(
+        config.get("species")
+        or ORGANISM_SPECIES.get(str(config.get("organism")), config.get("organism"))
+        or "unknown"
+    )
     path.write_text(
         "\n\n".join(
             [
@@ -771,11 +868,11 @@ def write_alignment_report(
                     "---\n"
                     f'title: "Reactome pathway alignment: {title}"\n'
                     "species:\n"
-                    "  - human\n"
+                    f"  - {species}\n"
                     "---"
                 ),
                 f"# Reactome pathway alignment: `{config['module']}`",
-                "[Back to Reactome-GO Alignment](../REACTOME.md)",
+                "[Back to Reactome-GO Alignment](../../REACTOME.md)",
                 "Generated by `ingest_reactome_pathways.py` from "
                 f"`{config['reactome_root']}` using `{config['scope']}` scope.",
                 "## Counts\n\n"
@@ -955,7 +1052,8 @@ def main() -> None:
         module_sources = load_module_sources(root, str(pathway["module"]))
         alignment = align_module(pathway, imported, module_sources)
 
-        write_yaml(import_path, imported)
+        if not args.use_existing_imports:
+            write_yaml(import_path, imported)
         write_yaml(args.alignments_dir / f"{slug}.yaml", alignment, prune_empty=False)
         write_alignment_report(
             args.reports_dir / f"{slug}.md",

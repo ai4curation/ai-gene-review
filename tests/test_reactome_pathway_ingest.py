@@ -1,6 +1,7 @@
 from pathlib import Path
 import importlib.util
 
+import pytest
 import yaml
 
 
@@ -35,7 +36,10 @@ def test_align_module_separates_reactome_and_module_only_events() -> None:
                 "catalysts": [
                     {
                         "activity": {"id": "GO:1"},
-                        "physical_entity": {"members": ["UniProtKB:P1"]},
+                        "physical_entity": {
+                            "schema_class": "EntityWithAccessionedSequence",
+                            "members": ["UniProtKB:P1"],
+                        },
                     }
                 ],
             },
@@ -44,7 +48,10 @@ def test_align_module_separates_reactome_and_module_only_events() -> None:
                 "catalysts": [
                     {
                         "activity": {"id": "GO:3"},
-                        "physical_entity": {"members": ["UniProtKB:P3"]},
+                        "physical_entity": {
+                            "schema_class": "EntityWithAccessionedSequence",
+                            "members": ["UniProtKB:P3"],
+                        },
                     }
                 ],
             },
@@ -102,7 +109,7 @@ def test_align_module_separates_reactome_and_module_only_events() -> None:
                 "verdict": "reaction_id_exact",
                 "match_basis": [
                     "cited_reactome_id",
-                    "executor_match",
+                    "executor_match_exact",
                     "mf_match",
                 ],
             }
@@ -140,7 +147,10 @@ def test_align_module_flags_same_reaction_missing_executor() -> None:
                 "catalysts": [
                     {
                         "activity": {"id": "GO:1"},
-                        "physical_entity": {"members": ["UniProtKB:P1"]},
+                        "physical_entity": {
+                            "schema_class": "EntityWithAccessionedSequence",
+                            "members": ["UniProtKB:P1"],
+                        },
                     }
                 ],
             }
@@ -178,6 +188,90 @@ def test_align_module_flags_same_reaction_missing_executor() -> None:
     ]
 
 
+def test_align_module_does_not_promote_complex_member_to_exact_executor() -> None:
+    imported = {
+        "events": {
+            "R-HSA-1": {
+                "schema_class": "Reaction",
+                "catalysts": [
+                    {
+                        "activity": {"id": "GO:1"},
+                        "physical_entity": {
+                            "schema_class": "Complex",
+                            "members": ["UniProtKB:P1", "UniProtKB:P2"],
+                        },
+                    }
+                ],
+            }
+        }
+    }
+    module_sources = [
+        {
+            "scope": "activity_evidence",
+            "reactome_id": "R-HSA-1",
+            "node_id": "step1",
+            "annoton_id": "activity1",
+            "function_id": "GO:1",
+            "participant_ids": ["UniProtKB:P1"],
+        }
+    ]
+
+    alignment = ingest.align_module(
+        {
+            "module": "example",
+            "reactome_root": "R-HSA-ROOT",
+            "scope": "curated_slice",
+        },
+        imported,
+        module_sources,
+    )
+
+    assert alignment["matches"] == [
+        {
+            "module_node": "step1",
+            "module_annoton": "activity1",
+            "reactome_event": "R-HSA-1",
+            "verdict": "same_reaction_executor_unconfirmed",
+            "match_basis": [
+                "cited_reactome_id",
+                "executor_match_via_complex",
+                "mf_match",
+            ],
+        }
+    ]
+
+
+def test_reactome_only_family_verdict_requires_set_catalyst() -> None:
+    complex_event = {
+        "schema_class": "Reaction",
+        "catalysts": [
+            {
+                "physical_entity": {
+                    "schema_class": "Complex",
+                    "members": ["UniProtKB:P1", "UniProtKB:P2"],
+                }
+            }
+        ],
+    }
+    candidate_set_event = {
+        "schema_class": "Reaction",
+        "catalysts": [
+            {
+                "physical_entity": {
+                    "schema_class": "CandidateSet",
+                    "members": ["UniProtKB:P1", "UniProtKB:P2"],
+                }
+            }
+        ],
+    }
+
+    assert ingest.reactome_only_verdict(complex_event, []) == "reactome_only_event"
+    assert (
+        ingest.reactome_only_verdict(candidate_set_event, [])
+        == "unmatched_family_event"
+    )
+
+
 def test_select_pathways_filters_by_id() -> None:
     config = {
         "pathways": [
@@ -204,9 +298,7 @@ def test_select_pathways_filters_by_id() -> None:
 def test_select_pathways_rejects_unknown_id() -> None:
     config = {"pathways": [{"id": "urea_cycle"}]}
 
-    try:
+    with pytest.raises(ValueError) as e:
         ingest.select_pathways(config, {"not_a_slice"})
-    except ValueError as e:
-        assert str(e) == "Unknown pathway id(s): not_a_slice"
-    else:
-        raise AssertionError("expected an unknown pathway id to fail")
+
+    assert str(e.value) == "Unknown pathway id(s): not_a_slice"

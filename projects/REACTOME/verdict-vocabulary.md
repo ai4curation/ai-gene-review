@@ -40,6 +40,23 @@ cases before each affected gene review receives its final `ACCEPT`, `MODIFY`,
 | `boundary_mismatch` | A transport or membrane event uses the right substrate class but the GO term, compartment, or direction crosses a different boundary than Reactome. | `MODIFY` or `UNDECIDED` |
 | `insufficient_event_detail` | The cached Reactome Markdown is a pathway summary or free-text statement that does not expose enough participants, compartments, or catalyst roles to decide. | `UNDECIDED` until the event graph can be checked |
 
+## Pathway Comparator Verdicts
+
+`ingest_reactome_pathways.py` emits a narrower set of event-to-module verdicts
+for local pathway comparisons:
+
+| Verdict | Use when |
+|---------|----------|
+| `reaction_id_exact` | The local activity cites the same Reactome stable ID, Reactome exposes an exact accessioned executor, and the GO MF ID matches the event activity. |
+| `same_reaction_mf_unconfirmed` | The local activity cites the same Reactome stable ID and the exact executor matches, but the Reactome MF and local GO MF IDs differ. This can be a benign parent/child specificity difference or a wrong GO branch that needs manual review. |
+| `same_reaction_executor_unconfirmed` | The local activity cites the same Reactome stable ID and overlaps a Reactome `Complex`, `DefinedSet`, or `CandidateSet`, but the exact active accession is not established by the comparator. |
+| `same_reaction_missing_executor` | The local activity cites the same Reactome stable ID, but no imported catalyst member overlaps the local executor. |
+| `same_executor_different_reaction` | A Reactome-only or module-only event shares an exact accessioned executor with an event on the other side under a different Reactome stable ID. |
+| `reactome_only_event` | The imported Reactome subtree has a reaction-like event that is not cited by the local module. |
+| `black_box_event` | The imported Reactome subtree has a `BlackBoxEvent` without explicit catalyst members. |
+| `unmatched_family_event` | The imported Reactome subtree has an uncited set/candidate-set catalyst with no exact local executor match. |
+| `module_only_event` | A local module activity cites a Reactome stable ID absent from the imported pathway slice. |
+
 ## Counting Rules
 
 - Count the Reactome stable ID itself, not only the GO term. One GO term can be
@@ -58,7 +75,7 @@ cases before each affected gene review receives its final `ACCEPT`, `MODIFY`,
   curation candidate first; a new GO annotation still needs ordinary gene-level
   evidence.
 - Keep manual splits for `REMOVE` and `MARK_AS_OVER_ANNOTATED` rows in
-  [`mf_manual_verdicts.tsv`](mf_manual_verdicts.tsv). A review action alone
+  [`mf_manual_verdicts.yaml`](mf_manual_verdicts.yaml). A review action alone
   does not distinguish a wrong GO branch from a regulator/executor swap or a
   paralog-specific contradiction.
 
@@ -69,7 +86,8 @@ controls and one exclusion:
 
 | Stable ID | Verdict | Reason |
 |-----------|---------|--------|
-| `R-HSA-111524`, `R-HSA-73794`, `R-HSA-73792`, `R-HSA-76590` | `reaction_mf_exact` | Each stable ID is a direct soluble reaction and its chemistry matches the local ADSS, IMPDH, GMPS, or AMPD MF. |
+| `R-HSA-73792` | `reaction_mf_exact` | The stable ID is a direct soluble reaction and its chemistry matches the local GMPS MF. |
+| `R-HSA-111524`, `R-HSA-73794`, `R-HSA-76590` | `same_reaction_executor_unconfirmed` | The ADSS, IMPDH, and AMP deaminase chemistries match, but Reactome represents each enzyme family as a `DefinedSet`; these family events are not exact executor assertions for any one paralog. |
 | Same four reaction IDs on human gene-review cytosol rows | `reaction_context_only` | The rows in completed reviews are accepted CC rows, not MF rows, even though the same event also matches a local MF. |
 | `R-HSA-73817` | `pathway_container_bp` | The stable ID names a purine biosynthesis pathway; it can support BP context but is excluded from one-to-one reaction/MF matching. |
 

@@ -174,6 +174,29 @@ template for a concise pathway-level reconciliation.
 
 ## Notes
 
+### 2026-10-21
+
+Resolved PR #5246 review follow-up in the pathway and inventory tooling. The
+Reactome pathway comparator now distinguishes exact
+`EntityWithAccessionedSequence` catalysts from overlapping `Complex`,
+`DefinedSet`, and `CandidateSet` members, so set- or complex-mediated
+overlaps are held at `same_reaction_executor_unconfirmed` instead of being
+promoted to `reaction_id_exact`.
+
+Recorded the bile-acid `R-HSA-192033` AKR1D1 event as a `wrong_go_branch`
+case: the event evidence supports delta4-3-oxosteroid 5beta-reductase
+chemistry, but the Reactome GO activity sits on the alcohol-dehydrogenase
+NADP+ branch. Corrected the 2026-10-05 exact-count framing at the same time:
+the regenerated purine slice has one exact single-executor match plus ADSS,
+IMPDH, and AMPD `DefinedSet` rows, and the bile-acid slice has one exact
+single-executor match, one CYP7B1 `CandidateSet`, one AKR1D1 wrong-branch
+event, and one HSD3B7 parent/child MF mismatch.
+
+Converted the hand-curated MF verdict overrides from
+`mf_manual_verdicts.tsv` to `mf_manual_verdicts.yaml` and joined them by stable
+`organism`/`gene`/`reactome_id`/`term_id` keys rather than by
+`existing_annotations` position.
+
 ### 2026-10-09
 
 Extended the YAML-first pathway-ingest seed with two additional curated slices:
@@ -262,7 +285,7 @@ candidates, 25 mixed over-annotation rows, 12 removed rows, 7 undecided rows,
 119 rows whose Reactome stable ID is reused across multiple genes, and 73 rows
 whose stable ID also appears as local module MF evidence.
 
-Added `mf_manual_verdicts.tsv` and fed it back into the inventory so the 37
+Added `mf_manual_verdicts.yaml` and fed it back into the inventory so the 37
 `MARK_AS_OVER_ANNOTATED` and `REMOVE` MF rows now have explicit verdicts rather
 than a blank "needs manual bucket" placeholder. The largest manual bucket is 19
 broad-parent or duplicate mappings that collapse to `reaction_mf_refine`; the
