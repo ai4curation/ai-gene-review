@@ -36,7 +36,7 @@ Source: https://pubmed.ncbi.nlm.nih.gov/11323413/; cache `publications/PMID_1132
 
 Native human phosphorylation is separate from detailed recombinant rat epsilon mutants. Rat S712/713GA changes eIF2 association/complex exchange; free epsilon activity is very low relative to assembled complex.
 
-**Inspected:** PMC indexed10,16,43–49,54,55,57,61,63,65,67,69.
+**Inspected:** Original Introduction (including the insulin-regulation background), Results and Figure 8 on GSK3 docking/phosphorylation of full-length and C-terminally truncated rat epsilon, and Discussion on the in-cis docking region. Saved paragraph indices 4–6,10,16,39–41,43–49,54–58,61,63,65,67,69. Figure 8 uses GSK3 alpha/beta immunoprecipitation from HEK293 cells; the epsilon construct is rat. The insulin-specific narrative cites prior work and is not presented as a new insulin experiment in this paper.
 
 **Limit:** Rat residue numbers not mapped to human without alignment; no complete supplemental vector inspection.
 
@@ -344,6 +344,6 @@ Source: https://pubmed.ncbi.nlm.nih.gov/9341116/; cache `publications/PMID_93411
 
 ## Remaining uncertainty
 
-Rows 47, 49, 51, 52 and 57 remain UNDECIDED. The missing genotype/operative-assay details for ER stress and myelination, the unresolved peptide-hormone stimulus in the rat-muscle donor, and the lack of an epsilon-specific T-cell-receptor step are distinct limitations. They are not negative experiments or evidence of a wrong gene.
+Rows 48, 49 and 57 remain UNDECIDED. These concern the shared myelination claim and an epsilon-specific T-cell-receptor pathway step. The inaccessible original patient ER-stress and rat hormone-donor experiments remain source-specific limitations, while independent mammalian epsilon evidence supports the broad response claims as non-core. PMID:11500362 provides a direct GSK3 docking experiment and an explicitly secondary account of insulin-dependent epsilon regulation; PMID:11756553 is not an insulin-challenge study.
 
-The heat annotations are retained as non-core from the combined same-gene evidence, including the direct rat heat donor. Their individual original-source limits remain in the reference assessments. Clinical and perturbation observations are not promoted into autonomous developmental or apoptotic mechanisms.
+The STX11, DYNC1H1 and KLK6 generic positive interactions remain non-core; their partner identities do not supply independently established epsilon-specific functional roles. Missing screen Methods limit the proposed refinements, not the existence of the curated positive pairs. STX11 is corroborated across binary-screen and cellular-association datasets. No native-interface requirement is added to GO binding definitions. Heat and glucose responses retain their existing non-core scope. Clinical and perturbation observations are not promoted into autonomous developmental or apoptotic mechanisms. The positive mouse nuclear observation remains contextual: stronger fixation increases cytoplasmic relative staining without demonstrating loss of nuclear signal.
