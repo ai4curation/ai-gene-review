@@ -26,11 +26,13 @@ The PTHR11671 PAINT slice should be read node-first:
   not a weakness; the assertion is the curator's placement on the fungal
   branch.
 - `PTN000186829` asserts `GO:0007035` vacuolar acidification on a broader
-  eukaryotic branch.
-- `PTN002268884` asserts `GO:0046961` proton-transporting ATPase activity,
-  rotational mechanism for subunit D descendants. GOA correctly weakens this
-  row with `contributes_to`, since Vma8 is a V-ATPase subunit rather than an
-  independent proton pump.
+  eukaryotic branch, and also deliberately places the correct but broad parent
+  `GO:0005774` vacuolar membrane at that node.
+- `PTN002268884` asserts `GO:0033176` proton-transporting V-type ATPase
+  complex and `GO:0046961` proton-transporting ATPase activity, rotational
+  mechanism for subunit D descendants. GOA correctly weakens the molecular
+  function row with `contributes_to`, since Vma8 is a V-ATPase subunit rather
+  than an independent proton pump.
 
 ## Curation decisions
 
@@ -47,11 +49,13 @@ subunit B rather than the VMA8 ortholog P32610. I kept the row because the
 term is right and noted the source-side donor problem in the row review.
 
 The EnsemblFungi `GO:0045121` membrane raft row was marked
-`MARK_AS_OVER_ANNOTATED`. That location is absent from the PTHR11671 PAINT
-family and from the curated subcellular-location comment in the P87220 UniProt
-record, which states "Vacuole membrane" for the Candida protein
-[file:genes/CANAL/VMA8/VMA8-uniprot.txt, "CC   -!- SUBCELLULAR LOCATION:
-Vacuole membrane"].
+`MARK_AS_OVER_ANNOTATED`. The source yeast IDA row is grounded in
+PMID:23836928, which shows that S. cerevisiae vacuolar membrane proteins can
+enter visible lipid domains in stationary phase, starvation, and other stresses
+[PMID:23836928, "micrometer-scale, stable lipid domains formed in the yeast
+vacuole membrane in response to nutrient deprivation"]. That supports a
+condition-specific S. cerevisiae location, not automatic transfer as a
+constitutive C. albicans Vma8 location.
 
 The UniProt IEA row to `GO:0046961` uses `enables`, which overstates a
 complex-level activity for this non-catalytic subunit. The accepted PAINT row
