@@ -212,9 +212,12 @@ nodes carry `GO:0007035 vacuolar acidification` and
 - Drafted the compact `PTHR11671` V-ATPase subunit D set across
   `yeast/VMA8`, `SCHPO/vma8`, `CANAL/VMA8`, and `NEUCR/vma-8` in PRs
   #5273-#5276. All four reviews treat `PTN000912657` as the curated fungal
-  vacuolar V-ATPase node, retain Vma8's `contributes_to` relation to rotary
-  proton-transporting ATPase activity, and mark unsupported membrane-raft or
-  standalone-`enables` activity transfers as qualifier or scope problems.
+  vacuolar V-ATPase node and retain Vma8's `contributes_to` relation to rotary
+  proton-transporting ATPase activity. The set distinguishes the supported
+  stress-induced vacuolar membrane-raft localization in `yeast/VMA8` from
+  unsupported cross-species transfers in `CANAL/VMA8` and `NEUCR/vma-8`, and
+  records standalone `enables GO:0046961` rows as relation problems where the
+  upstream source asserts full pump activity for non-catalytic subunit D.
 
 ## 2026-10-17
 
