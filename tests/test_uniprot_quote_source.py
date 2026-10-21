@@ -169,6 +169,34 @@ def test_validation_reports_both_checks_as_warnings(tmp_path):
     assert all(i.severity == ValidationSeverity.WARNING.value for i in issues)
 
 
+def test_snapshot_flatfile_quotes_keep_provenance_checks(tmp_path):
+    source = tmp_path / 'genes/X/g/g-record-evidence.yaml'
+    source.parent.mkdir(parents=True)
+    source.write_text(yaml.safe_dump({
+        'unisave_records': [{'record_text': (
+            'DE   RecName: Full=Predicted kinase;\n'
+            'CC   -!- FUNCTION: Binds unusual lipids. {ECO:0000256|ARBA:ARBA1}.\n'
+            'CC   -!- ACTIVITY: Hydrolyzes ATP. {ECO:0000269|PubMed:1}.\n'
+        )}],
+        'observations': {'computed_note': 'Metadata is not a protein statement'},
+    }))
+    reference = 'file:X/g/g-record-evidence.yaml'
+    data = _review([{'reference_id': reference, 'supporting_text': quote} for quote in [
+        'RecName: Full=Predicted kinase', 'Binds unusual lipids', 'Hydrolyzes ATP',
+        'Metadata is not a protein statement',
+    ]])
+    found = quote_source_findings(data, project_root=tmp_path)
+    assert {(f.path, f.check_type) for f in found} == {
+        ('core_functions[0].supported_by[0].supporting_text', FIELD_CHECK),
+        ('core_functions[0].supported_by[1].supporting_text', UNVETTED_CHECK),
+    }
+    # A newer curated occurrence of the same statement prevents an all-unvetted flag.
+    snapshot = yaml.safe_load(source.read_text())
+    snapshot['unisave_records'].append({'record_text':
+        'CC   -!- FUNCTION: Binds unusual lipids. {ECO:0000269|PubMed:2}.\n'})
+    source.write_text(yaml.safe_dump(snapshot))
+    assert not any(f.check_type == UNVETTED_CHECK for f in quote_source_findings(data, project_root=tmp_path))
+
 @pytest.mark.parametrize("reference_id,quote,unvetted,restating", [
     (SERA_METEA, "DR   GO; GO:0009070; P:serine family amino acid biosynthetic process; IEA:UniProtKB-ARBA.",
      True, True),
@@ -179,6 +207,27 @@ def test_quote_with_line_code_is_located(reference_id, quote, unvetted, restatin
     result = classify_quote(quote, _path(reference_id))
     assert result is not None
     assert result[:2] == (unvetted, restating)
+
+
+def test_snapshot_inherits_line_code_and_protein_existence_checks(tmp_path):
+    """The merged classifier applies upstream quote handling to archived entries too."""
+    source = tmp_path / "genes/X/g/g-record-evidence.yaml"
+    source.parent.mkdir(parents=True)
+    source.write_text(yaml.safe_dump({"unisave_records": [{"record_text": (
+        "CC   -!- FUNCTION: Binds unusual lipids. {ECO:0000256|ARBA:ARBA1}.\n"
+        "PE   4: Predicted;\n"
+    )}]}))
+    reference = "file:X/g/g-record-evidence.yaml"
+    data = _review([
+        {"reference_id": reference, "supporting_text": quote}
+        for quote in ["CC   -!- FUNCTION: Binds unusual lipids.", "PE   4: Predicted;"]
+    ])
+    assert {(finding.path, finding.check_type) for finding in quote_source_findings(
+        data, project_root=tmp_path
+    )} == {
+        ("core_functions[0].supported_by[0].supporting_text", UNVETTED_CHECK),
+        ("core_functions[0].supported_by[1].supporting_text", EXISTENCE_CHECK),
+    }
 
 
 def test_quote_spanning_line_wrap_with_codes_is_located():

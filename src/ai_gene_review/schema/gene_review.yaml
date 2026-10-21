@@ -156,6 +156,23 @@ slots:
   existing_annotations:
     range: ExistingAnnotation
     multivalued: true
+  alternative_records:
+    range: AlternativeRecord
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Manually assessed relationships to alternative UniProt records. The review's
+      primary id remains the preferred accession, normally Swiss-Prot. These are
+      evidence-backed cross-record judgments, not aliases, automatic annotation
+      transfers, or replacements for the primary record.
+  reference_proteome_assessments:
+    range: ReferenceProteomeAssessment
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Manual assessments of searched reference proteomes when no supported
+      counterpart was identified. Records the evidence and scope without inventing
+      an alternative accession. A negative search is not proof of gene absence.
   core_functions:
     range: CoreFunction
     multivalued: true
@@ -357,6 +374,8 @@ classes:
      - taxon
      - alternative_products
      - functional_isoforms
+     - alternative_records
+     - reference_proteome_assessments
      - references
      - existing_annotations
      - core_functions
@@ -368,6 +387,93 @@ classes:
       description:
         recommended: true
 
+
+  ReferenceProteomeAssessment:
+    description: Evidence-backed assessment of a reference-proteome search without an asserted alternative accession.
+    attributes:
+      reference_proteomes:
+        range: string
+        pattern: '^UP[0-9]{9}$'
+        multivalued: true
+        required: true
+        minimum_cardinality: 1
+      status:
+        range: ReferenceProteomeAssessmentStatusEnum
+        required: true
+      reviewed_on:
+        range: date
+        required: true
+      reason:
+        range: string
+        required: true
+      evidence:
+        range: AlternativeRecordEvidence
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        minimum_cardinality: 1
+
+  AlternativeRecord:
+    description: >-
+      A manually curated relationship between this review's primary UniProt
+      accession and another record. An equivalent reference-proteome record can
+      be useful for mapping while retaining the curated Swiss-Prot accession.
+      Equivalence does not imply an automatic transfer of every GO assertion,
+      nor that identical sequences alone establish a unique genomic locus.
+    attributes:
+      id:
+        range: string
+        required: true
+        pattern: '^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$'
+        description: Alternative primary UniProt accession, without a prefix.
+      relationship:
+        range: AlternativeRecordRelationshipEnum
+        required: true
+      reference_proteome:
+        range: string
+        pattern: '^UP[0-9]{9}$'
+        required: true
+        description: Reference proteome containing the alternative record.
+      reviewed_on:
+        range: date
+        required: true
+        description: Date the curator assessed this relationship and its evidence.
+      reason:
+        range: string
+        required: true
+        description: >-
+          Curator's rationale for the relationship, including unresolved questions
+          or qualifications about locus identity, cultivar, or annotation differences.
+      evidence:
+        range: AlternativeRecordEvidence
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        minimum_cardinality: 1
+        description: >-
+          Typed, cited evidence. Reference-proteome relationships require membership
+          evidence and sequence-comparison or locus-mapping evidence. Record history
+          and qualitative context alone do not establish equivalence.
+
+  AlternativeRecordEvidence:
+    description: >-
+      One evidence claim for a manually assessed cross-record relationship.
+      Keep reviewer interpretation in description and verbatim source quotations
+      in supported_by. Cite dated database snapshots for reproducibility; UniSave
+      entry versions establish record history, not sequence equivalence by themselves.
+    slots:
+      - description
+      - supported_by
+    slot_usage:
+      description:
+        required: true
+      supported_by:
+        required: true
+        minimum_cardinality: 1
+    attributes:
+      type:
+        range: AlternativeRecordEvidenceTypeEnum
+        required: true
 
   AlternativeProduct:
     description: >-
@@ -2678,6 +2784,45 @@ classes:
 
 
 enums:
+  AlternativeRecordRelationshipEnum:
+    permissible_values:
+      REFERENCE_PROTEOME_LOCUS_COUNTERPART:
+        description: >-
+          A supported counterpart at the same gene locus whose protein function or
+          integrity differs, for example an inactive reference-strain allele of an
+          experimentally characterized active protein. Does not assert functional
+          equivalence or permit automatic GO annotation transfer.
+      REFERENCE_PROTEOME_CANDIDATE:
+        description: >-
+          A plausible counterpart in a specified reference proteome whose locus or
+          protein equivalence remains unresolved. This is a candidate for further
+          investigation, not an asserted equivalent, alias, or GO-transfer target.
+      REFERENCE_PROTEOME_EQUIVALENT:
+        description: >-
+          Manually assessed equivalent representation of the reviewed protein in a
+          specified reference proteome. Retain the review's preferred accession;
+          this relationship does not assert record merging or automatic GO transfer.
+
+  AlternativeRecordEvidenceTypeEnum:
+    permissible_values:
+      PROTEOME_SEARCH:
+        description: A documented search of specified reference proteomes, including competing or absent matches and search limitations.
+      SEQUENCE_COMPARISON:
+        description: Direct sequence comparison or a shared UniParc sequence identity.
+      LOCUS_MAPPING:
+        description: Evidence that the records map to the corresponding genomic locus.
+      PROTEOME_MEMBERSHIP:
+        description: Evidence of membership in the specified reference proteome.
+      RECORD_HISTORY:
+        description: Historical accession, sequence, or proteome-membership observations, such as versioned UniSave records.
+      CURATION_CONTEXT:
+        description: Qualitative context such as source cultivar, hybrid origin, provenance, or curator explanation.
+
+  ReferenceProteomeAssessmentStatusEnum:
+    permissible_values:
+      NO_SUPPORTED_COUNTERPART:
+        description: No counterpart sufficiently supported for a relationship was identified in the documented search; not proof of genomic absence.
+
   SourceDefectTypeEnum:
     description: Kind of defect in a source database record.
     permissible_values:
