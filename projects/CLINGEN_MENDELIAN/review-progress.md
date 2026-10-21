@@ -5327,3 +5327,63 @@ pages and validated the appended history record. The catalogue render reports
 1,623 missing-review warnings; the progress render reports none.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker546-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T180246Z-codex-d35b4c.yaml)
+## Completion checkpoint 547 — 2026-10-21 18:55:39 UTC
+
+**547 complete; 2,329 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only [EIF2B4 #5301](https://github.com/ai4curation/ai-gene-review/pull/5301)
+to merged checkpoint 546. The coordinating AI agent accepted the complete
+merge audit and terminal main addendum; this is not a human maintainer sign-off.
+Products, follow-up PRs and tracker publications receive no additional credit.
+
+Approved head [`566979dc1095`](https://github.com/ai4curation/ai-gene-review/commit/566979dc1095190b989461deecd3fd832e7bca5a)
+merged at [`538ebfa38cf7`](https://github.com/ai4curation/ai-gene-review/commit/538ebfa38cf7bded4389af18fceab0fbccec61fa)
+on 2026-10-21 at 18:28:09 UTC, with actual parent `31717524f1710d19c5f8b22c5418f37b9e08b6eb`.
+All 19 approved paths, blobs and modes equal the complete merge delta and
+remain exact on the pinned main snapshot. The current
+[approval](https://github.com/ai4curation/ai-gene-review/pull/5301#pullrequestreview-5604007982)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5301#issuecomment-6322784586)
+have no unresolved threads or blocking requests.
+
+The actual [merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39650395859)
+passed strict EIF2B4 validation, all gene-schema checks, 699 module checks,
+14,900 history records, 42 history tests and 715 family checks. It actually ran
+the full suite: 4,176 tests, 268 doctests, 12 examples, typing, lint, 432 automation
+Python tests and 19 JavaScript tests passed. Skips, dependency warnings and an
+ignored destructor error remain disclosed in the audit; the jobs succeeded.
+
+The actual [main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39652986406)
+passed strict gene, history and family validation. Change filtering skipped the
+general suite; the final test job checked upstream conclusions. Strict gene
+validation retains 10 advisories: nine supported generic-binding policy warnings
+and one inherited Falcon quotation mismatch. The existing quoted text was
+preserved. The [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39652986498)
+successfully built and deployed MkDocs, with navigation/dependency warnings.
+This is not a claim of fresh gene HTML visual inspection.
+
+The accepted review preserves 53 source objects: 49 active and four retired
+contexts. Its actions are 21 ACCEPT, 13 MODIFY, 14 KEEP_AS_NON_CORE,
+2 UNDECIDED and 3 MARK_AS_OVER_ANNOTATED. It records three natural products,
+one core function and 57 inherited quotations; no new quotation was added.
+Completion records accepted review delivery, with unresolved judgments visible.
+
+This update starts from main `d2587858a920bf0ebb731c6c8e9cb74036c4d5db`. Its seven checkpoint-546
+publication paths equal the approved payload of merged
+[tracker #5316](https://github.com/ai4curation/ai-gene-review/pull/5316), merge `d2587858a920bf0ebb731c6c8e9cb74036c4d5db`.
+All 235 historical queue objects and 106 previous completion updates remain
+exact; this is update 107. Previous progress text remains byte-for-byte intact.
+All 2,876 catalogue identities and association texts are unchanged; only the
+EIF2B4 checkbox changes. The project instructions also document the standing
+campaign convention of adding no new publication quotations, while preserving
+inherited quotations and requiring verifiable sources and access limits.
+
+The pinned inventory has 8,551 review files, including 3,110 human reviews.
+1,253 catalogue genes have reviews and 1,623 lack them;
+706 available catalogue reviews remain uncredited. Four source changes,
+two generated project pages and one new append-only history record form the
+publication scope. No gene, source cache, runtime or prior history is edited.
+
+The publisher passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,623 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker547-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T185556Z-codex-be2135.yaml)
