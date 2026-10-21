@@ -1,6 +1,6 @@
 # Source-record defects for UNIPROT
 
-9 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+10 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
@@ -137,3 +137,13 @@ Please check the reference supporting this ELF4 positive polymerase-II transcrip
 - **Evidence reference:** PMID:14970218
 
 - **Evidence reference:** PMID:14976184
+
+## 10. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9GZR5 enables GO:0008020 G protein-coupled photoreceptor activity (NAS, PMID:11138005)
+- **Field:** GO_ID
+- **Change:** check GO:0008020 (alternatives in the explanation)
+- **Likely cause:** UNKNOWN
+- **Recorded in:** `genes/human/ELOVL4/ELOVL4-ai-review.yaml`
+
+PMID:11138005 does not support this molecular-function claim. Please check GO:0008020 assignment to Q9GZR5 and its GO_REF:0000108 consequence GO:0009584. Gene identity is correct; the origin of the term error is unknown.
