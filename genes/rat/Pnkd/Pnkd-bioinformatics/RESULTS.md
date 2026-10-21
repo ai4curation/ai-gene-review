@@ -1,8 +1,34 @@
-# Pnkd B4F7D2: placement against PNKD orthologs and the rat gene model
+# Pnkd: exact selected product and same-gene reference
+
+Selected B4F7D2 has 369 residues; reference D3ZXB0 has 424 residues.
+
+Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.
+
+| Reference interval | Selected interval | Identical residues |
+|---|---|---|
+| 1–79 | 1–79 | 79 |
+| 119–379 | 80–340 | 251 |
+| 395–406 | 341–352 | 6 |
+| 408–424 | 353–369 | 2 |
+
+Reference feature mapping (sequence coverage does not establish retained function):
+
+| Reference feature | Interval | Mapped / length | Identical |
+|---|---|---|---|
+| Transmembrane: Helical | 74–92 | 6 / 19 | 6 |
+| Domain: Metallo-beta-lactamase | 168–330 | 163 / 163 | 163 |
+
+A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.
+
+Inputs are the sibling frozen ProtNLM source and same-gene reference JSON files. Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.
+
+## Re-run 2026-10-20: target sequence read from the UniProt record
+
+The analysis script was revised so it reads the target sequence from the gene's UniProt record rather than from the ProtNLM2 source file, and was re-run; `results.json` and related outputs now reflect this re-run. The original results above are kept unchanged for the record.
 
 Target B4F7D2 has 369 residues. Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.
 
-## Protein alignments (reference blocks vs target blocks, 1-based)
+### Protein alignments (reference blocks vs target blocks, 1-based)
 
 | Reference | Length | Identical to B4F7D2 | Aligned blocks (ref start-end : target start-end) |
 |---|---|---|---|
@@ -17,14 +43,14 @@ Target B4F7D2 has 369 residues. Biopython PairwiseAligner global BLOSUM62, gap o
 | Q8N490-4 | 325 | 257 | 1-8:1-8; 9-281:69-341; 295-319:342-366; 323-325:367-369 |
 | NP_001128222.1 (rat RefSeq isoform 1) | 385 | 338 | 1-340:1-340; 356-367:341-352; 369-385:353-369 |
 
-## Rat isoform 1 versus B4F7D2
+### Rat isoform 1 versus B4F7D2
 
 B4F7D2 is identical to rat RefSeq NP_001128222.1 (isoform 1, 385 aa) over residues 1-328; after that the two C-termini are unrelated.
 
 - B4F7D2 tail (41 aa): `VRPGGWEGRGGKPGPHPASTYHCPARACKLFLELWPLTAGV`
 - Isoform 1 tail (57 aa): `CPSTLGEERAYNPFLRTHCLALQEALGPGPGPTSDDGCSRAQLLEELRRLKDMHKSK`
 
-## Zn(2+) ligands (mouse Q69ZP3 positions, by similarity to HAGH)
+### Zn(2+) ligands (mouse Q69ZP3 positions, by similarity to HAGH)
 
 | Mouse position | Mouse | B4F7D2 |
 |---|---|---|
@@ -36,7 +62,7 @@ B4F7D2 is identical to rat RefSeq NP_001128222.1 (isoform 1, 385 aa) over residu
 | 253 | D | D |
 | 291 | H | H |
 
-## Origin of the divergent tail (nucleotide level)
+### Origin of the divergent tail (nucleotide level)
 
 The BC168228 CDS (source of B4F7D2) matches the NM_001134750 CDS up to CDS nucleotide 984, then diverges. The first 36 divergent cDNA bases (`GTGAGGCCTGGGGGATGGGAGGGTCGGGGTGGGAAA`) are found at offset 43 of genomic window JAXUCZ010000009.1:83384150-83384400, preceded by `AAGAGCACA`.
 

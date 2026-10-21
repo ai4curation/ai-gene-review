@@ -1,4 +1,29 @@
-# DTD1 A0A2R8YCT7 versus reviewed DTD1 (Q8TEA8)
+# DTD1: exact selected product and same-gene reference
+
+Selected A0A2R8YCT7 has 127 residues; reference Q8TEA8 has 209 residues.
+
+Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.
+
+| Reference interval | Selected interval | Identical residues |
+|---|---|---|
+| 1–127 | 1–127 | 125 |
+
+Reference feature mapping (sequence coverage does not establish retained function):
+
+| Reference feature | Interval | Mapped / length | Identical |
+|---|---|---|---|
+| Motif: Gly-cisPro motif, important for rejection of L-amino acids | 139–140 | 0 / 2 | 0 |
+| Binding site:  | 4–4 | 1 / 1 | 1 |
+| Binding site:  | 6–6 | 1 / 1 | 1 |
+| Binding site:  | 28–28 | 1 / 1 | 1 |
+
+A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.
+
+Inputs are the sibling frozen ProtNLM source and same-gene reference JSON files. Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.
+
+## Re-run 2026-10-20: target sequence read from the UniProt record
+
+The analysis script was revised so it reads the target sequence from the gene's UniProt record rather than from the ProtNLM2 source file, and was re-run; `results.json` and related outputs now reflect this re-run. The original results above are kept unchanged for the record.
 
 Selected A0A2R8YCT7: 127 residues; reference Q8TEA8: 209 residues.
 Exact shared N-terminal prefix: residues 1-124. Selected C-terminal tail after the prefix: `TLF` (reference continues `GKFGAYMQVH...`).

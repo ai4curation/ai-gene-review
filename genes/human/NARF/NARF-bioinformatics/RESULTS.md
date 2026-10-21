@@ -16,6 +16,30 @@ Reference feature mapping (sequence coverage does not establish retained functio
 | Reference feature | Interval | Mapped / length | Identical |
 |---|---|---|---|
 
+A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.
+
+Inputs are the sibling frozen ProtNLM source and same-gene reference JSON files. Reproduce with `UV_NO_SYNC=1 uv run python compare_sequences.py` from this directory.
+
+## Re-run 2026-10-20: target sequence read from the UniProt record
+
+The analysis script was revised so it reads the target sequence from the gene's UniProt record rather than from the ProtNLM2 source file, and was re-run; `results.json` and related outputs now reflect this re-run. The original results above are kept unchanged for the record.
+
+Selected J3KS48 has 217 residues; reference Q9UHQ1 has 456 residues.
+
+Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.
+
+| Reference interval | Selected interval | Identical residues |
+|---|---|---|
+| 1–128 | 1–128 | 128 |
+| 174–258 | 129–213 | 85 |
+| 383–385 | 214–216 | 2 |
+| 456–456 | 217–217 | 1 |
+
+Reference feature mapping (sequence coverage does not establish retained function):
+
+| Reference feature | Interval | Mapped / length | Identical |
+|---|---|---|---|
+
 Reference cysteines (candidate metal-ligand positions; no ligand role is asserted here):
 
 | Reference Cys | Context | Selected position | Cys retained |

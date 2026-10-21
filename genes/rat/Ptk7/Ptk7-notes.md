@@ -104,23 +104,131 @@ GOA refresh: no new rows, no retired rows (37 rows). Pure re-audit; no action ch
 
 Open questions (UNDECIDED rows needing full text): PMID:17910947 (neurite outgrowth / RA response), PMID:15229603 (apical-basal polarity), PMID:25807483 supplementary data (coronary vasculature). The core-function MF GO:0060090 molecular adaptor activity is not carried by any GOA row; it is left as a core-function statement rather than a NEW row.
 
-## Full re-review 2026-10-20 (independent of ProtNLM output)
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+
+PTK7 is an inactive receptor kinase scaffold, not a tyrosine kinase or ATP-binding enzyme. The ProtNLM name captures this distinction correctly. Its function paragraph, however, transfers Off-track functions from fly, including R1–R6 photoreceptor targeting to the lamina, to a rat protein. Homology makes the donor biologically related but does not make the fly-specific developmental statement correct in rat.
+
+### Input identity and functional boundary
+
+The 1,079-residue rat sequence retains seven immunoglobulin-like domains, a membrane helix and a complete pseudokinase domain. Comparison with human PTK7 Q13308 maps 257/271 identical residues across the kinase-like domain. Human L828, Y877 and ALG948–950, implicated in the obstructed nucleotide pocket, map to identical rat L837, Y886 and ALG957–959. The N-terminal signal-peptide region is less conserved (12/30 identities), and the selected record does not call a signal peptide; this leaves initiation/topology details to verify without erasing the strong full-domain ortholog relationship. The emitted function donor Q6AWJ9 is Drosophila Off-track, not an unrelated cadherin.
+
+### Biological evidence
+
+- [PMID:32619402 — Structural Insights into Pseudokinase Domains of Receptor Tyrosine Kinases.](https://pubmed.ncbi.nlm.nih.gov/32619402/): Human PTK7 structural analysis identifies a sterically obstructed ATP-binding site; the implicated PTK7 residues are retained in the selected rat sequence.
+
+> ATP binding to PTK7 and ROR2 is prevented by projection of a tyrosine side-chain from the β5/αD hinge region
+
+- [PMID:24703874 — PTK7-Src signaling at epithelial cell contacts mediates spatial organization of actomyosin and planar cell polarity.](https://pubmed.ncbi.nlm.nih.gov/24703874/): Cell experiments show PTK7 recruits or organizes active Src at junctions rather than catalyzing Src-like phosphorylation itself.
+
+> PTK7 interacts with the
+> tyrosine kinase Src and stimulates Src signaling along cell-cell contacts.
+
+
+> PTK7-Src signaling module for spatial regulation of ROCK activity, actomyosin
+> contractility, and epithelial PCP.
+
+- [PMID:21132015 — Protein tyrosine kinase 7 has a conserved role in Wnt/β-catenin canonical signalling.](https://pubmed.ncbi.nlm.nih.gov/21132015/): PTK7 depletion reduces canonical Wnt reporter output in the tested cells; the positive sign is experimentally grounded and context-specific.
+
+> PTK7-deficient cells exhibit weakened β-catenin/T-cell factor transcriptional activity on Wnt3a stimulation.
+
+- [PMID:20643356 — Epidermal wound repair is regulated by the planar cell polarity signaling pathway.](https://pubmed.ncbi.nlm.nih.gov/20643356/): Mouse genetic interactions implicate PTK7 in wound repair without establishing an autonomous wound-specific catalytic activity.
+
+> Mice carrying mutant alleles of PCP genes Vangl2, 
+> Celsr1, PTK7, and Scrb1, and the transcription factor Grhl3, interact 
+> genetically, exhibiting failed wound healing
+
+- [PMID:20704721 — The novel mouse mutant, chuzhoi, has disruption of Ptk7 protein and exhibits defects in neural tube, heart and lung development and abnormal planar cell polarity in the ear.](https://pubmed.ncbi.nlm.nih.gov/20704721/): Histology of Ptk7/chuzhoi mutant lungs identifies thickened interstitial mesenchyme and defective septation.
+
+> thickened interstitial mesenchyme and reduced sepatation in chuzhoi mutants.
+
+
+> Chuzhoi mutants exhibit defects in the heart including double outlet right ventricle (DORV) with a ventricular septal defect (VSD), or parallel arterial trunks.
+
+- [PMID:15229603 — PTK7/CCK-4 is a novel regulator of planar cell polarity in vertebrates.](https://pubmed.ncbi.nlm.nih.gov/15229603/): The original mouse Ptk7 mutant study directly supports neural-tube closure and cochlear-polarity roles.
+
+> disrupts neural tube closure and stereociliary bundle
+> orientation
+
+- [PMID:17910947 — Identification of twinfilin-2 as a factor involved in neurite outgrowth by RNAi-based screen.](https://pubmed.ncbi.nlm.nih.gov/17910947/): The donor paper is a neuronal RNAi screen; its abstract foregrounds twinfilin-2 and does not enumerate the PTK7 result.
+
+> Phenotype-based screening of differentiating SH-SY5Y cells following
+> retinoic acid (RA) stimulation
+
+- [PMID:20837484 — The Wnt/planar cell polarity protein-tyrosine kinase-7 (PTK7) is a highly efficient proteolytic target of membrane type-1 matrix metalloproteinase: implications in cancer and embryogenesis.](https://pubmed.ncbi.nlm.nih.gov/20837484/): Human cell experiments connect PTK7 to actin organization and invasion; direction depends on context and receptor shedding.
+
+> The enforced expression of membrane PTK7 in cancer cells
+> leads to the actin cytoskeleton reorganization and the inhibition of cell
+> invasion.
+
+### Exact non-GO claims
+
+The complete emitted record is preserved in [Ptk7-protnlm-source.json](Ptk7-protnlm-source.json). Assessments below address the selected protein product; evidence on longer products is identified explicitly.
+
+#### Protein name
+
+> Inactive tyrosine-protein kinase 7
+
+CNN (CS 2). “Inactive tyrosine-protein kinase 7” identifies the supported PTK7 pseudokinase lineage. Human structural evidence and conservation of the rat pocket-occluding residues independently support inactivity; the label is not accepted merely because another annotation uses it. [PMID:32619402](https://pubmed.ncbi.nlm.nih.gov/32619402/); [sequence analysis](Ptk7-bioinformatics/RESULTS.md).
+
+#### Function
+
+> Acts as a calcium-dependent, homophilic cell adhesion molecule that regulates neural recognition during the development of the nervous system. Component of the repulsive Plexin signaling response to regulate motor axon guidance at the embryonic stage. Also component of a receptor complex that is required in the adult visual system to innervate the lamina layer; specific targeting of R1-R6 axons
+
+NPI (CS 0; TAXON_CONSTRAINT_VIOLATION) for the composite statement, specifically its claim that rat PTK7 targets fly R1–R6 axons to the lamina. Q6AWJ9 is the homologous fly receptor Off-track, so this is a lineage-specific developmental overtransfer rather than a random unrelated-protein match. Generic adhesion, Plexin interaction and axon guidance are separately UNC for this rat product: homologous developmental signaling makes them plausible, but the fly paragraph does not establish each mechanism in rat. The demonstrated mammalian PTK7-Src-ROCK polarity mechanism is a different, independently supported claim. [Donor record](Ptk7-otk-prediction-donor.json); [PMID:24703874](https://pubmed.ncbi.nlm.nih.gov/24703874/).
+
+No GO or EC term was emitted in this record; the name, function and location assessments above constitute its prediction review.
+
+### Family integration
+
+The selected PTHR45080:SF21 assignment is consistent with PTK7 ancestry. Family-wide tyrosine kinase activity cannot be applied to the conserved inactive PTK7 branch. Its ALG motif and pocket-occluding residues explain catalytic divergence, whereas the Off-track relationship illustrates a separate boundary: conserved receptor ancestry does not imply conserved fly-specific neural anatomy. No unsupported ancestral-node placement is asserted.
+
+### Evidence limits
+
+Both decisive primary publications are available with full text. The structural experiment concerns human PTK7, and the junctional studies use cultured canine epithelial cells and mouse auditory epithelium; transfer to rat is explicitly ortholog-based. The exact N-terminus and each narrow developmental or stimulus annotation are not independently assayed here. The genuine Falcon report correctly identifies pseudokinase function but supplies a 2021 meeting citation for the structural work; the review instead cites the verified 2020 Molecular Cell paper (DOI:10.1016/j.molcel.2020.06.018). Donor tracing is preserved in the Q13308 and Q8BKG3 QuickGO snapshots. PMID:17910947 and PMID:15229603 are abstract-only in the cache; their gene-specific screen or apical-basal details remain unresolved without claiming a curator error.
+
+Exact sequence mapping: [Ptk7-bioinformatics/RESULTS.md](Ptk7-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
+
+### Donor annotation audit
+
+The [human](Ptk7-Q13308-donor-goa.json) and [mouse](Ptk7-Q8BKG3-donor-goa.json) QuickGO snapshots preserve the source terms, qualifiers and primary references. Three ISO annotations explicitly negate kinase or ATP-binding activity; those negations are retained. The positive non-receptor-kinase IBA and transferase UniRule are separate conflicting claims.
+
+The kidney screen’s [original XML](Ptk7-PMC4804176-fulltext.xml), DOI [10.1038/ncomms11103](https://doi.org/10.1038/ncomms11103), includes a table omitted from the ordinary publication text extraction. Reproducible [table extraction](Ptk7-bioinformatics/extract_kidney_table.py) shows [moderate cystic kidneys in all three Ptk7 mutants](Ptk7-bioinformatics/kidney-table.md). This is sufficient to retain kidney development as non-core.
+
+The coronary-vasculature annotation traces to PMID:25807483. Its available full-text extraction does not expose a Ptk7-specific row; Europe PMC returned 404 for the full-text XML and the PMC page was blocked by browser verification. This narrow phenotype remains UNDECIDED, without inferring a curator error. The accessible chuzhoi paper independently establishes heart and ventricular-septum defects, so those broader annotations are retained.
+
+PMID:17910947 is a kinase RNAi screen whose accessible abstract highlights twinfilin-2; this is not evidence that the PTK7 annotation is misattributed. Its PTK7 neurite/retinoic-acid result remains unverified. The apical-basal term similarly traces to an abstract-only original PTK7 paper and remains distinct from the clearly established planar-polarity axis.
+
+### Re-review 2026-10-10
+
+GOA refresh: no new rows, no retired rows (37 rows). Pure re-audit; no action changed.
+
+- Kinase-activity rows checked against the pseudokinase evidence. The three NOT rows (GO:0004714, GO:0016301 from mouse MGI:1918711; GO:0005524 from human Q13308) stay ACCEPT. Added the donors' own primary evidence: [PMID:15019986 "Mouse PTK7 was shown to be phosphorylated neither by itself nor by other protein tyrosine kinases."] (source of the MGI NOT IDA rows) and [PMID:24107129 "CCK4 (colon carcinoma kinase 4)/PTK7 (protein tyrosine kinase 7) [56], BubR1 [35], IRAK3/IRAK-M [57] and MviN [28] were not catalytically active in vitro in previously published studies, consistent with our observations that they do not bind ATP."] (source of the human NOT ATP binding IDA row).
+- GO:0004715 IBA (REMOVE) and GO:0016740 IEA (REMOVE) retained: the objection is target-lineage catalytic loss, not donor count. Added a propagation_review (PROPAGATION_BAD / PSEUDO_OR_SUBACTIVITY_LOSS) naming PANTHER:PTN001231168 and FB:FBgn0262081, plus the falcon statement that PTK7 "is a **pseudokinase**, not an active tyrosine kinase".
+- GO:0060976 coronary vasculature development (ISO, UNDECIDED): confirmed via QuickGO that the mouse donor row is MGI IMP from PMID:25807483; the cached full text does not mention Ptk7, so it stays UNDECIDED. Added the reference and a quote describing the screen.
+- Added propagation_review blocks to the remaining UNDECIDED/MODIFY ISO rows (GO:0010976, GO:0071300 from human PMID:17910947 screen; GO:0045198 from mouse PMID:15229603; GO:0016020 granularity).
+- No stale UniProt quotes (checker: 0).
+
+Open questions (UNDECIDED rows needing full text): PMID:17910947 (neurite outgrowth / RA response), PMID:15229603 (apical-basal polarity), PMID:25807483 supplementary data (coronary vasculature). The core-function MF GO:0060090 molecular adaptor activity is not carried by any GOA row; it is left as a core-function statement rather than a NEW row.
+
+### Full re-review 2026-10-20 (independent of ProtNLM output)
 
 This re-review did not use any ProtNLM prediction or prediction-evidence file; the earlier sections above that assess ProtNLM text are historical. The sequence-comparison script (`Ptk7-bioinformatics/compare_sequences.py`) now reads the selected sequence from `Ptk7-uniprot.txt` instead of the frozen ProtNLM source JSON; rerunning it reproduced identical alignment and landmark results.
 
-### Identity of the benchmark accession
+#### Identity of the benchmark accession
 
 - A0A8I6ALM9 is an unreviewed (TrEMBL) Ensembl-derived model (ENSRNOP00000094722.1, gene ENSRNOG00000039976, RGD:1310472) of rat Ptk7, 1,079 aa vs 1,070 aa for human Q13308.
 - Residues 35–1079 align to human 26–1070 with 972 identities: all seven Ig-like domains, the transmembrane helix (21/21 identical) and the pseudokinase domain (257/271) are complete, including the pocket-occluding L837/Y886 and ALG957–959 (human L828/Y877/ALG948–950; PMID:32619402).
 - The first ~34 residues (MGRAWRGALLPMPARRARVPPCKFRGKAGTPDGPTG...) are Arg/Pro/Gly-rich and lack the hydrophobic signal-peptide core of human/mouse PTK7 (human 1–30 signal peptide maps with only 12 identities); UniProt calls no signal peptide. This is most likely an N-terminal gene-model (first exon / start codon) problem rather than a biologically distinct isoform. Without a signal peptide the predicted type I topology is not guaranteed for this exact product; the functional core is otherwise intact. Not a fragment; not a catalytic-residue loss relative to the PTK7 ortholog (PTK7 is a pseudokinase in all mammals).
 
-### Evolutionary placement
+#### Evolutionary placement
 
 - UniProt DR: PTHR45080:SF21 (INACTIVE TYROSINE-PROTEIN KINASE 7), same subfamily as human PTK7 Q13308 (official PANTHER human row; see `interpro/panther/PTHR45080/PTHR45080-review.yaml`).
 - Disagreement: PANTHER's own classification row for this rat entry is PTHR24418:SF399 (MATK-like non-receptor tyrosine kinase). This explains the rat-only IBA GO:0004715 (node PANTHER:PTN001231168, which occurs in the PTHR24416/PTHR24418 kinase PAINT files, not in PTHR45080). Human PTK7 does not get that IBA. The PTK7-clade node PANTHER:PTN000701324 (PTHR45080, Amniota, seeded by Q13308) propagates only cell-cell junction (GO:0005911) and the unsigned regulation of canonical Wnt signaling (GO:0060828); rat Ptk7 misses these IBAs because of the misclassification.
 - Closest characterised relative: human PTK7 (Q13308, same subfamily SF21; donor of the ISO/IEA process rows) and mouse Ptk7 (Q8BKG3; MGI IMP/IDA donor). Neither has a review in this repo.
 
-### Changes in this re-review
+#### Changes in this re-review
 
 - Description rewritten as a standalone biological summary (no product-specific commentary).
 - GO:0004715 IBA REMOVE retained; reason now records the PANTHER family misassignment (WRONG_ORTHOLOG_OR_PARALOG added to failure modes) in addition to pseudokinase catalytic loss.
