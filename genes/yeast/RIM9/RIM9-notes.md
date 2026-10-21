@@ -10,4 +10,4 @@ The two polarized-subcompartment IBAs are weaker for S. cerevisiae RIM9. They tr
 
 The vacuolar-lumen IDA row cites an abstract-only Tos7 paper. The review keeps the row as non-core because Obara et al. do show alkaline-induced movement of Dfg16/Rim9-GFP to the vacuolar lumen, but the plasma membrane is the core functional site.
 
-I added a conservative `NEW` `GO:0009268 response to pH` row because RIM9 lacks an existing ambient-pH process annotation despite full-text evidence that Rim9 is part of the upstream Rim101 integral-membrane pH-sensing machinery and indirectly supports pH sensing by maintaining Rim21 level and plasma-membrane localization.
+I did not keep a new pH-response process row for RIM9. Li and Mitchell show that `rim9` mutants block Rim1/Rim101 C-terminal cleavage under alkaline growth conditions, but the later AID experiment in Obara et al. argues that Rim9 is an auxiliary stabilizing component rather than the pH sensor that directly performs signal recognition; the plasma-membrane localization rows and the core-function prose capture the supported role without asserting a new broad process annotation.
