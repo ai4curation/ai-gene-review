@@ -2996,25 +2996,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**549 of 2,876 genes are complete; 2,327 remain.**
-This checkpoint adds EIF2S3 and EIF3F to the merged 547 checkpoint.
-[Checkpoint 549](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-549-2026-10-21-194621-utc)
-records their approved heads, exact merged files and accepted CI evidence.
-The inventory is pinned to main [`bf2af2d12324`](https://github.com/ai4curation/ai-gene-review/commit/bf2af2d12324277c67537afb3e8f55cb96a21c57),
-captured 2026-10-21 19:46:21 UTC. Each catalogue gene counts once; products,
+**552 of 2,876 genes are complete; 2,324 remain.**
+This checkpoint adds ELAC2, ELF4 and ELANE to the merged 549 checkpoint.
+[Checkpoint 552](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-552-2026-10-21-221521-utc)
+records their approved heads, actual merges, report integration and accepted CI evidence.
+The inventory is pinned to main [`cd7e12584376`](https://github.com/ai4curation/ai-gene-review/commit/cd7e12584376e4fff47f4e9b13d8bd20c967a7b6),
+prepared 2026-10-21 22:15:21 UTC. Each catalogue gene counts once; products,
 follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,553 reviews are available, including 3,112 human reviews.
-Of 1,255 catalogue genes with reviews, 549 are credited and 706 remain uncredited;
-1,621 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,556 reviews are available, including 3,115 human reviews.
+Of 1,258 catalogue genes with reviews, 552 are credited and 706 remain uncredited;
+1,618 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-Both genes passed the full merge-group test suite and documentation deployment.
-EIF2S3 also passed its actual main validation. EIF3F's actual main run was
-cancelled by a higher-priority build; its failed aggregate remains recorded.
-The accepted immediate EIF2S3 descendant preserves every EIF3F payload and
-validation-runtime file. That bridge does not claim a second strict EIF3F
-validation. Filtered, cancelled and skipped tests are not reported as passes.
+All three merge-group builds executed the full test suite. Their actual-main
+builds passed scoped validation; path filtering skipped the broad main suites.
+Documentation builds and gh-pages pushes succeeded; no independent live-page
+inspection is claimed. ELAC2 and ELANE retain computed DRAFT status, and all
+source-specific uncertainties remain visible. Campaign completion records the
+accepted, merged review, not certainty about every annotation or a COMPLETE file status.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3696,9 +3696,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
 - [x] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
 - [x] **EIF3F** — HGNC:3275; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d0f623e7-ea96-461a-a348-7aa5a7a1d7ff-2023-12-06T070000.000Z) (MONDO:0000508; AR; Definitive).
-- [ ] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
-- [ ] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
+- [x] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
+- [x] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
 - [ ] **ELN** — HGNC:3327; [cutis laxa, autosomal dominant 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bfdc253-320e-4c03-959f-57348fe403fd-2024-10-04T160000.000Z) (MONDO:0007411; AD; Definitive).
 - [ ] **ELOVL4** — HGNC:14415; [ELOVL4-related maculopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b9daf74-594d-4f11-b322-d671266ebf8e-2023-02-02T170000.000Z) (MONDO:0700227; AD; Definitive).
 - [ ] **ELP2** — HGNC:18248; [complex neurodevelopmental disorder with motor features](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d8c7b2b6-442f-41ff-85b5-3674572ab744-2025-06-23T160000.000Z) (MONDO:0100516; AR; Definitive).

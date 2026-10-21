@@ -5453,3 +5453,70 @@ pages and validated the appended history record. The catalogue render reports
 1,621 missing-review warnings; the progress render reports none.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker549-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T194705Z-codex-08c9fb.yaml)
+
+## Completion checkpoint 552 — 2026-10-21 22:15:21 UTC
+
+**552 complete; 2,324 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds ELAC2, ELF4 and ELANE to merged checkpoint 549.
+The coordinating AI agent accepted their exact-head reviews and merge audits;
+this is not a human maintainer sign-off. Products, follow-ups and tracker
+publications receive no extra credit. ELN and ELOVL4 receive no credit here.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths at merge |
+| --- | --- | --- | --- | --- |
+| [ELAC2 #5317](https://github.com/ai4curation/ai-gene-review/pull/5317) | [`75b47d953f5e`](https://github.com/ai4curation/ai-gene-review/commit/75b47d953f5e4bdc8fed2bcd3ba5f3ecb66272d9) | [`1abe4bf2c030`](https://github.com/ai4curation/ai-gene-review/commit/1abe4bf2c0309ac3bad7500e5ecb6701e7cfe344) | `0d5a010702a4` | 32/32 |
+| [ELF4 #5321](https://github.com/ai4curation/ai-gene-review/pull/5321) | [`e1de9ec5ca9e`](https://github.com/ai4curation/ai-gene-review/commit/e1de9ec5ca9e2db9320596a3643819c74ff15270) | [`44cdc2dbe050`](https://github.com/ai4curation/ai-gene-review/commit/44cdc2dbe05063e8eae9eb3716464768704da817) | `1abe4bf2c030` | 25/26 |
+| [ELANE #5320](https://github.com/ai4curation/ai-gene-review/pull/5320) | [`db127beeec42`](https://github.com/ai4curation/ai-gene-review/commit/db127beeec420bdbd587bb5dae419ae3eb6f1623) | [`cd7e12584376`](https://github.com/ai4curation/ai-gene-review/commit/cd7e12584376e4fff47f4e9b13d8bd20c967a7b6) | `44cdc2dbe050` | 51/52 |
+
+ELAC2 preserves all 32 approved path modes/OIDs, including its 29 science
+payloads. ELF4 preserves 25 of 26 paths exactly; its aggregate report contains
+all 18 parent rows plus two exact ELF4 rows, for 20. Relative to its approved
+18-row report, the two ELAC2 parent rows are retained. ELANE preserves 51 of
+52 paths exactly; its aggregate contains all 20 parent rows plus its exact
+query row, for 21. Relative to its approved 17-row report, four ELAC2/ELF4
+parent rows are retained. These are explicit report-union exceptions, not
+claims that every aggregate blob equals its approved head. All three merges'
+other payloads remain exact at the pinned main, and all report records are preserved.
+
+The accepted CI evidence is linked separately for each event:
+
+- ELAC2: [merge group](https://github.com/ai4curation/ai-gene-review/actions/runs/39676861125), [actual main](https://github.com/ai4curation/ai-gene-review/actions/runs/39679097253) and [docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39679097289).
+- ELF4: [merge group](https://github.com/ai4curation/ai-gene-review/actions/runs/39678825030), [actual main](https://github.com/ai4curation/ai-gene-review/actions/runs/39681455350) and [docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39681455419).
+- ELANE: [merge group](https://github.com/ai4curation/ai-gene-review/actions/runs/39680202603), [actual main](https://github.com/ai4curation/ai-gene-review/actions/runs/39682864328) and [docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39682864226).
+
+All three merge groups passed the full suite: 4,176 Python tests (one skipped,
+84 deselected), 268 doctests (37 skipped), 12 examples, typing, lint, 432
+Python automation tests and 19 JavaScript tests. Their actual-main builds
+passed scoped strict validation, history validation/tests and family checks;
+the broad main suites were skipped by path filters. Aggregate jobs checked
+job conclusions and did not execute these tests. ELAC2 retains one accepted
+advisory; ELANE retains 11, including ten generic-binding policy warnings and
+one source-specific exosome warning. The actual log governs that count even
+though reviewer prose omitted the latter. Docs workflows built and pushed
+gh-pages successfully; no independent live-page or pixel inspection is claimed.
+
+The merged reviews retain ELAC2's 36 sources/four products/one core, ELF4's
+42 sources/one product/one core and ELANE's 102 sources/one product/one core.
+All add zero publication quotations. ELAC2 and ELANE keep computed DRAFT
+status; ELF4 is COMPLETE. ELAC2 retains one UNDECIDED annotation, ELF4 four,
+and ELANE five. Campaign completion records accepted merged
+review work and does not relabel those uncertainties as resolved.
+
+The baseline is main `cd7e12584376e4fff47f4e9b13d8bd20c967a7b6`. All seven predecessor tracker paths match approved
+[tracker #5319](https://github.com/ai4curation/ai-gene-review/pull/5319), head `6749bce965d6f56e161bb620a9b5986d57495b42`
+and actual merge `0d5a010702a4fcbf92209dc76eda9f22a8e1a81b`. All 235 queue objects and 108 prior completion
+updates remain exact; this is update 109. Previous progress bytes and all
+2,876 catalogue identities/association texts are preserved. Only ELAC2,
+ELF4 and ELANE checkboxes change; the existing quotation convention is unchanged.
+
+The pinned inventory contains 8,556 reviews, including 3,115 human reviews.
+1,258 catalogue genes have files; 1,618 lack files and
+706 available reviews remain uncredited. Three source files, the queue
+mirror, two rendered pages and an append-only history record form the
+publication scope. No gene, source cache, runtime or prior history is
+changed by this tracker.
+The publication passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,618 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker552-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T223102Z-codex-2f1a51.yaml)
