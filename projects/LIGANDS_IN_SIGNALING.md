@@ -42,8 +42,9 @@ Yes, in standard annotation and in the ontology.
 
 - **Annotations.** A hand-picked sample of textbook ligands was checked against QuickGO
   ([results/ligand_survey.json](LIGANDS_IN_SIGNALING/results/ligand_survey.json),
-  [script](LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey.py)). 23 of 24 human
-  ligands and all 14 fly ligands are annotated `involved_in` the pathway they activate, mostly
+  [script](LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey.py)). 21 of 22 human
+  ligands (plus 4 of 5 receptor comparators) and all 14 fly ligands are annotated `involved_in`
+  the pathway they activate, mostly
   with experimental evidence (FlyBase almost entirely so). Human KITLG is the exception: it has
   no Kit signaling pathway annotation. Receptors are annotated the same way, except the
   inhibitory receptors PTCH1 and ptc, which carry only regulation terms.
@@ -178,8 +179,8 @@ almost all falsely: G-protein alphas, LYN and IRAK4 qualify through exosome or e
 annotations, and netrin signaling "passes" on DSCAM and tubulin. Only IL34 (human) and sli
 (fly) are real. The ligand step has to come from curated modules.
 
-Caveats: symbol matching stands in for orthology; fly, budding yeast and fission yeast are
-lumped as one "non-vertebrate" lineage, so the yeast N rows (fly donors) are meaningless;
+Caveats: symbol matching stands in for orthology; budding yeast and fission yeast have no
+same-lineage donor in the seven-species panel (so unflagged yeast terms fall into U);
 go-basic omits MF-to-BP part_of links, which is harmless here because only BP annotations
 place genes in pathways.
 
@@ -189,8 +190,9 @@ Both modules are pan-species, have two steps (ligand, receptor), and pass the sc
 validators.
 
 - **[Netrin signaling](../modules/netrin_signaling.yaml)** (*netrin-activated signaling
-  pathway*). Ligand: netrin family (PANTHER netrin/laminin family, restricted to netrins; PAINT
-  node PTN008501429), *receptor ligand activity* (netrins both attract and repel, so neither
+  pathway*). Ligand: netrin family (PANTHER netrin/laminin family `PTHR10574`, restricted to
+  canonical secreted netrins under PAINT node PTN008501429 and excluding netrin-G1/G2,
+  netrin-4, and netrin-5), *receptor ligand activity* (netrins both attract and repel, so neither
   child fits). Receptor: attraction through the DCC family (no PANTHER id; DCC and Frazzled sit
   in different subfamilies of a broad family) or repulsion through the UNC5 family. GOA gaps
   recorded in the notes: no netrin and not DCC is on the netrin pathway in human; fly NetA/NetB
@@ -205,10 +207,12 @@ validators.
 ## 5. Other curator work in this branch
 
 - **NTN1 and NTN3 gene reviews:** core function and MODIFY replacements changed from *netrin
-  receptor binding* to *receptor ligand activity*. NTN1's four non-verbatim deep-research quotes
-  (listed in `conf/local_quote_baseline.yaml`) replaced with an exact quote and their baseline
-  entries removed. The repo-wide prune would also remove 233 now-passing entries for other genes;
-  that was left out to keep this change focused.
+  receptor binding* to *receptor ligand activity*, and `NEW` annotations for *netrin-activated
+  signaling pathway* (`GO:0038007`) added to both reviews and their `core_functions`. NTN1's
+  four non-verbatim deep-research quotes (listed in `conf/local_quote_baseline.yaml`) replaced
+  with row-specific verbatim publication quotes and their baseline entries removed. The repo-wide
+  prune would also remove 233 now-passing entries for other genes; that was left out to keep this
+  change focused.
 - **PTHR45836 family review** (`interpro/panther/PTHR45836/PTHR45836-review.yaml`): the
   PTN002911633 assessment notes that its IBD should use the ligand-activity term; a new
   SUBFAMILY_ONLY assessment of *chemorepellent activity* covers the four Slit subfamilies.
@@ -270,8 +274,8 @@ uv run python projects/LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey
 
 ### Known issues
 
-- Module validator warnings: the PANTHER member index was not built locally, so family
-  membership was not checked (UniProt's PANTHER cross-references agree with the families used);
-  the Slit PAINT-node term mismatch is intentional.
+- Module validator warnings: PANTHER family-membership checks pass against `.cache/panther/panther-members-19.0.tsv`;
+  the remaining advisory warnings are `PTN008501429` MOD-ID seed comparison (no UniProtKB accessions in `PTHR10574-paint.tsv`)
+  and the intentional `PTN002911633` / `SUBFAMILY_ONLY` warnings on `slit_robo_signaling.yaml` (`GO:0045499` vs PAINT's `GO:0048495`).
 - `tests/test_bioreason_benchmark_policy.py::test_argo95_exact_goa_reads_the_declared_baseline_commit`
   fails on main as well; unrelated to this work.

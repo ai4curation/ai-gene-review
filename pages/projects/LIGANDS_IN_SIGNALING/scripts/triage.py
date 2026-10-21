@@ -92,15 +92,18 @@ def main() -> None:
     n_desc = collections.Counter(a for t in pathways for a in go.ancestors(t) if a != t)
     generic = {t for t, c in n_desc.items() if c >= 40} | {CELL_SURFACE, GPCR, SIGNAL_TRANSDUCTION}
 
-    labels = {r["term"]: r for r in yaml.safe_load(open(CURATED / "term_labels.yaml"))["term_labels"]}
-    expected = {
-        lineage: {r["term"]: r["expected_ligands"] for r in rows}
-        for lineage, rows in yaml.safe_load(open(CURATED / "expected_ligands.yaml"))["expected_ligands"].items()
-    }
-    flags = {
-        org: {r["term"]: r for r in rows}
-        for org, rows in yaml.safe_load(open(CURATED / "organism_flags.yaml"))["organism_flags"].items()
-    }
+    with (CURATED / "term_labels.yaml").open() as fh:
+        labels = {r["term"]: r for r in yaml.safe_load(fh)["term_labels"]}
+    with (CURATED / "expected_ligands.yaml").open() as fh:
+        expected = {
+            lineage: {r["term"]: r["expected_ligands"] for r in rows}
+            for lineage, rows in yaml.safe_load(fh)["expected_ligands"].items()
+        }
+    with (CURATED / "organism_flags.yaml").open() as fh:
+        flags = {
+            org: {r["term"]: r for r in rows}
+            for org, rows in yaml.safe_load(fh)["organism_flags"].items()
+        }
 
     checks = {o: json.loads((args.results / f"gapcheck-{o}.json").read_text()) for o in args.orgs}
     by_term = collections.defaultdict(dict)
@@ -123,7 +126,7 @@ def main() -> None:
             elif term in labels:
                 rec.update(category=labels[term]["category"], note=labels[term].get("reason", ""))
             else:
-                lineage = "vertebrate" if org in VERTEBRATE else "fly"
+                lineage = "vertebrate" if org in VERTEBRATE else ("fly" if org == "fly" else None)
                 donors = collections.defaultdict(list)
                 for porg, pr in passing.items():
                     if (org in VERTEBRATE) == (porg in VERTEBRATE):

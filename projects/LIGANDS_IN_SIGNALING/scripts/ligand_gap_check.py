@@ -100,6 +100,8 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 name=go.name[p],
                 n_genes=len(genes),
                 n_ligand_genes=len(lig),
+                # Symbol lists are capped (8/6/12) to keep gapcheck-*.json compact; note that
+                # scripts/triage.py reads ligand_genes as the cross-species donor pool.
                 ligand_genes=sorted(symbol[g] for g in lig)[:8],
                 binding_only_genes=sorted(symbol[g] for g in (genes & binding) - ligand)[:6],
                 genes=sorted(symbol[g] for g in genes)[:12],

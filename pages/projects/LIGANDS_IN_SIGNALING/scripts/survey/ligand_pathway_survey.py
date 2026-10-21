@@ -61,9 +61,11 @@ SIGNAL_TRANSDUCTION = "GO:0007165"
 def resolve(taxon: str, gene: str) -> str | None:
     if (taxon, gene) in OVERRIDES:
         return OVERRIDES[(taxon, gene)]
-    r = requests.get("https://rest.uniprot.org/uniprotkb/search", params={
+    resp = requests.get("https://rest.uniprot.org/uniprotkb/search", params={
         "query": f"gene_exact:{gene} AND organism_id:{taxon} AND reviewed:true",
-        "fields": "accession,gene_names", "format": "json"}).json()
+        "fields": "accession,gene_names", "format": "json"}, timeout=30)
+    resp.raise_for_status()
+    r = resp.json()
     hits = [(x["primaryAccession"], (x.get("genes") or [{}])[0].get("geneName", {}).get("value"))
             for x in r.get("results", [])]
     exact = [a for a, n in hits if n == gene]
@@ -73,8 +75,10 @@ def resolve(taxon: str, gene: str) -> str | None:
 def bp_annotations(acc: str) -> list[dict]:
     rows, page = [], 1
     while True:
-        r = requests.get(f"{QUICKGO}/annotation/search", headers=HEADERS, params={
-            "geneProductId": acc, "aspect": "biological_process", "limit": 200, "page": page}).json()
+        resp = requests.get(f"{QUICKGO}/annotation/search", headers=HEADERS, params={
+            "geneProductId": acc, "aspect": "biological_process", "limit": 200, "page": page}, timeout=30)
+        resp.raise_for_status()
+        r = resp.json()
         rows += r["results"]
         if page >= r["pageInfo"]["total"]:
             return rows
@@ -85,8 +89,10 @@ def ancestors(terms: list[str], relations: str) -> dict[str, set[str]]:
     out = {}
     for i in range(0, len(terms), 50):
         chunk = ",".join(terms[i:i + 50])
-        r = requests.get(f"{QUICKGO}/ontology/go/terms/{chunk}/ancestors", headers=HEADERS,
-                         params={"relations": relations}).json()
+        resp = requests.get(f"{QUICKGO}/ontology/go/terms/{chunk}/ancestors", headers=HEADERS,
+                            params={"relations": relations}, timeout=30)
+        resp.raise_for_status()
+        r = resp.json()
         for x in r["results"]:
             out[x["id"]] = set(x.get("ancestors", [])) | {x["id"]}
     return out

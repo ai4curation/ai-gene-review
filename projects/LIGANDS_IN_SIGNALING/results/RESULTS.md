@@ -27,8 +27,8 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | A: ligand counterpart not on the pathway | 11 | 10 | 13 | 29 | 5 | 0 | 0 |
 | B: ligand counterpart only on a related pathway term | 8 | 9 | 9 | 7 | 1 | 0 | 0 |
 | C: ligand counterpart on the pathway but lacks a ligand-activity MF | 4 | 4 | 4 | 8 | 2 | 0 | 0 |
-| N: no same-symbol ligand counterpart annotated | 0 | 5 | 1 | 7 | 0 | 6 | 2 |
-| U: no donor ligand available | 3 | 7 | 7 | 1 | 4 | 0 | 0 |
+| N: no same-symbol ligand counterpart annotated | 0 | 5 | 1 | 7 | 0 | 0 | 0 |
+| U: no donor ligand available | 3 | 7 | 7 | 1 | 4 | 6 | 2 |
 | X: no protein ligand expected (small molecule, light, microbial) | 37 | 40 | 34 | 29 | 17 | 0 | 1 |
 | Y: antigen, contact or ligand-independent | 11 | 11 | 11 | 10 | 4 | 0 | 0 |
 | O: suspect over-annotation | 0 | 0 | 0 | 0 | 6 | 0 | 0 |
@@ -38,7 +38,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 
 | Organism | Term | Category | Ligand lookups |
 |---|---|---|---|
-| human | netrin-activated signaling pathway (GO:0038007) | A | NTN1: A; NTN3: A; NTN4: A |
+| human | netrin-activated signaling pathway (GO:0038007) | A | NTN1: A; NTN3: A |
 | human | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | APOA1: A (ligand MF) |
 | human | interleukin-22-mediated signaling pathway (GO:0140865) | A | IL22: A (ligand MF) |
 | human | complement component C5a signaling pathway (GO:0038178) | A | C5: A (ligand MF) |
@@ -63,7 +63,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | human | fibroblast growth factor receptor apoptotic signaling pathway (GO:1902178) | C | FGF2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGF8: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGFR3: C |
 | mouse | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | Agt: A (ligand MF); Ccl2: A (ligand MF); Npy: A (ligand MF) |
 | mouse | G protein-coupled acetylcholine receptor signaling pathway (GO:0007213) | A | Agrn: A (ligand MF) |
-| mouse | netrin-activated signaling pathway (GO:0038007) | A | Ntn1: A; Ntn3: A; Ntn4: A |
+| mouse | netrin-activated signaling pathway (GO:0038007) | A | Ntn1: A; Ntn3: A |
 | mouse | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | Apoa1: A (ligand MF) |
 | mouse | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | Bdnf: A (ligand MF) |
 | mouse | bombesin receptor signaling pathway (GO:0031989) | A | Grp: A (ligand MF); Nmb: A (ligand MF) |
@@ -86,7 +86,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | mouse | fibroblast growth factor receptor apoptotic signaling pathway (GO:1902178) | C | Fgf2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf8: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgfr3: C |
 | rat | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | Agt: A (ligand MF); Ccl2: A (ligand MF); Npy: A (ligand MF) |
 | rat | G protein-coupled acetylcholine receptor signaling pathway (GO:0007213) | A | Agrn: A (ligand MF) |
-| rat | netrin-activated signaling pathway (GO:0038007) | A | Ntn1: A; Ntn3: A; Ntn4: A |
+| rat | netrin-activated signaling pathway (GO:0038007) | A | Ntn1: A; Ntn3: A |
 | rat | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | Apoa1: A (ligand MF) |
 | rat | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | Bdnf: A (ligand MF) |
 | rat | G protein-coupled receptor signaling pathway coupled to cGMP nucleotide second messenger (GO:0007199) | A | Agt: A (ligand MF) |
@@ -117,7 +117,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | zebrafish | G protein-coupled acetylcholine receptor signaling pathway (GO:0007213) | A | agrn: A |
 | zebrafish | lipopolysaccharide-mediated signaling pathway (GO:0031663) | A | il1b: A (ligand MF); tnfa: A (ligand MF); tnfb: A (ligand MF) |
 | zebrafish | G protein-coupled opioid receptor signaling pathway (GO:0038003) | A | penkb: A (ligand MF); penka: A (ligand MF) |
-| zebrafish | netrin-activated signaling pathway (GO:0038007) | A | ntn1b: A; ntn1a: A; ntn4: A |
+| zebrafish | netrin-activated signaling pathway (GO:0038007) | A | ntn1b: A; ntn1a: A |
 | zebrafish | endothelin receptor signaling pathway (GO:0086100) | A | edn1: A (ligand MF); edn2: A (ligand MF) |
 | zebrafish | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | A | col1a1b: A; col1a1a: A; col4a2: A |
 | zebrafish | interleukin-15-mediated signaling pathway (GO:0035723) | A | il15: A (ligand MF) |
