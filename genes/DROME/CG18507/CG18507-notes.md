@@ -40,3 +40,50 @@ The accession-specific GOA fetch contains no existing annotation rows. The molec
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG18507-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+This section was written without consulting any ProtNLM/ProtNLM2 output or prediction-evidence files.
+
+### Identity of the benchmark accession
+
+- M9PBB3 (510 aa, TrEMBL, PE 4) is one of five UniProt products of FBgn0028527 (CG18507): M9PBB3 510, M9PCX0 510,
+  M9PFU6 499, Q9VJW7 513, Q7KTB0 514. None is a reviewed Swiss-Prot entry, so there is no canonical reviewed product.
+- All five share an identical N-terminus through residue 438-492 (including both TM helices and the TMEM268-aligned
+  core) and differ only in their C-terminal tails, i.e. alternative 3' exons
+  [file:DROME/CG18507/CG18507-bioinformatics/RESULTS.md "M9PBB3 is a full-length alternative product of the gene, not a fragment."].
+- M9PBB3 is therefore a full-length alternative isoform, not a fragment or defective gene model; no domain or
+  predicted TM segment is missing relative to the other products.
+- QuickGO (queried 2026-10-21) returns zero GO annotations for any of the five accessions.
+
+### Evolutionary placement
+
+- PANTHER PTHR31193 ("TRANSMEMBRANE PROTEIN C9ORF91") has a single subfamily, SF1 "TRANSMEMBRANE PROTEIN 268",
+  containing human TMEM268 (Q5VZI3), mouse Tmem268 (Q8R239), bovine TMEM268 and fly CG18507. The fly gene is thus the
+  subfamily-level ortholog of TMEM268. The family review (interpro/panther/PTHR31193/PTHR31193-review.yaml) places
+  M9PBB3 in SF1, which agrees with the UniProt cross-reference; no disagreement.
+- Local alignment (BLOSUM62): fly 227-399 vs human 39-215, 30.5% identity / 52.4% similarity; mouse alignment extends
+  to fly 486 / mouse 331. Fly residues 1-226 (MobiDB-lite disordered, low complexity) are a fly-specific extension.
+- No PAINT/IBA annotations exist for this family's members in GOA, so there is no curator node placement to follow.
+
+### Literature
+
+- Only gene-specific primary source: Chung, Chavez & Andrew 2011 [PMID:21963537 "We found that expression of 20 of
+  the 38 early-expressed genes absolutely required trh at all stages."]. The falcon report places CG18507 in Table 1
+  (cDNA RE25285) as Trh-dependent; Table 1 is not in the cached text, so the gene-specific row is unverified here.
+  This is an expression/regulation fact about the transcript, not a function of the protein; no GO term is warranted
+  (an expression pattern under a transcription factor is not participation in tracheal development).
+- Human TMEM268: ER and plasma membrane localization [PMID:30361615 "Immunofluorescence assay demonstrated that the
+  TMEM268 protein was mainly present in the endoplasmic reticulum and plasma membrane"]; binds and stabilizes ITGB4
+  (PMID:30361615) and CD11b/ITGAM [PMID:38730209 "TMEM268 interacts with the C-terminus of CD11b and inhibits its
+  degradation via the endosomal–lysosomal pathway."]. Both partners are vertebrate integrins without fly orthologs, so
+  the partner-specific stabilization function is not transferred.
+
+### Decisions
+
+- No existing GOA rows to review.
+- NEW: GO:0016020 membrane (Phobius TM helices in the conserved core + SF1 membership + human ortholog membrane
+  localization). Kept generic: no fly localization data, and the human data name two different membranes.
+- No molecular-function or biological-process term proposed; core_functions left empty because no activity is
+  established. Gaps recorded as BIOLOGY knowledge_gaps with suggested experiments.
+- Description rewritten to be family- and evidence-grounded (previous text was a one-line placeholder).
