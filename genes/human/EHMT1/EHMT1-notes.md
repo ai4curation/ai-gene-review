@@ -1,0 +1,19 @@
+# EHMT1 evidence notes
+
+## 2026-10-20: source assessment and synthesis
+
+EHMT1/GLP is a nuclear lysine methyltransferase with a principal H3K9 chromatin-writing role and a directly demonstrated nonhistone p53 K373 substrate context. The two catalytic entries preserve that substrate distinction. No general apoptotic or tumor-suppression process is inferred from the p53 cell experiments. Human ankyrin-region mono/di-H3K9 recognition remains explicit without assigning a me3-selective reader term.
+
+Human enzymology, mouse genetic and complex studies, and current pathway models provide different kinds of evidence. The mouse promoter-silencing experiments support epigenetic repression, including a complex contribution separable from catalytic activity; they do not make EHMT1 a DNA methyltransferase or demonstrate a constitutive-heterochromatin compartment. Brown-adipocyte white-gene repression does not directly establish inhibition of white-adipocyte differentiation. Weak purified mouse H3K27 methylation and developmental/adipose effects remain contextual.
+
+The four unresolved source decisions concern direct H3K9 trimethylation chemistry (rows 52, 53 and 56) and the inaccessible methyl-state-specific experiment in PMID12004135 (row 54). H3K9me3 ChIP and bulk methylation by immunopurified complexes do not isolate the final chemical step. The broader writer activity and human p53 K373 reaction remain supported. The p53 paper's author-only correction, DOI 10.1074/jbc.A109.062588, adds Laura Pérez-Burgos; no assay correction is stated.
+
+Partner-class refinements retain the actual association, species and construct scope. WIZ's documented tethering role supports scaffold binding; CDYL/MPP8 and RelA have independently supported corepressor and transcription-factor classes. The LCOR-locus source concerns PALI1. These binding descriptions do not transfer partner catalytic or regulatory activity to EHMT1. Supported generic associations would remain non-core when no informative class is justified, in accordance with this project's explicit binding policy.
+
+The four official products reconstruct to 1298, 66, 1184 and 808 residues. Shorter products have substantial changes to the ankyrin and/or catalytic regions; no shared activity is assumed. Historical assay numbering is not silently remapped to the current displayed protein. The HPA page independently labels nucleoplasm and nuclear bodies supported; no image-pixel inspection is claimed. Reactome paths retain their model-only scope.
+
+The normal GOA export contains 61 contexts and yields 59 distinct source objects after two date-only duplicate collapses. All original source identities, qualifiers, partners and products are retained. The decisions are 32 ACCEPT, 11 MODIFY, 11 KEEP_AS_NON_CORE, four UNDECIDED and one MARK_AS_OVER_ANNOTATED. No NEW row or publication quotation was added.
+
+Original access is recorded separately from normal-cache metadata. Several operative originals were inspected externally even when a normal cache was abstract-only; the PMID20118233 cache lacks its operative Methods/Results despite a full-text flag. PMID12004135 remains bounded to its abstract. Independent consultation supplied the two reserved originals and final core synthesis; the owner source assessments and the consultation's species/numbering limits are retained in the source guide. No separate figure-pixel or supplement inspection is asserted. Genuine research-provider attempts failed with HTTP 403 and 401; the actual source work is documented rather than represented as provider output.
+
+See [the source guide](EHMT1-source-evidence.yaml) for public original URLs, precise access scopes and correction provenance, and [the replay results](EHMT1-bioinformatics/evidence/RESULTS.md) for database joins and exact product reconstruction. The analysis archive contains database records, not article bodies. Publication caches and source exports are unmodified machine outputs.
