@@ -90,10 +90,12 @@ Key cached papers used to review the seeded GOA rows:
 - PMID:34088313: supports non-core Hfl1-dependent recruitment of Atg8 to the
   vacuolar membrane for early-stationary-phase turnover.
 
-All `GO:0005515 protein binding` rows were real interactions or large-scale
-physical-interaction calls, but the term itself is uninformative for Atg8. I
-removed those rows rather than using the interaction evidence as a molecular
-function. Mechanistic interaction evidence was retained through process-level
+Most `GO:0005515 protein binding` rows were real S. cerevisiae interactions or
+large-scale physical-interaction calls, but the term itself is uninformative for
+Atg8. Five rows from ParkinsonsUK-UCL or IntAct transfer human or mammalian
+LC3/GABARAP receptor interactions onto yeast ATG8; those were also removed, but
+as wrong-species transfers rather than as SGD yeast Atg8 interactions.
+Mechanistic yeast interaction evidence was retained through process-level
 annotations such as Cvt, ER-phagy, Atg1 targeting, and autophagosome assembly.
 
 ## 2024-2026 literature search
