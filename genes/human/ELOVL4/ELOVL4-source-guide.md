@@ -84,3 +84,12 @@ Rows 9 and 16 are explicitly lateral term changes. GO:0019368 unsaturated fatty 
 ## Cache-state access flags
 
 The optional `full_text_unavailable` flags follow the normal-cache convention for PMIDs 11138005, 16036915, 20937905, 37491316 and 38422897. The first four have separately recovered original material with the precise read scopes recorded above; their flags do not negate that access. Only 38422897 still lacks operative ELOVL4-specific evidence. No normal publication cache was edited to reconcile these distinct states.
+
+
+## Follow-up interpretation and reproducibility boundaries
+
+The current annotations retain the same decisions and source fields. In particular, the circadian row is scientifically unresolved despite complete original access, and the two positive generic-binding sources remain non-core under the campaign policy. The seven IBA support lists link to [the reproducible PAINT results](ELOVL4-bioinformatics/RESULTS.md).
+
+The core's specific processes are [saturated fatty-acid elongation](https://www.ebi.ac.uk/QuickGO/term/GO:0019367) and [polyunsaturated fatty-acid elongation](https://www.ebi.ac.uk/QuickGO/term/GO:0034626), replacing their broad elongation ancestor. Official typed is_a paths place both below GO:0030497; neither contains the other or GO:0042761, and GO:0042761 contains neither. The greater-than-22-carbon biosynthesis term therefore retains complementary chain-length information. Human ELOVL4 membrane assays support saturated substrates, while accepted PAINT evidence and endogenous mouse conditional loss support the polyunsaturated role; this does not assign a precise purified-human PUFA product distribution.
+
+VERIFIED reference assessments concern the identified source and the stated claim, not unrestricted local availability of every experiment. The normal abstract-only caches for 11138005, 16036915, 20937905 and 37491316 remain unchanged; separately recovered original text is available only through the cited external locators and preserved private access records. For 16036915, Figure 4 refers to read text/captions, not inspected pixels. For 20937905, Figure 1 pixels were inspected, but S2 and S8B were read only as observations reported in the main Results; their detailed Methods and images remain unavailable. The portable archive contains database inputs, not article bodies, and its unchanged outputs verify those database derivations rather than publication interpretation.

@@ -170,3 +170,14 @@ The reproducibility directory exposes its code and results directly. Its archive
 ## Cache-state access flags
 
 The optional `full_text_unavailable` flags follow the normal-cache convention for PMIDs 11138005, 16036915, 20937905, 37491316 and 38422897. The first four have separately recovered original material with the precise read scopes recorded above; their flags do not negate that access. Only 38422897 still lacks operative ELOVL4-specific evidence. No normal publication cache was edited to reconcile these distinct states.
+
+
+## ELOVL4 follow-up evidence clarification
+
+The 37 decisions remain 19 ACCEPT, 7 MODIFY, 5 KEEP_AS_NON_CORE, 4 UNDECIDED and 2 REMOVE. Supported HuRI and CERS2 associations remain non-core under the campaign binding policy; neither an unsupported specific function nor a false interaction is inferred from the generic term. The two generic-binding validator advisories are disclosed.
+
+The circadian UNDECIDED decision records scientific uncertainty despite complete original access: rhythmic rat transcript abundance is positive evidence, but the normal protein's contribution to a recurring process and its transfer to human remain unresolved. The W246G sign question records the apparent tension between the two signed terms and the measured miniature-current changes; this selective missense allele is not treated as a null, and no source defect or reversed annotation is asserted.
+
+The seven IBA reviews now link directly, without quotations, to the visible PAINT results. The single condensation core uses the already accepted saturated and polyunsaturated elongation branches in place of their broad elongation ancestor, alongside the nonredundant very-long-chain biosynthesis term. The chemistry, ER membrane location and all core supports remain unchanged.
+
+All 32 inherited quotation values and their published paths remain exact. The family-level lead excerpt is retained as context, not relabeled as an ELOVL4-specific experimental result; the source-scoped human membrane and mouse conditional-loss evidence is identified in the source guide and reference-only supports. The normal caches remain exact. Original text recovered outside the caches is still external to the repository; Figure 1 pixels were inspected for PMID 20937905, whereas its S2/S8 observations are main-text reports with inaccessible supplementary panels. Formatting of the three visible Python modules changes no algorithm, inputs or output hashes; the input-only archive is unchanged.
