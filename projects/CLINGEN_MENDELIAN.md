@@ -2988,22 +2988,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**443 of 2,876 genes are complete; 2,433 remain.**
-DCC is the verified addition since checkpoint 442.
-[Checkpoint 443](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-443-2026-10-18-151414-utc)
-records its approved files, merge and successful validation on main. The completion
-cutoff is [`7bbbe4f59c5b`](https://github.com/ai4curation/ai-gene-review/commit/7bbbe4f59c5b14d9b053d691deba3a8c5726d9bf),
-merged at 2026-10-18 15:14:14 UTC.
-Each catalogue gene counts once; products and follow-up commits add no credit.
+**473 of 2,876 genes are complete; 2,403 remain.**
+This checkpoint adds DDX41 and 20 genes from two accepted merge-audit batches to
+checkpoint 452. [Checkpoint 473](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-473-2026-10-21-002117-utc)
+links the approved heads, exact merged files and CI evidence. The inventory is
+pinned to main [`0ad352a62667`](https://github.com/ai4curation/ai-gene-review/commit/0ad352a6266763efcd3daaaa2a32a0755d5b54cd),
+captured 2026-10-21 00:21:17 UTC. Only these 21 accepted completions are added;
+other merged or queued reviews await their own audit. Each catalogue gene counts
+once; products and follow-up commits add no credit.
 
-At that cutoff, 7,981 reviews are available, including 3,006 human reviews.
-Of 1,169 catalogue genes with reviews, 443 are credited and 726 remain uncredited;
-1,707 catalogue genes still lack a review file. DCC adds one available human
-review and the sole new completion. Other review-file additions receive no credit
-here. Availability and completion remain separate.
-Earlier checkpoints, queue records and histories remain preserved. Pending gene
-reviews remain unchecked until their approvals, merged files and actual-main
-validation are verified.
+At this snapshot, 8,467 reviews are available, including 3,102 human reviews.
+Of 1,248 catalogue genes with reviews, 473 are credited and 775 remain uncredited;
+1,628 catalogue genes still lack a review file. Availability and
+accepted completion are separate measures. Fifteen immediate main builds in these
+batches were cancelled; their exact merge commits passed merge-group checks, and
+preserved-payload/runtime checks against successful descendants were accepted with
+explicit scope limits. No cancelled run is counted as a success.
+
+Earlier checkpoints, queue records and histories remain preserved. Pending genes
+remain unchecked until their review, merged files and CI evidence are accepted.
 
 [Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
@@ -3569,33 +3572,33 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **DBT** — HGNC:2698; [maple syrup urine disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cfd1ebde-e447-4877-977e-f5b9fe434adc-2018-10-30T160000.000Z) (MONDO:0009563; AR; Definitive).
 - [x] **DCAF17** — HGNC:25784; [Woodhouse-Sakati syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6a1d7719-4261-494d-87aa-745518580673-2021-07-27T153526.827Z) (MONDO:0009419; AR; Definitive).
 - [x] **DCC** — HGNC:2701; [mirror movements 1 and/or agenesis of the corpus callosum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f923f025-a973-4af8-b2c2-00dc39ed3026-2022-07-26T160000.000Z) (MONDO:0100515; AD; Definitive).
-- [ ] **DCDC2** — HGNC:18141; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_477c8aba-eeba-43dc-a5e2-f6f84b127b8f-2021-10-13T160000.000Z) (MONDO:0005308; AR; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86802e37-e2a5-43b9-8538-e104859b4c55-2020-08-31T170000.000Z) (MONDO:0019497; AR; Limited).
-- [ ] **DCLRE1C** — HGNC:17642; [severe combined immunodeficiency due to DCLRE1C deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_603e0855-2b57-4463-a9b7-1c5d70089a4f-2021-02-18T154301.245Z) (MONDO:0011225; AR; Definitive).
-- [ ] **DCX** — HGNC:2714; [lissencephaly spectrum disorders](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b0d23d1-5ca6-4584-9d74-cf78ca21b0e1-2021-02-23T150911.296Z) (MONDO:0018838; XL; Definitive).
-- [ ] **DDB2** — HGNC:2718; [xeroderma pigmentosum group E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cf2a4254-51ec-467a-9194-3962d39a6b20-2019-04-19T160000.000Z) (MONDO:0010213; AR; Definitive).
-- [ ] **DDC** — HGNC:2719; [aromatic L-amino acid decarboxylase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1dea33e3-7cf6-47f9-aa52-2525b439031a-2022-02-25T170000.000Z) (MONDO:0012084; AR; Definitive).
-- [ ] **DDHD1** — HGNC:19714; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ba9bbb1-e36f-41db-9e56-23496613e46d-2022-12-01T200000.000Z) (MONDO:0019064; AR; Definitive).
-- [ ] **DDR2** — HGNC:2731; [spondyloepimetaphyseal dysplasia-short limb-abnormal calcification syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ac98a8f4-fedc-425d-ae43-ff4ef848b765-2023-05-30T160000.000Z) (MONDO:0010077; AR; Definitive); [warburg-cinotti syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6fc9f08-7935-48c2-a40e-bf93af5c5e1f-2026-03-27T160000.000Z) (MONDO:0032579; AD; Moderate).
-- [ ] **DDX11** — HGNC:2736; [Warsaw breakage syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_99d606e6-7d37-4502-bf44-bbf2db469459-2025-02-21T170000.000Z) (MONDO:0013252; AR; Definitive).
-- [ ] **DDX3X** — HGNC:2745; [X-linked syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b7c89d4-ccb2-4d4e-ad11-9d6051a40b6d-2020-05-05T100000.000Z) (MONDO:0020119; XL; Definitive).
-- [ ] **DDX41** — HGNC:18674; [DDX41-related hematologic malignancy predisposition syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e3db8214-a39d-408d-a3c2-7b4e817b1cc1-2020-07-30T202935.621Z) (MONDO:0014809; AD; Definitive).
-- [ ] **DEGS1** — HGNC:13709; [leukodystrophy, hypomyelinating, 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8a3090a0-8f88-4114-9438-87f8645ea133-2026-02-02T170000.000Z) (MONDO:0032730; AR; Definitive).
-- [ ] **DEPDC5** — HGNC:18423; [focal epilepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82a82c75-f9a5-4f51-a15c-6513c13df57c-2018-08-07T040000.000Z) (MONDO:0005384; AD; Definitive).
-- [ ] **DES** — HGNC:2770; [arrhythmogenic right ventricular cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aef9a60b-a94f-4318-824e-e748c5c20ecb-2018-09-11T160000.000Z) (MONDO:0016587; AD; Moderate); [dilated cardiomyopathy 1I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91b2595a-5eb9-4ac3-aa3d-d5f99cacad84-2026-03-04T170000.000Z) (MONDO:0011482; AD; Definitive).
-- [ ] **DGKE** — HGNC:2852; [atypical hemolytic-uremic syndrome with DGKE deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14eaa3eb-1b94-4ae3-a233-7e47e6817021-2025-04-03T160000.000Z) (MONDO:0018159; AR; Definitive); [membranoproliferative glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_99d5772a-c32d-4f71-a67c-8820d13e703c-2025-04-03T160000.000Z) (MONDO:0002461; AR; Definitive).
-- [ ] **DGUOK** — HGNC:2858; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dd4c3ef2-6738-4770-ad64-4db31672ca9a-2024-02-22T170000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **DHCR24** — HGNC:2859; [desmosterolosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c0bfe726-6062-406f-bbcf-ccd1f21ba987-2025-06-25T160000.000Z) (MONDO:0011217; AR; Definitive).
-- [ ] **DHCR7** — HGNC:2860; [Smith-Lemli-Opitz syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d5ed71c9-a76b-44c0-b5c0-44d604f2e0e9-2023-08-15T060000.000Z) (MONDO:0010035; AR; Definitive).
-- [ ] **DHDDS** — HGNC:20603; [DHDDS-CDG](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_748d9424-1f8c-4d72-8e79-2e0b8cc7c445-2023-04-06T160000.000Z) (MONDO:1040054; AR; Definitive).
-- [ ] **DHODH** — HGNC:2867; [postaxial acrofacial dysostosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9a1e8295-6655-4114-a54e-038aa8de5fe2-2023-06-15T040000.000Z) (MONDO:0009903; AR; Definitive).
-- [ ] **DHTKD1** — HGNC:23537; [2-aminoadipic 2-oxoadipic aciduria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6dd5de3-9819-432d-996c-12a66dff277f-2020-11-03T193815.515Z) (MONDO:0008774; AR; Definitive).
-- [ ] **DHX30** — HGNC:16716; [neurodevelopmental disorder with severe motor impairment and absent language](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_34f6aaf4-42ed-4871-acc9-efad01ef616e-2024-11-19T170000.000Z) (MONDO:0060622; AD; Definitive).
-- [ ] **DIAPH1** — HGNC:2876; [DIAPH1-related sensorineural hearing loss-thrombocytopenia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_43c017fd-ce70-4fbe-ad30-90f216adaa7d-2018-01-05T170000.000Z) (MONDO:0044635; AD; Definitive); [progressive microcephaly-seizures-cortical blindness-developmental delay syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1a6bb748-bda5-4d57-ab9c-00882cbefdf6-2024-11-21T170000.000Z) (MONDO:0014714; AR; Definitive).
-- [ ] **DICER1** — HGNC:17098; [DICER1-related tumor predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aeabfc3b-63a9-40f2-9c71-41b079fee4e2-2023-07-05T170000.000Z) (MONDO:0100216; AD; Definitive).
-- [ ] **DIS3L2** — HGNC:28648; [Perlman syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68b93df-e0e7-4d46-8934-8b86064c0b37-2019-11-21T193052.781Z) (MONDO:0009965; AR; Definitive).
-- [ ] **DKC1** — HGNC:2890; [DKC1-related disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afd6a4ca-7a1c-42ef-a9cf-bef557128f12-2020-06-16T100000.000Z) (MONDO:0100152; XL; Definitive); [dyskeratosis congenita, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb90bea1-16e7-44da-8551-91fb5fd7088a-2025-09-22T170000.000Z) (MONDO:0010584; XL; Definitive).
-- [ ] **DLD** — HGNC:2898; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_990dd96f-16ec-4c0f-a46b-ce4a647b7a50-2021-03-11T171246.198Z) (MONDO:0009723; AR; Definitive); [pyruvate dehydrogenase E3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9dfbbc2-cede-491e-9db0-fc5719fbc729-2019-03-08T170000.000Z) (MONDO:0009529; AR; Definitive).
-- [ ] **DLG3** — HGNC:2902; [non-syndromic X-linked intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e73a08f0-ff3a-4328-9020-89102296e405-2018-08-24T100000.000Z) (MONDO:0019181; XL; Definitive).
+- [x] **DCDC2** — HGNC:18141; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_477c8aba-eeba-43dc-a5e2-f6f84b127b8f-2021-10-13T160000.000Z) (MONDO:0005308; AR; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86802e37-e2a5-43b9-8538-e104859b4c55-2020-08-31T170000.000Z) (MONDO:0019497; AR; Limited).
+- [x] **DCLRE1C** — HGNC:17642; [severe combined immunodeficiency due to DCLRE1C deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_603e0855-2b57-4463-a9b7-1c5d70089a4f-2021-02-18T154301.245Z) (MONDO:0011225; AR; Definitive).
+- [x] **DCX** — HGNC:2714; [lissencephaly spectrum disorders](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b0d23d1-5ca6-4584-9d74-cf78ca21b0e1-2021-02-23T150911.296Z) (MONDO:0018838; XL; Definitive).
+- [x] **DDB2** — HGNC:2718; [xeroderma pigmentosum group E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cf2a4254-51ec-467a-9194-3962d39a6b20-2019-04-19T160000.000Z) (MONDO:0010213; AR; Definitive).
+- [x] **DDC** — HGNC:2719; [aromatic L-amino acid decarboxylase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1dea33e3-7cf6-47f9-aa52-2525b439031a-2022-02-25T170000.000Z) (MONDO:0012084; AR; Definitive).
+- [x] **DDHD1** — HGNC:19714; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ba9bbb1-e36f-41db-9e56-23496613e46d-2022-12-01T200000.000Z) (MONDO:0019064; AR; Definitive).
+- [x] **DDR2** — HGNC:2731; [spondyloepimetaphyseal dysplasia-short limb-abnormal calcification syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ac98a8f4-fedc-425d-ae43-ff4ef848b765-2023-05-30T160000.000Z) (MONDO:0010077; AR; Definitive); [warburg-cinotti syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6fc9f08-7935-48c2-a40e-bf93af5c5e1f-2026-03-27T160000.000Z) (MONDO:0032579; AD; Moderate).
+- [x] **DDX11** — HGNC:2736; [Warsaw breakage syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_99d606e6-7d37-4502-bf44-bbf2db469459-2025-02-21T170000.000Z) (MONDO:0013252; AR; Definitive).
+- [x] **DDX3X** — HGNC:2745; [X-linked syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b7c89d4-ccb2-4d4e-ad11-9d6051a40b6d-2020-05-05T100000.000Z) (MONDO:0020119; XL; Definitive).
+- [x] **DDX41** — HGNC:18674; [DDX41-related hematologic malignancy predisposition syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e3db8214-a39d-408d-a3c2-7b4e817b1cc1-2020-07-30T202935.621Z) (MONDO:0014809; AD; Definitive).
+- [x] **DEGS1** — HGNC:13709; [leukodystrophy, hypomyelinating, 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8a3090a0-8f88-4114-9438-87f8645ea133-2026-02-02T170000.000Z) (MONDO:0032730; AR; Definitive).
+- [x] **DEPDC5** — HGNC:18423; [focal epilepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82a82c75-f9a5-4f51-a15c-6513c13df57c-2018-08-07T040000.000Z) (MONDO:0005384; AD; Definitive).
+- [x] **DES** — HGNC:2770; [arrhythmogenic right ventricular cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aef9a60b-a94f-4318-824e-e748c5c20ecb-2018-09-11T160000.000Z) (MONDO:0016587; AD; Moderate); [dilated cardiomyopathy 1I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91b2595a-5eb9-4ac3-aa3d-d5f99cacad84-2026-03-04T170000.000Z) (MONDO:0011482; AD; Definitive).
+- [x] **DGKE** — HGNC:2852; [atypical hemolytic-uremic syndrome with DGKE deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14eaa3eb-1b94-4ae3-a233-7e47e6817021-2025-04-03T160000.000Z) (MONDO:0018159; AR; Definitive); [membranoproliferative glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_99d5772a-c32d-4f71-a67c-8820d13e703c-2025-04-03T160000.000Z) (MONDO:0002461; AR; Definitive).
+- [x] **DGUOK** — HGNC:2858; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dd4c3ef2-6738-4770-ad64-4db31672ca9a-2024-02-22T170000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **DHCR24** — HGNC:2859; [desmosterolosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c0bfe726-6062-406f-bbcf-ccd1f21ba987-2025-06-25T160000.000Z) (MONDO:0011217; AR; Definitive).
+- [x] **DHCR7** — HGNC:2860; [Smith-Lemli-Opitz syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d5ed71c9-a76b-44c0-b5c0-44d604f2e0e9-2023-08-15T060000.000Z) (MONDO:0010035; AR; Definitive).
+- [x] **DHDDS** — HGNC:20603; [DHDDS-CDG](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_748d9424-1f8c-4d72-8e79-2e0b8cc7c445-2023-04-06T160000.000Z) (MONDO:1040054; AR; Definitive).
+- [x] **DHODH** — HGNC:2867; [postaxial acrofacial dysostosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9a1e8295-6655-4114-a54e-038aa8de5fe2-2023-06-15T040000.000Z) (MONDO:0009903; AR; Definitive).
+- [x] **DHTKD1** — HGNC:23537; [2-aminoadipic 2-oxoadipic aciduria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6dd5de3-9819-432d-996c-12a66dff277f-2020-11-03T193815.515Z) (MONDO:0008774; AR; Definitive).
+- [x] **DHX30** — HGNC:16716; [neurodevelopmental disorder with severe motor impairment and absent language](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_34f6aaf4-42ed-4871-acc9-efad01ef616e-2024-11-19T170000.000Z) (MONDO:0060622; AD; Definitive).
+- [x] **DIAPH1** — HGNC:2876; [DIAPH1-related sensorineural hearing loss-thrombocytopenia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_43c017fd-ce70-4fbe-ad30-90f216adaa7d-2018-01-05T170000.000Z) (MONDO:0044635; AD; Definitive); [progressive microcephaly-seizures-cortical blindness-developmental delay syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1a6bb748-bda5-4d57-ab9c-00882cbefdf6-2024-11-21T170000.000Z) (MONDO:0014714; AR; Definitive).
+- [x] **DICER1** — HGNC:17098; [DICER1-related tumor predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aeabfc3b-63a9-40f2-9c71-41b079fee4e2-2023-07-05T170000.000Z) (MONDO:0100216; AD; Definitive).
+- [x] **DIS3L2** — HGNC:28648; [Perlman syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68b93df-e0e7-4d46-8934-8b86064c0b37-2019-11-21T193052.781Z) (MONDO:0009965; AR; Definitive).
+- [x] **DKC1** — HGNC:2890; [DKC1-related disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afd6a4ca-7a1c-42ef-a9cf-bef557128f12-2020-06-16T100000.000Z) (MONDO:0100152; XL; Definitive); [dyskeratosis congenita, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb90bea1-16e7-44da-8551-91fb5fd7088a-2025-09-22T170000.000Z) (MONDO:0010584; XL; Definitive).
+- [x] **DLD** — HGNC:2898; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_990dd96f-16ec-4c0f-a46b-ce4a647b7a50-2021-03-11T171246.198Z) (MONDO:0009723; AR; Definitive); [pyruvate dehydrogenase E3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9dfbbc2-cede-491e-9db0-fc5719fbc729-2019-03-08T170000.000Z) (MONDO:0009529; AR; Definitive).
+- [x] **DLG3** — HGNC:2902; [non-syndromic X-linked intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e73a08f0-ff3a-4328-9020-89102296e405-2018-08-24T100000.000Z) (MONDO:0019181; XL; Definitive).
 - [ ] **DLG4** — HGNC:2903; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fe31e200-7afd-49a9-80e0-60f9236c7dab-2023-01-16T230000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **DLL1** — HGNC:2908; [neurodevelopmental disorder with nonspecific brain abnormalities and with or without seizures](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_83ba0dc3-95f6-4c50-8616-ea2d3eeb7456-2024-07-02T160000.000Z) (MONDO:0032877; AD; Definitive).
 - [ ] **DMD** — HGNC:2928; [progressive muscular dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b528435f-dc16-45e0-9f0f-2da3f293ab4c-2024-11-14T170000.000Z) (MONDO:0016106; XL; Definitive).
@@ -5643,9 +5646,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **DAAM2** — HGNC:18143; [idiopathic multidrug-resistant nephrotic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0190c635-fa58-432c-9342-68805f6cbca2-2024-07-23T160000.000Z) (MONDO:0035459; AR; Limited).
 - [ ] **DDX59** — HGNC:25360; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ac80eb5-d18e-4285-a9cd-8734717d765b-2023-06-28T160000.000Z) (MONDO:0005308; AR; Limited).
 - [ ] **DENND5B** — HGNC:28338; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_894b2a59-9659-46b8-992f-4e6fd952a785-2026-05-20T170000.000Z) (MONDO:0100038; AD; Limited).
-- [ ] **DIABLO** — HGNC:21528; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f5903c3b-b2d7-4c14-b196-37533187d807-2021-09-21T160000.000Z) (MONDO:0019497; AD; Limited).
-- [ ] **DIAPH3** — HGNC:15480; [auditory neuropathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fc54aaf6-8e1b-4c98-bcbe-e1f337f6eadc-2020-02-06T170000.000Z) (MONDO:0021944; AD; Limited).
-- [ ] **DISP1** — HGNC:19711; [holoprosencephaly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ef9d5a3b-d4ec-473b-b5a2-aaa25cf9babd-2022-09-27T090000.000Z) (MONDO:0016296; AD; Limited).
+- [x] **DIABLO** — HGNC:21528; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f5903c3b-b2d7-4c14-b196-37533187d807-2021-09-21T160000.000Z) (MONDO:0019497; AD; Limited).
+- [x] **DIAPH3** — HGNC:15480; [auditory neuropathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fc54aaf6-8e1b-4c98-bcbe-e1f337f6eadc-2020-02-06T170000.000Z) (MONDO:0021944; AD; Limited).
+- [x] **DISP1** — HGNC:19711; [holoprosencephaly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ef9d5a3b-d4ec-473b-b5a2-aaa25cf9babd-2022-09-27T090000.000Z) (MONDO:0016296; AD; Limited).
 - [ ] **DLGAP2** — HGNC:2906; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_efeafdd5-9105-470f-b332-8c7a3dd65078-2021-10-13T220000.000Z) (MONDO:0100038; AD; Limited).
 - [ ] **DMGDH** — HGNC:24475; [dimethylglycine dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b181250b-bc72-43b7-adec-5b85860b1a62-2026-01-09T170000.000Z) (MONDO:0011610; AR; Limited).
 - [ ] **DMXL2** — HGNC:2938; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_746b46e8-0621-4879-80a1-4fb1679975be-2020-02-06T170000.000Z) (MONDO:0019497; AD; Limited).
