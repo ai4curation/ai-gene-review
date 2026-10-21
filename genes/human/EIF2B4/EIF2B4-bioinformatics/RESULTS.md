@@ -16,7 +16,7 @@ The complete IntAct query has 159 records. Eighteen imported generic-binding con
 
 Every selected curated reference checksum matches its saved official sequence. This authenticates the reference entity, not the complete assayed insert. VHL isoform 2 is independently reconstructed as a 172-residue sequence lacking canonical residues 114–154; it is not interchangeable with the shorter N-terminally truncated isoform commonly discussed under a different name. Partner enzymatic activity is not transferred to delta.
 
-Official partner functions and features support the factor-binding, transcription-factor-binding, protease-binding, lipase-binding and enzyme-binding refinements. UQCRC1 processing activity is qualified in its official record, while GRB2 is an adaptor; neither automatically supplies a more specific binding subclass here. The primary study’s retest/orthogonal-subset scope is documented in the source guide, without assigning a subset assay to an unverified individual pair.
+The FOS/KLKB1/LPL/GATM binary two-hybrid records support assay-context binding. Independently documented partner classes remain contextual findings, but the specific binding replacements are withdrawn: the exact experimental inserts, processing states and natural-product equivalence remain unresolved, and no independent EIF2B4 role with these partners was established. Generic non-core binding is retained; the primary study’s orthogonal subset is not assigned to an unverified target pair. The viral M2 records instead establish co-complex association, not a resolved direct contact, so generic non-core binding is retained without a transporter-binding replacement. UQCRC1 processing activity remains qualified in its official record, while GRB2 is an adaptor; neither automatically supplies a more specific binding subclass here.
 
 ## PAINT and rat donor provenance
 
@@ -35,7 +35,7 @@ These are source joins, not substitutes for reading the donor experiments. The b
 
 ## Rules, localization and product boundaries
 
-Four ARBA rules have target-matching FunFam conditions. The GEF rule concludes GO:0005085 but its saved conclusion does not expose an annotation relation; it cannot independently establish how an `enables` relation was inherited from another source. The other rule conclusions are retained with their experimental/physiological scope assessed in the review.
+Four ARBA rules have target-matching FunFam conditions. The GEF rule concludes GO:0005085 but its saved conclusion does not expose an annotation relation; it cannot independently establish how an `enables` relation was inherited from another source. The remaining rule conclusions are assessed individually in the review. In particular, the organ-development conclusion is marked over-annotated because the positive multisystem disease observations do not identify an organ-development step beyond the established translation mechanism.
 
 Reactome events 72670/72722 connect through complex 72526 and catalyst activity 72528. Human component 72521 identifies Q9UI10, residues 1–523, and its own cytosol compartment. The exchange catalyst is the complex. Component membership does not mean that delta alone performs the whole exchange reaction.
 
