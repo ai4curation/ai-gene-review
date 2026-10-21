@@ -48,6 +48,8 @@ UNIPROT_SEARCH = "https://rest.uniprot.org/uniprotkb/search"
 
 # Assessment categories of de Crécy-Lagard et al. 2025, in display order.
 CATEGORIES = ["COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP"]
+# How a cohort's eligible pool is counted (see benchmark-cohorts.yaml).
+ELIGIBLE_BASES = ("go_or_function", "all", "complement", "none")
 # Taxa named in the project prose; their pilot counts are recorded so the text is reproducible.
 NAMED_TAXA = {"wheat": 4565, "horse": 9796, "donkey": 9793, "fly": 7227, "human": 9606, "mouse": 10090, "rat": 10116}
 
@@ -145,6 +147,10 @@ def compute(
     unlisted = sorted(set(by_cohort) - spec_ids - set(spec["not_drawn_from_release"]))
     if unlisted:
         raise typer.BadParameter(f"benchmark-summary.json cohorts missing from {COHORTS_YAML.name}: {', '.join(unlisted)}")
+
+    for c in spec["cohorts"]:
+        if c.get("eligible", "go_or_function") not in ELIGIBLE_BASES:
+            raise typer.BadParameter(f"cohort {c['id']}: eligible must be one of {', '.join(ELIGIBLE_BASES)}")
 
     mod_taxa = {int(r["taxon_id"]) for r in read_csv(HERE / "mod-evolution-benchmark/cohort.csv")}
     pombe_inventory = read_csv(HERE / "pombe-benchmark/inventory.csv")
@@ -394,15 +400,21 @@ def eligible(c: dict) -> int | None:
     >>> pool = {"records": 94, "with_go_or_function": 41}
     >>> eligible({"pool": pool, "eligible_basis": "go_or_function"}), eligible({"pool": pool, "eligible_basis": "complement"})
     (41, 53)
+    >>> eligible({"pool": pool, "eligible_basis": "all"})
+    94
     >>> eligible({"pool": pool, "eligible_basis": "none"}) is None
     True
     """
     basis = c.get("eligible_basis", "go_or_function")
+    if basis == "go_or_function":
+        return c["pool"]["with_go_or_function"]
+    if basis == "all":
+        return c["pool"]["records"]
     if basis == "complement":
         return c["pool"]["records"] - c["pool"]["with_go_or_function"]
     if basis == "none":
         return None
-    return c["pool"]["with_go_or_function"]
+    raise ValueError(f"unknown eligible basis {basis!r} for cohort {c.get('id', '?')}")
 
 
 CHIP = {"census": ("census", "Census"), "hand-picked": ("hand", "Hand-picked"), "ranked rule": ("rule-c", "Ranked rule"), "off-list": ("off", "Census, off-list")}
@@ -441,7 +453,7 @@ def render_cohorts(d: dict) -> str:
         text(
             20,
             foot - 4,
-            f"Eligible: pool records with GO or function text; for remainder tiers, the records without it; dash where a tier mixes sources. "
+            f"Eligible: pool records with GO or function text; whole pool for ARGO-50; records without it for remainder tiers; dash where a tier mixes sources. "
             f"In-snapshot cohorts: {snapshot_picked} memberships, {d['prediction_targets']} distinct targets.",
             "t m",
             12,
@@ -471,7 +483,7 @@ def render_outcomes(d: dict) -> str:
             if w > 0:
                 body.append(f'<rect class="c-{cat}" x="{x:.1f}" y="{y}" width="{w:.1f}" height="22"{' opacity="0.55"' if later else ''}/>')
                 if w >= 26:
-                    body.append(text(x + w / 2, y + 15.5, str(counts[cat]), "t chip-t num", 11.5, "middle"))
+                    body.append(text(x + w / 2, y + 15.5, str(counts[cat]), "t chip-t num", 11.5, "middle").replace("<text ", '<text opacity="0.7" ', 1) if later else text(x + w / 2, y + 15.5, str(counts[cat]), "t chip-t num", 11.5, "middle"))
             x += w
         body.append(text(bar_x + bar_w + 12, y + 15, f"n = {n}", "t m num", 12.5))
     foot = top + len(rows) * row + 40

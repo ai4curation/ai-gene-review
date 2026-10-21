@@ -359,7 +359,7 @@ a **pilot set released by UniProt**: about 26,000 TrEMBL entries from "about 400
 searched species" ([UniProt ProtNLM help](https://www.uniprot.org/help/ProtNLM)). The REST API
 also serves some records from the 28,553-entry pre-release export that are not on the list (at
 least 57 are known: all 28 *S. pombe* and 29 fly records we checked; the total is undetermined),
-and our cohorts use 37 of them (28 *S. pombe*, 9 fly). Proteins outside both return 404. We could
+and our cohorts use 37 of them (28 *S. pombe*, 9 fly). Other proteins we probed returned 404. We could
 only evaluate what was released, so every cohort below is a census of, or a hand-picked sample
 from, that material. The last bar is not strictly nested: 86 of our 242 targets are off the list
 or have only names, locations or keywords.
