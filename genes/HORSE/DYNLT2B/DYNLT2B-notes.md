@@ -39,3 +39,13 @@ PANTHER: horse and human DYNLT2B are both in PTHR21255:SF7 (DYNLT2B-specific sub
 - Status set to COMPLETE.
 
 Next relative: canonical product of the same gene, UniProt gene-centric A0A9L0S9P8 (folder would be genes/HORSE/DYNLT2B__A0A9L0S9P8). Caveat: S9P8 itself has a divergent, Met-less N-terminus; A0A9L0TLH8 is the human-like full-length model and A0A9L0S150 the Ensembl canonical. Whichever is chosen, the experimentally characterised orthologue is human Q8WW35, already reviewed (genes/human/DYNLT2B).
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0045505, GO:0005868) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. Neither horse DYNLT2B product has GOA rows; the same two terms are
+proposed as NEW on the canonical product (DYNLT2B__A0A9L0S9P8, reviewed in
+`genes/HORSE/DYNLT2B__A0A9L0S9P8/`). A gene-level proposal belongs on one representative product, so
+the duplicate rows on this alternative model were withdrawn for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

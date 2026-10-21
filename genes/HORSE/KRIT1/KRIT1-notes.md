@@ -56,3 +56,13 @@ The relative is horse A0A3Q2GZV2, the full-length 736-aa product of the same gen
 `interpro/panther/PTHR13283/PTHR13283-review.yaml` places A0A9L0SR44 in SF11, which agrees with UniProt. However, the SF11 `description` copies the family-level KRIT1-vs-FRMD8 coherence text, and so describes FRMD8 inside the KRIT1 subfamily. A0A9L0SR44 is also listed as the representative, although it is an alternative C-terminal product; A0A3Q2GZV2 would be a better horse representative. I did not edit the family file.
 
 No KRIT1/CCM module exists in `modules/`. `modules/dmel_stripak_complex.yaml` covers only Ccm3/PDCD10. KRIT1 does not appear in `gocams/index.tsv`.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0008017) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (KRIT1__A0A3Q2GZV2, reviewed in `genes/HORSE/KRIT1__A0A3Q2GZV2/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

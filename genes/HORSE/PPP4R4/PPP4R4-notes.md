@@ -67,3 +67,13 @@ protein-binding policy.
 
 **Family/modules.** interpro/panther/PTHR21467 lists A0A9L0S961 and Q6NUP7 as SF0 representatives. Its
 subfamily placement agrees with this review. No module in modules/ mentions PPP4R4, Q6NUP7 or PTHR21467.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0019888) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (PPP4R4__A0A9L0S938, reviewed in `genes/HORSE/PPP4R4__A0A9L0S938/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

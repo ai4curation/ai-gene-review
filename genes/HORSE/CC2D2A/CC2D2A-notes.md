@@ -47,3 +47,13 @@ Rewrote the description, which now covers the domain architecture, MKS-module ro
 ### Relative to review next
 
 A0A5F5PUW7, the gene-centric canonical horse CC2D2A model (same gene). No review exists in the repo. Its folder would be `genes/HORSE/CC2D2A__A0A5F5PUW7`. The human ortholog Q9P2K1 already has a complete review (genes/human/CC2D2A, every annotation actioned).
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0035869, GO:1904491, GO:1905515, GO:0036038) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (CC2D2A__A0A5F5PUW7, reviewed in `genes/HORSE/CC2D2A__A0A5F5PUW7/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

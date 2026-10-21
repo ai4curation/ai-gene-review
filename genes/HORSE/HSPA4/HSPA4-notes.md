@@ -53,3 +53,13 @@ Conclusion: A0A9L0S5Z5 is an alternative-splice gene model of horse HSPA4, not t
 - Relative per the campaign rule: the same-gene canonical product F6YZJ4 (horse HSPA4, 840 aa), which has no review. The closest experimentally characterised ortholog is human HSPA4 P34932 (genes/human/HSPA4, status COMPLETE). Its review is largely templated: many protein-binding rows are UNDECIDED, and ATP hydrolysis is UNDECIDED.
 - PANTHER family review interpro/panther/PTHR45639/PTHR45639-review.yaml places A0A9L0S5Z5 and P34932 in SF6, which agrees with UniProt. It lists A0A9L0S5Z5 as an SF6 representative, although the canonical horse model F6YZJ4 would be the better representative.
 - Module: modules/heat_shock_response.yaml, part `hsp110_nef` (HSP110-family Hsp70 NEF; PTHR45639, PTN000452854). HSPA4 is not listed as a representative member there.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0000774) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (HSPA4__F6YZJ4, reviewed in `genes/HORSE/HSPA4__F6YZJ4/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

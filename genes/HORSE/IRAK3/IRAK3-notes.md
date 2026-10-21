@@ -41,3 +41,13 @@ The horse gene is in PANTHER PTHR24419:SF7 (IRAK3) with human Q9Y616 (80.5% iden
 Same-gene canonical product F6QZW8 (horse IRAK3, Ensembl canonical, 614 aa). It has no review in the repo; its folder would be `genes/HORSE/IRAK3__F6QZW8`. Human IRAK3 (Q9Y616) already has a complete review at genes/human/IRAK3.
 
 Modules: there is no IRAK3 part yet. Relevant modules are `modules/toll_like_receptor_signaling.yaml` (IRAK-TRAF6 signalosome), `modules/il1_signaling.yaml`, `modules/tlr4_md2_lps_signaling.yaml` and `modules/tlr2_heterodimer_lipopeptide_signaling.yaml`.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0034122, GO:0043242, GO:0019901) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (IRAK3__F6QZW8, reviewed in `genes/HORSE/IRAK3__F6QZW8/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

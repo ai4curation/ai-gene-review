@@ -45,3 +45,13 @@ The canonical product of the same gene, F6YEX2 (UniProt gene-centric canonical, 
 
 ### Family review and modules
 interpro/panther/PTHR11972/PTHR11972-review.yaml lists A0A9L0SQG9 under SF75 together with human Q9NRD9, which agrees with UniProt's PANTHER cross-reference, so there is no placement disagreement. The family review marks peroxidase activity as UNRESOLVED (contested). Here the contest is resolved toward NOT for mammalian SF75, on the basis of the purified-protein result and the residue caution. No module under modules/ mentions DUOX1, Q9NRD9 or DUOX.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0050665) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (DUOX1__F6YEX2, reviewed in `genes/HORSE/DUOX1__F6YEX2/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

@@ -38,3 +38,13 @@ ProtNLM2 output was not opened or used. Deep research: `just deep-research-falco
 ### Relative to review next
 
 A0A9L0T4W6 is a non-canonical alternative gene model. The canonical product of the same horse gene, A0A9L0RAE3, has no review. Suggested folder: `genes/HORSE/PTPRN2__A0A9L0RAE3`. The PANTHER family review (interpro/panther/PTHR46106) also places the horse protein in SF5, so there is no subfamily disagreement. But it uses the non-canonical A0A9L0T4W6 as the horse representative and repeats the "989-1003 deletion" description. No module in modules/ includes PTPRN2; `modules/beta_cell_glucose_stimulated_insulin_secretion.yaml` is the closest pathway context.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0051046) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (PTPRN2__A0A9L0RAE3, reviewed in `genes/HORSE/PTPRN2__A0A9L0RAE3/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.

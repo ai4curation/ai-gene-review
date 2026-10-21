@@ -46,3 +46,13 @@ Every seeded annotation receives a current assessment. UNDECIDED marks unresolve
 - The old `RESULTS.md` is kept. It is now marked DISPUTED in reference_review because of its WD40-boundary wording, and it is no longer cited as support.
 
 **Relative.** The canonical product of the same gene, F6WDM0, has no review in the repo. A future folder would be `genes/HORSE/GEMIN5__F6WDM0`. The human ortholog (genes/human/GEMIN5) is fully reviewed. The PANTHER family review `interpro/panther/PTHR46362/PTHR46362-review.yaml` agrees with the SF1 placement. It lists the benchmark isoform A0A9L0R5P7 as a representative member; F6WDM0 would be the better representative. No module in modules/ references GEMIN5.
+
+## 2026-10-21 — NEW rows withdrawn from the alternative gene model (PR #5303 review)
+
+The re-review had proposed NEW rows (GO:0000387, GO:0032797) on this benchmark accession because GOA propagates the
+gene's annotations, including PAINT IBA rows, to one representative product per gene and not to
+alternative transcript models. The same terms are already annotated in GOA on the canonical horse
+product of this gene (GEMIN5__F6WDM0, reviewed in `genes/HORSE/GEMIN5__F6WDM0/`). Filling that propagation
+convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
+for consistency across the cohort. The gene-level function is unchanged and is recorded on the
+canonical product's review; this file's description and core functions still describe it.
