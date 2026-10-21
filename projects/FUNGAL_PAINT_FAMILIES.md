@@ -44,7 +44,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-10-17
+Last updated: 2026-10-21
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -191,7 +191,9 @@ node `PANTHER:PTN002336496`.
 generic `GO:0008233 peptidase activity` at the family root,
 `PANTHER:PTN000086749`, and the eukaryotic ER signal-peptidase-complex role at
 `PANTHER:PTN000086750`, which carries `GO:0005787 signal peptidase complex` and
-`GO:0051604 protein maturation`.
+`GO:0051604 protein maturation`. This family is included as a compact
+paralog-aware comparison set even though these particular IBD rows are at the
+PTHR10806 root and Eukaryota rather than at a fungal-only node.
 
 - [x] `yeast/SEC11` - *S. cerevisiae* SPC catalytic subunit; drafted in PR
   #5264
