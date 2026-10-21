@@ -1,6 +1,6 @@
 # ELN evidence notes
 
-Elastin contributes the elastic core of extracellular fibers. Tropoelastin self-association, matrix binding and structural incorporation are work performed by the protein; oxidative cross-linking is performed by lysyl oxidases. The binding refinements use measured matrix interactions and assembly context. Generic non-core binding is retained for weaker or enzyme–substrate associations, while two positive studies with unresolved exact preparation scope remain uncertain.
+Elastin contributes the elastic core of extracellular fibers. Tropoelastin self-association, matrix binding and structural incorporation are work performed by the protein; oxidative cross-linking is performed by lysyl oxidases. The binding refinements use measured matrix interactions and assembly context. Generic non-core binding is retained for weaker or enzyme–substrate associations. The two fibulin-5 studies with incomplete preparation details now use a whole-gene matrix-binding refinement, supported by independent human experiments; their access limitations remain explicit.
 
 ## Source boundary and products
 
@@ -10,9 +10,9 @@ Official P15502 has 13 listed natural splice products. The displayed P15502-3 se
 
 ## Scientific decisions and uncertainty
 
-The 48 decisions comprise 20 ACCEPT, 15 MODIFY, 10 KEEP_AS_NON_CORE and 3 UNDECIDED. Broad structural function is refined to elasticity, and broad matrix assembly to elastic-fiber assembly. Arterial circulation, respiratory mechanics, postnatal valve organization and smooth-muscle proliferation regulation remain contextual positive roles. The human deletion study PMID:8132745 supports supravalvular aortic disease but does not resolve the exact outflow-tract developmental term. PMID:11805834 and PMID:17035250 positively report binding; their unresolved target/preparation scope is not converted into a negative interaction claim.
+The 48 decisions comprise 9 ACCEPT, 17 MODIFY and 22 KEEP_AS_NON_CORE. Broad structural function is refined to elasticity, and broad matrix assembly to elastic-fiber assembly. Arterial circulation, respiratory mechanics, postnatal valve organization and smooth-muscle proliferation regulation remain contextual positive roles. The human deletion study PMID:8132745 supports supravalvular aortic disease; its existing developmental curator interpretation is retained as a non-core role, without inventing a direct embryonic mechanism. PMID:11805834 and PMID:17035250 positively report binding. Independent human matrix-assembly studies justify refining these whole-gene claims while the source-specific preparation limits remain unresolved.
 
-Broad location terms are retained for proteomic ECM fractions and for extracellular precursors, aggregates and cleavage products. Two Reactome events explicitly locate ELN in elastic-fiber complexes on both sides, supporting a more specific fiber location there. A family prediction and source-specific elastic-material morphology can also be refined using independent human fiber evidence. These distinctions do not imply that every detected ELN molecule is already part of a mature fiber.
+Eleven broad location annotations are retained as non-core context for proteomic ECM fractions and for extracellular precursors, aggregates and cleavage products; the structural core location remains the elastic fiber. Two Reactome events explicitly locate ELN in elastic-fiber complexes on both sides, supporting a more specific fiber location there. A family prediction and source-specific elastic-material morphology can also be refined using independent human fiber evidence. These distinctions do not imply that every detected ELN molecule is already part of a mature fiber.
 
 ## Preparation and assay limits
 
@@ -29,3 +29,9 @@ The mouse donor collection contains 27 current records. PMID:20576933 addresses 
 ## Reproducibility and citation policy
 
 Reference assessments distinguish normal-cache contents, separately recovered main text, supplementary tables and actual figure-pixel inspection. The public source guide provides the source-specific account. No new publication quotation is introduced; support is reference-only. Database evidence is intended for portable offline reconstruction; original article bodies remain outside the public analysis package. Publication qualification, derived reports and append-only history are separate from the scientific source decisions.
+
+## Review follow-up
+
+The review distinguishes noncovalent matrix binding during fiber assembly from the mechanical elasticity of the assembled elastin core. The existing structural core is preserved; the binding activity is addressed separately. The MGI donor attribution for PMID:17099216 has a bounded, unreported source CHECK query. Normal abstract-only cache flags for PMID:17099216 and PMID:18757743 remain unchanged and are explicitly reflected by `full_text_unavailable`, alongside the separately recovered original-text accounts.
+
+The database derivation code and expected results are visible beside the input archive. [Database reconstruction results](ELN-bioinformatics/RESULTS.md) are cited from the rows that use those saved database premises. The genuine provider failure remains documented in the earlier acquisition evidence; no provider-labelled research report is fabricated.

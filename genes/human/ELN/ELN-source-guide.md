@@ -30,7 +30,7 @@ The authentic abstract explicitly identifies tropoelastin-associated material in
 
 Fibulin-5 is an elastin-binding protein essential for elastic fibre development in vivo.
 
-The authentic abstract positively reports calcium-dependent fibulin-5–elastin binding and mouse developmental phenotypes. Complete operative Methods and the exact ELN preparation/species corresponding to the imported mouse-fibulin pair were not recovered. The nominal PDF response is challenge HTML. The positive association is retained as context, but the source-specific annotation remains uncertain; an empty current interaction-database response is not negative evidence.
+The authentic abstract positively reports calcium-dependent fibulin-5–elastin binding and mouse developmental phenotypes. Complete operative Methods and the exact ELN preparation/species corresponding to the imported mouse-fibulin pair were not recovered. The nominal PDF response is challenge HTML. The positive association and curator assertion are retained; independent human fibulin-5/matrix experiments support the whole-gene matrix-binding refinement. Exact source preparation remains unverified, and an empty current interaction-database response is not negative evidence.
 
 ## PMID:15790312
 
@@ -48,7 +48,7 @@ Selected operative Methods, Results, captions and Discussion were read in an aut
 
 Fibulin-5 mutations: mechanisms of impaired elastic fiber formation in recessive cutis laxa.
 
-The authentic abstract and partial original Results preview contain positive wild-type/mutant fibulin-5–tropoelastin binding. Complete Methods and the exact ELN preparation corresponding to the imported pair remain unavailable. Rat RFL6 assembly experiments and the human fibulin mutation context are not silently converted into a defined human ELN insert. Source-specific binding remains uncertain without denying the positive reported observation.
+The authentic abstract and partial original Results preview contain positive wild-type/mutant fibulin-5–tropoelastin binding. Complete Methods and the exact ELN preparation corresponding to the imported pair remain unavailable. Rat RFL6 assembly experiments and the human fibulin mutation context are not silently converted into a defined human ELN insert. The positive binding report and curator assertion are retained; independent human fibulin-5/matrix experiments support the whole-gene matrix-binding refinement without resolving this preparation boundary.
 
 ## PMID:17324935
 
@@ -120,7 +120,7 @@ The authentic abstract reports an ELN-disrupting t(6;7) translocation associated
 
 Supravalvular aortic stenosis associated with a deletion disrupting the elastin gene.
 
-All seven authentic scanned article pages were visually examined, including operative Methods, Results and figures. Human family genomic analyses establish an ELN-disrupting deletion in supravalvular aortic stenosis. They do not directly resolve the exact developmental outflow-tract morphogenesis claim, which remains scientifically uncertain; this is not a claim that the authentic original was inaccessible or about a different gene.
+All seven authentic scanned article pages were visually examined, including operative Methods, Results and figures. Human family genomic analyses establish an ELN-disrupting deletion in supravalvular aortic stenosis. The existing developmental interpretation is retained by curator deference as a non-core structural vascular role. No direct embryonic mechanism or mutant-protein assay is inferred; the authentic original was accessible and concerns ELN.
 
 ## PMID:9580666
 
@@ -205,3 +205,7 @@ The current mouse ELN donor annotation and authentic main screening Methods/Resu
 Elastin haploinsufficiency results in progressive aortic valve malformation and latent valve disease in a mouse model.
 
 Selected complete genuine main Methods, Results, captions and Discussion describe mouse Eln haploinsufficiency, progressive postnatal valve matrix/morphometric changes and aortic mechanical testing. Normal neonatal measurements are distinguished from later valve disease. Detailed online Methods and figure pixels were not recovered. This donor study does not establish an early human cushion-formation assay or equal activity of human splice products.
+
+## Saved database reconstruction
+
+[RESULTS.md](ELN-bioinformatics/RESULTS.md), the visible `reproduce.py`, `results.json` and `input-manifest.json` expose the database derivations. Reference-only links from the relevant review rows identify exactly where this local artifact supports official-record paths, donor joins, sequences and ontology relations; original assay evidence remains separately attributed. The mouse donor attribution in PMID:17099216 is also recorded as an unreported MGI CHECK query, without rejecting independently supported human fiber localization.

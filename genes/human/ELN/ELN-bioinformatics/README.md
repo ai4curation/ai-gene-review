@@ -1,7 +1,38 @@
-# Reproduce ELN database evidence
+# ELN database evidence replay
 
-Run `python3 reproduce.py` from any working directory. The program requires only Python's standard library, checks the archive hash and every internal input hash, safely extracts to a temporary directory, reconstructs the evidence and removes the temporary files afterward. It performs no network calls and does not modify the saved evidence.
+Run from this directory, or pass the script's path from another directory:
 
-The archive contains frozen official Reactome, QuickGO, UniProt, InterPro and Ensembl records, sequence FASTA files, retrieval receipts, the literal 48 source assertions and all 50 raw contexts. The inner program reconstructs typed target paths and current donor joins, checks product sequences and ontology relations, and exposes raw-context multiplicity. Its expected projection is compared against freshly derived results rather than used to generate them.
+```sh
+python3 reproduce.py
+```
 
-Only private absolute file locators in the expected projection were converted to relative archive paths; all scientific objects and ordered graph edges remain unchanged. Original publication bodies, figure images, supplementary article workbooks and provider logs are not redistributed. See the source guide for independently assessed primary evidence and access limits. A successful replay verifies the saved database reconstruction, not biological equivalence of all natural products or completeness of unexpanded graph branches.
+Python 3.9 or later and its standard library are sufficient. No network access,
+repository checkout, package installation or pre-existing extraction directory is
+needed. The replay reads adjacent files using the script's location and writes
+only into an automatically removed temporary directory.
+
+- `reproduce.py` contains all executable reconstruction and verification logic.
+- `results.json` is the unchanged expected database projection previously stored
+  as `expected-projection.json` inside the archive. It is compared with values
+  freshly derived from the saved inputs, not printed as a substitute for them.
+- `input-manifest.json` lists the exact 99 input paths, SHA-256 hashes, sizes and
+  modes. These are 95 official database/sequence/receipt files and four frozen
+  source/context/product records.
+- `database-evidence.tar.gz` contains only those 99 inputs. Every input's bytes
+  and mode are unchanged from the original published archive.
+- `archive-manifest.json` binds the archive and the two visible JSON files.
+- `RESULTS.md` records the scope and limits of the reconstruction.
+
+Before writing any input, the replay verifies the archive hash and its entire
+member set, hashes, sizes and modes. It rejects unexpected, duplicate, traversal,
+absolute, non-regular and sparse members. It never executes code from the archive.
+The hash records detect inconsistency; they are not a digital signature or a
+substitute for reviewing the code and the underlying evidence.
+
+The replay reconstructs 48 source objects against 50 raw contexts, eight Reactome
+source-event paths to human P15502, literal mouse-donor joins, 13 official product
+sequence checks and the saved typed ontology edges. Unexpanded branches remain
+explicit. This is positive database/source/product evidence, not a proof of absent
+paths, experimental equivalence of every product, or primary-paper assay results.
+No article bodies, figures, supplements or provider output are bundled. Genuine
+normal publication caches and the gene review are not changed by this packaging.
