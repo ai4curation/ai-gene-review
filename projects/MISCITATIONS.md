@@ -25,9 +25,10 @@ were buried one gene at a time. The register covers 14,559 adjudicated reference
 2,074 of 4,513 reviews and flags 559 (3.8%, an enriched sample rather than an error
 rate); all six seed cases stand. The main finding is structural: four of the six are
 defects in how a source database attached a correct paper (a wrong `WITH/FROM`
-interactor, an experimental code on a meeting report, a missing `NOT`), and the schema
-has no field for that yet. Most defects live in GOA, IntAct or UniProt rather than in
-this repo, and nothing has been reported upstream.
+interactor, an experimental code on a meeting report, a missing `NOT`). The schema
+records these as `review.source_defects` (see [Source defects](../docs/source_defects.md));
+the six seed cases have not yet been migrated into it. Most defects live in GOA, IntAct
+or UniProt rather than in this repo, and nothing has been reported upstream.
 
 The sibling [Miscitation Audit](MISCITATION_AUDIT.md) keys the same flags on the
 citation to find bad PMIDs copied across genes. Both count one flag per (gene,

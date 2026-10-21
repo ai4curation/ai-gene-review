@@ -278,6 +278,12 @@ cache-gocams *args="":
 gocam-index *args="":
     uv run ai-gene-review gocam-index {{args}}
 
+# Collect structured source-database defects (review.source_defects and GO-CAM
+# activity_reviews[].source_defects) into reports/source-defects.tsv plus one
+# Markdown report per upstream resource in reports/source-defects/. See docs/source_defects.md.
+export-source-defects *args="":
+    uv run python -m ai_gene_review.tools.export_source_defects {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
