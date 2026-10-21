@@ -1,6 +1,6 @@
 # EGR2 source and evidence guide
 
-This guide separates imported annotation provenance, actual experimental scope, and the content available in each publication cache. Cached abstracts remain abstracts even where an original was independently inspected. The source records and inherited quotations are preserved except for the three explicitly documented excerpt-occurrence retirements; no replacement quotation was introduced.
+This guide separates imported annotation provenance, actual experimental scope, and the content available in each publication cache. Cached abstracts remain abstracts even where an original was independently inspected. The source records and inherited quotations are preserved except for the four explicitly documented excerpt-occurrence retirements; no replacement quotation was introduced.
 
 ## Experimental evidence and access
 
@@ -62,3 +62,5 @@ The normal acquisition archives, historical source contexts and provider outcome
 The transcriptional core includes positive regulation of myelination (GO:0031643) and Schwann-cell differentiation (GO:0014040), supported by the mouse loss-of-function abstracts PMID:7935840 and PMID:10068633 and human myelinopathy evidence. The saved official structural ontology relations do not make these processes redundant with positive regulation of RNA polymerase II transcription.
 
 The SUMO core names [human NAB2, UniProtKB:Q15742](https://www.uniprot.org/uniprotkb/Q15742/entry) as the conserved substrate. Its official record identifies Homo sapiens (taxon 9606); the defined biochemical experiment in PMID:21836637 still used mouse Egr2 and mouse Nab2 with human SUMO1. The human substrate identifier expresses the ortholog inference and does not relabel that experiment as a human purified-pair assay. Long and Short EGR2 retain their distinct 476- and 426-residue sequence boundaries; functional equivalence is not established.
+
+The PR review follow-up retires the inherited PMID:14532282 HCF-1 quotation from the GO:0061629 IEA assertion. That quotation does not establish the DNA-binding partner class; PMID:18396140 supplies the KLF4 evidence. All other retained quotation text remains exact. Six broad molecular-function source rows are refined to supported is_a descendants after checking official ontology ancestry.

@@ -21,3 +21,7 @@ The transcriptional core includes positive regulation of myelination and Schwann
 ## GOA snapshot reconciliation
 
 Final validation identified that the two newly fetched annotations were absent from the old bundled GOA snapshot. The bundled GOA is therefore refreshed from the already archived, normal fetch output (72 raw rows; 71 distinct source contexts). Five historical rows no longer present in that snapshot are retained with `retired: true`; their review actions and all original evidence remain unchanged. This is a source-lifecycle correction, not a claim that the biological functions were disproved. The earlier snapshot is preserved in the portable evidence directory.
+
+## PR 5249 review follow-up
+
+Removed one inherited HCF-1 quotation from the KLF4 DNA-binding-transcription-factor binding assertion because it did not support that partner class. The matching primary KLF4 reference remains. Six broad molecular-function rows are refined to already supported descendant terms: SUMO ligase activity, zinc ion binding, and RNA polymerase II cis-regulatory region sequence-specific DNA binding. Both old and current DNA-binding sources and both cis-regulatory-binding sources receive the same specificity treatment. Source identities and lifecycle flags are unchanged. The standalone biological description now states the colon-cancer context of proapoptotic targets and leaves experimental-provenance limits in the evidence guide and review reasons. Thirty-eight inherited quotation occurrences remain, with no new quotations.
