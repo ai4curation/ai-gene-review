@@ -25,9 +25,10 @@ Reviewed local evidence:
   S. pombe erg6, C. albicans ERG6, A. fumigatus erg6, and additional fungal
   sterol C-24 methyltransferases. The PAINT activity/localization node
   `PTN002226525` and fungal process node `PTN000802684` therefore cover the
-  Neurospora enzyme, but `GO:0003838` itself is scoped to RHEA:21128,
-  zymosterol -> fecosterol, so this review proposes a lanosterol-specific
-  molecular-function term for the Neurospora core function.
+  Neurospora enzyme. `GO:0003838` is currently defined as the RHEA:21128
+  zymosterol -> fecosterol reaction, but PAINT uses it for the broader sterol
+  C-24 methyltransferase activity class, so this review keeps `GO:0003838` and
+  proposes a lanosterol-specific child term for the Neurospora core function.
 
 PubMed/NCBI search notes:
 
