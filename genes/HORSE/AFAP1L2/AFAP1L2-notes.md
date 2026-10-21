@@ -44,3 +44,13 @@ A0A9L0RQI4 is in PANTHER PTHR14338:SF4 (AFAP1L2), the same subfamily as human Q8
 ### Relative
 
 Human AFAP1L2 (Q8N4X5), ortholog in the same PANTHER subfamily and the PAINT seed for PTN002682769; `genes/human/AFAP1L2/AFAP1L2-ai-review.yaml` exists with all 18 GOA rows reviewed. Suggestion for that review (not edited here): it could add the p85-binding and actin filament binding MFs supported by PMID:19060924 and PMID:27462298. No module includes AFAP1L2; nearest context modules are `modules/integrin_fak_src_signaling.yaml` and `modules/pi3k_akt_mtor.yaml`.
+
+## 2026-10-21 — NEW rows withdrawn: already annotated on another product of the same gene
+
+The HORSE40 re-review (PR #5303) proposed NEW IBA rows for GO:0030296 protein tyrosine kinase activator
+activity and GO:0005829 cytosol on A0A9L0RQI4, because GOA did not propagate the PAINT IBAs to this
+transcript model. QuickGO shows that another horse AFAP1L2 product, A0A3Q2HBW2 (943 aa), carries both
+terms by IBA and IEA. GOA propagates gene-level annotations to one representative product per gene, so
+these rows filled a convention rather than a curation gap. They were withdrawn under the rule applied
+across the ProtNLM2 re-review cohorts. The core functions keep their own PAINT and literature support,
+and the gene-level function is unchanged.
