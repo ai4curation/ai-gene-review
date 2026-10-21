@@ -23,8 +23,10 @@ The original exploratory analysis used a pre-release XML export (`post-processed
 [`benchmark-funnel.json`](benchmark-funnel.json)): the published list has 26,856 accessions in
 416 taxa. The API serves 26,855 of them (A0A8K0EP25 returns 404). 10,268 records carry GO
 predictions or function text, 6,291 of them GO predictions; the rest carry only names,
-locations or keywords. Off-list, the API also serves the 28 S. pombe Swiss-Prot entries of the
-[pombe cohort](pombe.md).
+locations or keywords. Off the list, the API also serves records from the pre-release export:
+all 28 *S. pombe* entries of the [pombe cohorts](pombe.md) and all 29 off-list fly accessions
+identified for [FLY_NEXT20](fly-next20.md) (9 of which that cohort uses) return predictions. This
+is not an exhaustive census of what the API serves.
 
 The table below describes the **pre-release XML export** (28,553 entries) used in the first
 exploratory analysis. It is kept for provenance and does not describe the public release.

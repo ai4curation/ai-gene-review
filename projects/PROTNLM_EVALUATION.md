@@ -356,12 +356,13 @@ manifest:
 
 ProtNLM2's full predictions (GO terms, function text, locations) are public only for
 a **pilot set released by UniProt**: about 26,000 TrEMBL entries from "about 400 of the most
-searched species" ([UniProt ProtNLM help](https://www.uniprot.org/help/ProtNLM)). Apart from
-37 entries it still serves from a pre-release export (28 *S. pombe* and 9 fly records, used in
-our pombe and FLY_NEXT20 cohorts), the REST API returns 404 for any other protein. We could only
-evaluate what was released, so every cohort below is a census of, or a hand-picked sample from,
-that material. The last bar is not strictly nested: 86 of our 242 targets are off the list or
-have only names, locations or keywords.
+searched species" ([UniProt ProtNLM help](https://www.uniprot.org/help/ProtNLM)). The REST API
+also serves some records from the 28,553-entry pre-release export that are not on the list (at
+least 57 are known: all 28 *S. pombe* and 29 fly records we checked; the total is undetermined),
+and our cohorts use 37 of them (28 *S. pombe*, 9 fly). Proteins outside both return 404. We could
+only evaluate what was released, so every cohort below is a census of, or a hand-picked sample
+from, that material. The last bar is not strictly nested: 86 of our 242 targets are off the list
+or have only names, locations or keywords.
 
 ![Funnel from UniProtKB to our cohorts](PROTNLM_EVALUATION/figures/benchmark-funnel.svg)
 

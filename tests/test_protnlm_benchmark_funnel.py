@@ -59,8 +59,18 @@ def test_outside_set_breakdown_is_consistent(funnel: dict) -> None:
     assert sum(outside["not_on_list_by_species"].values()) == outside["not_on_list"]
 
 
-def test_categories_cover_every_count(module: ModuleType, funnel: dict) -> None:
-    """No assessment code can silently drop out of the outcome bars."""
-    for cohort in funnel["cohorts"]:
+def test_categories_match_summary_codes(module: ModuleType) -> None:
+    """The funnel's category list and the summary generator's code list must not drift apart."""
+    spec = importlib.util.spec_from_file_location("benchmark_summary", PROJECT / "build_benchmark_summary.py")
+    assert spec is not None and spec.loader is not None
+    summary_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(summary_module)
+    assert tuple(module.CATEGORIES) == tuple(summary_module.CODES)
+
+
+def test_summary_codes_are_known(module: ModuleType) -> None:
+    """Every code counted in benchmark-summary.json is drawn in the figures."""
+    summary = json.loads((PROJECT / "benchmark-summary.json").read_text())
+    assert set(summary["go_counts"]) <= set(module.CATEGORIES)
+    for cohort in summary["cohorts"]:
         assert set(cohort["go_counts"]) <= set(module.CATEGORIES)
-    assert set(funnel["go_counts"]) <= set(module.CATEGORIES)

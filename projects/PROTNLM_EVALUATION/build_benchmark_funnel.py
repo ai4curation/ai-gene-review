@@ -179,6 +179,7 @@ def compute(
                 "method": c["method"],
                 "detail": c["detail"],
                 "pool": pool(c["pool"]),
+                "eligible_basis": c.get("eligible", "go_or_function"),
                 "selected": stats["records"] if stats else donkey_selected,
                 "go_claims": sum(go_counts.values()),
                 "go_counts": go_counts,
@@ -318,7 +319,7 @@ def render_funnel(d: dict) -> str:
         ("Unreviewed (TrEMBL)", f"Swiss-Prot is the other {fmt(d['swissprot'])}", d["trembl"], False),
         ("ProtNLM2 public pilot", f"{d['pilot']['taxa']} taxa", d["pilot"]["records"], False),
         ("With GO or function text", "the rest: names, locations, keywords", d["pilot"]["with_go_or_function"], False),
-        ("Our prediction targets", f"{d['prediction_targets_with_any_review']} reviewed; {outside['total']} outside the set above", d["prediction_targets"], True),
+        ("Our prediction targets", f"{d['prediction_targets_with_any_review']} of {d['prediction_targets']} reviewed; {outside['total']} from outside the set above", d["prediction_targets"], True),
     ]
     width, top, row, bar_h = 960, 40, 66, 40
     cx, max_w = 455, 300
@@ -367,7 +368,7 @@ def render_funnel(d: dict) -> str:
         text(
             20,
             foot + 22,
-            f"Targets outside the GO/function set: {outside['not_on_list']} served by the API but not on the list "
+            f"Targets outside the GO/function set: {outside['not_on_list']} not on the published list "
             f"({species_breakdown(outside['not_on_list_by_species'])}), and {outside['listed_without_go_or_function']} listed with only names, locations or keywords.",
             "t m",
             12.5,
@@ -387,6 +388,23 @@ def render_funnel(d: dict) -> str:
     return svg(width, foot + 54, body, "Funnel from UniProtKB to the ProtNLM2 benchmark cohorts")
 
 
+def eligible(c: dict) -> int | None:
+    """Pool records a cohort could be drawn from, given how it was drawn.
+
+    >>> pool = {"records": 94, "with_go_or_function": 41}
+    >>> eligible({"pool": pool, "eligible_basis": "go_or_function"}), eligible({"pool": pool, "eligible_basis": "complement"})
+    (41, 53)
+    >>> eligible({"pool": pool, "eligible_basis": "none"}) is None
+    True
+    """
+    basis = c.get("eligible_basis", "go_or_function")
+    if basis == "complement":
+        return c["pool"]["records"] - c["pool"]["with_go_or_function"]
+    if basis == "none":
+        return None
+    return c["pool"]["with_go_or_function"]
+
+
 CHIP = {"census": ("census", "Census"), "hand-picked": ("hand", "Hand-picked"), "ranked rule": ("rule-c", "Ranked rule"), "off-list": ("off", "Census, off-list")}
 
 
@@ -395,7 +413,7 @@ def render_cohorts(d: dict) -> str:
     cols = {"pool": 410, "elig": 530, "picked": 610, "chip": 640, "go": 940}
     body = [
         text(cols["pool"], 40, "Records", "t m b", 12, "end"),
-        text(cols["elig"], 40, "GO/function", "t m b", 12, "end"),
+        text(cols["elig"], 40, "Eligible", "t m b", 12, "end"),
         text(cols["picked"], 40, "Picked", "t m b", 12, "end"),
         text(cols["chip"], 40, "How picked", "t m b", 12),
         text(cols["go"], 40, "GO claims", "t m b", 12, "end"),
@@ -406,7 +424,7 @@ def render_cohorts(d: dict) -> str:
         body.append(text(20, y, c["label"], "t b", 14.5))
         body.append(text(20, y + 18, c["drawn_from"], "t m", 12.5))
         body.append(text(cols["pool"], y, fmt(c["pool"]["records"]), "t num", 14, "end"))
-        body.append(text(cols["elig"], y, fmt(c["pool"]["with_go_or_function"]), "t num", 14, "end"))
+        body.append(text(cols["elig"], y, fmt(eligible(c)), "t num", 14, "end"))
         body.append(text(cols["picked"], y, fmt(c["selected"]), "t b num", 14, "end"))
         cls, label = CHIP[c["method"]]
         chip_w = 9 + 6.6 * len(label)
@@ -423,8 +441,8 @@ def render_cohorts(d: dict) -> str:
         text(
             20,
             foot - 4,
-            f"Records and GO/function count the released pool each cohort was drawn from. In-snapshot cohorts pick {snapshot_picked} memberships, "
-            f"{d['prediction_targets']} distinct targets.",
+            f"Eligible: pool records with GO or function text; for remainder tiers, the records without it; dash where a tier mixes sources. "
+            f"In-snapshot cohorts: {snapshot_picked} memberships, {d['prediction_targets']} distinct targets.",
             "t m",
             12,
         )
@@ -433,8 +451,9 @@ def render_cohorts(d: dict) -> str:
 
 
 def render_outcomes(d: dict) -> str:
-    rows = [(c["label"], c["go_counts"]) for c in d["cohorts"] if c["in_snapshot"] and c["go_claims"]]
-    rows.append(("All cohorts", d["go_counts"]))
+    rows = [(c["label"], c["go_counts"], False) for c in d["cohorts"] if c["in_snapshot"] and c["go_claims"]]
+    rows.append((TOTAL_LABEL, d["go_counts"], False))
+    rows += [(f"{c['label']} (later)", c["go_counts"], True) for c in d["cohorts"] if not c["in_snapshot"] and c["go_claims"]]
     width, top, row, bar_x, bar_w = 960, 52, 34, 190, 640
     body = []
     lx = bar_x
@@ -442,27 +461,27 @@ def render_outcomes(d: dict) -> str:
         body.append(f'<rect class="c-{cat}" x="{lx}" y="16" width="12" height="12" rx="2"/>')
         body.append(text(lx + 17, 27, cat, "t", 12.5))
         lx += 70
-    for i, (label, counts) in enumerate(rows):
-        y = top + i * row + (10 if label == "All cohorts" else 0)
+    for i, (label, counts, later) in enumerate(rows):
+        y = top + i * row + (10 if (label == TOTAL_LABEL or later) else 0) + (10 if later else 0)
         n = sum(counts[c] for c in CATEGORIES)
-        body.append(text(20, y + 15, label, "t b" if label == "All cohorts" else "t", 14))
+        body.append(text(20, y + 15, label, "t b" if label == TOTAL_LABEL else ("t m" if later else "t"), 14 if not later else 13))
         x = bar_x
         for cat in CATEGORIES:
             w = bar_w * counts[cat] / n if n else 0
             if w > 0:
-                body.append(f'<rect class="c-{cat}" x="{x:.1f}" y="{y}" width="{w:.1f}" height="22"/>')
+                body.append(f'<rect class="c-{cat}" x="{x:.1f}" y="{y}" width="{w:.1f}" height="22"{' opacity="0.55"' if later else ''}/>')
                 if w >= 26:
                     body.append(text(x + w / 2, y + 15.5, str(counts[cat]), "t chip-t num", 11.5, "middle"))
             x += w
         body.append(text(bar_x + bar_w + 12, y + 15, f"n = {n}", "t m num", 12.5))
-    foot = top + len(rows) * row + 20
+    foot = top + len(rows) * row + 40
     nc = d["narrative_counts"]
     body.append(f'<line class="rule" x1="20" y1="{foot}" x2="940" y2="{foot}"/>')
     body.append(
         text(
             20,
             foot + 22,
-            "Share of each cohort's GO claims. COR means supported and absent from the target's existing annotation, so it is only possible where the target lacks the term.",
+            "Share of each cohort's GO claims. COR = supported and absent from the target's existing annotation. Rows marked (later) were reviewed after the snapshot and are not in the total.",
             "t m",
             12.5,
         )
@@ -478,6 +497,8 @@ def render_outcomes(d: dict) -> str:
     )
     return svg(width, foot + 54, body, "Assessment categories of ProtNLM2 GO claims by cohort")
 
+
+TOTAL_LABEL = "All in-snapshot cohorts"
 
 RENDERERS = {"benchmark-funnel": render_funnel, "benchmark-cohorts": render_cohorts, "benchmark-outcomes": render_outcomes}
 

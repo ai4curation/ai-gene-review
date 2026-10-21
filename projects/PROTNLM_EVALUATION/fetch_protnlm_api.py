@@ -131,7 +131,7 @@ def fetch_all(accessions: list[str], jsonl_path: Path, resume: bool = False, wor
                     f.write(json.dumps(data) + "\n")
             f.flush()
             n_done = min(start + chunk, len(remaining))
-            if n_done % 500 < chunk:
+            if n_done // 500 > (n_done - chunk) // 500 or n_done == len(remaining):
                 print(f"  {n_done}/{len(remaining)} fetched ({len(errors)} errors)", flush=True)
 
     print(f"Done: {len(remaining) - len(errors)} fetched, {len(errors)} errors")
