@@ -136,4 +136,22 @@ The official three-product boundary remains Q9NR50-1/Q9NR50-2/Q9NR50-3, with len
 
 The [portable evidence](EIF2B3-evidence/README.md) provides exact source URLs, hashes and a raw-derived replay for the family tree, alignment, literal IBDs, target rule conditions, donor records, Reactome entity paths and HPA location reliability. The current term and source relations remain separate from the biological assessment. In particular, the two probable UniProt relation queries preserve the original `enables` fields while requesting review of the complex-contribution interpretation.
 
-The four unresolved annotations are retained explicitly. Incomplete subunit attribution or unavailable operative details are not negative evidence, and positive whole-factor observations remain visible. No new process annotation is inferred from a phenotype, and no additional core is added simply to mirror every contextual source assertion.
+The three unresolved annotations are retained explicitly. Incomplete subunit attribution or unavailable operative details are not negative evidence, and positive whole-factor observations remain visible. No new process annotation is inferred from a phenotype, and no additional core is added simply to mirror every contextual source assertion.
+
+## Follow-up interpretation and direct source access
+
+The heat-response annotation is a supported non-core gene-level claim through the rat P70541 donor and PMID:9341116. This corroboration supports retaining the parallel TAS claim while leaving the exact gamma-specific content of PMID:12499492 unresolved. The latter paper's incomplete access is recorded as a source limitation, not a negative heat-response conclusion.
+
+RNA-dependent translation-factor activity remains a distinct unresolved claim from the accepted initiation-factor activity. PMID:10900014 is accessible and supports human EIF2B gamma-dependent HCV-IRES translation; Discussion reference 20 is the authenticated PMID:1647211. The earlier positive EMCV-IRES observation uses the combined designation eIF-2/2B, and its unavailable Methods do not resolve factor preparation or gamma contribution. No isolated-gamma RNA-contact requirement is imposed.
+
+For the broad cytoplasmic row, [HPA's EIF2B3 subcellular record](https://www.proteinatlas.org/ENSG00000070785-EIF2B3/subcellular) independently supports cytosol, as does the [target-resolved Reactome entity](https://reactome.org/content/detail/R-HSA-72525). The original HeLa purification remains evidence for cytoplasm. For CNS development, ARBA00026561's matched condition set contains two gamma-family FunFams; the patient 823 exchange assay in PMID:15054402 measures a biochemical defect in transformed lymphocytes, not a developmental endpoint. The developmental prediction is therefore over-annotated without disputing the disease association.
+
+The existing locator inventory distinguishes partial normal caches from separately assessed originals. These direct public links make the load-bearing observations easier to inspect without adding quotations:
+
+| Claim | Public original and operative locator | Access boundary |
+|---|---|---|
+| Gamma association with tagged epsilon and complex assembly | [PMID:15060152 / PMC381664](https://pmc.ncbi.nlm.nih.gov/articles/PMC381664/), human-subunit cloning and assembly Methods, Results/Figure 1; saved indexed blocks 25–62 | The normal cache contains abstract and Discussion, not the operative gamma passages. Selected original Methods/Results were separately assessed; no purified binary affinity is claimed. |
+| Human translation comparator | [PMID:27023709 / PMC4833825](https://pmc.ncbi.nlm.nih.gov/articles/PMC4833825/), Methods and Results/Figure 2h; saved entries 12, 19 and 23 | Human-factor comparator is distinct from the S. pombe structure and subcomplex work. |
+| Gamma patient exchange defect | [PMID:15054402 original](https://doi.org/10.1038/sj.ejhg.5201189), EBV-transformed-cell Methods and Table 1 patient 823 | Normal cache remains abstract-only; selected original Methods, Results and Table 1 were assessed separately. |
+
+Exact cache/extract SHA-256 values and the original access scopes remain in [original-locators.json](EIF2B3-evidence/original-locators.json). A source URL or cache flag does not itself imply that complete operative text was recovered. The three unresolved annotations are RNA-binding activity, oligodendrocyte development and T-cell-receptor signaling; none is relabeled as biologically false.
