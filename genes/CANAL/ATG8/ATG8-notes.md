@@ -25,6 +25,10 @@ manual literature pass instead of a generated `ATG8-deep-research-*.md`.
   transport/degradation assays in an `atg11` mutant under nitrogen starvation
   and hypha-inducing conditions, supporting the UniProt vacuolar-membrane
   localization context.
+- `PMID:27473887` is abstract-only locally. The abstract reports that C. albicans
+  `pex1 atg8` and `pex1 atg1` double mutants have attenuated oxidative-stress
+  tolerance, supporting an autophagy-dependent stress phenotype but not a direct
+  oxidative-stress activity specific to ATG8.
 - `PMID:36328097` was added because UniProt cites it for C. albicans ATG8
   function and it postdates the seeded GOA literature. Its abstract reports that
   `atg8 ire1` double mutants are more sensitive to ER stress and have stronger
@@ -51,11 +55,15 @@ justified adding a new direct C. albicans ATG8 GO term.
 - Accepted the PTN000861115 fungal-type vacuole-membrane IBA. It is scoped to
   fungi and is concordant with UniProt's PMID:31284951-backed vacuole-membrane
   statement.
-- Accepted both UniProt SubCell rows because they duplicate curated
-  autophagosome/vacuole membrane locations rather than making unsupported
-  transfers.
+- Accepted the UniProt SubCell autophagosome-membrane row because it duplicates
+  the accepted PAINT row, and marked both generic vacuolar-membrane rows too
+  general beside the accepted fungal-type vacuole membrane IBA.
 - Removed only the CGD `GO:0003674 molecular_function` ND row. The more
   informative PE-binding MF row supersedes this no-data placeholder.
+- Did not promote the by-similarity UniProt nucleophagy, early secretory
+  pathway fusion, or Atg8-PE membrane-tethering statements to new annotations:
+  they were transferred from S. cerevisiae, and the GOA plus PAINT rows already
+  cover the conserved autophagosome-membrane function with stronger specificity.
 - Kept `GO:0030968 endoplasmic reticulum unfolded protein response` as
   non-core. It has direct Candida double-mutant support, but it is a contextual
   ER-stress role rather than the conserved core ATG8 activity.
