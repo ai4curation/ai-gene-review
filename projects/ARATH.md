@@ -575,7 +575,7 @@ Last updated: 2026-10-20
 - [x] Review the Arabidopsis representatives of the photorespiration module
       (18 genes: PGLP1, PLGG1, GLO1, GLO2, CAT2, GGAT1, AGT1, HPR, HPR2, GLYK,
       GLN2, GLU1, SHM1, GLDP1, GLDP2, GDCH, GDCST, mtLPD2)
-- [ ] Review mtLPD1 (At1g48030), the main leaf glycine decarboxylase L protein,
+- [x] Review mtLPD1 (At1g48030), the main leaf glycine decarboxylase L protein,
       and GGAT2 (At1g70580)
 - [ ] Consider reviewer suggestions for the photorespiration module: BASS6 as a
       second glycolate exporter, the shade-induced cytosolic GLYK isoform, viable
@@ -640,3 +640,9 @@ out of the reviews: the module now names mtLPD1 (At1g48030) rather than mtLPD2
 as the main leaf L protein, and proteomics-only location rows follow the
 organelle audit (marked over-annotated, not removed). Photorespiration now
 counts as curated in the gap analysis (34 of 107 pathways).
+
+Reviewed mtLPD1 and GGAT2. mtLPD1 evidence (leaf GDC holds about four times more
+L1 than L2, PMID:32311173; mutants show mtLPD1 predominant in photorespiration,
+PMID:41990722) is now cited in the photorespiration module. GGAT2's
+photorespiration row rests on enzyme activity, leaf peroxisome peptides and
+expression only; no ggat2 mutant has been described.
