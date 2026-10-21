@@ -15,6 +15,7 @@ translated precursor:
   translocation in vacuolar and Golgi/endosomal V-ATPase holoenzymes;
 - PI-SceI/VDE: the excised intein endonuclease, which accounts for the
   InterPro-derived DNA-binding, endonuclease, and intein-protein-splicing rows.
+  This is now recorded explicitly as the UniProt chain `PRO_0000002459`.
 
 ## PAINT/IBA rows
 
@@ -39,9 +40,11 @@ The PTHR43607 PAINT rows fit VMA1 and do not need pruning.
 - Changed broad `GO:0005774 vacuolar membrane` rows to `MODIFY` with
   `GO:0000329 fungal-type vacuole membrane`, because the fungal child term is
   already directly supported.
-- Kept the PI-SceI/VDE intein `GO:0003677 DNA binding`, `GO:0004519
-  endonuclease activity`, and `GO:0016539 intein-mediated protein splicing`
-  rows as non-core precursor/intein activities.
+- Modified the PI-SceI/VDE intein `GO:0003677 DNA binding` and `GO:0004519
+  endonuclease activity` rows to the more precise `GO:0043565`
+  sequence-specific DNA binding and `GO:1990238` double-stranded DNA
+  endonuclease activity terms, and kept `GO:0016539` intein-mediated protein
+  splicing as a non-core precursor/intein process.
 - Changed the broader `GO:0030908 protein splicing` row to `MODIFY` toward
   `GO:0016539 intein-mediated protein splicing`.
 - Kept `GO:0005524 ATP binding` as a non-core catalytic-site subactivity, not
