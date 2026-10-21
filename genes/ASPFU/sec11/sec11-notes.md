@@ -53,9 +53,12 @@ converting signal-peptide-bearing secretory precursors into mature proteins.
 - Marked `GO:0008233 peptidase activity` and `GO:0016020 membrane`
   `TOO_GENERAL`; each is entailed by a more precise accepted term in this same
   review.
-- Modified `GO:0004252 serine-type endopeptidase activity` to
-  `GO:0009003 signal peptidase activity`.
-- Accepted both `GO:0051604 protein maturation` rows.
+- Accepted `GO:0004252 serine-type endopeptidase activity` as the
+  serine-protease chemistry claim complementary to `GO:0009003 signal
+  peptidase activity`.
+- Modified both `GO:0051604 protein maturation` rows to the live
+  `GO:0016485 protein processing` process term for SPC-catalyzed signal
+  peptide cleavage.
 - Removed `GO:0045047 protein targeting to ER`. Sec11 removes a signal peptide
   after ER targeting/translocation; it does not execute the upstream
   signal-recognition targeting step.
