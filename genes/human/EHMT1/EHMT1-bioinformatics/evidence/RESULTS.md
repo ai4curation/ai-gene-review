@@ -8,4 +8,4 @@ Three current ARBA rules have exact matching FunFam/taxon condition sets. ARBA00
 
 The current IntAct export recovers the MPP8/EHMT1 record EBI-11059482 / IM-24272-454 with its anti-tag coimmunoprecipitation method. Other original associations rely on the separately cited primary sources; their absence from this current export is not a contradiction. Partner-function records preserve curated evidence provenance and do not establish EHMT1 activity by themselves.
 
-HPA per-location HTML independently labels nucleoplasm and nuclear bodies supported. No image pixels were inspected. The full machine-readable output is `results.json`; public primary-source locators, assay limitations and the four unresolved methyl-state decisions are in `../../EHMT1-source-evidence.yaml`.
+HPA per-location HTML independently labels nucleoplasm and nuclear bodies supported. No image pixels were inspected. The full machine-readable output is `results.json`; public primary-source locators, assay limitations and the three unresolved methyl-state decisions are in `../../EHMT1-source-evidence.yaml`.
