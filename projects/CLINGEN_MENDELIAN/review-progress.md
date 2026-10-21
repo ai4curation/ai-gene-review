@@ -5387,3 +5387,69 @@ pages and validated the appended history record. The catalogue render reports
 1,623 missing-review warnings; the progress render reports none.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker547-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T185556Z-codex-be2135.yaml)
+
+## Completion checkpoint 549 — 2026-10-21 19:46:21 UTC
+
+**549 complete; 2,327 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds [EIF2S3 #5314](https://github.com/ai4curation/ai-gene-review/pull/5314)
+and [EIF3F #5315](https://github.com/ai4curation/ai-gene-review/pull/5315) to merged checkpoint 547.
+The coordinating AI agent accepted their merge audits; this is not a human
+maintainer sign-off. Products, follow-ups and trackers receive no extra credit.
+
+EIF2S3 approved head `d7140993c185a1dea61187562e05358af517377a` merged at `4d4b0ea1e8ede4bd5ce45128123c83b6d529ff39`
+with actual parent `c5d0b8f3d69bb45714a85a7734651e317b93ece0`. All 31 approved paths, blobs and modes
+match the actual merge delta and pinned main. The current formal approval and
+detailed review remain unchanged with no unresolved threads. Its
+[merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39656094067) ran
+4,176 tests, 268 doctests, 12 examples, typing, lint and 432 Python/19 JavaScript
+automation tests successfully. Its [actual main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39659047032)
+passed strict EIF2S3 validation, 14,905 history records, 42 history tests and 715
+family checks. Main change filtering skipped the general suite. The 33 strict
+advisories comprise 32 supported generic-binding warnings and one optional
+propagation-metadata warning. Its [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39659046970)
+built and deployed successfully. The review retains 81 sources from 82 raw
+records, two cores, one 472-residue product and zero new quotations.
+
+EIF3F approved head `18c2b74730af07e228e4f60ac58903e4075956e2` merged at `c5d0b8f3d69bb45714a85a7734651e317b93ece0`
+with actual parent `d2587858a920bf0ebb731c6c8e9cb74036c4d5db`. All 29 approved paths, blobs and modes
+match the actual merge delta and pinned main. Its formal approval and detailed
+review remain unchanged with no unresolved threads. Its
+[merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39655244958) passed
+the same full test suite, strict EIF3F validation, 14,903 history records,
+42 history tests and 715 family checks. Its [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39658205474)
+built and deployed successfully.
+
+EIF3F's [actual main run](https://github.com/ai4curation/ai-gene-review/actions/runs/39658205293)
+was cancelled because a higher-priority main build was waiting. Strict EIF3F
+validation passed with 49 supported generic-binding advisories and 14,903 history
+records were checked, but the history pytest step was interrupted and the
+aggregate failed. The general suite was filtered out. None of those incomplete
+or skipped checks is reported as executed success.
+
+The successful immediate EIF2S3 descendant preserves all 29 EIF3F payloads,
+388 protected positions, 316 runtime pins and 14 complete validation-runtime
+roots. This is the campaign's documented cancelled-main bridge convention;
+it does not reclassify the cancelled run or claim that EIF2S3's strict step
+revalidated EIF3F. EIF3F retains 119 sources: 30 ACCEPT, 36 MODIFY,
+52 KEEP_AS_NON_CORE and one UNDECIDED; two cores, one 357-residue product and
+zero new quotations. Review completion leaves that uncertainty visible.
+
+This update starts from main `bf2af2d12324277c67537afb3e8f55cb96a21c57`. All seven predecessor tracker paths
+match approved [tracker #5318](https://github.com/ai4curation/ai-gene-review/pull/5318), merge `bf2af2d12324277c67537afb3e8f55cb96a21c57`.
+All 235 queue objects and 107 previous completion updates remain exact; this is
+update 108. Previous progress text remains byte-for-byte intact. All 2,876
+catalogue identities and association texts remain unchanged; only EIF2S3 and
+EIF3F checkboxes change. The existing quotation convention now explicitly
+attributes its authority to the user's standing instruction.
+
+The pinned inventory has 8,553 reviews, including 3,112 human reviews.
+1,255 catalogue genes have reviews; 1,621 lack them, and
+706 available catalogue reviews remain uncredited. Three source files,
+three generated files and one append-only history record form the publication
+scope. No gene, source cache, runtime or previous history is edited.
+
+The publisher passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,621 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker549-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T194705Z-codex-08c9fb.yaml)
