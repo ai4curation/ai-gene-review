@@ -217,11 +217,12 @@ PTHR10806 root and Eukaryota rather than at a fungal-only node.
 - Drafted the compact `PTHR10806` Sec11/SPC catalytic-subunit set across
   `yeast/SEC11`, `SCHPO/sec11`, `CANAL/SEC11`, `NEUCR/sec11`, `ASPFU/sec11`,
   and `EMENI/sec11` in PRs #5264-#5269. All six reviews accept the eukaryotic
-  `PTN000086750` signal-peptidase-complex and protein-maturation placements,
-  treat the root `PTN000086749` peptidase assertion as correct but generic
-  beside exact `GO:0009003 signal peptidase activity`, and reject propagated
-  `GO:0045047 protein targeting to ER` where it confuses signal-peptide
-  cleavage with the upstream targeting step.
+  `PTN000086750` signal-peptidase-complex placement, treat its
+  `GO:0051604 protein maturation` row as correct but generic beside exact
+  `GO:0016485 protein processing`, treat the root `PTN000086749` peptidase
+  assertion as correct but generic beside exact `GO:0009003 signal peptidase
+  activity`, and reject propagated `GO:0045047 protein targeting to ER` where
+  it confuses signal-peptide cleavage with the upstream targeting step.
 
 ## 2026-10-17
 
