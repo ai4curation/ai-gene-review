@@ -49,10 +49,11 @@
   molecular role; the specific assertions are V-ATPase complex membership,
   contribution to rotary proton ATPase activity, and participation in proton
   transmembrane transport.
-- Removed the two GO:0046961 rows whose qualifier is `enables`. Vma8 contributes
-  to the V-ATPase holoenzyme activity as a rotor subunit, but isolated Vma8 does
-  not catalyze proton-transporting ATP hydrolysis; the IBA and IMP
-  `contributes_to` rows retain the correct complex-level MF.
+- Marked the two GO:0046961 rows whose qualifier is `enables` as
+  `MARK_AS_OVER_ANNOTATED`. Vma8 contributes to the V-ATPase holoenzyme
+  activity as a rotor subunit, but isolated Vma8 does not catalyze
+  proton-transporting ATP hydrolysis; the IBA and IMP `contributes_to` rows
+  retain the correct complex-level MF.
 - Did not add NEW rows. The existing GOA set already covers V1 membership,
   vacuolar/Golgi V-type ATPase complex membership at the available GO
   granularity, rotary proton ATPase contribution, proton transport, and
