@@ -216,11 +216,13 @@ seeded by budding- and fission-yeast Atg8 annotations.
 
 - Drafted the compact `PTHR10969` ATG8 set across `yeast/ATG8`,
   `SCHPO/atg8`, `CANAL/ATG8`, `NEUCR/apg-6`, `ASPFU/atg8`, and
-  `EMENI/atg8`. All six reviews accept the eukaryotic `PTN000103522`
+  `EMENI/atg8`. All six reviews endorse the eukaryotic `PTN000103522`
   ATG8/LC3/GABARAP PAINT placements and the fungal `PTN000861115`
-  fungal-type vacuole membrane placement, while treating generic
-  vacuolar-membrane parent rows as redundant where the fungal-specific child is
-  already asserted.
+  fungal-type vacuole membrane placement. `CANAL/ATG8`, `NEUCR/apg-6`,
+  `ASPFU/atg8`, and `EMENI/atg8` mark generic `GO:0005774`
+  vacuolar-membrane rows as `TOO_GENERAL` against the asserted
+  fungal-specific child; `SCHPO/atg8` refines them with `MODIFY` to
+  `GO:0000329`, and `yeast/ATG8` keeps them as `KEEP_AS_NON_CORE`.
 
 ## 2026-10-17
 
