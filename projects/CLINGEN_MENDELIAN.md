@@ -2988,21 +2988,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**541 of 2,876 genes are complete; 2,335 remain.**
-This checkpoint adds exactly 68 distinct genes from accepted merge-audit batches
-03–09 to the published checkpoint 473. [Checkpoint 541](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-541-2026-10-21-005359-utc)
-links each approved head, merged files and CI evidence. The inventory is pinned
-to main [`a17627810d4a`](https://github.com/ai4curation/ai-gene-review/commit/a17627810d4a13efede28a3c07a481aa0b44131b),
-captured 2026-10-21 00:53:59 UTC. EGR2, EHMT1 and EGFR are excluded from this frozen
-count. Each catalogue gene counts once; products and follow-ups add no credit.
+**544 of 2,876 genes are complete; 2,332 remain.**
+This checkpoint adds only EGR2, EHMT1 and EGFR to the merged 541 checkpoint.
+[Checkpoint 544](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-544-2026-10-21-023541-utc)
+links their approved heads, exact merged files and accepted CI evidence. The
+inventory is pinned to main [`81298ef287da`](https://github.com/ai4curation/ai-gene-review/commit/81298ef287dae81220ae068a10a524f17628bf7d),
+captured 2026-10-21 02:35:41 UTC. Each catalogue gene counts once; products,
+follow-ups and the tracker publication itself add no credit.
 
-At this snapshot, 8,472 reviews are available, including 3,102 human reviews.
-Of 1,248 catalogue genes with reviews, 541 are credited and 707 remain uncredited;
-1,628 catalogue genes still lack a review file. Availability and accepted
-completion are separate measures. 67 immediate main builds in these batches
-were cancelled. Exact-head and merge-group checks passed, with accepted,
-explicitly bounded preserved-payload/runtime evidence from successful descendants.
-Cancelled or skipped tests are not counted as successful gene revalidation.
+At this snapshot, 8,473 reviews are available, including 3,103 human reviews.
+Of 1,249 catalogue genes with reviews, 544 are credited and 705 remain uncredited;
+1,627 catalogue genes still lack a review file. Availability and accepted
+completion are separate measures.
+
+EGR2 and EHMT1 passed their approved-head, merge-group and scoped main checks.
+EGFR passed its final approved-head and merge-group checks. Its immediate main
+build was cancelled; the successful tracker successor preserved all EGFR files
+and runtime roots, ran broad tests and history checks, and skipped scoped gene
+validation. Cancelled and skipped checks are not reported as passes.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3672,10 +3675,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EFL1** — HGNC:25789; [Shwachman-Diamond syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0339941d-fe9f-4451-850c-5f5738a7ce7d-2026-02-10T170000.000Z) (MONDO:0044205; AR; Definitive).
 - [x] **EFNB1** — HGNC:3226; [craniofrontonasal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_31ffbd0b-5c6b-4396-a84c-9330d81e4a08-2020-10-26T154650.453Z) (MONDO:0010570; XL; Definitive).
 - [x] **EFTUD2** — HGNC:30858; [mandibulofacial dysostosis-microcephaly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_66012775-240c-4640-ac66-12647021eee5-2022-07-20T160000.000Z) (MONDO:0012516; AD; Definitive).
-- [ ] **EGFR** — HGNC:3236; [non-small cell lung carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_49342c73-96d7-45ba-9c90-d2d5e5710636-2020-07-30T202207.418Z) (MONDO:0005233; AD; Definitive).
+- [x] **EGFR** — HGNC:3236; [non-small cell lung carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_49342c73-96d7-45ba-9c90-d2d5e5710636-2020-07-30T202207.418Z) (MONDO:0005233; AD; Definitive).
 - [x] **EGLN1** — HGNC:1232; [EGLN1-related erythrocytosis and pheochromocytoma/paraganglioma predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_647ffb08-3740-43a0-8601-258324e995ab-2025-09-09T160000.000Z) (MONDO:1060184; AD; Definitive).
-- [ ] **EGR2** — HGNC:3239; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6e83e27-0c9a-4475-92f5-745303931858-2021-11-17T033516.468Z) (MONDO:0015626; SD; Definitive).
-- [ ] **EHMT1** — HGNC:24650; [Kleefstra syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db91a861-6a88-4848-b6d5-4772bdef52ff-2018-06-06T100000.000Z) (MONDO:0012455; AD; Definitive).
+- [x] **EGR2** — HGNC:3239; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6e83e27-0c9a-4475-92f5-745303931858-2021-11-17T033516.468Z) (MONDO:0015626; SD; Definitive).
+- [x] **EHMT1** — HGNC:24650; [Kleefstra syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db91a861-6a88-4848-b6d5-4772bdef52ff-2018-06-06T100000.000Z) (MONDO:0012455; AD; Definitive).
 - [ ] **EIF2AK4** — HGNC:19687; [pulmonary veno-occlusive disease and/or pulmonary capillary haemangiomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d20386c-ad1a-4c88-9f43-4ca3cedbfd6f-2022-12-02T170000.000Z) (MONDO:0018554; AR; Definitive).
 - [ ] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
 - [ ] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).

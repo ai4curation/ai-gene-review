@@ -205,8 +205,11 @@ def render_report(resource: str, rows: list[dict[str, str]]) -> str:
         lines.append(f"- **Recorded in:** `{r['source_path']}`")
         lines += ["", r["explanation"]]
         for ev in json.loads(r["supported_by"] or "[]"):
-            lines += ["", f"> {' '.join(str(ev.get('supporting_text', '')).split())}",
-                      f"> — {ev.get('reference_id', '')}"]
+            text = " ".join(str(ev.get("supporting_text") or "").split())
+            if text:
+                lines += ["", f"> {text}", f"> — {ev.get('reference_id', '')}"]
+            else:
+                lines += ["", f"- **Evidence reference:** {ev.get('reference_id', '')}"]
     return "\n".join(lines) + "\n"
 
 

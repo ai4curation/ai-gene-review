@@ -45,7 +45,7 @@ Using ontology closure-based comparison against GOA
 
 Google's protein language model that predicts protein names, GO terms, subcellular locations, and function comments.
 
-![center w:700](slides_figures/prediction_types_bar.png)
+![center w:700](../slides_figures/prediction_types_bar.png)
 
 28,553 entries. Every protein gets a name; ~24% also get GO terms, ~48% get subcellular locations, ~19% get function comments. 30% get only a name.
 
@@ -72,7 +72,7 @@ Google's protein language model that predicts protein names, GO terms, subcellul
 <div class="columns">
 <div>
 
-![w:480](slides_figures/swissprot_trembl_overview.png)
+![w:480](../slides_figures/swissprot_trembl_overview.png)
 
 96% TrEMBL, 4% Swiss-Prot. But Swiss-Prot does not mean well-characterized.
 
@@ -81,7 +81,7 @@ Species distribution is unusual --- dominated by agricultural species (wheat, pe
 </div>
 <div>
 
-![w:480](slides_figures/top20_species_by_group.png)
+![w:480](../slides_figures/top20_species_by_group.png)
 
 </div>
 </div>
@@ -90,7 +90,7 @@ Species distribution is unusual --- dominated by agricultural species (wheat, pe
 
 ## Swiss-Prot fraction varies dramatically by species
 
-![center w:700](slides_figures/swissprot_by_species.png)
+![center w:700](../slides_figures/swissprot_by_species.png)
 
 ---
 
@@ -99,12 +99,12 @@ Species distribution is unusual --- dominated by agricultural species (wheat, pe
 <div class="columns">
 <div>
 
-![w:480](slides_figures/entries_by_taxon_group.png)
+![w:480](../slides_figures/entries_by_taxon_group.png)
 
 </div>
 <div>
 
-![w:480](slides_figures/prediction_types_by_taxon.png)
+![w:480](../slides_figures/prediction_types_by_taxon.png)
 
 </div>
 </div>
@@ -118,12 +118,12 @@ Land plants dominate by entry count. Prediction richness (% with GO terms) varie
 <div class="columns">
 <div>
 
-![w:480](slides_figures/model_score_distribution.png)
+![w:480](../slides_figures/model_score_distribution.png)
 
 </div>
 <div>
 
-![w:480](slides_figures/evidence_methods.png)
+![w:480](../slides_figures/evidence_methods.png)
 
 </div>
 </div>
@@ -150,7 +150,7 @@ Seven species: **Human**, **Mouse**, **Arabidopsis**, **Wheat**, **S. coelicolor
 
 ## Cross-species comparison: ProtNLM2 vs all GOA
 
-![center w:900](slides_figures/protnlm_vs_goa_cross_species.png)
+![center w:900](../slides_figures/protnlm_vs_goa_cross_species.png)
 
 LESS_SPECIFIC dominates for all species. MORE_SPECIFIC and NO_OVERLAP are concentrated in plants (thinner GOA coverage).
 
@@ -158,7 +158,7 @@ LESS_SPECIFIC dominates for all species. MORE_SPECIFIC and NO_OVERLAP are concen
 
 ## ProtNLM2 vs automated pipelines (InterPro2GO, IBA)
 
-![center w:950](slides_figures/protnlm_vs_goa_by_source.png)
+![center w:950](../slides_figures/protnlm_vs_goa_by_source.png)
 
 Compared to InterPro2GO or IBA alone, more predictions appear as MORE_SPECIFIC or NO_OVERLAP. But are these genuine gains?
 
