@@ -11,7 +11,7 @@ Part of [EXECUTABLE_MODELS](../EXECUTABLE_MODELS.md).
 
 Two viewers now run module-derived Boolean models: this repository's
 [model pages](../../models/index.html) and the **Dynamics** tab on AmiGO 3 module
-pages ([cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74)). Both are
+pages (merged in [cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74)). Both are
 interactive: you can perturb steps, run curated scenarios and check expectations. They
 were written separately, so the code is duplicated. This page sets out what depends on
 what, which duplication matters, and where each piece should end up.
@@ -85,8 +85,8 @@ Two facts make consolidation easy:
 
 ### Order
 
-1. Merge [amigo3#74](https://github.com/cmungall/amigo3/pull/74), which carries the
-   port and its parity tests.
+1. ~~Merge [amigo3#74](https://github.com/cmungall/amigo3/pull/74), which carries the
+   port and its parity tests.~~ Merged 2026-10-21.
 2. Here: `module-to-bnet --all --json` plus the payload JSON Schema.
 3. AmiGO 3 build consumes the payload, with the port kept as a fallback for one
    release.
