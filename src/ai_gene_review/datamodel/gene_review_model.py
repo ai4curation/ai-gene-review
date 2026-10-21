@@ -154,6 +154,173 @@ class ReferenceProteomeAssessmentStatusEnum(str, Enum):
     """
 
 
+class SourceDefectTypeEnum(str, Enum):
+    """
+    Kind of defect in a source database record.
+    """
+    WRONG_GENE_PRODUCT = "WRONG_GENE_PRODUCT"
+    """
+    The assertion is attached to the wrong gene or gene product ("that gene, not this gene"), e.g. through a symbol or alias collision. The corrected_value names the gene the evidence is actually about.
+    """
+    WRONG_REFERENCE = "WRONG_REFERENCE"
+    """
+    The assertion is keyed to a reference that does not support it (mis-keyed or transposed identifier, or a paper about something else).
+    """
+    WRONG_TERM = "WRONG_TERM"
+    """
+    The reference supports a different GO term than the one asserted.
+    """
+    WRONG_EVIDENCE_CODE = "WRONG_EVIDENCE_CODE"
+    """
+    The evidence code misrepresents the evidence (e.g. an experimental code on a review or meeting report, IDA for a mutant phenotype).
+    """
+    MISSING_NEGATION = "MISSING_NEGATION"
+    """
+    The reference reports the opposite, so the row should carry NOT.
+    """
+    WRONG_WITH_FROM = "WRONG_WITH_FROM"
+    """
+    The WITH/FROM (interactor, donor or source) identifier is wrong.
+    """
+    WRONG_QUALIFIER = "WRONG_QUALIFIER"
+    """
+    The relation/qualifier is wrong (e.g. enables vs involved_in).
+    """
+    WRONG_CAUSAL_RELATION = "WRONG_CAUSAL_RELATION"
+    """
+    A GO-CAM causal edge has the wrong relation or direction.
+    """
+    OTHER = "OTHER"
+    """
+    Any other source-record defect; describe it in the explanation.
+    """
+
+
+class SourceResourceEnum(str, Enum):
+    """
+    Resource responsible for fixing a source defect. For GOA rows this is the assigned_by group.
+    """
+    TAIR = "TAIR"
+    UNIPROT = "UNIPROT"
+    GOA_EBI = "GOA_EBI"
+    """
+    EBI GOA curation (assigned_by GOA / UniProt-GOA).
+    """
+    GO_CAM = "GO_CAM"
+    """
+    A GO-CAM model (fixed in Noctua by the model's contributors).
+    """
+    GO_CENTRAL = "GO_CENTRAL"
+    """
+    GO Central / PAINT phylogenetic annotation.
+    """
+    INTACT = "INTACT"
+    MGI = "MGI"
+    RGD = "RGD"
+    ZFIN = "ZFIN"
+    FLYBASE = "FLYBASE"
+    WORMBASE = "WORMBASE"
+    SGD = "SGD"
+    POMBASE = "POMBASE"
+    DICTYBASE = "DICTYBASE"
+    XENBASE = "XENBASE"
+    ECOCYC = "ECOCYC"
+    REACTOME = "REACTOME"
+    ARUK_UCL = "ARUK_UCL"
+    """
+    ARUK-UCL / BHF-UCL curation groups.
+    """
+    OTHER = "OTHER"
+    """
+    Name the resource in the explanation.
+    """
+
+
+class SourceDefectCauseEnum(str, Enum):
+    """
+    Likely mechanism by which a source defect arose.
+    """
+    SYMBOL_COLLISION = "SYMBOL_COLLISION"
+    """
+    Two genes share a symbol or alias and the wrong one was picked.
+    """
+    LEGACY_ALIAS = "LEGACY_ALIAS"
+    """
+    An outdated gene name in the paper was mapped to the wrong current locus.
+    """
+    IDENTIFIER_TRANSPOSITION = "IDENTIFIER_TRANSPOSITION"
+    """
+    Digit transposition or typo in an identifier.
+    """
+    SEQUENCE_MISMAPPING = "SEQUENCE_MISMAPPING"
+    """
+    Primers, probes or constructs in the paper map to a different locus.
+    """
+    CONTAMINANT = "CONTAMINANT"
+    """
+    A common affinity-purification contaminant recorded as a real partner.
+    """
+    OTHER = "OTHER"
+    UNKNOWN = "UNKNOWN"
+
+
+class SourceDefectConfidenceEnum(str, Enum):
+    """
+    How firmly a source defect is established.
+    """
+    CONFIRMED = "CONFIRMED"
+    """
+    Verified against primary data (full text, sequence, live resource query); the report can be filed as a correction.
+    """
+    PROBABLE = "PROBABLE"
+    """
+    Strong but incomplete evidence (e.g. abstract only); the report should be filed as a query to the curators.
+    """
+    SUSPECTED = "SUSPECTED"
+    """
+    Plausible concern worth raising, not yet verified.
+    """
+
+
+class SourceDefectRequestedChangeEnum(str, Enum):
+    """
+    The change a source defect asks the responsible resource to make.
+    """
+    REPOINT = "REPOINT"
+    """
+    Replace asserted_value with corrected_value in the same slot.
+    """
+    DELETE_VALUE = "DELETE_VALUE"
+    """
+    Remove asserted_value from the slot and keep the rest of the record (e.g. drop one has_input from a GO-CAM activity).
+    """
+    DELETE_ROW = "DELETE_ROW"
+    """
+    Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+    """
+    CHECK = "CHECK"
+    """
+    The value is wrong or doubtful, but the right change depends on information the reviewer could not see (e.g. a full text). The explanation gives the alternatives.
+    """
+
+
+class SourceDefectReportStatusEnum(str, Enum):
+    """
+    Progress of an upstream report.
+    """
+    NOT_REPORTED = "NOT_REPORTED"
+    REPORTED = "REPORTED"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    FIXED = "FIXED"
+    """
+    The source has corrected the record (re-fetch to confirm).
+    """
+    DECLINED = "DECLINED"
+    """
+    The resource reviewed the report and kept the record.
+    """
+
+
 class ExecutableModelTypeEnum(str, Enum):
     """
     The modelling formalism of an executable model.
@@ -2064,6 +2231,7 @@ class AlternativeRecordEvidence(ConfiguredBaseModel):
                        'PredictionReview'],
          'slot_uri': 'dcterms:description'} })
     supported_by: list[SupportingTextInReference] = Field(default=..., min_length=1, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -2340,6 +2508,40 @@ class ReferenceReplacement(ConfiguredBaseModel):
                        'ConsistencyException']} })
 
 
+class SourceDefect(ConfiguredBaseModel):
+    """
+    A defect in a source database record (a GOA/MOD annotation row, a UniProt entry, a GO-CAM activity, an interaction record), stated precisely enough that a report to the responsible resource can be generated from it. It records what the source asserts, what it should assert where that is known, why, and how sure the reviewer is. It does not replace the review action: the action says what this repository does with the claim; the source defect says what the source should fix.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    defect_type: SourceDefectTypeEnum = Field(default=..., description="""What is wrong with the source record.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    resource: SourceResourceEnum = Field(default=..., description="""The resource that holds the defective record and would need to fix it (for a GOA row, the assigned_by group, not the GOA aggregator).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    record: Optional[str] = Field(default=None, description="""Identifier of the defective record where one exists, e.g. a GO-CAM activity id (gomodel:.../...), a UniProt accession, or an IntAct interaction id. For a GOA row, which is identified by the enclosing annotation, leave unset.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    slot: Optional[str] = Field(default=None, description="""The field of the record that holds asserted_value, using the source's own name for it, e.g. enabled_by or has_input for a GO-CAM activity, or DB_Object_ID, DB:Reference, With/From, Evidence_Code or Qualifier for a GAF row. Needed when one record has several fields that could carry the same value.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    requested_change: Optional[SourceDefectRequestedChangeEnum] = Field(default=None, description="""What the resource is asked to do. Distinguishes re-pointing a value from removing it, which an absent corrected_value cannot.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    asserted_value: str = Field(default=..., description="""What the source currently says, as a CURIE where possible (e.g. AGI_LocusCode:AT2G45160 for the gene product, PMID:32213638 for the reference, IDA for the evidence code).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    corrected_value: Optional[str] = Field(default=None, description="""What the source should say instead, as a CURIE, when it can be established (e.g. AGI_LocusCode:AT5G64610). Leave unset when the value is wrong but the right one is unknown (e.g. a mis-keyed reference whose intended paper cannot be identified).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    corrected_label: Optional[str] = Field(default=None, description="""Human-readable label for corrected_value (e.g. \"HAM1 MYST histone acetyltransferase\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    cause: Optional[SourceDefectCauseEnum] = Field(default=None, description="""Most likely mechanism of the error, where it can be inferred.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    confidence: SourceDefectConfidenceEnum = Field(default=..., description="""How firmly the defect is established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect', 'RuleReview']} })
+    explanation: str = Field(default=..., description="""Self-contained explanation suitable for pasting into a report to the resource's curators.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Verbatim evidence for the defect (and for the corrected value).""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
+                       'FindingReview',
+                       'Review',
+                       'CoreFunction',
+                       'ProposedOntologyTerm',
+                       'RuleReview',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment',
+                       'PredictionAssessment']} })
+    report_status: Optional[SourceDefectReportStatusEnum] = Field(default=SourceDefectReportStatusEnum.NOT_REPORTED, description="""Where the upstream report stands.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect'], 'ifabsent': 'string(NOT_REPORTED)'} })
+    report_url: Optional[str] = Field(default=None, description="""Link to the upstream ticket, email thread or helpdesk entry, once filed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
+
+
 class Finding(ConfiguredBaseModel):
     """
     A finding is a statement about a gene, which is supported by a reference. Similar to \"comments\" in uniprot
@@ -2378,6 +2580,7 @@ class FindingReview(ConfiguredBaseModel):
     superseded_by: Optional[list[str]] = Field(default=None, description="""Reference(s) that dispute, correct, or overturn this finding. Used together with finding_status DISPUTED or OVERTURNED.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview']} })
     review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Evidence for this assessment, including exact snippets from the papers that contradict, overturn, or corroborate the original finding. Each snippet is attributed to its explicit reference_id, not the parent finding's publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -3965,7 +4168,9 @@ class ModuleNode(ConfiguredBaseModel):
     variant_sets: Optional[list[ModuleVariantSet]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     connections: Optional[list[ModuleConnection]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     conforms_to: Optional[list[Conformance]] = Field(default=None, description="""Reusable template motifs that this node (together with its parts and connections) is an instance of. Conformance is a compositional, bundle-scoped consistency check: a concrete cascade may freely extend its start and end, while an inner sub-bundle node declares that its parts match a generic motif (e.g. the three-tier MAP kinase relay).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
-    activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
+    module_ref: Optional[str] = Field(default=None, description="""Reference to another module that realizes this node, as the stem of a module file in the same directory as the referencing module, with an optional node id after a hash (e.g. \"mitophagy\" or \"mitophagy#atg8_capture\"). This is the same form, resolved the same way, as a conformance template. Unlike conforms_to (instance-of a motif), module_ref is inclusion: the node is a stand-in for the referenced module, so umbrella modules (e.g. organelle lifecycles) can compose existing modules without copying their annotons. A referencing node carries no annotons, parts or variant_sets of its own; it may carry label, description, concepts, context and evidence. For satisfiability the node is satisfied exactly when the referenced module or node is satisfied; mark the enclosing part optional when the referenced module is not required (e.g. a function that some lineages lack). References must resolve and must not form cycles.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
+    activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Every regulator must be used unless it is listed under `omitted_regulators`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
+    omitted_regulators: Optional[list[str]] = Field(default=None, description="""Elements with a signed connection into this element that its `activation_logic` deliberately leaves out, typically a modulator that tunes an already-active step rather than switching it on or off, which a Boolean rule cannot express. Listing an omission makes it a stated claim; an unused regulator that is not listed is a validation error. Only meaningful alongside `activation_logic`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM models (or specific activities) that realize this module node as a whole.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
                        'AlternativeRecord',
@@ -4205,7 +4410,8 @@ class ModuleAnnoton(ConfiguredBaseModel):
     processes: Optional[list[BiologicalProcessDescriptor]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton']} })
     locations: Optional[list[CellularComponentDescriptor]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton', 'CoreFunction']} })
     role_description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton']} })
-    activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
+    activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Every regulator must be used unless it is listed under `omitted_regulators`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
+    omitted_regulators: Optional[list[str]] = Field(default=None, description="""Elements with a signed connection into this element that its `activation_logic` deliberately leaves out, typically a modulator that tunes an already-active step rather than switching it on or off, which a Boolean rule cannot express. Listing an omission makes it a stated claim; an unused regulator that is not listed is a validation error. Only meaningful alongside `activation_logic`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM model activities (annotons) that realize this module annoton. Used to ground an abstract/non-grounded module role in concrete curated causal activity models.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
                        'AlternativeRecord',
@@ -4433,6 +4639,7 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamActivityReview', 'Review']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4704,6 +4911,7 @@ class Review(ConfiguredBaseModel):
          'domain_of': ['Review']} })
     additional_reference_ids: Optional[list[str]] = Field(default=None, description="""IDs of the references""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -4723,6 +4931,7 @@ class Review(ConfiguredBaseModel):
                        'CoreFunction']} })
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamActivityReview', 'Review']} })
 
 
 class ConsistencyException(ConfiguredBaseModel):
@@ -4854,6 +5063,7 @@ class CoreFunction(ConfiguredBaseModel):
                        'PredictionReview'],
          'recommended': True} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -4927,6 +5137,7 @@ class ProposedOntologyTerm(ConfiguredBaseModel):
     proposed_parent: Optional[Term] = Field(default=None, description="""Proposed parent term in the ontology hierarchy""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     proposed_mappings: Optional[list[TermMapping]] = Field(default=None, description="""Proposed mappings to equivalent terms in other ontologies""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5070,8 +5281,9 @@ class RuleReview(ConfiguredBaseModel):
     condition_overlap: Optional[ConditionOverlapAssessment] = Field(default=None, description="""Assessment of overlap between rule conditions""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     go_specificity: Optional[GOSpecificityAssessment] = Field(default=None, description="""Assessment of GO term specificity""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     taxonomic_scope: Optional[TaxonomicScopeAssessment] = Field(default=None, description="""Assessment of taxonomic restriction appropriateness""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
-    confidence: Optional[float] = Field(default=None, description="""Overall confidence in the rule (0.0 to 1.0)""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
+    confidence: Optional[float] = Field(default=None, description="""Overall confidence in the rule (0.0 to 1.0)""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect', 'RuleReview']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this review""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5311,6 +5523,7 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5359,6 +5572,7 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5407,6 +5621,7 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5455,6 +5670,7 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5503,6 +5719,7 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5624,6 +5841,7 @@ class PredictionAssessment(ConfiguredBaseModel):
                        'InterPro2GORedundancy',
                        'PredictionAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting evidence for the assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
@@ -5650,6 +5868,7 @@ Term.model_rebuild()
 Reference.model_rebuild()
 ReferenceReview.model_rebuild()
 ReferenceReplacement.model_rebuild()
+SourceDefect.model_rebuild()
 Finding.model_rebuild()
 FindingReview.model_rebuild()
 SupportingTextInReference.model_rebuild()

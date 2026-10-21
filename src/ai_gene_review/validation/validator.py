@@ -45,6 +45,7 @@ from ai_gene_review.validation.local_source_text import (
     validate_local_source_quotes,
 )
 from ai_gene_review.validation.uniprot_quote_source import validate_uniprot_quote_sources
+from ai_gene_review.validation.goa_support import validate_goa_support
 from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
@@ -395,6 +396,7 @@ def validate_gene_review(
         # validator skips file: and Reactome: quotes entirely.
         validate_local_source_quotes(data, report, yaml_file_path)
         validate_uniprot_quote_sources(data, report)
+        validate_goa_support(data, report, yaml_file_path)
 
     return report
 

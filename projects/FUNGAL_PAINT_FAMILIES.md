@@ -3,6 +3,7 @@ title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, NEUCR]
+autolink_exclude: [Ser]
 ---
 
 # Fungal PAINT Family Reviews
@@ -36,12 +37,13 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
+| `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-10-11
+Last updated: 2026-10-17
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -72,11 +74,13 @@ paralog-aware activity and complex checks.
 - [x] `yeast/ESA1` - NuA4 catalytic subunit; drafted in PR #4604
 - [x] `yeast/SAS2` - SAS-I catalytic subunit; drafted in PR #4606
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
-- [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
+- [x] `SCHPO/mst1` - fission yeast NuA4 MYST acetyltransferase; drafted in this
+  branch
 - [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; merged in PR
   #4774
-- [ ] `NEUCR` MYST-family member
+- [x] `NEUCR/esa-1` - Neurospora ESA1/NuA4 catalytic subunit; drafted in
+  this branch
 
 ## Later Candidates
 
@@ -163,9 +167,32 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
 - [x] `NEUCR/erg-1` - *Neurospora crassa* sterol C-8 isomerase; merged in PR
   #4719
 
+## Family 8: WDR12/Ytm1 Pre-60S Assembly Factors
+
+`PTHR19855` contains an Ascomycota WDR12/Ytm1 ancestor,
+`PANTHER:PTN000458086`, with PAINT assertions for the large-subunit
+preribosome, PeBoW complex, and ribosomal large subunit biogenesis. The node is
+seeded by curated *S. cerevisiae* YTM1 evidence, with additional *S. pombe*
+`ytm1` support for `GO:0042273 ribosomal large subunit biogenesis`, and sits
+separately from the sibling fungal mitochondrial/peroxisome-fission adaptor
+node `PANTHER:PTN002336496`.
+
+- [x] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; merged in
+  PR #5118
+- [x] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; merged in PR #5121
+- [x] `CANAL/YTM1` - *Candida albicans* CGD member; merged in PR #5120
+- [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; merged in PR
+  #5117
+
 ---
 
 # NOTES
+
+## 2026-10-17
+
+- Started the compact WDR12/Ytm1 set in `PTHR19855` across `yeast/YTM1`,
+  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`; the individual gene reviews
+  merged in PRs #5117, #5118, #5120, and #5121.
 
 ## 2026-10-11
 
@@ -281,6 +308,11 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
   removes the Ess1 generic binding rows, leaves an abstract-only
   Siva/PMP22-cited self-interaction row undecided, and removes Ras/Lte1
   bud-neck localization rows where `bcy1` was only a bypass background.
+- Rechecked `NEUCR/esa-1` as the filamentous-fungal ESA1 representative in
+  `PTHR10615:SF218`. The fungal `PANTHER:PTN000834946` H4-acetyltransferase
+  row and the broad eukaryotic `PANTHER:PTN004172926` MYST-root rows remain
+  sound against the PAINT placement; the second-pass edits only tightened
+  UniProt evidence snippets.
 - Added `PTHR10868` as a compact sterol C-8 isomerase family after sibling
   `yeast/ERG2`, `SCHPO/erg2`, and `NEUCR/erg-1` reviews had checked the same
   fungal node placements. The `CANAL/ERG2` follow-up accepts the fungal
