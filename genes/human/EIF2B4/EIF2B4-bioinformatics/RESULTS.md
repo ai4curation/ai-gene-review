@@ -35,7 +35,7 @@ These are source joins, not substitutes for reading the donor experiments. The b
 
 ## Rules, localization and product boundaries
 
-Four ARBA rules have target-matching FunFam conditions. The GEF rule concludes GO:0005085 but its saved conclusion does not expose an annotation relation; it cannot independently establish how an `enables` relation was inherited from another source. The remaining rule conclusions are assessed individually in the review. In particular, the organ-development conclusion is marked over-annotated because the positive multisystem disease observations do not identify an organ-development step beyond the established translation mechanism.
+Four ARBA rules have target-matching FunFam conditions. The GEF rule concludes GO:0005085 but its saved conclusion does not expose an annotation relation; it cannot independently establish how an `enables` relation was inherited from another source. The remaining rule conclusions are assessed individually in the review. In particular, the CNS-development and organ-development conclusions are marked over-annotated because the positive clinical observations do not identify those developmental steps beyond the established translation mechanism. The saved ARBA00026561 condition set 55 and ARBA00029247 condition set 240 (zero-based) both match Q9UI10 FunFam 3.40.50.10470:FF:000002; these literal matches do not themselves resolve the biological participation question.
 
 Reactome events 72670/72722 connect through complex 72526 and catalyst activity 72528. Human component 72521 identifies Q9UI10, residues 1–523, and its own cytosol compartment. The exchange catalyst is the complex. Component membership does not mean that delta alone performs the whole exchange reaction.
 
