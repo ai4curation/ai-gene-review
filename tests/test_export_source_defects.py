@@ -1,6 +1,7 @@
 """Tests for the source-defect exporter (upstream reporting of source-record errors)."""
 
 import csv
+import json
 from pathlib import Path
 
 import pytest
@@ -136,3 +137,56 @@ def test_committed_reports_are_current() -> None:
     with tsv.open(encoding="utf-8") as fh:
         committed = list(csv.DictReader(fh, delimiter="\t"))
     assert committed == collect(root), "run `just export-source-defects`"
+
+
+@pytest.mark.parametrize(
+    "evidence",
+    [
+        {"reference_id": "PMID:1"},
+        {"reference_id": "PMID:1", "supporting_text": None},
+        {"reference_id": "PMID:1", "supporting_text": ""},
+        {"reference_id": "PMID:1", "supporting_text": " \n\t "},
+    ],
+)
+def test_reference_only_evidence_is_not_rendered_as_a_quote(evidence: dict) -> None:
+    row = {**{c: "" for c in COLUMNS}, "supported_by": json.dumps([evidence])}
+    before = row.copy()
+    rendered = render_report("TAIR", [row])
+    assert rendered.endswith("\n- **Evidence reference:** PMID:1\n")
+    assert not any(line.startswith(">") for line in rendered.splitlines())
+    assert row == before
+
+
+def test_mixed_evidence_preserves_reference_order_and_quoted_format() -> None:
+    # Synthetic text tests formatting only; it is not a publication excerpt.
+    evidence = [
+        {"reference_id": "PMID:1"},
+        {"reference_id": "PMID:2", "supporting_text": "  example\nquoted\ttext  "},
+        {"reference_id": "https://example.org/evidence"},
+    ]
+    row = {**{c: "" for c in COLUMNS}, "supported_by": json.dumps(evidence)}
+    rendered = render_report("TAIR", [row])
+    assert rendered.endswith(
+        "\n- **Evidence reference:** PMID:1\n"
+        "\n> example quoted text\n> — PMID:2\n"
+        "\n- **Evidence reference:** https://example.org/evidence\n"
+    )
+    assert json.loads(row["supported_by"]) == evidence
+
+
+def test_reference_only_export_preserves_tsv_evidence_and_source(repo: Path) -> None:
+    source = repo / "genes" / "ARATH" / "GSTF6" / "GSTF6-ai-review.yaml"
+    source.write_text(GENE_REVIEW.replace("        supporting_text: GSTF2 and GSTF3\n", ""), encoding="utf-8")
+    before = source.read_bytes()
+    tsv = repo / "reference-only.tsv"
+    report_dir = repo / "reference-only-reports"
+    rows = write_outputs(repo, tsv, report_dir)
+    with tsv.open(encoding="utf-8") as stream:
+        saved_rows = list(csv.DictReader(stream, delimiter="\t"))
+    assert saved_rows == rows
+    tair = next(row for row in saved_rows if row["resource"] == "TAIR")
+    assert json.loads(tair["supported_by"]) == [{"reference_id": "PMID:21631432"}]
+    report = (report_dir / "TAIR.md").read_text(encoding="utf-8")
+    assert "- **Evidence reference:** PMID:21631432" in report
+    assert not any(line.startswith(">") for line in report.splitlines())
+    assert source.read_bytes() == before
