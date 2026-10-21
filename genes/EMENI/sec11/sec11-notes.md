@@ -35,19 +35,20 @@ Sec11 architecture described in the Q5B8K4 UniProt record.
   This is the correct complex call for eukaryotic Sec11; Q5B8K4 is in the
   fungal `PTHR10806:SF6` SEC11 subfamily and has no evidence of loss.
 - `PTN000086750`, taxon 2759/Eukaryota: `GO:0051604 protein maturation`. This
-  is broader than "signal peptide cleavage" but directly describes the maturation
-  of signal-bearing protein precursors by the ER SPC, so I accepted it.
+  is broader than signal peptide cleavage, so I modified it to `GO:0016485
+  protein processing`, the live process-level term for SPC proteolysis after
+  obsoletion of `GO:0006465 signal peptide processing`.
 
 ## Annotation Decisions
 
 - Accepted the exact conserved calls for `GO:0009003 signal peptidase activity`,
-  `GO:0005787 signal peptidase complex`, `GO:0005789 endoplasmic reticulum
-  membrane`, the broader but still correct `GO:0005783 endoplasmic reticulum`,
-  and `GO:0051604 protein maturation`.
-- Modified `GO:0004252 serine-type endopeptidase activity` to
-  `GO:0009003 signal peptidase activity`, and marked `GO:0008233 peptidase
-  activity` and `GO:0016020 membrane` as `TOO_GENERAL` because each is entailed
-  by a more specific accepted Sec11 term already present in the review.
+  `GO:0004252 serine-type endopeptidase activity`, `GO:0005787 signal
+  peptidase complex`, and `GO:0005789 endoplasmic reticulum membrane`.
+- Modified `GO:0051604 protein maturation` to `GO:0016485 protein processing`,
+  the live process-level term for SPC-catalyzed signal peptide cleavage.
+- Marked `GO:0008233 peptidase activity`, `GO:0005783 endoplasmic reticulum`,
+  and `GO:0016020 membrane` as `TOO_GENERAL` because each is entailed by a more
+  specific accepted Sec11 term already present in the review.
 - Removed the EnsemblFungi transfer to `GO:0045047 protein targeting to ER`.
   Sec11 cleaves signal peptides in the ER membrane after targeting to the
   Sec61/Sec62/Sec63 translocation machinery; it is not known to direct nascent
