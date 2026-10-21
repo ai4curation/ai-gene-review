@@ -356,6 +356,13 @@ like it carries GO. The answer separates two things CDD conflates:
 Pfam→InterPro). Reproduce with `ncbifam_cdd_probe.py` and the FTP/Entrez checks in
 [NCBIFAM-METHODOLOGY.md](NCBIFam/NCBIFAM-METHODOLOGY.md).
 
+> **Caveat (2026-10-18):** this holds for the `cd` models and the bulk CDD files,
+> but NCBI also stores GO on **CDD domain architectures (SPARCLE)** and has
+> propagated it to RefSeq proteins since March 2023 (`ArchId:` in the WITH/FROM
+> column of NCBI's per-assembly GAFs). That GO is in neither `cddannot*.dat` nor
+> `hmm_PGAP.tsv`. In *P. putida* KT2440 it is the largest single NCBI GO source
+> (47% of GO-bearing proteins). See [REFSEQ_GO](REFSEQ_GO.md).
+
 ## Gaps Found (scoping)
 
 | # | Gap | Size | What it is |
