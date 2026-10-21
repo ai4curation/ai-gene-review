@@ -2988,23 +2988,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**545 of 2,876 genes are complete; 2,331 remain.**
-This checkpoint adds only EIF2B2 to the merged 544 checkpoint.
-[Checkpoint 545](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-545-2026-10-21-165933-utc)
+**546 of 2,876 genes are complete; 2,330 remain.**
+This checkpoint adds only EIF2B3 to the merged 545 checkpoint.
+[Checkpoint 546](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-546-2026-10-21-175711-utc)
 links its approved head, exact merged files and accepted CI evidence. The
-inventory is pinned to main [`613523bf19bb`](https://github.com/ai4curation/ai-gene-review/commit/613523bf19bba276b9ea72840a06c56e606897f2),
-captured 2026-10-21 16:59:33 UTC. Each catalogue gene counts once; products,
-follow-ups and the tracker publication itself add no credit.
+inventory is pinned to main [`31717524f171`](https://github.com/ai4curation/ai-gene-review/commit/31717524f1710d19c5f8b22c5418f37b9e08b6eb),
+captured 2026-10-21 17:57:11 UTC. Each catalogue gene counts once; products,
+follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,550 reviews are available, including 3,109 human reviews.
-Of 1,252 catalogue genes with reviews, 545 are credited and 707 remain uncredited;
-1,624 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,551 reviews are available, including 3,110 human reviews.
+Of 1,253 catalogue genes with reviews, 546 are credited and 707 remain uncredited;
+1,623 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-EIF2B2 passed exact approved-head checks and its actual merge-group and main
+EIF2B3 passed exact approved-head checks and its actual merge-group and main
 validation. The merge-group ran the full test suite; the main push skipped that
-suite after change filtering. Its documentation workflow succeeded. Skipped
-checks are not reported as executed tests.
+suite after change filtering. Its documentation workflow built and deployed
+successfully. Skipped checks are not reported as executed tests.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3681,7 +3681,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **EIF2AK4** — HGNC:19687; [pulmonary veno-occlusive disease and/or pulmonary capillary haemangiomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d20386c-ad1a-4c88-9f43-4ca3cedbfd6f-2022-12-02T170000.000Z) (MONDO:0018554; AR; Definitive).
 - [ ] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
 - [x] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
-- [ ] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
+- [x] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
 - [ ] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
 - [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
 - [ ] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
