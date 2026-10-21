@@ -38,12 +38,13 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
+| `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-10-17
+Last updated: 2026-10-21
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -184,9 +185,36 @@ node `PANTHER:PTN002336496`.
 - [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; merged in PR
   #5117
 
+## Family 9: V-type ATPase Subunit D
+
+`PTHR11671` contains the conserved V-type ATPase subunit D family. The fungal
+node `PANTHER:PTN000912657` carries PAINT assertions to
+`GO:0000329 fungal-type vacuole membrane` and
+`GO:0016471 vacuolar proton-transporting V-type ATPase complex`, while broader
+nodes carry `GO:0007035 vacuolar acidification` and
+`GO:0046961 proton-transporting ATPase activity, rotational mechanism`.
+
+- [x] `yeast/VMA8` - *S. cerevisiae* V1 subunit D with direct assembly,
+  rotor-coupling, and vacuolar/Golgi V-ATPase evidence; drafted in PR #5273
+- [x] `SCHPO/vma8` - fission-yeast V-ATPase subunit D with PomBase ORFeome
+  localization and PTHR11671 PAINT rows; drafted in PR #5274
+- [x] `CANAL/VMA8` - CGD *Candida albicans* V-ATPase subunit D; drafted in PR
+  #5276
+- [x] `NEUCR/vma-8` - *Neurospora crassa* V-ATPase subunit D with direct 1999
+  V-ATPase subunit evidence; drafted in PR #5275
+
 ---
 
 # NOTES
+
+## 2026-10-21
+
+- Drafted the compact `PTHR11671` V-ATPase subunit D set across
+  `yeast/VMA8`, `SCHPO/vma8`, `CANAL/VMA8`, and `NEUCR/vma-8` in PRs
+  #5273-#5276. All four reviews treat `PTN000912657` as the curated fungal
+  vacuolar V-ATPase node, retain Vma8's `contributes_to` relation to rotary
+  proton-transporting ATPase activity, and mark unsupported membrane-raft or
+  standalone-`enables` activity transfers as qualifier or scope problems.
 
 ## 2026-10-17
 
