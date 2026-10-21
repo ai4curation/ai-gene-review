@@ -92,3 +92,12 @@ Paths below are relative to the repository root. `Cache full text` reports the p
 - `publications/PMID_8430778.md`: `db70d61bfaf724f85a3c21ac95a45e4889d4038509d8f7e5e0d629eb6d5225db`.
 
 The machine cache flags are unchanged. Source access failures and selected-text limits are documented above without replacing unavailable evidence with a different study or fabricated quotation.
+
+
+## Relation and uncertainty follow-up
+
+The selected GOA records at physical lines 35–36 assign UniProt `enables` to GO:0005085 with PMID:25858979 and PMID:27023709 (annotation date 2023-10-11). These bytes remain unchanged. [Official GO relation guidance](https://www.geneontology.org/docs/go-annotations/#relations-between-a-gene-product-and-a-molecular-function) distinguishes an activity executed by a product from its contribution to a complex activity not attributable to that subunit. The review records a probable `WRONG_QUALIFIER` query, with proposed `contributes_to`, unknown cause and `NOT_REPORTED` status. It preserves the biological GEF contribution and does not assert a confirmed database error.
+
+The source distinction is auditable at the public locators above: PMID:25858979 main paragraphs 5–12 and Figure 1C–G/Figures 2–3 captions describe whole-complex exchange and delta-mutant experiments; supplementary Methods remain inaccessible. PMID:27023709 Methods passage 12 and Results passage 23/Figure 2h identify the human translation comparator. PMID:29599213 Results on alpha homodimer/complex assembly, Figure 1G–I captions and Methods on human subunit cloning provide independent alpha contribution evidence; the original extracted text at lines 195–248 and 410–525 distinguishes that assembly role from the catalytic subcomplex. No supplemental insert sequence or figure-pixel claim is added.
+
+The existing source-access entries for PMID:8626696, PMID:12499492 and PMID:15217090 remain operative. Their cited sibling-review summaries do not resolve the source-specific alpha uncertainties. PMID:31048492 remains abstract/deposition evidence; the proposed phospho-eIF2alpha question seeks adequate subunit-specific assay/contact evidence without presenting missing access as a biological knowledge gap. The natural 222-aa product comparison is a proposed experiment, not an observed result.
