@@ -17,6 +17,11 @@
   the cytoplasmic side of the vacuole membrane, and recording conserved ATPase
   alpha/beta-chain, InterPro, and PANTHER classifications
   [file:genes/NEUCR/vma-1/vma-1-uniprot.txt].
+- Marked the InterPro `GO:0046034` ATP metabolic process projection as
+  over-annotated. The shared F1/V1/A1 alpha-beta ATPase signatures fire on both
+  ATP synthase and V-ATPase subunits; vma-1 consumes ATP to drive vacuolar
+  proton transport rather than contributing to ATP metabolism as its
+  gene-level process.
 - PMID:8722770 was fetched only as an abstract. It directly supports the genetic
   importance of `vma-1` in Neurospora but does not add a more specific
   molecular function, complex, or localization term beyond the family-backed
