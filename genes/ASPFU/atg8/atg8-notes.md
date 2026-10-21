@@ -23,8 +23,9 @@ The important PAINT nodes for the Aspergillus entry are:
   single-copy fungal Atg8-family ubiquitin-like modifier.
 - `PTN000861115`, a fungal node seeded by budding- and fission-yeast Atg8
   annotations, carries `GO:0000329 fungal-type vacuole membrane`. That is the
-  specific fungal compartment term to keep for A. fumigatus; the generic
-  `GO:0005774 vacuolar membrane` SubCell and ISS rows are true but redundant.
+  specific fungal compartment term to keep for A. fumigatus from PAINT; the
+  generic `GO:0005774 vacuolar membrane` SubCell and ISS rows are true but
+  less specific.
 
 No Aspergillus-specific divergence or loss was found for the eukaryotic or
 fungal nodes.
@@ -37,7 +38,8 @@ result is that "Under starvation conditions, fluorescently labeled Atg8
 accumulated within the vacuoles of wt A. fumigatus" [PMID:17921348 Unexpected
 link between metal ion deficiency and autophagy in Aspergillus fumigatus.].
 This is direct AfAtg8 support for vacuolar delivery during starvation, but the
-paper perturbs `Af atg1`, not `Af atg8`.
+signal is a vacuolar-lumen flux readout rather than vacuole-membrane
+localization, and the paper perturbs `Af atg1`, not `Af atg8`.
 
 Osakina et al. 2022 tagged Atg8 with RFP at the native locus and showed that
 "under carbon and nitrogen starvation (C/N-) conditions, Atg8 localized to
@@ -57,11 +59,12 @@ fumigatus.]. It does not justify modifying an atg8 row.
 
 Jung et al. 2025 tested fungal ATG4 inhibitors using recombinant ATG4/ATG8
 substrates from Cryptococcus, A. fumigatus, and A. niger. They cloned
-`AfAtg4 (A0A9P9N7X1)` and an A. fumigatus Atg8 substrate in vitro [PMID:41407331
-Evaluating the Antifungal Potential of Autophagy-Related Protein 4 (ATG4)
-Inhibitors against Human Fungal Pathogens.]. This supports biochemical
-conservation of ATG4-mediated fungal Atg8 processing and is useful context, but
-it is not better row-level evidence than the local PAINT calls for Q4WJ27.
+`AfAtg4 (A0A9P9N7X1)` and an A. fumigatus Atg8 BRET substrate using B0XPW3,
+the A1163 ortholog of Af293 Q4WJ27, in vitro [PMID:41407331 Evaluating the
+Antifungal Potential of Autophagy-Related Protein 4 (ATG4) Inhibitors against
+Human Fungal Pathogens.]. This supports biochemical conservation of
+ATG4-mediated fungal Atg8 processing and is useful context, but it is not better
+row-level evidence than the local PAINT calls for Q4WJ27.
 
 ## Update scan
 
