@@ -10,7 +10,7 @@ Each entry gives the actual access and assay boundary. The cache SHA-256 identif
 
 [Degradation of outer membrane protein A in Escherichia coli killing by neutrophil elastase.](https://pubmed.ncbi.nlm.nih.gov/10947984/)
 
-The authentic abstract links neutrophil elastase to E. coli OmpA degradation and phagosomal bacterial defense. Operative Methods were not recovered. It corroborates the phagocytic-vesicle assignment without authenticating an exact purified preparation, imaging protocol or processed-chain sequence.
+The authentic abstract supports E. coli OmpA cleavage and nonoxidative bacterial killing, with a separate mouse sepsis experiment. Phagosomal localization is recorded in the captured human UniProt P08246 subcellular-location annotation citing this paper, rather than stated in the inspected abstract. Operative Methods were not recovered; no exact purified preparation, imaging protocol or processed-chain sequence is authenticated.
 
 Normal cache: [PMID_10947984.md](../../../publications/PMID_10947984.md); `full_text_available: false`; SHA-256 `7a0f1193a9f1de0f0ec67398b68086eaabb9094b7ea26f831dbe7bec1b6e82de`.
 
@@ -439,3 +439,13 @@ Official captured Reactome records resolve an explicit P08246 component path. R-
 The 102 normal source objects and all 104 raw QuickGO contexts are retained. Two pairs differ in interacting taxon even though that field is deduplicated by the normal TSV projection; those raw biological contexts remain visible in the archive. There are no newly proposed annotation rows or publication quotations.
 
 The official P08246 product is a 267-aa precursor without an alternative-products block. Signal, propeptide and chain features describe processing, not natural splice products. Historical 218-aa enzyme preparations, glycoforms and engineered constructs are documented at their own boundaries; equivalence to every current processing state is not assumed.
+
+## Core-location evidence map
+
+The three added core location identifiers are current cellular components in the saved official QuickGO records: [azurophil granule](https://www.ebi.ac.uk/QuickGO/term/GO:0042582), [phagocytic vesicle](https://www.ebi.ac.uk/QuickGO/term/GO:0045335) and [neutrophil extracellular trap](https://www.ebi.ac.uk/QuickGO/term/GO:0140644). Their is_a closures reach cellular anatomical entity and do not classify them as protein-containing complexes.
+
+- GO:0042582 maps to accepted rows 79/80. PMID:20974816 supports marker-defined human granules; the saved PMID:25066128 original index, Results blocks 27 and 33 and granule-isolation Methods block 65, supports the preparation and heterogeneous topology. The latter figure captions were read; its pixels were not inspected.
+- GO:0045335 maps to accepted row 84. The captured [human UniProt P08246 record](https://www.uniprot.org/uniprotkb/P08246/entry), SUBCELLULAR LOCATION/SL-0206, explicitly cites PMID:10947984 for phagosomal localization after bacterial ingestion. The genuine abstract itself establishes OmpA cleavage and nonoxidative killing, not an inspected localization protocol. Full-text and preparation limits remain unchanged.
+- GO:0140644 maps to accepted rows 95/96. PMID:32434865 Methods, antibody Table 1 and Figure 3C caption identify human thrombus extracellular DNA associated with neutrophil elastase. This is location evidence, not a catalytic assay in thrombi. The independent PMID:20974816 and PMID:32045782 contexts remain separately assessed above; no universal NET requirement or processed-isoform equivalence is inferred.
+
+The generic process [proteolysis](https://www.ebi.ac.uk/QuickGO/term/GO:0006508) covers peptide-bond cleavage. Its four ACCEPT decisions are preserved; the compact core already states the enzyme chemistry through [GO:0004252](https://www.ebi.ac.uk/QuickGO/term/GO:0004252) and lists selected biological contexts. This is a choice of summary granularity, not a claim that a molecular-function term is a biological-process ancestor or that all accepted processes must be duplicated in the core.
