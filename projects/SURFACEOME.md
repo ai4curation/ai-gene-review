@@ -211,8 +211,10 @@ The work is incomplete. In priority order:
 5. **Optional:** compare against UniProt topology (`TOPO_DOM Extracellular`,
    `LIPID GPI-anchor`) as a non-GO reference. The paper's best single database was
    UniProt's expanded rule (89.8%). The user asked to focus on GO first.
-6. Open a PR for branch `surfacebench-reviews` (not opened yet), add a project card to
-   `pages/projects/index.html` (manually maintained), then run `just render-projects`.
+6. Branch `surfacebench-reviews` is PR
+   [#5312](https://github.com/ai4curation/ai-gene-review/pull/5312); push follow-up
+   commits there, and get it green and merged. The project card in
+   `pages/projects/index.html` is already added.
 
 Work log: the session that started this project ran 10 parallel review agents
 (10–11 genes each) over the 104 missing SurfaceBench genes, then committed each batch after
