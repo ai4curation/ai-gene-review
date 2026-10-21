@@ -28,7 +28,7 @@ PANTHER `PTHR10806-paint.tsv` contains three ancestral assertions for this famil
 - `PTN000086750` at Eukaryota: `GO:0005787 signal peptidase complex`.
 - `PTN000086750` at Eukaryota: `GO:0051604 protein maturation`.
 
-The eukaryote-scoped `PTN000086750` rows are good matches for `S. pombe sec11`, so the IBA annotations to signal peptidase complex and protein maturation were accepted. The family-root `PTN000086749` peptidase-activity row is directionally correct but uninformative beside the accepted signal peptidase activity rows, so it was marked `TOO_GENERAL` rather than removed.
+The eukaryote-scoped `PTN000086750` signal-peptidase-complex IBA is a good match for `S. pombe sec11` and was accepted; its protein-maturation IBA was retained but refined to the more specific child `GO:0016485 protein processing`. The family-root `PTN000086749` peptidase-activity row is directionally correct but uninformative beside the accepted signal peptidase activity rows, so it was marked `TOO_GENERAL` rather than removed.
 
 All three `GO:0009003 signal peptidase activity` rows were accepted. The sibling `GO:0004252 serine-type endopeptidase activity` and `GO:0016485 protein processing` rows were also accepted because they capture the catalytic chemistry and live proteolytic process term for ER SPC. The two broad `GO:0051604 protein maturation` rows were modified to `GO:0016485`. The root `GO:0008233 peptidase activity` and generic `GO:0016020 membrane` rows were marked `TOO_GENERAL`, because accepted descendant annotations in the same review cover the activity and compartment more precisely.
 
