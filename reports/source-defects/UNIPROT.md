@@ -1,6 +1,6 @@
 # Source-record defects for UNIPROT
 
-7 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+9 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
@@ -109,3 +109,31 @@ Please check the enables relation for this source-specific GO:0005085 assertion.
 - **Evidence reference:** PMID:27023709
 
 - **Evidence reference:** PMID:29599213
+
+## 8. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q99607 located_in GO:0016605 PML body (IDA, PMID:14970218)
+- **Field:** DB:Reference
+- **Change:** check PMID:14970218 (alternatives in the explanation)
+- **Likely cause:** UNKNOWN
+- **Recorded in:** `genes/human/ELF4/ELF4-ai-review.yaml`
+
+Please check the reference supporting this ELF4 PML-body location assertion. The inspected indexed original PMID14970218 contains genuine MEF–AML1 association, while its operative reporter experiments concern NERF2; no PML text was found in that indexed original. PMID14976184 contains direct human MEF/PML localization and lysozyme promoter activation. The proposed replacement is conditional on the curator’s complete source record; this is not a wrong-gene claim, a confirmed absence from every unavailable supplement, or an inferred cause of miscitation. Biological annotation and imported reference are preserved.
+
+- **Evidence reference:** PMID:14970218
+
+- **Evidence reference:** PMID:14976184
+
+## 9. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q99607 involved_in GO:0045944 positive regulation of transcription by RNA polymerase II (IDA, PMID:14970218)
+- **Field:** DB:Reference
+- **Change:** check PMID:14970218 (alternatives in the explanation)
+- **Likely cause:** UNKNOWN
+- **Recorded in:** `genes/human/ELF4/ELF4-ai-review.yaml`
+
+Please check the reference supporting this ELF4 positive polymerase-II transcription assertion. The inspected indexed original PMID14970218 contains genuine MEF–AML1 association, but its operative BLK-promoter transactivation experiments concern NERF2/ELF2. PMID14976184 instead reports MEF-dependent lysozyme-promoter activation enhanced by PML and increased endogenous lysozyme RNA. The proposed replacement is conditional on the curator’s complete source record; this is not a wrong-gene claim, a confirmed absence from every unavailable supplement, or an inferred cause of miscitation. Biological annotation and imported reference are preserved.
+
+- **Evidence reference:** PMID:14970218
+
+- **Evidence reference:** PMID:14976184
