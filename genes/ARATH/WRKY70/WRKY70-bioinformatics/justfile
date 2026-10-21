@@ -1,0 +1,45 @@
+# WRKY70 DAP-seq promoter-target analysis. Run from this directory.
+# Dependencies are declared in pyproject.toml; `uv run` creates the environment on first use.
+# PYTHON can be overridden, e.g. `just PYTHON=python3 all` (needs pyyaml and scipy installed)
+PYTHON := env_var_or_default("PYTHON", "uv run --project . python")
+
+all: download analyze analyze-wide test-other-tf
+
+download:
+    bash scripts/download_data.sh data
+
+# Focal TF = WRKY70 (O'Malley 2016 dataset WRKY70_col)
+analyze:
+    {{PYTHON}} -I scripts/promoter_targets.py \
+        --peaks data/WRKY70_col.narrowPeak \
+        --ns-targets data/WRKY70_col.nS_targets.txt \
+        --other-peaks data/dap_wrky --focal-dataset WRKY70_col \
+        --gtf data/Arabidopsis_thaliana.TAIR10.63.gtf.gz \
+        --genome data/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz \
+        --gaf data/tair.gaf.gz --obo data/go-basic.obo \
+        --config query_genes.yaml --upstream 2000 --downstream 0 \
+        --outdir results
+
+# Sanity test on a different TF (WRKY33_col_a) and a narrower (1 kb) window; writes to results_test_wrky33/
+test-other-tf:
+    {{PYTHON}} -I scripts/promoter_targets.py \
+        --peaks data/dap_wrky/WRKY33_col_a.narrowPeak \
+        --ns-targets data/WRKY33_col_a.nS_targets.txt \
+        --other-peaks data/dap_wrky --focal-dataset WRKY33_col_a \
+        --gtf data/Arabidopsis_thaliana.TAIR10.63.gtf.gz \
+        --genome data/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz \
+        --gaf data/tair.gaf.gz --obo data/go-basic.obo \
+        --config query_genes.yaml --upstream 1000 --downstream 0 \
+        --outdir results_test_wrky33
+
+# Window sensitivity: WRKY70, -3 kb to +500 bp around the TSS; writes to results_window_3kb_plus500/
+analyze-wide:
+    {{PYTHON}} -I scripts/promoter_targets.py \
+        --peaks data/WRKY70_col.narrowPeak \
+        --ns-targets data/WRKY70_col.nS_targets.txt \
+        --other-peaks data/dap_wrky --focal-dataset WRKY70_col \
+        --gtf data/Arabidopsis_thaliana.TAIR10.63.gtf.gz \
+        --genome data/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz \
+        --gaf data/tair.gaf.gz --obo data/go-basic.obo \
+        --config query_genes.yaml --upstream 3000 --downstream 500 \
+        --outdir results_window_3kb_plus500

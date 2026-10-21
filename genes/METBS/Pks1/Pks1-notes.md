@@ -42,6 +42,7 @@
 - Response to UV radiation
 - Response to temperature stress
 - Fungal-type cell wall organization (pigment deposition)
+
 ## Re-review 2026-10-01 (GOA refresh)
 
 - New GOA rows reviewed:
@@ -67,3 +68,23 @@
 - Removed non-verbatim supporting texts (a quote attributed to Pks1-bioinformatics/
   RESULTS.md and a paraphrased PMID:29958281 finding); core_functions consolidated from
   four entries to two.
+
+## Bioinformatics Report Audit 2026-10-10
+
+- Reviewed `Pks1-bioinformatics/RESULTS.md` and left it uncited. The embedded
+  `PKS1_SEQUENCE` is 2137 aa while the cached UniProt record is 2148 aa and
+  diverges by residue 40, so the current UniProt `ACT_SITE` and `MOD_RES`
+  coordinates were indexed into the wrong sequence. The failed coordinate
+  checks are artifacts and do not impeach the UniProt `MOD_RES` 1712/1830
+  evidence supporting the accepted GO:0031177 phosphopantetheine binding
+  annotation.
+- The scripts mix an automated motif scanner with manually encoded UniProt active
+  sites, manually assigned homolog identity values, hard-coded conservation
+  prose, and hard-coded evolutionary and selection claims, so the outputs do not
+  constitute an independent reproducible phylogenetic or active-site analysis.
+- The report's GO recommendations include `GO:0009411 response to UV` and the
+  broad `GO:0043473 pigmentation`; those were rejected or replaced in the
+  2026-10-01 re-review under the participation and comparator rules.
+- Prefer the cached UniProt record and PMID:29958281 quotes already in
+  `Pks1-ai-review.yaml` for Pks1 domain architecture, product identity, pigment
+  biosynthesis, and stress-phenotype support.

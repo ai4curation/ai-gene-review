@@ -18,14 +18,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from ai_gene_review.source_tree import (
     GitSnapshot,
     declared_review_snapshot,
     git_snapshot,
     review_snapshot_tree,
 )
+from ai_gene_review.yaml_utils import safe_load
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -57,11 +56,11 @@ def read_text(path: str) -> str:
 
 @lru_cache(maxsize=None)
 def read_yaml(path: str) -> dict[str, Any]:
-    return yaml.safe_load(read_text(path)) or {}
+    return safe_load(read_text(path)) or {}
 
 
 def read_policy() -> dict[str, Any]:
-    return yaml.safe_load(POLICY_PATH.read_text(encoding="utf-8")) or {}
+    return safe_load(POLICY_PATH.read_text(encoding="utf-8")) or {}
 
 
 def sha256(path: str) -> str:

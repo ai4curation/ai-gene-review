@@ -37,8 +37,8 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 ## Bottom line
 
 - GO **obsoleted four ED sub-pathway terms** (GO:0009255, GO:0061679, GO:0061680, GO:0061681) and folded them into **GO:0061678**.
-- Only **two repo reviews** use them: *P. putida* **edd** (IEA row) and **eda** (proposed NEW), both on GO:0009255.
-- The obsoletion **has landed** (OLS marks GO:0009255 obsolete); both reviews are **fixed in #3232**: edd ACCEPT → MODIFY → GO:0061678, eda NEW → GO:0061678.
+- Only **two repo reviews** needed direct fixes: *P. putida* **edd** and **eda**.
+- PR **#3232** is merged: edd ACCEPT → MODIFY → GO:0061678, eda NEW → GO:0061678, and both `core_functions` now point to GO:0061678.
 
 ---
 
@@ -79,16 +79,16 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 | PSEPK **eda** | proposed, from UniProt pathway line | NEW, now **GO:0061678** (#3232) | `core_functions.directly_involved_in` |
 
 - No review uses GO:0061679, GO:0061680 or GO:0061681.
-- No gene review yet uses the replacement GO:0061678; the ED **module** is already grounded in it.
+- The ED **module** and both PSEPK ED-enzyme reviews now use GO:0061678.
 - Sibling term GO:0061688 (obsoleted in the same GO release) was proposed by PSEPK **glk**; #3232 drops it and ACCEPTs glk's GOA **GO:0006096** row, since Glk does no ED step.
-- Upstream: EcoCyc 1 and UniProt 3 annotations, plus 7 external mappings, to move.
+- Upstream issue snapshot: EcoCyc 1 and UniProt 3 annotations, plus 7 external mappings.
 
 ---
 
 ## Next steps
 
-1. Merge #3232 (open): edd, eda → **GO:0061678** (rows and `core_functions`); glk → **GO:0006096**. All three validate.
-4. Later, as one batch: E. coli **edd** and **eda** (not yet in the repo), and a pass over gnd.
+1. Done in #3232: edd, eda → **GO:0061678** (rows and `core_functions`); glk → **GO:0006096**.
+2. Later, as one batch tracked in #460: E. coli `edd`, E. coli `eda`, and a pass over `gnd`.
 
 **Upstream:** go-annotation#6390 · go-ontology#31916
 **Read more:** `projects/ENTNER_DOUDOROFF_OBSOLETION.md`

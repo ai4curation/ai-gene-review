@@ -212,3 +212,54 @@ Design notes:
           activity: gomodel:568b0f9600000284/57ec3a7e00000079
           title: "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)"
   ```
+
+### Composing modules by reference (`module_ref`)
+
+An umbrella module (for example an organelle lifecycle) composes existing modules
+instead of copying their annotons. A node with `module_ref` stands in for another
+module, written like a conformance template: `<stem>` for the whole module, or
+`<stem>#<node_id>` for one node in it. The stem names a module file in the same
+directory as the referencing module; the engine, the validator and the renderer
+all resolve it that way.
+
+```yaml
+parts:
+  - order: 5
+    role: turnover
+    node:
+      id: mitochondrial_turnover
+      label: Mitophagy
+      module_ref: mitophagy
+  - order: 4
+    optional: true          # not every lineage has it; does not gate the umbrella
+    node:
+      id: respiration
+      label: Oxidative phosphorylation
+      module_ref: mitochondrial_complex_iv
+```
+
+`module_ref` means inclusion, which is different from `conforms_to` (an instance
+of a motif):
+
+- **Satisfiability.** `module_logic` compiles the referenced module in place, so
+  the umbrella node is satisfied exactly when the referenced module or node is.
+  Gaps are reported at the umbrella step. Atoms reached through a reference are
+  namespaced `<stem>#<annoton_id>`, so a step reached twice is one atom.
+  Mark the enclosing part `optional` when a lineage may lack the referenced
+  module. Inlining multiplies route counts, so for umbrella modules use
+  `is_satisfied`, `unsatisfied_steps` and `core_atoms`, which do not enumerate
+  routes; `enumerate_routes` raises past `max_routes`. When two steps reference
+  the same module, each copy's variant sets are enumerated independently, so
+  routes can mix branches of one referenced variant set and are then not
+  guaranteed minimal.
+- **Validation (blocking).** The reference must resolve, references must not
+  form a cycle, and the referencing node must not carry its own `annotons`,
+  `parts` or `variant_sets`; label, description, concepts, context and
+  evidence are allowed. Problems inside a referenced module are reported when
+  that module itself is validated, not when the umbrella is.
+- **Rendering.** The node links to the referenced module page or node anchor,
+  it is not counted as an ungrounded leaf, and reference problems appear in the
+  page's QC panel.
+
+The Boolean-network translator (`module-to-bnet`) does not follow references yet,
+and warns when a document uses them.

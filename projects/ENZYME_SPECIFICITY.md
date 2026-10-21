@@ -1,6 +1,7 @@
 ---
 title: "Enzyme Specificity Project"
 maturity: COMPLETE
+last_reviewed: 2026-10-04
 tags: [PIPELINE, FLAGSHIP]
 species: [CANAL, human, SACEN]
 genes: [LPL1, GND1, PHYKPL, eryCIII, ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2]
@@ -38,10 +39,19 @@ looks amiss until someone checks the substrate, cofactor or subunit.
 
 ## Overview
 
-This project tracks genes where GO annotations fail to capture the correct enzyme specificity - either:
-1. **Too narrow**: Annotation to one substrate when enzyme has broader specificity
-2. **Too broad**: Generic enzyme class when specific activity is known
-3. **Wrong reaction**: Incorrect reaction type based on domain classification
+This project tracks GO molecular-function annotations that name the right broad
+enzyme family but miss a decisive specificity axis:
+
+1. **Substrate range or chain length**: an annotation names one substrate when
+   the enzyme has a broader range, or transfers a term from the wrong acyl-chain
+   paralog.
+2. **Cofactor or donor specificity**: the enzyme belongs to the right
+   transferase or dehydrogenase class, but the GO term names the wrong sugar
+   nucleotide or redox cofactor.
+3. **Reaction mechanism**: a domain-family hit supplies the wrong catalytic
+   type, as in a PLP enzyme that is a phospho-lyase rather than a transaminase.
+4. **Subunit, paralog or name-collision transfer**: a catalytic term belongs to
+   another subunit, paralog or historical synonym rather than the reviewed gene.
 
 Enzyme specificity is crucial for accurate functional annotation. Misannotated specificity can:
 - Mislead metabolic pathway reconstruction
@@ -54,14 +64,15 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 
 ### 1. Substrate Specificity Errors
 
-**The Problem**: Enzyme annotated to specific substrate when it has broader or different specificity.
+**The Problem**: Enzyme annotated to a substrate term that is too narrow for
+the branch or belongs to the wrong ortholog/paralog.
 
 **Example - LPL1 (C. albicans)**:
 - Annotated: `GO:0004622` (phosphatidylcholine lysophospholipase activity)
-- Actual: Phospholipase B with three distinct activities:
-  1. sn-1/sn-2 fatty acid ester hydrolase
-  2. Lysophospholipase activity (on ALL glycerophospholipids, not just PC)
-  3. Transacylase activity
+- Review conclusion: Candida LPL1 belongs to the phospholipase B branch,
+  not a phosphatidylcholine-only or monoacylglycerol lipase branch. The
+  characterized *S. cerevisiae* LPL1 homolog has sn-1/sn-2 fatty-acid ester
+  hydrolase, lysophospholipase and transacylase activities on glycerophospholipids.
 - **Action**: MODIFY → `GO:0102545` (phospholipase B activity)
 
 ### 2. Reaction Mechanism Errors
@@ -89,7 +100,7 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 
 **Example - Epe1 (S. pombe)** (see CONTESTED_FUNCTION.md):
 - Annotated: Histone demethylase, oxidoreductase, dioxygenase
-- Actual: Pseudo-enzyme with degenerate active site
+- Actual: pseudo-enzyme with a degenerate active site
 - **Action**: REMOVE all enzymatic annotations
 
 ## Featured Examples
@@ -174,7 +185,7 @@ term where one exists, and fall back to the general term where it does not**
 | Step | Gene | UniProt | MF term | Chain-length specificity |
 |------|------|---------|---------|--------------------------|
 | ① dehydrogenase | ACADVL | P49748 | `GO:0017099` | very-long/long-chain-specific |
-| ① dehydrogenase | ACAD9 | Q9H845 | `GO:0017099` | VLC + complex I assembly factor |
+| ① dehydrogenase | ACAD9 | Q9H845 | `GO:0004466` | long-chain FAO + complex I assembly factor |
 | ① dehydrogenase | ACADM | P11310 | `GO:0070991` | medium-chain-specific |
 | ① dehydrogenase | ACADS | P16219 | `GO:0016937` | short-chain-specific |
 | ② hydratase | HADHA | P40939 | `GO:0004300` | long-chain (no LC-specific MF; in MTP) |
@@ -196,9 +207,13 @@ term where one exists, and fall back to the general term where it does not**
 - **Cross-gene mis-attribution (REMOVE)**: cholesterol O-acyltransferase +
   ER localization on **ACAT1** — these came from a SOAT1/SOAT2 paper via the
   historical "ACAT1" nickname collision; mitochondrial T2 has no sterol activity.
-- **Paralog cross-transfer (REMOVE)**: several IEA/ISS terms on **ACADVL** were
-  propagated from mouse LCAD (*Acadl*), including a self-contradictory
-  "negative regulation of fatty acid oxidation".
+- **Evidence-scope correction (MODIFY)**: two very-long-chain `GO:0017099`
+  rows on **ACAD9** were refined to long-chain `GO:0004466` because the
+  supporting palmitoyl-CoA assays demonstrate C16 chemistry.
+- **Unresolved cross-species regulatory transfers (UNDECIDED)**: ACADVL
+  receives mouse VLCAD/P50544-derived fatty-acid oxidation regulation rows
+  whose donor identity is now clear but whose direct transferability still
+  needs full-text resolution.
 
 **Reaction-specificity / mapping gap (links to RHEA project):** the GO→RHEA
 chaining check on the module flags ① → ② as a break — step ① makes
@@ -227,8 +242,8 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 ### Priority 1: Completed — fatty acid β-oxidation (acyl-chain-length specificity)
 | Gene | Species | Issue | Status |
 |------|---------|-------|--------|
-| ACADVL | human | Chain-length-specific MF; mouse-LCAD paralog cross-transfer removed | COMPLETE |
-| ACAD9 | human | VLC dehydrogenase + complex I assembly factor | COMPLETE |
+| ACADVL | human | Chain-length-specific MF; mouse VLCAD/P50544 regulatory transfers unresolved | COMPLETE |
+| ACAD9 | human | Long-chain dehydrogenase + complex I assembly factor | COMPLETE |
 | ACADM | human | Medium-chain-specific MF (`GO:0070991`) | COMPLETE |
 | ACADS | human | Short-chain-specific MF (`GO:0016937`) | COMPLETE |
 | HADHA | human | Generic→long-chain-specific MODIFY; thiolase MF removed (HADHB's) | COMPLETE |
@@ -263,9 +278,24 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-09-04
+Last updated: 2026-10-04
 
 # NOTES
+
+## 2026-10-04
+
+**Project audit confirmed the 14-review set remains complete.**
+
+Rechecked the three frontmatter species and 14 listed genes against the current
+`*-ai-review.yaml` files. All 14 reviews are `COMPLETE`; LPL1, PHYKPL, eryCIII,
+GND1, HADHA, HADH, ACAT1, ACAD9 and ACADVL still carry the specificity actions
+summarized above. No pending genes remain. The overview taxonomy was refreshed
+so the older substrate/reaction/mechanism framing also names the cofactor,
+donor, subunit, paralog and name-collision errors that were added later. The
+ACAD9 and ACADVL beta-oxidation rows, slide text and SVG were brought into line
+with the current reviews: ACAD9 now points to long-chain GO:0004466, and the
+mouse VLCAD/P50544-derived ACADVL regulatory rows are UNDECIDED rather than a
+removed paralog-transfer example.
 
 ## 2026-09-04
 
@@ -309,7 +339,8 @@ Created project to track enzyme specificity annotation issues.
 - Phospholipase B enzymes have three activities in one protein
 - Current annotation (`GO:0004622`) captures only lysophospholipase on PC
 - Better term: `GO:0102545` (phospholipase B activity)
-- Also: `GO:0047372` (monoacylglycerol lipase) kept as non-core (likely promiscuous)
+- Also: `GO:0047372` (monoacylglycerol lipase) was initially kept as non-core,
+  then changed to REMOVE once the IBA source was traced to the ROG1 paralog
 
 **PHYKPL Key Points**:
 - Domain classification misleading (aminotransferase family)
@@ -329,10 +360,11 @@ long-chain 3-OH-acyl-CoA DH `GO:0016509`) and fall back to the general term wher
 none exists (the hydratases ECHS1/HADHA → `GO:0004300`; the straight-chain
 thiolases HADHB/ACAA2 → `GO:0003988`; short/medium HADH → `GO:0003857`).
 
-Specificity errors removed/modified: HADHA generic→long-chain MODIFY and the
-mis-attributed thiolase MF removed; the long-chain `GO:0016509` over-annotation
-on short-chain HADH flagged; ACAT1's SOAT1/cholesterol terms removed
-(nickname collision); ACADVL's mouse-LCAD paralog cross-transfers removed.
+Specificity errors removed/modified: ACAD9 very-long-chain→long-chain MODIFY,
+HADHA generic→long-chain MODIFY and the mis-attributed thiolase MF removed; the
+long-chain `GO:0016509` over-annotation on short-chain HADH flagged; ACAT1's
+SOAT1/cholesterol terms removed (nickname collision); ACADVL's mouse
+VLCAD/P50544-derived regulatory transfers left UNDECIDED.
 
 Cross-link: the cross-species `MODULE:fatty_acid_beta_oxidation` and its
 GO→RHEA chaining check (now generalized into the module tooling) surface a
