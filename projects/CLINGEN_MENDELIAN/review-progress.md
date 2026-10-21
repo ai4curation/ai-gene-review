@@ -5139,3 +5139,73 @@ remain 8,472 total reviews, 3,102 human, 1,248 available catalogue reviews and
 1,628 missing. The open-head gate changed only by removing merged PR #5249 and
 then stabilized at 163 heads. This bridge adds no EGR2 completion credit; the
 frozen checkpoint remains 541.
+
+## Completion checkpoint 544 — 2026-10-21 02:35:41 UTC
+
+**544 complete; 2,332 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds exactly EGR2, EHMT1 and EGFR to the merged 541 checkpoint.
+The coordinating AI agent accepted each complete merge audit; this is not a
+human maintainer sign-off or a new biological review. Products, follow-up PRs
+and the tracker publication receive no additional gene credit.
+
+| Gene / PR | Approved head / merge | Approval / detail | Exact PR paths | Immediate main build / docs | Exact merge-group build |
+|---|---|---|---:|---|---|
+| [EGR2 #5249](https://github.com/ai4curation/ai-gene-review/pull/5249) | [`53560956d08a`](https://github.com/ai4curation/ai-gene-review/commit/53560956d08ae0d01ce116e1af5e483d2431b66e) / [`a1dc7cee46ff`](https://github.com/ai4curation/ai-gene-review/commit/a1dc7cee46ff3f4a7c8b06efe4221e0bfe17e6ae) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5249#pullrequestreview-5593478509) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5249#issuecomment-6304890310) | 26 | [39524461723](https://github.com/ai4curation/ai-gene-review/actions/runs/39524461723) success / [39524461748](https://github.com/ai4curation/ai-gene-review/actions/runs/39524461748) success | [39522566057](https://github.com/ai4curation/ai-gene-review/actions/runs/39522566057) success |
+| [EHMT1 #5251](https://github.com/ai4curation/ai-gene-review/pull/5251) | [`a455c87f9263`](https://github.com/ai4curation/ai-gene-review/commit/a455c87f9263c4d3e4f518b572a4d52f0470de86) / [`f1f1f9b20ec6`](https://github.com/ai4curation/ai-gene-review/commit/f1f1f9b20ec60f6a0b489b98867c3fcf33663823) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5251#pullrequestreview-5593669020) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5251#issuecomment-6305268790) | 34 | [39526942091](https://github.com/ai4curation/ai-gene-review/actions/runs/39526942091) success / [39526942097](https://github.com/ai4curation/ai-gene-review/actions/runs/39526942097) success | [39525021979](https://github.com/ai4curation/ai-gene-review/actions/runs/39525021979) success |
+| [EGFR #5252](https://github.com/ai4curation/ai-gene-review/pull/5252) | [`0638a3b2722e`](https://github.com/ai4curation/ai-gene-review/commit/0638a3b2722e15b68ec28aa4a3c03c409bd4052a) / [`8eeb6f927b0f`](https://github.com/ai4curation/ai-gene-review/commit/8eeb6f927b0f7cc733934c6706d5710fc65f8eb8) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5252#pullrequestreview-5593970737) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5252#issuecomment-6305907508) | 35 | [39531434283](https://github.com/ai4curation/ai-gene-review/actions/runs/39531434283) cancelled / [39531434228](https://github.com/ai4curation/ai-gene-review/actions/runs/39531434228) success | [39529711313](https://github.com/ai4curation/ai-gene-review/actions/runs/39529711313) success |
+
+All 95 approved PR path occurrences match their merged blobs and modes and
+remain identical at main `81298ef287dae81220ae068a10a524f17628bf7d`. Authenticated commit objects establish
+the EGR2 → EHMT1 → EGFR → tracker sequence. Each accepted merge audit also
+checks the complete immediate-parent delta and unchanged paths outside it.
+The final approved heads have no unresolved review threads or blocking requests.
+
+EGR2 passed scoped gene validation and 42 history tests on its PR and main
+builds; broad suites, all-schema and module checks ran on the merge-group.
+History coverage ran on the PR only. Its DRAFT status and inherited uncited
+research-report advisory remain recorded. EHMT1 passed scoped gene, history
+and family checks on main, with broad suites, schemas and modules on the
+merge-group; unresolved scientific contexts and optional suggestions remain.
+
+EGFR's immediate main build [39531434283](https://github.com/ai4curation/ai-gene-review/actions/runs/39531434283)
+was cancelled during checkout by a higher-priority main request. Its aggregate
+failed because dependencies were cancelled; this is not a successful run.
+The immediate tracker successor [`81298ef287da`](https://github.com/ai4curation/ai-gene-review/commit/81298ef287dae81220ae068a10a524f17628bf7d)
+changed only eight project, render and history paths, preserving all 35 EGFR
+payload paths and 18 runtime/workflow roots. Its successful
+[build 39531567708](https://github.com/ai4curation/ai-gene-review/actions/runs/39531567708) ran broad tests and
+history checks but explicitly skipped scoped gene validation. EGFR's exact
+approved-head and actual-merge merge-group checks supply the gene checks;
+successor success is not presented as fresh EGFR validation. The earlier failed
+[merge-group 39526448256](https://github.com/ai4curation/ai-gene-review/actions/runs/39526448256), caused by a
+stale source-report assertion, remains part of the record; the corrected final
+head and merge-group passed.
+
+EGFR remains DRAFT with 1,008 reviewed rows, 41 UNDECIDED annotations, four
+products and one core function. Its 177 advisories comprise 169 generic-binding
+and eight source-context warnings. Completion denotes accepted review delivery,
+not certainty about every annotation. The documentation runs succeeded,
+including the [tracker successor docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39531567710);
+the EGFR/successor docs retained 21 warnings. Documentation success covers
+schema/MkDocs generation and deployment, not fresh individual gene HTML
+rendering or visual inspection.
+
+[Tracker PR #5253](https://github.com/ai4curation/ai-gene-review/pull/5253) landed checkpoint 541 at
+`81298ef287dae81220ae068a10a524f17628bf7d` from approved head `e556803f9ba33e51eac8d98e197940424083881f`. Its eight
+paths were verified exactly; that publication adds no gene credit. This update
+starts from that merged main snapshot rather than modifying the closed PR.
+All 235 historical queue objects and 103 previous completion updates remain
+exact; this is update 104. Prior progress text, including older inventories and
+then-pending gene statements, is preserved as historical evidence.
+
+Current main has 8,473 review files, including 3,103 human reviews.
+1,249 catalogue genes have reviews and 1,627 lack them; 705
+available catalogue reviews remain uncredited. All 2,876 catalogue identities
+and association texts are unchanged; only the three accepted checkboxes change.
+No gene review, cache, runtime file or existing history is modified by this
+checkpoint. The publisher passed eight project frontmatter checks, rendered both project
+pages and validated one new append-only history record. The catalogue render
+reports 1,627 missing-review warnings; the progress render reports none. These
+four source changes, two HTML renders and new history form seven publication paths.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker544-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T024452Z-codex-095029.yaml)
