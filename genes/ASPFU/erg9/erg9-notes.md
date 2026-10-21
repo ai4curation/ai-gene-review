@@ -15,6 +15,11 @@
   strains and noted that "Erg9 and Erg1 are both essentially required to form
   squalene or, respectively, squalene epoxide which are precursors of
   lanosterol" in ergosterol biosynthesis. [PMID:39060235]
+- The same 2024 full text reports that the conditional erg9tetOn mutant was not
+  viable under repressed conditions and that GC-MS profiling after Erg9
+  depletion showed a slight but significant ergosterol decrease relative to
+  other sterols, giving A. fumigatus-specific evidence that erg9 feeds
+  ergosterol biosynthesis. [PMID:39060235]
 - The PTHR11626 family review puts Q4WAG4 in PTHR11626:SF2, the canonical
   squalene synthase subfamily, and supports accepting the IBA rows to
   GO:0051996, GO:0005789 and the fungal GO:0006696 node for A. fumigatus. The
