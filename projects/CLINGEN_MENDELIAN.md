@@ -2977,6 +2977,14 @@ For this ClinGen project, follow the user's standing instruction: retain a suppo
 
 This is an intentional task-specific departure from the annotation-reviewer skill's informational-exclusion recommendation, which generally uses `REMOVE` for uninformative generic binding without declaring the reported interaction false. The authority is the user's explicit instruction for this project, not the ActionEnum alone. This does not change the repository-wide policy or claim an external maintainer sign-off.
 
+This campaign adds no new publication quotations. Preserve inherited quotations
+and immutable publication caches. Record claim-level evidence with verified
+reference identifiers, source-access limits and precise locators in the notes
+and evidence records. A reference-only citation does not claim that a quotation
+was checked by the verbatim-substring validator. This convention does not waive
+source verification or permit invented findings; inaccessible evidence retains
+its explicit uncertainty. It applies to this campaign, not repository-wide.
+
 ## Status
 
 Gene reviews are proceeding in evidence-priority order, alphabetically within
@@ -2988,20 +2996,20 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**546 of 2,876 genes are complete; 2,330 remain.**
-This checkpoint adds only EIF2B3 to the merged 545 checkpoint.
-[Checkpoint 546](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-546-2026-10-21-175711-utc)
+**547 of 2,876 genes are complete; 2,329 remain.**
+This checkpoint adds only EIF2B4 to the merged 546 checkpoint.
+[Checkpoint 547](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-547-2026-10-21-185539-utc)
 links its approved head, exact merged files and accepted CI evidence. The
-inventory is pinned to main [`31717524f171`](https://github.com/ai4curation/ai-gene-review/commit/31717524f1710d19c5f8b22c5418f37b9e08b6eb),
-captured 2026-10-21 17:57:11 UTC. Each catalogue gene counts once; products,
+inventory is pinned to main [`d2587858a920`](https://github.com/ai4curation/ai-gene-review/commit/d2587858a920bf0ebb731c6c8e9cb74036c4d5db),
+captured 2026-10-21 18:55:39 UTC. Each catalogue gene counts once; products,
 follow-ups and tracker publications add no credit.
 
 At this snapshot, 8,551 reviews are available, including 3,110 human reviews.
-Of 1,253 catalogue genes with reviews, 546 are credited and 707 remain uncredited;
+Of 1,253 catalogue genes with reviews, 547 are credited and 706 remain uncredited;
 1,623 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-EIF2B3 passed exact approved-head checks and its actual merge-group and main
+EIF2B4 passed exact approved-head checks and its actual merge-group and main
 validation. The merge-group ran the full test suite; the main push skipped that
 suite after change filtering. Its documentation workflow built and deployed
 successfully. Skipped checks are not reported as executed tests.
@@ -3682,7 +3690,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
 - [x] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
 - [x] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
-- [ ] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
+- [x] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
 - [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
 - [ ] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
 - [ ] **EIF3F** — HGNC:3275; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d0f623e7-ea96-461a-a348-7aa5a7a1d7ff-2023-12-06T070000.000Z) (MONDO:0000508; AR; Definitive).
