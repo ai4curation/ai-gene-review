@@ -67,3 +67,14 @@ PANTHER subfamily SF1 and is the donor for the Lsm6-node IBAs. No review exists 
 
 Modules: none in modules/ model the Lsm2-8 or Lsm1-7 rings. modules/dmel_spliceosome.yaml
 mentions the U6-associated LSm ring only in passing (Drosophila).
+
+## 2026-10-21: PR #5306 review follow-up
+
+The three PMID:26292707 rows (GO:0030620 U2 snRNA binding IDA, GO:0005686 U2 snRNP EXP,
+GO:0005682 U5 snRNP IDA) are returned from REMOVE to UNDECIDED. The PDB 3JB9 cross-reference
+check shows what was modelled, not the full particle composition or the paper's
+compositional data, and the cached publication is abstract-only; RESULTS-rereview.md and the
+source defect (CHECK, PROBABLE) already say this is a query rather than a certainty. The
+source defect proposing smf1 as the intended gene product is kept unchanged as the vehicle
+for the correction. The PMID:26292707 reference_review is changed from NONE/MISCITED to
+LOW/DISPUTED to match.

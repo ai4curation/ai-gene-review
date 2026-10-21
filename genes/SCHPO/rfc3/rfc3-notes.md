@@ -40,3 +40,11 @@ ProtNLM2 files and prediction-evidence folders were not opened or used.
 **Relative to review next.** S. cerevisiae RFC3 (P38629, SGD:S000005234), the SF9 ortholog and PAINT donor; no review in the repo (genes/yeast/RFC3 absent). Human RFC5 (P40937) is also unreviewed.
 
 **Modules.** No module covers eukaryotic RFC or the pombe checkpoint clamp loaders; related: modules/dmel_elg1_rfc_like_complex.yaml, modules/dmel_9_1_1_checkpoint_clamp.yaml (Drosophila), modules/bacterial_chromosomal_dna_replication.yaml (bacterial clamp loader, same PTHR11669 family).
+
+## 2026-10-21: PR #5306 review follow-up
+
+The four GO:0031391 Elg1 RFC-like complex rows are ACCEPT on direct S. pombe TAP-MS evidence
+(PMID:16040599), but no core function covered them. Added a third core_functions entry
+(in_complex GO:0031391, nucleus), matching the shape of the S. cerevisiae RFC3 review. Ctf18-RFC
+membership stays KEEP_AS_NON_CORE (phylogeny and genetics only in pombe, no biochemical
+composition), and GO:0061860 clamp unloader activity stays KEEP_AS_NON_CORE (Elg1-driven).
