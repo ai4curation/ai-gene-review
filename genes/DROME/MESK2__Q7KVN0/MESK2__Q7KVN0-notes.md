@@ -66,3 +66,24 @@ sibling isoform folder genes/DROME/MESK2 (keyed to Q8T0V2).
 - Core function: noncatalytic NDRG alpha/beta-hydrolase-fold protein of unknown activity, in
   cytoplasm (inferred). For transfer purposes: nothing about MESK2 molecular function is
   experimentally established; location is phylogenetically inferred; phenotypes are genetic.
+
+## 2026-10-21 — NEW row withdrawn: already annotated on another product of the same gene
+
+The re-review proposed a NEW row (GO:0005737 cytoplasm, IBA) on this accession. GOA already carries
+the same term on another product of the same gene: Q9GU50 (TrEMBL, FlyBase FBgn0043070, CG15669),
+which has `GO:0005737 is_active_in IBA GO_REF:0000033` from PTN000867215 (QuickGO API, checked
+2026-10-21). Q9GU50 has no folder in this repository and is sequence-identical to Q7KVN0 (UniProt
+CRC64 55C19C656736FA6C for both, 485 aa). GOA propagates gene-level annotations to one
+representative product per gene, so adding the term to a second product fills a convention rather
+than a curation gap. The row was withdrawn, following the rule applied across the ProtNLM2
+re-review cohorts (raised for MESK2 in the review of PR #5305).
+
+The core function keeps cytoplasm as its location. It now rests directly on the PAINT node:
+the PTHR11034 PAINT row for PTN000867215 (GO:0005737, IBD, seeded by human, mouse and rat NDRG1-4,
+taxon 6072 Eumetazoa), together with the PANTHER placement of MESK2 in SF56 under that node. The
+gene-level function is unchanged.
+
+Also in this pass: PMID:33827210 now carries `full_text_unavailable: true`, matching the cache
+(`full_text_available: false`). The full-text reading from PMC7610703 recorded in
+`MESK2__Q7KVN0-bioinformatics/` is unchanged, and the sibling Q8T0V2 review now records the same
+status.

@@ -87,3 +87,10 @@ This section was written without consulting any ProtNLM/ProtNLM2 output or predi
 - No molecular-function or biological-process term proposed; core_functions left empty because no activity is
   established. Gaps recorded as BIOLOGY knowledge_gaps with suggested experiments.
 - Description rewritten to be family- and evidence-grounded (previous text was a one-line placeholder).
+
+## 2026-10-21 — Evidence code on the NEW membrane row
+
+Following the review of PR #5305, the NEW GO:0016020 membrane row now uses `evidence_type: ISS`
+instead of IEA. The inference rests on PANTHER subfamily membership with human TMEM268 (whose
+membrane location is experimental) plus Phobius transmembrane predictions, so ISS describes it
+better than an electronic code. The term and reasoning are unchanged.

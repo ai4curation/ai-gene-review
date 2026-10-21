@@ -25,3 +25,15 @@ Changes vs prior review:
 - Description rewritten; references added (PMID:15466869, 41136621, 41698914; 35051350 fetched but not cited).
 
 Falcon deep research not used as support (it missed PMID:33028630, see above). PANTHER family review (interpro/panther/PTHR21600) places RluA-1 in SF40 as well; no placement disagreement, though its SF40 description does not mention the tRNA Psi32 specificity. Relative to review next: human RPUSD2 (Q8IZ73), no review in repo.
+
+## 2026-10-21 — MF granularity check (GO:0160151 vs GO:0106029)
+
+The review of PR #5305 suggested GO:0106029 tRNA pseudouridine synthase activity instead of
+GO:0160151 tRNA pseudouridine(32) synthase activity, because of the two fly SF40 paralogs. OLS
+(checked 2026-10-21): GO:0160151 and GO:0160152 (Psi31) are both is_a GO:0106029, which is_a
+GO:0009982. GO:0160151 is kept. The yeast SF40 pair Rib2/Pus8 and Pus9 splits by compartment, and
+both form Psi32 [PMID:15466869 "two enzymes, Rib2/Pus8p and Pus9p, are required for Psi32
+formation in cytoplasmic and mitochondrial tRNAs, respectively"]. Human RPUSD2 also forms Psi32.
+Psi32 is therefore the position conserved across every characterized member. Psi34 is reported
+only for human cytosolic tRNA-Ile-TAT, and Psi31 is already kept as non-core. The GO:0009982 IBA
+row's reason now says this explicitly.

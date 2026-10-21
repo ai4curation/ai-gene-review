@@ -83,3 +83,26 @@ PANTHER/PAINT, the cached literature and new sequence analysis.
   carries the gene's GOA rows and has no review. Suggested folder genes/DROME/MESK2__Q7KVN0
   (genes/DROME/MESK2 is keyed to Q8T0V2).
 - Modules: no module in modules/ covers NDRG proteins or MESK2.
+
+## 2026-10-21 — NEW row withdrawn: already annotated on another product of the same gene
+
+The re-review proposed a NEW row (GO:0005737 cytoplasm, IBA) on this accession. GOA already carries
+the same term on another product of the same gene: Q9GU50 (TrEMBL, FlyBase FBgn0043070, CG15669),
+which has `GO:0005737 is_active_in IBA GO_REF:0000033` from PTN000867215 (QuickGO API, checked
+2026-10-21). Q9GU50 has no folder in this repository; it is sequence-identical to the canonical
+product Q7KVN0 (UniProt CRC64 55C19C656736FA6C for both, 485 aa). GOA propagates gene-level
+annotations to one representative product per gene, so adding the term to a second product fills a
+convention rather than a curation gap. The row was withdrawn, following the rule applied across the
+ProtNLM2 re-review cohorts (raised for MESK2 in the review of PR #5305), and `existing_annotations`
+is now empty, matching the empty GOA file for Q8T0V2.
+
+The core function keeps cytoplasm as its location. It now rests directly on the PAINT node:
+the PTHR11034 PAINT row for PTN000867215 (GO:0005737, IBD, seeded by human, mouse and rat NDRG1-4,
+taxon 6072 Eumetazoa), together with the identical Ndr-domain block shared with Q7KVN0. The
+gene-level function is unchanged.
+
+Also in this pass: the PMID:33827210 reference review is aligned with the sibling Q7KVN0 review.
+The cached publication is abstract-only (`full_text_available: false`), so `full_text_unavailable:
+true` stays, but the full text was read from PMC7610703 in
+`genes/DROME/MESK2__Q7KVN0/MESK2__Q7KVN0-bioinformatics/`, so the reference is now VERIFIED with
+notes pointing there.
