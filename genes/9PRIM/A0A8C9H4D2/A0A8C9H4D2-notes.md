@@ -29,3 +29,10 @@ No ProtNLM2 file or prediction-evidence folder was opened for this review.
 - GO:0007165 signal transduction (IEA TreeGrafter): UNDECIDED, consistent with the human IBA row. The PAINT node placement is a deliberate judgment that I do not have evidence to overturn. There is no OLFML2A-specific evidence for it, and this short product lacks the secretory entry needed for extracellular signalling.
 - Previous core function GO:0005201 extracellular matrix structural constituent: dropped as unsupported. Even the full-length protein has only binding evidence.
 - Relative to review next: A0A8C9H9A8, the full-length product of the same gene (same_gene_canonical; no review in the repo). The human OLFML2A review (Q68BL7) is already complete.
+
+## 2026-10-21 — Characterised comparator (PR #5304 review)
+
+The same-gene relative reviewed in this batch now lives in `genes/9PRIM/OLFML2A__A0A8C9H9A8/` (renamed from the bare-symbol
+folder so it does not shadow this accession's folder). That relative has no experimental data of its own, so the
+experimentally characterised comparator for this gene is human OLFML2A, already reviewed in `genes/human/OLFML2A/`. It sits in the same
+PANTHER subfamily (PTHR23192:SF29) as this target. Its review is still IN_PROGRESS on main, so its experimental findings should be checked there before any transfer.

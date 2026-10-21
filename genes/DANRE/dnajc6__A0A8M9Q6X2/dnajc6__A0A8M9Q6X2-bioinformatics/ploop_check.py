@@ -26,7 +26,7 @@ def read_uniprot_seq(path: Path) -> str:
     return "".join(seq)
 
 
-zf = read_uniprot_seq(ROOT / "genes/DANRE/dnajc6/dnajc6-uniprot.txt")
+zf = read_uniprot_seq(ROOT / "genes/DANRE/dnajc6__A0A8M9Q6X2/dnajc6__A0A8M9Q6X2-uniprot.txt")
 hs = read_uniprot_seq(ROOT / "genes/human/DNAJC6/DNAJC6-uniprot.txt")
 print(f"zebrafish dnajc6 A0A8M9Q6X2 length: {len(zf)}")
 print(f"human DNAJC6 O75061 length: {len(hs)}")

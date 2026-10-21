@@ -18,7 +18,7 @@
 ### Evolutionary grounding
 
 - PANTHER: target, human OLFML2A (Q68BL7), mouse Olfml2a/photomedin-1 (Q8BHP7) and A0A8C9H4D2 all sit
-  in PTHR23192:SF29 (OLFACTOMEDIN-LIKE PROTEIN 2A) [file:9PRIM/OLFML2A/OLFML2A-bioinformatics/RESULTS.md].
+  in PTHR23192:SF29 (OLFACTOMEDIN-LIKE PROTEIN 2A) [file:9PRIM/OLFML2A__A0A8C9H9A8/OLFML2A__A0A8C9H9A8-bioinformatics/RESULTS.md].
 - Pairwise identity over aligned columns: 97.5% to human (99.5% target coverage), 84.0% to mouse
   (99.4% coverage); 98.4% to A0A8C9H4D2 over its 439 residues. Predicted signal peptide 1..27; two
   N-terminal CXCXCX9C motifs (residues 47 and 86); olfactomedin-domain cysteines conserved.

@@ -140,3 +140,10 @@ Modules: modules/synaptic_vesicle_endocytosis.yaml and
 modules/synaptic_vesicle_cycle.yaml mention auxilin/DNAJC6.
 
 `just validate DANRE A0A8M9QG43`: valid, no warnings.
+
+## 2026-10-21 — Characterised comparator (PR #5304 review)
+
+The same-gene relative reviewed in this batch now lives in `genes/DANRE/dnajc6__A0A8M9Q6X2/` (renamed from the bare-symbol
+folder so it does not shadow this accession's folder). That relative has no experimental data of its own, so the
+experimentally characterised comparator for this gene is human DNAJC6 (auxilin), already reviewed in `genes/human/DNAJC6/`. It sits in the same
+PANTHER subfamily (PTHR23172:SF4) as this target.
