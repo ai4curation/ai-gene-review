@@ -49,3 +49,8 @@ UniProtKB:P10253 (LYAG_HUMAN), gene GAA, HGNC:4065, human (NCBITaxon:9606). 952 
 
 ## Core functions summary
 1. MF GO:0004558 alpha-1,4-glucosidase activity; directly involved in BP GO:0005980 glycogen catabolic process; located_in GO:0043202 lysosomal lumen (and GO:0005764 lysosome). This is the well-established core: lysosomal degradation of glycogen to glucose at acidic pH.
+
+## 2026-10-09 completion pass (alignment with dismech Pompe entries)
+
+- Re-checked all 45 GOA rows against the review; actions and core function (GO:0004558 alpha-1,4-glucosidase activity, directly involved in GO:0005980 glycogen catabolic process, lysosomal lumen/lysosome) stand. Status set to COMPLETE.
+- dismech Pompe_Disease, Infantile-Onset_Pompe_Disease and Late-Onset_Pompe_Disease now all bind GO:0004558 (DECREASED) on their molecular GAA node, consistent with this core function and with modules/lysosomal_glycogen_degradation.yaml.

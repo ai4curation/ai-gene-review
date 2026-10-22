@@ -1,0 +1,12 @@
+# BPT7 gene 14 (gp14, P03724) — Curation Notes
+
+## Summary of Function
+Bacteriophage T7 internal virion protein gp14 (`P03724`, 196 AA) is the smallest of the three proteins (`gp14`, `gp15`, `gp16`) that compose the cylindrical internal core inside the mature T7 icosahedral head (~18–20 copies in the virion core; 8 copies in the assembled hexameric/octameric core ring) [PMID:6864790, PMID:23306440, PMID:34214465]. Upon irreversible adsorption of T7 to the *Escherichia coli* cell surface, gp14 is the first internal core protein ejected through the portal-tail channel [PMID:16054667, PMID:20036409]. Fractionation, Sarkosyl extraction, and cryo-electron tomography demonstrate that ejected gp14 partitions exclusively into the **host outer membrane** (co-sedimenting with outer membrane marker OmpA and remaining insoluble in Sarkosyl), where it assembles into a membrane-spanning pore that anchors the periplasmic gp15-gp16 DNA-ejectosome tunnel and conducts ions across lipid bilayers in vitro [PMID:20036409, PMID:23306440, PMID:34214465].
+
+## Annotation Review
+- `GO:0020002` (`host cell plasma membrane`) on 4 rows (`EXP` `PMID:20036409`, `EXP` `PMID:23306440`, `IDA` `PMID:34214465`, and `IEA` `GO_REF:0000044` `[UniProtKB-SubCell:SL-0376]`): **MODIFY** all 4 rows to `GO:0044384` (`host outer membrane`). UniProt subcellular location `SL-0376` is explicitly "Host outer membrane", and all three experimental papers (`PMID:20036409`, `PMID:23306440`, `PMID:34214465`) demonstrate that ejected gp14 localizes exclusively to the *E. coli* outer membrane (where it forms the outer membrane pore of the trans-envelope DNA-ejectosome), whereas gp16 spans the inner (plasma) membrane.
+- `GO:0039678` (`symbiont genome ejection through host cell envelope`, `IEA` `GO_REF:0000002`) and `GO:0046718` (`symbiont entry into host cell`, `IEA` `GO_REF:0000043`): **MODIFY** to the more specific term `GO:0099002` (`symbiont genome ejection through host cell envelope, short tail mechanism`), which is already present on the gene.
+- `GO:0099002` (`symbiont genome ejection through host cell envelope, short tail mechanism`, `IEA` `GO_REF:0000120`): **ACCEPT**.
+- `GO:0044423` (`virion component`, `IEA` `GO_REF:0000104`): **ACCEPT**.
+- **Proposed `NEW` annotations**:
+  - `GO:0140911` (`pore-forming activity`, `IDA`, `PMID:34214465`): Swanson et al. (2021) directly demonstrated step-wise open channel/pore formation by purified recombinant gp14 in planar lipid bilayers.

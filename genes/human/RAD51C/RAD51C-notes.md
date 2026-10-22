@@ -90,3 +90,17 @@ Targeted update alongside the new XRCC3 review (`genes/human/XRCC3/`).
   dispute the interactions, which are captured by GO:0033063 / GO:0033065 and the core functions.
   This supersedes the note above that the legacy actions were left as-is.
 - Completed the truncated PMID:41196948 quote ("...to promote homologous pairing").
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- GO:0005739 rows: IEA GO_REF:0000044 ACCEPT (reason reworded and records the check: UniProt line is ECO:0000269 to
+  PMID:20413593); IDA GO_REF:0000052 (HPA) ACCEPT; IDA PMID:20413593 ACCEPT. Actions unchanged.
+- Added NEW GO:0042645 mitochondrial nucleoid, **IDA** PMID:29158291 (cached in this batch):
+  [PMID:29158291 "Using subfractionation and mtDNA immunoprecipitation (mtDNA-IP), we find that RAD51C/XRCC3 is an integral part of the mitochondrial nucleoid that binds to mtDNA control regions within the D-loop"];
+  [PMID:29158291 "Interestingly, substantial amounts of RAD51, RAD51C, and XRCC3 were still present in the nucleoid fraction even after salt extraction"];
+  [PMID:29158291 "mitochondrial levels of RAD51C/XRCC3 and RAD51 were severely reduced upon mtDNA depletion, suggesting that RAD51C/XRCC3 is a new member of the mitochondrial nucleoid"].
+- PMID:20413593's protease-protection result ("Rad51 in the mitochondrial fraction is largely resistant to proteinase
+  K treatment") is for RAD51 only, so it is not used for RAD51C.
+- core_functions locations unchanged: the mitochondrial/nucleoid pool is a genuine second location, but the core role
+  is nuclear HR. (Observation: the mitochondrion rows are ACCEPT although the reviewer describes them as non-core;
+  left as is for consistency across the three rows, outside this batch's scope.)

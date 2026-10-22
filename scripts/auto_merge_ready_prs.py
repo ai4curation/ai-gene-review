@@ -1012,12 +1012,19 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
-        "--max-enqueue-per-run", type=positive_int, default=2,
-        help="maximum queue admission attempts per sweep (default: 2)",
+        "--max-enqueue-per-run", type=positive_int, default=50,
+        help="maximum queue admission attempts per sweep (default: 50)",
     )
     parser.add_argument(
-        "--max-queue-size", type=positive_int, default=2,
-        help="stop admitting when the observed queue reaches this size (default: 2)",
+        "--max-queue-size", type=positive_int, default=50,
+        help="stop admitting when the observed queue reaches this size (default: 50)",
+    )
+    parser.add_argument(
+        "--time-budget-seconds", type=positive_int, default=None,
+        help=(
+            "stop starting new PRs after this many seconds so the sweep still "
+            "writes its summary before an external timeout (default: no limit)"
+        ),
     )
     parser.add_argument(
         "--trusted-reviewer",
@@ -1145,12 +1152,31 @@ def main(argv: list[str] | None = None) -> int:
     failed: list[dict] = []
     enqueue_attempts = 0
     queue_size = len(queue.numbers)
+    started = time.monotonic()
     for pr in candidates:
         number = pr["number"]
-        if queue.active and (
-            enqueue_attempts >= args.max_enqueue_per_run or queue_size >= args.max_queue_size
-        ):
-            skipped.append({"number": number, "reason": "queue admission budget/capacity reached"})
+        elapsed = time.monotonic() - started
+        if args.time_budget_seconds is not None and elapsed >= args.time_budget_seconds:
+            skipped.append({
+                "number": number,
+                "reason": f"sweep time budget reached: {elapsed:.0f}/{args.time_budget_seconds}s",
+            })
+            continue
+        if queue.active and queue_size >= args.max_queue_size:
+            skipped.append({
+                "number": number,
+                "reason": f"queue capacity reached: {queue_size}/{args.max_queue_size} observed entries",
+            })
+            continue
+        if queue.active and enqueue_attempts >= args.max_enqueue_per_run:
+            skipped.append({
+                "number": number,
+                "reason": (
+                    f"queue admission attempt budget reached: "
+                    f"{enqueue_attempts}/{args.max_enqueue_per_run} attempts "
+                    f"({queue_size}/{args.max_queue_size} observed entries)"
+                ),
+            })
             continue
         try:
             fresh = view_pr(args.repo, number)
@@ -1289,7 +1315,13 @@ def main(argv: list[str] | None = None) -> int:
                     raise ValueError("merge-queue configuration changed; retry next sweep")
                 if queue.active:
                     if number not in latest_queue.numbers and len(latest_queue.numbers) >= args.max_queue_size:
-                        skipped.append({"number": number, "reason": "queue filled during verification"})
+                        skipped.append({
+                            "number": number,
+                            "reason": (
+                                f"queue filled during verification: "
+                                f"{len(latest_queue.numbers)}/{args.max_queue_size} observed entries"
+                            ),
+                        })
                         continue
                     hold = queue_retry_hold(args.repo, number, fresh["headRefOid"])
                     if hold:
