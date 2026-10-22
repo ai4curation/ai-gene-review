@@ -249,10 +249,11 @@ batch only closed the file out.
 |---|---:|---:|---:|---:|---:|---:|---:|
 | TETTS TERT | 27 | 17 | 0 | 2 | 0 | 8 | 0 |
 | TETTS TAP65 | 25 | 22 | 1 | 2 | 0 | 0 | 1 |
-| PARTE A0BFB4 | 14 | 10 | 0 | 0 | 0 | 4 | 0 |
+| PARTE A0BFB4 | 14 | 6 | 0 | 0 | 0 | 8 | 0 |
 
 "Other" is TOO_GENERAL, UNDECIDED or MARK_AS_OVER_ANNOTATED. TERT's eight are all
-TOO_GENERAL; A0BFB4's four are three MARK_AS_OVER_ANNOTATED plus one UNDECIDED.
+TOO_GENERAL; A0BFB4's eight are four TOO_GENERAL, three MARK_AS_OVER_ANNOTATED and one
+UNDECIDED.
 
 **Patterns, continuing the Track A and B lists.**
 
@@ -268,6 +269,10 @@ TOO_GENERAL; A0BFB4's four are three MARK_AS_OVER_ANNOTATED plus one UNDECIDED.
   the polymerase and telomere-maintenance ancestors of terms accepted elsewhere in
   the same review. Five are EXP rows, which is exactly the case the enum covers:
   the term is uninformative, the evidence is not in doubt, and REMOVE would be wrong.
+  A0BFB4's four broad catalytic rows were brought to the same convention during review
+  of PR #5300: they had been left `ACCEPT` out of deference to an earlier round, which
+  meant one batch shipping two conventions for one pattern. Each was checked against
+  QuickGO as a strict ancestor of a term accepted in the same file before being changed.
 - *Refinement where the assay is sharper than the term.* Both `telomeric repeat DNA
   binding` rows became `single-stranded telomeric DNA binding` (telomerase engages
   the 3' overhang), and TAP65's generic `nucleic acid binding` / `RNA binding` became

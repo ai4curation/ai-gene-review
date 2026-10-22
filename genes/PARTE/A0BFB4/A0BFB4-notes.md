@@ -53,8 +53,40 @@ No annotation action was changed. In particular:
   regulation of autophagy is broad enough that a noncanonical ciliate role stays open.
   Closing it needs Paramecium perturbation data, not another pass over the same evidence.
 - The four broad catalytic/nucleotide rows (`GO:0004672`, `GO:0016301`, `GO:0016740`,
-  `GO:0000166`) stay `ACCEPT`. The 2026-09-20 and 2026-09-22 rounds set them that way on
-  purpose, against treating ontology breadth as non-coreness. Whether they would be better
-  as `TOO_GENERAL`, given that `GO:0004674` is asserted and entails all four, is a real
-  question about the repo's convention rather than about this gene, and is raised for a
-  human rather than settled here.
+  `GO:0000166`) were left `ACCEPT` at first, because the 2026-09-20 and 2026-09-22 rounds set
+  them that way on purpose. That is now changed to `TOO_GENERAL` — see the next entry.
+
+
+## Broad catalytic rows moved to TOO_GENERAL (2026-10-22, PR #5300 review)
+
+Review of PR #5300 pointed out that each of the four rows already conceded the entailment in
+its own `reason` — "the specific kinase activity entails the broader
+nucleotide-binding/phosphotransfer classes" — and then argued for `ACCEPT` on the ground that
+the terms are not false. That is not an argument against `TOO_GENERAL`, whose definition says
+in terms that it judges the term rather than the evidence and never means the claim is false.
+The same PR applies the opposite convention to TETTS TERT, which marks `GO:0034061` (five
+rows, four of them EXP), `GO:0003964`, `GO:0003677` and `GO:0000723` `TOO_GENERAL` on exactly
+this reasoning. One batch should not ship two conventions, least of all while flipping this
+file to `COMPLETE`.
+
+Ancestry verified against QuickGO (`is_a`/`part_of` closure) rather than assumed, before
+changing anything:
+
+| row | descendant accepted in this file | ancestor? |
+|---|---|---|
+| `GO:0000166` nucleotide binding | `GO:0005524` ATP binding | yes |
+| `GO:0004672` protein kinase activity | `GO:0004674` | yes |
+| `GO:0016301` kinase activity | `GO:0004674` | yes |
+| `GO:0016740` transferase activity | `GO:0004674` | yes |
+
+This does not reverse the earlier rounds' decision. That decision was against
+`KEEP_AS_NON_CORE`, i.e. against calling these rows peripheral; `TOO_GENERAL` says something
+different and compatible — the rows are central and true, and say nothing the specific term
+does not already say.
+
+Also in this round: the Falcon citation on the `GO:0004674` IBA row was an absence statement
+("depends mainly on domain architecture ... rather than direct experiment") sitting in
+`supported_by` for a row whose reason reads "Strongly supported". The absence point moved into
+`reason`, where it belongs, and `supported_by` now carries the report's positive Ser/Thr call
+[file:PARTE/A0BFB4/A0BFB4-deep-research-falcon.md "supporting inference that the protein most
+likely phosphorylates Ser/Thr residues rather than Tyr residues"].

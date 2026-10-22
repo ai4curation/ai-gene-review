@@ -211,3 +211,22 @@ and `GO:0000333` was declined on redundancy grounds here; (b) `GO:1904868 telome
 catalytic core complex assembly` is appropriate for p65 as the agent that drives it — if
 TERT also carries it, that is fine, both subunits participate; (c) catalysis
 (`GO:0003721`) belongs to TERT alone and must not appear on p65.
+
+## Comparator query behind the GO:0140691 NEW row (2026-10-22)
+
+Recorded so the figures in that row's `reason` are auditable rather than asserted. QuickGO
+annotation search, `goId=GO:0140691`, `goUsage=exact`, `evidenceCode=ECO:0000269` with
+`evidenceCodeUsage=descendants` (i.e. experimental evidence only):
+
+```
+https://www.ebi.ac.uk/QuickGO/services/annotation/search?goId=GO%3A0140691&goUsage=exact&evidenceCode=ECO%3A0000269&evidenceCodeUsage=descendants&limit=100
+```
+
+Re-run 2026-10-22: `numberOfHits: 36` across 32 distinct gene products, including
+`UniProtKB:Q9BUR4` WRAP53 (IDA) and `UniProtKB:Q8VC51` mouse Wrap53 (IDA). Those two are the
+load-bearing comparators: telomerase-RNP biogenesis factors acting on telomerase RNA, the same
+role p65 occupies, so the term is applied to proteins in p65's position and its absence here
+reads as a gap rather than a convention.
+
+The counts move as GO annotation advances; what matters for the row is the presence of the
+WRAP53 pair, not the exact total.
