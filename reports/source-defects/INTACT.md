@@ -25,8 +25,6 @@ This IPI row (protein binding, PMID:19407142) gives ABI1 (P49597) as the interac
 
 The enclosing PMID:16954185 annotation supplies Q15109 (AGER/RAGE) as the partner. The original Methods and Figure 6 describe human V5-tagged AGER1 and reciprocal EGFR coimmunoprecipitation in HEK293 and mouse mesangial cells; the paper distinguishes AGER1 from RAGE. Official identity maps AGER1/OST48 to DDOST/P39656. Frozen QuickGO record UniProtKB:P00533!447040847 is assigned by IntAct. The saved current IntAct export contains no matching PMID:16954185 pair, so the intended interaction record could not be authenticated. Please check that upstream record and its With/From mapping before repointing it to P39656; the positive AGER1 association is retained, and this does not assert that an EGFR–RAGE interaction is biologically impossible.
 
-> 
-> — PMID:16954185
+- **Evidence reference:** PMID:16954185
 
-> 
-> — UniProtKB:P39656
+- **Evidence reference:** UniProtKB:P39656
