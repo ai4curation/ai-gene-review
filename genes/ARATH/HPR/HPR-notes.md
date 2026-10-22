@@ -67,5 +67,5 @@ record (`HPR-uniprot.txt`). No `*-deep-research-*.md` file exists for this gene.
 ## Module comparison (modules/photorespiration_c2_cycle.yaml, peroxisomal_hpr1_variant)
 
 Module asserts GO:0008465 / GO:0009853 / GO:0005777 for HPR1. This review agrees on all three. The
-review also accepts the more specific GO:0009854 (oxidative photosynthetic carbon pathway, is_a
+review also accepts the more specific GO:0009854 (oxidative photosynthetic carbon pathway, part_of
 photorespiration), which is supported by IMP.

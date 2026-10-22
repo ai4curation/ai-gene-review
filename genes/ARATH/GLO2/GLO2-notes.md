@@ -66,4 +66,4 @@ No `-deep-research-*.md` file exists for this gene.
 
 - Module: GO:0003973 MF, GO:0009853 photorespiration, GO:0005777 peroxisome. Review agrees on MF
   and location; the existing (accepted) process annotation is the more specific GO:0009854
-  oxidative photosynthetic carbon pathway (is_a GO:0009853).
+  oxidative photosynthetic carbon pathway (part_of GO:0009853).
