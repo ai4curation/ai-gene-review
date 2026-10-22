@@ -53,7 +53,10 @@ aside as overviews or animal/pathogen biology. The other 61 are not assessed;
 they are general eukaryotic machinery (ribosome, spliceosome, proteasome, DNA
 repair, N-glycosylation) or minor metabolic maps, and the output file lists
 them. A `MODULE_WITH_ARATH_GENES` call does not mean the pathway is finished:
-every module is still `DRAFT`, and some hold only one or two Arabidopsis genes.
+every module is still `DRAFT`, and some hold only one or two Arabidopsis genes. Two further limits of the script: `mentions_arabidopsis` is a plain substring
+test, so a module that names Arabidopsis only in a caveat still counts as
+mentioning it; and the output records the run date in `summary.generated`, so
+re-running on another day changes that one field even when nothing else does.
 
 ## 1. No module (35)
 

@@ -66,7 +66,7 @@ No `-deep-research-*.md` file exists for this gene.
   death), which is a conditional phenotype of the mutant rather than a role of CAT2 in
   photoperiodism.
 - cat2 is a widely used model of intracellular H2O2 stress (review PMID:20876333, abstract only).
-- Second-site gox1 mutation suppresses cat2 [PMID:27225899], placing CAT2 downstream of GOX1 H2O2
+- Second-site gox1 mutation attenuates the cat2 phenotype [PMID:27225899], placing CAT2 downstream of GOX1 H2O2
   production.
 - Expression: light-stimulated and clock regulated (PMID:22303256 citing Zhong et al. 1997);
   cat2 mRNA increased under sulfur depletion (PMID:15032878); CAT2 transcripts up after cold
