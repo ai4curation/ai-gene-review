@@ -83,8 +83,11 @@ No `-deep-research-*.md` file exists for this gene.
   experimental photorespiration annotations outside Arabidopsis are rice GLO1. In Arabidopsis,
   photorespiration is carried by GLU1, GLYK, HPR, SHM1, PLGG1, PEX10, PUMP1 and others (IMP/TAS).
   The absence for CAT2 is therefore not a systematic cross-species convention with a body of
-  experimental catalase annotations behind it; it is proposed here as NEW with TAS evidence,
-  because CAT2 catalyses the disproportionation of the H2O2 produced inside the pathway.
+  experimental catalase annotations behind it. A NEW photorespiration row was first proposed
+  on that basis, then withdrawn on curator review (2026-10-22, PR #5254): H2O2 removal is
+  ancillary to the carbon chemistry of the cycle, and the systematic absence of the term from
+  catalases is treated as a convention. CAT2 is linked to the pathway through GO:0042744
+  hydrogen peroxide catabolic process, and the question is kept in suggested_questions.
 
 ## Module comparison (modules/photorespiration_c2_cycle.yaml)
 
