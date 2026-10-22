@@ -389,3 +389,73 @@ def test_atom_carries_step_function_ids():
 def test_serine_module_steps_have_activities():
     atoms = list(iter_atoms(compile_module_file("modules/phosphorylated_serine_biosynthesis.yaml")))
     assert [a.function_ids for a in atoms] == [("GO:0004617",), ("GO:0004648",), ("GO:0036424",)]
+
+
+# --------------------------------------------------------------------------- #
+# Grounding: a participant may ground through gene or gene_product            #
+# --------------------------------------------------------------------------- #
+
+
+def test_gene_product_participant_is_grounded():
+    """An ANY_WITH_FUNCTION step's exemplar `gene_product` grounds its atom.
+
+    Reading only `participant.gene` left such steps with no symbol and no
+    accession, so no genome- or expression-keyed oracle could ever satisfy
+    them and their modules were unsatisfiable in every context.
+    """
+    doc = {"module": {"id": "m", "annotons": [{
+        "id": "holin",
+        "participant": {
+            "selector_type": "ANY_WITH_FUNCTION",
+            "required_function": {"term": {"id": "GO:0140911"}},
+            "gene_product": {"preferred_term": "t (Bacteriophage T4)",
+                             "term": {"id": "UniProtKB:P06808"}},
+        },
+    }]}}
+    (atom,) = list(iter_atoms(compile_module(doc)))
+    assert atom.uniprot == "P06808"
+    assert atom.gene_symbol == "t"
+
+
+def test_explicit_gene_takes_precedence_over_gene_product():
+    doc = {"module": {"id": "m", "annotons": [{
+        "id": "a",
+        "participant": {"gene": {"preferred_term": "A", "term": {"id": "UniProtKB:P1"}},
+                        "gene_product": {"preferred_term": "B",
+                                         "term": {"id": "UniProtKB:P2"}}},
+    }]}}
+    (atom,) = list(iter_atoms(compile_module(doc)))
+    assert (atom.gene_symbol, atom.uniprot) == ("A", "P1")
+
+
+# --------------------------------------------------------------------------- #
+# No curated module may be vacuously satisfiable                              #
+# --------------------------------------------------------------------------- #
+
+
+def _curated_modules() -> list[Path]:
+    return sorted(Path("modules").glob("*.yaml"))
+
+
+def test_no_curated_module_is_satisfied_by_an_empty_context():
+    """A module satisfied when nothing holds asserts no requirement at all.
+
+    This happens when every part of a module is marked `optional: true`:
+    `compile_module` turns an optional part into OR(filled, empty), so a node
+    whose parts are all optional admits the empty route and is vacuously true.
+    Alternative mechanisms belong in a `variant_sets` with selection
+    ONE_OR_MORE, which requires at least one branch. Caught
+    `phage_single_gene_lysis`, which every genome satisfied, including genomes
+    encoding no lysis protein at all.
+    """
+    vacuous = []
+    for path in _curated_modules():
+        circuit = compile_module_file(path)
+        if not list(iter_atoms(circuit)):
+            continue  # no leaf steps to require; nothing to assert
+        if is_satisfied(circuit, lambda atom: False):
+            vacuous.append(path.name)
+    assert vacuous == [], (
+        "these modules are satisfied by a context in which no step holds: "
+        + ", ".join(vacuous)
+    )
