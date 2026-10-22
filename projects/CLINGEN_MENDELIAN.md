@@ -2977,6 +2977,14 @@ For this ClinGen project, follow the user's standing instruction: retain a suppo
 
 This is an intentional task-specific departure from the annotation-reviewer skill's informational-exclusion recommendation, which generally uses `REMOVE` for uninformative generic binding without declaring the reported interaction false. The authority is the user's explicit instruction for this project, not the ActionEnum alone. This does not change the repository-wide policy or claim an external maintainer sign-off.
 
+Under the user’s standing instruction, this campaign adds no new publication quotations. Preserve inherited quotations
+and immutable publication caches. Record claim-level evidence with verified
+reference identifiers, source-access limits and precise locators in the notes
+and evidence records. A reference-only citation does not claim that a quotation
+was checked by the verbatim-substring validator. This convention does not waive
+source verification or permit invented findings; inaccessible evidence retains
+its explicit uncertainty. It applies to this campaign, not repository-wide.
+
 ## Status
 
 Gene reviews are proceeding in evidence-priority order, alphabetically within
@@ -2988,21 +2996,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**541 of 2,876 genes are complete; 2,335 remain.**
-This checkpoint adds exactly 68 distinct genes from accepted merge-audit batches
-03–09 to the published checkpoint 473. [Checkpoint 541](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-541-2026-10-21-005359-utc)
-links each approved head, merged files and CI evidence. The inventory is pinned
-to main [`a17627810d4a`](https://github.com/ai4curation/ai-gene-review/commit/a17627810d4a13efede28a3c07a481aa0b44131b),
-captured 2026-10-21 00:53:59 UTC. EGR2, EHMT1 and EGFR are excluded from this frozen
-count. Each catalogue gene counts once; products and follow-ups add no credit.
+**552 of 2,876 genes are complete; 2,324 remain.**
+This checkpoint adds ELAC2, ELF4 and ELANE to the merged 549 checkpoint.
+[Checkpoint 552](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-552-2026-10-21-221521-utc)
+records their approved heads, actual merges, report integration and accepted CI evidence.
+The inventory is pinned to main [`cd7e12584376`](https://github.com/ai4curation/ai-gene-review/commit/cd7e12584376e4fff47f4e9b13d8bd20c967a7b6),
+prepared 2026-10-21 22:15:21 UTC. Each catalogue gene counts once; products,
+follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,472 reviews are available, including 3,102 human reviews.
-Of 1,248 catalogue genes with reviews, 541 are credited and 707 remain uncredited;
-1,628 catalogue genes still lack a review file. Availability and accepted
-completion are separate measures. 67 immediate main builds in these batches
-were cancelled. Exact-head and merge-group checks passed, with accepted,
-explicitly bounded preserved-payload/runtime evidence from successful descendants.
-Cancelled or skipped tests are not counted as successful gene revalidation.
+At this snapshot, 8,556 reviews are available, including 3,115 human reviews.
+Of 1,258 catalogue genes with reviews, 552 are credited and 706 remain uncredited;
+1,618 catalogue genes still lack a review file. Availability and accepted
+completion are separate measures.
+
+All three merge-group builds executed the full test suite. Their actual-main
+builds passed scoped validation; path filtering skipped the broad main suites.
+Documentation builds and gh-pages pushes succeeded; no independent live-page
+inspection is claimed. ELAC2 and ELANE retain computed DRAFT status, and all
+source-specific uncertainties remain visible. Campaign completion records the
+accepted, merged review, not certainty about every annotation or a COMPLETE file status.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3672,21 +3684,21 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EFL1** — HGNC:25789; [Shwachman-Diamond syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0339941d-fe9f-4451-850c-5f5738a7ce7d-2026-02-10T170000.000Z) (MONDO:0044205; AR; Definitive).
 - [x] **EFNB1** — HGNC:3226; [craniofrontonasal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_31ffbd0b-5c6b-4396-a84c-9330d81e4a08-2020-10-26T154650.453Z) (MONDO:0010570; XL; Definitive).
 - [x] **EFTUD2** — HGNC:30858; [mandibulofacial dysostosis-microcephaly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_66012775-240c-4640-ac66-12647021eee5-2022-07-20T160000.000Z) (MONDO:0012516; AD; Definitive).
-- [ ] **EGFR** — HGNC:3236; [non-small cell lung carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_49342c73-96d7-45ba-9c90-d2d5e5710636-2020-07-30T202207.418Z) (MONDO:0005233; AD; Definitive).
+- [x] **EGFR** — HGNC:3236; [non-small cell lung carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_49342c73-96d7-45ba-9c90-d2d5e5710636-2020-07-30T202207.418Z) (MONDO:0005233; AD; Definitive).
 - [x] **EGLN1** — HGNC:1232; [EGLN1-related erythrocytosis and pheochromocytoma/paraganglioma predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_647ffb08-3740-43a0-8601-258324e995ab-2025-09-09T160000.000Z) (MONDO:1060184; AD; Definitive).
-- [ ] **EGR2** — HGNC:3239; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6e83e27-0c9a-4475-92f5-745303931858-2021-11-17T033516.468Z) (MONDO:0015626; SD; Definitive).
-- [ ] **EHMT1** — HGNC:24650; [Kleefstra syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db91a861-6a88-4848-b6d5-4772bdef52ff-2018-06-06T100000.000Z) (MONDO:0012455; AD; Definitive).
+- [x] **EGR2** — HGNC:3239; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6e83e27-0c9a-4475-92f5-745303931858-2021-11-17T033516.468Z) (MONDO:0015626; SD; Definitive).
+- [x] **EHMT1** — HGNC:24650; [Kleefstra syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db91a861-6a88-4848-b6d5-4772bdef52ff-2018-06-06T100000.000Z) (MONDO:0012455; AD; Definitive).
 - [ ] **EIF2AK4** — HGNC:19687; [pulmonary veno-occlusive disease and/or pulmonary capillary haemangiomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d20386c-ad1a-4c88-9f43-4ca3cedbfd6f-2022-12-02T170000.000Z) (MONDO:0018554; AR; Definitive).
 - [ ] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
-- [ ] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
-- [ ] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
-- [ ] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
+- [x] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
+- [x] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
+- [x] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
 - [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
-- [ ] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
-- [ ] **EIF3F** — HGNC:3275; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d0f623e7-ea96-461a-a348-7aa5a7a1d7ff-2023-12-06T070000.000Z) (MONDO:0000508; AR; Definitive).
-- [ ] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
-- [ ] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
+- [x] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
+- [x] **EIF3F** — HGNC:3275; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d0f623e7-ea96-461a-a348-7aa5a7a1d7ff-2023-12-06T070000.000Z) (MONDO:0000508; AR; Definitive).
+- [x] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
+- [x] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
 - [ ] **ELN** — HGNC:3327; [cutis laxa, autosomal dominant 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bfdc253-320e-4c03-959f-57348fe403fd-2024-10-04T160000.000Z) (MONDO:0007411; AD; Definitive).
 - [ ] **ELOVL4** — HGNC:14415; [ELOVL4-related maculopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b9daf74-594d-4f11-b322-d671266ebf8e-2023-02-02T170000.000Z) (MONDO:0700227; AD; Definitive).
 - [ ] **ELP2** — HGNC:18248; [complex neurodevelopmental disorder with motor features](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d8c7b2b6-442f-41ff-85b5-3674572ab744-2025-06-23T160000.000Z) (MONDO:0100516; AR; Definitive).
