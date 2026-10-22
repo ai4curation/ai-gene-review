@@ -1,0 +1,74 @@
+# Source defects: recording errors that live upstream
+
+A review sometimes finds that the error is in the **source record**, not in
+this repository's understanding. Examples:
+
+- an annotation or GO-CAM activity attached to the wrong gene ("that gene,
+  not this gene"), often through a shared symbol or a legacy alias;
+- an annotation keyed to a reference that does not support it;
+- an experimental evidence code on a review or meeting report, or a missing `NOT`.
+
+The review `action` says what this repository does with the claim (for
+example `REMOVE` or `UNDECIDED`). `source_defects` says what the **source**
+should fix, in a form from which a report to that resource can be generated.
+
+## Where it goes
+
+- Gene reviews: `existing_annotations[].review.source_defects`. The defective
+  record is the GOA/MOD row described by the enclosing annotation, so `record`
+  is usually left unset.
+- GO-CAM reviews: `activity_reviews[].source_defects`. Set `record` to the
+  activity id.
+
+## Fields
+
+| Field | Required | Meaning |
+|---|---|---|
+| `defect_type` | yes | `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`, `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`, `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `OTHER` |
+| `resource` | yes | Who must fix it. For a GOA row this is the `assigned_by` group (`TAIR`, `MGI`, ...), not GOA. A GO-CAM model is `GO_CAM`. |
+| `record` | no | Id of the defective record when it is not the enclosing annotation. |
+| `slot` | no | The field holding `asserted_value`, in the source's own terms: `enabled_by` or `has_input` for a GO-CAM activity; `DB_Object_ID`, `DB:Reference`, `With/From`, `Evidence_Code` or `Qualifier` for a GAF row. |
+| `requested_change` | no | `REPOINT` (replace with `corrected_value`), `DELETE_VALUE` (drop the value, keep the record), `DELETE_ROW`, or `CHECK` (the right change depends on information we could not see; the explanation gives the alternatives). |
+| `asserted_value` | yes | What the source says now, as a CURIE (`AGI_LocusCode:AT2G45160`, `PMID:32213638`). |
+| `corrected_value` / `corrected_label` | no | What it should say, when known. Leave unset when the value is wrong but the right one is unknown. |
+| `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OTHER`, `UNKNOWN` |
+| `confidence` | yes | `CONFIRMED` (file as a correction), `PROBABLE` (file as a query), `SUSPECTED` |
+| `explanation` | yes | Self-contained text a curator at the resource can act on. |
+| `supported_by` | no | Verbatim quotes, checked like any other `supporting_text`. |
+| `report_status` / `report_url` | no | `NOT_REPORTED` (default), `REPORTED`, `ACKNOWLEDGED`, `FIXED`, `DECLINED`, plus a link once filed. |
+
+## Example: "that gene, not this gene"
+
+```yaml
+source_defects:
+- defect_type: WRONG_GENE_PRODUCT
+  resource: GO_CAM
+  record: gomodel:67e5e74400000148/67e5e74400000172
+  slot: enabled_by
+  requested_change: REPOINT
+  asserted_value: AGI_LocusCode:AT2G45160      # SCL27, alias HAM1 (HAIRY MERISTEM 1)
+  corrected_value: AGI_LocusCode:AT5G64610     # HAM1, MYST acetyltransferase
+  corrected_label: HAM1, MYST histone acetyltransferase 1 (UniProtKB:Q9FLF7)
+  cause: SYMBOL_COLLISION
+  confidence: CONFIRMED
+  explanation: >-
+    The H4K5 acetyltransferase activity is enabled_by SCL27, a GRAS protein
+    that shares the HAM1 alias; the cited papers study MYST HAM1 (AT5G64610).
+```
+
+## Generating reports
+
+```bash
+just export-source-defects
+```
+
+This writes `reports/source-defects.tsv`, with one row per defect, and
+`reports/source-defects/<RESOURCE>.md`, with one report per resource listing
+the defects that are not yet `FIXED` or `DECLINED`. Filing a report is a
+manual step. When it is done, set `report_status: REPORTED` and
+`report_url`, and set `FIXED` once a re-fetch shows the correction.
+
+This complements `reference_review` (see [Reference Curation](reference_curation.md)),
+which judges the *reference* itself. When a correct paper is attached badly
+(the wrong gene, a wrong WITH/FROM, a missing NOT), the reference is
+`VERIFIED` and the defect belongs here.

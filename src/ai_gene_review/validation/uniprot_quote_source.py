@@ -1,6 +1,7 @@
 """Checks on *what kind* of UniProt statement a supporting_text quotes.
 
-``local_source_text`` checks that a quote from a ``-uniprot.txt`` file is
+``local_source_text`` checks that a quote from a ``-uniprot.txt`` file or
+``-record-evidence.yaml`` snapshot is
 verbatim. This module asks what the quoted statement is, because a UniProt
 record mixes evidence with labels and with unvetted predictions:
 
@@ -25,7 +26,8 @@ record mixes evidence with labels and with unvetted predictions:
 * Labels restate an annotation rather than support it: protein names and EC
   numbers, keywords, and the record's own GO cross-references.
 
-Two global checks follow, both reported as warnings, whatever the quote supports:
+Three checks follow, all reported as warnings; the first two apply whatever the
+quote supports:
 
 ``uniprot_quote_unvetted_prediction``
     Every evidence item on the quoted statement is an unvetted prediction
@@ -34,10 +36,21 @@ Two global checks follow, both reported as warnings, whatever the quote supports
 ``uniprot_quote_restating_field``
     The quote comes from a label field (``RESTATING_FIELDS``) or a GO
     cross-reference.
+``uniprot_quote_existence_as_support``
+    The quote is the protein existence (``PE``) line, cited for an ACCEPT or NEW
+    row or a core function. Existence says nothing about function; it can argue that an
+    annotation rests on prediction, but not support accepting one. An accepted
+    ND annotation needs evidence that the literature was searched instead.
 
 A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
-reported. Quotes that cannot be located are left to the verbatim check.
+reported. Before matching, a quote loses any flat-file line codes and feature
+keys copied with it; feature ranges (``102..292``) are positions, not an
+ellipsis; and brackets the verbatim check treats as editorial are gaps, while
+literal notation such as ``[2Fe-2S]`` stays. Quotes that cannot be located are
+left to the verbatim check.
+Snapshot support covers embedded UniSave ``record_text`` flat files; JSON fields
+and computed observations are not classified as UniProt flat-file statements.
 """
 
 from __future__ import annotations
@@ -47,6 +60,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import yaml
 
 from ai_gene_review.validation.local_source_text import (
     PROJECT_ROOT,
@@ -61,13 +76,17 @@ from ai_gene_review.validation.validation_report import (
 
 UNVETTED_CHECK = "uniprot_quote_unvetted_prediction"
 FIELD_CHECK = "uniprot_quote_restating_field"
+EXISTENCE_CHECK = "uniprot_quote_existence_as_support"
 
 #: Line codes that are labels for the entry rather than evidence about it:
 #: identifiers, names, gene names, taxonomy, keywords and the sequence.
+#: Protein existence (``PE``) is not a label: it is a fair argument that an
+#: annotation rests on prediction, though never support for accepting one
+#: (``EXISTENCE_CHECK``).
 #: Cross-references are labels only for GO (``RESTATING_DR``); family and
 #: domain cross-references are classification evidence.
 RESTATING_FIELDS = frozenset(
-    {"ID", "AC", "DT", "DE", "GN", "OS", "OG", "OC", "OX", "OH", "KW", "PE", "SQ"}
+    {"ID", "AC", "DT", "DE", "GN", "OS", "OG", "OC", "OX", "OH", "KW", "SQ"}
 )
 RESTATING_DR = frozenset({"GO"})
 
@@ -90,6 +109,16 @@ UNVETTED_MARKERS = (
 _BRACE = re.compile(r"(?:Evidence=)?\{(ECO:[^{}]*)\}")
 #: Evidence tokens left over when a quote cuts through a brace.
 _STRAY_EVIDENCE = re.compile(r"(?:Evidence=)?\{?ECO:\d{7}(?:\|[^\s,;}]*)?[,;}]?|[{}]")
+#: A flat-file line code (``DR   ``, ``CC       ``) copied into a quote, with
+#: a feature key after ``FT``; the parsed statements drop both (the key is the
+#: statement's topic), so they must go before a quote can be located.
+_LINE_CODE = re.compile(r"(?:^|(?<=\s))(?:FT {3}\w+ +|[A-Z]{2} {3,})")
+#: Bracketed text. What the verbatim check drops as editorial (``[protein]``)
+#: is a gap here, since dropping it would join words that are not adjacent in
+#: the record; literal notation (``[2Fe-2S]``) is kept as quoted text.
+_BRACKETED = re.compile(r"\[[^\]\n]*\]")
+#: A feature range (``102..292``), which must not be read as an ellipsis.
+_RANGE = re.compile(r"(?<=[\d<>?])\.\.(?=[<>?]?[\d?])")
 _FT_EVIDENCE = re.compile(r'/evidence="([^"]*)"')
 _REFERENCE_CODES = frozenset({"RN", "RP", "RC", "RX", "RG", "RA", "RT", "RL"})
 
@@ -283,7 +312,20 @@ def parse_uniprot_statements(raw: str) -> List[Statement]:
 @lru_cache(maxsize=256)
 def _indexed(path: Path, mtime_ns: int, size: int) -> Tuple[Tuple[Statement, ...], str, Tuple[int, ...]]:
     """Statements of *path*, their normalised concatenation, and each one's start offset."""
-    statements = tuple(parse_uniprot_statements(path.read_text(encoding="utf-8")))
+    raw = path.read_text(encoding="utf-8")
+    if path.name.endswith("-record-evidence.yaml"):
+        snapshot = yaml.safe_load(raw)
+        records = snapshot.get("unisave_records", []) if isinstance(snapshot, dict) else []
+        # Parse each archived entry separately: a field must not continue into
+        # another entry, and JSON metadata must not masquerade as flat-file text.
+        statements = tuple(
+            statement
+            for record in records
+            if isinstance(record, dict) and isinstance(record.get("record_text"), str)
+            for statement in parse_uniprot_statements(record["record_text"])
+        )
+    else:
+        statements = tuple(parse_uniprot_statements(raw))
     normalize = _validator().normalize_text
     starts: List[int] = []
     pieces: List[str] = []
@@ -319,10 +361,28 @@ def _quote_parts(quote: str) -> List[str]:
 
     >>> _quote_parts("Oxidoreductase {ECO:0000256|ARBA:ARBA00023002, ... NAD {ECO:0000256|ARBA:ARBA1};")
     ['oxidoreductase', 'nad']
+    >>> _quote_parts("DR   GO; GO:0003677; F:DNA binding; IEA:InterPro.")
+    ['go go 0003677 f dna binding iea interpro']
+    >>> _quote_parts("CC       Reaction=L-seryl-[protein] + ATP")
+    ['reaction l seryl', 'atp']
+    >>> _quote_parts("Name=[2Fe-2S] cluster")
+    ['name 2fe 2s cluster']
+    >>> _quote_parts("FT   DNA_BIND        102..292")
+    ['102 292']
+    >>> _quote_parts("FT   CHAIN           ?..649")
+    []
     """
     validator = _validator()
-    stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", quote))
-    return [p for p in (validator.normalize_text(x) for x in validator._split_query(stripped)) if p]
+
+    def gap(m: re.Match) -> str:
+        inner = m.group(0)[1:-1]
+        return m.group(0) if any(p.search(inner) for p in validator._literal_bracket_regexes) else " ... "
+
+    stripped = _BRACKETED.sub(gap, _RANGE.sub(" ", _LINE_CODE.sub(" ", quote)))
+    stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", stripped))
+    # A lone number (what ``?..649`` leaves) would match any position in the record.
+    parts = (validator.normalize_text(x) for x in validator._split_query(stripped))
+    return [p for p in parts if p and not p.isdigit()]
 
 
 def _index(path: Path):
@@ -342,8 +402,8 @@ def locate_quote(quote: str, path: Path) -> List[Statement]:
     return located
 
 
-def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[Statement]]]:
-    """``(unvetted, restating, statements)`` for a quote, or None if not located.
+def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, bool, List[Statement]]]:
+    """``(unvetted, restating, existence, statements)`` for a quote, or None if not located.
 
     A flag holds only if it holds for every occurrence of every part.
     """
@@ -351,7 +411,7 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[St
     parts = _quote_parts(quote)
     if not parts:
         return None
-    unvetted = restating = True
+    unvetted = restating = existence = True
     first: List[Statement] = []
     for part in parts:
         occ = _occurrences(part, statements, text, starts)
@@ -360,7 +420,8 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, List[St
         first.extend(s for s in occ[0] if s not in first)
         unvetted &= all(all(s.is_unvetted for s in o) for o in occ)
         restating &= all(all(s.is_restating for s in o) for o in occ)
-    return unvetted, restating, first
+        existence &= all(all(s.field == "PE" for s in o) for o in occ)
+    return unvetted, restating, existence, first
 
 
 @dataclass(frozen=True)
@@ -373,21 +434,63 @@ class QuoteFinding:
     statements: Tuple[Statement, ...]
 
 
+_ELEMENT = re.compile(r"^(existing_annotations|core_functions)\[(\d+)\]")
+
+
+def _accepts(data: Any, path: str) -> bool:
+    """Whether the quote at *path* supports asserting a function: an ACCEPT or NEW row, or a core function.
+
+    >>> data = {"existing_annotations": [{"review": {"action": "ACCEPT"}},
+    ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}}]}
+    >>> _accepts(data, "existing_annotations[0].review.supported_by[0].supporting_text")
+    True
+    >>> _accepts(data, "existing_annotations[1].review.supported_by[0].supporting_text")
+    False
+    >>> _accepts(data, "core_functions[0].supported_by[0].supporting_text")
+    True
+    >>> _accepts(data, "references[0].findings[0].supporting_text")
+    False
+    """
+    m = _ELEMENT.match(path)
+    if not m:
+        return False
+    if m.group(1) == "core_functions":
+        return True
+    try:
+        element = data["existing_annotations"][int(m.group(2))]
+    except (KeyError, IndexError, TypeError):
+        return False
+    return ((element or {}).get("review") or {}).get("action") in ("ACCEPT", "NEW")
+
+
+def _is_nd(data: Any, path: str) -> bool:
+    m = _ELEMENT.match(path)
+    if not m or m.group(1) != "existing_annotations":
+        return False
+    try:
+        element = data["existing_annotations"][int(m.group(2))]
+    except (KeyError, IndexError, TypeError):
+        return False
+    return (element or {}).get("evidence_type") == "ND"
+
+
 def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[QuoteFinding]:
     """Flagged UniProt quotes in a review document."""
     findings: List[QuoteFinding] = []
     for path, reference_id, quote in iter_local_quotes(data):
         source = resolve_local_source(reference_id, project_root)
-        if source is None or not source.name.endswith("-uniprot.txt"):
+        if source is None or not source.name.endswith(("-uniprot.txt", "-record-evidence.yaml")):
             continue
         result = classify_quote(quote, source)
         if result is None:
             continue
-        unvetted, restating, statements = result
+        unvetted, restating, existence, statements = result
         if unvetted:
             findings.append(QuoteFinding(path, reference_id, UNVETTED_CHECK, tuple(statements)))
         if restating:
             findings.append(QuoteFinding(path, reference_id, FIELD_CHECK, tuple(statements)))
+        if existence and _accepts(data, path):
+            findings.append(QuoteFinding(path, reference_id, EXISTENCE_CHECK, tuple(statements)))
     return findings
 
 
@@ -408,10 +511,25 @@ def _describe(statements: Tuple[Statement, ...]) -> str:
 def validate_uniprot_quote_sources(
     data: Any, report: ValidationReport, project_root: Path = PROJECT_ROOT
 ) -> None:
-    """Warn on UniProt quotes that are unvetted predictions or labels."""
+    """Warn on UniProt quotes that are unvetted predictions or labels, or that cite protein existence for an ACCEPT."""
     for f in quote_source_findings(data, project_root):
-        where = _describe(f.statements)
-        if f.check_type == UNVETTED_CHECK:
+        if f.check_type == EXISTENCE_CHECK:
+            message = (
+                "Supporting text quotes UniProt protein existence, which says whether the protein "
+                "exists, not what it does; it cannot support accepting a function"
+            )
+            if _is_nd(data, f.path):
+                suggestion = (
+                    "Accepting an ND (no data) annotation needs evidence that the literature was "
+                    "searched and found nothing, not the protein's existence level"
+                )
+            else:
+                suggestion = (
+                    "Cite evidence for the function itself; protein existence can support "
+                    "MARK_AS_OVER_ANNOTATED or UNDECIDED, not ACCEPT"
+                )
+        elif f.check_type == UNVETTED_CHECK:
+            where = _describe(f.statements)
             labels = sorted({label for s in f.statements for label in s.unvetted_sources})
             evidence = sorted({e for s in f.statements for e in s.evidence})
             message = (
@@ -423,6 +541,7 @@ def validate_uniprot_quote_sources(
                 "the publication behind it, or your own analysis"
             )
         else:
+            where = _describe(f.statements)
             message = (
                 f"Supporting text quotes a UniProt {where}, a label that restates an "
                 "annotation rather than giving evidence for it"

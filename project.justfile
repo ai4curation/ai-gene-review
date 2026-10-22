@@ -285,6 +285,12 @@ cache-gocams *args="":
 gocam-index *args="":
     uv run ai-gene-review gocam-index {{args}}
 
+# Collect structured source-database defects (review.source_defects and GO-CAM
+# activity_reviews[].source_defects) into reports/source-defects.tsv plus one
+# Markdown report per upstream resource in reports/source-defects/. See docs/source_defects.md.
+export-source-defects *args="":
+    uv run python -m ai_gene_review.tools.export_source_defects {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
@@ -2618,6 +2624,21 @@ scan-prose-panther *args="": ensure-panther-members
 [group('QC')]
 panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# Audit Swiss-Prot reviews outside their exact taxon's reference proteome.
+# Default writes CSV + issue-ready Markdown; use --format csv/markdown, --species POPTR,
+# --refresh, --offline, or --output-dir PATH. See projects/ORPHAN_CURATED.md.
+[group('QC')]
+[positional-arguments]
+orphan-curated *ARGS:
+    uv run python -m ai_gene_review.analysis.orphan_curated "$@"
+
+# Render counterpart assessments from project frontmatter genes and curated review YAML.
+# Defaults to ORPHAN_CURATED; accepts --project PATH, --output-dir PATH and --check.
+[group('QC')]
+[positional-arguments]
+project-counterparts *ARGS:
+    uv run python -m ai_gene_review.analysis.project_counterparts "$@"
 
 # ============ History records (ported from dismech) ============
 # Append-only curation session history under history/. See docs/history.md.

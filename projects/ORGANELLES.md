@@ -234,8 +234,9 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [x] Decide policy: evidence-based; no TOO_GENERAL; synthesis is a red flag;
       be bold about sub-compartments (see Policy)
 - [x] Red-flag worklist generated (`root_organelle_red_flags.md`)
-- [ ] Work through the 283 root-only mitochondrial synthesis rows, starting
-      with human; apply rules 3 and 4 in the gene reviews
+- [ ] Work through the root-only mitochondrial synthesis rows (285 in the
+      2026-10-20 run), starting with human; apply rules 3 and 4
+  - [x] Batch 1: 20 human genes (2026-10-20); 76 human genes remain
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Revise to "add, don't substitute" after PR #5208 review: synthesis
       root rows ACCEPT, sub-compartment as a NEW row; validator exemption
@@ -250,6 +251,50 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-10-20 (batch 1: 20 human genes)
+
+Applied the policy to 20 human genes with root-only mitochondrion rows from
+synthesis evidence. Nine gained a sub-compartment, eleven stayed at the root.
+No synthesis row was MODIFYed; all kept their action, with reasons recording
+the PAINT-seed or mapping check.
+
+| gene | outcome | evidence |
+|---|---|---|
+| NSUN2 | NEW matrix (IDA) | matrix-only APEX2 labelling and protease protection (PMID:31276587) |
+| RAD51C | NEW nucleoid (IDA) | salt-resistant nucleoid fractions with TFAM; D-loop mtDNA IP (PMID:29158291) |
+| AMACR | NEW matrix (IC) | soluble, no TM, import signal, mitochondrial beta-oxidation; signal not cleaved |
+| DUT | NEW matrix (IC, isoform 3) | processed presequence, no TM, mtDNA replication context |
+| FEN1 | NEW matrix (IC) | protease protection, PMF-dependent import, soluble; internal pool is mostly FENMIT |
+| APEX1 | NEW IMS and matrix (IC) | Mia40-dependent import and PLA with Mia40; matrix pool repairs mtDNA (one group) |
+| ADCK2 | NEW inner membrane (IC) | predicted TM at the COQ8A anchor position, protease protection, yeast Cqd1 |
+| GPX4 | NEW inner membrane (IC, mitochondrial isoform) | rodent sub-mitochondrial fractionation, import, cardiolipin |
+| ABHD18 | NEW inner membrane (IC) | predicted presequence, cardiolipin substrate, yeast Cld1 analogy; least certain call |
+| AKAP10 | root | predicted MTS only; organelle itself contested |
+| DHFR | root | sub-mitochondrial data were for DHFR2 and later reattributed |
+| FADS1 | root; rows to KEEP_AS_NON_CORE | ER enzyme; one imaging study; isoform error in old review fixed |
+| STOM | root | Ensembl projection is circular; organelle claim weak |
+| ASB9 | root | overexpression and crude pellet only |
+| SECISBP2 | root | MTS vs negative fractionation disagree |
+| RFK | root | yeast FMN1 is inner membrane, human RFK has no TM |
+| PTS | root | PAINT node seeded only by PTS's own GFP-screen row; HPA says cytosol |
+| TRAF3 | root | recruited via MAVS; no outer-membrane evidence |
+| HLCS | root | single functional line (matrix carboxylases), like PYCR2 |
+| GLOD4 | root | no presequence, no TM, crude fractionation only |
+
+What batch 1 showed:
+
+- **IBA seeds are often thin.** Several PAINT nodes are seeded by one gene,
+  sometimes the target itself (PTS) or a distant organism (SECISBP2, from a
+  trypanosome screen). DHFR's node includes the paralog DHFR2 but is carried
+  by rodent Dhfr. None of these was wrong about the organelle, but two (PTS,
+  STOM) may be over-annotated at the organelle level; they were kept
+  consistent with their direct rows pending a decision.
+- **Sub-compartment calls cluster by evidence type.** Two came from a direct
+  sub-compartment assay (IDA); the rest are IC from at least two agreeing
+  lines. Every root-staying gene failed rule 4 for a stated reason.
+- **Core-function locations were left alone in all 20** except NSUN2, where
+  the mt-tRNA methylation activity is shown in the matrix.
 
 ## 2026-10-18 (MMADHC core-function location)
 

@@ -86,9 +86,9 @@ Report: `GID1A-hypotheses/gid1a-catalytic-inactivity/openscientist.md` (3 iterat
 
 **Checked here against `GID1A-uniprot.txt`:**
 - The residue claims are correct. Positions 191/289/319 are S/D/V. Residues 113-115 are the HGG oxyanion motif. The nucleophile elbow is AGDSSGG.
-- UniProt annotates only two ACT_SITE residues, 191 and 289, and no catalytic His. This corroborates the absence of an annotated general base; the Val at 319 itself comes from the sequence, not from the active-site annotation. It agrees with the Val319 finding in the PTHR23024 family review (PR #5027, not yet merged).
+- UniProt annotates only two ACT_SITE residues, 191 and 289, and no catalytic His. This corroborates the absence of an annotated general base; the Val at 319 itself comes from the sequence, not from the active-site annotation. It agrees with the Val319 finding in the PTHR23024 family review (PR #5027).
 - I did not re-run the alignments or the PDB distance measurements.
-- The paralog residues (GID1B Asn338, GID1C Ile317 at the AADAC His373 position) are the residue-level basis for the GID1B review's IBA hydrolase REMOVE, whose propagation_review names AADAC (P22760) as SUPPORTS_SOURCE_BUT_NOT_TARGET.
+- The paralog residues (GID1B Asn338, GID1C Ile317 at the AADAC His373 position) are the residue-level basis for the GID1B review's IBA hydrolase REMOVE. That row's propagation_review gives the source status SUPPORTS_SOURCE_BUT_NOT_TARGET to the PAINT node PANTHER:PTN009058710, not to AADAC; AADAC (P22760) is one of the active esterases in the IBA's with/from list that seeded the node.
 
 **Errors in the report, not to be propagated:**
 - It says GID1B and GID1C have "no GA-binding MF" and only GO:0016787. This is false. Both GOA files and both reviews carry GO:0010331 gibberellin binding.
