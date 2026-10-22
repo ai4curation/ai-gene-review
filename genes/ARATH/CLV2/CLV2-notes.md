@@ -28,3 +28,11 @@
 ## PR #4384 review follow-up (2026-10-06)
 - Removed PMID:25754504 ("no direct binding") from `supported_by` of the CLE-peptide MODIFY rows: it refutes rather than supports the action; the dispute stays in each row's summary. Reworded `reason` so it justifies the MODIFY instead of claiming non-core.
 - Trimmed the GO:0015026 reason: coreceptor activity entails combining with the messenger, so it is not fully neutral on the binding dispute.
+
+## OpenScientist adjudication of direct CLE binding (2026-10-22)
+- Ran a neutral OpenScientist function-assignment job: "CLV2 directly binds the CLV3 CLE peptide" (GO:0017046), seeded with PMID:20626648 and PMID:25754504. Report: `CLV2-hypotheses/clv2-direct-clv3-binding/openscientist.md`. Verdict: refuted.
+- Checked against cached records. Its quotes from PMID:25754504, PMID:20626648, PMID:18202283, PMID:19843317 and PMID:27229734 match. Its key premise, that the 2010 radioligand peptide was not arabinosylated, is not stated in Guo et al.; the methods only say the peptide was radioiodinated on its histidines [PMID:20626648 "The CLV3 peptide contains two histidine residues so it can be radioiodinated using the Iodogen method"]. The report itself calls this "inferred, not confirmed".
+- The report understates Guo's controls: binding by immunoprecipitated CLV2, no binding with BRI1, and independence from CRN [PMID:20626648 "the observed CLV2 ligand-binding activity was not dependent on the co-expression of CRN"].
+- Its sequence-identity argument (CLV2 ectodomain ~35% identical to CLV1/BAM1/PXY vs ~45% within that clade) cannot exclude binding: the kinase-less receptor-like protein TMM binds EPF2 (PMID:22241782, via PubMed; not cached).
+- In Guo's assay the same peptide bound CLV1 with Kd 30 nM, close to the 17.5 nM of PMID:18202283, so an arabinosylation explanation would need CLV2 to be specifically sensitive to the modification. Untested.
+- Decision: the eight PMID:20626648 CLE-peptide IPI rows and the PMID:28586647 CLE14 IPI row changed from MODIFY (to GO:0017046) to UNDECIDED. Two direct assays disagree and the photoaffinity paper is abstract-only here. Core function (coreceptor activity, GO:0015026) unchanged. The OpenScientist verdict is recorded as DISPUTED and not adopted.
