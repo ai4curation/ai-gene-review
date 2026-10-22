@@ -78,3 +78,37 @@ Row 19 retains MODIFY to collagen binding. The exact Q4VAQ0 construct is an unre
 The protected UniProt catalytic-activity record explicitly attributes EC:6.1.1.12 and tRNA(Asp) charging to PMID:15779907 with ECO:0000269. This supports the cognate Asp reaction and is now discussed alongside GO:0050560's tRNA(Asx)/EC:6.1.1.23 scope. The original 2005 substrate panel remains uninspected, so rows 50 and 52 remain UNDECIDED. Obsoletion of GO:0070145 is separate from the unresolved Asn premise. No human GatCAB-absence claim is made.
 
 The authored source guide remains available as navigation in references and the gene directory, but its bare self-citations have been removed from supported_by. All primary-source associations, 35 inherited quotation occurrences, 54 literal source objects, 22 reference identities, product information and the single catalytic core are preserved. The guide corrects spacing and records these dispositions and public source locators. This follow-up introduces no NEW annotation, new source cache or new quotation. ROOT performs derived rendering and the final publication checks after accepting this finite packet.
+
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Context: ProtNLM2 benchmark target Q6PI48 (cohort HORSE40 + HORSE40_HUMAN_PAIR). No ProtNLM2 file or output was opened or used.
+
+### Identity
+Q6PI48 (SYDM_HUMAN) is the reviewed, canonical Swiss-Prot entry: 645 aa precursor, no alternative-product comment, predicted transit peptide 1-47 and chain 48-645. It carries the full domain set (OB-fold anticodon-binding PF01336, GAD insertion PF02938, class II catalytic PF00152). It is not a fragment, isoform or alternative gene model.
+
+### Evolutionary grounding
+- PANTHER PTHR22594:SF5 "ASPARTATE--TRNA LIGASE, MITOCHONDRIAL" (UniProt and the PANTHER 19.0 member files agree). SF5 also contains E. coli AspS (P21889), yeast MSD1 (P15179), S. pombe dar2, fly AspRS-m, worm dars-2, mouse Dars2 (Q8BIP0) and Arabidopsis At4g33760. That makes this the bacterial-type, discriminating AspRS lineage.
+- The PAINT IBDs for GO:0004815, GO:0006422 (PTN000502597) and mitochondrion (PTN000502598) use MSD1, AspS and DARS2 itself as donors. PAINT did not propagate GO:0050560 (non-discriminating Asp-tRNA(Asx)) to this node. I treat that omission as a deliberate decision.
+- Human mitochondria have their own AsnRS, NARS2 (Q96I59, PTHR22594:SF34). So a non-discriminating DARS2 is neither expected nor needed.
+- Family review interpro/panther/PTHR22594/PTHR22594-review.yaml places DARS2 in SF5 and scopes annotation to the mitochondrial AspRS lineage. No disagreement.
+
+### Changes in this pass
+1. **GO:0005515 protein binding.** Following the protein-binding policy, 15 rows were changed to REMOVE:
+   - 11 HuRI rows (PMID:32296183)
+   - 2 GAPDHS rows (BioPlex PMID:28514442, PMID:33961781)
+   - the HSPD1 BioID proximity row (PMID:29568061)
+   - the two CFTR rows (MaMTH PMID:35156780, proximity PMID:36012204)
+
+   The earlier "enzyme binding", "collagen binding" and "transmembrane transporter binding" refinements described the partners, not anything DARS2 does. Most partners also sit in compartments DARS2 does not occupy (ER, secretory vesicles, cell surface, testis cytosol). Removing a row does not mean the interaction is false. Three HSPD1 rows (AP-MS x2, crosslinking) stay MODIFY to GO:0051087, because Hsp60 is a matrix chaperonin that shares DARS2's compartment and the pair recurs across methods. The YARS2 IPI (PMID:15779907) stays UNDECIDED because the full text could not be read.
+2. **GO:0031966 mitochondrial membrane** (IDA/IEA/IMP) changed from ACCEPT to KEEP_AS_NON_CORE. The peripheral pool is real (PMID:30006346: salt/carbonate-extractable). The catalytic core location remains the matrix.
+3. **GO:0050560 aspartate-tRNA(Asn) ligase (PMID:15779907)** changed from UNDECIDED to MODIFY to GO:0004815. This now matches the PMID:17384640 row. The grounds are the SF5/PAINT placement, NARS2 being present, and UniProt curators assigning only EC:6.1.1.12 with ECO:0000269 to this same paper. The IC row on obsolete GO:0070145 depends on it, so it was changed from UNDECIDED to MODIFY to GO:0070127, matching the 2013 row. Caveat: the full 2005 text was not read. Revisit if it contains a direct tRNA(Asn) charging assay.
+4. Specific verbatim quotes were added for the 2025 activity row (PMID:40814755) and the homodimer rows (PMID:23275545). The description was rewritten as a project-independent summary: structure, matrix/peripheral pools, FBXO24/acetylation turnover, reported extracellular release, LBSL/CMT disease. The deep-research file is now cited for the core-versus-moonlighting framing.
+
+Unchanged after re-examination: core function (GO:0004815 in GO:0005759, directly involved in GO:0070127), the TOO_GENERAL handling of broad IEA terms, the mitochondrion/matrix ACCEPTs, and ATP/tRNA binding and homodimerization. No NEW annotations. The 2024 extracellular/immune findings (PMID:39039092) stay a suggested question. They are not a process annotation, because the experiments relied on delivery reagents.
+
+### Relative to review next
+Yeast MSD1 (P15179, SGD:S000006025) is the mitochondrial AspRS ortholog in the same PANTHER subfamily (SF5). It is a direct PAINT donor for both the ligase and mitochondrion IBDs. It has no review in the repo. Mouse Dars2 (Q8BIP0, SF5) and E. coli AspS (P21889, SF5) are also unreviewed.
+
+### Modules
+modules/mitochondrial_trna_charging_and_initiator_formylation.yaml includes DARS2 (GO:0004815, Reactome R-HSA-380229).

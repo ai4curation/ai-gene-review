@@ -193,3 +193,36 @@ The nine DOI identities were independently mapped to primary PubMed records in `
 The current approving review and all five nonblocking suggestions were read. No flat NEW row is added merely to mirror the existing GO-CAM-backed integrated ferroptosis process or suppress a validator advisory; the participation/comparator/parent/nonredundancy assessment remains above. Core plasma-membrane placement retains its explicitly curated/source-bounded basis, separate from total-membrane measurements. Functional tetramer assembly is already in the description, source judgments and structural evidence, and a compact core need not repeat every accepted parent or assembly term. No unsupported intrinsic quinone reductase activity is assigned to ALDH7A1: its aldehyde oxidation and NADH supply remain distinct from partner chemistry. Optional prose alternatives do not require changing approved biology. Seeded alternative-product parser strings and derived reports are preserved for their separate tooling scope.
 
 The final audit includes every authored Markdown file, the genuine provider report and nested artifact, normalized URL-encoded/escaped DOIs, PMID/PubMed URLs and PMC mappings. Bare bibliographies of cached papers are not recursively promoted to new source obligations. Final hashes, citation counts, exact-quote/source-preservation checks, full validation, history and rendering are recorded in the handoff manifest. DRAFT is retained for the two existing advisories; publication readiness is assessed separately from that schema status and only after the complete required-cache census.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: full re-review of all 43 `existing_annotations` rows (42 GOA-seeded plus the previously added NEW GO:0110076 row), the description, both core functions and the references. No ProtNLM2 file or prediction-evidence folder was opened or used. The GOA tsv (46 rows, refreshed 2026-10-19) is fully covered by the YAML; duplicate IDA rows collapse into single YAML entries.
+
+**Identity.** The benchmark accession P49419 is the canonical, reviewed human entry (AL7A1_HUMAN, 539 aa, isoform 1 displayed, with the predicted 1-26 mitochondrial transit peptide and catalytic Glu296 and Cys330, numbered from the precursor). It is not a fragment, isoform or alternative gene model. Isoform 2 (P49419-2, cytosolic, VSP_038987) and isoform 4 are alternative products of the same entry. The membrane/ferroptosis GO-CAM uses P49419-2.
+
+**Evolutionary grounding.** Evidence is in `interpro/panther/PTHR43521/PTHR43521-paint.tsv` and `.cache/panther/PTHR19.0_*`.
+- PAINT node PTN000192435 carries IBDs for GO:0004043 and GO:0019477, seeded by `MGI:MGI:108186|UniProtKB:P49419|ZFIN:ZDB-GENE-030131-6129`, so the core AASA-dehydrogenase/lysine-catabolism function is inherited across vertebrates. The same node holds GO:0008802 and the five CC terms, all seeded from human alone.
+- The deeper node PTN000192422 carries GO:0004029, seeded by Arabidopsis AT5G62530 and human. The plant ALDH12A1 node PTN000192427 holds P5C dehydrogenase and proline catabolism, which are not transferable to ALDH7A1.
+- PAINT made no IBD for negative regulation of ferroptosis, medium-chain aldehyde DH, choline catabolism or hearing. I read these omissions as deliberate. Ferroptosis and choline remain human-specific experimental or Reactome assertions, kept as they were.
+- The current GOA snapshot has no IBA rows for P49419, so these node placements do not yet appear in GOA.
+
+**Subfamily placement oddity.** In PANTHER 19.0 the human protein is the only listed ortholog in PTHR43521:SF5. Mouse Q9DBF1, rat Q64057, bovine Q2KJC9, zebrafish Q803R9, horse A0A9L0RRL6, Arabidopsis ALDH7B4 and the other plant ALDH7s are all in SF1. SF1 and SF5 carry the same name, and the PAINT node unites human, mouse and zebrafish. I treat the split as an HMM classification artifact, not an orthology break, and raised it as a suggested question. The family review `interpro/panther/PTHR43521/PTHR43521-review.yaml` describes the other branch as "ALDH4/P5C-related". By the PANTHER subfamily names and the PAINT seed (AT5G62530 = ALDH12A1), that branch is plant ALDH12A1/P5CDH-like (SF7) and L-glutamate-gamma-semialdehyde DH (SF6), not human ALDH4A1. The family review was left untouched because it is outside this gene folder.
+
+**Change made.** One action was revised.
+- GO:0007605 sensory perception of sound (TAS, PMID:9417906) changed from UNDECIDED to REMOVE. The cached abstract states the basis of the hearing hypothesis:
+  - cloning from a cochlear library screened for hearing genes [PMID:9417906 "We constructed and screened a human fetal cochlear cDNA library to identify genes involved in hearing and deafness."];
+  - expression that is not cochlea-specific [PMID:9417906 "Northern blots of 13 human fetal tissues show antiquitin to be highly expressed in cochlea, ovary, eye, heart, and kidney."];
+  - an analogy to a plant homolog [PMID:9417906 "The plant homolog of ATQ1 is thought to be involved in regulating turgor pressure"].
+- This is a non-experimental author statement resting on expression and analogy, with no participation evidence. Removing it does not overrule an experimental curator call.
+
+**Re-examined and unchanged.**
+- The lysine-catabolism core (GO:0004043, GO:0019477, mitochondrial matrix/cytosol) now also cites the PAINT IBD.
+- The second core: broad NAD+-aldehyde DH (GO:0004029), aldehyde metabolism and negative regulation of ferroptosis, at the Golgi and plasma membrane. ALDH7A1 itself makes the NADH and consumes the aldehydes, which passes the participation test, and GO-CAM 680ad14200003459 already models it.
+- The betaine-aldehyde/choline rows are kept as non-core. The PAINT IBD for GO:0008802 is seeded from human only.
+- GO:0016491 MODIFY to GO:0004029, generic protein binding REMOVE, identical protein binding ACCEPT (the functional tetramer), and exosome KEEP_AS_NON_CORE.
+
+**Relative for next review.** Mouse Aldh7a1 (Q9DBF1, MGI:108186). It is a PAINT seed at PTN000192435 together with human, so it is in the same clade, although PANTHER 19.0 puts it in SF1 rather than SF5. The repo has no mouse, rat or zebrafish Aldh7a1 review. The horse ortholog review (`genes/HORSE/ALDH7A1`) is a benchmark target, not a characterized relative.
+
+**Modules.** `modules/lysine_catabolism_saccharopine.yaml`, `modules/lysine_catabolism.yaml` and `modules/ferroptosis.yaml`.
+
+`just validate human ALDH7A1` passed. Its one advisory notes that no annotation quotes the Falcon deep-research file.
