@@ -24,10 +24,10 @@ review_sets:
     - update_model_system_stance
     - harmonize_RAB7A_core_function_synthesis
     - revisit_mouse_Rab7_SynGO_annotations
+    - draft_GO_CAM_like_delivery_route_template
   pending_tasks:
     - build_GO_derived_human_surfaceome_prior
     - select_small_delivery_address_pilot_set
-    - draft_GO_CAM_like_delivery_route_template
 sidecars:
   notes: DELIVEROME.md
 external_sources:
@@ -155,6 +155,14 @@ The human and mouse comparison is reassuring for GO transfer: both reviews conve
 | Late endosome-to-lysosome route | GO:1902774 late endosome to lysosome transport |
 | Recycling to surface | GO:0099638 endosome to plasma membrane protein transport |
 
+## Executable Agent-Based Delivery Route Model
+
+To make post-internalization routing quantitatively testable directly from curated GO-CAM-like module topology, we implemented an **Agent-Based Model (`model_type: AGENT_BASED`, `derivation: DERIVED_FROM_MODULE`)** of the canonical endosomal sorting and payload escape network:
+
+- **Project documentation**: [Agent-Based Modeling of Intracellular Trafficking](ABM_TRAFFICKING.md)
+- **Curated delivery route module**: [`modules/endosomal_trafficking_routing.yaml`](../modules/endosomal_trafficking_routing.html) (`TFRC` $\to$ `CLTC`/`AP2M1` $\to$ `ATP6V1A` early endosome acidification $\to$ `EHD1` recycling vs. `TSG101`/`RAB7A` late endosome maturation $\to$ `CTSD` lysosomal degradation vs. pre-lysosomal cytosolic cargo escape)
+- **Interactive browser ABM**: [`pages/models/endosomal_trafficking_abm.html`](../models/endosomal_trafficking_abm.html) — simulates a conserved cohort of $N = 100$ cargo particles across 24 discrete steps, reproducing the ~10% baseline cytosolic escape vs. ~47% recycling / ~43% lysosomal degradation split and the ~4.7-fold surge in cytosolic escape upon `RAB7A`/`Rab7` loss-of-function (PMID:41814093).
+
 ## Open Questions
 
 - What evidence threshold should Deliverome surface proteomics meet before it supports a GO cellular-component annotation?
@@ -175,9 +183,9 @@ The human and mouse comparison is reassuring for GO transfer: both reviews conve
 - [x] Compare human RAB7A and mouse Rab7/Rab7a.
 - [x] Harmonize human RAB7A core-function synthesis with mouse Rab7/Rab7a for early-to-late endosome maturation, late endosome membrane localization, and retromer binding.
 - [x] Revisit mouse SynGO AMPA-receptor trafficking annotations from PMID:24217640.
+- [x] Draft a GO-CAM-like delivery route template (`modules/endosomal_trafficking_routing.yaml`) with an executable Agent-Based Model (`endosomal_trafficking_abm`).
 - [ ] Build GO-derived human surfaceome prior.
 - [ ] Select a small delivery-address pilot set.
-- [ ] Draft a GO-CAM-like delivery route template.
 
 # NOTES
 

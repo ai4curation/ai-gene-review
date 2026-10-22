@@ -120,3 +120,54 @@ def test_model_summaries_report_failing_scenarios(tmp_path: Path) -> None:
     assert boolean["module_href"] == "../modules/loop.html"
     out = render_models_index(rows, tmp_path / "models")
     assert "1 failing" in out.read_text()
+
+
+def test_render_module_writes_an_interactive_abm_model_page(tmp_path: Path) -> None:
+    abm_yaml = """id: MODULE:trafficking
+title: Trafficking route
+module:
+  id: trafficking
+  label: Trafficking route
+  parts:
+    - node: {id: uptake, label: Receptor uptake}
+    - node: {id: sorting, label: Early endosome sorting}
+    - node: {id: recycling, label: Recycling endosome}
+    - node: {id: lysosome, label: Lysosomal degradation}
+  connections:
+    - {source: uptake, target: sorting, connection_type: PROVIDES_INPUT_FOR}
+    - {source: sorting, target: recycling, connection_type: PROVIDES_INPUT_FOR}
+    - {source: sorting, target: lysosome, connection_type: PROVIDES_INPUT_FOR}
+executable_models:
+  - id: trafficking_abm
+    title: Trafficking as an Agent-Based Model
+    model_type: AGENT_BASED
+    derivation: DERIVED_FROM_MODULE
+    scenarios:
+      - id: baseline
+        label: Baseline sorting
+        expected_active: [uptake, sorting, recycling, lysosome]
+        expected_outcome_order: [recycling, uptake]
+"""
+    modules = tmp_path / "modules"
+    modules.mkdir()
+    yaml_path = modules / "trafficking.yaml"
+    yaml_path.write_text(abm_yaml)
+    out = tmp_path / "pages" / "modules"
+
+    page, _ = render_module(yaml_path, output_dir=out, modules_dir=modules)
+    model_page = tmp_path / "pages" / "models" / "trafficking_abm.html"
+    assert model_page.exists()
+
+    payload = _payload(model_page.read_text())
+    assert payload["model_type"] == "AGENT_BASED"
+    assert [s["id"] for s in payload["stages"]] == [
+        "uptake",
+        "sorting",
+        "recycling",
+        "lysosome",
+    ]
+    assert payload["scenarios"][0]["failures"] == []
+    assert "Agent-Based Model" in model_page.read_text()
+    assert "Derived from module" in model_page.read_text()
+    assert 'href="../models/trafficking_abm.html"' in page.read_text()
+

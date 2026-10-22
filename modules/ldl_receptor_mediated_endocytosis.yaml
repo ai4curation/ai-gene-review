@@ -288,3 +288,84 @@ module:
     SREBP2-dependent transcriptional control of LDLR and PCSK9 is upstream regulation, not modelled.
     ApoE-mediated remnant uptake by LDLR is noted in the LDLR review but kept out of this LDL-specific
     module.
+executable_models:
+  - id: ldlr_endocytosis_abm
+    title: Agent-based LDL particle clearance and PCSK9 receptor-degradation model
+    model_type: AGENT_BASED
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      Tracks a cohort of 100 extracellular apoB-100 LDL particles (apob_ligand) through LDLR-mediated
+      clathrin endocytosis (ldlr_endocytosis) and lysosomal acid lipase cholesteryl-ester hydrolysis
+      (lipa_ce_hydrolysis), gated by secreted PCSK9 chaperone activity (pcsk9_degradation).
+    notes: >-
+      Deterministic particle-conserving agent-based simulation (N=100 LDL particles, T=24 steps)
+      derived directly from the module's PROVIDES_INPUT_FOR transport connections and the
+      NEGATIVELY_REGULATES PCSK9 regulatory connection.
+    scenarios:
+      - id: normal_ldl_clearance
+        label: Normal hepatic LDL clearance (PCSK9 baseline off; complete lysosomal cholesteryl-ester hydrolysis)
+        description: >-
+          When LDLR recycling is uninhibited (pcsk9_degradation inactive) and lysosomal acid lipase
+          is functional, 100% of bound LDL particles are internalized and hydrolyzed in lysosomes.
+        expected_active:
+          - apob_ligand
+          - ldlr_endocytosis
+          - lipa_ce_hydrolysis
+        expected_inactive:
+          - pcsk9_degradation
+        expected_outcome_order:
+          - lipa_ce_hydrolysis
+          - apob_ligand
+      - id: pcsk9_gain_of_function
+        label: PCSK9 gain-of-function / familial hypercholesterolaemia (LDLR degraded; extracellular LDL retention)
+        description: >-
+          Constitutively active PCSK9 (pcsk9_degradation: true) diverts LDLR to lysosomal degradation,
+          gating off receptor-mediated LDL endocytosis and leaving 100% of LDL particles uncleared at
+          apob_ligand.
+        settings:
+          - element: pcsk9_degradation
+            active: true
+        expected_active:
+          - apob_ligand
+          - pcsk9_degradation
+        expected_inactive:
+          - ldlr_endocytosis
+          - lipa_ce_hydrolysis
+        expected_outcome_order:
+          - apob_ligand
+          - lipa_ce_hydrolysis
+      - id: ldlr_loss_fh
+        label: LDLR loss-of-function familial hypercholesterolaemia (receptor uptake blocked)
+        description: >-
+          Loss of LDLR function (ldlr_endocytosis: false) prevents internalization of apoB-100 LDL
+          particles, retaining 100% of the cohort in the extracellular apob_ligand pool.
+        settings:
+          - element: ldlr_endocytosis
+            active: false
+        expected_active:
+          - apob_ligand
+        expected_inactive:
+          - ldlr_endocytosis
+          - pcsk9_degradation
+          - lipa_ce_hydrolysis
+        expected_outcome_order:
+          - apob_ligand
+          - lipa_ce_hydrolysis
+      - id: lipa_loss_wolman
+        label: LIPA loss-of-function (Wolman disease / CESD; endolysosomal cholesteryl-ester accumulation)
+        description: >-
+          Inactivating lysosomal acid lipase (lipa_ce_hydrolysis: false) permits normal LDLR-mediated
+          internalization of LDL particles, which then accumulate unhydrolyzed at the endolysosomal
+          delivery stage (ldlr_endocytosis).
+        settings:
+          - element: lipa_ce_hydrolysis
+            active: false
+        expected_active:
+          - apob_ligand
+          - ldlr_endocytosis
+        expected_inactive:
+          - pcsk9_degradation
+          - lipa_ce_hydrolysis
+        expected_outcome_order:
+          - ldlr_endocytosis
+          - lipa_ce_hydrolysis
