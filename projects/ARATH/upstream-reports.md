@@ -136,3 +136,12 @@ before it can be filed. The reasoning is in each review's `reason` field.
 | SLAC1 (Q9LD83) | GO:0005634 nucleus, ISM (AtSubP) | withdraw; SLAC1 is a plasma-membrane channel |
 | SERRATE (Q9ZVD0) | GO:0003677 DNA binding and GO:0003700 DNA-binding transcription factor activity, ISS | withdraw; the zinc finger binds RNA and DCL1 |
 | SERRATE (Q9ZVD0) | part_of GO:0005846 nuclear cap binding complex, PMID:24137006 | SE binds CBP20/CBP80 but is not a subunit; GO:0140262 mRNA cap binding complex binding |
+
+The others are now recorded as structured `source_defects` on the gene reviews,
+except for four rows. The SnRK2.2 GO:0009738 gap is a missing annotation, not a defective
+record. The SnRK2.3 RCA NOT-cytosol row and the SLAC1 AtSubP nucleus row are computational
+predictions that the reviews REMOVE, not curation errors to report. The SLAC1 GO:0090333
+→ GO:0090332 change is a term-choice judgement, which the review records as a MODIFY. The
+recorded set also includes the CBL4, SnRK2.2 and SERRATE defects found later. The generated per-resource
+reports are in [`reports/source-defects/`](../../reports/source-defects/) (`TAIR.md`,
+`INTACT.md`, `GO_CAM.md`), regenerated with `just export-source-defects`.
