@@ -35,6 +35,23 @@ discusses IAMH1 as background.
 - I found no in vitro enzyme assay with purified IAMH1.
 - Orthologs: [PMID:32327358 "IAMH1-like genes have been identified in all of the plant genomes including Chlamydomonas reinhardtii and Physcomitrella patens."]
 
+## Additional evidence from X. Gao et al. 2026 (PMID:42844995) and Moya-Cuevas et al. (PMID:41362017)
+
+Added after the automated PR review (2026-10-22).
+- IAMH1-specific data in the IAMH2 paper:
+  [PMID:42844995 "IAMH1 was upregulated in the iamh2 mutant under low light (Figure S8A), indicating partial compensation."]
+  [PMID:42844995 "However, only IAMH2 was light‐responsive in Col‐0 (Figure S8B), and this compensation did not restore hypocotyl elongation, suggesting that IAMH2 plays a non‐redundant role in this context."]
+  Figure S3A of the same paper shows At4g37550 allelic variation between the Sichuan and Tibet ecotypes.
+  So IAMH1 and IAMH2 are redundant for exogenous or iaaM-derived IAM, but not for low-light hypocotyl growth.
+- Pathway caveat: [PMID:42844995 "recent studies have questioned whether this pathway contributes to auxin biosynthesis under standard conditions"],
+  citing Moya-Cuevas et al. 2026. I resolved that citation through PubMed to PMID:41362017 (New Phytol
+  249:2452-2466; DOI 10.1111/nph.70819) and read the full text. It never mentions IAMH1 or IAMH2. It
+  proposes that IAM acts as a signal through ABA:
+  [PMID:41362017 "These results imply that IAM may have a function beyond its role as an intermediate in a secondary pathway of auxin biosynthesis, potentially acting as an independent signaling molecule"]
+  and describes the IAM pathway as contributing to IAA "under specific conditions". This qualifies but
+  does not refute the IAM-to-IAA role of the IAMHs, so the NEW GO:0009684 annotation is kept with the
+  caveat recorded in its reason.
+
 ## GO annotation decisions (summary)
 
 - GO:0016811 (IEA): MODIFY to GO:0043864 indoleacetamide hydrolase activity (a descendant; OLS checked).
@@ -50,9 +67,12 @@ discusses IAMH1 as background.
   - The cytosol HDA row stays ACCEPT because it agrees with the IAMH1-GFP data and supports the core function.
 - GO:0009507 chloroplast (ISM, AtSubP prediction): MARK_AS_OVER_ANNOTATED.
   - It is a single sequence-based prediction with no experimental support.
-  - The first 80 residues of IAMH1 and IAMH2 are nearly identical (compared from the two UniProt files),
-    yet IAMH2 has no chloroplast annotation.
   - None of the three proteomic datasets places IAMH1 in plastids.
+  - Correction (2026-10-22, after PR review): an earlier version argued that the first 80 residues of
+    IAMH1 and IAMH2 are "nearly identical". That was wrong. Computed from the two UniProt sequences they
+    differ at 21 of 80 positions (73.75% identity), less conserved than the 90% full-length identity, so
+    no N-terminal (transit-peptide) argument can be made from IAMH2's lack of a chloroplast annotation.
+    The sentence was removed from the review.
 - NEW GO:0009684 indoleacetic acid biosynthetic process (IMP, PMID:32327358).
   - Participation: IAMH1 is proposed to catalyse IAM to IAA, so it performs a step of the process.
   - Evidence: genetic and metabolite data. Comparator AMI1 carries GO:0009684 by IDA (QuickGO, taxon 3702).

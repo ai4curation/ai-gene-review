@@ -63,6 +63,21 @@ PMID:32327358 and PMID:42844995; both are cached with full text.
   [PMID:42844995 "Under low light, the triple mutant exhibited hypocotyl lengths comparable to those of the iamh2 single mutant (Figure 4I, J), indicating that IAMH2 is epistatic to C3H14 and C3H15."]
 - The coding sequence differs little between the alleles:
   [PMID:42844995 "While three amino acid substitutions were found in the coding sequence, none were located within functional domains or predicted to affect protein structure (Figure S6)."]
+- Non-redundancy with IAMH1 under low light (added after the automated PR review, 2026-10-22):
+  [PMID:42844995 "IAMH1 was upregulated in the iamh2 mutant under low light (Figure S8A), indicating partial compensation."]
+  [PMID:42844995 "However, only IAMH2 was light‐responsive in Col‐0 (Figure S8B), and this compensation did not restore hypocotyl elongation, suggesting that IAMH2 plays a non‐redundant role in this context."]
+  The core function now says IAMH2 is redundant with IAMH1 for exogenous or iaaM-derived IAM, but
+  non-redundant for the low-light hypocotyl IAA pool.
+- Light conditions of the metabolite data: IAA is significantly lower in iamh2 hypocotyls under low light
+  only, and IAM is significantly elevated under normal light (Figure 2H). An earlier version of the review
+  description put both under low light; that was corrected.
+- Pathway caveat: the paper cites Moya-Cuevas et al. 2026 as questioning whether the IAM pathway contributes
+  to auxin biosynthesis under standard conditions, and proposes that the pathway is conditionally recruited
+  under low light:
+  [PMID:42844995 "We therefore propose that the IAM pathway is not essential for basal auxin homeostasis, but is conditionally recruited under low‐light stress to provide local IAA for adaptive growth."]
+  I resolved that citation through PubMed to PMID:41362017 (New Phytol 249:2452-2466) and read the full
+  text. It does not mention the IAMHs; it proposes that IAM also signals through ABA. It qualifies but
+  does not refute the IAM-to-IAA role, so the NEW GO:0009684 annotation is kept with the caveat.
 - The regulation by C3H14/C3H15 acts on the IAMH2 transcript; it is not an activity of the IAMH2 protein,
   so it is not a GO annotation for IAMH2.
 
