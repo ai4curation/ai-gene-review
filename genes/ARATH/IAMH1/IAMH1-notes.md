@@ -40,15 +40,14 @@ discusses IAMH1 as background.
 - GO:0016811 (IEA): MODIFY to GO:0043864 indoleacetamide hydrolase activity (a descendant; OLS checked).
 - GO:0005829 cytosol (HDA, Aryal et al. 2014): ACCEPT. It fits the non-nuclear GFP signal of a soluble
   enzyme without targeting signals.
-- GO:0000325 plant-type vacuole (HDA, Carter et al. 2004 vegetative vacuole proteome): KEEP_AS_NON_CORE.
-  - It is an experimental high-throughput detection and I have not re-examined the per-protein data.
-  - The IAM substrate and the cytosolic location argue against a vacuolar enzymatic role.
-  - The paper itself notes contaminants in the preparation (it excluded 15% of hits as potential
+- GO:0000325 plant-type vacuole (HDA, Carter et al. 2004 vegetative vacuole proteome) and
+  GO:0005886 plasma membrane (HDA, membrane protein-correlation profiling, PMID:28887381): UNDECIDED,
+  at the user's request (2026-10-22). These high-throughput detections are not judged in this review
+  because the per-protein data were not examined. Context for a later reviewer:
+  - The vacuole paper itself notes contaminants in the preparation (it excluded 15% of hits as potential
     chloroplast or mitochondrial contaminants).
-  - I left it as non-core rather than removing it, because I cannot see the curator's per-protein evidence.
-- GO:0005886 plasma membrane (HDA, membrane protein-correlation profiling, PMID:28887381): KEEP_AS_NON_CORE.
-  That study found many soluble proteins partitioned between cytosolic and membrane-associated pools;
-  peripheral membrane association is possible but has no known functional significance.
+  - The membrane study found many soluble proteins partitioned between cytosolic and membrane-associated pools.
+  - The cytosol HDA row stays ACCEPT because it agrees with the IAMH1-GFP data and supports the core function.
 - GO:0009507 chloroplast (ISM, AtSubP prediction): MARK_AS_OVER_ANNOTATED.
   - It is a single sequence-based prediction with no experimental support.
   - The first 80 residues of IAMH1 and IAMH2 are nearly identical (compared from the two UniProt files),
