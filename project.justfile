@@ -191,6 +191,19 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Report how much of PAINT's IBD.gaf (IBD/IRD/IKR node rows) our family reviews cover.
+# Prints markdown; writes no files. --leaf also weights by leaf IBA rows (slower).
+# Example: just paint-review-coverage --leaf
+paint-review-coverage *args="":
+    uv run python scripts/paint_review_coverage.py {{args}}
+
+# Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
+# `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
+# verdict or overwrites a curated field; lists losses still judged with a gain verdict.
+# Dry run by default. Example: just fill-node-evidence --apply interpro/panther/PTHR12210/PTHR12210-review.yaml
+fill-node-evidence *args="":
+    uv run python -m ai_gene_review.validation.family_node_evidence {{args}}
+
 # Regenerate the PANTHER IBA project tables through public wrapper recipes.
 # These may download cached PAINT source data on the first run.
 [group('QC')]
@@ -271,6 +284,12 @@ cache-gocams *args="":
 # Rebuild gocams/index.tsv (gene product -> GO-CAM activity) from the cache
 gocam-index *args="":
     uv run ai-gene-review gocam-index {{args}}
+
+# Collect structured source-database defects (review.source_defects and GO-CAM
+# activity_reviews[].source_defects) into reports/source-defects.tsv plus one
+# Markdown report per upstream resource in reports/source-defects/. See docs/source_defects.md.
+export-source-defects *args="":
+    uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
@@ -1041,16 +1060,17 @@ check-retractions *ARGS:
 validate-modules: ensure-panther-members
     #!/usr/bin/env bash
     set -uo pipefail
-    files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
-    if [ -z "$files" ]; then
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
+    if [ ${#files[@]} -eq 0 ]; then
         echo "No module YAML files found"
         exit 0
     fi
     rc=0
-    while IFS= read -r f; do
-        echo "Schema-validating $f"
-        uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
-    done <<< "$files"
+    echo "Schema-validating ${#files[@]} modules (batch)..."
+    uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "${files[@]}" || rc=1
     echo "Validating module term labels, reference titles, and supporting_text..."
     # module_validator also verifies every literature reference (PMID/DOI):
     #  - each title (references list or EvidenceItem) must match the cited
@@ -1059,8 +1079,7 @@ validate-modules: ensure-panther-members
     #    the cached publications/PMID_*.md.
     # Both use linkml-reference-validator's own matcher. Mismatches are errors;
     # unfetchable/uncached references are advisory warnings.
-    # shellcheck disable=SC2086
-    uv run python -m ai_gene_review.validation.module_validator $files || rc=1
+    uv run python -m ai_gene_review.validation.module_validator "${files[@]}" || rc=1
     exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)
@@ -1135,12 +1154,12 @@ validate-gene organism gene:
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
-    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml --verbose
+    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml --verbose --ontology-checks
 
 # Validate all genes for an organism (shows detailed errors by default)
 validate-organism organism:
     @mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
+    uv run ai-gene-review validate --verbose --ontology-checks --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
 
 # Validate all genes that contain a specific top-level tag in their review YAML
 # Example: just validate-tag UPB
@@ -1165,7 +1184,7 @@ validate-tag tag:
 
     echo "Validating ${match_count} gene review file(s) with tag '{{tag}}'..."
     # shellcheck disable=SC2046
-    uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
+    uv run ai-gene-review validate --verbose --ontology-checks --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
 # Validate ONLY the given changed gene-review files (full strict per-gene stack:
@@ -1224,7 +1243,7 @@ validate-all:
     #!/usr/bin/env bash
     exit_code=0
     echo "Schema validation (batch)..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    uv run python -m ai_gene_review.validation.schema_batch --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
     echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
     # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
@@ -1246,12 +1265,12 @@ validate-all:
     echo ""
     echo "Reference validation (batch; errors block, advisory warnings allowed)..."
     # One linkml-reference-validator process over all files (schema parsed once),
-    # rather than one process per file. Requires linkml-reference-validator >= 0.2.1.
+    # rather than one process per file. Requires linkml-reference-validator >= 0.3.0.
     {{ref_validator}} validate data genes/*/*/*-ai-review.yaml --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} || exit_code=1
     echo ""
     echo "Best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --no-schema --no-references --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --no-schema --no-references --ontology-checks --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
@@ -1554,7 +1573,7 @@ gen-all-slides:
 
 # Render a single gene review YAML as HTML (custom renderer)
 render organism gene:
-    uv run python -m ai_gene_review.render genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+    uv run python -m ai_gene_review.render "genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
 
 # Render all gene reviews for an organism as HTML
 render-organism organism:
@@ -2606,6 +2625,21 @@ scan-prose-panther *args="": ensure-panther-members
 panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
 
+# Audit Swiss-Prot reviews outside their exact taxon's reference proteome.
+# Default writes CSV + issue-ready Markdown; use --format csv/markdown, --species POPTR,
+# --refresh, --offline, or --output-dir PATH. See projects/ORPHAN_CURATED.md.
+[group('QC')]
+[positional-arguments]
+orphan-curated *ARGS:
+    uv run python -m ai_gene_review.analysis.orphan_curated "$@"
+
+# Render counterpart assessments from project frontmatter genes and curated review YAML.
+# Defaults to ORPHAN_CURATED; accepts --project PATH, --output-dir PATH and --check.
+[group('QC')]
+[positional-arguments]
+project-counterparts *ARGS:
+    uv run python -m ai_gene_review.analysis.project_counterparts "$@"
+
 # ============ History records (ported from dismech) ============
 # Append-only curation session history under history/. See docs/history.md.
 
@@ -2627,7 +2661,7 @@ new-history *ARGS:
 # Validate a single history record
 [group('QC')]
 validate-history file:
-    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "{{file}}"
 
 # Validate all history records
 [group('QC')]
@@ -2671,26 +2705,28 @@ backfill-history *ARGS:
 validate-families: ensure-panther-members
     #!/usr/bin/env bash
     set -uo pipefail
-    files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
-    if [ -z "$files" ]; then
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
+    if [ ${#files[@]} -eq 0 ]; then
         echo "No family review YAML files found"
         exit 0
     fi
     rc=0
-    while IFS= read -r f; do
-        echo "Schema-validating $f"
-        uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
-            --target-class FamilyReview "$f" || rc=1
-    done <<< "$files"
-    echo "Validating GO term ids and labels..."
-    while IFS= read -r f; do
-        uv run linkml-term-validator validate-data "$f" \
-            -s src/ai_gene_review/schema/family_review.yaml \
-            -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
-    done <<< "$files"
+    # As in dismech's validate-disorders, batch by phase so schema generation
+    # and ontology initialization are paid once, not once per family. Every
+    # file is still checked and any nonzero validator exit remains blocking.
+    echo "Schema-validating ${#files[@]} families (batch)..."
+    uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
+        --target-class FamilyReview "${files[@]}" || rc=1
+    echo "Validating GO term ids and labels (batch)..."
+    uv run linkml-term-validator validate-data "${files[@]}" \
+        -s src/ai_gene_review/schema/family_review.yaml \
+        -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
     echo "Validating supporting_text quotes against cached publications..."
     # One multi-file call (schema parsed once); same wrapper and config as gene reviews.
-    scripts/run_reference_validator.sh validate data $files \
+    scripts/run_reference_validator.sh validate data "${files[@]}" \
         --schema src/ai_gene_review/schema/family_review.yaml \
         --target-class FamilyReview --config conf/reference_validator_config.yaml || rc=1
     echo "Validating curated residue sites against UniProt sequences..."

@@ -28,7 +28,7 @@ style: |
 
 Re-asking PubMed about every paper the gene reviews cite
 
-<span class="small">AI Gene Review · projects/RETRACTIONS · 2026</span>
+<span class="small">AI Gene Review · projects/RETRACTIONS · 2026-10-05</span>
 
 ---
 
@@ -36,7 +36,7 @@ Re-asking PubMed about every paper the gene reviews cite
 
 ## Bottom line
 
-- Nothing in the pipeline re-checked whether a cited paper had since been **retracted**; `check_retractions.py` now does, recording **where** each PMID is cited.
+- The ordinary fetch/validate path did not re-check whether a cited paper had since been **retracted**; `check_retractions.py` now does, recording **where** each PMID is cited.
 - First run: **25,088 PMIDs** → **7 retracted**, **13 expressions of concern**, 659 errata. Reviews had caught **3 of 7** by hand; **4 of 7** sit under a GO annotation.
 - None of the four is an accepted core function. Flagging them (`is_invalid`, notice citation) is **still to do**.
 
@@ -47,7 +47,7 @@ Re-asking PubMed about every paper the gene reviews cite
 - A **miscitation** is wrong the moment it is written; reading the review finds it.
 - A **retraction** was fine when written and **went bad afterwards**; only re-asking PubMed finds it.
 - `just validate` checks a quote is verbatim in the cached paper, not that the paper still stands.
-- 4 of the 7 retraction notices are **2025–2026** records: a careful review can be stale a year later.
+- Retraction notices can arrive after reviews are written: a careful review can be stale a year later.
 
 ---
 
@@ -82,7 +82,7 @@ Re-asking PubMed about every paper the gene reviews cite
 ## Expressions of concern and errata
 
 - **13 EoCs**, all cited as annotation evidence. Seven are generic `protein binding` IPI rows already marked REMOVE or over-annotated.
-- The one to read: **PMID:19033661** (AIP1/VEGFR2, *J Clin Invest* 2008; EoC Sep 2025) supports **13 accepted or non-core rows** on DAB2IP and VEGFA.
+- First dense cluster to read: **PMID:19033661** (AIP1/VEGFR2, *J Clin Invest* 2008) supports **13 accepted or non-core rows** on DAB2IP and VEGFA.
 - **659 errata are not a defect list**: PMID:40205054 alone is cited by 277 genes.
 - One PMID does not resolve at all: **PMID:34521819** (JAK1, STAT1).
 
@@ -93,6 +93,6 @@ Re-asking PubMed about every paper the gene reviews cite
 - ✅ Checker, register, first full run; seed case TNFRSF21 verified end to end.
 - ⬜ Work the four annotation-evidence retractions (TP53, BACE1, STAT3, Mtor): `is_invalid`, cite notice, note whether the row survives.
 - ⬜ `reference_review` (DISPUTED) for the 13 EoCs, starting with PMID:19033661.
-- ⬜ Extend the scan to cached `*-goa.tsv` references; decide on CI via the publication-type backfill.
+- ⬜ Extend the scan to cached `*-goa.tsv` references; decide on CI via the publication-type backfill. Tracked in #4009.
 
 **Read more:** `projects/RETRACTIONS.md` · `RETRACTIONS/retraction-register.md` · `check_retractions.py`

@@ -36,8 +36,8 @@ GO annotation review of ten human basement-membrane and interstitial matrix gene
 
 ## Bottom line
 
-- **All 10 planned genes are reviewed** across three phases (the task list on the page still shows Phase 3 open).
-- **639 GOA rows**: 284 ACCEPT, 193 non-core, 73 REMOVE, 63 MODIFY, 17 NEW.
+- **All 10 planned genes have actioned rows**; 8 are `COMPLETE`, with AGRN/NID1 still needing metadata closure.
+- **635 review rows**: 284 ACCEPT, 193 non-core, 70 REMOVE, 63 MODIFY, 13 NEW, 5 over-annotated, 7 undecided.
 - **FN1 carries most corrections**: 52 `protein binding` rows removed, 38 `extracellular region` rows sharpened to `extracellular matrix`.
 
 ---
@@ -81,9 +81,10 @@ GO annotation review of ten human basement-membrane and interstitial matrix gene
 
 ## Status and next steps
 
-- ✅ 10/10 planned gene reviews complete.
-- ⬜ **DCN** has no `core_functions` block yet.
-- ⬜ No ECM module; basement membrane (NID1, HSPG2, AGRN with laminin and collagen IV) is the obvious first one.
-- ⬜ Update the stale task list on the project page.
+- ✅ 10/10 planned genes have every row actioned; 8/10 are `COMPLETE`.
+- ⬜ Finalize `AGRN` and `NID1` review status.
+- ⬜ Add **DCN** `core_functions`.
+- ⬜ Draft the first ECM module: NID1/HSPG2/AGRN with laminin and collagen IV.
+- ⬜ Issue #4070 tracks the remaining ECM closure work.
 
 **Read more:** `projects/ECM.md` · `genes/human/FN1/` · `genes/human/SPOCK2/`
