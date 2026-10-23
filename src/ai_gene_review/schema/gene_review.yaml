@@ -156,6 +156,23 @@ slots:
   existing_annotations:
     range: ExistingAnnotation
     multivalued: true
+  alternative_records:
+    range: AlternativeRecord
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Manually assessed relationships to alternative UniProt records. The review's
+      primary id remains the preferred accession, normally Swiss-Prot. These are
+      evidence-backed cross-record judgments, not aliases, automatic annotation
+      transfers, or replacements for the primary record.
+  reference_proteome_assessments:
+    range: ReferenceProteomeAssessment
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Manual assessments of searched reference proteomes when no supported
+      counterpart was identified. Records the evidence and scope without inventing
+      an alternative accession. A negative search is not proof of gene absence.
   core_functions:
     range: CoreFunction
     multivalued: true
@@ -332,6 +349,18 @@ slots:
       Use only on very rare occasions: records why this annotation's action is
       deliberately allowed to contradict another row's action under the
       action-consistency rules. See docs/action_consistency.md.
+  source_defects:
+    range: SourceDefect
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Defects in the source database's record that this review has identified,
+      recorded in structured form so they can be reported upstream (to TAIR,
+      GOA, UniProt, GO-CAM and so on). Use it when the error lives in the
+      source record rather than in this review, e.g. an annotation or GO-CAM
+      activity attached to the wrong gene product ("that gene, not this gene")
+      or keyed to the wrong reference. The review's own action still says what
+      this repository does with the claim. See docs/source_defects.md.
   propagation_review:
     range: PropagationReview
     description: >-
@@ -362,6 +391,8 @@ classes:
      - taxon
      - alternative_products
      - functional_isoforms
+     - alternative_records
+     - reference_proteome_assessments
      - references
      - existing_annotations
      - core_functions
@@ -373,6 +404,93 @@ classes:
       description:
         recommended: true
 
+
+  ReferenceProteomeAssessment:
+    description: Evidence-backed assessment of a reference-proteome search without an asserted alternative accession.
+    attributes:
+      reference_proteomes:
+        range: string
+        pattern: '^UP[0-9]{9}$'
+        multivalued: true
+        required: true
+        minimum_cardinality: 1
+      status:
+        range: ReferenceProteomeAssessmentStatusEnum
+        required: true
+      reviewed_on:
+        range: date
+        required: true
+      reason:
+        range: string
+        required: true
+      evidence:
+        range: AlternativeRecordEvidence
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        minimum_cardinality: 1
+
+  AlternativeRecord:
+    description: >-
+      A manually curated relationship between this review's primary UniProt
+      accession and another record. An equivalent reference-proteome record can
+      be useful for mapping while retaining the curated Swiss-Prot accession.
+      Equivalence does not imply an automatic transfer of every GO assertion,
+      nor that identical sequences alone establish a unique genomic locus.
+    attributes:
+      id:
+        range: string
+        required: true
+        pattern: '^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$'
+        description: Alternative primary UniProt accession, without a prefix.
+      relationship:
+        range: AlternativeRecordRelationshipEnum
+        required: true
+      reference_proteome:
+        range: string
+        pattern: '^UP[0-9]{9}$'
+        required: true
+        description: Reference proteome containing the alternative record.
+      reviewed_on:
+        range: date
+        required: true
+        description: Date the curator assessed this relationship and its evidence.
+      reason:
+        range: string
+        required: true
+        description: >-
+          Curator's rationale for the relationship, including unresolved questions
+          or qualifications about locus identity, cultivar, or annotation differences.
+      evidence:
+        range: AlternativeRecordEvidence
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        minimum_cardinality: 1
+        description: >-
+          Typed, cited evidence. Reference-proteome relationships require membership
+          evidence and sequence-comparison or locus-mapping evidence. Record history
+          and qualitative context alone do not establish equivalence.
+
+  AlternativeRecordEvidence:
+    description: >-
+      One evidence claim for a manually assessed cross-record relationship.
+      Keep reviewer interpretation in description and verbatim source quotations
+      in supported_by. Cite dated database snapshots for reproducibility; UniSave
+      entry versions establish record history, not sequence equivalence by themselves.
+    slots:
+      - description
+      - supported_by
+    slot_usage:
+      description:
+        required: true
+      supported_by:
+        required: true
+        minimum_cardinality: 1
+    attributes:
+      type:
+        range: AlternativeRecordEvidenceTypeEnum
+        required: true
 
   AlternativeProduct:
     description: >-
@@ -530,6 +648,89 @@ classes:
         range: ReferenceReplacementReasonEnum
         required: true
         description: Why the source identifier should resolve to the target reference.
+
+  SourceDefect:
+    description: >-
+      A defect in a source database record (a GOA/MOD annotation row, a UniProt
+      entry, a GO-CAM activity, an interaction record), stated precisely enough
+      that a report to the responsible resource can be generated from it. It
+      records what the source asserts, what it should assert where that is
+      known, why, and how sure the reviewer is. It does not replace the review
+      action: the action says what this repository does with the claim; the
+      source defect says what the source should fix.
+    attributes:
+      defect_type:
+        range: SourceDefectTypeEnum
+        required: true
+        description: What is wrong with the source record.
+      resource:
+        range: SourceResourceEnum
+        required: true
+        description: >-
+          The resource that holds the defective record and would need to fix it
+          (for a GOA row, the assigned_by group, not the GOA aggregator).
+      record:
+        range: string
+        description: >-
+          Identifier of the defective record where one exists, e.g. a GO-CAM
+          activity id (gomodel:.../...), a UniProt accession, or an
+          IntAct interaction id. For a GOA row, which is identified by the
+          enclosing annotation, leave unset.
+      slot:
+        range: string
+        description: >-
+          The field of the record that holds asserted_value, using the source's
+          own name for it, e.g. enabled_by or has_input for a GO-CAM activity,
+          or DB_Object_ID, DB:Reference, With/From, Evidence_Code or Qualifier
+          for a GAF row. Needed when one record has several fields that could
+          carry the same value.
+      requested_change:
+        range: SourceDefectRequestedChangeEnum
+        description: >-
+          What the resource is asked to do. Distinguishes re-pointing a value
+          from removing it, which an absent corrected_value cannot.
+      asserted_value:
+        range: string
+        required: true
+        description: >-
+          What the source currently says, as a CURIE where possible (e.g.
+          AGI_LocusCode:AT2G45160 for the gene product, PMID:32213638 for the
+          reference, IDA for the evidence code).
+      corrected_value:
+        range: string
+        description: >-
+          What the source should say instead, as a CURIE, when it can be
+          established (e.g. AGI_LocusCode:AT5G64610). Leave unset when the
+          value is wrong but the right one is unknown (e.g. a mis-keyed
+          reference whose intended paper cannot be identified).
+      corrected_label:
+        range: string
+        description: Human-readable label for corrected_value (e.g. "HAM1 MYST histone acetyltransferase").
+      cause:
+        range: SourceDefectCauseEnum
+        description: Most likely mechanism of the error, where it can be inferred.
+      confidence:
+        range: SourceDefectConfidenceEnum
+        required: true
+        description: How firmly the defect is established.
+      explanation:
+        range: string
+        required: true
+        description: >-
+          Self-contained explanation suitable for pasting into a report to the
+          resource's curators.
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Verbatim evidence for the defect (and for the corrected value).
+      report_status:
+        range: SourceDefectReportStatusEnum
+        ifabsent: string(NOT_REPORTED)
+        description: Where the upstream report stands.
+      report_url:
+        range: uri
+        description: Link to the upstream ticket, email thread or helpdesk entry, once filed.
 
   Finding:
     description: A finding is a statement about a gene, which is supported by a reference.
@@ -1366,6 +1567,14 @@ classes:
         range: EvidenceItem
         multivalued: true
         inlined_as_list: true
+      source_defects:
+        range: SourceDefect
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Defects in the cached GO-CAM model itself (e.g. the activity is
+          enabled_by the wrong gene product), in reportable structured form.
+          See docs/source_defects.md.
       notes:
         range: string
 
@@ -1535,6 +1744,7 @@ classes:
       - knowledge_gaps
       - propagation_review
       - consistency_exception
+      - source_defects
     rules:
       - preconditions:
           slot_conditions:
@@ -2593,6 +2803,162 @@ classes:
 
 
 enums:
+  AlternativeRecordRelationshipEnum:
+    permissible_values:
+      REFERENCE_PROTEOME_LOCUS_COUNTERPART:
+        description: >-
+          A supported counterpart at the same gene locus whose protein function or
+          integrity differs, for example an inactive reference-strain allele of an
+          experimentally characterized active protein. Does not assert functional
+          equivalence or permit automatic GO annotation transfer.
+      REFERENCE_PROTEOME_CANDIDATE:
+        description: >-
+          A plausible counterpart in a specified reference proteome whose locus or
+          protein equivalence remains unresolved. This is a candidate for further
+          investigation, not an asserted equivalent, alias, or GO-transfer target.
+      REFERENCE_PROTEOME_EQUIVALENT:
+        description: >-
+          Manually assessed equivalent representation of the reviewed protein in a
+          specified reference proteome. Retain the review's preferred accession;
+          this relationship does not assert record merging or automatic GO transfer.
+
+  AlternativeRecordEvidenceTypeEnum:
+    permissible_values:
+      PROTEOME_SEARCH:
+        description: A documented search of specified reference proteomes, including competing or absent matches and search limitations.
+      SEQUENCE_COMPARISON:
+        description: Direct sequence comparison or a shared UniParc sequence identity.
+      LOCUS_MAPPING:
+        description: Evidence that the records map to the corresponding genomic locus.
+      PROTEOME_MEMBERSHIP:
+        description: Evidence of membership in the specified reference proteome.
+      RECORD_HISTORY:
+        description: Historical accession, sequence, or proteome-membership observations, such as versioned UniSave records.
+      CURATION_CONTEXT:
+        description: Qualitative context such as source cultivar, hybrid origin, provenance, or curator explanation.
+
+  ReferenceProteomeAssessmentStatusEnum:
+    permissible_values:
+      NO_SUPPORTED_COUNTERPART:
+        description: No counterpart sufficiently supported for a relationship was identified in the documented search; not proof of genomic absence.
+
+  SourceDefectTypeEnum:
+    description: Kind of defect in a source database record.
+    permissible_values:
+      WRONG_GENE_PRODUCT:
+        description: >-
+          The assertion is attached to the wrong gene or gene product ("that
+          gene, not this gene"), e.g. through a symbol or alias collision. The
+          corrected_value names the gene the evidence is actually about.
+      WRONG_REFERENCE:
+        description: >-
+          The assertion is keyed to a reference that does not support it
+          (mis-keyed or transposed identifier, or a paper about something else).
+      WRONG_TERM:
+        description: The reference supports a different GO term than the one asserted.
+      WRONG_EVIDENCE_CODE:
+        description: >-
+          The evidence code misrepresents the evidence (e.g. an experimental
+          code on a review or meeting report, IDA for a mutant phenotype).
+      MISSING_NEGATION:
+        description: The reference reports the opposite, so the row should carry NOT.
+      WRONG_WITH_FROM:
+        description: The WITH/FROM (interactor, donor or source) identifier is wrong.
+      WRONG_QUALIFIER:
+        description: The relation/qualifier is wrong (e.g. enables vs involved_in).
+      WRONG_CAUSAL_RELATION:
+        description: A GO-CAM causal edge has the wrong relation or direction.
+      OTHER:
+        description: Any other source-record defect; describe it in the explanation.
+
+  SourceResourceEnum:
+    description: >-
+      Resource responsible for fixing a source defect. For GOA rows this is the
+      assigned_by group.
+    permissible_values:
+      TAIR: {}
+      UNIPROT: {}
+      GOA_EBI:
+        description: EBI GOA curation (assigned_by GOA / UniProt-GOA).
+      GO_CAM:
+        description: A GO-CAM model (fixed in Noctua by the model's contributors).
+      GO_CENTRAL:
+        description: GO Central / PAINT phylogenetic annotation.
+      INTACT: {}
+      MGI: {}
+      RGD: {}
+      ZFIN: {}
+      FLYBASE: {}
+      WORMBASE: {}
+      SGD: {}
+      POMBASE: {}
+      DICTYBASE: {}
+      XENBASE: {}
+      ECOCYC: {}
+      REACTOME: {}
+      ARUK_UCL:
+        description: ARUK-UCL / BHF-UCL curation groups.
+      OTHER:
+        description: Name the resource in the explanation.
+
+  SourceDefectCauseEnum:
+    description: Likely mechanism by which a source defect arose.
+    permissible_values:
+      SYMBOL_COLLISION:
+        description: Two genes share a symbol or alias and the wrong one was picked.
+      LEGACY_ALIAS:
+        description: An outdated gene name in the paper was mapped to the wrong current locus.
+      IDENTIFIER_TRANSPOSITION:
+        description: Digit transposition or typo in an identifier.
+      SEQUENCE_MISMAPPING:
+        description: Primers, probes or constructs in the paper map to a different locus.
+      CONTAMINANT:
+        description: A common affinity-purification contaminant recorded as a real partner.
+      OTHER: {}
+      UNKNOWN: {}
+
+  SourceDefectConfidenceEnum:
+    description: How firmly a source defect is established.
+    permissible_values:
+      CONFIRMED:
+        description: >-
+          Verified against primary data (full text, sequence, live resource
+          query); the report can be filed as a correction.
+      PROBABLE:
+        description: >-
+          Strong but incomplete evidence (e.g. abstract only); the report should
+          be filed as a query to the curators.
+      SUSPECTED:
+        description: Plausible concern worth raising, not yet verified.
+
+  SourceDefectRequestedChangeEnum:
+    description: The change a source defect asks the responsible resource to make.
+    permissible_values:
+      REPOINT:
+        description: Replace asserted_value with corrected_value in the same slot.
+      DELETE_VALUE:
+        description: >-
+          Remove asserted_value from the slot and keep the rest of the record
+          (e.g. drop one has_input from a GO-CAM activity).
+      DELETE_ROW:
+        description: Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+      CHECK:
+        description: >-
+          The value is wrong or doubtful, but the right change depends on
+          information the reviewer could not see (e.g. a full text). The
+          explanation gives the alternatives.
+
+  SourceDefectReportStatusEnum:
+    description: Progress of an upstream report.
+    permissible_values:
+      NOT_REPORTED: {}
+      REPORTED: {}
+      ACKNOWLEDGED: {}
+      FIXED:
+        description: The source has corrected the record (re-fetch to confirm).
+      DECLINED:
+        description: The resource reviewed the report and kept the record.
+
   ExecutableModelTypeEnum:
     description: The modelling formalism of an executable model.
     permissible_values:

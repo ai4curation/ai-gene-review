@@ -64,6 +64,8 @@ genes:
 - CASPL1D2
 - CASPL4C1
 - CBF1
+- CBL10
+- CBL4
 - CCA1
 - CDF1
 - CER1
@@ -240,12 +242,16 @@ genes:
 - SEP2
 - SEP3
 - SEP4
+- SERRATE
 - SHR
 - SIZ1
+- SLAC1
 - SLY1
 - SMXL6
 - SMXL7
 - SMXL8
+- SnRK2.2
+- SnRK2.3
 - SOC1
 - SOS1
 - SOT17
@@ -471,6 +477,25 @@ WRKY70, RPM1, RPS2), salt tolerance (SOS1, CIPK24, HKT1), indolic glucosinolate
 regulation (MYB34, MYB51, MYB122) and the heat-stress set from
 [ARATH_HEAT_STRESS](ARATH_HEAT_STRESS.md).
 
+Since this snapshot, modules have been drafted for ABA signaling, miRNA
+biogenesis, pattern-triggered immunity, salicylic acid / NPR1, the SOS
+pathway and heat stress. Of the groups above, only indolic glucosinolate
+regulation still has no module. The counts in this section will change when
+the stats script is next re-run.
+
+### Pathways not yet curated
+
+[Arabidopsis pathways not yet curated](ARATH/ARATH-pathway-gaps.md) checks 107
+Arabidopsis pathways against the modules. The pathway list comes from KEGG's
+*A. thaliana* maps plus plant processes that KEGG has no map for. 34 pathways
+have a module with a reviewed Arabidopsis gene. The other 73 do not: 35 have
+no module, 21 have only a cross-kingdom module that never mentions
+Arabidopsis, and 17 have a module with no reviewed Arabidopsis gene. The
+largest gap is plant-specific metabolism: hormone biosynthesis (all but GA and
+SA), starch and sucrose, flavonoids and anthocyanins,
+cuticle and plastid lipids, phytosterols, and nitrate and ammonium
+assimilation.
+
 ## View 5: families
 
 | Family | PANTHER name | Coherence call | ARATH reviews |
@@ -513,7 +538,7 @@ studies) list ARATH among their species; the stats file names them all.
 ---
 # STATUS
 
-Last updated: 2026-10-14
+Last updated: 2026-10-20
 
 ## Phase 1: summarize the corpus
 
@@ -537,14 +562,43 @@ Last updated: 2026-10-14
 - [ ] Check that sibling genes in the same module received consistent actions
       for shared terms (e.g. the three GID1s, the SEPALLATAs, the AHKs)
 - [ ] Add deep research for the 85 reviews that have none
+- [ ] File the draft reports in [upstream-reports.md](ARATH/upstream-reports.md)
+      (GO-CAM HAM1/SCL27; TAIR SUR1, F4JLB7/RIC7, GSTF6) and record the tickets
+- [ ] Bring OST1 in line with SnRK2.2/SnRK2.3: they MODIFY protein kinase
+      activity (GO:0004672) and kinase activity (GO:0016301) to GO:0004674,
+      while OST1 ACCEPTs GO:0004672 and marks GO:0016301 over-annotated
+- [ ] Re-run the corpus statistics after the 2026-10-19 additions
 
 ## Phase 3: modules
 
-- [ ] Draft modules for the unmodularized groups: ABA signaling, small-RNA
-      biogenesis, pattern-triggered immunity, salicylic acid / NPR1, SOS salt
-      tolerance, indolic glucosinolate regulation, heat-stress response
-- [ ] Decide whether the 11 modules with no reviewed Arabidopsis gene need
-      Arabidopsis reviews (cellulose, xylan and photosynthesis first)
+- [x] Draft modules for ABA signaling, miRNA biogenesis, pattern-triggered
+      immunity, salicylic acid / NPR1, SOS salt tolerance and heat-stress response
+- [ ] Draft a module for indolic glucosinolate biosynthesis and its MYB regulation
+- [x] Map Arabidopsis pathways to modules and list the uncurated ones
+      ([ARATH-pathway-gaps](ARATH/ARATH-pathway-gaps.md))
+- [ ] Draft modules for plant-specific pathways that have none, starting with
+      those that already have reviewed genes: ABA biosynthesis (NCED3),
+      flavonoids/anthocyanins (TT8), cuticle lipids (CER1), UV-B (UVR8), cold
+      acclimation (CBF1)
+- [ ] Draft the remaining hormone biosynthesis modules (auxin, cytokinin,
+      brassinosteroid, jasmonate, ethylene, strigolactone)
+- [x] Draft a photorespiration module
+      ([photorespiration_c2_cycle](../modules/photorespiration_c2_cycle.html))
+- [x] Review the Arabidopsis representatives of the photorespiration module
+      (18 genes: PGLP1, PLGG1, GLO1, GLO2, CAT2, GGAT1, AGT1, HPR, HPR2, GLYK,
+      GLN2, GLU1, SHM1, GLDP1, GLDP2, GDCH, GDCST, mtLPD2)
+- [x] Review mtLPD1 (At1g48030), the main leaf glycine decarboxylase L protein,
+      and GGAT2 (At1g70580)
+- [ ] Consider reviewer suggestions for the photorespiration module: BASS6 as a
+      second glycolate exporter, the shade-induced cytosolic GLYK isoform, viable
+      Arabidopsis gln2 mutants, and the H-protein MF term in
+      `glycine_cleavage_system` (lipoic acid binding vs molecular carrier activity)
+- [ ] Draft starch and sucrose modules
+- [ ] Review Arabidopsis genes for modules that mention Arabidopsis but have no
+      reviewed gene (photosynthesis, cellulose and xylan first)
+- [ ] Add Arabidopsis representatives to the 21 cross-kingdom modules that
+      never mention it (TCA cycle, pentose phosphate, MEP pathway and others)
+- [ ] Compare the pathway map with AraCyc/PMN
 - [ ] Move the 29 populated modules from `DRAFT` toward review
 
 ## Phase 4: families
@@ -570,3 +624,56 @@ rows include `NEW` rows, since those live in `existing_annotations`. Module
 membership is found by matching module UniProt accessions to review ids, plus
 explicit `genes/ARATH/<GENE>/` paths; family membership by `genes/ARATH/` paths
 in PANTHER family reviews.
+
+## 2026-10-19
+
+Followed up the handoff from the previous session.
+
+- New reviews: CBL4 (SOS3), CBL10 (SCaBP8), SLAC1, SnRK2.2 (SRK2D), SnRK2.3
+  (SRK2I) and SERRATE (SE). No deep-research provider worked in this session
+  (Edison authentication failed and the OpenAI key was rejected), so each review
+  rests on hand-written notes in its `-notes.md`. None has a deep-research file.
+  All validate; all are `DRAFT`.
+- Paralogs were aligned on shared terms. CBL4 and CBL10 both use GO:0043539 for
+  CIPK24 activation. SnRK2.2 and SnRK2.3 both MODIFY GO:0004672 to GO:0004674
+  and GO:0010029 to GO:0010187.
+- GAI, RGA and GID1A: GOA was re-fetched, and their IBA rows (7, 7 and 4) were
+  reviewed against the PTHR31636 and PTHR23024 family reviews. GID1A lost two
+  ARBA rows; GO:0009939 was re-proposed as NEW because a core function cites it.
+- AGO1: the RNA endonuclease activity IDA row is now MODIFY to GO:0090624.
+- GID1A notes: the source status in the GID1B cross-reference now refers to
+  PTN009058710, not AADAC.
+- Draft upstream reports are in [upstream-reports.md](ARATH/upstream-reports.md).
+  None has been filed.
+
+Added the pathway gap analysis: a hand-curated pathway-to-module map
+(`ARATH/ARATH-pathway-map.yaml`), a script that checks it against `modules/`
+and `genes/ARATH/` (`ARATH/scripts/arath_pathway_gaps.py`), its output
+(`ARATH/ARATH-pathway-gaps.yaml`) and a write-up
+([ARATH-pathway-gaps](ARATH/ARATH-pathway-gaps.md)). The corpus stats file was
+not regenerated in this change, so the other numbers on this page are still
+from the 2026-10-14 snapshot.
+
+## 2026-10-20
+
+Drafted the `photorespiration_c2_cycle` module (ten parts from 2-phosphoglycolate
+phosphatase to D-glycerate 3-kinase, plus ammonia refixation; glycine
+decarboxylase is included by reference to `glycine_cleavage_system`).
+Representatives are Arabidopsis proteins checked against UniProt; none has a
+gene review yet, so photorespiration now counts as "module without reviewed
+ARATH genes" in the gap analysis.
+
+Reviewed the 18 Arabidopsis members of the photorespiration module; the
+reviews were written by parallel agents, then checked and committed in batches. Deep research
+could not be run in this environment (no provider API keys), so each gene's
+notes file is built from cached publications and UniProt. Two corrections came
+out of the reviews: the module now names mtLPD1 (At1g48030) rather than mtLPD2
+as the main leaf L protein, and proteomics-only location rows follow the
+organelle audit (marked over-annotated, not removed). Photorespiration now
+counts as curated in the gap analysis (34 of 107 pathways).
+
+Reviewed mtLPD1 and GGAT2. mtLPD1 evidence (leaf GDC holds about four times more
+L1 than L2, PMID:32311173; mutants show mtLPD1 predominant in photorespiration,
+PMID:41990722) is now cited in the photorespiration module. GGAT2's
+photorespiration row rests on enzyme activity, leaf peroxisome peptides and
+expression only; no ggat2 mutant has been described.
