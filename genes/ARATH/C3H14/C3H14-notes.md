@@ -106,3 +106,51 @@ obsolete.
 25732536 (JXB 2015), 41758611 (Plant Cell 2026), 42711403 (Nat Plants 2026),
 32279333 (PCE 2020), 19674407 (Plant J 2009), and 25228083 (the cache is
 abstract-only, so full-text quotes cannot be validated).
+
+## 2026-10-23 session 2: curator-supplied full texts
+
+The curator uploaded PDFs of PMID:25228083 (Kim 2014, accepted manuscript),
+PMID:25732536 (Chai 2015, JXB) and PMID:41758611 (Xue 2026, Plant Cell). These are
+publisher copies under copyright, so they were **not** committed to `publications/`.
+Quotes from them are recorded as `supporting_text_fulltext` (not validated against the
+cache) with `full_text_unavailable: true`.
+
+### Kim 2014 (PMID:25228083)
+- Results heading: "Overexpression of AtC3H14 results in cell elongation defect and
+  ectopic secondary wall formation."
+- Figure 7 ("Enhanced phloem fiber formation in 35S::AtC3H14 plants") was viewed. TBO
+  sections show precocious stem phloem fibers and many extra lignified phloem fibers in
+  roots. The TAIR GO:1901347 (negative regulation of secondary cell wall biogenesis)
+  sign error is therefore CONFIRMED; the correct term is GO:1901348.
+- RNA-EMSA: "RNA-EMSA using AtC3H14-GST and in vitro transcribed ADPG1 and DUF1218 RNA
+  fragments of 3'-UTR containing the ARE motif".
+
+### Chai 2015 (PMID:25732536)
+- "Both C3H14 and C3H15 were observed to localize to the nucleus and cytoplasmic foci in
+  the same cells" (35S:GFP-C3H14 in tobacco epidermis).
+- "Both proteins bound poly(rU), single-stranded DNA, and double-stranded DNA, but not
+  poly(rC) at 0.1 M NaCl". This contradicts Kim 2014, which reports binding to poly(C)
+  and poly(G) as well; salt conditions differ (0.1 M vs 250/500 mM NaCl).
+- In yeast, GAL4-BD fusions of full-length C3H14 and its N-terminal 237 residues
+  transactivate; the TZF domain alone does not.
+- c3h14 c3h15 stems: "a significant reduction in secondary wall thickness of fibres or
+  vessels"; "the cellulose, xylose, and lignin contents were visibly decreased". The
+  double mutant "is taller than the wild type". Single mutants resemble wild type.
+- Alleles: c3h14 GABI_239E11; c3h15-1 SALK_045897; c3h15-2 SALK_065040.
+
+### Xue 2026 (PMID:41758611)
+- ProC3H14::C3H14-VENUS in MMCs: weaker than C3H15-VENUS "but showed a similar
+  pattern" (diffuse cytoplasm and nucleus, plus variable-sized cytoplasmic foci).
+- DCP1 colocalization (~80% of DCP1 foci), BiFC, pull-down, FRET-FLIM and FRAP were all
+  done with **C3H15 only**.
+- RNA affinity purification used C3H15 protein: 2,480 targets, "C3H15 primarily binds to
+  the coding region of mRNA (96%)". C3H14 was not tested. The abstract's "they bind
+  highly expressed mRNAs" therefore rests on C3H15 data.
+- c3h14/15 double mutant: RNA accumulates in MMC nuclei and cytoplasm at stage 5,
+  meiosis arrests at pachytene, R-loops and gammaH2AX increase. C3H15-VENUS complements.
+- Consequence for the review: P-body remains unproposed for C3H14. The GO:0061158 NEW
+  row rests on C3H14's own 3'-UTR data (PMID:25228083, PMID:42844995) plus genetic
+  requirement in meiocytes.
+
+### Still not accessible
+PMID:42711403 (Nat Plants 2026), PMID:32279333 (PCE 2020), PMID:19674407 (Plant J 2009).
