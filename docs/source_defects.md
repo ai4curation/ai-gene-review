@@ -64,7 +64,11 @@ just export-source-defects
 
 This writes `reports/source-defects.tsv`, with one row per defect, and
 `reports/source-defects/<RESOURCE>.md`, with one report per resource listing
-the defects that are not yet `FIXED` or `DECLINED`. Filing a report is a
+the defects that are not yet `FIXED` or `DECLINED`. These outputs are
+generated and git-ignored: do not commit them. Each one aggregates every
+review in the repository, so a committed copy would conflict between any two
+PRs that touch a defect. The `source_defects` blocks in the reviews are the
+record. Generate the reports when you need them. Filing a report is a
 manual step. When it is done, set `report_status: REPORTED` and
 `report_url`, and set `FIXED` once a re-fetch shows the correction.
 
