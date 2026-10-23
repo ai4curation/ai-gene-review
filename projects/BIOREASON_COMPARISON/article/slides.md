@@ -168,7 +168,7 @@ Mouse has the highest selected-case mean (4.7), followed by ***B. subtilis*** (4
 
 ---
 
-## Eight reproducible model failure modes
+## Eight recurrent model failure modes
 
 Immediately diagnostic to a reader of the narrative.
 
@@ -180,10 +180,10 @@ Immediately diagnostic to a reader of the narrative.
 | 4 | **Organism-specific biology absent** | daf-16 generic FoxO, no IIS/dauer/longevity |
 | 5 | **Neo-functionalisation / moonlighting missed** | Nmnat NAD⁺ enzyme; chaperone role lost |
 | 6 | **Narrative–GO disconnect** | RidA: `protein binding` not deaminase activity |
-| 7 | **Cross-kingdom fold bias** | aprE subtilisin → "human blood coagulation" |
+| 7 | **Cross-kingdom fold bias** | PGRPLB (*Anopheles*) → "fruit fly" protein |
 | 8 | **Generated UniProt-style fabrication** | Slc5a1 → steroid-sulfate transporter |
 
-**The biases are architectural — they predict *where* the model will fail on deployment.**
+**The biases are architectural — they predict *where* the model will fail on deployment.** (Modes are illustrated by selected cases; counts with denominators are on the project page. As presented at ISMB 2026 on 14 July 2026, row 7 cited aprE, but aprE's coagulation terms come from GO-GPT/SFT, not the RL narrative. Corrected on 2026-09-27.)
 
 ---
 

@@ -57,3 +57,59 @@ biologically meaningful partners (MMACHC, MTR, MTRR) are captured by the molecul
 
 ## Reference for file: quote
 Add file:human/MMADHC/MMADHC-uniprot.txt to references for the UniProt FUNCTION/SUBCELLULAR quote support.
+
+## 2026-10-18 — ORGANELLES pilot: mitochondrial sub-compartment
+
+Applied projects/ORGANELLES.md Policy to the four GO:0005739 rows. Question: is the
+mitochondrial pool of MMADHC in the matrix (GO:0005759)? Lines of evidence:
+
+1. **MTS, no TM segment.** UniProt TRANSIT 1..38 (ECO:0000255), no TRANSMEM feature;
+   [PMID:18385497 "a putative mitochondrial targeting"];
+   [PMID:42709793 "Human MMADHC has an N-terminal mitochondrial targeting sequence (MTS)"].
+   The MTS-less deltaN38 variant [PMID:42709793 "was localized almost exclusively in the cytosol"].
+2. **PMF-dependent import** (presequence pathway across the inner membrane):
+   [PMID:42709793 "its short half-life is driven by its continual import into energized mitochondria and degradation by LONP1"];
+   accumulates in the cytosol upon depolarization.
+3. **Matrix protease turnover.** LONP1 inhibition enriches MMADHC in the mitochondrial fraction:
+   [PMID:42709793 "consistent with MMADHC being degraded primarily by LONP1 in the mitochondrial matrix"].
+   In mouse HSCs the m-AAA protease Afg3l2 also turns it over:
+   [PMID:41411131 "Loss of Afg3l2 leads to Mmadhc accumulation"] (abstract only).
+4. **Function on the matrix side.** The mitochondrial branch feeds the AdoCbl pathway
+   (MMAB, MMUT); MMUT [file:human/MMUT/MMUT-uniprot.txt "Mitochondrion matrix {ECO:0000269|PubMed:24458}."].
+
+Caveat: no sub-mitochondrial fractionation or protease-protection assay exists for MMADHC
+(PMID:23270877 is abstract-only here: IF + subcellular fractionation; PMID:42709793 used
+crude mitochondria). Matrix is therefore a curator inference (IC). Four lines agree, so
+policy rule 4 applies.
+
+Changes: IBA (GO_REF:0000033; PAINT PTN008546602 seeded only by Q9H3L0's own root
+annotation) and IEA (GO_REF:0000044, SL-0173) KEEP_AS_NON_CORE -> MODIFY to GO:0005759;
+HTP (PMID:34800366) and IDA (PMID:23270877) stay KEEP_AS_NON_CORE with reasons noting the
+assays resolve only the organelle; NEW IC GO:0005759 row; core_functions locations now
+cytosol + mitochondrial matrix (the single branch-point core function spans both pools).
+Expected validator warning: mixed actions on GO:0005739 (policy-driven: direct vs synthesis rows). (Superseded 2026-10-18: the synthesis rows are no longer MODIFYed, so this warning no longer occurs.)
+
+## 2026-10-18 (ORGANELLES revision)
+
+After the PR #5208 review, the IBA/IEA mitochondrion rows are kept (not MODIFYed to the matrix): their sources correctly assert the organelle and could not resolve further. The mitochondrial matrix stays as the NEW IC row, added alongside the root rows as GO does for DARS2 and MMUT.
+
+## 2026-10-18 (core-function location, after OpenScientist)
+
+Question put to OpenScientist: does the mitochondrial pool perform part of the core
+AdoCbl-supply function in the matrix, or is the decisive activity cytosolic? Report:
+`MMADHC-hypotheses/mmadhc-mitochondrial-pool-adocbl/openscientist.md`. Verdict "partially
+supported": the matrix location is well supported, the matrix-side function is unresolved
+[file:human/MMADHC/MMADHC-hypotheses/mmadhc-mitochondrial-pool-adocbl/openscientist.md "No
+direct physical interaction between MMADHC and any mitochondrial cobalamin enzyme (MMAB,
+MMUT, MMAA) has been demonstrated in any assay."]. Checked its key citations:
+[PMID:24722857 "null mutations N-terminal to Met116 cause isolated"] and [PMID:26364851 "the
+globular C-terminal domain of human CblD, which is sufficient for its"]. It missed the
+mouse Afg3l2 paper, which links mitochondrial Mmadhc accumulation to increased AdoCbl
+[PMID:41411131 "Loss of Afg3l2 leads to Mmadhc accumulation, driving excessive"].
+
+Decision: the mitochondrial pool matters for the AdoCbl branch, but where its molecular
+step happens is unknown. So the matrix stays on the NEW location row and is removed from
+the core function's `locations` (which records where the characterized activity occurs:
+the cytosol, with MMACHC). The mitochondrion rows stay KEEP_AS_NON_CORE. The open question
+is recorded as a core-function knowledge gap, with a compartment-restricted rescue and
+matrix proximity labelling as suggested experiments.

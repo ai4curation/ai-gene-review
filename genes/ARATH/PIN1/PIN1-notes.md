@@ -163,3 +163,12 @@ Note: PIN1 plasma-membrane localization itself remains well supported by other r
 *particular* citations don't substantiate localization, hence the validator's
 "inconsistent review actions for GO:0005886" warning (expected/acceptable).
 Status kept DRAFT; validation: ✓ Valid.
+
+## 2026-10-05 update (auxin_polar_transport module curation)
+- Resolved eight UNDECIDED rows. Several had been judged from abstract-only caches; per the curation policy experimental annotations are deferred to curators rather than rejected:
+  - leaf shaping (PMID:16971475) and xylem/phloem pattern formation (PMID:16943276): KEEP_AS_NON_CORE. The 16943276 abstract shows pin1 was among the mutants analysed [PMID:16943276 "Our analyses of double mutant and transgenic plants indicated that auxin transport and perception act independently to pattern leaf veins"].
+  - photomorphogenesis TAS (PMID:16141452): supported by the full text [PMID:16141452 "the PIN-FORMED1 (PIN1) protein is required for basipetal auxin movement and crucial for shoot vascular development, gravitropic responses, and photomorphogenesis"].
+  - plasmodesma HDA: KEEP_AS_NON_CORE; cytoplasm HDA: MARK_AS_OVER_ANNOTATED; gravitropism IMP (PMID:16601150, abstract-only): stays UNDECIDED.
+- All GO:0005515 rows switched to REMOVE (repository policy: protein binding is uninformative; removal does not deny the interaction).
+- Basal and apical plasma membrane rows upgraded to ACCEPT (core polar locations used in core_functions).
+- 2026-10-06: gravitropism IMP (PMID:16601150) — Europe PMC reports no PMC/open-access full text; evidence not seen. Deferred to curator as KEEP_AS_NON_CORE (polar auxin transport is required for gravitropic responses). No UNDECIDED rows remain.

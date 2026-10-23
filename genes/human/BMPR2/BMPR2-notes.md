@@ -1,0 +1,99 @@
+# BMPR2 research and annotation notes
+
+## 2026-10-02 — initial scientific assessment
+
+BMPR2/Q13873 is a type-II BMP receptor kinase. The manually reviewed candidate preserves all 152 seeded annotation objects, including four NOT assertions, every original reference/evidence/partner/qualifier field and both named protein products. The 153 raw GOA rows include one date-only duplicate group; this review does not regenerate or edit that source. Thirty-nine annotations are accepted as core-related, 66 retained as non-core, nine refined and 38 left undecided. No new annotation is manufactured. A COMPLETE review status means that each source assertion has a decision, including explicit uncertainty; it does not mean that every experimental question is resolved.
+
+The annotation-reviewer and core-function-synthesizer workflows were applied. A separate 17-row binding consultation assessed source indices 28–40, 98, 99, 104 and 148; the scientific owner integrated those recommendations with the remaining 135 manually assessed rows. The user's standing ClinGen-project instruction retains correct generic binding when no defensible specific replacement is established. This scoped instruction overrides the default informational preference to exclude generic protein binding; it does not certify unread interactions. There are four supported generic non-core interactions and four unresolved generic interactions in this candidate; the cadherin- and tyrosine-kinase-binding terms are already specific and are retained separately.
+
+The standard provider-only deep-research command was attempted once. The configured Falcon command and its configured Perplexity-lite fallback could not resolve the required deep-research-client version in the offline tool cache. No research output was returned and no provider-named file was authored manually. The following assessment is manual research, not a substitute provider output. The actual failure envelope is retained in the TMP scientific packet.
+
+### Receptor mechanism and the minimal core
+
+The core combines ligand recognition, membrane receptor assembly and receptor-to-receptor phosphorylation into one BMP receptor activity, GO:0098821, at the plasma membrane in a receptor complex. BMPR2/type-II kinase phosphorylates type-I receptor components; activated type-I kinase then phosphorylates R-SMADs. ATP binding and general serine/threonine kinase activity are parts of this coupled mechanism, not additional independent cores. The normal Reactome event [R-HSA-201443](https://reactome.org/content/detail/R-HSA-201443) and the human BMP10/BMPRII structural study [PMID:35504921](https://pubmed.ncbi.nlm.nih.gov/35504921/) support this synthesis. Selected primary Results/Methods were read, including the human extracellular-domain construct and binary/ternary complex geometry. The ternary extracellular structure lacks direct ALK1–BMPRII contact; that does not rule out intracellular receptor association.
+
+The source GO:0005024 annotation is refined to BMP receptor activity. The official [GO:0005024 definition](https://amigo.geneontology.org/amigo/term/GO:0005024) concerns TGF-beta-ligand receptor activity; receptor-superfamily membership alone does not establish that ligand specificity. [GO:0098821](https://amigo.geneontology.org/amigo/term/GO:0098821) is the established BMP-receptor term under transmembrane receptor serine/threonine kinase activity. This is a ligand/term distinction, not a criticism based on the number of PAINT donors. A PAINT target appearing among its descendant evidence is legitimate experimental grounding, not circularity.
+
+The canonical UniProt product is 1,038 residues. The source records a second named product with the residue-530 substitution and deletion of residues 531–1038, producing a 530-residue short product. These two original product objects remain unchanged. Engineered dominant-negative or tail-deletion constructs are not silently treated as the natural short isoform. The extracellular, transmembrane, kinase and long-tail regions have distinct roles; tail-associated LIMK/cofilin regulation does not make BMPR2 a cofilin kinase. Earlier tail/LIMK papers have condition-dependent regulatory findings and do not justify a second universal catalytic core.
+
+### Direct activity versus downstream physiology
+
+Human mesenchymal-cell receptor RNAi establishes ligand-dependent use of BMPR2 and ACVR2A, with greater reliance on BMPR2 for BMP2/4 than BMP6/7 [PMID:18436533](https://pubmed.ncbi.nlm.nih.gov/18436533/). Its type-I BRET dimers are not BMPR2 dimers. The paper's ligand-induced mineralization and receptor-specific ID1 experiments are distinct evidence layers; the review does not invent an independently inspected BMPR2-knockdown mineral-deposition assay.
+
+The human pulmonary endothelial BMP9 study supports receptor-specific and partially redundant outputs [PMID:19366699](https://pubmed.ncbi.nlm.nih.gov/19366699/). The canonical cache contains the abstract and Discussion, not the main Results/Methods, despite its full-text flag. ActRII in this BMP9 paper is not evidence that the ligand tested was activin. BMP2/BMPRII-dependent PPARgamma/apoE anti-proliferative signaling in smooth-muscle cells is supported separately [PMID:18382765](https://pubmed.ncbi.nlm.nih.gov/18382765/); the abstract explicitly separates that PPARgamma response from SMAD1/5/8 phosphorylation. Its source-specific positive-SMAD assertion remains undecided pending the relevant full-paper assay, rather than being rejected from the abstract.
+
+Positive regulation of transcription does not require BMPR2 to bind DNA or perform RNA synthesis. The receptor supplies signaling that regulates downstream transcriptional effectors; the broad transcription-regulatory terms remain non-core with source-specific limitations. Hepcidin receptor use is supported by [PMID:18326817](https://pubmed.ncbi.nlm.nih.gov/18326817/). Osteogenic differentiation is supported by BMPR2 RNAi in human adipose-derived cells [PMID:22684006](https://pubmed.ncbi.nlm.nih.gov/22684006/); this does not assign the receptor the activity of its regulatory microRNA.
+
+The cartilage experiment uses an engineered human dominant-negative receptor in chick sternal chondrocytes [PMID:9442116](https://pubmed.ncbi.nlm.nih.gov/9442116/). Methods/Results were read. Matrix-associated glycosaminoglycan/aggrecan readouts, differentiation markers, hypertrophy and proliferation depend on the experimental conditions. BMPR2 supplies signaling rather than proteoglycan-biosynthetic chemistry, motivating refinement to [GO:1902730 positive regulation of proteoglycan biosynthetic process](https://amigo.geneontology.org/amigo/term/GO:1902730). The assay is neither a direct human cartilage experiment nor a natural splice-product comparison.
+
+### Wild-type, mutant and localization boundaries
+
+In [PMID:12045205](https://pubmed.ncbi.nlm.nih.gov/12045205/), the complete cached abstract explicitly assigns p38 activation in NMuMG cells to mutant, not wild-type, constructs. Its trafficking and BMP/SMAD effects differ among mutations. The broader UniProt p38 summary is therefore not promoted to a normal p38-activation core.
+
+Cached XML Methods/Results and Figure1–4 captions from [PMID:25187962](https://pubmed.ncbi.nlm.nih.gov/25187962/) distinguish wild-type plasma-membrane/cytoplasmic localization from mutant patterns. Thr268fs and Ser863Asn show nuclear accumulation and Gln433X aggregates intracellularly; these observations do not redefine normal BMPR2 localization. Thr268fs, Gln433X and Ser863Asn reduce proliferation and increase apoptosis relative to wild type, whereas Tyr67Cys does not show the same endpoints. No new nuclear-location annotation is introduced; the original source rows concern endothelial proliferation, plasma membrane and apoptosis.
+
+Systemic arterial pressure and pulmonary pressure are distinct terms. Familial PAH segregation in [PMID:18364108](https://pubmed.ncbi.nlm.nih.gov/18364108/) supports pulmonary disease context but does not independently establish a systemic-pressure assay. The systemic row remains undecided. Proliferation, apoptosis, differentiation and organismal developmental roles are contextual consequences of receptor signaling, not redundant molecular cores.
+
+### Interaction evidence
+
+Short exact excerpts in the candidate are drawn only from immutable normal caches or the UniProt record. The aggregate budget is at most 25 quoted words per source across the entire review, including repeated occurrences. All other citations are reference-only; these do not imply complete source access.
+
+| Source and indices (zero-based) | Finding and boundary |
+| --- | --- |
+| PMID12045205, 28 | The abstract explicitly reports BMP4 binding/trafficking comparisons; refine generic binding to BMP binding. |
+| PMID15188402, 29–30 | PKC beta immunodetection supports PKC binding. The mouse C4bpa target table is uninspected; C4bpa is not the CtBP protein validated in the abstract. |
+| PMID15657086, 31–32 | Retain caveolin-associated interactions with the exact source isoform accessions. Do not invent alpha/beta numbering or BMPR2 isoform specificity. |
+| PMID19229295 and PMID21976273, 33/36/98/99 | GDF5–BMPRII binding has explicit independent support. The original type-I-crystal paper's BMPR2 assay is not claimed read. Receptor accessions in WITH/FROM remain receptor partners, not renamed BMP ligands. |
+| PMID19424179, 34 | cGKI/PRKG1 binds and phosphorylates BMPRII. The direction is cGKI to receptor; the later nuclear translocation is cGKI's behavior. |
+| PMID21791611, 35 | Authenticated longer supplemental text reports BMPRII/TSC-22 co-IP in Figure2D. The canonical cache stays abstract-only. TbetaRI purified binding/stability assays are not transferred to BMPRII. |
+| PMID21976273, 37 | Ligand competition by noggin does not independently demonstrate BMPRII–noggin binding; the exact direct interaction remains unresolved. |
+| PMID24407287, 38 | The longer ASC/THP-1 source has mass-spectrometry context but lacks the target table cells. Preserve uncertainty without a wrong-gene accusation. |
+| PMID33308444, 39 | Cached primary Results explicitly show ligand-independent BMPRII co-IP with SCUBE3; the type-I associations are ligand-dependent. |
+| PMID36931259, 40 | YWHAE screen entry and target validation remain uninspected; preserve the source and uncertainty. |
+| PMID26598555, 104/148 | Endogenous HUVEC co-IP/PLA supports VE-cadherin/SRC receptor-associated complexes, without proving every contact is direct or that BMPR2 phosphorylates SRC. |
+
+The longer PMID21791611/24407287/25468996 artifact records remain separate authenticated supplemental evidence. No existing normal cache was overwritten, and no supplemental-only passage is used as canonical supporting_text.
+
+### Developmental transfers and four NOT assertions
+
+Official mouse donor records and primary abstracts were consulted in addition to cached sources. These primary web readings are documented here; uncached papers are not added as normal cached references or quotation targets. [PMID:12441304](https://pubmed.ncbi.nlm.nih.gov/12441304/) describes a hypomorphic Bmpr2 allele with proximal conotruncal septation defects, absent semilunar valves and apparently unaffected atrioventricular valves. [PMID:19409885](https://pubmed.ncbi.nlm.nih.gov/19409885/) and indexed primary Results/captions describe conditional deletions with tissue-dependent outflow positioning and AV cushion/valvulogenesis defects. Myocardial deletion was compatible with normal myocardial development, with possible receptor compensation. The original full donor-inference chain is not established for every human row.
+
+| Negated source index | Preserved uncertainty |
+| --- | --- |
+| 13, outflow tract septum morphogenesis | Anatomical substructures, positioning and allele-specific septation phenotypes must be reconciled before treating the transferred NOT as universal. |
+| 20, atrioventricular valve development | Apparently unaffected AV valves in the hypomorph differ from conditional endocardial defects; retain the negative source field but leave its unrestricted transfer undecided. |
+| 118, cardiac muscle tissue development | Normal development after a particular myocardial deletion is conditional dispensability, not proof that human BMPR2 never contributes. |
+| 139, pharyngeal arch artery morphogenesis | An aortic-arch abnormality is not automatically the same developmental event; the exact negative observation and transfer context remain unresolved. |
+
+All four remain NOT with UNDECIDED actions. Positive neighboring valve/septal annotations are retained as non-core where independent developmental evidence supports them, with the mouse/model boundary explicit. Additional [indexed primary Results/Discussion for PMID:19409885](https://pmc.ncbi.nlm.nih.gov/articles/PMC2745439/) describe increased or persistent semilunar-valve mesenchymal proliferation in conditional mutants at E17.5–18.5, despite unchanged earlier whole-heart BrdU fractions. Accordingly, source indices 150/151 are retained as non-core with late-valve/mouse context, not a universal cardiomyocyte or human effect. This is body-text reading, not figure-image analysis, and the normal publication cache remains absent. [PMID:10772805](https://pubmed.ncbi.nlm.nih.gov/10772805/) official primary abstract establishes arrested mouse epiblast differentiation and absent mesoderm, not a human-embryo experiment.
+
+The cached ALK1-pathway abstract [PMID:19903896](https://pubmed.ncbi.nlm.nih.gov/19903896/) and official MGI entries identify the donor study for several lymphatic, arterial and retinal annotations. They do not expose each BMPR2-specific perturbation. The precise endogenous-receptor contribution remains uncertain; ligand trapping or type-I receptor inhibition cannot simply be assumed equivalent to endogenous BMPR2 loss. The review does not assert that any particular unread experiment actually used a trap. Neuronal localization, negative vasoconstriction, alveolar development and several sign-specific developmental readouts likewise remain unresolved at the target-assay level. A paper title naming another receptor is not used to remove an annotation.
+
+### Activin evidence and unavailable optional sources
+
+The immutable UniProt record explicitly records activin-A reception. Official PubMed and publisher abstracts for [PMID:24018044](https://pubmed.ncbi.nlm.nih.gov/24018044/) were read: they describe activin-A binding and BMPR2/ALK4 signaling in immortalized gonadotrope-like cells, including BMPR2 perturbation and transcriptional outputs. This bounded primary evidence supports contextual non-core retention of the activin receptor/signaling rows 76, 77 and 96. It does not establish universal activin receptor usage or convert the BMP9 paper into an activin assay. Candidate support points to the actual cached UniProt record, not to a fabricated PMID cache.
+
+Official abstract reading of [PMID:7791754](https://pubmed.ncbi.nlm.nih.gov/7791754/) supplies early human BMP receptor context. A single normal two-PMID fetch for these papers failed DNS, cached zero of two and created no source files. There was no retry or source-workflow replay. The cardiac papers above were separately queued for optional source recovery. None of these absent caches is claimed validated cached support, and their unavailability does not prevent decisions supported by already accessible evidence. Primary web result envelopes and source-identity observations are retained in the TMP owner packet.
+
+### Source preservation and outstanding questions
+
+All 24 originally cited publication caches and nine Reactome records were inspected at their actual accessible level. Three already existing normal publication caches (35504921, 19903896 and 17114649) are added as references; no new downloads were required. Reference-review notes distinguish abstract, partial body, selected full-text sections, supplemental artifact text and uninspected tables. VERIFIED citation status is limited to the stated findings; it does not certify every screen edge or every source annotation.
+
+R-HSA-201453 has a fetched title about BMP SMAD1/5/8 dissociation but a body about SMAD2/3, ZFYVE9 and TGFBR components. This upstream mismatch is preserved and recorded. The BMPR2 plasma-membrane assertion is independently supported, while this mismatched body is not used to establish BMP mechanism. Other Reactome component activities, such as type-I SMAD phosphorylation or endofin localization, are not transferred to BMPR2.
+
+No new biological-process assertion is proposed. In particular, necessity for differentiation or matrix accumulation is not equated with performing matrix-biosynthetic chemistry. Existing process assertions are assessed on their actual signaling role, specificity and source access. Remaining questions concern donor-context reconciliation, target-level tables, natural isoform differences and the generality of activin reception.
+
+Normal candidate schema, ontology-term, reference/title/quotation and explicit strict GOA checks pass. Seven warnings are retained with explanations: the ontology cache still expects the older GO:0043235 label, while the authored core uses the current official primary label, signaling receptor complex; four generic-binding retention warnings follow the user instruction above; the modified PAINT receptor term lacks a structured ancestral-node audit because no complete PAINT tree/MSA was inspected; and the differing SMAD-regulation actions reflect source-specific evidence access rather than an inconsistent view of the receptor's biological function. No invented propagation evidence is added to silence a warning.
+
+This candidate is staged for independent scientific review. No canonical review, notes, source cache or history was changed by this proposal build; application, validation against the applied file and history remain separate subsequent steps.
+
+
+## Follow-up to PR 3878, 2026-10-02
+
+The generic-binding decisions follow the explicit task instruction recorded in [the ClinGen project curation instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions). This task-specific choice intentionally departs from the informational-exclusion recommendation; that recommendation does not assert that an uninformative interaction is false.
+
+The broad kinase assertion now targets the already-present BMP receptor activity. The TGF-beta-ligand receptor assertion is removed for incorrect ligand scope, superseding the earlier MODIFY disposition above. The [official term definition and comment](https://amigo.geneontology.org/amigo/term/GO:0005024) distinguish TGF-beta ligand reception from receptor-family membership. The retained BMP-binding and osteoblast-differentiation refinements now explicitly acknowledge existing target annotations: they consolidate source-specific assertions rather than add functional coverage. Source rows remain intact.
+
+The uncached activin and cardiac paper readings remain in the scientific sections above, with their links and access limits. The annotation reasons now refer to those notes and retain their cached UniProt or existing transfer provenance without repeating paper-specific experiments or colon-less PMID tokens. No source cache was fabricated or refreshed. This follow-up does not assert that a missing cache is equivalent to a full-paper reading or that the complete PAINT phylogeny was inspected.
+
+The suggested neuronal-localization removals are not adopted solely from receptor topology or an incomplete donor paper: signaling receptors can traffic to specialized membrane compartments, and the source-specific uncertainty remains. The four NOT assertions, 38 UNDECIDED decisions, two natural products and single molecular core are preserved.

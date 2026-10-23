@@ -28,3 +28,7 @@ Deep research: no falcon report present at time of review.
 - New primary papers found via the report and verified at PubMed, then cached: PMID:34428469 (Qiu et al. 2021, AAA3 nucleotide state regulates activation; activated dynein relocates to septal/SPB minus ends) and PMID:9832552 (Beckwith et al. 1998, NudG LC8 co-IPs with the heavy chain and is required for heavy-chain localization).
 - Added 9832552 co-IP evidence to the cytoplasmic dynein complex IDA row; 34428469 septal minus-end relocation to the cell septum row (still non-core) and to core function 1; deep-research quote added to core function 1.
 - Not used: 2023-2024 mammalian/yeast papers (Okada 2023, Rao 2024 review) - comparative context only.
+
+## 2026-10-01 re-review (GOA refresh)
+
+- No new (PENDING) or vanished GOA rows after the refresh. Existing judgments re-audited against current guidelines (IBA reasoning, NEW participation/comparator tests, protein-binding handling, verbatim supporting text); no changes needed.

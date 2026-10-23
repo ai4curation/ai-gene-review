@@ -21,3 +21,23 @@ Newer literature search:
 
 - PubMed query for `(Saccharomyces OR yeast) AND (PFD1 OR GIM6 OR YJL179W OR prefoldin)` in 2024-2026 found papers on Gim3/Pfd4 meiotic tubulin homeostasis, Gim3 fluconazole mutational robustness, HTD1265-induced GimC phenotypes, prefoldin-like Bud27/URI, a plant-prefoldin review, and non-PFD1 topics.
 - Web searches for `Saccharomyces PFD1 Gim6 prefoldin 2024 2025 2026`, `YJL179W Pfd1 Gim6 yeast prefoldin 2024`, and exact titles for the 2026 GimC/Gim3 papers did not find a newer Pfd1-specific molecular-function paper or any evidence changing the canonical prefoldin interpretation.
+
+## 2026-10-01 current GOA refresh
+
+- `just fetch-gene yeast PFD1 --force` refreshed PFD1 to 13 live GOA rows. The
+  live IBA set now has only `GO:0006457` protein folding, `GO:0005737`
+  cytoplasm and `GO:0044183` protein folding chaperone from
+  `PANTHER:PTN002325135`; all three remain `NO_FAILURE_CORE`.
+- The historical `GO:0051082` unfolded protein binding rows and five generic
+  `GO:0005515` protein binding IPI rows are absent from live GOA after the
+  refresh and are retained as `retired: true` source assertions.
+- The refresh added a ComplexPortal `PMID:9463374` IPI `GO:0016272` prefoldin
+  complex row. The cached paper is abstract-only, but its abstract places Gim
+  proteins in common cytoplasmic complexes and the later prefoldin discovery
+  paper explicitly established prefoldin as a heterohexameric chaperone, so the
+  new row was accepted.
+- Searches through 2026 found the 2026 Gim3/Pfd4 meiotic-spindle paper
+  [PMID:42647631 "Gim3 functions as part of the prefoldin complex, with tubulin
+  as a key client"]. The paper is relevant complex-level context, but it assays
+  a different beta-type prefoldin subunit and does not require new direct PFD1
+  annotations.

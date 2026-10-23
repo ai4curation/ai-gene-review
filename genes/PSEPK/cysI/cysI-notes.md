@@ -23,6 +23,11 @@
 - The paper leaves open whether FprA transfers electrons through reduced
   ferredoxin or directly. GO:0050311 is therefore the best current functional
   model, not a claim that the exact carrier has been reconstituted.
+- The OpenScientist report recovered the same PP_2371/Q88KB9 sulfite-reductase
+  hemoprotein identity but followed KEGG in mapping a NADPH-dependent CysJ
+  partner to PP_0860/PP_1703. I treated that donor model as disputed rather than
+  as independent support because the KO-based transfer does not distinguish
+  E. coli CysJ from the Fpr-class reductases implicated by PMID:23794620.
 
 ## Open issue
 
