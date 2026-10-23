@@ -43,3 +43,53 @@ motor regulator activity (GO:0140659).
 - GO:0005815 microtubule organizing center: CNN (exact term in donkey GOA).
 - GO:0005737 cytoplasm: LSP (donkey GOA has centrosome, spindle, axon etc.).
 - GO:0030154 cell differentiation: UNC (generic; NDEL1 acts in neuronal migration and neurite outgrowth).
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+No ProtNLM2 file or prediction-evidence folder was opened for this pass.
+
+Deep research: `just deep-research-falcon EQUAS NDEL1 --fallback perplexity-lite` failed at Edison login
+(`HTTPStatusError: Client error '403 Forbidden' for url 'https://api.platform.edisonscientific.com/auth/login'`);
+no deep-research file was written. Literature used instead: cached primary papers cited by the human NDEL1
+review (PMID:16291865, 15473966, 20007476, 20403325, 14970193, 17600710, 37086789, 37730751, 38194050, 21283621,
+19492042, 22114287, 17035248, 11163259, 17997972) and the human Swiss-Prot record.
+
+### Identity: the benchmark is an alternative gene model
+
+- UniProt holds ten unreviewed donkey NDEL1 entries from one Ensembl gene; none is reviewed, so no
+  reviewed donkey canonical exists. They share the N-terminus and differ at the C-terminus
+  [file:EQUAS/NDEL1/NDEL1-bioinformatics/RESULTS-rereview.md "All share the same N-terminal
+  sequence and differ at the C-terminus, as alternative last exons would."].
+- A0A9L0IJ72 (481 aa) is the only donkey model with the human isoform-1 last exon. It is collinear with human
+  Q9GZM8 isoform 1 (345 aa) through residue 338, then replaces human GMLPLSV (339-345) with a 143-residue tail
+  (donkey 339-481) found in no human isoform. The earlier note "donkey residues 339-474" came from end
+  placement in the pairwise alignment; 339-481 is the correct span.
+- All mapped functional sites are retained (LIS1-binding 114-133, CDK/MAPK phosphosites S198/T219/S231/S242/T245,
+  DISC1 L266/E267, palmitoyl C273, centrosome-targeting 256-291). Only S344 has no counterpart.
+- Family: PANTHER PTHR10921:SF0 (NDEL1 subfamily), the same subfamily as human/mouse/rat NDEL1. This agrees with
+  the PTHR10921 family review's subfamily structure; no placement disagreement.
+
+### Changes vs the previous review
+
+- GO:0005815 MTOC: ACCEPT -> MODIFY to centrosome (the reason already argued it was less specific).
+- GO:0005875 microtubule associated complex: ACCEPT -> KEEP_AS_NON_CORE (transient association, not a subunit).
+- GO:0033157: replaced support that quoted the human record's own DR GO line with PMID:21283621.
+- NEW GO:0030473 nuclear migration along microtubule, GO:0034454 microtubule anchoring at centrosome and
+  GO:0060090 molecular adaptor activity (ISS from human/rodent, matching the human review's core functions;
+  participation via LIS1-dynein regulation and dynein/dynactin tethering at the mother centriole
+  [PMID:16291865 "Moreover, Nudel seems to tether dynactin and dynein to the mother centriole for MT anchoring."]).
+- Primary-paper quotes added to the rows that had only UniProt support. The description was rewritten to state
+  the correct tail span.
+- Unchanged: REMOVE kinesin complex (kinesin-1 cargo, not a subunit; family review NOT_APPLICABLE);
+  MARK_AS_OVER_ANNOTATED synaptic vesicle and insulin receptor signalling; non-core mitotic rows (vertebrate
+  NDE1/NDEL1 clade per the family review).
+
+### Relative
+
+Human NDEL1 (Q9GZM8), same PANTHER subfamily SF0; complete review at `genes/human/NDEL1/NDEL1-ai-review.yaml`.
+Module: `modules/nucleokinesis.yaml`.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+Removed a duplicated supported_by entry (the RESULTS-rereview.md "collinear with human isoform 1" quote
+was listed twice on the NEW GO:0140659 cytoskeletal motor regulator activity row). No change of action.
