@@ -97,4 +97,4 @@
   cyclase-modulating GPCR signaling, guanyl nucleotide binding, response to monoamine: TOO_GENERAL.
 - Muscle contraction (TAS, PMID:9050846): MODIFY to G protein-coupled acetylcholine receptor signaling pathway (GO:0007213).
 - cytoplasm (IBA): MODIFY to cytoplasmic side of plasma membrane.
-- CRHR1 binding (IBA): MARK_AS_OVER_ANNOTATED (no GNAO1-specific evidence; CRHR1 is primarily Gs-coupled).
+- CRHR1 binding (IBA): initially considered over-annotation, but QuickGO shows the PAINT node PTN000026844 is grounded on rat Gnao1 (RGD:628732) IPI with rat Crhr1 (PMID:20548297, not cached), i.e. the direct ortholog. KEEP_AS_NON_CORE.
