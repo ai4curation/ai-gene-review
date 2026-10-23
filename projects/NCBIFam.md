@@ -3,6 +3,7 @@ title: "NCBIFAM / CDD → GO Contribution & Gap Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+autolink_exclude: [ParB, parB]
 sidecars:
   slide_charts:
     - NCBIFam/slides/ncbifam-flow.svg
@@ -25,7 +26,7 @@ measured both sides. Forward, NCBIFAM backs 705 (13%) of the 5,549 InterPro2GO
 rows in this repo and is the only integrating signature for 250 of them. Reverse,
 NCBIFAM's own curated metadata puts GO terms on 11,228 of 34,351 models that GO
 never ingests, while CDD-proper has no GO of its own. We built a validated
-250-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
+252-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
 checked four high-gain rows structurally with OpenScientist. The gain is real
 but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
 entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
@@ -386,13 +387,13 @@ The curation deliverable mirrors RHEA's [`rhea2go.sssom.yaml`](RHEA/rhea2go.ssso
 GO mapping **we propose for ingestion** — *not* a transcription of NCBI's
 `hmm_PGAP.tsv go_terms`. Each is backed by the model's `family_type`,
 `product_name`, EC, and PMIDs, plus the live UniProtKB propagation gain. A
-**250-row seed** (248 families; the dGTPase family is 3 rows after the clade split
-below, +220 EC-bridge rows promoted from the candidate set — batch 2 (10 hand-picked) plus
+**252-row seed** (249 families; the dGTPase family is 3 rows after the clade split
+below and the ParB family TIGR00180 is 2, +220 EC-bridge rows promoted from the candidate set — batch 2 (10 hand-picked) plus
 gain-ranked batches 3–5 covering the **complete gain ≥ 100 set** (60 at ≥500, 48 at 200–499,
 102 at 100–199)) spanning all three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family
 resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
 
-- **`skos:exactMatch`** (246 rows) — the GO term *is* the family's function; a
+- **`skos:exactMatch`** (247 rows) — the GO term *is* the family's function; a
   ready-to-add `ncbifam2go` row. The enzyme majority are **EC-bridge supported**
   (verified live: `ec2go(EC)` = this GO term, e.g. formamidase EC
   3.5.1.49→`GO:0004328`, β-lactamase EC 3.5.2.6→`GO:0008800`, uridine kinase EC
@@ -402,7 +403,9 @@ resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
   IS630 transposase → `GO:0004803` (18,874 entries missing it), an encapsulin-shell
   CC term, and an anti-phage defense BP term. **Five of these rows propose our own
   *specific* term to replace an NCBI value that was too broad** (see below).
-- **`skos:narrowMatch`** (2 rows) — the **dGTPase family split** (NF002326). Structural
+- **`skos:narrowMatch`** (3 rows) — the **dGTPase family split** (NF002326), and
+  chromosome segregation for the chromosomal sub-clade of ParB/RepB/Spo0J (TIGR00180;
+  see the ParB case below). For the dGTPase family, structural
   verification showed this one accession is substrate-heterogeneous, so its family-level
   `exactMatch` is the common parent `GO:0016793` (triphosphoric monoester hydrolase, true
   for all members) and the two specific sub-clade activities — strict `GO:0008832` dGTPase
@@ -447,6 +450,25 @@ We therefore propose the curator-consensus `GO:0051301 cell division` as the
 `exactMatch` and **decline** the higher-gain specific term. Specificity is the goal
 only up to the altitude the evidence supports.
 
+**…and the gain can be the error set: the ParB/RepB/Spo0J case.** `TIGR00180` came
+up in the reviews of *P. putida* and *P. aeruginosa* ParB
+([worked case in REFSEQ_GO](REFSEQ_GO.md#worked-case-the-parab-chromosome-partition-proteins)).
+NCBI gives it DNA binding, chromosome segregation and cytokinesis. InterPro2GO for
+its InterPro entry (IPR004437) passes on only DNA binding, so it looked like the
+model's curated chromosome-segregation term was being masked. It is not a gap
+worth filling. TIGR00180 is a domain model, and its 79 reviewed members are 32
+chromosomal ParB/Spo0J, 33 Noc nucleoid-occlusion proteins, 10 plasmid partition
+proteins (SopB, P1 ParB, KorB, RepB), 2 F-plasmid YubM and 2 Shigella VirB
+transcription activators. Chromosome segregation already reaches 95% of TIGR00180
+entries (27,383 of 28,687) by other routes. **All 6 reviewed entries that lack it
+are SopB, P1 ParB, YubM or VirB, where it would be wrong.** We therefore map the
+family to DNA binding (`exactMatch`, the only NCBI term true of every member,
+confirmatory). Chromosome segregation is a `narrowMatch` for the chromosomal ParB
+sub-clade, not to be propagated to the whole family, as in the dGTPase split.
+Cytokinesis is not mapped: no member does the work of cytokinesis. The plasmid
+partition members carry no plasmid-partitioning term (`GO:0030541`) at all, which
+is a separate gap that this family model cannot fill.
+
 **Verification matters and catches real errors.** One scoping-sample NCBIFAM
 `go_terms` value (`GO:0009448` on a GABA transaminase) is **obsolete**; a
 diacylglycerol-kinase model (NF009874, EC 2.7.1.107) is tagged with the **wrong**
@@ -468,9 +490,9 @@ CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 
-The 250-row seed has **two tiers of review**, and they should not be conflated: **~40
+The 252-row seed has **two tiers of review**, and they should not be conflated: **~40
 fully hand-curated rows** (the original bespoke set + the hand-picked batch 2) with
-individually-written rationale, plus **210 EC-bridge rows bulk-promoted** from the
+individually-written rationale (including the 2 TIGR00180 rows), plus **210 EC-bridge rows bulk-promoted** from the
 candidate set (batches 3–5). The promoted rows are *not* individually hand-reasoned —
 their comments are uniform/generated and each was auto-verified against a fixed bar
 (live `ec2go` bridge, QuickGO non-obsolete + canonical label, live UniProtKB gain ≥ 100,
@@ -582,7 +604,7 @@ over-annotation.
 - **Maturity**: IN_PROGRESS — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
-  250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
+  252-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
   generated at collection scale, the **member-DB attribution re-join done** on the
   repo's annotations, and **four seed rows structurally verified via OpenScientist**
   (DUF1156, dGTPase, IS630, encapsulin).
@@ -596,12 +618,13 @@ over-annotation.
   5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
   repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 250 SSSOM rows in **two tiers**: ~40 fully hand-curated (bespoke rationale, altitude
+  — 252 SSSOM rows in **two tiers**: ~42 fully hand-curated (bespoke rationale, altitude
   judgement) + 210 EC-bridge rows bulk-promoted from the candidate set (batches 3–5,
-  uniform generated comments, auto-verified to a fixed bar). Predicates: 246 exactMatch
+  uniform generated comments, auto-verified to a fixed bar). Predicates: 247 exactMatch
   (incl. 5 proposing our own specific term over NCBI's broad one and 1 — FtsX — declining
-  a too-specific term), plus 2 narrowMatch (the dGTPase NF002326 clade split after structural
-  verification) and 2 broadMatch (VirB5 → T4SS complex, and the arsenate reductase Rieske
+  a too-specific term, and 1 — TIGR00180 — mapping a role-heterogeneous family to DNA
+  binding), plus 3 narrowMatch (the dGTPase NF002326 clade split after structural
+  verification, and chromosome segregation for the ParB sub-clade of TIGR00180) and 2 broadMatch (VirB5 → T4SS complex, and the arsenate reductase Rieske
   small subunit → whole-enzyme activity — a subunit→whole relation, not blanket-propagatable).
   Spanning MF/BP/CC, each with
   live propagation gain; **passes** `just validate-ncbifam-mappings`.

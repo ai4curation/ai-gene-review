@@ -418,11 +418,16 @@ What the case shows:
   NBR012933 would reach the 53,688 assemblies that carry WP_003097243.1.
 - **The naming model is not the most informative model.** For both ParBs, the
   architecture passes on only `DNA binding`. TIGR00180 also matches, has the
-  same product name, and carries chromosome segregation (plus a debatable
-  cytokinesis term), but it does not pass on its GO because it did not name the
-  protein. Adding GO:0007059 to architecture 11445026 would restore the core
+  same product name, and carries chromosome segregation (plus a cytokinesis
+  term that is wrong), but it does not pass on its GO because it did not name
+  the protein. Adding GO:0007059 to architecture 11445026 would restore the core
   process on every ParB it names. That includes WP_003100240.1, which alone is
-  in 39,809 assemblies.
+  in 39,809 assemblies. This is safe only if the architecture names chromosomal
+  ParBs alone. TIGR00180 itself also covers Noc, plasmid SopB/KorB/RepB and
+  Shigella VirB (see the TIGR00180 rows in [NCBIFam](NCBIFam.md#curated-new-mappings-sssom)).
+  In PGAP those relatives are named by their own models (Noc by TIGR04285,
+  SopB by NF010252, KorB by architecture 11488667), so winner-take-all keeps
+  them from inheriting ParB's terms.
 - **Neither pipeline knows ParB is a CTPase.** The CDD region note still
   describes the N-terminal domain as a "ParB-like nuclease domain". The ParB
   CTPase activity (GO:0043273), measured directly on *P. aeruginosa* ParB
