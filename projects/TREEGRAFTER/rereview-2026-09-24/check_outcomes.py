@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 import sys
 
 import yaml
@@ -107,6 +108,16 @@ def main() -> int:
                 # against that instead, so a drift is still caught.
                 later = ann.get("superseded_by") or {}
                 expected = later.get("action", act)
+                if later and not (
+                    re.fullmatch(r"PR #\d+", str(later.get("by", "")))
+                    and str(later.get("reason", "")).rstrip().endswith((".", ")"))
+                ):
+                    # An unquoted '#' truncates a YAML value at parse time, so a
+                    # cut-off `by`/`reason` would otherwise pass unnoticed.
+                    problems.append(
+                        f"{batch} {name} {ann.get('term_id')}: superseded_by needs "
+                        f"by: 'PR #N' and a complete reason (quote values containing '#')"
+                    )
                 if later:
                     superseded.append(
                         f"{batch} {name} {ann.get('term_id')}: {act} superseded by "

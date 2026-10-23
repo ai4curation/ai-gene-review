@@ -89,10 +89,15 @@ decision. Declare the later decision on the annotation instead:
 ```yaml
     superseded_by:
       action: UNDECIDED          # the live review's action
-      by: 'PR #5304'             # quote it: '#' starts a YAML comment
+      by: 'PR #5304'
       date: '2026-10-23'
-      reason: why the later review differs
+      reason: 'Why the later review (PR #5304) differs.'
 ```
+
+Quote every value in this block. In an unquoted YAML value a `#` preceded by a space
+starts a comment, so `reason: ... (PR #5304): ...` silently loads as `... (PR`. The
+checker therefore requires `by` to name a PR (`PR #NNNN`) and `reason` to end with
+sentence punctuation, so a truncated value fails the gate instead of passing it.
 
 `check_outcomes.py` then checks the live row against `superseded_by.action`
 rather than `action`, and lists each such row as `superseded`, so a further
