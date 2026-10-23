@@ -154,3 +154,28 @@ cache) with `full_text_unavailable: true`.
 
 ### Still not accessible
 PMID:42711403 (Nat Plants 2026), PMID:32279333 (PCE 2020), PMID:19674407 (Plant J 2009).
+
+## 2026-10-23 session 3: PR review follow-up (PR 5344)
+
+- "Chai et al., 2022", which PMID:35736512 cites (with Chai 2015) for C3H14/15
+  recognition of G-rich CHRE elements, is PMID:35139225 (Chai et al. 2022 Plant Physiol,
+  "The CCCH zinc finger protein C3H15 negatively regulates cell elongation by inhibiting
+  brassinosteroid signaling"). Its abstract describes C3H15, not C3H14: "The
+  dephosphorylated C3H15 protein accumulates in the nucleus, where C3H15 regulates
+  transcription via G-rich elements (typically GGGAGA)". It was not added to the review's
+  references because it has no C3H14-specific data. It is the origin of the CHRE motif
+  used in PMID:35736512 and is relevant to the paralog question about how a TZF protein
+  discriminates DNA from RNA targets.
+- Added NEW GO:0010113 negative regulation of systemic acquired resistance (IMP,
+  PMID:35736512). It is a sibling of GO:1900425 under GO:0031348 (checked in the OLS4
+  hierarchy).
+- Expanded the reason for not using GO:0035925, and hedged the description's statement
+  of the promoter-binding role.
+- TAIR curator decision (2026-10-23, this session): the sign of the TAIR IMP row
+  GO:1901347 (PMID:25228083) is wrong. The correction for TAIR is to re-point it to
+  GO:2000652 regulation of secondary cell wall biogenesis, with the relation
+  acts_upstream_of_or_within_positive_effect (RO:0004032), rather than to GO:1901348.
+  Recorded as two source_defects (GO_ID and Qualifier) on that row. The review's own
+  proposed replacement stays GO:1901348, because review replacement terms carry no
+  relation. The suggested question asking whether to re-point the row was removed as
+  answered. Checked in OLS4: GO:2000652 is the parent of GO:1901347 and GO:1901348.
