@@ -372,6 +372,10 @@
 
 
 
+            <a href="../../genes/mouse/Rab7/Rab7-ai-review.html" title="mouse/Rab7">Rab7</a>
+
+
+
             <a href="../../genes/human/SORL1/SORL1-ai-review.html" title="human/SORL1">SORL1</a>
 
 
@@ -594,9 +598,9 @@ definition remain out of step, which is the mismatch that started the ticket.</p
 </table>
 <p><a href="http://amigo.geneontology.org/amigo/term/GO:0099638">GO:0099638</a>'s <code>assignedBy</code> split is Ensembl 359, EnsemblFungi 334, GO_Central<br />
 166, UniProt 27, EnsemblMetazoa 24, RGD 10, PomBase 7, MGI 6, SGD 3, FlyBase 2,<br />
-TAIR 1 — i.e. <strong>roughly 76% of the footprint is Ensembl/EnsemblFungi orthology<br />
-projection</strong> that regenerates from the MOD seeds each release and needs no<br />
-individual attention.</p>
+TAIR 1 — i.e. <strong>roughly 74% of the footprint (693 of 939) is Ensembl/EnsemblFungi<br />
+orthology projection</strong> that regenerates from the MOD seeds each release and needs<br />
+no individual attention.</p>
 <p>The two regulation terms have disjoint, single-seed fan-outs:</p>
 <ul>
 <li><strong><a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a></strong> is mostly a <em>plant</em> IBA cloud (26 rows across <em>Brassica</em>,<br />
@@ -640,6 +644,20 @@ for this repo is concrete</strong>: <code>GENE-goa.tsv</code> files are fetched 
 API, so a review built from one can silently lack rows the GO release carries —<br />
 see the <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a> entry under "Tier 3" below, where exactly this happened. Both<br />
 discrepancies are worth reporting upstream, independently of the obsoletion.</p>
+<p><strong>The <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a> half of this is reproducible offline from two committed files.</strong><br />
+<code>genes/human/ALDH7A1/ALDH7A1-uniprot.txt:631</code> already carries the row:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">DR</span><span class="w">   </span><span class="k">GO</span><span class="p">;</span><span class="w"> </span><span class="k">GO</span><span class="err">:</span><span class="mi">1905750</span><span class="p">;</span><span class="w"> </span><span class="nl">P</span><span class="p">:</span><span class="n">negative</span><span class="w"> </span><span class="n">regulation</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">endosome</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">plasma</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">transport</span><span class="p">;</span><span class="w"> </span><span class="nl">IDA</span><span class="p">:</span><span class="n">UniProtKB</span><span class="p">.</span>
+</code></pre></div>
+
+<p>while <code>ALDH7A1-goa.tsv</code> has no <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> line at all. So the annotation is<br />
+present in this repo's own UniProt flat file and absent from its GOA file,<br />
+which localises the loss to the <strong>QuickGO fetch path specifically</strong> rather than<br />
+to the GO release, to UniProt, or to anything isoform-related. It also makes the<br />
+"is this systematic?" open question cheap to answer without any API: diff the<br />
+<code>DR   GO;</code> blocks of every committed <code>*-uniprot.txt</code> against the matching<br />
+<code>*-goa.tsv</code> and count the UniProt-sourced terms that only appear on one side.<br />
+Worth running that sweep before reporting upstream, so the report carries a rate<br />
+rather than two anecdotes.</p>
 <h2 id="impact-on-this-repo">Impact on this repo</h2>
 <p>Eleven reviews reference one of the four terms. <strong>None of them also carries the<br />
 corresponding replacement term</strong>, so this is a clean re-terming everywhere — no<br />
@@ -731,7 +749,8 @@ the upstream EXP list (IDA, PMID:27322061) and is the subject of a cached GO-CAM
 <h3 id="tier-3-a-row-that-never-made-it-into-the-review">Tier 3 — a row that never made it into the review</h3>
 <p><code>genes/human/ALDH7A1/ALDH7A1-ai-review.yaml</code> does <strong>not</strong> mention <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a>,<br />
 because <code>ALDH7A1-goa.tsv</code> (fetched 2025-10-27) does not contain it — the<br />
-QuickGO gap documented above. The GO release does carry<br />
+QuickGO gap documented above — even though <code>ALDH7A1-uniprot.txt:631</code> in the same<br />
+folder does. The GO release does carry<br />
 <code>ALDH7A1 · GO:1905750 · IDA · PMID:31492851</code>, and the review already discusses<br />
 that paper (for the Golgi-membrane and plasma-membrane localizations it <em>did</em><br />
 receive, treated as "stress-induced membrane recruitment ... real but<br />
@@ -740,6 +759,17 @@ being obsoleted, and the review's existing reasoning about PMID:31492851 is the<
 right place to decide whether <code>GO:2001136</code> belongs. Eight ortholog ISS/ISO rows<br />
 (zebrafish, rat, mouse, bovine, <em>Xenopus</em>, …) hang off this one human<br />
 annotation.</p>
+<p><strong>How the row gets added matters.</strong> It cannot simply be hand-written into<br />
+<code>existing_annotations</code>: <code>validation/validator.py</code> raises a blocking<br />
+<code>ERROR — "Found N annotations not in GOA"</code> for any review row with no matching<br />
+line in <code>GENE-goa.tsv</code>, so a manually inserted <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> row would make<br />
+<code>just validate human ALDH7A1</code> fail. The intended route is therefore <strong>fix the<br />
+fetch path first</strong> — re-run <code>just fetch-gene human ALDH7A1</code> and, if the row is<br />
+still missing, treat it as the QuickGO bug above and pursue it there (reporting<br />
+upstream, and if needed sourcing the row from <code>api.geneontology.org</code> in the<br />
+fetcher) so that <code>ALDH7A1-goa.tsv</code> carries it. Until GOA carries the row, the<br />
+finding belongs in <code>ALDH7A1-notes.md</code> and/or a <code>suggested_questions</code> entry, not<br />
+in <code>existing_annotations</code>.</p>
 <h3 id="tier-4-prose-mentions-only-non-blocking">Tier 4 — prose mentions only, non-blocking</h3>
 <p>Five AP-complex sigma-subunit reviews cite <a href="http://amigo.geneontology.org/amigo/term/GO:0099638">GO:0099638</a> inside IBA<br />
 <code>source_status</code> commentary, all describing the same donor — <em>S. pombe</em> <code>vas2</code><br />
@@ -801,7 +831,7 @@ term in the same small corner of the ontology:</p>
 <td><a href="http://amigo.geneontology.org/amigo/term/GO:0032456">GO:0032456</a> endocytic recycling</td>
 <td>IBA + IMP (PMID:18029400)</td>
 <td>ACCEPT</td>
-<td>—</td>
+<td>yes (<code>directly_involved_in</code>)</td>
 </tr>
 <tr>
 <td><a href="../../genes/human/LMTK3/LMTK3-ai-review.html">LMTK3</a></td>
@@ -812,6 +842,12 @@ term in the same small corner of the ontology:</p>
 </tr>
 </tbody>
 </table>
+<p><strong>Read the Action column before using this as an argument.</strong> Only <a href="../../genes/human/LMTK2/LMTK2-ai-review.html">LMTK2</a>'s<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0032456">GO:0032456</a> is a curated GO annotation (IBA + IMP, both <code>ACCEPT</code>). <a href="../../genes/human/LMTK1/LMTK1-ai-review.html">LMTK1</a>'s<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:2001135">GO:2001135</a> and <a href="../../genes/human/LMTK3/LMTK3-ai-review.html">LMTK3</a>'s <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> are <code>action: NEW</code> — <em>this repo's own<br />
+proposals</em>, not rows that exist in GOA — so the three-paralog pattern below is<br />
+one curated annotation plus two AI-review proposals, not three independent<br />
+curation decisions that happened to diverge.</p>
 <p><a href="../../genes/human/LMTK2/LMTK2-ai-review.html">LMTK2</a>'s review additionally contains a <code>MODIFY</code> whose<br />
 <code>proposed_replacement_terms</code> is <a href="http://amigo.geneontology.org/amigo/term/GO:0032456">GO:0032456</a> (replacing a wrong-destination late-endosome<br />
 term). So this repo has independently converged on the <code>GO:0032456</code> /<br />
@@ -820,7 +856,9 @@ obsoleted for the third — for no biological reason, only because that is where
 the cargo-specific term happened to sit. Post-merge the three paralogs read as<br />
 one coherent family: the process, its regulation, and its negative regulation.<br />
 That is a point worth making on the upstream ticket in favour of the merge,<br />
-against the de-merge request.</p>
+against the de-merge request — <strong>stated as a proposal-side observation</strong>, with<br />
+the two <code>NEW</code> actions disclosed, since two thirds of the pattern is this repo's<br />
+reading rather than existing GO content.</p>
 <h2 id="scope">Scope</h2>
 <ul>
 <li><strong>Organisms with reviews here</strong>: human (<a href="../../genes/human/LMTK3/LMTK3-ai-review.html">LMTK3</a>, <a href="../../genes/human/RAB7A/RAB7A-ai-review.html">RAB7A</a>, <a href="../../genes/human/SORL1/SORL1-ai-review.html">SORL1</a>, <a href="../../genes/human/ATP6AP1/ATP6AP1-ai-review.html">ATP6AP1</a>,<br />
@@ -865,10 +903,13 @@ against the de-merge request.</p>
    two and already carries the biology; decide whether the IEA row adds anything<br />
    once it is <code>GO:0032456</code>.</li>
 <li><strong><a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a></strong> (human, P49419) — <code>genes/human/ALDH7A1/</code>. Re-fetch and check<br />
-   whether the <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> IDA appears; if it still does not, add it manually<br />
-   from the GO release rather than leaving the review silently short a row. The<br />
-   review's existing PMID:31492851 reasoning ("stress-induced membrane<br />
-   recruitment ... non-core") is the natural anchor for the judgement.</li>
+   whether the <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> IDA appears. If it does, review it like any other row.<br />
+   If it still does not, <strong>do not hand-write it into <code>existing_annotations</code></strong> —<br />
+   that is a blocking validation error (see Tier 3 above); treat it as a fetch-path<br />
+   bug to fix or report, and record the finding in <code>ALDH7A1-notes.md</code> /<br />
+<code>suggested_questions</code> in the meantime. The review's existing PMID:31492851<br />
+   reasoning ("stress-induced membrane recruitment ... non-core") is the natural<br />
+   anchor for the judgement either way.</li>
 </ol>
 <h3 id="tier-3-single-row-swaps-low-risk">Tier 3 — single-row swaps, low risk</h3>
 <ol>
@@ -903,13 +944,19 @@ against the de-merge request.</p>
    or a no-op.</li>
 <li><strong>When it lands</strong>, <a href="../../genes/human/LMTK3/LMTK3-ai-review.html">LMTK3</a> first (validation), then <a href="../../genes/human/SORL1/SORL1-ai-review.html">SORL1</a> and <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a> (which<br />
    need judgement, not just a swap), then the mechanical single-row swaps.</li>
-<li><strong>Independently of the obsoletion</strong>, report the two QuickGO-invisible rows<br />
-   (mouse <code>Mfsd8</code>, human <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a>) upstream, and add the <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a> row to its<br />
-   review. That gap is a data-freshness problem in this repo's own fetch path<br />
-   and is worth fixing whichever way the ticket goes.</li>
+<li><strong>Independently of the obsoletion</strong>, run the <code>*-uniprot.txt</code> vs <code>*-goa.tsv</code><br />
+<code>DR   GO;</code> sweep described above to size the gap, then report the<br />
+   QuickGO-invisible rows (mouse <code>Mfsd8</code>, human <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a>) upstream and fix the<br />
+   fetch path so <code>ALDH7A1-goa.tsv</code> carries its <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> IDA. The review row<br />
+   follows from the GOA file, not ahead of it. That gap is a data-freshness<br />
+   problem in this repo's own fetch path and is worth fixing whichever way the<br />
+   ticket goes.</li>
 <li><strong>Consider commenting on go-ontology#31237</strong> with the LMTK-family observation<br />
    above — three paralogs, one biology, three terms, two of which are already on<br />
-   the surviving side of the merge.</li>
+   the surviving side of the merge. If posting it, say plainly that <a href="../../genes/human/LMTK1/LMTK1-ai-review.html">LMTK1</a>'s<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:2001135">GO:2001135</a> and <a href="../../genes/human/LMTK3/LMTK3-ai-review.html">LMTK3</a>'s <a href="http://amigo.geneontology.org/amigo/term/GO:1905750">GO:1905750</a> are AI-review <code>NEW</code> proposals from this<br />
+   repo and only <a href="../../genes/human/LMTK2/LMTK2-ai-review.html">LMTK2</a>'s <a href="http://amigo.geneontology.org/amigo/term/GO:0032456">GO:0032456</a> is curated in GOA; the observation is still<br />
+   worth making, but it must not read as three existing GO annotations.</li>
 </ol>
 <h2 id="open-questions">Open questions</h2>
 <ul>
@@ -933,7 +980,10 @@ against the de-merge request.</p>
   raised, and nobody in the thread answered it.</li>
 <li>Is the QuickGO/GO-release discrepancy systematic? Two of 36 rows were affected<br />
   here. If the rate holds across the corpus, a non-trivial number of<br />
-<code>GENE-goa.tsv</code> files are missing experimental rows.</li>
+<code>GENE-goa.tsv</code> files are missing experimental rows. This is answerable offline:<br />
+  the <a href="../../genes/human/ALDH7A1/ALDH7A1-ai-review.html">ALDH7A1</a> case is visible as a <code>DR   GO;</code> line in the committed<br />
+<code>*-uniprot.txt</code> with no counterpart in the committed <code>*-goa.tsv</code>, so the same<br />
+  diff run corpus-wide gives a rate for the UniProt-sourced half of the gap.</li>
 </ul>
     </div>
 

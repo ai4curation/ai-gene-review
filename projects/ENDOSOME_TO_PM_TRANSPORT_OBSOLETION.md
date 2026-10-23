@@ -9,6 +9,7 @@ species:
 genes:
   - LMTK3
   - RAB7A
+  - Rab7
   - SORL1
   - ATP6AP1
   - ALDH7A1
@@ -125,9 +126,9 @@ definition remain out of step, which is the mismatch that started the ticket.
 
 GO:0099638's `assignedBy` split is Ensembl 359, EnsemblFungi 334, GO_Central
 166, UniProt 27, EnsemblMetazoa 24, RGD 10, PomBase 7, MGI 6, SGD 3, FlyBase 2,
-TAIR 1 — i.e. **roughly 76% of the footprint is Ensembl/EnsemblFungi orthology
-projection** that regenerates from the MOD seeds each release and needs no
-individual attention.
+TAIR 1 — i.e. **roughly 74% of the footprint (693 of 939) is Ensembl/EnsemblFungi
+orthology projection** that regenerates from the MOD seeds each release and needs
+no individual attention.
 
 The two regulation terms have disjoint, single-seed fan-outs:
 
@@ -158,6 +159,23 @@ for this repo is concrete**: `GENE-goa.tsv` files are fetched from the QuickGO
 API, so a review built from one can silently lack rows the GO release carries —
 see the ALDH7A1 entry under "Tier 3" below, where exactly this happened. Both
 discrepancies are worth reporting upstream, independently of the obsoletion.
+
+**The ALDH7A1 half of this is reproducible offline from two committed files.**
+`genes/human/ALDH7A1/ALDH7A1-uniprot.txt:631` already carries the row:
+
+```
+DR   GO; GO:1905750; P:negative regulation of endosome to plasma membrane protein transport; IDA:UniProtKB.
+```
+
+while `ALDH7A1-goa.tsv` has no GO:1905750 line at all. So the annotation is
+present in this repo's own UniProt flat file and absent from its GOA file,
+which localises the loss to the **QuickGO fetch path specifically** rather than
+to the GO release, to UniProt, or to anything isoform-related. It also makes the
+"is this systematic?" open question cheap to answer without any API: diff the
+`DR   GO;` blocks of every committed `*-uniprot.txt` against the matching
+`*-goa.tsv` and count the UniProt-sourced terms that only appear on one side.
+Worth running that sweep before reporting upstream, so the report carries a rate
+rather than two anecdotes.
 
 ## Impact on this repo
 
@@ -218,7 +236,8 @@ the upstream EXP list (IDA, PMID:27322061) and is the subject of a cached GO-CAM
 
 `genes/human/ALDH7A1/ALDH7A1-ai-review.yaml` does **not** mention GO:1905750,
 because `ALDH7A1-goa.tsv` (fetched 2025-10-27) does not contain it — the
-QuickGO gap documented above. The GO release does carry
+QuickGO gap documented above — even though `ALDH7A1-uniprot.txt:631` in the same
+folder does. The GO release does carry
 `ALDH7A1 · GO:1905750 · IDA · PMID:31492851`, and the review already discusses
 that paper (for the Golgi-membrane and plasma-membrane localizations it *did*
 receive, treated as "stress-induced membrane recruitment ... real but
@@ -227,6 +246,18 @@ being obsoleted, and the review's existing reasoning about PMID:31492851 is the
 right place to decide whether `GO:2001136` belongs. Eight ortholog ISS/ISO rows
 (zebrafish, rat, mouse, bovine, *Xenopus*, …) hang off this one human
 annotation.
+
+**How the row gets added matters.** It cannot simply be hand-written into
+`existing_annotations`: `validation/validator.py` raises a blocking
+`ERROR — "Found N annotations not in GOA"` for any review row with no matching
+line in `GENE-goa.tsv`, so a manually inserted GO:1905750 row would make
+`just validate human ALDH7A1` fail. The intended route is therefore **fix the
+fetch path first** — re-run `just fetch-gene human ALDH7A1` and, if the row is
+still missing, treat it as the QuickGO bug above and pursue it there (reporting
+upstream, and if needed sourcing the row from `api.geneontology.org` in the
+fetcher) so that `ALDH7A1-goa.tsv` carries it. Until GOA carries the row, the
+finding belongs in `ALDH7A1-notes.md` and/or a `suggested_questions` entry, not
+in `existing_annotations`.
 
 ### Tier 4 — prose mentions only, non-blocking
 
@@ -260,8 +291,15 @@ term in the same small corner of the ontology:
 | Gene | Term | Ev | Action | In `core_functions`? |
 |---|---|---|---|---|
 | LMTK1 | GO:2001135 regulation of endocytic recycling | ISO (PMID:24672056) | NEW | yes (`directly_involved_in`) |
-| LMTK2 | GO:0032456 endocytic recycling | IBA + IMP (PMID:18029400) | ACCEPT | — |
+| LMTK2 | GO:0032456 endocytic recycling | IBA + IMP (PMID:18029400) | ACCEPT | yes (`directly_involved_in`) |
 | LMTK3 | GO:1905750 neg. reg. of endosome to PM protein transport | IMP (PMID:28294115) | NEW | yes (`directly_involved_in`) |
+
+**Read the Action column before using this as an argument.** Only LMTK2's
+GO:0032456 is a curated GO annotation (IBA + IMP, both `ACCEPT`). LMTK1's
+GO:2001135 and LMTK3's GO:1905750 are `action: NEW` — *this repo's own
+proposals*, not rows that exist in GOA — so the three-paralog pattern below is
+one curated annotation plus two AI-review proposals, not three independent
+curation decisions that happened to diverge.
 
 LMTK2's review additionally contains a `MODIFY` whose
 `proposed_replacement_terms` is GO:0032456 (replacing a wrong-destination late-endosome
@@ -271,7 +309,9 @@ obsoleted for the third — for no biological reason, only because that is where
 the cargo-specific term happened to sit. Post-merge the three paralogs read as
 one coherent family: the process, its regulation, and its negative regulation.
 That is a point worth making on the upstream ticket in favour of the merge,
-against the de-merge request.
+against the de-merge request — **stated as a proposal-side observation**, with
+the two `NEW` actions disclosed, since two thirds of the pattern is this repo's
+reading rather than existing GO content.
 
 ## Scope
 
@@ -319,10 +359,13 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
    two and already carries the biology; decide whether the IEA row adds anything
    once it is `GO:0032456`.
 3. **ALDH7A1** (human, P49419) — `genes/human/ALDH7A1/`. Re-fetch and check
-   whether the GO:1905750 IDA appears; if it still does not, add it manually
-   from the GO release rather than leaving the review silently short a row. The
-   review's existing PMID:31492851 reasoning ("stress-induced membrane
-   recruitment ... non-core") is the natural anchor for the judgement.
+   whether the GO:1905750 IDA appears. If it does, review it like any other row.
+   If it still does not, **do not hand-write it into `existing_annotations`** —
+   that is a blocking validation error (see Tier 3 above); treat it as a fetch-path
+   bug to fix or report, and record the finding in `ALDH7A1-notes.md` /
+   `suggested_questions` in the meantime. The review's existing PMID:31492851
+   reasoning ("stress-induced membrane recruitment ... non-core") is the natural
+   anchor for the judgement either way.
 
 ### Tier 3 — single-row swaps, low risk
 
@@ -357,13 +400,19 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
    or a no-op.
 3. **When it lands**, LMTK3 first (validation), then SORL1 and ALDH7A1 (which
    need judgement, not just a swap), then the mechanical single-row swaps.
-4. **Independently of the obsoletion**, report the two QuickGO-invisible rows
-   (mouse `Mfsd8`, human ALDH7A1) upstream, and add the ALDH7A1 row to its
-   review. That gap is a data-freshness problem in this repo's own fetch path
-   and is worth fixing whichever way the ticket goes.
+4. **Independently of the obsoletion**, run the `*-uniprot.txt` vs `*-goa.tsv`
+   `DR   GO;` sweep described above to size the gap, then report the
+   QuickGO-invisible rows (mouse `Mfsd8`, human ALDH7A1) upstream and fix the
+   fetch path so `ALDH7A1-goa.tsv` carries its GO:1905750 IDA. The review row
+   follows from the GOA file, not ahead of it. That gap is a data-freshness
+   problem in this repo's own fetch path and is worth fixing whichever way the
+   ticket goes.
 5. **Consider commenting on go-ontology#31237** with the LMTK-family observation
    above — three paralogs, one biology, three terms, two of which are already on
-   the surviving side of the merge.
+   the surviving side of the merge. If posting it, say plainly that LMTK1's
+   GO:2001135 and LMTK3's GO:1905750 are AI-review `NEW` proposals from this
+   repo and only LMTK2's GO:0032456 is curated in GOA; the observation is still
+   worth making, but it must not read as three existing GO annotations.
 
 ## Open questions
 
@@ -387,4 +436,7 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
   raised, and nobody in the thread answered it.
 - Is the QuickGO/GO-release discrepancy systematic? Two of 36 rows were affected
   here. If the rate holds across the corpus, a non-trivial number of
-  `GENE-goa.tsv` files are missing experimental rows.
+  `GENE-goa.tsv` files are missing experimental rows. This is answerable offline:
+  the ALDH7A1 case is visible as a `DR   GO;` line in the committed
+  `*-uniprot.txt` with no counterpart in the committed `*-goa.tsv`, so the same
+  diff run corpus-wide gives a rate for the UniProt-sourced half of the gap.
