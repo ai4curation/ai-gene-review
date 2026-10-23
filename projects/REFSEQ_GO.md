@@ -3,7 +3,7 @@ title: "NCBI RefSeq vs UniProt/GOA: prokaryotic GO pipeline comparison"
 collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
-species: [PSEPK]
+species: [PSEPK, PSEAE]
 autolink_exclude: [degP, DegP, dnaA, ftsI, FtsI]
 manifest:
   artifacts:
@@ -378,6 +378,63 @@ oxaloacetate decarboxylase, where the review assigns pyruvate carboxylase. In th
 other direction, UniProt still carries the 2002 submitter name for PP_3099 (puuD,
 "uricase"), while NCBI correctly names it the T6SS sheath protein TssC.
 
+### Worked case: the ParAB chromosome-partition proteins
+
+ParA and ParB were reviewed in *P. putida* KT2440 and in *P. aeruginosa* PAO1,
+where both proteins have been characterized experimentally. Each review has a
+companion PGAP prediction review that scores NCBI's GO term by term. The
+orthologs are 84% (ParA) and 79% (ParB) identical, with identical Walker A
+and CTP-binding motifs
+([alignment](../genes/PSEPK/parA/parA-bioinformatics/RESULTS.md)), so any
+difference between the two species comes from the pipelines, not the
+biology.
+
+| protein | NCBI naming source | NCBI GO | GOA GO | reviewed core function |
+|---|---|---|---|---|
+| PSEPK/parA (PP_0002) | architecture 11439703, "ParA family protein" | ATP binding, ATP hydrolysis activity | **none** | ATP hydrolysis activity; chromosome segregation |
+| PSEAE/parA (PA5563) | BlastRule NBR012933, "chromosome partitioning protein Soj" | **none** | **none** | ATP hydrolysis activity (IDA); chromosome segregation (IMP) |
+| PSEPK/parB (PP_0001) | architecture 11445026, "ParB/RepB/Spo0J family partition protein" | DNA binding | DNA binding, chromosome, chromosome segregation, positive regulation of sporulation | sequence-specific DNA binding; CTPase activity; chromosome segregation |
+| PSEAE/parB (PA5562) | architecture 11445026 | DNA binding | as PP_0001, plus identical protein binding (IPI) and two UniRule transcription terms | sequence-specific DNA binding (IDA); CTPase activity (IDA); chromosome segregation |
+
+Prediction reviews:
+[PP_0002](../genes/PSEPK/parA/parA-pgap-predictions-review.yaml),
+[PA5563](../genes/PSEAE/parA/parA-pgap-predictions-review.yaml),
+[PP_0001](../genes/PSEPK/parB/parB-pgap-predictions-review.yaml),
+[PA5562](../genes/PSEAE/parB/parB-pgap-predictions-review.yaml).
+
+What the case shows:
+
+- **An architecture can fill a gap that GOA leaves completely open.** GOA has no
+  annotation of any kind for either ParA. The Pfam domain (AAA_31) has no
+  InterPro2GO mapping and the PANTHER subfamily brings no IBA. In *P. putida*,
+  UniProt still calls the Swiss-Prot entry "Uncharacterized protein PP_0002".
+  NCBI's architecture GO for PP_0002 is correct, and it is the only GO this
+  protein has anywhere.
+- **The same architecture is not used for the ortholog.** The *P. aeruginosa*
+  ParA is named by a BlastRule instead, which gives it a better name and no GO.
+  Under winner-take-all the architecture's terms are then not passed on, so a
+  well-studied ATPase ends up with no GO from either pipeline. Adding ATP
+  hydrolysis activity (GO:0016887) and chromosome segregation (GO:0007059) to
+  NBR012933 would reach the 53,688 assemblies that carry WP_003097243.1.
+- **The naming model is not the most informative model.** For both ParBs, the
+  architecture passes on only `DNA binding`. TIGR00180 also matches, has the
+  same product name, and carries chromosome segregation (plus a debatable
+  cytokinesis term), but it does not pass on its GO because it did not name the
+  protein. Adding GO:0007059 to architecture 11445026 would restore the core
+  process on every ParB it names. That includes WP_003100240.1, which alone is
+  in 39,809 assemblies.
+- **Neither pipeline knows ParB is a CTPase.** The CDD region note still
+  describes the N-terminal domain as a "ParB-like nuclease domain". The ParB
+  CTPase activity (GO:0043273), measured directly on *P. aeruginosa* ParB
+  (PMID:38843873), is absent from NCBI, from GOA and from every matched
+  model. The ParB family was shown to be a CTPase in 2019, but none of these
+  family models carries the term.
+- **NCBI avoids two GOA errors.** GOA gives both ParBs `positive regulation of
+  sporulation` from the *B. subtilis* Spo0J-seeded PANTHER node (IBA in PAO1,
+  TreeGrafter in KT2440), although neither species sporulates. It also gives
+  the PAO1 ParB `DNA-templated transcription` from a UniRule. The reviews
+  remove all three of these rows, and NCBI asserts none of them.
+
 ## Second genome: *E. coli* K-12, via WP_ records
 
 *E. coli* K-12 MG1655 is one of the 15 curated references, so PGAP never runs on
@@ -699,6 +756,10 @@ public NCBI Insights posts.
       [Level 3](#level-3-against-956-curated-reviews)).
 - [ ] Send NCBI the model-level GO fixes marked *(model)* above, with the review
       evidence for each.
+- [ ] Add to that list the ParAB gaps from the [worked case](#worked-case-the-parab-chromosome-partition-proteins):
+      chromosome segregation on architecture 11445026; ATP hydrolysis activity and
+      chromosome segregation on BlastRule NBR012933; CTPase activity for ParB
+      models; and the "nuclease" wording of the COG1475 region note.
 - [ ] Score a random sample of the 160 non-obsolete unassessed NCBI terms, so the
       NCBI-only error rate can be estimated rather than just shown by example.
 - [ ] Recompute obsolete NCBI terms with their GO replacements, to separate
