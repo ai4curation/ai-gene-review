@@ -176,7 +176,11 @@ Full tables are in [RESULTS.md](IRD_EVIDENCE/RESULTS.md).
 Family reviews can now record a PAINT loss directly: a node assessment carries
 `evidence: IRD` (or IKR) and `negated: true`, and takes one of the loss verdicts
 LOSS_SUPPORTED, LOSS_CONTRADICTED, LOSS_TOO_BROAD or LOSS_STALE. The validator checks
-these against the family's `paint.tsv`. [ird_seed_assessments.yaml](IRD_EVIDENCE/ird_seed_assessments.yaml)
+these against the family's `paint.tsv`. `just fill-node-evidence` copies `evidence`,
+`negated` and a loss's blocked IBD node (`seeds`) from the slice into every assessment;
+it never sets a verdict, and lists any loss still judged with a gain verdict. Its first
+run filled `evidence` on all 1,873 node assessments that lacked it, across 473 reviews.
+[ird_seed_assessments.yaml](IRD_EVIDENCE/ird_seed_assessments.yaml)
 pre-fills an entry for each of the 170 contested IRD rows, leaving only the verdict to
 decide. The 18 rows that fall in families with a review have been adjudicated (one more,
 TYK2, was already done), each with verbatim supporting quotes:
@@ -326,6 +330,8 @@ Updated 2026-10-06.
 - [x] Pre-filled seed assessments for the 170 contested IRD rows (`ird_seed_assessments.yaml`)
 - [x] Adjudicate the 18 contested IRD rows in families that already have a review
 - [x] Fix the PAINT slicer so IRD nodes are not dropped; refresh the 545 affected slices
+- [x] `just fill-node-evidence`: copy PAINT evidence, negation and loss seeds into every
+      node assessment, so new reviews of loss rows no longer fail NODE_POLARITY by omission
 - [ ] Adjudicate the remaining 151 seeded IRD rows (their families have no review yet)
 - [ ] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows
 - [ ] Report the fungal Hsp70 refolding IRD (PTHR19375) to PAINT as too broad
