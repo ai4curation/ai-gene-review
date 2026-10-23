@@ -46,7 +46,7 @@ Yes, in standard annotation and in the ontology.
 
 - **Annotations.** A hand-picked sample of textbook ligands was checked against QuickGO
   ([results/ligand_survey.json](LIGANDS_IN_SIGNALING/results/ligand_survey.json),
-  [script](LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey.py)). 21 of 22 human
+  [script](LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey.py)). 23 of 24 human
   ligands (plus 4 of 5 receptor comparators) and all 14 fly ligands are annotated `involved_in`
   the pathway they activate, mostly
   with experimental evidence (FlyBase almost entirely so). Human KITLG is the exception: it has
@@ -209,19 +209,20 @@ validators.
   pathway.
 - **[Kit signaling](../modules/kit_signaling.yaml)** (*Kit signaling pathway*, `GO:0038109`).
   Upgraded the ligand step (`kitlg_scf_ligand`) from a single-gene `ENTITY` to `FAMILY`
-  (`PANTHER:PTHR11574` `KIT LIGAND`, PAINT node `PTN002611905`, *stem cell factor receptor
-   ligand activity* `GO:0038111`) with representative members across human (`KITLG`), mouse
-  (`Kitl`), rat (`Kitlg`), and zebrafish (`kitlga`, `kitlgb`). GOA gaps resolved in gene reviews:
-  human `KITLG` and zebrafish `kitlga` lacked `GO:0038109` *Kit signaling pathway* (added as
-  `NEW` in both reviews).
+  (`PANTHER:PTHR11574` `KIT LIGAND`, PAINT node `PTN002611905`, *cytokine activity*
+  `GO:0005125`) with representative members in human (`KITLG`) and zebrafish (`kitlga`; the
+  `PTHR11574` family review also covers mouse `Kitlg` and zebrafish `kitlgb`). GOA gaps resolved
+  in gene reviews: human `KITLG` and zebrafish `kitlga` lacked `GO:0038109` *Kit signaling
+  pathway* (added as `NEW` in both reviews).
 - **[Ephrin-Eph signaling](../modules/ephrin_receptor_signaling.yaml)** (*ephrin receptor
   signaling pathway*, `GO:0048013`). Upgraded the ligand step (`efnb2_efnb2_ligand`) from a
   single-gene `ENTITY` using *ephrin receptor binding* (`GO:0046875`) to `FAMILY`
   (`PANTHER:PTHR11304` `EPHRIN`, PAINT node `PTN000885159`, *receptor ligand activity*
-  `GO:0048018`) with representative members spanning GPI-anchored ephrin-A (`EFNA1`),
-  transmembrane ephrin-B (`EFNB1`, `EFNB2`, `Efnb2`), *C. elegans* (`vab-2`), and *Drosophila*
-  (`Ephrin`). The validator's `PAINT_TERM_NOT_ASSERTED` warning on `PTN000885159` (`GO:0048018`
-  vs PAINT's `GO:0046875`) is intentional per Decision 2 and documented in
+  `GO:0048018`) with representative members on the module step for human (`EFNB2`, `EFNB1`) and
+  zebrafish (`efnb2a`), while the `PTHR11304` family review spans GPI-anchored ephrin-A
+  (`EFNA1`–`EFNA5`), transmembrane ephrin-B (`EFNB1`–`EFNB3`), *C. elegans* (`efn-4`), and
+  *Drosophila* (`Ephrin`). The validator's `PAINT_TERM_NOT_ASSERTED` warning on `PTN000885159`
+  (`GO:0048018` vs PAINT's `GO:0046875`) is intentional per Decision 2 and documented in
   `interpro/panther/PTHR11304/PTHR11304-review.yaml`.
 - **[MIF-CD74 signaling](../modules/mif_signaling.yaml)** (*macrophage migration inhibitory
   factor signaling pathway*, `GO:0035691`). Two-step pan-species module. Ligand: MIF /
@@ -229,9 +230,10 @@ validators.
   `PTN000237510`), *cytokine activity* (`GO:0005125`, a child of *receptor ligand activity*
   `GO:0048018`). Receptor: CD74 subfamily (`PANTHER:PTHR14093:SF17`, PAINT node `PTN002679661`),
   *cytokine receptor activity* (`GO:0004896`). GOA gap resolved in the new human `MIF` gene
-  review: human `MIF` carried `GO:0005125` *cytokine activity* and `GO:0048018` *receptor ligand
-  activity* (IBA) but lacked `GO:0035691` *macrophage migration inhibitory factor signaling
-  pathway* (`NEW` added).
+  review: human `MIF` carried `GO:0005125` *cytokine activity* and the parent term `GO:0007166`
+  *cell surface receptor signaling pathway* (whereas human `DDT` already carried `GO:0035691` by
+  IDA from `PMID:21817065`), so `GO:0035691` *macrophage migration inhibitory factor signaling
+  pathway* was added as `NEW` on `MIF` (and `GO:0007166` refined via `MODIFY` to `GO:0035691`).
 
 ## 5. Other curator work in this branch
 
@@ -247,22 +249,28 @@ validators.
   binding*) to `MODIFY` → `GO:0048018` (*receptor ligand activity*) on human `EFNB1`; and
   created the full human `MIF` review (`genes/human/MIF/MIF-ai-review.yaml`) with `NEW`
   `GO:0035691` (*macrophage migration inhibitory factor signaling pathway*) and `MODIFY` on
-  `GO:0005102` (*signaling receptor binding*) → `GO:0005125` (*cytokine activity*).
+  `GO:0005126` (*cytokine receptor binding*) → `GO:0005125` (*cytokine activity*).
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
     its IBD should use the ligand-activity term; a new `SUBFAMILY_ONLY` assessment of
     *chemorepellent activity* covers the four Slit subfamilies.
-  - `interpro/panther/PTHR11574/PTHR11574-review.yaml`: `APPROVE` assessment for `PTN002611905`
-    (`GO:0038111` *stem cell factor receptor ligand activity*, `GO:0038109` *Kit signaling
-    pathway*).
-  - `interpro/panther/PTHR11304/PTHR11304-review.yaml`: `MODIFY_TERM` assessment on
-    `PTN000885159` replacing `GO:0046875` (*ephrin receptor binding*) with `GO:0048018`
-    (*receptor ligand activity*) while retaining `GO:0048013` (*ephrin receptor signaling
-    pathway*).
-  - `interpro/panther/PTHR11954/PTHR11954-review.yaml`: `APPROVE` on `PTN000237513` (`GO:0005125`
-    *cytokine activity*, `GO:0048018` *receptor ligand activity*) with a `MISSING_ANNOTATION`
-    assessment proposing `GO:0035691` (*macrophage migration inhibitory factor signaling
-    pathway*) at the vertebrate MIF/DDT node.
+  - `interpro/panther/PTHR11574/PTHR11574-review.yaml`: `SOUND` node assessments for
+    `PTN002611905` (`GO:0005125` *cytokine activity*, `GO:0005576` *extracellular region*,
+    `GO:0005886` *plasma membrane*, `GO:0008284` *positive regulation of cell population
+    proliferation*) and `FAMILY_WIDE` term assessments including `GO:0005125` (*cytokine
+    activity*) and `GO:0038109` (*Kit signaling pathway*).
+  - `interpro/panther/PTHR11304/PTHR11304-review.yaml`: `SOUND` node assessments on
+    `PTN000885159` (`GO:0046875` *ephrin receptor binding*, `GO:0048013` *ephrin receptor
+    signaling pathway*, `GO:0005886` *plasma membrane*, `GO:0007411` *axon guidance*), noting
+    in `assessment_reason` that PAINT should also assert `GO:0048018` (*receptor ligand
+    activity*) at `PTN000885159`, together with `FAMILY_WIDE` term assessments for `GO:0048018`
+    and `GO:0048013`.
+  - `interpro/panther/PTHR11954/PTHR11954-review.yaml`: `SOUND` node assessments on
+    `PTN000237510` (`GO:0005576` *extracellular region*, `GO:0050178` *phenylpyruvate
+    tautomerase activity*) and `PTN000237513` (`GO:0005125` *cytokine activity*), noting in
+    `assessment_reason` and the `FAMILY_WIDE` term assessment for `GO:0035691` (*macrophage
+    migration inhibitory factor signaling pathway*) that PAINT should also place `GO:0035691` at
+    `PTN000237513`.
 - **Corpus count of receptor-specific binding terms** in gene reviews: 820 annotation rows in
   353 reviews (489 ACCEPT, 221 KEEP_AS_NON_CORE, 13 MODIFY), plus 162 core functions. Most common:
   Notch binding (73), integrin binding (67), EGF receptor binding (36), ephrin receptor binding
