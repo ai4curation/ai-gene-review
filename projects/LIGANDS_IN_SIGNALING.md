@@ -230,10 +230,10 @@ validators.
   `PTN000237510`), *cytokine activity* (`GO:0005125`, a child of *receptor ligand activity*
   `GO:0048018`). Receptor: CD74 subfamily (`PANTHER:PTHR14093:SF17`, PAINT node `PTN002679661`),
   *cytokine receptor activity* (`GO:0004896`). GOA gap resolved in the new human `MIF` gene
-  review: human `MIF` carried `GO:0005125` *cytokine activity* and the parent term `GO:0007166`
-  *cell surface receptor signaling pathway* (whereas human `DDT` already carried `GO:0035691` by
-  IDA from `PMID:21817065`), so `GO:0035691` *macrophage migration inhibitory factor signaling
-  pathway* was added as `NEW` on `MIF` (and `GO:0007166` refined via `MODIFY` to `GO:0035691`).
+  review: in GOA only the receptor `CD74` carried `GO:0035691`, while human `MIF` carried
+  `GO:0005125` *cytokine activity* and the parent term `GO:0007166` *cell surface receptor
+  signaling pathway* (`IDA`, `PMID:12782713`), which is refined via `MODIFY` to `GO:0035691`
+  *macrophage migration inhibitory factor signaling pathway*.
 
 ## 5. Other curator work in this branch
 
@@ -247,9 +247,10 @@ validators.
 - **KITLG, kitlga, EFNB1, and MIF gene reviews:** added `NEW` `GO:0038109` (*Kit signaling
   pathway*) to human `KITLG` and zebrafish `kitlga`; updated `GO:0046875` (*ephrin receptor
   binding*) to `MODIFY` → `GO:0048018` (*receptor ligand activity*) on human `EFNB1`; and
-  created the full human `MIF` review (`genes/human/MIF/MIF-ai-review.yaml`) with `NEW`
-  `GO:0035691` (*macrophage migration inhibitory factor signaling pathway*) and `MODIFY` on
-  `GO:0005126` (*cytokine receptor binding*) → `GO:0005125` (*cytokine activity*).
+  created the full human `MIF` review (`genes/human/MIF/MIF-ai-review.yaml`) with `MODIFY` on
+  `GO:0007166` (*cell surface receptor signaling pathway*) → `GO:0035691` (*macrophage migration
+  inhibitory factor signaling pathway*) and `MODIFY` on `GO:0005126` (*cytokine receptor
+  binding*) → `GO:0005125` (*cytokine activity*).
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
     its IBD should use the ligand-activity term; a new `SUBFAMILY_ONLY` assessment of

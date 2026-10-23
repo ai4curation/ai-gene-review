@@ -28,9 +28,9 @@
 
 ## Signaling Pathway Annotation Gap (`GO:0035691`)
 
-- In GOA, `GO:0035691` (*macrophage migration inhibitory factor signaling pathway*) is annotated to the receptor `CD74` (human `CD74`, mouse `Cd74`), the co-receptor `CD44` (mouse `Cd44`), and the paralogous ligand `DDT` (human `DDT` via `IDA` from `PMID:21817065`, and mouse `Ddt` via `IEA`), **but not to `MIF` itself** (`UniProtKB:P14174`).
-- Instead, `MIF` was annotated in 2003 (`PMID:12782713`) to the parent term `GO:0007166` (*cell surface receptor signaling pathway*) before `GO:0035691` was created in the ontology, and that annotation was never updated to the specific pathway term.
+- In GOA (as captured in `projects/LIGANDS_IN_SIGNALING/results/triage.json:371-381`, `:2668-2678`, `:5387-5397`), `GO:0035691` (*macrophage migration inhibitory factor signaling pathway*) is annotated only to the receptor `CD74` (`CD74` in human, `mCD74/iso:Long` in mouse, `Cd74` in rat), and to **neither ligand (`MIF` or `DDT`)**:
+  - Human `MIF` (`UniProtKB:P14174`, `genes/human/MIF/MIF-goa.tsv`) was annotated in 2003 (`PMID:12782713`) to the parent term `GO:0007166` (*cell surface receptor signaling pathway*, `IDA`) before `GO:0035691` was created in the ontology, and that annotation was never updated to the specific pathway term.
+  - Human `DDT` (`UniProtKB:P30046`) was annotated from `PMID:21817065` (`BHF-UCL`, `20170726`) only to `GO:0005126` (*cytokine receptor binding*, `IDA`) and `GO:0070374` (*positive regulation of ERK1 and ERK2 cascade*, `IGI` with `UniProtKB:P14174`), without `GO:0035691` or `GO:0005125` (*cytokine activity*).
 - In `MIF-ai-review.yaml`:
-  - `GO:0007166` (`IDA`, `PMID:12782713`) is marked `MODIFY` with `proposed_replacement_terms: [GO:0035691]`.
-  - `GO:0035691` (*macrophage migration inhibitory factor signaling pathway*) is proposed as a `NEW` `involved_in` annotation (`IDA`, `PMID:12782713`, supported by `PMID:12782713`, `PMID:17045821`, `PMID:21817065`).
+  - `GO:0007166` (`IDA`, `PMID:12782713`) is marked `MODIFY` with `proposed_replacement_terms: [GO:0035691]` (*macrophage migration inhibitory factor signaling pathway*, supported by `PMID:12782713`, `PMID:17045821`, `PMID:21817065`).
   - `GO:0005125` (*cytokine activity*, an `is_a` child of `GO:0048018` *receptor ligand activity*) is `ACCEPT`ed as the primary molecular function, and `GO:0005126` (*cytokine receptor binding*, `PMID:17045821`, `PMID:21817065`) is marked `MODIFY` $\rightarrow$ `GO:0005125` (*cytokine activity*) per Decision 4 in `projects/LIGANDS_IN_SIGNALING.md`.
