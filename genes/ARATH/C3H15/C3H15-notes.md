@@ -107,4 +107,23 @@ not established.
 ## Deep research
 `just deep-research-falcon` failed: falcon and perplexity providers not configured
 in this environment ("Provider 'falcon' not available. Available: openscientist").
-OpenScientist was launched instead.
+OpenScientist was run instead (`C3H15-deep-research-openscientist.md`), finishing
+after the review was drafted.
+
+Reconciliation with the OpenScientist report (2026-10-23):
+- It cites PMID:24567187, 25732536, 38865085, 18221561 and 25228083, which agree
+  with the review.
+- It misses PMID:35139225 (Chai 2022; EMSA, ChIP-qPCR, GFP imaging and
+  fractionation of C3H15), PMID:42844995 (RNA-EMSA of C3H15 on the IAMH2 3' UTR),
+  and PMID:41758611 / PMID:42711403 (P-body/DCP1, CCR4-NOT, meiocyte mRNA
+  clearance). Its "Limitations" 1 and 3 (no direct C3H15 biochemistry; localization
+  not imaged) are therefore out of date and are not adopted.
+- It reconciles the cdm1 single-mutant sterility with redundancy by asserting
+  C3H15 has a "more specialized requirement in microsporogenesis". That is
+  speculation; the conflict stays an open question in the review.
+- MYB46 cascade placement (PMID:22271306, PMID:19674407) is shown for C3H14 only;
+  not transferred to C3H15.
+- Family-level cytoplasmic-foci data (PMID:20173417, AtTZF family) is not used:
+  I have not checked whether C3H15 is one of the 11 AtTZF members tested, and
+  direct C3H15 P-body evidence exists (PMID:41758611).
+No annotation decision changed as a result.
