@@ -46,57 +46,44 @@ No exact-product protein expression or functional experiment was found. The genu
 
 Exact sequence mapping: [dpm-1-bioinformatics/RESULTS.md](dpm-1-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+This pass used no ProtNLM output. Its evidence is the UniProt records, a new sequence analysis, the cached
+primary papers and the falcon deep research.
 
-### 2026-10-20 full re-review
+**Identity: the benchmark is an isoform fragment.** U4PF58 is the WormBase Y66H1A.2b product, 51 aa long.
+It is identical to residues 189-239 of the canonical dpm-1 product Q9TYJ7 (Y66H1A.2a, 239 aa). UniProt has
+no reviewed (Swiss-Prot) dpm-1 entry, and Q9TYJ7 and U4PF58 are the only two dpm-1 entries.
+U4PF58 has no part of the glycosyltransferase 2-like domain (canonical 8-176). This was reproduced
+independently from live UniProt records by `dpm-1-bioinformatics/compare_sequences_rereview.py`, with
+output in `RESULTS-rereview.md`. The existing `RESULTS.md` and `compare_sequences.py` were left unchanged.
 
-#### Identity of the benchmark accession
+**Evolutionary grounding.** U4PF58, Q9TYJ7, human DPM1 (O60762) and yeast Dpm1 (P14020) are all in
+PTHR43398:SF1, according to UniProt PANTHER cross-references. Q9TYJ7 is 64.7% identical to human DPM1
+over 238 aligned columns, so the worm gene belongs to the metazoan three-subunit DPM synthase lineage,
+where the catalytic DPM1 relies on DPM3 for tethering and stability
+[PMID:16280320 "DPM1 was rapidly degraded by the proteasome in the absence of DPM3."].
+PAINT places GO:0004582 at PTN002459128. Its seeds include human O60762, mouse Dpm1, yeast and
+Mycobacterium proteins. So the activity is grounded for the full-length worm product, though not for
+this fragment. The U4PF58 segment maps to human DPM1 211-260. That stretch holds only 2 of the 13
+GDP-mannose binding residues that UniProt annotates by similarity to the archaeal structure
+(Q8U4M3), and it has no metal-binding residue.
 
-- U4PF58 is the 51-aa product of WormBase gene model **Y66H1A.2b** (UniProt GN line cites
-  `WormBase:Y66H1A.2b`). The canonical full-length dpm-1 product is **Q9TYJ7** (Y66H1A.2a, 239 aa).
-- Reproducible alignment (`dpm-1-bioinformatics/RESULTS.md`, now built only from UniProt downloads,
-  no prediction files): U4PF58 = Q9TYJ7 residues 189-239, 51/51 identical.
-- The UniProt glycosyltransferase 2-like domain of Q9TYJ7 (residues 8-176) is entirely absent
-  (0/169 mapped). The DXD-type motif (Q9TYJ7 position 96; human DPM1 position 118) is absent.
-- So U4PF58 is an alternative gene model / C-terminal fragment-like isoform, not a catalytically
-  competent enzyme. Whether Y66H1A.2b is translated is untested; PeptideAtlas PE 1 is a gene-level
-  peptide flag and its peptides may all derive from the shared C-terminal region, so it does not
-  establish that the short product exists.
+**Annotation decisions.** GO:0004582 (IEA, InterPro2GO) is kept as REMOVE for this product. I added a
+`source_defects` entry (PROBABLE, REPOINT U4PF58 -> Q9TYJ7) so that the row can go upstream as a
+fragment-coverage problem. The annotation is right for the gene and wrong only for this product.
+No NEW terms were proposed: the fragment has no demonstrated activity, location or partner, and
+core_functions stays empty. The description was rewritten to state the isoform relationship and
+what is retained.
 
-#### Evolutionary placement
+**Family review.** The family review `interpro/panther/PTHR43398/PTHR43398-review.yaml` lists U4PF58 as
+the representative of SF1, and its GO:0004582 assessment is UNRESOLVED with an explicit exclusion for
+the exact product. There is no subfamily-placement disagreement. Q9TYJ7 would make a better SF1
+representative than the fragment. That is a suggestion for the family file and has not been applied
+here.
 
-- UniProt places U4PF58 (and thus the dpm-1 locus) in PANTHER PTHR43398:SF1 (DPM1). Human DPM1
-  (O60762), S. cerevisiae DPM1 (P14020) and S. pombe dpm1 (O14466) are all in PTHR43398:SF1
-  (`interpro/panther/PTHR43398/PTHR43398-entries.csv`).
-- PAINT: GO:0004582 placed at PTN002459128 with seeds including human O60762, mouse Dpm1, yeast
-  SGD:S000006387; GO:0005789 (ER membrane) at PTN000092441 (taxon 2759); GO:0006488 (dolichol-linked
-  oligosaccharide biosynthesis) at PTN000092440. Worm full-length DPM-1 is inside these clades.
-- Full-length worm DPM-1 vs human DPM1: 64.7% identity over 238 aligned columns. Worm DPM-1, like
-  human/S. pombe DPM1, lacks the C-terminal TM anchor of the S. cerevisiae single-subunit enzyme
-  (family review / InterPro description), so the closest characterised relative by architecture and
-  phylogeny is human DPM1 (animal three-subunit type).
-- The fragment region (worm 189-239) maps to human DPM1 211-260 with 33 identical residues.
-
-#### Literature
-
-- [PMID:10835346 "mammalian DPM synthase contains catalytic DPM1 and regulatory DPM2 subunits"].
-  The abstract states DPM3 associates with DPM1 "via its C-terminal domain" - this refers to DPM3's
-  C-terminal domain, not a mapped DPM1 region, so it cannot be used to argue that the DPM1 C-terminal
-  tail (the U4PF58 region) is a DPM3-binding module.
-- Falcon deep research (`dpm-1-deep-research-falcon.md`) treats U4PF58 as if it were full-length
-  DPM1 and does not notice the truncation; it found no worm-specific experimental work. Its general
-  DPM1 biochemistry applies to Q9TYJ7, not to U4PF58.
-
-#### Decisions
-
-- GO:0004582 IEA (InterPro2GO): REMOVE for this product (no catalytic domain). The activity should be
-  carried by Q9TYJ7.
-- No core functions: none can be assigned to the isolated 51-aa product.
-- PANTHER family review (`interpro/panther/PTHR43398/PTHR43398-review.yaml`): no disagreement about
-  subfamily placement (SF1). Its only listed representative member for SF1 is the fragment U4PF58;
-  a full-length member (Q9TYJ7 or O60762) would be a better representative. Not edited here (outside
-  this gene folder).
-- Previous review/notes cited a ProtNLM source file; those references and the script dependency on
-  it were removed so the review is independent of predictions.
+**Next relative.** The canonical product Q9TYJ7 has no review in the repo. Because `genes/worm/dpm-1` is
+keyed to the fragment, its review would go in `genes/worm/dpm-1__Q9TYJ7`. Related modules are
+`modules/dolichol_phosphate_sugar_donor_supply.yaml` (Dol-P-Man synthase branch),
+`modules/n_glycan_llo_assembly_lumenal.yaml`, `modules/gpi_anchor_core_glycan_assembly.yaml` and
+`modules/dolichyl_phosphate_biosynthesis.yaml`.

@@ -56,72 +56,56 @@ Both cited papers have cached full text. The 2024 mouse study supports the Sdhaf
 
 Exact sequence mapping: [Sdhaf2-bioinformatics/RESULTS.md](Sdhaf2-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+Scope: re-examined all 3 GOA rows, the description and core functions without using any
+ProtNLM2 output.
 
-### 2026-10-20 full re-review (independent of any ProtNLM output)
+### Identity of the benchmark accession
 
-#### Identity: alternative gene model, not the canonical product
+- A0A494B8X4 (TrEMBL, 135 aa, Ensembl ENSMUST00000237827 / ENSMUSP00000157391) is an
+  **alternative product** of mouse Sdhaf2 (MGI:1913322). The reviewed canonical product is
+  **Q8C6I2** (Swiss-Prot SDHF2_MOUSE, 164 aa, isoform 1). This folder is keyed to the
+  alternative product; no review of Q8C6I2 exists in the repo.
+- Identical to Q8C6I2 over 1-121, then an unrelated 14-residue tail (DTPEEGVGSHCRWL)
+  replacing canonical 122-164. Not UniProt isoform 2 (tail GMPYAELHLGIIR) or isoform 3.
+- Pfam PF03937 66-141 in Q8C6I2 vs 66-124 in A0A494B8X4 (InterPro API).
+- Mapping human Q9NX18 PDB:8DYD helix features (new script
+  `Sdhaf2-bioinformatics/map_structure_rereview.py`, results in `RESULTS-rereview.md`):
+  transit peptide, Gly78-equivalent (mouse Gly76; PPGL2 G78R abolishes SDHA binding and
+  flavination per UniProt Q9NX18) and helices up to human 115-123 are retained; helices
+  human 127-132, 135-145 and the C-terminal 155-161 are lost. Activity of the truncated
+  product is therefore not assumed (not shown to be lost either).
 
-- A0A494B8X4 is a TrEMBL, Ensembl-derived entry (ENSMUSP00000157391 / ENSMUST00000237827), 135 aa.
-- Canonical mouse Sdhaf2 is Q8C6I2, 164 aa, Swiss-Prot. Residues 1-121 are identical. A0A494B8X4 then
-  ends in a novel 14-residue tail, DTPEEGVGSHCRWL, and so lacks canonical residues 122-164 (43 aa).
-  [file:mouse/Sdhaf2/Sdhaf2-bioinformatics/RESULTS.md]
-- The tail does not match either Swiss-Prot alternative isoform of Q8C6I2. Isoform 2 replaces
-  122-164 with GMPYAELHLGIIR, and isoform 3 lacks residues 1-94. A0A494B8X4 is therefore a third
-  alternative C-terminus.
-- Retained: the mitochondrial transit peptide (1-27, predicted) and the RGxxE motif (mouse 75-79;
-  the human paraganglioma variant G78R sits at mouse G76).
-- Lost: canonical residues 122-141 at the end of the Pfam PF03937 Sdh5 domain (66-141), plus the
-  C-terminal 23 residues. Whether this product is expressed as a stable protein or is active has not
-  been tested.
+### Evolutionary grounding
 
-#### Evolutionary grounding
+- PANTHER PTHR12469:SF2 (same subfamily as canonical mouse and human SDHAF2). No
+  disagreement with `interpro/panther/PTHR12469/PTHR12469-review.yaml` on subfamily placement.
+- PAINT: eukaryotic node PTN000279729 has IBDs for GO:0005739, GO:0006099, GO:0006121,
+  GO:0034553 (seeds SGD:S000005432 Sdh5, UniProtKB:Q9NX18, AT5G51040). No EMT, Wnt or
+  protein-FAD linkage term was propagated: treated as deliberate.
+- Gene-level function [PMID:19628817 "Sdh5 is required for SDH-dependent respiration and for
+  Sdh1 flavination"]; human mechanism [PMID:32887801 "works in synergy with SDHAF2 to properly
+  orient the flavin and capping domains of SDHA"].
 
-- PANTHER PTHR12469 (PROTEIN EMI5 HOMOLOG, MITOCHONDRIAL), subfamily SF2 (SUCCINATE DEHYDROGENASE
-  ASSEMBLY FACTOR 2, MITOCHONDRIAL). The human ortholog SDHAF2 Q9NX18 is in the same subfamily.
-- PAINT (interpro/panther/PTHR12469/PTHR12469-paint.tsv): the eukaryotic node PTN000279729 carries IBD
-  mitochondrion (seeds Arabidopsis, yeast and human), TCA cycle, mitochondrial electron transport, and
-  complex II assembly (seeds yeast Sdh5 and human SDHAF2). PTN000279784 (taxon 284812, S. pombe)
-  carries NOT IRD for the process terms. No EMT or Wnt terms were propagated. I treat this as a
-  deliberate decision, so the EMT/Wnt rows are not family functions.
-- This product's GOA set has none of the IBA rows, only SubCell and ARBA IEA rows.
+### Decisions
 
-#### Literature
+- GO:0005759 mitochondrial matrix (IEA SubCell): ACCEPT; retained transit peptide + PAINT node.
+  The UniProt SubCell line is ARBA-derived so not quoted.
+- GO:0010719 negative regulation of EMT (IEA ARBA): UNDECIDED -> MARK_AS_OVER_ANNOTATED.
+  The only evidence (PMID:23983127) is a knockout/knockdown EMT-marker phenotype (necessity,
+  not participation) in a single cancer-context study; not in PAINT; unassayed truncated product.
+- GO:0090090 negative regulation of canonical Wnt signaling (IEA ARBA): UNDECIDED ->
+  MARK_AS_OVER_ANNOTATED, same reasoning.
+- Core function: added one, location-only (mitochondrial matrix), with the gene-level
+  SDHA-flavinylation role described but no MF asserted for this product.
+- PMID:38569044 no longer used as row support (does not assay this product); retained.
 
-- PMID:19628817: yeast Sdh5 and human SDH5 bind SDHA and are required for its flavination. SDHAF2 is
-  the PGL2 paraganglioma gene.
-- PMID:32887801: the human SDHA-SDHAF2 crystal structure. SDHAF2 and a dicarboxylate together orient
-  the SDHA flavin and capping domains for covalent FAD attachment.
-- PMID:38569044: in mouse muscle and C2C12 cells, Drp1 promotes Sdhaf2 mitochondrial translocation.
-  Mitochondrial Sdhaf2 is limiting for complex II assembly, and restoring Sdhaf2 rescues complex II
-  activity.
-- PMID:23983127: a single study in lung cancer. SDH5 loss leads to EMT and SDH5 binds GSK-3beta,
-  restraining beta-catenin. A knockout-mouse lung phenotype is reported.
-- Falcon deep research (Sdhaf2-deep-research-falcon.md) agrees with this picture. It said no dedicated
-  Sdhaf2-null mouse study was found, yet PMID:23983127 reports "SDH5 knock-out mice". The knockout is
-  not characterised further in the abstract.
+### Relative to review next
 
-#### Decisions
+Same-gene canonical product Q8C6I2 (mouse Sdhaf2, Swiss-Prot); no review in repo
+(would be `genes/mouse/Sdhaf2__Q8C6I2/`). Human SDHAF2 (Q9NX18) has a complete review at
+`genes/human/SDHAF2/SDHAF2-ai-review.yaml`.
 
-- GO:0005759 mitochondrial matrix (IEA SubCell): ACCEPT, because the targeting peptide is intact and
-  the location is a family-level property.
-- GO:0010719 negative regulation of EMT (IEA ARBA): MARK_AS_OVER_ANNOTATED. It is a downstream
-  phenotype from necessity evidence, was not propagated by PAINT, and is applied to a truncated
-  product.
-- GO:0090090 negative regulation of canonical Wnt (IEA ARBA): KEEP_AS_NON_CORE. It has a mechanistic
-  claim behind it (GSK-3beta binding), but only from a single cancer study. This matches the human
-  ortholog review.
-- I proposed no NEW annotations. The canonical product's function (GO:0044183 protein folding
-  chaperone, GO:0018293 protein-FAD linkage, GO:0034553 complex II assembly) is recorded in
-  core_functions as gene-level and caveated. It is not asserted as a new annotation on this
-  truncated product, because the end of the Sdh5 domain is missing and no product-specific assay
-  exists.
-- The bioinformatics folder was redone: compare_products.py works from the UniProt flat file and REST
-  data only. The earlier script read a ProtNLM input file, so it was replaced.
-
-#### Closest characterised relative
-
-- Human SDHAF2 (Q9NX18), ortholog in PTHR12469:SF2 and a PAINT seed for complex II assembly. It has a
-  complete review at genes/human/SDHAF2/SDHAF2-ai-review.yaml.
+Modules: `modules/mitochondrial_complex_ii.yaml` (sdhaf2_activity part),
+`modules/dmel_respiratory_complex_assembly_factors.yaml`.

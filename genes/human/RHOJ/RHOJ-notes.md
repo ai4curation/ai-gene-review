@@ -57,82 +57,26 @@ Exact sequence mapping: [RHOJ-bioinformatics/RESULTS.md](RHOJ-bioinformatics/RES
 
 The genuine Falcon report is retained. Its gene-level synthesis is interpreted through the exact product sequence and the primary sources above; the truncation boundary and paralog distinctions are assessed independently.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+Scope: G3V4H1 (ProtNLM2 benchmark target, cohort MOD_EVOLUTION20). No ProtNLM2 file or prediction output was opened or used. New analysis: `RHOJ-bioinformatics/compare_sequences_rereview.py` -> `RESULTS-rereview.txt` / `RESULTS-rereview.md`, which fetch sequences and transcript models live from UniProt and Ensembl. The earlier `RESULTS.md` and its scripts are unchanged.
 
-### 2026-10-20 full re-review (independent of ProtNLM output)
+### Identity of the benchmark accession
 
-This re-review replaces earlier notes that mixed annotation review with a review of
-ProtNLM output. Those prediction assessments are not used as evidence here.
+- G3V4H1 is an **alternative gene model**, not the canonical RHOJ product and not one of the UniProt-described isoforms. It is 153 aa; canonical Q9H4E5 is 214 aa, and isoform 2 (Q9H4E5-2) lacks only residues 113-134 and keeps the canonical C-terminus.
+- It is translated from ENST00000557447 (RHOJ-204), Ensembl biotype **nonsense_mediated_decay**. The CDS matches canonical RHOJ-201 to nt 305. RHOJ-204 then uses a shortened exon 3, skips exon 4 and splices into the canonical 3' UTR. The 50-residue proline-rich tail (104-153) is read from sequence just 3' of the canonical stop codon, and it is not a frameshifted read of canonical coding sequence.
+- Retained: G1 P-loop (GDGAVGKT, 28), switch I (PTVFD, 52), switch II (DTAGQ, 75), effector region 50-58, N-terminal palmitoylation cysteines 3 and 11. Missing: the 121-129 distal loop needed for nucleotide loading [PMID:27660391 "Chimeras of TCL and TC10 revealed amino acids 121-129 of TCL contributed to the differences in nucleotide loading."], the G4 TQID (133), the G5 CSAL (175), the polybasic region and the CAAX box (CSII, 211).
+- PE 1 on the TrEMBL record comes from PeptideAtlas. Peptides from shared residues 1-103 cannot tell this product apart from the canonical one, so the PE level is not evidence that G3V4H1 exists as a polypeptide.
 
-#### Identity of the benchmark accession
+### Evolutionary grounding
 
-- G3V4H1 (TrEMBL, 153 aa) is the translation of Ensembl ENST00000557447 (RHOJ-204).
-  Ensembl annotates this transcript as `nonsense_mediated_decay`. It is not the canonical
-  product. The canonical product is Q9H4E5 (Swiss-Prot, 214 aa), from ENST00000316754
-  (RHOJ-201) [file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md].
-- Residues 1-103 are identical to Q9H4E5. Residues 104-153 are an unrelated tail that
-  MobiDB-lite predicts to be disordered (124-153) and that is rich in Pro and His.
-- The product keeps: the N-terminal extension, including the DEKK 17-20 determinant of
-  nucleotide loading [PMID:27660391]; the N-terminal palmitoylation sites C3 and C11 of
-  Q9H4E5; the G1 P-loop (28-35); switch I and the effector region (50-58); and the G3
-  DTAGQE motif (75-80).
-- The product lacks: the G4 (TQID, 133-136) and G5 (SAL, 176-178) guanine-base recognition
-  motifs; the distal loop 121-129 that regulates nucleotide loading [PMID:27660391 "Chimeras
-  of TCL and TC10 revealed amino acids 121–129 of TCL contributed to the differences in
-  nucleotide loading."]; the polybasic region; and the CAAX box (C211 farnesylation).
-- PANTHER v19 gene-info lookup places Q9H4E5 in PTHR24072:SF17 ("RHO-RELATED GTP-BINDING
-  PROTEIN RHOJ"). G3V4H1 is unmapped there. InterPro places it in PTHR24072 at the family
-  level only, on residues 20-103.
-- The UniProt "Belongs to the small GTPase superfamily. Rab family" similarity line on
-  G3V4H1 is a PROSITE-ProRule artefact. InterPro IPR003578 (Small_GTPase_Rho), PANTHER
-  and the literature all place RHOJ in the Rho/Cdc42 subfamily.
-- PE 1 on G3V4H1 comes from PeptideAtlas identifications. These may be peptides shared
-  with the canonical product. No peptide unique to the tail is documented.
+- PANTHER PTHR24072 (Rho family GTPase). The PANTHER 19 geneinfo service places canonical Q9H4E5 in PTHR24072:SF17 (RHO-RELATED GTP-BINDING PROTEIN RHOJ). G3V4H1 is unmapped there; it only matches the family HMM over residues 20-103 (InterPro API). GTPase activity, GTP binding and plasma membrane are IBD-placed at the family root, PTN000632671, and Q9H4E5 is among the donors. Because the function is ancestral to the whole family, it holds for the RHOJ gene. G3V4H1 itself receives no IBA; its three rows are InterPro/UniRule/EC-mapping IEAs triggered by the N-terminal half-domain.
+- The family review (`interpro/panther/PTHR24072/PTHR24072-review.yaml`) already names G3V4H1 as an altered same-gene product and does not dispute subfamily placement. I found no disagreement.
 
-#### Gene-level biology (canonical Q9H4E5)
+### Decisions
 
-- Fast-exchanging, hydrolytically active GTPase [PMID:10967094 "In vitro, TCL shows rapid
-  GDP/GTP exchange and displays higher GTP dissociation and hydolysis rates than TC10."].
-- Localization depends on activation state (plasma membrane versus EEA1/Rab5 endosomes)
-  [PMID:27660391].
-- Endothelial-enriched and an ERG target. Required for lumen and tube formation
-  [PMID:21628409; PMID:21148427 "RhoJ is endothelial-expressed in vivo, activated by vascular
-  endothelial growth factor, localizes to focal adhesions..."].
-- GTP-bound RHOJ binds the PlexinD1 cytoplasmic domain and integrates Sema3E and VEGF
-  cues [PMID:32347571].
+All three IEAs (GTPase activity, G protein activity, GTP binding) changed from UNDECIDED to **MARK_AS_OVER_ANNOTATED**. They are true of the gene and of Q9H4E5 [PMID:10967094 "In vitro, TCL shows rapid GDP/GTP exchange and displays higher GTP dissociation and hydolysis rates than TC10."]. They are not supported for an NMD-transcript product that lacks the guanine-base motifs and half the fold. I did not use REMOVE, because no assay of this product exists and the claims are correct at gene level. The description was rewritten so that it gives the gene-level biology [PMID:21628409; PMID:30158707] and then the product-identity boundary. core_functions stays empty, since no function is established for this product. No NEW terms were proposed.
 
-#### Evolutionary grounding
+### Relative to review next
 
-- PAINT node PTN000632671 (Rho-family root, PTHR24072) carries IBD GTPase activity,
-  GTP binding and plasma membrane. Q9H4E5 is among the seeds. The node supports these
-  functions for the RHOJ lineage. The question for G3V4H1 is not lineage loss but product
-  integrity.
-- Closest characterised relative by phylogeny: mouse Rhoj (Q9ER71), the SF17 ortholog,
-  characterised in endothelial knockout and retinal angiogenesis studies
-  [PMID:32347571]. The repo has no mouse Rhoj review, and no review of human canonical
-  Q9H4E5 as a separate accession (this folder is G3V4H1).
-
-#### Decisions
-
-All three IEA MF rows (GTPase activity, G protein activity, GTP binding) are marked
-MARK_AS_OVER_ANNOTATED. The terms are correct for RHOJ but not supported for an
-NMD-transcript product that lacks half the G domain. They are not removed, because the
-claims are true of the gene. core_functions is left empty because no function is
-supported for this product.
-
-#### Family / modules
-
-- interpro/panther/PTHR24072/PTHR24072-review.yaml lists G3V4H1 under "Benchmark members
-  without resolved subfamily placement". This matches the PANTHER lookup (G3V4H1 is
-  unmapped at subfamily level, while canonical RHOJ is SF17). The family review does not
-  mention the NMD biotype.
-- No module in modules/ includes RHOJ. RHOJ appears only in falcon deep-research artifacts
-  for the FGFR, Fc-gamma receptor, death-receptor and Nodal modules, as incidental text.
-
-#### Deep research
-
-The falcon report (RHOJ-deep-research-falcon.md) is gene-level and accurate on endothelial
-biology. It correctly flags that the "Rab family" label is wrong. It does not analyse the
-G3V4H1 product.
+The canonical product of the same gene, Q9H4E5 (RHOJ_HUMAN, reviewed). `genes/human/RHOJ` is keyed to G3V4H1, and no review of Q9H4E5 exists in the repo, so the next folder would be `genes/human/RHOJ__Q9H4E5`. No module names RHOJ or Q9H4E5. These modules use PTHR24072 Rho-family descriptors and are context only: `modules/rho_gprotein_signaling.yaml`, `modules/ephrin_receptor_signaling.yaml`, `modules/chemokine_signaling.yaml`, `modules/phagocytic_engulfment.yaml`.

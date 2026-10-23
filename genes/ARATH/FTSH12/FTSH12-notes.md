@@ -67,94 +67,57 @@ Exact sequence mapping: [FTSH12-bioinformatics/RESULTS.md](FTSH12-bioinformatics
 
 The [8XKU deposition](https://www.rcsb.org/structure/8XKU) identifies FTSH12 in the Arabidopsis ATP-bound complex; [entry metadata](FTSH12-8XKU-entry.json) records the primary citation. Its sequence-to-reference comparison retains the ATP-binding and zinc-site regions. The resolved complex supports import architecture, while the independent H769Y complementation experiment defines the protease/function distinction.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+No ProtNLM2 file or prediction-evidence folder was opened in this pass, and none was used as evidence.
 
-### 2026-10-20 full re-review
+### Identity of the benchmark accession
 
-This re-review is independent of any machine-learning prediction output. The earlier version of
-these notes and of `FTSH12-bioinformatics/` read the benchmark sequence from a prediction-source JSON.
-The comparison script now reads the sequence only from `FTSH12-uniprot.txt` and the reviewed reference
-from `FTSH12-same-gene-reference.json` (UniProt Q9SAJ3).
+- A0A1P8ARD2 (unreviewed, 991 aa) is an **alternative Araport11 gene model of AT1G79560/FTSH12**. It is not the canonical product. The canonical product is Swiss-Prot **Q9SAJ3** (FTSHC_ARATH, 1008 aa). UniProt lists a third model, A0A1P8ARE4 (963 aa).
+- The independent re-analysis ([RESULTS-rereview.md](FTSH12-bioinformatics/RESULTS-rereview.md), from `compare_gene_models_rereview.py`, which fetches both sequences from UniProt REST) shows residues **1-983 identical**. Only the C-terminal tail differs: A0A1P8ARD2 984-991 `VVYILSSC` against Q9SAJ3 984-1008 `EELLPHKDRVSYQPVDLRAAPLHRS`.
+- All functional regions lie in the shared prefix: transit peptide 1-49, TM 154-174 and 427-447, Walker A `GPPGTGKT` at 533, Walker B `FVFVDE` at 587, HEXXH `HEAGH` at 769-773, and the third zinc ligand Asp849. No domain or catalytic residue is missing. The divergent tail lies beyond the M41 domain and has not been tested experimentally.
+- The experimental GO annotations (TAIR IDA/IMP/IPI from PMID:30309901 and others) sit on Q9SAJ3. This accession carries only IEA rows.
 
-#### Identity of the benchmark accession
+### Evidence re-checked (quotes grep-verified against cached full text)
 
-- A0A1P8ARD2 (TrEMBL, 991 aa; RefSeq NP_001321597.1, EMBL ANM59220.1) is an **alternative gene model**
-  of At1g79560/FTSH12. The reviewed canonical product is Q9SAJ3, which has 1008 aa.
-- The two are identical over residues 1–983. Q9SAJ3 then ends `EELLPHKDRVSYQPVDLRAAPLHRS` (25 aa),
-  and A0A1P8ARD2 ends `VVYILSSC` (8 aa). This looks like an alternative 3' exon or splice choice
-  ([RESULTS.md](FTSH12-bioinformatics/RESULTS.md)).
-- Every annotated feature is retained: transit peptide 1–49, TM 154–174 and 427–447, Walker A
-  GPPGTGKT (533–540), Walker B VDEID (D591-E592), the second region of homology with both arginine fingers
-  (RSGR vs canonical RPGR), and the zinc site H769/E770/H773/D849. No domain or catalytic residue is
-  lost. Whether the alternative C-terminal tail is expressed has not been tested.
-- The pore-loop region (~556–563, `FASGAEF...`) lacks the aromatic FVG motif of canonical FtsH. This
-  matches Kikuchi et al. 2018 [PMID:30309901 "were well conserved in FtsHi1, FtsHi2, FtsHi3, FtsHi4,
-  and FtsHi5, but not in FtsH12"].
+- PMID:30309901 (Kikuchi 2018): FTSH12 is one of the six subunits of the 2-MD Ycf2/FtsHi import motor, and the only one that keeps the FtsH zinc site. Two points bear on the protease question and were missing from the earlier pass: [PMID:30309901 "Hydrophobic residues at the pore loop ... were well conserved in FtsHi1, FtsHi2, FtsHi3, FtsHi4, and FtsHi5, but not in FtsH12"] and [PMID:30309901 "We also detected trace amounts of FtsH12 in the pull-down fraction"]. The authors also write [PMID:30309901 "The role of FtsH12 in the complex remains unclear, but its zinc binding motif is not crucial for its essential function"].
+- PMID:33216923 (Mielke 2021): inner-envelope localization with the AAA+ and catalytic domains facing the stroma, and normal N-terminal maturation of imported proteins whatever the FTSH12 level.
+- PMID:39197452 (Liang 2024, Cell; abstract only): heterohexameric AAA+ motor structure.
 
-#### Biology (primary literature)
+### Evolutionary grounding
 
-- FTSH12 is a subunit of the 2-MDa Ycf2/FtsHi complex [PMID:30309901 "The inner envelope-localized Ycf2,
-  FtsHi1, FtsHi2, FtsHi4, FtsHi5, FtsH12, and pdNAD-MDH proteins therefore form a stable 2-MD complex
-  (the Ycf2/FtsHi complex), which interacts with the translocating preproteins."]. This was confirmed
-  with native-promoter Myc-FtsH12 pull-downs [PMID:33216923 "In two independent experiments, we were
-  able to pull-down FtsH12 together with FtsHi1, FtsHi5, and the plastidic form of MDH from isolated
-  chloroplasts"].
-- It associates with translocation intermediates in an ATP-dependent way, but only for inner-envelope
-  clients [PMID:30309901 "Thus, the transient associations with Ycf2 and FtsHi/FtsH12 proteins are
-  specific to preproteins destined to be translocated across the inner envelope membrane."].
-- It is located in the inner envelope, with the C-terminal domains facing the stroma [PMID:33216923
-  "this unambiguously confirms the localization of FtsH12 in the inner chloroplast envelope"].
-- The zinc site is dispensable [PMID:30309901 "Furthermore, even the FtsH12 zinc binding site is
-  dispensable for its essential function."]. N-terminomics shows no FTSH12-dependent processing
-  [PMID:33216923 "N-terminome analyses further demonstrated normal proteolytic maturation of
-  plastid-imported proteins irrespective of FTSH12 abundance."].
-- Mielke et al. speculate that FTSH12's ATPase is impaired [PMID:33216923 "FtsH12 contains several amino
-  acid exchanges in the Walker B motif and the second region of homology of its AAA-type domain that
-  likely impair the ATPase activity function"]. My motif inspection finds the Walker B glutamate and
-  both SRH arginines retained, so I do not accept this as evidence against ATPase activity. I still
-  use `contributes_to` for the complex-level import ATPase.
-- The deep research (falcon) agrees with this picture; its key claims were checked against the papers.
+- PANTHER PTHR43655:SF19 ("ATP-DEPENDENT ZINC METALLOPROTEASE FTSH 12, CHLOROPLASTIC") is the FTSH12 subfamily. Kikuchi et al.'s own phylogeny places land-plant FtsH12 in the clade with the FtsHi proteins and Ycf2, derived from cyanobacterial FtsH.
+- PAINT (interpro/panther/PTHR43655/PTHR43655-paint.tsv) has three IBD rows: PTN008683692 GO:0004222, and PTN000554085 GO:0005745 m-AAA complex and GO:0034982 mitochondrial protein processing. The seeds are all mitochondrial m-AAA proteases (human AFG3L2/SPG7, mouse, fly, yeast, worm). These propagate to canonical Q9SAJ3 as IBA. The two mitochondrial terms (m-AAA complex, mitochondrial protein processing) do not fit a chloroplast inner-envelope import-motor subunit. They should be challenged when Q9SAJ3 is reviewed (node placement or a missing NOT on the plastid branch). The metalloendopeptidase IBA is an ancestral-state claim that the H769Y result does not refute but does not support either.
+- The family review interpro/panther/PTHR43655/PTHR43655-review.yaml lists A0A1P8ARD2 as the SF19 representative member and leaves GO:0004222 and GO:0045037 UNRESOLVED. I found no disagreement about subfamily placement. It would be better for the family review to name the canonical Q9SAJ3 as the representative.
 
-#### Evolutionary placement and the relative
+### Decisions (changes from the earlier pass)
 
-- UniProt places FTSH12 in PANTHER **PTHR43655:SF19** (FTSH12, chloroplastic), within PTHR43655
-  "ATP-DEPENDENT PROTEASE". In this repo's entries table, SF19 holds only Arabidopsis FTSH12. The other
-  PTHR43655 subfamilies are bacterial FtsH and AFG3L2-like (SF2), AFG3L2 (SF9), paraplegin/SPG7 (SF8),
-  yeast YTA12 (SF14) and Arabidopsis mitochondrial FTSH3/FTSH10 (SF35, SF2).
-- The FtsHi partners (FTSHI1/2/4/5) and the thylakoid FtsH1/2/5 fall in a **different family**,
-  PTHR23076 (checked with a UniProt REST query of the PANTHER cross-references).
-- Kikuchi et al.'s phylogeny instead places FTSH12 in the cyanobacterium-derived clade with the
-  FtsHi proteins [PMID:30309901 "Ycf2, FtsHi1, FtsHi2, FtsHi4, FtsHi5, and FtsH12 are all derived from
-  the chloroplast genome-encoded FtsH in the ancestral cyanobacterial endosymbiont"].
-- PAINT: canonical Q9SAJ3 gets IBA GO:0004222 (PTN008683692) and IBA GO:0005745 m-AAA complex plus
-  GO:0034982 mitochondrial protein processing (PTN000554085, Eukaryota node, human/mouse/fly/yeast m-AAA
-  donors). The mitochondrial terms contradict the inner-envelope localization and look like
-  over-propagation from SF19 sitting under the eukaryotic m-AAA node. A0A1P8ARD2 itself has no IBA
-  rows. This disagreement is raised as a suggested question.
-- Closest experimentally characterised relative by PANTHER placement: the m-AAA proteases of the same
-  family (different subfamily). I chose human AFG3L2 (Q9Y4W6, SF9), whose review is
-  `genes/human/AFG3L2/AFG3L2-ai-review.yaml` with no PENDING rows. **No subfamily-specific m-AAA
-  functions** (mitochondrial localisation, m-AAA complex, mitochondrial protein processing) are
-  transferred. The only transfer considered is the ancestral FtsH metalloprotease chemistry, which is
-  kept as non-core.
-- Family review `interpro/panther/PTHR43655/PTHR43655-review.yaml` lists SF19 with FTSH12 and leaves
-  metalloendopeptidase and import scope UNRESOLVED. That is consistent with this review. It does not
-  discuss the PTN000554085 mitochondrial propagation to SF19.
-- Modules: no chloroplast protein-import or Ycf2/FtsHi module exists in `modules/`. The FtsH hits there
-  concern bacterial FtsH (LpxC/lambda CII degradation) and do not apply.
+- The three protease rows (GO:0004176, GO:0004222, GO:0006508) stay MARK_AS_OVER_ANNOTATED. The reasons now add the missing pore-loop residues and the PAINT/TAIR-ISS context on the canonical entry.
+- ATP binding and ATP hydrolysis activity: ACCEPT, re-grounded on the independently checked Walker A and Walker B motifs.
+- cytoplasm: MODIFY to chloroplast inner membrane (GO:0009706).
+- NEW part_of GO:0062091 Ycf2/FtsHi complex and NEW involved_in GO:0045037 protein import into chloroplast stroma (complex-subunit participation). Both are experimental on the same gene product (Q9SAJ3), and the sequence is identical over all functional regions.
+- Core function rewritten: contributes_to GO:0016464 chloroplast protein-transporting ATPase activity, in complex GO:0062091. This is a complex-level activity, so it uses contributes_to, not enables. A second core function records ATP hydrolysis by the AAA+ module.
+- The old RESULTS.md is kept but no longer cited as support, because its stated inputs include the frozen prediction-source JSON. RESULTS-rereview.md replaces it as the cited source.
 
-#### Action changes from the previous version
+### Relative to review next
 
-- Peptidase, metalloendopeptidase and proteolysis rows: MARK_AS_OVER_ANNOTATED changed to
-  KEEP_AS_NON_CORE. The HEXXH and D849 zinc ligands are intact and conserved across land plants, so
-  the activity is plausible but unproven, and it is dispensable for the essential function.
-- Cytoplasm: kept as MODIFY to chloroplast inner membrane.
-- ATP binding and ATP hydrolysis: kept as ACCEPT, with the motif analysis added.
-- NEW rows (same gene, direct evidence; the canonical Q9SAJ3 carries them): part_of GO:0062091
-  Ycf2/FtsHi complex, contributes_to GO:0016464 chloroplast protein-transporting ATPase activity, and
-  involved_in GO:0045037 protein import into chloroplast stroma.
-- Core function: the MF is now contributes_to GO:0016464 in the GO:0062091 complex; the earlier MF was
-  GO:0016887.
-- The reference to the prediction-source JSON was removed.
+The benchmark accession is an alternative gene model, and the canonical product Q9SAJ3 has no review in the repo. The next target is therefore **Q9SAJ3** (same_gene_canonical), in folder `genes/ARATH/FTSH12__Q9SAJ3`. That review should handle the TAIR IDA/IMP/IPI/HDA rows, the mitochondrial HDA (PMID:28887381), the plasma membrane ISM, the thylakoid SubCell row from PMID:14630971 (which conflicts with the inner-envelope data), and the m-AAA IBA rows.
+
+### Modules
+
+No module in modules/ covers chloroplast protein import or the Ycf2-FtsHi/TIC machinery (grep for FTSH12, Ycf2, FtsHi and chloroplast protein import found no relevant module).
+
+## 2026-10-21 — NEW rows withdrawn: already annotated on another product of the same gene
+
+The re-review proposed NEW rows (GO:0062091 Ycf2/FtsHi complex, GO:0045037 protein import into chloroplast
+stroma) on this accession. GOA already carries both terms on the canonical FTSH12 product, reviewed in
+`genes/ARATH/FTSH12__Q9SAJ3/`. GOA propagates gene-level annotations to one representative product per gene,
+so adding them to a second product fills a convention, not a curation gap. The rows were withdrawn under the
+rule applied across the ProtNLM2 re-review cohorts, first raised in the PR #5303 review. The gene-level
+function is unchanged.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The first core function (Ycf2/FtsHi motor subunit: contributes_to GO:0016464, GO:0045037, in_complex GO:0062091) now says in its description why these terms have no annotation row here. The import-motor annotations are TAIR IDA/IMP on the canonical product Q9SAJ3 and are reviewed in genes/ARATH/FTSH12__Q9SAJ3. The NEW rows were withdrawn because of GOA's one-product-per-gene convention, not because of doubt about the biology. The two best-practice warnings for GO:0045037 and GO:0062091 are expected.
+- Protease verdicts reconciled: the canonical Q9SAJ3 review now marks its five protease rows (GO:0004176 IEA and ISS, GO:0004222 IBA and IEA, GO:0006508 IEA) MARK_AS_OVER_ANNOTATED, matching the three rows here.
+- History: the 2026-10-21T113916Z record described NEW GO:0062091/GO:0045037 rows that were withdrawn in the same commit. A new append-only record documents the withdrawal.

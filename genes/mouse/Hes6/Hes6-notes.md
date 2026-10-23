@@ -1,61 +1,108 @@
-# Hes6 (mouse, Q9JHE6) review notes
+# Hes6 (mouse, Q9JHE6) notes
 
-## Provenance / process
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-- 2026-10-20: `just fetch-gene mouse Hes6` (27 GOA rows). `just deep-research-falcon mouse Hes6 --fallback perplexity-lite`
-  FAILED (falcon failed; perplexity-lite fallback timed out after 600 s). No deep-research file exists; the review is
-  built from primary literature retrieved by a PubMed search (`Hes6[tiab] AND (mouse OR mice OR murine)`) and cached
-  with `just fetch-pmid`.
-- Evolutionary grounding: mouse Hes6 is in PANTHER PTHR10985 (HES-related bHLH), subfamily SF11 (TRANSCRIPTION
-  COFACTOR HES-6), together with human HES6 (Q96HZ4) and zebrafish hes6 (Q6P0J1). IBA rows come from PAINT nodes
-  PTN004213585 (family-wide: nucleus, RNAPII cis-regulatory DNA binding, DNA-binding TF activity, negative regulation
-  of RNAPII transcription) and PTN000105428 (anterior/posterior pattern specification, regulation of neurogenesis).
-  Mouse Hes6 (MGI:1859852) is itself a seed for the PTN004213585 IBDs on GO:0000981 and GO:0000122.
-- Several of the key papers are abstract-only in the cache (PMID:10851137, PMID:11959828, PMID:11076679,
-  PMID:17868320, PMID:23689134, PMID:21501606). Full text: PMID:11551980, PMID:12972610, PMID:17065448,
-  PMID:26105991, PMID:26435136, PMID:29404444, PMID:22114720 (Xenopus).
+Context: mouse Hes6 is reviewed as the experimentally characterised reference for
+the PANTHER PTHR10985:SF11 (TRANSCRIPTION COFACTOR HES-6) subfamily, which also
+holds human HES6 (Q96HZ4), zebrafish hes6/her13.2 (Q6P0J1) and her13 (Q568A5).
+No ProtNLM2 output was opened or used.
 
-## What is experimentally established in MOUSE (Hes6 protein or mouse cells)
+### Deep research
 
-- Heterodimerises with / binds Hes1 and antagonises Hes1 repression; relieves Hes1 inhibition of Mash1-E47
-  [PMID:10851137 "Hes6 alone does not bind to the DNA but suppresses Hes1 from repressing transcription. In addition,
-  Hes6 suppresses Hes1 from inhibiting Mash1-E47 heterodimer and thereby enables Mash1 and E47 to upregulate
-  transcription in the presence of Hes1."]
-- Two further anti-Hes1 mechanisms: blocks Hes1-Gro/TLE interaction and promotes Hes1 proteolysis
-  [PMID:12972610 "Hes6 inhibits the interaction of Hes1 with its transcriptional corepressor Gro/TLE. Moreover, it
-  promotes proteolytic degradation of Hes1."]
-- Binds Groucho/TLE corepressors through WRPW [PMID:11551980 "HES6 interacted with the corepressor transducin-like
-  Enhancer of split 1 in yeast and mammalian cells through its WRPW COOH-terminal motif."] (mouse HES6 cDNA,
-  C2C12 myoblasts).
-- Homodimerises (preferentially) [PMID:17868320 "It is reported that Hes6 preferentially forms homodimers."]
-- DNA binding: CONTESTED. Bae et al. found no DNA binding by Hes6 alone (short loop); Cossins et al. found binding to
-  the ESE box and repression of an ESE reporter [PMID:11959828 "Hes6 binds DNA containing the Enhancer of Split E box
-  (ESE) motif, the preferred binding site of Drosophila EoS proteins, and represses transcription of an ESE box
-  reporter."]; Gao et al. infer N-box binding in myoblasts from a HES6-VP16 fusion [PMID:11551980 "These results
-  confirm that HES6 binds to N boxes in myoblasts."], probably via heterodimers. Biological activities (myogenic,
-  proneural, anti-gliogenic) do NOT require Hes6's own DNA-binding basic arm [PMID:11959828; PMID:17065448].
-- Nuclear protein [PMID:11551980 "localized to the nucleus in transfected cells"; PMID:17065448 nuclear localisation
-  required].
-- Neurogenesis: promotes cortical neuron differentiation [PMID:12972610], knockdown in cortical progenitors yields
-  supernumerary astrocytes [PMID:17065448]; Hes6 knockout mice show impaired neuroblast differentiation in adult dentate
-  gyrus [PMID:26105991 "Hes6 knockout negatively affects neuroblast differentiation based on DCX
-  immunohistochemistry."]; retinal misexpression promotes rod differentiation [PMID:10851137].
-- Myogenesis: C2C12 overexpression can induce (Gao) or impair (Cossins) differentiation; knockdown disrupts actin and
-  fusion [PMID:21501606]. Direction is context-dependent, so "regulation of myoblast differentiation" is the safe level.
-- Other (not core): represses hepatic Pparg2 via HNF4a (adenoviral over/under-expression; PMID:29404444); sumoylation
-  at K27/K30 regulates stability (PMID:26435136, HeLa / NIH3T3); interacts with RelA/NF-kB in cortical progenitors
-  (PMID:23689134); oscillates antiphasically to Hes1 in liver (PMID:22913986, not cited in review).
+`just deep-research-falcon mouse Hes6 --fallback perplexity-lite` failed: falcon
+returned "Edison API request failed: Failed to authenticate" (HTTP 403) and the
+perplexity-lite fallback returned HTTP 401 "insufficient_quota". No deep-research
+file exists. The review is built from primary literature cached in
+`publications/` (PubMed search "Hes6[tiab]", 160 hits; mouse/mammalian
+mechanistic papers fetched with `just fetch-pmid`).
 
-## Inferred only (no mouse experimental evidence)
+### Evolutionary grounding
 
-- Anterior/posterior pattern specification (IBA, PTN000105428). The zebrafish ortholog acts in the segmentation clock
-  (Her7:Hes6 heterodimers), but no mouse Hes6 somitogenesis data were found; kept as non-core, flagged as inferred.
+- UniProt Q9JHE6 carries PANTHER PTHR10985 (HES-related bHLH family). The
+  subfamily placement PTHR10985:SF11 and pairwise identities were computed in
+  `genes/DANRE/hes6/hes6-bioinformatics/RESULTS-rereview.md` (mouse vs human
+  HES6 0.857 identity; vs zebrafish hes6 0.562; HES1, a different subfamily,
+  about 0.36 to the zebrafish protein). All SF11 members end in WRPW.
+- PAINT nodes reaching mouse Hes6 (`interpro/panther/PTHR10985/PTHR10985-paint.tsv`):
+  PTN004213585 (eukaryote-level HES/HEY node: nucleus, GO:0000978, GO:0000981,
+  GO:0000122; mouse Hes6 MGI:1859852 is itself a seed for GO:0000981 and
+  GO:0000122) and PTN000105428 (GO:0009952 A/P pattern specification and
+  GO:0050767 regulation of neurogenesis; mouse Hes6 is not a seed; zebrafish
+  hes6 ZDB-GENE-030828-5 is a seed for GO:0009952). A NOT IRD for GO:0050767
+  sits at PTN000105659 (taxon 9347), a different branch.
+- The ISO homo/heterodimerization rows (PMID:11076679) come from chicken HES1
+  (O57337, HES1_CHICK), a protein in a different PTHR10985 subfamily. The terms
+  are nevertheless supported directly in mouse (below).
 
-## Decisions summary
+### What is experimentally established for mouse Hes6
 
-- Core MF: transcription regulator inhibitor activity (GO:0140416; antagonising Hes1), binding to Hes1
-  (GO:0061629), transcription corepressor binding (GO:0001222, NEW; TLE via WRPW), dimerisation.
-- DNA-binding / DNA-binding TF rows: kept as non-core (contested), general ones MODIFIED to the specific
-  IDA-supported terms (GO:0000977, GO:0001227).
-- Generic development/differentiation rows MODIFIED to positive regulation of neuron differentiation /
-  positive regulation of neurogenesis / regulation of myoblast differentiation.
+1. Hes1 antagonist / transcription regulator inhibitor. Mouse Hes6 binds Hes1,
+   "Hes6 alone does not bind to the DNA but suppresses Hes1 from repressing
+   transcription", and relieves Hes1 inhibition of Mash1-E47 [PMID:10851137].
+   Hes6 "inhibits the interaction of Hes1 with its transcriptional corepressor
+   Gro/TLE. Moreover, it promotes proteolytic degradation of Hes1" [PMID:12972610].
+   Sumoylation at K27/K30 modulates stability and derepression of Hes1 targets
+   [PMID:26435136].
+2. Dimerization. "Hes6 preferentially forms homodimers"; heterodimerization with
+   Hes1 is restrained by an N-terminal acidic patch [PMID:17868320].
+3. Groucho/TLE binding via WRPW and repression when tethered. Mouse HES6 (clone
+   "identical to the published mouse HES6 cDNA but lacks the first 16 amino
+   acids") "interacted with the corepressor transducin-like Enhancer of split 1
+   in yeast and mammalian cells through its WRPW COOH-terminal motif" and
+   "repressed transcription from an N box-containing template and also when
+   tethered to DNA through the GAL4 DNA binding domain" [PMID:11551980].
+4. DNA binding: contested. Bae 2000 reports no autonomous DNA binding
+   [PMID:10851137]; Cossins 2002 reports ESE E-box binding and repression of an
+   ESE reporter [PMID:11959828]; Gao 2001 infers N-box binding from a HES6-VP16
+   reporter [PMID:11551980]; human HES6 has an HT-SELEX IDA (PMID:28473536,
+   ARUK-UCL, source of the ISO GO:1990837 row). Crucially, the neural and
+   myogenic activities do NOT require the basic DNA-binding arm
+   [PMID:17065448; PMID:11959828; Xenopus PMID:22114720]. Zebrafish data show
+   Hes6 homodimers bind weakly while Her7:Hes6 heterodimers bind strongly
+   (family review PTHR10985). I keep DNA-binding terms as non-core.
+5. Cortical neurogenesis / gliogenesis. Hes6 promotes cortical neuron
+   differentiation [PMID:12972610]; knockdown makes progenitors adopt astrocytic
+   fate and overexpression suppresses astrocyte differentiation, with separable
+   mechanisms [PMID:17065448; PMID:17868320]. Retroviral misexpression in retina
+   promotes rod differentiation [PMID:10851137]. Interacts with RelA-NF-kB in
+   cortical progenitors [PMID:23689134, abstract only].
+6. Myogenesis: conflicting overexpression results (Gao: induces
+   differentiation via MyoR repression [PMID:11551980]; Cossins: impairs C2C12
+   differentiation [PMID:11959828]); knockdown leaves differentiation markers
+   intact but disrupts F-actin, motility and fusion [PMID:21501606].
+   Hes6 is a direct MyoD/Myf5 target.
+7. Loss of function in vivo: Hes6-null mice (tau-lacZ/lacZ replacement) show no
+   detectable inner-ear defect, "similar to observations in other tissues"
+   [PMID:16534784]; adult dentate gyrus shows reduced DCX+ neuroblasts but no
+   proliferation or integration defect [PMID:26105991]. So Hes6 is largely
+   dispensable in vivo; most functional data are gain-of-function or knockdown
+   in culture.
+8. Expression: induced by proneural bHLH proteins, not by Notch
+   [PMID:10976052]; downstream of Math1 in inner-ear hair cells [PMID:16534784];
+   embryonic nervous system, myotome, thymus, epithelia [PMID:10906477;
+   PMID:11044617].
+9. Peripheral reports: hepatic Pparg2 repression (adenoviral overexpression /
+   shRNA in mouse liver) [PMID:29404444]; circadian LDLR promoter repression in
+   HepG2 [PMID:22913986]; CBP/PML body interaction [PMID:18160400, abstract
+   only]; WRPW acts as a proteasomal degron [PMID:15896295]. Not used for GO
+   terms.
+
+### Decisions
+
+- Core MF: GO:0140416 transcription regulator inhibitor activity (Hes1
+  antagonism), GO:0061629 binding Hes1, GO:0046982/GO:0042803 dimerization.
+  NEW: GO:0001222 transcription corepressor binding (TLE1 via WRPW, mouse
+  HES6, PMID:11551980).
+- Core BP: positive regulation of neuron differentiation (MODIFY from nervous
+  system development IMP), positive regulation of neurogenesis (MODIFY from
+  IBA regulation of neurogenesis). NEW: GO:0048712 negative regulation of
+  astrocyte differentiation (PMID:17065448 knockdown + overexpression; Hes6 is a
+  nuclear transcription regulator acting in the progenitor itself, so this is a
+  regulatory role, not a downstream phenotype).
+- A/P pattern specification IBA: MARK_AS_OVER_ANNOTATED; no mouse evidence and
+  Hes6-null mice are without reported patterning defects; the segmentation-clock
+  role is established only for zebrafish hes6 (Her7:Hes6 heterodimer).
+- For transfer to zebrafish hes6: transferable with confidence = Hes1/Hairy
+  antagonism through heterodimerization, Groucho/TLE binding (WRPW conserved),
+  nuclear location. Not transferable without care = DNA-binding repressor
+  activity (contested in mouse, partner-dependent in fish).

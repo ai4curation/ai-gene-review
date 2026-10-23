@@ -52,59 +52,56 @@ Exact sequence mapping: [UBE2F-bioinformatics/RESULTS.md](UBE2F-bioinformatics/R
 
 The genuine Falcon report is retained. Its gene-level synthesis is interpreted through the exact product sequence and the primary sources above; the truncation boundary and paralog distinctions are assessed independently.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+Scope: re-examined the description, core functions and references from the literature, the
+UniProt records (F8WDQ9 and the reviewed Q969M7 in UBE2F-same-gene-reference.json) and the
+PANTHER/PAINT evidence. No ProtNLM2 file or prediction-evidence folder was opened.
 
-### 2026-10-20 full re-review (independent of any ML predictions)
+### Identity of F8WDQ9
+- F8WDQ9 (101 aa, TrEMBL) is the Ensembl model ENST00000455999 / ENSP00000389685 of UBE2F
+  (ENSG00000184182, HGNC:12480). It is not among the seven isoforms described on Q969M7
+  (Q969M7-1..7), so it is an alternative gene model, not a curated UniProt isoform.
+- Residues 1-94 are identical to Q969M7 1-94. Canonical residues 95-178 are absent, and a 7-residue
+  tail (FIERTFN) follows, with only 2/7 identity to canonical 179-185
+  (UBE2F-bioinformatics/RESULTS.md, alignment.txt).
+- Retained: the N-terminal UBA3-docking extension (canonical "Interaction with UBA3" region 1-29),
+  the N-acetyl-Met1/Leu2/Leu4 surface that binds the DCNL PONY domain [PMID:23201271
+  "LC-MS/MS analysis revealed UBE2F as retaining its N-terminal methionine and being
+  N-terminally acetylated"], and the first ~60 residues of the UBC fold (helix 1 and beta 1-4).
+- Lost: the HPN motif (His106-Pro107-Asn108) and catalytic Cys116 (C116 mutagenesis abolishes
+  NEDD8 conjugation on Q969M7), plus the C-terminal helices of the UBC core. UniProt's PROSITE
+  rule PRU00388 carries the matching CAUTION ("Lacks conserved residue(s) required for the
+  propagation of feature annotation"). F8WDQ9 therefore cannot be a NEDD8- or ubiquitin-
+  conjugating enzyme.
 
-#### Identity of the benchmark accession
+### Evolutionary grounding
+- Canonical Q969M7 is in PANTHER PTHR24067 (UBIQUITIN-CONJUGATING ENZYME E2). The PAINT node
+  PTN000630367 carries IBD NEDD8 transferase activity (GO:0019788) and protein neddylation
+  (GO:0045116), with donors UBE2M P61081, Q969M7, fly, mouse and yeast Ubc12.
+- F8WDQ9 has no PANTHER assignment and no IBA rows. It is a same-gene product, so the
+  relationship needs no orthology inference, but the inherited catalytic function needs the
+  active site that it lacks. I therefore transfer no function from the PAINT node.
+- PTHR24067 family review (interpro/panther/PTHR24067/PTHR24067-review.yaml): it says that NEDD8
+  specificity needs separate evidence. This matches my reading, and I found no disagreement about
+  subfamily placement. A NEDD8-E2 subfamily (SF261 "NEDD8-CONJUGATING ENZYME UBC-12") exists, but
+  UniProt lists only the family-level PTHR24067 for Q969M7, and F8WDQ9 has no assignment, so no
+  subfamily claim is made.
 
-F8WDQ9 is an unreviewed 101-residue UniProt entry derived from Ensembl ENSP00000389685
-(transcript ENST00000455999), gene UBE2F (HGNC:12480). It is NOT the canonical product.
-The reviewed canonical product is Q969M7 (185 aa).
+### Annotation decisions
+- GOA has no rows for F8WDQ9 (empty GOA file), so there are no existing annotations to act on.
+- core_functions is left empty on purpose: no activity has been shown for, or can be inferred
+  for, a product without the catalytic Cys. I did not propose any NEW term, because necessity of
+  the gene (canonical product) for CUL5 neddylation does not show that this product takes part.
+- Description rewritten: it describes the gene and the canonical product, then states precisely
+  what F8WDQ9 keeps and lacks.
+- Added PMID:23201271 (N-terminal acetylation and DCNL binding, residues 1-25 kept in F8WDQ9) and
+  the UniProt flat file (family membership and CAUTION). The protnlm-source.json reference is
+  kept but marked relevance NONE, not used.
 
-Sequence mapping ([RESULTS.md](UBE2F-bioinformatics/RESULTS.md); script now reads the
-F8WDQ9 sequence from `UBE2F-uniprot.txt` rather than any prediction file):
-
-- F8WDQ9 1-94 = Q969M7 1-94 (100% identity), then a 7-residue alternative tail `FIERTFN`.
-- The tail matches the C-terminal end of the described isoform 5 alternative sequence
-  (VSP_037271, `...MSEFIERTFN`), but the splice junction differs (isoform 5 diverges at
-  residue 72, F8WDQ9 at 95), so F8WDQ9 is not identical to any Swiss-Prot-described isoform.
-- Retained: N-terminal E1-docking extension and acetylated N terminus (the DCNL-binding
-  segment; [PMID:23201271 "recognizes acetylated N termini"]), and about 70 of the 154 UBC-core residues.
-- Lost: catalytic Cys116 (glycyl thioester site) and the rest of the UBC core. UniProt itself
-  cautions: "Lacks conserved residue(s) required for the propagation of feature annotation".
-- Conclusion: a truncated alternative gene-model product; cannot be a NEDD8-conjugating
-  enzyme. No proteomic evidence of expression was found.
-
-#### Existing annotations
-
-GOA has zero rows for F8WDQ9. Nothing to accept/remove. I did not propose NEW terms:
-transferring NEDD8 conjugating enzyme activity (GO:0061654) or protein neddylation
-(GO:0045116) from Q969M7 would be wrong given the missing catalytic cysteine, and binding
-terms for the retained N-terminus have no direct evidence for this product.
-
-#### Evolutionary context
-
-- Canonical Q969M7 is classified in PANTHER PTHR24067 by UniProt; panther.obo also has a
-  subfamily PTHR24068:SF129 "NEDD8-CONJUGATING ENZYME UBE2F" — release skew between
-  PTHR24067 and PTHR24068, already documented in `interpro/panther/PTHR24068/PTHR24068-review.yaml`.
-- PAINT node PTN000630367 (NEDD8-conjugating clade, seeds include human UBE2M P61081,
-  UBE2F Q969M7, mouse MGI:1915171, yeast UBC12) carries IBD GO:0019788 and GO:0045116.
-  F8WDQ9 itself has no PANTHER assignment and no IBA, consistent with the truncation.
-- Closest characterised relative: the canonical product Q969M7 of the same gene; nearest
-  ortholog with experimental seeding is mouse Ube2f (Q9CY34, MGI:1915171), in the same
-  UBE2F subfamily. No review exists in the repo for either. Paralog UBE2M (P61081) is the
-  other branch of the same PAINT clade.
-- GO-CAM 6606056e00002524 (HIV-1 Vif / CUL5) includes Q969M7 as NEDD8 conjugating enzyme.
-
-#### Literature on the canonical protein (gene-level baseline only)
-
-- [PMID:19250909 "the previously uncharacterized E2 UBE2F is a NEDD8-conjugating enzyme in vitro"]
-- [PMID:23300442 "conjugation of NEDD8 to Cullin-5 by the NEDD8-conjugating enzyme UBE2F is required for HIV Vif-mediated degradation"]
-
-#### Modules
-
-`modules/ubiquitin_transfer_relay.yaml` (generic E1-E2-E3 relay, also reused by NEDD8) is
-the only relevant module; no dedicated neddylation module exists (curation gap, noted here).
+### Relative
+- Relative for the next review: canonical same-gene product Q969M7 (UBE2F), relation
+  same_gene_canonical. Its complete review is in open PR #5303
+  (genes/human/UBE2F__Q969M7/UBE2F__Q969M7-ai-review.yaml), so no new review is needed.
+- Modules: modules/ubiquitin_transfer_relay.yaml (generic E1-E2-E3 relay, which mentions NEDD8 reuse).
+  modules/dmel_cop9_signalosome.yaml covers deneddylation (fly) and is related only indirectly.

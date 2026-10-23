@@ -122,3 +122,10 @@
   (Q39193) both carry GO:0009738 (TAS) in GOA; SnRK2.2 does not — a gap, not a
   convention. Pathway reconstitution (PMID:19924127) shows the SnRK2s are core
   components.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+- TOPP1/AtI-2 regulation added to the description and core function 1 [PMID:26943172 "TOPP1 and AtI-2 negatively regulated the SnRK2.2/3/6-mediated activation of the ABA responsive reporter gene RD29B"]; core function 1 now cites the curated UniProt FREE1 statement (ECO:0000269, PMID:30962512).
+- The ten GO:0005515 rows with clade A PP2C partners (ABI1, ABI2, HAB1, AHG1) changed from REMOVE to MODIFY to GO:0019903 protein phosphatase binding, matching the OST1 review, which ACCEPTs a curated GO:0019903 IPI row (PMID:19955427) in place of its generic phosphatase-binding rows. The bHLH122 and MAP4K rows stay REMOVE.
+- GO:0009737 rows: reason now explains why the term is kept alongside GO:0009738.
+- Source defect recorded on the PMID:19407142 IPI row: WITH/FROM is ABI1 (P49597) but the cached main text names only PP2CA/AHG3 (P49598) and AHG1 [PMID:19407142 "we observe interaction of SnRK2.2 with PP2CA/AHG3 and AHG1 using the Y2H assay (SOM Figure 3)"]. Confidence SUSPECTED because the supplementary figure was not checked.

@@ -197,6 +197,13 @@ fetch-panther-paint-all *args="":
 paint-review-coverage *args="":
     uv run python scripts/paint_review_coverage.py {{args}}
 
+# Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
+# `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
+# verdict or overwrites a curated field; lists losses still judged with a gain verdict.
+# Dry run by default. Example: just fill-node-evidence --apply interpro/panther/PTHR12210/PTHR12210-review.yaml
+fill-node-evidence *args="":
+    uv run python -m ai_gene_review.validation.family_node_evidence {{args}}
+
 # Regenerate the PANTHER IBA project tables through public wrapper recipes.
 # These may download cached PAINT source data on the first run.
 [group('QC')]
@@ -2617,6 +2624,21 @@ scan-prose-panther *args="": ensure-panther-members
 [group('QC')]
 panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# Audit Swiss-Prot reviews outside their exact taxon's reference proteome.
+# Default writes CSV + issue-ready Markdown; use --format csv/markdown, --species POPTR,
+# --refresh, --offline, or --output-dir PATH. See projects/ORPHAN_CURATED.md.
+[group('QC')]
+[positional-arguments]
+orphan-curated *ARGS:
+    uv run python -m ai_gene_review.analysis.orphan_curated "$@"
+
+# Render counterpart assessments from project frontmatter genes and curated review YAML.
+# Defaults to ORPHAN_CURATED; accepts --project PATH, --output-dir PATH and --check.
+[group('QC')]
+[positional-arguments]
+project-counterparts *ARGS:
+    uv run python -m ai_gene_review.analysis.project_counterparts "$@"
 
 # ============ History records (ported from dismech) ============
 # Append-only curation session history under history/. See docs/history.md.

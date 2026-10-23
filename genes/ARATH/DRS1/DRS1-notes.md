@@ -66,50 +66,41 @@ The DRS1/AraNet paper, the DWD-family paper and the Arabidopsis 5hmC study have 
 
 Heterochromatin (IBA), Cul4-RING E3 ubiquitin ligase complex (ISS) and regulation of DNA damage checkpoint (IBA) are now KEEP_AS_NON_CORE. There is no target-specific evidence of divergence from the WDR76/CMR1 node. DRS1 carries the DWD motif, and the cached WDR76 paper states that WDR76 associates with Cul4-DDB1 and that yeast CMR1 is involved in a DNA damage checkpoint. All three remain untested in Arabidopsis.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+ProtNLM-derived files in this folder (`DRS1-protnlm-*`, `DRS1-5hmc-prediction-donor.json`) were not opened or used.
 
 ### Identity
 
-- Q9SAI7 is the single UniProt entry for At1g80710 (DRS1, DROUGHT SENSITIVE 1), 516 aa, RefSeq NP_178186.1.
-  UniProt lists no alternative products; the benchmark accession is the canonical full-length product,
-  not an isoform or fragment. It contains the WD40 repeats of the family (Pfam PF00400 x2, SMART x4) and an
-  N-terminal disordered region (31-102, MobiDB-lite).
-- PANTHER PTHR14773 has a single subfamily, SF0 (WD REPEAT-CONTAINING PROTEIN 76), which contains DRS1,
-  yeast CMR1 (Q12510, YDL156W), human WDR76 (Q9H967) and many fungal/vertebrate members. All three IBA rows
-  descend from PAINT node PTN000381277 with CMR1 and/or WDR76 as experimental donors. There is no subfamily
-  split to argue with; the family review (interpro/panther/PTHR14773/PTHR14773-review.yaml) agrees on SF0.
-- The UniProt FUNCTION comment (5hmC reader) is ARBA-only and is not used as evidence.
+Q9SAI7 is the single UniProt product of AT1G80710/DRS1 (516 aa; EMBL AEE36439.1, RefSeq NP_178186.1). It is an unreviewed TrEMBL entry but is the canonical, full-length gene product, not an isoform or fragment. Its length matches the yeast ortholog Cmr1 (Q12510, 522 aa); human WDR76 (Q9H967, 626 aa) is longer at the N terminus. UniProt records WD repeats (PROSITE PS50082/PS50294, SMART SM00320 x4) and an N-terminal disordered region (31-102, MobiDB-lite). The UniProt FUNCTION line (5hmC reader) and the DNA-binding/DNA damage keywords are ARBA-only and were not used as evidence.
 
-### Target-specific evidence
+### Evolutionary grounding
 
-- [PMID:20118918 "We designate At1g80710 as Drs1 (drought sensitive 1)"]: drs1-1 retained ~80% of WT water
-  under drought; detached leaves insensitive to ABA for water loss; independent allele drs1-2 same phenotype;
-  ABA-dependent germination unaffected ["ABA showed no effect on germination rate in the mutant (data not shown)"].
-- Same paper: "Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif". DDB1 binding
-  is not tested for DRS1.
+PANTHER PTHR14773 has three subfamilies. DRS1, human WDR76 (Q9H967), mouse Wdr76, Xenopus wdr76 and yeast Cmr1 (Q12510) are all in PTHR14773:SF0 (interpro/panther/PTHR14773/PTHR14773-entries.csv), so they are orthologs and the PAINT node PTN000381277 (WDR76/CMR1) covers DRS1. Gallina et al. 2015 treat WDR76 as the Cmr1 ortholog [PMID:25817432 "WDR76 is the closest orthologue of Cmr1 in higher eukaryotes"]. The IBAs (DNA binding, nucleus, heterochromatin, regulation of DNA damage checkpoint) therefore descend from experimentally grounded donors:
+- yeast Cmr1: nuclear, DNA binding in vitro, chromatin accumulation after UV [PMID:25817432 "Cmr1 was described as a histone-related protein11, with DNA-binding capacity in vitro and with the ability to accumulate on chromatin in response to ultraviolet irradiation"]; checkpoint adaptation defect [PMID:25817432 "Deletion of CMR1 causes increased chromosome loss and mutation rates, a defect in DNA-damage checkpoint adaptation"].
+- human WDR76: chromatin association and stress foci [PMID:25817432 "WDR76 associated with chromatin in untreated cells and relocalized into nuclear foci under replication stress conditions"]; CBX1/CBX5 co-localization [PMID:27248496].
 
-### Evolutionary (ortholog) evidence
+No plant member has been tested for any of these; no evidence of divergence exists either.
 
-- Yeast CMR1: "higher affinity for UV-damaged DNA and had increased localization to chromatin upon UV treatment";
-  linked to a DNA damage checkpoint [PMID:27248496, review of prior yeast work].
-- Human WDR76: co-localizes with CBX1/CBX5, recruited to UV-laser damage, associates with Cul4-DDB1 [PMID:27248496].
-- PAINT propagated generic DNA binding, nucleus, heterochromatin and regulation of DNA damage checkpoint, not
-  damaged-DNA binding or 5hmC binding; I treat the omission as deliberate. Arabidopsis DNA has no appreciable
-  5hmC [PMID:25380728], a further reason not to transfer a 5hmC-reader role.
+### Decisions (changes from the previous version)
 
-### Decisions (2026-10-20 full re-review)
+- All actions retained. DNA binding (IBA) and nucleus (IBA, ISM) ACCEPT; heterochromatin, Cul4-RING complex (ISS) and checkpoint regulation KEEP_AS_NON_CORE; drought and ABA IMPs ACCEPT.
+- Support for the DNA binding and nucleus rows was wrong in kind: it quoted the CBX co-localization and the DWD motif, neither of which addresses DNA binding. Replaced with Gallina et al. 2015 (yeast Cmr1 DNA binding, nuclear localization), now added as a reference.
+- Checkpoint row now cites the Gallina primary result instead of the WDR76 paper's paraphrase of it.
+- Added a second core function (conserved nuclear DNA-binding activity, phylogenetically inferred) alongside the drought/ABA core function.
+- ABA row now also records that germination ABA response is unaffected, so the term should not be expanded to ABA signaling generally.
+- ISS Cul4-RING: noted that the comparator PRL1 is not a DRS1 ortholog; the inference rests on the DWD motif plus the reported Cul4-DDB1 association of the ortholog WDR76.
+- Description rewritten to state the subfamily placement and to separate inherited ortholog properties from the DRS1-specific phenotype.
 
-- ACCEPT: DNA binding (IBA), nucleus (IBA, ISM), response to water deprivation (IMP), response to ABA (IMP).
-- KEEP_AS_NON_CORE: heterochromatin (IBA; single human donor), Cul4-RING E3 complex (ISS via DWD motif; PRL1 is not
-  an ortholog), regulation of DNA damage checkpoint (IBA; untested in plants).
-- Removed prediction-derived file references from the review; this review is independent of computational
-  name/function predictions.
-- Deep research (falcon) missed the primary DRS1 paper; its "no target-specific study" conclusion is not adopted.
+### Relative to review next
 
-### Closest characterised relative
+Human WDR76 (Q9H967), same PANTHER subfamily (PTHR14773:SF0) and PAINT donor for heterochromatin/nucleus. Yeast Cmr1 (Q12510) is equally an ortholog and is the better-characterized donor. Neither has a review in the repo.
 
-- Human WDR76 (Q9H967), same PANTHER subfamily SF0 and PAINT node; yeast CMR1 (Q12510) is equally close
-  phylogenetically. Neither has a review in the repo (no genes/human/WDR76 or genes/yeast/CMR1).
-- No modules in modules/ reference DRS1, WDR76 or PTHR14773.
+### Family review / modules
+
+interpro/panther/PTHR14773/PTHR14773-review.yaml lists DRS1 as the SF0 representative; no disagreement on subfamily placement. Its SF0 description could add WDR76 and Cmr1 as experimentally characterized representatives. No module in modules/ covers DRS1, WDR76 or Cmr1.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The drought/ABA water-loss entry was removed from `core_functions`. It described a loss-of-function phenotype with no molecular function and an unknown mechanism, which is necessity, not participation. The conserved nuclear DNA-binding WD40 role (WDR76/CMR1 subfamily, PTHR14773:SF0) is now the only core function.
+- The two IMP rows (GO:0009414 response to water deprivation, GO:0009737 response to abscisic acid; acts_upstream_of_or_within, PMID:20118918) changed from ACCEPT to KEEP_AS_NON_CORE. The genetic evidence is sound and the terms are as precise as it allows, so they are kept, but they are not core. The phenotype stays in the description and in the suggested question about the DRS1 mechanism.

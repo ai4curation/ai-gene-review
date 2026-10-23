@@ -38,53 +38,69 @@ No target-specific biochemical study was located under AT4G38370 or Q0WW53. The 
 
 Exact sequence mapping: [AT4G38370-bioinformatics/RESULTS.md](AT4G38370-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
 
-## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-This entry was written during a re-review that deliberately ignored the ProtNLM2 predictions; the earlier sections above, including the ProtNLM2 claim assessments, are retained unchanged.
+Done without opening any ProtNLM file or prediction-evidence folder.
 
-### 2026-10-20 full re-review (independent of ProtNLM predictions)
+### Entry identity
 
-The previous version of this review was built around a ProtNLM prediction and its structure-matched
-TIGAR donor. That framing has been dropped: TIGAR (human/zebrafish) sits in a different PANTHER family
-from AT4G38370, so its fructose-2,6-bisphosphatase biochemistry cannot be transferred. The TIGAR
-references and the prediction-derived files are no longer cited.
+- Q0WW53 is the RIKEN full-length cDNA entry (EMBL BAE98645.1) for At4g38370. Its 225-residue
+  sequence is identical to F4JTN4, the reference-proteome entry from the genome annotation (EMBL
+  AEE86920.1, RefSeq NP_568040.1, Proteomes UP000006548). A third TrEMBL entry, Q8LCU4, is a cDNA
+  variant differing only at K90E. See `AT4G38370-bioinformatics/RESULTS-rereview.md`.
+- Q0WW53 is therefore not a fragment, isoform or alternative gene model. It is a redundant entry for
+  the full canonical product.
+- QuickGO (checked 2026-10-21): Q0WW53 has 0 GO annotations, matching the empty GOA file. The TAIR rows
+  for the locus are on F4JTN4: `GO:0003674` ND, `GO:0008150` ND, and `GO:0005634` nucleus by ISM
+  (GO_REF:0000122). No repo review exists for F4JTN4.
 
-#### Identity
-- Q0WW53 (RIKEN cDNA BAE98645.1, 225 aa) is sequence-identical to F4JTN4, the TAIR/Araport
-  AT4G38370 gene-model product (NP_568040.1). Q8LCU4 differs at one residue (K90E). So the benchmark
-  accession is the full-length canonical product, not an isoform or fragment.
-- UniProt PE level 1 comes from a large-scale N-terminal acetylation proteomics study
-  (PMID:22223895); the gene is not named in the cached main text (supplementary data).
+### Evolutionary placement
 
-#### Family / evolutionary placement
-- Domains: Pfam PF00300 His_Phos_1, InterPro IPR013078 His_Pase_superF_clade-1, CDD cd07067
-  HP_PGM_like [file:ARATH/AT4G38370/AT4G38370-uniprot.txt "DR   InterPro; IPR013078; His_Pase_superF_clade-1."].
-- PANTHER PTHR47821 (single subfamily SF2), "PHOSPHOGLYCERATE MUTASE FAMILY PROTEIN".
-  InterPro counts: 951 proteins, 697 proteomes. A UniProt query of the first 500 members shows
-  land plants (Gossypium, Oryza, Solanum, Prunus, Populus, Arabidopsis...), algae/diatoms (Triparma,
-  Durusdinium) and ~70 bacterial members (Halomonas, Vreelandella, Billgrantia, Enterovibrio,
-  Brachybacterium). None is Swiss-Prot reviewed and none has experimental characterization.
-- No GOA annotations exist for Q0WW53 (no IBA), so there is no PAINT node for this family.
-- Motifs: RHG at 16-18 (His17, putative nucleophile); SHGD at 172-175 (His173, second conserved
-  histidine typical of clade 1). Presence of the motifs suggests, but does not show, catalytic activity.
-- The falcon deep research conflates clade 1 (PF00300) with clade-2 histidine acid phosphatases and
-  phytases (RHGXRXP, PF00328). Its phytase/acid phosphatase discussion is not applicable.
+- PANTHER PTHR47821 (PHOSPHOGLYCERATE MUTASE FAMILY PROTEIN) has a single subfamily, SF2. The PANTHER 19
+  reference tree (treeinfo service) has 47 leaves: land plants, Klebsormidium, Chlamydomonas,
+  Thalassiosira and Monosiga. The root node is PTN005357400 (Eukaryota).
+- InterPro member counts: 951 proteins. Viridiplantae 587, Fungi 67, Bacteria 182, Metazoa 15. There
+  are no Swiss-Prot members and no members in human, mouse, yeast, fission yeast, E. coli, fly, worm or
+  zebrafish. No family member has been characterised experimentally. Q0WW53 has no IBA rows, so PAINT
+  has not propagated any function to this family.
+- Ortholog names in RefSeq ("metal-independent phosphoserine phosphatase", "Mb2253c-like") are
+  automatic name transfers. They are not evidence and are not used.
+- The characterised branch-1 enzymes are in other PANTHER families: human and E. coli dPGM are in
+  PTHR11931, and TIGAR is in PTHR46517 (verified from UniProt). I used them only as fold-level
+  comparators to test whether the catalytic residues are retained. No substrate-specific function is
+  transferred from them.
 
-#### Closest characterized relative
-- No experimentally characterized member of PTHR47821 exists. Characterized clade-1 proteins (dPGM,
-  TIGAR, PFKFB bisphosphatase domain, UBASH3/Sts-1, bacterial SixA/PhoE) all belong to other PANTHER
-  families, so any transfer would be superfamily-level only. Relative recorded as none_found.
+### Catalytic residues (new script `catalytic_residues_rereview.py`)
 
-#### PANTHER family review
-- interpro/panther/PTHR47821/PTHR47821-review.yaml: coherence UNKNOWN; agrees with SF2 placement.
-  It leans on TIGAR/ProtNLM donor material, which this re-review no longer uses; no disagreement on
-  subfamily placement.
+- Q0WW53 has RHG at 16-18, LRERYFG at 107-113 and SHGD at 172-175.
+- In local alignments (31-36% identity), His17 aligns with the curated phosphohistidine nucleophile of
+  PGAM1, GpmA and TIGAR. Glu109 aligns with their proton donor/acceptor, and His173 aligns with the
+  transition-state stabiliser of PGAM1 and GpmA.
+- Conclusion: the protein is probably catalytically active, but its substrate and reaction class are
+  unresolved.
 
-#### Modules
-- No module includes AT4G38370. The glycolysis/gluconeogenesis modules containing PGAM are not
-  applicable because phosphoglycerate mutase activity is not established for this family.
+### Literature
 
-#### Annotation decisions
-- No existing GO annotations to review. No NEW annotations proposed: a generic catalytic or
-  phosphatase activity term would rest only on superfamily membership, and the superfamily includes
-  both mutases and phosphatases with diverse substrates.
+PubMed and Europe PMC searches for At4g38370, Q0WW53 and F4JTN4 found no functional study. Europe PMC
+returned two hits that only mention the locus in large-scale data (a phylogenetic marker set and an
+embryo single-nucleus expression study). PMID:22223895 is the large-scale proteomics study behind PE
+level 1. The falcon report agrees that no gene-specific literature exists.
+
+### Changes to the review
+
+- Rewrote the description in terms of family placement and the retained catalytic triad.
+- Added one core function (predicted phosphotransfer catalysis) with no GO molecular function asserted,
+  plus a BIOLOGY knowledge gap and suggested experiments.
+- Lowered the relevance of the TIGAR paper to LOW because it is a different PANTHER family. Kept all
+  earlier references, and marked the prediction-derived files as unused.
+- No GOA rows to act on.
+
+### Relative
+
+No experimentally characterised ortholog or paralog exists within PTHR47821. The next item is the
+canonical reference-proteome entry for the same gene, F4JTN4, which holds the TAIR GO rows and has no
+review. It would go in `genes/ARATH/AT4G38370__F4JTN4`.
+
+The PANTHER family review `interpro/panther/PTHR47821/PTHR47821-review.yaml` agrees on the SF2
+placement. Its coherence is UNKNOWN and it leans on TIGAR, which is in a different family. The review
+does not disagree on subfamily placement. No module in `modules/` mentions this gene.
