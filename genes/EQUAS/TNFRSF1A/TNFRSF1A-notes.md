@@ -114,3 +114,16 @@ another product of the same gene, reviewed in `genes/EQUAS/TNFRSF1A__A0A8C4MD74/
 annotations to one representative product per gene, so adding them to a second product fills a
 convention rather than a curation gap. The rows were withdrawn under the rule applied across the
 ProtNLM2 re-review cohorts, first raised in the review of PR #5303. The gene-level function is unchanged.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+- Core-function location GO:0005886 plasma membrane, left after the 2026-10-21 withdrawal of its NEW row,
+  is kept under the convention accepted in PRs #5305 (MESK2) and #5308 (FTSH12): a core term stays when
+  core_functions supported_by cites direct evidence independent of the withdrawn row. Added the curated
+  human UniProt line "Cell membrane {ECO:0000269|PubMed:22801493}"; the donkey product retains the signal
+  peptide and transmembrane segment. The PR reviewer preferred dropping it; it is kept for consistency
+  across cohorts, and no annotation row re-asserts it on this product.
+- Replaced the uninformative core-function quote "- human residues 64-106." with the RESULTS.md identity
+  line and the RESULTS-rereview.md statement that the skipped exon encodes the C-terminal half of the first
+  cysteine-rich domain and most of the second.
+- The 2026-10-21 bullets describing a plasma membrane NEW row are superseded by the withdrawal section.

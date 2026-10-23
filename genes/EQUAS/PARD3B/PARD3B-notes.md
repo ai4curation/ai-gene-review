@@ -57,3 +57,10 @@
 
 ### Modules
 - No module in modules/ contains PARD3B. modules/dmel_epithelial_polarity_complexes.yaml covers the Drosophila Bazooka/PAR complex (PAR3 family, SF17), which is related only at family level.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+Dropped the two remaining `ortholog_experimental_goa.txt` quotes (GO:0030054 cell junction and
+GO:0032991 protein-containing complex). A GO annotation listing is not evidence for an annotation; both
+rows keep their primary support (PMID:12459187, PMID:16458856). The listing reference is downgraded to
+relevance LOW and noted as provenance only.

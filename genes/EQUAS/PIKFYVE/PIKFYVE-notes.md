@@ -17,3 +17,11 @@
 - Evolutionary placement: UniProt places A0A9L0JQ61, A0A8C4L106, human Q9Y2I7 and mouse Q9Z1T6 in PANTHER PTHR46715:SF1 (the only subfamily). Yeast Fab1 (P34756) is in a different PANTHER family (PTHR45748:SF7), so the mammalian ortholog, not yeast Fab1, is the relevant phylogenetic comparator. No PANTHER family review exists under interpro/panther/PTHR46715/ (only entries/metadata), so no placement disagreement to report.
 - Annotation decisions re-examined and kept: both kinase MF rows REMOVE (no catalytic domain in this product; activity belongs to the full-length products of the same gene); four kinase-dependent BP rows REMOVE; two vesicle CC rows UNDECIDED (FYVE targeting lost, no localization data for the short isoform; DEP-mediated membrane association is untested); DEP-domain InterPro2GO signal transduction MARK_AS_OVER_ANNOTATED. Added the new same-gene alignment as support on the MF rows; description updated with the same-gene relationship. No core function (uncharacterized isoform); knowledge gap retained.
 - Relative to review next: the canonical product of the same gene, donkey A0A8C4L106 (would go in genes/EQUAS/PIKFYVE__A0A8C4L106); no review exists. Characterized ortholog for later transfer: human PIKFYVE Q9Y2I7 (same PANTHER subfamily), also unreviewed in the repo. Module: modules/phosphoinositide_biosynthesis.yaml (yeast Fab1 PI(3,5)P2 branch).
+
+## 2026-10-23 — PR #5309 review follow-up
+
+The PR reviewer asked whether this review needs core_functions. I left it without one. core_functions
+records positive function statements, and no activity, process or location can be asserted for this
+kinase-less isoform: every catalytic and PI(3,5)P2-dependent row is removed on domain-architecture
+grounds and the localization rows are UNDECIDED. The absence of a known function is stated explicitly in
+the description and in the BIOLOGY knowledge_gaps entry, with a matching suggested experiment.

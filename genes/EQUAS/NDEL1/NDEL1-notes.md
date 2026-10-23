@@ -88,3 +88,8 @@ review (PMID:16291865, 15473966, 20007476, 20403325, 14970193, 17600710, 3708678
 
 Human NDEL1 (Q9GZM8), same PANTHER subfamily SF0; complete review at `genes/human/NDEL1/NDEL1-ai-review.yaml`.
 Module: `modules/nucleokinesis.yaml`.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+Removed a duplicated supported_by entry (the RESULTS-rereview.md "collinear with human isoform 1" quote
+was listed twice on the NEW GO:0140659 cytoskeletal motor regulator activity row). No change of action.

@@ -68,3 +68,14 @@ another product of the same gene, reviewed in `genes/HORSE/SLC27A5/`. GOA propag
 annotations to one representative product per gene, so adding them to a second product fills a
 convention rather than a curation gap. The rows were withdrawn under the rule applied across the
 ProtNLM2 re-review cohorts, first raised in the review of PR #5303. The gene-level function is unchanged.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+Core-function process GO:0008206 bile acid metabolic process, left after the 2026-10-21 withdrawal of its
+NEW row, is kept under the convention accepted in PRs #5305 (MESK2) and #5308 (FTSH12): a core term stays
+when core_functions supported_by cites direct evidence independent of the withdrawn row. Its support is
+primary literature on SLC27A5 bile acid-CoA ligase activity and reconjugation (PMID:10749848, 11980911,
+16618417), and I added the PAINT IBD row placing GO:0008206 at PTN008678717 (PTHR43107-paint.tsv), an
+ancestor of horse SLC27A5. The PR reviewer preferred dropping it; it is kept for consistency across
+cohorts, and no annotation row re-asserts it on this product. The earlier "NEW: GO:0008206" bullet is
+superseded by the withdrawal section.

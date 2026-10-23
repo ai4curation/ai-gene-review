@@ -53,3 +53,9 @@ This is the first review of this entry. ProtNLM2 predictions were not consulted.
   GAG-bearing proteoglycan.
 - All other rows are accepted. The relative to review next is human TGFBR3 (Q03167): it has no
   review in the repo.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+The three reviewer-proposed NEW rows (GO:0036122 BMP binding, GO:0030509 BMP signaling pathway,
+GO:0015026 coreceptor activity) are orthology-based transfers from human TbetaRIII papers, so their
+evidence_type is now ISS rather than IEA, consistent with the other NEW rows in this PR.

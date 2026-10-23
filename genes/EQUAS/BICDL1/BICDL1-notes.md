@@ -126,3 +126,21 @@ another product of the same gene, reviewed in `genes/EQUAS/BICDL1__A0A9L0K8K5/`.
 annotations to one representative product per gene, so adding them to a second product fills a
 convention rather than a curation gap. The rows were withdrawn under the rule applied across the
 ProtNLM2 re-review cohorts, first raised in the review of PR #5303. The gene-level function is unchanged.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+Core-function terms left after the 2026-10-21 withdrawal of the NEW rows (GO:0031267 small GTPase
+binding, GO:0005813 centrosome). The PR reviewer preferred dropping them from core_functions. For
+consistency with the convention accepted in the parallel cohort PRs #5305 (MESK2) and #5308 (FTSH12),
+a core-function term is kept when its core_functions supported_by cites direct evidence independent of
+the withdrawn row (primary literature or a PAINT IBD row), and dropped only when no such evidence exists.
+The withdrawal rule is about not duplicating a gene-level GOA row on a second product; core_functions
+summarise the gene product's function, which the primary evidence still supports.
+
+- GO:0031267: kept; already supported by PMID:20360680 (C-terminal region binds GTP-locked Rab6A-Q72R and
+  not GDP-locked Rab6A-T27N).
+- GO:0005813: kept; added PMID:20360680 "specifically localized around the γ-tubulin-labelled centrosome"
+  (endogenous BICDR-1) to the first core function.
+
+The 2026-10-21 "Decisions" bullets that describe these as added NEW rows are superseded by the withdrawal
+section; no annotation row for either term remains in the review.

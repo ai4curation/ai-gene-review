@@ -47,3 +47,8 @@ ProtNLM2 output was not consulted for this section.
 ### Relative
 - Next relative: human RBM41 (Q96IZ5), ortholog in PTHR16105:SF2. No review exists in the repo (no genes/human/RBM41).
 - Modules: no minor-spliceosome module exists. modules/dmel_spliceosome.yaml explicitly excludes the minor spliceosome.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+The reviewer-proposed NEW rows transferred from PMID:38499487 now use evidence_type ISS (was ISO), so all
+orthology-based NEW rows in this PR use the same code.

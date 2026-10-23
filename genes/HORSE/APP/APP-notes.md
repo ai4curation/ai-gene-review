@@ -80,3 +80,24 @@ Among the horse models, F6XKR3 would be the best-formed product (APP751 with the
 
 No module in `modules/` includes APP. The gamma-secretase and Notch modules mention secretase substrates in general
 terms only.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+The review cited `APP-bioinformatics/ortholog_experimental_goa.txt` (a QuickGO listing of human, mouse and
+rat APP experimental GO annotations) as supporting_text in 73 annotation rows. A GO annotation listing
+records what is annotated, not why it is true, so citing it is citing annotations as evidence for
+themselves. Following the treatment already applied to genes/EQUAS/APP, every such citation was removed:
+
+- 27 rows already had other support (human UniProt curated text, the alignment output, PANTHER family
+  review, primary papers). The listing quote was dropped, and where the donkey review quotes the donor
+  paper for the same term, that verbatim quote was added.
+- 46 rows had the listing as their only support. 44 were re-supported with the donor-publication,
+  human UniProt or PANTHER family-review quotes used for the same GO term in genes/EQUAS/APP (all verbatim
+  and validated there).
+- GO:0043204 perikaryon: donor paper PMID:10341243 was cached (full text) and quoted ("APP was detected
+  mostly in the cell body and in growth cones"), with the human UniProt line tying Perikaryon to it.
+- GO:0005641 nuclear envelope lumen: the only donor (PMID:21989385) is abstract-only in the cache and its
+  abstract does not mention the compartment; the human UniProt record has no curated nuclear-envelope
+  location. With no independent support the row is now UNDECIDED (was KEEP_AS_NON_CORE).
+
+The listing stays in references with relevance LOW, as provenance for identifying donor papers only.

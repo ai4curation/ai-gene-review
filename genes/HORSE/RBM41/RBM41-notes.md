@@ -36,3 +36,8 @@ Cohort DONKEY40_HORSE_PARTNER (partner of donkey A0A9L0IK51, genes/EQUAS/RBM41, 
 
 ### Relative
 - Human RBM41 (Q96IZ5), same PANTHER subfamily SF2. It is the only experimentally characterised member of SF2. There is no genes/human/RBM41 review in the repo, so it needs review.
+
+## 2026-10-23 — PR #5309 review follow-up
+
+The reviewer-proposed NEW rows transferred from PMID:38499487 are orthology-based, so evidence_type is
+now ISS rather than IEA, consistent with the other NEW rows in this PR.
