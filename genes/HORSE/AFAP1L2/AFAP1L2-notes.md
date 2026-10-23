@@ -44,3 +44,32 @@ A0A9L0RQI4 is in PANTHER PTHR14338:SF4 (AFAP1L2), the same subfamily as human Q8
 ### Relative
 
 Human AFAP1L2 (Q8N4X5), ortholog in the same PANTHER subfamily and the PAINT seed for PTN002682769; `genes/human/AFAP1L2/AFAP1L2-ai-review.yaml` exists with all 18 GOA rows reviewed. Suggestion for that review (not edited here): it could add the p85-binding and actin filament binding MFs supported by PMID:19060924 and PMID:27462298. No module includes AFAP1L2; nearest context modules are `modules/integrin_fak_src_signaling.yaml` and `modules/pi3k_akt_mtor.yaml`.
+
+## 2026-10-21 — NEW rows withdrawn: already annotated on another product of the same gene
+
+The HORSE40 re-review (PR #5303) proposed NEW IBA rows for GO:0030296 protein tyrosine kinase activator
+activity and GO:0005829 cytosol on A0A9L0RQI4, because GOA did not propagate the PAINT IBAs to this
+transcript model. QuickGO shows that another horse AFAP1L2 product, A0A3Q2HBW2 (943 aa), carries both
+terms by IBA and IEA. GOA propagates gene-level annotations to one representative product per gene, so
+these rows filled a convention rather than a curation gap. They were withdrawn under the rule applied
+across the ProtNLM2 re-review cohorts. The core functions keep their own PAINT and literature support,
+and the gene-level function is unchanged.
+
+## 2026-10-23 — Which form of the representative-product rule applies here (PR #5310 review)
+
+Two forms of the rule are in use across the ProtNLM2 re-review cohorts:
+
+1. Withdraw a NEW row when GOA already carries the same term on another product of the same gene. Applied
+   here to GO:0030296 and GO:0005829, which GOA carries on A0A3Q2HBW2.
+2. Move a gene-level NEW proposal to a reviewed representative product. Applied to DYNLT2B, where the
+   canonical product `DYNLT2B__A0A9L0S9P8` has its own review folder.
+
+The three remaining NEW rows here are GO:0036312 PI3K regulatory subunit binding, GO:0051015 actin filament
+binding and GO:0030027 lamellipodium. They are ISS transfers from human and rodent AFAP1L2 and appear in no
+species' GOA, so form 1 does not apply. Form 2 would require a review of A0A3Q2HBW2, which does not exist in
+the repo. The proposals therefore stay on this benchmark accession until a representative-product review
+is created. They describe the horse gene, not something specific to this transcript model.
+
+Core functions keep GO:0030296 and GO:0005829 with their own PAINT and literature support. This is the
+convention accepted in PRs #5305 (MESK2) and #5308 (FTSH12): a core function may name a gene-level term
+that GOA carries on another product, provided its supported_by does not rest on the withdrawn row.
