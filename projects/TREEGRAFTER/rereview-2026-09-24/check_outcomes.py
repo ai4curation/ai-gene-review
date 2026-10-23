@@ -39,6 +39,7 @@ def main() -> int:
     problems: list[str] = []
     preexisting: list[str] = []
     merged: list[str] = []
+    superseded: list[str] = []
     genes = rows = 0
     for path in sorted(glob.glob(os.path.join(HERE, "batch-*.yaml"))):
         batch = os.path.basename(path)
@@ -100,10 +101,21 @@ def main() -> int:
                     )
                     continue
                 review = match[0].get("review") or {}
-                if review.get("action") != act:
+                # A later review may overturn this audit's adjudication. The
+                # audit's own `action` stays as decided; the later decision is
+                # declared in `superseded_by`, and the live row is checked
+                # against that instead, so a drift is still caught.
+                later = ann.get("superseded_by") or {}
+                expected = later.get("action", act)
+                if later:
+                    superseded.append(
+                        f"{batch} {name} {ann.get('term_id')}: {act} superseded by "
+                        f"{expected} ({later.get('by', '?')})"
+                    )
+                if review.get("action") != expected:
                     problems.append(
                         f"{batch} {name} {ann.get('term_id')}: live action "
-                        f"{review.get('action')!r} != recorded {act!r}"
+                        f"{review.get('action')!r} != recorded {expected!r}"
                     )
                 if review.get("action") != "MODIFY" and review.get(
                     "proposed_replacement_terms"
@@ -131,6 +143,8 @@ def main() -> int:
     print(f"checked {genes} gene entries / {rows} annotation rows")
     for m in merged:
         print(f"  merged entry: {m}")
+    for p in superseded:
+        print(f"  superseded: {p}")
     for p in preexisting:
         print(f"  pre-existing (not this audit's): {p}")
     for p in problems:
