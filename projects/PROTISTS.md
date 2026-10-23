@@ -3,8 +3,8 @@ title: "Protists"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PLAF7, TOXGM, TOXGO, TRYB2, TRYBB, LEIMA, TETTS, PARTE, GIAIC, TRIV3, ENTH1, PHATC, THAPS, DICDI, CHLRE, SALRS, MONBE, CAPO3]
-genes: [REL1, TPR, PFRA, PFRC, gp63, PTR1, CSP, CRT, MDR1, PMII, CDPK1, ATP4, MSP1, RH5, K13, AMA1, HAP2, SAG1, MIC2, ROP18, A0BFB4, A2FPI7, B7FXQ8]
-autolink_exclude: [TERT, rod, Sil1, sil1, GPI]
+genes: [TERT, TAP65, REL1, TPR, PFRA, PFRC, gp63, PTR1, CSP, CRT, MDR1, PMII, CDPK1, ATP4, MSP1, RH5, K13, AMA1, HAP2, SAG1, MIC2, ROP18, A0BFB4, A2FPI7, B7FXQ8]
+autolink_exclude: [rod, Sil1, sil1, GPI, TPP1, tpp1]
 ---
 
 # Protists: Gene Function Outside Animals, Fungi and Plants
@@ -16,12 +16,12 @@ all for the parasites that carry most protist GO curation (*Plasmodium*,
 *Toxoplasma*, trypanosomes, *Leishmania*), nor for the ciliate and diatom
 models. This project sets out to fill that gap, lineage by lineage, starting
 with a seed list of 27 well-studied genes whose UniProt accessions we have
-checked. Tracks A (Apicomplexa) and B (Kinetoplastida) are done: 20 genes
-(11 *P. falciparum*, 3 *T. gondii*, 4 *T. brucei*, 2 *L. major*) have COMPLETE
-reviews covering 295 existing annotations plus 33 new ones. The most common
-corrections were removing terms carried over from animal homologs and replacing
-generic `membrane` and `protein binding` rows with the compartment or binding
-partner each paper shows.
+checked. Tracks A (Apicomplexa), B (Kinetoplastida) and C (ciliates) are done:
+23 genes (11 *P. falciparum*, 3 *T. gondii*, 4 *T. brucei*, 2 *L. major*,
+2 *T. thermophila*, 1 *P. tetraurelia*) have COMPLETE reviews covering 361
+existing annotations plus 34 new ones. The most common corrections were removing
+terms carried over from animal homologs and replacing generic `membrane` and
+`protein binding` rows with the compartment or binding partner each paper shows.
 
 "Protist" is not a clade. Here it means any eukaryote that is not an animal, a
 fungus or a land plant. Green algae and the unicellular relatives of animals
@@ -72,7 +72,7 @@ more and is not a row here because its annotations sit under the TREU927 strain.
 | *Entamoeba histolytica* HM-1:IMSS | ENTH1 | 294381 | 197 | 13,213 | 0 |
 | *Plasmodium berghei* ANKA | PLABA | 5823 | 148 | 0 | 0 |
 | *Toxoplasma gondii* (species) | TOXGO | 5811 | 133 | 0 | 1 |
-| *Tetrahymena thermophila* SB210 | TETTS | 312017 | 124 | 0 | 0 |
+| *Tetrahymena thermophila* SB210 | TETTS | 312017 | 124 | 0 | 2 |
 | *Toxoplasma gondii* ME49 | TOXGM | 508771 | 35 | 0 | 2 |
 | *Trypanosoma cruzi* CL Brener | TRYCC | 353153 | 29 | 0 | 0 |
 | *Phaeodactylum tricornutum* | PHATC | 556484 | 17 | 0 | 1 |
@@ -99,7 +99,7 @@ tracks by lineage, roughly following the eukaryote supergroups:
 |---|---|---|---|
 | A | Apicomplexa (Alveolata) | *P. falciparum*, *T. gondii* | 14/14 COMPLETE |
 | B | Kinetoplastida (Discoba) | *T. brucei*, *L. major* | 6/6 COMPLETE |
-| C | Ciliates (Alveolata) | *Tetrahymena*, *Paramecium* | 1 draft (PARTE) |
+| C | Ciliates (Alveolata) | *Tetrahymena*, *Paramecium* | 3/3 COMPLETE |
 | D | Metamonads and *Entamoeba* | *Giardia*, *Trichomonas*, *E. histolytica* | 1 draft (TRIV3) |
 | E | Stramenopiles | *Phaeodactylum*, *Thalassiosira*; oomycetes later | 1 draft (PHATC) |
 | F | Amoebozoa | *Dictyostelium* | mature: [DICTYOSTELIUM_DEVELOPMENT](DICTYOSTELIUM_DEVELOPMENT.md) |
@@ -146,7 +146,7 @@ normal guidelines in `CLAUDE.md`; they do not replace them.
 ---
 # STATUS
 
-Last updated: 2026-10-15
+Last updated: 2026-10-20
 
 ## Seed gene list
 
@@ -191,9 +191,9 @@ one folder for the species.
 
 ### Track C: Ciliates
 
-- [ ] TETTS TERT (O77448): telomerase reverse transcriptase
-- [ ] TETTS TAP65 (W7X6T2): p65 telomerase holoenzyme protein (LARP7 family)
-- [ ] PARTE A0BFB4: existing draft, to finish
+- [x] TETTS TERT (O77448): telomerase reverse transcriptase
+- [x] TETTS TAP65 (W7X6T2): p65 telomerase holoenzyme protein (LARP7 family)
+- [x] PARTE A0BFB4: existing draft, finished
 
 ### Track D: Metamonads and *Entamoeba*
 
@@ -228,7 +228,8 @@ PiggyMac; *Phaeodactylum* aureochrome 1a; *Giardia* (strain WB) alpha-giardin.
       with no UniProt gene symbol need `just fetch-gene <ORG> <ACC> --alias <NAME>`)
 - [x] Review Track A (Apicomplexa)
 - [x] Review Track B (Kinetoplastida)
-- [ ] Review Track C (ciliates): finish the PARTE draft, add Tetrahymena TERT and TAP65
+- [x] Review Track C (ciliates): finish the PARTE draft, add Tetrahymena TERT and TAP65
+- [ ] Review Track D (metamonads and *Entamoeba*)
 - [ ] Decide whether to submit "food vacuole membrane" and "moving junction" as
       GO term requests (see 2026-10-15 notes)
 - [ ] Collect protist-specific over-annotation patterns in a
@@ -236,6 +237,72 @@ PiggyMac; *Phaeodactylum* aureochrome 1a; *Giardia* (strain WB) alpha-giardin.
 - [ ] Collect proposed GO terms for lineage-specific processes
 
 # NOTES
+
+## 2026-10-20 (Track C)
+
+Track C reviewed: 2 new *Tetrahymena* genes plus the long-standing *Paramecium*
+draft, all `status: COMPLETE` and passing `just validate`. 52 annotations newly
+reviewed with 1 NEW row; A0BFB4's 14 rows were reviewed in earlier rounds and this
+batch only closed the file out.
+
+| Gene | Annotations | ACCEPT | NON_CORE | MODIFY | REMOVE | Other | NEW |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TETTS TERT | 27 | 17 | 0 | 2 | 0 | 8 | 0 |
+| TETTS TAP65 | 25 | 22 | 1 | 2 | 0 | 0 | 1 |
+| PARTE A0BFB4 | 14 | 6 | 0 | 0 | 0 | 8 | 0 |
+
+"Other" is TOO_GENERAL, UNDECIDED or MARK_AS_OVER_ANNOTATED. TERT's eight are all
+TOO_GENERAL; A0BFB4's eight are four TOO_GENERAL, three MARK_AS_OVER_ANNOTATED and one
+UNDECIDED.
+
+**Patterns, continuing the Track A and B lists.**
+
+- *The expected import did not happen.* Tracks A and B were dominated by animal
+  terms transferred onto divergent lineages, and both ciliate genes were set up for
+  it — TERT by the enormous human-telomerase literature, TAP65 by the LARP7 family's
+  7SK/P-TEFb role. Neither GOA contained any of it: no shelterin, TPP1/POT1, Cajal
+  body, dyskerin or senescence terms on TERT, and no 7SK or transcription-elongation
+  terms on TAP65. Worth recording as a negative result, because it suggests the
+  over-annotation risk tracks how much *experimental* curation a protist gene has
+  rather than how divergent the lineage is.
+- *Generic ancestors, judged rather than removed.* TERT's eight TOO_GENERAL rows are
+  the polymerase and telomere-maintenance ancestors of terms accepted elsewhere in
+  the same review. Five are EXP rows, which is exactly the case the enum covers:
+  the term is uninformative, the evidence is not in doubt, and REMOVE would be wrong.
+  A0BFB4's four broad catalytic rows were brought to the same convention during review
+  of PR #5300: they had been left `ACCEPT` out of deference to an earlier round, which
+  meant one batch shipping two conventions for one pattern. Each was checked against
+  QuickGO as a strict ancestor of a term accepted in the same file before being changed.
+- *Refinement where the assay is sharper than the term.* Both `telomeric repeat DNA
+  binding` rows became `single-stranded telomeric DNA binding` (telomerase engages
+  the 3' overhang), and TAP65's generic `nucleic acid binding` / `RNA binding` became
+  `telomerase RNA binding` — a specificity that was tested and held in *Tetrahymena*,
+  where p65 knockdown collapses TER while leaving 5S, SRP, U2, U3 and U6 untouched.
+- *The non-catalytic subunit stayed non-catalytic.* No telomerase activity term was
+  transferred onto p65, and the explicit negative result is now recorded on the
+  reference rather than merely absent: coassembly of p65 did not affect TERT's
+  primer-extension activity in reconstitution.
+- *Two nuclei, one term.* *Tetrahymena* has a macronucleus and a micronucleus and GO
+  has terms for both, but no cached source says which compartment was assayed for
+  TERT, so `nucleus` stays generic and the refinement is a question rather than an
+  assertion.
+
+**One asymmetry left standing deliberately.** TERT carries `GO:0000333 telomerase
+catalytic core complex` and p65 does not, although p65 is a subunit of that very
+core. The reason is procedural, not biological: TERT's GOA already contains the term,
+so reviewing it is an ACCEPT, while adding it to p65 would be a `NEW` row — and
+`NEW` is governed by the rule against proposing a term that is a descendant of one
+the gene already carries, which p65 satisfies eight times over with `GO:0005697`.
+Both reviews are correct under the rule and reach opposite content. This is the same
+shape as the `MODIFY`-to-a-non-descendant gap found in Track B: a rule that behaves
+differently depending on which side of the fence an annotation already sits. Raised
+as a question on TAP65 rather than resolved by either reviewer.
+
+**Caveat, as in Tracks A and B.** Automated deep research was unavailable (perplexity
+is not a registered provider, falcon fails authentication, the OpenAI key is
+rejected), so each `-notes.md` is a manual literature review and says so. All 11
+cited PMIDs were already cached, 8 with full text.
+
 
 ## 2026-10-15 (Track B)
 
