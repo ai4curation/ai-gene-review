@@ -101,3 +101,92 @@ themselves. Following the treatment already applied to genes/EQUAS/APP, every su
   location. With no independent support the row is now UNDECIDED (was KEEP_AS_NON_CORE).
 
 The listing stays in references with relevance LOW, as provenance for identifying donor papers only.
+
+## 2026-10-23 — PR #5309 second review: quotes that did not support their terms
+
+The reviewer found that many quotes used to replace the ortholog GOA listing were verbatim but did not
+state the term they supported. Validation only checks that a quote is a substring of its source, so it
+cannot catch this. Every quote added in that pass was re-read against one question: does this sentence
+state this term, for this gene product, at this specificity?
+
+**Wrong-gene donor (GO:0008285).** The only donor is a human IDA assigned by UniProt
+(P05067, PMID:22944668, 2017-04-25). That paper is about the antimicrobial activity of human islet amyloid
+polypeptide (IAPP, amylin) ["Human islet amyloid polypeptide (hIAPP) shows an antimicrobial activity
+towards two types of clinically relevant bacteria."]. Its cached abstract never mentions APP or
+amyloid-beta and contains no proliferation assay. The row is now UNDECIDED, with a PROBABLE
+`WRONG_GENE_PRODUCT` source defect on the upstream UniProt row (requested change CHECK; candidate correct
+product IAPP, UniProtKB:P10997, verified by UniProt REST). `genes/human/APP` still ACCEPTs this IDA; that
+file is outside this PR and should get the same treatment.
+
+**Re-supported with a quote that states the claim.** Where possible these use the donor paper or a
+curated human UniProt line tied to a PubMed id:
+- signaling receptor binding: Abeta42 interacts with FPR2 (UniProt), and CD74 interacts with APP while
+  "it also serves as a receptor for macrophage migration inhibitory factor" (PMID:19849849, the IPI
+  donor, cached in full). These replace "Functions as a cell surface receptor", which states the inverse
+  relation, and "Correctly scoped to the APP subfamily.", which states nothing about function.
+- early endosome and early endosome membrane: "Early endosome {ECO:0000269|PubMed:20580937}" plus
+  "Single-pass type I membrane protein". A type I membrane protein in early endosomes is in their
+  membrane; the reason says so. This replaces "colocalize in endosomal and Golgi compartments".
+- enzyme binding: direct PSEN1 binding (PMID:30630874) and IDE binding (PMID:17051221) from UniProt,
+  replacing the ADAM19 sAPPalpha quote, which reports a processing outcome rather than binding.
+- protein serine/threonine kinase binding: LRRK2 binding (PMID:28720718), replacing ROCK2
+  phosphorylation of APP.
+- membrane raft: "Also binds GPC1 in lipid rafts." (UniProt), replacing a PANTHER scope sentence.
+- perinuclear region: the full SORL1 sentence ending "...cytoplasm and perinuclear regions". The
+  earlier quote had been cut off before "perinuclear".
+- neuron projection: "Cell projection, growth cone {ECO:0000269|PubMed:10341243}."
+- positive regulation of synaptic transmission, cholinergic: "oAβ42 activates both homomeric α7- and
+  heteromeric α7β2-nAChR subtypes" (PMID:33239400, the donor), added beside the CHRNA7 binding line.
+- positive regulation of inflammatory response: Aβ "stimulates the nuclear transcription factor κB
+  (NF-κB) signaling, leading to the secretion of inflammatory cytokines" (PMID:29961672, the donor,
+  full text).
+- positive regulation of ERK1/2 cascade: "chronic activation of the ERK MAPK cascade ... via α7
+  nAChRs" (PMID:11404397, full text), replacing a sentence about the generic MAPK cascade.
+- amyloid fibril formation: an oligomer that "can form and coexist in parallel with the well-known
+  cross-β-sheet fibrils" (PMID:26138908).
+- microglial cell activation: the full TLR2 sentence, which names "cultured microglia and macrophages".
+
+**UNDECIDED: the donor text does not state the term.** All of these donors are cached abstract-only,
+except PMID:23382219, which is cached in full. The abstracts were read in full, and none mentions the
+term's specific entity:
+- astrocyte activation and astrocyte activation involved in immune response (PMID:15457210,
+  PMID:23152628). The UniProt "mononuclear phagocytes" line is about a different cell type.
+- positive and negative regulation of gene expression (PMID:22198949). One TLR2 sentence supported both
+  directions while naming no gene.
+- positive regulation of chemokine, IL-1β and IL-6 production (PMID:22406537), and of TNF production
+  (PMID:22198949). No cytokine is named in either abstract.
+- dendritic spine and dendritic shaft (PMID:11988176). The abstract is about ASIC and does not mention
+  APP. The 23931995 sentence ("dendritic APP/BACE-1-containing vesicles") still supports dendrite, but
+  it cannot tell spines from shafts. This donor may also be mis-keyed, but no source defect was filed
+  because the full text was not read.
+- signaling receptor complex (PMID:23382219, full text). That paper is a PX-FERM cargo-recognition
+  study in which APP appears only as a previously identified SNX17 cargo. It is a possible source defect
+  but was not filed.
+- positive regulation of the JNK cascade (PMID:23921129). JNK is never mentioned.
+- modulation of EPSP (PMID:20974225), regulation of spontaneous synaptic transmission (PMID:15457210)
+  and positive regulation of non-canonical NF-κB signalling (PMID:15457210). None of these is measured
+  or mentioned.
+- cellular response to amyloid-beta (PMID:29518356). In that paper the responding entity is microglia
+  expressing TREM2.
+- positive regulation of amyloid fibril formation (PMID:19660551). The paper characterises Abeta
+  assemblies in J20 mice but does not test regulation.
+
+**Kept as they were, after the check:**
+- dendrite: PMID:23931995 places APP vesicles in dendrites.
+- Golgi-associated vesicle, growth cone, synapse, axonogenesis, signaling receptor activator activity,
+  regulation of presynapse assembly and synapse organization: the reviewer verified these.
+- learning and learning or memory: these are MARK_AS_OVER_ANNOTATED, and their quotes support the
+  phenotype-not-participation reason.
+- negative regulation of LTP and regulation of long-term neuronal synaptic plasticity:
+  "Aβ-induced inhibition of long-term potentiation" supports both.
+- calcium-mediated signalling (Abeta raises cytosolic Ca2+), amyloid-beta complex (oligomeric states),
+  receptor ligand activity (direct TLR2–Aβ42 interaction) and glycolysis.
+- positive regulation of protein metabolic process: this is MARK_AS_OVER_ANNOTATED, and its quote
+  shows the indirect MAPK coupling that the reason describes.
+
+**Out of scope.** `genes/EQUAS/APP/APP-protnlm-predictions-review.yaml` (and
+`genes/EQUAS/HOXA2/HOXA2-protnlm-predictions-review.yaml`) still quote the ortholog GOA listing. There it
+backs an LSP verdict about annotation state, not a biological claim. Whether to change that is a separate
+decision, and those files were left untouched.
+
+Row tally for this file (HORSE/APP): 13 re-supported, 18 set to UNDECIDED, and 4 moved from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED. The 4 are microglia development, positive regulation of LTP, neuron projection maintenance and positive regulation of T cell migration. Each uses the reasoning already in EQUAS/APP, which its existing quote does support.
