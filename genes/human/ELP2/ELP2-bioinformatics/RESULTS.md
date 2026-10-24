@@ -8,9 +8,9 @@ The captured PTHR44111 tree has 192 nodes. Human Q6IA86 lies below assertion nod
 
 Current donor snapshots contain 27 mouse, 13 fly and 46 yeast records. The projection selects the kinase-binding and Elongator-complex records needed for the reviewed claims. These database records establish traceability; primary experimental scope is assessed separately in the source guide.
 
-IPR037289 maps to tRNA wobble-uridine modification and Elongator complex and matches the human sequence across 5–823. The generic WD40 mapping is not substituted for that family-specific result. SL-0086 and SL-0191 retain their literal cytoplasm/nucleus targets. Current GO definitions and combined is_a/part_of ancestry are saved; cytosol refinement uses independent HPA data.
+IPR037289 maps to tRNA wobble-uridine modification and Elongator complex and matches the human sequence across 5–823. The generic WD40 mapping is not substituted for that family-specific result. SL-0086 and SL-0191 retain their literal cytoplasm/nucleus targets. Current GO definitions and combined is_a/part_of ancestry are saved; cytosol and nucleoplasm refinements use independent HPA data. The captured combined is_a/part_of closure places GO:0005829 within cytoplasm and GO:0005654 within nucleus; these are supported location refinements, not claims that the historical assays themselves resolved the smaller compartments.
 
-HPA XML supports main cytosol and additional nucleoplasm through the recorded human cell-line/antibody data. No HPA pixels were inspected. The per-assay details and database definitions are in results.json; the readable source guide gives the biological and original-access limits.
+HPA XML supports main cytosol and additional nucleoplasm through the recorded human cell-line/antibody data. Both HPA002996 and CAB020835 include nucleoplasmic observations in recorded human cell lines, supporting the additional nuclear compartment alongside the main cytosolic pool. No HPA pixels were inspected. The per-assay details and database definitions are in results.json; the readable source guide gives the biological and original-access limits.
 
 The reproducible checks cover database joins and sequences, not original-paper experiments, annotation verdicts, catalytic-subunit assignment or functional equivalence of products. Article bodies and provider outputs are excluded.
 
