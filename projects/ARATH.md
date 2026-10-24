@@ -602,3 +602,14 @@ Followed up the handoff from the previous session.
   PTN009058710, not AADAC.
 - Draft upstream reports are in [upstream-reports.md](ARATH/upstream-reports.md).
   None has been filed.
+
+## 2026-10-24
+
+- OST1: the four general kinase MF rows now MODIFY to GO:0004674, matching SnRK2.2 and SnRK2.3.
+- OpenScientist checked the two single-study potassium channel inhibitor (GO:0019870) calls.
+  Neither finding has been independently replicated. For CBL10/AKT1 the in-planta data are
+  overexpression-only, so AKT1 inhibition was dropped from CBL10's core functions. For
+  SLAC1/KAT1, slac1 loss-of-function shows reduced rather than increased inward K+ current
+  (PMID:23126621). Both keep their MODIFY to GO:0019870 with caveats. Reports are in each gene's
+  `-hypotheses/` folder.
+

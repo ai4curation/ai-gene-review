@@ -92,3 +92,18 @@ PMID:30361234; the others are abstract-only.
   10-TM plasma-membrane channel.
 - GO:0090333 regulation of stomatal closure (IMP, PMID:29463779): SLAC1 executes
   closure (the anion efflux step) rather than regulating it; GO:0090332 fits.
+
+## 2026-10-24: OpenScientist run on KAT1/AKT2 inhibition
+
+Report: `SLAC1-hypotheses/slac1-kat1-inhibition/openscientist.md` (3 iterations, ~25 min).
+Hypothesis: SLAC1 directly inhibits KAT1 and AKT2, but not KAT2, and this has been replicated.
+
+- Verdict from the run: partially supported (weak to moderate), not independently replicated.
+  The report supports keeping GO:0019870 as a non-core activity with caveats.
+- Checked here: the Zhang 2016 oocyte result is verbatim in the cached paper
+  [PMID:27002025 "SLAC1 inhibited KAT1 dramatically, but did not inhibit KAT2"]. The
+  Laanemets 2013 abstract confirms that slac1 lowers inward K+ channel activity through
+  raised cytosolic Ca2+ [PMID:23126621 "this is caused by the severely reduced activity of inward K(+) (K(+)(in)) channels in slac1 guard cells"].
+  The report calls this "later work"; it is from 2013, three years before Zhang 2016.
+- No action changes. The KAT1 and AKT2 rows stay MODIFY to GO:0019870 with a caveat added to
+  their reasons. GO:0019870 was already absent from core_functions.

@@ -90,3 +90,24 @@ PMID:19448033 and PMID:31858132 have full text.
 - nucleus ISM: REMOVE (prediction; contradicted by membrane targeting data).
 - regulation of potassium ion transport IMP -> MODIFY to GO:0043267 negative regulation.
 - monoatomic ion homeostasis IMP -> MODIFY to GO:0055078 sodium ion homeostasis.
+
+## 2026-10-24: OpenScientist run on AKT1 inhibition
+
+Report: `CBL10-hypotheses/cbl10-akt1-inhibition/openscientist.md` (3 iterations, ~26 min).
+Hypothesis: CBL10 directly inhibits AKT1, independently of CIPK kinase activity, and this
+has been replicated.
+
+- Verdict from the run: partially supported, single-source. No study citing Ren et al. 2013
+  re-measured AKT1 currents or root K+ in cbl10 loss-of-function plants. [file:ARATH/CBL10/CBL10-hypotheses/cbl10-akt1-inhibition/openscientist.md "The in-planta support that does exist is overexpression-based, not derived from *cbl10*-null plants"]
+- Checked here: the Ren 2013 abstract confirms the in-planta lines are overexpressors and
+  that the inhibition was shown by electrophysiology in oocytes and root protoplasts
+  [PMID:23331977 "The CBL10-over-expressing lines showed a phenotype as sensitive as that of the akt1 mutant under low-K+ conditions"].
+  The HAK5 claim was confirmed from the PMID:26474642 abstract (CBL1/8/9/10 with CIPK23
+  activate HAK5). I did not re-check the citation counts (76 citing papers, 105 Europe PMC records).
+- Where I disagree with the report: it recommends against GO:0019870 because the mechanism
+  is competition with CIPK23 and because CBL10 activates HAK5. GO:0019870 is defined as
+  binding to a potassium channel and reducing its activity, which a competitive binder
+  satisfies, and HAK5 is a different target reached through a kinase. So the GO:0005515
+  MODIFY to GO:0019870 stays, with a single-source caveat added to its reason.
+- Change made: the AKT1-inhibition core function was removed. Single-lab, overexpression-only
+  in planta, and peripheral to the Ca2+-sensor role with CIPK24.
