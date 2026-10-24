@@ -129,7 +129,7 @@ def rewrite_review(
 
     def folded(text: str) -> list[str]:
         return [f"{child}reason: >-\n"] + [
-            f"{child}  {w}\n" for w in textwrap.wrap(text, 84 - ind)
+            f"{child}  {w}\n" for w in textwrap.wrap(text, 84 - ind, break_on_hyphens=False)
         ]
 
     sections: list[tuple[str, list[str]]] = []
