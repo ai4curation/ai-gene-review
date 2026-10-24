@@ -14,6 +14,7 @@ Family-batched review of keratin-associated proteins (2026-10-24). KRTAP11-1 is 
 - Review of human KAP1 family, with general statement of KAP role. [PMID:12895003 "Keratin-associated proteins are involved in the formation of the cross-linked network of the keratin-intermediate filament proteins that support hair fibers."]
 - Sequence-repeat analysis of human KAPs and how they interact with IFs. [PMID:16713301 "This may give additional conformational flexibility to the chain and hence allow the A pentapeptides greater opportunity to interact appropriately with the IF via disulphide bonds, ionic interactions and/or hydrogen bonding."]
 - Review of KRTAP evolution and use in wool breeding. [PMID:29797267 "KRTAP gene variants thus should provide information for improved wool by sheep and goat breeding."]
+- Fujimoto et al. 2014 - the only primary functional study of a KAP11 protein, done on the mouse orthologue Krtap11-1. Direct binding assay: the KAP11-1 probe adheres to hair-cortex type I keratins K31/K33/K34 even without disulfide formation, and forcible expression distorts hair-follicle keratin bundling. This is the ortholog binding evidence used to MODIFY the human KRT83 (P78385) GO:0005515 IPI row to GO:1990254 keratin filament binding. Species caveat: whether human KRTAP11-1 binds the same keratins is not yet shown experimentally. [PMID:24439038 "the biotinylated Krtap11-1 probe enabled the adherence to certain type I keratins in the hair cortex, including K31, 33 and 34, in the absence of disulfide formation."]
 
 ## Curation decisions
 

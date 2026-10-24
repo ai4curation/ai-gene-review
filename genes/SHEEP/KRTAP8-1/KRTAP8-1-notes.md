@@ -1,6 +1,6 @@
 # KRTAP8-1 (SHEEP) review notes
 
-Family-batched review of mammalian keratin-associated proteins (KRTAPs). No deep-research report was generated for this gene; evidence comes from UniProt, cached PubMed records and family reviews.
+Family-batched review of mammalian keratin-associated proteins (KRTAPs). An OpenScientist deep-research report (`KRTAP8-1-deep-research-openscientist.md`) is present and was used as leads (see "OpenScientist report (integrated)" below); the primary evidence comes from UniProt, cached PubMed records and family reviews.
 
 ## Family-level evidence
 
@@ -23,8 +23,7 @@ Family-batched review of mammalian keratin-associated proteins (KRTAPs). No deep
 - CC: GO:0045095 keratin filament (ACCEPT/NEW/MODIFY of ND root).
 - BP: GO:0031424 keratinization; hair cycle/follicle development not used (KAPs are downstream structural products).
 - ARBA cytosol: KEEP_AS_NON_CORE, harmonized with the human KRTAP reviews (KAPs are synthesized in the cytoplasm of the keratinizing cell but act in the keratin matrix; true but not the site of function).
-- ISO identical protein binding (HuRI Y2H donors): MARK_AS_OVER_ANNOTATED.
-- No bare GO:0005515 rows in this gene's GOA.
+- No bare GO:0005515 protein binding and no ISO identical protein binding rows in this gene's GOA.
 
 ## OpenScientist report (integrated)
 
