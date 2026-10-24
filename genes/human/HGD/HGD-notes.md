@@ -57,3 +57,19 @@ UniProtKB: Q93099 (HGD_HUMAN); HGNC:4892; EC 1.13.11.5; 445 aa.
 - PMID:10876237 (crystal structure, Fe sites, hexamer) — via UniProt, not cited in GOA rows.
 - Reactome R-HSA-71164 (cytosolic localization / reaction).
 - file: dismech Alkaptonuria.yaml for disease pathophysiology.
+
+## 2026-10-23 re-review (homogentisate catabolism module, step 1)
+
+- GO:0005515 protein binding rows (IPI PMID:21044950 with TERF1 P54274; IPI PMID:32296183
+  with NTAQ1 Q96HA8) changed from MARK_AS_OVER_ANNOTATED to REMOVE, per the protein-binding
+  policy (src/ai_gene_review/validation/protein_binding_policy.py). Neither screen supports a
+  more informative MF; removal does not deny the interactions. Supersedes the earlier note above.
+- GO:0042802 identical protein binding (WITH/FROM Q93099 = self) kept as non-core; consistent
+  with the crystallographic homohexamer [PMID:10876237 "associates as a hexamer arranged as a
+  dimer of trimers"].
+- IBA rows now cite the PAINT node PTN000114776 lines; the new family review
+  interpro/panther/PTHR11056/PTHR11056-review.yaml assesses both node rows as SOUND.
+- Falcon deep research cited for cytosol and hexamer. It also reports a 2026 SCLC study of
+  HGD oxidizing tryptophan to N-formylkynurenine; not in the publications cache and not
+  replicated, so recorded only as a suggested question/experiment, not as an annotation.
+- Status set to COMPLETE.
