@@ -4,19 +4,69 @@ This guide records the actual original sections and source records used for the 
 
 ## Direct original sources
 
+The following structured locators record the actual access scope. The biological interpretation and specimen limits follow separately; the public original routes are listed below.
 
-- [PMID:10413517](https://doi.org/10.1021/bi990591+): actual author original; Methods web 373–585 and 634–797, Results 994–1236, Discussion 1611–1681 and Table 1/Figures 1/3/4/5/6 captions read. No pixels. Human XPF12–916, N37812–378 and other engineered fragments are not the natural 372-aa product. Mg-containing plasmid incision and Mg-free denatured-DNA-cellulose binding are distinct assays. ERCC1 capture does not include the XPA member required by the current NEF1 definition.
-- [PMID:10644440](https://doi.org/10.1006/geno.1999.6016): actual author original Methods 278–541, Results 717–963 and Discussion 965–1189, with exact capture gaps excluded. No pixels. Mouse cloning/testis-expression work includes a human HeLa chromatographic/immunoblot comparator. A source-specific human NER or complex-reconstitution assay was not identified. Correct human complex/repair functions are retained or refined using independent actual human evidence; no wrong-gene claim is made.
-- [PMID:11790111](https://doi.org/10.1021/bi011614z): actual author original Methods 269–385, Results 496–727, Discussion 807–948 and Figures 1–6 captions. No pixels. Human chromatin extracts, psoralen-crosslinked DNA and XPF-directed antibody inhibition measure incision dependence. The inspected readouts do not resolve a damaged-DNA-binding measurement attributable to XPF separately from repair-complex assembly and incision. GO:0003684 does not require preferential affinity over undamaged DNA or an isolated-protein preparation.
-- [PMID:14690602](https://doi.org/10.1016/s1097-2765(03)00478-7): lab-hosted original PDF SHA256 53e2da4af22ecd7c9f72173e61fd4b5179600d8246c18266edc4cacc5f70e3bc; full main layout-text lines 1–521 through Methods. Actual Figure 4 pixels on page 5 read, other figure captions read but other pixels not inspected. Human XPF-deficient cells retain overhangs after TRF2 inhibition; ERCC1-null mouse cells provide the double-minute phenotype. The latter increases in deficient cells and is not a positive formation step by human XPF. Human TRF2 association is a small fraction; RAP1 is present in the same isolated complex, not shown by a purified binary XPF–RAP1 assay.
-- [PMID:16076955](https://doi.org/10.1073/pnas.0504341102): unchanged normal original text lines 76/78/82/84/86/88/96/98/104 read. Full human Sf9 enzyme and truncated E. coli complexes are distinct reagents. Heterodimer structure and junction incision support complex/catalytic claims. Neither full nor truncated enzyme cleaves free ssDNA under the reported conditions. No supplement or figure pixels read.
-- [PMID:16678501](https://doi.org/10.1016/j.dnarep.2006.03.009): original PMC2814188 web Methods 98–123 and Results 124–135 plus 152–170 read. The middle 136–151 was not fully available in tool output, and a later request hit a challenge. Human XPF-deficient fibroblasts/rescue, HMT+UVA and UVA-only controls assess gamma-H2AX; XPF is not inferred to be its kinase. This is a bounded operative read, not a complete original read.
-- [PMID:19595722](https://doi.org/10.1016/j.molcel.2009.06.019): unchanged original cache lines 87/151/163 read: human XPF–BTBD12 two-hybrid and G325E effect, separately from the fly comparison. No general isoform equivalence.
-- [PMID:19596235](https://doi.org/10.1016/j.cell.2009.06.030): unchanged PMC2720686 text lines 90/92/98/100/102/108/110/118/124/130/140/176/214/220/226/232 read. Earlier aggregate output truncated; no full-read claim. Human endogenous/transfected interaction controls and ERCC4 knockdown UV/MMC sensitivity were inspected. SLX1/MUS81 junction chemistry is not XPF chemistry. Supplementary bodies and figure pixels were not read.
-- [PMID:19596236](https://doi.org/10.1016/j.cell.2009.06.029): unchanged PMC2861413 lines 106/108/110/210/224 read. Human complex pull-down and XPF–SLX4 yeast two-hybrid distinguish XPF from ERCC1 contact; main Methods read. No supplementary construct sequence or pixels.
-- [PMID:24012755](https://doi.org/10.1016/j.celrep.2013.08.017): unchanged PMC4334113 lines 117/119/127/169/194 read, including a supplementary caption but not its body. XBR deletion and XPF interaction are distinct from SLX1 cutting and telomere-SCE effects. The main expression method inspected concerns TRF2/SLX1, not a verified full XPF construct sequence.
-- [PMID:22483113](https://doi.org/10.1016/j.str.2012.02.009): actual abstract and official PDB 2KN7 entry/entity/assembly data, not the complete original. The human Q92889 fragment is residues 842–908,67 aa; two chains with two short DNA strands. This supports fragment binding/self-association, not a full-length physiological homodimer or arbitrary ssDNA cleavage. The separate sealed homodimer peer preserves the exact API records.
-- [PMID:32111838](https://doi.org/10.1038/s41467-020-14856-2): additional independently inspected PMC7048804 structure source, retained in the separate structure peer. Main Methods/Results/captions distinguish regulatory helicase-like and catalytic nuclease domains, full human Sf21 enzyme from ERCC1 proteolysis, Mn-containing incision from stabilized structural preparations, and intrinsic catalytic effects from recruitment defects. No original pixels or supplement were inspected. Its source fields are not substituted into imported rows.
+```yaml
+source_access:
+- reference: PMID:10413517
+  doi: https://doi.org/10.1021/bi990591+
+  actual_read: actual author original; Methods web 373–585 and 634–797, Results 994–1236, Discussion 1611–1681 and
+    Table 1/Figures 1/3/4/5/6 captions read. No pixels.
+- reference: PMID:10644440
+  doi: https://doi.org/10.1006/geno.1999.6016
+  actual_read: actual author original Methods 278–541, Results 717–963 and Discussion 965–1189, with exact capture
+    gaps excluded. No pixels.
+- reference: PMID:11790111
+  doi: https://doi.org/10.1021/bi011614z
+  actual_read: actual author original Methods 269–385, Results 496–727, Discussion 807–948 and Figures 1–6 captions.
+    No pixels.
+- reference: PMID:14690602
+  doi: https://doi.org/10.1016/s1097-2765(03)00478-7
+  actual_read: lab-hosted original PDF SHA256 53e2da4af22ecd7c9f72173e61fd4b5179600d8246c18266edc4cacc5f70e3bc;
+    full main layout-text lines 1–521 through Methods. Actual Figure 4 pixels on page 5 read, other figure captions
+    read but other pixels not inspected.
+- reference: PMID:16076955
+  doi: https://doi.org/10.1073/pnas.0504341102
+  actual_read: unchanged normal original text lines 76/78/82/84/86/88/96/98/104 read.
+- reference: PMID:16678501
+  doi: https://doi.org/10.1016/j.dnarep.2006.03.009
+  actual_read: original PMC2814188 web Methods 98–123 and Results 124–135 plus 152–170 read. The middle 136–151
+    was not fully available in tool output, and a later request hit a challenge.
+- reference: PMID:19595722
+  doi: https://doi.org/10.1016/j.molcel.2009.06.019
+  actual_read: 'unchanged original cache lines 87/151/163 read:'
+- reference: PMID:19596235
+  doi: https://doi.org/10.1016/j.cell.2009.06.030
+  actual_read: unchanged PMC2720686 text lines 90/92/98/100/102/108/110/118/124/130/140/176/214/220/226/232 read.
+    Earlier aggregate output truncated; no full-read claim.
+- reference: PMID:19596236
+  doi: https://doi.org/10.1016/j.cell.2009.06.029
+  actual_read: unchanged PMC2861413 lines 106/108/110/210/224 read.
+- reference: PMID:24012755
+  doi: https://doi.org/10.1016/j.celrep.2013.08.017
+  actual_read: unchanged PMC4334113 lines 117/119/127/169/194 read, including a supplementary caption but not its
+    body.
+- reference: PMID:22483113
+  doi: https://doi.org/10.1016/j.str.2012.02.009
+  actual_read: actual abstract and official PDB 2KN7 entry/entity/assembly data, not the complete original.
+- reference: PMID:32111838
+  doi: https://doi.org/10.1038/s41467-020-14856-2
+  actual_read: additional independently inspected PMC7048804 structure source, retained in the separate structure
+    peer.
+```
+
+- [PMID:10413517](https://doi.org/10.1021/bi990591+): Human XPF12–916, N37812–378 and other engineered fragments are not the natural 372-aa product. Mg-containing plasmid incision and Mg-free denatured-DNA-cellulose binding are distinct assays. ERCC1 capture does not include the XPA member required by the current NEF1 definition.
+- [PMID:10644440](https://doi.org/10.1006/geno.1999.6016): Mouse cloning/testis-expression work includes a human HeLa chromatographic/immunoblot comparator. A source-specific human NER or complex-reconstitution assay was not identified. Correct human complex/repair functions are retained or refined using independent actual human evidence; no wrong-gene claim is made.
+- [PMID:11790111](https://doi.org/10.1021/bi011614z): Human chromatin extracts, psoralen-crosslinked DNA and XPF-directed antibody inhibition measure incision dependence. The inspected readouts do not resolve a damaged-DNA-binding measurement attributable to XPF separately from repair-complex assembly and incision. GO:0003684 does not require preferential affinity over undamaged DNA or an isolated-protein preparation.
+- [PMID:14690602](https://doi.org/10.1016/s1097-2765(03)00478-7): Human XPF-deficient cells retain overhangs after TRF2 inhibition; ERCC1-null mouse cells provide the double-minute phenotype. The latter increases in deficient cells and is not a positive formation step by human XPF. Human TRF2 association is a small fraction; RAP1 is present in the same isolated complex, not shown by a purified binary XPF–RAP1 assay.
+- [PMID:16076955](https://doi.org/10.1073/pnas.0504341102): Full human Sf9 enzyme and truncated E. coli complexes are distinct reagents. Heterodimer structure and junction incision support complex/catalytic claims. Neither full nor truncated enzyme cleaves free ssDNA under the reported conditions. No supplement or figure pixels read.
+- [PMID:16678501](https://doi.org/10.1016/j.dnarep.2006.03.009): Human XPF-deficient fibroblasts/rescue, HMT+UVA and UVA-only controls assess gamma-H2AX; XPF is not inferred to be its kinase. This is a bounded operative read, not a complete original read.
+- [PMID:19595722](https://doi.org/10.1016/j.molcel.2009.06.019): human XPF–BTBD12 two-hybrid and G325E effect, separately from the fly comparison. No general isoform equivalence.
+- [PMID:19596235](https://doi.org/10.1016/j.cell.2009.06.030): Human endogenous/transfected interaction controls and ERCC4 knockdown UV/MMC sensitivity were inspected. SLX1/MUS81 junction chemistry is not XPF chemistry. Supplementary bodies and figure pixels were not read.
+- [PMID:19596236](https://doi.org/10.1016/j.cell.2009.06.029): Human complex pull-down and XPF–SLX4 yeast two-hybrid distinguish XPF from ERCC1 contact; main Methods read. No supplementary construct sequence or pixels.
+- [PMID:24012755](https://doi.org/10.1016/j.celrep.2013.08.017): XBR deletion and XPF interaction are distinct from SLX1 cutting and telomere-SCE effects. The main expression method inspected concerns TRF2/SLX1, not a verified full XPF construct sequence.
+- [PMID:22483113](https://doi.org/10.1016/j.str.2012.02.009): The human Q92889 fragment is residues 842–908,67 aa; two chains with two short DNA strands. This supports fragment binding/self-association, not a full-length physiological homodimer or arbitrary ssDNA cleavage. The separate sealed homodimer peer preserves the exact API records.
+- [PMID:32111838](https://doi.org/10.1038/s41467-020-14856-2): Main Methods/Results/captions distinguish regulatory helicase-like and catalytic nuclease domains, full human Sf21 enzyme from ERCC1 proteolysis, Mn-containing incision from stabilized structural preparations, and intrinsic catalytic effects from recruitment defects. No original pixels or supplement were inspected. Its source fields are not substituted into imported rows.
 
 ## Actual access routes for recovered originals
 
@@ -142,3 +192,20 @@ All five inherited core quotations remain at their original paths. The inherited
 ## Normal source-version reconciliation
 
 The delivered [normal GOA snapshot](ERCC4-goa.tsv) was generated by the ordinary forced fetch pipeline in a separate workspace after final validation identified that the older snapshot lacked the two already reviewed IEA contexts at indices 95 and 96. Its 100 rows represent exactly the same 96 imported contexts as the accepted official QuickGO snapshot; the inherited authored proposal remains separate and retired. All 97 review source objects and all 52 inherited quotation paths remained unchanged. The older 98-row GOA snapshot and the initial failed validation are retained in the review archive. The legacy [UniProt record](ERCC4-uniprot.txt), entry version 234, remains unchanged in delivery; the unselected genuine version 235 acquisition had identical canonical sequence and CC/FT content. No current-only assertion was relabeled NEW.
+
+
+## 2026-10-24 — specificity and whole-gene consistency
+
+Five broad DNA-endonuclease assertions are refined to [GO:0106332](https://www.ebi.ac.uk/QuickGO/term/GO:0106332). The three broad DNA-repair assertions all use MODIFY: the electronic family/rule context lists the independently established NER, ICL-repair and SSA end-removal operations, while the original-paper contexts retain their narrower demonstrated repair arms. This does not claim that each source assayed every pathway. The three replacements at the electronic context are nonredundant under current is_a/part_of ancestry. No NEW row is manufactured to cover a core.
+
+The SSA step is supported by the explicit human catalytic chain described above and the human junction-incision experiments, rather than by perturbation necessity alone. The current restricted same-role comparator records include yeast Rad1 (P06777), Rad10 (P06838) and fission-yeast Rad16 (P36617) on GO:0000736. Their presence is corroborative, not a substitute for the human evidence. The cached [human KAT5/NER GO-CAM](https://identifiers.org/gomodel:617b481400000521) places ERCC4 in NER, not SSA; its Q92889-2 label is not used to establish activity of the natural short product. The SSA removal operation is not template-based homologous recombination.
+
+Both NEF1 rows retain the independently supported XPA-containing membership. The human [ERCC1–ERCC4 recruitment event](https://reactome.org/content/detail/R-HSA-5690991), verified PAINT placement and current term definition supply the broader context; the PMID:10413517 ERCC1-capture experiment itself assays the heterodimer. Both UV-response rows retain the established gene-level repair contribution, with the HMT/UVA gamma-H2AX assay distinguished from the independent human photolesion-clearance experiments.
+
+For [PMID:19596235](https://pmc.ncbi.nlm.nih.gov/articles/PMC2720686/), the relevant ERCC4 experiment is Results, **SLX4 is required for resistance to DNA damaging agents that produce interstrand crosslinks or DNA-protein adducts**, Figure 3E–F, and **MCA and HR assays** in the main Methods (normal extraction lines 118 and 226). ERCC4 siRNA causes MMC and UV sensitivity. The inherited SLX4-depletion quotation remains exact as complex-level context; it does not itself establish the ERCC4 phenotype or transfer SLX4's DR-GFP result to XPF. No replacement quotation was added.
+
+For [PMID:14690602](https://static1.squarespace.com/static/61c20b2946a75a2c2aafd075/t/61fca1c48073ae0d428622f3/1643946437199/2003Zhu_Mol_Cell_2003.pdf), Results and Figure 6 (pp. 1494–1495) show increased TDMs in Ercc1-null mouse cells, with Xpc-null controls. Figure 7 (p. 1496) is the proposed protective-cleavage model. The positive TDM-formation assertion is removed; the hypothetical protective mechanism is not promoted to a new negative-regulation assertion. These figure captions and actual main text were read; this follow-up does not claim new Figure 6/7 pixel inspection.
+
+The ICL core intentionally retains the broader pathway: SLX4-associated ERCC1–XPF repair is not reduced to the NER-in-ICL branch GO:1901255. The existing more specific assertions remain supported, without imposing a universal unhooking order. The retired broad ssDNA-nuclease proposal uses TOO_GENERAL because accepted GO:1990599 already entails it; retirement and the source/quotation history remain intact.
+
+Supported generic binding follows the [ClinGen campaign curation instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions): retain NC when no evidence-backed specific activity is established, refine when it is, and use UNDECIDED for inaccessible evidence. The same linked instructions prohibit new publication quotations and require inherited quotations to remain exact. They are explicit task-specific user overrides; no repository-wide policy change is claimed.

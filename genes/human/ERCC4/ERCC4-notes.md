@@ -122,3 +122,18 @@ The selected review and genuine refreshed GOA were installed against main c55b5d
 ### Prepublication wording correction — 2026-10-24
 
 Independent review identified an overly restrictive explanation for the unresolved PMID:11790111 damaged-DNA-binding context. Official GO:0003684 defines binding to damaged DNA without requiring preferential affinity over undamaged DNA or an isolated-protein preparation. The review and source guide now state the actual unresolved point: whether the inspected evidence establishes binding attributable to XPF separately from complex assembly and incision. The action remains UNDECIDED, with its inherited quotation, source fields, all action counts and both cores unchanged.
+
+
+## 2026-10-24 — response to the published review
+
+The specificity correction refines all five broad DNA-endonuclease rows to junction-specific duplex-DNA cleavage. All three broad DNA-repair rows use MODIFY, with the electronic context covering independently established NER, ICL repair and the SSA nonhomologous-end-removal step. The original-paper contexts preserve their narrower assay scopes. The SSA addition is a refinement of existing broad coverage, not a new annotation; the human catalytic participant chain, actual human junction incision, same-role ortholog comparators, current parents and the cached NER GO-CAM were checked. The two core contexts remain the same nuclease, with the first explicitly distinguishing broader ICL repair from the NER-in-ICL branch.
+
+NEF1 and UV-response assessments now use the same whole-gene judgment across their sources while recording each experiment's limits. The positive TDM-formation assertion is removed after rereading the actual deficiency phenotype and protective-cleavage model. The retired historical broad ssDNA proposal is TOO_GENERAL rather than an unresolved active function. Three questions address damaged-DNA contacts, TFIID association and the natural short product.
+
+All 97 source objects, two natural products and all 52 inherited quotation paths and values are unchanged. The SLX4-only quotation remains exactly as inherited and is explicitly identified as complex context; ERCC4-specific human knockdown evidence is cited without a new quotation, with the actual Figure 3E–F/Methods locator in the source guide. The refreshed 100-row GOA, 96 active imported contexts and immutable normal source caches are preserved.
+
+Both standing user overrides are documented in the [ClinGen campaign curation instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions): supported generic binding is NC unless a specific role warrants MODIFY, and no new publication quotations are added while inherited quotations remain exact. The 21 supported generic-binding rows are therefore retained; removing them solely for their uninformative label would violate the campaign instruction. This is an explicit task-specific departure from the default skill, not an unreported repository policy change.
+
+The prior main review was COMPLETE; the published re-review changed it to DRAFT. This follow-up preserves DRAFT rather than describing the historical transition as unchanged. Current action totals are 45 ACCEPT, 32 KEEP_AS_NON_CORE, 12 MODIFY, six UNDECIDED, one REMOVE and one retired TOO_GENERAL. Final canonical validation and any resulting advisory counts are recorded separately by the publication step; this scientific packet does not claim that those checks have already run.
+
+Canonical follow-up validation passed: normal, strict whole-document terms, components, computed status and rendering. DRAFT retains 22 advisories. All 197 description/review/core narratives occur in rendered HTML. All 48 selected normal-source dependencies remain exact.
