@@ -41,6 +41,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
+| `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 
 ---
 
@@ -251,6 +252,24 @@ nodes carry `GO:0007035 vacuolar acidification` and
 - [x] `NEUCR/vma-8` - *Neurospora crassa* V-ATPase subunit D with direct 1999
   V-ATPase subunit evidence; drafted in PR #5275
 
+## Family 12: V-type ATPase Catalytic Subunit A
+
+`PTHR43607` contains the conserved V-type ATPase catalytic A-subunit family.
+The family-root `PANTHER:PTN000389800` node carries the rotary
+proton-transporting ATPase activity and proton-transport process assertions,
+`PANTHER:PTN000389802` places V1-domain membership on the eukaryotic branch,
+and fungal node `PANTHER:PTN001032540` asserts fungal-type vacuole membrane
+localization for the vacuolar proton pump.
+
+- [x] `yeast/VMA1` - *S. cerevisiae* V1 catalytic A subunit and PI-SceI/VDE
+  intein precursor; drafted in PR #5279
+- [x] `SCHPO/vma1` - fission-yeast V-ATPase A subunit with PomBase
+  disruption evidence; drafted in PR #5278
+- [x] `CANAL/TFP1` - CGD *Candida albicans* V-ATPase A subunit with
+  filamentation, stress, and acidification literature; drafted in PR #5281
+- [x] `NEUCR/vma-1` - *Neurospora crassa* V-ATPase A subunit with direct
+  vacuolar ATPase context; drafted in PR #5280
+
 ---
 
 # NOTES
@@ -282,6 +301,12 @@ nodes carry `GO:0007035 vacuolar acidification` and
   assertion as correct but generic beside exact `GO:0009003 signal peptidase
   activity`, and reject propagated `GO:0045047 protein targeting to ER` where
   it confuses signal-peptide cleavage with the upstream targeting step.
+- Drafted the compact `PTHR43607` V-ATPase catalytic A-subunit set across
+  `yeast/VMA1`, `SCHPO/vma1`, `CANAL/TFP1`, and `NEUCR/vma-1` in PRs
+  #5278-#5281. All four reviews accept the root PAINT activity/transport node,
+  the eukaryotic V1-domain node, and the fungal vacuole-membrane node, while
+  handling species-specific biology such as the budding-yeast PI-SceI/VDE
+  intein and Candida TFP1 phenotypes outside the conserved catalytic core.
 
 ## 2026-10-17
 
