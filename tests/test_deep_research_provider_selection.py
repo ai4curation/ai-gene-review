@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -114,13 +115,21 @@ def test_fallback_after_hyphenated_provider_uses_canonical_output_path(
 ) -> None:
     wrapper = load_wrapper()
     gene_dir = tmp_path / "TP53"
-    calls: list[list[str]] = []
-
-    def fake_run(cmd, **kwargs):
-        calls.append(cmd)
-        return subprocess.CompletedProcess(cmd, returncode=1 if len(calls) == 1 else 0)
-
-    monkeypatch.setattr(wrapper.subprocess, "run", fake_run)
+    command_log = tmp_path / "calls.jsonl"
+    client = tmp_path / "client.py"
+    client.write_text(
+        "import json, pathlib, sys\n"
+        f"with open({str(command_log)!r}, 'a') as log:\n"
+        "    log.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+        "if sys.argv[sys.argv.index('--provider') + 1] != 'falcon':\n"
+        "    sys.exit(1)\n"
+        "output = pathlib.Path(sys.argv[sys.argv.index('--output') + 1])\n"
+        "output.parent.mkdir(parents=True, exist_ok=True)\n"
+        "output.write_text('research report')\n"
+    )
+    monkeypatch.setenv(
+        "DEEP_RESEARCH_CLIENT_CMD", shlex.join([sys.executable, str(client)])
+    )
 
     result = wrapper.run_deep_research(
         organism="human",
@@ -132,7 +141,9 @@ def test_fallback_after_hyphenated_provider_uses_canonical_output_path(
         fallback_providers=["falcon"],
     )
 
+    calls = [json.loads(line) for line in command_log.read_text().splitlines()]
     assert result == 0
+    assert (gene_dir / "TP53-deep-research-falcon.md").read_text() == "research report"
     assert len(calls) == 2
     assert calls[0][calls[0].index("--output") + 1] == str(
         gene_dir / "TP53-deep-research-perplexity-lite.md"
