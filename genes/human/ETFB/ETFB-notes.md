@@ -64,3 +64,25 @@ Supporting text:
 ## Deep research
 falcon DR file not present within poll window; grounded in UniProt, cached PMIDs, Reactome,
 and the MADD disorder KB.
+
+
+## 2026-10-24 — Current source review and preserved history
+
+All 27 current source contexts are reviewed: 18 ACCEPT, six MODIFY and three KEEP_AS_NON_CORE. The 25 inherited positions remain fixed. One historical ARBA mitochondrion context is absent from the current source; it remains at index 3 as retired with a supported biological MODIFY to matrix. Retirement records source absence, not functional loss. There are 28 total rows and no NEW annotation.
+
+Two formerly aggregated interaction contexts are split without moving quotations. Legacy index 6 retains LYRM5, the partner named in its fixed quotation, while the ETFA context is appended. Legacy index 7 retains the ETFA context with its general BioPlex quotation, and LYRM5 is appended separately. The current ARBA ETF-complex assertion is also appended. Every current source object has one exact active representation; missing supporting_entities are added only from the captured current context, with every existing source value preserved.
+
+All 41 inherited quotation paths, values and reference associations remain fixed (27 annotation, four core and ten reference-finding anchors). Accepted evidence references are appended after existing support prefixes. Thirteen references receive the accepted access assessments, replacing obsolete generic-binding over-annotation commentary; overlapping source scopes are separately labeled. Existing reference identities, titles, order and findings remain unchanged. The two ordered cores, description, natural products and INITIALIZED status are retained for a later synthesis phase.
+
+The source guide records the human alpha/beta carrier assays, the different BioPlex accession labels, grouped MitoCoP products and remaining old-original access limits. Inherited description/core recognition-loop wording and the S1P trimer finding remain synthesis follow-up items: accepted original evidence distinguishes predicted docking and co-IP from an obligate third ETF subunit. Their inherited text/quotes are preserved at this checkpoint, not newly endorsed as expanded mechanistic proof.
+
+
+## 2026-10-24 — ETFB contribution to electron transfer
+
+ETFB supplies an AMP-binding domain and part of the architecture surrounding the single FAD of assembled ETF. The human structure resolves beta density from Leu4 to Ile255 and places AMP within beta domain III; its stabilizing role is a structural interpretation, not AMP turnover (https://doi.org/10.1073/pnas.93.25.14355, Results cofactor sites). In the human reconstitution, mature untagged Δ19-alpha pairs with full-length His6-beta and transfers electrons from MCAD or GCDH to DCIP. ETFDH performs the distinct downstream ubiquinone-reduction reaction (https://doi.org/10.1074/jbc.M114.614115, Experimental Procedures and Figure 5).
+
+The recognition-loop role remains supported: the human ETF–MCAD structure reports a static anchor coupled to a mobile FAD domain, and beta-E165A changes donor-transfer kinetics (https://doi.org/10.1074/jbc.M404884200; https://doi.org/10.1074/jbc.M505562200). These two papers were available as original abstracts with verified identifiers; publisher body/PDF access failed, so their detailed Methods and product sequences were not independently inspected. This positive but bounded evidence does not establish identical docking for all donors or the 346-residue product. The two inherited core positions now describe facets of the same assembled carrier activity, with electron transfer recorded as a contribution to the complex.
+
+The S1P finding now distinguishes human-cell co-IP/GST association and ETF stability/flavination effects from the proposed computational trimer (https://doi.org/10.15252/emmm.202114904, Results/Figure 3 and docking Methods). The inherited quotation is retained exactly. It does not establish that S1P is an obligatory third subunit of every functional ETF complex. Product-resolved import, donor-specific methylation effects and S1P occupancy remain useful experimental questions.
+
+Final canonical validation passes all six checks, with all 65 authored narratives present in the private rendering. Computed DRAFT retains 3 advisories. The 28 source/review objects comprise 27 current contexts and one explicitly retired historical context. All 41 inherited quotation paths, texts and reference associations, two natural products and two ordered core slots remain preserved. The two cores describe contributions to assembled ETF; no autonomous beta turnover is asserted. All 20 selected normal sources, the 33 private source files and eight unrelated baseline files remain unchanged.
