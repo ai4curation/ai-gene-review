@@ -96,3 +96,7 @@ Report: `GID1A-hypotheses/gid1a-catalytic-inactivity/openscientist.md` (3 iterat
 - It says no primary paper reports the presence or absence of esterase activity. The original rice GID1 paper is cited as describing the protein as HSL-like "without hydrolase activity" [PMID:24961590 "GID1 was first described in rice as a nuclear localized protein similar to hormone-sensitive lipase family without hydrolase activity"]. The Falcon deep-research file reports a negative p-nitrophenyl acetate assay. So the "no residual activity" clause has at least a published negative claim behind it. I have not verified the primary assay, because PMID:16193045 has no cached text.
 
 **Curation consequence:** no action changes. GO:0016787 hydrolase activity (IEA, GO_REF:0000002) is already REMOVE in this review; the report is now cited as a reference and in that row's supported_by as residue-level support. The proposed "gibberellin receptor activity" MF still has no GO term.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+Dropped the NEW GO:0009939 positive regulation of GA-mediated signaling row (IGI, PMID:17194763). No GID1 paralog carries GO:0009939; all carry GO:0010476 gibberellin mediated signaling pathway, which GID1A already has. The second core function now uses GO:0010476 with proposed_molecular_function "gibberellin receptor activity" (the existing proposed_new_terms entry), which distinguishes it from the GA-binding core function.

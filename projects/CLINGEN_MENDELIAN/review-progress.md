@@ -5520,3 +5520,51 @@ pages and validated the appended history record. The catalogue render reports
 1,618 missing-review warnings; the progress render reports none.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker552-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T223102Z-codex-2f1a51.yaml)
+
+## Completion checkpoint 553 — 2026-10-21 23:25:39 UTC
+
+**553 complete; 2,323 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only [ELN #5322](https://github.com/ai4curation/ai-gene-review/pull/5322)
+to merged checkpoint 552. The coordinating AI agent accepted the exact-head
+review and merge audit; this is not a human maintainer sign-off. Products,
+follow-ups, private drafts and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths at merge |
+| --- | --- | --- | --- | --- |
+| [ELN #5322](https://github.com/ai4curation/ai-gene-review/pull/5322) | [`2fd23fe02242`](https://github.com/ai4curation/ai-gene-review/commit/2fd23fe02242dc65c995cb869bfed64b9f76f23b) | [`c4275075822f`](https://github.com/ai4curation/ai-gene-review/commit/c4275075822f1cb9e9e28ae49b90090793bdf2f7) | `cd7e12584376` | 31/31 |
+
+All 31 approved path modes and blobs match the actual ELN merge. Its aggregate
+source-defect report preserves 21 parent records and adds one exact conditional
+ELN/MGI query, for 22 records. The tracker successor changes no ELN payload.
+The review preserves 48 source annotations and 13 natural products, with two
+core functions and zero new publication quotations. Decisions are 9 ACCEPT,
+17 MODIFY and 22 KEEP_AS_NON_CORE. Its computed status remains DRAFT with five
+accepted advisories; completion does not suppress these qualifications.
+
+The [merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39687733885)
+executed the full suite: 4,176 Python tests (one skipped, 84 deselected),
+268 doctests (37 skipped), 12 examples, typing, lint, 432 Python automation
+tests and 19 JavaScript tests. The [actual-main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39689841584)
+passed strict gene validation, 14,915 history records, 42 history tests and
+715 family checks. Its broad suite was filtered, not executed again.
+Aggregate jobs checked conclusions rather than running these tests.
+The [documentation workflow](https://github.com/ai4curation/ai-gene-review/actions/runs/39689841571)
+built and pushed gh-pages successfully; no independent live-page inspection is claimed.
+
+The pinned inventory at main `7f1f8f7147f165a688c45300b0da8052adfdadf1` contains 8,557 reviews, including 3,116
+human reviews. Of the 2,876 catalogue genes, 1,259 have review files and 1,617
+lack them; 706 available reviews remain uncredited. All seven predecessor
+[tracker #5324](https://github.com/ai4curation/ai-gene-review/pull/5324) paths
+match its approved head `797605851a52befe7c870379624d1a16b1ab0714` at the merge.
+All 235 queue objects, 109 earlier completion updates and earlier progress
+bytes remain exact. This is update 110; only the ELN checkbox changes, and all
+2,876 catalogue identities and association texts are preserved.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. It changes no gene review,
+source cache, runtime or earlier history. ELOVL4 and ELP2 remain uncredited.
+The publication passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,617 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker553-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T232923Z-codex-8fec8a.yaml)
