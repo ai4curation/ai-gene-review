@@ -134,6 +134,32 @@ def test_non_uniprot_sequence_is_unresolved_not_a_crash():
     assert _outcomes(results, "CANONICAL") == [ClaimOutcome.PASS]
 
 
+def test_prefixless_accession_is_still_checked():
+    """A bare UniProt accession resolves as in gene_residue_claims; a wrong residue fails."""
+    mapping = {
+        "as_reported": _pos("P1-2", 7, "S"),
+        "canonical": {"accession": "P1", "position": 5, "residue": "S"},
+    }
+    results = check_mapping(mapping, "P1", "G", "PMID:1", CACHE)
+    assert _outcomes(results, "CANONICAL") == [ClaimOutcome.FAIL]
+
+
+@pytest.mark.integration
+def test_real_mappings_pin_current_sequence_versions():
+    """The committed RASAL2 mappings record the versions UniProt currently serves."""
+    from ai_gene_review.validation.family_residue_validator import SequenceCache
+
+    cache = SequenceCache(Path(".cache/uniprot_seq"))
+    results = validate_finding_residue_mappings(
+        Path("genes/human/RASAL2/RASAL2-ai-review.yaml"), cache
+    )
+    assert results and all(r.outcome is ClaimOutcome.PASS for r in results), [
+        str(r) for r in results
+    ]
+    drifted = [r for r in results if "sequence version has moved" in r.detail]
+    assert not drifted, [str(d) for d in drifted]
+
+
 def test_canonical_identity_failure_says_what_to_write():
     mapping = {"as_reported": _pos("P1-2", 7, "S"), "canonical": _pos("P1-1", 4, "S")}
     seqs = {**CACHE.seqs, "P1-1": CACHE.seqs["P1"]}

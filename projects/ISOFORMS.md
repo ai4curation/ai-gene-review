@@ -115,7 +115,7 @@ displayed sequence. Cases found so far:
 | Gene | UniProt entry | What the literature says | What UniProt records | Kind of mismatch |
 |---|---|---|---|---|
 | SYNGAP1 | Q96PV0 | Four C-terminal splice forms (alpha1, alpha2, beta, gamma); only alpha1 ends in the class I PDZ ligand -QTRV that binds PSD-95 (PMID:32579114) | Four named isoforms, none ending in -QTRV. The alpha1 C-terminus exists as RefSeq NP_001123538.1 (1292 aa), which the entry cross-references without assigning it to an isoform, and as unreviewed entries B7ZCA0 and A0A2R8Y6T2 | Literature isoform missing from the reviewed entry |
-| RASAL2 | Q9UJF2 | Phosphosites S351 (PMID:33563064) and Ser237 (PMID:33096593) | Both are serines only in isoform 2 (Q9UJF2-2, 1280 aa, the RefSeq NP_733793.2 form); in the displayed isoform 1 they are Ser203 and Ser89 | Residue numbering uses a non-displayed isoform |
+| RASAL2 | Q9UJF2 | Phosphosites S351 (PMID:33563064) and Ser237 (PMID:33096593) | Both are serines only in isoform 2 (Q9UJF2-2, 1280 aa, the RefSeq NP_733793.2 form); in the displayed sequence (Q9UJF2) they are Ser203 and Ser89 | Residue numbering uses a non-displayed isoform |
 
 Both were found while reviewing the SynGAP RasGAP subfamily (PRs #5338, #5364
 and the SYNGAP1 follow-up). In each case the error propagated into prose: the

@@ -20,9 +20,10 @@ residue in the displayed sequence of the review's entry (``canonical``). Checks:
     Both sides claim the same amino acid; a mapping between two different residues
     cannot be the same position in two numberings.
 
-Only UniProtKB sequences can be fetched. A side named by another identifier (an
-isoform known only from RefSeq, say) is reported ``UNRESOLVED`` rather than failing
-the run.
+Only UniProtKB sequences can be fetched. A side whose accession carries another
+prefix (an isoform known only from RefSeq, say) is reported ``UNRESOLVED`` rather than
+failing the run; a prefix-less accession is treated as UniProtKB, as in
+``gene_residue_claims``.
 
 Positions are resolved with the same sequence cache and position check as
 ``gene_residue_claims``. The slot is optional, so reviews that state residues only
@@ -62,7 +63,8 @@ def _check_side(
     ...             "as reported", "G", "PMID:1", "AS_REPORTED").outcome.value
     'UNRESOLVED'
     """
-    if not spec["accession"].startswith("UniProtKB:"):
+    acc = spec["accession"]
+    if ":" in acc and not acc.startswith("UniProtKB:"):
         return ClaimCheck(
             kind, gene, ref_id,
             f"{label} {spec['accession']} cannot be checked: only UniProtKB sequences "
