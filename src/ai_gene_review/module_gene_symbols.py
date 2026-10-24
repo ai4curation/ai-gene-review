@@ -54,7 +54,11 @@ def symbol_label_warnings(document: Any) -> list[str]:
                 # `gene_product` feeds symbol extraction exactly as `gene` does
                 # (see module_logic._atom_from_annoton), so an ambiguous label
                 # there must raise the same advisory. Checking only `gene` let
-                # the engine and validation diverge silently.
+                # the engine and validation diverge silently. This walk recurses,
+                # so it also reaches a `gene_product` nested in
+                # `protein_complex.active_units`, which the engine does not yet
+                # read: deliberate, since an ambiguous label is a curation defect
+                # either way and those become load-bearing once complexes ground.
                 if key in {"gene", "gene_product"}:
                     check(child, child_path)
                 elif key == "representative_members" and isinstance(child, list):

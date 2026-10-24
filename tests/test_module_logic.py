@@ -19,6 +19,7 @@ import yaml
 from ai_gene_review.module_gene_symbols import descriptor_symbol
 from ai_gene_review.render_modules import as_list
 from ai_gene_review.module_logic import (
+    _uniprot_from_gene,
     And,
     Atom,
     compile_module,
@@ -503,7 +504,9 @@ UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of", "domai
 #: (`required_function`, `required_domain` and `taxon` are constraints). Kept
 #: as the union of the two tuples above so that adding a slot to the schema and
 #: leaving it unread fails the partition test below rather than going silent --
-#: which is how `gene_product` was missed in the first place.
+#: which is how `gene_product` was missed in the first place. The partition test
+#: recognises a new slot by its Descriptor range, so an entity slot added as a
+#: bare `string`/`uriorcurie` would still have to be listed here by hand.
 ENTITY_GROUNDING_SLOTS = (*READ_GROUNDING_SLOTS, *UNREAD_GROUNDING_SLOTS)
 
 
@@ -513,17 +516,31 @@ def _descriptor_is_usable(slot: str, descriptor: dict) -> bool:
     Separates an engine defect (a usable grounding that was dropped) from a
     curation defect (a descriptor too ambiguous to ground, e.g. a label that is
     not symbol-first and carries no accession). Both exist in the corpus.
+
+    Usability is evaluated on whichever descriptor actually holds the
+    grounding, which is why `family` reads its `representative_members` rather
+    than the family descriptor itself. **Any slot moved into
+    `READ_GROUNDING_SLOTS` needs its case added here in the same change.**
+    A `protein_complex` descriptor, for instance, usually carries a
+    non-symbol-first `preferred_term` and no `term`, so it evaluates False;
+    that is harmless only while the slot is unread. Reclassify it without
+    adding an `active_units` case and every complex whose subunits are
+    perfectly groundable reports as "unusable descriptor" instead of as the
+    dropped grounding it is -- silencing the population this guard exists for.
     """
     candidates = (
         as_list(descriptor.get("representative_members"))
         if slot == "family"
         else [descriptor]
     )
+    # Both predicates are the engine's own (`_symbol_from_gene` defers to
+    # `descriptor_symbol`), imported rather than restated: the guard's job is to
+    # agree with the engine about what counts as groundable, so a copy of the
+    # accession rule that silently stopped matching a broadened one would
+    # reclassify a dropped grounding as an unusable descriptor and go quiet --
+    # this PR's own bug class, inside the guard against it.
     return any(
-        descriptor_symbol(candidate)
-        or str(((candidate or {}).get("term") or {}).get("id", "")).startswith(
-            "UniProtKB:"
-        )
+        descriptor_symbol(candidate or {}) or _uniprot_from_gene(candidate or {})
         for candidate in candidates
     )
 
@@ -577,6 +594,11 @@ def test_every_participant_slot_is_classified_read_or_unread(curated_slots):
         if "Descriptor" in str(spec.get("range", ""))
         and slot not in ("required_function", "required_domain", "taxon")
     }
+    overlap = sorted(set(READ_GROUNDING_SLOTS) & set(UNREAD_GROUNDING_SLOTS))
+    assert overlap == [], (
+        "these slots are listed as both read and unread, so the guard below "
+        f"silently treats them as read: {overlap}"
+    )
     assert entity_slots == set(ENTITY_GROUNDING_SLOTS), (
         "ParticipantSelector's entity-grounding slots are not all classified; "
         f"unclassified: {sorted(entity_slots - set(ENTITY_GROUNDING_SLOTS))}, "
@@ -608,7 +630,12 @@ def test_no_ungrounded_atom_comes_from_a_slot_the_engine_reads(
         for atom in iter_atoms(circuit):
             if atom.is_grounded:
                 continue
-            annoton_id = atom.node_id.rpartition("#")[2]
+            if "#" in atom.node_id:
+                # Compiled from a `module_ref`; its own file covers it. Looking
+                # the bare id up in the referring document's slot map would
+                # report this file for another's atom on an id collision.
+                continue
+            annoton_id = atom.node_id
             dropped = sorted(
                 slot
                 for slot, usable in slots.get(annoton_id, {}).items()
