@@ -314,3 +314,50 @@ def test_backfill_counts_an_aliased_quote_once():
         ["CC:CAUTION"],
         ["CC:CAUTION"],
     ]
+
+
+@pytest.mark.parametrize(
+    "quote,path,expected",
+    [
+        # a feature key quoted without the FT line code
+        ("TRANSIT         1..64", "yeast/ALT1/ALT1-uniprot.txt", ["FT:TRANSIT"]),
+        ("ZN_FING         290..371", "SCHPO/pli1/pli1-uniprot.txt", ["FT:ZN_FING"]),
+        ("CHAIN           1..316", "SCHPO/cab4/cab4-uniprot.txt", ["FT:CHAIN"]),
+        # ... followed by a qualifier of the same feature
+        (
+            'BINDING         572..580 /ligand="ATP"',
+            "SCHPO/ppk18/ppk18-uniprot.txt",
+            ["FT:BINDING"],
+        ),
+        ("FT   TRANSIT         1..18", "SCHPO/cem1/cem1-uniprot.txt", ["FT:TRANSIT"]),
+    ],
+)
+def test_feature_quotes_with_or_without_line_code(quote, path, expected):
+    assert record_sections(quote, PROJECT_ROOT / "genes" / path) == expected
+
+
+def test_feature_quote_with_a_qualifier_of_another_feature_is_not_located():
+    path = PROJECT_ROOT / "genes" / "SCHPO" / "ppk18" / "ppk18-uniprot.txt"
+    assert locate_sections('BINDING         572..580 /ligand="GTP"', path) == (
+        UNLOCATED,
+        [],
+    )
+
+
+def test_multiline_feature_quote_with_qualifiers():
+    """A feature quoted with its continuation lines, as copied from the flat file."""
+    path = PROJECT_ROOT / "genes" / "SCHPO" / "plo1" / "plo1-uniprot.txt"
+    quote = 'FT   BINDING         47..55\nFT                   /ligand="ATP"'
+    assert record_sections(quote, path) == ["FT:BINDING"]
+
+
+def test_quote_spanning_two_features():
+    path = PROJECT_ROOT / "genes" / "human" / "LRP2BP" / "LRP2BP-uniprot.txt"
+    quote = 'FT   REPEAT          59..92\nFT                   /note="TPR"\nFT   REPEAT          93..125\n'
+    assert record_sections(quote, path) == ["FT:REPEAT"]
+
+
+def test_signal_peptide_quote_is_the_feature_not_the_keyword():
+    """'SIGNAL 1..18' once matched across the KW line and the first feature."""
+    path = PROJECT_ROOT / "genes" / "human" / "ADM5" / "ADM5-uniprot.txt"
+    assert record_sections("SIGNAL          1..18", path) == ["FT:SIGNAL"]

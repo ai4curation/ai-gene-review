@@ -440,22 +440,19 @@ def is_uniprot_source(path: Path) -> bool:
 
 LOCATED, UNLOCATED, AMBIGUOUS, UNSEARCHABLE = "located", "unlocated", "ambiguous", "unsearchable"
 
-#: A quote that is only a feature line's key and location (``FT   ACT_SITE  170``).
-#: Normalisation leaves nothing searchable in it (the key is stripped and a lone
-#: number is dropped), so it is matched against the parsed features instead.
-_FEATURE_QUOTE = re.compile(r"^\s*FT {3}(\w+) +([<>?]?\d*\??(?:\.\.[<>?]?\d*\??)?)\s*$")
+#: A quote that opens with a feature key and location, with or without the
+#: ``FT   `` line code (``FT   ACT_SITE  170``, ``TRANSIT  1..64``). The parsed
+#: statements keep the key as the topic, not as text, so it is matched there.
+_FEATURE_LEAD = re.compile(r"^\s*(?:FT {3})?([A-Z][A-Z0-9_]+) +(?=[<>?]?\d|\?)")
 
 
-def _locate_feature(quote: str, statements: Tuple[Statement, ...]) -> Tuple[str, List[str]]:
-    """``(status, sections)`` for a quote with nothing searchable left after normalisation."""
-    m = _FEATURE_QUOTE.match(quote)
-    if not m or not re.search(r"\d", m.group(2)):
-        return UNSEARCHABLE, []
-    key, location = m.groups()
-    found = any(
-        s.field == "FT" and s.topic == key and s.text.split()[:1] == [location] for s in statements
-    )
-    return (LOCATED, [f"FT:{key}"]) if found else (UNLOCATED, [])
+def _feature_lead(quote: str, statements: Tuple[Statement, ...]) -> Optional[Tuple[str, str, str]]:
+    """``(key, location, rest)`` when *quote* opens with a feature key of this record."""
+    m = _FEATURE_LEAD.match(quote)
+    if not m or not any(s.field == "FT" and s.topic == m.group(1) for s in statements):
+        return None
+    location, *after = quote[m.end():].split(None, 1)
+    return m.group(1), location, after[0] if after else ""
 
 
 def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
@@ -468,14 +465,32 @@ def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
     several places that lie in different sections (a short quote such as
     ``Nucleus``, found in both a keyword and a comment): the section is then
     not established, and no sections are returned rather than a guess. A quote
-    that is only a feature key and location is matched against the record's
-    features; any other quote with nothing searchable in it (a bare number) is
-    ``UNSEARCHABLE``.
+    that opens with a feature key and location (with or without the ``FT``
+    line code) is first matched against the record's features of that key, and
+    otherwise searched as text (it may span several features); a quote with
+    nothing searchable in it (a bare number) is ``UNSEARCHABLE``.
     """
     statements, text, starts = _index(path)
+    feature = _feature_lead(quote, statements)
+    if feature is not None:
+        key, location, rest = feature
+        rest_parts = _quote_parts(rest)
+        normalize = _validator().normalize_text
+        found = any(
+            s.field == "FT"
+            and s.topic == key
+            and s.text.split()[:1] == [location]
+            and all(f" {p} " in f" {normalize(s.text)} " for p in rest_parts)
+            for s in statements
+        )
+        if found:
+            return LOCATED, [f"FT:{key}"]
+        if not rest_parts:  # a key and location only, and no such feature
+            return UNLOCATED, []
+        # otherwise the quote may span several features: search it as text
     parts = _quote_parts(quote)
     if not parts:
-        return _locate_feature(quote, statements)
+        return UNSEARCHABLE, []
     sections: List[str] = []
     for part in parts:
         occurrences = _occurrences(part, statements, text, starts)
