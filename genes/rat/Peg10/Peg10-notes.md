@@ -1,0 +1,2 @@
+# Peg10 (rat, A0ABK0LI09) — review notes
+SIRH1; all GOA rows ISO/IEA. Reviewed rat UniProt record is 408 aa = Gag/capsid region only (no Pol/protease domain), so protease NOT asserted; capsid/RNA-packaging and placental roles transferred by orthology (mouse/human). NEW: GO:0039660 structural constituent of virion (ISS). nucleic acid binding IEA -> TOO_GENERAL. Pol/protease flagged in suggested_questions. No openscientist report present for rat.
