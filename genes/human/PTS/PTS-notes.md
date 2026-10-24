@@ -12,3 +12,9 @@
 - Human Protein Atlas subcellular entry for ENSG00000150787 (downloaded 2026-10-24, XML/JSON): antibody HPA001481, passes the protein-array validation; immunofluorescence in A-431, U-251MG and U2OS gives cytosol only; reliability "Approved" (one antibody, no independent second antibody or GFP line). Counterstains are nucleus, microtubules and ER; no mitochondrial marker is used, so a small mitochondrial pool is not excluded but none is seen.
 - The only mitochondrial line is the LIFEdb GFP-fusion screen (GO_REF:0000054), which also seeds the PAINT IBD at PTN000287347 alone.
 - With one direct but low-resolution screen row for, and one approved antibody row against, neither row can be accepted or overruled: both GO:0005739 rows changed KEEP_AS_NON_CORE -> UNDECIDED. A mitochondrial co-stain or fractionation of endogenous PTPS would settle it.
+
+## 2026-10-24 follow-up (review of PR #5469)
+
+- HPA evidence is now reproducible and citable: `PTS-bioinformatics/hpa_subcellular.py` downloads the HPA XML and writes `hpa_subcellular.yaml`; `PTS-bioinformatics/RESULTS.md` summarises it. Both GO:0005739 rows cite RESULTS.md.
+- On whether HPA is contrary or silent: HPA assigns mitochondrial locations from the staining pattern with this same counterstain set, so a cytosol-only call is a negative observation against a substantial pool, though not against a minor one. Kept UNDECIDED.
+- The suggested question no longer says the rows "should be marked over-annotated"; it names the experiment that would decide.
