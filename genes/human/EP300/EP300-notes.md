@@ -1,0 +1,15 @@
+# EP300 review notes
+
+The acquisition contained 478 raw GOA rows and 471 seeded annotation contexts. Seven duplicate-context collapses are documented in the acquisition reconciliation; no imported source object, qualifier, partner, taxon or product was rewritten during review. The official displayed human Q09472 product is 2,414 residues; laboratory constructs were not turned into natural products.
+
+Eight disjoint manual lanes covered all 471 contexts. Whole-gene integration resolves general functions only with positive independent evidence and retains unresolved partner-specific assays. The public source guide supplies DOI links, actual read scopes and experimental boundaries. Supported generic binding is retained as non-core where no defensible specific functional term was established, following the ClinGen campaign instruction; demonstrated partner classes receive specific terms. No new publication quotations or NEW annotations were introduced.
+
+The inherited PMID23934153 title placeholder was replaced with the exact genuine normal-cache title. PMID15919823 is UNVERIFIED: its read main text concerns STAT3 transport without a p300 acetylation assay, while its supplement was inaccessible. Independent evidence establishes the activity. No original citation was rewritten. PMID18273021 supports engineered-p300 H4 assays through its inspected supplement; the main article remained unavailable. Linked correction notices for23870121,26302407 and34637754 retain their actual access limits.
+
+HPA supports nucleoplasm and an additional cytosolic human pool. Current cytosolic Reactome events R-HSA-9701531 and R-HSA-9760082 do not themselves substantiate imported nuclear locations; machine-readable review support instead identifies independent HPA evidence. Original event references remain intact.
+
+Annotation checkpoint counts: {"KEEP_AS_NON_CORE": 103, "ACCEPT": 217, "MODIFY": 115, "UNDECIDED": 36}. Two independently synthesized cores now describe acetyl-CoA-dependent protein-lysine acetylation and transcription coactivation, located in the nucleoplasm. The computed DRAFT status reflects validation advisories. All annotation rows have been reviewed, with 36 explicitly unresolved. Remaining uncertainty includes damaged-DNA contact, pre-mRNA binding, mitochondrial organization, brown-fat regulation and specific interaction partners; missing access is not evidence of curator error.
+
+The normal acquisition attempted Falcon (HTTP403) and then perplexity-lite (HTTP401/quota). Neither produced a research result, so no provider-named research file was fabricated. The manually assessed originals and database provenance are documented in [the source guide](EP300-source-guide.md).
+
+Core catalytic evidence uses PMID20019387 Dna2 acetylation and25818647 histone acetylation; human PolII coactivation is supported by18782771 and25519132. PMID18644873 independently supplies PolIII recruitment/coactivation capability, including assays without added acetyl-CoA, and does not substantiate the PolII-specific process by itself. Alternative acyl donors and individual binding partners are not separate core units.
