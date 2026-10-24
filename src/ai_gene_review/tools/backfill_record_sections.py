@@ -154,7 +154,7 @@ def backfill_text(
     lines = text.splitlines(keepends=True)
     # line index -> (replacement for that line or None, lines to insert before it)
     edits: Dict[int, Tuple[Optional[str], List[str]]] = {}
-    seen: set = set()
+    seen: set[int] = set()
     for path, item, source in _record_items(data, project_root):
         if id(item) in seen:  # a YAML alias: the anchored item is already counted
             continue

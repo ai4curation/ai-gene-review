@@ -455,40 +455,66 @@ def _feature_lead(quote: str, statements: Tuple[Statement, ...]) -> Optional[Tup
     return m.group(1), location, after[0] if after else ""
 
 
+#: The ``...`` that joins the parts of a quote (a feature range has two dots).
+_ELLIPSIS = re.compile(r"\.{3,}|\u2026")
+
+
 def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
     """``(status, sections)`` for a quote from UniProt record *path*.
 
     ``sections`` are those of the statements the quote spans, each once, in
     quote order; a line code copied with the quote (``CC   -!- CAUTION: ...``)
-    is ignored, as in ``locate_quote``. The status is ``UNLOCATED`` when a part
-    of the quote is not in the record, and ``AMBIGUOUS`` when a part occurs in
-    several places that lie in different sections (a short quote such as
-    ``Nucleus``, found in both a keyword and a comment): the section is then
-    not established, and no sections are returned rather than a guess. A quote
-    that opens with a feature key and location (with or without the ``FT``
-    line code) is first matched against the record's features of that key, and
-    otherwise searched as text (it may span several features); a quote with
-    nothing searchable in it (a bare number) is ``UNSEARCHABLE``.
+    is ignored, as in ``locate_quote``. Each ``...``-separated part is located
+    on its own. The status is ``UNLOCATED`` when a part of the quote is not in
+    the record, and ``AMBIGUOUS`` when a part occurs in several places that lie
+    in different sections (a short quote such as ``Nucleus``, found in both a
+    keyword and a comment): the section is then not established, and no
+    sections are returned rather than a guess. A quote with nothing searchable
+    in it (a bare number) is ``UNSEARCHABLE``.
     """
     statements, text, starts = _index(path)
-    feature = _feature_lead(quote, statements)
+    sections: List[str] = []
+    for raw in _ELLIPSIS.split(quote):
+        status, found = _locate_part(raw, statements, text, starts)
+        if status == UNSEARCHABLE:
+            continue
+        if status != LOCATED:
+            return status, []
+        sections.extend(sec for sec in found if sec not in sections)
+    return (LOCATED, sections) if sections else (UNSEARCHABLE, [])
+
+
+def _locate_part(
+    raw: str, statements: Tuple[Statement, ...], text: str, starts: Tuple[int, ...]
+) -> Tuple[str, List[str]]:
+    """``(status, sections)`` for one ``...``-free part of a quote.
+
+    A part that opens with a feature key and location (with or without the
+    ``FT`` line code) is first matched against the record's features of that
+    key, since the key is the statement's topic rather than its text; failing
+    that, a longer part is searched as text (it may span several features).
+    """
+    feature = _feature_lead(raw, statements)
     if feature is not None:
         key, location, rest = feature
         rest_parts = _quote_parts(rest)
         normalize = _validator().normalize_text
-        found = any(
-            s.field == "FT"
-            and s.topic == key
-            and s.text.split()[:1] == [location]
-            and all(f" {p} " in f" {normalize(s.text)} " for p in rest_parts)
-            for s in statements
+        matched = next(
+            (
+                s
+                for s in statements
+                if s.field == "FT"
+                and s.topic == key
+                and s.text.split()[:1] == [location]
+                and all(f" {p} " in f" {normalize(s.text)} " for p in rest_parts)
+            ),
+            None,
         )
-        if found:
-            return LOCATED, [f"FT:{key}"]
+        if matched is not None:
+            return LOCATED, [matched.section]
         if not rest_parts:  # a key and location only, and no such feature
             return UNLOCATED, []
-        # otherwise the quote may span several features: search it as text
-    parts = _quote_parts(quote)
+    parts = _quote_parts(raw)
     if not parts:
         return UNSEARCHABLE, []
     sections: List[str] = []

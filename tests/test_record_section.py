@@ -3,7 +3,9 @@
 Run against the real human TP53 flat file in the repository, which has
 curated FUNCTION and CAUTION comments, features, Pfam cross-references and a
 protein name, and the Arabidopsis AOP2 UniSave snapshot, whose archived entry
-has a CAUTION comment.
+has a CAUTION comment. Feature-quote cases use the records the review of the
+SCHPO backfill cited (cem1, pli1, cab4, ppk18, plo1, yeast ALT1) and a few
+human records with the layouts in question (OMA1, LRP2BP, ADM5).
 """
 
 from pathlib import Path
@@ -361,3 +363,38 @@ def test_signal_peptide_quote_is_the_feature_not_the_keyword():
     """'SIGNAL 1..18' once matched across the KW line and the first feature."""
     path = PROJECT_ROOT / "genes" / "human" / "ADM5" / "ADM5-uniprot.txt"
     assert record_sections("SIGNAL          1..18", path) == ["FT:SIGNAL"]
+
+
+CEM1 = "SCHPO/cem1/cem1-uniprot.txt"
+
+
+@pytest.mark.parametrize(
+    "quote,path,expected",
+    [
+        # parts joined by "...", each a feature
+        (
+            "FT   ACT_SITE        170 ... FT   ACT_SITE        311",
+            CEM1,
+            (LOCATED, ["FT:ACT_SITE"]),
+        ),
+        (
+            "FT   ACT_SITE        170 ... FT   TRANSIT         1..18",
+            CEM1,
+            (LOCATED, ["FT:ACT_SITE", "FT:TRANSIT"]),
+        ),
+        # one part not in the record makes the whole quote not located
+        (
+            "FT   ACT_SITE        170 ... FT   ACT_SITE        999",
+            CEM1,
+            (UNLOCATED, []),
+        ),
+        # an unknown start position
+        (
+            "FT   PROPEP          ?..524",
+            "human/OMA1/OMA1-uniprot.txt",
+            (LOCATED, ["FT:PROPEP"]),
+        ),
+    ],
+)
+def test_multipart_and_open_range_feature_quotes(quote, path, expected):
+    assert locate_sections(quote, PROJECT_ROOT / "genes" / path) == expected
