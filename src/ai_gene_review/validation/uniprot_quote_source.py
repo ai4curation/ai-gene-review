@@ -438,7 +438,24 @@ def is_uniprot_source(path: Path) -> bool:
     return path.name.endswith(UNIPROT_SOURCE_SUFFIXES)
 
 
-LOCATED, UNLOCATED, AMBIGUOUS = "located", "unlocated", "ambiguous"
+LOCATED, UNLOCATED, AMBIGUOUS, UNSEARCHABLE = "located", "unlocated", "ambiguous", "unsearchable"
+
+#: A quote that is only a feature line's key and location (``FT   ACT_SITE  170``).
+#: Normalisation leaves nothing searchable in it (the key is stripped and a lone
+#: number is dropped), so it is matched against the parsed features instead.
+_FEATURE_QUOTE = re.compile(r"^\s*FT {3}(\w+) +([<>?]?\d*\??(?:\.\.[<>?]?\d*\??)?)\s*$")
+
+
+def _locate_feature(quote: str, statements: Tuple[Statement, ...]) -> Tuple[str, List[str]]:
+    """``(status, sections)`` for a quote with nothing searchable left after normalisation."""
+    m = _FEATURE_QUOTE.match(quote)
+    if not m or not re.search(r"\d", m.group(2)):
+        return UNSEARCHABLE, []
+    key, location = m.groups()
+    found = any(
+        s.field == "FT" and s.topic == key and s.text.split()[:1] == [location] for s in statements
+    )
+    return (LOCATED, [f"FT:{key}"]) if found else (UNLOCATED, [])
 
 
 def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
@@ -450,11 +467,17 @@ def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
     of the quote is not in the record, and ``AMBIGUOUS`` when a part occurs in
     several places that lie in different sections (a short quote such as
     ``Nucleus``, found in both a keyword and a comment): the section is then
-    not established, and no sections are returned rather than a guess.
+    not established, and no sections are returned rather than a guess. A quote
+    that is only a feature key and location is matched against the record's
+    features; any other quote with nothing searchable in it (a bare number) is
+    ``UNSEARCHABLE``.
     """
     statements, text, starts = _index(path)
+    parts = _quote_parts(quote)
+    if not parts:
+        return _locate_feature(quote, statements)
     sections: List[str] = []
-    for part in _quote_parts(quote):
+    for part in parts:
         occurrences = _occurrences(part, statements, text, starts)
         if not occurrences:
             return UNLOCATED, []
@@ -462,7 +485,7 @@ def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
         if len(candidates) > 1:
             return AMBIGUOUS, []
         sections.extend(sec for sec in candidates.pop() if sec not in sections)
-    return (LOCATED, sections) if sections else (UNLOCATED, [])
+    return LOCATED, sections
 
 
 def record_sections(quote: str, path: Path) -> Optional[List[str]]:

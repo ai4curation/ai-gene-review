@@ -15,7 +15,10 @@ from ai_gene_review.tools.backfill_record_sections import backfill_text
 from ai_gene_review.validation import ValidationSeverity, validate_gene_review
 from ai_gene_review.validation.uniprot_quote_source import (
     AMBIGUOUS,
+    LOCATED,
     PROJECT_ROOT,
+    UNLOCATED,
+    UNSEARCHABLE,
     RECORD_SECTION_CHECK,
     locate_sections,
     record_section_findings,
@@ -270,3 +273,44 @@ def test_fix_leaves_values_it_cannot_rewrite_on_one_line(stated):
     result = backfill_text(text, fix=True)
     assert (result.fixed, result.mismatched) == (0, 1)
     assert result.text == text
+
+
+CEM1_PATH = PROJECT_ROOT / "genes" / "SCHPO" / "cem1" / "cem1-uniprot.txt"
+
+
+@pytest.mark.parametrize(
+    "quote,expected",
+    [
+        # a feature key with a single position: nothing searchable is left after
+        # normalisation, so it is matched against the parsed features
+        ("FT   ACT_SITE        170", (LOCATED, ["FT:ACT_SITE"])),
+        ("FT   ACT_SITE 311", (LOCATED, ["FT:ACT_SITE"])),
+        # the key exists but not at that position
+        ("FT   ACT_SITE        999", (UNLOCATED, [])),
+        # a bare number cannot be attributed to any section
+        ("170", (UNSEARCHABLE, [])),
+    ],
+)
+def test_single_position_feature_quotes(quote, expected):
+    assert locate_sections(quote, CEM1_PATH) == expected
+
+
+def test_backfill_counts_an_aliased_quote_once():
+    """A quote reused through a YAML alias gets one inserted line and one count."""
+    text = (
+        "core_functions:\n"
+        "- supported_by:\n"
+        f"  - &q\n    reference_id: {TP53}\n    supporting_text: {CAUTION_QUOTE}\n"
+        "- supported_by:\n"
+        "  - *q\n"
+    )
+    result = backfill_text(text)
+    assert result.added == 1
+    assert result.text.count("record_section:") == 1
+    after = yaml.safe_load(result.text)
+    assert [
+        c["supported_by"][0]["record_section"] for c in after["core_functions"]
+    ] == [
+        ["CC:CAUTION"],
+        ["CC:CAUTION"],
+    ]

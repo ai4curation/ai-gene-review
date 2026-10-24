@@ -34,6 +34,7 @@ from ai_gene_review.validation.local_source_text import (
 from ai_gene_review.validation.uniprot_quote_source import (
     AMBIGUOUS,
     UNLOCATED,
+    UNSEARCHABLE,
     is_uniprot_source,
     locate_sections,
 )
@@ -86,7 +87,8 @@ class BackfillResult:
     ``text`` is the updated document. ``added`` and ``fixed`` count values
     written; ``mismatched`` counts existing values that disagree with the
     cited file and were left alone; ``unlocated`` counts quotes that could not
-    be found in the cited file; ``ambiguous`` counts quotes found in more than
+    be found in the cited file; ``unsearchable`` counts quotes with nothing
+    searchable in them (a bare number); ``ambiguous`` counts quotes found in more than
     one section, which are left without a value; ``unplaceable`` counts quotes
     whose layout (e.g. a flow mapping) leaves no line to insert the key on.
     """
@@ -96,6 +98,7 @@ class BackfillResult:
     fixed: int = 0
     mismatched: int = 0
     unlocated: int = 0
+    unsearchable: int = 0
     ambiguous: int = 0
     unplaceable: int = 0
     paths: List[str] = field(default_factory=list)
@@ -151,10 +154,17 @@ def backfill_text(
     lines = text.splitlines(keepends=True)
     # line index -> (replacement for that line or None, lines to insert before it)
     edits: Dict[int, Tuple[Optional[str], List[str]]] = {}
+    seen: set = set()
     for path, item, source in _record_items(data, project_root):
+        if id(item) in seen:  # a YAML alias: the anchored item is already counted
+            continue
+        seen.add(id(item))
         status, sections = locate_sections(item["supporting_text"], source)
         if status == UNLOCATED:
             result.unlocated += 1
+            continue
+        if status == UNSEARCHABLE:
+            result.unsearchable += 1
             continue
         if status == AMBIGUOUS:
             result.ambiguous += 1
