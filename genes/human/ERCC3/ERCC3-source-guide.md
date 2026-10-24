@@ -441,3 +441,10 @@ The backtracking discussion in Reactome 9684118 uses a bacterial UvrD analogy. R
 ## Human transcription-dependence study: PMID:35947745
 
 [Original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC9458433/). Main Methods, Results and Discussion were inspected, including the acute-depletion PRO-seq experiments and controls. Endogenous FKBP-tagged human HAP1 factors were depleted for two hours; moth-nuclei spike-ins and untagged drug controls support the transcription comparison. XPB dependence is variable across promoters, and residual protein remains. No figure pixels or supplementary files were inspected. The 2026 Communications Biology item DOI 10.1038/s42003-026-10203-1 is a Perspective, not an additional primary experimental study.
+
+
+## Core chemistry and partner-specific refinement
+
+Fresh official [ATP hydrolysis](https://www.ebi.ac.uk/QuickGO/term/GO:0016887) and [DNA translocase](https://www.ebi.ac.uk/QuickGO/term/GO:0015616) definitions and typed ancestry distinguish chemical ATP turnover from the overall ATP-driven motor action. Both are represented as activities of the same XPB molecule. The hydrolysis entry uses the already inspected human primary experiments described above and adds no new process assertion or quotation.
+
+Official [O00505](https://www.uniprot.org/uniprotkb/O00505/entry) identifies human KPNA3 as an importin-alpha family member. [GO:0061676](https://www.ebi.ac.uk/QuickGO/term/GO:0061676) requires binding to that family; the exact liver-screen and HuRI records documented above support this refinement. They do not establish physiological cargo transport or receptor activity by XPB. The current GO:0043138 label/definition polarity mismatch remains documented; no imported identifier or label was altered.
