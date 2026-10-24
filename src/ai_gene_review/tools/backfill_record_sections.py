@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
 import yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 
 from ai_gene_review.validation.local_source_text import (
     PROJECT_ROOT,
@@ -40,7 +42,10 @@ from ai_gene_review.validation.uniprot_quote_source import (
 )
 
 KEY = "record_section"
-_PLAIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9 :/_.()-]*")
+#: Items safe to write unquoted in a flow sequence. A ``:`` is not: PyYAML accepts
+#: ``[CC:CAUTION]``, but YAML 1.2 loaders such as ruamel's safe loader (which the
+#: reference validator uses) reject a colon inside a plain scalar in flow context.
+_PLAIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9 /_.()-]*")
 
 
 class MarkedDict(dict):
@@ -111,10 +116,8 @@ class BackfillResult:
 def flow_value(sections: Iterable[str]) -> str:
     """Render sections as a one-line YAML flow sequence.
 
-    >>> flow_value(["CC:CAUTION", "CC:SUBCELLULAR LOCATION"])
-    '[CC:CAUTION, CC:SUBCELLULAR LOCATION]'
-    >>> flow_value(["FT:a,b"])
-    '["FT:a,b"]'
+    >>> flow_value(["CC:CAUTION", "CC:SUBCELLULAR LOCATION", "DE"])
+    '["CC:CAUTION", "CC:SUBCELLULAR LOCATION", DE]'
     """
     return (
         "["
@@ -228,6 +231,19 @@ def _eol(line: str) -> str:
     return line[len(line.rstrip("\r\n")) :] or "\n"
 
 
+def _loads_strictly(text: str) -> bool:
+    """True when ruamel's YAML 1.2 safe loader can read *text*.
+
+    >>> _loads_strictly('a: ["CC:CAUTION"]'), _loads_strictly("a: [CC:CAUTION]")
+    (True, False)
+    """
+    try:
+        YAML(typ="safe").load(text)
+    except YAMLError:  # an external parser's verdict, not a bug here
+        return False
+    return True
+
+
 def _check_only_sections_changed(original: str, result: BackfillResult) -> None:
     """Fail unless the new text differs from the original only in ``record_section`` values."""
     try:
@@ -236,6 +252,13 @@ def _check_only_sections_changed(original: str, result: BackfillResult) -> None:
         raise ValueError(
             f"record_section backfill produced invalid YAML; refusing to write: {e}"
         ) from e
+    # The reference validator reads reviews with ruamel's YAML 1.2 safe loader,
+    # which is stricter than PyYAML: the result must load there too.
+    if _loads_strictly(original) and not _loads_strictly(result.text):
+        raise ValueError(
+            "record_section backfill produced YAML that ruamel's safe loader rejects; "
+            "refusing to write"
+        )
     changed = set(result.paths)
     for doc in (before, after):
         for path, _, item in iter_local_quote_items(doc):

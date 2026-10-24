@@ -188,7 +188,7 @@ def test_backfill_text_is_idempotent_and_reports_mismatches():
     once = backfill_text(SUPPORTED_BY).text
     assert backfill_text(once).added == 0
     assert backfill_text(once).text == once
-    wrong = once.replace("[CC:CAUTION]", "[CC:FUNCTION]")
+    wrong = once.replace('["CC:CAUTION"]', '["CC:FUNCTION"]')
     result = backfill_text(wrong)
     assert result.added == 0
     assert result.text == wrong
@@ -207,7 +207,7 @@ def _items(doc):
 
 def test_backfill_text_fix_rewrites_wrong_values_only():
     once = backfill_text(SUPPORTED_BY).text
-    wrong = once.replace("[CC:CAUTION]", "[CC:FUNCTION]")
+    wrong = once.replace('["CC:CAUTION"]', '["CC:FUNCTION"]')
     result = backfill_text(wrong, fix=True)
     assert (result.fixed, result.mismatched) == (1, 0)
     assert result.text == once
@@ -238,7 +238,7 @@ def test_record_sections_reads_unisave_snapshots():
     text = f"core_functions:\n- supported_by:\n  - reference_id: {AOP2}\n    supporting_text: {AOP2_CAUTION}\n"
     result = backfill_text(text)
     assert result.added == 1
-    assert "record_section: [CC:CAUTION]" in result.text
+    assert 'record_section: ["CC:CAUTION"]' in result.text
 
 
 def test_ambiguous_quote_gets_no_section():
@@ -423,3 +423,14 @@ def test_unicode_ellipsis_is_text_as_in_the_verbatim_check():
         UNLOCATED,
         [],
     )
+
+
+@pytest.mark.parametrize("text", [SUPPORTED_BY, FINDING_FIRST_KEY])
+def test_backfilled_text_loads_with_the_reference_validators_yaml_loader(text):
+    """The reference validator reads reviews with ruamel's YAML 1.2 safe loader,
+    which rejects an unquoted colon in a flow sequence (`[CC:CAUTION]`)."""
+    from ruamel.yaml import YAML
+
+    result = backfill_text(text)
+    assert result.added == 1
+    assert YAML(typ="safe").load(result.text) == yaml.safe_load(result.text)
