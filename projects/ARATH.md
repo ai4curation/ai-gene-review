@@ -545,9 +545,8 @@ Last updated: 2026-10-19
 - [ ] Add deep research for the 85 reviews that have none
 - [ ] File the draft reports in [upstream-reports.md](ARATH/upstream-reports.md)
       (GO-CAM HAM1/SCL27; TAIR SUR1, F4JLB7/RIC7, GSTF6) and record the tickets
-- [ ] Bring OST1 in line with SnRK2.2/SnRK2.3: they MODIFY protein kinase
-      activity (GO:0004672) and kinase activity (GO:0016301) to GO:0004674,
-      while OST1 ACCEPTs GO:0004672 and marks GO:0016301 over-annotated
+- [x] Bring OST1 in line with SnRK2.2/SnRK2.3: all three now MODIFY protein
+      kinase activity (GO:0004672) and kinase activity (GO:0016301) to GO:0004674
 - [ ] Re-run the corpus statistics after the 2026-10-19 additions
 
 ## Phase 3: modules
