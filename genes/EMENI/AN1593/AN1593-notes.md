@@ -28,14 +28,19 @@ full text for PMID:22506079, and a manual web/literature sweep.
 ### PAINT alignment
 
 - Keep `GO:0004420` and broad `GO:0008299` from `PTN000060346`. AN1593 is a
-  short HMGR, but it still belongs to the HMGR family and catalyzes the
-  NADPH-dependent HMG-CoA reduction represented by the root PAINT activity node.
-- Remove or generalize the housekeeping-HMGR placements. `PTN000060347` places
-  ER and peroxisomal membrane on long canonical HMG-CoA reductases, while
-  UniProt predicts only a single transmembrane helix and only generic membrane
-  localization for AN1593. `PTN000832055` is the fungal ergosterol node and
-  belongs on the long sterol-pathway paralogs, not this pimaradiene-cluster
-  paralog.
+  short HMGR, but it retains NCBIfam/PROSITE HMG-CoA reductase signatures and
+  the annotated catalytic residues that argue against a pseudokinase-like loss
+  of the catalytic domain.
+- Remove the housekeeping-HMGR placements. `PTN000060347` places ER and
+  peroxisomal membrane on long canonical HMG-CoA reductases, while AN1593 lacks
+  the N-terminal sterol-sensing membrane region and the UniProt single-pass TM
+  prediction overlaps the catalytic fold. `PTN000832055` is the fungal ergosterol
+  node and belongs on the long sterol-pathway paralogs, not this
+  pimaradiene-cluster paralog.
 - Retain the two AspGD `GO:0019748 secondary metabolic process` rows. They are
   broad, but the pbcR overexpression evidence places AN1593.4 in a secondary
   diterpene cluster rather than in housekeeping sterol synthesis.
+- Reviewer follow-up: added `source_defects` for UniProt's likely spurious
+  single-pass membrane prediction; removed `membrane` from the core function;
+  added Bromann et al. 2016 to `references`; added AN1593/PTHR10572 family
+  exceptions for ER membrane and ergosterol biosynthesis.

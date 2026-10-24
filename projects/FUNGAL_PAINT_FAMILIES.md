@@ -357,7 +357,9 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 activity and broad isoprenoid-biosynthesis node, the eukaryotic
 `PANTHER:PTN000060347` membrane node that carries both ER and over-propagated
 peroxisomal localization, and the fungal `PANTHER:PTN000832055` ergosterol
-node seeded by a canonical sterol-pathway HMGR.
+node seeded by a canonical sterol-pathway HMGR. The short AN1593 branch is an
+exception to the ER and ergosterol propagation, but retains the catalytic and
+broad isoprenoid-biosynthesis terms.
 
 - [x] `CANAL/HMG1` - Candida albicans long sterol-pathway HMG-CoA reductase;
   drafted in PR #5454
