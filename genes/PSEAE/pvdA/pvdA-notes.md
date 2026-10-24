@@ -73,9 +73,11 @@ iron-homeostasis process, which is scoped FAMILY_WIDE there.
 ## Provider deep research
 
 `just deep-research-perplexity PSEAE pvdA` is not available in this environment
-(`Provider 'perplexity' not available. Available: falcon, openscientist`), and
-`falcon` fails authentication here (`Exception: Failed to authenticate`). No
-`-deep-research-*.md` file was fabricated. The review is built from the cached
+(`Provider 'perplexity' not available. Available: falcon, openscientist`),
+`falcon` fails authentication here (`Exception: Failed to authenticate`), and
+`openscientist` was still running with no output when it hit a 15-minute limit,
+so all three available routes failed. No `-deep-research-*.md` file was
+fabricated. The review is built from the cached
 publications in `publications/` (one with full text, PMID:17900176) and the
 curated UniProt record; where only an abstract was available this is recorded in
 `full_text_unavailable` and in each `reference_review`.

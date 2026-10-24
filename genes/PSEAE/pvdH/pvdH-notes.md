@@ -64,8 +64,9 @@ the pyoverdine locus context.
 ## Provider deep research
 
 `just deep-research-perplexity PSEAE pvdH` is unavailable in this environment
-(`Provider 'perplexity' not available. Available: falcon, openscientist`) and the
-`falcon` provider fails authentication here. No `-deep-research-*.md` file was
-fabricated. The review rests on the cached publications (both abstract-only, as
+(`Provider 'perplexity' not available. Available: falcon, openscientist`), the
+`falcon` provider fails authentication here, and an `openscientist` run started
+for the sibling gene pvdA produced no output before hitting a 15-minute limit,
+so no provider route was usable. No `-deep-research-*.md` file was fabricated. The review rests on the cached publications (both abstract-only, as
 recorded in `full_text_unavailable`) and on the curated domain/family
 cross-references in the UniProt record.
