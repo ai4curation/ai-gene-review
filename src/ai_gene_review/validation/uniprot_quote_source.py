@@ -66,6 +66,7 @@ import yaml
 from ai_gene_review.validation.local_source_text import (
     PROJECT_ROOT,
     _validator,
+    iter_local_quote_items,
     iter_local_quotes,
     resolve_local_source,
 )
@@ -77,6 +78,7 @@ from ai_gene_review.validation.validation_report import (
 UNVETTED_CHECK = "uniprot_quote_unvetted_prediction"
 FIELD_CHECK = "uniprot_quote_restating_field"
 EXISTENCE_CHECK = "uniprot_quote_existence_as_support"
+RECORD_SECTION_CHECK = "record_section_mismatch"
 
 #: Line codes that are labels for the entry rather than evidence about it:
 #: identifiers, names, gene names, taxonomy, keywords and the sequence.
@@ -200,6 +202,24 @@ class Statement:
         False
         """
         return self.field in RESTATING_FIELDS or (self.field == "DR" and self.topic in RESTATING_DR)
+
+    @property
+    def section(self) -> str:
+        """The ``record_section`` value for this statement.
+
+        The line code, followed for comments, features and cross-references by
+        the comment topic, feature key or database:
+
+        >>> Statement("CC", "CAUTION", "x", ()).section, Statement("FT", "BINDING", "x", ()).section
+        ('CC:CAUTION', 'FT:BINDING')
+        >>> Statement("DR", "Pfam", "x", ()).section, Statement("DE", "", "x", ()).section
+        ('DR:Pfam', 'DE')
+        >>> Statement("REF", "", "x", ()).section
+        'REF'
+        """
+        if self.field in ("CC", "FT", "DR") and self.topic:
+            return f"{self.field}:{self.topic}"
+        return self.field
 
 
 def _unvetted_label(evidence: str) -> Optional[str]:
@@ -402,6 +422,59 @@ def locate_quote(quote: str, path: Path) -> List[Statement]:
     return located
 
 
+#: File-name suffixes of UniProt records cached in the repository: a current
+#: flat file, and a snapshot of archived UniSave versions.
+UNIPROT_SOURCE_SUFFIXES = ("-uniprot.txt", "-record-evidence.yaml")
+
+
+def is_uniprot_source(path: Path) -> bool:
+    """True for a cached UniProt record, current or archived.
+
+    >>> is_uniprot_source(Path("TP53-uniprot.txt")), is_uniprot_source(Path("FRI-record-evidence.yaml"))
+    (True, True)
+    >>> is_uniprot_source(Path("TP53-notes.md"))
+    False
+    """
+    return path.name.endswith(UNIPROT_SOURCE_SUFFIXES)
+
+
+LOCATED, UNLOCATED, AMBIGUOUS = "located", "unlocated", "ambiguous"
+
+
+def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
+    """``(status, sections)`` for a quote from UniProt record *path*.
+
+    ``sections`` are those of the statements the quote spans, each once, in
+    quote order; a line code copied with the quote (``CC   -!- CAUTION: ...``)
+    is ignored, as in ``locate_quote``. The status is ``UNLOCATED`` when a part
+    of the quote is not in the record, and ``AMBIGUOUS`` when a part occurs in
+    several places that lie in different sections (a short quote such as
+    ``Nucleus``, found in both a keyword and a comment): the section is then
+    not established, and no sections are returned rather than a guess.
+    """
+    statements, text, starts = _index(path)
+    sections: List[str] = []
+    for part in _quote_parts(quote):
+        occurrences = _occurrences(part, statements, text, starts)
+        if not occurrences:
+            return UNLOCATED, []
+        candidates = {tuple(dict.fromkeys(s.section for s in o)) for o in occurrences}
+        if len(candidates) > 1:
+            return AMBIGUOUS, []
+        sections.extend(sec for sec in candidates.pop() if sec not in sections)
+    return (LOCATED, sections) if sections else (UNLOCATED, [])
+
+
+def record_sections(quote: str, path: Path) -> Optional[List[str]]:
+    """The ``record_section`` values for a quote from UniProt record *path*.
+
+    None when the quote is not located or its section is ambiguous; see
+    ``locate_sections``.
+    """
+    status, sections = locate_sections(quote, path)
+    return sections if status == LOCATED else None
+
+
 def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, bool, List[Statement]]]:
     """``(unvetted, restating, existence, statements)`` for a quote, or None if not located.
 
@@ -479,7 +552,7 @@ def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[
     findings: List[QuoteFinding] = []
     for path, reference_id, quote in iter_local_quotes(data):
         source = resolve_local_source(reference_id, project_root)
-        if source is None or not source.name.endswith(("-uniprot.txt", "-record-evidence.yaml")):
+        if source is None or not is_uniprot_source(source):
             continue
         result = classify_quote(quote, source)
         if result is None:
@@ -557,4 +630,74 @@ def validate_uniprot_quote_sources(
             suggestion=suggestion,
             validation_category="BestPractices",
             check_type=f.check_type,
+        )
+
+
+@dataclass(frozen=True)
+class RecordSectionFinding:
+    """A stated ``record_section`` that disagrees with the cited file.
+
+    ``expected`` is None when the cited source is not a database record.
+    """
+
+    path: str
+    reference_id: str
+    stated: Tuple[str, ...]
+    expected: Optional[Tuple[str, ...]]
+
+
+def _stated_sections(value: Any) -> Tuple[str, ...]:
+    if isinstance(value, str):
+        return (value,)
+    return tuple(str(v) for v in value or ())
+
+
+def record_section_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[RecordSectionFinding]:
+    """Stated ``record_section`` values that disagree with the cited local file.
+
+    A quote that cannot be located is left to the verbatim check, and one whose
+    section is ambiguous is not checked.
+    """
+    findings: List[RecordSectionFinding] = []
+    for path, reference_id, item in iter_local_quote_items(data):
+        stated = _stated_sections(item.get("record_section"))
+        if not stated:
+            continue
+        source = resolve_local_source(reference_id, project_root)
+        if source is None:
+            continue
+        if not is_uniprot_source(source):
+            findings.append(RecordSectionFinding(path, reference_id, stated, None))
+            continue
+        expected = record_sections(item["supporting_text"], source)
+        if expected is not None and list(stated) != expected:
+            findings.append(RecordSectionFinding(path, reference_id, stated, tuple(expected)))
+    return findings
+
+
+def validate_record_sections(
+    data: Any, report: ValidationReport, project_root: Path = PROJECT_ROOT
+) -> None:
+    """Warn when a stated ``record_section`` disagrees with the cited file."""
+    for f in record_section_findings(data, project_root):
+        stated = ", ".join(f.stated)
+        if f.expected is None:
+            message = (
+                f"record_section ({stated}) is set on a quote from {f.reference_id}, "
+                "which is not a database record"
+            )
+            suggestion = "Remove record_section; use reference_section_type for manuscript sections"
+        else:
+            message = (
+                f"record_section says {stated}, but the quote comes from "
+                f"{', '.join(f.expected)} in {f.reference_id}"
+            )
+            suggestion = "Run `just backfill-record-sections --fix` to correct it"
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            message,
+            path=f"{f.path}.record_section",
+            suggestion=suggestion,
+            validation_category="BestPractices",
+            check_type=RECORD_SECTION_CHECK,
         )
