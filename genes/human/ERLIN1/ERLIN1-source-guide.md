@@ -99,3 +99,8 @@ The structural activity is represented by [GO:0140378](https://www.ebi.ac.uk/Qui
 [Whitten-Bauer et al., PMID:31810281](https://doi.org/10.3390/cells8121555), Methods and full Results/Discussion, was read from the genuine full original cache. Human Huh-7 depletion separates an effect on establishing HCV RNA replication and efficient particle production from tested entry, initial translation and established-replicon maintenance. Different depletion efficiencies limit an absolute ERLIN1/ERLIN2 specificity claim. These HCV findings and the influenza context above are not generalized into a universal proviral or antiviral core function.
 
 For this synthesis, no figure pixels, separate supplementary data, deposited atomic model or raw omics data were inspected. Main-text captions and operative prose were read as specified above. The official product record supplies one displayed 348-aa O75477 chain and no alternative-product comment; model organisms, transfection hosts, recombinant constructs and the natural human product remain distinct.
+
+
+## Review follow-up: subunit versus complex activity
+
+The core scaffold relation was narrowed after exact-head review. PMID:19240031 supports physical oligomeric composition and assembly; PMID:38782601 supports human complex-dependent association. Together these support the subunit's structural contribution and contribution to complex scaffold activity, without an independently resolved ERLIN1 bridging mechanism. No new original access, figure inspection or source assertion is implied by this slot correction. The membrane-raft source remains positive but is now explicitly non-core.
