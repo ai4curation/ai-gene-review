@@ -18,7 +18,7 @@ Human congenital tufting enteropathy variants and altered EPCAM RNA/protein were
 
 ## Annotation outcomes and open boundaries
 
-All 40 imported annotations have manual decisions: 16 ACCEPT, 15 KEEP_AS_NON_CORE, 4 MODIFY and 5 UNDECIDED. Imported terms, evidence, citations, partners and source flags are preserved. Supported generic interactions remain non-core when no narrower function is established. The refinements identify claudin-associated cell adhesion molecule binding, NEK7 kinase binding, plasma membrane, and regulation of cell differentiation. No new annotations or publication quotations were added.
+All 40 imported annotations have manual decisions: 15 ACCEPT, 16 KEEP_AS_NON_CORE, 4 MODIFY and 5 UNDECIDED. Imported terms, evidence, citations, partners and source flags are preserved. Supported generic interactions remain non-core when no narrower function is established. The refinements identify claudin-associated cell adhesion molecule binding, NEK7 kinase binding, plasma membrane, and regulation of cell differentiation. No new annotations or publication quotations were added.
 
 Five uncertainties remain. The ureteric-bud development transfer traces to a mouse expression study whose complete original was unavailable. Three tight-junction annotations retain uncertainty because the older tissue localization experiments were inaccessible and later human intestinal imaging places EPCAM below the tight junction. The fifth uncertainty is the inherited cadherin-binding role in trans-cellular adhesion: the rat donor experiments concern claudin association and attachment, while the independent human fragment-screen hit does not resolve this combined role. Valid PAINT ancestry and the correct UniProt location mapping are preserved; one context's negative localization does not establish a universal absence.
 
@@ -41,3 +41,11 @@ The [campaign binding instruction](../../../projects/CLINGEN_MENDELIAN.md#curati
 The ureteric-bud transfer and three tight-junction rows remain undecided. An accessible expression-focused abstract does not establish that the complete developmental study performed no functional experiment. The older localization abstract explicitly reports tight-junction staining in human/rat tissues, but its inaccessible images cannot yet be reconciled with the later human intestinal below-junction pool. Neither uncertainty is treated as a demonstrated false annotation.
 
 Regulation of cell differentiation remains the replacement for the source-specific stem-cell differentiation row. PMID:19785009 Figures 4–6 measure altered lineage output from established HES2/HES3 cells while pluripotency and teratoma formation are largely retained. GO:2000036, regulation of stem cell population maintenance, is current, but is not a better description of those measured outputs. PMID:20064925 adds H9 expression/ChIP observations; its functional knockdown is in HCT116 carcinoma cells, not a direct hESC population-maintenance assay.
+
+## Released-product scope follow-up, 2026-10-24
+
+The released EpICD gene-expression signaling annotation is retained as non-core, matching the nuclear-complex binding assessment. The core remains the membrane claudin-associated function. The source evidence and product boundaries are unchanged.
+
+The full original Results paragraph after Figure 10B/C in PMID:23486470 explicitly discusses residual claudin stabilization by the binding-impaired EpCAMmutHA protein, with residual binding below assay detection and additional stabilization mechanisms both left open. The normal abstract cache is unchanged; the source guide and reference review point to the separately retrieved full original.
+
+A protein-stabilization process annotation is a potential future refinement. No NEW process row is introduced in this follow-up: that would require the separate comparator and ontology-parent checks in the repository guidelines, not simply filling an optional core process slot. The campaign quotation rule is not a blanket prohibition on justified NEW annotations.
