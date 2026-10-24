@@ -33,6 +33,9 @@
   consistent.
 - Kept `GO:0005524` ATP binding as non-core because ATP is the phosphoryl donor of the
   kinase reaction, but substrate binding is subsidiary to the catalytic function.
+- Added a non-core `NEW` `GO:0000287` magnesium ion binding row because Candida Erg12
+  has UniProt Mg(2+) binding features transferred from the same rat mevalonate kinase
+  donor that supports the sibling yeast and fission-yeast rows.
 - Modified the broad cytoplasm IEA to `GO:0005829` cytosol. The cytoplasmic placement is
   true for Erg12, but GOA already carries the more specific cytosol annotations from PAINT
   and UniProtKB-SubCell.
