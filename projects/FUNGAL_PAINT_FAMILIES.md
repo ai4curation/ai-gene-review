@@ -90,7 +90,6 @@ paralog-aware activity and complex checks.
 ## Later Candidates
 
 - [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
-- [ ] `PTHR31297` fungal glucan exo-1,3-beta-glucosidases
 - [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
 
 ## Family 3: Chitin Synthase Export Chaperones
@@ -129,14 +128,14 @@ cell-wall beta-glucan node, and a Saccharomycetes `PTN001262687`
 exo-1,3-beta-glucosidase node.
 
 - [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in PR #4610
-- [ ] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
-  clade
-- [ ] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
-  fungal wall beta-glucan node
-- [ ] `CANAL/XOG1` - CGD-seeded *Candida albicans*
-  exo-1,3-beta-glucosidase; review in PR #4596
-- [ ] `NEUCR/NCU09652` - *Neurospora crassa* PTHR31297 member to place against
-  the yeast, PomBase, and CGD subtrees
+- [x] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
+  clade; merged in PR #4611
+- [x] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
+  fungal wall beta-glucan node; merged in PR #4612
+- [x] `CANAL/XOG1` - CGD-seeded *Candida albicans*
+  exo-1,3-beta-glucosidase; merged in PR #4596
+- [ ] `NEUCR/NCU03914` - *Neurospora crassa* SF34 exgD-like member; supersedes
+  the earlier `NCU09652` placeholder, which is a GH43 beta-xylosidase
 
 ## Family 6: PKA Regulatory Subunits
 
