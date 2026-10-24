@@ -75,8 +75,10 @@ identical across the four orthologs for the same claim.
 - InterPro2GO IPR000545 -> GO:0004461: source defect recorded (enables -> contributes_to). The human
   row is a UniProt combined IEA (GO_REF:0000120) built from InterPro2GO plus an Ensembl Compara
   transfer of the mouse MGI IDA, so its defect explanation attributes the fix upstream.
-- Calcium-binding core function now also lists GO:0005576 extracellular region (the structural Ca2+
-  site maintains the fold of the secreted protein in milk).
+- Considered adding GO:0005576 extracellular region to the calcium-binding core function (the structural Ca2+
+  site maintains the fold of the secreted protein in milk) and declined: the extracellular region rows are
+  KEEP_AS_NON_CORE, and listing the term as a core location would contradict them. The description of
+  the calcium core function now mentions the fold in milk instead.
 - GO:0042802: PMID:23353684 (full text read) stays REMOVE; PMID:23416304 (abstract-only) stays
   UNDECIDED. Both reasons now state the split explicitly.
 - NEW Golgi lumen row: reason now states it is a conserved-cell-biology inference from human and

@@ -74,8 +74,10 @@ identical across the four orthologs for the same claim.
 - InterPro2GO IPR000545 -> GO:0004461: source defect recorded (enables -> contributes_to). The human
   row is a UniProt combined IEA (GO_REF:0000120) built from InterPro2GO plus an Ensembl Compara
   transfer of the mouse MGI IDA, so its defect explanation attributes the fix upstream.
-- Calcium-binding core function now also lists GO:0005576 extracellular region (the structural Ca2+
-  site maintains the fold of the secreted protein in milk).
+- Considered adding GO:0005576 extracellular region to the calcium-binding core function (the structural Ca2+
+  site maintains the fold of the secreted protein in milk) and declined: the extracellular region rows are
+  KEEP_AS_NON_CORE, and listing the term as a core location would contradict them. The description of
+  the calcium core function now mentions the fold in milk instead.
 - GO:0005515 IPI PMID:12927542 changed from REMOVE to MODIFY -> GO:0140767, aligning it with the four
   sibling B4GALT1 IPI rows: loss of alpha-lactalbumin binding in the B4GALT1 W314A mutant is still
   evidence of the specifier interaction.
