@@ -6071,3 +6071,71 @@ only the four named checkboxes change. Source inventories and dated availability
 snapshots are preserved without a fresh availability recount. The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker574-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T172508Z-codex-7cbb12.yaml)
+
+## Completion checkpoint 579 — 2026-10-24 20:10:52 UTC
+
+**579 complete; 2,297 remaining out of 2,876 primary catalogue genes.**
+This adds only the five accepted actual merges below to
+[tracker 574, PR #5438](https://github.com/ai4curation/ai-gene-review/pull/5438).
+Each exact-head approval and actual-merge audit was checked independently;
+acceptance by the coordinating AI agent is not a human maintainer sign-off.
+ESRRB, ETFB and ETFDH remain uncredited.
+
+| Gene / PR | Approved head | Actual merge | Active + retired contexts | References / cores | DRAFT advisories |
+| --- | --- | --- | --- | --- | --- |
+| [ERLIN1 #5429](https://github.com/ai4curation/ai-gene-review/pull/5429) | [`38e73810a2a8`](https://github.com/ai4curation/ai-gene-review/commit/38e73810a2a82b9d025a87bfb92c5b52f54133c2) | [`46463aea153a`](https://github.com/ai4curation/ai-gene-review/commit/46463aea153a62d821a88f970f71ef5e2ab14a41) | 53 + 5 | 33 / 2 | 25 |
+| [ERLIN2 #5441](https://github.com/ai4curation/ai-gene-review/pull/5441) | [`8aa9bf645000`](https://github.com/ai4curation/ai-gene-review/commit/8aa9bf64500012bf13709f323cdb826b008ef588) | [`7d2955f3f04f`](https://github.com/ai4curation/ai-gene-review/commit/7d2955f3f04f0dcbd25b2c6fc1ff478959bdf778) | 59 + 5 | 49 / 3 | 16 |
+| [ESCO2 #5443](https://github.com/ai4curation/ai-gene-review/pull/5443) | [`884b57b4e82f`](https://github.com/ai4curation/ai-gene-review/commit/884b57b4e82f43c9dc4a43d2add7823532dd8ed2) | [`625ad38e3a3b`](https://github.com/ai4curation/ai-gene-review/commit/625ad38e3a3bc5eaf7821e242d9976f84b7f7ffc) | 29 + 0 | 15 / 1 | 4 |
+| [ESPN #5446](https://github.com/ai4curation/ai-gene-review/pull/5446) | [`1519f7b56246`](https://github.com/ai4curation/ai-gene-review/commit/1519f7b56246bfa2ac14613d75990bc1a6253c33) | [`f93a466f6e7a`](https://github.com/ai4curation/ai-gene-review/commit/f93a466f6e7a8854069ba774a4ecdfc9a7e93737) | 18 + 0 | 12 / 1 | 1 |
+| [ETFA #5452](https://github.com/ai4curation/ai-gene-review/pull/5452) | [`d2e21e55a62e`](https://github.com/ai4curation/ai-gene-review/commit/d2e21e55a62e9db549e291056c717a23c156e423) | [`0974627b3c89`](https://github.com/ai4curation/ai-gene-review/commit/0974627b3c895ff1e5701f6c6013c4b98de29d5c) | 36 + 1 | 26 / 4 | 2 |
+
+All 82 approved PR path entries, 36 complete gene-directory files and 178
+external dependency entries match their approved head, actual merge and fixed
+main `0974627b3c895ff1e5701f6c6013c4b98de29d5c` in mode, type and blob. Dependency counts overlap across genes.
+ERLIN2 has 18 PR paths but 17 net changes because PMID:19751772 already matched
+its merge parent; the other PR path sets equal their net changes. The read-only
+remote-main observation was `0974627b3c895ff1e5701f6c6013c4b98de29d5c`; it is recorded
+separately from the fixed parity cut. The five records preserve 132 inherited
+quotation anchors in total and introduce no new quotation or NEW annotation.
+
+ERLIN1 and ERLIN2 retain distinct protein and substrate scopes. Their structural
+units contribute to the erlin complex's scaffold activity; neither is assigned
+ubiquitin-transfer chemistry. ERLIN1 cholesterol binding is distinguished from
+unresolved ERLIN2-specific native-cholesterol binding. Activated receptor turnover
+and misfolded-protein quality control remain separate experimental contexts.
+ERLIN1's 348-residue product and ERLIN2's 339-, 152- and 206-residue products are
+not treated as functionally equivalent.
+
+ESCO2 retains acetyl-CoA-dependent protein-lysine acetylation coupled to cohesion
+and replication-fork regulation. Human ESCO2-fragment, combined ESCO1/2-depletion
+and mouse-loss evidence remain distinct; no purified full-length human
+ESCO2–SMC3 assay is implied. ESPN retains direct actin cross-linking and
+microvillar assembly, with human espin 3A assays distinguished from rodent
+localization and the two source products.
+
+ETFA retains direct alpha-subunit FAD contacts alongside its contribution to the
+assembled ETFA–ETFB carrier. MCAD/GCDH-to-DCIP assays do not establish isolated
+alpha activity, ETFDH's separate ubiquinone reaction or complete metabolic flux.
+The 333-residue precursor, its processed mature chain and the alternative
+284-residue product remain distinct. Five ETFA judgments are UNDECIDED; retired
+historical contexts in ETFA and the erlins remain visible. Completion is not a
+claim that every annotation or product mechanism is resolved.
+
+All three jobs in each actual merge-group run succeeded: [ERLIN1](https://github.com/ai4curation/ai-gene-review/actions/runs/40118864897), [ERLIN2](https://github.com/ai4curation/ai-gene-review/actions/runs/40122236875), [ESCO2](https://github.com/ai4curation/ai-gene-review/actions/runs/40124476015), [ESPN](https://github.com/ai4curation/ai-gene-review/actions/runs/40124578712), [ETFA](https://github.com/ai4curation/ai-gene-review/actions/runs/40125951462).
+Each broad suite ran 4,245 Python tests (one skipped, 84 deselected), 276 doctests
+(37 skipped), 12 examples, 438 overlapping automation tests and 19 JavaScript
+tests, plus mypy and Ruff. Counts overlap and are not summed. Changed-gene
+validation ran with the advisories above; the separate all-gene batch was
+schema-only. The corresponding PR broad suites were path-filtered and skipped.
+Prediction and upstream PAINT checks were skipped in the recorded merge jobs;
+the aggregate gates added no tests. Recorded warnings and an ignored SQL
+finalizer diagnostic are not hidden by the successful terminal conclusions.
+
+All 2,876 catalogue identities and association text, 235 queue objects, 117
+earlier completion updates and preceding progress bytes are preserved. This is
+update 118; only the five named checkboxes change. Dated source inventories
+remain historical and are not refreshed by this completion update.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker579-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T201537Z-codex-48a79e.yaml)
