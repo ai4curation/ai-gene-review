@@ -120,3 +120,23 @@ def test_review_file_walks_reference_findings(tmp_path: Path):
     }
     assert all(r.outcome is ClaimOutcome.PASS for r in results)
     assert all(r.term == "PMID:1" for r in results)
+
+
+def test_non_uniprot_sequence_is_unresolved_not_a_crash():
+    """A RefSeq-only isoform cannot be fetched by the UniProt cache; the row is unresolved."""
+    mapping = {
+        "as_reported": {"accession": "RefSeq:NP_001123538.1", "position": 7, "residue": "S"},
+        "canonical": _pos("P1", 4, "S"),
+    }
+    results = check_mapping(mapping, "P1", "G", "PMID:1", CACHE)
+    assert _outcomes(results, "AS_REPORTED") == [ClaimOutcome.UNRESOLVED]
+    assert "only UniProtKB sequences" in next(r.detail for r in results if r.kind == "AS_REPORTED")
+    assert _outcomes(results, "CANONICAL") == [ClaimOutcome.PASS]
+
+
+def test_canonical_identity_failure_says_what_to_write():
+    mapping = {"as_reported": _pos("P1-2", 7, "S"), "canonical": _pos("P1-1", 4, "S")}
+    seqs = {**CACHE.seqs, "P1-1": CACHE.seqs["P1"]}
+    results = check_mapping(mapping, "P1", "G", "PMID:1", StubCache(seqs))
+    detail = next(r.detail for r in results if r.kind == "CANONICAL_IDENTITY")
+    assert "use UniProtKB:P1" in detail

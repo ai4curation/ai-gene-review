@@ -628,9 +628,13 @@ Two kinds of mismatch are recorded in structured form, not prose:
   UniProt is not wrong here, so this is not a source defect. Add
   `residue_mappings` to the finding: `as_reported` is the residue in the
   numbering the paper used, `canonical` the same residue in the review's own
-  displayed sequence. Each side is checked against the real sequence
+  displayed sequence (the bare accession, never `-1`: the displayed isoform
+  is not always isoform 1). Pin `sequence_version` on both sides, as for any
+  `ResiduePosition`. Each side is checked against the real sequence
   (`python -m ai_gene_review.validation.finding_residue_mappings`, run by
-  `just validate-families`), so a number read on the wrong sequence fails.
+  `just validate-families`), so a number read on the wrong sequence fails;
+  a side that is not a UniProtKB sequence (a RefSeq-only isoform) is reported
+  unresolved rather than checked.
   Never state a residue number in a finding without knowing which sequence it
   refers to.
 

@@ -20,6 +20,10 @@ residue in the displayed sequence of the review's entry (``canonical``). Checks:
     Both sides claim the same amino acid; a mapping between two different residues
     cannot be the same position in two numberings.
 
+Only UniProtKB sequences can be fetched. A side named by another identifier (an
+isoform known only from RefSeq, say) is reported ``UNRESOLVED`` rather than failing
+the run.
+
 Positions are resolved with the same sequence cache and position check as
 ``gene_residue_claims``. The slot is optional, so reviews that state residues only
 in prose are unaffected.
@@ -49,6 +53,26 @@ def _bare(accession: str) -> str:
     return accession.split(":")[-1]
 
 
+def _check_side(
+    cache: SequenceCache, spec: dict, label: str, gene: str, ref_id: str, kind: str
+) -> ClaimCheck:
+    """Check one side of a mapping, or report it unresolved if it is not a UniProtKB sequence.
+
+    >>> _check_side(None, {"accession": "RefSeq:NP_1.1", "position": 1, "residue": "M"},
+    ...             "as reported", "G", "PMID:1", "AS_REPORTED").outcome.value
+    'UNRESOLVED'
+    """
+    if not spec["accession"].startswith("UniProtKB:"):
+        return ClaimCheck(
+            kind, gene, ref_id,
+            f"{label} {spec['accession']} cannot be checked: only UniProtKB sequences "
+            "are fetched",
+            ClaimOutcome.UNRESOLVED,
+        )
+    check, _ = _check_position(cache, spec, label, gene, ref_id, kind)
+    return check
+
+
 def check_mapping(
     mapping: dict,
     review_accession: str,
@@ -58,10 +82,7 @@ def check_mapping(
 ) -> list[ClaimCheck]:
     """Run every check for one residue mapping on one finding."""
     reported = mapping["as_reported"]
-    reported_check, _ = _check_position(
-        cache, reported, "as reported", gene, ref_id, "AS_REPORTED"
-    )
-    results = [reported_check]
+    results = [_check_side(cache, reported, "as reported", gene, ref_id, "AS_REPORTED")]
     canonical = mapping.get("canonical")
     if not canonical:
         return results
@@ -76,13 +97,10 @@ def check_mapping(
         results.append(ClaimCheck(
             "CANONICAL_IDENTITY", gene, ref_id,
             f"canonical {canonical['accession']} is not this review's displayed "
-            f"sequence ({review_accession})",
+            f"sequence; use UniProtKB:{_bare(review_accession)} without an isoform suffix",
             ClaimOutcome.FAIL,
         ))
-    canonical_check, _ = _check_position(
-        cache, canonical, "canonical", gene, ref_id, "CANONICAL"
-    )
-    results.append(canonical_check)
+    results.append(_check_side(cache, canonical, "canonical", gene, ref_id, "CANONICAL"))
 
     same = reported["residue"] == canonical["residue"]
     results.append(ClaimCheck(
