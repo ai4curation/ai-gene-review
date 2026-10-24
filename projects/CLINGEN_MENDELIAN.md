@@ -2996,29 +2996,28 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**566 of 2,876 genes are complete; 2,310 remain.**
-This checkpoint adds EPHB4, EPG5 and EPM2A to the merged 563 checkpoint.
-[Checkpoint 566](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-566-2026-10-24-105205-utc)
-records all three approved heads, actual merges and executed merge-group CI.
-The inventory is pinned to main [`fcbef68494c3`](https://github.com/ai4curation/ai-gene-review/commit/fcbef68494c3bd156a9c3625ae37de0a9f5df27c),
-prepared 2026-10-24 10:52:05 UTC. Each catalogue gene counts once; products,
-follow-ups and tracker publications add no credit.
+**574 of 2,876 genes are complete; 2,302 remain.**
+This checkpoint adds ERCC6, ERCC6L2, ERCC8 and ERF to the
+[merged 570 checkpoint](https://github.com/ai4curation/ai-gene-review/pull/5409).
+[Checkpoint 574](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-574-2026-10-24-171426-utc)
+records their approved heads, actual merges and executed merge-group CI.
+All four gene payloads, including the separate ERCC6 fusion review, match
+fixed main [`a98198438715`](https://github.com/ai4curation/ai-gene-review/commit/a9819843871530062eb4b2878778b5bdd778e6b9).
+The one subsequent normal-source change is explicitly traced: ERCC8's accepted
+full-text refresh of PMID:26620705 supersedes ERCC6's earlier abstract-only cache.
+This is a fixed-cut checkpoint; a later remote-main observation is not represented
+as an additional parity audit.
 
-At this snapshot, 8,876 reviews are available, including 3,204 human reviews.
-Of 1,285 catalogue genes with reviews, 566 are credited and 719 remain uncredited;
-1,591 catalogue genes still lack a review file. Availability and accepted
-completion are separate measures.
+All four gene reviews remain DRAFT, with 44, four, five and five validation
+advisories, respectively; the separately validated ERCC6 fusion sibling retains
+three advisories and adds no catalogue credit. Unresolved annotations and
+product-specific limits remain explicit. ERCC6L2 includes one accepted new
+helicase annotation on the experimentally tested 1,550-residue product.
+ERLIN1 and ERLIN2 receive no completion credit here.
 
-All three actual merge-group suites and scoped gene validations passed. All 19
-EPHB4, nine EPG5 and 46 EPM2A approved paths, including their complete five-, six-
-and five-file gene directories, match the approved heads, actual merges and pinned
-main. EPHB4 is COMPLETE with eight unresolved annotations and no CI advisories.
-EPG5 and EPM2A remain DRAFT with one and three CI advisories, respectively. EPG5
-retains 16 records (15 active, one retired) and all 33 inherited quotation values
-and paths. The reviews retain four, two and eight distinct source-described
-products, respectively; EPM2A's external B3EWF7 product and its four GO assertions
-remain separate from the O95278 annotation set. These distinctions do not add gene
-credit. Unmerged or unaudited work adds no credit here.
+This is a completion update only. The catalogue, association text, queue records
+and earlier review-availability inventories are preserved. Their dated inventory
+snapshots remain historical and are not presented as fresh availability counts.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3717,14 +3716,14 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EPG5** — HGNC:29331; [Vici syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9a6ae5b4-2fa4-44aa-92e1-49997f6c9a87-2024-06-07T170000.000Z) (MONDO:0009452; AR; Definitive).
 - [x] **EPHB4** — HGNC:3395; [EPHB4-associated vascular malformation spectrum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1a3438a-72a7-41f7-b140-2041ea7a39c1-2022-11-03T160000.000Z) (MONDO:0700080; AD; Definitive).
 - [x] **EPM2A** — HGNC:3413; [Lafora disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f970ced6-0164-41ed-9e1f-1fb9f892bca6-2020-05-23T190000.000Z) (MONDO:0009697; AR; Definitive).
-- [ ] **ERCC2** — HGNC:3434; [xeroderma pigmentosum group D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91d0c244-d958-4358-8b92-cefefbce3843-2019-04-19T160000.000Z) (MONDO:0010212; AR; Definitive).
-- [ ] **ERCC3** — HGNC:3435; [xeroderma pigmentosum group B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bf09deab-9612-4b13-8bb7-4c2a25dde868-2019-04-19T160000.000Z) (MONDO:0012531; AR; Definitive).
-- [ ] **ERCC4** — HGNC:3436; [xeroderma pigmentosum group F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89544dc5-2d3b-4b7f-b835-3fec714bf7a5-2019-08-14T194406.189Z) (MONDO:0010215; AR; Definitive).
-- [ ] **ERCC5** — HGNC:3437; [xeroderma pigmentosum group G](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fc08c954-8ded-449b-8f67-e4f044b26cda-2019-04-19T160000.000Z) (MONDO:0010216; AR; Definitive).
-- [ ] **ERCC6** — HGNC:3438; [Cockayne spectrum with or without cerebrooculofacioskeletal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e9dbf99e-d648-465c-8aa5-0840e76c0aeb-2022-08-18T100000.000Z) (MONDO:0100506; AR; Definitive).
-- [ ] **ERCC6L2** — HGNC:26922; [bone marrow failure syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_27c476cf-2010-4415-a33b-fd75a619817c-2026-09-14T160000.000Z) (MONDO:0000159; AR; Definitive).
-- [ ] **ERCC8** — HGNC:3439; [Cockayne syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb43bf9-5d0c-4753-8230-6bd97805a8bc-2022-08-12T100000.000Z) (MONDO:0019569; AR; Definitive).
-- [ ] **ERF** — HGNC:3444; [craniosynostosis 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1954ba97-532a-4ef3-9d62-c4ebfd252084-2021-06-12T062024.684Z) (MONDO:0010929; AD; Definitive).
+- [x] **ERCC2** — HGNC:3434; [xeroderma pigmentosum group D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91d0c244-d958-4358-8b92-cefefbce3843-2019-04-19T160000.000Z) (MONDO:0010212; AR; Definitive).
+- [x] **ERCC3** — HGNC:3435; [xeroderma pigmentosum group B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bf09deab-9612-4b13-8bb7-4c2a25dde868-2019-04-19T160000.000Z) (MONDO:0012531; AR; Definitive).
+- [x] **ERCC4** — HGNC:3436; [xeroderma pigmentosum group F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89544dc5-2d3b-4b7f-b835-3fec714bf7a5-2019-08-14T194406.189Z) (MONDO:0010215; AR; Definitive).
+- [x] **ERCC5** — HGNC:3437; [xeroderma pigmentosum group G](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fc08c954-8ded-449b-8f67-e4f044b26cda-2019-04-19T160000.000Z) (MONDO:0010216; AR; Definitive).
+- [x] **ERCC6** — HGNC:3438; [Cockayne spectrum with or without cerebrooculofacioskeletal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e9dbf99e-d648-465c-8aa5-0840e76c0aeb-2022-08-18T100000.000Z) (MONDO:0100506; AR; Definitive).
+- [x] **ERCC6L2** — HGNC:26922; [bone marrow failure syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_27c476cf-2010-4415-a33b-fd75a619817c-2026-09-14T160000.000Z) (MONDO:0000159; AR; Definitive).
+- [x] **ERCC8** — HGNC:3439; [Cockayne syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb43bf9-5d0c-4753-8230-6bd97805a8bc-2022-08-12T100000.000Z) (MONDO:0019569; AR; Definitive).
+- [x] **ERF** — HGNC:3444; [craniosynostosis 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1954ba97-532a-4ef3-9d62-c4ebfd252084-2021-06-12T062024.684Z) (MONDO:0010929; AD; Definitive).
 - [ ] **ERLIN1** — HGNC:16947; [hereditary spastic paraplegia 62](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d668c62f-b002-4015-a629-ecbebed40e59-2025-06-18T190000.000Z) (MONDO:0014302; AR; Definitive).
 - [ ] **ERLIN2** — HGNC:1356; [hereditary spastic paraplegia 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1467b8b6-6295-4fa8-bafc-86478e6ffd19-2025-06-18T190000.000Z) (MONDO:0012639; AD; Limited); [hereditary spastic paraplegia 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9599fa0e-da62-437d-8f6f-2f2ef0297c8c-2025-06-18T190000.000Z) (MONDO:0012639; AR; Definitive).
 - [ ] **ESCO2** — HGNC:27230; [Roberts-SC phocomelia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4020105e-bc43-4365-9540-9a8f77b37fae-2021-03-19T160000.000Z) (MONDO:0100253; AR; Definitive).

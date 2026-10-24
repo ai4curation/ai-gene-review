@@ -5880,3 +5880,194 @@ are preserved. This is update 115; only EPHB4, EPG5 and EPM2A checkboxes change,
 and all 2,876 catalogue identities and association texts remain exact.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker566-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T105619Z-codex-5b4d98.yaml)
+
+## Completion checkpoint 570 — 2026-10-24 14:30:02 UTC
+
+**570 complete; 2,306 remaining out of 2,876 primary catalogue genes.**
+This adds only ERCC2, ERCC3, ERCC4 and ERCC5 to the
+[merged 566 tracker, PR #5391](https://github.com/ai4curation/ai-gene-review/pull/5391).
+Each has an exact-head approval and an independently accepted actual-merge audit.
+Acceptance by the coordinating AI agent is not a human maintainer sign-off.
+Products, follow-ups and tracker publications do not add gene credit. ERCC6 and
+ERCC6L2 remain uncredited here.
+
+| Gene / PR | Approved head | Actual merge | Merged at (UTC) | Approved paths |
+| --- | --- | --- | --- | --- |
+| [ERCC2 #5390](https://github.com/ai4curation/ai-gene-review/pull/5390) | [`965e844b78cb`](https://github.com/ai4curation/ai-gene-review/commit/965e844b78cbb86685a1586c46b7fb10e443b0e0) | [`41adae91d2e7`](https://github.com/ai4curation/ai-gene-review/commit/41adae91d2e786e57182400041738a653db90c26) | 2026-10-24T11:04:03Z | 24 |
+| [ERCC3 #5392](https://github.com/ai4curation/ai-gene-review/pull/5392) | [`6b2d97d944ad`](https://github.com/ai4curation/ai-gene-review/commit/6b2d97d944ad38fead65429bcc695270fab44f26) | [`b60f053738c4`](https://github.com/ai4curation/ai-gene-review/commit/b60f053738c48d7fcaa0e2f651a5ee8f73149611) | 2026-10-24T12:17:42Z | 23 |
+| [ERCC4 #5393](https://github.com/ai4curation/ai-gene-review/pull/5393) | [`451ee1dc76a7`](https://github.com/ai4curation/ai-gene-review/commit/451ee1dc76a7de97bc7043933911a0c6984eaef5) | [`d6debbce31dd`](https://github.com/ai4curation/ai-gene-review/commit/d6debbce31ddd59d0bd5931218389d821e33641a) | 2026-10-24T13:38:28Z | 10 |
+| [ERCC5 #5396](https://github.com/ai4curation/ai-gene-review/pull/5396) | [`a038096b703e`](https://github.com/ai4curation/ai-gene-review/commit/a038096b703e4a33aa0ae23b498f86ffbd84efb9) | [`e7236877cf14`](https://github.com/ai4curation/ai-gene-review/commit/e7236877cf14aa3343182f032eb225f15ed4efe4) | 2026-10-24T14:00:39Z | 25 |
+
+All 82 approved paths match in mode, type and blob at approved head, actual merge
+and pinned main `e7236877cf14aa3343182f032eb225f15ed4efe4`. The complete ERCC2/3/4/5 gene
+directories also match (six, six, seven and six files), with 102, 112, 48 and 35
+normal-source dependencies verified in the accepted audits. ERCC4 has ten PR paths
+but nine net merge changes because PMID:22323595 was already present on its parent.
+Actual merge times come from GitHub merge metadata, not queue-commit timestamps.
+
+ERCC2 retains 151 contexts, 109 references, two products (760 and 405 residues)
+and two cores. Its actions are 97 ACCEPT, 22 MODIFY, 21 KEEP_AS_NON_CORE,
+ten UNDECIDED and one MARK_AS_OVER_ANNOTATED. Measured ATP hydrolysis remains
+separate from directional helicase activity; the scaffold role does not imply
+an additional catalytic activity.
+
+ERCC3 retains 162 contexts, 118 references, one displayed 782-residue product and
+two cores. Actions are 93 ACCEPT, 14 MODIFY, 45 KEEP_AS_NON_CORE, eight UNDECIDED
+and two MARK_AS_OVER_ANNOTATED. The principal DNA-translocation role and measured
+ATP hydrolysis remain explicit; historical unwinding assays retain their bounded
+non-core interpretation.
+
+ERCC4 retains 97 records: 96 active imported contexts plus one retired historical
+proposal. Its 100 genuine refreshed GOA rows reconcile to those 96 imported
+contexts; the legacy UniProt and provider files remain unchanged. Actions are
+45 ACCEPT, 32 KEEP_AS_NON_CORE, 12 MODIFY, six UNDECIDED, one REMOVE and one retired
+TOO_GENERAL. The 55 references, two products (916 and 372 residues), two contextual
+nuclease core units, negated source assertion and all 52 inherited quotation paths
+remain preserved. The two core units describe contexts of the same enzyme.
+
+ERCC5 retains 77 contexts, 41 references, three products (1,186, 419 and 232
+residues) and one core. Actions are 35 ACCEPT, 20 MODIFY, 13 KEEP_AS_NON_CORE,
+eight UNDECIDED and one TOO_GENERAL. No shared activity is assumed among the
+natural products. None of these four publications adds a new annotation or a new
+publication quotation.
+
+All four reviews remain DRAFT. Their successful changed-gene validations retain
+18, 34, 22 and five advisories: respectively 17, 33, 21 and four supported
+generic-binding warnings, plus one research/provider-citation advisory per gene.
+These warnings and unresolved annotations are not erased by completion credit.
+
+| Actual merge-group run | Broad Python tests passed | Doctests passed | Gene advisories | History records |
+| --- | --- | --- | --- | --- |
+| [ERCC2 run 40087008874](https://github.com/ai4curation/ai-gene-review/actions/runs/40087008874) | 4,239 | 275 | 18 | 15,653 |
+| [ERCC3 run 40092038098](https://github.com/ai4curation/ai-gene-review/actions/runs/40092038098) | 4,239 | 275 | 34 | 15,656 |
+| [ERCC4 run 40097532447](https://github.com/ai4curation/ai-gene-review/actions/runs/40097532447) | 4,245 | 276 | 22 | 15,667 |
+| [ERCC5 run 40099095412](https://github.com/ai4curation/ai-gene-review/actions/runs/40099095412) | 4,245 | 276 | 5 | 15,669 |
+
+All three jobs in each merge-group run completed successfully. Each run also
+executed 12 examples, 438 overlapping automation tests, 19 JavaScript tests,
+mypy on 285 source files and two Ruff commands. Broad pytest had one skipped,
+84 deselected and nine warnings; doctests had 37 skipped and eight warnings.
+Counts overlap and are not summed. Changed-gene validation ran; the separate
+all-gene batch was schema-only. Each run checked 703 module schemas, 718 family
+schemas and 42 history tests. The aggregate dependency gate added no suite.
+An ignored destructor diagnostic did not fail the runs.
+
+The PR broad suites were skipped by path filtering; their success labels alone
+are not broad-test evidence. Prediction/BioReason checks, prediction evidence
+upload, curation-history coverage, sequence-save and full-run upstream PAINT
+steps were skipped in the captured merge workflows. No independent actual-main
+scientific validation or documentation build is claimed by this update.
+
+All 2,876 catalogue identities and association text, 235 queue objects, 115 earlier
+completion updates and preceding progress bytes remain exact. This is update 116;
+only the four named checkboxes change. Source inventories and dated availability
+snapshots are preserved without a fresh availability recount. The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker570-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T144924Z-codex-9e8160.yaml)
+
+## Completion checkpoint 574 — 2026-10-24 17:14:26 UTC
+
+**574 complete; 2,302 remaining out of 2,876 primary catalogue genes.**
+This adds only ERCC6, ERCC6L2, ERCC8 and ERF to the
+[merged 570 tracker, PR #5409](https://github.com/ai4curation/ai-gene-review/pull/5409).
+Each has an exact-head approval and an independently accepted actual-merge audit.
+Acceptance by the coordinating AI agent is not a human maintainer sign-off.
+Products, fusion siblings, follow-ups and tracker publications do not add gene
+credit. ERLIN1 and ERLIN2 remain uncredited here.
+
+| Gene / PR | Approved head | Actual merge | Merged at (UTC) | Approved path entries |
+| --- | --- | --- | --- | --- |
+| [ERCC6 #5401](https://github.com/ai4curation/ai-gene-review/pull/5401) | [`698d023e16e8`](https://github.com/ai4curation/ai-gene-review/commit/698d023e16e81509a69159c5b5845b844002ad2a) | [`8dd02fff434c`](https://github.com/ai4curation/ai-gene-review/commit/8dd02fff434c025d5b6e02b35e030e0e0c8e6ea5) | 2026-10-24T15:16:17Z | 51 |
+| [ERCC6L2 #5405](https://github.com/ai4curation/ai-gene-review/pull/5405) | [`97d48ec2383b`](https://github.com/ai4curation/ai-gene-review/commit/97d48ec2383b3c86d26b8229c4d0355b8408041c) | [`b28805f7842b`](https://github.com/ai4curation/ai-gene-review/commit/b28805f7842b33a261c3aa2be33168b1ead3c084) | 2026-10-24T16:48:20Z | 14 |
+| [ERCC8 #5408](https://github.com/ai4curation/ai-gene-review/pull/5408) | [`0d421ad2bf24`](https://github.com/ai4curation/ai-gene-review/commit/0d421ad2bf243988b071896f15a8afbd4e3ca846) | [`e5a60e057d21`](https://github.com/ai4curation/ai-gene-review/commit/e5a60e057d21c19eb0b92e4e93993f57df609790) | 2026-10-24T16:51:32Z | 17 |
+| [ERF #5411](https://github.com/ai4curation/ai-gene-review/pull/5411) | [`243b49524eda`](https://github.com/ai4curation/ai-gene-review/commit/243b49524eda63cce0159451616a09193098b855) | [`a98198438715`](https://github.com/ai4curation/ai-gene-review/commit/a9819843871530062eb4b2878778b5bdd778e6b9) | 2026-10-24T16:59:30Z | 13 |
+
+Approved-head and actual-merge payloads match for all 95 path entries across the
+four PRs. Complete gene directories (11 ERCC6/cognate fusion files, five ERCC6L2,
+five ERCC8 and six ERF) retain exact mode/type/blob parity at fixed main
+`a9819843871530062eb4b2878778b5bdd778e6b9`. Normal-dependency comparisons cover 70, ten,
+39 and nine external paths respectively. These counts overlap across genes.
+ERCC6 has 51 PR paths but 50 net merge changes because PMID:16246722 was already
+present on its parent; ERCC6L2 has 14 PR paths but 12 net changes because the two
+PTHR45629 files already matched its parent. ERCC8 has 17 net changes, including
+one accepted publication refresh; ERF has 13 additions.
+
+One historical source blob is deliberately superseded on this fixed main:
+ERCC6's abstract-only PMID:26620705 was replaced by the accepted ERCC8 genuine
+full-text record. The original body remains an exact prefix, with only the
+availability/extraction metadata changed and the original text appended.
+The current blob exactly matches the ERCC8 approved head and actual merge;
+every other selected gene/dependency blob retains its prior accepted content.
+The later remote-main observation `a5be4091f08c69c7238275dd2200e4aaf474e1a8` is recorded as an
+observation, not as a second payload-parity cut.
+
+ERCC6 retains 139 primary contexts (53 ACCEPT, 21 MODIFY, 61 KEEP_AS_NON_CORE,
+four UNDECIDED), 62 references and four core activity units. The 1,493-residue
+CSB and external 1,061-residue CSB-PGBD3 product remain distinct. The validated
+ERCC6__P0DP91 sibling separately retains all 11 fusion contexts, including literal
+extension groups/partner identifiers, four references and no core. Its three
+ACCEPT, five KEEP_AS_NON_CORE and three UNDECIDED assessments do not imply that
+the fusion inherits the CSB motor. Its three product records include external
+cross-references to CSB and PGBD3, not three extra ERCC6 gene credits. Both reviews
+remain DRAFT, with 44 and three advisories respectively.
+
+ERCC6L2 retains 24 imported contexts plus one accepted NEW DNA-helicase activity
+annotation specifically on the experimentally tested Q5T890-1 product. Its 25
+assessments are nine ACCEPT, two MODIFY, eight KEEP_AS_NON_CORE, five UNDECIDED
+and one NEW, with 13 references and one core. The source-described 1,561-, 1,550-
+and 712-residue products remain distinct. The ATP-dependent unwinding component
+is bounded to the tested short-overhang/substrate and SSB conditions; residual
+melting and the unresolved link to repair contexts remain explicit. DRAFT retains
+four binding advisories; the NEW assertion was justified by the measured activity,
+not by warning removal.
+
+ERCC8 retains 77 source contexts, 43 references, distinct 396- and 205-residue
+products and one substrate-adaptor core. Actions are 45 ACCEPT, 12 MODIFY,
+17 KEEP_AS_NON_CORE and three UNDECIDED. Ligase substrate recruitment is separated
+from RBX1 catalytic machinery and the CSB motor, with species and experimental
+assembly boundaries retained. It remains DRAFT with five generic-binding
+advisories.
+
+ERF retains 24 source contexts, 15 references, distinct 548- and 473-residue
+products and one chromatin-localized transcriptional-repression core. Actions
+are eight ACCEPT, 11 MODIFY and five KEEP_AS_NON_CORE. Promoter-specific DNA
+recognition remains distinct from the HT-SELEX naked-DNA motif assay; bounded
+TLE5/AES-2 binding does not imply an assayed recruitment mechanism. DRAFT retains
+five advisories: three generic-binding, one deliberate source-specific action
+split, and one unused manual-research-reference warning.
+
+None of these publications adds a supporting-text quotation. Source contexts,
+natural product boundaries and unresolved judgments remain part of the accepted
+records; completion credit does not imply every annotation is resolved.
+
+| Actual merge-group run | Broad Python tests passed | Doctests passed | Gene advisories | History records |
+| --- | --- | --- | --- | --- |
+| [ERCC6 run 40104791174](https://github.com/ai4curation/ai-gene-review/actions/runs/40104791174) | 4,245 | 276 | 44 + 3 fusion | 15,675 |
+| [ERCC6L2 run 40110584409](https://github.com/ai4curation/ai-gene-review/actions/runs/40110584409) | 4,245 | 276 | 4 | 15,683 |
+| [ERCC8 run 40110626350](https://github.com/ai4curation/ai-gene-review/actions/runs/40110626350) | 4,245 | 276 | 5 | 15,688 |
+| [ERF run 40112161497](https://github.com/ai4curation/ai-gene-review/actions/runs/40112161497) | 4,245 | 276 | 5 | 15,691 |
+
+All three jobs in each actual merge-group run completed successfully. Each run
+executed 12 examples, 438 overlapping automation tests, 19 JavaScript tests,
+mypy on 285 source files and two Ruff commands. Broad pytest had one skipped,
+84 deselected and nine warnings; doctests had 37 skipped and eight warnings.
+Counts overlap and are not summed. Changed-gene validation ran (two reviews for
+ERCC6); the separate all-gene batch was schema-only. Each run checked 703 module
+schemas, 718 family schemas and 42 history tests. The aggregate gate added no
+suite. The PR broad suites were skipped by path filtering, so their successful
+labels alone are not broad-test evidence. Prediction and upstream PAINT checks
+were skipped in these captured merge workflows.
+
+ERF's saved API response reports completed/SUCCESS jobs while five nested suite
+steps still have pending/in-progress states and the gate has no step array.
+A bounded direct-job recheck resolved the validation steps but retained these
+metadata limits. Full terminal logs establish the successful commands and counts;
+no terminal nested-step metadata was invented. No independent all-main biological
+validation or documentation build is claimed by this update.
+
+All 2,876 catalogue identities and association text, 235 queue objects, 116 earlier
+completion updates and preceding progress bytes remain exact. This is update 117;
+only the four named checkboxes change. Source inventories and dated availability
+snapshots are preserved without a fresh availability recount. The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker574-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T172508Z-codex-7cbb12.yaml)
