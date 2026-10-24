@@ -24,3 +24,24 @@
 
 ## Deep research
 - OpenScientist deep research was not yet available when this review was completed; review based on primary literature, UniProt and cached publications.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+The report's cited PMIDs were fetched into publications/ and the points used were checked
+against the abstracts.
+
+- No contradiction with the review. The report gives micelle surface (colloidal)
+  stabilization as the primary function, matching the core GO:0140777 (family convention
+  for kappa-casein), extracellular location and lactation.
+- One error in the report, not adopted: its summary calls the alpha-s/beta-casein assembly
+  "calcium-insensitive"; those caseins are calcium-sensitive (PMID:21245413), and it is
+  kappa-casein that is calcium-insensitive.
+- Added to GO:0140777 (NEW): PMID:41865247 (kappa-casein stabilizes micelles in milk but
+  fibrillates under destabilizing conditions), PMID:22177076 (chymosin cleavage at
+  Phe105-Met106 releases glycomacropeptide and leaves para-kappa-casein on the surface,
+  backing the reason's statement), and a quote from the report.
+- Not used: chymosin cleavage as a GO term for CSN3 (kappa-casein is the substrate; the
+  activity belongs to chymosin), glycomacropeptide, casoxin and casoplatelin peptide
+  activities, A/B variant cheese-making associations, JAK2-STAT5/mTOR expression control.
+- No action changes.
+- Also added PMID:41200845 (kappa-casein inhibits calcium-induced amorphous aggregation of beta-casein in vitro, found via the rat Csn3 report) to GO:0140777 and the IBA protein stabilization row, as direct biochemical support for the stabilizing activity.

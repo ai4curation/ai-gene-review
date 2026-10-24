@@ -40,3 +40,34 @@
 
 ## Deep research
 - OpenScientist deep research was not yet available when this review was completed; review based on primary literature, UniProt and cached publications.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ and the points used were
+checked against the abstracts.
+
+- No contradictions with the review: the report's primary function (phosphate-centre
+  calcium phosphate sequestration, micelle assembly, extracellular site, lactation) matches
+  the core function. The report agrees that intact beta-casein is not an enzyme and that
+  peptide activities (BCM-7, casohypotensin, antioxidant peptide) are properties of
+  digestion products, consistent with the MARK_AS_OVER_ANNOTATED / non-core calls on the
+  peptide-derived rows.
+- Added to GO:0140314 (NEW): PMID:23958008 (micelles let milk be secreted without
+  pathological calcification) and a quote from the report.
+- Added references PMID:25754442 (purified bovine beta-casein self-assembles into
+  core-shell micelles) and PMID:42439892 (mouse Ergic2/3 knockout: less phosphorylated
+  beta-casein, poorer offspring growth; kinase-pathway evidence, not annotated here).
+- Not used: prolactin/JAK2-STAT5 and BMAL1 regulation (expression control, not beta-casein
+  activity; PMID:39506316, 34668648, 34415905), A1/A2 BCM-7 nutrition studies
+  (PMID:40943529, 40277101, 26404362, 42195980).
+
+## Reviewer feedback (PR #5352, 2026-10-24)
+
+- GO:0042803 protein homodimerization activity (IDA, PMID:8186264): changed from UNDECIDED
+  to MODIFY -> GO:0042802 identical protein binding (parent term, verified via OLS). The
+  essence (beta-casein binds beta-casein) is well established, PMID:25754442 ("self-assembles
+  into small core-shell micelles"), but a homodimer is not shown in the cached abstract.
+  GO:0051260 protein homooligomerization was considered and rejected: it is a process term
+  defined for oligomers of 3-10 monomers, which does not fit polydisperse beta-casein
+  micelles, and swapping aspect in a MODIFY is awkward.
+- Status set to COMPLETE.

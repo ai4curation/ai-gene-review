@@ -9,3 +9,23 @@
 
 ## Deep research
 - OpenScientist deep research not available at time of review.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ and the points used were
+checked against the abstracts.
+
+- No contradictions with the review. The report's primary function (calcium phosphate
+  sequestration, micelle building, nutrient supply, lactation) matches the core
+  functions; it also treats beta-casomorphins as digestion products.
+- Added to GO:0140314 (NEW): PMID:42439892 (mouse Ergic2/3 knockout: less phosphorylated
+  beta-casein in milk and poorer offspring growth; correlative, since the whole secretome
+  is affected), PMID:31928725, and a quote from the report.
+- Checked but not adopted: the report presents the self-association data of PMID:3401012
+  as beta-casein biophysics generally; that paper studies nonphosphorylated human
+  beta-casein. Golgi-vesicle micelle assembly (PMID:6581043, 6586179) is rat work on caseins
+  in general; a Golgi lumen location for mouse beta-casein was not proposed from it.
+  Expression control (PMID:37591874, 27129249), Fam20C, SPCA calcium pumping
+  (PMID:16025219, 6302145; properties of other proteins) and microtubule transport
+  (PMID:1400631) were not used for annotation.
+- No action changes.

@@ -24,3 +24,24 @@
 
 ## Deep research
 - OpenScientist run had not been delivered at the time of writing (see report).
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+Checked the OpenScientist report against the review; every cited PMID was fetched
+into publications/ and the points used were verified against the abstracts.
+
+- No contradictions with the review. The report's primary function (phosphoserine-cluster
+  calcium phosphate sequestration, micelle core, Golgi site) matches the core function
+  (GO:0140314, Golgi lumen, extracellular region, lactation).
+- Added to GO:0140314 (NEW): PMID:37803629 (dephosphorylated casein is hardly incorporated
+  into artificial micelles: phosphorylation is required for sequestration-driven assembly),
+  PMID:12962326 (caseins form a calcium-phosphate transport complex), and a quote from the
+  report itself.
+- Added to GO:0050821 protein stabilization (KEEP_AS_NON_CORE): PMID:20496103, alphaS-casein
+  (alpha-s1/alpha-s2 mixture) inhibits alpha-lactalbumin fibrillization in vitro, a
+  physiological milk partner, strengthening the non-core chaperone-like call.
+- Not used for GO: FAM20C as the Golgi casein kinase (a property of the kinase, not of
+  CSN1S1), allergen epitope mapping (PMID:39631588), Keap1 docking of digest-derived
+  peptides (PMID:41819897; docking only), breed polymorphism and cheesemaking associations
+  (PMID:24704225, 23746587, 30219425), and buffalo phosphate stoichiometry (PMID:9988530).
+- No action changes. Status set to COMPLETE.

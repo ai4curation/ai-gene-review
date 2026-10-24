@@ -25,3 +25,23 @@
 
 ## Deep research
 - OpenScientist deep research not available at time of review (see final report).
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ and the points used were
+checked against the abstracts (full text where cached).
+
+- No contradictions with the review. The report's central claims (micelle scaffold,
+  calcium phosphate sequestration, knockout curtails milk protein and calcium phosphate
+  secretion and pup growth) match the review's core functions and its ACCEPT of lactation
+  (IMP) and MODIFY of molecular sequestering activity to GO:0140314.
+- Added to GO:0007595 lactation (IMP, PMID:21789179): PMID:10504344 (goat alpha-s1 null:
+  ER export of the other caseins depends on alpha-s1-casein) and PMID:25549363 (rat: the
+  membrane-associated form sits in cholesterol-rich ER microdomains; alpha-s1-casein "takes
+  center stage" in micelle building and transport). These show the protein does part of
+  the work of milk secretion, not only being its cargo.
+- Added to GO:0140313 (MODIFY -> GO:0140314): PMID:25714333 (micelles sequester and
+  transport amorphous calcium phosphate) and a quote from the report.
+- Not used: casein-cluster super-enhancer regulation (PMID:37591874), CSN1S1-promoter
+  transgenics (PMID:21881921), FAM20C, peptide activities (PMID:27765241, 25580741).
+- No action changes.

@@ -15,3 +15,27 @@
 ## Annotation judgements
 - Hormone-response IBAs (estradiol, progesterone, DHEA, deoxycorticosterone) trace to a bovine explant study where supraphysiological steroids inhibited casein synthesis [PMID:3585228 "A similar inhibitory effect was also found using high levels of other steroids without 11 beta-hydroxyl, such as deoxycorticosterone and dehydroepiandrosterone, and to some extent with oestradiol-17 beta"]: casein is a transcriptional readout, not a participant -> REMOVE.
 - molecular sequestering activity -> MODIFY to calcium ion sequestering activity (GO:0140314, OLS-verified, is_a GO:0140313).
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ and the points used were
+checked against the abstracts (full text where cached).
+
+- No contradictions with the review. The report's primary (calcium phosphate
+  sequestration) and secondary (ER export organizer, chaperone) functions match the core
+  functions and the ISO lactation row.
+- Added to GO:0007595 lactation (ISO): PMID:25549363, a rat mammary-cell study showing the
+  membrane-associated form of alpha-s1-casein in ER cholesterol-rich microdomains and its
+  central place in micelle building and transport, and PMID:10504344 (goat null: ER export
+  of the other caseins depends on alpha-s1-casein). This gives rat-specific grounding to
+  the participation claim.
+- Added to GO:0140313 (MODIFY -> GO:0140314): PMID:8126102 (casein phosphorylation is needed
+  for Ca2+ binding and micelle formation; mouse acini, not rat as the report's context
+  could suggest) and a quote from the report.
+- Not used: JAK/STAT/SOCS and hypothyroidism expression studies (PMID:26472537), casein
+  kinase activity changes (PMID:6273140, 2833669), FAM20C, Golgi calcium for late
+  phosphorylation (PMID:8713076). An ER/Golgi location for rat alpha-s1-casein was not
+  proposed; PMID:25549363 could support one but casein transit locations are not
+  annotated elsewhere in the rat reviews.
+- No action changes.
+- Note: the earlier bullet above saying the hormone-response IBAs go to REMOVE is out of date; the review marks them MARK_AS_OVER_ANNOTATED, the family convention.

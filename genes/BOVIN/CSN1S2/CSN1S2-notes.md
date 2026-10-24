@@ -18,3 +18,35 @@
 
 ## Deep research
 - OpenScientist run had not been delivered at the time of writing.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ (one, PMID:26735893, could
+not be fetched) and the points used were checked against the abstracts.
+
+- No contradictions with the review. The report's primary function (calcium phosphate
+  sequestration by phosphoserine clusters, micelle building, extracellular site) matches
+  the core function.
+- Added to GO:0140314 (NEW): PMID:31928725 (caseins sequester calcium phosphate
+  nanoclusters through multiply phosphorylated short sequences), PMID:32921475 (micellar
+  calcium is either in CCP held by phosphoserine clusters or bound directly to
+  phosphoserine), and a quote from the report.
+- Added to GO:0042803 homodimerization (KEEP_AS_NON_CORE): PMID:16546124 (disulphide
+  dimers in casein micelles of all milks studied). The report's statement that bovine
+  alpha-s2 forms homo- and heterodimers overstates this abstract, which shows homo- and
+  heterodimers only for rodent caseins; recorded in the reference review.
+- Not used for GO: FAM20C (kinase property), casocidin-1 and caseinophosphopeptide
+  activities (peptide-derived, PMID:7556666, 9216247, 10532380), iron chelation by goat
+  phosphopeptides (PMID:28215884), breed polymorphisms (PMID:40184159, 33546434, 37685069).
+  The report's "four phosphate centers" (its own sequence scan) versus the review's "three
+  phosphoserine clusters" was not changed: it is a counting convention, not a primary
+  finding.
+
+## Reviewer feedback (PR #5352, 2026-10-24)
+
+- Dropped the NEW GO:0007595 lactation row and removed lactation from core_functions.
+  The comparator check had left out the same-role mouse paralogs Csn1s2a and Csn1s2b,
+  neither of which carries lactation, and alpha-s2-casein has no knockout or other direct
+  evidence that it does part of the work of lactation, so the absence is treated as a
+  convention to respect. The "Added for consistency" clause went with the row.
+- Status set to COMPLETE.

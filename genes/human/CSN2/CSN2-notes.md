@@ -34,7 +34,7 @@
 
 - Cysteine protease inhibition: reverse zymography of milk beta-casein and a synthetic
   L133-Q151 peptide [PMID:12788072 "beta-Casein and the active domain, synthesized L(133)-Q(151), peptide inhibited cysteine proteases."]. Single in vitro study,
-  abstract-only, no in vivo evidence; kept as non-core.
+  abstract-only, no in vivo evidence; marked as over-annotated (matching bovine, mouse and rat beta-casein).
 - ACE inhibitor: only a sequence statement that a peptide encoded within beta-casein is an
   ACE inhibitor (PMID:2387396); no assay on human beta-casein in that paper. Fragment
   activity, not an activity of the intact secreted protein.
@@ -53,3 +53,32 @@
 ## Deep research
 
 - OpenScientist run was in progress during this review; see report for integration status.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ and the points used were
+checked against the abstracts (or full text where cached).
+
+- No contradictions with the review. The report's primary function (phosphoseryl-cluster
+  calcium phosphate sequestration, micelle self-association, extracellular, lactation)
+  matches the core function; it also treats beta-casomorphins, casein phosphopeptides and
+  antimicrobial peptides as digestion products, consistent with the over-annotation calls
+  on the peptide-derived rows.
+- Added to GO:0140314 (NEW): PMID:38318529 ("β- and αS-caseins are highly effective mineral
+  chaperones", unlike kappa-casein), PMID:31928725 (nanocluster sequestration by
+  multiply-phosphorylated sequences) and a quote from the report.
+- Added reference PMID:31826378 (beta-casein share of human milk protein rises from 33.8% in
+  colostrum to 40.3% in mature milk).
+- Not used: STAT5/GR/Oct-1 promoter regulation (PMID:23313770, 27130254, 24861805, 27044595;
+  expression control, not beta-casein activity), bovine A1/A2 and BCM-7 work, FAM20C
+  (kinase property), CPP metal binding (PMID:26434306; peptide fragment).
+
+## Reviewer feedback (PR #5352, 2026-10-24)
+
+- GO:0004869 cysteine-type endopeptidase inhibitor activity, IBA and IDA (PMID:12788072):
+  KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED, matching bovine, mouse and rat beta-casein;
+  added the missing propagation_review on the IBA row (same structure as mouse Csn2).
+- GO:0005509 calcium ion binding: reason now records the OLS check that GO:0140314's only
+  ancestors are metal ion sequestering activity (GO:0140487) and molecular sequestering
+  activity (GO:0140313), so it is not under calcium ion binding. No action change.
+- Status COMPLETE.

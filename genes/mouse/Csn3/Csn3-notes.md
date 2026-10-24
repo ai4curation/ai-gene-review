@@ -9,3 +9,25 @@
 
 ## Deep research
 - OpenScientist deep research not available at time of review.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+The report arrived after the review; its PMIDs were fetched into publications/ and the
+points used were checked against the abstracts.
+
+- No contradiction with the review. The report's primary function (micelle colloidal
+  stabilization; Csnk-/- females fail to lactate) matches core GO:0140777, protein
+  stabilization and lactation (IMP, PMID:16698927).
+- Added to GO:0140777 (NEW): PMID:12778565 ("stabilizing hairy brush of kappa-casein") and a
+  quote from the report.
+- Report error, not adopted: it calls para-kappa-casein "membrane-anchored"; it remains on
+  the micelle, not on a membrane.
+- Not used: chymosin cleavage (an activity of chymosin; kappa-casein is the substrate),
+  glycomacropeptide bioactivities (PMID:30870995 and others; peptide-derived), Elf5
+  co-expression (PMID:18180458), micelle scattering models (PMID:21112300, 22381008,
+  25388767).
+- GO:0045735 nutrient reservoir activity stays KEEP_AS_NON_CORE (least abundant casein; its
+  distinctive essential role is stabilization); see mouse Csn1s2a for the contrasting core
+  call on a major casein.
+- No action changes.
+- Also added PMID:41200845 (kappa-casein inhibits calcium-induced amorphous aggregation of beta-casein in vitro, found via the rat Csn3 report) to GO:0140777 and the IBA protein stabilization row, as direct biochemical support for the stabilizing activity.

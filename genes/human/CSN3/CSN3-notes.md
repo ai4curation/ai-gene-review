@@ -40,3 +40,25 @@
 ## Deep research
 
 - OpenScientist run was in progress during this review; see report for integration status.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+All PMIDs cited by the report were fetched into publications/ and the points used were
+checked against the abstracts (full text where cached).
+
+- No contradiction with the review's core call (GO:0140777 micelle stabilization,
+  extracellular, lactation, protein stabilization).
+- Added to GO:0140777 (NEW): PMID:11302432 ("The main role of kappa-casein in milk is to
+  stabilize the formation of casein micelles") and a quote from the report.
+- Added reference PMID:38318529 with findings. Its scattering data support the
+  multivalent-binding model, in which kappa-casein is in both the coat and the core of the
+  micelle, whereas the review summary (and the proposed "casein micelle" definition shared
+  with human CSN1S1/CSN2) speak of a surface coat. This refines the location of the
+  stabilizer within the micelle but not the activity; the wording was left as is and the
+  point is flagged for the family.
+- Not used: chymosin cleavage at Phe97-Ile98 (kappa-casein is the substrate; the activity
+  is chymosin's), O-glycosylation sites (PMID:7734846, bovine), glycomacropeptide, kappacin
+  and lactaptin activities (peptide-derived; PMID:35215457, 32633745, 11451690, 15917528,
+  31408975, 29116065, 27708236, 27513518), AlphaFold disorder statistics.
+- No action changes.
+- Also added PMID:41200845 (kappa-casein inhibits calcium-induced amorphous aggregation of beta-casein in vitro, found via the rat Csn3 report) to GO:0140777 and the IBA protein stabilization row, as direct biochemical support for the stabilizing activity.
