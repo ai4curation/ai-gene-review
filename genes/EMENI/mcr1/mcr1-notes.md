@@ -16,10 +16,10 @@
   branch as A. fumigatus mcr1 and S. cerevisiae MCR1.
 - `PTN000452207` carries the MCR1 mitochondrial localization and broad
   NAD(P)H-dependent cytochrome-b5 reductase molecular-function assertions. The
-  molecular-function row is seeded by S. cerevisiae MCR1 and PGA3 at a broad
-  eukaryotic node, so the broad term is retained as a deliberate node-level
-  assertion rather than refined on the PAINT row; the separate Rhea/EC mapping
-  captures the NADH-specific child `GO:0090524`.
+  molecular-function row is seeded by S. cerevisiae MCR1 (`SGD:S000001633`)
+  and PGA3 (`SGD:S000004594`, UniProt Q12746) at a broad eukaryotic node, so
+  the IBA supports only the broad parent for A. nidulans mcr1; the separate
+  Rhea/EC mapping captures the NADH-specific child `GO:0090524`.
 - `PTN000452208` carries `GO:0006696 ergosterol biosynthetic process` from an
   S. cerevisiae MCR1 source. PMID:10622712 reconstituted Candida CYP51 sterol
   14alpha-demethylation with a yeast microsomal cytochrome b5/NADH-cytochrome
