@@ -358,8 +358,8 @@ NADPH-dependent HMG-CoA reductase activity and broad isoprenoid biosynthesis on
 the conserved `PANTHER:PTN000060346` catalytic node, ER membrane on
 `PANTHER:PTN000060347`, and fungal ergosterol biosynthesis on
 `PANTHER:PTN000832055`. The same `PTN000060347` node also carries a
-peroxisomal-membrane assertion seeded only by human HMGCR that needs pruning
-from fungal ER HMG-CoA reductases.
+peroxisomal-membrane assertion placed too broadly above fungi that needs
+pruning from fungal ER HMG-CoA reductases.
 
 - [x] `CANAL/HMG1` - *Candida albicans* HMG-CoA reductase; drafted in PR #5454
 - [x] `ASPFU/hmg1` - major *Aspergillus fumigatus* HMG-CoA reductase with
