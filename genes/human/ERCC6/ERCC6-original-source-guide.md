@@ -52,9 +52,9 @@ Actual original access route: [publisher/archive/author text](https://pmc.ncbi.n
 
 ## PMID:9565609 — Biochemical and biological characterization of wild-type and ATPase-deficient Cockayne syndrome B repair protein.
 
-[Original publication](https://doi.org/10.1074/jbc.273.19.11844) · [PubMed](https://pubmed.ncbi.nlm.nih.gov/9565609/)
+[Original publication](https://doi.org/10.1074/jbc.273.19.11844) · [PubMed](https://pubmed.ncbi.nlm.nih.gov/9565609/) · [Institutional author-thesis reproduction, Elisabetta Citterio](https://repub.eur.nl/pub/21104/000524_CITTERIO%2C%20Elisabetta.pdf)
 
-**Read scope.** Independent source review: actual original Methods/Results web 355–1112, author thesis pp. 87–90; Figures 2–5 and TableII pixels pp. 89–90 inspected in the independent source review.
+**Read scope.** Original Methods and Results from the institutional author-thesis reproduction, pp. 87–90; Figures 2–5 and Table II on pp. 89–90 inspected as images. This access route is an author reproduction rather than a publisher-hosted copy.
 
 **Evidence.** Full-length human N-HA/C-His6 CSB and K538R from Sf21: DNA-stimulated ATP hydrolysis, structured-DNA stimulation with M13 secondary-structure caveat, negative helicase assay with positive TFIIH control. Injected wild-type CSB restores post-UV RNA synthesis in CS1AN cells; K538R gives partial rescue.
 
@@ -445,7 +445,7 @@ All 33 assertions are retained as non-core protein binding. Cellular co-recovery
 
 ## Separate CSB–PGBD3 fusion annotations
 
-These 11 source contexts belong to UniProt P0DP91 (product aliases P0DP91-1 and Q03468-2). They remain separate from the 139 canonical-CSB contexts. The [complete source records and unchanged reviews](ERCC6-fusion-annotations.json) retain annotation IDs, literal qualifiers, evidence, source extensions, WITH/FROM partners and review reasons. These are reviewed external assertions, not NEW primary annotations.
+These 11 source contexts belong to UniProt P0DP91 (product aliases P0DP91-1 and Q03468-2). They remain separate from the 139 canonical-CSB contexts. The [schema-backed fusion review](../ERCC6__P0DP91/ERCC6__P0DP91-ai-review.yaml) preserves all eleven review decisions; its [complete source records](../ERCC6__P0DP91/ERCC6__P0DP91-source-records.yaml) retain annotation IDs, literal qualifiers, evidence, source extensions and WITH/FROM partners. These are reviewed external assertions, not NEW primary annotations.
 
 | Context | GO term | Evidence | Reference | Action | WITH/FROM partner | Extension |
 |---|---|---|---|---|---|---|
@@ -475,3 +475,8 @@ These four activity descriptions concern canonical human CSB. They describe diff
 The fusion sentence in the biological description is grounded in [PMID:22483866, DOI 10.1016/j.dnarep.2012.02.004](https://doi.org/10.1016/j.dnarep.2012.02.004), Methods on distinct full-length-CSB and fusion expression, Results on gene-expression changes, and MER85 electrophoretic-mobility-shift assays. The source tests separately expressed products and selected DNA sequences. Its antiviral-like expression program is not converted into a demonstrated antiviral-defense activity.
 
 Current official ontology records: [ATP hydrolysis](https://www.ebi.ac.uk/QuickGO/term/GO:0016887), [DNA translocase](https://www.ebi.ac.uk/QuickGO/term/GO:0015616), [ATP-dependent chromatin remodeler](https://www.ebi.ac.uk/QuickGO/term/GO:0140658), and [chromatin-protein adaptor](https://www.ebi.ac.uk/QuickGO/term/GO:0140463). The captured current is-a and is-a/part-of closures show no ancestor/descendant redundancy among these four molecular functions. ATP hydrolysis remains its own measured chemistry. The accepted damage-sensor annotation is preserved; a separate core unit would repeat the Pol-II-coupled sensing and recruitment mechanism. No new publication quotations were added.
+
+
+## Product attribution and unresolved biological questions
+
+The two canonical-CSB HPA annotations now carry structured source defects. The HPA071297 immunogen sequence mismatch is established, but the observed staining cannot be uniquely assigned between CSB–PGBD3 and standalone PGBD3; the requested upstream action is to check the product assignment, not silently repoint it. The separate retracted PMID:10786832 is explicitly marked invalid and is not positive functional evidence. Suggested questions and experiments distinguish CSB’s own BER work, PolIII regulation, product-specific nuclear-body localization and prevention of damage from repair or survival.
