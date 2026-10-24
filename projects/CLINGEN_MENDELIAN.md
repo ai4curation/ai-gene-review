@@ -2996,27 +2996,29 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**563 of 2,876 genes are complete; 2,313 remain.**
-This checkpoint adds EP300 and EPCAM to the merged 561 checkpoint.
-[Checkpoint 563](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-563-2026-10-24-093844-utc)
-records both approved heads, actual merges and executed merge-group CI.
-The inventory is pinned to main [`5cc22e30227e`](https://github.com/ai4curation/ai-gene-review/commit/5cc22e30227e8948cc5f800b9e91213750e533ea),
-prepared 2026-10-24 09:38:44 UTC. Each catalogue gene counts once; products,
+**566 of 2,876 genes are complete; 2,310 remain.**
+This checkpoint adds EPHB4, EPG5 and EPM2A to the merged 563 checkpoint.
+[Checkpoint 566](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-566-2026-10-24-105205-utc)
+records all three approved heads, actual merges and executed merge-group CI.
+The inventory is pinned to main [`fcbef68494c3`](https://github.com/ai4curation/ai-gene-review/commit/fcbef68494c3bd156a9c3625ae37de0a9f5df27c),
+prepared 2026-10-24 10:52:05 UTC. Each catalogue gene counts once; products,
 follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,874 reviews are available, including 3,202 human reviews.
-Of 1,283 catalogue genes with reviews, 563 are credited and 720 remain uncredited;
-1,593 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,876 reviews are available, including 3,204 human reviews.
+Of 1,285 catalogue genes with reviews, 566 are credited and 719 remain uncredited;
+1,591 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-EP300 and EPCAM passed their actual merge-group suites and scoped gene validation.
-All 90 EP300 and 24 EPCAM approved paths, including each complete five-file gene
-directory, match the approved head, actual merge and pinned main. Both reviews
-remain DRAFT: EP300 has 23 unresolved annotations and 48 CI advisories; EPCAM has
-five unresolved annotations and four CI advisories. EP300 has two core functions
-and EPCAM has one; each has one displayed canonical protein product. Accepted
-campaign completion preserves those qualifications. Unmerged or unaudited work
-adds no credit here.
+All three actual merge-group suites and scoped gene validations passed. All 19
+EPHB4, nine EPG5 and 46 EPM2A approved paths, including their complete five-, six-
+and five-file gene directories, match the approved heads, actual merges and pinned
+main. EPHB4 is COMPLETE with eight unresolved annotations and no CI advisories.
+EPG5 and EPM2A remain DRAFT with one and three CI advisories, respectively. EPG5
+retains 16 records (15 active, one retired) and all 33 inherited quotation values
+and paths. The reviews retain four, two and eight distinct source-described
+products, respectively; EPM2A's external B3EWF7 product and its four GO assertions
+remain separate from the O95278 annotation set. These distinctions do not add gene
+credit. Unmerged or unaudited work adds no credit here.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3712,9 +3714,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EOGT** — HGNC:28526; [Adams-Oliver syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cbb132d6-44d8-4679-b31c-a50aa0443a97-2026-07-06T160000.000Z) (MONDO:0014124; AR; Definitive).
 - [x] **EP300** — HGNC:3373; [Rubinstein-Taybi syndrome due to EP300 haploinsufficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5559f540-f08e-4446-bc8b-a241bb3a4a8e-2022-05-20T044017.803Z) (MONDO:0013364; AD; Definitive).
 - [x] **EPCAM** — HGNC:11529; [Lynch syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c071c7e-ba5c-46c7-b46b-fee6acf3a43f-2022-06-20T170000.000Z) (MONDO:0005835; AD; Definitive).
-- [ ] **EPG5** — HGNC:29331; [Vici syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9a6ae5b4-2fa4-44aa-92e1-49997f6c9a87-2024-06-07T170000.000Z) (MONDO:0009452; AR; Definitive).
-- [ ] **EPHB4** — HGNC:3395; [EPHB4-associated vascular malformation spectrum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1a3438a-72a7-41f7-b140-2041ea7a39c1-2022-11-03T160000.000Z) (MONDO:0700080; AD; Definitive).
-- [ ] **EPM2A** — HGNC:3413; [Lafora disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f970ced6-0164-41ed-9e1f-1fb9f892bca6-2020-05-23T190000.000Z) (MONDO:0009697; AR; Definitive).
+- [x] **EPG5** — HGNC:29331; [Vici syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9a6ae5b4-2fa4-44aa-92e1-49997f6c9a87-2024-06-07T170000.000Z) (MONDO:0009452; AR; Definitive).
+- [x] **EPHB4** — HGNC:3395; [EPHB4-associated vascular malformation spectrum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1a3438a-72a7-41f7-b140-2041ea7a39c1-2022-11-03T160000.000Z) (MONDO:0700080; AD; Definitive).
+- [x] **EPM2A** — HGNC:3413; [Lafora disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f970ced6-0164-41ed-9e1f-1fb9f892bca6-2020-05-23T190000.000Z) (MONDO:0009697; AR; Definitive).
 - [ ] **ERCC2** — HGNC:3434; [xeroderma pigmentosum group D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91d0c244-d958-4358-8b92-cefefbce3843-2019-04-19T160000.000Z) (MONDO:0010212; AR; Definitive).
 - [ ] **ERCC3** — HGNC:3435; [xeroderma pigmentosum group B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bf09deab-9612-4b13-8bb7-4c2a25dde868-2019-04-19T160000.000Z) (MONDO:0012531; AR; Definitive).
 - [ ] **ERCC4** — HGNC:3436; [xeroderma pigmentosum group F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89544dc5-2d3b-4b7f-b835-3fec714bf7a5-2019-08-14T194406.189Z) (MONDO:0010215; AR; Definitive).
