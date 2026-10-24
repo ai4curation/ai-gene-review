@@ -116,4 +116,6 @@ def test_cli_exit_code(tmp_path, capsys, reference_id, exit_code):
         "supported_by": [{"reference_id": reference_id, "supporting_text": "x"}],
     }}]}))
     assert main([str(path)]) == exit_code
-    assert ("supported_by[0]" in capsys.readouterr().out) == bool(exit_code)
+    out = capsys.readouterr().out
+    assert ("supported_by[0]" in out) == bool(exit_code)
+    assert ("use UNDECIDED" in out) == bool(exit_code)

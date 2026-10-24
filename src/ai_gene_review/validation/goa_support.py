@@ -156,7 +156,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     For files no fuller validator covers, such as BioReason/GO-GPT prediction
     sidecars (see ``validate-prediction-terms``).
     """
-    parser = argparse.ArgumentParser(description=main.__doc__.split("\n")[0])
+    parser = argparse.ArgumentParser(description="Reject GOA files cited as support.")
     parser.add_argument("files", nargs="+", type=Path)
     args = parser.parse_args(argv)
     failed = False
@@ -165,6 +165,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         validate_goa_support(yaml.safe_load(path.read_text()), report, path)
         for issue in report.issues:
             print(f"{path}: {issue.path}: {issue.message}")
+            if issue.suggestion:
+                print(f"  {issue.suggestion}")
         failed = failed or not report.is_valid
     return int(failed)
 
