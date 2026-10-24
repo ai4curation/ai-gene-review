@@ -22,14 +22,15 @@ region."].
 that hydrolyzes cytidine triphosphate (CTP) to cytidine diphosphate (CDP)."; PMID:31835030;
 PMID:32077854 "show that CTP is required for spreading"]. P. aeruginosa ParB has been assayed
 directly [PMID:38843873 "We found that the same holds true for the P. aeruginosa ParB."]. CTP
-dependence is ancestral in the family [PMID:41448349]. Proposed NEW CTPase activity (ISO).
+dependence is ancestral in the family [PMID:41448349]. Proposed NEW CTPase activity (ISO), and NEW
+sequence-specific DNA binding (ISO) to record the evidence behind the DNA binding MODIFY.
 
 **Sporulation.** The GOA (TreeGrafter) term positive regulation of sporulation is inherited from
 B. subtilis Spo0J. P. putida does not sporulate [PMID:11849535 "not known to pass through
 developmental phases"]. REMOVE.
 
 **Related P. putida paper.** A ParB-like CTPase clamp, BisD, drives gene activation in P. putida
-transfer competence (PMID:40842242, not cached). BisD is a separate protein of the ICE-associated
+transfer competence (PMID:40842242). BisD is a separate protein of the ICE-associated
 ParB-like family, not PP_0001.
 
 **NCBI/CDD comparison.** The architecture gives only DNA binding. TIGR00180 also matches and

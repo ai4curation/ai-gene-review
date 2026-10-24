@@ -8,7 +8,7 @@ BLOSUM62, gap open -10, extend -0.5.
 
 | protein | P. putida length | P. aeruginosa length | identical positions | identity | motif | P. putida position | P. aeruginosa position |
 |---|---:|---:|---:|---:|---|---|---|
-| parA | 263 | 262 | 219/262 | 83.6% | deviant Walker A (KGGxxK[ST]) | KGGVGKT 11-17 | KGGVGKT 11-17 |
+| parA | 263 | 262 | 219/262 | 83.6% | deviant Walker A (KGGxGK[ST]) | KGGVGKT 11-17 | KGGVGKT 11-17 |
 | parB | 290 | 290 | 229/290 | 79.0% | ParB CTP-binding box II (GERRxRA) | GERRWRA 91-97 | GERRWRA 91-97 |
 
 ## Interpretation

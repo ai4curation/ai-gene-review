@@ -3,7 +3,7 @@
 Reads the cached UniProt flat files in the gene folders, aligns each
 P. putida protein with its P. aeruginosa ortholog (global, BLOSUM62),
 reports identity, and locates the conserved motifs that define the two
-activities: the deviant Walker A box of ParA (KGGxxK[ST]) and the
+activities: the deviant Walker A box of ParA (KGGxGK[ST]) and the
 CTP-binding box of ParB (GERRxRA).
 
 Run from the repository root:
@@ -19,7 +19,7 @@ from Bio.Align import substitution_matrices
 
 ROOT = Path(__file__).resolve().parents[4]
 MOTIFS = {
-    "parA": ("deviant Walker A (KGGxxK[ST])", r"KGG..K[ST]"),
+    "parA": ("deviant Walker A (KGGxGK[ST])", r"KGG.GK[ST]"),
     "parB": ("ParB CTP-binding box II (GERRxRA)", r"GERR.RA"),
 }
 

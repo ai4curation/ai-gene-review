@@ -34,4 +34,5 @@ NEW: CTPase activity (IDA), sequence-specific DNA binding (IDA).
 
 The transcription rows come from UniRule UR000413841. This entry, unlike the P. putida
 ortholog, has a PROSITE HTH_CROC1 (PS50943) / IPR001387 match, which may explain why only the
-P. aeruginosa protein gets transcription terms.
+P. aeruginosa protein gets transcription terms. This is an inference: the conditions of
+UR000413841 were not checked.

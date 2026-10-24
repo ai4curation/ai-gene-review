@@ -461,7 +461,11 @@ chromosomal ParB/Spo0J, 33 Noc nucleoid-occlusion proteins, 10 plasmid partition
 proteins (SopB, P1 ParB, KorB, RepB), 2 F-plasmid YubM and 2 Shigella VirB
 transcription activators. Chromosome segregation already reaches 95% of TIGR00180
 entries (27,383 of 28,687) by other routes. **All 6 reviewed entries that lack it
-are SopB, P1 ParB, YubM or VirB, where it would be wrong.** We therefore map the
+are SopB, P1 ParB, YubM or VirB, where it would be wrong.** The existing coverage
+is not clean either: 7 reviewed plasmid proteins already carry chromosome
+segregation by other routes (KorB P07674 and Q52313, RepB P05683, Y4cJ P55392, and
+the plasmid ParBs Q746H2, Q9PHE9 and Q9RZV8). These are the same error, made
+upstream, and all 33 Noc entries carry it too, which is debatable. We therefore map the
 family to DNA binding (`exactMatch`, the only NCBI term true of every member,
 confirmatory). Chromosome segregation is a `narrowMatch` for the chromosomal ParB
 sub-clade, not to be propagated to the whole family, as in the dGTPase split.
@@ -490,7 +494,7 @@ CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 
-The 252-row seed has **two tiers of review**, and they should not be conflated: **~40
+The 252-row seed has **two tiers of review**, and they should not be conflated: **~42
 fully hand-curated rows** (the original bespoke set + the hand-picked batch 2) with
 individually-written rationale (including the 2 TIGR00180 rows), plus **210 EC-bridge rows bulk-promoted** from the
 candidate set (batches 3–5). The promoted rows are *not* individually hand-reasoned —
@@ -500,7 +504,7 @@ non-catalytic-subunit screen). The **EC bridge** is what lets us apply that *sam
 mechanical evidence standard* to the whole collection with no per-row human judgement,
 because the agreement of two independent curated resources (NCBI's `go_terms` and GO's
 `ec2go`) *is* the verification — but that standard is weaker than the altitude/over-
-annotation judgement applied to the ~40 hand-curated rows (the "high gain is a flag,
+annotation judgement applied to the ~42 hand-curated rows (the "high gain is a flag,
 not an instruction" discipline holds for the hand-set; the promoted rows rely on the
 EC-bridge agreement plus the subunit screen). [`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)
 walks every NCBIFAM model and emits each `(model, GO)` where `ec2go(model's EC)`

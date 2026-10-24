@@ -26,4 +26,6 @@ stimulation of ATPase (shown in Myxococcus, PMID:40998818, not in P. aeruginosa)
 as suggested questions.
 
 **Decisions.** NEW ATP hydrolysis activity (IDA), chromosome segregation (IMP), protein
-homodimerization activity (IPI) and cytosol (IDA).
+homodimerization activity (IPI, two-hybrid only) and cytoplasm (IDA; the source abstract
+says "cytosolic", but the method is not stated and ParA-family proteins are expected to
+associate with the nucleoid, so the broader term is used).
