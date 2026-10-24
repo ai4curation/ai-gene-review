@@ -15,7 +15,7 @@
 - `PTN000452207` carries the MCR1 mitochondrial localization and broad
   NAD(P)H-dependent cytochrome-b5 reductase molecular-function assertions.
   The molecular-function row is seeded by S. cerevisiae MCR1
-  (`SGD:S000001633`) and PGA3 (`SGD:S000004594`, UniProt Q12746) at a broad
+  (`SGD:S000001633`) and PGA3 (`SGD:S000004594`) at a broad
   eukaryotic node, so the IBA supports only the broad parent for Neurospora
   mcr-1; the separate Rhea/EC mapping captures the NADH-specific child
   `GO:0090524`.
