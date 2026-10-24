@@ -17,12 +17,12 @@
   configured.
 - Manual live searches for `NCU03914`, `Q1K5Z7`, and Neurospora
   glucan 1,3-beta-glucosidase found no primary paper that directly assayed
-  NCU03914 catalytic activity, localization, or deletion phenotypes. The useful
-  hits were indirect: Pei et al. 2015 list NCU03914 in an extracellular-protein
-  table from a secretion-mutant screen, Liu et al. 2022 is a newer HSAF/cell-wall
-  stress transcriptomics study whose cached full text does not mention NCU03914,
-  and Galagan et al. 2003 is the Neurospora genome paper cited by UniProt for
-  the Q1K5Z7 genomic sequence.
+  NCU03914 catalytic activity or localization. The useful hits were Pei et al.
+  2015, which screened the FGSC 16594 NCU03914 deletion strain on Avicel and
+  found no gross lignocellulase-secretion deficit, Liu et al. 2022, a newer
+  HSAF/cell-wall stress transcriptomics study whose cached full text does not
+  mention NCU03914, and Galagan et al. 2003, the Neurospora genome paper cited
+  by UniProt for the Q1K5Z7 genomic sequence.
 
 PTHR31297 PAINT notes:
 
@@ -37,8 +37,9 @@ PTHR31297 PAINT notes:
 - The exact `GO:0004338 glucan exo-1,3-beta-glucosidase activity` IBD is a
   separate `PANTHER:PTN001262687` Saccharomycetes node seeded by Candida XOG1 and
   budding-yeast EXG1/EXG2/SPR1 members. NCU03914 is outside that SF1 node. The
-  EC-derived exact beta-1,3-exoglucosidase row should therefore be treated as an
-  unresolved ARBA/EC inference rather than as a PAINT-supported SF34 activity.
+  current GOA file presents the exact beta-1,3-exoglucosidase row as an
+  ARBA/EC-derived IEA. The Q1K5Z7 UniProt flat file still displays the same term
+  as a GO_Central IBA, which appears stale against the current PAINT placement.
 - The sibling `SCHPO/exg2` review is also an SF34 case and is intentionally
   cautious: S. pombe Exg2 is a membrane GH5 protein with a wall phenotype, but
   direct assays did not detect the narrower beta-1,6-glucanase activity
