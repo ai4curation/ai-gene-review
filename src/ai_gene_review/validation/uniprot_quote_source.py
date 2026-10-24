@@ -455,8 +455,11 @@ def _feature_lead(quote: str, statements: Tuple[Statement, ...]) -> Optional[Tup
     return m.group(1), location, after[0] if after else ""
 
 
-#: The ``...`` that joins the parts of a quote (a feature range has two dots).
-_ELLIPSIS = re.compile(r"\.{3,}|\u2026")
+#: The ``...`` that joins the parts of a quote. The verbatim check splits on
+#: runs of two or more periods and treats ``\u2026`` as text; splitting here only
+#: on three or more keeps feature ranges (``1..64``) whole, and ``_quote_parts``
+#: then applies the verbatim check's rule within each part.
+_ELLIPSIS = re.compile(r"\.{3,}")
 
 
 def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
@@ -470,7 +473,10 @@ def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
     in different sections (a short quote such as ``Nucleus``, found in both a
     keyword and a comment): the section is then not established, and no
     sections are returned rather than a guess. A quote with nothing searchable
-    in it (a bare number) is ``UNSEARCHABLE``.
+    in it (a bare number) is ``UNSEARCHABLE``; a part with nothing searchable
+    is skipped, so ``LOCATED`` means every searchable part was found (the
+    verbatim check, not this function, establishes that the whole quote is in
+    the record).
     """
     statements, text, starts = _index(path)
     sections: List[str] = []
@@ -513,6 +519,7 @@ def _locate_part(
             None,
         )
         if matched is not None:
+            # no ambiguity check: every feature with this key has the same section
             return LOCATED, [matched.section]
         if not rest_parts:  # a key and location only, and no such feature
             return UNLOCATED, []

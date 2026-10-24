@@ -405,3 +405,21 @@ def test_bare_key_quote_spanning_two_features():
     path = PROJECT_ROOT / "genes" / "human" / "LRP2BP" / "LRP2BP-uniprot.txt"
     quote = 'REPEAT          59..92\nFT                   /note="TPR"\nFT   REPEAT          93..125\n'
     assert record_sections(quote, path) == ["FT:REPEAT"]
+
+
+def test_backfill_counts_unsearchable_quotes():
+    text = (
+        "core_functions:\n- supported_by:\n"
+        f"  - reference_id: {TP53}\n    supporting_text: '176'\n"
+    )
+    result = backfill_text(text)
+    assert (result.added, result.unsearchable, result.unlocated) == (0, 1, 0)
+    assert result.text == text
+
+
+def test_unicode_ellipsis_is_text_as_in_the_verbatim_check():
+    """'…' is not a part separator, so the quote is one part, not two."""
+    assert locate_sections(f"{FUNCTION_QUOTE} … {CAUTION_QUOTE}", TP53_PATH) == (
+        UNLOCATED,
+        [],
+    )
