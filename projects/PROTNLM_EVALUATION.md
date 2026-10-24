@@ -604,3 +604,4 @@ These NPIs judge the deposited sequence, not the gene. They would not transfer t
 | [Archive](PROTNLM_EVALUATION/archive/README.md) | Superseded bootstrap script and early triage CSV; do not run |
 | [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) | Domain-to-GO mapping coverage across the benchmark |
 | [Data history](PROTNLM_EVALUATION/data_history.md) | XML/API source provenance |
+| [Re-review manifest](PROTNLM_EVALUATION/rereview/manifest.yaml) | Every benchmark target and paired reference in the gene re-review campaign, with its review file and status ([refresher](PROTNLM_EVALUATION/rereview/refresh_manifest.py); `generated_at` marks the snapshot) |

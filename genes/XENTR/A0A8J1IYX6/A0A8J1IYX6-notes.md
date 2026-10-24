@@ -132,3 +132,78 @@ anchor) but is recorded here and in the family-review notes.
   (term_assessment scope UNRESOLVED).
 - `interpro/panther/panther-members.tsv` not refreshed (shared file; orchestrator
   runs it once) — a missing-member warning for P23443/Q15418 is expected.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 files were not opened. New analysis: `A0A8J1IYX6-bioinformatics/`
+(`compare_agc_rereview.py`, `tree_agc_rereview.py`, `RESULTS-rereview.md` and
+captured outputs). No existing files in that folder were overwritten; the folder
+is new.
+
+### Identity
+
+- Complete 424-aa product (UniProt sequence version 1, not flagged as a fragment).
+  It is not an isoform, fragment or alternative model of another gene.
+  X. tropicalis has separate prkcd (A0A6I8SIW5, 683 aa) and prkcq (A0A8J0S8T2,
+  699 aa) genes. Over the catalytic region the target is about 41% identical to
+  each, while frog prkcd vs human PRKCD is 88.5%.
+- **Correction to the 2026-08-29 entry:** PANTHER PTHR24351 is *not* "the S6K
+  branch outside PKC". Its member list (`PTHR24351-entries.csv`) includes every
+  human PKC (PRKCA/B/G/D/E/H/Q/I/Z), PKN1-3, AKT1-3 and SGK1-3 as well as the
+  S6K/RSK/MSK kinases. The family name is only a label. The InterPro API
+  confirms PTHR24351 (42-416, E=1e-110) with no :SF subfamily.
+- The kinase domain is PKC-like. Best pairwise matches are PRKCQ 42.7% and PRKCD
+  41.0%, followed by the other PKCs (36-38%); FunFam calls it "Protein kinase C".
+  In an NJ tree (RSKR excluded) the target branches at the base of the PKC + PKN
+  clade, outside the delta/theta ortholog clades. With RSKR included, the two
+  long branches pair. RSKR is in PTHR24355, so this is read as long-branch
+  attraction.
+- So the RefSeq "PKC delta" name is half right: the kinase domain is PKC-like,
+  but the protein is not PKC delta and has no C1/C2 domains. The conclusion that
+  PRKCD biology must not be transferred still stands.
+- Residues: K142, D235 and D253 are retained. The PKCdelta activation-loop T507
+  aligns to **G269**, so the PDK1 phospho-acceptor is lost. No hydrophobic motif
+  is recognisable in the C-terminal tail. Activity and regulation are untested.
+
+### Changes
+
+- description rewritten (PKC-like AGC kinase, correct PANTHER scope, lost
+  activation-loop Thr, separate prkcd/prkcq genes).
+- GO:0005634 nucleus IBA: ACCEPT -> KEEP_AS_NON_CORE. The node assessment is
+  UNRESOLVED in the family review, nuclear activity is branch-specific in
+  PTHR24351, and the target is not in the RSK/MSK or fungal lineages that
+  supply the nuclear evidence. It is no longer in core_functions locations.
+- GO:0005737 cytoplasm IBA: ACCEPT (rationale rewritten).
+- GO:0004674 IBA + IEA: ACCEPT. The note about the activation-loop G269 was
+  added to the reason. Keyword quotes ("Serine/threonine-protein kinase", a KW
+  label) were replaced with PROSITE signature quotes and a quote from
+  RESULTS-rereview.md.
+- GO:0000166, GO:0004672, GO:0016301, GO:0016740: MARK_AS_OVER_ANNOTATED ->
+  TOO_GENERAL. These terms are true but entailed by GO:0004674 or GO:0005524,
+  which is what TOO_GENERAL means.
+- GO:0005524 ATP binding: KEEP_AS_NON_CORE (the "ATP-binding" keyword quote was
+  dropped).
+- References: GO_REF:0000033 and the deep-research and UniProt findings were
+  corrected for PANTHER scope. A reference_review was added to the UniProt file,
+  and RESULTS-rereview.md was added as a reference. No reference was removed.
+  The deep-research file is kept but no longer cited as support.
+- Added suggested_questions and suggested_experiments. No NEW annotations were
+  added, because nothing gene-specific supports any process term.
+
+### Relative and family
+
+- No characterized ortholog exists. By the tree, the nearest characterized
+  relatives are the PKC/PKN clade, and the closest by identity within it are the
+  novel PKCs. Nominated relative: human PRKCQ (Q04759), family_member, with
+  PRKCD (Q05655) essentially tied. Neither has a review in the repo (only
+  `genes/human/PRKCH__C0HM02`).
+- Family review disagreement: `interpro/panther/PTHR24351/PTHR24351-review.yaml`
+  describes the family as the S6K/RSK/MSK/Akt/SGK/Sch9 clade and omits the PKC
+  and PKN members. Its notes reject the codex framing of "PKC-delta-related
+  kinase architecture", relying on the 2026-08-29 gene-review claim of
+  "S6K-family placement". That claim is wrong for the kinase domain; the
+  rejection should be revisited. The family review was not edited, because it
+  is shared.
+- Modules: none apply. `gpcr_plc_calcium_pkc_signaling.yaml` concerns
+  DAG/Ca2+-activated PKCs, and this protein lacks C1/C2.
+  `insulin_receptor_signaling.yaml` uses PTHR24351 only for AKT.

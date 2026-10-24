@@ -40,6 +40,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
+| `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 
 ---
 
@@ -232,6 +233,24 @@ PTHR10806 root and Eukaryota rather than at a fungal-only node.
 - [x] `EMENI/sec11` - *Aspergillus nidulans* Sec11/SPC member; drafted in PR
   #5268
 
+## Family 11: V-type ATPase Subunit D
+
+`PTHR11671` contains the conserved V-type ATPase subunit D family. The fungal
+node `PANTHER:PTN000912657` carries PAINT assertions to
+`GO:0000329 fungal-type vacuole membrane` and
+`GO:0016471 vacuolar proton-transporting V-type ATPase complex`, while broader
+nodes carry `GO:0007035 vacuolar acidification` and
+`GO:0046961 proton-transporting ATPase activity, rotational mechanism`.
+
+- [x] `yeast/VMA8` - *S. cerevisiae* V1 subunit D with direct assembly,
+  rotor-coupling, and vacuolar/Golgi V-ATPase evidence; drafted in PR #5273
+- [x] `SCHPO/vma8` - fission-yeast V-ATPase subunit D with PomBase ORFeome
+  localization and PTHR11671 PAINT rows; drafted in PR #5274
+- [x] `CANAL/VMA8` - CGD *Candida albicans* V-ATPase subunit D; drafted in PR
+  #5276
+- [x] `NEUCR/vma-8` - *Neurospora crassa* V-ATPase subunit D with direct 1999
+  V-ATPase subunit evidence; drafted in PR #5275
+
 ---
 
 # NOTES
@@ -245,6 +264,15 @@ PTHR10806 root and Eukaryota rather than at a fungal-only node.
   fungal-type vacuole membrane placement. The reviews handled generic
   `GO:0005774` vacuolar-membrane rows as broad source annotations that
   should not add a second core location beside fungal-type vacuole membrane.
+- Drafted the compact `PTHR11671` V-ATPase subunit D set across
+  `yeast/VMA8`, `SCHPO/vma8`, `CANAL/VMA8`, and `NEUCR/vma-8` in PRs
+  #5273-#5276. All four reviews treat `PTN000912657` as the curated fungal
+  vacuolar V-ATPase node and retain Vma8's `contributes_to` relation to rotary
+  proton-transporting ATPase activity. The set distinguishes the supported
+  stress-induced vacuolar membrane-raft localization in `yeast/VMA8` from
+  unsupported cross-species transfers in `CANAL/VMA8` and `NEUCR/vma-8`, and
+  records standalone `enables GO:0046961` rows as relation problems where the
+  upstream source asserts full pump activity for non-catalytic subunit D.
 - Drafted the compact `PTHR10806` Sec11/SPC catalytic-subunit set across
   `yeast/SEC11`, `SCHPO/sec11`, `CANAL/SEC11`, `NEUCR/sec11`, `ASPFU/sec11`,
   and `EMENI/sec11` in PRs #5264-#5269. All six reviews accept the eukaryotic
