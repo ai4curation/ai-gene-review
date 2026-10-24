@@ -127,18 +127,19 @@ EXG1/XOG1-family IBA rows split over a broad Aspergillus-root
 cell-wall beta-glucan node, and a Saccharomycetes `PTN001262687`
 exo-1,3-beta-glucosidase node.
 
-- [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in PR #4610
+- [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; merged in PR #4610
 - [x] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
   clade; merged in PR #4612
 - [x] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
   fungal wall beta-glucan node; merged in PR #4699
 - [x] `SCHPO/exg2` - SF34 membrane GH5 protein with S. pombe cell-wall
   phenotypes; merged in PR #4701
-- [x] `SCHPO/exg3` - SF34/SF39-like glucanase-family protein; merged in PR
+- [x] `SCHPO/exg3` - SF43 glucanase-family protein; merged in PR
   #4702
 - [x] `CANAL/XOG1` - CGD-seeded *Candida albicans*
   exo-1,3-beta-glucosidase; merged in PR #4596
-- [x] `CANAL/EXG2` - CGD-seeded SF34 membrane GH5 member; merged in PR #4618
+- [x] `CANAL/EXG2` - CGD-seeded SF1 exo-1,3-beta-glucosidase; merged in PR
+  #4618
 - [x] `ASPFU/exgA` - Aspergillus SF34 seed for the broad glucan-catabolism
   node; merged in PR #5417
 - [x] `NEUCR/NCU03914` - *Neurospora crassa* SF34 exgD-like member; supersedes
