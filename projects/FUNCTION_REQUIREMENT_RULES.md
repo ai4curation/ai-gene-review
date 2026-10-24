@@ -3,7 +3,7 @@ title: "Function Requirement (NOT) Rules"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [ECOLI, METEA, PSEPK, human]
-genes: [ftsI, mdcD, traB, yjdM, kguE, GCH1, AYR1, RAM1, CAD, TGFBR3]
+genes: [ftsI, mdcD, traB, yjdM, kguE, GCH1, AYR1, RAM1, CAD, TGFBR3, HDAC5, MEN1, GPER1, ADRB3, CSGALNACT1, ARHGDIB, TBCC]
 ---
 
 # Function Requirement (NOT) Rules
@@ -18,8 +18,9 @@ experimentally supported proteins for the five large rules (497 to 3984 proteins
 each), and most flags are themselves annotation problems: non-catalytic subunits
 annotated `enables` instead of `contributes_to`, regulators annotated with the
 activity they regulate, or wrong terms. Applied to the GOA files in this repository,
-the rules flag 167 rows, and reviewers had independently removed, modified, marked
-over-annotated or left undecided 138 of them (83%).
+the rules flag 178 rows; reviewers removed, modified, marked over-annotated or left
+undecided 149 of them (84%). Seven new full reviews started from rule flags each
+confirmed the flag (see [Full reviews from leads](#full-reviews-from-leads)).
 
 ## Why
 
@@ -140,11 +141,12 @@ annotated `enables` should be `contributes_to`.
 
 ## Local sweep (2026-10-24)
 
-Flagged GOA rows in `genes/`, by the existing review action:
+Flagged GOA rows in `genes/`, by the existing review action (after the seven new
+reviews below):
 
 | Rule | REMOVE | MODIFY | MARK_AS_OVER_ANNOTATED | UNDECIDED | KEEP_AS_NON_CORE | ACCEPT |
 |---|---|---|---|---|---|---|
-| FRR:0001 | 5 | | | | | |
+| FRR:0001 | 6 | | | | | |
 | FRR:0002 | 1 | | | | | |
 | FRR:0003 | 6 | | | | | |
 | FRR:0004 | 12 | 21 | 6 | 1 | 2 | 4 |
@@ -152,8 +154,11 @@ Flagged GOA rows in `genes/`, by the existing review action:
 | FRR:0006 | 2 | 2 | 2 | | 3 | 3 |
 | FRR:0007 | | | 2 | | | |
 | FRR:0008 | 1 | | | | | |
-| FRR:0009 | 9 | 26 | 5 | | 1 | 6 |
-| FRR:0010 | 4 | 1 | 3 | 1 | | |
+| FRR:0009 | 9 | 32 | 5 | | 1 | 6 |
+| FRR:0010 | 4 | 5 | 3 | 1 | | |
+
+HDAC4, RPS3 and ABHD2, which were also on the lead list, already had reviews, and
+each flagged row had already been modified or removed.
 
 ### Review of the kept or accepted leads
 
@@ -177,12 +182,33 @@ fixes below) was looked at again. Outcomes:
 | zebrafish trpm7 | channel activity | Data gap (no TRANSMEM features in the entry); fixed by adding the ion transport domain. |
 | ECOLI manX | PTS phosphotransferase activity | Rule gap; PTS group translocation is now exempt, as its soluble IIA/IIB components carry `enables`. |
 
+## Full reviews from leads
+
+Seven human genes flagged on experimental annotations were given full reviews
+(2026-10-24). Falcon deep research failed with an Edison authentication error, so the
+reviews are built from the cached papers and recorded in each gene's notes file. In
+every case the flag was right about the term, and the experiment itself stood:
+
+| Gene | Flagged row | Rule | Outcome |
+|---|---|---|---|
+| ADRB3 | G protein activity (IDA, IEA) | FRR:0010 | MODIFY → beta3-adrenergic receptor activity. The paper shows the receptor driving GTP loading of Gs/Gi, which is receptor (exchange) activity. The same UniProt IDA sits on the mouse and rat orthologs. |
+| ARHGDIB | GTPase activity (IMP) | FRR:0010 | MODIFY → Rho GDP-dissociation inhibitor activity; RhoGDI2 holds Rac1 inactive. |
+| TBCC | GTPase activity (IDA) | FRR:0010 | MODIFY → GTPase activator activity; TBCC stimulates tubulin GTP hydrolysis through an arginine finger. |
+| GPER1 | nuclear estrogen receptor activity (IDA, IBA, IEA) | FRR:0009 | MODIFY → G protein-coupled estrogen receptor activity. The IBA node's placement is sound; the term it carries is not. |
+| HDAC5 | DNA-binding transcription activator activity (IMP) and related rows | FRR:0009 | MODIFY → transcription coactivator, coregulator or corepressor activity. The weak intrinsic deacetylase activity is marked over-annotated (class IIa His for the catalytic Tyr). |
+| MEN1 | DNA-binding transcription activator activity (IEA from mouse IDA) | FRR:0009 | MODIFY → transcription coactivator activity; menin binds DNA without sequence specificity, as a scaffold for MLL complexes. |
+| CSGALNACT1 | peptidoglycan glycosyltransferase activity (IDA) | FRR:0001 | REMOVE. Wrong term and wrong gene: the cited abstract describes an 802-residue chromosome-15 chondroitin synthase (CHSY1); CSGALNACT1 is 532 residues. |
+
+Each review records the upstream errors as `source_defects`, mostly WRONG_TERM for
+UniProt, plus CACAO, PINC, ARUK-UCL/BHF-UCL, MGI and GO Central (PAINT). They appear
+in `reports/source-defects/`.
+
 ## Next steps
 
-- Review the out-of-repository leads above (HDAC4/5, menin, MED12, GPER1, the beta-3
-  adrenergic receptor GTPase rows, chondroitin GalNAc-transferase 1), starting with
-  `just fetch-gene` and a normal gene review, and record confirmed errors as
-  `source_defects` (`WRONG_TERM`, or `WRONG_QUALIFIER` for accessory subunits).
+- Review the remaining out-of-repository leads: zebrafish MED12, mouse GPER1, the
+  membrane progestin and olfactory receptors given TF activity, and the accessory
+  subunits annotated `enables` (record those as `WRONG_QUALIFIER`).
+- File the accumulated source defects upstream (`just export-source-defects`).
 - More rules for common absence arguments: heme or quinone binding without a binding
   site; RNA polymerase or helicase activities; receptor activities without a
   ligand-binding domain.
