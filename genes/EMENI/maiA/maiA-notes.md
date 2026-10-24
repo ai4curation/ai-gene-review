@@ -36,3 +36,12 @@ in this session; none was generated. Notes are from cached publications
 - GO:0005737 cytoplasm (IEA): ACCEPT. Generic catalytic/aromatic aa metabolic: TOO_GENERAL.
 - Did not add GO:1902000 homogentisate catabolic process: human GSTZ1 does not carry it
   and MaiA acts on maleylacetoacetate rather than homogentisate; left for discussion.
+
+## 2026-10-24 follow-up
+
+- GO:0005739 mitochondrion (IBA, PTN000137159) changed from UNDECIDED to
+  MARK_AS_OVER_ANNOTATED. The IBD seeds are mammalian GSTZ1 only, where the
+  mitochondrial matrix pool is minor relative to the cytosolic enzyme; there is
+  no fungal localization evidence and UniProt places MaiA in the cytoplasm by
+  similarity, so the propagated term likely overstates MaiA localization. Not
+  removed because a mitochondrial fraction has never been tested.
