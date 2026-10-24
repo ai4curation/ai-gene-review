@@ -2996,25 +2996,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**553 of 2,876 genes are complete; 2,323 remain.**
-This checkpoint adds ELN to the merged 552 checkpoint.
-[Checkpoint 553](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-553-2026-10-21-232539-utc)
-records its approved head, actual merge, preserved source report and accepted CI evidence.
-The inventory is pinned to main [`7f1f8f7147f1`](https://github.com/ai4curation/ai-gene-review/commit/7f1f8f7147f165a688c45300b0da8052adfdadf1),
-prepared 2026-10-21 23:25:39 UTC. Each catalogue gene counts once; products,
+**557 of 2,876 genes are complete; 2,319 remain.**
+This checkpoint adds ELP2, ELOVL4, EML1 and EMILIN1 to the merged 553 checkpoint.
+[Checkpoint 557](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-557-2026-10-24-061402-utc)
+records their approved heads, actual merges and executed merge-group CI.
+The inventory is pinned to main [`83dcbe1d939d`](https://github.com/ai4curation/ai-gene-review/commit/83dcbe1d939d3a29daecb0e16145bdd29c339d3a),
+prepared 2026-10-24 06:14:02 UTC. Each catalogue gene counts once; products,
 follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,557 reviews are available, including 3,116 human reviews.
-Of 1,259 catalogue genes with reviews, 553 are credited and 706 remain uncredited;
-1,617 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,868 reviews are available, including 3,196 human reviews.
+Of 1,277 catalogue genes with reviews, 557 are credited and 720 remain uncredited;
+1,599 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-ELN passed the full merge-group suite and scoped actual-main validation.
-The broad main suite was skipped by path filtering. Documentation built and
-pushed successfully; no independent live-page inspection is claimed.
-Its 48 annotations have 9 ACCEPT, 17 MODIFY and 22 KEEP_AS_NON_CORE decisions.
-ELN retains computed DRAFT status and five accepted validation advisories.
-Campaign completion records the accepted merged review, not a COMPLETE file status.
+All four accepted merges passed their full merge-group suites. Their 88 approved
+file paths match the reviewed versions at each actual merge and the pinned main.
+ELP2 has computed COMPLETE status; ELOVL4, EML1 and EMILIN1 retain DRAFT status,
+including unresolved annotations and accepted advisories. Campaign completion
+records accepted merged reviews and does not erase these qualifications.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3700,10 +3699,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
 - [x] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
 - [x] **ELN** — HGNC:3327; [cutis laxa, autosomal dominant 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bfdc253-320e-4c03-959f-57348fe403fd-2024-10-04T160000.000Z) (MONDO:0007411; AD; Definitive).
-- [ ] **ELOVL4** — HGNC:14415; [ELOVL4-related maculopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b9daf74-594d-4f11-b322-d671266ebf8e-2023-02-02T170000.000Z) (MONDO:0700227; AD; Definitive).
-- [ ] **ELP2** — HGNC:18248; [complex neurodevelopmental disorder with motor features](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d8c7b2b6-442f-41ff-85b5-3674572ab744-2025-06-23T160000.000Z) (MONDO:0100516; AR; Definitive).
-- [ ] **EMILIN1** — HGNC:19880; [arterial tortuosity-bone fragility syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be7af692-0751-4da3-a24a-b28cf4675b4d-2025-06-05T160000.000Z) (MONDO:0971179; AR; Definitive).
-- [ ] **EML1** — HGNC:3330; [band heterotopia of brain](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3938ad35-9bf2-4b80-b910-05a2a1e6b6bf-2025-05-27T170000.000Z) (MONDO:0010873; AR; Definitive).
+- [x] **ELOVL4** — HGNC:14415; [ELOVL4-related maculopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b9daf74-594d-4f11-b322-d671266ebf8e-2023-02-02T170000.000Z) (MONDO:0700227; AD; Definitive).
+- [x] **ELP2** — HGNC:18248; [complex neurodevelopmental disorder with motor features](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d8c7b2b6-442f-41ff-85b5-3674572ab744-2025-06-23T160000.000Z) (MONDO:0100516; AR; Definitive).
+- [x] **EMILIN1** — HGNC:19880; [arterial tortuosity-bone fragility syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be7af692-0751-4da3-a24a-b28cf4675b4d-2025-06-05T160000.000Z) (MONDO:0971179; AR; Definitive).
+- [x] **EML1** — HGNC:3330; [band heterotopia of brain](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3938ad35-9bf2-4b80-b910-05a2a1e6b6bf-2025-05-27T170000.000Z) (MONDO:0010873; AR; Definitive).
 - [ ] **ENG** — HGNC:3349; [juvenile polyposis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_08c5b377-a2a1-44ac-9b7e-dc2141ee7a04-2022-12-30T180000.000Z) (MONDO:0017380; AD; Limited); [telangiectasia, hereditary hemorrhagic, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d4d13b4a-f97b-45d0-9b82-07bcb6685a0a-2022-12-05T170000.000Z) (MONDO:0008535; AD; Definitive).
 - [ ] **ENPP1** — HGNC:3356; [arterial calcification, generalized, of infancy, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_50cf1e96-1629-41c5-a5db-1c37e8b24aaa-2025-11-23T050000.000Z) (MONDO:0008817; AR; Definitive); [hypopigmentation-punctate palmoplantar keratoderma syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ed97faaf-d5ce-4da2-8367-b6fb51a57cbf-2022-06-17T040000.000Z) (MONDO:0014227; AD; Limited).
 - [ ] **ENTPD1** — HGNC:3363; [complex hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8634ea9c-3fce-4d72-94e9-2ac6756e5cb6-2023-05-06T023000.000Z) (MONDO:0015150; AR; Definitive).
