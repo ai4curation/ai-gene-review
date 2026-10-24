@@ -36,3 +36,30 @@ The accession-specific GOA fetch contains no existing annotation rows. The molec
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG13494-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not consulted for this section.
+
+### Identity
+- Q8MZA7 is the only UniProt entry for FlyBase FBgn0034671 (UniProt REST `xref:flybase-FBgn0034671` returns Q8MZA7 alone, 120 aa, unreviewed). Q9W2B6 is a merged secondary accession. The benchmark accession is therefore the canonical full-length product: not an isoform, fragment or alternative gene model. OMA records it as the main isoform (transcript FBtr0071733).
+
+### Literature
+- No gene-specific publication. The falcon deep research ran exact searches for CG13494, FBgn0034671, Q8MZA7, AT17606p and AAM29281.1 and found none [file:DROME/CG13494/CG13494-deep-research-falcon.md "found **no gene-specific mechanistic paper or exact mention**"].
+- UniProt Bgee line: "Expressed in mid-late elongation-stage spermatid (Drosophila) in testis and 21 other cell types or tissues" (a high-throughput expression summary, not functional evidence).
+
+### Sequence and evolution (new analysis: CG13494-bioinformatics/analyze_rereview.py, RESULTS-rereview.md, results-rereview.json)
+- Architecture: Ser/Thr-rich residues 1-36, Phobius TM helix 37-61, then a Gly/Cys/Asp-rich low-complexity tail (62-120: Gly 35.6%, Cys 28.8%, Asp 16.9%). 20 Cys in 120 residues.
+- InterPro: no member-database match (API HTTP 204), so no PANTHER family or subfamily, and no PAINT node.
+- Pfam CYSTM (PF12734, TM + Cys-rich module) does not match (score -42.3 bits, E = 1.0); the resemblance is compositional.
+- eggNOG KOG4726 (UniProt xref) also contains human keratin-associated proteins and CRCT1, which is a Cys-rich low-complexity grouping, not evidence of homology. No function transferred.
+- OMA HOG:F0655449 is rooted at the melanogaster group; 1:1 orthologs only in D. ficusphila, erecta, sechellia, simulans, yakuba and suzukii. This is a lineage-restricted, probably young, testis-expressed gene.
+
+### Annotation decisions
+- GOA has no annotation rows for Q8MZA7, so there is nothing to re-assess.
+- No NEW annotations. Membrane (GO:0016020) would rest only on the Phobius TM prediction; I left it as a suggested question rather than asserting it. No MF or BP can be transferred because there is no characterised homolog.
+- Description rewritten to cover architecture, lineage restriction and expression. core_functions stays empty, and a gene-level WHOLLY_DARK knowledge gap was added.
+
+### Relative / family / modules
+- No characterised relative exists (no PANTHER family, no ortholog outside the melanogaster group), so relation is none_found.
+- No PANTHER family review is relevant (no PANTHER assignment). No modules/ or gocams/ entries mention CG13494, Q8MZA7 or FBgn0034671.

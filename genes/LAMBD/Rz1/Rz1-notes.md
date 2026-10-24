@@ -1,0 +1,22 @@
+# Bacteriophage lambda gene Rz1 (Outer membrane spanin subunit / o-spanin; UniProt Q37935)
+
+## Overview
+Gene `Rz1` of *Escherichia phage lambda* (`NCBITaxon:2681611`) is an embedded out-of-frame gene wholly nested within the +1 reading frame of `Rz` and encodes the outer membrane spanin subunit (o-spanin, 60 AA precursor; 40 AA mature lipoprotein) [PMID:8626053, PMID:18713319, PMID:28040784]. Following cleavage of its N-terminal 19-residue lipoprotein signal peptide by signal peptidase II (LspA) and lipid modification (N-palmitoylation and S-diacylglycerol attachment) at Cys-20, mature Rz1 is sorted by the Lol pathway to the inner leaflet of the *Escherichia coli* outer membrane [PMID:8626053, PMID:18713319]. In the periplasm, Rz1 forms a DsbA-dependent covalent homodimer via an intermolecular disulfide bond at Cys-29 (`PMID:23387988`) and binds the C-terminal periplasmic domain of the inner membrane subunit Rz (i-spanin) to form the periplasm-spanning Rz-Rz1 spanin complex [PMID:18713319, PMID:20734329, PMID:28040784].
+
+## Structure, Complex Formation, and Outer Membrane Fusion
+1. **Outer Membrane Lipoprotein Localization**: Subcellular fractionation and `[3H]`palmitate/globomycin labeling in induced lambda lysogens proved that Rz1 is a lipoprotein localized almost exclusively to the *E. coli* outer membrane (`GO:0039662`) [PMID:8626053, PMID:18713319].
+2. **Proline-Rich Region and Quaternary Rearrangement with Rz**: Mature Rz1 (40 AA) has a 25% proline content (10 prolines, including a central penta-proline stretch) and is intrinsically unstructured in isolation (`PMID:20734329`, `PMID:23387988`). Mixing soluble periplasmic domains `sRz` and `sRz1` induces a major disorder-to-helical conformational change and forms rod-like bundles (`PMID:20734329`). *In vivo*, complex formation with Rz1 across the periplasmic peptidoglycan meshwork structurally stabilizes the C-terminal periplasmic domain of Rz, protecting Rz from adventitious cleavage by periplasmic proteases (`PMID:20734329`).
+3. **Outer Membrane Disruption via Inner-Outer Membrane Fusion**: Genetic analysis (`PMID:22904283`, `PMID:28040784`) and membrane fusion assays (`PMID:25870259`) established that once endolysin `R` degrades the peptidoglycan meshwork, liberated Rz-Rz1 spanin complexes oligomerize and mediate fusion of the inner and outer membranes (`GO:0061025`), disrupting the host outer membrane (`GO:0090680`) to complete cytolytic virion release (`GO:0044659`).
+
+## GO Annotation Review Summary
+- **Accepted Core Terms**:
+  - `GO:0039662` (`host cell outer membrane`, IDA `PMID:8626053`): Exact subcellular location of the mature Rz1 lipoprotein (o-spanin).
+  - `GO:0090680` (`viral release via disruption of host outer membrane`, IMP `PMID:22904283`): Core biological process of the Rz-Rz1 spanin complex.
+  - `GO:0061025` (`membrane fusion`, IDA `PMID:25870259`): Core mechanism by which Rz-Rz1 disrupts the outer membrane.
+  - `GO:0044659` (`viral release from host cell by cytolysis`, IEA `GO_REF:0000002`): Core viral exit pathway.
+- **Modified Terms**:
+  - `GO:0019076` (`viral release from host cell`, IDA `PMID:28040784`): Too general; replaced (`MODIFY`) with the specific descendant term `GO:0090680` (`viral release via disruption of host outer membrane`) demonstrated in `PMID:28040784`.
+  - `GO:0020002` (`host cell plasma membrane`, EXP `PMID:23387988`, IEA `GO_REF:0000044` from `UniProtKB-SubCell:SL-0376`): Replaced (`MODIFY`) with `GO:0039662` (`host cell outer membrane`). Rz1 is the outer membrane lipoprotein subunit (`o-spanin`, `SL-0376` = Host cell outer membrane), whereas Rz is the inner/plasma membrane subunit (`i-spanin`); both `PMID:8626053` and `PMID:23387988` explicitly state that Rz1 is localized to the host outer membrane.
+  - `GO:0031640` (`killing of cells of another organism`, IEA `GO_REF:0000043`): Replaced (`MODIFY`) with `GO:0090680` (`viral release via disruption of host outer membrane`) and `GO:0044659` (`viral release from host cell by cytolysis`).
+- **Removed Terms**:
+  - `GO:0045861` (`negative regulation of proteolysis`, IDA `PMID:20734329`): Removed (`REMOVE`). In `PMID:20734329`, binding of Rz1 to Rz folds the C-terminal periplasmic domain of Rz into a stable complex, which sterically prevents adventitious degradation of uncomplexed Rz by host periplasmic proteases. Rz1 is a structural spanin subunit, not a protease regulator or inhibitor, so annotating `GO:0045861` confuses normal folding-coupled proteolytic stability of a binding partner with regulation of proteolysis.

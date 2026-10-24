@@ -48,6 +48,7 @@ from ai_gene_review.module_boolean import (
     _parse,
     _tokenize,
     module_to_boolean,
+    omitted_regulators,
 )
 from ai_gene_review.module_notation import iter_connections, iter_nodes
 from ai_gene_review.render_modules import as_list
@@ -503,6 +504,7 @@ def boolean_model_payload(
         "edges": sorted([e.source, e.target, e.sign] for e in base.edges),
         "layout": layered_layout(base),
         "rules": _rules_json(base),
+        "omitted": omitted_regulators(doc),
         "declared_logic": sorted(
             str(n.get("id"))
             for n in _iter_elements(doc)
