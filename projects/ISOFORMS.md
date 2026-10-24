@@ -123,29 +123,24 @@ SYNGAP1 description attributed the PDZ ligand to the whole protein, and a deep-
 research report placed RASAL2 S351 in the PH domain, which is correct for
 neither numbering.
 
-### Recording these in a structured way (proposal, not yet in the schema)
+### How these are recorded
 
-Today these mismatches can only be written as prose in a `functional_isoforms`
-description or a findings statement, so they cannot be counted or reported
-upstream. Two changes would cover both kinds:
+Each kind of mismatch has a structured home, so the cases can be counted and
+the ones that are UniProt's to fix can be reported to UniProt:
 
-1. **A literature isoform missing from UniProt.** Allow `functional_isoforms[].maps_to`
-   to name non-Swiss-Prot sequences (new mapping types such as `REFSEQ_PROTEIN`
-   and `UNIPROTKB_UNREVIEWED`), and allow a `source_defects` block on a
-   functional isoform with a new defect type (`MISSING_ISOFORM`, resource
-   `UNIPROT`, record the accession). A functional isoform with no
-   `UNIPROT_ISOFORM` mapping is then a computable gap, and
-   `just export-source-defects` already turns `source_defects` into per-resource
-   reports, so UniProt would get a list of missing isoforms for free.
-2. **Residue numbers given on a non-displayed isoform.** This is not an error
-   in UniProt, so it should not be a source defect. A small optional
-   `numbering_isoform` field (a UniProt isoform id, or a RefSeq protein when
-   UniProt lacks the isoform) on findings and on residue-bearing statements
-   would let a validator check that the named residue exists in that sequence.
-
-SYNGAP1 currently records alpha1 as a `functional_isoforms` entry with
-`maps_to` left empty and the RefSeq and unreviewed accessions in its
-description, which is the closest the current schema allows.
+1. **A literature isoform missing from UniProt** is a `functional_isoforms`
+   entry whose `maps_to` names the sequences that carry it (`REFSEQ_PROTEIN`,
+   `UNIPROTKB_UNREVIEWED`) and has no `UNIPROT_ISOFORM` mapping, plus a
+   `source_defects` item (`MISSING_ISOFORM`, resource `UNIPROT`,
+   `requested_change: ADD`). `just export-source-defects` writes these into the
+   report for UniProt. SYNGAP1 `SYNGAP1_ALPHA1` is the first.
+2. **Residue numbers given on a non-displayed isoform** are not an error in
+   UniProt, so they are not source defects. The finding carries
+   `residue_mappings`: the residue as the paper numbers it (`as_reported`, e.g.
+   `UniProtKB:Q9UJF2-2` 351 S) and the same residue in the displayed sequence
+   (`canonical`, `UniProtKB:Q9UJF2` 203 S). The validator resolves both against
+   the real sequences and fails a number read on the wrong one. The two RASAL2
+   findings are the first.
 
 ## References
 

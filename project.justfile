@@ -2742,4 +2742,6 @@ validate-families: ensure-panther-members
     uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
     echo "Validating gene-level residue claims..."
     uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    echo "Validating residue numbers reported on reference findings..."
+    uv run python -m ai_gene_review.validation.finding_residue_mappings || rc=1
     exit $rc

@@ -364,6 +364,17 @@ slots:
       activity attached to the wrong gene product ("that gene, not this gene")
       or keyed to the wrong reference. The review's own action still says what
       this repository does with the claim. See docs/source_defects.md.
+  residue_mappings:
+    range: ResidueMapping
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Residues that this finding names by number, each given in the numbering
+      the source used and, when that is not the displayed UniProt sequence,
+      also in the displayed sequence. Papers often number residues on an
+      isoform other than the one UniProt displays, so the same residue can
+      appear under two numbers (RASAL2 Ser351 in isoform 2 is Ser203 in the
+      displayed isoform). Both sides are checked against the real sequences.
   propagation_review:
     range: PropagationReview
     description: >-
@@ -573,6 +584,15 @@ classes:
           GO terms that are specific to this functional class. These are terms
           that should NOT be annotated to the gene as a whole, only to this specific
           form. Using Term objects enables linkml-term-validator checking.
+      source_defects:
+        range: SourceDefect
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Defects in UniProt's (or another source's) record of this isoform,
+          for example an isoform established in the literature that the
+          reviewed UniProt entry does not list (defect_type MISSING_ISOFORM).
+          See docs/source_defects.md.
 
   FunctionalIsoformMapping:
     description: >-
@@ -582,7 +602,9 @@ classes:
       type:
         range: FunctionalIsoformMappingTypeEnum
         required: true
-        description: Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)
+        description: >-
+          Type of identifier (UNIPROT_ISOFORM, UNIPROT_CHAIN, REFSEQ_PROTEIN or
+          UNIPROTKB_UNREVIEWED)
       ids:
         range: string
         multivalued: true
@@ -591,6 +613,8 @@ classes:
           UniProt identifiers belonging to this functional class.
           For UNIPROT_ISOFORM: P19544-1, P19544-2, etc.
           For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.
+          For REFSEQ_PROTEIN: NP_001123538.1 (versioned RefSeq protein).
+          For UNIPROTKB_UNREVIEWED: B7ZCA0 (a TrEMBL accession).
       residues:
         range: string
         description: >-
@@ -745,6 +769,7 @@ classes:
       - reference_section_type
       - record_section
       - finding_review
+      - residue_mappings
 
   FindingReview:
     description: Manual reviewer assessment of a specific finding within a reference - in
@@ -1925,6 +1950,33 @@ classes:
           The validator compares this against the current record and, when they differ,
           says so explicitly rather than letting a stale claim look verified.
 
+  ResidueMapping:
+    description: >-
+      One residue named in a source, recorded in the sequence whose numbering
+      the source used, and optionally the same residue in the displayed UniProt
+      sequence of this gene. Each side is a ResiduePosition, so the validator
+      can confirm both residues and that they are the same amino acid.
+    attributes:
+      as_reported:
+        range: ResiduePosition
+        required: true
+        inlined: true
+        description: >-
+          The residue as the source numbers it, in the sequence that numbering
+          refers to, e.g. UniProtKB:Q9UJF2-2 (a UniProt isoform) or an
+          unreviewed UniProtKB accession when the isoform is not in the
+          reviewed entry.
+      canonical:
+        range: ResiduePosition
+        inlined: true
+        description: >-
+          The same residue in the displayed sequence of this review's entry
+          (the review's own id). Omit when as_reported already is the
+          displayed sequence, or when the residue has no counterpart there.
+      note:
+        range: string
+        description: How the mapping was established, or why canonical is absent.
+
   PropagationSource:
     description: >-
       A source entity considered while reviewing an inferred annotation. This is
@@ -2871,6 +2923,12 @@ enums:
         description: The relation/qualifier is wrong (e.g. enables vs involved_in).
       WRONG_CAUSAL_RELATION:
         description: A GO-CAM causal edge has the wrong relation or direction.
+      MISSING_ISOFORM:
+        description: >-
+          An isoform established in the literature is not among the isoforms
+          of the reviewed UniProt entry. asserted_value is the entry
+          (UniProtKB:Q96PV0); corrected_value names a sequence that carries
+          the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
       OTHER:
         description: Any other source-record defect; describe it in the explanation.
 
@@ -2945,6 +3003,10 @@ enums:
           (e.g. drop one has_input from a GO-CAM activity).
       DELETE_ROW:
         description: Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+      ADD:
+        description: >-
+          Add something the record lacks, e.g. a missing isoform;
+          corrected_value names what should be added.
       CHECK:
         description: >-
           The value is wrong or doubtful, but the right change depends on
@@ -3888,6 +3950,14 @@ enums:
         description: UniProt isoform ID (e.g., P19544-1, Q07817-2)
       UNIPROT_CHAIN:
         description: UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)
+      REFSEQ_PROTEIN:
+        description: >-
+          Versioned RefSeq protein accession (e.g., NP_001123538.1). Use when
+          the isoform is not among the reviewed UniProt entry's isoforms.
+      UNIPROTKB_UNREVIEWED:
+        description: >-
+          Unreviewed UniProtKB (TrEMBL) accession carrying the isoform's
+          sequence (e.g., B7ZCA0). Use when the reviewed entry lacks the isoform.
 
   # ============== Prediction Review Enums ==============
 
