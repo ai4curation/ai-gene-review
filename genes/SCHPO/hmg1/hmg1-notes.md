@@ -33,8 +33,8 @@
   `GO:0004420` node `PTN000060346`, the ER-membrane node `PTN000060347`, and
   the fungal ergosterol node `PTN000832055` are sound for this canonical long
   fungal HMG-CoA reductase. The same broad `PTN000060347` node also
-  over-propagates `GO:0005778 peroxisomal membrane`; the only seed is human
-  HMGCR, and S. pombe Hmg1 is an ER/nuclear-envelope enzyme.
+  over-propagates the old `GO:0005778 peroxisomal membrane` assertion to fungal
+  descendants even though S. pombe Hmg1 is an ER/nuclear-envelope enzyme.
 - Kept broad `GO:0008299 isoprenoid biosynthetic process` as core in both the
   PAINT and InterPro2GO rows, matching the existing budding-yeast HMG1/HMG2
   reviews: the term is general but still names the core pathway that Hmg1 feeds
