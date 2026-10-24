@@ -14,8 +14,9 @@ set:
   physiological role and characterization of the Aspergillus nidulans enzyme" -
   abstract-only; characterizes A. nidulans OAH sulfhydrylase as an "oligomeric
   protein with a broad substrate specificity with regard to sulfhydryl
-  compounds" and says its major physiological role "seems to be recycling of
-  the thiomethyl group of methylthio-adenosine".
+  compounds", says OAH SHLase-negative mutants were "completely
+  prototrophic", and says its major physiological role "seems to be recycling
+  of the thiomethyl group of methylthio-adenosine".
 - PMID:9506902, "Structure and regulation of cysD, the homocysteine synthase
   gene of Aspergillus nidulans" - abstract-only; cysD was isolated by
   "functional complementation of a cysD11 mutation" and its cDNA complemented
@@ -32,7 +33,11 @@ synthase activity is therefore stale relative to the local 2026 PAINT export;
 it is still biologically defensible as a non-core in-vitro activity because
 PMID:17482430 explicitly names homocysteine synthase encoded by cysD among the
 A. nidulans enzymes that catalyze O-acetylserine plus sulfide to form cysteine
-in vitro.
+in vitro. The IEA `GO:0071266` de novo methionine-biosynthesis row is retained
+only through the homocysteine-producing hydrogen-sulfide/OAH branch; the
+methanethiol reaction fits salvage of methylthioadenosine-derived sulfur and is
+tracked separately with generic `GO:0071267` L-methionine salvage while the
+precise fungal pathway term remains unresolved.
 
 I searched the web for newer `cysD`, homocysteine synthase, and
 O-acetylhomoserine sulfhydrylase papers. The newer hits were background papers,
