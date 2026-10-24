@@ -56,3 +56,27 @@ Exact sequence mapping: [RHOJ-bioinformatics/RESULTS.md](RHOJ-bioinformatics/RES
 ## Research integration
 
 The genuine Falcon report is retained. Its gene-level synthesis is interpreted through the exact product sequence and the primary sources above; the truncation boundary and paralog distinctions are assessed independently.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: G3V4H1 (ProtNLM2 benchmark target, cohort MOD_EVOLUTION20). No ProtNLM2 file or prediction output was opened or used. New analysis: `RHOJ-bioinformatics/compare_sequences_rereview.py` -> `RESULTS-rereview.txt` / `RESULTS-rereview.md`, which fetch sequences and transcript models live from UniProt and Ensembl. The earlier `RESULTS.md` and its scripts are unchanged.
+
+### Identity of the benchmark accession
+
+- G3V4H1 is an **alternative gene model**, not the canonical RHOJ product and not one of the UniProt-described isoforms. It is 153 aa; canonical Q9H4E5 is 214 aa, and isoform 2 (Q9H4E5-2) lacks only residues 113-134 and keeps the canonical C-terminus.
+- It is translated from ENST00000557447 (RHOJ-204), Ensembl biotype **nonsense_mediated_decay**. The CDS matches canonical RHOJ-201 to nt 305. RHOJ-204 then uses a shortened exon 3, skips exon 4 and splices into the canonical 3' UTR. The 50-residue proline-rich tail (104-153) is read from sequence just 3' of the canonical stop codon, and it is not a frameshifted read of canonical coding sequence.
+- Retained: G1 P-loop (GDGAVGKT, 28), switch I (PTVFD, 52), switch II (DTAGQ, 75), effector region 50-58, N-terminal palmitoylation cysteines 3 and 11. Missing: the 121-129 distal loop needed for nucleotide loading [PMID:27660391 "Chimeras of TCL and TC10 revealed amino acids 121-129 of TCL contributed to the differences in nucleotide loading."], the G4 TQID (133), the G5 CSAL (175), the polybasic region and the CAAX box (CSII, 211).
+- PE 1 on the TrEMBL record comes from PeptideAtlas. Peptides from shared residues 1-103 cannot tell this product apart from the canonical one, so the PE level is not evidence that G3V4H1 exists as a polypeptide.
+
+### Evolutionary grounding
+
+- PANTHER PTHR24072 (Rho family GTPase). The PANTHER 19 geneinfo service places canonical Q9H4E5 in PTHR24072:SF17 (RHO-RELATED GTP-BINDING PROTEIN RHOJ). G3V4H1 is unmapped there; it only matches the family HMM over residues 20-103 (InterPro API). GTPase activity, GTP binding and plasma membrane are IBD-placed at the family root, PTN000632671, and Q9H4E5 is among the donors. Because the function is ancestral to the whole family, it holds for the RHOJ gene. G3V4H1 itself receives no IBA; its three rows are InterPro/UniRule/EC-mapping IEAs triggered by the N-terminal half-domain.
+- The family review (`interpro/panther/PTHR24072/PTHR24072-review.yaml`) already names G3V4H1 as an altered same-gene product and does not dispute subfamily placement. I found no disagreement.
+
+### Decisions
+
+All three IEAs (GTPase activity, G protein activity, GTP binding) changed from UNDECIDED to **MARK_AS_OVER_ANNOTATED**. They are true of the gene and of Q9H4E5 [PMID:10967094 "In vitro, TCL shows rapid GDP/GTP exchange and displays higher GTP dissociation and hydolysis rates than TC10."]. They are not supported for an NMD-transcript product that lacks the guanine-base motifs and half the fold. I did not use REMOVE, because no assay of this product exists and the claims are correct at gene level. The description was rewritten so that it gives the gene-level biology [PMID:21628409; PMID:30158707] and then the product-identity boundary. core_functions stays empty, since no function is established for this product. No NEW terms were proposed.
+
+### Relative to review next
+
+The canonical product of the same gene, Q9H4E5 (RHOJ_HUMAN, reviewed). `genes/human/RHOJ` is keyed to G3V4H1, and no review of Q9H4E5 exists in the repo, so the next folder would be `genes/human/RHOJ__Q9H4E5`. No module names RHOJ or Q9H4E5. These modules use PTHR24072 Rho-family descriptors and are context only: `modules/rho_gprotein_signaling.yaml`, `modules/ephrin_receptor_signaling.yaml`, `modules/chemokine_signaling.yaml`, `modules/phagocytic_engulfment.yaml`.

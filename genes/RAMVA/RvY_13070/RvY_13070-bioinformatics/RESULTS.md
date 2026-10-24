@@ -1,5 +1,14 @@
 # Bioinformatics Analysis: RvSOD15 and Cu/Zn SOD Paralogs
 
+## Audit Note
+
+This report is retained as a Cu/Zn-superoxide-dismutase paralog screen, not as
+direct evidence for `RvY_13070-ai-review.yaml`. The target RvSOD15 review rests
+on the RvY_13070/RvSOD15 experimental structure and activity data from
+PMID:37358501 plus GOA evidence; the cross-paralog PROSITE failures below are
+hypotheses for future Ramazzottius reviews and should not be promoted to GO
+annotation decisions without per-gene review of each accession.
+
 ## Question
 
 Sim & Inoue (2023, PMID:37358501) report that *R. varieornatus* has 16 CuZnSOD

@@ -1,0 +1,8 @@
+# grpE manual review notes
+
+- Deep research and FEBA fitness summaries were unavailable for this review; the synthesis below is based on the cached UniProtKB record and the cached publications cited by the seeded GOA rows.
+- GrpE's core biochemical activity is adenyl-nucleotide exchange on the DnaK Hsp70 ATPase cycle. Liberek et al. showed that GrpE alone increases release of DnaK-bound ATP or ADP, and Gamer et al. showed that GrpE stimulates nucleotide release from DnaK-DnaJ-sigma32 complexes. The IBA and InterPro2GO nucleotide-exchange rows are therefore accepted.
+- GrpE is also a direct DnaK co-chaperone. The Harrison et al. DnaK ATPase-domain structure contains an asymmetric DnaK:GrpE2 complex, and the Johnson et al. coimmunoprecipitation paper supports DnaK-GrpE binding in vivo and in vitro. Generic GO:0005515 rows whose WITH/FROM partner is DnaK are modified to GO:0051087 protein-folding chaperone binding; GroEL and MntH rows from broad interaction screens are removed rather than promoted to GrpE chaperone biology.
+- Homodimerization and DnaK-GrpE complex formation are true structural facts for GrpE, but they are implementation details of the nucleotide-exchange reaction, so they are kept as non-core rather than represented as core molecular functions.
+- The Hsp70-Hsp40-NEF unfoldase row is accepted for GrpE because GrpE is the E. coli nucleotide exchange factor that recycles DnaK in this ATP-dependent misfolded-protein remodeling system.
+- GrpE is cytosolic and heat inducible; its reversible thermal transition around the heat-shock range suggests that it can bias DnaK toward the high-affinity ADP state at elevated temperature.

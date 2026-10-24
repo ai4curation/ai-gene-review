@@ -5,8 +5,7 @@ Two identifications in the ABHD8 review cannot be verified from inside the repos
 both changed an action:
 
 * **SGD:S000004089 is ICT1_YEAST, a genuine acyltransferase** rather than an artefact of one
-  paralog. This is what downgraded two lipid-activity rows from REMOVE to
-  MARK_AS_OVER_ANNOTATED.
+  paralog. This is what keeps two lipid-activity rows unresolved rather than removed.
 * **UniProtKB:Q8WTS1 (ABHD5) has no annotated active site, while ABHD8 has a full triad.**
   This is what blocks the common "ABHD5 is a fold without a function, so ABHD8 is too"
   analogy. Note it does *not* make ABHD5 catalytically dead - UniProt records a demonstrated
@@ -276,9 +275,8 @@ def main() -> None:
              f"recommended name is \"{sgd['name']}\".")
     L.append("")
     L.append("The acyltransferase activity therefore sits in a named, reviewed member of this family")
-    L.append("in another organism, so the two acyltransferase-branch IBAs are propagating from a real")
-    L.append("annotated activity. They are marked over-annotated rather than removed because what is")
-    L.append("absent is a demonstration in ABHD8, not an activity in the family.")
+    L.append("in another organism, so the two acyltransferase-branch IBAs are not removed outright:")
+    L.append("what is absent is a demonstration in ABHD8, not an activity in the family.")
     L.append("")
 
     for acc in ("Q8WTS1", "Q96I13"):

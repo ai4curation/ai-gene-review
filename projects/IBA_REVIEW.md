@@ -5,6 +5,7 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
 genes:
+  - DNAH12
   - cao-1
   - NQO2
   - Epe1
@@ -79,6 +80,8 @@ genes:
   - yakA
   - statA
   - statC
+  - gei-17
+  - sta-1
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -86,6 +89,9 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/AUT3cgCPXmUUG57tko5G9C
       title: Project brief
+    - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
+      title: JAK-STAT briefing
+      description: AI generated
 ---
 
 # IBA Annotation Quality Project
@@ -961,6 +967,7 @@ as a secondary function.
 - **CAPG (human)** — `GO:0051014` (actin filament **severing**): CAPG caps but does **not** sever. The original characterization (cached PMID:1322908) states verbatim that CAPG *"reversibly blocks the barbed ends of actin filaments but does not sever preformed actin"*. The severing term over-extends from the gelsolin/villin family; CAPG retains capping only.
 - **human/CRYAA** — `GO:0042026` (protein **refolding**): αA-crystallin is an ATP-independent **holdase** that prevents aggregation but cannot refold clients. This one is corroborated **inside GOA itself**: there is an explicit curated `NOT|involved_in` (ISS) annotation to GO:0042026, which the IBA directly contradicts. UniProt describes only aggregation-prevention chaperone activity, no refolding.
 - **Worm small heat-shock proteins** — `GO:0042026` (protein refolding): a stronger version of the CRYAA case. hsp-16.2 is a holdase, not a foldase; and **hsp-12.3 / hsp-12.6 have *no* chaperone activity at all** — the title of PMID:9744800 is literally *"…Hsp12.2 and Hsp12.3 form tetramers and have no chaperone-like activity."* They are pseudo-sHSPs (tetramers/monomers rather than the large oligomers holdase function needs), so the family-level refolding IBA is fully refuted.
+- **sta-2 (worm, PTHR11801 STAT)** — `GO:0000978` (Pol II cis-regulatory region **sequence-specific DNA binding**) from the STAT root node **PTN000210448**. STA-2 keeps the STAT DNA-binding-domain *fold* but not its sequence-reading features: its UniProt entry has only the fold-level superfamilies (IPR008967, IPR012345) and lacks the STAT DNA-binding-domain signatures (Pfam PF02864, IPR013801, cd14801) that its DNA-binding paralog STA-1 carries; an OpenScientist analysis found none of the three base-contacting residues of DNA-bound STAT1 conserved, and Wang & Levy 2012 (PMID:24058748) saw no binding to a STAT motif. Marked over-annotated rather than removed, because STA-2 does regulate transcription; the DNA-binding transcription factor terms (`GO:0000981`, `GO:0003700`) are generalised to `GO:0140110` transcription regulator activity. The same family node is sound for STA-1, so this is a paralog-level sub-activity loss, not a node error. Unlike CAPG, absence of the activity is not demonstrated, only unsupported.
 - **Lesson**: capping≠severing and holdase≠foldase are sub-activity distinctions that family-level IBA flattens. The CRYAA and hsp-12.3 cases are especially clean because a curator negated the term (CRYAA) or a paper demonstrated zero activity (hsp-12.3).
 
 ### 9. Regulatory-Sign Inversion Within a Family
@@ -972,6 +979,8 @@ as a secondary function.
 - Reality: BCL2 is the prototypical **anti-apoptotic** guardian; it inhibits MOMP and cytochrome c release (PMID:9027314, PMID:9219694).
 - **Root cause (verified from GOA WITH/FROM)**: the IBA for GO:0043065 is inferred from a PANTHER node (PTN000135648) whose WITH/FROM list **mixes pro- and anti-apoptotic BCL2-family members** — pro-apoptotic BAX (Q07812) and BAK1 (Q16611) alongside anti-apoptotic members. The shared BH-domain fold unites activators and inhibitors of apoptosis under one family, so the "positive regulation" sign can leak onto BCL2.
 - **Caveat (why this is "non-core" rather than flatly "wrong")**: BCL2 *does* have documented context-dependent pro-apoptotic behavior (e.g. caspase-cleaved BCL2), and GOA additionally carries a separate **NAS** annotation (PMID:14634621, ComplexPortal) to the very same GO:0043065. So the honest framing is that the *IBA family-node inference is unreliable for sign* (verified mechanism), not that positive regulation is impossible for BCL2. The companion review more confidently re-points related terms to their negative-regulation children (e.g. `GO:0001836` release of cytochrome c → `GO:0090201` *negative* regulation of release of cytochrome c).
+
+**Example - sta-1 (worm, PTHR11801 STAT)**: the STAT node **PTN000927860** carries `GO:0006952` (defense response), seeded by vertebrate STATs and fly Stat92E, which *activate* immune genes. Worm STA-1 does the opposite: it binds promoters and represses antiviral genes, and *sta-1* mutants are about 100-fold less permissive to Orsay virus (PMID:28874466). The sta-1 review MODIFYs the IBA to `GO:0050687` (*negative* regulation of defense response to virus; propagation_review `REGULATORY_SIGN_INVERSION`). The same node also delivers the JAK-STAT lineage gap (section 14), so one node shows two distinct failure modes on one worm gene.
 
 ### 10. Complex / Compartment / Pathway Membership Over-Transfer
 
@@ -1061,8 +1070,11 @@ as a secondary function.
 - **che-3 (worm)** — `GO:0060294` (cilium movement involved in cell motility): che-3 is cytoplasmic **dynein-2** (retrograde IFT motor); *C. elegans* sensory cilia are **non-motile**. The motility term comes from axonemal-dynein orthologs in organisms with motile cilia.
 - **D7 salivary proteins (mosquito, ANOGA: D7r2/D7r4/D7r5/D7L1)** — `GO:0007608` (sensory perception of smell): UniProt calls D7r4 a *"salivary protein… modulates blood feeding,"* female-saliva-specific. The OBP/PBP-GOBP fold was repurposed for binding biogenic amines/eicosanoids in saliva — these proteins are not expressed in antennae and have no olfactory role.
 - **sta-2 (worm)** — `GO:0007259` (JAK-STAT signaling): transferred from fly/mammalian STATs, but *C. elegans* has **no JAK kinases**; STA-2 is activated via SNF-12/hemidesmosomes.
+- **sta-1 (worm, PTHR11801)** — `GO:0007259` (cell surface receptor signaling pathway via JAK-STAT) from STAT node **PTN000927860**: REMOVE, same evidence as sta-2 (no JAK in *C. elegans*, PMID:28874466). STA-1 is a JAK-independent transcriptional repressor in antiviral immunity, modelled in [c_elegans_jak_independent_stat_signaling](../modules/c_elegans_jak_independent_stat_signaling.yaml). With sta-2 and gei-17 this makes three worm genes receiving JAK-presupposing terms from two families; the class-level fix is a GO taxon constraint, tracked in [TAXON_PATHWAY_VARIANCE](TAXON_PATHWAY_VARIANCE.md).
+- **gei-17 (worm, PTHR10782)** — `GO:0046426` (negative regulation of receptor signaling pathway via JAK-STAT): the IBD sits on the eumetazoan PIAS node **PTN000845825**, seeded by human PIAS1 (STAT1 inhibition) and fly Su(var)2-10 — sound for both. GEI-17 inherits it through the ecdysozoan branch, but *C. elegans* has **no conserved JAK homolog** and its STAT STA-1 acts JAK-independently (PMID:28874466). Same nematode gap as sta-2 below it, but reached from the *regulator* side: the inherited term regulates a pathway the organism lacks. The fix is an IRD on the nematode branch (the [PTHR10782 FamilyReview](../interpro/panther/PTHR10782/PTHR10782-review.yaml) rates the node `NEEDS_PRUNING`), not removal from the node, since the node also carries the valid fly seed. SF94 holds both GEI-17 and the fly seed, so no subfamily-level scope can separate them; the family review records GEI-17 as a **member exception** (`member_exceptions` on the term assessment, anchored to the `NEEDS_PRUNING` node), which is what lets the gene review `REMOVE` the row without the family/gene cross-check reporting a disagreement. This is the general pattern for a loss on a branch that PANTHER's subfamilies do not split. The sibling IBD on the same node, `GO:0140416` transcription regulator inhibitor activity, is left UNDECIDED on GEI-17. The term covers inhibition by binding *or* post-translational modification, so ligase-dependent inhibition is within it. An OpenScientist analysis ruled out a binding route through the SAP domain (GEI-17 has none, and human PIAS1 does not need it; PMID:24036127). Binding through PIAS1's SIM-adjacent acidic module is not excluded, since GEI-17 keeps an equivalent module at the same position after the SP-RING (`genes/worm/gei-17/gei-17-bioinformatics/RESULTS.md`). GEI-17 also inhibits the piRNA USTC transcription complex in a SUMOylation-dependent way (PMID:40316696, abstract only), so the modification route is plausible but not shown. An earlier version of the gene review marked this over-annotated on a misreading of the term definition.
 - **fshr-1 (worm)** — `GO:0009755` (hormone-mediated signaling): *C. elegans* lacks gonadotropins (FSH/LH/TSH); FSHR-1 functions in innate immunity/stress.
 - **HEN1 (Arabidopsis)** — `GO:0034587` (piRNA processing): piRNAs are metazoan; plant HEN1 methylates miRNA/siRNA duplexes. Over-transfer from the metazoan HEN1/HENMT1 context.
+- **The JAK-STAT cluster (worm sta-1, sta-2, gei-17; Dictyostelium statA, statC) — one structural cause.** The [STAT family review](../interpro/panther/PTHR11801/PTHR11801-review.yaml) places the STAT JAK-STAT IBD on **PTN000927860, the Unikonts node**, though its seeds support only Bilateria (`TOO_DEEP`); the [JAK family review](../interpro/panther/PTHR45807/PTHR45807-review.yaml) shows JAKs are animal-only (PANTHER root at Eumetazoa, no nematode or amoebozoan leaf). The term sits where STATs arose, the pathway arose with JAKs, so every lineage that kept STATs without JAKs inherits it. Per-gene REMOVEs and PAINT IRDs treat the symptoms; the class-level fix is a GO taxon constraint on `GO:0007259` and `GO:0046425`, proposed with evidence in [TAXON_PATHWAY_VARIANCE](TAXON_PATHWAY_VARIANCE.md) (TPV-001 to TPV-003). A public briefing written for GO editors and PAINT curators summarises the whole case: [JAK-STAT Without JAK](https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM). The same review pair found the reverse error too: a PAINT IRD that wrongly says **TYK2 lost** JAK-STAT signaling (PTN002910252, rated `WRONG_NODE` against TYK2's own IDA evidence).
 - **Lesson**: check **taxon appropriateness** — does the process even occur in this lineage? GO taxon constraints catch some of these; the WITH/FROM naming a vertebrate/insect source is the tell. Watch especially for organelle-system swaps (plastid↔mitochondrion; cytoplasmic↔axonemal dynein).
 
 ### 15. Regulator / Effector and Direct / Downstream Conflation
@@ -1358,6 +1370,9 @@ and a representative seed) in the corresponding
 | che-3 | worm | Cross-lineage: cilium motility on non-motile sensory cilia (IFT dynein) | MEDIUM | COMPLETE |
 | D7r2/D7r4/D7r5/D7L1 | ANOGA | Cross-function: smell perception on repurposed salivary OBP-fold | MEDIUM | COMPLETE |
 | sta-2, fshr-1 | worm | Cross-kingdom: JAK-STAT / hormone signaling absent in nematodes | MEDIUM | COMPLETE |
+| sta-2 | worm | Sub-activity loss: sequence-specific DNA binding (PTN000210448) on a STAT that lacks the STAT DNA-binding-domain signature; MARK + generalise TF terms to transcription regulator | MEDIUM | DRAFT |
+| sta-1 | worm | Lineage gap: JAK-STAT from STAT node PTN000927860 (no JAK); same node gives a sign inversion on defense response (MODIFY to negative regulation) | MEDIUM | DRAFT |
+| gei-17 | worm | Lineage gap: neg. reg. of JAK-STAT inherited from PIAS node PTN000845825; no JAK in nematodes (IRD needed) | MEDIUM | DRAFT |
 | opa1, eat-3 | DANRE, worm | Mis-grouping: peroxisome fission on mito-fusion OPA1 | MEDIUM | COMPLETE |
 | hsp-12.3/hsp-12.6 | worm | Pseudo-sHSP: refolding, but "no chaperone-like activity" (PMID:9744800) | HIGH | COMPLETE |
 | YAR1, ACL4 | yeast | Family over-transfer (Rps3 biogenesis factor; Rpl4 chaperone) | LOW | COMPLETE |
@@ -1373,6 +1388,7 @@ and a representative seed) in the corresponding
 | pten | DICDI | Compartment mismatch: nucleus on a membrane/cortex PtdIns(3,4,5)P3 phosphatase | LOW | COMPLETE |
 | spiA | DICDI | Compartment mismatch: SCAMP TGN/recycling-endosome on a spore-coat protein | LOW | COMPLETE |
 | acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
+| DNAH12 / Dnah12 | human, mouse | **Ortholog split across PANTHER families** (human PTHR46532, mouse PTHR10676 in PANTHER 19): human gets no IBA, while mouse inherits inner dynein arm assembly (PTN008951089). Mouse also over-inherits microtubule motor activity, although DNAH12 lacks a microtubule-binding domain | MEDIUM | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 
@@ -1457,6 +1473,66 @@ table for all 423 genes); the raw keep-only TSVs come from
 *under*-annotated, not fully annotated. When IBA supplies only a broad
 molecular-function term, treat it as a prompt to look for the specific
 experimentally defined activity rather than as a finished call.
+
+### C. Orthologs split across PANTHER families (classification-driven absence)
+
+A third mechanism has nothing to do with how conservative PAINT is. The leaf
+is simply **not in the tree that carries the annotations**, because PANTHER
+classifies it into a different family from its own one-to-one ortholog. The
+biology is annotated in the ancestor; the human gene is never a descendant of
+that ancestor.
+
+**DNAH12 (dynein axonemal heavy chain 12) is the worked example.** It is the
+gene behind spermatogenic failure 100 (asthenoteratozoospermia with loss of
+the sperm inner dynein arms).
+
+| | Human DNAH12 (Q6ZR08) | Mouse Dnah12 (Q3V0Q1, MGI:107720) |
+|---|---|---|
+| PANTHER 19 family (PANTHER API) | **PTHR46532**, family "male fertility factor kl5" (34 leaves; the only human or mouse member) | **PTHR10676**, family "dynein heavy chain family protein" |
+| PANTHER 19 subfamily | PTHR46532:SF11, "dynein axonemal heavy chain 12" | PTHR10676:SF255, "dynein axonemal heavy chain 12" |
+| InterPro/UniProt PANTHER xref | PTHR22878:SF70 | PTHR22878:SF70 (rat Dnah12 also SF70; `interpro/panther/PTHR22878/PTHR22878-entries.csv`) |
+| IBA annotations | **none** | 8, from PTN000743491, PTN008951089 and PTN008503981 |
+
+Both subfamilies are correctly named for DNAH12, so PANTHER identifies the
+protein correctly. The anomaly is only that the two orthologous subfamilies
+are placed in different families.
+
+The mouse IBAs include exactly the functions the human experimental
+literature establishes: inner dynein arm (GO:0036156), **inner dynein arm
+assembly (GO:0036159)**, sperm flagellum assembly (GO:0120316), and dynein
+light intermediate chain binding (GO:0051959). Human DNAH12 has none of them.
+The human gene review independently proposed GO:0036159 as a NEW annotation
+from patient and knockout data (PMID:40146200), which is the same call PAINT
+already made at PTN008951089. That makes this a propagation gap, not an
+ontology or evidence gap. That IBD is seeded by DNAH3, DNAH7 and
+MGI:2683040, which are structural IDA heavy chains, not assembly factors
+(`interpro/panther/PTHR10676/PTHR10676-paint.tsv`).
+
+The same case also shows a **true over-propagation** for the mouse leaf.
+PTN000743491 carries minus-end-directed microtubule motor activity
+(GO:0008569), which is right for the family. But DNAH12 is the shortest
+DNAH and **lacks the microtubule-binding domain** (PMID:40146200), so it is
+probably a recruitment scaffold for DNAH1 and DNALI1 rather than a motor.
+That is a lineage-specific loss after the annotated node (taxonomy: partial
+sub-activity loss, pattern 8). So one gene pair shows both failure modes:
+the human leaf gets nothing, and the mouse leaf gets one term too many.
+
+**How to spot this class:**
+
+- The human gene appears in `projects/paint/human-no-IBA.tsv` but its
+  one-to-one ortholog in mouse or rat has IBAs. Comparing IBA counts across
+  an ortholog pair is a cheap screen.
+- The PANTHER API (`geneinfo`) returns different `family_id` values for the
+  two orthologs.
+- The InterPro-derived PANTHER cross-reference in UniProt disagrees with the
+  PANTHER API. That disagreement is itself a signal; see the PANTHER section
+  of `CLAUDE.md` on the two classification sources.
+
+**Remedy:** report the split to PANTHER rather than annotating around it. In
+the meantime, review the human gene's missing terms from the ortholog's IBA
+set, citing the PTN node as evidence of the ancestral assertion. Do not
+assume that every term transfers: in this case the motor-activity term
+should not.
 
 ## Recommendations for IBA Curation
 

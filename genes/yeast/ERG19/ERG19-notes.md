@@ -175,3 +175,23 @@ and the vacuole over-annotation flag.
   J. Fungi review updates the Garay preprint mentioned in the falcon report;
   both are pathway/engineering context and neither changes the direct GO
   annotation set for yeast ERG19.
+
+## 2026-10-24 merge with main (PR Shepherd)
+
+- Merged `origin/main` into the review branch to clear a `CONFLICTING` state.
+  `taxon.label` now reads `Saccharomyces cerevisiae S288C`, the normalized
+  `NCBITaxon:559292` label introduced by the taxon dynamic-enum binding; the
+  conflicting `description` text was identical on both sides apart from line
+  reflowing.
+- Re-quoted the falcon support on the `GO:0005773` vacuole row, whose
+  `supporting_text` was a paraphrase grandfathered in
+  `conf/local_quote_baseline.yaml`. It now quotes the report's localization
+  row verbatim: [file:yeast/ERG19/ERG19-deep-research-falcon.md "One
+  review/preprint describes MDD/Mvd1 as a cytosolic homodimer and a 2020
+  cell-factory review states the MVA-pathway proteins are mostly cytosolic.
+  ... direct ERG19-specific localization experiment in *S. cerevisiae* was not
+  found in retrieved texts."] That states the argument for
+  `MARK_AS_OVER_ANNOTATED` more directly than the paraphrase did: the vacuolar
+  placement comes from a review pathway figure, not from an ERG19 localization
+  assay. The now-passing baseline entry was dropped. No term, action, evidence
+  code or reason changed.

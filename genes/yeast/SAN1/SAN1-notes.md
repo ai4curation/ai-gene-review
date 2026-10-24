@@ -43,3 +43,61 @@ The newer literature extends the set of San1 substrate contexts but does not
 change the core molecular picture: San1's central function is still recognition
 and RING E3-mediated ubiquitination of misfolded or aberrant proteins for
 proteasomal degradation.
+
+## 2026-10-01 current GOA refresh
+
+Forced a current GOA/UniProt refresh, fetched all 12 SAN1 GOA PMIDs, and fetched
+the current PTHR15710 PAINT export. The refresh left 20 live GOA rows and the
+review now retains five older source assertions as `retired: true` because they
+no longer exactly match live GOA:
+
+- `GO:0006511` / IBA / `GO_REF:0000033`: the current PTHR15710 export no longer
+  carries this catabolic-process assertion on `PANTHER:PTN001864905`, although
+  San1 still has direct IDA/IMP evidence for ubiquitin-dependent protein
+  catabolism.
+- `GO:0008270` and `GO:0046872` / IEA / `GO_REF:0000043`: the old keyword rows
+  disappeared from live GOA; the curated SGD RCA zinc-binding row from
+  PMID:30358795 remains live.
+- Two `GO:0031249` / IPI / PMID:21211726 rows: DisProt has replaced these
+  denatured-protein-binding rows with a live `GO:0051787` misfolded-protein
+  binding row for Cdc68/Spt16.
+
+Rechecked all current IBA rows against `interpro/panther/PTHR15710/PTHR15710-paint.tsv`
+and kept `propagation_review.source_entities` to the PAINT PTN nodes rather than
+the extant `WITH/FROM` members:
+
+- `PANTHER:PTN001864905` still supports inherited `GO:0061630` ubiquitin protein
+  ligase activity.
+- `PANTHER:PTN004565028` still supports a defensible non-core cytoplasmic
+  localization row.
+- `PANTHER:PTN008581526` supports inherited `GO:0051788` response to misfolded
+  protein, seeded by SGD SAN1. The same node also propagates Candida-seeded
+  `GO:0036503` ERAD quality control pathway to budding-yeast SAN1; changed that
+  row to `MODIFY` because San1 is a nuclear/cytosolic misfolded-protein PQC
+  ligase, not an ERAD ligase, and `GO:0051788` is the correct inherited process.
+
+The refresh also materialized the previously proposed `GO:0016567` protein
+ubiquitination annotation from PMID:15078868, which is now `ACCEPT`, and added
+the direct SGD `GO:0061630` row from the same paper. The new DisProt
+`GO:0045732` positive regulation of protein catabolic process row from
+PMID:21211726 was changed to `MODIFY` toward protein ubiquitination / response
+to misfolded protein, because San1 executes substrate ubiquitination rather than
+indirectly regulating protein catabolism.
+
+Repeated the PubMed/web search for newer yeast SAN1/San1 papers. PMID:42300961
+is the newest cached direct hit; it uses `ubr1`/`san1` deletion to stabilize
+DHFR indel variants, but does not change the core San1 curation.
+
+## PR #3789 follow-up
+
+- Dropped `GO:0006511` from the first core function because it is an ancestor of
+  `GO:0071630` already listed on the same activity.
+- Rewrote the `GO:0005737` cytoplasm IBA to keep the row conservatively on the
+  strength of SGD/PAINT localization rather than with quotes that only locate
+  cytoplasmic substrates.
+- Recast the `GO:0036503` ERAD IBA as a compartment-specific PAINT mismatch
+  rather than a parent/child granularity problem.
+- Clarified that the `GO:0036503` and `GO:0045732` MODIFY replacements are
+  already present as live SAN1 annotations, cross-cited PMID:15078868 on the
+  broad `GO:0004842` transferase row, and reframed the proposed sensor term
+  against GO's usual has-input modeling pattern.
