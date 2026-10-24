@@ -202,8 +202,8 @@ by discarding true annotations.
 
 | Gene | Benchmark label | Evidence | Assessment |
 |---|---|---|---|
-| ITPR1 | no (endomembrane_resident) | Dellis et al. 2006, PMID:16840702 ([doi](https://doi.org/10.1126/science.1125203)): IP3 opened "very few (1.9 +/- 0.2 per cell)" PM channels in DT40 chicken and mouse B cells. These carry about half the BCR-evoked Ca2+ entry, and an engineered site near the pore was modulated by *extracellular* alpha-bungarotoxin. Follow-ups: PMID:17999955, PMID:17052225. The benchmark's LLM rationale says no lineage reports a PM pool, which these papers contradict. | Accessible and functional by the benchmark's own definition, so it is better labelled `contextual` (cell-type restricted). It is not practically targetable at about 2 copies per cell, but that is question 3. The GO PM call is not an error. |
-| ITPR3 | no | It carries the same PANTHER-node PM IBA as ITPR1. Not checked further. | Unverified; may be the same case as ITPR1. |
+| ITPR1 | no (endomembrane_resident) | Dellis et al. 2006, PMID:16840702 ([doi](https://doi.org/10.1126/science.1125203)): IP3 opened "very few (1.9 +/- 0.2 per cell)" PM channels in DT40 chicken and mouse B cells, carrying about half the BCR-evoked Ca2+ entry, with a pore-adjacent site reachable from outside. But the subtype matters: El-Daher et al. 2000 (PMID:10828023) show that in human platelets the **surface-exposed IP3R is type III (ITPR3), not type I**. The cached abstracts do not say which subtype carries the B-cell PM pool. | A functional PM IP3R pool exists, but it is not established that ITPR1 itself (vs its ITPR3 paralog) is the surface subtype. Better than `no`, but the surface evidence is partly by paralogy. GO PM call is not an error. |
+| ITPR3 | no | Same PANTHER-node PM IBA as ITPR1, **plus subtype-specific experimental support**: platelet surface biotinylation labels only type III (PMID:10828023), and TIRF localises type III to ER-PM junctions (PMID:21062895). | The clearest surface case of the three IP3Rs. Better labelled `contextual` (platelet / junctional surface pool). Reviewed row now carries a `part_of platelet` (CL:0000233) extension. |
 | F2, TF, VEGFA | no (secreted_only) | GO defines cell surface as "The external part of the cell wall and/or plasma membrane", which includes bound extrinsic proteins (thrombin on thrombomodulin/PARs, transferrin on TFRC, VEGFA on heparan sulfate). | A definitional disagreement, not an error on either side. The benchmark excludes surface-bound secreted ligands; GO includes them. |
 | SYNE2 | no (UniProt calls it surface) | UniProt lists Cell membrane for C-terminal-TM isoforms at focal adhesions, curator inference only (ECO:0000305). | Weak; leave as is. |
 
@@ -211,9 +211,37 @@ Effect on the headline numbers: relabelling ITPR1 as `contextual` moves R2 (no
 IEA) from 69.4% to 70.1%. On yes vs no, with ITPR1 dropped from the `no` set,
 it moves from 76.7% to 77.4%. The point is interpretive, not numerical.
 
-The ITPR1 review's PM row (IBA, KEEP_AS_NON_CORE) currently cites only UniProt's
-ER location. Adding PMID:16840702 would ground it; that evidence is from chicken
-and mouse cells, so for the human gene it supports the row by similarity.
+Both reviews were updated (2026-10-24). The ITPR1 and ITPR3 PM rows now cite the
+surface-IP3R literature (PMID:16840702, PMID:10828023, and for ITPR3
+PMID:21062895) with `findings`/`reference_review`, replacing the placeholder "IBA
+pool" reasons. The ITPR3 platelet row carries a structured `part_of CL:0000233
+platelet` annotation extension to record the cell-type-restricted surface context
+(see "Annotation extensions" below). ITPR1 keeps the subtype caveat in prose,
+because the evidence does not establish that ITPR1 (vs ITPR3) is the surface
+subtype. All rows stay `KEEP_AS_NON_CORE`.
+
+### Annotation extensions for contextual localization
+
+Contextual localization is recorded structurally with an **annotation extension**
+on the existing-annotation row, not in prose, wherever the context is grounded.
+The slot is `extensions` (a `predicate` from the Relation Ontology plus a `term`).
+The idioms in the corpus:
+
+- `BFO:0000050` (part_of) + a cell type (`CL:…`) or tissue (`UBERON:…`) — e.g.
+  LRP4 `cell surface` part_of `neuron`, and now ITPR3 `plasma membrane` part_of
+  `platelet`. This is the one for "surface only in cell type X".
+- `BFO:0000066` (occurs_in) + a CC — mainly for an MF/activity row localised to a
+  compartment.
+- `RO:0002233` (has input) + a `UniProtKB:…` partner — substrate/partner context,
+  the most common extension overall.
+
+Across the human corpus ~48 reviews use extensions (predicates seen: has input 134,
+occurs_in 73, part_of 53, plus a few regulates/has-output). So extensions are the
+sanctioned mechanism and should be used for contextual localization, but most
+contextual-location calls today are still captured only as `KEEP_AS_NON_CORE` plus
+a prose `reason`. Converting those to `part_of CL/UBERON` extensions where the
+cell type or tissue is known is a worthwhile structural cleanup (candidate for a
+follow-up pass; not done corpus-wide here).
 
 ## Reproducing
 
