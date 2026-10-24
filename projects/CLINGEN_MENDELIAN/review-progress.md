@@ -5741,3 +5741,63 @@ uncredited by this checkpoint. No independent documentation build or live-page
 inspection for these gene merges is claimed.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker561-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T075154Z-codex-6ed544.yaml)
+
+## Completion checkpoint 563 — 2026-10-24 09:38:44 UTC
+
+**563 complete; 2,313 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only EP300 and EPCAM to [merged checkpoint 561, tracker #5383](https://github.com/ai4curation/ai-gene-review/pull/5383).
+The coordinating AI agent accepted both exact-head reviews and independent actual-merge
+audits; this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit. EP300 was accepted as gene 562 and EPCAM
+as gene 563; both are recorded together in this publication update.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [EP300 #5384](https://github.com/ai4curation/ai-gene-review/pull/5384) | [`7b5643c079a0`](https://github.com/ai4curation/ai-gene-review/commit/7b5643c079a0e391193da1e2a3d1dcd5971f604a) | [`cb6bb5ec57f8`](https://github.com/ai4curation/ai-gene-review/commit/cb6bb5ec57f815572bee8e519c8101ad91b0070e) | `7293c5a1c39e` | 90/90 |
+| [EPCAM #5385](https://github.com/ai4curation/ai-gene-review/pull/5385) | [`fe9ed9ed05ca`](https://github.com/ai4curation/ai-gene-review/commit/fe9ed9ed05ca1dfbedaaf2cd3ee1eb3c8aeff6be) | [`5cc22e30227e`](https://github.com/ai4curation/ai-gene-review/commit/5cc22e30227e8948cc5f800b9e91213750e533ea) | `cb6bb5ec57f8` | 24/24 |
+
+All approved paths match in mode, object type and blob ID at their approved heads,
+actual merges and pinned main. Each complete five-file gene directory also matches.
+Imported annotation contexts, normal source caches and displayed protein products
+are preserved. No new publication quotations were added.
+
+EP300 retains 471 reviewed annotations: 218 ACCEPT, 115 MODIFY,
+115 KEEP_AS_NON_CORE and 23 UNDECIDED. Its two core functions are distinct from
+its one displayed canonical protein product, Q09472 (2,414 residues). EPCAM retains
+40 reviewed annotations: 15 ACCEPT, 16 KEEP_AS_NON_CORE, four MODIFY and five
+UNDECIDED. It has one core function and one displayed canonical product, P16422
+(314 residues). Neither committed review or UniProt record lists alternative
+products. EPCAM's released EpEX/EpICD fragments are not counted as splice products.
+Accepted completion preserves both DRAFT statuses and unresolved questions.
+
+[EP300 merge-group Build and test run 40079507159](https://github.com/ai4curation/ai-gene-review/actions/runs/40079507159)
+and [EPCAM run 40081006893](https://github.com/ai4curation/ai-gene-review/actions/runs/40081006893)
+each completed all three jobs successfully before their respective merges at
+2026-10-24T09:09:21Z and 2026-10-24T09:31:30Z. Each suite executed 4,239 Python
+tests (one skipped, 84 deselected, nine warnings), 275 doctests (37 skipped, eight
+warnings), 12 examples, mypy on 285 files, Ruff, 438 overlapping Python automation
+tests and 19 JavaScript tests. Aggregate dependency gates did not execute additional
+suites. Counts overlap and are not summed as unique tests.
+
+Changed-gene validation actually ran in each run. EP300 passed with 48 advisories:
+42 generic-binding policy warnings and six source-specific action-consistency
+warnings. EPCAM passed with four generic-binding policy advisories. The separate
+all-gene batches were schema-only. Both runs also checked 703 modules and 718
+families; EP300 checked 15,640 history records and EPCAM checked 15,643, each followed
+by 42 history tests. Ignored post-pytest oaklib/SQLAlchemy destructor diagnostics
+did not fail the jobs. Prediction-review, BioReason/GO-GPT, prediction-upload,
+curation-history-coverage, sequence-save and full-run upstream PAINT checks were
+skipped; the captured job steps distinguish these from executed checks. No
+independent actual-main scientific validation or documentation build is claimed.
+
+At fixed main `5cc22e30227e8948cc5f800b9e91213750e533ea`, there are 8,874 reviews,
+including 3,202 human reviews. Of 2,876 catalogue genes, 1,283 have review
+files and 1,593 lack them; 720 available reviews remain uncredited.
+All 235 queue objects, 113 earlier completion updates and earlier progress bytes
+are preserved. This is update 114; only EP300 and EPCAM checkboxes change, and all
+2,876 catalogue identities and association texts remain exact.
+
+This checkpoint updates three project sources, their queue mirror and two rendered
+pages. The append-only curation history is linked below.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker563-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T094406Z-codex-ddcd2b.yaml)
