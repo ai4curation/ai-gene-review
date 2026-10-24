@@ -25,68 +25,77 @@ Removed limitation/tool-access statements from positive support where applicable
 Read the focused report on the PTHR24348 versus PTHR44167 placement issue. The report supports the same conclusion as the earlier topology snapshot that A0BFB4 is genuinely Atg1/ULK-related rather than misplaced into PTHR24348 by a donor-count artifact. Its new target-relevant argument is narrower: A0BFB4 retains the compact kinase domain but lacks the canonical C-terminal Atg1 interaction module, and ciliates lack the Atg13/Atg17/Atg101 initiation complex. Retained the kinase MF rows and broad PAINT localizations, marked the four autophagy BP/CC rows as over-annotated, and removed autophagosome assembly / phagophore assembly site from the core function pending Paramecium-specific localization or knockdown evidence.
 
 
-## Track C finish (2026-10-20)
+## Track C close-out, superseded by the 2026-10-21 re-review (2026-10-20, revised 2026-10-24)
 
-Closed the draft out as part of the PROTISTS Track C (ciliates) batch. Automated deep
-research is still unavailable in this environment (perplexity is not a registered
-provider, falcon fails authentication, the OpenAI key is rejected), so nothing new was
-generated; the existing `A0BFB4-deep-research-falcon.md` was re-read instead.
+This entry is kept short because almost all of what it described has been overtaken. As part of
+the PROTISTS Track C batch the draft was closed out: automated deep research was unavailable
+(perplexity unregistered, falcon auth failure, OpenAI key rejected), so the existing falcon report
+was re-read rather than regenerated, and it was cited from the `GO:0004674` IBA row and from
+`core_functions` to clear the one content validation warning standing between the file and
+`status: COMPLETE`. No annotation action was changed at that point.
 
-Two changes only, both to clear the one content warning that stood between this file and
-`status: COMPLETE` — that no annotation cited the available deep-research file, even
-though the 2026-09-20 round records having read it in full:
+Review of PR #5300 then asked for the four broad catalytic rows to move from `ACCEPT` to
+`TOO_GENERAL`, on the ground that each conceded the entailment in its own reason while arguing
+`ACCEPT` from the term not being false, and that TERT in the same batch used `TOO_GENERAL` for
+the identical pattern. That change was made and has now been dropped: the 2026-10-21 re-review
+below, merged to main first, resolved the same four rows as `MODIFY` to the specific descendant,
+which is the `correct-but-general` rule and is equally sanctioned. Main's version also carries
+motif-level evidence from a new `A0BFB4-bioinformatics/` analysis that the Track C branch did not
+have, so it was taken wholesale rather than re-litigated.
 
-- `GO:0004674` (IBA) now cites the Falcon report for the point that actually bears on the
-  row, that the functional call rests on domain architecture rather than any A0BFB4 assay
-  [file:PARTE/A0BFB4/A0BFB4-deep-research-falcon.md "functional interpretation therefore
-  depends mainly on domain architecture and kinome context rather than direct experiment"].
-- `core_functions` now carries the report's substrate statement
-  [file:PARTE/A0BFB4/A0BFB4-deep-research-falcon.md "The specific substrates of A0BFB4 are
-  unknown."], which is what keeps the core function stated at kinase level with no substrate.
+What survives from the Track C branch is only the `DRAFT` to `COMPLETE` flip, which main's version
+earns on its own: it validates with no content warnings, and it cites the falcon report four
+times without needing the citations added here.
 
-No annotation action was changed. In particular:
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
-- The four autophagy rows keep the dispositions the earlier rounds reached: three
-  `MARK_AS_OVER_ANNOTATED` (`GO:0000045`, `GO:0000407`, `GO:0005776`) and `GO:0010506`
-  left `UNDECIDED`. The asymmetry is deliberate and is argued in that row: the three
-  specific terms name canonical Atg1-complex machinery the lineage lacks, while
-  regulation of autophagy is broad enough that a noncanonical ciliate role stays open.
-  Closing it needs Paramecium perturbation data, not another pass over the same evidence.
-- The four broad catalytic/nucleotide rows (`GO:0004672`, `GO:0016301`, `GO:0016740`,
-  `GO:0000166`) were left `ACCEPT` at first, because the 2026-09-20 and 2026-09-22 rounds set
-  them that way on purpose. That is now changed to `TOO_GENERAL` — see the next entry.
+ProtNLM2 output was not opened or used. Evidence used: UniProt record, GOA rows, PTHR24348 PAINT
+table, PTHR44167 family review, PMID:28123910 (full text), PMID:24280724, the falcon report,
+the earlier placement-evidence file and OpenScientist report, and a new kinase-domain analysis.
 
+Identity: A0BFB4 is the only UniProt product of GSPATT00028266001 (381 aa, TrEMBL, PE 3). It is
+not a fragment or isoform as far as the record shows: kinase domain 96-348, with an N-terminal
+~95-residue segment and a 33-residue C-terminal tail. A full-length Atg1/ULK protein is ~900-1050
+aa with a central S/P-rich region and a C-terminal EAT/MIT domain. A0BFB4 lacks both. Per
+PMID:28123910 this is true of every ciliate Atg1-like kinase, so it reflects the gene structure of
+this lineage, not a truncated gene model.
 
-## Broad catalytic rows moved to TOO_GENERAL (2026-10-22, PR #5300 review)
+New analysis (A0BFB4-bioinformatics/, RESULTS.md):
+- Catalytic motifs intact: GEGTFG(103), ACK(123; K125), HRDIKPDN(213), DFG(236), APE(260).
+- Kinase-domain MAFFT + BLOSUM62 NJ against 17 characterised kinases. Identity to everything is
+  24.8-32.0%, with no discriminating best hit (unc-51 32.0, ULK2 30.7, CAMK2A 30.1, SLK 29.8; yeast
+  ATG1 24.8). A0BFB4 sits on a long branch near the ULK+STE20 clade. It formed an exclusive clade
+  with ATG1/ULK in only 1/200 bootstraps.
+- This disagrees with the OpenScientist claim of ~35% to ULK1/2 as clean evidence of Atg1 ancestry.
+  The OpenScientist report also wrongly calls PTHR44167 a function-less catch-all. Per
+  interpro/panther/PTHR44167 it is the CHK2/Rad53 and CDC7/DDK family.
 
-Review of PR #5300 pointed out that each of the four rows already conceded the entailment in
-its own `reason` — "the specific kinase activity entails the broader
-nucleotide-binding/phosphotransfer classes" — and then argued for `ACCEPT` on the ground that
-the terms are not false. That is not an argument against `TOO_GENERAL`, whose definition says
-in terms that it judges the term rather than the evidence and never means the claim is false.
-The same PR applies the opposite convention to TETTS TERT, which marks `GO:0034061` (five
-rows, four of them EXP), `GO:0003964`, `GO:0003677` and `GO:0000723` `TOO_GENERAL` on exactly
-this reasoning. One batch should not ship two conventions, least of all while flipping this
-file to `COMPLETE`.
+Placement: the PANTHER reference tree grafts A0BFB4 (leaf PTN002805316) into PTHR24348:SF22,
+which is the fungal ATG1 subfamily by current HMM membership, below the Atg1/ULK node
+PTN000681272. The current HMM instead assigns PTHR44167:SF18. The IBA rows come from the tree.
+With weak sequence support for the graft and the target-specific loss of the Atg1 C-terminal
+module and partners, I do not transfer Atg1-node-specific BP/CC terms.
 
-Ancestry verified against QuickGO (`is_a`/`part_of` closure) rather than assumed, before
-changing anything:
+Action changes vs previous version:
+- membrane (IBA, PTN000681272): ACCEPT -> MARK_AS_OVER_ANNOTATED (Atg1-node localization that
+  depends on the missing complex-recruitment module).
+- regulation of autophagy: UNDECIDED -> MARK_AS_OVER_ANNOTATED (same source node and argument as
+  the sister rows; "open question" is not evidence).
+- autophagosome assembly, phagophore assembly site, autophagosome: MARK_AS_OVER_ANNOTATED kept,
+  with reasons rewritten to cite PMID:28123910 full text and the new analysis.
+- cytosol (from PTN000681272): ACCEPT -> KEEP_AS_NON_CORE. cytoplasm (from the family node
+  PTN002805221): ACCEPT.
+- protein Ser/Thr kinase activity (IBA, IEA) and ATP binding: ACCEPT.
+- nucleotide binding -> MODIFY to ATP binding. Protein kinase activity, kinase activity and
+  transferase activity -> MODIFY to GO:0004674 (correct-but-general rule).
+- Description rewritten to be project-independent and to state the classification conflict.
 
-| row | descendant accepted in this file | ancestor? |
-|---|---|---|
-| `GO:0000166` nucleotide binding | `GO:0005524` ATP binding | yes |
-| `GO:0004672` protein kinase activity | `GO:0004674` | yes |
-| `GO:0016301` kinase activity | `GO:0004674` | yes |
-| `GO:0016740` transferase activity | `GO:0004674` | yes |
+Family review disagreement: interpro/panther/PTHR44167/PTHR44167-review.md ("Focused A0BFB4 update
+— 2026-09-20") still says the gene review accepts the four autophagy terms. That is out of date (not
+edited here; outside this gene folder).
 
-This does not reverse the earlier rounds' decision. That decision was against
-`KEEP_AS_NON_CORE`, i.e. against calling these rows peripheral; `TOO_GENERAL` says something
-different and compatible — the rows are central and true, and say nothing the specific term
-does not already say.
-
-Also in this round: the Falcon citation on the `GO:0004674` IBA row was an absence statement
-("depends mainly on domain architecture ... rather than direct experiment") sitting in
-`supported_by` for a row whose reason reads "Strongly supported". The absence point moved into
-`reason`, where it belongs, and `supported_by` now carries the report's positive Ser/Thr call
-[file:PARTE/A0BFB4/A0BFB4-deep-research-falcon.md "supporting inference that the protein most
-likely phosphorylates Ser/Thr residues rather than Tyr residues"].
+Relative for next review: S. cerevisiae ATG1 (P53104) is the experimentally best-characterised
+member of the PAINT subfamily (PTHR24348:SF22) into which A0BFB4 is grafted. No yeast ATG1 review
+exists in the repo. Human ULK1 has a review stub (status INITIALIZED). Dictyostelium atg1 and worm
+unc-51 have complete reviews. Because orthology is not established, the relation is family_member,
+not ortholog.

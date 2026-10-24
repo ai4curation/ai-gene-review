@@ -42,3 +42,11 @@
   `Constitutional_Megaloblastic_Anemia_With_Severe_Neurologic_Disease`, which marks
   GO:0004146 dihydrofolate reductase activity and GO:0046654 tetrahydrofolate
   biosynthetic process DECREASED.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- GO:0005739 rows: HTP, IBA, IEA and ISS all stay ACCEPT. Before this batch the three synthesis rows shared one reason; each now has its own reason recording its check.
+- IBA PTN000556119 (PTHR48069, Eukaryota) seeds: mouse Dhfr MGI:94890, rat Dhfr RGD:2500 and human DHFR2 Q86XF0. DHFR2 is a paralog, but the rodent seeds are canonical orthologues with IDA [PMID:25980602 "We demonstrate that dihydrofolate reductase activity is also a feature of the mitochondria in both rat and mouse but this is not due to a second enzyme."]. The human study assigns the mitochondrial activity to DHFR [PMID:38224738 "This data provides compelling evidence that DHFR (and not DHFR2) is the reductase activity in human mitochondria."]. So this is not a paralog over-transfer. The propagation_review is NO_FAILURE_NON_CORE.
+- ISS from mouse P00375, which has IDA from PMID:25980602. The IEA (SL-0173) line is itself ECO:0000250 from P00375.
+- Stayed at root. DHFR has no presequence and no TM segment. The only sub-mitochondrial result belongs to DHFRL1 [PMID:21876188 "Human DHFRL1, SHMT2, and TYMS were localized to mitochondrial matrix and inner membrane"], and the 2024 study revised that attribution, so the result cannot be transferred. That leaves fewer than two agreeing lines.
+- New cached papers: PMID:25980602, PMID:21876188.

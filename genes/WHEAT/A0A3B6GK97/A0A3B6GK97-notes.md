@@ -127,3 +127,63 @@ hydrolase. All evidence is homology/profile-based (IEA). No experimental data, n
 gene-specific publications. Reviews should stay conservative: the two IEA annotations are
 biologically reasonable; the MF (hydrolase activity) is under-specific and is the main
 candidate for refinement.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not opened or used. New analysis: `A0A3B6GK97-bioinformatics/RESULTS-rereview.md`
+(scripts `gene_model_rereview.py`, `sf103_motif_scan_rereview.py`; outputs in `results_rereview/`).
+Earlier files in the bioinformatics folder were left unchanged.
+
+### Identity / gene model
+- Benchmark accession A0A3B6GK97 = TraesCS3D02G033600.1 (IWGSC v1.1; 3D:12385036-12386454, +, 3 exons),
+  302 aa, TrEMBL, PE 3. It has no reviewed canonical entry; the folder is keyed to this accession.
+- **Fragment / incomplete gene model.** The model is about 130-140 aa shorter than its
+  chromosome-3 SF103 relatives (433-444 aa). In frame 0 of the 8 kb upstream genomic sequence, about
+  1.5 kb before the annotated start, a segment aligns to residues 1-150 of the 3B homoeolog
+  A0A3B6FIU7 (TraesCS3B02G036500, 444 aa, 93.3% identical to the query) at 87% identity,
+  starting at FIU7's Met. The stretch between contains stop codons and is absent from FIU7,
+  so it is probably an intron. The true 3D product is therefore likely about 440 aa.
+- **The reconstruction does not restore the active site.** In the reconstructed 3D N-terminus
+  and in FIU7, the oxyanion reads SIDGGD / SIDGGS (intact paralogs: SIDGGG), and the nucleophile
+  elbow region (`...DVIAGTSTGGLV...` in 3A A0A3B6E9X0) is replaced by an unrelated segment. No
+  homologous G-x-S-x-G occurs in the 8 kb upstream region. The catalytic Asp (NLIDSG) is retained.
+  The 3B/3D homoeolog pair is therefore predicted to encode a **non-catalytic patatin-like
+  protein**. The other chromosome-3 SF103 copies (3A 046500, 3B 036800, 3D 033200/033500) have an
+  intact GTSTG and DGGG.
+- This changes the earlier conclusion that the model was "most likely an incomplete gene model
+  rather than a pseudo-enzyme": it is both incomplete and, at the locus level, serine-less.
+
+### Phylogeny (PANTHER 19 tree API, PTHR32176)
+- SF103 is a grass subfamily (BEP-clade speciation node PTN002083020; rice Os08g0476900,
+  Os08g0477100, Os08g0376500, Os08g0376550). Its sister is rice PLP2 (Q6ZJD3, SF26; reviewed,
+  but its function is "By similarity" only), which joins it at PTN008645074.
+- The Arabidopsis pPLAII proteins (PLP1/4/5 in SF89, PLP2 in SF109) and rice PLP1 (SF5) join
+  only at duplication node PTN009133995. They are out-paralogs, not orthologs. "pPLAII" in RESULTS.md
+  is valid only for the broad clade.
+- The IBA lipase terms in UniProt (GO:0004620, GO:0047372) come from eukaryote node PTN001282408
+  (seeds AT4G37050/60/70). The more specific Brassicaceae nodes (PTN004927353 GO:0010311;
+  PTN004927362 GO:0009626; PTN008645086 GO:0009737) were not propagated to wheat. The family
+  placement is fine, but this descendant has lost the nucleophile.
+
+### Annotation decisions (changed from previous review)
+- GO:0006629 lipid metabolic process (IEA InterPro2GO): ACCEPT changed to **MARK_AS_OVER_ANNOTATED**.
+  The domain inference assumes hydrolase activity, which the protein cannot have. It is not
+  shown to be false, because a non-catalytic role cannot be excluded.
+- GO:0016787 hydrolase activity (IEA ARBA): MODIFY to GO:0052689 changed to **REMOVE**.
+  The protein has no serine nucleophile, so this is a pseudoenzyme over-annotation.
+- core_functions emptied: no molecular function is supported. The description was rewritten.
+- A pre-existing non-verbatim quote on the RESULTS.md reference was fixed. All references were kept.
+
+### Family review / modules
+- `interpro/panther/PTHR32176/PTHR32176-review.yaml` already records SF103 placement and the
+  catalytic-region loss (lipase scope UNRESOLVED). This review agrees with it. The re-review adds
+  that the loss is shared with the 3B homoeolog and is present in the genomic sequence, not just
+  the gene model. The PANTHER family label "XYLOSE ISOMERASE" reflects E. coli XylA (SF92) and is not
+  descriptive of patatins.
+- No relevant module: `modules/triacylglycerol_lipolysis.yaml` covers animal PNPLA2, and
+  `modules/xylose_oxidoreductase_pathway.yaml` mentions PTHR32176 only for XylA.
+
+### Next relative
+- No ortholog has been characterised. Nearest characterised relative by tree placement:
+  Arabidopsis PLP2 / pPLAIIalpha (At2g26560, O48723), the best-studied member of the sister clade
+  across PTN009133995 (PMID:16297072). It has no review in the repo.

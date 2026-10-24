@@ -471,9 +471,24 @@ apply to every UniProt quote, whatever it supports.
   prediction; citing ARBA text for an ARBA annotation is circular.
 - **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
   record's own `DR GO` lines restate an annotation rather than support it.
+- **Protein existence (`PE`) is not evidence of function.** Quote it to argue that an
+  annotation rests on prediction (e.g. `MARK_AS_OVER_ANNOTATED`, `KEEP_AS_NON_CORE`,
+  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function. An accepted `ND` annotation needs evidence
+  that the literature was searched, not the existence level.
 
-Validation warns on both (`uniprot_quote_unvetted_prediction`,
-`uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
+Validation warns on all three (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`, `uniprot_quote_existence_as_support`;
+`src/ai_gene_review/validation/uniprot_quote_source.py`).
+
+**Record which section a UniProt quote comes from.** A UniProt quote's
+`supporting_text` item carries `record_section`, the section(s) of the record
+it quotes: `CC:CAUTION`, `CC:FUNCTION`, `FT:BINDING`, `DR:Pfam`, `DE` and so on.
+This is the database-record counterpart of `reference_section_type` (which is for
+manuscript sections such as RESULTS) and makes questions like "which UniProt
+cautions does this review use?" answerable by query. Do not write it by hand: run
+`just backfill-record-sections genes/<org>/<GENE>` after editing, which derives it
+from the cited file and changes nothing else. Validation warns
+(`record_section_mismatch`) when a stated value disagrees with the cited file.
 
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
@@ -514,6 +529,14 @@ For a statement from P1 contradicted by P2, use P1's
 `findings[].finding_review` with `finding_status`, `superseded_by`, and
 `supported_by` containing P2's exact snippet. See
 [Reference Curation](docs/reference_curation.md) for examples and validation rules.
+
+**Errors that live in the source record** (an annotation or GO-CAM activity on
+the wrong gene, a mis-keyed reference, a wrong evidence code) go in
+`review.source_defects` (or `activity_reviews[].source_defects` for GO-CAMs), with
+`asserted_value` → `corrected_value`, the responsible `resource` and a
+`confidence`. That is how "that gene, not this gene" is recorded;
+`just export-source-defects` turns them into per-resource upstream reports. See
+`docs/source_defects.md`.
 
 ## Tools
 
