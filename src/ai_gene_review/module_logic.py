@@ -83,6 +83,24 @@ class Atom:
         ))
 
     @property
+    def is_grounded(self) -> bool:
+        """True when some oracle could satisfy this step.
+
+        An atom with no symbol, no accession and no required function cannot be
+        satisfied by any genome-, expression- or activity-keyed predicate, so
+        every route through it is dead and its module is unsatisfiable in every
+        context -- silently, since nothing else reports it.
+
+        >>> Atom("n", "l", "A", "P1").is_grounded
+        True
+        >>> Atom("n", "l", None, None).is_grounded
+        False
+        >>> Atom("n", "l", None, None, function_ids=("GO:0140911",)).is_grounded
+        True
+        """
+        return bool(self.gene_symbols or self.uniprots or self.function_ids)
+
+    @property
     def uniprots(self) -> tuple[str, ...]:
         """Return every concrete UniProt accession available for this step."""
         return tuple(dict.fromkeys(
@@ -142,7 +160,13 @@ def _uniprot_from_gene(gene: dict) -> Optional[str]:
 def _atom_from_annoton(annoton: dict, namespace: str = "") -> Atom:
     """Build an :class:`Atom` from an annoton dict, prefixing its id with ``namespace#``."""
     participant = annoton.get("participant") or {}
-    gene = participant.get("gene") or {}
+    # A participant grounds through whichever descriptor its selector_type uses:
+    # `gene` for a concrete gene, `gene_product` for an exemplar protein (as
+    # ANY_WITH_FUNCTION steps carry). Both are Descriptors, so the same symbol
+    # and accession rules apply. Reading only `gene` left every gene_product
+    # step ungrounded, and an ungrounded atom no oracle can satisfy makes its
+    # whole module silently unsatisfiable in every context.
+    gene = participant.get("gene") or participant.get("gene_product") or {}
     representatives = ((participant.get("family") or {}).get("representative_members") or [])
     gene_symbol = _symbol_from_gene(gene)
     # An explicit gene supplies the canonical symbol. Family-only fallback
