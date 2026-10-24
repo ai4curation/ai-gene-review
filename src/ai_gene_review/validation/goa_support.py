@@ -11,6 +11,11 @@ not checked; neither are ``references[].findings``, where a quoted GAF row is a
 statement about the GOA table itself. That is the one place a GOA quote can
 still appear, so keep such findings descriptive. Only dict items are inspected;
 the schema makes every ``supported_by`` item a mapping.
+
+Prediction reviews (``*-predictions*.yaml``) are checked too, by
+``prediction_evidence``. There the prediction, not the GOA row, is under review,
+but ``supported_by`` still has to show the predicted term is true or false; that
+it is already in GOA (a CNN or LSP assessment) is stated in the summary.
 """
 
 from __future__ import annotations
