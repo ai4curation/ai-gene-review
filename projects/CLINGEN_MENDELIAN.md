@@ -2996,28 +2996,22 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**574 of 2,876 genes are complete; 2,302 remain.**
-This checkpoint adds ERCC6, ERCC6L2, ERCC8 and ERF to the
-[merged 570 checkpoint](https://github.com/ai4curation/ai-gene-review/pull/5409).
-[Checkpoint 574](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-574-2026-10-24-171426-utc)
-records their approved heads, actual merges and executed merge-group CI.
-All four gene payloads, including the separate ERCC6 fusion review, match
-fixed main [`a98198438715`](https://github.com/ai4curation/ai-gene-review/commit/a9819843871530062eb4b2878778b5bdd778e6b9).
-The one subsequent normal-source change is explicitly traced: ERCC8's accepted
-full-text refresh of PMID:26620705 supersedes ERCC6's earlier abstract-only cache.
-This is a fixed-cut checkpoint; a later remote-main observation is not represented
-as an additional parity audit.
+**579 of 2,876 genes are complete; 2,297 remain.**
+This checkpoint adds ERLIN1, ERLIN2, ESCO2, ESPN and ETFA to the
+[merged 574 tracker](https://github.com/ai4curation/ai-gene-review/pull/5438).
+[Checkpoint 579](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-579-2026-10-24-201052-utc)
+records their exact approved heads, actual merges and executed merge-group CI.
+All five complete gene directories and selected normal dependencies match
+fixed main [`0974627b3c89`](https://github.com/ai4curation/ai-gene-review/commit/0974627b3c895ff1e5701f6c6013c4b98de29d5c).
 
-All four gene reviews remain DRAFT, with 44, four, five and five validation
-advisories, respectively; the separately validated ERCC6 fusion sibling retains
-three advisories and adds no catalogue credit. Unresolved annotations and
-product-specific limits remain explicit. ERCC6L2 includes one accepted new
-helicase annotation on the experimentally tested 1,550-residue product.
-ERLIN1 and ERLIN2 receive no completion credit here.
+These reviews remain DRAFT, with 25, 16, four, one and two advisories,
+respectively. Preserved historical contexts, unresolved judgments and product
+limits remain explicit; completion does not imply every annotation is resolved.
+ESRRB, ETFB and ETFDH are not credited here.
 
-This is a completion update only. The catalogue, association text, queue records
-and earlier review-availability inventories are preserved. Their dated inventory
-snapshots remain historical and are not presented as fresh availability counts.
+The catalogue, association text, all queue records and earlier progress are
+preserved. Dated review-availability inventories remain historical; this update
+does not claim a fresh availability recount.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3724,12 +3718,12 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ERCC6L2** — HGNC:26922; [bone marrow failure syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_27c476cf-2010-4415-a33b-fd75a619817c-2026-09-14T160000.000Z) (MONDO:0000159; AR; Definitive).
 - [x] **ERCC8** — HGNC:3439; [Cockayne syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb43bf9-5d0c-4753-8230-6bd97805a8bc-2022-08-12T100000.000Z) (MONDO:0019569; AR; Definitive).
 - [x] **ERF** — HGNC:3444; [craniosynostosis 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1954ba97-532a-4ef3-9d62-c4ebfd252084-2021-06-12T062024.684Z) (MONDO:0010929; AD; Definitive).
-- [ ] **ERLIN1** — HGNC:16947; [hereditary spastic paraplegia 62](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d668c62f-b002-4015-a629-ecbebed40e59-2025-06-18T190000.000Z) (MONDO:0014302; AR; Definitive).
-- [ ] **ERLIN2** — HGNC:1356; [hereditary spastic paraplegia 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1467b8b6-6295-4fa8-bafc-86478e6ffd19-2025-06-18T190000.000Z) (MONDO:0012639; AD; Limited); [hereditary spastic paraplegia 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9599fa0e-da62-437d-8f6f-2f2ef0297c8c-2025-06-18T190000.000Z) (MONDO:0012639; AR; Definitive).
-- [ ] **ESCO2** — HGNC:27230; [Roberts-SC phocomelia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4020105e-bc43-4365-9540-9a8f77b37fae-2021-03-19T160000.000Z) (MONDO:0100253; AR; Definitive).
-- [ ] **ESPN** — HGNC:13281; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bdbd958-1ad2-447a-9ccd-ed86f308577a-2018-02-27T170000.000Z) (MONDO:0019497; AD; Limited); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7c63a581-ad69-4f18-b68b-d1b2cef5e699-2018-02-27T170000.000Z) (MONDO:0019497; AR; Definitive).
+- [x] **ERLIN1** — HGNC:16947; [hereditary spastic paraplegia 62](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d668c62f-b002-4015-a629-ecbebed40e59-2025-06-18T190000.000Z) (MONDO:0014302; AR; Definitive).
+- [x] **ERLIN2** — HGNC:1356; [hereditary spastic paraplegia 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1467b8b6-6295-4fa8-bafc-86478e6ffd19-2025-06-18T190000.000Z) (MONDO:0012639; AD; Limited); [hereditary spastic paraplegia 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9599fa0e-da62-437d-8f6f-2f2ef0297c8c-2025-06-18T190000.000Z) (MONDO:0012639; AR; Definitive).
+- [x] **ESCO2** — HGNC:27230; [Roberts-SC phocomelia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4020105e-bc43-4365-9540-9a8f77b37fae-2021-03-19T160000.000Z) (MONDO:0100253; AR; Definitive).
+- [x] **ESPN** — HGNC:13281; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bdbd958-1ad2-447a-9ccd-ed86f308577a-2018-02-27T170000.000Z) (MONDO:0019497; AD; Limited); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7c63a581-ad69-4f18-b68b-d1b2cef5e699-2018-02-27T170000.000Z) (MONDO:0019497; AR; Definitive).
 - [ ] **ESRRB** — HGNC:3473; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03c875bb-70aa-4652-a7f2-35df1065165b-2018-04-24T160000.000Z) (MONDO:0019497; AR; Definitive).
-- [ ] **ETFA** — HGNC:3481; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d6848e7-6e9e-4545-9f97-69480face058-2018-05-22T160000.000Z) (MONDO:0009282; AR; Definitive).
+- [x] **ETFA** — HGNC:3481; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d6848e7-6e9e-4545-9f97-69480face058-2018-05-22T160000.000Z) (MONDO:0009282; AR; Definitive).
 - [ ] **ETFB** — HGNC:3482; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d9a8d844-c82a-4258-bd48-10e2d977273e-2023-05-23T040000.000Z) (MONDO:0009282; AR; Definitive).
 - [ ] **ETFDH** — HGNC:3483; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_062e336e-cfda-45f7-b509-cd44a5079034-2018-05-22T040000.000Z) (MONDO:0009282; AR; Definitive).
 - [ ] **ETHE1** — HGNC:23287; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d29d908d-ea85-4eb4-a6a5-400c95511c9a-2019-04-08T161759.443Z) (MONDO:0009723; AR; Definitive).
