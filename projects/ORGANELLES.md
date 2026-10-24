@@ -2,6 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old]
 ---
 
 # Organelles
@@ -212,7 +213,7 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   BRAF the review's own reason argues the activity is elsewhere (ADO's
   N-degron oxidation is cytosolic; BRAF's mitochondrial pool has no assigned
   activity). ARAF shares BRAF's PAINT node (PTN000584576) and is the arguable
-  case: its reason does give it a mitochondrial role, MST2 sequestration,
+  case: its reason does give it a mitochondrial role, <gene species="human" symbol="STK3">MST2</gene> sequestration,
   though that is not among its annotated functions. ABCC9's short SUR2
   variants have a real mitochondrial function, and ACACA's row is already
   over-annotated. The policy so far judges the term, not the qualifier. A
@@ -283,7 +284,7 @@ whether the organelle claim holds at all.
 | ADO | root; IBA, IEA and HTP rows to KEEP_AS_NON_CORE (were MARK_AS_OVER_ANNOTATED / REMOVE) | mouse fractionation and MitoCarta HDA behind the projection; the earlier "UniProt says cytosol" was wrong |
 | AGTPBP1 | NEW outer membrane (IC) | mouse sub-mitochondrial fractionation (PMID:20620870); soluble, no presequence or TM |
 | ANK2 | root | contact points on the mitochondrial surface by imaging; no anchor |
-| ARAF | root | sub-compartment lines disagree (rat IMS/matrix fractionation vs cytosolic-face MST2/BAD roles) |
+| ARAF | root | sub-compartment lines disagree (rat IMS/matrix fractionation vs cytosolic-face <gene species="human" symbol="STK3">MST2</gene>/BAD roles) |
 | ARL16 | root | organelle-level co-staining only, of an N-extended variant |
 | ASAH2 | root; rows to MARK_AS_OVER_ANNOTATED | the original GFP construct was N-terminally truncated; full-length ASAH2 goes to the plasma membrane (PMID:15845354) |
 | ATP7B | root; HTP row UNDECIDED to KEEP_AS_NON_CORE | only the processed 140 kDa form is mitochondrial; MitoCoP call deferred to the curator, as for AMACR |
