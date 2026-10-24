@@ -5568,3 +5568,64 @@ pages and validated the appended history record. The catalogue render reports
 1,617 missing-review warnings; the progress render reports none.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker553-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T232923Z-codex-8fec8a.yaml)
+
+## Completion checkpoint 557 — 2026-10-24 06:14:02 UTC
+
+**557 complete; 2,319 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds four accepted merges to [checkpoint 553, tracker #5326](https://github.com/ai4curation/ai-gene-review/pull/5326).
+The coordinating AI agent accepted the exact-head reviews and merge audits;
+this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [ELP2 #5325](https://github.com/ai4curation/ai-gene-review/pull/5325) | [`21343d5f60e3`](https://github.com/ai4curation/ai-gene-review/commit/21343d5f60e3e9b1838d351339aa7793e838172c) | [`1a193ad5a9a8`](https://github.com/ai4curation/ai-gene-review/commit/1a193ad5a9a87357491e981d5abc3f615e39a139) | `eb83fa701eb9` | 20/20 |
+| [ELOVL4 #5323](https://github.com/ai4curation/ai-gene-review/pull/5323) | [`9ed941653b45`](https://github.com/ai4curation/ai-gene-review/commit/9ed941653b4501e0bb98c1e51b52eab6318e7ab3) | [`f96d2abc07b1`](https://github.com/ai4curation/ai-gene-review/commit/f96d2abc07b18943f7c239622eff90a33dcfb3bc) | `1a193ad5a9a8` | 20/20 |
+| [EML1 #5327](https://github.com/ai4curation/ai-gene-review/pull/5327) | [`b28e213dbe95`](https://github.com/ai4curation/ai-gene-review/commit/b28e213dbe95cb5c4638256e67c4ad94c43a8b5f) | [`02a780ad3cef`](https://github.com/ai4curation/ai-gene-review/commit/02a780ad3cef37a9ed984620990ee33b2650e4bc) | `f96d2abc07b1` | 19/19 |
+| [EMILIN1 #5329](https://github.com/ai4curation/ai-gene-review/pull/5329) | [`3e2b4f91315b`](https://github.com/ai4curation/ai-gene-review/commit/3e2b4f91315b390e8c0ee73e93cf96137313362f) | [`83dcbe1d939d`](https://github.com/ai4curation/ai-gene-review/commit/83dcbe1d939d3a29daecb0e16145bdd29c339d3a) | `02a780ad3cef` | 29/29 |
+
+All 88 approved path modes and Git objects match at the actual merges and
+pinned main, including source caches, supporting material and histories.
+The full gene directories also match. The reviews retain their imported
+annotations and natural products; no new publication quotations were added.
+ELOVL4's 32 inherited quotations remain preserved.
+
+| Gene | Sources | Products | Cores | Decisions | Computed status |
+| --- | ---: | ---: | ---: | --- | --- |
+| ELP2 | 20 | 7 | 1 | 7 ACCEPT, 7 KEEP_AS_NON_CORE, 6 MODIFY | COMPLETE |
+| ELOVL4 | 37 | 1 | 1 | 19 ACCEPT, 5 KEEP_AS_NON_CORE, 7 MODIFY, 2 REMOVE, 4 UNDECIDED | DRAFT |
+| EML1 | 39 | 2 | 1 | 11 ACCEPT, 23 KEEP_AS_NON_CORE, 4 MODIFY, 1 UNDECIDED | DRAFT |
+| EMILIN1 | 99 | 2 | 2 | 29 ACCEPT, 48 KEEP_AS_NON_CORE, 17 MODIFY, 1 REMOVE, 4 UNDECIDED | DRAFT |
+
+Product counts include the displayed canonical protein when no alternative-product
+list is present; ELOVL4 has one source-described 314-aa product.
+
+ELOVL4 retains four unresolved annotations and two binding advisories; EML1
+retains one unresolved annotation and eight binding advisories. EMILIN1 retains
+four unresolved annotations and 24 advisories (22 binding, two propagation).
+ELP2 has no gene-validation warnings. Accepted campaign completion does not
+convert DRAFT files to COMPLETE or remove uncertainty.
+
+Each accepted merge-group build executed 4,214 Python tests (one skipped,
+84 deselected, nine warnings), 270 doctests (37 skipped, eight warnings),
+12 examples, typing across 284 files, lint, 438 additional Python automation
+tests and 19 JavaScript tests. The additional automation tests overlap the
+broad suite and are not additive unique coverage. Validation executed 42 history
+tests, scoped gene validation, all-gene schema checks, modules and families.
+The all-gene check is schema-only; aggregate jobs report job conclusions.
+
+Builds: [ELP2](https://github.com/ai4curation/ai-gene-review/actions/runs/40066991538), [ELOVL4](https://github.com/ai4curation/ai-gene-review/actions/runs/40066992452), [EML1](https://github.com/ai4curation/ai-gene-review/actions/runs/40066993531), [EMILIN1](https://github.com/ai4curation/ai-gene-review/actions/runs/40067208919).
+
+The inventory at main `83dcbe1d939d3a29daecb0e16145bdd29c339d3a` contains 8,868 reviews,
+including 3,196 human reviews. Of the 2,876 catalogue genes, 1,277
+have review files and 1,599 lack them; 720 available reviews remain
+uncredited. All 235 queue objects, 110 earlier completion updates and earlier
+progress bytes are preserved. This is update 111; only four checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. ENG, ENPP1, ENTPD1 and EOGT
+remain uncredited by this checkpoint. This checkpoint does not claim an
+independent documentation build or live-page inspection for the four merges.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker557-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T061743Z-codex-2fc9e5.yaml)
