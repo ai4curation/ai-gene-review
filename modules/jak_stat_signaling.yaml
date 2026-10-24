@@ -60,6 +60,34 @@ evidence:
       Describes the IFN-gamma receptor signaling module in which JAK1 and JAK2
       activate STAT1 homodimers that bind GAS elements, an exemplar realization
       of this generic module.
+  - source_id: PMID:24058787
+    title: Evolution of the JAK-STAT pathway.
+    statement: >-
+      Taxon scope: the canonical receptor-JAK-STAT pathway was assembled in
+      Bilateria, before the protostome-deuterostome split; Drosophila
+      Domeless-Hopscotch-STAT92E is the invertebrate exemplar.
+    supporting_text: >-
+      These came together to form the canonical JAK-STAT signaling pathway
+      prior to the divergence of protostomia
+  - source_id: PMID:24058787
+    title: Evolution of the JAK-STAT pathway.
+    statement: >-
+      The ancestral bilaterian pathway had one JAK, one STAT and one SHP and
+      three SOCS proteins; the multiple JAKs and STATs that the receptor-class
+      variant sets choose among are later, vertebrate expansions.
+    supporting_text: >-
+      At the time of the emergence of bilateria, archetypal members of each of
+      the JAK-STAT pathway components had been generated, including a single
+      JAK, STAT and SHP, and three SOCS proteins.
+  - source_id: PMID:24058748
+    title: Comparative evolutionary genomics of the STAT family of transcription factors.
+    statement: >-
+      The vertebrate STAT1-6 set arose by the two early-vertebrate whole-genome
+      duplications.
+    supporting_text: >-
+      the core of STAT gene regulatory networks, comprising stat1 through 4,
+      stat5 and stat6, arose early in vertebrate evolution, probably through
+      the two whole genome duplication events
   - source_id: PANTHER:PTN001562978
     title: PAINT Janus kinase ancestral node
     statement: >-
@@ -84,7 +112,13 @@ notes: >-
   activation) are out of scope for the canonical trunk and are noted where
   relevant. GO term ids in descriptors were checked against curated gene reviews
   in this repository; where no precise GO molecular function exists, only a
-  preferred_term and description are given.
+  preferred_term and description are given. Pathway evolution and taxon
+  scope follow Liongue and Ward 2013 (PMID:24058787): the components are
+  older than the pathway, and their coupling into a receptor-JAK-STAT cascade
+  is bilaterian. Pre-bilaterian STATs and JAK-like proteins, and lineages
+  whose STATs act without JAK, are outside this module's scope. A cross-gene
+  briefing on JAK-STAT taxon scope is at
+  https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM.
 module:
   id: jak_stat_signaling
   label: Canonical JAK-STAT cytokine signaling pathway
@@ -106,11 +140,21 @@ module:
         dominant proximal mechanism of cytokine-mediated signaling.
   context:
     taxa:
-      - preferred_term: metazoans
+      - preferred_term: bilaterians
+        term:
+          id: NCBITaxon:33213
+          label: Bilateria
         description: >-
-          The canonical receptor/JAK/STAT cassette is a metazoan innovation;
-          mammals encode four JAKs and seven STATs. Invertebrates use a reduced
-          set (e.g. a single Hopscotch JAK and STAT92E in Drosophila).
+          The canonical receptor/JAK/STAT cassette was assembled in the
+          bilaterian ancestor; sponges have only a JAK-like kinase, while STATs
+          are much older (PMID:24058787). Mammals encode four JAKs and seven
+          STATs. Invertebrates use a reduced set (e.g. a single Hopscotch JAK
+          and STAT92E in Drosophila). Caenorhabditis elegans has no JAK, and its
+          STATs act in JAK-independent pathways
+          (MODULE:c_elegans_jak_independent_stat_signaling). Dictyostelium also
+          has STATs but no JAK; they are activated by tyrosine kinase-like
+          kinases and the cAMP receptor cAR1
+          (MODULE:dicty_jak_independent_stat_signaling).
     cellular_components:
       - preferred_term: plasma membrane
         term:
@@ -608,6 +652,19 @@ module:
       node:
         id: stat_transcription
         label: STAT-dependent transcription
+        activation_logic:
+          # Transcription needs the nuclear STAT dimer and is restrained by PTPN2
+          # and PIAS. The default rule would also let ERK alone switch it on.
+          all_of:
+            - element: stat_dimerization_import
+            - none_of:
+                - element: ptp_dephosphorylation
+                - element: pias_restraint
+        omitted_regulators:
+          # ERK serine phosphorylation (STAT1/STAT3 Ser727) tunes maximal
+          # transcription of an already-active STAT dimer; it neither drives nor
+          # is required for transcription, which a Boolean rule cannot express.
+          - mapk_branch_interface
         module_type: REGULATORY_STEP
         description: >-
           Nuclear STAT dimers bind specific DNA elements - GAS (gamma-activated
@@ -937,18 +994,43 @@ module:
       target: stat_transcription
       connection_type: PROVIDES_INPUT_FOR
       description: Nuclear STAT dimers bind GAS/ISRE elements to activate transcription.
-    - source: jak_stat_negative_regulation
+    - source: ptp_dephosphorylation
       target: jak_activation
       connection_type: NEGATIVELY_REGULATES
-      description: SOCS proteins and phosphatases inhibit and reset JAK activation.
-    - source: jak_stat_negative_regulation
+      description: >-
+        SHP1 (PTPN6), SHP2 (PTPN11) and PTPN2 dephosphorylate JAKs and
+        receptors, resetting JAK activation. (SOCS inhibition of JAK is the
+        separate socs_feedback connection below.)
+    - source: ptp_dephosphorylation
       target: stat_transcription
       connection_type: NEGATIVELY_REGULATES
-      description: PTPN2 and PIAS proteins restrain nuclear STAT transcriptional output.
+      description: PTPN2 (TC-PTP) dephosphorylates nuclear STATs, restraining STAT transcriptional output.
+    - source: pias_restraint
+      target: stat_transcription
+      connection_type: NEGATIVELY_REGULATES
+      description: >-
+        PIAS SUMO E3 ligases bind activated nuclear STAT dimers and restrain
+        their transcriptional activity.
     - source: stat_transcription
       target: socs_feedback
       connection_type: CAUSES
       description: STAT-driven transcription induces SOCS/CIS genes, closing the negative-feedback loop.
+    - source: socs_feedback
+      target: jak_activation
+      connection_type: NEGATIVELY_REGULATES
+      description: >-
+        STAT-induced SOCS/CIS proteins bind JAKs and phospho-receptors and
+        inhibit JAK catalysis, closing the classic negative feedback loop
+        (STAT transcription -> SOCS -> JAK inhibition).
+      evidence:
+        - source_id: PMID:9202126
+          title: A new protein containing an SH2 domain that inhibits JAK kinases.
+          statement: JAB/SOCS1 binds the JAK JH1 domain and inhibits JAK kinase activity and downstream STAT activation.
+          supporting_text: Interaction of JAB with Jak1, Jak2 or Jak3 markedly reduces their tyrosine-kinase activity and suppresses the tyrosine-phosphorylation and activation of STATs.
+        - source_id: PMID:9202125
+          title: A family of cytokine-inducible inhibitors of signalling.
+          statement: SOCS genes are rapidly transcribed in response to cytokine, forming a negative feedback loop.
+          supporting_text: Transcription of all four SOCS genes is increased rapidly in response to interleukin-6, in vitro and in vivo, suggesting they may act in a classic negative feedback loop to regulate cytokine signal transduction.
     - source: receptor_phosphorylation
       target: mapk_branch_interface
       connection_type: PROVIDES_INPUT_FOR
@@ -965,3 +1047,165 @@ module:
       target: stat_recruitment_phosphorylation
       connection_type: PROVIDES_INPUT_FOR
       description: RTK/Src/GPCR tyrosine kinases can phosphorylate STATs independently of cytokine-receptor JAKs.
+executable_models:
+  - id: jak_stat_signaling_boolean
+    title: JAK-STAT signaling as a Boolean network
+    model_type: BOOLEAN
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      The module's connections read as a signed regulatory graph and
+      translated by ai-gene-review module-to-bnet. Each negative regulator is
+      wired where the module says it acts: SOCS and the phosphatases on JAK,
+      the phosphatases and PIAS on nuclear STATs. STAT transcription carries
+      activation_logic because ERK serine phosphorylation of STATs only tunes
+      maximal transcription, so it is declared an omitted regulator. In
+      every scenario the phosphatase, PIAS and JAK-independent STAT inputs are
+      held off unless stated.
+    scenarios:
+      - id: unstimulated
+        label: No cytokine
+        description: No ligand engagement; the pathway rests with every step off.
+        settings:
+          - element: ligand_receptor_engagement
+            active: false
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - jak_activation
+          - stat_transcription
+      - id: sustained_cytokine
+        label: Sustained cytokine
+        description: >-
+          Ligand engagement held on. STAT-driven transcription induces SOCS,
+          which inhibits JAK, so there is no steady state with STAT
+          transcription on: the single attractor is cyclic, which in a Boolean
+          model reads as a transient (pulsed or adapting) response rather than
+          literal oscillation.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+        expected_attractor_kind: CYCLIC
+        expected_attractor_count: 1
+        expected_oscillating:
+          - jak_activation
+          - stat_transcription
+          - socs_feedback
+        evidence:
+          - source_id: PMID:9202125
+            statement: >-
+              SOCS genes are cytokine-induced and proposed to act in a classic
+              negative feedback loop on cytokine signalling.
+            supporting_text: >-
+              Transcription of all four SOCS genes is increased rapidly in
+              response to interleukin-6, in vitro and in vivo, suggesting they
+              may act in a classic negative feedback loop to regulate cytokine
+              signal transduction.
+      - id: socs_lost
+        label: SOCS knocked out
+        description: >-
+          SOCS held off under sustained cytokine. With nothing else wired to
+          terminate JAK, the pathway locks on with STAT transcription
+          sustained: in this module SOCS is the only loop that makes the
+          response transient.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+          - element: socs_feedback
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - jak_activation
+          - stat_transcription
+        evidence:
+          - source_id: PMID:9202125
+            statement: SOCS-1 inhibits receptor phosphorylation and STAT activation.
+            supporting_text: >-
+              Expression of SOCS-1 inhibited both interleukin-6-induced
+              receptor phosphorylation and STAT activation.
+      - id: jak_inhibited
+        label: JAK inhibited
+        description: >-
+          JAK held off, as by a JAK inhibitor. Receptor and STAT
+          phosphorylation cannot occur and STAT transcription stays off.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: false
+          - element: jak_activation
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - receptor_phosphorylation
+          - stat_transcription
+      - id: pias_restraint
+        label: PIAS active
+        description: >-
+          PIAS held on under sustained cytokine. STATs are still activated and
+          imported, but nuclear transcription is blocked; because SOCS is then
+          never induced, JAK stays on. The nuclear brake stops the output
+          without terminating the upstream signal.
+        settings:
+          - element: ligand_receptor_engagement
+            active: true
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: true
+          - element: alt_stat_inputs
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - jak_activation
+          - stat_dimerization_import
+        expected_inactive:
+          - stat_transcription
+          - socs_feedback
+      - id: jak_independent_input
+        label: JAK-independent STAT input
+        description: >-
+          No cytokine, but STATs phosphorylated by a JAK-independent kinase
+          (RTK, Src). STAT transcription comes on and induces SOCS, but SOCS
+          acts only on JAK, so in this wiring it cannot terminate the response.
+          A property of the module's wiring, not a curated biological claim.
+        settings:
+          - element: ligand_receptor_engagement
+            active: false
+          - element: ptp_dephosphorylation
+            active: false
+          - element: pias_restraint
+            active: false
+          - element: alt_stat_inputs
+            active: true
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - stat_transcription
+          - socs_feedback
+        expected_inactive:
+          - jak_activation

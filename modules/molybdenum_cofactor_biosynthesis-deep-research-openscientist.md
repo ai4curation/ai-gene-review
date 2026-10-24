@@ -2,9 +2,9 @@
 provider: openscientist
 model: openscientist-autonomous
 cached: false
-start_time: '2026-07-20T21:22:08.990237'
-end_time: '2026-07-20T21:55:11.524332'
-duration_seconds: 1982.53
+start_time: '2026-09-01T11:06:25.888164'
+end_time: '2026-09-01T11:25:06.826935'
+duration_seconds: 1120.94
 template_file: templates/module_research.md.j2
 template_variables:
   module_title: Prokaryotic molybdenum cofactor biosynthesis from GTP to Mo-molybdopterin
@@ -85,14 +85,14 @@ provider_config:
   max_retries: 3
   parameters:
     allowed_domains: []
-    max_iterations: 3
+    max_iterations: 5
     use_hypotheses: false
     investigation_mode: autonomous
     poll_interval: 30
     timeout: 7200
     save_artifacts: true
     artifact_max_bytes: 5242880
-citation_count: 24
+citation_count: 26
 artifact_count: 4
 artifact_sources:
   openscientist_artifacts_zip: 4
@@ -254,19 +254,19 @@ system to all biology.
 
 ## Output
 
-# Prokaryotic Molybdenum Cofactor Biosynthesis from GTP to Mo-Molybdopterin and Optional Dinucleotide Variants
+# Prokaryotic Molybdenum Cofactor Biosynthesis: From GTP to Mo-Molybdopterin and Optional Dinucleotide Variants
 
-*A commissioned review-style synthesis. Search date: 2026-07-21. Literature accessed via PubMed.*
+*A review-style synthesis of a conserved four-stage biosynthetic module. Search date: 2026-09-01. Citations are given as PubMed IDs (PMID).*
 
 ---
 
 ## 1. Executive Summary
 
-Nearly all molybdenum- and tungsten-dependent enzymes require a common prosthetic group, the **molybdenum cofactor (Moco)**, in which the catalytic metal is held by the *cis*-dithiolene of a tricyclic pyranopterin called **molybdopterin (MPT)**. In prokaryotes this cofactor is built by a compact, evolutionarily ancient biosynthetic module that begins with a single common metabolite — **GTP** — and ends either at **Mo-MPT** or at a nucleotide-capped variant (**MGD** or **MCD**) tailored to a particular class of client enzyme. This review treats that module as a self-contained biological system: four ordered stages, each catalyzed by a small set of dedicated enzymes, with two well-documented points of lineage-specific variation (the adenylyltransferase step and the optional dinucleotide-capping step).
+Prokaryotic molybdenum cofactor (Moco) biosynthesis is a short, largely linear metabolic module that transforms a single molecule of GTP into a metal-loaded pyranopterin-dithiolene cofactor and, in many organisms, appends a nucleotide to tailor the cofactor to a specific class of client enzyme. The pathway is one of the most deeply conserved in biology: homologues of its terminal enzymes are present in all three domains of life, and two of them fused during eukaryotic evolution to become gephyrin, the neuronal scaffolding protein. Despite this evolutionary depth, the chemistry is remarkable — the first committed step is a radical S-adenosylmethionine (radical-SAM) reaction that rearranges the purine skeleton of GTP into a pterin, and the sulfur-insertion step borrows a ubiquitin-like protein-conjugation logic that predates and parallels the eukaryotic ubiquitin system.
 
-The best-supported mechanistic model is a strictly ordered relay. First, the radical-SAM enzyme **MoaA**, carrying two [4Fe–4S] clusters, performs a 3′,8-cyclization of GTP, and **MoaC** carries out the majority of the ensuing rearrangement to **cyclic pyranopterin monophosphate (cPMP)**. Second, a **ubiquitin-like sulfur relay** installs the dithiolene: the E1-like activating enzyme **MoeB** adenylylates the small sulfur-carrier protein **MoaD**, which — after being charged to a C-terminal thiocarboxylate by an external cysteine-desulfurase system — donates two sulfur atoms to cPMP within the **MoaD–MoaE molybdopterin synthase** to yield MPT. Third, MPT is **adenylylated** (by a dedicated **MogA**, or by a catalytically competent **MoaB** in certain lineages) and **MoeA** inserts molybdate to produce Mo-MPT. Fourth and optionally, **MobA** appends GMP to make molybdopterin guanine dinucleotide (MGD/bis-MGD), or **MocA** appends CMP to make molybdopterin cytosine dinucleotide (MCD), each serving specific molybdoenzyme families.
+This review defines the module in four obligatory-to-optional stages. **Stage 1** builds the pyranopterin ring: MoaA, a bifunctional two-[4Fe-4S]-cluster radical-SAM enzyme, converts GTP into the cyclic intermediate 3',8-cyclo-7,8-dihydro-GTP, which MoaC then rearranges into cyclic pyranopterin monophosphate (cPMP). **Stage 2** installs the dithiolene sulfurs: the E1-like enzyme MoeB adenylylates the ubiquitin-fold sulfur carrier MoaD, which — after thiocarboxylation by the cysteine desulfurase IscS — cooperates with MoaE in a MoaD₂–MoaE₂ synthase to convert cPMP into molybdopterin (MPT). **Stage 3** loads the metal: a MogA- or MoaB-class G-domain protein adenylylates MPT to MPT-AMP, and a MoeA-class E-domain hydrolyzes MPT-AMP while ligating molybdate to form Mo-MPT. **Stage 4** is an optional, client-class-specific maturation: MobA appends GMP to make bis-molybdopterin guanine dinucleotide (bis-MGD) for the DMSO-reductase family, MocA appends CMP to make molybdopterin cytosine dinucleotide (MCD) for xanthine-oxidase-type enzymes, and the sulfite-oxidase family retains the unmodified Mo-MPT.
 
-Three conclusions organize the field. (i) The **core chemistry is obligatory and deeply conserved** — pterin construction, ubiquitin-like sulfur insertion, and two-step metal insertion trace to the last universal common ancestor (LUCA). (ii) The **principal prokaryotic variation is combinatorial**, not architectural: which adenylyltransferase implements MPT activation, and whether/which dinucleotide cap is appended, are the two decision points. (iii) The system is **metabolically embedded** — its sulfur supply is shared with Fe–S cluster assembly and tRNA thiolation, so it cannot be understood as a fully autonomous cassette. Below we lay out the boundaries, mechanism, players, variation, constraints, and open questions, and flag where claims rest on strong biochemistry versus indirect or organism-specific evidence.
+The strongest, most reproducible conclusions of this synthesis are: (i) stages 1–3 are obligatory and strictly ordered — sulfur insertion must precede metal insertion, and MPT adenylylation must precede molybdotransfer; (ii) the MogA/MoaB adenylyltransferase and MoeA insertase form an ancient, universal terminal module whose fusion produced eukaryotic gephyrin and plant Cnx1; and (iii) the dinucleotide branch is an accessory step whose product is dictated by the structural family of the downstream molybdoenzyme rather than by the cofactor chemistry itself. Well-supported uncertainties remain around the identity and regulation of the prokaryotic MoaB adenylyltransferase lineage, the precise choreography of sulfur delivery, and how cofactor forms are trafficked and protected en route to client apoenzymes.
 
 ---
 
@@ -274,183 +274,201 @@ Three conclusions organize the field. (i) The **core chemistry is obligatory and
 
 ### 2.1 What is included
 
-The system as defined here is the prokaryotic pathway that converts **GTP → cPMP → MPT → Mo-MPT (→ MGD or MCD)**. It comprises four functional stages:
+The module comprises the enzymatic conversion of **GTP → cPMP → MPT → Mo-MPT (→ bis-MGD or MCD)**. Concretely, this includes:
 
-1. **cPMP formation** — MoaA (radical-SAM GTP 3′,8-cyclase) and MoaC (cPMP synthase).
-2. **Sulfur-carrier activation and MPT synthesis** — MoeB (E1-like adenylyltransferase), MoaD (ubiquitin-fold sulfur carrier), and the MoaD–MoaE molybdopterin synthase.
-3. **Mo-MPT formation** — MPT adenylylation (MogA or a competent MoaB) followed by molybdate insertion (MoeA).
-4. **Optional dinucleotide maturation** — MobA (guanylyltransferase → MGD) or MocA (cytidylyltransferase → MCD).
+- **MoaA** (GTP 3',8-cyclase) and **MoaC** (cPMP synthase) — pyranopterin ring construction;
+- **MoeB** (sulfur-carrier adenylyltransferase), **MoaD** (ubiquitin-like sulfur carrier), and **MoaE** (MPT synthase large subunit) — dithiolene installation;
+- **MogA / catalytically competent MoaB** (MPT adenylyltransferase) and **MoeA** (molybdotransferase) — metal insertion;
+- **MobA** (guanylyltransferase) and **MocA** (cytidylyltransferase) — optional dinucleotide maturation.
 
-### 2.2 What is deliberately excluded, and what is commonly confused with it
+### 2.2 What is excluded (adjacent processes commonly conflated with the module)
 
-Several neighboring processes are frequently conflated with the pathway but are mechanistically and definitionally separate:
+Several neighboring processes supply or consume the pathway's intermediates but are mechanistically distinct and should be treated separately:
 
-- **Upstream sulfur mobilization** — The cysteine-desulfurase/persulfide relay (IscS, TusA and relatives) that *charges* MoaD is not part of the core module; it is a shared cellular resource (see §5.4). Only the *activated* thiocarboxylated MoaD enters the pathway proper.
-- **Molybdate transport** — High-affinity molybdate uptake by the ModABC ABC transporter, and its ModE-mediated regulation, supply the substrate for MoeA but are transport/regulatory events, not biosynthetic steps [PMID: 27196733](https://pubmed.ncbi.nlm.nih.gov/27196733/).
-- **Terminal cofactor sulfuration** — Conversion of Mo-MPT to the *sulfido* form needed by xanthine-oxidase–family enzymes is a client-specific maturation event downstream of this module.
-- **Cofactor insertion into apoenzymes and the mature molybdoenzyme reactions** — DMSO reductase, nitrate reductase, formate dehydrogenase, sulfite oxidase, xanthine oxidoreductase, etc., are *consumers* of the cofactor, not part of its synthesis.
-- **Pathway regulation** — Molybdenum- and iron-responsive transcriptional control (FNR, ModE, Fur, NarXL) governs expression but is outside the enzymatic pathway itself [PMID: 31517366](https://pubmed.ncbi.nlm.nih.gov/31517366/).
-- **Eukaryotic fusion organization and human disease** — The multidomain eukaryotic enzymes (MOCS1/2/3, CNX1, gephyrin) and Moco deficiency in humans are explicitly out of scope, though they are informative comparators (see §5.1).
+- **Upstream sulfur supply.** The cysteine desulfurase **IscS**, the rhodanese **YnjE**, and sulfur-relay proteins such as **TusA** generate the persulfide sulfur that thiocarboxylates MoaD ([PMID: 19946146](https://pubmed.ncbi.nlm.nih.gov/19946146/); [PMID: 21856748](https://pubmed.ncbi.nlm.nih.gov/21856748/); [PMID: 31655739](https://pubmed.ncbi.nlm.nih.gov/31655739/)). This is the boundary between Moco biosynthesis and general cellular sulfur trafficking.
+- **Iron–sulfur cluster assembly.** MoaA depends on [4Fe-4S] clusters delivered by A-type carrier proteins (ErpA/IscA), coupling cofactor output to cellular Fe-S status ([PMID: 33782054](https://pubmed.ncbi.nlm.nih.gov/33782054/); [PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/)).
+- **Molybdate transport** into the cytoplasm (ModABC and related systems).
+- **Terminal cofactor sulfuration** of the Mo center (for xanthine-oxidase-family enzymes), performed by dedicated sulfurases downstream of the cofactor-forming module.
+- **Cofactor insertion into client apoenzymes**, often via dedicated chaperones (e.g., TorD, XdhC) that bind Moco and hand it to specific apoproteins ([PMID: 18522945](https://pubmed.ncbi.nlm.nih.gov/18522945/); [PMID: 17686778](https://pubmed.ncbi.nlm.nih.gov/17686778/)).
+- **Mature molybdoenzyme catalysis, pathway regulation, and the eukaryotic MOCS/CNX/GPHN fusion organization and human disease**, which — while informative for evolutionary comparison — lie outside the prokaryotic module proper.
 
-### 2.3 Competing definitions
+### 2.3 Competing definitions in the literature
 
-Two nomenclature/definition issues recur in the literature. First, the earliest pterin intermediate has historically been called **"precursor Z"**; it is now recognized as **cPMP** (cyclic pyranopterin monophosphate), and the two terms are used interchangeably in older and newer papers. Second, the boundary between "Moco biosynthesis" and "Moco *maturation*" is drawn differently by different authors: some treat molybdate insertion (MoeA) as the terminal step and regard MGD/MCD formation as a separate "dinucleotide" pathway, whereas others fold the dinucleotide-capping enzymes into the core pathway. This review adopts the inclusive definition (stages 1–4) because the dinucleotide caps are obligatory for whole classes of client enzymes and therefore functionally continuous with the rest of the module.
+Two definitional ambiguities recur. First, the **identity of the MPT adenylyltransferase** is described inconsistently: in *E. coli*, MogA performs adenylylation, but MoaB is a structural paralog of MogA whose catalytic competence has been demonstrated in archaea (e.g., *Pyrococcus furiosus*), so some lineages use a "MoaB-class" adenylyltransferase. Treating "MPT adenylylation" as a single conserved activity with alternative protein implementations resolves the confusion. Second, older literature sometimes lumps the terminal two-step Mo insertion (adenylylation + molybdotransfer) into a single "molybdenum insertase" activity — accurate for the fused eukaryotic enzymes (gephyrin, Cnx1) but potentially misleading for prokaryotes where the two activities reside on separate proteins.
 
 ---
 
 ## 3. Mechanistic Overview
 
-{{figure:moco_pathway_schematic.png|caption=Schematic of the prokaryotic molybdenum cofactor biosynthesis module. GTP is cyclized by the radical-SAM enzyme MoaA and rearranged by MoaC to cyclic pyranopterin monophosphate (cPMP). A ubiquitin-like sulfur relay (MoeB activating the MoaD carrier for the MoaD–MoaE synthase) installs the dithiolene to make molybdopterin (MPT). MPT is adenylylated (by MogA or a competent MoaB) and MoeA inserts molybdate to form Mo-MPT. Optionally, MobA appends GMP (MGD) or MocA appends CMP (MCD) for client-specific molybdoenzyme families.}}
+The best current model is an essentially linear cascade with a single branch point at the end. The pyranopterin scaffold is built first, then decorated with two sulfurs, then charged with molybdenum, and finally — optionally — capped with a nucleotide.
 
-The pathway is best described as a **strictly ordered, four-stage relay** in which the product of each stage is the obligate substrate of the next.
+```
+                    Stage 1: Pyranopterin ring
+   GTP ──MoaA──► 3',8-cyclo-7,8-dihydro-GTP ──MoaC──► cPMP
+   (radical-SAM 3',8-cyclase)              (cPMP synthase)
 
-### 3.1 Stage 1 — cPMP formation (obligatory)
+                    Stage 2: Dithiolene sulfurs
+   MoaD ──MoeB(+ATP)──► MoaD-AMP ──IscS sulfur──► MoaD-thiocarboxylate
+   cPMP + 2 × MoaD~COSH ──MoaD2-MoaE2 synthase──► MPT (+ regenerated MoaD)
 
-MoaA and MoaC together convert GTP into cPMP. The modern mechanistic picture revises the classic division of labor: **MoaA generates a cyclic nucleotide intermediate, 3′,8-cyclo-7,8-dihydro-GTP (3′,8-cH₂GTP), and MoaC then catalyzes the majority of the complex rearrangement that forms the pyranopterin ring** and yields cPMP [PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/). MoaA is a radical-SAM enzyme with an N-terminal [4Fe–4S] cluster that reductively cleaves SAM to a 5′-deoxyadenosyl radical, and a C-terminal [4Fe–4S] cluster that binds substrate [PMID: 16632608](https://pubmed.ncbi.nlm.nih.gov/16632608/). ENDOR spectroscopy established that the guanine **N1** nitrogen ligates the unique iron of the C-terminal cluster, constraining the geometry of radical attack [PMID: 19566093](https://pubmed.ncbi.nlm.nih.gov/19566093/).
+                    Stage 3: Molybdenum insertion (obligatory, 2 steps)
+   MPT ──MogA / MoaB (+ATP)──► MPT-AMP ──MoeA(+molybdate)──► Mo-MPT
 
-### 3.2 Stage 2 — sulfur insertion to make MPT (obligatory)
+                    Stage 4: Optional nucleotide maturation
+                          ┌─ MobA (+GTP) ─► bis-MGD   → DMSO-reductase family
+   Mo-MPT ────────────────┼─ (none) ──────► Mo-MPT    → sulfite-oxidase family
+                          └─ MocA (+CTP) ─► MCD       → xanthine-oxidase family
+```
 
-cPMP contains the pyranopterin skeleton but lacks the metal-binding **dithiolene**. Two sulfur atoms are inserted at C1′ and C2′ by **molybdopterin synthase**, a heterotetramer of two MoaE (large) and two MoaD (small) subunits. The chemistry is a **ubiquitin-like sulfur relay** [PMID: 17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/):
-
-- MoaD is a ubiquitin-fold protein with a C-terminal **Gly-Gly motif** that, in its active form, carries a transferable sulfur as a **C-terminal thiocarboxylate**.
-- Only the **thiocarboxylated** synthase converts cPMP (precursor Z) to MPT in vitro [PMID: 11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/).
-- After discharging its sulfur, MoaD is **regenerated** by MoeB, an E1-like enzyme that adenylylates the MoaD C-terminus so an external sulfur donor can re-form the thiocarboxylate. MoaD thus cycles between the MoaE (transfer) and MoeB (recharge) complexes [PMID: 17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/).
-- Structural work places cPMP in a conserved pocket at the MoaE dimer interface near the MoaD C-terminal glycine, and indicates the first dithiolene sulfur is added at the **C2′** position [PMID: 18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/), consistent with sulfur atoms being added sequentially (C2′ first, then C1′).
-
-### 3.3 Stage 3 — Mo-MPT formation (obligatory)
-
-MPT must be activated before the metal can be inserted. The activation is an **adenylylation** of the MPT phosphate to form **MPT-AMP (adenylyl-MPT)**, catalyzed by a MogA-family protein (or a competent MoaB; see §4 and §5.2). **MoeA** then uses adenylyl-MPT as substrate, hydrolyzing the AMP and inserting molybdate to yield **Mo-MPT** [PMID: 11428898](https://pubmed.ncbi.nlm.nih.gov/11428898/). Structurally, MoeA and MogA are related — the MogA-like fold corresponds to domain 3 of MoeA — and are thought to bind similar ligands, which underlies the eukaryotic fusion of the two activities into a single protein (§5.1).
-
-### 3.4 Stage 4 — optional dinucleotide maturation (conditional/accessory)
-
-Some organisms and some client enzymes use Mo-MPT directly; others append a nucleotide. **MobA** transfers GMP from GTP to form **molybdopterin guanine dinucleotide (MGD)**, which for many enzymes is assembled into the **bis-MGD** cofactor of the DMSO-reductase family (including nitrate reductase NarGHI) [PMID: 25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/). **MocA** transfers CMP from CTP to form **molybdopterin cytosine dinucleotide (MCD)** for enzymes such as the xanthine-oxidase-family CO dehydrogenase and aldehyde oxidoreductases [PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/).
-
-### 3.5 Step classification
-
-| Step | Enzyme(s) | Class | Product |
-|------|-----------|-------|---------|
-| GTP → 3′,8-cH₂GTP | MoaA (radical-SAM, 2×[4Fe–4S]) | Obligatory | cyclic nucleotide |
-| 3′,8-cH₂GTP → cPMP | MoaC | Obligatory | cPMP |
-| MoaD recharge | MoeB (E1-like) + external S donor | Obligatory (accessory input) | thiocarboxyl-MoaD |
-| cPMP → MPT | MoaD–MoaE synthase | Obligatory | MPT |
-| MPT → adenylyl-MPT | MogA **or** competent MoaB | Obligatory (variant implementations) | MPT-AMP |
-| adenylyl-MPT → Mo-MPT | MoeA | Obligatory | Mo-MPT |
-| Mo-MPT → MGD | MobA | Conditional | MGD/bis-MGD |
-| Mo-MPT → MCD | MocA | Conditional | MCD |
+**Obligatory steps:** Stages 1–3 are obligatory for any active cofactor. Within them, two orderings are non-negotiable: (a) sulfur must be inserted into the pterin (Stage 2) before the metal (Stage 3), and (b) MPT must be adenylylated before MoeA can ligate molybdate. **Conditional/accessory steps:** Stage 4 is conditional on the client enzyme class; its omission still yields a functional (Mo-MPT) cofactor for sulfite-oxidase-type enzymes. The requirement for MoeB-mediated MoaD reactivation is obligatory but *cyclic* — MoaD is a catalytic sulfur shuttle regenerated after every turnover.
 
 ---
 
 ## 4. Major Molecular Players and Active Assemblies
 
-**MoaA** — A radical-SAM enzyme and one of the most conserved members of the family. It harbors two [4Fe–4S] clusters: an N-terminal cluster for reductive SAM cleavage (generating the 5′-deoxyadenosyl radical) and a C-terminal cluster that binds GTP through guanine N1 [PMID: 16632608](https://pubmed.ncbi.nlm.nih.gov/16632608/); [PMID: 19566093](https://pubmed.ncbi.nlm.nih.gov/19566093/). Its product is the cyclic nucleotide 3′,8-cH₂GTP.
+### 4.1 MoaA — a bifunctional two-cluster radical-SAM cyclase
 
-**MoaC** — A cPMP synthase that catalyzes the majority of the pyranopterin-forming rearrangement, converting 3′,8-cH₂GTP to cPMP [PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/). This reassignment of the "heavy lifting" from MoaA to MoaC is a key mechanistic revision of the last decade.
+MoaA initiates the pathway with chemically the most demanding step: rearranging the purine of GTP so that guanine C8 is inserted into the nascent pterin ring. Crystallographic and spectroscopic work establishes that **each MoaA monomer carries two distinct [4Fe-4S] clusters**. The N-terminal cluster is bound by the canonical CX₃CX₂C radical-SAM motif and "is involved in the reductive cleavage of SAM and generates a 5'-deoxyadenosyl radical (5'-dA•)," while the unique C-terminal cluster is "presumably involved in substrate binding and/or activation," coordinating 5'-GTP through the guanine N1/N2 atoms ([PMID: 16632608](https://pubmed.ncbi.nlm.nih.gov/16632608/)). The MoaA·5'-GTP structure visualizes the L-Met and 5'-dA SAM-cleavage products poised to abstract a hydrogen from the substrate, and — critically — shows that "the tightly anchored triphosphate moiety prevents the escape of radical intermediates," confining the radical chemistry to a productive intramolecular rearrangement ([PMID: 16632608](https://pubmed.ncbi.nlm.nih.gov/16632608/)). Because MoaA "binds two [4Fe-4S] clusters per monomer" and these are delivered by A-type carriers, Moco output is mechanistically coupled to cellular iron and Fe-S status ([PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/); [PMID: 33782054](https://pubmed.ncbi.nlm.nih.gov/33782054/)).
 
-**MoeB** — An E1-like (ubiquitin-activating-enzyme-like) adenylyltransferase that regenerates the transferable sulfur on MoaD by adenylylating its C-terminus, enabling re-formation of the thiocarboxylate [PMID: 17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/).
+The product of MoaA is not cPMP directly but the cyclic nucleotide **3',8-cyclo-7,8-dihydro-GTP (3',8-cH₂GTP)**. Mechanistic studies from the Yokoyama laboratory show that "the characteristic pyranopterin ring is constructed by a complex rearrangement of guanosine 5'-triphosphate (GTP) into cyclic pyranopterin monophosphate (cPMP) through the action of two enzymes, MoaA and MoaC," and that "MoaC catalyzes the majority of the transformation and produces cPMP from a unique cyclic nucleotide, 3',8-cyclo-7,8-dihydro-GTP (3',8-cH2GTP)" ([PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/)). Using an uncleavable substrate analogue (3',8-cH₂GMP[CH₂]PP), they further demonstrated that the early stage of MoaC catalysis proceeds without cyclic-phosphate formation, refining the intermediate sequence. This division of labor — MoaA as the radical cyclase, MoaC as the rearrangement engine — reframes a step long attributed largely to MoaA.
 
-**MoaD** — A small ubiquitin-fold sulfur carrier with a C-terminal Gly-Gly motif; in its active state the terminal glycine is a thiocarboxylate. MoaD is a paradigm for ancient ubiquitin-like protein modifiers that double as sulfur donors (alongside ThiS and archaeal SAMPs) [PMID: 24995873](https://pubmed.ncbi.nlm.nih.gov/24995873/).
+{{figure:moco_pathway_schematic.png|caption=Schematic of the prokaryotic molybdenum cofactor biosynthesis module. GTP is cyclized by the radical-SAM enzyme MoaA and rearranged by MoaC to cyclic pyranopterin monophosphate (cPMP); molybdopterin synthase (MoaD2-MoaE2, reactivated by MoeB using IscS-derived sulfur) inserts two dithiolene sulfurs to form MPT; a MogA/MoaB-class G-domain adenylylates MPT and a MoeA-class E-domain inserts molybdate to give Mo-MPT; MobA or MocA optionally append GMP or CMP to yield bis-MGD or MCD for specific client-enzyme families.}}
 
-**MoaD–MoaE molybdopterin synthase** — A heterotetramer (MoaE₂–MoaD₂) in which each MoaD C-terminus inserts deep into a MoaE subunit to form the active site; two such sites transfer two sulfurs to cPMP [PMID: 12571227](https://pubmed.ncbi.nlm.nih.gov/12571227/); [PMID: 18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/).
+### 4.2 The molybdopterin synthase assembly — MoaD, MoaE, and MoeB
 
-**MogA / competent MoaB** — The MPT adenylyltransferase. In *E. coli* this is the dedicated MogA protein; in some lineages a **catalytically competent MoaB** performs the same reaction (§5.2) [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/).
+MPT synthase is a **heterotetramer of two large MoaE subunits and two small MoaD subunits**, with the MoaD proteins docked at opposite ends of a central MoaE dimer. It converts the sulfur- and metal-free precursor cPMP (precursor Z) into MPT: "the conversion of the sulfur- and metal-free precursor Z to MPT by MPT synthase involves the transfer of sulfur atoms from a C-terminal MoaD thiocarboxylate to the C-1' and C-2' positions of precursor Z," with the first dithiolene sulfur added at C2' ([PMID: 18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/)). The reaction is strictly sulfur-source-dependent: "only the thiocarboxylated MPT synthase complex was found to be able to convert precursor Z in vitro to MPT" ([PMID: 11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/)). Because two sulfurs are installed but each MoaD delivers one, the two-MoaD stoichiometry of the tetramer is functionally meaningful.
 
-**MoeA** — The molybdotransferase that inserts molybdate into adenylyl-MPT. Its four-domain structure includes a MogA-like domain, and a cleft at the dimer interface is the likely functional site [PMID: 11428898](https://pubmed.ncbi.nlm.nih.gov/11428898/).
+MoaD is a **ubiquitin-fold protein with a conserved C-terminal Gly-Gly motif**. It cycles between two heterotetrameric complexes: "MoaD cycles between two different heterotetrameric complexes, one with MoaE to form MPT synthase and the other with MoeB, a protein similar to E1 in the ubiquitin pathway, to regenerate its transferrable sulfur" ([PMID: 17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/)). MoeB activates the MoaD C-terminus as an acyl-adenylate (MoaD-AMP); the terminal glycine (Gly81 in *E. coli*) is essential for this MoaD-AMP formation and for downstream sulfur transfer. The MoaD-AMP is then converted to the thiocarboxylate by an external persulfide donor. This is the same chemical logic — C-terminal adenylylation followed by thiol conjugation — used in ubiquitin and ThiS activation, making Moco biosynthesis a canonical example of ancestral, prokaryotic ubiquitin-like protein chemistry.
 
-**MobA / MocA** — Dinucleotide transferases with a two-domain modular architecture: the **N-terminal domain sets nucleotide specificity** (GTP vs. CTP) and the **C-terminal domain sets client-enzyme (acceptor) specificity** [PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/).
+### 4.3 The terminal Mo-insertion module — G-domain adenylyltransferase + MoeA E-domain
+
+Metal insertion is a **two-step reaction**. A **MogA-class (protein-G/G-domain) protein first adenylylates MPT to MPT-AMP**, and a **MoeA-class (E-domain) protein then hydrolyzes MPT-AMP and ligates molybdate to form Mo-MPT**. Structural work on *E. coli* MoaB shows it is a 3₂-symmetric hexamer whose fold matches MogA and the G-domains of rat/human gephyrin and *Arabidopsis* Cnx1: "the overall fold of the monomer is similar to those of the MogA protein of E. coli, the G-domains of rat and human gephyrin and the G-domains of Cnx1 protein from A. thaliana, all of which are involved in the insertion of an unknown molybdenum species into molybdopterin to form the molybdenum cofactor" ([PMID: 15159566](https://pubmed.ncbi.nlm.nih.gov/15159566/)). This structural identity is the basis for treating MoaB as a catalytically competent adenylyltransferase in the lineages (e.g., archaeal *Pyrococcus*) that lack a separate MogA. In eukaryotes the two activities are fused: "the final step of Moco biosynthesis, i.e. transfer and insertion of Mo into MPT, is catalyzed by the two-domain proteins Cnx1 in plants and gephyrin in mammals" ([PMID: 11554796](https://pubmed.ncbi.nlm.nih.gov/11554796/)).
+
+The molybdate-insertion chemistry itself has been dissected in the plant MoeA homolog Cnx1E. The E-domain catalyzes both reactions: "molybdate insertion and MPT-AMP hydrolysis are catalyzed by the Mo-insertase E-domain. Earlier work reported a highly conserved aspartate residue to be essential for Mo-insertase functionality" ([PMID: 31860061](https://pubmed.ncbi.nlm.nih.gov/31860061/)). Substituting Cnx1E Asp274 with Glu (D274E) arrests MPT-AMP hydrolysis and causes accumulation of both MPT-AMP and molybdate; the mutant structure shows disorder of residues 269–274, attributed to the inability of Glu274 to coordinate an octahedral Mg²⁺-water complex. High-resolution datasets further reveal "two molybdate-binding sites within the active site" whose occupancy is tied to a distinctive backbone conformation proposed to govern molybdate selectivity ([PMID: 29717023](https://pubmed.ncbi.nlm.nih.gov/29717023/)). Because Cnx1E is the direct homolog of bacterial MoeA, these mechanistic details transfer to the prokaryotic step with reasonable confidence.
+
+### 4.4 The dinucleotide transferases — MobA and MocA
+
+The optional cap is added by **paralogous, strictly nucleotide-specific transferases**. "The molybdenum cofactor is modified by the addition of GMP or CMP to the C4' phosphate of molybdopterin forming the molybdopterin guanine dinucleotide or molybdopterin cytosine dinucleotide cofactor, respectively" — via GTP:MPT guanylyltransferase **MobA** or CTP:MPT cytidylyltransferase **MocA** ([PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/)). MobA and MocA share only ~22% identity yet are so nucleotide-selective that "the exchange of five amino acids was enough to obtain activity with both GTP and CTP in either MocA or MobA"; the N-terminal domain encodes nucleotide specificity while the C-terminal domain determines which client enzyme the transferase serves ([PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/); [PMID: 19542235](https://pubmed.ncbi.nlm.nih.gov/19542235/)).
+
+| Enzyme | Reaction | Product | Client molybdoenzyme family | Reference |
+|--------|----------|---------|------------------------------|-----------|
+| (none) | — | Mo-MPT | Sulfite oxidase (SUOX) family | [PMID: 18535145](https://pubmed.ncbi.nlm.nih.gov/18535145/) |
+| MobA | Mo-MPT + GTP → bis-MGD | bis-MGD | DMSO reductase family (incl. NarGHI nitrate reductase) | [PMID: 25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/) |
+| MocA | Mo-MPT + CTP → MCD | MCD | Xanthine dehydrogenase / aldehyde oxidoreductase (XdhABC, YagTSR) | [PMID: 19542235](https://pubmed.ncbi.nlm.nih.gov/19542235/) |
 
 ---
 
 ## 5. Evolutionary and Cell-Biological Variation
 
-### 5.1 Deep antiquity and eukaryotic fusion
+### 5.1 A deeply conserved, evolutionarily plastic core
 
-Because Moco-dependent metabolism underlies core nitrogen, sulfur, and carbon transformations across all three domains of life, Moco is traced to **LUCA**, while the biosynthetic genes subsequently diverged and acquired additional functions [PMID: 33017596](https://pubmed.ncbi.nlm.nih.gov/33017596/). The clearest structural signature of this divergence is the **prokaryote-to-eukaryote consolidation of monofunctional enzymes into multidomain proteins**. The plant **Cnx1** protein (and its animal/insect homologs gephyrin and cinnamon) fuses an N-terminal **MoeA-homologous** domain with a C-terminal **MoaB/MogA-homologous** domain, thereby combining into one polypeptide two steps carried out by separate proteins in *E. coli* [PMID: 8528286](https://pubmed.ncbi.nlm.nih.gov/8528286/). The ubiquitin-fold sulfur carriers (MoaD/ThiS/SAMP) are regarded as among the **most ancient protein modifiers**, linking Moco biosynthesis to the deep evolutionary origins of both sulfur transfer and ubiquitin-like signaling [PMID: 24995873](https://pubmed.ncbi.nlm.nih.gov/24995873/).
+The terminal insertase MoeA is essential for Moco biosynthesis and exists in all domains of life — one of the pathway's oldest components. Phylogenetic analysis reveals that "in Archaea we identified an ancestral duplication where one of the paralogs might bind tungsten instead of molybdenum" ([PMID: 39091723](https://pubmed.ncbi.nlm.nih.gov/39091723/)), marking an ancient Mo/W-binding divergence at the metal-insertion step. This metal flexibility is not merely ancestral: the archaeon *Pyrobaculum aerophilum* makes an active tungsten nitrate reductase in which "W is coordinated by a bis-molybdopterin guanine dinucleotide cofactor" ([PMID: 20863064](https://pubmed.ncbi.nlm.nih.gov/20863064/)), demonstrating that the same pyranopterin and dinucleotide machinery can carry either metal.
 
-### 5.2 Lineage-specific variation at the adenylylation step
+### 5.2 From prokaryotic module to eukaryotic fusion proteins
 
-The MPT-adenylylation step has (at least) two experimentally validated prokaryotic implementations. The dedicated **MogA** is the canonical solution. However, Bevers et al. showed that **MoaB from the hyperthermophilic archaeon *Pyrococcus furiosus* reconstitutes the function of *E. coli* MogA**, catalyzing Mg²⁺/ATP-dependent MPT adenylylation — at a rate comparable to the Cnx1 G-domain at room temperature and up to ~20-fold faster at 80 °C [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/). Critically, this competence is **lineage-specific, not universal**: in a direct comparison, **only MogA is active in *E. coli*, whereas *E. coli* MoaB is inactive** for this reaction [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/). The competent *P. furiosus* MoaB is also hexameric, in contrast to trimeric mesophilic MogA. The same study noted conservation of metal/nucleotide specificity between molybdenum and tungsten cofactor synthesis, underscoring that the adenylylation chemistry is shared by the W-cofactor branch.
+The most striking evolutionary elaboration is the **fusion of MogA and MoeA in the eukaryotic lineage**: "MoeA was obtained from Bacteria by early eukaryotes, MogA fused with MoeA in the opisthokont ancestors, and it finally gained roles in anchoring inhibitory neurotransmitters" ([PMID: 39091723](https://pubmed.ncbi.nlm.nih.gov/39091723/)). The resulting two-domain gephyrin/Cnx1 architecture places a MoeA-like E-domain and a MogA/MoaB-like G-domain on one polypeptide. The plant enzyme Cnx1 encodes exactly this two-domain fusion — "the N-terminal domain is homologous to the E. coli Moco protein MoeA, the C-terminal domain is homologous to the E. coli Moco proteins MoaB and MogA" — and functionally complements an *E. coli* mogA mutant ([PMID: 8528286](https://pubmed.ncbi.nlm.nih.gov/8528286/)). Gephyrin later gained a moonlighting role clustering glycine and GABA receptors at inhibitory synapses ([PMID: 11554796](https://pubmed.ncbi.nlm.nih.gov/11554796/)). A further example of repurposing: in Actinobacteria a MoeA copy (Glp) has lost enzymatic activity and instead functions in cell division ([PMID: 39091723](https://pubmed.ncbi.nlm.nih.gov/39091723/)).
 
-| Property | *E. coli* MogA | *E. coli* MoaB | *P. furiosus* MoaB |
-|----------|----------------|----------------|--------------------|
-| MPT adenylyltransferase activity | Yes | **No** | **Yes** |
-| Role in pathway | Dedicated | Inactive paralog | Functional substitute for MogA |
-| Oligomeric state | Trimeric | — | Hexameric |
-| Reference | [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/) | [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/) | [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/) |
+**Best representative of the ancestral role:** because the MoeA family has expanded and diversified (Mo- vs W-binding paralogs, enzymatically dead cell-division copies, fused eukaryotic insertases), the free-standing, catalytically active bacterial/archaeal MoeA — not the moonlighting eukaryotic fusion or the Actinobacterial Glp — is the best proxy for the ancestral molybdotransferase.
 
-The practical implication is that **MoaB annotation alone does not predict function**: only some MoaB proteins are catalytically competent adenylyltransferases, and *P. furiosus* MoaB — not *E. coli* MoaB — is the better representative of the ancestral/competent role.
+### 5.3 Physiological and lineage-specific variation
 
-### 5.3 Client-specific dinucleotide capping
-
-The optional dinucleotide step is where the module is tuned to the downstream molybdoenzyme repertoire. MobA and MocA share only ~22% identity yet have exchangeable specificity modules: swapping five N-terminal residues confers dual GTP/CTP activity, and **exchanging the entire N-terminal domain fully inverts nucleotide specificity**, while the **C-terminal domain dictates acceptor (client-enzyme) binding** [PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/). This modularity explains how a single fold family can produce cofactor variants matched to distinct enzyme classes. The physiological stakes are real: in *Mycobacterium tuberculosis*, MobA-derived **bis-MGD is required for NarGHI nitrate reductase activity and for persistence in guinea pigs** [PMID: 25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/), directly linking a "downstream, optional" biosynthetic step to a virulence phenotype. Beyond MGD and MCD, the DMSO-reductase family (subfamily 2) that uses the Mo-bis-MGD cofactor spans dissimilatory nitrate reductases, DMSO/DMS dehydrogenases, chlorate/perchlorate reductases, and anaerobic hydroxylases such as ethylbenzene dehydrogenase, illustrating the breadth of client classes served by the MGD branch [PMID: 26960184](https://pubmed.ncbi.nlm.nih.gov/26960184/).
-
-### 5.4 Physiological-state variation via shared sulfur supply
-
-The pathway's sulfur input is not private. In *E. coli*, conversion of cPMP to MPT requires the **L-cysteine desulfurase IscS**, the same enzyme that builds Fe–S clusters [PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/). The persulfide carrier **TusA** partitions sulfur between Moco biosynthesis and tRNA thiomodification, and different TusA-like paralogs are specialized to particular pathways in different organisms [PMID: 31655739](https://pubmed.ncbi.nlm.nih.gov/31655739/); [PMID: 28098827](https://pubmed.ncbi.nlm.nih.gov/28098827/). Consequently, MPT synthesis competes with Fe–S assembly and tRNA thiolation for a shared sulfur pool, and cofactor output is expected to vary with cellular redox and iron/sulfur status. Consistent with this embedding, *moaABCDE* and *moeAB* expression is controlled by the O₂-sensing [4Fe–4S] regulator **FNR** [PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/); [PMID: 31517366](https://pubmed.ncbi.nlm.nih.gov/31517366/).
+- **MPT synthase architecture varies.** Some bacteria (e.g., *M. tuberculosis*) encode a **fused MoaD–MoaE protein (MoaX)** that must be post-translationally cleaved by a JAMM/MPN protease to liberate the free C-terminal di-Gly of MoaD required for sulfur carriage ([PMID: 29777693](https://pubmed.ncbi.nlm.nih.gov/29777693/)).
+- **Sulfur-donor systems differ.** *E. coli* uses IscS as the primary donor with the rhodanese YnjE as a refining step — an arrangement paralleling the two-sulfurtransferase (desulfurase + rhodanese) system used in humans ([PMID: 21856748](https://pubmed.ncbi.nlm.nih.gov/21856748/)).
+- **Cofactor-form usage is client-driven, not organism-driven.** A single organism can make Mo-MPT, bis-MGD, and MCD simultaneously to serve its different molybdoenzyme families, distributing them to user enzymes via dedicated binding/chaperone proteins ([PMID: 17686778](https://pubmed.ncbi.nlm.nih.gov/17686778/)).
 
 ---
 
 ## 6. Constraints, Dependencies, and Failure Modes
 
-**Obligatory ordering.** The four stages are strictly sequential because each enzyme requires the specific product of the preceding step. cPMP is the only substrate for the synthase; MPT is the only substrate for adenylylation; adenylyl-MPT (not free MPT) is the substrate for MoeA-catalyzed molybdate insertion; and only Mo-MPT can be dinucleotide-capped. This is not merely a kinetic preference but a chemical requirement — for example, MoeA acts on the adenylylated species, so **skipping adenylylation blocks molybdate insertion**, and the pathway cannot "shortcut" from MPT directly to Mo-MPT.
+### 6.1 Ordering constraints
 
-**Activation-before-transfer within the sulfur relay.** MoaD must be recharged to its thiocarboxylate form before it can donate sulfur; only thiocarboxylated synthase converts cPMP to MPT [PMID: 11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/). The MoeB-catalyzed adenylylation of MoaD therefore necessarily precedes each round of MoaE-catalyzed sulfur transfer, and MoaD physically cycles between the two complexes [PMID: 17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/).
+1. **MoaA before MoaC.** MoaC's substrate is MoaA's cyclic product (3',8-cH₂GTP); MoaC cannot act on GTP directly ([PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/)).
+2. **Sulfur before metal.** cPMP must be converted to the dithiolene-bearing MPT before molybdate can be chelated; the dithiolene is the metal-binding ligand. There is no route by which molybdate is inserted into cPMP.
+3. **MoeB activation before sulfur transfer.** MoaD must be adenylylated and thiocarboxylated before it can supply sulfur to MoaE; only the thiocarboxylated synthase is active ([PMID: 11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/)).
+4. **Adenylylation before molybdotransfer.** MoeA acts on MPT-AMP, not MPT; the D274E Cnx1E experiment, which traps MPT-AMP when hydrolysis is blocked, directly evidences this obligatory intermediate ([PMID: 31860061](https://pubmed.ncbi.nlm.nih.gov/31860061/)).
+5. **Metal before nucleotide (for the standard route).** Dinucleotide transferases act on Mo-MPT; notably, MocA can convert MPT to MCD in the absence of molybdate but only for a single turnover, with product remaining bound — underscoring that molybdate loading is normally coupled to productive dinucleotide formation ([PMID: 19542235](https://pubmed.ncbi.nlm.nih.gov/19542235/)).
 
-**Mutually exclusive capping.** MGD and MCD formation are alternative fates of the same Mo-MPT pool, selected by which transferase (MobA vs. MocA) and which client acceptor are present. The N-domain/C-domain modularity means the choice is encoded in the transferase itself and in its acceptor-protein contacts [PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/).
+### 6.2 Dependency constraints
 
-**Shared-resource failure modes.** Because IscS/TusA supply sulfur to multiple pathways, perturbations to Fe–S metabolism or to tRNA thiolation can indirectly starve MPT synthesis, and vice versa [PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/); [PMID: 28098827](https://pubmed.ncbi.nlm.nih.gov/28098827/). Likewise, loss of molybdate uptake (ModABC) removes the substrate for MoeA even when the entire enzymatic pathway is intact [PMID: 27196733](https://pubmed.ncbi.nlm.nih.gov/27196733/). These dependencies mean the module can fail without any mutation in its own genes.
+- **Iron/Fe-S dependency.** MoaA's requirement for two [4Fe-4S] clusters makes the entire pathway hostage to Fe-S cluster assembly and iron availability ([PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/); [PMID: 33782054](https://pubmed.ncbi.nlm.nih.gov/33782054/)).
+- **Sulfur dependency.** In an *iscS* deletion strain MoaD sulfuration is greatly reduced and compound Z (the oxidation product of the immediate MPT precursor) accumulates to the same extent as in an MPT-synthase-deficient strain, whereas *csdA*/*sufS* deletions do not have this effect; "IscS, but not CsdA or SufS, interacts with MoeB and MoaD" ([PMID: 19946146](https://pubmed.ncbi.nlm.nih.gov/19946146/)). Independently, "the l-cysteine desulfurase IscS was identified as the primary sulfur donor for the formation of the thiocarboxylate on the small subunit (MoaD) of MPT synthase" ([PMID: 21856748](https://pubmed.ncbi.nlm.nih.gov/21856748/)).
 
-**Evidence that rules out alternative paths.** The requirement for thiocarboxylated MoaD [PMID: 11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/) rules out a "free-sulfide" route to the dithiolene under physiological synthase catalysis. The demonstration that MoaC, not MoaA, performs most of the rearrangement [PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/) rules out the older model in which MoaA alone produced the pyranopterin. The N1-binding ENDOR result [PMID: 19566093](https://pubmed.ncbi.nlm.nih.gov/19566093/) constrains the site of radical chemistry on GTP.
+### 6.3 Failure modes and their physiological readouts
+
+- **Loss of dinucleotide maturation is client-specific.** MobA "converts MoCo to bis-molybdopterin guanine dinucleotide (bis-MGD), a form of the cofactor that is required by the dimethylsulfoxide (DMSO) reductase family of enzymes, which includes the nitrate reductase NarGHI"; a *M. tuberculosis mobA* deletion abolishes assimilatory and respiratory nitrate reductase activity and impairs persistence in guinea pigs ([PMID: 25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/)). By contrast, sulfite-oxidase-family enzymes are unaffected by *mobA* loss because they use bare Mo-MPT — consistent with the finding that MoCo-dependent resistance to N-hydroxylated base analogs in *E. coli* is MobA-independent and satisfied by the GMP-free (MPT) cofactor ([PMID: 17349664](https://pubmed.ncbi.nlm.nih.gov/17349664/)).
+- **Blocked molybdate insertion** (e.g., the conserved-Asp mutant of the MoeA/Cnx1E E-domain) traps MPT-AMP and molybdate, producing an inactive cofactor precursor ([PMID: 31860061](https://pubmed.ncbi.nlm.nih.gov/31860061/)).
 
 ---
 
 ## 7. Controversies and Open Questions
 
-1. **The exact MoaA/MoaC division of labor and intermediate structures.** While it is now established that MoaC does the bulk of the rearrangement via a discrete cyclic nucleotide [PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/), the complete atomic-resolution trajectory from 3′,8-cH₂GTP to cPMP — and the precise fate of every atom — remains an active area rather than a settled picture.
+**Strongly supported claims.** The radical-SAM identity and two-cluster architecture of MoaA; the MoaC-driven rearrangement to cPMP; the ubiquitin-like MoaD/MoeB activation cycle; the thiocarboxylate-dependent two-sulfur transfer by the MoaD₂–MoaE₂ synthase; the two-step (adenylylation + molybdotransfer) metal insertion; the conserved-Asp/Mg²⁺-water mechanism of the E-domain; and the client-class partitioning of Mo-MPT, bis-MGD, and MCD are all supported by convergent structural, biochemical, and genetic evidence.
 
-2. **Which MoaB proteins are competent, and why.** The demonstration that *P. furiosus* MoaB is an active adenylyltransferase while *E. coli* MoaB is inactive [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/) raises an unresolved question: what sequence/structural determinants (and oligomeric differences) distinguish competent from inactive MoaB lineages, and how widely is the competent variant distributed across bacteria and archaea? Genome annotation currently cannot answer this.
+**Areas of disagreement or indirect evidence.**
 
-3. **Regiochemistry and order of dithiolene sulfur insertion.** Structural and biochemical data indicate the first sulfur is added at C2′ [PMID: 18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/), but the details of the second insertion and the conformational changes coupling the two events are only partially resolved.
+1. **Mechanistic transfer across organisms.** Much of the molybdate-insertion mechanism comes from the *plant* enzyme Cnx1E ([PMID: 31860061](https://pubmed.ncbi.nlm.nih.gov/31860061/); [PMID: 29717023](https://pubmed.ncbi.nlm.nih.gov/29717023/)), whereas the adenylyltransferase paralogy comes from *E. coli* MoaB structure ([PMID: 15159566](https://pubmed.ncbi.nlm.nih.gov/15159566/)) and the catalytically competent MoaB claim rests on archaeal (*Pyrococcus*) biochemistry. Whether every prokaryotic MoaB is a bona fide adenylyltransferase in vivo, or only a subset of the lineage, is not fully resolved.
+2. **Identity of the physiological sulfur donor beyond IscS.** IscS is the primary donor, but the precise roles of YnjE, TusA, and other rhodanese/relay proteins — and how sulfur is channeled specifically to MoaD versus competing tRNA-thiolation and Fe-S pathways — remain partially defined ([PMID: 21856748](https://pubmed.ncbi.nlm.nih.gov/21856748/); [PMID: 31655739](https://pubmed.ncbi.nlm.nih.gov/31655739/)).
+3. **The Mo/W selectivity switch.** The archaeal MoeA duplication that may distinguish Mo from W ([PMID: 39091723](https://pubmed.ncbi.nlm.nih.gov/39091723/)) and the tungsten-loaded bis-MGD nitrate reductase ([PMID: 20863064](https://pubmed.ncbi.nlm.nih.gov/20863064/)) raise unresolved questions about how — and where in the pathway — metal identity is selected.
+4. **Cofactor trafficking and protection.** How the labile cofactor is shielded from oxidation and delivered to the correct apoenzyme (via chaperones such as XdhC and TorD; [PMID: 17686778](https://pubmed.ncbi.nlm.nih.gov/17686778/); [PMID: 18522945](https://pubmed.ncbi.nlm.nih.gov/18522945/)) sits at the module's exit boundary and is incompletely mapped.
 
-4. **Organismal comparability.** Much of the mechanistic detail is stitched together from different organisms — *E. coli* (MogA, IscS/TusA, regulation), *Staphylococcus aureus* (synthase structures), *P. furiosus* (competent MoaB), *M. tuberculosis* (bis-MGD physiology). Mixing data across such divergent taxa risks overgeneralization; lineage-specific differences (e.g., the adenylyltransferase implementation) show this is not merely a theoretical concern.
-
-5. **Regulation of flux and sulfur partitioning.** How cells dynamically allocate the shared IscS/TusA sulfur pool between Moco, Fe–S, and tRNA thiolation under changing conditions is not quantitatively understood [PMID: 28098827](https://pubmed.ncbi.nlm.nih.gov/28098827/); [PMID: 31655739](https://pubmed.ncbi.nlm.nih.gov/31655739/).
-
-6. **Extent of the tungsten-cofactor overlap.** The adenylylation machinery is shared between Mo- and W-cofactor synthesis [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/), but where the pathways diverge to select metal identity in vivo is not fully defined by this module alone.
-
----
-
-## 8. Limitations and Knowledge Gaps
-
-- **Model-organism bias.** The strongest biochemistry is from a handful of tractable organisms; the review's four-stage model is best validated in *E. coli* and should be applied to other prokaryotes with caution.
-- **In vitro vs. in vivo.** Several mechanistic assignments (e.g., thiocarboxylate requirement, MoaB competence) rest on reconstituted assays; in vivo flux, channeling between enzymes, and complex formation are less well characterized.
-- **Structural coverage is uneven.** High-resolution structures exist for the synthase and MoeA, but a comprehensive structural view of the full assembly line — especially transient MoaD-handoff complexes and the MoeA molybdate-insertion state — is incomplete.
-- **Distribution of variants.** The genomic prevalence of the MogA-vs-competent-MoaB choice, and of MobA/MocA capping, across bacterial and archaeal phyla has not been systematically mapped here.
+**Most important open questions.** (i) What is the full, ordered inventory of intermediates between MoaA product and cPMP, and how does MoaC accomplish the ring rearrangement? (ii) Which prokaryotic lineages genuinely use MoaB rather than MogA for adenylylation, and what selects between them? (iii) How is metal specificity (Mo vs W) determined mechanistically at the MoeA step? (iv) How is the choice among Mo-MPT, bis-MGD, and MCD coordinated with client-enzyme demand in a single cell?
 
 ---
 
-## 9. Proposed Follow-up Experiments / Actions
+## 8. Limitations and Knowledge Gaps of This Review
 
-1. **Comparative genomics of MoaB competence.** Build a phylogenetic and structural classifier that distinguishes competent (*P. furiosus*-like) from inactive (*E. coli*-like) MoaB proteins, validated by heterologous complementation of a *mogA* mutant. This would resolve open question §7.2.
-2. **Reconstitute the full pathway in vitro with defined sulfur input.** Combine MoaA/MoaC, the MoeB/MoaD/MoaE relay charged by IscS/TusA, MogA/MoeA, and MobA/MocA to measure step-wise kinetics, channeling, and rate-limiting steps under a single controlled system.
-3. **Time-resolved structural studies of sulfur handoff.** Capture the MoaD-thiocarboxylate → MoaE transfer and the MoaD → MoeB recharge complexes (cryo-EM/time-resolved crystallography) to nail down the two-sulfur insertion order and coupling, building on [PMID: 18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/).
-4. **Quantitative sulfur-partitioning studies.** Use isotope tracing to measure how the shared IscS/TusA pool is allocated between Moco, Fe–S, and tRNA thiolation under varying O₂, iron, and molybdate availability [PMID: 28098827](https://pubmed.ncbi.nlm.nih.gov/28098827/).
-5. **Map dinucleotide-cap requirements across client families.** Systematically test which molybdoenzyme classes require MGD, bis-MGD, MCD, or bare Mo-MPT, and correlate with the presence/absence of MobA/MocA in each genome, extending the *M. tuberculosis* bis-MGD paradigm [PMID: 25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/).
+- **Cross-organism synthesis.** This review integrates data from *E. coli*, *M. tuberculosis*, *Pseudomonas*, *Rhodobacter*, archaea, plants, and mammals. While the core module is conserved, mechanistic details established in one system (especially plant Cnx1E and eukaryotic gephyrin) are extrapolated to prokaryotes with appropriate but incomplete confidence.
+- **The MoaB adenylyltransferase lineage** is the least directly characterized node; its inclusion as an "alternative implementation" of MPT adenylylation rests on structural homology plus limited archaeal biochemistry rather than a broad enzymological survey.
+- **Kinetics and flux control** across the module — which step is rate-limiting under physiological molybdate/iron/sulfur conditions — were not quantitatively assessed here.
+- **Regulation** was deliberately excluded from scope, so the review does not capture how transcriptional/translational control (FNR, NarXL, Fur, ArcA; [PMID: 31517366](https://pubmed.ncbi.nlm.nih.gov/31517366/)) tunes module output.
+
+---
+
+## 9. Proposed Follow-up Experiments and Actions
+
+1. **Direct in vitro reconstitution of MoaB adenylyltransferase activity** across diverse prokaryotic lineages (bacteria vs archaea) to define which organisms genuinely use MoaB rather than MogA, and to test whether a single active-site signature predicts catalytic competence.
+2. **Time-resolved characterization of the MoaA→MoaC handoff**, using trapped or analogue intermediates to enumerate every species between 3',8-cH₂GTP and cPMP and to assign each rearrangement step to MoaA vs MoaC.
+3. **Structural/mechanistic dissection of Mo/W selectivity** at MoeA, comparing the archaeal Mo- and putative W-binding paralogs to identify the residues governing metal choice, complemented by molybdate/tungstate competition assays.
+4. **Systematic mapping of sulfur channeling** to MoaD, using genetic depletion and pulse-labeling to quantify the relative contributions of IscS, YnjE, and TusA and to test channeling versus free-diffusion models.
+5. **Cofactor-flux tracing in a single organism** expressing multiple client families, to determine how the cell partitions Mo-MPT among the "stop" (sulfite-oxidase), MobA (bis-MGD), and MocA (MCD) fates in response to enzyme demand.
+6. **Cross-complementation matrix** of fused (MoaX, Cnx1, gephyrin) vs split (MoaD/MoaE; MogA/MoeA) architectures to quantify the functional consequences of evolutionary fusion and to identify the minimal active module.
 
 ---
 
 ## 10. Key References
 
-- MoaA/MoaC mechanism and cPMP formation — [PMID: 26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/); [PMID: 16632608](https://pubmed.ncbi.nlm.nih.gov/16632608/); [PMID: 19566093](https://pubmed.ncbi.nlm.nih.gov/19566093/); [PMID: 35480226](https://pubmed.ncbi.nlm.nih.gov/35480226/); [PMID: 30097104](https://pubmed.ncbi.nlm.nih.gov/30097104/).
-- Ubiquitin-like sulfur relay and molybdopterin synthase — [PMID: 17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/); [PMID: 11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/); [PMID: 12571227](https://pubmed.ncbi.nlm.nih.gov/12571227/); [PMID: 18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/); [PMID: 24995873](https://pubmed.ncbi.nlm.nih.gov/24995873/).
-- MPT adenylylation and molybdate insertion (MogA/MoaB/MoeA) — [PMID: 18154309](https://pubmed.ncbi.nlm.nih.gov/18154309/); [PMID: 11428898](https://pubmed.ncbi.nlm.nih.gov/11428898/).
-- Dinucleotide variants (MobA/MocA, MGD/MCD) and client families — [PMID: 21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/); [PMID: 25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/); [PMID: 26960184](https://pubmed.ncbi.nlm.nih.gov/26960184/).
-- Evolution, LUCA origin, and eukaryotic fusion — [PMID: 33017596](https://pubmed.ncbi.nlm.nih.gov/33017596/); [PMID: 8528286](https://pubmed.ncbi.nlm.nih.gov/8528286/); [PMID: 35956883](https://pubmed.ncbi.nlm.nih.gov/35956883/).
-- Shared sulfur supply and metabolic embedding — [PMID: 38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/); [PMID: 28098827](https://pubmed.ncbi.nlm.nih.gov/28098827/); [PMID: 31655739](https://pubmed.ncbi.nlm.nih.gov/31655739/); [PMID: 36403141](https://pubmed.ncbi.nlm.nih.gov/36403141/).
-- Boundaries: transport and regulation — [PMID: 27196733](https://pubmed.ncbi.nlm.nih.gov/27196733/); [PMID: 31517366](https://pubmed.ncbi.nlm.nih.gov/31517366/).
+| PMID | Contribution to this review |
+|------|------------------------------|
+| [26575208](https://pubmed.ncbi.nlm.nih.gov/26575208/) | MoaA/MoaC two-enzyme unit; 3',8-cH₂GTP intermediate; MoaC does most of the rearrangement to cPMP |
+| [16632608](https://pubmed.ncbi.nlm.nih.gov/16632608/) | MoaA two-[4Fe-4S]-cluster architecture; GTP anchoring prevents radical escape |
+| [38631442](https://pubmed.ncbi.nlm.nih.gov/38631442/) | Fe-S dependence of Moco biosynthesis; two clusters per MoaA monomer |
+| [33782054](https://pubmed.ncbi.nlm.nih.gov/33782054/) | A-type carriers (ErpA/IscA) deliver [4Fe-4S] to MoaA |
+| [18092812](https://pubmed.ncbi.nlm.nih.gov/18092812/) | MPT synthase heterotetramer; two-sulfur transfer to C1'/C2' of precursor Z |
+| [11459846](https://pubmed.ncbi.nlm.nih.gov/11459846/) | Only thiocarboxylated MPT synthase is active |
+| [17223713](https://pubmed.ncbi.nlm.nih.gov/17223713/) | MoaD ubiquitin fold; MoeB (E1-like) reactivation cycle |
+| [29777693](https://pubmed.ncbi.nlm.nih.gov/29777693/) | Fused MoaD–MoaE (MoaX) cleaved by JAMM/MPN protease |
+| [19946146](https://pubmed.ncbi.nlm.nih.gov/19946146/) | IscS as the specific in vivo sulfur donor interacting with MoeB/MoaD |
+| [21856748](https://pubmed.ncbi.nlm.nih.gov/21856748/) | IscS primary donor; rhodanese YnjE refines sulfur transfer |
+| [31655739](https://pubmed.ncbi.nlm.nih.gov/31655739/) | TusA sulfur-relay diversity feeding Moco biosynthesis |
+| [15159566](https://pubmed.ncbi.nlm.nih.gov/15159566/) | MoaB structure homologous to MogA and gephyrin/Cnx1 G-domains |
+| [11554796](https://pubmed.ncbi.nlm.nih.gov/11554796/) | Terminal Mo insertion by two-domain Cnx1/gephyrin (G + E domains) |
+| [31860061](https://pubmed.ncbi.nlm.nih.gov/31860061/) | E-domain performs MPT-AMP hydrolysis + molybdate insertion; conserved Asp essential |
+| [29717023](https://pubmed.ncbi.nlm.nih.gov/29717023/) | Two molybdate-binding subsites in the Cnx1E active site |
+| [8528286](https://pubmed.ncbi.nlm.nih.gov/8528286/) | Cnx1 two-domain fusion = MoeA + MoaB/MogA homologs; complements mogA |
+| [39091723](https://pubmed.ncbi.nlm.nih.gov/39091723/) | MoeA universality, archaeal Mo/W duplication, MogA-MoeA fusion, Glp repurposing |
+| [21081498](https://pubmed.ncbi.nlm.nih.gov/21081498/) | MobA/MocA nucleotide specificity encoded by five N-terminal residues |
+| [19542235](https://pubmed.ncbi.nlm.nih.gov/19542235/) | MocA characterization; MCD required by XdhABC/YagTSR; single-turnover without molybdate |
+| [25404027](https://pubmed.ncbi.nlm.nih.gov/25404027/) | MobA/bis-MGD required by DMSO-reductase family; persistence phenotype in *M. tuberculosis* |
+| [20863064](https://pubmed.ncbi.nlm.nih.gov/20863064/) | Tungsten coordinated by bis-MGD in archaeal nitrate reductase |
+| [18535145](https://pubmed.ncbi.nlm.nih.gov/18535145/) | SUOX fold persistence across all domains; Mo-MPT-retaining client family |
+| [18522945](https://pubmed.ncbi.nlm.nih.gov/18522945/) | TorD chaperone connects cofactor synthesis to apoenzyme (exit boundary) |
+| [17686778](https://pubmed.ncbi.nlm.nih.gov/17686778/) | XdhC/MobA competition for Moco; cofactor targeting to user enzymes |
+| [17349664](https://pubmed.ncbi.nlm.nih.gov/17349664/) | GMP-free MoCo (MPT) sufficient for certain MoCo-dependent functions |
+| [31517366](https://pubmed.ncbi.nlm.nih.gov/31517366/) | Regulation of Moco/molybdoenzyme genes (excluded scope, context) |
 
 ---
 
-*Prepared as a synthesis of a multi-iteration literature investigation (6 confirmed findings, 39 papers reviewed). Uncertainty is flagged throughout; mechanistic claims are attributed to the specific organisms and assays in which they were established, and cross-organism generalizations are identified as such.*
+*Prepared as a commissioned review-style synthesis. Claims are anchored to the primary and review literature cited above; extrapolations across organisms (notably from plant Cnx1E and eukaryotic gephyrin to prokaryotic MoeA/MogA) are flagged in the text and should be treated as mechanistically plausible rather than directly demonstrated in every prokaryote.*
 
 
 ## Artifacts
@@ -462,27 +480,29 @@ The pathway's sulfur input is not private. In *E. coli*, conversion of cPMP to M
 
 ## Citations
 
-1. PMID:27196733
-2. PMID:31517366
-3. PMID:26575208
-4. PMID:16632608
-5. PMID:19566093
-6. PMID:17223713
-7. PMID:11459846
-8. PMID:18092812
-9. PMID:11428898
-10. PMID:25404027
-11. PMID:21081498
-12. PMID:24995873
-13. PMID:12571227
-14. PMID:18154309
-15. PMID:33017596
-16. PMID:8528286
-17. PMID:26960184
-18. PMID:38631442
-19. PMID:31655739
-20. PMID:28098827
-21. PMID:35480226
-22. PMID:30097104
-23. PMID:35956883
-24. PMID:36403141
+1. PMID:19946146
+2. PMID:21856748
+3. PMID:31655739
+4. PMID:33782054
+5. PMID:38631442
+6. PMID:18522945
+7. PMID:17686778
+8. PMID:16632608
+9. PMID:26575208
+10. PMID:18092812
+11. PMID:11459846
+12. PMID:17223713
+13. PMID:15159566
+14. PMID:11554796
+15. PMID:31860061
+16. PMID:29717023
+17. PMID:21081498
+18. PMID:19542235
+19. PMID:18535145
+20. PMID:25404027
+21. PMID:39091723
+22. PMID:20863064
+23. PMID:8528286
+24. PMID:29777693
+25. PMID:17349664
+26. PMID:31517366

@@ -3,10 +3,36 @@ title: "Glycobiology Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human]
-genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1]
+genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1, GALNT1, C1GALT1, C1GALT1C1, GCNT1]
+last_reviewed: 2026-10-04
+manifest:
+  slides:
+    - href: GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/UqXg1UcLZY6vA2goRnxuCj
+      title: Project brief
 ---
 
 # Glycobiology Project
+
+**Bottom line:** glycosylation is the most common and diverse protein
+modification, built by large, sequence-similar families of glycosyltransferases
+and read by lectins, and GO annotation of these glycogenes is easy to get wrong
+at the level of specificity. We reviewed every existing GO annotation on 11
+human glycogenes (seven exemplars spanning transferase, lectin and CDG axes,
+then four mucin-type O-glycan initiation genes), indexed 17 glycobiology
+pathway modules whose 100 cited gene reviews add 2,748 more annotations, and
+built a CAZy-family-to-GO mapping (`cazy2go`) as the glyco analogue of
+`interpro2go`. Across the 376 single-gene exemplar annotations only 4 were
+removed, while 107 were kept as non-core, 40 marked over-annotated, 38 modified,
+and 2 proposed as new: the problem is altitude and pleiotropy (generic parent MF
+or `membrane` terms, downstream physiology on single-sugar enzymes), not wrong
+functions, and the module cohort shows the same skew. The `cazy2go` work
+produced a 60-row safe-to-propagate set and 34 hand-endorsed family-level gaps
+in `interpro2go`, still awaiting curator sign-off. The GOA closure query that
+would size the full animal glycogene set is tracked with the remaining
+follow-ups in [#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).
 
 ## Overview
 
@@ -41,6 +67,204 @@ The two aims meet at one question: **where does GO under-represent glycan biolog
 that the specialist glyco resources capture well, and where does GO
 over-annotate glycogenes** (e.g. propagating downstream "guilt-by-substrate"
 metabolic processes onto an enzyme that only adds one sugar)?
+
+## Exemplar reviews (calibration set)
+
+Seven human genes were reviewed to calibrate the over-/under-annotation
+hypotheses across the main functional axes of animal glycobiology. Phase 1
+covered one **glycosyltransferase**, one **lectin**, and one **CDG** gene;
+Phase 2 broadened the GT axis across four more transferase sub-types
+(O-fucosyl-, GlcNAc-branching-, sialyl-, galactosyl-). Each Phase-2 gene was
+reviewed with a **FutureHouse Falcon deep-research report integrated from the
+start**, and the Phase-1 three were retro-fitted with their Falcon findings.
+
+| Gene | UniProt | Axis (CAZy) | Why chosen |
+|------|---------|-------------|------------|
+| **B3GALNT2** | Q8NCR0 | β-1,3-GalNAc-T (GT31) | α-dystroglycan O-mannosyl (matriglycan) elongation; dystroglycanopathy (secondary CDG); [RHEA](RHEA.md)-flagged GO gap |
+| **LGALS3** | P17931 | lectin (galectin) | chimera-type β-galactoside-binding galectin; large pleiotropic set — protein-binding + pleiotropy stress-test |
+| **PMM2** | O15305 | CDG (precursor) | phosphomannomutase 2; PMM2-CDG is the commonest CDG; "guilt-by-association" on a precursor-supply enzyme |
+| **POFUT1** | Q9H488 | O-fucosyl-T (GT65) | ER O-fucosyltransferase on EGF repeats; Notch O-fucosylation; ER (not Golgi) localization test |
+| **MGAT1** | P26572 | GlcNAc-T I (GT13) | medial-Golgi gatekeeper committing N-glycans to hybrid/complex processing |
+| **ST6GAL1** | P15907 | sialyl-T (GT29) | trans-Golgi α-2,6-sialyltransferase (CD22 ligand / CD75 epitope) |
+| **B4GALT1** | P15291 | β-1,4-Gal-T (GT7) | LacNAc synthase; bifunctional lactose synthase with α-lactalbumin; CDG-IID |
+
+All seven validate clean (`status: DRAFT`).
+
+### Verdict distributions (authoritative, from the YAMLs)
+
+| Gene | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | UNDECIDED |
+|------|--:|-------:|---------:|-----:|-------:|-------:|----:|----------:|
+| B3GALNT2 | 16 | 6 | 2 | 0 | 7 | 0 | 0 | 1 |
+| LGALS3 | 106 | 23 | 62 | 20 | 0 | 0 | 1 | 0 |
+| PMM2 | 23 | 16 | 2 | 4 | 1 | 0 | 0 | 0 |
+| POFUT1 | 21 | 15 | 2 | 3 | 1 | 0 | 0 | 0 |
+| MGAT1 | 26 | 11 | 6 | 5 | 4 | 0 | 0 | 0 |
+| ST6GAL1 | 35 | 23 | 5 | 2 | 4 | 1 | 0 | 0 |
+| B4GALT1 | 76 | 46 | 23 | 0 | 7 | 0 | 0 | 0 |
+| **Total** | **303** | **140** | **102** | **34** | **24** | **1** | **1** | **1** |
+
+Only **1/303 REMOVE** (ST6GAL1, a high-throughput-interactome `protein binding`),
+against **102 NON_CORE + 34 OVER + 24 MODIFY** — i.e. ~53% of annotations are
+*demoted, refined, or still unresolved* but **99.7%** are *retained in some form*. The
+mis-annotation signal is overwhelmingly **altitude/specificity and pleiotropy**,
+not wrong functions — exactly the project's prediction. (PMM2's three former
+REMOVEs have since been softened to `MARK_AS_OVER_ANNOTATED`; the counts above
+are recomputed from the YAMLs rather than carried forward.)
+
+### What the exemplars confirmed (audit hypotheses → evidence)
+
+- **Generic-MF-term collapse to the specific activity is the dominant GT fix.**
+  Every transferase carried over-general parent MF terms that were **MODIFY**'d to
+  the specific child: B3GALNT2 (`UDP-glycosyltransferase`/`hexosyltransferase` →
+  `GO:0008376`), MGAT1 (`acetylglucosaminyltransferase` → `GO:0003827` GlcNAc-TI),
+  ST6GAL1 (`sialyltransferase` → `GO:0003835` α-2,6-sialyl-T), B4GALT1
+  (`galactosyltransferase`/`UDP-galactosyltransferase` → `GO:0003831`).
+- **Substrate "guilt-by-association" over-annotation is real and gene-class-dependent.**
+  GTs and the precursor enzyme (PMM2) carry downstream whole-pathway terms beyond
+  their molecular role. B3GALNT2's broad process terms were MODIFY'd to the precise
+  `GO:0035269` (O-mannosyl). PMM2 — which only supplies GDP-mannose and is *not* a
+  glycosyltransferase — had `protein N-linked glycosylation` kept **NON_CORE**.
+  MGAT1's many complex-N-glycan-dependent physiologies are likewise NON_CORE.
+- **Compartment errors.** POFUT1 is a soluble **ER-luminal** enzyme; its `membrane`
+  calls (TM-prediction/proteomics) were over-annotated and ER localization affirmed
+  — a reminder that GT localization annotations need the right organelle.
+- **Lectin "protein binding" under-specificity is pervasive.** Galectin-3 carried
+  **21** generic `protein binding` (GO:0005515) IPI annotations — *all* downgraded;
+  many are glycan-mediated lectin contacts whose informative MF is `carbohydrate
+  binding` (GO:0030246).
+- **Pleiotropy ≠ core.** The dominant LGALS3 verdict was **NON_CORE (62/106)**; its
+  immune/apoptosis/fibrosis/cancer biology is downstream of one core activity
+  (β-galactoside CRD binding + N-terminal LLPS lattice). A new `GO:0062093 lysophagy`
+  annotation was *added* (the damaged-endomembrane glycan-sensing role).
+- **GO coverage gaps surfaced for curation — 8 `proposed_new_terms`** across the set:
+  protein-O-mannose β-1,3-GalNAc-T activity (B3GALNT2, the [RHEA](RHEA.md)-flagged
+  EC 2.4.1.313 gap); galectin-glycan-lattice-assembly + damaged-endomembrane-glycan-
+  sensor (LGALS3); phosphomannomutase-in-GDP-mannose-biosynthesis (PMM2);
+  O-fucosylation-coupled ER quality control (POFUT1); oligomannose→complex N-glycan
+  conversion (MGAT1); protein-N-glycan α-2,6-sialyltransferase activity (ST6GAL1);
+  and a **lactose synthase complex** CC term (B4GALT1).
+- **Citation hygiene (verify, don't trust).** Reviews flagged real citation problems
+  via `reference_review`: PMM2's FlyBase IMP **MISCITED** (PMID:9525984 is MPI/CDG-Ib,
+  a different enzyme); POFUT1's MF TAS to a *Drosophila* survey marked MISCITED; and
+  across all Falcon integrations, preprint-only / unresolvable-PMID claims and a
+  stale EC number (ST6GAL1 "2.4.99.1" → current 2.4.3.1) were rejected and recorded
+  in notes rather than cited.
+
+Net: across all 303 Phase 1/2 exemplar annotations, the verdict skew (a single
+REMOVE, a high-throughput-interactome `protein binding`; heavy NON_CORE + OVER
++ MODIFY) matches the project's prediction — glycogene mis-annotation is
+dominated by **altitude / specificity and pleiotropy**, not outright wrong
+functions. The independent 2,748-annotation module cohort
+([pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)) reproduces this at
+scale.
+
+## Phase 3 — mucin-type O-glycan initiation
+
+The O-glycosylation gap identified when the pathway modules were indexed is now
+partly closed. Four human genes covering the initiation and first two elongation
+steps of mucin-type O-glycan biosynthesis were reviewed de novo (73 annotations,
+all validate clean):
+
+| Gene | UniProt | Role | N |
+|------|---------|------|--:|
+| **GALNT1** | Q10472 | GalNAc-T1 (GT27); transfers GalNAc to Ser/Thr — the committed initiating step, one of 20 paralogues | 29 |
+| **C1GALT1** | Q9NS00 | T-synthase (GT31); adds Gal to form the core 1 disaccharide (T antigen) | 13 |
+| **C1GALT1C1** | Q96EU7 | Cosmc; the dedicated ER folding chaperone for C1GALT1 — a non-catalytic member of the pathway | 9 |
+| **GCNT1** | Q02742 | C2GnT1 (GT14); adds the core 2 beta-1,6 branch that licenses selectin-ligand synthesis | 22 |
+
+Verdicts: 44 ACCEPT / 14 MODIFY / 5 NON_CORE / 6 OVER / 3 REMOVE / 1 NEW. Every
+`supporting_text` quote was verified as a verbatim substring of the cached
+publication (164 quotes, 0 failures) and every proposed GO term checked against
+QuickGO for existence, aspect and obsolescence.
+
+**Note on provenance.** Deep-research tooling was unavailable in this environment
+(the configured OpenAI key is rejected), so these four carry no
+`-deep-research-PROVIDER.md` file, unlike the Phase 1 and 2 exemplars. The
+reviews are grounded instead in the cached publications, which were present for
+every PMID cited by GOA. Per repository policy no self-authored file was named as
+though it were provider deep research.
+
+### What Phase 3 adds to the audit
+
+- **The chaperone/enzyme boundary is already curated correctly, and that is the
+  finding.** Cosmc is a chaperone with no transferase activity, and GOA carries
+  `GO:0016263` on it as a **NOT** annotation — the curators had explicitly negated
+  the client enzyme's activity on its chaperone. This was the batch's most
+  instructive row: read without the negation flag it looks like a textbook
+  necessity-mistaken-for-possession error, and it is the opposite. The seeding
+  pipeline carries `negated: true` correctly; the lesson is for the reviewer, who
+  must read the flag before reasoning about the row, since the negation inverts
+  the meaning of an otherwise ordinary-looking IMP.
+- **Generic-MF collapse recurs, and extends to cellular components.** Both
+  `GO:0016757 glycosyltransferase activity` rows were MODIFY'd to the specific
+  child, matching Phases 1-2. But the dominant MODIFY here was locational: six
+  `GO:0016020 membrane` rows across three genes collapsed to `GO:0000139 Golgi
+  membrane`. Bare `membrane` on a type II Golgi glycosyltransferase is the
+  cellular-component analogue of the generic-MF problem.
+- **Guilt-by-substrate is strongest where the product has famous physiology.**
+  GCNT1 carries leukocyte tethering or rolling, its positive regulation, and cell
+  adhesion molecule production — all because it builds the core 2 branch of a
+  selectin ligand. The tethering assays behind them were run on GOLPH3-depleted
+  cells, not GCNT1-depleted cells. GALNT1 carries `GO:0019082 viral protein
+  processing` because Reactome models it glycosylating SARS-CoV-2 ORF3a; the
+  enzyme's activity does not change with the provenance of its acceptor.
+- **A committed pathway enzyme was missing from its own pathway.** C1GALT1 had
+  **no** mucin-type O-glycosylation process annotation: its only two
+  biological-process rows were angiogenesis and kidney development, both cited to
+  a case-control SNP association study for IgA nephropathy. The comparator check
+  confirms a gap rather than a convention — GALNT1 (upstream), GCNT1 (downstream)
+  and even C1GALT1's own non-catalytic chaperone all carry the process term. Added
+  as the batch's single `NEW`.
+- **A citation that format validation cannot catch.** PMID:17228361 is correctly
+  identified and correctly titled, and supports neither annotation drawn from it;
+  it is recorded `MISCITED` in `reference_review`.
+- **Restraint where the cache is thin.** PMID:16638743 is a GalNAc-T3/FGF23 paper
+  cited as an IDA on GALNT1, abstract-only in our cache. Rather than allege
+  mis-attribution, it is marked `UNVERIFIED` and the annotation ACCEPTed: a
+  selectivity claim of that kind is normally established against a panel of
+  isoforms, and the asserted activity is independently certain for this gene.
+
+Still uncovered on this axis: the remaining GALNT paralogues (the family's
+acceptor-specificity differences are what GO does not currently express), core 3
+and core 4 branching, and the sialyl/fucosyl capping steps.
+
+## Pathway modules
+
+Alongside the single-gene exemplars, the repo holds **17 curated glycobiology
+`ModuleReview` documents** — pathway-level decompositions of N-glycan LLO
+assembly and transfer, dolichol/nucleotide-sugar donor supply, the five GPI-anchor
+stages, glycosphingolipid biosynthesis, and the lysosomal catabolism of
+glycolipids, heparan sulfate and keratan/chondroitin sulfate. Index, with the
+cohort analysis:
+**[GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)**.
+
+These were curated independently as pathway-level documents, so the corpus
+probes a wider glycobiology space than the exemplar set alone implies. The 17
+modules cite **100 distinct human gene reviews** (all present in
+`genes/human/`, **zero overlap** with the 11 single-gene exemplars) carrying **2,748
+adjudicated annotations**. That cohort is a second, independent verdict baseline:
+
+| Cohort | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | UNDECIDED |
+|--------|--:|-------:|---------:|-----:|-------:|-------:|----:|----------:|
+| Module genes (100) | 2748 | 63.3% | 17.6% | 14.0% | 3.4% | 0.8% | 0.4% | 0.5% |
+| Exemplars (7) | 303 | 46.2% | 33.7% | 11.2% | 7.9% | 0.3% | 0.3% | 0.3% |
+
+It corroborates the project's central claim on 10× the data — REMOVE stays
+under 1%, retention ~99.2% — while showing the exemplar set is deliberately
+NON_CORE-skewed (62 of its 102 NON_CORE verdicts are LGALS3 alone). The gap
+between the two rows is a **gene-class effect**, narrow biosynthetic enzymes
+versus a pleiotropic lectin, and should be read that way when the GOA closure
+query yields a third number.
+
+Two gaps the module axis exposes:
+
+- **O-glycosylation is uncovered.** No module addresses mucin-type,
+  GALNT-initiated O-glycan biosynthesis; the exemplars reach O-linked biology
+  only via POFUT1 and B3GALNT2.
+- **The module cohort under-proposes new terms** — 2 `proposed_new_terms` entries
+  across 100 module genes, against 8 across the 7 Phase 1/2 exemplars. Almost certainly a
+  curation-process artifact rather than a real coverage difference, and a
+  concrete re-review target.
 
 ## The glycobiology GO term landscape
 
@@ -105,91 +329,6 @@ with a seeded [`cazy2go.sssom.yaml`](GLYCOBIOLOGY/cazy2go.sssom.yaml) (CAZy
 family → GO molecular function, the glyco analogue of `interpro2go`) built from
 the exemplar GT families.
 
-## Exemplar reviews (calibration set)
-
-Seven human genes were reviewed to calibrate the over-/under-annotation
-hypotheses across the main functional axes of animal glycobiology. Phase 1
-covered one **glycosyltransferase**, one **lectin**, and one **CDG** gene;
-Phase 2 broadened the GT axis across four more transferase sub-types
-(O-fucosyl-, GlcNAc-branching-, sialyl-, galactosyl-). Each Phase-2 gene was
-reviewed with a **FutureHouse Falcon deep-research report integrated from the
-start**, and the Phase-1 three were retro-fitted with their Falcon findings.
-
-| Gene | UniProt | Axis (CAZy) | Why chosen |
-|------|---------|-------------|------------|
-| **B3GALNT2** | Q8NCR0 | β-1,3-GalNAc-T (GT31) | α-dystroglycan O-mannosyl (matriglycan) elongation; dystroglycanopathy (secondary CDG); [RHEA](RHEA.md)-flagged GO gap |
-| **LGALS3** | P17931 | lectin (galectin) | chimera-type β-galactoside-binding galectin; large pleiotropic set — protein-binding + pleiotropy stress-test |
-| **PMM2** | O15305 | CDG (precursor) | phosphomannomutase 2; PMM2-CDG is the commonest CDG; "guilt-by-association" on a precursor-supply enzyme |
-| **POFUT1** | Q9H488 | O-fucosyl-T (GT65) | ER O-fucosyltransferase on EGF repeats; Notch O-fucosylation; ER (not Golgi) localization test |
-| **MGAT1** | P26572 | GlcNAc-T I (GT13) | medial-Golgi gatekeeper committing N-glycans to hybrid/complex processing |
-| **ST6GAL1** | P15907 | sialyl-T (GT29) | trans-Golgi α-2,6-sialyltransferase (CD22 ligand / CD75 epitope) |
-| **B4GALT1** | P15291 | β-1,4-Gal-T (GT7) | LacNAc synthase; bifunctional lactose synthase with α-lactalbumin; CDG-IID |
-
-All seven validate clean (`status: DRAFT`).
-
-### Verdict distributions (authoritative, from the YAMLs)
-
-| Gene | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
-|------|--:|-------:|---------:|-----:|-------:|-------:|----:|
-| B3GALNT2 | 16 | 5 | 2 | 2 | 7 | 0 | 0 |
-| LGALS3 | 106 | 21 | 64 | 20 | 0 | 0 | 1 |
-| PMM2 | 23 | 16 | 2 | 1 | 1 | 3 | 0 |
-| POFUT1 | 21 | 15 | 2 | 3 | 1 | 0 | 0 |
-| MGAT1 | 26 | 11 | 6 | 5 | 4 | 0 | 0 |
-| ST6GAL1 | 35 | 23 | 5 | 2 | 4 | 1 | 0 |
-| B4GALT1 | 76 | 44 | 21 | 6 | 5 | 0 | 0 |
-| **Total** | **303** | **135** | **102** | **39** | **22** | **4** | **1** |
-
-Only **4/303 REMOVE** (all high-throughput-interactome `protein binding`), against
-**102 NON_CORE + 39 OVER + 22 MODIFY** — i.e. ~54% of annotations are *demoted or
-refined* but ~99% are *retained in some form*. The mis-annotation signal is
-overwhelmingly **altitude/specificity and pleiotropy**, not wrong functions —
-exactly the project's prediction.
-
-### What the exemplars confirmed (audit hypotheses → evidence)
-
-- **Generic-MF-term collapse to the specific activity is the dominant GT fix.**
-  Every transferase carried over-general parent MF terms that were **MODIFY**'d to
-  the specific child: B3GALNT2 (`UDP-glycosyltransferase`/`hexosyltransferase` →
-  `GO:0008376`), MGAT1 (`acetylglucosaminyltransferase` → `GO:0003827` GlcNAc-TI),
-  ST6GAL1 (`sialyltransferase` → `GO:0003835` α-2,6-sialyl-T), B4GALT1
-  (`galactosyltransferase`/`UDP-galactosyltransferase` → `GO:0003831`).
-- **Substrate "guilt-by-association" over-annotation is real and gene-class-dependent.**
-  GTs and the precursor enzyme (PMM2) carry downstream whole-pathway terms beyond
-  their molecular role. B3GALNT2's broad process terms were MODIFY'd to the precise
-  `GO:0035269` (O-mannosyl). PMM2 — which only supplies GDP-mannose and is *not* a
-  glycosyltransferase — had `protein N-linked glycosylation` kept **NON_CORE**.
-  MGAT1's many complex-N-glycan-dependent physiologies are likewise NON_CORE.
-- **Compartment errors.** POFUT1 is a soluble **ER-luminal** enzyme; its `membrane`
-  calls (TM-prediction/proteomics) were over-annotated and ER localization affirmed
-  — a reminder that GT localization annotations need the right organelle.
-- **Lectin "protein binding" under-specificity is pervasive.** Galectin-3 carried
-  **21** generic `protein binding` (GO:0005515) IPI annotations — *all* downgraded;
-  many are glycan-mediated lectin contacts whose informative MF is `carbohydrate
-  binding` (GO:0030246).
-- **Pleiotropy ≠ core.** The dominant LGALS3 verdict was **NON_CORE (64/106)**; its
-  immune/apoptosis/fibrosis/cancer biology is downstream of one core activity
-  (β-galactoside CRD binding + N-terminal LLPS lattice). A new `GO:0062093 lysophagy`
-  annotation was *added* (the damaged-endomembrane glycan-sensing role).
-- **GO coverage gaps surfaced for curation — 7 `proposed_new_terms`** across the set:
-  protein-O-mannose β-1,3-GalNAc-T activity (B3GALNT2, the [RHEA](RHEA.md)-flagged
-  EC 2.4.1.313 gap); galectin-glycan-lattice-assembly + damaged-endomembrane-glycan-
-  sensor (LGALS3); phosphomannomutase-in-GDP-mannose-biosynthesis (PMM2);
-  O-fucosylation-coupled ER quality control (POFUT1); oligomannose→complex N-glycan
-  conversion (MGAT1); protein-N-glycan α-2,6-sialyltransferase activity (ST6GAL1);
-  and a **lactose synthase complex** CC term (B4GALT1).
-- **Citation hygiene (verify, don't trust).** Reviews flagged real citation problems
-  via `reference_review`: PMM2's FlyBase IMP **MISCITED** (PMID:9525984 is MPI/CDG-Ib,
-  a different enzyme); POFUT1's MF TAS to a *Drosophila* survey marked MISCITED; and
-  across all Falcon integrations, preprint-only / unresolvable-PMID claims and a
-  stale EC number (ST6GAL1 "2.4.99.1" → current 2.4.3.1) were rejected and recorded
-  in notes rather than cited.
-
-Net: across 144 annotations the verdict skew (only 3 REMOVE, all
-high-throughput-interactome `protein binding`; heavy NON_CORE + MODIFY) matches
-the project's prediction — glycogene mis-annotation is dominated by **altitude /
-specificity and pleiotropy**, not outright wrong functions.
-
 ## Candidate animal genes already in the repo
 
 The corpus already contains glyco-relevant gene reviews that can seed the audit
@@ -229,6 +368,12 @@ fuller candidate list; these are the already-curated anchors.
 
 - How large is the animal glycogene set under the anchor terms, and what is the
   ACCEPT/MODIFY/OVER/REMOVE verdict distribution relative to the corpus baseline?
+  *(Partly answered: 111 human glycogenes are already reviewed — 11 single-gene
+  exemplars plus the 100 genes in
+  [pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) — but the two cohorts
+  give materially different distributions, so "the" baseline depends on
+  gene-class composition. The closure query needs to report that composition, not
+  just a single percentage.)*
 - Can CAZy GT/GH family membership be used as an independent check on
   glycosyltransferase/glycosidase MF annotations (right family → right activity
   class)?
@@ -240,15 +385,26 @@ fuller candidate list; these are the already-curated anchors.
 
 - **Started**: 2026-06-21
 - **Maturity**: IN_PROGRESS — scope, GO anchor-term set (QuickGO-verified), and
-  external resource landscape defined; **7 exemplar reviews complete** (B3GALNT2,
-  LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1; 303 annotations; all validate
-  clean), each backed by a **FutureHouse Falcon deep-research report** integrated
-  into the YAML. They confirm the altitude/specificity + pleiotropy
-  over-annotation hypotheses (135 ACCEPT / 102 NON_CORE / 39 OVER / 22 MODIFY /
-  4 REMOVE / 1 NEW).
+  external resource landscape defined; **11 human exemplar reviews complete**
+  (the 7-gene Phase 1/2 set plus 4 mucin-type O-glycan initiation genes; 376
+  annotations), and all validate clean. The first seven are backed by a
+  **FutureHouse Falcon deep-research report** integrated into the YAML, while
+  Phase 3 was curated directly from cached GOA publications. Together they
+  confirm the altitude/specificity + pleiotropy over-annotation hypotheses (184
+  ACCEPT / 107 NON_CORE / 40 OVER / 38 MODIFY / 4 REMOVE / 2 NEW / 1 UNDECIDED).
+  **17 pathway modules** and their **100-gene / 2,748-annotation**
+  cohort are now indexed under
+  [GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) and reproduce
+  the same skew independently.
 - **Next steps**: (1) run the GOA closure query for the anchor terms across the
-  animal taxa to enumerate the glycogene set and its verdict baseline; (2) flesh
-  out [GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md) with
-  access recipes; (3) promote the 7 exemplar `proposed_new_terms` as GO new-term
-  requests; (4) extend the review/Falcon pass to the already-curated anchor genes
-  (GPC6, Notch1, Uggt1) and a glycosidase/CDG type-II gene.
+  animal taxa to enumerate the glycogene set and its verdict baseline — the
+  111-gene reviewed human corpus (11 exemplars + 100 module genes) is the
+  denominator to measure it against; (2) promote the 8 exemplar
+  `proposed_new_terms` as GO new-term requests; (3) get curator sign-off on the
+  34 hand-endorsed `cazy2go` true gaps and 210 family-specific subfamily
+  proposals; (4) build the GlycoCoO/GlycoEnzOnto→GO SSSOM alignment and GlyGen
+  cross-check probe; (5) add a mucin-type GALNT-initiated O-glycan module; (6)
+  re-review the module cohort for `proposed_new_terms`, which it currently
+  under-proposes (2 across 100 module genes); (7) extend Phase 3 across the
+  remaining GALNT paralogues and the core 3/core 4 and capping steps. See
+  [#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).

@@ -26,3 +26,12 @@ UniProt calls LepB a multi-pass membrane protein. Plasma-membrane localization
 is a taxon-aware refinement: in Gram-negative P. putida, the Sec channel and
 type I signal peptidase occupy the cytoplasmic membrane. No independent
 KT2440-specific topology experiment was found in this first pass.
+
+## Annotation-reviewer pass (2026-09-01)
+
+Reviewed all 7 GOA-derived rows against the local UniProt record, current GO
+status recorded from QuickGO, and the module-aware OpenScientist report. Outcome:
+1 ACCEPT, 2 KEEP_AS_NON_CORE, 2 MARK_AS_OVER_ANNOTATED, and 2 MODIFY; no row
+remains PENDING or UNDECIDED. Exact signal peptidase activity remains core;
+generic membrane and protein-maturation assertions remain refined to plasma
+membrane and live GO:0016485 protein processing, respectively.

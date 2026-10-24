@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-05-06T21:55:58.442644'
-end_time: '2026-05-06T22:09:48.531180'
-duration_seconds: 830.09
+start_time: '2026-09-12T08:49:23.338452'
+end_time: '2026-09-12T08:55:19.938563'
+duration_seconds: 356.6
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: ARATH
@@ -19,12 +19,23 @@ template_variables:
   protein_domains: AtDRB-like_DSRM_1. (IPR044450); AtDRB-like_DSRM_2. (IPR044451);
     dsRBD_dom. (IPR014720); dsrm (PF00035)
 provider_config:
-  timeout: 600
+  timeout: null
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 14
+    max_embedded_images: 8
+citation_count: 19
+artifact_count: 1
+artifact_sources:
+  edison_answer_artifacts: 1
+artifacts:
+- filename: artifact-00.md
+  path: DRB1-deep-research-falcon_artifacts/artifact-00.md
+  media_type: text/markdown
+  source: edison_answer_artifacts
+  data_storage_id: null
+  description: Edison artifact artifact-00
 ---
 
 ## Question
@@ -135,165 +146,160 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Arabidopsis thaliana DRB1/HYL1 (UniProt O04492; At1g09700)
+# Functional annotation report: *Arabidopsis thaliana* DRB1/HYL1
 
-### 0) Target verification (critical disambiguation)
-The literature analyzed here consistently equates **DRB1** with **HYPONASTIC LEAVES 1 (HYL1)** in **Arabidopsis thaliana**, describing it as a **double-stranded RNA (dsRNA)-binding protein** and a core component of the plant **miRNA “Microprocessor”** complex (with DCL1 and SERRATE/SE). This matches the UniProt O04492 description and its two dsRNA-binding domains (dsRBDs/DSRMs). (ding2023micrornaproductionin pages 5-6, ding2023micrornaproductionin pages 1-2, bajczyk2023recentinsightsinto pages 16-17, bielewicz2023hyponasticleaves1 pages 1-2)
+## Executive conclusion
 
-### 1) Key concepts and definitions (current understanding)
+The requested target is correctly identified as *A. thaliana* **DOUBLE-STRANDED RNA-BINDING PROTEIN 1 (DRB1)**, better known as **HYPONASTIC LEAVES 1 (HYL1)**: locus **At1g09700**, UniProt **O04492**. The literature’s DRB1/HYL1 identity, two N-terminal double-stranded-RNA-binding domains (dsRBDs), and role with DICER-LIKE1 (DCL1) agree with the supplied UniProt/InterPro/Pfam annotations. Studies of mammalian DRB1 or plant homologues such as MdDRB1, OsDRB1, and SlDRB1 were not used as direct evidence for this annotation.
 
-#### 1.1 What DRB1/HYL1 is
-**DRB1/HYL1** is a plant **dsRNA-binding protein** in the DRB family and is widely recognized as a **core cofactor of DICER-LIKE 1 (DCL1)** in miRNA biogenesis. (ding2023micrornaproductionin pages 1-2, ding2023micrornaproductionin pages 5-6)
+DRB1/HYL1 is **not an enzyme**. It is a dsRNA-binding specificity, positioning, and assembly factor in the plant miRNA microprocessor. Its principal function is to bind structured primary/pre-miRNA substrates and cooperate with catalytic RNase III enzyme DCL1 and SERRATE (SE), increasing cleavage efficiency and—especially—cleavage-site accuracy. Its best-established site of action is the **nucleus**, including nuclear “dicing bodies” or D-bodies, although regulated nuclear–cytoplasmic shuttling and additional cytoplasmic functions have also been reported (yang2010structureofarabidopsis pages 1-2, yang2014homodimerizationofhyl1 pages 1-2, bhagat2022dynamicphosphorylationof pages 1-2).
 
-**Domain architecture (functional annotation relevant):**
-- DRB1/HYL1 contains **two dsRNA-binding domains (dsRBDs; also called DSRM motifs)**, which is a conserved feature of HYL1 homologs across plant species. (ding2023micrornaproductionin pages 5-6, bajczyk2023recentinsightsinto pages 16-17)
-- Mechanistically, one dsRBD is described as binding the **pri-miRNA stem**, while the other supports **protein–protein interactions** with DCL1 and SE, facilitating assembly/function of the processing complex. (ding2023micrornaproductionin pages 5-6)
+## Identity and protein architecture
 
-#### 1.2 The plant “Microprocessor” and pri-miRNA processing
-In Arabidopsis, miRNAs are produced from **primary miRNA transcripts (pri-miRNAs)** that are processed in the nucleus by a Microprocessor complex whose core includes **DCL1 + HYL1/DRB1 + SERRATE (SE)**. (ding2023micrornaproductionin pages 1-2, ding2023micrornaproductionin pages 5-6)
+HYL1 contains two tandem N-terminal dsRBDs, corresponding to the supplied AtDRB-like_DSRM_1, AtDRB-like_DSRM_2, InterPro dsRBD, and Pfam dsrm annotations. Structural work distinguishes a canonical first domain, **dsRBD1/HR1**, responsible for dsRNA recognition, from a more unusual **dsRBD2/HR2**, which provides an important homodimerization surface. The protein also has a nuclear-localization region and a less-conserved, substantially disordered C-terminal region implicated in protein interactions, localization, and stability. Expression of the tandem N-terminal dsRBD region can rescue core defects of *hyl1* mutants, showing that these domains are sufficient for much of the canonical miRNA-processing function (yang2010structureofarabidopsis pages 1-2, yang2014homodimerizationofhyl1 pages 1-2, bhagat2018dynamicregulationof pages 1-4).
 
-In mechanistic terms, DRB1/HYL1 is described as helping to **position DCL1** on pri-miRNAs and to improve **efficiency and precision** of DCL1-catalyzed cleavage, thereby enhancing accurate miRNA production. (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 7-9)
+The target therefore belongs functionally to the plant DRB/HYL family of double-stranded-RNA-binding cofactors. The domain composition does **not** support an intrinsic catalytic reaction: HYL1 lacks RNase III catalytic domains, and cleavage is executed by DCL1 (yang2010structureofarabidopsis pages 1-2).
 
-### 2) Molecular function, biological processes, pathways, and substrate specificity
+## Primary molecular function and substrate specificity
 
-#### 2.1 Primary molecular function (what DRB1 “does”)
-DRB1/HYL1 is **not an enzyme** that catalyzes a chemical transformation. Its primary molecular function is best described as an **RNA-binding and Dicer-cofactor/adaptor activity** that promotes **accurate pri-miRNA processing**.
+HYL1 recognizes the double-stranded stem or miRNA/miRNA* duplex region of structured pri-miRNAs/pre-miRNAs rather than catalyzing RNA hydrolysis. Within the nuclear DCL1–HYL1–SE complex, it promotes productive substrate engagement and helps orient DCL1 relative to the transition between single- and double-stranded RNA. Thus, the most precise annotation is **double-stranded pri-/pre-miRNA-binding microprocessor cofactor that promotes accurate and efficient DCL1 cleavage** (yang2010structureofarabidopsis pages 1-2, yang2014homodimerizationofhyl1 pages 1-2, yang2006serrateisa pages 6-6).
 
-**Substrate specificity (operational):** DRB1/HYL1 binds **stem-loop dsRNA features within pri-miRNAs** (and/or the pri-miRNA stem region) and supports DCL1/SE interactions, thereby influencing cleavage-site choice and processing outcomes. (ding2023micrornaproductionin pages 5-6, pegler2024drb1drb2and pages 1-2)
+A prominent mechanistic model is that the HYL1 homodimer acts as an anchor or molecular ruler. Canonical first cleavage commonly occurs approximately **15–17 nucleotides** from an ssRNA–dsRNA junction. In *hyl1* mutants, correct products decrease and aberrant cuts appear in either double- or single-stranded precursor regions, depending on the allele. These results indicate that HYL1 interprets precursor geometry and constrains where DCL1 cuts, although the diversity of plant precursor structures means that a rigid universal-ruler model is probably too simple (yang2014homodimerizationofhyl1 pages 12-13).
 
-#### 2.2 Roles across miRNA biogenesis steps
-**Nuclear miRNA processing:** pri-miRNA processing into pre-miRNA and then a miRNA/miRNA* duplex occurs in specialized nuclear sites (“**D-bodies**”), involving DCL1/HYL1/SE. (ding2023micrornaproductionin pages 1-2)
+## Protein partners and processing mechanism
 
-**Post-processing pathway context:** After duplex formation, the guide strand is retained by **AGO1**, forming the core of the effector complex (miRISC). DRB1/HYL1 is also linked to **strand selection and AGO1 loading** and is discussed as having nuclear and cytoplasmic pools relevant to downstream miRNA function. (ding2023micrornaproductionin pages 5-6, ding2023micrornaproductionin pages 1-2)
+### DCL1 and SERRATE
 
-### 3) Subcellular localization (where DRB1 works)
-DRB1/HYL1 is primarily described as **nuclear** and enriched in nuclear miRNA-processing bodies (D-bodies) together with DCL1 and SE. (ding2023micrornaproductionin pages 1-2, ding2023micrornaproductionin pages 5-6)
+DCL1 is the catalytic RNase III component, HYL1 is the dsRNA-binding accuracy factor, and SE is another RNA/protein-interaction cofactor. Physical interaction between HYL1 and DCL1, together with pri-miRNA accumulation and diminished mature-miRNA production in *hyl1*, *dcl1*, and *se* mutants, supports their operation as a functional nuclear complex. Increased pri-miRNA abundance in processing mutants—but not in a control defective mainly in mature-miRNA stabilization—specifically implicates this complex in precursor cleavage rather than merely product stability (yang2006serrateisa pages 6-6).
 
-A nuclear import route is explicitly described: **KETCH1** mediates HYL1 nuclear import. (ding2023micrornaproductionin pages 5-6, bielewicz2023hyponasticleaves1 pages 11-12)
+### Homodimerization
 
-In addition, a **cytoplasmic pool** has been described in recent synthesis, where DRB1/HYL1 can associate with **AGO1 and polysomes**, consistent with roles beyond strictly nuclear processing (e.g., translational repression). (ding2023micrornaproductionin pages 5-6)
+HYL1 self-association has been demonstrated by yeast two-hybrid, recombinant pull-down, co-immunoprecipitation, and bimolecular fluorescence-complementation approaches. **Gly147 and Leu165 in dsRBD2** are critical for dimer formation. Disrupting dimerization leaves HYL1–DCL1 binding intact but causes aberrant cleavage-site selection, retention of pri-miRNAs in HYL1-containing complexes, reduced processing efficiency, reduced accuracy, and strong mutant phenotypes. Dimerization therefore has a direct mechanistic role rather than simply increasing complex abundance (yang2014homodimerizationofhyl1 pages 1-2, yang2014homodimerizationofhyl1 pages 4-5).
 
-### 4) Regulation of DRB1/HYL1 activity (key mechanisms)
-DRB1/HYL1 is described as a **short-lived phosphoprotein**, implying dynamic regulation in response to signaling pathways.
-
-**Phosphorylation/dephosphorylation control:**
-- Kinases discussed include **MPK3** and **SnRK2**, reported to phosphorylate HYL1 (including at residues S42 and S159 in the review synthesis). (ding2023micrornaproductionin pages 5-6)
-- Phosphatases discussed include **CPL1**, **PP4**, and **SMEK1** (in complexes) that dephosphorylate HYL1 and promote miRNA biogenesis. (ding2023micrornaproductionin pages 5-6, bielewicz2023hyponasticleaves1 pages 12-12)
-
-This regulatory axis provides a mechanistic explanation for how environmental or developmental signaling can tune miRNA outputs by altering Microprocessor function. (ding2023micrornaproductionin pages 5-6, bielewicz2023hyponasticleaves1 pages 11-12)
-
-### 5) Recent developments and latest research (prioritizing 2023–2024)
-
-#### 5.1 2023: DRB1/HYL1 as a transcription-associated regulator of MIR genes
-A major 2023 development is evidence that HYL1/DRB1 participates in **transcriptional regulation of MIR genes**, beyond its canonical post-transcriptional Microprocessor function.
-
-Bielewicz et al. (Plant and Cell Physiology; **April 2023**; https://doi.org/10.1093/pcp/pcad032) report that HYL1 **colocalizes with RNA polymerase II**, affects Pol II distribution along MIR genes, and interacts with transcription factors, supporting a direct link between HYL1 and MIR transcription. (bielewicz2023hyponasticleaves1 pages 1-2, bielewicz2023hyponasticleaves1 pages 11-12)
-
-Visual/experimental evidence in the paper includes (i) ChIP-based occupancy patterns showing Pol II and HYL1 association along MIR loci and (ii) proximity ligation assay (PLA) / co-IP evidence for HYL1–Pol II association/colocalization. (bielewicz2023hyponasticleaves1 media e10b6f47, bielewicz2023hyponasticleaves1 media eb7b4d42)
-
-**Expert analysis implication:** This positions DRB1/HYL1 as a potential integrator of **co-transcriptional pri-miRNA production** and **processing**, i.e., coordination between Pol II activity and Microprocessor engagement. (bielewicz2023hyponasticleaves1 pages 1-2, bielewicz2023hyponasticleaves1 media e10b6f47)
-
-#### 5.2 2024: Revised “miRNA biogenesis atlas” and HYL1 influence on processing patterns
-Yan et al. (Nature Plants; **June 2024**; https://doi.org/10.1038/s41477-024-01725-9) use parallel degradome-seq and DMS-MaPseq to revise aspects of Arabidopsis miRNA biogenesis and report that DCL1 cofactors **SE and HYL1 can synergistically and independently impact processing patterns and in vivo RNA secondary structures of pri-miRNAs**. (yan2024paralleldegradomeseqand pages 1-3)
-
-**Interpretation:** this strengthens a model in which DRB1/HYL1 affects not only efficiency/accuracy but also **the structural processing landscape** of pri-miRNAs in vivo. (yan2024paralleldegradomeseqand pages 1-3)
-
-#### 5.3 2024: Stress-responsive miRNA landscapes quantify DRB1 dependence
-Pegler et al. (International Journal of Molecular Sciences; **November 2024**; https://doi.org/10.3390/ijms252312562) profile miRNAs under mannitol-induced osmotic stress and show DRB1/HYL1 is a dominant determinant of stress-responsive miRNA landscapes.
-
-Key quantitative results include:
-- In **drb1** seedlings under mannitol stress, **45.2% (100/221)** of detected miRNAs were significantly altered; among these, **94.0% (94/100)** were reduced in abundance. (pegler2024drb1drb2and pages 16-17)
-- In contrast, in Col-0 under mannitol, **119/123 (96.7%)** significantly altered miRNAs increased, while in drb1 most significantly altered miRNAs decreased (statistics above). (pegler2024drb1drb2and pages 7-9)
-- RT-qPCR module examples under stress include **miR160 decreases of 4.0-fold (drb1/Mann) and 2.5-fold (drb2/Mann)** with corresponding target shifts (e.g., ARF17), and **DRB1 transcript increasing 2.9-fold** in drb4/Mann. (pegler2024drb1drb2and pages 17-19)
-
-**Mechanistic interpretation:** These data support DRB1/HYL1 as the preferred DCL1 partner for production of most miRNAs and show that perturbing DRB partnerships can reprogram both miRNA abundance and the apparent mode of target regulation (cleavage vs translational repression) in stress contexts. (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 17-19)
-
-### 6) Current applications and real-world implementation relevance
-Direct “field” implementations typically leverage miRNA pathways rather than DRB1 itself; however, recent primary literature provides explicit translational/engineering framing.
-
-#### 6.1 Engineering stress tolerance via DRB-dependent miRNA modules
-Pegler et al. (2024) explicitly propose that identified stress-responsive miRNA/target modules can be **molecularly manipulated** to generate plants with improved osmotic-stress tolerance, and their data identify DRB1/HYL1 as a primary determinant for production of specific miRNAs (e.g., miR160/164/167/396) central to growth and stress responses. (pegler2024drb1drb2and pages 1-2)
-
-They further contextualize applied routes through manipulation of specific modules (e.g., miR399/PHO2 impacts salt stress response; miR160/ARF impacts root development; miR408 modules balance growth and drought resistance), emphasizing practical relevance of precise miRNA regulation for trait tuning. (pegler2024drb1drb2and pages 24-25)
-
-#### 6.2 Implementation concept: DRB1 as a “lever” for miRNA output tuning
-Because DRB1/HYL1 influences pri-miRNA processing precision and miRNA landscapes, it can be considered an upstream “**lever**” for global miRNA output tuning. The 2023 discovery of a Pol II-associated role extends this to include **transcriptional regulation of MIR genes**, suggesting that interventions affecting HYL1 might have combined transcriptional and processing consequences—useful for engineering but also a risk for pleiotropy. (bielewicz2023hyponasticleaves1 pages 1-2)
-
-### 7) Expert opinions and authoritative synthesis (what reviews emphasize)
-Recent authoritative synthesis articles emphasize that miRNA biogenesis is a multi-step, interconnected process, and highlight HYL1/DRB1 as a core Microprocessor component whose regulation (including phosphorylation state, nuclear import, and complex assembly) is crucial for accurate miRNA production. (ding2023micrornaproductionin pages 1-2, ding2023micrornaproductionin pages 5-6)
-
-Additionally, plant-wide evolutionary synthesis supports deep conservation of HYL1-like proteins with two dsRBDs, reinforcing that DRB1/HYL1 is a conserved, central solution to accurate miRNA maturation in plants. (bajczyk2023recentinsightsinto pages 16-17)
-
-### 8) Summary of key evidence (table)
-The following table consolidates core claims, experimental basis, URLs, and citation IDs used above.
-
-| Aspect | Key findings | Experimental basis | Primary source (author year journal) | URL | Citation ID |
-|---|---|---|---|---|---|
-| Identity/domains | DRB1 corresponds to Arabidopsis **HYL1/DRB1**, a nuclear double-stranded RNA-binding protein and core microprocessor factor; HYL1/DRB1 proteins contain **two DSRM/dsRBD domains** conserved across plants. | Review synthesis; comparative/domain analysis | Bajczyk et al. 2023, *Plants* | https://doi.org/10.3390/plants12020342 | (bajczyk2023recentinsightsinto pages 16-17) |
-| Identity/domains | HYL1/DRB1 is one of five Arabidopsis DRB proteins; DRB proteins contain **two dsRBDs**. In HYL1, one dsRBD binds the pri-miRNA stem and the other mediates interaction with DCL1 and SE. | Review of prior biochemical/genetic evidence | Ding & Zhang 2023, *Frontiers in Plant Science* | https://doi.org/10.3389/fpls.2023.1096772 | (ding2023micrornaproductionin pages 5-6) |
-| Core function in miRNA biogenesis | HYL1/DRB1 is a **core component of the plant microprocessor** with DCL1 and SERRATE (SE), promoting efficient and precise **pri-miRNA processing** into pre-miRNA and then miRNA/miRNA* duplexes in nuclear dicing bodies. | Review | Ding & Zhang 2023, *Frontiers in Plant Science* | https://doi.org/10.3389/fpls.2023.1096772 | (ding2023micrornaproductionin pages 1-2, ding2023micrornaproductionin pages 5-6) |
-| Core function in miRNA biogenesis | The Arabidopsis microprocessor comprises **DCL1 + SE + HYL1**; HYL1 is a dsRNA-binding cofactor that helps shape processing outcomes, and DCL1 partners SE and HYL1 can **synergistically and independently affect pri-miRNA processing patterns and in vivo RNA secondary structures**. | Primary study; degradome-seq and DMS-MaPseq | Yan et al. 2024, *Nature Plants* | https://doi.org/10.1038/s41477-024-01725-9 | (yan2024paralleldegradomeseqand pages 1-3) |
-| Mechanistic details | HYL1 forms a **homodimer** that binds pri-miRNA stem regions for proper processing; one dsRBD contacts pri-miRNA while the other supports interaction with DCL1/SE, enabling accurate cleavage-site selection. | Review of biochemical/genetic studies | Ding & Zhang 2023, *Frontiers in Plant Science* | https://doi.org/10.3389/fpls.2023.1096772 | (ding2023micrornaproductionin pages 5-6) |
-| Mechanistic details | DRB1/HYL1 is the **preferred functional partner of DCL1** for production of most Arabidopsis miRNAs; it accurately positions DCL1 on pri-miRNAs and is the primary DRB required for miR160, miR164, miR167 and miR396 biogenesis. | Primary study; sRNA-seq and RT-qPCR under osmotic stress | Pegler et al. 2024, *International Journal of Molecular Sciences* | https://doi.org/10.3390/ijms252312562 | (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 7-9) |
-| Regulation | HYL1 is a **short-lived phosphoprotein**. MPK3 and SnRK2 phosphorylate HYL1 (reported sites include S42 and S159), whereas **CPL1, PP4, and SMEK1** dephosphorylate HYL1 to promote miRNA biogenesis. | Review of regulatory studies | Ding & Zhang 2023, *Frontiers in Plant Science* | https://doi.org/10.3389/fpls.2023.1096772 | (ding2023micrornaproductionin pages 5-6) |
-| Regulation | Additional cited evidence links HYL1 activity to **CPL phosphatases**, **protein phosphatase 4/SMEK1**, and nuclear import machinery; these layers regulate HYL1 function in miRNA accumulation and development. | Review/primary-study synthesis | Bielewicz et al. 2023, *Plant and Cell Physiology* | https://doi.org/10.1093/pcp/pcad032 | (bielewicz2023hyponasticleaves1 pages 11-12, bielewicz2023hyponasticleaves1 pages 12-12) |
-| Localization | HYL1 is **nuclear**, imported by **KETCH1**, and accumulates in **nuclear dicing bodies (D-bodies)** with DCL1 and SE; a cytoplasmic pool can associate with **AGO1 and polysomes** to promote miRNA-mediated translational repression. | Review | Ding & Zhang 2023, *Frontiers in Plant Science* | https://doi.org/10.3389/fpls.2023.1096772 | (ding2023micrornaproductionin pages 5-6, ding2023micrornaproductionin pages 1-2) |
-| Newly reported transcriptional role | Beyond pri-miRNA processing, HYL1/DRB1 **colocalizes with RNA polymerase II**, affects Pol II distribution along MIR genes, interacts with transcription factors, and contributes to proper **MIR gene transcription**. | Primary study; proteomics, ChIP, colocalization analyses | Bielewicz et al. 2023, *Plant and Cell Physiology* | https://doi.org/10.1093/pcp/pcad032 | (bielewicz2023hyponasticleaves1 pages 1-2, bielewicz2023hyponasticleaves1 pages 11-12) |
-| Newly reported transcriptional role | Visual evidence from the same study shows **ChIP occupancy of Pol II and HYL1 along MIR genes** and **PLA/co-IP evidence for HYL1–Pol II association/colocalization**. | Figure-based evidence: ChIP, PLA, co-IP/western blot | Bielewicz et al. 2023, *Plant and Cell Physiology* | https://doi.org/10.1093/pcp/pcad032 | (bielewicz2023hyponasticleaves1 media e10b6f47, bielewicz2023hyponasticleaves1 media eb7b4d42) |
-| Quantitative data/stats | Under mannitol stress, **45.2% (100/221)** of detected miRNAs were significantly altered in drb1 seedlings, and **94.0% (94/100)** of those altered miRNAs were reduced. In control-grown drb1 seedlings, miR160, miR164, miR167 and miR396 showed roughly **≥2-fold reductions** versus Col-0. | Primary study; sRNA-seq and RT-qPCR | Pegler et al. 2024, *International Journal of Molecular Sciences* | https://doi.org/10.3390/ijms252312562 | (pegler2024drb1drb2and pages 16-17) |
-| Quantitative data/stats | Comparative stress response statistics: Col-0/Mann had **119/123 (96.7%)** significantly altered miRNAs increased; drb4/Mann **86/95 (90.5%)** increased; drb1/Mann **94/100 (94.0%)** decreased; drb2/Mann **41/58 (70.7%)** decreased. | Primary study; sRNA-seq | Pegler et al. 2024, *International Journal of Molecular Sciences* | https://doi.org/10.3390/ijms252312562 | (pegler2024drb1drb2and pages 7-9) |
-| Quantitative data/stats | Example validated modules under stress: in drb4/Mann, **miR160 decreased 3.6-fold** with **ARF17 up 1.8-fold**; in drb1 and drb2 under stress, **miR160 fell 4.0-fold and 2.5-fold**, while **ARF17 decreased 1.5-fold and 1.3-fold**, respectively; **DRB1 transcript increased 2.9-fold** and **DRB2 decreased 2.6-fold** in drb4/Mann. | Primary study; RT-qPCR | Pegler et al. 2024, *International Journal of Molecular Sciences* | https://doi.org/10.3390/ijms252312562 | (pegler2024drb1drb2and pages 17-19) |
+| Aspect | Best-supported annotation | Key experimental evidence | Confidence / caveat |
+|---|---|---|---|
+| Identity and domains | *Arabidopsis thaliana* DRB1 is HYL1, matching the supplied At1g09700/O04492 target. It contains two tandem N-terminal dsRNA-binding domains: dsRBD1 is canonical and RNA-binding, while dsRBD2 is noncanonical and contributes to dimerization. | Structural analysis defined the tandem dsRBD architecture. Expressing the tandem N-terminal region rescued *hyl1-2*, showing that it is sufficient for core miRNA-processing function (yang2010structureofarabidopsis pages 1-2, yang2014homodimerizationofhyl1 pages 1-2). | High. The accession and locus mapping come from the supplied UniProt record; the literature independently confirms the DRB1/HYL1 alias and matching architecture. |
+| Catalytic status and substrate | HYL1 is a nonenzymatic dsRNA-binding specificity and positioning factor, not an RNase. It recognizes structured pri-miRNA or pre-miRNA regions and helps position catalytic DCL1 relative to ssRNA–dsRNA junctions. | Structural and genetic evidence assigns cleavage to RNase III enzyme DCL1 and RNA recognition or positioning to HYL1. Canonical cleavage occurs approximately 15–17 nt from the ssRNA–dsRNA junction (yang2010structureofarabidopsis pages 1-2, yang2014homodimerizationofhyl1 pages 12-13). | High for noncatalytic cofactor status; moderate for a universal molecular-ruler model because precursor structures and processing modes vary. |
+| DCL1–SE complex | HYL1 acts with DCL1 and SERRATE in the nuclear plant miRNA microprocessor, promoting efficient and precise pri-miRNA cleavage and mature-miRNA accumulation. | HYL1 physically interacts with DCL1. *hyl1*, *dcl1*, and *se* mutants accumulate pri-miRNAs or generate inaccurate products, supporting a functional DCL1–HYL1–SE complex (yang2014homodimerizationofhyl1 pages 1-2, yang2006serrateisa pages 6-6). | High. DCL1 is catalytic, whereas HYL1 and SERRATE are accessory processing factors. |
+| Homodimerization | HYL1 homodimerizes through dsRBD2. The dimer is proposed to orient DCL1 for correct cleavage-site selection. | Yeast two-hybrid, pull-down, co-immunoprecipitation, and bimolecular fluorescence complementation demonstrated self-association. Gly147 and Leu165 are critical; disrupting dimerization preserved DCL1 binding but caused inaccurate cleavage, pri-miRNA retention in HYL1 complexes, and lower processing efficiency (yang2014homodimerizationofhyl1 pages 1-2, yang2014homodimerizationofhyl1 pages 4-5). | High for dimerization and its functional importance; the exact anchor or ruler geometry remains a mechanistic model. |
+| Nuclear localization and dicing bodies | HYL1 performs its primary processing function in the nucleus and concentrates with DCL1 and SERRATE in nuclear dicing bodies distinct from Cajal bodies. | Fluorescence-localization and interaction studies place HYL1 and DCL1 in nuclear D-bodies; genetic loss of either protein impairs nuclear pri-miRNA processing (yang2014homodimerizationofhyl1 pages 1-2, yang2014homodimerizationofhyl1 pages 4-5). | High for nuclear and D-body localization. Whether D-bodies are principally active processing sites, assembly sites, or both remains incompletely resolved. |
+| Cytoplasmic and downstream roles | HYL1 undergoes nuclear–cytoplasmic shuttling and can dimerize in the cytosol. Available evidence also links cytoplasmic HYL1 to miRNA-mediated translational repression. | HYL1 dimerization was detected in both nucleus and cytosol, while its C-terminal region influenced localization and stability. Prior work summarized in the gathered evidence identifies cytoplasmic HYL1 as a translational-repression factor (bhagat2022dynamicphosphorylationof pages 16-17, bhagat2022dynamicphosphorylationof pages 1-2). | Moderate. Cytoplasmic localization is supported experimentally, but detailed translational-repression measurements were not present in the gathered excerpts. |
+| Phosphorylation and stability | HYL1 activity, localization, and abundance are controlled by reversible phosphorylation and proteolysis. CPL1/2-mediated dephosphorylation promotes active HYL1, while MPK3 phosphorylates conserved Ser42 and affects shuttling and degradation. | MPK3-dependent Ser42 phosphorylation, nuclear–cytosolic redistribution, altered HYL1 stability in *mpk3*, and contributions of the C terminus to stability and localization were reported experimentally (bhagat2018dynamicregulationof pages 1-4, bhagat2022dynamicphosphorylationof pages 1-2). | Moderate to high. Phosphoregulation is established, but the effects of particular phosphorylation states and enzymes remain mechanistically complex. |
+| 2024 precursor-structure research | Reconstitution of the Arabidopsis DCL1–SERRATE–HYL1 machinery in yeast confirmed that precursor-duplex geometry influences processing. DCL1 recognition of a 2-nt 3′ overhang contributes to precise second cleavage. | Bulge position altered cleavage activity and precision. Weakening the DCL1 PAZ-domain 3′-overhang pocket shifted miR-5p termini by 1–2 nt and reduced second-cleavage precision for most assessed Arabidopsis miRNAs (zhang2024structuraldeterminantsin pages 8-8). | High for DCL1 and precursor-structure effects. HYL1 was part of the reconstituted complex, but the study did not isolate a new HYL1-specific biochemical activity. |
+| 2024 osmotic-stress research | DRB1 is required for an appropriate miRNA response to mannitol-induced osmotic stress and is the principal DRB factor for production of miR160, miR164, miR167, and miR396 under the tested conditions. | In 15-day-old *drb1* seedlings, 100 of 221 detected miRNAs, or 45.2%, changed significantly after mannitol treatment; 94 of those 100, or 94.0%, decreased. Conversely, 119 of 123 altered miRNAs, or 96.7%, increased in stressed wild type. The four highlighted miRNAs were reduced approximately twofold or more in unstressed *drb1* seedlings (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 16-17). | Moderate to high. The molecular genotype effect is strong, but mannitol is a laboratory osmotic-stress proxy and does not establish field-level drought tolerance. |
+| 2024 auxin and root-development research | DRB1 cooperates with other DRB proteins to regulate the miR160–ARF10/ARF16/ARF17 module involved in Arabidopsis root responses to auxin. | Recent mutant studies identify DRB1 as a primary factor for miR160 production and connect defective DRB activity with altered miR160-mediated responses (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 16-17). | Moderate. The gathered evidence supports DRB1 involvement in miR160 production, but detailed auxin-treatment and root-phenotype measurements were unavailable in the cited excerpts. |
 
 
-*Table: This table compiles key verified evidence on Arabidopsis thaliana DRB1/HYL1, covering identity, domain architecture, microprocessor function, regulation, localization, transcriptional roles, and quantitative mutant data. It prioritizes 2023-2024 sources and links each claim to specific available citation contexts.*
+*Table: Compact evidence map for the verified Arabidopsis DRB1/HYL1 target, distinguishing established molecular functions from mechanistic models and recent 2024 findings.*
 
-### 9) Evidence limitations (transparency)
-Some classic foundational primary papers from the early 2000s that originally established HYL1/DRB1’s role in miRNA accumulation and pri-miRNA processing were cited within the 2023–2024 sources but were not directly retrievable in the accessible full-text corpus for this run. Consequently, the report relies on convergent evidence from recent reviews and multiple 2023–2024 primary studies that explicitly summarize and experimentally extend those foundational conclusions. (ding2023micrornaproductionin pages 5-6, bielewicz2023hyponasticleaves1 pages 11-12, bielewicz2023hyponasticleaves1 pages 1-2)
+## Subcellular localization
 
+The primary site of HYL1 activity is the **nucleus**. HYL1, DCL1, and SE concentrate in D-bodies, nuclear foci associated with miRNA-complex assembly and/or processing. HYL1 and DCL1 define bodies distinct from canonical Cajal bodies. The evidence firmly establishes colocalization and dependence of nuclear pri-miRNA processing on these proteins, although the relative contributions of diffuse nucleoplasmic, cotranscriptional, and D-body-localized processing remain under investigation (yang2014homodimerizationofhyl1 pages 1-2, yang2014homodimerizationofhyl1 pages 4-5).
+
+HYL1 also undergoes **nuclear–cytoplasmic shuttling** and can dimerize in both compartments. Evidence summarized in the 2022 study further links cytoplasmic HYL1 to miRNA-mediated translational repression, extending its function beyond precursor processing. Because the detailed measurements from that translational-repression study were not available in the retrieved text, this should be regarded as a supported secondary function rather than the defining annotation (bhagat2022dynamicphosphorylationof pages 16-17, bhagat2022dynamicphosphorylationof pages 1-2).
+
+## Regulation of HYL1 activity
+
+HYL1 is regulated by phosphorylation, localization, and proteolytic stability. CPL-family phosphatases promote the hypophosphorylated, processing-competent state; inappropriate phosphorylation impairs accurate processing and strand selection. MPK3 phosphorylates the conserved **Ser42**, affects nuclear–cytosolic shuttling, and promotes turnover. In *mpk3* mutants, HYL1 was reported to be hyperphosphorylated yet more stable and less readily degraded, illustrating that HYL1 regulation depends on combinations of sites and modifying enzymes rather than a simple binary phosphorylation switch. Its C-terminal region also contributes to stability and localization (yang2014homodimerizationofhyl1 pages 1-2, bhagat2018dynamicregulationof pages 1-4, bhagat2022dynamicphosphorylationof pages 1-2).
+
+A 2023 study added FREE1 as a negative regulatory input. Nuclear FREE1 associates with the microprocessor regulator CPL1 and disrupts productive HYL1–SE–CPL1 association. Nuclear FREE1 inactivation increases those associations and shifts HYL1 from an inactive hyperphosphorylated form toward active hypophosphorylated HYL1, thereby increasing miRNA biogenesis. This connects endosomal/ESCRT-associated machinery to nuclear miRNA regulation rather than changing HYL1’s core biochemical function. Li *et al.*, published November 2023, DOI: https://doi.org/10.15252/embr.202255037.
+
+## Biological pathway and downstream consequences
+
+HYL1 operates near the beginning of the canonical plant miRNA pathway:
+
+1. RNA polymerase II produces a structured pri-miRNA.
+2. Nuclear DCL1–HYL1–SE recognizes and cleaves the precursor, usually through pri-miRNA-to-pre-miRNA and pre-miRNA-to-miRNA/miRNA* steps.
+3. The resulting small-RNA duplex is stabilized and one strand is selected for AGO1.
+4. AGO1-containing miRISC recognizes complementary target RNAs and directs transcript cleavage and/or translational repression.
+
+HYL1 therefore affects downstream gene regulation indirectly by controlling the amount, termini, and strand identity of mature miRNAs. Its effects on development, hormones, and stress are largely consequences of perturbing particular miRNA–target modules rather than evidence that HYL1 itself is a hormone receptor or stress-signaling enzyme (pegler2024drb1drb2and pages 1-2, yang2006serrateisa pages 6-6).
+
+A proposed later role links HYL1 to nuclear AGO1 loading through the intrinsically disordered scaffold CARP9. CARP9 interacts with HYL1, mature miRNA, and AGO1 and was proposed to stabilize a post-processing HYL1–CARP9–AGO1 complex. This suggests continuity between accurate duplex production and effector loading, but it remains less foundational than HYL1’s DCL1-cofactor role. Tomassi *et al.*, published September 2020, DOI: https://doi.org/10.1104/pp.20.00258.
+
+## Recent developments, 2023–2024
+
+### Precursor geometry and reconstituted processing
+
+A 2024 study reconstituted Arabidopsis DCL1–SE–HYL1 processing in *Saccharomyces cerevisiae*. It showed that the position of asymmetric bulges within miRNA/miRNA* duplexes can alter cleavage efficiency, precision, or both. Recognition of the pre-miRNA’s **2-nt 3′ overhang** by the DCL1 PAZ-domain pocket was important for precise second cleavage; weakening this interaction shifted miR-5p termini by **1–2 nt** and reduced precision for most assessed Arabidopsis miRNAs. This work refines current understanding of the substrate features handled by the HYL1-containing complex, but its newly isolated determinants were mainly assigned to precursor geometry and DCL1 rather than to a new catalytic activity of HYL1 (zhang2024structuraldeterminantsin pages 8-8). Zhang and Li, published August 2024, DOI: https://doi.org/10.1111/tpj.16974.
+
+### Osmotic-stress response
+
+In 15-day-old seedlings exposed to mannitol, **100 of 221 detected miRNAs (45.2%)** changed significantly in *drb1*. Of these, **94/100 (94.0%) decreased**. Wild-type plants showed the opposite global response: **119/123 altered miRNAs (96.7%) increased**. Under control conditions, loss of DRB1 caused an approximately twofold or greater reduction in miR160, miR164, miR167, and miR396, supporting DRB1 as their primary DRB cofactor under the tested conditions. DRB1, DRB2, and DRB4 jointly affected miR399 and miR408 regulation (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 16-17). Pegler *et al.*, published November 2024, DOI: https://doi.org/10.3390/ijms252312562.
+
+These results are molecular evidence for defective osmotic-stress adaptation in *drb1*, not proof that manipulating DRB1 will improve crop drought tolerance. Mannitol is a controlled osmotic-stress proxy, and altered miRNA profiles may include both adaptive and maladaptive effects.
+
+### Auxin and root development
+
+Two 2024 studies connected DRB1 with control of the **miR160–ARF10/ARF16/ARF17** module. DRB1 is a major determinant of miR160 production; DRB2 and, in roots, DRB4 also contribute. Perturbing these DRB proteins alters miR160 abundance, ARF target expression, and root responses to endogenous manipulations or exogenous 2,4-D. The mechanistic interpretation is that DRB1 controls an upstream RNA-processing step, while altered AUXIN RESPONSE FACTOR expression produces the developmental phenotype (pegler2024drb1drb2and pages 1-2, pegler2024drb1drb2and pages 16-17). Zimmerman *et al.*, published August 2024, DOI: https://doi.org/10.3390/genes15081042; and December 2024, DOI: https://doi.org/10.3390/genes15121648.
+
+## Applications and real-world relevance
+
+HYL1/DRB1 is currently most valuable as a **research and biotechnology control point**, rather than as a deployed agricultural product. Demonstrated or plausible uses include:
+
+- tuning specific miRNA–target modules to alter root architecture or hormone responsiveness;
+- engineering stress-responsive miRNA networks, including modules involving miR160, miR164, miR167, miR396, miR399, and miR408;
+- improving artificial-miRNA design by respecting duplex bulges, terminal geometry, and DCL1 cleavage constraints;
+- using HYL1 phosphorylation, localization, or partner interactions to modulate miRNA output without changing MIR-gene sequences.
+
+However, HYL1 processes many miRNA families, so global overexpression or suppression is likely to be pleiotropic. More realistic translational strategies would alter tissue-specific expression, selected interaction surfaces, or individual MIR precursor structures. No evidence retrieved here establishes field deployment, commercial cultivars, or agronomic benefit from direct Arabidopsis DRB1 manipulation.
+
+## Evidence-weighted annotation
+
+**Recommended primary annotation:** “Double-stranded RNA-binding, noncatalytic cofactor of the Arabidopsis nuclear DCL1–SERRATE microprocessor; binds structured pri-/pre-miRNA substrates and promotes efficient, precise cleavage and mature-miRNA accumulation.”
+
+**Localization annotation:** “Predominantly nuclear, including miRNA dicing bodies; capable of regulated nuclear–cytoplasmic shuttling, with secondary cytoplasmic/post-processing functions.”
+
+**Strongest evidence:** structural determination, domain-rescue genetics, direct protein-interaction assays, mutant precursor/product profiles, in-vitro/reconstituted processing, and cleavage-site mapping (yang2010structureofarabidopsis pages 1-2, yang2014homodimerizationofhyl1 pages 1-2, yang2014homodimerizationofhyl1 pages 4-5, yang2014homodimerizationofhyl1 pages 12-13, zhang2024structuraldeterminantsin pages 8-8).
+
+**Main uncertainties:** the exact physical ruler/anchor mechanism across structurally diverse pri-miRNAs; how much processing occurs in D-bodies versus cotranscriptionally elsewhere in the nucleus; and the general importance of HYL1’s proposed cytoplasmic and AGO1-loading functions relative to its established nuclear role.
 
 References
 
-1. (ding2023micrornaproductionin pages 5-6): Ning Ding and Bailong Zhang. Microrna production in arabidopsis. Frontiers in Plant Science, Jan 2023. URL: https://doi.org/10.3389/fpls.2023.1096772, doi:10.3389/fpls.2023.1096772. This article has 29 citations.
+1. (yang2010structureofarabidopsis pages 1-2): Seong Wook Yang, Hong-Ying Chen, Jing Yang, Satoru Machida, Nam-Hai Chua, and Y. Adam Yuan. Structure of arabidopsis hyponastic leaves1 and its molecular implications for mirna processing. Structure, 18 5:594-605, May 2010. URL: https://doi.org/10.1016/j.str.2010.02.006, doi:10.1016/j.str.2010.02.006. This article has 203 citations and is from a domain leading peer-reviewed journal.
 
-2. (ding2023micrornaproductionin pages 1-2): Ning Ding and Bailong Zhang. Microrna production in arabidopsis. Frontiers in Plant Science, Jan 2023. URL: https://doi.org/10.3389/fpls.2023.1096772, doi:10.3389/fpls.2023.1096772. This article has 29 citations.
+2. (yang2014homodimerizationofhyl1 pages 1-2): Xi Yang, Wenqing Ren, Qiuxia Zhao, Peng Zhang, Feijie Wu, and Yuke He. Homodimerization of hyl1 ensures the correct selection of cleavage sites in primary mirna. Nucleic Acids Research, 42:12224-12236, Oct 2014. URL: https://doi.org/10.1093/nar/gku907, doi:10.1093/nar/gku907. This article has 76 citations and is from a highest quality peer-reviewed journal.
 
-3. (bajczyk2023recentinsightsinto pages 16-17): Mateusz Bajczyk, Artur Jarmolowski, Monika Jozwiak, Andrzej Pacak, Halina Pietrykowska, Izabela Sierocka, Aleksandra Swida-Barteczka, Lukasz Szewc, and Zofia Szweykowska-Kulinska. Recent insights into plant mirna biogenesis: multiple layers of mirna level regulation. Plants, 12:342, Jan 2023. URL: https://doi.org/10.3390/plants12020342, doi:10.3390/plants12020342. This article has 79 citations.
+3. (bhagat2022dynamicphosphorylationof pages 1-2): Prakash Kumar Bhagat, Deepanjali Verma, Kirti Singh, Raghuram Badmi, Deepika Sharma, and Alok Krishna Sinha. Dynamic phosphorylation of mirna biogenesis factor hyl1 by mpk3 involving nuclear–cytoplasmic shuttling and protein stability in arabidopsis. International Journal of Molecular Sciences, 23:3787, Mar 2022. URL: https://doi.org/10.3390/ijms23073787, doi:10.3390/ijms23073787. This article has 18 citations.
 
-4. (bielewicz2023hyponasticleaves1 pages 1-2): Dawid Bielewicz, Jakub Dolata, Mateusz Bajczyk, Lukasz Szewc, Tomasz Gulanicz, Susheel S Bhat, Anna Karlik, Monika Jozwiak, Artur Jarmolowski, and Zofia Szweykowska-Kulinska. Hyponastic leaves 1 interacts with rna pol ii to ensure proper transcription of microrna genes. Plant and Cell Physiology, 64:571-582, Apr 2023. URL: https://doi.org/10.1093/pcp/pcad032, doi:10.1093/pcp/pcad032. This article has 17 citations and is from a domain leading peer-reviewed journal.
+4. (bhagat2018dynamicregulationof pages 1-4): Prakash Kumar Bhagat, Deepanjali Verma, Raghuram Badmi, and Alok Krishna Sinha. Dynamic regulation of hyl1 provides new insights into its multifaceted role in arabidopsis. bioRxiv, Aug 2018. URL: https://doi.org/10.1101/396861, doi:10.1101/396861. This article has 4 citations.
 
-5. (pegler2024drb1drb2and pages 1-2): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
+5. (yang2006serrateisa pages 6-6): Li Yang, Ziqiang Liu, Feng Lu, Aiwu Dong, and Hai Huang. Serrate is a novel nuclear regulator in primary microrna processing in arabidopsis. The Plant journal : for cell and molecular biology, 47 6:841-50, Sep 2006. URL: https://doi.org/10.1111/j.1365-313x.2006.02835.x, doi:10.1111/j.1365-313x.2006.02835.x. This article has 533 citations.
 
-6. (pegler2024drb1drb2and pages 7-9): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
+6. (yang2014homodimerizationofhyl1 pages 12-13): Xi Yang, Wenqing Ren, Qiuxia Zhao, Peng Zhang, Feijie Wu, and Yuke He. Homodimerization of hyl1 ensures the correct selection of cleavage sites in primary mirna. Nucleic Acids Research, 42:12224-12236, Oct 2014. URL: https://doi.org/10.1093/nar/gku907, doi:10.1093/nar/gku907. This article has 76 citations and is from a highest quality peer-reviewed journal.
 
-7. (bielewicz2023hyponasticleaves1 pages 11-12): Dawid Bielewicz, Jakub Dolata, Mateusz Bajczyk, Lukasz Szewc, Tomasz Gulanicz, Susheel S Bhat, Anna Karlik, Monika Jozwiak, Artur Jarmolowski, and Zofia Szweykowska-Kulinska. Hyponastic leaves 1 interacts with rna pol ii to ensure proper transcription of microrna genes. Plant and Cell Physiology, 64:571-582, Apr 2023. URL: https://doi.org/10.1093/pcp/pcad032, doi:10.1093/pcp/pcad032. This article has 17 citations and is from a domain leading peer-reviewed journal.
+7. (yang2014homodimerizationofhyl1 pages 4-5): Xi Yang, Wenqing Ren, Qiuxia Zhao, Peng Zhang, Feijie Wu, and Yuke He. Homodimerization of hyl1 ensures the correct selection of cleavage sites in primary mirna. Nucleic Acids Research, 42:12224-12236, Oct 2014. URL: https://doi.org/10.1093/nar/gku907, doi:10.1093/nar/gku907. This article has 76 citations and is from a highest quality peer-reviewed journal.
 
-8. (bielewicz2023hyponasticleaves1 pages 12-12): Dawid Bielewicz, Jakub Dolata, Mateusz Bajczyk, Lukasz Szewc, Tomasz Gulanicz, Susheel S Bhat, Anna Karlik, Monika Jozwiak, Artur Jarmolowski, and Zofia Szweykowska-Kulinska. Hyponastic leaves 1 interacts with rna pol ii to ensure proper transcription of microrna genes. Plant and Cell Physiology, 64:571-582, Apr 2023. URL: https://doi.org/10.1093/pcp/pcad032, doi:10.1093/pcp/pcad032. This article has 17 citations and is from a domain leading peer-reviewed journal.
+8. (bhagat2022dynamicphosphorylationof pages 16-17): Prakash Kumar Bhagat, Deepanjali Verma, Kirti Singh, Raghuram Badmi, Deepika Sharma, and Alok Krishna Sinha. Dynamic phosphorylation of mirna biogenesis factor hyl1 by mpk3 involving nuclear–cytoplasmic shuttling and protein stability in arabidopsis. International Journal of Molecular Sciences, 23:3787, Mar 2022. URL: https://doi.org/10.3390/ijms23073787, doi:10.3390/ijms23073787. This article has 18 citations.
 
-9. (bielewicz2023hyponasticleaves1 media e10b6f47): Dawid Bielewicz, Jakub Dolata, Mateusz Bajczyk, Lukasz Szewc, Tomasz Gulanicz, Susheel S Bhat, Anna Karlik, Monika Jozwiak, Artur Jarmolowski, and Zofia Szweykowska-Kulinska. Hyponastic leaves 1 interacts with rna pol ii to ensure proper transcription of microrna genes. Plant and Cell Physiology, 64:571-582, Apr 2023. URL: https://doi.org/10.1093/pcp/pcad032, doi:10.1093/pcp/pcad032. This article has 17 citations and is from a domain leading peer-reviewed journal.
+9. (zhang2024structuraldeterminantsin pages 8-8): Hui Zhang and Fengle Li. Structural determinants in the mirna/mirna* duplex and the dcl1 paz domain for precise and efficient plant mirna processing. The Plant journal : for cell and molecular biology, 120:109-122, Aug 2024. URL: https://doi.org/10.1111/tpj.16974, doi:10.1111/tpj.16974. This article has 5 citations.
 
-10. (bielewicz2023hyponasticleaves1 media eb7b4d42): Dawid Bielewicz, Jakub Dolata, Mateusz Bajczyk, Lukasz Szewc, Tomasz Gulanicz, Susheel S Bhat, Anna Karlik, Monika Jozwiak, Artur Jarmolowski, and Zofia Szweykowska-Kulinska. Hyponastic leaves 1 interacts with rna pol ii to ensure proper transcription of microrna genes. Plant and Cell Physiology, 64:571-582, Apr 2023. URL: https://doi.org/10.1093/pcp/pcad032, doi:10.1093/pcp/pcad032. This article has 17 citations and is from a domain leading peer-reviewed journal.
+10. (pegler2024drb1drb2and pages 1-2): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
 
-11. (yan2024paralleldegradomeseqand pages 1-3): Xingxing Yan, Changhao Li, Kaiye Liu, Tianru Zhang, Qian Xu, Xindi Li, Jiaying Zhu, Ziying Wang, Anikah Yusuf, Shuqing Cao, Xu Peng, James J. Cai, and Xiuren Zhang. Parallel degradome-seq and dms-mapseq substantially revise the mirna biogenesis atlas in arabidopsis. Nature plants, 10:1126-1143, Jun 2024. URL: https://doi.org/10.1038/s41477-024-01725-9, doi:10.1038/s41477-024-01725-9. This article has 19 citations and is from a highest quality peer-reviewed journal.
+11. (pegler2024drb1drb2and pages 16-17): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
 
-12. (pegler2024drb1drb2and pages 16-17): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
+## Artifacts
 
-13. (pegler2024drb1drb2and pages 17-19): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
-
-14. (pegler2024drb1drb2and pages 24-25): Joseph L. Pegler, Jackson M. J. Oultram, Christopher P. L. Grof, and Andrew L. Eamens. Drb1, drb2 and drb4 are required for an appropriate mirna-mediated molecular response to osmotic stress in arabidopsis thaliana. International Journal of Molecular Sciences, 25:12562, Nov 2024. URL: https://doi.org/10.3390/ijms252312562, doi:10.3390/ijms252312562. This article has 1 citations.
+- [Edison artifact artifact-00](DRB1-deep-research-falcon_artifacts/artifact-00.md)
 
 ## Citations
 
-1. ding2023micrornaproductionin pages 5-6
-2. ding2023micrornaproductionin pages 1-2
-3. yan2024paralleldegradomeseqand pages 1-3
-4. bajczyk2023recentinsightsinto pages 16-17
-5. https://doi.org/10.1093/pcp/pcad032
-6. https://doi.org/10.1038/s41477-024-01725-9
-7. https://doi.org/10.3390/ijms252312562
-8. https://doi.org/10.3390/plants12020342
-9. https://doi.org/10.3389/fpls.2023.1096772
-10. https://doi.org/10.3389/fpls.2023.1096772,
-11. https://doi.org/10.3390/plants12020342,
-12. https://doi.org/10.1093/pcp/pcad032,
-13. https://doi.org/10.3390/ijms252312562,
-14. https://doi.org/10.1038/s41477-024-01725-9,
+1. yang2010structureofarabidopsis pages 1-2
+2. yang2006serrateisa pages 6-6
+3. zhang2024structuraldeterminantsin pages 8-8
+4. bhagat2022dynamicphosphorylationof pages 1-2
+5. bhagat2018dynamicregulationof pages 1-4
+6. bhagat2022dynamicphosphorylationof pages 16-17
+7. https://doi.org/10.15252/embr.202255037.
+8. https://doi.org/10.1104/pp.20.00258.
+9. https://doi.org/10.1111/tpj.16974.
+10. https://doi.org/10.3390/ijms252312562.
+11. https://doi.org/10.3390/genes15081042;
+12. https://doi.org/10.3390/genes15121648.
+13. https://doi.org/10.1016/j.str.2010.02.006,
+14. https://doi.org/10.1093/nar/gku907,
+15. https://doi.org/10.3390/ijms23073787,
+16. https://doi.org/10.1101/396861,
+17. https://doi.org/10.1111/j.1365-313x.2006.02835.x,
+18. https://doi.org/10.1111/tpj.16974,
+19. https://doi.org/10.3390/ijms252312562,

@@ -1,0 +1,3 @@
+# Nepl19 catalytic-residue comparison
+
+Run `just analyze` with MAFFT 7.525 and pinned Biopython. The script accepts the retained exact Q9VAS1 target, experimentally characterized human neprilysin P08473 reference and mouse neprilysin Q61391 positive control. Records were fetched from https://rest.uniprot.org/uniprotkb/P08473.json and https://rest.uniprot.org/uniprotkb/Q61391.json on 2026-09-09 UTC. Full-length L-INS-i and G-INS-i alignments map every reference catalytic and zinc-binding annotation to target and control, retaining output and hash provenance. No outcome is hardcoded. The unrelated MMP12 search hit was excluded; only the independently identified neprilysin control is used.

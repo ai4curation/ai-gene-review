@@ -1,10 +1,40 @@
 ---
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
-maturity: SCOPING
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - NCBIFam/slides/ncbifam-flow.svg
+    - NCBIFam/slides/ncbifam-gain.svg
+manifest:
+  slides:
+    - href: NCBIFam/slides/NCBIFam-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
+      title: Project brief
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
+
+**Bottom line:** NCBIFAM (the PGAP/TIGRFAM HMM collection) and CDD reach GO only
+through InterPro2GO, so GOA hides which member database fired and drops every
+signature InterPro has not integrated (60% of NCBIFAM models, 75% of CDD). We
+measured both sides. Forward, NCBIFAM backs 705 (13%) of the 5,549 InterPro2GO
+rows in this repo and is the only integrating signature for 250 of them. Reverse,
+NCBIFAM's own curated metadata puts GO terms on 11,228 of 34,351 models that GO
+never ingests, while CDD-proper has no GO of its own. We built a validated
+250-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
+checked four high-gain rows structurally with OpenScientist. The gain is real
+but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
+entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
+is a clean fill.
+
+We did this because NCBIFAM is a large curated source of family-level function
+for prokaryotic proteins that GO does not use directly, and because its
+contribution to existing annotations is invisible without re-joining GOA to
+InterPro member integration.
 
 ## The value question, answered first: yes — and here are the mappings
 
@@ -23,7 +53,7 @@ straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
 |---|---|---:|---:|---|---|
 | NF033545 IS630 transposase | GO:0004803 transposase activity | **18,874** | 2 ~ | adopt NCBI | Mobile elements — InterPro integration lags most here; single biggest gap |
 | TIGR03542 LL-DAP aminotransferase | GO:0010285 LL-DAP transaminase | **1,185** | 2→**0** ✗ | **refine** | Large *bacterial* TrEMBL gap is real; but both reviewed "gaps" are plant ALD1 paralogs (see †) |
-| NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation |
+| NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation. Checked for viral capsid contamination (2026-10-17): 0 viral members; phage SrpI-like capsids go to NF045672 instead; 829/932 neighbourhoods carry the cysteine-desulfurase cargo ([context check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)) |
 | TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1→**0** ✗ | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575; the 1 reviewed "gap" is tobacco PMT paralog (see †) |
 | NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
 | NF002326 dGTPase | GO:0016793 (family) + GO:0008832 / GO:0106375 (clades) | (split) | — | **split** | ⚠️ **Corrected**: structural verification showed this family is substrate-heterogeneous, so it was **split** — family-level `exactMatch` to the parent GO:0016793 (gain ~0) + two `narrowMatch` sub-clades (strict dGTPase GO:0008832 marked *do-not-blanket-propagate*; broad SAMHD1-like GO:0106375). The apparent 456 net-new for the strict term applies only to the dGTPase core, not the whole family (see ‡‡ / the SSSOM split block) |
@@ -107,7 +137,7 @@ The round was productive in *both* altitude directions:
 | **NF042963** DUF1156 (anti-phage) | A0A3B7MFS0 | Intact SAM-dependent **DNA amino-methyltransferase** (DPPY), no nuclease; BREX/DISARM-like defense; DUF1156 accessory | **Adds an MF** the DUF name hid (GO:0009008; base UNDECIDED m6A/m4C) — seed *under*-specified |
 | **NF002326** dGTPase | Q92Q32 ("-like") | Active site **intact**, but SAMHD1-like **broad dNTPase**, strict dGTP not supported | **Over-refinement caught**: keep GO:0008832 for strict members, map "-like" clade to sibling GO:0106375 |
 | **NF033545** IS630 transposase | P16943 ("uncharacterized") | Bona fide **DDE transposase** (RNase-H fold, intact D181/D261/E297 triad) | **Confirms** GO:0004803; grounds the 18,874 headline (add an intact-triad filter for defective IS copies) |
-| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein (⚠️ *weakly blinded* — the prompt named the accession, so Foldseek could read `encap_f2a`/IPR049822 off the curated signature; the independent part is the AlphaFold no-TM evidence) | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation |
+| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein (⚠️ *weakly blinded* — the prompt named the accession, so Foldseek could read `encap_f2a`/IPR049822 off the curated signature; the independent part is the AlphaFold no-TM evidence) | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation. Follow-up (2026-10-17): Aguilar et al. 2026 (PMID:42875451) show the SrpI-like domain also occurs in phage major capsid proteins, but NCBIFAM puts those in NF045672, not NF041162; a domain-level PF19307/IPR045641 → GO:0140737 rule would **not** be safe ([context check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)) |
 
 The two enzyme rows are the payoff: DUF1156 shows the seed can **under**-specify (a
 "DUF" concealing a real MF) and dGTPase shows it can **over**-specify (a strict child
@@ -326,6 +356,13 @@ like it carries GO. The answer separates two things CDD conflates:
 Pfam→InterPro). Reproduce with `ncbifam_cdd_probe.py` and the FTP/Entrez checks in
 [NCBIFAM-METHODOLOGY.md](NCBIFam/NCBIFAM-METHODOLOGY.md).
 
+> **Caveat (2026-10-18):** this holds for the `cd` models and the bulk CDD files,
+> but NCBI also stores GO on **CDD domain architectures (SPARCLE)** and has
+> propagated it to RefSeq proteins since March 2023 (`ArchId:` in the WITH/FROM
+> column of NCBI's per-assembly GAFs). That GO is in neither `cddannot*.dat` nor
+> `hmm_PGAP.tsv`. In *P. putida* KT2440 it is the largest single NCBI GO source
+> (47% of GO-bearing proteins). See [REFSEQ_GO](REFSEQ_GO.md).
+
 ## Gaps Found (scoping)
 
 | # | Gap | Size | What it is |
@@ -519,6 +556,13 @@ over-annotation.
    contribution skews broad; prefer the specific child the curated entry supports.
 5. **Unintegrated signatures with a real function are `proposed_new_terms` /
    InterPro-integration requests**, not silent gaps.
+6. **Do not adopt NCBI `go_terms` that are known to be wrong.** NF016349
+   (Linocin_M18, PfamEq; encapsulin shell) carries GO:0008233 peptidase activity
+   and GO:0042742 defense response to bacterium in hmm_PGAP/20.0, left over from
+   Linocin M18's original misidentification as a bacteriocin. Exclude it from any
+   candidate round. Likewise, never map the SrpI-like domain (PF19307 / IPR045641 /
+   NF040250) to GO:0140737, because it also matches phage major capsid proteins
+   ([NF041162 check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)).
 
 ## Follow-Up Targets
 
@@ -535,7 +579,7 @@ over-annotation.
 ## Project Status
 
 - **Started**: 2026-06-20
-- **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
+- **Maturity**: IN_PROGRESS — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
   250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**

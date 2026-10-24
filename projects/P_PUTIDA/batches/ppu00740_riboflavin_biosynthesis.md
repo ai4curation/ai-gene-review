@@ -66,3 +66,16 @@ OpenScientist conclusions:
 This PR is a module-first light pass. It does not create PENDING gene-review stubs for all 15 KEGG members. Full gene reviews should prioritize the core `rib` genes and any non-core entries whose current GO/pathway mappings look misleading after module-level review.
 
 Generated UTC: 2026-07-15T11:02:48.876044+00:00
+
+## Repair Checkpoint
+
+On 2026-09-01, the FMN adenylyltransferase step was split into bacterial
+bifunctional RibF (`PTHR22749:SF6`) and eukaryotic FAD synthase
+(`PTHR23293:SF9`) variants. Human FLAD1 is no longer incorrectly declared as a
+member of the bacterial RibF family; its GO:0003919 activity is grounded by
+`PTN000591373`. The bacterial variant is instead grounded by its Q88Q93 and
+P0AG40 exemplar records because local PTHR22749 PAINT covers only the kinase
+half of bifunctional RibF.
+
+Repair pull request: [#2861](https://github.com/ai4curation/ai-gene-review/pull/2861)
+(`codex/putida-riboflavin-repair-wave90`).

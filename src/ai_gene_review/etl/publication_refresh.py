@@ -35,6 +35,8 @@ All refresh operations include rate limiting (0.5-2.0 second delays) to:
 
 import time
 import yaml
+
+from ai_gene_review.etl.publication_warm import _full_text_section_start
 from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -89,7 +91,12 @@ def find_pmc_candidates(
             full_text_available = frontmatter.get("full_text_available", False)
 
             # Check if this is a candidate for re-fetch
-            has_full_text_section = "## Full Text" in body
+            # Structural, not a bare substring: `"## Full Text" in body` also matches
+            # inside `### Full Text Notes`. Doubly latent today (no such heading exists,
+            # and no record is full_text_available: true without a section), but the
+            # reader, the writer and the two candidate scans should agree on what a
+            # heading is.
+            has_full_text_section = _full_text_section_start(body) != -1
 
             # Candidate if: has PMC ID AND (no full text flag OR no full text section)
             if pmcid and (not full_text_available or not has_full_text_section):

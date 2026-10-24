@@ -1,0 +1,32 @@
+# GHSR evidence and annotation tracing
+
+GHSR recognizes acyl-ghrelin. The defining [PMID:10604470](https://pubmed.ncbi.nlm.nih.gov/10604470/), DOI [10.1038/45230](https://doi.org/10.1038/45230), explicitly distinguishes the GHSR pathway from hypothalamic growth-hormone-releasing hormone(GHRH). QuickGO definitions checked 2026-09-08: GO:0016520 binds GHRH, while GO:0001616 binds ghrelin. Human GOA nevertheless has GO:0016520 IDA rows citing this paper and PMID:8688086, plus a rat-derived IEA. The horse row transfers GO:0016520 from human Q92847/ENSP00000241256 under GO_REF:0000107. The correction therefore belongs on the human donor and horse target. It is a ligand/term mismatch, not an allegation of an unsupported experimental organism.
+
+Modern [PMID:35027551](https://pubmed.ncbi.nlm.nih.gov/35027551/) structures directly show active ghrelin receptor bound to ghrelin and G protein. The complete 366 aa horse receptor aligns at 95.1% identity with human Q92847 and retains all seven helices and key ligand-binding features. This grounds receptor-subfamily transfer beyond a generic GPCR-domain label.
+
+[PMID:42426797](https://pubmed.ncbi.nlm.nih.gov/42426797/), DOI [10.1186/s12917-026-05700-8](https://doi.org/10.1186/s12917-026-05700-8), full text cached, measures equine tissue GHSR transcripts and circulating ghrelin. “Sequencing confirmed both products were identical to the equine GHSR1a reference sequence”. The validated tissues are pituitary and adrenal medulla. This is horse-specific identity/expression evidence, not a ghrelin-versus-oxytocin ligand-binding experiment or proof of every inferred physiological role. A completed horse-specific Falcon report is preserved alongside this review.
+
+Human immune effects are supported by [PMID:15232612](https://pubmed.ncbi.nlm.nih.gov/15232612/). Human decidualization in [PMID:17494105](https://pubmed.ncbi.nlm.nih.gov/17494105/) is not generalized to horse uterine biology. Fine-grained neuronal and metabolic transfers require their own donor-specific assessments; general receptor conservation is not enough for every physiological term.
+
+## Additional horse evidence
+
+The horse-specific report located Ceriotti et al. (2018), [PMID:29526750](https://pubmed.ncbi.nlm.nih.gov/29526750/), [DOI:10.1016/j.peptides.2018.03.003](https://doi.org/10.1016/j.peptides.2018.03.003). The independently verified primary abstract describes GHS-R1a immunodetection and ghrelin responses in equine chondrocytes. The study supports receptor-associated activity in horse cells. Antagonist pharmacology and antibody detection do not constitute a purified F6QF00 ligand-binding assay, and the concentration-dependent injury response is not a universal anti-inflammatory function. The [accepted manuscript](https://air.unimi.it/retrieve/dfa8b99a-9a90-748b-e053-3a05fe0a3a96/1-s2.0-S0196978118300421-main.pdf) provides a full-text source for further assay-level examination.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+**Identity.** F6QF00 (366 aa, TrEMBL, Ensembl ENSECAP00000015283) is the complete canonical GHSR type 1a product, not a fragment, isoform or alternative model. Human Q92847 is also 366 aa, and the two align gaplessly with 18 substitutions, mostly in the N-terminal segment (12-36) and the C-tail. `GHSR-bioinformatics/motif_check_rereview.py` (output in `RESULTS-rereview.md`) shows that the ERY (140), CWxP (275) and NPxxY (319) motifs, the C116-C198 disulfide, the human BINDING residues 178/181/213/214/286 and the N13/N27 glycosylation sites are all conserved. The PROSITE PRU00521 "lacks conserved residues" caution most likely reflects GHSR's natural ERY in place of DRY, which human GHSR shares. The equine GHSR1b splice form is unconfirmed (PMID:42426797).
+
+**Evolutionary grounding.** PANTHER PTHR24243:SF7 (GROWTH HORMONE SECRETAGOGUE RECEPTOR TYPE 1) holds both horse and human. The ghrelin-specific IBD terms (GO:0001616, GO:0009755) sit at PTN002797666, a Euteleostomi node donated by rat, human and pig GHSR, so horse lies inside the inheriting clade. Plasma membrane and GPCR signaling sit at the deeper peptide-receptor node PTN002797649. The family review `interpro/panther/PTHR24243/PTHR24243-review.yaml` places both GHSR reviews in SF7, which agrees with this review. The neuronal and immune terms are Ensembl Compara transfers from SF7 orthologs (mouse Q99P50, human Q92847); PAINT does not propagate them.
+
+**Horse evidence.** GHSR1a transcripts are sequence-confirmed in pituitary and adrenal medulla [PMID:42426797 "Sequencing confirmed both products were identical to the equine GHSR1a reference sequence"]. In equine chondrocytes, the protective effect of ghrelin depends on GHS-R1a [PMID:29526750 "ghrelin protects chondrocytes against LPS-induced damage via interaction with GHS-R1a"]; that is antagonist pharmacology, not a recombinant assay.
+
+**Changes from the previous version.**
+- Removed every comparison to oxytocin. Nothing in the GO annotations or the literature raises an oxytocin question.
+- Generic terms that more specific accepted terms already entail (cell communication, signaling, signal transduction, response to hormone, GPCR activity, signaling receptor activity) changed from KEEP_AS_NON_CORE/MODIFY to TOO_GENERAL. Ancestry was checked with OLS hierarchicalAncestors.
+- GO:0016520 (GHRH receptor activity): kept as MODIFY to GO:0001616. The ligand is wrong, and the defect is on the human donor IDA rows and in GO-CAM 67f85f2b00000823.
+- Learning and memory: changed to MARK_AS_OVER_ANNOTATED. They are behavioural readouts, and the mechanism is captured by coreceptor activity and regulation of synaptic plasticity, both kept as non-core.
+- Decidualization: changed from UNDECIDED to MARK_AS_OVER_ANNOTATED. The human evidence is a ligand-supplementation effect, and equids have an epitheliochorial placenta without a comparable stromal decidual reaction.
+- Membrane raft and actin polymerization stay UNDECIDED. Only the abstract of the donor paper (PMID:15232612) is cached, and it does not describe those experiments.
+- Hormone-mediated signaling pathway was added to the core function. PMID:29526750 and the deep-research file were added as references.
+
+**Relative.** The closest characterised relative in the same SF7 subfamily is human GHSR (Q92847). `genes/human/GHSR/GHSR-ai-review.yaml` exists but is IN_PROGRESS, with about 30 UNDECIDED rows and GO:0016520 still on the donor rows, so it needs a full review.

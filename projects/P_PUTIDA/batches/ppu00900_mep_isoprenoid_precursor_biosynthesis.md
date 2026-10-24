@@ -42,6 +42,40 @@ The following KEGG members are outside this module:
 | 6 | `ispG` | PP_0853 | Q88PJ7 | GO:0141197 flavodoxin-coupled HMBPP synthase | OpenScientist complete and assessed |
 | 7 | `ispH` | PP_0606 | Q88Q89 | GO:0051745 HMBPP reductase | OpenScientist complete and assessed |
 
+## Wave117 Repair
+
+This repair preserves the reusable seven-reaction route while tightening family,
+reaction, and evolutionary grounding. The module now uses exact PANTHER
+subfamilies for DXS, Dxr, IspD, IspE, IspF, and IspH. Several official PANTHER
+labels are chloroplast-biased even though their verified member sets contain the
+reviewed bacterial exemplars; those labels are retained verbatim and accompanied
+by explicit scope caveats rather than rewritten.
+
+IspG remains represented by separate flavodoxin- and ferredoxin-coupled leaves.
+Both use the parent PANTHER family because the indexed SF0 label conflates the
+ferredoxin/chloroplast implementation with reviewed flavodoxin-coupled bacterial
+members. Carrier specificity is instead grounded by each leaf's exact GO
+molecular function, Rhea reaction, and reviewed UniProt exemplar. No IspG PTN is
+asserted because the available PAINT node supports the ferredoxin term but does
+not cleanly distinguish the two carrier-specific implementations. The other six
+steps retain only locally verified PAINT IBD nodes.
+
+The existing completed OpenScientist reports were reused: generic module research
+completed in 1,643 seconds, and PSEPK pathway/taxon research completed in 1,187
+seconds. No replacement run was needed. A required annotation-reviewer pass
+examined all existing annotations, evidence, core functions, and proposed terms
+for `dxs`, `dxr`, `ispD`, `ispE`, `ispF`, `ispG`, and `ispH`; it found no blocking
+biological, GO, or evidence issue and recommended no gene-review edit.
+
+For PSEPK specifically, the seven reviewed UniProt entries cover every reaction.
+DXS remains a shared route entry and Dxr the commitment step. Q88PJ7 supports the
+flavodoxin-coupled IspG reaction, but its physiological flavodoxin/reductase
+partners have not been established directly in KT2440. Q88Q89 IspH directly
+supports alternative IPP- and DMAPP-forming branches, so a separate native IDI is
+not required to complete the route. Direct KT2440 biochemical assays were not
+located for every enzyme, and those target-specific evidence gaps are not promoted
+to generic module claims.
+
 ## Curation Findings
 
 - The seven PSEPK Swiss-Prot entries satisfy every required reaction; no pathway
@@ -62,8 +96,6 @@ The following KEGG members are outside this module:
 - No native IDI is present in the current KT2440 proteome, but this is not a
   pathway hole because IspH directly forms both IPP and DMAPP. The `idi` used
   in PMID:31500633 was cloned from *E. coli*, as stated in the paper's Methods.
-  KEGG M00096 includes a separate K01823 IDI step, so this curated module is
-  intentionally not treated as a literal M00096 transcription.
 - The report's proposed PP_0142/PP_0959 "reannotation" was not propagated:
   local metadata already assigns these proteins to the ABC-transporter bucket,
   outside the ppu00900 candidate set.
@@ -90,6 +122,16 @@ The following KEGG members are outside this module:
   remain unresolved.
 
 ## Workflow Status
+
+### Wave117 Repair
+
+- [x] Re-audit the seven-reaction boundary and all seven PSEPK gene reviews.
+- [x] Verify exact PANTHER labels, member containment, reviewed exemplars, and PAINT nodes.
+- [x] Separate flavodoxin- and ferredoxin-coupled IspG implementations conservatively.
+- [x] Reuse and assess completed generic and PSEPK OpenScientist research.
+- [x] Complete the required annotation-reviewer consult for all seven genes.
+
+### Initial Pass
 
 - [x] Partition the 17 KEGG candidates into the seven-step route and out-of-scope entries.
 - [x] Fetch all seven selected genes with current UniProt and GOA records.

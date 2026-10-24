@@ -13,10 +13,10 @@ autolink_gene_symbols: false
 - Core genes recovered from ppu04122: 2 (`moaD`, `moeB`)
 - Selected gene reviews: 13
 - Fetched GOA rows reviewed: 59 of 59 (no `PENDING` actions)
-- Justified new gene annotations: 1 (`moaD` `part_of` GO:1990140)
+- Justified new gene annotations: 3 (`moaD` GO:0097163 and GO:1990140; `moaE` GO:1990140)
 - Conserved core roles covered: 6
-- Optional MGD/MCD maturation genes covered: 3
-- Paralog assignments retained as uncertain: 4
+- Optional MGD maturation genes covered in KT2440: 1
+- Candidate assignments retained as uncertain: 6
 - Broad-map candidates excluded: 21
 
 ## Scope
@@ -35,12 +35,36 @@ outside even when a MobA/MocA nucleotide-maturation variant is represented.
 Folate, queuosine, riboflavin, and pterin-recycling genes appearing on broad
 map00790 are also outside scope.
 
+## Reusable-Module Audit
+
+`scope: CONCRETE` is retained because the module models a concrete sequence of
+biochemical reactions with grounded terminal participants, not an ungrounded
+motif. It is nevertheless species-neutral: PSEPK proteins are exemplars rather
+than a required composition, and KT2440-specific candidate conclusions are
+recorded only in this batch.
+
+The former PSEPK-anchored `ORTHOLOG_OF` selectors for MoaA, MoaE, and MoeA were
+replaced by function-constrained family selectors with reviewed cross-species
+UniProt exemplars. Canonical MoaA deliberately has no PANTHER term because the
+local PSEPK and E. coli exemplars occupy different subfamilies of a family that
+also contains MoaC and fusion proteins. The active-MoaB variant remains anchored
+to reviewed Pyrococcus furiosus Q8U3T3 because catalytic competence is not a
+property of the whole MoaB family. The MCD branch is anchored to reviewed E.
+coli MocA Q46810 and omits PTHR43777:SF1 as a selector because that broad family
+does not establish nucleotide specificity.
+
+The MoaD-MoaE synthase leaf explicitly models two MoaD and two MoaE units. Its
+molybdopterin synthase molecular function remains on the leaf complex annoton;
+MoaD sulfur-carrier activity is on the separate MoaD activation annoton. The
+module has no generic module-level cellular locations.
+
 ## Required Workflow
 
 - [x] Fetch missing selected-gene scaffolds.
 - [x] Run OpenScientist research for every selected gene.
 - [x] Run generic module OpenScientist research.
 - [x] Run module + ppu00790 + PSEPK OpenScientist research.
+- [x] Annotation-review all 13 selected PSEPK gene reviews.
 - [x] Curate every GOA row with no `PENDING` actions.
 - [x] Revise and validate the reusable module.
 - [x] Validate and render selected gene reviews and batch artifacts.
@@ -55,28 +79,31 @@ map00790 are also outside scope.
 | CANDIDATE_UNCERTAIN | `PP_2482` | PP_2482 | Q88K11 | MoaA-family paralog | Radical-SAM/[4Fe-4S] features retained; exact GTP-cyclase activity and redundancy with `moaA` remain undecided. |
 | CANDIDATE_UNCERTAIN | `PP_1969` | PP_1969 | Q88LG4 | MoaA-family paralog | Closely related to PP_2482 but divergent from canonical MoaA; exact substrate and pathway role remain undecided. |
 | COVERED_CORE | `moaC` | PP_1292 | Q88NC0 | cPMP synthase | Exact GO:0061799 activity retained. |
-| RECOVERED_CORE | `moaD` | PP_1293 | Q88NB9 | MPT synthase sulfur carrier | Existing GO:1990133 for the transient MoeB-MoaD activation complex is retained; an ISS `NEW` GO:1990140 row captures the distinct MoaD-MoaE synthase complex used in the core function. |
-| COVERED_CORE | `moaE` | PP_1294 | Q88NB8 | MPT synthase catalytic subunit | Exact GO:0030366 activity retained. |
+| RECOVERED_CORE | `moaD` | PP_1293 | Q88NB9 | MPT synthase sulfur carrier | Existing GO:1990133 for the transient MoeB-MoaD activation complex is retained; ISS `NEW` rows capture sulfur carrier activity GO:0097163 and the distinct MoaD-MoaE synthase complex GO:1990140. |
+| COVERED_CORE | `moaE` | PP_1294 | Q88NB8 | MPT synthase catalytic subunit | Exact GO:0030366 activity is retained and a UniProt-grounded `NEW` GO:1990140 row captures the MoaE side of the 2:2 synthase complex. |
 | RECOVERED_CORE | `moeB` | PP_0735 | Q88PW3 | MoaD adenylyltransferase | Exact GO:0061605 retained; GO:0008641 is removed because MoaD acyl-adenylation does not satisfy the live term's E1 thiolester requirement. |
 | COVERED_CORE | `moeA` | PP_2123 | Q88L14 | MPT molybdotransferase | Exact GO:0061599 activity retained. |
 | CANDIDATE_UNCERTAIN | `moaB-I` | PP_2122 | Q88L15 | possible MogA-equivalent/accessory protein | No standalone MogA was found; UniProt says this MoaB family lacks MPT adenylyltransferase activity, so pathway necessity remains undecided. |
 | CANDIDATE_UNCERTAIN | `moaB-II` | PP_4600 | Q88E67 | possible MogA-equivalent/accessory protein | Same unresolved family-level conflict as `moaB-I`; no exact catalytic GO term was added. |
 | COVERED_VARIANT | `mobA` | PP_3457 | Q88HA3 | MGD branch | Reviewed Mo-MPT guanylyltransferase GO:0061603 retained as an optional downstream variant. |
-| COVERED_VARIANT | `PP_2483` | PP_2483 | Q88K10 | predicted MocA/MCD branch | K07141 plus local subfamily and neighborhood evidence support GO:0061602 as a replacement for broad nucleotidyltransferase; direct CTP assay is absent. |
-| COVERED_VARIANT | `PP_4230` | PP_4230 | Q88F68 | predicted MocA/MCD branch | K07141 plus local subfamily and neighborhood evidence support GO:0061602 as a replacement for broad nucleotidyltransferase; client dedication remains inferential. |
+| CANDIDATE_UNCERTAIN | `PP_2483` | PP_2483 | Q88K10 | MobA-like NTP transferase | K07141 favors MocA, but saved pairwise comparison instead places Q88K10 closer to E. coli MobA and PTHR43777:SF1 is not specific; GO:0016779 remains `UNDECIDED`. |
+| CANDIDATE_UNCERTAIN | `PP_4230` | PP_4230 | Q88F68 | MobA-like NTP transferase | K07141 and modest similarity favor MocA, but neither the broad family nor sequence similarity establishes CTP specificity; GO:0016779 remains `UNDECIDED`. |
 
-GO:1990140 is an existing live GO cellular-component term, so the proposal is an
-`action: NEW` row in `existing_annotations`, supported by the PTHR33359:SF1
-ortholog and the conserved MoaD-MoaE heterotetramer. `proposed_new_terms` remains
-empty because no new ontology class is being requested.
+GO:1990140 and GO:0097163 are existing live GO terms, so the proposals are
+`action: NEW` rows in `existing_annotations`, not requests for new ontology
+classes. The MoaD and MoaE complex rows are grounded by the target MoaE UniProt
+statement specifying a heterotetramer of two MoaD and two MoaE subunits; the
+MoaD carrier row is additionally grounded by exact PTHR33359:SF1 membership.
+`proposed_new_terms` therefore remains empty.
 
 ## MogA Search
 
-No standalone KT2440 protein mapped to the locally fetched MogA family
-PTHR43764 or to KEGG K03831. The only small MoaB/Mog-fold candidates are
-`moaB-I` and `moaB-II` (both K03638/PTHR43232), while `moeA` carries the
-separate molybdotransferase architecture. Because MoaB catalytic competence is
-lineage-dependent and the two target entries explicitly carry a transferred
+The local reviewed-entry PANTHER slice contains no KT2440 MogA representative,
+but that slice is not a complete proteome census and is not used as proof of
+absence. Across the selected reviews, the only identified small MoaB/Mog-fold
+candidates are `moaB-I` and `moaB-II` (both K03638/PTHR43232), while `moeA`
+carries the separate molybdotransferase architecture. Because MoaB catalytic
+competence is lineage-dependent and both target entries carry a transferred
 "no MPT adenylyltransferase activity" statement, neither paralog is asserted as
 the missing MogA-equivalent. Direct MPT-AMP and MoeA-coupled assays are needed.
 
@@ -152,17 +179,18 @@ The `PP_4230` report is also assessed as `MISCITED`. It treats a heterologous
 *Cellulosimicrobium* `CsXodCBA` production experiment in KT2440 as evidence for
 the native PP_4230/PP_4231 locus, puts PP_2482 rather than PP_2483 in its second
 MocA-cluster table, and relies on unsaved motif and AlphaFold analyses. The
-predicted MocA assignment is retained from the saved K07141, PANTHER, target
-UniProt, and local reproducible-analysis evidence; CTP specificity and client
-dedication still require direct testing.
+saved K07141 assignment and modest similarity to E. coli MocA favor a MocA-like
+interpretation, but the broad family and sequence evidence do not establish CTP
+specificity. Q88F68 therefore remains unresolved rather than serving as the
+module's MocA exemplar.
 
 The completed `PP_2483` report is assessed as `MISCITED`. It promotes the
 unresolved PP_2482 paralog to canonical MoaA, treats indirect neighborhood and
 orthologous-enzyme evidence as decisive support for dedicated delivery to one
 KT2440 client, and presents unsaved target alignment and residue analyses. The
-predicted MocA assignment is retained from the saved K07141, PANTHER, target
-UniProt, and local reproducible-analysis evidence; direct CTP specificity and
-client dedication remain untested.
+saved local comparison instead places Q88K10 closer to E. coli MobA than MocA,
+contradicting a specific MocA assertion despite the K07141 assignment. Q88K10
+therefore remains unresolved rather than serving as the module's MocA exemplar.
 
 An ontology ancestor scan using both `is_a` and `part_of` relationships found no
 remaining pair in which both a parent and its more specific child are positively
@@ -171,11 +199,11 @@ parents in the three MoaA-family reviews, broad pathway parents in `moaE`/`moeA`
 and the two MobA process ancestors are marked `MARK_AS_OVER_ANNOTATED`; the more
 specific child rows remain retained.
 
-Both final-module OpenScientist reports were regenerated after the source was
-tightened to an explicitly prokaryotic scope. Their frontmatter records
+Both OpenScientist reports were regenerated for wave116 from the explicitly
+prokaryotic source before the final selector repair. Their frontmatter records
 `cached: false`, `max_iterations: 3`, a 7200-second provider timeout, and start
-times later than the final module YAML. The earlier human-oriented outputs were
-overwritten; both refreshed reports and their provider artifacts are present.
+times for the new runs. Both refreshed reports and their provider artifacts are
+present; their claims remain retrieval inputs rather than module authority.
 
 The refreshed generic report is assessed as `LOW_QUALITY` retrieval support. It
 now uses the prokaryotic title, explicitly places MOCS/CNX/GPHN organization and
@@ -206,16 +234,16 @@ outside the curated boundary even when discussed as retrieval context.
 The local sequence analysis shows that PP_2482 and PP_1969 retain radical-SAM
 motifs but are only 36-38% identical to canonical Q88E69 and lack its two
 MoaA-specific InterPro records. Pairwise identity alone also fails to distinguish
-MobA from MocA; PP_2483 and PP_4230 are therefore assigned as predicted MocA
-proteins from concordant K07141, PTHR43777:SF1, and neighborhood evidence, not
-from global sequence identity alone.
+MobA from MocA: PP_4230 is closer to the E. coli MocA control, whereas PP_2483
+is closer to MobA despite both targets mapping to K07141. PTHR43777:SF1 is broad
+and the prior neighborhood conclusion was not produced by the saved analysis.
+Neither target is therefore assigned a specific nucleotide-transfer reaction.
 
-The reusable prokaryotic module uses family or ortholog selectors according to the local
-resolution of each role and exposes the curated KT2440 UniProt proteins as
-concrete representatives. Q88K11, Q88LG4, Q88L15, and Q88E67 are recorded in
-knowledge gaps rather than forced into canonical MoaA or catalytic MoaB roles;
-Q88K10 and Q88F68 are shown as predicted, not experimentally demonstrated,
-MocA representatives.
+The reusable prokaryotic module uses family or cross-species ortholog selectors
+according to the resolution of each role and uses curated KT2440 proteins only
+as concrete exemplars. Q88K11, Q88LG4, Q88L15, Q88E67, Q88K10, and Q88F68 are
+kept as species-specific unresolved candidates in this batch rather than being
+forced into canonical MoaA, catalytic MoaB, or MocA roles.
 
 The MPT-synthesis leaf represents the required GO:1990140 MoaD2-MoaE2
 heterotetramer as a protein complex with two visible MoaE catalytic units and
@@ -239,4 +267,4 @@ routes retain the complete upstream sequence through
 - Sequence analysis: `genes/PSEPK/moaA/moaA-bioinformatics/RESULTS.md`
 - PANTHER evidence: `PTHR22960`, `PTHR33359`, `PTHR23404`, `PTHR10953`, `PTHR10192`, `PTHR43232`, `PTHR43764`, `PTHR19136`, and `PTHR43777`
 
-Generated UTC: 2026-07-20
+Generated UTC: 2026-09-01

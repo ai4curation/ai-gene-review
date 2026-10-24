@@ -69,3 +69,50 @@ No `protein binding` annotations present (good).
 - Falcon deep research: completed (`DCV1-deep-research-falcon.md`, ~29 min, 16 refs). **Concordant** with this review: it finds no DCV1-specific experimental characterization; all function is family-level inference (Sur7/PalI/Rim9 tetraspanner, plasma-membrane/MCC-eisosome, Rim101 pH-response by analogy to RIM9's auxiliary role in the Rim21–Dfg16–Rim9 sensor complex). Its citations are reviews / other-gene primary papers (Athanasopoulos 2019 FEMS Microbiol Rev; Obara 2012 JBC on Rim21; Douglas 2012 mBio on Sur7) — none are DCV1-specific, so they are used as background only and not added as `supporting_text` (falcon file: quote-tokens are not validator-verified per project guidance).
 </content>
 </invoke>
+
+## 2026-09-21 full-gene re-review
+
+All8 original source assertions preserved. Actual PTHR28013 v19 root PTN001997363 has PM/division-site/growing-tip IBDs and lies above exact DCV1 leaf PTN001997377. No loss found. One donor is not weak evidence, and a nuclear-envelope pool is not proof of PM exclusion. Both PM rows and division/tip rows are UNDECIDED pending full source and target-context adjudication. GO:0035838 defines the end of an elongated cell; budding yeast cannot be excluded solely by its species name. Broad membrane restored ACCEPT. SGD nuclear-envelope IDA PMID:33002606 retained ACCEPT because the location is coherent and source-specific; CC status does not make a term noncore.
+
+The PMID:33002606 official cached abstract and PubMed record were checked. Full text could not be retrieved from publisher/author searches; a title about TOS7 is not evidence that DCV1 was untested. Citation uncertainty remains explicit and no wrong-gene assertion is made. The PMID:22042866 CDC28 screen phenotype is documented by UniProt but full target-specific evidence remains unverified, so its reference review was qualified. No molecular activity or cell-cycle participation was manufactured from viability necessity. Exact global/repository OpenScientist target checks were negative. Focused report registered for source imaging and secondary locations.
+
+The complete existing Falcon output and its separate summary-table artifact were also read. It bases PM/Rim101 proposals on Sur7/Rim9 analogies, does not reconstruct the actual PAINT tree, and misses both PMID:33002606 and PMID:22042866. Its statement that no direct cell-biological characterization was found is a search limitation, not evidence against the curated nuclear-envelope experiment. It supplies no direct division-tip imaging or target pathway mechanism; the focused request therefore covers unresolved source evidence rather than duplicating a settled finding.
+
+
+## Recovery PR follow-up (2026-09-22)
+
+Restored readable GO/PMID/PTN identifiers in curation prose. For DCV1, core
+localization cites the recorded UniProt topology and SGD-attributed observation;
+the unrelated Rim101 report sentence no longer supports plasma-membrane location.
+For YAR1, unanswered report questions are not positive evidence. For SSQ1, the
+located Nop1 association remains recorded while its generic binding label is removed.
+The annotation changes apply only to the relevant gene; no inherited location is
+rejected solely from its best-characterized compartment.
+
+## 2026-10-01 focused DCV1 IBA adjudication
+
+Read the cached OpenScientist report for `secondary-membrane-division-site-and-tip-localization`
+and fetched the report's new DCV1-specific primary lead, PMID:36601911. The PubMed
+abstract directly reports that Dcv1 is uniformly plasma-membrane localized in
+vegetative cells, becomes rear-localized rather than front/tip-localized in
+pheromone-responding cells, and that `dcv1Δ` mislocalizes plasma-membrane lipids
+and polarity/trafficking proteins.
+
+Consequences for the three IBA rows are asymmetric:
+
+- `GO:0005886 plasma membrane` is now accepted. The PTN001997363 plasma-membrane
+  assertion is still on the exact DCV1 target path, and direct Dcv1-GFP imaging
+  independently supports the same compartment.
+- `GO:0035838 growing cell tip` is removed. The best budding-yeast polarized-growth
+  state in the available evidence is the pheromone shmoo, and Dcv1 sits at the
+  rear of those cells, opposite the pheromone receptor and growth front.
+- `GO:0032153 cell division site` remains unresolved. PMID:36601911 resolves
+  plasma membrane and shmoo-front exclusion, but it does not test bud-neck or
+  cytokinesis-plane enrichment, so the fission-yeast-seeded IBA still needs a
+  direct Dcv1/septin or Dcv1/Myo1 imaging test.
+
+The SGD nuclear-envelope IDA from PMID:33002606 is retained. The full text is still
+not cached, but a Tos7-focused title is not evidence of a wrong-gene annotation.
+The new PM paper means the old accepted ND biological-process row is now unresolved:
+Dcv1 has target-specific evidence for a mating front-rear polarity role, but the
+full paper should be curated before proposing an exact BP term.

@@ -72,3 +72,72 @@ Core: GO:0004581 MF (ACCEPT), GO:0006488 / GO:0006487 BP (ACCEPT), GO:0005789 ER
   It is a large-scale MS localization to bulk membrane; keep as non-core / over-annotated
   relative to the specific ER-membrane term. MARK_AS_OVER_ANNOTATED (redundant with specific CC).
 - GO:0005515 protein binding x4: MARK_AS_OVER_ANNOTATED (viral interactome, non-informative).
+
+## Horse-pair evidence and exact protein model
+
+The selected horse ALG5 A0A5F5PM72 retains the N-terminal hydrophobic membrane anchor, but the 294-aa sequence deletes canonical human residues 95–124. The remaining 294 residues align at 94.6% identity. Do not equate sequence-family identity with demonstrated activity of a deletion-bearing model. The horse GOA enzyme activity is UNDECIDED pending model/structure validation; ER membrane residence remains supported by the preserved anchor.
+
+[PMID:10359825](https://pubmed.ncbi.nlm.nih.gov/10359825/), DOI [10.1073/pnas.96.12.6982](https://doi.org/10.1073/pnas.96.12.6982), studies BOTH ALG5 and ALG6 despite its ALG6-focused title. “Expression of the human ALG5 and ALG6 cDNA could partially complement the respective S. cerevisiae alg5 and alg6 deficiency.” This supports human ALG5 glucose-donor pathway identity and demonstrates why title-only paralog attribution is unsafe. The independent human UniProt biochemical statement is explicitly experimental-source-derived, not ARBA.
+
+The ProtNLM paragraph instead describes GDP-mannose transfer and DPM synthase, which are not established properties of this ALG5-family sequence. The internal deletion does not itself establish conversion to a GDP-mannose-dependent enzyme. No horse functional paper was identified; human deep research is prioritized.
+
+## Research synthesis
+
+The human Falcon synthesis supports UDP-glucose-dependent dolichyl-phosphate glucosylation and separates yeast topology experiments from direct human evidence. Its disease survey emphasizes the 2024 p.Arg79Trp founder pedigrees, but the independently cached PMID:35896117 establishes earlier monoallelic ALG5 disease and impaired polycystin-1 maturation. The current biological summary therefore describes the verified dominant kidney phenotype and does not assert an unverified ALG5-CDG diagnosis or experimentally settled human membrane topology.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: full re-review of all 19 GOA rows, description and core functions. ProtNLM2
+output was not consulted (the earlier "ProtNLM paragraph" remark above predates this
+pass and was not used).
+
+### Identity
+- Benchmark accession Q9Y673 is the reviewed canonical UniProt entry (isoform 1, 324 aa).
+  It is not a fragment or alternative gene model. Isoform 2 (Q9Y673-2, VSP_041019) lacks
+  residues 95-124 (QKRDPAFTYEVIVVDDGSKDQTSKVAFKYC), a segment inside the GT2 catalytic
+  domain containing the conserved VVDDGSKD stretch (108-115); its activity is untested.
+- The horse model A0A5F5PM72 (294 aa) lacks the same 95-124 segment, i.e. it matches the
+  isoform-2 splice pattern rather than the canonical product [file:human/ALG5/ALG5-uniprot.txt
+  "VAR_SEQ         95..124"].
+- PMID:10359825 reports its 1999 human cDNA as encoding 242 aa [PMID:10359825 "encoding a
+  polypeptide of 242 amino acids"], shorter than the canonical 324 aa; the yeast
+  complementation was done with that clone.
+
+### Evolutionary grounding
+- PANTHER PTHR10859:SF91 (DOLICHYL-PHOSPHATE BETA-GLUCOSYLTRANSFERASE). Member index
+  (19.0) places Q9Y673, S. cerevisiae ALG5 P40350, S. pombe alg5 O60061 and horse
+  A0A5F5PM72 in SF91. The DPM1-type mannosyltransferases are in other PTHR10859 subfamilies,
+  so mannose-transfer functions are not transferable.
+- PAINT: GO:0004581 and GO:0006488 IBD at PTN001653583 (seeds include SGD:S000006148,
+  PomBase:SPBC56F2.10c, FB:FBgn0261020, human Q9Y673); GO:0005789 IBD at PTN000092356
+  (taxon 2759). Target lies inside the clade; no evidence of loss.
+- Family review interpro/panther/PTHR10859/PTHR10859-review.yaml agrees on SF91 placement
+  (no disagreement).
+
+### Literature re-check
+- PMID:10359825 full text is now cached (the earlier note said abstract-only). It contains
+  cloning, Northern blots, patient sequencing and yeast alg5 complementation (CPY
+  glycosylation) [PMID:10359825 "Expression of the humanALG5andALG6cDNA partially
+  complemented the respective yeast mutations, as shown by the improved glycosylation of
+  CPY"]. It contains no ALG5 localization or topology experiment, so the EXP ER-membrane and
+  IGI cytoplasmic-side rows rest on other grounds (UniProt topology, Reactome, PMID:35896117).
+- PMID:35896117 (abstract): [PMID:35896117 "ALG5 haploinsufficiency is sufficient to alter
+  the synthesis of the N-glycan chain in renal epithelial cells"]; PC1 maturation defect is
+  downstream, not annotated as an ALG5 process.
+
+### Changes vs previous version
+- GO:0005515 x4 (SARS-CoV-2 ORF3a IPIs): KEEP_AS_NON_CORE -> REMOVE (protein-binding policy).
+- GO:0006487 protein N-linked glycosylation (TAS, IMP): ACCEPT -> MODIFY to GO:0006488
+  (descendant already carried; ALG5 acts on the lipid-linked precursor, not protein).
+- GO:0098556 cytoplasmic side of rough ER membrane: ACCEPT -> MODIFY to GO:0098554 (no
+  rough-vs-smooth ER evidence).
+- GO:0016020 membrane (HDA): MARK_AS_OVER_ANNOTATED -> MODIFY to GO:0005789 (correct-but-general
+  rule).
+- Core functions merged into one (MF GO:0004581, BP GO:0006488, CC ER membrane + cytoplasmic
+  side). Added PMID:35896117 and deep-research references. Status -> COMPLETE.
+
+### Relative
+- Closest characterized relative by phylogeny: S. cerevisiae ALG5 (P40350), same PANTHER
+  subfamily SF91 and an IBD seed; review genes/yeast/ALG5/ALG5-ai-review.yaml is COMPLETE.
+- Modules: modules/dolichol_phosphate_sugar_donor_supply.yaml (ALG5 step);
+  modules/n_glycan_llo_assembly_lumenal.yaml (consumer of Dol-P-Glc).

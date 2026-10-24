@@ -218,7 +218,7 @@ python analyze_lrx1.py ../../../yeast/MTC7/MTC7.fasta -o mtc7_test_results.json
 - [x] Visualizations created where applicable
 
 ### Data Integrity
-- [x] Input data source documented (UniProt Q95Y86)
+- [x] Input data source documented (UniProt Q22179)
 - [x] Analysis methods clearly described (LDL-A patterns, hydrophobicity)
 - [x] External tools documented (DeepTMHMM, AlphaFold)
 - [x] Results are reproducible from FASTA input

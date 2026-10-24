@@ -4,7 +4,7 @@ title: "RHEA->GO Mapping Reviews: enzymes backing the curated mappings"
 
 # RHEA->GO Mapping Reviews
 
-**Parent project:** [RHEA.md](../RHEA.md) - **Mapping set:** [rhea2go.sssom.yaml](rhea2go.sssom.yaml)
+**Parent project:** [RHEA.md](../RHEA.md) - **Mapping set:** [rhea2go.sssom.yaml](rhea2go.sssom.yaml) - **GO-term projection:** [rhea2go.terms.yaml](rhea2go.terms.yaml)
 
 Every curated RHEA->GO mapping in [`rhea2go.sssom.yaml`](rhea2go.sssom.yaml) is backed here by a review
 of a reviewed (Swiss-Prot) enzyme that carries the reaction. All RHEA reactions are **absent from the
@@ -37,7 +37,6 @@ and `rhea2ec(reaction)=EC`).
 | RHEA:12685 | GO:0050627 mycothione reductase [NAD(P)H] activity | Mycothione reductase (P9WHH3) | Mycobacterium tuberculosis | PE1, PMID:10512639 | exactMatch |
 | RHEA:13817 | GO:0047057 vitamin-K-epoxide reductase (warfarin-sensitive) activity | Vitamin K epoxide reductase complex subunit 1-like protein 1 (Q8N0U8) | Homo sapiens | PE1, PMID:24532791 | exactMatch |
 | RHEA:14105 | GO:0004735 pyrroline-5-carboxylate reductase activity | Pyrroline-5-carboxylate reductase 1, mitochondrial (P32322) | Homo sapiens | PE1, PMID:28258219 | exactMatch |
-| RHEA:16573 | GO:0004648 O-phospho-L-serine:2-oxoglutarate transaminase activity | Phosphoserine aminotransferase (P23721) | Escherichia coli | PE1, PMID:8706854 | exactMatch |
 | RHEA:16905 | GO:0047408 alkenylglycerophosphocholine hydrolase activity | Lysoplasmalogenase TMEM86A (Q8N2M4) | Homo sapiens | PE1, PMID:36592658 | exactMatch |
 | RHEA:18021 | GO:0047288 beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminide alpha-2,3- sialyltransferase activity | CMP-N-acetylneuraminate-beta-galactosamide-alpha-2,3-sialyltransferase 1 (Q11201) | Homo sapiens | PE1, PMID:8027041 | exactMatch |
 | RHEA:16981 | GO:0018506 maleylacetate reductase activity | Maleylacetate reductase 2 (P94135) | Cupriavidus pinatubonensis | PE1, Swiss-Prot curator | exactMatch |
@@ -49,6 +48,11 @@ and `rhea2ec(reaction)=EC`).
 These reviewed enzymes catalyse a well-characterised reaction for which **QuickGO returns no specific
 molecular-function term**. Each is recorded in the mapping set as `sssom:NoTermFound` with a proposed
 term, and is a GO new-term-request candidate.
+
+### Phosphohydroxythreonine aminotransferase (`serC` P23721)
+- **Organism / evidence:** Escherichia coli; reviewed, PE1, catalytic activity PMID:8706854.
+- **Reaction (RHEA:16573, EC 2.6.1.52):** 4-(phosphooxy)-L-threonine + 2-oxoglutarate = (R)-3-hydroxy-2-oxo-4-phosphooxybutanoate + L-glutamate
+- **GO status:** GO:0004648 names the distinct phosphoserine reaction and is neither a parent nor an exact target. **Proposed new term:** *phosphohydroxythreonine aminotransferase activity*, anchored to RHEA:16573.
 
 ### (S)-2-hydroxypropylphosphonic acid epoxidase (hppE Q56185)
 - **Organism / evidence:** Streptomyces wedmorensis; reviewed, PE1, catalytic activity PMID:16015285.
@@ -69,6 +73,11 @@ term, and is a GO new-term-request candidate.
 - **Organism / evidence:** Bacteroides thetaiotaomicron; reviewed, PE1, catalytic activity PMID:23943617.
 - **Reaction (RHEA:13145, EC 2.4.1.320):** 4-O-beta-D-mannopyranosyl-N-acetyl-D-glucosamine + phosphate = alpha-D-mannose 1-phosphate + N-acetyl-D-glucosamine
 - **GO status:** no specific MF term (QuickGO). **Proposed new term:** *1,4-beta-mannosyl-N-acetylglucosamine phosphorylase activity*, anchored to RHEA:13145 / EC 2.4.1.320.
+
+### Phosphatidylethanolamine-dependent ceramide phosphoethanolamine synthase (SMSr Q96LT4)
+- **Organism / evidence:** Homo sapiens; reviewed, PE1, catalytic activity PMID:19506037.
+- **Reaction (RHEA:36079, EC 2.7.8.-):** N-acylsphing-4-enine + 1,2-diacyl-sn-glycero-3-phosphoethanolamine = N-acylsphing-4-enine 1-phosphoethanolamine + 1,2-diacyl-sn-glycerol
+- **GO status:** `GO:0002950` names CDP-ethanolamine/CMP donor chemistry, not the phosphatidylethanolamine/DAG reaction. **Proposed new term:** *phosphatidylethanolamine-dependent ceramide phosphoethanolamine synthase activity*, anchored to RHEA:36079 and the human SAMD8 review.
 
 ## Reproduce / validate
 

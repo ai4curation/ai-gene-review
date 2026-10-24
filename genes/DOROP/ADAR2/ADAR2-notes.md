@@ -79,3 +79,27 @@
 - GO:0016556 mRNA modification - captures primary substrate class
 - GO:0008270 zinc ion binding - conserved catalytic zinc coordination
 - GO:1904115 axon cytoplasm - directly demonstrated (PMID:32201888)
+
+
+## 2026-09-20 TreeGrafter re-review
+
+Reviewed all 13 rows, including three earlier NEW proposals. Broad RNA binding and RNA processing now ACCEPT as direct core aspects of dsRNA editing. Retained the tRNA-specific and free-adenosine substrate distinctions. Both existing function reports were incorporated, while correcting Falcon's identification of C1JAR3 as sqADAR2b: the 786-aa cached sequence carries three dsRBDs and matches the sqADAR2a architecture described in PMID:19390115. The primary study explicitly assays both variants. Nucleolar localization remains UNDECIDED, with lack of squid microscopy treated as uncertainty rather than disproof. Existing mRNA-modification, zinc-binding and axon-cytoplasm proposals are retained on substrate, deaminase chemistry and neuronal-localization evidence; the latter observations are from squid ADAR2, not proof of exclusive localization to one splice variant.
+
+
+## Recovery PR specificity follow-up (2026-09-22)
+
+Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.
+
+
+## Evidence-presentation correction (2026-09-23)
+
+Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
+
+Zinc support is the electronic UniProt keyword, not the unrelated ADAR overview quotation. Live QuickGO confirms mRNA modification and adenosine-to-inosine editing are not ancestors of one another; see ADAR2-process-ancestry-check.json.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+The proposed zinc annotation now attributes its electronic support to the UniProt file. Proposed mRNA modification cites recombinant sqADAR2 editing K+ channel mRNAs in PMID:19390115 (IDA), not a whole-transcriptome editing count; proposed axoplasm localization uses IDA for PMID:32201888. These are proposal metadata, not alterations of imported GOA rows.

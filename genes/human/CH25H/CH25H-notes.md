@@ -89,3 +89,70 @@ ER membrane is the accurate compartment.
 
 Two candidate-gene association studies found LACK of association with Alzheimer's disease
 (PMID:15465627, PMID:16157450 per UniProt RN[6]/RN[7]); not a disease gene by these data.
+
+## Paired horse benchmark evidence review
+
+The human reference supplies mechanistic evidence for the corresponding selected horse protein; the human conclusion alone is not validation of the horse sequence. The exact horse comparison is in `genes/HORSE/CH25H/CH25H-bioinformatics/RESULTS.md`. Research reports are source leads; annotation decisions cite the underlying publication or experimentally supported UniProt passages. Unresolved source-specific results retain UNDECIDED.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: full re-review of every existing annotation, the description and core functions of
+O95992. ProtNLM2 predictions were not opened or used.
+
+### Identity
+- O95992 is the reviewed, canonical UniProt entry (CH25H_HUMAN, 272 aa, single chain
+  PRO_0000226801, three predicted TM helices 38-58, 84-104, 121-141, histidine boxes 1-3 intact).
+  It is not an isoform, fragment or alternative gene model; the folder is keyed to the canonical product.
+
+### Evolutionary placement
+- PANTHER PTHR11863 (STEROL DESATURASE); subfamily PTHR11863:SF213 "CHOLESTEROL 25-HYDROXYLASE"
+  (PANTHER 19.0 member index). MSMO1 (Q15800) is in SF225; ERG3/SC5D-type desaturases in SF226.
+- PAINT (interpro/panther/PTHR11863/PTHR11863-paint.tsv):
+  - PTN002627316 (taxon 117571, Euteleostomi): GO:0001567 cholesterol 25-hydroxylase activity,
+    seeded by MGI:1333869 (mouse Ch25h) and UniProtKB:O95992. This is the CH25H-specific node.
+  - PTN000221246 (Eukaryota): GO:0000254 C-4 methylsterol oxidase activity, GO:0005789 ER membrane,
+    and (in the newer PAINT file, not yet in this GOA snapshot) GO:0016126 sterol biosynthetic process;
+    seeds are methylsterol oxidases (MSMO1, ERG25, plant SMOs).
+  - PTN002275159 (Eumetazoa): GO:0036197 zymosterol biosynthesis and GO:0006695 cholesterol biosynthesis,
+    seeded by mouse Msmo1 (+ zebrafish in the newer file).
+- The curators placed the cholesterol 25-hydroxylase grant on the CH25H clade node and placed C-4
+  methylsterol oxidation on deep nodes seeded only by MSMO1/ERG25-type members. CH25H inherits the
+  deep-node terms mechanically, but its own subfamily diverged in substrate position (side-chain C-25
+  of cholesterol, not C-4 methyl of 4,4-dimethylsterols). Only the shared ER-membrane location and
+  diiron histidine-box chemistry are family-wide. The PTHR11863 family review agrees (C-4 methylsterol
+  oxidase "not supported for CH25H"); no subfamily-placement disagreement found.
+
+### Action changes vs the previous review
+- GO:0000254 C-4 methylsterol oxidase activity (IBA): MARK_AS_OVER_ANNOTATED -> REMOVE (wrong activity
+  for the CH25H subfamily, not an over-broad one).
+- GO:0036197 zymosterol biosynthetic process (IBA): MARK_AS_OVER_ANNOTATED -> REMOVE (CH25H acts on
+  cholesterol, downstream of zymosterol; source node seeded by Msmo1 only).
+- GO:0005515 protein binding (IPI x2, HuRI): MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE -> REMOVE for
+  both rows, per the protein-binding policy; the two rows are now consistent.
+- GO:0005829 cytosol (TAS, Reactome): MARK_AS_OVER_ANNOTATED -> REMOVE (integral ER membrane enzyme;
+  reaction-compartment artifact).
+- GO:0006629 lipid metabolic process (TAS): KEEP_AS_NON_CORE -> MODIFY to GO:0008203 cholesterol
+  metabolic process (descendant already carried by IDA).
+- GO:0008610 lipid biosynthetic process (IEA): KEEP_AS_NON_CORE retained; no oxysterol/25-HC
+  biosynthetic process term exists in GO (label search of local GO for "hydroxycholesterol" and
+  "oxysterol" returned only binding, transfer, 7-alpha-hydroxylase and receptor-signalling terms).
+- GO:0034340 response to type I interferon (IDA): ACCEPT -> KEEP_AS_NON_CORE (context of deployment
+  as an ISG; antiviral effect captured by GO:1903914). Removed from core_functions directly_involved_in.
+- Unchanged: ER membrane (ACCEPT x3), cholesterol 25-hydroxylase activity (ACCEPT x6), iron ion binding
+  (ACCEPT), cholesterol metabolic process (ACCEPT), negative regulation of viral fusion with host PM
+  (ACCEPT x2), B cell chemotaxis (KEEP_AS_NON_CORE x2; CH25H makes the precursor of the EBI2 ligand
+  but does no step of chemotaxis), negative regulation of cholesterol metabolic process
+  (KEEP_AS_NON_CORE), steroid hydroxylase activity (MODIFY -> GO:0001567).
+- No NEW annotations proposed. Candidate "bile acid biosynthetic process" (25-HC feeds CYP7B1 in the
+  acidic pathway) was not added: it is a minor route, not curated on CH25H by GO/MGI, and the
+  bile_acid_synthesis_ring_modification module lists CH25H only as an upstream oxysterol source.
+
+### Relative to review next
+- Mouse Ch25h (Q9Z0F5, MGI:1333869): ortholog, same PANTHER subfamily SF213 and co-seed of PAINT node
+  PTN002627316. Extensive mouse experimental work (antiviral, EBI2/7a,25-OHC lymphocyte positioning,
+  macrophage inflammasome restraint, Leydig cell differentiation per UniProt By-similarity notes).
+  No mouse Ch25h review exists in the repo (genes/mouse has no Ch25h folder).
+
+### Modules
+- modules/bile_acid_synthesis_ring_modification.yaml (CH25H named as source of 25-HC for CYP7B1; prose only).
+- modules/srebp_signaling.yaml (25-HC as INSIG ligand; CH25H not a part).

@@ -1,11 +1,28 @@
 ---
 title: "Specific Annotation Edit Recommendations"
-maturity: COMPLETE
+maturity: ARCHIVED
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1]
 ---
 
 # Specific Annotation Edit Recommendations
+
+**Bottom line:** this is a working document from the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md)
+project, written on 2025-12-29 to turn the Priority 2 review of six
+surveillance-immunity genes (zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1)
+into line-level YAML edits. It records which protein-binding rows were
+already converted to MODIFY (ZIP-2), proposes consolidating redundant
+CEBP-2 protein-binding rows, asks for six ELT-2 and three HLH-30 generic
+transcription terms to be marked over-annotated, and asks for the FSHR-1
+immune phenotypes to be checked against PMID:19196974 and PMID:26360906.
+The final YAML files took only part of this advice: the ELT-2 and HLH-30
+generic terms stayed ACCEPT (ELT-2 *tissue development* became MODIFY),
+and FSHR-1 ended with two REMOVE rows for its hormone-signalling terms and a
+NEW Gram-positive defence row. Treat the per-gene reviews as authoritative;
+the file paths and line numbers below point to an older checkout.
+
 ## C. elegans Surveillance Immunity Genes (Priority 2)
 
 This document provides specific edit recommendations for the AI review YAML files based on systematic curation of all annotations.
@@ -14,7 +31,7 @@ This document provides specific edit recommendations for the AI review YAML file
 
 ## GENE 1: ZIP-2 (Q21148) - Priority Changes
 
-### File: `/Users/cjm/repos/ai-gene-review/genes/worm/zip-2/zip-2-ai-review.yaml`
+### File: `genes/worm/zip-2/zip-2-ai-review.yaml`
 
 #### Change 1: Replace GO:0005515 (protein binding) with ATF-2 interaction
 **Current YAML location:** Line ~219-240
@@ -74,7 +91,7 @@ This document provides specific edit recommendations for the AI review YAML file
 
 ## GENE 2: CEBP-2 (Q8IG69) - Priority Changes
 
-### File: `/Users/cjm/repos/ai-gene-review/genes/worm/cebp-2/cebp-2-ai-review.yaml`
+### File: `genes/worm/cebp-2/cebp-2-ai-review.yaml`
 
 #### Critical Issue: Redundant GO:0005515 Annotations
 
@@ -158,7 +175,7 @@ Keep only CEBP-2 interactions with ZIP-2 and ZIP-11 (documented to work together
 
 ## GENE 3: IRG-1 (O16327) - Priority Changes
 
-### File: `/Users/cjm/repos/ai-gene-review/genes/worm/irg-1/irg-1-ai-review.yaml`
+### File: `genes/worm/irg-1/irg-1-ai-review.yaml`
 
 **Status:** EXCELLENT - YAML review is comprehensive and well-reasoned. Minimal changes needed.
 
@@ -188,7 +205,7 @@ proposed_new_terms:
 
 ## GENE 4: ELT-2 (Q10655) - Priority Changes
 
-### File: `/Users/cjm/repos/ai-gene-review/genes/worm/elt-2/elt-2-ai-review.yaml`
+### File: `genes/worm/elt-2/elt-2-ai-review.yaml`
 
 #### Critical Changes: Remove Over-Annotated Generic Terms
 
@@ -326,7 +343,7 @@ The following 6 GO terms are superseded by more specific child terms and should 
 
 ## GENE 5: HLH-30 (H2KZZ2) - Priority Changes
 
-### File: `/Users/cjm/repos/ai-gene-review/genes/worm/hlh-30/hlh-30-ai-review.yaml`
+### File: `genes/worm/hlh-30/hlh-30-ai-review.yaml`
 
 #### Changes: Remove 3 Over-Annotated Generic Terms
 
@@ -415,7 +432,7 @@ The following 6 GO terms are superseded by more specific child terms and should 
 
 ## GENE 6: FSHR-1 (L8EC40) - Priority Changes
 
-### File: `/Users/cjm/repos/ai-gene-review/genes/worm/fshr-1/fshr-1-ai-review.yaml`
+### File: `genes/worm/fshr-1/fshr-1-ai-review.yaml`
 
 #### Critical Recommendation: Validate Immune Annotations
 
@@ -503,12 +520,12 @@ The following 6 GO terms are superseded by more specific child terms and should 
 ## FILE PATHS FOR REFERENCE
 
 ```
-/Users/cjm/repos/ai-gene-review/genes/worm/zip-2/zip-2-ai-review.yaml
-/Users/cjm/repos/ai-gene-review/genes/worm/cebp-2/cebp-2-ai-review.yaml
-/Users/cjm/repos/ai-gene-review/genes/worm/irg-1/irg-1-ai-review.yaml
-/Users/cjm/repos/ai-gene-review/genes/worm/elt-2/elt-2-ai-review.yaml
-/Users/cjm/repos/ai-gene-review/genes/worm/hlh-30/hlh-30-ai-review.yaml
-/Users/cjm/repos/ai-gene-review/genes/worm/fshr-1/fshr-1-ai-review.yaml
+genes/worm/zip-2/zip-2-ai-review.yaml
+genes/worm/cebp-2/cebp-2-ai-review.yaml
+genes/worm/irg-1/irg-1-ai-review.yaml
+genes/worm/elt-2/elt-2-ai-review.yaml
+genes/worm/hlh-30/hlh-30-ai-review.yaml
+genes/worm/fshr-1/fshr-1-ai-review.yaml
 ```
 
 ---

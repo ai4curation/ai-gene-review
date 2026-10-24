@@ -1,0 +1,60 @@
+history_version: 1
+target:
+  kind: gene
+  slug: ARHGAP36
+  organism: human
+  path: genes/human/ARHGAP36/ARHGAP36-ai-review.yaml
+session:
+  id: 2026-09-19T045243Z-claude-code-e3e9f6
+  timestamp: '2026-09-19T04:52:43Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/3079
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  summary: Fix a residue_claim whose target was the mouse ortholog rather than this
+    gene, which failed the validate-families gate in CI
+  details: |
+    CI caught a real defect that every local check had missed. The preceding record
+    (2026-09-19T041345Z-claude-code-a10369) states that validation was green at the time
+    it was written; that is accurate for what was run, and this record names the gate that
+    was not run.
+
+    `just validate human ARHGAP36` was green through every round. `just validate-families`
+    was not: it also runs ai_gene_review.validation.gene_residue_claims over the gene
+    corpus, and it failed with
+
+      [FAIL] TARGET_IDENTITY ARHGAP36 GO:0005096:
+             target accession UniProtKB:B1AUC7 is not this gene (Q6ZRI8)
+
+    The rule is at src/ai_gene_review/validation/gene_residue_claims.py:148-159: a
+    residue_claim's target must be this gene's own protein. The anchor may be any
+    comparator; the target may not. This matches ResiduePosition's own wording in the
+    schema -- "the corresponding position in this gene's own protein".
+
+    The second residue claim had anchored on mouse Arhgap6 (O54834 R435) with mouse
+    Arhgap36 (B1AUC7 T246) as target, to make the "the loss predates the rodent-primate
+    split" argument machine-checkable. Re-pointed to the same anchor with this gene as
+    target (Q6ZRI8 T258), which keeps the PAINT-donor comparison checkable and satisfies
+    the rule. The dating argument is not expressible as a residue claim at all, because it
+    is about a different protein, so it stays in review.reason and in
+    ARHGAP36-bioinformatics/RESULTS.md section 4c where it is reproducible. The claim's
+    comment now says that explicitly rather than leaving the omission unexplained.
+
+    No action, term, evidence_type, supporting_text or core_functions entry changed. The
+    only change is the target of one residue_claim and its comment, plus the notes.
+
+    Verified before and after, locally, on the same validator CI used:
+      committed version: exit 1, [FAIL] TARGET_IDENTITY, 6 pass 1 fail 0 unresolved
+      fixed version:     exit 0,                         6 pass 0 fail 0 unresolved
+
+    Recorded in ARHGAP36-notes.md for the next gene: run `just validate-families` whenever
+    a review carries residue_claims, or the gene-level check alone in seconds with
+    `uv run python -m ai_gene_review.validation.gene_residue_claims <review.yaml>`.

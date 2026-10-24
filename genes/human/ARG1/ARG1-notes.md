@@ -1,5 +1,7 @@
 # ARG1 (Arginase-1, human, UniProtKB:P05089) — review notes
 
+> Historical research notes follow. The dated source-scope correction and normal-source closure sections supersede earlier nuclear-carryover, generic-binding, NK-cell, IFN-signaling and manganese-contribution interpretations. The current review has one catalytic core and four unresolved source-specific assertions.
+
 ## Summary of function
 ARG1 is the cytosolic, liver-type (type I) arginase, a binuclear manganese
 metalloenzyme that catalyzes the terminal (fifth) step of the urea cycle:
@@ -85,3 +87,141 @@ falcon deep-research launched (`just deep-research-falcon human P05089 --alias A
 FAILED after 600s ("All providers failed" — falcon endpoint timeout). No
 -deep-research-falcon.md file produced. Review grounded in the UniProt record, all 9
 cached publications, and dismech Arginase_Deficiency.yaml. No DR file fabricated.
+
+
+## 2026-09-28 source-scope correction and followup
+
+This section supersedes the earlier nuclear carryover, generic-binding removal,
+NK-cell specificity, IFN-signaling interpretation and manganese `contributes_to`
+comments. All 38 original annotation source objects and three product records
+are retained. The six cytoplasm/arginine-metabolism umbrellas remain core
+annotations because they describe the same cytosolic catabolic activity at
+broader resolution. One arginase activity core now connects that reaction to
+the urea cycle and L-arginine catabolism; its binuclear manganese requirement is
+part of the catalytic description, not a partial contribution to another
+molecular function.
+
+The nine canonical PMID abstracts were read in full. Local full-text availability
+is true only for 21728378 and 28813417; these records were read in targeted
+sections, not treated as proof of complete experimental inspection. Raw UniProt,
+GOA and all existing publication/Reactome cache bytes are unchanged. The prior
+failed Falcon attempt remains the actual provider history; no provider file was
+authored. Three normal Reactome caches remain pending, so this draft is not a
+completed source-closure claim.
+
+### Human IFN-gamma production rather than response signaling
+
+[PMID:16709924 original Blood article](https://ashpublications.org/blood/article/108/5/1627/132630/Suppression-of-T-cell-functions-by-human),
+Results and Figure 6C–D, directly tests human T-cell cytokine output following
+arginine depletion by granulocyte material or recombinant human ARG1.
+The Figure 6C legend states: “Human PMN arginase suppresses T-cell IFN-γ synthesis by a posttranscriptional mechanism.”
+The targeted original Methods/Results read distinguishes secreted protein
+measured after 48 hours from transcript measurements. The existing IMP row is
+refined to GO:0032689, negative regulation of type II interferon production;
+GO:0060336 concerns regulation of the response pathway. These are distinct
+endpoints. The original source/evidence/relationship are preserved. The short
+quotation is from the publisher body, not the abstract-only normal cache.
+
+### Target-specific uncertainties
+
+The antiprotozoal and Th2 Ensembl transfers remain unresolved at the exact donor
+experiment/transfer level. General human fungicidal or T-cell evidence does not
+close those specific assertions. The independently read [mouse macrophage study,
+PMID:19360123](https://pubmed.ncbi.nlm.nih.gov/19360123/) provides contextual Th2
+corroboration, not a reconstructed Ensembl chain or a direct human assay. Its
+official abstract was consulted; no normal cache was requested for that context.
+
+For [PMID:28813417](https://pmc.ncbi.nlm.nih.gov/articles/PMC5706633/), the inspected
+CMTM6 co-IP/MS Methods and Extended Data 6c point to a specific interaction
+inventory. The ARG1 row of that inventory and Supplementary Table 1 have not
+been adjudicated. The original ARG1–CMTM6 interaction stays UNDECIDED; neither
+generic wording nor a missing body-text match makes it wrong. The prior MISCITED
+judgment is withdrawn. For [PMID:21630459](https://pubmed.ncbi.nlm.nih.gov/21630459/),
+the abstract reports microscopy-based nuclear purity above 99.9%. The ARG1
+protein-table/peptide entry remains uninspected, so nuclear localization stays
+UNDECIDED without speculation about cytoplasmic carryover or a requirement for
+a known nuclear function.
+
+### Catalysis and compartment boundaries
+
+[PMID:21728378](https://pmc.ncbi.nlm.nih.gov/articles/PMC3150614/) contains human
+arginase I inhibitor-binding and structural work, while its inspected enzyme
+inhibition Methods use Plasmodium falciparum arginase. The human activity row is
+retained using its established biochemical context; the parasite kinetic assay
+is not relabeled as human. The title is reconciled to the normal cached Greek
+alpha spelling. [PMID:17562323](https://pubmed.ncbi.nlm.nih.gov/17562323/) explicitly
+reports assayed recombinant human enzyme, and
+[PMID:3540966](https://pubmed.ncbi.nlm.nih.gov/3540966/) reports activity conferred
+by the cloned human cDNA.
+
+The neutrophil fungicidal and T-cell regulatory roles remain secondary to the
+core hepatic catabolic role. Phagolysosomal arginine depletion is the proposed
+antimicrobial mechanism in PMID:15546957. Its azurophil-granule localization does
+not independently establish the separate Reactome specific-granule assertion.
+That existing curated compartment is retained with the limited event-summary
+scope explicit, rather than supported by an off-target granule quotation.
+
+Official indexed records distinguish [normal ARG1 catalysis](https://reactome.org/content/detail/R-HSA-70569),
+[failed ARG1 variant catalysis](https://reactome.org/content/detail/R-HSA-9956512),
+and [ARG1 gene expression](https://reactome.org/content/schema/instance/browser/R-HSA-9959871).
+For the last event, cytosol describes the protein output, not a transcriptional
+activity of the ARG1 protein. Exact normal-cache recovery and its source check
+remain pending. No NEW annotation is introduced by this followup.
+
+
+## 2026-09-28 normal-source closure
+
+The three pending normal Reactome records are now present after Source39 recovery.
+Their canonical bytes were checked against the exact independently validated archive;
+all three complete event summaries and human identity fields were read. This closes
+the recovery hold recorded above. R-HSA-70569 explicitly names the cytosolic ARG1
+trimer and its arginine-to-ornithine/urea reaction. R-HSA-9956512 describes deficient
+variants and distinguishes candidate versus characterized members; R-HSA-9959871
+describes TP53 repression of ARG1 expression. Those latter two short summaries do
+not reproduce all participant/compartment fields of the earlier inspected official
+graphs. Their location reasons retain that distinction and independent human
+cytosolic evidence, without assigning normal activity to deficient variants or
+transcriptional activity to the expression product.
+
+All 38 decisions are now made, including four explicit unresolved claims whose
+source-specific evidence remains uncertain. The three newly read records do not
+change any action, product, core or original source assertion. The review status
+is COMPLETE; this records completion of the audit, not resolution of every
+biological uncertainty. Raw gene records and every prior cache remain unchanged.
+
+
+## 2026-09-28 PR3361 evidence-scope clarification
+
+All 38 annotation decisions, three product records and the single arginase core
+remain unchanged. The original source fields and published history are preserved.
+The user-supplied session AGENTS.md requires `UNDECIDED` when relevant experimental
+evidence cannot be accessed and defines `REMOVE` as an assertion unlikely to be
+correct. This explicit instruction takes priority over the local review skill's
+generic-binding removal default. It is not a rule attributed to CLAUDE.md.
+Consequently the uninspected ARG1–CMTM6 table entry stays unresolved. No specific
+binding activity is invented to replace an unadjudicated co-IP/MS observation.
+
+The six cytoplasm/arginine-metabolism reasons now distinguish PAINT, UniProt,
+InterPro, crystallographic EXP and cDNA-era TAS provenance. Independent human
+cytosolic or catalytic evidence corroborates these broad assertions without
+relabeling it as the original source experiment. The MF refinements identify
+known catalytic or manganese specificity; retained broad CC/BP annotations are
+umbrella coverage of that same function, not additional activities. Extracellular
+myeloid arginase is biologically real and remains a secondary context of the same
+chemistry in this compact single-core synthesis.
+
+The two granule-exocytosis Reactome identities and summaries are checked, but
+their ARG1-specific participant inventories remain uninspected. Their reference
+reviews now explicitly say `UNVERIFIED` for that remaining scope. The deficient-
+variant and gene-expression records retain the separately documented prior
+official graph read by the coordinating reviewer; their short recovered summaries
+do not themselves display every participant or compartment. In the expression
+event ARG1 is the cytosolic protein output, not the transcriptional machinery.
+
+The IFN-gamma-production refinement still depends on the publicly linked original
+Blood Results/Figure 6C–D and targeted Methods recorded above. General cytokine
+suppression in the immutable abstract cache alone does not establish the specific
+endpoint. The exact short figure-legend quotation and body locator remain visible;
+no publication cache was edited. The antiprotozoal transfer remains unresolved,
+with the donor infection context and possible parasite-versus-host-defense effects
+raised as a question rather than asserted from an uninspected experiment.

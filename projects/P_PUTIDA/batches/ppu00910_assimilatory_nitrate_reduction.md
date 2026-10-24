@@ -36,12 +36,13 @@ autolink_gene_symbols: false
 - [x] Consult the annotation reviewer and module curator.
 - [x] Validate and render module, project, and gene reviews.
 - [x] Open draft PR [#2577](https://github.com/ai4curation/ai-gene-review/pull/2577) for this module.
+- [x] Merge PR #2577 after review and CI (2026-08-28).
 
 ## Selected Genes
 
 | Done | Gene | Locus | UniProt | Role | Research |
 |---|---|---|---|---|---|
-| [x] | `nasA` | PP_2092 | Q88L43 | nitrate/nitrite porter; nitrate import is core | Falcon complete |
+| [x] | `nasA` | PP_2092 | Q88L43 | nitrate/nitrite porter; required for extracellular-nitrate realization | Falcon complete |
 | [x] | `PP_1703` | PP_1703 | Q88M71 | candidate fused assimilatory nitrate reductase | OpenScientist report complete |
 | [x] | `nirB` | PP_1705 | Q88M69 | nitrite reductase catalytic large subunit | job complete; no report materialized |
 | [x] | `nirD` | PP_1706 | Q88M68 | nitrite reductase Rieske-fold small subunit | job complete; no report materialized |
@@ -66,3 +67,54 @@ E. coli exemplars. The only selected-gene PTN, PTN000177398, occurs in the
 rejected PP_1703 membrane IEA and is deliberately not used as module grounding.
 The final module is species-neutral: concrete proteins are exemplars of reusable
 families or architectural variants rather than species-locked selectors.
+
+## Wave 118 Repair Audit (2026-09-01)
+
+Repair PR: [#2903](https://github.com/ai4curation/ai-gene-review/pull/2903).
+
+The repaired reusable boundary preserves the ordered nitrate import -> nitrate
+reduction -> NirBD nitrite reduction sequence while distinguishing pathway core
+from whole-cell input context. Nitrate import is optional at the module boundary:
+it is required when a realization starts from extracellular nitrate, but the two
+reductive steps can be instantiated from an intracellular-nitrate input. GS-GOGAT
+remains a separate downstream ammonia-assimilation module; respiratory nitrate
+reduction, denitrification, and DNRA remain outside.
+
+`scope: CONCRETE` is retained because this is a grounded, bacteria-scoped pathway
+realization with representative proteins at every leaf, not a gene-free abstract
+motif. Both transporter and nitrate-reductase variant sets retain `ONE_OR_MORE`
+as relaxed modeling. Transport systems can coexist, but the model neither asserts
+coexistence nor universal exclusivity of nitrate-reductase architectures.
+
+Species-specific PP_1703 uncertainty has been removed from generic role and
+module-note prose and remains documented in this PSEPK batch and gene review.
+The single-subunit NarB-like branch uses reviewed P39458 as an architecture
+exemplar but does not retain the unsupported ferredoxin-specific GO assertion;
+the family-level selector uses donor-generic GO:0008940 because one exemplar
+does not establish a universal electron donor for every NarB-like
+implementation. Exact PANTHER subfamilies were added for NrtABCD
+components and NasC only where official labels and member containment match the
+role. PTN009073875 grounds nitrate transport and PTN008082957 grounds the NirD
+complex contribution; misleading or unresolved molybdopterin-reductase
+family/PTN identifiers remain omitted. The exact pyridine-nucleotide function of
+the fused KT2440 Q88M71 exemplar remains an architecture- and context-based
+inference pending direct assay.
+
+The mandatory annotation-reviewer pass covered all GOA rows for nasA, PP_1703,
+nirB, and nirD. It found one required source-fidelity repair: all nine nasA rows
+were missing their GOA qualifiers, which are now restored. PP_1703, nirB, and
+nirD required no action changes; the nirB iron-sulfur replacement rationale now
+quotes both the 2Fe-2S and 4Fe-4S assignments.
+
+Fresh PSEPK module/pathway OpenScientist research completed with the configured
+7200-second job allowance in 1660.53 seconds. It recovered NasA, PP_1703, and
+NirBD as a complete three-step whole-cell realization and kept GS-GOGAT plus
+respiratory, denitrification, and DNRA machinery outside. Its claims that
+PP_1703 is directly functional and cytoplasmic exceed the cited target-strain
+evidence; wave 118 therefore retains the existing candidate wording and does
+not add a localization annotation.
+
+The separate generic module OpenScientist job was allowed to run uninterrupted
+for the full configured 7200 seconds, then exited at the client timeout without
+materializing a report. No generic research artifact or unsupported evidence
+claim was added from that unsuccessful run.

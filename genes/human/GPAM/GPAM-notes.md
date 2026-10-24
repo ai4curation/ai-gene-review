@@ -111,3 +111,74 @@ Over-annotations / non-core / to correct:
   biosynthetic process (GO:0006655)` IMP: downstream / minor secondary; non-core.
 - `protein binding (GO:0005515)` IPI: MARK_AS_OVER_ANNOTATED (uninformative).
 </content>
+
+
+## 2026-09-08 paired human–horse review
+
+
+
+GPAM encodes mitochondrial glycerol-3-phosphate acyltransferase 1, which transfers a fatty acyl group from acyl-CoA to the sn-1 position of glycerol-3-phosphate to produce lysophosphatidic acid. This early glycerolipid-biosynthetic reaction supplies precursors for membrane phospholipids and triacylglycerols. GPAT1 associates with the mitochondrial outer membrane through an amphipathic surface and an N-terminal targeting region.
+
+## Reaction and membrane topology
+
+The substrate donor is acyl-CoA and the acceptor is the sn-1 hydroxyl of glycerol-3-phosphate. Lysophosphatidic acid enters several glycerolipid routes, so pathway participation is broader than the one catalyzed reaction. The 2023 structural work reports an N-terminal catalytic domain and associated C-terminal domain, and replaces a conventional multi-pass-transmembrane picture with an amphipathic surface/N-terminal loop-helix membrane association mechanism. The UniProt record links this reaction to direct experimental sources; the acyl-CoA statement is therefore not an ARBA corroboration. Papers mainly describing another GPAT paralog may include GPAT1 comparator assays, so title alone cannot justify discarding their GO annotations.
+
+## Decisive inspected evidence
+
+From [PMID:36522428](https://pubmed.ncbi.nlm.nih.gov/36522428/):
+
+> Glycerol-3-phosphate acyltransferase (GPAT)1 is a mitochondrial outer membrane protein that catalyzes the first step of de novo glycerolipid biosynthesis.
+
+## Evidence inventory
+
+- [PMID:36522428: Structural basis of the acyl-transfer mechanism of human GPAT1.](https://pubmed.ncbi.nlm.nih.gov/36522428/). [DOI:10.1038/s41594-022-00884-7](https://doi.org/10.1038/s41594-022-00884-7). The repository cache contains the abstract; source-specific claims beyond it remain unresolved.
+- [PMID:18238778: AGPAT6 is a novel microsomal glycerol-3-phosphate acyltransferase.](https://pubmed.ncbi.nlm.nih.gov/18238778/). [DOI:10.1074/jbc.M708151200](https://doi.org/10.1074/jbc.M708151200). The repository cache contains the abstract; source-specific claims beyond it remain unresolved.
+- [PMID:19075029: The microsomal cardiolipin remodeling enzyme acyl-CoA lysocardiolipin acyltransferase is an acyltransferase of multiple anionic lysophospholipids.](https://pubmed.ncbi.nlm.nih.gov/19075029/). [DOI:10.1194/jlr.M800567-JLR200](https://doi.org/10.1194/jlr.M800567-JLR200). The repository cache contains the abstract; source-specific claims beyond it remain unresolved.
+
+## Transfer to the selected horse protein
+
+The exact target is [A0A9L0TTC1](https://www.uniprot.org/uniprotkb/A0A9L0TTC1/entry), not an arbitrary horse record with a matching name. The reproducible [paired-sequence analysis](../../HORSE/GPAM/GPAM-bioinformatics/RESULTS.md) records identity, coverage and internal gaps. It supports homology but is not a reciprocal orthology test. Molecular properties are transferred only with the relevant domain, targeting and paralog constraints. The prediction-time sequence is not independently verified.
+
+## Open evidence questions
+
+The following annotation scopes need source-specific follow-up: phosphatidylglycerol biosynthetic process, protein binding. Experimental annotations are not removed merely because a cached abstract omits the gene or a specific assay. High-throughput protein-binding rows require their actual partner or complex context before replacement with an informative molecular function.
+
+
+Research provenance: external Falcon/Edison was attempted with Perplexity fallback. Some requests returned HTTP 429 and fallback returned insufficient-quota HTTP 401; successful external reports are preserved separately. Primary-source manual synthesis is explicitly labeled manual where no external report was available.
+
+## External report topology check
+
+The Falcon report repeats an integral two-transmembrane-helix GPAT1 model from older literature. The directly inspected human structural study PMID:36522428 explicitly states “GPAT1 has no transmembrane regions as previously proposed” and describes amphipathic membrane association. The review uses that primary structural result; the external report is preserved unchanged and is not counted as a second independent confirmation.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: full re-review of all 28 GOA rows, description and core functions for Q9HCL2. No ProtNLM2 output was consulted.
+
+### Identity
+- Q9HCL2 is the reviewed Swiss-Prot canonical product of human GPAM (828 aa, PE 1), not an isoform, fragment or alternative gene model. It has the full N-terminal membrane-association/targeting region (80-120), the HXXXXD catalytic motif (230-235) and the C-terminal GPAT_C domain (PF19277) [file:human/GPAM/GPAM-uniprot.txt].
+
+### Evolutionary grounding
+- PANTHER PTHR12563:SF16 ("GLYCEROL-3-PHOSPHATE ACYLTRANSFERASE 1, MITOCHONDRIAL"). Mouse Gpam Q61586 and rat Gpam P97564 are in the same subfamily (interpro/panther/PTHR12563/PTHR12563-entries.csv). GPAT2 (Q6NUI2) is in SF15, and the DHAPAT/GNPAT branches are in SF17/20/22/24/25.
+- PAINT node PTN000970957 (taxon Eumetazoa, the GPAT1+GPAT2 clade) carries IBDs for GO:0005739, GO:0004366, GO:0006650 and GO:0019432 (PTHR12563-paint.tsv). PAINT did not put the outer membrane at the node; the review refines to the outer membrane from GPAM-specific evidence.
+- The family review (interpro/panther/PTHR12563/PTHR12563-review.yaml) lists GPAM under SF16, which agrees with this review. One small defect: its SF16 `description` copies the family-level coherence text rather than describing SF16.
+
+### Literature added (cached via just fetch-pmid)
+- PMID:12417724 Hammond 2002: Gpam-/- mice have lower liver and plasma TAG and less sn-1 palmitate in PC/PE.
+- PMID:23908354 Wendel 2013: GPAT1, but not GPAT4, routes de novo fatty acids into TAG and away from oxidation.
+- PMID:17158253 Gonzalez-Baro 2007 and PMID:25415055 Yamashita 2014: reviews covering outer-membrane location, NEM resistance and the motifs.
+- PMC full-text fetches for PMID:18238778 (PMC2442282) and PMID:19075029 (PMC2666181) returned no body text, so both stay abstract-only. Their experimental rows are kept, deferring to the curators; UniProt cites both with ECO:0000269 for GPAM reactions, and Reactome R-HSA-75886 cites Chen 2008 for recombinant human GPAM.
+- The deep-research (falcon) report repeats the old two-TM topology. PMID:36522428 contradicts it ("GPAT1 has no transmembrane regions as previously proposed"), so the report is not used for topology.
+
+### Changes vs previous review
+- mitochondrion (IBA, HTP): KEEP_AS_NON_CORE -> MODIFY to GO:0005741, since a correct-but-general term gets MODIFY.
+- glycerophospholipid metabolic process (IBA), phospholipid biosynthetic process (IEA): ACCEPT -> MODIFY to GO:0006654.
+- lipid metabolic process (IEA): ACCEPT -> MODIFY to GO:0006654 + GO:0019432.
+- protein binding (HuRI, CIDEB): UNDECIDED -> REMOVE per the generic protein-binding policy. A CIDEB question was added.
+- CDP-diacylglycerol biosynthetic process, diacylglycerol biosynthetic process: ACCEPT -> KEEP_AS_NON_CORE (precise but peripheral branches).
+- phosphatidylglycerol biosynthetic process (IMP, PMID:19075029): UNDECIDED -> KEEP_AS_NON_CORE. The curated UniProt reaction RHEA:33203 (ECO:0000269) supports it; it is a side activity.
+- plasma membrane (InterPro IPR028354 PlsB mapping): REMOVE retained. This is a lineage-inappropriate electronic transfer from bacterial PlsB.
+- Core function now adds directly_involved_in GO:0006654 and GO:0019432. The description was rewritten to cover the structure-based membrane association and the knockout physiology.
+- No NEW terms. Fatty-acid-oxidation effects in knockouts are downstream partitioning phenotypes, not participation, so they are not annotated.
+
+### Relative for next review
+- Mouse Gpam (Q61586, MGI:109162) is the SF16 ortholog with knockout, hepatocyte and GO-CAM (63a86a8600001386, 6446bfcb00000006) evidence. It has no review in the repo.

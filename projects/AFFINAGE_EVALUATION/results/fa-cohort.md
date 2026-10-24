@@ -101,3 +101,11 @@ AIGR's own deep-research step.
   Affinage's narrative coverage — most of what it says was already annotated.
 - Exact-GO-id non-import is a design choice here (the layer is coarse), not a claim that every
   Affinage GO term is wrong — many are true *ancestors* of the curated term.
+- **Provenance lives here, not in the reviews** (checked 2026-09-27). None of the 22 reviews
+  lists its `-deep-research-affinage.md` as a `file:` reference. Only 4 (BRCA1, FANCA, FANCC,
+  RAD51) mention Affinage anywhere. None records the ERCC4/BRCA1 `pairwise = tie` flag in a
+  `reference_review` (0/22). The per-gene files in [`fa-cohort/`](fa-cohort/) are therefore the
+  record of which papers came from Affinage.
+- **Not an independent recall sample.** Because these reviews were revised to fold Affinage's
+  papers in, their retrieval recall (85%) measures that step. They are reported separately
+  from the PAINT-backlog genes in [paint-campaign.md](paint-campaign.md).

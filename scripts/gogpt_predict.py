@@ -27,12 +27,13 @@ from typing import Any, Callable
 import yaml
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+from ai_gene_review.taxon import review_taxon
 from ai_gene_review.sft_prediction_evidence import (
-    NEGATED_ACTION_PREFIX,
     NEGATIVE_ACTIONS,
     POSITIVE_ACTIONS,
     PROVENANCE_LIMITED_NEGATIVE,
     load_aigr_term_actions,
+    split_action_evidence,
 )
 
 
@@ -158,7 +159,7 @@ def extract_accession(uniprot_file: Path) -> str:
 
 def load_review_decisions(review_file: Path) -> dict[str, set[str]]:
     """Load exact GO ID to AIGR action mappings from existing annotations."""
-    return dict(load_aigr_term_actions(review_file, preserve_negated=True))
+    return dict(load_aigr_term_actions(review_file))
 
 
 def load_review_terms(review_file: Path) -> dict[str, set[str]]:
@@ -296,12 +297,19 @@ def deterministic_assessment(
 ) -> tuple[str, str]:
     """Classify only exact, unambiguous current AIGR action matches."""
     actions = set((review_decisions or {}).get(go_id, set()))
-    biological_actions = actions - {PROVENANCE_LIMITED_NEGATIVE}
+    biological_actions, accepted_negations = split_action_evidence(actions)
     action_text = ", ".join(sorted(biological_actions))
 
     # A retained annotation is sufficient evidence that the exact prediction is
     # correct-not-novel, even if another evidence line has a different action.
     positive = sorted(biological_actions & POSITIVE_ACTIONS)
+    if positive and accepted_negations:
+        return (
+            "UNC",
+            "Deterministic exact-match comparison: current AIGR retains both "
+            "positive and NOT annotations for this exact GO term; context or "
+            f"isoform-specific manual adjudication is required. {MANUAL_ASSESSMENT_MARKER}.",
+        )
     if positive:
         return (
             "CNN",
@@ -310,17 +318,11 @@ def deterministic_assessment(
             "not novel.",
         )
 
-    accepted_negations = sorted(
-        action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in biological_actions
-        if action.startswith(NEGATED_ACTION_PREFIX)
-        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
-    )
     if accepted_negations:
         return (
             "NPI",
             "Deterministic exact-match comparison: current AIGR retains a NOT "
-            f"annotation with action(s) {', '.join(accepted_negations)}, which "
+            f"annotation with action(s) {', '.join(sorted(accepted_negations))}, which "
             "directly contradicts this positive GO-GPT prediction; classified as "
             "nonparalog incorrect.",
         )
@@ -441,6 +443,20 @@ def assessment_counts(predictions: list[dict[str, Any]]) -> Counter[str]:
     )
 
 
+def format_assessment_counts(counts: Counter[str]) -> str:
+    """Format all review-category counts so manual categories are never dropped."""
+    manual_assessments = ("COR", "LSP", "PLI", "REP")
+    assessments = (
+        CONFIDENCE_BY_ASSESSMENT
+        if any(counts.get(assessment, 0) for assessment in manual_assessments)
+        else ("CNN", "NPI", "UNC")
+    )
+    return " ".join(
+        f"{assessment}:{counts.get(assessment, 0)}"
+        for assessment in assessments
+    )
+
+
 def build_prediction_review_yaml(
     gene: str,
     organism: str,
@@ -450,8 +466,15 @@ def build_prediction_review_yaml(
     go_labels: dict[str, str],
     seq_length: int,
     go_adapter: Any | None = None,
+    taxon: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Build a PredictionReview document from a local GO-GPT inference."""
+    """Build a PredictionReview document from a local GO-GPT inference.
+
+    ``taxon`` is the gene review's NCBITaxon term; it is required because the
+    bound ``taxon`` slot does not accept a UniProt species code.
+    """
+    if taxon is None:
+        raise ValueError(f"No NCBITaxon taxon supplied for {gene} ({organism})")
     del seq_length  # Retained in the API for compatibility with existing callers.
     predicted_annotations = []
     for aspect in ("MF", "BP", "CC"):
@@ -477,13 +500,13 @@ def build_prediction_review_yaml(
     description = (
         f"GO-GPT predictions for {gene} ({organism}). "
         f"{len(predicted_annotations)} non-generic terms retained. Deterministic "
-        f"exact comparison against current AIGR: CNN:{counts['CNN']} "
-        f"NPI:{counts['NPI']} UNC:{counts['UNC']}."
+        "exact comparison against current AIGR: "
+        f"{format_assessment_counts(counts)}."
     )
     return {
         "id": accession,
         "gene_symbol": gene,
-        "taxon": {"id": f"uniprot:{organism}", "label": organism},
+        "taxon": taxon,
         "status": prediction_review_status(predicted_annotations),
         "description": description,
         "references": [{"id": BIOREASON_REF, "title": BIOREASON_TITLE}],
@@ -495,6 +518,7 @@ def build_web_export_review(
     existing_document: dict[str, Any],
     raw_export: Path,
     review_file: Path,
+    repo_root: Path,
     go_labels: dict[str, str],
     go_adapter: Any,
 ) -> dict[str, Any]:
@@ -586,20 +610,18 @@ def build_web_export_review(
         f"{raw_specific_count} non-root terms; {len(leaf_terms)} non-generic IS_A "
         f"leaf terms retained (MF:{aspect_counts['MF']} BP:{aspect_counts['BP']} "
         f"CC:{aspect_counts['CC']}). Deterministic exact comparison against "
-        f"current AIGR: CNN:{counts['CNN']} NPI:{counts['NPI']} "
-        f"UNC:{counts['UNC']}. {unresolved_note}{label_audit_note}"
+        f"current AIGR: {format_assessment_counts(counts)}. "
+        f"{unresolved_note}{label_audit_note}"
     )
 
-    source_documents = existing_document.get("source_documents") or [raw_export.name]
-    if raw_export.name not in source_documents:
-        source_documents = [*source_documents, raw_export.name]
+    source_documents = web_export_source_documents(
+        existing_document, raw_export, repo_root
+    )
 
     result = {
         "id": existing_document.get("id"),
         "gene_symbol": gene,
-        "taxon": existing_document.get(
-            "taxon", {"id": f"uniprot:{organism}", "label": organism}
-        ),
+        "taxon": review_taxon(review_file),
         "status": prediction_review_status(predictions),
         "description": description,
         "references": existing_document.get("references")
@@ -635,6 +657,44 @@ def summarize_documents(documents: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def repo_relative_source(path: Path, repo_root: Path) -> str:
+    """Return a repository-relative source path for PredictionReview YAML."""
+    return path.resolve().relative_to(repo_root.resolve()).as_posix()
+
+
+def web_export_source_documents(
+    existing_document: dict[str, Any],
+    raw_export: Path,
+    repo_root: Path,
+) -> list[str]:
+    """Normalize BioReason raw-export provenance to repo-relative paths."""
+    raw_source = repo_relative_source(raw_export, repo_root)
+    source_documents = existing_document.get("source_documents") or []
+    if not source_documents:
+        source_documents = [raw_source]
+
+    normalized: list[str] = []
+    for source in source_documents:
+        if source == raw_export.name:
+            source = raw_source
+        if source not in normalized:
+            normalized.append(source)
+
+    if raw_source not in normalized:
+        normalized.append(raw_source)
+    return normalized
+
+
+def resolve_web_export_source(
+    repo_root: Path, review_path: Path, source: str
+) -> Path:
+    """Resolve old bare and new repo-relative BioReason raw source paths."""
+    repo_relative = repo_root / source
+    if repo_relative.is_file():
+        return repo_relative
+    return review_path.parent / source
+
+
 def refresh_web_exports(
     repo_root: Path,
     go_adapter: Any,
@@ -660,7 +720,7 @@ def refresh_web_exports(
             ),
             f"{path.parent.name}-bioreason-rl-predictions.md",
         )
-        raw_export = path.parent / raw_name
+        raw_export = resolve_web_export_source(repo_root, path, raw_name)
         review_file = path.parent / f"{path.parent.name}-ai-review.yaml"
         if not raw_export.exists():
             raise FileNotFoundError(f"Missing raw provenance: {raw_export}")
@@ -668,7 +728,7 @@ def refresh_web_exports(
             raise FileNotFoundError(f"Missing AIGR review: {review_file}")
 
         regenerated = build_web_export_review(
-            existing, raw_export, review_file, go_labels, go_adapter
+            existing, raw_export, review_file, repo_root, go_labels, go_adapter
         )
         after_documents.append(regenerated)
         if regenerated != existing:
@@ -772,6 +832,7 @@ def run_inference(args: argparse.Namespace) -> int:
         go_labels=load_go_cache(repo_root),
         seq_length=len(sequence),
         go_adapter=go_adapter,
+        taxon=review_taxon(gene_dir / f"{args.gene}-ai-review.yaml"),
     )
 
     if args.format in ("yaml", "both"):

@@ -28,6 +28,7 @@
 --     * Slot: description Description: Description of the entity
 --     * Slot: ontology Description: Ontology of the term. E.g `go`, `cl`, `hp`
 --     * Slot: FunctionalIsoform_id Description: Autocreated FK slot
+--     * Slot: FamilyDescriptor_id Description: Autocreated FK slot
 --     * Slot: Review_id Description: Autocreated FK slot
 --     * Slot: CoreFunction_id Description: Autocreated FK slot
 -- # Class: Reference Description: A reference is a published text  that describes a finding or a method. References might be formal publications (where the ID is a PMID), or for methods, a GO_REF. Additionally, a reference to a local ad-hoc analysis or review can be made by using the `file:` prefix.
@@ -38,6 +39,7 @@
 --     * Slot: full_text_unavailable Description: Whether the full text is unavailable
 --     * Slot: GeneReview_id Description: Autocreated FK slot
 --     * Slot: ModuleReview_id Description: Autocreated FK slot
+--     * Slot: GoCamReview_model Description: Autocreated FK slot
 --     * Slot: RuleReview_id Description: Autocreated FK slot
 --     * Slot: PredictionReview_id Description: Autocreated FK slot
 --     * Slot: reference_review_id Description: Manual reviewer assessment of this reference (relevance, and citation correctness / scientific soundness). Reviewer-supplied, distinct from the machine-fetched id/title.
@@ -65,7 +67,7 @@
 --     * Slot: full_text_unavailable Description: Whether the full text is unavailable
 --     * Slot: reference_section_type Description: Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')
 --     * Slot: KnowledgeGap_id Description: Autocreated FK slot
--- # Class: EvidenceItem Description: A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. This is deliberately less strict than the publication quote validation used in gene reviews.
+-- # Class: EvidenceItem Description: A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. When a literature source_id (PMID/DOI) is paired with a supporting_text, that quote is validated verbatim (normalized substring) against the cached publication by the project's module supporting-text check (ai_gene_review.validation.module_validator), using the same matcher as gene reviews; non-literature source_ids (GO, file:, Reactome, PANTHER, ...) carry no supporting_text quote and are not fetched.
 --     * Slot: id
 --     * Slot: source_id Description: Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...
 --     * Slot: title
@@ -78,6 +80,7 @@
 --     * Slot: GeneDescriptor_id Description: Autocreated FK slot
 --     * Slot: GeneProductDescriptor_id Description: Autocreated FK slot
 --     * Slot: FamilyDescriptor_id Description: Autocreated FK slot
+--     * Slot: AncestralNodeDescriptor_id Description: Autocreated FK slot
 --     * Slot: DomainDescriptor_id Description: Autocreated FK slot
 --     * Slot: CellularComponentDescriptor_id Description: Autocreated FK slot
 --     * Slot: ProteinComplexDescriptor_id Description: Autocreated FK slot
@@ -94,6 +97,8 @@
 --     * Slot: ModulePart_id Description: Autocreated FK slot
 --     * Slot: ModuleVariantSet_uid Description: Autocreated FK slot
 --     * Slot: ModuleAnnoton_uid Description: Autocreated FK slot
+--     * Slot: GoCamAssociation_id Description: Autocreated FK slot
+--     * Slot: GoCamActivityReview_id Description: Autocreated FK slot
 --     * Slot: ParticipantSelector_id Description: Autocreated FK slot
 --     * Slot: ModuleContext_id Description: Autocreated FK slot
 --     * Slot: ModuleConnection_id Description: Autocreated FK slot
@@ -131,6 +136,13 @@
 --     * Slot: preferred_term
 --     * Slot: description
 --     * Slot: notes
+--     * Slot: term_id
+-- # Class: AncestralNodeDescriptor Description: A PANTHER/PAINT ancestral node (a PTN identifier, e.g. PANTHER:PTN000299444) used to ground an evolutionary inference about a function. Asserting an ancestral node states that the function associated with the enclosing annoton is inferred to have arisen at, or been present in, the last common ancestor represented by this node, and is therefore inferred to be retained in extant descendant proteins barring divergence, neofunctionalization, or loss of key residues. This is a stronger, clade-level claim than a representative member. Such nodes can be resolved from the IBA WITH/FROM column (GO_REF:0000033) of a representative member's GOA record rather than guessed.
+--     * Slot: id
+--     * Slot: preferred_term
+--     * Slot: description
+--     * Slot: notes
+--     * Slot: FamilyDescriptor_id Description: Autocreated FK slot
 --     * Slot: term_id
 -- # Class: DomainDescriptor Description: A descriptor for a protein domain, motif, site, or architectural feature.
 --     * Slot: id
@@ -218,6 +230,7 @@
 --     * Slot: title Description: Title of the entity
 --     * Slot: description Description: Description of the entity
 --     * Slot: status
+--     * Slot: scope Description: Whether this module is a concrete biological realization or an abstract reusable motif/template. ABSTRACT modules are intentionally gene-free and are not expected to declare representative protein members for every leaf node.
 --     * Slot: notes
 --     * Slot: module_id
 -- # Class: ModuleNode Description: A node in a module. Nodes can be recursively decomposed using parts and variant_sets, and may also carry leaf annotons and connections.
@@ -228,6 +241,12 @@
 --     * Slot: notes
 --     * Slot: ModuleVariantSet_uid Description: Autocreated FK slot
 --     * Slot: context_id
+-- # Class: Conformance Description: Assertion that a module node (together with its parts and connections) is an instance of a reusable template module or motif, optionally recording how it deviates from that template. Modeled after the dismech conforms_to pattern: conformance is a consistency check, not inheritance.
+--     * Slot: id
+--     * Slot: template Description: Reference to the template, as a module path relative to modules/ with an optional node id after a hash (e.g. "mapk_relay" or "mapk_relay#map2k"). The referenced template defines the required steps, function terms, and connection topology this node must contain.
+--     * Slot: status Description: Whether the node matches the template exactly, matches with the noted deviations, or matches the core motif while extending it.
+--     * Slot: notes Description: Free-text rationale or context for the conformance and any deviations.
+--     * Slot: ModuleNode_id Description: Autocreated FK slot
 -- # Class: ModulePart Description: A conjunctive part or step of a module node.
 --     * Slot: id
 --     * Slot: order Description: Optional display or temporal order. Equal or absent values imply partial ordering only.
@@ -253,6 +272,36 @@
 --     * Slot: ModuleNode_id Description: Autocreated FK slot
 --     * Slot: participant_id
 --     * Slot: function_id
+-- # Class: GoCamAssociation Description: A reference from a module element to a production GO-CAM (Gene Ontology Causal Activity Model), optionally pinned to a specific activity (annoton) within that model. The referenced model is expected to be cached under gocams/<model_id>/<model_id>-src.yaml.
+--     * Slot: id
+--     * Slot: model Description: GO-CAM model id, e.g. gomodel:568b0f9600000284 (or the bare local id 568b0f9600000284). Matches the cached gocams/<model_id>/ folder.
+--     * Slot: activity Description: Optional activity/annoton id within the model that this element corresponds to, e.g. gomodel:568b0f9600000284/57ec3a7e00000079.
+--     * Slot: title Description: Cached model title, recorded for human readability.
+--     * Slot: description
+--     * Slot: notes
+--     * Slot: ModuleNode_id Description: Autocreated FK slot
+--     * Slot: ModuleAnnoton_uid Description: Autocreated FK slot
+-- # Class: GoCamReview Description: A reviewer's assessment of a cached production GO-CAM model (gocams/<model_id>/<model_id>-src.yaml), recorded alongside it as gocams/<model_id>/<model_id>-review.yaml. Captures a standalone reading of the model, per-activity (annoton) QC against GO-CAM best practice, and the consistency of each activity with the corresponding gene annotation review. Validate standalone with `-C GoCamReview`.
+--     * Slot: title Description: Title of the entity
+--     * Slot: description Description: Description of the entity
+--     * Slot: model Description: GO-CAM model id (gomodel:... or the bare local id) matching the cached gocams/<model_id>/ folder.
+--     * Slot: taxon Description: Primary taxon of the model, e.g. NCBITaxon:6239.
+--     * Slot: summary Description: Reviewer's standalone reading of what the model asserts (the causal story), independent of the curation project.
+--     * Slot: status
+--     * Slot: notes
+-- # Class: GoCamActivityReview Description: Review of a single GO-CAM activity (annoton): the cached gene product / molecular function / process / location, a best-practice QC verdict, and how the activity relates to the gene's annotation review.
+--     * Slot: id
+--     * Slot: activity_id Description: Activity individual id within the model, e.g. gomodel:568b0f9600000284/57ec3a7e00000079.
+--     * Slot: gene_product Description: enabled_by gene product id as cached (e.g. UniProtKB:..., WB:...).
+--     * Slot: molecular_function Description: Molecular function GO id of the activity as cached.
+--     * Slot: biological_process Description: part_of biological process GO id as cached, if any.
+--     * Slot: cellular_component Description: occurs_in cellular component GO id as cached, if any.
+--     * Slot: verdict Description: Overall best-practice/evidence verdict for this activity (mirrors the OK / UNCERTAIN / WRONG forensic-review scale).
+--     * Slot: consistency Description: How this activity relates to the gene's annotation review (genes/**/<gene>-ai-review.yaml).
+--     * Slot: gene_review Description: Reference to the gene review compared against, e.g. file:human/TP53/TP53-ai-review.yaml.
+--     * Slot: supporting_text Description: Verbatim supporting text from a cited reference, where applicable.
+--     * Slot: notes
+--     * Slot: GoCamReview_model Description: Autocreated FK slot
 -- # Class: ParticipantSelector Description: A selector for a concrete or abstract participant in a module annoton. This can ground to a gene, gene product, complex, family, domain, ortholog, homolog, or any entity satisfying a functional/domain constraint.
 --     * Slot: id
 --     * Slot: selector_type
@@ -277,6 +326,8 @@
 --     * Slot: target
 --     * Slot: connection_type
 --     * Slot: description
+--     * Slot: chaining_status Description: Curator adjudication of reaction continuity across this connection: whether the upstream reaction's product is the downstream reaction's substrate. This is an explicit override for the (advisory, non-blocking) automated chaining check, so a known gap can be acknowledged rather than re-reported each run. Leave unset to let the automated check report its finding.
+--     * Slot: chaining_note Description: Free-text explanation for the chaining_status, e.g. why a break is a genuine knowledge gap, or which GO/RHEA mapping is missing.
 --     * Slot: notes
 --     * Slot: ModuleNode_id Description: Autocreated FK slot
 --     * Slot: predicate_id
@@ -296,6 +347,35 @@
 --     * Slot: summary Description: Summary of the review
 --     * Slot: action Description: Action to be taken
 --     * Slot: reason Description: Reason for the action
+--     * Slot: propagation_review_id Description: Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.
+-- # Class: PropagationReview Description: Structured, mechanical assessment of a propagated or inferred annotation. The detailed biological rationale remains in review.reason; this object records the reusable taxonomy and optional per-source-gene/node comments.
+--     * Slot: id
+--     * Slot: root_cause Description: Where the issue lies, or that no issue was found: source annotation, propagation decision, term scoping, circular/redundant evidence, or no propagation failure.
+--     * Slot: residue_claims_not_applicable Description: Why this annotation's argument cannot be expressed as a residue claim, for cases that are genuinely not point-residue questions -- capping versus severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent rather than residues substituted (MEFV, RAD51C). Recording the reason keeps the escape valve honest rather than silent.
+-- # Class: ResidueClaim Description: A claim that a specific position in THIS gene's protein does or does not carry the residue an anchor protein has at the corresponding position.Both sides carry an explicit position and residue, which is what makes the claim checkable without an alignment: the anchor and target residues are each resolved directly against their own sequences. The alignment is only needed to confirm the two positions genuinely correspond, so a claim remains partially verifiable even when no alignment is pinned.Positions are always in each protein's own native numbering, never an alignment column -- columns shift when PANTHER re-releases a family, and a stale column still resolves, to the wrong residue.
+--     * Slot: id
+--     * Slot: claim_type Description: Whether the target lost, retained, or substituted the residue.
+--     * Slot: site_ref Description: Optional reference to a curated family-level residue site, as ``<family_id>#<site_id>`` (e.g. PANTHER:PTHR11022#zn_triad). When given, the validator additionally checks that the site exists in that family review and that the anchor position is one the site declares -- which is what stops a gene review and a family review drifting apart.
+--     * Slot: role Description: Mechanistic role of the anchor residue (e.g. "metal ligand", "nucleophile").
+--     * Slot: method Description: How the correspondence between anchor and target positions was established.
+--     * Slot: alignment_release Description: Version of the alignment *resource* the correspondence was taken from, when one exists -- e.g. "PANTHER 19.0" or "Pfam 37.0". A tool name or a script path is not a release and does not belong here; put that in comment.Omit it for an alignment computed ad hoc. That is not a gap: the claim states both positions and both residues, so the alignment is only how the correspondence was *discovered*, while the evidence is the two sequence lookups the validator performs. Pinning matters for a shared resource whose coordinates can shift under you, not for a one-off computation.
+--     * Slot: comment Description: Short note, e.g. why the target position is absent rather than substituted.
+--     * Slot: PropagationReview_id Description: Autocreated FK slot
+--     * Slot: anchor_id Description: The comparator: a protein known to have the functional residue, and where.
+--     * Slot: target_id Description: The corresponding position in this gene's own protein. Omit only when the region is unalignable, in which case say so in comment; a missing target is weaker evidence than a stated substitution.
+-- # Class: ResiduePosition Description: A single residue in a named protein, in that protein's own numbering.
+--     * Slot: id
+--     * Slot: accession Description: UniProt CURIE, e.g. UniProtKB:Q96PD5.
+--     * Slot: position Description: 1-based position in this protein's own sequence.
+--     * Slot: residue Description: Single-letter residue expected at that position. U and O are permitted for selenocysteine and pyrrolysine -- a catalytic position can legitimately be selenocysteine, as in SEPHS2.
+--     * Slot: sequence_version Description: UniProt sequence version (the SV in a P49903.2 style citation) the position was read against. Record it: an amino-acid sequence is not immutable. SEPHS2 is already on sequence version 3, and a corrected or re-chosen canonical sequence shifts every downstream position, so an unversioned claim can go silently wrong -- or worse, keep passing against a different residue that happens to match.The validator compares this against the current record and, when they differ, says so explicitly rather than letting a stale claim look verified.
+-- # Class: PropagationSource Description: A source entity considered while reviewing an inferred annotation. This is intentionally compact: use comment for source-specific caveats, not for restating the whole review rationale.
+--     * Slot: id
+--     * Slot: source_id Description: Identifier for the source entity, e.g. UniProtKB:P03950, MGI:MGI:104579, PANTHER:PTN002745520, or a GO_REF/source label when no gene product identifier is available.
+--     * Slot: source_label Description: Human-readable source label, such as a gene symbol or node label.
+--     * Slot: source_status Description: Mechanical status of this source with respect to the target annotation.
+--     * Slot: comment Description: Short source-specific comment, e.g. "human ANG supports angiogenesis, but mouse Ang2/Angrp is non-angiogenic" or "seed is inferred-only".
+--     * Slot: PropagationReview_id Description: Autocreated FK slot
 -- # Class: CoreFunction Description: A core function is a GO-CAM-like annotation of the core evolved functions of a gene. This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like representation.
 --     * Slot: id
 --     * Slot: description Description: Description of the core function
@@ -500,6 +580,12 @@
 -- # Class: FindingReview_superseded_by
 --     * Slot: FindingReview_id Description: Autocreated FK slot
 --     * Slot: superseded_by_id Description: Reference(s) that dispute, correct, or overturn this finding. Used together with finding_status DISPUTED or OVERTURNED.
+-- # Class: Conformance_deviations
+--     * Slot: Conformance_id Description: Autocreated FK slot
+--     * Slot: deviations Description: Specific differences from the template (e.g. a missing or merged tier, a substituted function term). Listed deviations are treated as informational rather than errors during conformance QC.
+-- # Class: GoCamActivityReview_qc_flags
+--     * Slot: GoCamActivityReview_id Description: Autocreated FK slot
+--     * Slot: qc_flags Description: Specific GO-CAM best-practice issues observed for this activity.
 -- # Class: ExistingAnnotation_extensions
 --     * Slot: ExistingAnnotation_id Description: Autocreated FK slot
 --     * Slot: extensions_id
@@ -512,6 +598,9 @@
 -- # Class: Review_supported_by
 --     * Slot: Review_id Description: Autocreated FK slot
 --     * Slot: supported_by_id
+-- # Class: PropagationReview_failure_modes
+--     * Slot: PropagationReview_id Description: Autocreated FK slot
+--     * Slot: failure_modes Description: Biological shape of the propagation issue. Multiple values are allowed when a case combines, for example, paralog transfer and functional divergence.
 -- # Class: CoreFunction_supported_by
 --     * Slot: CoreFunction_id Description: Autocreated FK slot
 --     * Slot: supported_by_id
@@ -579,7 +668,9 @@ CREATE TABLE "GeneReview" (
 	taxon_id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY(taxon_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_GeneReview_id" ON "GeneReview" (id);
+);
+CREATE INDEX "ix_GeneReview_id" ON "GeneReview" (id);
+
 CREATE TABLE "FunctionalIsoform" (
 	id TEXT NOT NULL,
 	name TEXT NOT NULL,
@@ -588,33 +679,43 @@ CREATE TABLE "FunctionalIsoform" (
 	"GeneReview_id" TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
-);CREATE INDEX "ix_FunctionalIsoform_id" ON "FunctionalIsoform" (id);
+);
+CREATE INDEX "ix_FunctionalIsoform_id" ON "FunctionalIsoform" (id);
+
 CREATE TABLE "Term" (
 	id TEXT NOT NULL,
 	label TEXT NOT NULL,
 	description TEXT,
 	ontology TEXT,
 	"FunctionalIsoform_id" TEXT,
+	"FamilyDescriptor_id" INTEGER,
 	"Review_id" INTEGER,
 	"CoreFunction_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("FunctionalIsoform_id") REFERENCES "FunctionalIsoform" (id),
+	FOREIGN KEY("FamilyDescriptor_id") REFERENCES "FamilyDescriptor" (id),
 	FOREIGN KEY("Review_id") REFERENCES "Review" (id),
 	FOREIGN KEY("CoreFunction_id") REFERENCES "CoreFunction" (id)
-);CREATE INDEX "ix_Term_id" ON "Term" (id);
+);
+CREATE INDEX "ix_Term_id" ON "Term" (id);
+
 CREATE TABLE "ReferenceReview" (
 	id INTEGER NOT NULL,
 	relevance VARCHAR(6),
 	correctness VARCHAR(16),
 	review_notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_ReferenceReview_id" ON "ReferenceReview" (id);
+);
+CREATE INDEX "ix_ReferenceReview_id" ON "ReferenceReview" (id);
+
 CREATE TABLE "FindingReview" (
 	id INTEGER NOT NULL,
 	finding_status VARCHAR(12),
 	review_notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_FindingReview_id" ON "FindingReview" (id);
+);
+CREATE INDEX "ix_FindingReview_id" ON "FindingReview" (id);
+
 CREATE TABLE "Descriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -631,7 +732,20 @@ CREATE TABLE "Descriptor" (
 	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_Descriptor_id" ON "Descriptor" (id);
+);
+CREATE INDEX "ix_Descriptor_id" ON "Descriptor" (id);
+
+CREATE TABLE "FamilyDescriptor" (
+	id INTEGER NOT NULL,
+	preferred_term TEXT NOT NULL,
+	description TEXT,
+	notes TEXT,
+	term_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY(term_id) REFERENCES "Term" (id)
+);
+CREATE INDEX "ix_FamilyDescriptor_id" ON "FamilyDescriptor" (id);
+
 CREATE TABLE "CellularComponentDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -644,7 +758,9 @@ CREATE TABLE "CellularComponentDescriptor" (
 	FOREIGN KEY("ModuleAnnoton_uid") REFERENCES "ModuleAnnoton" (uid),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_CellularComponentDescriptor_id" ON "CellularComponentDescriptor" (id);
+);
+CREATE INDEX "ix_CellularComponentDescriptor_id" ON "CellularComponentDescriptor" (id);
+
 CREATE TABLE "MolecularFunctionDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -657,7 +773,9 @@ CREATE TABLE "MolecularFunctionDescriptor" (
 	FOREIGN KEY(source_location_id) REFERENCES "CellularComponentDescriptor" (id),
 	FOREIGN KEY(destination_location_id) REFERENCES "CellularComponentDescriptor" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_MolecularFunctionDescriptor_id" ON "MolecularFunctionDescriptor" (id);
+);
+CREATE INDEX "ix_MolecularFunctionDescriptor_id" ON "MolecularFunctionDescriptor" (id);
+
 CREATE TABLE "BiologicalProcessDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -672,7 +790,9 @@ CREATE TABLE "BiologicalProcessDescriptor" (
 	FOREIGN KEY(starts_with_id) REFERENCES "Descriptor" (id),
 	FOREIGN KEY(ends_with_id) REFERENCES "Descriptor" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_BiologicalProcessDescriptor_id" ON "BiologicalProcessDescriptor" (id);
+);
+CREATE INDEX "ix_BiologicalProcessDescriptor_id" ON "BiologicalProcessDescriptor" (id);
+
 CREATE TABLE "ModuleNode" (
 	id TEXT NOT NULL,
 	label TEXT NOT NULL,
@@ -684,7 +804,9 @@ CREATE TABLE "ModuleNode" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ModuleVariantSet_uid") REFERENCES "ModuleVariantSet" (uid),
 	FOREIGN KEY(context_id) REFERENCES "ModuleContext" (id)
-);CREATE INDEX "ix_ModuleNode_id" ON "ModuleNode" (id);
+);
+CREATE INDEX "ix_ModuleNode_id" ON "ModuleNode" (id);
+
 CREATE TABLE "ModuleVariantSet" (
 	uid INTEGER NOT NULL,
 	id TEXT NOT NULL,
@@ -695,7 +817,9 @@ CREATE TABLE "ModuleVariantSet" (
 	"ModuleNode_id" TEXT,
 	PRIMARY KEY (uid),
 	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id)
-);CREATE INDEX "ix_ModuleVariantSet_uid" ON "ModuleVariantSet" (uid);
+);
+CREATE INDEX "ix_ModuleVariantSet_uid" ON "ModuleVariantSet" (uid);
+
 CREATE TABLE "ModuleAnnoton" (
 	uid INTEGER NOT NULL,
 	id TEXT NOT NULL,
@@ -709,7 +833,21 @@ CREATE TABLE "ModuleAnnoton" (
 	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id),
 	FOREIGN KEY(participant_id) REFERENCES "ParticipantSelector" (id),
 	FOREIGN KEY(function_id) REFERENCES "MolecularFunctionDescriptor" (id)
-);CREATE INDEX "ix_ModuleAnnoton_uid" ON "ModuleAnnoton" (uid);
+);
+CREATE INDEX "ix_ModuleAnnoton_uid" ON "ModuleAnnoton" (uid);
+
+CREATE TABLE "GoCamReview" (
+	title TEXT NOT NULL,
+	description TEXT,
+	model TEXT NOT NULL,
+	taxon TEXT,
+	summary TEXT,
+	status VARCHAR(11),
+	notes TEXT,
+	PRIMARY KEY (model)
+);
+CREATE INDEX "ix_GoCamReview_model" ON "GoCamReview" (model);
+
 CREATE TABLE "ParticipantSelector" (
 	id INTEGER NOT NULL,
 	selector_type VARCHAR(17) NOT NULL,
@@ -736,19 +874,34 @@ CREATE TABLE "ParticipantSelector" (
 	FOREIGN KEY(required_function_id) REFERENCES "MolecularFunctionDescriptor" (id),
 	FOREIGN KEY(required_domain_id) REFERENCES "DomainDescriptor" (id),
 	FOREIGN KEY(taxon_id) REFERENCES "TaxonDescriptor" (id)
-);CREATE INDEX "ix_ParticipantSelector_id" ON "ParticipantSelector" (id);
+);
+CREATE INDEX "ix_ParticipantSelector_id" ON "ParticipantSelector" (id);
+
 CREATE TABLE "ModuleContext" (
 	id INTEGER NOT NULL,
 	notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_ModuleContext_id" ON "ModuleContext" (id);
-CREATE TABLE "Review" (
+);
+CREATE INDEX "ix_ModuleContext_id" ON "ModuleContext" (id);
+
+CREATE TABLE "PropagationReview" (
 	id INTEGER NOT NULL,
-	summary TEXT,
-	action VARCHAR(22) NOT NULL,
-	reason TEXT,
+	root_cause VARCHAR(30) NOT NULL,
+	residue_claims_not_applicable TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_Review_id" ON "Review" (id);
+);
+CREATE INDEX "ix_PropagationReview_id" ON "PropagationReview" (id);
+
+CREATE TABLE "ResiduePosition" (
+	id INTEGER NOT NULL,
+	accession TEXT NOT NULL,
+	position INTEGER NOT NULL,
+	residue TEXT NOT NULL,
+	sequence_version INTEGER,
+	PRIMARY KEY (id)
+);
+CREATE INDEX "ix_ResiduePosition_id" ON "ResiduePosition" (id);
+
 CREATE TABLE "CoreFunction" (
 	id INTEGER NOT NULL,
 	description TEXT,
@@ -759,54 +912,72 @@ CREATE TABLE "CoreFunction" (
 	FOREIGN KEY(molecular_function_id) REFERENCES "Term" (id),
 	FOREIGN KEY(contributes_to_molecular_function_id) REFERENCES "Term" (id),
 	FOREIGN KEY(in_complex_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_CoreFunction_id" ON "CoreFunction" (id);
+);
+CREATE INDEX "ix_CoreFunction_id" ON "CoreFunction" (id);
+
 CREATE TABLE "Experiment" (
 	id INTEGER NOT NULL,
 	hypothesis TEXT,
 	description TEXT NOT NULL,
 	experiment_type TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_Experiment_id" ON "Experiment" (id);
+);
+CREATE INDEX "ix_Experiment_id" ON "Experiment" (id);
+
 CREATE TABLE "Question" (
 	id INTEGER NOT NULL,
 	question TEXT NOT NULL,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_Question_id" ON "Question" (id);
+);
+CREATE INDEX "ix_Question_id" ON "Question" (id);
+
 CREATE TABLE "InterPro2GORedundancy" (
 	id INTEGER NOT NULL,
 	summary TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_InterPro2GORedundancy_id" ON "InterPro2GORedundancy" (id);
+);
+CREATE INDEX "ix_InterPro2GORedundancy_id" ON "InterPro2GORedundancy" (id);
+
 CREATE TABLE "ParsimonyAssessment" (
 	id INTEGER NOT NULL,
 	assessment VARCHAR(14) NOT NULL,
 	notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_ParsimonyAssessment_id" ON "ParsimonyAssessment" (id);
+);
+CREATE INDEX "ix_ParsimonyAssessment_id" ON "ParsimonyAssessment" (id);
+
 CREATE TABLE "LiteratureSupportAssessment" (
 	id INTEGER NOT NULL,
 	assessment VARCHAR(12) NOT NULL,
 	notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_LiteratureSupportAssessment_id" ON "LiteratureSupportAssessment" (id);
+);
+CREATE INDEX "ix_LiteratureSupportAssessment_id" ON "LiteratureSupportAssessment" (id);
+
 CREATE TABLE "ConditionOverlapAssessment" (
 	id INTEGER NOT NULL,
 	assessment VARCHAR(11) NOT NULL,
 	notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_ConditionOverlapAssessment_id" ON "ConditionOverlapAssessment" (id);
+);
+CREATE INDEX "ix_ConditionOverlapAssessment_id" ON "ConditionOverlapAssessment" (id);
+
 CREATE TABLE "GOSpecificityAssessment" (
 	id INTEGER NOT NULL,
 	assessment VARCHAR(11) NOT NULL,
 	notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_GOSpecificityAssessment_id" ON "GOSpecificityAssessment" (id);
+);
+CREATE INDEX "ix_GOSpecificityAssessment_id" ON "GOSpecificityAssessment" (id);
+
 CREATE TABLE "TaxonomicScopeAssessment" (
 	id INTEGER NOT NULL,
 	assessment VARCHAR(11) NOT NULL,
 	notes TEXT,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_TaxonomicScopeAssessment_id" ON "TaxonomicScopeAssessment" (id);
+);
+CREATE INDEX "ix_TaxonomicScopeAssessment_id" ON "TaxonomicScopeAssessment" (id);
+
 CREATE TABLE "PredictionAssessment" (
 	id INTEGER NOT NULL,
 	assessment VARCHAR(3) NOT NULL,
@@ -814,7 +985,9 @@ CREATE TABLE "PredictionAssessment" (
 	error_type VARCHAR(29),
 	summary TEXT NOT NULL,
 	PRIMARY KEY (id)
-);CREATE INDEX "ix_PredictionAssessment_id" ON "PredictionAssessment" (id);
+);
+CREATE INDEX "ix_PredictionAssessment_id" ON "PredictionAssessment" (id);
+
 CREATE TABLE "AlternativeProduct" (
 	id TEXT NOT NULL,
 	name TEXT,
@@ -823,7 +996,9 @@ CREATE TABLE "AlternativeProduct" (
 	"GeneReview_id" TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
-);CREATE INDEX "ix_AlternativeProduct_id" ON "AlternativeProduct" (id);
+);
+CREATE INDEX "ix_AlternativeProduct_id" ON "AlternativeProduct" (id);
+
 CREATE TABLE "FunctionalIsoformMapping" (
 	id INTEGER NOT NULL,
 	type VARCHAR(15) NOT NULL,
@@ -831,7 +1006,9 @@ CREATE TABLE "FunctionalIsoformMapping" (
 	"FunctionalIsoform_id" TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY("FunctionalIsoform_id") REFERENCES "FunctionalIsoform" (id)
-);CREATE INDEX "ix_FunctionalIsoformMapping_id" ON "FunctionalIsoformMapping" (id);
+);
+CREATE INDEX "ix_FunctionalIsoformMapping_id" ON "FunctionalIsoformMapping" (id);
+
 CREATE TABLE "Finding" (
 	id INTEGER NOT NULL,
 	statement TEXT,
@@ -841,7 +1018,9 @@ CREATE TABLE "Finding" (
 	finding_review_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(finding_review_id) REFERENCES "FindingReview" (id)
-);CREATE INDEX "ix_Finding_id" ON "Finding" (id);
+);
+CREATE INDEX "ix_Finding_id" ON "Finding" (id);
+
 CREATE TABLE "ChemicalEntityDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -850,7 +1029,9 @@ CREATE TABLE "ChemicalEntityDescriptor" (
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_ChemicalEntityDescriptor_id" ON "ChemicalEntityDescriptor" (id);
+);
+CREATE INDEX "ix_ChemicalEntityDescriptor_id" ON "ChemicalEntityDescriptor" (id);
+
 CREATE TABLE "GeneDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -859,16 +1040,35 @@ CREATE TABLE "GeneDescriptor" (
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_GeneDescriptor_id" ON "GeneDescriptor" (id);
-CREATE TABLE "FamilyDescriptor" (
+);
+CREATE INDEX "ix_GeneDescriptor_id" ON "GeneDescriptor" (id);
+
+CREATE TABLE "GeneProductDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
 	description TEXT,
 	notes TEXT,
+	"FamilyDescriptor_id" INTEGER,
 	term_id TEXT,
 	PRIMARY KEY (id),
+	FOREIGN KEY("FamilyDescriptor_id") REFERENCES "FamilyDescriptor" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_FamilyDescriptor_id" ON "FamilyDescriptor" (id);
+);
+CREATE INDEX "ix_GeneProductDescriptor_id" ON "GeneProductDescriptor" (id);
+
+CREATE TABLE "AncestralNodeDescriptor" (
+	id INTEGER NOT NULL,
+	preferred_term TEXT NOT NULL,
+	description TEXT,
+	notes TEXT,
+	"FamilyDescriptor_id" INTEGER,
+	term_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY("FamilyDescriptor_id") REFERENCES "FamilyDescriptor" (id),
+	FOREIGN KEY(term_id) REFERENCES "Term" (id)
+);
+CREATE INDEX "ix_AncestralNodeDescriptor_id" ON "AncestralNodeDescriptor" (id);
+
 CREATE TABLE "DomainDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -877,7 +1077,9 @@ CREATE TABLE "DomainDescriptor" (
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_DomainDescriptor_id" ON "DomainDescriptor" (id);
+);
+CREATE INDEX "ix_DomainDescriptor_id" ON "DomainDescriptor" (id);
+
 CREATE TABLE "ProteinComplexDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -886,7 +1088,9 @@ CREATE TABLE "ProteinComplexDescriptor" (
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_ProteinComplexDescriptor_id" ON "ProteinComplexDescriptor" (id);
+);
+CREATE INDEX "ix_ProteinComplexDescriptor_id" ON "ProteinComplexDescriptor" (id);
+
 CREATE TABLE "CellTypeDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -897,7 +1101,9 @@ CREATE TABLE "CellTypeDescriptor" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_CellTypeDescriptor_id" ON "CellTypeDescriptor" (id);
+);
+CREATE INDEX "ix_CellTypeDescriptor_id" ON "CellTypeDescriptor" (id);
+
 CREATE TABLE "AnatomicalEntityDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -908,7 +1114,9 @@ CREATE TABLE "AnatomicalEntityDescriptor" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_AnatomicalEntityDescriptor_id" ON "AnatomicalEntityDescriptor" (id);
+);
+CREATE INDEX "ix_AnatomicalEntityDescriptor_id" ON "AnatomicalEntityDescriptor" (id);
+
 CREATE TABLE "DevelopmentalStageDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -919,7 +1127,9 @@ CREATE TABLE "DevelopmentalStageDescriptor" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_DevelopmentalStageDescriptor_id" ON "DevelopmentalStageDescriptor" (id);
+);
+CREATE INDEX "ix_DevelopmentalStageDescriptor_id" ON "DevelopmentalStageDescriptor" (id);
+
 CREATE TABLE "TaxonDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -930,7 +1140,9 @@ CREATE TABLE "TaxonDescriptor" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_TaxonDescriptor_id" ON "TaxonDescriptor" (id);
+);
+CREATE INDEX "ix_TaxonDescriptor_id" ON "TaxonDescriptor" (id);
+
 CREATE TABLE "RelationDescriptor" (
 	id INTEGER NOT NULL,
 	preferred_term TEXT NOT NULL,
@@ -939,17 +1151,33 @@ CREATE TABLE "RelationDescriptor" (
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_RelationDescriptor_id" ON "RelationDescriptor" (id);
+);
+CREATE INDEX "ix_RelationDescriptor_id" ON "RelationDescriptor" (id);
+
 CREATE TABLE "ModuleReview" (
 	id TEXT NOT NULL,
 	title TEXT NOT NULL,
 	description TEXT,
 	status TEXT,
+	scope VARCHAR(8),
 	notes TEXT,
 	module_id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY(module_id) REFERENCES "ModuleNode" (id)
-);CREATE INDEX "ix_ModuleReview_id" ON "ModuleReview" (id);
+);
+CREATE INDEX "ix_ModuleReview_id" ON "ModuleReview" (id);
+
+CREATE TABLE "Conformance" (
+	id INTEGER NOT NULL,
+	template TEXT NOT NULL,
+	status VARCHAR(15),
+	notes TEXT,
+	"ModuleNode_id" TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id)
+);
+CREATE INDEX "ix_Conformance_id" ON "Conformance" (id);
+
 CREATE TABLE "ModulePart" (
 	id INTEGER NOT NULL,
 	"order" INTEGER,
@@ -961,14 +1189,92 @@ CREATE TABLE "ModulePart" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id),
 	FOREIGN KEY(node_id) REFERENCES "ModuleNode" (id)
-);CREATE INDEX "ix_ModulePart_id" ON "ModulePart" (id);
+);
+CREATE INDEX "ix_ModulePart_id" ON "ModulePart" (id);
+
+CREATE TABLE "GoCamAssociation" (
+	id INTEGER NOT NULL,
+	model TEXT NOT NULL,
+	activity TEXT,
+	title TEXT,
+	description TEXT,
+	notes TEXT,
+	"ModuleNode_id" TEXT,
+	"ModuleAnnoton_uid" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id),
+	FOREIGN KEY("ModuleAnnoton_uid") REFERENCES "ModuleAnnoton" (uid)
+);
+CREATE INDEX "ix_GoCamAssociation_id" ON "GoCamAssociation" (id);
+
+CREATE TABLE "GoCamActivityReview" (
+	id INTEGER NOT NULL,
+	activity_id TEXT NOT NULL,
+	gene_product TEXT,
+	molecular_function TEXT,
+	biological_process TEXT,
+	cellular_component TEXT,
+	verdict VARCHAR(9),
+	consistency VARCHAR(14),
+	gene_review TEXT,
+	supporting_text TEXT,
+	notes TEXT,
+	"GoCamReview_model" TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY("GoCamReview_model") REFERENCES "GoCamReview" (model)
+);
+CREATE INDEX "ix_GoCamActivityReview_id" ON "GoCamActivityReview" (id);
+
+CREATE TABLE "Review" (
+	id INTEGER NOT NULL,
+	summary TEXT,
+	action VARCHAR(22) NOT NULL,
+	reason TEXT,
+	propagation_review_id INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY(propagation_review_id) REFERENCES "PropagationReview" (id)
+);
+CREATE INDEX "ix_Review_id" ON "Review" (id);
+
+CREATE TABLE "ResidueClaim" (
+	id INTEGER NOT NULL,
+	claim_type VARCHAR(11) NOT NULL,
+	site_ref TEXT,
+	role TEXT,
+	method VARCHAR(15) NOT NULL,
+	alignment_release TEXT,
+	comment TEXT,
+	"PropagationReview_id" INTEGER,
+	anchor_id INTEGER NOT NULL,
+	target_id INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY("PropagationReview_id") REFERENCES "PropagationReview" (id),
+	FOREIGN KEY(anchor_id) REFERENCES "ResiduePosition" (id),
+	FOREIGN KEY(target_id) REFERENCES "ResiduePosition" (id)
+);
+CREATE INDEX "ix_ResidueClaim_id" ON "ResidueClaim" (id);
+
+CREATE TABLE "PropagationSource" (
+	id INTEGER NOT NULL,
+	source_id TEXT NOT NULL,
+	source_label TEXT,
+	source_status VARCHAR(30),
+	comment TEXT,
+	"PropagationReview_id" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY("PropagationReview_id") REFERENCES "PropagationReview" (id)
+);
+CREATE INDEX "ix_PropagationSource_id" ON "PropagationSource" (id);
+
 CREATE TABLE "AnnotationExtension" (
 	id INTEGER NOT NULL,
 	predicate TEXT NOT NULL,
 	term_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_AnnotationExtension_id" ON "AnnotationExtension" (id);
+);
+CREATE INDEX "ix_AnnotationExtension_id" ON "AnnotationExtension" (id);
+
 CREATE TABLE "EmbeddedRule" (
 	id INTEGER NOT NULL,
 	rule_id TEXT NOT NULL,
@@ -979,7 +1285,9 @@ CREATE TABLE "EmbeddedRule" (
 	ipr2go_redundancy_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(ipr2go_redundancy_id) REFERENCES "InterPro2GORedundancy" (id)
-);CREATE INDEX "ix_EmbeddedRule_id" ON "EmbeddedRule" (id);
+);
+CREATE INDEX "ix_EmbeddedRule_id" ON "EmbeddedRule" (id);
+
 CREATE TABLE "RedundantAnnotation" (
 	id INTEGER NOT NULL,
 	go_id TEXT NOT NULL,
@@ -989,7 +1297,9 @@ CREATE TABLE "RedundantAnnotation" (
 	"InterPro2GORedundancy_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("InterPro2GORedundancy_id") REFERENCES "InterPro2GORedundancy" (id)
-);CREATE INDEX "ix_RedundantAnnotation_id" ON "RedundantAnnotation" (id);
+);
+CREATE INDEX "ix_RedundantAnnotation_id" ON "RedundantAnnotation" (id);
+
 CREATE TABLE "PredictionReview" (
 	id TEXT NOT NULL,
 	gene_symbol TEXT NOT NULL,
@@ -999,63 +1309,84 @@ CREATE TABLE "PredictionReview" (
 	taxon_id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY(taxon_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_PredictionReview_id" ON "PredictionReview" (id);
+);
+CREATE INDEX "ix_PredictionReview_id" ON "PredictionReview" (id);
+
 CREATE TABLE "GeneReview_aliases" (
 	"GeneReview_id" TEXT,
 	aliases TEXT,
 	PRIMARY KEY ("GeneReview_id", aliases),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
-);CREATE INDEX "ix_GeneReview_aliases_aliases" ON "GeneReview_aliases" (aliases);CREATE INDEX "ix_GeneReview_aliases_GeneReview_id" ON "GeneReview_aliases" ("GeneReview_id");
+);
+CREATE INDEX "ix_GeneReview_aliases_aliases" ON "GeneReview_aliases" (aliases);
+CREATE INDEX "ix_GeneReview_aliases_GeneReview_id" ON "GeneReview_aliases" ("GeneReview_id");
+
 CREATE TABLE "GeneReview_tags" (
 	"GeneReview_id" TEXT,
 	tags TEXT,
 	PRIMARY KEY ("GeneReview_id", tags),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id)
-);CREATE INDEX "ix_GeneReview_tags_tags" ON "GeneReview_tags" (tags);CREATE INDEX "ix_GeneReview_tags_GeneReview_id" ON "GeneReview_tags" ("GeneReview_id");
+);
+CREATE INDEX "ix_GeneReview_tags_tags" ON "GeneReview_tags" (tags);
+CREATE INDEX "ix_GeneReview_tags_GeneReview_id" ON "GeneReview_tags" ("GeneReview_id");
+
 CREATE TABLE "GeneReview_core_functions" (
 	"GeneReview_id" TEXT,
 	core_functions_id INTEGER,
 	PRIMARY KEY ("GeneReview_id", core_functions_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(core_functions_id) REFERENCES "CoreFunction" (id)
-);CREATE INDEX "ix_GeneReview_core_functions_GeneReview_id" ON "GeneReview_core_functions" ("GeneReview_id");CREATE INDEX "ix_GeneReview_core_functions_core_functions_id" ON "GeneReview_core_functions" (core_functions_id);
+);
+CREATE INDEX "ix_GeneReview_core_functions_core_functions_id" ON "GeneReview_core_functions" (core_functions_id);
+CREATE INDEX "ix_GeneReview_core_functions_GeneReview_id" ON "GeneReview_core_functions" ("GeneReview_id");
+
 CREATE TABLE "GeneReview_suggested_questions" (
 	"GeneReview_id" TEXT,
 	suggested_questions_id INTEGER,
 	PRIMARY KEY ("GeneReview_id", suggested_questions_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(suggested_questions_id) REFERENCES "Question" (id)
-);CREATE INDEX "ix_GeneReview_suggested_questions_suggested_questions_id" ON "GeneReview_suggested_questions" (suggested_questions_id);CREATE INDEX "ix_GeneReview_suggested_questions_GeneReview_id" ON "GeneReview_suggested_questions" ("GeneReview_id");
+);
+CREATE INDEX "ix_GeneReview_suggested_questions_suggested_questions_id" ON "GeneReview_suggested_questions" (suggested_questions_id);
+CREATE INDEX "ix_GeneReview_suggested_questions_GeneReview_id" ON "GeneReview_suggested_questions" ("GeneReview_id");
+
 CREATE TABLE "GeneReview_suggested_experiments" (
 	"GeneReview_id" TEXT,
 	suggested_experiments_id INTEGER,
 	PRIMARY KEY ("GeneReview_id", suggested_experiments_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(suggested_experiments_id) REFERENCES "Experiment" (id)
-);CREATE INDEX "ix_GeneReview_suggested_experiments_suggested_experiments_id" ON "GeneReview_suggested_experiments" (suggested_experiments_id);CREATE INDEX "ix_GeneReview_suggested_experiments_GeneReview_id" ON "GeneReview_suggested_experiments" ("GeneReview_id");
+);
+CREATE INDEX "ix_GeneReview_suggested_experiments_GeneReview_id" ON "GeneReview_suggested_experiments" ("GeneReview_id");
+CREATE INDEX "ix_GeneReview_suggested_experiments_suggested_experiments_id" ON "GeneReview_suggested_experiments" (suggested_experiments_id);
+
+CREATE TABLE "PropagationReview_failure_modes" (
+	"PropagationReview_id" INTEGER,
+	failure_modes VARCHAR(31),
+	PRIMARY KEY ("PropagationReview_id", failure_modes),
+	FOREIGN KEY("PropagationReview_id") REFERENCES "PropagationReview" (id)
+);
+CREATE INDEX "ix_PropagationReview_failure_modes_PropagationReview_id" ON "PropagationReview_failure_modes" ("PropagationReview_id");
+CREATE INDEX "ix_PropagationReview_failure_modes_failure_modes" ON "PropagationReview_failure_modes" (failure_modes);
+
 CREATE TABLE "Question_experts" (
 	"Question_id" INTEGER,
 	experts TEXT,
 	PRIMARY KEY ("Question_id", experts),
 	FOREIGN KEY("Question_id") REFERENCES "Question" (id)
-);CREATE INDEX "ix_Question_experts_experts" ON "Question_experts" (experts);CREATE INDEX "ix_Question_experts_Question_id" ON "Question_experts" ("Question_id");
+);
+CREATE INDEX "ix_Question_experts_Question_id" ON "Question_experts" ("Question_id");
+CREATE INDEX "ix_Question_experts_experts" ON "Question_experts" (experts);
+
 CREATE TABLE "InterPro2GORedundancy_novel_annotations" (
 	"InterPro2GORedundancy_id" INTEGER,
 	novel_annotations TEXT,
 	PRIMARY KEY ("InterPro2GORedundancy_id", novel_annotations),
 	FOREIGN KEY("InterPro2GORedundancy_id") REFERENCES "InterPro2GORedundancy" (id)
-);CREATE INDEX "ix_InterPro2GORedundancy_novel_annotations_novel_annotations" ON "InterPro2GORedundancy_novel_annotations" (novel_annotations);CREATE INDEX "ix_InterPro2GORedundancy_novel_annotations_InterPro2GORedundancy_id" ON "InterPro2GORedundancy_novel_annotations" ("InterPro2GORedundancy_id");
-CREATE TABLE "GeneProductDescriptor" (
-	id INTEGER NOT NULL,
-	preferred_term TEXT NOT NULL,
-	description TEXT,
-	notes TEXT,
-	"FamilyDescriptor_id" INTEGER,
-	term_id TEXT,
-	PRIMARY KEY (id),
-	FOREIGN KEY("FamilyDescriptor_id") REFERENCES "FamilyDescriptor" (id),
-	FOREIGN KEY(term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_GeneProductDescriptor_id" ON "GeneProductDescriptor" (id);
+);
+CREATE INDEX "ix_InterPro2GORedundancy_novel_annotations_novel_annotations" ON "InterPro2GORedundancy_novel_annotations" (novel_annotations);
+CREATE INDEX "ix_InterPro2GORedundancy_novel_annotations_InterPro2GORedundancy_id" ON "InterPro2GORedundancy_novel_annotations" ("InterPro2GORedundancy_id");
+
 CREATE TABLE "ComplexUnit" (
 	uid INTEGER NOT NULL,
 	id TEXT,
@@ -1070,13 +1401,17 @@ CREATE TABLE "ComplexUnit" (
 	FOREIGN KEY("ProteinComplexDescriptor_id") REFERENCES "ProteinComplexDescriptor" (id),
 	FOREIGN KEY(participant_id) REFERENCES "ParticipantSelector" (id),
 	FOREIGN KEY(function_id) REFERENCES "MolecularFunctionDescriptor" (id)
-);CREATE INDEX "ix_ComplexUnit_uid" ON "ComplexUnit" (uid);
+);
+CREATE INDEX "ix_ComplexUnit_uid" ON "ComplexUnit" (uid);
+
 CREATE TABLE "ModuleConnection" (
 	id INTEGER NOT NULL,
 	source TEXT NOT NULL,
 	target TEXT NOT NULL,
 	connection_type VARCHAR(20),
 	description TEXT,
+	chaining_status VARCHAR(14),
+	chaining_note TEXT,
 	notes TEXT,
 	"ModuleNode_id" TEXT,
 	predicate_id INTEGER,
@@ -1085,7 +1420,9 @@ CREATE TABLE "ModuleConnection" (
 	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id),
 	FOREIGN KEY(predicate_id) REFERENCES "RelationDescriptor" (id),
 	FOREIGN KEY(context_id) REFERENCES "ModuleContext" (id)
-);CREATE INDEX "ix_ModuleConnection_id" ON "ModuleConnection" (id);
+);
+CREATE INDEX "ix_ModuleConnection_id" ON "ModuleConnection" (id);
+
 CREATE TABLE "KnowledgeGap" (
 	id INTEGER NOT NULL,
 	gap_statement TEXT NOT NULL,
@@ -1105,7 +1442,9 @@ CREATE TABLE "KnowledgeGap" (
 	FOREIGN KEY("ModuleNode_id") REFERENCES "ModuleNode" (id),
 	FOREIGN KEY("Review_id") REFERENCES "Review" (id),
 	FOREIGN KEY("CoreFunction_id") REFERENCES "CoreFunction" (id)
-);CREATE INDEX "ix_KnowledgeGap_id" ON "KnowledgeGap" (id);
+);
+CREATE INDEX "ix_KnowledgeGap_id" ON "KnowledgeGap" (id);
+
 CREATE TABLE "RuleReview" (
 	id TEXT NOT NULL,
 	description TEXT,
@@ -1128,7 +1467,9 @@ CREATE TABLE "RuleReview" (
 	FOREIGN KEY(condition_overlap_id) REFERENCES "ConditionOverlapAssessment" (id),
 	FOREIGN KEY(go_specificity_id) REFERENCES "GOSpecificityAssessment" (id),
 	FOREIGN KEY(taxonomic_scope_id) REFERENCES "TaxonomicScopeAssessment" (id)
-);CREATE INDEX "ix_RuleReview_id" ON "RuleReview" (id);
+);
+CREATE INDEX "ix_RuleReview_id" ON "RuleReview" (id);
+
 CREATE TABLE "RuleConditionSet" (
 	id INTEGER NOT NULL,
 	number INTEGER NOT NULL,
@@ -1136,7 +1477,9 @@ CREATE TABLE "RuleConditionSet" (
 	"EmbeddedRule_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("EmbeddedRule_id") REFERENCES "EmbeddedRule" (id)
-);CREATE INDEX "ix_RuleConditionSet_id" ON "RuleConditionSet" (id);
+);
+CREATE INDEX "ix_RuleConditionSet_id" ON "RuleConditionSet" (id);
+
 CREATE TABLE "RuleGOAnnotation" (
 	id INTEGER NOT NULL,
 	go_id TEXT NOT NULL,
@@ -1145,7 +1488,9 @@ CREATE TABLE "RuleGOAnnotation" (
 	"EmbeddedRule_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("EmbeddedRule_id") REFERENCES "EmbeddedRule" (id)
-);CREATE INDEX "ix_RuleGOAnnotation_id" ON "RuleGOAnnotation" (id);
+);
+CREATE INDEX "ix_RuleGOAnnotation_id" ON "RuleGOAnnotation" (id);
+
 CREATE TABLE "RuleReviewEntry" (
 	id TEXT NOT NULL,
 	label TEXT,
@@ -1155,7 +1500,9 @@ CREATE TABLE "RuleReviewEntry" (
 	"EmbeddedRule_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("EmbeddedRule_id") REFERENCES "EmbeddedRule" (id)
-);CREATE INDEX "ix_RuleReviewEntry_id" ON "RuleReviewEntry" (id);
+);
+CREATE INDEX "ix_RuleReviewEntry_id" ON "RuleReviewEntry" (id);
+
 CREATE TABLE "PredictedAnnotation" (
 	id INTEGER NOT NULL,
 	source_method TEXT NOT NULL,
@@ -1169,19 +1516,45 @@ CREATE TABLE "PredictedAnnotation" (
 	FOREIGN KEY("PredictionReview_id") REFERENCES "PredictionReview" (id),
 	FOREIGN KEY(predicted_term_id) REFERENCES "Term" (id),
 	FOREIGN KEY(review_id) REFERENCES "PredictionAssessment" (id)
-);CREATE INDEX "ix_PredictedAnnotation_id" ON "PredictedAnnotation" (id);
+);
+CREATE INDEX "ix_PredictedAnnotation_id" ON "PredictedAnnotation" (id);
+
 CREATE TABLE "FunctionalIsoformMapping_ids" (
 	"FunctionalIsoformMapping_id" INTEGER,
 	ids TEXT NOT NULL,
 	PRIMARY KEY ("FunctionalIsoformMapping_id", ids),
 	FOREIGN KEY("FunctionalIsoformMapping_id") REFERENCES "FunctionalIsoformMapping" (id)
-);CREATE INDEX "ix_FunctionalIsoformMapping_ids_ids" ON "FunctionalIsoformMapping_ids" (ids);CREATE INDEX "ix_FunctionalIsoformMapping_ids_FunctionalIsoformMapping_id" ON "FunctionalIsoformMapping_ids" ("FunctionalIsoformMapping_id");
+);
+CREATE INDEX "ix_FunctionalIsoformMapping_ids_FunctionalIsoformMapping_id" ON "FunctionalIsoformMapping_ids" ("FunctionalIsoformMapping_id");
+CREATE INDEX "ix_FunctionalIsoformMapping_ids_ids" ON "FunctionalIsoformMapping_ids" (ids);
+
+CREATE TABLE "Conformance_deviations" (
+	"Conformance_id" INTEGER,
+	deviations TEXT,
+	PRIMARY KEY ("Conformance_id", deviations),
+	FOREIGN KEY("Conformance_id") REFERENCES "Conformance" (id)
+);
+CREATE INDEX "ix_Conformance_deviations_Conformance_id" ON "Conformance_deviations" ("Conformance_id");
+CREATE INDEX "ix_Conformance_deviations_deviations" ON "Conformance_deviations" (deviations);
+
+CREATE TABLE "GoCamActivityReview_qc_flags" (
+	"GoCamActivityReview_id" INTEGER,
+	qc_flags VARCHAR(30),
+	PRIMARY KEY ("GoCamActivityReview_id", qc_flags),
+	FOREIGN KEY("GoCamActivityReview_id") REFERENCES "GoCamActivityReview" (id)
+);
+CREATE INDEX "ix_GoCamActivityReview_qc_flags_GoCamActivityReview_id" ON "GoCamActivityReview_qc_flags" ("GoCamActivityReview_id");
+CREATE INDEX "ix_GoCamActivityReview_qc_flags_qc_flags" ON "GoCamActivityReview_qc_flags" (qc_flags);
+
 CREATE TABLE "PredictionReview_source_documents" (
 	"PredictionReview_id" TEXT,
 	source_documents TEXT,
 	PRIMARY KEY ("PredictionReview_id", source_documents),
 	FOREIGN KEY("PredictionReview_id") REFERENCES "PredictionReview" (id)
-);CREATE INDEX "ix_PredictionReview_source_documents_source_documents" ON "PredictionReview_source_documents" (source_documents);CREATE INDEX "ix_PredictionReview_source_documents_PredictionReview_id" ON "PredictionReview_source_documents" ("PredictionReview_id");
+);
+CREATE INDEX "ix_PredictionReview_source_documents_source_documents" ON "PredictionReview_source_documents" (source_documents);
+CREATE INDEX "ix_PredictionReview_source_documents_PredictionReview_id" ON "PredictionReview_source_documents" ("PredictionReview_id");
+
 CREATE TABLE "Reference" (
 	id TEXT NOT NULL,
 	title TEXT NOT NULL,
@@ -1190,16 +1563,20 @@ CREATE TABLE "Reference" (
 	full_text_unavailable BOOLEAN,
 	"GeneReview_id" TEXT,
 	"ModuleReview_id" TEXT,
+	"GoCamReview_model" TEXT,
 	"RuleReview_id" TEXT,
 	"PredictionReview_id" TEXT,
 	reference_review_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY("ModuleReview_id") REFERENCES "ModuleReview" (id),
+	FOREIGN KEY("GoCamReview_model") REFERENCES "GoCamReview" (model),
 	FOREIGN KEY("RuleReview_id") REFERENCES "RuleReview" (id),
 	FOREIGN KEY("PredictionReview_id") REFERENCES "PredictionReview" (id),
 	FOREIGN KEY(reference_review_id) REFERENCES "ReferenceReview" (id)
-);CREATE INDEX "ix_Reference_id" ON "Reference" (id);
+);
+CREATE INDEX "ix_Reference_id" ON "Reference" (id);
+
 CREATE TABLE "EvidenceItem" (
 	id INTEGER NOT NULL,
 	source_id TEXT NOT NULL,
@@ -1213,6 +1590,7 @@ CREATE TABLE "EvidenceItem" (
 	"GeneDescriptor_id" INTEGER,
 	"GeneProductDescriptor_id" INTEGER,
 	"FamilyDescriptor_id" INTEGER,
+	"AncestralNodeDescriptor_id" INTEGER,
 	"DomainDescriptor_id" INTEGER,
 	"CellularComponentDescriptor_id" INTEGER,
 	"ProteinComplexDescriptor_id" INTEGER,
@@ -1229,6 +1607,8 @@ CREATE TABLE "EvidenceItem" (
 	"ModulePart_id" INTEGER,
 	"ModuleVariantSet_uid" INTEGER,
 	"ModuleAnnoton_uid" INTEGER,
+	"GoCamAssociation_id" INTEGER,
+	"GoCamActivityReview_id" INTEGER,
 	"ParticipantSelector_id" INTEGER,
 	"ModuleContext_id" INTEGER,
 	"ModuleConnection_id" INTEGER,
@@ -1238,6 +1618,7 @@ CREATE TABLE "EvidenceItem" (
 	FOREIGN KEY("GeneDescriptor_id") REFERENCES "GeneDescriptor" (id),
 	FOREIGN KEY("GeneProductDescriptor_id") REFERENCES "GeneProductDescriptor" (id),
 	FOREIGN KEY("FamilyDescriptor_id") REFERENCES "FamilyDescriptor" (id),
+	FOREIGN KEY("AncestralNodeDescriptor_id") REFERENCES "AncestralNodeDescriptor" (id),
 	FOREIGN KEY("DomainDescriptor_id") REFERENCES "DomainDescriptor" (id),
 	FOREIGN KEY("CellularComponentDescriptor_id") REFERENCES "CellularComponentDescriptor" (id),
 	FOREIGN KEY("ProteinComplexDescriptor_id") REFERENCES "ProteinComplexDescriptor" (id),
@@ -1254,10 +1635,14 @@ CREATE TABLE "EvidenceItem" (
 	FOREIGN KEY("ModulePart_id") REFERENCES "ModulePart" (id),
 	FOREIGN KEY("ModuleVariantSet_uid") REFERENCES "ModuleVariantSet" (uid),
 	FOREIGN KEY("ModuleAnnoton_uid") REFERENCES "ModuleAnnoton" (uid),
+	FOREIGN KEY("GoCamAssociation_id") REFERENCES "GoCamAssociation" (id),
+	FOREIGN KEY("GoCamActivityReview_id") REFERENCES "GoCamActivityReview" (id),
 	FOREIGN KEY("ParticipantSelector_id") REFERENCES "ParticipantSelector" (id),
 	FOREIGN KEY("ModuleContext_id") REFERENCES "ModuleContext" (id),
 	FOREIGN KEY("ModuleConnection_id") REFERENCES "ModuleConnection" (id)
-);CREATE INDEX "ix_EvidenceItem_id" ON "EvidenceItem" (id);
+);
+CREATE INDEX "ix_EvidenceItem_id" ON "EvidenceItem" (id);
+
 CREATE TABLE "ProposedOntologyTerm" (
 	id INTEGER NOT NULL,
 	proposed_name TEXT NOT NULL,
@@ -1268,7 +1653,9 @@ CREATE TABLE "ProposedOntologyTerm" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("KnowledgeGap_id") REFERENCES "KnowledgeGap" (id),
 	FOREIGN KEY(proposed_parent_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_ProposedOntologyTerm_id" ON "ProposedOntologyTerm" (id);
+);
+CREATE INDEX "ix_ProposedOntologyTerm_id" ON "ProposedOntologyTerm" (id);
+
 CREATE TABLE "RuleCondition" (
 	id INTEGER NOT NULL,
 	condition_type VARCHAR(15) NOT NULL,
@@ -1283,7 +1670,9 @@ CREATE TABLE "RuleCondition" (
 	"RuleConditionSet_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("RuleConditionSet_id") REFERENCES "RuleConditionSet" (id)
-);CREATE INDEX "ix_RuleCondition_id" ON "RuleCondition" (id);
+);
+CREATE INDEX "ix_RuleCondition_id" ON "RuleCondition" (id);
+
 CREATE TABLE "PairwiseOverlap" (
 	id INTEGER NOT NULL,
 	condition_a TEXT NOT NULL,
@@ -1303,7 +1692,9 @@ CREATE TABLE "PairwiseOverlap" (
 	"RuleConditionSet_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("RuleConditionSet_id") REFERENCES "RuleConditionSet" (id)
-);CREATE INDEX "ix_PairwiseOverlap_id" ON "PairwiseOverlap" (id);
+);
+CREATE INDEX "ix_PairwiseOverlap_id" ON "PairwiseOverlap" (id);
+
 CREATE TABLE "RelatedEntry" (
 	id INTEGER NOT NULL,
 	relationship VARCHAR(12) NOT NULL,
@@ -1315,31 +1706,45 @@ CREATE TABLE "RelatedEntry" (
 	"RuleReviewEntry_id" TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY("RuleReviewEntry_id") REFERENCES "RuleReviewEntry" (id)
-);CREATE INDEX "ix_RelatedEntry_id" ON "RelatedEntry" (id);
+);
+CREATE INDEX "ix_RelatedEntry_id" ON "RelatedEntry" (id);
+
 CREATE TABLE "KnowledgeGap_gap_kind" (
 	"KnowledgeGap_id" INTEGER,
 	gap_kind VARCHAR(8),
 	PRIMARY KEY ("KnowledgeGap_id", gap_kind),
 	FOREIGN KEY("KnowledgeGap_id") REFERENCES "KnowledgeGap" (id)
-);CREATE INDEX "ix_KnowledgeGap_gap_kind_gap_kind" ON "KnowledgeGap_gap_kind" (gap_kind);CREATE INDEX "ix_KnowledgeGap_gap_kind_KnowledgeGap_id" ON "KnowledgeGap_gap_kind" ("KnowledgeGap_id");
+);
+CREATE INDEX "ix_KnowledgeGap_gap_kind_gap_kind" ON "KnowledgeGap_gap_kind" (gap_kind);
+CREATE INDEX "ix_KnowledgeGap_gap_kind_KnowledgeGap_id" ON "KnowledgeGap_gap_kind" ("KnowledgeGap_id");
+
 CREATE TABLE "RuleReview_suggested_modifications" (
 	"RuleReview_id" TEXT,
 	suggested_modifications TEXT,
 	PRIMARY KEY ("RuleReview_id", suggested_modifications),
 	FOREIGN KEY("RuleReview_id") REFERENCES "RuleReview" (id)
-);CREATE INDEX "ix_RuleReview_suggested_modifications_RuleReview_id" ON "RuleReview_suggested_modifications" ("RuleReview_id");CREATE INDEX "ix_RuleReview_suggested_modifications_suggested_modifications" ON "RuleReview_suggested_modifications" (suggested_modifications);
+);
+CREATE INDEX "ix_RuleReview_suggested_modifications_suggested_modifications" ON "RuleReview_suggested_modifications" (suggested_modifications);
+CREATE INDEX "ix_RuleReview_suggested_modifications_RuleReview_id" ON "RuleReview_suggested_modifications" ("RuleReview_id");
+
 CREATE TABLE "RuleReviewEntry_appears_in_condition_sets" (
 	"RuleReviewEntry_id" TEXT,
 	appears_in_condition_sets INTEGER,
 	PRIMARY KEY ("RuleReviewEntry_id", appears_in_condition_sets),
 	FOREIGN KEY("RuleReviewEntry_id") REFERENCES "RuleReviewEntry" (id)
-);CREATE INDEX "ix_RuleReviewEntry_appears_in_condition_sets_appears_in_condition_sets" ON "RuleReviewEntry_appears_in_condition_sets" (appears_in_condition_sets);CREATE INDEX "ix_RuleReviewEntry_appears_in_condition_sets_RuleReviewEntry_id" ON "RuleReviewEntry_appears_in_condition_sets" ("RuleReviewEntry_id");
+);
+CREATE INDEX "ix_RuleReviewEntry_appears_in_condition_sets_RuleReviewEntry_id" ON "RuleReviewEntry_appears_in_condition_sets" ("RuleReviewEntry_id");
+CREATE INDEX "ix_RuleReviewEntry_appears_in_condition_sets_appears_in_condition_sets" ON "RuleReviewEntry_appears_in_condition_sets" (appears_in_condition_sets);
+
 CREATE TABLE "RuleReviewEntry_asserted_predicted_go_terms" (
 	"RuleReviewEntry_id" TEXT,
 	asserted_predicted_go_terms TEXT,
 	PRIMARY KEY ("RuleReviewEntry_id", asserted_predicted_go_terms),
 	FOREIGN KEY("RuleReviewEntry_id") REFERENCES "RuleReviewEntry" (id)
-);CREATE INDEX "ix_RuleReviewEntry_asserted_predicted_go_terms_RuleReviewEntry_id" ON "RuleReviewEntry_asserted_predicted_go_terms" ("RuleReviewEntry_id");CREATE INDEX "ix_RuleReviewEntry_asserted_predicted_go_terms_asserted_predicted_go_terms" ON "RuleReviewEntry_asserted_predicted_go_terms" (asserted_predicted_go_terms);
+);
+CREATE INDEX "ix_RuleReviewEntry_asserted_predicted_go_terms_asserted_predicted_go_terms" ON "RuleReviewEntry_asserted_predicted_go_terms" (asserted_predicted_go_terms);
+CREATE INDEX "ix_RuleReviewEntry_asserted_predicted_go_terms_RuleReviewEntry_id" ON "RuleReviewEntry_asserted_predicted_go_terms" ("RuleReviewEntry_id");
+
 CREATE TABLE "SupportingTextInReference" (
 	id INTEGER NOT NULL,
 	reference_id TEXT NOT NULL,
@@ -1351,7 +1756,9 @@ CREATE TABLE "SupportingTextInReference" (
 	PRIMARY KEY (id),
 	FOREIGN KEY(reference_id) REFERENCES "Reference" (id),
 	FOREIGN KEY("KnowledgeGap_id") REFERENCES "KnowledgeGap" (id)
-);CREATE INDEX "ix_SupportingTextInReference_id" ON "SupportingTextInReference" (id);
+);
+CREATE INDEX "ix_SupportingTextInReference_id" ON "SupportingTextInReference" (id);
+
 CREATE TABLE "ExistingAnnotation" (
 	id INTEGER NOT NULL,
 	qualifier VARCHAR(42),
@@ -1366,7 +1773,9 @@ CREATE TABLE "ExistingAnnotation" (
 	FOREIGN KEY(original_reference_id) REFERENCES "Reference" (id),
 	FOREIGN KEY(term_id) REFERENCES "Term" (id),
 	FOREIGN KEY(review_id) REFERENCES "Review" (id)
-);CREATE INDEX "ix_ExistingAnnotation_id" ON "ExistingAnnotation" (id);
+);
+CREATE INDEX "ix_ExistingAnnotation_id" ON "ExistingAnnotation" (id);
+
 CREATE TABLE "TermMapping" (
 	id INTEGER NOT NULL,
 	predicate TEXT NOT NULL,
@@ -1375,140 +1784,201 @@ CREATE TABLE "TermMapping" (
 	PRIMARY KEY (id),
 	FOREIGN KEY("ProposedOntologyTerm_id") REFERENCES "ProposedOntologyTerm" (id),
 	FOREIGN KEY(target_term_id) REFERENCES "Term" (id)
-);CREATE INDEX "ix_TermMapping_id" ON "TermMapping" (id);
+);
+CREATE INDEX "ix_TermMapping_id" ON "TermMapping" (id);
+
 CREATE TABLE "GeneReview_proposed_new_terms" (
 	"GeneReview_id" TEXT,
 	proposed_new_terms_id INTEGER,
 	PRIMARY KEY ("GeneReview_id", proposed_new_terms_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(proposed_new_terms_id) REFERENCES "ProposedOntologyTerm" (id)
-);CREATE INDEX "ix_GeneReview_proposed_new_terms_GeneReview_id" ON "GeneReview_proposed_new_terms" ("GeneReview_id");CREATE INDEX "ix_GeneReview_proposed_new_terms_proposed_new_terms_id" ON "GeneReview_proposed_new_terms" (proposed_new_terms_id);
+);
+CREATE INDEX "ix_GeneReview_proposed_new_terms_GeneReview_id" ON "GeneReview_proposed_new_terms" ("GeneReview_id");
+CREATE INDEX "ix_GeneReview_proposed_new_terms_proposed_new_terms_id" ON "GeneReview_proposed_new_terms" (proposed_new_terms_id);
+
 CREATE TABLE "Reference_findings" (
 	"Reference_id" TEXT,
 	findings_id INTEGER,
 	PRIMARY KEY ("Reference_id", findings_id),
 	FOREIGN KEY("Reference_id") REFERENCES "Reference" (id),
 	FOREIGN KEY(findings_id) REFERENCES "Finding" (id)
-);CREATE INDEX "ix_Reference_findings_Reference_id" ON "Reference_findings" ("Reference_id");CREATE INDEX "ix_Reference_findings_findings_id" ON "Reference_findings" (findings_id);
+);
+CREATE INDEX "ix_Reference_findings_Reference_id" ON "Reference_findings" ("Reference_id");
+CREATE INDEX "ix_Reference_findings_findings_id" ON "Reference_findings" (findings_id);
+
 CREATE TABLE "FindingReview_superseded_by" (
 	"FindingReview_id" INTEGER,
 	superseded_by_id TEXT,
 	PRIMARY KEY ("FindingReview_id", superseded_by_id),
 	FOREIGN KEY("FindingReview_id") REFERENCES "FindingReview" (id),
 	FOREIGN KEY(superseded_by_id) REFERENCES "Reference" (id)
-);CREATE INDEX "ix_FindingReview_superseded_by_FindingReview_id" ON "FindingReview_superseded_by" ("FindingReview_id");CREATE INDEX "ix_FindingReview_superseded_by_superseded_by_id" ON "FindingReview_superseded_by" (superseded_by_id);
+);
+CREATE INDEX "ix_FindingReview_superseded_by_superseded_by_id" ON "FindingReview_superseded_by" (superseded_by_id);
+CREATE INDEX "ix_FindingReview_superseded_by_FindingReview_id" ON "FindingReview_superseded_by" ("FindingReview_id");
+
 CREATE TABLE "Review_additional_reference_ids" (
 	"Review_id" INTEGER,
 	additional_reference_ids_id TEXT,
 	PRIMARY KEY ("Review_id", additional_reference_ids_id),
 	FOREIGN KEY("Review_id") REFERENCES "Review" (id),
 	FOREIGN KEY(additional_reference_ids_id) REFERENCES "Reference" (id)
-);CREATE INDEX "ix_Review_additional_reference_ids_Review_id" ON "Review_additional_reference_ids" ("Review_id");CREATE INDEX "ix_Review_additional_reference_ids_additional_reference_ids_id" ON "Review_additional_reference_ids" (additional_reference_ids_id);
+);
+CREATE INDEX "ix_Review_additional_reference_ids_additional_reference_ids_id" ON "Review_additional_reference_ids" (additional_reference_ids_id);
+CREATE INDEX "ix_Review_additional_reference_ids_Review_id" ON "Review_additional_reference_ids" ("Review_id");
+
 CREATE TABLE "RuleCondition_sample_proteins" (
 	"RuleCondition_id" INTEGER,
 	sample_proteins TEXT,
 	PRIMARY KEY ("RuleCondition_id", sample_proteins),
 	FOREIGN KEY("RuleCondition_id") REFERENCES "RuleCondition" (id)
-);CREATE INDEX "ix_RuleCondition_sample_proteins_RuleCondition_id" ON "RuleCondition_sample_proteins" ("RuleCondition_id");CREATE INDEX "ix_RuleCondition_sample_proteins_sample_proteins" ON "RuleCondition_sample_proteins" (sample_proteins);
+);
+CREATE INDEX "ix_RuleCondition_sample_proteins_RuleCondition_id" ON "RuleCondition_sample_proteins" ("RuleCondition_id");
+CREATE INDEX "ix_RuleCondition_sample_proteins_sample_proteins" ON "RuleCondition_sample_proteins" (sample_proteins);
+
 CREATE TABLE "PairwiseOverlap_condition_a_in_sets" (
 	"PairwiseOverlap_id" INTEGER,
 	condition_a_in_sets INTEGER,
 	PRIMARY KEY ("PairwiseOverlap_id", condition_a_in_sets),
 	FOREIGN KEY("PairwiseOverlap_id") REFERENCES "PairwiseOverlap" (id)
-);CREATE INDEX "ix_PairwiseOverlap_condition_a_in_sets_condition_a_in_sets" ON "PairwiseOverlap_condition_a_in_sets" (condition_a_in_sets);CREATE INDEX "ix_PairwiseOverlap_condition_a_in_sets_PairwiseOverlap_id" ON "PairwiseOverlap_condition_a_in_sets" ("PairwiseOverlap_id");
+);
+CREATE INDEX "ix_PairwiseOverlap_condition_a_in_sets_condition_a_in_sets" ON "PairwiseOverlap_condition_a_in_sets" (condition_a_in_sets);
+CREATE INDEX "ix_PairwiseOverlap_condition_a_in_sets_PairwiseOverlap_id" ON "PairwiseOverlap_condition_a_in_sets" ("PairwiseOverlap_id");
+
 CREATE TABLE "PairwiseOverlap_condition_b_in_sets" (
 	"PairwiseOverlap_id" INTEGER,
 	condition_b_in_sets INTEGER,
 	PRIMARY KEY ("PairwiseOverlap_id", condition_b_in_sets),
 	FOREIGN KEY("PairwiseOverlap_id") REFERENCES "PairwiseOverlap" (id)
-);CREATE INDEX "ix_PairwiseOverlap_condition_b_in_sets_PairwiseOverlap_id" ON "PairwiseOverlap_condition_b_in_sets" ("PairwiseOverlap_id");CREATE INDEX "ix_PairwiseOverlap_condition_b_in_sets_condition_b_in_sets" ON "PairwiseOverlap_condition_b_in_sets" (condition_b_in_sets);
+);
+CREATE INDEX "ix_PairwiseOverlap_condition_b_in_sets_condition_b_in_sets" ON "PairwiseOverlap_condition_b_in_sets" (condition_b_in_sets);
+CREATE INDEX "ix_PairwiseOverlap_condition_b_in_sets_PairwiseOverlap_id" ON "PairwiseOverlap_condition_b_in_sets" ("PairwiseOverlap_id");
+
 CREATE TABLE "GeneReview_existing_annotations" (
 	"GeneReview_id" TEXT,
 	existing_annotations_id INTEGER,
 	PRIMARY KEY ("GeneReview_id", existing_annotations_id),
 	FOREIGN KEY("GeneReview_id") REFERENCES "GeneReview" (id),
 	FOREIGN KEY(existing_annotations_id) REFERENCES "ExistingAnnotation" (id)
-);CREATE INDEX "ix_GeneReview_existing_annotations_GeneReview_id" ON "GeneReview_existing_annotations" ("GeneReview_id");CREATE INDEX "ix_GeneReview_existing_annotations_existing_annotations_id" ON "GeneReview_existing_annotations" (existing_annotations_id);
+);
+CREATE INDEX "ix_GeneReview_existing_annotations_existing_annotations_id" ON "GeneReview_existing_annotations" (existing_annotations_id);
+CREATE INDEX "ix_GeneReview_existing_annotations_GeneReview_id" ON "GeneReview_existing_annotations" ("GeneReview_id");
+
 CREATE TABLE "ExistingAnnotation_extensions" (
 	"ExistingAnnotation_id" INTEGER,
 	extensions_id INTEGER,
 	PRIMARY KEY ("ExistingAnnotation_id", extensions_id),
 	FOREIGN KEY("ExistingAnnotation_id") REFERENCES "ExistingAnnotation" (id),
 	FOREIGN KEY(extensions_id) REFERENCES "AnnotationExtension" (id)
-);CREATE INDEX "ix_ExistingAnnotation_extensions_ExistingAnnotation_id" ON "ExistingAnnotation_extensions" ("ExistingAnnotation_id");CREATE INDEX "ix_ExistingAnnotation_extensions_extensions_id" ON "ExistingAnnotation_extensions" (extensions_id);
+);
+CREATE INDEX "ix_ExistingAnnotation_extensions_extensions_id" ON "ExistingAnnotation_extensions" (extensions_id);
+CREATE INDEX "ix_ExistingAnnotation_extensions_ExistingAnnotation_id" ON "ExistingAnnotation_extensions" ("ExistingAnnotation_id");
+
 CREATE TABLE "ExistingAnnotation_supporting_entities" (
 	"ExistingAnnotation_id" INTEGER,
 	supporting_entities TEXT,
 	PRIMARY KEY ("ExistingAnnotation_id", supporting_entities),
 	FOREIGN KEY("ExistingAnnotation_id") REFERENCES "ExistingAnnotation" (id)
-);CREATE INDEX "ix_ExistingAnnotation_supporting_entities_ExistingAnnotation_id" ON "ExistingAnnotation_supporting_entities" ("ExistingAnnotation_id");CREATE INDEX "ix_ExistingAnnotation_supporting_entities_supporting_entities" ON "ExistingAnnotation_supporting_entities" (supporting_entities);
+);
+CREATE INDEX "ix_ExistingAnnotation_supporting_entities_ExistingAnnotation_id" ON "ExistingAnnotation_supporting_entities" ("ExistingAnnotation_id");
+CREATE INDEX "ix_ExistingAnnotation_supporting_entities_supporting_entities" ON "ExistingAnnotation_supporting_entities" (supporting_entities);
+
 CREATE TABLE "Review_supported_by" (
 	"Review_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("Review_id", supported_by_id),
 	FOREIGN KEY("Review_id") REFERENCES "Review" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_Review_supported_by_supported_by_id" ON "Review_supported_by" (supported_by_id);CREATE INDEX "ix_Review_supported_by_Review_id" ON "Review_supported_by" ("Review_id");
+);
+CREATE INDEX "ix_Review_supported_by_Review_id" ON "Review_supported_by" ("Review_id");
+CREATE INDEX "ix_Review_supported_by_supported_by_id" ON "Review_supported_by" (supported_by_id);
+
 CREATE TABLE "CoreFunction_supported_by" (
 	"CoreFunction_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("CoreFunction_id", supported_by_id),
 	FOREIGN KEY("CoreFunction_id") REFERENCES "CoreFunction" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_CoreFunction_supported_by_supported_by_id" ON "CoreFunction_supported_by" (supported_by_id);CREATE INDEX "ix_CoreFunction_supported_by_CoreFunction_id" ON "CoreFunction_supported_by" ("CoreFunction_id");
+);
+CREATE INDEX "ix_CoreFunction_supported_by_CoreFunction_id" ON "CoreFunction_supported_by" ("CoreFunction_id");
+CREATE INDEX "ix_CoreFunction_supported_by_supported_by_id" ON "CoreFunction_supported_by" (supported_by_id);
+
 CREATE TABLE "ProposedOntologyTerm_supported_by" (
 	"ProposedOntologyTerm_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("ProposedOntologyTerm_id", supported_by_id),
 	FOREIGN KEY("ProposedOntologyTerm_id") REFERENCES "ProposedOntologyTerm" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_ProposedOntologyTerm_supported_by_ProposedOntologyTerm_id" ON "ProposedOntologyTerm_supported_by" ("ProposedOntologyTerm_id");CREATE INDEX "ix_ProposedOntologyTerm_supported_by_supported_by_id" ON "ProposedOntologyTerm_supported_by" (supported_by_id);
+);
+CREATE INDEX "ix_ProposedOntologyTerm_supported_by_supported_by_id" ON "ProposedOntologyTerm_supported_by" (supported_by_id);
+CREATE INDEX "ix_ProposedOntologyTerm_supported_by_ProposedOntologyTerm_id" ON "ProposedOntologyTerm_supported_by" ("ProposedOntologyTerm_id");
+
 CREATE TABLE "RuleReview_supported_by" (
 	"RuleReview_id" TEXT,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("RuleReview_id", supported_by_id),
 	FOREIGN KEY("RuleReview_id") REFERENCES "RuleReview" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_RuleReview_supported_by_supported_by_id" ON "RuleReview_supported_by" (supported_by_id);CREATE INDEX "ix_RuleReview_supported_by_RuleReview_id" ON "RuleReview_supported_by" ("RuleReview_id");
+);
+CREATE INDEX "ix_RuleReview_supported_by_RuleReview_id" ON "RuleReview_supported_by" ("RuleReview_id");
+CREATE INDEX "ix_RuleReview_supported_by_supported_by_id" ON "RuleReview_supported_by" (supported_by_id);
+
 CREATE TABLE "ParsimonyAssessment_supported_by" (
 	"ParsimonyAssessment_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("ParsimonyAssessment_id", supported_by_id),
 	FOREIGN KEY("ParsimonyAssessment_id") REFERENCES "ParsimonyAssessment" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_ParsimonyAssessment_supported_by_supported_by_id" ON "ParsimonyAssessment_supported_by" (supported_by_id);CREATE INDEX "ix_ParsimonyAssessment_supported_by_ParsimonyAssessment_id" ON "ParsimonyAssessment_supported_by" ("ParsimonyAssessment_id");
+);
+CREATE INDEX "ix_ParsimonyAssessment_supported_by_ParsimonyAssessment_id" ON "ParsimonyAssessment_supported_by" ("ParsimonyAssessment_id");
+CREATE INDEX "ix_ParsimonyAssessment_supported_by_supported_by_id" ON "ParsimonyAssessment_supported_by" (supported_by_id);
+
 CREATE TABLE "LiteratureSupportAssessment_supported_by" (
 	"LiteratureSupportAssessment_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("LiteratureSupportAssessment_id", supported_by_id),
 	FOREIGN KEY("LiteratureSupportAssessment_id") REFERENCES "LiteratureSupportAssessment" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_LiteratureSupportAssessment_supported_by_supported_by_id" ON "LiteratureSupportAssessment_supported_by" (supported_by_id);CREATE INDEX "ix_LiteratureSupportAssessment_supported_by_LiteratureSupportAssessment_id" ON "LiteratureSupportAssessment_supported_by" ("LiteratureSupportAssessment_id");
+);
+CREATE INDEX "ix_LiteratureSupportAssessment_supported_by_supported_by_id" ON "LiteratureSupportAssessment_supported_by" (supported_by_id);
+CREATE INDEX "ix_LiteratureSupportAssessment_supported_by_LiteratureSupportAssessment_id" ON "LiteratureSupportAssessment_supported_by" ("LiteratureSupportAssessment_id");
+
 CREATE TABLE "ConditionOverlapAssessment_supported_by" (
 	"ConditionOverlapAssessment_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("ConditionOverlapAssessment_id", supported_by_id),
 	FOREIGN KEY("ConditionOverlapAssessment_id") REFERENCES "ConditionOverlapAssessment" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_ConditionOverlapAssessment_supported_by_ConditionOverlapAssessment_id" ON "ConditionOverlapAssessment_supported_by" ("ConditionOverlapAssessment_id");CREATE INDEX "ix_ConditionOverlapAssessment_supported_by_supported_by_id" ON "ConditionOverlapAssessment_supported_by" (supported_by_id);
+);
+CREATE INDEX "ix_ConditionOverlapAssessment_supported_by_ConditionOverlapAssessment_id" ON "ConditionOverlapAssessment_supported_by" ("ConditionOverlapAssessment_id");
+CREATE INDEX "ix_ConditionOverlapAssessment_supported_by_supported_by_id" ON "ConditionOverlapAssessment_supported_by" (supported_by_id);
+
 CREATE TABLE "GOSpecificityAssessment_supported_by" (
 	"GOSpecificityAssessment_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("GOSpecificityAssessment_id", supported_by_id),
 	FOREIGN KEY("GOSpecificityAssessment_id") REFERENCES "GOSpecificityAssessment" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_GOSpecificityAssessment_supported_by_GOSpecificityAssessment_id" ON "GOSpecificityAssessment_supported_by" ("GOSpecificityAssessment_id");CREATE INDEX "ix_GOSpecificityAssessment_supported_by_supported_by_id" ON "GOSpecificityAssessment_supported_by" (supported_by_id);
+);
+CREATE INDEX "ix_GOSpecificityAssessment_supported_by_GOSpecificityAssessment_id" ON "GOSpecificityAssessment_supported_by" ("GOSpecificityAssessment_id");
+CREATE INDEX "ix_GOSpecificityAssessment_supported_by_supported_by_id" ON "GOSpecificityAssessment_supported_by" (supported_by_id);
+
 CREATE TABLE "TaxonomicScopeAssessment_supported_by" (
 	"TaxonomicScopeAssessment_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("TaxonomicScopeAssessment_id", supported_by_id),
 	FOREIGN KEY("TaxonomicScopeAssessment_id") REFERENCES "TaxonomicScopeAssessment" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_TaxonomicScopeAssessment_supported_by_TaxonomicScopeAssessment_id" ON "TaxonomicScopeAssessment_supported_by" ("TaxonomicScopeAssessment_id");CREATE INDEX "ix_TaxonomicScopeAssessment_supported_by_supported_by_id" ON "TaxonomicScopeAssessment_supported_by" (supported_by_id);
+);
+CREATE INDEX "ix_TaxonomicScopeAssessment_supported_by_TaxonomicScopeAssessment_id" ON "TaxonomicScopeAssessment_supported_by" ("TaxonomicScopeAssessment_id");
+CREATE INDEX "ix_TaxonomicScopeAssessment_supported_by_supported_by_id" ON "TaxonomicScopeAssessment_supported_by" (supported_by_id);
+
 CREATE TABLE "PredictionAssessment_supported_by" (
 	"PredictionAssessment_id" INTEGER,
 	supported_by_id INTEGER,
 	PRIMARY KEY ("PredictionAssessment_id", supported_by_id),
 	FOREIGN KEY("PredictionAssessment_id") REFERENCES "PredictionAssessment" (id),
 	FOREIGN KEY(supported_by_id) REFERENCES "SupportingTextInReference" (id)
-);CREATE INDEX "ix_PredictionAssessment_supported_by_PredictionAssessment_id" ON "PredictionAssessment_supported_by" ("PredictionAssessment_id");CREATE INDEX "ix_PredictionAssessment_supported_by_supported_by_id" ON "PredictionAssessment_supported_by" (supported_by_id);
+);
+CREATE INDEX "ix_PredictionAssessment_supported_by_PredictionAssessment_id" ON "PredictionAssessment_supported_by" ("PredictionAssessment_id");
+CREATE INDEX "ix_PredictionAssessment_supported_by_supported_by_id" ON "PredictionAssessment_supported_by" (supported_by_id);

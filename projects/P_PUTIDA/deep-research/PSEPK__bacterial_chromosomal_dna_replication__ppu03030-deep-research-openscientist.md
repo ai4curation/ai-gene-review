@@ -2,17 +2,18 @@
 provider: openscientist
 model: openscientist-autonomous
 cached: false
-start_time: '2026-08-31T15:32:25.915578'
-end_time: '2026-08-31T15:48:01.846527'
-duration_seconds: 935.93
+start_time: '2026-09-01T14:09:55.796752'
+end_time: '2026-09-01T14:48:09.712986'
+duration_seconds: 2293.92
 template_file: templates/module_pathway_taxon_research.md.j2
 template_variables:
   module_title: Bacterial chromosomal DNA replication
   module_summary: Reusable bacterial chromosome-replication module spanning origin
     initiation, fork unwinding and single-strand protection, RNA priming, DNA polymerase
     III synthesis and proofreading, sliding-clamp processivity, clamp loading, and
-    Okazaki-fragment ligation. Exact Pseudomonas putida exemplars ground the conserved
-    activities and complexes.
+    Okazaki-fragment ligation. Verified Pseudomonas putida and Escherichia coli exemplars
+    ground the conserved activities and complexes without restricting the module to
+    either species.
   module_outline: "- Bacterial chromosomal DNA replication\n  - 1. replication initiation\
     \ at the chromosomal origin\n  - DnaA-dependent origin opening\n    - DnaA replication\
     \ initiator (molecular player: bacterial DnaA family; activity or role: DNA replication\
@@ -34,9 +35,13 @@ template_variables:
     \ factor activity)\n  - 6. clamp loading and replisome coupling\n  - DnaX-containing\
     \ clamp-loader complex\n    - DnaX tau/gamma clamp-loader ATPase contribution\
     \ (molecular player: bacterial DnaX clamp-loader family; activity or role: contributes\
-    \ to DNA clamp loader activity)\n  - 7. Okazaki-fragment nick sealing\n  - LigA-dependent\
-    \ DNA ligation\n    - NAD-dependent DNA ligase LigA (molecular player: bacterial\
-    \ NAD-dependent DNA ligase family; activity or role: DNA ligase (NAD+) activity)"
+    \ to DNA clamp loader activity)\n    - HolA delta clamp-loader subunit (molecular\
+    \ player: bacterial HolA delta family)\n    - HolB delta-prime clamp-loader subunit\
+    \ (molecular player: bacterial HolB delta-prime family)\n    - HolC chi clamp-loader\
+    \ subunit (molecular player: bacterial HolC chi family)\n  - 7. Okazaki-fragment\
+    \ nick sealing\n  - LigA-dependent DNA ligation\n    - NAD-dependent DNA ligase\
+    \ LigA (molecular player: bacterial NAD-dependent DNA ligase family; activity\
+    \ or role: DNA ligase (NAD+) activity)"
   module_connections: '- DnaA-dependent origin opening precedes DnaB helicase and
     SSB expose and protect templates
 
@@ -124,7 +129,6 @@ provider_config:
     timeout: 7200
     save_artifacts: true
     artifact_max_bytes: 5242880
-citation_count: 4
 artifact_count: 2
 artifact_sources:
   openscientist_artifacts_zip: 2
@@ -194,7 +198,7 @@ Candidate gene count: 18
 
 ### Working Scope
 
-Reusable bacterial chromosome-replication module spanning origin initiation, fork unwinding and single-strand protection, RNA priming, DNA polymerase III synthesis and proofreading, sliding-clamp processivity, clamp loading, and Okazaki-fragment ligation. Exact Pseudomonas putida exemplars ground the conserved activities and complexes.
+Reusable bacterial chromosome-replication module spanning origin initiation, fork unwinding and single-strand protection, RNA priming, DNA polymerase III synthesis and proofreading, sliding-clamp processivity, clamp loading, and Okazaki-fragment ligation. Verified Pseudomonas putida and Escherichia coli exemplars ground the conserved activities and complexes without restricting the module to either species.
 
 ### Provisional Biological Outline
 
@@ -219,6 +223,9 @@ Reusable bacterial chromosome-replication module spanning origin initiation, for
   - 6. clamp loading and replisome coupling
   - DnaX-containing clamp-loader complex
     - DnaX tau/gamma clamp-loader ATPase contribution (molecular player: bacterial DnaX clamp-loader family; activity or role: contributes to DNA clamp loader activity)
+    - HolA delta clamp-loader subunit (molecular player: bacterial HolA delta family)
+    - HolB delta-prime clamp-loader subunit (molecular player: bacterial HolB delta-prime family)
+    - HolC chi clamp-loader subunit (molecular player: bacterial HolC chi family)
   - 7. Okazaki-fragment nick sealing
   - LigA-dependent DNA ligation
     - NAD-dependent DNA ligase LigA (molecular player: bacterial NAD-dependent DNA ligase family; activity or role: DNA ligase (NAD+) activity)
@@ -298,251 +305,159 @@ organism.
 
 ## Output
 
-# Module/Pathway/Taxon Review: Bacterial Chromosomal DNA Replication in *Pseudomonas putida* KT2440 (KEGG ppu03030)
+# Species-Aware Review: Chromosomal DNA Replication in *Pseudomonas putida* KT2440
 
 **Target taxon:** *Pseudomonas putida* KT2440 (PSEPK; NCBI taxon 160488; proteome UP000000556)
-**Target bucket:** KEGG `ppu03030` "DNA replication" (local module: bacterial chromosome-replication)
-**Purpose:** Support manual module satisfiability and gene-annotation curation.
-
-## 1. Executive Summary
-
-The KEGG **ppu03030 "DNA replication"** module is **fully satisfiable (COVERED)** in *Pseudomonas putida* KT2440. All seven expected steps of the reusable bacterial chromosome-replication module — (1) DnaA-dependent origin initiation, (2) DnaB/SSB fork unwinding and single-strand protection, (3) DnaG RNA priming, (4) Pol III α/ε processive synthesis and proofreading, (5) DnaN β-clamp processivity, (6) DnaX clamp-loader assembly with δ/δ′/χ/ψ, and (7) LigA Okazaki-fragment ligation — have high-confidence, one-to-one gene assignments in the KT2440 genome. The core replisome is completely encoded and internally consistent in UniProt annotation.
-
-The single most important curation action is that the **replication initiator `dnaA` (PP_0010, UniProt P0A116) is a metadata gap, not a biological gap.** DnaA is present in the KT2440 genome — it sits immediately upstream of `dnaN`/PP_0011 in the canonical *dnaA–dnaN–recF–gyrB* origin-proximal cluster — but it is omitted from the 18-gene candidate list because the KEGG map03030 reference pathway does not enumerate the initiator. This locus should be added to the module metadata as a covered step.
-
-The second key finding is that **three candidate genes are likely over-propagated / paralogous annotations that do not belong to the core replisome:** PP_0353 (Q88QY1), PP_4768 (Q88DQ5), and PP_3893 (Q88G33). Domain-signature analysis (InterPro/Pfam) cleanly discriminates these from the authentic components: PP_0353 and PP_4768 carry only the generic RNase H-like/DEDDh exonuclease fold and lack the DnaQ-proteobacterial epsilon signature (IPR006309) that uniquely marks the true proofreader `dnaQ`/PP_4141; PP_3893 carries a phage-type DnaB helicase signature (IPR019889) absent from the bona fide replicative helicase `dnaB`/PP_4873. These three should be demoted to **candidate_uncertain** and promoted to full `fetch-gene` review, but their removal does not create any module gap because every step they nominally covered is already satisfied by a higher-confidence gene. Finally, enterobacterial-lineage-specific factors (dnaC/dnaI, priB/priC/dnaT, seqA) are legitimately **not_expected_in_target_taxon**.
-
-## 2. Target-Organism Pathway Definition
-
-**Process included.** KEGG ppu03030 as scoped for this module covers *chromosomal* (replisome-centric) DNA replication: origin initiation, replication-fork unwinding and single-strand protection, RNA primer synthesis, processive leading/lagging-strand DNA synthesis with proofreading, sliding-clamp processivity, clamp loading and replisome coupling, and Okazaki-fragment maturation/nick sealing.
-
-**Neighboring pathways to keep separate.** KT2440's candidate metadata already reveals the boundary tension: several genes carry a **primary bucket of kegg:ppu03420 (Nucleotide excision repair)** rather than ppu03030 — notably `polA`/PP_0123 (DNA polymerase I), `ligA`/PP_4274 (NAD-dependent DNA ligase), and `ligB`/PP_4968 (DNA ligase B). These are shared "primer-processing and nick-sealing" enzymes that participate in both replication (Okazaki maturation) and repair. For a chromosomal-replication module, `polA`, `ligA`, `rnhA`, and `rnhB` are best treated as **supporting** primer-processing functions rather than core replisome subunits. Broad overview maps (map01100 metabolic pathways; recombination/repair maps ppu03430/ppu03440) should be kept out of scope.
-
-**Alternate names / database definitions.** The pathway is variously called "DNA replication" (KEGG map03030), the "bacterial replisome," or "DNA polymerase III holoenzyme + accessory factors." The initiator DnaA belongs to KEGG's replication-*initiation* description but is not enumerated in the map03030 enzyme list, which is why it is absent from the candidate metadata despite being biologically central. Curators should note this systematic KEGG-map limitation.
-
-## 3. Expected Step Model
-
-The reusable module and its ordering map onto KT2440 loci as follows:
-
-| # | Module step | Expected activity | KT2440 gene | Locus | UniProt | Verdict |
-|---|-------------|-------------------|-------------|-------|---------|---------|
-| 1 | Origin initiation | DNA replication origin binding | dnaA | PP_0010 | P0A116 | **Covered (add to metadata)** |
-| 2 | Fork unwinding | 5′→3′ replicative helicase | dnaB | PP_4873 | Q88DF2 | **Covered** |
-| 2 | Single-strand protection | ssDNA binding | ssb | PP_0485 | Q88QK5 | **Covered** |
-| 3 | RNA priming | DNA-directed RNA primer synthesis | dnaG | PP_0388 | P0A118 | **Covered** |
-| 4 | Processive synthesis | DNA-directed DNA polymerase (Pol III α) | dnaEA | PP_1606 | Q88MG5 | **Covered** |
-| 4 | Proofreading | 3′→5′ exonuclease (Pol III ε) | dnaQ | PP_4141 | Q88FF6 | **Covered** |
-| 5 | Sliding-clamp processivity | β-clamp processivity factor | dnaN | PP_0011 | P0A120 | **Covered** |
-| 6 | Clamp loading | DnaX τ/γ clamp-loader ATPase | dnaX | PP_4269 | Q88F30 | **Covered** |
-| 6 | Clamp loading | δ subunit | holA | PP_4796 | Q88DM9 | **Covered** |
-| 6 | Clamp loading | δ′ subunit | holB | PP_1966 | Q88LG7 | **Covered** |
-| 6 | Clamp loading | χ subunit | holC | PP_0978/0979 | Q88P75/Q88P74 | **Covered (annotation swap)** |
-| 6 | Clamp loading | ψ subunit | holD | PP_0978/0979 | (adjacent) | **Candidate_uncertain** |
-| 6 | Core coupling | θ subunit | holE | — | — | **Candidate_uncertain / not required** |
-| 7 | Nick sealing | NAD-dependent DNA ligase | ligA | PP_4274 | Q88F25 | **Covered (supporting)** |
-| S | Primer processing | Pol I (nick translation) | polA | PP_0123 | Q88RK6 | **Supporting** |
-| S | Primer removal | RNase HI / HII | rnhA / rnhB | PP_4142 / PP_1605 | Q88FF5 / Q88MG6 | **Supporting** |
-
-## 4. Candidate Genes and Evidence
-
-### 4.1 Origin initiation — the DnaA metadata gap (Finding F001)
-
-**`dnaA` (PP_0010, UniProt P0A116)** is a reviewed UniProt entry, "Chromosomal replication initiator protein DnaA," in proteome UP000000556 (taxon 160488). It is **absent from the 18-gene candidate list** even though it is the entry point of the entire pathway. The evidence that this is a metadata artifact rather than a biological absence is strong and multi-pronged: (i) DnaA is a reviewed, high-confidence entry in the target proteome; (ii) it occupies the canonical origin-proximal position immediately upstream of `dnaN`/PP_0011 (which *is* in the candidate list), following the conserved *dnaA–dnaN–recF–gyrB* synteny (gyrB = PP_0013, confirmed present); and (iii) the omission traces directly to KEGG map03030 not enumerating the initiator. **Curation action: add PP_0010 to module metadata as a covered Step-1 gene.**
-
-Supporting context from KT2440 chromosome biology: origin-proximal coordination of replication and segregation is an established feature of this organism, consistent with a functional DnaA-dependent origin ([PMID: 30352930](https://pubmed.ncbi.nlm.nih.gov/30352930/)).
-
-### 4.2 Core replisome, steps 2–7 (Finding F002)
-
-The core replisome is **fully encoded and consistently annotated** in UniProt. Each subunit has a specific, non-generic functional call:
-
-- **`dnaB`/PP_4873** — "main replicative DNA helicase," DnaB family, 5′→3′ unwinding (Step 2).
-- **`ssb`/PP_0485** — single-stranded DNA-binding protein (Step 2).
-- **`dnaG`/PP_0388** — DnaG primase, EC 2.7.7.101 (Step 3).
-- **`dnaEA`/PP_1606** — Pol III α subunit, EC 2.7.7.7 (Step 4, synthesis).
-- **`dnaQ`/PP_4141** — Pol III ε subunit, 3′→5′ proofreading exonuclease (Step 4, proofreading).
-- **`dnaN`/PP_0011** — β sliding clamp, processivity factor (Step 5).
-- **`dnaX`/PP_4269** — τ/γ clamp-loader ATPase, DnaX family (Step 6).
-- **`holA`/PP_4796 (δ), `holB`/PP_1966 (δ′), `holC` (χ)** — clamp-loader accessory subunits (Step 6).
-- **`ligA`/PP_4274** — NAD-dependent DNA ligase LigA (Step 7).
-- **Supporting:** `polA`/PP_0123 (Pol I), `rnhA`/PP_4142 (RNase HI), `rnhB`/PP_1605 (RNase HII) for Okazaki primer processing.
-
-These are all high-confidence, one-to-one assignments and require no promotion to deep review except where noted below.
-
-### 4.3 The χ/ψ (holC/holD) annotation swap (Finding F005)
-
-The clamp-loader **χ and ψ subunits map to the adjacent locus pair PP_0978–PP_0979**, but with a curation-relevant inconsistency:
-
-- **Q88P75 / PP_0978** = protein name "DNA polymerase III subunit chi" (121 aa) but carries **no gene name**.
-- **Q88P74 / PP_0979** = gene name `holC` but a **blank protein name** (142 aa).
-
-The candidate metadata assigns "chi = holC" to PP_0979, which conflicts with UniProt's chi call on PP_0978. Both loci fall in the size range of χ (~147 aa) and ψ (~137 aa) and are adjacent — the canonical *holC–holD* arrangement. A gene-name search for `holD`/ψ returns nothing, but the PP_0978–PP_0979 pair is the expected χ–ψ cassette. **Interpretation:** χ is present (locus identity needs harmonizing between UniProt and metadata), and ψ (holD) is very likely present as the unnamed partner locus. Curation action: disambiguate the PP_0978/PP_0979 pair and assign χ and ψ explicitly. This is why holD is marked **candidate_uncertain** in the step model — present by synteny/size but not name-confirmed.
-
-### 4.4 Three over-propagated candidates (Findings F003, F007)
-
-Three candidate genes carry generic or paralogous annotations and are **not** core replisome components:
-
-**PP_0353 (Q88QY1)** — UniProt has no protein name, no EC number, no family assignment, and protein-existence level 4 (Predicted): a bare "Exonuclease" call. Domain analysis shows it shares only the generic RNase H-like/DEDDh exonuclease fold (Pfam PF00929; InterPro IPR013520/IPR012337/IPR036397) and **lacks the DnaQ-proteobacterial epsilon signature IPR006309**. It is an ExoX/oligoribonuclease-type exonuclease, not a replisome subunit.
-
-**PP_4768 (Q88DQ5)** — carries only generic DnaQ/Pol-III-epsilon boilerplate function text but is **not** the epsilon subunit (the true ε is `dnaQ`/PP_4141). It is 203 aa, shares the generic RNase H-like/DEDDh fold, and — critically — **lacks IPR006309**. This is a DnaQ-family exonuclease paralog (ExoX-like), a classic case of over-propagated epsilon annotation.
-
-**PP_3893 (Q88G33)** — annotated "DNA 5′→3′ helicase," DnaB subfamily. It shares the DnaB Pfam architecture (PF00772 + PF03796) with the authentic `dnaB`/PP_4873 but **additionally carries the phage-specific signature IPR019889 (DNA_helicase_DnaB-like_phg)** that `dnaB`/PP_4873 lacks. This marks PP_3893 as a phage/prophage-type DnaB paralog, not the chromosomal replicative helicase.
-
-The discriminating logic is summarized below:
-
-```
-Authentic proofreader   dnaQ/PP_4141 (252 aa): DEDDh fold + IPR006054 + IPR006309  [OK] epsilon
-Over-annotation         PP_4768 (203 aa):      DEDDh fold, NO IPR006309            [X] ExoX-like
-Over-annotation         PP_0353 (236 aa):      DEDDh fold, NO name/EC/family, PE4  [X] predicted exo
-
-Authentic helicase      dnaB/PP_4873:  PF00772+PF03796, NO phage signature         [OK] replicative
-Over-annotation         PP_3893 (465): PF00772+PF03796 + IPR019889 (phage)         [X] phage-type
-```
-
-**Curation action:** demote PP_0353, PP_4768, PP_3893 to **candidate_uncertain**, remove from the core replisome, and promote all three to full `fetch-gene` review. Because Steps 4 (proofreading) and 2 (helicase) are already satisfied by `dnaQ`/PP_4141 and `dnaB`/PP_4873, their removal creates **no module gap**.
-
-### 4.5 Lineage-specific replication features (Finding F004)
-
-A gene-name survey of taxon 160488 in UniProt shows KT2440's replication accessory landscape differs from the enterobacterial paradigm:
-
-**Present (beyond the candidate list):** `dnaE2`/PP_3119 (error-prone/translesion DNA polymerase) and `imuB`/PP_3118 (part of the *imuA–imuB–dnaE2* mutagenesis cassette); `hda`/PP_1668 (DnaA regulatory inactivation, RIDA); `priA`/PP_5088 (replication-fork restart); topoisomerases `gyrA`/PP_1767, `gyrB`/PP_0013, `parC`/PP_4912, `parE`/PP_4915; helicases/nucleases `rep`/PP_5264, `recD`/PP_4672, `recQ`/PP_4516.
-
-**Absent by name (enterobacterial-specific, not_expected_in_target_taxon):** `dnaC` (and `dnaI`), `priB`, `priC`, `dnaT`, `holE`, `imuA`, `imuC`, `seqA`. The absence of `dnaC`, the *priB/priC/dnaT* primosome accessories, and `seqA` reflects genuine lineage divergence — *Pseudomonas* uses a DnaC-independent helicase-loading mechanism and lacks the *E. coli* SeqA sequestration system. These should not be counted as module gaps.
-
-## 5. Gaps, Ambiguities, and Likely Over-Annotations
-
-| Item | Category | Rationale |
-|------|----------|-----------|
-| dnaA / PP_0010 | **Metadata gap (add)** | Present in genome; omitted only because KEGG map03030 doesn't list the initiator |
-| holC/holD (PP_0978–PP_0979) | **Ambiguity (harmonize)** | χ named on wrong locus; ψ present but unnamed; needs disambiguation |
-| holE (θ) | **candidate_uncertain / not required** | No name hit; θ is dispensable and often absent outside enterobacteria |
-| PP_0353 | **Over-annotation → candidate_uncertain** | Predicted (PE4), no name/EC/family; generic DEDDh exo, lacks IPR006309 |
-| PP_4768 | **Over-annotation → candidate_uncertain** | DnaQ boilerplate but not ε; lacks IPR006309; ExoX-like paralog |
-| PP_3893 | **Over-annotation → candidate_uncertain** | Phage-type DnaB (IPR019889); true helicase is dnaB/PP_4873 |
-| polA, ligA, rnhA, rnhB | **Supporting (not core)** | Primer processing / nick sealing; polA & ligA primary-bucketed to ppu03420 |
-| dnaC/dnaI, priB/priC/dnaT, seqA | **not_expected_in_target_taxon** | Enterobacterial-specific; genuine lineage divergence |
-
-The over-annotation calls are well-justified by the documented history of KT2440 re-annotation (Finding F006). The original genome ([PMID: 12534463](https://pubmed.ncbi.nlm.nih.gov/12534463/)) was substantially revised: Belda et al. re-annotated 1548 gene functions and added 242 new protein-coding genes ([PMID: 26913973](https://pubmed.ncbi.nlm.nih.gov/26913973/)), and GenBank-vs-RefSeq annotation discrepancies persist for this strain ([PMID: 41036861](https://pubmed.ncbi.nlm.nih.gov/41036861/)). This establishes both the plausibility of over-propagated calls and the value of locus-level re-curation.
-
-## 6. Module and GO-Curation Recommendations
-
-**Module verdict: COVERED (fully satisfiable).** All seven steps have high-confidence gene assignments (Finding F008).
-
-Step-by-step curation status:
-
-- **Step 1 (initiation):** COVERED — add `dnaA`/PP_0010 to metadata.
-- **Step 2 (unwinding + ssDNA):** COVERED — `dnaB`/PP_4873 + `ssb`/PP_0485.
-- **Step 3 (priming):** COVERED — `dnaG`/PP_0388.
-- **Step 4 (synthesis + proofreading):** COVERED — `dnaEA`/PP_1606 + `dnaQ`/PP_4141.
-- **Step 5 (β-clamp):** COVERED — `dnaN`/PP_0011.
-- **Step 6 (clamp loader):** COVERED — `dnaX`/PP_4269 + `holA`/PP_4796 + `holB`/PP_1966 + χ/ψ at PP_0978–PP_0979; `holE`/θ candidate_uncertain (not required).
-- **Step 7 (ligation):** COVERED — `ligA`/PP_4274 (supported by `polA`, `rnhA`, `rnhB`).
-
-**Module-boundary guidance.** The generic module boundaries are essentially correct for this organism, with two refinements: (i) the module should explicitly include the initiator DnaA even though KEGG map03030 omits it; and (ii) the primer-processing/nick-sealing enzymes (`polA`, `ligA`, `rnhA`, `rnhB`) should be labeled as *supporting* functions shared with repair (ppu03420), not core replisome subunits, to avoid double-counting across modules.
-
-**GO-curation notes.** The broad EC 2.7.7.7 (DNA-directed DNA polymerase) mapping is attached to many clamp-loader subunits (holA/holB/holC) and to the exonuclease paralogs, which is misleading — these subunits are structural/ATPase components, not catalytic polymerases. Curators should prefer specific GO terms: DNA polymerase III complex (GO:0009360), DNA clamp loader activity, single-stranded DNA binding (ssb), 3′-5′ exonuclease activity restricted to `dnaQ`, and DNA-directed DNA polymerase activity restricted to `dnaEA`. No new module documents or new GO term requests appear necessary; existing terms cover all satisfied steps.
-
-## 7. Genes to Promote to Full Review
-
-The following loci warrant full `fetch-gene` review:
-
-1. **PP_0353 (Q88QY1)** — resolve identity of predicted "Exonuclease"; confirm ExoX/oligoribonuclease assignment and remove from replication module.
-2. **PP_4768 (Q88DQ5)** — confirm DnaQ-family paralog (not epsilon); reassign away from Pol III core.
-3. **PP_3893 (Q88G33)** — confirm phage/prophage-type DnaB paralog (IPR019889); reassign away from chromosomal replisome.
-4. **PP_0978 / PP_0979 (Q88P75 / Q88P74)** — harmonize the χ (holC) / ψ (holD) annotation swap and assign gene names and protein names consistently.
-5. **PP_0010 (P0A116, dnaA)** — add to module metadata as the Step-1 initiator (administrative, not a deep-review need, but must be entered).
-
-## 8. Mechanistic Model / Synthesis
-
-The KT2440 chromosomal replisome follows the canonical Gram-negative bacterial architecture with minimal lineage-specific modification within the core:
-
-```
-         Step 1: ORIGIN INITIATION
-         DnaA (PP_0010) -- binds oriC, opens duplex
-         [regulated by Hda/PP_1668, RIDA]
-                 |
-                 v
-         Step 2: FORK UNWINDING + ssDNA PROTECTION
-         DnaB helicase (PP_4873) --> 5'->3' unwinding
-         SSB (PP_0485) --> coats exposed ssDNA
-         [DnaC-independent loading -- no dnaC in KT2440]
-                 |
-                 v
-         Step 3: RNA PRIMING
-         DnaG primase (PP_0388) --> RNA primers
-                 |
-                 v
-         Step 4-6: POL III HOLOENZYME
-         +-----------------------------------------+
-         |  a  DnaEA (PP_1606)  -- synthesis        |
-         |  e  DnaQ  (PP_4141)  -- 3'->5' proofread  |
-         |  b  DnaN  (PP_0011)  -- processivity clamp|
-         |  clamp loader: t/g DnaX (PP_4269)         |
-         |      d HolA (PP_4796), d' HolB (PP_1966)  |
-         |      x/psi  PP_0978-PP_0979                |
-         +-----------------------------------------+
-                 |
-                 v
-         Step 7: OKAZAKI MATURATION
-         RNase HI/HII (PP_4142/PP_1605) -- primer removal
-         Pol I (PP_0123) -- gap filling
-         LigA (PP_4274) -- NAD+-dependent nick sealing
-
-   NOT in core (over-annotations -> candidate_uncertain):
-     PP_0353  predicted exonuclease (ExoX-like)
-     PP_4768  DnaQ-family paralog (NOT epsilon)
-     PP_3893  phage-type DnaB paralog (NOT replicative helicase)
-
-   Not expected in taxon: dnaC/dnaI, priB/priC/dnaT, seqA, holE
-```
-
-The discriminating diagnostic that resolves the three over-annotations is the **presence/absence of family-specific InterPro signatures superimposed on a shared fold**: the DEDDh exonuclease fold is shared by both the authentic proofreader and its paralogs, but only the true `dnaQ`/PP_4141 carries IPR006309; likewise the DnaB helicase fold is shared, but only the phage paralog PP_3893 carries IPR019889. This "shared-fold-plus-diagnostic-signature" logic is a reusable rule for future replication-module curation in other *Pseudomonas* strains.
-
-## 9. Evidence Base
-
-| PMID | Title (abbreviated) | Relevance |
-|------|---------------------|-----------|
-| [12534463](https://pubmed.ncbi.nlm.nih.gov/12534463/) | *Complete genome sequence... P. putida KT2440* | Authoritative KT2440 genome underlying all PP_xxxx locus tags |
-| [26913973](https://pubmed.ncbi.nlm.nih.gov/26913973/) | *The revisited genome of P. putida KT2440* | 1548 genes re-annotated, 242 new CDS added — justifies locus-level re-curation |
-| [41036861](https://pubmed.ncbi.nlm.nih.gov/41036861/) | *Differences in GenBank and RefSeq annotations* | Documents persistent annotation discrepancies in KT2440 |
-| [30352930](https://pubmed.ncbi.nlm.nih.gov/30352930/) | *Segregation but not replication of the... chromosome* | Origin-proximal replication/segregation coordination context |
-
-Verified supporting quotations:
-
-- [PMID: 26913973](https://pubmed.ncbi.nlm.nih.gov/26913973/): *"We identified 242 new protein-coding genes and re-annotated the functions of 1548 genes, which are linked to almost 4900 PubMed references."* — Direct evidence that KT2440 annotations have been substantially revised, justifying locus-level re-curation of the replication candidate genes.
-- [PMID: 12534463](https://pubmed.ncbi.nlm.nih.gov/12534463/): *"Sequence analysis of the 6.18 Mb genome of strain KT2440 reveals diverse transport and metabolic systems."* — Establishes the authoritative KT2440 genome underlying the PP_xxxx locus tags used throughout this review.
-
-**Evidence-type summary.** Every gene assignment in this review is grounded in **UniProt/InterPro/Pfam annotation plus genomic synteny**, cross-checked against the KEGG ppu03030 reference pathway and the re-annotated KT2440 genome. No direct target-strain biochemical or genetic experiments were located for the individual replisome subunits; transfer of mechanism from generic bacterial/*E. coli* models is **strong for the conserved core** (β-clamp, Pol III, DnaB, DnaG, SSB, LigA are near-universal) and **uncertain for lineage-specific accessories** (χ/ψ locus identity, holE presence, DnaC-independent loading).
-
-## 10. Limitations and Knowledge Gaps
-
-1. **Homology-based, not experimental.** Every gene assignment rests on annotation and synteny, not on direct biochemical or genetic experiments in KT2440. No target-strain knockout, complementation, or in-vitro reconstitution data were found for the individual replisome subunits.
-2. **holD/ψ and holE/θ are name-inferred.** ψ is inferred present from the PP_0978–PP_0979 synteny and size range, not from a confirmed gene name. θ (holE) may be genuinely absent; its dispensability makes this hard to distinguish from a gap.
-3. **The χ/ψ annotation swap** was diagnosed from a UniProt inconsistency and has not been resolved against a curated reference — it needs a full gene-level review.
-4. **Over-annotation calls** rest on signature analysis; final confirmation of the alternative functions (ExoX vs oligoribonuclease for PP_0353/PP_4768; prophage origin for PP_3893) would benefit from genomic-context inspection and phylogenetic placement.
-5. **Literature specificity.** Most retrieved KT2440 literature concerns metabolic engineering, biodegradation, and genome annotation rather than replication mechanism directly; mechanistic conclusions for the conserved core are therefore "strong but indirect."
-
-## 11. Proposed Follow-up Experiments / Actions
-
-1. **Metadata fix (immediate):** Add `dnaA`/PP_0010 to the ppu03030 module as a covered Step-1 gene.
-2. **Full `fetch-gene` reviews** for PP_0353, PP_4768, PP_3893, and the PP_0978/PP_0979 pair (Section 7).
-3. **Genomic-context check** for PP_3893 — determine whether it lies within an annotated prophage region, which would corroborate the phage-DnaB call.
-4. **Phylogenetic placement** of PP_0353/PP_4768 among DEDDh exonucleases to assign ExoX vs oligoribonuclease vs other paralog identity.
-5. **GO-term refinement:** replace broad EC 2.7.7.7 mappings on clamp-loader subunits with specific complex/activity terms; restrict 3′-5′ exonuclease activity to `dnaQ`/PP_4141.
-6. **Expert question:** confirm the *Pseudomonas* DnaC-independent helicase-loading mechanism so that the absence of `dnaC` is documented as expected rather than a gap.
+**Target bucket:** KEGG `ppu03030` "DNA replication" (18 candidate genes)
+**Purpose:** Support manual module satisfiability and gene-annotation curation (not a generic pathway essay).
 
 ---
 
-*Review completed over 5 iterations; 8 findings confirmed; 12 papers reviewed. Module verdict: **ppu03030 DNA replication is COVERED (fully satisfiable) in P. putida KT2440**.*
+## 1. Executive summary
+
+The bacterial chromosome-replication module is **fully satisfiable** in *P. putida* KT2440. Every mechanistic step — origin initiation, fork unwinding, single-strand protection, RNA priming, processive Pol III synthesis + proofreading, sliding-clamp processivity, clamp loading, and Okazaki maturation/ligation — is encoded by a confidently identifiable gene. However, the `ppu03030` candidate list is **both incomplete and contaminated**, so it should not be used as ground truth:
+
+- **Incomplete at the initiation step.** The initiator **dnaA (PP_0010)** and the helicase loader **dnaC (PP_1552)** are not in the bucket at all; they live in other KEGG maps. dnaA sits in the canonical **dnaA–dnaN–recF–gyrB** origin cluster (PP_0010–PP_0011–PP_0012–PP_0013), which is strong direct genomic evidence.
+- **Contaminated by KO over-propagation.** Three genes carry the epsilon KO (K02342) but only **dnaQ (PP_4141)** is the replisome proofreader; **PP_0353** and **PP_4768** are DnaQ/DEDDh exonuclease paralogs. **PP_3893** carries the DnaB KO (K02314) but is a *"putative phage DNA helicase"* — the true replicative helicase is **dnaB (PP_4873)**.
+- **Two accessory subunits are unannotatable.** **holD (psi)** and **holE (theta)** have **no ortholog** in KEGG (ppu), the UniProt proteome, or (for psi) a positive-control-validated Pfam/InterPro domain search — and psi is likewise undetectable in *P. aeruginosa* PAO1, i.e. a genus-level pattern. Theta absence is expected (largely enterobacteria-restricted); psi is a genuine gap/lineage-divergent call. Neither blocks satisfiability (both are non-essential; the core clamp loader DnaX₃-δ-δ'-χ is intact).
+- The metadata name **"dnaEA"** for PP_1606 implies a second Pol III alpha. That paralog is **dnaE2/imuC (PP_3119)** within an **imuB–imuC (PP_3118–PP_3119)** SOS mutagenesis cassette — a translesion polymerase, **not** part of the core replisome.
+
+**Bottom line for curation:** mark all seven module steps **covered**, but re-assign initiation to dnaA/dnaC, restrict the epsilon and helicase steps to the single true gene each, flag PP_0353/PP_4768/PP_3893 as over-propagated paralogs, log psi as a gap and theta as not_expected_in_target_taxon, and move ligB, imuC/dnaE2, rnhA/rnhB, and polA to their more appropriate repair/maturation contexts.
+
+---
+
+## 2. Target-organism pathway definition
+
+**Included process (KEGG ppu03030, "DNA replication"):** the semiconservative synthesis machinery acting at the replication fork — helicase-driven unwinding, single-strand protection, primer synthesis, coordinated leading/lagging-strand Pol III holoenzyme synthesis with proofreading, sliding-clamp processivity, ATP-dependent clamp loading, and RNA-primer removal + nick ligation to mature Okazaki fragments.
+
+**Neighboring processes to keep separate:**
+- **Initiation regulation / origin licensing** — dnaA, dnaC, DiaA, Hda/regulatory inactivation. KEGG scatters dnaA/dnaC outside ppu03030; the reusable module should still treat DnaA-dependent origin opening as **step 1**.
+- **DNA topology** — DNA gyrase (gyrA PP_1767 / gyrB PP_0013), topoisomerase IV (parC PP_4912 / parE PP_4915), topoisomerase I (topA PP_2139, PP_3831). Required for fork progression/decatenation but curated under topology maps, not the replisome step model.
+- **Mismatch/base-excision/nucleotide-excision repair (KEGG ppu03420/ppu03430)** — polA, ligA, ligB, rnhA, rnhB are placed by KEGG in these buckets even though they physically contribute to lagging-strand maturation.
+- **SOS/translesion synthesis** — imuA/imuB/dnaE2(imuC), dinB (Pol IV), umuDC/Pol V. These overlap the Pol III alpha family by homology but are a distinct mutagenesis module.
+
+**Alternate names / database definitions:** KEGG `map03030`/`ppu03030` "DNA replication"; the replisome is also captured as KEGG modules **M00263** (bacterial DNA polymerase III complex) and by BioCyc/MetaCyc "DNA replication" and Pseudomonas Genome DB (PseudoCAP) categories. UniProt uses the eco/E. coli reference nomenclature (dnaE, dnaQ, holA–holE, dnaX, dnaN).
+
+---
+
+## 3. Expected step model (satisfiability call per step)
+
+| # | Step | Expected player(s) | KT2440 gene(s) | Call |
+|---|------|--------------------|----------------|------|
+| 1 | Origin initiation | DnaA (+ DnaC loader) | **dnaA PP_0010** (K02313); **dnaC PP_1552** (K02315) | **covered** (outside bucket — metadata gap) |
+| 2 | Fork unwinding + ssDNA protection | DnaB helicase, SSB | **dnaB PP_4873** (K02314); **ssb PP_0485** (K03111) | **covered** (exclude prophage helicase PP_3893) |
+| 3 | RNA priming | DnaG primase | **dnaG PP_0388** (K02316) | **covered** |
+| 4 | Pol III core synthesis + proofreading | alpha (DnaE), epsilon (DnaQ) | **dnaEA PP_1606** (K02337); **dnaQ PP_4141** (K02342) | **covered** (exclude PP_0353/PP_4768) |
+| 5 | Sliding-clamp processivity | beta clamp (DnaN) | **dnaN PP_0011** (K02338) | **covered** |
+| 6 | Clamp loading / replisome coupling | DnaX (tau/gamma), delta (HolA), delta' (HolB), chi (HolC), psi (HolD) | **dnaX PP_4269** (K02343); **holA PP_4796** (K02340); **holB PP_1966** (K02341); **holC PP_0979** (K02339); **holD = none** | **covered** for core loader; **psi = gap/candidate_uncertain** |
+| — | (core accessory theta, HolE) | theta | **none** | **not_expected_in_target_taxon** |
+| 7 | Okazaki maturation + nick sealing | Pol I (polA), RNase H (rnhA/rnhB), LigA | **polA PP_0123** (K02335); **rnhA PP_4142** (K03469); **rnhB PP_1605** (K03470); **ligA PP_4274** (K01972) | **covered** |
+
+---
+
+## 4. Candidate genes and evidence
+
+**High-confidence, one-to-one core replisome genes (direct KEGG/UniProt orthology; strong):**
+- **dnaN / PP_0011 (P0A120)** — beta sliding clamp (K02338). Origin-cluster context. **Covered, step 5.**
+- **dnaG / PP_0388 (P0A118)** — DNA primase (K02316). **Covered, step 3.**
+- **ssb / PP_0485 (Q88QK5)** — single-strand DNA-binding protein (K03111). **Covered, step 2.**
+- **dnaEA / PP_1606 (Q88MG5)** — Pol III alpha (K02337). The replicative catalytic subunit. **Covered, step 4.** Caveat: "dnaEA" name implies a paralog (see dnaE2 below); confirm this is the *replicative* alpha (it is, by KO K02337).
+- **dnaQ / PP_4141 (Q88FF6)** — Pol III epsilon proofreader (K02342). Adjacent to rnhA (PP_4142). **Covered, step 4.**
+- **dnaX / PP_4269 (Q88F30)** — clamp-loader tau/gamma ATPase (K02343). **Covered, step 6.**
+- **holA / PP_4796 (Q88DM9)** — clamp-loader delta (K02340). **Covered, step 6.**
+- **holB / PP_1966 (Q88LG7)** — clamp-loader delta' (K02341). **Covered, step 6.**
+- **holC / PP_0979 (Q88P74)** — clamp-loader chi (K02339). **Covered, step 6.**
+- **dnaB / PP_4873 (Q88DF2)** — replicative helicase (K02314), GenBank "replicative DNA helicase (ATPase)". **Covered, step 2.**
+
+**Okazaki-maturation genes (correct biology, but bucketed elsewhere by KEGG):**
+- **polA / PP_0123 (Q88RK6)** — Pol I (K02335) with 5'→3' and 3'→5' exonuclease; removes RNA primers, fills gaps. Primary bucket ppu03420. **Covered, step 7**, cross-listed.
+- **ligA / PP_4274 (Q88F25)** — NAD+-dependent DNA ligase (K01972). The **essential** replicative nick-sealer. Primary bucket ppu03420. **Covered, step 7.**
+- **rnhA / PP_4142 (Q88FF5)** — RNase HI (K03469); **rnhB / PP_1605 (Q88MG6)** — RNase HII (K03470). Remove RNA primers/R-loops. Supportive of Okazaki processing but also repair; keep as accessory.
+
+**Ambiguous / likely over-propagated (see §5).**
+
+*Evidence type:* All assignments above are **homology/orthology-based** (KEGG KO + UniProt), corroborated by **synteny** (origin cluster, dnaQ–rnhA adjacency) and by cross-*Pseudomonas* conservation. No KT2440-specific biochemical/genetic knockouts of individual replisome subunits were found in the literature searched; the strain's genome organization is directly documented (origin/dnaA region conserved with *B. subtilis*, PMID 1552862).
+
+---
+
+## 5. Gaps, ambiguities, and likely over-annotations
+
+**Over-propagated epsilon KO (K02342) — three genes, one true epsilon.**
+Only **dnaQ (PP_4141)** is the replisome proofreader — it is the sole gene carrying the epsilon-specific signatures (CDD **cd06131** "DNA_pol_III_epsilon_Ecoli_like", InterPro **IPR006054 DnaQ + IPR006309 DnaQ_proteo**, PANTHER **PTHR30231:SF41**). **PP_0353** and **PP_4768** are generically named "Exonuclease" and inherit K02342 only because the whole DnaQ/DEDDh 3'→5' exonuclease superfamily maps to Pfam **PF00929 (RNase_T)** / PANTHER family **PTHR30231** / eggNOG **COG0847**. Their discriminating subfamily assignments identify them as *distinct* enzymes:
+- **PP_0353** → CDD **cd06127** (generic DEDDh), PANTHER **PTHR30231:SF4 "protein NEN2"** — a NEN/oligoribonuclease-like exonuclease, **not** the replisome epsilon.
+- **PP_4768** → CDD **cd06127**, PANTHER **PTHR30231:SF37 "Exodeoxyribonuclease 10" (ExoX)** — a mismatch/repair-associated 3'→5' exodeoxyribonuclease. Its UniProt "DNA polymerase III … core" FUNCTION/SUBUNIT text is transferred boilerplate, not evidence of replisome membership.
+
+→ Both are **candidate_uncertain / remove from module**; do not count toward step 4, and re-annotate with a generic 3'→5' exonuclease term (GO:0008408) rather than the Pol III epsilon term.
+
+**Over-propagated DnaB KO (K02314) — prophage helicase.**
+**PP_3893** is a *"putative phage DNA helicase"* sharing K02314 with the real **dnaB (PP_4873)**. Metadata's generic "DNA 5'-3' helicase" label masks its prophage origin. → **not_in_module / candidate_uncertain** (prophage paralog).
+
+**Missing accessory subunits.**
+- **holD (psi):** undetectable by **three** independent methods — KEGG KO (K02344), UniProt gene/name search, and a **positive-control-validated domain search** (Pfam **PF03603** / InterPro **IPR004615**, which correctly retrieves *E. coli* holD P28632 but returns nothing in KT2440). The same domain is also absent from *P. aeruginosa* PAO1, so this is a **genus-level pattern**, not a KT2440 annotation lapse. Its chi partner (holC, Pfam PF04364) *is* present. Interpretation: psi is either genuinely absent in *Pseudomonas* or so divergent that no current family model detects it; because psi is a non-essential accessory clamp-loader subunit and the core loader (DnaX₃-δ-δ'-χ) is intact, its absence does **not** block satisfiability. → **gap / lineage-divergent** (resolve only by expert HMM/AlphaFold-structural check).
+- **holE (theta):** no ortholog; theta is largely enterobacteria-restricted. → **not_expected_in_target_taxon** (expected negative).
+
+**Second Pol III alpha = SOS polymerase, not replisome.**
+**dnaE2/imuC (PP_3119, K14162)** with **imuB (PP_3118, K14161)** is the error-prone translesion cassette. The "dnaEA" name in metadata is the tell that a second alpha exists; ensure dnaE2/imuC is curated into the **SOS/mutagenesis** module, not step 4.
+
+**Second ligase.**
+**ligB (PP_4968, K01972)** shares the LigA KO. LigB is a non-essential NAD+-ligase paralog in *Pseudomonas*; **ligA (PP_4274)** is the essential replicative ligase. → keep **ligA** as the step-7 player; mark **ligB** accessory/candidate_uncertain.
+
+**Boundary leakage.** gyrA/gyrB/parC/parE/topA are required for replication but are topology enzymes; keep them **out** of the replisome step model (separate maps).
+
+---
+
+## 6. Module and GO-curation recommendations
+
+**Per-step status:**
+- Step 1 initiation → **covered** via dnaA (PP_0010) + dnaC (PP_1552); **module_needs_revision**: add these loci to the reusable module's initiation slot (currently absent from the ppu03030 candidate metadata).
+- Step 2 unwinding/protection → **covered** (dnaB PP_4873, ssb PP_0485); remove PP_3893 from the module.
+- Step 3 priming → **covered** (dnaG PP_0388).
+- Step 4 core synthesis/proofreading → **covered** (dnaEA PP_1606 + dnaQ PP_4141); exclude PP_0353, PP_4768.
+- Step 5 processivity → **covered** (dnaN PP_0011).
+- Step 6 clamp loading → **covered** for DnaX/δ/δ'/χ; **psi = candidate_uncertain/gap**; **theta = not_expected_in_target_taxon**.
+- Step 7 ligation/maturation → **covered** (ligA PP_4274; polA PP_0123; rnhA/rnhB accessory); ligB accessory.
+
+**Module-document actions:**
+- Update bucket boundaries: the reusable module should explicitly place **dnaA/dnaC** (initiation) and, if desired, note topology enzymes as a linked-but-separate module.
+- Add a **"lineage-specific / expected-absent" annotation** for HolE(theta) so its absence is not scored as an unmet step.
+- Add a **paralog-disambiguation note** for the epsilon KO (K02342) and DnaB KO (K02314) so future over-propagation is auto-flagged.
+
+**GO-curation:**
+- Existing GO terms suffice for all covered steps (e.g., GO:0006269 DNA replication initiation; GO:0006271 DNA strand elongation; GO:0003887 DNA-directed DNA polymerase; GO:0008408 3'-5' exonuclease; GO:0003689 DNA clamp loader; GO:0003896 DNA primase; GO:0003697 ssDNA binding; GO:0003911 DNA ligase (NAD+)). **No new GO term requests are needed.**
+- Recommend GO annotations be **restricted**: e.g., "DNA clamp loader activity" (GO:0003689) should be assigned to the DnaX/HolA/HolB/HolC set, not extended to psi (absent); "3'-5' exonuclease, replisome proofreading" should map to PP_4141 only, with PP_0353/PP_4768 given a generic exonuclease term rather than the Pol III epsilon term.
+
+---
+
+## 7. Genes to promote to full `fetch-gene` review
+
+1. **PP_3893** — resolve prophage vs. functional accessory replicative helicase; likely remove from module. *(High priority.)*
+2. **PP_0353** (likely NEN2/oligoribonuclease-like DEDDh exonuclease, PANTHER SF4) and **PP_4768** (likely ExoX / Exodeoxyribonuclease 10, PANTHER SF37) — DnaQ-superfamily exonuclease paralogs mis-KO'd as Pol III epsilon; assign correct specific names, remove Pol III epsilon KO/GO, and re-annotate as generic 3'→5' exonucleases. *(High priority.)*
+3. **holD/psi** — three annotation methods (KEGG KO, UniProt name, positive-control Pfam PF03603/IPR004615) all negative in KT2440 *and* PAO1; only a sensitive profile-HMM/AlphaFold-structural search could distinguish true loss from extreme divergence. *(Medium — expert/structural, not routine fetch-gene.)*
+4. **PP_3119 (dnaE2/imuC) + PP_3118 (imuB)** — confirm SOS cassette membership and ensure exclusion from the replicative core step. *(Medium.)*
+5. **ligB (PP_4968)** — confirm non-essential paralog status; keep ligA as the module player. *(Low–medium.)*
+
+---
+
+## 8. Key references
+
+- Ogasawara N, Yoshikawa H. *Genes and their organization in the replication origin region of the bacterial chromosome.* Mol Microbiol 1992. **PMID 1552862** — direct sequence evidence that the *P. putida* dnaA/origin region and gene order are conserved (grounds step 1).
+- Takami H et al. *Replication origin region of the chromosome of alkaliphilic Bacillus halodurans C-125.* 1999. **PMID 10427704** — notes conserved DnaA-box/origin organization shared with *P. putida* (supports origin-cluster interpretation).
+- Fahey J et al. *DinB (Pol IV), ImuBC and RpoS contribute to ciprofloxacin-resistance mutations in Pseudomonas aeruginosa.* 2023. **PMID 37625357** — *Pseudomonas* evidence that imuBC/dnaE2 is an SOS mutagenesis (translesion) system, supporting exclusion of PP_3118/PP_3119 from the replicative core (species transfer from *P. aeruginosa* to *P. putida*: strong at the pathway level).
+- Molina-Henares MA et al. *Conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium.* 2010. **PMID 20158506** — KT2440 functional-genomics context (essential-gene framework).
+- de Siqueira GMV et al. *Differences in GenBank and RefSeq annotations may affect genomics data interpretation for [P. putida].* 2025. **PMID 41036861** — caution that KT2440 annotation source affects gene calls, directly relevant to over-propagation risk.
+- Primary database evidence (direct, this review): **KEGG REST** (rest.kegg.jp) organism `ppu` — KO assignments for all 18 bucket genes, K02313→PP_0010 (dnaA), K02315→PP_1552 (dnaC), K02344/K02345 (holD/holE) → no gene; **UniProt** proteome UP000000556 — no holD/holE entries; gyr/par/top loci.
+- Positive-control domain evidence (direct, this review): **UniProt/Pfam/InterPro** — HolD/psi signature **PF03603 / IPR004615** retrieves *E. coli* K-12 holD (**P28632**) but returns nothing in *P. putida* KT2440 (UP000000556) or *P. aeruginosa* PAO1 (UP000002438); chi signature PF04364 is present (holC=PP_0979). Epsilon discrimination: CDD cd06131 + InterPro IPR006309 (DnaQ_proteo) + PANTHER PTHR30231:SF41 unique to dnaQ=PP_4141; PP_0353=SF4 (NEN2-like), PP_4768=SF37 (ExoX).
+
+---
+
+### Uncertainty & species-transfer notes
+- All KT2440 gene→step assignments are **homology/orthology-based** (KEGG KO + UniProt) plus **synteny**; no strain-specific subunit knockouts were located. Confidence is high for the universally conserved core (alpha, beta, DnaB, SSB, DnaG, DnaX, LigA) and high that PP_0353/PP_4768/PP_3893 are paralogs (based on KO sharing + generic/prophage names).
+- HolE(theta) absence is a well-established phylogenetic pattern (enterobacteria-restricted); transfer to KT2440 as an expected negative is **strong**.
+- HolD(psi) absence is now supported by **three** independent methods (KEGG KO, UniProt name, and a positive-control-validated Pfam/InterPro domain search) and is a **genus-level** pattern (also undetectable in *P. aeruginosa* PAO1 while robustly found in *E. coli*). This strongly indicates either true loss or extreme divergence; final discrimination requires profile-HMM/AlphaFold-structural analysis. It does not affect satisfiability (psi is a non-essential accessory subunit; core loader intact).
+- imuBC/dnaE2 role is transferred from *P. aeruginosa*/general *Pseudomonas* SOS biology — **strong** at the pathway level, not yet demonstrated biochemically in KT2440.
 
 
 ## Artifacts
 
 - [OpenScientist final report](PSEPK__bacterial_chromosomal_dna_replication__ppu03030-deep-research-openscientist_artifacts/final_report.html)
 - [OpenScientist final report](PSEPK__bacterial_chromosomal_dna_replication__ppu03030-deep-research-openscientist_artifacts/final_report.pdf)
-
-## Citations
-
-1. PMID:30352930
-2. PMID:12534463
-3. PMID:26913973
-4. PMID:41036861

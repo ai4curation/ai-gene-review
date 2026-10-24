@@ -14,6 +14,7 @@ autolink_gene_symbols: false
 - KEGG-derived candidates inspected: 19 proteins and 2 overlapping ncRNA features
 - Newly reviewed PSEPK proteins: 8
 - Revised existing review: 1
+- Wave128 annotation-reviewer re-audit: 9 selected proteins
 - Module/pathway/taxon provider: OpenScientist
 
 ## Workflow
@@ -43,6 +44,27 @@ SecDF-YajC is represented as an accessory completion and throughput complex,
 not as an absolute requirement for every substrate.
 
 ## Annotation Decisions
+
+### Annotation-reviewer pass
+
+The 2026-09-01 Wave128 pass compared every GOA-derived row with the local
+UniProt record, available primary literature, PAINT/PANTHER evidence, and the
+module-aware OpenScientist report. GOA coverage and final action counts were:
+
+| Gene | GOA rows | Additional NEW rows | Reviewer outcome |
+|---|---:|---:|---|
+| `secA` | 12 | 0 | 6 ACCEPT; 2 KEEP_AS_NON_CORE; 3 MARK_AS_OVER_ANNOTATED; 1 REMOVE |
+| `secB` | 4 | 1 | 1 ACCEPT; 1 KEEP_AS_NON_CORE; 1 MODIFY; 1 REMOVE; 1 NEW |
+| `secD` | 7 | 1 | 3 ACCEPT; 1 KEEP_AS_NON_CORE; 2 MARK_AS_OVER_ANNOTATED; 1 MODIFY; 1 NEW |
+| `secE` | 8 | 1 | 3 ACCEPT; 2 KEEP_AS_NON_CORE; 3 MARK_AS_OVER_ANNOTATED; 1 NEW |
+| `secF` | 7 | 1 | 3 ACCEPT; 1 KEEP_AS_NON_CORE; 2 MARK_AS_OVER_ANNOTATED; 1 MODIFY; 1 NEW |
+| `secG` | 6 | 1 | 3 ACCEPT; 1 KEEP_AS_NON_CORE; 1 MARK_AS_OVER_ANNOTATED; 1 MODIFY; 1 NEW |
+| `secY` | 6 | 2 | 3 ACCEPT; 1 KEEP_AS_NON_CORE; 2 MARK_AS_OVER_ANNOTATED; 2 NEW |
+| `yajC` | 1 | 1 | 1 ACCEPT; 1 NEW |
+| `lepB` | 7 | 0 | 1 ACCEPT; 2 KEEP_AS_NON_CORE; 2 MARK_AS_OVER_ANNOTATED; 2 MODIFY |
+
+No selected row remains PENDING or UNDECIDED. Each gene notes file records the
+row-level review conclusion and the evidence classes consulted.
 
 - SecB is modeled as an unfolded-protein carrier that maintains precursor
   translocation competence; the imported protein-folding annotation is removed.
@@ -91,13 +113,15 @@ family rather than its misleading chloroplast-centered subfamily label.
 
 ## Research Status
 
-The OpenScientist report and artifacts are stored under
-`projects/P_PUTIDA/deep-research/`. Local UniProt, GOA, PANTHER, PAINT, and
-InterPro records, primary Sec literature, and provenance-bearing notes for all
-nine reviewed genes were used to resolve exact identifiers and subunit-level
-annotation actions.
+The Wave128 OpenScientist run uses the resolved reusable module, its five-part
+outline and connections, the ppu03060 candidate bucket, and the KT2440 taxon.
+It completed in 2,755.52 seconds with 7 citations and 2 retained artifacts; the
+report and artifacts are stored under `projects/P_PUTIDA/deep-research/`. Local
+UniProt, GOA, PANTHER, PAINT, and InterPro records, primary Sec literature, and
+provenance-bearing notes for all nine reviewed genes were used to resolve exact
+identifiers and subunit-level annotation actions.
 
 ## Validation
 
-The eight new reviews, revised SecA review, reusable module, and project page
-are validated and rendered before publication.
+All nine selected reviews, the reusable module, and the project page are
+validated and rendered before publication.

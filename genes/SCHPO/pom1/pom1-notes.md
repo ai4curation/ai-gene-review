@@ -47,4 +47,14 @@ S. pombe DYRK-family dual-specificity protein kinase. Forms polar cortical gradi
 - GO:0005856 cytoskeleton (IBA): Pom1 is cortical/PM, not a cytoskeletal component; over-annotation from phylo.
 - GO:0005737 cytoplasm (IBA): broad; Pom1 acts at cortex/PM. Keep non-core.
 - PMID:12206652 (Mac1) and PMID:20870879 (invasive filaments) and PMID:22174761 (Pom2): pom1 localization references, supportive of cell tip/division site CC.
-- PMID:11950884 not cached locally; cell tip localization corroborated by many other refs.
+- PMID:11950884 is now cached as an abstract-only record. Its abstract directly states
+  that the analyzed morphological factors, including Pom1, concentrate at cell ends
+  during vegetative growth and reports a Pom1 role early in the switch to shmooing growth.
+
+## 2026-09-01 — current GOA and IBA refresh
+
+- Refreshed the machine-sourced bundle with `just fetch-gene SCHPO pom1 --force`; current GOA adds an IBA `GO:0004674 protein serine/threonine kinase activity` at PAINT node `PANTHER:PTN000624408`.
+- Removed the discontinued ARBA `GO:0032878 regulation of establishment or maintenance of cell polarity` row from `existing_annotations`; the experimentally supported polarity role remains synthesized in `core_functions` and represented by current, more specific experimental GOA rows.
+- Accepted the new IBA. The PAINT node spans the conserved DYRK catalytic branch and includes Pom1 among its experimentally annotated descendants; this is expected experimental grounding for the ancestral placement, not circular evidence. Direct Pom1 substrate phosphorylation in PMID:25720772 independently supports the activity.
+- Updated the PTHR24058 family review to separate this sound catalytic transfer from the deeper-node cytoplasm/cytoskeleton localization transfers, retaining the existing subfamily-aware localization decisions.
+- Added structured failure metadata for the rejected cytoskeleton IBA and replaced the discontinued broad polarity term in `core_functions` with the current, experimentally supported `GO:0061245 establishment or maintenance of bipolar cell polarity`.

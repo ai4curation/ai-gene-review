@@ -112,3 +112,19 @@ and GO:0006750 remain core for canonical GshA and GshB; generic catalytic,
 binding, and localization terms remain over-annotated or non-core. PP_3253's
 specific ligase and process terms remain undecided, its broad C-N ligase class
 is non-core, and no core function is asserted.
+
+## 2026-09-01 Family-evidence repair
+
+Repair PR: [#2862](https://github.com/ai4curation/ai-gene-review/pull/2862).
+
+The bifunctional *Pasteurella multocida* GshAB/GshF exemplar Q9CM00 is assigned
+to PANTHER:PTHR38761:SF1 on the basis of its N-terminal glutamate--cysteine
+ligase region, even though the same polypeptide also performs the second
+glutathione-synthetase reaction. The second module leaf now includes that exact
+whole-protein classification only in the exemplar description, not as a family
+selector. The same subfamily contains monofunctional GshA proteins, so asserting
+it on the second leaf would falsely imply glutathione-synthetase activity for
+those proteins. InterPro:IPR040657 identifies the C-terminal ATP-grasp-like
+domain and PMID:16339152 directly establishes both activities in the recombinant
+fusion. The resulting outside-family advisory for Q9CM00 is intentional and
+documents fusion architecture rather than a validation failure.

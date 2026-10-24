@@ -1,41 +1,62 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-06-20T06:23:09
+# Generation date: 2026-09-11T21:18:31
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
 # description: Schema for gene curation Top level entity is a GeneReview, which is about a single gene (and its equivalent swiss-prot entry). It contains a high level summary of the gene, plus a review of all existing annotations. It also contains a list of core functions, which are GO-CAM-like annotons describing the core evolved functions of the gene.
 # license: https://creativecommons.org/publicdomain/zero/1.0/
 
+import dataclasses
+import re
 from dataclasses import dataclass
+from datetime import (
+    date,
+    datetime,
+    time
+)
 from typing import (
     Any,
     ClassVar,
+    Dict,
+    List,
     Optional,
     Union
 )
 
 from jsonasobj2 import (
+    JsonObj,
     as_dict
 )
 from linkml_runtime.linkml_model.meta import (
     EnumDefinition,
-    PermissibleValue
+    PermissibleValue,
+    PvFormulaOptions
 )
 from linkml_runtime.utils.curienamespace import CurieNamespace
 from linkml_runtime.utils.enumerations import EnumDefinitionImpl
+from linkml_runtime.utils.formatutils import (
+    camelcase,
+    sfx,
+    underscore
+)
 from linkml_runtime.utils.metamodelcore import (
+    bnode,
     empty_dict,
     empty_list
 )
 from linkml_runtime.utils.slot import Slot
 from linkml_runtime.utils.yamlutils import (
     YAMLRoot,
+    extended_float,
+    extended_int,
     extended_str
 )
 from rdflib import (
+    Namespace,
     URIRef
 )
 
+from linkml_runtime.linkml_model.types import Boolean, Float, Integer, String
 from linkml_runtime.utils.metamodelcore import Bool
 
 metamodel_version = "1.7.0"
@@ -86,6 +107,10 @@ class ModuleReviewId(extended_str):
 
 
 class ModuleNodeId(extended_str):
+    pass
+
+
+class GoCamReviewModel(extended_str):
     pass
 
 
@@ -170,21 +195,19 @@ class GeneReview(YAMLRoot):
 
         self._normalize_inlined_as_list(slot_name="references", slot_type=Reference, key_name="id", keyed=True)
 
-        self._normalize_inlined_as_dict(slot_name="existing_annotations", slot_type=ExistingAnnotation, key_name="evidence_type", keyed=False)
+        self._normalize_inlined_as_list(slot_name="existing_annotations", slot_type=ExistingAnnotation, key_name="evidence_type", keyed=False)
 
         if not isinstance(self.core_functions, list):
             self.core_functions = [self.core_functions] if self.core_functions is not None else []
         self.core_functions = [v if isinstance(v, CoreFunction) else CoreFunction(**as_dict(v)) for v in self.core_functions]
 
-        self._normalize_inlined_as_dict(slot_name="proposed_new_terms", slot_type=ProposedOntologyTerm, key_name="proposed_name", keyed=False)
+        self._normalize_inlined_as_list(slot_name="proposed_new_terms", slot_type=ProposedOntologyTerm, key_name="proposed_name", keyed=False)
 
-        self._normalize_inlined_as_dict(slot_name="suggested_questions", slot_type=Question, key_name="question", keyed=False)
+        self._normalize_inlined_as_list(slot_name="suggested_questions", slot_type=Question, key_name="question", keyed=False)
 
-        self._normalize_inlined_as_dict(slot_name="suggested_experiments", slot_type=Experiment, key_name="description", keyed=False)
+        self._normalize_inlined_as_list(slot_name="suggested_experiments", slot_type=Experiment, key_name="description", keyed=False)
 
-        if not isinstance(self.knowledge_gaps, list):
-            self.knowledge_gaps = [self.knowledge_gaps] if self.knowledge_gaps is not None else []
-        self.knowledge_gaps = [v if isinstance(v, KnowledgeGap) else KnowledgeGap(**as_dict(v)) for v in self.knowledge_gaps]
+        self._normalize_inlined_as_list(slot_name="knowledge_gaps", slot_type=KnowledgeGap, key_name="gap_statement", keyed=False)
 
         super().__post_init__(**kwargs)
 
@@ -270,9 +293,7 @@ class FunctionalIsoform(YAMLRoot):
         if not isinstance(self.description, str):
             self.description = str(self.description)
 
-        if not isinstance(self.maps_to, list):
-            self.maps_to = [self.maps_to] if self.maps_to is not None else []
-        self.maps_to = [v if isinstance(v, FunctionalIsoformMapping) else FunctionalIsoformMapping(**as_dict(v)) for v in self.maps_to]
+        self._normalize_inlined_as_list(slot_name="maps_to", slot_type=FunctionalIsoformMapping, key_name="type", keyed=False)
 
         self._normalize_inlined_as_list(slot_name="isoform_specific_terms", slot_type=Term, key_name="id", keyed=True)
 
@@ -547,8 +568,11 @@ class SupportingTextInReference(YAMLRoot):
 class EvidenceItem(YAMLRoot):
     """
     A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local
-    file, pathway record, issue, or any other citable artifact. This is deliberately less strict than the publication
-    quote validation used in gene reviews.
+    file, pathway record, issue, or any other citable artifact. When a literature source_id (PMID/DOI) is paired with
+    a supporting_text, that quote is validated verbatim (normalized substring) against the cached publication by the
+    project's module supporting-text check (ai_gene_review.validation.module_validator), using the same matcher as
+    gene reviews; non-literature source_ids (GO, file:, Reactome, PANTHER, ...) carry no supporting_text quote and are
+    not fetched.
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -619,9 +643,7 @@ class Descriptor(YAMLRoot):
         if self.term is not None and not isinstance(self.term, Term):
             self.term = Term(**as_dict(self.term))
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -684,15 +706,39 @@ class FamilyDescriptor(Descriptor):
     class_model_uri: ClassVar[URIRef] = GENE_REVIEW.FamilyDescriptor
 
     preferred_term: str = None
+    family_terms: Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]] = empty_dict()
     representative_members: Optional[Union[Union[dict, GeneProductDescriptor], list[Union[dict, GeneProductDescriptor]]]] = empty_list()
+    ancestral_nodes: Optional[Union[Union[dict, "AncestralNodeDescriptor"], list[Union[dict, "AncestralNodeDescriptor"]]]] = empty_list()
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if not isinstance(self.representative_members, list):
-            self.representative_members = [self.representative_members] if self.representative_members is not None else []
-        self.representative_members = [v if isinstance(v, GeneProductDescriptor) else GeneProductDescriptor(**as_dict(v)) for v in self.representative_members]
+        self._normalize_inlined_as_list(slot_name="family_terms", slot_type=Term, key_name="id", keyed=True)
+
+        self._normalize_inlined_as_list(slot_name="representative_members", slot_type=GeneProductDescriptor, key_name="preferred_term", keyed=False)
+
+        self._normalize_inlined_as_list(slot_name="ancestral_nodes", slot_type=AncestralNodeDescriptor, key_name="preferred_term", keyed=False)
 
         super().__post_init__(**kwargs)
 
+
+@dataclass(repr=False)
+class AncestralNodeDescriptor(Descriptor):
+    """
+    A PANTHER/PAINT ancestral node (a PTN identifier, e.g. PANTHER:PTN000299444) used to ground an evolutionary
+    inference about a function. Asserting an ancestral node states that the function associated with the enclosing
+    annoton is inferred to have arisen at, or been present in, the last common ancestor represented by this node, and
+    is therefore inferred to be retained in extant descendant proteins barring divergence, neofunctionalization, or
+    loss of key residues. This is a stronger, clade-level claim than a representative member. Such nodes can be
+    resolved from the IBA WITH/FROM column (GO_REF:0000033) of a representative member's GOA record rather than
+    guessed.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["AncestralNodeDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:AncestralNodeDescriptor"
+    class_name: ClassVar[str] = "AncestralNodeDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.AncestralNodeDescriptor
+
+    preferred_term: str = None
 
 @dataclass(repr=False)
 class DomainDescriptor(Descriptor):
@@ -785,9 +831,7 @@ class ComplexUnit(YAMLRoot):
         if self.function is not None and not isinstance(self.function, MolecularFunctionDescriptor):
             self.function = MolecularFunctionDescriptor(**as_dict(self.function))
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -874,25 +918,15 @@ class MolecularFunctionDescriptor(Descriptor):
     destination_location: Optional[Union[dict, CellularComponentDescriptor]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if not isinstance(self.substrates, list):
-            self.substrates = [self.substrates] if self.substrates is not None else []
-        self.substrates = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.substrates]
+        self._normalize_inlined_as_list(slot_name="substrates", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.products, list):
-            self.products = [self.products] if self.products is not None else []
-        self.products = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.products]
+        self._normalize_inlined_as_list(slot_name="products", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.cofactors, list):
-            self.cofactors = [self.cofactors] if self.cofactors is not None else []
-        self.cofactors = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.cofactors]
+        self._normalize_inlined_as_list(slot_name="cofactors", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.targets, list):
-            self.targets = [self.targets] if self.targets is not None else []
-        self.targets = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.targets]
+        self._normalize_inlined_as_list(slot_name="targets", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.cargo, list):
-            self.cargo = [self.cargo] if self.cargo is not None else []
-        self.cargo = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.cargo]
+        self._normalize_inlined_as_list(slot_name="cargo", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
         if self.source_location is not None and not isinstance(self.source_location, CellularComponentDescriptor):
             self.source_location = CellularComponentDescriptor(**as_dict(self.source_location))
@@ -923,17 +957,11 @@ class BiologicalProcessDescriptor(Descriptor):
     ends_with: Optional[Union[dict, Descriptor]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if not isinstance(self.inputs, list):
-            self.inputs = [self.inputs] if self.inputs is not None else []
-        self.inputs = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.inputs]
+        self._normalize_inlined_as_list(slot_name="inputs", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.outputs, list):
-            self.outputs = [self.outputs] if self.outputs is not None else []
-        self.outputs = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.outputs]
+        self._normalize_inlined_as_list(slot_name="outputs", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.occurs_in, list):
-            self.occurs_in = [self.occurs_in] if self.occurs_in is not None else []
-        self.occurs_in = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.occurs_in]
+        self._normalize_inlined_as_list(slot_name="occurs_in", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
         if self.starts_with is not None and not isinstance(self.starts_with, Descriptor):
             self.starts_with = Descriptor(**as_dict(self.starts_with))
@@ -978,6 +1006,7 @@ class ModuleReview(YAMLRoot):
     references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, Reference]], list[Union[dict, Reference]]]] = empty_dict()
     knowledge_gaps: Optional[Union[Union[dict, "KnowledgeGap"], list[Union[dict, "KnowledgeGap"]]]] = empty_list()
     status: Optional[str] = None
+    scope: Optional[Union[str, "ModuleScopeEnum"]] = None
     evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
     notes: Optional[str] = None
 
@@ -1002,16 +1031,15 @@ class ModuleReview(YAMLRoot):
 
         self._normalize_inlined_as_list(slot_name="references", slot_type=Reference, key_name="id", keyed=True)
 
-        if not isinstance(self.knowledge_gaps, list):
-            self.knowledge_gaps = [self.knowledge_gaps] if self.knowledge_gaps is not None else []
-        self.knowledge_gaps = [v if isinstance(v, KnowledgeGap) else KnowledgeGap(**as_dict(v)) for v in self.knowledge_gaps]
+        self._normalize_inlined_as_list(slot_name="knowledge_gaps", slot_type=KnowledgeGap, key_name="gap_statement", keyed=False)
 
         if self.status is not None and not isinstance(self.status, str):
             self.status = str(self.status)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        if self.scope is not None and not isinstance(self.scope, ModuleScopeEnum):
+            self.scope = ModuleScopeEnum(self.scope)
+
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1043,6 +1071,8 @@ class ModuleNode(YAMLRoot):
     parts: Optional[Union[Union[dict, "ModulePart"], list[Union[dict, "ModulePart"]]]] = empty_list()
     variant_sets: Optional[Union[Union[dict, "ModuleVariantSet"], list[Union[dict, "ModuleVariantSet"]]]] = empty_list()
     connections: Optional[Union[Union[dict, "ModuleConnection"], list[Union[dict, "ModuleConnection"]]]] = empty_list()
+    conforms_to: Optional[Union[Union[dict, "Conformance"], list[Union[dict, "Conformance"]]]] = empty_list()
+    gocam_associations: Optional[Union[Union[dict, "GoCamAssociation"], list[Union[dict, "GoCamAssociation"]]]] = empty_list()
     evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
     notes: Optional[str] = None
 
@@ -1057,9 +1087,7 @@ class ModuleNode(YAMLRoot):
         if not isinstance(self.label, str):
             self.label = str(self.label)
 
-        if not isinstance(self.knowledge_gaps, list):
-            self.knowledge_gaps = [self.knowledge_gaps] if self.knowledge_gaps is not None else []
-        self.knowledge_gaps = [v if isinstance(v, KnowledgeGap) else KnowledgeGap(**as_dict(v)) for v in self.knowledge_gaps]
+        self._normalize_inlined_as_list(slot_name="knowledge_gaps", slot_type=KnowledgeGap, key_name="gap_statement", keyed=False)
 
         if self.module_type is not None and not isinstance(self.module_type, ModuleTypeEnum):
             self.module_type = ModuleTypeEnum(self.module_type)
@@ -1067,32 +1095,64 @@ class ModuleNode(YAMLRoot):
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
 
-        if not isinstance(self.concepts, list):
-            self.concepts = [self.concepts] if self.concepts is not None else []
-        self.concepts = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.concepts]
+        self._normalize_inlined_as_list(slot_name="concepts", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
         if self.context is not None and not isinstance(self.context, ModuleContext):
             self.context = ModuleContext(**as_dict(self.context))
 
-        if not isinstance(self.annotons, list):
-            self.annotons = [self.annotons] if self.annotons is not None else []
-        self.annotons = [v if isinstance(v, ModuleAnnoton) else ModuleAnnoton(**as_dict(v)) for v in self.annotons]
+        self._normalize_inlined_as_list(slot_name="annotons", slot_type=ModuleAnnoton, key_name="id", keyed=False)
 
         if not isinstance(self.parts, list):
             self.parts = [self.parts] if self.parts is not None else []
         self.parts = [v if isinstance(v, ModulePart) else ModulePart(**as_dict(v)) for v in self.parts]
 
-        if not isinstance(self.variant_sets, list):
-            self.variant_sets = [self.variant_sets] if self.variant_sets is not None else []
-        self.variant_sets = [v if isinstance(v, ModuleVariantSet) else ModuleVariantSet(**as_dict(v)) for v in self.variant_sets]
+        self._normalize_inlined_as_list(slot_name="variant_sets", slot_type=ModuleVariantSet, key_name="id", keyed=False)
 
-        if not isinstance(self.connections, list):
-            self.connections = [self.connections] if self.connections is not None else []
-        self.connections = [v if isinstance(v, ModuleConnection) else ModuleConnection(**as_dict(v)) for v in self.connections]
+        self._normalize_inlined_as_list(slot_name="connections", slot_type=ModuleConnection, key_name="source", keyed=False)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="conforms_to", slot_type=Conformance, key_name="template", keyed=False)
+
+        self._normalize_inlined_as_list(slot_name="gocam_associations", slot_type=GoCamAssociation, key_name="model", keyed=False)
+
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class Conformance(YAMLRoot):
+    """
+    Assertion that a module node (together with its parts and connections) is an instance of a reusable template
+    module or motif, optionally recording how it deviates from that template. Modeled after the dismech conforms_to
+    pattern: conformance is a consistency check, not inheritance.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["Conformance"]
+    class_class_curie: ClassVar[str] = "gene_review:Conformance"
+    class_name: ClassVar[str] = "Conformance"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.Conformance
+
+    template: str = None
+    status: Optional[Union[str, "ConformanceStatusEnum"]] = None
+    deviations: Optional[Union[str, list[str]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.template):
+            self.MissingRequiredField("template")
+        if not isinstance(self.template, str):
+            self.template = str(self.template)
+
+        if self.status is not None and not isinstance(self.status, ConformanceStatusEnum):
+            self.status = ConformanceStatusEnum(self.status)
+
+        if not isinstance(self.deviations, list):
+            self.deviations = [self.deviations] if self.deviations is not None else []
+        self.deviations = [v if isinstance(v, str) else str(v) for v in self.deviations]
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1134,9 +1194,7 @@ class ModulePart(YAMLRoot):
         if self.optional is not None and not isinstance(self.optional, Bool):
             self.optional = Bool(self.optional)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1184,9 +1242,7 @@ class ModuleVariantSet(YAMLRoot):
         if self.selection is not None and not isinstance(self.selection, VariantSelectionEnum):
             self.selection = VariantSelectionEnum(self.selection)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1214,6 +1270,7 @@ class ModuleAnnoton(YAMLRoot):
     processes: Optional[Union[Union[dict, BiologicalProcessDescriptor], list[Union[dict, BiologicalProcessDescriptor]]]] = empty_list()
     locations: Optional[Union[Union[dict, CellularComponentDescriptor], list[Union[dict, CellularComponentDescriptor]]]] = empty_list()
     role_description: Optional[str] = None
+    gocam_associations: Optional[Union[Union[dict, "GoCamAssociation"], list[Union[dict, "GoCamAssociation"]]]] = empty_list()
     evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
     notes: Optional[str] = None
 
@@ -1232,20 +1289,186 @@ class ModuleAnnoton(YAMLRoot):
         if self.function is not None and not isinstance(self.function, MolecularFunctionDescriptor):
             self.function = MolecularFunctionDescriptor(**as_dict(self.function))
 
-        if not isinstance(self.processes, list):
-            self.processes = [self.processes] if self.processes is not None else []
-        self.processes = [v if isinstance(v, BiologicalProcessDescriptor) else BiologicalProcessDescriptor(**as_dict(v)) for v in self.processes]
+        self._normalize_inlined_as_list(slot_name="processes", slot_type=BiologicalProcessDescriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.locations, list):
-            self.locations = [self.locations] if self.locations is not None else []
-        self.locations = [v if isinstance(v, CellularComponentDescriptor) else CellularComponentDescriptor(**as_dict(v)) for v in self.locations]
+        self._normalize_inlined_as_list(slot_name="locations", slot_type=CellularComponentDescriptor, key_name="preferred_term", keyed=False)
 
         if self.role_description is not None and not isinstance(self.role_description, str):
             self.role_description = str(self.role_description)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="gocam_associations", slot_type=GoCamAssociation, key_name="model", keyed=False)
+
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class GoCamAssociation(YAMLRoot):
+    """
+    A reference from a module element to a production GO-CAM (Gene Ontology Causal Activity Model), optionally pinned
+    to a specific activity (annoton) within that model. The referenced model is expected to be cached under
+    gocams/<model_id>/<model_id>-src.yaml.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["GoCamAssociation"]
+    class_class_curie: ClassVar[str] = "gene_review:GoCamAssociation"
+    class_name: ClassVar[str] = "GoCamAssociation"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.GoCamAssociation
+
+    model: str = None
+    activity: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.model):
+            self.MissingRequiredField("model")
+        if not isinstance(self.model, str):
+            self.model = str(self.model)
+
+        if self.activity is not None and not isinstance(self.activity, str):
+            self.activity = str(self.activity)
+
+        if self.title is not None and not isinstance(self.title, str):
+            self.title = str(self.title)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class GoCamReview(YAMLRoot):
+    """
+    A reviewer's assessment of a cached production GO-CAM model (gocams/<model_id>/<model_id>-src.yaml), recorded
+    alongside it as gocams/<model_id>/<model_id>-review.yaml. Captures a standalone reading of the model, per-activity
+    (annoton) QC against GO-CAM best practice, and the consistency of each activity with the corresponding gene
+    annotation review. Validate standalone with `-C GoCamReview`.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["GoCamReview"]
+    class_class_curie: ClassVar[str] = "gene_review:GoCamReview"
+    class_name: ClassVar[str] = "GoCamReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.GoCamReview
+
+    model: Union[str, GoCamReviewModel] = None
+    title: str = None
+    description: Optional[str] = None
+    references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, Reference]], list[Union[dict, Reference]]]] = empty_dict()
+    taxon: Optional[str] = None
+    summary: Optional[str] = None
+    status: Optional[Union[str, "GoCamReviewStatusEnum"]] = None
+    activity_reviews: Optional[Union[Union[dict, "GoCamActivityReview"], list[Union[dict, "GoCamActivityReview"]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.model):
+            self.MissingRequiredField("model")
+        if not isinstance(self.model, GoCamReviewModel):
+            self.model = GoCamReviewModel(self.model)
+
+        if self._is_empty(self.title):
+            self.MissingRequiredField("title")
+        if not isinstance(self.title, str):
+            self.title = str(self.title)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        self._normalize_inlined_as_list(slot_name="references", slot_type=Reference, key_name="id", keyed=True)
+
+        if self.taxon is not None and not isinstance(self.taxon, str):
+            self.taxon = str(self.taxon)
+
+        if self.summary is not None and not isinstance(self.summary, str):
+            self.summary = str(self.summary)
+
+        if self.status is not None and not isinstance(self.status, GoCamReviewStatusEnum):
+            self.status = GoCamReviewStatusEnum(self.status)
+
+        self._normalize_inlined_as_list(slot_name="activity_reviews", slot_type=GoCamActivityReview, key_name="activity_id", keyed=False)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class GoCamActivityReview(YAMLRoot):
+    """
+    Review of a single GO-CAM activity (annoton): the cached gene product / molecular function / process / location, a
+    best-practice QC verdict, and how the activity relates to the gene's annotation review.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["GoCamActivityReview"]
+    class_class_curie: ClassVar[str] = "gene_review:GoCamActivityReview"
+    class_name: ClassVar[str] = "GoCamActivityReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.GoCamActivityReview
+
+    activity_id: str = None
+    gene_product: Optional[str] = None
+    molecular_function: Optional[str] = None
+    biological_process: Optional[str] = None
+    cellular_component: Optional[str] = None
+    verdict: Optional[Union[str, "GoCamClaimVerdictEnum"]] = None
+    qc_flags: Optional[Union[Union[str, "GoCamQcFlagEnum"], list[Union[str, "GoCamQcFlagEnum"]]]] = empty_list()
+    consistency: Optional[Union[str, "GoCamConsistencyEnum"]] = None
+    gene_review: Optional[str] = None
+    supporting_text: Optional[str] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.activity_id):
+            self.MissingRequiredField("activity_id")
+        if not isinstance(self.activity_id, str):
+            self.activity_id = str(self.activity_id)
+
+        if self.gene_product is not None and not isinstance(self.gene_product, str):
+            self.gene_product = str(self.gene_product)
+
+        if self.molecular_function is not None and not isinstance(self.molecular_function, str):
+            self.molecular_function = str(self.molecular_function)
+
+        if self.biological_process is not None and not isinstance(self.biological_process, str):
+            self.biological_process = str(self.biological_process)
+
+        if self.cellular_component is not None and not isinstance(self.cellular_component, str):
+            self.cellular_component = str(self.cellular_component)
+
+        if self.verdict is not None and not isinstance(self.verdict, GoCamClaimVerdictEnum):
+            self.verdict = GoCamClaimVerdictEnum(self.verdict)
+
+        if not isinstance(self.qc_flags, list):
+            self.qc_flags = [self.qc_flags] if self.qc_flags is not None else []
+        self.qc_flags = [v if isinstance(v, GoCamQcFlagEnum) else GoCamQcFlagEnum(v) for v in self.qc_flags]
+
+        if self.consistency is not None and not isinstance(self.consistency, GoCamConsistencyEnum):
+            self.consistency = GoCamConsistencyEnum(self.consistency)
+
+        if self.gene_review is not None and not isinstance(self.gene_review, str):
+            self.gene_review = str(self.gene_review)
+
+        if self.supporting_text is not None and not isinstance(self.supporting_text, str):
+            self.supporting_text = str(self.supporting_text)
+
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1320,9 +1543,7 @@ class ParticipantSelector(YAMLRoot):
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1352,33 +1573,19 @@ class ModuleContext(YAMLRoot):
     notes: Optional[str] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if not isinstance(self.taxa, list):
-            self.taxa = [self.taxa] if self.taxa is not None else []
-        self.taxa = [v if isinstance(v, TaxonDescriptor) else TaxonDescriptor(**as_dict(v)) for v in self.taxa]
+        self._normalize_inlined_as_list(slot_name="taxa", slot_type=TaxonDescriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.cell_types, list):
-            self.cell_types = [self.cell_types] if self.cell_types is not None else []
-        self.cell_types = [v if isinstance(v, CellTypeDescriptor) else CellTypeDescriptor(**as_dict(v)) for v in self.cell_types]
+        self._normalize_inlined_as_list(slot_name="cell_types", slot_type=CellTypeDescriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.anatomical_locations, list):
-            self.anatomical_locations = [self.anatomical_locations] if self.anatomical_locations is not None else []
-        self.anatomical_locations = [v if isinstance(v, AnatomicalEntityDescriptor) else AnatomicalEntityDescriptor(**as_dict(v)) for v in self.anatomical_locations]
+        self._normalize_inlined_as_list(slot_name="anatomical_locations", slot_type=AnatomicalEntityDescriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.developmental_stages, list):
-            self.developmental_stages = [self.developmental_stages] if self.developmental_stages is not None else []
-        self.developmental_stages = [v if isinstance(v, DevelopmentalStageDescriptor) else DevelopmentalStageDescriptor(**as_dict(v)) for v in self.developmental_stages]
+        self._normalize_inlined_as_list(slot_name="developmental_stages", slot_type=DevelopmentalStageDescriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.cellular_components, list):
-            self.cellular_components = [self.cellular_components] if self.cellular_components is not None else []
-        self.cellular_components = [v if isinstance(v, CellularComponentDescriptor) else CellularComponentDescriptor(**as_dict(v)) for v in self.cellular_components]
+        self._normalize_inlined_as_list(slot_name="cellular_components", slot_type=CellularComponentDescriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.conditions, list):
-            self.conditions = [self.conditions] if self.conditions is not None else []
-        self.conditions = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.conditions]
+        self._normalize_inlined_as_list(slot_name="conditions", slot_type=Descriptor, key_name="preferred_term", keyed=False)
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1406,6 +1613,8 @@ class ModuleConnection(YAMLRoot):
     description: Optional[str] = None
     context: Optional[Union[dict, ModuleContext]] = None
     evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    chaining_status: Optional[Union[str, "ChainingStatusEnum"]] = None
+    chaining_note: Optional[str] = None
     notes: Optional[str] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
@@ -1431,9 +1640,13 @@ class ModuleConnection(YAMLRoot):
         if self.context is not None and not isinstance(self.context, ModuleContext):
             self.context = ModuleContext(**as_dict(self.context))
 
-        if not isinstance(self.evidence, list):
-            self.evidence = [self.evidence] if self.evidence is not None else []
-        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+        self._normalize_inlined_as_list(slot_name="evidence", slot_type=EvidenceItem, key_name="source_id", keyed=False)
+
+        if self.chaining_status is not None and not isinstance(self.chaining_status, ChainingStatusEnum):
+            self.chaining_status = ChainingStatusEnum(self.chaining_status)
+
+        if self.chaining_note is not None and not isinstance(self.chaining_note, str):
+            self.chaining_note = str(self.chaining_note)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
@@ -1476,7 +1689,7 @@ class ExistingAnnotation(YAMLRoot):
         if self.qualifier is not None and not isinstance(self.qualifier, AnnotationQualifierEnum):
             self.qualifier = AnnotationQualifierEnum(self.qualifier)
 
-        self._normalize_inlined_as_dict(slot_name="extensions", slot_type=AnnotationExtension, key_name="predicate", keyed=False)
+        self._normalize_inlined_as_list(slot_name="extensions", slot_type=AnnotationExtension, key_name="predicate", keyed=False)
 
         if self.negated is not None and not isinstance(self.negated, Bool):
             self.negated = Bool(self.negated)
@@ -1519,6 +1732,7 @@ class Review(YAMLRoot):
     additional_reference_ids: Optional[Union[Union[str, ReferenceId], list[Union[str, ReferenceId]]]] = empty_list()
     supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
     knowledge_gaps: Optional[Union[Union[dict, "KnowledgeGap"], list[Union[dict, "KnowledgeGap"]]]] = empty_list()
+    propagation_review: Optional[Union[dict, "PropagationReview"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.action):
@@ -1538,11 +1752,190 @@ class Review(YAMLRoot):
             self.additional_reference_ids = [self.additional_reference_ids] if self.additional_reference_ids is not None else []
         self.additional_reference_ids = [v if isinstance(v, ReferenceId) else ReferenceId(v) for v in self.additional_reference_ids]
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
-        if not isinstance(self.knowledge_gaps, list):
-            self.knowledge_gaps = [self.knowledge_gaps] if self.knowledge_gaps is not None else []
-        self.knowledge_gaps = [v if isinstance(v, KnowledgeGap) else KnowledgeGap(**as_dict(v)) for v in self.knowledge_gaps]
+        self._normalize_inlined_as_list(slot_name="knowledge_gaps", slot_type=KnowledgeGap, key_name="gap_statement", keyed=False)
+
+        if self.propagation_review is not None and not isinstance(self.propagation_review, PropagationReview):
+            self.propagation_review = PropagationReview(**as_dict(self.propagation_review))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class PropagationReview(YAMLRoot):
+    """
+    Structured, mechanical assessment of a propagated or inferred annotation. The detailed biological rationale
+    remains in review.reason; this object records the reusable taxonomy and optional per-source-gene/node comments.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["PropagationReview"]
+    class_class_curie: ClassVar[str] = "gene_review:PropagationReview"
+    class_name: ClassVar[str] = "PropagationReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.PropagationReview
+
+    root_cause: Union[str, "PropagationRootCauseEnum"] = None
+    failure_modes: Optional[Union[Union[str, "PropagationFailureModeEnum"], list[Union[str, "PropagationFailureModeEnum"]]]] = empty_list()
+    source_entities: Optional[Union[Union[dict, "PropagationSource"], list[Union[dict, "PropagationSource"]]]] = empty_list()
+    residue_claims: Optional[Union[Union[dict, "ResidueClaim"], list[Union[dict, "ResidueClaim"]]]] = empty_list()
+    residue_claims_not_applicable: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.root_cause):
+            self.MissingRequiredField("root_cause")
+        if not isinstance(self.root_cause, PropagationRootCauseEnum):
+            self.root_cause = PropagationRootCauseEnum(self.root_cause)
+
+        if not isinstance(self.failure_modes, list):
+            self.failure_modes = [self.failure_modes] if self.failure_modes is not None else []
+        self.failure_modes = [v if isinstance(v, PropagationFailureModeEnum) else PropagationFailureModeEnum(v) for v in self.failure_modes]
+
+        self._normalize_inlined_as_list(slot_name="source_entities", slot_type=PropagationSource, key_name="source_id", keyed=False)
+
+        self._normalize_inlined_as_list(slot_name="residue_claims", slot_type=ResidueClaim, key_name="claim_type", keyed=False)
+
+        if self.residue_claims_not_applicable is not None and not isinstance(self.residue_claims_not_applicable, str):
+            self.residue_claims_not_applicable = str(self.residue_claims_not_applicable)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ResidueClaim(YAMLRoot):
+    """
+    A claim that a specific position in THIS gene's protein does or does not carry the residue an anchor protein has
+    at the corresponding position.
+    Both sides carry an explicit position and residue, which is what makes the claim checkable without an alignment:
+    the anchor and target residues are each resolved directly against their own sequences. The alignment is only
+    needed to confirm the two positions genuinely correspond, so a claim remains partially verifiable even when no
+    alignment is pinned.
+    Positions are always in each protein's own native numbering, never an alignment column -- columns shift when
+    PANTHER re-releases a family, and a stale column still resolves, to the wrong residue.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ResidueClaim"]
+    class_class_curie: ClassVar[str] = "gene_review:ResidueClaim"
+    class_name: ClassVar[str] = "ResidueClaim"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ResidueClaim
+
+    claim_type: Union[str, "ResidueClaimEnum"] = None
+    anchor: Union[dict, "ResiduePosition"] = None
+    method: Union[str, "ResidueClaimMethodEnum"] = None
+    site_ref: Optional[str] = None
+    target: Optional[Union[dict, "ResiduePosition"]] = None
+    role: Optional[str] = None
+    alignment_release: Optional[str] = None
+    comment: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.claim_type):
+            self.MissingRequiredField("claim_type")
+        if not isinstance(self.claim_type, ResidueClaimEnum):
+            self.claim_type = ResidueClaimEnum(self.claim_type)
+
+        if self._is_empty(self.anchor):
+            self.MissingRequiredField("anchor")
+        if not isinstance(self.anchor, ResiduePosition):
+            self.anchor = ResiduePosition(**as_dict(self.anchor))
+
+        if self._is_empty(self.method):
+            self.MissingRequiredField("method")
+        if not isinstance(self.method, ResidueClaimMethodEnum):
+            self.method = ResidueClaimMethodEnum(self.method)
+
+        if self.site_ref is not None and not isinstance(self.site_ref, str):
+            self.site_ref = str(self.site_ref)
+
+        if self.target is not None and not isinstance(self.target, ResiduePosition):
+            self.target = ResiduePosition(**as_dict(self.target))
+
+        if self.role is not None and not isinstance(self.role, str):
+            self.role = str(self.role)
+
+        if self.alignment_release is not None and not isinstance(self.alignment_release, str):
+            self.alignment_release = str(self.alignment_release)
+
+        if self.comment is not None and not isinstance(self.comment, str):
+            self.comment = str(self.comment)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ResiduePosition(YAMLRoot):
+    """
+    A single residue in a named protein, in that protein's own numbering.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ResiduePosition"]
+    class_class_curie: ClassVar[str] = "gene_review:ResiduePosition"
+    class_name: ClassVar[str] = "ResiduePosition"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ResiduePosition
+
+    accession: str = None
+    position: int = None
+    residue: str = None
+    sequence_version: Optional[int] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.accession):
+            self.MissingRequiredField("accession")
+        if not isinstance(self.accession, str):
+            self.accession = str(self.accession)
+
+        if self._is_empty(self.position):
+            self.MissingRequiredField("position")
+        if not isinstance(self.position, int):
+            self.position = int(self.position)
+
+        if self._is_empty(self.residue):
+            self.MissingRequiredField("residue")
+        if not isinstance(self.residue, str):
+            self.residue = str(self.residue)
+
+        if self.sequence_version is not None and not isinstance(self.sequence_version, int):
+            self.sequence_version = int(self.sequence_version)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class PropagationSource(YAMLRoot):
+    """
+    A source entity considered while reviewing an inferred annotation. This is intentionally compact: use comment for
+    source-specific caveats, not for restating the whole review rationale.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["PropagationSource"]
+    class_class_curie: ClassVar[str] = "gene_review:PropagationSource"
+    class_name: ClassVar[str] = "PropagationSource"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.PropagationSource
+
+    source_id: str = None
+    source_label: Optional[str] = None
+    source_status: Optional[Union[str, "PropagationSourceStatusEnum"]] = None
+    comment: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.source_id):
+            self.MissingRequiredField("source_id")
+        if not isinstance(self.source_id, str):
+            self.source_id = str(self.source_id)
+
+        if self.source_label is not None and not isinstance(self.source_label, str):
+            self.source_label = str(self.source_label)
+
+        if self.source_status is not None and not isinstance(self.source_status, PropagationSourceStatusEnum):
+            self.source_status = PropagationSourceStatusEnum(self.source_status)
+
+        if self.comment is not None and not isinstance(self.comment, str):
+            self.comment = str(self.comment)
 
         super().__post_init__(**kwargs)
 
@@ -1572,14 +1965,14 @@ class CoreFunction(YAMLRoot):
     in_complex: Optional[Union[dict, Term]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if not isinstance(self.knowledge_gaps, list):
-            self.knowledge_gaps = [self.knowledge_gaps] if self.knowledge_gaps is not None else []
-        self.knowledge_gaps = [v if isinstance(v, KnowledgeGap) else KnowledgeGap(**as_dict(v)) for v in self.knowledge_gaps]
+        self._normalize_inlined_as_list(slot_name="knowledge_gaps", slot_type=KnowledgeGap, key_name="gap_statement", keyed=False)
 
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         if self.molecular_function is not None and not isinstance(self.molecular_function, Term):
             self.molecular_function = Term(**as_dict(self.molecular_function))
@@ -1693,11 +2086,11 @@ class ProposedOntologyTerm(YAMLRoot):
         if self.proposed_parent is not None and not isinstance(self.proposed_parent, Term):
             self.proposed_parent = Term(**as_dict(self.proposed_parent))
 
-        if not isinstance(self.proposed_mappings, list):
-            self.proposed_mappings = [self.proposed_mappings] if self.proposed_mappings is not None else []
-        self.proposed_mappings = [v if isinstance(v, TermMapping) else TermMapping(**as_dict(v)) for v in self.proposed_mappings]
+        self._normalize_inlined_as_list(slot_name="proposed_mappings", slot_type=TermMapping, key_name="predicate", keyed=False)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -1758,9 +2151,7 @@ class KnowledgeGap(YAMLRoot):
             self.provenance = [self.provenance] if self.provenance is not None else []
         self.provenance = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.provenance]
 
-        if not isinstance(self.proposed_terms, list):
-            self.proposed_terms = [self.proposed_terms] if self.proposed_terms is not None else []
-        self.proposed_terms = [v if isinstance(v, ProposedOntologyTerm) else ProposedOntologyTerm(**as_dict(v)) for v in self.proposed_terms]
+        self._normalize_inlined_as_list(slot_name="proposed_terms", slot_type=ProposedOntologyTerm, key_name="proposed_name", keyed=False)
 
         super().__post_init__(**kwargs)
 
@@ -1912,7 +2303,9 @@ class RuleReview(YAMLRoot):
         if self.confidence is not None and not isinstance(self.confidence, float):
             self.confidence = float(self.confidence)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -1948,17 +2341,13 @@ class EmbeddedRule(YAMLRoot):
 
         if self._is_empty(self.condition_sets):
             self.MissingRequiredField("condition_sets")
-        if not isinstance(self.condition_sets, list):
-            self.condition_sets = [self.condition_sets] if self.condition_sets is not None else []
-        self.condition_sets = [v if isinstance(v, RuleConditionSet) else RuleConditionSet(**as_dict(v)) for v in self.condition_sets]
+        self._normalize_inlined_as_list(slot_name="condition_sets", slot_type=RuleConditionSet, key_name="number", keyed=False)
 
         if self._is_empty(self.entries):
             self.MissingRequiredField("entries")
         self._normalize_inlined_as_list(slot_name="entries", slot_type=RuleReviewEntry, key_name="id", keyed=True)
 
-        if not isinstance(self.go_annotations, list):
-            self.go_annotations = [self.go_annotations] if self.go_annotations is not None else []
-        self.go_annotations = [v if isinstance(v, RuleGOAnnotation) else RuleGOAnnotation(**as_dict(v)) for v in self.go_annotations]
+        self._normalize_inlined_as_list(slot_name="go_annotations", slot_type=RuleGOAnnotation, key_name="go_id", keyed=False)
 
         if self.ipr2go_redundancy is not None and not isinstance(self.ipr2go_redundancy, InterPro2GORedundancy):
             self.ipr2go_redundancy = InterPro2GORedundancy(**as_dict(self.ipr2go_redundancy))
@@ -2004,16 +2393,12 @@ class RuleConditionSet(YAMLRoot):
 
         if self._is_empty(self.conditions):
             self.MissingRequiredField("conditions")
-        if not isinstance(self.conditions, list):
-            self.conditions = [self.conditions] if self.conditions is not None else []
-        self.conditions = [v if isinstance(v, RuleCondition) else RuleCondition(**as_dict(v)) for v in self.conditions]
+        self._normalize_inlined_as_list(slot_name="conditions", slot_type=RuleCondition, key_name="condition_type", keyed=False)
 
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
 
-        if not isinstance(self.pairwise_overlap, list):
-            self.pairwise_overlap = [self.pairwise_overlap] if self.pairwise_overlap is not None else []
-        self.pairwise_overlap = [v if isinstance(v, PairwiseOverlap) else PairwiseOverlap(**as_dict(v)) for v in self.pairwise_overlap]
+        self._normalize_inlined_as_list(slot_name="pairwise_overlap", slot_type=PairwiseOverlap, key_name="condition_a", keyed=False)
 
         super().__post_init__(**kwargs)
 
@@ -2267,9 +2652,7 @@ class RuleReviewEntry(YAMLRoot):
             self.asserted_predicted_go_terms = [self.asserted_predicted_go_terms] if self.asserted_predicted_go_terms is not None else []
         self.asserted_predicted_go_terms = [v if isinstance(v, str) else str(v) for v in self.asserted_predicted_go_terms]
 
-        if not isinstance(self.related_entries, list):
-            self.related_entries = [self.related_entries] if self.related_entries is not None else []
-        self.related_entries = [v if isinstance(v, RelatedEntry) else RelatedEntry(**as_dict(v)) for v in self.related_entries]
+        self._normalize_inlined_as_list(slot_name="related_entries", slot_type=RelatedEntry, key_name="relationship", keyed=False)
 
         super().__post_init__(**kwargs)
 
@@ -2337,9 +2720,7 @@ class InterPro2GORedundancy(YAMLRoot):
     summary: Optional[str] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if not isinstance(self.redundant_annotations, list):
-            self.redundant_annotations = [self.redundant_annotations] if self.redundant_annotations is not None else []
-        self.redundant_annotations = [v if isinstance(v, RedundantAnnotation) else RedundantAnnotation(**as_dict(v)) for v in self.redundant_annotations]
+        self._normalize_inlined_as_list(slot_name="redundant_annotations", slot_type=RedundantAnnotation, key_name="go_id", keyed=False)
 
         if not isinstance(self.novel_annotations, list):
             self.novel_annotations = [self.novel_annotations] if self.novel_annotations is not None else []
@@ -2413,7 +2794,9 @@ class ParsimonyAssessment(YAMLRoot):
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -2443,7 +2826,9 @@ class LiteratureSupportAssessment(YAMLRoot):
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -2473,7 +2858,9 @@ class ConditionOverlapAssessment(YAMLRoot):
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -2503,7 +2890,9 @@ class GOSpecificityAssessment(YAMLRoot):
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -2533,7 +2922,9 @@ class TaxonomicScopeAssessment(YAMLRoot):
         if self.notes is not None and not isinstance(self.notes, str):
             self.notes = str(self.notes)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
@@ -2594,9 +2985,7 @@ class PredictionReview(YAMLRoot):
             self.source_documents = [self.source_documents] if self.source_documents is not None else []
         self.source_documents = [v if isinstance(v, str) else str(v) for v in self.source_documents]
 
-        if not isinstance(self.predictions, list):
-            self.predictions = [self.predictions] if self.predictions is not None else []
-        self.predictions = [v if isinstance(v, PredictedAnnotation) else PredictedAnnotation(**as_dict(v)) for v in self.predictions]
+        self._normalize_inlined_as_list(slot_name="predictions", slot_type=PredictedAnnotation, key_name="source_method", keyed=False)
 
         super().__post_init__(**kwargs)
 
@@ -2689,12 +3078,30 @@ class PredictionAssessment(YAMLRoot):
         if self.error_type is not None and not isinstance(self.error_type, PredictionErrorTypeEnum):
             self.error_type = PredictionErrorTypeEnum(self.error_type)
 
-        self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+        if not isinstance(self.supported_by, list):
+            self.supported_by = [self.supported_by] if self.supported_by is not None else []
+        self.supported_by = [v if isinstance(v, SupportingTextInReference) else SupportingTextInReference(**as_dict(v)) for v in self.supported_by]
 
         super().__post_init__(**kwargs)
 
 
 # Enumerations
+class ModuleScopeEnum(EnumDefinitionImpl):
+    """
+    How concrete the module document is expected to be.
+    """
+    CONCRETE = PermissibleValue(
+        text="CONCRETE",
+        description="""A module representing a specific pathway, complex, process, or taxon-scoped realization where terminal steps should generally ground to representative members.""")
+    ABSTRACT = PermissibleValue(
+        text="ABSTRACT",
+        description="""A reusable motif or template that intentionally uses abstract participant selectors and is not expected to ground each terminal node to concrete representative proteins.""")
+
+    _defn = EnumDefinition(
+        name="ModuleScopeEnum",
+        description="How concrete the module document is expected to be.",
+    )
+
 class ModuleTypeEnum(EnumDefinitionImpl):
     """
     Broad type of biological module node.
@@ -2758,6 +3165,52 @@ class VariantSelectionEnum(EnumDefinitionImpl):
     _defn = EnumDefinition(
         name="VariantSelectionEnum",
         description="How variants in a variant set may be selected in a realization.",
+    )
+
+class ChainingStatusEnum(EnumDefinitionImpl):
+    """
+    Curator adjudication of reaction continuity across a module connection (whether the upstream reaction's product is
+    consumed as the downstream reaction's substrate). Used as an explicit override for the advisory, non-blocking
+    automated chaining check.
+    """
+    VERIFIED = PermissibleValue(
+        text="VERIFIED",
+        description="""The upstream product is confirmed to be the downstream substrate (curator-confirmed continuity).""")
+    KNOWLEDGE_GAP = PermissibleValue(
+        text="KNOWLEDGE_GAP",
+        description="""The connecting intermediate or enzyme is genuinely not known; the break reflects missing biological knowledge, not a modelling error.""")
+    MAPPING_GAP = PermissibleValue(
+        text="MAPPING_GAP",
+        description="""The chemistry is known but the GO/RHEA (or GO/ChEBI) mapping does not yet capture the link, so the automated check cannot see the continuity.""")
+    NOT_APPLICABLE = PermissibleValue(
+        text="NOT_APPLICABLE",
+        description="""Chaining does not apply to this connection (e.g. a regulatory or non-metabolic edge, or a spiral re-entry handled elsewhere).""")
+    UNVERIFIED = PermissibleValue(
+        text="UNVERIFIED",
+        description="Continuity has not been assessed (explicitly, as opposed to simply leaving the field unset).")
+
+    _defn = EnumDefinition(
+        name="ChainingStatusEnum",
+        description="""Curator adjudication of reaction continuity across a module connection (whether the upstream reaction's product is consumed as the downstream reaction's substrate). Used as an explicit override for the advisory, non-blocking automated chaining check.""",
+    )
+
+class ConformanceStatusEnum(EnumDefinitionImpl):
+    """
+    How closely a module node matches a template motif it conforms to.
+    """
+    EXACT = PermissibleValue(
+        text="EXACT",
+        description="""The node matches the template motif exactly: same steps, function terms, and connection topology, with no recorded deviations.""")
+    WITH_DEVIATIONS = PermissibleValue(
+        text="WITH_DEVIATIONS",
+        description="""The node matches the template motif apart from the differences listed in deviations (e.g. a merged or missing tier, a substituted term).""")
+    EXTENDS = PermissibleValue(
+        text="EXTENDS",
+        description="The node contains the full template motif and adds further steps or structure beyond it.")
+
+    _defn = EnumDefinition(
+        name="ConformanceStatusEnum",
+        description="How closely a module node matches a template motif it conforms to.",
     )
 
 class ParticipantSelectorTypeEnum(EnumDefinitionImpl):
@@ -2946,6 +3399,165 @@ class EvidenceType(EnumDefinitionImpl):
     _defn = EnumDefinition(
         name="EvidenceType",
         description="Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms",
+    )
+
+class PropagationRootCauseEnum(EnumDefinitionImpl):
+    """
+    Mechanical root-cause classification for propagated or inferred annotations. This distinguishes bad source
+    annotations from bad propagation decisions and term-scoping issues.
+    """
+    NO_FAILURE_CORE = PermissibleValue(
+        text="NO_FAILURE_CORE",
+        description="The propagated annotation is correct and core for the target.")
+    NO_FAILURE_NON_CORE = PermissibleValue(
+        text="NO_FAILURE_NON_CORE",
+        description="The propagated annotation is biologically defensible but contextual, secondary, or generic.")
+    SOURCE_BAD = PermissibleValue(
+        text="SOURCE_BAD",
+        description="The source annotation is wrong, miscited, homonym-confused, or contradicted.")
+    SOURCE_STALE_OR_MISSING = PermissibleValue(
+        text="SOURCE_STALE_OR_MISSING",
+        description="""The transferred term no longer appears on the current source record, or donor tracing cannot recover it.""")
+    SOURCE_WEAK_OR_INFERRED = PermissibleValue(
+        text="SOURCE_WEAK_OR_INFERRED",
+        description="The source exists but is only inferred, statement-level, or otherwise weak for propagation.")
+    EVIDENCE_CIRCULAR_OR_REDUNDANT = PermissibleValue(
+        text="EVIDENCE_CIRCULAR_OR_REDUNDANT",
+        description="""The propagation chain transfers from another transfer, or the target already has stronger direct evidence.""")
+    PROPAGATION_BAD = PermissibleValue(
+        text="PROPAGATION_BAD",
+        description="The source annotation is sound, but the term should not propagate to this target.")
+    TERM_SCOPING_PROBLEM = PermissibleValue(
+        text="TERM_SCOPING_PROBLEM",
+        description="""The biology is related, but the GO term is too broad, too specific, or has the wrong role or qualifier.""")
+    UNRESOLVED = PermissibleValue(
+        text="UNRESOLVED",
+        description="The propagation issue was investigated but could not be classified confidently.")
+
+    _defn = EnumDefinition(
+        name="PropagationRootCauseEnum",
+        description="""Mechanical root-cause classification for propagated or inferred annotations. This distinguishes bad source annotations from bad propagation decisions and term-scoping issues.""",
+    )
+
+class PropagationFailureModeEnum(EnumDefinitionImpl):
+    """
+    Biological subtype for a propagation or inference issue.
+    """
+    WRONG_ORTHOLOG_OR_PARALOG = PermissibleValue(
+        text="WRONG_ORTHOLOG_OR_PARALOG",
+        description="Donor/source is a paralog, expanded family member, or wrong subfamily.")
+    FUNCTIONAL_DIVERGENCE = PermissibleValue(
+        text="FUNCTIONAL_DIVERGENCE",
+        description="Target retained fold or orthology but changed substrate, product, activity, or pathway role.")
+    PSEUDO_OR_SUBACTIVITY_LOSS = PermissibleValue(
+        text="PSEUDO_OR_SUBACTIVITY_LOSS",
+        description="Catalytic residues or a specific sub-activity are lost even though the domain remains.")
+    CONTEXT_OR_TISSUE_MISMATCH = PermissibleValue(
+        text="CONTEXT_OR_TISSUE_MISMATCH",
+        description="Donor evidence is tissue, developmental, organismal, or disease-context specific.")
+    LINEAGE_OR_TAXON_MISMATCH = PermissibleValue(
+        text="LINEAGE_OR_TAXON_MISMATCH",
+        description="Process does not occur in the target lineage or organelle system.")
+    COMPARTMENT_OR_COMPLEX_MISMATCH = PermissibleValue(
+        text="COMPARTMENT_OR_COMPLEX_MISMATCH",
+        description="Localization, complex membership, or pathway compartment does not transfer.")
+    REGULATORY_SIGN_INVERSION = PermissibleValue(
+        text="REGULATORY_SIGN_INVERSION",
+        description="""Family contains activators and inhibitors, and a positive/negative regulatory term leaks across members.""")
+    ROLE_CONFLATION = PermissibleValue(
+        text="ROLE_CONFLATION",
+        description="""Substrate, regulator, effector, or specificity subunit is annotated as the agent or core machinery.""")
+    GRANULARITY_MISMATCH = PermissibleValue(
+        text="GRANULARITY_MISMATCH",
+        description="Parent term is true but uninformative, or child term overstates specificity.")
+    SOURCE_MISCITATION = PermissibleValue(
+        text="SOURCE_MISCITATION",
+        description="Source evidence points to the wrong gene, organism, publication, or homonym.")
+    SOURCE_EVIDENCE_WEAK = PermissibleValue(
+        text="SOURCE_EVIDENCE_WEAK",
+        description="""Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation.""")
+    CIRCULAR_PROPAGATION = PermissibleValue(
+        text="CIRCULAR_PROPAGATION",
+        description="""Propagation chain depends on another propagated annotation rather than independent source evidence.""")
+
+    _defn = EnumDefinition(
+        name="PropagationFailureModeEnum",
+        description="Biological subtype for a propagation or inference issue.",
+    )
+
+class ResidueClaimEnum(EnumDefinitionImpl):
+    """
+    What a residue claim asserts about the target protein.
+    """
+    LOST = PermissibleValue(
+        text="LOST",
+        description="""The target does not carry the anchor's functional residue -- it is substituted, or no residue aligns to that position at all.""")
+    RETAINED = PermissibleValue(
+        text="RETAINED",
+        description="""The target does carry the residue. Worth recording explicitly: a retained site refutes a \"lacks the catalytic residue\" argument, which is how the CASP12 and LPA errors would have been caught.""")
+    SUBSTITUTED = PermissibleValue(
+        text="SUBSTITUTED",
+        description="""The residue differs but the substitution is conservative or otherwise argued not to abolish function. Distinct from LOST, which asserts the function is gone.""")
+
+    _defn = EnumDefinition(
+        name="ResidueClaimEnum",
+        description="What a residue claim asserts about the target protein.",
+    )
+
+class ResidueClaimMethodEnum(EnumDefinitionImpl):
+    """
+    How the anchor-to-target position correspondence was established.
+    """
+    MSA = PermissibleValue(
+        text="MSA",
+        description="Multiple sequence alignment; record the alignment_release.")
+    STRUCTURE = PermissibleValue(
+        text="STRUCTURE",
+        description="Structural superposition or a solved complex.")
+    UNIPROT_FEATURE = PermissibleValue(
+        text="UNIPROT_FEATURE",
+        description="Both positions read from UniProt feature tables on their own records, with no alignment step.")
+    LITERATURE = PermissibleValue(
+        text="LITERATURE",
+        description="A publication states the correspondence directly; cite it in review.supported_by.")
+
+    _defn = EnumDefinition(
+        name="ResidueClaimMethodEnum",
+        description="How the anchor-to-target position correspondence was established.",
+    )
+
+class PropagationSourceStatusEnum(EnumDefinitionImpl):
+    """
+    Mechanical status of a source entity with respect to a propagated target annotation.
+    """
+    SUPPORTS_TRANSFER = PermissibleValue(
+        text="SUPPORTS_TRANSFER",
+        description="Source evidence supports the term and the transfer to the target.")
+    SUPPORTS_SOURCE_BUT_NOT_TARGET = PermissibleValue(
+        text="SUPPORTS_SOURCE_BUT_NOT_TARGET",
+        description="Source evidence supports the source annotation, but propagation to the target is unsafe.")
+    SOURCE_BAD = PermissibleValue(
+        text="SOURCE_BAD",
+        description="Source annotation or source citation is itself wrong.")
+    SOURCE_STALE_OR_MISSING = PermissibleValue(
+        text="SOURCE_STALE_OR_MISSING",
+        description="Current source record no longer carries the transferred term, or tracing cannot recover it.")
+    SOURCE_WEAK_OR_INFERRED = PermissibleValue(
+        text="SOURCE_WEAK_OR_INFERRED",
+        description="Source exists but is only inferred, statement-level, or otherwise weak.")
+    CIRCULAR_OR_REDUNDANT = PermissibleValue(
+        text="CIRCULAR_OR_REDUNDANT",
+        description="Source participates in a circular transfer chain or adds no independent support.")
+    NOT_RELEVANT = PermissibleValue(
+        text="NOT_RELEVANT",
+        description="Source was inspected but is not relevant to the target annotation.")
+    UNRESOLVED = PermissibleValue(
+        text="UNRESOLVED",
+        description="Source could not be classified confidently.")
+
+    _defn = EnumDefinition(
+        name="PropagationSourceStatusEnum",
+        description="Mechanical status of a source entity with respect to a propagated target annotation.",
     )
 
 class ActionEnum(EnumDefinitionImpl):
@@ -3648,8 +4260,10 @@ class PredictionAssessmentEnum(EnumDefinitionImpl):
 
 class PredictionErrorTypeEnum(EnumDefinitionImpl):
     """
-    Types of errors that lead to incorrect functional predictions, based on Table 1 of de Crécy-Lagard et al. 2025
-    (PMID:40703034).
+    Types of errors that lead to incorrect functional predictions. The first block is based on Table 1 of de
+    Crécy-Lagard et al. 2025 (PMID:40703034); the trailing values capture additional, recurrent failure patterns
+    observed when evaluating sequence- and LLM-based function predictors (e.g. ProtNLM2, BioReason-Pro) that Table 1
+    does not name explicitly.
     """
     FAILURE_TO_CAPTURE_LITERATURE = PermissibleValue(
         text="FAILURE_TO_CAPTURE_LITERATURE",
@@ -3681,10 +4295,28 @@ class PredictionErrorTypeEnum(EnumDefinitionImpl):
     IN_VITRO_NOT_IN_VIVO = PermissibleValue(
         text="IN_VITRO_NOT_IN_VIVO",
         description="""The predicted activity can be demonstrated in vitro but does not represent the in vivo biological function (e.g., promiscuous activity at orders of magnitude lower rate than the dedicated enzyme).""")
+    PSEUDOENZYME_OVERANNOTATION = PermissibleValue(
+        text="PSEUDOENZYME_OVERANNOTATION",
+        description="""The model assigns the ancestral catalytic activity of a domain family to a member that retains the fold but has lost or degraded the catalytic residues (a pseudoenzyme), failing to detect substituted/missing active-site residues. E.g. predicting demethylase activity for a JmjC protein with a degenerate active site, chitinase activity for a member lacking the catalytic glutamate, or peroxidase activity for a peroxiredoxin that has lost its resolving cysteine and instead acts as a chaperone. A special case of MULTIPLE_FUNCTIONS / neofunctionalization where the divergence is specifically loss of catalysis.""")
+    LOCALIZATION_DEFAULT = PermissibleValue(
+        text="LOCALIZATION_DEFAULT",
+        description="""The model defaults to a cytosolic/cytoplasmic subcellular localization when no transmembrane or signal-sequence features are detected, mislocalizing secreted, periplasmic, organellar (mitochondrial, ER, vacuolar), or membrane proteins. Tends to succeed only when a domain/family name explicitly encodes the compartment (e.g. BiP/KAR2 -> ER).""")
+    TAXON_CONSTRAINT_VIOLATION = PermissibleValue(
+        text="TAXON_CONSTRAINT_VIOLATION",
+        description="""The predicted term is valid only in a lineage/kingdom different from the organism (e.g. animal-specific 'neuronal cell body' or adaptive-immune terms predicted for a plant or bacterial protein), reflecting homology transfer from a better-studied taxon. Distinct from PATHWAY_CONTEXT_IGNORED (a missing metabolic pathway) in that the violated constraint is taxonomic rather than pathway-level.""")
+    WRONG_INPUT_SEQUENCE = PermissibleValue(
+        text="WRONG_INPUT_SEQUENCE",
+        description="""A data-pipeline error rather than a model-reasoning error: the predictor was supplied the wrong input (e.g. the sequence of a different gene), so every output describes the wrong protein. Recorded to distinguish upstream pipeline mistakes from genuine model mispredictions.""")
+    DOMAIN_ARCHITECTURE_MISMATCH = PermissibleValue(
+        text="DOMAIN_ARCHITECTURE_MISMATCH",
+        description="""The predicted activity requires a domain, catalytic region, or complete architecture absent from the selected protein. Includes transfer of a multidomain donor's activity through a shared noncatalytic domain. Does not establish that the target is a fold-retaining pseudoenzyme, that its gene model is wrong, or that the historical model input differed.""")
+    COMPLEX_ACTIVITY_TRANSFER = PermissibleValue(
+        text="COMPLEX_ACTIVITY_TRANSFER",
+        description="""Intrinsic catalytic activity of a molecular complex is assigned to a noncatalytic accessory subunit. Participation in the complex or its biological process does not establish that the subunit catalyzes the reaction.""")
 
     _defn = EnumDefinition(
         name="PredictionErrorTypeEnum",
-        description="""Types of errors that lead to incorrect functional predictions, based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034).""",
+        description="""Types of errors that lead to incorrect functional predictions. The first block is based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034); the trailing values capture additional, recurrent failure patterns observed when evaluating sequence- and LLM-based function predictors (e.g. ProtNLM2, BioReason-Pro) that Table 1 does not name explicitly.""",
     )
 
 class ReferenceRelevanceEnum(EnumDefinitionImpl):
@@ -3883,6 +4515,117 @@ class PublicationTypeEnum(EnumDefinitionImpl):
         description="""The kind of publication or source a reference is. For PMIDs this is inferred from the PubMed publication-type ('PT') metadata; for non-literature references it is inferred from the identifier scheme. Used to test hypotheses about which evidence sources (primary papers, reviews, abstracts, deep research) suffice for GO annotation review.""",
     )
 
+class GoCamReviewStatusEnum(EnumDefinitionImpl):
+    """
+    Progress state of a GO-CAM model review.
+    """
+    DRAFT = PermissibleValue(
+        text="DRAFT",
+        description="Review started; activities not yet fully assessed.")
+    IN_PROGRESS = PermissibleValue(
+        text="IN_PROGRESS",
+        description="Some activities reviewed; review ongoing.")
+    COMPLETE = PermissibleValue(
+        text="COMPLETE",
+        description="All activities reviewed.")
+
+    _defn = EnumDefinition(
+        name="GoCamReviewStatusEnum",
+        description="Progress state of a GO-CAM model review.",
+    )
+
+class GoCamClaimVerdictEnum(EnumDefinitionImpl):
+    """
+    Forensic-review verdict for a GO-CAM activity, mirroring the OK / UNCERTAIN / WRONG scale used for claim
+    validation: does the asserted activity hold up against the cited evidence and GO-CAM best practice?
+    """
+    OK = PermissibleValue(
+        text="OK",
+        description="""The activity is well supported and follows best practice (correct MF specificity, correct causal/has-input usage, adequate evidence).""")
+    UNCERTAIN = PermissibleValue(
+        text="UNCERTAIN",
+        description="""Defensible but imprecise or under-supported; a minor best-practice or evidence issue that needs qualification.""")
+    WRONG = PermissibleValue(
+        text="WRONG",
+        description="""The activity contradicts the evidence or violates a hard best-practice rule (e.g. binding-as-function, wrong causal directionality).""")
+
+    _defn = EnumDefinition(
+        name="GoCamClaimVerdictEnum",
+        description="""Forensic-review verdict for a GO-CAM activity, mirroring the OK / UNCERTAIN / WRONG scale used for claim validation: does the asserted activity hold up against the cited evidence and GO-CAM best practice?""",
+    )
+
+class GoCamConsistencyEnum(EnumDefinitionImpl):
+    """
+    How a GO-CAM activity relates to the corresponding gene's annotation review (genes/**/<gene>-ai-review.yaml).
+    """
+    CONSISTENT = PermissibleValue(
+        text="CONSISTENT",
+        description="The activity's function matches an accepted core function in the gene review.")
+    MORE_SPECIFIC = PermissibleValue(
+        text="MORE_SPECIFIC",
+        description="The activity asserts a more specific function than the gene review.")
+    MORE_GENERAL = PermissibleValue(
+        text="MORE_GENERAL",
+        description="The activity asserts a more general function than the gene review.")
+    RELATED = PermissibleValue(
+        text="RELATED",
+        description="Same general area but neither a clean subsumption nor a match.")
+    CONFLICT = PermissibleValue(
+        text="CONFLICT",
+        description="The activity asserts a function the gene review removed, negated, or marked as over-annotated.")
+    NOT_IN_REVIEW = PermissibleValue(
+        text="NOT_IN_REVIEW",
+        description="The function is not represented in the gene review (candidate gap).")
+    NO_GENE_REVIEW = PermissibleValue(
+        text="NO_GENE_REVIEW",
+        description="No gene review exists yet for this gene product.")
+
+    _defn = EnumDefinition(
+        name="GoCamConsistencyEnum",
+        description="""How a GO-CAM activity relates to the corresponding gene's annotation review (genes/**/<gene>-ai-review.yaml).""",
+    )
+
+class GoCamQcFlagEnum(EnumDefinitionImpl):
+    """
+    Specific GO-CAM best-practice issues observed for an activity. Derived from the GO-CAM annotation best-practice
+    checklist (see gocams/BEST_PRACTICE.md).
+    """
+    BINDING_AS_FUNCTION = PermissibleValue(
+        text="BINDING_AS_FUNCTION",
+        description="""Molecular function is a bare 'binding' term with no functional consequence specified (use catalytic/receptor/adaptor/sequestering MF).""")
+    GENERIC_MF = PermissibleValue(
+        text="GENERIC_MF",
+        description="An overly generic MF term is used where a specific child term applies.")
+    HAS_INPUT_MISUSE = PermissibleValue(
+        text="HAS_INPUT_MISUSE",
+        description="""'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA instead of the substrate/target gene/downstream effector.""")
+    DIRECT_VS_INDIRECT_CAUSAL = PermissibleValue(
+        text="DIRECT_VS_INDIRECT_CAUSAL",
+        description="Direct regulation asserted for a multi-step (indirect) mechanism, or vice versa.")
+    INCORRECT_DIRECTIONALITY = PermissibleValue(
+        text="INCORRECT_DIRECTIONALITY",
+        description="Causal edge directionality (subject -> object) appears reversed.")
+    MISSING_LOCATION = PermissibleValue(
+        text="MISSING_LOCATION",
+        description="Activity lacks an 'occurs in' cellular component.")
+    MISSING_PROCESS = PermissibleValue(
+        text="MISSING_PROCESS",
+        description="Activity is not connected to a biological process via 'part of'.")
+    ORPHAN_ACTIVITY = PermissibleValue(
+        text="ORPHAN_ACTIVITY",
+        description="Activity has no causal connections to the rest of the model.")
+    MISSING_EVIDENCE = PermissibleValue(
+        text="MISSING_EVIDENCE",
+        description="An activity or relationship lacks an evidence code / reference.")
+    COMPLEX_SUBUNIT_REPRESENTATION = PermissibleValue(
+        text="COMPLEX_SUBUNIT_REPRESENTATION",
+        description="""Complex represented with a complex term where a specific active subunit is known (or vice versa).""")
+
+    _defn = EnumDefinition(
+        name="GoCamQcFlagEnum",
+        description="""Specific GO-CAM best-practice issues observed for an activity. Derived from the GO-CAM annotation best-practice checklist (see gocams/BEST_PRACTICE.md).""",
+    )
+
 # Slots
 class slots:
     pass
@@ -4049,6 +4792,9 @@ slots.suggested_experiments = Slot(uri=GENE_REVIEW.suggested_experiments, name="
 slots.knowledge_gaps = Slot(uri=GENE_REVIEW.knowledge_gaps, name="knowledge_gaps", curie=GENE_REVIEW.curie('knowledge_gaps'),
                    model_uri=GENE_REVIEW.knowledge_gaps, domain=None, range=Optional[Union[Union[dict, KnowledgeGap], list[Union[dict, KnowledgeGap]]]])
 
+slots.propagation_review = Slot(uri=GENE_REVIEW.propagation_review, name="propagation_review", curie=GENE_REVIEW.curie('propagation_review'),
+                   model_uri=GENE_REVIEW.propagation_review, domain=None, range=Optional[Union[dict, PropagationReview]])
+
 slots.status = Slot(uri=GENE_REVIEW.status, name="status", curie=GENE_REVIEW.curie('status'),
                    model_uri=GENE_REVIEW.status, domain=None, range=Optional[Union[str, "GeneReviewStatusEnum"]])
 
@@ -4112,8 +4858,14 @@ slots.descriptor__evidence = Slot(uri=GENE_REVIEW.evidence, name="descriptor__ev
 slots.descriptor__notes = Slot(uri=GENE_REVIEW.notes, name="descriptor__notes", curie=GENE_REVIEW.curie('notes'),
                    model_uri=GENE_REVIEW.descriptor__notes, domain=None, range=Optional[str])
 
+slots.familyDescriptor__family_terms = Slot(uri=GENE_REVIEW.family_terms, name="familyDescriptor__family_terms", curie=GENE_REVIEW.curie('family_terms'),
+                   model_uri=GENE_REVIEW.familyDescriptor__family_terms, domain=None, range=Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]])
+
 slots.familyDescriptor__representative_members = Slot(uri=GENE_REVIEW.representative_members, name="familyDescriptor__representative_members", curie=GENE_REVIEW.curie('representative_members'),
                    model_uri=GENE_REVIEW.familyDescriptor__representative_members, domain=None, range=Optional[Union[Union[dict, GeneProductDescriptor], list[Union[dict, GeneProductDescriptor]]]])
+
+slots.familyDescriptor__ancestral_nodes = Slot(uri=GENE_REVIEW.ancestral_nodes, name="familyDescriptor__ancestral_nodes", curie=GENE_REVIEW.curie('ancestral_nodes'),
+                   model_uri=GENE_REVIEW.familyDescriptor__ancestral_nodes, domain=None, range=Optional[Union[Union[dict, AncestralNodeDescriptor], list[Union[dict, AncestralNodeDescriptor]]]])
 
 slots.proteinComplexDescriptor__active_units = Slot(uri=GENE_REVIEW.active_units, name="proteinComplexDescriptor__active_units", curie=GENE_REVIEW.curie('active_units'),
                    model_uri=GENE_REVIEW.proteinComplexDescriptor__active_units, domain=None, range=Optional[Union[Union[dict, ComplexUnit], list[Union[dict, ComplexUnit]]]])
@@ -4181,6 +4933,9 @@ slots.biologicalProcessDescriptor__ends_with = Slot(uri=GENE_REVIEW.ends_with, n
 slots.moduleReview__status = Slot(uri=GENE_REVIEW.status, name="moduleReview__status", curie=GENE_REVIEW.curie('status'),
                    model_uri=GENE_REVIEW.moduleReview__status, domain=None, range=Optional[str])
 
+slots.moduleReview__scope = Slot(uri=GENE_REVIEW.scope, name="moduleReview__scope", curie=GENE_REVIEW.curie('scope'),
+                   model_uri=GENE_REVIEW.moduleReview__scope, domain=None, range=Optional[Union[str, "ModuleScopeEnum"]])
+
 slots.moduleReview__module = Slot(uri=GENE_REVIEW.module, name="moduleReview__module", curie=GENE_REVIEW.curie('module'),
                    model_uri=GENE_REVIEW.moduleReview__module, domain=None, range=Union[dict, ModuleNode])
 
@@ -4220,11 +4975,29 @@ slots.moduleNode__variant_sets = Slot(uri=GENE_REVIEW.variant_sets, name="module
 slots.moduleNode__connections = Slot(uri=GENE_REVIEW.connections, name="moduleNode__connections", curie=GENE_REVIEW.curie('connections'),
                    model_uri=GENE_REVIEW.moduleNode__connections, domain=None, range=Optional[Union[Union[dict, ModuleConnection], list[Union[dict, ModuleConnection]]]])
 
+slots.moduleNode__conforms_to = Slot(uri=GENE_REVIEW.conforms_to, name="moduleNode__conforms_to", curie=GENE_REVIEW.curie('conforms_to'),
+                   model_uri=GENE_REVIEW.moduleNode__conforms_to, domain=None, range=Optional[Union[Union[dict, Conformance], list[Union[dict, Conformance]]]])
+
+slots.moduleNode__gocam_associations = Slot(uri=GENE_REVIEW.gocam_associations, name="moduleNode__gocam_associations", curie=GENE_REVIEW.curie('gocam_associations'),
+                   model_uri=GENE_REVIEW.moduleNode__gocam_associations, domain=None, range=Optional[Union[Union[dict, GoCamAssociation], list[Union[dict, GoCamAssociation]]]])
+
 slots.moduleNode__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleNode__evidence", curie=GENE_REVIEW.curie('evidence'),
                    model_uri=GENE_REVIEW.moduleNode__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
 
 slots.moduleNode__notes = Slot(uri=GENE_REVIEW.notes, name="moduleNode__notes", curie=GENE_REVIEW.curie('notes'),
                    model_uri=GENE_REVIEW.moduleNode__notes, domain=None, range=Optional[str])
+
+slots.conformance__template = Slot(uri=GENE_REVIEW.template, name="conformance__template", curie=GENE_REVIEW.curie('template'),
+                   model_uri=GENE_REVIEW.conformance__template, domain=None, range=str)
+
+slots.conformance__status = Slot(uri=GENE_REVIEW.status, name="conformance__status", curie=GENE_REVIEW.curie('status'),
+                   model_uri=GENE_REVIEW.conformance__status, domain=None, range=Optional[Union[str, "ConformanceStatusEnum"]])
+
+slots.conformance__deviations = Slot(uri=GENE_REVIEW.deviations, name="conformance__deviations", curie=GENE_REVIEW.curie('deviations'),
+                   model_uri=GENE_REVIEW.conformance__deviations, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.conformance__notes = Slot(uri=GENE_REVIEW.notes, name="conformance__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.conformance__notes, domain=None, range=Optional[str])
 
 slots.modulePart__order = Slot(uri=GENE_REVIEW.order, name="modulePart__order", curie=GENE_REVIEW.curie('order'),
                    model_uri=GENE_REVIEW.modulePart__order, domain=None, range=Optional[int])
@@ -4286,11 +5059,86 @@ slots.moduleAnnoton__locations = Slot(uri=GENE_REVIEW.locations, name="moduleAnn
 slots.moduleAnnoton__role_description = Slot(uri=GENE_REVIEW.role_description, name="moduleAnnoton__role_description", curie=GENE_REVIEW.curie('role_description'),
                    model_uri=GENE_REVIEW.moduleAnnoton__role_description, domain=None, range=Optional[str])
 
+slots.moduleAnnoton__gocam_associations = Slot(uri=GENE_REVIEW.gocam_associations, name="moduleAnnoton__gocam_associations", curie=GENE_REVIEW.curie('gocam_associations'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__gocam_associations, domain=None, range=Optional[Union[Union[dict, GoCamAssociation], list[Union[dict, GoCamAssociation]]]])
+
 slots.moduleAnnoton__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleAnnoton__evidence", curie=GENE_REVIEW.curie('evidence'),
                    model_uri=GENE_REVIEW.moduleAnnoton__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
 
 slots.moduleAnnoton__notes = Slot(uri=GENE_REVIEW.notes, name="moduleAnnoton__notes", curie=GENE_REVIEW.curie('notes'),
                    model_uri=GENE_REVIEW.moduleAnnoton__notes, domain=None, range=Optional[str])
+
+slots.goCamAssociation__model = Slot(uri=GENE_REVIEW.model, name="goCamAssociation__model", curie=GENE_REVIEW.curie('model'),
+                   model_uri=GENE_REVIEW.goCamAssociation__model, domain=None, range=str)
+
+slots.goCamAssociation__activity = Slot(uri=GENE_REVIEW.activity, name="goCamAssociation__activity", curie=GENE_REVIEW.curie('activity'),
+                   model_uri=GENE_REVIEW.goCamAssociation__activity, domain=None, range=Optional[str])
+
+slots.goCamAssociation__title = Slot(uri=GENE_REVIEW.title, name="goCamAssociation__title", curie=GENE_REVIEW.curie('title'),
+                   model_uri=GENE_REVIEW.goCamAssociation__title, domain=None, range=Optional[str])
+
+slots.goCamAssociation__description = Slot(uri=GENE_REVIEW.description, name="goCamAssociation__description", curie=GENE_REVIEW.curie('description'),
+                   model_uri=GENE_REVIEW.goCamAssociation__description, domain=None, range=Optional[str])
+
+slots.goCamAssociation__evidence = Slot(uri=GENE_REVIEW.evidence, name="goCamAssociation__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.goCamAssociation__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.goCamAssociation__notes = Slot(uri=GENE_REVIEW.notes, name="goCamAssociation__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.goCamAssociation__notes, domain=None, range=Optional[str])
+
+slots.goCamReview__model = Slot(uri=GENE_REVIEW.model, name="goCamReview__model", curie=GENE_REVIEW.curie('model'),
+                   model_uri=GENE_REVIEW.goCamReview__model, domain=None, range=URIRef)
+
+slots.goCamReview__taxon = Slot(uri=GENE_REVIEW.taxon, name="goCamReview__taxon", curie=GENE_REVIEW.curie('taxon'),
+                   model_uri=GENE_REVIEW.goCamReview__taxon, domain=None, range=Optional[str])
+
+slots.goCamReview__summary = Slot(uri=GENE_REVIEW.summary, name="goCamReview__summary", curie=GENE_REVIEW.curie('summary'),
+                   model_uri=GENE_REVIEW.goCamReview__summary, domain=None, range=Optional[str])
+
+slots.goCamReview__status = Slot(uri=GENE_REVIEW.status, name="goCamReview__status", curie=GENE_REVIEW.curie('status'),
+                   model_uri=GENE_REVIEW.goCamReview__status, domain=None, range=Optional[Union[str, "GoCamReviewStatusEnum"]])
+
+slots.goCamReview__activity_reviews = Slot(uri=GENE_REVIEW.activity_reviews, name="goCamReview__activity_reviews", curie=GENE_REVIEW.curie('activity_reviews'),
+                   model_uri=GENE_REVIEW.goCamReview__activity_reviews, domain=None, range=Optional[Union[Union[dict, GoCamActivityReview], list[Union[dict, GoCamActivityReview]]]])
+
+slots.goCamReview__notes = Slot(uri=GENE_REVIEW.notes, name="goCamReview__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.goCamReview__notes, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__activity_id = Slot(uri=GENE_REVIEW.activity_id, name="goCamActivityReview__activity_id", curie=GENE_REVIEW.curie('activity_id'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__activity_id, domain=None, range=str)
+
+slots.goCamActivityReview__gene_product = Slot(uri=GENE_REVIEW.gene_product, name="goCamActivityReview__gene_product", curie=GENE_REVIEW.curie('gene_product'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__gene_product, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__molecular_function = Slot(uri=GENE_REVIEW.molecular_function, name="goCamActivityReview__molecular_function", curie=GENE_REVIEW.curie('molecular_function'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__molecular_function, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__biological_process = Slot(uri=GENE_REVIEW.biological_process, name="goCamActivityReview__biological_process", curie=GENE_REVIEW.curie('biological_process'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__biological_process, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__cellular_component = Slot(uri=GENE_REVIEW.cellular_component, name="goCamActivityReview__cellular_component", curie=GENE_REVIEW.curie('cellular_component'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__cellular_component, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__verdict = Slot(uri=GENE_REVIEW.verdict, name="goCamActivityReview__verdict", curie=GENE_REVIEW.curie('verdict'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__verdict, domain=None, range=Optional[Union[str, "GoCamClaimVerdictEnum"]])
+
+slots.goCamActivityReview__qc_flags = Slot(uri=GENE_REVIEW.qc_flags, name="goCamActivityReview__qc_flags", curie=GENE_REVIEW.curie('qc_flags'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__qc_flags, domain=None, range=Optional[Union[Union[str, "GoCamQcFlagEnum"], list[Union[str, "GoCamQcFlagEnum"]]]])
+
+slots.goCamActivityReview__consistency = Slot(uri=GENE_REVIEW.consistency, name="goCamActivityReview__consistency", curie=GENE_REVIEW.curie('consistency'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__consistency, domain=None, range=Optional[Union[str, "GoCamConsistencyEnum"]])
+
+slots.goCamActivityReview__gene_review = Slot(uri=GENE_REVIEW.gene_review, name="goCamActivityReview__gene_review", curie=GENE_REVIEW.curie('gene_review'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__gene_review, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__supporting_text = Slot(uri=GENE_REVIEW.supporting_text, name="goCamActivityReview__supporting_text", curie=GENE_REVIEW.curie('supporting_text'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__supporting_text, domain=None, range=Optional[str])
+
+slots.goCamActivityReview__evidence = Slot(uri=GENE_REVIEW.evidence, name="goCamActivityReview__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.goCamActivityReview__notes = Slot(uri=GENE_REVIEW.notes, name="goCamActivityReview__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.goCamActivityReview__notes, domain=None, range=Optional[str])
 
 slots.participantSelector__selector_type = Slot(uri=GENE_REVIEW.selector_type, name="participantSelector__selector_type", curie=GENE_REVIEW.curie('selector_type'),
                    model_uri=GENE_REVIEW.participantSelector__selector_type, domain=None, range=Union[str, "ParticipantSelectorTypeEnum"])
@@ -4379,8 +5227,79 @@ slots.moduleConnection__context = Slot(uri=GENE_REVIEW.context, name="moduleConn
 slots.moduleConnection__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleConnection__evidence", curie=GENE_REVIEW.curie('evidence'),
                    model_uri=GENE_REVIEW.moduleConnection__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
 
+slots.moduleConnection__chaining_status = Slot(uri=GENE_REVIEW.chaining_status, name="moduleConnection__chaining_status", curie=GENE_REVIEW.curie('chaining_status'),
+                   model_uri=GENE_REVIEW.moduleConnection__chaining_status, domain=None, range=Optional[Union[str, "ChainingStatusEnum"]])
+
+slots.moduleConnection__chaining_note = Slot(uri=GENE_REVIEW.chaining_note, name="moduleConnection__chaining_note", curie=GENE_REVIEW.curie('chaining_note'),
+                   model_uri=GENE_REVIEW.moduleConnection__chaining_note, domain=None, range=Optional[str])
+
 slots.moduleConnection__notes = Slot(uri=GENE_REVIEW.notes, name="moduleConnection__notes", curie=GENE_REVIEW.curie('notes'),
                    model_uri=GENE_REVIEW.moduleConnection__notes, domain=None, range=Optional[str])
+
+slots.propagationReview__root_cause = Slot(uri=GENE_REVIEW.root_cause, name="propagationReview__root_cause", curie=GENE_REVIEW.curie('root_cause'),
+                   model_uri=GENE_REVIEW.propagationReview__root_cause, domain=None, range=Union[str, "PropagationRootCauseEnum"])
+
+slots.propagationReview__failure_modes = Slot(uri=GENE_REVIEW.failure_modes, name="propagationReview__failure_modes", curie=GENE_REVIEW.curie('failure_modes'),
+                   model_uri=GENE_REVIEW.propagationReview__failure_modes, domain=None, range=Optional[Union[Union[str, "PropagationFailureModeEnum"], list[Union[str, "PropagationFailureModeEnum"]]]])
+
+slots.propagationReview__source_entities = Slot(uri=GENE_REVIEW.source_entities, name="propagationReview__source_entities", curie=GENE_REVIEW.curie('source_entities'),
+                   model_uri=GENE_REVIEW.propagationReview__source_entities, domain=None, range=Optional[Union[Union[dict, PropagationSource], list[Union[dict, PropagationSource]]]])
+
+slots.propagationReview__residue_claims = Slot(uri=GENE_REVIEW.residue_claims, name="propagationReview__residue_claims", curie=GENE_REVIEW.curie('residue_claims'),
+                   model_uri=GENE_REVIEW.propagationReview__residue_claims, domain=None, range=Optional[Union[Union[dict, ResidueClaim], list[Union[dict, ResidueClaim]]]])
+
+slots.propagationReview__residue_claims_not_applicable = Slot(uri=GENE_REVIEW.residue_claims_not_applicable, name="propagationReview__residue_claims_not_applicable", curie=GENE_REVIEW.curie('residue_claims_not_applicable'),
+                   model_uri=GENE_REVIEW.propagationReview__residue_claims_not_applicable, domain=None, range=Optional[str])
+
+slots.residueClaim__claim_type = Slot(uri=GENE_REVIEW.claim_type, name="residueClaim__claim_type", curie=GENE_REVIEW.curie('claim_type'),
+                   model_uri=GENE_REVIEW.residueClaim__claim_type, domain=None, range=Union[str, "ResidueClaimEnum"])
+
+slots.residueClaim__site_ref = Slot(uri=GENE_REVIEW.site_ref, name="residueClaim__site_ref", curie=GENE_REVIEW.curie('site_ref'),
+                   model_uri=GENE_REVIEW.residueClaim__site_ref, domain=None, range=Optional[str],
+                   pattern=re.compile(r'^PANTHER:PTHR[0-9]{5}#[a-z0-9_]+$'))
+
+slots.residueClaim__anchor = Slot(uri=GENE_REVIEW.anchor, name="residueClaim__anchor", curie=GENE_REVIEW.curie('anchor'),
+                   model_uri=GENE_REVIEW.residueClaim__anchor, domain=None, range=Union[dict, ResiduePosition])
+
+slots.residueClaim__target = Slot(uri=GENE_REVIEW.target, name="residueClaim__target", curie=GENE_REVIEW.curie('target'),
+                   model_uri=GENE_REVIEW.residueClaim__target, domain=None, range=Optional[Union[dict, ResiduePosition]])
+
+slots.residueClaim__role = Slot(uri=GENE_REVIEW.role, name="residueClaim__role", curie=GENE_REVIEW.curie('role'),
+                   model_uri=GENE_REVIEW.residueClaim__role, domain=None, range=Optional[str])
+
+slots.residueClaim__method = Slot(uri=GENE_REVIEW.method, name="residueClaim__method", curie=GENE_REVIEW.curie('method'),
+                   model_uri=GENE_REVIEW.residueClaim__method, domain=None, range=Union[str, "ResidueClaimMethodEnum"])
+
+slots.residueClaim__alignment_release = Slot(uri=GENE_REVIEW.alignment_release, name="residueClaim__alignment_release", curie=GENE_REVIEW.curie('alignment_release'),
+                   model_uri=GENE_REVIEW.residueClaim__alignment_release, domain=None, range=Optional[str])
+
+slots.residueClaim__comment = Slot(uri=GENE_REVIEW.comment, name="residueClaim__comment", curie=GENE_REVIEW.curie('comment'),
+                   model_uri=GENE_REVIEW.residueClaim__comment, domain=None, range=Optional[str])
+
+slots.residuePosition__accession = Slot(uri=GENE_REVIEW.accession, name="residuePosition__accession", curie=GENE_REVIEW.curie('accession'),
+                   model_uri=GENE_REVIEW.residuePosition__accession, domain=None, range=str)
+
+slots.residuePosition__position = Slot(uri=GENE_REVIEW.position, name="residuePosition__position", curie=GENE_REVIEW.curie('position'),
+                   model_uri=GENE_REVIEW.residuePosition__position, domain=None, range=int)
+
+slots.residuePosition__residue = Slot(uri=GENE_REVIEW.residue, name="residuePosition__residue", curie=GENE_REVIEW.curie('residue'),
+                   model_uri=GENE_REVIEW.residuePosition__residue, domain=None, range=str,
+                   pattern=re.compile(r'^[ACDEFGHIKLMNPQRSTVWYUO]$'))
+
+slots.residuePosition__sequence_version = Slot(uri=GENE_REVIEW.sequence_version, name="residuePosition__sequence_version", curie=GENE_REVIEW.curie('sequence_version'),
+                   model_uri=GENE_REVIEW.residuePosition__sequence_version, domain=None, range=Optional[int])
+
+slots.propagationSource__source_id = Slot(uri=GENE_REVIEW.source_id, name="propagationSource__source_id", curie=GENE_REVIEW.curie('source_id'),
+                   model_uri=GENE_REVIEW.propagationSource__source_id, domain=None, range=str)
+
+slots.propagationSource__source_label = Slot(uri=GENE_REVIEW.source_label, name="propagationSource__source_label", curie=GENE_REVIEW.curie('source_label'),
+                   model_uri=GENE_REVIEW.propagationSource__source_label, domain=None, range=Optional[str])
+
+slots.propagationSource__source_status = Slot(uri=GENE_REVIEW.source_status, name="propagationSource__source_status", curie=GENE_REVIEW.curie('source_status'),
+                   model_uri=GENE_REVIEW.propagationSource__source_status, domain=None, range=Optional[Union[str, "PropagationSourceStatusEnum"]])
+
+slots.propagationSource__comment = Slot(uri=GENE_REVIEW.comment, name="propagationSource__comment", curie=GENE_REVIEW.curie('comment'),
+                   model_uri=GENE_REVIEW.propagationSource__comment, domain=None, range=Optional[str])
 
 slots.coreFunction__description = Slot(uri=GENE_REVIEW.description, name="coreFunction__description", curie=GENE_REVIEW.curie('description'),
                    model_uri=GENE_REVIEW.coreFunction__description, domain=None, range=Optional[str])

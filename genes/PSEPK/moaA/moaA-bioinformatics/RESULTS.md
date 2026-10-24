@@ -27,6 +27,10 @@ acid.
 - The reviewed MoaA sequence Q88E69 is the only one of the three with the
   MoaA-specific InterPro entries IPR013483 and IPR000385 in its UniProt record.
   All three share broader MoaA-like/radical-SAM entries and PTHR22960.
+- The generated KEGG link table maps all three MoaA-family proteins to K03639.
+  This similarity-driven KO co-assignment is useful context but does not override
+  the MoaA-specific InterPro split or the low pairwise identities between Q88E69
+  and the two unreviewed paralogs.
 - Q88E69 is 36.25% identical to Q88K11 (PP_2482) and 37.85% identical to Q88LG4
   (PP_1969) over aligned residue pairs. Q88K11 and Q88LG4 are 66.15% identical
   to one another. This pattern supports a closer relationship between the two
@@ -50,12 +54,10 @@ evidence resolves the paralogs.
   orthologies, respectively.
 - These modest identities are not sufficient by themselves to assign nucleotide
   specificity. PTHR43777:SF1 also contains reviewed proteins with non-MocA names,
-  so family membership alone is not decisive. Independently of this sequence
-  analysis, however, KEGG assigns both PP_2483 and PP_4230 to K07141
-  (molybdenum-cofactor cytidylyltransferase), and both occur in
-  molybdoenzyme-associated neighborhoods. The concordant orthology, subfamily,
-  and neighborhood evidence supports a predicted MocA assignment while leaving
-  CTP specificity and client delivery to direct experimental testing.
+  so family membership alone is not decisive. KEGG K07141 and the control
+  comparison favor a MocA-like interpretation for PP_4230, whereas PP_2483 is
+  closer to the MobA control despite its K07141 assignment. The present analysis
+  therefore does not establish MobA or MocA activity for either target.
 
 ## Limits
 

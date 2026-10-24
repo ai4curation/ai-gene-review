@@ -79,9 +79,11 @@
 ## Annotation-specific cautions
 
 - The seven `protein binding` annotations are uninformative generic outputs of
-  interaction screens or complex studies. They are marked over-annotated even
-  where the interaction itself is informative (for example Sse1 as an Ssb
-  nucleotide-exchange factor in PMID:16688211).
+  interaction screens or complex studies. They are removed even where the
+  interaction itself is informative, because GO:0005515 does not capture the
+  Sse1 nucleotide-exchange-factor relationship in PMID:16688211, the
+  Bmh/SNF1/Glc7 regulatory context, or Ssb's cotranslational chaperone
+  mechanism.
 - The plasma-membrane HDA annotation comes from a detergent-solubilized plasma
   membrane fraction containing many identified proteins; no specific membrane
   residence or membrane function for this abundant soluble Hsp70 is shown in
@@ -169,3 +171,52 @@
   with the nearly identical Ssb2 paralog. This retains the bulk high-throughput
   fraction observation without treating plasma membrane as a demonstrated
   functional compartment for the soluble cytosolic chaperone.
+
+## IBA follow-up (2026-09-29)
+
+- Re-read the seven SSB1 IBA rows against `projects/IBA_REVIEW.md` and the
+  current `interpro/panther/PTHR19375/PTHR19375-paint.tsv` cache. The cytoplasm,
+  ATP hydrolysis, generic protein-folding chaperone, nucleus,
+  heat-shock-protein binding, and cytosol transfers remain biologically sound
+  at their PAINT nodes; their `source_entities` blocks now record curated
+  extant donors rather than the PTN alone.
+- Updated the `GO:0042026 protein refolding` IBA to match current PAINT and the
+  SSB2 review. Current PAINT records a NOT/IRD for `GO:0042026` at fungal node
+  PTN001065099, sourced from PTN000452648 on 2026-06-16, and carries the broader
+  `GO:0006457 protein folding` assertion down that branch. The pinned GOA row
+  therefore traces to a still-sound source node whose refolding assertion should
+  no longer propagate to ribosome-associated fungal Ssb; modifying it to
+  `GO:0006457` follows the PAINT revision without claiming every possible
+  refolding activity is absent.
+- Exact PubMed searches for `(SSB1/Ssb1/YDL229W) AND Saccharomyces cerevisiae`
+  in 2025+ found two direct Ssb1/2 papers. PMID:41078542 links Ssb1/2 to ABC
+  transporter gene expression and quorum-sensing-molecule release at the
+  diauxic shift, and PMID:42538864 reports that Ssb1/2 support cotranslational
+  mitochondrial precursor handling and association of translating ribosomes
+  with the mitochondrial outer membrane. Both refine secondary physiology of the
+  Ssb1/2 system; neither changes the core ATP-dependent cotranslational folding
+  function or justifies a broad new downstream process annotation from the
+  abstract alone.
+- Converted all seven legacy bare `GO:0005515 protein binding` rows from
+  `MARK_AS_OVER_ANNOTATED` to `REMOVE` under the current generic-binding policy.
+  This withdraws only the unqualified protein-binding GO term; it does not
+  reject the Sse1, Bmh, Uri1, or other observed physical interactions.
+
+## 2026-10-01 current-GOA refresh follow-up
+
+- Forced a current `fetch-gene` refresh. The live SSB1 GOA feed still contains
+  39 rows, and all 39 exact live signatures are represented by unretired YAML
+  rows after the refresh; the two exact rows absent from live GOA are the
+  intentional `NEW` proposals for `GO:0043022 ribosome binding` and
+  `GO:0022626 cytosolic ribosome`.
+- Reviewed the three newly seeded rows that the older review had collapsed: the
+  third PMID:1394434 `GO:0002181 cytoplasmic translation` row is kept as a
+  non-core translation-context annotation, and the two additional PMID:16429126
+  `GO:0005515 protein binding` rows are removed as uninformative generic
+  protein-binding assertions from the same proteome-wide complex survey.
+- Backfilled 25 current supporting-entity lists from GOA. The IBA rows continue
+  to use PAINT ancestral nodes as their proximate source evidence, and SSB1
+  self-donors remain valid descendant evidence rather than circular support.
+- Searched PubMed for exact `SSB1`/`Ssb1`/`YDL229W` mentions in 2025-2026. The
+  search returned the same two recent Ssb1/2 papers noted in the 2026-09-29
+  follow-up and no newer exact-match paper that changes the review.

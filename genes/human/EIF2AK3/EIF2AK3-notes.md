@@ -37,3 +37,31 @@ I removed tyrosine kinase terms because the literature supports PERK as an eIF2a
 I removed the `cytosol` Reactome-based annotation because the local Reactome entry is clearly about an `EIF2AK3-ALK` fusion and not native PERK [Reactome:R-HSA-9700131 ALK mutants bind type I TKIs, "EIF2AK3(30-144)-ALK(1058-1620)"].
 
 I treated broad binding and very generic signaling terms conservatively when they did not sharpen the PERK story beyond the ISR/ER-stress framework.
+
+
+## 2026-09-20 IBA re-review
+
+Restored documented tyrosine autophosphorylation, Hsp90-family binding and compatible broad localization/translation annotations. Replaced unsupported experimental and ortholog-process exclusions with uncertainty; removed curation commentary from description.
+
+Evidence inspected: [PMID:17998206](https://pubmed.ncbi.nlm.nih.gov/17998206/), [PMID:11907036](https://pubmed.ncbi.nlm.nih.gov/11907036/), [PMID:25329545](https://pubmed.ncbi.nlm.nih.gov/25329545/).
+
+Remaining questions:
+
+- Native PERK nucleus localization versus downstream-transcription-factor import (OpenScientist running).
+- Recover original full texts for ER overload response, amino-acid starvation and RNA-polymerase-I claims; investigate untraced ortholog process transfers.
+
+The project audit records all changed row indices and decisions in `projects/IBA_REVIEW/rereview-2026-09-20/localization.yaml`.
+
+
+### Focused nuclear-localization report adjudication (2026-09-20)
+
+The generated [OpenScientist report](EIF2AK3-hypotheses/function-hypothesis-go-0005634/openscientist.md) was incorporated, with its conclusion independently assessed. It identifies HPA nucleoplasm staining and established ER-membrane topology, but its claim that the GO nucleus term excludes nuclear envelope is incorrect. [AmiGO GO:0005635](https://amigo.geneontology.org/amigo/term/GO:0005635) explicitly gives a part_of relation to nucleus GO:0005634. ER continuity alone does not establish PERK residence in nuclear envelope, but membrane anchoring cannot refute the broader nucleus annotation.
+
+Direct inspection of [HPA subcellular evidence](https://www.proteinatlas.org/ENSG00000172071-EIF2AK3/subcellular) confirmed nucleoplasm staining with CAB009204 in A-431 and U2OS; U-251MG was cytosolic. The [antibody-validation page](https://www.proteinatlas.org/ENSG00000172071-EIF2AK3/summary/antibody) describes the ICC result as standard Approved and says: “The subcellular location is partly supported by literature or no literature is available.” Enhanced genetic, tagged-protein, or independent-antibody validation is not shown for this ICC signal. This warrants uncertainty about specificity, not a claim that the staining is an established artifact. Failure to recover the known ER compartment is a discrepancy requiring explanation, not a demonstrated refutation.
+
+The nuclear IBA remains UNDECIDED. A specificity-validated endogenous localization assay distinguishing nucleoplasm, nuclear envelope, and perinuclear ER, with characterization of full-length versus processed protein, would settle the remaining target-specific issue. The report was not duplicated and its generated text was preserved unchanged.
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Add explicit support for retained kinase, translation and localization claims, and explain why the GO tyrosine-kinase reaction includes protein autophosphorylation.

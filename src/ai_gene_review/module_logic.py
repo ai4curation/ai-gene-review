@@ -11,6 +11,9 @@ as a tree of nodes. Read as logic, that tree is a *monotone boolean formula* ove
 * a leaf ``annoton`` is an :class:`Atom` whose truth value is supplied externally
   by a per-context predicate (e.g. "is this participant gene expressed in this
   tissue / cell-zone?").
+* a node with a ``module_ref`` is replaced by the compiled referenced module (or
+  node), so an umbrella module is satisfied exactly when the modules it composes
+  are. Atoms reached through a reference are namespaced ``<module>#<annoton>``.
 
 Separating the *logic* (this module) from the *oracle* (the predicate) lets the
 same engine resolve a module against any context source - microbial genome
@@ -53,6 +56,8 @@ from typing import Callable, Iterator, Literal, Optional, Union
 import yaml
 
 from ai_gene_review.render_modules import as_list
+from ai_gene_review.module_gene_symbols import descriptor_symbol
+from ai_gene_review.module_qc import DEFAULT_MODULES_DIR, resolve_template_node
 
 
 @dataclass(frozen=True)
@@ -63,6 +68,27 @@ class Atom:
     label: str
     gene_symbol: Optional[str]
     uniprot: Optional[str]
+    representative_gene_symbols: tuple[str, ...] = ()
+    representative_uniprots: tuple[str, ...] = ()
+    #: GO molecular-function ids the step requires (annoton ``function`` and
+    #: participant ``required_function``), for activity-based oracles.
+    function_ids: tuple[str, ...] = ()
+
+    @property
+    def gene_symbols(self) -> tuple[str, ...]:
+        """Return every concrete symbol available for this step."""
+        return tuple(dict.fromkeys(
+            ([self.gene_symbol] if self.gene_symbol else [])
+            + list(self.representative_gene_symbols)
+        ))
+
+    @property
+    def uniprots(self) -> tuple[str, ...]:
+        """Return every concrete UniProt accession available for this step."""
+        return tuple(dict.fromkeys(
+            ([self.uniprot] if self.uniprot else [])
+            + list(self.representative_uniprots)
+        ))
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic
         return f"Atom({self.gene_symbol or self.node_id})"
@@ -92,15 +118,16 @@ Predicate = Callable[[Atom], bool]
 
 
 def _symbol_from_gene(gene: dict) -> Optional[str]:
-    """Pull a leading gene symbol out of a GeneDescriptor's ``preferred_term``.
+    """Use the same conservative symbol-label rule as module validation.
 
-    >>> _symbol_from_gene({"preferred_term": "PCK1 (cytosolic PEPCK)"})
-    'PCK1'
+    Ambiguous labels yield no symbol; the descriptor's accession is retained.
+
+    >>> _symbol_from_gene({"preferred_term": "MetXS (PSEPK)"})
+    'MetXS'
+    >>> _symbol_from_gene({"preferred_term": "PSEPK MetXS"}) is None
+    True
     """
-    pref = gene.get("preferred_term") if gene else None
-    if not pref:
-        return None
-    return pref.split()[0].strip().rstrip(":")
+    return descriptor_symbol(gene or {})
 
 
 def _uniprot_from_gene(gene: dict) -> Optional[str]:
@@ -112,24 +139,73 @@ def _uniprot_from_gene(gene: dict) -> Optional[str]:
     return None
 
 
-def _atom_from_annoton(annoton: dict) -> Atom:
-    """Build an :class:`Atom` from an annoton dict."""
-    gene = (annoton.get("participant") or {}).get("gene") or {}
+def _atom_from_annoton(annoton: dict, namespace: str = "") -> Atom:
+    """Build an :class:`Atom` from an annoton dict, prefixing its id with ``namespace#``."""
+    participant = annoton.get("participant") or {}
+    gene = participant.get("gene") or {}
+    representatives = ((participant.get("family") or {}).get("representative_members") or [])
+    gene_symbol = _symbol_from_gene(gene)
+    # An explicit gene supplies the canonical symbol. Family-only fallback
+    # applies the same symbol-label rule; ambiguous prose never becomes a symbol.
+    representative_symbols = tuple(
+        symbol for member in representatives
+        if (symbol := _symbol_from_gene(member))
+    ) if not gene_symbol else ()
+    representative_uniprots = tuple(
+        accession for member in representatives
+        if (accession := _uniprot_from_gene(member))
+    )
+    uniprot = _uniprot_from_gene(gene)
+    annoton_id = annoton.get("id", "?")
+    function_ids = tuple(dict.fromkeys(
+        tid for descriptor in (annoton.get("function"), participant.get("required_function"))
+        if (tid := ((descriptor or {}).get("term") or {}).get("id", "")).startswith("GO:")
+    ))
     return Atom(
-        node_id=annoton.get("id", "?"),
+        node_id=f"{namespace}#{annoton_id}" if namespace else annoton_id,
         label=annoton.get("label", annoton.get("id", "?")),
-        gene_symbol=_symbol_from_gene(gene),
-        uniprot=_uniprot_from_gene(gene),
+        gene_symbol=gene_symbol or (representative_symbols[0] if representative_symbols else None),
+        uniprot=uniprot or (representative_uniprots[0] if representative_uniprots else None),
+        representative_gene_symbols=representative_symbols,
+        representative_uniprots=representative_uniprots,
+        function_ids=function_ids,
     )
 
 
-def compile_node(node: dict) -> And:
-    """Compile a ModuleNode dict into an AND over its atoms, parts, and variant sets."""
+def _compile_reference(
+    node: dict, modules_dir: Path, chain: tuple[str, ...]
+) -> And:
+    """Compile a ``module_ref`` node as an AND wrapping the referenced module."""
+    module_ref = str(node["module_ref"])
+    if module_ref in chain:
+        raise ValueError(f"module_ref cycle: {' -> '.join([*chain, module_ref])}")
+    target = resolve_template_node(module_ref, modules_dir)
+    if target is None:
+        raise ValueError(f"module_ref '{module_ref}' of node {node.get('id')!r} not found")
+    namespace = module_ref.partition("#")[0]
+    sub = compile_node(target, modules_dir, (*chain, module_ref), namespace)
+    return And(node_id=node.get("id", "?"), children=[sub])
+
+
+def compile_node(
+    node: dict,
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    chain: tuple[str, ...] = (),
+    namespace: str = "",
+) -> And:
+    """Compile a ModuleNode dict into an AND over its atoms, parts, and variant sets.
+
+    ``module_ref`` nodes are resolved against ``modules_dir``; ``chain`` holds
+    the references being expanded (for cycle detection) and ``namespace`` the
+    referenced module whose atoms are being compiled.
+    """
+    if node.get("module_ref"):
+        return _compile_reference(node, Path(modules_dir), chain)
     children: list[Circuit] = []
     for annoton in as_list(node.get("annotons")):
-        children.append(_atom_from_annoton(annoton))
+        children.append(_atom_from_annoton(annoton, namespace))
     for part in as_list(node.get("parts")):
-        sub = compile_node(part["node"])
+        sub = compile_node(part["node"], modules_dir, chain, namespace)
         if part.get("optional"):
             # An optional part is an OR of (filled, empty) -> always satisfiable.
             empty: Circuit = And(node_id="empty", children=[])
@@ -138,21 +214,35 @@ def compile_node(node: dict) -> And:
         else:
             children.append(sub)
     for vs in as_list(node.get("variant_sets")):
-        branches: list[Circuit] = [compile_node(v) for v in as_list(vs.get("variants"))]
+        branches: list[Circuit] = [
+            compile_node(v, modules_dir, chain, namespace) for v in as_list(vs.get("variants"))
+        ]
         children.append(Or(set_id=vs.get("id", "?"),
                            selection=vs.get("selection", "ONE_OR_MORE"),
                            children=branches))
     return And(node_id=node.get("id", "?"), children=children)
 
 
-def compile_module(doc: dict) -> And:
-    """Compile a loaded ModuleReview document (its ``module``) into a circuit."""
-    return compile_node(doc["module"])
+def compile_module(
+    doc: dict,
+    modules_dir: Union[str, Path] = DEFAULT_MODULES_DIR,
+    stem: Optional[str] = None,
+) -> And:
+    """Compile a loaded ModuleReview document (its ``module``) into a circuit.
+
+    ``module_ref`` nodes resolve against ``modules_dir``; ``stem`` (the
+    document's own file stem) lets a reference back to it be caught as a cycle.
+    """
+    return compile_node(doc["module"], Path(modules_dir), (stem,) if stem else ())
 
 
 def compile_module_file(path: Union[str, Path]) -> And:
-    """Load a ModuleReview YAML file and compile its root module node."""
-    return compile_module(yaml.safe_load(Path(path).read_text()))
+    """Load a ModuleReview YAML file and compile its root module node.
+
+    References resolve against the file's own directory.
+    """
+    path = Path(path)
+    return compile_module(yaml.safe_load(path.read_text()), path.parent, path.stem)
 
 
 def iter_atoms(circuit: Circuit) -> Iterator[Atom]:
@@ -164,31 +254,73 @@ def iter_atoms(circuit: Circuit) -> Iterator[Atom]:
             yield from iter_atoms(child)
 
 
-def enumerate_routes(circuit: Circuit) -> list[list[Atom]]:
-    """Enumerate minimal satisfying routes.
+#: Default cap on :func:`enumerate_routes`; umbrella modules multiply route counts.
+DEFAULT_MAX_ROUTES = 10_000
+
+
+def count_routes(circuit: Circuit) -> int:
+    """Count the routes :func:`enumerate_routes` would return, without building them.
+
+    >>> count_routes(Or("vs", "ONE_OR_MORE", [Atom("a", "a", "A", None), Atom("b", "b", "B", None)]))
+    2
+    """
+    if isinstance(circuit, Atom):
+        return 1
+    if isinstance(circuit, And):
+        total = 1
+        for child in circuit.children:
+            total *= count_routes(child)
+        return total
+    return sum(count_routes(c) for c in circuit.children) or 1
+
+
+def enumerate_routes(circuit: Circuit, max_routes: int = DEFAULT_MAX_ROUTES) -> list[list[Atom]]:
+    """Enumerate satisfying routes.
 
     Each route picks exactly one branch per :class:`Or` node and includes every
-    atom on the conjunctive backbone. Returns one atom-list per route.
+    atom on the conjunctive backbone, each atom once. Returns one atom-list per
+    route.
 
-    Note: route count is the Cartesian product of branch counts across all OR
-    nodes, so it grows multiplicatively. Curated modules are small (<= tens of
-    routes); if this engine is ever applied to deeply nested / genome-scale module
-    sets, prefer satisfiability/gap queries (which do not materialise all routes)
-    over enumerating them, or add a route-count guard.
+    Route count is the Cartesian product of branch counts across all OR nodes,
+    and ``module_ref`` inlining multiplies the counts of every referenced
+    module, so this raises ``ValueError`` past ``max_routes``. For umbrella
+    modules prefer :func:`is_satisfied`, :func:`unsatisfied_steps` and
+    :func:`core_atoms`, which do not materialise routes. When two steps
+    reference the same module, each copy's variant sets are enumerated
+    independently, so routes may mix different branches of one referenced
+    variant set; every such route is still a satisfying set, but routes are
+    then not guaranteed minimal.
     """
+    total = count_routes(circuit)
+    if total > max_routes:
+        raise ValueError(
+            f"circuit has {total} routes, more than max_routes={max_routes}; "
+            "use is_satisfied/unsatisfied_steps/core_atoms instead"
+        )
+    return _enumerate(circuit)
+
+
+def _enumerate(circuit: Circuit) -> list[list[Atom]]:
+    """Unguarded route enumeration behind :func:`enumerate_routes`."""
     if isinstance(circuit, Atom):
         return [[circuit]]
     if isinstance(circuit, And):
         routes: list[list[Atom]] = [[]]
         for child in circuit.children:
-            child_routes = enumerate_routes(child)
-            routes = [r + cr for r in routes for cr in child_routes]
+            child_routes = _enumerate(child)
+            routes = [_merge_route(r, cr) for r in routes for cr in child_routes]
         return routes
     # Or
     routes = []
     for child in circuit.children:
-        routes.extend(enumerate_routes(child))
+        routes.extend(_enumerate(child))
     return routes or [[]]
+
+
+def _merge_route(left: list[Atom], right: list[Atom]) -> list[Atom]:
+    """Concatenate two partial routes, keeping each atom (by ``node_id``) once."""
+    seen = {a.node_id for a in left}
+    return left + [a for a in right if a.node_id not in seen]
 
 
 def is_satisfied(circuit: Circuit, holds: Predicate) -> bool:
@@ -210,19 +342,27 @@ def core_atoms(circuit: Circuit) -> list[Atom]:
     """Atoms required by *every* route (the AND-core; gate candidates).
 
     If any core atom is unsatisfied no route can succeed, so these are exactly the
-    atoms whose absence gates the whole module.
+    atoms whose absence gates the whole module. Computed structurally (an AND
+    unions its children's cores, an OR intersects them), so it does not
+    enumerate routes and stays cheap for umbrella modules.
     """
-    routes = enumerate_routes(circuit)
-    if not routes:
-        return []
-    common: set[str] = set(a.node_id for a in routes[0])
-    for r in routes[1:]:
-        common &= set(a.node_id for a in r)
+    common = _core_ids(circuit)
     seen: dict[str, Atom] = {}
     for a in iter_atoms(circuit):
         if a.node_id in common:
             seen[a.node_id] = a
     return list(seen.values())
+
+
+def _core_ids(circuit: Circuit) -> set[str]:
+    """Return the ids of atoms present in every route of ``circuit``."""
+    if isinstance(circuit, Atom):
+        return {circuit.node_id}
+    if isinstance(circuit, And):
+        return set().union(*(_core_ids(c) for c in circuit.children))
+    if not circuit.children:
+        return set()
+    return set.intersection(*(_core_ids(c) for c in circuit.children))
 
 
 def step_id(circuit: Circuit) -> str:
@@ -293,7 +433,7 @@ def abduce(circuit: Circuit, holds: Predicate, asserted_active: bool) -> Abducti
     sat = is_satisfied(circuit, holds)
     gaps = unsatisfied_steps(circuit, holds)
     gap_ids = [step_id(s) for s in gaps]
-    gap_candidates = {step_id(s): sorted({a.gene_symbol for a in iter_atoms(s) if a.gene_symbol})
+    gap_candidates = {step_id(s): sorted({symbol for a in iter_atoms(s) for symbol in a.gene_symbols})
                       for s in gaps}
     if sat and asserted_active:
         return Abduction("CONSISTENT_ACTIVE", True, True, True, gap_ids, gap_candidates, [])
@@ -325,4 +465,3 @@ def unsatisfied_steps(circuit: Circuit, holds: Predicate) -> list[Circuit]:
     if isinstance(circuit, And):
         return [c for c in circuit.children if not is_satisfied(c, holds)]
     return [] if is_satisfied(circuit, holds) else [circuit]
-

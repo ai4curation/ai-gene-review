@@ -11,12 +11,12 @@ The BioReason functional summary is fundamentally wrong about pol5's function:
 
 > A soluble scaffold in fission yeast that uses an armadillo-repeat solenoid to organize macromolecular assemblies essential for cell division. Although bearing a polymerase-V-related framework and a vestigial motif from a broader polymerase family, it functions primarily as a non-enzymatic insertase-like organizer that stabilizes and remodels protein complexes during cytokinesis.
 
-Pol5 has nothing to do with cytokinesis, scaffolding, or cell division. It is an **essential nucleolar protein that regulates rRNA transcription by RNA polymerase I** and plays critical roles in **ribosome biogenesis**, particularly for 60S subunit formation. The curated review, supported by PMID:16816948 and PMID:31745560, shows that:
+Pol5 has no supported role in cytokinesis, membrane remodeling, or furrow formation. It is an **essential nuclear/nucleolar rRNA-production and ribosome-biogenesis factor**. Direct S. pombe evidence shows rDNA-promoter-fragment binding and reduced rRNA production, while mechanistic work on the budding-yeast ortholog establishes pre-rRNA binding, processing, and assembly roles. The available evidence does not establish direct regulation of Pol I transcription as Pol5's primary function. The curated review, supported by PMID:16816948 and PMID:31745560, shows that:
 
 - Pol5 localizes to the nucleolus (not cytoplasm)
 - Pol5 binds rDNA promoter fragments (IDA evidence)
 - Reducing Pol5 levels inhibits rRNA production
-- Pol5 is required for pre-rRNA processing at A2 and C2 cleavage sites
+- The budding-yeast ortholog is required for pre-rRNA processing and contacts the 5' ETS, ITS2, and 25S domain III
 - Pol5 has a NOT annotation for nucleolar large rRNA transcription (ISO), clarifying it acts in ribosome biogenesis rather than as a Pol I transcription factor per se
 
 BioReason claims:
@@ -33,4 +33,4 @@ The interpro2go annotations (GO_REF:0000002) for pol5 include nucleic acid bindi
 
 ## Notes on thinking trace
 
-The trace correctly identifies the ARM-repeat fold and polymerase-V-related framework, but then makes an unfounded leap to cytokinesis based on generic ARM-repeat biology. The statement "ARM-repeat scaffolds of the MYBBP1A lineage are widely used to regulate cytoskeletal and nuclear assemblies" ignores that MYBBP1A (the human ortholog) is itself a nucleolar protein involved in rRNA transcription -- exactly the function that pol5 actually performs.
+The trace correctly identifies the ARM-repeat fold and polymerase-V-related framework, but then makes an unfounded leap to cytokinesis based on generic ARM-repeat biology. The statement "ARM-repeat scaffolds of the MYBBP1A lineage are widely used to regulate cytoskeletal and nuclear assemblies" ignores that the conserved Pol5/MYBBP1A family is nucleolar and linked to rRNA production and ribosome biogenesis, with direct pre-rRNA-processing evidence for budding-yeast Pol5.

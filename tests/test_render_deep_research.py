@@ -49,6 +49,9 @@ def test_collect_deep_research_sections_rebases_artifact_links(tmp_path):
     output_dir = tmp_path / "pages"
     gene_dir.mkdir(parents=True)
     output_dir.mkdir()
+    artifact = gene_dir / 'TEST1-deep-research-falcon_artifacts/plot.png'
+    artifact.parent.mkdir()
+    artifact.write_bytes(b'archived image fixture')
 
     report_path = gene_dir / "TEST1-deep-research-falcon.md"
     report_path.write_text(
@@ -156,3 +159,18 @@ Rendered deep research.
     assert "4 citations" in html
     assert "Rendered deep research." in html
     assert "## Output" not in html
+
+
+def test_renamed_artifact_rewrites_urls_without_touching_quoted_prose(tmp_path):
+    from ai_gene_review.render import resolve_research_artifacts
+
+    report = tmp_path / 'current.md'
+    artifact = tmp_path / 'current_artifacts/plot.png'
+    artifact.parent.mkdir()
+    artifact.write_bytes(b'png')
+    old = 'previous_artifacts/plot.png'
+    artifacts = [{'path': old, 'href': old}]
+    prose = f'<p>"{old}"</p><code>href="{old}"</code>'
+    result = resolve_research_artifacts(artifacts, prose + f'<img src="{old}">', report, tmp_path)
+    assert prose in result
+    assert '<img src="current_artifacts/plot.png">' in result

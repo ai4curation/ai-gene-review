@@ -56,3 +56,18 @@ metabolic process (BP) + GO:0005765 lysosomal membrane (CC); ATP binding / ATP
 hydrolysis secondary.
 
 Deep research: falcon out of credits (HTTP 402); grounded in UniProt + GOA + cached PMIDs.
+
+
+## Full annotation re-review — 2026-09-20
+
+Re-read all 51 annotation rows against the UniProt record, all cited primary abstracts, the full localization/transport papers (PMID:27456980 and PMID:33845046), and the five cached Reactome events. Traced the challenged inherited functions to PTHR11384/PTN004256010. Broad membrane, transport and ABC transporter assertions are true core properties and were restored; no donor-count objection is used.
+
+Direct ER sorting and negative peroxisome localization justify rejecting native peroxisomal location/import, but they do not separately refute all lipid metabolism or peroxisome-organization processes. Those independent claims remain UNDECIDED pending the coordinated hypothesis report. PMID:14533738 explicitly reports GFP-labelled human PMP69 fragments targeting peroxisomes, so that positive experimental row is UNDECIDED for construct-context reconciliation, not dismissed because the title emphasizes ABCD1. The earlier general native peroxisome assignment from PMID:9302272 remains rejected in light of direct later contradictory localization, while its rat-antibody versus human-full-length experimental context is explicitly acknowledged.
+
+Evidence excerpts: PMID:27456980, "ABCD4 does not localize to peroxisomes"; PMID:19010322, "only P70R lacks the region and is translated with NH(2)-terminal hydrophobic TMS1."; PMID:33845046, "ABCD4 transports cobalamin from the inside to the outside of liposomes in a manner that is dependent on ATPase activity". The description now identifies the specific N-terminal targeting difference rather than claiming absence of every organelle-targeting signal.
+
+## 2026-10-05 OpenScientist fatty-acid/peroxisome follow-up
+
+- Critically evaluated `genes/human/ABCD4/ABCD4-hypotheses/fatty-acid-functions-and-peroxisome-organization/openscientist.md`, which addressed the pending fatty-acid and peroxisome-organization IBAs from `PTN004256010`. The report found no ABCD4-specific experimental support for long-chain fatty acid transport, fatty acid beta-oxidation, very-long-chain fatty acid catabolism, or peroxisome organization [file:human/ABCD4/ABCD4-hypotheses/fatty-acid-functions-and-peroxisome-organization/openscientist.md "None of the four claims has any experimental support on ABCD4"].
+- Changed `GO:0005324`, `GO:0006635`, `GO:0042760`, and `GO:0007031` from `UNDECIDED` to `REMOVE`, with `PROPAGATION_BAD` reviews against the peroxisomal ABCD1-3 PANTHER branch. The lysosomal cobalamin transport rows remain the core ABCD4 annotations, and the direct NOT-peroxisome IDA rows remain the decisive localization evidence.
+- Reviewer follow-up anchored the fatty-acid and VLCFA removals directly to the primary localization papers rather than leaving the AI report as the only machine-readable support. `GO:0006635` and `GO:0042760` now state that the curator call goes beyond the report's hedged "candidate removal" language because the unsupported peroxisomal import step leaves no direct ABCD4 route into peroxisomal beta-oxidation.

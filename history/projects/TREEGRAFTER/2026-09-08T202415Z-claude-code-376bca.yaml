@@ -1,0 +1,91 @@
+history_version: 1
+target:
+  kind: project
+  slug: TREEGRAFTER
+  path: projects/TREEGRAFTER.md
+session:
+  id: 2026-09-08T202415Z-claude-code-376bca
+  timestamp: '2026-09-08T20:24:15Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/2982
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - failure_modes
+  - scripts
+  - sidecars
+  - corroboration
+  - next_steps
+  - failure-modes
+  summary: 'Address PR #2982 review: safe join key, tightened failure-mode heuristics,
+    corroboration caveat'
+  details: |
+    Follow-up to the ai4c-reviewer CHANGES_REQUESTED review on PR #2982.
+
+    Blocking items addressed:
+
+    1. Join collision. classify_failure_modes.py joined placement rows to review
+       rows on (gene_symbol, term_id), which is not unique: 14 colliding keys span
+       genuinely different genes (ALB in CANLF+FELCA, mdh in METEA+PSEPK, the two
+       PSEPK dapF paralogs Q88CF3/Q88GD4, AmiC1/AmiC2 across five cyanobacteria).
+       analyze_placement.py now emits a 'file' column; failure_mode_curated.tsv
+       gained a 'file' column (all 163 rows migrated deterministically, each
+       (gene, term_id) mapped to exactly one placement row); all joins are keyed on
+       (file, term_id). This was NOT purely latent: the METEA mdh rows were
+       carrying PSEPK mdh's reviewer_reason in the committed table. A warning now
+       fires for curated overrides that match no placement row.
+
+    2. Binding rule. RE_BINDING collapsed to /binding$/ and ran ahead of the
+       reason-text rules, stamping every term ending in 'binding' as mode 3.
+       Replaced with an explicit LOW_INFO_BINDING allowlist (binding, protein
+       binding, identical protein binding, small molecule binding). Terms naming a
+       real ligand (ubiquinone binding, double-stranded DNA binding, metal ion
+       binding, peptide binding, DNA binding) now fall through to the reviewer's
+       reason.
+
+    3. Mis-placement rule. Added RE_FAMILY_LEVEL, tested before RE_MISPLACE, so
+       reasons that explicitly state family-level propagation land in mode 1 (its
+       operational definition): zwf, scpC, paaF/paaH/paaJ and the four aroQ rows.
+       Removed the bare 'paralog' and 'rather than' alternatives; narrowed
+       'acts on' to the contrastive 'acts on X ... not Y' form (a bare 'acts on'
+       was filing mutS's granularity reason as mis-placement). Added
+       mis-annotat/mis-assign/mis-graft, wrong-substrate and paralog
+       over-annotation forms, which keep the genuine mis-placements (mdh, pepV,
+       Saro_0802) in mode 4.
+
+       Net effect on the published split: granularity 42%->47%, generic/context
+       38%->36%, mis-placement 19%->13% (58->41 annotations, 41->26 genes),
+       pseudo-enzyme 1%. 9 rows are now mode 0 UNCLASSIFIED rather than
+       confidently mis-filed; they are documented as the curation queue.
+
+    4. Corroboration confound. Added a caveat to the Corroboration section:
+       reviewers see original_reference_id while adjudicating, so the 77%-vs-41%
+       gap may be partly caused by the provenance label rather than only predicted
+       by it; 77% vs 41% should be read as an upper bound. Added a
+       provenance-blinded re-adjudication to next steps.
+
+    Also: cached graft_node() lookups (suggestion 6); corrected the PTHR43128
+    attribution on failure-modes.md - L-LACTATE DEHYDROGENASE is the SF16
+    subfamily name, the family is L-2-HYDROXYCARBOXYLATE DEHYDROGENASE (NAD(P)(+))
+    (suggestion 10, verified against interpro/panther/panther.obo).
+
+    NOT changed, with reason: suggestion 11 asked to drop 'obsolete' from the
+    GO:0051082 note. Verified via OLS - GO:0051082 is 'obsolete unfolded protein
+    binding', is_obsolete: true, with a replaced_by note pointing to GO:0044183 /
+    GO:0140309. It still appears in GOA downloads because GOA lags the ontology,
+    which is the documented GOA-vs-ontology skew, so the existing note is correct.
+
+    Verification: all three scripts were run end-to-end in this environment (the
+    review sandbox could not). Before any edit they reproduced the committed
+    treegrafter_placement.tsv, treegrafter_family_hotspots.tsv and
+    treegrafter_failure_modes.tsv byte-identically. After the edits the pipeline is
+    idempotent, the placement row set is unchanged (only the 'file' column added),
+    treegrafter_family_hotspots.tsv is byte-identical, and no orphan-curated
+    warning fires.

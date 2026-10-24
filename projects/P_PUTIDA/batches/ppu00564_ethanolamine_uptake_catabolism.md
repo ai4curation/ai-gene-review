@@ -86,3 +86,12 @@ its earlier Asta retrieval report as low-weight background.
   needed to resolve the two transferred microcompartment annotations.
 
 2026-08-13: Started as module 19 of the current 20-module batch.
+
+## 2026-09-01 EutE family repair
+
+The reusable module's acetylating EutE variant is now grounded on
+`PANTHER:PTHR11699:SF68`, whose exact official label is
+`ACETALDEHYDE DEHYDROGENASE (ACETYLATING) EUTE`. The Salmonella EutE exemplar
+P41793 is indexed in that subfamily. This refinement does not change the
+separate non-acylating aldehyde-dehydrogenase variant used to represent the
+unresolved KT2440 AldB-I route.

@@ -66,3 +66,41 @@ which is essential for kinetochore assembly and proper chromosome segregation.
 - Zinc ion binding is supported by the CYS domain characterization
 - The protein heterodimerization IEA may relate to histone fold but needs evaluation
 - Scm3 is NOT a stable nucleosome component in S. pombe (unlike what was proposed for budding yeast)
+
+## 2026-09-01 refresh and evidence audit
+
+- Refetched UniProt and QuickGO data with `just fetch-gene SCHPO scm3 --force`.
+  Three retired generic protein-binding rows supported by PMID:19217403 were removed
+  from the review because they are no longer present in GOA.
+- QuickGO returned three PMID:19217403 annotations to GO:0034506 that differ only by
+  annotation extension (`existence_overlaps` cell-cycle terms). The repository TSV
+  does not represent extensions, so these became byte-identical rows. This exposed
+  the projection bug fixed and merged separately in PR #2913; the post-merge refetch
+  now retains one projected row without bypassing the fetch wrapper.
+- The two PMID:19217404 protein-binding annotations remain distinct because their
+  WITH/FROM partners differ: Cnp1 (PomBase:SPBC1105.17) and Mis18
+  (PomBase:SPCC970.12). They are now represented separately in the YAML. Cnp1 binding
+  is modified to the informative histone binding term; the generic Mis18
+  binding term is retained as over-annotated rather than treated as a separate activity.
+- Corrected an evidence overstatement: PMID:19217403 reports no Scm3-H4 interaction
+  in the yeast two-hybrid experiment, but that passage does not establish a negative
+  result for Scm3-H3 binding.
+- Replaced the core-function support from the secondary deep-research synthesis with
+  verbatim evidence from PMID:19217403, PMID:19217404, and PMID:38084929. The four
+  primary functional/localization papers were manually adjudicated and recorded in
+  `reference_review`.
+- No OpenScientist job was launched: the core function, principal localization, and
+  zinc-dependent targeting mechanism are directly covered by accessible full-text
+  primary studies, leaving no focused unresolved hypothesis that would improve this
+  review.
+- PR review follow-up added GO:0019237 `centromeric DNA binding` as a `NEW` IDA
+  annotation from PMID:38084929. Because the GO term already exists, this belongs in
+  `existing_annotations` with `action: NEW`, not in `proposed_new_terms`, which is
+  reserved for ontology terms that do not yet exist.
+- Replaced the PMID:19217404 chromatin-assembly support with the paper's direct
+  incorporation result, and refined the Cnp1 IPI replacement to GO:0042393 `histone
+  binding` so that the recommendation does not claim chaperone activity from binding
+  evidence alone.
+- Verified the second PMID:19217404 IPI partner against PomBase: SPCC970.12 is Mis18,
+  not Mis16 (whose systematic identifier is SPCC1672.10), and corrected the review
+  prose accordingly.

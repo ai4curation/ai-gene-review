@@ -6,7 +6,9 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
+from ai_gene_review.source_tree import review_snapshot_tree
 from scripts.gogpt_compare_levels import (
     build_comparison,
     get_core_terms_from_document,
@@ -83,11 +85,8 @@ def test_core_term_extraction_covers_every_go_valued_slot() -> None:
     }
 
 
-def test_post_review_terms_include_new_go_terms_and_respect_exclusions(
-    tmp_path: Path,
-) -> None:
-    review = tmp_path / "gene-ai-review.yaml"
-    review.write_text(
+def test_post_review_terms_include_new_go_terms_and_respect_exclusions() -> None:
+    review = yaml.safe_load(
         """
 existing_annotations:
   - term: {id: GO:0000001}
@@ -108,54 +107,21 @@ core_functions:
     assert get_post_review_terms(review) == {"GO:0000001", "GO:0000004"}
 
 
-def test_committed_three_level_report_matches_current_reviews() -> None:
-    details, stats = build_comparison(REPO_ROOT)
+def test_committed_three_level_report_matches_review_snapshot(
+    forbid_working_tree_genes: None,
+) -> None:
+    details, stats = build_comparison(review_snapshot_tree(REPO_ROOT))
     committed = json.loads(
         (REPO_ROOT / "reports/gogpt-comparison-levels.json").read_text()
     )
 
     assert committed == details
-    assert len(details) == 299
+    assert len(details) == 296
+    # Pinned at review_snapshot_commit in benchmark-policy.yaml; bump via `just refresh-benchmark-snapshot`.
     assert stats == {
-        "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
-        # Upstream reviews moved these levels. The HdeB re-review retains
-        # GO:0051082 as an explicit interim post-review/core term (+1 to both
-        # post_review and core). Separately, surA now retains GO:0005515
-        # post-review (+1 post_review only), while the HdeA comprehensive review
-        # adds one post-review term and two GO-valued core slots without changing
-        # either overlap count. The Spy comprehensive review adds two post-review
-        # terms and two GO-valued core slots without changing either overlap count.
-        # The CpxP comprehensive review adds one post-review term and two GO-valued
-        # core slots, also without changing either overlap count. DnaJ removes two
-        # net post-review terms and three predicted overlaps after
-        # resolving miscited CAFA rows. Its core count and overlap stay unchanged:
-        # evidence-backed GO:0001671 replaces overclaimed GO:0043335 in the core set.
-        # surA, Spy, CpxP, DnaJ, DnaK, GroEL, RidA, SecB, Skp, and SlyD advanced
-        # to COMPLETE, moving the reference-status distribution 67->77 COMPLETE.
-        # DnaK changes review classifications without changing the three overlap totals.
-        # GroEL removes two net post-review terms and one predicted overlap after
-        # narrowing broad cytoplasm to the directly supported cytosol term; its core
-        # count and overlap stay unchanged.
-        # RidA removes one net post-review term and one predicted overlap by narrowing
-        # broad annotations and replacing obsolete terms with the specific isoleucine
-        # process or the holdase NTR; its GO-valued core set and overlap stay unchanged.
-        # SecB removes two net post-review terms and two predicted overlaps by narrowing
-        # broad transport/localization annotations; its core set and overlap stay unchanged.
-        # Skp retains experimentally supported protein folding and adds it to the
-        # synthesized core process set while treating homotrimerization as non-core,
-        # adding one reference term and exact overlap at both AIGR levels. GOA is
-        # unaffected, distinguishing that curation edit from a snapshot refresh.
-        # SlyD's refreshed GOA removes obsolete GO:0051082 plus the active broad
-        # parents GO:0016853 and GO:0046872, reducing raw and post-review
-        # totals/overlaps by three. Its term-less holdase core removes GO:0051082
-        # from the GO-valued core set.
-        # CnoX's refreshed GOA removes obsolete GO:0051082 and two stale process
-        # rows, reducing raw totals by three and predicted overlaps by two. Its
-        # completed review plus follow-up adds evidence-backed GO:0009408 to the
-        # post-review set while removing general redox homeostasis from the core;
-        # GO:0051087 remains an evidence-backed core activity and predicted overlap.
-        "post_review": {"overlap": 849, "total": 2761, "pred": 8871},
-        "core": {"overlap": 350, "total": 1230, "pred": 8871},
+        "goa": {"overlap": 1020, "total": 2844, "pred": 8806},
+        "post_review": {"overlap": 849, "total": 2672, "pred": 8806},
+        "core": {"overlap": 355, "total": 1206, "pred": 8806},
     }
 
 

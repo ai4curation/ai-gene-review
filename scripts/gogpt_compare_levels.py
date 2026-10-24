@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""Compare GO-GPT predictions with GOA and current AIGR review layers."""
+"""Compare GO-GPT predictions with GOA and AIGR review layers at the declared snapshot.
+
+Inputs (the batch predictions, per-gene GOA TSVs and AIGR reviews) are read at
+``review_snapshot_commit`` in the BioReason benchmark policy, not from the
+working tree; refresh with ``just refresh-benchmark-snapshot``.
+"""
 
 from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Iterable
 
 import yaml
+
+from ai_gene_review.source_tree import SourceTree, review_snapshot_tree
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -59,16 +67,13 @@ def ids(terms: Iterable[Any]) -> set[str]:
     return {identifier for term in terms if (identifier := go_id(term))}
 
 
-def get_goa_terms(goa_file: Path) -> set[str]:
-    """Level 1: exact terms from the committed GOA snapshot."""
-    if not goa_file.exists():
-        return set()
-    with goa_file.open(newline="", encoding="utf-8") as handle:
-        return {
-            identifier
-            for row in csv.DictReader(handle, delimiter="\t")
-            if (identifier := str(row.get("GO TERM") or "")).startswith("GO:")
-        }
+def get_goa_terms(goa_text: str) -> set[str]:
+    """Level 1: exact terms from a committed GOA TSV."""
+    return {
+        identifier
+        for row in csv.DictReader(io.StringIO(goa_text, newline=""), delimiter="\t")
+        if (identifier := str(row.get("GO TERM") or "")).startswith("GO:")
+    }
 
 
 def get_core_terms_from_document(review: dict[str, Any]) -> set[str]:
@@ -83,15 +88,8 @@ def get_core_terms_from_document(review: dict[str, Any]) -> set[str]:
     return terms
 
 
-def get_core_terms(review_file: Path) -> set[str]:
-    """Level 3: all GO-valued terms in current AIGR core functions."""
-    review = yaml.safe_load(review_file.read_text(encoding="utf-8")) or {}
-    return get_core_terms_from_document(review)
-
-
-def get_post_review_terms(review_file: Path) -> set[str]:
+def get_post_review_terms(review: dict[str, Any]) -> set[str]:
     """Level 2: retained/replacement/new annotations plus AIGR core terms."""
-    review = yaml.safe_load(review_file.read_text(encoding="utf-8")) or {}
     terms: set[str] = set()
 
     for annotation in review.get("existing_annotations", []) or []:
@@ -109,9 +107,9 @@ def get_post_review_terms(review_file: Path) -> set[str]:
     return terms
 
 
-def prediction_sets(batch_file: Path) -> dict[tuple[str, str], set[str]]:
+def prediction_sets(batch_text: str) -> dict[tuple[str, str], set[str]]:
     """Recover emitted predictions independent of the batch file's old reference columns."""
-    records = json.loads(batch_file.read_text(encoding="utf-8"))
+    records = json.loads(batch_text)
     predictions: dict[tuple[str, str], set[str]] = defaultdict(set)
     for record in records:
         key = (record["organism"], record["gene"])
@@ -120,11 +118,10 @@ def prediction_sets(batch_file: Path) -> dict[tuple[str, str], set[str]]:
     return predictions
 
 
-def build_comparison(repo_root: Path) -> tuple[list[dict[str, Any]], dict[str, dict[str, int]]]:
-    """Build deterministic per-gene records and aggregate counters."""
-    batch_file = repo_root / "reports" / "gogpt-comparison.json"
-    if not batch_file.exists():
-        raise FileNotFoundError(f"Missing GO-GPT batch results: {batch_file}")
+def build_comparison(
+    tree: SourceTree,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, int]]]:
+    """Build deterministic per-gene records and aggregate counters from ``tree``."""
 
     stats = {
         level: {"overlap": 0, "total": 0, "pred": 0}
@@ -132,19 +129,24 @@ def build_comparison(repo_root: Path) -> tuple[list[dict[str, Any]], dict[str, d
     }
     details: list[dict[str, Any]] = []
 
-    for (organism, gene), predictions in sorted(prediction_sets(batch_file).items()):
+    batch = prediction_sets(tree.read_text("reports/gogpt-comparison.json"))
+    for (organism, gene), predictions in sorted(batch.items()):
         specific_predictions = predictions - GENERIC_TERMS
         if not specific_predictions:
             continue
-        gene_dir = repo_root / "genes" / organism / gene
-        review_file = gene_dir / f"{gene}-ai-review.yaml"
-        if not review_file.exists():
+        gene_dir = f"genes/{organism}/{gene}"
+        review_file = f"{gene_dir}/{gene}-ai-review.yaml"
+        if not tree.is_file(review_file):
             continue
+        goa_file = f"{gene_dir}/{gene}-goa.tsv"
+        review = yaml.safe_load(tree.read_text(review_file)) or {}
 
         reference_sets = {
-            "goa": get_goa_terms(gene_dir / f"{gene}-goa.tsv"),
-            "post_review": get_post_review_terms(review_file),
-            "core": get_core_terms(review_file),
+            "goa": get_goa_terms(tree.read_text(goa_file))
+            if tree.is_file(goa_file)
+            else set(),
+            "post_review": get_post_review_terms(review),
+            "core": get_core_terms_from_document(review),
         }
         overlaps = {
             level: specific_predictions & reference
@@ -166,6 +168,7 @@ def build_comparison(repo_root: Path) -> tuple[list[dict[str, Any]], dict[str, d
                 "post_review_overlap": len(overlaps["post_review"]),
                 "core_terms": len(reference_sets["core"]),
                 "core_overlap": len(overlaps["core"]),
+                "predicted_terms": sorted(specific_predictions),
                 "goa_overlap_terms": sorted(overlaps["goa"]),
                 "post_review_overlap_terms": sorted(overlaps["post_review"]),
                 "core_overlap_terms": sorted(overlaps["core"]),
@@ -251,7 +254,7 @@ def main() -> None:
         / "figures"
         / "three_level_overlap.png"
     )
-    details, stats = build_comparison(repo_root)
+    details, stats = build_comparison(review_snapshot_tree(repo_root))
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(details, indent=2) + "\n", encoding="utf-8")

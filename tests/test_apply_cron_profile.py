@@ -138,13 +138,13 @@ def test_off_profile_removes_every_schedule():
         assert "workflow_dispatch" in triggers
 
 
-def test_main_ci_workflow_is_not_managed():
-    """main.yaml's weekly re-validation is CI, not an agent; `off` must not
-    disable it."""
+@pytest.mark.parametrize("workflow", ["main", "generate-pages"])
+def test_ci_and_publication_workflows_are_not_managed(workflow):
+    """Agent profiles must not disable validation or publication schedules."""
     config = load_config(DEFAULT_CONFIG)
     for profile in config["profiles"].values():
-        assert "main" not in profile["workflows"]
-    assert "cron:" in (Path(".github/workflows/main.yaml")).read_text()
+        assert workflow not in profile["workflows"]
+    assert "cron:" in Path(f".github/workflows/{workflow}.yaml").read_text()
 
 
 def test_off_then_back_round_trips_every_managed_workflow():

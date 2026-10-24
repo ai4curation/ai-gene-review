@@ -15,7 +15,7 @@
 
 ## Executive Summary
 
-PTHR22891 is the **Argonaute/Piwi** superfamily, the protein effectors of small-RNA-guided gene silencing across eukaryotes (with prokaryotic Argonautes outside the typical eukaryotic clades). Members share the canonical four-domain architecture (N, PAZ, MID, PIWI). The **PAZ domain** anchors the 3' end of a small RNA guide; the **MID domain** binds the 5' phosphate; and the **PIWI domain** adopts an RNase H-like fold that, in catalytically competent ("slicer") members, carries a conserved Asp-Asp-His/Asp-Glu-Asp-His catalytic tetrad and cleaves target RNAs base-paired to the guide.
+PTHR22891 is the **Argonaute/Piwi** superfamily, the protein effectors of small-RNA-guided gene silencing across eukaryotes (with prokaryotic Argonautes outside the typical eukaryotic clades). Members share the canonical four-domain architecture (N, PAZ, MID, PIWI). The **PAZ domain** anchors the 3' end of a small RNA guide; the **MID domain** binds the 5' phosphate; and the **PIWI domain** adopts an RNase H-like fold that, in catalytically competent ("slicer") members, retains the catalytic residues needed to cleave target RNAs base-paired to the guide.
 
 The conserved core function is **small-RNA-guided recognition of complementary nucleic acid** leading to silencing — either post-transcriptional (mRNA cleavage / translational repression, the AGO clade with miRNA/siRNA) or transcriptional/co-transcriptional (chromatin/heterochromatin silencing, and the PIWI clade with piRNA-directed transposon repression in animal germlines). The family shows clear **neofunctionalization** between the AGO and PIWI clades and, in many lineages, between slicer-competent and slicer-dead paralogs. The fission-yeast anchor **ago1** is unusual in being the **sole Argonaute** of its organism and acting primarily in **RNAi-directed heterochromatin assembly** (RITS complex) at centromeres, the mating-type locus, and subtelomeres, in addition to canonical slicing.
 
@@ -30,7 +30,8 @@ PTHR22891 has 68 subfamilies. The retrieved member table (80 proteins) does not 
 - Human AGO2 (slicer; UMP-bound MID structure 9bf2 is from this clade)
 - Arabidopsis AGO1 (O04379), AGO6 (O48771)
 - *Leishmania* AGO1 (G8XR08), *Giardia* Ago (A8BCK6, C6LTG5)
-- C. elegans WAGO clade (wago-1 Q21770, wago-4 O62275, hrde-1 Q09249)
+- C. elegans WAGO clade (wago-1 Q21770, wago-4 O62275, hrde-1 Q09249), a distinct nematode radiation within the broader Argonaute superfamily
+- C. elegans ERGO-1 (O61931), the 26G-siRNA effector; domain-wise phylogenetic analysis supports an AGO-related PIWI domain and a WAGO-like PAZ domain, rather than the older PIWI-clade assignment ([PMID:30650636](https://pubmed.ncbi.nlm.nih.gov/30650636/), Figure 4).
 
 **Function**: miRNA/siRNA-guided post-transcriptional silencing (mRNA slicing or translational repression); plant/protist AGOs also direct chromatin-level silencing.
 
@@ -40,14 +41,14 @@ PTHR22891 has 68 subfamilies. The retrieved member table (80 proteins) does not 
 **Key Members**:
 - Zebrafish piwil2 (A2CEI6), chicken PIWIL1 (A6N7Y9)
 - *Bombyx mori* Siwi (A8D8P8), AGO3 (A9ZSZ2)
-- C. elegans ergo-1 (O61931, a 26G/piRNA-associated Argonaute)
+- C. elegans PRG-1 (P90786), the 21U-RNA/piRNA-binding Piwi protein ([PMID:22700655](https://pubmed.ncbi.nlm.nih.gov/22700655/)). ERGO-1-associated 26G-RNAs are endo-siRNAs, not 21U piRNAs.
 
-**Function**: piRNA-guided silencing of transposable elements, primarily in the animal germline; participates in the ping-pong amplification loop.
+**Function**: piRNA-guided target recognition and silencing, primarily in the animal germline, with lineage-specific roles in piRNA maturation and mRNA regulation. Ping-pong amplification is a property of particular PIWI systems, not every PIWI protein. Mammalian PIWIL1/MIWI operates prominently in primary piRNA loading and spermiogenic mRNA regulation, while C. elegans PRG-1 triggers secondary 22G-siRNA silencing and does not run a canonical ping-pong piRNA loop ([PMID:38491008](https://pubmed.ncbi.nlm.nih.gov/38491008/), [PMID:31835033](https://pubmed.ncbi.nlm.nih.gov/31835033/), [PMID:22700655](https://pubmed.ncbi.nlm.nih.gov/22700655/)).
 
 ### Anchor subfamily — S. pombe ago1 (Argonaute)
 **Anchor**: O74957 (ago1), "Protein argonaute", 834 aa, S. pombe.
 
-ago1 is the **sole Argonaute** in fission yeast and falls within the broad eukaryotic **AGO clade** (canonical Argonaute, not a PIWI-clade protein). It is the catalytic core of the **RITS** (RNA-induced transcriptional silencing) and **ARC** (Argonaute siRNA chaperone) complexes. Unlike the metazoan AGO subfamilies whose dominant output is mRNA slicing, ago1's principal role is **siRNA-directed (co-transcriptional) heterochromatin assembly**, although it retains a functional slicer (PIWI Asp-Asp-His triad: Asp580, Asp651, His788). It thus represents a lineage where the conserved Argonaute MF (small-RNA binding + slicing) is coupled to a chromatin-silencing BP output.
+ago1 is the **sole Argonaute** in fission yeast and falls within the broad eukaryotic **AGO clade** (canonical Argonaute, not a PIWI-clade protein). It is the catalytic core of the **RITS** (RNA-induced transcriptional silencing) and **ARC** (Argonaute siRNA chaperone) complexes. Whereas metazoan AGO proteins mediate multiple modes of post-transcriptional repression, ago1's principal role is **siRNA-directed (co-transcriptional) heterochromatin assembly**, although it retains a functional slicer (PIWI Asp-Asp-His triad: Asp580, Asp651, His788). It thus represents a lineage where the conserved Argonaute MF (small-RNA binding + slicing) is coupled to a chromatin-silencing BP output.
 
 ## IBA Annotation Assessment
 
@@ -63,9 +64,15 @@ Only one IBA (GO_REF:0000033) is propagated to ago1 in the current GOA:
 
 **No localization conflicts.** No CC term is propagated by IBA, so there is no risk of transferring a clade-specific localization (e.g., a PIWI-clade germline/nuage localization) onto the fission-yeast protein.
 
+## Target-specific boundaries for propagation
+
+PRG-1 and WAGO-1 require different catalytic judgments. Recombinant PRG-1 has reported slicing activity, even though catalytic mutants retain major germline silencing functions; dispensability in a reporter assay does not establish catalytic loss ([PMID:22700655](https://pubmed.ncbi.nlm.nih.gov/22700655/), [PMID:34428467](https://pubmed.ncbi.nlm.nih.gov/34428467/)). WAGO-1 is a specialized 22G-siRNA effector with loss of the canonical slicer machinery; its accepted guide-binding function does not justify miRNA-binding or endonuclease transfer (see [WAGO-1 review](../../../genes/worm/wago-1/wago-1-ai-review.yaml)).
+
+Localization must also be assessed independently of principal compartment. The broad nuclear IBD at PTN001875625 can coexist with cytoplasmic localization. Human PIWIL1 has nuclear immunostaining in a subset of colorectal tumors, supporting a contextual nuclear annotation without asserting a nuclear germline function ([PMID:28634417](https://pubmed.ncbi.nlm.nih.gov/28634417/)). PRG-1 and WAGO-1 nuclear calls remain unresolved in their gene reviews pending evidence beyond positive P-granule localization. GO:0043186 P granule includes germline granules of higher eukaryotes and is not nematode-only; the term therefore cannot be rejected on human PIWIL1 merely because mammalian granules have other names ([GO definition](https://amigo.geneontology.org/amigo/term/GO%3A0043186)).
+
 ## Review Status
 
-- **Date**: 2026-06-07
+- **Date**: 2026-09-20
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata, family entry table, S. pombe ago1 UniProt/GOA/AI-review, iba_propagation.tsv

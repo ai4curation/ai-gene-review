@@ -2,13 +2,13 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-14T16:45:12.162921'
-end_time: '2026-06-14T16:59:17.068958'
-duration_seconds: 844.91
+start_time: '2026-09-12T08:49:31.743214'
+end_time: '2026-09-12T08:58:16.580114'
+duration_seconds: 524.84
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: ARATH
-  gene_id: Q9FE29
+  gene_id: CASPL1D1
   gene_symbol: CASPL1D1
   uniprot_accession: Q9FE29
   protein_description: 'RecName: Full=CASP-like protein 1D1; Short=AtCASPL1D1;'
@@ -24,11 +24,10 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 18
-artifact_count: 2
+citation_count: 22
+artifact_count: 1
 artifact_sources:
   edison_answer_artifacts: 1
-  edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
   path: CASPL1D1-deep-research-falcon_artifacts/artifact-00.md
@@ -36,14 +35,6 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
-- filename: image-1.png
-  path: CASPL1D1-deep-research-falcon_artifacts/image-1.png
-  media_type: image/png
-  source: edison_message_content
-  data_storage_id: null
-  description: '## Context ID: pqac-00000013 The most informative figure is the conceptual
-    model in Figure 8, which schematizes CASP/CSD assembly in wild-type plants and
-    the re'
 ---
 
 ## Question
@@ -79,7 +70,7 @@ artifacts:
 
 ### Research Target:
 
-Please provide a comprehensive research report on the gene **CASPL1D1** (gene ID: Q9FE29, UniProt: Q9FE29) in ARATH.
+Please provide a comprehensive research report on the gene **CASPL1D1** (gene ID: CASPL1D1, UniProt: Q9FE29) in ARATH.
 
 The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
 
@@ -139,7 +130,7 @@ Always prioritize recent, authoritative sources and provide specific citations f
 
 ### Research Target:
 
-Please provide a comprehensive research report on the gene **CASPL1D1** (gene ID: Q9FE29, UniProt: Q9FE29) in ARATH.
+Please provide a comprehensive research report on the gene **CASPL1D1** (gene ID: CASPL1D1, UniProt: Q9FE29) in ARATH.
 
 The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
 
@@ -154,178 +145,176 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research Report: Arabidopsis thaliana CASPL1D1 (At4g15610; UniProt Q9FE29)
+# CASPL1D1 (At4g15610/Q9FE29) Functional-Annotation Report
 
-### Executive summary
-CASPL1D1 (Casparian strip membrane domain protein-like D1; At4g15610; UniProt Q9FE29) is a plant-specific multi-pass plasma-membrane protein in the CASP/CASPL (MARVEL-like) superfamily. The strongest direct experimental evidence indicates that CASPL1D1 is expressed predominantly in the root cortex near the tip, localizes to the cortical-cell plasma membrane, and is excluded from the Casparian strip membrane domain (CSD), arguing against it being a core CASP1–5 organizer of the endodermal CSD. Loss-of-function analysis (especially in a caspl1d1 caspl1d2 double mutant) shows only a weak, context-dependent increase in endodermal suberization under control and salt stress, with no major impacts on whole-root water transport metrics under the conditions tested. CASPL1D1 associates with the aquaporin PIP2;1 by copurification, suggesting a potential regulatory/scaffolding role at the plasma membrane rather than an enzymatic activity with defined substrates. (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 8-10)
+## Executive summary
 
-### 1) Key concepts and definitions (current understanding)
+**Identity is verified.** The requested protein is the *Arabidopsis thaliana* protein **CASPL1D1 (At4g15610; UniProt Q9FE29)**, also called CASP-like protein 1D1/AtCASPL1D1. The locus identity, organism, and CASP-like designation agree between the supplied UniProt record and Arabidopsis primary literature; no similarly named protein from another organism was used. The supplied CASP/CASPL InterPro/Pfam assignments are consistent with literature describing the Arabidopsis CASP-like family as small, four-pass integral-membrane proteins related to the MARVEL superfamily. Arabidopsis has approximately 39 CASP/CASPL-family members. (champeyroux2019regulationofa pages 1-2, barbosa2023directedgrowthand pages 1-2)
 
-#### Casparian strip and Casparian strip membrane domain (CSD)
-The Casparian strip (CS) is a lignin-impregnated band in endodermal cell walls that forms an extracellular diffusion barrier in roots. CASP proteins (CASP1–CASP5) are small, four-transmembrane-span, endodermis-specific MARVEL-family proteins that define the CSD, a specialized plasma-membrane domain tightly associated with the lignified wall and characterized by membrane protein exclusion and matrix adhesion. (barbosa2023directedgrowthand pages 1-2)
+**The gene symbol is not ambiguous in this context, but gene-specific literature is limited.** The best-supported primary function is **nonenzymatic organization of specialized plasma-membrane/cell-wall interfaces**, particularly lignified barriers induced during immunity. CASPL1D1 is not a demonstrated enzyme, channel, or transporter: no catalytic reaction, enzyme substrate specificity, transported substrate, or intrinsic transport activity has been reported. Its precise molecular mechanism remains unresolved, and detailed mechanisms established for canonical endodermal CASP1–CASP5 should be treated as family-level inference rather than CASPL1D1-specific fact. (lee2019lignin‐basedbarrierrestricts pages 6-8, barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 1-2)
 
-A key 2023 mechanistic advance is that CASPs are not required to initiate correctly positioned lignin microdomains; rather, CASPs are required to organize, expand, and fuse these initial lignin foci into a continuous band and to establish membrane–wall attachment/exclusion-zone properties typical of a mature CSD. (barbosa2023directedgrowthand pages 5-6, barbosa2023directedgrowthand pages 1-2)
+## Evidence map
 
-#### CASPL proteins vs. CASP1–5 proteins
-Barbosa et al. (2023) describe CASPs and CASP-LIKEs (CASPLs) as a plant-specific branch of the MARVEL family; however, CASP1–5 are the experimentally demonstrated core organizers of the endodermal CSD. Importantly, additional CASPL knockouts tested in a casp quintuple background did not enhance the casp phenotype, arguing against straightforward compensation of CASP loss by those CASPLs in canonical CSD assembly. (barbosa2023directedgrowthand pages 3-4, barbosa2023directedgrowthand pages 11-12)
-
-### 2) Target gene verification (critical disambiguation)
-Champeyroux et al. explicitly identify CASPL1D1 as Arabidopsis locus At4g15610 and treat it as one of four CASPL proteins previously identified as interactants of the aquaporin PIP2;1. This aligns with the user-provided UniProt identity (Q9FE29; At4g15610; CASP-like protein 1D1) and supports that the literature cited here refers to the correct Arabidopsis gene/protein. (champeyroux2019regulationofa pages 1-2)
-
-### 3) Gene-specific functional evidence for CASPL1D1
-
-#### 3.1 Expression pattern
-In Champeyroux et al. (Plant Cell & Environment; published March 2019; https://doi.org/10.1111/pce.13537), CASPL1D1 promoter activity (GUS) and CASPL1D1::GFP indicate that CASPL1D1 is active in root tips/younger tissues and is reported as “mostly expressed in the cortex close to the root tip and in a continuous way along the root.” (champeyroux2019regulationofa pages 4-6)
-
-This is a key gene-specific point because it distinguishes CASPL1D1 from paralogs that show more strictly suberized-endodermis expression (in the same study, CASPL1B1/CASPL1B2/CASPL1D2 are emphasized as exclusively expressed in suberized endodermal cells). (champeyroux2019regulationofa pages 1-2)
-
-#### 3.2 Subcellular localization
-CASPL1D1::GFP localizes to the plasma membrane in cortical cells and is excluded from the Casparian strip domain (CSD) (contrasted in the same work with CASPL1B2). This supports annotation of CASPL1D1 as a plasma-membrane protein that likely functions outside the core endodermal CSD scaffold. (champeyroux2019regulationofa pages 4-6)
-
-#### 3.3 Molecular interactions and mechanistic role
-CASPL1D1 was previously identified among PIP2;1 interactants and in Champeyroux et al. is supported to associate with aquaporin complexes by copurification with GFP-PIP2;1. The authors additionally note potential coexpression/colocalization with PIP2;1 at the plasma membrane of cortical cells, consistent with a scaffolding/regulatory association rather than a catalytic enzyme function. (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8)
-
-However, the provided evidence does not include direct FRET-FLIM binding validation for CASPL1D1 (direct interaction evidence is shown for other paralogs such as CASPL1D2 and CASPL1B1 in the same study). Therefore, CASPL1D1’s interaction should be treated as supported by biochemical association (copurification) but not definitively established as direct physical binding in planta from the snippets available here. (champeyroux2019regulationofa pages 10-11, champeyroux2019regulationofa pages 8-10)
-
-#### 3.4 Mutant phenotypes and quantitative effects
-Champeyroux et al. generated caspl1d1 mutant lines and a caspl1d1 caspl1d2 double mutant, with strong transcript reduction for CASPL1D1 in the mutant backgrounds (73% decrease in caspl1d1.1 and 76% decrease in the caspl1d1 caspl1d2 double mutant by RT-qPCR). (champeyroux2019regulationofa pages 6-8)
-
-A reproducible quantitative phenotype reported for the caspl1d1 caspl1d2 double mutant is a modest but statistically significant increase in the continuous endodermal suberization zone: 42% vs 36% in control under baseline conditions, and 56% vs 50% in control under NaCl treatment, with no similar effect upon ABA treatment. This supports the conclusion that CASPL1D1 (together with CASPL1D2) plays a slight negative/modulatory role in endodermal suberization under some conditions. (champeyroux2019regulationofa pages 6-8)
-
-Despite altered suberization metrics, multiple physiological readouts showed no major effects under tested conditions: no significant differences in solute exudation flux (Js) in caspl mutants compared with controls, and no clear whole-root hydraulic conductivity phenotype across control, NaCl, or ABA treatments. (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 8-10, champeyroux2019regulationofa pages 1-2)
-
-### 4) Pathways and biological processes implicated
-
-#### 4.1 Endodermal barrier formation as the proximate process
-Even though CASPL1D1 localizes primarily to cortical plasma membrane and is excluded from the CSD, genetic evidence suggests CASPL1D1 can modulate endodermal suberization (particularly in combination with CASPL1D2). Suberization is part of the broader root barrier system that works together with the lignified Casparian strip to regulate apoplastic flow. (champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 1-2)
-
-#### 4.2 Link to membrane trafficking and CSD assembly models (contextual inference)
-Recent mechanistic work on CASP proteins provides a useful framework for interpreting CASPL proteins as membrane-domain organizers rather than enzymes/transporters. In a 2023 Nature Communications study (published July 2023; https://doi.org/10.1038/s41467-023-37265-7), CASPs are shown to organize the growth and fusion of lignin microdomains into a continuous Casparian strip by displacing secretory foci and exocyst components such as EXO70A1; proximity labeling also implicates RabA GTPases (known exocyst activators) as CASP-proximal factors. (barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 11-12)
-
-These findings strengthen the general interpretation that CASP/CASPL family members function as plasma-membrane scaffolds that shape where secretion and wall-modifying activities occur. For CASPL1D1 specifically, direct evidence for such a role is limited, but its plasma-membrane localization and association with PIP2;1 are consistent with a scaffold/regulator role at the membrane. (champeyroux2019regulationofa pages 4-6, barbosa2023directedgrowthand pages 11-12)
-
-### 5) Recent developments and latest research (prioritizing 2023–2024)
-The most relevant recent advance in this evidence set is the 2023 mechanistic dissection of CASP-mediated microdomain fusion and secretory focus displacement, including a negative-feedback model where CASPs evict EXO70A1 to move secretion along the median zone and seal gaps, and the demonstration that at least three CASPs (most effectively CASP1/3/5) are required to complement a casp quintuple mutant. This work modernizes the field’s model of how the endodermal diffusion barrier is assembled at the nanoscale. (barbosa2023directedgrowthand pages 8-9, barbosa2023directedgrowthand pages 12-13)
-
-A key nuance from this 2023 study is that “CASPL” genes tested did not compensate for CASP loss in the caspQ phenotype (caspQ 6x-caspl), which argues against annotating CASPL1D1 as a direct functional equivalent of the core endodermal CASP scaffold in CSD formation without gene-specific evidence. (barbosa2023directedgrowthand pages 3-4)
-
-### 6) Current applications and real-world implementations
-
-#### 6.1 Modulating root water relations and stress tolerance via trafficking and plasma-membrane proteome changes
-A concrete implementation relevant to CASPL1D1 comes from a plasma-membrane proteomics and functional stress-tolerance study: RabA2b overexpression in Arabidopsis improves drought tolerance and alters the plasma-membrane proteome (Frontiers in Plant Science; published October 2021; https://doi.org/10.3389/fpls.2021.738694). CASPL1D1 (At4g15610) appears among proteins reported in the PM-proteomics results (Table 1) with fold-change values close to 1 (0.94 and 1.07 in two OE lines, each with reported p-values), indicating detection in PM fractions and modest abundance differences in that dataset. (ambastha2021raba2boverexpressionalters pages 12-13)
-
-The same study reiterates the functional hypothesis from prior work that CASPL1D1 interacts with PIP2;1 and was proposed to be involved in water transport regulation, linking CASPL1D1 to a broader translational theme: engineering membrane trafficking and aquaporin-associated membrane complexes to improve plant performance under water stress. (ambastha2021raba2boverexpressionalters pages 14-17)
-
-### 7) Expert opinions and analysis (authoritative interpretations within sources)
-
-#### 7.1 Gene-level interpretation from Champeyroux et al. 2019
-Champeyroux et al. interpret the caspl1d1 caspl1d2 phenotype as consistent with a slight negative role for these genes in suberization under control and salt conditions, and they emphasize the absence of strong root transport phenotypes, implying CASPL1D1 is not a major determinant of whole-root hydraulics in their experimental settings. (champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 1-2)
-
-#### 7.2 Field-level mechanistic interpretation from Barbosa et al. 2023
-Barbosa et al. present a mechanistic model in which CASP microdomains organize and confine localized secretion and lignification by displacing vesicle-tethering factors (EXO70A1/exocyst landmarks) to ensure microdomain growth and fusion into a continuous strip. This model shifts emphasis from CASPs as purely recruitment factors for lignin enzymes to CASPs as organizers of membrane-wall microdomain dynamics and secretory focus displacement. (barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 12-13)
-
-### 8) Key statistics and data points (from recent studies and relevant primary literature)
-- CASPL1D1 transcript reduction in mutants: 73% decrease (caspl1d1.1) and 76% decrease (caspl1d1 caspl1d2), supporting that mutant phenotyping was conducted in substantially reduced-expression backgrounds. (champeyroux2019regulationofa pages 6-8)
-- Suberization phenotype in caspl1d1 caspl1d2: continuous endodermal suberization zone 42% vs 36% (control) and 56% vs 50% (NaCl), with the effect not observed under ABA treatment in the reported comparisons. (champeyroux2019regulationofa pages 6-8)
-- CASPL1D1 in PM proteomics (RabA2b OE drought-tolerance context): fold-change values 0.94 (OE6.4 vs WT; p=3.43E-02) and 1.07 (OE11.4 vs WT; p=1.41E-02). (ambastha2021raba2boverexpressionalters pages 12-13)
-- CASP microdomain function (2023): at least three CASPs (best CASP1/3/5 combination) required to complement caspQ, supporting a cooperative multi-component scaffold model. (barbosa2023directedgrowthand pages 8-9)
-
-### 9) Visual evidence: current mechanistic model for CASP/CSD assembly
-The following cited figure provides a concise, current model of how CASP microdomains regulate secretory landmarks (EXO70A1) to drive microdomain fusion and how the caspQ mutant results in a ‘string-of-pearls’ phenotype due to persistent secretion at the same foci.
-
-(barbosa2023directedgrowthand media d10ce794)
-
-### 10) Practical functional annotation for CASPL1D1 (At4g15610; Q9FE29)
-
-#### Molecular function (most defensible)
-- **Likely role**: plasma-membrane scaffold/regulator associated with aquaporin-containing membrane complexes (PIP2;1) and/or membrane-domain organization.
-- **Not supported**: enzymatic catalysis, defined transported substrate, or a direct core-CSD assembly role comparable to CASP1–5.
-
-This interpretation is based on (i) plasma-membrane localization and cortical expression, (ii) copurification/association with PIP2;1, and (iii) weak, redundant phenotypes affecting suberization primarily observed in higher-order mutants. (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8)
-
-#### Biological processes
-- **Root cell-type specific plasma membrane function** in cortex near the root tip (direct evidence). (champeyroux2019regulationofa pages 4-6)
-- **Modulation of endodermal suberization** (direct evidence in caspl1d1 caspl1d2) with condition dependence (control/NaCl > ABA). (champeyroux2019regulationofa pages 6-8)
-
-#### Subcellular localization
-- **Plasma membrane** in cortical cells; excluded from the Casparian strip membrane domain. (champeyroux2019regulationofa pages 4-6)
-
-### Evidence summary table
-| Claim/annotation category | Specific finding | Experimental system/method | Conditions (e.g., control/NaCl/ABA) | Interpretation for functional annotation | Source (include DOI URL and year) |
-|---|---|---|---|---|---|
-| identity | CASPL1D1 corresponds to Arabidopsis thaliana locus **At4g15610** and is discussed as one of four **CASPL** proteins previously identified as interactants of aquaporin **PIP2;1**. | Gene/protein identification in Arabidopsis root studies; prior interactor-based selection summarized in paper | Arabidopsis roots | Confirms the target is the Arabidopsis **CASP-like protein 1D1** rather than a different similarly named gene from another species. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 1-2) |
-| domain/family | CASPL1D1 belongs to the **CASP-LIKE (CASPL)** family; Barbosa et al. describe **CASPs/CASPLs** as a plant-specific branch of the **MARVEL** family with multiple transmembrane domains involved in membrane-domain organization. | Family-level comparative and functional analysis of CASP/CASPL proteins | General Casparian strip context | Supports annotation of AtCASPL1D1 as a small multi-pass membrane protein likely acting as a membrane-domain/scaffold component rather than an enzyme or transporter with known catalytic substrate. | Barbosa et al. 2023, Nat Commun. DOI: https://doi.org/10.1038/s41467-023-37265-7 (2023) (barbosa2023directedgrowthand pages 11-12, barbosa2023directedgrowthand pages 16-17) |
-| expression | **CASPL1D1 shows GUS activity in root tips and younger tissues** and is reported as **mostly expressed in the cortex close to the root tip and continuously along the root**; this pattern was confirmed by **CASPL1D1::GFP**. | Promoter-GUS and GFP fusion expression analysis | Arabidopsis roots under standard conditions | Indicates a tissue-biased role in root cortex/plasma membrane biology rather than exclusive endodermal Casparian strip assembly. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 4-6) |
-| expression | In contrast to CASPL1B1, CASPL1B2 and CASPL1D2, **CASPL1D1 is not described as exclusively expressed in suberized endodermal cells** in the provided evidence. | Comparative expression interpretation from reporter analyses | Arabidopsis roots | Suggests AtCASPL1D1 may function outside the canonical endodermal suberized domain emphasized for other CASPL paralogs. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 1-2) |
-| subcellular localization | **CASPL1D1 localizes to the plasma membrane in cortical cells** and, unlike CASPL1B2, is **excluded from the Casparian strip domain (CSD)**. | CASPL1D1::GFP localization microscopy | Arabidopsis root cortical cells | Strongly supports annotation as a **plasma-membrane structural/regulatory protein** rather than a lumenal or wall-localized factor; exclusion from the CSD argues against a direct core-CASP role in CSD formation. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 4-6) |
-| interactions | CASPL1D1 is reported among four CASPL proteins that **copurify with GFP-PIP2;1**, and the authors note potential **coexpression/colocalization with PIP2;1** at the plasma membrane of cortical cells. | Copurification/proteomics plus expression-localization comparison | Arabidopsis roots | Supports a probable association with aquaporin regulatory complexes, but does **not** by itself establish direct binding or channel regulation by CASPL1D1. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 8-10) |
-| interactions | Direct physical interaction/function was demonstrated in the study for **CASPL1B1** and for interaction testing of **CASPL1D2**, but **equivalent direct FRET/functional proof is not reported for CASPL1D1** in the provided snippets. | FRET-FLIM / heterologous functional assays summarized in excerpt | Arabidopsis / assay-specific | Functional annotation for AtCASPL1D1 should remain conservative: **association with PIP2;1 is supported, direct mechanistic regulation is not yet established** from the provided evidence. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 10-11, champeyroux2019regulationofa pages 8-10) |
-| mutant/phenotype | **Single caspl1d1** mutants and **caspl1d1 caspl1d2** double mutants showed **no detectable alteration of endodermal suberization under standard growth conditions** in one summary, but other analyses found a **slight enlargement of the continuous suberization zone** in the double mutant. | T-DNA/transposon loss-of-function analysis with suberization phenotyping | Mainly control conditions | Indicates any role of AtCASPL1D1 in barrier formation is **weak/modulatory**, likely partially redundant with CASPL1D2. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8) |
-| mutant/phenotype | Under **NaCl stress**, the **caspl1d1 caspl1d2** double mutant showed a somewhat stronger continuous suberization phenotype; **no phenotype after ABA** treatment was reported for this trait. | Root suberization assays in mutant lines | Control, NaCl, ABA | Supports a context-dependent role in modulating suberization, especially under salt stress, but not a major ABA-dependent pathway role based on current evidence. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 1-2) |
-| mutant/phenotype | **No significant differences** were detected for **root hydraulic conductivity (Lpr)**, **osmotic permeability (Lpr-o)**, **solute exudation fluxes (Js)**, or **root/shoot dry weight** in caspl1d1-related mutant backgrounds under tested conditions. | Root hydraulics, solute flux, and biomass phenotyping | Control, NaCl, ABA as tested | Suggests AtCASPL1D1 is **not a major determinant of whole-root water transport** or gross growth under the tested experimental settings. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 6-8, champeyroux2019regulationofa pages 8-10, champeyroux2019regulationofa pages 1-2) |
-| quantitative stats | **CASPL1D1 transcript abundance decreased by 73% in caspl1d1.1 and 76% in caspl1d1 caspl1d2** relative to control. | RT-qPCR in mutant lines | Mutant versus control | Confirms substantial knockdown/disruption in the analyzed mutant material, supporting interpretation of phenotype tests as informative for gene function. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 6-8) |
-| quantitative stats | In the **caspl1d1 caspl1d2** double mutant, the **continuous endodermal suberization zone** was reported as **42% vs 36% in control** under standard conditions and **56% vs 50% in control** under **NaCl** treatment. | Quantification of suberization pattern in mutant and control roots | Control and NaCl | Quantitatively supports a **slight negative role** for CASPL1D1/CASPL1D2 in limiting continuous suberization. | Champeyroux et al. 2019, Plant Cell Environ. DOI: https://doi.org/10.1111/pce.13537 (2019) (champeyroux2019regulationofa pages 6-8) |
-| domain/family | In the broader family context, **CASP proteins** are small **four-transmembrane-span**, endodermis-specific MARVEL-family proteins that form stable **Casparian strip membrane domains (CSDs)**, mediate membrane-wall adhesion, and help create membrane exclusion zones. | CASP quintuple-mutant analysis, imaging, proximity labeling, mechanistic modeling | Arabidopsis endodermis | Although this evidence concerns **CASP1-5 rather than CASPL1D1 directly**, it provides the best current mechanistic framework for inferring that CASPL proteins are membrane-domain organizers/scaffolds. | Barbosa et al. 2023, Nat Commun. DOI: https://doi.org/10.1038/s41467-023-37265-7 (2023) (barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 11-12) |
-| domain/family | Barbosa et al. tested extra **CASPL** knockouts in a **caspQ 6x-caspl** background and found **no enhancement** of the caspQ phenotype, arguing that tested CASPLs do **not compensate** for loss of core CASPs in Casparian strip assembly. | Higher-order mutant analysis | Casparian strip formation context | Suggests AtCASPL1D1 is unlikely to be a simple functional substitute for core CSD-forming CASPs and may have a distinct, more peripheral role. | Barbosa et al. 2023, Nat Commun. DOI: https://doi.org/10.1038/s41467-023-37265-7 (2023) (barbosa2023directedgrowthand pages 3-4) |
-| quantitative stats | Family-level quantitative/mechanistic result: **at least three CASPs**—most effectively **CASP1, CASP3 and CASP5**—were needed to complement the **caspQ** mutant; single or double CASPs were insufficient. | Complementation analysis in caspQ | Casparian strip assembly assays | Reinforces that CSD function depends on cooperative assembly of membrane scaffolds; by analogy, CASPL1D1 may also act in complexes rather than alone, though this remains inferential for AtCASPL1D1. | Barbosa et al. 2023, Nat Commun. DOI: https://doi.org/10.1038/s41467-023-37265-7 (2023) (barbosa2023directedgrowthand pages 8-9) |
+| Topic | Conclusion | Evidence type | Key quantitative observation | Confidence |
+|---|---|---|---|---|
+| Identity | **CASPL1D1 is Arabidopsis thaliana locus At4g15610**, matching the supplied UniProt accession **Q9FE29** and CASP-like annotation; no different organism or similarly named protein is considered. (champeyroux2019regulationofa pages 1-2, champeyroux2019regulationofa pages 2-3) | Direct CASPL1D1 | Arabidopsis CASP/CASPL family: **39 members**. (champeyroux2019regulationofa pages 1-2) | High |
+| Molecular class and primary function | CASPL1D1 is best classified as a CASP-like integral membrane protein with a probable organizational/scaffold role. **No catalytic reaction, enzyme substrate, transport activity, or transported substrate has been demonstrated.** (barbosa2023directedgrowthand pages 1-2, champeyroux2019regulationofa pages 1-2) | Family inference | Canonical CASPs are small proteins with **four transmembrane spans**; applicability of their detailed mechanism to CASPL1D1 remains unproven. (barbosa2023directedgrowthand pages 1-2) | High for noncatalytic classification; moderate for scaffold inference |
+| Root expression and localization | A promoter reporter was active in root tips, young tissues, and broadly across root cell types; CASPL1D1–GFP was concentrated in cortex near the root tip and continued along the root. It localized to the **cortical-cell plasma membrane** and was excluded from the canonical Casparian-strip domain. (champeyroux2019regulationofa pages 4-6) | Direct CASPL1D1 | The localization construct used a **1,906-bp promoter**. (champeyroux2019regulationofa pages 2-3) | High |
+| Root suberization | Joint disruption of CASPL1D1 and CASPL1D2 sometimes modestly enlarged the continuously suberized zone, suggesting a weak, context-dependent negative influence on suberization rather than an essential biosynthetic role. (champeyroux2019regulationofa pages 6-8) | Combined-mutant | Continuous suberization: **42% versus 36%** in control conditions; **56% versus 50%** after NaCl; **58% versus 58%** after ABA. CASPL1D1 transcript was reduced **73%** in the single line and **76%** in the double mutant. (champeyroux2019regulationofa pages 6-8) | Low–moderate because the phenotype was small, inconsistent, and not assignable to CASPL1D1 alone |
+| Root hydraulics and solute transport | CASPL1D1/CASPL1D2 loss did not significantly alter hydraulic conductivity, osmotic permeability, or solute flow; CASPL1D1 is therefore **not established as a water or solute transporter**. (champeyroux2019regulationofa pages 8-10, champeyroux2019regulationofa pages 6-8) | Combined-mutant | ABA reduced hydrostatic conductivity by **49%** in the double mutant versus **53%** in control; NaCl inhibition was **70% versus 52%**, but the difference was not significant. (champeyroux2019regulationofa pages 8-10) | High for absence of a major measured phenotype; not proof of no subtle function |
+| Aquaporin relationship | CASPL1D1 copurified in a GFP–PIP2;1 interactome, but direct CASPL1D1–PIP2;1 binding or regulation was not demonstrated. Direct interaction/function tests instead concerned CASPL1B1 and CASPL1D2, so their effects must not be transferred to CASPL1D1. (champeyroux2019regulationofa pages 1-2, champeyroux2019regulationofa pages 10-11, champeyroux2019regulationofa pages 8-10) | Direct CASPL1D1 screen plus paralog evidence | PIP2;1 increased oocyte water permeability **eightfold**; CASPL1B1—not CASPL1D1—added **25%**. (champeyroux2019regulationofa pages 10-11) | Low for a CASPL1D1 regulatory interaction |
+| Pathogen-induced lignification | CASPL1D1 knockdown reduced pathogen-induced lignification; combined CASPL1D1 knockdown and caspl4d1 mutation caused a stronger defect. Lignification persisted, indicating cooperation with CASPL4D1 and additional factors rather than exclusive control by CASPL1D1. (lee2019lignin‐basedbarrierrestricts pages 6-8) | Direct knockdown and combined-mutant | No exact CASPL1D1-specific fold change or lignin percentage was reported in the extracted evidence. (lee2019lignin‐basedbarrierrestricts pages 6-8) | Moderate–high for participation; low for its precise molecular action |
+| Immune-barrier function | CASPL1D1-deficient material showed spread of hypersensitive-response cell death beyond the inoculation site and weaker restriction of avirulent Pseudomonas growth; defects were stronger with caspl4d1. The proposed role is organization of a lignified apoplastic barrier during immune responses. (lee2019lignin‐basedbarrierrestricts pages 6-8, kim2020thearabidopsisr2r3 pages 5-8) | Direct knockdown and combined-mutant | Phenotypes involved AvrRpm1- and AvrRpt2-expressing bacteria; the available excerpts provide no exact CASPL1D1-specific bacterial titres. (lee2019lignin‐basedbarrierrestricts pages 6-8) | Moderate–high for barrier participation; moderate for the structural mechanism |
+| 2023 canonical-CASP model | Canonical CASP1–CASP5 organize membrane–wall adhesion, protein-exclusion zones, exocyst dynamics, and fusion of lignified microdomains. This modern scaffold model is plausible for CASPL1D1 but was **not tested on CASPL1D1**. (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 1-2) | Family inference | In the five-CASP knockout, mature lignin occupied about **50% of the wild-type area**; CASP1 proximity labeling recovered **332 enriched proteins**, including **32** also reduced in myb36. (barbosa2023directedgrowthand pages 11-12, barbosa2023directedgrowthand pages 2-3) | High for CASP1–5; low–moderate when extrapolated to CASPL1D1 |
 
 
-*Table: This table compiles gene-specific evidence for Arabidopsis AtCASPL1D1 (At4g15610; Q9FE29) from Champeyroux et al. 2019 and relevant family/mechanistic context from Barbosa et al. 2023. It separates direct findings on expression, localization, interactions, and mutant phenotypes from broader CASP/CASPL inferences useful for functional annotation.*
+*Table: Evidence is separated into CASPL1D1-specific observations, combined-mutant findings, and inferences from canonical CASPs. The table highlights that CASPL1D1 is most defensibly viewed as a membrane-associated barrier organizer, not a demonstrated enzyme or transporter.*
+
+## 1. Identity, family, and molecular class
+
+CASPL1D1 is explicitly identified in the literature as **At4g15610** in *A. thaliana*, confirming that the retrieved studies concern the requested Q9FE29 target. The UniProt description supplied by the user—CASP-like protein 1D1, CASP/CASPL domains—is therefore concordant with the literature. (champeyroux2019regulationofa pages 1-2, champeyroux2019regulationofa pages 2-3)
+
+Canonical Arabidopsis CASPs are small proteins with **four transmembrane helices**, intracellular termini, and homology to eukaryotic MARVEL-domain proteins such as animal occludins. The broader Arabidopsis family contains 39 members in five MARVEL-related subfamilies. These properties support classifying CASPL1D1 as an integral-membrane domain-organizing protein, but the detailed topology was established at family/canonical-CASP level rather than experimentally mapped for Q9FE29 itself. (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 11-12)
+
+Accordingly, the most defensible molecular-function annotation is:
+
+> **Probable plasma-membrane scaffold or organizer involved in coupling specialized membrane domains to localized cell-wall modification, especially immune-induced lignification.**
+
+This is substantially better supported than annotations implying catalytic or transport activity.
+
+## 2. Cellular and tissue localization
+
+The strongest CASPL1D1-specific localization study used a **1,906-bp CASPL1D1 promoter** and CASPL1D1–GFP fusion. Promoter-reporter activity occurred in root tips and young tissues and was broadly detectable across root cell types. The fusion protein was especially concentrated in cortical cells near the root tip and remained detectable along the root. At subcellular resolution, it localized to the **cortical-cell plasma membrane**. Importantly, it was excluded from the canonical endodermal Casparian-strip domain, arguing against simply assigning CASPL1D1 the same root localization as CASP1–CASP5. (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 2-3)
+
+CASPL1D1 expression has also been reported in cells overlying lateral-root bases, a territory associated with suberization, and was strongly induced—approximately **300-fold**—in plants overexpressing the suberization regulator MYB41. These observations associate it with membrane/cell-wall remodeling, although they do not prove that CASPL1D1 catalyzes suberin synthesis. (champeyroux2019regulationofa pages 6-8)
+
+Leaf immune studies did not provide equivalent CASPL1D1-specific live-cell localization. Therefore, its exact membrane microdomain and molecular partners at infection sites remain open questions. Localization of CASPL4D1 adjacent to pathogen-induced lignin supports a family model but cannot be transferred uncritically to CASPL1D1. (lee2019lignin‐basedbarrierrestricts pages 8-10, lee2019lignin‐basedbarrierrestricts pages 6-8)
+
+## 3. Primary biological function: immune-induced lignified barrier organization
+
+The strongest functional evidence comes from Lee et al., published **December 2019** in *The EMBO Journal* ([DOI 10.15252/embj.2019101948](https://doi.org/10.15252/embj.2019101948)). CASPL1D1 transcripts accumulated after challenge with avirulent *Pseudomonas syringae* pv. tomato DC3000 carrying AvrRpm1. Because a suitable insertion mutant was unavailable, the researchers generated artificial-microRNA knockdown lines. CASPL1D1 knockdown substantially reduced pathogen-induced lignification, allowed hypersensitive-response cell death to spread beyond the inoculation area, and weakened restriction of AvrRpm1- and AvrRpt2-expressing bacteria. (lee2019lignin‐basedbarrierrestricts pages 6-8, lee2019lignin‐basedbarrierrestricts pages 4-6)
+
+Combining CASPL1D1 knockdown with a **caspl4d1** mutation produced still less lignin, greater spread of cell death, and stronger bacterial-growth phenotypes. Lignification was reduced rather than abolished, indicating that CASPL1D1 and CASPL4D1 cooperate nonredundantly and that other organizers also contribute. Evidence also implicated this CASPL combination in pattern-triggered responses, although the best-developed experiments concerned effector-triggered immunity. (lee2019lignin‐basedbarrierrestricts pages 6-8)
+
+The resulting mechanistic model is that CASPL proteins help organize a **Casparian-strip-like lignified barrier in the leaf apoplast**. The barrier seals or partitions extracellular space, decreases bacterial motility and spread, and spatially confines hypersensitive cell death. CASPL1D1 is thus better described as part of the machinery that positions or structures lignification than as a lignin-biosynthetic enzyme. Exact CASPL1D1-specific lignin percentages and bacterial titres were not available in the extracted evidence, limiting quantitative assignment of effect size. (lee2019lignin‐basedbarrierrestricts pages 8-10, lee2019lignin‐basedbarrierrestricts pages 6-8)
+
+## 4. Pathway context
+
+### Immune lignification
+
+CASPL1D1 participates downstream or alongside inducible phenylpropanoid/lignin production during incompatible bacterial interactions. A September 2020 study in *Frontiers in Plant Science* ([DOI 10.3389/fpls.2020.583153](https://doi.org/10.3389/fpls.2020.583153)) placed this barrier response in a **MYB15-controlled lignification program**: MYB15 activates lignin-biosynthetic genes, and MYB15-dependent lignification restricts bacterial spread and spreading hypersensitive cell death. The study used CASPL-deficient material to support the requirement for CASPL-organized lignin accumulation, but it did not establish direct MYB15 binding to the CASPL1D1 promoter or a unique CASPL1D1 biochemical mechanism. (kim2020thearabidopsisr2r3 pages 5-8, kim2020thearabidopsisr2r3 pages 2-3)
+
+The pathway can therefore be summarized cautiously as:
+
+**pathogen perception/ETI → MYB15-dependent induction of lignin biosynthesis → CASPL1D1/CASPL4D1-dependent organization of localized lignified apoplastic structures → confinement of bacteria and cell death.**
+
+The first and last relationships are experimentally supported; the precise physical step executed by CASPL1D1 remains inferred.
+
+### Root suberization and water relations
+
+Champeyroux et al., published **March 2019** in *Plant, Cell & Environment* ([DOI 10.1111/pce.13537](https://doi.org/10.1111/pce.13537)), investigated CASPL1D1 with CASPL1D2 in roots. CASPL1D1 transcript abundance was reduced by **73%** in the caspl1d1.1 line and **76%** in the caspl1d1/caspl1d2 double mutant. In one experiment, continuously suberized endodermal cells increased from **36% in control to 42% in the double mutant**; after NaCl, values were **50% versus 56%**, whereas ABA yielded **58% in both genotypes**. The effect was small and inconsistent, supporting at most a weak, context-dependent negative influence of CASPL1D1/1D2 on continuous suberization. It cannot be assigned to CASPL1D1 alone. (champeyroux2019regulationofa pages 6-8)
+
+The mutants had no significant change in solute flow, hydrostatic hydraulic conductivity, or osmotic hydraulic conductivity. ABA reduced hydrostatic conductivity by 53% in control and 49% in the double mutant; NaCl reductions were 52% and 70%, respectively, without a significant genotype effect. Thus CASPL1D1 is not established as a water/solute transporter and does not have a major nonredundant role in whole-root hydraulic conductance under the tested conditions. (champeyroux2019regulationofa pages 8-10, champeyroux2019regulationofa pages 6-8)
+
+### Aquaporin association
+
+CASPL1D1 was among four CASPL proteins recovered in a GFP–PIP2;1 aquaporin interactome. However, direct interaction and functional assays in the 2019 study focused on CASPL1B1 and CASPL1D2—not CASPL1D1. PIP2;1 increased Xenopus-oocyte water permeability eightfold, and CASPL1B1 added 25%; these values must not be attributed to CASPL1D1. Coexpression in root cortical plasma membranes makes a CASPL1D1–PIP2;1 relationship plausible, but direct binding, stabilization, or gating by CASPL1D1 remains unproven. (champeyroux2019regulationofa pages 4-6, champeyroux2019regulationofa pages 10-11, champeyroux2019regulationofa pages 8-10)
+
+## 5. Recent mechanistic developments, 2023–2024
+
+No 2023–2024 primary study directly resolving CASPL1D1 function was identified in the targeted searches. The major recent advance is instead a **July 2023 Nature Communications** study of canonical CASP1–CASP5 ([DOI 10.1038/s41467-023-37265-7](https://doi.org/10.1038/s41467-023-37265-7)). It substantially refined expert understanding of what CASP-family membrane proteins do. (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 1-2)
+
+In a five-CASP knockout, correctly positioned lignin microdomains still formed, showing that CASPs are not strictly required to activate or spatially initiate lignin polymerization. However, the domains failed to organize and fuse normally: walls became excessive and heterogeneous, plasma-membrane/cell-wall adhesion and protein-exclusion zones were lost, and mature lignin occupied only about **50% of the wild-type area**. This shifted the canonical-CASP model from “recruiters required for lignification” toward **organizers of membrane-wall microdomain growth, architecture, and fusion**. (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 2-3)
+
+Mechanistically, canonical CASPs appear to displace EXO70A1-marked secretory foci and exclude vesicle-tethering factors after CASP arrival, causing secretion to move along the median cell-wall zone until neighboring lignified microdomains fuse. CASP1 proximity labeling recovered **332 enriched proteins**, including **32** also reduced in the myb36 mutant, and implicated RabA-family GTPases/exocyst regulation. Arabidopsis has 23 EXO70 proteins and 26 RabA GTPases, illustrating the trafficking-system complexity surrounding these domains. (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 11-12)
+
+This is the best current structural analogy for CASPL1D1: it may organize an immune-induced membrane-wall platform that shapes lignin deposition and seals the apoplast. Nevertheless, CASPL1D1 was not among the canonical CASP1–CASP5 proteins tested, and its cortical localization outside the root Casparian-strip domain shows that paralogs can be spatially and functionally specialized. Confidence in transferring the exact EXO70/Rab mechanism to CASPL1D1 is therefore only low to moderate.
+
+## 6. Current applications and implementations
+
+CASPL1D1 presently has **research applications**, not a validated commercial or agronomic implementation:
+
+1. **Plant-immunity barrier biology:** knockdown material provides a genetic tool for separating pathogen perception from the physical confinement phase of immunity.
+2. **Localized lignification studies:** CASPL1D1/CASPL4D1 perturbation can test how lignin architecture, rather than lignin biosynthesis alone, restricts microbes.
+3. **Root membrane and suberization research:** promoter–GUS and CASPL1D1–GFP lines map cortical membrane domains and permit tests of weak suberization phenotypes.
+4. **Aquaporin-adjacent membrane organization:** CASPL1D1 is a candidate PIP2;1-associated scaffold, but it is not yet a validated aquaporin regulator.
+5. **Crop hypothesis generation:** enhancing CASPL-like barrier organization could, in principle, improve pathogen confinement or control root barriers. Gene-family divergence and the absence of a strong CASPL1D1 hydraulic phenotype mean that direct crop engineering would be premature.
+
+No evidence was found for a deployed CASPL1D1-based crop trait, diagnostic, chemical target, or biotechnology product.
+
+## 7. Expert assessment and annotation recommendation
+
+The literature supports the following curated annotation:
+
+**Molecular function:** probable integral-plasma-membrane scaffold/domain organizer; no demonstrated catalytic or transport activity.
+
+**Biological process:** organization of pathogen-induced lignified apoplastic barriers; possible weak modulation of root endodermal suberization in conjunction with CASPL1D2.
+
+**Cellular component:** plasma membrane, experimentally demonstrated in root cortical cells; exact leaf infection-site microdomain remains unresolved.
+
+**Pathway:** inducible immune lignification associated with ETI and probably aspects of PTI, connected to MYB15-driven lignin biosynthesis and cooperating with CASPL4D1.
+
+**Evidence strength:** moderate-to-high for participation in immune lignification and pathogen confinement; high for root cortical plasma-membrane localization; low-to-moderate for a root-suberization role; low for direct PIP2;1 regulation; currently inferential for EXO70/Rab-mediated microdomain organization.
+
+The most important unresolved experiments are endogenous-tag localization during infection, clean null alleles with complementation, direct proximity/interactome analysis, tests of EXO70/Rab recruitment, and quantitative lignin chemistry/imaging in single and higher-order mutants. Until those are available, CASPL1D1 should not be annotated as an enzyme, transporter, direct aquaporin regulator, or canonical Casparian-strip component.
 
 References
 
-1. (champeyroux2019regulationofa pages 4-6): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 19 citations.
+1. (champeyroux2019regulationofa pages 1-2): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 21 citations.
 
-2. (champeyroux2019regulationofa pages 6-8): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 19 citations.
+2. (barbosa2023directedgrowthand pages 1-2): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 36 citations and is from a highest quality peer-reviewed journal.
 
-3. (champeyroux2019regulationofa pages 8-10): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 19 citations.
+3. (lee2019lignin‐basedbarrierrestricts pages 6-8): Myoung‐Hoon Lee, Hwi Seong Jeon, Seu Ha Kim, Joo Hee Chung, Daniele Roppolo, Hye‐Jung Lee, Hong Joo Cho, Yuki Tobimatsu, John Ralph, and Ohkmae K Park. Lignin‐based barrier restricts pathogens to the infection site and confers resistance in plants. The EMBO Journal, Dec 2019. URL: https://doi.org/10.15252/embj.2019101948, doi:10.15252/embj.2019101948. This article has 493 citations.
 
-4. (barbosa2023directedgrowthand pages 1-2): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+4. (barbosa2023directedgrowthand pages 12-13): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 36 citations and is from a highest quality peer-reviewed journal.
 
-5. (barbosa2023directedgrowthand pages 5-6): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+5. (champeyroux2019regulationofa pages 2-3): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 21 citations.
 
-6. (barbosa2023directedgrowthand pages 3-4): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+6. (champeyroux2019regulationofa pages 4-6): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 21 citations.
 
-7. (barbosa2023directedgrowthand pages 11-12): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+7. (champeyroux2019regulationofa pages 6-8): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 21 citations.
 
-8. (champeyroux2019regulationofa pages 1-2): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 19 citations.
+8. (champeyroux2019regulationofa pages 8-10): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 21 citations.
 
-9. (champeyroux2019regulationofa pages 10-11): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 19 citations.
+9. (champeyroux2019regulationofa pages 10-11): Chloé Champeyroux, Jorge Bellati, Marie Barberon, Valérie Rofidal, Christophe Maurel, and Véronique Santoni. Regulation of a plant aquaporin by a casparian strip membrane domain protein-like. Plant, cell & environment, 42 6:1788-1801, Mar 2019. URL: https://doi.org/10.1111/pce.13537, doi:10.1111/pce.13537. This article has 21 citations.
 
-10. (barbosa2023directedgrowthand pages 12-13): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+10. (kim2020thearabidopsisr2r3 pages 5-8): Seu Ha Kim, Pui Ying Lam, Myoung-Hoon Lee, Hwi Seong Jeon, Yuki Tobimatsu, and Ohkmae K. Park. The arabidopsis r2r3 myb transcription factor myb15 is a key regulator of lignin biosynthesis in effector-triggered immunity. Frontiers in Plant Science, Sep 2020. URL: https://doi.org/10.3389/fpls.2020.583153, doi:10.3389/fpls.2020.583153. This article has 160 citations.
 
-11. (barbosa2023directedgrowthand pages 8-9): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+11. (barbosa2023directedgrowthand pages 11-12): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 36 citations and is from a highest quality peer-reviewed journal.
 
-12. (ambastha2021raba2boverexpressionalters pages 12-13): Vivek Ambastha, Ifat Matityahu, Dafna Tidhar, and Yehoram Leshem. Raba2b overexpression alters the plasma-membrane proteome and improves drought tolerance in arabidopsis. Frontiers in Plant Science, Oct 2021. URL: https://doi.org/10.3389/fpls.2021.738694, doi:10.3389/fpls.2021.738694. This article has 16 citations.
+12. (barbosa2023directedgrowthand pages 2-3): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 36 citations and is from a highest quality peer-reviewed journal.
 
-13. (ambastha2021raba2boverexpressionalters pages 14-17): Vivek Ambastha, Ifat Matityahu, Dafna Tidhar, and Yehoram Leshem. Raba2b overexpression alters the plasma-membrane proteome and improves drought tolerance in arabidopsis. Frontiers in Plant Science, Oct 2021. URL: https://doi.org/10.3389/fpls.2021.738694, doi:10.3389/fpls.2021.738694. This article has 16 citations.
+13. (lee2019lignin‐basedbarrierrestricts pages 8-10): Myoung‐Hoon Lee, Hwi Seong Jeon, Seu Ha Kim, Joo Hee Chung, Daniele Roppolo, Hye‐Jung Lee, Hong Joo Cho, Yuki Tobimatsu, John Ralph, and Ohkmae K Park. Lignin‐based barrier restricts pathogens to the infection site and confers resistance in plants. The EMBO Journal, Dec 2019. URL: https://doi.org/10.15252/embj.2019101948, doi:10.15252/embj.2019101948. This article has 493 citations.
 
-14. (barbosa2023directedgrowthand media d10ce794): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+14. (lee2019lignin‐basedbarrierrestricts pages 4-6): Myoung‐Hoon Lee, Hwi Seong Jeon, Seu Ha Kim, Joo Hee Chung, Daniele Roppolo, Hye‐Jung Lee, Hong Joo Cho, Yuki Tobimatsu, John Ralph, and Ohkmae K Park. Lignin‐based barrier restricts pathogens to the infection site and confers resistance in plants. The EMBO Journal, Dec 2019. URL: https://doi.org/10.15252/embj.2019101948, doi:10.15252/embj.2019101948. This article has 493 citations.
 
-15. (barbosa2023directedgrowthand pages 16-17): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.
+15. (kim2020thearabidopsisr2r3 pages 2-3): Seu Ha Kim, Pui Ying Lam, Myoung-Hoon Lee, Hwi Seong Jeon, Yuki Tobimatsu, and Ohkmae K. Park. The arabidopsis r2r3 myb transcription factor myb15 is a key regulator of lignin biosynthesis in effector-triggered immunity. Frontiers in Plant Science, Sep 2020. URL: https://doi.org/10.3389/fpls.2020.583153, doi:10.3389/fpls.2020.583153. This article has 160 citations.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](CASPL1D1-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000013 The most informative figure is the conceptual model in Figure 8, which schematizes CASP/CSD assembly in wild-type plants and the re](CASPL1D1-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. barbosa2023directedgrowthand pages 1-2
-2. champeyroux2019regulationofa pages 1-2
+1. champeyroux2019regulationofa pages 1-2
+2. barbosa2023directedgrowthand pages 1-2
 3. champeyroux2019regulationofa pages 4-6
-4. champeyroux2019regulationofa pages 6-8
-5. barbosa2023directedgrowthand pages 3-4
-6. barbosa2023directedgrowthand pages 8-9
-7. champeyroux2019regulationofa pages 8-10
-8. barbosa2023directedgrowthand pages 5-6
+4. champeyroux2019regulationofa pages 2-3
+5. champeyroux2019regulationofa pages 6-8
+6. champeyroux2019regulationofa pages 8-10
+7. champeyroux2019regulationofa pages 10-11
+8. barbosa2023directedgrowthand pages 12-13
 9. barbosa2023directedgrowthand pages 11-12
-10. champeyroux2019regulationofa pages 10-11
-11. barbosa2023directedgrowthand pages 12-13
-12. barbosa2023directedgrowthand pages 16-17
-13. https://doi.org/10.1111/pce.13537
-14. https://doi.org/10.1038/s41467-023-37265-7
-15. https://doi.org/10.3389/fpls.2021.738694
-16. https://doi.org/10.1111/pce.13537,
-17. https://doi.org/10.1038/s41467-023-37265-7,
-18. https://doi.org/10.3389/fpls.2021.738694,
+10. barbosa2023directedgrowthand pages 2-3
+11. DOI 10.15252/embj.2019101948
+12. DOI 10.3389/fpls.2020.583153
+13. DOI 10.1111/pce.13537
+14. DOI 10.1038/s41467-023-37265-7
+15. https://doi.org/10.15252/embj.2019101948
+16. https://doi.org/10.3389/fpls.2020.583153
+17. https://doi.org/10.1111/pce.13537
+18. https://doi.org/10.1038/s41467-023-37265-7
+19. https://doi.org/10.1111/pce.13537,
+20. https://doi.org/10.1038/s41467-023-37265-7,
+21. https://doi.org/10.15252/embj.2019101948,
+22. https://doi.org/10.3389/fpls.2020.583153,

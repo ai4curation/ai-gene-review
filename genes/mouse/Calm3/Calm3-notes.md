@@ -45,8 +45,8 @@ PMID:31628181 (Jin et al. 2019, *J Neurosci*) is cited for IMP/NAS annotations o
 ## ISO Transfer Context
 
 Mouse Calm3 receives ISO annotations from two sources:
-1. **GO_REF:0000119** (mouse-human ortholog pipeline) — transfers from human CALM1 (UniProtKB:P0DP25)
-2. **GO_REF:0000096** (mouse-rat ortholog pipeline) — transfers from rat calmodulins (RGD:2257, 2258, 2259)
+1. **GO_REF:0000119** (mouse-human ortholog pipeline) — transfers from human CALM3 (UniProtKB:P0DP25), the true ortholog. (Earlier versions of this note said CALM1; P0DP25 is CALM3 per UniProt, checked 2026-09-26.)
+2. **GO_REF:0000096** (mouse-rat ortholog pipeline) — transfers from rat Calm1 (RGD:2257), Calm2 (RGD:2258) and Calm3 (RGD:2259). Only rat Calm3 is the ortholog; Calm1 and Calm2 are paralog donors whose annotations transfer because the three rat loci encode the same protein. Five terms (GO:0000785 chromatin, GO:0019904, GO:0031800, GO:0043548, GO:0048306) come from rat Calm1 alone.
 
 Since all calmodulin proteins are 100% identical across paralogs and orthologs, ISO transfers are biochemically valid. The review question shifts to whether they add paralog-specific signal. Most ISO terms on Calm3 represent legitimate calmodulin biology and were ACCEPTED or KEEP_AS_NON_CORE based on whether they represent core vs. peripheral functions.
 

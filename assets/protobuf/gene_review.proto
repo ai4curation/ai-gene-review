@@ -18,6 +18,15 @@ message AnatomicalEntityDescriptor
  repeated  evidenceItem evidence = 0
   string notes = 0
  }
+// A PANTHER/PAINT ancestral node (a PTN identifier, e.g. PANTHER:PTN000299444) used to ground an evolutionary inference about a function. Asserting an ancestral node states that the function associated with the enclosing annoton is inferred to have arisen at, or been present in, the last common ancestor represented by this node, and is therefore inferred to be retained in extant descendant proteins barring divergence, neofunctionalization, or loss of key residues. This is a stronger, clade-level claim than a representative member. Such nodes can be resolved from the IBA WITH/FROM column (GO_REF:0000033) of a representative member's GOA record rather than guessed.
+message AncestralNodeDescriptor
+ {
+  string preferredTerm = 0
+  string description = 0
+  term term = 0
+ repeated  evidenceItem evidence = 0
+  string notes = 0
+ }
 message AnnotationExtension
  {
   string predicate = 0
@@ -83,6 +92,14 @@ message ConditionOverlapAssessment
   string notes = 0
  repeated  supportingTextInReference supportedBy = 0
  }
+// Assertion that a module node (together with its parts and connections) is an instance of a reusable template module or motif, optionally recording how it deviates from that template. Modeled after the dismech conforms_to pattern: conformance is a consistency check, not inheritance.
+message Conformance
+ {
+  string template = 0
+  conformanceStatusEnum status = 0
+ repeated  string deviations = 0
+  string notes = 0
+ }
 // A core function is a GO-CAM-like annotation of the core evolved functions of a gene. This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like representation.
 message CoreFunction
  {
@@ -137,7 +154,7 @@ message EmbeddedRule
   string createdDate = 0
   string modifiedDate = 0
  }
-// A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. This is deliberately less strict than the publication quote validation used in gene reviews.
+// A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. When a literature source_id (PMID/DOI) is paired with a supporting_text, that quote is validated verbatim (normalized substring) against the cached publication by the project's module supporting-text check (ai_gene_review.validation.module_validator), using the same matcher as gene reviews; non-literature source_ids (GO, file:, Reactome, PANTHER, ...) carry no supporting_text quote and are not fetched.
 message EvidenceItem
  {
   string sourceId = 0
@@ -176,7 +193,9 @@ message FamilyDescriptor
   term term = 0
  repeated  evidenceItem evidence = 0
   string notes = 0
+ repeated  term familyTerms = 0
  repeated  geneProductDescriptor representativeMembers = 0
+ repeated  ancestralNodeDescriptor ancestralNodes = 0
  }
 // A finding is a statement about a gene, which is supported by a reference. Similar to "comments" in uniprot
 message Finding
@@ -250,6 +269,45 @@ message GeneReview
  repeated  experiment suggestedExperiments = 0
  repeated  knowledgeGap knowledgeGaps = 0
  }
+// Review of a single GO-CAM activity (annoton): the cached gene product / molecular function / process / location, a best-practice QC verdict, and how the activity relates to the gene's annotation review.
+message GoCamActivityReview
+ {
+  string activityId = 0
+  string geneProduct = 0
+  string molecularFunction = 0
+  string biologicalProcess = 0
+  string cellularComponent = 0
+  goCamClaimVerdictEnum verdict = 0
+ repeated  goCamQcFlagEnum qcFlags = 0
+  goCamConsistencyEnum consistency = 0
+  string geneReview = 0
+  string supportingText = 0
+ repeated  evidenceItem evidence = 0
+  string notes = 0
+ }
+// A reference from a module element to a production GO-CAM (Gene Ontology Causal Activity Model), optionally pinned to a specific activity (annoton) within that model. The referenced model is expected to be cached under gocams/<model_id>/<model_id>-src.yaml.
+message GoCamAssociation
+ {
+  string model = 0
+  string activity = 0
+  string title = 0
+  string description = 0
+ repeated  evidenceItem evidence = 0
+  string notes = 0
+ }
+// A reviewer's assessment of a cached production GO-CAM model (gocams/<model_id>/<model_id>-src.yaml), recorded alongside it as gocams/<model_id>/<model_id>-review.yaml. Captures a standalone reading of the model, per-activity (annoton) QC against GO-CAM best practice, and the consistency of each activity with the corresponding gene annotation review. Validate standalone with `-C GoCamReview`.
+message GoCamReview
+ {
+  string title = 0
+  string description = 0
+ repeated  reference references = 0
+  string model = 0
+  string taxon = 0
+  string summary = 0
+  goCamReviewStatusEnum status = 0
+ repeated  goCamActivityReview activityReviews = 0
+  string notes = 0
+ }
 // Assessment of GO term specificity
 message GOSpecificityAssessment
  {
@@ -294,6 +352,7 @@ message ModuleAnnoton
  repeated  biologicalProcessDescriptor processes = 0
  repeated  cellularComponentDescriptor locations = 0
   string roleDescription = 0
+ repeated  goCamAssociation gocamAssociations = 0
  repeated  evidenceItem evidence = 0
   string notes = 0
  }
@@ -307,6 +366,8 @@ message ModuleConnection
   string description = 0
   moduleContext context = 0
  repeated  evidenceItem evidence = 0
+  chainingStatusEnum chainingStatus = 0
+  string chainingNote = 0
   string notes = 0
  }
 // Context that applies to a module node, variant, annoton, or connection.
@@ -335,6 +396,8 @@ message ModuleNode
  repeated  modulePart parts = 0
  repeated  moduleVariantSet variantSets = 0
  repeated  moduleConnection connections = 0
+ repeated  conformance conformsTo = 0
+ repeated  goCamAssociation gocamAssociations = 0
  repeated  evidenceItem evidence = 0
   string notes = 0
  }
@@ -357,6 +420,7 @@ message ModuleReview
  repeated  reference references = 0
  repeated  knowledgeGap knowledgeGaps = 0
   string status = 0
+  moduleScopeEnum scope = 0
   moduleNode module = 0
  repeated  evidenceItem evidence = 0
   string notes = 0
@@ -465,6 +529,23 @@ message PredictionReview
  repeated  string sourceDocuments = 0
  repeated  predictedAnnotation predictions = 0
  }
+// Structured, mechanical assessment of a propagated or inferred annotation. The detailed biological rationale remains in review.reason; this object records the reusable taxonomy and optional per-source-gene/node comments.
+message PropagationReview
+ {
+  propagationRootCauseEnum rootCause = 0
+ repeated  propagationFailureModeEnum failureModes = 0
+ repeated  propagationSource sourceEntities = 0
+ repeated  residueClaim residueClaims = 0
+  string residueClaimsNotApplicable = 0
+ }
+// A source entity considered while reviewing an inferred annotation. This is intentionally compact: use comment for source-specific caveats, not for restating the whole review rationale.
+message PropagationSource
+ {
+  string sourceId = 0
+  string sourceLabel = 0
+  propagationSourceStatusEnum sourceStatus = 0
+  string comment = 0
+ }
 // A proposed new ontology term that should exist but doesn't currently
 message ProposedOntologyTerm
  {
@@ -536,6 +617,28 @@ message RelationDescriptor
  repeated  evidenceItem evidence = 0
   string notes = 0
  }
+// A claim that a specific position in THIS gene's protein does or does not carry the residue an anchor protein has at the corresponding position.
+// Both sides carry an explicit position and residue, which is what makes the claim checkable without an alignment: the anchor and target residues are each resolved directly against their own sequences. The alignment is only needed to confirm the two positions genuinely correspond, so a claim remains partially verifiable even when no alignment is pinned.
+// Positions are always in each protein's own native numbering, never an alignment column -- columns shift when PANTHER re-releases a family, and a stale column still resolves, to the wrong residue.
+message ResidueClaim
+ {
+  residueClaimEnum claimType = 0
+  string siteRef = 0
+  residuePosition anchor = 0
+  residuePosition target = 0
+  string role = 0
+  residueClaimMethodEnum method = 0
+  string alignmentRelease = 0
+  string comment = 0
+ }
+// A single residue in a named protein, in that protein's own numbering.
+message ResiduePosition
+ {
+  string accession = 0
+  integer position = 0
+  string residue = 0
+  integer sequenceVersion = 0
+ }
 // A review of an existing annotation.
 message Review
  {
@@ -546,6 +649,7 @@ message Review
  repeated  reference additionalReferenceIds = 0
  repeated  supportingTextInReference supportedBy = 0
  repeated  knowledgeGap knowledgeGaps = 0
+  propagationReview propagationReview = 0
  }
 // A single condition in a rule antecedent
 message RuleCondition

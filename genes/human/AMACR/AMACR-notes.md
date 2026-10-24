@@ -72,3 +72,15 @@ Asp152 (proton donor) by similarity to UniProtKB:O06543. Monomer [PMID:7649182 "
   specific GO:0008111 supersedes it → MARK_AS_OVER_ANNOTATED.
 </content>
 </invoke>
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- GO:0005739 rows: IBA, IEA, EXP and 3x IDA were already ACCEPT and stay ACCEPT. The HTP row stays UNDECIDED, which was the earlier action, so the validator's inconsistent-actions warning was already there before this batch. The IBA now has a propagation_review: PTN007717897 (PTHR48228, Bilateria) is seeded by rat Amacr RGD:3048 and AMACR itself, so the result is NO_FAILURE_CORE.
+- NEW GO:0005759 mitochondrial matrix (IC):
+  - function: [PMID:11060359 "the mitochondrial enzyme plays a crucial role in the mitochondrial beta-oxidation of the breakdown products of pristanic acid"]. That substrate is made in the matrix.
+  - soluble monomer with no TM segment [PMID:7649182 "It is a monomer of 47 kDa"].
+  - N-terminal import signal [PMID:11060344 "mitochondrial targeting information is localized between amino acids 22 and 85"].
+  - mouse immuno-EM [PMID:10770938 "Immunoelectron microscopy and subcellular fractionation located racemase to mitochondria and peroxisomes."].
+- Caveat: the signal is not cleaved in mouse [PMID:10770938 "the noncleavable N-terminal sequence of the polypeptide acts as a weak mitochondrial"]. No sub-mitochondrial assay exists, so the row is IC.
+- New cached paper: PMID:10770938.
+- core_functions locations left as peroxisomal matrix + mitochondrion. The matrix site of the mitochondrial activity is inferred, not shown (MMADHC lesson).
