@@ -1,0 +1,8 @@
+# Csn2 (rat beta-casein, P02665) - review notes
+
+- cDNA: 216-aa mature sequence; conserved N-terminal phosphorylation cluster [PMID:6283475 "One such cluster containing the majority of the potential casein phosphorylation sites was located near the amino terminus."]; signal peptide nearly identical to ovine [PMID:6283475 "14 of 15 amino acids in the signal peptide sequence of the precasein were identical between the rat and ovine caseins."]
+- Gene: 9 exons; separate exons for signal peptide and hydrophobic C-terminal region [PMID:3997858 "The conserved 5' noncoding region, the highly conserved signal peptide, and the hydrophobic carboxyl-terminal region of the protein are each encoded by a separate exon."]
+- Phosphate centre in rat: S29/S31/S32 (SISSEE), by similarity (UniProt).
+- Mouse Csn2 KO (Kumar 1994) [PMID:8016126 "Homozygous beta-casein mutant mice are viable and fertile; females can lactate and successfully rear young."]; [PMID:8016126 "Despite the deficiency of beta-casein, casein micelles were assembled in heterozygous and homozygous mutants, albeit with reduced diameters."]; [PMID:8016126 "The growth of pups feeding on the milk of homozygous mutants was reduced relative to those feeding on the milk of wild-type mice."]
+- Cysteine protease inhibition: single reverse-zymography study on milk beta-casein [PMID:12788072 "beta-Casein and the active domain, synthesized L(133)-Q(151), peptide inhibited cysteine proteases."] -> MARK_AS_OVER_ANNOTATED for propagated rows (not tested in rat, no in vivo role).
+- NEW: calcium ion sequestering activity (GO:0140314, OLS-verified) by sequence similarity, consistent with Csn1s1 review.
