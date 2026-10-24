@@ -20,15 +20,19 @@ what, which duplication matters, and where each piece should end up.
 
 ## Four layers
 
-| Layer | What it is | Module-specific? | Implementations (2026-10-20) |
+| Layer | What it is | Module-specific? | Implementations (2026-10-24) |
 |---|---|---|---|
 | 1. Schema | `connections`, `activation_logic`, `omitted_regulators`, `executable_models` and scenarios | yes | `src/ai_gene_review/schema/gene_review.yaml` |
 | 2. Translator | module YAML to a Boolean network: container flattening, signs, the default rule, declared logic, removed connections | yes | `module_boolean.py` here; `amigo3/boolean.py` (a port) |
-| 3. Engine | network to stepping, attractors and scenario verdicts | **no** | `module_dynamics.py` (Python); the inline JS in `executable_model.html.j2`; `amigo3/web/boolean-engine.js` |
+| 3. Engine | network to stepping, attractors and scenario verdicts | **no** | the stepping and attractor search in `module_dynamics.py` (Python); the inline JS in `executable_model.html.j2`; `amigo3/web/boolean-engine.js` |
 | 4. Viewer | interactive pages | – | model pages here; the AmiGO 3 Dynamics tab |
 
 Each layer depends only on the one above it. The engine needs nothing from the module
-schema: it consumes a network.
+schema: it consumes a network. The browser engines already work that way, reading only
+the payload. The Python file does not yet: `module_dynamics.py` also holds the scenario
+glue, which reads `executable_models`, settings and removed connections from module
+YAML and calls the translator. Replacing its engine with aeon or mpbn (Plan step 3)
+therefore means splitting the file, not swapping it.
 
 **The translator encodes what the schema means**, and it has changed twice in a week
 (`activation_logic` in #4966, `omitted_regulators` in #5041). A copy that drifts

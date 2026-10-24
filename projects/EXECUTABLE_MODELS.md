@@ -225,7 +225,7 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [ ] First constraint-based model type
 - [ ] First agent-based model, following the dismech layout
 - [ ] Payload JSON Schema and a `--json` mode for `module-to-bnet` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
-- [ ] Shared conformance fixtures run by every implementation (architecture, Order step 2)
+- [ ] Shared conformance fixtures run by every implementation ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 2)
 
 # NOTES
 
