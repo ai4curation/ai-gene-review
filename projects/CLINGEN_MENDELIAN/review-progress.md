@@ -5685,3 +5685,59 @@ uncredited by this checkpoint. No independent documentation build or live-page
 inspection for these gene merges is claimed.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker559-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T071001Z-codex-768730.yaml)
+
+## Completion checkpoint 561 — 2026-10-24 07:51:14 UTC
+
+**561 complete; 2,315 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds EOGT and ENTPD1 to [merged checkpoint 559, tracker #5382](https://github.com/ai4curation/ai-gene-review/pull/5382).
+The coordinating AI agent accepted the exact-head reviews and actual-merge audits;
+this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [EOGT #5381](https://github.com/ai4curation/ai-gene-review/pull/5381) | [`70677246ec7e`](https://github.com/ai4curation/ai-gene-review/commit/70677246ec7e7ccc176372dd9ba4bab69200bc98) | [`bc777faa7a96`](https://github.com/ai4curation/ai-gene-review/commit/bc777faa7a968fa182d20c6ff4264cf398a18f33) | `04f1f31db8f3` | 22/22 |
+| [ENTPD1 #5380](https://github.com/ai4curation/ai-gene-review/pull/5380) | [`536ec2d369d3`](https://github.com/ai4curation/ai-gene-review/commit/536ec2d369d34706376b50ceed13a4435f48127e) | [`9ba348f4516c`](https://github.com/ai4curation/ai-gene-review/commit/9ba348f4516cf6f675880116ac3060f7a54a8b59) | `bc777faa7a96` | 33/33 |
+
+All 55 approved file objects and modes, including normal caches and histories,
+match the actual merges and pinned main. Complete gene directories also match.
+Imported annotation contexts and source-described natural products are preserved;
+no new publication quotations were added.
+
+| Gene | Annotation rows | Products | Cores | Decisions | Computed status | Advisories |
+| --- | ---: | ---: | ---: | --- | --- | ---: |
+| EOGT | 8 | 3 | 1 | 7 ACCEPT, 1 MODIFY | COMPLETE | 0 |
+| ENTPD1 | 70 | 6 | 1 | 53 ACCEPT, 3 KEEP_AS_NON_CORE, 8 MODIFY, 1 REMOVE, 5 UNDECIDED | DRAFT | 4 |
+
+EOGT retains eight reviewed annotation rows, three source-described products and
+one core function, with COMPLETE status and no validation warnings. ENTPD1 retains
+70 reviewed annotation rows, six products, one core function and five unresolved
+annotations. Its four actual CI advisories comprise one generic-binding warning,
+one UDP-annotation action split and two stale-exception warnings. The latter reflect
+the validator's exception matching; they were not erased by the approving review.
+Accepted campaign completion does not convert ENTPD1 from DRAFT to COMPLETE.
+
+Each actual merge-group suite ran 4,214 Python tests (one skipped, 84 deselected,
+nine warnings), 270 doctests (37 skipped, eight warnings), 12 examples, mypy on 284
+files, Ruff, 438 overlapping Python automation tests and 19 JavaScript tests.
+Validation included scoped gene checks, all-gene schema checks, 703 modules,
+718 families and 42 history tests. History-record totals were 15,632 for EOGT and
+15,634 for ENTPD1. Global advisories and skipped steps remain documented; the
+ignored post-pytest SQLAlchemy destructor diagnostic did not fail either job.
+The all-gene check is schema-only; aggregate jobs report job conclusions.
+
+Builds: [EOGT](https://github.com/ai4curation/ai-gene-review/actions/runs/40072822896), [ENTPD1](https://github.com/ai4curation/ai-gene-review/actions/runs/40073130021).
+
+At main `273712aad3cb515aa95f60294a37dff884258011`, the inventory contains 8,872 reviews,
+including 3,200 human reviews. Of 2,876 catalogue genes, 1,281 have
+review files and 1,595 lack them; 720 available reviews remain uncredited.
+All 235 queue objects, 112 earlier completion updates and earlier progress bytes
+are preserved. This is update 113; only the EOGT and ENTPD1 checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. EP300 and EPCAM remain
+uncredited by this checkpoint. No independent documentation build or live-page
+inspection for these gene merges is claimed.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker561-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T075154Z-codex-6ed544.yaml)

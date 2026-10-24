@@ -2996,24 +2996,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**559 of 2,876 genes are complete; 2,317 remain.**
-This checkpoint adds ENG and ENPP1 to the merged 557 checkpoint.
-[Checkpoint 559](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-559-2026-10-24-070859-utc)
+**561 of 2,876 genes are complete; 2,315 remain.**
+This checkpoint adds EOGT and ENTPD1 to the merged 559 checkpoint.
+[Checkpoint 561](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-561-2026-10-24-075114-utc)
 records their approved heads, actual merges and executed merge-group CI.
-The inventory is pinned to main [`04f1f31db8f3`](https://github.com/ai4curation/ai-gene-review/commit/04f1f31db8f36ff1bed22c0e5ff8220567c219ce),
-prepared 2026-10-24 07:08:59 UTC. Each catalogue gene counts once; products,
+The inventory is pinned to main [`273712aad3cb`](https://github.com/ai4curation/ai-gene-review/commit/273712aad3cb515aa95f60294a37dff884258011),
+prepared 2026-10-24 07:51:14 UTC. Each catalogue gene counts once; products,
 follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,870 reviews are available, including 3,198 human reviews.
-Of 1,279 catalogue genes with reviews, 559 are credited and 720 remain uncredited;
-1,597 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,872 reviews are available, including 3,200 human reviews.
+Of 1,281 catalogue genes with reviews, 561 are credited and 720 remain uncredited;
+1,595 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-Both accepted merges passed their full merge-group suites. Their 73 approved
+Both accepted merges passed their full merge-group suites. Their 55 approved
 file paths and complete gene directories match the reviewed versions at each
-actual merge and the pinned main. Both reviews retain DRAFT status, unresolved
-annotations and accepted advisories. Campaign completion records accepted
-merged reviews and does not erase those qualifications.
+actual merge and the pinned main. EOGT is COMPLETE without validation warnings.
+ENTPD1 remains DRAFT with five unresolved annotations and four accepted advisories.
+Campaign completion records accepted merged reviews and preserves those qualifications.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3705,8 +3705,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EML1** — HGNC:3330; [band heterotopia of brain](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3938ad35-9bf2-4b80-b910-05a2a1e6b6bf-2025-05-27T170000.000Z) (MONDO:0010873; AR; Definitive).
 - [x] **ENG** — HGNC:3349; [juvenile polyposis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_08c5b377-a2a1-44ac-9b7e-dc2141ee7a04-2022-12-30T180000.000Z) (MONDO:0017380; AD; Limited); [telangiectasia, hereditary hemorrhagic, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d4d13b4a-f97b-45d0-9b82-07bcb6685a0a-2022-12-05T170000.000Z) (MONDO:0008535; AD; Definitive).
 - [x] **ENPP1** — HGNC:3356; [arterial calcification, generalized, of infancy, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_50cf1e96-1629-41c5-a5db-1c37e8b24aaa-2025-11-23T050000.000Z) (MONDO:0008817; AR; Definitive); [hypopigmentation-punctate palmoplantar keratoderma syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ed97faaf-d5ce-4da2-8367-b6fb51a57cbf-2022-06-17T040000.000Z) (MONDO:0014227; AD; Limited).
-- [ ] **ENTPD1** — HGNC:3363; [complex hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8634ea9c-3fce-4d72-94e9-2ac6756e5cb6-2023-05-06T023000.000Z) (MONDO:0015150; AR; Definitive).
-- [ ] **EOGT** — HGNC:28526; [Adams-Oliver syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cbb132d6-44d8-4679-b31c-a50aa0443a97-2026-07-06T160000.000Z) (MONDO:0014124; AR; Definitive).
+- [x] **ENTPD1** — HGNC:3363; [complex hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8634ea9c-3fce-4d72-94e9-2ac6756e5cb6-2023-05-06T023000.000Z) (MONDO:0015150; AR; Definitive).
+- [x] **EOGT** — HGNC:28526; [Adams-Oliver syndrome 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cbb132d6-44d8-4679-b31c-a50aa0443a97-2026-07-06T160000.000Z) (MONDO:0014124; AR; Definitive).
 - [ ] **EP300** — HGNC:3373; [Rubinstein-Taybi syndrome due to EP300 haploinsufficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5559f540-f08e-4446-bc8b-a241bb3a4a8e-2022-05-20T044017.803Z) (MONDO:0013364; AD; Definitive).
 - [ ] **EPCAM** — HGNC:11529; [Lynch syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3c071c7e-ba5c-46c7-b46b-fee6acf3a43f-2022-06-20T170000.000Z) (MONDO:0005835; AD; Definitive).
 - [ ] **EPG5** — HGNC:29331; [Vici syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9a6ae5b4-2fa4-44aa-92e1-49997f6c9a87-2024-06-07T170000.000Z) (MONDO:0009452; AR; Definitive).
