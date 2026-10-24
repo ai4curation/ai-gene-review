@@ -250,6 +250,10 @@ class SourceResourceEnum(str, Enum):
     """
     MTBBASE curation of Mycobacterium tuberculosis genes.
     """
+    PINC = "PINC"
+    """
+    PINC curation group (assigned_by PINC in GOA).
+    """
     OTHER = "OTHER"
     """
     Name the resource in the explanation.
