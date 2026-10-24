@@ -5119,6 +5119,10 @@ def validation_cleanup_issues(
         Optional[Path],
         typer.Option(help="File of open validation-cleanup issue titles, one per line."),
     ] = None,
+    closed_titles: Annotated[
+        Optional[Path],
+        typer.Option(help="File of recently closed cleanup issue titles; not re-filed."),
+    ] = None,
     max_new: Annotated[int, typer.Option(help="Most issues to create this run.")] = 5,
     max_open: Annotated[int, typer.Option(help="Cap on the open cleanup backlog.")] = 15,
     max_warnings: Annotated[
@@ -5130,9 +5134,16 @@ def validation_cleanup_issues(
     The output feeds `gh issue create` in the validation-cleanup-scan workflow; the
     issues carry the `low_effort` label so the curation scanner's low tier fixes them.
     """
-    existing = set(open_titles.read_text().splitlines()) - {""} if open_titles else set()
+    def _titles(path: Optional[Path]) -> set[str]:
+        return set(path.read_text().splitlines()) - {""} if path else set()
+
     selected = cleanup_issues.select_issues(
-        cleanup_issues.collect_issues(tsv), existing, max_new, max_open, max_warnings
+        cleanup_issues.collect_issues(tsv),
+        _titles(open_titles),
+        _titles(closed_titles),
+        max_new,
+        max_open,
+        max_warnings,
     )
     with output.open("w", encoding="utf-8") as f:
         for issue in selected:

@@ -10,6 +10,7 @@ from ai_gene_review.validation import cleanup_issues
 from ai_gene_review.validation.validation_report import ValidationReport
 
 PREFIX = "/home/runner/work/ai-gene-review/ai-gene-review/"
+VMA1_TITLE = "[validation-cleanup] genes/yeast/VMA1"
 
 
 def _row(file_path, check_type, severity="warning", path="references[0]"):
@@ -30,14 +31,17 @@ def _row(file_path, check_type, severity="warning", path="references[0]"):
 def validation_tsv(tmp_path):
     rows = [
         _row("genes/human/ABCA1/ABCA1-ai-review.yaml", "folded_scalar_hyphen"),
-        _row("genes/human/ABCA1/ABCA1-ai-review.yaml", "uniprot_quote_restating_field"),
+        _row("genes/human/ABCA1/ABCA1-ai-review.yaml", "folded_scalar_hyphen", path="line 9"),
         # judgement / sanctioned-legacy checks are never filed
+        _row("genes/human/ABCA1/ABCA1-ai-review.yaml", "uniprot_quote_restating_field"),
         _row("genes/human/ABCA1/ABCA1-ai-review.yaml", "protein_binding_policy"),
         _row("genes/human/AARD/AARD-ai-review.yaml", "inconsistent_review_actions"),
         _row("genes/human/AARD/AARD-ai-review.yaml", "no_deep_research_results"),
         # errors are blocked in CI already, not low-effort cleanup
         _row("genes/human/AASDH/AASDH-ai-review.yaml", "folded_scalar_hyphen", "error"),
         _row("genes/yeast/VMA1/VMA1-ai-review.yaml", "local_source_supporting_text"),
+        # not a gene review path: dropped rather than filed under a runner path
+        {**_row("x", "folded_scalar_hyphen"), "file_path": "/work/mygenes/h/X/X-ai-review.yaml"},
     ]
     p = tmp_path / "validation-all.tsv"
     with p.open("w") as f:
@@ -53,10 +57,7 @@ def test_collect_keeps_only_low_effort_warnings(validation_tsv):
         "genes/human/ABCA1/ABCA1-ai-review.yaml",
         "genes/yeast/VMA1/VMA1-ai-review.yaml",
     ]
-    assert [w.check_type for w in issues[0].warnings] == [
-        "folded_scalar_hyphen",
-        "uniprot_quote_restating_field",
-    ]
+    assert [w.path for w in issues[0].warnings] == ["references[0]", "line 9"]
 
 
 def test_body_names_the_file_and_validate_command(validation_tsv):
@@ -64,33 +65,48 @@ def test_body_names_the_file_and_validate_command(validation_tsv):
     assert "`genes/yeast/VMA1/VMA1-ai-review.yaml`" in issue.body
     assert "just validate yeast VMA1" in issue.body
     assert "local_source_supporting_text" in issue.body
+    assert "just local-quote-baseline --prune" in issue.body
+    assert "Do not delete a `supporting_text`" in issue.body
+
+
+@pytest.mark.parametrize("check_type", sorted(cleanup_issues.LOW_EFFORT_CHECKS))
+def test_every_low_effort_check_has_guidance(check_type):
+    assert cleanup_issues.CHECK_GUIDANCE[check_type]
 
 
 @pytest.mark.parametrize(
-    "open_titles,max_new,max_open,expected",
+    "open_titles,closed_titles,max_new,max_open,expected",
     [
-        (set(), 5, 15, ["genes/yeast/VMA1", "genes/human/ABCA1"]),
-        ({"[validation-cleanup] genes/yeast/VMA1"}, 5, 15, ["genes/human/ABCA1"]),
-        (set(), 1, 15, ["genes/yeast/VMA1"]),
-        ({"a", "b"}, 5, 3, ["genes/yeast/VMA1"]),
-        ({"a", "b", "c"}, 5, 3, []),
+        (set(), set(), 5, 15, ["genes/yeast/VMA1", "genes/human/ABCA1"]),
+        ({VMA1_TITLE}, set(), 5, 15, ["genes/human/ABCA1"]),
+        # closed recently: not re-filed, and does not count toward the open cap
+        (set(), {VMA1_TITLE}, 5, 1, ["genes/human/ABCA1"]),
+        (set(), set(), 1, 15, ["genes/yeast/VMA1"]),
+        ({"a", "b"}, set(), 5, 3, ["genes/yeast/VMA1"]),
+        ({"a", "b", "c"}, set(), 5, 3, []),
     ],
 )
-def test_select_dedups_and_caps(validation_tsv, open_titles, max_new, max_open, expected):
+def test_select_dedups_and_caps(
+    validation_tsv, open_titles, closed_titles, max_new, max_open, expected
+):
     issues = cleanup_issues.collect_issues(validation_tsv)
-    selected = cleanup_issues.select_issues(issues, open_titles, max_new, max_open, 10)
+    selected = cleanup_issues.select_issues(
+        issues, open_titles, closed_titles, max_new, max_open, 10
+    )
     assert [i.gene_dir for i in selected] == expected
 
 
 def test_select_skips_files_with_too_many_warnings(validation_tsv):
     issues = cleanup_issues.collect_issues(validation_tsv)
-    selected = cleanup_issues.select_issues(issues, set(), 5, 15, 1)
+    selected = cleanup_issues.select_issues(issues, set(), set(), 5, 15, 1)
     assert [i.gene_dir for i in selected] == ["genes/yeast/VMA1"]
 
 
 def test_cli_writes_json_lines(validation_tsv, tmp_path):
     open_titles = tmp_path / "open.txt"
-    open_titles.write_text("[validation-cleanup] genes/yeast/VMA1\n")
+    open_titles.write_text("")
+    closed_titles = tmp_path / "closed.txt"
+    closed_titles.write_text(VMA1_TITLE + "\n")
     out = tmp_path / "issues.jsonl"
     result = CliRunner().invoke(
         app,
@@ -101,6 +117,8 @@ def test_cli_writes_json_lines(validation_tsv, tmp_path):
             str(out),
             "--open-titles",
             str(open_titles),
+            "--closed-titles",
+            str(closed_titles),
         ],
     )
     assert result.exit_code == 0, result.output

@@ -78,9 +78,14 @@ jobs:
           set -euo pipefail
           run_id="$SOURCE_RUN_ID"
           if [ -z "$run_id" ]; then
-            read -r run_id created_at < <(gh run list --repo "$REPO" --workflow main.yaml \
+            latest="$(gh run list --repo "$REPO" --workflow main.yaml \
               --event schedule --status completed --limit 1 \
-              --json databaseId,createdAt --jq '.[0] | "\(.databaseId) \(.createdAt)"')
+              --json databaseId,createdAt --jq '.[0] // empty | "\(.databaseId) \(.createdAt)"')"
+            if [ -z "$latest" ]; then
+              echo "::error::No completed scheduled main.yaml run found"
+              exit 1
+            fi
+            read -r run_id created_at <<<"$latest"
             # A stale report would re-file warnings that have since been fixed.
             if [ "$(date -d "$created_at" +%s)" -lt "$(date -d '8 days ago' +%s)" ]; then
               echo "::error::Latest scheduled main.yaml run ($run_id, $created_at) is over 8 days old"
@@ -88,23 +93,13 @@ jobs:
             fi
           fi
           echo "Reading validation-all-report from main.yaml run $run_id"
-          gh run download "$run_id" --repo "$REPO" -n validation-all-report -D reports
+          gh run download "$run_id" --repo "$REPO" -n validation-all-report -D reports || {
+            echo "::error::main.yaml run $run_id has no validation-all-report artifact (validate-all wrote no TSV, or it expired): $GITHUB_SERVER_URL/$REPO/actions/runs/$run_id"
+            exit 1
+          }
           echo "SOURCE_RUN=$run_id" >> "$GITHUB_ENV"
 
-      - name: Select cleanup issues
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-        run: |
-          set -euo pipefail
-          gh issue list --repo "$REPO" --label validation-cleanup --state open \
-            --limit 500 --json title --jq '.[].title' > /tmp/open-cleanup-titles.txt
-          uv run ai-gene-review validation-cleanup-issues reports/validation-all.tsv \
-            -o /tmp/cleanup-issues.jsonl \
-            --open-titles /tmp/open-cleanup-titles.txt \
-            --max-new "$MAX_NEW" --max-open "$MAX_OPEN"
-
       - name: Ensure labels exist
-        if: env.CREATE_ISSUES == 'true'
         env:
           GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
         run: |
@@ -113,6 +108,24 @@ jobs:
             --description "Suitable for lower-effort/cheaper-model automation; output must remain review-gated" --force
           gh label create validation-cleanup --color BFD4F2 \
             --description "Validation warning cleanup on an existing review" --force
+
+      - name: Select cleanup issues
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          gh issue list --repo "$REPO" --label validation-cleanup --state open \
+            --limit 500 --json title --jq '.[].title' > /tmp/open-cleanup-titles.txt
+          # Closed with warnings left means the rest needs a human; do not re-file
+          # it every week.
+          gh issue list --repo "$REPO" --label validation-cleanup --state closed \
+            --search "closed:>=$(date -d '90 days ago' +%Y-%m-%d)" \
+            --limit 500 --json title --jq '.[].title' > /tmp/closed-cleanup-titles.txt
+          uv run ai-gene-review validation-cleanup-issues reports/validation-all.tsv \
+            -o /tmp/cleanup-issues.jsonl \
+            --open-titles /tmp/open-cleanup-titles.txt \
+            --closed-titles /tmp/closed-cleanup-titles.txt \
+            --max-new "$MAX_NEW" --max-open "$MAX_OPEN"
 
       - name: Create cleanup issues
         if: env.CREATE_ISSUES == 'true'
@@ -136,5 +149,9 @@ jobs:
             echo "- Open cleanup issues before this run: $(wc -l < /tmp/open-cleanup-titles.txt 2>/dev/null || echo '?')"
             echo "- Create issues: $CREATE_ISSUES"
             echo "- Selected:"
-            jq -r '"  - \(.title)"' /tmp/cleanup-issues.jsonl 2>/dev/null || echo "  - (none)"
+            if [ -s /tmp/cleanup-issues.jsonl ]; then
+              jq -r '"  - \(.title)"' /tmp/cleanup-issues.jsonl
+            else
+              echo "  - (none)"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
