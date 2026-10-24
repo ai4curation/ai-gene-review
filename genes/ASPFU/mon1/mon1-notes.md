@@ -57,6 +57,7 @@ still the main open biology.
 - `GO:0035658 Mon1-Ccz1 complex`: ACCEPT as a broad PAINT transfer, with a
   caveat that the filamentous-fungal Ccz1 partner is diverged and still needs
   direct validation.
-- Add `GO:0006914 autophagy` as a conservative NEW row: Mon1 contributes to the
-  Rab7/Ypt7 activation/fusion machinery used by autophagosomes at the vacuole,
-  and this role is experimentally supported in S. cerevisiae and F. graminearum.
+- Add `GO:0016236 macroautophagy` as a conservative NEW row: Mon1 contributes
+  to the Rab7/Ypt7 activation/fusion machinery used by autophagosomes at the
+  vacuole, and this role is experimentally supported in S. cerevisiae and
+  F. graminearum.
