@@ -6139,3 +6139,59 @@ remain historical and are not refreshed by this completion update.
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker579-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T201537Z-codex-48a79e.yaml)
+
+## Completion checkpoint 582 — 2026-10-24 22:42:53 UTC
+
+**582 complete; 2,294 remaining out of 2,876 primary catalogue genes.**
+This adds only the three accepted actual merges below to
+[tracker 579, PR #5467](https://github.com/ai4curation/ai-gene-review/pull/5467).
+Independent audit acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [ESRRB #5461](https://github.com/ai4curation/ai-gene-review/pull/5461) | [`2dc84ba6ac5b`](https://github.com/ai4curation/ai-gene-review/commit/2dc84ba6ac5beafa6ad3e0bf74256ea21b719d72) | [`2cb3afa8a856`](https://github.com/ai4curation/ai-gene-review/commit/2cb3afa8a856b1faab7217c00b212f8b2bdcb55b) | 53 | 31 / 1 | COMPLETE / 0 |
+| [ETFDH #5468](https://github.com/ai4curation/ai-gene-review/pull/5468) | [`246dc94621f1`](https://github.com/ai4curation/ai-gene-review/commit/246dc94621f1cf938b6bd118cdd19ce0ad8eeb0e) | [`9cb3fe3a3e21`](https://github.com/ai4curation/ai-gene-review/commit/9cb3fe3a3e2161a86c5bebc6d9a295233cb7c200) | 37 | 19 / 5 | DRAFT / 7 |
+| [ETHE1 #5470](https://github.com/ai4curation/ai-gene-review/pull/5470) | [`8cf5cbe3040e`](https://github.com/ai4curation/ai-gene-review/commit/8cf5cbe3040efbae4295c15ecb0446a5bfdd9781) | [`5cffa2f757b5`](https://github.com/ai4curation/ai-gene-review/commit/5cffa2f757b5ae147f0f128177b0ffd0dbe0d096) | 27 | 16 / 1 | DRAFT / 5 |
+
+All 46 approved PR paths, 16 complete gene-directory files and 49 external
+dependency entries match approved head, actual merge and fixed main
+`5cffa2f757b5ae147f0f128177b0ffd0dbe0d096` in mode, type and blob. Dependency counts can overlap.
+The separate remote-main observation was `5cffa2f757b5ae147f0f128177b0ffd0dbe0d096`.
+All 42 inherited quotation anchors belong to ETFDH and remain exact; ESRRB and
+ETHE1 have none. No new quotation or NEW annotation is introduced.
+
+ESRRB retains human DNA-binding and transcription-activation evidence, with
+long and short constructs corresponding to current 508- and 433-residue
+accession sequences, without verifying historical plasmid sequences or the
+untested 500-residue product. Mouse developmental contexts remain separate. Its computed COMPLETE
+status leaves six UNDECIDED judgments visible.
+
+ETFDH retains the ETF-to-ubiquinone reaction with FAD and a 4Fe–4S cluster,
+separate from the soluble ETFA–ETFB carrier. Human enzyme assays and the native
+porcine structure remain distinct; neither establishes full respiratory flux or
+functional equivalence of the 617- and 570-residue products. Two stress-process
+judgments remain UNDECIDED.
+
+ETHE1 retains iron-dependent glutathione-persulfide oxidation to sulfite and
+glutathione in the matrix. Historical cytoplasmic observations remain non-core;
+independent matrix evidence and the unresolved two-zinc source-model query are
+preserved. Engineered truncations, native processing and separate shorter
+RefSeq products are not treated as functionally equivalent.
+
+All three jobs succeeded in each actual merge-group run: [ESRRB](https://github.com/ai4curation/ai-gene-review/actions/runs/40136643412), [ETFDH](https://github.com/ai4curation/ai-gene-review/actions/runs/40136974831), [ETHE1](https://github.com/ai4curation/ai-gene-review/actions/runs/40136976805).
+Each broad suite executed 4,268 Python tests (one skipped, 84 deselected),
+277 doctests (37 skipped), 12 examples, 438 overlapping automation tests and
+19 JavaScript tests, plus mypy over 285 source files and Ruff. Counts overlap
+and are not summed. Changed-gene validation retained the advisories above;
+the separate all-gene batch was schema-only. The PR broad suites, prediction
+checks and upstream PAINT checks were skipped in their recorded scopes.
+Global warnings and unresolved residue claims remain; aggregate gates add no tests.
+
+This is update 119. All 2,876 identities and association text, 235 queue objects,
+118 earlier updates and preceding progress bytes remain exact; only the three
+named checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker582-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T225256Z-codex-c6114a.yaml)
