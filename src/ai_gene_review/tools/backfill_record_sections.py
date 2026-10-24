@@ -11,7 +11,9 @@ it was. The result is reloaded and compared with the original, and the file is
 not written unless the only difference is the added ``record_section`` keys.
 
 Existing values are kept; ``fix=True`` rewrites the ones that disagree with
-the cited file (a value on a single line only).
+the cited file, when the value is a one-line flow sequence that can be
+replaced by rewriting its line. A quote whose text occurs in more than one
+section of the record gets no value: the section is not established.
 """
 
 from __future__ import annotations
@@ -29,7 +31,12 @@ from ai_gene_review.validation.local_source_text import (
     iter_local_quote_items,
     resolve_local_source,
 )
-from ai_gene_review.validation.uniprot_quote_source import record_sections
+from ai_gene_review.validation.uniprot_quote_source import (
+    AMBIGUOUS,
+    UNLOCATED,
+    is_uniprot_source,
+    locate_sections,
+)
 
 KEY = "record_section"
 _PLAIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9 :/_.()-]*")
@@ -79,8 +86,9 @@ class BackfillResult:
     ``text`` is the updated document. ``added`` and ``fixed`` count values
     written; ``mismatched`` counts existing values that disagree with the
     cited file and were left alone; ``unlocated`` counts quotes that could not
-    be found in the cited file; ``unplaceable`` counts quotes whose layout
-    (e.g. a flow mapping) leaves no line to insert the key on.
+    be found in the cited file; ``ambiguous`` counts quotes found in more than
+    one section, which are left without a value; ``unplaceable`` counts quotes
+    whose layout (e.g. a flow mapping) leaves no line to insert the key on.
     """
 
     text: str
@@ -88,6 +96,7 @@ class BackfillResult:
     fixed: int = 0
     mismatched: int = 0
     unlocated: int = 0
+    ambiguous: int = 0
     unplaceable: int = 0
     paths: List[str] = field(default_factory=list)
 
@@ -114,11 +123,14 @@ def flow_value(sections: Iterable[str]) -> str:
 def _record_items(
     data: Any, project_root: Path
 ) -> Iterator[Tuple[str, MarkedDict, Path]]:
-    """``(path, item, source)`` for each quote whose cited source is a UniProt flat file."""
+    """``(path, item, source)`` for each quote whose cited source is a cached UniProt record."""
     for path, reference_id, item in iter_local_quote_items(data):
         source = resolve_local_source(reference_id, project_root)
-        if source is not None and source.name.endswith("-uniprot.txt"):
-            assert isinstance(item, MarkedDict), "load the document with load_marked"
+        if source is not None and is_uniprot_source(source):
+            if not isinstance(item, MarkedDict):
+                raise TypeError(
+                    "load the document with load_marked to get key positions"
+                )
             yield path, item, source
 
 
@@ -140,16 +152,19 @@ def backfill_text(
     # line index -> (replacement for that line or None, lines to insert before it)
     edits: Dict[int, Tuple[Optional[str], List[str]]] = {}
     for path, item, source in _record_items(data, project_root):
-        sections = record_sections(item["supporting_text"], source)
-        if sections is None:
+        status, sections = locate_sections(item["supporting_text"], source)
+        if status == UNLOCATED:
             result.unlocated += 1
+            continue
+        if status == AMBIGUOUS:
+            result.ambiguous += 1
             continue
         stated = _stated(item.get(KEY))
         if stated is not None:
             if stated == sections:
                 continue
             line, col = item.value_marks[KEY]
-            if not fix or lines[line][col:].strip() != _raw_value(lines[line][col:]):
+            if not fix or not _rewritable(item, lines):
                 result.mismatched += 1
                 continue
             edits[line] = (
@@ -186,9 +201,17 @@ def backfill_text(
     return result
 
 
-def _raw_value(rest: str) -> str:
-    """The flow-sequence or scalar written on one line, without a trailing comment."""
-    return rest.split(" #", 1)[0].strip()
+def _rewritable(item: MarkedDict, lines: List[str]) -> bool:
+    """True when the stated value is a one-line flow sequence on its key's line, with no comment.
+
+    Only such a value can be replaced by rewriting one line; a block sequence
+    or a flow sequence wrapped over several lines is left alone.
+    """
+    line, col = item.value_marks[KEY]
+    if line != item.key_marks[KEY][0]:
+        return False
+    rest = lines[line][col:].strip()
+    return rest.startswith("[") and rest.endswith("]") and " #" not in rest
 
 
 def _eol(line: str) -> str:
@@ -197,7 +220,12 @@ def _eol(line: str) -> str:
 
 def _check_only_sections_changed(original: str, result: BackfillResult) -> None:
     """Fail unless the new text differs from the original only in ``record_section`` values."""
-    before, after = yaml.safe_load(original), yaml.safe_load(result.text)
+    try:
+        before, after = yaml.safe_load(original), yaml.safe_load(result.text)
+    except yaml.YAMLError as e:  # the edit broke the document
+        raise ValueError(
+            f"record_section backfill produced invalid YAML; refusing to write: {e}"
+        ) from e
     changed = set(result.paths)
     for doc in (before, after):
         for path, _, item in iter_local_quote_items(doc):

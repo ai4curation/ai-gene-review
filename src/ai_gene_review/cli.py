@@ -1691,11 +1691,18 @@ def backfill_record_sections(
     from ai_gene_review.tools.backfill_record_sections import backfill_file, review_files
 
     files = review_files(paths or [Path("genes")])
-    totals = {"files": 0, "added": 0, "fixed": 0, "mismatched": 0, "unlocated": 0, "unplaceable": 0}
+    counts = ("added", "fixed", "mismatched", "unlocated", "ambiguous", "unplaceable")
+    totals = dict.fromkeys(("files",) + counts, 0)
+    failed: list[Path] = []
     for f in files:
-        r = backfill_file(f, fix=fix, dry_run=dry_run)
+        try:
+            r = backfill_file(f, fix=fix, dry_run=dry_run)
+        except ValueError as e:  # the edit would change more than record_section: skip this file
+            typer.echo(f"{f}: skipped, {e}", err=True)
+            failed.append(f)
+            continue
         totals["files"] += int(r.changed)
-        for key in ("added", "fixed", "mismatched", "unlocated", "unplaceable"):
+        for key in counts:
             totals[key] += getattr(r, key)
         if r.changed or r.mismatched:
             typer.echo(f"{f}: added {r.added}, fixed {r.fixed}, mismatched {r.mismatched}")
@@ -1703,8 +1710,12 @@ def backfill_record_sections(
     typer.echo(
         f"{verb} {totals['files']} of {len(files)} files: added {totals['added']}, "
         f"fixed {totals['fixed']}; left {totals['mismatched']} mismatched, "
-        f"{totals['unlocated']} not located in the cited file, {totals['unplaceable']} unplaceable"
+        f"{totals['unlocated']} not located in the cited file, "
+        f"{totals['ambiguous']} in more than one section, {totals['unplaceable']} unplaceable"
     )
+    if failed:
+        typer.echo(f"{len(failed)} file(s) skipped because the edit was unsafe", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command()

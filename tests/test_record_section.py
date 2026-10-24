@@ -2,7 +2,8 @@
 
 Run against the real human TP53 flat file in the repository, which has
 curated FUNCTION and CAUTION comments, features, Pfam cross-references and a
-protein name.
+protein name, and the Arabidopsis AOP2 UniSave snapshot, whose archived entry
+has a CAUTION comment.
 """
 
 from pathlib import Path
@@ -13,8 +14,10 @@ import yaml
 from ai_gene_review.tools.backfill_record_sections import backfill_text
 from ai_gene_review.validation import ValidationSeverity, validate_gene_review
 from ai_gene_review.validation.uniprot_quote_source import (
+    AMBIGUOUS,
     PROJECT_ROOT,
     RECORD_SECTION_CHECK,
+    locate_sections,
     record_section_findings,
     record_sections,
 )
@@ -203,3 +206,67 @@ def test_backfill_text_fix_rewrites_wrong_values_only():
     result = backfill_text(wrong, fix=True)
     assert (result.fixed, result.mismatched) == (1, 0)
     assert result.text == once
+
+
+AOP2 = "file:ARATH/AOP2/AOP2-record-evidence.yaml"
+AOP2_PATH = PROJECT_ROOT / "genes" / "ARATH" / "AOP2" / "AOP2-record-evidence.yaml"
+AOP2_CAUTION = "5-bp deletion that leads to a non-functional protein"
+
+
+def test_record_sections_reads_unisave_snapshots():
+    """An archived UniProt entry is a database record too."""
+    assert record_sections(AOP2_CAUTION, AOP2_PATH) == ["CC:CAUTION"]
+    doc = {
+        "core_functions": [
+            {
+                "supported_by": [
+                    {
+                        "reference_id": AOP2,
+                        "supporting_text": AOP2_CAUTION,
+                        "record_section": ["CC:CAUTION"],
+                    }
+                ]
+            }
+        ]
+    }
+    assert record_section_findings(doc) == []
+    text = f"core_functions:\n- supported_by:\n  - reference_id: {AOP2}\n    supporting_text: {AOP2_CAUTION}\n"
+    result = backfill_text(text)
+    assert result.added == 1
+    assert "record_section: [CC:CAUTION]" in result.text
+
+
+def test_ambiguous_quote_gets_no_section():
+    """'Nucleus' is both a keyword and a subcellular location: the section is not established."""
+    assert locate_sections("Nucleus", TP53_PATH) == (AMBIGUOUS, [])
+    assert record_sections("Nucleus", TP53_PATH) is None
+    text = f"core_functions:\n- supported_by:\n  - reference_id: {TP53}\n    supporting_text: Nucleus\n"
+    result = backfill_text(text)
+    assert (result.added, result.ambiguous) == (0, 1)
+    assert result.text == text
+    # and a stated value on such a quote is not second-guessed
+    assert (
+        record_section_findings(_doc(supporting_text="Nucleus", record_section=["KW"]))
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "stated",
+    [
+        # block sequence: the value does not start on the key's line
+        "record_section:\n    - CC:FUNCTION\n    - CC:CAUTION\n",
+        # flow sequence wrapped over two lines
+        "record_section: [CC:FUNCTION,\n      CC:CAUTION]\n",
+        # trailing comment would be lost
+        "record_section: [CC:FUNCTION]  # checked\n",
+    ],
+)
+def test_fix_leaves_values_it_cannot_rewrite_on_one_line(stated):
+    text = (
+        f"core_functions:\n- supported_by:\n  - reference_id: {TP53}\n"
+        f"    {stated}    supporting_text: {CAUTION_QUOTE}\n"
+    )
+    result = backfill_text(text, fix=True)
+    assert (result.fixed, result.mismatched) == (0, 1)
+    assert result.text == text
