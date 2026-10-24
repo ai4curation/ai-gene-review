@@ -1,3 +1,10 @@
+---
+title: "Agent-Based Modeling of Intracellular Trafficking"
+maturity: IN_PROGRESS
+tags: [PIPELINE, BIOLOGY_DOMAIN]
+species: [human]
+---
+
 # Agent-Based Modeling of Intracellular Trafficking
 
 Can a curated pathway module simulate **where a cohort of cargo particles goes, how competing sorting branches split flux, and where cargo accumulates when a trafficking step is perturbed** — without authoring a separate simulation script?
