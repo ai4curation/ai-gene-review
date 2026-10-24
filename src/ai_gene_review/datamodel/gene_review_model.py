@@ -2557,7 +2557,21 @@ class Finding(ConfiguredBaseModel):
          'recommended': True} })
     full_text_unavailable: Optional[bool] = Field(default=None, description="""Whether the full text is unavailable""", json_schema_extra = { "linkml_meta": {'domain_of': ['Reference', 'Finding', 'SupportingTextInReference']} })
     reference_section_type: Optional[ManuscriptSection] = Field(default=None, description="""Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference'], 'recommended': True} })
+    record_section: Optional[list[str]] = Field(default=None, description="""For a quote from a database record (currently a cached UniProt record: a flat file, `file:...-uniprot.txt`, or a UniSave snapshot, `file:...-record-evidence.yaml`), the section(s) of the record the quote comes from, as the line code followed, where the line code has one, by its topic: the comment topic for `CC` (e.g. `CC:CAUTION`, `CC:FUNCTION`, `CC:SUBCELLULAR LOCATION`), the feature key for `FT` (e.g. `FT:BINDING`), the database for `DR` (e.g. `DR:Pfam`), and `REF` for a citation block. Plain line codes are used otherwise (e.g. `DE`, `KW`). A quote whose `...`-separated parts come from different sections lists each once, in order. A quote whose text occurs in several sections (a short phrase found in both a keyword and a comment) has no established section and is left without a value. This is the database-record counterpart of `reference_section_type`, which describes manuscript sections. The value is derived from the cited file, so fill it with `just backfill-record-sections` rather than by hand; validation warns when a stated value disagrees with the cited file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference']} })
     finding_review: Optional[FindingReview] = Field(default=None, description="""Manual reviewer assessment of this specific finding - in particular whether the finding remains current, is disputed, or has been overturned/superseded by later evidence. Reviewer-supplied; distinct from the statement/supporting_text that describe the finding itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding']} })
+
+    @field_validator('record_section')
+    def pattern_record_section(cls, v):
+        pattern=re.compile(r"^(?:REF|[A-Z]{2}(?::[A-Za-z0-9][A-Za-z0-9 ,/_.()-]*)?)$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid record_section format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid record_section format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class FindingReview(ConfiguredBaseModel):
@@ -2612,6 +2626,20 @@ class SupportingTextInReference(ConfiguredBaseModel):
     supporting_text_fulltext: Optional[str] = Field(default=None, description="""Supporting text from the full-text PDF when the full text cannot be committed to the repository. This is an interim solution for cases where we have access to full text but cannot share it publicly. Unlike supporting_text, this field is not validated against cached publication text.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SupportingTextInReference']} })
     full_text_unavailable: Optional[bool] = Field(default=None, description="""Whether the full text is unavailable""", json_schema_extra = { "linkml_meta": {'domain_of': ['Reference', 'Finding', 'SupportingTextInReference']} })
     reference_section_type: Optional[ManuscriptSection] = Field(default=None, description="""Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference'], 'recommended': True} })
+    record_section: Optional[list[str]] = Field(default=None, description="""For a quote from a database record (currently a cached UniProt record: a flat file, `file:...-uniprot.txt`, or a UniSave snapshot, `file:...-record-evidence.yaml`), the section(s) of the record the quote comes from, as the line code followed, where the line code has one, by its topic: the comment topic for `CC` (e.g. `CC:CAUTION`, `CC:FUNCTION`, `CC:SUBCELLULAR LOCATION`), the feature key for `FT` (e.g. `FT:BINDING`), the database for `DR` (e.g. `DR:Pfam`), and `REF` for a citation block. Plain line codes are used otherwise (e.g. `DE`, `KW`). A quote whose `...`-separated parts come from different sections lists each once, in order. A quote whose text occurs in several sections (a short phrase found in both a keyword and a comment) has no established section and is left without a value. This is the database-record counterpart of `reference_section_type`, which describes manuscript sections. The value is derived from the cited file, so fill it with `just backfill-record-sections` rather than by hand; validation warns when a stated value disagrees with the cited file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference']} })
+
+    @field_validator('record_section')
+    def pattern_record_section(cls, v):
+        pattern=re.compile(r"^(?:REF|[A-Z]{2}(?::[A-Za-z0-9][A-Za-z0-9 ,/_.()-]*)?)$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid record_section format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid record_section format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class EvidenceItem(ConfiguredBaseModel):

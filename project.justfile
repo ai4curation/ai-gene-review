@@ -197,6 +197,13 @@ fetch-panther-paint-all *args="":
 paint-review-coverage *args="":
     uv run python scripts/paint_review_coverage.py {{args}}
 
+# Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
+# `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
+# verdict or overwrites a curated field; lists losses still judged with a gain verdict.
+# Dry run by default. Example: just fill-node-evidence --apply interpro/panther/PTHR12210/PTHR12210-review.yaml
+fill-node-evidence *args="":
+    uv run python -m ai_gene_review.validation.family_node_evidence {{args}}
+
 # Regenerate the PANTHER IBA project tables through public wrapper recipes.
 # These may download cached PAINT source data on the first run.
 [group('QC')]
@@ -1432,6 +1439,13 @@ check-missing-goa organism:
         echo "Total: $missing genes with missing annotations"
         echo "Run 'just seed-goa-organism {{organism}}' to fix"
     fi
+
+# Fill record_section (CC:CAUTION, CC:FUNCTION, FT:BINDING, ...) on UniProt quotes.
+# Example: just backfill-record-sections genes/human/TP53
+#          just backfill-record-sections --dry-run
+#          just backfill-record-sections --fix
+backfill-record-sections *args:
+    uv run ai-gene-review backfill-record-sections {{args}}
 
 # Backfill isoform field on existing annotations for a specific gene
 backfill-isoforms organism gene:

@@ -78,6 +78,32 @@ it. `check_outcomes.py` enforces it, so the next audit inherits a rule rather
 than re-inferring one. `summarize.py` reads only the annotation-level field, so
 the gene-level value is documentary.
 
+## Later reviews that overturn an adjudication
+
+This audit's records are a snapshot of what it decided. A later gene review can
+legitimately reach a different action on the same TreeGrafter row; the ProtNLM2
+gene re-review campaign did so for three batch-01 rows. Do not rewrite the
+recorded `action` or `outcome` for those rows: they describe this audit's
+decision. Declare the later decision on the annotation instead:
+
+```yaml
+    superseded_by:
+      action: UNDECIDED          # the live review's action
+      by: 'PR #5304'
+      date: '2026-10-23'
+      reason: 'Why the later review (PR #5304) differs.'
+```
+
+Quote every value in this block. In an unquoted YAML value a `#` preceded by a space
+starts a comment, so `reason: ... (PR #5304): ...` silently loads as `... (PR`. The
+checker therefore requires `by` to name a PR (`PR #NNNN`) and `reason` to end with
+sentence punctuation, so a truncated value fails the gate instead of passing it.
+
+`check_outcomes.py` then checks the live row against `superseded_by.action`
+rather than `action`, and lists each such row as `superseded`, so a further
+drift still fails the gate. `summarize.py` is unaffected: it counts this
+audit's own transitions.
+
 ## What the verbatim check does and does not cover
 
 This audit's rules lean on `supporting_text` being a verbatim substring of its
