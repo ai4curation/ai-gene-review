@@ -22,13 +22,13 @@ Actual original scans pp6489–6492, Methods and Figures 3–6 read; p6492/Figur
 
 [Original access route](https://doi.org/10.1074/jbc.M002578200); [identifier record](https://pubmed.ncbi.nlm.nih.gov/10801852/).
 
-Official identifier/title/DOI and abstract verified. Complete JBC original not recovered. Its MAT1–XPD assay was not inspected; the refined adaptor role is independently established by actual human CAK–ERCC2 reconstitution and TFIIH architecture in PMID:8692842 and PMID:31253769, rather than assumed verification of this source.
+Official identifier/title/DOI and abstract verified. Complete JBC original not recovered. Its MAT1–XPD assay was not inspected; the protein-complex scaffold role is independently established by actual human CAK–ERCC2 reconstitution and TFIIH architecture in PMID:8692842 and PMID:31253769, rather than assumed verification of this source.
 
 ### PMID:11445587 — A yeast four-hybrid system identifies Cdk-activating kinase as a regulator of the XPD helicase, a subunit of transcription factor IIH.
 
 [Original access route](https://www.jbc.org/article/S0021925819587889/pdf); [identifier record](https://pubmed.ncbi.nlm.nih.gov/11445587/).
 
-Official identifier/title/DOI verified. Indexed original p35329 Methods/initial Results fragments cover human HeLa-library constructs, Sf9 coexpression and assay protocols, but complete main Results and figures were not recovered. Same-partner XPD/p44 and CAK–core adaptor biology is independently supported by PMID:19934020 and PMID:8692842; that does not verify this original assay in full.
+Official identifier/title/DOI verified. Indexed original p35329 Methods/initial Results fragments cover human HeLa-library constructs, Sf9 coexpression and assay protocols, but complete main Results and figures were not recovered. Same-partner XPD/p44 and CAK–core scaffold biology is independently supported by PMID:19934020 and PMID:8692842; that does not verify this original assay in full.
 
 ### PMID:16669699 — Dynamic interaction of TTDA with TFIIH is stabilized by nucleotide excision repair in living cells.
 
@@ -279,4 +279,7 @@ All 68 row contexts (67 distinct source objects) reach [ERCC2 entity R-HSA-67443
 
 ## Ontology and annotation scope
 
-Current [GO:0035315](https://www.ebi.ac.uk/QuickGO/term/GO:0035315) has direct epidermal-cell and neuron-differentiation parents. Its name alone does not establish the cell type relevant to the inaccessible TTD review. [GO:0005669](https://www.ebi.ac.uk/QuickGO/term/GO:0005669) denotes TFIID, whereas [GO:0000439](https://www.ebi.ac.uk/QuickGO/term/GO:0000439) describes the seven-subunit TFIIH core including XPD; PMID:27193682 explicitly used TBP in place of TFIID. The helicase refinements identify XPD's informative ATP-driven motor activity, without asserting a current hydrolase ancestry for the helicase term.
+Current [GO:0035315](https://www.ebi.ac.uk/QuickGO/term/GO:0035315) has direct epidermal-cell and neuron-differentiation parents. Its name alone does not establish the cell type relevant to the inaccessible TTD review. [GO:0005669](https://www.ebi.ac.uk/QuickGO/term/GO:0005669) denotes TFIID, whereas [GO:0000439](https://www.ebi.ac.uk/QuickGO/term/GO:0000439) describes the seven-subunit TFIIH core including XPD; PMID:27193682 explicitly used TBP in place of TFIID. The ATP-hydrolysis annotations retain the separately measured chemistry. The broad phosphorus-anhydride hydrolase annotation is refined to GO:0016887, whose current is_a ancestry includes GO:0016818; the directional helicase activity remains independently represented.
+
+
+Follow-up original-source check: PMID:19934020 Results/Figure 5C and ATPase Methods independently support ATP hydrolysis by high-salt-washed human XPD preparations, with retained ATPase in variants that lose productive unwinding. The caption and Methods give different incubation durations, so no exact duration is asserted here. [GO:0016887](https://www.ebi.ac.uk/QuickGO/term/GO:0016887) identifies ATP hydrolysis and its Rhea:13065 reaction; its is_a ancestry contains the broad phosphorus-anhydride hydrolase term.
