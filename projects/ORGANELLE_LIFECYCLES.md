@@ -66,6 +66,15 @@ matching, and lifecycle stages are processes.
    modules are linked as optional, so they are visible but cannot produce false
    negatives.
 
+## Two-layer model
+
+A rule makes two kinds of claim: a process step requires a molecular function
+(close to binary), and that function is carried out by one of several
+families, domains or complexes (open-world and gappy). The engine currently
+compiles both to the same OR, so a failed rule cannot say which kind of gap it
+hit. See [the two-layer design note](ORGANELLE_LIFECYCLES/two-layer-model.md)
+for the model, what the engine does today, and the options.
+
 ## Finding: existing modules are not yet rules
 
 The pilot showed that most existing organelle-related modules are descriptive
@@ -91,7 +100,8 @@ The organelle-by-stage matrix lives in
 
 - [x] `module_ref` schema slot, engine, validator and rendering (PR #5108)
 - [x] `mitochondrial_protein_import` (eukaryote-wide, PAINT-grounded; `RULE_CANDIDATE`)
-- [ ] Model the kinetoplastid inner-membrane translocase as a lineage `variant_set` in `mitochondrial_protein_import`, then mark it `RULE_READY`
+- [ ] Add the kinetoplastid Tim17-lineage realizer to the TIM23 and TIM22 activity steps of `mitochondrial_protein_import` (layer 2, see the [two-layer note](ORGANELLE_LIFECYCLES/two-layer-model.md)), after confirming its PANTHER placement; then mark it `RULE_READY`
+- [ ] Engine: label gaps by layer (controlled variant-set axis carried into the circuit), report gaps inside referenced modules, filter gap candidates to absent atoms, and carry family/domain selectors on atoms for proteome oracles
 - [x] `mitochondrion_lifecycle` umbrella (import required; other stages optional)
 - [ ] Make mitochondrial division rule-ready (Mff / Mdv1-Fis1 / FtsZ variants), then make it required
 - [ ] Mitochondrial iron-sulfur cluster assembly module (universal to mitochondrion-related organelles; start from the Drosophila-only `dmel_iron_sulfur_cluster_assembly`)
