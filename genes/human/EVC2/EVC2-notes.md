@@ -45,3 +45,7 @@ All 14 machine-source objects, all nine prior references, three natural product 
 ## 2026-10-24 — Current published revision status
 
 Published revision `ca963bcd72cf00c3715e3682dc4242256489f955` is DRAFT with one advisory for the supported core-only positive-regulation facet (GO:0045880); earlier COMPLETE paragraphs record historical checkpoints. The UniProt reference retains its verified record identity and the existing explanation of the disputed terminal-region wording; DISPUTED now records that most salient issue in the single-valued correctness field. The signaling core and all annotation decisions remain unchanged.
+
+### 2026-10-24: source-assessment wording
+
+The UniProt reference note now explains the current DISPUTED assessment without naming the former VERIFIED value. Record identity and the supported complex statements remain verified; the disputed terminal-region phrase remains explicitly scoped. This addresses the optional wording suggestion in PR #5477 review 5640604137. Annotation decisions, evidence references, core functions and the one-advisory DRAFT status are unchanged.
