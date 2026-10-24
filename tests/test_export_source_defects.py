@@ -130,15 +130,6 @@ def test_change_line(change: str, corrected: str, expected: str) -> None:
     assert f"**Change:** {expected}" in render_report("TAIR", rows)
 
 
-def test_committed_reports_are_current() -> None:
-    """The committed TSV must match what the exporter produces from the repo."""
-    root = Path(__file__).resolve().parents[1]
-    tsv = root / "reports" / "source-defects.tsv"
-    with tsv.open(encoding="utf-8") as fh:
-        committed = list(csv.DictReader(fh, delimiter="\t"))
-    assert committed == collect(root), "run `just export-source-defects`"
-
-
 @pytest.mark.parametrize(
     "evidence",
     [

@@ -90,3 +90,8 @@ PMID:19448033 and PMID:31858132 have full text.
 - nucleus ISM: REMOVE (prediction; contradicted by membrane targeting data).
 - regulation of potassium ion transport IMP -> MODIFY to GO:0043267 negative regulation.
 - monoatomic ion homeostasis IMP -> MODIFY to GO:0055078 sodium ion homeostasis.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+- Tonoplast core function MF changed from GO:0043539 to GO:0043495 protein-membrane adaptor activity, with a NEW IDA row on PMID:19832944 [PMID:19832944 "distinct targeting signals located in the N-terminal domain of CBL proteins determine the spatially discrete localization of CBL/CIPK complexes"], the curated UniProt note "Exclusively targeted to the tonoplast when interacting with CIPK24", and S-acylation-dependent tonoplast targeting (PMID:31441225, added to publications/).
+- AKT1 binding row and the AKT1 core function: GO:0019870 refined to GO:0070320 inward rectifier potassium channel inhibitor activity (AKT1 is an inward rectifier).
