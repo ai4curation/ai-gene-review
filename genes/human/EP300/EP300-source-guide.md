@@ -6,7 +6,7 @@ The review preserves imported source assertions and distinguishes independent bi
 
 Acetyl-CoA-dependent histone and nonhistone assays support the central EP300/p300 chemistry. Alternative acyl donors establish additional biochemical capacities with assay concentrations and cellular limitations retained. Human, mouse, rat and viral binding partners remain distinct. Experimental deletions, substitutions and isolated domains are not additional natural products.
 
-SIRT1 judgments use explicit interaction abstracts and the actual main-text interaction report in PMID20660480. Its Figure5B re-ChIP supports co-occupancy, not physical binding; the cited supplementary interaction assay was not inspected. HPA supplies independent human localization support for Reactome-derived nucleoplasm assertions, including two current cytosolic event objects.
+SIRT1 judgments use explicit interaction abstracts and the actual main-text interaction report in PMID:20660480. Its Figure 5B re-ChIP supports co-occupancy, not physical binding; the cited supplementary interaction assay was not inspected. HPA supplies independent human localization support. Two Reactome event objects have cytosol event-level compartments while their EP300 participant is explicitly nucleoplasmic; the participant chains below support the imported gene location and identify the narrower event-level consistency query.
 
 ## Publication access and operative locators
 
@@ -56,13 +56,13 @@ Identity and abstract checked against official Europe PMC metadata. Official abs
 
 [Original article or notice](https://doi.org/10.1128/MCB.20.8.2676-2686.2000). Imported source indices: 0.
 
-Identity and abstract independently checked against official Europe PMC metadata. Original cached Methods, Results and Discussion read. Targeted CRD1 reporter experiments and untethered p300/p53 Fig.8 support context-dependent repression alongside coactivation; figure pixels and missing captions were not inspected.
+Identity and abstract independently checked against official Europe PMC metadata. Original cached Methods, Results and Discussion read. Targeted CRD1 reporter experiments and untethered p300/p53 Fig. 8 support context-dependent repression alongside coactivation; figure pixels and missing captions were not inspected.
 
 ### PMID:10821277 — ATF-2 has intrinsic histone acetyltransferase activity which is modulated by phosphorylation.
 
 [Original article or notice](https://doi.org/10.1038/35012097). Imported source indices: 330, 366.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. PubMed abstract explicitly focuses on ATF2 H2B/H4 acetylation. Main original inaccessible; do not infer that EP300 was absent. General H4 and H2B activities resolved with independent18273021 supplement and16917507 original. Public original: https://doi.org/10.1038/35012097.
+Identifier/title match the genuine normal PubMed record inspected for this source. PubMed abstract explicitly focuses on ATF2 H2B/H4 acetylation. Main original inaccessible; do not infer that EP300 was absent. General H4 and H2B activities resolved with independent18273021 supplement and PMID:16917507 original. Public original: https://doi.org/10.1038/35012097.
 
 ### PMID:11029584 — Domains of Brn-2 that mediate homodimerization and interaction with general and melanocytic transcription factors.
 
@@ -92,13 +92,13 @@ Identity and abstract checked against official Europe PMC metadata. Official abs
 
 [Original article or notice](https://doi.org/10.1016/s1097-2765(01)00277-5). Imported source indices: 67, 68.
 
-Identity and abstract checked against official Europe PMC metadata. Official abstract read; Strap/p300 cofactor role reported. Specific JMY support supplied separately by10518217 abstract; main experiments unavailable.
+Identity and abstract checked against official Europe PMC metadata. Official abstract read; Strap/p300 cofactor role reported. Specific JMY support supplied separately by PMID:10518217 abstract; main experiments unavailable.
 
 ### PMID:11581164 — Selective coactivation of estrogen-dependent transcription by CITED1 CBP/p300-binding protein.
 
 [Original article or notice](https://doi.org/10.1101/gad.906301). Imported source indices: 69, 362.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual normal-cache operative Results and Methods read; Figure1E/7B described text, no image pixels or supplement. Human MCF-7 endogenous interaction; purified assay is CITED1–ERalpha, not p300. cache lines: [99, 115, 125, 141, 211, 215]. Public original: https://doi.org/10.1101/gad.906301.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual normal-cache operative Results and Methods read; Figure 1E/7B described text, no image pixels or supplement. Human MCF-7 endogenous interaction; purified assay is CITED1–ERalpha, not p300. cache lines: [99, 115, 125, 141, 211, 215]. Public original: https://doi.org/10.1101/gad.906301.
 
 ### PMID:11909954 — Scaffold/matrix attachment region elements interact with a p300-scaffold attachment factor A complex and are bound by acetylated nucleosomes.
 
@@ -146,7 +146,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1093/emboj/cdf660). Imported source indices: 338.
 
-Identifier/title/DOI verified. Read Figures1–3 Results and Methods; cellular p300/RelA acetylation, catalytic mutant controls and transcription reporter support the specific activity and coactivation.
+Identifier/title/DOI verified. Read Figures 1–3 Results and Methods; cellular p300/RelA acetylation, catalytic mutant controls and transcription reporter support the specific activity and coactivation.
 
 ### PMID:12527917 — Synergism between p68 RNA helicase and the transcriptional coactivators CBP and p300.
 
@@ -188,13 +188,13 @@ Identity and abstract independently checked against official Europe PMC metadata
 
 [Original article or notice](https://doi.org/10.1128/JVI.66.12.6893-6902.1992). Imported source indices: 86.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Original journal pages 6893–6895 (PDF-equivalent image pages1–3): introductory identity context, Materials and Methods, Results opening and Figure1A/B. Limits: The PMC PDF route returned a browser-check page. Scanned pages4–9 were saved but not read; no full-paper read is claimed.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: Original journal pages 6893–6895 (PDF-equivalent image pages1–3): introductory identity context, Materials and Methods, Results opening and Figure 1A/B. Limits: The PMC PDF route returned a browser-check page. Scanned pages4–9 were saved but not read; no full-paper read is claimed.
 
 ### PMID:14645221 — Histone acetyltransferase-dependent chromatin remodeling and the vascular clock.
 
 [Original article or notice](https://doi.org/10.1074/jbc.M311973200). Imported source indices: 46, 87, 88, 89, 194, 305.
 
-Identifier/title match the genuine normal PubMed record inspected for this source.  actual original: Web indexed author-repository PDF first access, lines93–295, pp7092–7094; main Methods and early Results.. limits: Local repository retrieval404; publisher403; continuation and screenshot404. Remaining pp7095–7097 and all image pixels unread. Main text partially available, normal cache remains abstract-only.. species construct: Human HeLa/HVSMC; mouse NIH3T3 reporter and mouse tissue separate; reticulocyte proteins/FLAG-p300 residue/species bounds unspecified in inspected Methods.. Public original: https://doi.org/10.1074/jbc.M311973200.
+Identifier/title match the genuine normal PubMed record inspected for this source.  actual original: Web indexed author-repository PDF first access, lines 93–295, pp7092–7094; main Methods and early Results.. limits: Local repository retrieval404; publisher403; continuation and screenshot404. Remaining pp7095–7097 and all image pixels unread. Main text partially available, normal cache remains abstract-only.. species construct: Human HeLa/HVSMC; mouse NIH3T3 reporter and mouse tissue separate; reticulocyte proteins/FLAG-p300 residue/species bounds unspecified in inspected Methods.. Public original: https://doi.org/10.1074/jbc.M311973200.
 
 ### PMID:14716005 — Dendrite development regulated by CREST, a calcium-regulated transcriptional activator.
 
@@ -206,19 +206,19 @@ PMID/title/DOI checked against official Europe PMC metadata. Read scope: Officia
 
 [Original article or notice](https://doi.org/10.1210/me.2003-0311). Imported source indices: 91, 92.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata and abstract, including reported BETA2-p300 competition. Limits: OUP main/PDF requests returned403; the PDF path was an attempted route, not a verified article artifact. No E47 interaction conclusion is drawn from abstract omission.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. This resolves NEUROD1/BETA2, not the separate E47 row. See EP300-source-guide.md.
 
 ### PMID:14759370 — Structural mechanism of the bromodomain of the coactivator CBP in p53 transcriptional activation.
 
 [Original article or notice](https://doi.org/10.1016/s1097-2765(03)00528-8). Imported source indices: 93.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Publisher-formatted original PDF: Results on endogenous p300/CBP-p53 interaction, Figure3D/E caption; Experimental Procedures in vivo binding and in vitro HAT. Extracted text lines169–193,233–248,556–613. Limits: Mouse NIH/3T3 endogenous p300-p53 interaction is distinct from CBP-specific bromodomain NMR. PDF page images not separately viewed. No claim of p300 bromodomain acetyl-p53 recognition. Human corroboration is independent PMID17438265.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: Publisher-formatted original PDF: Results on endogenous p300/CBP-p53 interaction, Figure 3D/E caption; Experimental Procedures in vivo binding and in vitro HAT. Extracted text lines 169–193,233–248,556–613. Limits: Mouse NIH/3T3 endogenous p300-p53 interaction is distinct from CBP-specific bromodomain NMR. PDF page images not separately viewed. No claim of p300 bromodomain acetyl-p53 recognition. Human corroboration is independent PMID:17438265.
 
 ### PMID:15075319 — Positive and negative modulation of the transcriptional activity of the ETS factor ESE-1 through interaction with p300, CREB-binding protein, and Ku 70/86.
 
 [Original article or notice](https://doi.org/10.1074/jbc.M401356200). Imported source indices: 94.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata and abstract explicitly reporting ESE-1/ELF3-p300 interaction. Limits: DOI response is an Elsevier redirect/landing shell; JBC PDF returned403. No original Methods/Results read.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. See EP300-source-guide.md.
 
 ### PMID:15261140 — Small molecule blockade of transcriptional coactivation of the hypoxia-inducible factor pathway.
 
@@ -230,31 +230,31 @@ Identity and abstract independently checked against official Europe PMC metadata
 
 [Original article or notice](https://doi.org/10.1016/j.virol.2004.06.044). Imported source indices: 96.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata and abstract reporting HCV core-p300/CBP interaction. Limits: DOI landing shell and ScienceDirect403 did not provide main article. Exact viral product/p300 constructs unverified.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. See EP300-source-guide.md.
 
 ### PMID:15448695 — A new effector pathway links ATM kinase with the DNA damage response.
 
 [Original article or notice](https://doi.org/10.1038/ncb1170). Imported source indices: 404.
 
-Identifier/title/DOI verified. Original Figure4 caption/image and supplementary captions accessed, but complete main article unavailable. Strap-complex HAT assay is not purified p300; direct EP300 activity is independently established.
+Identifier/title/DOI verified. Original Figure 4 caption/image and supplementary captions accessed, but complete main article unavailable. Strap-complex HAT assay is not purified p300; direct EP300 activity is independently established.
 
 ### PMID:15509808 — Interferon regulatory factor 1 binding to p300 stimulates DNA-dependent acetylation of p53.
 
 [Original article or notice](https://doi.org/10.1128/MCB.24.22.10083-10098.2004). Imported source indices: 97.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC indexed blocks20–34 Methods,46–52 Results/Figure2: human IRF1, human p300 purification, endogenous co-IP and peptide binding. Limits: Other Results were not comprehensively reviewed for this binding lane. No independent visual reading of Figure2 image.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC indexed blocks20–34 Methods,46–52 Results/Figure 2: human IRF1, human p300 purification, endogenous co-IP and peptide binding. Limits: Other Results were not comprehensively reviewed for this binding lane. No independent visual reading of Figure 2 image.
 
 ### PMID:15542844 — p53 Stabilization and accumulation induced by human vaccinia-related kinase 1.
 
 [Original article or notice](https://doi.org/10.1128/MCB.24.23.10366-10380.2004). Imported source indices: 98.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks14–25 Methods and73–86 Results/Figures6–7, especially Figure6B p300-p53 co-IP. Limits: VRK1 phosphorylation and p300 binding/acetylation are distinct. No figure image visual read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks14–25 Methods and73–86 Results/Figures 6–7, especially Figure 6B p300-p53 co-IP. Limits: VRK1 phosphorylation and p300 binding/acetylation are distinct. No figure image visual read.
 
 ### PMID:15588252 — The Smad3 linker region contains a transcriptional activation domain.
 
 [Original article or notice](https://doi.org/10.1042/BJ20041820). Imported source indices: 99.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks18–25 Experimental,34 functional context,39–44 Results/Figure3 SMAD3-p300 co-IP. Limits: Full-length and linker SMAD3 have different TGF-beta dependence. No figure image visual read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks18–25 Experimental,34 functional context,39–44 Results/Figure 3 SMAD3-p300 co-IP. Limits: Full-length and linker SMAD3 have different TGF-beta dependence. No figure image visual read.
 
 ### PMID:15632193 — SIRT1 deacetylation and repression of p300 involves lysine residues 1020/1024 within the cell cycle regulatory domain 1.
 
@@ -296,7 +296,7 @@ Identifier/title/DOI verified. Read all main Methods/Results/Discussion and capt
 
 [Original article or notice](https://doi.org/10.1128/MCB.25.18.7966-7975.2005). Imported source indices: 339.
 
-Identifier/title/DOI verified. Read Methods/Figure1 and preparation caveat in Discussion. Active p300 immunocomplexes from293T are distinguished from recombinant p300 alone.
+Identifier/title/DOI verified. Read Methods/Figure 1 and preparation caveat in Discussion. Active p300 immunocomplexes from293T are distinguished from recombinant p300 alone.
 
 ### PMID:16219772 — p300 modulates ATF4 stability and transcriptional activity independently of its acetyltransferase domain.
 
@@ -314,13 +314,13 @@ Identity and abstract independently checked against official Europe PMC metadata
 
 [Original article or notice](https://doi.org/10.1053/j.gastro.2005.07.055). Imported source indices: 381, 410.
 
-Identifier/title/DOI and abstract verified; full original unavailable. Specific2005STAT3 acetylation/angiotensinogen assays remain unverified; humanHepG2 versus mouse scope is stated in the abstract.
+Identifier/title/DOI and abstract verified; full original unavailable. Specific2005STAT3 acetylation/angiotensinogen assays remain unverified; human HepG2 versus mouse scope is stated in the abstract.
 
 ### PMID:16325578 — A nuclear function of beta-arrestin1 in GPCR signaling: regulation of histone acetylation and gene transcription.
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2005.09.011). Imported source indices: 332, 387.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. PubMed abstract explicitly reports promoter recruitment of p300, H4 acetylation and transcription following beta-arrestin1 signaling. Original detailed H4 assay unread; independent18273021 supplement and32691935 original establish activity/process. Listed erratum not interpreted as a retraction. Public original: https://doi.org/10.1016/j.cell.2005.09.011.
+Identifier/title match the genuine normal PubMed record inspected for this source. PubMed abstract explicitly reports promoter recruitment of p300, H4 acetylation and transcription following beta-arrestin1 signaling. Original detailed H4 assay unread; independent18273021 supplement and PMID:32691935 original establish activity/process. Listed erratum not interpreted as a retraction. Public original: https://doi.org/10.1016/j.cell.2005.09.011.
 
 ### PMID:16337145 — Acetylation and alternative splicing regulate ZNF76-mediated transcription.
 
@@ -338,13 +338,13 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1128/JVI.80.9.4292-4303.2006). Imported source indices: 104, 105.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks14–27 Methods,33–39 Results/Figure1,49–63 Results/Figures3–4; Discussion76/79 context. Limits: Human full-length p300, CH3(1709–1913) and AT-CH3(1195–1921) constructs distinguished; endogenous U2OS/BJ human results separated from MEF complementation. SV40 LT association is p53 mediated. No figure image visual read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks14–27 Methods,33–39 Results/Figure 1,49–63 Results/Figures 3–4; Discussion76/79 context. Limits: Human full-length p300, CH3(1709–1913) and AT-CH3(1195–1921) constructs distinguished; endogenous U2OS/BJ human results separated from MEF complementation. SV40 LT association is p53 mediated. No figure image visual read.
 
 ### PMID:16652169 — Foxp3 represses retroviral transcription by targeting both NF-kappaB and CREB pathways.
 
 [Original article or notice](https://doi.org/10.1371/journal.ppat.0020033). Imported source indices: 106.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks77–86 Results/Figure7 and100 plasmid Methods; human FOXP3/p300-HA co-IP in HEK293T. Limits: No purified binary affinity was measured in the inspected experiment; figure image not separately viewed.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks77–86 Results/Figure 7 and100 plasmid Methods; human FOXP3/p300-HA co-IP in HEK293T. Limits: No purified binary affinity was measured in the inspected experiment; figure image not separately viewed.
 
 ### PMID:16687403 — The SWI/SNF chromatin-remodeling complex is a cofactor for Tat transactivation of the HIV promoter.
 
@@ -356,7 +356,7 @@ Identity and abstract independently checked against official Europe PMC metadata
 
 [Original article or notice](https://doi.org/10.1099/vir.0.81766-0). Imported source indices: 107.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata/abstract reporting bICP0-p300 interaction. Limits: Publisher main and PDF attempts returned403. No host-versus-construct species inference from viral title.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. See EP300-source-guide.md.
 
 ### PMID:16864582 — The transcriptional activity of CITED1 is regulated by phosphorylation in a cell cycle-dependent manner.
 
@@ -368,13 +368,13 @@ PMID/title/DOI checked against official Europe PMC metadata. Read scope: Officia
 
 [Original article or notice](https://doi.org/10.1038/sj.emboj.7601273). Imported source indices: 109.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks38–50 Results/Figures3–4,94–109 Methods; actual Figures2E,3,4 images. Figure4 establishes HIPK2-p300 association, Figure2E separately resolves H2B and other histone acetylation. Limits: pLNCX-HA-p300 construction refers to earlier work; exact species/sequence provenance of that expression vector was not independently reconstructed. Human 293 host is not by itself proof of human reagent origin. No supplement read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks38–50 Results/Figures 3–4,94–109 Methods; actual Figures 2E,3,4 images. Figure 4 establishes HIPK2-p300 association, Figure 2E separately resolves H2B and other histone acetylation. Limits: pLNCX-HA-p300 construction refers to earlier work; exact species/sequence provenance of that expression vector was not independently reconstructed. Human 293 host is not by itself proof of human reagent origin. No supplement read.
 
 ### PMID:17075044 — Interaction of GATA-3/T-bet transcription factors regulates expression of sialyl Lewis X homing receptors on Th1/Th2 lymphocytes.
 
 [Original article or notice](https://doi.org/10.1073/pnas.0607926103). Imported source indices: 110.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks25–33 Results/Figure2,44–53 Results/Figure4,59–68 Methods; T-bet-p300 interaction in Jurkat and COS7. Limits: CBP and p300-specific antibodies distinguished in Methods. No direct DNA-binding activity assigned to p300 from promoter ChIP. No image/supplement visual read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks25–33 Results/Figure 2,44–53 Results/Figure 4,59–68 Methods; T-bet-p300 interaction in Jurkat and COS7. Limits: CBP and p300-specific antibodies distinguished in Methods. No direct DNA-binding activity assigned to p300 from promoter ChIP. No image/supplement visual read.
 
 ### PMID:17150957 — Functional architecture of atrophins.
 
@@ -386,31 +386,31 @@ Identity and abstract checked against official Europe PMC metadata. Official abs
 
 [Original article or notice](https://doi.org/10.1074/mcp.M700021-MCP200). Imported source indices: 425, 427, 441, 446.
 
-Official identity and actual main article verified. Figure3 directly tests human p300 and CBP separately for propionyl/butyryl transfer; detailed H4 lysine-site mapping is CBP-specific. TableI independently maps p300 autoacylation.
+Official identity and actual main article verified. Figure 3 directly tests human p300 and CBP separately for propionyl/butyryl transfer; detailed H4 lysine-site mapping is CBP-specific. TableI independently maps p300 autoacylation.
 
 ### PMID:17382325 — Modulation of p300 binding by posttranslational modifications of the C-terminal activation domain of hypoxia-inducible factor-1alpha.
 
 [Original article or notice](https://doi.org/10.1016/j.febslet.2007.03.015). Imported source indices: 111.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata/abstract reporting HIF1A peptide-p300 binding assay. Limits: Wiley main403; exact peptide modifications and affinity values unverified. Independent human interaction support is PMID18268343.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata/abstract reporting HIF1A peptide-p300 binding assay. Limits: Wiley main403; exact peptide modifications and affinity values unverified. Independent human interaction support is PMID:18268343.
 
 ### PMID:17403783 — HLA-B-associated transcript 3 (Bat3)/Scythe is essential for p300-mediated acetylation of p53.
 
 [Original article or notice](https://doi.org/10.1101/gad.1534107). Imported source indices: 112, 345, 347, 361.
 
-Identifier/title/DOI verified. Human BAT3-p300/p53 experiments and mouse knockout physiology distinguished; Figure4 and operative Methods read.
+Identifier/title/DOI verified. Human BAT3-p300/p53 experiments and mouse knockout physiology distinguished; Figure 4 and operative Methods read.
 
 ### PMID:17438265 — Four domains of p300 each bind tightly to a sequence spanning both transactivation subdomains of p53.
 
 [Original article or notice](https://doi.org/10.1073/pnas.0702010104). Imported source indices: 113.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks21–28 Results/Table1,33–50 Results/Figures3–4,65–78 Experimental Procedures; purified human p300 domains and human p53 peptides. Limits: Domain affinities are not whole-protein affinity constants. Tables/captions/text read, figure images not independently viewed.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks21–28 Results/Table 1,33–50 Results/Figures 3–4,65–78 Experimental Procedures; purified human p300 domains and human p53 peptides. Limits: Domain affinities are not whole-protein affinity constants. Tables/captions/text read, figure images not independently viewed.
 
 ### PMID:17476304 — Cooperative interactions between CBP and TORC2 confer selectivity to CREB target gene expression.
 
 [Original article or notice](https://doi.org/10.1038/sj.emboj.7601715). Imported source indices: 114.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks18–31 Results/Figures1–2,41–55 Results/Figures4–5 and66–73 Methods; actual Figure2 image. Limits: Figure2D is endogenous human p300 co-IP; Figure2E is CBP KIX. Preserve that distinction. Imported CREB1 isoform identifier does not establish exclusivity. Supplements not read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks18–31 Results/Figures 1–2,41–55 Results/Figures 4–5 and66–73 Methods; actual Figure 2 image. Limits: Figure 2D is endogenous human p300 co-IP; Figure 2E is CBP KIX. Preserve that distinction. Imported CREB1 isoform identifier does not establish exclusivity. Supplements not read.
 
 ### PMID:17641689 — MED25 is distinct from TRAP220/MED1 in cooperating with CBP for retinoid receptor activation.
 
@@ -428,73 +428,73 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1074/jbc.M703735200). Imported source indices: 115.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata/abstract reporting CHOP N-terminal p300 association. Limits: DOI shell/JBC PDF403; no operative original Methods/Results recovered.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. See EP300-source-guide.md.
 
 ### PMID:17906639 — The prolyl isomerase Pin1 orchestrates p53 acetylation and dissociation from the apoptosis inhibitor iASPP.
 
 [Original article or notice](https://doi.org/10.1038/nsmb1306). Imported source indices: 116.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Actual publisher supplement text: S4 p300 acetylation/reporter, S5 promoter recruitment and S8 acetylation/iASPP; supplementary Methods for ChIP. Limits: Publisher main page and .pdf URL both supplied a paywall HTML page. No main interaction figure read, no supplement image visual read. Human p53 binding supported independently by17438265.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: Actual publisher supplement text: S4 p300 acetylation/reporter, S5 promoter recruitment and S8 acetylation/iASPP; supplementary Methods for ChIP. Limits: Publisher main page and .pdf URL both supplied a paywall HTML page. No main interaction figure read, no supplement image visual read. Human p53 binding supported independently by PMID:17438265.
 
 ### PMID:18160048 — Lyl1 interacts with CREB1 and alters expression of CREB1 target genes.
 
 [Original article or notice](https://doi.org/10.1016/j.bbamcr.2007.11.015). Imported source indices: 117.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata/abstract reporting LYL1-CREB1-p300/CBP complexes. Limits: DOI shell/ScienceDirect403; no main interaction Methods or figures recovered.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. See EP300-source-guide.md.
 
 ### PMID:18268343 — PTEN regulates p300-dependent hypoxia-inducible factor 1 transcriptional activity through Forkhead transcription factor 3a (FOXO3a).
 
 [Original article or notice](https://doi.org/10.1073/pnas.0706790105). Imported source indices: 118.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks31–47 Results/Figures4–6 and49–58 Methods. Figure6A/IP Methods explicitly use human U251 extracts. Limits: Mouse Pten MEF reporter/ChIP experiments are separate; co-IP not replaced with ChIP evidence. Figure images and supplements not independently viewed.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks31–47 Results/Figures 4–6 and49–58 Methods. Figure 6A/IP Methods explicitly use human U251 extracts. Limits: Mouse Pten MEF reporter/ChIP experiments are separate; co-IP not replaced with ChIP evidence. Figure images and supplements not independently viewed.
 
 ### PMID:18391200 — Structure of tumor suppressor p53 and its intrinsically disordered N-terminal transactivation domain.
 
 [Original article or notice](https://doi.org/10.1073/pnas.0801353105). Imported source indices: 119.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks54–66 Results/Figure5 SAXS p53-TAZ2 complex and main Methods. Limits: Detailed construction delegated in main paper to SI/prior sources; SI not read. Independent17438265 explicitly verifies human constructs. No full-length p300 structural claim. No image visual read.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks54–66 Results/Figure 5 SAXS p53-TAZ2 complex and main Methods. Limits: Detailed construction delegated in main paper to SI/prior sources; SI not read. Independent17438265 explicitly verifies human constructs. No full-length p300 structural claim. No image visual read.
 
 ### PMID:18451878 — A transcription cofactor required for the heat-shock response.
 
 [Original article or notice](https://doi.org/10.1038/embor.2008.70). Imported source indices: 120, 121.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks23–38 Results/Figures2–3 and58–61 main Methods. Actual publisher supplement all text pp1–6 (IP, purification, HAT, ChIP, reporter methods and S1 legend); S1 image p7 viewed. Limits: Human U2OS host and endogenous p300 distinguished from the imported mouse Strap partner Q99LG4; exact tagged Strap sequence not reconstructed. No full-particle binary binding claim.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: PMC blocks23–38 Results/Figures 2–3 and58–61 main Methods. Actual publisher supplement all text pp1–6 (IP, purification, HAT, ChIP, reporter methods and S1 legend); S1 image p7 viewed. Limits: Human U2OS host and endogenous p300 distinguished from the imported mouse Strap partner Q99LG4; exact tagged Strap sequence not reconstructed. No full-particle binary binding claim.
 
 ### PMID:18485870 — Acetylation is indispensable for p53 activation.
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2008.03.025). Imported source indices: 122.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Normal cache introduction/discussion, particularly lines64–81; official identity/abstract verified. Limits: Despite normal full_text_available:true, this cache does not expose operative Results/Methods for the binding claim. Both live PMC variants gave browser checks and Europe PMC XML returned500. No complete original read claimed. Human p53 binding independently established by17438265/16611888.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: Normal cache introduction/discussion, particularly lines 64–81; official identity/abstract verified. Limits: Despite normal full_text_available:true, this cache does not expose operative Results/Methods for the binding claim. Both live PMC variants gave browser checks and Europe PMC XML returned500. No complete original read claimed. Human p53 binding independently established by PMID:17438265/16611888.
 
 ### PMID:18487222 — Prohibitin and the SWI/SNF ATPase subunit BRG1 are required for effective androgen antagonist-mediated transcriptional repression of androgen receptor-regulated genes.
 
 [Original article or notice](https://doi.org/10.1093/carcin/bgn117). Imported source indices: 33, 392, 399.
 
-Identity and abstract independently checked against official Europe PMC metadata. Original PMC2722849 Methods, Results and Fig.4 caption read. DHT-dependent p300–AR association and PSA-promoter occupancy are distinct from antagonist-induced prohibitin repression and loss of p300. Figure pixels and supplements were not inspected.
+Identity and abstract independently checked against official Europe PMC metadata. Original PMC2722849 Methods, Results and Fig. 4 caption read. DHT-dependent p300–AR association and PSA-promoter occupancy are distinct from antagonist-induced prohibitin repression and loss of p300. Figure pixels and supplements were not inspected.
 
 ### PMID:18509338 — Induced ncRNAs allosterically modify RNA-binding proteins in cis to inhibit transcription.
 
 [Original article or notice](https://doi.org/10.1038/nature06992). Imported source indices: 123, 124.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Normal-cache main Results lines72–80 and Methods98/102/106 onward, with actual official Europe PMC XML captured. Publisher supplement S3/S6 captions pp17–18 and S6A image p6 independently viewed. Limits: FUS/EWS association with p300 is RNase-sensitive; the CBP binding-domain maps are not p300 maps. Mouse RAW264.7 promoter experiments are not human p300 protein assay proof. Exact Flag-p300 construct sequence not independently reconstructed.
+PMID/title/DOI checked against official Europe PMC metadata. Read scope: Normal-cache main Results lines 72–80 and Methods98/102/106 onward, with actual official Europe PMC XML captured. Publisher supplement S3/S6 captions pp17–18 and S6A image p6 independently viewed. Limits: FUS/EWS association with p300 is RNase-sensitive; the CBP binding-domain maps are not p300 maps. Mouse RAW264.7 promoter experiments are not human p300 protein assay proof. Exact Flag-p300 construct sequence not independently reconstructed.
 
 ### PMID:18690848 — NUPR1 interacts with p53, transcriptionally regulates p21 and rescues breast epithelial cells from doxorubicin-induced genotoxic stress.
 
 [Original article or notice](https://doi.org/10.2174/156800908785133196). Imported source indices: 125.
 
-PMID/title/DOI checked against official Europe PMC metadata. Read scope: Official metadata/abstract reporting NUPR1-p53-p300 complex. Limits: Publisher request returned403. Independent p53 binding does not certify the unread NUPR1 component.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. The abstract identifies NUPR1, p53 and p300 in the complex. See EP300-source-guide.md.
 
 ### PMID:18722353 — Acetylation of Sirt2 by p300 attenuates its deacetylase activity.
 
 [Original article or notice](https://doi.org/10.1016/j.bbrc.2008.08.042). Imported source indices: 126, 317, 341, 382, 430.
 
-Identifier/title/DOI and abstract verified, but exact SIRT2 interaction/deacetylation experiments remain unverified because full article access failed. General EP300 activities are independently supported elsewhere.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. The separate tubulin-deacetylation process remains unresolved. See EP300-source-guide.md.
 
 ### PMID:18782771 — The STAT3 NH2-terminal domain stabilizes enhanceosome assembly by interacting with the p300 bromodomain.
 
 [Original article or notice](https://doi.org/10.1074/jbc.M805941200). Imported source indices: 383, 412, 438.
 
-Identifier/title/DOI verified. Read actual binding/deletion/reporter experiments and Methods. HumanHepG2 coactivation, human-cell STAT3 fragment binding, and mouseMEF ChIP are distinct. Earlier catalytic work cited by the authors is not new experimental evidence in this study.
+Identifier/title/DOI verified. The unchanged normal cache is abstract-only, but the actual recovered PMC2576556 original Methods and operative Results/captions were read. Cell Cultures identifies human HepG2 and HEK293 separately from mouse MEFs. Figure 6E and its Results show dose-dependent enhancement of IL-6-induced gamma-FBG luciferase activity by full-length p300 in human HepG2 cells, with the bromodomain-deletion construct failing to coactivate. Figures 4-5/6A test human-cell association. Figure 6B-D PolII ChIP is mouse MEF evidence and is not relabeled as human ChIP. This supports human-cell PolII coactivation, not universal catalytic independence. Access: https://pmc.ncbi.nlm.nih.gov/articles/PMC2576556/ ; DOI https://doi.org/10.1074/jbc.M805941200 . See EP300-source-guide.md. No new figure pixels or supplements were inspected in the feedback pass.
 
 ### PMID:19047049 — Hyaluronan-mediated CD44 interaction with p300 and SIRT1 regulates beta-catenin signaling and NFkappaB-specific transcription activity leading to MDR1 and Bcl-xL gene expression and chemoresistance in breast tumor cells.
 
@@ -506,7 +506,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1073/pnas.0810965105). Imported source indices: 128.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Human293 overexpression and Daudi endogenous co-IP; not purified binary complex. Actual normal-cache operative original text read. cache lines: ['Results85–89/Figure1', 'Methods123–127']. Public original: https://doi.org/10.1073/pnas.0810965105.
+Identifier/title match the genuine normal PubMed record inspected for this source. Human 293 overexpression and Daudi endogenous co-IP; not purified binary complex. Actual normal-cache operative original text read. cache lines: ['Results85–89/Figure 1', 'Methods123–127']. Public original: https://doi.org/10.1073/pnas.0810965105.
 
 ### PMID:19071119 — Transcriptional activation of hypoxia-inducible factor-1alpha by HDAC4 and HDAC5 involves differential recruitment of p300 and FIH-1.
 
@@ -518,7 +518,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1016/j.str.2008.12.009). Imported source indices: 130.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Fresh actual original HTML via PMC?pdf=1; operative Results/captions/Methods read. Normal cache contains Discussion only despite availability flag; unchanged. No image pixels/supplement read. actual original: raw/PMID19217391-PMC-response.html; indexed blocks23–41 and68–78. construct: Human p3001723–1812/C1738A,C1746A,C1789A,C1790A; p53(2–39)/other shortpeptides; recombinant domains, not natural products.. Public original: https://doi.org/10.1016/j.str.2008.12.009.
+Identifier/title match the genuine normal PubMed record inspected for this source. Fresh actual original HTML via PMC?pdf=1; operative Results/captions/Methods read. Normal cache contains Discussion only despite availability flag; unchanged. No image pixels/supplement read. actual original: raw/PMID:19217391-PMC-response.html; indexed blocks23–41 and68–78. construct: Human p3001723–1812/C1738A,C1746A,C1789A,C1790A; p53(2–39)/other shortpeptides; recombinant domains, not natural products.. Public original: https://doi.org/10.1016/j.str.2008.12.009.
 
 ### PMID:19218448 — Molecular basis of the interactions between the p73 N terminus and p300: effects on transactivation and modulation by phosphorylation.
 
@@ -530,19 +530,19 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1073/pnas.0810147106). Imported source indices: 132, 133.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual recovered original Results/caption/construct/cell Methods; normal cache Discussion-only despite true flag unchanged. No pixels/supplement. actual original: raw/PMID19234109-PMC-indexed.json blocks59,62,78,80. Public original: https://doi.org/10.1073/pnas.0810147106.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual recovered original Results/caption/construct/cell Methods; normal cache Discussion-only despite true flag unchanged. No pixels/supplement. actual original: raw/PMID:19234109-PMC-indexed.json blocks59,62,78,80. Public original: https://doi.org/10.1073/pnas.0810147106.
 
 ### PMID:19339993 — Crosstalk between sumoylation and acetylation regulates p53-dependent chromatin transcription and DNA binding.
 
 [Original article or notice](https://doi.org/10.1038/emboj.2009.83). Imported source indices: 134.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual original purified solution interaction Methods/Results; normal cache Discussion-only unchanged. p300 preparation deferred to earlier protocol, no guess. actual original: raw/PMID19339993-PMC-indexed.json blocks27,30,68,82. Public original: https://doi.org/10.1038/emboj.2009.83.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual original purified solution interaction Methods/Results; normal cache Discussion-only unchanged. p300 preparation deferred to earlier protocol, no guess. actual original: raw/PMID:19339993-PMC-indexed.json blocks27,30,68,82. Public original: https://doi.org/10.1038/emboj.2009.83.
 
 ### PMID:19680224 — SENP3 is responsible for HIF-1 transactivation under mild oxidative stress via p300 de-SUMOylation.
 
 [Original article or notice](https://doi.org/10.1038/emboj.2009.210). Imported source indices: 135.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Main positive cellular HIF1A–p300 association read; detailed constructs and some protocols deferred to unread supplement. No original image pixels. cache lines: ['Results134–138/Figure6', 'Methods188,196,214,222–230']. Public original: https://doi.org/10.1038/emboj.2009.210.
+Identifier/title match the genuine normal PubMed record inspected for this source. Main positive cellular HIF1A–p300 association read; detailed constructs and some protocols deferred to unread supplement. No original image pixels. cache lines: ['Results134–138/Figure 6', 'Methods188,196,214,222–230']. Public original: https://doi.org/10.1038/emboj.2009.210.
 
 ### PMID:20018936 — Phosphorylation and acetylation of histone H3 and autoregulation by early growth response 1 mediate interleukin 1beta induction of early growth response 1 transcription.
 
@@ -554,7 +554,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1074/jbc.M109.086397). Imported source indices: 51, 136.
 
-Identifier/title/DOI verified against official metadata. Direct human p300/acetyl-CoA/Dna2 evidence; full-length and catalytic-domain preparations distinguished. Read Methods and Figure1.
+Identifier/title/DOI verified against official metadata. Direct human p300/acetyl-CoA/Dna2 evidence; full-length and catalytic-domain preparations distinguished. Read Methods and Figure 1.
 
 ### PMID:20089040 — Vitamin D stimulates apoptosis in gastric cancer cells in synergy with trichostatin A /sodium butyrate-induced and 5-aza-2'-deoxycytidine-induced PTEN upregulation.
 
@@ -566,7 +566,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1038/ncb2038). Imported source indices: 138, 340.
 
-Identifier/title/DOI verified. Actual author-deposited original Chapter2, Figure6 and original SupplementaryFigureS11 support human BRD7-p300 association and p53 acetylation; publisher main preview alone was not treated as full access.
+Identifier/title/DOI verified. Actual author-deposited original Chapter2, Figure 6 and original Supplementary Figure S11 support human BRD7-p300 association and p53 acetylation; publisher main preview alone was not treated as full access.
 
 ### PMID:20590529 — Dual roles for MEF2A and MEF2D during human macrophage terminal differentiation and c-Jun expression.
 
@@ -584,25 +584,25 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1016/j.ccr.2010.05.024). Imported source indices: 140.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual Results Figure4E–L and antibody Methods read; detailed in-vitro binding constructs/supplement not inspected. Mouse TRAMP-C and human Rv1 contexts distinct; imported mouse FoxA2 retained. cache lines: [153, 155, 230]. Public original: https://doi.org/10.1016/j.ccr.2010.05.024.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual Results Figure 4E–L and antibody Methods read; detailed in-vitro binding constructs/supplement not inspected. Mouse TRAMP-C and human Rv1 contexts distinct; imported mouse FoxA2 retained. cache lines: [153, 155, 230]. Public original: https://doi.org/10.1016/j.ccr.2010.05.024.
 
 ### PMID:20660480 — SIRT1 is regulated by a PPAR{γ}-SIRT1 negative feedback loop associated with senescence.
 
 [Original article or notice](https://doi.org/10.1093/nar/gkq609). Imported source indices: 141.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual original Methods, Results and Figure5 caption read. Human HeLa and human SIRT1/PPARgamma constructs; main Figure5B is sequential ChIP. Supplementary Figure4 cited by authors but image not inspected; no purified binary p300–SIRT1 claim. cache lines: [74, 82, 211, 212, 246]. Public original: https://doi.org/10.1093/nar/gkq609.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual original Methods, Results and Figure 5 caption read. Human HeLa and human SIRT1/PPARgamma constructs; main Figure 5B is sequential ChIP. Supplementary Figure 4 cited by authors but image not inspected; no purified binary p300–SIRT1 claim. cache lines: [74, 82, 211, 212, 246]. Public original: https://doi.org/10.1093/nar/gkq609.
 
 ### PMID:20808282 — A multiprotein complex necessary for both transcription and DNA replication at the β-globin locus.
 
 [Original article or notice](https://doi.org/10.1038/emboj.2010.204). Imported source indices: 142.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual PubMed abstract read; PMC challenge and EuropePMC500. Human K562/CD34 erythroid complex described, APE1 partner resolved independently by20856196. Public original: https://doi.org/10.1038/emboj.2010.204.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual PubMed abstract read; PMC challenge and EuropePMC500. Human K562/CD34 erythroid complex described, APE1 partner resolved independently by PMID:20856196. Public original: https://doi.org/10.1038/emboj.2010.204.
 
 ### PMID:20856196 — Human AP endonuclease (APE1/Ref-1) and its acetylation regulate YB-1-p300 recruitment and RNA polymerase II loading in the drug-induced activation of multidrug resistance gene MDR1.
 
 [Original article or notice](https://doi.org/10.1038/onc.2010.435). Imported source indices: 143, 144.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual original Figure1/2 Results and cell/construct/IP/acetylation Methods; no figure pixels/supplement. Human HEK-293T; recombinant HAT bounds referred to earlier protocol, not established here. cache lines: [86, 94, 98, 138, 144, 162]. Public original: https://doi.org/10.1038/onc.2010.435.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual original Figure 1/2 Results and cell/construct/IP/acetylation Methods; no figure pixels/supplement. Human HEK-293T; recombinant HAT bounds referred to earlier protocol, not established here. cache lines: [86, 94, 98, 138, 144, 162]. Public original: https://doi.org/10.1038/onc.2010.435.
 
 ### PMID:20940255 — Acetylation of Rb by PCAF is required for nuclear localization and keratinocyte differentiation.
 
@@ -614,7 +614,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1074/jbc.M110.153270). Imported source indices: 316.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Recovered actual original Plasmid/acetylation Methods and MEF2D experiment Results/caption; rest not comprehensively read. Human293T full-lengthp300 expression. No new quotes/cache edits. actual original: raw/PMID21030595-PMC-indexed.json blocks22,26,55–58. Public original: https://doi.org/10.1074/jbc.M110.153270.
+Identifier/title match the genuine normal PubMed record inspected for this source. Recovered actual original Plasmid/acetylation Methods and MEF2D experiment Results/caption; rest not comprehensively read. Human 293T full-length p300 expression. No new quotes/cache edits. actual original: raw/PMID:21030595-PMC-indexed.json blocks22,26,55–58. Public original: https://doi.org/10.1074/jbc.M110.153270.
 
 ### PMID:21084751 — Salt-inducible kinase 2 links transcriptional coactivator p300 phosphorylation to the prevention of ChREBP-dependent hepatic steatosis in mice.
 
@@ -626,7 +626,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1016/j.febslet.2010.11.034). Imported source indices: 145.
 
-PubMed/source identity verified. Official PubMed/publisher abstract; original Methods/Results not recovered. See EP300-source-guide.md, binding extension PMID:21108945, for publisher route and precise read scope.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. See EP300-source-guide.md.
 
 ### PMID:21131905 — Distinct roles of GCN5/PCAF-mediated H3K9ac and CBP/p300-mediated H3K18/27ac in nuclear receptor transactivation.
 
@@ -656,13 +656,13 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1074/jbc.M111.304337). Imported source indices: 413, 467.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Normal-cache complete original operative text; fresh PMC web/requests routes challenged, not counted as new access. Figure pixels/supplements not read. cache lines: ['97–129 Methods and Results']. construct: Human p300 residues1066–1707; HEK293T/HeLa experiments.. Public original: https://doi.org/10.1074/jbc.M111.304337.
+Identifier/title match the genuine normal PubMed record inspected for this source. Normal-cache complete original operative text; fresh PMC web/requests routes challenged, not counted as new access. Figure pixels/supplements not read. cache lines: ['97–129 Methods and Results']. construct: Human p300 residues 1066–1707; HEK293T/HeLa experiments.. Public original: https://doi.org/10.1074/jbc.M111.304337.
 
 ### PMID:22770219 — Acetylation-dependent regulation of Skp2 function.
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2012.05.038). Imported source indices: 152.
 
-PubMed/source identity verified. Normal original Results lines94–98, main assay Methods lines164–178. Figure1A interaction reported in Results; figure pixels and detailed supplementary procedures not inspected. Separate human/mouse SKP2 tests. See EP300-source-guide.md, binding extension PMID:22770219, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results lines 94–98, main assay Methods lines 164–178. Figure 1A interaction reported in Results; figure pixels and detailed supplementary procedures not inspected. Separate human/mouse SKP2 tests. See EP300-source-guide.md, binding extension PMID:22770219, for publisher route and precise read scope.
 
 ### PMID:23010591 — Structural features of human histone acetyltransferase p300 and its complex with p53.
 
@@ -674,7 +674,7 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1371/journal.pone.0049045). Imported source indices: 154.
 
-PubMed/source identity verified. Normal original Results lines184–232/Table1/Figures1–2 and Methods457–480. Positive human-library Y2H, explicitly unsuccessful robust pull-down/co-IP confirmation; HeLa localization uses p3001039–1285 plus NLS. No images inspected. See EP300-source-guide.md, binding extension PMID:23145062, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results lines 184–232/Table 1/Figures 1–2 and Methods457–480. Positive human-library Y2H, explicitly unsuccessful robust pull-down/co-IP confirmation; HeLa localization uses p3001039–1285 plus NLS. No images inspected. See EP300-source-guide.md, binding extension PMID:23145062, for publisher route and precise read scope.
 
 ### PMID:23329847 — Regulation of the cyclin-dependent kinase inhibitor 1A gene (CDKN1A) by the repressor BOZF1 through inhibition of p53 acetylation and transcription factor Sp1 binding.
 
@@ -686,13 +686,13 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2013.01.032). Imported source indices: 40, 457.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. PubMed abstract explicitly assigns H3K122 acetylation to p300/CBP. Main article and source-specific p300-versus-CBP assay remain inaccessible; general HAT retained via independent evidence, exact H3K122 remains unresolved. Public original: https://doi.org/10.1016/j.cell.2013.01.032.
+Identifier/title/DOI match the genuine normal PubMed record. The verified abstract explicitly attributes H3K122 acetylation to p300/CBP. Accept the existing residue-specific IDA assertion with deference to the curator; full original Methods/Results remain inaccessible, and exact enzyme preparations and comparison conditions are not independently verified. The unchanged full-text-unavailable flag records that access limit. See EP300-source-guide.md; original https://doi.org/10.1016/j.cell.2013.01.032 .
 
 ### PMID:23441852 — The corepressor activity of Alien is controlled by CREB-binding protein/p300.
 
 [Original article or notice](https://doi.org/10.1111/febs.12211). Imported source indices: 155.
 
-PubMed/source identity verified. Publisher-indexed actual Results/Figure3A–B,4–6 captions and Experimental Procedures recovered via search despite direct403. Figure3A p3001096–1721 HAT fragment with translated Alien alpha; Methods/figure bounds differ from one Results acetylation fragment description, so no residue equivalence inferred. Mouse CBP library screen and monkey CV1 reporter distinguished. Actual original pixels not inspected. See EP300-source-guide.md, binding extension PMID:23441852, for publisher route and precise read scope.
+PubMed/source identity verified. Publisher-indexed actual Results/Figure 3A–B,4–6 captions and Experimental Procedures recovered via search despite direct403. Figure 3A p3001096–1721 HAT fragment with translated Alien alpha; Methods/figure bounds differ from one Results acetylation fragment description, so no residue equivalence inferred. Mouse CBP library screen and monkey CV1 reporter distinguished. Actual original pixels not inspected. See EP300-source-guide.md, binding extension PMID:23441852, for publisher route and precise read scope.
 
 ### PMID:23455922 — Interlaboratory reproducibility of large-scale human protein-complex analysis by standardized AP-MS.
 
@@ -704,13 +704,13 @@ PubMed/source identity verified. Official metadata/abstract and publisher page r
 
 [Original article or notice](https://doi.org/10.1111/febs.12225). Imported source indices: 157.
 
-PubMed/source identity verified. Actual publisher main Results weblines300–313/Figure2E–G and Methods364–409 (cell culture, constructs, ChIP/reChIP and IP). Human HEK293 p300–STAT6 co-IP. No images inspected. See EP300-source-guide.md, binding extension PMID:23461825, for publisher route and precise read scope.
+PubMed/source identity verified. Actual publisher main Results weblines300–313/Figure 2E–G and Methods364–409 (cell culture, constructs, ChIP/reChIP and IP). Human HEK293 p300–STAT6 co-IP. No images inspected. See EP300-source-guide.md, binding extension PMID:23461825, for publisher route and precise read scope.
 
 ### PMID:23746844 — HIF1A employs CDK8-mediator to stimulate RNAPII elongation in response to hypoxia.
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2013.04.048). Imported source indices: 158.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual original Figure4C Results and cell/bait interaction Methods read. Bacterial GST-HIF1A fragments capture p300 from human HeLa nuclear extract. Detailed extended protocol and image pixels not read. cache lines: [127, 163, 181]. Public original: https://doi.org/10.1016/j.cell.2013.04.048.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual original Figure 4C Results and cell/bait interaction Methods read. Bacterial GST-HIF1A fragments capture p300 from human HeLa nuclear extract. Detailed extended protocol and image pixels not read. cache lines: [127, 163, 181]. Public original: https://doi.org/10.1016/j.cell.2013.04.048.
 
 ### PMID:23811396 — Role of p300 in regulating neuronal nitric oxide synthase gene expression through nuclear factor-κB-mediated way in neuronal cells.
 
@@ -722,31 +722,31 @@ Identity and abstract independently checked against official Europe PMC metadata
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2013.06.027). Imported source indices: 161.
 
-PubMed/source identity verified. Normal record discussion-only; separate PMC original blocks23–54 and115–125 actually read. Figure2F–I p300/SET1C/ASH2L assays; main Methods refer extended procedures, not fully recovered. Correction37172569 actual author-institution notice corrects Figure5A actin image; Figure2 binding experiments are distinct. No pixels inspected. See EP300-source-guide.md, binding extension PMID:23870121, for publisher route and precise read scope.
+PubMed/source identity verified. Normal record discussion-only; separate PMC original blocks23–54 and115–125 actually read. Figure 2F–I p300/SET1C/ASH2L assays; main Methods refer extended procedures, not fully recovered. Correction37172569 actual author-institution notice corrects Figure 5A actin image; Figure 2 binding experiments are distinct. No pixels inspected. See EP300-source-guide.md, binding extension PMID:23870121, for publisher route and precise read scope.
 
 ### PMID:23934153 — Structure of the p300 catalytic core and implications for chromatin targeting and HAT regulation.
 
 [Original article or notice](https://doi.org/10.1038/nsmb.2642). Imported source indices: 41.
 
-Official PMID/title/DOI verified. Original Supplementary Figure1, Tables1–2, Figure6 caption and main Figure4 caption support HAT/modified-histone binding claims. Main Methods/Results unavailable. Kinetic reagent is an engineered core, not natural full-length p300.
+Official PMID/title/DOI verified. Original Supplementary Figure 1, Tables 1–2, Figure 6 caption and main Figure 4 caption support HAT/modified-histone binding claims. Main Methods/Results unavailable. Kinetic reagent is an engineered core, not natural full-length p300.
 
 ### PMID:23962722 — Acetylation of the KXGS motifs in tau is a critical determinant in modulation of tau aggregation and clearance.
 
 [Original article or notice](https://doi.org/10.1093/hmg/ddt402). Imported source indices: 350, 355, 414.
 
-Identifier/title/DOI verified. Read operative Methods and Figures1–2 including images. Direct human p300/tau acetyl-CoA assays support substrate-specific inhibition of assembly, not universal anti-aggregation.
+Identifier/title/DOI verified. Read operative Methods and Figures 1–2 including images. Direct human p300/tau acetyl-CoA assays support substrate-specific inhibition of assembly, not universal anti-aggregation.
 
 ### PMID:23999430 — Kruppel-like factor 15 is critical for vascular inflammation.
 
 [Original article or notice](https://doi.org/10.1172/JCI68552). Imported source indices: 162.
 
-PubMed/source identity verified. Normal original Results lines285–338, Figure5 and human versus mouse contexts; mouse Methods430–455 and human subjects457ff inspected. Detailed additional Methods are supplementary; do not infer purified binary affinity or construct species beyond stated human-cell assay. See EP300-source-guide.md, binding extension PMID:23999430, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results lines 285–338, Figure 5 and human versus mouse contexts; mouse Methods430–455 and human subjects457ff inspected. Detailed additional Methods are supplementary; do not infer purified binary affinity or construct species beyond stated human-cell assay. See EP300-source-guide.md, binding extension PMID:23999430, for publisher route and precise read scope.
 
 ### PMID:24120661 — Mitogenic and oncogenic stimulation of K433 acetylation promotes PKM2 protein kinase activity and nuclear localization.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2013.09.004). Imported source indices: 360, 415.
 
-Identifier/title/DOI verified. Main original and Figures1/5 read; human-cell and mouse experiments distinguished. Extended Methods inaccessible, so exact purified enzyme boundaries remain unresolved.
+Identifier/title/DOI verified. Main original and Figures 1/5 read; human-cell and mouse experiments distinguished. Extended Methods inaccessible, so exact purified enzyme boundaries remain unresolved.
 
 ### PMID:24229708 — Runx3 inactivation is a crucial early event in the development of lung adenocarcinoma.
 
@@ -758,19 +758,19 @@ PubMed/source identity verified. Official metadata and abstract; publisher redir
 
 [Original article or notice](https://doi.org/10.1158/0008-5472.CAN-13-2020). Imported source indices: 164, 165.
 
-PubMed/source identity verified. Actual indexed main Discussion reports SupplementaryFigureS2A–B p300/HDAC4/5 complexes in MCF-7 versus MDA-MB-231 and TFAP2C dependence. Main ChIP Methods excerpt recovered, but interaction supplement and complete co-IP Methods remain inaccessible. See EP300-source-guide.md, binding extension PMID:24413532, for publisher route and precise read scope.
+Identifier/title/DOI verified. The recovered publisher-indexed main Discussion explicitly reports HDAC4/HDAC5-p300 association in MCF-7 cells, absent in MDA-MB-231 and dependent on TFAP2C, with Supplementary Figure S2A-B cited. The actual supplement and complete co-IP Methods remain inaccessible. The positive original report plus curated IPI assertions now supports retention of both broad associations as non-core; no purified binary binding or inspected supplement is claimed. See EP300-source-guide.md.
 
 ### PMID:24421387 — EAF2 suppresses hypoxia-induced factor 1α transcriptional activity by disrupting its interaction with coactivator CBP/p300.
 
 [Original article or notice](https://doi.org/10.1128/MCB.00718-13). Imported source indices: 166.
 
-PubMed/source identity verified. Normal original Methods88–116 and Results178–186/Figure7. Human EAF2/HIF1A constructs and endogenous RCC4 p300 co-IP distinguished from mouse MEFs. No images inspected. See EP300-source-guide.md, binding extension PMID:24421387, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Methods88–116 and Results178–186/Figure 7. Human EAF2/HIF1A constructs and endogenous RCC4 p300 co-IP distinguished from mouse MEFs. No images inspected. See EP300-source-guide.md, binding extension PMID:24421387, for publisher route and precise read scope.
 
 ### PMID:24529102 — Histone acetyltransferase-deficient p300 mutants in diffuse large B cell lymphoma have altered transcriptional regulatory activities and are required for optimal cell growth.
 
 [Original article or notice](https://doi.org/10.1186/1476-4598-13-29). Imported source indices: 167.
 
-PubMed/source identity verified. Normal original Results126–136/Figures2–3 and Methods222–230. Wild-type A293 p300 control distinct from SUDHL2/RC-K8 tumor truncations; GST-REL assay uses cell extracts. No images inspected. See EP300-source-guide.md, binding extension PMID:24529102, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results126–136/Figures 2–3 and Methods222–230. Wild-type A293 p300 control distinct from SUDHL2/RC-K8 tumor truncations; GST-REL assay uses cell extracts. No images inspected. See EP300-source-guide.md, binding extension PMID:24529102, for publisher route and precise read scope.
 
 ### PMID:24852146 — BAG6/BAT3 modulates autophagy by affecting EP300/p300 intracellular localization.
 
@@ -794,7 +794,7 @@ PubMed/source identity verified. Official metadata/abstract only; detailed p300 
 
 [Original article or notice](https://doi.org/10.1093/nar/gku857). Imported source indices: 170.
 
-PubMed/source identity verified. Normal original Methods135 and Results209–211/Figure3 captions. Human HEK293 co-IP, recombinant p300/ZNF509L interaction, reporter and chromatin recruitment; wheat-germ translated p300 fragments separately described. No figures or supplement pixels inspected. See EP300-source-guide.md, binding extension PMID:25245946, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Methods135 and Results209–211/Figure 3 captions. Human HEK293 co-IP, recombinant p300/ZNF509L interaction, reporter and chromatin recruitment; wheat-germ translated p300 fragments separately described. No figures or supplement pixels inspected. See EP300-source-guide.md, binding extension PMID:25245946, for publisher route and precise read scope.
 
 ### PMID:25314079 — Acetylation of snail modulates the cytokinome of cancer cells to enhance the recruitment of macrophages.
 
@@ -812,55 +812,55 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1038/nature13921). Imported source indices: 172.
 
-PubMed/source identity verified. Normal original Results100/Figure4, ExtendedDataFigure3 caption255 and Methods140–166. Human293-derived cellular assays; recombinant proteins expressed/purified from Sf9 for interaction assay; separate mouse-brain studies. No figure pixels inspected. See EP300-source-guide.md, binding extension PMID:25519132, for publisher route and precise read scope.
+Identifier/title/DOI verified. Actual original main Results Mechanism of transcriptional activation, Figure 4a-e, and Cell culture/RNA interference Methods were read. Human 293 T-REx reporter cells recruit P300 after GAL4-AUTS2 induction; P300-specific RNAi reduces reporter activation, and C646 provides a separate inhibitor comparison. The Methods identify human siRNAs. Figure 2c-d records PolII recruitment in this reporter system. Extended Data Figure 3 describes human 293 nuclear-extract association and a separate recombinant Sf9-derived protein assay. Mouse CNS/brain profiling and phenotypes are distinct experiments. Thus the citation supports human-cell PolII coactivation and is not mouse-only. Access: https://pmc.ncbi.nlm.nih.gov/articles/PMC4323097/ ; DOI https://doi.org/10.1038/nature13921 . See EP300-source-guide.md. No new figure pixels were inspected.
 
 ### PMID:25593309 — Screen identifies bromodomain protein ZMYND8 in chromatin recognition of transcription-associated DNA damage that promotes homologous recombination.
 
 [Original article or notice](https://doi.org/10.1101/gad.252189.114). Imported source indices: 195.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual original BRD localization screen and laser-imaging Methods read; no figure pixels or supplement. p300 positive screen, CBP separate. actual original: raw/PMID25593309-PMC-indexed.json blocks28–34,92–95. Public original: https://doi.org/10.1101/gad.252189.114.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual original BRD localization screen and laser-imaging Methods read; no figure pixels or supplement. p300 positive screen, CBP separate. actual original: raw/PMID:25593309-PMC-indexed.json blocks28–34,92–95. Public original: https://doi.org/10.1101/gad.252189.114.
 
 ### PMID:25651062 — An acetyl-methyl switch drives a conformational change in p53.
 
 [Original article or notice](https://doi.org/10.1016/j.str.2014.12.010). Imported source indices: 173.
 
-PubMed/source identity verified. Normal discussion-only; actual PMC original Results37–42/Figure2E–F and main Methods77–83 read. p300 bromodomain–p53 peptide NMR distinct from mouse ChIP meta-analysis and 53BP1 crystal structures. Exact p300 domain preparation is in unreviewed supplement; no residue bounds/species inferred beyond source identification. No pixels inspected. See EP300-source-guide.md, binding extension PMID:25651062, for publisher route and precise read scope.
+PubMed/source identity verified. Normal discussion-only; actual PMC original Results37–42/Figure 2E–F and main Methods77–83 read. p300 bromodomain–p53 peptide NMR distinct from mouse ChIP meta-analysis and 53BP1 crystal structures. Exact p300 domain preparation is in unreviewed supplement; no residue bounds/species inferred beyond source identification. No pixels inspected. See EP300-source-guide.md, binding extension PMID:25651062, for publisher route and precise read scope.
 
 ### PMID:25818647 — Intracellular crotonyl-CoA stimulates transcription through p300-catalyzed histone crotonylation.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2015.02.029). Imported source indices: 18, 47, 306, 373, 439, 445, 448.
 
-Official identity and actual main article verified. Figures1–2 establish p300 histone acetylation/crotonylation and chromatin transcription. Figure4 reuses previously published mouse p300 ChIP alongside new histone-mark ChIP. Extended Methods supplement unavailable.
+Official identity and actual main article verified. Figures 1–2 establish p300 histone acetylation/crotonylation and chromatin transcription. Figure 4 reuses previously published mouse p300 ChIP alongside new histone-mark ChIP. Extended Methods supplement unavailable.
 
 ### PMID:26302407 — Combined CSL and p53 downregulation promotes cancer-associated fibroblast activation.
 
 [Original article or notice](https://doi.org/10.1038/ncb3228). Imported source indices: 174.
 
-PubMed/source identity verified. Normal original Results126–134/Figure4I and Methods252–260. Human293T p300 co-IP; purified-protein assay pertains to CSL/p53. Correction26419803 publisher text recovered: author's name corrected, not experiment. No pixels inspected. See EP300-source-guide.md, binding extension PMID:26302407, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results126–134/Figure 4I and Methods252–260. Human 293T p300 co-IP; purified-protein assay pertains to CSL/p53. Correction26419803 publisher text recovered: author's name corrected, not experiment. No pixels inspected. See EP300-source-guide.md, binding extension PMID:26302407, for publisher route and precise read scope.
 
 ### PMID:26479788 — PARP9-DTX3L ubiquitin ligase targets host histone H2BJ and viral 3C protease to enhance interferon signaling and control viral infection.
 
 [Original article or notice](https://doi.org/10.1038/ni.3279). Imported source indices: 432.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual original operative Results, X-ChIP/IP Methods and Supplementary Figure6C caption included in main article text; no supplementary image pixels. Human U3A STAT1 versus STAT1-CC distinguished. cache lines: [126, 254, 387]. Public original: https://doi.org/10.1038/ni.3279.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual original operative Results, X-ChIP/IP Methods and Supplementary Figure 6C caption included in main article text; no supplementary image pixels. Human U3A STAT1 versus STAT1-CC distinguished. cache lines: [126, 254, 387]. Public original: https://doi.org/10.1038/ni.3279.
 
 ### PMID:26751287 — The LINK-A lncRNA activates normoxic HIF1α signalling in triple-negative breast cancer.
 
 [Original article or notice](https://doi.org/10.1038/ncb3295). Imported source indices: 175.
 
-PubMed/source identity verified. Normal original Results184/Figure5A–C, Methods214–220 and antibodies246–248. HIF1A phosphorylation/association perturbations in human cells; no binary assay inferred. Current PubMed metadata contains no linked retraction/correction, not an independent guarantee of all findings. No pixels inspected. See EP300-source-guide.md, binding extension PMID:26751287, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results184/Figure 5A–C, Methods214–220 and antibodies246–248. HIF1A phosphorylation/association perturbations in human cells; no binary assay inferred. Current PubMed metadata contains no linked retraction/correction, not an independent guarantee of all findings. No pixels inspected. See EP300-source-guide.md, binding extension PMID:26751287, for publisher route and precise read scope.
 
 ### PMID:26983400 — SIK2 regulates fasting-induced PPARα activity and ketogenesis through p300.
 
 [Original article or notice](https://doi.org/10.1038/srep23317). Imported source indices: 53.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Human HepG2 binding/WT-LXXAA test; mouse liver interventions separate. Main original text; detailed co-IP protocol referenced elsewhere, no supplement/pixels inspected. cache lines: ['Results99–107/Figures3–4', 'Methods124–148']. Public original: https://doi.org/10.1038/srep23317.
+Identifier/title match the genuine normal PubMed record inspected for this source. Human HepG2 binding/WT-LXXAA test; mouse liver interventions separate. Main original text; detailed co-IP protocol referenced elsewhere, no supplement/pixels inspected. cache lines: ['Results99–107/Figures 3–4', 'Methods124–148']. Public original: https://doi.org/10.1038/srep23317.
 
 ### PMID:26990986 — Glutamine Triggers Acetylation-Dependent Degradation of Glutamine Synthetase via the Thalidomide Receptor Cereblon.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2016.02.032). Imported source indices: 406.
 
-Identifier/title/DOI verified. Main Figure5/Results support p300-associated GS acetylation. The main Results describe supplementary p300-HAT activity, but that panel/extended Methods were not recovered independently; C646 is not p300-specific.
+Identifier/title/DOI verified. Main Figure 5/Results support p300-associated GS acetylation. The main Results describe supplementary p300-HAT activity, but that panel/extended Methods were not recovered independently; C646 is not p300-specific.
 
 ### PMID:27018634 — Quantitative Mass Spectrometry Identifies Novel Host Binding Partners for Pathogenic Escherichia coli Type III Secretion System Effectors.
 
@@ -872,25 +872,25 @@ PubMed/source identity verified. Official abstract and ACS supplement listing; o
 
 [Original article or notice](https://doi.org/10.1007/s12640-016-9636-2). Imported source indices: 322, 329, 337, 374, 376.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Complete operative Methods and Results through Figure4 read. No original image pixels; source uses CTPB treatment, not selective EP300 genetic rescue. Normal abstract-only cache unchanged. actual original: raw/PMID27256286-UCC, author manuscript PDF, text lines185–357. Public original: https://doi.org/10.1007/s12640-016-9636-2.
+Identifier/title match the genuine normal PubMed record inspected for this source. Complete operative Methods and Results through Figure 4 read. No original image pixels; source uses CTPB treatment, not selective EP300 genetic rescue. Normal abstract-only cache unchanged. actual original: raw/PMID:27256286-UCC, author manuscript PDF, text lines 185–357. Public original: https://doi.org/10.1007/s12640-016-9636-2.
 
 ### PMID:28128295 — RNA helicase DDX3 maintains lipid homeostasis through upregulation of the microsomal triglyceride transfer protein by interacting with HNF4 and SHP.
 
 [Original article or notice](https://doi.org/10.1038/srep41452). Imported source indices: 177.
 
-PubMed/source identity verified. Normal original Results132–134/Figure6A and Methods218. HuH7 nuclear co-IP separately detects p300 and CBP association with HA-DDX3. No purified p300/DDX3 binary assay or image inspection. See EP300-source-guide.md, binding extension PMID:28128295, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results132–134/Figure 6A and Methods218. HuH7 nuclear co-IP separately detects p300 and CBP association with HA-DDX3. No purified p300/DDX3 binary assay or image inspection. See EP300-source-guide.md, binding extension PMID:28128295, for publisher route and precise read scope.
 
 ### PMID:28262505 — Distinct Roles of Brd2 and Brd4 in Potentiating the Transcriptional Program for Th17 Cell Differentiation.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2016.12.022). Imported source indices: 417, 468.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual operative Figure4/6 Results and T-cell sorting/siRNA/ChIP Methods read. Murine B6 naïve CD4 cells; cotransfection distinct. No image pixels or supplements inspected; listed siRNAs do not include EP300. cache lines: [144, 146, 160, 162, 252, 264, 270]. Public original: https://doi.org/10.1016/j.molcel.2016.12.022.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual operative Figure 4/6 Results and T-cell sorting/siRNA/ChIP Methods read. Murine B6 naïve CD4 cells; cotransfection distinct. No image pixels or supplements inspected; listed siRNAs do not include EP300. cache lines: [144, 146, 160, 162, 252, 264, 270]. Public original: https://doi.org/10.1016/j.molcel.2016.12.022.
 
 ### PMID:28386764 — Roles of tau protein in health and disease.
 
 [Original article or notice](https://doi.org/10.1007/s00401-017-1707-9). Imported source indices: 391.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Review Table1 and surrounding tau-domain text read; no primary tau-binding original newly acquired. NAS/review level explicitly retained. cache lines: [77, 108]. Public original: https://doi.org/10.1007/s00401-017-1707-9.
+Identifier/title match the genuine normal PubMed record inspected for this source. Review Table 1 and surrounding tau-domain text read; no primary tau-binding original newly acquired. NAS/review level explicitly retained. cache lines: [77, 108]. Public original: https://doi.org/10.1007/s00401-017-1707-9.
 
 ### PMID:28514442 — Architecture of the human interactome defines protein communities and disease networks.
 
@@ -902,19 +902,19 @@ PubMed/source identity verified. Normal original Results101/103, Methods123–12
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2018.04.011). Imported source indices: 313, 433, 442, 447.
 
-Official identity and actual main article verified. Figures1/5 and STAR Methods establish 2-hydroxyisobutyrylation, and Figures4/7 support human-cell glycolysis regulation. This is not the direct original for butyrylation rows442/447; those claims are independently supported by PMID17267393.
+Official identity and actual main article verified. Figures 1/5 and STAR Methods establish 2-hydroxyisobutyrylation, and Figures 4/7 support human-cell glycolysis regulation. This is not the direct original for butyrylation rows442/447; those claims are independently supported by PMID:17267393.
 
 ### PMID:30193097 — Dynamic Acetylation of Phosphoenolpyruvate Carboxykinase Toggles Enzyme Activity between Gluconeogenic and Anaplerotic Reactions.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2018.07.031). Imported source indices: 372, 418.
 
-Identifier/title/DOI verified. Human p300 coexpression with rat PCK1 and actual cellular glucose production are read in Figure2 and STAR Methods. Purified TIP60 control is not assigned to p300.
+Identifier/title/DOI verified. Human p300 coexpression with rat PCK1 and actual cellular glucose production are read in Figure 2 and STAR Methods. Purified TIP60 control is not assigned to p300.
 
 ### PMID:30197302 — Leucine Signals to mTORC1 via Its Metabolite Acetyl-Coenzyme A.
 
 [Original article or notice](https://doi.org/10.1016/j.cmet.2018.08.013). Imported source indices: 419, 428, 465.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual normal-cache original operative text. Main figure captions read, image pixels/supplement not inspected. Human HeLa mechanisms separated from mouse corroboration; assay kit uses lysate H3 substrate, not purified raptor catalysis. cache lines: ['Results143–205/Figures3–4 captions', 'STAR Methods cell models/transfection/raptor mutagenesis/fractionation/activity/Co-IP:227–231,249–257,287,299,309,321,327']. Public original: https://doi.org/10.1016/j.cmet.2018.08.013.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual normal-cache original operative text. Main figure captions read, image pixels/supplement not inspected. Human HeLa mechanisms separated from mouse corroboration; assay kit uses lysate H3 substrate, not purified raptor catalysis. cache lines: ['Results143–205/Figures 3–4 captions', 'STAR Methods cell models/transfection/raptor mutagenesis/fractionation/activity/Co-IP:227–231,249–257,287,299,309,321,327']. Public original: https://doi.org/10.1016/j.cmet.2018.08.013.
 
 ### PMID:31645732 — Metabolic regulation of gene expression by histone lactylation.
 
@@ -926,13 +926,13 @@ Official identity and operative p300 original evidence verified. Extended Data9 
 
 [Original article or notice](https://doi.org/10.1038/s41467-020-16886-2). Imported source indices: 334, 353, 420, 429, 466.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Actual normal-cache original operative text; main captions read, supplement/image pixels not inspected. Human constructs and HeLa interventions; mouse primary cells separate. Cytosolic p300 immunoprecipitate H3/p53 assay is distinct from in-cell raptor modification. cache lines: ['Results134–142/Figure4 and Discussion154–156', 'Methods164,170,182–190,232–298,328,334']. Public original: https://doi.org/10.1038/s41467-020-16886-2.
+Identifier/title match the genuine normal PubMed record inspected for this source. Actual normal-cache original operative text; main captions read, supplement/image pixels not inspected. Human constructs and HeLa interventions; mouse primary cells separate. Cytosolic p300 immunoprecipitate H3/p53 assay is distinct from in-cell raptor modification. cache lines: ['Results134–142/Figure 4 and Discussion154–156', 'Methods164,170,182–190,232–298,328,334']. Public original: https://doi.org/10.1038/s41467-020-16886-2.
 
 ### PMID:32691935 — LINC00941 promotes oral squamous cell carcinoma progression via activating CAPRIN2 and canonical WNT/β-catenin signaling pathway.
 
 [Original article or notice](https://doi.org/10.1111/jcmm.15667). Imported source indices: 369, 388.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Original operative normal-cache text; no image pixels or supplement. Human HSC-3/OSC-19 genetic perturbation/ChIP/reporter; HAT-deletion boundaries not specified in inspected main text. cache lines: ['Methods2.1–2.4,2.9–2.10', 'Results3.3/Figure3 main caption']. Public original: https://doi.org/10.1111/jcmm.15667.
+Identifier/title match the genuine normal PubMed record inspected for this source. Original operative normal-cache text; no image pixels or supplement. Human HSC-3/OSC-19 genetic perturbation/ChIP/reporter; HAT-deletion boundaries not specified in inspected main text. cache lines: ['Methods2.1–2.4,2.9–2.10', 'Results3.3/Figure 3 main caption']. Public original: https://doi.org/10.1111/jcmm.15667.
 
 ### PMID:33961781 — Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
 
@@ -944,19 +944,19 @@ PubMed/source identity verified. Normal discussion-only; actual PMC original STA
 
 [Original article or notice](https://doi.org/10.1038/s41467-021-25867-y). Imported source indices: 450.
 
-Official identity and operative original evidence verified. Figure4 separately assays p300/CBP with synthetic isonicotinyl-CoA and histone substrates. Assay uses5mM donor; Methods/caption differ between HEK293A/T enzyme-expression hosts. Endogenous physiological scope remains open.
+Official identity and operative original evidence verified. Figure 4 separately assays p300/CBP with synthetic isonicotinyl-CoA and histone substrates. Assay uses5mM donor; Methods/caption differ between HEK293A/T enzyme-expression hosts. Endogenous physiological scope remains open.
 
 ### PMID:34637754 — NRF1 association with AUTS2-Polycomb mediates specific gene activation in the brain.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2021.09.020). Imported source indices: 180.
 
-PubMed/source identity verified. Normal original Results177–191/Figure3B–I and Methods315–317. Human293-derived AUTS2/p300 interaction and reporter assays distinguished from mouse ESC-derived motor neurons. Linked correction34798045 metadata verified; body inaccessible; independent25519132 supports binding/coactivation. No pixels inspected. See EP300-source-guide.md, binding extension PMID:34637754, for publisher route and precise read scope.
+PubMed/source identity verified. Normal original Results177–191/Figure 3B–I and Methods315–317. Human 293-derived AUTS2/p300 interaction and reporter assays distinguished from mouse ESC-derived motor neurons. Linked correction34798045 metadata verified; body inaccessible; independent25519132 supports binding/coactivation. No pixels inspected. See EP300-source-guide.md, binding extension PMID:34637754, for publisher route and precise read scope.
 
 ### PMID:40240600 — Histone H1 deamidation facilitates chromatin relaxation for DNA repair.
 
 [Original article or notice](https://doi.org/10.1038/s41586-025-08835-0). Imported source indices: 42, 456, 458, 463.
 
-Identifier/title match the genuine normal PubMed record inspected for this source. Original normal-cache operative text; figure captions and main Results descriptions of extended/supplemental results, but no extended-data/supplement file/image inspection. Human HeLa/U2OS; recombinant GST-p300 HAT E.coli with exact residue bounds not in inspected main Methods. cache lines: ['Results146–194/Figures3–5 captions', 'Methods228–236,274,324,336']. Public original: https://doi.org/10.1038/s41586-025-08835-0.
+Identifier/title match the genuine normal PubMed record inspected for this source. Original normal-cache operative text; figure captions and main Results descriptions of extended/supplemental results, but no extended-data/supplement file/image inspection. Human HeLa/U2OS; recombinant GST-p300 HAT E.coli with exact residue bounds not in inspected main Methods. cache lines: ['Results146–194/Figures 3–5 captions', 'Methods228–236,274,324,336']. Public original: https://doi.org/10.1038/s41586-025-08835-0.
 
 ### PMID:8684459 — A p300/CBP-associated factor that competes with the adenoviral oncoprotein E1A.
 
@@ -968,13 +968,13 @@ Identifier/title match the genuine normal PubMed record inspected for this sourc
 
 [Original article or notice](https://doi.org/10.1016/s0092-8674(00)82001-2). Imported source indices: 43.
 
-Official PMID/title/DOI and abstract verified. Main article inaccessible after publisher routes. Histone acetyltransferase function independently supported by PMID25818647 and the original PMID23934153 supplement; no claim to have read the 1996 Methods.
+Official PMID/title/DOI and abstract verified. Main article inaccessible after publisher routes. Histone acetyltransferase function independently supported by PMID:25818647 and the original PMID:23934153 supplement; no claim to have read the 1996 Methods.
 
 ### PMID:9018065 — The adenovirus 12 E1A proteins can bind directly to proteins of the p300 transcription co-activator family, including the CREB-binding protein CBP and p300.
 
 [Original article or notice](https://doi.org/10.1099/0022-1317-78-2-423). Imported source indices: 182.
 
-PubMed/source identity verified. Verified publisher abstract with explicit Ad12 E1A/p300 binding; full text paywalled, Methods/figures unavailable. No Ad5 substitution. See EP300-source-guide.md, binding extension PMID:9018065, for publisher route and precise read scope.
+Identifier/title/DOI verified in the genuine normal record. The abstract explicitly supports the named p300 interaction or complex represented by this source context. The broad association is retained as non-core with deference to the curated IPI annotation. Full original Methods and operative figures remain inaccessible, so exact constructs, species and binary-contact details are not newly claimed. The explicit partner is Ad12 E1A, with no substitution of Ad5 evidence. See EP300-source-guide.md.
 
 ### PMID:9194564 — Synergistic activation of transcription by CBP and p53.
 
@@ -1022,91 +1022,91 @@ Official identity verified by enzymology lane. ROOT read original supplementary 
 
 [Original article or notice](https://doi.org/10.1128/MCB.01262-07). Independent supporting or correction reference.
 
-Official identity and original PMC2546916 Methods, Results/captions2–5 and Discussion read. Reconstituted human PolIII/TFIIIC systems directly establish p300 recruitment, H3 acetylation and coactivation. No figure pixels or supplements inspected; AT2 is not a clean catalytic-only perturbation.
+Official identity and original PMC2546916 Methods, Results/captions 2-5 and Discussion were read. Reconstituted human PolIII/TFIIIC systems establish p300 recruitment, acetylation and coactivation, including a naked-template condition without added acetyl-CoA. This reference supports the coactivator molecular-function capability; it does not independently support the PolII-specific process in core 2. That process has separate human-cell support from PMID:18782771 Figure 6E and PMID:25519132 Figure 4. AT2 is not a clean catalytic-only perturbation. Access: https://pmc.ncbi.nlm.nih.gov/articles/PMC2546916/ ; DOI https://doi.org/10.1128/MCB.01262-07 . See EP300-source-guide.md.
 
 ### PMID:34798045 — NRF1 association with AUTS2-Polycomb mediates specific gene activation in the brain.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2021.10.023). Independent supporting or correction reference.
 
-PubMed verifies the linked correction to PMID34637754, but the correction body was unavailable. Its experimental scope is not inferred. The AUTS2 binding refinement also rests on independently read PMID25519132.
+PubMed verifies the linked correction to PMID:34637754, but the correction body was unavailable. Its experimental scope is not inferred. The AUTS2 binding refinement also rests on independently read PMID:25519132.
 
 ### PMID:37172569 — SET1 and p300 Act Synergistically, through Coupled Histone Modifications, in Transcriptional Activation by p53.
 
 [Original article or notice](https://doi.org/10.1016/j.cell.2023.04.013). Independent supporting or correction reference.
 
-Identifier and correction relationship verified against PubMed. The author-institution notice replaces a duplicated actin-control image in Figure5A of PMID23870121; the p300/ASH2L interaction evidence read here is Figure2F–I. Correction notice accessed separately from the abstract-only normal cache.
+Identifier and correction relationship verified against PubMed. The author-institution notice replaces a duplicated actin-control image in Figure 5A of PMID:23870121; the p300/ASH2L interaction evidence read here is Figure 2F–I. Correction notice accessed separately from the abstract-only normal cache.
 
 ### PMID:26419803 — Corrigendum: Combined CSL and p53 downregulation promotes cancer-associated fibroblast activation.
 
 [Original article or notice](https://doi.org/10.1038/ncb3242). Independent supporting or correction reference.
 
-Identifier and correction relationship verified against PubMed. The actual publisher-indexed corrigendum corrects the spelling of an author name; it does not amend the Figure4I p300/p53 experiment of PMID26302407.
+Identifier and correction relationship verified against PubMed. The actual publisher-indexed corrigendum corrects the spelling of an author name; it does not amend the Figure 4I p300/p53 experiment of PMID:26302407.
 
 ### PMID:15616592 — Arginine methyltransferase CARM1 is a promoter-specific regulator of NF-kappaB-dependent gene expression.
 
 [Original article or notice](https://doi.org/10.1038/sj.emboj.7600500). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Operative Methods and Figures3,4,7. Human nuclear p300/p65/CARM1 association and separate mouse reporter work. Purified binary binding is CARM1–p65, not p300. TNF/LPS experiments corroborate NF-kB participation without constituting a new lectin-receptor stimulation experiment. Public source: [PMID:15616592, DOI](https://doi.org/10.1038/sj.emboj.7600500); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC544912/)
+Official identifier/title checked against the genuine normal record. Original read scope: Operative Methods and Figures 3,4,7. Human nuclear p300/p65/CARM1 association and separate mouse reporter work. Purified binary binding is CARM1–p65, not p300. TNF/LPS experiments corroborate NF-kB participation without constituting a new lectin-receptor stimulation experiment. Public source: [PMID:15616592, DOI](https://doi.org/10.1038/sj.emboj.7600500); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC544912/)
 
 ### PMID:18458156 — Pitx2 is functionally important in the early stages of vascular smooth muscle cell differentiation.
 
 [Original article or notice](https://doi.org/10.1083/jcb.200711145). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Figure6 and ChIP/reporter Methods in murine A404 differentiation. p300 promoter-chromatin recruitment differs from Pitx2 sequence recognition in the EMSA. Public source: [PMID:18458156, DOI](https://doi.org/10.1083/jcb.200711145); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2364692/)
+Official identifier/title checked against the genuine normal record. Original read scope: Figure 6 and ChIP/reporter Methods in murine A404 differentiation. p300 promoter-chromatin recruitment differs from Pitx2 sequence recognition in the EMSA. Public source: [PMID:18458156, DOI](https://doi.org/10.1083/jcb.200711145); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2364692/)
 
 ### PMID:19229036 — Stress-inducible regulation of heat shock factor 1 by the deacetylase SIRT1.
 
 [Original article or notice](https://doi.org/10.1126/science.1165946). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Operative Results and Figures1–4 captions, especially2A–C. p300-associated HSF1 acetylation in human293T cells. Detailed supplementary Methods/FigureS1 inaccessible; downstream attenuation tests SIRT1 or HSF1 mutants, not selective endogenous p300 loss. Public source: [PMID:19229036, DOI](https://doi.org/10.1126/science.1165946); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3429349/)
+Official identifier/title checked against the genuine normal record. Original read scope: Operative Results and Figures 1–4 captions, especially2A–C. p300-associated HSF1 acetylation in human 293T cells. Detailed supplementary Methods/Figure S1 inaccessible; downstream attenuation tests SIRT1 or HSF1 mutants, not selective endogenous p300 loss. Public source: [PMID:19229036, DOI](https://doi.org/10.1126/science.1165946); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3429349/)
 
 ### PMID:19822209 — Syndromic features and mild cognitive impairment in mice with genetic reduction on p300 activity: Differential contribution of p300 and CBP to Rubinstein-Taybi syndrome etiology.
 
 [Original article or notice](https://doi.org/10.1016/j.nbd.2009.10.001). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Printed pp4–13, Methods/Results and Figures1–4 descriptions. Mouse Ep300 heterozygote growth, face and bounded behavioral phenotypes; no direct human behavior or figure-pixel reassessment. Public source: [PMID:19822209, DOI](https://doi.org/10.1016/j.nbd.2009.10.001); [author manuscript](https://digital.csic.es/bitstream/10261/57866/3/Syndromic.pdf)
+Official identifier/title checked against the genuine normal record. Original read scope: Printed pp4–13, Methods/Results and Figures 1–4 descriptions. Mouse Ep300 heterozygote growth, face and bounded behavioral phenotypes; no direct human behavior or figure-pixel reassessment. Public source: [PMID:19822209, DOI](https://doi.org/10.1016/j.nbd.2009.10.001); [author manuscript](https://digital.csic.es/bitstream/10261/57866/3/Syndromic.pdf)
 
 ### PMID:20955178 — Regulation of unfolded protein response modulator XBP1s by acetylation and deacetylation.
 
 [Original article or notice](https://doi.org/10.1042/BJ20101293). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Experimental section and Results/Figures1–4. Human HEK293 host, mouse XBP1s and laboratory HA-p300; cycloheximide stability and reporter assays. The isolated biochemical assay is SIRT1 deacetylation. Public source: [PMID:20955178, DOI](https://doi.org/10.1042/BJ20101293); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3477812/)
+Official identifier/title checked against the genuine normal record. Original read scope: Experimental section and Results/Figures 1–4. Human HEK293 host, mouse XBP1s and laboratory HA-p300; cycloheximide stability and reporter assays. The isolated biochemical assay is SIRT1 deacetylation. Public source: [PMID:20955178, DOI](https://doi.org/10.1042/BJ20101293); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3477812/)
 
 ### PMID:23752591 — The methyltransferase SMYD3 mediates the recruitment of transcriptional cofactors at the myostatin and c-Met genes and regulates skeletal muscle atrophy.
 
 [Original article or notice](https://doi.org/10.1101/gad.217240.113). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Main Results/Figure2 and ChIP/RNA Methods. Mouse C2C12 p300 ChIP interrogates intronic genomic DNA. Supplementary FigureS2 unavailable; the pre-mRNA-binding assertion stays unresolved. Public source: [PMID:23752591, DOI](https://doi.org/10.1101/gad.217240.113); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3690402/)
+Official identifier/title checked against the genuine normal record. Original read scope: Main Results/Figure 2 and ChIP/RNA Methods. Mouse C2C12 p300 ChIP interrogates intronic genomic DNA. Supplementary Figure S2 unavailable; the pre-mRNA-binding assertion stays unresolved. Public source: [PMID:23752591, DOI](https://doi.org/10.1101/gad.217240.113); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3690402/)
 
 ### PMID:24216764 — p300-dependent acetylation of activating transcription factor 5 enhances C/EBPβ transactivation of C/EBPα during 3T3-L1 differentiation.
 
 [Original article or notice](https://doi.org/10.1128/MCB.00956-13). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Methods and Results/Figures1–6. Mouse 3T3-L1 p300 knockdown, ATF5 acetylation and promoter recruitment; human stem-cell experiments test downstream ATF5. Laboratory p300 reagent species/bounds unspecified. Public source: [PMID:24216764, DOI](https://doi.org/10.1128/MCB.00956-13); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3911509/)
+Official identifier/title checked against the genuine normal record. Original read scope: Methods and Results/Figures 1–6. Mouse 3T3-L1 p300 knockdown, ATF5 acetylation and promoter recruitment; human stem-cell experiments test downstream ATF5. Laboratory p300 reagent species/bounds unspecified. Public source: [PMID:24216764, DOI](https://doi.org/10.1128/MCB.00956-13); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3911509/)
 
 ### PMID:25200183 — A SIRT7-dependent acetylation switch of GABPβ1 controls mitochondrial function.
 
 [Original article or notice](https://doi.org/10.1016/j.cmet.2014.08.001). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Experimental Procedures and Figures6–7. Recombinant p300 acetylates GABPbeta1, affecting GABP association; most mitochondrial phenotyping manipulates SIRT7. Organization versus function/transcript regulation remains unresolved. Reagent bounds and supplement are unresolved. Public source: [PMID:25200183, DOI](https://doi.org/10.1016/j.cmet.2014.08.001); [author upload](https://www.researchgate.net/publication/265474944_A_SIRT7-Dependent_Acetylation_Switch_of_GABP_beta_1_Controls_Mitochondrial_Function)
+Official identifier/title checked against the genuine normal record. Original read scope: Experimental Procedures and Figures 6–7. Recombinant p300 acetylates GABPbeta1, affecting GABP association; most mitochondrial phenotyping manipulates SIRT7. Organization versus function/transcript regulation remains unresolved. Reagent bounds and supplement are unresolved. Public source: [PMID:25200183, DOI](https://doi.org/10.1016/j.cmet.2014.08.001); [author upload](https://www.researchgate.net/publication/265474944_A_SIRT7-Dependent_Acetylation_Switch_of_GABP_beta_1_Controls_Mitochondrial_Function)
 
 ### PMID:27105113 — Dynamic Competing Histone H4 K5K8 Acetylation and Butyrylation Are Hallmarks of Highly Active Gene Promoters.
 
 [Original article or notice](https://doi.org/10.1016/j.molcel.2016.03.014). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Main Methods and Figures5/7: p300 histone butyrylation, chromatin transcription and competing acetyl/butyryl donors. Sf21 expression does not identify the enzyme species; detailed preparation supplement unread. Human p300/nonhistone support is independently provided by PMID17267393. Public source: [PMID:27105113, DOI](https://doi.org/10.1016/j.molcel.2016.03.014); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC4850424/)
+Official identifier/title checked against the genuine normal record. Original read scope: Main Methods and Figures 5/7: p300 histone butyrylation, chromatin transcription and competing acetyl/butyryl donors. Sf21 expression does not identify the enzyme species; detailed preparation supplement unread. Human p300/nonhistone support is independently provided by PMID:17267393. Public source: [PMID:27105113, DOI](https://doi.org/10.1016/j.molcel.2016.03.014); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC4850424/)
 
 ### PMID:35075301 — BCAA-BCKA axis regulates WAT browning through acetylation of PRDM16.
 
 [Original article or notice](https://doi.org/10.1038/s42255-021-00520-6). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Publisher ExtendedDataFigures4–5 captions available; main Results/Methods subscription-limited. Figure5d tests p300/PRDM16 coexpression; downstream tests manipulate Bcat2 or PRDM16. Precise negative brown-fat differentiation remains unresolved. Public source: [PMID:35075301, DOI and publisher](https://doi.org/10.1038/s42255-021-00520-6)
+Official identifier/title checked against the genuine normal record. Original read scope: Publisher Extended Data Figures 4–5 captions available; main Results/Methods subscription-limited. Figure 5d tests p300/PRDM16 coexpression; downstream tests manipulate Bcat2 or PRDM16. Precise negative brown-fat differentiation remains unresolved. Public source: [PMID:35075301, DOI and publisher](https://doi.org/10.1038/s42255-021-00520-6)
 
 ### PMID:9742083 — Mammalian GCN5 and P/CAF acetyltransferases have homologous amino-terminal domains important for recognition of nucleosomal substrates.
 
 [Original article or notice](https://doi.org/10.1128/MCB.18.10.5659). Independent supporting or correction reference.
 
-Official identifier/title checked against the genuine normal record. Original read scope: Recombinant-protein Methods and Figure8: GCN5/PCAF association with a GST-p300 fragment. HAT assays elsewhere test GCN5/PCAF; p300 catalytic support comes independently. Public source: [PMID:9742083, DOI](https://doi.org/10.1128/MCB.18.10.5659); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC109152/)
+Official identifier/title checked against the genuine normal record. Original read scope: Recombinant-protein Methods and Figure 8: GCN5/PCAF association with a GST-p300 fragment. HAT assays elsewhere test GCN5/PCAF; p300 catalytic support comes independently. Public source: [PMID:9742083, DOI](https://doi.org/10.1128/MCB.18.10.5659); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC109152/)
 
 ## Database and phylogenetic evidence
 
@@ -1118,28 +1118,28 @@ The actual [Human Protein Atlas EP300 record](https://www.proteinatlas.org/ENSG0
 
 All sixteen cited ARBA rules genuinely match target domains and taxon conditions; the matched condition sets are recorded separately from the biological conclusions. InterPro domains identify the KIX, HAT, ZZ and interlocking coactivator structures. Seven Rhea reactions distinguish histone/protein acetylation, propionylation, butyrylation, crotonylation, 2-hydroxyisobutyrylation and L-lactylation. A matching rule or pathway membership does not make p300 the kinase, methyltransferase, transporter or catalytic actor of a neighboring reaction.
 
-All 107 distinct Reactome source objects were read in their preserved normal records; current API root objects were recovered for 77 and were rate-limited for 30. Current R-HSA-9701531 and R-HSA-9760082 describe cytosolic events, despite imported nucleoplasm assertions. Human HPA evidence independently supports nucleoplasmic EP300; these two cited event objects are not represented as supporting that location. Chimeric R-NUL experiments distinguish recombinant human p300 from nonhuman partners.
+All 107 distinct Reactome source objects were read in their preserved normal records; current API root objects were recovered for 77 and were rate-limited for 30. R-HSA-9701531 and R-HSA-9760082 have cytosol event-level compartments, but both resolve through their catalyst or input-set chains to nucleoplasmic EP300 physical entity R-HSA-381325 (UniProt Q09472). Those participant chains and independent HPA evidence support the imported nucleoplasm annotations. The structured consistency queries concern the enclosing event compartments, with alternatives left open. Chimeric R-NUL experiments distinguish recombinant human p300 from nonhuman partners.
 
 ## Recovered donor originals
 
 | Reference and original access | Operative scope and limitation |
 | --- | --- |
-| [PMID:19822209, DOI](https://doi.org/10.1016/j.nbd.2009.10.001); [author manuscript](https://digital.csic.es/bitstream/10261/57866/3/Syndromic.pdf) | Printed pp4–13, Methods/Results and Figures1–4 descriptions. Mouse Ep300 heterozygote growth, face and bounded behavioral phenotypes; no direct human behavior or figure-pixel reassessment. |
-| [PMID:23752591, DOI](https://doi.org/10.1101/gad.217240.113); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3690402/) | Main Results/Figure2 and ChIP/RNA Methods. Mouse C2C12 p300 ChIP interrogates intronic genomic DNA. Supplementary FigureS2 unavailable; the pre-mRNA-binding assertion stays unresolved. |
-| [PMID:24216764, DOI](https://doi.org/10.1128/MCB.00956-13); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3911509/) | Methods and Results/Figures1–6. Mouse 3T3-L1 p300 knockdown, ATF5 acetylation and promoter recruitment; human stem-cell experiments test downstream ATF5. Laboratory p300 reagent species/bounds unspecified. |
-| [PMID:20955178, DOI](https://doi.org/10.1042/BJ20101293); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3477812/) | Experimental section and Results/Figures1–4. Human HEK293 host, mouse XBP1s and laboratory HA-p300; cycloheximide stability and reporter assays. The isolated biochemical assay is SIRT1 deacetylation. |
-| [PMID:15616592, DOI](https://doi.org/10.1038/sj.emboj.7600500); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC544912/) | Operative Methods and Figures3,4,7. Human nuclear p300/p65/CARM1 association and separate mouse reporter work. Purified binary binding is CARM1–p65, not p300. TNF/LPS experiments corroborate NF-kB participation without constituting a new lectin-receptor stimulation experiment. |
-| [PMID:18458156, DOI](https://doi.org/10.1083/jcb.200711145); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2364692/) | Figure6 and ChIP/reporter Methods in murine A404 differentiation. p300 promoter-chromatin recruitment differs from Pitx2 sequence recognition in the EMSA. |
-| [PMID:9742083, DOI](https://doi.org/10.1128/MCB.18.10.5659); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC109152/) | Recombinant-protein Methods and Figure8: GCN5/PCAF association with a GST-p300 fragment. HAT assays elsewhere test GCN5/PCAF; p300 catalytic support comes independently. |
-| [PMID:25200183, DOI](https://doi.org/10.1016/j.cmet.2014.08.001); [author upload](https://www.researchgate.net/publication/265474944_A_SIRT7-Dependent_Acetylation_Switch_of_GABP_beta_1_Controls_Mitochondrial_Function) | Experimental Procedures and Figures6–7. Recombinant p300 acetylates GABPbeta1, affecting GABP association; most mitochondrial phenotyping manipulates SIRT7. Organization versus function/transcript regulation remains unresolved. Reagent bounds and supplement are unresolved. |
-| [PMID:27105113, DOI](https://doi.org/10.1016/j.molcel.2016.03.014); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC4850424/) | Main Methods and Figures5/7: p300 histone butyrylation, chromatin transcription and competing acetyl/butyryl donors. Sf21 expression does not identify the enzyme species; detailed preparation supplement unread. Human p300/nonhistone support is independently provided by PMID17267393. |
-| [PMID:19229036, DOI](https://doi.org/10.1126/science.1165946); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3429349/) | Operative Results and Figures1–4 captions, especially2A–C. p300-associated HSF1 acetylation in human293T cells. Detailed supplementary Methods/FigureS1 inaccessible; downstream attenuation tests SIRT1 or HSF1 mutants, not selective endogenous p300 loss. |
-| [PMID:35075301, DOI and publisher](https://doi.org/10.1038/s42255-021-00520-6) | Publisher ExtendedDataFigures4–5 captions available; main Results/Methods subscription-limited. Figure5d tests p300/PRDM16 coexpression; downstream tests manipulate Bcat2 or PRDM16. Precise negative brown-fat differentiation remains unresolved. |
-| [PMID:18644873, DOI](https://doi.org/10.1128/MCB.01262-07); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2546916/) | Independently read coactivation packet: Methods, Results and Figures2–5 captions in a reconstituted polymerase-III system. Figure pixels/supplement unread. This supplies polymerase-neutral transcription corroboration. |
+| [PMID:19822209, DOI](https://doi.org/10.1016/j.nbd.2009.10.001); [author manuscript](https://digital.csic.es/bitstream/10261/57866/3/Syndromic.pdf) | Printed pp4–13, Methods/Results and Figures 1–4 descriptions. Mouse Ep300 heterozygote growth, face and bounded behavioral phenotypes; no direct human behavior or figure-pixel reassessment. |
+| [PMID:23752591, DOI](https://doi.org/10.1101/gad.217240.113); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3690402/) | Main Results/Figure 2 and ChIP/RNA Methods. Mouse C2C12 p300 ChIP interrogates intronic genomic DNA. Supplementary Figure S2 unavailable; the pre-mRNA-binding assertion stays unresolved. |
+| [PMID:24216764, DOI](https://doi.org/10.1128/MCB.00956-13); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3911509/) | Methods and Results/Figures 1–6. Mouse 3T3-L1 p300 knockdown, ATF5 acetylation and promoter recruitment; human stem-cell experiments test downstream ATF5. Laboratory p300 reagent species/bounds unspecified. |
+| [PMID:20955178, DOI](https://doi.org/10.1042/BJ20101293); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3477812/) | Experimental section and Results/Figures 1–4. Human HEK293 host, mouse XBP1s and laboratory HA-p300; cycloheximide stability and reporter assays. The isolated biochemical assay is SIRT1 deacetylation. |
+| [PMID:15616592, DOI](https://doi.org/10.1038/sj.emboj.7600500); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC544912/) | Operative Methods and Figures 3,4,7. Human nuclear p300/p65/CARM1 association and separate mouse reporter work. Purified binary binding is CARM1–p65, not p300. TNF/LPS experiments corroborate NF-kB participation without constituting a new lectin-receptor stimulation experiment. |
+| [PMID:18458156, DOI](https://doi.org/10.1083/jcb.200711145); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2364692/) | Figure 6 and ChIP/reporter Methods in murine A404 differentiation. p300 promoter-chromatin recruitment differs from Pitx2 sequence recognition in the EMSA. |
+| [PMID:9742083, DOI](https://doi.org/10.1128/MCB.18.10.5659); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC109152/) | Recombinant-protein Methods and Figure 8: GCN5/PCAF association with a GST-p300 fragment. HAT assays elsewhere test GCN5/PCAF; p300 catalytic support comes independently. |
+| [PMID:25200183, DOI](https://doi.org/10.1016/j.cmet.2014.08.001); [author upload](https://www.researchgate.net/publication/265474944_A_SIRT7-Dependent_Acetylation_Switch_of_GABP_beta_1_Controls_Mitochondrial_Function) | Experimental Procedures and Figures 6–7. Recombinant p300 acetylates GABPbeta1, affecting GABP association; most mitochondrial phenotyping manipulates SIRT7. Organization versus function/transcript regulation remains unresolved. Reagent bounds and supplement are unresolved. |
+| [PMID:27105113, DOI](https://doi.org/10.1016/j.molcel.2016.03.014); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC4850424/) | Main Methods and Figures 5/7: p300 histone butyrylation, chromatin transcription and competing acetyl/butyryl donors. Sf21 expression does not identify the enzyme species; detailed preparation supplement unread. Human p300/nonhistone support is independently provided by PMID:17267393. |
+| [PMID:19229036, DOI](https://doi.org/10.1126/science.1165946); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC3429349/) | Operative Results and Figures 1–4 captions, especially2A–C. p300-associated HSF1 acetylation in human 293T cells. Detailed supplementary Methods/Figure S1 inaccessible; downstream attenuation tests SIRT1 or HSF1 mutants, not selective endogenous p300 loss. |
+| [PMID:35075301, DOI and publisher](https://doi.org/10.1038/s42255-021-00520-6) | Publisher Extended Data Figures 4–5 captions available; main Results/Methods subscription-limited. Figure 5d tests p300/PRDM16 coexpression; downstream tests manipulate Bcat2 or PRDM16. Precise negative brown-fat differentiation remains unresolved. |
+| [PMID:18644873, DOI](https://doi.org/10.1128/MCB.01262-07); [PMC original](https://pmc.ncbi.nlm.nih.gov/articles/PMC2546916/) | Independently read coactivation packet: Methods, Results and Figures 2–5 captions in a reconstituted polymerase-III system. Figure pixels/supplement unread. This supplies polymerase-neutral transcription corroboration. |
 
-Additional independently integrated target originals are [PMID19217391](https://doi.org/10.1016/j.str.2008.12.009), Experimental Procedures and Results/Figures1–2, for a defined human TAZ2/p53 interaction; [PMID14645221](https://doi.org/10.1074/jbc.M311973200), Methods and early Results/Figures1–2, printed pp7092–7094, for clock-associated p300 (later pages unavailable); [PMID24939902](https://doi.org/10.1093/nar/gku533), Figures1F and3–8, for PCNA acetylation and repair regulation with joint-versus-individual depletion distinguished; [PMID30197302](https://doi.org/10.1016/j.cmet.2018.08.013), STAR Methods/Figures3–4, and [PMID32561715](https://doi.org/10.1038/s41467-020-16886-2), Methods/Figure4, for human-cell nutrient-responsive p300/RPTOR acetylation; and [PMID24120661](https://pmc.ncbi.nlm.nih.gov/articles/PMC4183148/), Figures1E–H and5C–F, for p300-dependent PKM2 acetylation and nuclear accumulation. PKM2 activity is not transferred to p300. Original images1/5 were inspected in the separate nonhistone primary review; this database lane read their operative captions/Results. Exact assay distinctions are retained in the annotation reasons.
+Additional independently integrated target originals are [PMID:19217391](https://doi.org/10.1016/j.str.2008.12.009), Experimental Procedures and Results/Figures 1–2, for a defined human TAZ2/p53 interaction; [PMID:14645221](https://doi.org/10.1074/jbc.M311973200), Methods and early Results/Figures 1–2, printed pp7092–7094, for clock-associated p300 (later pages unavailable); [PMID:24939902](https://doi.org/10.1093/nar/gku533), Figures 1F and3–8, for PCNA acetylation and repair regulation with joint-versus-individual depletion distinguished; [PMID:30197302](https://doi.org/10.1016/j.cmet.2018.08.013), STAR Methods/Figures 3–4, and [PMID:32561715](https://doi.org/10.1038/s41467-020-16886-2), Methods/Figure 4, for human-cell nutrient-responsive p300/RPTOR acetylation; and [PMID:24120661](https://pmc.ncbi.nlm.nih.gov/articles/PMC4183148/), Figures 1E–H and5C–F, for p300-dependent PKM2 acetylation and nuclear accumulation. PKM2 activity is not transferred to p300. Original images1/5 were inspected in the separate nonhistone primary review; this database lane read their operative captions/Results. Exact assay distinctions are retained in the annotation reasons.
 
-The originals for the coactivator-binding donor PMID17641689 and supporting PMID12586840, the TGF-beta sources PMID25514493/10722728, and the full mouse p53 donor PMID17591690 do not all have operative target full-text support available. Independent evidence is used only where it actually resolves the assertion; missing originals are not treated as proof of curator error.
+The originals for the coactivator-binding donor PMID:17641689 and supporting PMID:12586840, the TGF-beta sources PMID:25514493/10722728, and the full mouse p53 donor PMID:17591690 do not all have operative target full-text support available. Independent evidence is used only where it actually resolves the assertion; missing originals are not treated as proof of curator error.
 
 ## Reactome source-object access inventory
 
@@ -1257,4 +1257,10 @@ Each row identifies the actual imported source; the annotation review keeps even
 
 ## Core synthesis
 
-The two compact core units are protein-lysine acetyltransferase activity with internal peptidyl-lysine acetylation, and transcription coactivator activity with positive regulation of RNA-polymerase-II transcription. PMID20019387 Methods/Figure1 and25818647 Figure1E–G provide direct catalytic support. PMID18782771 Figure6E and25519132 Figure4/ExtendedDataFigure3 support human-cell PolII coactivation. PMID18644873 Methods/Figures3–4 supplies separate reconstituted PolIII recruitment evidence, including no-added-acetyl-CoA conditions; the multi-substitution AT2 mutant does not isolate catalytic necessity. HPA supplies the nucleoplasm location. A cytosolic pool remains documented without requiring a separate core.
+The two compact core units are protein-lysine acetyltransferase activity with internal peptidyl-lysine acetylation, and transcription coactivator activity with positive regulation of RNA-polymerase-II transcription. PMID:20019387 Methods/Figure 1 and PMID:25818647 Figure 1E–G provide direct catalytic support. PMID:18782771 Figure 6E and PMID:25519132 Figure 4/Extended Data Figure 3 support human-cell PolII coactivation. PMID:18644873 Methods/Figures 3–4 supplies separate reconstituted PolIII recruitment evidence, including no-added-acetyl-CoA conditions; the multi-substitution AT2 mutant does not isolate catalytic necessity. HPA supplies the nucleoplasm location. A cytosolic pool remains documented without requiring a separate core.
+
+## Reactome event and participant compartment distinction
+
+The official [R-HSA-9701531 event](https://reactome.org/ContentService/data/query/R-HSA-9701531) lists cytosol at event level. Its [catalyst activity 9701519](https://reactome.org/ContentService/data/query/9701519) identifies physical entity [R-HSA-381325](https://reactome.org/ContentService/data/query/R-HSA-381325), whose own compartment is nucleoplasm and reference product is UniProt Q09472. The event input/output STAT3 and acetyl-CoA/CoA entities are also described as nucleoplasmic.
+
+The official [R-HSA-9760082 event](https://reactome.org/ContentService/data/query/R-HSA-9760082) likewise lists cytosol, but input [R-HSA-1027362](https://reactome.org/ContentService/data/query/R-HSA-1027362) is the nucleoplasmic CREBBP/EP300 set and explicitly contains R-HSA-381325. Its other input and output are described as nucleoplasmic. These participant records support the imported EP300 nucleoplasm annotations. The structured source queries request investigation of each enclosing event's compartment; they do not establish that the annotation reference or gene location is wrong. Candidate replacement nucleoplasm is marked PROBABLE/CHECK, and no upstream report has been filed.
