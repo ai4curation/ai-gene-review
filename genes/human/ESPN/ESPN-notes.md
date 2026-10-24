@@ -36,3 +36,12 @@ One actin-filament cross-linking core captures the independently measured bundli
 Human espin 3A was tested with rabbit F-actin, in LLC-PK1-CL4 epithelial cells and in mouse cochlear explants. Native rat small-espin and mouse isoform-sensitive localization evidence remain separate. Neither 3A nor rat small espin is identified as either current natural human product without sequence reconciliation. All eighteen annotation decisions, eleven reference objects, both natural-product records and the existing status remain unchanged. This phase adds no annotation or publication quotation. The current official GO:7770064 term was independently verified in QuickGO and OLS; its recent creation does not make the identifier invalid.
 
 Final canonical validation records DRAFT with 1 advisories. All 18 source contexts and both natural product records remain exact; all 38 authored narratives appear in the private HTML rendering. No NEW annotation or publication quotation was introduced.
+
+
+### Review follow-up
+
+Refined the WH2-derived parent binding term to monomer binding and the structural location from the actin polymer to the actin-filament bundle. The independent [human study, PMID:29572253](https://pmc.ncbi.nlm.nih.gov/articles/PMC6232856/) distinguishes binding (Figure 5K), bundling (5L), targeting and elongation (Figures 4–5); [PMID:9763424](https://pmc.ncbi.nlm.nih.gov/articles/PMC2132824/) localizes rat small espin along microvillar bundles. Source fields remain unchanged and no new quotes or annotations were added.
+
+Reconciled the published unversioned 3A coordinates with historical RefSeq records and both source-described human products. The historical interval has 318 residues, whereas the 288-residue product additionally lacks residues 543–572. Shared WH2 and C-terminal regions support gene-level transfer, but do not prove construct identity or equal activity. Repeated caveats were moved to the source guide and focused product/transport questions. Canonical variant numbering is preserved. The source guide records actual failed provider attempts and the standing campaign quotation policy.
+
+Revised canonical validation passes all six checks, with all 41 authored narratives present in the private rendering. Computed DRAFT retains 1 documented advisories. All 18 source objects, 11 prior references, two natural products and 16 selected normal source files remain exact. One curated UniProt reference is appended; no NEW annotation or quotation was introduced.
