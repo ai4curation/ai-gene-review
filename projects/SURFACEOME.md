@@ -122,7 +122,9 @@ benchmark rewards that.
   - Ectoenzymes: CA9, STEAP1, STEAP2, GUCY2C.
   - Orphan or unknown MF: GPRC5D, GPNMB, SEZ6, DLK1, GYPA, TM4SF1.
 - `no` called surface (5): ITPR1, ITPR3 (ER channels with a PM annotation),
-  F2, TF, VEGFA (secreted ligands with cell-surface annotations).
+  F2, TF, VEGFA (secreted ligands with cell-surface annotations). These five are
+  disputed labels rather than clear GO errors; see §6. ITPR1 in particular has
+  experimental evidence for a functional, outward-facing PM pool.
 - `contextual` (18 not called surface): mostly lysosomal/secretory-pathway
   proteins with a minor surface pool (LAMP1/2, CD68, PMEL, TYRP1, TGOLN2, STIM1).
 
@@ -180,6 +182,39 @@ Review-level calls worth expert eyes:
 8. **Evidence artifacts**: PM from membrane-fraction proteomics (HDA), and
    Reactome TAS assigning PM to a whole complex (the APOB/LDL case).
 
+## 6. Disputed benchmark labels: location and function vs targetability
+
+Three questions are easy to run together:
+
+| Question | What answers it |
+|---|---|
+| 1. Is the protein at the plasma membrane? (location) | GO cellular component |
+| 2. Does it act there? (function) | GO molecular function / biological process |
+| 3. Could an extracellular agent usefully bind it? (targetability) | copy number, exposed epitope size, cell-type coverage |
+
+GO answers 1 and 2. It has no abundance threshold, and "core" vs "non-core" in our
+reviews is a separate judgment about centrality to the gene's main function.
+SurfaceBench defines surface as "accessible on the extracellular face of an intact
+cell", which is question 1 plus topology. Some of its labels, however, read as
+answers to question 3. When the benchmark and GO disagree, record which case it
+is. Do not count it as a GO error, and do not change a rule to make GO agree
+by discarding true annotations.
+
+| Gene | Benchmark label | Evidence | Assessment |
+|---|---|---|---|
+| ITPR1 | no (endomembrane_resident) | Dellis et al. 2006, PMID:16840702 ([doi](https://doi.org/10.1126/science.1125203)): IP3 opened "very few (1.9 +/- 0.2 per cell)" PM channels in DT40 chicken and mouse B cells. These carry about half the BCR-evoked Ca2+ entry, and an engineered site near the pore was modulated by *extracellular* alpha-bungarotoxin. Follow-ups: PMID:17999955, PMID:17052225. The benchmark's LLM rationale says no lineage reports a PM pool, which these papers contradict. | Accessible and functional by the benchmark's own definition, so it is better labelled `contextual` (cell-type restricted). It is not practically targetable at about 2 copies per cell, but that is question 3. The GO PM call is not an error. |
+| ITPR3 | no | It carries the same PANTHER-node PM IBA as ITPR1. Not checked further. | Unverified; may be the same case as ITPR1. |
+| F2, TF, VEGFA | no (secreted_only) | GO defines cell surface as "The external part of the cell wall and/or plasma membrane", which includes bound extrinsic proteins (thrombin on thrombomodulin/PARs, transferrin on TFRC, VEGFA on heparan sulfate). | A definitional disagreement, not an error on either side. The benchmark excludes surface-bound secreted ligands; GO includes them. |
+| SYNE2 | no (UniProt calls it surface) | UniProt lists Cell membrane for C-terminal-TM isoforms at focal adhesions, curator inference only (ECO:0000305). | Weak; leave as is. |
+
+Effect on the headline numbers: relabelling ITPR1 as `contextual` moves R2 (no
+IEA) from 69.4% to 70.1%. On yes vs no, with ITPR1 dropped from the `no` set,
+it moves from 76.7% to 77.4%. The point is interpretive, not numerical.
+
+The ITPR1 review's PM row (IBA, KEEP_AS_NON_CORE) currently cites only UniProt's
+ER location. Adding PMID:16840702 would ground it; that evidence is from chicken
+and mouse cells, so for the human gene it supports the row by similarity.
+
 ## Reproducing
 
 ```bash
@@ -201,8 +236,10 @@ The work is incomplete. In priority order:
    - count junction CC terms that sit outside PM (desmosome `GO:0030057`,
      tight junction / bicellular tight junction, gap junction `GO:0005921`)
      as surface evidence.
-   - drop ITPR-type false positives: require the TM function and the PM annotation to be non-IBA, or
-     require that PM is not outweighed by ER-membrane experimental annotations.
+   - do **not** add rules whose only purpose is to remove ITPR1/ITPR3 (for
+     example, dropping IBA PM rows). ITPR1 has a real, outward-facing PM pool, so
+     that would make GO match a disputed label by discarding a true annotation
+     (§6). Instead, report the score with and without the disputed labels.
    - Report every change in a new row in §3; never tune on per-gene names.
 2. **Confirm the `db_go` finding** (§2, point 2) with the authors before
    publicizing it. Their code is pinned at commit `80930d0` (cloned 2026-10-21).
