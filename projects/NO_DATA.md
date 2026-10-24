@@ -304,7 +304,7 @@ It edits only the affected review blocks.
   term the review did not carry (e.g. DROME/Vps50, Vps51, Vps53 `contributes_to`
   vesicle membrane tethering; mouse/Sdhaf2 protein folding chaperone), the term
   moved to its own `NEW` row with the original reasoning and quotes.
-- **Judgement calls.** Bare protein-binding IPIs were not counted as
+- **Judgement calls (agreed 2026-10-24, now in CLAUDE.md).** Bare protein-binding IPIs were not counted as
   literature that identifies a function (yeast/CRT10, human/TIMM21 stay
   `ACCEPT`). Papers on orthologs were not counted either (yeast/COQ4, whose
   decarboxylase paper is not on yeast; DROME/Tango5, from human VMP1).
