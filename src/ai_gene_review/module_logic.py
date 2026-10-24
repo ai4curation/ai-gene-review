@@ -83,6 +83,24 @@ class Atom:
         ))
 
     @property
+    def is_grounded(self) -> bool:
+        """True when some oracle could satisfy this step.
+
+        An atom with no symbol, no accession and no required function cannot be
+        satisfied by any genome-, expression- or activity-keyed predicate, so
+        every route through it is dead and its module is unsatisfiable in every
+        context -- silently, since nothing else reports it.
+
+        >>> Atom("n", "l", "A", "P1").is_grounded
+        True
+        >>> Atom("n", "l", None, None).is_grounded
+        False
+        >>> Atom("n", "l", None, None, function_ids=("GO:0140911",)).is_grounded
+        True
+        """
+        return bool(self.gene_symbols or self.uniprots or self.function_ids)
+
+    @property
     def uniprots(self) -> tuple[str, ...]:
         """Return every concrete UniProt accession available for this step."""
         return tuple(dict.fromkeys(

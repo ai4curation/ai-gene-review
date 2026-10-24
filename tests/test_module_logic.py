@@ -29,7 +29,11 @@ from ai_gene_review.module_logic import (
     abduce,
 )
 
-GLUCONEO_HUMAN = Path("modules/gluconeogenesis_human.yaml")
+#: Anchor module paths to the repository, not the invoking cwd, so the
+#: corpus-wide tests below hold wherever pytest is started from.
+MODULES_DIR = Path(__file__).parents[1] / "modules"
+
+GLUCONEO_HUMAN = MODULES_DIR / "gluconeogenesis_human.yaml"
 
 
 def _annoton(aid: str, symbol: str, acc: str) -> dict:
@@ -387,7 +391,7 @@ def test_atom_carries_step_function_ids():
 
 
 def test_serine_module_steps_have_activities():
-    atoms = list(iter_atoms(compile_module_file("modules/phosphorylated_serine_biosynthesis.yaml")))
+    atoms = list(iter_atoms(compile_module_file(MODULES_DIR / "phosphorylated_serine_biosynthesis.yaml")))
     assert [a.function_ids for a in atoms] == [("GO:0004617",), ("GO:0004648",), ("GO:0036424",)]
 
 
@@ -434,7 +438,7 @@ def test_explicit_gene_takes_precedence_over_gene_product():
 
 
 def _curated_modules() -> list[Path]:
-    return sorted(Path("modules").glob("*.yaml"))
+    return sorted(MODULES_DIR.glob("*.yaml"))
 
 
 def test_no_curated_module_is_satisfied_by_an_empty_context():
@@ -458,4 +462,54 @@ def test_no_curated_module_is_satisfied_by_an_empty_context():
     assert vacuous == [], (
         "these modules are satisfied by a context in which no step holds: "
         + ", ".join(vacuous)
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Grounding ratchet: an ungrounded atom is satisfiable by nothing             #
+# --------------------------------------------------------------------------- #
+
+#: Atoms with no symbol, no accession and no required function, and the modules
+#: they make unsatisfiable in *every* context. Both are ratchets: they may only
+#: fall. The bulk are PROTEIN_COMPLEX participants, whose subunits sit at
+#: ``protein_complex.active_units[].participant.gene_product``, one level deeper
+#: than `_atom_from_annoton` reads; a handful are ANY_WITH_FUNCTION steps that
+#: carry no descriptor at all and would need an activity-keyed oracle.
+UNGROUNDED_ATOM_BUDGET = 354
+UNSATISFIABLE_MODULE_BUDGET = 127
+
+
+def test_ungrounded_atoms_do_not_increase():
+    """Guard the direction the empty-context test cannot see.
+
+    An empty context is *meant* to leave a module unsatisfied, so that test
+    passes just as happily when an atom is unsatisfiable by construction. This
+    is the dual guard: it counts steps no oracle could ever satisfy, which is
+    how `participant.gene_product` groundings went missing silently.
+    """
+    ungrounded = [
+        (path.name, atom.node_id)
+        for path in _curated_modules()
+        for atom in iter_atoms(compile_module_file(path))
+        if not atom.is_grounded
+    ]
+    assert len(ungrounded) <= UNGROUNDED_ATOM_BUDGET, (
+        f"ungrounded atoms rose to {len(ungrounded)} (budget "
+        f"{UNGROUNDED_ATOM_BUDGET}); a grounding slot is being missed: "
+        + ", ".join(f"{m}:{a}" for m, a in ungrounded[:10])
+    )
+
+
+def test_modules_unsatisfiable_in_every_context_do_not_increase():
+    """A module UNSAT even when every groundable step holds is dead weight."""
+    dead = []
+    for path in _curated_modules():
+        circuit = compile_module_file(path)
+        if not list(iter_atoms(circuit)):
+            continue
+        if not is_satisfied(circuit, lambda atom: atom.is_grounded):
+            dead.append(path.name)
+    assert len(dead) <= UNSATISFIABLE_MODULE_BUDGET, (
+        f"modules unsatisfiable in every context rose to {len(dead)} (budget "
+        f"{UNSATISFIABLE_MODULE_BUDGET}): " + ", ".join(dead[:10])
     )
