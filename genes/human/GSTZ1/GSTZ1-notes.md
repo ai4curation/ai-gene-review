@@ -51,3 +51,19 @@
 - CC mitochondrion / mitochondrial matrix (IBA, IDA, HTP, TAS, ISS): real secondary loc -> KEEP_AS_NON_CORE.
 - protein binding / identical protein binding (IPI HuRI/SH3): uninformative -> MARK_AS_OVER_ANNOTATED.
 - protein homodimerization activity (IPI PMID:10739172): genuine homodimer -> KEEP_AS_NON_CORE.
+
+## 2026-10-24 re-review (status COMPLETE)
+
+- Both bare GO:0005515 rows (SH3 peptide array; HuRI) are now REMOVE under the
+  protein-binding policy. Neither paper supports a more informative term; the homodimer
+  is already captured by GO:0042802/GO:0042803.
+- Glutathione transferase activity (all four rows) and cellular detoxification (IDA)
+  are now ACCEPT, as the second core function. That function is the
+  glutathione-dependent dehalogenation of dichloroacetate, directly assayed
+  [PMID:10739172] and localized to the cytosol and mitochondrial matrix [PMID:20884751].
+  Activity toward classical CDNB-type substrates stays noted as minimal [PMID:9396740].
+- Cytoplasm is now MODIFY -> cytosol. Catalytic activity and aromatic amino acid
+  metabolic process are now TOO_GENERAL.
+- Weak title-fragment quotes were replaced with curated UniProt statements (MAAI
+  reaction with ECO:0000269; GSH cofactor note; homodimer from PubMed:11327815) and with
+  PAINT rows.
