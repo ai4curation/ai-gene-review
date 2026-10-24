@@ -195,6 +195,15 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+**Measured activity is not automatically function.** For an enzyme activity that
+was assayed but is weak or promiscuous, decide whether the protein evolved to
+catalyse the reaction: a genuine secondary activity is `KEEP_AS_NON_CORE`; real
+in vitro activity of unknown relevance is `MARK_AS_OVER_ANNOTATED`; noise-level
+activity of a paralog, when a dedicated enzyme for the same reaction exists in
+the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
+the judgement in `reason`. See the promiscuous-activity tiers in
+`projects/ENZYME_SPECIFICITY.md`.
+
 ### Do not overrule curators from incomplete evidence
 
 PomBase, and the GO consortium databases generally, are highly reliable. Curators
