@@ -31,6 +31,8 @@
   `mating projection actin fusion focus` are fission-yeast-specific imports.
   The full-text S. pombe paper explicitly contrasts S. pombe Exg1 with
   ScExg1/CaXog1: fission Exg1 and Exg3 are beta-1,6-specific and cannot
-  degrade beta-1,3 glucans [PMID:20852022, "In contrast to ScExg1 and CaXog1, the S. pombe Exg1 and Exg3 were highly specific for β(1,6)-glucans"].
+  degrade beta-1,3 glucans; however, SpExg1 and Aspergillus exgA are both
+  PTHR31297:SF1 members, so that activity is over-specific for exgA rather than
+  proven to come from a separate PANTHER branch [PMID:20852022, "In contrast to ScExg1 and CaXog1, the S. pombe Exg1 and Exg3 were highly specific for β(1,6)-glucans"].
   The mating-projection localization comes from a separate fission-yeast actin
   fusion focus study [PMID:25825517, "Type V myosins are essential for fusion and concentrate cell wall hydrolases"].
