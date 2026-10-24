@@ -37,7 +37,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
-| `PTHR43290` MEVALONATE KINASE | root mevalonate-kinase node and fungal ergosterol node | `ERG12`/`erg12`/`ERG12`/`erg12` |
+| `PTHR43290` MEVALONATE KINASE | root mevalonate-kinase node and fungal ergosterol node | `ERG12`/`erg12`/`ERG12`/`ASPFU/erg12` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
@@ -272,12 +272,16 @@ localization for the vacuolar proton pump.
 
 ## Family 13: Mevalonate Kinases
 
-`PTHR43290` is a compact single-subfamily mevalonate-kinase family. PAINT
-places `GO:0004496` mevalonate kinase activity, `GO:0005829` cytosol, and
+`PTHR43290` is a compact GHMP-kinase family whose local fungal members all sit
+in the mevalonate kinase subfamily `PTHR43290:SF2`. PAINT places
+`GO:0004496` mevalonate kinase activity, `GO:0005829` cytosol, and
 `GO:0019287` IPP biosynthesis via mevalonate at the family-root
 `PANTHER:PTN000048555` node, adds fungal `GO:0006696` ergosterol biosynthetic
 process on `PANTHER:PTN000825284`, and keeps metazoan cholesterol biosynthesis
-on a separate animal descendant.
+on the separate animal node `PANTHER:PTN000825262`. The same PAINT file also
+records the non-fungal branch structure: eukaryotic `PANTHER:PTN002214956`
+prunes the root mevalonate-kinase and IPP-biosynthesis assertions by IRD, while
+plant `PANTHER:PTN008680403` carries `GO:0047940` glucuronokinase activity.
 
 - [x] `yeast/ERG12` - *S. cerevisiae* mevalonate-kinase anchor; already
   `COMPLETE` and revalidated without changes
@@ -289,15 +293,16 @@ on a separate animal descendant.
 
 ## Family 14: ALO/GULO Aldonolactone Oxidoreductases
 
-`PTHR43762` contains a broad aldonolactone oxidoreductase placement at
-`PANTHER:PTN000356408`, an exact fungal `GO:0003885`
-D-arabinono-1,4-lactone oxidase node at `PANTHER:PTN000356435`, a fungal
-mitochondrion node at `PANTHER:PTN001015900`, and a Dikarya IRD that prunes
-plant/animal/bacterial L-ascorbate biosynthesis rather than fungal
+`PTHR43762` contains a broad `GO:0016491` oxidoreductase placement and a
+plant/animal/bacterial L-ascorbate-biosynthesis placement at
+`PANTHER:PTN000356408`, a CGD/SGD-seeded exact `GO:0003885`
+D-arabinono-1,4-lactone oxidase node at `PANTHER:PTN000356435`, a
+Dikarya mitochondrial node at `PANTHER:PTN001015900`, and an IRD on that
+Dikarya node that prunes the L-ascorbate process rather than fungal
 D-erythroascorbate biosynthesis.
 
 - [x] `yeast/ALO1` - *S. cerevisiae* ALO1 anchor; revalidated without changes
-- [x] `CANAL/ALO1` - CGD *Candida albicans* ALO1 seed; revalidated without
+- [x] `CANAL/ALO1` - CGD *Candida albicans* `CANAL/ALO1` seed; revalidated without
   changes
 - [x] `NEUCR/alo-1` - *Neurospora crassa* ALO-family member; revalidated
   without changes
