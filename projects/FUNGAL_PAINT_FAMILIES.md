@@ -37,6 +37,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
+| `PTHR43290` MEVALONATE KINASE | root mevalonate-kinase node and fungal ergosterol node | `ERG12`/`erg12`/`ERG12`/`erg12` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
@@ -47,7 +48,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-10-21
+Last updated: 2026-10-24
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -91,7 +92,6 @@ paralog-aware activity and complex checks.
 - [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
 - [ ] `PTHR31297` fungal glucan exo-1,3-beta-glucosidases
 - [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
-- [ ] `PTHR43762` fungal D-arabinono-1,4-lactone oxidases
 
 ## Family 3: Chitin Synthase Export Chaperones
 
@@ -270,9 +270,59 @@ localization for the vacuolar proton pump.
 - [x] `NEUCR/vma-1` - *Neurospora crassa* V-ATPase A subunit with direct
   vacuolar ATPase context; drafted in PR #5280
 
+## Family 13: Mevalonate Kinases
+
+`PTHR43290` is a compact single-subfamily mevalonate-kinase family. PAINT
+places `GO:0004496` mevalonate kinase activity, `GO:0005829` cytosol, and
+`GO:0019287` IPP biosynthesis via mevalonate at the family-root
+`PANTHER:PTN000048555` node, adds fungal `GO:0006696` ergosterol biosynthetic
+process on `PANTHER:PTN000825284`, and keeps metazoan cholesterol biosynthesis
+on a separate animal descendant.
+
+- [x] `yeast/ERG12` - *S. cerevisiae* mevalonate-kinase anchor; already
+  `COMPLETE` and revalidated without changes
+- [x] `SCHPO/erg12` - fission-yeast mevalonate kinase; re-reviewed in PR
+  #5358
+- [x] `ASPFU/erg12` - *Aspergillus fumigatus* mevalonate kinase; drafted in PR
+  #5359
+- [x] `CANAL/ERG12` - *Candida albicans* mevalonate kinase; drafted in PR #5361
+
+## Family 14: ALO/GULO Aldonolactone Oxidoreductases
+
+`PTHR43762` contains a broad aldonolactone oxidoreductase placement at
+`PANTHER:PTN000356408`, an exact fungal `GO:0003885`
+D-arabinono-1,4-lactone oxidase node at `PANTHER:PTN000356435`, a fungal
+mitochondrion node at `PANTHER:PTN001015900`, and a Dikarya IRD that prunes
+plant/animal/bacterial L-ascorbate biosynthesis rather than fungal
+D-erythroascorbate biosynthesis.
+
+- [x] `yeast/ALO1` - *S. cerevisiae* ALO1 anchor; revalidated without changes
+- [x] `CANAL/ALO1` - CGD *Candida albicans* ALO1 seed; revalidated without
+  changes
+- [x] `NEUCR/alo-1` - *Neurospora crassa* ALO-family member; revalidated
+  without changes
+- [x] `SCHPO/alo1` - fission-yeast ALO-family member with PomBase NOT IGC rows
+  against exact substrate/process transfer; marked `COMPLETE` in PR #5368
+
 ---
 
 # NOTES
+
+## 2026-10-24
+
+- Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
+  `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
+  yeast, Aspergillus, and Candida reviews were updated in PRs #5358-#5361;
+  budding-yeast `ERG12` was already complete. All reviewed fungal members align
+  with root `PTN000048555` for mevalonate kinase activity, cytosol, and
+  mevalonate-pathway IPP biosynthesis, and with fungal `PTN000825284` for
+  ergosterol biosynthesis.
+- Finished the `PTHR43762` ALO/GULO tranche across `yeast/ALO1`,
+  `SCHPO/alo1`, `CANAL/ALO1`, and `NEUCR/alo-1`. The S. pombe review needed
+  only completion/follow-up in PR #5368: it keeps PomBase NOT rows against exact
+  D-arabinono-1,4-lactone oxidase and D-erythroascorbate biosynthesis, records
+  the anomalous deprecated `GO_REF:0000025` IGC citation as a source defect, and
+  treats broad PAINT/ARBA parent rows as too general beside `GO:0016899`.
 
 ## 2026-10-21
 
