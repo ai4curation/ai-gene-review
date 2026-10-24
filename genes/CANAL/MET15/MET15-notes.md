@@ -18,11 +18,12 @@
   O-acetylhomoserine sulfhydrylase activity, and `GO:0071269`
   L-homocysteine biosynthetic process. They no longer assert `GO:0004124`
   cysteine synthase activity, matching the 2024 C. albicans substrate assay.
-- The `GO:0004124` cysteine synthase activity and `GO:0019344` L-cysteine
-  biosynthetic process rows were removed as stale or over-propagated transfers
-  from bifunctional family members. C. albicans has a separate CysA/CysK
-  O-acetyl-L-serine route, while Met15p performs the
-  O-acetyl-L-homoserine-to-L-homocysteine step.
+- The `GO:0004124` cysteine synthase activity rows were removed as stale or
+  over-propagated transfers from bifunctional family members because purified
+  CaMet15p did not detectably convert O-acetyl-L-serine to L-cysteine. The
+  `GO:0019344` L-cysteine biosynthetic process row was kept as non-core because
+  Met15p produces L-homocysteine and `PMID:42003610` places C. albicans CYS4
+  and CYS3 in transsulfuration, allowing cysteine/homocysteine interconversion.
 - `PMID:10992284` established the original met15-deficient strain and reported
   that growth without methionine "was severely delayed" rather than fully
   abolished. `PMID:16043373` is abstract-only in the cache and only confirms
