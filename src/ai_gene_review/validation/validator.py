@@ -32,6 +32,7 @@ from ai_gene_review.validation.action_consistency import (
     check_action_consistency,
     go_ancestors,
 )
+from ai_gene_review.validation.nd_policy import check_nd_policy
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -484,6 +485,7 @@ def check_best_practices_rules(
     validate_reference_replacements(data, report)
     validate_alternative_records(data, report)
     check_protein_binding_policy(data, report)
+    check_nd_policy(data, report)
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )

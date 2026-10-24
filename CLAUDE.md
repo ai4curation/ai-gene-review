@@ -158,7 +158,8 @@ always use a holistic synthesized picture of the gene function that you have obt
 ActionEnum:
     permissible_values:
       ACCEPT:
-        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene.
+          For an ND root-term row, ACCEPT means the annotation follows the evidence-code guideline (see "ND annotations" below)
       KEEP_AS_NON_CORE:
         description: Keep the existing annotation as-is, but mark it as non-core. For pleiotropic genes, this may be the developmental
           processes, or other processes that are not the core function of the gene.
@@ -194,6 +195,23 @@ match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the te
 When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
+
+### ND annotations: reward adherence to the evidence-code guideline
+
+An ND (No biological Data available, `GO_REF:0000015`) row says a curator searched
+the literature for one aspect and found nothing to annotate. **ACCEPT it when no
+literature on this gene product, in this species, identifies a function in that
+aspect.** IBA, ISO, ISS or IEA rows in the same aspect do not make it stale: they are
+not literature on the gene, so never REMOVE an ND "because an IBA now covers the
+aspect". Only when such literature exists is the ND stale: REMOVE it (or MODIFY,
+when no fitting term existed) with `nd_case: STALE` or `ONTOLOGY_BLOCKED`, and quote
+the paper. Never use `KEEP_AS_NON_CORE`, `MARK_AS_OVER_ANNOTATED` or `TOO_GENERAL` on
+an ND, and never propose a `NEW` ND (record a `knowledge_gaps` entry instead).
+Record why there is no data in `review.nd_case`; `TRUE_GAP` and `EXISTENCE` need a
+BIOLOGY knowledge gap whose `dark_aspect` matches the ND aspect. A bare protein-binding
+IPI does not make an MF ND stale. The `nd_policy` check warns on deviations, and the
+compliance score credits an accepted ND that cites the literature search. See
+`projects/NO_DATA.md` for the case taxonomy.
 
 ### Do not overrule curators from incomplete evidence
 

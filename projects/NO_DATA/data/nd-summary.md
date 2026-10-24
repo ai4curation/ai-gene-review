@@ -39,14 +39,11 @@ Signals are provisional triage, not curated case assignments.
 
 | action | ND rows |
 |---|---:|
-| ACCEPT | 195 |
-| REMOVE | 82 |
-| MODIFY | 40 |
-| KEEP_AS_NON_CORE | 30 |
+| ACCEPT | 304 |
+| REMOVE | 31 |
+| MODIFY | 18 |
 | UNDECIDED | 4 |
-| TOO_GENERAL | 4 |
 | NEW | 4 |
-| MARK_AS_OVER_ANNOTATED | 2 |
 
 ## By provisional signal
 
@@ -63,16 +60,16 @@ Signals are provisional triage, not curated case assignments.
 
 ## Signal x action
 
-| signal \ action | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | MODIFY | NEW | REMOVE | TOO_GENERAL | UNDECIDED |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| aspect_empty | 131 | 15 | 0 | 18 | 0 | 14 | 0 | 2 |
-| coexists_with_experimental | 5 | 0 | 1 | 7 | 0 | 17 | 0 | 0 |
-| electronic_or_author_only | 10 | 2 | 0 | 0 | 0 | 13 | 0 | 2 |
-| inferable_by_homology | 36 | 13 | 1 | 13 | 2 | 37 | 4 | 0 |
-| short_orf/aspect_empty | 10 | 0 | 0 | 0 | 2 | 0 | 0 | 0 |
-| short_orf/coexists_with_experimental | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 |
-| short_orf/electronic_or_author_only | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| short_orf/inferable_by_homology | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| signal \ action | ACCEPT | MODIFY | NEW | REMOVE | UNDECIDED |
+|---|---:|---:|---:|---:|---:|
+| aspect_empty | 163 | 8 | 0 | 7 | 2 |
+| coexists_with_experimental | 12 | 7 | 0 | 11 | 0 |
+| electronic_or_author_only | 20 | 0 | 0 | 5 | 2 |
+| inferable_by_homology | 96 | 1 | 2 | 7 | 0 |
+| short_orf/aspect_empty | 10 | 0 | 2 | 0 | 0 |
+| short_orf/coexists_with_experimental | 0 | 2 | 0 | 0 | 0 |
+| short_orf/electronic_or_author_only | 2 | 0 | 0 | 0 | 0 |
+| short_orf/inferable_by_homology | 1 | 0 | 0 | 1 | 0 |
 
 ## Signal x aspect
 

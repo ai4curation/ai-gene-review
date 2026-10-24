@@ -441,7 +441,9 @@ support a GO annotation in <strong>this aspect</strong> under the evidence-code 
 <p>"Literature" means papers that identify a function, not any mention of the<br />
 gene. A screen hit, an expression change or a non-physiological in-vitro<br />
 reaction that a curator would not annotate leaves the ND correct (see N4).<br />
-Per CLAUDE.md, an accepted ND needs evidence that the literature was searched:<br />
+A bare protein-binding IPI does not count either: it identifies no function,<br />
+which is why the protein-binding policy removes it. Papers on orthologs do not<br />
+count, however strong. Per CLAUDE.md, an accepted ND needs evidence that the literature was searched:<br />
 cite the deep-research file or the reviewer's own search, not the UniProt<br />
 <code>PE</code> line.</p>
 <p><code>ACCEPT</code> here endorses the annotation as made. It does not make a root term a<br />
@@ -698,48 +700,76 @@ the signal × action table in the summary). One example is the 4 <code>NEW</code
 ND to <em>assert</em> a gap. ND is the contributing group's statement about its own<br />
 search, so we cannot meaningfully propose one. These rows should become<br />
 <code>knowledge_gaps</code> entries.</p>
-<h2 id="proposed-coupling-to-knowledge-gaps">Proposed coupling to knowledge gaps</h2>
+<h2 id="coupling-to-knowledge-gaps-implemented">Coupling to knowledge gaps (implemented)</h2>
 <ol>
-<li><strong>Schema.</strong> Add an optional <code>nd_case</code> slot (enum <code>N1</code>–<code>N7</code>, with readable<br />
-   names) on the review of an ND row. An ND row would then carry a<br />
-   machine-readable answer to "why no data".</li>
-<li><strong>Validation (best-practice warnings, not errors):</strong></li>
-<li><code>nd_case: TRUE_GAP</code> (N4) or <code>EXISTENCE</code> (N3) requires a <code>BIOLOGY</code><br />
-<code>KnowledgeGap</code> whose <code>dark_aspect</code> matches the ND aspect (table above).</li>
-<li>An ND with <code>REMOVE</code> or <code>MODIFY</code> requires <code>nd_case: STALE</code> (N1) or<br />
-<code>ONTOLOGY_BLOCKED</code> (N5). <code>ACCEPT</code> is expected for every other case.</li>
-<li><code>KEEP_AS_NON_CORE</code> on an ND warns, and suggests <code>ACCEPT</code>.</li>
-<li><code>REMOVE</code> of an ND whose aspect has no experimental annotation in GOA<br />
-     warns, unless the review adds a literature-backed term in that aspect.<br />
-     This catches removal "because an IBA exists".</li>
-<li><code>NEW</code> on an ND row warns, and suggests a <code>knowledge_gaps</code> entry instead.</li>
-<li>A <code>BIOLOGY</code> gap with <code>dark_aspect: MF_DARK</code> on a gene whose GOA has an<br />
-     MF ND with no <code>nd_case</code> produces a reminder to classify the row.</li>
-<li><strong>Upstream.</strong> N1 rows where the MOD has already annotated the aspect are<br />
-   GORULE:0000054 conflicts. They can go to <code>source_defects</code> and on to the<br />
+<li><strong>Schema.</strong> <code>review.nd_case</code> (<code>NoDataCaseEnum</code>: <code>STALE</code>, <code>INFERABLE</code>,<br />
+<code>EXISTENCE</code>, <code>TRUE_GAP</code>, <code>ONTOLOGY_BLOCKED</code>, <code>NEGATIVE</code>) records why an ND<br />
+   row has no data. Bookkeeping artifacts (N7) are re-checked and given one of<br />
+   these values. The <code>ACCEPT</code> description now says what ACCEPT means on an ND<br />
+   row.</li>
+<li><strong>Validation</strong> (<code>nd_policy</code>, best-practice warnings):</li>
+<li><code>KEEP_AS_NON_CORE</code>, <code>MARK_AS_OVER_ANNOTATED</code> or <code>TOO_GENERAL</code> on an ND;</li>
+<li><code>REMOVE</code> or <code>MODIFY</code> on an ND without <code>nd_case</code> <code>STALE</code> or<br />
+<code>ONTOLOGY_BLOCKED</code>, which catches removal "because an IBA exists";</li>
+<li><code>ACCEPT</code> with <code>nd_case</code> <code>STALE</code> or <code>ONTOLOGY_BLOCKED</code>;</li>
+<li><code>NEW</code> on an ND row (record a <code>knowledge_gaps</code> entry instead);</li>
+<li><code>nd_case</code> <code>TRUE_GAP</code> or <code>EXISTENCE</code> without a <code>BIOLOGY</code> gap whose<br />
+<code>dark_aspect</code> matches the ND aspect (<code>MF_DARK</code>, <code>BP_DARK</code> or <code>CC_DARK</code>,<br />
+     or <code>WHOLLY_DARK</code>), on the row, the gene or a core function;</li>
+<li><code>nd_case</code> on a non-ND row.</li>
+<li><strong>Compliance</strong> (<code>qc_config.yaml</code>, the evidence-code × action rule table):<br />
+<code>nd_search_support</code> credits an <code>ACCEPT</code>ed ND that gives a reason and cites<br />
+   a source for the literature search (e.g. the deep-research file).<br />
+<code>nd_stale_support</code> credits a <code>REMOVE</code>d or <code>MODIFY</code>d ND only for a PMID/DOI<br />
+   quote from the literature that makes it stale.</li>
+<li><strong>Upstream (to do).</strong> N1 rows where the MOD has already annotated the aspect<br />
+   are GORULE:0000054 conflicts. They can go to <code>source_defects</code> and on to the<br />
    per-resource reports. N7 bulk-date clusters are a question for the MOD,<br />
    not a defect.</li>
 </ol>
+<h2 id="re-action-pass-2026-10-24">Re-action pass (2026-10-24)</h2>
+<p><code>scripts/apply_acceptance_rule.py</code> applied decisions made by reading each<br />
+non-<code>ACCEPT</code> ND row's reason and the review's other rows in the same aspect.<br />
+It edits only the affected review blocks.</p>
+<ul>
+<li><strong>49 rows kept <code>REMOVE</code>/<code>MODIFY</code> with <code>nd_case: STALE</code></strong>: the review cites<br />
+  literature on this gene in this species (e.g. <a href="../../genes/yeast/MDM10/MDM10-ai-review.html">yeast/MDM10</a>, <a href="../../genes/mouse/Capsl/Capsl-ai-review.html">mouse/Capsl</a>,<br />
+<a href="../../genes/ARATH/MLO2/MLO2-ai-review.html">ARATH/MLO2</a>, <a href="../../genes/DANRE/elna/elna-ai-review.html">DANRE/elna</a>, <a href="../../genes/human/ARL15/ARL15-ai-review.html">human/ARL15</a>).</li>
+<li><strong>109 rows changed to <code>ACCEPT</code></strong>: 51 <code>REMOVE</code> (mostly "superseded by the<br />
+  IBA"), 30 <code>KEEP_AS_NON_CORE</code>, 22 <code>MODIFY</code> to an inferred term, 4<br />
+<code>TOO_GENERAL</code> and 2 <code>MARK_AS_OVER_ANNOTATED</code>. The earlier reason is kept inside<br />
+  the new one. <code>nd_case</code> was set to <code>TRUE_GAP</code> where the review already has a<br />
+  matching <code>BIOLOGY</code> gap and to <code>INFERABLE</code> where a retained inferred row<br />
+  covers the aspect; it was left unset otherwise.</li>
+<li><strong>12 <code>NEW</code> rows added</strong>: where a converted <code>MODIFY</code> proposed an inferred<br />
+  term the review did not carry (e.g. <a href="../../genes/DROME/Vps50/Vps50-ai-review.html">DROME/Vps50</a>, <a href="../../genes/DROME/Vps51/Vps51-ai-review.html">Vps51</a>, <a href="../../genes/DROME/Vps53/Vps53-ai-review.html">Vps53</a> <code>contributes_to</code><br />
+  vesicle membrane tethering; <a href="../../genes/mouse/Sdhaf2/Sdhaf2-ai-review.html">mouse/Sdhaf2</a> protein folding chaperone), the term<br />
+  moved to its own <code>NEW</code> row with the original reasoning and quotes.</li>
+<li><strong>Judgement calls.</strong> Bare protein-binding IPIs were not counted as<br />
+  literature that identifies a function (<a href="../../genes/yeast/CRT10/CRT10-ai-review.html">yeast/CRT10</a>, <a href="../../genes/human/TIMM21/TIMM21-ai-review.html">human/TIMM21</a> stay<br />
+<code>ACCEPT</code>). Papers on orthologs were not counted either (<a href="../../genes/yeast/COQ4/COQ4-ai-review.html">yeast/COQ4</a>, whose<br />
+  decarboxylase paper is not on yeast; <a href="../../genes/DROME/Tango5/Tango5-ai-review.html">DROME/Tango5</a>, from human <a href="../../genes/human/VMP1/VMP1-ai-review.html">VMP1</a>).<br />
+<code>NAS</code> and Reactome <code>TAS</code> rows on the gene were counted (<a href="../../genes/DROME/Kpc1/Kpc1-ai-review.html">DROME/Kpc1</a>,<br />
+<a href="../../genes/human/TAT/TAT-ai-review.html">human/TAT</a>).</li>
+<li><strong>Left alone:</strong> 4 <code>UNDECIDED</code> rows, and 4 <code>NEW</code> ND rows (<a href="../../genes/SCHPO/tam10/tam10-ai-review.html">SCHPO/tam10</a> ×2,<br />
+<a href="../../genes/MYCTU/Rv0898c/Rv0898c-ai-review.html">MYCTU/Rv0898c</a>, <a href="../../genes/human/P3R3URF/P3R3URF-ai-review.html">human/P3R3URF</a>), which need knowledge gaps written by<br />
+  reading before the row can go.</li>
+</ul>
+<p>After the pass: 304 <code>ACCEPT</code> (32 <code>TRUE_GAP</code>, 63 <code>INFERABLE</code>, 209 not yet<br />
+classified), 31 <code>REMOVE</code> and 18 <code>MODIFY</code> (all <code>STALE</code>).</p>
 <h2 id="plan">Plan</h2>
 <ul>
 <li>[x] Inventory script and summary (<a href="NO_DATA/data/nd-summary.html">data</a>)</li>
-<li>[ ] Agree on the case list and the action per case (questions below)</li>
-<li>[ ] Classify a seed set by reading: the 30 <code>coexists_with_experimental</code> rows<br />
-      (expected N1) and the 62 accepted, gap-less <code>aspect_empty</code> rows<br />
-      (expected N4, which should gain gaps)</li>
-<li>[ ] Add <code>nd_case</code> to the schema and the warnings to best-practice validation</li>
-<li>[ ] Re-action pass under the acceptance rule (needs a <code>history/</code> record per<br />
-      gene): the 30 <code>KEEP_AS_NON_CORE</code> ND rows go to <code>ACCEPT</code>; the 65 <code>REMOVE</code><br />
-      rows whose aspect has no experimental annotation in GOA are read, and go<br />
-      to <code>ACCEPT</code> unless the review found supporting literature (N1)</li>
+<li>[x] Agree on the action per case: guideline-conformant ND is <code>ACCEPT</code></li>
+<li>[x] Add <code>nd_case</code> to the schema, <code>nd_policy</code> warnings, ND compliance rules</li>
+<li>[x] Re-action pass (above)</li>
+<li>[ ] Classify the 209 unclassified <code>ACCEPT</code> rows by reading; the 62 gap-less<br />
+<code>aspect_empty</code> rows are expected to be N4 and gain <code>BIOLOGY</code> gaps</li>
+<li>[ ] Replace the 4 <code>NEW</code> ND rows with <code>knowledge_gaps</code> entries</li>
 <li>[ ] N1 upstream report from <code>source_defects</code></li>
 </ul>
 <h2 id="open-questions">Open questions</h2>
 <ul>
-<li><strong>Wording of <code>ACCEPT</code>.</strong> The <code>ActionEnum</code> text says ACCEPT means "retain as<br />
-  representing the core function". Should it gain a sentence saying that for<br />
-  ND (and other root-term) rows, ACCEPT means the annotation follows the<br />
-  evidence-code guidelines?</li>
 <li><strong>N2 against GORULE:0000054.</strong> The rule reports an ND next to an IBA. We<br />
   accept both, because the ND correctly says that no literature exists for this<br />
   species. Is that worth raising with GO as a clarification of the rule?</li>
@@ -756,9 +786,9 @@ search, so we cannot meaningfully propose one. These rows should become<br />
     <strong>Local changes</strong> ·
 
     Last committed source:
-    <time datetime="2026-10-24T04:44:17Z">24 Oct 2026, 04:44 UTC</time>
-    · <a href="https://github.com/ai4curation/ai-gene-review/commit/6f21a7dd612a4b5930b23e04857931744dd6661e" aria-label="View source change 6f21a7dd612a4b5930b23e04857931744dd6661e">6f21a7dd612a</a>
-    · <a href="https://github.com/ai4curation/ai-gene-review/blob/6f21a7dd612a4b5930b23e04857931744dd6661e/projects/NO_DATA.md">View committed source</a>
+    <time datetime="2026-10-24T13:52:00Z">24 Oct 2026, 13:52 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/589ca34bd726f27a757d53b2ea30777a9048d753" aria-label="View source change 589ca34bd726f27a757d53b2ea30777a9048d753">589ca34bd726</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/589ca34bd726f27a757d53b2ea30777a9048d753/projects/NO_DATA.md">View committed source</a>
 
 </small>
 
