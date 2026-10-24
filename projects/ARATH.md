@@ -676,3 +676,15 @@ L1 than L2, PMID:32311173; mutants show mtLPD1 predominant in photorespiration,
 PMID:41990722) is now cited in the photorespiration module. GGAT2's
 photorespiration row rests on enzyme activity, leaf peroxisome peptides and
 expression only; no ggat2 mutant has been described.
+
+## 2026-10-24
+
+- OST1: the four general kinase MF rows now MODIFY to GO:0004674, matching SnRK2.2 and SnRK2.3.
+- OpenScientist checked the two single-study potassium channel inhibitor calls. Neither finding
+  has been independently replicated. For CBL10/AKT1 the in-planta data are overexpression-only,
+  so AKT1 inhibition was dropped from CBL10's core functions. For SLAC1/KAT1, slac1
+  loss-of-function shows reduced rather than increased inward K+ current (PMID:23126621). Both
+  keep their MODIFY rows with caveats; SLAC1's replacement moves to GO:0070320 (inward rectifier
+  potassium channel inhibitor activity), matching CBL10. Reports are in each gene's
+  `-hypotheses/` folder.
+

@@ -95,3 +95,25 @@ PMID:19448033 and PMID:31858132 have full text.
 
 - Tonoplast core function MF changed from GO:0043539 to GO:0043495 protein-membrane adaptor activity, with a NEW IDA row on PMID:19832944 [PMID:19832944 "distinct targeting signals located in the N-terminal domain of CBL proteins determine the spatially discrete localization of CBL/CIPK complexes"], the curated UniProt note "Exclusively targeted to the tonoplast when interacting with CIPK24", and S-acylation-dependent tonoplast targeting (PMID:31441225, added to publications/).
 - AKT1 binding row and the AKT1 core function: GO:0019870 refined to GO:0070320 inward rectifier potassium channel inhibitor activity (AKT1 is an inward rectifier).
+
+## 2026-10-24: OpenScientist run on AKT1 inhibition
+
+Report: `CBL10-hypotheses/cbl10-akt1-inhibition/openscientist.md` (3 iterations, ~26 min).
+Hypothesis: CBL10 directly inhibits AKT1, independently of CIPK kinase activity, and this
+has been replicated.
+
+- Verdict from the run: partially supported, single-source. No study citing Ren et al. 2013
+  re-measured AKT1 currents or root K+ in cbl10 loss-of-function plants. [file:ARATH/CBL10/CBL10-hypotheses/cbl10-akt1-inhibition/openscientist.md "The in-planta support that does exist is overexpression-based, not derived from *cbl10*-null plants"]
+- Checked here: the Ren 2013 abstract confirms the in-planta lines are overexpressors and
+  that the inhibition was shown by electrophysiology in oocytes and root protoplasts
+  [PMID:23331977 "The CBL10-over-expressing lines showed a phenotype as sensitive as that of the akt1 mutant under low-K+ conditions"].
+  The HAK5 claim was confirmed from the PMID:26474642 abstract (CBL1/8/9/10 with CIPK23
+  activate HAK5). I did not re-check the citation counts (76 citing papers, 105 Europe PMC records).
+- Where I disagree with the report: it recommends against GO:0019870 because the mechanism
+  is competition with CIPK23 and because CBL10 activates HAK5. GO:0019870 and its child
+  GO:0070320 (used here since #5245) mean binding a potassium channel and reducing its
+  activity, which a competitive binder satisfies, and HAK5 is a different target reached
+  through a kinase. So the GO:0005515 MODIFY to GO:0070320 stays, with a single-source
+  caveat added to its reason.
+- Change made: the AKT1-inhibition core function was removed. Single-lab, overexpression-only
+  in planta, and peripheral to the Ca2+-sensor role with CIPK24.
