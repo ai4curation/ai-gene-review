@@ -43,6 +43,11 @@
 - UniProt curates Hmg2 as the second A. fumigatus HMG-CoA reductase in the
   early mevalonate module: "Hmg1 and hmg2 catalyze the reduction of
   hydroxymethylglutaryl-CoA (HMG-CoA) to mevalonate".
+- PMID:16110826 and PMID:22106303 are the primary UniProt-cited papers on the
+  hmg2 entry. Both are cached only as abstracts here; PMID:22106303 supports
+  the distinctive A. fumigatus connection between mevalonate, ergosterol, and
+  TAFC siderophore biosynthesis, but its perturbation experiments are on hmg1
+  rather than on weakly expressed hmg2.
 - Gonzalez-Jimenez et al. studied hmg2 explicitly in the context of
   cyp51A-independent azole resistance and reported that both hmg1 and hmg2
   encode HMG-CoA reductases involved in ergosterol biosynthesis
