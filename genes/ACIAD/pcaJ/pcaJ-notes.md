@@ -15,5 +15,6 @@
   A. calcoaceticus [PMID:6780551 "each transferase appears to have an alpha 2
   beta 2 oligomeric structure formed by association of nonidentical
   subunits"]; GO:0047569 is therefore contributes_to.
-- catJ (ACIAD1449) is sequence-identical and shares the UniProt entry
-  [PMID:8125318].
+- catJ (ACIAD1449) encodes a near-identical, isofunctional protein that UniProt
+  merges into the same entry [file:ACIAD/pcaJ/pcaJ-uniprot.txt "Name=catJ;
+  OrderedLocusNames=ACIAD1449;"; PMID:8125318].

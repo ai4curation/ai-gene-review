@@ -18,6 +18,8 @@
   MODIFY to contributes_to, as for PSEPK pcaI/pcaJ.
 - pcaI heads the pcaIJFBDKCHG operon [PMID:8063101 "all of the pca structural
   genes are tightly grouped in the order pcaIJFBDKCHG within a single operon"].
-- catI (ACIAD1448) is sequence-identical and is merged into the same UniProt
-  entry [PMID:8125318 "the catIJF region, known to exchange genetic information
+- catI (ACIAD1448) encodes a near-identical, isofunctional protein that UniProt
+  merges into the same entry [file:ACIAD/pcaI/pcaI-uniprot.txt "Name=catI;
+  OrderedLocusNames=ACIAD1448;"]; the catIJF and pcaIJF regions exchange
+  sequence [PMID:8125318 "the catIJF region, known to exchange genetic information
   with the pcaIJF region"].
