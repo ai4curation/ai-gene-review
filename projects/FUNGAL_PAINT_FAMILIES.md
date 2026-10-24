@@ -38,6 +38,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
 | `PTHR43290` MEVALONATE KINASE | root mevalonate-kinase node and fungal ergosterol node | `ERG12`/`erg12`/`ERG12`/`ASPFU/erg12` |
+| `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
@@ -350,6 +351,28 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 - [ ] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
   PTHR43797:SF2 subfamily
 
+## Family 17: HMG-CoA Reductases
+
+`PTHR10572` contains class I HMG-CoA reductases. PAINT places exact
+NADPH-dependent HMG-CoA reductase activity and broad isoprenoid biosynthesis on
+the conserved `PANTHER:PTN000060346` catalytic node, ER membrane on
+`PANTHER:PTN000060347`, and fungal ergosterol biosynthesis on
+`PANTHER:PTN000832055`. The same `PTN000060347` node also carries a
+peroxisomal-membrane assertion placed too broadly above fungi that needs
+pruning from fungal ER HMG-CoA reductases.
+
+- [x] `CANAL/HMG1` - *Candida albicans* HMG-CoA reductase; drafted in PR #5454
+- [x] `ASPFU/hmg1` - major *Aspergillus fumigatus* HMG-CoA reductase with
+  TAFC-linked mevalonate evidence; drafted in PR #5456
+- [x] `ASPFU/hmg2` - second *A. fumigatus* HMG-CoA reductase paralog; drafted
+  in PR #5458
+- [x] `EMENI/AN1593` - short *A. nidulans* pimaradiene-cluster HMG-CoA
+  reductase; drafted in PR #5459
+- [x] `SCHPO/hmg1` - essential fission-yeast ER/nuclear-envelope HMG-CoA
+  reductase; drafted in this branch
+- [ ] `yeast/HMG1` and `yeast/HMG2` - budding-yeast ER/nuclear-envelope
+  isozymes that already remove the stale peroxisomal IBA
+
 ---
 
 # NOTES
@@ -363,6 +386,13 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
   `PTN002887184` PAINT node for homocysteine synthase activity and
   L-homocysteine biosynthesis.
 
+- Started `PTHR10572`, separating long fungal sterol-pathway HMG-CoA
+  reductases from Aspergillus short cluster paralogs. `CANAL/HMG1`,
+  `ASPFU/hmg1`, `ASPFU/hmg2`, and `SCHPO/hmg1` all remove the stale
+  peroxisomal-membrane IBA from `PTN000060347` while keeping exact HMGR
+  activity and the ER-membrane and fungal ergosterol branches where appropriate;
+  `EMENI/AN1593` keeps exact HMGR catalysis but removes ergosterol and
+  ER-specific terms that overreach the pimaradiene-cluster paralog.
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
   yeast, Aspergillus, and Candida reviews were updated in PRs #5358-#5361;
