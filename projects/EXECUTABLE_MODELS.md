@@ -224,15 +224,16 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [ ] Node-level `model_associations` for external model variables
 - [ ] First constraint-based model type
 - [ ] First agent-based model, following the dismech layout
-- [ ] Payload JSON Schema and `module-to-bnet --all --json` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
+- [ ] Payload JSON Schema and a `--json` mode for `module-to-bnet` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
 - [ ] Shared conformance fixtures run by every implementation (architecture, Order step 2)
 
 # NOTES
 
 ## 2026-10-20
 
-AmiGO 3 gained a Dynamics tab on module pages
-([cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74)). It ports this
+AmiGO 3 is adding a Dynamics tab to module pages
+([cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74), opened today, merged
+2026-10-21). It ports this
 repository's translator, which reproduces `module-to-bnet` on all 559 translating
 modules at `924358b17`, and has its own JS engine. With two viewers, the translator
 now exists twice. [Architecture](EXECUTABLE_MODELS/architecture.md) records the

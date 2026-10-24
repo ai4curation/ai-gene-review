@@ -46,16 +46,17 @@ Two facts make consolidation easier:
   each scenario its settings, rule overrides and removed edges.
 - **The translator and engine depend on very little.** `module_boolean` and
   `module_dynamics` themselves need only `pyyaml` and the standard library. The
-  exception is the one-line `as_list` helper, which `module_boolean` and
-  `module_notation` import from `render_modules`; that module in turn imports `jinja2`
-  and `module_qc`. Moving `as_list` into a leaf module is a prerequisite for the
-  package extraction below.
+  exception is the one-line `as_list` helper, which `module_boolean`,
+  `module_dynamics` and `module_notation` import from `render_modules`; that module
+  in turn imports `jinja2` and `module_qc`. Moving `as_list` into a leaf module is a
+  prerequisite for the package extraction below.
 
 ## Plan
 
 1. **Make the payload the contract.** Write a versioned JSON Schema for the
-   `boolean_model_payload` output and add `ai-gene-review module-to-bnet --all --json`
-   to emit it for every module. Viewers then consume the payload, never module YAML,
+   `boolean_model_payload` output and add a `--json` mode to `ai-gene-review
+   module-to-bnet`, which together with its existing `--all` emits it for every
+   module. Viewers then consume the payload, never module YAML,
    so `activation_logic` and flattening are known only to the translator.
 2. **One translator, kept with the schema.**
    - **Now:** `amigo3 build --repository` already snapshots this repository. It should
@@ -97,7 +98,7 @@ Two facts make consolidation easier:
    port and its parity tests.~~ Merged 2026-10-21.
 2. Conformance fixtures here, run in both repositories' CI. This depends on nothing
    else, and every later step then lands with a check underneath it.
-3. Here: `module-to-bnet --all --json` plus the payload JSON Schema.
+3. Here: a `--json` mode for `module-to-bnet`, plus the payload JSON Schema.
 4. AmiGO 3 build consumes the payload, with the port kept as a fallback for one
    release.
 5. Extract the JS engine and point `executable_model.html.j2` at it.
