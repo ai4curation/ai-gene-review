@@ -42,3 +42,11 @@ The six imported products remain P49961-1(510),-2(517),-3(306),-4(372),-5(402),-
 ## Core synthesis and reproducible products
 
 One apyrase unit represents successive extracellular ATP/ADP hydrolysis with phosphate release, class-level nucleotide catabolism and the demonstrated contribution to negative regulation of platelet aggregation. The external side of the plasma membrane is the specific core location supported by the human surface evidence. The independently read originals are PMID:8529670 (printed pp. 67, 70–71; Table 3), PMID:8996251 (Methods, Fig. 1 and human surface Fig. 5), and PMID:10636909 (Methods, Fig. 4 and Fig. 5 Results). Native placental enzyme was not isoform resolved; endothelial human and porcine experiments remain distinguished. A separate CD73 reaction produces adenosine. The [product-analysis bundle](ENTPD1-bioinformatics/RESULTS.md) supplies exact replay inputs and coordinate projections for all six source-described human products; these projections do not establish functional equivalence.
+
+## Follow-up evidence boundaries
+
+[PMID:17502665](https://doi.org/10.1084/jem.20062512), official PMC Results sections3–5/Figures3–5 and Methods12–15, connects mouse CD39-dependent nucleotide degradation to CD73-mediated adenosine generation, A2A-dependent responses, proliferation and graft suppression. This supports the immune-regulatory context while leaving AMP hydrolysis with CD73. Human/primate observations in that paper remain unpublished.
+
+[PMID:16478441](https://doi.org/10.1042/BJ20051568), Results and Figures1–3, supports human CD39–RanBPM association and identifies CD39 as the enzyme whose ATP/ADP hydrolysis is reduced by RanBPM. It does not establish CD39 as an adapter or an enzyme regulator. The review retains the supported association as non-core under the campaign instructions.
+
+The CDP/UDP questions identify measurements missing from the inspected human substrate panel and the partially accessible rat original; they do not erase the accepted PAINT UDP assertion or claim that the entire literature lacks those measurements.
