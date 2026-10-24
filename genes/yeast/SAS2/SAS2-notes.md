@@ -47,3 +47,32 @@
   does not mention Sas2, and the zinc-binding RCA row now cites the
   bioinformatic zinc-proteome method plus the UniProt C2HC MYST zinc-finger
   feature.
+
+## 2026-10-11 GOA source refresh
+
+- Ran `just fetch-gene yeast SAS2`, then forced a current GOA/UniProt refresh with
+  `just fetch-gene yeast SAS2 --force`. The 2026 live GOA feed split several
+  IntAct protein-binding rows by supporting entity and added current source rows
+  for the SAS4/Cac1 interactions from PMID:11731480, the SAS4 chromatin
+  interactome association from PMID:21179020, the ComplexPortal SAS
+  acetyltransferase complex annotation from PMID:11731480, and the UniProt
+  protein-lysine-acetyltransferase activity annotation from PMID:22020126.
+- Marked nine rows that vanished from the current GOA snapshot as `retired:
+  true`: six old UniProt keyword rows, the Krogan 2006 IntAct SAS4
+  protein-binding row, and two stale Q99314-supported protein-binding rows that
+  had been seeded from the pre-force local GOA snapshot. The retirements record
+  upstream disappearance only; they do not change the biological interpretation
+  of Sas2 as the catalytic SAS-I/SAS acetyltransferase subunit.
+- Re-read cached PMID:11731480, PMID:21179020, and PMID:22020126 while resolving
+  the new rows. PMID:11731480 is abstract-only in the cache but directly states
+  that Sas2 interacts with Cac1 and Asf1 and is present in a nuclear protein
+  complex with Sas4 and Sas5. PMID:21179020 has full text cached and supports the
+  high-throughput chromatin-associated interactome source. PMID:22020126 is
+  abstract-only in the cache but directly reports ySas2 active-site lysine
+  autoacetylation and its requirement for acetylation and protein substrate
+  binding in vitro.
+- `just deep-research-falcon yeast SAS2 --fallback perplexity-lite` could not run
+  in this environment because the deep-research provider credentials were absent.
+  I searched the current web/PubMed-facing index for 2024-2026 direct
+  Sas2/SAS-I primary papers and did not find evidence that changes the September
+  IBA review.

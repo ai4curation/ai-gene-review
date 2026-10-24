@@ -191,6 +191,19 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Report how much of PAINT's IBD.gaf (IBD/IRD/IKR node rows) our family reviews cover.
+# Prints markdown; writes no files. --leaf also weights by leaf IBA rows (slower).
+# Example: just paint-review-coverage --leaf
+paint-review-coverage *args="":
+    uv run python scripts/paint_review_coverage.py {{args}}
+
+# Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
+# `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
+# verdict or overwrites a curated field; lists losses still judged with a gain verdict.
+# Dry run by default. Example: just fill-node-evidence --apply interpro/panther/PTHR12210/PTHR12210-review.yaml
+fill-node-evidence *args="":
+    uv run python -m ai_gene_review.validation.family_node_evidence {{args}}
+
 # Regenerate the PANTHER IBA project tables through public wrapper recipes.
 # These may download cached PAINT source data on the first run.
 [group('QC')]
@@ -271,6 +284,12 @@ cache-gocams *args="":
 # Rebuild gocams/index.tsv (gene product -> GO-CAM activity) from the cache
 gocam-index *args="":
     uv run ai-gene-review gocam-index {{args}}
+
+# Collect structured source-database defects (review.source_defects and GO-CAM
+# activity_reviews[].source_defects) into reports/source-defects.tsv plus one
+# Markdown report per upstream resource in reports/source-defects/. See docs/source_defects.md.
+export-source-defects *args="":
+    uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
@@ -2605,6 +2624,21 @@ scan-prose-panther *args="": ensure-panther-members
 [group('QC')]
 panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# Audit Swiss-Prot reviews outside their exact taxon's reference proteome.
+# Default writes CSV + issue-ready Markdown; use --format csv/markdown, --species POPTR,
+# --refresh, --offline, or --output-dir PATH. See projects/ORPHAN_CURATED.md.
+[group('QC')]
+[positional-arguments]
+orphan-curated *ARGS:
+    uv run python -m ai_gene_review.analysis.orphan_curated "$@"
+
+# Render counterpart assessments from project frontmatter genes and curated review YAML.
+# Defaults to ORPHAN_CURATED; accepts --project PATH, --output-dir PATH and --check.
+[group('QC')]
+[positional-arguments]
+project-counterparts *ARGS:
+    uv run python -m ai_gene_review.analysis.project_counterparts "$@"
 
 # ============ History records (ported from dismech) ============
 # Append-only curation session history under history/. See docs/history.md.

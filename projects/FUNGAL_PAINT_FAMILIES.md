@@ -2,7 +2,8 @@
 title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
-species: [yeast, SCHPO, CANAL, NEUCR]
+species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
+autolink_exclude: [Ser]
 ---
 
 # Fungal PAINT Family Reviews
@@ -36,12 +37,16 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR35329` CHITIN SYNTHASE EXPORT CHAPERONE | fungal `CHS7` node | `CHS7`/`Q5AA40`/`csc-1` |
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
+| `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
+| `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
+| `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
+| `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-10-11
+Last updated: 2026-10-21
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -72,11 +77,13 @@ paralog-aware activity and complex checks.
 - [x] `yeast/ESA1` - NuA4 catalytic subunit; drafted in PR #4604
 - [x] `yeast/SAS2` - SAS-I catalytic subunit; drafted in PR #4606
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
-- [ ] `SCHPO/mst1` - fission yeast MYST acetyltransferase
 - [x] `SCHPO/mst2` - fission yeast MYST acetyltransferase; drafted in this branch
+- [x] `SCHPO/mst1` - fission yeast NuA4 MYST acetyltransferase; drafted in this
+  branch
 - [x] `CANAL/ESA1` - CGD-seeded Esa1/NuA4 catalytic subunit; merged in PR
   #4774
-- [ ] `NEUCR` MYST-family member
+- [x] `NEUCR/esa-1` - Neurospora ESA1/NuA4 catalytic subunit; drafted in
+  this branch
 
 ## Later Candidates
 
@@ -132,17 +139,20 @@ exo-1,3-beta-glucosidase node.
 
 ## Family 6: PKA Regulatory Subunits
 
-`PTHR11635` contains the conserved PKA regulatory-subunit node
-`PANTHER:PTN004280545`, a fungal nuclear-localization node
-`PANTHER:PTN000908765`, and a broad cAMP-signaling/cytosol node
-`PANTHER:PTN000180782` whose `GO:0007189` GPCR-pathway assertion needs
-step-specific review in each fungus.
+`PTHR11635` contains the root PKA regulatory-chain node
+`PANTHER:PTN004280545`, which carries the conserved cAMP binding, PKA
+catalytic-subunit binding, PKA inhibitor, and PKA-complex assertions; fungal
+node `PANTHER:PTN000908765`, which carries nuclear localization; and the broad
+cAMP-signaling/cytosol node `PANTHER:PTN000180782`, which carries cytosol and
+an over-scoped GPCR/adenylate-cyclase pathway assertion.
 
-- [ ] `yeast/BCY1` - *S. cerevisiae* PKA regulatory subunit
-- [x] `SCHPO/cgs1` - *S. pombe* PKA regulatory subunit; merged in PR #4763
-- [x] `CANAL/BCY1` - CGD-seeded *Candida albicans* Bcy1; merged in PR #4751
-- [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; drafted in this
-  branch
+- [x] `CANAL/BCY1` - *Candida albicans* PKA regulatory subunit; merged in PR
+  #4751
+- [x] `NEUCR/mcb` - *Neurospora crassa* PKA regulatory subunit; merged in PR
+  #4756
+- [x] `SCHPO/cgs1` - fission-yeast PKA regulatory subunit; merged in PR #4763
+- [x] `yeast/BCY1` - budding-yeast PKA regulatory-subunit anchor; drafted in
+  this branch
 
 ## Family 7: Sterol C-8 Isomerases
 
@@ -160,9 +170,124 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
 - [x] `NEUCR/erg-1` - *Neurospora crassa* sterol C-8 isomerase; merged in PR
   #4719
 
+## Family 8: WDR12/Ytm1 Pre-60S Assembly Factors
+
+`PTHR19855` contains an Ascomycota WDR12/Ytm1 ancestor,
+`PANTHER:PTN000458086`, with PAINT assertions for the large-subunit
+preribosome, PeBoW complex, and ribosomal large subunit biogenesis. The node is
+seeded by curated *S. cerevisiae* YTM1 evidence, with additional *S. pombe*
+`ytm1` support for `GO:0042273 ribosomal large subunit biogenesis`, and sits
+separately from the sibling fungal mitochondrial/peroxisome-fission adaptor
+node `PANTHER:PTN002336496`.
+
+- [x] `yeast/YTM1` - *S. cerevisiae* Nop7-Erb1-Ytm1 pre-60S factor; merged in
+  PR #5118
+- [x] `SCHPO/ytm1` - fission-yeast WDR12/Ytm1 seed; merged in PR #5121
+- [x] `CANAL/YTM1` - *Candida albicans* CGD member; merged in PR #5120
+- [x] `NEUCR/ytm1` - *Neurospora crassa* WDR12/Ytm1 member; merged in PR
+  #5117
+
+## Family 9: ATG8/LC3/GABARAP Autophagy Modifiers
+
+`PTHR10969` contains the compact eukaryotic ATG8/LC3/GABARAP ancestor,
+`PANTHER:PTN000103522`, with PAINT assertions for autophagosome membrane,
+phosphatidylethanolamine binding, autophagosome assembly, mitophagy,
+nitrogen-starvation response, and autophagosome maturation. It also contains
+the fungal `PANTHER:PTN000861115` node for fungal-type vacuole membrane,
+seeded by budding- and fission-yeast Atg8 annotations.
+
+- [x] `yeast/ATG8` - *S. cerevisiae* Atg8 anchor with extensive Cvt,
+  mitophagy, nucleophagy, ER-phagy, vacuole-membrane, and lipid-droplet rows;
+  opened in PR #5258
+- [x] `SCHPO/atg8` - fission-yeast Atg8 seed with direct PAS, Hfl1,
+  Atg38, mitophagy, ER-phagy, and nucleophagy evidence; opened in PR #5256
+- [x] `CANAL/ATG8` - CGD-seeded *Candida albicans* Atg8 ortholog with
+  autophagy and ER-stress genetic-interaction evidence; opened in PR #5257
+- [x] `NEUCR/apg-6` - *Neurospora crassa* ATG8-family member; opened in PR
+  #5255
+- [x] `ASPFU/atg8` - *Aspergillus fumigatus* ATG8-family member with direct
+  GFP/RFP-AfAtg8 literature; opened in PR #5260
+- [x] `EMENI/atg8` - *Aspergillus nidulans* ATG8-family member with direct
+  PAS and GFP-Atg8 imaging literature; opened in PR #5261
+
+## Family 10: Sec11 Signal Peptidase Catalytic Subunits
+
+`PTHR10806` contains signal peptidase complex catalytic subunits. PAINT places
+generic `GO:0008233 peptidase activity` at the family root,
+`PANTHER:PTN000086749`, and the eukaryotic ER signal-peptidase-complex role at
+`PANTHER:PTN000086750`, which carries `GO:0005787 signal peptidase complex` and
+`GO:0051604 protein maturation`. This family is included as a compact
+paralog-aware comparison set even though these particular IBD rows are at the
+PTHR10806 root and Eukaryota rather than at a fungal-only node.
+
+- [x] `yeast/SEC11` - *S. cerevisiae* SPC catalytic subunit; drafted in PR
+  #5264
+- [x] `SCHPO/sec11` - fission-yeast Sec11 seed for fungal and PomBase homology
+  transfers; drafted in PR #5269
+- [x] `CANAL/SEC11` - CGD *Candida albicans* Sec11/SPC member; drafted in PR
+  #5266
+- [x] `NEUCR/sec11` - *Neurospora crassa* Sec11/SPC member; drafted in PR
+  #5265
+- [x] `ASPFU/sec11` - *Aspergillus fumigatus* AfSec1/sec11 member with direct
+  Gel1-processing evidence; drafted in PR #5267
+- [x] `EMENI/sec11` - *Aspergillus nidulans* Sec11/SPC member; drafted in PR
+  #5268
+
+## Family 11: V-type ATPase Subunit D
+
+`PTHR11671` contains the conserved V-type ATPase subunit D family. The fungal
+node `PANTHER:PTN000912657` carries PAINT assertions to
+`GO:0000329 fungal-type vacuole membrane` and
+`GO:0016471 vacuolar proton-transporting V-type ATPase complex`, while broader
+nodes carry `GO:0007035 vacuolar acidification` and
+`GO:0046961 proton-transporting ATPase activity, rotational mechanism`.
+
+- [x] `yeast/VMA8` - *S. cerevisiae* V1 subunit D with direct assembly,
+  rotor-coupling, and vacuolar/Golgi V-ATPase evidence; drafted in PR #5273
+- [x] `SCHPO/vma8` - fission-yeast V-ATPase subunit D with PomBase ORFeome
+  localization and PTHR11671 PAINT rows; drafted in PR #5274
+- [x] `CANAL/VMA8` - CGD *Candida albicans* V-ATPase subunit D; drafted in PR
+  #5276
+- [x] `NEUCR/vma-8` - *Neurospora crassa* V-ATPase subunit D with direct 1999
+  V-ATPase subunit evidence; drafted in PR #5275
+
 ---
 
 # NOTES
+
+## 2026-10-21
+
+- Drafted the compact `PTHR10969` ATG8 set across `yeast/ATG8`,
+  `SCHPO/atg8`, `CANAL/ATG8`, `NEUCR/apg-6`, `ASPFU/atg8`, and
+  `EMENI/atg8`. All six reviews endorse the eukaryotic `PTN000103522`
+  ATG8/LC3/GABARAP PAINT placements and the fungal `PTN000861115`
+  fungal-type vacuole membrane placement. The reviews handled generic
+  `GO:0005774` vacuolar-membrane rows as broad source annotations that
+  should not add a second core location beside fungal-type vacuole membrane.
+- Drafted the compact `PTHR11671` V-ATPase subunit D set across
+  `yeast/VMA8`, `SCHPO/vma8`, `CANAL/VMA8`, and `NEUCR/vma-8` in PRs
+  #5273-#5276. All four reviews treat `PTN000912657` as the curated fungal
+  vacuolar V-ATPase node and retain Vma8's `contributes_to` relation to rotary
+  proton-transporting ATPase activity. The set distinguishes the supported
+  stress-induced vacuolar membrane-raft localization in `yeast/VMA8` from
+  unsupported cross-species transfers in `CANAL/VMA8` and `NEUCR/vma-8`, and
+  records standalone `enables GO:0046961` rows as relation problems where the
+  upstream source asserts full pump activity for non-catalytic subunit D.
+- Drafted the compact `PTHR10806` Sec11/SPC catalytic-subunit set across
+  `yeast/SEC11`, `SCHPO/sec11`, `CANAL/SEC11`, `NEUCR/sec11`, `ASPFU/sec11`,
+  and `EMENI/sec11` in PRs #5264-#5269. All six reviews accept the eukaryotic
+  `PTN000086750` signal-peptidase-complex placement, treat its
+  `GO:0051604 protein maturation` row as correct but generic beside exact
+  `GO:0016485 protein processing`, treat the root `PTN000086749` peptidase
+  assertion as correct but generic beside exact `GO:0009003 signal peptidase
+  activity`, and reject propagated `GO:0045047 protein targeting to ER` where
+  it confuses signal-peptide cleavage with the upstream targeting step.
+
+## 2026-10-17
+
+- Started the compact WDR12/Ytm1 set in `PTHR19855` across `yeast/YTM1`,
+  `SCHPO/ytm1`, `CANAL/YTM1`, and `NEUCR/ytm1`; the individual gene reviews
+  merged in PRs #5117, #5118, #5120, and #5121.
 
 ## 2026-10-11
 
@@ -272,6 +397,17 @@ separate descendant PTNs and do not propagate to the fungal ERG2 genes.
   contrary Neurospora localization data, and the over-specific `GO:0007189`
   GPCR pathway row from `PTN000180782` was redirected to neutral
   `GO:0141156` cAMP/PKA signal transduction.
+- Drafted the `yeast/BCY1` anchor review. It keeps Bcy1's starvation, P-body,
+  chromatin, and plasma-membrane rows as non-core contexts, narrows TPK
+  `protein binding` rows to `protein kinase A catalytic subunit binding`,
+  removes the Ess1 generic binding rows, leaves an abstract-only
+  Siva/PMP22-cited self-interaction row undecided, and removes Ras/Lte1
+  bud-neck localization rows where `bcy1` was only a bypass background.
+- Rechecked `NEUCR/esa-1` as the filamentous-fungal ESA1 representative in
+  `PTHR10615:SF218`. The fungal `PANTHER:PTN000834946` H4-acetyltransferase
+  row and the broad eukaryotic `PANTHER:PTN004172926` MYST-root rows remain
+  sound against the PAINT placement; the second-pass edits only tightened
+  UniProt evidence snippets.
 - Added `PTHR10868` as a compact sterol C-8 isomerase family after sibling
   `yeast/ERG2`, `SCHPO/erg2`, and `NEUCR/erg-1` reviews had checked the same
   fungal node placements. The `CANAL/ERG2` follow-up accepts the fungal

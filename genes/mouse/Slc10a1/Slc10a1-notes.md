@@ -132,3 +132,9 @@ transfer-of-a-transfer. Per CLAUDE.md, that status is reserved for genuine circu
 - Isoform 2 (O08705-2, VSP_061644) has a roughly sixfold higher taurocholate affinity than
   isoform 1 (KM 14 vs 86 uM, PMID:10209268) but no isoform-resolved GO annotation exists.
 - No GO-CAM model containing mouse Slc10a1 was found in `gocams/index.tsv` at review time.
+
+## 2026-10-12 Ortholog/family audit
+
+GOA refetched (no new rows); review already COMPLETE and unchanged. PANTHER PTHR10361:SF40 (hepatic Na/bile acid cotransporter) confirmed from UniProt; IBA nodes PTN000040759/40761/002570905 appropriate. Core function (GO:0008508 symporter -> GO:0015721 transport, at GO:0016323 basolateral membrane) is consistent with rat Slc10a1 and human SLC10A1.
+
+Key species-divergence point verified and correctly handled: unlike human NTCP, mouse Ntcp is NOT a functional HBV/HDV entry receptor — it binds preS1 and transports taurocholate normally but cannot support infection, mapped to residues 84-87 [PMID:23678176 "mNTCP residues 84 to 87 were substituted by human counterparts, mNTCP can effectively support viral infections"]. The mouse review therefore omits the virus-receptor terms (GO:0001618/GO:0046718) that human SLC10A1 carries as NEW, and raises a suggested_question about a NOT annotation/taxon constraint to block their automated transfer. Rat Slc10a1 likewise carries no receptor terms. Consistent across all three. The GO:0016020 ACCEPT(IEA)/MODIFY(IDA) validator warning is a deliberate, documented choice (IDA names observed membrane; family-signature IEA cannot resolve polarity).

@@ -3421,3 +3421,2150 @@ checked. CYB5A, CWC27 and other published or available reviews receive no
 completion credit in this snapshot. No gene annotation or source is changed.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-425-20261015/history/projects/CLINGEN_MENDELIAN/2026-10-15T143837Z-codex-94c5f2.yaml)
+
+## Completion checkpoint 426 — 2026-10-16 10:41:28 UTC
+
+**426 complete; 2,450 remaining out of 2,876 primary catalogue genes.**
+Only CWC27 is added to the 425 checked genes in tracker [#5034](https://github.com/ai4curation/ai-gene-review/pull/5034),
+whose exact approved head was `48efb320877bcbe219856ddcef8c5af42c8bbe5e` and which subsequently
+merged as [56a970dd16a3](https://github.com/ai4curation/ai-gene-review/commit/56a970dd16a33e4685edc8b23bd9d1303d7e7e6a).
+Tracker publication itself does not add gene credit. The completion cutoff is
+the CWC27 merge below; this is not an exhaustive claim about every repository
+review merge. ROOT, the coordinating AI agent, accepted this completion proof.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CWC27 | [#5003](https://github.com/ai4curation/ai-gene-review/pull/5003) | `c75d783131ad` | [8b87c39aea83](https://github.com/ai4curation/ai-gene-review/commit/8b87c39aea838985bfff03d14cc3bb13ac93f582) | 2026-10-16 10:41:28 | 9 / 9 |
+
+The [final formal approval](https://github.com/ai4curation/ai-gene-review/pull/5003#pullrequestreview-5534904007)
+and [complete detailed review](https://github.com/ai4curation/ai-gene-review/pull/5003#issuecomment-6194574317)
+clear all prior scientific blockers on that exact head. Required
+[PR validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38751823079)
+passed. The [ordinary merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/38885535910)
+passed all-gene schema validation, examples and the full test suite before merge.
+The separate [post-main push run](https://github.com/ai4curation/ai-gene-review/actions/runs/38888888905)
+then materialized the exact merged commit and passed scoped CWC27 and history
+validation. Its full test suite was skipped for the source-only push, not rerun.
+
+All nine approved file modes, types and blobs equal the merged full PR paths,
+and the actual parent delta contains exactly nine paths. Prior substantive
+source review, the final Figure S1 locator correction, all 16 original source
+objects, two official products and the explicit isoform-scoped new molecular
+function are retained. Derived DRAFT reflects a nonblocking secondary-research
+citation advisory, not an unresolved action or outstanding scientific blocker.
+This completion follows validated final review, cleared actionable feedback and
+merger; it does not infer completion from a status label alone.
+
+All 2,876 catalogue identities and association texts, all 235 historical queue
+records, all 75 prior completion updates and the entire previous progress text
+remain unchanged. Only the previously unchecked CWC27 identity becomes checked.
+Earlier statements excluding CWC27 remain historical checkpoint records.
+Review-link availability and rendering warnings remain separate from completion;
+no other gene is counted by this update. All earlier project history records
+remain append-only and no gene annotation or source file changes.
+
+Rendering availability remains separate from completion credit. The committed main-page render contains 1,751 missing-review warnings; the fresh baseline and checkpoint 426 render under the same frozen 2,966-human-review inventory contain 1,733 (18 cleared; none added). The cleared genes are CYB5A, DNAH17, DNAH8, FBXL4, MT-TC, MT-TH, MT-TK, MT-TL1, MT-TM, MT-TQ, MT-TS1, MT-TS2, MT-TV, MT-TW, MTFMT, SUCLA2, TARS2, TRMT10C. All remain unchecked and receive no completion credit here. CWC27 was already linked; its newly recorded completion follows the accepted merge evidence. The progress page has zero rendering warnings.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T114448Z-codex-51b38b.yaml)
+
+## Completion checkpoint 427 — 2026-10-16 11:40:12 UTC
+
+**427 complete; 2,449 remaining out of 2,876 primary catalogue genes.**
+Only CYB5A is added to the 426 checked genes in tracker [#5053](https://github.com/ai4curation/ai-gene-review/pull/5053),
+using its exact checkpoint-426 head `7173ebea8f29d62fb2f17eeb755e8f0c0f225d38` as the preimage.
+This is a follow-up on that existing tracker PR. Tracker publication itself
+adds no gene credit. ROOT, the coordinating AI agent, accepted the independent
+completion proof; this is not a human maintainer sign-off.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CYB5A | [#5033](https://github.com/ai4curation/ai-gene-review/pull/5033) | `a0cbfb16972e` | [782b3b5a78c7](https://github.com/ai4curation/ai-gene-review/commit/782b3b5a78c788e9c88c99b98aae2baa0af3dba0) | 2026-10-16 11:40:12 | 21 / 21 |
+
+The [final formal approval](https://github.com/ai4curation/ai-gene-review/pull/5033#pullrequestreview-5535363788)
+and [complete detailed review](https://github.com/ai4curation/ai-gene-review/pull/5033#issuecomment-6195231459)
+clear the four prior scientific blockers on that exact head. Three residual
+presentation/exception suggestions are explicitly optional; there are no open
+review threads. Required [PR validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38756453055)
+passed. The [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/38892124958)
+passed scoped gene/history validation, all-gene schema validation, examples,
+the full test suite and automation checks. The separate
+[actual-main push run](https://github.com/ai4curation/ai-gene-review/actions/runs/38895302561)
+then materialized the same merged commit and passed scoped CYB5A and history
+validation, completing at 11:45:27 UTC. Its full test suite was skipped by the
+workflow; it is not represented as a full-suite rerun.
+
+All 21 approved file modes, types and blobs equal the merged full PR paths,
+and the actual parent delta contains exactly those 21 additions. All four final
+review/notes/source-guide/render artifacts are exact, as are 24 protected
+scientific paths. The accepted science preserves 21 original annotation source
+objects, 23 reference identities, all three official product identities and
+three exact quotations, with one explicitly homolog-inferred electron-transfer
+assertion. The review's DRAFT status and three justified UNDECIDED annotations
+remain biological/source-access statements, not outstanding required feedback.
+The seven documented validation advisories are unchanged and nonblocking.
+
+All 2,876 catalogue identities and association texts, all 235 historical queue
+records, all 76 prior completion updates, the entire preceding progress text
+(including checkpoint 426), and all existing project histories remain unchanged.
+Only the previously unchecked CYB5A identity becomes checked. Earlier statements
+excluding CYB5A retain their historical checkpoint scope. No gene annotations,
+source caches or earlier histories change.
+
+The rendering inventory remains frozen at main `782b3b5a78c788e9c88c99b98aae2baa0af3dba0`:
+7,824 total review YAMLs and 2,966 human review YAMLs. The checkpoint-426 baseline
+has 1,733 main-page missing-review warnings and zero progress-page warnings.
+No availability change is proposed here; ROOT will derive the two updated HTML
+pages in this same inventory and record their actual results separately.
+
+The final render passed all eight frontmatter checks and reproduced exactly the baseline warning lists: 1,733 for the main page and zero for the progress page. The completion counts are 427 checked and 2,449 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T120914Z-codex-756f94.yaml)
+
+## Completion checkpoint 428 — 2026-10-16 12:05:50 UTC
+
+**428 complete; 2,448 remaining out of 2,876 primary catalogue genes.**
+Only CXCR4 is added to checkpoint 427 in tracker [#5053](https://github.com/ai4curation/ai-gene-review/pull/5053).
+The exact prior tracker head is `d69551859e986bbcb2e37d44ae14daebf7fd9851`. ROOT, the coordinating
+AI agent, accepted the independent completion audit; this is not a human
+maintainer sign-off. The entire prior checkpoint 426 and 427 record is preserved.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths |
+| --- | --- | --- | --- | --- | --- |
+| CXCR4 | [#5035](https://github.com/ai4curation/ai-gene-review/pull/5035) | `f019a43cbb9c` | [9cff2a2e29e9](https://github.com/ai4curation/ai-gene-review/commit/9cff2a2e29e9221d04e45143abb00951b0277a49) | 2026-10-16 12:05:50 | 54 / 54 |
+
+The [final formal approval](https://github.com/ai4curation/ai-gene-review/pull/5035#pullrequestreview-5536596991)
+and [complete detailed review](https://github.com/ai4curation/ai-gene-review/pull/5035#issuecomment-6197047569)
+resolve the six prior review requests on that exact head. There are no open
+review threads; the remaining presentation suggestions are optional.
+[Required PR validation](https://github.com/ai4curation/ai-gene-review/actions/runs/38769178578)
+passed. The [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/38895306397)
+passed scoped gene/history validation, all-gene schema validation, examples,
+3,889 tests and 251 automation tests. The separate
+[actual-main push run](https://github.com/ai4curation/ai-gene-review/actions/runs/38898166465)
+validated the merged CXCR4 and history files, completing at 12:12:56 UTC.
+The full suite was skipped on that push; its successful execution belongs to
+the merge-group run.
+
+All 54 approved file modes, types and blobs equal the merged full PR paths
+and the complete actual parent delta. The accepted science preserves all 117
+annotation source objects, both official products, 79 reference identities,
+19 exact excerpts and one core. The original 118 GOA rows deterministically
+seeded 117 objects through one duplicate collapse. All 84 protected scientific
+paths remain exact. Five justified UNDECIDED decisions, DRAFT status and two
+nonblocking validation advisories remain explicit; none is unresolved required
+feedback. The review comment's count of eight new excerpts is an arithmetic
+slip: the verified inventory is 12 prior plus seven new, totaling 19.
+
+### Current render inventory and correction of the prior freeze
+
+The checkpoint-427 render was frozen at main `782b3b5a78c788e9c88c99b98aae2baa0af3dba0` even though its
+branch had already incorporated the CXCR4 merge. Its 7,824 total / 2,966 human
+inventory and 1,733 warnings describe that historical render only. They do not
+describe the current branch. This appended disclosure corrects the current
+state without rewriting either earlier checkpoint or history record.
+
+The branch now has **7,825 review YAMLs, including 2,967 human reviews**, exactly
+matching main `9cff2a2e29e9221d04e45143abb00951b0277a49`. CXCR4 is the sole added review since the
+checkpoint-427 inventory and must become a link instead of a missing-review
+warning. The complete tracker PR therefore has **19 cumulative availability
+gains**, reducing the prior-main warning list from 1,751 to **1,732**, with no
+new missing reviews. The 19 are CXCR4, CYB5A, DNAH17, DNAH8, FBXL4, MT-TC, MT-TH, MT-TK, MT-TL1, MT-TM, MT-TQ, MT-TS1, MT-TS2, MT-TV, MT-TW, MTFMT, SUCLA2, TARS2, TRMT10C.
+The incremental change since checkpoint 427 is one link and one removed warning,
+CXCR4. These are exact Git-inventory and frontmatter-path results; ROOT will
+regenerate both HTML pages against the current branch and record the actual
+1,732 / zero warning results before publication.
+
+Availability and accepted completion are separate. CXCR4 is checked here only
+because its independent audit and separate actual-main validation are now
+accepted, not because its YAML is present. The earlier request to leave it
+unchecked correctly described the pre-audit boundary. No other available review
+receives credit. All 2,876 catalogue identities and association texts, all 235
+historical queue objects, all 77 prior completion updates, the full preceding
+progress text and all 166 prior project histories remain unchanged. Existing
+cosmetic spacing in historical queue/history text remains preserved.
+
+The final render passed all eight frontmatter checks and cleared exactly the stale CXCR4 availability warning: 1,732 warnings remain for the main page and zero for the progress page. The actual branch inventory contains 7,825 reviews, including 2,967 human reviews. The completion counts are 428 checked and 2,448 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-16T124217Z-codex-d73d47.yaml)
+
+## Completion checkpoint 430 — 2026-10-17 05:42:20 UTC
+
+**430 complete; 2,446 remaining out of 2,876 primary catalogue genes.**
+CYFIP2 and CYB5R3 are the only additions to checkpoint 428 on tracker
+[#5053](https://github.com/ai4curation/ai-gene-review/pull/5053), whose prior head is
+`2409002e46c2034acd6d9fcabd7b7d76c3b3fae9`. ROOT accepted both completion audits at 2026-10-17T05:52:50.199573+00:00.
+ROOT is the coordinating AI agent; this records verified provenance and is not
+a human maintainer sign-off. All earlier checkpoint text remains unchanged.
+
+| Gene | PR | Approved head | Merge | Merged UTC | Full PR / parent delta paths | Actual-main validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| CYFIP2 | [#5037](https://github.com/ai4curation/ai-gene-review/pull/5037) | `3184ce0f9edd` | [74290d411a6f](https://github.com/ai4curation/ai-gene-review/commit/74290d411a6ff4e547b9454a373c9677c963c22e) | 2026-10-17T00:11:09Z | 19 / 19 | [run 38985181650](https://github.com/ai4curation/ai-gene-review/actions/runs/38985181650) |
+| CYB5R3 | [#5036](https://github.com/ai4curation/ai-gene-review/pull/5036) | `2ce15d1c9773` | [04ba970bf897](https://github.com/ai4curation/ai-gene-review/commit/04ba970bf8973abdda90bf8bbf3349870ee014ef) | 2026-10-17T05:42:20Z | 22 / 21 | [run 39007238786](https://github.com/ai4curation/ai-gene-review/actions/runs/39007238786) |
+
+The [CYFIP2 approval](https://github.com/ai4curation/ai-gene-review/pull/5037#pullrequestreview-5537492723)
+applies to the exact 19-file approved head, and all 19 merged files match it.
+Its separate main push [test job](https://github.com/ai4curation/ai-gene-review/actions/runs/38985181650/job/117254874615)
+completed successfully at 2026-10-17T00:16:42Z.
+All 28 protected scientific source paths remained exact. Five documented
+validation advisories remain; they are not unresolved required feedback.
+
+The [CYB5R3 approval](https://github.com/ai4curation/ai-gene-review/pull/5036#pullrequestreview-5543953732)
+applies to all 22 final PR paths. The actual merge changes 21 paths because the
+identical shared `reactome/R-HSA-198824.md` cache was already on parent main.
+All 22 final modes, types and blobs still equal the approved files, and all 37
+protected scientific source paths remained exact. The separate main push
+[test job](https://github.com/ai4curation/ai-gene-review/actions/runs/39007238786/job/117322091749) completed
+successfully at 2026-10-17T05:48:10Z.
+Its 33 documented validation advisories remain explicit. The completion audits
+check the scoped gene and history validation in these actual-main jobs; the job
+name is not used to claim a full-suite run.
+
+### Current review availability
+
+The tracker head contains 7,825 review YAMLs, including 2,967 human reviews.
+Current main `04ba970bf8973abdda90bf8bbf3349870ee014ef` contains **7,856 review YAMLs,
+including 2,997 human reviews**. The tracker branch has no gene changes since
+its merge base, and main has not changed the selected tracker target files.
+ROOT will incorporate current main and render the project against that actual
+inventory. The exact frontmatter/path comparison predicts **1,716 missing-review
+warnings**, down from 1,732 at checkpoint 428, and zero progress-page warnings.
+These are expected results from Git paths, not a claim that this owner ran the
+renderer. ROOT records the actual render results before publication.
+
+The 16 newly available catalogue reviews are AGA, CTNS, CYB5R3, CYFIP2, CYP27B1, FBP1, FUCA1, GALNT3, GNPTAB, HNF1A, HNF4A, KCNJ11, MT-ND1, MT-ND5, MT-ND6, NAGA.
+No new missing review appears in the comparison. Only CYFIP2 and CYB5R3 earn
+completion credit here; the other available reviews remain at their existing
+checkbox states until separately accepted completion evidence is available.
+
+### Pending reviews remain uncredited
+
+At the saved 2026-10-17 05:42:59 UTC queue observation, CYLD, CYP11B2, CYP27A1,
+CYP1B1, CYP2U1, CYP4V2, CYP7B1, D2HGDH, DAG1 and DARS2 were approved and open in
+the merge queue. The newer selected observation at 2026-10-17T05:56:13.253237+00:00 confirms
+[DCAF17 #5073](https://github.com/ai4curation/ai-gene-review/pull/5073) remains
+approved and queued at `87bf8aa55fa996cd5b729b279b0e7870efec7228`.
+[DBT #5074](https://github.com/ai4curation/ai-gene-review/pull/5074) has the revised
+head `2a70bf366aca76c6eba7686b4d987df75ab7cfc4` and awaits fresh review; the
+previous changes-requested decision remains visible. No pending PR receives
+completion credit. These timestamped observations are not an exhaustive new
+queue census or a guarantee of later queue positions.
+
+All 2,876 catalogue identities and association texts, 235 historical queue
+objects, 78 previous completion updates, the full preceding progress text and
+167 prior project history records are preserved. This appends one completion
+update containing two distinct genes. Products and follow-up commits are not
+additional campaign genes.
+
+ROOT incorporated main `b17aa10c2915a7ed409475664718fbfff9e03dfe`, including the newly merged CYLD review, before rendering. The final render passed all eight frontmatter checks: 1,715 missing-review warnings remain for the main page and zero for the progress page. Seventeen warnings cleared since checkpoint 428, including CYLD beyond the sixteen predicted above; no warnings were added. The actual branch inventory contains 7,857 reviews, including 2,998 human reviews. CYLD remains uncredited here pending its separate completion audit. The completion counts are 430 checked and 2,446 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T060834Z-codex-e7f969.yaml)
+
+## Completion checkpoint 431 — 2026-10-17 06:04:48 UTC
+
+**431 complete; 2,445 remaining out of 2,876 primary catalogue genes.**
+CYLD is the only addition to checkpoint 430. Its approved head
+`5186f4184ce6e35e4e86343ef3829c0cadc641e3` in
+[#5045](https://github.com/ai4curation/ai-gene-review/pull/5045) merged as
+[`b17aa10c2915`](https://github.com/ai4curation/ai-gene-review/commit/b17aa10c2915a7ed409475664718fbfff9e03dfe).
+All 28 approved file modes, types and blobs match the merge, all 28 paths form
+the actual parent-to-merge delta, and all 56 protected scientific source paths
+remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5045#pullrequestreview-5544095962)
+applies to that exact head; all required review findings were resolved.
+
+The separate actual-main push [run 39008579742](https://github.com/ai4curation/ai-gene-review/actions/runs/39008579742)
+and [test job 117326023627](https://github.com/ai4curation/ai-gene-review/actions/runs/39008579742/job/117326023627)
+completed successfully at 2026-10-17T06:11:58Z. The scoped gene validation passed
+with nine documented generic-binding advisories; 12,007 history records had no
+issues, and all 42 history tests passed. This records scoped validation, not a
+claim that the full repository test suite ran. ROOT is the coordinating AI
+agent; its provenance acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 79 earlier completion updates, the complete
+preceding progress text and 168 earlier project history records. The catalogue
+changes only CYLD from unchecked to checked. The branch already contained the
+CYLD review for checkpoint 430 rendering; its availability now gains completion
+credit because the separate completion audit has passed.
+
+DBT [#5074](https://github.com/ai4curation/ai-gene-review/pull/5074) is approved
+at `2a70bf366aca76c6eba7686b4d987df75ab7cfc4` and was confirmed in the normal
+merge queue in the saved selected observation. DCC [#5080](https://github.com/ai4curation/ai-gene-review/pull/5080)
+has passed checks at `63405caa5b9be2ccde240f170ea4149f40697717` and is undergoing
+review follow-up. DCDC2 source review and DCLRE1C preparation are ongoing.
+These selected status observations add no completion credit and are not a new
+exhaustive queue census.
+
+The actual branch inventory remains 7,857 reviews, including 2,998 human reviews. All eight frontmatter checks and both ordinary renders passed. The warning lists are unchanged from checkpoint 430: 1,715 missing-review warnings on the catalogue and zero on the progress page. Counts are 431 checked and 2,445 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T062231Z-codex-665f41.yaml)
+
+## Completion checkpoint 432 — 2026-10-17 06:35:24 UTC
+
+**432 complete; 2,444 remaining out of 2,876 primary catalogue genes.**
+CYP11B2 is the only addition to checkpoint 431. Its approved head
+`4b3aa8b4dafb59bafbc0c7c5d828ff0cb56d5037` in
+[#5046](https://github.com/ai4curation/ai-gene-review/pull/5046) merged as
+[`a87ae568676c`](https://github.com/ai4curation/ai-gene-review/commit/a87ae568676c4012ea4abe5393967aeff1b52ae7).
+All nine approved file modes, types and blobs match the merge, all nine paths
+form the actual parent-to-merge delta, and all 23 protected scientific source
+paths remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5046#pullrequestreview-5544347766)
+applies to that exact head; all required review findings were resolved.
+
+The separate actual-main push [run 39010474868](https://github.com/ai4curation/ai-gene-review/actions/runs/39010474868)
+and [test job 117331762104](https://github.com/ai4curation/ai-gene-review/actions/runs/39010474868/job/117331762104)
+completed successfully at 2026-10-17T06:43:28Z. Scoped gene validation passed
+with two documented source-specific action advisories, including the distinction
+between positive and negated cortisol claims. All 12,009 history records had
+no issues, and all 42 history tests passed. The full test suite was skipped on
+this push job; the completion check does not claim a full-suite run.
+The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 80 earlier completion updates, the complete
+preceding progress text and 169 earlier project history records. The catalogue
+changes only CYP11B2 from unchecked to checked. JSON escaping is explicitly
+kept at the preceding checkpoint's literal UTF-8 setting; earlier queue values
+are unchanged. This update's queue prose uses ordinary spacing. The completion
+cutoff is also stated directly on the main project page.
+
+DCC [#5080](https://github.com/ai4curation/ai-gene-review/pull/5080) is approved
+at `08e1797356e01101c5de7091b61dd1b61c97e92b` and entered the normal merge
+queue. DCDC2 [#5082](https://github.com/ai4curation/ai-gene-review/pull/5082)
+has passed validation and is undergoing review follow-up. DCLRE1C source
+review continues. The existing DCX review requires a bounded interaction
+follow-up before completion credit under the project's current instruction.
+These selected status observations add no completion credit and are not a new
+exhaustive queue census.
+
+The actual branch inventory remains 7,857 reviews, including 2,998 human reviews. All eight frontmatter checks and both ordinary renders passed. The warning lists are unchanged from checkpoint 431: 1,715 missing-review warnings on the catalogue and zero on the progress page. Counts are 432 checked and 2,444 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T064927Z-codex-6f8b44.yaml)
+
+## Completion checkpoint 433 — 2026-10-17 07:07:09 UTC
+
+**433 complete; 2,443 remaining out of 2,876 primary catalogue genes.**
+CYP27A1 is the only addition to checkpoint 432. Its approved head
+`930aefe5b3b095210095b09bb33f425a815a3cb6` in
+[#5047](https://github.com/ai4curation/ai-gene-review/pull/5047) merged as
+[`1f2d0f4c42bd`](https://github.com/ai4curation/ai-gene-review/commit/1f2d0f4c42bde7e51deeed7d0486ef015657404b).
+All eleven approved file modes, types and blobs match the merge, all eleven paths
+form the actual parent-to-merge delta, and all 38 protected scientific source
+paths remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5047#pullrequestreview-5545111481)
+applies to that exact head; all required review findings were resolved.
+
+The separate actual-main push [run 39012439782](https://github.com/ai4curation/ai-gene-review/actions/runs/39012439782)
+and [test job 117337633319](https://github.com/ai4curation/ai-gene-review/actions/runs/39012439782/job/117337633319)
+completed successfully at 2026-10-17T07:13:32Z. Scoped gene validation passed
+without gene-validation warnings. All 12,011 history records had
+no issues, and all 42 history tests passed. The full test suite was skipped on
+this push job; the completion check does not claim a full-suite run.
+The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 81 earlier completion updates, the complete
+preceding progress text and 170 earlier project history records. The catalogue
+changes only CYP27A1 from unchecked to checked. Earlier queue values and literal UTF-8 formatting are unchanged. The completion
+cutoff is also stated directly on the main project page.
+
+DCC [#5080](https://github.com/ai4curation/ai-gene-review/pull/5080) is approved
+at `08e1797356e01101c5de7091b61dd1b61c97e92b` and entered the normal merge
+queue. DCDC2 [#5082](https://github.com/ai4curation/ai-gene-review/pull/5082)
+is approved at `6d095b754e8d53597421072c84270e86e1329603` and queued.
+DCLRE1C [#5083](https://github.com/ai4curation/ai-gene-review/pull/5083) and
+DDB2 [#5084](https://github.com/ai4curation/ai-gene-review/pull/5084) await review.
+The DCX follow-up is undergoing validation; DDC and DDHD1 source assessment continues.
+These selected status observations add no completion credit and are not a new
+exhaustive queue census.
+
+The actual branch inventory remains 7,857 reviews, including 2,998 human reviews. All eight frontmatter checks and both ordinary renders passed. The warning lists are unchanged from checkpoint 432: 1,715 missing-review warnings on the catalogue and zero on the progress page. Counts are 433 checked and 2,443 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T071959Z-codex-6bbe43.yaml)
+
+## Completion checkpoint 434 — 2026-10-17 07:38:48 UTC
+
+**434 complete; 2,442 remaining out of 2,876 primary catalogue genes.**
+CYP2U1 is the only addition to checkpoint 433. Its approved head
+`9e15617075a94611247854991769f782ba9a03d8` in
+[#5049](https://github.com/ai4curation/ai-gene-review/pull/5049) merged as
+[`e32937e9a43d`](https://github.com/ai4curation/ai-gene-review/commit/e32937e9a43d197137f795d76417027d318843f0).
+All 21 approved file modes, types and blobs match the merge, all 21 paths
+form the actual parent-to-merge delta, and all 17 protected scientific source
+paths remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5049#pullrequestreview-5545846816)
+applies to that exact head.
+
+The separate actual-main push [run 39014407121](https://github.com/ai4curation/ai-gene-review/actions/runs/39014407121)
+and [test job 117343409663](https://github.com/ai4curation/ai-gene-review/actions/runs/39014407121/job/117343409663)
+completed successfully at 2026-10-17T07:45:38Z. Scoped gene validation passed
+with one inherited mixed-action monooxygenase advisory. All 12,013 history
+records were valid, all 42 history tests passed, and all 695 family files
+validated. The full test suite was skipped on the main push; the separate
+successful [merge-group run 39012443172](https://github.com/ai4curation/ai-gene-review/actions/runs/39012443172)
+provides the full-suite evidence for the merge candidate. These are distinct
+validation events. The coordinating AI agent's acceptance is not a human
+maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 82 earlier completion updates, the complete
+preceding progress text and 172 earlier project history records. The catalogue
+changes only CYP2U1 from unchecked to checked. Earlier queue values and literal
+UTF-8 formatting are unchanged. The completion cutoff is also stated directly
+on the main project page.
+
+DDC [#5086](https://github.com/ai4curation/ai-gene-review/pull/5086) and
+DDHD1 [#5087](https://github.com/ai4curation/ai-gene-review/pull/5087) have been
+published for review. DDB2 [#5084](https://github.com/ai4curation/ai-gene-review/pull/5084)
+has a provenance follow-up at `ee8a2dd11241467cb1fe1c6666a0456275cd2689`.
+DCLRE1C [#5083](https://github.com/ai4curation/ai-gene-review/pull/5083) is approved
+at `5a2760761b431c0ba318236e86611fe3322c5be1` and entered the normal merge queue.
+DCX documentation follow-up and DDR2/DDX11 source assessment continue. These
+selected status observations add no completion credit and are not a new
+exhaustive queue census.
+
+The actual branch inventory remains 7,858 reviews, including 2,999 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,714 missing-review warnings, one fewer than checkpoint 433 because CYP2U1 now has a review. The progress page has no warnings. Counts are 434 checked and 2,442 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T080750Z-codex-f286a0.yaml)
+
+## Completion checkpoint 435 — 2026-10-17 08:10:20 UTC
+
+**435 complete; 2,441 remaining out of 2,876 primary catalogue genes.**
+CYP4V2 is the only addition to checkpoint 434. Its approved head
+`ab461cf6a1357c01b7e15f10219929d63f354a7b` in
+[#5050](https://github.com/ai4curation/ai-gene-review/pull/5050) merged as
+[`40c8c08b26b8`](https://github.com/ai4curation/ai-gene-review/commit/40c8c08b26b8ba217b428bcbbaf11935991afb5d).
+All 14 approved file modes, types and blobs match the merge, all 14 paths
+form the actual parent-to-merge delta, and all 15 protected source and prior
+provenance paths remain exact. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5050#pullrequestreview-5546006171)
+applies to that exact head.
+
+The separate actual-main push [run 39016360461](https://github.com/ai4curation/ai-gene-review/actions/runs/39016360461)
+and [test job 117349178779](https://github.com/ai4curation/ai-gene-review/actions/runs/39016360461/job/117349178779)
+completed successfully at 2026-10-17T08:17:21Z. Scoped CYP4V2 validation passed
+with two generic-binding advisories retained under the explicit project policy.
+All 12,015 history records were valid, all 42 history tests passed, and all
+695 family files validated. The full test suite was skipped on the main push;
+the separate successful [merge-group run 39014408739](https://github.com/ai4curation/ai-gene-review/actions/runs/39014408739)
+provides the full-suite evidence for the exact merge candidate. These are distinct
+validation events. The coordinating AI agent's acceptance is not a human
+maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 83 earlier completion updates, the complete
+preceding progress text and 173 earlier project history records. The catalogue
+changes only CYP4V2 from unchecked to checked. Earlier queue values and literal
+UTF-8 formatting are unchanged. The completion cutoff is also stated directly
+on the main project page. The rendered review links and availability counts are
+qualified against incorporated main [`a3bfd308b643`](https://github.com/ai4curation/ai-gene-review/commit/a3bfd308b6432eac0114cae92f702bb5e2edf39e),
+which also includes the newly available CYP1B1 review. CYP1B1 remains unchecked
+pending completion verification; its availability adds no completion credit.
+
+The actual branch inventory remains 7,860 reviews, including 3,001 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,712 missing-review warnings, two fewer than checkpoint 434 because CYP4V2 and CYP1B1 now have reviews; CYP1B1 remains unchecked. The progress page has no warnings. Counts are 435 checked and 2,441 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T084245Z-codex-8e6cce.yaml)
+
+## Completion checkpoint 436 — 2026-10-17 08:31:18 UTC
+
+**436 complete; 2,440 remaining out of 2,876 primary catalogue genes.**
+CYP1B1 is the only addition to checkpoint 435. Its approved head
+`e46195e4fbeb664c4ef8cd6438662b34968a2142` in
+[#5048](https://github.com/ai4curation/ai-gene-review/pull/5048) merged as
+[`a3bfd308b643`](https://github.com/ai4curation/ai-gene-review/commit/a3bfd308b6432eac0114cae92f702bb5e2edf39e).
+All 49 approved file modes, types and blobs match the merge. The actual
+parent-to-merge delta contains 46 paths; three shared Reactome files were already
+identical on parent main. All 49 protected source and provenance positions remain
+exact. These 49 protected paths comprise 42 machine sources, four prior history
+records and three accepted authored review artifacts; this protection set is
+distinct from the PR delta. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5048#pullrequestreview-5547093134)
+applies to that exact head.
+
+The separate actual-main push [run 39017675880](https://github.com/ai4curation/ai-gene-review/actions/runs/39017675880)
+and [test job 117353019495](https://github.com/ai4curation/ai-gene-review/actions/runs/39017675880/job/117353019495)
+completed successfully at 2026-10-17T08:38:15Z. Scoped CYP1B1 validation passed
+without annotation advisories. All 12,020 history records were valid, all 42
+history tests passed, and all 695 family files validated. The full test suite
+was skipped on the main push. The separate successful
+[merge-group run 39016362284](https://github.com/ai4curation/ai-gene-review/actions/runs/39016362284)
+and [job 117349183993](https://github.com/ai4curation/ai-gene-review/actions/runs/39016362284/job/117349183993)
+provide full-suite evidence for the exact merge candidate: 3,912 tests passed
+with one skipped and 83 deselected, 252 passed with 37 skipped in the separate
+suite, and 415 automation checks passed. These remain distinct validation events.
+The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 84 earlier completion updates, the complete
+preceding progress text and 174 earlier project history records. The catalogue
+changes only CYP1B1 from unchecked to checked. Update 85 is appended; earlier
+queue values and literal UTF-8 formatting are unchanged. Review availability at incorporated main
+`66f848da36501873b7f42e8edff5226bdff2702a` is 7,860 review files, including 3,001 human
+reviews. CYP7B1 was updated on main and remains unchecked pending completion
+verification. CYP1B1 now
+receives completion credit because its approval, merge and actual-main checks
+have been verified; availability alone did not establish that credit.
+
+The actual branch inventory contains 7,860 reviews, including 3,001 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,712 missing-review warnings, unchanged from checkpoint 435; CYP7B1 remains unchecked. The progress page has no warnings. Counts are 436 checked and 2,440 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T090405Z-codex-4ae10d.yaml)
+
+## Completion checkpoint 437 — 2026-10-17 08:58:31 UTC
+
+**437 complete; 2,439 remaining out of 2,876 primary catalogue genes.**
+CYP7B1 is the only addition to checkpoint 436. Its approved head
+`75c32d63eb7a3594a4bed871c21b0b5e45324c01` in
+[#5051](https://github.com/ai4curation/ai-gene-review/pull/5051) merged as
+[`66f848da3650`](https://github.com/ai4curation/ai-gene-review/commit/66f848da36501873b7f42e8edff5226bdff2702a).
+All 19 approved file modes, types and blobs match the merge. The actual
+parent-to-merge delta contains 18 paths; publication PMID 24275569 was already
+identical on parent main. The separate protection set contains 62 positions:
+32 machine source files, 29 other context files and one prior PR history record.
+All remain exact. These counts describe distinct sets. The historical GOA
+snapshot is preserved byte for byte, and both approved curation histories match
+the merge. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5051#pullrequestreview-5547301213)
+and [final discussion](https://github.com/ai4curation/ai-gene-review/pull/5051#issuecomment-6214673452)
+cover that exact head.
+
+The separate actual-main push [run 39019360739](https://github.com/ai4curation/ai-gene-review/actions/runs/39019360739)
+and [test job 117357894268](https://github.com/ai4curation/ai-gene-review/actions/runs/39019360739/job/117357894268)
+completed successfully at 2026-10-17T09:05:03Z. Scoped CYP7B1 validation passed
+with the same two supported generic-binding KEEP_AS_NON_CORE advisories as the
+approved-head and merge-group checks. All 12,022 history records were valid,
+all 42 history tests passed, and all 695 family files validated. The full test
+suite was skipped on the main push. The separate successful
+[merge-group run 39017677239](https://github.com/ai4curation/ai-gene-review/actions/runs/39017677239)
+and [job 117353023833](https://github.com/ai4curation/ai-gene-review/actions/runs/39017677239/job/117353023833)
+provide full-suite evidence for the exact same merge SHA: 3,912 tests passed
+with one skipped and 83 deselected, 252 doctests passed with 37 skipped,
+415 automation tests and 19 JavaScript tests passed. The all-gene schema,
+12 valid/invalid examples, mypy and lint checks also passed. The standalone
+changed-source-evidence step was skipped; it is not reported as passed.
+These remain distinct validation events. DRAFT and two UNDECIDED annotations
+are retained; project completion means the review was finished, approved and
+merged, not that every scientific uncertainty was resolved. The coordinating
+AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 85 earlier completion updates, the complete
+preceding progress text and 175 earlier project history records. The catalogue
+changes only CYP7B1 from unchecked to checked. Update 86 is appended; earlier
+queue values and literal UTF-8 formatting are unchanged. Review availability is
+7,861 review files, including 3,002 human reviews, against incorporated main
+9db646fd420946e2c8a9f325be9cd5b62b2c3d4c. D2HGDH is newly available but remains
+unchecked pending verification; it receives no credit in this checkpoint. CYP7B1
+already had a review; this accepted augmentation supplies completion credit
+without adding an inventory item. Other available and pending reviews receive
+no credit from this update.
+
+The actual branch inventory contains 7,861 reviews, including 3,002 human reviews. All eight frontmatter checks and both ordinary renders passed. The catalogue has 1,711 missing-review warnings, one fewer than checkpoint 436 because D2HGDH is newly available but remains unchecked; CYP7B1 is now checked. The progress page has no warnings. Counts are 437 checked and 2,439 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T093348Z-codex-4a0537.yaml)
+
+## Completion checkpoint 438 — 2026-10-17 09:29:48 UTC
+
+**438 complete; 2,438 remaining out of 2,876 primary catalogue genes.**
+D2HGDH is the only addition to checkpoint 437. Its approved head
+`50483db1f01e0e791d3a08ef907b39d287813714` in
+[#5052](https://github.com/ai4curation/ai-gene-review/pull/5052) merged as
+[`9db646fd4209`](https://github.com/ai4curation/ai-gene-review/commit/9db646fd420946e2c8a9f325be9cd5b62b2c3d4c).
+All 17 approved file modes, types and blobs match the merge, and all 17 paths
+are actual parent-to-merge changes. The separate protection set contains 41
+positions: 13 machine source files, 27 other context files and one prior PR
+history record. All remain exact. These counts describe distinct sets. The
+historical GOA snapshot is preserved byte for byte, and both approved curation
+histories match the merge. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5052#pullrequestreview-5547556150)
+and [final discussion](https://github.com/ai4curation/ai-gene-review/pull/5052#issuecomment-6215129827)
+cover that exact head.
+
+The separate actual-main push [run 39021341700](https://github.com/ai4curation/ai-gene-review/actions/runs/39021341700)
+and [test job 117363611688](https://github.com/ai4curation/ai-gene-review/actions/runs/39021341700/job/117363611688)
+completed successfully at 2026-10-17T09:36:40Z. Scoped D2HGDH validation passed
+with zero gene advisories. All 12,024 history records were valid, all 42 history
+tests passed, and all 695 family files validated. The full test suite was skipped
+on the main push. The separate successful
+[merge-group run 39019362379](https://github.com/ai4curation/ai-gene-review/actions/runs/39019362379)
+and [job 117357899592](https://github.com/ai4curation/ai-gene-review/actions/runs/39019362379/job/117357899592)
+provide full-suite evidence for the exact same merge SHA: 3,912 tests passed
+with one skipped and 83 deselected, 252 doctests passed with 37 skipped,
+415 automation tests and 19 JavaScript tests passed. The all-gene schema,
+12 valid/invalid examples, mypy and lint checks also passed. The standalone
+changed-source-evidence step was skipped; it is not reported as passed.
+These remain distinct validation events. The review retains COMPLETE status
+and two UNDECIDED negated source assertions; project completion means the review
+was finished, approved and merged, not that every scientific uncertainty was
+resolved. The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 86 earlier completion updates, the complete
+preceding progress text and 176 earlier project history records. The catalogue
+changes only D2HGDH from unchecked to checked. Update 87 is appended; earlier
+queue values and literal UTF-8 formatting are unchanged. Review availability is
+unchanged from checkpoint 437: 7,861 review files, including 3,002 human reviews,
+against incorporated main 9db646fd420946e2c8a9f325be9cd5b62b2c3d4c. D2HGDH
+added one review at that merge; checkpoint 437 already recorded its availability
+without credit. This update supplies the verified completion credit without
+counting that inventory addition again. Other available and pending reviews
+receive no credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,861 reviews, including 3,002 human reviews. The catalogue has 1,711 missing-review warnings and the progress page has no warnings, unchanged from checkpoint 437. Counts are 438 checked and 2,438 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T095628Z-codex-07f7ee.yaml)
+
+## Completion checkpoint 439 — 2026-10-17 10:01:42 UTC
+
+**439 complete; 2,437 remaining out of 2,876 primary catalogue genes.**
+DAG1 is the only addition to checkpoint 438. Its approved head
+`3d949f3bd8f428c3e1d1710284b292e661a4954e` in
+[#5054](https://github.com/ai4curation/ai-gene-review/pull/5054) merged as
+[`f6be2985c3b5`](https://github.com/ai4curation/ai-gene-review/commit/f6be2985c3b532458ebf9383357cc1e519d97c7e).
+All 64 approved file modes, types and blobs match the merge, and all 64 paths
+are actual parent-to-merge changes. The separate protection set contains 122
+positions: 93 machine source files, 27 other context files and two prior PR
+history records. All remain exact. These counts describe distinct sets. The
+historical GOA snapshot is preserved byte for byte, and all three approved curation
+histories match the merge. The [approval](https://github.com/ai4curation/ai-gene-review/pull/5054#pullrequestreview-5549342181)
+and [final discussion](https://github.com/ai4curation/ai-gene-review/pull/5054#issuecomment-6217821485)
+cover that exact head.
+
+The separate actual-main push [run 39023334577](https://github.com/ai4curation/ai-gene-review/actions/runs/39023334577)
+and [test job 117369341944](https://github.com/ai4curation/ai-gene-review/actions/runs/39023334577/job/117369341944)
+completed successfully at 2026-10-17T10:06:51Z. Scoped DAG1 validation passed
+with five disclosed and accepted gene advisories: a stale GO-label warning,
+three supported generic-binding policy warnings and one synthesized-core
+coverage warning. All 12,027 history records were valid, all 42 history
+tests passed, and all 695 family files validated. The full test suite was skipped
+on the main push. The separate successful
+[merge-group run 39021343335](https://github.com/ai4curation/ai-gene-review/actions/runs/39021343335)
+and [job 117363615962](https://github.com/ai4curation/ai-gene-review/actions/runs/39021343335/job/117363615962)
+provide full-suite evidence for the exact same merge SHA: 3,912 tests passed
+with one skipped and 83 deselected, 252 doctests passed with 37 skipped,
+415 automation tests and 19 JavaScript tests passed. The all-gene schema,
+12 valid/invalid examples, mypy and lint checks also passed. The standalone
+changed-source-evidence step was skipped; it is not reported as passed.
+These remain distinct validation events. The review retains DRAFT status
+and ten UNDECIDED source assertions; project completion means the review
+was finished, approved and merged, not that every scientific uncertainty was
+resolved. The coordinating AI agent's acceptance is not a human maintainer sign-off.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 87 earlier completion updates, the complete
+preceding progress text and 177 earlier project history records. The catalogue
+changes only DAG1 from unchecked to checked. Update 88 is appended; earlier
+queue values and literal UTF-8 formatting are unchanged. Review availability rises from checkpoint 438's 7,861 total / 3,002 human
+reviews to 7,862 / 3,003 at main f6be2985c3b532458ebf9383357cc1e519d97c7e.
+DAG1 adds one available review and receives the sole new verified credit.
+Other available and pending reviews
+receive no credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,862 reviews, including 3,003 human reviews. The catalogue has 1,710 missing-review warnings and the progress page has no warnings, one fewer than checkpoint 438. Counts are 439 checked and 2,437 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T102135Z-codex-3dcc7e.yaml)
+
+## Completion checkpoint 440 — 2026-10-17 10:32:17 UTC
+
+**440 complete; 2,436 remaining out of 2,876 primary catalogue genes.**
+DARS2 is the sole addition to checkpoint 439. Its approved head
+`722a2bd80bba55a3b3b34067d0a7d8ec6b0196bb` in
+[#5060](https://github.com/ai4curation/ai-gene-review/pull/5060) merged as
+[`6328c89e41e0`](https://github.com/ai4curation/ai-gene-review/commit/6328c89e41e0cc646e4a1437079844d87ad7e3b7).
+All 11 approved PR file modes and blobs match the merge. The actual parent delta
+contains 10 paths because PMID_24275569.md was already present with identical bytes.
+The separate set of 59 protected positions comprises 28 machine-source/provider
+files, 28 other context files and three earlier PR histories. All remain exact.
+The 54 source annotation dictionaries, 35 inherited quotations, 3,446-byte notes
+prefix and previously merged target history are preserved. The exact-head
+[approval](https://github.com/ai4curation/ai-gene-review/pull/5060#pullrequestreview-5549390951)
+and [final discussion](https://github.com/ai4curation/ai-gene-review/pull/5060#issuecomment-6217890878)
+resolve the blockers and record the remaining nonblocking collagen-refinement judgment.
+
+The actual-main push [run 39025275210](https://github.com/ai4curation/ai-gene-review/actions/runs/39025275210)
+and [job 117374923665](https://github.com/ai4curation/ai-gene-review/actions/runs/39025275210/job/117374923665)
+passed at 2026-10-17T10:39:12Z. Scoped DARS2 validation passed with 11 accepted
+advisories; all 12,030 histories validated, 42 history tests passed and 695 family
+files validated. The full suite was skipped on this push. The separate successful
+[merge-group run 39023336329](https://github.com/ai4curation/ai-gene-review/actions/runs/39023336329)
+and [job 117369347335](https://github.com/ai4curation/ai-gene-review/actions/runs/39023336329/job/117369347335)
+tested the exact same merge SHA: 3,912 tests passed, one skipped, 83 deselected;
+252 doctests passed, 37 skipped; 415 automation tests and 19 JavaScript tests passed.
+All-gene schemas, 12 valid/invalid examples, mypy and lint also passed. The standalone
+prediction/source-evidence step was skipped and is not claimed as executed.
+
+DARS2 retains DRAFT status and three UNDECIDED source assertions. Completion means
+the review was finished, approved and merged; it does not resolve all scientific
+uncertainty or imply a human maintainer sign-off by the coordinating AI agent.
+DARS2 was already available as a review: repository availability remains 7,862
+reviews, including 3,003 human reviews. Of 1,166 catalogue genes with available
+reviews, 440 are credited and 726 remain uncredited; 1,710 still lack review files.
+
+This update preserves all 2,876 catalogue identities and association texts, 235
+historical queue objects, all 88 earlier completion updates, the complete preceding
+progress text and 178 prior project histories. Only the DARS2 checkbox changes;
+completion update 89 is appended. Other available and pending reviews receive no
+credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,862 reviews, including 3,003 human reviews. The catalogue has 1,710 missing-review warnings and the progress page has no warnings, unchanged from checkpoint 439. Counts are 440 checked and 2,436 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T104628Z-codex-760612.yaml)
+
+## Completion checkpoint 441 — 2026-10-17 10:58:01 UTC
+
+**441 complete; 2,435 remaining out of 2,876 primary catalogue genes.**
+DCAF17 is the sole addition to checkpoint 440. Its approved head
+`87bf8aa55fa996cd5b729b279b0e7870efec7228` in
+[#5073](https://github.com/ai4curation/ai-gene-review/pull/5073) merged as
+[`1b47f6653c7f`](https://github.com/ai4curation/ai-gene-review/commit/1b47f6653c7fa96e61b6a6ac5fe76b989961b59c).
+All 13 approved PR file modes and blobs match the merge. The actual parent delta
+contains 12 paths; `publications/PMID_15815621.md` was already identical on the parent.
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/5073#pullrequestreview-5550019338)
+and separate actual-main validation establish this completion.
+
+The actual-main push [run 39026890723](https://github.com/ai4curation/ai-gene-review/actions/runs/39026890723)
+and [job 117379542492](https://github.com/ai4curation/ai-gene-review/actions/runs/39026890723/job/117379542492)
+succeeded at 2026-10-17T11:03:25Z. Scoped gene, history and family validation
+passed; the full test suite was skipped on this push. The separate successful
+[merge-group run 39025277296](https://github.com/ai4curation/ai-gene-review/actions/runs/39025277296)
+and [job 117374929386](https://github.com/ai4curation/ai-gene-review/actions/runs/39025277296/job/117374929386)
+tested the same merge SHA and ran the full test suite, examples, all-gene schemas
+and automation checks. The standalone prediction/source-evidence step was skipped
+and is not claimed as executed. Completion records the finished, approved and
+merged review; it is not a human maintainer sign-off by the coordinating AI agent.
+
+The 46 inspected positions overlap the 13 approved PR paths: seven were added
+among the 12 merge changes, one approved cache was already identical on the parent,
+and 38 pre-existing context paths were unchanged. These are the selected
+post-publication preservation inventory, not 46 files that all predated the merge.
+Their explicit categories and paths are:
+
+- tracker source records (2): `projects/CLINGEN_MENDELIAN.md`, `projects/CLINGEN_MENDELIAN/publication-queue.json`.
+- pathway and model sources (6): `gocams/index.tsv`, `reactome/R-HSA-8952638.md`, `reactome/R-HSA-8952639.md`, `reactome/R-HSA-8955245.md`, `reactome/R-HSA-8955285.md`, `reactome/R-HSA-8956045.md`.
+- repository runtime and build context (25): `CLAUDE.md`, `AGENTS.md`, `docs/history.md`, `genes/human/RBFOX3/RBFOX3-bioinformatics/rbfox3_analysis/pyproject.toml`, `genes/human/RBFOX3/RBFOX3-bioinformatics/rbfox3_analysis/README.md`, `genes/yeast/MTC7/MTC7-bioinformatics/pyproject.toml`, `genes/yeast/MTC7/MTC7-bioinformatics/README.md`, `genes/human/CFAP418/CFAP418-bioinformatics/pyproject.toml`, `genes/human/CFAP418/CFAP418-bioinformatics/README.md`, `genes/PSEPK/pedH/pedH-bioinformatics/pyproject.toml`, `genes/PSEPK/pedH/pedH-bioinformatics/README.md`, `genes/human/C18orf21/C18orf21-bioinformatics/pyproject.toml`, `genes/human/C18orf21/C18orf21-bioinformatics/README.md`, `genes/human/C18orf21/C18orf21-bioinformatics/genes/human/C18orf21/C18orf21-bioinformatics/pyproject.toml`, `genes/human/C18orf21/C18orf21-bioinformatics/genes/human/C18orf21/C18orf21-bioinformatics/README.md`, `genes/PENCH/aatA/aatA-bioinformatics/pyproject.toml`, `genes/PENCH/aatA/aatA-bioinformatics/README.md`, `genes/METBS/Pks1/Pks1-bioinformatics/pyproject.toml`, `genes/METBS/Pks1/Pks1-bioinformatics/README.md`, `genes/human/GATA3/GATA3-bioinformatics/pyproject.toml`, `genes/human/GATA3/GATA3-bioinformatics/README.md`, `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/pyproject.toml`, `projects/THLAR_OILSEED/ortholog_mapping/pyproject.toml`, `analysis/mf_metabolic_network/pyproject.toml`, `src/ai_gene_review/schema/gene_review.yaml`.
+- publication caches (10): `publications/PMID_14702039.md`, `publications/PMID_15489334.md`, `publications/PMID_16949367.md`, `publications/PMID_17974005.md`, `publications/PMID_29907856.md`, `publications/PMID_15815621.md`, `publications/PMID_19026396.md`, `publications/PMID_30068992.md`, `publications/PMID_36509865.md`, `publications/PMID_40449516.md`.
+- DCAF17 machine source files (2): `genes/human/DCAF17/DCAF17-goa.tsv`, `genes/human/DCAF17/DCAF17-uniprot.txt`.
+- prior DCAF17 session history (1): `history/genes/human/DCAF17/2026-10-16T144134Z-codex-bd0f40.yaml`.
+
+The runtime/build category records the exact historical DCAF17 execution inventory
+listed above; it is not an exhaustive inventory of repository runtime. The merge
+preserved the 38 pre-existing context paths and the already-identical cache, and
+introduced the seven remaining listed paths. This checkpoint separately updates
+the two tracker source records and their related project files; other positions
+retain their accepted merge contents. DCAF17 had zero validation advisories.
+No gene annotation is edited by this tracker update.
+
+DCAF17 adds a review file. Repository availability is now 7,863 reviews,
+including 3,004 human reviews. Of 1,167 catalogue genes with available
+reviews, 441 are credited and 726 remain uncredited; 1,709 still lack
+review files. Availability and completion remain different measures.
+
+This update preserves all 2,876 catalogue identities and association texts, 235
+historical queue objects, all 89 earlier completion updates, the complete preceding
+progress text and 179 prior project histories. Only the DCAF17 checkbox changes;
+completion update 90 is appended. Other available and pending reviews receive no
+credit from this update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,863 reviews, including 3,004 human reviews. The catalogue has 1,709 missing-review warnings and the progress page has no warnings, reflecting the new DCAF17 review. Counts are 441 checked and 2,435 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T113125Z-codex-90e568.yaml)
+
+## Completion checkpoint 442 — 2026-10-17 13:46:17 UTC
+
+**442 complete; 2,434 remaining out of 2,876 primary catalogue genes.**
+DNAH12 is the sole addition to checkpoint 441. Its approved head
+`d9a78ab63b0da51e49b3f80341668c68e2599efd` in
+[#4877](https://github.com/ai4curation/ai-gene-review/pull/4877) merged as
+[`298fede2212a`](https://github.com/ai4curation/ai-gene-review/commit/298fede2212a4d540865542e5e8b396bec69107c).
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/4877#pullrequestreview-5517454210)
+resolves the required review changes. All 27 approved path modes and types are
+preserved. Twenty-six blobs are identical; `cache/go/terms.csv` contains exactly
+the approved GO:0036156 insertion applied to the newer parent. Removing that
+single line reproduces the parent cache byte for byte. The actual merge delta
+has 25 additions and two modifications. Its 17 machine-source/provider additions
+and six history additions are exact approved blobs; all other tracked paths are
+unchanged by this merge. These additions are not pre-existing protected files.
+
+The separate actual-main push [run 39037932465](https://github.com/ai4curation/ai-gene-review/actions/runs/39037932465)
+and [job 117411414646](https://github.com/ai4curation/ai-gene-review/actions/runs/39037932465/job/117411414646)
+completed successfully at 2026-10-17T14:07:58Z. Scoped DNAH12 validation passed
+with zero gene curation advisories. All 12,200 history records validated, 42
+history tests passed and 705 family files validated. The full suite actually ran
+on this push: 3,912 tests passed, one skipped and 83 deselected; 252 doctests
+passed and 37 skipped. All 12 valid/invalid examples, mypy and lint passed.
+
+The distinct successful [merge-group run 39035866797](https://github.com/ai4curation/ai-gene-review/actions/runs/39035866797)
+and [job 117405388809](https://github.com/ai4curation/ai-gene-review/actions/runs/39035866797/job/117405388809)
+tested the same merge SHA. They independently passed the full suite and doctests
+with the same counts, plus all-gene schemas, modules, 415 automation tests and
+19 JavaScript tests. All-gene schemas, modules and agentic automation were skipped
+on the main push. Standalone changed prediction/source-evidence steps were
+skipped in both events and are not claimed as executed.
+
+Zero DNAH12 curation advisories does not mean every check was warning-free.
+The passing suites reported nine test warnings and eight doctest warnings;
+family checks retained unrelated unresolved membership/residue cases and skipped
+snippet checks. The approving reviewer left three nonblocking notes: attribute
+the mouse expression panel precisely, move a curation-framed phylogeny sentence
+out of the description, and investigate a prior DuplicateKeyError as tooling.
+The review remains COMPLETE with one UNDECIDED binding assertion. Completion
+records finished, approved and merged curation; it does not resolve all scientific
+uncertainty or imply a human maintainer sign-off by the coordinating AI agent.
+
+Repository availability is now 7,965 reviews, including 3,005 human reviews.
+DNAH12 accounts for the one new human review since checkpoint 441; other net
+review-file additions receive no completion credit here. Of 1,168 catalogue
+genes with available reviews, 442 are credited and 726 remain uncredited;
+1,708 catalogue genes still lack reviews. The later publication source main
+`bff21ea8eb90bc3e07bb2fbedf14c25d37080161` has the same inventory; the completion
+cutoff remains the DNAH12 merge at 13:46:17 UTC.
+
+This update preserves all 2,876 catalogue identities and association texts, all
+235 historical queue objects, all 90 earlier completion updates, the complete
+preceding progress text and 181 prior project history records. Only the DNAH12
+checkbox changes; completion update 91 is appended. No gene annotation, source
+cache or earlier history record is edited by this tracker update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,965 reviews, including 3,005 human reviews. The catalogue has 1,708 missing-review warnings and the progress page has no warnings, reflecting the new DNAH12 review. Counts are 442 checked and 2,434 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-17T142405Z-codex-a230e1.yaml)
+
+## Completion checkpoint 443 — 2026-10-18 15:14:14 UTC
+
+**443 complete; 2,433 remaining out of 2,876 primary catalogue genes.**
+DCC is the sole addition to checkpoint 442. Its approved head
+`08e1797356e01101c5de7091b61dd1b61c97e92b` in
+[#5080](https://github.com/ai4curation/ai-gene-review/pull/5080) merged as
+[`7bbbe4f59c5b`](https://github.com/ai4curation/ai-gene-review/commit/7bbbe4f59c5b14d9b053d691deba3a8c5726d9bf).
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/5080#pullrequestreview-5556675186)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5080#issuecomment-6230751438)
+close the required changes. The reviewer explicitly retracts the earlier
+generic-binding objection after verifying the project's binding instruction and
+accepts the revised core representation. There are no inline comments or review
+threads. The older changes-requested review belongs to an earlier revision.
+
+All 18 approved files have identical blobs and modes in the merge. Its sole
+parent is `23a506fc6b8bd5a2822d76bc2151276fa7bddac4`; the complete delta contains
+exactly those 18 additions, including two DCC history records and ten publication
+caches. All 158,727 paths outside the delta are unchanged.
+Complete saved tree listings were reconstructed and authenticated against the
+Git commit tree hashes, and the 18 captured file contents were checked against
+their Git blob identifiers.
+
+The actual-main push [run 39139563867](https://github.com/ai4curation/ai-gene-review/actions/runs/39139563867)
+and [test job 117710997259](https://github.com/ai4curation/ai-gene-review/actions/runs/39139563867/job/117710997259)
+completed successfully at 2026-10-18T15:21:25Z. The complete raw job log is retained
+in the merge audit. Its operative sections identify this main revision and its
+parent, detect the exact 18-file delta, and execute strict changed-gene validation
+on DCC. That validation passed with six generic-binding policy warnings, whose
+scientific dispositions were accepted in the approving review. All 12,956 history
+records validated, 42 history tests passed, and 708 family files validated. Family
+checks reported no failures while retaining unrelated unresolved membership and
+residue cases and skipped snippet checks.
+
+This was a scoped main-push workflow: the general test suite, example validation,
+agentic checks and standalone source-evidence validation were skipped. No fresh
+full-suite run is claimed. All test-job steps and its three annotations were
+read; the annotations concern Node.js migration, scoped validation and the future
+runner image, not DCC scientific failures. The separate main-push documentation
+run 39139563863 also succeeded. The distinct [merge-group run 39137566672](https://github.com/ai4curation/ai-gene-review/actions/runs/39137566672)
+completed successfully at the same merge SHA; its run metadata is preserved, but
+its full job log was not re-audited and is not substituted for actual-main proof.
+
+The review file remains DRAFT, with three UNDECIDED annotations and the six
+acknowledged policy warnings. The approving reviewer left only nonblocking
+suggestions about provenance wording, comparator interpretation and a structured
+knowledge gap. Completion records approved and merged curation, not resolution
+of every biological uncertainty or a human maintainer sign-off by the
+coordinating AI agent.
+
+Repository availability at this actual-main cutoff is 7,981 reviews,
+including 3,006 human reviews. Of 1,169 catalogue genes with
+available reviews, 443 are credited and 726 remain uncredited;
+1,707 catalogue genes still lack reviews. These counts were recomputed
+from the complete main tree and the unchanged catalogue, not copied from the
+preceding checkpoint. DCC alone receives new completion credit.
+
+This update preserves all 2,876 catalogue identities and association texts,
+all 235 historical queue objects, all 91 earlier completion updates, the complete
+preceding progress text and 182 prior project history records. Only the DCC
+checkbox changes; completion update 92 is appended. No gene review, source cache,
+runtime file or earlier history record is edited by this tracker update.
+
+All eight frontmatter checks and both ordinary renders passed against the actual branch inventory of 7,981 reviews, including 3,006 human reviews. The catalogue has 1,707 missing-review warnings and the progress page has no warnings, reflecting the new DCC review. Counts are 443 checked and 2,433 unchecked catalogue genes.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker-426-20261016/history/projects/CLINGEN_MENDELIAN/2026-10-18T153706Z-codex-1e95f8.yaml)
+
+## Completion checkpoint 444 — 2026-10-18 15:47:45 UTC
+
+**444 complete; 2,432 remaining out of 2,876 primary catalogue genes.**
+DCDC2 is the sole addition to checkpoint 443. Its approved head
+`6d095b754e8d53597421072c84270e86e1329603` in
+[#5082](https://github.com/ai4curation/ai-gene-review/pull/5082) merged as
+[`28ce6af8efa0`](https://github.com/ai4curation/ai-gene-review/commit/28ce6af8efa0c260e8bae7b6b0783376deef99cf).
+The exact-head [approval](https://github.com/ai4curation/ai-gene-review/pull/5082#pullrequestreview-5556761735)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5082#issuecomment-6230973558)
+resolve the two required changes. The reviewer accepts the microtubule-binding
+support and withdraws the blocking partner-class objection after checking the
+project instruction and explicit assay limits. Remaining suggestions are advisory;
+there are no inline comments or unresolved review threads.
+
+All 17 approved files have identical blobs and modes in the merge. Its sole
+parent is `7bbbe4f59c5b14d9b053d691deba3a8c5726d9bf`; the complete delta contains
+exactly those 17 additions, including two DCDC2 history records and ten publication
+caches. All 158,745 paths outside the delta are unchanged.
+Complete saved trees were authenticated against the Git commit tree hashes, and
+all 17 captured file contents were checked against their Git blob identifiers.
+
+The actual-main push [run 39142088672](https://github.com/ai4curation/ai-gene-review/actions/runs/39142088672)
+and [test job 117718406876](https://github.com/ai4curation/ai-gene-review/actions/runs/39142088672/job/117718406876)
+completed successfully at 2026-10-18T15:53:59Z. Its full raw log is preserved in the
+merge audit. The operative log identifies main and its parent, detects the exact
+17-file delta and passes strict changed-gene validation on DCDC2 with 19 documented
+generic-binding policy advisories. The approving reviewer accepts the retained
+association/class distinctions under the project instruction. All 12,958 history
+records validated, 42 history tests passed and 708 family reviews validated.
+Residue-site checks recorded 10,417 passes, no failures and 23 unresolved cases;
+gene residue checks recorded 617 passes, no failures and two unresolved cases.
+Other unrelated family/member uncertainties remain disclosed by those checks.
+
+This main-push workflow was scoped: general tests, examples, merge-queue schema,
+agentic checks and standalone source-evidence validation were skipped. No fresh
+full-suite execution is claimed. ROOT read all test/docs steps and annotations;
+the owner independently read all test steps and operative gene/history/family
+results. There are no failure annotations. The separate documentation push
+run 39142088680 also succeeded. The distinct [merge-group run 39139566172](https://github.com/ai4curation/ai-gene-review/actions/runs/39139566172)
+succeeded at the same SHA; only its run metadata is used here, not a repeated
+full job-log audit or a substitute for actual-main evidence.
+
+The review file remains DRAFT with the 19 accepted policy advisories. Advisory
+review suggestions about wording, product representation and knowledge gaps do
+not become required changes. Completion records approved, merged curation; ROOT
+is the coordinating AI agent, not a human maintainer sign-off.
+
+Availability was recomputed from the complete actual-main tree: 7,982
+reviews, including 3,007 human reviews. Of 1,170 catalogue
+genes with reviews, 444 are credited and 726 remain uncredited;
+1,706 catalogue genes still lack a review. DCDC2 alone supplies the
+one added review and completion since the preceding checkpoint.
+
+This update preserves all 2,876 catalogue identities and association texts,
+all 235 historical queue objects, all 92 earlier completion updates, the complete
+preceding progress text and 183 prior project history records. Only the
+DCDC2 checkbox changes; completion update 93 is appended. No gene review, source
+cache, runtime file or earlier history record is edited by this tracker update.
+
+## Completion checkpoint 445 — 2026-10-18 16:14:34 UTC
+
+**445 complete; 2,431 remaining out of 2,876 primary catalogue genes.**
+DCLRE1C is the sole addition to checkpoint 444. Its approved head
+`5a2760761b431c0ba318236e86611fe3322c5be1` in
+[#5083](https://github.com/ai4curation/ai-gene-review/pull/5083) merged as
+[`e734e32bef52`](https://github.com/ai4curation/ai-gene-review/commit/e734e32bef526741f14422b1489a0a6cf03f1e50).
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5083#pullrequestreview-5556870444)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5083#issuecomment-6231293539)
+accept the three requested changes and qualifier correction. Remaining observations
+are nonblocking; no inline comments or unresolved review threads remain at the audit.
+
+All 45 approved files have identical blobs and modes in the merge. The immediate
+parent is `28ce6af8efa0c260e8bae7b6b0783376deef99cf`. The delta consists of six gene
+files, two append-only history records, 30 publication caches and seven Reactome
+caches. All 158,762 paths outside that delta are unchanged. Complete saved trees
+were authenticated against their Git commit hashes, and every changed file was
+checked against its Git blob identifier. The commit's older authored timestamp
+does not replace the verified PR merge event time.
+
+The actual-main [push run 39144107165](https://github.com/ai4curation/ai-gene-review/actions/runs/39144107165)
+and [test job 117724327377](https://github.com/ai4curation/ai-gene-review/actions/runs/39144107165/job/117724327377)
+completed successfully at 2026-10-18T16:21:02Z. Its saved log shows strict validation
+of the changed DCLRE1C review, 12,960 history records, 42 history tests and 708 family
+files passing. General tests, examples, all-gene schema validation and automation
+were skipped on this scoped push; those are not represented as post-merge runs.
+
+The distinct [merge-group run 39142091286](https://github.com/ai4curation/ai-gene-review/actions/runs/39142091286)
+at the same exact SHA completed successfully before merge. Its actual log shows
+all-gene schema validation with no issues, 12 valid/invalid examples passing,
+3,940 main tests passing with one skipped and 84 deselected, 252 doctests passing
+with 37 skipped, and 415 automation tests passing. Typing and lint checks passed.
+All 82 selected job steps and eight annotations were inspected across the merge
+group, main push and [documentation run 39144107160](https://github.com/ai4curation/ai-gene-review/actions/runs/39144107160).
+No failure annotation was present. Unrelated module/family ontology warnings,
+documentation-link warnings and action deprecations remain disclosed. The docs
+workflow pushed gh-pages; no independent served-page inspection is asserted.
+Eight incidental issue-comment workflows were skipped. Earlier PR test/review
+success is retained as metadata, distinct from the inspected merge/main logs.
+
+The merged review is COMPLETE and retains one explicit UNDECIDED annotation.
+Completion records accepted and merged curation, not a claim that every scientific
+uncertainty is resolved. ROOT independently accepted the merge proof after replay
+and complete review/CI inspection; ROOT is the coordinating AI agent, not a human
+maintainer sign-off.
+
+The complete actual-main tree contains 7,983 reviews, including 3,008
+human reviews. Of 1,171 catalogue genes with reviews, 445 are
+credited and 726 remain uncredited; 1,705 catalogue
+genes still lack a review file. DCLRE1C alone supplies the additional available
+review and completion since checkpoint 444.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 93 prior completion updates, the complete preceding
+progress text and 183 prior project history records. Only the DCLRE1C checkbox
+changes relative to checkpoint 444, and update 94 is appended. No gene review,
+source cache, runtime file or earlier history is edited by this tracker update.
+
+## Completion checkpoint 446 — 2026-10-18 16:48:20 UTC
+
+**446 complete; 2,430 remaining out of 2,876 primary catalogue genes.**
+DDB2 is the sole addition to checkpoint 445. Its approved head
+`ee8a2dd11241467cb1fe1c6666a0456275cd2689` in
+[#5084](https://github.com/ai4curation/ai-gene-review/pull/5084) merged as
+[`95963b9be78a`](https://github.com/ai4curation/ai-gene-review/commit/95963b9be78a614c8db78e75759e02b15ed645b5).
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5084#pullrequestreview-5556929290)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5084#issuecomment-6231443645)
+accept the clarified original-source provenance and the complex-contribution core
+correction. Remaining suggestions are nonblocking. No inline comments or
+unresolved review threads were present in the audit.
+
+All five approved file blobs and modes are identical in the merge. The immediate
+parent is `e734e32bef526741f14422b1489a0a6cf03f1e50`. The delta modifies the review
+YAML and HTML and adds notes plus two history records. All 158,805 paths outside
+that delta are unchanged. Complete saved head, merge and parent trees were
+authenticated against their commit objects, and each changed file against its Git
+blob identifier. The PR merge event time above is distinct from authored dates.
+
+The actual-main [push run 39146677012](https://github.com/ai4curation/ai-gene-review/actions/runs/39146677012)
+and [test job 117731814617](https://github.com/ai4curation/ai-gene-review/actions/runs/39146677012/job/117731814617)
+completed successfully at 2026-10-18T16:54:49Z. Strict DDB2 validation passed with
+18 retained generic-binding advisories under the standing ClinGen instruction.
+The log separately shows 12,962 history records, 42 history tests and 708 family
+files passing. History coverage, all-gene schemas, general tests, examples,
+modules and automation were skipped on this scoped push; no pass is claimed for
+those skipped steps.
+
+The separate exact-SHA [merge-group run 39144109780](https://github.com/ai4curation/ai-gene-review/actions/runs/39144109780)
+completed successfully before merge. Its actual log shows all-gene schemas with
+no issues, 12 examples passing, 3,940 main tests passing with one skipped and 84
+deselected, 252 doctests passing with 37 skipped, and 415 automation tests passing.
+Typing and lint passed. The earlier exact-head PR test also passed scoped review
+validation with the same 18 advisories; its history-coverage step passed. The
+reviewer could not run the ordinary suite itself, so its approval is not used as
+a substitute for these actual CI results.
+
+All 130 job steps and 14 annotations were inspected across the PR test/review,
+merge group and main push test/docs. No failure annotation was present. Unrelated
+family/module ontology notices, test dependency and infrastructure deprecations,
+and documentation-link warnings remain disclosed. The [docs push 39146676998](https://github.com/ai4curation/ai-gene-review/actions/runs/39146676998)
+completed and pushed gh-pages, without an independent served-page inspection.
+Incidental issue-comment workflows are outside this DDB2 gate and were inspected
+only as metadata; one was still active at capture.
+
+The sole YAML semantic change moves the second core's GO:0004842 from
+`molecular_function` to `contributes_to_molecular_function`. All 81 source and
+review objects, 60 references, five products and other YAML content remain exact.
+The merged file retains its inherited COMPLETE status, while the accepted
+histories disclose the pre-existing computed DRAFT discrepancy. No new status
+calculation or warning-driven rewrite is implied. ROOT independently accepted the
+merge proof after replay and full review/CI inspection; this is coordinating AI
+agent acceptance, not a human maintainer sign-off.
+
+There are still 7,983 review files, including 3,008 human reviews.
+Of 1,171 catalogue genes with reviews, 446 are credited and
+725 remain uncredited; 1,705 catalogue genes lack a review
+file. DDB2 already had a review, so availability is unchanged. This is its first
+accepted campaign completion, not an extra credit for a product or follow-up.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 94 prior completion updates, the full preceding
+progress text and 183 prior project history records. Only DDB2's checkbox changes
+relative to checkpoint 445, and update 95 is appended. No gene review, source
+cache, runtime file or earlier history is edited by this tracker update.
+
+## Completion checkpoint 447 — 2026-10-18 17:10:05 UTC
+
+**447 complete; 2,429 remaining out of 2,876 primary catalogue genes.**
+DCX is the sole addition to checkpoint 446. Approved head
+`2204701c7274a7aa9228e34739139db55cac3751` in
+[#5085](https://github.com/ai4curation/ai-gene-review/pull/5085) merged as
+[`22f429edcf1a`](https://github.com/ai4curation/ai-gene-review/commit/22f429edcf1adff6285ecc152aa2a898d56646e5),
+with immediate parent `95963b9be78a614c8db78e75759e02b15ed645b5`.
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5085#pullrequestreview-5556998310)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5085#issuecomment-6231652422)
+resolve the blocking evidence objections. The reviewer withdrew the ancestor and
+stoichiometry objections, accepted the assay versus native-context limits, and
+recorded the axoneme-action disagreement as nonblocking. No inline comments or
+review threads were present. Remaining evidence-navigation and historical-prose
+suggestions are nonblocking and do not authorize rewriting earlier histories.
+
+All eight approved file blobs and modes match the merge. Three DCX files are
+modified (review YAML, rendered HTML and notes); the source-evidence guide, two
+history records and two publication caches are added. All 158,807 paths outside
+this delta are unchanged. Complete saved head, parent and merge trees were
+authenticated against their commits, and each changed blob against its Git
+identifier. The merge event time above is distinct from authored dates.
+
+The actual-main [push run 39148316947](https://github.com/ai4curation/ai-gene-review/actions/runs/39148316947)
+and [test job 117736623696](https://github.com/ai4curation/ai-gene-review/actions/runs/39148316947/job/117736623696)
+completed successfully at 2026-10-18T17:17:27Z. Its full log and operative command,
+validation and warning windows were inspected: strict DCX validation passed with
+seven retained generic-binding advisories under the explicit ClinGen project
+instruction; 12,964 history records, 42 history tests and 708 family files passed.
+All-gene schemas, modules, general tests, examples and automation were skipped on
+this scoped push. The current-main snapshot equals the audited merge.
+
+The separate exact-SHA [merge-group run 39146679553](https://github.com/ai4curation/ai-gene-review/actions/runs/39146679553)
+passed before merge. Its operative log shows all-gene schemas with no issues,
+12 examples passing, 3,940 tests passing with one skipped and 84 deselected,
+252 doctests passing with 37 skipped, and 415 automation tests passing; typing
+and lint passed. The exact-head PR test also succeeded with the same seven
+advisories, satisfying the review's conditional approval. The reviewer did not
+run the ordinary suite itself; that approval is not substituted for actual CI.
+The [docs push 39148316995](https://github.com/ai4curation/ai-gene-review/actions/runs/39148316995)
+completed and pushed gh-pages; no served-page inspection is claimed.
+
+The first merge audit captured the push while running; a separately sealed
+terminal addendum completed the proof without replacing that earlier snapshot.
+All 35 terminal push steps and all three current annotations were read, with no
+failed step or failure annotation. The two other merge-SHA jobs contributed
+47 inspected steps and five annotations; the earlier pending push annotation
+snapshot was empty and is not treated as the final annotation count. Family
+validation retains unrelated unresolved records and infrastructure notices.
+The complete logs remain available, with actual read windows and scope stated;
+no source-paper body reading or new gene validation was performed for this audit.
+
+All 39 imported annotation dictionaries and the inherited NEW dictionary are
+preserved. The merged 40 entries comprise 11 ACCEPT, 13 MODIFY,
+12 KEEP_AS_NON_CORE, 3 UNDECIDED and one inherited NEW. Description, both products
+and core functions are unchanged from the immediate parent. The merged DRAFT
+status and seven accepted policy advisories are explicit; completion here means
+an accepted, verified campaign review, not disappearance of unresolved evidence.
+ROOT accepted both saved proofs and the complete operative review/CI evidence.
+That is coordinating AI-agent acceptance, not a human maintainer sign-off.
+
+There remain 7,983 review files, including 3,008 human reviews.
+Of 1,171 catalogue genes with reviews, 447 are credited and
+724 remain uncredited; 1,705 catalogue genes lack a review
+file. DCX already had a review, so availability is unchanged. Only its first
+accepted campaign completion is counted.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 95 prior completion updates, the complete preceding
+progress text and 183 prior project history records. Only DCX's checkbox changes
+relative to checkpoint 446, and update 96 is appended. No gene review, source
+cache, runtime file or prior history is edited by this tracker update.
+
+## Completion checkpoint 448 — 2026-10-18 17:32:58 UTC
+
+**448 complete; 2,428 remaining out of 2,876 primary catalogue genes.**
+DDC is the sole addition to checkpoint 447. Approved head
+`b276d279c68e23af68285f74a3b4a94433c87862` in
+[#5086](https://github.com/ai4curation/ai-gene-review/pull/5086) merged as
+[`c4be76827e7a`](https://github.com/ai4curation/ai-gene-review/commit/c4be76827e7a4cb01fb9c77ed9d3f4b98933b1fb),
+with immediate parent `22f429edcf1adff6285ecc152aa2a898d56646e5`.
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5086#pullrequestreview-5557039655)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5086#issuecomment-6231794240)
+accept the previous blockers as resolved or adequately answered. The amino-acid
+process was refined to GO:0009072; the AR-term objection was withdrawn after
+consideration of the dated official ontology response. The remaining external
+source-note reproducibility limitation was explicitly nonblocking because the
+load-bearing claims had independent validator-checked support. Residual core-scope,
+ontology-cache and wording suggestions are optional. No inline comments or review
+threads were present; this tracker does not implement optional scientific edits.
+
+All ten approved file blobs and modes match the merge. Three DDC files are modified
+(review YAML, rendered HTML and notes); two evidence/source guides, two history
+records and three publication caches are added. All 158,812 paths outside this
+delta are unchanged. Complete saved head, parent and merge trees, commit identities
+and changed blobs were authenticated. This proves the approved payload at the
+merge, not equality between the entire PR tree and main. The merge event time above
+is distinct from authored dates.
+
+The actual-main [push run 39150099881](https://github.com/ai4curation/ai-gene-review/actions/runs/39150099881)
+[test job 117741791093](https://github.com/ai4curation/ai-gene-review/actions/runs/39150099881/job/117741791093)
+completed successfully at 2026-10-18T17:40:19Z. All 35 terminal step records and three
+annotations were read. Its full log is saved, with operative command/result windows
+inspected: strict DDC validation passed with one retained generic-binding NC
+advisory, 12,966 history records had no issues, 42 history tests passed, and 708
+family files had no blocking issues. All-gene schemas, modules, history coverage,
+examples, general tests, agentic automation and full upstream PAINT were skipped on
+this scoped push. They are not claimed to have run on actual main.
+
+The separate exact-SHA [merge-group run 39148319713](https://github.com/ai4curation/ai-gene-review/actions/runs/39148319713)
+passed before merge. Its operative log shows all-gene schemas, scoped modules,
+12 examples, 3,940 tests with one skipped and 84 deselected, 252 doctests with 37
+skipped, and 415 automation tests passing; typing passed for 268 files. It also
+passed the history and family checks. History-coverage and full upstream-PAINT
+steps were skipped. The exact-approved-head test and reviewer jobs succeeded.
+The reviewer's eight permission denials and `is_error: false` are reported
+separately from its independently present exact-head approval; they are not CI
+failures. The [docs push 39150099911](https://github.com/ai4curation/ai-gene-review/actions/runs/39150099911)
+completed and pushed the site; no served-page inspection is claimed.
+
+The original merge snapshot captured actual-main CI while running. A separately
+sealed terminal addendum completed that proof without replacing the prior snapshot.
+The four previously terminal jobs supplied 95 recorded steps and 11 annotations;
+the later push supplied its own 35 steps and three annotations. All annotations
+were notices/warnings, with no failure-level annotation. Unrelated family
+adjudication categories and infrastructure notices remain explicitly distinct
+from blocking failures. Complete logs are archived, but only stated operative
+windows are claimed read. No source-paper body or new local gene suite was read or
+run for this completion update.
+
+The merged review retains 27 annotations: 17 ACCEPT, five TOO_GENERAL,
+three KEEP_AS_NON_CORE and two MODIFY, with no UNDECIDED. It contains four products
+and two core functions and remains DRAFT. The accepted generic-binding advisory
+and DRAFT status do not prevent completion of an accepted and verified campaign
+review. ROOT accepted both saved merge proofs and their review/CI evidence; this
+is coordinating AI-agent acceptance, not a human maintainer sign-off.
+
+There remain 7,983 review files, including 3,008 human reviews.
+Of 1,171 catalogue genes with reviews, 448 are credited and
+723 remain uncredited; 1,705 catalogue genes lack a review
+file. DDC already had a review, so availability is unchanged. Only its first
+accepted campaign completion is counted.
+
+This update preserves all 2,876 catalogue identities and association texts,
+235 historical queue objects, 96 prior completion updates, the complete preceding
+progress text and 183 prior project history records. Only DDC's checkbox changes
+relative to checkpoint 447, and update 97 is appended. No gene review, source
+cache, runtime file or prior history is edited. The publication preimage remains
+queued checkpoint 443; this private successor is held until ROOT separately
+requalifies and authorizes publication.
+
+## Completion checkpoint 449 — 2026-10-18 18:05:01 UTC
+
+**449 complete; 2,427 remaining out of 2,876 primary catalogue genes.**
+DDHD1 is the sole addition to checkpoint 448. Approved head
+`bbe34f00d09d848d64d3e3ebb3cea1fda256b6e6` in
+[#5087](https://github.com/ai4curation/ai-gene-review/pull/5087) merged as
+[`66220febb3d8`](https://github.com/ai4curation/ai-gene-review/commit/66220febb3d8e4c2c16095885a79ceaac6d3b937),
+with immediate parent `c4be76827e7a4cb01fb9c77ed9d3f4b98933b1fb`.
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5087#pullrequestreview-5557023674)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5087#issuecomment-6231757131)
+accept the prior blockers as resolved. The reviewer explicitly withdraws its
+generic-binding objection under the standing ClinGen instruction. Tissue and
+SPG28 context, product scope, oligomerization notes, source locators and append-only
+history are accepted. Experiments, a possible later HuRI refinement, policy-warning
+wording and optional short quotations remain suggestions, not blocking requests.
+There are no inline comments or review threads.
+
+All 20 approved PR file blobs and modes match the merge. The actual immediate-parent
+delta contains 19 additions: six gene files, two histories, two PANTHER lookup
+files, eight publication caches and one Reactome cache. The twentieth PR path,
+`publications/PMID_23186163.md`, was already identical in the parent. All 158,822
+paths outside the 19-path delta are unchanged. Complete saved head, parent and
+merge trees and their commit objects were authenticated, together with all 20
+saved blobs. This establishes approved-path equality, not equality of the entire
+PR branch and main. The cutoff is the merge event time, not an authored date.
+
+The actual-main [push test run 39152524224](https://github.com/ai4curation/ai-gene-review/actions/runs/39152524224)
+and [job 117748902797](https://github.com/ai4curation/ai-gene-review/actions/runs/39152524224/job/117748902797)
+passed strict changed-DDHD1 validation with one expected generic-binding non-core
+advisory, 12,968 history records without issues, 42 history tests, and 708 family
+files. Its all-gene schemas, modules, history coverage, examples, general tests,
+automation and full upstream PAINT steps were skipped. Those scopes are not
+claimed as actual-main executions.
+
+The exact-SHA [merge-group run 39150102446](https://github.com/ai4curation/ai-gene-review/actions/runs/39150102446)
+passed the scoped checks and broad schemas/modules, 12 examples, 3,940 tests with
+one skipped and 84 deselected, 252 doctests with 37 skipped, typing for 268 files,
+Ruff, 415 Python automation tests and 19 JavaScript tests with zero failures.
+History coverage and full upstream PAINT were skipped there. An ignored SQL
+destructor exception appears after the successful general-test summary; subsequent
+checks and the job succeeded. The event is retained in the evidence rather than
+silently omitted or characterized as a failed suite.
+
+The approved-head [test run 39017424539](https://github.com/ai4curation/ai-gene-review/actions/runs/39017424539)
+passed scoped DDHD1 validation, 12,017 histories, 42 history tests, 695 family files
+and history coverage identifying both DDHD1 session records. Its broad test scopes
+were skipped. The [review run 39017424544](https://github.com/ai4curation/ai-gene-review/actions/runs/39017424544)
+succeeded and recorded the exact-head approval; three permission denials with
+`is_error: false` did not prevent that output. Independent test jobs provide the
+validation evidence. The actual-main [documentation run 39152524403](https://github.com/ai4curation/ai-gene-review/actions/runs/39152524403)
+successfully built and pushed gh-pages despite nonblocking documentation warnings;
+no served-page inspection is claimed.
+
+All five operative jobs were terminal success. All 130 step records and 14
+annotations were read; annotations were notices/warnings, with no failure level.
+Full logs are archived and exact operative windows were inspected; whole
+installation logs are not claimed read. Incidental comment/mention workflows
+were inventoried separately as skipped, not counted as DDHD1 validation.
+
+The merged review deliberately remains DRAFT: 12 source assertions comprise three
+ACCEPT, four MODIFY, two REMOVE, two KEEP_AS_NON_CORE and one UNDECIDED, with no NEW.
+It retains four products, one core function and 15 references. The one undecided
+source and accepted policy advisory remain visible; neither changes the fact that
+the campaign review was approved, merged and verified. ROOT accepted the saved
+merge proof and complete review/CI audit as completion 449. This is coordinating
+AI-agent acceptance, not a human maintainer sign-off. No primary source body or
+ordinary local suite was reread or run for this tracker update.
+
+The authenticated main tree now contains 7,984 review files, including
+3,009 human reviews. Of 1,172 catalogue genes with reviews,
+449 are credited and 723 remain uncredited; 1,704 lack a review
+file. DDHD1 adds one available review and one completion; no other gene receives
+credit. Availability was re-inventoried from this exact tree.
+
+All 2,876 catalogue identities and association texts, 235 historical queue objects,
+97 prior completion updates, the entire preceding progress text and 183 project
+history records remain preserved. Only DDHD1's checkbox changes relative to
+checkpoint 448; update 98 is appended. No gene, source cache, runtime or prior
+history is edited. The publication preimage remains queued checkpoint 443; this
+private successor is held until ROOT separately requalifies publication.
+
+## Completion checkpoint 450 — 2026-10-18 18:27:44 UTC
+
+**450 complete; 2, 426 remaining out of 2,876 primary catalogue genes.**
+DDR2 is the sole addition to checkpoint 449. Approved head
+`a43188ff51c0ddbaa3e409cbcd119b943bf4eaf5` in
+[#5089](https://github.com/ai4curation/ai-gene-review/pull/5089) merged as
+[`ac35012f4993`](https://github.com/ai4curation/ai-gene-review/commit/ac35012f4993a7d06938bf7b7069c6e7d921dcc0),
+with immediate parent `66220febb3d8e4c2c16095885a79ceaac6d3b937`.
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5089#pullrequestreview-5557446385)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5089#issuecomment-6232957392)
+accept the two expression-response annotations as UNDECIDED, rather than the
+reviewer's earlier over-annotation suggestion. The reviewer acknowledges the
+limits of abstract-only evidence. All seven earlier suggestions were implemented
+or explicitly declined; the remaining cache-versus-original-access wording
+suggestion is expressly nonblocking. Both earlier inline threads are resolved
+and outdated.
+
+All 25 approved PR blobs and modes match the merge. All 25 paths are additions
+relative to the immediate parent: seven gene files, including historical rendered
+HTML, two history records and 16 publication caches. All 158,841 paths outside
+that delta are unchanged. Complete saved head, parent and merge trees authenticate
+against their commit objects. This proves equality of the approved paths, not
+identity of the whole PR branch and main. The cutoff is the merge event time.
+
+The actual-main [push test run 39154253413](https://github.com/ai4curation/ai-gene-review/actions/runs/39154253413)
+and [job 117754074534](https://github.com/ai4curation/ai-gene-review/actions/runs/39154253413/job/117754074534)
+passed strict changed-DDR2 validation with two expected generic-binding non-core
+advisories, 12,970 history records, 42 history-schema tests and 708 family files.
+Broad schemas, modules, examples, general tests and automation were skipped in
+this job; they are not represented as actual-main executions.
+
+The exact-SHA [merge-group run 39152527229](https://github.com/ai4curation/ai-gene-review/actions/runs/39152527229)
+passed those scoped checks plus broad schemas/modules, 12 examples, 3,940 tests
+with one skipped and 84 deselected, 252 doctests with 37 skipped, typing/lint,
+415 Python automation tests and 19 JavaScript tests. An ignored SQL destructor
+exception followed the passing pytest summary; later checks and the whole job
+succeeded. History coverage and full upstream PAINT were skipped in this job.
+
+The approved-head [test run 39021892379](https://github.com/ai4curation/ai-gene-review/actions/runs/39021892379)
+passed scoped DDR2 validation, 12,026 histories, 42 history tests, 695 families and
+history coverage. Its broad suites were skipped. The successful second attempt
+of [review run 39021892380](https://github.com/ai4curation/ai-gene-review/actions/runs/39021892380)
+produced the exact-head approval. Its nine permission denials did not prevent
+artifact review; the reviewer explicitly deferred unavailable local validation
+to independent CI. The first attempt failed on a logged session limit, with 13
+steps and 7 annotations, four at failure level. That historical service failure
+is preserved separately and was superseded on the same head; it is not fresh
+scientific changes requested.
+
+The actual-main [documentation run 39154253423](https://github.com/ai4curation/ai-gene-review/actions/runs/39154253423)
+built and pushed gh-pages despite nonfatal link/deprecation warnings. No browser
+inspection of every deployed page is claimed. All five operative jobs were
+terminal success. The accepted merge audit read all 130 operative steps and 14
+annotations, none at failure level, plus the full current reviews and resolved
+threads. Full logs are archived with exact operative windows; whole installation
+logs are not claimed read. Incidental comment/mention workflows were inventoried
+as skipped and are not counted as DDR2 validation.
+
+The merged review remains DRAFT with 74 source rows: 17 ACCEPT, 38 KEEP_AS_NON_CORE,
+14 MODIFY, 4 UNDECIDED and 1 TOO_GENERAL. One core and 31 references are retained.
+There is no alternative_products or gene_products block; the committed history
+records one 855-residue precursor. This tracker update makes no new product
+judgment or status recomputation. The four unresolved sources and two policy
+advisories remain visible. ROOT accepted the full merge/CI evidence as completion
+450; ROOT is the coordinating AI agent, not a human maintainer sign-off.
+
+The authenticated main tree now contains 7,985 reviews, including
+3,010 human reviews. Of 1,173 catalogue genes with reviews,
+450 are credited and 723 remain uncredited; 1,703 lack a review
+file. DDR2 adds one available review and one completion. No other gene gains credit.
+
+All 2,876 catalogue identities and association texts, 235 historical queue objects,
+98 prior completion updates, the complete prior progress text and 183 project
+history records remain preserved. Only DDR2's checkbox changes relative to 449;
+update 99 is appended. No gene, source cache, runtime or prior history is edited.
+The publication preimage remains queued checkpoint 443. This private successor
+is held until ROOT separately requalifies publication; no remote action occurs.
+
+## Completion checkpoint 451 — 2026-10-18 19:00:24 UTC
+
+**451 complete; 2,425 remaining out of 2,876 primary catalogue genes.**
+DDX11 is the sole addition to checkpoint 450. Approved head
+`38c2dcfcb8bca92ce14b2492f50375025ad35d74` in
+[#5088](https://github.com/ai4curation/ai-gene-review/pull/5088) merged as
+[`d00415e9a6d8`](https://github.com/ai4curation/ai-gene-review/commit/d00415e9a6d83d80030610ea88875ac196fb0db4),
+with immediate parent `ac35012f4993a7d06938bf7b7069c6e7d921dcc0`.
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5088#pullrequestreview-5557462174)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5088#issuecomment-6232955655)
+resolve all three blockers: seven action/reason mismatches, source-specific
+helicase refinements, and replication/cohesion core process coverage. Remaining
+suggestions are optional. There are no inline comments or review threads.
+
+All 18 approved PR blobs and modes match the merge. All are additions relative
+to the immediate parent: six gene files (including historical rendered HTML),
+two history records, nine publication caches and one Reactome cache. All 158,866
+outside paths remain unchanged. Complete saved trees authenticate against their
+commit objects. This verifies approved paths without asserting whole-branch
+identity. The cutoff is the merge event time.
+
+The actual-main [push test run 39156749671](https://github.com/ai4curation/ai-gene-review/actions/runs/39156749671)
+([job 117761445338](https://github.com/ai4curation/ai-gene-review/actions/runs/39156749671/job/117761445338))
+passed strict changed-DDX11 validation, 12,972 histories, 42 history tests and
+708 family files. Eight generic-binding non-core warnings and one chromatin-binding
+consistency advisory remain acknowledged. Broad schemas, modules, examples,
+general tests and automation were skipped in this actual-main job.
+
+The exact-SHA [merge-group run 39154256066](https://github.com/ai4curation/ai-gene-review/actions/runs/39154256066)
+passed those scoped checks plus all-gene schemas, 673 modules, 12 examples,
+3,940 tests (one skipped, 84 deselected), 252 doctests (37 skipped), typing/lint,
+415 Python automation tests and 19 JavaScript tests. An ignored SQL destructor
+exception followed the passing pytest summary; subsequent checks and the job
+passed. History coverage and full upstream PAINT checks were skipped here.
+
+The approved-head [test run 39021231928](https://github.com/ai4curation/ai-gene-review/actions/runs/39021231928)
+passed strict DDX11 validation, 12,024 histories, 42 history tests, 695 family
+files and history coverage. Its broad suites were skipped. Attempt 2 of
+[review run 39021231914](https://github.com/ai4curation/ai-gene-review/actions/runs/39021231914)
+produced the approval. Its seven permission denials and unavailable local
+validation are recorded; independent CI passed. Attempt 1 failed on an explicit
+session limit (13 steps, seven annotations, four at failure level) and was
+superseded on the same head. That service failure is retained separately.
+
+The actual-main [documentation run 39156749659](https://github.com/ai4curation/ai-gene-review/actions/runs/39156749659)
+built and pushed gh-pages despite nonfatal link/deprecation warnings. No visual
+inspection of every deployed page is claimed. All five operative jobs passed;
+the accepted audit accounts for all 130 operative steps and 14 annotations,
+none at failure level. Full logs and operative windows are archived. Incidental
+skipped comment workflows are not counted as validation.
+
+The merged review remains DRAFT with 87 sources: 34 ACCEPT, 31 KEEP_AS_NON_CORE,
+19 MODIFY and three UNDECIDED. It retains five official alternative products,
+one core, 22 references and its NOT flag. No new product judgment or status
+recomputation is made here. ROOT, the coordinating AI agent, accepted the
+merge evidence as completion 451; this is not a human maintainer sign-off.
+
+The authenticated tree contains 7,986 reviews, including 3,011 human reviews.
+Of 1,174 catalogue genes with reviews, 451 are credited and
+723 remain uncredited; 1,702 lack a review file.
+All 2,876 catalogue identities and association texts, 235 historical queue
+objects, 99 prior completion updates, prior progress text and 183 project
+histories remain preserved. Only DDX11's checkbox changes relative to 450;
+update 100 is appended. Gene, source, runtime and historical files are unchanged.
+The publication preimage remains queued checkpoint 443. This private successor
+is held pending separate publication qualification; no remote action occurs.
+
+## Completion checkpoint 452 — 2026-10-18 20:02:38 UTC
+
+**452 complete; 2,424 remaining out of 2,876 primary catalogue genes.**
+DEPDC5 is the sole addition to checkpoint 451. Approved head
+`1df572006295104a82e18622efe4e94f20f24144` in
+[#5091](https://github.com/ai4curation/ai-gene-review/pull/5091) merged as
+[`790ca0a86e3a`](https://github.com/ai4curation/ai-gene-review/commit/790ca0a86e3abf240be01bfad42ffa9a348646d2),
+with immediate parent `a82ae1968bd472f368fe7c141c5938229db1168c`.
+The exact-head [formal approval](https://github.com/ai4curation/ai-gene-review/pull/5091#pullrequestreview-5557538719)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5091#issuecomment-6233230306)
+resolved the core-coverage and evidence-support requests. Minor spacing and
+duplication suggestions are nonblocking. There are no inline comments or review threads.
+
+All 26 approved PR blobs and modes match the merge, and all are additions relative
+to its immediate parent. The other 158,912 paths are unchanged. Complete saved
+trees authenticate against their commit objects. The two append-only histories,
+machine sources, rendered artifact and accepted candidate files match the final
+published evidence. This verifies the approved paths without asserting whole-branch identity.
+
+The approved-head [test run 39027766145](https://github.com/ai4curation/ai-gene-review/actions/runs/39027766145),
+[review run 39027766126](https://github.com/ai4curation/ai-gene-review/actions/runs/39027766126),
+exact-SHA [merge-group run 39158973668](https://github.com/ai4curation/ai-gene-review/actions/runs/39158973668),
+actual-main [push test 39161493056](https://github.com/ai4curation/ai-gene-review/actions/runs/39161493056),
+and actual-main [documentation run 39161492882](https://github.com/ai4curation/ai-gene-review/actions/runs/39161492882)
+all succeeded. The actual-main test completed at 20:10:15 UTC; documentation built
+and pushed gh-pages. No visual inspection of the deployed site is claimed.
+
+All three test jobs passed strict DEPDC5 validation with five expected generic-binding
+non-core advisories under the standing project instruction. Actual-main and
+merge-group history validation covered 12,996 records and 42 tests; family validation
+covered 708 families. Broad schema, examples, tests and automation ran in the merge
+group, including 3,940 passing tests, 252 doctests, 415 automation tests and 19 JavaScript
+tests. Those broad suites were skipped on the PR and actual-main jobs. An ignored SQL
+destructor exception followed the passing test summary; later checks and the job passed.
+The reviewer could not run local validation; the successful independent CI is separate
+evidence. Nonfatal dependency and documentation-link warnings remain recorded.
+
+The audit captured ten runs, twelve jobs, 130 steps and fourteen annotations, with no
+failure annotation. Five jobs executed; seven incidental comment/review jobs were skipped.
+Full logs and operative windows are archived. The merged review remains DRAFT with
+44 sources (25 ACCEPT, seven MODIFY, twelve KEEP_AS_NON_CORE), eight official products,
+one integrated core and 28 references. No new product judgment or status recomputation
+is made here. ROOT, the coordinating AI agent, accepted the merge evidence as completion
+452; this is not a human maintainer sign-off.
+
+The authenticated tree contains 7,987 reviews, including 3,012 human reviews.
+Of 1,175 catalogue genes with reviews, 452 are credited and
+723 remain uncredited; 1,701 lack a review file.
+All 2,876 catalogue identities and association texts, 235 historical queue objects,
+100 prior completion updates and prior progress text remain preserved. Only DEPDC5's
+checkbox changes relative to 451; update 101 is appended. Gene, source, runtime and
+historical files are unchanged. The publication preimage remains queued checkpoint 443;
+this private successor is held pending separate publication qualification.
+
+## Completion checkpoint 473 — 2026-10-21 00:21:17 UTC
+
+**473 complete; 2,403 remaining out of 2,876 primary catalogue genes.**
+This update preserves checkpoint 452 and adds exactly 21 distinct genes: DDX41
+(452→453), the first ten-gene audit batch (453→463), and the second ten-gene batch
+(463→473). Later batches are excluded. The coordinating agent accepted the three
+sealed audit records; this is not a human maintainer sign-off or a new biological
+re-review. Accepted source decisions, unresolved annotations and product limits
+remain unchanged.
+
+| Gene / PR | Approved head / merge | Approval / detail | Exact PR paths | Immediate main test / docs | Exact merge-group test |
+|---|---|---|---:|---|---|
+| [DDX41 #5090](https://github.com/ai4curation/ai-gene-review/pull/5090) | [`babb88ce2f40`](https://github.com/ai4curation/ai-gene-review/commit/babb88ce2f4056502a5ab32bf1581edd083f0006) / [`653a15c8309e`](https://github.com/ai4curation/ai-gene-review/commit/653a15c8309ed6cd9a9c5cff373a07c7a65a4a93) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5090#pullrequestreview-5557581837) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5090#issuecomment-6233362245) | 29 | [39164000966](https://github.com/ai4curation/ai-gene-review/actions/runs/39164000966) success / [39164000992](https://github.com/ai4curation/ai-gene-review/actions/runs/39164000992) success | [39161495647](https://github.com/ai4curation/ai-gene-review/actions/runs/39161495647) success |
+| [DGKE #5094](https://github.com/ai4curation/ai-gene-review/pull/5094) | [`f94d4f7d86c9`](https://github.com/ai4curation/ai-gene-review/commit/f94d4f7d86c9339be463af6de0cbbbe641f850c3) / [`51f9e16d8801`](https://github.com/ai4curation/ai-gene-review/commit/51f9e16d8801f450624e5697659a099852b3ba33) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5094#pullrequestreview-5557598083) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5094#issuecomment-6233396695) | 22 | [39166466485](https://github.com/ai4curation/ai-gene-review/actions/runs/39166466485) success / [39166466508](https://github.com/ai4curation/ai-gene-review/actions/runs/39166466508) success | [39164003526](https://github.com/ai4curation/ai-gene-review/actions/runs/39164003526) success |
+| [DEGS1 #5092](https://github.com/ai4curation/ai-gene-review/pull/5092) | [`277db2c325e2`](https://github.com/ai4curation/ai-gene-review/commit/277db2c325e201f9fdc6ccce7211d8a4295be3ae) / [`4a05f894ee6d`](https://github.com/ai4curation/ai-gene-review/commit/4a05f894ee6d7fd6754f9729fac54218f180dc28) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5092#pullrequestreview-5557637596) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5092#issuecomment-6233509172) | 9 | [39168514887](https://github.com/ai4curation/ai-gene-review/actions/runs/39168514887) success / [39168515160](https://github.com/ai4curation/ai-gene-review/actions/runs/39168515160) success | [39166468593](https://github.com/ai4curation/ai-gene-review/actions/runs/39166468593) success |
+| [DDX3X #5093](https://github.com/ai4curation/ai-gene-review/pull/5093) | [`465ce8334e2d`](https://github.com/ai4curation/ai-gene-review/commit/465ce8334e2d78e32df0f197a9c9e76159498446) / [`f4a4941aefd6`](https://github.com/ai4curation/ai-gene-review/commit/f4a4941aefd68e2ada4c9f78f16157cd3ea931c7) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5093#pullrequestreview-5557655715) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5093#issuecomment-6233552216) | 55 | [39180447214](https://github.com/ai4curation/ai-gene-review/actions/runs/39180447214) success / [39180447185](https://github.com/ai4curation/ai-gene-review/actions/runs/39180447185) success | [39179010406](https://github.com/ai4curation/ai-gene-review/actions/runs/39179010406) success |
+| [DES #5095](https://github.com/ai4curation/ai-gene-review/pull/5095) | [`00ffdd5fac63`](https://github.com/ai4curation/ai-gene-review/commit/00ffdd5fac63da75e4daeb9cbb1ecfbe20543bda) / [`94ac62eafce3`](https://github.com/ai4curation/ai-gene-review/commit/94ac62eafce3bf2645f1fe17a8695795c21851e3) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5095#pullrequestreview-5557849249) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5095#issuecomment-6234095718) | 31 | [39181828974](https://github.com/ai4curation/ai-gene-review/actions/runs/39181828974) success / [39181828957](https://github.com/ai4curation/ai-gene-review/actions/runs/39181828957) success | [39180449829](https://github.com/ai4curation/ai-gene-review/actions/runs/39180449829) success |
+| [DGUOK #5096](https://github.com/ai4curation/ai-gene-review/pull/5096) | [`49076e9e3e15`](https://github.com/ai4curation/ai-gene-review/commit/49076e9e3e15703ce83b0eb7783109ccbb092c94) / [`f8a49c1b5036`](https://github.com/ai4curation/ai-gene-review/commit/f8a49c1b5036720d8754e3dd7d22a0fe7b2bce2a) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5096#pullrequestreview-5557900129) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5096#issuecomment-6234213320) | 12 | [39183168173](https://github.com/ai4curation/ai-gene-review/actions/runs/39183168173) cancelled / [39183168066](https://github.com/ai4curation/ai-gene-review/actions/runs/39183168066) success | [39181831026](https://github.com/ai4curation/ai-gene-review/actions/runs/39181831026) success |
+| [DHCR24 #5097](https://github.com/ai4curation/ai-gene-review/pull/5097) | [`587ac7bda814`](https://github.com/ai4curation/ai-gene-review/commit/587ac7bda81494384d1751f3687a8bd4473d3a18) / [`a76e2eefb45e`](https://github.com/ai4curation/ai-gene-review/commit/a76e2eefb45e8419701a148ecae36a3077ae4a78) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5097#pullrequestreview-5557944765) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5097#issuecomment-6234363366) | 16 | [39183672110](https://github.com/ai4curation/ai-gene-review/actions/runs/39183672110) cancelled / [39183672116](https://github.com/ai4curation/ai-gene-review/actions/runs/39183672116) success | [39182172955](https://github.com/ai4curation/ai-gene-review/actions/runs/39182172955) success |
+| [DHDDS #5098](https://github.com/ai4curation/ai-gene-review/pull/5098) | [`8c035e287392`](https://github.com/ai4curation/ai-gene-review/commit/8c035e28739251d366c86e1e75289106217d9c22) / [`3fe42af909db`](https://github.com/ai4curation/ai-gene-review/commit/3fe42af909db02f8d77b395c338b57af145eec0e) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5098#pullrequestreview-5557995490) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5098#issuecomment-6234491409) | 14 | [39183673052](https://github.com/ai4curation/ai-gene-review/actions/runs/39183673052) cancelled / [39183673049](https://github.com/ai4curation/ai-gene-review/actions/runs/39183673049) cancelled | [39182174939](https://github.com/ai4curation/ai-gene-review/actions/runs/39182174939) success |
+| [DHCR7 #5099](https://github.com/ai4curation/ai-gene-review/pull/5099) | [`95e4139036f8`](https://github.com/ai4curation/ai-gene-review/commit/95e4139036f8f97dd82ca64fcc7eced437f36836) / [`3df2def4d26b`](https://github.com/ai4curation/ai-gene-review/commit/3df2def4d26ba94be2bb841bfdac847ccf0a7257) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5099#pullrequestreview-5558004769) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5099#issuecomment-6234523529) | 9 | [39183674278](https://github.com/ai4curation/ai-gene-review/actions/runs/39183674278) cancelled / [39183674220](https://github.com/ai4curation/ai-gene-review/actions/runs/39183674220) cancelled | [39182177176](https://github.com/ai4curation/ai-gene-review/actions/runs/39182177176) success |
+| [DHODH #5100](https://github.com/ai4curation/ai-gene-review/pull/5100) | [`244b6c627a7f`](https://github.com/ai4curation/ai-gene-review/commit/244b6c627a7fba91c6b7ddfbfb3bda0b2b0bb422) / [`02ba969a6693`](https://github.com/ai4curation/ai-gene-review/commit/02ba969a6693acb3e327cc9c7f8c3ce67a7e43ed) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5100#pullrequestreview-5558050890) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5100#issuecomment-6234619294) | 12 | [39183674954](https://github.com/ai4curation/ai-gene-review/actions/runs/39183674954) success / [39183674944](https://github.com/ai4curation/ai-gene-review/actions/runs/39183674944) success | [39182178020](https://github.com/ai4curation/ai-gene-review/actions/runs/39182178020) success |
+| [DHTKD1 #5101](https://github.com/ai4curation/ai-gene-review/pull/5101) | [`dbc5c226176e`](https://github.com/ai4curation/ai-gene-review/commit/dbc5c226176e999dcdaa83e26bb92100ee68369d) / [`41c0e159f6cb`](https://github.com/ai4curation/ai-gene-review/commit/41c0e159f6cbd5c0a67c3f56d7004d399c14a32d) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5101#pullrequestreview-5558200635) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5101#issuecomment-6234975384) | 20 | [39187058970](https://github.com/ai4curation/ai-gene-review/actions/runs/39187058970) cancelled / [39187058954](https://github.com/ai4curation/ai-gene-review/actions/runs/39187058954) cancelled | [39182180976](https://github.com/ai4curation/ai-gene-review/actions/runs/39182180976) success |
+| [DHX30 #5104](https://github.com/ai4curation/ai-gene-review/pull/5104) | [`acb5a15c1f0e`](https://github.com/ai4curation/ai-gene-review/commit/acb5a15c1f0e49344517ba6426d98daecd7bfedf) / [`6e2c9512f547`](https://github.com/ai4curation/ai-gene-review/commit/6e2c9512f5470b3213e884a94e9de2e0971e6d6e) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5104#pullrequestreview-5558688756) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5104#issuecomment-6236356873) | 15 | [39187061624](https://github.com/ai4curation/ai-gene-review/actions/runs/39187061624) cancelled / [39187061641](https://github.com/ai4curation/ai-gene-review/actions/runs/39187061641) cancelled | [39183560931](https://github.com/ai4curation/ai-gene-review/actions/runs/39183560931) success |
+| [DIAPH3 #5107](https://github.com/ai4curation/ai-gene-review/pull/5107) | [`624277d51efb`](https://github.com/ai4curation/ai-gene-review/commit/624277d51efbb0cfdbfc6ec9a69547243a327e77) / [`093159b74f94`](https://github.com/ai4curation/ai-gene-review/commit/093159b74f945e8aff403c922f3fc828388c03d2) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5107#pullrequestreview-5558704630) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5107#issuecomment-6236358086) | 29 | [39187083163](https://github.com/ai4curation/ai-gene-review/actions/runs/39187083163) cancelled / [39187083168](https://github.com/ai4curation/ai-gene-review/actions/runs/39187083168) cancelled | [39183628155](https://github.com/ai4curation/ai-gene-review/actions/runs/39183628155) success |
+| [DIS3L2 #5112](https://github.com/ai4curation/ai-gene-review/pull/5112) | [`e589819b9cdb`](https://github.com/ai4curation/ai-gene-review/commit/e589819b9cdb9ca713adfe846cb33f0fd1e6f820) / [`3b05624a9f1e`](https://github.com/ai4curation/ai-gene-review/commit/3b05624a9f1e5d3dcd2538feea179e34c0152a4b) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5112#pullrequestreview-5558774436) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5112#issuecomment-6236579467) | 16 | [39187084244](https://github.com/ai4curation/ai-gene-review/actions/runs/39187084244) cancelled / [39187084239](https://github.com/ai4curation/ai-gene-review/actions/runs/39187084239) cancelled | [39183629782](https://github.com/ai4curation/ai-gene-review/actions/runs/39183629782) success |
+| [DICER1 #5111](https://github.com/ai4curation/ai-gene-review/pull/5111) | [`398a29f56c91`](https://github.com/ai4curation/ai-gene-review/commit/398a29f56c917f2d7561f8dc1a15a09c24f21216) / [`9b42a011248d`](https://github.com/ai4curation/ai-gene-review/commit/9b42a011248d0f68f0104504639dc6445c00008a) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5111#pullrequestreview-5558808807) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5111#issuecomment-6236636197) | 39 | [39187085727](https://github.com/ai4curation/ai-gene-review/actions/runs/39187085727) cancelled / [39187085740](https://github.com/ai4curation/ai-gene-review/actions/runs/39187085740) cancelled | [39183677788](https://github.com/ai4curation/ai-gene-review/actions/runs/39183677788) success |
+| [DISP1 #5113](https://github.com/ai4curation/ai-gene-review/pull/5113) | [`2560fb0489f4`](https://github.com/ai4curation/ai-gene-review/commit/2560fb0489f459c740ae180d8a4239cfcf5bd4e0) / [`bd4061b01e12`](https://github.com/ai4curation/ai-gene-review/commit/bd4061b01e128bb9265e8f06f19b92ff1bf345b9) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5113#pullrequestreview-5558866652) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5113#issuecomment-6236917853) | 18 | [39187106249](https://github.com/ai4curation/ai-gene-review/actions/runs/39187106249) cancelled / [39187106248](https://github.com/ai4curation/ai-gene-review/actions/runs/39187106248) cancelled | [39184686456](https://github.com/ai4curation/ai-gene-review/actions/runs/39184686456) success |
+| [DIAPH1 #5106](https://github.com/ai4curation/ai-gene-review/pull/5106) | [`b2cc6c0f777a`](https://github.com/ai4curation/ai-gene-review/commit/b2cc6c0f777a34fec33592dcde3672c3508edaf1) / [`6155bb365387`](https://github.com/ai4curation/ai-gene-review/commit/6155bb3653871f5397fec9cc103b4b8a3dad352c) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5106#pullrequestreview-5558936828) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5106#issuecomment-6237111789) | 31 | [39187107447](https://github.com/ai4curation/ai-gene-review/actions/runs/39187107447) cancelled / [39187107461](https://github.com/ai4curation/ai-gene-review/actions/runs/39187107461) cancelled | [39184893342](https://github.com/ai4curation/ai-gene-review/actions/runs/39184893342) success |
+| [DIABLO #5105](https://github.com/ai4curation/ai-gene-review/pull/5105) | [`54140f8251fe`](https://github.com/ai4curation/ai-gene-review/commit/54140f8251fe587084b98492b95a0bc8f1070ad7) / [`894e016ddd0f`](https://github.com/ai4curation/ai-gene-review/commit/894e016ddd0f9cb3da7644891970dacd3b8e1168) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5105#pullrequestreview-5559024229) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5105#issuecomment-6237325377) | 10 | [39187108123](https://github.com/ai4curation/ai-gene-review/actions/runs/39187108123) cancelled / [39187108065](https://github.com/ai4curation/ai-gene-review/actions/runs/39187108065) cancelled | [39185053319](https://github.com/ai4curation/ai-gene-review/actions/runs/39185053319) success |
+| [DKC1 #5116](https://github.com/ai4curation/ai-gene-review/pull/5116) | [`e3607a505307`](https://github.com/ai4curation/ai-gene-review/commit/e3607a5053074cbe8f63438630135620f5ab51c2) / [`57fb4720a939`](https://github.com/ai4curation/ai-gene-review/commit/57fb4720a9395797a5752c90a89a366d4ee69b1a) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5116#pullrequestreview-5559098133) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5116#issuecomment-6237584282) | 31 | [39187610495](https://github.com/ai4curation/ai-gene-review/actions/runs/39187610495) cancelled / [39187610587](https://github.com/ai4curation/ai-gene-review/actions/runs/39187610587) success | [39186097967](https://github.com/ai4curation/ai-gene-review/actions/runs/39186097967) success |
+| [DLG3 #5115](https://github.com/ai4curation/ai-gene-review/pull/5115) | [`c2c50812909a`](https://github.com/ai4curation/ai-gene-review/commit/c2c50812909a0c47238671841e2b7a2fcd98aba7) / [`1ed4061082c2`](https://github.com/ai4curation/ai-gene-review/commit/1ed4061082c2b361f9da06d23a492cbdc235b439) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5115#pullrequestreview-5559266634) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5115#issuecomment-6238228841) | 28 | [39187653317](https://github.com/ai4curation/ai-gene-review/actions/runs/39187653317) cancelled / [39187653845](https://github.com/ai4curation/ai-gene-review/actions/runs/39187653845) success | [39186302052](https://github.com/ai4curation/ai-gene-review/actions/runs/39186302052) success |
+| [DLD #5126](https://github.com/ai4curation/ai-gene-review/pull/5126) | [`4033131ca553`](https://github.com/ai4curation/ai-gene-review/commit/4033131ca5532631b41a1b7b692b28133cafc8aa) / [`bf0db45a4fe2`](https://github.com/ai4curation/ai-gene-review/commit/bf0db45a4fe26275fdf708410771b75b1f721a83) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5126#pullrequestreview-5559305300) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5126#issuecomment-6238414131) | 19 | [39187910583](https://github.com/ai4curation/ai-gene-review/actions/runs/39187910583) cancelled / [39187910613](https://github.com/ai4curation/ai-gene-review/actions/runs/39187910613) cancelled | [39186483421](https://github.com/ai4curation/ai-gene-review/actions/runs/39186483421) success |
+
+All 465 approved PR path occurrences match their merge blobs and modes. The
+saved audits also verify that paths outside each PR delta are unchanged relative
+to its immediate parent. All selected paths still match main `0ad352a6266763efcd3daaaa2a32a0755d5b54cd`;
+a captured chain of commit objects proves containment of every merge. Shared
+publication paths may occur in more than one audit, so this sum is not a count of
+unique files. Optional review suggestions are preserved in the audits; no current
+mandatory request or unresolved review thread was accepted as completed.
+
+DDX41 and five genes in the first batch have successful immediate main test runs.
+For DGUOK, DHCR24, DHDDS, DHCR7 and DHTKD1, and all ten genes in the second batch,
+the immediate main test was cancelled. DHX30 and DLG3 also have failed aggregate
+gates caused by cancellation. These outcomes remain recorded as cancellations or
+failures, not successful main gene validation. Each exact merge commit separately
+passed its merge-group checks. Successful descendants support the finite bridge:
+DGUOK, DHCR24, DHDDS and DHCR7 retain their approved payloads and executable runtime
+at [`02ba969a6693`](https://github.com/ai4curation/ai-gene-review/commit/02ba969a6693acb3e327cc9c7f8c3ce67a7e43ed),
+with [test 39183674954](https://github.com/ai4curation/ai-gene-review/actions/runs/39183674954) and
+[docs 39183674944](https://github.com/ai4curation/ai-gene-review/actions/runs/39183674944). DHTKD1 and the second batch retain
+their payloads at [`bb50821d7123`](https://github.com/ai4curation/ai-gene-review/commit/bb50821d71232c86e36c9dee6ed1d0604f6b5505),
+with [test 39200674021](https://github.com/ai4curation/ai-gene-review/actions/runs/39200674021) and
+[docs 39200673967](https://github.com/ai4curation/ai-gene-review/actions/runs/39200673967). Its only relevant runtime differences
+are documented additive GO-cache rows, affecting no reviewed term of those genes.
+A descendant job's scoped gene validation covers its own changed paths; it is not
+claimed to rerun validation for every earlier gene. The original approved-head and
+exact merge-group validations provide that earlier gene-specific evidence.
+
+Documentation success means the recorded MkDocs/schema build and deployment;
+it does not establish regeneration or visual inspection of every gene HTML page.
+The original audits retain event-specific skipped steps, warning annotations,
+review-service limitations and optional suggestions. No ordinary suite, source
+research or workflow rerun was performed to prepare this tracker update.
+
+The current main snapshot contains 8,467 review files, including 3,102 human
+reviews; 1,248 catalogue genes have reviews, 1,628 lack them, and
+775 available catalogue reviews remain uncredited. This inventory includes
+other existing reviews without awarding them completion credit. All 2,876 catalogue
+identities and association texts, 235 historical queue objects, 101 earlier
+completion updates and prior progress bytes are preserved. Update 102 appends the
+three accepted audit stages and exact per-gene evidence. No gene, publication,
+runtime or history file is modified.
+
+The publication preimage is checkpoint 443, merged through
+[#5053](https://github.com/ai4curation/ai-gene-review/pull/5053) at
+[`7873440186c6`](https://github.com/ai4curation/ai-gene-review/commit/7873440186c62052a1cb7e255b2882a82484c273)
+on 2026-10-19 at 04:13:34 UTC. Its six tracker files still match this captured main.
+Accepted private checkpoints 444–452 are retained in full before this addition.
+The current runtime includes dependency update [#4972](https://github.com/ai4curation/ai-gene-review/pull/4972);
+publication uses the publisher's current-runtime checks, two ordinary project
+renders and a new append-only history record. The publication checkout at
+`a17627810d4a13efede28a3c07a481aa0b44131b` contains 8,472 review files, including
+3,102 human reviews. All eight frontmatter checks and both renders passed;
+the catalogue reports 1,628 missing-review warnings and the progress page reports none.
+The inventory above remains the explicitly pinned audit snapshot.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker473-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T004045Z-codex-b8ec9c.yaml)
+
+## Completion checkpoint 541 — 2026-10-21 00:53:59 UTC
+
+**541 complete; 2,335 remaining out of 2,876 primary catalogue genes.**
+This appends exactly 68 accepted distinct genes from batches 03–09 to the published
+473 checkpoint. The coordinating agent accepted the sealed merge audits; this is
+not a human maintainer sign-off or a new biological review. EGR2, EHMT1 and EGFR
+remain excluded. Existing source decisions, unresolved annotations and product
+limits are unchanged.
+
+| Gene / PR | Approved head / merge | Approval / detail | Exact PR paths | Immediate main test / docs | Exact merge-group test |
+|---|---|---|---:|---|---|
+| [DMD #5143](https://github.com/ai4curation/ai-gene-review/pull/5143) | [`4aefd77b3080`](https://github.com/ai4curation/ai-gene-review/commit/4aefd77b30801cc14aab2bf3f042790e39f2fb64) / [`d87957d33b6b`](https://github.com/ai4curation/ai-gene-review/commit/d87957d33b6be948d2dfb611ceb61f3cb25e8d80) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5143#pullrequestreview-5560125374) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5143#issuecomment-6241153024) | 93 | [39187911774](https://github.com/ai4curation/ai-gene-review/actions/runs/39187911774) cancelled / [39187911820](https://github.com/ai4curation/ai-gene-review/actions/runs/39187911820) cancelled | [39186523486](https://github.com/ai4curation/ai-gene-review/actions/runs/39186523486) success |
+| [DMRT1 #5137](https://github.com/ai4curation/ai-gene-review/pull/5137) | [`039a1748dfd9`](https://github.com/ai4curation/ai-gene-review/commit/039a1748dfd905d76e7215196cd1a9010698cb8e) / [`bfd1a7762bd2`](https://github.com/ai4curation/ai-gene-review/commit/bfd1a7762bd2132ce7e2022e0b2c0b0989868284) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5137#pullrequestreview-5560176227) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5137#issuecomment-6241335801) | 23 | [39187961366](https://github.com/ai4curation/ai-gene-review/actions/runs/39187961366) cancelled / [39187961360](https://github.com/ai4curation/ai-gene-review/actions/runs/39187961360) cancelled | [39186566983](https://github.com/ai4curation/ai-gene-review/actions/runs/39186566983) success |
+| [DNAJB6 #5159](https://github.com/ai4curation/ai-gene-review/pull/5159) | [`a6b6af6fe047`](https://github.com/ai4curation/ai-gene-review/commit/a6b6af6fe0475c82ef1a67870c3ec99f5a278369) / [`b39a1cb3f4e3`](https://github.com/ai4curation/ai-gene-review/commit/b39a1cb3f4e33814679ac2af999e7d5eac681b6f) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5159#pullrequestreview-5560194426) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5159#issuecomment-6241367207) | 9 | [39187962574](https://github.com/ai4curation/ai-gene-review/actions/runs/39187962574) cancelled / [39187962550](https://github.com/ai4curation/ai-gene-review/actions/runs/39187962550) success | [39186610942](https://github.com/ai4curation/ai-gene-review/actions/runs/39186610942) success |
+| [DNAJC21 #5160](https://github.com/ai4curation/ai-gene-review/pull/5160) | [`8bfb849689de`](https://github.com/ai4curation/ai-gene-review/commit/8bfb849689de411947bcef3d0923286d35da9b73) / [`c8ec8c24406e`](https://github.com/ai4curation/ai-gene-review/commit/c8ec8c24406e0d21b91114d3f4d0c82365781b6f) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5160#pullrequestreview-5560227287) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5160#issuecomment-6241475723) | 10 | [39188517354](https://github.com/ai4curation/ai-gene-review/actions/runs/39188517354) cancelled / [39188517394](https://github.com/ai4curation/ai-gene-review/actions/runs/39188517394) success | [39187131353](https://github.com/ai4curation/ai-gene-review/actions/runs/39187131353) success |
+| [DNAAF1 #5142](https://github.com/ai4curation/ai-gene-review/pull/5142) | [`48e448043ff3`](https://github.com/ai4curation/ai-gene-review/commit/48e448043ff340f7af3b3e2c45096df76dd9b414) / [`91b8d9960ee6`](https://github.com/ai4curation/ai-gene-review/commit/91b8d9960ee6792d452531db963712aa407adc1b) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5142#pullrequestreview-5560284122) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5142#issuecomment-6241784152) | 9 | [39188517758](https://github.com/ai4curation/ai-gene-review/actions/runs/39188517758) cancelled / [39188517713](https://github.com/ai4curation/ai-gene-review/actions/runs/39188517713) success | [39187168564](https://github.com/ai4curation/ai-gene-review/actions/runs/39187168564) success |
+| [DLG4 #5141](https://github.com/ai4curation/ai-gene-review/pull/5141) | [`cfaa650ed3a9`](https://github.com/ai4curation/ai-gene-review/commit/cfaa650ed3a9478ef97a678a4e49eab61c2dc3fe) / [`3aedf3afbe24`](https://github.com/ai4curation/ai-gene-review/commit/3aedf3afbe24ac09d9837c41a61f76edd0ff501d) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5141#pullrequestreview-5560310684) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5141#issuecomment-6241886528) | 65 | [39188940630](https://github.com/ai4curation/ai-gene-review/actions/runs/39188940630) cancelled / [39188940588](https://github.com/ai4curation/ai-gene-review/actions/runs/39188940588) cancelled | [39187507583](https://github.com/ai4curation/ai-gene-review/actions/runs/39187507583) success |
+| [DNAAF19 #5145](https://github.com/ai4curation/ai-gene-review/pull/5145) | [`144f1e87eb82`](https://github.com/ai4curation/ai-gene-review/commit/144f1e87eb824f7625e5db35633eed329f011502) / [`d0d98a87fe34`](https://github.com/ai4curation/ai-gene-review/commit/d0d98a87fe34b148a2cc339c71eeef63736a64a9) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5145#pullrequestreview-5560292265) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5145#issuecomment-6241835833) | 14 | [39189048360](https://github.com/ai4curation/ai-gene-review/actions/runs/39189048360) cancelled / [39189048306](https://github.com/ai4curation/ai-gene-review/actions/runs/39189048306) cancelled | [39187612323](https://github.com/ai4curation/ai-gene-review/actions/runs/39187612323) success |
+| [DNAAF5 #5150](https://github.com/ai4curation/ai-gene-review/pull/5150) | [`4356434a016b`](https://github.com/ai4curation/ai-gene-review/commit/4356434a016b243a87761ca94ed5c02384be36d3) / [`ef281598e742`](https://github.com/ai4curation/ai-gene-review/commit/ef281598e74241228b64c0dc3fb52ec339dcdd66) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5150#pullrequestreview-5560266964) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5150#issuecomment-6241698555) | 14 | [39189049668](https://github.com/ai4curation/ai-gene-review/actions/runs/39189049668) cancelled / [39189049667](https://github.com/ai4curation/ai-gene-review/actions/runs/39189049667) success | [39187655939](https://github.com/ai4curation/ai-gene-review/actions/runs/39187655939) success |
+| [DNAJC30 #5161](https://github.com/ai4curation/ai-gene-review/pull/5161) | [`2152e7a87a89`](https://github.com/ai4curation/ai-gene-review/commit/2152e7a87a89e4146a2d006e58aef05a4ec8332e) / [`69b742f2ee16`](https://github.com/ai4curation/ai-gene-review/commit/69b742f2ee165f2fbe404560ce73303aca328f6f) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5161#pullrequestreview-5560289804) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5161#issuecomment-6241816900) | 9 | [39189233128](https://github.com/ai4curation/ai-gene-review/actions/runs/39189233128) cancelled / [39189233126](https://github.com/ai4curation/ai-gene-review/actions/runs/39189233126) cancelled | [39187768552](https://github.com/ai4curation/ai-gene-review/actions/runs/39187768552) success |
+| [DNAAF11 #5146](https://github.com/ai4curation/ai-gene-review/pull/5146) | [`4117de879ccf`](https://github.com/ai4curation/ai-gene-review/commit/4117de879ccf5e8778b06c97d5816e450a051b0d) / [`aa1885d8bb10`](https://github.com/ai4curation/ai-gene-review/commit/aa1885d8bb102d8ce249072b11e0ecb2eb4fd319) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5146#pullrequestreview-5560364100) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5146#issuecomment-6242060792) | 18 | [39189234291](https://github.com/ai4curation/ai-gene-review/actions/runs/39189234291) cancelled / [39189234305](https://github.com/ai4curation/ai-gene-review/actions/runs/39189234305) success | [39187914173](https://github.com/ai4curation/ai-gene-review/actions/runs/39187914173) success |
+| [DNAL1 #5162](https://github.com/ai4curation/ai-gene-review/pull/5162) | [`db557d9516b0`](https://github.com/ai4curation/ai-gene-review/commit/db557d9516b06942e87d65db9c3f2a0f9d9f1f07) / [`002583730642`](https://github.com/ai4curation/ai-gene-review/commit/002583730642ea1fcb225dbdf54b37d6d55a17b6) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5162#pullrequestreview-5560337325) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5162#issuecomment-6241988575) | 10 | [39189632983](https://github.com/ai4curation/ai-gene-review/actions/runs/39189632983) cancelled / [39189633015](https://github.com/ai4curation/ai-gene-review/actions/runs/39189633015) success | [39187965245](https://github.com/ai4curation/ai-gene-review/actions/runs/39187965245) success |
+| [DNAJB2 #5158](https://github.com/ai4curation/ai-gene-review/pull/5158) | [`4274e9cc4f6f`](https://github.com/ai4curation/ai-gene-review/commit/4274e9cc4f6f75308911aff82636cbd522477bb5) / [`cf96752efc52`](https://github.com/ai4curation/ai-gene-review/commit/cf96752efc524f028ef0208e93b13ca2c5228d4d) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5158#pullrequestreview-5560372249) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5158#issuecomment-6242097183) | 13 | [39189743504](https://github.com/ai4curation/ai-gene-review/actions/runs/39189743504) cancelled / [39189743506](https://github.com/ai4curation/ai-gene-review/actions/runs/39189743506) success | [39188201729](https://github.com/ai4curation/ai-gene-review/actions/runs/39188201729) success |
+| [DNAJC19 #5157](https://github.com/ai4curation/ai-gene-review/pull/5157) | [`628c6d0a23fd`](https://github.com/ai4curation/ai-gene-review/commit/628c6d0a23fd323ed52dd6b54bb3073d28e67afa) / [`af2d3d44164a`](https://github.com/ai4curation/ai-gene-review/commit/af2d3d44164aa625683cbc1bdd4cb9c45b9807de) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5157#pullrequestreview-5560377859) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5157#issuecomment-6242128278) | 11 | [39190257375](https://github.com/ai4curation/ai-gene-review/actions/runs/39190257375) cancelled / [39190257374](https://github.com/ai4curation/ai-gene-review/actions/runs/39190257374) success | [39188519926](https://github.com/ai4curation/ai-gene-review/actions/runs/39188519926) success |
+| [DNAH8 #5152](https://github.com/ai4curation/ai-gene-review/pull/5152) | [`2eca53bbcb0a`](https://github.com/ai4curation/ai-gene-review/commit/2eca53bbcb0a9ed5f991dc8a872b48278b1a47de) / [`8035864699cb`](https://github.com/ai4curation/ai-gene-review/commit/8035864699cb5472923445bb7f40fa2a91111185) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5152#pullrequestreview-5560428047) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5152#issuecomment-6242311233) | 5 | [39190404930](https://github.com/ai4curation/ai-gene-review/actions/runs/39190404930) cancelled / [39190405014](https://github.com/ai4curation/ai-gene-review/actions/runs/39190405014) cancelled | [39188894055](https://github.com/ai4curation/ai-gene-review/actions/runs/39188894055) success |
+| [DNAI1 #5155](https://github.com/ai4curation/ai-gene-review/pull/5155) | [`c823aef039b3`](https://github.com/ai4curation/ai-gene-review/commit/c823aef039b31ab4304aed87e2c4b859a64b8676) / [`310c7ae87d11`](https://github.com/ai4curation/ai-gene-review/commit/310c7ae87d11066c2a99a59aa8f00dc0e1cb34f0) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5155#pullrequestreview-5560441782) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5155#issuecomment-6242360608) | 17 | [39190405751](https://github.com/ai4curation/ai-gene-review/actions/runs/39190405751) cancelled / [39190405824](https://github.com/ai4curation/ai-gene-review/actions/runs/39190405824) cancelled | [39188942834](https://github.com/ai4curation/ai-gene-review/actions/runs/39188942834) success |
+| [DNAI2 #5156](https://github.com/ai4curation/ai-gene-review/pull/5156) | [`fc0c50b25008`](https://github.com/ai4curation/ai-gene-review/commit/fc0c50b250086de1ff6aab6a13a52c5d702b3a89) / [`7bd7d235ed1a`](https://github.com/ai4curation/ai-gene-review/commit/7bd7d235ed1ac8096a90be314c0a67ae6d4edb6c) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5156#pullrequestreview-5560453958) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5156#issuecomment-6242410910) | 27 | [39190449220](https://github.com/ai4curation/ai-gene-review/actions/runs/39190449220) cancelled / [39190449173](https://github.com/ai4curation/ai-gene-review/actions/runs/39190449173) cancelled | [39189051611](https://github.com/ai4curation/ai-gene-review/actions/runs/39189051611) success |
+| [DNAAF3 #5148](https://github.com/ai4curation/ai-gene-review/pull/5148) | [`57422dc7a00d`](https://github.com/ai4curation/ai-gene-review/commit/57422dc7a00d0a46c260deb6228e0821ec78c1c2) / [`2e5ae6740fe6`](https://github.com/ai4curation/ai-gene-review/commit/2e5ae6740fe600706b87eebebbba6efecb5adf60) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5148#pullrequestreview-5560471345) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5148#issuecomment-6242453461) | 15 | [39190449878](https://github.com/ai4curation/ai-gene-review/actions/runs/39190449878) cancelled / [39190449905](https://github.com/ai4curation/ai-gene-review/actions/runs/39190449905) success | [39189052844](https://github.com/ai4curation/ai-gene-review/actions/runs/39189052844) success |
+| [DNAAF4 #5149](https://github.com/ai4curation/ai-gene-review/pull/5149) | [`6d980bcdaf60`](https://github.com/ai4curation/ai-gene-review/commit/6d980bcdaf609249ed628039d03e994d4817ec64) / [`ed8061507edb`](https://github.com/ai4curation/ai-gene-review/commit/ed8061507edb3036108cf9c30c5d9529739144ec) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5149#pullrequestreview-5560548684) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5149#issuecomment-6242809075) | 18 | [39190699924](https://github.com/ai4curation/ai-gene-review/actions/runs/39190699924) cancelled / [39190700045](https://github.com/ai4curation/ai-gene-review/actions/runs/39190700045) success | [39189236702](https://github.com/ai4curation/ai-gene-review/actions/runs/39189236702) success |
+| [DNAAF2 #5147](https://github.com/ai4curation/ai-gene-review/pull/5147) | [`d0374e4a65f6`](https://github.com/ai4curation/ai-gene-review/commit/d0374e4a65f614f2ac172b81d655d0674f754171) / [`c4d984a59437`](https://github.com/ai4curation/ai-gene-review/commit/c4d984a59437531255d63e73de22521334b17a12) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5147#pullrequestreview-5560570961) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5147#issuecomment-6242886312) | 20 | [39191111520](https://github.com/ai4curation/ai-gene-review/actions/runs/39191111520) cancelled / [39191111317](https://github.com/ai4curation/ai-gene-review/actions/runs/39191111317) success | [39189634754](https://github.com/ai4curation/ai-gene-review/actions/runs/39189634754) success |
+| [DNAAF6 #5151](https://github.com/ai4curation/ai-gene-review/pull/5151) | [`441ccd42b8d9`](https://github.com/ai4curation/ai-gene-review/commit/441ccd42b8d97d3972aa95a4ae47024216f49bf9) / [`2a58063332e6`](https://github.com/ai4curation/ai-gene-review/commit/2a58063332e64b82d0e33812d3e8d07ce5f4c1bd) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5151#pullrequestreview-5560606904) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5151#issuecomment-6243008839) | 24 | [39191112043](https://github.com/ai4curation/ai-gene-review/actions/runs/39191112043) cancelled / [39191112553](https://github.com/ai4curation/ai-gene-review/actions/runs/39191112553) success | [39189745266](https://github.com/ai4curation/ai-gene-review/actions/runs/39189745266) success |
+| [DOCK11 #5171](https://github.com/ai4curation/ai-gene-review/pull/5171) | [`c015258574f8`](https://github.com/ai4curation/ai-gene-review/commit/c015258574f81d05cfe5cf85d2ff06b2e3cddca0) / [`e7adbec2048f`](https://github.com/ai4curation/ai-gene-review/commit/e7adbec2048f0c753b6efa076fa97db71d1385a5) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5171#pullrequestreview-5561006604) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5171#issuecomment-6244402496) | 27 | [39191657344](https://github.com/ai4curation/ai-gene-review/actions/runs/39191657344) cancelled / [39191657475](https://github.com/ai4curation/ai-gene-review/actions/runs/39191657475) success | [39190260091](https://github.com/ai4curation/ai-gene-review/actions/runs/39190260091) success |
+| [DNMT3A #5170](https://github.com/ai4curation/ai-gene-review/pull/5170) | [`bfb486a5fc25`](https://github.com/ai4curation/ai-gene-review/commit/bfb486a5fc2573711353c7c1a5519c26343ebd27) / [`29efd5e1e346`](https://github.com/ai4curation/ai-gene-review/commit/29efd5e1e34684328f64e886425b557e7ca8e40d) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5170#pullrequestreview-5561022491) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5170#issuecomment-6244452967) | 28 | [39191833685](https://github.com/ai4curation/ai-gene-review/actions/runs/39191833685) cancelled / [39191833696](https://github.com/ai4curation/ai-gene-review/actions/runs/39191833696) cancelled | [39190309258](https://github.com/ai4curation/ai-gene-review/actions/runs/39190309258) success |
+| [DNMT1 #5167](https://github.com/ai4curation/ai-gene-review/pull/5167) | [`822362e01633`](https://github.com/ai4curation/ai-gene-review/commit/822362e01633d73d93ca46d16600d363b93cfe0e) / [`9a1b5a39a111`](https://github.com/ai4curation/ai-gene-review/commit/9a1b5a39a1110336ec5319cc38190679231eb0a4) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5167#pullrequestreview-5561060128) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5167#issuecomment-6244539919) | 20 | [39191835649](https://github.com/ai4curation/ai-gene-review/actions/runs/39191835649) cancelled / [39191835674](https://github.com/ai4curation/ai-gene-review/actions/runs/39191835674) success | [39190409062](https://github.com/ai4curation/ai-gene-review/actions/runs/39190409062) success |
+| [DNMT3B #5169](https://github.com/ai4curation/ai-gene-review/pull/5169) | [`09e528221f4b`](https://github.com/ai4curation/ai-gene-review/commit/09e528221f4ba8259e1b170cf7618c1d84d9d1e0) / [`26236c3c82d6`](https://github.com/ai4curation/ai-gene-review/commit/26236c3c82d6e193d0c1881a05753aaed8083409) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5169#pullrequestreview-5561042871) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5169#issuecomment-6244497906) | 22 | [39191834266](https://github.com/ai4curation/ai-gene-review/actions/runs/39191834266) cancelled / [39191834319](https://github.com/ai4curation/ai-gene-review/actions/runs/39191834319) cancelled | [39190407682](https://github.com/ai4curation/ai-gene-review/actions/runs/39190407682) success |
+| [DNM1L #5166](https://github.com/ai4curation/ai-gene-review/pull/5166) | [`ad720c8913ed`](https://github.com/ai4curation/ai-gene-review/commit/ad720c8913ed74798a9f5616c795340658175a8f) / [`e902e7ed5bfb`](https://github.com/ai4curation/ai-gene-review/commit/e902e7ed5bfbe7b75b101e0ca084ef561e1a1f96) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5166#pullrequestreview-5561071033) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5166#issuecomment-6244563709) | 13 | [39191971333](https://github.com/ai4curation/ai-gene-review/actions/runs/39191971333) cancelled / [39191971311](https://github.com/ai4curation/ai-gene-review/actions/runs/39191971311) cancelled | [39190451175](https://github.com/ai4curation/ai-gene-review/actions/runs/39190451175) success |
+| [DOCK6 #5174](https://github.com/ai4curation/ai-gene-review/pull/5174) | [`eaa59b3d397d`](https://github.com/ai4curation/ai-gene-review/commit/eaa59b3d397dceebfed519411f8c7d273b30a4b0) / [`afdc59380483`](https://github.com/ai4curation/ai-gene-review/commit/afdc5938048354da746ae2646c73fab2282c0a13) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5174#pullrequestreview-5561082621) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5174#issuecomment-6244619341) | 14 | [39192127336](https://github.com/ai4curation/ai-gene-review/actions/runs/39192127336) cancelled / [39192127466](https://github.com/ai4curation/ai-gene-review/actions/runs/39192127466) success | [39190701958](https://github.com/ai4curation/ai-gene-review/actions/runs/39190701958) success |
+| [DNM2 #5168](https://github.com/ai4curation/ai-gene-review/pull/5168) | [`09e9a65cdec6`](https://github.com/ai4curation/ai-gene-review/commit/09e9a65cdec6bfec9f9f3b3e8e684a5957eb1ea6) / [`c9dd834fefc5`](https://github.com/ai4curation/ai-gene-review/commit/c9dd834fefc58b135f458d1ddec409d0f80cbfd3) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5168#pullrequestreview-5561095269) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5168#issuecomment-6244646991) | 41 | [39192497984](https://github.com/ai4curation/ai-gene-review/actions/runs/39192497984) cancelled / [39192498061](https://github.com/ai4curation/ai-gene-review/actions/runs/39192498061) success | [39191114254](https://github.com/ai4curation/ai-gene-review/actions/runs/39191114254) success |
+| [DOCK2 #5175](https://github.com/ai4curation/ai-gene-review/pull/5175) | [`e0ef2857f3a3`](https://github.com/ai4curation/ai-gene-review/commit/e0ef2857f3a3dd2eadb78f0475f38c3a7f0ea9e3) / [`0372a9c59eb2`](https://github.com/ai4curation/ai-gene-review/commit/0372a9c59eb2d501b46dfa5c438d89eeaf4ab1f7) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5175#pullrequestreview-5561111627) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5175#issuecomment-6244698085) | 24 | [39192499221](https://github.com/ai4curation/ai-gene-review/actions/runs/39192499221) cancelled / [39192499143](https://github.com/ai4curation/ai-gene-review/actions/runs/39192499143) success | [39191115546](https://github.com/ai4curation/ai-gene-review/actions/runs/39191115546) success |
+| [DOCK7 #5176](https://github.com/ai4curation/ai-gene-review/pull/5176) | [`75d22cf922bc`](https://github.com/ai4curation/ai-gene-review/commit/75d22cf922bca48fd1925c2bf460f74347627427) / [`1ddc38b26cc3`](https://github.com/ai4curation/ai-gene-review/commit/1ddc38b26cc37326d2058c5413bd69d34af825e3) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5176#pullrequestreview-5561141102) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5176#issuecomment-6244785065) | 38 | [39193043623](https://github.com/ai4curation/ai-gene-review/actions/runs/39193043623) cancelled / [39193043621](https://github.com/ai4curation/ai-gene-review/actions/runs/39193043621) success | [39191658870](https://github.com/ai4curation/ai-gene-review/actions/runs/39191658870) success |
+| [DOK7 #5177](https://github.com/ai4curation/ai-gene-review/pull/5177) | [`b6399867d721`](https://github.com/ai4curation/ai-gene-review/commit/b6399867d72139d431343335e907bb8d2ca47530) / [`d1c971ac8733`](https://github.com/ai4curation/ai-gene-review/commit/d1c971ac8733acaa24c8b02bb464454e05895617) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5177#pullrequestreview-5561268305) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5177#issuecomment-6245157259) | 18 | [39193157984](https://github.com/ai4curation/ai-gene-review/actions/runs/39193157984) cancelled / [39193158011](https://github.com/ai4curation/ai-gene-review/actions/runs/39193158011) cancelled | [39191660369](https://github.com/ai4curation/ai-gene-review/actions/runs/39191660369) success |
+| [DOCK8 #5178](https://github.com/ai4curation/ai-gene-review/pull/5178) | [`beb3d6d0d283`](https://github.com/ai4curation/ai-gene-review/commit/beb3d6d0d28336a1d6c3df408ca00c1ae7ed019e) / [`a066dcf2b38d`](https://github.com/ai4curation/ai-gene-review/commit/a066dcf2b38dd92e7b4895d7af660182c7df53f9) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5178#pullrequestreview-5561283477) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5178#issuecomment-6245213069) | 31 | [39193158990](https://github.com/ai4curation/ai-gene-review/actions/runs/39193158990) cancelled / [39193158943](https://github.com/ai4curation/ai-gene-review/actions/runs/39193158943) cancelled | [39191837788](https://github.com/ai4curation/ai-gene-review/actions/runs/39191837788) success |
+| [DOLK #5179](https://github.com/ai4curation/ai-gene-review/pull/5179) | [`b702277e430e`](https://github.com/ai4curation/ai-gene-review/commit/b702277e430e6b2b24323b4d52903f6a839aa9eb) / [`ee9a871cc585`](https://github.com/ai4curation/ai-gene-review/commit/ee9a871cc585eef81fb83534dfc7e06d425fd5e6) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5179#pullrequestreview-5561320533) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5179#issuecomment-6245328836) | 39 | [39193160109](https://github.com/ai4curation/ai-gene-review/actions/runs/39193160109) cancelled / [39193159955](https://github.com/ai4curation/ai-gene-review/actions/runs/39193159955) success | [39191838572](https://github.com/ai4curation/ai-gene-review/actions/runs/39191838572) success |
+| [DPAGT1 #5180](https://github.com/ai4curation/ai-gene-review/pull/5180) | [`594f32073592`](https://github.com/ai4curation/ai-gene-review/commit/594f32073592adcb30f2c8fea6b409ecbd8407b5) / [`a7a19e059c4b`](https://github.com/ai4curation/ai-gene-review/commit/a7a19e059c4bd5680d5ef90c9d4e389d45051031) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5180#pullrequestreview-5561418458) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5180#issuecomment-6245598860) | 10 | [39193322914](https://github.com/ai4curation/ai-gene-review/actions/runs/39193322914) cancelled / [39193322917](https://github.com/ai4curation/ai-gene-review/actions/runs/39193322917) success | [39191973501](https://github.com/ai4curation/ai-gene-review/actions/runs/39191973501) success |
+| [DPF2 #5181](https://github.com/ai4curation/ai-gene-review/pull/5181) | [`caff9ddfe06c`](https://github.com/ai4curation/ai-gene-review/commit/caff9ddfe06cefc7242c59e86b17673ae945a296) / [`21c22151b39e`](https://github.com/ai4curation/ai-gene-review/commit/21c22151b39ed7c4c775129b9a639b98aff22dc4) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5181#pullrequestreview-5561491244) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5181#issuecomment-6245797001) | 26 | [39193640339](https://github.com/ai4curation/ai-gene-review/actions/runs/39193640339) cancelled / [39193640407](https://github.com/ai4curation/ai-gene-review/actions/runs/39193640407) cancelled | [39192128880](https://github.com/ai4curation/ai-gene-review/actions/runs/39192128880) success |
+| [DPY19L2 #5184](https://github.com/ai4curation/ai-gene-review/pull/5184) | [`34272ec51bcd`](https://github.com/ai4curation/ai-gene-review/commit/34272ec51bcd6703df20839b5f87d682fe5cc3ef) / [`40ac2eaa80d5`](https://github.com/ai4curation/ai-gene-review/commit/40ac2eaa80d54950df02821ecb2a41e204f4da91) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5184#pullrequestreview-5561527829) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5184#issuecomment-6245908477) | 18 | [39193778825](https://github.com/ai4curation/ai-gene-review/actions/runs/39193778825) cancelled / [39193778832](https://github.com/ai4curation/ai-gene-review/actions/runs/39193778832) success | [39192366441](https://github.com/ai4curation/ai-gene-review/actions/runs/39192366441) success |
+| [DPH1 #5182](https://github.com/ai4curation/ai-gene-review/pull/5182) | [`4330af836f24`](https://github.com/ai4curation/ai-gene-review/commit/4330af836f247fa7c438f3bc9036cc4ded71d3e2) / [`a44f07ba473d`](https://github.com/ai4curation/ai-gene-review/commit/a44f07ba473d1cfd1e8c6eb940b1a6b227c4b37c) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5182#pullrequestreview-5561532488) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5182#issuecomment-6245934400) | 15 | [39194050778](https://github.com/ai4curation/ai-gene-review/actions/runs/39194050778) cancelled / [39194050729](https://github.com/ai4curation/ai-gene-review/actions/runs/39194050729) success | [39192501158](https://github.com/ai4curation/ai-gene-review/actions/runs/39192501158) success |
+| [DPM1 #5183](https://github.com/ai4curation/ai-gene-review/pull/5183) | [`92402e4181d4`](https://github.com/ai4curation/ai-gene-review/commit/92402e4181d44ff22f1f9a38f8f111cb3be406bf) / [`4b38a493196d`](https://github.com/ai4curation/ai-gene-review/commit/4b38a493196da1564744dcd5491b83eab6c9ce29) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5183#pullrequestreview-5561624440) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5183#issuecomment-6246172677) | 23 | [39194608242](https://github.com/ai4curation/ai-gene-review/actions/runs/39194608242) cancelled / [39194608284](https://github.com/ai4curation/ai-gene-review/actions/runs/39194608284) cancelled | [39193070200](https://github.com/ai4curation/ai-gene-review/actions/runs/39193070200) success |
+| [DRC1 #5186](https://github.com/ai4curation/ai-gene-review/pull/5186) | [`623841bd26d1`](https://github.com/ai4curation/ai-gene-review/commit/623841bd26d17eaf91c82aed2040f117568652cc) / [`9b5c8c67d999`](https://github.com/ai4curation/ai-gene-review/commit/9b5c8c67d9998489f3be74276da5b24323fe7613) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5186#pullrequestreview-5561638314) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5186#issuecomment-6246203719) | 12 | [39194653608](https://github.com/ai4curation/ai-gene-review/actions/runs/39194653608) cancelled / [39194653597](https://github.com/ai4curation/ai-gene-review/actions/runs/39194653597) cancelled | [39193111849](https://github.com/ai4curation/ai-gene-review/actions/runs/39193111849) success |
+| [DRC2 #5187](https://github.com/ai4curation/ai-gene-review/pull/5187) | [`ef2c0153f4a6`](https://github.com/ai4curation/ai-gene-review/commit/ef2c0153f4a6fe110cb925368a5ab03f5213a59a) / [`023c6f73c5e9`](https://github.com/ai4curation/ai-gene-review/commit/023c6f73c5e902f9c00e1b57794f799b21ba6f9b) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5187#pullrequestreview-5561726274) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5187#issuecomment-6246436907) | 12 | [39194654994](https://github.com/ai4curation/ai-gene-review/actions/runs/39194654994) cancelled / [39194655058](https://github.com/ai4curation/ai-gene-review/actions/runs/39194655058) success | [39193162028](https://github.com/ai4curation/ai-gene-review/actions/runs/39193162028) success |
+| [DRC4 #5188](https://github.com/ai4curation/ai-gene-review/pull/5188) | [`7ab4969cb43f`](https://github.com/ai4curation/ai-gene-review/commit/7ab4969cb43f3a0a8fe1a1ae34405f78d40c04d3) / [`d05e9f2348ac`](https://github.com/ai4curation/ai-gene-review/commit/d05e9f2348ac95df795c5f8031774ff1955e7d70) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5188#pullrequestreview-5561932517) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5188#issuecomment-6247052075) | 27 | [39194863186](https://github.com/ai4curation/ai-gene-review/actions/runs/39194863186) cancelled / [39194863196](https://github.com/ai4curation/ai-gene-review/actions/runs/39194863196) success | [39193325269](https://github.com/ai4curation/ai-gene-review/actions/runs/39193325269) success |
+| [DSE #5190](https://github.com/ai4curation/ai-gene-review/pull/5190) | [`ab6b0fdca25f`](https://github.com/ai4curation/ai-gene-review/commit/ab6b0fdca25f9f86040c26fba95b3af993e49a15) / [`21eda734da77`](https://github.com/ai4curation/ai-gene-review/commit/21eda734da7725d2dc5fc503edd197eed802a874) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5190#pullrequestreview-5561950328) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5190#issuecomment-6247132283) | 15 | [39195171996](https://github.com/ai4curation/ai-gene-review/actions/runs/39195171996) cancelled / [39195171953](https://github.com/ai4curation/ai-gene-review/actions/runs/39195171953) success | [39193642108](https://github.com/ai4curation/ai-gene-review/actions/runs/39193642108) success |
+| [DSC2 #5189](https://github.com/ai4curation/ai-gene-review/pull/5189) | [`e636319d505f`](https://github.com/ai4curation/ai-gene-review/commit/e636319d505f36b4f2f294d494c801fd41994ff3) / [`2556e031729c`](https://github.com/ai4curation/ai-gene-review/commit/2556e031729cfc0399b778793875925eb83edf17) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5189#pullrequestreview-5562051331) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5189#issuecomment-6247420388) | 25 | [39195350971](https://github.com/ai4curation/ai-gene-review/actions/runs/39195350971) cancelled / [39195350913](https://github.com/ai4curation/ai-gene-review/actions/runs/39195350913) cancelled | [39193780479](https://github.com/ai4curation/ai-gene-review/actions/runs/39193780479) success |
+| [DSPP #5191](https://github.com/ai4curation/ai-gene-review/pull/5191) | [`d94ee03e2a0d`](https://github.com/ai4curation/ai-gene-review/commit/d94ee03e2a0d76c9264d3ffb4350521f047e4df3) / [`5b34aefb94ae`](https://github.com/ai4curation/ai-gene-review/commit/5b34aefb94ae9d0aa9ea599bd08a96b093625b2c) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5191#pullrequestreview-5562219152) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5191#issuecomment-6247971623) | 24 | [39195398487](https://github.com/ai4curation/ai-gene-review/actions/runs/39195398487) cancelled / [39195398424](https://github.com/ai4curation/ai-gene-review/actions/runs/39195398424) success | [39194052484](https://github.com/ai4curation/ai-gene-review/actions/runs/39194052484) success |
+| [DSP #5192](https://github.com/ai4curation/ai-gene-review/pull/5192) | [`95a97d3c58fc`](https://github.com/ai4curation/ai-gene-review/commit/95a97d3c58fcf7c02494cc25278d139a94e0c462) / [`a532a7e2a80a`](https://github.com/ai4curation/ai-gene-review/commit/a532a7e2a80a40000cd1fc2de1453eeef4bebc93) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5192#pullrequestreview-5562245042) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5192#issuecomment-6248012201) | 42 | [39195900296](https://github.com/ai4curation/ai-gene-review/actions/runs/39195900296) cancelled / [39195900287](https://github.com/ai4curation/ai-gene-review/actions/runs/39195900287) success | [39194505866](https://github.com/ai4curation/ai-gene-review/actions/runs/39194505866) success |
+| [DSG2 #5193](https://github.com/ai4curation/ai-gene-review/pull/5193) | [`cc1b22a58fcf`](https://github.com/ai4curation/ai-gene-review/commit/cc1b22a58fcf047bf9afa85c10ead212ce78ba2e) / [`75aa3e00937b`](https://github.com/ai4curation/ai-gene-review/commit/75aa3e00937b5e9917481cc2e7fa7b93af1a4b4b) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5193#pullrequestreview-5562443524) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5193#issuecomment-6248412698) | 35 | [39195901249](https://github.com/ai4curation/ai-gene-review/actions/runs/39195901249) cancelled / [39195901445](https://github.com/ai4curation/ai-gene-review/actions/runs/39195901445) cancelled | [39194610015](https://github.com/ai4curation/ai-gene-review/actions/runs/39194610015) success |
+| [DST #5194](https://github.com/ai4curation/ai-gene-review/pull/5194) | [`572573c3c88d`](https://github.com/ai4curation/ai-gene-review/commit/572573c3c88d56212a9cd6f9f8db02c439c0b508) / [`fc7905919eba`](https://github.com/ai4curation/ai-gene-review/commit/fc7905919eba92a7b64c0053a832e0e5f0dd4514) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5194#pullrequestreview-5562472606) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5194#issuecomment-6248486691) | 27 | [39196041995](https://github.com/ai4curation/ai-gene-review/actions/runs/39196041995) cancelled / [39196041953](https://github.com/ai4curation/ai-gene-review/actions/runs/39196041953) success | [39194656802](https://github.com/ai4curation/ai-gene-review/actions/runs/39194656802) success |
+| [DYNC2H1 #5195](https://github.com/ai4curation/ai-gene-review/pull/5195) | [`589cc2bcfa69`](https://github.com/ai4curation/ai-gene-review/commit/589cc2bcfa691aaa72e1c76914d0062eacf7cbc3) / [`cf4e305fd676`](https://github.com/ai4curation/ai-gene-review/commit/cf4e305fd6764de9fa0a6684e91e63eb2c3eb585) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5195#pullrequestreview-5562664256) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5195#issuecomment-6249056551) | 16 | [39196191841](https://github.com/ai4curation/ai-gene-review/actions/runs/39196191841) cancelled / [39196191806](https://github.com/ai4curation/ai-gene-review/actions/runs/39196191806) success | [39194657870](https://github.com/ai4curation/ai-gene-review/actions/runs/39194657870) success |
+| [DTNBP1 #5196](https://github.com/ai4curation/ai-gene-review/pull/5196) | [`03d41d65b557`](https://github.com/ai4curation/ai-gene-review/commit/03d41d65b5577b6597cb17a35ff75707525acd01) / [`fb63079d569c`](https://github.com/ai4curation/ai-gene-review/commit/fb63079d569c7c90ed896fe10783ac620b517165) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5196#pullrequestreview-5562705125) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5196#issuecomment-6249229218) | 38 | [39196449647](https://github.com/ai4curation/ai-gene-review/actions/runs/39196449647) cancelled / [39196449636](https://github.com/ai4curation/ai-gene-review/actions/runs/39196449636) cancelled | [39194865002](https://github.com/ai4curation/ai-gene-review/actions/runs/39194865002) success |
+| [DYNC1H1 #5197](https://github.com/ai4curation/ai-gene-review/pull/5197) | [`6e18c9fee11d`](https://github.com/ai4curation/ai-gene-review/commit/6e18c9fee11de522fec40dceea6d07352ea11afb) / [`80e71bc89765`](https://github.com/ai4curation/ai-gene-review/commit/80e71bc897654ac90f70b5792cf8a160acc5f761) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5197#pullrequestreview-5562818228) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5197#issuecomment-6249493883) | 16 | [39196612953](https://github.com/ai4curation/ai-gene-review/actions/runs/39196612953) cancelled / [39196612959](https://github.com/ai4curation/ai-gene-review/actions/runs/39196612959) success | [39195173513](https://github.com/ai4curation/ai-gene-review/actions/runs/39195173513) success |
+| [DYNC2I1 #5198](https://github.com/ai4curation/ai-gene-review/pull/5198) | [`1e03c1c23080`](https://github.com/ai4curation/ai-gene-review/commit/1e03c1c23080e9e523754bdbca5390cbc61d9a70) / [`fb4523358525`](https://github.com/ai4curation/ai-gene-review/commit/fb4523358525fa85ee3f667d64a74695a0e12cad) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5198#pullrequestreview-5562889655) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5198#issuecomment-6249611850) | 13 | [39196818398](https://github.com/ai4curation/ai-gene-review/actions/runs/39196818398) cancelled / [39196818396](https://github.com/ai4curation/ai-gene-review/actions/runs/39196818396) cancelled | [39195352469](https://github.com/ai4curation/ai-gene-review/actions/runs/39195352469) success |
+| [DYNC2I2 #5199](https://github.com/ai4curation/ai-gene-review/pull/5199) | [`b62674f50cce`](https://github.com/ai4curation/ai-gene-review/commit/b62674f50cce2a15db3e88300070be3e8878b8af) / [`d27e12acf159`](https://github.com/ai4curation/ai-gene-review/commit/d27e12acf159518bbe9284b1a876c473b59c2d89) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5199#pullrequestreview-5562991309) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5199#issuecomment-6249882551) | 15 | [39196864128](https://github.com/ai4curation/ai-gene-review/actions/runs/39196864128) cancelled / [39196864086](https://github.com/ai4curation/ai-gene-review/actions/runs/39196864086) success | [39195400174](https://github.com/ai4curation/ai-gene-review/actions/runs/39195400174) success |
+| [DZIP1L #5200](https://github.com/ai4curation/ai-gene-review/pull/5200) | [`6f162afe0af2`](https://github.com/ai4curation/ai-gene-review/commit/6f162afe0af2f88c488f8ed766874f80df7b1235) / [`226af0294fc8`](https://github.com/ai4curation/ai-gene-review/commit/226af0294fc8afe63595871fd238fffc1b2b2a2a) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5200#pullrequestreview-5563291296) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5200#issuecomment-6250757324) | 24 | [39197258526](https://github.com/ai4curation/ai-gene-review/actions/runs/39197258526) cancelled / [39197258604](https://github.com/ai4curation/ai-gene-review/actions/runs/39197258604) cancelled | [39195902343](https://github.com/ai4curation/ai-gene-review/actions/runs/39195902343) success |
+| [DYSF #5201](https://github.com/ai4curation/ai-gene-review/pull/5201) | [`49b5a265f90e`](https://github.com/ai4curation/ai-gene-review/commit/49b5a265f90ed06d3be175ddb9ca2dd5ec1aec66) / [`1068c61a9bc4`](https://github.com/ai4curation/ai-gene-review/commit/1068c61a9bc4c06a6bed0b51ee652573175cbecc) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5201#pullrequestreview-5563163099) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5201#issuecomment-6250400278) | 64 | [39197257972](https://github.com/ai4curation/ai-gene-review/actions/runs/39197257972) cancelled / [39197257858](https://github.com/ai4curation/ai-gene-review/actions/runs/39197257858) success | [39195858820](https://github.com/ai4curation/ai-gene-review/actions/runs/39195858820) success |
+| [DYRK1A #5202](https://github.com/ai4curation/ai-gene-review/pull/5202) | [`6597d1785ec4`](https://github.com/ai4curation/ai-gene-review/commit/6597d1785ec43f141c6454e9a2bf4bf34a9b2d2f) / [`406f5938e971`](https://github.com/ai4curation/ai-gene-review/commit/406f5938e9714f4691d785ec90a0e09471a31a25) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5202#pullrequestreview-5563341932) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5202#issuecomment-6250910959) | 40 | [39197545128](https://github.com/ai4curation/ai-gene-review/actions/runs/39197545128) cancelled / [39197545204](https://github.com/ai4curation/ai-gene-review/actions/runs/39197545204) success | [39196042828](https://github.com/ai4curation/ai-gene-review/actions/runs/39196042828) success |
+| [EARS2 #5203](https://github.com/ai4curation/ai-gene-review/pull/5203) | [`47586cd9ec28`](https://github.com/ai4curation/ai-gene-review/commit/47586cd9ec28e61b1bab3fe016f04bf38d03ea41) / [`112b5bcc30f5`](https://github.com/ai4curation/ai-gene-review/commit/112b5bcc30f58eba2217df67296df6096a854d0c) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5203#pullrequestreview-5563380442) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5203#issuecomment-6251036843) | 19 | [39197634082](https://github.com/ai4curation/ai-gene-review/actions/runs/39197634082) cancelled / [39197633986](https://github.com/ai4curation/ai-gene-review/actions/runs/39197633986) success | [39196193202](https://github.com/ai4curation/ai-gene-review/actions/runs/39196193202) success |
+| [EBF3 #5204](https://github.com/ai4curation/ai-gene-review/pull/5204) | [`c40488eaa2a4`](https://github.com/ai4curation/ai-gene-review/commit/c40488eaa2a4a50cd94d6c3c90103919dd90257c) / [`6ed8e2a7f55e`](https://github.com/ai4curation/ai-gene-review/commit/6ed8e2a7f55e81007afbfe997efcd9a6c7f10da6) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5204#pullrequestreview-5563376538) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5204#issuecomment-6251018312) | 17 | [39197924600](https://github.com/ai4curation/ai-gene-review/actions/runs/39197924600) cancelled / [39197924606](https://github.com/ai4curation/ai-gene-review/actions/runs/39197924606) cancelled | [39196451008](https://github.com/ai4curation/ai-gene-review/actions/runs/39196451008) success |
+| [EBP #5206](https://github.com/ai4curation/ai-gene-review/pull/5206) | [`68f7809eaf59`](https://github.com/ai4curation/ai-gene-review/commit/68f7809eaf59425cb19a9c2cf9c6639d61fdf1a3) / [`b54117406d6e`](https://github.com/ai4curation/ai-gene-review/commit/b54117406d6e27c79d4d7226636ffea62ffe4ebc) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5206#pullrequestreview-5563650354) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5206#issuecomment-6251553396) | 18 | [39198396486](https://github.com/ai4curation/ai-gene-review/actions/runs/39198396486) cancelled / [39198396497](https://github.com/ai4curation/ai-gene-review/actions/runs/39198396497) cancelled | [39196820332](https://github.com/ai4curation/ai-gene-review/actions/runs/39196820332) success |
+| [ECHS1 #5207](https://github.com/ai4curation/ai-gene-review/pull/5207) | [`59891106a316`](https://github.com/ai4curation/ai-gene-review/commit/59891106a316a4aa4189bcb60b9eb1a3adfe6400) / [`398bc75deb14`](https://github.com/ai4curation/ai-gene-review/commit/398bc75deb144c27f5efc2a5dc338c677dd83dd4) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5207#pullrequestreview-5563770156) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5207#issuecomment-6251928089) | 18 | [39198538846](https://github.com/ai4curation/ai-gene-review/actions/runs/39198538846) cancelled / [39198538917](https://github.com/ai4curation/ai-gene-review/actions/runs/39198538917) success | [39197217052](https://github.com/ai4curation/ai-gene-review/actions/runs/39197217052) success |
+| [EDAR #5209](https://github.com/ai4curation/ai-gene-review/pull/5209) | [`ee11a9c9ed0b`](https://github.com/ai4curation/ai-gene-review/commit/ee11a9c9ed0b87ce13b2e15612da2dea074bf87c) / [`71b6c5799dfc`](https://github.com/ai4curation/ai-gene-review/commit/71b6c5799dfc936e6fde3443fe83a1cd07a18345) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5209#pullrequestreview-5563884824) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5209#issuecomment-6252319106) | 26 | [39198820516](https://github.com/ai4curation/ai-gene-review/actions/runs/39198820516) cancelled / [39198820467](https://github.com/ai4curation/ai-gene-review/actions/runs/39198820467) success | [39197259771](https://github.com/ai4curation/ai-gene-review/actions/runs/39197259771) success |
+| [EEF1A2 #5210](https://github.com/ai4curation/ai-gene-review/pull/5210) | [`4c9c7d3ac8f4`](https://github.com/ai4curation/ai-gene-review/commit/4c9c7d3ac8f4cbae7b3bf4007b7bcfae58623370) / [`d564c0d6318a`](https://github.com/ai4curation/ai-gene-review/commit/d564c0d6318a1856b1c1569a6afde8eacffc0d24) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5210#pullrequestreview-5563957383) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5210#issuecomment-6252551937) | 27 | [39199086385](https://github.com/ai4curation/ai-gene-review/actions/runs/39199086385) cancelled / [39199086378](https://github.com/ai4curation/ai-gene-review/actions/runs/39199086378) cancelled | [39197546581](https://github.com/ai4curation/ai-gene-review/actions/runs/39197546581) success |
+| [EFL1 #5212](https://github.com/ai4curation/ai-gene-review/pull/5212) | [`ed0f1b2d871f`](https://github.com/ai4curation/ai-gene-review/commit/ed0f1b2d871f6c98a196ac529929f596040cedfa) / [`6a7cc1874c90`](https://github.com/ai4curation/ai-gene-review/commit/6a7cc1874c9051e487e2b66b8af98760ea8d111a) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5212#pullrequestreview-5564046076) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5212#issuecomment-6252843357) | 20 | [39199088053](https://github.com/ai4curation/ai-gene-review/actions/runs/39199088053) cancelled / [39199087994](https://github.com/ai4curation/ai-gene-review/actions/runs/39199087994) success | [39197635176](https://github.com/ai4curation/ai-gene-review/actions/runs/39197635176) success |
+| [EFEMP1 #5211](https://github.com/ai4curation/ai-gene-review/pull/5211) | [`eebf417e370c`](https://github.com/ai4curation/ai-gene-review/commit/eebf417e370c1d173dec3b7bd6997e2cfac38b17) / [`8e7fec328553`](https://github.com/ai4curation/ai-gene-review/commit/8e7fec328553636be3af4dd95ed927ba92612826) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5211#pullrequestreview-5564121765) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5211#issuecomment-6253045187) | 22 | [39199472305](https://github.com/ai4curation/ai-gene-review/actions/runs/39199472305) cancelled / [39199472302](https://github.com/ai4curation/ai-gene-review/actions/runs/39199472302) cancelled | [39197926121](https://github.com/ai4curation/ai-gene-review/actions/runs/39197926121) success |
+| [EFNB1 #5216](https://github.com/ai4curation/ai-gene-review/pull/5216) | [`c25a84d61d9f`](https://github.com/ai4curation/ai-gene-review/commit/c25a84d61d9f32c08eb42da78c0738a46156cdc4) / [`aedd27b9cba6`](https://github.com/ai4curation/ai-gene-review/commit/aedd27b9cba617c13644a87b447f532665666b88) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5216#pullrequestreview-5564381802) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5216#issuecomment-6253747878) | 32 | [39199555560](https://github.com/ai4curation/ai-gene-review/actions/runs/39199555560) cancelled / [39199555516](https://github.com/ai4curation/ai-gene-review/actions/runs/39199555516) success | [39198104288](https://github.com/ai4curation/ai-gene-review/actions/runs/39198104288) success |
+| [EFEMP2 #5214](https://github.com/ai4curation/ai-gene-review/pull/5214) | [`c8945f77bb2a`](https://github.com/ai4curation/ai-gene-review/commit/c8945f77bb2a5a5ee061af9085b8717e37023790) / [`1032e54fff10`](https://github.com/ai4curation/ai-gene-review/commit/1032e54fff10e15b19220fcb5e39667efeced56c) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5214#pullrequestreview-5564407856) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5214#issuecomment-6253780134) | 38 | [39200006193](https://github.com/ai4curation/ai-gene-review/actions/runs/39200006193) cancelled / [39200006150](https://github.com/ai4curation/ai-gene-review/actions/runs/39200006150) success | [39198398570](https://github.com/ai4curation/ai-gene-review/actions/runs/39198398570) success |
+| [EFTUD2 #5217](https://github.com/ai4curation/ai-gene-review/pull/5217) | [`dc7af6e90ee4`](https://github.com/ai4curation/ai-gene-review/commit/dc7af6e90ee4573eb0bced9f5fb645751250e701) / [`f83a00550e18`](https://github.com/ai4curation/ai-gene-review/commit/f83a00550e186baad06ca43b627446aa4888466f) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5217#pullrequestreview-5564562667) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5217#issuecomment-6254008010) | 31 | [39200007097](https://github.com/ai4curation/ai-gene-review/actions/runs/39200007097) cancelled / [39200007094](https://github.com/ai4curation/ai-gene-review/actions/runs/39200007094) cancelled | [39198400037](https://github.com/ai4curation/ai-gene-review/actions/runs/39198400037) success |
+| [EGLN1 #5218](https://github.com/ai4curation/ai-gene-review/pull/5218) | [`f0b9710c5988`](https://github.com/ai4curation/ai-gene-review/commit/f0b9710c59889a7149ab9a28baa14376e523dde1) / [`58b90b0b579a`](https://github.com/ai4curation/ai-gene-review/commit/58b90b0b579a24cd9fd9d826dad874a04e0ada75) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5218#pullrequestreview-5564793906) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5218#issuecomment-6254699274) | 39 | [39200135501](https://github.com/ai4curation/ai-gene-review/actions/runs/39200135501) cancelled / [39200135508](https://github.com/ai4curation/ai-gene-review/actions/runs/39200135508) cancelled | [39198540735](https://github.com/ai4curation/ai-gene-review/actions/runs/39198540735) success |
+| [DNAH17 #5154](https://github.com/ai4curation/ai-gene-review/pull/5154) | [`ba791f830b16`](https://github.com/ai4curation/ai-gene-review/commit/ba791f830b16f50e2dc6fe632286ff8111d42a78) / [`0b6ca0183624`](https://github.com/ai4curation/ai-gene-review/commit/0b6ca01836243691ec860840e326b4369a7b36cb) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5154#pullrequestreview-5561786441) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5154#issuecomment-6246649944) | 7 | [39297514802](https://github.com/ai4curation/ai-gene-review/actions/runs/39297514802) cancelled / [39297514592](https://github.com/ai4curation/ai-gene-review/actions/runs/39297514592) cancelled | [39293010123](https://github.com/ai4curation/ai-gene-review/actions/runs/39293010123) success |
+| [DNASE1L3 #5164](https://github.com/ai4curation/ai-gene-review/pull/5164) | [`95c9f6a6bb26`](https://github.com/ai4curation/ai-gene-review/commit/95c9f6a6bb26af8f2c7fde6ab3a006a7bce1b5f2) / [`87ce1e9437b5`](https://github.com/ai4curation/ai-gene-review/commit/87ce1e9437b5c02efcf5ec8f99e41626a1d85617) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5164#pullrequestreview-5561781270) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5164#issuecomment-6246651948) | 20 | [39297517088](https://github.com/ai4curation/ai-gene-review/actions/runs/39297517088) success / [39297516955](https://github.com/ai4curation/ai-gene-review/actions/runs/39297516955) success | [39293061047](https://github.com/ai4curation/ai-gene-review/actions/runs/39293061047) success |
+
+All 1,610 approved PR path occurrences match their merge blobs and modes and
+remain identical at captured main `a17627810d4a13efede28a3c07a481aa0b44131b`. Saved commit objects prove
+containment of all 68 merges. Each accepted audit also establishes unchanged
+paths outside its complete PR delta relative to its immediate parent. Shared
+source paths may occur in multiple audits; this total counts path occurrences.
+No accepted current mandatory review request or unresolved thread remains.
+
+The immediate main builds comprise 67 cancellations and one success
+(DNASE1L3); 40 immediate documentation runs succeeded. These outcomes are
+preserved individually above. Exact approved-head and actual-merge merge-group
+checks supply gene-specific evidence. Successful descendants corroborate preserved
+payload and runtime; they are not claimed to revalidate every earlier gene.
+The accepted batch limits are retained explicitly:
+
+Batch 03 (473→483): All ten immediate main builds cancelled; six aggregate gates failed due to cancellation. DNAJB6 and DNAAF1 completed actual-main gene validation before later cancellation, without a successful whole main build. Each exact merge commit passed merge-group checks. Descendant bridge preserves all payloads and executable runtime; only eleven unrelated GO-cache terms added. Its scoped validation does not revalidate these ten. Docs deployments do not imply fresh individual gene HTML. No new science/quotes or ordinary local suite in this audit.
+
+Batch 04 (483→493): All ten immediate main builds cancelled; six cancellation-dependent gates failed. DNAJB2, DNAAF4 and DNAAF6 passed actual-main gene/history checks before later family-step cancellation. No whole main build is relabeled successful. Exact actual merge commits all passed merge-group checks. The successful descendant preserves all 160 payload paths and executable runtime; eleven unrelated GO-cache additions only. Its scoped validation does not revalidate these ten. Seven immediate docs successes describe schema/MkDocs deployment, not individual gene HTML regeneration. Two failed log-retrieval attempts and v1 prose-total correction remain recorded. Effective recovered log and 160-path proof passed. No ordinary local suite or scientific quotations added.
+
+Batch 05 (493→503): All ten immediate main builds cancelled. Exact approved-head and actual-merge merge-group checks passed; cancelled aggregate outcomes remain cancelled or failed. Successful descendant bb50821d71232c86e36c9dee6ed1d0604f6b5505 preserves selected payloads and executable runtime, with eleven unrelated additive GO-cache rows. Its scoped validation does not revalidate these earlier genes. Six immediate docs successes are schema/MkDocs deployment, not individual gene HTML regeneration. No ordinary local suite or scientific quotation added during audit. DOCK6/DOCK2 passed gene/history checks before later family cancellation; six aggregate gates failed due to cancellation. DNM2 and DOCK2 retain explicitly disclosed stale committed HTML.
+
+Batch 06 (503→513): All ten immediate main builds cancelled. Exact approved-head and actual-merge merge-group checks passed; cancelled aggregate outcomes remain cancelled or failed. Successful descendant bb50821d71232c86e36c9dee6ed1d0604f6b5505 preserves selected payloads and executable runtime, with eleven unrelated additive GO-cache rows. Its scoped validation does not revalidate these earlier genes. Six immediate docs successes are schema/MkDocs deployment, not individual gene HTML regeneration. No ordinary local suite or scientific quotation added during audit. DPAGT1 gene validation passed but history pytest was interrupted. DPH1 displayed validations passed but job/API conclusion remains cancelled and gate failed. Eight aggregate gates failed due to cancellation. DOLK eight resolved inline threads were read by delegated auditor.
+
+Batch 07 (513→523): All ten immediate-main builds cancelled; eight aggregate gates failed due to cancellation. DSPP gene/history passed before family cancellation; DYNC2H1 gene passed but history interrupted. No cancelled or skipped test is relabeled successful. Exact approved-head and actual-merge merge-group checks passed. Successful bb508 descendant preserves 251 selected paths and executable runtime, with eleven unrelated additive GO-cache rows; it does not revalidate these ten earlier genes. Six immediate docs successes mean schema/MkDocs deployment, not individual gene HTML regeneration. No local ordinary suite or scientific quote added by this audit.
+
+Batch 08 (523→533): All ten immediate-main builds cancelled; seven aggregate gates failed due to cancellation. DYNC2I2 gene/history passed before family cancellation; DZIP1L/EARS2/ECHS1 gene passed but history completion not established. Main broad tests were skipped. Exact approved-head and actual-merge merge-group checks passed. Successful bb508 descendant preserves all 268 paths and executable runtime, with eleven or ten unrelated additive GO-cache rows. Its scoped validation does not revalidate these ten earlier genes. Six immediate docs successes mean schema/MkDocs deployment, not individual gene HTML regeneration. No ordinary local suite or scientific quotation added during audit.
+
+Batch 09 (533→541): Seven immediate-main builds cancelled; three aggregate gates failed due to cancellation. EFL1/EFNB1 gene/history passed before family cancellation. DNASE1L3 actual main gene/history/family passed; broad suite and history coverage were skipped. Exact approved-head and actual-merge merge-group checks passed for all eight. First six preserve selected paths/runtime to bb508 except ten unrelated additive GO-cache rows. DNAH17 instead preserves all payload and 298 runtime blobs to later successful DNASE1L3 merge [`87ce1e9437b5`](https://github.com/ai4curation/ai-gene-review/commit/87ce1e9437b5c02efcf5ec8f99e41626a1d85617). DNASE1L3 uses its own actual-main pass; neither successor is claimed to revalidate prior genes. Four immediate docs successes mean schema/MkDocs deployment, not individual gene HTML regeneration. Incorrect old-successor attempt retained as failure and replaced by versioned correct proof. No ordinary local suite or scientific quotation added during audit.
+
+The shared successful descendant [`bb50821d7123`](https://github.com/ai4curation/ai-gene-review/commit/bb50821d71232c86e36c9dee6ed1d0604f6b5505)
+has [build 39200674021](https://github.com/ai4curation/ai-gene-review/actions/runs/39200674021) and
+[docs 39200673967](https://github.com/ai4curation/ai-gene-review/actions/runs/39200673967).
+DNAH17 uses the later DNASE1L3 merge [`87ce1e9437b5`](https://github.com/ai4curation/ai-gene-review/commit/87ce1e9437b5c02efcf5ec8f99e41626a1d85617),
+with [build 39297517088](https://github.com/ai4curation/ai-gene-review/actions/runs/39297517088) and
+[docs 39297516955](https://github.com/ai4curation/ai-gene-review/actions/runs/39297516955); DNASE1L3 uses its own main pass.
+Documentation success denotes schema/MkDocs generation and deployment, not fresh
+rendering or visual inspection of every gene HTML page. DNM2 and DOCK2 retain the
+explicitly disclosed stale committed HTML. Accepted generic-binding advisories
+and source uncertainties are not silently removed by this completion update.
+
+The current main inventory contains 8,472 review files, including 3,102 human
+reviews. 1,248 catalogue genes have reviews and 1,628 lack them;
+707 available catalogue reviews remain uncredited. All 2,876 catalogue
+identities and association texts and 235 historical queue objects remain exact.
+The 102 updates already published on this PR branch remain exact; 92 of those
+pre-existed on main. This follow-up appends update 103. Previous progress text,
+including checkpoint 473's original inventory, is preserved byte-for-byte.
+
+The publication preimage is open [PR #5253](https://github.com/ai4curation/ai-gene-review/pull/5253) at
+`a6b08818d82e62d653bd9f330df66697ecb082cb`, containing checkpoint 473 and its existing history.
+Relative to main checkpoint 443, the combined PR has 98 checkbox changes
+(30 already published plus these 68) and 103 updates rather than main's 92.
+The publisher ran all eight project frontmatter checks, rendered both project
+pages and validated a new append-only history record. The catalogue render
+reports 1,628 missing-review warnings; the progress render reports none. The
+combined PR has eight paths, retaining the earlier checkpoint 473 history.
+Gene reviews, source caches and runtime files remain unchanged by this update.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker473-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T010856Z-codex-decdef.yaml)
+
+Terminal publication preflight observed EGR2 merging after that evidence cut,
+advancing main to [`a1dc7cee46ff`](https://github.com/ai4curation/ai-gene-review/commit/a1dc7cee46ff3f4a7c8b06efe4221e0bfe17e6ae).
+A complete 26-path tree comparison confirms no tracker, project-history or runtime
+change and no change to the 1,610 accepted path occurrences. The inventory counts
+remain 8,472 total reviews, 3,102 human, 1,248 available catalogue reviews and
+1,628 missing. The open-head gate changed only by removing merged PR #5249 and
+then stabilized at 163 heads. This bridge adds no EGR2 completion credit; the
+frozen checkpoint remains 541.
+
+## Completion checkpoint 544 — 2026-10-21 02:35:41 UTC
+
+**544 complete; 2,332 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds exactly EGR2, EHMT1 and EGFR to the merged 541 checkpoint.
+The coordinating AI agent accepted each complete merge audit; this is not a
+human maintainer sign-off or a new biological review. Products, follow-up PRs
+and the tracker publication receive no additional gene credit.
+
+| Gene / PR | Approved head / merge | Approval / detail | Exact PR paths | Immediate main build / docs | Exact merge-group build |
+|---|---|---|---:|---|---|
+| [EGR2 #5249](https://github.com/ai4curation/ai-gene-review/pull/5249) | [`53560956d08a`](https://github.com/ai4curation/ai-gene-review/commit/53560956d08ae0d01ce116e1af5e483d2431b66e) / [`a1dc7cee46ff`](https://github.com/ai4curation/ai-gene-review/commit/a1dc7cee46ff3f4a7c8b06efe4221e0bfe17e6ae) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5249#pullrequestreview-5593478509) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5249#issuecomment-6304890310) | 26 | [39524461723](https://github.com/ai4curation/ai-gene-review/actions/runs/39524461723) success / [39524461748](https://github.com/ai4curation/ai-gene-review/actions/runs/39524461748) success | [39522566057](https://github.com/ai4curation/ai-gene-review/actions/runs/39522566057) success |
+| [EHMT1 #5251](https://github.com/ai4curation/ai-gene-review/pull/5251) | [`a455c87f9263`](https://github.com/ai4curation/ai-gene-review/commit/a455c87f9263c4d3e4f518b572a4d52f0470de86) / [`f1f1f9b20ec6`](https://github.com/ai4curation/ai-gene-review/commit/f1f1f9b20ec60f6a0b489b98867c3fcf33663823) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5251#pullrequestreview-5593669020) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5251#issuecomment-6305268790) | 34 | [39526942091](https://github.com/ai4curation/ai-gene-review/actions/runs/39526942091) success / [39526942097](https://github.com/ai4curation/ai-gene-review/actions/runs/39526942097) success | [39525021979](https://github.com/ai4curation/ai-gene-review/actions/runs/39525021979) success |
+| [EGFR #5252](https://github.com/ai4curation/ai-gene-review/pull/5252) | [`0638a3b2722e`](https://github.com/ai4curation/ai-gene-review/commit/0638a3b2722e15b68ec28aa4a3c03c409bd4052a) / [`8eeb6f927b0f`](https://github.com/ai4curation/ai-gene-review/commit/8eeb6f927b0f7cc733934c6706d5710fc65f8eb8) | [approval](https://github.com/ai4curation/ai-gene-review/pull/5252#pullrequestreview-5593970737) / [detail](https://github.com/ai4curation/ai-gene-review/pull/5252#issuecomment-6305907508) | 35 | [39531434283](https://github.com/ai4curation/ai-gene-review/actions/runs/39531434283) cancelled / [39531434228](https://github.com/ai4curation/ai-gene-review/actions/runs/39531434228) success | [39529711313](https://github.com/ai4curation/ai-gene-review/actions/runs/39529711313) success |
+
+All 95 approved PR path occurrences match their merged blobs and modes and
+remain identical at main `81298ef287dae81220ae068a10a524f17628bf7d`. Authenticated commit objects establish
+the EGR2 → EHMT1 → EGFR → tracker sequence. Each accepted merge audit also
+checks the complete immediate-parent delta and unchanged paths outside it.
+The final approved heads have no unresolved review threads or blocking requests.
+
+EGR2 passed scoped gene validation and 42 history tests on its PR and main
+builds; broad suites, all-schema and module checks ran on the merge-group.
+History coverage ran on the PR only. Its DRAFT status and inherited uncited
+research-report advisory remain recorded. EHMT1 passed scoped gene, history
+and family checks on main, with broad suites, schemas and modules on the
+merge-group; unresolved scientific contexts and optional suggestions remain.
+
+EGFR's immediate main build [39531434283](https://github.com/ai4curation/ai-gene-review/actions/runs/39531434283)
+was cancelled during checkout by a higher-priority main request. Its aggregate
+failed because dependencies were cancelled; this is not a successful run.
+The immediate tracker successor [`81298ef287da`](https://github.com/ai4curation/ai-gene-review/commit/81298ef287dae81220ae068a10a524f17628bf7d)
+changed only eight project, render and history paths, preserving all 35 EGFR
+payload paths and 18 runtime/workflow roots. Its successful
+[build 39531567708](https://github.com/ai4curation/ai-gene-review/actions/runs/39531567708) ran broad tests and
+history checks but explicitly skipped scoped gene validation. EGFR's exact
+approved-head and actual-merge merge-group checks supply the gene checks;
+successor success is not presented as fresh EGFR validation. The earlier failed
+[merge-group 39526448256](https://github.com/ai4curation/ai-gene-review/actions/runs/39526448256), caused by a
+stale source-report assertion, remains part of the record; the corrected final
+head and merge-group passed.
+
+EGFR remains DRAFT with 1,008 reviewed rows, 41 UNDECIDED annotations, four
+products and one core function. Its 177 advisories comprise 169 generic-binding
+and eight source-context warnings. Completion denotes accepted review delivery,
+not certainty about every annotation. The documentation runs succeeded,
+including the [tracker successor docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39531567710);
+the EGFR/successor docs retained 21 warnings. Documentation success covers
+schema/MkDocs generation and deployment, not fresh individual gene HTML
+rendering or visual inspection.
+
+[Tracker PR #5253](https://github.com/ai4curation/ai-gene-review/pull/5253) landed checkpoint 541 at
+`81298ef287dae81220ae068a10a524f17628bf7d` from approved head `e556803f9ba33e51eac8d98e197940424083881f`. Its eight
+paths were verified exactly; that publication adds no gene credit. This update
+starts from that merged main snapshot rather than modifying the closed PR.
+All 235 historical queue objects and 103 previous completion updates remain
+exact; this is update 104. Prior progress text, including older inventories and
+then-pending gene statements, is preserved as historical evidence.
+
+Current main has 8,473 review files, including 3,103 human reviews.
+1,249 catalogue genes have reviews and 1,627 lack them; 705
+available catalogue reviews remain uncredited. All 2,876 catalogue identities
+and association texts are unchanged; only the three accepted checkboxes change.
+No gene review, cache, runtime file or existing history is modified by this
+checkpoint. The publisher passed eight project frontmatter checks, rendered both project
+pages and validated one new append-only history record. The catalogue render
+reports 1,627 missing-review warnings; the progress render reports none. These
+four source changes, two HTML renders and new history form seven publication paths.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker544-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T024452Z-codex-095029.yaml)
+## Completion checkpoint 545 — 2026-10-21 16:59:33 UTC
+
+**545 complete; 2,331 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only [EIF2B2 #5283](https://github.com/ai4curation/ai-gene-review/pull/5283)
+to the merged 544 checkpoint. The coordinating AI agent accepted the complete
+merge audit; this is not a human maintainer sign-off. Products, follow-up PRs
+and the tracker publication receive no additional gene credit.
+
+Approved head [`184a3beedb18`](https://github.com/ai4curation/ai-gene-review/commit/184a3beedb1835da7e15d39e63b88a8c1bb5aaa9)
+merged at [`078fd7636b0a`](https://github.com/ai4curation/ai-gene-review/commit/078fd7636b0acb0abaef497d65b76bee22a485a9)
+on 2026-10-21 at 06:27:56 UTC. All 25 approved paths, blobs and modes equal
+the complete merge delta and this later pinned main snapshot; no extra path was
+introduced. The current [approval](https://github.com/ai4curation/ai-gene-review/pull/5283#pullrequestreview-5595264244)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5283#issuecomment-6308625352)
+have no unresolved threads or blocking requests.
+
+The actual [merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39553679049)
+passed strict EIF2B2 validation, all gene-schema and module checks, 14,749
+history records, 42 history tests and family checks. It actually ran the full
+suite: 4,168 tests passed, 268 doctests passed, 12 examples passed, typing and
+lint passed, and 432 agentic plus 19 JavaScript tests passed. Skips and
+dependency warnings remain in the audit.
+
+The actual [main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39555562252)
+passed strict EIF2B2, history and family checks. Change filtering skipped
+the general suite and all-gene/module scopes; the final test job only checked
+upstream conclusions. The [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39555562068)
+successfully built and deployed MkDocs, retaining navigation/dependency
+warnings. This is not a claim of fresh gene HTML visual inspection.
+
+EIF2B2 remains DRAFT with 42 reviewed source rows: 18 ACCEPT, 9 MODIFY,
+8 KEEP_AS_NON_CORE, 4 UNDECIDED and 3 MARK_AS_OVER_ANNOTATED; one core function,
+33 references and no publication quotations. The four accepted validation
+advisories concern generic binding and source-specific action differences.
+Completion means accepted review delivery, not certainty about every annotation.
+Renderer [PR #5285](https://github.com/ai4curation/ai-gene-review/pull/5285)
+is the immediate merge parent; its three approved files remain exact and it
+receives no gene credit.
+
+Main advanced through 1,212 unrelated paths after the merge audit. A bounded
+comparison preserves all 25 EIF2B2 and three renderer paths exactly; it supplies
+no additional gene credit or new CI claims. The inventory below is freshly
+recounted from that successor.
+
+This update starts from main `613523bf19bba276b9ea72840a06c56e606897f2`, with the seven
+checkpoint-544 publication paths inherited from merged [tracker #5271](https://github.com/ai4curation/ai-gene-review/pull/5271).
+All 235 historical queue objects and 104 previous completion updates remain
+exact; this is update 105. Previous progress text remains byte-for-byte intact.
+All 2,876 catalogue identities and association texts are unchanged; only the
+EIF2B2 checkbox changes.
+
+The pinned inventory has 8,550 review files, including 3,109 human reviews.
+1,252 catalogue genes have reviews and 1,624 lack them; 707
+available catalogue reviews remain uncredited. Four source changes, two
+generated project pages and one new append-only history record form the
+publication scope. No gene, source cache, runtime or prior history is edited.
+
+The publisher passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,624 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker545-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T170052Z-codex-877798.yaml)
+## Completion checkpoint 546 — 2026-10-21 17:57:11 UTC
+
+**546 complete; 2,330 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only [EIF2B3 #5284](https://github.com/ai4curation/ai-gene-review/pull/5284)
+to merged checkpoint 545. The coordinating AI agent accepted the complete
+merge audit and terminal main addendum; this is not a human maintainer sign-off.
+Products, follow-up PRs and tracker publications receive no additional credit.
+
+Approved head [`39624d66898c`](https://github.com/ai4curation/ai-gene-review/commit/39624d66898c4d816dc4f92d2ceceedf0a3a5894)
+merged at [`06bb22ebd22c`](https://github.com/ai4curation/ai-gene-review/commit/06bb22ebd22c7ff13472ac27d3a2016c938c2d73)
+on 2026-10-21 at 17:24:29 UTC. All 20 approved paths, blobs and modes equal
+the complete merge delta and remain exact on the pinned main snapshot. The
+current [approval](https://github.com/ai4curation/ai-gene-review/pull/5284#pullrequestreview-5596119912)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5284#issuecomment-6310142286)
+have no unresolved threads or blocking requests. Advisory suggestions remain
+recorded with their original scope.
+
+The actual [merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39641181545)
+passed strict EIF2B3 validation, all gene-schema and module checks, 14,895 history
+records, 42 history tests and family checks. It actually ran the full suite:
+4,176 tests passed, 268 doctests passed, 12 examples passed, typing and lint
+passed, and 432 agentic plus 19 JavaScript tests passed. Skips, dependency
+warnings and unresolved corpus diagnostics remain in the audit.
+
+The actual [main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39643518333)
+passed strict EIF2B3, history and family checks. Change filtering skipped
+the general suite and all-gene/module scopes; the final test job only checked
+upstream conclusions. The [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39643518280)
+successfully built and deployed MkDocs, retaining navigation/dependency warnings.
+This is not a claim of fresh gene HTML visual inspection.
+
+EIF2B3 has computed status COMPLETE with 34 reviewed source rows: 21 ACCEPT,
+5 MODIFY, 4 KEEP_AS_NON_CORE, 3 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED;
+three natural products, one core function and no publication quotations.
+Completion records accepted review delivery; the three unresolved source
+judgments remain visible. The strict gene validation returned no annotation
+warnings. The tracker publication adds no scientific decision or gene credit.
+
+This update starts from main `31717524f1710d19c5f8b22c5418f37b9e08b6eb`, whose seven checkpoint-545
+publication paths equal the approved payload of merged [tracker #5313](https://github.com/ai4curation/ai-gene-review/pull/5313).
+All 235 historical queue objects and 105 previous completion updates remain
+exact; this is update 106. Previous progress text remains byte-for-byte intact.
+All 2,876 catalogue identities and association texts are unchanged; only the
+EIF2B3 checkbox changes.
+
+The pinned inventory has 8,551 review files, including 3,110 human reviews.
+1,253 catalogue genes have reviews and 1,623 lack them; 707
+available catalogue reviews remain uncredited. Four source changes, two generated
+project pages and one new append-only history record form the publication scope.
+No gene, source cache, runtime or prior history is edited.
+
+The publisher passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,623 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker546-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T180246Z-codex-d35b4c.yaml)
+## Completion checkpoint 547 — 2026-10-21 18:55:39 UTC
+
+**547 complete; 2,329 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only [EIF2B4 #5301](https://github.com/ai4curation/ai-gene-review/pull/5301)
+to merged checkpoint 546. The coordinating AI agent accepted the complete
+merge audit and terminal main addendum; this is not a human maintainer sign-off.
+Products, follow-up PRs and tracker publications receive no additional credit.
+
+Approved head [`566979dc1095`](https://github.com/ai4curation/ai-gene-review/commit/566979dc1095190b989461deecd3fd832e7bca5a)
+merged at [`538ebfa38cf7`](https://github.com/ai4curation/ai-gene-review/commit/538ebfa38cf7bded4389af18fceab0fbccec61fa)
+on 2026-10-21 at 18:28:09 UTC, with actual parent `31717524f1710d19c5f8b22c5418f37b9e08b6eb`.
+All 19 approved paths, blobs and modes equal the complete merge delta and
+remain exact on the pinned main snapshot. The current
+[approval](https://github.com/ai4curation/ai-gene-review/pull/5301#pullrequestreview-5604007982)
+and [detailed review](https://github.com/ai4curation/ai-gene-review/pull/5301#issuecomment-6322784586)
+have no unresolved threads or blocking requests.
+
+The actual [merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39650395859)
+passed strict EIF2B4 validation, all gene-schema checks, 699 module checks,
+14,900 history records, 42 history tests and 715 family checks. It actually ran
+the full suite: 4,176 tests, 268 doctests, 12 examples, typing, lint, 432 automation
+Python tests and 19 JavaScript tests passed. Skips, dependency warnings and an
+ignored destructor error remain disclosed in the audit; the jobs succeeded.
+
+The actual [main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39652986406)
+passed strict gene, history and family validation. Change filtering skipped the
+general suite; the final test job checked upstream conclusions. Strict gene
+validation retains 10 advisories: nine supported generic-binding policy warnings
+and one inherited Falcon quotation mismatch. The existing quoted text was
+preserved. The [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39652986498)
+successfully built and deployed MkDocs, with navigation/dependency warnings.
+This is not a claim of fresh gene HTML visual inspection.
+
+The accepted review preserves 53 source objects: 49 active and four retired
+contexts. Its actions are 21 ACCEPT, 13 MODIFY, 14 KEEP_AS_NON_CORE,
+2 UNDECIDED and 3 MARK_AS_OVER_ANNOTATED. It records three natural products,
+one core function and 57 inherited quotations; no new quotation was added.
+Completion records accepted review delivery, with unresolved judgments visible.
+
+This update starts from main `d2587858a920bf0ebb731c6c8e9cb74036c4d5db`. Its seven checkpoint-546
+publication paths equal the approved payload of merged
+[tracker #5316](https://github.com/ai4curation/ai-gene-review/pull/5316), merge `d2587858a920bf0ebb731c6c8e9cb74036c4d5db`.
+All 235 historical queue objects and 106 previous completion updates remain
+exact; this is update 107. Previous progress text remains byte-for-byte intact.
+All 2,876 catalogue identities and association texts are unchanged; only the
+EIF2B4 checkbox changes. The project instructions also document the standing
+campaign convention of adding no new publication quotations, while preserving
+inherited quotations and requiring verifiable sources and access limits.
+
+The pinned inventory has 8,551 review files, including 3,110 human reviews.
+1,253 catalogue genes have reviews and 1,623 lack them;
+706 available catalogue reviews remain uncredited. Four source changes,
+two generated project pages and one new append-only history record form the
+publication scope. No gene, source cache, runtime or prior history is edited.
+
+The publisher passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,623 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker547-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T185556Z-codex-be2135.yaml)
+
+## Completion checkpoint 549 — 2026-10-21 19:46:21 UTC
+
+**549 complete; 2,327 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds [EIF2S3 #5314](https://github.com/ai4curation/ai-gene-review/pull/5314)
+and [EIF3F #5315](https://github.com/ai4curation/ai-gene-review/pull/5315) to merged checkpoint 547.
+The coordinating AI agent accepted their merge audits; this is not a human
+maintainer sign-off. Products, follow-ups and trackers receive no extra credit.
+
+EIF2S3 approved head `d7140993c185a1dea61187562e05358af517377a` merged at `4d4b0ea1e8ede4bd5ce45128123c83b6d529ff39`
+with actual parent `c5d0b8f3d69bb45714a85a7734651e317b93ece0`. All 31 approved paths, blobs and modes
+match the actual merge delta and pinned main. The current formal approval and
+detailed review remain unchanged with no unresolved threads. Its
+[merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39656094067) ran
+4,176 tests, 268 doctests, 12 examples, typing, lint and 432 Python/19 JavaScript
+automation tests successfully. Its [actual main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39659047032)
+passed strict EIF2S3 validation, 14,905 history records, 42 history tests and 715
+family checks. Main change filtering skipped the general suite. The 33 strict
+advisories comprise 32 supported generic-binding warnings and one optional
+propagation-metadata warning. Its [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39659046970)
+built and deployed successfully. The review retains 81 sources from 82 raw
+records, two cores, one 472-residue product and zero new quotations.
+
+EIF3F approved head `18c2b74730af07e228e4f60ac58903e4075956e2` merged at `c5d0b8f3d69bb45714a85a7734651e317b93ece0`
+with actual parent `d2587858a920bf0ebb731c6c8e9cb74036c4d5db`. All 29 approved paths, blobs and modes
+match the actual merge delta and pinned main. Its formal approval and detailed
+review remain unchanged with no unresolved threads. Its
+[merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39655244958) passed
+the same full test suite, strict EIF3F validation, 14,903 history records,
+42 history tests and 715 family checks. Its [documentation run](https://github.com/ai4curation/ai-gene-review/actions/runs/39658205474)
+built and deployed successfully.
+
+EIF3F's [actual main run](https://github.com/ai4curation/ai-gene-review/actions/runs/39658205293)
+was cancelled because a higher-priority main build was waiting. Strict EIF3F
+validation passed with 49 supported generic-binding advisories and 14,903 history
+records were checked, but the history pytest step was interrupted and the
+aggregate failed. The general suite was filtered out. None of those incomplete
+or skipped checks is reported as executed success.
+
+The successful immediate EIF2S3 descendant preserves all 29 EIF3F payloads,
+388 protected positions, 316 runtime pins and 14 complete validation-runtime
+roots. This is the campaign's documented cancelled-main bridge convention;
+it does not reclassify the cancelled run or claim that EIF2S3's strict step
+revalidated EIF3F. EIF3F retains 119 sources: 30 ACCEPT, 36 MODIFY,
+52 KEEP_AS_NON_CORE and one UNDECIDED; two cores, one 357-residue product and
+zero new quotations. Review completion leaves that uncertainty visible.
+
+This update starts from main `bf2af2d12324277c67537afb3e8f55cb96a21c57`. All seven predecessor tracker paths
+match approved [tracker #5318](https://github.com/ai4curation/ai-gene-review/pull/5318), merge `bf2af2d12324277c67537afb3e8f55cb96a21c57`.
+All 235 queue objects and 107 previous completion updates remain exact; this is
+update 108. Previous progress text remains byte-for-byte intact. All 2,876
+catalogue identities and association texts remain unchanged; only EIF2S3 and
+EIF3F checkboxes change. The existing quotation convention now explicitly
+attributes its authority to the user's standing instruction.
+
+The pinned inventory has 8,553 reviews, including 3,112 human reviews.
+1,255 catalogue genes have reviews; 1,621 lack them, and
+706 available catalogue reviews remain uncredited. Three source files,
+three generated files and one append-only history record form the publication
+scope. No gene, source cache, runtime or previous history is edited.
+
+The publisher passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,621 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker549-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T194705Z-codex-08c9fb.yaml)
+
+## Completion checkpoint 552 — 2026-10-21 22:15:21 UTC
+
+**552 complete; 2,324 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds ELAC2, ELF4 and ELANE to merged checkpoint 549.
+The coordinating AI agent accepted their exact-head reviews and merge audits;
+this is not a human maintainer sign-off. Products, follow-ups and tracker
+publications receive no extra credit. ELN and ELOVL4 receive no credit here.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths at merge |
+| --- | --- | --- | --- | --- |
+| [ELAC2 #5317](https://github.com/ai4curation/ai-gene-review/pull/5317) | [`75b47d953f5e`](https://github.com/ai4curation/ai-gene-review/commit/75b47d953f5e4bdc8fed2bcd3ba5f3ecb66272d9) | [`1abe4bf2c030`](https://github.com/ai4curation/ai-gene-review/commit/1abe4bf2c0309ac3bad7500e5ecb6701e7cfe344) | `0d5a010702a4` | 32/32 |
+| [ELF4 #5321](https://github.com/ai4curation/ai-gene-review/pull/5321) | [`e1de9ec5ca9e`](https://github.com/ai4curation/ai-gene-review/commit/e1de9ec5ca9e2db9320596a3643819c74ff15270) | [`44cdc2dbe050`](https://github.com/ai4curation/ai-gene-review/commit/44cdc2dbe05063e8eae9eb3716464768704da817) | `1abe4bf2c030` | 25/26 |
+| [ELANE #5320](https://github.com/ai4curation/ai-gene-review/pull/5320) | [`db127beeec42`](https://github.com/ai4curation/ai-gene-review/commit/db127beeec420bdbd587bb5dae419ae3eb6f1623) | [`cd7e12584376`](https://github.com/ai4curation/ai-gene-review/commit/cd7e12584376e4fff47f4e9b13d8bd20c967a7b6) | `44cdc2dbe050` | 51/52 |
+
+ELAC2 preserves all 32 approved path modes/OIDs, including its 29 science
+payloads. ELF4 preserves 25 of 26 paths exactly; its aggregate report contains
+all 18 parent rows plus two exact ELF4 rows, for 20. Relative to its approved
+18-row report, the two ELAC2 parent rows are retained. ELANE preserves 51 of
+52 paths exactly; its aggregate contains all 20 parent rows plus its exact
+query row, for 21. Relative to its approved 17-row report, four ELAC2/ELF4
+parent rows are retained. These are explicit report-union exceptions, not
+claims that every aggregate blob equals its approved head. All three merges'
+other payloads remain exact at the pinned main, and all report records are preserved.
+
+The accepted CI evidence is linked separately for each event:
+
+- ELAC2: [merge group](https://github.com/ai4curation/ai-gene-review/actions/runs/39676861125), [actual main](https://github.com/ai4curation/ai-gene-review/actions/runs/39679097253) and [docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39679097289).
+- ELF4: [merge group](https://github.com/ai4curation/ai-gene-review/actions/runs/39678825030), [actual main](https://github.com/ai4curation/ai-gene-review/actions/runs/39681455350) and [docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39681455419).
+- ELANE: [merge group](https://github.com/ai4curation/ai-gene-review/actions/runs/39680202603), [actual main](https://github.com/ai4curation/ai-gene-review/actions/runs/39682864328) and [docs](https://github.com/ai4curation/ai-gene-review/actions/runs/39682864226).
+
+All three merge groups passed the full suite: 4,176 Python tests (one skipped,
+84 deselected), 268 doctests (37 skipped), 12 examples, typing, lint, 432
+Python automation tests and 19 JavaScript tests. Their actual-main builds
+passed scoped strict validation, history validation/tests and family checks;
+the broad main suites were skipped by path filters. Aggregate jobs checked
+job conclusions and did not execute these tests. ELAC2 retains one accepted
+advisory; ELANE retains 11, including ten generic-binding policy warnings and
+one source-specific exosome warning. The actual log governs that count even
+though reviewer prose omitted the latter. Docs workflows built and pushed
+gh-pages successfully; no independent live-page or pixel inspection is claimed.
+
+The merged reviews retain ELAC2's 36 sources/four products/one core, ELF4's
+42 sources/one product/one core and ELANE's 102 sources/one product/one core.
+All add zero publication quotations. ELAC2 and ELANE keep computed DRAFT
+status; ELF4 is COMPLETE. ELAC2 retains one UNDECIDED annotation, ELF4 four,
+and ELANE five. Campaign completion records accepted merged
+review work and does not relabel those uncertainties as resolved.
+
+The baseline is main `cd7e12584376e4fff47f4e9b13d8bd20c967a7b6`. All seven predecessor tracker paths match approved
+[tracker #5319](https://github.com/ai4curation/ai-gene-review/pull/5319), head `6749bce965d6f56e161bb620a9b5986d57495b42`
+and actual merge `0d5a010702a4fcbf92209dc76eda9f22a8e1a81b`. All 235 queue objects and 108 prior completion
+updates remain exact; this is update 109. Previous progress bytes and all
+2,876 catalogue identities/association texts are preserved. Only ELAC2,
+ELF4 and ELANE checkboxes change; the existing quotation convention is unchanged.
+
+The pinned inventory contains 8,556 reviews, including 3,115 human reviews.
+1,258 catalogue genes have files; 1,618 lack files and
+706 available reviews remain uncredited. Three source files, the queue
+mirror, two rendered pages and an append-only history record form the
+publication scope. No gene, source cache, runtime or prior history is
+changed by this tracker.
+The publication passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,618 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker552-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T223102Z-codex-2f1a51.yaml)
+
+## Completion checkpoint 553 — 2026-10-21 23:25:39 UTC
+
+**553 complete; 2,323 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only [ELN #5322](https://github.com/ai4curation/ai-gene-review/pull/5322)
+to merged checkpoint 552. The coordinating AI agent accepted the exact-head
+review and merge audit; this is not a human maintainer sign-off. Products,
+follow-ups, private drafts and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths at merge |
+| --- | --- | --- | --- | --- |
+| [ELN #5322](https://github.com/ai4curation/ai-gene-review/pull/5322) | [`2fd23fe02242`](https://github.com/ai4curation/ai-gene-review/commit/2fd23fe02242dc65c995cb869bfed64b9f76f23b) | [`c4275075822f`](https://github.com/ai4curation/ai-gene-review/commit/c4275075822f1cb9e9e28ae49b90090793bdf2f7) | `cd7e12584376` | 31/31 |
+
+All 31 approved path modes and blobs match the actual ELN merge. Its aggregate
+source-defect report preserves 21 parent records and adds one exact conditional
+ELN/MGI query, for 22 records. The tracker successor changes no ELN payload.
+The review preserves 48 source annotations and 13 natural products, with two
+core functions and zero new publication quotations. Decisions are 9 ACCEPT,
+17 MODIFY and 22 KEEP_AS_NON_CORE. Its computed status remains DRAFT with five
+accepted advisories; completion does not suppress these qualifications.
+
+The [merge-group build](https://github.com/ai4curation/ai-gene-review/actions/runs/39687733885)
+executed the full suite: 4,176 Python tests (one skipped, 84 deselected),
+268 doctests (37 skipped), 12 examples, typing, lint, 432 Python automation
+tests and 19 JavaScript tests. The [actual-main build](https://github.com/ai4curation/ai-gene-review/actions/runs/39689841584)
+passed strict gene validation, 14,915 history records, 42 history tests and
+715 family checks. Its broad suite was filtered, not executed again.
+Aggregate jobs checked conclusions rather than running these tests.
+The [documentation workflow](https://github.com/ai4curation/ai-gene-review/actions/runs/39689841571)
+built and pushed gh-pages successfully; no independent live-page inspection is claimed.
+
+The pinned inventory at main `7f1f8f7147f165a688c45300b0da8052adfdadf1` contains 8,557 reviews, including 3,116
+human reviews. Of the 2,876 catalogue genes, 1,259 have review files and 1,617
+lack them; 706 available reviews remain uncredited. All seven predecessor
+[tracker #5324](https://github.com/ai4curation/ai-gene-review/pull/5324) paths
+match its approved head `797605851a52befe7c870379624d1a16b1ab0714` at the merge.
+All 235 queue objects, 109 earlier completion updates and earlier progress
+bytes remain exact. This is update 110; only the ELN checkbox changes, and all
+2,876 catalogue identities and association texts are preserved.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. It changes no gene review,
+source cache, runtime or earlier history. ELOVL4 and ELP2 remain uncredited.
+The publication passed eight project frontmatter checks, rendered both project
+pages and validated the appended history record. The catalogue render reports
+1,617 missing-review warnings; the progress render reports none.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker553-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T232923Z-codex-8fec8a.yaml)

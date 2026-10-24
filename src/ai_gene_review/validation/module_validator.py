@@ -25,7 +25,9 @@ It also enforces **bundle-scoped conformance**: any node declaring
 ``conforms_to`` a template motif is checked (via ``module_qc``) so that an
 ``error``-severity mismatch -- a wrong/missing tier, a broken relay topology,
 or an unresolvable template -- blocks validation, while declared
-``WITH_DEVIATIONS`` deviations surface as advisory warnings.
+``WITH_DEVIATIONS`` deviations surface as advisory warnings. Likewise every
+``module_ref`` must resolve, must not form a cycle, and its node must not carry
+its own annotons, parts or variant sets.
 
 For direct terms in slots whose GO aspect is known, this validator also checks
 the expected GO branch: molecular-function slots (``function`` and
@@ -103,7 +105,9 @@ from ai_gene_review.validation.supporting_text import (
 )
 
 # A resolver answers: given a CURIE, return (status, primary_label, aliases).
-# status is "ok" when the id resolved, "not_found" when the ontology was
+# status is "ok" when the id resolved, "ok_no_aliases" when it resolved but the
+# ontology source cannot list synonyms (e.g. the OLS adapter), so only the
+# primary label is known, "not_found" when the ontology was
 # consulted but the id is absent, and "unavailable" when the ontology itself
 # could not be loaded/queried (e.g. transient download failure) - the latter is
 # advisory so CI does not go red on flaky ontology fetches. Implemented as a
@@ -1487,6 +1491,14 @@ def validate_terms(
                 f"the {where} quotes the retired label verbatim, which is "
                 f"allowed when the entry documents the retirement"
             )
+        if err and status == "ok_no_aliases":
+            # The ontology source cannot list synonyms, so a non-primary label
+            # may be a synonym: advisory, as it was before ids resolved here.
+            warnings.append(
+                f"{err} (synonyms unavailable from this ontology source; "
+                f"label not validated against synonyms)"
+            )
+            continue
         if err:
             errors.append(err)
 
@@ -1719,7 +1731,14 @@ def _build_oak_resolver(
             # entity_aliases includes synonyms; tolerate adapters lacking it.
             alias_fn = getattr(adapter, "entity_aliases", None)
             if callable(alias_fn):
-                aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                try:
+                    aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                except NotImplementedError:
+                    # e.g. the OLS adapter has no alias map. The id and its
+                    # primary label did resolve, so do not report the ontology
+                    # as unavailable; but synonyms are unknown, so a label that
+                    # differs from the primary may still be a valid synonym.
+                    return ("ok_no_aliases", primary, set())
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())
@@ -1919,6 +1938,7 @@ def validate_module_file(
     conformance_errors, conformance_warnings = validate_conformance(doc, path.parent)
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
+    errors.extend(validate_module_refs(doc, path.parent, path.stem))
 
     # Reaction chaining: advisory only (never blocks). A `chaining_status`
     # override on a connection acknowledges a known gap and suppresses its
@@ -2239,7 +2259,7 @@ def validate_feedback_loops(doc: object) -> List[str]:
 
 
 def validate_executable_models(
-    doc: object, repo_root: Path = Path(".")
+    doc: object, repo_root: Path
 ) -> Tuple[List[str], List[str]]:
     """Check ``activation_logic`` and the ``executable_models`` a module declares.
 
@@ -2311,6 +2331,23 @@ def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], Lis
         else:
             warnings.append(message)
     return errors, warnings
+
+
+def validate_module_refs(doc: object, modules_dir: Path, self_stem: str) -> List[str]:
+    """Return blocking errors for unresolved, cyclic or impure ``module_ref`` nodes.
+
+    References are resolved, like conformance templates, from the document's
+    own directory; ``self_stem`` lets a reference back to it count as a cycle.
+    """
+    from ai_gene_review.module_qc import module_ref_violations
+
+    if not isinstance(doc, dict):
+        return []
+    return [
+        f"module_ref [{violation['node_id']} -> {violation['module_ref']}]: "
+        f"{violation['message']}"
+        for violation in module_ref_violations(doc, modules_dir, self_stem)
+    ]
 
 
 def main(argv: Optional[List[str]] = None) -> int:
