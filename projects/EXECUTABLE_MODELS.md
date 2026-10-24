@@ -212,7 +212,7 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [x] Schema: `activation_logic` (declarative AND/OR/NOT over regulators) on nodes and annotons
 - [x] Schema: `executable_models` with typed models, derivation, scenarios and expectations
 - [x] Translator honours `activation_logic`; consistency checks against declared connections
-- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon
+- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon (opt-in: the test skips unless `biodivine-aeon` is installed, which CI does not do)
 - [x] Scenario expectations checked in module validation (blocking)
 - [x] ERK cascade: derived Boolean model with six curated scenarios; BBM-070 as external model
 - [x] Methionine cycle: Maud kinetic model as external model
@@ -224,8 +224,8 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [ ] Node-level `model_associations` for external model variables
 - [ ] First constraint-based model type
 - [ ] First agent-based model, following the dismech layout
-- [ ] Payload JSON Schema and `module-to-bnet --all --json` ([architecture](EXECUTABLE_MODELS/architecture.md) step 2)
-- [ ] Shared conformance fixtures run by every implementation (architecture step 4)
+- [ ] Payload JSON Schema and `module-to-bnet --all --json` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
+- [ ] Shared conformance fixtures run by every implementation (architecture, Order step 2)
 
 # NOTES
 

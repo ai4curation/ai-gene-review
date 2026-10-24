@@ -11,7 +11,9 @@ Part of [EXECUTABLE_MODELS](../EXECUTABLE_MODELS.md).
 
 Two viewers now run module-derived Boolean models: this repository's
 [model pages](../../models/index.html) and the **Dynamics** tab on AmiGO 3 module
-pages (merged in [cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74)). Both are
+pages (merged in [cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74); that
+repository is private for now, so the AmiGO 3 links and figures on this page are not yet
+publicly checkable). Both are
 interactive: you can perturb steps, run curated scenarios and check expectations. They
 were written separately, so the code is duplicated. This page sets out what depends on
 what, which duplication matters, and where each piece should end up.
@@ -37,14 +39,17 @@ the duplication to remove.
 connected components of the state graph). Duplicating it is cheap and low-risk, as
 long as the copies are tested against each other.
 
-Two facts make consolidation easy:
+Two facts make consolidation easier:
 
 - **The data contract already exists.** `module_dynamics.boolean_model_payload()`
   emits nearly the same JSON as AmiGO 3's `/api/boolean`: the base network, plus for
   each scenario its settings, rule overrides and removed edges.
-- **The translator and engine depend on almost nothing.** `module_boolean`,
-  `module_dynamics` and the helpers they import need only `pyyaml` and the standard
-  library.
+- **The translator and engine depend on very little.** `module_boolean` and
+  `module_dynamics` themselves need only `pyyaml` and the standard library. The
+  exception is the one-line `as_list` helper, which `module_boolean` and
+  `module_notation` import from `render_modules`; that module in turn imports `jinja2`
+  and `module_qc`. Moving `as_list` into a leaf module is a prerequisite for the
+  package extraction below.
 
 ## Plan
 
@@ -57,15 +62,17 @@ Two facts make consolidation easy:
      also run this repository's own translator, through the command above, and store
      the payloads. Translator and data then always come from the same commit, so they
      cannot drift.
-   - **Later:** extract a small `pyyaml`-only package containing `module_boolean` and
-     `module_dynamics`. Do this only when the module schema itself moves out of this
-     repository and gains other consumers, for example GO-CAM tooling. Before then, a
-     pinned package version would lag the data it reads.
+   - **Later:** once `as_list` has moved, extract a small `pyyaml`-only package
+     containing `module_boolean` and `module_dynamics`. Do this only when the module
+     schema itself moves out of this repository and gains other consumers, for example
+     GO-CAM tooling. Before then, a pinned package version would lag the data it reads.
 3. **Engines: reuse in Python, publish one in the browser.**
    - **Python:** validation should use existing tools rather than grow its own engine.
-     `tests/test_module_dynamics.py` already cross-checks the exhaustive search against
-     biodivine-aeon. Networks above the exhaustive limit of 18 variables should go to
-     aeon or mpbn.
+     `tests/test_module_dynamics.py` has a cross-check of the exhaustive search against
+     biodivine-aeon, but it is opt-in: `biodivine-aeon` is not a project or dev
+     dependency, so the test is skipped in CI. Making it run there belongs with the
+     conformance fixtures (Plan step 4). Networks above the exhaustive limit of 18
+     variables should go to aeon or mpbn.
    - **Browser:** we have not found a maintained JS library that does asynchronous
      attractors and scenario checks on `.bnet` input; check before building. If none
      exists, extract one dependency-free file of about 150 lines, with `.bnet` or the
@@ -73,9 +80,10 @@ Two facts make consolidation easy:
      engine could also run external models, such as GINsim or BBM exports.
 4. **Shared conformance fixtures, run in both repositories' CI.** Keep a small set
    here: module YAML, its expected `.bnet`, and each scenario's expected verdict. Every
-   implementation, in either language, runs it. Drift then fails a build instead of
-   going unnoticed. AmiGO 3's `tests/test_boolean.py` already does a two-module version
-   of this against `module-to-bnet` output.
+   implementation, in either language, runs it, and the aeon cross-check runs with
+   them. Drift then fails a build instead of going unnoticed. AmiGO 3's
+   `tests/test_boolean.py` already does a two-module version of this against
+   `module-to-bnet` output.
 5. **Viewers specialise.**
    - The model pages here stay static and light, part of the published site with no
      server.
@@ -87,10 +95,11 @@ Two facts make consolidation easy:
 
 1. ~~Merge [amigo3#74](https://github.com/cmungall/amigo3/pull/74), which carries the
    port and its parity tests.~~ Merged 2026-10-21.
-2. Here: `module-to-bnet --all --json` plus the payload JSON Schema.
-3. AmiGO 3 build consumes the payload, with the port kept as a fallback for one
+2. Conformance fixtures here, run in both repositories' CI. This depends on nothing
+   else, and every later step then lands with a check underneath it.
+3. Here: `module-to-bnet --all --json` plus the payload JSON Schema.
+4. AmiGO 3 build consumes the payload, with the port kept as a fallback for one
    release.
-4. Conformance fixtures here, run in both repositories' CI.
 5. Extract the JS engine and point `executable_model.html.j2` at it.
 6. Retire the AmiGO 3 port.
 
