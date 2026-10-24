@@ -174,6 +174,7 @@ def test_endosomal_trafficking_rab7_loss_boosts_cytosolic_escape() -> None:
 
     assert wt.final_counts["ehd1_recycling_branch"] > wt.final_counts["cytosolic_cargo_escape"]
     assert wt.final_counts["ctsd_lysosomal_degradation"] > wt.final_counts["cytosolic_cargo_escape"]
+    # Regression lock on uncalibrated default rates (DEFAULT_BASE_RATE=0.45, COMPETING_INHIBITOR_FACTOR=0.25)
     assert wt.final_counts["cytosolic_cargo_escape"] == 10
 
     assert rab7_ko.final_counts["ctsd_lysosomal_degradation"] == 0
@@ -219,6 +220,10 @@ def test_endosomal_trafficking_rab7_loss_boosts_cytosolic_escape() -> None:
             {"expected_active": ["nonexistent_stage"]},
             "expected_active names nonexistent_stage, which is not a model stage",
         ),
+        (
+            {"expected_outcome_order": ["ehd1_recycling_branch"]},
+            "expected_outcome_order requires at least 2 stages to compare",
+        ),
     ],
 )
 def test_abm_scenario_failure_diagnostics(
@@ -232,7 +237,7 @@ def test_abm_scenario_failure_diagnostics(
 
 
 def test_removed_connections_preserves_stage_topology_and_expands_containers() -> None:
-    doc = {
+    doc: dict[str, Any] = {
         "id": "MODULE:container_trafficking",
         "title": "Container Trafficking",
         "module": {
@@ -301,7 +306,7 @@ def test_removed_connections_preserves_stage_topology_and_expands_containers() -
 
 
 def test_omitted_regulators_and_activation_logic_in_abm() -> None:
-    doc = {
+    doc: dict[str, Any] = {
         "id": "MODULE:logic_trafficking",
         "title": "Logic Trafficking",
         "module": {
@@ -354,7 +359,7 @@ def test_omitted_regulators_and_activation_logic_in_abm() -> None:
 
 
 def test_oscillating_regulator_loop_reports_non_convergence() -> None:
-    doc = {
+    doc: dict[str, Any] = {
         "id": "MODULE:osc_reg",
         "title": "Oscillating Regulators",
         "module": {

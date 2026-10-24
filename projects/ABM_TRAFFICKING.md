@@ -2,7 +2,8 @@
 title: "Agent-Based Modeling of Intracellular Trafficking"
 maturity: IN_PROGRESS
 tags: [PIPELINE, BIOLOGY_DOMAIN]
-species: [human]
+species: [human, mouse]
+genes: [TFRC, CLTC, AP2M1, ATP6V1A, EHD1, TSG101, RAB7A, Rab7, CTSD, APOB, LDLR, PCSK9, LIPA]
 ---
 
 # Agent-Based Modeling of Intracellular Trafficking
@@ -36,7 +37,7 @@ Intracellular trafficking poses a fundamentally different question: **given a fi
 
 In `src/ai_gene_review/module_abm.py`, `module_to_abm()` compiles a `ModuleReview` YAML document directly into an `ABMModel` with no external rule files:
 
-1. **Compartments (`ABMStage`)**: Every leaf activity (`AtomicActivity`) or complex (`ProteinComplex`) that participates in at least one resolved module connection (with containers expanded to their constituent leaves via `PART_OF`, or all leaves if the module has no connections) becomes a discrete stage.
+1. **Compartments (`ABMStage`)**: Every leaf activity (`AtomicActivity`) or complex (`ProteinComplex`) that participates in at least one resolved module connection (with containers expanded to their constituent leaves via `PART_OF`) becomes a discrete stage.
    - **Entry stages**: Stages with outgoing cargo flow (`PROVIDES_INPUT_FOR` / `CAUSES` / `HAS_INPUT`) and no incoming cargo flow (e.g., `tfrc_cargo_binding` or `apob_ligand`; falling back to the first flow stage if all flow stages have incoming flow) split the initial cohort of $N = 100$ cargo particles at $t = 0$.
    - **Pure regulators (`is_flow_stage = False`)**: Stages that only emit or receive regulatory edges (`POSITIVELY_REGULATES` / `NEGATIVELY_REGULATES`) and have no incoming or outgoing flow edges (e.g., `pcsk9_degradation` in `ldl_receptor_mediated_endocytosis`) are flagged with `is_flow_stage = False` and `default_active = False`. They act as regulatory switches rather than cargo-holding compartments.
 2. **Flow transitions (`ABMTransition`)**: Every `PROVIDES_INPUT_FOR`, `CAUSES`, or `HAS_INPUT` connection between stages becomes a directed particle transition with a uniform uncalibrated default base rate:
@@ -68,7 +69,7 @@ In `src/ai_gene_review/module_abm.py`, `module_to_abm()` compiles a `ModuleRevie
 
 | Scenario ID | Perturbation (`settings`) | Final Cohort Distribution ($N = 100, T = 24$) | Biological Interpretation |
 |---|---|---|---|
-| `wt_steady_trafficking` | *(none)* | **47%** `ehd1_recycling_branch`, **43%** `ctsd_lysosomal_degradation`, **10%** `cytosolic_cargo_escape` | Baseline endosomal partitioning under uniform default rates: most internalized cargo is recycled or degraded in lysosomes while ~10% escapes to the cytosol (reproducing the qualitative hierarchy of the ~8% hepatic LNP cytosolic escape in [PMID:41814093](https://pubmed.ncbi.nlm.nih.gov/41814093/)). |
+| `wt_steady_trafficking` | *(none)* | **47%** `ehd1_recycling_branch`, **43%** `ctsd_lysosomal_degradation`, **10%** `cytosolic_cargo_escape` | Baseline endosomal partitioning under uniform default rates: most internalized cargo is recycled or degraded in lysosomes while ~10% escapes to the cytosol (consistent with the qualitative pattern of low (~8%) baseline hepatic LNP cytosolic escape in [PMID:41814093](https://pubmed.ncbi.nlm.nih.gov/41814093/)). |
 | `rab7a_loss_lnp_escape` | `escrt_rab7_late_endosome: false` | **53%** `ehd1_recycling_branch`, **47%** `cytosolic_cargo_escape`, **0%** `ctsd_lysosomal_degradation` | **Rab7 loss-of-function ([PMID:41814093](https://pubmed.ncbi.nlm.nih.gov/41814093/))**: Blocking late-endosome/lysosome maturation prevents lysosomal degradation and lifts competitive sequestration, increasing productive cytosolic cargo escape from 10% to 47% in the uncalibrated model. |
 | `clathrin_endocytosis_block` | `clathrin_ap2_internalization: false` | **100%** `tfrc_cargo_binding` | Clathrin/AP-2 Pitstop-2 or `AP2M1` Y286A block traps 100% of receptor-bound cargo at the cell surface. |
 | `vatpase_acidification_block` | `early_endosome_acidification: false` | **100%** `clathrin_ap2_internalization` | Bafilomycin A1 / V-ATPase block prevents luminal acidification and ligand uncoupling, arresting cargo in nascent endocytic vesicles. |

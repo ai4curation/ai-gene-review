@@ -168,6 +168,7 @@ class ABMModel:
     terminal_stages: list[str]
     skipped_connections: list[tuple[str, str, str]] = field(default_factory=list)
     removed_connections: list[tuple[str, str]] = field(default_factory=list)
+    invalid_activation_logic: list[str] = field(default_factory=list)
 
     @property
     def variables(self) -> list[str]:
@@ -436,11 +437,17 @@ def module_to_abm(
                 neg_reg_by_target[tgt].append(src)
 
     logic_by_target: dict[str, dict[str, Any] | None] = {}
+    invalid_logic: list[str] = []
     for eid in variables:
         elem_dict = index.get(eid) or {}
-        logic_by_target[eid] = _normalize_logic_expr(
-            elem_dict.get("activation_logic"), base_flat
-        )
+        raw_logic = elem_dict.get("activation_logic")
+        if raw_logic is not None:
+            norm_logic = _normalize_logic_expr(raw_logic, base_flat)
+            if norm_logic is None:
+                invalid_logic.append(f"{eid}: invalid activation_logic {raw_logic!r}")
+            logic_by_target[eid] = norm_logic
+        else:
+            logic_by_target[eid] = None
 
     stages: list[ABMStage] = []
     for eid in variables:
@@ -533,6 +540,7 @@ def module_to_abm(
         terminal_stages=terminal_stages,
         skipped_connections=skipped,
         removed_connections=sorted(removed_leaf_pairs),
+        invalid_activation_logic=invalid_logic,
     )
 
 
@@ -771,6 +779,9 @@ def _run_abm_scenario_with_sim(
         failures.append(
             f"unsupported connection_type {pred!r} on {raw_src} -> {raw_tgt}"
         )
+    for bad_logic in abm.invalid_activation_logic:
+        if not any(bad_logic in f for f in failures):
+            failures.append(f"invalid activation_logic: {bad_logic}")
 
     stage_ids = set(abm.variables)
     stage_map = abm.stage_map()
@@ -826,6 +837,10 @@ def _run_abm_scenario_with_sim(
             )
 
     order_list = [str(e) for e in as_list(scenario.get("expected_outcome_order"))]
+    if 0 < len(order_list) < 2:
+        failures.append(
+            "expected_outcome_order requires at least 2 stages to compare"
+        )
     unknown_order = [e for e in order_list if e not in stage_ids]
     for eid in unknown_order:
         failures.append(
