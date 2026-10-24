@@ -190,7 +190,7 @@ place genes in pathways.
 
 ## 4. Curated modules
 
-All five modules have family-grounded pan-species ligand steps and pass the schema and module
+All eight modules have family-grounded pan-species ligand steps and pass the schema and module
 validators.
 
 - **[Netrin signaling](../modules/netrin_signaling.yaml)** (*netrin-activated signaling
@@ -234,6 +234,37 @@ validators.
   `GO:0005125` *cytokine activity* and the parent term `GO:0007166` *cell surface receptor
   signaling pathway* (`IDA`, `PMID:12782713`), which is refined via `MODIFY` to `GO:0035691`
   *macrophage migration inhibitory factor signaling pathway*.
+- **[IL-34-CSF1R signaling](../modules/il34_signaling.yaml)** (*interleukin-34-mediated signaling
+  pathway*, `GO:0061514`, and *macrophage colony-stimulating factor signaling pathway*,
+  `GO:0038145`). Three-step pan-species module. Ligand: IL-34 family (`PANTHER:PTHR28606`, PAINT
+  node `PTN002823014`), *cytokine activity* (`GO:0005125`). Receptor: CSF1R subfamily
+  (`PANTHER:PTHR24416:SF47`, PAINT nodes `PTN001230349` and `PTN002814394`), *macrophage
+  colony-stimulating factor receptor activity* (`GO:0005011`). GOA Category C gap resolved in the
+  new human `IL34` gene review: in GOA `IL34` was already annotated to `GO:0038145` (`IBA`) and
+  `GO:0061514` (`IDA`), but its only MF terms were `GO:0005157` (*macrophage colony-stimulating
+  factor receptor binding*, `IBA`/`IDA`/`IMP`) and `GO:0005515` (*protein binding*, `IPI`);
+  `GO:0005157` is modified to `GO:0005125` (*cytokine activity*) per Decision 2.
+- **[IL-21 signaling](../modules/il21_signaling.yaml)** (*interleukin-21-mediated signaling
+  pathway*, `GO:0038114`). Three-step pan-species module. Ligand: IL-21 subfamily
+  (`PANTHER:PTHR14356:SF2`, within `PANTHER:PTHR14356` `INTERLEUKIN-15-RELATED`, PAINT nodes
+  `PTN002682898` and `PTN007637558`), *cytokine activity* (`GO:0005125`). Receptor: IL21R
+  subfamily (`PANTHER:PTHR23037:SF7`, PAINT node `PTN000547990`) paired with the common gamma
+  chain (`IL2RG`, `PANTHER:PTHR23037:SF47`, PAINT nodes `PTN002745476` and `PTN008588077`),
+  *cytokine receptor activity* (`GO:0004896`). GOA Category A gap resolved in the human `IL21`
+  gene review: `IL21` lacked `GO:0038114` and carried the ancestor `GO:0007259` (*cell surface
+  receptor signaling pathway via JAK-STAT*, `NAS`) and `GO:0007165` (*signal transduction*,
+  `NAS`), both refined via `MODIFY` to `GO:0038114`, and its receptor-binding annotations
+  (`GO:0005126`, `GO:0005134`) are modified to `GO:0005125` (*cytokine activity*).
+- **[IL-22 signaling](../modules/il22_signaling.yaml)** (*interleukin-22-mediated signaling
+  pathway*, `GO:0140865`). Three-step pan-species module. Ligand: IL-22 family (`PANTHER:PTHR48488`,
+  PAINT node `PTN009232695`), *cytokine activity* (`GO:0005125`). Receptor: IL22RA1 subfamily
+  (`PANTHER:PTHR20859:SF53`, PAINT node `PTN000466212`) paired with the shared `IL10RB` beta
+  chain (`PANTHER:PTHR20859:SF50`), *cytokine receptor activity* (`GO:0004896`), alongside
+  extracellular decoy antagonism by soluble `IL22RA2` (`PANTHER:PTHR20859:SF51`). GOA Category A
+  gap resolved in the human `IL22` gene review: `IL22` lacked `GO:0140865` and carried only
+  `GO:0007165` (*signal transduction*, `IEA`), refined via `MODIFY` to `GO:0140865`, and
+  `GO:0045518` (*interleukin-22 receptor binding*, `NAS`) is modified to `GO:0005125` (*cytokine
+  activity*).
 
 ## 5. Other curator work in this branch
 
@@ -251,7 +282,19 @@ validators.
   `GO:0007166` (*cell surface receptor signaling pathway*) → `GO:0035691` (*macrophage migration
   inhibitory factor signaling pathway*) and `MODIFY` on `GO:0005126` (*cytokine receptor
   binding*) → `GO:0005125` (*cytokine activity*).
-- **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`):
+- **IL34, IL21, and IL22 gene reviews:** created the human `IL34` review
+  (`genes/human/IL34/IL34-ai-review.yaml`), modifying `GO:0005157` (*macrophage colony-stimulating
+  factor receptor binding*) to `GO:0005125` (*cytokine activity*) and accepting `GO:0038145`
+  (*macrophage colony-stimulating factor signaling pathway*) and `GO:0061514`
+  (*interleukin-34-mediated signaling pathway*); updated `genes/human/IL21/IL21-ai-review.yaml` to
+  modify `GO:0007259` (*cell surface receptor signaling pathway via JAK-STAT*) and `GO:0007165`
+  (*signal transduction*) to `GO:0038114` (*interleukin-21-mediated signaling pathway*) and
+  receptor-binding rows (`GO:0005126`, `GO:0005134`) to `GO:0005125` (*cytokine activity*); and
+  updated `genes/human/IL22/IL22-ai-review.yaml` to modify `GO:0007165` (*signal transduction*) to
+  `GO:0140865` (*interleukin-22-mediated signaling pathway*) and `GO:0045518` (*interleukin-22
+  receptor binding*) to `GO:0005125` (*cytokine activity*).
+- **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
+  `PTHR14356`, `PTHR48488`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
     its IBD should use the ligand-activity term; a new `SUBFAMILY_ONLY` assessment of
     *chemorepellent activity* covers the four Slit subfamilies.
@@ -272,6 +315,28 @@ validators.
     `assessment_reason` and the `FAMILY_WIDE` term assessment for `GO:0035691` (*macrophage
     migration inhibitory factor signaling pathway*) that PAINT should also place `GO:0035691` at
     `PTN000237513`.
+  - `interpro/panther/PTHR28606/PTHR28606-review.yaml`: `SOUND` node assessments on
+    `PTN002823014` (`GO:0005576` *extracellular region*, `GO:0005157` *macrophage
+    colony-stimulating factor receptor binding*, `GO:0008284` *positive regulation of cell
+    population proliferation*, `GO:0045651` *positive regulation of macrophage differentiation*,
+    `GO:0045657` *positive regulation of monocyte differentiation*), noting in `assessment_reason`
+    and the `FAMILY_WIDE` term assessments for `GO:0005125` (*cytokine activity*), `GO:0061514`
+    (*interleukin-34-mediated signaling pathway*), and `GO:0038145` (*macrophage colony-stimulating
+    factor signaling pathway*) that PAINT should also place `GO:0005125` and `GO:0061514` at
+    `PTN002823014`.
+  - `interpro/panther/PTHR14356/PTHR14356-review.yaml`: `SOUND` node assessments on
+    `PTN002682898` (`GO:0001819` *positive regulation of cytokine production*, `GO:0050778`
+    *positive regulation of immune response*) and `PTN007637558` (`GO:0045954` *positive
+    regulation of natural killer cell mediated cytotoxicity*), `FAMILY_WIDE` term assessment for
+    `GO:0005125` (*cytokine activity*) across IL-21 (`PTHR14356:SF2`) and IL-15 (`PTHR14356:SF3`)
+    subfamilies, and `SUBFAMILY_ONLY` term assessments for `GO:0038114` (*interleukin-21-mediated
+    signaling pathway* on `PANTHER:PTHR14356:SF2`) and `GO:0035723` (*interleukin-15-mediated
+    signaling pathway* on `PANTHER:PTHR14356:SF3`).
+  - `interpro/panther/PTHR48488/PTHR48488-review.yaml`: `SOUND` node assessments on
+    `PTN009232695` (`GO:0005125` *cytokine activity*, `GO:0005576` *extracellular region*) and
+    `SCOPE_MISMATCH` on `GO:0050728` (*negative regulation of inflammatory response*), plus a
+    `FAMILY_WIDE` term assessment recommending `GO:0140865` (*interleukin-22-mediated signaling
+    pathway*) at `PTN009232695`.
 - **Corpus count of receptor-specific binding terms** in gene reviews: 820 annotation rows in
   353 reviews (489 ACCEPT, 221 KEEP_AS_NON_CORE, 13 MODIFY), plus 162 core functions. Most common:
   Notch binding (73), integrin binding (67), EGF receptor binding (36), ephrin receptor binding
@@ -285,9 +350,10 @@ validators.
 - Ligand survey, gap check, triage and the relaxed-rule experiment, all rerunnable (below).
 - Research on GO policy (sections 1 and 2) and the decisions in section 2.
 - Modules: `netrin_signaling`, `slit_robo_signaling`, `kit_signaling` (upgraded),
-  `ephrin_receptor_signaling` (upgraded), `mif_signaling`.
-- Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF.
-- Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954.
+  `ephrin_receptor_signaling` (upgraded), `mif_signaling`, `il34_signaling`, `il21_signaling`,
+  `il22_signaling`.
+- Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22.
+- Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488.
 - Report page: [report/ligand-gap-report.html](LIGANDS_IN_SIGNALING/report/ligand-gap-report.html)
   (human, fly and fission yeast snapshot; also published as the Ligand gap report artifact).
   It predates the GPCR scope and the other species, so its counts are lower than section 3.
@@ -295,7 +361,7 @@ validators.
 ### Next steps
 
 1. **More modules**, pan-species, ligand step first, using the decisions in section 2. Queue from
-   the gap check: collagen-DDR, fly Toll-6/7 neurotrophin (spz5, NT1), IL-21, IL-22.
+   the gap check: collagen-DDR, fly Toll-6/7 neurotrophin (spz5, NT1).
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an
