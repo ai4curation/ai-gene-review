@@ -40,3 +40,8 @@ The earlier annotation and validation paragraphs are dated checkpoints. This suc
 The [source guide](EVC2-source-guide.md#review-revision-pathway-membership-and-source-questions) consolidates the repeated species, construct and processing boundaries while individual reasons retain their own evidence chains. A probable source query records the preserved UniProt CC:SUBUNIT N-terminal EFCAB7 wording versus the original mouse C-terminal W-peptide mapping; adjacent IQCE wording remains a distinct mechanistic question. The four-protein assembly and its two stable subcomplexes motivate an expert complex-representation question, without inventing a GO term or universal stoichiometry.
 
 All 14 machine-source objects, all nine prior references, three natural product records and the one core’s molecular-activity gap remain preserved. One reference to the unchanged UniProt file is added. No NEW annotation or quotation is added, consistent with the [standing campaign instruction](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions). Private schema/term checks accompany this proposal; the published COMPLETE status is unchanged here pending canonical validation.
+
+
+## 2026-10-24 — Current published revision status
+
+Published revision `ca963bcd72cf00c3715e3682dc4242256489f955` is DRAFT with one advisory for the supported core-only positive-regulation facet (GO:0045880); earlier COMPLETE paragraphs record historical checkpoints. The UniProt reference retains its verified record identity and the existing explanation of the disputed terminal-region wording; DISPUTED now records that most salient issue in the single-valued correctness field. The signaling core and all annotation decisions remain unchanged.
