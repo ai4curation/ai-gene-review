@@ -309,7 +309,30 @@ D-erythroascorbate biosynthesis.
 - [x] `SCHPO/alo1` - fission-yeast ALO-family member with PomBase NOT IGC rows
   against exact substrate/process transfer; marked `COMPLETE` in PR #5368
 
-## Family 15: Homocysteine/Cysteine Synthases
+## Family 15: Saccharopine Dehydrogenases
+
+`PTHR11133` contains a broad eukaryotic saccharopine-dehydrogenase ancestor,
+`PANTHER:PTN000123605`, that carries `GO:0004753 saccharopine dehydrogenase
+activity` and `GO:0005737 cytoplasm`. PAINT places `GO:0009085 L-lysine
+biosynthetic process` on two separate fungal nodes: `PANTHER:PTN000875292` for
+the NAD(+), L-lysine-forming `LYS1`/`lys3` branch and
+`PANTHER:PTN000875327` for the reciprocal NADP(+), L-glutamate-forming
+`LYS9`/`lys9` branch.
+
+- [ ] `yeast/LYS1` - *S. cerevisiae* peroxisomal/cytosolic
+  LYS1-family enzyme; already `COMPLETE`
+- [ ] `yeast/LYS9` - *S. cerevisiae* LYS9-family saccharopine reductase;
+  already `COMPLETE`
+- [ ] `SCHPO/lys3` - fission-yeast LYS1-family member; already reviewed and
+  ready for this family recheck
+- [ ] `SCHPO/lys9` - fission-yeast LYS9-family member; already reviewed and
+  ready for this family recheck
+- [x] `CANAL/LYS1` - CGD-seeded *Candida albicans* LYS1-family member; drafted
+  in this branch
+- [x] `NEUCR/lys-4` - *Neurospora crassa* LYS1-family member; merged in PR
+  #4644
+
+## Family 16: Homocysteine/Cysteine Synthases
 
 `PTHR43797` is a compact homocysteine/cysteine synthase family. Its fungal
 members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
