@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from ai_gene_review.module_gene_symbols import descriptor_symbol
 from ai_gene_review.render_modules import as_list
 from ai_gene_review.module_logic import (
     And,
@@ -480,9 +481,9 @@ def test_no_curated_module_is_satisfied_by_an_empty_context(curated_corpus):
 # --------------------------------------------------------------------------- #
 
 #: Participant slots `_atom_from_annoton` reads for a symbol or accession. An
-#: ungrounded atom whose participant carries one of these is an engine defect:
-#: the grounding was there to be read and was not read.
-READ_GROUNDING_SLOTS = ("gene", "gene_product")
+#: ungrounded atom whose participant carries a *usable* descriptor in one of
+#: these is an engine defect: the grounding was there to be read and was not.
+READ_GROUNDING_SLOTS = ("gene", "gene_product", "family")
 
 #: Slots the engine knowingly does not read, so an atom grounded only through
 #: one of them is expected to come out ungrounded until that is fixed.
@@ -491,21 +492,52 @@ READ_GROUNDING_SLOTS = ("gene", "gene_product")
 #: any-of versus all-of question (a complex needs every subunit, while the
 #: representative slots are any-of) that wants a curator's decision.
 #: `ortholog_of`/`homolog_of` name a reference gene rather than the ortholog
-#: actually required in context. A participant with none of these slots, such
-#: as a descriptor-less ANY_WITH_FUNCTION step, needs an activity-keyed oracle.
-UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of")
+#: actually required in context, so grounding on it would assert the presence
+#: of the wrong gene. `domain` names a region, not a gene product. A
+#: participant with none of these slots, such as a descriptor-less
+#: ANY_WITH_FUNCTION step, needs an activity-keyed oracle.
+UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of", "domain")
+
+#: Every entity-grounding slot on `ParticipantSelector`, i.e. those whose range
+#: is a Descriptor naming *what plays the role* rather than constraining it
+#: (`required_function`, `required_domain` and `taxon` are constraints). Kept
+#: as the union of the two tuples above so that adding a slot to the schema and
+#: leaving it unread fails the partition test below rather than going silent --
+#: which is how `gene_product` was missed in the first place.
+ENTITY_GROUNDING_SLOTS = (*READ_GROUNDING_SLOTS, *UNREAD_GROUNDING_SLOTS)
 
 
-def _participant_slots(document: dict) -> dict[str, set[str]]:
-    """Map each annoton id to the grounding slots its participant carries."""
-    slots: dict[str, set[str]] = {}
+def _descriptor_is_usable(slot: str, descriptor: dict) -> bool:
+    """True when a descriptor actually offers a symbol or a UniProt accession.
+
+    Separates an engine defect (a usable grounding that was dropped) from a
+    curation defect (a descriptor too ambiguous to ground, e.g. a label that is
+    not symbol-first and carries no accession). Both exist in the corpus.
+    """
+    candidates = (
+        as_list(descriptor.get("representative_members"))
+        if slot == "family"
+        else [descriptor]
+    )
+    return any(
+        descriptor_symbol(candidate)
+        or str(((candidate or {}).get("term") or {}).get("id", "")).startswith(
+            "UniProtKB:"
+        )
+        for candidate in candidates
+    )
+
+
+def _participant_slots(document: dict) -> dict[str, dict[str, bool]]:
+    """Map each annoton id to the grounding slots it carries, and their usability."""
+    slots: dict[str, dict[str, bool]] = {}
 
     def walk(node: dict) -> None:
         for annoton in as_list(node.get("annotons")):
             participant = annoton.get("participant") or {}
             slots[str(annoton.get("id"))] = {
-                slot
-                for slot in (*READ_GROUNDING_SLOTS, *UNREAD_GROUNDING_SLOTS, "family")
+                slot: _descriptor_is_usable(slot, participant[slot])
+                for slot in ENTITY_GROUNDING_SLOTS
                 if participant.get(slot)
             }
         for part in as_list(node.get("parts")):
@@ -518,7 +550,43 @@ def _participant_slots(document: dict) -> dict[str, set[str]]:
     return slots
 
 
-def test_no_ungrounded_atom_comes_from_a_slot_the_engine_reads(curated_corpus):
+@pytest.fixture(scope="session")
+def curated_slots() -> dict[Path, dict[str, dict[str, bool]]]:
+    """Parse each module once for its participants' grounding slots."""
+    return {
+        path: _participant_slots(yaml.safe_load(path.read_text()))
+        for path in _curated_modules()
+    }
+
+
+def test_every_participant_slot_is_classified_read_or_unread(curated_slots):
+    """A grounding slot the schema gains must be classified, not ignored.
+
+    `ENTITY_GROUNDING_SLOTS` is the union of the read and unread tuples, so a
+    new `ParticipantSelector` descriptor slot (a `paralog_of`, say) that the
+    engine does not read is invisible to the guard below until it is listed
+    here. This makes the omission itself fail.
+    """
+    schema = yaml.safe_load(
+        (MODULES_DIR.parent / "src/ai_gene_review/schema/gene_review.yaml").read_text()
+    )
+    attributes = schema["classes"]["ParticipantSelector"]["attributes"]
+    entity_slots = {
+        slot
+        for slot, spec in attributes.items()
+        if "Descriptor" in str(spec.get("range", ""))
+        and slot not in ("required_function", "required_domain", "taxon")
+    }
+    assert entity_slots == set(ENTITY_GROUNDING_SLOTS), (
+        "ParticipantSelector's entity-grounding slots are not all classified; "
+        f"unclassified: {sorted(entity_slots - set(ENTITY_GROUNDING_SLOTS))}, "
+        f"stale: {sorted(set(ENTITY_GROUNDING_SLOTS) - entity_slots)}"
+    )
+
+
+def test_no_ungrounded_atom_comes_from_a_slot_the_engine_reads(
+    curated_corpus, curated_slots
+):
     """Guard the direction the empty-context test structurally cannot see.
 
     An empty context is *meant* to leave a module unsatisfied, so that test
@@ -530,21 +598,28 @@ def test_no_ungrounded_atom_comes_from_a_slot_the_engine_reads(curated_corpus):
     a slot the engine does read stops being read -- which is exactly how
     `participant.gene_product` went missing, silently and with no validation
     error.
+
+    Only *usable* descriptors count: one too ambiguous to yield a symbol and
+    carrying no accession is a curation defect, not a dropped grounding.
     """
     offenders = []
     for path, circuit in curated_corpus.items():
-        slots = _participant_slots(yaml.safe_load(path.read_text()))
+        slots = curated_slots[path]
         for atom in iter_atoms(circuit):
             if atom.is_grounded:
                 continue
             annoton_id = atom.node_id.rpartition("#")[2]
-            read = slots.get(annoton_id, set()) & set(READ_GROUNDING_SLOTS)
-            if read:
-                offenders.append(f"{path.name}:{annoton_id} carries {sorted(read)}")
+            dropped = sorted(
+                slot
+                for slot, usable in slots.get(annoton_id, {}).items()
+                if usable and slot in READ_GROUNDING_SLOTS
+            )
+            if dropped:
+                offenders.append(f"{path.name}:{annoton_id} carries {dropped}")
     assert offenders == [], (
-        "these steps are ungrounded although their participant carries a slot "
-        "the engine reads, so a grounding is being dropped: "
-        + ", ".join(offenders[:10])
+        "these steps are ungrounded although their participant carries a "
+        "usable descriptor in a slot the engine reads, so a grounding is being "
+        "dropped: " + ", ".join(offenders[:10])
     )
 
 
