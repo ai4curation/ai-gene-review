@@ -343,13 +343,55 @@ genes:
 - worm/wdr-23
 manifest:
   slides:
-    - href: PROTNLM_EVALUATION/protnlm_evaluation_slides.html
+    - href: https://claude.ai/artifact/MSLGF5gr1jNJiecx3SwhCg
+      title: Slides
       description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/XSJYGbkxkq6cVsDY6ifBQb
       title: Project brief
 ---
 # ProtNLM2 Evaluation
+
+## Challenge: Selecting a benchmark from an arbitrary set of genes
+
+ProtNLM2's full predictions (GO terms, function text, locations) are public only for
+a **pilot set released by UniProt**: about 26,000 TrEMBL entries from "about 400 of the most
+searched species" ([UniProt ProtNLM help](https://www.uniprot.org/help/ProtNLM)). The REST API
+also serves some records from the 28,553-entry pre-release export that are not on the list (at
+least 57 are known: all 28 *S. pombe* and 29 fly records we checked; the total is undetermined),
+and our cohorts use 37 of them (28 *S. pombe*, 9 fly). Other proteins we probed returned 404. We could
+only evaluate what was released, so every cohort below is a census of, or a hand-picked sample
+from, that material. The last bar is not strictly nested: 86 of our 242 targets are off the list
+or have only names, locations or keywords.
+
+![Funnel from UniProtKB to our cohorts](PROTNLM_EVALUATION/figures/benchmark-funnel.svg)
+
+![How each cohort was drawn](PROTNLM_EVALUATION/figures/benchmark-cohorts.svg)
+
+This makes the evaluation hard to read as a benchmark:
+
+- **The species mix was set upstream.** Wheat has 725 pilot records, horse 404, fly 94 and
+  human 151 (`pilot_taxa` in `benchmark-funnel.json`). Neither UniProt nor Google DeepMind
+  documents how records were chosen.
+- **Every listed record is TrEMBL, but many genes are well studied.** A fly record can be
+  identical to a reviewed entry with experimental GO (Lcp3 and P07188), so "correct and new"
+  is rarely available in model-organism cohorts.
+- **There is no denominator.** Nobody chose the inputs to measure proteome-wide accuracy or
+  recall, so neither can be estimated here.
+- **Cohorts are not interchangeable.** Hand-picked, census and rule-ranked cohorts answer
+  different questions. Their category rates should not be pooled into one accuracy figure.
+
+What the evaluation can do is judge each emitted claim against sequence, domains, structure
+and literature, and report the patterns of error. Figures are built by
+[`build_benchmark_funnel.py`](PROTNLM_EVALUATION/build_benchmark_funnel.py) from
+[`benchmark-funnel.json`](PROTNLM_EVALUATION/benchmark-funnel.json); the
+[data provenance](PROTNLM_EVALUATION/data_history.md) page explains the pre-release export and
+the off-list records. The cohort descriptions are curated in
+[`benchmark-cohorts.yaml`](PROTNLM_EVALUATION/benchmark-cohorts.yaml).
+
+![GO verdicts by cohort](PROTNLM_EVALUATION/figures/benchmark-outcomes.svg)
+
+## Summary
 
 **Bottom line:** ProtNLM2 is Google DeepMind's sequence-to-text model that
 writes protein names, GO terms and function paragraphs straight from sequence,
@@ -483,7 +525,7 @@ The [pombe cohort](PROTNLM_EVALUATION/pombe.md) includes every GO/function-beari
 
 The [fly cohort](PROTNLM_EVALUATION/fly.md) includes every Drosophila melanogaster gene with GO or function-text predictions in the published species subset, plus a separate tier of location/keyword-only records. Its census preserves exact sequences, current FlyBase identifiers and original prediction provenance.
 
-The horse cohort contains [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads.
+The horse cohort contains [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads. Because horse is a PANTHER reference proteome, its genes carry PAINT IBA and no TreeGrafter rows; the [DONKEY40 cohort](PROTNLM_EVALUATION/donkey40.md) pairs 40 donkey proteins (TreeGrafter + ProtNLM2) with their horse orthologs (IBA) to compare all three on the same genes.
 
 ## ARGO-ProtNLM-50 benchmark design
 
@@ -523,7 +565,7 @@ COR and CNN distinguish absence versus presence of an equivalent annotation in t
 - human/UBE2F (F8WDQ9) ubiquitin-protein transferase activity is NPI. Its rationale combines the missing catalytic Cys116 in the 101-residue record with NEDD8-not-ubiquitin specificity.
 - NEUCR/NCU04302, a SUMO E2, has its ubiquitin-specific narrative claims scored PLI.
 
-Under the rule above, UBE2F stays NPI on architecture grounds. Its NEDD8 argument is a PLI-type reason, and the review does not separate the two. There are 0 PLI among the 288 GO claims and 13 narrative records with a PLI judgment, so the boundary has so far mostly been applied to narrative text.
+Under the rule above, UBE2F stays NPI on architecture grounds. Its NEDD8 argument is a PLI-type reason, and the review does not separate the two. At the 2026-09-27 review snapshot there are 2 PLI among the 288 GO claims (both ARGO-50: ORYSI/B8BAB0 pollen maturation and ORYSJ/Q6YYC5 K63-linked ubiquitination); HORSE40 has since gained a third (HORSE/WEE1 female pronucleus assembly, a WEE2 oocyte process, added 2026-10-11). There are 13 narrative records with a PLI judgment, so the boundary has so far mostly been applied to narrative text.
 
 **Fragment-driven NPIs.** Both MOD-evolution GO NPIs rest partly on the selected TrEMBL product being short or incomplete:
 
@@ -557,9 +599,9 @@ These NPIs judge the deposited sequence, not the gene. They would not transfer t
 | [REST API fetch pipeline](PROTNLM_EVALUATION/fetch_protnlm_api.py) | Retrieval of raw prediction and corroboration records |
 | [Exploratory notebook](PROTNLM_EVALUATION/protnlm_summary.ipynb) | Dataset exploration |
 | [Benchmark notebook](PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb) | Benchmark overlap analysis |
-| [Slide deck](PROTNLM_EVALUATION/protnlm_evaluation_slides.html) (Marp source: [protnlm_evaluation_slides.md](PROTNLM_EVALUATION/protnlm_evaluation_slides.md)) — AI generated | Exploratory presentation; assessment totals and case judgments on this page reflect the current reviews |
 | [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) | Original ARGO-50 OpenScientist verdicts (advisory evidence) |
 | [OpenScientist reconciliation](PROTNLM_EVALUATION/openscientist-reconciliation.md) | Term-by-term comparison of those verdicts with the current reviews ([generator](PROTNLM_EVALUATION/reconcile_openscientist.py)) |
 | [Archive](PROTNLM_EVALUATION/archive/README.md) | Superseded bootstrap script and early triage CSV; do not run |
 | [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) | Domain-to-GO mapping coverage across the benchmark |
 | [Data history](PROTNLM_EVALUATION/data_history.md) | XML/API source provenance |
+| [Re-review manifest](PROTNLM_EVALUATION/rereview/manifest.yaml) | Every benchmark target and paired reference in the gene re-review campaign, with its review file and status ([refresher](PROTNLM_EVALUATION/rereview/refresh_manifest.py); `generated_at` marks the snapshot) |

@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-30T05:42:00.066054'
-end_time: '2026-09-30T05:54:47.079074'
-duration_seconds: 767.01
+start_time: '2026-09-27T00:03:10.979643'
+end_time: '2026-09-27T00:10:12.940246'
+duration_seconds: 421.96
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -24,10 +24,11 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 26
+citation_count: 13
 artifact_count: 2
 artifact_sources:
-  edison_answer_artifacts: 2
+  edison_answer_artifacts: 1
+  edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
   path: SOS2-deep-research-falcon_artifacts/artifact-00.md
@@ -35,12 +36,13 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
-- filename: artifact-01.md
-  path: SOS2-deep-research-falcon_artifacts/artifact-01.md
-  media_type: text/markdown
-  source: edison_answer_artifacts
+- filename: image-1.png
+  path: SOS2-deep-research-falcon_artifacts/image-1.png
+  media_type: image/png
+  source: edison_message_content
   data_storage_id: null
-  description: Edison artifact artifact-01
+  description: '## Context ID: pqac-00000014 Figure 4 illustrates the binding of compound
+    2 to the SOS2 catalytic pocket and provides the structural rationale for its selectivi'
 ---
 
 ## Question
@@ -151,201 +153,204 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Comprehensive Research Report: SOS2 (Son of Sevenless Homolog 2)
+# Human SOS2 (UniProt Q07890): functional-annotation research report
 
-## Gene Identity Verification
+## Executive conclusion
 
-The gene symbol SOS2 in humans (UniProt: Q07890) encodes Son of Sevenless Homolog 2, a RAS guanine nucleotide exchange factor (GEF) (bannoura2024targetingguaninenucleotide pages 3-4, lunaramirez2026sos1trackingthe pages 20-21, lunaramirez2026sos1trackingthe pages 1-2). This protein is distinct from plant SOS2 proteins, which are serine/threonine kinases involved in salt tolerance. Human SOS2 shares approximately 70% sequence homology with its paralog SOS1 and belongs to the SOS family of RASGEFs (nair2023regulationofrasgtpase pages 2-5, lunaramirez2026sos1trackingthe pages 20-21).
+The requested target is correctly identified: **human SOS2 (SOS Ras/Rho guanine nucleotide exchange factor 2), UniProt Q07890**, also called **Son of sevenless homolog 2**. It is not the Arabidopsis salt-overly-sensitive kinase also called SOS2. Direct accession-level confirmation comes from recent biochemical work using residues 562–1047 of **Q07890** as the human SOS2 RAS-GEF construct. Human SOS2 is one of two mammalian SOS paralogs and shares approximately 69–70% overall similarity with SOS1. (nair2021rasisoformsfrom pages 9-10, rojas2011mammaliansonof pages 1-2, zak2025discoveryofsmall pages 7-8)
 
-## Primary Molecular Function
+SOS2’s primary function is to act as a **guanine-nucleotide exchange factor (GEF) for RAS-family small GTPases**. It promotes release of GDP from membrane-associated RAS; because cellular GTP is abundant, RAS then binds GTP and enters its active signaling state. SOS2 therefore does not transfer a chemical group or hydrolyze a substrate: it catalyzes nucleotide exchange by remodeling the RAS nucleotide-binding site. The strongest substrate evidence concerns canonical RAS proteins. RAC-GEF activity is plausible from its DH domain and paralogy to SOS1, but has not been comparably demonstrated for SOS2 and should not be treated as its established primary function. (baltanas2021sos2comesto pages 1-3, baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 1-2)
 
-### Enzymatic Activity and Catalytic Mechanism
+Its best-supported distinctive role is not absolute substrate specificity but **context-dependent signaling bias**: relative to SOS1, SOS2 often makes a disproportionate contribution to RTK-driven wild-type RAS–PI3K–AKT signaling, anchorage-independent survival, and KRAS-mutant transformation, while SOS1 more strongly controls sustained RAS–RAF–MEK–ERK signaling. SOS2 remains partly redundant with SOS1, and this division is not universal across cell types. (baltanas2021sos2comesto pages 8-10, baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 10-11)
 
-SOS2 functions as a RAS guanine nucleotide exchange factor, catalyzing the fundamental exchange reaction that converts inactive, GDP-bound RAS to active, GTP-bound RAS (bannoura2024targetingguaninenucleotide pages 3-4, kamel2026disruptingthekras–sos1 pages 6-7, kamel2026disruptingthekras–sos1 pages 7-8). The reaction can be summarized as: **RAS–GDP + GTP → RAS–GTP + GDP**. SOS2 does not directly transfer or load GTP onto RAS; rather, it binds RAS-GDP and destabilizes the nucleotide-binding environment, lowering the activation barrier for GDP dissociation (kamel2026disruptingthekras–sos1 pages 6-7). Because GTP is abundant in cells relative to GDP, it preferentially binds the nucleotide-free RAS intermediate, thereby generating active RAS-GTP (kamel2026disruptingthekras–sos1 pages 7-8).
-
-The catalytic mechanism involves the CDC25 homology domain, which contacts RAS switch regions and inserts a helical hairpin into the nucleotide-binding pocket, promoting GDP release (karimah2024mutationanalysisof pages 1-3, kamel2026disruptingthekras–sos1 pages 7-8). The RAS exchanger motif (REM) domain cooperates structurally with CDC25 and provides an allosteric RAS-binding site where RAS-GTP can bind, stabilizing the active conformation and creating positive feedback that amplifies nucleotide exchange (kamel2026disruptingthekras–sos1 pages 6-7, nair2023regulationofrasgtpase pages 2-5).
-
-### Substrate Specificity
-
-SOS2 is characterized as a RAS-specific guanine nucleotide exchange factor (bannoura2024targetingguaninenucleotide pages 3-4, lunaramirez2026sos1trackingthe pages 24-24). The primary substrates are members of the RAS family of small GTPases. While the literature establishes SOS2's activity toward RAS proteins, the detailed isoform selectivity—whether it preferentially activates KRAS, NRAS, or HRAS—has not been comprehensively characterized for SOS2 specifically (kamel2026disruptingthekras–sos1 pages 7-8, bannoura2024targetingguaninenucleotide pages 3-4, kamel2026disruptingthekras–sos1 pages 6-7). SOS family proteins are also reported to have activity toward RAC GTPases, though this function may involve distinct recruitment mechanisms (lunaramirez2026sos1trackingthe pages 1-2).
-
-## Structural Organization and Regulation
-
-SOS2 possesses a modular domain architecture that integrates catalytic function with sophisticated regulatory mechanisms (nair2023regulationofrasgtpase pages 2-5, karimah2024mutationanalysisof pages 1-3). The protein contains:
-
-| Domain name | Location in protein | Functional role |
-|---|---|---|
-| Histone-fold domain (HF/HD) | N-terminal regulatory region | Participates in SOS-family autoinhibition by docking against the linker adjoining the PH and catalytic regions, thereby restricting productive membrane engagement and access to the allosteric RAS-binding site. It can also interact with membrane phospholipids, helping couple membrane recruitment to relief of autoinhibition. These functions are inferred for SOS2 largely from its conserved architecture with SOS1. (nair2023regulationofrasgtpase pages 2-5, karimah2024mutationanalysisof pages 1-3, nair2023regulationofrasgtpase pages 1-2) |
-| Dbl-homology domain (DH) | N-terminal regulatory region, preceding and adjacent to the PH domain | Primarily serves a regulatory/autoinhibitory function in SOS2 rather than constituting its RAS-GEF catalytic site. The DH–PH module sterically restricts the REM allosteric site; disruption of the DH–REM interface—such as by the Noonan-syndrome-associated M267K substitution—is predicted to expose the REM domain and increase RAS-directed exchange activity. (karimah2024mutationanalysisof pages 8-10, karimah2024mutationanalysisof pages 6-8) |
-| Pleckstrin-homology domain (PH) | N-terminal regulatory region, immediately following the DH domain | Binds acidic membrane lipids, including PIP2, and helps stabilize SOS2-family proteins at activated membrane signaling platforms. Together with the DH domain, it contributes to autoinhibition in the resting state; membrane-lipid engagement helps relieve this restraint and brings the catalytic core into proximity to membrane-anchored RAS. SOS2-specific biochemical characterization is less extensive than for SOS1. (nair2023regulationofrasgtpase pages 2-5, karimah2024mutationanalysisof pages 1-3, pierre2011understandingsos(son pages 17-23) |
-| RAS exchanger motif (REM) | Central catalytic/regulatory core, immediately N-terminal to the CDC25 domain | Cooperates structurally with CDC25 and contributes the allosteric RAS-binding site. In the established SOS-family mechanism, RAS-GTP binding at this site stabilizes an active conformation and increases nucleotide exchange at the catalytic site, creating positive feedback. SOS2 clearly contains the REM domain, although direct demonstration of RAS-GTP-driven allosteric activation is less complete for SOS2 than for SOS1. (nair2023regulationofrasgtpase pages 2-5, karimah2024mutationanalysisof pages 8-10, kamel2026disruptingthekras–sos1 pages 6-7, nair2023regulationofrasgtpase pages 1-2) |
-| CDC25-homology catalytic domain | Central catalytic core, C-terminal to REM | Provides the principal RAS-GEF active site. It binds RAS switch regions and inserts a helical hairpin that distorts the nucleotide-binding pocket, promotes GDP dissociation, and generates nucleotide-free RAS; abundant cellular GTP then binds to form active RAS-GTP. The net exchange is RAS–GDP + GTP → RAS–GTP + GDP. (karimah2024mutationanalysisof pages 1-3, kamel2026disruptingthekras–sos1 pages 7-8, kamel2026disruptingthekras–sos1 pages 6-7) |
-| Proline-rich region (PR; PxxP motifs) | Disordered C-terminal region | Binds the SH3 domains of GRB2 and thereby couples SOS2 to activated receptor complexes. Following RTK activation, GRB2 uses its SH2 domain to engage receptor-associated phosphotyrosines while its SH3 domains bind SOS2 PxxP motifs, recruiting SOS2 from the cytosol to the plasma membrane near RAS. Human SOS2 reportedly binds GRB2 with higher affinity than SOS1, although it associates less efficiently with EGFR/Shc complexes and tends to support shorter-duration signaling. (baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 2-3, pierre2011understandingsos(son pages 23-33) |
+| Topic | Best-supported conclusion | Evidence type/strength | Key source and date |
+|---|---|---|---|
+| Identity and domain architecture | Human **SOS2** is Son of sevenless homolog 2, a ubiquitously expressed mammalian SOS-family GEF distinct from plant proteins named SOS2. UniProt **Q07890** was directly used for a human SOS2 construct spanning residues 562–1047. Conserved architecture comprises tandem histone folds, DH, PH, REM, catalytic CDC25H, and a proline-rich C-terminal region. Architecture is well supported by sequence homology; most detailed regulatory structures derive from SOS1. | **Strong identity evidence; moderate structural inference.** Q07890 was experimentally referenced, but full-length SOS2 structural validation remains limited. | Zak et al., **January 2025**; Nair et al., **June 2021** (nair2021rasisoformsfrom pages 9-10, zak2025discoveryofsmall pages 7-8) |
+| Catalytic function and substrate | SOS2 is a **RAS guanine-nucleotide exchange factor**: its CDC25H module promotes GDP dissociation from RAS, permitting abundant cellular GTP to bind and generate active RAS–GTP. The best-supported substrates are canonical RAS proteins; SOS2-specific RAC-GEF activity has not been formally established. | **Strong biochemical/family evidence for RAS-GEF activity; limited evidence for RAC.** | Rojas et al., **March 2011**; Baltanás et al., **June 2021** (baltanas2021sos2comesto pages 1-3, baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 1-2) |
+| Localization and recruitment | SOS2 is primarily cytosolic before stimulation and functions at the **cytoplasmic face of cellular membranes**, especially the plasma membrane, where membrane-anchored RAS resides. RTK activation recruits GRB2–SOS complexes through the proline-rich SOS tail; PH- and histone-fold-mediated lipid contacts can further stabilize membrane association. Detailed autoinhibition and allosteric RAS–GTP activation mechanisms are strongly established for SOS1 and are plausible—but not equivalently demonstrated—for SOS2. | **Strong pathway-level evidence; moderate SOS2-specific evidence.** Localization model is conserved, whereas several mechanistic details are inferred from SOS1. | Nair et al., **June 2021**; Baltanás et al., **June 2021** (nair2021rasisoformsfrom pages 9-10, baltanas2021sos2comesto pages 7-8) |
+| Comparison with SOS1 | SOS1 and SOS2 share about **69–70% overall similarity** and partial redundancy, but SOS1 usually dominates sustained RAS–ERK signaling. SOS2 binds GRB2 more strongly yet interacts less efficiently with activated EGFR/Shc, is less stable, and is associated mainly with short-duration signaling. | **Moderate-to-strong comparative evidence**, including interaction, degradation, knockout, and signaling studies. | Rojas et al., **March 2011**; Baltanás et al., **June 2021** (baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 1-2, baltanas2021sos2comesto pages 5-7) |
+| PI3K–AKT specificity | In keratinocytes and mutant-RAS models, SOS2 loss preferentially reduces EGF/RTK-stimulated **AKT phosphorylation**, whereas ERK activation is often preserved. This supports a context-dependent bias toward wild-type RAS–PI3K–AKT signaling rather than an absolute pathway-exclusive function. | **Strong cellular and genetic evidence in tested models; context-dependent**, not a universal biochemical specificity. | Sheffels and colleagues, summarized by Baltanás et al., **June 2021** (baltanas2021sos2comesto pages 8-10, baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 10-11) |
+| Physiology and knockout evidence | Constitutive **Sos2-null mice are viable and fertile**, unlike embryonic-lethal Sos1 knockout mice. Adult single knockouts can survive, but combined Sos1/Sos2 loss causes rapid death, demonstrating essential collective function and redundancy. Sos2 loss also reduces hair-follicle stem-cell populations, supporting a specific role in epidermal homeostasis. | **Strong in-vivo genetic evidence**, primarily from mouse models. | Esteban et al., **September 2000**; Baltanás et al., **June 2021** (baltanas2021sos2comesto pages 1-3, baltanas2021sos2comesto pages 4-5) |
+| Noonan syndrome variants | Heterozygous activating SOS2 variants cause **Noonan syndrome 9**. Reported variants cluster in the DH region, including **T264K/R, E266_M267delins, M267K/R/T, and T376S**, and are proposed to weaken autoinhibitory domain interactions, thereby increasing RAS–MAPK signaling. Severe lymphatic disease occurs in some patients. | **Strong human genetic association; mechanistic interpretation partly structural/computational.** Open Targets identifies Noonan syndrome as the strongest curated SOS2 disease association. | Baltanás et al., **June 2021**; Open Targets, accessed **2026** (OpenTargets Search: -SOS2, baltanas2021sos2comesto pages 8-10) |
+| Cancer evidence | SOS2 is generally not the primary proliferative RAS GEF, but it supports **anchorage-independent growth and anoikis resistance**, particularly in KRAS-mutant cells, through wild-type RAS–PI3K–AKT signaling. CRISPR depletion impaired transformation in lung, colorectal, and pancreatic cancer models; reported dependence follows approximately **KRAS > NRAS > HRAS**. These findings are preclinical and do not establish clinical efficacy. | **Moderate-to-strong preclinical evidence** from genetic perturbation and 3D-growth assays; no validated SOS2-directed therapy. | Sheffels et al., **2018–2021**; Baltanás et al., **June 2021** (baltanas2021sos2comesto pages 8-10, baltanas2021sos2comesto pages 10-11) |
+| 2025 ligand discovery | A **6,000-compound SPR screen** produced a 33-µM quinazoline hit; optimization yielded single-digit-micromolar SOS2 binders. Compound 2 showed no saturable SOS1 binding up to 200 µM. X-ray structures identified catalytic-pocket selectivity determinants **R900, D904, and V907** and a second interdomain pocket. These molecules are **binders and preclinical chemical starting points**, potentially useful for inhibitors or PROTACs—not validated cellular SOS2 inhibitors. | **Strong biophysical and crystallographic binding evidence; weak functional/therapeutic evidence** because cellular pathway inhibition and in-vivo efficacy were not established. | Zak et al., *Journal of Medicinal Chemistry*, **January 2025** (zak2025discoveryofsmall pages 4-5, zak2025discoveryofsmall pages 5-7, zak2025discoveryofsmall pages 2-4, zak2025discoveryofsmall pages 1-2, zak2025discoveryofsmall media c657e5c6) |
 
 
-*Table: Domain-by-domain summary of how human SOS2 integrates autoinhibition, membrane recruitment, adaptor binding, allosteric regulation, and catalytic RAS nucleotide exchange. Several mechanistic assignments are supported strongly at the SOS-family level but remain less directly characterized for SOS2 than for SOS1.*
+*Table: A concise evidence map for human SOS2/Q07890 covering identity, mechanism, localization, physiology, disease relevance, cancer biology, and ligand discovery. It distinguishes direct SOS2 evidence from SOS1-based inference and emphasizes the preclinical status of reported chemical binders.*
 
-### Autoinhibition and Activation
+## 1. Identity verification and domain organization
 
-In the resting state, SOS2 is maintained in an autoinhibited conformation through intramolecular interactions involving the DH domain, histone-fold domain, and the catalytic REM-CDC25 core (nair2023regulationofrasgtpase pages 2-5, karimah2024mutationanalysisof pages 8-10). The DH domain restrains the REM domain, preventing premature activation (karimah2024mutationanalysisof pages 8-10, karimah2024mutationanalysisof pages 6-8). Disease-associated mutations that disrupt these autoinhibitory contacts, such as the Noonan syndrome-associated M267K substitution in the DH domain, destabilize the DH-REM interface and release autoinhibition, leading to enhanced RAS-GEF activity and hyperactivation of RAS/MAPK signaling (karimah2024mutationanalysisof pages 8-10).
+### 1.1 Verification
 
-Activation involves multiple coordinated events: receptor tyrosine kinase (RTK) stimulation triggers GRB2-mediated recruitment to the plasma membrane through interaction with SOS2's C-terminal proline-rich motifs (baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 2-3, pierre2011understandingsos(son pages 23-33). Membrane localization facilitates interactions of the PH and histone-fold domains with acidic phospholipids such as PIP2 and phosphatidic acid, helping to relieve autoinhibition (nair2023regulationofrasgtpase pages 2-5, nair2023regulationofrasgtpase pages 1-2). Once at the membrane and released from autoinhibition, RAS-GTP binding to the allosteric site further enhances catalytic activity through positive feedback (kamel2026disruptingthekras–sos1 pages 6-7, nair2023regulationofrasgtpase pages 1-2).
+The symbol, protein description, organism, and accession supplied by the user are mutually consistent:
 
-## Subcellular Localization
+- **Gene/protein:** SOS2 / Son of sevenless homolog 2
+- **Organism:** *Homo sapiens*
+- **UniProt:** Q07890
+- **Molecular class:** multidomain RAS guanine-nucleotide exchange factor
+- **Human paralog:** SOS1
 
-SOS2 carries out its function primarily at the **plasma membrane** following stimulus-dependent recruitment from the **cytosol** (nair2023regulationofrasgtpase pages 1-2, nair2023regulationofrasgtpase pages 2-5). In unstimulated cells, SOS2 resides in the cytoplasm, often constitutively associated with the GRB2 adaptor protein through its proline-rich C-terminal region (baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 2-3). Upon growth factor stimulation and RTK activation, the GRB2-SOS2 complex is recruited to phosphotyrosine residues on activated receptors or receptor-associated scaffold proteins via GRB2's SH2 domain (baltanas2021sos2comesto pages 7-8, pierre2011understandingsos(son pages 23-33, rojas2011mammaliansonof pages 3-4). This membrane translocation brings SOS2 into proximity with its membrane-anchored RAS substrates, enabling productive nucleotide exchange (nair2023regulationofrasgtpase pages 1-2, rojas2011mammaliansonof pages 2-3).
+A 2025 SOS2 ligand study expressed a catalytic-region construct covering residues **562–1047 of Q07890**, independently tying the accession to human Son of sevenless 2. This excludes same-symbol proteins in other organisms, especially plant SOS2 kinases. (zak2025discoveryofsmall pages 1-2, zak2025discoveryofsmall pages 7-8)
 
-Notably, human SOS2 binds GRB2 with higher affinity than SOS1, supporting robust complex formation (baltanas2021sos2comesto pages 7-8). However, SOS2 associates less efficiently with activated EGFR and the Shc adaptor compared to SOS1, and its membrane-associated signaling is predominantly short-term rather than sustained (kamel2026disruptingthekras–sos1 pages 7-8, baltanas2021sos2comesto pages 7-8).
+### 1.2 Domain architecture
 
-## Signaling Pathways and Biological Function
+The conserved mammalian SOS architecture proceeds approximately as follows:
 
-### RAS/MAPK Pathway
+1. **N-terminal tandem histone-fold region**—participates in regulatory and membrane-related organization.
+2. **DH domain**—a Dbl-homology/RhoGEF-like module implicated in autoinhibitory packing; unlike SOS1, SOS2-specific RAC exchange activity remains uncertain.
+3. **PH domain**—supports lipid/membrane interactions and contributes to regulation.
+4. **REM domain**—the RAS exchanger motif, involved in RAS binding and the allosteric regulatory site.
+5. **CDC25-homology domain**—the catalytic RAS-GEF module that promotes GDP release.
+6. **C-terminal proline-rich region**—binds SH3-domain adaptors, especially GRB2, coupling SOS2 to activated receptors. (nair2021rasisoformsfrom pages 9-10, rojas2011mammaliansonof pages 1-2)
 
-SOS2 participates in canonical RAS/MAPK signaling by activating RAS GTPases in response to RTK stimulation (nair2023regulationofrasgtpase pages 1-2, theard2024sos2modulatesthe pages 16-17, bannoura2024targetingguaninenucleotide pages 3-4). Activated RAS-GTP can then engage downstream effectors including the RAF-MEK-ERK kinase cascade (bannoura2024targetingguaninenucleotide pages 3-4). However, SOS2's contribution to MAPK signaling is generally weaker and more context-dependent than SOS1's role (kamel2026disruptingthekras–sos1 pages 7-8). In EGF-stimulated systems, SOS2-associated signaling is mainly short-term, whereas SOS1 supports both acute and sustained ERK activation (kamel2026disruptingthekras–sos1 pages 7-8).
+This agrees with the supplied InterPro assignments: histone fold, DH/Dbl-homology, PH-like/PH domains, plus the catalytic region represented in the recent Q07890 construct. Importantly, most atomic-level knowledge of full-length autoinhibition and allosteric activation comes from SOS1. Given high conservation, it is a strong working model for SOS2, but not every SOS1 regulatory detail has been demonstrated directly in SOS2. (nair2021rasisoformsfrom pages 9-10, baltanas2021sos2comesto pages 7-8)
 
-### PI3K/AKT Pathway - Preferential Role
+## 2. Molecular function, reaction, and substrate specificity
 
-Recent evidence indicates that SOS2 has a particularly important and preferential role in coupling RTK signaling to the **PI3K/AKT pathway** (baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 8-10, theard2024sos2modulatesthe pages 12-13, sheffels2018oncogenicrasisoforms pages 10-11). In multiple cellular contexts, including primary keratinocytes and RAS-mutant tumor cells, SOS2 makes a dominant contribution to RTK-driven AKT phosphorylation (baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 8-10). Genetic ablation or silencing of SOS2 substantially reduces AKT phosphorylation at Ser473 and Thr308 without producing equivalent reductions in ERK phosphorylation, indicating pathway-selective involvement (baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 8-10, sheffels2018oncogenicrasisoforms pages 5-7).
+### 2.1 Catalyzed reaction
 
-This preferential PI3K/AKT signaling occurs through SOS2-mediated activation of wild-type RAS alongside mutant RAS in oncogenic settings (sheffels2018oncogenicrasisoforms pages 10-11). SOS2 functions as a critical proximal signaling bottleneck linking activated EGFR and other RTKs to PI3K/AKT activation (theard2024sos2modulatesthe pages 12-13). Because SOS1 and SOS2 are present at relatively low cellular abundance, their availability limits signal transmission to downstream effectors, and SOS2 appears to modulate the threshold of RTK signaling required for robust AKT activation (theard2024sos2modulatesthe pages 12-13).
+The functional reaction can be represented as:
 
-The functional importance of SOS2-dependent PI3K/AKT signaling is evident in transformation assays: SOS2 deletion reduces anchorage-independent growth and spheroid formation in KRAS-mutant pancreatic and lung cancer cells (baltanas2021sos2comesto pages 8-10, sheffels2018oncogenicrasisoforms pages 10-11). In EGFR-mutant lung adenocarcinoma, SOS2 loss sensitizes cells to EGFR inhibitors and reduces PI3K/AKT-mediated resistance mechanisms (theard2024sos2modulatesthe pages 12-13).
+**RAS–GDP + GTP → RAS–GTP + GDP**, with SOS2 acting catalytically and remaining unchanged.
 
-### Hierarchical RAS Isoform Dependence
+Mechanistically, SOS2 binds RAS through its REM–CDC25 catalytic module. The CDC25-homology domain destabilizes nucleotide coordination and promotes GDP dissociation. Nucleotide-free RAS is transient; GTP then binds because its cytosolic concentration exceeds that of GDP. RAS–GTP can engage effectors including RAF kinases and PI3K. GAP proteins, not SOS2, subsequently accelerate GTP hydrolysis and return RAS to the GDP-bound state. (nair2021rasisoformsfrom pages 9-10, rojas2011mammaliansonof pages 1-2)
 
-SOS2 exhibits a hierarchical requirement across oncogenic RAS isoforms. KRAS-driven transformation shows the strongest dependence on SOS2, particularly for KRASG12/G13 mutants, whereas HRAS-driven transformation is largely SOS2-independent (sheffels2018oncogenicrasisoforms pages 10-11). This isoform-specific requirement correlates with differential engagement of PI3K/AKT signaling in anchorage-independent growth conditions (sheffels2018oncogenicrasisoforms pages 10-11, sheffels2018oncogenicrasisoforms pages 5-7).
+### 2.2 Substrate range
 
-## Functional Relationship with SOS1
+Canonical **H-RAS, N-RAS, and K-RAS/wild-type RAS pools** are the relevant substrate class. Experimental cancer models indicate that the biological requirement for SOS2 follows an approximate **KRAS > NRAS > HRAS** hierarchy, but this reflects cellular signaling dependence rather than proof that purified SOS2 has the same rank order of catalytic efficiency toward the three proteins. (baltanas2021sos2comesto pages 10-11)
 
-While SOS1 and SOS2 share high sequence homology and both function as RAS GEFs, they exhibit important functional differences:
+The DH domain raises a second possibility: Rho-family exchange activity. SOS1 is a demonstrated RAC-GEF, whereas SOS2 has supporting interaction and homology evidence but had not, as of the authoritative 2021 synthesis, been formally established as an equivalent RAC-GEF. Thus, functional annotation should assign **RAS GEF** as the primary molecular function and treat RAC activation as provisional/context-dependent. (baltanas2021sos2comesto pages 7-8)
 
-| Feature | SOS1 | SOS2 |
-|---|---|---|
-| Expression pattern | Broadly expressed in postembryonic tissues; especially abundant in placental labyrinth trophoblast. | Also broadly expressed, with protein abundance often comparable to SOS1, but substantially lower expression in placental labyrinth trophoblast. (baltanas2021sos2comesto pages 5-7, qian2000thesos1and pages 9-10) |
-| Developmental requirement | Essential during mouse embryogenesis; constitutive loss causes embryonic lethality associated with placental and cardiac defects. | Constitutive knockout mice are viable and fertile, indicating that SOS2 is dispensable for gross development when SOS1 remains intact. (lunaramirez2026sos1trackingthe pages 20-21, kamel2026disruptingthekras–sos1 pages 6-7) |
-| Role in RAS/MAPK signaling | Usually the dominant RTK-coupled RAS GEF; supports acute and sustained RAS–ERK signaling. | Activates RAS and can support acute MAPK output, but usually has a weaker, shorter-lived, and more context-dependent role. (kamel2026disruptingthekras–sos1 pages 7-8) |
-| Role in PI3K/AKT signaling | Contributes to RTK/RAS-dependent PI3K–AKT signaling, but is not consistently the dominant paralog in examined keratinocyte and RAS-mutant models. | Frequently has a preferential role in RTK-driven PI3K–AKT activation; its deletion reduces AKT phosphorylation, anchorage-independent growth, and RTK/AKT-mediated drug resistance in relevant RAS- or EGFR-mutant models. (baltanas2021sos2comesto pages 7-8, theard2024sos2modulatesthe pages 12-13, sheffels2018oncogenicrasisoforms pages 10-11) |
-| Protein stability | Relatively more stable. | Less stable because of faster ubiquitin-dependent proteasomal degradation, potentially limiting sustained signaling. (cordeddu2015activatingmutationsaffecting pages 6-7, rojas2011mammaliansonof pages 1-2) |
-| GRB2 binding affinity | Constitutively associates with GRB2 through C-terminal proline-rich motifs, but its reported affinity is lower than that of SOS2. | Reported to bind GRB2 with higher affinity than SOS1, supporting adaptor-mediated recruitment to activated receptor complexes. (baltanas2021sos2comesto pages 7-8) |
-| Receptor association | Associates efficiently with activated EGFR/Shc signaling complexes and often provides the principal receptor-to-RAS connection. | Associates less efficiently with EGFR and Shc despite strong GRB2 binding, which may contribute to weaker sustained receptor signaling. (baltanas2021sos2comesto pages 7-8, qian2000thesos1and pages 9-10) |
-| Duration of signaling | Supports both short-term and sustained RAS–ERK activation after growth-factor stimulation. | Predominantly supports short-term signaling and shows reduced long-term association with upstream signaling complexes. (kamel2026disruptingthekras–sos1 pages 7-8, rojas2011mammaliansonof pages 1-2) |
-| Functional redundancy | Dominant paralog in many physiological and oncogenic settings, although adult loss can be buffered by SOS2. | Provides ancillary or compensatory activity; combined SOS1/SOS2 loss causes substantially stronger phenotypes than either single loss, demonstrating partial rather than complete redundancy. (theard2023sos2regulatesthe pages 5-8, lunaramirez2026sos1trackingthe pages 20-21, theard2024sos2modulatesthe pages 1-2) |
+## 3. Regulation and subcellular localization
 
+### 3.1 Where SOS2 acts
 
-*Table: Comparison of the two mammalian SOS paralogs highlights their shared RAS-GEF activity but distinct developmental importance, signaling dynamics, stability, and pathway biases.*
+SOS2 is a soluble intracellular protein that is primarily cytosolic in unstimulated cells. Its productive catalytic activity occurs at the **cytoplasmic face of membranes—especially the plasma membrane—where prenylated RAS substrates reside**. Following ligand activation, receptor tyrosine kinases generate phosphotyrosine docking sites. GRB2 binds the receptor directly or through adaptors such as SHC and uses its SH3 domains to engage the proline-rich SOS2 tail, increasing the local concentration of SOS2 near membrane-bound RAS. PH- and histone-fold-mediated lipid contacts can further stabilize membrane association. (nair2021rasisoformsfrom pages 9-10, baltanas2021sos2comesto pages 7-8)
 
-SOS1 is the dominant paralog in most physiological and pathological contexts: constitutive SOS1 knockout causes embryonic lethality due to placental and cardiac developmental defects, whereas SOS2 knockout mice are viable and fertile (lunaramirez2026sos1trackingthe pages 20-21, kamel2026disruptingthekras–sos1 pages 6-7). However, the proteins are not completely redundant. Combined SOS1/SOS2 deletion produces substantially stronger phenotypes than either single deletion, demonstrating partial functional overlap and the capacity for SOS2 to provide compensatory activity when SOS1 is absent (theard2023sos2regulatesthe pages 5-8, lunaramirez2026sos1trackingthe pages 20-21, theard2024sos2modulatesthe pages 1-2).
+SOS2 reportedly binds GRB2 more strongly than SOS1 but associates less efficiently with activated EGFR and SHC in EGF-stimulated cells. It is also less stable and more rapidly degraded through ubiquitin/proteasome-dependent processes. These differences may help explain why SOS2 frequently supports shorter-lived signals while SOS1 supports both acute and sustained signaling. (baltanas2021sos2comesto pages 7-8, rojas2011mammaliansonof pages 1-2, baltanas2021sos2comesto pages 5-7)
 
-At the transcriptional level, SOS1 deletion alters expression of approximately 2,305 genes in mouse embryonic fibroblasts, whereas SOS2 deletion alone changes only 59 genes, further supporting SOS1's dominant regulatory role (licerasboillos2025sos1ablationalters pages 4-6). Despite this hierarchy, SOS2 has emerged as functionally significant in specific contexts, particularly in regulating the PI3K/AKT signaling axis in keratinocytes and KRAS-driven tumor models (baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 8-10).
+### 3.2 Autoinhibition and allostery
 
-SOS2's reduced protein stability—due to faster ubiquitin-dependent proteasomal degradation—may contribute to its weaker sustained signaling compared to SOS1 (cordeddu2015activatingmutationsaffecting pages 6-7). Additionally, while SOS2 binds GRB2 with higher affinity, it associates less efficiently with EGFR/Shc complexes, potentially limiting its long-term engagement with activated receptor platforms (baltanas2021sos2comesto pages 7-8).
+In the conserved SOS regulatory model, N-terminal DH–PH regions occlude access to the allosteric RAS-binding surface. Membrane recruitment and lipid interactions shift the conformational equilibrium toward an accessible state. Binding of RAS–GTP to an allosteric site in the REM region can then enhance catalytic exchange on a second RAS molecule, generating positive feedback. This mechanism is structurally established for SOS1; the analogous importance of allosteric RAS–GTP activation in SOS2 remained less securely demonstrated. It should therefore be described as a highly plausible paralog-based mechanism rather than an equally complete SOS2-specific structural result. (nair2021rasisoformsfrom pages 9-10, baltanas2021sos2comesto pages 7-8)
 
-## Recent Developments and Clinical Relevance
+## 4. Pathway placement and biological processes
 
-### Therapeutic Target in Cancer
+The central pathway is:
 
-Recent studies (2023-2024) have highlighted SOS2 as a potential therapeutic target in RAS-driven cancers (theard2024sos2modulatesthe pages 16-17, theard2024sos2modulatesthe pages 1-2). In EGFR-mutant lung adenocarcinoma, SOS2 modulates the threshold of EGFR signaling and regulates both the efficacy of and resistance to the EGFR tyrosine kinase inhibitor osimertinib (theard2024sos2modulatesthe pages 16-17, theard2024sos2modulatesthe pages 1-2). SOS2 deletion sensitizes EGFR-mutant cells to reduced serum and osimertinib treatment by inhibiting PI3K/AKT pathway reactivation, a common resistance mechanism (theard2024sos2modulatesthe pages 1-2, theard2024sos2modulatesthe pages 12-13).
+**Growth factor → RTK phosphorylation → SHC/GRB2–SOS2 recruitment → RAS–GTP → RAF–MEK–ERK and/or PI3K–AKT outputs.**
 
-### RASopathies
+Through these pathways, SOS2 can influence proliferation, survival, differentiation, stem-cell maintenance, and responses to loss of matrix attachment. Yet broad phenotypes should be interpreted as downstream consequences of its precise biochemical role—controlling the amount, location, and duration of RAS–GTP—rather than independent enzymatic activities. (baltanas2021sos2comesto pages 1-3, baltanas2021sos2comesto pages 8-10)
 
-SOS2 mutations have been identified in Noonan syndrome, a developmental disorder caused by dysregulation of the RAS/MAPK pathway (karimah2024mutationanalysisof pages 8-10). Activating mutations affecting the DH domain, such as M267K, enhance SOS2's GEF function and result in elevated RAS/MAPK signaling (karimah2024mutationanalysisof pages 8-10). While SOS1 mutations are more frequently associated with RASopathies, the identification of disease-causing SOS2 mutations establishes its clinical relevance (lunaramirez2026sos1trackingthe pages 20-21).
+A reproducible distinction has emerged in tested keratinocyte and RAS-mutant systems: SOS1 loss more strongly reduces RAS activation and ERK-axis output, whereas SOS2 loss preferentially reduces EGF/RTK-stimulated **AKT phosphorylation**, often with comparatively preserved ERK phosphorylation. This supports a model in which SOS2-generated wild-type RAS–GTP preferentially sustains PI3K–AKT signaling in certain contexts. It is a cellular network bias, not evidence that SOS2’s catalytic pocket intrinsically recognizes “PI3K-directed RAS.” (baltanas2021sos2comesto pages 8-10, baltanas2021sos2comesto pages 7-8, baltanas2021sos2comesto pages 10-11)
 
-### Drug Development
+## 5. Experimental evidence from genetics and physiology
 
-The growing understanding of SOS2's role in RAS-dependent signaling has prompted efforts to develop SOS2-targeting therapeutics (lunaramirez2026sos1trackingthe pages 20-21). Small-molecule compounds have been identified that bind SOS2 at catalytic or interdomain sites, offering potential strategies for pharmacological inhibition (lunaramirez2026sos1trackingthe pages 20-21). The distinct pathway preferences and functional contexts of SOS1 versus SOS2 suggest that dual or selective targeting strategies may be necessary for optimal therapeutic benefit (lunaramirez2026sos1trackingthe pages 20-21).
+Constitutive **Sos2-knockout mice are viable and fertile**, whereas constitutive Sos1 loss causes embryonic lethality. This originally led to SOS2 being considered dispensable. Later conditional genetics refined that view: adult animals can tolerate either single knockout, but combined Sos1/Sos2 ablation causes rapid death. SOS2 is therefore partly redundant and compensatory, even though SOS1 is usually the dominant paralog. (nair2021rasisoformsfrom pages 9-10, baltanas2021sos2comesto pages 1-3)
 
-## Summary
+SOS2 also has nonredundant tissue functions. Genetic analysis of mouse keratinocytes and skin found overlapping SOS1/SOS2 contributions to proliferation and survival, but SOS2 loss significantly reduced hair-follicle stem-cell populations in newborn and adult animals. This supports a specific function in epidermal stem-cell homeostasis and is stronger evidence than expression correlation alone. (baltanas2021sos2comesto pages 4-5)
 
-SOS2 (Son of Sevenless Homolog 2) is a RAS guanine nucleotide exchange factor that catalyzes the conversion of inactive RAS-GDP to active RAS-GTP through nucleotide exchange. It functions primarily at the plasma membrane following stimulus-dependent recruitment from the cytosol via the GRB2 adaptor in response to receptor tyrosine kinase activation. While SOS2 participates in canonical RAS/MAPK signaling, it has emerged as having a preferential and functionally important role in RTK-dependent PI3K/AKT pathway activation, particularly in KRAS-mutant cellular contexts. SOS2's activity is regulated through autoinhibition mediated by intramolecular domain interactions, with membrane recruitment and RAS-GTP allosteric binding relieving this inhibition. Although SOS1 is the dominant SOS paralog in most developmental and signaling contexts, SOS2 provides critical context-dependent functions and partial redundancy, with recent work establishing its importance in cancer biology and identifying it as a potential therapeutic target in RAS-driven malignancies.
+## 6. Human disease relevance
+
+### 6.1 Noonan syndrome 9
+
+Heterozygous activating SOS2 variants cause **Noonan syndrome type 9 (NS9; OMIM 616559)**, establishing a direct human genotype–function relationship. Reported variants include **T264K, T264R, E266_M267delins, M267K, M267R, M267T, and T376S**, concentrated in the DH regulatory region. Their clustering supports disruption of autoinhibitory domain contacts and inappropriate RAS–MAPK activation; however, variant-specific structural effects are partly inferred or computational rather than established by complete biochemical analysis of every allele. Some affected individuals have severe lymphatic complications. (baltanas2021sos2comesto pages 8-10)
+
+Open Targets identifies Noonan syndrome as the strongest curated SOS2 disease association in the retrieved dataset, with an association score of approximately **0.854**, compared with approximately 0.758 for the NS9-specific term. The same resource reports weaker statistical associations with hypertension and gout; these should not be considered equivalent to the causal Mendelian evidence for NS9. (OpenTargets Search: -SOS2)
+
+### 6.2 Cancer
+
+SOS2 is not usually the dominant RAS GEF for conventional two-dimensional proliferation, but genetic experiments reveal functions under tumor-relevant stress. In mouse and human models, SOS2 deletion impaired anchorage-independent growth, reduced EGF-stimulated AKT phosphorylation, and sensitized KRAS-mutant cells to anoikis. Tested lines included lung, colorectal, and pancreatic cancer models; combining SOS2 loss with MEK inhibition could reverse transformed growth more effectively than either perturbation alone. (baltanas2021sos2comesto pages 8-10, baltanas2021sos2comesto pages 10-11)
+
+A 2021 synthesis reported **253 somatic SOS2 mutations** catalogued across tumors, including functionally activating variants in gallbladder carcinoma and desmoplastic melanoma, and an association between SOS2 expression and osimertinib resistance in non-small-cell lung cancer. Mutation count alone does not establish driver status, and expression–resistance correlation does not prove that SOS2 inhibition will benefit patients. (baltanas2021sos2comesto pages 8-10)
+
+The most defensible translational model is that SOS2 activates wild-type RAS downstream of RTKs, sustaining PI3K–AKT survival signals that cooperate with mutant KRAS. Accordingly, tumors dependent on this circuit may be vulnerable to SOS2 inhibition, particularly alongside MEK/ERK- or KRAS-directed agents. All such evidence is currently preclinical. (baltanas2021sos2comesto pages 8-10, baltanas2021sos2comesto pages 10-11)
+
+## 7. Recent research and therapeutic development
+
+### 7.1 State of the field in 2023–2024
+
+The 2023–2024 literature remained dominated by broader RAS regulation, SOS1 pharmacology, and GEF-directed drug discovery rather than SOS2-selective experimental studies. The expert consensus is that GEFs are attractive upstream targets because they control GTP loading, but most GEF-directed agents remain preclinical and require stronger mechanistic, selectivity, and cellular-target-engagement validation. For SOS2 specifically, this caution is especially important: compounds selective for SOS1, such as commonly discussed SOS1 inhibitors, cannot be cited as evidence of SOS2 inhibition. The limited SOS2-specific 2024 Noonan work was principally structural modeling and therefore complements, rather than replaces, human genetics and biochemical validation.
+
+### 7.2 First structure-guided SOS2 binders
+
+The most important recent advance is Zak et al., published in the *Journal of Medicinal Chemistry* in **January 2025** (DOI [10.1021/acs.jmedchem.4c02007](https://doi.org/10.1021/acs.jmedchem.4c02007)). A **6,000-compound SPR fragment screen** identified a quinazoline hit with approximately **33 µM** affinity. Medicinal-chemistry optimization produced single-digit-micromolar binders. Compound 2 showed no saturable binding to SOS1 at concentrations up to **200 µM**, providing direct evidence that selectivity between the close paralogs is chemically achievable. (zak2025discoveryofsmall pages 2-4, zak2025discoveryofsmall pages 1-2)
+
+Crystallography identified SOS2 residues **R900, D904, and V907**, corresponding to different residues in SOS1, as important selectivity determinants. Structures were deposited for compounds 2, 6, and 9 as PDB **9BVI, 9BVF, and 9BVE**. The experimentally observed compound-2 pose and the SOS1/SOS2 pocket comparison provide the structural rationale for paralog-selective ligand design. (zak2025discoveryofsmall pages 4-5, zak2025discoveryofsmall pages 5-7, zak2025discoveryofsmall media c657e5c6)
+
+A separate screen of **961 fluorinated fragments** yielded 38 initial hits, 23 confirmed by STD-NMR, and revealed a previously unreported interdomain pocket. Compound 11 bound weakly by ITC—approximately **331 µM for SOS2 and 159 µM for SOS1**—so it was not SOS2-selective, but its structure (PDB **9GIN**) suggests a possible route to compounds that perturb the SOS–RAS interface. (zak2025discoveryofsmall pages 4-5, zak2025discoveryofsmall pages 2-4)
+
+These are **binding fragments and chemical starting points**, not validated SOS2 drugs. Cellular suppression of RAS signaling, antitumor efficacy, pharmacokinetics, and safety were not established. Some binding modes could conceivably activate rather than inhibit SOS2; functional validation is therefore essential. Proposed uses as catalytic inhibitors, SOS–RAS interaction disruptors, or PROTAC ligands remain prospective. (zak2025discoveryofsmall pages 5-7, zak2025discoveryofsmall pages 2-4)
+
+## 8. Current applications and real-world implementation
+
+1. **Molecular diagnosis:** SOS2 is included in RASopathy/Noonan-syndrome sequencing panels. Pathogenic activating variants can establish NS9 and help focus cardiovascular, developmental, and lymphatic evaluation. This is the clearest current clinical implementation.
+2. **Cancer biomarker research:** SOS2 dependency, expression, and pathway output are being evaluated as biomarkers for PI3K–AKT dependence, anchorage-independent survival, and combination sensitivity in KRAS-mutant cancers. This remains research use rather than routine oncology practice.
+3. **Drug discovery:** Q07890 catalytic-domain constructs, SPR/NMR fragment screening, crystallography, and structure-guided chemistry now permit direct SOS2 ligand discovery. No SOS2-selective approved therapy or clinically validated inhibitor was identified.
+4. **Disease-mechanism modeling:** Sos2 knockout and double-knockout models are used to separate paralog-specific from redundant RAS-GEF functions, including epidermal stem-cell maintenance and oncogenic RAS cooperation. (baltanas2021sos2comesto pages 1-3, baltanas2021sos2comesto pages 4-5, zak2025discoveryofsmall pages 4-5)
+
+## 9. Evidence-weighted functional annotation
+
+**Recommended primary annotation:**
+
+> Human SOS2/Q07890 is a cytoplasmic, receptor-coupled RAS guanine-nucleotide exchange factor that is recruited to the cytoplasmic face of the plasma membrane through GRB2/adaptor and lipid interactions. Its CDC25-homology catalytic domain promotes GDP release from canonical RAS proteins, enabling GTP loading and downstream RAF–MEK–ERK and PI3K–AKT signaling. It is partly redundant with SOS1 but has context-specific importance for RTK-driven wild-type RAS–PI3K–AKT signaling, epidermal stem-cell homeostasis, and survival/transformation of some KRAS-mutant cells.
+
+**Confidence assessment:**
+
+- **High confidence:** identity, human organism, Q07890 accession, RAS-GEF function, GDP-release/GTP-loading reaction, REM/CDC25 catalytic module, membrane-proximal action, partial redundancy with SOS1, and causal association with Noonan syndrome 9.
+- **Moderate confidence/context-dependent:** preferential contribution to PI3K–AKT signaling, KRAS-mutant cancer dependence, and tissue-specific stem-cell functions.
+- **Provisional or extrapolated:** SOS2 RAC-GEF activity; exact equivalence of full-length SOS1 and SOS2 autoinhibition/allosteric activation; and therapeutic efficacy of newly discovered SOS2 binders.
+
+Overall, SOS2 should no longer be described simply as a dispensable SOS1 backup. The current evidence supports a broadly redundant but biologically consequential RAS activator with distinct regulatory stability, receptor coupling, tissue functions, and a measurable bias toward PI3K–AKT survival signaling in selected systems. The field’s principal unresolved questions are the full-length SOS2 regulatory structure, quantitative substrate/isoform kinetics, determinants of ERK-versus-AKT pathway selection, and whether selective SOS2 inhibition has a clinically usable therapeutic window.
 
 References
 
-1. (bannoura2024targetingguaninenucleotide pages 3-4): Sahar F. Bannoura, Husain Yar Khan, Md. Hafiz Uddin, Ramzi M. Mohammad, Boris C. Pasche, and Asfar S. Azmi. Targeting guanine nucleotide exchange factors for novel cancer drug discovery. Expert Opinion on Drug Discovery, 19:949-959, Jun 2024. URL: https://doi.org/10.1080/17460441.2024.2368242, doi:10.1080/17460441.2024.2368242. This article has 11 citations and is from a peer-reviewed journal.
+1. (nair2021rasisoformsfrom pages 9-10): Arathi Nair, Katharina F. Kubatzky, and Bhaskar Saha. Ras isoforms from lab benches to lives—what are we missing and how far are we? International Journal of Molecular Sciences, 22:6508, Jun 2021. URL: https://doi.org/10.3390/ijms22126508, doi:10.3390/ijms22126508. This article has 7 citations.
 
-2. (lunaramirez2026sos1trackingthe pages 20-21): Luis Luna-Ramírez, Rósula García-Navas, Eugenio Santos, and Fernando C. Baltanás. Sos1: tracking the evolving path from promising to actionable therapeutic target in ras-dependent cancers. Molecular Cancer, Mar 2026. URL: https://doi.org/10.1186/s12943-026-02632-7, doi:10.1186/s12943-026-02632-7. This article has 1 citations and is from a highest quality peer-reviewed journal.
+2. (rojas2011mammaliansonof pages 1-2): J. M. Rojas, J. L. Oliva, and E. Santos. Mammalian son of sevenless guanine nucleotide exchange factors: old concepts and new perspectives. Genes & cancer, 2 3:298-305, Mar 2011. URL: https://doi.org/10.1177/1947601911408078, doi:10.1177/1947601911408078. This article has 117 citations.
 
-3. (lunaramirez2026sos1trackingthe pages 1-2): Luis Luna-Ramírez, Rósula García-Navas, Eugenio Santos, and Fernando C. Baltanás. Sos1: tracking the evolving path from promising to actionable therapeutic target in ras-dependent cancers. Molecular Cancer, Mar 2026. URL: https://doi.org/10.1186/s12943-026-02632-7, doi:10.1186/s12943-026-02632-7. This article has 1 citations and is from a highest quality peer-reviewed journal.
+3. (zak2025discoveryofsmall pages 7-8): Krzysztof M. Zak, Alex G. Waterson, Leonhard Geist, Nina Braun, Katja Hauer, Klaus Rumpel, Juergen Ramharter, Heinz Stadtmueller, Bernhard Wolkerstorfer, David Schoenbauer, Jianwen Cui, Jason Phan, Jason R. Abbott, Dhruba Sarkar, Timothy R. Hodges, Allison Arnold, John L. Sensintaffar, Stephen W. Fesik, and Dirk Kessler. Discovery of small molecules that bind to son of sevenless 2 (sos2). Journal of Medicinal Chemistry, 68:2680-2693, Jan 2025. URL: https://doi.org/10.1021/acs.jmedchem.4c02007, doi:10.1021/acs.jmedchem.4c02007. This article has 5 citations and is from a highest quality peer-reviewed journal.
 
-4. (nair2023regulationofrasgtpase pages 2-5): Arathi Nair and Bhaskar Saha. Regulation of ras-gtpase signaling and localization by post-translational modifications. Kinases and Phosphatases, 1:97-116, Apr 2023. URL: https://doi.org/10.3390/kinasesphosphatases1020007, doi:10.3390/kinasesphosphatases1020007. This article has 7 citations.
+4. (baltanas2021sos2comesto pages 1-3): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
 
-5. (kamel2026disruptingthekras–sos1 pages 6-7): Emadeldin M. Kamel, Sally Mostafa Khadrawy, Mohamed A. M. Ali, Mostafa R. Abukhadra, Nour Y. S. Yassin, Saleh Alkhedhairi, Faris F. Aba Alkhayl, and Al Mokhtar Lamsabhi. Disrupting the kras–sos1 protein–protein interaction: mechanistic rationale for pan-kras pathway suppression and combination therapy. Frontiers in Chemistry, Apr 2026. URL: https://doi.org/10.3389/fchem.2026.1808601, doi:10.3389/fchem.2026.1808601. This article has 1 citations.
+5. (baltanas2021sos2comesto pages 7-8): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
 
-6. (kamel2026disruptingthekras–sos1 pages 7-8): Emadeldin M. Kamel, Sally Mostafa Khadrawy, Mohamed A. M. Ali, Mostafa R. Abukhadra, Nour Y. S. Yassin, Saleh Alkhedhairi, Faris F. Aba Alkhayl, and Al Mokhtar Lamsabhi. Disrupting the kras–sos1 protein–protein interaction: mechanistic rationale for pan-kras pathway suppression and combination therapy. Frontiers in Chemistry, Apr 2026. URL: https://doi.org/10.3389/fchem.2026.1808601, doi:10.3389/fchem.2026.1808601. This article has 1 citations.
+6. (baltanas2021sos2comesto pages 8-10): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
 
-7. (karimah2024mutationanalysisof pages 1-3): Nihayatul Karimah. Mutation analysis of shp2, sos1, and sos2 related to dysregulation of ras/mapk pathway in noonan syndrome. Acta Biochimica Indonesiana, 7:143, Aug 2024. URL: https://doi.org/10.32889/actabioina.143, doi:10.32889/actabioina.143. This article has 0 citations.
+7. (baltanas2021sos2comesto pages 10-11): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
 
-8. (lunaramirez2026sos1trackingthe pages 24-24): Luis Luna-Ramírez, Rósula García-Navas, Eugenio Santos, and Fernando C. Baltanás. Sos1: tracking the evolving path from promising to actionable therapeutic target in ras-dependent cancers. Molecular Cancer, Mar 2026. URL: https://doi.org/10.1186/s12943-026-02632-7, doi:10.1186/s12943-026-02632-7. This article has 1 citations and is from a highest quality peer-reviewed journal.
+8. (baltanas2021sos2comesto pages 5-7): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
 
-9. (nair2023regulationofrasgtpase pages 1-2): Arathi Nair and Bhaskar Saha. Regulation of ras-gtpase signaling and localization by post-translational modifications. Kinases and Phosphatases, 1:97-116, Apr 2023. URL: https://doi.org/10.3390/kinasesphosphatases1020007, doi:10.3390/kinasesphosphatases1020007. This article has 7 citations.
+9. (baltanas2021sos2comesto pages 4-5): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
 
-10. (karimah2024mutationanalysisof pages 8-10): Nihayatul Karimah. Mutation analysis of shp2, sos1, and sos2 related to dysregulation of ras/mapk pathway in noonan syndrome. Acta Biochimica Indonesiana, 7:143, Aug 2024. URL: https://doi.org/10.32889/actabioina.143, doi:10.32889/actabioina.143. This article has 0 citations.
+10. (OpenTargets Search: -SOS2): Open Targets Query (-SOS2, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-11. (karimah2024mutationanalysisof pages 6-8): Nihayatul Karimah. Mutation analysis of shp2, sos1, and sos2 related to dysregulation of ras/mapk pathway in noonan syndrome. Acta Biochimica Indonesiana, 7:143, Aug 2024. URL: https://doi.org/10.32889/actabioina.143, doi:10.32889/actabioina.143. This article has 0 citations.
+11. (zak2025discoveryofsmall pages 4-5): Krzysztof M. Zak, Alex G. Waterson, Leonhard Geist, Nina Braun, Katja Hauer, Klaus Rumpel, Juergen Ramharter, Heinz Stadtmueller, Bernhard Wolkerstorfer, David Schoenbauer, Jianwen Cui, Jason Phan, Jason R. Abbott, Dhruba Sarkar, Timothy R. Hodges, Allison Arnold, John L. Sensintaffar, Stephen W. Fesik, and Dirk Kessler. Discovery of small molecules that bind to son of sevenless 2 (sos2). Journal of Medicinal Chemistry, 68:2680-2693, Jan 2025. URL: https://doi.org/10.1021/acs.jmedchem.4c02007, doi:10.1021/acs.jmedchem.4c02007. This article has 5 citations and is from a highest quality peer-reviewed journal.
 
-12. (pierre2011understandingsos(son pages 17-23): Stéphane Pierre, Anne-Sophie bats, and Xavier Coumoul. Understanding sos (son of sevenless). Biochemical pharmacology, 82 9:1049-56, Nov 2011. URL: https://doi.org/10.1016/j.bcp.2011.07.072, doi:10.1016/j.bcp.2011.07.072. This article has 107 citations and is from a domain leading peer-reviewed journal.
+12. (zak2025discoveryofsmall pages 5-7): Krzysztof M. Zak, Alex G. Waterson, Leonhard Geist, Nina Braun, Katja Hauer, Klaus Rumpel, Juergen Ramharter, Heinz Stadtmueller, Bernhard Wolkerstorfer, David Schoenbauer, Jianwen Cui, Jason Phan, Jason R. Abbott, Dhruba Sarkar, Timothy R. Hodges, Allison Arnold, John L. Sensintaffar, Stephen W. Fesik, and Dirk Kessler. Discovery of small molecules that bind to son of sevenless 2 (sos2). Journal of Medicinal Chemistry, 68:2680-2693, Jan 2025. URL: https://doi.org/10.1021/acs.jmedchem.4c02007, doi:10.1021/acs.jmedchem.4c02007. This article has 5 citations and is from a highest quality peer-reviewed journal.
 
-13. (baltanas2021sos2comesto pages 7-8): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
+13. (zak2025discoveryofsmall pages 2-4): Krzysztof M. Zak, Alex G. Waterson, Leonhard Geist, Nina Braun, Katja Hauer, Klaus Rumpel, Juergen Ramharter, Heinz Stadtmueller, Bernhard Wolkerstorfer, David Schoenbauer, Jianwen Cui, Jason Phan, Jason R. Abbott, Dhruba Sarkar, Timothy R. Hodges, Allison Arnold, John L. Sensintaffar, Stephen W. Fesik, and Dirk Kessler. Discovery of small molecules that bind to son of sevenless 2 (sos2). Journal of Medicinal Chemistry, 68:2680-2693, Jan 2025. URL: https://doi.org/10.1021/acs.jmedchem.4c02007, doi:10.1021/acs.jmedchem.4c02007. This article has 5 citations and is from a highest quality peer-reviewed journal.
 
-14. (rojas2011mammaliansonof pages 2-3): J. M. Rojas, J. L. Oliva, and E. Santos. Mammalian son of sevenless guanine nucleotide exchange factors: old concepts and new perspectives. Genes & cancer, 2 3:298-305, Mar 2011. URL: https://doi.org/10.1177/1947601911408078, doi:10.1177/1947601911408078. This article has 117 citations.
+14. (zak2025discoveryofsmall pages 1-2): Krzysztof M. Zak, Alex G. Waterson, Leonhard Geist, Nina Braun, Katja Hauer, Klaus Rumpel, Juergen Ramharter, Heinz Stadtmueller, Bernhard Wolkerstorfer, David Schoenbauer, Jianwen Cui, Jason Phan, Jason R. Abbott, Dhruba Sarkar, Timothy R. Hodges, Allison Arnold, John L. Sensintaffar, Stephen W. Fesik, and Dirk Kessler. Discovery of small molecules that bind to son of sevenless 2 (sos2). Journal of Medicinal Chemistry, 68:2680-2693, Jan 2025. URL: https://doi.org/10.1021/acs.jmedchem.4c02007, doi:10.1021/acs.jmedchem.4c02007. This article has 5 citations and is from a highest quality peer-reviewed journal.
 
-15. (pierre2011understandingsos(son pages 23-33): Stéphane Pierre, Anne-Sophie bats, and Xavier Coumoul. Understanding sos (son of sevenless). Biochemical pharmacology, 82 9:1049-56, Nov 2011. URL: https://doi.org/10.1016/j.bcp.2011.07.072, doi:10.1016/j.bcp.2011.07.072. This article has 107 citations and is from a domain leading peer-reviewed journal.
-
-16. (rojas2011mammaliansonof pages 3-4): J. M. Rojas, J. L. Oliva, and E. Santos. Mammalian son of sevenless guanine nucleotide exchange factors: old concepts and new perspectives. Genes & cancer, 2 3:298-305, Mar 2011. URL: https://doi.org/10.1177/1947601911408078, doi:10.1177/1947601911408078. This article has 117 citations.
-
-17. (theard2024sos2modulatesthe pages 16-17): Patricia L. Theard, Amanda J. Linke, Nancy E. Sealover, Brianna R. Daley, Johnny Yang, Katherine Cox, and Robert L. Kortum. <scp>sos2</scp> modulates the threshold of <scp>egfr</scp> signaling to regulate osimertinib efficacy and resistance in lung adenocarcinoma. Molecular Oncology, 18:641-661, Jan 2024. URL: https://doi.org/10.1002/1878-0261.13564, doi:10.1002/1878-0261.13564. This article has 15 citations and is from a peer-reviewed journal.
-
-18. (baltanas2021sos2comesto pages 8-10): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
-
-19. (theard2024sos2modulatesthe pages 12-13): Patricia L. Theard, Amanda J. Linke, Nancy E. Sealover, Brianna R. Daley, Johnny Yang, Katherine Cox, and Robert L. Kortum. <scp>sos2</scp> modulates the threshold of <scp>egfr</scp> signaling to regulate osimertinib efficacy and resistance in lung adenocarcinoma. Molecular Oncology, 18:641-661, Jan 2024. URL: https://doi.org/10.1002/1878-0261.13564, doi:10.1002/1878-0261.13564. This article has 15 citations and is from a peer-reviewed journal.
-
-20. (sheffels2018oncogenicrasisoforms pages 10-11): Erin Sheffels, Nancy E. Sealover, Chenyue Wang, Do Hyung Kim, Isabella A. Vazirani, Elizabeth Lee, Elizabeth M. Terrell, Deborah K. Morrison, Ji Luo, and Robert L. Kortum. Oncogenic ras isoforms show a hierarchical requirement for the guanine nucleotide exchange factor sos2 to mediate cell transformation. Science Signaling, Sep 2018. URL: https://doi.org/10.1126/scisignal.aar8371, doi:10.1126/scisignal.aar8371. This article has 64 citations and is from a domain leading peer-reviewed journal.
-
-21. (sheffels2018oncogenicrasisoforms pages 5-7): Erin Sheffels, Nancy E. Sealover, Chenyue Wang, Do Hyung Kim, Isabella A. Vazirani, Elizabeth Lee, Elizabeth M. Terrell, Deborah K. Morrison, Ji Luo, and Robert L. Kortum. Oncogenic ras isoforms show a hierarchical requirement for the guanine nucleotide exchange factor sos2 to mediate cell transformation. Science Signaling, Sep 2018. URL: https://doi.org/10.1126/scisignal.aar8371, doi:10.1126/scisignal.aar8371. This article has 64 citations and is from a domain leading peer-reviewed journal.
-
-22. (baltanas2021sos2comesto pages 5-7): Fernando C. Baltanás, Rósula García-Navas, and Eugenio Santos. Sos2 comes to the fore: differential functionalities in physiology and pathology. International Journal of Molecular Sciences, 22:6613, Jun 2021. URL: https://doi.org/10.3390/ijms22126613, doi:10.3390/ijms22126613. This article has 37 citations.
-
-23. (qian2000thesos1and pages 9-10): Xiaolan Qian, Luis Esteban, William C. Vass, Cheerag Upadhyaya, Alex G. Papageorge, Kate Yienger, Jerrold M. Ward, Douglas R. Lowy, and Eugenio Santos. The sos1 and sos2 ras‐specific exchange factors: differences in placental expression and signaling properties. The EMBO Journal, 19:642-654, Feb 2000. URL: https://doi.org/10.1093/emboj/19.4.642, doi:10.1093/emboj/19.4.642. This article has 161 citations.
-
-24. (cordeddu2015activatingmutationsaffecting pages 6-7): Viviana Cordeddu, Jiani C. Yin, Cecilia Gunnarsson, Carl Virtanen, Séverine Drunat, Francesca Lepri, Alessandro De Luca, Cesare Rossi, Andrea Ciolfi, Trevor J. Pugh, Alessandro Bruselles, James R. Priest, Len A. Pennacchio, Zhibin Lu, Arnavaz Danesh, Rene Quevedo, Alaa Hamid, Simone Martinelli, Francesca Pantaleoni, Maria Gnazzo, Paola Daniele, Christina Lissewski, Gianfranco Bocchinfuso, Lorenzo Stella, Sylvie Odent, Nicole Philip, Laurence Faivre, Marketa Vlckova, Eva Seemanova, Cristina Digilio, Martin Zenker, Giuseppe Zampino, Alain Verloes, Bruno Dallapiccola, Amy E. Roberts, Hélène Cavé, Bruce D. Gelb, Benjamin G. Neel, and Marco Tartaglia. Activating mutations affecting the dbl homology domain of sos2 cause noonan syndrome. Human Mutation, 36:1080-1087, Nov 2015. URL: https://doi.org/10.1002/humu.22834, doi:10.1002/humu.22834. This article has 93 citations and is from a domain leading peer-reviewed journal.
-
-25. (rojas2011mammaliansonof pages 1-2): J. M. Rojas, J. L. Oliva, and E. Santos. Mammalian son of sevenless guanine nucleotide exchange factors: old concepts and new perspectives. Genes & cancer, 2 3:298-305, Mar 2011. URL: https://doi.org/10.1177/1947601911408078, doi:10.1177/1947601911408078. This article has 117 citations.
-
-26. (theard2023sos2regulatesthe pages 5-8): Patricia L. Theard, Amanda J. Linke, Nancy E. Sealover, Brianna R. Daley, Johnny Yang, Katherine Cox, and Robert L Kortum. Sos2 regulates the threshold of mutant egfr-dependent oncogenesis. bioRxiv, Jun 2023. URL: https://doi.org/10.1101/2023.01.20.524989, doi:10.1101/2023.01.20.524989. This article has 4 citations.
-
-27. (theard2024sos2modulatesthe pages 1-2): Patricia L. Theard, Amanda J. Linke, Nancy E. Sealover, Brianna R. Daley, Johnny Yang, Katherine Cox, and Robert L. Kortum. <scp>sos2</scp> modulates the threshold of <scp>egfr</scp> signaling to regulate osimertinib efficacy and resistance in lung adenocarcinoma. Molecular Oncology, 18:641-661, Jan 2024. URL: https://doi.org/10.1002/1878-0261.13564, doi:10.1002/1878-0261.13564. This article has 15 citations and is from a peer-reviewed journal.
-
-28. (licerasboillos2025sos1ablationalters pages 4-6): Pilar Liceras-Boillos, Rósula Garcia-Navas, Clara Llorente-González, L. Francisco Lorenzo-Martin, Luis Luna-Ramírez, Rocío Fuentes-Mateos, Nuria Calzada, Francisco M. Vega, Mark R. Holt, Anne J. Ridley, Xose R. Bustelo, Miguel Vicente-Manzanares, Eugenio Santos, and Fernando C. Baltanás. Sos1 ablation alters focal adhesion dynamics and increases mmp2/9-dependent gelatinase activity in primary mouse embryonic fibroblasts. Cell Communication and Signaling : CCS, Mar 2025. URL: https://doi.org/10.1186/s12964-025-02122-1, doi:10.1186/s12964-025-02122-1. This article has 1 citations.
+15. (zak2025discoveryofsmall media c657e5c6): Krzysztof M. Zak, Alex G. Waterson, Leonhard Geist, Nina Braun, Katja Hauer, Klaus Rumpel, Juergen Ramharter, Heinz Stadtmueller, Bernhard Wolkerstorfer, David Schoenbauer, Jianwen Cui, Jason Phan, Jason R. Abbott, Dhruba Sarkar, Timothy R. Hodges, Allison Arnold, John L. Sensintaffar, Stephen W. Fesik, and Dirk Kessler. Discovery of small molecules that bind to son of sevenless 2 (sos2). Journal of Medicinal Chemistry, 68:2680-2693, Jan 2025. URL: https://doi.org/10.1021/acs.jmedchem.4c02007, doi:10.1021/acs.jmedchem.4c02007. This article has 5 citations and is from a highest quality peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](SOS2-deep-research-falcon_artifacts/artifact-00.md)
-- [Edison artifact artifact-01](SOS2-deep-research-falcon_artifacts/artifact-01.md)
+![## Context ID: pqac-00000014 Figure 4 illustrates the binding of compound 2 to the SOS2 catalytic pocket and provides the structural rationale for its selectivi](SOS2-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. karimah2024mutationanalysisof pages 8-10
-2. bannoura2024targetingguaninenucleotide pages 3-4
-3. sheffels2018oncogenicrasisoforms pages 10-11
-4. cordeddu2015activatingmutationsaffecting pages 6-7
-5. nair2023regulationofrasgtpase pages 2-5
-6. karimah2024mutationanalysisof pages 1-3
-7. nair2023regulationofrasgtpase pages 1-2
-8. karimah2024mutationanalysisof pages 6-8
-9. rojas2011mammaliansonof pages 2-3
-10. rojas2011mammaliansonof pages 3-4
-11. sheffels2018oncogenicrasisoforms pages 5-7
-12. rojas2011mammaliansonof pages 1-2
-13. https://doi.org/10.1080/17460441.2024.2368242,
-14. https://doi.org/10.1186/s12943-026-02632-7,
-15. https://doi.org/10.3390/kinasesphosphatases1020007,
-16. https://doi.org/10.3389/fchem.2026.1808601,
-17. https://doi.org/10.32889/actabioina.143,
-18. https://doi.org/10.1016/j.bcp.2011.07.072,
-19. https://doi.org/10.3390/ijms22126613,
-20. https://doi.org/10.1177/1947601911408078,
-21. https://doi.org/10.1002/1878-0261.13564,
-22. https://doi.org/10.1126/scisignal.aar8371,
-23. https://doi.org/10.1093/emboj/19.4.642,
-24. https://doi.org/10.1002/humu.22834,
-25. https://doi.org/10.1101/2023.01.20.524989,
-26. https://doi.org/10.1186/s12964-025-02122-1,
+1. nair2021rasisoformsfrom pages 9-10
+2. rojas2011mammaliansonof pages 1-2
+3. zak2025discoveryofsmall pages 7-8
+4. zak2025discoveryofsmall pages 4-5
+5. zak2025discoveryofsmall pages 5-7
+6. zak2025discoveryofsmall pages 2-4
+7. zak2025discoveryofsmall pages 1-2
+8. 10.1021/acs.jmedchem.4c02007
+9. https://doi.org/10.1021/acs.jmedchem.4c02007
+10. https://doi.org/10.3390/ijms22126508,
+11. https://doi.org/10.1177/1947601911408078,
+12. https://doi.org/10.1021/acs.jmedchem.4c02007,
+13. https://doi.org/10.3390/ijms22126613,

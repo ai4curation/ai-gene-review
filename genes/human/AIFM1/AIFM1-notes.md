@@ -89,6 +89,15 @@ Final source14 validation passed (`just validate human AIFM1`, exit 0) with one 
 
 The coordinator independently read the complete source14 semantic delta and appended notes, checked the original PMID:39979311 Methods/Results distinctions, and accepted the bounded clarification with all annotation/core judgments preserved. Live AmiGO GO:0160203 was rechecked on 2026-09-27 and still gives the longer authored name, confirming the remaining warning is a local ontology snapshot mismatch.
 
+## APOPTOSIS label closure (2026-09-30)
+
+Updated the four authored `GO:0160203` labels to `mitochondrial disulfide
+relay system`, matching the local ontology snapshot used by validation. This is
+a display-label repair only: the IBA, IDA, TAS, and core-function assertions
+still point to the same GO identifier and still capture NADH-activated AIF
+anchoring/activation of CHCHD4 in the mitochondrial disulfide-relay import
+system.
+
 ## 2026-09-27 claim-specific evidence cleanup
 
 The exact current PR #3295 head `f561e9e633f6c348e9a063b6c04599ca0ef01b55`, formal review 5330345721 and full comment 5855866784 were checked before edits. All five canonical gene files and both published histories matched that head. The following changes preserve all 77 source assertions and actions, original reference identities, core terms and biological scope.

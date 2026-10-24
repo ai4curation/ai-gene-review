@@ -27,6 +27,10 @@ acid.
 - The reviewed MoaA sequence Q88E69 is the only one of the three with the
   MoaA-specific InterPro entries IPR013483 and IPR000385 in its UniProt record.
   All three share broader MoaA-like/radical-SAM entries and PTHR22960.
+- The generated KEGG link table maps all three MoaA-family proteins to K03639.
+  This similarity-driven KO co-assignment is useful context but does not override
+  the MoaA-specific InterPro split or the low pairwise identities between Q88E69
+  and the two unreviewed paralogs.
 - Q88E69 is 36.25% identical to Q88K11 (PP_2482) and 37.85% identical to Q88LG4
   (PP_1969) over aligned residue pairs. Q88K11 and Q88LG4 are 66.15% identical
   to one another. This pattern supports a closer relationship between the two

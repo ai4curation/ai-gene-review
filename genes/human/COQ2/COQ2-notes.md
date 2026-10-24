@@ -17,7 +17,7 @@ COQ2 is **4-hydroxybenzoate polyprenyltransferase, mitochondrial** (para-hydroxy
 ## Subcellular location and topology
 
 - SUBCELLULAR LOCATION: "Mitochondrion inner membrane ...; Multi-pass membrane protein ...; Matrix side" [file:human/COQ2/COQ2-uniprot.txt].
-- Seven transmembrane helices (TRANSMEM 84–104, 109–129, 149–169, 173–193, 204–224, 232–252, 278–298, 301–321, 333–353 in UniProt FT); C-terminus faces intermembrane space [file:human/COQ2/COQ2-uniprot.txt].
+- Nine transmembrane helices (TRANSMEM 84–104, 109–129, 149–169, 173–193, 204–224, 232–252, 278–298, 301–321, 333–353 in UniProt FT); C-terminus faces intermembrane space [file:human/COQ2/COQ2-uniprot.txt].
 - IDA localization to mitochondrial inner membrane established in [PMID:27493029]: "its protein product localizes to mitochondria with the C-terminus facing the intermembrane space."
 - HTP mitochondrial proteome dataset [PMID:34800366] localizes COQ2 to mitochondrion (aspect C).
 

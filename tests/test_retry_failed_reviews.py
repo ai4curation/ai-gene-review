@@ -734,7 +734,18 @@ def test_execute_requires_writer_before_discovery(monkeypatch):
     assert exc.value.code == 2
 
 
+class _FrozenDatetime(datetime):
+    """datetime whose now() is the fixtures' NOW, so main() sees the same clock."""
+
+    @classmethod
+    def now(cls, tz=None):
+        return NOW if tz is None else NOW.astimezone(tz)
+
+
 def test_execute_cli_uses_explicit_live_mode(monkeypatch):
+    # main() reads the wall clock; without freezing it, the fixture run drifts
+    # outside GitHub's 30-day rerun window once NOW is a month old.
+    monkeypatch.setattr(retry, "datetime", _FrozenDatetime)
     writes = harness(monkeypatch)
     assert retry.main(["--repo", "owner/repo", "--execute", "--min-delay-hours", "0"]) == 0
     assert len(writes) == 1

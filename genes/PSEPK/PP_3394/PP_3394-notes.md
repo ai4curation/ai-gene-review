@@ -8,3 +8,11 @@
 ## Full-gene metabolic-scope re-review, 2026-09-20
 
 Catalytic activity is retained: uncertainty between HMGL-like and synthase-family reaction assignments does not establish loss of catalysis. Oxo-acid lyase is separately UNDECIDED because its definition specifies C-C cleavage of a 3-hydroxy acid, not any DRE-TIM reaction. The existing mvaB report and the actual BCAA module report both leave PP_3394 unresolved. The latter explicitly states: "Both are candidates for the displaced leucine terminal step; choice is **unresolved** and should be flagged." TreeGrafter PTN000031316 supports the original HMG-CoA-lyase/leucine/ketone annotations, but the target-specific reaction is not settled by a paralog comparison. A focused reaction adjudication is coordinated by the parent reviewer; no duplicate was launched.
+
+## Focused DRE-TIM reaction report, 2026-10-10
+
+OpenScientist resolved the specific PP_3394/MvaB split that was left open in the first full-gene re-review. The report assigns the leucine/terpene HMG-CoA-lyase activity to MvaB/PP_3540, not PP_3394, and finds that PP_3394 fails the HMG-CoA-lyase-specific PS01062 signature while matching the isopropylmalate/homocitrate-synthase site-1 motif. [file:PSEPK/PP_3394/PP_3394-hypotheses/dre-tim-reaction-and-pathway-specificity/openscientist.md, "PP_3394 FAILS the HMG-CoA-lyase-specific PROSITE active-site signature PS01062 (SVAGLGGCPY)"]
+
+The same report cautions that the PP_3394-specific discrimination is computational, with no direct PP_3394 biochemical assay or mutant phenotype available. [file:PSEPK/PP_3394/PP_3394-hypotheses/dre-tim-reaction-and-pathway-specificity/openscientist.md, "All of the discriminating evidence is *computational*"]
+
+The appropriate PP_3394 curation stance is now more asymmetric: retain generic catalytic activity and keep oxo-acid lyase/acyltransferase specificity unresolved, but remove the specific HMG-CoA lyase, leucine catabolism, and ketone-body biosynthesis rows. Even for a true bacterial HMG-CoA lyase, acetoacetate formation alone does not establish a dedicated ketone-body biosynthetic pathway; in KT2440, the supported leucine/terpene HMG-CoA-lyase reaction maps to MvaB/PP_3540.

@@ -25,6 +25,11 @@ from ai_gene_review.etl.publication_refresh import (
     get_refresh_summary,
     find_active_review_pmids,
 )
+from ai_gene_review.evaluation.cafa import (
+    CafaInputError,
+    evaluate_cafa_predictions,
+    format_cafa_rows_tsv,
+)
 from ai_gene_review.validation import (
     BatchValidationReport,
     ValidationReport,
@@ -434,6 +439,24 @@ def _warning_lines(output: str) -> list[str]:
     ]
 
 
+# NCBITaxon label mismatches block, unlike GO label drift: the advisory policy
+# exists for GOA/GO release lag, which does not apply to NCBITaxon labels.
+BLOCKING_LABEL_MISMATCH = re.compile(r"Label mismatch for '?NCBITaxon:")
+
+
+def _split_blocking_label_warnings(warnings: list[str]) -> tuple[list[str], list[str]]:
+    """Split term-validator warnings into (blocking, advisory).
+
+    >>> _split_blocking_label_warnings([
+    ...     "WARN: Label mismatch for 'NCBITaxon:3055': expected 'X', got 'CHLRE'",
+    ...     "WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'",
+    ... ])
+    (["WARN: Label mismatch for 'NCBITaxon:3055': expected 'X', got 'CHLRE'"], ["WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'"])
+    """
+    blocking = [w for w in warnings if BLOCKING_LABEL_MISMATCH.search(w)]
+    return blocking, [w for w in warnings if not BLOCKING_LABEL_MISMATCH.search(w)]
+
+
 def _has_error_output(output: str) -> bool:
     # "❌ ERROR" is the linkml-term-validator error marker; the "❌ ... issue(s):"
     # header (also emitted for warning-only results) intentionally does not match.
@@ -507,6 +530,18 @@ def _run_validation_command(
             check_type=check_type,
         )
     else:
+        if check_type == "linkml_term_validator":
+            blocking, warnings = _split_blocking_label_warnings(warnings)
+            if blocking:
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    f"{phase}: taxon label does not match NCBITaxon: "
+                    f"{_summarize_validator_output(chr(10).join(blocking))}",
+                    path=str(report.file_path) if report.file_path else None,
+                    details=details,
+                    validation_category=validation_category,
+                    check_type=check_type,
+                )
         if warnings:
             report.add_issue(
                 ValidationSeverity.WARNING,
@@ -536,6 +571,7 @@ def _validate_gene_review_cli(
     check_schema: bool,
     check_terms: bool,
     show_timing: bool = False,
+    check_ontology: bool = False,
 ) -> ValidationReport:
     yaml_file = yaml_file.resolve()
     schema_path = schema_path.resolve()
@@ -639,6 +675,7 @@ def _validate_gene_review_cli(
                 check_best_practices=True,
                 check_goa=check_goa,
                 check_supporting_text=check_references,
+                check_ontology=check_ontology,
             )
             _merge_report(report, best_practices_report)
         except Exception as e:
@@ -702,6 +739,7 @@ def _validate_multiple_files_cli(
     check_terms: bool,
     show_progress: bool = False,
     show_timing: bool = False,
+    check_ontology: bool = False,
 ) -> BatchValidationReport:
     batch_report = BatchValidationReport()
 
@@ -737,6 +775,7 @@ def _validate_multiple_files_cli(
                         check_schema,
                         check_terms,
                         show_timing=show_timing,
+                        check_ontology=check_ontology,
                     )
                 )
                 progress.advance(main_task)
@@ -752,10 +791,116 @@ def _validate_multiple_files_cli(
                     check_schema,
                     check_terms,
                     show_timing=show_timing,
+                    check_ontology=check_ontology,
                 )
             )
 
     return batch_report
+
+
+@app.command("cafa-evaluate")
+def cafa_evaluate(
+    prediction_file: Annotated[
+        Path,
+        typer.Argument(
+            help=(
+                "Prediction TSV with columns: gene_id, go_id, label, aspect, "
+                "score, rank. score is ignored; rank must be a precomputed "
+                "integer bin. .gz is supported."
+            )
+        ),
+    ],
+    training_annotations: Annotated[
+        Path,
+        typer.Option(
+            "--training",
+            "-t",
+            help="Pre-cutoff experimental annotations TSV.",
+        ),
+    ],
+    new_annotations: Annotated[
+        Path,
+        typer.Option(
+            "--new",
+            "-n",
+            help="Post-cutoff experimental annotations TSV used as the proxy test set.",
+        ),
+    ],
+    curated_genes: Annotated[
+        Path,
+        typer.Option(
+            "--genes",
+            "-g",
+            help="Curatable gene list with PAN-GO-style long IDs.",
+        ),
+    ],
+    go_parents: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--parents",
+            "-p",
+            help="Optional GO all-parents lookup used to expand the training exclusion set.",
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write metrics TSV to this path."),
+    ] = None,
+    max_rank: Annotated[
+        int,
+        typer.Option(
+            "--max-rank",
+            help=(
+                "Evaluate threshold pools 1..MAX_RANK from precomputed "
+                "PAN-GO decile ranks."
+            ),
+        ),
+    ] = 10,
+    no_header: Annotated[
+        bool,
+        typer.Option("--no-header", help="Omit the TSV header row."),
+    ] = False,
+):
+    """Evaluate GO predictions with the PAN-GO CAFA-style metric.
+
+    This reimplements the Human Functionome supplementary evaluation on prepared
+    files: training annotations are excluded, post-cutoff experimental
+    annotations are used as the proxy test set, and precision/recall are
+    macro-averaged per protein. Prediction scores are ignored; rank must be a
+    precomputed integer decile.
+    """
+
+    if max_rank < 1:
+        typer.echo("Error: --max-rank must be at least 1", err=True)
+        raise typer.Exit(code=1)
+
+    for path in [prediction_file, training_annotations, new_annotations, curated_genes]:
+        if not path.exists():
+            typer.echo(f"Error: file not found: {path}", err=True)
+            raise typer.Exit(code=1)
+    if go_parents is not None and not go_parents.exists():
+        typer.echo(f"Error: file not found: {go_parents}", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        rows = evaluate_cafa_predictions(
+            prediction_file,
+            training_annotations,
+            new_annotations,
+            curated_genes,
+            go_parents,
+            thresholds=tuple(range(1, max_rank + 1)),
+            threshold_fraction_denominator=10,
+        )
+        tsv = format_cafa_rows_tsv(rows, include_header=not no_header)
+        if output:
+            output.write_text(tsv)
+            typer.echo(f"CAFA metrics written to: {output}")
+        else:
+            typer.echo(tsv, nl=False)
+    except CafaInputError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -789,6 +934,16 @@ def validate(
         typer.Option(
             "--terms",
             help="Run ontology term/label validation with linkml-term-validator",
+        ),
+    ] = False,
+    ontology_checks: Annotated[
+        bool,
+        typer.Option(
+            "--ontology-checks",
+            help=(
+                "Run best-practice checks that need the GO hierarchy (e.g. ancestor/"
+                "descendant action-consistency rules). Implied by --terms."
+            ),
         ),
     ] = False,
     no_goa: Annotated[
@@ -849,6 +1004,13 @@ def validate(
     check_goa = not no_goa
     check_references = not no_references
     check_schema = not no_schema
+    check_ontology = terms or ontology_checks
+    if check_ontology and check_best_practices:
+        # Fail fast, before any file: per-file errors would hide a missing ontology
+        # behind thousands of identical failures.
+        from ai_gene_review.validation.action_consistency import go_ancestors
+
+        go_ancestors().load()
     schema_path = Path(schema).resolve() if schema else get_schema_path()
 
     # Validate single file or multiple files
@@ -865,6 +1027,7 @@ def validate(
             check_schema,
             terms,
             show_timing=show_timing,
+            check_ontology=check_ontology,
         )
 
         # Determine status symbol and color
@@ -936,6 +1099,7 @@ def validate(
             terms,
             show_progress=True,  # Enable progress bar for multiple files
             show_timing=show_timing,
+            check_ontology=check_ontology,
         )
 
         # Show summary
@@ -1494,6 +1658,63 @@ def backfill_isoforms(
 
     except (ValueError, FileNotFoundError) as e:
         typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def backfill_record_sections(
+    paths: Annotated[
+        Optional[list[Path]],
+        typer.Argument(help="Review YAML files or directories (default: genes/)"),
+    ] = None,
+    fix: Annotated[
+        bool,
+        typer.Option("--fix", help="Also rewrite existing values that disagree with the cited file"),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Report what would change without writing files"),
+    ] = False,
+):
+    """Fill record_section on quotes from cached UniProt flat files.
+
+    Each supporting_text quoting a file:...-uniprot.txt record gets the
+    section(s) of the record it comes from (e.g. CC:CAUTION, CC:FUNCTION,
+    FT:BINDING, DR:Pfam). Only the new lines are written; the rest of each
+    file is left as it was. Existing values are kept unless --fix is given.
+
+    Examples:
+        ai-gene-review backfill-record-sections genes/human/TP53/TP53-ai-review.yaml
+        ai-gene-review backfill-record-sections genes/human --dry-run
+        ai-gene-review backfill-record-sections --fix
+    """
+    from ai_gene_review.tools.backfill_record_sections import backfill_file, review_files
+
+    files = review_files(paths or [Path("genes")])
+    counts = ("added", "fixed", "mismatched", "unlocated", "ambiguous", "unplaceable")
+    totals = dict.fromkeys(("files",) + counts, 0)
+    failed: list[Path] = []
+    for f in files:
+        try:
+            r = backfill_file(f, fix=fix, dry_run=dry_run)
+        except ValueError as e:  # the edit would change more than record_section: skip this file
+            typer.echo(f"{f}: skipped, {e}", err=True)
+            failed.append(f)
+            continue
+        totals["files"] += int(r.changed)
+        for key in counts:
+            totals[key] += getattr(r, key)
+        if r.changed or r.mismatched:
+            typer.echo(f"{f}: added {r.added}, fixed {r.fixed}, mismatched {r.mismatched}")
+    verb = "would update" if dry_run else "updated"
+    typer.echo(
+        f"{verb} {totals['files']} of {len(files)} files: added {totals['added']}, "
+        f"fixed {totals['fixed']}; left {totals['mismatched']} mismatched, "
+        f"{totals['unlocated']} not located in the cited file, "
+        f"{totals['ambiguous']} in more than one section, {totals['unplaceable']} unplaceable"
+    )
+    if failed:
+        typer.echo(f"{len(failed)} file(s) skipped because the edit was unsafe", err=True)
         raise typer.Exit(code=1)
 
 
@@ -4342,6 +4563,7 @@ def refresh_panther_members(
         member_index_path,
         panther_assignments_conflict,
         load_member_overrides,
+        settle_member_alternates,
         write_member_index,
     )
     import yaml
@@ -4447,13 +4669,8 @@ def refresh_panther_members(
                 "  ⚠ overrides for accessions no longer cited: "
                 + ", ".join(sorted(set(overrides) - accessions))
             )
-        # An override that adopts UniProt's value settles that disagreement.
-        alternates = {
-            accession: family_sf
-            for accession, family_sf in alternates.items()
-            if accession not in index
-            or panther_assignments_conflict(index[accession], family_sf)
-        }
+        # A curated override settles the disagreement, in either direction.
+        alternates = settle_member_alternates(alternates, index, overrides)
 
     unresolved = accessions - set(index)
     out_path = write_member_index(

@@ -1,0 +1,69 @@
+# CEP41 functional review
+
+## 2026-10-10 — whole-gene evidence review
+
+CEP41 supports ciliary protein targeting and microtubule organization. The normal fetch seeded 40 assertions and four alternative products; all source fields, partner identifiers, qualifiers, reference identities and product descriptions are preserved. This is the first campaign review of this gene, not a claim of complete mechanistic knowledge.
+
+The binding instruction in the [published campaign instructions](https://github.com/ai4curation/ai-gene-review/blob/6ae4685964aa1aae16bfec2647cab2ccfed750f6/projects/CLINGEN_MENDELIAN.md#curation-instructions) retains supported generic binding as non-core when no better molecular function is justified. Here, the sole generic source supports a specific enzyme-binding refinement. Inaccessible target evidence remains undecided.
+
+### Ciliary targeting and modification
+
+[PMID:22246503](https://pmc.ncbi.nlm.nih.gov/articles/PMC3267856/), Results and Figure 2b, places endogenous CEP41 “at the centrioles and cilia” in mammalian cells including human hTERT-RPE1. Patient fibroblasts retain initial ARL13B-positive cilia despite striking loss of GT335/PolyE modification. Expression rescue, zebrafish axonemal ultrastructure and mouse IMCD3 TTLL6 localization identify a modification/architecture role beyond a general ciliopathy phenotype.
+
+Figure 4b reports tagged CEP41–TTLL6 complex association; Figure 4c shows restricted TTLL6 entry after Cep41 depletion. The Methods describe both human EGFP/HA and mouse GST/EGFP/FLAG CEP41 constructs. A human assay host does not settle the species of every tagged construct, and a cellular co-IP is not a purified binding interface. Enzyme binding is the supported resolution; a specific IFT motor bridge is still a hypothesis.
+
+The polyglutamylation ISS donor Q6GQN0 is zebrafish cep41 with an IMP from this same study. The original chemical-process row is refined to **protein localization to cilium**, the measured CEP41 step. TTLL6 performs glutamyl addition. This is a positive mechanistic refinement, not an assertion that all noncatalytic proteins are excluded from modification processes. Intrinsic glutamylase activity and a reaction-level CEP41 cofactor mechanism have not been established.
+
+[PMID:31885126](https://pmc.ncbi.nlm.nih.gov/articles/PMC7001496/), Results/Figures 3–8, adds human HUVEC/RPE1 and zebrafish evidence. The authors distinguish initial ciliation from length, modification and the “modulation of cilia disassembly”. CCP5 codepletion restores balanced glutamylation and several cellular phenotypes. HIF1A co-IP was performed in HEK293T, not HUVECs. AURKA phosphorylation and VEGF expression are downstream readouts; they do not give CEP41 kinase or transcription-factor activity. These context-dependent vascular results inform the biological summary without creating a list of new downstream process annotations.
+
+### Direct microtubule capability and structural scope
+
+[PMID:38841887](https://doi.org/10.1242/jcs.261927), Figures 1–2 and purification Methods, tests purified human NM_018718.3 CEP41 with goat-brain tubulin. The normal abstract describes “microtubule-stabilizing activity”. Selected [publisher full text](https://www.researchgate.net/publication/381222103_CEP41_a_ciliopathy-linked_centrosomal_protein_regulates_microtubule_assembly_and_cell_proliferation) resolves the construct and assay details. Bulk polymerization does not establish processive plus-end polymerase activity. Microtubule binding is included in the core; no redundant NEW binding assertion is added because GO:0005515 is an existing positive ancestor.
+
+[PMID:40593728](https://www.nature.com/articles/s41467-025-61015-6), Figure 6 and model-building Methods, assigns mouse CEP41 to mBMIP5 and supports multiciliogenesis. The luminal assignment raises an unresolved TTLL6-access question. This corroborates structural participation without claiming atomic human evidence or universal necessity for initial ciliation.
+
+The two core processes describe protein targeting and ciliary assembly/structural maturation, respectively. Their scope is consistent with preserved ciliation in human near-null fibroblasts. Alternative products Q9BYV8-1, -2, -4 and -5 remain separately recorded; unqualified source rows are not converted into universal isoform claims.
+
+### Source-specific limits and provenance
+
+- The original PMID:14654843 centrosome output was not independently recovered. The PMID:21399614 cache contains selected body sections but omits much of Results and the target tables. Both original IDAs are retained with separately cited, direct human localization corroboration from PMID:22246503. This does not claim that the independent study is their original experimental provenance.
+- PMID:19946888 describes membrane-fraction LC-MS, including associated proteins. The publisher identifies `jms1696_Suppinfotable1.xls`, but the recovered payloads are HTTP403 HTML rather than a workbook. Its exact CEP41 hit remains uninspected, so the membrane HDA is UNDECIDED. Neither membrane topology nor a false-positive detection is inferred.
+- The 22 Reactome events include Q9BYV8 through the cytosolic centrosome entity R-HSA-380269. Their broad compartment assertions remain non-core. Peripheral reaction titles describe other proteins' work and receive LOW reference relevance; they do not establish CEP41 kinase, motor or exchange-factor activity.
+- PAINT is an ancestral inference, not pairwise similarity. The exact node PTN002893044 is preserved; self-donor inclusion is legitimate. Its complete placement/history was not reconstructed. The retained basal-body active-in assertion is corroborated by localization plus a measured targeting role, not by a supposed basal-body catalytic assay.
+
+The [source evidence extract](CEP41-source-evidence.json) preserves literal donor, compartment, event and typed ontology fields with retrieval URLs and content hashes. It distinguishes source-linked database records from independent biological replication. It contains no invented target records or long literature quotations. Original publications and machine source files remain unchanged.
+
+### Research and validation record
+
+Normal source retrieval succeeded. An initial concurrent provider attempt began before UniProt metadata was available and failed its input template; the explicit fallback returned HTTP401. A single post-intake retry supplied the normal UniProt metadata: Falcon timed out at 90 seconds, and Perplexity again returned HTTP401. Task-specific process groups were cleaned up. No provider report was created or fabricated; this journal records manual primary-source work.
+
+Newly authored excerpts are counted across YAML and these notes, including repeated excerpts. Each source remains at or below 25 words. There is no inherited gene-notes prefix for this new gene. Normal gene validation, derived status and rendering are recorded in the handoff; a justified unresolved annotation does not by itself prevent a completed campaign audit after publication review and required checks.
+
+
+## 2026-10-10 — PR #4513 source and recommendation clarification
+
+This dated clarification preserves the complete earlier notes. All 40 source assertions, actions, products, reference identities, descriptions and core functions remain unchanged.
+
+The polyglutamylation entry contains two distinct layers. The source block archives the original ISS assertion to GO:0018095 and zebrafish donor Q6GQN0; the exact current donor record is IMP PMID:22246503 for that term. The nested review proposes GO:0061512 based on separately cited mammalian mechanistic evidence, rather than issuing a new fish-derived ISS annotation. Mouse IMCD3 depletion restricts TTLL6 mainly to basal bodies, while the human fibroblast experiment establishes glutamylation loss and rescue; these experiments are not interchangeable [PMID:22246503](https://pubmed.ncbi.nlm.nih.gov/22246503/). No claim is made that the fish donor already has the localization term. The recommendation identifies the measured CEP41 step and preserves the important glutamylation connection in the biological summary and core. It does not exclude every possible noncatalytic contribution to chemistry, and chemistry acceptance is not introduced solely to retain annotation coverage.
+
+The existing-schema distinction is explicit: ExistingAnnotation stores original term/evidence/source/donor, while Review stores proposed_replacement_terms and its own supported_by. The [exact-head schema](https://github.com/ai4curation/ai-gene-review/blob/4d3f375d8e1e06e27e6b09fbe0a6733cce9c6bf5/src/ai_gene_review/schema/gene_review.yaml) does not turn the latter into a replacement GOA record with inherited experimental provenance. The [source evidence extract](CEP41-source-evidence.json) now makes this distinction machine-readable while preserving all original donor and ontology fields.
+
+The microtubule-binding core remains directly supported by human purified-protein evidence [PMID:38841887](https://pubmed.ncbi.nlm.nih.gov/38841887/). No NEW binding row is added: the explicit project instruction applies the ancestor/descendant test to terms the gene already carries, and original positive GO:0005515 remains in the source annotation despite its nested enzyme-binding recommendation. The preserved official typed ancestry places GO:0005515 above GO:0008017. MODIFY is the review of an existing source assertion, whereas NEW would add another assertion; refining the former does not waive the restriction on the latter. The existing core-coverage validator message is an advisory to consider NEW if novel and is retained with this [policy basis](https://github.com/ai4curation/ai-gene-review/blob/4d3f375d8e1e06e27e6b09fbe0a6733cce9c6bf5/AGENTS.md). No source term or true microtubule activity is deleted to silence it.
+
+The repeated Reactome reasons and useful evidence-access limits remain intact because this follow-up concerns the two source/recommendation questions. No provider retry is made without changed access or credentials; the prior genuine bounded failures and manual primary evidence are already documented. No new publication quotations or provider artifacts are introduced.
+
+
+## 2026-10-10 — correction of the NEW molecular-function policy scope
+
+The prior dated interpretation of the hierarchy restriction was too broad. The [exact-head instructions](https://github.com/ai4curation/ai-gene-review/blob/64965a25de441f9628c26bb35cb92576a86bdd98/CLAUDE.md) introduce that checklist specifically before proposing a NEW process term. Extending its ancestor/descendant exclusion to the experimentally demonstrated molecular function was an error. The original positive protein-binding term and the recorded ontology ancestry are real; their presence does not, under that process-specific instruction, bar this MF proposal. The earlier notes remain intact as history, and the source evidence artifact retains the superseded interpretation with this explicit correction. No policy file is edited.
+
+Add one **microtubule binding (GO:0008017), IDA, PMID:38841887** proposal. Selected full Methods/Results identify human NM_018718.3 CEP41 (373 residues), bacterially produced with the purification tag removed before experiments, and preformed microtubules made from goat-brain tubulin. CEP41 co-sediments with those microtubules but remains soluble in the matching no-microtubule control. This establishes direct binding independently of the mouse cellular co-IP and cellular localization results [PMID:38841887](https://doi.org/10.1242/jcs.261927). It does not establish an atomic human interface, processive polymerase activity, a physiological tubulin-subtype preference or all-product equivalence. The genuine normal cache remains unchanged and abstract-only; the separately inspected original full text supplies construct and control detail.
+
+The new molecular-function row expresses the already supported core activity. All 40 original machine source objects, products, references, core functions and description remain unchanged. One existing review action changes as explained below: the polyglutamylation assertion is retained as non-core, and its localization replacement is withdrawn. No NEW process annotation is proposed. The added six-word cached abstract anchor brings the aggregate PMID:38841887 quotation total across YAML and the entire preserved notes to 14 words; other source totals remain 24, 7 and 4 words. No new quotation is repeated in this notes append.
+
+
+### Current process decision supersedes the prior localization replacement
+
+Retain the original ISS **protein polyglutamylation (GO:0018095)** assertion as KEEP_AS_NON_CORE and withdraw its proposed replacement. The prior dated MODIFY rationale placed too much weight on the absence of a reaction-level CEP41 cofactor assay when assessing broader involved_in participation. Noncatalytic participation does not require intrinsic glutamyl-transfer activity. Human fibroblast modification loss/rescue, together with tagged TTLL6 association and the separate mouse IMCD3 targeting experiment, supports CEP41's contribution to the modification process [PMID:22246503](https://pubmed.ncbi.nlm.nih.gov/22246503/). This does not recast the mouse targeting assay as a human experiment or rewrite the original zebrafish ISS provenance.
+
+The independently supported protein-localization-to-cilium core remains the precise mechanistic account. No separate NEW process is added solely to replace the withdrawn recommendation. The source artifact preserves the old review explanation as explicitly superseded provenance and records the current non-core process decision; its original donor fields and ontology relationships remain unchanged. This current decision supersedes the earlier process-replacement rationale while preserving every published notes byte above.

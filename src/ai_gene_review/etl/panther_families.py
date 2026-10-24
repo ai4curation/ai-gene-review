@@ -724,6 +724,38 @@ def apply_member_overrides(
     return merged
 
 
+def settle_member_alternates(
+    alternates: Dict[str, str],
+    index: Dict[str, str],
+    overrides: Dict[str, Tuple[str, str]],
+) -> Dict[str, str]:
+    """Drop alternates that a curated override, or agreement, has settled.
+
+    ``alternates`` holds UniProt's family where it disagrees with PANTHER's own
+    classification; membership checks accept either. A curated override settles
+    that disagreement in either direction. If it adopts UniProt's value there is
+    no conflict left. If it adopts PANTHER's own placement, UniProt's value has
+    been rejected, so it must stop passing membership checks as an alternate.
+
+    >>> settle_member_alternates(
+    ...     {"P1": "PTHR9:SF9", "P2": "PTHR9:SF9", "P3": "PTHR7:SF1"},
+    ...     {"P1": "PTHR1:SF2", "P2": "PTHR9:SF9", "P3": "PTHR3:SF3"},
+    ...     {"P1": ("PTHR1:SF2", "PANTHER tree placement adopted"),
+    ...      "P2": ("PTHR9:SF9", "UniProt value adopted")},
+    ... )
+    {'P3': 'PTHR7:SF1'}
+    """
+    return {
+        accession: family_sf
+        for accession, family_sf in alternates.items()
+        if accession not in overrides
+        and (
+            accession not in index
+            or panther_assignments_conflict(index[accession], family_sf)
+        )
+    }
+
+
 def build_member_index(
     accessions: Set[str],
     classification_paths: Iterable[Path],

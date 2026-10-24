@@ -77,6 +77,12 @@ lint-caches:
 fix-caches:
 	uv run python -m ai_gene_review.tools.cache_lint --fix
 
+# Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
+# thing in a copy of the committed reports and checks the generator refuses with the message
+# it declares, or still renders with the clause it declares.
+check-alignment-page-guards *ARGS:
+	uv run python projects/DISMECH_METABOLIC_ALIGNMENT/check_page_guards.py {{ARGS}}
+
 # Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
 # (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
 # linkml-term-validator on the regenerated nested term-tuple file.
