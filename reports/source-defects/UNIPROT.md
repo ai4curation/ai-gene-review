@@ -1,6 +1,6 @@
 # Source-record defects for UNIPROT
 
-9 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+10 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
@@ -137,3 +137,12 @@ Please check the reference supporting this ELF4 positive polymerase-II transcrip
 - **Evidence reference:** PMID:14970218
 
 - **Evidence reference:** PMID:14976184
+
+## 10. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:P30793  GO:0003924 GTPase activity (IDA, PMID:2463916)
+- **Field:** GO_ID
+- **Change:** GO:0003924 → GO:0003934 (GTP cyclohydrolase I activity)
+- **Recorded in:** `genes/human/GCH1/GCH1-ai-review.yaml`
+
+This IDA row (PMID:2463916, assigned by UniProt) gives GCH1 GTPase activity (GTP + H2O = GDP + phosphate). The paper purifies GTP cyclohydrolase I, which converts GTP to 7,8-dihydroneopterin 3'-triphosphate and formate and produces no GDP. The evidence supports GO:0003934 GTP cyclohydrolase I activity instead.

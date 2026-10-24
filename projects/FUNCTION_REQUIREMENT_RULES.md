@@ -3,21 +3,23 @@ title: "Function Requirement (NOT) Rules"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [ECOLI, METEA, PSEPK, human]
-genes: [ftsI, mdcD, traB, yjdM, kguE]
+genes: [ftsI, mdcD, traB, yjdM, kguE, GCH1, AYR1, RAM1, CAD, TGFBR3]
 ---
 
 # Function Requirement (NOT) Rules
 
 **Bottom line:** a rule of the form "a protein that enables GO term *T* carries at
-least one of these features" lets us say, from sequence features alone, that a
-protein lacking all of them is unlikely to enable *T*. Eight pilot rules, tested
-against every experimental (ECO:0000269 and descendants) `enables` annotation in
-GOA, flag 4% to 6% of the experimentally supported proteins for the four large
-rules (683 to 3990 proteins each) and 0 to 11 proteins for the four small ones. Most
-flags are themselves annotation problems: non-catalytic subunits annotated
-`enables` instead of `contributes_to`, or outright wrong terms. Applied to the GOA
-files in this repository, the rules flag 115 rows, and reviewers had already
-removed, modified, marked over-annotated or left undecided 85 of them (74%).
+least one of these features" turns the contrapositive into a **lead generator**: a
+protein lacking all of them is worth a second look. The rules are a way of finding
+candidate misannotations, not a validation gate; a flag is never by itself a reason
+to change an annotation. Ten pilot rules were tested against every experimental
+(ECO:0000269 and descendants) `enables` annotation in GOA. They flag 4% to 8% of the
+experimentally supported proteins for the five large rules (497 to 3984 proteins
+each), and most flags are themselves annotation problems: non-catalytic subunits
+annotated `enables` instead of `contributes_to`, regulators annotated with the
+activity they regulate, or wrong terms. Applied to the GOA files in this repository,
+the rules flag 167 rows, and reviewers had independently removed, modified, marked
+over-annotated or left undecided 138 of them (83%).
 
 ## Why
 
@@ -71,20 +73,52 @@ features from the UniProt REST API, cached under `.cache/function-requirements/`
 the sweep reads only the cached `*-uniprot.txt` and `*-goa.tsv` files and runs in
 about 10 s.
 
-## Pilot rules and acceptance results (2026-10-24)
+## Rules and acceptance results (2026-10-24)
 
 | Rule | Term | Strength | Experimental proteins flagged |
 |---|---|---|---|
 | FRR:0001 | peptidoglycan glycosyltransferase activity: needs GT51 or SEDS | REQUIRED | 2 / 10 |
 | FRR:0002 | acetyl-CoA carboxylase activity: needs biotin carboxylase, BCCP or carboxyltransferase; excluded by malonate decarboxylase beta | REQUIRED | 1 / 20 |
 | FRR:0003 | DNA-directed DNA polymerase activity: needs a catalytic polymerase fold | REQUIRED | 11 / 89 |
-| FRR:0004 | transmembrane transporter activity: needs a TM segment or membrane beta-barrel/carrier family | REQUIRED | 175 / 3990 |
+| FRR:0004 | transmembrane transporter activity: needs a TM segment or membrane beta-barrel/carrier/channel family | REQUIRED | 173 / 3984 |
 | FRR:0005 | protein kinase activity: needs a known protein kinase fold | ADVISORY | 132 / 2207 |
-| FRR:0006 | ATP hydrolysis activity: needs a known ATPase fold | ADVISORY | 42 / 683 |
+| FRR:0006 | ATP hydrolysis activity: needs a known ATPase fold | ADVISORY | 41 / 683 |
 | FRR:0007 | phosphonoacetate hydrolase activity: needs the alkaline phosphatase fold | ADVISORY | 1 / 3 |
 | FRR:0008 | phosphogluconate 2-dehydrogenase activity: needs an NAD(P)-binding domain | ADVISORY | 0 / 2 |
+| FRR:0009 | DNA-binding transcription factor activity: needs one of 60 DNA-binding domain families | ADVISORY | 221 / 2759 |
+| FRR:0010 | GTPase activity: needs a P-loop or tubulin/FtsZ GTPase domain | ADVISORY | 30 / 497 |
 
-What the flags on experimental annotations are:
+### The transcription factor rule
+
+The DNA-binding domain list was built from the data: starting from the families
+most common among the 2759 proteins with experimental `enables` annotations to
+`GO:0003700` and its descendants, entries were added (each name checked against
+InterPro) until the remaining flags were mostly not transcription factors. Eleven
+superfamilies (homeodomain-like, winged helix, C2H2 zinc finger, HLH, bZIP, nuclear
+receptor zinc finger, Zn2Cys6, lambda repressor-like, HMG box, p53-like, GATA) cover
+79%; the full list of 60 covers 92%.
+
+The remaining 221 flagged proteins mix two kinds:
+
+- **Likely misannotations, worth reviewing:** chromatin enzymes (human HDAC4 and
+  HDAC5, IDA/IMP), menin, mediator MED12 (four zebrafish entries, IGI), ribosomal
+  protein uS3, alpha-enolase, the lipase ABHD2, yeast FKBP1, and membrane receptors
+  given a nuclear activity (GPER1 in human and mouse, the membrane progestin receptor,
+  olfactory receptor OR51E2, LRP2, the FemA siderophore receptor).
+- **Rule or data gaps:** isoform entries without InterPro matches (zebrafish nuclear
+  receptor and AHR isoforms), and transcription factors with non-canonical DNA
+  binding, such as NME2 binding the MYC promoter element and CC2D1A.
+
+### The GTPase rule
+
+Of 30 flagged proteins, the clearest leads are the beta-3 adrenergic receptor (human,
+mouse, rat; IDA), a GPCR that activates G proteins rather than hydrolysing GTP;
+regulators of GTPases (Rho GDI 2, the tubulin-folding cofactor TBCC); and proteins
+with no GTPase relationship at all (SEC14L8, an annexin, a sarcoplasmic
+calcium-binding protein, methylmalonyl-CoA mutase). G beta and gamma subunits
+annotated `enables` should be `contributes_to`.
+
+### Other flags on experimental annotations
 
 - **FRR:0001.** E. coli FtsI (P0AD68, IDA/IMP; EcoliWiki), a historical attribution
   this repository's review already removes, and human chondroitin sulfate
@@ -98,8 +132,7 @@ What the flags on experimental annotations are:
   protein with no InterPro entry, a phage replication protein).
 - **FRR:0004.** Mainly ABC nucleotide-binding subunits, periplasmic substrate-binding
   proteins, channel accessory subunits (such as voltage-gated calcium channel beta
-  subunits) and respiratory complex subunits. Some flags are UniProt entries that
-  lack predicted TRANSMEM features.
+  subunits) and respiratory complex subunits.
 - **FRR:0005.** Kinase regulatory subunits and cyclins, receptor ectodomain proteins,
   phosphatases, and contested metabolic-kinase moonlighting claims (PGK1, PKM, PEPCK).
 - **FRR:0007.** E. coli YjdM (P0AFJ1, IDA), which this repository already marks
@@ -114,32 +147,46 @@ Flagged GOA rows in `genes/`, by the existing review action:
 | FRR:0001 | 5 | | | | | |
 | FRR:0002 | 1 | | | | | |
 | FRR:0003 | 6 | | | | | |
-| FRR:0004 | 13 | 22 | 6 | 1 | 2 | 9 |
-| FRR:0005 | 8 | 10 | 8 | 2 | 9 | 3 |
-| FRR:0006 | 2 | 2 | 2 | | 4 | 3 |
+| FRR:0004 | 12 | 21 | 6 | 1 | 2 | 4 |
+| FRR:0005 | 8 | 10 | 8 | 2 | 9 | 1 |
+| FRR:0006 | 2 | 2 | 2 | | 3 | 3 |
 | FRR:0007 | | | 2 | | | |
 | FRR:0008 | 1 | | | | | |
+| FRR:0009 | 9 | 26 | 5 | | 1 | 6 |
+| FRR:0010 | 4 | 1 | 3 | 1 | | |
 
-The 30 rows kept or accepted are the follow-up list. Several are worth a second
-look: V1-ATPase subunits (ATP6V1B1, ATP6V1B2, ATP6V1F) accepted for proton
-transmembrane transporter activity, which they do not carry out alone; EQUAS
-TGFBR3 (betaglycan, which has no kinase domain) accepted for `GO:0005024`
-transforming growth factor beta receptor activity, which GO places under protein
-serine/threonine kinase activity, when its own term is the type III receptor activity
-`GO:0070123`; and the T7 0.7 protein kinase rows. Others are rule gaps or data gaps:
-ManX (a PTS component accepted for the PTS phosphotransferase term, which is a
-transporter descendant), zebrafish TRPM7 (a UniProt entry without TRANSMEM features),
-and the lambda Nu1 terminase.
+### Review of the kept or accepted leads
+
+Each flagged row that reviewers had kept or accepted (25 genes, before the rule
+fixes below) was looked at again. Outcomes:
+
+| Gene | Flagged row | Outcome |
+|---|---|---|
+| GCH1 | GTPase activity (IDA) | **Changed to MODIFY → GTP cyclohydrolase I activity**, with a `source_defects` entry. GO defines GTPase activity as GTP → GDP + phosphate; GCH1 makes dihydroneopterin triphosphate and formate. The previous ACCEPT said "not a classical GTPase", so action and reason disagreed. |
+| TGFBR3 (EQUAS) | TGF-beta receptor activity, type III | No change; the problem is in GO, which places `GO:0070123` under protein serine/threonine kinase activity although betaglycan has no kinase domain. The review already raises this as a suggested question. |
+| AYR1 (yeast) | ligand-gated channel activity (IDA) | No change. The full-text bilayer study reports an NADPH-gated channel, and AYR1 has no transmembrane segment; the existing KEEP_AS_NON_CORE already says it is a single unconfirmed study. |
+| RAM1 (MEDTR) | DNA-binding TF activity (IBA, IMP) | No change. The review already notes that direct DNA binding by this GRAS protein is not shown and defers to the curators; whether the GRAS domain binds DNA is an open question. |
+| CAD | protein kinase activity (ISS) | No change. The review already addresses the missing kinase fold (autophosphorylation, plausibly by the ATP-grasp domain). |
+| PGK1, PCK1, CRY1 | protein kinase activity | No change; contested moonlighting or autophosphorylation claims, already kept as non-core. |
+| ATP6V1B1, B2, C1, F | proton transmembrane transporter activity | No change. These V1 subunits also carry the rotational proton-ATPase term, which is in the exempt subtree and implies this parent; the flag is a rule gap. |
+| SCHPO asp1, SPAC694.03; mouse Alpl; lambda Nu1 | ATP hydrolysis activity | No change; genuine activities on ATP-grasp, alkaline phosphatase or terminase scaffolds. asp1's RimK-type ATP-grasp was added to the rule. |
+| skn-1, atfs-1 (worm); ROF1 (yeast) | DNA-binding TF activity | Rule gaps, fixed by adding the bZIP domain, Skn-1 DNA-binding domain and WOPR (Gti1/Pac2) families. |
+| CC2D1A, NME2 | DNA-binding TF activity | No change; experimentally reported non-canonical DNA binding. |
+| gbfA (DICDI) | DNA-binding TF activity | Data gap: the UniProt entry has no InterPro matches. |
+| T7 0.7 | protein kinase activity | Rule gap, fixed by adding the T7-type protein kinase family. |
+| zebrafish trpm7 | channel activity | Data gap (no TRANSMEM features in the entry); fixed by adding the ion transport domain. |
+| ECOLI manX | PTS phosphotransferase activity | Rule gap; PTS group translocation is now exempt, as its soluble IIA/IIB components carry `enables`. |
 
 ## Next steps
 
-- Review the 30 kept or accepted rows listed in `sweep.tsv` and the flagged
-  experimental annotations; record real errors as `source_defects`
-  (`WRONG_QUALIFIER` for accessory subunits).
-- Wire violations into gene review validation as warnings, so a reviewer who
-  ACCEPTs a flagged row has to say why.
-- Add rules for the other common absence arguments: DNA-binding transcription
-  factor activity without a DNA-binding domain, and heme or quinone binding without
-  a binding site.
+- Review the out-of-repository leads above (HDAC4/5, menin, MED12, GPER1, the beta-3
+  adrenergic receptor GTPase rows, chondroitin GalNAc-transferase 1), starting with
+  `just fetch-gene` and a normal gene review, and record confirmed errors as
+  `source_defects` (`WRONG_TERM`, or `WRONG_QUALIFIER` for accessory subunits).
+- More rules for common absence arguments: heme or quinone binding without a binding
+  site; RNA polymerase or helicase activities; receptor activities without a
+  ligand-binding domain.
+- Suppress flags on a parent term when the same protein carries an exempt
+  descendant (the V1-ATPase case).
 - Link REQUIRED rules to family-review residue sites, so a rule can say "this
   domain, with this residue intact".
