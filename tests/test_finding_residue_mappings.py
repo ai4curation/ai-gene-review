@@ -18,17 +18,22 @@ from ai_gene_review.validation.finding_residue_mappings import (
     check_mapping,
     validate_finding_residue_mappings,
 )
+from ai_gene_review.validation.family_residue_validator import SequenceCache
 from ai_gene_review.validation.gene_residue_claims import ClaimOutcome
 
 
-class StubCache:
-    """In-memory sequences keyed by accession, in place of UniProt."""
+class StubCache(SequenceCache):
+    """In-memory sequences keyed by accession, in place of UniProt; never fetches."""
 
     def __init__(self, seqs: dict[str, str]):
+        super().__init__(cache_dir=Path("unused"))
         self.seqs = seqs
 
     def get(self, accession: str) -> str:
         return self.seqs[accession.split(":")[-1]]
+
+    def sequence_version(self, accession: str) -> int | None:
+        return None
 
 
 #                        position: 123456789
@@ -141,6 +146,7 @@ def test_prefixless_accession_is_still_checked():
         "canonical": {"accession": "P1", "position": 5, "residue": "S"},
     }
     results = check_mapping(mapping, "P1", "G", "PMID:1", CACHE)
+    assert _outcomes(results, "CANONICAL_IDENTITY") == [ClaimOutcome.PASS]
     assert _outcomes(results, "CANONICAL") == [ClaimOutcome.FAIL]
 
 

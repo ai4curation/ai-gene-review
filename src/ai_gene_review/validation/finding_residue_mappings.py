@@ -57,7 +57,7 @@ def _bare(accession: str) -> str:
 def _check_side(
     cache: SequenceCache, spec: dict, label: str, gene: str, ref_id: str, kind: str
 ) -> ClaimCheck:
-    """Check one side of a mapping, or report it unresolved if it is not a UniProtKB sequence.
+    """Check one side of a mapping; report it unresolved if it names a non-UniProtKB prefix.
 
     >>> _check_side(None, {"accession": "RefSeq:NP_1.1", "position": 1, "residue": "M"},
     ...             "as reported", "G", "PMID:1", "AS_REPORTED").outcome.value
