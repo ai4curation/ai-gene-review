@@ -1440,6 +1440,13 @@ check-missing-goa organism:
         echo "Run 'just seed-goa-organism {{organism}}' to fix"
     fi
 
+# Fill record_section (CC:CAUTION, CC:FUNCTION, FT:BINDING, ...) on UniProt quotes.
+# Example: just backfill-record-sections genes/human/TP53
+#          just backfill-record-sections --dry-run
+#          just backfill-record-sections --fix
+backfill-record-sections *args:
+    uv run ai-gene-review backfill-record-sections {{args}}
+
 # Backfill isoform field on existing annotations for a specific gene
 backfill-isoforms organism gene:
     uv run ai-gene-review backfill-isoforms genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
