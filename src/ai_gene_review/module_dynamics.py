@@ -280,6 +280,10 @@ def run_scenario(
     count = scenario.get("expected_attractor_count")
     if count is not None and len(found) != int(count):
         failures.append(f"expected {count} attractor(s), got {len(found)}")
+    if as_list(scenario.get("expected_outcome_order")):
+        failures.append(
+            "expected_outcome_order is not supported on BOOLEAN scenarios"
+        )
     for slot, attr in (
         ("expected_active", "always_on"),
         ("expected_inactive", "always_off"),

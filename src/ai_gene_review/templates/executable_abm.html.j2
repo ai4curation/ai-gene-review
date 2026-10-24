@@ -430,6 +430,59 @@
     let timer = null;
     let simResult = null;
 
+    function escHtml(s) {
+        return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    const flowInputsByTarget = {};
+    const competingInhibitorsByTarget = {};
+    for (const st of data.stages) {
+        flowInputsByTarget[st.id] = new Set();
+        competingInhibitorsByTarget[st.id] = new Set();
+    }
+    for (const t of data.transitions) {
+        if (!flowInputsByTarget[t.target]) flowInputsByTarget[t.target] = new Set();
+        flowInputsByTarget[t.target].add(t.source);
+        if (!competingInhibitorsByTarget[t.target]) competingInhibitorsByTarget[t.target] = new Set();
+        for (const inh of t.competing_inhibitors || []) {
+            competingInhibitorsByTarget[t.target].add(inh);
+        }
+    }
+
+    function evalAbmLogic(expr, active, flowInputs, competingInhibitors, removedSet, targetId) {
+        if (!expr || typeof expr !== "object") return true;
+        if (typeof expr.element === "string") {
+            const v = expr.element;
+            if (removedSet && targetId && removedSet.has(v + "->" + targetId)) {
+                return !(flowInputs && flowInputs.has(v));
+            }
+            if (competingInhibitors && competingInhibitors.has(v)) return false;
+            if (flowInputs && flowInputs.has(v)) return true;
+            return Boolean(active[v]);
+        }
+        if (Array.isArray(expr.none_of)) {
+            return !expr.none_of.some(sub =>
+                evalAbmLogic(sub, active, flowInputs, competingInhibitors, removedSet, targetId)
+            );
+        }
+        if (Array.isArray(expr.all_of)) {
+            return expr.all_of.every(sub =>
+                evalAbmLogic(sub, active, flowInputs, competingInhibitors, removedSet, targetId)
+            );
+        }
+        if (Array.isArray(expr.any_of)) {
+            return expr.any_of.some(sub =>
+                evalAbmLogic(sub, active, flowInputs, competingInhibitors, removedSet, targetId)
+            );
+        }
+        return true;
+    }
+
     function resolveActive(settings, removedSet) {
         const active = {};
         for (const st of data.stages) {
@@ -439,18 +492,32 @@
                 active[st.id] = Boolean(st.default_active);
             }
         }
-        for (let iter = 0; iter < data.stages.length; iter++) {
+        const maxIter = Math.max(1, data.stages.length + 1);
+        for (let iter = 0; iter < maxIter; iter++) {
             let changed = false;
             for (const st of data.stages) {
                 if (Object.prototype.hasOwnProperty.call(settings, st.id)) continue;
-                let gatedOff = false;
-                for (const r of st.gate_activators || []) {
-                    if (!removedSet.has(r + "->" + st.id) && !active[r]) gatedOff = true;
+                let nextVal;
+                if (st.activation_logic) {
+                    const logicOk = evalAbmLogic(
+                        st.activation_logic,
+                        active,
+                        flowInputsByTarget[st.id],
+                        competingInhibitorsByTarget[st.id],
+                        removedSet,
+                        st.id
+                    );
+                    nextVal = Boolean(st.default_active) && Boolean(logicOk);
+                } else {
+                    let gatedOff = false;
+                    for (const r of st.gate_activators || []) {
+                        if (!removedSet.has(r + "->" + st.id) && !active[r]) gatedOff = true;
+                    }
+                    for (const r of st.gate_inhibitors || []) {
+                        if (!removedSet.has(r + "->" + st.id) && active[r]) gatedOff = true;
+                    }
+                    nextVal = gatedOff ? false : Boolean(st.default_active);
                 }
-                for (const r of st.gate_inhibitors || []) {
-                    if (!removedSet.has(r + "->" + st.id) && active[r]) gatedOff = true;
-                }
-                const nextVal = gatedOff ? false : Boolean(st.default_active);
                 if (active[st.id] !== nextVal) {
                     active[st.id] = nextVal;
                     changed = true;
@@ -486,14 +553,28 @@
             if (!elementActive[t.source] || !elementActive[t.target]) {
                 return { ...t, effective_rate: 0 };
             }
-            for (const r of t.gate_activators || []) {
-                if (!removedSet.has(r + "->" + t.target) && !elementActive[r]) {
+            if (t.activation_logic) {
+                const logicOk = evalAbmLogic(
+                    t.activation_logic,
+                    elementActive,
+                    flowInputsByTarget[t.target],
+                    competingInhibitorsByTarget[t.target],
+                    removedSet,
+                    t.target
+                );
+                if (!logicOk) {
                     return { ...t, effective_rate: 0 };
                 }
-            }
-            for (const r of t.gate_inhibitors || []) {
-                if (!removedSet.has(r + "->" + t.target) && elementActive[r]) {
-                    return { ...t, effective_rate: 0 };
+            } else {
+                for (const r of t.gate_activators || []) {
+                    if (!removedSet.has(r + "->" + t.target) && !elementActive[r]) {
+                        return { ...t, effective_rate: 0 };
+                    }
+                }
+                for (const r of t.gate_inhibitors || []) {
+                    if (!removedSet.has(r + "->" + t.target) && elementActive[r]) {
+                        return { ...t, effective_rate: 0 };
+                    }
                 }
             }
             let rate = t.base_rate;
@@ -506,7 +587,7 @@
                 if (removedSet.has(mod + "->" + t.target)) continue;
                 if (elementActive[mod]) {
                     rate *= params.positive_regulator_boost;
-                } else {
+                } else if (!t.activation_logic) {
                     rate = 0;
                 }
             }
@@ -588,12 +669,12 @@
 
             card.innerHTML = `
                 <div class="stage-top">
-                    <div class="stage-title">${st.label}</div>
+                    <div class="stage-title">${escHtml(st.label)}</div>
                     <div class="stage-count">${st.is_flow_stage ? count : (isEnabled ? "ON" : "OFF")}</div>
                 </div>
                 <div class="stage-loc">
-                    <code>${st.id}</code>
-                    ${st.location_label ? " · " + st.location_label : ""}
+                    <code>${escHtml(st.id)}</code>
+                    ${st.location_label ? " · " + escHtml(st.location_label) : ""}
                 </div>
                 ${st.is_flow_stage ? `
                 <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[idx % COLORS.length]}"></div></div>
@@ -646,7 +727,7 @@
             }).join(" ");
             html += `<polyline fill="none" stroke="${color}" stroke-width="2.2" points="${pts}"/>`;
             const item = document.createElement("span");
-            item.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};margin-right:4px;"></span><code>${st.id}</code> (${simResult.finalCounts[st.id]})`;
+            item.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};margin-right:4px;"></span><code>${escHtml(st.id)}</code> (${simResult.finalCounts[st.id]})`;
             legend.appendChild(item);
         });
         svg.innerHTML = html;
@@ -660,12 +741,13 @@
             (tr.competing_inhibitors || []).forEach(c => mods.push(`- ${c}`));
             (tr.positive_modulators || []).forEach(p => mods.push(`+ ${p}`));
             (tr.gate_inhibitors || []).forEach(g => mods.push(`gate -${g}`));
+            if (tr.activation_logic) mods.push(`logic: ${tr.activation_logic}`);
             const row = document.createElement("tr");
             row.innerHTML = `
-                <td><code>${tr.source}</code></td>
-                <td><code>${tr.target}</code></td>
-                <td><code>${tr.predicate}</code></td>
-                <td>${mods.length ? mods.map(m => `<code>${m}</code>`).join(" ") : "—"}</td>
+                <td><code>${escHtml(tr.source)}</code></td>
+                <td><code>${escHtml(tr.target)}</code></td>
+                <td><code>${escHtml(tr.predicate)}</code></td>
+                <td>${mods.length ? mods.map(m => `<code>${escHtml(m)}</code>`).join(" ") : "—"}</td>
                 <td><strong>${tr.effective_rate.toFixed(3)}</strong> <span style="color:#64748b">(base ${tr.base_rate})</span></td>
             `;
             tbody.appendChild(row);
@@ -680,17 +762,17 @@
         const sc = data.scenarios.find(s => s.id === currentScenario);
         if (sc) {
             const orderText = (sc.expected_outcome_order || []).length
-                ? `<div><strong>Expected terminal order:</strong> <code>${sc.expected_outcome_order.join(" &gt; ")}</code></div>`
+                ? `<div><strong>Expected terminal order:</strong> <code>${sc.expected_outcome_order.map(escHtml).join(" &gt; ")}</code></div>`
                 : "";
             box.innerHTML = `
-                <div><strong>Scenario:</strong> ${sc.label}</div>
-                ${sc.description ? `<div style="margin-top:4px;color:#475569;">${sc.description}</div>` : ""}
+                <div><strong>Scenario:</strong> ${escHtml(sc.label)}</div>
+                ${sc.description ? `<div style="margin-top:4px;color:#475569;">${escHtml(sc.description)}</div>` : ""}
                 ${orderText}
             `;
         } else if (currentScenario === "__baseline__") {
             box.innerHTML = `<div><strong>Unperturbed baseline:</strong> All flow stages enabled with default module kinetics.</div>`;
         } else {
-            box.innerHTML = `<div><strong>Custom perturbation:</strong> Locked settings ${JSON.stringify(currentSettings)}</div>`;
+            box.innerHTML = `<div><strong>Custom perturbation:</strong> Locked settings <code>${escHtml(JSON.stringify(currentSettings))}</code></div>`;
         }
     }
 

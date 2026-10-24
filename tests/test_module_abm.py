@@ -28,6 +28,7 @@ from ai_gene_review.module_abm import (
 )
 from ai_gene_review.module_dynamics import (
     run_declared_scenarios,
+    run_scenario,
     unchecked_scenario_models,
 )
 from ai_gene_review.validation.module_validator import validate_executable_models
@@ -228,3 +229,177 @@ def test_abm_scenario_failure_diagnostics(
     res = run_abm_scenario(doc, "endosomal_trafficking_abm", scenario)
     assert not res.passed
     assert any(expected_msg in f for f in res.failures), res.failures
+
+
+def test_removed_connections_preserves_stage_topology_and_expands_containers() -> None:
+    doc = {
+        "id": "MODULE:container_trafficking",
+        "title": "Container Trafficking",
+        "module": {
+            "id": "container_trafficking",
+            "label": "Container Trafficking",
+            "parts": [
+                {"node": {"id": "entry", "label": "Entry"}},
+                {"node": {"id": "mid", "label": "Mid"}},
+                {"node": {"id": "booster", "label": "Booster"}},
+                {
+                    "node": {
+                        "id": "sink_group",
+                        "label": "Sink Group",
+                        "parts": [
+                            {"node": {"id": "sink_a", "label": "Sink A"}},
+                            {"node": {"id": "sink_b", "label": "Sink B"}},
+                        ],
+                    }
+                },
+            ],
+            "connections": [
+                {"source": "entry", "target": "mid", "connection_type": "PROVIDES_INPUT_FOR"},
+                {"source": "mid", "target": "sink_group", "connection_type": "PROVIDES_INPUT_FOR"},
+                {"source": "booster", "target": "sink_a", "connection_type": "POSITIVELY_REGULATES"},
+            ],
+        },
+        "executable_models": [
+            {
+                "id": "container_abm",
+                "model_type": "AGENT_BASED",
+                "derivation": "DERIVED_FROM_MODULE",
+                "scenarios": [
+                    {
+                        "id": "sever_entry_to_mid",
+                        "removed_connections": [{"source": "entry", "target": "mid"}],
+                        "expected_active": ["entry"],
+                        "expected_inactive": ["mid", "sink_a", "sink_b"],
+                    },
+                    {
+                        "id": "sever_container_edge",
+                        "removed_connections": [{"source": "mid", "target": "sink_group"}],
+                        "expected_active": ["entry", "mid"],
+                        "expected_inactive": ["sink_a", "sink_b"],
+                    },
+                ],
+            }
+        ],
+    }
+    results = run_declared_abm_scenarios(doc)
+    assert len(results) == 2
+    assert [(r.scenario_id, r.failures) for r in results if not r.passed] == []
+
+    # Removing entry -> mid must not promote mid to an entry stage or drop entry from stages
+    abm_cut = module_to_abm(doc, removed_connections=[("entry", "mid")])
+    assert abm_cut.entry_stages == ["entry"]
+    assert "entry" in abm_cut.stage_map()
+    assert "mid" in abm_cut.stage_map()
+
+    # Container-level removed_connections expand to leaf pairs in payload
+    payload = abm_model_payload(doc, doc["executable_models"][0])
+    sc_by_id = {s["id"]: s for s in payload["scenarios"]}
+    assert sc_by_id["sever_container_edge"]["removed_connections"] == [
+        {"source": "mid", "target": "sink_a"},
+        {"source": "mid", "target": "sink_b"},
+    ]
+
+
+def test_omitted_regulators_and_activation_logic_in_abm() -> None:
+    doc = {
+        "id": "MODULE:logic_trafficking",
+        "title": "Logic Trafficking",
+        "module": {
+            "id": "logic_trafficking",
+            "label": "Logic Trafficking",
+            "parts": [
+                {"node": {"id": "uptake", "label": "Uptake"}},
+                {"node": {"id": "mod_a", "label": "Modulator A"}},
+                {"node": {"id": "mod_b", "label": "Modulator B"}},
+                {"node": {"id": "mod_omitted", "label": "Omitted Modulator"}},
+                {
+                    "node": {
+                        "id": "target_compartment",
+                        "label": "Target",
+                        "omitted_regulators": ["mod_omitted"],
+                        "activation_logic": {
+                            "all_of": [
+                                {"element": "uptake"},
+                                {"any_of": [{"element": "mod_a"}, {"element": "mod_b"}]},
+                            ]
+                        },
+                    }
+                },
+            ],
+            "connections": [
+                {"source": "uptake", "target": "target_compartment", "connection_type": "PROVIDES_INPUT_FOR"},
+                {"source": "mod_a", "target": "target_compartment", "connection_type": "POSITIVELY_REGULATES"},
+                {"source": "mod_b", "target": "target_compartment", "connection_type": "POSITIVELY_REGULATES"},
+                {"source": "mod_omitted", "target": "target_compartment", "connection_type": "NEGATIVELY_REGULATES"},
+            ],
+        },
+    }
+    # With OR activation_logic on (mod_a, mod_b) and mod_omitted declared in omitted_regulators,
+    # locking mod_a ON (while mod_b is OFF and mod_omitted is ON) still opens target_compartment.
+    res = run_abm_scenario(
+        doc,
+        "logic_abm",
+        {
+            "id": "or_gate_open",
+            "settings": [
+                {"element": "mod_a", "active": True},
+                {"element": "mod_b", "active": False},
+                {"element": "mod_omitted", "active": True},
+            ],
+            "expected_active": ["uptake", "mod_a", "mod_omitted", "target_compartment"],
+            "expected_inactive": ["mod_b"],
+        },
+    )
+    assert res.passed, res.failures
+
+
+def test_oscillating_regulator_loop_reports_non_convergence() -> None:
+    doc = {
+        "id": "MODULE:osc_reg",
+        "title": "Oscillating Regulators",
+        "module": {
+            "id": "osc_reg",
+            "label": "Oscillating Regulators",
+            "parts": [
+                {"node": {"id": "cargo_entry", "label": "Entry"}},
+                {"node": {"id": "reg_a", "label": "Reg A"}},
+                {"node": {"id": "reg_b", "label": "Reg B"}},
+            ],
+            "connections": [
+                {"source": "cargo_entry", "target": "reg_a", "connection_type": "POSITIVELY_REGULATES"},
+                {"source": "reg_a", "target": "reg_b", "connection_type": "POSITIVELY_REGULATES"},
+                {"source": "reg_b", "target": "reg_a", "connection_type": "NEGATIVELY_REGULATES"},
+            ],
+        },
+    }
+    res = run_abm_scenario(doc, "osc_abm", {"id": "osc_check"})
+    assert not res.passed
+    assert any("did not converge" in f for f in res.failures), res.failures
+
+
+def test_cross_model_scenario_slots_rejected() -> None:
+    doc = _toy_trafficking_doc()
+    abm_res = run_abm_scenario(
+        doc,
+        "toy_abm",
+        {
+            "id": "boolean_slots_on_abm",
+            "expected_attractor_kind": "FIXED_POINT",
+            "expected_attractor_count": 1,
+            "expected_oscillating": ["uptake"],
+        },
+    )
+    assert not abm_res.passed
+    assert any("is not supported on AGENT_BASED scenarios" in f for f in abm_res.failures)
+
+    bool_res = run_scenario(
+        doc,
+        "toy_bool",
+        {
+            "id": "abm_slot_on_boolean",
+            "expected_outcome_order": ["erc_recycling", "cytosol_escape"],
+        },
+    )
+    assert not bool_res.passed
+    assert any("expected_outcome_order is not supported on BOOLEAN scenarios" in f for f in bool_res.failures)
+

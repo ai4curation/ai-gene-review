@@ -111,10 +111,12 @@ def model_summaries(
             if interactive:
                 if mtype == "AGENT_BASED":
                     result = run_abm_scenario(doc, str(model["id"]), scenario)
+                    entry["passed"] = result.passed
+                    entry["kinds"] = []
                 else:
                     result = run_scenario(doc, str(model["id"]), scenario)
-                entry["passed"] = result.passed
-                entry["kinds"] = [a.kind for a in result.attractors]
+                    entry["passed"] = result.passed
+                    entry["kinds"] = [a.kind for a in result.attractors]
             scenarios.append(entry)
         out.append(
             {

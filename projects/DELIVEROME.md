@@ -161,7 +161,7 @@ To make post-internalization routing quantitatively testable directly from curat
 
 - **Project documentation**: [Agent-Based Modeling of Intracellular Trafficking](ABM_TRAFFICKING.md)
 - **Curated delivery route module**: [`modules/endosomal_trafficking_routing.yaml`](../modules/endosomal_trafficking_routing.html) (`TFRC` $\to$ `CLTC`/`AP2M1` $\to$ `ATP6V1A` early endosome acidification $\to$ `EHD1` recycling vs. `TSG101`/`RAB7A` late endosome maturation $\to$ `CTSD` lysosomal degradation vs. pre-lysosomal cytosolic cargo escape)
-- **Interactive browser ABM**: [`pages/models/endosomal_trafficking_abm.html`](../models/endosomal_trafficking_abm.html) — simulates a conserved cohort of $N = 100$ cargo particles across 24 discrete steps, reproducing the ~10% baseline cytosolic escape vs. ~47% recycling / ~43% lysosomal degradation split and the ~4.7-fold surge in cytosolic escape upon `RAB7A`/`Rab7` loss-of-function (PMID:41814093).
+- **Interactive browser ABM**: [`pages/models/endosomal_trafficking_abm.html`](../models/endosomal_trafficking_abm.html) — simulates a conserved cohort of $N = 100$ cargo particles across 24 discrete steps under uniform uncalibrated default rates, reproducing the qualitative baseline hierarchy (~10% cytosolic escape vs. ~47% recycling / ~43% lysosomal degradation, compared with ~8% baseline in vivo LNP escape in PMID:41814093) and the diversion of endosomal flux into cytosolic escape (from 10% to 47%) upon `RAB7A`/`Rab7` loss-of-function (PMID:41814093).
 
 ## Open Questions
 

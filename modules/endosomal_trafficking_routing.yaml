@@ -304,6 +304,10 @@ module:
                   id: GO:1902600
                   label: proton transmembrane transport
             locations:
+              - preferred_term: endosome membrane
+                term:
+                  id: GO:0010008
+                  label: endosome membrane
               - preferred_term: lysosomal membrane
                 term:
                   id: GO:0005765
@@ -392,9 +396,12 @@ module:
                   statement: Binds ubiquitinated endocytic cargo on endosome membranes to nucleate ESCRT-mediated MVB sorting.
                 - source_id: PMID:12900395
                   title: Hrs regulates multivesicular body formation via ESCRT recruitment to endosomes.
-                  statement: Recruitment of the ESCRT-I subunit TSG101 to endosomes drives multivesicular body formation.
+                  statement: The ESCRT-I subunit TSG101 mediates sorting of ubiquitinated endocytic cargo into multivesicular bodies for the degradative pathway.
                   supporting_text: >-
-                    indirectly regulates multivesicular body formation
+                    The ESCRT complexes are conserved through evolution, and the mammalian homologue
+                    of Vps23p, Tsg101, has been shown to mediate the sorting of ubiquitinated proteins
+                    into the degradative pathway, much like its yeast counterpart (Babst et al., 2000;
+                    Bishop et al., 2002).
             processes:
               - preferred_term: multivesicular body assembly
                 term:
@@ -405,14 +412,14 @@ module:
                   id: GO:0043162
                   label: ubiquitin-dependent protein catabolic process via the multivesicular body sorting pathway
             locations:
-              - preferred_term: early endosome membrane
-                term:
-                  id: GO:0031901
-                  label: early endosome membrane
               - preferred_term: late endosome membrane
                 term:
                   id: GO:0031902
                   label: late endosome membrane
+              - preferred_term: early endosome membrane
+                term:
+                  id: GO:0031901
+                  label: early endosome membrane
             role_description: >-
               Recognizes ubiquitinated cargo and recruits ESCRT machinery to bud intraluminal vesicles
               into maturing multivesicular bodies.
@@ -534,9 +541,11 @@ module:
                   statement: Cleaves internal peptide bonds in acidic lysosomal and endosomal lumens during cargo turnover.
                 - source_id: PMID:8393577
                   title: "Crystal structures of native and inhibited forms of human cathepsin D: implications for lysosomal targeting and drug design."
-                  statement: Human cathepsin D is a lysosomal aspartic protease that degrades internalized protein cargo.
+                  statement: Human cathepsin D is a lysosomal N-glycosylated aspartic protease that degrades internalized protein cargo.
                   supporting_text: >-
-                    aspartic protease
+                    Determination of the crystal structures of cathepsin D and a complex with
+                    pepstatin at 2.5 A resolution provides insights into inhibitor binding and
+                    lysosomal targeting for this two-chain, N-glycosylated aspartic protease.
             processes:
               - preferred_term: proteolysis
                 term:
@@ -597,26 +606,34 @@ executable_models:
     model_type: AGENT_BASED
     derivation: DERIVED_FROM_MODULE
     description: >-
-      Simulates 100 discrete cargo/nanoparticle agents traversing the seven stages of the module.
-      In wild-type baseline trafficking, active RAB7A/ESCRT late endosomal maturation
-      (escrt_rab7_late_endosome) attenuates the cytosolic escape transition from acidified early
-      endosomes, resulting in ~47% recycling (ehd1_recycling_branch), ~43% lysosomal degradation
-      (ctsd_lysosomal_degradation), and ~10% cytosolic escape (cytosolic_cargo_escape) — matching
-      the ~8% in vivo hepatic LNP cytosolic escape measured by LysoTag barcoding (PMID:41814093).
-      Perturbing individual stages reproduces genetic and pharmacological blocks across the pathway.
+      Simulates 100 discrete cargo/nanoparticle agents traversing the seven stages of the module
+      under uniform uncalibrated default transition rates (base_rate = 0.45,
+      competing_inhibitor_factor = 0.25). In wild-type baseline trafficking, active RAB7A/ESCRT
+      late endosomal maturation (escrt_rab7_late_endosome) attenuates the cytosolic escape
+      transition from acidified early endosomes, resulting in ~47% recycling
+      (ehd1_recycling_branch), ~43% lysosomal degradation (ctsd_lysosomal_degradation), and ~10%
+      cytosolic escape (cytosolic_cargo_escape) — reproducing the qualitative hierarchy observed
+      by LysoTag barcoding (~8% baseline cytosolic LNP escape in vivo; PMID:41814093). Perturbing
+      individual stages reproduces the qualitative direction of genetic and pharmacological blocks
+      across the pathway.
     notes: >-
       Deterministic particle-conserving agent-based simulation (N=100 cargo particles, T=24 steps)
       derived from the module's directed flow connections (PROVIDES_INPUT_FOR) and competing-pathway
-      inhibitory edges (NEGATIVELY_REGULATES). Cargo cohorts initialize at the cell-surface entry
-      stage (tfrc_cargo_binding) and partition across competing branches at the acidified sorting
-      endosome (early_endosome_acidification).
+      inhibitory edges (NEGATIVELY_REGULATES) using uniform uncalibrated default kinetics. Cargo
+      cohorts initialize at the cell-surface entry stage (tfrc_cargo_binding) and partition across
+      competing branches at the acidified sorting endosome (early_endosome_acidification). Modeling
+      cytosolic_cargo_escape as a direct branch out of early_endosome_acidification (attenuated by
+      escrt_rab7_late_endosome) is a topological simplification that lumps early- and
+      maturing-endosomal escape into a single pre-lysosomal branch.
     scenarios:
       - id: wt_steady_trafficking
         label: Wild-type baseline trafficking (recycling + lysosomal degradation dominate; ~10% cytosolic escape)
         description: >-
-          With all trafficking machinery active, internalized cargo is predominantly partitioned
-          between EHD1-mediated plasma-membrane recycling (47%) and RAB7A/CTSD-mediated lysosomal
-          degradation (43%), while only a minor fraction (10%) escapes into the cytosol.
+          With all trafficking machinery active under default module kinetics, internalized cargo
+          is predominantly partitioned between EHD1-mediated plasma-membrane recycling (47%) and
+          RAB7A/CTSD-mediated lysosomal degradation (43%), while only a minor fraction (10%)
+          escapes into the cytosol — consistent with the qualitative hierarchy measured by LysoTag
+          in vivo barcoding (~8% baseline LNP escape; PMID:41814093).
         expected_active:
           - tfrc_cargo_binding
           - clathrin_ap2_internalization
@@ -637,11 +654,13 @@ executable_models:
               finding that ~8% of BiP-20 LNPs reach the 
               cytosol within 30 min of administration.
       - id: rab7a_loss_lnp_escape
-        label: RAB7A / late-endosomal maturation loss (diverts flux from lysosomes and boosts cytosolic escape ~5-fold)
+        label: RAB7A / late-endosomal maturation loss (diverts flux from lysosomes and increases cytosolic escape)
         description: >-
           Inactivating escrt_rab7_late_endosome (modeling Rab7 loss-of-function) blocks endosome-to-lysosome
           delivery (ctsd_lysosomal_degradation drops to 0%) and lifts competitive sequestration on the
-          acidified sorting endosome, boosting productive cytosolic escape from 10% to 47%.
+          acidified sorting endosome, increasing productive cytosolic escape from 10% to 47% in the
+          uncalibrated default model (reproducing the qualitative increase in LNP escape upon Rab7 loss
+          in PMID:41814093).
         settings:
           - element: escrt_rab7_late_endosome
             active: false
@@ -714,6 +733,16 @@ executable_models:
         expected_outcome_order:
           - clathrin_ap2_internalization
           - early_endosome_acidification
+        evidence:
+          - source_id: file:human/ATP6V1A/ATP6V1A-ai-review.yaml
+            statement: V-ATPase proton pumping acidifies early and late endosomal compartments; loss of V-ATPase function prevents endosomal acidification.
+          - source_id: PMID:33065002
+            title: Structures of a Complete Human V-ATPase Reveal Mechanisms of Its Assembly.
+            statement: V-ATPase couples V1 ATP hydrolysis to Vo proton translocation to acidify intracellular endolysosomal compartments.
+            supporting_text: >-
+              Vesicular- or vacuolar-type adenosine triphosphatases (V-ATPases) 
+              are ATP-driven proton pumps comprised of a cytoplasmic V1 complex for ATP 
+              hydrolysis and a membrane-embedded Vo complex for proton transfer.
       - id: ehd1_recycling_block
         label: EHD1 recycling block (diverts sorting-endosome cargo toward lysosomal degradation and escape)
         description: >-
@@ -767,3 +796,13 @@ executable_models:
           - escrt_rab7_late_endosome
           - cytosolic_cargo_escape
           - ctsd_lysosomal_degradation
+        evidence:
+          - source_id: file:human/CTSD/CTSD-ai-review.yaml
+            statement: Cathepsin D is the principal lysosomal aspartic endopeptidase responsible for luminal protein degradation.
+          - source_id: PMID:8393577
+            title: "Crystal structures of native and inhibited forms of human cathepsin D: implications for lysosomal targeting and drug design."
+            statement: Inhibition of human cathepsin D by pepstatin blocks its lysosomal aspartic protease activity.
+            supporting_text: >-
+              Determination of the crystal structures of cathepsin D and a complex with
+              pepstatin at 2.5 A resolution provides insights into inhibitor binding and
+              lysosomal targeting for this two-chain, N-glycosylated aspartic protease.

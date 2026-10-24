@@ -8,9 +8,9 @@ Boolean networks—where all downstream branches of an active sorting hub turn
 across compartments:
 
 * **Flow connections** (``PROVIDES_INPUT_FOR``, ``PRECEDES``, ``CAUSES``,
-  ``HAS_OUTPUT``) define directed cargo transport transitions between stages.
-* **Branch competition & negative regulation** (``NEGATIVELY_REGULATES``,
-  ``INHIBITS``, ``PREVENTS``):
+  ``HAS_INPUT``, ``HAS_OUTPUT``) define directed cargo transport transitions
+  between stages.
+* **Branch competition & negative regulation** (``NEGATIVELY_REGULATES``):
   - When a competing flow stage :math:`w` negatively regulates stage :math:`v`
     (for example, Rab7-mediated late endosome maturation limiting endosomal
     dwell time and cytosolic escape), an active :math:`w` attenuates the
@@ -20,10 +20,10 @@ across compartments:
   - When a pure regulator :math:`r` (an element not itself carrying cargo flux,
     such as extracellular PCSK9 promoting LDLR degradation) negatively
     regulates stage :math:`v`, activating :math:`r` gates :math:`v` off.
-* **Positive regulation** (``POSITIVELY_REGULATES``, ``ENABLES``,
-  ``REGULATES``): an active positive regulator boosts flux into its target
-  stage (:math:`\\times 1.35`), whereas inactivating a required positive
-  regulator gates the target stage off.
+* **Positive regulation** (``POSITIVELY_REGULATES``): an active positive
+  regulator boosts flux into its target stage (:math:`\\times 1.35`), whereas
+  inactivating a required positive regulator gates the target stage off.
+* **Structural connections** (``PART_OF``) are ignored during ABM derivation.
 
 Examples
 --------
@@ -69,6 +69,9 @@ import yaml
 from ai_gene_review.module_boolean import (
     _element_index,
     _Flattener,
+    _logic_operator,
+    activation_logic_findings,
+    omitted_regulators,
 )
 from ai_gene_review.module_dynamics import (
     Attractor,
@@ -85,6 +88,7 @@ FLOW_PREDICATES: frozenset[str] = frozenset(
         "PROVIDES_INPUT_FOR",
         "PRECEDES",
         "CAUSES",
+        "HAS_INPUT",
         "HAS_OUTPUT",
     }
 )
@@ -92,16 +96,18 @@ FLOW_PREDICATES: frozenset[str] = frozenset(
 POSITIVE_REG_PREDICATES: frozenset[str] = frozenset(
     {
         "POSITIVELY_REGULATES",
-        "ENABLES",
-        "REGULATES",
     }
 )
 
 INHIBITING_PREDICATES: frozenset[str] = frozenset(
     {
         "NEGATIVELY_REGULATES",
-        "INHIBITS",
-        "PREVENTS",
+    }
+)
+
+STRUCTURAL_PREDICATES: frozenset[str] = frozenset(
+    {
+        "PART_OF",
     }
 )
 
@@ -128,6 +134,9 @@ class ABMStage:
     location_id: str | None = None
     gate_activators: tuple[str, ...] = ()
     gate_inhibitors: tuple[str, ...] = ()
+    activation_logic: dict[str, Any] | None = None
+    flow_inputs: tuple[str, ...] = ()
+    competing_inhibitors: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -143,6 +152,8 @@ class ABMTransition:
     positive_modulators: tuple[str, ...] = ()
     gate_activators: tuple[str, ...] = ()
     gate_inhibitors: tuple[str, ...] = ()
+    activation_logic: dict[str, Any] | None = None
+    flow_inputs: tuple[str, ...] = ()
 
 
 @dataclass
@@ -156,6 +167,7 @@ class ABMModel:
     entry_stages: list[str]
     terminal_stages: list[str]
     skipped_connections: list[tuple[str, str, str]] = field(default_factory=list)
+    removed_connections: list[tuple[str, str]] = field(default_factory=list)
 
     @property
     def variables(self) -> list[str]:
@@ -177,6 +189,7 @@ class ABMSimulation:
     trajectory: list[dict[str, int]]
     final_counts: dict[str, int]
     peak_counts: dict[str, int]
+    converged: bool = True
 
 
 def _coerce_doc(doc_or_review: Any) -> dict[str, Any]:
@@ -193,7 +206,8 @@ def _coerce_doc(doc_or_review: Any) -> dict[str, Any]:
 def _loc_from_descriptor(loc: Any) -> tuple[str | None, str | None]:
     if not isinstance(loc, dict):
         return None, None
-    term = loc.get("term") if isinstance(loc.get("term"), dict) else {}
+    term_raw = loc.get("term")
+    term: dict[str, Any] = term_raw if isinstance(term_raw, dict) else {}
     label = loc.get("preferred_term") or term.get("label")
     term_id = term.get("id")
     return (str(label) if label else None, str(term_id) if term_id else None)
@@ -205,6 +219,12 @@ def _extract_location(elem_dict: dict[str, Any]) -> tuple[str | None, str | None
         label, term_id = _loc_from_descriptor(loc)
         if label or term_id:
             return label, term_id
+    ctx = elem_dict.get("context")
+    if isinstance(ctx, dict):
+        for loc in as_list(ctx.get("cellular_components")):
+            label, term_id = _loc_from_descriptor(loc)
+            if label or term_id:
+                return label, term_id
     for ann in as_list(elem_dict.get("annotons")):
         if not isinstance(ann, dict):
             continue
@@ -238,6 +258,61 @@ def _normalize_removed(
     return frozenset(out)
 
 
+def _normalize_logic_expr(
+    expr: Any, base_flat: _Flattener
+) -> dict[str, Any] | None:
+    if not isinstance(expr, dict):
+        return None
+    try:
+        op = _logic_operator(expr)
+    except ValueError:
+        return None
+    if op == "element":
+        leaf = str(expr["element"])
+        exits = base_flat.exits(leaf)
+        if len(exits) == 1:
+            return {"element": exits[0]}
+        return {"any_of": [{"element": x} for x in exits]}
+    subs: list[dict[str, Any]] = []
+    for sub in as_list(expr[op]):
+        norm_sub = _normalize_logic_expr(sub, base_flat)
+        if norm_sub is None:
+            return None
+        subs.append(norm_sub)
+    return {op: subs}
+
+
+def _eval_abm_logic(
+    expr: dict[str, Any],
+    active: dict[str, bool],
+    flow_inputs: tuple[str, ...] = (),
+    competing_inhibitors: tuple[str, ...] = (),
+) -> bool:
+    op = _logic_operator(expr)
+    if op == "element":
+        v = str(expr["element"])
+        if v in competing_inhibitors:
+            return False
+        if v in flow_inputs:
+            return True
+        return active.get(v, False)
+    subs = [
+        _eval_abm_logic(
+            sub,
+            active,
+            flow_inputs=flow_inputs,
+            competing_inhibitors=competing_inhibitors,
+        )
+        for sub in as_list(expr[op])
+        if isinstance(sub, dict)
+    ]
+    if op == "none_of":
+        return not any(subs)
+    if op == "all_of":
+        return all(subs)
+    return any(subs)
+
+
 def module_to_abm(
     doc_or_review: Any,
     removed_connections: Any = None,
@@ -249,9 +324,21 @@ def module_to_abm(
         raise ValueError("module document is missing a top-level 'module' mapping")
 
     removed = _normalize_removed(removed_connections)
-    flat = _Flattener(module, removed)
+    base_flat = _Flattener(module, frozenset())
     index = _element_index(module)
     labels = _labels(doc)
+    omitted_by_target = {
+        k: set(v) for k, v in omitted_regulators(doc).items()
+    }
+
+    # Expand removed_connections across container boundaries so both Python and
+    # browser simulation see the leaf stage pairs that were severed.
+    removed_leaf_pairs: set[tuple[str, str]] = set()
+    for raw_src, raw_tgt in removed:
+        for s in base_flat.exits(raw_src):
+            for t in base_flat.entries(raw_tgt):
+                if s != t:
+                    removed_leaf_pairs.add((s, t))
 
     # Preserve document order for elements.
     order: list[str] = []
@@ -268,81 +355,122 @@ def module_to_abm(
                 order.append(s_aid)
                 kinds[s_aid] = "annoton"
 
-    # Flatten connections across container boundaries using _Flattener.exits / .entries
-    flat_conns: list[tuple[str, str, str, str | None]] = []
+    # Flatten all unperturbed connections first to fix the stage inventory and
+    # baseline entry/terminal/regulator classification, then filter out removed
+    # connections for transitions and regulatory gates.
+    base_flat_conns: list[tuple[str, str, str, str | None]] = []
+    active_flat_conns: list[tuple[str, str, str, str | None]] = []
     skipped: list[tuple[str, str, str]] = []
-    seen_flat: set[tuple[str, str, str]] = set()
-    for conn in flat.connections:
+    seen_base: set[tuple[str, str, str]] = set()
+    seen_active: set[tuple[str, str, str]] = set()
+    for conn in base_flat.connections:
         raw_pred = conn.get("connection_type")
-        pred = (
-            raw_pred.value
-            if hasattr(raw_pred, "value")
-            else str(raw_pred or "")
-        )
+        pred = str(getattr(raw_pred, "value", raw_pred) or "")
         raw_src = str(conn.get("source") or "")
         raw_tgt = str(conn.get("target") or "")
         desc = str(conn.get("description")) if conn.get("description") else None
-        if pred not in (FLOW_PREDICATES | POSITIVE_REG_PREDICATES | INHIBITING_PREDICATES):
-            skipped.append((raw_src, pred, raw_tgt))
+        if pred in STRUCTURAL_PREDICATES:
             continue
-        for s in flat.exits(raw_src):
-            for t in flat.entries(raw_tgt):
-                if s != t and (s, t, pred) not in seen_flat:
-                    seen_flat.add((s, t, pred))
-                    flat_conns.append((s, t, pred, desc))
+        if pred not in (FLOW_PREDICATES | POSITIVE_REG_PREDICATES | INHIBITING_PREDICATES):
+            if (raw_src, raw_tgt) not in removed:
+                skipped.append((raw_src, pred, raw_tgt))
+            continue
+        raw_removed = (raw_src, raw_tgt) in removed
+        for s in base_flat.exits(raw_src):
+            for t in base_flat.entries(raw_tgt):
+                if s == t:
+                    continue
+                if (s, t, pred) not in seen_base:
+                    seen_base.add((s, t, pred))
+                    base_flat_conns.append((s, t, pred, desc))
+                if (
+                    not raw_removed
+                    and (s, t) not in removed_leaf_pairs
+                    and (s, t, pred) not in seen_active
+                ):
+                    seen_active.add((s, t, pred))
+                    active_flat_conns.append((s, t, pred, desc))
 
-    involved = {s for s, _, _, _ in flat_conns} | {t for _, t, _, _ in flat_conns}
+    involved = {s for s, _, _, _ in base_flat_conns} | {
+        t for _, t, _, _ in base_flat_conns
+    }
     variables = [v for v in order if v in involved]
     variables += sorted(v for v in involved if v not in variables)
 
+    base_outgoing_preds_by_source: dict[str, set[str]] = {eid: set() for eid in variables}
+    base_incoming_by_target: dict[str, int] = {eid: 0 for eid in variables}
+    base_flow_endpoints: set[str] = set()
+    base_flow_incoming: dict[str, int] = {eid: 0 for eid in variables}
+    base_flow_outgoing: dict[str, int] = {eid: 0 for eid in variables}
+
+    for src, tgt, pred, _desc in base_flat_conns:
+        base_outgoing_preds_by_source[src].add(pred)
+        base_incoming_by_target[tgt] += 1
+        if pred in FLOW_PREDICATES:
+            base_flow_endpoints.add(src)
+            base_flow_endpoints.add(tgt)
+            base_flow_outgoing[src] += 1
+            base_flow_incoming[tgt] += 1
+
     flow_conns: list[tuple[str, str, str, str | None]] = []
+    flow_inputs_by_target: dict[str, list[str]] = {eid: [] for eid in variables}
     pos_reg_by_target: dict[str, list[str]] = {eid: [] for eid in variables}
     neg_reg_by_target: dict[str, list[str]] = {eid: [] for eid in variables}
-    outgoing_preds_by_source: dict[str, set[str]] = {eid: set() for eid in variables}
-    incoming_by_target: dict[str, int] = {eid: 0 for eid in variables}
 
-    flow_endpoints: set[str] = set()
-    flow_incoming: dict[str, int] = {eid: 0 for eid in variables}
-    flow_outgoing: dict[str, int] = {eid: 0 for eid in variables}
-
-    for src, tgt, pred, desc in flat_conns:
-        outgoing_preds_by_source[src].add(pred)
-        incoming_by_target[tgt] += 1
+    for src, tgt, pred, desc in active_flat_conns:
         if pred in FLOW_PREDICATES:
             flow_conns.append((src, tgt, pred, desc))
-            flow_endpoints.add(src)
-            flow_endpoints.add(tgt)
-            flow_outgoing[src] += 1
-            flow_incoming[tgt] += 1
+            if src not in flow_inputs_by_target[tgt]:
+                flow_inputs_by_target[tgt].append(src)
         elif pred in POSITIVE_REG_PREDICATES:
-            if src not in pos_reg_by_target[tgt]:
+            if (
+                src not in omitted_by_target.get(tgt, set())
+                and src not in pos_reg_by_target[tgt]
+            ):
                 pos_reg_by_target[tgt].append(src)
         elif pred in INHIBITING_PREDICATES:
-            if src not in neg_reg_by_target[tgt]:
+            if (
+                src not in omitted_by_target.get(tgt, set())
+                and src not in neg_reg_by_target[tgt]
+            ):
                 neg_reg_by_target[tgt].append(src)
+
+    logic_by_target: dict[str, dict[str, Any] | None] = {}
+    for eid in variables:
+        elem_dict = index.get(eid) or {}
+        logic_by_target[eid] = _normalize_logic_expr(
+            elem_dict.get("activation_logic"), base_flat
+        )
 
     stages: list[ABMStage] = []
     for eid in variables:
-        is_flow = eid in flow_endpoints
-        is_entry = is_flow and flow_incoming[eid] == 0
-        is_terminal = is_flow and flow_outgoing[eid] == 0
+        is_flow = eid in base_flow_endpoints
+        is_entry = is_flow and base_flow_incoming[eid] == 0
+        is_terminal = is_flow and base_flow_outgoing[eid] == 0
         elem_dict = index.get(eid) or {}
         loc_label, loc_id = _extract_location(elem_dict)
 
-        out_preds = outgoing_preds_by_source.get(eid, set())
+        out_preds = base_outgoing_preds_by_source.get(eid, set())
         if is_flow:
             default_active = True
         elif (
             out_preds
             and out_preds <= INHIBITING_PREDICATES
-            and incoming_by_target[eid] == 0
+            and base_incoming_by_target[eid] == 0
         ):
             default_active = False
         else:
             default_active = True
 
-        gate_acts = tuple(r for r in pos_reg_by_target[eid] if r not in flow_endpoints)
-        gate_inhs = tuple(r for r in neg_reg_by_target[eid] if r not in flow_endpoints)
+        gate_acts = tuple(
+            r for r in pos_reg_by_target[eid] if r not in base_flow_endpoints
+        )
+        gate_inhs = tuple(
+            r for r in neg_reg_by_target[eid] if r not in base_flow_endpoints
+        )
+        comp_inhs_stage = tuple(
+            r for r in neg_reg_by_target[eid] if r in base_flow_endpoints
+        )
 
         stages.append(
             ABMStage(
@@ -357,6 +485,9 @@ def module_to_abm(
                 location_id=loc_id,
                 gate_activators=gate_acts,
                 gate_inhibitors=gate_inhs,
+                activation_logic=logic_by_target.get(eid),
+                flow_inputs=tuple(flow_inputs_by_target[eid]),
+                competing_inhibitors=comp_inhs_stage,
             )
         )
 
@@ -368,11 +499,15 @@ def module_to_abm(
     transitions: list[ABMTransition] = []
     for src, tgt, pred, desc in flow_conns:
         comp_inhs = tuple(
-            r for r in neg_reg_by_target[tgt] if r in flow_endpoints and r != src
+            r for r in neg_reg_by_target[tgt] if r in base_flow_endpoints and r != src
         )
         pos_mods = tuple(r for r in pos_reg_by_target[tgt] if r != src)
-        gate_acts = tuple(r for r in pos_reg_by_target[tgt] if r not in flow_endpoints)
-        gate_inhs = tuple(r for r in neg_reg_by_target[tgt] if r not in flow_endpoints)
+        gate_acts = tuple(
+            r for r in pos_reg_by_target[tgt] if r not in base_flow_endpoints
+        )
+        gate_inhs = tuple(
+            r for r in neg_reg_by_target[tgt] if r not in base_flow_endpoints
+        )
         transitions.append(
             ABMTransition(
                 source=src,
@@ -384,6 +519,8 @@ def module_to_abm(
                 positive_modulators=pos_mods,
                 gate_activators=gate_acts,
                 gate_inhibitors=gate_inhs,
+                activation_logic=logic_by_target.get(tgt),
+                flow_inputs=tuple(flow_inputs_by_target[tgt]),
             )
         )
 
@@ -395,13 +532,14 @@ def module_to_abm(
         entry_stages=entry_stages,
         terminal_stages=terminal_stages,
         skipped_connections=skipped,
+        removed_connections=sorted(removed_leaf_pairs),
     )
 
 
 def _resolve_element_active(
     model: ABMModel,
     settings: dict[str, bool],
-) -> dict[str, bool]:
+) -> tuple[dict[str, bool], bool]:
     """Determine which stages/regulators are active after applying settings and gates."""
     active: dict[str, bool] = {}
     for stage in model.stages:
@@ -410,23 +548,33 @@ def _resolve_element_active(
         else:
             active[stage.id] = stage.default_active
 
-    for _ in range(len(model.stages)):
+    converged = False
+    for _ in range(len(model.stages) + 1):
         changed = False
         for stage in model.stages:
             if stage.id in settings:
                 continue
             gated_off = False
-            if any(not active.get(r, True) for r in stage.gate_activators):
-                gated_off = True
-            if any(active.get(r, False) for r in stage.gate_inhibitors):
-                gated_off = True
+            if stage.activation_logic is not None:
+                gated_off = not _eval_abm_logic(
+                    stage.activation_logic,
+                    active,
+                    flow_inputs=stage.flow_inputs,
+                    competing_inhibitors=stage.competing_inhibitors,
+                )
+            else:
+                if any(not active.get(r, True) for r in stage.gate_activators):
+                    gated_off = True
+                if any(active.get(r, False) for r in stage.gate_inhibitors):
+                    gated_off = True
             new_val = False if gated_off else stage.default_active
             if active[stage.id] != new_val:
                 active[stage.id] = new_val
                 changed = True
         if not changed:
+            converged = True
             break
-    return active
+    return active, converged
 
 
 def _effective_transition_rate(
@@ -436,10 +584,19 @@ def _effective_transition_rate(
     """Compute effective per-step transition rate for a flow transition."""
     if not element_active.get(t.source, False) or not element_active.get(t.target, False):
         return 0.0
-    if any(not element_active.get(r, True) for r in t.gate_activators):
-        return 0.0
-    if any(element_active.get(r, False) for r in t.gate_inhibitors):
-        return 0.0
+    if t.activation_logic is not None:
+        if not _eval_abm_logic(
+            t.activation_logic,
+            element_active,
+            flow_inputs=t.flow_inputs,
+            competing_inhibitors=t.competing_inhibitors,
+        ):
+            return 0.0
+    else:
+        if any(not element_active.get(r, True) for r in t.gate_activators):
+            return 0.0
+        if any(element_active.get(r, False) for r in t.gate_inhibitors):
+            return 0.0
 
     rate = t.base_rate
     for inh in t.competing_inhibitors:
@@ -448,7 +605,7 @@ def _effective_transition_rate(
     for mod in t.positive_modulators:
         if element_active.get(mod, False):
             rate *= POSITIVE_REGULATOR_BOOST
-        else:
+        elif t.activation_logic is None:
             rate = 0.0
     return rate
 
@@ -461,7 +618,7 @@ def simulate_abm(
 ) -> ABMSimulation:
     """Run a deterministic particle-conserving simulation of ``model``."""
     pinned = dict(settings or {})
-    element_active = _resolve_element_active(model, pinned)
+    element_active, converged = _resolve_element_active(model, pinned)
 
     counts: dict[str, int] = {s.id: 0 for s in model.stages}
     active_entries = [sid for sid in model.entry_stages if element_active.get(sid, False)]
@@ -548,6 +705,7 @@ def simulate_abm(
         trajectory=trajectory,
         final_counts=dict(counts),
         peak_counts=peak_counts,
+        converged=converged,
     )
 
 
@@ -563,15 +721,14 @@ def abm_models(doc_or_review: Any) -> list[dict[str, Any]]:
     ]
 
 
-def run_abm_scenario(
-    doc_or_review: Any,
+def _run_abm_scenario_with_sim(
+    doc: dict[str, Any],
     model_id: str,
     scenario_or_dict: Any,
     n_agents: int = DEFAULT_N_AGENTS,
     n_steps: int = DEFAULT_N_STEPS,
-) -> ScenarioResult:
-    """Run a single scenario against a module-derived ABM and check expectations."""
-    doc = _coerce_doc(doc_or_review)
+) -> tuple[ScenarioResult, ABMSimulation, ABMModel]:
+    """Run a single ABM scenario and return ``(result, simulation, abm_model)``."""
     if isinstance(scenario_or_dict, dict):
         scenario = scenario_or_dict
     elif hasattr(scenario_or_dict, "model_dump"):
@@ -583,6 +740,17 @@ def run_abm_scenario(
     label = str(scenario.get("label") or sid)
     failures: list[str] = []
 
+    for boolean_only_slot in (
+        "expected_oscillating",
+        "expected_attractor_kind",
+        "expected_attractor_count",
+    ):
+        val = scenario.get(boolean_only_slot)
+        if val is not None and val != [] and val != "":
+            failures.append(
+                f"{boolean_only_slot} is not supported on AGENT_BASED scenarios"
+            )
+
     removed = _removed(scenario)
     declared = {
         (str(c.get("source")), str(c.get("target")))
@@ -591,7 +759,19 @@ def run_abm_scenario(
     for pair in sorted(removed - declared):
         failures.append(f"removed connection {pair[0]} -> {pair[1]} is not declared")
 
+    logic_problems = activation_logic_findings(doc, removed_connections=removed)
+    if logic_problems:
+        failures.extend(
+            f"removed_connections break an activation_logic: {p}"
+            for p in logic_problems
+        )
+
     abm = module_to_abm(doc, removed_connections=removed)
+    for raw_src, pred, raw_tgt in abm.skipped_connections:
+        failures.append(
+            f"unsupported connection_type {pred!r} on {raw_src} -> {raw_tgt}"
+        )
+
     stage_ids = set(abm.variables)
     stage_map = abm.stage_map()
 
@@ -599,9 +779,17 @@ def run_abm_scenario(
     bad = sorted(set(settings) - stage_ids)
     if bad:
         failures.append(f"settings name elements that are not model stages: {bad}")
-        return ScenarioResult(model_id, sid, label, [], failures)
+        valid_settings = {k: v for k, v in settings.items() if k in stage_ids}
+        sim = simulate_abm(
+            abm, settings=valid_settings, n_agents=n_agents, n_steps=n_steps
+        )
+        return ScenarioResult(model_id, sid, label, [], failures), sim, abm
 
     sim = simulate_abm(abm, settings=settings, n_agents=n_agents, n_steps=n_steps)
+    if not sim.converged:
+        failures.append(
+            "regulator gating did not converge (oscillating regulator loop)"
+        )
 
     def is_stage_active(eid: str) -> bool:
         st = stage_map[eid]
@@ -660,7 +848,22 @@ def run_abm_scenario(
         if is_stage_active(v)
     )
     attr = Attractor(list(abm.variables), [mask])
-    return ScenarioResult(model_id, sid, label, [attr], failures)
+    return ScenarioResult(model_id, sid, label, [attr], failures), sim, abm
+
+
+def run_abm_scenario(
+    doc_or_review: Any,
+    model_id: str,
+    scenario_or_dict: Any,
+    n_agents: int = DEFAULT_N_AGENTS,
+    n_steps: int = DEFAULT_N_STEPS,
+) -> ScenarioResult:
+    """Run a single scenario against a module-derived ABM and check expectations."""
+    doc = _coerce_doc(doc_or_review)
+    result, _sim, _abm = _run_abm_scenario_with_sim(
+        doc, model_id, scenario_or_dict, n_agents=n_agents, n_steps=n_steps
+    )
+    return result
 
 
 def run_declared_abm_scenarios(doc_or_review: Any) -> list[ScenarioResult]:
@@ -691,11 +894,8 @@ def abm_model_payload(
     for sc in as_list(model_entry.get("scenarios")):
         if not isinstance(sc, dict):
             continue
-        result = run_abm_scenario(doc, model_id, sc)
-        removed = _removed(sc)
-        sc_abm = module_to_abm(doc, removed_connections=removed)
+        result, sim, sc_abm = _run_abm_scenario_with_sim(doc, model_id, sc)
         settings = _settings(sc)
-        sim = simulate_abm(sc_abm, settings=settings)
         scenarios_out.append(
             {
                 "id": sc.get("id"),
@@ -703,7 +903,7 @@ def abm_model_payload(
                 "description": sc.get("description") or "",
                 "settings": settings,
                 "removed_connections": [
-                    {"source": s, "target": t} for s, t in sorted(removed)
+                    {"source": s, "target": t} for s, t in sc_abm.removed_connections
                 ],
                 "expected_active": [str(x) for x in as_list(sc.get("expected_active"))],
                 "expected_inactive": [str(x) for x in as_list(sc.get("expected_inactive"))],
@@ -764,6 +964,9 @@ def abm_model_payload(
                 "location_id": s.location_id or "",
                 "gate_activators": list(s.gate_activators),
                 "gate_inhibitors": list(s.gate_inhibitors),
+                "activation_logic": s.activation_logic,
+                "flow_inputs": list(s.flow_inputs),
+                "competing_inhibitors": list(s.competing_inhibitors),
             }
             for s in base_abm.stages
         ],
@@ -778,6 +981,8 @@ def abm_model_payload(
                 "positive_modulators": list(t.positive_modulators),
                 "gate_activators": list(t.gate_activators),
                 "gate_inhibitors": list(t.gate_inhibitors),
+                "activation_logic": t.activation_logic,
+                "flow_inputs": list(t.flow_inputs),
             }
             for t in base_abm.transitions
         ],

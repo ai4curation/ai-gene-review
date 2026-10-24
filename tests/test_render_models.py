@@ -171,3 +171,17 @@ executable_models:
     assert "Derived from module" in model_page.read_text()
     assert 'href="../models/trafficking_abm.html"' in page.read_text()
 
+    import yaml
+
+    doc = yaml.safe_load(abm_yaml)
+    rows = model_summaries(
+        doc,
+        yaml_path,
+        page,
+        tmp_path / "pages" / "models",
+        from_file=tmp_path / "pages" / "models" / "index.html",
+    )
+    assert rows[0]["scenarios"][0]["kinds"] == []
+    index_html = render_models_index(rows, tmp_path / "pages" / "models").read_text()
+    assert "fixed point" not in index_html
+
