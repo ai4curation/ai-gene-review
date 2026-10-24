@@ -43,6 +43,11 @@
   Aspergillus, Fusarium, or Penicillium; the PAINT row is still defensible for
   Mon1, but a direct A. nidulans MonA-Ccz1/Rab7 assay remains the main open
   experiment.
+- S. cerevisiae MON1 carries `GO:0016236 macroautophagy` by IMP, and the
+  Fusarium FgMon1 paper directly reports impaired autophagosome-vacuole fusion.
+  I used the specific macroautophagy child rather than adding parent
+  `GO:0006914 autophagy`, which the yeast MON1 review already treats as too
+  general beside more specific autophagy-route terms.
 
 ## Annotation decisions
 
@@ -65,6 +70,6 @@
   vacuole membrane is the better core localization.
 - `GO:0035658 Mon1-Ccz1 complex`: ACCEPT with the caveat that direct
   filamentous-fungal complex formation remains untested.
-- Add `GO:0006914 autophagy` as a conservative NEW row because Mon1-Ccz1
-  executes Rab7/Ypt7-dependent autophagosome-vacuole fusion in yeast, and
-  Fusarium FgMon1 has direct autophagy and Rab7 evidence.
+- Add `GO:0016236 macroautophagy` as a conservative NEW row because
+  Mon1-Ccz1 executes Rab7/Ypt7-dependent autophagosome-vacuole fusion in yeast,
+  and Fusarium FgMon1 has direct autophagy and Rab7 evidence.
