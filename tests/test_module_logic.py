@@ -14,8 +14,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
+from ai_gene_review.render_modules import as_list
 from ai_gene_review.module_logic import (
+    And,
     Atom,
     compile_module,
     compile_module_file,
@@ -441,24 +444,31 @@ def _curated_modules() -> list[Path]:
     return sorted(MODULES_DIR.glob("*.yaml"))
 
 
-def test_no_curated_module_is_satisfied_by_an_empty_context():
+@pytest.fixture(scope="session")
+def curated_corpus() -> dict[Path, And]:
+    """Compile every curated module once; shared by the corpus-wide tests.
+
+    Compiling inlines `module_ref` targets, so doing it per test made the three
+    corpus tests re-walk the whole of `modules/` three times over.
+    """
+    return {path: compile_module_file(path) for path in _curated_modules()}
+
+
+def test_no_curated_module_is_satisfied_by_an_empty_context(curated_corpus):
     """A module satisfied when nothing holds asserts no requirement at all.
 
     This happens when every part of a module is marked `optional: true`:
     `compile_module` turns an optional part into OR(filled, empty), so a node
     whose parts are all optional admits the empty route and is vacuously true.
-    Alternative mechanisms belong in a `variant_sets` with selection
-    ONE_OR_MORE, which requires at least one branch. Caught
-    `phage_single_gene_lysis`, which every genome satisfied, including genomes
-    encoding no lysis protein at all.
+    Alternative mechanisms belong in a `variant_sets`, whose selection requires
+    a branch. Caught `phage_single_gene_lysis`, which every genome satisfied,
+    including genomes encoding no lysis protein at all.
     """
-    vacuous = []
-    for path in _curated_modules():
-        circuit = compile_module_file(path)
-        if not list(iter_atoms(circuit)):
-            continue  # no leaf steps to require; nothing to assert
-        if is_satisfied(circuit, lambda atom: False):
-            vacuous.append(path.name)
+    vacuous = [
+        path.name
+        for path, circuit in curated_corpus.items()
+        if list(iter_atoms(circuit)) and is_satisfied(circuit, lambda atom: False)
+    ]
     assert vacuous == [], (
         "these modules are satisfied by a context in which no step holds: "
         + ", ".join(vacuous)
@@ -466,50 +476,101 @@ def test_no_curated_module_is_satisfied_by_an_empty_context():
 
 
 # --------------------------------------------------------------------------- #
-# Grounding ratchet: an ungrounded atom is satisfiable by nothing             #
+# Grounding: an ungrounded atom is satisfiable by nothing                     #
 # --------------------------------------------------------------------------- #
 
-#: Atoms with no symbol, no accession and no required function, and the modules
-#: they make unsatisfiable in *every* context. Both are ratchets: they may only
-#: fall. The bulk are PROTEIN_COMPLEX participants, whose subunits sit at
-#: ``protein_complex.active_units[].participant.gene_product``, one level deeper
-#: than `_atom_from_annoton` reads; a handful are ANY_WITH_FUNCTION steps that
-#: carry no descriptor at all and would need an activity-keyed oracle.
-UNGROUNDED_ATOM_BUDGET = 354
-UNSATISFIABLE_MODULE_BUDGET = 127
+#: Participant slots `_atom_from_annoton` reads for a symbol or accession. An
+#: ungrounded atom whose participant carries one of these is an engine defect:
+#: the grounding was there to be read and was not read.
+READ_GROUNDING_SLOTS = ("gene", "gene_product")
+
+#: Slots the engine knowingly does not read, so an atom grounded only through
+#: one of them is expected to come out ungrounded until that is fixed.
+#: `protein_complex` holds its subunits one level deeper, at
+#: ``active_units[].participant.gene_product``, and reading them raises an
+#: any-of versus all-of question (a complex needs every subunit, while the
+#: representative slots are any-of) that wants a curator's decision.
+#: `ortholog_of`/`homolog_of` name a reference gene rather than the ortholog
+#: actually required in context. A participant with none of these slots, such
+#: as a descriptor-less ANY_WITH_FUNCTION step, needs an activity-keyed oracle.
+UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of")
 
 
-def test_ungrounded_atoms_do_not_increase():
-    """Guard the direction the empty-context test cannot see.
+def _participant_slots(document: dict) -> dict[str, set[str]]:
+    """Map each annoton id to the grounding slots its participant carries."""
+    slots: dict[str, set[str]] = {}
+
+    def walk(node: dict) -> None:
+        for annoton in as_list(node.get("annotons")):
+            participant = annoton.get("participant") or {}
+            slots[str(annoton.get("id"))] = {
+                slot
+                for slot in (*READ_GROUNDING_SLOTS, *UNREAD_GROUNDING_SLOTS, "family")
+                if participant.get(slot)
+            }
+        for part in as_list(node.get("parts")):
+            walk(part["node"])
+        for variant_set in as_list(node.get("variant_sets")):
+            for variant in as_list(variant_set.get("variants")):
+                walk(variant)
+
+    walk(document["module"])
+    return slots
+
+
+def test_no_ungrounded_atom_comes_from_a_slot_the_engine_reads(curated_corpus):
+    """Guard the direction the empty-context test structurally cannot see.
 
     An empty context is *meant* to leave a module unsatisfied, so that test
     passes just as happily when an atom is unsatisfiable by construction. This
-    is the dual guard: it counts steps no oracle could ever satisfy, which is
-    how `participant.gene_product` groundings went missing silently.
+    is the dual guard, and it is deliberately keyed on the *cause* rather than
+    on a total: a count over a growing corpus would fail an unrelated PR that
+    merely adds a 195th `PROTEIN_COMPLEX` module, and name the wrong reason.
+    Keyed this way it stays quiet for the known-unread slots and fires the day
+    a slot the engine does read stops being read -- which is exactly how
+    `participant.gene_product` went missing, silently and with no validation
+    error.
+    """
+    offenders = []
+    for path, circuit in curated_corpus.items():
+        slots = _participant_slots(yaml.safe_load(path.read_text()))
+        for atom in iter_atoms(circuit):
+            if atom.is_grounded:
+                continue
+            annoton_id = atom.node_id.rpartition("#")[2]
+            read = slots.get(annoton_id, set()) & set(READ_GROUNDING_SLOTS)
+            if read:
+                offenders.append(f"{path.name}:{annoton_id} carries {sorted(read)}")
+    assert offenders == [], (
+        "these steps are ungrounded although their participant carries a slot "
+        "the engine reads, so a grounding is being dropped: "
+        + ", ".join(offenders[:10])
+    )
+
+
+def test_report_corpus_grounding_counts(curated_corpus, capsys):
+    """Report, without asserting, how much of the corpus is still ungroundable.
+
+    These are the numbers quoted in PR #5333: they are visibility, not a
+    ratchet, because asserting a total over a growing corpus erodes into a
+    constant that gets bumped. The invariant that can only improve is the
+    cause-keyed test above.
     """
     ungrounded = [
-        (path.name, atom.node_id)
-        for path in _curated_modules()
-        for atom in iter_atoms(compile_module_file(path))
+        atom
+        for circuit in curated_corpus.values()
+        for atom in iter_atoms(circuit)
         if not atom.is_grounded
     ]
-    assert len(ungrounded) <= UNGROUNDED_ATOM_BUDGET, (
-        f"ungrounded atoms rose to {len(ungrounded)} (budget "
-        f"{UNGROUNDED_ATOM_BUDGET}); a grounding slot is being missed: "
-        + ", ".join(f"{m}:{a}" for m, a in ungrounded[:10])
-    )
-
-
-def test_modules_unsatisfiable_in_every_context_do_not_increase():
-    """A module UNSAT even when every groundable step holds is dead weight."""
-    dead = []
-    for path in _curated_modules():
-        circuit = compile_module_file(path)
-        if not list(iter_atoms(circuit)):
-            continue
-        if not is_satisfied(circuit, lambda atom: atom.is_grounded):
-            dead.append(path.name)
-    assert len(dead) <= UNSATISFIABLE_MODULE_BUDGET, (
-        f"modules unsatisfiable in every context rose to {len(dead)} (budget "
-        f"{UNSATISFIABLE_MODULE_BUDGET}): " + ", ".join(dead[:10])
-    )
+    dead = [
+        path.name
+        for path, circuit in curated_corpus.items()
+        if list(iter_atoms(circuit))
+        and not is_satisfied(circuit, lambda atom: atom.is_grounded)
+    ]
+    with capsys.disabled():
+        print(
+            f"\n  corpus grounding: {len(ungrounded)} ungrounded atoms; "
+            f"{len(dead)} of {len(curated_corpus)} modules unsatisfiable in "
+            "every context"
+        )
