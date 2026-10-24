@@ -1,2 +1,14 @@
 # Peg10 (rat, A0ABK0LI09) — review notes
 SIRH1; all GOA rows ISO/IEA. Reviewed rat UniProt record is 408 aa = Gag/capsid region only (no Pol/protease domain), so protease NOT asserted; capsid/RNA-packaging and placental roles transferred by orthology (mouse/human). NEW: GO:0039660 structural constituent of virion (ISS). nucleic acid binding IEA -> TOO_GENERAL. Pol/protease flagged in suggested_questions. No openscientist report present for rat.
+
+## Deep research integration (OpenScientist, 2026-10-24)
+
+An OpenScientist report has now arrived. Read as leads; each point checked against cached publications. No contradiction with the review's calls.
+
+- Catalytic activity: the report states the ORF2 aspartic protease is catalytically active and self-processing via >60% -1 frameshifting in mouse/human [PMID:17942406 "and participates in post-translational processing of PEG10 ORF1-2"] and that the rat ORF1 record (A0ABK0LI09) lacks the D[ST]G protease motif. This is exactly the family convention: protease is asserted only where shown (mouse/human), and the reviewed rat record has no Pol region, so no protease is asserted for rat. Kept in suggested_questions. Confirmed the rat CCHC motif detail [report: "confirms a single C-X2-C-X4-H-X4-C CCHC zinc finger (CLYCGNGGHFADTC, ~residues 378–391)"], added to the zinc ion binding row.
+- Capsid structure: X-ray crystallography confirms the human PEG10 CA CTD-like domain is a Gag capsid homolog [PMID:34357660 "report here the X-ray crystal structures of the CA CTD-like domains of MOAP1 and PEG10, and confirm that these proteins are indeed structural homologs of retrovirus and retrotransposon Gag proteins"]. Added to the NEW structural constituent of virion row.
+- VLP budding and placental RNA binding [PMID:30951545 "The Gag domain of PEG10 supports the budding of virus-like particles, which are released from the cell and can be recovered from exosome preparations"; "a large number of PEG10-bound transcripts, including Hbegf..."]. Added to homooligomerization and mRNA binding rows.
+- Protease-motif point mutation disrupts fetal placental vasculature and PEG10 localizes to the three trophoblast layers [PMID:34559199]; this is a mouse Pol-isoform result, consistent with placenta ACCEPT; not used to assert protease on the rat Gag-only record.
+- SIAH1 anti-apoptotic / SIAH1/2 ubiquitination / USP9X deubiquitination [PMID:12810624, PMID:42168988, PMID:38677662] and stress-granule/UBQLN2 recruitment [PMID:40680123] are regulatory/oncogenic context; the corresponding processes are not in the rat GOA and I did not add NEW process terms (conservative; mostly cancer re-expression context).
+
+No action changes. Cross-species: no change implied for mouse/human PEG10 reviews; the protease convention (assert only for mouse/human where the Pol isoform and activity are shown) is unchanged.
