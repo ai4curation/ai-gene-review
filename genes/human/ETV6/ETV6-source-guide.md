@@ -57,16 +57,18 @@ The ten Reactome records below are valid disease-fusion models. Their P41212 ref
 
 | Source event | Representative participant route | Complete P41212 fusion participants |
 |---|---|---|
-| [R-HSA-9703430](https://reactome.org/content/detail/R-HSA-9703430) | 9703430 → 9703378 → 9703372 → 9703373 → 9703313 | 9703313, 9703318, 9703302, 9703305, 9703308 |
-| [R-HSA-9703432](https://reactome.org/content/detail/R-HSA-9703432) | 9703432 → 9703359 → 9703372 → 9703373 → 9703313 | 9703313, 9703318, 9703302, 9703305, 9703308 |
+| [R-HSA-9703430](https://reactome.org/content/detail/R-HSA-9703430) | 9703430 → 9703378 → 9703372 → 9703353 → 9703305 | 9703313, 9703318, 9703302, 9703305, 9703308 |
+| [R-HSA-9703432](https://reactome.org/content/detail/R-HSA-9703432) | 9703432 → 9703359 → 9703372 → 9703353 → 9703305 | 9703313, 9703318, 9703302, 9703305, 9703308 |
 | [R-HSA-9703433](https://reactome.org/content/detail/R-HSA-9703433) | 9703433 → 9703345 → 9703315 | 9703315, 9697944, 9703302, 9703320, 9703307, 9703312 |
-| [R-HSA-9703434](https://reactome.org/content/detail/R-HSA-9703434) | 9703434 → 9703358 → 9703356 → 9703378 → 9703372 → 9703373 → 9703313 | 9703313, 9703318, 9703302, 9703305, 9703308 |
-| [R-HSA-9703435](https://reactome.org/content/detail/R-HSA-9703435) | 9703435 → 9703372 → 9703373 → 9703313 | 9703313, 9703318, 9703302, 9703305, 9703308 |
+| [R-HSA-9703434](https://reactome.org/content/detail/R-HSA-9703434) | 9703434 → 9703358 → 9703356 → 9703378 → 9703372 → 9703353 → 9703305 | 9703313, 9703318, 9703302, 9703305, 9703308 |
+| [R-HSA-9703435](https://reactome.org/content/detail/R-HSA-9703435) | 9703435 → 9703372 → 9703353 → 9703305 | 9703313, 9703318, 9703302, 9703305, 9703308 |
 | [R-HSA-9703437](https://reactome.org/content/detail/R-HSA-9703437) | 9703437 → 9703409 → 9703354 → 9697944 | 9697944, 9703315, 9703312, 9703320, 9703307, 9703313, 9703318, 9703302, 9703305, 9703308 |
-| [R-HSA-9703438](https://reactome.org/content/detail/R-HSA-9703438) | 9703438 → 9703426 → 9703372 → 9703373 → 9703313 | 9703313, 9703318, 9703302, 9703305, 9703308 |
-| [R-HSA-9703441](https://reactome.org/content/detail/R-HSA-9703441) | 9703441 → 9703425 → 9703349 → 9703378 → 9703372 → 9703373 → 9703313 | 9703313, 9703318, 9703302, 9703305, 9703308 |
+| [R-HSA-9703438](https://reactome.org/content/detail/R-HSA-9703438) | 9703438 → 9703426 → 9703372 → 9703353 → 9703305 | 9703313, 9703318, 9703302, 9703305, 9703308 |
+| [R-HSA-9703441](https://reactome.org/content/detail/R-HSA-9703441) | 9703441 → 9703425 → 9703349 → 9703378 → 9703372 → 9703353 → 9703305 | 9703313, 9703318, 9703302, 9703305, 9703308 |
 | [R-HSA-9673760](https://reactome.org/content/detail/R-HSA-9673760) | 9673760 → 9673677 → 9673893 | 9673893, 9673898 |
 | [R-HSA-9673761](https://reactome.org/content/detail/R-HSA-9673761) | 9673761 → 9673678 → 9673914 → 9673893 | 9673893, 9673898, 9673912, 9673905 |
+
+The table uses the same representative routes as the annotation rationales and source-defect explanations. For R-HSA-9703430, R-HSA-9703432, R-HSA-9703434, R-HSA-9703435, R-HSA-9703438 and R-HSA-9703441, the shared [9703372](https://reactome.org/ContentService/data/query/9703372) container also has a valid alternate branch through [9703373](https://reactome.org/ContentService/data/query/9703373) to [9703313](https://reactome.org/ContentService/data/query/9703313). The representative branch instead passes through [9703353](https://reactome.org/ContentService/data/query/9703353) to [9703305](https://reactome.org/ContentService/data/query/9703305). Both terminals retain a P41212 segment and a foreign FLT3 insertion; neither is native ETV6. Choosing one reproducible route does not exclude the other participants listed in the final column. The ten queries describe one upstream projection issue class across ten exported source rows, not ten independent flaws in the disease-event models.
 
 The protein-bearing participant routes are complete: 116 fully captured participant objects plus GDP 29420 and GTP 29438 as two inline terminal chemical leaves (118 reachable identifiers). The chemical leaves do not introduce another protein participant. Each of the 14 reachable P41212 sequence entities carries a foreign-protein insertion; no native P41212 participant was found. The event roots have no regulator branches. Earlier rate-limited child requests were retained, then independently recovered by paced retries before this conclusion.
 
@@ -91,4 +93,4 @@ Additional synthesis reading used the observed author-upload text of [PMID:12588
 
 The family segregation, variant and HSPC sections of [PMID:25581430](https://doi.org/10.1038/ng.3177), including Figures 1–5 captions and Methods, support familial thrombocytopenia with hematologic malignancy predisposition. They do not resolve the individual roles of every natural ETV6 product. The historical M1(M43A)/M43 reporter comparison and mouse S1A positive Fli1 context retain the species, promoter and construct limits described above. Questions and experiments address these boundaries without manufacturing new annotations.
 
-The complete accepted reference assessments and normal publication records are unchanged. Both genuine gene-source files are also preserved exactly; delivery classification is against the fixed input main and will be rechecked at canonical publication. Core synthesis adds no reference, source correction or quotation.
+The original publication and database reference assessments retain their access limits. This guide is cited as a local reference so that the Reactome participant routes and independent HPA observations are traceable from the annotation rationales. It does not turn the antibody signal into a product-resolved localization assay or establish a new core at the cytosol.
