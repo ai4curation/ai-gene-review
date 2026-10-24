@@ -66,6 +66,7 @@ def test_body_names_the_file_and_validate_command(validation_tsv):
     assert "just validate yeast VMA1" in issue.body
     assert "local_source_supporting_text" in issue.body
     assert "just local-quote-baseline --prune" in issue.body
+    assert "never the cited source" in issue.body
     assert "Do not delete a `supporting_text`" in issue.body
 
 

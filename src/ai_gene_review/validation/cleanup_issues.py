@@ -26,10 +26,16 @@ CHECK_GUIDANCE = {
     ),
     "local_source_supporting_text": (
         "The quote is listed in `conf/local_quote_baseline.yaml` because its source "
-        "file was regenerated. Re-quote verbatim text from the current source that "
-        "makes the same point (do not trim the quote until it matches), then drop "
-        "the entry with `just local-quote-baseline --prune`. Never add entries or "
-        "run `just local-quote-baseline --write`."
+        "no longer contains it. Edit only the review YAML, never the cited source "
+        "file: re-quote verbatim text from the current source that makes the same "
+        "point (do not trim the quote until it matches); if the source no longer "
+        "supports anything equivalent, leave the warning. If the warning says the "
+        "reference does not resolve, run the suggested cache command for a "
+        "`Reactome:` id, and leave a `file:` id alone (re-pointing it is a "
+        "judgement). Then run `just local-quote-baseline --prune`, which drops "
+        "every entry that now passes across the corpus, so unrelated removals in "
+        "the diff are expected. Never add entries or run "
+        "`just local-quote-baseline --write`."
     ),
 }
 
