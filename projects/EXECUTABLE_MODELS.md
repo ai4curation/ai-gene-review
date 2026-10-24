@@ -183,7 +183,11 @@ what the curated wiring implies; they are not a literature-validated mechanism.
    [neuronal migration ABM](https://dismech.monarchinitiative.org/pages/models/neuronal_migration_abm.html),
    whose spec + Python runner + in-browser runner + committed results layout fits
    `executable_models` directly.
-6. **GO-CAM as a source.** A GO-CAM is a signed causal graph over activities and
+6. **Consolidate the code.** The translator, engine and viewer now exist twice, here
+   and in AmiGO 3's Dynamics tab. [Architecture and long-term plan](EXECUTABLE_MODELS/architecture.md)
+   sets out what depends on what, and plans one translator kept with the schema and
+   a JSON payload as the contract between translator and viewers.
+7. **GO-CAM as a source.** A GO-CAM is a signed causal graph over activities and
    can be read by the same translator. It has the same blind spot for feedback as
    uncurated modules, so its value is calibration, not a ready-made model.
 
@@ -199,6 +203,8 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - `src/ai_gene_review/validation/module_validator.py`:
   `validate_executable_models` (blocking).
 - `tests/test_module_dynamics.py`, `tests/test_render_models.py`.
+- `projects/EXECUTABLE_MODELS/architecture.md`: dependency layers and the
+  consolidation plan with AmiGO 3.
 
 ---
 # STATUS
@@ -206,7 +212,7 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [x] Schema: `activation_logic` (declarative AND/OR/NOT over regulators) on nodes and annotons
 - [x] Schema: `executable_models` with typed models, derivation, scenarios and expectations
 - [x] Translator honours `activation_logic`; consistency checks against declared connections
-- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon
+- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon (opt-in: the test skips unless `biodivine-aeon` is installed, which CI does not do)
 - [x] Scenario expectations checked in module validation (blocking)
 - [x] ERK cascade: derived Boolean model with six curated scenarios; BBM-070 as external model
 - [x] Methionine cycle: Maud kinetic model as external model
@@ -218,8 +224,20 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [ ] Node-level `model_associations` for external model variables
 - [ ] First constraint-based model type
 - [ ] First agent-based model, following the dismech layout
+- [ ] Payload JSON Schema and a `--json` mode for `module-to-bnet` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
+- [ ] Shared conformance fixtures run by every implementation ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 2)
 
 # NOTES
+
+## 2026-10-20
+
+AmiGO 3 is adding a Dynamics tab to module pages
+([cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74), opened today, merged
+2026-10-21). It ports this
+repository's translator, which reproduces `module-to-bnet` on all 559 translating
+modules at `924358b17`, and has its own JS engine. With two viewers, the translator
+now exists twice. [Architecture](EXECUTABLE_MODELS/architecture.md) records the
+dependency layers and the plan to make `boolean_model_payload` the contract.
 
 ## 2026-10-16
 
