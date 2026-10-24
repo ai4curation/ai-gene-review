@@ -207,12 +207,17 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 - **`is_active_in` on root rows.** Some IBA rows carry `is_active_in
   GO:0005739`, which says the gene's activity happens there, not only that
-  the protein is present. In batch 2, ADO's and BRAF's IBA rows do, while both
-  reasons argue the activity is elsewhere (ADO's N-degron oxidation is
-  cytosolic; BRAF's mitochondrial pool has no assigned activity). The
-  policy so far judges the term, not the qualifier. A later pass should
-  check `is_active_in` rows and propose `located_in` where the activity is
-  not shown in the organelle.
+  the protein is present. In batch 2 five GO:0005739 rows carry it: the IBA
+  rows of ACACA, ADO, ARAF and BRAF, and ABCC9's Ensembl IEA. For ADO and
+  BRAF the review's own reason argues the activity is elsewhere (ADO's
+  N-degron oxidation is cytosolic; BRAF's mitochondrial pool has no assigned
+  activity). ARAF shares BRAF's PAINT node (PTN000584576) and is the arguable
+  case: its reason does give it a mitochondrial role, MST2 sequestration,
+  though that is not among its annotated functions. ABCC9's short SUR2
+  variants have a real mitochondrial function, and ACACA's row is already
+  over-annotated. The policy so far judges the term, not the qualifier. A
+  later pass should check `is_active_in` rows and propose `located_in` where
+  the activity is not shown in the organelle.
 - **Fix the IEA rows upstream.** The root-only IEA rows on AARS2, CLYBL and
   MMADHC come from UniProt subcellular-location keyword `SL-0173`
   (Mitochondrion). Genes whose entries use `SL-0170` (Mitochondrion matrix),
