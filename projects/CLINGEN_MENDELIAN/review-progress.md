@@ -5629,3 +5629,59 @@ remain uncredited by this checkpoint. This checkpoint does not claim an
 independent documentation build or live-page inspection for the four merges.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker557-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T061743Z-codex-2fc9e5.yaml)
+
+## Completion checkpoint 559 — 2026-10-24 07:08:59 UTC
+
+**559 complete; 2,317 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds ENG and ENPP1 to [merged checkpoint 557, tracker #5379](https://github.com/ai4curation/ai-gene-review/pull/5379).
+The coordinating AI agent accepted the exact-head reviews and actual-merge audits;
+this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [ENG #5374](https://github.com/ai4curation/ai-gene-review/pull/5374) | [`ca7bef2fb4fe`](https://github.com/ai4curation/ai-gene-review/commit/ca7bef2fb4feb301b2c20b8b951a5d9d6ff92db0) | [`eeb6b2ea3fe4`](https://github.com/ai4curation/ai-gene-review/commit/eeb6b2ea3fe4415887d3d7ff5fa358b0d922f6c9) | `83dcbe1d939d` | 41/41 |
+| [ENPP1 #5377](https://github.com/ai4curation/ai-gene-review/pull/5377) | [`a3d10688e084`](https://github.com/ai4curation/ai-gene-review/commit/a3d10688e084920f2bec5c61e157332c6f9d0a44) | [`ec0663817767`](https://github.com/ai4curation/ai-gene-review/commit/ec0663817767fc39466497bdb2ebe9fd21391e21) | `eeb6b2ea3fe4` | 32/32 |
+
+All 73 approved file objects and modes, including normal caches and histories,
+match the actual merges and pinned main. Complete gene directories also match.
+Imported annotation contexts and source-described natural products are preserved;
+no new publication quotations were added. ENPP1 has one displayed canonical
+product because the source does not enumerate alternative products; this is not
+a claim that no other transcript exists.
+
+| Gene | Sources | Products | Cores | Decisions | Computed status | Advisories |
+| --- | ---: | ---: | ---: | --- | --- | ---: |
+| ENG | 104 | 2 | 2 | 29 ACCEPT, 59 KEEP_AS_NON_CORE, 2 MARK_AS_OVER_ANNOTATED, 4 MODIFY, 10 UNDECIDED | DRAFT | 13 |
+| ENPP1 | 97 | 1 | 2 | 39 ACCEPT, 20 KEEP_AS_NON_CORE, 6 MARK_AS_OVER_ANNOTATED, 11 MODIFY, 21 UNDECIDED | DRAFT | 6 |
+
+ENG retains ten unresolved annotations and 13 advisories: eleven generic binding,
+one source-action split and one CI ontology-label lag. ENPP1 retains 21 unresolved
+annotations and six advisories: one generic binding, three propagation-metadata
+and two source-action splits. Accepted campaign completion does not convert
+DRAFT files to COMPLETE or remove uncertainty.
+
+Each actual merge-group suite ran 4,214 Python tests (one skipped, 84 deselected,
+nine warnings), 270 doctests (37 skipped, eight warnings), 12 examples, mypy on 284
+files, Ruff, 438 overlapping Python automation tests and 19 JavaScript tests.
+Validation included scoped gene checks, all-gene schema checks, 703 modules,
+718 families and 42 history tests. History-record totals were 15,627 for ENG and
+15,629 for ENPP1. Global advisories and skipped steps remain documented; the
+ignored post-pytest SQLAlchemy destructor diagnostic did not fail either job.
+The all-gene check is schema-only; aggregate jobs report job conclusions.
+
+Builds: [ENG](https://github.com/ai4curation/ai-gene-review/actions/runs/40068917287), [ENPP1](https://github.com/ai4curation/ai-gene-review/actions/runs/40070735296).
+
+At main `04f1f31db8f36ff1bed22c0e5ff8220567c219ce`, the inventory contains 8,870 reviews,
+including 3,198 human reviews. Of 2,876 catalogue genes, 1,279 have
+review files and 1,597 lack them; 720 available reviews remain uncredited.
+All 235 queue objects, 111 earlier completion updates and earlier progress bytes
+are preserved. This is update 112; only the ENG and ENPP1 checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. EOGT, ENTPD1 and EP300 remain
+uncredited by this checkpoint. No independent documentation build or live-page
+inspection for these gene merges is claimed.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker559-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T071001Z-codex-768730.yaml)
