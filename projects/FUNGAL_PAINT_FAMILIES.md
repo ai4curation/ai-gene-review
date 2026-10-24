@@ -350,6 +350,28 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 - [ ] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
   PTHR43797:SF2 subfamily
 
+## Family 17: HMG-CoA Reductases
+
+`PTHR10572` contains the conserved class I HMG-CoA reductase catalytic node
+`PANTHER:PTN000060346`, which carries exact NADPH-dependent HMG-CoA reductase
+activity and isoprenoid biosynthesis, plus a fungal `PANTHER:PTN000832055`
+placement for ergosterol biosynthesis. PAINT also places ER membrane and a
+deeper peroxisomal-membrane term together at `PANTHER:PTN000060347`; the
+peroxisomal term is mammalian-source compartment propagation that needs pruning
+from fungal ER HMG-CoA reductases.
+
+- [x] `CANAL/HMG1` - *Candida albicans* HMG-CoA reductase; drafted in PR #5454
+- [x] `ASPFU/hmg1` - major *Aspergillus fumigatus* HMG-CoA reductase with
+  TAFC-linked mevalonate evidence; drafted in PR #5456
+- [x] `ASPFU/hmg2` - second *A. fumigatus* HMG-CoA reductase paralog; drafted
+  in this branch
+- [ ] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase; already
+  `COMPLETE`
+- [ ] `yeast/HMG2` - *S. cerevisiae* HMG-CoA reductase paralog; already
+  `COMPLETE`
+- [ ] `SCHPO/hmg1` - fission-yeast HMG-CoA reductase; existing exemplar to
+  refresh
+
 ---
 
 # NOTES
