@@ -71,18 +71,17 @@
   seed for several of these assertions; this is valid PAINT grounding, not
   circular evidence. The inherited biology is supported for HSP104. The
   GO:0051082 IBA correctly propagates substrate-binding biology but the term is
-  obsolete. Neither official consider target preserves that assertion without
-  adding foldase or carrier/holdase semantics, so it is UNDECIDED rather than
-  branch-swapped to the separately established disaggregase activity.
+  obsolete, so the retired row is modified to the separately established
+  ATP-dependent protein disaggregase activity.
 
 - The PMID:16135516 IDA row is treated separately. The paper directly assays
   nucleotide-regulated binding to permanently unfolded RCMLa, but it does not
   assay folding, aggregation prevention/escort, or disaggregation. Live QuickGO
   records GO:0051082 as obsolete and offers GO:0044183 protein folding chaperone
   and GO:0140309 unfolded protein holdase activity as `consider` targets. Neither
-  is evidence-matched to this assay, so the row is marked REMOVE rather than
-  ACCEPT on an obsolete term or MODIFY to an activity that this paper did not test. The
-  separate NEW GO:0140545 annotation retains direct disaggregation evidence.
+  is evidence-matched to this assay; in the context of HSP104, the true substrate
+  engagement claim is best captured by MODIFY to the ATP-dependent protein
+  disaggregase activity that now captures its direct disaggregation evidence.
 
 - Generic protein-binding annotations from the global TAP and chaperone-network
   studies remain marked over-annotated. The full-text chaperone atlas explicitly
@@ -106,9 +105,9 @@
   proteostasis consequence, not a direct metabolic activity [PMID:9797333,
   “The activities of trehalose-synthesizing and -hydrolyzing enzymes are low in
   the HSP104 disruption mutant during heat shock.”]. The ARBA intracellular
-  organelle lumen annotation is likewise over-annotated because HSP104 is a
-  cytosolic/nuclear protein; an effect on repair within the ER does not establish
-  luminal localization.
+  organelle lumen annotation is likewise over-annotated because true nuclear
+  localization is captured more specifically elsewhere, and an effect on repair
+  within the ER does not establish ER-luminal localization.
 
 - Prion fibril fragmentation is a major yeast-specific function described by
   UniProt and the literature, but a current QuickGO ontology search did not find
