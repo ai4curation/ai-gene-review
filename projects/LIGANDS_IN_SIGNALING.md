@@ -235,15 +235,15 @@ validators.
   signaling pathway* (`IDA`, `PMID:12782713`), which is refined via `MODIFY` to `GO:0035691`
   *macrophage migration inhibitory factor signaling pathway*.
 - **[IL-34-CSF1R signaling](../modules/il34_signaling.yaml)** (*interleukin-34-mediated signaling
-  pathway*, `GO:0061514`, and *macrophage colony-stimulating factor signaling pathway*,
+  pathway*, `GO:0061514`, and sibling *macrophage colony-stimulating factor signaling pathway*,
   `GO:0038145`). Three-step pan-species module. Ligand: IL-34 family (`PANTHER:PTHR28606`, PAINT
   node `PTN002823014`), *cytokine activity* (`GO:0005125`). Receptor: CSF1R subfamily
   (`PANTHER:PTHR24416:SF47`, PAINT nodes `PTN001230349` and `PTN002814394`), *macrophage
   colony-stimulating factor receptor activity* (`GO:0005011`). GOA Category C gap resolved in the
-  new human `IL34` gene review: in GOA `IL34` was already annotated to `GO:0038145` (`IBA`) and
-  `GO:0061514` (`IDA`), but its only MF terms were `GO:0005157` (*macrophage colony-stimulating
-  factor receptor binding*, `IBA`/`IDA`/`IMP`) and `GO:0005515` (*protein binding*, `IPI`);
-  `GO:0005157` is modified to `GO:0005125` (*cytokine activity*) per Decision 2.
+  new human `IL34` gene review: in GOA `IL34` was annotated to `GO:0038145` (`IBA`, modified to
+  `GO:0061514`) and `GO:0061514` (`IDA`), while its only MF terms were `GO:0005157` (*macrophage
+  colony-stimulating factor receptor binding*, `IBA`/`IDA`/`IMP`) and `GO:0005515` (*protein
+  binding*, `IPI`); `GO:0005157` is modified to `GO:0005125` (*cytokine activity*) per Decision 2.
 - **[IL-21 signaling](../modules/il21_signaling.yaml)** (*interleukin-21-mediated signaling
   pathway*, `GO:0038114`). Three-step pan-species module. Ligand: IL-21 subfamily
   (`PANTHER:PTHR14356:SF2`, within `PANTHER:PTHR14356` `INTERLEUKIN-15-RELATED`, PAINT nodes
@@ -251,10 +251,10 @@ validators.
   subfamily (`PANTHER:PTHR23037:SF7`, PAINT node `PTN000547990`) paired with the common gamma
   chain (`IL2RG`, `PANTHER:PTHR23037:SF47`, PAINT nodes `PTN002745476` and `PTN008588077`),
   *cytokine receptor activity* (`GO:0004896`). GOA Category A gap resolved in the human `IL21`
-  gene review: `IL21` lacked `GO:0038114` and carried the ancestor `GO:0007259` (*cell surface
-  receptor signaling pathway via JAK-STAT*, `NAS`) and `GO:0007165` (*signal transduction*,
-  `NAS`), both refined via `MODIFY` to `GO:0038114`, and its receptor-binding annotations
-  (`GO:0005126`, `GO:0005134`) are modified to `GO:0005125` (*cytokine activity*).
+  gene review: `IL21` lacked `GO:0038114` and carried `GO:0007165` (*signal transduction*, `NAS`,
+  refined via `MODIFY` to `GO:0038114`) alongside `GO:0007259` (*cell surface receptor signaling
+  pathway via JAK-STAT*, `NAS`, `ACCEPT`), and its receptor-binding annotations (`GO:0005126`,
+  `GO:0005134`) are modified to `GO:0005125` (*cytokine activity*).
 - **[IL-22 signaling](../modules/il22_signaling.yaml)** (*interleukin-22-mediated signaling
   pathway*, `GO:0140865`). Three-step pan-species module. Ligand: IL-22 family (`PANTHER:PTHR48488`,
   PAINT node `PTN009232695`), *cytokine activity* (`GO:0005125`). Receptor: IL22RA1 subfamily
@@ -262,7 +262,8 @@ validators.
   chain (`PANTHER:PTHR20859:SF50`), *cytokine receptor activity* (`GO:0004896`), alongside
   extracellular decoy antagonism by soluble `IL22RA2` (`PANTHER:PTHR20859:SF51`). GOA Category A
   gap resolved in the human `IL22` gene review: `IL22` lacked `GO:0140865` and carried only
-  `GO:0007165` (*signal transduction*, `IEA`), refined via `MODIFY` to `GO:0140865`, and
+  `GO:0007165` (*signal transduction*, `IEA`), refined via `MODIFY` to `GO:0140865` (with `NEW`
+  `GO:0007259` *cell surface receptor signaling pathway via JAK-STAT* retained alongside it), and
   `GO:0045518` (*interleukin-22 receptor binding*, `NAS`) is modified to `GO:0005125` (*cytokine
   activity*).
 
@@ -284,15 +285,16 @@ validators.
   binding*) → `GO:0005125` (*cytokine activity*).
 - **IL34, IL21, and IL22 gene reviews:** created the human `IL34` review
   (`genes/human/IL34/IL34-ai-review.yaml`), modifying `GO:0005157` (*macrophage colony-stimulating
-  factor receptor binding*) to `GO:0005125` (*cytokine activity*) and accepting `GO:0038145`
-  (*macrophage colony-stimulating factor signaling pathway*) and `GO:0061514`
-  (*interleukin-34-mediated signaling pathway*); updated `genes/human/IL21/IL21-ai-review.yaml` to
-  modify `GO:0007259` (*cell surface receptor signaling pathway via JAK-STAT*) and `GO:0007165`
-  (*signal transduction*) to `GO:0038114` (*interleukin-21-mediated signaling pathway*) and
-  receptor-binding rows (`GO:0005126`, `GO:0005134`) to `GO:0005125` (*cytokine activity*); and
-  updated `genes/human/IL22/IL22-ai-review.yaml` to modify `GO:0007165` (*signal transduction*) to
-  `GO:0140865` (*interleukin-22-mediated signaling pathway*) and `GO:0045518` (*interleukin-22
-  receptor binding*) to `GO:0005125` (*cytokine activity*).
+  factor receptor binding*) to `GO:0005125` (*cytokine activity*) and `GO:0038145` (*macrophage
+  colony-stimulating factor signaling pathway*) to `GO:0061514` (*interleukin-34-mediated signaling
+  pathway*), and accepting `GO:0061514`; updated `genes/human/IL21/IL21-ai-review.yaml` to modify
+  `GO:0007165` (*signal transduction*) to `GO:0038114` (*interleukin-21-mediated signaling
+  pathway*), retain `GO:0007259` (*cell surface receptor signaling pathway via JAK-STAT*) as
+  `ACCEPT`, and modify receptor-binding rows (`GO:0005126`, `GO:0005134`) to `GO:0005125`
+  (*cytokine activity*); and updated `genes/human/IL22/IL22-ai-review.yaml` to modify `GO:0007165`
+  (*signal transduction*) to `GO:0140865` (*interleukin-22-mediated signaling pathway*), retain
+  `NEW` `GO:0007259` (*cell surface receptor signaling pathway via JAK-STAT*), and modify
+  `GO:0045518` (*interleukin-22 receptor binding*) to `GO:0005125` (*cytokine activity*).
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
   `PTHR14356`, `PTHR48488`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
@@ -320,10 +322,9 @@ validators.
     colony-stimulating factor receptor binding*, `GO:0008284` *positive regulation of cell
     population proliferation*, `GO:0045651` *positive regulation of macrophage differentiation*,
     `GO:0045657` *positive regulation of monocyte differentiation*), noting in `assessment_reason`
-    and the `FAMILY_WIDE` term assessments for `GO:0005125` (*cytokine activity*), `GO:0061514`
-    (*interleukin-34-mediated signaling pathway*), and `GO:0038145` (*macrophage colony-stimulating
-    factor signaling pathway*) that PAINT should also place `GO:0005125` and `GO:0061514` at
-    `PTN002823014`.
+    and the `FAMILY_WIDE` term assessments for `GO:0005125` (*cytokine activity*) and `GO:0061514`
+    (*interleukin-34-mediated signaling pathway*) that PAINT should also place `GO:0005125` and
+    `GO:0061514` at `PTN002823014`.
   - `interpro/panther/PTHR14356/PTHR14356-review.yaml`: `SOUND` node assessments on
     `PTN002682898` (`GO:0001819` *positive regulation of cytokine production*, `GO:0050778`
     *positive regulation of immune response*) and `PTN007637558` (`GO:0045954` *positive
