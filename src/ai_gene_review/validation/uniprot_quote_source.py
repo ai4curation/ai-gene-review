@@ -492,7 +492,9 @@ def _locate_part(
     A part that opens with a feature key and location (with or without the
     ``FT`` line code) is first matched against the record's features of that
     key, since the key is the statement's topic rather than its text; failing
-    that, a longer part is searched as text (it may span several features).
+    that, a longer part is searched as text without its leading key (it may
+    span several features). A further key later in the part is stripped only
+    when it keeps its ``FT`` line code.
     """
     feature = _feature_lead(raw, statements)
     if feature is not None:
@@ -514,6 +516,8 @@ def _locate_part(
             return LOCATED, [matched.section]
         if not rest_parts:  # a key and location only, and no such feature
             return UNLOCATED, []
+        # search the rest as text; the key is not text in the parsed record
+        raw = f"{location} {rest}"
     parts = _quote_parts(raw)
     if not parts:
         return UNSEARCHABLE, []

@@ -398,3 +398,10 @@ CEM1 = "SCHPO/cem1/cem1-uniprot.txt"
 )
 def test_multipart_and_open_range_feature_quotes(quote, path, expected):
     assert locate_sections(quote, PROJECT_ROOT / "genes" / path) == expected
+
+
+def test_bare_key_quote_spanning_two_features():
+    """The leading bare key is dropped before the fall-back text search."""
+    path = PROJECT_ROOT / "genes" / "human" / "LRP2BP" / "LRP2BP-uniprot.txt"
+    quote = 'REPEAT          59..92\nFT                   /note="TPR"\nFT   REPEAT          93..125\n'
+    assert record_sections(quote, path) == ["FT:REPEAT"]
