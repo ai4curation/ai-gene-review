@@ -2,6 +2,14 @@
 
 UniProt P12683; HMG-CoA reductase 1, EC 1.1.1.34; polytopic ER/nuclear-envelope protein with SSD [UniProt:P12683].
 
+## 2026-10-24 PTHR10572 PAINT alignment
+
+- Re-ran `just fetch-gene yeast HMG1`; UniProt P12683, GOA, and the PTHR10572 cache were already current.
+- Falcon deep research was attempted, but no external research provider/API key was available after the wrapper extracted the UniProt context.
+- Searched for newer HMG1 literature. The 2026 Process Biochemistry ergosterol-production paper uses engineered truncated `tHMG1` to improve ergosterol yield, but it does not change the native Hmg1 GO calls.
+- PTHR10572 PAINT alignment: keep `GO:0004420`, `GO:0005789`, `GO:0006696`, and broad `GO:0008299` IBAs as sound; continue removing the stale `GO:0005778` peroxisomal-membrane IBA from eukaryotic node `PANTHER:PTN000060347`.
+- Tightened the peroxisomal `propagation_review` to trace the bad IBA to the proximate PAINT node rather than to the single human HMGCR seed, and replaced truncated UniProt `Reaction=` quotes with complete catalytic text.
+
 ## Evidence journal
 - [PMID:3526336 "Assays of HMG-CoA reductase activity in extracts from hmg1- and hmg2- mutants indicate that HMG1 contributes at least 83% of the activity found in wild-type cells."]; double mutant lethal [PMID:3526336].
 - Redundancy [PMID:2828155 "Although cells bearing null mutations in both genes are inviable, cells bearing a null mutation in either gene are viable."]
