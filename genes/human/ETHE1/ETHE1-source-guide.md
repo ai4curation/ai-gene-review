@@ -18,7 +18,7 @@ Current [HPA ETHE1 subcellular data](https://www.proteinatlas.org/ENSG0000010575
 
 The entire 86-residue HPA029029 antigen is shared by the displayed 254-residue sequence and all captured RefSeq alternatives, including the predicted XP record. Therefore this antibody cannot identify which product contributes the nuclear signal. This positive but antibody-dependent evidence supports retaining a bounded non-core nuclear context, while leaving the disagreement with the 2004 experiment unresolved. It does not establish predominant nuclear residence, nucleocytoplasmic shuttling or a nuclear biochemical activity. The older HSCO study PMID:12398897 remains unavailable at operative-original level in this review; it is not dismissed as an artifact.
 
-[GO_REF:0000054](https://geneontology.org/GO_REF/0000054) describes **LIFEdb GFP-fusion localization**, not HPA. Its current resource URL redirects to a general proteomics page, and the exact ETHE1 clone images were not recovered. The broad GO cytoplasm term includes organelles. Refining it to matrix here rests on the independent native-human experiment above, not on a claim that the historical GFP-fusion or HSCO experiments themselves resolved matrix or excluded soluble cytosol. Mitochondrial HPA images likewise do not resolve the matrix; their refinement uses the independent fractionation result.
+[GO_REF:0000054](https://geneontology.org/GO_REF/0000054) describes **LIFEdb GFP-fusion localization**, not HPA. Its current resource URL redirects to a general proteomics page, and the exact ETHE1 clone images were not recovered. The broad GO cytoplasm term includes organelles. Refining it to matrix here rests on the independent native-human experiment above, not on a claim that the historical GFP-fusion experiment itself resolved matrix or excluded soluble cytosol. The separately imported experimental HSCO cytoplasm assertion is retained as non-core rather than replaced by matrix; its operative original remains unread. Mitochondrial HPA images likewise do not resolve the matrix; their refinement uses the independent fractionation result.
 
 ## Proteomics and protein-group limits
 
@@ -90,3 +90,32 @@ These are deterministic comparisons of the official captured sequences, not assa
 The executed reaction is supported by [PMID:23144459](https://doi.org/10.1074/jbc.M112.407411), Experimental Procedures (enzyme assay and reaction-product analysis), Results (GSSH kinetics, Table 2 and Figure 5), and [PMID:25596185](https://doi.org/10.1093/hmg/ddv007), Results (single-iron active site and Figure 3A) and Methods (protein preparation and persulfide dioxygenase assay). The former shows sulfite HPLC co-elution with an enzyme-free control; its confirmatory mass-spectrometric result is reported as data not shown. The latter independently measures GSSH-dependent oxygen consumption and resolves one iron per protomer; its substrate pose is manually docked. Neither claim requires an obligate dimer.
 
 The current [sulfur dioxygenase term](https://www.ebi.ac.uk/QuickGO/term/GO:0050313) describes the GSSH-to-sulfite-and-glutathione reaction. The same catalytic step directly changes a glutathione conjugate and supplies persulfide oxidation within sulfide catabolism, supporting the existing [glutathione-metabolism](https://www.ebi.ac.uk/QuickGO/term/GO:0006749) and [sulfide-oxidation](https://www.ebi.ac.uk/QuickGO/term/GO:0019418) contexts. These contexts do not attribute free-H2S oxidation or sulfate production to ETHE1. The matrix location comes independently from [PMID:14732903](https://doi.org/10.1086/381653), Methods (proteinase K protection and suborganellar fractionation) and Results/Figure 6c–d, rather than from the enzyme preparation or antibody imaging alone.
+
+
+## Feedback clarification: curated records, TST and pathway coupling
+
+The unchanged [local UniProt record](ETHE1-uniprot.txt) is now an explicit reference. **CC:COFACTOR** supports one Fe(2+) per subunit; **CC:SUBUNIT** preserves monomer/dimer preparation differences and the TST interaction; **CC:SUBCELLULAR LOCATION** retains the older cytoplasm and nucleus reports separately. Its reference title is derived from the record's ID, first AC and recommended full name. These curated statements do not establish biochemical equivalence among the shorter RefSeq products.
+
+The actual [PMID:19136963 author-uploaded original](https://www.researchgate.net/publication/23771212_Loss_of_ETHE1_a_mitochondrial_dioxygenase_causes_fatal_sulfide_toxicity_in_Ethylmalonic_Encephalopathy), main Results discussing structural association with rhodanese and Methods *Cloning and expression of rhodaneseHis*, provides positive human-cell association evidence. ETHE1-HA expressed in HeLa was recovered with anti-rhodanese; coexpressed ETHE1-HA and human rhodanese-His6 were reciprocally immunoprecipitated. The main text refers to Supplementary Figure 3b–c, but those panels were not inspected. The experiment does not establish purified binary binding, an unmodified endogenous complex or direct substrate channeling. The bacterial operon/fusion observation in the same passage is distinct from these human-cell experiments.
+
+The 2009 main Discussion describes sulfite produced by ETHE1 being used downstream by rhodanese. [PMID:23144459](https://pmc.ncbi.nlm.nih.gov/articles/PMC3531769/) likewise discusses a postulated downstream rhodanese role and alternative sulfur flows; its tested ETHE1 reaction uses GSSH and does not turn over thiosulfate. Consequently, the TST association is not evidence that TST is obligatorily immediately upstream of ETHE1, or that the co-immunoprecipitation experiment reconstitutes metabolite transfer. Native coupling remains a focused question.
+
+For nuclear localization, **GO_REF:0000052 itself supplies the imported mitochondrion annotation**. The separate positive nuclear observation comes from the named HPA029029 antibody record and inspected image at the [HPA portal](https://www.proteinatlas.org/ENSG00000105755-ETHE1/subcellular), with the antibody/aggregate/product limitations stated above. It does not verify the inaccessible HSCO paper's shuttling mechanism.
+
+Iron binding remains ACCEPT as part of the characterized catalytic mechanism. The one core explicitly describes iron coordination while retaining sulfur dioxygenase as its single molecular-function term; no second core or new annotation is needed. The full construct and native-fractionation limits remain in the source sections above, allowing the repeated row rationales to be shortened without changing their decisions.
+
+### Reproducible Reactome composition query
+
+The following fields are transcribed from the captured official ContentService responses, not reconstructed from the event-summary cache. This remains an unreported, probable composition query, with the supported matrix annotation retained.
+
+| Official response | Field | Captured value |
+| --- | --- | --- |
+| [1614521](https://reactome.org/ContentService/data/query/1614521) | stIdVersion / displayName | R-HSA-1614521.2 / ETHE1:2Zn2+ [mitochondrial matrix] |
+| [1614521](https://reactome.org/ContentService/data/query/1614521) | hasComponent, in order | 1614628; 880067; 880067 (the final occurrence is an integer ID) |
+| [1614628](https://reactome.org/ContentService/data/query/1614628) | referenceEntity / coordinates / compartment | O95571 / 8–254 / GO:0005759 |
+| [880067](https://reactome.org/ContentService/data/query/880067) | referenceEntity | CHEBI:29105, zinc(2+) |
+| [UniProt O95571](https://www.uniprot.org/uniprotkb/O95571/entry) | CC:COFACTOR | one Fe(2+) per subunit, consistent with the human biochemical and structural evidence |
+
+The cached source is preserved; the duplicated zinc components are not silently replaced. Independent human measurements and the curated cofactor record motivate checking composition, without excluding every possible metal condition or product.
+
+Captured complex-response SHA256: `c76165024547c563c253ed0c6d553081f306bba4a3e291525096ce8720485586`.
