@@ -140,8 +140,8 @@ exo-1,3-beta-glucosidase node.
   exo-1,3-beta-glucosidase; merged in PR #4596
 - [x] `CANAL/EXG2` - CGD-seeded SF1 exo-1,3-beta-glucosidase; merged in PR
   #4618
-- [x] `ASPFU/exgA` - Aspergillus SF34 seed for the broad glucan-catabolism
-  node; merged in PR #5417
+- [x] `ASPFU/exgA` - *Aspergillus fumigatus* SF1 exoglucanase inheriting
+  the broad exgD/exgB-seeded glucan-catabolism node; merged in PR #5417
 - [x] `NEUCR/NCU03914` - *Neurospora crassa* SF34 exgD-like member; supersedes
   the earlier `NCU09652` placeholder, which is a GH43 beta-xylosidase; drafted
   in PR #5433
