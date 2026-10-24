@@ -332,11 +332,36 @@ the NAD(+), L-lysine-forming `LYS1`/`lys3` branch and
 - [x] `NEUCR/lys-4` - *Neurospora crassa* LYS1-family member; merged in PR
   #4644
 
+## Family 16: Homocysteine/Cysteine Synthases
+
+`PTHR43797` is a compact homocysteine/cysteine synthase family. Its fungal
+members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
+`GO:0051009` O-acetylhomoserine sulfhydrylase activity, and
+`GO:0071269` L-homocysteine biosynthetic process on the shared
+`PANTHER:PTN002887184` node seeded by *S. cerevisiae* `MET17`,
+*S. pombe* `met17`, the CGD *C. albicans* `MET15` member, and bacterial MetY.
+
+- [ ] `yeast/MET17` - *S. cerevisiae* bifunctional Met17/Met15 enzyme; already
+  drafted and needs PAINT-source refresh against `PTN002887184`
+- [ ] `SCHPO/met17` - fission-yeast O-acetylhomoserine sulfhydrylase; already
+  drafted and needs PAINT-source refresh against `PTN002887184`
+- [x] `CANAL/MET15` - CGD *Candida albicans* MET15 seed with 2024 direct
+  CaMet15p biochemical evidence; drafted in this branch
+- [ ] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
+  PTHR43797:SF2 subfamily
+
 ---
 
 # NOTES
 
 ## 2026-10-24
+
+- Added `PTHR43797`, the compact homocysteine/cysteine synthase family, as the
+  next fungal PAINT tranche. The initial batch covers the existing
+  `yeast/MET17` and `SCHPO/met17` drafts plus CGD `CANAL/MET15` and
+  `EMENI/cysD`, all of which fall in `PTHR43797:SF2` under the shared
+  `PTN002887184` PAINT node for homocysteine synthase activity and
+  L-homocysteine biosynthesis.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
