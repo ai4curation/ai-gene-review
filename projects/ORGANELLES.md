@@ -236,7 +236,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [x] Red-flag worklist generated (`root_organelle_red_flags.md`)
 - [ ] Work through the root-only mitochondrial synthesis rows (285 in the
       2026-10-20 run), starting with human; apply rules 3 and 4
-  - [x] Batch 1: 20 human genes (2026-10-20); 76 human genes remain
+  - [x] Batch 1: 20 human genes (2026-10-20)
+  - [x] Batch 2: 20 human genes (2026-10-24); 44 human genes remain
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Revise to "add, don't substitute" after PR #5208 review: synthesis
       root rows ACCEPT, sub-compartment as a NEW row; validator exemption
@@ -251,6 +252,58 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-10-24 (batch 2: 20 human genes)
+
+The next 20 human genes, alphabetically, with root-only mitochondrion rows
+from synthesis evidence (ABCC9 to CFAP410). Only one gained a
+sub-compartment. This slice is dominated by signalling and cytosolic
+proteins that reach mitochondria transiently, so the main work was checking
+whether the organelle claim holds at all.
+
+| gene | outcome | evidence |
+|---|---|---|
+| ABCC9 | root | Ensembl projection rests on mouse IDA/IMP; mitochondrial forms are short splice products; inner-membrane KATP location only assumed |
+| ABL1 | root; NAS row ACCEPT to KEEP_AS_NON_CORE | kinase recruited under ROS or ER stress; no presequence or TM |
+| ACACA | root; IBA stays MARK_AS_OVER_ANNOTATED | PAINT node seeded only by ACC2-lineage genes; ACC1 is cytosolic |
+| ACBD3 | root | By similarity, from rodent PAP7 binding the mitochondrial PBR; one indirect line |
+| ADO | root; IBA, IEA and HTP rows to KEEP_AS_NON_CORE (were MARK_AS_OVER_ANNOTATED / REMOVE) | mouse fractionation and MitoCarta HDA behind the projection; the earlier "UniProt says cytosol" was wrong |
+| AGTPBP1 | NEW outer membrane (IC) | mouse sub-mitochondrial fractionation (PMID:20620870); soluble, no presequence or TM |
+| ANK2 | root | contact points on the mitochondrial surface by imaging; no anchor |
+| ARAF | root | sub-compartment lines disagree (rat IMS/matrix fractionation vs cytosolic-face MST2/BAD roles) |
+| ARL16 | root | organelle-level co-staining only, of an N-extended variant |
+| ASAH2 | root; rows to MARK_AS_OVER_ANNOTATED | the original GFP construct was N-terminally truncated; full-length ASAH2 goes to the plasma membrane (PMID:15845354) |
+| ATP7B | root; HTP row UNDECIDED to KEEP_AS_NON_CORE | only the processed 140 kDa form is mitochondrial; MitoCoP call deferred to the curator, as for AMACR |
+| AZIN2 | root; row to MARK_AS_OVER_ANNOTATED | projection from a crude mouse fraction; the mouse protein also has a NOT row that was not projected |
+| BRAF | root | Bag1-dependent pool recruited to the mitochondrial surface; no anchor |
+| C0HM83 (SHMOOSE) | root | no presequence, no TM, no sub-mitochondrial assay |
+| CALR | root; row stays MARK_AS_OVER_ANNOTATED | one rat study; signal peptide, KDEL retention, curated ER lumen |
+| CAMK2A | root; ISS row UNDECIDED to MARK_AS_OVER_ANNOTATED | the mouse donor's antibody is pan-"CaMKII"; alpha is never named |
+| CASP4 | root | immuno-EM on ER and mitochondria; fractions ER-contaminated |
+| CAVIN1 | root; rows stay UNDECIDED | combined mitochondrial/nuclear pellet; full text not retrievable |
+| CCN6 | root | two direct sources; ER signal peptide; sub-mitochondrial data not citable |
+| CFAP410 | root | one hedged 1997 antisera study; MTS only predicted |
+
+What batch 2 showed:
+
+- **Transient recruitment is the common case.** ABL1, BRAF, ARAF, ANK2
+  and CASP4 reach the mitochondrial surface under signalling or stress. The
+  outer membrane is tempting, but none has an anchor or a fractionation
+  that separates surface from contact sites. As with TRAF3 they stay at the
+  root.
+- **Projections carry their source's weakness.** AZIN2's projection dropped
+  a NOT row on the mouse source; CAMK2A's donor IDA used a pan-CaMKII
+  antibody. Checking what the source annotation rests on decided both.
+- **The MAM lesson from STOM recurred.** CASP4's fractions were
+  ER-contaminated by the authors' own account, and CALR is an ER-lumen
+  protein supported by one rat study. Neither paper separates mitochondria
+  from ER contact membranes.
+- **Two earlier calls were reversed.** ADO, where an earlier review
+  misread UniProt, and ASAH2, where a 2005 follow-up showed the 2000
+  construct was truncated.
+- **Tooling:** `just backfill-record-sections` writes unquoted flow lists
+  (`[CC:SUBCELLULAR LOCATION]`) that the reference validator cannot parse.
+  The agents quoted them by hand in the files they touched.
 
 ## 2026-10-20 (batch 1: 20 human genes)
 
