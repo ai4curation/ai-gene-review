@@ -85,3 +85,40 @@ additional DNA binding.
 - No REMOVE and no UNDECIDED: all key claims verifiable in cached abstracts.
 </content>
 </invoke>
+
+
+## 2026-10-24 augmentation: complete annotation checkpoint
+
+All 97 retained contexts have reviewed actions: 96 current imported source contexts and one retired historical authored proposal. All original source key/value pairs, 52 inherited quotation paths and values, and both natural products are preserved. The two prior core objects are carried unchanged for separate review. The original notes above remain intact.
+
+The current source extension adds two official mouse-orthology IEA contexts without rewriting the normal GOA/UniProt files. Database/phylogenetic, direct-original and interaction-screen evidence were assessed separately and reconciled. Generic supported binding is retained as non-core; damaged-DNA binding, TFIID-binding, source-specific HR and the negative telomerase-inhibitor claim retain explicit uncertainty. The TDM-formation annotation is over-annotated because the actual mouse loss-of-ERCC1 phenotype and proposed protective cleavage do not demonstrate a human formation step. Historical authored proposal91 is retired without erasing its source or quotations.
+
+The standalone description now separates the regulatory helicase-like module from the nuclease domain and distinguishes pathway recruitment defects from intrinsic catalytic loss. Reference-review notes now state actual access and correct the earlier domain, direct-binding, telomerase and cleavage overstatements; the disease reference23623386 is explicitly limited to its actually read abstract, with no full-original claim. No new publication quotations were introduced. Later recovered14734547 Methods/Results replace only the earlier abstract-only access clauses in database rows0/5, with their actions unchanged.
+
+See [the source guide](ERCC4-source-guide.md) for exact original links, assay/species/construct boundaries and unresolved source scope.
+
+
+## 2026-10-24 — core synthesis and explicit row 5 successor
+
+The accepted 97-context annotation checkpoint is retained unchanged in the review archive. Its successor changes only the review of source index 5 from ACCEPT to UNDECIDED and updates the two core entries. Current GO excludes SSA and its nonhomologous-end-removal step from the GO:0000724 ancestry; the earlier row 5 rationale incorrectly used that bridge. The IBD node, target descent, MSA and four experimental descendants are valid. Their exact template-based HR operative assays remain unverified here, so no PAINT node-placement defect or biological absence is asserted.
+
+The two core units share GO:0106332 junction-specific duplex-DNA nuclease activity. They describe repair incision and SSA end processing by the same human ERCC1–XPF enzyme, with the human Reactome catalyst activeUnit and PMID:14734547 assay bounds documented in ERCC4-source-guide.md. The first unit contains nonredundant NER and ICL-repair terms; the second contains the specific SSA nonhomologous-end-removal step. No complete SSA reconstitution, free-ssDNA cleavage, universal ICL incision order or activity equivalence of the 372-aa natural product is asserted. The current action counts are 50 ACCEPT, 33 KEEP_AS_NON_CORE, 6 MODIFY, 7 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED; one UNDECIDED authored proposal is retired, leaving six active unresolved assessments.
+
+All 97 source objects, 55 references, two natural products and 52 inherited quotation paths/values are preserved, including all five quotations embedded in the two cores. Five reference-only core support entries were added; no new publication quotations or NEW annotation contexts were introduced. The earlier telomere quote is retained as historical source context, not as proof of SSA. Public source-guide links now resolve to actual public records; archived derivation filenames are not presented as public links. Original notes remain an unchanged prefix of this journal.
+
+
+## 2026-10-24 — genuine GOA source-version refresh
+
+Final validation exposed the preserved legacy GOA snapshot's omission of the two current IEA contexts already reviewed at indices 95 and 96. A genuine `just fetch-gene human ERCC4 --uniprot-id Q92889 --force` was run in a separate private workspace. Its untouched normal GOA output contains 100 rows representing 96 imported contexts, versus the legacy 98 rows representing 94 contexts. The complete independent current 100-record QuickGO response equals the earlier accepted official source snapshot; the 97-context review YAML remained byte-for-byte unchanged through the fetch. No new annotation decision was needed. The selected GOA is the genuine refreshed output, not a hand-edited validation fixture. Both source versions and the original failed validation receipt are preserved in the review archive.
+
+The same acquisition refreshed UniProt metadata from entry version 234 to 235, but that unneeded metadata refresh was not selected. Delivery retains the exact legacy UniProt source, whose sequence and CC/FT fields are identical to the refreshed entry. All publication and Reactome cache dependencies are unchanged; shared sources use exact pinned-main bytes. No new publication quotation was introduced.
+
+
+### Canonical validation — 2026-10-24
+
+The selected review and genuine refreshed GOA were installed against main c55b5dbe40c23cf28a1c7fa37df927d0b803bcfb. Normal validation, strict whole-document term validation, component validation, computed-status checking and rendering all passed. DRAFT retains 29 advisories described above; no warnings were suppressed. All 197 description, annotation-review and core-function narratives occur in the rendered HTML. The generated HTML was retained privately for verification, and the previous tracked HTML was restored. Normal sources and unrelated working changes remained intact.
+
+
+### Prepublication wording correction — 2026-10-24
+
+Independent review identified an overly restrictive explanation for the unresolved PMID:11790111 damaged-DNA-binding context. Official GO:0003684 defines binding to damaged DNA without requiring preferential affinity over undamaged DNA or an isolated-protein preparation. The review and source guide now state the actual unresolved point: whether the inspected evidence establishes binding attributable to XPF separately from complex assembly and incision. The action remains UNDECIDED, with its inherited quotation, source fields, all action counts and both cores unchanged.
