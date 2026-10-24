@@ -2996,25 +2996,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**549 of 2,876 genes are complete; 2,327 remain.**
-This checkpoint adds EIF2S3 and EIF3F to the merged 547 checkpoint.
-[Checkpoint 549](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-549-2026-10-21-194621-utc)
-records their approved heads, exact merged files and accepted CI evidence.
-The inventory is pinned to main [`bf2af2d12324`](https://github.com/ai4curation/ai-gene-review/commit/bf2af2d12324277c67537afb3e8f55cb96a21c57),
-captured 2026-10-21 19:46:21 UTC. Each catalogue gene counts once; products,
+**553 of 2,876 genes are complete; 2,323 remain.**
+This checkpoint adds ELN to the merged 552 checkpoint.
+[Checkpoint 553](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-553-2026-10-21-232539-utc)
+records its approved head, actual merge, preserved source report and accepted CI evidence.
+The inventory is pinned to main [`7f1f8f7147f1`](https://github.com/ai4curation/ai-gene-review/commit/7f1f8f7147f165a688c45300b0da8052adfdadf1),
+prepared 2026-10-21 23:25:39 UTC. Each catalogue gene counts once; products,
 follow-ups and tracker publications add no credit.
 
-At this snapshot, 8,553 reviews are available, including 3,112 human reviews.
-Of 1,255 catalogue genes with reviews, 549 are credited and 706 remain uncredited;
-1,621 catalogue genes still lack a review file. Availability and accepted
+At this snapshot, 8,557 reviews are available, including 3,116 human reviews.
+Of 1,259 catalogue genes with reviews, 553 are credited and 706 remain uncredited;
+1,617 catalogue genes still lack a review file. Availability and accepted
 completion are separate measures.
 
-Both genes passed the full merge-group test suite and documentation deployment.
-EIF2S3 also passed its actual main validation. EIF3F's actual main run was
-cancelled by a higher-priority build; its failed aggregate remains recorded.
-The accepted immediate EIF2S3 descendant preserves every EIF3F payload and
-validation-runtime file. That bridge does not claim a second strict EIF3F
-validation. Filtered, cancelled and skipped tests are not reported as passes.
+ELN passed the full merge-group suite and scoped actual-main validation.
+The broad main suite was skipped by path filtering. Documentation built and
+pushed successfully; no independent live-page inspection is claimed.
+Its 48 annotations have 9 ACCEPT, 17 MODIFY and 22 KEEP_AS_NON_CORE decisions.
+ELN retains computed DRAFT status and five accepted validation advisories.
+Campaign completion records the accepted merged review, not a COMPLETE file status.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3696,10 +3696,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
 - [x] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
 - [x] **EIF3F** — HGNC:3275; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d0f623e7-ea96-461a-a348-7aa5a7a1d7ff-2023-12-06T070000.000Z) (MONDO:0000508; AR; Definitive).
-- [ ] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
-- [ ] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
-- [ ] **ELN** — HGNC:3327; [cutis laxa, autosomal dominant 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bfdc253-320e-4c03-959f-57348fe403fd-2024-10-04T160000.000Z) (MONDO:0007411; AD; Definitive).
+- [x] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **ELANE** — HGNC:3309; [neutropenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_259c43d2-b114-43bd-9e4e-a7beeb644323-2020-05-14T000924.456Z) (MONDO:0001475; AD; Definitive).
+- [x] **ELF4** — HGNC:3319; [autoinflammatory syndrome, familial, X-linked, Behcet-like 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_625f18f6-e14f-457b-9134-a2b1aeedc410-2025-06-25T160000.000Z) (MONDO:0024770; XL; Definitive).
+- [x] **ELN** — HGNC:3327; [cutis laxa, autosomal dominant 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bfdc253-320e-4c03-959f-57348fe403fd-2024-10-04T160000.000Z) (MONDO:0007411; AD; Definitive).
 - [ ] **ELOVL4** — HGNC:14415; [ELOVL4-related maculopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b9daf74-594d-4f11-b322-d671266ebf8e-2023-02-02T170000.000Z) (MONDO:0700227; AD; Definitive).
 - [ ] **ELP2** — HGNC:18248; [complex neurodevelopmental disorder with motor features](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d8c7b2b6-442f-41ff-85b5-3674572ab744-2025-06-23T160000.000Z) (MONDO:0100516; AR; Definitive).
 - [ ] **EMILIN1** — HGNC:19880; [arterial tortuosity-bone fragility syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be7af692-0751-4da3-a24a-b28cf4675b4d-2025-06-05T160000.000Z) (MONDO:0971179; AR; Definitive).
