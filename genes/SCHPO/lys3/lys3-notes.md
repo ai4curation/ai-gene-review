@@ -16,15 +16,18 @@ for S. pombe `lys3`, which already carries the exact NAD(+), L-lysine-forming
 `GO:0004754` term from InterPro/Rhea/EC and from S. cerevisiae LYS1.
 
 The cytoplasm/cytosol rows should be kept. Unlike S. cerevisiae Lys1, there is
-no evidence that S. pombe Lys3 is peroxisomal, and the PomBase L-lysine
-biosynthesis GO-CAM models `lys3` in `GO:0005829 cytosol`.
+no evidence that S. pombe Lys3 is peroxisomal. The ORFeome row directly
+supports broad cytoplasm, while PomBase infers `GO:0005829 cytosol` from the
+accepted `GO:0004754` activity and exports the same placement in its
+L-lysine-biosynthesis GO-CAM.
 
 Cached PMIDs for `lys3` are abstract-only. `PMID:3142867` directly places the
 classical `lys3-37` auxotroph at the saccharopine dehydrogenase step, while
 `PMID:17622533` only reports a later lys3 auxotroph marker. The 2006 ORFeome
 localization paper supports the source of the PomBase `GO:0005737 cytoplasm`
 HDA row, but the precise cytosol placement comes from PomBase curation and the
-GO-CAM model.
+GO-CAM carries that same curator inference rather than an independent
+localization assay.
 
 Newer-paper search: searched for S. pombe `lys3`, `SPAC227.18`, and
 saccharopine dehydrogenase. Newer hits were PomBase/BioGRID/clone or reagent
