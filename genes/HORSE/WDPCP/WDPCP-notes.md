@@ -88,3 +88,9 @@ product of this gene (WDPCP__A0A9L0T876, reviewed in `genes/HORSE/WDPCP__A0A9L0T
 convention on a second product of the same gene is not a curation gap, so the rows were withdrawn
 for consistency across the cohort. The gene-level function is unchanged and is recorded on the
 canonical product's review; this file's description and core functions still describe it.
+
+## 2026-10-23 — Stale cross-reference corrected (PR #5310 review)
+
+The GO:0005930 axoneme row's reason still said the basal plate localization "is added as a NEW row below".
+That row was withdrawn in PR #5303 because GOA carries it on the canonical product A0A9L0T876. The sentence
+now says so.
