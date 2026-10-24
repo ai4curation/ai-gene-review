@@ -1,12 +1,12 @@
 # ENG source and assay guide
 
-This guide separates inspected source evidence from remaining access limits. Normal publication-cache flags are preserved; several originals were recovered separately while their normal cache remains abstract-only. Original article bodies, figure images and private workspace paths are not redistributed here. Numerical row indices below are zero-based positions in the frozen 104-annotation review.
+This guide separates inspected source evidence from remaining access limits. Normal publication-cache flags are preserved; several originals were recovered separately while their normal cache remains abstract-only. Reference-level full_text_unavailable flags are omitted where operative original text was recovered; partial reads, missing figures and missing supplements remain specified below. This does not change the independent normal-cache full-text flags. Original article bodies, figure images and private workspace paths are not redistributed here. Numerical row indices below are zero-based positions in the frozen 104-annotation review.
 
 ## Primary sources and experimental scope
 
 ### PMID:1326540
 
-[Original paper](https://www.researchgate.net/publication/286626003_Endoglin_is_a_component_of_the_transforming_growth_factor-beta_receptor_system_in_human_endothelial_cells). Original cellular affinity-labeling, crosslinking, immunoprecipitation and competition Methods/Results, Discussion and captions; saved original lines 577–1557. Later citing-paper text on the same page is excluded. The journal identifier is https://doi.org/10.1016/S0021-9258(18)41732-2.
+[Publisher DOI](https://doi.org/10.1016/s0021-9258(18)41732-2); [accessed author copy](https://www.researchgate.net/publication/286626003_Endoglin_is_a_component_of_the_transforming_growth_factor-beta_receptor_system_in_human_endothelial_cells). Original cellular affinity-labeling, crosslinking, immunoprecipitation and competition Methods/Results, Discussion and captions; saved original lines 577–1557. Later citing-paper text on the same page is excluded.
 
 [Endoglin is a component of the transforming growth factor-beta receptor system in human endothelial cells.](https://pubmed.ncbi.nlm.nih.gov/1326540/)
 
@@ -36,7 +36,7 @@ Reviewed annotation contexts: 45, 49, 53. Normal cache full-text flag: false.
 
 ### PMID:3262645
 
-[Original paper](https://www.researchgate.net/publication/19892954_Biochemical_characterization_of_the_44G4_antigen_from_the_HOON_pre-B_leukemic_cell_line). Operative Methods, Results and Discussion on lectin affinity and carbohydrate treatment; Figure 1 caption. Saved indexed original: Methods lines 624–1620; Results 1622–1853, 2174–2746 and 2800–3357; Figure 1 caption 1970–2031; Discussion 3399–4121.
+[Publisher DOI](https://doi.org/10.4049/jimmunol.141.6.1934); [accessed author copy](https://www.researchgate.net/publication/19892954_Biochemical_characterization_of_the_44G4_antigen_from_the_HOON_pre-B_leukemic_cell_line). Operative Methods, Results and Discussion on lectin affinity and carbohydrate treatment; Figure 1 caption. Saved indexed original: Methods lines 624–1620; Results 1622–1853, 2174–2746 and 2800–3357; Figure 1 caption 1970–2031; Discussion 3399–4121.
 
 [Biochemical characterization of the 44G4 antigen from the HOON pre-B leukemic cell line.](https://pubmed.ncbi.nlm.nih.gov/3262645/)
 
@@ -66,7 +66,7 @@ Reviewed annotation contexts: 1, 7, 71, 78, 80, 82, 83. Normal cache full-text f
 
 ### PMID:8294451
 
-[Original paper](https://www.researchgate.net/publication/296754217_Endoglin_forms_a_heteromeric_complex_with_the_signaling_receptors_for_transforming_growth_factor-beta). Selected Methods on porcine endothelial receptors, radioligand crosslinking and immunoprecipitation; receptor-association Results and Discussion. Saved indexed original: Methods lines 786–944 and 1031–1311; Results 1726–1951 and 2283–2713; Discussion 2770–2808, 2854–2898 and 3166–3245.
+[Publisher DOI](https://doi.org/10.1016/s0021-9258(17)42126-0); [accessed author copy](https://www.researchgate.net/publication/296754217_Endoglin_forms_a_heteromeric_complex_with_the_signaling_receptors_for_transforming_growth_factor-beta). Selected Methods on porcine endothelial receptors, radioligand crosslinking and immunoprecipitation; receptor-association Results and Discussion. Saved indexed original: Methods lines 786–944 and 1031–1311; Results 1726–1951 and 2283–2713; Discussion 2770–2808, 2854–2898 and 3166–3245.
 
 [Endoglin forms a heteromeric complex with the signaling receptors for transforming growth factor-beta.](https://pubmed.ncbi.nlm.nih.gov/8294451/)
 
@@ -86,7 +86,7 @@ Reviewed annotation contexts: 47. Normal cache full-text flag: false.
 
 ### PMID:9872992
 
-[Original paper](https://www.researchgate.net/publication/13415440_Endoglin_Is_an_Accessory_Protein_That_Interacts_with_the_Signaling_Receptor_Complex_of_Multiple_Members_of_the_Transforming_Growth_Factor-_Superfamily). Receptor-expression/affinity-labeling Methods; ligand/receptor Results; Figures 5, 6 and 9 captions and matching Discussion. Saved indexed original: Methods lines 512–741; Results 1977–2012 and 2140–2278; captions 2052–2131, 2280–2349 and 3151–3188; Discussion 2652–2769.
+[Publisher DOI](https://doi.org/10.1074/jbc.274.2.584); [accessed author copy](https://www.researchgate.net/publication/13415440_Endoglin_Is_an_Accessory_Protein_That_Interacts_with_the_Signaling_Receptor_Complex_of_Multiple_Members_of_the_Transforming_Growth_Factor-_Superfamily). Receptor-expression/affinity-labeling Methods; ligand/receptor Results; Figures 5, 6 and 9 captions and matching Discussion. Saved indexed original: Methods lines 512–741; Results 1977–2012 and 2140–2278; captions 2052–2131, 2280–2349 and 3151–3188; Discussion 2652–2769.
 
 [Endoglin is an accessory protein that interacts with the signaling receptor complex of multiple members of the transforming growth factor-beta superfamily.](https://pubmed.ncbi.nlm.nih.gov/9872992/)
 
@@ -96,7 +96,7 @@ Reviewed annotation contexts: 34, 35, 36, 37, 69, 72, 73, 76, 83, 86, 87. Normal
 
 ### PMID:10348742
 
-[Original paper](https://www.researchgate.net/publication/12949633_Defective_angiogenesis_in_mice_lacking_endoglin). Original knockout design, developmental Results, Discussion and Methods notes: saved original lines 195–439 and 484–709; captions 501–615 and 754–792; Methods notes 800–866. Corrected line indexes preserve all original captured responses; the unrelated article beginning at line 901 is excluded.
+[Publisher DOI](https://doi.org/10.1126/science.284.5419.1534); [accessed author copy](https://www.researchgate.net/publication/12949633_Defective_angiogenesis_in_mice_lacking_endoglin). Original knockout design, developmental Results, Discussion and Methods notes: saved original lines 195–439 and 484–709; captions 501–615 and 754–792; Methods notes 800–866. Corrected line indexes preserve all original captured responses; the unrelated article beginning at line 901 is excluded.
 
 [Defective angiogenesis in mice lacking endoglin.](https://pubmed.ncbi.nlm.nih.gov/10348742/)
 
@@ -136,7 +136,7 @@ Reviewed annotation contexts: 62, 76. Normal cache full-text flag: false.
 
 ### PMID:12015308
 
-[Original paper](https://www.researchgate.net/publication/11356951_Extracellular_and_cytoplasmic_domains_of_endoglin_interact_with_the_TGF-b_receptors_I_and_II). Domain-construct and reporter Methods; receptor-association and Smad reporter Results; Figures 3, 4, 5, 9 and 10 captions. Saved indexed original: Methods lines 452–464, 529–607, 1051–1092 and 1133–1175; Results 1177–1262, 1604–1621, 1826–1972, 2163–2222 and 3168–3230; Discussion 3313–3420 and 3944–4086.
+[Publisher DOI](https://doi.org/10.1074/jbc.m111991200); [accessed author copy](https://www.researchgate.net/publication/11356951_Extracellular_and_cytoplasmic_domains_of_endoglin_interact_with_the_TGF-b_receptors_I_and_II). Domain-construct and reporter Methods; receptor-association and Smad reporter Results; Figures 3, 4, 5, 9 and 10 captions. Saved indexed original: Methods lines 452–464, 529–607, 1051–1092 and 1133–1175; Results 1177–1262, 1604–1621, 1826–1972, 2163–2222 and 3168–3230; Discussion 3313–3420 and 3944–4086.
 
 [Extracellular and cytoplasmic domains of endoglin interact with the transforming growth factor-beta receptors I and II.](https://pubmed.ncbi.nlm.nih.gov/12015308/)
 
@@ -166,7 +166,7 @@ Reviewed annotation contexts: 24, 25, 26, 51, 59. Normal cache full-text flag: f
 
 ### PMID:17068149
 
-[Original paper](https://www.researchgate.net/publication/6728399_Identification_of_BMP9_and_BMP10_as_functional_activators_of_the_orphan_activin_receptor-like_kinase_1_ALK1_in_endothelial_cells). Expression-plasmid and BRE reporter Methods; BMP9/ALK1/ENG Results and Figure 4 caption. Saved indexed original: Methods lines 477–625, with human ENG plasmid 541–560 and reporter assay 562–588; Results 1025–1059; Figure 4 caption 1149–1166.
+[Publisher DOI](https://doi.org/10.1182/blood-2006-07-034124); [accessed author copy](https://www.researchgate.net/publication/6728399_Identification_of_BMP9_and_BMP10_as_functional_activators_of_the_orphan_activin_receptor-like_kinase_1_ALK1_in_endothelial_cells). Expression-plasmid and BRE reporter Methods; BMP9/ALK1/ENG Results and Figure 4 caption. Saved indexed original: Methods lines 477–625, with human ENG plasmid 541–560 and reporter assay 562–588; Results 1025–1059; Figure 4 caption 1149–1166.
 
 [Identification of BMP9 and BMP10 as functional activators of the orphan activin receptor-like kinase 1 (ALK1) in endothelial cells.](https://pubmed.ncbi.nlm.nih.gov/17068149/)
 
@@ -216,7 +216,7 @@ Reviewed annotation contexts: 41, 42. Normal cache full-text flag: true.
 
 ### PMID:19703439
 
-[Original paper](https://www.researchgate.net/publication/26763607_Endoglin_is_dispensable_for_angiogenesis_but_required_for_endocardial_cushion_formation_in_the_midgestation_mouse_embryo). Methods on chimeras, embryoid bodies, AVC explants and expression; corresponding Results and Discussion, including figure captions. Saved original lines: Methods 342–623; Results 625–1504; Discussion 1506–1815. Supplementary files and figure pixels were not inspected.
+[Publisher DOI](https://doi.org/10.1016/j.ydbio.2009.08.016); [accessed author copy](https://www.researchgate.net/publication/26763607_Endoglin_is_dispensable_for_angiogenesis_but_required_for_endocardial_cushion_formation_in_the_midgestation_mouse_embryo). Methods on chimeras, embryoid bodies, AVC explants and expression; corresponding Results and Discussion, including figure captions. Saved original lines: Methods 342–623; Results 625–1504; Discussion 1506–1815. Supplementary files and figure pixels were not inspected.
 
 [Endoglin is dispensable for angiogenesis, but required for endocardial cushion formation in the midgestation mouse embryo.](https://pubmed.ncbi.nlm.nih.gov/19703439/)
 
@@ -236,7 +236,7 @@ Reviewed annotation contexts: 61. Normal cache full-text flag: true.
 
 ### PMID:20856203
 
-[Original paper](https://www.researchgate.net/publication/46381716_Critical_role_of_endoglin_in_tumor_cell_plasticity_of_Ewing_sarcoma_and_melanoma). Selected ENG-perturbation/signaling Results, Discussion and matching cell/affinity-labeling Methods. Saved indexed original: Results lines 482–600 and 634–711; Discussion 1145–1410; Methods 1412–1503. The relevant supplementary affinity-labeling panel was not recovered.
+[Publisher DOI](https://doi.org/10.1038/onc.2010.418); [accessed author copy](https://www.researchgate.net/publication/46381716_Critical_role_of_endoglin_in_tumor_cell_plasticity_of_Ewing_sarcoma_and_melanoma). Selected ENG-perturbation/signaling Results, Discussion and matching cell/affinity-labeling Methods. Saved indexed original: Results lines 482–600 and 634–711; Discussion 1145–1410; Methods 1412–1503. The relevant supplementary affinity-labeling panel was not recovered.
 
 [Critical role of endoglin in tumor cell plasticity of Ewing sarcoma and melanoma.](https://pubmed.ncbi.nlm.nih.gov/20856203/)
 
@@ -272,7 +272,7 @@ Reviewed annotation contexts: 50. Normal cache full-text flag: true.
 
 Independently assessed original Methods, binding Results and literal affinity tables support direct human soluble ENG recognition of BMP9 and BMP10. Fc/His constructs, assay geometry and ligand-dependent affinities remain distinct. Soluble sequestration can inhibit signaling and does not invert the membrane coreceptor role; no full-length natural-tail equivalence.
 
-Reviewed annotation contexts: 41. Normal cache full-text flag: true.
+Reviewed annotation contexts: 31, 41. Normal cache full-text flag: true.
 
 ### PMID:22347366
 
@@ -282,7 +282,7 @@ Reviewed annotation contexts: 41. Normal cache full-text flag: true.
 
 Independently assessed original structural/domain and binding evidence supports human BMP9 recognition with soluble engineered constructs. The earlier truncation-based Cys350 interpretation is kept separate from the later C350-C382 intramolecular bond structure. No complete full-length membrane receptor complex or natural-tail equivalence is claimed.
 
-Reviewed annotation contexts: 41. Normal cache full-text flag: true.
+Reviewed annotation contexts: 31, 41. Normal cache full-text flag: true.
 
 ### PMID:22940691
 
@@ -332,7 +332,7 @@ Reviewed annotation contexts: 88. Normal cache full-text flag: true.
 
 Independently assessed original structural, binding and mutational evidence resolves human orphan-region BMP9 recognition and distinguishes ZP-mediated covalent dimerization. Folding/secretion controls and C350-C382 intramolecular bonding are considered. Soluble complexes are not a complete membrane-receptor assembly, and proposed type II receptor handoff is not an observed step. No natural-tail equivalence or figure-pixel claim.
 
-Reviewed annotation contexts: 21, 24, 25, 26, 31, 58, 62, 70, 71. Normal cache full-text flag: true.
+Reviewed annotation contexts: 21, 25, 31, 58, 62, 70, 71. Normal cache full-text flag: true.
 
 ### PMID:31540324
 

@@ -16,7 +16,7 @@ The porcine donor is P37176. Its historical 643-residue clone is not assumed to 
 
 ## Annotation decisions and unresolved evidence
 
-All 104 frozen source objects have proposed decisions: 29 ACCEPT, 62 KEEP_AS_NON_CORE, one MODIFY, two MARK_AS_OVER_ANNOTATED and ten UNDECIDED. The generic receptor activity is refined to coreceptor activity, GO:0015026. All fourteen supported generic protein-binding rows remain non-core under the campaign policy. No new GO annotation or publication quotation is introduced.
+All 104 frozen source objects have proposed decisions: 29 ACCEPT, 59 KEEP_AS_NON_CORE, four MODIFY, two MARK_AS_OVER_ANNOTATED and ten UNDECIDED. The generic receptor activity is refined to coreceptor activity, GO:0015026. Eleven supported generic protein-binding rows remain non-core. Three are refined using independently established BMP, type I TGF-beta receptor and type II TGF-beta receptor binding; this follows the campaign exception for evidence-backed specific terms. No new GO annotation or publication quotation is introduced.
 
 The two glycan-recognition assignments from the 44G4-antigen study exceed its inspected experiment. Lectin affinity, galactose competition and glycosidase treatment characterize sugars carried by ENG; the lectin is the recognizing molecule. This preserves the positive glycosylation findings. The separate porcine glycosaminoglycan claim remains unresolved. [PMID:3262645](https://pubmed.ncbi.nlm.nih.gov/3262645/), [PMID:8294451](https://pubmed.ncbi.nlm.nih.gov/8294451/)
 
@@ -37,3 +37,12 @@ The frozen UniProt SUBUNIT text reverses TGFB2/TGFB3 relative to the inspected 1
 The [offline source-context analysis](ENG-bioinformatics/RESULTS.md) reproduces identities, products, raw source joins, PAINT placement and rule/localization applicability. It does not derive scientific annotation decisions from lookup tables.
 
 The unresolved PAINT vasculogenesis decision additionally records the inspected ancestral node in structured propagation metadata. The prose retains the source-specific distinction between the assessed human glycan source and the unverified porcine source. Structured consistency-exception metadata is not used because the applicable rule does not consume it. The propagation metadata expresses the existing judgment; no action or source field is changed.
+
+
+## Reviewer follow-up
+
+Direct BMP9/BMP10 recognition is now represented by a BMP-binding core unit alongside coreceptor activity. The refined BMP9 row retains its original mature-ligand partner. The two receptor-binding refinements retain the unread PMID:15702480 citation and explicitly use independent PMID:12015308 association evidence. Construct-specific affinities and shared extracellular domains do not establish equivalent natural-tail signaling. [PMID:21737454](https://doi.org/10.1074/jbc.M111.260133), [PMID:22347366](https://doi.org/10.1371/journal.pone.0029948), [PMID:28564608](https://doi.org/10.1016/j.celrep.2017.05.011)
+
+The reference-level availability flags were authored during this review's packaging by copying normal-cache availability; they were absent from the seeded review. They are optional reviewer fields, not immutable GOA or publication-cache metadata. Eleven flags are removed where operative original text was recovered separately. Eleven genuinely unavailable-reference flags remain. The source guide retains the exact partial-read and supplement limits, and normal publication caches remain unchanged. Flag omission does not certify a complete-paper or figure-pixel review.
+
+The seven challenged developmental and transcription-regulation annotations remain non-core with positive experimental rationales and explicit attribution limits. Regulatory process terms permit an upstream signaling contribution. The cardiac expression assays, hypoxia evidence and compound neural-crest genotype are preserved; no myocardium-autonomous mechanism, direct ENG transcription machinery or normal human dosage requirement is claimed. The offline source archive remains unchanged, and no publication quotations or NEW annotations are added.
