@@ -16,8 +16,11 @@ whose aspect also carries an IBA or ISO, we chose `ACCEPT` 36 times,
 `REMOVE` 37 times and `KEEP_AS_NON_CORE` 13 times. Only 90 of the 237 genes
 have any `knowledge_gaps`, and 62 accepted ND rows (51 genes) have nothing else in
 their aspect and still no `BIOLOGY` gap. This project sorts ND rows into a
-small set of cases. Each case gets one review action. Only one case (a true gap)
-must be paired with a `KnowledgeGap`.
+small set of cases. One rule fixes the action: **an ND that follows the
+evidence-code guideline is `ACCEPT`**. It follows the guideline when no
+literature on this gene product, in this species, identifies a function in that
+aspect. Inferences (IBA, ISO, ISS, IEA) in the same aspect do not change this.
+Only one case (a true gap) must also be paired with a `KnowledgeGap`.
 
 ## What ND means in GO
 
@@ -47,8 +50,36 @@ Three consequences follow, and the cases below rest on them:
    bulk re-stamp, not 108 separate searches.
 3. **ND is about literature for this gene product.** It is silent on
    inference. In practice a MOD's ND often coexists with a GO_Central IBA in
-   the same aspect, though GORULE:0000054 reports this pairing. How to treat
-   that pairing is the main question for case N2.
+   the same aspect, though GORULE:0000054 reports this pairing. An IBA is not
+   literature for the gene, so it does not make the ND wrong.
+
+## The acceptance rule
+
+We reward annotations that follow the evidence-code guidelines, and ND is no
+exception. The test for an ND row is:
+
+> Is there literature on **this gene product, in this species**, that would
+> support a GO annotation in **this aspect** under the evidence-code guidelines
+> (an IDA, IMP, IPI, IGI, IEP or similar that a curator would make)?
+
+- **No** → the ND is correct: `ACCEPT`. This holds whether the aspect is empty
+  or already carries IBA, ISO, ISS or IEA rows, and whether or not the function
+  is obvious from orthologs.
+- **Yes** → the ND is stale or missed (N1): `REMOVE`, and add the term the
+  literature supports.
+
+"Literature" means papers that identify a function, not any mention of the
+gene. A screen hit, an expression change or a non-physiological in-vitro
+reaction that a curator would not annotate leaves the ND correct (see N4).
+Per CLAUDE.md, an accepted ND needs evidence that the literature was searched:
+cite the deep-research file or the reviewer's own search, not the UniProt
+`PE` line.
+
+`ACCEPT` here endorses the annotation as made. It does not make a root term a
+core function: `core_functions` never cite an ND row, and the function of an
+N2 gene is carried by its informative IBA or ISO rows. `KEEP_AS_NON_CORE` is
+not used for ND, and neither is `REMOVE` when an IBA appears in the same
+aspect.
 
 ## Case taxonomy
 
@@ -59,11 +90,11 @@ no data?*
 | Case | Short name | Is the ND true? | Knowledge gap? | Proposed action |
 |---|---|---|---|---|
 | N1 | Stale or missed | No: data exist | No (curation) | `REMOVE`, and add the informative term |
-| N2 | Not assayed here, inferable | Yes | No | `KEEP_AS_NON_CORE` |
-| N3 | Existence in question | Yes | Yes, of a special kind (does the product exist?) | `KEEP_AS_NON_CORE`, defer to MICROPROTEINS |
-| N4 | True knowledge gap | Yes | **Yes, `BIOLOGY`**, required | `KEEP_AS_NON_CORE` and a `KnowledgeGap` |
-| N5 | Ontology-blocked | Formally yes | No (ontology) | `MODIFY` to the term, or a proposed term |
-| N6 | Tested and negative | Yes | No (or a narrower gap) | `KEEP_AS_NON_CORE`, and keep the NOT row |
+| N2 | Not assayed here, inferable | Yes | No | `ACCEPT` |
+| N3 | Existence in question | Yes | Yes, of a special kind (does the product exist?) | `ACCEPT`, defer to MICROPROTEINS |
+| N4 | True knowledge gap | Yes | **Yes, `BIOLOGY`**, required | `ACCEPT` and a `KnowledgeGap` |
+| N5 | Ontology-blocked | No: literature identifies the function | No (ontology) | `MODIFY` to the term, or a proposed term |
+| N6 | Tested and negative | Yes | No (or a narrower gap) | `ACCEPT`, and keep the NOT row |
 | N7 | Bookkeeping artifact | Unclear | Decide after reading | Re-check, then reclassify |
 
 ### N1 — Stale or missed: data now exist
@@ -97,11 +128,12 @@ Examples: CANAL/LPL1 (phospholipase B, inferred from the *S. cerevisiae*
 branch), CANAL/ERG2, CANAL/MON1 and DANRE/gmppb. The inventory signal
 `inferable_by_homology` marks 106 rows, and most of them belong to this case.
 
-**Action:** `KEEP_AS_NON_CORE`. The ND is a correct statement, and we judge
-claims rather than evidence codes, so `REMOVE` is wrong. `ACCEPT` is also wrong,
-because ACCEPT means "represents the core function" and a root term never does.
-The informative IBA or ISO carries the function, and the ND records that it is
-unverified in this species. Do not add a `KnowledgeGap`.
+**Action:** `ACCEPT`. Nothing was published on this gene product in this
+species, so the ND follows the guideline. The informative IBA or ISO carries the
+function, and is reviewed on its own row. The ND records that the function is
+unverified in this species. Do not add a `KnowledgeGap`. `REMOVE` is wrong: 37
+reviews removed an ND for this reason alone ("superseded by the IBA"), which
+penalises a correct annotation.
 
 **Subcase N2b — the family is known but the specificity is not.** If the
 ortholog assignment is ambiguous (paralog-rich family, possible pseudoenzyme,
@@ -124,7 +156,7 @@ also catches yeast/SMX2 (an Sm protein) and yeast/COA4, which are canonical,
 well-conserved short proteins and fall in N2 or N4. The MICROPROTEINS census
 found the same split.
 
-**Action:** `KEEP_AS_NON_CORE`. Where translation or conservation evidence
+**Action:** `ACCEPT`. Where translation or conservation evidence
 exists but function does not, the gene gets a `BIOLOGY` gap whose
 `gap_statement` puts the existence question first.
 
@@ -132,8 +164,8 @@ exists but function does not, the gene gets a `BIOLOGY` gap whose
 
 Nobody knows. The review has read the literature and the deep research and
 confirms that no experiment, and no defensible inference, assigns a term in this
-aspect. Only this case should be coupled to `knowledge_gaps`. The coupling
-should be mandatory:
+aspect. **Action:** `ACCEPT`. Only this case should be coupled to
+`knowledge_gaps`. The coupling should be mandatory:
 
 | ND aspect | Required `KnowledgeGap.dark_aspect` |
 |---|---|
@@ -160,7 +192,9 @@ experiment:
 ### N5 — Ontology-blocked: the function is known but GO cannot say it
 
 Structural or accessory subunits whose function is "be part of machine X" often
-get an MF ND because no MF term fits. That accounted for about 64% of the conserved
+get an MF ND because no MF term fits, even though literature on the gene
+identifies its role. Under the acceptance rule that literature makes the ND
+incorrect. That accounted for about 64% of the conserved
 "MF-dark" genes in the Function Knowledge Gaps triage. Examples: DROME/Vps53 (contributes
 to GARP/EARP tethering) and human/POLE4.
 
@@ -171,8 +205,9 @@ ONTOLOGY-only `knowledge_gaps` entry is not allowed.
 
 ### N6 — Tested and negative
 
-The function people expected was tested and ruled out. The ND then sits next
-to a `NOT` row, as for SCHPO/alo1: the positive ISO to D-arabinono-lactone
+The function people expected was tested and ruled out. **Action:** `ACCEPT`:
+a negative result identifies no function. The ND then sits next to a `NOT`
+row, as for SCHPO/alo1: the positive ISO to D-arabinono-lactone
 biosynthesis was withdrawn and PomBase now carries `NOT` IGC for that process. The
 ND is honest, but the aspect is not empty: the NOT row is information. If an
 alternative function is plausible but unknown, record an N4 gap with the
@@ -229,8 +264,12 @@ search, so we cannot meaningfully propose one. These rows should become
 2. **Validation (best-practice warnings, not errors):**
    - `nd_case: TRUE_GAP` (N4) or `EXISTENCE` (N3) requires a `BIOLOGY`
      `KnowledgeGap` whose `dark_aspect` matches the ND aspect (table above).
-   - An ND with `REMOVE` requires `nd_case: STALE` (N1). An ND with `ACCEPT`
-     warns, and the suggested action is `KEEP_AS_NON_CORE`.
+   - An ND with `REMOVE` or `MODIFY` requires `nd_case: STALE` (N1) or
+     `ONTOLOGY_BLOCKED` (N5). `ACCEPT` is expected for every other case.
+   - `KEEP_AS_NON_CORE` on an ND warns, and suggests `ACCEPT`.
+   - `REMOVE` of an ND whose aspect has no experimental annotation in GOA
+     warns, unless the review adds a literature-backed term in that aspect.
+     This catches removal "because an IBA exists".
    - `NEW` on an ND row warns, and suggests a `knowledge_gaps` entry instead.
    - A `BIOLOGY` gap with `dark_aspect: MF_DARK` on a gene whose GOA has an
      MF ND with no `nd_case` produces a reminder to classify the row.
@@ -247,19 +286,21 @@ search, so we cannot meaningfully propose one. These rows should become
       (expected N1) and the 62 accepted, gap-less `aspect_empty` rows
       (expected N4, which should gain gaps)
 - [ ] Add `nd_case` to the schema and the warnings to best-practice validation
-- [ ] Bulk re-action pass: ACCEPT → KEEP_AS_NON_CORE for N2, N3 and N4 rows
-      (this needs a `history/` record per gene)
+- [ ] Re-action pass under the acceptance rule (needs a `history/` record per
+      gene): the 30 `KEEP_AS_NON_CORE` ND rows go to `ACCEPT`; the 65 `REMOVE`
+      rows whose aspect has no experimental annotation in GOA are read, and go
+      to `ACCEPT` unless the review found supporting literature (N1)
 - [ ] N1 upstream report from `source_defects`
 
 ## Open questions
 
-- **Action for a true ND.** This page proposes `KEEP_AS_NON_CORE` everywhere,
-  because ACCEPT means "core function". The alternative is to keep ACCEPT, read
-  as "accept the statement", and treat ND rows as exempt from the core
-  semantics. Either choice works if it is applied consistently.
-- **N2 against GORULE:0000054.** Should we recommend that the MOD retire an
-  ND once an IBA covers the aspect? Or is "no literature for this species"
-  worth keeping as a signal that the IBA is unverified?
+- **Wording of `ACCEPT`.** The `ActionEnum` text says ACCEPT means "retain as
+  representing the core function". Should it gain a sentence saying that for
+  ND (and other root-term) rows, ACCEPT means the annotation follows the
+  evidence-code guidelines?
+- **N2 against GORULE:0000054.** The rule reports an ND next to an IBA. We
+  accept both, because the ND correctly says that no literature exists for this
+  species. Is that worth raising with GO as a clarification of the rule?
 - **Is N3 a kind of knowledge gap or its own kind?** An existence question
   could justify a new `KnowledgeGapAspectEnum` value (e.g. `EXISTENCE_DARK`)
   rather than overloading `WHOLLY_DARK`.
