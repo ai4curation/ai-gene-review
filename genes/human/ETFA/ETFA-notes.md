@@ -63,3 +63,31 @@ reviewed: 20 ACCEPT, 6 KEEP_AS_NON_CORE, 9 MARK_AS_OVER_ANNOTATED (all bare prot
 IPIs). 4 core_functions (electron transfer activity x3 contexts: respiratory ETC / fatty-acid
 beta-ox / amino-acid catabolism; + FAD binding), all in mitochondrial matrix / ETF complex.
 19 reference_review blocks added.
+
+
+## 2026-10-24 — Current source review and preserved history
+
+All 36 current imported contexts are reviewed: 21 ACCEPT, eight MODIFY, two KEEP_AS_NON_CORE and five UNDECIDED. The 35 historical row positions remain fixed. The historical location assertion absent from the current GOA remains in place with retired status and a biological MODIFY to mitochondrial matrix; source absence is not evidence of functional loss. One previously aggregated interaction is now represented by explicit ETFB and LYRM5 contexts, with ETFB retaining the prior row whose summary named that partner and LYRM5 appended independently. The new current ARBA complex assertion is also appended. There are 37 total rows, including one historical row, and no NEW annotation.
+
+All 32 inherited quotation paths, texts and reference associations remain unchanged. The old interaction quotation about LYRM5 is retained at its original position as historical context; it is not the specific proof of ETFB heterodimerization. Accepted independent support follows the inherited support prefix. The source guide separates the actual partner assays and access limits. All 26 reference identities, titles and findings are preserved; 21 references receive the accepted manual access assessments. The original description, four ordered cores, two natural products, questions, experiments and status remain unchanged pending separate synthesis.
+
+Human mature Δ19-alpha/His6-beta DCIP experiments establish ETF electron-carrier function, distinct from ETFDH-mediated ubiquinone reduction, autonomous alpha activity and the untested 284-residue alternative product. The 1996 Q21 label differs from current P13804 Q20/S21; other checked contact residues match. Historical residue statements are retained as paper numbering, without a universal offset. No publication cache or machine source was edited.
+
+### 2026-10-24 — Database-origin annotation assessment
+
+Eleven database-origin contexts were assessed: nine are supported as written, and two broad mitochondrial locations are refined to mitochondrial matrix using explicit human ETFA participant records and the official UniProt location mapping. The HPA observations themselves remain mitochondrial-resolution evidence. Actual PAINT ancestry and canonical sequence support all four inherited assertions; human self-WITH is expected. The current versus captured electron-transfer donor-list difference is retained without rewriting the source.
+
+The human ETF structure establishes alpha-subunit FAD contacts and alpha/beta complex membership. The independent human mature Δ19-alpha/His6-beta assay establishes electron transfer from MCAD or GCDH to DCIP. ETFDH performs the subsequent ubiquinone reaction in the Reactome model. These roles are kept distinct. The current ARBA rule is unavailable, but the ETF complex assertion is independently supported; no rule conditions were invented.
+
+The two natural ETFA products remain separate. Neither the human heterodimer experiments nor antibody antigen overlap establishes equal function or location of the 284-residue product. No new process annotation, core function, publication quotation or normal publication-cache alteration was made in this assessment. The source guide records actual article sections, image inspection and access limits.
+
+
+## 2026-10-24: Core attribution and assay scope
+
+The four inherited core positions remain ordered as electron transfer, FAD binding, fatty-acid oxidation context and amino-acid catabolic context. They describe two molecular facets and two metabolic settings of the same ETF carrier, not four independent enzymes. Electron transfer is attributed to ETFA as a contribution within the ETFA–ETFB complex; direct alpha-subunit FAD contacts support the separate FAD-binding facet. All seven inherited core quotation anchors and all 32 quotations across the review remain at their original paths. The 37 accepted annotation reviews, 26 reference objects and two natural-product records are unchanged. No annotation or publication quotation is added.
+
+The human ETF crystal structure resolves a composite cofactor environment. The human biochemical preparation uses mature Δ19-alpha plus full-length His6-beta; MCAD/octanoyl-CoA and GCDH/glutaryl-CoA reactions reduce DCIP. These are positive redox-step assays, not complete respiratory or catabolic flux measurements. ETF is itself an electron carrier, rather than a passive substrate whose necessity alone motivates the process attribution. The matrix ETF complex passes electrons to inner-membrane ETFDH; ubiquinone reduction is ETFDH chemistry. The 284-residue alternative product remains untested by these experiments. The original Q21 sequence-numbering inconsistency remains local; other checked contacts agree with the current sequence, and no universal offset is imposed.
+
+The core terms were checked against current official GO definitions and separately filtered is_a and is_a/part_of ancestry. The three process terms have no ancestor/descendant pair among them. Their placement is contextual, not a claim of separate catalytic activities. The 1997/1999 inherited quotation sources retain their previously documented access limits; their preservation does not represent a new original-paper read. Independent human structural and coupled-assay evidence and target-specific Reactome roles support the refined attribution.
+
+Canonical validation: all six status, schema/GOA, strict-term, ontology-component and render checks passed. All 82 authored narratives occur in the private HTML rendering. Computed DRAFT retains two supported generic protein-binding advisories under the explicit [campaign convention](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions). All 32 inherited quotation paths/text/reference associations remain exact; no new publication quotations or NEW annotations were introduced. The two source-machine files are genuine fetched refreshes; the other 38 selected normal dependencies retain their acquired bytes.
