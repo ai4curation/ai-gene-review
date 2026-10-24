@@ -61,3 +61,21 @@ identical across the four orthologs for the same claim.
   structural papers modified to enzyme-substrate adaptor activity where the paper shows LA altering
   B4GALT1 specificity/activity; PMID:12927542 (binding loss only) and PMID:14644449 (Hsp105,
   denatured substrate) removed. Mouse GLUT8 colocalisation with LA in Golgi [PMID:31020623].
+
+## Review follow-up (PR #5395 reviewer suggestions, 2026-10-24)
+
+- Complex rows: reason now states that the human B4GALT1 review uses GO:1902494 catalytic complex
+  and that GO:1990234 transferase complex is a more specific descendant of it.
+- Added the lactose synthase complex entry to proposed_new_terms, mirroring the B4GALT1 review
+  (same name, definition, parent GO:1902494 and RHEA:12404 mapping); the suggested question now
+  points at it.
+- is_active_in extracellular region (IBA, PTN000150627): source defect recorded against GO_Central
+  (is_active_in -> located_in); the action stays KEEP_AS_NON_CORE.
+- InterPro2GO IPR000545 -> GO:0004461: source defect recorded (enables -> contributes_to). The human
+  row is a UniProt combined IEA (GO_REF:0000120) built from InterPro2GO plus an Ensembl Compara
+  transfer of the mouse MGI IDA, so its defect explanation attributes the fix upstream.
+- Calcium-binding core function now also lists GO:0005576 extracellular region (the structural Ca2+
+  site maintains the fold of the secreted protein in milk).
+- GO:0005515 IPI PMID:12927542 changed from REMOVE to MODIFY -> GO:0140767, aligning it with the four
+  sibling B4GALT1 IPI rows: loss of alpha-lactalbumin binding in the B4GALT1 W314A mutant is still
+  evidence of the specifier interaction.
