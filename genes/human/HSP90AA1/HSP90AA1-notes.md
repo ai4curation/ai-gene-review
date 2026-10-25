@@ -12,3 +12,13 @@ Deep research: not run. In this environment falcon times out and perplexity-lite
 - About 25 Ensembl/ARBA rodent physiology transfers (responses to cocaine, salt, estrogen and so on) and the minor-nucleotide binding terms are marked over-annotated.
 - 195 protein binding IPI rows are removed as uninformative.
 - The minor locations (exosome, sperm, melanosome, growth cones and so on) are kept as non-core.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 mitochondrion, IDA PMID:25609812 and IEA GO_REF:0000044 (SL-0173). No sub-compartment rows; qualifier located_in.
+
+Checks:
+- UniProt "Mitochondrion {ECO:0000269|PubMed:25609812}" [file:human/HSP90AA1/HSP90AA1-uniprot.txt], so the IEA mapping rests on the same paper as the IDA.
+- PMID:25609812 (full text cached): "The clamp domain (R192) of Tom70 interacts with the C-terminal motif (EEVD) of Hsp90, thereby recruiting Hsp90/IRF3/Bax to mitochondria." Recruited pool on Sendai virus infection; no protease protection or sub-mitochondrial fractionation.
+
+Outcome: both rows stay KEEP_AS_NON_CORE with the check recorded. Stays at root (TRAF3/BRAF precedent): no anchor, no outer-membrane assay.

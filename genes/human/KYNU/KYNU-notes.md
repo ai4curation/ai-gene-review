@@ -130,3 +130,12 @@ Non-core / over-annotations: mitochondrion (IBA over-annotated; IDA kept non-cor
 response to type II interferon (context/inducibility, non-core), response to vitamin B6
 (cofactor-dependency phenomenon, non-core), NAD+ biosynthetic process is a valid but
 higher-level process that is accepted as core context.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+- Rows: GO:0005739 IBA (is_active_in, PTN001019478) and IDA (PMID:6468727, located_in).
+- PAINT: [file:interpro/panther/PTHR14084/PTHR14084-paint.tsv] the GO:0005739 IBD on PTN001019478 has one seed, UniProtKB:Q16719 (KYNU itself), so the IBA restates the IDA.
+- The IDA: [PMID:6468727 "3-hydroxykynureninase in human liver was present in cytosol and mitochondria."] (1984, abstract-only, no marker controls described). Against: UniProt "Cytoplasm, cytosol" (PMID:8706755, HAMAP), HPA cytosol, no transit peptide or TM.
+- Before: IBA MARK_AS_OVER_ANNOTATED, IDA KEEP_AS_NON_CORE, which judged one claim two ways. After: both UNDECIDED, following the PTS precedent (one low-resolution direct line against contrary curated data; full text not read, so not overruled; a cytosolic majority does not refute a minor pool). IBA summary text left unchanged because interpro/panther/PTHR14084/PTHR14084-review.yaml quotes it.
+- Follow-up outside this gene folder: PTHR14084-review.yaml says "KYNU marks it over-annotated"; that is now stale (now UNDECIDED).
+- is_active_in: the seed measured activity in the mitochondrial fraction, so if the pool is real the activity is shown there; unresolved. No sub-compartment.
