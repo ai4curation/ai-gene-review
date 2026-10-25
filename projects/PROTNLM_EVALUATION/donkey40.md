@@ -175,45 +175,51 @@ The 41 rows that are down-graded (29) or UNDECIDED (12) fall into five groups:
 
 ### ProtNLM2 on the same proteins
 
-The 69 ProtNLM2 GO predictions were judged COR 16, CNN 15, LSP 24, UNC 10,
-NPI 4: 80% correct, 6% wrong. Per-row data:
-[`donkey40_protnlm_vs.tsv`](donkey40/donkey40_protnlm_vs.tsv).
+The 69 ProtNLM2 GO predictions were judged COR 11, CNN 13, LSP 23, UNC 13,
+NPI 9: 68% correct, 13% wrong. Per-row data:
+[`donkey40_protnlm_vs.tsv`](donkey40/donkey40_protnlm_vs.tsv). Correctness is judged
+for the deposited donkey sequence, so a claim true of the gene but needing a region an
+alternative model lacks is NPI. Novelty is judged against GOA for any product of the gene.
 
-Two caveats limit what "80% correct" means. CNN and LSP are judged against the
-donkey GOA record, which includes the TreeGrafter rows under evaluation, so 39
-of the 55 correct calls (24 of them LSP) are correct relative to TreeGrafter
+Two caveats limit what "68% correct" means. CNN and LSP are judged against the
+donkey GOA record, which includes the TreeGrafter rows under evaluation, so 36
+of the 47 correct calls (23 of them LSP) are correct relative to TreeGrafter
 itself. And the prediction reviews and the gene reviews were written by the
-same agentic process. The COR, UNC and NPI calls (30) are the ones judged on
+same agentic process. The COR, UNC and NPI calls (33) are the ones judged on
 their own evidence.
 
 | Relation to donkey TreeGrafter rows | Predictions | Correct | UNC | Wrong |
 |---|---|---|---|---|
 | same term | 4 | 4 | 0 | 0 |
-| ProtNLM2 shallower | 27 | 27 | 0 | 0 |
+| ProtNLM2 shallower | 28 | 24 | 2 | 2 |
 | ProtNLM2 deeper | 3 | 2 | 0 | 1 |
 | sibling | 3 | 2 | 1 | 0 |
-| unrelated | 32 | 20 | 9 | 3 |
+| unrelated | 31 | 15 | 10 | 6 |
 
-Against horse IBA the counts are almost the same (28 shallower, 3 same term),
+Against horse IBA the counts are almost the same (29 shallower, 3 same term),
 as expected now that TreeGrafter and IBA agree.
 
 - **Where ProtNLM2 overlaps the tree-based sources, it is shallower.** It
-  names an ancestor of a term TreeGrafter already gives in 27 of the 37
-  related predictions; all 27 are correct and most are LSP.
-- **Its new content sits off the tree.** All 16 COR predictions are unrelated
+  names an ancestor of a term TreeGrafter already gives in 28 of the 38
+  related predictions; 24 of those are correct, most of them LSP.
+- **Its new content sits off the tree.** All 11 COR predictions are unrelated
   to any TreeGrafter or IBA term. Examples:
-  - dynactin binding and centrosome on BICDL1;
   - protein delipidation on ATG4C;
   - peptidyl-lysine oxidation on LOXL3;
+  - protein homodimerization on NADK2;
   - extracellular region on TGFBR3.
 
-  So do 9 of the 10 UNC and 3 of the 4 NPI predictions.
-- **The four wrong predictions show four different faults.**
-  - **Keyword read as an activity:** phosphorylation on EPS8L2, from the
-    Phosphoprotein keyword.
-  - **The fused gene model:** double-stranded DNA binding on the PDIA4 fusion.
-  - **Function of the full-length protein:** a PI-phosphate biosynthetic
-    process on the PIKFYVE fragment.
+  So do 10 of the 13 UNC and 6 of the 9 NPI predictions.
+- **The nine wrong predictions fall into four kinds.**
+  - **The selected model lacks what the term needs:** membrane on a 97-residue
+    SNAP23 product, transporter activity on a SLC16A11 alternative model, and
+    double-stranded DNA binding on the PDIA4 fusion gene model.
+  - **A phenotype read as participation:** in utero embryonic development and
+    cell-cell junction assembly on FLCN, and neuron projection development on
+    BICDL1, each resting on loss-of-function or overexpression phenotypes.
+  - **Keyword or family default read as an activity:** phosphorylation on
+    EPS8L2 (Phosphoprotein keyword) and ubiquitin-dependent catabolism on
+    USP36, a nucleolar deubiquitinase.
   - **Activity of an unrelated family:** myosin phosphatase on DUSP5.
 
 **Summary.** On a mammal one speciation from a reference proteome,

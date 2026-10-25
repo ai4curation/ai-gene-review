@@ -1638,9 +1638,31 @@ refresh-benchmark-snapshot commit="origin/main":
     uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
     uv run python projects/BIOREASON_COMPARISON/cafa_style_argo139.py > /dev/null
     uv run python projects/BIOREASON_COMPARISON/analyze_second_review.py > /dev/null
-    uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
     echo "Review snapshot is now ${sha:0:10} (${date}). Headline changes:"
     diff <(echo "$before") <(uv run python scripts/benchmark_snapshot_headlines.py) || true
+
+# Move the ProtNLM2 evaluation's review snapshot (independent of the BioReason one) and
+# rebuild its derived reports and figures. Prose numbers in projects/PROTNLM_EVALUATION.md
+# and donkey40.md are hand-maintained; update them from the printed summary.
+refresh-protnlm-snapshot commit="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sha="$(git rev-parse --verify "{{commit}}^{commit}")"
+    date="$(git show -s --format=%cs "$sha")"
+    policy=projects/PROTNLM_EVALUATION/review-snapshot.yaml
+    uv run python - "$policy" "$sha" "$date" <<'PY'
+    import re, sys
+    path, sha, date = sys.argv[1:]
+    text = open(path).read()
+    text = re.sub(r"(?m)^review_snapshot_commit: .*$", f"review_snapshot_commit: {sha}", text, count=1)
+    text = re.sub(r'(?m)^review_snapshot_date: .*$', f'review_snapshot_date: "{date}"', text, count=1)
+    open(path, "w").write(text)
+    PY
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
+    uv run python projects/PROTNLM_EVALUATION/cor_goa_entailment.py
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_funnel.py refresh-reviews
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_funnel.py render
+    echo "ProtNLM2 review snapshot is now ${sha:0:10} (${date})."
 
 # Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
 check-bioreason-sft-reviews:

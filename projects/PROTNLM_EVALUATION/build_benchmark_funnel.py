@@ -167,16 +167,8 @@ def compute(
             return census({int(name.split(":", 1)[1])})
         raise typer.BadParameter(f"unknown pool {name!r} in {COHORTS_YAML.name}")
 
-    donkey_selected = len(yaml.safe_load((HERE / "donkey40/selection.yaml").read_text())["records"])
-    # DONKEY40 was reviewed after the snapshot; its per-claim verdicts live in its own table.
-    donkey_counts = count_categories([r["assessment"] for r in read_csv_tsv(HERE / "donkey40/donkey40_protnlm_vs.tsv")])
-
     cohorts = []
     for c in spec["cohorts"]:
-        stats = by_cohort.get(c["id"])
-        if stats is None and not c.get("post_snapshot"):
-            raise typer.BadParameter(f"cohort {c['id']} is not in benchmark-summary.json and is not marked post_snapshot")
-        go_counts = {k: stats["go_counts"].get(k, 0) for k in CATEGORIES} if stats else donkey_counts
         cohorts.append(
             {
                 "id": c["id"],
@@ -186,10 +178,7 @@ def compute(
                 "detail": c["detail"],
                 "pool": pool(c["pool"]),
                 "eligible_basis": c.get("eligible", "go_or_function"),
-                "selected": stats["records"] if stats else donkey_selected,
-                "go_claims": sum(go_counts.values()),
-                "go_counts": go_counts,
-                "in_snapshot": stats is not None,
+                **cohort_review_fields(c, by_cohort),
             }
         )
 
@@ -225,20 +214,62 @@ def compute(
             "top": [{"taxon": t, "organism": names[t], "records": n} for t, n in top],
             "named": {k: taxon_counts.get(t, 0) for k, t in NAMED_TAXA.items()},
         },
-        "prediction_targets": summary["prediction_targets"],
-        "prediction_targets_with_any_review": summary["prediction_targets_with_any_review"],
+        **summary_fields(summary),
         "prediction_targets_outside_go_set": {
             "total": len(off_list) + len(no_go_or_function),
             "not_on_list": len(off_list),
             "not_on_list_by_species": dict(sorted(off_list_by_species.items(), key=lambda kv: -kv[1])),
             "listed_without_go_or_function": len(no_go_or_function),
         },
-        "go_counts": {k: summary["go_counts"].get(k, 0) for k in CATEGORIES},
-        "narrative_records": len(summary["narrative_reviews"]),
-        "narrative_counts": summary["narrative_counts"],
         "cohorts": cohorts,
     }
     FUNNEL_JSON.write_text(json.dumps(funnel, indent=2) + "\n")
+    typer.echo(f"Wrote {FUNNEL_JSON}")
+
+
+def summary_fields(summary: dict) -> dict:
+    """Top-level fields taken from benchmark-summary.json (the review snapshot)."""
+    return {
+        "review_snapshot": summary["review_snapshot"],
+        "prediction_targets": summary["prediction_targets"],
+        "prediction_targets_with_any_review": summary["prediction_targets_with_any_review"],
+        "go_counts": {k: summary["go_counts"].get(k, 0) for k in CATEGORIES},
+        "narrative_records": len(summary["narrative_reviews"]),
+        "narrative_counts": summary["narrative_counts"],
+    }
+
+
+def cohort_review_fields(c: dict, by_cohort: dict) -> dict:
+    """Per-cohort counts from the review snapshot; DONKEY40 (post-snapshot) from its own table."""
+    stats = by_cohort.get(c["id"])
+    if stats is None and not c.get("post_snapshot"):
+        raise typer.BadParameter(f"cohort {c['id']} is not in benchmark-summary.json and is not marked post_snapshot")
+    if stats:
+        go_counts = {k: stats["go_counts"].get(k, 0) for k in CATEGORIES}
+        selected = stats["records"]
+    else:
+        # DONKEY40 was reviewed after the snapshot; its per-claim verdicts live in its own table.
+        go_counts = count_categories([r["assessment"] for r in read_csv_tsv(HERE / "donkey40/donkey40_protnlm_vs.tsv")])
+        selected = len(yaml.safe_load((HERE / "donkey40/selection.yaml").read_text())["records"])
+    return {"selected": selected, "go_claims": sum(go_counts.values()), "go_counts": go_counts, "in_snapshot": stats is not None}
+
+
+@app.command("refresh-reviews")
+def refresh_reviews() -> None:
+    """Recompute only the review-derived fields of benchmark-funnel.json.
+
+    The UniProt and API counts are kept as committed, so a new review snapshot
+    does not require re-fetching the ProtNLM2 API dump.
+    """
+    data = json.loads(FUNNEL_JSON.read_text())
+    summary = json.loads((HERE / "benchmark-summary.json").read_text())
+    by_cohort = {c["cohort"]: c for c in summary["cohorts"]}
+    spec = {c["id"]: c for c in load_cohort_spec()["cohorts"]}
+    for c in data["cohorts"]:
+        c.update(cohort_review_fields(spec[c["id"]], by_cohort))
+    data.update(summary_fields(summary))
+    data["built"] = date.today().isoformat()
+    FUNNEL_JSON.write_text(json.dumps(data, indent=2) + "\n")
     typer.echo(f"Wrote {FUNNEL_JSON}")
 
 
