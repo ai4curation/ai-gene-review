@@ -132,3 +132,47 @@ The [FANCC source guide](FANCC-source-guide.md) combines the public source locat
 The inherited GO:0030674 proposal is now explicitly retired, with its UNDECIDED assessment, source fields and both quotations preserved. This withdraws our earlier active proposal because the available FANCC-specific evidence does not establish the proposed adaptor mechanism. It does not claim that GO withdrew a source annotation: this was an authored proposal and never occurred in the preserved GOA snapshot. The unresolved mechanism remains a question for targeted experiments; no scaffold or catalytic replacement is asserted.
 
 There are 37 retained historical records and 36 active imported records. The active decisions are 22 ACCEPT, 3 MODIFY, 6 KEEP_AS_NON_CORE and 5 UNDECIDED; the one retired proposal is also UNDECIDED. All original source fields and all 27 quotation/path/reference associations remain unchanged. The schema's existing retirement field records this lifecycle separately from the biological verdict, consistent with the earlier DHODH withdrawn-proposal treatment. Initial normal and ontology-enabled checks reported the old proposal as absent from GOA after its action changed from NEW; those failures are retained in execution provenance. No validator, ontology, GOA or publication cache was changed to bypass that check.
+
+
+## 2026-10-25: expose partner-specific decisions
+
+PR review identified that the AKT1 refinement was present only in prose while two historical source rows combined multiple partners. The normal `seed-goa` command was run against an exact private copy of the committed machine GOA file. Its five distinct source objects for PMID:24412244 and PMID:35512704 were matched to the independently reviewed current contexts. The structured review now records each partner separately: AKT1 is MODIFY to GO:0043422 (protein kinase B binding); both SMAD4 contexts and both FBXW7 contexts remain UNDECIDED because their original target matrices were unavailable. The evidence standard is unchanged: inspected AKT1 co-IP and MEOX2 Y2H support their respective partner-binding terms, without inferring kinase activity or transcriptional regulation.
+
+The first partner occupies each old, unquoted row position, and the three additional contexts are appended. All 27 inherited quotation/path/reference associations, all unrelated source rows, the retired adaptor record, references, products and core functions remain unchanged. The original collapsed review objects follow verbatim as JSON values; they are historical accounts, not additional active annotations. The machine GOA and UniProt files are unchanged.
+
+The cytosol IDA is now KEEP_AS_NON_CORE. Re-reading the actual PMID:9596688 abstract confirms the explicitly reported cytosolic co-IP, which supports the broad compartment together with the curator attribution and independent Reactome model. Complete Methods and figure availability remain unresolved; this decision does not claim those were read. The earlier UNDECIDED assessment was more cautious than required for this well-supported location. No unused consistency_exception field was added: the actual configured conflict table does not classify the former NC/U pair as a conflict.
+
+### Historical collapsed source objects
+
+```json
+{
+  "8": {
+    "term": {
+      "id": "GO:0005515",
+      "label": "protein binding"
+    },
+    "evidence_type": "IPI",
+    "original_reference_id": "PMID:24412244",
+    "qualifier": "enables",
+    "review": {
+      "action": "UNDECIDED",
+      "summary": "Both current partner expansions remain limited by the unavailable original target table.",
+      "reason": "Current context 2: PMID:24412244 is the verified colorectal-cancer interaction-screen paper, but its operative main text and target interaction table were not recovered from the exact publisher route. The imported WITH identifies SMAD4; the abstract alone does not establish the target assay, controls or native-versus-mutant scope. DNA-binding-transcription-factor binding was considered, but no specific replacement or removal is justified without the operative target evidence. Positive curated attribution is retained as unresolved, not contradicted. Current context 3: The verified PMID:24412244 abstract reports the screen globally, while the complete target table and operative Methods remain unavailable. The imported partner Q969H0 is FBXW7, an SCF substrate-recognition subunit; partner identity alone does not establish binding to a complete ubiquitin ligase, enzyme regulation or FANCC substrate status. The annotation is not removed or declared false because the target experiment cannot be inspected."
+    }
+  },
+  "11": {
+    "term": {
+      "id": "GO:0005515",
+      "label": "protein binding"
+    },
+    "evidence_type": "IPI",
+    "original_reference_id": "PMID:35512704",
+    "qualifier": "enables",
+    "review": {
+      "action": "UNDECIDED",
+      "summary": "The collapsed historical binding context combines a supported AKT refinement with two unresolved target matrices.",
+      "reason": "The historical source object does not name a partner and is preserved intact. Its three fresh contexts are adjudicated separately: AKT1 context 6 is MODIFY to protein kinase B binding; SMAD4 context 7 and FBXW7 context 8 are UNDECIDED. No AKT-specific replacement is applied wholesale to this collapsed object. Current context 6: PMID:35512704 Data S1, Figure iiiA, directly displays FLAG-tagged FANCC recovered with GST-AKT1 in transfected HEK293T cells, with a wild-type AKT1 signal and a stronger E17K-mutant signal. The panel was visually inspected; no new densitometry is claimed. Table S3B row 10 separately records positive AKT1-E17K/FANCC validation. The paper’s main Methods distinguish tagged proximity, split-luciferase and pull-down assays; the semi-endogenous MCF7 panel does not show FANCC. GO:0043422 precisely names binding to protein kinase B/AKT, without assigning FANCC kinase activity, substrate status or an established native-cell DNA-repair mechanism. The unreadable Table S2 file and mutation annotations remain explicit source limits. Current context 7: PMID:35512704 main Methods establish the human tagged BRET screen and its wild-type/mutant comparisons. Actual IntAct records EBI-63711113, EBI-63706663, EBI-63715006 and EBI-63702524 identify FANCC/SMAD4 BRET contexts with mutation-with-no-effect features; these are positive curated records, not evidence of mutant-only or absent wild-type binding. However, both preserved downloads of the primary Table S2 workbook lack a readable ZIP directory, and no target-specific SMAD4 panel was inspected. A transcription-factor-binding refinement is plausible but is not asserted from curated features alone. UNDECIDED records that target-source limit without rejecting the interaction. Current context 8: Actual PMID:35512704 IntAct records EBI-63689535, EBI-63693940, EBI-63684551 and EBI-63698153 identify FANCC/FBXW7 BRET contexts with mutation-with-no-effect features. The main Methods were read, but the primary Table S2 target matrix could not be parsed from either preserved download. FBXW7 is the SCF substrate-recognition subunit; the record does not on its own demonstrate FANCC binding to the assembled ligase, ligase regulation or a direct enzymatic reaction. Retain the positive curator attribution as unresolved pending readable target measurements; no wrong-gene or no-binding claim is made."
+    }
+  }
+}
+```
