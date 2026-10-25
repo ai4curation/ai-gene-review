@@ -2996,22 +2996,19 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**595 of 2,876 genes are complete; 2,281 remain.**
-This checkpoint adds EYA4, EZH2, F10 and F11 to the
-[merged 591 tracker](https://github.com/ai4curation/ai-gene-review/pull/5498).
-[Checkpoint 595](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-595-2026-10-25-045730-utc)
+**597 of 2,876 genes are complete; 2,279 remain.**
+This checkpoint adds F12 and F13A1 to the
+[merged 595 tracker](https://github.com/ai4curation/ai-gene-review/pull/5504).
+[Checkpoint 597](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-597-2026-10-25-065114-utc)
 records their approved heads, actual merges and executed merge-group CI.
 Their complete gene directories and selected dependencies match fixed main
-[`db8135f603bf`](https://github.com/ai4curation/ai-gene-review/commit/db8135f603bf131e28c36950b3162c2610e55b64).
+[`5e597e6e08e8`](https://github.com/ai4curation/ai-gene-review/commit/5e597e6e08e8006c81764e88155a19a826b63dee).
 
-Local status computation and validation recorded EYA4 as COMPLETE with zero
-advisories. EZH2, F10 and F11 remain DRAFT with 54, four and one advisories,
-respectively. UNDECIDED judgments remain explicit: EYA4 has one, EZH2 16,
-F10 three and F11 one. Completion records accepted merged work, not resolution
-of every biological uncertainty. Only these four genes are added here.
-
-All catalogue identities and associations, queue records and earlier progress
-remain preserved. Dated availability inventories are unchanged.
+F12 and F13A1 remain DRAFT with 10 and 22 validation advisories, respectively.
+Two F12 contexts and one F13A1 context remain UNDECIDED. Completion records
+accepted merged work, not resolution of every biological uncertainty.
+Only these two genes are added here; catalogue identities, associations,
+earlier progress and dated availability inventories remain preserved.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3739,8 +3736,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EZH2** — HGNC:3527; [Weaver syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5dcf5941-6076-4486-94be-7ba3944abaee-2022-08-03T160000.000Z) (MONDO:0010193; AD; Definitive).
 - [x] **F10** — HGNC:3528; [congenital factor X deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4adcc848-b354-4975-801f-4b55bbca64ad-2019-11-27T170000.000Z) (MONDO:0009212; AR; Definitive).
 - [x] **F11** — HGNC:3529; [congenital factor XI deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a57ba9d9-45c5-48bc-b939-7593f67a86ed-2019-10-23T160000.000Z) (MONDO:0012897; SD; Definitive).
-- [ ] **F12** — HGNC:3530; [congenital factor XII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_50bbe8d0-4feb-43c7-8573-9d7f85c82e54-2020-01-22T170000.000Z) (MONDO:0009315; AR; Definitive); [hereditary angioedema type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f40992c9-1172-4528-ab53-95108094d4b6-2024-09-04T160000.000Z) (MONDO:0012526; AD; Definitive).
-- [ ] **F13A1** — HGNC:3531; [factor XIII, A subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dd9321a7-f45d-419e-94ce-101ab545a847-2020-07-22T160000.000Z) (MONDO:0013187; AR; Definitive).
+- [x] **F12** — HGNC:3530; [congenital factor XII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_50bbe8d0-4feb-43c7-8573-9d7f85c82e54-2020-01-22T170000.000Z) (MONDO:0009315; AR; Definitive); [hereditary angioedema type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f40992c9-1172-4528-ab53-95108094d4b6-2024-09-04T160000.000Z) (MONDO:0012526; AD; Definitive).
+- [x] **F13A1** — HGNC:3531; [factor XIII, A subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dd9321a7-f45d-419e-94ce-101ab545a847-2020-07-22T160000.000Z) (MONDO:0013187; AR; Definitive).
 - [ ] **F13B** — HGNC:3534; [factor XIII, b subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_403b3588-323c-4103-9207-cc9c8be12281-2020-07-22T160000.000Z) (MONDO:0013190; AR; Definitive).
 - [ ] **F2** — HGNC:3535; [congenital prothrombin deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ba9c4b9-9984-4d31-a9ae-bf638838f201-2020-06-24T160000.000Z) (MONDO:0013361; AR; Definitive); [thrombophilia due to thrombin defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6389b3a3-ef86-4588-9be8-eb79dcb8d3cd-2020-06-24T160000.000Z) (MONDO:0008559; AD; Definitive).
 - [ ] **F5** — HGNC:3542; [congenital factor V deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_beaa3af3-7d91-4d53-b081-de0e660c16c6-2020-03-25T160000.000Z) (MONDO:0009210; AR; Definitive); [thrombophilia due to activated protein C resistance](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab28e09c-08ff-4149-a536-3cdb9cc4099f-2019-09-30T160000.000Z) (MONDO:0008560; AD; Definitive).
