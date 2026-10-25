@@ -6430,3 +6430,53 @@ was `db8135f603bf131e28c36950b3162c2610e55b64`; source inventories remain histor
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/5ab2f723c88e861c08f6095f17dcb005db096262/history/projects/CLINGEN_MENDELIAN/2026-10-25T051225Z-codex-a3d1af.yaml).
+
+## Completion checkpoint 597 — 2026-10-25 06:51:14 UTC
+
+**597 complete; 2,279 remaining out of 2,876 primary catalogue genes.**
+Only F12 and F13A1 are added to [tracker 595, PR #5504](https://github.com/ai4curation/ai-gene-review/pull/5504).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F12 #5501](https://github.com/ai4curation/ai-gene-review/pull/5501) | [`abe1ca5de2c0`](https://github.com/ai4curation/ai-gene-review/commit/abe1ca5de2c08a06df2959f3adb9fcef87c30be1) | [`cb90c6f3df01`](https://github.com/ai4curation/ai-gene-review/commit/cb90c6f3df010204fd74fc52a8d42057164045e5) | 63 | 38 / 1 | DRAFT / 10 |
+| [F13A1 #5502](https://github.com/ai4curation/ai-gene-review/pull/5502) | [`3b34fd96c0f4`](https://github.com/ai4curation/ai-gene-review/commit/3b34fd96c0f45ab374f131a1d28be2ad6b2d4a49) | [`5e597e6e08e8`](https://github.com/ai4curation/ai-gene-review/commit/5e597e6e08e8006c81764e88155a19a826b63dee) | 48 | 26 / 1 | DRAFT / 22 |
+
+The accepted F12 and F13A1 closures contain 45 and 31 files, respectively,
+including their complete gene directories, histories and selected sources.
+Every file matches the accepted head and actual merge evidence and fixed main
+`5e597e6e08e8006c81764e88155a19a826b63dee`. These overlapping sets are not summed.
+F12 has 31 approved PR paths and 30 net merge paths: the identical
+R-HSA-9936430 cache was already present on its actual merge parent. F13A1 has
+23 approved PR paths and 23 net merge paths. No gene decision or source byte
+changes in this tracker update. The accepted F13A1 review retains its one NEW
+calcium-binding annotation, and neither review adds publication quotations.
+
+**F12.** Activated factor XII supplies serine endopeptidase activity in contact-system and coagulation reactions. Source-specific signaling, surface and product boundaries remain explicit; two contexts remain undecided.
+
+**F13A1.** Activated factor XIII A catalyzes protein cross-linking that stabilizes fibrin. The added calcium-binding annotation is supported by a human A-subunit structure and corroborating evidence, while precursor versus active-complex and inaccessible-original limits remain explicit.
+
+F12 remains DRAFT with 10 advisories (eight supported non-core binding and two
+context-consistency advisories) and two UNDECIDED contexts. F13A1 remains DRAFT
+with 22 supported non-core binding advisories and one UNDECIDED context.
+Original-access and assay limits remain visible in the gene reviews.
+
+The three Build and test jobs passed on each actual merge in
+[F12 run 40165165689](https://github.com/ai4curation/ai-gene-review/actions/runs/40165165689)
+and [F13A1 run 40168349716](https://github.com/ai4curation/ai-gene-review/actions/runs/40168349716).
+Accepted operative log reads cover the executed test, strict-target, schema,
+history and family checks. Global skipped snippets, unresolved family/gene
+claims and the nonfatal post-test SQL cleanup exception remain disclosed in
+the accepted evidence. Aggregate gates add no tests. This tracker proposal
+does not rerun gene validators or claim those global uncertainties are resolved.
+
+- [F12 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/cb90c6f3df010204fd74fc52a8d42057164045e5/history/genes/human/F12/2026-10-25T045958Z-codex-6867ca.yaml)
+- [F13A1 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/5e597e6e08e8006c81764e88155a19a826b63dee/history/genes/human/F13A1/2026-10-25T053201Z-codex-0423ae.yaml)
+
+Update 124 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 123 earlier updates and all preceding progress bytes.
+Only the F12 and F13A1 checkboxes change. Dated source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/ad3d4b87db7ef790c7418a16f8c072694bb6c04b/history/projects/CLINGEN_MENDELIAN/2026-10-25T070241Z-codex-cecf61.yaml).
