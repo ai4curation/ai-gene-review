@@ -57,3 +57,47 @@ uv run --no-dev python projects/RETRACTIONS/check_retractions.py \
 The `citation_sites` column is what makes a row actionable: a retracted paper in a
 `references:` list is bibliographic cleanup, whereas the same paper as an
 annotation's `original_reference_id` is a curation question.
+
+## PubPeer check (prototype)
+
+- `check_pubpeer.py` — asks PubPeer which cited PMIDs have comments. It reuses
+  `check_retractions.py`'s citation harvest, so rows carry the same
+  `citation_sites`. It then re-asks PubMed about each PubPeer hit, so every
+  row has a current PubMed severity and the register can pick out the papers
+  that are discussed but carry no formal notice.
+- `pubpeer-check.tsv` / `pubpeer-check.json` — **generated**: one row per cited
+  PMID with PubPeer comments (count, latest comment date, thread URL, publisher
+  updates PubPeer relays, PubMed severity, citing genes, and the review actions
+  on any annotation resting on the paper).
+- `pubpeer-register.md` — **generated** register: PubPeer-only formal notices
+  first, then discussed papers behind GO annotations with no PubMed notice.
+
+```bash
+uv run --no-dev python projects/RETRACTIONS/check_pubpeer.py
+uv run --no-dev python projects/RETRACTIONS/check_pubpeer.py --pmids 19225519 --out-dir /tmp/pp
+uv run --no-dev python projects/RETRACTIONS/check_pubpeer.py --from-json projects/RETRACTIONS/pubpeer-check.json
+```
+
+Endpoint caveats, all found by probing it:
+
+- It uses `https://pubpeer.com/v3/publications`, the endpoint PubPeer's browser
+  extensions call, with the extension's public `devkey`. That is fine for a
+  prototype but is not a documented bulk API; get a PubPeer key before
+  scheduling this, and pass it as `PUBPEER_DEVKEY`.
+- **At most 10 publications are returned per request**, however many PMIDs are
+  sent, and only PMIDs with a PubPeer page come back. A 100-PMID batch found 10
+  hits where the same PMIDs asked 10 at a time found 27. The checker splits any
+  batch whose response is full until each answer is provably complete.
+- The default `python-requests`/`urllib` user agents get a 403.
+- **Matching is not strictly by PMID**: asked about PMID 13760, PubPeer
+  returns PMID:27926515, an unrelated 2016 Oncotarget paper. Entries for PMIDs
+  that were not asked for are dropped.
+- It rate-limits at ~3 requests/second (429). Requests are spaced 1 s apart and
+  back off on 429; a full pass takes roughly half an hour.
+- PubPeer's relayed notices are incomplete. It showed no update for one PubMed
+  retraction (PMID:16616141) and only an erratum for another (PMID:29371969),
+  so PubMed stays the authority on severity.
+
+A comment count is not a verdict: a thread can be an image-duplication report
+or a request for a reagent. The register ranks and lists; reading the thread is
+the curator's step.
