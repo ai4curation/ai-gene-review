@@ -48,3 +48,7 @@ PMID1944309 directly compares expressed human typesI/II and establishes adrenal/
 Full-text PMID21930695 overturns the previous rejection of mitochondrial specificity: fractionation/import/carbonate extraction supports IMM association without integral insertion, with IMS-facing translocase interactions. Most localization experiments use mouse MA-10, but the paper explicitly reports localization in human adrenal NCIH295 cells and tests human adrenal steroid production. PMID22262841 corroborates mitochondrial activity; its local cache is abstract-only (PMC fetch failed), and indexed main-text passages were independently read. Do not rewrite broad mitochondrial membrane and ER labels as peripheral functions solely because they are broad.
 
 GO-CAM index checked using the actual UniProt ID: the human cortisol model includes HSD3B1, not HSD3B2; it does not directly establish this isoform's activity. HSD3B2 core functions rely on direct isoform-specific literature.
+
+## PR #5543 gene-level follow-up (2026-10-25)
+
+Replaced the two IEA ACCEPT rows supported only by EC labels with experimentally grounded CC:CATALYTIC ACTIVITY reactions: pregnenolone oxidation for GO:0003854 and pregn-5-ene-3,20-dione isomerization for GO:0004769. Both reaction records cite ECO:0000269|PubMed:25322271. Actions remain ACCEPT; original annotation fields unchanged.

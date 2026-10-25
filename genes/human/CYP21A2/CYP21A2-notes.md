@@ -89,3 +89,7 @@ All seeded annotation fields outside review were preserved exactly. Every row wa
 PMID16984992/22014889/27721825 directly assay both progesterone21hydroxylation→DOC and17OH-progesterone21hydroxylation→11-deoxycortisol. PMID25855791 establishes human structure/kinetics. The two specific MF terms now ground separate mineralocorticoid and cortisol cores. QuickGO confirms cortisol biosynthesis descends from primary-alcohol, ketone and olefinic compound metabolism, so those broad terms are true ancestors refined to cortisol rather than overannotations.
 
 GO-CAM67b1629100003765 has CYP21A2 with17OH-progesterone21hydroxylase in cortisol biosynthesis. Reactome211976 is a broad sterol-homeostasis umbrella, not separate cholesterol-directed activity. The flawed upstream HSD3B-only description in Reactome194002 is not followed.
+
+## PR #5543 gene-level follow-up (2026-10-25)
+
+Verified GO ancestry live on 2026-10-25 via https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0034651/paths/GO:0034308?relations=is_a,part_of . The response contains two paths, both entirely is_a: GO:0034651 → GO:0034650 → GO:0034308, and GO:0034651 → GO:0034309 → GO:0034308. Thus cortisol biosynthesis is a descendant of primary alcohol metabolism; the existing MODIFY is a specialization, not a lateral replacement. Added the explicit chains to the reason and shortened the summary to distinguish the claim from its justification. No actions or replacement terms changed.

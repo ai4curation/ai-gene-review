@@ -79,3 +79,7 @@ QuickGO definition GO0004508 is only17alpha hydroxylation(RHEA65760). Queries fo
 PMID19403566 supports tissue-specific rat adrenal repression versus testes; PMID7588219 demonstrates fetal mouse adrenal expression/activity(E12.5–14.5), lost by late gestation/adulthood. The boundary is normal adult adrenal output, not absence of the gene or gonadal activity. Mouse-focused36640554 includes human comparison and is not rejected from its title.
 
 GO-CAM67b1629100003765 gives CYP17A1 hydroxylase/cortisol roles; it does not supply lyase evidence. Cached Reactome193070/193099 describe lyase despite GO4508 attachment and name acetaldehyde instead of the acetate supported by primary chemistry/Rhea. These limitations are assessed explicitly. Reactome194002 incorrectly attributes pregnenolone→17OH-progesterone entirely to HSD3B; the CYP17 step is required.
+
+## PR #5543 gene-level follow-up (2026-10-25)
+
+Verified GO ancestry live on 2026-10-25 via https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0034651/paths/GO:0034308?relations=is_a,part_of . The response contains two paths, both entirely is_a: GO:0034651 → GO:0034650 → GO:0034308, and GO:0034651 → GO:0034309 → GO:0034308. Thus cortisol biosynthesis is a descendant of primary alcohol metabolism; the existing MODIFY is a specialization, not a lateral replacement. Added the explicit chains to the reason and shortened the summary to distinguish the claim from its justification. No actions or replacement terms changed.
