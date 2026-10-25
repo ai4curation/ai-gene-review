@@ -377,14 +377,29 @@ def _table(rows: List[Dict[str, Any]], with_actions: bool) -> List[str]:
 def write_register(summary: Dict[str, Any], out_dir: Path) -> Path:
     rows = summary["flagged"]
     discrepant = [r for r in rows if r.get("pubpeer_only_formal_flag")]
+    formal = ("RETRACTED", "EXPRESSION_OF_CONCERN")
+    # Errata are usually benign, so they do not take a paper out of this list.
     ann_no_notice = [
-        r for r in rows if r["used_as_annotation_evidence"] and not r["pubmed_severity"]
-    ]
-    with_notice = [
         r
         for r in rows
-        if r["pubmed_severity"] in ("RETRACTED", "EXPRESSION_OF_CONCERN")
+        if r["n_annotations_accept_or_keep"] and r["pubmed_severity"] not in formal
     ]
+    # Most PubPeer pages carry one comment; rank by how much discussion there is.
+    ann_no_notice.sort(
+        key=lambda r: (
+            -r["total_comments"],
+            -r["n_annotations_accept_or_keep"],
+            r["pmid"],
+        )
+    )
+    n_other_ann = sum(
+        1
+        for r in rows
+        if r["used_as_annotation_evidence"]
+        and not r["n_annotations_accept_or_keep"]
+        and r["pubmed_severity"] not in formal
+    )
+    with_notice = [r for r in rows if r["pubmed_severity"] in formal]
     other = [r for r in rows if not r["used_as_annotation_evidence"]]
 
     lines: List[str] = [
@@ -415,21 +430,26 @@ def write_register(summary: Dict[str, Any], out_dir: Path) -> Path:
     else:
         lines.append(
             "PubPeer relays publisher retractions and expressions of concern. These are "
-            "papers where it shows one that the last PubMed scan did not. Check the "
-            "notice before acting: the two sources can disagree for indexing reasons."
+            "papers where it shows one that PubMed does not. **Verify the notice "
+            "before acting**: PubPeer can attach a notice to the wrong paper by "
+            "matching a publisher article number rather than the PMID (the "
+            "2026-10-25 run's one case was such a mismatch)."
         )
         lines.append("")
         lines += _table(discrepant, with_actions=True)
     lines.append("")
 
     lines += [
-        "## Discussed papers behind GO annotations, no PubMed notice",
+        "## Discussed papers behind accepted annotations, no PubMed notice",
         "",
         f"{len(ann_no_notice)} papers with PubPeer comments are the "
-        "`original_reference_id` of at least one reviewed GO annotation and carry no "
-        "retraction, expression of concern or erratum in PubMed. This is what PubPeer "
-        "adds to the retraction scan. Ordered by the number of `ACCEPT` / "
-        "`KEEP_AS_NON_CORE` annotations resting on the paper, then by comment count.",
+        "`original_reference_id` of at least one GO annotation the review keeps "
+        "(`ACCEPT` or `KEEP_AS_NON_CORE`) and have no retraction or expression of "
+        "concern in PubMed (an erratum does not exclude a paper). This is what "
+        "PubPeer adds to the retraction scan. Ordered by comment count, then by the "
+        "number of kept annotations resting on the paper. A further "
+        f"{n_other_ann} discussed papers sit only behind annotations the reviews "
+        "already remove, modify or leave undecided; they are in `pubpeer-check.tsv`.",
         "",
     ]
     shown = ann_no_notice[:ANNOTATION_TABLE_CAP]
@@ -448,9 +468,10 @@ def write_register(summary: Dict[str, Any], out_dir: Path) -> Path:
         lines.append("None.")
     else:
         lines.append(
-            f"{len(with_notice)} papers in the [retraction register]"
-            "(retraction-register.md) also have PubPeer threads, which are often the "
-            "fastest way to see what the problem was."
+            f"{len(with_notice)} papers with PubPeer threads are currently retracted or "
+            "under an expression of concern in PubMed (as fetched for this run, so this "
+            "can be newer than the [retraction register](retraction-register.md)). "
+            "The thread is often the fastest way to see what the problem was."
         )
         lines.append("")
         lines += _table(with_notice, with_actions=True)

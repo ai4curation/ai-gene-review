@@ -1,7 +1,7 @@
 ---
 title: "Retracted Literature Behind Annotations"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-05
+last_reviewed: 2026-10-25
 tags: [PIPELINE, EVALUATION]
 manifest:
   slides:
@@ -230,6 +230,56 @@ the full text, and a retraction notice is not a substitute for reading what they
 The worked example is human/TNFRSF21, which already does all of this by hand.
 
 
+## PubPeer check (prototype)
+
+Formal notices lag behind the discussion that triggers them, and most criticised
+papers never get one. [`RETRACTIONS/check_pubpeer.py`](RETRACTIONS/check_pubpeer.py)
+asks PubPeer which cited PMIDs have comments. It uses the same citation harvest
+as the retraction checker, so each hit keeps its citation sites, and it re-fetches
+PubMed for every hit so each row has a current PubMed severity. Output goes to
+`RETRACTIONS/pubpeer-check.{tsv,json}` and the generated
+[PubPeer register](RETRACTIONS/pubpeer-register.md). Endpoint behaviour (10-result
+response cap, 20 requests/minute, non-PMID matching) is documented in
+[`RETRACTIONS/README.md`](RETRACTIONS/README.md).
+
+**First run (2026-10-25):** all **45,511** distinct PMIDs cited in 7,111 review
+files were checked in 759 requests. **1,070** (2.4%) have PubPeer comments, and most
+threads are short: 434 have a single comment, 71 have ten or more.
+
+| Group | Papers |
+|-------|------:|
+| PubPeer comments, any citation site | 1,070 |
+| ... the `original_reference_id` of a reviewed GO annotation | 909 |
+| ... behind an `ACCEPT`/`KEEP_AS_NON_CORE` annotation, no PubMed retraction or EoC | **578** |
+| ... of which with ten or more comments | 28 |
+| Currently retracted or EoC in PubMed (cross-check) | 33 |
+
+The 578 are what PubPeer adds to the retraction scan: papers under kept annotations
+that have been publicly questioned with no formal notice. Ranked by comment count,
+they head the register. A comment count is not a verdict, and reading the thread is
+the curator's step. The same rule against overruling curators applies here as to
+retractions: a PubPeer thread can justify `UNDECIDED` or a question upstream, never a
+silent removal.
+
+Two findings from the run:
+
+1. **PubPeer's relayed notices are not reliable enough to act on.** It flagged one
+   paper as retracted with no PubMed notice: PMID:34009234 (P4HA3, reference list
+   only). The attached notice, PMID:37476337, retracts an unrelated stroke paper in
+   *Evid Based Complement Alternat Med* (article 6278259). The P4HA3 review's
+   publisher id is also 6278259, so PubPeer matched the wrong identifier. Its
+   PMID lookup has the same weakness: asked about PMID 13760, it returns
+   PMID:27926515. PubMed stays the authority on severity.
+2. **The retraction register is stale.** PubMed now lists 12 of the PubPeer-
+   discussed papers as retracted and 21 as EoC, against 7 and 13 for the whole
+   corpus in September. The five new retractions are all cited in reference
+   lists only, and every one already carries `is_invalid: true`, flagged by hand
+   in newer reviews. Eight new expressions of concern are not recorded, and seven
+   of them are the `original_reference_id` of an annotation. The one under kept
+   annotations is PMID:23626692 (human/TLR2, TLR6; `ACCEPT` ×2). The corpus has
+   grown from 25,088 to 45,511 cited PMIDs, so `check_retractions.py` needs a
+   full re-run.
+
 ---
 
 # STATUS
@@ -258,6 +308,16 @@ The worked example is human/TNFRSF21, which already does all of this by hand.
       PMID's PubMed PT list and simply ignores `Retracted Publication`; a
       retraction/EoC flag could ride along at no extra request cost
       ([#4009](https://github.com/ai4curation/ai-gene-review/issues/4009))
+- [x] PubPeer prototype (`RETRACTIONS/check_pubpeer.py`) and first full run
+      (2026-10-25): 1,070 discussed papers, 578 behind kept annotations with no
+      formal notice
+- [ ] Re-run `check_retractions.py` over the grown corpus (45,511 PMIDs); the
+      PubPeer cross-check already shows 8 unrecorded expressions of concern
+- [ ] Get a PubPeer API key before scheduling the PubPeer check; the prototype
+      uses the browser extension's public key
+- [ ] Triage the top of the PubPeer register: read the threads with ten or more
+      comments behind `ACCEPT` annotations and record what they allege in
+      `reference_review`
 
 # NOTES
 
@@ -289,4 +349,21 @@ Design decisions worth recording:
   found while reading it: it rewrites the YAML through a plain `yaml.dump`, so it can
   reflow a whole file - check the diff before committing.
 
-Last updated: 2026-09-17
+## 2026-10-25
+
+**PubPeer prototype.** Added `check_pubpeer.py` and ran it over every cited PMID.
+Things learned about the endpoint, all by probing it:
+
+- It returns at most 10 publications per request and silently drops the rest. A
+  100-PMID batch gave 10 hits where the same PMIDs, ten at a time, gave 27. Any
+  full response is split and re-asked. In the full run no 60-PMID batch exceeded
+  7 hits, and the three densest batches matched when re-queried five at a time.
+- It limits to 20 requests/minute and can send `Retry-After: 0` while still
+  refusing, so the client waits for `X-RateLimit-Reset`.
+- It matches identifiers loosely (PMID 13760 → PMID:27926515; P4HA3's review
+  inherited another paper's retraction through a shared article number). Entries
+  for PMIDs that were not asked for are dropped. Relayed notices go in the
+  discrepancy section to be verified.
+- Default `requests`/`urllib` user agents get a 403.
+
+Last updated: 2026-10-25
