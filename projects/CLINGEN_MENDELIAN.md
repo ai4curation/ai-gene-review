@@ -3007,7 +3007,7 @@ Their complete gene directories, histories and selected dependencies match fixed
 [`6987a3bd0ad7`](https://github.com/ai4curation/ai-gene-review/commit/6987a3bd0ad703b71e385a800f02f05875107597).
 
 All three remain DRAFT, with one, 19 and 13 validation advisories, respectively.
-FAM20C retains two UNDECIDED contexts and FAN1 retains four.
+FAM149B1 retains one UNDECIDED context, FAM20C two and FAN1 four.
 Completion records accepted merged work, not resolution of every biological
 uncertainty. Catalogue identities, associations, earlier progress and dated
 availability inventories remain preserved.

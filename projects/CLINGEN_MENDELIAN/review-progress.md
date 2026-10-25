@@ -6724,7 +6724,7 @@ Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
 | [FAM20C #5518](https://github.com/ai4curation/ai-gene-review/pull/5518) | [`6e6e5f210468`](https://github.com/ai4curation/ai-gene-review/commit/6e6e5f210468a71c09b55c4986f156d7fab24c6f) → [`fe796a54bcf2`](https://github.com/ai4curation/ai-gene-review/commit/fe796a54bcf2a8bc92c0c7471850ca8704cb72f2) | 11 / 11 | 24 | 62; 22 / 1 | [40199680527](https://github.com/ai4curation/ai-gene-review/actions/runs/40199680527) |
 | [FAN1 #5519](https://github.com/ai4curation/ai-gene-review/pull/5519) | [`a9d14408071f`](https://github.com/ai4curation/ai-gene-review/commit/a9d14408071f2b6a6566be5383291ac0b93ca19f) → [`6987a3bd0ad7`](https://github.com/ai4curation/ai-gene-review/commit/6987a3bd0ad703b71e385a800f02f05875107597) | 10 / 10 | 21 | 51; 16 / 2 | [40199887007](https://github.com/ai4curation/ai-gene-review/actions/runs/40199887007) |
 
-The 59 closure entries include all eight gene histories and 35 external source entries.
+The 59 closure entries comprise 16 gene-directory files, eight gene histories and 35 external source entries.
 The approved revisions, actual merges and fixed main `6987a3bd0ad703b71e385a800f02f05875107597` match in paths,
 blob contents and modes across each complete gene/history tree and selected source
 dependency. All 35 PR paths contribute net changes; none is a parent-relative no-op.
@@ -6737,8 +6737,8 @@ generic-binding advisory. FAM20C is a secretory-pathway serine/threonine kinase;
 its core keeps supported biomineral tissue breadth and distinguishes calcium binding
 from kinase activation. FAN1 combines structure-selective endonuclease and exonuclease
 activities in cross-link repair and repeat maintenance; its substrate and fork-response
-claims remain bounded to the measured experiments. FAM20C has two unresolved contexts
-and FAN1 has four. The reviews remain DRAFT with one, 19 and 13 advisories, respectively;
+claims remain bounded to the measured experiments. FAM149B1 retains one UNDECIDED
+context, FAM20C two and FAN1 four. The reviews remain DRAFT with one, 19 and 13 advisories, respectively;
 accepted completion does not erase those limitations.
 
 All three Build jobs passed on each actual merge. The exact merge SHAs equal the
