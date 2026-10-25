@@ -6649,3 +6649,65 @@ dated source inventories remain exact.
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/ca957c681d950c7354c241a2917ecefac033c5a7/history/projects/CLINGEN_MENDELIAN/2026-10-25T104648Z-codex-56a4d6.yaml).
+
+## Completion checkpoint 605 — 2026-10-25 12:14:40 UTC
+
+**605 complete; 2,271 remaining out of 2,876 primary catalogue genes.**
+Only FAM111A, FA2H and FAM111B are added to
+[tracker 602, PR #5515](https://github.com/ai4curation/ai-gene-review/pull/5515).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure / external (introduced + reused) | Contexts; refs / cores; status / advisories | Merge-group Build |
+| --- | --- | --- | --- | --- | --- |
+| [FAM111A #5513](https://github.com/ai4curation/ai-gene-review/pull/5513) | [`f8cce69f8514`](https://github.com/ai4curation/ai-gene-review/commit/f8cce69f851412b8e68d930dc0dd96a2b50a6146) → [`188ffae23080`](https://github.com/ai4curation/ai-gene-review/commit/188ffae230806a6c652be526ec3b9643d2b8cbad) | 10 / 10 | 16 / 9 (3 + 6) | 25; 8 / 2; DRAFT 2 | [40185677456](https://github.com/ai4curation/ai-gene-review/actions/runs/40185677456) |
+| [FA2H #5511](https://github.com/ai4curation/ai-gene-review/pull/5511) | [`b3f037d162d3`](https://github.com/ai4curation/ai-gene-review/commit/b3f037d162d325e6473f80240ea58507f3c4a224) → [`5570083290e2`](https://github.com/ai4curation/ai-gene-review/commit/5570083290e261b8ed759f1b5a23fe848aa30ac5) | 28 / 28 | 34 / 19 (13 + 6) | 60; 24 / 1; DRAFT 28 | [40186388342](https://github.com/ai4curation/ai-gene-review/actions/runs/40186388342) |
+| [FAM111B #5514](https://github.com/ai4curation/ai-gene-review/pull/5514) | [`40503049cf7c`](https://github.com/ai4curation/ai-gene-review/commit/40503049cf7c1fb314bbda536ed86d5c5a133d91) → [`30b2d8c689e0`](https://github.com/ai4curation/ai-gene-review/commit/30b2d8c689e0b0984bd9c707bb30a8ae0ade7349) | 10 / 9 | 19 / 12 (2 + 10) | 19; 10 / 1; DRAFT 7 | [40188806293](https://github.com/ai4curation/ai-gene-review/actions/runs/40188806293) |
+
+The three closures contain 69 entries across 61 unique paths, including
+40 external dependency entries across 32 unique paths. Complete gene directories,
+all seven gene histories and selected dependencies match the approved heads, actual
+merges and fixed main `30b2d8c689e0b0984bd9c707bb30a8ae0ade7349`. The preceding tracker602 closure of 761 paths and
+all 210 project histories also remain unchanged at this cut. The three PRs contain
+48 path entries and 47 net changes. FAM111B's `publications/PMID_32776417.md` was
+already identical, including mode, on its actual merge parent; that PR entry is a
+no-op. The queue separately records all dependency reuse from each merge parent.
+
+For precision about the unchanged preceding checkpoint, the shared F8/F9 PR paths
+`reactome/R-HSA-158278.md` and `reactome/R-HSA-9669959.md` are both F9
+`already_present_on_parent` entries. Both were byte- and mode-identical on F9's
+actual merge parent, so neither is an F9 net change. This term counts no-op PR
+entries, not every reused dependency in a gene's closure. This clarification is
+appended here; all earlier progress and queue records remain exact.
+
+**FAM111A.** FAM111A combines serine endopeptidase activity and single-stranded DNA binding in replication-associated nuclear work. Controlled autocleavage is directly measured; repair of TOP1–DNA complexes and fork progression do not establish TOP1 or PARP1 as purified cleavage substrates. Its context-dependent antiviral role remains distinct from direct cleavage of viral I3. No natural alternative-product field is asserted.
+
+**FA2H.** FA2H hydroxylates free fatty acids at carbon 2 in the ER membrane, supplying hydroxylated acyl precursors for sphingolipids. Rodent lipid and myelin experiments support downstream pathway participation; human disease evidence is complementary and is not a direct human myelin-maintenance assay. Direct hydroxylation of ceramide-bound acyl chains and activity of the natural 159-residue product remain unresolved.
+
+**FAM111B.** FAM111B is a predominantly nuclear serine endopeptidase with directly measured self-cleavage. Its physiological trans-substrates and the reactions connecting proteolysis to nuclear architecture and telomere phenotypes remain unresolved. Nuclear-peripheral localization does not establish lamin-complex membership. The natural 734- and 704-residue products are not assumed functionally equivalent.
+
+FAM111A, FA2H and FAM111B retain two, 28 and seven supported-binding advisories,
+respectively, and remain DRAFT. FA2H retains one UNDECIDED context; FAM111B retains
+three. FAM111B's 19 contexts comprise 18 imported annotations and one previously
+accepted NEW autoprocessing annotation. The other two genes contain only imported
+contexts. All three have zero publication quotation anchors. This tracker update
+adds no annotation, gene edit or publication quotation.
+
+All three Build jobs succeeded on each actual merge. Accepted ROOT operative
+reads distinguish strict changed-gene validation from all-gene schema validation.
+All three broad suites executed 12 examples, 4,293 tests (one skipped and 84
+deselected), 278 doctests (37 skipped), mypy on 287 files, Ruff, 438 workflow tests
+and 19 JavaScript tests. Their history checks covered 16,556, 16,559 and 16,562
+records, respectively, with 42 history tests each. Existing module advisories,
+unresolved family/gene cases and the nonfatal SQL cleanup exception after passing
+tests remain documented. Aggregate gating adds no tests. This proposal reuses
+the accepted operative reads; it runs no validators and claims no new original
+source reading.
+
+Update 128 preserves all 2,876 catalogue identities and association text, 235
+queue objects, 127 earlier updates and every preceding progress byte. Only the
+FAM111A, FA2H and FAM111B checkboxes change. Existing curation instructions and
+dated source inventories remain exact.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/92d8df6951df41b2e2c9df753581790ed42dd392/history/projects/CLINGEN_MENDELIAN/2026-10-25T122502Z-codex-da920e.yaml).

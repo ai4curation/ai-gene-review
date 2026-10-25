@@ -2998,19 +2998,19 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**602 of 2,876 genes are complete; 2,274 remain.**
-This checkpoint adds only F8 and F9 to the
-[merged 600 tracker](https://github.com/ai4curation/ai-gene-review/pull/5512).
-[Checkpoint 602](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-602-2026-10-25-103539-utc)
-records their approved heads, actual merges and executed merge-group CI.
+**605 of 2,876 genes are complete; 2,271 remain.**
+This checkpoint adds only FAM111A, FA2H and FAM111B to the
+[merged 602 tracker](https://github.com/ai4curation/ai-gene-review/pull/5515).
+[Checkpoint 605](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-605-2026-10-25-121440-utc) records their
+approved heads, actual merges, preserved source closures and executed merge-group CI.
 Their complete gene directories, histories and selected dependencies match fixed main
-[`a2300ffcb10c`](https://github.com/ai4curation/ai-gene-review/commit/a2300ffcb10cba1966804d3cb56813eabb60ba59).
+[`30b2d8c689e0`](https://github.com/ai4curation/ai-gene-review/commit/30b2d8c689e0b0984bd9c707bb30a8ae0ade7349).
 
-F8 and F9 remain DRAFT with three and one supported-binding advisories,
-respectively; F8 retains two UNDECIDED contexts. Completion records accepted
-merged work, not resolution of every biological uncertainty. Catalogue
-identities, associations, earlier progress and dated availability inventories
-remain preserved.
+All three remain DRAFT, with two, 28 and seven supported-binding advisories,
+respectively. FA2H retains one UNDECIDED context and FAM111B retains three.
+Completion records accepted merged work, not resolution of every biological
+uncertainty. Catalogue identities, associations, earlier progress and dated
+availability inventories remain preserved.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3746,9 +3746,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **F7** — HGNC:3544; [factor VII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_43fb4e99-e97a-4d9c-af11-79c2b09ecd2e-2019-07-24T160000.000Z) (MONDO:0002244; AR; Definitive).
 - [x] **F8** — HGNC:3546; [hemophilia A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d4578f11-b635-45f4-8034-310fca5fe960-2019-07-24T160000.000Z) (MONDO:0010602; XL; Definitive).
 - [x] **F9** — HGNC:3551; [hemophilia B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d56d08d-48d0-4523-b433-dbd44c5b9e45-2019-05-22T190226.728Z) (MONDO:0010604; XL; Definitive); [thrombophilia, X-linked, due to factor 9 defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b3a7f2c-a07a-4a10-b1f7-78642ebdaa5d-2023-11-06T170000.000Z) (MONDO:0010432; XL; Limited).
-- [ ] **FA2H** — HGNC:21197; [hereditary spastic paraplegia 35](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d5cb819a-ac27-4e87-9db3-6997c476d871-2025-01-27T170000.000Z) (MONDO:0012866; AR; Definitive).
+- [x] **FA2H** — HGNC:21197; [hereditary spastic paraplegia 35](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d5cb819a-ac27-4e87-9db3-6997c476d871-2025-01-27T170000.000Z) (MONDO:0012866; AR; Definitive).
 - [ ] **FAH** — HGNC:3579; [tyrosinemia type I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_39c50699-f422-4bae-89ac-af13ef7cb8cc-2020-06-29T174149.440Z) (MONDO:0010161; AR; Definitive).
-- [ ] **FAM111A** — HGNC:24725; [FAM111A-related skeletal dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_486e2a74-6377-4328-8fed-628e37d00d95-2025-04-02T160000.000Z) (MONDO:1060172; AD; Definitive).
+- [x] **FAM111A** — HGNC:24725; [FAM111A-related skeletal dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_486e2a74-6377-4328-8fed-628e37d00d95-2025-04-02T160000.000Z) (MONDO:1060172; AD; Definitive).
 - [ ] **FAM20C** — HGNC:22140; [lethal osteosclerotic bone dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89ee4afa-299c-4f56-b4ad-c530031abdd3-2025-06-25T170000.000Z) (MONDO:0009821; AR; Definitive).
 - [ ] **FAN1** — HGNC:29170; [hereditary nonpolyposis colon cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_9863) (MONDO:0018630; AD; Limited); [karyomegalic interstitial nephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b51bd6a-53b9-4252-a5a8-1c50e7a6beab-2026-03-11T160000.000Z) (MONDO:0013898; AR; Definitive).
 - [ ] **FANCA** — HGNC:3582; [Fanconi anemia complementation group A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ceecf6ee-6700-40e5-a0d3-f7891805daac-2019-04-19T160000.000Z) (MONDO:0009215; AR; Definitive).
@@ -5314,7 +5314,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **EXOC7** — HGNC:23214; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cfa8fad2-3961-4f16-861f-45ce6c859ad8-2023-06-20T160000.000Z) (MONDO:0100038; AR; Moderate).
 - [ ] **EXTL3** — HGNC:3518; [immunoskeletal dysplasia with neurodevelopmental abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4e38b015-678c-4762-9d26-12d094b3529d-2026-02-19T170000.000Z) (MONDO:0044312; AR; Moderate).
 - [ ] **FADD** — HGNC:3573; [FADD-related immunodeficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5fa10f54-283e-4059-b82b-d5902bdb0531-2026-02-17T180000.000Z) (MONDO:0013408; AR; Moderate).
-- [ ] **FAM111B** — HGNC:24200; [hereditary sclerosing poikiloderma with tendon and pulmonary involvement](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d13f8dba-f9ae-42f3-a97a-dcc34b063e5b-2023-12-19T170000.000Z) (MONDO:0014310; AD; Moderate).
+- [x] **FAM111B** — HGNC:24200; [hereditary sclerosing poikiloderma with tendon and pulmonary involvement](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d13f8dba-f9ae-42f3-a97a-dcc34b063e5b-2023-12-19T170000.000Z) (MONDO:0014310; AD; Moderate).
 - [ ] **FAM149B1** — HGNC:29162; [Joubert syndrome 36](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_546920bc-e63a-44e4-a828-5c9fe0a929e6-2025-04-18T160000.000Z) (MONDO:0032902; AR; Moderate).
 - [ ] **FAR1** — HGNC:26222; [fatty acyl-CoA reductase 1 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91f6f864-5d07-4891-94b5-7f73bd71752c-2025-07-08T160000.000Z) (MONDO:0014510; AR; Moderate); [fatty acyl-CoA reductase 1 upregulation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1068b8e8-36a1-4110-9ab4-45f9d4ece894-2025-07-08T160000.000Z) (MONDO:0100230; AD; Moderate).
 - [ ] **FBLN5** — HGNC:3602; [demyelinating hereditary motor and sensory neuropathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a863341a-9dcf-4a4f-a82d-7edb5e63fe92-2026-08-08T160000.000Z) (MONDO:0018776; AD; Moderate).
