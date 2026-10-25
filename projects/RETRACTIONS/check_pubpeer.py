@@ -52,9 +52,10 @@ ask PubPeer for a key and set ``PUBPEER_DEVKEY``. Four behaviours matter:
   the number against another identifier). Entries whose PMID was not asked for
   are dropped. They still occupy response slots, which is why even a batch of
   10 or fewer PMIDs is split when its response is full.
-* **Rate limit.** At ~3 requests/second it answers 429 within a minute.
-  Requests are spaced ``--delay`` apart (default 1 s) and a 429 backs off for
-  ``Retry-After`` or 30 s, 60 s, ... before retrying.
+* **Rate limit: 20 requests per minute** (``X-RateLimit-Limit: 20``). Requests
+  are spaced ``--delay`` apart (default 3.1 s). On a 429 the client sleeps until
+  ``X-RateLimit-Reset``; ``Retry-After`` alone is not enough, because PubPeer
+  sometimes sends ``Retry-After: 0`` while still refusing requests.
 * The default ``python-requests`` / ``urllib`` user agents are refused (403);
   a descriptive ``User-Agent`` is sent instead.
 
@@ -155,8 +156,20 @@ def parse_feedback(item: Dict[str, Any]) -> Optional[PubPeerRecord]:
     )
 
 
+def _rate_limit_wait(headers: Any, attempt: int) -> float:
+    """Seconds to sleep after a 429: until the window resets, never less than 5 s."""
+    waits = [5.0 * attempt]
+    reset = headers.get("X-RateLimit-Reset", "")
+    if reset.isdigit():
+        waits.append(int(reset) - time.time() + 1)
+    retry_after = headers.get("Retry-After", "")
+    if retry_after.isdigit():
+        waits.append(int(retry_after) + 1)
+    return min(max(waits), 120.0)
+
+
 class PubPeerClient:
-    def __init__(self, devkey: str, delay: float = 1.0, retries: int = 5):
+    def __init__(self, devkey: str, delay: float = 3.1, retries: int = 8):
         self.devkey = devkey
         self.delay = delay
         self.retries = retries
@@ -177,9 +190,8 @@ class PubPeerClient:
                     timeout=60,
                 )
                 if resp.status_code == 429:
-                    retry_after = resp.headers.get("Retry-After", "")
-                    wait = int(retry_after) if retry_after.isdigit() else 30 * attempt
-                    print(f"  rate limited; waiting {wait}s", file=sys.stderr)
+                    wait = _rate_limit_wait(resp.headers, attempt)
+                    print(f"  rate limited; waiting {wait:.0f}s", file=sys.stderr)
                     time.sleep(wait)
                     last_exc = RuntimeError("429 Too Many Requests")
                     continue
@@ -206,7 +218,7 @@ class PubPeerClient:
 
 
 def fetch_pubpeer(
-    pmids: List[str], client: PubPeerClient, batch_size: int = 40
+    pmids: List[str], client: PubPeerClient, batch_size: int = 60
 ) -> Tuple[Dict[str, PubPeerRecord], List[str]]:
     """Ask PubPeer about ``pmids`` (``PMID:n``); return hits and never-asked PMIDs.
 
@@ -469,10 +481,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--genes-dir", type=Path, default=GENES_DIR)
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument(
-        "--batch-size", type=int, default=40, help="PMIDs per PubPeer request"
+        "--batch-size", type=int, default=60, help="PMIDs per PubPeer request"
     )
     parser.add_argument(
-        "--delay", type=float, default=1.0, help="seconds to pause between requests"
+        "--delay", type=float, default=3.1, help="seconds to pause between requests"
     )
     parser.add_argument("--limit", type=int, default=0, help="only the first N PMIDs")
     parser.add_argument("--pmids", nargs="*", default=None, help="only these PMIDs")

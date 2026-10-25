@@ -92,8 +92,10 @@ Endpoint caveats, all found by probing it:
 - **Matching is not strictly by PMID**: asked about PMID 13760, PubPeer
   returns PMID:27926515, an unrelated 2016 Oncotarget paper. Entries for PMIDs
   that were not asked for are dropped.
-- It rate-limits at ~3 requests/second (429). Requests are spaced 1 s apart and
-  back off on 429; a full pass takes roughly half an hour.
+- It allows **20 requests per minute** (`X-RateLimit-Limit: 20`). Requests are
+  spaced 3.1 s apart, and a 429 waits until `X-RateLimit-Reset`, because
+  PubPeer sometimes sends `Retry-After: 0` while still refusing. A full pass over
+  ~45,000 PMIDs is roughly 800 requests, so it takes about an hour.
 - PubPeer's relayed notices are incomplete. It showed no update for one PubMed
   retraction (PMID:16616141) and only an erratum for another (PMID:29371969),
   so PubMed stays the authority on severity.
