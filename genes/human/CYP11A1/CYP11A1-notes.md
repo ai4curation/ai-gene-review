@@ -128,3 +128,7 @@ Falcon deep research was attempted for human/CYP11A1 with perplexity-lite fallba
 46. GO:0008386 (IDA; PMID:18182448): ACCEPT — Direct experimental (IDA) annotation to the core cholesterol side-chain-cleaving activity, quantifying residual activity of patient CYP11A1 mutants.
 
 Counts: 32 ACCEPT, 11 MODIFY, 2 KEEP_AS_NON_CORE, 1 REMOVE. No NEW annotations were added. All original seeded annotation fields were preserved.
+
+## 2026-10-25: review evidence follow-up
+
+Replaced EC-only and bare cofactor-header quotations with the curated overall cholesterol-cleavage reaction and explicit heme cofactor statement, both experimentally supported by PMID:21636783 in the source record. No annotation actions or machine source fields changed.
