@@ -2996,16 +2996,17 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**582 of 2,876 genes are complete; 2,294 remain.**
-This checkpoint adds ESRRB, ETFDH and ETHE1 to the
-[merged 579 tracker](https://github.com/ai4curation/ai-gene-review/pull/5467).
-[Checkpoint 582](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-582-2026-10-24-224253-utc)
+**585 of 2,876 genes are complete; 2,291 remain.**
+This checkpoint adds ETFB, ETV6 and EVC to the
+[merged 582 tracker](https://github.com/ai4curation/ai-gene-review/pull/5479).
+[Checkpoint 585](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-585-2026-10-24-235050-utc)
 records their approved heads, actual merges and executed merge-group CI.
 Their complete gene directories and selected dependencies match fixed main
-[`5cffa2f757b5`](https://github.com/ai4curation/ai-gene-review/commit/5cffa2f757b5ae147f0f128177b0ffd0dbe0d096).
+[`5e62db5cf988`](https://github.com/ai4curation/ai-gene-review/commit/5e62db5cf9887be68578d786c36f0e647a90cf7b).
 
-ESRRB has computed COMPLETE status with six UNDECIDED judgments. ETFDH and
-ETHE1 remain DRAFT with seven and five advisories, respectively. Completion
+ETFB and ETV6 remain DRAFT with four and seven advisories, respectively.
+EVC has computed COMPLETE status with zero advisories, while one UNDECIDED
+judgment and its unresolved molecular function remain visible. Completion
 records accepted merged work; it does not resolve every biological uncertainty.
 Only these three genes are added at this checkpoint.
 
@@ -3724,11 +3725,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ESPN** — HGNC:13281; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bdbd958-1ad2-447a-9ccd-ed86f308577a-2018-02-27T170000.000Z) (MONDO:0019497; AD; Limited); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7c63a581-ad69-4f18-b68b-d1b2cef5e699-2018-02-27T170000.000Z) (MONDO:0019497; AR; Definitive).
 - [x] **ESRRB** — HGNC:3473; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03c875bb-70aa-4652-a7f2-35df1065165b-2018-04-24T160000.000Z) (MONDO:0019497; AR; Definitive).
 - [x] **ETFA** — HGNC:3481; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d6848e7-6e9e-4545-9f97-69480face058-2018-05-22T160000.000Z) (MONDO:0009282; AR; Definitive).
-- [ ] **ETFB** — HGNC:3482; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d9a8d844-c82a-4258-bd48-10e2d977273e-2023-05-23T040000.000Z) (MONDO:0009282; AR; Definitive).
+- [x] **ETFB** — HGNC:3482; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d9a8d844-c82a-4258-bd48-10e2d977273e-2023-05-23T040000.000Z) (MONDO:0009282; AR; Definitive).
 - [x] **ETFDH** — HGNC:3483; [multiple acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_062e336e-cfda-45f7-b509-cd44a5079034-2018-05-22T040000.000Z) (MONDO:0009282; AR; Definitive).
 - [x] **ETHE1** — HGNC:23287; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d29d908d-ea85-4eb4-a6a5-400c95511c9a-2019-04-08T161759.443Z) (MONDO:0009723; AR; Definitive).
-- [ ] **ETV6** — HGNC:3495; [thrombocytopenia 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92a8c1cb-91c1-45cd-adbe-4180b1f6da7d-2020-01-22T170000.000Z) (MONDO:0014536; AD; Definitive).
-- [ ] **EVC** — HGNC:3497; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6995e30b-00db-47c2-b39b-5a41e7aa4190-2025-09-24T040000.000Z) (MONDO:0009162; AR; Definitive).
+- [x] **ETV6** — HGNC:3495; [thrombocytopenia 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92a8c1cb-91c1-45cd-adbe-4180b1f6da7d-2020-01-22T170000.000Z) (MONDO:0014536; AD; Definitive).
+- [x] **EVC** — HGNC:3497; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6995e30b-00db-47c2-b39b-5a41e7aa4190-2025-09-24T040000.000Z) (MONDO:0009162; AR; Definitive).
 - [ ] **EVC2** — HGNC:19747; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47310dca-83c5-460e-b489-e8d90108b498-2026-02-02T170000.000Z) (MONDO:0009162; AR; Definitive); [acrofacial dysostosis, Weyers type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_139c6ac2-63a8-45ef-9de0-a414946c380a-2026-02-02T050000.000Z) (MONDO:0008673; AD; Definitive).
 - [ ] **EXOC6B** — HGNC:17085; [spondyloepimetaphyseal dysplasia with joint laxity, type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_162103c3-57c8-428c-8b31-4befec82aa4c-2025-07-02T160000.000Z) (MONDO:0032724; AR; Definitive).
 - [ ] **EXT1** — HGNC:3512; [exostoses, multiple, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ced1387-c0a8-4f03-bd70-1595cb7683fd-2018-06-04T170000.000Z) (MONDO:0007585; AD; Definitive).
