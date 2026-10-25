@@ -66,3 +66,16 @@ See [the FANCF source guide](FANCF-source-guide.md) for public paper, figure, da
 ## 2026-10-25 — Canonical validation
 
 All six canonical checks pass, including term labels, ontology components, current source matching and rendering of all 60 narratives. Computed status is DRAFT with three advisories: two supported generic-binding screen associations retained as non-core under the standing campaign instruction, and the unused inherited Affinage file. The final 27 imported contexts have 20 ACCEPT, four MODIFY and three KEEP_AS_NON_CORE decisions, with no UNDECIDED or authored NEW entries. All 42 inherited quotation paths, 26 reference identities and one scaffold core are retained. The genuine refreshed GOA is adopted; existing UniProt and all normal sources remain unchanged. External original-paper access remains distinct from abstract-only cache metadata.
+
+
+## 2026-10-25: source-specific evidence links and public figure
+
+The 11 Reactome location contexts now cite their own event records, with direct FANCF participant links and complete representative routes in the [source guide](FANCF-source-guide.md). The two ICL-repair rows explicitly cite FANCF-specific PMID:15262960 and PMID:17082180; FA-complex rows also expose the existing curated UniProt SUBUNIT provenance. Nuclear-localization text is not used as direct evidence for cytosol.
+
+The independently inspected mouse HU result remains supported by the genuine Bakker author-dissertation chapter: [Figure 5.2, printed page 84 / PDF page 85](evidence/Bakker-2011-Figure-5.2-page-84.png), with a compact provenance record and the complete dissertation linked in the guide. The measured output is FANCD2 monoubiquitination in Fancf-null versus wild-type MEFs, not FANCF ubiquitin-transfer chemistry. The abstract-only normal cache is unchanged.
+
+FANCG-specific binding reasons no longer repeat the separate FANCA paragraphs; inherited quotations remain exactly where they were. PMID:21915857's former MEDIUM sentence is explicitly historical and superseded by the current HIGH assessment. PMID:17082180 is HIGH relevance because it directly addresses human FANCF, while its independently checked scope remains the original abstract rather than newly recovered full Methods or figures.
+
+All 27 imported source objects, actions (20 ACCEPT, four MODIFY, three KEEP_AS_NON_CORE), 26 reference identities/findings, the core, product boundary and 42 quotation paths/text/reference associations are retained. No new quotation or annotation is added.
+
+Canonical validation of this evidence-link successor passed all six checks and all 60 rendered narratives. DRAFT and the three existing advisories remain: two supported generic-binding screen associations and the unused inherited research file. The public page and provenance are additional evidence artifacts; normal sources and all inherited quotations remain exact.
