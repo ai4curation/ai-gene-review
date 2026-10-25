@@ -29,13 +29,18 @@ There are two kinds of case:
   | `toggle_switch` | bistability: two fixed points, one when a side is forced on |
   | `container_flattening` | entry and exit tiers of a wired container; a GAP tier is neither; annotons are atomic |
   | `unwired_container_expansion` | an unwired container is one step unless a child is itself an endpoint |
-  | `declared_logic` | `all_of`, `any_of` and nested `none_of`; an omitted regulator; removing its connection |
+  | `declared_logic` | `all_of`, `any_of` and nested `none_of`; an omitted regulator; removing its connection drops it |
+  | `container_lumped_by_removal` | removing a container's only internal connection turns it into one step |
 
 - **Frozen**: slimmed copies of real modules that have curated Boolean scenarios
   (`erk_cascade`, `jak_stat_signaling`, `p38_cascade`) or omitted regulators
   (`c_elegans_dbl1_body_size_signaling`, `bacterial_type_iv_secretion_apparatus`). They
   keep only what translation reads (the tree, connections, declared logic and the derived
   Boolean models' scenarios), so later curation of the live module does not change them.
+
+The `module.yaml` files are translator inputs, not full module documents: frozen copies
+keep only the keys translation reads, and annotons carry an empty `participant` stub.
+Do not run them through module validation.
 
 ## expected.json
 
@@ -48,7 +53,7 @@ There are two kinds of case:
 | `rules` | each variable's update rule in BoolNet syntax; `null` for an input |
 | `edges` | `[source, target, sign, omitted]`, sorted; `omitted` marks a regulator the declared logic leaves out |
 | `free_attractors` | the asynchronous attractors with every input free |
-| `scenarios[]` | `id`, `settings` (fixed values), `removed_connections`, `variables` (the scenario network's variables: a variable left with no connection drops out), `rules` (keyed by the base variables, with those connections removed), `attractors` (over the scenario's variables, with the settings fixed and other inputs free), and `expectations_hold` (the curated expectations pass) |
+| `scenarios[]` | `id`, `model` (the executable model it belongs to), `settings` (fixed values), `removed_connections`, then the scenario's own network after those removals: `variables` (a variable left with no connection drops out; a container whose internal wiring is removed appears as one step), `rules` and `edges` (as above, keyed by those variables); `attractors` (with the settings fixed and other inputs free), and `expectations_hold` (the curated expectations pass) |
 
 Each attractor is `{size, always_on, always_off, oscillating}`: the number of states in
 the terminal strongly connected component, and which variables are constant on, constant

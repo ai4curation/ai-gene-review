@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ai_gene_review.module_boolean import module_to_boolean
+from ai_gene_review.module_boolean import module_to_boolean, omitted_regulators
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = ROOT / "models" / "boolean" / "conformance" / "cases"
@@ -39,20 +39,36 @@ def build_script():
     return module
 
 
-def test_cases_cover_the_translation_rules_and_dynamics() -> None:
-    """Guard against the fixture set silently shrinking."""
-    expected = {
-        "relay_with_phosphatase",
-        "negative_feedback_oscillator",
-        "toggle_switch",
-        "container_flattening",
-        "unwired_container_expansion",
-        "declared_logic",
-        "erk_cascade",
-        "jak_stat_signaling",
-        "p38_cascade",
-    }
-    assert expected <= set(CASE_NAMES)
+def test_cases_are_exactly_the_declared_set() -> None:
+    """Every declared case is present and nothing else is: the set cannot silently shrink."""
+    script = build_script()
+    assert set(CASE_NAMES) == set(script.SYNTHETIC) | set(script.FROZEN)
+
+
+def test_biodivine_aeon_is_installed() -> None:
+    """The aeon cross-checks below skip without biodivine-aeon; this one does not.
+
+    biodivine-aeon is a declared dev dependency so that the cross-checks run in CI.
+    If it ever stops installing, this fails instead of the cross-checks quietly
+    turning into skips.
+    """
+    assert importlib.util.find_spec("biodivine_aeon") is not None
+
+
+@pytest.mark.parametrize("name", build_script().FROZEN)
+def test_frozen_copies_translate_like_the_live_module(name: str) -> None:
+    """slim() keeps every key translation reads.
+
+    Both sides re-read the live module, so ordinary curation does not break this;
+    it fails when module_boolean starts reading a key that slim() drops.
+    """
+    live = yaml.safe_load((ROOT / "modules" / f"{name}.yaml").read_text())
+    frozen = build_script().freeze(name)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        a, b = module_to_boolean(live), module_to_boolean(frozen)
+    assert (a.variables, a.rules, a.edges) == (b.variables, b.rules, b.edges)
+    assert omitted_regulators(live) == omitted_regulators(frozen)
 
 
 def test_fixtures_are_current() -> None:
@@ -83,6 +99,22 @@ def test_translation_matches(name: str) -> None:
     assert sorted([e.source, e.target, e.sign] for e in model.edges) == [
         e[:3] for e in expected["edges"]
     ]
+    for scenario in expected["scenarios"]:
+        removed = {(s, t) for s, t in scenario["removed_connections"]}
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            variant = (
+                module_to_boolean(doc, removed_connections=removed)
+                if removed
+                else model
+            )
+        assert list(variant.variables) == scenario["variables"], scenario["id"]
+        assert {v: variant.rules.get(v) for v in variant.variables} == scenario[
+            "rules"
+        ], scenario["id"]
+        assert sorted([e.source, e.target, e.sign] for e in variant.edges) == [
+            e[:3] for e in scenario["edges"]
+        ], scenario["id"]
 
 
 def aeon_summary(aeon, model, fixed: dict[str, bool]) -> list[dict]:

@@ -39,6 +39,15 @@ from ai_gene_review.module_dynamics import attractors, boolean_models, run_scena
 ROOT = Path(__file__).resolve().parents[1]
 CONFORMANCE = ROOT / "models" / "boolean" / "conformance"
 FORMAT_VERSION = 1
+SYNTHETIC = [
+    "relay_with_phosphatase",
+    "negative_feedback_oscillator",
+    "toggle_switch",
+    "container_flattening",
+    "unwired_container_expansion",
+    "declared_logic",
+    "container_lumped_by_removal",
+]
 
 # Real modules frozen as fixtures: every module with curated Boolean scenarios, plus
 # declared-logic modules that exercise omitted_regulators.
@@ -119,13 +128,17 @@ def summarise(found) -> list[dict]:
     ]
 
 
-def expected(doc: dict, source: str) -> dict:
-    model = module_to_boolean(doc)
-    omitted = omitted_regulators(doc)
-    edges = sorted(
+def signed_edges(model, omitted: dict[str, list[str]]) -> list[list]:
+    """``[source, target, sign, omitted]`` for every edge, sorted."""
+    return sorted(
         [e.source, e.target, e.sign, e.source in omitted.get(e.target, [])]
         for e in model.edges
     )
+
+
+def expected(doc: dict, source: str) -> dict:
+    model = module_to_boolean(doc)
+    omitted = omitted_regulators(doc)
     scenarios = []
     for entry in boolean_models(doc):
         for scenario in entry.get("scenarios") or []:
@@ -146,12 +159,16 @@ def expected(doc: dict, source: str) -> dict:
             scenarios.append(
                 {
                     "id": scenario["id"],
+                    "model": str(entry.get("id")),
                     "settings": settings,
                     "removed_connections": sorted([s, t] for s, t in removed),
-                    # A removed connection can leave a variable with no edges at all;
-                    # it then drops out of the scenario's network.
+                    # The scenario's own network. A removed connection can leave a
+                    # variable with no edges (it drops out) or turn a container into
+                    # one step (it appears), so variables, rules and edges are the
+                    # variant's, not the base model's.
                     "variables": list(variant.variables),
-                    "rules": {v: variant.rules.get(v) for v in model.variables},
+                    "rules": {v: variant.rules.get(v) for v in variant.variables},
+                    "edges": signed_edges(variant, omitted),
                     "attractors": summarise(attractors(variant, settings)),
                     "expectations_hold": result.passed,
                 }
@@ -162,7 +179,7 @@ def expected(doc: dict, source: str) -> dict:
         "variables": list(model.variables),
         "inputs": model.inputs,
         "rules": {v: model.rules.get(v) for v in model.variables},
-        "edges": edges,
+        "edges": signed_edges(model, omitted),
         "free_attractors": summarise(attractors(model)),
         "scenarios": scenarios,
     }
@@ -181,7 +198,13 @@ def main(argv: list[str] | None = None) -> int:
         "--refresh-inputs", action="store_true", help="re-copy frozen module snapshots"
     )
     args = parser.parse_args(argv)
-    warnings.simplefilter("ignore", UserWarning)
+    # module_to_boolean warns about module_ref; keep that local to this run.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        return build(args)
+
+
+def build(args: argparse.Namespace) -> int:
     cases = CONFORMANCE / "cases"
     if args.refresh_inputs:
         for name in FROZEN:
@@ -192,8 +215,17 @@ def main(argv: list[str] | None = None) -> int:
                 "# translation-relevant keys only. Refresh with --refresh-inputs.\n"
                 + yaml.safe_dump(freeze(name), sort_keys=False, allow_unicode=True)
             )
+    present = {p.name for p in cases.iterdir() if (p / "module.yaml").exists()}
+    declared = set(SYNTHETIC) | set(FROZEN)
+    if present != declared:
+        print(
+            "Conformance cases differ from SYNTHETIC + FROZEN:"
+            f" missing {sorted(declared - present)}, undeclared {sorted(present - declared)}",
+            file=sys.stderr,
+        )
+        return 1
     stale = []
-    for case in sorted(p for p in cases.iterdir() if (p / "module.yaml").exists()):
+    for case in sorted(cases / name for name in declared):
         doc = yaml.safe_load((case / "module.yaml").read_text())
         source = "frozen" if case.name in FROZEN else "synthetic"
         text = dump(expected(doc, source))

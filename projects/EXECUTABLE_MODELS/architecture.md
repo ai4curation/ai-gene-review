@@ -96,11 +96,11 @@ Two facts make consolidation easier:
      payload as input. Both viewers would vendor the same pinned copy. A standalone
      engine could also run external models, such as GINsim or BBM exports.
 4. **Shared conformance fixtures, run in both repositories' CI.** These now exist in
-   [`models/boolean/conformance/`](https://github.com/ai4curation/ai-gene-review/tree/main/models/boolean/conformance): six
+   [`models/boolean/conformance/`](https://github.com/ai4curation/ai-gene-review/tree/main/models/boolean/conformance): seven
    synthetic modules, one per translation rule or dynamic behaviour, plus frozen
    snapshots of three modules with curated scenarios (ERK, JAK-STAT, p38) and two with
-   omitted regulators. Each case pins the variables, rules, signed edges, the rules
-   under each scenario's removed connections, and the asynchronous attractors with
+   omitted regulators. Each case pins the variables, rules, signed edges, each
+   scenario's own variables, rules and edges after its removed connections, and the asynchronous attractors with
    inputs free and under each scenario. `tests/test_boolean_conformance.py` checks them
    against this repository's translator and engine, and against biodivine-aeon. Every
    other implementation runs the same cases, so drift fails a build instead of going

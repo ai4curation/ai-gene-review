@@ -241,10 +241,10 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 
 Shared conformance fixtures, Order step 2 of the
 [architecture](EXECUTABLE_MODELS/architecture.md) plan. `models/boolean/conformance/`
-holds eleven cases: six synthetic modules, each isolating one translation rule or
+holds twelve cases: seven synthetic modules, each isolating one translation rule or
 dynamic behaviour (default rule, oscillation under negative feedback, bistability,
 container flattening with a GAP tier, unwired-container expansion, declared logic with
-an omitted regulator), and slimmed frozen copies of ERK, JAK-STAT, p38, the DBL-1
+an omitted regulator, a removal that collapses a container into one step), and slimmed frozen copies of ERK, JAK-STAT, p38, the DBL-1
 pathway and the type IV secretion apparatus. `scripts/build_boolean_conformance.py`
 writes each case's `expected.json`, and `--check` fails CI when the translator or
 engine output changes. `biodivine-aeon` is now a dev dependency: every fixture's
