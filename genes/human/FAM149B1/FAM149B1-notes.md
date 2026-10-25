@@ -1,6 +1,6 @@
 # FAM149B1 intake notes
 
-2026-10-25: Completed authorized private mechanical bootstrap from accepted identity/ownership preflight. Six raw/TSV/PENDING contexts, three seed references and two literal source products remain exact. See [SOURCE-GUIDE.md](SOURCE-GUIDE.md) for source, product and access boundaries and the genuine provider failure.
+2026-10-25: Completed authorized private mechanical bootstrap from accepted identity/ownership preflight. Six raw/TSV/PENDING contexts, three seed references and two literal source products remain exact. See [FAM149B1-source-guide.md](FAM149B1-source-guide.md) for source, product and access boundaries and the genuine provider failure.
 
 No original Methods/Results, supplement or figure pixels were read; no annotation decisions, standalone biological description, core functions, new quotations or NEW rows were authored. Displayed and shorter splice products were reconstructed mechanically, with external RefSeq/Ensembl models kept separate. Actual PAINT target mapping is preserved for later scientific review, including valid self-WITH descendant evidence.
 
