@@ -6579,3 +6579,73 @@ and locator records, distinct from generated provider deep-research outputs.
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/7299f061c916cbf80c0e0ca11d6d6fe2942052fd/history/projects/CLINGEN_MENDELIAN/2026-10-25T092541Z-codex-cc9bbf.yaml).
+
+## Completion checkpoint 602 — 2026-10-25 10:35:39 UTC
+
+**602 complete; 2,274 remaining out of 2,876 primary catalogue genes.**
+Only F8 and F9 are added to [tracker 600, PR #5512](https://github.com/ai4curation/ai-gene-review/pull/5512).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F8 #5508](https://github.com/ai4curation/ai-gene-review/pull/5508) | [`54dd62a301f9`](https://github.com/ai4curation/ai-gene-review/commit/54dd62a301f9eab4558bed698c73c22feaa00114) | [`84279f79ce1c`](https://github.com/ai4curation/ai-gene-review/commit/84279f79ce1c3463c960ce8c16ebbded87682af3) | 53 | 51 / 1 | DRAFT / 3 |
+| [F9 #5509](https://github.com/ai4curation/ai-gene-review/pull/5509) | [`1fa8926a132a`](https://github.com/ai4curation/ai-gene-review/commit/1fa8926a132aad5b436c2693e0b917c049762ea7) | [`a2300ffcb10c`](https://github.com/ai4curation/ai-gene-review/commit/a2300ffcb10cba1966804d3cb56813eabb60ba59) | 64 | 46 / 1 | DRAFT / 1 |
+
+F8's accepted closure has 58 files: five gene files, four histories and 49
+external normal dependencies (21 introduced by its merge, 28 reused from its
+parent). F9's closure has 50 files: five gene files, three histories and 42
+external normal dependencies (21 introduced, 21 reused). These are 108 closure
+entries across the two genes, representing 101 unique paths, including 84
+unique external dependencies. The complete closures match approved heads,
+actual merges and fixed main `a2300ffcb10cba1966804d3cb56813eabb60ba59`. The preceding tracker600 closure of
+682 paths and its 209 project histories also remain unchanged at this cut.
+
+The F8 PR has 30 paths and 30 net merge changes. The F9 PR has 35 paths and
+29 net merge changes: six approved PR paths were already identical, including
+mode, on its actual merge parent. In the queue, `already_present_on_parent`
+names those no-op PR paths; it does not count all reused closure dependencies.
+Reuse of an uncited or cited dependency from a parent is not itself a PR no-op.
+The two PRs have 65 path entries (63 unique paths), while their net changes
+cover 59 unique paths. The queue records every path, hash and classification.
+
+**F8.** Activated FVIIIa is a nonenzymatic cofactor that enhances FIXa cleavage of factor X in intrinsic tenase on extracellular phospholipid surfaces. FIXa supplies the catalysis. VWF carrier binding and the separate unactivated-FVIII/ADAMTS13 assays remain distinguished; copper coordination is a supporting structural facet. The natural 216-residue F8B product remains distinct from activated FVIIIa and engineered B-domain deletions.
+
+**F9.** Activated FIXa performs the serine-endopeptidase step that converts factor X to Xa in intrinsic tenase; FVIIIa enhances that reaction as a cofactor. Calcium binding and membrane association support the same catalytic unit. The natural 461- and 423-residue precursor products remain separate from activation-generated light and heavy chains, without assuming equivalent secretion, processing or activity.
+
+F8 retains two UNDECIDED contexts and three supported generic-binding
+advisories; F9 retains one supported generic-binding advisory. Both remain
+DRAFT. Their accepted source and product limits remain explicit. The F8 review
+contains 52 imported contexts and one previously accepted NEW cofactor row;
+F9 contains 64 imported contexts and no NEW rows. This tracker update adds no
+annotation, gene edit or publication quotation. Both reviews have zero
+publication quotation anchors.
+
+For clarity about the unchanged preceding F7 checkpoint: A (466 residues)
+and B (444 residues) are natural splice isoforms, both represented as precursor
+products. They are not the proteolytic activation products of one another.
+Their processing and functional equivalence are not assumed. This clarification
+is appended here; the earlier F7 progress record remains byte-for-byte intact.
+
+All three Build and test jobs succeeded on each actual merge:
+[F8 run 40180125540](https://github.com/ai4curation/ai-gene-review/actions/runs/40180125540)
+and [F9 run 40183249079](https://github.com/ai4curation/ai-gene-review/actions/runs/40183249079).
+Accepted operative reads cover strict changed-gene validation and all-gene
+schema validation, which are distinct checks. Both suites actually ran 12
+examples, 4,293 tests (one skipped and 84 deselected), 278 doctests (37 skipped),
+mypy on 287 files, Ruff, 438 workflow tests and 19 JavaScript tests. Saved logs
+retain existing module advisories, unresolved family/gene cases and the
+nonfatal SQL cleanup exception after passing tests. Aggregate gating adds no
+tests. This proposal reuses those accepted reads; it runs no validators and
+claims no new original-source reading.
+
+[F8 final curation history](https://github.com/ai4curation/ai-gene-review/blob/a2300ffcb10cba1966804d3cb56813eabb60ba59/history/genes/human/F8/2026-10-25T090357Z-codex-450dd0.yaml) and
+[F9 final curation history](https://github.com/ai4curation/ai-gene-review/blob/a2300ffcb10cba1966804d3cb56813eabb60ba59/history/genes/human/F9/2026-10-25T090908Z-codex-c0c39d.yaml).
+
+Update 127 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 126 earlier updates and all preceding progress bytes.
+Only the F8 and F9 checkboxes change. Existing source-guide instructions and
+dated source inventories remain exact.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/ca957c681d950c7354c241a2917ecefac033c5a7/history/projects/CLINGEN_MENDELIAN/2026-10-25T104648Z-codex-56a4d6.yaml).

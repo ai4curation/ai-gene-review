@@ -2998,18 +2998,19 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**600 of 2,876 genes are complete; 2,276 remain.**
-This checkpoint adds only F7 to the
-[merged 599 tracker](https://github.com/ai4curation/ai-gene-review/pull/5510).
-[Checkpoint 600](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-600-2026-10-25-091243-utc)
-records its approved head, actual merge and executed merge-group CI.
-Its complete gene directory, histories and selected dependencies match fixed main
-[`305207f43d2d`](https://github.com/ai4curation/ai-gene-review/commit/305207f43d2d8c1add6219c550d1dc651ca1fdc4).
+**602 of 2,876 genes are complete; 2,274 remain.**
+This checkpoint adds only F8 and F9 to the
+[merged 600 tracker](https://github.com/ai4curation/ai-gene-review/pull/5512).
+[Checkpoint 602](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-602-2026-10-25-103539-utc)
+records their approved heads, actual merges and executed merge-group CI.
+Their complete gene directories, histories and selected dependencies match fixed main
+[`a2300ffcb10c`](https://github.com/ai4curation/ai-gene-review/commit/a2300ffcb10cba1966804d3cb56813eabb60ba59).
 
-F7 is COMPLETE with no validation advisories and retains 20 UNDECIDED contexts.
-Completion records accepted merged work, not resolution of every biological
-uncertainty. Catalogue identities, associations, earlier progress and dated
-availability inventories remain preserved.
+F8 and F9 remain DRAFT with three and one supported-binding advisories,
+respectively; F8 retains two UNDECIDED contexts. Completion records accepted
+merged work, not resolution of every biological uncertainty. Catalogue
+identities, associations, earlier progress and dated availability inventories
+remain preserved.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3743,8 +3744,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **F2** — HGNC:3535; [congenital prothrombin deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ba9c4b9-9984-4d31-a9ae-bf638838f201-2020-06-24T160000.000Z) (MONDO:0013361; AR; Definitive); [thrombophilia due to thrombin defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6389b3a3-ef86-4588-9be8-eb79dcb8d3cd-2020-06-24T160000.000Z) (MONDO:0008559; AD; Definitive).
 - [x] **F5** — HGNC:3542; [congenital factor V deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_beaa3af3-7d91-4d53-b081-de0e660c16c6-2020-03-25T160000.000Z) (MONDO:0009210; AR; Definitive); [thrombophilia due to activated protein C resistance](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab28e09c-08ff-4149-a536-3cdb9cc4099f-2019-09-30T160000.000Z) (MONDO:0008560; AD; Definitive).
 - [x] **F7** — HGNC:3544; [factor VII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_43fb4e99-e97a-4d9c-af11-79c2b09ecd2e-2019-07-24T160000.000Z) (MONDO:0002244; AR; Definitive).
-- [ ] **F8** — HGNC:3546; [hemophilia A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d4578f11-b635-45f4-8034-310fca5fe960-2019-07-24T160000.000Z) (MONDO:0010602; XL; Definitive).
-- [ ] **F9** — HGNC:3551; [hemophilia B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d56d08d-48d0-4523-b433-dbd44c5b9e45-2019-05-22T190226.728Z) (MONDO:0010604; XL; Definitive); [thrombophilia, X-linked, due to factor 9 defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b3a7f2c-a07a-4a10-b1f7-78642ebdaa5d-2023-11-06T170000.000Z) (MONDO:0010432; XL; Limited).
+- [x] **F8** — HGNC:3546; [hemophilia A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d4578f11-b635-45f4-8034-310fca5fe960-2019-07-24T160000.000Z) (MONDO:0010602; XL; Definitive).
+- [x] **F9** — HGNC:3551; [hemophilia B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d56d08d-48d0-4523-b433-dbd44c5b9e45-2019-05-22T190226.728Z) (MONDO:0010604; XL; Definitive); [thrombophilia, X-linked, due to factor 9 defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b3a7f2c-a07a-4a10-b1f7-78642ebdaa5d-2023-11-06T170000.000Z) (MONDO:0010432; XL; Limited).
 - [ ] **FA2H** — HGNC:21197; [hereditary spastic paraplegia 35](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d5cb819a-ac27-4e87-9db3-6997c476d871-2025-01-27T170000.000Z) (MONDO:0012866; AR; Definitive).
 - [ ] **FAH** — HGNC:3579; [tyrosinemia type I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_39c50699-f422-4bae-89ac-af13ef7cb8cc-2020-06-29T174149.440Z) (MONDO:0010161; AR; Definitive).
 - [ ] **FAM111A** — HGNC:24725; [FAM111A-related skeletal dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_486e2a74-6377-4328-8fed-628e37d00d95-2025-04-02T160000.000Z) (MONDO:1060172; AD; Definitive).
