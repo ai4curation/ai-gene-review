@@ -2996,17 +2996,17 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**597 of 2,876 genes are complete; 2,279 remain.**
-This checkpoint adds F12 and F13A1 to the
-[merged 595 tracker](https://github.com/ai4curation/ai-gene-review/pull/5504).
-[Checkpoint 597](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-597-2026-10-25-065114-utc)
+**599 of 2,876 genes are complete; 2,277 remain.**
+This checkpoint adds F13B and F5 to the
+[merged 597 tracker](https://github.com/ai4curation/ai-gene-review/pull/5507).
+[Checkpoint 599](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-599-2026-10-25-074649-utc)
 records their approved heads, actual merges and executed merge-group CI.
 Their complete gene directories and selected dependencies match fixed main
-[`5e597e6e08e8`](https://github.com/ai4curation/ai-gene-review/commit/5e597e6e08e8006c81764e88155a19a826b63dee).
+[`82d5cc827a69`](https://github.com/ai4curation/ai-gene-review/commit/82d5cc827a695fa875ab377fe3262865cbe5f413).
 
-F12 and F13A1 remain DRAFT with 10 and 22 validation advisories, respectively.
-Two F12 contexts and one F13A1 context remain UNDECIDED. Completion records
-accepted merged work, not resolution of every biological uncertainty.
+F13B is COMPLETE with no advisories. F5 is DRAFT with two supported-binding
+advisories and five UNDECIDED contexts. Completion records accepted merged
+work, not resolution of every biological uncertainty.
 Only these two genes are added here; catalogue identities, associations,
 earlier progress and dated availability inventories remain preserved.
 
@@ -3738,9 +3738,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **F11** — HGNC:3529; [congenital factor XI deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a57ba9d9-45c5-48bc-b939-7593f67a86ed-2019-10-23T160000.000Z) (MONDO:0012897; SD; Definitive).
 - [x] **F12** — HGNC:3530; [congenital factor XII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_50bbe8d0-4feb-43c7-8573-9d7f85c82e54-2020-01-22T170000.000Z) (MONDO:0009315; AR; Definitive); [hereditary angioedema type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f40992c9-1172-4528-ab53-95108094d4b6-2024-09-04T160000.000Z) (MONDO:0012526; AD; Definitive).
 - [x] **F13A1** — HGNC:3531; [factor XIII, A subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dd9321a7-f45d-419e-94ce-101ab545a847-2020-07-22T160000.000Z) (MONDO:0013187; AR; Definitive).
-- [ ] **F13B** — HGNC:3534; [factor XIII, b subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_403b3588-323c-4103-9207-cc9c8be12281-2020-07-22T160000.000Z) (MONDO:0013190; AR; Definitive).
+- [x] **F13B** — HGNC:3534; [factor XIII, b subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_403b3588-323c-4103-9207-cc9c8be12281-2020-07-22T160000.000Z) (MONDO:0013190; AR; Definitive).
 - [ ] **F2** — HGNC:3535; [congenital prothrombin deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ba9c4b9-9984-4d31-a9ae-bf638838f201-2020-06-24T160000.000Z) (MONDO:0013361; AR; Definitive); [thrombophilia due to thrombin defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6389b3a3-ef86-4588-9be8-eb79dcb8d3cd-2020-06-24T160000.000Z) (MONDO:0008559; AD; Definitive).
-- [ ] **F5** — HGNC:3542; [congenital factor V deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_beaa3af3-7d91-4d53-b081-de0e660c16c6-2020-03-25T160000.000Z) (MONDO:0009210; AR; Definitive); [thrombophilia due to activated protein C resistance](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab28e09c-08ff-4149-a536-3cdb9cc4099f-2019-09-30T160000.000Z) (MONDO:0008560; AD; Definitive).
+- [x] **F5** — HGNC:3542; [congenital factor V deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_beaa3af3-7d91-4d53-b081-de0e660c16c6-2020-03-25T160000.000Z) (MONDO:0009210; AR; Definitive); [thrombophilia due to activated protein C resistance](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab28e09c-08ff-4149-a536-3cdb9cc4099f-2019-09-30T160000.000Z) (MONDO:0008560; AD; Definitive).
 - [ ] **F7** — HGNC:3544; [factor VII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_43fb4e99-e97a-4d9c-af11-79c2b09ecd2e-2019-07-24T160000.000Z) (MONDO:0002244; AR; Definitive).
 - [ ] **F8** — HGNC:3546; [hemophilia A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d4578f11-b635-45f4-8034-310fca5fe960-2019-07-24T160000.000Z) (MONDO:0010602; XL; Definitive).
 - [ ] **F9** — HGNC:3551; [hemophilia B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d56d08d-48d0-4523-b433-dbd44c5b9e45-2019-05-22T190226.728Z) (MONDO:0010604; XL; Definitive); [thrombophilia, X-linked, due to factor 9 defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b3a7f2c-a07a-4a10-b1f7-78642ebdaa5d-2023-11-06T170000.000Z) (MONDO:0010432; XL; Limited).

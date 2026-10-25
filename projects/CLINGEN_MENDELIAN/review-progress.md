@@ -6480,3 +6480,53 @@ Only the F12 and F13A1 checkboxes change. Dated source inventories remain histor
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/ad3d4b87db7ef790c7418a16f8c072694bb6c04b/history/projects/CLINGEN_MENDELIAN/2026-10-25T070241Z-codex-cecf61.yaml).
+
+## Completion checkpoint 599 — 2026-10-25 07:46:49 UTC
+
+**599 complete; 2,277 remaining out of 2,876 primary catalogue genes.**
+Only F13B and F5 are added to [tracker 597, PR #5507](https://github.com/ai4curation/ai-gene-review/pull/5507).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F13B #5503](https://github.com/ai4curation/ai-gene-review/pull/5503) | [`82a9b4b2d9f8`](https://github.com/ai4curation/ai-gene-review/commit/82a9b4b2d9f8bb36a6a4518f1aaa6b37354cf20b) | [`f877133cb49b`](https://github.com/ai4curation/ai-gene-review/commit/f877133cb49b46405f798e83357db16c226d4dc5) | 12 | 11 / 1 | COMPLETE / 0 |
+| [F5 #5505](https://github.com/ai4curation/ai-gene-review/pull/5505) | [`e19cdce4c81b`](https://github.com/ai4curation/ai-gene-review/commit/e19cdce4c81bca98d98f4a40d341ec36b25e8edf) | [`98a7416f5cc6`](https://github.com/ai4curation/ai-gene-review/commit/98a7416f5cc6ca2e2f5a672527c936287f42b70e) | 55 | 54 / 2 | DRAFT / 2 |
+
+The accepted F13B and F5 closures contain 18 and 57 files, respectively,
+including their complete gene directories, histories and selected sources.
+Every file matches the accepted head and actual merge evidence and fixed main
+`82d5cc827a695fa875ab377fe3262865cbe5f413`. These overlapping sets are not summed.
+F13B has 15 approved PR paths and 10 net merge paths: five identical shared
+source files were already present on its actual merge parent. F5 has 27
+approved PR paths and 27 net merge paths. The queue records the exact shared
+paths and hashes. No gene decision or source byte changes in this tracker update.
+F13B retains one NEW structural-molecule annotation and F5 retains two NEW
+cofactor annotations. Neither review adds publication quotations.
+
+**F13B.** The factor XIII B subunit organizes and stabilizes the circulating A2B2 zymogen. It is released during activation, before A-subunit cross-linking; the accepted structural-molecule annotation does not assign A-subunit catalysis or a clearance mechanism to B.
+
+**F5.** Activated Va enhances Xa-mediated prothrombin activation. In a distinct state, FV-short and protein S support TFPIalpha inhibition of Xa, with TFPIalpha providing the direct inhibitory contact. Two accepted NEW annotations capture demonstrated cofactor work; five source-specific contexts remain undecided.
+
+F13B is COMPLETE with no validation advisories. F5 remains DRAFT with two
+supported non-core binding advisories and five UNDECIDED contexts.
+Original-access and assay limits remain visible in the gene reviews.
+
+The three Build and test jobs passed on each actual merge in
+[F13B run 40170451404](https://github.com/ai4curation/ai-gene-review/actions/runs/40170451404)
+and [F5 run 40172434424](https://github.com/ai4curation/ai-gene-review/actions/runs/40172434424).
+Accepted operative log reads cover the executed test, strict-target, schema,
+history and family checks. Global skipped snippets, unresolved family/gene
+claims and the nonfatal post-test SQL cleanup exception remain disclosed in
+the accepted evidence. Aggregate gates add no tests. This tracker proposal
+does not rerun gene validators or claim those global uncertainties are resolved.
+
+- [F13B accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/f877133cb49b46405f798e83357db16c226d4dc5/history/genes/human/F13B/2026-10-25T062816Z-codex-ced303.yaml)
+- [F5 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/98a7416f5cc6ca2e2f5a672527c936287f42b70e/history/genes/human/F5/2026-10-25T064922Z-codex-950746.yaml)
+
+Update 125 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 124 earlier updates and all preceding progress bytes.
+Only the F13B and F5 checkboxes change. Dated source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/7ada2e1aa38e8f4de29b777ab75db3757b455d36/history/projects/CLINGEN_MENDELIAN/2026-10-25T075339Z-codex-a15907.yaml).
