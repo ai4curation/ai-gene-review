@@ -2,7 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-autolink_exclude: [SUR2, sur2, ACC1, "1.6", old]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60]
 ---
 
 # Organelles
@@ -319,6 +319,68 @@ What batch 2 showed:
   (`[CC:SUBCELLULAR LOCATION]`) that the reference validator cannot parse.
   The agents quoted them by hand in the files they touched.
 
+## 2026-10-24 (STOM and PTS re-checked)
+
+Batch 1 left both genes at the root with every row KEEP_AS_NON_CORE, flagged as
+possible organelle-level over-annotations. Two new sources settled what could be
+settled.
+
+**STOM: full text of PMID:25262680 does not support mitochondrion.** The
+cached copy is abstract-only, so the curator's AgBase IDA was not second-guessed
+in batch 1. The user supplied the full text (Kim et al. 2014, *J Microbiol
+Biotechnol* 24:1744-1754, doi:10.4014/jmb.1409.09063). The "mitochondrial"
+signal is co-fractionation in a crude heavy-membrane pellet that also carries ER:
+
+> "This fraction was enriched with mitochondria, as evidenced by the presence of
+> Hsp60, a mitochondrial matrix protein [28]. In this fraction, we also detected
+> the ER marker Grp78, probably because of the physical linkages between some
+> fractions of the ER and mitochondria."
+
+Sub-fractionation keeps the ER marker with stomatin:
+
+> "Analysis of the resulting four fractions by immunoblotting revealed that
+> HCV NS proteins had co-fractionated with stomatin, Hsp60, and calreticulin, an
+> ER lumen marker"
+
+and detergent pulls the mitochondrial marker away from stomatin:
+
+> "When the P15 fraction was treated with 1% NP40, NS5B and stomatin remained in
+> the same fraction, while Hsp60, which was released from mitochondria-derived
+> compartments, was detected in the bottom fractions"
+
+The authors themselves read the compartment as MAM, an ER region:
+
+> "our results suggest that the DRM in the P15 fraction might represent the
+> mitochondria-associated membranes, which are known to be reversibly tethered
+> to mitochondria and consist of a region of ER [44]."
+
+and imaging shows no mitochondrial pattern:
+
+> "Stomatin exhibited a distinct cytoplasmic and perinuclear localization (Fig. 2C)."
+
+Both GO:0005739 rows (the IDA and the circular Ensembl-projection IEA) are now
+MARK_AS_OVER_ANNOTATED, not REMOVE: the co-fractionation is real, it is the
+curator's source, and the paper does place stomatin on membranes tethered to
+mitochondria. GO:0044233 (mitochondria-associated endoplasmic reticulum membrane
+contact site) fits the authors' reading but rests on one detergent experiment
+with no MAM marker, so no NEW row. The reference now carries a
+`reference_review` saying the paper does not support mitochondrion.
+
+**PTS: conflicting weak lines, so UNDECIDED.** The only mitochondrial line is the
+LIFEdb GFP-fusion screen, which also alone seeds the PAINT node behind the IBA.
+The Human Protein Atlas detail (ENSG00000150787, downloaded 2026-10-24) is one
+antibody, HPA001481, passing protein-array validation, with immunofluorescence
+in A-431, U-251MG and U2OS showing cytosol only, at reliability "Approved". Its
+counterstains are nucleus, microtubules and ER, with no mitochondrial marker.
+One low-resolution direct row for and one approved single-antibody row against
+cannot be resolved without new data, so both rows are UNDECIDED (the enum's use
+for unresolvable evidence) rather than kept as if the claim stood.
+
+What this adds to the policy: a crude-fraction IDA is a red flag of its own when
+the fraction is not checked for ER. MAM co-purifies with mitochondria in every
+P15/heavy-membrane prep, so "found in the mitochondrial fraction" without an ER
+marker cannot distinguish mitochondrion from MAM.
+
 ## 2026-10-20 (batch 1: 20 human genes)
 
 Applied the policy to 20 human genes with root-only mitochondrion rows from
@@ -334,17 +396,17 @@ the PAINT-seed or mapping check.
 | DUT | NEW matrix (IC, isoform 3) | processed presequence, no TM, mtDNA replication context |
 | FEN1 | NEW matrix (IC) | protease protection, PMF-dependent import, soluble; internal pool is mostly FENMIT |
 | APEX1 | NEW IMS and matrix (IC) | Mia40-dependent import and PLA with Mia40; matrix pool repairs mtDNA (one group) |
-| ADCK2 | NEW inner membrane (IC) | predicted TM at the COQ8A anchor position, protease protection, yeast Cqd1 |
+| ADCK2 | NEW inner membrane (IC); GO:0016020 row MODIFY to it (in review) | predicted TM at the COQ8A anchor position, protease protection, yeast Cqd1 |
 | GPX4 | NEW inner membrane (IC, mitochondrial isoform) | rodent sub-mitochondrial fractionation, import, cardiolipin |
 | ABHD18 | NEW inner membrane (IC) | predicted presequence, cardiolipin substrate, yeast Cld1 analogy; least certain call |
 | AKAP10 | root | predicted MTS only; organelle itself contested |
 | DHFR | root | sub-mitochondrial data were for DHFR2 and later reattributed |
 | FADS1 | root; rows to KEEP_AS_NON_CORE | ER enzyme; one imaging study; isoform error in old review fixed |
-| STOM | root | Ensembl projection is circular; organelle claim weak |
+| STOM | root; rows to MARK_AS_OVER_ANNOTATED (2026-10-24) | Ensembl projection is circular; full text shows ER/MAM co-fractionation |
 | ASB9 | root | overexpression and crude pellet only |
 | SECISBP2 | root | MTS vs negative fractionation disagree |
 | RFK | root | yeast FMN1 is inner membrane, human RFK has no TM |
-| PTS | root | PAINT node seeded only by PTS's own GFP-screen row; HPA says cytosol |
+| PTS | root; rows to UNDECIDED (2026-10-24) | PAINT node seeded only by PTS's own GFP-screen row; HPA says cytosol |
 | TRAF3 | root | recruited via MAVS; no outer-membrane evidence |
 | HLCS | root | single functional line (matrix carboxylases), like PYCR2 |
 | GLOD4 | root | no presequence, no TM, crude fractionation only |
