@@ -21,7 +21,7 @@ Research provenance: the actual `just deep-research-falcon ECOLI hldE --fallback
 
 `just fetch-fitness ECOLI gmhB` was attempted and failed because no local FEBA data or reachable data source was available; no fitness artifact was written. PSEAE additionally lacks an organism mapping in the fetcher. No fitness phenotype is inferred from that failure.
 
-All 19 existing rows reviewed. The beta-heptose 1,7-bisphosphate 7-phosphatase activity and LPS-core/ADP-L,D-heptose synthesis are retained. General phosphatase, carbohydrate metabolism, LPS biosynthesis and cytoplasm terms are refined to supported specific descendants; cytosol, Mg binding and Zn binding are accepted as core location/cofactor features. This supersedes the older notes recommending MARK_AS_OVER_ANNOTATED for valid broad terms.
+All 19 existing rows reviewed. The beta-heptose 1,7-bisphosphate 7-phosphatase activity and LPS-core/ADP-L,D-heptose synthesis are retained. General phosphatase, carbohydrate metabolism, LPS biosynthesis and cytoplasm terms are refined to supported, more informative terms; cytosol, Mg binding and Zn binding are accepted as core location/cofactor features. This supersedes the older notes recommending MARK_AS_OVER_ANNOTATED for valid broad terms.
 
 PMID11751812 full text directly reconstructs E. coli GmhB chemistry and shows the gmhB deletion's altered LPS core. PMID20050615 full text uses biochemical kinetics and NMR: C7 phosphate is removed while the C1 phosphate remains. Exact quote: “E. coli GmhB prefers the β-anomer over the α-anomer by a factor of 100 : 1”. The preference concerns catalytic efficiency and is not absolute exclusivity.
 
@@ -33,3 +33,9 @@ PMID16990279 is an abstract-only E. coli HAD-family screen; its focus on other s
 
 ## 2026-10-25 PR #5542 follow-up: specific refinement reasons
 Replaced boilerplate in all four MODIFY rows with term-specific explanations: cytoplasm→cytosol; carbohydrate metabolism→ADP-heptose and LPS-core biosynthesis; LPS biosynthesis→LPS-core biosynthesis; phosphatase→beta-heptose bisphosphate C7 phosphatase. Added direct kinetic/NMR support for the molecular-function refinement. Removed the PMID18304323 cohort statistic from supported_by quotes, retaining its citation and curator-assigned cytosolic localization with the explicit limitation that target-specific peptide evidence was not independently recovered. All seeded annotation fields, actions and replacement terms are unchanged.
+
+## PR #5542 optional ancestry follow-up (2026-10-25)
+
+Checked the live QuickGO ancestors endpoint with relations=is_a,part_of for GO:0097171 and GO:0009244. GO:0009244 includes GO:0005975 among its ancestors; GO:0097171 does not. The latter belongs to the nucleotide-sugar/carbohydrate-derivative branch. The carbohydrate-metabolism MODIFY therefore combines a descendant refinement (LPS core) with a related, experimentally supported pathway refinement (ADP-heptose), not two descendant replacements. Both actions and replacement terms remain justified by PMID:11751812. No biological function or original annotation field changed.
+
+Endpoints: https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0097171/ancestors?relations=is_a,part_of and https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0009244/ancestors?relations=is_a,part_of .
