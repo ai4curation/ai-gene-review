@@ -1,0 +1,91 @@
+# EXT2 evidence and source guide
+
+This guide distinguishes the tested reagents and observations from conclusions about native human EXT2. The source-derived 718-, 728- and 751-residue product entries are retained unchanged. None of these experiments establishes equivalent activity, processing or localization of all three products. Supported generic interactions are retained as non-core under the [campaign instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions); no publication quotations or new annotation assertions were added.
+
+## Human enzyme preparations and the older activity conflict
+
+[PMID:12907669](https://pubmed.ncbi.nlm.nih.gov/12907669/) was read in its author-uploaded original, including construct Methods, single-transfer and polymerization Results, gel filtration, and the isoelectric-focusing discussion. Human placenta EXT2 lacks residues 1–46; it and human EXT1 residues 29–746 are expressed with engineered secretion leaders and tags in HEK293 cells. These are experimental soluble constructs, not natural secreted products.
+
+The separately expressed EXT2 preparation has low but readily detected GlcA transfer, weak and variable GlcNAc transfer, and no appreciable long-chain extension. Co-expressed EXT1–EXT2 has strong polymerization. The reported isoelectric-focusing control against endogenous-partner contamination is not displayed, and linkage-sensitive digestion of EXT1/heterocomplex products is not a separate proof of linkage in the EXT2-only product. Modern human complex experiments in [PMID:36402845](https://pubmed.ncbi.nlm.nih.gov/36402845/) and [PMID:36593275](https://pubmed.ncbi.nlm.nih.gov/36593275/) assign the principal GlcA site to EXT1 and the principal GlcNAc site to EXT2. The historical positive EXT2 GlcA capacity is retained with those limits, rather than erased by failed expression or a structural heading.
+
+The negative homodimerization assertion is likewise bounded. Soluble human EXT2 elutes near 80 kDa in the 2003 study, while the heterocomplex elutes near 160 kDa. [PMID:10639137](https://pubmed.ncbi.nlm.nih.gov/10639137/) instead detects self-association of differently tagged full-length mouse EXT2 in cells. That co-immunoprecipitation does not resolve homodimer stoichiometry. The retained NOT record does not assert that every native human product is incapable of self-association in every context.
+
+The database lane also recovered [PMID:11256613](https://pubmed.ncbi.nlm.nih.gov/11256613/) and its bovine-cDNA provenance in [PMID:9756849](https://pubmed.ncbi.nlm.nih.gov/9756849/). Their operative passages were independently checked here: full-length bovine EXT2 in Pichia lysates has positive transfer activity with mock controls; soluble single-protein yeast preparations differ, and COS-1 backgrounds contain endogenous activity. These are not additional human isolated-enzyme experiments. Their normal caches and source provenance belong to the accepted database lane; this lane does not duplicate acquisition.
+
+## Cellular biosynthesis and localization
+
+[PMID:17761672](https://pubmed.ncbi.nlm.nih.gov/17761672/) separates endogenous human siRNA experiments from mouse overexpression constructs. Human EXT2 depletion in HEK293 cells shortens metabolically labeled HS chains and lowers the HS/chondroitin-sulfate ratio. The paper's full-length overexpression constructs are mouse brain cDNAs. Independent human structural chemistry identifies the chain-elongation step performed by EXT2, distinguishing participation from a necessity-only phenotype.
+
+[PMID:10679296](https://pubmed.ncbi.nlm.nih.gov/10679296/) remains full-text unavailable after bounded publisher and alternate-route searches. Its positive abstract reports EXT association/Golgi localization in COS-7 and neonatal mouse chondrocyte expression. Independent source support is therefore named explicitly. [PMID:35137078](https://pubmed.ncbi.nlm.nih.gov/35137078/) Figure 7A shows full-length human fluorescent EXT2 with GM130 in COS-7 cells. In contrast, the ER localization and EXT1-dependent redistribution in PMID:10639137 concern GFP-tagged mouse EXT2 in BHK/sog9 cells; endoglycosidase-H sensitivity is reported as data not shown. This conserved ER context is retained without inventing native human ER imaging or calling ER retention an artifact. The database lane's broader conserved topology assessment remains separately attributable.
+
+## Interactions
+
+[PMID:18337501](https://pubmed.ncbi.nlm.nih.gov/18337501/) uses mouse EXT2 in HEK293 cells expressing NDST1. Reciprocal co-immunoprecipitation with preimmune and peptide-blocking controls supports association. The proposed GAGosome transport/competition model is not independently established by that experiment. PMID:35137078 provides separate full-length human EXT2/NDST1A, EXT2/NDST1B and EXT1/EXT2 FRET measurements in COS-7 cells. Figure 7C concerns EXT1 pairs and is not reassigned to EXT2. Neither assay establishes purified binary affinity or a fixed multienzyme stoichiometry.
+
+[PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/) BioPlex 293T line 8626 contains the literal Q93063-2/Q16394 pair. A/B table order is undirected; both-bait inventory membership does not determine which individual IP produced the edge. The absent HCT116 pair is not negative evidence because neither target is a listed bait there. [PMID:40205054](https://pubmed.ncbi.nlm.nih.gov/40205054/) supplies an explicit EXT1-bait/EXT2-prey APMS edge in U2OS. Its supplementary assembly and predicted-structure pair tables do not supply this pair. Both studies use tagged human ORFeome reagents; exact historical target-insert sequences were not verified against the current natural product records.
+
+## Skeletal phenotype and proteomic locations
+
+[PMID:9326317](https://pmc.ncbi.nlm.nih.gov/articles/PMC1715939/) is available as the complete original page scans. The actual family-genotyping Methods, clinical Results and Discussion were read, with pages 521 and 525 inspected as images. EXT2 variants segregate with hereditary multiple exostoses and variable skeletal severity. This is retained as a non-core skeletal phenotype; it is not an in-vitro bone-formation assay or evidence that EXT2 directly deposits bone.
+
+[PMID:19199708](https://pmc.ncbi.nlm.nih.gov/articles/PMC2693447/) provides human parotid-saliva proteomics, not urine or a generic secretory-cell experiment. Full main Methods and Results and authentic [Supplementary Table 1](https://doi.org/10.1021/pr800658c.s001) and [Table 2](https://doi.org/10.1021/pr800658c.s002) were read. Table 2 row 429 identifies EXT2/IPI00004047.1 with two sequences, two spectra and 5.3% coverage; Table 1 rows 4105–4106 supplies the peptide records. The preparation came from one donor and was an exosome-rich differential-centrifugation pellet. The reported protein false-positive rate is 5%; marker imaging validates the preparation rather than EXT2 itself. Exact sequence comparison finds both reported peptides in current products Q93063-1 and Q93063-3, while only the first matches Q93063-2. The data therefore do not uniquely distinguish the displayed product from the N-terminally extended product, and do not establish localization of every product. This specialized extracellular-vesicle detection is retained as non-core.
+
+[PMID:19946888](https://pubmed.ncbi.nlm.nih.gov/19946888/) reports human YTS natural-killer-cell membrane proteomics, but the full paper and target supplement remain unavailable. No EXT2 peptide or source-specific membrane identification is claimed. Independent human Golgi imaging and membrane-anchor context support the more specific location while preserving this limitation; the study title is not evidence for plasma-membrane localization.
+
+## Ontology and access boundaries
+
+Current GO:0043541 describes the dolichyl-linked Alg7/Alg13/Alg14 complex and is not the EXT1–EXT2 assembly. GO:0120504 is the specific complex. Replacement reaction terms GO:0050508 and GO:0050509 specify GlcNAc and GlcA transfer, respectively. The process replacements to GO:0015012 are evidence-based lateral refinements, not asserted current descendants of the broad polysaccharide/glycosaminoglycan terms. Typed ontology receipts distinguish is_a from part_of.
+
+Actual original access can differ from an immutable normal cache's extraction status: complete scanned or author-uploaded sources were read without editing those caches. Figures were only claimed as viewed where recorded. Full-text availability is not a claim that every figure, supplement or passage was inspected. The reference assessments above distinguish original access from normal-cache extraction metadata.
+
+## Modern catalytic-site and complex evidence
+
+[PMID:36402845](https://doi.org/10.1038/s41467-022-34882-6) uses human EXT1 29–746/EXT2 47–718 expressed in HEK293-F. Purification, mass photometry and cryo-EM establish the heterodimer. EXT2 GT-A D538N/D540N reduces fluorescent-oligosaccharide extension; separate full-length tagged rescue in EXT2-deficient HeLa cells supports cellular HS synthesis. EXT2 R266A retains complex GlcA transfer and rescue, consistent with the principal GlcA site residing in EXT1. The reported EXT1 mutant-stability confound remains relevant.
+
+[PMID:36593275](https://doi.org/10.1038/s41589-022-01220-2) uses human EXT1 28–746/EXT2 46–718. UDP-Glo assays with glypican-1 and defined oligosaccharides, mobility shifts and MALDI product analysis support elongation. EXT2 GT-A D538A/R569A strongly reduce GlcNAc transfer, with incomplete inactivation. Its imported GlcA annotation is qualified as a contribution to the assembled complex, whose principal GlcA site is EXT1. Isolated EXT2 secretion failure and isolated-domain proteolysis limit those preparations without erasing older positive transfer assays. Main operative text and captions were read; no new figure pixels, supplementary numerical experiments or raw spectra were inspected.
+
+[ComplexPortal CPX-8307](https://www.ebi.ac.uk/complexportal/complex/CPX-8307) correctly identifies the human EXT1/EXT2 assembly. Two separate source queries are retained: the GO:0043541 cross-reference points to the wrong dolichol-linked complex, while the portal's beta-1,3-GlcA/beta-1,4-GlcNAc function wording differs from the beta-1,4-GlcA/alpha-1,4-GlcNAc chain chemistry. The latter remains a probable wording query. Neither invalidates the assembly, and no upstream report has been sent.
+
+## Native and disease-variant location records
+
+[Human Protein Atlas](https://www.proteinatlas.org/ENSG00000151348-EXT2/subcellular) reports supported Golgi ICC/IF with HPA078409 in SiHa cells. Actual XML, page and selected image were inspected. Its antigen matches residues 423–501 and is shared by all three source-described products; the signal cannot identify an isoform. The perinuclear pattern does not resolve membrane topology or a particular cisterna.
+
+The retained ER membrane annotations combine conserved mouse EXT2 localization with native-target topology/SL-0097 evidence. Historical experimental ER contexts remain non-core, whereas broader conserved membrane-location assertions are accepted or refined. These decisions distinguish source context and functional centrality, without rejecting ER residence or inventing endogenous human ER imaging.
+
+The nine Reactome catalyst graphs reach native human Q93063 entity 2022888 (residues 1–718) or explicit disease variants. Inspection covers the stored catalyst, physicalEntity, component and member relations; it is not an exhaustive traversal of noncatalytic event branches.
+
+| Event | Representative route | EXT2 scope |
+| --- | --- | --- |
+| [2022851](https://reactome.org/content/detail/R-HSA-2022851) | 2022851 → 2022845 → 2022878 → 2022888 | Native |
+| [2022856](https://reactome.org/content/detail/R-HSA-2022856) | 2022856 → 2022849 → 2022878 → 2022888 | Native |
+| [2076392](https://reactome.org/content/detail/R-HSA-2076392) | 2076392 → 2022849 → 2022878 → 2022888 | Native |
+| [3656254](https://reactome.org/content/detail/R-HSA-3656254) | 3656254 → 9631891 → 9036278 → 3731111 → member | Mutant EXT2 set |
+| [3656257](https://reactome.org/content/detail/R-HSA-3656257) | 3656257 → 9631805 → 9036279 → 2022888 | Native EXT2 with defective EXT1 |
+| [3656261](https://reactome.org/content/detail/R-HSA-3656261) | 3656261 → 9631718 → 9036279 → 2022888 | Native EXT2 with defective EXT1 |
+| [3656267](https://reactome.org/content/detail/R-HSA-3656267) | 3656267 → 9631865 → 9036278 → 3731111 → member | Mutant EXT2 set |
+| [9036285](https://reactome.org/content/detail/R-HSA-9036285) | 9036285 → 9631886 → 9036279 → 2022888 | Native EXT2 with defective EXT1 |
+| [9036289](https://reactome.org/content/detail/R-HSA-9036289) | 9036289 → 9631922 → 9036278 → 3731111 → member | Mutant EXT2 set |
+
+The mutant set has literal A361Pfs*44, D227N, G172*, Q258*, Y222* and V187Pfs*115 members. Modeled mutant compartments do not assay native products. The three mutant-only source contexts retain the independently corroborated native Golgi-membrane location; the disease events themselves are valid.
+
+## Donors, phylogeny and automatic mappings
+
+[PMID:9756849](https://doi.org/10.1074/jbc.273.41.26265) identifies a roughly 70-kDa bovine-serum enzyme by purification and four tryptic peptides, then recovers a 718-residue bovine-kidney EXT2 cDNA. This supports extracellular soluble EXT2; proteolytic removal of its anchor is a size/topology interpretation without a mapped cleavage site. The human transfer is retained as a non-core conservation inference. The corresponding [PMID:11256613](https://doi.org/10.1093/embo-reports/kvd045) Pichia experiments distinguish positive full-length bovine EXT2 lysates with mock controls from inactive secreted single-protein preparations under their tested conditions. Neither is a human isolated-enzyme experiment. Actual Methods, Results, tables and specified captions were read, without figure pixels.
+
+The actual PTHR11062 tree/MSA contains Q93063 leaf PTN002476065 with an exact 718-residue match. It descends from PTN000115158 (imported Golgi/broad glycosyltransferase assertions) and PTN000868988 (additional sugar-transfer assertions). Four positive IBD records and no NOT occur on the target path. Mouse P70428/ENSMUSP00000028623 and bovine O77783 each match the captured 718-residue donor sequence. Current UniProt PTHR48261 classification and its alternative returned tree are retained as a family/version boundary, not evidence against the inspected PAINT ancestry. Self-WITH is valid; donor count is not a weakness.
+
+Actual [ARBA00026373](https://www.uniprot.org/arba/ARBA00026373), [ARBA00043286](https://www.uniprot.org/arba/ARBA00043286) and [ARBA00090157](https://www.uniprot.org/arba/ARBA00090157) target matches occur in disjuncts 0/2, 2 and 0, respectively. IPR004263/IPR015338 matches and mappings and SL-0134/0132/0097/0243 records were inspected. Rule applicability is kept separate from biological adjudication. Direct Rhea 16213 access returned HTTP 403; current GO:0050508 and [ENZYME 2.4.1.224](https://enzyme.expasy.org/EC/2.4.1.224) corroborate the reaction without a claimed successful Rhea retrieval.
+
+## Integrated access boundary
+
+The 60 source contexts and three natural product records are unchanged. All annotation reviews retain their accepted evidence-specific decisions; the five shared reference assessments combine compatible scopes. The negative homodimer record and the positive full-length mouse self-association evidence remain distinct. The source guide records original and figure access explicitly, including the earlier Figure 7 pixel inspection and current parotid supplementary target rows. Provider acquisition failed as documented in the notes; no provider-branded account was authored. This annotation checkpoint has no new assertions, quotations or synthesized core functions.
+
+The public normal cache for PMID:10639137 retains the already-published abstract-only extraction. The complete original was nevertheless accessed and read for the assessments above; a genuinely fetched fuller cache is preserved separately with its acquisition provenance. The reference access flag describes that actual original access, not the selected public cache extraction. Neither cache was edited.
+
+## Core-function synthesis
+
+The single core describes [GO:0050508](https://www.ebi.ac.uk/QuickGO/term/GO:0050508), the alpha-1,4 addition of GlcNAc from UDP-GlcNAc to a GlcA-terminated acceptor. EXT2 is the catalytic subunit for the principal GlcNAc-transfer step within the [EXT1–EXT2 complex](https://www.ebi.ac.uk/QuickGO/term/GO:0120504). Its measured chemistry and the human glypican/oligosaccharide product assays support direct participation in [heparan sulfate proteoglycan biosynthesis](https://www.ebi.ac.uk/QuickGO/term/GO:0015012). The functional location is [Golgi membrane](https://www.ebi.ac.uk/QuickGO/term/GO:0000139); conserved ER residence is retained in the annotation review without adding a redundant location for this catalytic unit.
+
+The molecular-function slot records the EXT2 catalytic domain's reaction, supported by positive older single-transfer activity and modern active-site tests. It does not attribute autonomous chain polymerization to isolated EXT2. The 2022 FACE/HeLa-rescue and 2023 UDP-Glo/glypican/MALDI experiments retain their distinct soluble and full-length constructs; no new figure pixels, raw spectra or supplementary numerical data were inspected during synthesis. The current synthesis reread the operative main Methods/Results. The low historical GlcA activity and the unresolved quantitative contribution in intact complexes remain explicit research questions, not an asserted second core. No equivalent function or processing is assigned to all three natural products.
+
+The standalone description's skeletal-disease sentence is grounded in the actual human family study [PMID:9326317](https://pmc.ncbi.nlm.nih.gov/articles/PMC1715939/) and the human-complex source context. It is not an additional ossification mechanism. Current ontology definitions and typed is_a/part_of branches were checked from the captured official records. A single MF, BP, location and complex avoid ancestor/descendant duplication; no new GO annotation or quotation is introduced.
