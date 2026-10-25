@@ -43,7 +43,8 @@ For each module, record evidence that all of the following are satisfied:
 - [ ] `2_aminoethylphosphonate_degradation`: active first audit; review literature,
   bacterial scope and step evidence curated. All six PSEPK, SALTY and
   BACCE PhnW/PhnX member reviews are adjudicated and pass targeted validation.
-  Module validation passes without warnings; module-specific PR completion pending.
+  Module validation passes without warnings; [draft PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538)
+  is open. Repository-wide validation, review and merge remain pending.
 - [ ] Remaining 701 modules: recorded individually as NOT_STARTED in the inventory.
 
 ## Notes
