@@ -27,7 +27,7 @@ genes of a pathway, and only 48 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 687 modules. Seventy-seven already have a matching module, 10 are
+triaged against our 702 modules. Seventy-eight already have a matching module, 10 are
 ready to model, 30 lack a GO process term, and 56 are disease or drug pathways
 and out of scope. Four modules have now been derived from RGD diagrams: the pilot
 `srebp_signaling`, and the linked blood set `coagulation_cascade`, `fibrinolysis`
@@ -88,7 +88,7 @@ fetcher sends its own identifying user agent.
 
 | File | Contents |
 |------|----------|
-| `pw_go_mappings.sssom.tsv` | Candidate PW→GO mappings in SSSOM form, from three sources: GO ids PW cites in a definition (`skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. |
+| `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists and any QA finding, as fixed `pw2go:` codes defined in the mapping-set description; `see_also` gives GO's replacement for an obsolete target, or the conflicting GO ids for a page citation that disagrees. |
 | `pw_gocam_completeness.tsv` | One row for each of the 1,677 PW terms with human genes. Genes are taken over the term and its descendants. The basis is the RGD-curated set when one exists and all sources otherwise. Columns give the share of basis genes in any human GO-CAM, the share with a gene review, the best-overlapping GO-CAM, and the GO-CAM models whose process falls under a mapped GO term, with the share of genes they contain. |
 | `module_seeds.yaml` | One seed per diagram pathway: diagram structure, RGD-curated human genes, merged GO mappings, GO-CAM coverage, matches to existing modules, and a triage tier. |
 | `summary.yaml` | Headline counts used on this page. |
@@ -101,9 +101,9 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 77 |
+| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 78 |
 | `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 10 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 20 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 19 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 30 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -135,7 +135,8 @@ split along their sub-pathways before modelling.
   terms, and one at an id that no longer resolves. Several are amino-acid "metabolic process" terms that GO has since
   obsoleted, such as cysteine, histidine, tyrosine, phenylalanine and
   tryptophan metabolic process. These can go back to RGD as a concrete update
-  list, filtered with `object_status` in the SSSOM file.
+  list: in the SSSOM file they carry `pw2go:OBSOLETE_TARGET` or
+  `pw2go:MISSING_TARGET`, and 12 of them list GO's replacement in `see_also`.
 - **Some well-known pathways have no GO process match by label.** Examples are
   p53 signaling, AMPK signaling, PKA signaling, hypoxia-inducible factor,
   angiotensin II and vasopressin signaling, renin-angiotensin, and
@@ -323,7 +324,8 @@ member gene products, only VWF, A2M and APOH have gene reviews.
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
   definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
 - Send RGD the 44 obsolete GO citations, the unresolvable one and the 3 wrong page citations, with GO's replacement where one
-  exists (the SSSOM `comment` column).
+  exists. All are selectable by `curation_rule` in the SSSOM file
+  (`OBSOLETE_TARGET`, `MISSING_TARGET`, `PAGE_XREF_DISAGREES`, `ID_ECHO`).
 - Map the 30 `needs_go_mapping` seeds by hand, or record missing terms as
   `proposed_new_terms`.
 - Review the blood-set member genes, starting with the proteases and cofactors
@@ -340,14 +342,14 @@ member gene products, only VWF, A2M and APOH have gene reviews.
 
 - [x] Fetch PW, RGD gene annotations and all 200 RGD diagram pages
 - [x] Parse diagram pages into structured records (`pathways/`)
-- [x] Candidate PW→GO mappings (`data/pw_go_mappings.sssom.tsv`)
+- [x] Candidate PW→GO mappings (`data/pw_go_mappings.sssom.yaml`; `just validate-rgd-mappings`)
 - [x] GO-CAM completeness table (`data/pw_gocam_completeness.tsv`)
 - [x] Module seeds and triage (`data/module_seeds.yaml`)
 - [x] Pilot module from an RGD diagram (`modules/srebp_signaling.yaml`)
 - [ ] Spot-check and promote definition-citation mappings
 - [ ] Report obsolete GO citations to RGD
 - [ ] Map `needs_go_mapping` seeds
-- [ ] Gene reviews for SREBP pathway members
+- [x] Gene reviews for SREBP pathway members
 - [ ] Model the next `candidate` seeds
 
 ## Notes
