@@ -131,6 +131,18 @@ an inadequate rationale; repairing the rationale need not change the conclusion.
   refute an intrinsic enzyme activity without refuting participation in the
   corresponding biological process through a complex or regulatory role. A
   scaffold need not catalyze the reaction to participate in that process.
+- **Score the accession the predictor saw, judge novelty across the gene.** Correctness
+  is assessed for the exact sequence given to the predictor. Many targets are truncated or
+  alternative gene models. An activity, location or complex-membership prediction that needs
+  a feature this accession demonstrably lacks relative to the canonical product (signal
+  peptide, transmembrane segment, targeting signal, catalytic residues, binding region) is
+  `NPI` with `DOMAIN_ARCHITECTURE_MISMATCH`, even when the term is true of the gene. Establish
+  the absence by analysis; do not assume it. For a process term, `NPI` requires that the
+  gene's known mechanism of participation needs the missing feature. Otherwise use `UNC`, as
+  the activity-versus-participation rule above requires. Novelty is judged against GOA for
+  every product of the same gene in that species, because GOA propagates to one
+  representative product per gene: a term on the canonical product makes the prediction
+  `CNN` or `LSP`, not `COR`.
 - **Separate limited usefulness from biological error.** A broad but true term
   is not incorrect merely because a more informative annotation is available.
   Use `LSP` only when a supported, more specific annotation actually exists;
