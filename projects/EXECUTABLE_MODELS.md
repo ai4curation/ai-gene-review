@@ -118,6 +118,8 @@ JSON and recomputes the attractors whenever a box is locked.
 | [ERK cascade](../modules/erk_cascade.html) | MAPK network and cancer cell fate (Grieco 2013, BBM-070) | Boolean | external | |
 | [JAK-STAT signaling](../modules/jak_stat_signaling.html) | [JAK-STAT signaling as a Boolean network](../models/jak_stat_signaling_boolean.html) | Boolean | derived | 6, all hold |
 | [p38 cascade](../modules/p38_cascade.html) | [p38 cascade as a Boolean network](../models/p38_cascade_boolean.html) | Boolean | derived | 4, all hold |
+| [Endosomal trafficking & escape](../modules/endosomal_trafficking_routing.html) | [Endosomal Trafficking, Sorting & Cytosolic Escape (Agent-Based Cohort Model)](../models/endosomal_trafficking_abm.html) | Agent-Based | derived | 6, all hold |
+| [LDLR endocytosis](../modules/ldl_receptor_mediated_endocytosis.html) | [LDLR Endocytosis & Cholesterol Clearance (Agent-Based Cohort Model)](../models/ldlr_endocytosis_abm.html) | Agent-Based | derived | 4, all hold |
 | [Methionine cycle](../modules/methionine_cycle.html) | Maud kinetic model (biosustain) | Kinetic | external | |
 
 The ERK scenarios encode what the curated wiring predicts: no stimulus → rest;
@@ -177,13 +179,18 @@ what the curated wiring implies; they are not a literature-validated mechanism.
    derived flux model per module (or a module's reactions checked against a
    genome-scale model's) is the next type to add. Small ones can run in the
    browser with a JS LP solver.
-5. **Agent-based models.** Developmental modules (neuronal migration, cerebellum
-   development) are rules about cells, not molecules, and want an agent-based
-   runner like dismech's
-   [neuronal migration ABM](https://dismech.monarchinitiative.org/pages/models/neuronal_migration_abm.html),
-   whose spec + Python runner + in-browser runner + committed results layout fits
-   `executable_models` directly.
-6. **GO-CAM as a source.** A GO-CAM is a signed causal graph over activities and
+5. **Agent-based models ([ABM_TRAFFICKING](ABM_TRAFFICKING.md)).** Intracellular
+   trafficking and delivery modules ([Deliverome](DELIVEROME.md)) track a conserved
+   cohort of cargo particles partitioning across competing sorting branches (`src/ai_gene_review/module_abm.py`)
+   and render an interactive in-browser cohort simulator (`executable_abm.html.j2`).
+   Developmental modules (neuronal migration, cerebellum development) can extend the
+   same `AGENT_BASED` model type to cell-level rules like dismech's
+   [neuronal migration ABM](https://dismech.monarchinitiative.org/pages/models/neuronal_migration_abm.html).
+6. **Consolidate the code.** The translator, engine and viewer now exist twice, here
+   and in AmiGO 3's Dynamics tab. [Architecture and long-term plan](EXECUTABLE_MODELS/architecture.md)
+   sets out what depends on what, and plans one translator kept with the schema and
+   a JSON payload as the contract between translator and viewers.
+7. **GO-CAM as a source.** A GO-CAM is a signed causal graph over activities and
    can be read by the same translator. It has the same blind spot for feedback as
    uncurated modules, so its value is calibration, not a ready-made model.
 
@@ -191,22 +198,28 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 
 - `src/ai_gene_review/module_boolean.py`: translation, now honouring
   `activation_logic` and removed connections.
-- `src/ai_gene_review/module_dynamics.py`: attractors, scenario checks, browser
-  payload.
+- `src/ai_gene_review/module_abm.py`: agent-based compartment & particle cohort
+  compiler, conservation-preserving simulator, scenario runner (`expected_active`,
+  `expected_inactive`, `expected_outcome_order`), and browser payload builder.
+- `src/ai_gene_review/module_dynamics.py`: attractors, scenario checks (Boolean and
+  Agent-Based), browser payload.
 - `src/ai_gene_review/render_models.py` and templates
-  `executable_model.html.j2`, `executable_model_index.html.j2`: model pages,
-  rendered with the module pages into `pages/models/`.
+  `executable_model.html.j2`, `executable_abm.html.j2`,
+  `executable_model_index.html.j2`: model pages, rendered with the module pages
+  into `pages/models/`.
 - `src/ai_gene_review/validation/module_validator.py`:
   `validate_executable_models` (blocking).
-- `tests/test_module_dynamics.py`, `tests/test_render_models.py`.
+- `tests/test_module_dynamics.py`, `tests/test_module_abm.py`, `tests/test_render_models.py`.
+- `projects/EXECUTABLE_MODELS/architecture.md`: dependency layers and the
+  consolidation plan with AmiGO 3.
 
 ---
 # STATUS
 
 - [x] Schema: `activation_logic` (declarative AND/OR/NOT over regulators) on nodes and annotons
-- [x] Schema: `executable_models` with typed models, derivation, scenarios and expectations
+- [x] Schema: `executable_models` with typed models, derivation, scenarios and expectations (`expected_outcome_order`)
 - [x] Translator honours `activation_logic`; consistency checks against declared connections
-- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon
+- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon (opt-in: the test skips unless `biodivine-aeon` is installed, which CI does not do)
 - [x] Scenario expectations checked in module validation (blocking)
 - [x] ERK cascade: derived Boolean model with six curated scenarios; BBM-070 as external model
 - [x] Methionine cycle: Maud kinetic model as external model
@@ -217,9 +230,21 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [ ] Curate the 226 undecided steps in the audit
 - [ ] Node-level `model_associations` for external model variables
 - [ ] First constraint-based model type
-- [ ] First agent-based model, following the dismech layout
+- [x] First agent-based models (`endosomal_trafficking_abm` and `ldlr_endocytosis_abm`), with Python + in-browser cohort simulator and blocking scenario checks
+- [ ] Payload JSON Schema and a `--json` mode for `module-to-bnet` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
+- [ ] Shared conformance fixtures run by every implementation ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 2)
 
 # NOTES
+
+## 2026-10-20
+
+AmiGO 3 is adding a Dynamics tab to module pages
+([cmungall/amigo3#74](https://github.com/cmungall/amigo3/pull/74), opened today, merged
+2026-10-21). It ports this
+repository's translator, which reproduces `module-to-bnet` on all 559 translating
+modules at `924358b17`, and has its own JS engine. With two viewers, the translator
+now exists twice. [Architecture](EXECUTABLE_MODELS/architecture.md) records the
+dependency layers and the plan to make `boolean_model_payload` the contract.
 
 ## 2026-10-16
 

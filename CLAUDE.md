@@ -448,7 +448,10 @@ the state of its annotation, not evidence. This is a blocking error whatever the
 action (`supporting_text_goa_file`, `src/ai_gene_review/validation/goa_support.py`).
 Quote the publication or curated UniProt statement behind the annotation, or your
 own analysis; if nothing independent supports the row, use `UNDECIDED`. A
-comparator argument ("paralog X carries this term") belongs in `reason`.
+comparator argument ("paralog X carries this term") belongs in `reason`. The same
+holds in prediction reviews (`validate-predictions`): `supported_by` shows the
+predicted term is true or false, and that it is already in GOA (CNN, LSP) is said
+in `summary`.
 
 **Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
 apply to every UniProt quote, whatever it supports.

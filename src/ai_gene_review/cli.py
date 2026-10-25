@@ -1691,7 +1691,7 @@ def backfill_record_sections(
     from ai_gene_review.tools.backfill_record_sections import backfill_file, review_files
 
     files = review_files(paths or [Path("genes")])
-    counts = ("added", "fixed", "mismatched", "unlocated", "ambiguous", "unplaceable")
+    counts = ("added", "fixed", "mismatched", "unlocated", "unsearchable", "ambiguous", "unplaceable")
     totals = dict.fromkeys(("files",) + counts, 0)
     failed: list[Path] = []
     for f in files:
@@ -1711,6 +1711,7 @@ def backfill_record_sections(
         f"{verb} {totals['files']} of {len(files)} files: added {totals['added']}, "
         f"fixed {totals['fixed']}; left {totals['mismatched']} mismatched, "
         f"{totals['unlocated']} not located in the cited file, "
+        f"{totals['unsearchable']} with nothing searchable, "
         f"{totals['ambiguous']} in more than one section, {totals['unplaceable']} unplaceable"
     )
     if failed:

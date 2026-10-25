@@ -1003,9 +1003,11 @@ validate-predictions +files:
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;
 # predicted GO terms are deliberately unbound (a model may predict an obsolete or
 # nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
-# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which have no
-# excerpts for validate-predictions' source-evidence check. Same blocking policy
-# as validate-all.
+# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which follow
+# other conventions than validate-predictions' source-evidence check expects.
+# The one evidence rule they share, that a GOA file is never support
+# (supporting_text_goa_file), is checked here too. Same blocking policy as
+# validate-all.
 [group('QC')]
 validate-prediction-terms +files:
     #!/usr/bin/env bash
@@ -1017,6 +1019,7 @@ validate-prediction-terms +files:
     if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
         exit 1
     fi
+    uv run validate-goa-support {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]
