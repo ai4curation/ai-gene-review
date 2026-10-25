@@ -2996,20 +2996,19 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**591 of 2,876 genes are complete; 2,285 remain.**
-This checkpoint adds EXT2, EXT1, EYA1 and EYS to the
-[merged 587 tracker](https://github.com/ai4curation/ai-gene-review/pull/5494).
-[Checkpoint 591](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-591-2026-10-25-032601-utc)
+**595 of 2,876 genes are complete; 2,281 remain.**
+This checkpoint adds EYA4, EZH2, F10 and F11 to the
+[merged 591 tracker](https://github.com/ai4curation/ai-gene-review/pull/5498).
+[Checkpoint 595](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-595-2026-10-25-045730-utc)
 records their approved heads, actual merges and executed merge-group CI.
 Their complete gene directories and selected dependencies match fixed main
-[`b2b10f56fdd7`](https://github.com/ai4curation/ai-gene-review/commit/b2b10f56fdd7e6996d24885376d9ff6b10f19377).
+[`db8135f603bf`](https://github.com/ai4curation/ai-gene-review/commit/db8135f603bf131e28c36950b3162c2610e55b64).
 
-EXT2 and EXT1 remain DRAFT with six and one advisories respectively.
-Local status computation and validation recorded EYA1 and EYS as COMPLETE
-with zero advisories. UNDECIDED judgments remain explicit for all four:
-EXT2 has one, EXT1 two, EYA1 three and EYS four.
-Completion records accepted merged work, not resolution of every biological
-uncertainty. Only these four genes are added at this checkpoint.
+Local status computation and validation recorded EYA4 as COMPLETE with zero
+advisories. EZH2, F10 and F11 remain DRAFT with 54, four and one advisories,
+respectively. UNDECIDED judgments remain explicit: EYA4 has one, EZH2 16,
+F10 three and F11 one. Completion records accepted merged work, not resolution
+of every biological uncertainty. Only these four genes are added here.
 
 All catalogue identities and associations, queue records and earlier progress
 remain preserved. Dated availability inventories are unchanged.
@@ -3735,11 +3734,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EXT1** — HGNC:3512; [exostoses, multiple, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ced1387-c0a8-4f03-bd70-1595cb7683fd-2018-06-04T170000.000Z) (MONDO:0007585; AD; Definitive).
 - [x] **EXT2** — HGNC:3513; [exostoses, multiple, type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9e6829ce-3e0b-44c5-a214-756f33b1e948-2018-12-21T153126.680Z) (MONDO:0007586; AD; Definitive).
 - [x] **EYA1** — HGNC:3519; [branchio-oto-renal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dca41ef6-ee63-4b1f-93d3-8b114dafcc58-2017-11-21T170000.000Z) (MONDO:0007029; AD; Definitive).
-- [ ] **EYA4** — HGNC:3522; [dilated cardiomyopathy 1J](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e0a0bad-1f7a-402e-af19-a80453653b86-2025-02-05T050000.000Z) (MONDO:0011541; AD; Limited); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_21c75059-bd7b-48ef-a828-28ffebe52ca0-2018-01-05T170000.000Z) (MONDO:0019497; AD; Definitive).
+- [x] **EYA4** — HGNC:3522; [dilated cardiomyopathy 1J](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e0a0bad-1f7a-402e-af19-a80453653b86-2025-02-05T050000.000Z) (MONDO:0011541; AD; Limited); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_21c75059-bd7b-48ef-a828-28ffebe52ca0-2018-01-05T170000.000Z) (MONDO:0019497; AD; Definitive).
 - [x] **EYS** — HGNC:21555; [EYS-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f70860e-464d-4d26-aee0-07ef03e4da1b-2022-11-03T160000.000Z) (MONDO:0800391; AR; Definitive).
-- [ ] **EZH2** — HGNC:3527; [Weaver syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5dcf5941-6076-4486-94be-7ba3944abaee-2022-08-03T160000.000Z) (MONDO:0010193; AD; Definitive).
-- [ ] **F10** — HGNC:3528; [congenital factor X deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4adcc848-b354-4975-801f-4b55bbca64ad-2019-11-27T170000.000Z) (MONDO:0009212; AR; Definitive).
-- [ ] **F11** — HGNC:3529; [congenital factor XI deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a57ba9d9-45c5-48bc-b939-7593f67a86ed-2019-10-23T160000.000Z) (MONDO:0012897; SD; Definitive).
+- [x] **EZH2** — HGNC:3527; [Weaver syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5dcf5941-6076-4486-94be-7ba3944abaee-2022-08-03T160000.000Z) (MONDO:0010193; AD; Definitive).
+- [x] **F10** — HGNC:3528; [congenital factor X deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4adcc848-b354-4975-801f-4b55bbca64ad-2019-11-27T170000.000Z) (MONDO:0009212; AR; Definitive).
+- [x] **F11** — HGNC:3529; [congenital factor XI deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a57ba9d9-45c5-48bc-b939-7593f67a86ed-2019-10-23T160000.000Z) (MONDO:0012897; SD; Definitive).
 - [ ] **F12** — HGNC:3530; [congenital factor XII deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_50bbe8d0-4feb-43c7-8573-9d7f85c82e54-2020-01-22T170000.000Z) (MONDO:0009315; AR; Definitive); [hereditary angioedema type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f40992c9-1172-4528-ab53-95108094d4b6-2024-09-04T160000.000Z) (MONDO:0012526; AD; Definitive).
 - [ ] **F13A1** — HGNC:3531; [factor XIII, A subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dd9321a7-f45d-419e-94ce-101ab545a847-2020-07-22T160000.000Z) (MONDO:0013187; AR; Definitive).
 - [ ] **F13B** — HGNC:3534; [factor XIII, b subunit, deficiency of](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_403b3588-323c-4103-9207-cc9c8be12281-2020-07-22T160000.000Z) (MONDO:0013190; AR; Definitive).
