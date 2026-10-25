@@ -6363,4 +6363,4 @@ was `b2b10f56fdd7e6996d24885376d9ff6b10f19377`; source inventories remain histor
 
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
-Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker591-20261025/history/projects/CLINGEN_MENDELIAN/2026-10-25T033732Z-codex-767415.yaml).
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/8c7ae8004be4e7855e189a3475bb67ae0f21afb3/history/projects/CLINGEN_MENDELIAN/2026-10-25T033732Z-codex-767415.yaml).

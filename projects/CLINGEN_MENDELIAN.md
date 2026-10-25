@@ -3005,8 +3005,9 @@ Their complete gene directories and selected dependencies match fixed main
 [`b2b10f56fdd7`](https://github.com/ai4curation/ai-gene-review/commit/b2b10f56fdd7e6996d24885376d9ff6b10f19377).
 
 EXT2 and EXT1 remain DRAFT with six and one advisories respectively.
-EYA1 and EYS have computed COMPLETE status with zero advisories, while
-three and four UNDECIDED judgments respectively remain explicit.
+Local status computation and validation recorded EYA1 and EYS as COMPLETE
+with zero advisories. UNDECIDED judgments remain explicit for all four:
+EXT2 has one, EXT1 two, EYA1 three and EYS four.
 Completion records accepted merged work, not resolution of every biological
 uncertainty. Only these four genes are added at this checkpoint.
 
