@@ -219,7 +219,7 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [x] Schema: `activation_logic` (declarative AND/OR/NOT over regulators) on nodes and annotons
 - [x] Schema: `executable_models` with typed models, derivation, scenarios and expectations (`expected_outcome_order`)
 - [x] Translator honours `activation_logic`; consistency checks against declared connections
-- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon (opt-in: the test skips unless `biodivine-aeon` is installed, which CI does not do)
+- [x] Exhaustive asynchronous attractor search, cross-checked against biodivine-aeon (a dev dependency since 2026-10-25, so the cross-checks run in CI)
 - [x] Scenario expectations checked in module validation (blocking)
 - [x] ERK cascade: derived Boolean model with six curated scenarios; BBM-070 as external model
 - [x] Methionine cycle: Maud kinetic model as external model
@@ -232,9 +232,27 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [ ] First constraint-based model type
 - [x] First agent-based models (`endosomal_trafficking_abm` and `ldlr_endocytosis_abm`), with Python + in-browser cohort simulator and blocking scenario checks
 - [ ] Payload JSON Schema and a `--json` mode for `module-to-bnet` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
-- [ ] Shared conformance fixtures run by every implementation ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 2)
+- [x] Shared conformance fixtures in `models/boolean/conformance/`, checked here against the translator, the engine and biodivine-aeon ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 2)
+- [ ] AmiGO 3 runs the same conformance fixtures against its translator port and JS engine
 
 # NOTES
+
+## 2026-10-25
+
+Shared conformance fixtures, Order step 2 of the
+[architecture](EXECUTABLE_MODELS/architecture.md) plan. `models/boolean/conformance/`
+holds eleven cases: six synthetic modules, each isolating one translation rule or
+dynamic behaviour (default rule, oscillation under negative feedback, bistability,
+container flattening with a GAP tier, unwired-container expansion, declared logic with
+an omitted regulator), and slimmed frozen copies of ERK, JAK-STAT, p38, the DBL-1
+pathway and the type IV secretion apparatus. `scripts/build_boolean_conformance.py`
+writes each case's `expected.json`, and `--check` fails CI when the translator or
+engine output changes. `biodivine-aeon` is now a dev dependency: every fixture's
+attractors, with inputs free and under each scenario, match aeon's symbolic search,
+including which steps stay on, stay off or oscillate. The endosomal-trafficking and LDL
+receptor scenarios belong to agent-based models and are not part of these Boolean
+fixtures. Parity with AmiGO 3's port was re-measured at `6987a3bd0`: 574 modules, no
+differences.
 
 ## 2026-10-20
 

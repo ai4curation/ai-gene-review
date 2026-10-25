@@ -20,7 +20,7 @@ what, which duplication matters, and where each piece should end up.
 
 ## Four layers
 
-| Layer | What it is | Module-specific? | Implementations (2026-10-24) |
+| Layer | What it is | Module-specific? | Implementations (2026-10-25) |
 |---|---|---|---|
 | 1. Schema | `connections`, `activation_logic`, `omitted_regulators`, `executable_models` and scenarios | yes | `src/ai_gene_review/schema/gene_review.yaml` |
 | 2. Translator | module YAML to a Boolean network: container flattening, signs, the default rule, declared logic, removed connections | yes | `module_boolean.py` here; `amigo3/boolean.py` (a port) |
@@ -45,9 +45,23 @@ long as the copies are tested against each other.
 
 Two facts make consolidation easier:
 
-- **The data contract already exists.** `module_dynamics.boolean_model_payload()`
-  emits nearly the same JSON as AmiGO 3's `/api/boolean`: the base network, plus for
-  each scenario its settings, rule overrides and removed edges.
+- **The data contract already exists, in two close variants.** Both
+  `module_dynamics.boolean_model_payload()` and AmiGO 3's `/api/boolean` emit the base
+  network, the `.bnet` text, and for each scenario its settings and removed edges.
+  They differ as follows (2026-10-25), and reconciling these is the substance of
+  Plan step 1:
+
+  | | `boolean_model_payload()` | AmiGO 3 `/api/boolean` |
+  |---|---|---|
+  | Unit | one payload per executable model | one per module, with the scenarios of every derived Boolean model |
+  | Rules | `rules` map of regulated variables to `{text, tree}` | `rule` string on each variable, `null` for inputs |
+  | Variables | `id`, `label`, `input` | also `group`, `kind`, `activators`, `inhibitors`, `members` (resolved to loaded genes) |
+  | Declared logic | top-level `declared_logic` list and `omitted` map | `declared_logic` flag and `omitted_regulators` list on each variable; `omitted` flag on each edge |
+  | Edges | `[source, target, sign]` | objects with `source`, `target`, `sign`, `connection_types`, `omitted` |
+  | Scenario rules | `rule_overrides`: only the changed rules, `null` for a variable that became an input | `rules`: the full map, or `null` when nothing is removed |
+  | Scenario results | precomputed `attractors` and `failures` | the `expected_*` fields, checked in the browser |
+  | Inconsistent declared logic | translation refuses (no payload) | `logic_problems` listed; that step alone falls back to the default rule |
+  | Layout | precomputed layered `layout` | none (laid out in the browser) |
 - **The translator and engine depend on very little.** `module_boolean` and
   `module_dynamics` themselves need only `pyyaml` and the standard library. The
   exception is the one-line `as_list` helper, which `module_boolean`,
@@ -73,22 +87,24 @@ Two facts make consolidation easier:
      GO-CAM tooling. Before then, a pinned package version would lag the data it reads.
 3. **Engines: reuse in Python, publish one in the browser.**
    - **Python:** validation should use existing tools rather than grow its own engine.
-     `tests/test_module_dynamics.py` has a cross-check of the exhaustive search against
-     biodivine-aeon, but it is opt-in: `biodivine-aeon` is not a project or dev
-     dependency, so the test is skipped in CI. Making it run there belongs with the
-     conformance fixtures (Plan step 4). Networks above the exhaustive limit of 18
-     variables should go to aeon or mpbn.
+     `biodivine-aeon` is a dev dependency, so the cross-checks of the exhaustive search
+     against aeon (`tests/test_module_dynamics.py` and every conformance case) run in
+     CI. Networks above the exhaustive limit of 18 variables should go to aeon or mpbn.
    - **Browser:** we have not found a maintained JS library that does asynchronous
      attractors and scenario checks on `.bnet` input; check before building. If none
      exists, extract one dependency-free file of about 150 lines, with `.bnet` or the
      payload as input. Both viewers would vendor the same pinned copy. A standalone
      engine could also run external models, such as GINsim or BBM exports.
-4. **Shared conformance fixtures, run in both repositories' CI.** Keep a small set
-   here: module YAML, its expected `.bnet`, and each scenario's expected verdict. Every
-   implementation, in either language, runs it, and the aeon cross-check runs with
-   them. Drift then fails a build instead of going unnoticed. AmiGO 3's
-   `tests/test_boolean.py` already does a two-module version of this against
-   `module-to-bnet` output.
+4. **Shared conformance fixtures, run in both repositories' CI.** These now exist in
+   [`models/boolean/conformance/`](https://github.com/ai4curation/ai-gene-review/tree/main/models/boolean/conformance): six
+   synthetic modules, one per translation rule or dynamic behaviour, plus frozen
+   snapshots of three modules with curated scenarios (ERK, JAK-STAT, p38) and two with
+   omitted regulators. Each case pins the variables, rules, signed edges, the rules
+   under each scenario's removed connections, and the asynchronous attractors with
+   inputs free and under each scenario. `tests/test_boolean_conformance.py` checks them
+   against this repository's translator and engine, and against biodivine-aeon. Every
+   other implementation runs the same cases, so drift fails a build instead of going
+   unnoticed.
 5. **Viewers specialise.**
    - The model pages here stay static and light, part of the published site with no
      server.
@@ -101,16 +117,24 @@ Two facts make consolidation easier:
 1. ~~Merge [amigo3#74](https://github.com/cmungall/amigo3/pull/74), which carries the
    port and its parity tests.~~ Merged 2026-10-21.
 2. Conformance fixtures here, run in both repositories' CI. This depends on nothing
-   else, and every later step then lands with a check underneath it.
+   else, and every later step then lands with a check underneath it. Done here
+   2026-10-25; AmiGO 3 runs them from a pinned copy.
 3. Here: a `--json` mode for `module-to-bnet`, plus the payload JSON Schema.
 4. AmiGO 3 build consumes the payload, with the port kept as a fallback for one
    release.
 5. Extract the JS engine and point `executable_model.html.j2` at it.
 6. Retire the AmiGO 3 port.
 
-## Parity today
+## Parity
 
-At commit `924358b17`, AmiGO 3's port produced the same rules as `module-to-bnet` for
-all 559 modules that translate. That includes the eight modules with
-`activation_logic` and the network of every scenario that removes connections. Its JS
-engine confirms all twelve curated ERK and JAK-STAT scenarios.
+Measured by translating every module with both implementations, not by the fixtures:
+
+| Date | ai-gene-review commit | Modules that translate | Rules differing | Scenario networks differing |
+|---|---|---|---|---|
+| 2026-10-20 | `924358b17` | 559 | 0 | 0 |
+| 2026-10-25 | `6987a3bd0` | 574 | 0 | 0 |
+
+Both runs include every module with `activation_logic` and the network of every
+scenario that removes connections. The JS engine confirms all twelve curated ERK and
+JAK-STAT scenarios. The conformance fixtures turn this one-off measurement into a
+standing check on a fixed set of cases.
