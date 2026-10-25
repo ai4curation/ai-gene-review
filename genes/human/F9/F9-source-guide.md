@@ -84,3 +84,8 @@ The synthesis used the operative peptide assay in PMID:34502392 (Results 2.3 and
 ## 2026-10-25 — current term and representation check
 
 The current official [GO:0007597 definition](https://www.ebi.ac.uk/QuickGO/term/GO:0007597) was checked again and explicitly includes the performed FIXa-to-FXa step; the existing intrinsic-coagulation replacement and core therefore remain unchanged. This does not require every experimental FIXa activation route to reproduce the entire contact cascade. Calcium coordination and Gla-dependent lipid association remain supporting properties of the single catalytic assembly unit. The existing product-comparison experiment already tests matched calcium/phospholipid conditions; no separate binding core or new process assertion is required by this bounded feedback.
+
+
+### Cache metadata and external originals
+
+The `full_text_unavailable` flags for PMID:14722079, PMID:19846852, PMID:2472424 are true because their immutable normal caches are abstract-only. Complete external original availability and the precise previously documented reading scopes remain unchanged in `reference_review.review_notes`. Cache contents, external availability and actual reading are separate records; this metadata correction changes no annotation decision, citation identity or biological conclusion.
