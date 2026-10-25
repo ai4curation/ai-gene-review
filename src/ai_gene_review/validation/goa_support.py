@@ -156,7 +156,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     For files no fuller validator covers, such as BioReason/GO-GPT prediction
     sidecars (see ``validate-prediction-terms``).
     """
-    parser = argparse.ArgumentParser(description="Reject GOA files cited as support.")
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("files", nargs="+", type=Path)
     args = parser.parse_args(argv)
     failed = False

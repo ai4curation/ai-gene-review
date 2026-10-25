@@ -1019,7 +1019,7 @@ validate-prediction-terms +files:
     if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
         exit 1
     fi
-    uv run python -m ai_gene_review.validation.goa_support {{files}}
+    uv run validate-goa-support {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]
