@@ -6711,3 +6711,49 @@ dated source inventories remain exact.
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/92d8df6951df41b2e2c9df753581790ed42dd392/history/projects/CLINGEN_MENDELIAN/2026-10-25T122502Z-codex-da920e.yaml).
+
+## Completion checkpoint 608 — 2026-10-25 14:29:02 UTC
+
+**608 complete; 2,268 remaining out of 2,876 primary catalogue genes.**
+Only FAM149B1, FAM20C and FAN1 are added to [tracker 605, PR #5517](https://github.com/ai4curation/ai-gene-review/pull/5517).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure paths | Contexts; refs / cores | Merge-group Build |
+| --- | --- | --- | --- | --- | --- |
+| [FAM149B1 #5516](https://github.com/ai4curation/ai-gene-review/pull/5516) | [`bb4891f80b94`](https://github.com/ai4curation/ai-gene-review/commit/bb4891f80b94667fcab127e05fce8c16488551d5) → [`e66137d23a68`](https://github.com/ai4curation/ai-gene-review/commit/e66137d23a68b9fe9a87036d006fc8cdc634578b) | 14 / 14 | 14 | 6; 4 / 1 | [40196661463](https://github.com/ai4curation/ai-gene-review/actions/runs/40196661463) |
+| [FAM20C #5518](https://github.com/ai4curation/ai-gene-review/pull/5518) | [`6e6e5f210468`](https://github.com/ai4curation/ai-gene-review/commit/6e6e5f210468a71c09b55c4986f156d7fab24c6f) → [`fe796a54bcf2`](https://github.com/ai4curation/ai-gene-review/commit/fe796a54bcf2a8bc92c0c7471850ca8704cb72f2) | 11 / 11 | 24 | 62; 22 / 1 | [40199680527](https://github.com/ai4curation/ai-gene-review/actions/runs/40199680527) |
+| [FAN1 #5519](https://github.com/ai4curation/ai-gene-review/pull/5519) | [`a9d14408071f`](https://github.com/ai4curation/ai-gene-review/commit/a9d14408071f2b6a6566be5383291ac0b93ca19f) → [`6987a3bd0ad7`](https://github.com/ai4curation/ai-gene-review/commit/6987a3bd0ad703b71e385a800f02f05875107597) | 10 / 10 | 21 | 51; 16 / 2 | [40199887007](https://github.com/ai4curation/ai-gene-review/actions/runs/40199887007) |
+
+The 59 closure entries include all eight gene histories and 35 external source entries.
+The approved revisions, actual merges and fixed main `6987a3bd0ad703b71e385a800f02f05875107597` match in paths,
+blob contents and modes across each complete gene/history tree and selected source
+dependency. All 35 PR paths contribute net changes; none is a parent-relative no-op.
+The queue records introduced sources separately from unchanged dependencies reused
+from each merge parent. The preceding checkpoint 605 content and all earlier progress
+remain intact. No gene annotation or publication quotation is changed by this update.
+
+FAM149B1 retains its source-bounded ciliary function assessment and one supported
+generic-binding advisory. FAM20C is a secretory-pathway serine/threonine kinase;
+its core keeps supported biomineral tissue breadth and distinguishes calcium binding
+from kinase activation. FAN1 combines structure-selective endonuclease and exonuclease
+activities in cross-link repair and repeat maintenance; its substrate and fork-response
+claims remain bounded to the measured experiments. FAM20C has two unresolved contexts
+and FAN1 has four. The reviews remain DRAFT with one, 19 and 13 advisories, respectively;
+accepted completion does not erase those limitations.
+
+All three Build jobs passed on each actual merge. The exact merge SHAs equal the
+inspected merge-group SHAs, permitting reuse of those actual operative log reads.
+Strict changed-gene validation and all-gene schema validation both ran. Each broad
+suite executed 12 examples, 4,293 tests (one skipped, 84 deselected), 278 doctests
+(37 skipped), mypy on 287 files, Ruff, 438 workflow tests and 19 JavaScript tests.
+History validation covered 16,568, 16,570 and 16,572 records, with 42 history tests
+each. Existing module advisories, unresolved family/gene cases and the nonfatal SQL
+cleanup exception after passing tests remain explicit. Aggregate gating adds no tests.
+
+Update 129 preserves all 2,876 catalogue identities and association text, 235 queue
+objects, 128 earlier updates and every preceding progress byte. Only the three
+completed genes' checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/30aeb87d98dc102002b93c9545be10d8fd887e3d/history/projects/CLINGEN_MENDELIAN/2026-10-25T143018Z-codex-806f1f.yaml).
