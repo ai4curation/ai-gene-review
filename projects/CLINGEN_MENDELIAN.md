@@ -2998,19 +2998,17 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**608 of 2,876 genes are complete; 2,268 remain.**
-This checkpoint adds only FAM149B1, FAM20C and FAN1 to the
-[merged 605 tracker](https://github.com/ai4curation/ai-gene-review/pull/5517).
-[Checkpoint 608](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-608-2026-10-25-142902-utc) records their
-approved heads, actual merges, preserved source dependencies and executed merge-group CI.
-Their complete gene directories, histories and selected dependencies match fixed main
-[`6987a3bd0ad7`](https://github.com/ai4curation/ai-gene-review/commit/6987a3bd0ad703b71e385a800f02f05875107597).
+**610 of 2,876 genes are complete; 2,266 remain.**
+This checkpoint adds only FANCA, FANCB to the
+[merged 608 tracker](https://github.com/ai4curation/ai-gene-review/pull/5522).
+[Checkpoint 610](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-610-2026-10-25-171958-utc) records their
+approved heads, actual merges, preserved dependencies and executed merge-group CI.
+Complete gene directories, histories and selected sources match fixed main
+[`571674a8fdce`](https://github.com/ai4curation/ai-gene-review/commit/571674a8fdcef44aa071005ab30c36f786808ea0).
 
-All three remain DRAFT, with one, 19 and 13 validation advisories, respectively.
-FAM149B1 retains one UNDECIDED context, FAM20C two and FAN1 four.
-Completion records accepted merged work, not resolution of every biological
-uncertainty. Catalogue identities, associations, earlier progress and dated
-availability inventories remain preserved.
+Completion records accepted merged work; it does not resolve every biological
+uncertainty or change the reviews' computed DRAFT status. Catalogue identities,
+associations, earlier progress and dated availability inventories remain preserved.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3751,8 +3749,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FAM111A** — HGNC:24725; [FAM111A-related skeletal dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_486e2a74-6377-4328-8fed-628e37d00d95-2025-04-02T160000.000Z) (MONDO:1060172; AD; Definitive).
 - [x] **FAM20C** — HGNC:22140; [lethal osteosclerotic bone dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89ee4afa-299c-4f56-b4ad-c530031abdd3-2025-06-25T170000.000Z) (MONDO:0009821; AR; Definitive).
 - [x] **FAN1** — HGNC:29170; [hereditary nonpolyposis colon cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_9863) (MONDO:0018630; AD; Limited); [karyomegalic interstitial nephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b51bd6a-53b9-4252-a5a8-1c50e7a6beab-2026-03-11T160000.000Z) (MONDO:0013898; AR; Definitive).
-- [ ] **FANCA** — HGNC:3582; [Fanconi anemia complementation group A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ceecf6ee-6700-40e5-a0d3-f7891805daac-2019-04-19T160000.000Z) (MONDO:0009215; AR; Definitive).
-- [ ] **FANCB** — HGNC:3583; [Fanconi anemia complementation group B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb559b04-602e-42cc-aad3-ce634c145c26-2022-12-30T180000.000Z) (MONDO:0010351; XL; Definitive).
+- [x] **FANCA** — HGNC:3582; [Fanconi anemia complementation group A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ceecf6ee-6700-40e5-a0d3-f7891805daac-2019-04-19T160000.000Z) (MONDO:0009215; AR; Definitive).
+- [x] **FANCB** — HGNC:3583; [Fanconi anemia complementation group B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_eb559b04-602e-42cc-aad3-ce634c145c26-2022-12-30T180000.000Z) (MONDO:0010351; XL; Definitive).
 - [ ] **FANCC** — HGNC:3584; [Fanconi anemia complementation group C](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cf4881c3-15b3-4e10-bd24-2da80433863b-2019-04-19T160000.000Z) (MONDO:0009213; AR; Definitive).
 - [ ] **FANCD2** — HGNC:3585; [Fanconi anemia complementation group D2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5f0c260f-52d2-4225-9044-608f066ccfb2-2021-06-15T231506.767Z) (MONDO:0009214; AR; Definitive).
 - [ ] **FANCE** — HGNC:3586; [Fanconi anemia complementation group E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6da55a6e-2cf8-499c-b842-b5a435dbff3f-2020-05-14T001745.604Z) (MONDO:0010953; AR; Definitive).
