@@ -68,3 +68,8 @@ The standing exception retains supported generic VWF binding as non-core despite
 ## 2026-10-25: Primary cofactor reference and public supplement locator
 
 The NEW GO:0061133 annotation now uses PMID:6804496 as its primary reference, keeping the independently assayed human FIXa/FX comparison prominent and PMID:27749002 as corroboration. The latter paper’s actual separate official JTH-15-110-s001.docx Figure S1/S2 legends do contain the hirudin, plasma-derived human factors and PC/PS details previously recorded; the abbreviated cached main does not include that supplementary text. The [source guide](F8-source-guide.md#primary-assay-and-separate-supplementary-evidence) now links the exact public supplement and distinguishes its read scope from the cached main. No imported GOA source object, action, core, reference object or natural product changes; no new publication quotation or normal-cache edit.
+
+
+## 2026-10-25 — Publication-cache metadata consistency
+
+The `full_text_unavailable` flags for PMID:18492805, PMID:6804496, PMID:23640497 are true because their immutable normal caches are abstract-only. Complete external original availability and the precise previously documented reading scopes remain unchanged in `reference_review.review_notes`. Cache contents, external availability and actual reading are separate records; this metadata correction changes no annotation decision, citation identity or biological conclusion.
