@@ -95,3 +95,8 @@ The IBA refinements express term granularity, not a fault in experimental donors
 or a claim that PAINT performs pairwise transfer. Patterning is retained with
 mouse double-mutant evidence (PMID:10452853), without equating mouse embryonic
 phenotypes to a directly assayed human developmental phenotype.
+
+
+### PR5541 follow-up, 2026-10-25
+
+Record the independently verified type I versus type II receptor-class error in UniProt as a CONFIRMED WRONG_TERM source defect, retaining the evidence-backed MODIFY action. This is recorded for upstream reporting, not reported externally.

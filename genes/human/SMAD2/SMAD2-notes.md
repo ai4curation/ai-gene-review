@@ -18,3 +18,8 @@ Primary texts were cached through the repository pipeline. Where only abstracts 
 
 ## Final source checks
 PMID:18548003 was refreshed through the publication pipeline to full text. Figure 4 and its adjacent results explicitly report TGF-beta-induced binding of tagged SMAD2 to pri-miR-21 in COS7 RNA-ChIP assays; the annotation is not inferred solely from SMAD1/3. The processing pathway is distinguished from SMAD4-dependent transcription. PMID:23649632 explicitly establishes SMAD2-dependent maintenance of the undifferentiated human embryonic and mouse epiblast stem-cell state via Nanog activation and repression of autocrine BMP signaling; the negative differentiation annotation is therefore retained in this specific context.
+
+
+### PR5541 follow-up, 2026-10-25
+
+Resolve PR5541 review: replace unsupported TOO_GENERAL mesenchyme-development rationale with evidence-specific KEEP_AS_NON_CORE grounded in mouse prevalvular mesenchyme experiments; verify the GO definition and distinguish orthology from direct human evidence. Trim dangling figure-callout text from DNA-binding quotes.

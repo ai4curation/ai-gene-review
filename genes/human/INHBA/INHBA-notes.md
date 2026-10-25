@@ -56,3 +56,8 @@ Interferon-gamma inhibition is supported independently by human Th17 assays [PMI
 ## Completion
 
 Action counts: KEEP_AS_NON_CORE 32, MODIFY 17, ACCEPT 38, REMOVE 4, UNDECIDED 10, MARK_AS_OVER_ANNOTATED 3. No PENDING or NEW rows remain. Evidence quotations were checked against cached source text. Final ontology ancestry checks retained hematopoietic progenitor differentiation as non-core rather than falsely calling erythrocyte differentiation its descendant, and verified all generic-development replacements. Gene and history validation passed without warnings.
+
+
+### PR5541 follow-up, 2026-10-25
+
+Resolve PR5541 review: move opposite FSH-secretion outcomes into their respective activin A and inhibin A core-function entries, preserving supporting citations and complex context; remove the redundant context-free hormone core. Rate the activin B comparator reference MEDIUM.

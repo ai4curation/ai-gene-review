@@ -18,3 +18,8 @@ The adrenal-development transfer derives from expression and functional activin-
 
 ## Final cardiac source and localization checks
 PMID:20877696 full text provides independent early myocardial Smad4-deletion evidence for ventricular septal defects, reduced trabeculation and compact-myocardial thinning. It supports ventricular morphogenesis terms more specifically than the adult hypertrophy abstract (PMID:16151019). The exact negative-regulation-of-myofibril-assembly claim remains unresolved because its donor abstract does not expose those measurements or the regulatory sign. No contradiction of the original donor curator is asserted. Both reviews now quote publication-linked UniProt subcellular-location comments independently supporting cytoplasmic-to-nuclear movement; record sections are assigned by the backfill tool.
+
+
+### PR5541 follow-up, 2026-10-25
+
+Address PR5541 suggestion by trimming a dangling figure-callout fragment from the cited DNA-binding text without changing the evidence claim.
