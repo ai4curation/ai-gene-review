@@ -1,0 +1,42 @@
+# nicB: nicotinate entry-system audit
+
+## Identity and scope
+
+Accession Q88FX8; Pseudomonas putida KT2440. All 7 pre-existing rows reviewed; original non-review fields preserved. Nicotinate entry chemistry is distinct from nicotine oxidoreductases with similar gene names.
+
+## Primary evidence and boundaries
+
+PMID:18678916 full article was read at https://pmc.ncbi.nlm.nih.gov/articles/PMC2516282/ (NicAB results and Fig. 2). Supported force-refresh still yielded an abstract-only cache. The full study tests heterologously expressed KT2440 NicAB, including CytC truncation, artificial-acceptor bypass, heme staining and complementation in trans. It supports a functional cytochrome region, while the terminal oxidase identity remains proposed. Water supplies the inserted oxygen; oxygen dependence does not make NicAB a monooxygenase.
+
+PMID:19118407 ["Gene knockout and recovery studies further confirmed the ndhSL function."] independently supports target-gene function; its cached abstract explicitly describes the small Fe-S and large molybdenum/cytochrome subunits. Cofactor stoichiometry and NicB topology are comparative/predicted assignments in UniProt, not newly measured target assays. The current NicA sequence is 157 aa / 16686 Da; the older paper/deep report 23.8-kDa value is not propagated.
+
+## Function granularity
+
+QuickGO GO:0050138 was checked live on 2026-10-25: its definition explicitly uses NADP+ and maps to EC1.17.1.5/RHEA12236. It is unsuitable for cytochrome-linked NicAB EC1.17.2.1/RHEA27417. Retain GO:0016725 as the defensible parent for contributed complex chemistry; an exact cytochrome-linked hydroxylase descriptor is warranted at module level. Fe-S and heme binding are core cofactor roles. True broad terms are refined, not marked over-annotated. NicB membrane is retained as a supported predicted core location without fabricating experimentally resolved sidedness.
+
+## Comparative architecture
+
+PMID:29485696 Table 1 maps RB50 BB1783/A0A0H3LKL9 to NicB2 and BB1776/A0A0H3LTT1 to NicB1. They are architectural comparators, not isolated-subunit enzyme demonstrations. BB1776 is 946 aa and includes MCD-related regions as well as three cytochrome domains; a clean split into two nonoverlapping halves is unsafe. No alternative native complex stoichiometry is asserted.
+
+## Research provenance
+
+Default Falcon plus Perplexity-lite fallback was requested concurrently with publication caching. Existing Falcon report returned from cache successfully; content was reviewed but primary/curated sources anchor the decisions. No fresh provider success is claimed. FEBA retrieval failed because neither local nor remote data was reachable; no fitness artifact was fabricated. No accession matches were found in gocams/index.tsv.
+
+## Verified family membership
+
+- DR   PANTHER; PTHR47495; ALDEHYDE DEHYDROGENASE; 1.
+- DR   PANTHER; PTHR47495:SF1; BLL3820 PROTEIN; 1.
+
+Official labels were checked against interpro/panther/panther.obo. These broad family assignments do not alone establish nicotinate substrate specificity; no PTN ancestry was guessed.
+
+## Annotation ledger
+
+- GO:0009055 (IEA, GO_REF:0000002): ACCEPT. The full primary PMID18678916 reports truncation, artificial-acceptor bypass and complementation in trans, supporting the electron-transfer role. Delivery to a particular cytochrome oxidase is a mechanistic proposal, not a directly identified partner.
+- GO:0016020 (IEA, GO_REF:0000044): ACCEPT. The predicted transmembrane helix and curated membrane assignment support this core physical context. Computational evidence does not make a core location peripheral. No direct fractionation assay or experimentally resolved membrane sidedness is asserted; retain the broad location rather than invent a specific membrane compartment.
+- GO:0016491 (IEA, GO_REF:0000002): MODIFY. Target-specific NicAB studies establish nicotinate hydroxylation. NicA supplies Fe-S electron transfer and NicB supplies the catalytic/cytochrome regions; activity is executed by the assembled enzyme. GO:0050138 is NADP-specific and is not an appropriate replacement for this cytochrome-linked system.
+- GO:0020037 (IEA, GO_REF:0000002): ACCEPT. Three sequence-defined cytochrome c domains plus the full primary heme-staining/truncation experiment support functional heme association. This is integral to NicB function, not a peripheral cofactor effect.
+- GO:0043546 (ISS, file:PSEPK/nicB/nicB-uniprot.txt): NEW. The Mo-MCD-binding catalytic architecture and curated similarity-based cofactor assignment support this molecular function. It is not a new process claim, and no direct isolated-subunit cofactor quantitation is implied.
+- GO:1901848 (IDA, PMID:18678916): ACCEPT. PMID18678916 and PMID19118407 characterize the target KT2440 genes, including heterologous nicotinate conversion and knockout/recovery. The protein performs redox work in NicAB rather than merely responding to nicotinate.
+- GO:0016725 (IDA, PMID:18678916): ACCEPT. The original PMID18678916 studies the assembled target enzyme. This broad term accurately covers the cytochrome-linked chemistry; GO:0050138 instead specifies NADP+ and must not be substituted. Subunit contribution is explicit in core_functions; isolated-subunit turnover is not claimed.
+
+An exact cytochrome-linked activity is recorded under proposed_new_terms. The schema has no proposed_contributes_to_molecular_function slot; core functions therefore retain the correct GO parent for the assembled reaction and specific subunit-level binding/electron-transfer functions.

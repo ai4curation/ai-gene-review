@@ -1,0 +1,8 @@
+# PSEPK nicX research notes
+
+## 2026-10-25 complete annotation and taxon audit
+Applied review and annotation-reviewer guidance. Every seeded annotation was reviewed and machine-sourced fields preserved. No NEW process annotations were manufactured. GO-CAM index has no activity for these four accessions. Protein names, EC labels and GOA are not independent evidence; direct assays and publication-linked curated statements now support the reviews.
+Existing authentic Falcon report (June 2026) was read and retained; no provider rerun was necessary. Additional primary publications were normally fetched. `just fetch-fitness PSEPK nicX` failed because no local or remote FEBA source was reachable; no fitness artifact or result is claimed.
+
+NicX catalyzes 2,5-DHP ring opening to N-formylmaleamate, not the following NicD deformylation. PTHR34448:SF1 has official label BLL6088 PROTEIN and parent AMINOPEPTIDASE; NicX-specific IPR058739/PF26233 and biochemical activity, not this broad label, define the selected activity.
+PMID18678916 main article was read externally at PMC2516282: product NMR/MS established N-formylmaleamate and reassigned earlier apparent maleamate/formate production to contaminating deformylase. Full cached PMID33637718 directly studies KT2440 NicX and solves resting and substrate/product structures. Four protein ligands coordinate Fe(II): His265, Ser302, His318, Asp320. This corrects the old triad-only homology model repeated by the Falcon report. The enzyme is a homohexamer; DHP does not directly chelate Fe. The substrate/product and mutation experiments are completed work, so old suggestions merely to solve the fold or test the triad have been replaced. GOA self-citation and report-only support were removed.
