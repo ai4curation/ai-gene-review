@@ -45,3 +45,15 @@ The intake, lane and integration paragraphs above are historical checkpoints. Th
 PMID:35609210 Figure 7 distinguishes the outputs: intact full-length FAM149B1 restores normal length; neither 1–179 nor 180–582 does so, while 1–179 improves IFT88 distribution. The natural 528-residue product remains untested in these comparisons. The cilium-location inference stays UNDECIDED because unsuccessful distinct localization does not exclude transient, low-abundance or base-associated residence. Controlled cellular coassociation remains non-core binding, without a purified binary-interface or adaptor-function claim.
 
 The active [source guide](FAM149B1-source-guide.md) supplies the concise biological reading route and access/construct limits. The [PAINT evidence extract](FAM149B1-PAINT-evidence.json) reproduces the verified v19 target path and both actual ancestral assertions from preserved public-source captures. Current reference assessments retain both complete labeled lane scopes and unchanged cache flags. This successor reread the specified primary passages and performed saved-source phylogenetic reconstruction; it did not newly inspect figure pixels or entire papers. All original source objects, four reference objects, two natural products, normal caches and prior history records are preserved. No NEW annotation or publication quotation was added.
+
+## 2026-10-25 — PAINT assessment wording follow-up
+
+The active GO_REF:0000033 assessment now describes retention of cilium assembly at
+the imported specificity, matching the two ACCEPT reviews and existing core. This
+corrects a stale clause from the earlier assembly-to-organization proposal. All six
+review objects, both natural products, reference identities/findings, publication
+read scopes and the other reference assessments remain unchanged. Earlier journal
+entries retain their historical decisions; they do not replace the active review.
+The [source guide](FAM149B1-source-guide.md) and existing [PAINT evidence
+extract](FAM149B1-PAINT-evidence.json) retain the evidence route. No new publication
+quotation, annotation or molecular-function assertion is added.
