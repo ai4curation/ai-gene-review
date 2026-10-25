@@ -37,3 +37,9 @@ QuickGO term definitions were checked on 2026-10-25 for GO:0008968, GO:0033785, 
 No new broad downstream antibiotic biosynthesis term is proposed. Only the chemically established precursor pathway and exact enzyme functions are represented. Substrate use does not create an independent sugar-transport, lectin or host immune function.
 
 Comparator check: QuickGO annotation search on 2026-10-25 for exact GO:0097171 returned one annotation each for E. coli HldD P67910 and P. aeruginosa HldD Q9HYQ8. Both perform the same final epimerase role. Their annotation state checks the convention only; the SepC assay remains the evidence. The local GO-CAM index has no matching SepC accession entry.
+
+## PR #5542 evidence follow-up, 2026-10-25
+
+Added explicit family/domain support to both proposed annotation rows and the core function. The actual SepC record states `DR   PANTHER; PTHR43103:SF3; ADP-L-GLYCERO-D-MANNO-HEPTOSE-6-EPIMERASE; 1.` and `DR   Pfam; PF01370; Epimerase; 1.` The official subfamily label also matches the committed PANTHER ontology. These are independently computed classifications, not the unvetted submitter name or ARBA keywords.
+
+The evidence chain has three distinct parts: full-length identity connects A0A2P1G6C1 to the deposited paper protein AVM80386.1; specific PANTHER membership and the broader Pfam epimerase domain support the enzyme-family assignment; the previously inspected full-paper reaction experiment supplies the direct substrate/product and cofactor interpretation. Neither sequence identity nor classification is relabeled as a direct assay. The cached abstract quotation still supports the SepB/SepL/SepC ensemble only; no body text was inserted into the publication cache or fabricated as a cached quote. The actions and two proposed GO terms are unchanged.

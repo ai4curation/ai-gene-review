@@ -35,3 +35,8 @@ All 16 representatives have individual reviews. The 12 bacterial reviews adjudic
 Archived records are fetched by `genes/METMI/gmhA1/gmhA1-bioinformatics/fetch_archived_genes.py`: it pins official UniSave versions and uses the ordinary repository pipeline for GOA and review seeding. Source URLs, release dates, version numbers and hashes are retained. The separate `hldE_2-bioinformatics` workflow compares original GenBank construct translations with the archived proteins, with no approximate-match substitution.
 
 The protein architectures listed here are examples; the later paper also describes HldF isomerase/nucleotidyltransferase and HldG phosphatase/nucleotidyltransferase fusions. ATP use does not imply exclusion of CTP/UTP. Archaeal L,D-heptose formation or HldD activity was not demonstrated by the four-gene reconstruction; epimerase absence is not inferred.
+
+
+### PR5542 follow-up
+
+Deduplicated repeated evidence entries and made the kinase/adenylyltransferase family description explicit: PTHR30390:SF6 is present for the multifunctional SepB protein, not for standalone GmhA/DiaA enzymes, which do not satisfy the required-function constraint. Archaeal GmhB beta-substrate competence is now explicitly inferred from the actual PANTHER subfamily plus pathway context; anomer preference/exclusivity and construct identity remain unverified. Four E. coli GmhB MODIFY rationales now explain their individual terms and replacements. SepC evidence additionally combines its specific epimerase-family membership with sequence identity and the primary per-enzyme interpretation.

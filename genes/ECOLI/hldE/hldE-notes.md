@@ -30,3 +30,8 @@ PMID11751812 full text reconstructs the pathway using E. coli HldE and GmhB. Cru
 PMID10629197 full text genetically separates HldE domains and shows a heptoseless rfaE mutant. PMID16030223 full text independently supports functionally important kinase-domain dimerization and ATP-site mutants. Exact quote: “Altogether, our data support the notions that the HldE functional unit is a dimer and that structural components present in each HldE1 monomer are required for enzymatic activity.”
 
 PMID15911532 describes fractionation/proteomic localization; PMID18304323 full text documents a cytosolic proteome. Target-specific supplementary peptide tables were not re-extracted, and the existing curator-assigned IDA rows are retained with that limitation, not dismissed.
+
+
+### PR5542 follow-up, 2026-10-25
+
+Removed the cohort-level proteomics quotation from cytosol/cytoplasm annotation support. The publication reference and source-specific curator rationale remain, without presenting the aggregate 1,103-protein measurement as an independently verified HldE peptide identification.
