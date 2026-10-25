@@ -122,13 +122,37 @@ Other informative cells that do not meet either killer rule:
   semi-quantitative, and yeast and filamentous ratings are not on comparable
   colony scales.
 
+## GOA join
+
+Full write-up: [killer calls joined to GOA](FUNG_GROWTH/GOA_JOIN.md).
+
+- `FUNG_GROWTH/build_go_map.py` maps 25 plates to 16 GO catabolic-process
+  terms and 13 substrate-specific activity terms. It writes only labels;
+  every id is resolved in OLS4 by exact label and checked to be current and
+  in the right namespace (`data/carbon_source_go_map.tsv`,
+  `data/carbon_source_go_activity_map.tsv`).
+- `FUNG_GROWTH/goa_join.py` pulls 1,865 QuickGO annotations to those terms
+  for the 11 species and flags 60 rows (29 gene products, 40 IEA) where the
+  plate is a killer call (`data/goa_killer_flags.tsv`).
+- `cellobiose catabolic process` is unused in all 11 species, and
+  `starch catabolic process` is unused in *U. maydis*, so the target pairs
+  meet GO through hydrolase activities instead.
+- *S. cerevisiae* has no cellobiose-implying annotation, which agrees with
+  its plate. The clearest review candidate is two *C. albicans* GH3
+  β-glucosidases (BGL22, CAALFM_C301820WA) with IEA `cellulose catabolic
+  process` from a UniPathway mapping.
+- Three flag sets (*P. rubens* birchwood xylan, *U. maydis* citrus pectin,
+  *S. cerevisiae* apple pectin) rest on plates contradicted by a sister plate
+  of the same polymer and should be discounted.
+
 ## Next steps
 
-- Join killer phenotypes to GOA for the 11 repository species. Flag any
-  IEA/IBA rows to the matching catabolic process (e.g. cellobiose catabolism
-  in *S. pombe*, *S. cerevisiae*, *C. albicans*; starch catabolism in
-  *U. maydis*).
-- Add a curated carbon-source → GO process mapping (term ids looked up via OLS, not
-  from memory) so the join is mechanical rather than hand-matched.
+- Review the *C. albicans* BGL22 and CAALFM_C301820WA cellulose-catabolism
+  rows as gene reviews, after checking the literature on cellobiose
+  assimilation.
+- Require agreement across sister plates (pectin ×2, xylan ×3) before
+  calling a killer phenotype.
+- Read the *U. maydis* growth curves before using its calls: its no-carbon
+  score of 4 leaves little room on the 0–10 scale.
 - Ask the FUNG-GROWTH curators whether ratings of 0 on a 0-baseline plate
   are true zero growth or unscored cells, and source the ΔnoxR/ΔracA plates.
