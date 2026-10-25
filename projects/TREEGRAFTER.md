@@ -870,35 +870,42 @@ proteins is not an option: its output exists only for its published accession
 list, which includes 15 of them. So we ran a larger test on a cohort chosen
 from that list: the [DONKEY40 cohort](PROTNLM_EVALUATION/donkey40.md). It has 40 donkey proteins
 with both ProtNLM2 GO output and TreeGrafter rows, each paired with a horse
-ortholog carrying PAINT IBA rows, all reviewed 2026-10-14.
+ortholog carrying PAINT IBA rows, reviewed 2026-10-14 and re-reviewed
+2026-10-23.
 
 - **TreeGrafter on a mammal reproduces IBA.** 199 of the 225 TreeGrafter rows
   (`GO_REF:0000118` plus merged `GO_REF:0000120` rows with a PTN node) carry
-  the same term as the horse ortholog's IBA. The donkey reviews down-graded
-  12.9% of them (29 rows, counting the 8 TOO_GENERAL rows; 9.3% without
-  them), against 26.9% for this corpus, whose snapshot has no TOO_GENERAL
-  rows. The difference fits the corpus being mostly bacteria and fungi, where
-  the graft has far to go.
-- **Where donkey rows were down-graded or left UNDECIDED (41 rows), the cause
+  the same term as the horse ortholog's IBA, and no review attributes a
+  down-grade to graft placement.
+- **A correct graft does not make the rows much more reliable.** The donkey
+  reviews down-graded 17.3% of the rows by this page's definition (39 rows,
+  `REMOVE` + `MODIFY` + `MARK_AS_OVER_ANNOTATED`) and 22.7% counting the 12
+  TOO_GENERAL rows, against 26.9% for this corpus, whose snapshot has no
+  TOO_GENERAL rows. The gap is modest, rests on 40 genes (PARD3B and PIKFYVE
+  contribute six down-grades each), and mixes taxon with review vintage.
+- **Where donkey rows were down-graded or left UNDECIDED (64 rows), the cause
   was not graft placement.**
   - The input sequence (16 rows on three proteins): a PIKFYVE fragment with
     no kinase domain, a TNFRSF1A model missing part of its ectodomain, and a
     truncated SNAP23. TreeGrafter does not check that the protein keeps the
     domain the function needs.
-  - Terms inherited from the PAINT node (12 rows, the same terms horse
-    receives as IBA), such as the SNAP25 synaptic terms on SNAP23.
-  - True but too general (8 TOO_GENERAL rows).
-  - Three TreeGrafter-only rows. One of them, ATG3 `GO:0019776`, is a release
-    lag: horse IBA already carries its replacement, `GO:0141046`.
-  - Two rows that no available evidence decides (PARD3B, RBM41).
-- **ProtNLM2 on the same proteins** (69 GO predictions) is judged 80% correct
-  and 6% wrong. The caveat above applies with more force: 39 of the 55
+  - PAINT terms that over-reach (13 rows, the same terms horse receives as
+    IBA), such as the SNAP25 synaptic terms on SNAP23.
+  - PAINT terms that are right but imprecise (14 `MODIFY` rows, again the
+    same terms as horse IBA), twelve of them refined to a descendant.
+  - True but too general (12 TOO_GENERAL rows).
+  - Six rows whose term horse IBA does not carry. One, ATG3 `GO:0019776`,
+    is a release lag: horse IBA already carries its replacement,
+    `GO:0141046`.
+  - Three rows that no available evidence decides (FLCN, PARD3B, RBM41).
+- **ProtNLM2 on the same proteins** (69 GO predictions) is judged 68% correct
+  and 13% wrong. The caveat above applies with more force: 36 of the 47
   correct calls are CNN or LSP, judged against a GOA record that contains the
   TreeGrafter rows, and the same agentic process wrote both the prediction
   reviews and the gene reviews.
   - Where it overlaps the tree-based terms, it is mostly an ancestor of them:
-    27 of 37 related predictions, all correct.
-  - All 16 of its COR calls are terms neither TreeGrafter nor IBA gives.
+    28 of 38 related predictions, 24 of them correct.
+  - All 11 of its COR calls are terms neither TreeGrafter nor IBA gives.
 
 ## Propagation rules and graft paths
 
@@ -1599,7 +1606,7 @@ term is the wrong depth. A wrong reaction class (metZ) is rare.
 - **Test the fusion-seeded-root shape across PANTHER.** For every IBD on a
   family root, check whether all its seeds are multi-domain proteins whose
   extra domain the rest of the family lacks.
-- **Test a domain-coverage rule.** In DONKEY40, 20 down-graded or UNDECIDED
+- **Test a domain-coverage rule.** In DONKEY40, 16 down-graded or UNDECIDED
   TreeGrafter rows are on fragmentary or truncated donkey gene models. A rule
   that flags a TreeGrafter row when the protein lacks the InterPro domain its
   term depends on (for example a kinase term with no kinase domain) could be
@@ -1610,7 +1617,7 @@ term is the wrong depth. A wrong reaction class (metZ) is rare.
   HETGA rows (76% accepted) are a first mammalian batch and the 65 holozoan
   rows (63% down-graded) a first unicellular-eukaryote batch, both too small
   and too hand-picked to generalise from. DONKEY40 adds 225 mammalian rows,
-  selected by rule rather than by hand (9.3% down-graded).
+  selected by rule rather than by hand (17.3% down-graded, 39/225).
 - **File the `GO:0009329` label/axiom defect with GO.** This is the one item the
   2026-09-24 re-review turned from a suspicion into a verified finding (see the
   label-vs-definition bullet above): the term's definition is the AccA/AccD
