@@ -2996,22 +2996,23 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**587 of 2,876 genes are complete; 2,289 remain.**
-This checkpoint adds EVC2 and EXOC6B to the
-[merged 585 tracker](https://github.com/ai4curation/ai-gene-review/pull/5489).
-[Checkpoint 587](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-587-2026-10-25-021440-utc)
+**591 of 2,876 genes are complete; 2,285 remain.**
+This checkpoint adds EXT2, EXT1, EYA1 and EYS to the
+[merged 587 tracker](https://github.com/ai4curation/ai-gene-review/pull/5494).
+[Checkpoint 591](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-591-2026-10-25-032601-utc)
 records their approved heads, actual merges and executed merge-group CI.
 Their complete gene directories and selected dependencies match fixed main
-[`0fcfcd6ce63d`](https://github.com/ai4curation/ai-gene-review/commit/0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43).
+[`b2b10f56fdd7`](https://github.com/ai4curation/ai-gene-review/commit/b2b10f56fdd7e6996d24885376d9ff6b10f19377).
 
-Both reviews remain DRAFT: EVC2 has one core-coverage advisory, and EXOC6B
-has four generic-binding advisories and two UNDECIDED judgments. Completion
-records accepted merged work; it does not resolve every biological uncertainty.
-Only these two genes are added at this checkpoint.
+EXT2 and EXT1 remain DRAFT with six and one advisories respectively.
+Local status computation and validation recorded EYA1 and EYS as COMPLETE
+with zero advisories. UNDECIDED judgments remain explicit for all four:
+EXT2 has one, EXT1 two, EYA1 three and EYS four.
+Completion records accepted merged work, not resolution of every biological
+uncertainty. Only these four genes are added at this checkpoint.
 
-The catalogue, association text, all queue records and earlier progress are
-preserved. Dated availability inventories remain historical; this update does
-not claim a fresh availability recount.
+All catalogue identities and associations, queue records and earlier progress
+remain preserved. Dated availability inventories are unchanged.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
 remain unchecked until their review, merged files and CI evidence are accepted.
@@ -3731,11 +3732,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EVC** — HGNC:3497; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6995e30b-00db-47c2-b39b-5a41e7aa4190-2025-09-24T040000.000Z) (MONDO:0009162; AR; Definitive).
 - [x] **EVC2** — HGNC:19747; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47310dca-83c5-460e-b489-e8d90108b498-2026-02-02T170000.000Z) (MONDO:0009162; AR; Definitive); [acrofacial dysostosis, Weyers type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_139c6ac2-63a8-45ef-9de0-a414946c380a-2026-02-02T050000.000Z) (MONDO:0008673; AD; Definitive).
 - [x] **EXOC6B** — HGNC:17085; [spondyloepimetaphyseal dysplasia with joint laxity, type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_162103c3-57c8-428c-8b31-4befec82aa4c-2025-07-02T160000.000Z) (MONDO:0032724; AR; Definitive).
-- [ ] **EXT1** — HGNC:3512; [exostoses, multiple, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ced1387-c0a8-4f03-bd70-1595cb7683fd-2018-06-04T170000.000Z) (MONDO:0007585; AD; Definitive).
-- [ ] **EXT2** — HGNC:3513; [exostoses, multiple, type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9e6829ce-3e0b-44c5-a214-756f33b1e948-2018-12-21T153126.680Z) (MONDO:0007586; AD; Definitive).
-- [ ] **EYA1** — HGNC:3519; [branchio-oto-renal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dca41ef6-ee63-4b1f-93d3-8b114dafcc58-2017-11-21T170000.000Z) (MONDO:0007029; AD; Definitive).
+- [x] **EXT1** — HGNC:3512; [exostoses, multiple, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ced1387-c0a8-4f03-bd70-1595cb7683fd-2018-06-04T170000.000Z) (MONDO:0007585; AD; Definitive).
+- [x] **EXT2** — HGNC:3513; [exostoses, multiple, type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9e6829ce-3e0b-44c5-a214-756f33b1e948-2018-12-21T153126.680Z) (MONDO:0007586; AD; Definitive).
+- [x] **EYA1** — HGNC:3519; [branchio-oto-renal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dca41ef6-ee63-4b1f-93d3-8b114dafcc58-2017-11-21T170000.000Z) (MONDO:0007029; AD; Definitive).
 - [ ] **EYA4** — HGNC:3522; [dilated cardiomyopathy 1J](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e0a0bad-1f7a-402e-af19-a80453653b86-2025-02-05T050000.000Z) (MONDO:0011541; AD; Limited); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_21c75059-bd7b-48ef-a828-28ffebe52ca0-2018-01-05T170000.000Z) (MONDO:0019497; AD; Definitive).
-- [ ] **EYS** — HGNC:21555; [EYS-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f70860e-464d-4d26-aee0-07ef03e4da1b-2022-11-03T160000.000Z) (MONDO:0800391; AR; Definitive).
+- [x] **EYS** — HGNC:21555; [EYS-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f70860e-464d-4d26-aee0-07ef03e4da1b-2022-11-03T160000.000Z) (MONDO:0800391; AR; Definitive).
 - [ ] **EZH2** — HGNC:3527; [Weaver syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5dcf5941-6076-4486-94be-7ba3944abaee-2022-08-03T160000.000Z) (MONDO:0010193; AD; Definitive).
 - [ ] **F10** — HGNC:3528; [congenital factor X deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4adcc848-b354-4975-801f-4b55bbca64ad-2019-11-27T170000.000Z) (MONDO:0009212; AR; Definitive).
 - [ ] **F11** — HGNC:3529; [congenital factor XI deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a57ba9d9-45c5-48bc-b939-7593f67a86ed-2019-10-23T160000.000Z) (MONDO:0012897; SD; Definitive).

@@ -6304,3 +6304,63 @@ named checkboxes change. Dated availability inventories are unchanged.
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: `history/projects/CLINGEN_MENDELIAN/2026-10-25T021558Z-codex-69f821.yaml`.
+
+## Completion checkpoint 591 — 2026-10-25 03:26:01 UTC
+
+**591 complete; 2,285 remaining out of 2,876 primary catalogue genes.**
+This adds only EXT2, EXT1, EYA1 and EYS to
+[tracker 587, PR #5494](https://github.com/ai4curation/ai-gene-review/pull/5494).
+Independent actual-merge acceptance is by the coordinating AI agent, not a
+human maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [EXT2 #5490](https://github.com/ai4curation/ai-gene-review/pull/5490) | [`f3299defabac`](https://github.com/ai4curation/ai-gene-review/commit/f3299defabacbb021ca0c28f13d12a2f4e8c4f33) | [`212f56f04101`](https://github.com/ai4curation/ai-gene-review/commit/212f56f041010b01c80ce8a2a680e6fc3a03bf45) | 60 | 33 / 1 | DRAFT / 6 |
+| [EXT1 #5488](https://github.com/ai4curation/ai-gene-review/pull/5488) | [`0621827756fb`](https://github.com/ai4curation/ai-gene-review/commit/0621827756fb4ca0301d89f669acbcb0caf2b778) | [`ab72d4752747`](https://github.com/ai4curation/ai-gene-review/commit/ab72d475274707f696b6823c251115b8af50c9d6) | 61 | 30 / 2 | DRAFT / 1 |
+| [EYA1 #5491](https://github.com/ai4curation/ai-gene-review/pull/5491) | [`62fe39ec04f1`](https://github.com/ai4curation/ai-gene-review/commit/62fe39ec04f1789232ce9dc79bd3a80dd6b3bc8d) | [`980ac0e0a2f1`](https://github.com/ai4curation/ai-gene-review/commit/980ac0e0a2f14e779f6cc588d8d4260a7e5b0093) | 33 | 28 / 2 | COMPLETE / 0 |
+| [EYS #5493](https://github.com/ai4curation/ai-gene-review/pull/5493) | [`3367c5a7fbbe`](https://github.com/ai4curation/ai-gene-review/commit/3367c5a7fbbe108e409ca806bd4ca1f2b65e4e33) | [`501b51748c62`](https://github.com/ai4curation/ai-gene-review/commit/501b51748c62be09a902b9b7272cf325a2dadea4) | 21 | 15 / 1 | COMPLETE / 0 |
+
+All 56 approved PR path entries, 21 complete gene-directory files and 89
+external dependency entries match approved heads, actual merges and fixed main
+`b2b10f56fdd7e6996d24885376d9ff6b10f19377` in mode, type and blob. The 51 net merge paths
+exclude five EXT1 publication paths already present identically on its parent.
+The dependency ledger distinguishes 25 entries introduced by their gene merge
+from 64 reused entries; shared dependencies can appear more than once.
+EYA1 retains all 60 inherited quotation anchors and its two inherited NEW
+annotations. No quotations, source bytes or gene decisions change here.
+
+**EXT2.** EXT2 supplies the principal GlcNAc-transfer step of the Golgi EXT1–EXT2 heparan-sulfate elongation complex. Its assembled contribution to GlcA transfer is distinct from low activity in older separately expressed preparations.
+
+**EXT1.** EXT1 supplies the principal GlcA-transfer step and has measured secondary GlcNAc-transfer capacity. Its quantitative GlcNAc contribution in the native complex remains unresolved; the review retains preparation and protein-stability limits.
+
+**EYA1.** EYA1 combines conserved SIX-associated transcriptional coactivation with protein-tyrosine dephosphorylation, including H2AX-dependent regulation of the DNA-damage response. It is not assigned DNA strand-restoration chemistry, and intrinsic Ser/Thr catalysis remains unresolved.
+
+**EYS.** EYS provides conserved extracellular structural support associated with photoreceptor maintenance. The precise human interphotoreceptor topology and the functions of the four natural products remain unresolved; observed intracellular pools are not assumed to perform the same structural role.
+
+EXT2 and EXT1 retain one and two UNDECIDED judgments, respectively; EYA1 and
+EYS retain three and four despite their computed COMPLETE status. Source and
+product limits remain part of the accepted reviews.
+
+All three jobs passed in each actual merge-group run: [EXT2](https://github.com/ai4curation/ai-gene-review/actions/runs/40152868921), [EXT1](https://github.com/ai4curation/ai-gene-review/actions/runs/40153258542), [EYA1](https://github.com/ai4curation/ai-gene-review/actions/runs/40153641652), [EYS](https://github.com/ai4curation/ai-gene-review/actions/runs/40154709309).
+Each broad suite ran 4,293 Python tests (one skipped, 84 deselected),
+278 doctests (37 skipped), 12 examples, 438 overlapping automation tests,
+19 JavaScript tests, mypy over 287 files and Ruff. Counts overlap and are not
+summed. Target strict checks retained the advisories shown above; the separate
+all-gene batch was schema-only. Conditional prediction and upstream PAINT
+checks were skipped. Global warnings, unresolved checks and the nonfatal SQL
+cleanup exception remain recorded in the accepted audits; aggregate gates
+add no tests. The queue update preserves the per-run evidence and skip lists.
+
+- [EXT2 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/212f56f041010b01c80ce8a2a680e6fc3a03bf45/history/genes/human/EXT2/2026-10-25T014149Z-codex-6225f1.yaml)
+- [EXT1 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/ab72d475274707f696b6823c251115b8af50c9d6/history/genes/human/EXT1/2026-10-25T015241Z-codex-2325ba.yaml)
+- [EYA1 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/980ac0e0a2f14e779f6cc588d8d4260a7e5b0093/history/genes/human/EYA1/2026-10-25T020022Z-codex-0af32f.yaml)
+- [EYS accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/501b51748c62be09a902b9b7272cf325a2dadea4/history/genes/human/EYS/2026-10-25T020807Z-codex-7df027.yaml)
+
+Update 122 preserves all 2,876 identities and association text, 235 queue
+objects, 121 earlier updates and preceding progress bytes. Only the four named
+checkboxes change. The separate remote-main observation at 2026-10-25T03:26:01.626618+00:00
+was `b2b10f56fdd7e6996d24885376d9ff6b10f19377`; source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/8c7ae8004be4e7855e189a3475bb67ae0f21afb3/history/projects/CLINGEN_MENDELIAN/2026-10-25T033732Z-codex-767415.yaml).
