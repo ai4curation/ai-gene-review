@@ -40,10 +40,14 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) is ready for review. All six members reviewed; module validation and GitHub validation/test checks pass. The automated reviewer failed before producing an assessment; required approval and merge remain pending.
-- [ ] `abscisic_acid_signaling`: [draft PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) audits six steps, eight family annotons, 26 references, and 19 members (524 adjudicated rows). Targeted checks pass with documented module advisories; broad validation, PR review and merge remain pending. Branch `cmungall/aigr-aba-taxon-audit`.
-- [ ] `activin_receptor_signaling`: research and member reviews are in progress in branch `cmungall/aigr-activin-taxon-audit`; no PR yet.
-- [ ] Remaining 699 modules: recorded individually as NOT_STARTED in the inventory.
+- [x] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) merged after approval and required checks, at `7d28f887b2dbbab34afee940716ba660efc3a173`. Six member reviews, comparative literature, step/edge evidence and taxon/family grounding were rechecked in the merged content.
+- [ ] `abscisic_acid_signaling`: [PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) has 19 reviewed members (524 rows), passed full local validation and is approved in the normal merge queue.
+- [ ] `activin_receptor_signaling`: [PR #5541](https://github.com/ai4curation/ai-gene-review/pull/5541) is approved with all required head checks green and awaits merge-queue integration. All 11 members and 29 references curated; full local validation passed.
+- [ ] `adp_heptose_biosynthesis`: [PR #5542](https://github.com/ai4curation/ai-gene-review/pull/5542) is approved and queued after full repository validation. All 16 members, 12 references and 26 histories are complete.
+- [ ] `adrenal_steroidogenesis`: [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) is ready after full validation. Its 13 gene reviews preserve 434 rows; 26 references and 21 histories are curated. Review fixes are pushed on `3837d4fbce`; an upstream merge conflict must be resolved before CI can restart.
+- [ ] `aerobic_nicotinate_degradation`: [draft PR #5544](https://github.com/ai4curation/ai-gene-review/pull/5544) has 12 curated references and 12 gene reviews. Follow-up `90df36ce72` retains all 42 original rows and adds one evidence-backed NicC process proposal (43 total); 27 histories and all targeted checks pass. Full validation is running.
+- [ ] `alcoholic_fermentation`: 23 members and 487 original rows reviewed across yeast, plants, bacteria and Carassius; 34 curated references. Canonical and E1-derived entry variants, member-specific metal activation, native Bacillus branch and six comparative reviews are integrated. Targeted checks pass and full validation is running; a dedicated PR is being prepared.
+- [ ] Remaining 695 baseline modules: recorded individually as NOT_STARTED. One of 702 baseline audits is complete; five further module PRs are open and fermentation is in preparation. Refresh upstream additions before final completion.
 
 ## Notes
 
@@ -60,3 +64,10 @@ PhnW biochemistry (PMID:12107130), comparative Bacillus/Salmonella PhnX biochemi
 the distinction between assayed proteins and homology-based KT2440 assignments.
 Falcon/fallback research requests for new members failed authentication or quota
 checks; individual notes document manual primary-literature research instead.
+
+The ADP-heptose audit also checks the protein architecture boundary: standalone
+HldA/HldC, bifunctional HldE and trifunctional SepB provide different implementations
+of the same reactions. Archived DSM2067 records preserve strain identity after UniProt proteome pruning;
+only the kinase has an exact published-construct match, while three assignments remain qualified; the engineered S2 host is not mislabeled
+as an endogenous producer. The overlapping broad PR #5076 supplies ancestry edits
+but does not replace this literature, taxon and member audit.
