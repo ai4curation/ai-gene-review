@@ -2,6 +2,8 @@
 title: "Reactome-GO Alignment Project"
 maturity: SCOPING
 tags: [PIPELINE]
+species:
+  - human
 ---
 
 # Reactome-GO Alignment Project
@@ -164,15 +166,36 @@ template for a concise pathway-level reconciliation.
   ingester and make network/HTTP fetch failures skip only the affected slice,
   so the two newly seeded pathways can be live-fetched without refreshing the
   three already materialized imports.
+- [x] 2026-10-24: Live-fetch the two pending Reactome curated slices and emit
+  normalized imports plus
+  [GPI anchor core-glycan](REACTOME/pathway-alignments/gpi_anchor_core_glycan_assembly.md)
+  and
+  [glycosphingolipid lysosomal](REACTOME/pathway-alignments/glycosphingolipid_lysosomal_degradation.md)
+  alignment reports.
 - [ ] Resolve the four high-priority repeated MF events by deciding whether the
   Reactome family grouping is over-broad, the GO MF mapping is too general, or
   one paralog-specific gene review needs curation follow-up.
-- [ ] Re-run
-  `python3 projects/REACTOME/ingest_reactome_pathways.py --pathway gpi_anchor_core_glycan_assembly --pathway glycosphingolipid_lysosomal_degradation`
-  once `reactome.org` DNS resolution is available, then inspect the materialized
-  PSAP and PIGX rows for exact-event/missing-executor verdicts.
 
 ## Notes
+
+### 2026-10-24
+
+Materialized the two 2026-10-09 Reactome ContentService slices against
+Reactome release 97. `gpi_anchor_core_glycan_assembly` imports five reactions
+from `R-HSA-162710`: PIGL is a full exact match, PIGM/PIGX is correctly held at
+`same_reaction_executor_unconfirmed` because Reactome represents the
+mannosyltransferase I executor as the PIGM:PIGX complex, and the PIGW, PIGV,
+and PIGB rows are exact executor matches whose Reactome MFs are broad parents
+of the local activity terms.
+
+`glycosphingolipid_lysosomal_degradation` imports five reactions from
+`R-HSA-1660661`. GALC and SMPD1 are full exact matches; GBA, ASAH1, and ARSA
+are complex-mediated executor overlaps; and the PSAP lipid-presentation row
+that deliberately reuses ARSA's sulfatide reaction is now visible as a
+`same_reaction_missing_executor` case, because PSAP sits in the substrate
+complex in the imported event while ARSA is the catalytic executor. The two
+GLB1 GM1/LacCer reactions remain `module_only_event` rows until that curated
+slice is widened past the five initially selected unique catalytic events.
 
 ### 2026-10-21
 
@@ -218,9 +241,9 @@ record verdict-bearing YAML objects and cross-link same-participant candidates
 when a local selector overlaps an imported reaction under a different stable
 ID. Offline regeneration from the existing imports found one such fuzzy link:
 the current Reactome `R-HSA-70635` urea-cycle subtree contains mitochondrial
-ARG2 arginase activity, while the local urea-cycle module includes ARG2 as a
-representative of the ARG1/ARG2 arginase family but cites only the cytosolic
-ARG1 reaction.
+`ARG2` arginase activity, while the local urea-cycle module includes `ARG2` as a
+representative of the `ARG1`/`ARG2` arginase family but cites only the cytosolic
+`ARG1` reaction.
 
 Added a repeatable `--pathway` selector for `ingest_reactome_pathways.py` and
 made live-fetch network failures local to each requested slice. A targeted
