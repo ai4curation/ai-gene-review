@@ -350,6 +350,27 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 - [ ] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
   PTHR43797:SF2 subfamily
 
+## Family 17: HMG-CoA Reductases
+
+`PTHR10572` contains class I HMG-CoA reductases. PAINT places
+`GO:0004420` HMG-CoA reductase activity, `GO:0008299` isoprenoid
+biosynthesis, and `GO:0016126` sterol biosynthesis at the family-root
+`PANTHER:PTN000060346`, a eukaryotic ER-membrane assertion plus an over-broad
+peroxisomal-membrane assertion at `PANTHER:PTN000060347`, and a fungal
+ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
+
+- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
+  `COMPLETE`
+- [x] `yeast/HMG2` - *S. cerevisiae* regulated minor HMG-CoA reductase isozyme;
+  already `COMPLETE`
+- [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
+  exemplar
+- [x] `CANAL/HMG1` - CGD *Candida albicans* class I HMG-CoA reductase; drafted
+  in this PR
+- [ ] `ASPFU/hmg1` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 1
+- [ ] `ASPFU/hmg2` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 2
+- [ ] `EMENI/AN1593` - *Aspergillus nidulans* short PTHR10572 member
+
 ---
 
 # NOTES
@@ -362,6 +383,10 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
   `EMENI/cysD`, all of which fall in `PTHR43797:SF2` under the shared
   `PTN002887184` PAINT node for homocysteine synthase activity and
   L-homocysteine biosynthesis.
+- Started PTHR10572 HMG-CoA reductases with `CANAL/HMG1`. The family review
+  already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
+  membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
+  the eukaryotic peroxisomal-membrane IBA for fungal pruning.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission

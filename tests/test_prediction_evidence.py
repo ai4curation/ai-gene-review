@@ -49,6 +49,28 @@ def test_invalid_prediction_evidence_fails(tmp_path: Path, fault: str) -> None:
     assert not validate_prediction_evidence(path, tmp_path).is_valid
 
 
+def test_goa_file_as_support_fails(tmp_path: Path) -> None:
+    path = write_case(tmp_path)
+    (tmp_path / "genes/X-goa.tsv").write_text("enables\tGO:0003674\tmolecular_function\n")
+    data = yaml.safe_load(path.read_text())
+    data["references"].append({"id": "file:X-goa.tsv", "title": "GOA"})
+    data["predictions"][0]["review"]["supported_by"].append(
+        {"reference_id": "file:X-goa.tsv", "supporting_text": "molecular_function"})
+    path.write_text(yaml.safe_dump(data))
+    report = validate_prediction_evidence(path, tmp_path)
+    assert not report.is_valid
+    assert [i.check_type for i in report.issues] == ["supporting_text_goa_file"]
+
+
+def test_goa_file_listed_only_in_references_passes(tmp_path: Path) -> None:
+    path = write_case(tmp_path)
+    (tmp_path / "genes/X-goa.tsv").write_text("enables\tGO:0003674\tmolecular_function\n")
+    data = yaml.safe_load(path.read_text())
+    data["references"].append({"id": "file:X-goa.tsv", "title": "GOA"})
+    path.write_text(yaml.safe_dump(data))
+    assert validate_prediction_evidence(path, tmp_path).is_valid
+
+
 def test_missing_quote_is_reported_without_changing_schema_optionality(tmp_path: Path) -> None:
     path = write_case(tmp_path)
     data = yaml.safe_load(path.read_text())
