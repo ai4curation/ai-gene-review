@@ -2,10 +2,8 @@
 
 A MODIFY that replaces a precomposed term such as GO:0061740 *protein targeting
 to lysosome involved in chaperone-mediated autophagy* by its genus X should say
-where the context Y went: an annotation extension
-(``review.proposed_replacement_extensions``), a GO-CAM or module
-(``review.decomposed_into``), the review's core functions, or a deliberate
-``context_dropped``. See ``projects/INVOLVED_IN_PRECOMPOSITION.md``.
+where the context Y went, in ``review.decomposed_into``: a GO-CAM, a module, the
+review's core functions, or a deliberate ``context_dropped``. See ``projects/INVOLVED_IN_PRECOMPOSITION.md``.
 """
 
 from __future__ import annotations
@@ -81,12 +79,12 @@ def check_decomposition(
 ) -> None:
     """Check the decomposition slots of every existing-annotation review.
 
-    * ``proposed_replacement_extensions`` / ``decomposed_into`` only with MODIFY.
+    * ``decomposed_into`` only with MODIFY.
     * modules resolve to ``modules/<module>.yaml``, elements to an id inside it.
     * GO-CAM models resolve to a cached ``gocams/<id>/`` folder.
     * ``context_dropped`` cannot be combined with somewhere the context went.
-    * a MODIFY of an "X involved in Y" term to exactly X, with no extension and
-      no ``decomposed_into``, drops Y silently (warning).
+    * a MODIFY of an "X involved in Y" term to exactly X with no
+      ``decomposed_into`` drops Y silently (warning).
     """
     for i, ann in enumerate(data.get("existing_annotations") or []):
         if not isinstance(ann, dict) or not isinstance(ann.get("review"), dict):
@@ -94,16 +92,15 @@ def check_decomposition(
         review = ann["review"]
         base = f"existing_annotations[{i}].review"
         action = review.get("action")
-        exts = review.get("proposed_replacement_extensions") or []
         dec = review.get("decomposed_into") or {}
 
-        if (exts or dec) and action != "MODIFY":
+        if dec and action != "MODIFY":
             _issue(
                 report,
                 ValidationSeverity.ERROR,
-                f"proposed_replacement_extensions/decomposed_into used with action {action}",
+                f"decomposed_into used with action {action}",
                 base,
-                "These slots qualify a MODIFY's replacement; use MODIFY or drop them",
+                "decomposed_into qualifies a MODIFY's replacement; use MODIFY or drop it",
                 "decomposition_requires_modify",
             )
 
@@ -145,8 +142,7 @@ def check_decomposition(
                 )
 
         carried = bool(
-            exts
-            or dec.get("module_associations")
+            dec.get("module_associations")
             or dec.get("gocam_associations")
             or dec.get("in_core_functions")
         )
@@ -178,7 +174,7 @@ def check_decomposition(
                 ValidationSeverity.WARNING,
                 f"MODIFY to the genus '{genus}' of a precomposed term drops its 'involved in' context silently",
                 base,
-                "Add proposed_replacement_extensions part_of(Y), or decomposed_into "
-                "(gocam/module/in_core_functions), or decomposed_into.context_dropped with a reason",
+                "Add decomposed_into: gocam_associations, module_associations, "
+                "in_core_functions, or context_dropped with a reason",
                 "decomposition_context_dropped_silently",
             )

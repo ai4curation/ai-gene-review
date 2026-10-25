@@ -14,10 +14,6 @@ PRECOMPOSED = {
     "label": "protein targeting to lysosome involved in chaperone-mediated autophagy",
 }
 GENUS = {"id": "GO:0006622", "label": "protein targeting to lysosome"}
-PART_OF_CMA = {
-    "predicate": "BFO:0000050",
-    "term": {"id": "GO:0061684", "label": "chaperone-mediated autophagy"},
-}
 # Real repository fixtures: a cached GO-CAM and a module with a known node id.
 GOCAM = "gomodel:63c0ac2b00001252"
 MODULE = "apoptotic_execution_phase"
@@ -56,7 +52,6 @@ def test_review_model_accepts_decomposition_slots():
         summary="s",
         action="MODIFY",
         proposed_replacement_terms=[GENUS],
-        proposed_replacement_extensions=[PART_OF_CMA],
         decomposed_into={
             "gocam_associations": [{"model": GOCAM}],
             "module_associations": [{"module": MODULE, "element": MODULE_ELEMENT}],
@@ -64,14 +59,12 @@ def test_review_model_accepts_decomposition_slots():
         },
     )
     assert review.decomposed_into.module_associations[0].module == MODULE
-    assert review.proposed_replacement_extensions[0].term.id == "GO:0061684"
 
 
 @pytest.mark.parametrize(
     "extra,expected",
     [
         ({}, "decomposition_context_dropped_silently"),
-        ({"proposed_replacement_extensions": [PART_OF_CMA]}, None),
         ({"decomposed_into": {"gocam_associations": [{"model": GOCAM}]}}, None),
         ({"decomposed_into": {"in_core_functions": True}}, None),
         ({"decomposed_into": {"context_dropped": True}}, None),
@@ -111,8 +104,10 @@ def test_review_model_accepts_decomposition_slots():
         ),
         (
             {
-                "proposed_replacement_extensions": [PART_OF_CMA],
-                "decomposed_into": {"context_dropped": True},
+                "decomposed_into": {
+                    "context_dropped": True,
+                    "gocam_associations": [{"model": GOCAM}],
+                }
             },
             "decomposition_contradictory",
         ),
@@ -141,6 +136,6 @@ def test_lateral_modify_does_not_warn():
 @pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE"])
 def test_slots_require_modify(action):
     report = _validate(
-        {"action": action, "proposed_replacement_extensions": [PART_OF_CMA]}
+        {"action": action, "decomposed_into": {"in_core_functions": True}}
     )
     assert "decomposition_requires_modify" in _checks(report)

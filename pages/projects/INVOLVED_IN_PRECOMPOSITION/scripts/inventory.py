@@ -359,10 +359,7 @@ def main() -> None:
                 "qualifier": ea.get("qualifier"),
                 "has_extensions": bool(ea.get("extensions")),
                 "action": review.get("action"),
-                "decomposition_recorded": bool(
-                    review.get("proposed_replacement_extensions")
-                    or review.get("decomposed_into")
-                ),
+                "decomposition_recorded": bool(review.get("decomposed_into")),
                 "proposed_replacement_terms": [
                     f"{r.get('id')} {r.get('label', '')}".strip()
                     for r in review.get("proposed_replacement_terms") or []

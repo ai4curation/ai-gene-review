@@ -12,13 +12,14 @@ Y", and it has already obsoleted 1,265 more, 883 of them with a comment that
 the term "is pre-composed and should be captured as a GO-CAM model". Our gene
 reviews use 299 distinct such terms in 1,023 `existing_annotations` rows
 across 519 genes (23 species folders); 14 of those rows already sit on
-obsolete terms. The schema could not express the replacement GO asks for:
-`MODIFY` took replacement terms only, with no annotation extension and no
-link to a GO-CAM or module. This project added that schema (MODIFY plus
-`proposed_replacement_extensions` and `decomposed_into`), worked the 14
-obsolete-term rows and a chaperone-mediated autophagy pilot with a new module,
-and queues the remaining genes and the recurring "Y" contexts as module
-candidates.
+obsolete terms. The schema could not say where the Y context goes when a
+term is replaced by its X. This project added `decomposed_into` to MODIFY
+(pointing at a module, a GO-CAM or the gene's core functions, or recording that
+Y is not carried), worked the 14 obsolete-term rows and a chaperone-mediated
+autophagy pilot with a new module, and set a module policy: **modules are the
+reusable mechanisms (X), not the contexts (Y)**. A short-lived
+annotation-extension slot was removed, because X plus `part_of(Y)` just
+restates the retired class.
 
 ## What "precomposed" means, and what "replace it with a GO-CAM" means
 
@@ -80,25 +81,27 @@ linked to the annotation*. The loss happens when people "decompose" by
 splitting the row into two unrelated annotations (`involved_in X`,
 `involved_in Y`), because that drops the fact that X happens *as part of* Y.
 
-There are three places in our framework that can hold the link, from
-lightest to heaviest:
+Where the context should go, in this framework:
 
-1. **Annotation extension** (GAF column 16 / GPAD): `involved_in GO:0006622`
-   with extension `part_of(GO:0061684)`. This is single-gene and
-   single-hop, and exactly equivalent to the precomposed class. GO's
-   `replaced_by` cannot produce this: it names a single term, which is
-   applied to existing annotations automatically, so an obsoleted
-   precomposition necessarily keeps one half and drops the other. `consider`
-   lists both halves, but it is advice for a curator, not an automated
-   mapping.
-2. **`core_functions`** in the gene review. These are already a gene-local
-   GO-CAM: `molecular_function` + `directly_involved_in` + `locations` +
-   `in_complex`. An MF-`part_of`-BP term maps one-to-one onto a core function
-   (`molecular_function: X`, `directly_involved_in: [Y]`).
-3. **Module / production GO-CAM**. This is multi-gene and causal, and it is
-   the right home when Y is a pathway or developmental program with several
-   reviewed participants (ureteric bud branching, sprouting angiogenesis,
-   ESCRT/MVB sorting, cardiac conduction).
+1. **A module or production GO-CAM**, when the gene takes part in a
+   multi-participant mechanism. This is the real replacement: it adds the
+   activity that does the work, its inputs, and the causal links around it.
+2. **The gene's `core_functions`**, when Y is central to the gene. These are
+   already a gene-local GO-CAM (`molecular_function` + `directly_involved_in` +
+   `locations` + `in_complex`).
+3. **Nowhere**, recorded as `context_dropped`, when Y is peripheral (typically
+   a propagated developmental phenotype) or was itself the over-annotation.
+
+**Not an annotation extension.** `involved_in X` with `part_of(Y)` is exactly
+GO's logical definition of the retired class, so writing it is
+precomposition in different syntax. GO asked for these terms to be "captured
+as a GO-CAM model", not re-encoded. We briefly had an extension slot and
+removed it (2026-10-25); see the schema section.
+
+GO's own pointers behave accordingly. `replaced_by` names a single term and
+is applied to existing annotations automatically, so an obsoleted
+precomposition necessarily keeps one half. `consider` lists both halves, but
+it is advice for a curator, not an automated mapping.
 
 ## Inventory (GO release 2026-07-26)
 
@@ -145,8 +148,9 @@ yeast 21, DANRE 19, other 56.
 | rat/Rgn (IDA) | GO:1903052 pos. reg. of proteolysis involved in protein catabolic process | MODIFY → GO:0045732 | replaced_by GO:0045732 ✓ |
 
 The GATA3 `consider` pairs show the information loss directly. GO offers
-both halves as separate terms, and only an extension (or a model) can keep
-"negative regulation of proliferation *as part of* mesonephros development".
+both halves as separate terms; only a model can keep "negative regulation of
+proliferation *as part of* mesonephros development", and the question is
+whether that context is worth a model at all.
 
 ### Where GO-CAMs already realize the decomposition
 
@@ -174,46 +178,80 @@ Production GO-CAMs are themselves full of precomposed BP nodes. "Replace with
 a GO-CAM" is therefore an instruction to the GO-CAM curators too, not only to
 the GAF.
 
-### Recurring Y contexts (module candidates)
+### Recurring Y contexts
 
 [`data/module_candidates.yaml`](INVOLVED_IN_PRECOMPOSITION/data/module_candidates.yaml)
-groups rows by Y. There are 184 contexts. 67 have three or more genes, and
+groups rows by Y. There are 184 contexts; 67 have three or more genes, and
 54 of those are named by no module (crude test: the GO id does not appear in
-any module YAML). Strong candidates for new or extended modules:
+any module YAML). They are **not** a module to-do list. Read them through the
+module policy below: some Y's are really mechanisms (module material), most
+are tissue or developmental contexts (not).
 
-| Y context | Genes | Existing module |
-|---|---|---|
-| GO:0007605 sensory perception of sound (hair-cell mechanotransduction) | 12 (TMC1, tmc2a/b, LOXHD1, WHRN, PDZD7, ADGRV1, …; also developmental MYC/KIT/Sox2) | none |
-| GO:0002042 / GO:0002040 sprouting angiogenesis | 11 + 7 (VEGFA, NOTCH1, FGF2, ABL1, …) | `vegfr_signaling` (does not name the BP) |
-| GO:0060675 / GO:0001658 ureteric bud (branching) morphogenesis | 10 + 7 (BMP4, FGF1/2, SHH, SOX9, AGT, …) | `fgfr_signaling`, `hedgehog_signaling` (indirect) |
-| GO:0086064 electrical coupling in cardiac conduction | 9 (CALM1-3, CAV1, TBX5, …) | none |
-| GO:0043162 ubiquitin-dependent catabolism via MVB sorting (ESCRT-I) | 9 (TSG101, VPS28, VPS37A/B, MVB12A, UBAP1, …) | none |
-| GO:0035773 glucose-stimulated insulin secretion | 13 | `beta_cell_glucose_stimulated_insulin_secretion` ✓ |
-| GO:0061684 chaperone-mediated autophagy | 4 (HSPA8 in human, mouse and rat; CLU) | none (production GO-CAM exists) |
-| GO:0003272 endocardial cushion formation (EMT) | 6 (NOTCH1, RBPJ, BMP4, FGF8) | `notch_signaling` (indirect) |
-| DICDI sorocarp development (aggregation, culmination, slug) | 69 rows | `dicty_extracellular_camp_relay`, `dicty_starvation_initiation`, `dicty_allorecognition_adhesion` |
+| Y context | Genes | What it is | Where rows go |
+|---|---|---|---|
+| GO:0061684 chaperone-mediated autophagy | 4 (HSPA8 ×3 species, CLU) | mechanism | `chaperone_mediated_autophagy` ✓ (built) |
+| GO:0043162 ubiquitin-dependent catabolism via MVB sorting | 9 (TSG101, VPS28, VPS37A–D, MVB12A, UBAP1, COS9) | mechanism (ESCRT-I) | new ESCRT module, or generalize `dmel_escrt_machinery` |
+| GO:0007605 sensory perception of sound | 12 (TMC1, tmc2a/b, LOXHD1, WHRN, PDZD7, ADGRV1; also MYC/KIT/Sox2) | Y is a context; the X (detection of mechanical stimulus) is the hair-cell mechanotransduction mechanism | new mechanotransduction-complex module for the MET genes; drop the context for the developmental ones |
+| GO:0035773 glucose-stimulated insulin secretion | 13 | mechanism | `beta_cell_glucose_stimulated_insulin_secretion` ✓ |
+| GO:0086064 electrical coupling in cardiac conduction | 9 (CALM1–3, CAV1, TBX5, HRC) | context (cardiac); mixed mechanisms | per row; no new module |
+| GO:0002042 / GO:0002040 sprouting angiogenesis | 11 + 7 (VEGFA, NOTCH1, FGF2, ABL1…) | developmental context | the gene's signalling module (`vegfr_signaling`, `notch_signaling`, `fgfr_signaling`); no angiogenesis module |
+| GO:0060675 / GO:0001658 ureteric bud (branching) morphogenesis | 10 + 7 (BMP4, FGF1/2, SHH, SOX9, AGT…) | developmental context | the signalling modules; no ureteric-bud module |
+| GO:0003272 endocardial cushion formation | 6 (NOTCH1, RBPJ, BMP4, FGF8) | developmental context | `notch_signaling`, `bmp_signaling` |
+| DICDI sorocarp development (aggregation, culmination, slug) | 69 rows | lineage stage terms (class D-i) | keep the terms; existing dicty modules |
 
 Broad contexts such as `apoptotic process` (26 genes), `immune response`, or
-`anatomical structure development` are not module candidates. They mostly
-mark grouping terms (see class D below).
+`anatomical structure development` mostly mark grouping terms (class D).
+
+## Module policy: modules are the composable parts
+
+A precomposed term is usually **mechanism X used in context Y**:
+*cell migration* in *sprouting angiogenesis*, *negative regulation of FGFR
+signaling* in *ureteric bud formation*, *protein targeting to lysosome* in
+*chaperone-mediated autophagy*. Modules should model the X side.
+
+- **Build a module when X (or Y) is a reusable, multi-participant mechanism**
+  with its own steps: chaperone-mediated autophagy, ESCRT-I sorting, the
+  hair-cell mechanotransduction complex, caspase activation and inhibition.
+  Such a module is used across many contexts.
+- **Do not build a module per developmental or tissue context.** Ureteric bud
+  branching, sprouting angiogenesis, heart valve morphogenesis and mesonephros
+  development are not mechanisms. They are programmes that reuse mechanisms we
+  already model (FGFR, GDNF/RET, Notch, VEGFR, BMP, Hedgehog signalling) in a
+  particular place and order. A module per context would duplicate the
+  signalling modules with a tissue label attached, and it would recreate the
+  X × Y explosion that GO is removing, one level up.
+- **Contexts are expressed as context, not as new mechanisms.** When a
+  developmental programme is genuinely worth curating, model it as a concrete
+  composition. That can be a production GO-CAM, which is instance-level and
+  causal and is GO's intended home. It can also be a concrete module whose
+  `context` carries the `anatomical_locations`, `developmental_stages` and
+  `cell_types`, and whose parts `conforms_to` the existing signalling
+  templates. Both already exist in the schema. Do this only when the programme
+  is the object of curation, never just to give one annotation somewhere to
+  point.
+- **So a row points at its mechanism.** A VEGFA row on "positive regulation of
+  cell migration involved in sprouting angiogenesis" decomposes to positive
+  regulation of cell migration, with `decomposed_into` naming the
+  `vegfr_signaling` element VEGFA occupies. The angiogenesis context is either
+  in that module's context (if it is the module's scope) or dropped.
 
 ## Triage scheme for every row
 
 Each row gets one **decomposition outcome**, recorded alongside the ordinary
-action:
+action. Every outcome that keeps X is a MODIFY to X with `decomposed_into`
+saying where Y went:
 
 | Class | Rows | Default outcome |
 |---|---|---|
-| **A. MF `part_of` BP** | 72 | Decompose: genus MF (`enables`) + `part_of(Y)`. Also make it a `core_function` (MF + `directly_involved_in: [Y]`) if core. |
-| **B. BP `part_of` BP** | 513 | Decompose: `involved_in` genus + `part_of(Y)`. If the gene's real contribution is an MF, record that in core_functions. |
-| **C. regulation of a nested term** | 222 | Two-step unfolding: `regulation of X` + `part_of(Y)`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes. |
+| **A. MF `part_of` BP** | 72 | MODIFY to the MF. Y goes to the mechanism module or GO-CAM, or to a `core_function` (MF + `directly_involved_in: [Y]`) if core. |
+| **B. BP `part_of` BP** | 513 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
+| **C. regulation of a nested term** | 222 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
 | **D. no logical definition** | 216 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition. |
 
 Outcomes:
 
-- `DECOMPOSE_EXTENSION` — MODIFY to the genus with `part_of(Y)` (needs schema change 1).
-- `DECOMPOSE_MODEL` — MODIFY to the genus, and Y lives in a named GO-CAM activity or module node (needs schema change 2). Use this when Y has a module, or an existing GO-CAM for the gene or an ortholog realizes Y.
-- `DROP_CONTEXT` — MODIFY to the genus alone, because the Y context was the over-annotation (e.g. *Drosophila* acetyltransferase complex members on `DNA strand elongation involved in DNA replication`).
+- `DECOMPOSE_MODEL` — MODIFY to the genus; Y lives in a named GO-CAM activity or module element (`decomposed_into.gocam_associations` / `module_associations`), or in the gene's core functions (`in_core_functions`).
+- `DROP_CONTEXT` — MODIFY to the genus with `context_dropped: true`, because Y is peripheral context that does not warrant a model, or was itself the over-annotation (e.g. *Drosophila* acetyltransferase complex members on `DNA strand elongation involved in DNA replication`). The reason says which.
 - `KEEP_PRECOMPOSED` — the term is the right grain (D-i/D-ii) or GO is not retiring it. Record the reason.
 - Ordinary `REMOVE` / `MARK_AS_OVER_ANNOTATED` when neither X nor Y holds. Decomposing does not rescue a wrong annotation.
 
@@ -224,16 +262,20 @@ what curators declined" test also applies to Y: being necessary for Y (a
 knockout phenotype) is not the same as doing part of Y, and many class C
 rows fail that test.
 
-## Schema: decomposition slots on MODIFY (implemented)
+## Schema: `decomposed_into` on MODIFY (implemented)
 
 Before this project, `Review` had only `action`, `reason` and
-`proposed_replacement_terms` (id and label). It could carry **no extension
-and no link to a GO-CAM or module**. `extensions` existed only on
-`ExistingAnnotation`, describing the *original* GOA row. "MODIFY to X with
-part_of(Y)" could only be written as prose.
+`proposed_replacement_terms` (id and label), so a MODIFY to X could not say
+where Y went except in prose.
 
-Decision (project owner, 2026-10-18): keep **MODIFY**, with no new action, and
-add two optional slots to `Review`:
+Decisions (project owner): keep **MODIFY**, with no new action (2026-10-18);
+record Y only by reference to a model, not as an annotation extension
+(2026-10-25). For one week the schema also had `proposed_replacement_extensions`
+(X plus `part_of(Y)`). It was removed because it restated the retired class,
+added none of the structure a model adds, duplicated the module link where both
+existed, and nothing in the pipeline consumed it. Its 15 rows were converted:
+the 8 HSPA8 rows already linked to the GO-CAM and module; the 7 GATA3, NOTCH1
+and DNMT1/Dnmt1 rows became `context_dropped`.
 
 ```yaml
 review:
@@ -241,11 +283,6 @@ review:
   proposed_replacement_terms:
     - id: GO:0006622
       label: protein targeting to lysosome
-  proposed_replacement_extensions:        # AnnotationExtension list; qualifies every replacement
-    - predicate: BFO:0000050              # part_of
-      term:
-        id: GO:0061684
-        label: chaperone-mediated autophagy
   decomposed_into:                        # Decomposition: where Y now lives
     gocam_associations:                   # GoCamAssociation (same class modules use)
       - model: gomodel:63c0ac2b00001252
@@ -254,7 +291,7 @@ review:
       - module: chaperone_mediated_autophagy
         element: hspa8_substrate_adaptor
     in_core_functions: true               # Y recorded in core_functions[].directly_involved_in
-    context_dropped: false                # true = Y was the over-annotation, deliberately dropped
+    context_dropped: false                # true = Y deliberately not carried (peripheral, or the over-annotation)
     notes: ...
 ```
 
@@ -263,20 +300,18 @@ validate`, tested in `tests/test_decomposition_validation.py`):
 
 | check | severity |
 |---|---|
-| slots used with an action other than MODIFY | error |
+| `decomposed_into` used with an action other than MODIFY | error |
 | `module_associations[].module` not at `modules/<module>.yaml`, or `element` not an id in it | error |
 | `gocam_associations[].model` not cached under `gocams/` | error |
 | `context_dropped` combined with somewhere Y went | error |
-| MODIFY of "X involved in Y" to exactly X, with no extension, no `decomposed_into`, and no `context_dropped` | warning (`decomposition_context_dropped_silently`) |
+| MODIFY of "X involved in Y" to exactly X with no `decomposed_into` | warning (`decomposition_context_dropped_silently`) |
 
 Lateral MODIFYs, where the replacement is not the genus, are not flagged. The
-warning only catches X being kept while Y disappears without a word. The
-gene-review HTML template shows extensions next to the replacement terms and
-`decomposed_into` as badges.
+gene-review HTML template shows `decomposed_into` as badges.
 
 ## Worked cases (round 1)
 
-Each case is recorded in the gene review with the new slots and validates
+Each case is recorded in the gene review with `decomposed_into` and validates
 cleanly. 16 rows now carry a recorded decomposition (`rows_decomposition_recorded`
 in `data/summary.yaml`).
 
@@ -284,10 +319,10 @@ in `data/summary.yaml`).
 
 | Gene (rows) | Obsolete term | Outcome | What we did |
 |---|---|---|---|
-| human/GATA3 (IEA, ISS) | GO:2000607 neg. reg. of cell proliferation involved in mesonephros development | `DECOMPOSE_EXTENSION` | MODIFY → GO:0008285 negative regulation of cell population proliferation + `part_of(GO:0001823 mesonephros development)`, GO's own `consider` pair re-joined. Supported by Grote et al. 2008 (PMID:19112489) citing Gata3's role in pro/mesonephric proliferation control. |
+| human/GATA3 (IEA, ISS) | GO:2000607 neg. reg. of cell proliferation involved in mesonephros development | `DROP_CONTEXT` | MODIFY → GO:0008285 negative regulation of cell population proliferation, supported by Grote et al. 2008 (PMID:19112489) citing Gata3's role in pro/mesonephric proliferation control. The mesonephros context is a peripheral developmental role of a transcription factor and is not carried. |
 | human/GATA3 (IEA, ISS ×2) | GO:2000703 / GO:2000734 neg. reg. of FGFR / GDNF-receptor signaling involved in ureteric bud formation | keep Y, drop X | **Decomposition exposed a bad genus.** In PMID:19112489, Gata3 acts *upstream of Ret* and maintains its expression. The ectopic buds of the mutant *require* GDNF/Ret and FGF signaling, so nothing shows Gata3 inhibiting those pathways. GO's `consider` list is advice for a curator, and on reading the evidence its genus (GO:0040037) is unsupported for GATA3. MODIFY → GO:0072106 regulation of ureteric bud formation, which is sign-neutral because the evidence points both ways. |
-| human/NOTCH1 (IEA, ISS) | GO:0003252 neg. reg. of cell proliferation involved in heart valve morphogenesis | `DECOMPOSE_EXTENSION` | MODIFY → GO:0008285 + `part_of(GO:0003179 heart valve morphogenesis)`. GO gave no replacement. The claim was not re-judged, because the mouse source was not inspected. |
-| human/DNMT1 (IMP), mouse/Dnmt1 (IEA, ISO) | GO:1905931 neg. reg. of VSMC differentiation involved in phenotypic switching | `DECOMPOSE_EXTENSION` | MODIFY → GO:1905064 + `part_of(GO:0036166 phenotypic switching)`. GO gave no replacement. The reason spells out the GO-CAM it abbreviates: DNMT1 methyltransferase activity silences *SOD2*, upstream of VSMC differentiation, which is indirect and non-core. |
+| human/NOTCH1 (IEA, ISS) | GO:0003252 neg. reg. of cell proliferation involved in heart valve morphogenesis | `DROP_CONTEXT` | MODIFY → GO:0008285; the heart valve morphogenesis context is not carried. GO gave no replacement. The claim was not re-judged, because the mouse source was not inspected. |
+| human/DNMT1 (IMP), mouse/Dnmt1 (IEA, ISO) | GO:1905931 neg. reg. of VSMC differentiation involved in phenotypic switching | `DROP_CONTEXT` | MODIFY → GO:1905064; the phenotypic switching context is not carried. GO gave no replacement. The reason spells out the GO-CAM it abbreviates: DNMT1 methyltransferase activity silences *SOD2*, upstream of VSMC differentiation, which is indirect and non-core. |
 | yeast/GET3 (IMP) | GO:0000750 pheromone-dependent signal transduction involved in conjugation with cellular fusion | lateral; `replaced_by` is wrong for this gene | **A real upstream problem.** `replaced_by` is applied automatically, so GOA will move this IMP annotation to GO:0071507 pheromone response MAPK cascade. That suits the kinases, not GET3. Arr4/Get3 is a non-receptor GEF for Gpa1 (PMID:18261907), upstream of the cascade. Following the GO-CAM idiom in the *S. pombe* pheromone model `693b3c0900000536` (GEF activity positively regulates the cascade), MODIFY → GO:0062038 positive regulation of pheromone response MAPK cascade. |
 | SCHPO/cps1 (IBA), rat/Rgn (IDA) | GO:0051603 / GO:1903052 (pos. reg. of) proteolysis involved in protein catabolic process | no change | These already MODIFY to GO's `replaced_by`, which keeps Y (protein catabolic process). Nothing is lost, because proteolysis is annotated separately where it applies. |
 
@@ -304,9 +339,8 @@ in `data/summary.yaml`).
   *transmembrane protein transporter activity*, not the GO-CAM's *signaling
   adaptor activity*, and says why.
 - **HSPA8** (human IDA ×2, IMP, TAS; mouse ISO, ISS; rat ISS, ISO; 8 rows):
-  `DECOMPOSE_MODEL`. MODIFY → GO:0006622 protein targeting to lysosome +
-  `part_of(GO:0061684)`, with `decomposed_into` pointing at the GO-CAM
-  activity (the human ortholog's, for mouse and rat), the module annoton
+  `DECOMPOSE_MODEL`. MODIFY → GO:0006622 protein targeting to lysosome, with
+  `decomposed_into` pointing at the GO-CAM activity (the human ortholog's, for mouse and rat), the module annoton
   `hspa8_substrate_adaptor`, and `in_core_functions`. Each core function's
   `directly_involved_in` swaps GO:0061740 for GO:0006622 and keeps CMA.
 - **CLU** (IDA, PMID:9228033): `DROP_CONTEXT`. **Decomposition exposed a wrong
@@ -322,8 +356,7 @@ in `data/summary.yaml`).
    curator choice.** For GO:0000750, the automated migration moves an upstream
    GEF (Arr4/Get3) onto the MAPK cascade itself. A precomposed term's
    `replaced_by` is only safe when one term is true of *every* annotated
-   participant. Otherwise the term should carry `consider` only, or its
-   annotations should be migrated to the genus with a `part_of(Y)` extension.
+   participant. Otherwise the term should carry `consider` only.
    `consider` is a different thing: it is curator advice and is never applied
    automatically. The GATA3 case (its `consider` genus is unsupported for this
    gene) is that advice working as intended.
@@ -334,11 +367,16 @@ in `data/summary.yaml`).
    the same decomposition, as the action-consistency rules require.
 4. **Production GO-CAMs still use precomposed terms** (the CMA model's HSPA8
    node is GO:0061740), so a module is often the cleaner decomposition target.
+5. **Most Y contexts are not worth carrying.** In round 1 only HSPA8's Y
+   (chaperone-mediated autophagy) was a mechanism with a model. GET3's context
+   survived inside a lateral replacement term. The other Y's were
+   developmental contexts on propagated rows (GATA3, NOTCH1, DNMT1) or wrong
+   (CLU).
 
 ## Plan
 
-1. ~~**Schema**~~ — done: `proposed_replacement_extensions` and
-   `decomposed_into`, a validator, tests, and template rendering.
+1. ~~**Schema**~~ — done: `decomposed_into`, a validator, tests, and template
+   rendering (the extension slot was added and then removed).
 2. ~~**Obsolete-term rows**~~ — done (see above).
 3. ~~**Pilot**~~ — done: HSPA8 in human, mouse and rat, CLU, and the CMA module.
 4. **Next cases** — the clean, high-yield clusters:
@@ -350,16 +388,19 @@ in `data/summary.yaml`).
      `c_elegans_core_apoptosis`) as `module_associations`.
    - **ESCRT-I** (`protein transport to vacuole involved in ubiquitin-dependent
      protein catabolic process via the multivesicular body sorting pathway`,
-     10 rows, TSG101/VPS28/VPS37A–D/MVB12A/UBAP1), which needs a new ESCRT-I
-     module.
+     10 rows, TSG101/VPS28/VPS37A–D/MVB12A/UBAP1). First check whether
+     `dmel_escrt_machinery` can be generalized into a species-neutral ESCRT
+     module rather than adding a parallel one.
    - **hair-cell mechanotransduction** (`detection of mechanical stimulus
-     involved in sensory perception of sound`, 18 rows), which needs a new
-     module.
+     involved in sensory perception of sound`, 18 rows). A module for the MET
+     complex (TMC1/2, LHFPL5, TMIE, PCDH15, CDH23), not for hearing.
 5. **Full pass** — walk `data/annotations.yaml` gene by gene, from class A to
    B, C and D. Check `gocam_same_gene` and `gocam_same_symbol_other_species`
    first, and confirm orthology before citing the symbol-matched hits.
-6. **Modules** — sprouting angiogenesis, ureteric bud branching, and cardiac
-   conduction coupling, as the cases reach them.
+6. **Modules** — only for mechanisms, per the module policy. Developmental
+   contexts (sprouting angiogenesis, ureteric bud branching, endocardial
+   cushion, cardiac conduction) get no new modules; their rows point at the
+   existing signalling modules or drop the context.
 7. **Upstream** — collect class D-iii terms and GO-CAM process nodes that
    still use precomposed BPs for go-ontology tickets. From round 1, file a
    ticket on GO:0000750: its automated `replaced_by` GO:0071507 moves
