@@ -195,6 +195,34 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+### Root organelle terms: keep the organelle, add the sub-compartment
+
+Cellular-component rows on a root organelle term (`GO:0005739` mitochondrion,
+`GO:0005783` endoplasmic reticulum, `GO:0005794` Golgi apparatus, `GO:0005777`
+peroxisome, `GO:0005764` lysosome) follow the policy in `projects/ORGANELLES.md`.
+It is the one exception to the "correct but general is `MODIFY`" rule above:
+
+- **The organelle term is informative.** Never use `TOO_GENERAL` for it, and never
+  `MODIFY` it to a sub-compartment. Knowing a protein is in the mitochondrion is a real
+  claim even when its membrane or lumen is also known. (A generic term such as
+  `GO:0016020` membrane is not a root organelle term and is still refined by `MODIFY`.)
+- **Direct evidence** (IDA, EXP, HDA, HTP, ...) from an assay that cannot resolve the
+  sub-compartment (organelle proteomics, whole-organelle co-staining, GFP fusion) is
+  `ACCEPT`, or `KEEP_AS_NON_CORE` if the location is peripheral to the function.
+- **Synthesis evidence** (IBA, IEA, ISS, ISO, IC, ...) is a red flag: examine what the
+  source rests on (the PAINT IBD seeds, the UniProt keyword, the ortholog's own
+  annotation). If the organelle claim holds, keep the row and record the check in
+  `reason`; if it does not, `MARK_AS_OVER_ANNOTATED`.
+- **Be bold about the sub-compartment, but add it, don't substitute.** When the gene
+  has no sub-compartment row and at least two independent lines agree (a TM segment, a
+  cleavable presequence, a sub-organelle assay, a function that only makes sense on one
+  side), add the matrix, membrane or lumen term as a `NEW` row (usually IC) beside the
+  root rows. With one line, or lines that disagree, stay at the root and say why.
+- **Check crude fractions for ER.** A "mitochondrial" fraction that was not checked for
+  an ER marker cannot separate mitochondrion from mitochondria-associated ER membranes;
+  transient recruitment to the organelle surface (signalling, innate immunity) is not an
+  outer-membrane location.
+
 ### Do not overrule curators from incomplete evidence
 
 PomBase, and the GO consortium databases generally, are highly reliable. Curators

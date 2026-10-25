@@ -260,8 +260,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
       candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
 - [ ] Decide on a validation warning
-- [ ] Add the policy to CLAUDE.md / the annotation-reviewer guidance once it
-      has been tried on a batch of genes
+- [x] Add the policy to CLAUDE.md (2026-10-25, after batches 1 and 2); the
+      annotation-reviewer guidance still to do
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
