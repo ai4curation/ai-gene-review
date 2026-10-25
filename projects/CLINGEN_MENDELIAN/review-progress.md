@@ -6252,3 +6252,55 @@ named checkboxes change. Dated availability inventories are unchanged.
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker585-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-25T000127Z-codex-1c9b39.yaml)
+
+## Completion checkpoint 587 — 2026-10-25 02:14:40 UTC
+
+**587 complete; 2,289 remaining out of 2,876 primary catalogue genes.**
+This adds only EVC2 and EXOC6B to
+[tracker 585, PR #5489](https://github.com/ai4curation/ai-gene-review/pull/5489).
+Independent audit acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [EVC2 #5477](https://github.com/ai4curation/ai-gene-review/pull/5477) | [`9909a981c35d`](https://github.com/ai4curation/ai-gene-review/commit/9909a981c35d7fcafb37b1e3f25ce1150f9170bf) | [`60c2825da3e3`](https://github.com/ai4curation/ai-gene-review/commit/60c2825da3e3ed6b694e469d4cf6ec34b0621e1a) | 14 | 10 / 1 | DRAFT / 1 |
+| [EXOC6B #5480](https://github.com/ai4curation/ai-gene-review/pull/5480) | [`3acaf58e2071`](https://github.com/ai4curation/ai-gene-review/commit/3acaf58e2071e85a66edf28c5006120b7bcde64f) | [`0fcfcd6ce63d`](https://github.com/ai4curation/ai-gene-review/commit/0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43) | 11 | 17 / 1 | DRAFT / 4 |
+
+All 28 approved PR path entries, 10 complete gene-directory files and 24
+external dependency entries match approved head, actual merge and fixed main
+`0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43` in mode, type and blob. There are 26 net merge paths:
+two EVC2 publication caches already existed identically on its merge parent.
+Dependency counts can overlap. The separate remote-main observation was
+`0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43`. Both reviews contain zero quotations and zero
+NEW assertions. Three EVC2 products and two EXOC6B products remain distinct.
+
+EVC2 retains seven ACCEPT, four MODIFY and three KEEP_AS_NON_CORE decisions.
+EXOC6B retains five ACCEPT, four KEEP_AS_NON_CORE and two UNDECIDED decisions.
+Both remain DRAFT, with one core-coverage advisory and four generic-binding
+advisories respectively. No biological uncertainty is silently resolved by
+recording the merges.
+
+All three jobs succeeded in each actual merge-group run: [EVC2](https://github.com/ai4curation/ai-gene-review/actions/runs/40150759238), [EXOC6B](https://github.com/ai4curation/ai-gene-review/actions/runs/40151238545).
+Each broad suite executed 4,293 Python tests (one skipped, 84 deselected),
+278 doctests (37 skipped), 12 examples, 438 overlapping automation tests and
+19 JavaScript tests, plus mypy over 287 source files and Ruff. Counts overlap
+and are not summed. Strict target validation retained the advisories above;
+the separate all-gene batch was schema-only. History validation covered
+16,471 and 16,474 records respectively, with 42 history tests in each run.
+The earlier PR broad suites and conditional prediction/upstream PAINT checks
+were skipped in their recorded scopes. Global warnings, unresolved residue
+claims and the nonfatal SQL cleanup exception remain recorded; aggregate
+gates add no tests.
+
+The accepted gene histories use immutable merge-commit links:
+
+- [EVC2 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/60c2825da3e3ed6b694e469d4cf6ec34b0621e1a/history/genes/human/EVC2/2026-10-24T233603Z-codex-7aae6b.yaml)
+- [EXOC6B accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43/history/genes/human/EXOC6B/2026-10-24T234753Z-codex-017055.yaml)
+
+This is update 121. All 2,876 identities and association text, 235 queue objects,
+120 earlier updates and preceding progress bytes remain exact; only the two
+named checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: `history/projects/CLINGEN_MENDELIAN/2026-10-25T021558Z-codex-69f821.yaml`.
