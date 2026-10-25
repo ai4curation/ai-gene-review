@@ -80,7 +80,7 @@ Identity: the authoritative HGNC snapshot has approved AKR1D1, HGNC:388, previou
 
 ### Primary evidence and reaction boundaries
 
-Cached full human studies PMID:21255593 and PMID:18407998 were independently read. The kinetic study uses purified human recombinant enzyme, TLC product comparison with authentic standards, cofactor fluorescence titration, substrate kinetics and inhibition assays. It directly identifies 5beta products for the tested C18-C27 substrates except aldosterone; aldosterone turnover is observed but its product is inferred because an authentic standard was unavailable. Substrate inhibition varies by structure, and the authors discuss how single-concentration/cell preparations contributed to older discrepancies. These results support direct participation in androgen and C21 hormone metabolism alongside bile acid synthesis, without measuring each substrate's share of flux in vivo. [PMID:21255593](https://pmc.ncbi.nlm.nih.gov/articles/PMC3056882/), "5β-Reduced products were identified directly with all the C18-C27 steroid substrates except for aldosterone."
+Cached full human studies PMID:21255593 and PMID:18407998 were independently read. The kinetic study uses purified human recombinant enzyme, TLC product comparison with authentic standards, cofactor fluorescence titration, substrate kinetics and inhibition assays. It directly identifies 5beta products for the tested C18-C27 substrates except aldosterone; aldosterone turnover is observed but its product is inferred because an authentic standard was unavailable. Substrate inhibition varies by structure, and the authors discuss how single-concentration/cell preparations contributed to older discrepancies. These results support direct participation in androgen and C21 hormone metabolism alongside bile acid synthesis, without measuring each substrate's share of flux in vivo. [PMID:21255593](https://pmc.ncbi.nlm.nih.gov/articles/PMC3056882/). Product formation was demonstrated across the tested steroid panel apart from aldosterone; this does not establish every derivative in those carbon-number ranges.
 
 PMID:18407998 structures resolve NADP+/steroid complexes and the Tyr58/Glu120 environment; mutant assays use testosterone reduction. Steroid binding is retained as integral substrate recognition. These experiments explain double-bond reduction while retaining the 3-oxo group, not a universal negative result for every sugar or alcohol-forming substrate. [PMID:18407998](https://pmc.ncbi.nlm.nih.gov/articles/PMC2423251/), "Each steroid carbonyl accepts hydrogen bonds from catalytic residues Tyr 58 and Glu 120 ."
 
@@ -310,3 +310,93 @@ oxygen-insertion mechanism for ketosteroid monooxygenase activity, even though
 the exact AKR1C1/C2/C3 donor assays from PMID:21232532 still need full-text
 review. Ancestral aldose reduction remains unresolved because purified AKR1D1
 negative aldose assays were not located.
+
+
+## 2026-10-09 — R-HSA-193755 recovered from an official historical release
+
+The missing event is now available as authentic historical source material. The
+complete [Reactome release 89 human SBML archive](https://download.reactome.org/89/homo_sapiens.3.1.sbml.tgz)
+contains reaction `reaction_193755` in pathway member `R-HSA-193775.sbml`.
+Its exact title, input/output entities, AKR1D1 catalyst mapped to UniProt P51857,
+cytosol compartment, and literature links were read directly from the XML.
+The [unaltered source member](../../../reactome/R-HSA-193755-source/Reactome-v89-R-HSA-193775.sbml)
+and [machine-generated extraction/provenance](../../../reactome/R-HSA-193755-source/provenance.json)
+are retained alongside the [generated cache](../../../reactome/R-HSA-193755.md).
+The archive SHA256 is `d3c99ec42c7fcf5a582b67d6a4a4dcdadbe5e448d5c6b2c4fe81338e763bca61`;
+the member SHA256 is `4eda3a450b1b457917234329d64bf2feaf29addbc0716e569b2aa738866369fd`.
+The XML identifies itself as release 89, generated in June 2024. The cache uses
+the existing Reactome formatter with machine-extracted stable ID, title and
+summary. No current API success is implied: the release-97 ContentService and
+detail page still return 404 for this event, and no deletion or replacement
+history has been recovered.
+
+The archived equation's input is a Delta4 steroid and its output is the saturated
+5beta steroid while the 3-one remains. This supports the existing refinement to
+[GO:0047787](https://www.ebi.ac.uk/QuickGO/term/GO:0047787), rather than the alcohol/ketone
+chemistry of [GO:0008106](https://www.ebi.ac.uk/QuickGO/term/GO:0008106).
+Historical labels drifted: release 89 exports GO:0004033 and EC 1.1.1, whereas
+the later indexed event labels GO:0008106. The original GOA term, qualifier,
+TAS evidence and Reactome ID remain untouched. The source summary itself uses
+cholesten inconsistently in one product sentence; the title and explicit output
+entity identify the saturated cholestan product. The cache preserves that source
+text rather than silently repairing it.
+
+The event links [PMID:7508385](https://pubmed.ncbi.nlm.nih.gov/7508385/) and
+[PMID:12543708](https://pubmed.ncbi.nlm.nih.gov/12543708/). The former was inspected
+as an abstract: human cDNA expressed in COS cells supports reduction of related
+7alpha-hydroxy and 7alpha,12alpha-dihydroxy bile acid precursors. The latter is a
+broad 2003 review, accessed only as an abstract. Neither access scope establishes
+an independently inspected primary assay of this exact 24(S)-hydroxylated triol.
+Selected full Methods and Results of [PMID:21255593](https://pubmed.ncbi.nlm.nih.gov/21255593/)
+support the molecular-function class using purified human AKR1D1, NADPH, product
+comparison and substrate-dependent kinetics; their general substrate-range
+result is not substituted for an exact-substrate assay. Historical reaction
+identity and human enzyme activity are therefore supported, with the exact
+substrate assay limitation retained.
+
+The archived AKR1D1 species is located in cytosol (GO:0005829). Its steroid
+input starts in the ER membrane; this does not locate the enzyme there or
+establish transport by AKR1D1. The source explicitly leaves the translocation
+mechanism unresolved. Both affected annotation actions remain unchanged:
+MODIFY for the enzyme-class mapping and ACCEPT for cytosol. No NEW function,
+other annotation change, or current-event replacement is proposed.
+
+This entry supersedes the earlier search-only provenance description. It
+provides the durable, machine-derived event evidence requested by the prior
+review. The archived cache and original SBML address that historical source
+gate; successful retrieval of the current API is not claimed or required to
+verify this archived event. DRAFT remains the status calculated by the normal
+validation workflow. Campaign completion still requires this follow-up to
+receive review approval and merge. No further repeated live retrieval is
+necessary to assess the historical event supplied here.
+
+## 2026-10-09 — focused citation follow-up to PR #4465
+
+The recovered [Reactome reaction](../../../reactome/R-HSA-193755.md) now has
+a brief direct localization excerpt on its cytosol annotation. The same source
+already supplies the reaction-catalyst excerpt on the molecular-function
+refinement. Both passages were checked against the unchanged historical cache.
+
+The molecular-function refinement also now quotes the specific double-bond
+reduction chemistry described in the abstract of
+[PMID:21255593](https://pubmed.ncbi.nlm.nih.gov/21255593/). The core-function
+evidence retains the single product-identification excerpt from that study.
+Repeated copies of that product-range excerpt elsewhere in the YAML were
+consolidated, while their citations and all biological reasons remain. The
+notes' duplicate was paraphrased above. This keeps the two complementary
+anchors available without repeating the same quotation throughout the review;
+it does not imply that the historical 24(S)-triol was directly assayed in that
+paper. The exact-substrate limitation remains in the affected reason.
+
+This is a bounded citation edit: all original source fields, products, reference
+identities, actions, reasons, replacement terms and core-function terms remain
+unchanged. No publication cache, Reactome cache, archive member or provenance
+record was edited. The two edited sources' excerpts were counted across YAML
+and notes; unrelated inherited excerpts were outside this consolidation. The
+archival source directory remains a companion to the flat Reactome cache,
+containing the unaltered enclosing pathway member and machine-extracted
+provenance, with their hashes retained for integrity checks.
+
+## 2026-10-09 — per-annotation evidence anchors
+
+The broad steroid-reduction and steroid-metabolism decisions now carry complementary short anchors from the authentic [PMID:20522910 abstract](https://pubmed.ncbi.nlm.nih.gov/20522910/), which identifies human AKR1D1 and its steroid/sterol double-bond reduction. The primary product-identification excerpt from PMID:21255593 was relocated from the core evidence list to the hormone-metabolism annotation; its core citation and other core anchors remain. This preserves the exact aldosterone limitation without duplicating the excerpt. Every biological decision and reason is unchanged. The three annotations identified by the reviewer now each have a local verbatim anchor. No source cache or prior history was edited.

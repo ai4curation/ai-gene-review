@@ -19,8 +19,6 @@ import statistics
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from ai_gene_review.source_tree import (
     ReviewSnapshot,
     SourceTree,
@@ -28,6 +26,7 @@ from ai_gene_review.source_tree import (
     declared_review_snapshot,
     review_snapshot_tree,
 )
+from ai_gene_review.yaml_utils import safe_load
 
 CODES = ("COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP")
 PUBLIC = "https://github.com/ai4curation/ai-gene-review/blob/main/"
@@ -78,7 +77,7 @@ def collect(tree: SourceTree, config: SourceTree) -> dict[str, Any]:
     goa_rows: dict[str, int | None] = {}
     goa_latest: dict[str, str | None] = {}
     for path in tree.glob("genes/*/*/*-protnlm-predictions-review.yaml"):
-        doc = yaml.safe_load(tree.read_text(path))
+        doc = safe_load(tree.read_text(path))
         if doc["id"] not in targets:
             continue
         assert doc["id"] not in by_accession, f"Duplicate prediction review: {path}"
@@ -111,7 +110,7 @@ def collect(tree: SourceTree, config: SourceTree) -> dict[str, Any]:
             counts[category] += 1
         by_accession[doc["id"]] = counts
         go_counts.update(counts)
-    registry = yaml.safe_load(config.read_text(f"{base}/narrative-review-index.yaml"))
+    registry = safe_load(config.read_text(f"{base}/narrative-review-index.yaml"))
     narratives = []
     seen: set[str] = set()
     for entry in registry["reviews"]:

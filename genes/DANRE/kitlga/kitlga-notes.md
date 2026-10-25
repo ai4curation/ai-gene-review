@@ -100,3 +100,9 @@ core molecular function (stem cell factor receptor binding) is already present, 
 cytokine/growth-factor activity is captured in `core_functions` rather than manufactured
 as a new GOA-style row. Comparator/participation tests were not triggered because no new
 process term is proposed.
+
+## Re-review 2026-09-29
+- Resolved the two core_functions/existing_annotations consistency warnings.
+- GO:0005125 cytokine activity (core function 2's molecular_function) was not in existing_annotations: added it as a NEW row (evidence_type ISS, action NEW). Justified by the participation test (kitlga IS the SCF-family cytokine ligand that activates Kita) and comparator check (human ortholog KITLG P21583 carries GO:0005125, QuickGO IEA). It is a distinct MF branch from the already-annotated GO:0005173 stem cell factor receptor binding (which sits under cytokine receptor binding), so not redundant [PMID:17257055 "kitla is the functional kita ligand in zebrafish"; "overexpression of kitla results in a hyperpigmented embryo with an increase in the number and size of melanocytes"].
+- GO:0030318 melanocyte differentiation: it IS present in existing_annotations (rows 10-14, all KEEP_AS_NON_CORE) as a downstream developmental output in which kitlga acts as the signaling ligand rather than the differentiating cell. Removed it from core_functions[0].directly_involved_in for consistency (a non-core process should not be a directly_involved_in of a core function); the core proliferation process GO:0008284 remains.
+- Existing reference_reviews on the 3 PMIDs retained. Validation: 0 errors.

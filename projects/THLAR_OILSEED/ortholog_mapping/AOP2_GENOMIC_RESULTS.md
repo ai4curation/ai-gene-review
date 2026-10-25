@@ -1,6 +1,7 @@
 ---
 title: "Pennycress AOP2 genomic check"
 species: [THLAR, ARATH]
+autolink_gene_symbols: false
 ---
 
 # Genomic check of the pennycress AOP2 candidate

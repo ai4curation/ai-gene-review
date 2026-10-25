@@ -2,8 +2,9 @@
 title: "Gene model errors: fused UniProt entries"
 maturity: SCOPING
 tags: [PIPELINE]
-species: [RHOTO, 9POAL, ASPOR, HORSE, WHEAT]
-genes: [NCGR_LOCUS27674, Q2U1U6, CTDSP2, A0A3B6GK97, A0A0K3C4U4, A0A0K3C6G6, A0A0K3C6K4, A0A0K3C7C1, A0A0K3C9W7, A0A0K3CA73, A0A0K3CAZ0, A0A0K3CD57, A0A0K3CDC5, A0A0K3CH38, A0A0K3CI66, A0A0K3CIB4, A0A0K3CKJ7, A0A0K3CPN4, A0A0K3CPS8]
+species: [RHOTO, 9POAL, ASPOR, WHEAT, HORSE]
+genes: [NCGR_LOCUS27674, Q2U1U6, A0A3B6GK97, A0A0K3C4U4, A0A0K3C6G6, A0A0K3C6K4, A0A0K3C7C1, A0A0K3C9W7, A0A0K3CA73, A0A0K3CAZ0, A0A0K3CD57, A0A0K3CDC5, A0A0K3CH38, A0A0K3CI66, A0A0K3CIB4, A0A0K3CKJ7, A0A0K3CPN4, A0A0K3CPS8]
+autolink_gene_symbols: false
 ---
 
 # Gene model errors: fused UniProt entries
@@ -22,9 +23,9 @@ condition while mutating its neighbour has no effect. Examples include a
 3-methylcrotonyl-CoA carboxylase named "Nuclear pore complex protein Nup85"
 and a branched-chain keto acid dehydrogenase fused to an amino acid
 transporter. The repository already had one fused gene model
-(a Miscanthus "UMP-CMP kinase") and three truncated ones, all recorded only in
+(a Miscanthus "UMP-CMP kinase") and two truncated ones, all recorded only in
 review prose. Gene reviews now have a structured `gene_model_issues` field
-for such problems, and those four reviews have been back-filled.
+for such problems, and those three reviews have been back-filled.
 
 ## Why it matters for annotation review
 
@@ -41,17 +42,28 @@ product. For a fused entry that assumption fails:
 
 ## Existing reviews with gene model problems
 
-A text search of all `*-ai-review.yaml` files finds these, each recorded only
-in the description or review prose:
+A text search of all `*-ai-review.yaml` files found these, each recorded only
+in the description or review prose. All now carry `gene_model_issues`:
 
-| Review | Problem | How it is recorded |
+| Review | Problem | Status |
 |---|---|---|
-| 9POAL/NCGR_LOCUS27674 | Fused: a UMP-CMP kinase joined to a chalcone isomerase-fold protein in an EVidenceModeler annotation | description and review text |
-| ASPOR/Q2U1U6 | Possibly truncated model or non-catalytic fragment | description and review text |
-| HORSE/CTDSP2 | Incomplete model diverging from the human ortholog | suggested question |
-| WHEAT/A0A3B6GK97 | Truncated model (~100–130 residues short) lacking the catalytic serine | description and review text |
+| <gene species="9POAL" symbol="NCGR_LOCUS27674">9POAL/NCGR_LOCUS27674</gene> | Fused: a UMP-CMP kinase joined to a chalcone isomerase-fold protein in an EVidenceModeler annotation | SUSPECTED (domain architecture, ortholog length) |
+| <gene species="ASPOR" symbol="Q2U1U6">ASPOR/Q2U1U6</gene> | Truncated: the model starts at an ATG inside an intron and omits exon 1, which is encoded just upstream; the 134 residues are identical to residues 280–408 of the *A. flavus* ortholog | CONFIRMED (ortholog comparison, genomic sequence) |
+| <gene species="WHEAT" symbol="A0A3B6GK97">WHEAT/A0A3B6GK97</gene> | Truncated: about 140 N-terminal residues are encoded upstream, matching the full-length 3B homoeolog; the restored region still lacks the catalytic serine | SUSPECTED (homoeolog comparison, genomic sequence) |
 
-For contrast, 9POAL/NCGR_LOCUS67308 is tagged `chimeric-gene-model`, but it
+A fourth review, <gene species="HORSE" symbol="CTDSP2">HORSE/CTDSP2</gene>, was first back-filled as a truncated model.
+Its 2026-10 re-review shows the entry is the product of a real alternative
+Ensembl transcript of a correctly modelled gene, with a premature stop and
+full-length sibling entries (A0A9L0T5X1, A0A9L0R207). That is a probably
+non-productive isoform, not a gene model error, so it carries no
+`gene_model_issues` entry.
+
+The Q2U1U6 analysis also found a fused model in another *A. oryzae*
+assembly: A0ABQ6LHX9 (*A. oryzae* var. *brunneus*, 745 residues) carries the
+Q2U1U6 sequence as residues 612–745 behind an unrelated beta-lactamase-like
+domain.
+
+For contrast, <gene species="9POAL" symbol="NCGR_LOCUS67308">9POAL/NCGR_LOCUS67308</gene> is tagged `chimeric-gene-model`, but it
 is a real biological fusion (the grass `SDH2-RPS14` locus), not an annotation
 error. That is the only gene-model tag in the corpus, and its meaning
 differs from the cases here, which is part of the case for a controlled
@@ -144,13 +156,12 @@ classes `GeneModelIssue` and `GeneModelComponent`). Each entry records:
   description of each underlying gene) and `reviewed_segment` (the residues
   the review's functional statements refer to).
 - `evidence_types`: `TILING`, `ADJACENT_GENES`, `GENETIC_SEPARATION`,
-  `DOMAIN_ARCHITECTURE`, `ORTHOLOG_COMPARISON`, `TRANSCRIPT_EVIDENCE` or
-  `OTHER`.
+  `DOMAIN_ARCHITECTURE`, `ORTHOLOG_COMPARISON`, `TRANSCRIPT_EVIDENCE`,
+  `GENOMIC_SEQUENCE` or `OTHER`.
 - `supported_by`: exact quotes, checked like any other `supporting_text`.
 
 The rendered review shows the issues in a "Gene Model Issues" section under
-the description. The four existing reviews above have been back-filled, all
-as `SUSPECTED`. For a fused *R. toruloides* entry, a review would look like:
+the description. The three existing reviews above have been back-filled. For a fused *R. toruloides* entry, a review would look like:
 
 ```yaml
 gene_model_issues:
@@ -173,7 +184,7 @@ gene_model_issues:
 
 `data/rhoto_fusion_genetics.tsv` remains the pipeline record for the 26
 *R. toruloides* fusions until they have gene reviews; this page's `genes`
-metadata lists the four existing reviews and the 15 genetically separated
+metadata lists the three existing reviews and the 15 genetically separated
 entries.
 
 ## Next steps

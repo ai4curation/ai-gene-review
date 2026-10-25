@@ -24,6 +24,7 @@ from ai_gene_review.tools.pages_assets import share_template_assets
 from ai_gene_review.tools.pages_compaction import compact_browser_data, compact_gene_page
 from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
 from ai_gene_review.publication_links import rewrite_publication_links, restore_scientific_html_notation
+from ai_gene_review.site_provenance import collect_build_info, stamp_site_build
 
 
 # Temporary policy: permit unsupported >1 GB deployments, below the absolute
@@ -367,10 +368,13 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         compact_gene_page(output_dir, output_dir / page.relative_to(repo_root))
         for page in gene_pages
     ) + compact_browser_data(output_dir)
+    # Stamp after content transformations but before the final audit and sizing.
+    # Recovery uploads the same artifact without restamping it.
+    stamp_site_build(output_dir, collect_build_info(repo_root))
     # Check the URLs actually emitted by sharing/minification/compaction too.
     # The first audit above checks links inside panels before they are compressed.
     published_resolver = DependencyResolver(output_dir)
-    for page in generated_pages:
+    for page in [output_dir / "index.html", *generated_pages]:
         links = published_resolver.scan(page.relative_to(output_dir), page.read_text())
         broken_links.update(links.missing)
         audit.off_base_urls.update(links.off_base)
