@@ -40,10 +40,15 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) is ready for review. All six members reviewed; module validation and GitHub validation/test checks pass. The automated reviewer failed before producing an assessment; required approval and merge remain pending.
-- [ ] `abscisic_acid_signaling`: [draft PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) audits six steps, eight family annotons, 26 references, and 19 members (524 adjudicated rows). Targeted checks pass with documented module advisories; broad validation, PR review and merge remain pending. Branch `cmungall/aigr-aba-taxon-audit`.
-- [ ] `activin_receptor_signaling`: research and member reviews are in progress in branch `cmungall/aigr-activin-taxon-audit`; no PR yet.
-- [ ] Remaining 699 modules: recorded individually as NOT_STARTED in the inventory.
+- [x] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) merged after approval and required checks, at `7d28f887b2dbbab34afee940716ba660efc3a173`. Six member reviews, comparative literature, step/edge evidence and taxon/family grounding were rechecked in the merged content.
+- [x] `abscisic_acid_signaling`: [PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) merged as `d4ae4f02f7ab9759d41d104d7cd7af0ec66abb16`. All 19 reviews (524 rows), 26 references and lineage-specific signaling constraints were verified in merged content after approved checks.
+- [x] `activin_receptor_signaling`: [PR #5541](https://github.com/ai4curation/ai-gene-review/pull/5541) merged as `aff0030d3689b50ae9f6d147fc8334a0b942f0a7`. All 11 reviews, 29 references, taxon/step evidence and session histories were verified unchanged from the approved head.
+- [x] `adp_heptose_biosynthesis`: [PR #5542](https://github.com/ai4curation/ai-gene-review/pull/5542) merged as `8954a5dc480f1311f440eb4e50f5cefca5931980` after approval and required checks. Its 16 member reviews, 12 references and 26 histories were inspected; 44 curated/history files match the approved head.
+- [ ] `adrenal_steroidogenesis`: [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) is ready after full validation. Its 13 gene reviews preserve 434 rows; 26 references and 22 histories are curated. Visible mammalian-versus-fish CYP17 localization qualifications are pushed on `36cd602ebd`; renewed CI/review are running.
+- [ ] `aerobic_nicotinate_degradation`: [PR #5544](https://github.com/ai4curation/ai-gene-review/pull/5544) has 12 curated references and 12 gene reviews. Follow-up `90df36ce72` retains all 42 original rows and adds one evidence-backed NicC process proposal (43 total); 27 histories and all targeted checks pass. Full validation and renewed review passed; the PR is queued for merge.
+- [ ] `alcoholic_fermentation`: [draft PR #5545](https://github.com/ai4curation/ai-gene-review/pull/5545) has 23 members and 487 original rows reviewed across yeast, plants, bacteria and Carassius; 34 curated references. Canonical and E1-derived entry variants, member-specific metal activation, native Bacillus branch and six comparative reviews are integrated. Targeted checks pass and full validation is running; the dedicated PR awaits full validation and review.
+- [ ] `alginate_o_acetylation`: 14 curated references and 12 verified member targets across Pseudomonas and Azotobacter. All 12 individual reviews are complete, preserving all 42 original GOA rows, retaining four older proposals and adding five supported proposals (51 total); two redundant older proposals are removed. Module relay evidence and taxon scope are revised; independent final QA and full validation are in progress.
+- [ ] Remaining 694 baseline modules: recorded individually as NOT_STARTED. Four of 702 baseline audits are complete; three further module PRs are open and alginate O-acetylation is in progress. Refresh upstream additions before final completion.
 
 ## Notes
 
@@ -60,3 +65,10 @@ PhnW biochemistry (PMID:12107130), comparative Bacillus/Salmonella PhnX biochemi
 the distinction between assayed proteins and homology-based KT2440 assignments.
 Falcon/fallback research requests for new members failed authentication or quota
 checks; individual notes document manual primary-literature research instead.
+
+The ADP-heptose audit also checks the protein architecture boundary: standalone
+HldA/HldC, bifunctional HldE and trifunctional SepB provide different implementations
+of the same reactions. Archived DSM2067 records preserve strain identity after UniProt proteome pruning;
+only the kinase has an exact published-construct match, while three assignments remain qualified; the engineered S2 host is not mislabeled
+as an endogenous producer. The overlapping broad PR #5076 supplies ancestry edits
+but does not replace this literature, taxon and member audit.
