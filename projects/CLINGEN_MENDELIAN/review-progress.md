@@ -6364,3 +6364,69 @@ was `b2b10f56fdd7e6996d24885376d9ff6b10f19377`; source inventories remain histor
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/8c7ae8004be4e7855e189a3475bb67ae0f21afb3/history/projects/CLINGEN_MENDELIAN/2026-10-25T033732Z-codex-767415.yaml).
+
+## Completion checkpoint 595 — 2026-10-25 04:57:30 UTC
+
+**595 complete; 2,281 remaining out of 2,876 primary catalogue genes.**
+This adds only EYA4, EZH2, F10 and F11 to
+[tracker 591, PR #5498](https://github.com/ai4curation/ai-gene-review/pull/5498).
+Actual-merge acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [EYA4 #5492](https://github.com/ai4curation/ai-gene-review/pull/5492) | [`bdadf273c590`](https://github.com/ai4curation/ai-gene-review/commit/bdadf273c590b952d320e6f6b120c749ee638092) | [`a47ce8ba01b1`](https://github.com/ai4curation/ai-gene-review/commit/a47ce8ba01b18294a8361b9e81366affed61237e) | 19 | 14 / 2 | COMPLETE / 0 |
+| [EZH2 #5496](https://github.com/ai4curation/ai-gene-review/pull/5496) | [`cc0254df56f8`](https://github.com/ai4curation/ai-gene-review/commit/cc0254df56f8c7a3c3b3ef0bd74d1254e1396278) | [`f477bb7bd7f4`](https://github.com/ai4curation/ai-gene-review/commit/f477bb7bd7f4bee62db4a950c62dc5a9ca1bddf6) | 186 | 108 / 2 | DRAFT / 54 |
+| [F10 #5497](https://github.com/ai4curation/ai-gene-review/pull/5497) | [`4486ba7bcb42`](https://github.com/ai4curation/ai-gene-review/commit/4486ba7bcb4219cc3f8697ca61269a6a9829e020) | [`df37cff6f3ba`](https://github.com/ai4curation/ai-gene-review/commit/df37cff6f3bacd6900da5e0eec3dcf34fb2ed675) | 58 | 42 / 1 | DRAFT / 4 |
+| [F11 #5500](https://github.com/ai4curation/ai-gene-review/pull/5500) | [`d5255b7e6464`](https://github.com/ai4curation/ai-gene-review/commit/d5255b7e64643c9397e506cb784f5686b47247a8) | [`db8135f603bf`](https://github.com/ai4curation/ai-gene-review/commit/db8135f603bf131e28c36950b3162c2610e55b64) | 38 | 28 / 1 | DRAFT / 1 |
+
+All 140 approved PR paths are also the 140 net merge paths. The 20 complete
+gene-directory files and 177 external dependency entries match approved heads,
+actual merges and fixed main `db8135f603bf131e28c36950b3162c2610e55b64` in mode,
+type and blob. Of those dependency entries, 108 were introduced by the
+corresponding gene merge and 69 reused from its parent; there are 177 unique
+external paths in this four-gene closure. These counts describe overlapping
+payload and dependency sets and are not added together. EYA4 retains its three
+explicitly authorized NEW rows. No gene decisions, source bytes or quotations
+change in this tracker update.
+
+**EYA4.** EYA4 combines protein-tyrosine phosphatase activity with SIX-associated transcriptional coactivation. Human PLK1 regulation and peptide chemistry remain distinct from conserved DNA-repair inference; historical construct and five-product boundaries remain explicit.
+
+**EZH2.** EZH2 supplies the H3K27 methyltransferase site in PRC2 and binds tested long noncoding RNAs. EED reader activity and accessory targeting are kept separate from EZH2 catalysis; RNA binding does not impose a universal recruitment or regulatory outcome.
+
+**F10.** Activated factor Xa converts prothrombin to thrombin and acts on additional coagulation substrates. The same protease activity also cleaves PAR2 with barrier protection in a defined endothelial-cell model; that result is not generalized to all signaling contexts or mTOR regulation.
+
+**F11.** Activated factor XIa performs sequential factor IX cleavage in the intrinsic coagulation pathway. Its A3 recognition region and platelet-surface association support this catalytic unit; untested shorter-product equivalence and contextual fibrinolysis evidence remain bounded.
+
+Local status computation and validation recorded EYA4 as COMPLETE with zero
+advisories, while one UNDECIDED judgment remains. EZH2, F10 and F11 remain DRAFT
+with 54, four and one advisories, and 16, three and one UNDECIDED judgments,
+respectively. The advisories concern supported generic-binding contexts;
+completion does not erase these source and biological limits.
+
+All three jobs passed in each actual merge-group run: [EYA4](https://github.com/ai4curation/ai-gene-review/actions/runs/40157854148), [EZH2](https://github.com/ai4curation/ai-gene-review/actions/runs/40161582748), [F10](https://github.com/ai4curation/ai-gene-review/actions/runs/40161661337), [F11](https://github.com/ai4curation/ai-gene-review/actions/runs/40161878292).
+The accepted operative CI reads record 4,293 Python test passes (one skipped,
+84 deselected), 278 doctest passes (37 skipped), 12 examples, 438 overlapping
+automation tests, 19 JavaScript tests, mypy over 287 files and Ruff. Counts
+overlap and are not summed. Target strict checks retained the advisories above;
+the separate all-gene batch was schema-only. Module, history and family checks
+ran, while conditional prediction checks, history-coverage checks and full-run
+upstream PAINT verification were skipped. Global snippet skips, unresolved
+identifiers and the nonfatal SQL cleanup exception remain in the accepted
+receipts. Aggregate gates add no tests. The queue update retains per-run job
+links and exact skipped-step lists. No new workflow or validator ran for this
+private tracker proposal.
+
+- [EYA4 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/a47ce8ba01b18294a8361b9e81366affed61237e/history/genes/human/EYA4/2026-10-25T030619Z-codex-348d64.yaml)
+- [EZH2 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/f477bb7bd7f4bee62db4a950c62dc5a9ca1bddf6/history/genes/human/EZH2/2026-10-25T040727Z-codex-ab5d34.yaml)
+- [F10 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/df37cff6f3bacd6900da5e0eec3dcf34fb2ed675/history/genes/human/F10/2026-10-25T041001Z-codex-bd9a5e.yaml)
+- [F11 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/db8135f603bf131e28c36950b3162c2610e55b64/history/genes/human/F11/2026-10-25T041342Z-codex-ccb3cd.yaml)
+
+Update 123 preserves all 2,876 identities and association text, 235 queue
+objects, 122 earlier updates and preceding progress bytes. Only the four named
+checkboxes change. The separate remote-main observation at 2026-10-25T04:57:30.932556+00:00
+was `db8135f603bf131e28c36950b3162c2610e55b64`; source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/5ab2f723c88e861c08f6095f17dcb005db096262/history/projects/CLINGEN_MENDELIAN/2026-10-25T051225Z-codex-a3d1af.yaml).
