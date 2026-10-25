@@ -2996,19 +2996,18 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**585 of 2,876 genes are complete; 2,291 remain.**
-This checkpoint adds ETFB, ETV6 and EVC to the
-[merged 582 tracker](https://github.com/ai4curation/ai-gene-review/pull/5479).
-[Checkpoint 585](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-585-2026-10-24-235050-utc)
+**587 of 2,876 genes are complete; 2,289 remain.**
+This checkpoint adds EVC2 and EXOC6B to the
+[merged 585 tracker](https://github.com/ai4curation/ai-gene-review/pull/5489).
+[Checkpoint 587](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-587-2026-10-25-021440-utc)
 records their approved heads, actual merges and executed merge-group CI.
 Their complete gene directories and selected dependencies match fixed main
-[`5e62db5cf988`](https://github.com/ai4curation/ai-gene-review/commit/5e62db5cf9887be68578d786c36f0e647a90cf7b).
+[`0fcfcd6ce63d`](https://github.com/ai4curation/ai-gene-review/commit/0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43).
 
-ETFB and ETV6 remain DRAFT with four and seven advisories, respectively.
-EVC has computed COMPLETE status with zero advisories, while one UNDECIDED
-judgment and its unresolved molecular function remain visible. Completion
+Both reviews remain DRAFT: EVC2 has one core-coverage advisory, and EXOC6B
+has four generic-binding advisories and two UNDECIDED judgments. Completion
 records accepted merged work; it does not resolve every biological uncertainty.
-Only these three genes are added at this checkpoint.
+Only these two genes are added at this checkpoint.
 
 The catalogue, association text, all queue records and earlier progress are
 preserved. Dated availability inventories remain historical; this update does
@@ -3730,8 +3729,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ETHE1** — HGNC:23287; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d29d908d-ea85-4eb4-a6a5-400c95511c9a-2019-04-08T161759.443Z) (MONDO:0009723; AR; Definitive).
 - [x] **ETV6** — HGNC:3495; [thrombocytopenia 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92a8c1cb-91c1-45cd-adbe-4180b1f6da7d-2020-01-22T170000.000Z) (MONDO:0014536; AD; Definitive).
 - [x] **EVC** — HGNC:3497; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6995e30b-00db-47c2-b39b-5a41e7aa4190-2025-09-24T040000.000Z) (MONDO:0009162; AR; Definitive).
-- [ ] **EVC2** — HGNC:19747; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47310dca-83c5-460e-b489-e8d90108b498-2026-02-02T170000.000Z) (MONDO:0009162; AR; Definitive); [acrofacial dysostosis, Weyers type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_139c6ac2-63a8-45ef-9de0-a414946c380a-2026-02-02T050000.000Z) (MONDO:0008673; AD; Definitive).
-- [ ] **EXOC6B** — HGNC:17085; [spondyloepimetaphyseal dysplasia with joint laxity, type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_162103c3-57c8-428c-8b31-4befec82aa4c-2025-07-02T160000.000Z) (MONDO:0032724; AR; Definitive).
+- [x] **EVC2** — HGNC:19747; [Ellis-van Creveld syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47310dca-83c5-460e-b489-e8d90108b498-2026-02-02T170000.000Z) (MONDO:0009162; AR; Definitive); [acrofacial dysostosis, Weyers type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_139c6ac2-63a8-45ef-9de0-a414946c380a-2026-02-02T050000.000Z) (MONDO:0008673; AD; Definitive).
+- [x] **EXOC6B** — HGNC:17085; [spondyloepimetaphyseal dysplasia with joint laxity, type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_162103c3-57c8-428c-8b31-4befec82aa4c-2025-07-02T160000.000Z) (MONDO:0032724; AR; Definitive).
 - [ ] **EXT1** — HGNC:3512; [exostoses, multiple, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ced1387-c0a8-4f03-bd70-1595cb7683fd-2018-06-04T170000.000Z) (MONDO:0007585; AD; Definitive).
 - [ ] **EXT2** — HGNC:3513; [exostoses, multiple, type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9e6829ce-3e0b-44c5-a214-756f33b1e948-2018-12-21T153126.680Z) (MONDO:0007586; AD; Definitive).
 - [ ] **EYA1** — HGNC:3519; [branchio-oto-renal syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dca41ef6-ee63-4b1f-93d3-8b114dafcc58-2017-11-21T170000.000Z) (MONDO:0007029; AD; Definitive).
