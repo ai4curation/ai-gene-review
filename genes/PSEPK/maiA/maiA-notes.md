@@ -14,7 +14,7 @@ The ISS WITH/FROM donor is UniProt O24766, Alcaligenes faecalis MaiA. Its direct
 
 The previously proposed GO:1901848 nicotinate catabolic process is retained with IC evidence, not upgraded to IDA. MaiA performs the terminal chemical conversion rather than serving as a substrate or merely being required. The parent is a catabolic process; no ancestor/descendant is additionally proposed. This is grounded in the native cluster and specific family assignment, not in an apparent annotation gap.
 
-Comparator check on2026-10-25: QuickGO GO:1901848 searches for O24766 and F8G0M3 each returned zero annotations. Both enzymes perform maleate isomerization, but that catalytic role alone does not establish a nicotinate feeding pathway. S16 provides direct negative nicotinate-utilization evidence under the tested conditions. Therefore the absence is respected for those comparators, and native KT2440 pathway context supplies the additional evidence for its existing proposal. No GO-CAM entry was available to challenge that role assignment.
+Comparator check on 2026-10-25: QuickGO GO:1901848 searches for O24766 and F8G0M3 each returned zero annotations. Both enzymes perform maleate isomerization, but that catalytic role alone does not establish a nicotinate feeding pathway. S16 provides direct negative nicotinate-utilization evidence under the tested conditions. Therefore the absence is respected for those comparators, and native KT2440 pathway context supplies the additional evidence for its existing proposal. No GO-CAM entry was available to challenge that role assignment.
 
 ## Source access and research provenance
 
@@ -25,3 +25,7 @@ For the new S16 comparator, default Falcon deep research with Perplexity-lite fa
 ## Shared downstream chemistry and taxonomic boundary
 
 The lower order is N-formylmaleamate --NicD/Nfo--> maleamate plus formate --NicF/Ami--> maleate plus ammonium --MaiA/NicE/Iso--> fumarate. PMID:22530095 directly characterized the S16 versions after recombinant expression and purification. Its full text reports: “Attempts to degrade nicotinic acid by resting cells of strain S16 did not result in any degradation after 24 h of incubation”. S16 lacks the KT2440 nicAB entry genes in that study. Thus a shared lower enzyme cannot establish complete nicotinate degradation or justify transferring nicotinate-catabolism annotation to the nicotine-pathway comparator. The nicotine enzymes named NicA/NicA2 are not the KT2440 nicotinate hydroxylase small subunit merely because they share a name. No new nicotine-process annotation was added to the KT2440 genes.
+
+## PR 5544 follow-up (2026-10-25)
+
+The homotetramer ISS row is now REMOVE. Both the measured donor dimer and the target HAMAP homodimer prediction oppose the transferred tetramer assertion. The previous UNDECIDED rationale imposed an unnecessarily absolute exclusion standard. No homooligomerization replacement is added: live GO:0051260 concerns oligomer formation, and the current evidence principally establishes/inferentially transfers an assembly state. Target oligomerization remains an experimental question; this does not rescue the specific tetramer claim.

@@ -31,12 +31,20 @@ Official labels were checked against interpro/panther/panther.obo. These broad f
 
 ## Annotation ledger
 
-- GO:0009055 (IEA, GO_REF:0000002): ACCEPT. The full primary PMID18678916 reports truncation, artificial-acceptor bypass and complementation in trans, supporting the electron-transfer role. Delivery to a particular cytochrome oxidase is a mechanistic proposal, not a directly identified partner.
+- GO:0009055 (IEA, GO_REF:0000002): ACCEPT. The full primary PMID:18678916 reports truncation, artificial-acceptor bypass and complementation in trans, supporting the electron-transfer role. Delivery to a particular cytochrome oxidase is a mechanistic proposal, not a directly identified partner.
 - GO:0016020 (IEA, GO_REF:0000044): ACCEPT. The predicted transmembrane helix and curated membrane assignment support this core physical context. Computational evidence does not make a core location peripheral. No direct fractionation assay or experimentally resolved membrane sidedness is asserted; retain the broad location rather than invent a specific membrane compartment.
 - GO:0016491 (IEA, GO_REF:0000002): MODIFY. Target-specific NicAB studies establish nicotinate hydroxylation. NicA supplies Fe-S electron transfer and NicB supplies the catalytic/cytochrome regions; activity is executed by the assembled enzyme. GO:0050138 is NADP-specific and is not an appropriate replacement for this cytochrome-linked system.
 - GO:0020037 (IEA, GO_REF:0000002): ACCEPT. Three sequence-defined cytochrome c domains plus the full primary heme-staining/truncation experiment support functional heme association. This is integral to NicB function, not a peripheral cofactor effect.
 - GO:0043546 (ISS, file:PSEPK/nicB/nicB-uniprot.txt): NEW. The Mo-MCD-binding catalytic architecture and curated similarity-based cofactor assignment support this molecular function. It is not a new process claim, and no direct isolated-subunit cofactor quantitation is implied.
-- GO:1901848 (IDA, PMID:18678916): ACCEPT. PMID18678916 and PMID19118407 characterize the target KT2440 genes, including heterologous nicotinate conversion and knockout/recovery. The protein performs redox work in NicAB rather than merely responding to nicotinate.
-- GO:0016725 (IDA, PMID:18678916): ACCEPT. The original PMID18678916 studies the assembled target enzyme. This broad term accurately covers the cytochrome-linked chemistry; GO:0050138 instead specifies NADP+ and must not be substituted. Subunit contribution is explicit in core_functions; isolated-subunit turnover is not claimed.
+- GO:1901848 (IDA, PMID:18678916): ACCEPT. PMID:18678916 and PMID:19118407 characterize the target KT2440 genes, including heterologous nicotinate conversion and knockout/recovery. The protein performs redox work in NicAB rather than merely responding to nicotinate.
+- GO:0016725 (IDA, PMID:18678916): ACCEPT. The original PMID:18678916 studies the assembled target enzyme. This broad term accurately covers the cytochrome-linked chemistry; GO:0050138 instead specifies NADP+ and must not be substituted. Subunit contribution is explicit in core_functions; isolated-subunit turnover is not claimed.
 
 An exact cytochrome-linked activity is recorded under proposed_new_terms. The schema has no proposed_contributes_to_molecular_function slot; core functions therefore retain the correct GO parent for the assembled reaction and specific subunit-level binding/electron-transfer functions.
+
+## PR 5544 follow-up (2026-10-25)
+
+Live QuickGO checks on 2026-10-25 found no exact terms using EC 1.17.2.1, EC 3.5.1.106, EC 3.5.1.107 or the corresponding substrate-specific activity names. Nicotinate dehydrogenase GO:0050138 remains the NADP-specific reaction. All 14 direct children of GO:0016725 were inspected: acceptor classes include NAD/NADP, oxygen, disulfide, quinone and iron-sulfur protein, but no generic cytochrome-acceptor child. GO:0047111 is formate-specific and cannot substitute. Thus GO:0016725 remains the supported parent for cytochrome-linked NicAB; search non-retrieval is reported as a current search result, not proof that no future ontology term can exist.
+
+## PR 5544 follow-up (2026-10-25)
+
+The optional source-defect suggestion about an ordinary enables qualifier was not applied: the active annotation-reviewer instructions treat those machine-sourced qualifiers as inert and prohibit editing or arguing from them. The review continues to distinguish independently supported subunit functions from the assembled-enzyme reaction through contributes_to_molecular_function in core_functions. No upstream qualifier defect is asserted.

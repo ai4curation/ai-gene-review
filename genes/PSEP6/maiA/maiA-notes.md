@@ -2,7 +2,7 @@
 
 ## Exact identity
 
-UniProt F8G0M3, PSEP6, 252 amino acids, maps to original cluster GQ857548/ADN26549.1 and KEGG PPS_4060. UniProt uses maiA; the papers call the enzyme Iso/Pp-Iso. RCSB4FQ5 and4FQ7 link this accession to the substrate-bound C200A and wild-type structures from PMID:23347155. Expression tags mean PDB construct length is not the native protein length. PANTHER PTHR40267:SF1 officially reads BLR3294 PROTEIN and matches KT2440 MaiA; HAMAP MF_00943, InterPro IPR028615 and Pfam PF17645 provide more interpretable family support.
+UniProt F8G0M3, PSEP6, 252 amino acids, maps to original cluster GQ857548/ADN26549.1 and KEGG PPS_4060. UniProt uses maiA; the papers call the enzyme Iso/Pp-Iso. RCSB4FQ5 and 4FQ7 link this accession to the substrate-bound C200A and wild-type structures from PMID:23347155. Expression tags mean PDB construct length is not the native protein length. PANTHER PTHR40267:SF1 officially reads BLR3294 PROTEIN and matches KT2440 MaiA; HAMAP MF_00943, InterPro IPR028615 and Pfam PF17645 provide more interpretable family support.
 
 ## Direct target experiments
 

@@ -23,4 +23,8 @@ Official labels were checked against interpro/panther/panther.obo. These broad f
 
 ## Annotation ledger
 
-- GO:0016491 (IEA, GO_REF:0000002): ACCEPT. Molybdopterin-binding domains support the broad assertion. PMID29485696 proposes this locus as NicB2, the substrate/MCD component of the nicotinate system, but does not establish purified target-specific reaction kinetics. Keep the warranted broad function rather than infer aldehyde substrate specificity from an automated name.
+- GO:0016491 (IEA, GO_REF:0000002): ACCEPT. Molybdopterin-binding domains support the broad assertion. PMID:29485696 proposes this locus as NicB2, the substrate/MCD component of the nicotinate system, but does not establish purified target-specific reaction kinetics. Keep the warranted broad function rather than infer aldehyde substrate specificity from an automated name.
+
+## PR 5544 follow-up (2026-10-25)
+
+Retained the broad redox core and explicitly explained the asymmetry with KT2440 NicB: the latter has target-specific NicAB reaction evidence, whereas this RB50 comparator has architectural inference. IPR008274 supports a molybdopterin-binding domain, but the optional addition of another core/NEW cofactor-binding assertion is deferred rather than treating a domain label as measured cofactor occupancy. No exact substrate, physiological complex or stoichiometry is asserted.
