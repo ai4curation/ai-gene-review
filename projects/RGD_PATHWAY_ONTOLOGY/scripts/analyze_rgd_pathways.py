@@ -218,21 +218,24 @@ def load_gocams(path: Path) -> tuple[dict[str, set[str]], dict[str, str], dict[s
 MATCH_FIELD = {"label": "rdfs:label", "exact_synonym": "oboInOwl:hasExactSynonym"}
 
 # Curation-rule CURIEs (prefix ``pw2go``) record, in a standard SSSOM slot, why a
-# row exists and any QA finding on it, so reports can filter on them instead of
-# parsing ``comment``. Definitions are written into the mapping-set description.
+# row exists (``src/`` codes) and any QA finding on it (``qa/`` codes), so a report
+# selects problem rows with one prefix filter instead of parsing ``comment``.
+# Definitions are written into the mapping-set description.
 SOURCE_RULE = {"pw_def_xref": "PW_DEFINITION_XREF", "rgd_page_go_xref": "RGD_PAGE_GO_XREF"}
 RULE_TEXT = {
-    "PW_DEFINITION_XREF": "the GO id is cited as a definition source of the PW term",
-    "RGD_PAGE_GO_XREF": "the GO id is the 'associated GO term' on the term's RGD pathway page",
-    "LEXICAL_MATCH": "normalized PW label or exact synonym equals a GO label or exact synonym",
-    "PATHWAY_TO_PROCESS": "the lexical match needed the PW 'pathway' wording rewritten as a GO process",
-    "OBSOLETE_TARGET": "the GO term is obsolete; see_also lists GO's replaced_by terms, if any",
-    "MISSING_TARGET": "the GO id does not resolve in the GO release used",
-    "NOT_BIOLOGICAL_PROCESS": "the GO term is not a biological process, so it is not used for matching",
-    "ID_ECHO": "the GO local id equals the PW local id (likely a typo on the RGD page)",
-    "PAGE_XREF_DISAGREES": (
+    "src/PW_DEFINITION_XREF": "the GO id is cited as a definition source of the PW term",
+    "src/RGD_PAGE_GO_XREF": "the GO id is the 'associated GO term' on the term's RGD pathway page",
+    "src/LEXICAL_MATCH": "normalized PW label or exact synonym equals a GO label or exact synonym",
+    "src/PATHWAY_TO_PROCESS": (
+        "the lexical match needed the PW 'pathway' wording rewritten as a GO process; "
+        "match_string holds the normalized form that matched"),
+    "qa/OBSOLETE_TARGET": "the GO term is obsolete; see_also lists GO's replaced_by terms, if any",
+    "qa/MISSING_TARGET": "the GO id does not resolve in the GO release used",
+    "qa/NOT_BIOLOGICAL_PROCESS": "the GO term is not a biological process, so it is not used for matching",
+    "qa/ID_ECHO": "the GO local id equals the PW local id (likely a typo on the RGD page)",
+    "qa/PAGE_XREF_DISAGREES": (
         "the page xref is neither equal to, nor an ancestor or descendant of, the term's other "
-        "GO mappings; see_also lists those other GO ids; the row is not used for matching"),
+        "GO mappings, which other lists as conflicts_with=<GO id>; the row is not used for matching"),
 }
 MAPPING_SET_ID = "https://w3id.org/ai4curation/ai-gene-review/mappings/pw2go"
 
@@ -245,20 +248,30 @@ def sssom_row(m: dict) -> dict:
     ...     "match_source": "pw_def_xref", "object_status": "obsolete", "object_namespace": "",
     ...     "replaced_by": ["GO:3"], "comment": "c"})
     >>> r["curation_rule"], r["see_also"]
-    (['pw2go:PW_DEFINITION_XREF', 'pw2go:OBSOLETE_TARGET'], ['GO:3'])
+    (['pw2go:src/PW_DEFINITION_XREF', 'pw2go:qa/OBSOLETE_TARGET'], ['GO:3'])
+    >>> sssom_row({**{k: r[k] for k in ("subject_id", "predicate_id", "object_id")},
+    ...     "mapping_justification": "semapv:ManualMappingCuration", "match_source": "rgd_page_go_xref",
+    ...     "object_status": "ok", "object_namespace": "biological_process", "qa_flags": ["PAGE_XREF_DISAGREES"],
+    ...     "disagrees_with": ["GO:4", "GO:5"]})["other"]
+    'conflicts_with=GO:4|conflicts_with=GO:5'
     """
     src = m["match_source"]
-    rules = [SOURCE_RULE.get(src, "LEXICAL_MATCH")]
-    if src.endswith(":pathway->process"):
-        rules.append("PATHWAY_TO_PROCESS")
+    if src.startswith("lexical:"):
+        rules = ["src/LEXICAL_MATCH"]
+        if src.endswith(":pathway->process"):
+            rules.append("src/PATHWAY_TO_PROCESS")
+    else:
+        rules = ["src/" + SOURCE_RULE[src]]  # a new source must be given a code
     if m["object_status"] == "obsolete":
-        rules.append("OBSOLETE_TARGET")
+        rules.append("qa/OBSOLETE_TARGET")
     elif m["object_status"] == "missing":
-        rules.append("MISSING_TARGET")
+        rules.append("qa/MISSING_TARGET")
     elif m["object_namespace"] != "biological_process":
-        rules.append("NOT_BIOLOGICAL_PROCESS")
-    rules += m.get("qa_flags", [])
-    see_also = list(m.get("replaced_by") or []) + list(m.get("disagrees_with") or [])
+        rules.append("qa/NOT_BIOLOGICAL_PROCESS")
+    rules += ["qa/" + f for f in m.get("qa_flags", [])]
+    assert set(rules) <= set(RULE_TEXT), rules
+    see_also = list(m.get("replaced_by") or [])
+    conflicts = list(m.get("disagrees_with") or [])
     row = {k: m[k] for k in ("subject_id", "subject_label", "predicate_id") if m.get(k)}
     for k in ("object_id", "object_label", "mapping_justification", "subject_match_field",
               "object_match_field", "match_string"):
@@ -267,6 +280,8 @@ def sssom_row(m: dict) -> dict:
     row["curation_rule"] = [f"pw2go:{r}" for r in rules]
     if see_also:
         row["see_also"] = see_also
+    if conflicts:
+        row["other"] = "|".join(f"conflicts_with={g}" for g in conflicts)
     if m.get("comment"):
         row["comment"] = m["comment"]
     return row
@@ -301,8 +316,10 @@ def write_sssom(mappings: list[dict], path: Path) -> None:
         "mappings": [sssom_row(m) for m in sorted(mappings, key=lambda m: (m["subject_id"], m["object_id"]))],
     }
     with open(path, "w") as fh:
+        fh.write("# RGD Pathway Ontology -> GO candidate mappings (SSSOM) -- GENERATED, DO NOT HAND-EDIT.\n"
+                 "# Regenerate with projects/RGD_PATHWAY_ONTOLOGY/scripts/analyze_rgd_pathways.py and\n"
+                 "# validate with: just validate-rgd-mappings\n\n")
         yaml.safe_dump(doc, fh, sort_keys=False, width=100, allow_unicode=True)
-
 
 
 def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
