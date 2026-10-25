@@ -50,3 +50,36 @@ The [source guide](FAM20C-source-guide.md) records primary public locators, sour
 and product limits, the main Figure 5F versus supplemental S6F distinction, and the
 source-specific ER-lumen question. Normal-cache metadata and all prior source bytes are
 unchanged. Provider failure remains explicit; no provider file is manufactured.
+
+## 2026-10-25 — biomineral scope and evidence-locator follow-up
+
+FAM20C's matrix phosphorylation contributes to bone/dentin as well as enamel biology.
+[PMID:22582013, Results/Figure 3](https://pmc.ncbi.nlm.nih.gov/articles/PMC3754843/)
+shows WT-versus-D478A phosphorylation of OPN, DMP1 and MEPE; the independent human
+enamel-substrate experiments are [PMID:25789606, Figure 1 and Methods](https://doi.org/10.7554/eLife.06120).
+The core now represents biomineral tissue development once, covering that breadth.
+The enamel-specific 25789606 review is refined to enamel mineralization, a current
+is_a descendant, without retaining redundant parent/child core terms. This supersedes
+the enamel-only scope of the preceding core proposal, whose journal text is preserved.
+
+Serine/threonine breadth is supported by the actual [2015 main Results and Figure 5E/F](https://pmc.ncbi.nlm.nih.gov/articles/PMC4963185/)
+and the curated threonyl-protein reaction in [UniProt Q8IXL6](FAM20C-uniprot.txt).
+The main text names Thr193 alongside Ser45/Ser199. Main Figure 5F's Tp+Sp assignment
+and the different, ambiguous S6F peptide remain separately documented with direct
+public image/supplement links in the [source guide](FAM20C-source-guide.md).
+No spectral reanalysis is claimed. The same catalytic core explicitly names the
+ERO1A/PDI phosphorylation work in [PMID:29858230](https://doi.org/10.15252/embj.201798699)
+and [PMID:32149426](https://doi.org/10.15252/embj.2019103841), without transferring
+substrate oxidoreductase/chaperone functions to the kinase.
+
+The SERPINC1 curated pair is acknowledged, but its exact inaccessible 2012 assay
+remains UNDECIDED; positive mouse calcium binding remains non-core and is not called
+calcium-dependent kinase activity. Shared product caveats are consolidated, with the
+two natural products, precursor topology and processed Asp93 chain still distinct.
+All 62 imported source objects, 21 prior reference identities/findings, original
+access flags and zero quotation anchors remain exact. One UniProt reference is added;
+only the enamel-specific review action changes. Prior citation read scopes remain
+explicit; the 22582013 page span is corrected to Science 336:1150–1153 from the
+inspected official record. The journal is append-only, and no new annotation or
+publication quotation is added. The campaign instruction and public locators in the
+source guide govern quotation-free evidence documentation.

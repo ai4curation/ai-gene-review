@@ -10,7 +10,11 @@ These are agent-authored source notes. The 584-residue natural product and the 2
 
 [PMID:25789606](https://doi.org/10.7554/eLife.06120), Figures 1–5 and Methods, tests human enamel proteins and purified FAM20A–FAM20C preparations. AMTN, AMBN and ENAM phosphorylation is supported by kinase-dead and substrate-site controls. FAM20A is the activating pseudokinase; FAM20C performs phosphate transfer. Cellular co-IP, co-elution and a purified 2:2 assembly do not establish universal native stoichiometry. Mouse ameloblast-like cells and mammary tissue remain distinct from human U2OS and recombinant human proteins.
 
-[PMID:26091039](https://doi.org/10.1016/j.cell.2015.05.028), Figures 4/5 and Supplemental Experimental Procedures, provides target-specific substrate tests and cellular phosphoproteomics. Actual main Figure 5F identifies IGFBP1 Thr193 **and** Ser194 in the m/z 669.74 peptide. Supplemental Figure S6F examines a different peptide and has a Thr193-or-Ser194 ambiguity plus Ser199. The latter does not cancel the main threonine result. Corresponding short peptides were negative under the tested conditions, so substrate context matters. Purchased fibrinogen provenance is not a sequence-verified isolated human α-chain construct.
+[PMID:26091039](https://pmc.ncbi.nlm.nih.gov/articles/PMC4963185/), Results under broader substrate specificity and Figure 5E/F, reports phosphorylation of recombinant IGFBP1 by WT but not D478A FAM20C. The main text explicitly identifies Ser45, Thr193 and Ser199. This protein-substrate result supports additional threonine breadth independently of the following figure-detail clarification; corresponding short peptides were negative, so substrate context matters.
+
+The inspected [main Figure 5 image, panels E/F](https://cdn.ncbi.nlm.nih.gov/pmc/blobs/4251/4963185/da3bf44f81ab/nihms699715f5.jpg) supplies the WT/D478A control (E) and labels the m/z 669.74 IGFBP1 peptide with **Tp and Sp**, corresponding to Thr193 **and** Ser194 (F). In contrast, the [Extended Supplemental Procedures DOCX, Figure S6F caption](https://www.ebi.ac.uk/biostudies/files/S-EPMC4963185/NIHMS699715-supplement-11.docx) describes a different m/z 1188.49 peptide with Thr193 **or** Ser194 plus Ser199. This peptide-specific ambiguity remains intact. Ser199 is also a main-text site; it is not treated as supplement-only. These are the authors' text/panel assignments, confirmed by reading the captions and viewing the main image, without independent mass-spectrometry reanalysis. Purchased fibrinogen provenance is not a sequence-verified isolated human α-chain construct.
+
+The immutable [UniProt Q8IXL6 record](FAM20C-uniprot.txt), entry version 173 (2026-09-02), separately represents the serine reaction RHEA:17989 and threonine reaction [RHEA:46608](https://www.rhea-db.org/rhea/46608). This curated catalytic statement corroborates the measured breadth; it does not imply that every cited source separately tested threonine. Its cofactor, regulation and topology notes are also useful, with their evidence tags retained: the human protein was not crystallized with manganese in the cited worm structural experiment. The record's SERPINC1 IntAct pair is positive curated support, but its pair list does not reveal the unavailable exact 2012 target assay. The other retained substrate interactions have independently inspected target experiments. The SERPINC1 row therefore stays UNDECIDED without a nonbinding claim.
 
 The supported generic substrate interactions are retained as non-core under the standing campaign exception. Phosphorylation can establish transient enzyme–substrate engagement without establishing stable binding affinity or a new adaptor activity. Association with FAM20A, S1P or COPII proteins likewise does not transfer those partners' regulatory, protease or coat functions to FAM20C.
 
@@ -73,12 +77,23 @@ unit. Positive mouse calcium binding remains non-core and is not converted into
 calcium-dependent kinase activity.
 
 The two protein-phosphorylation processes are non-ancestral under the captured current
-is_a/part_of closure. Enamel mineralization is additionally retained because FAM20C
-performs phosphate transfer to enamel matrix proteins, supported by human biochemical
-controls and conserved enamel phenotypes. The broader biomineral-tissue process is
-not duplicated in the core. FAM20A activation, S1P cleavage, COPII transport and the
-redox/chaperone activities of substrates remain partner roles rather than extra
-FAM20C cores.
+is_a/part_of closure. The core uses [biomineral tissue development](https://www.ebi.ac.uk/QuickGO/term/GO:0031214)
+to encompass the supported bone/dentin and enamel matrix contributions. The actual
+PMID:22582013 Results/Figure 3 shows WT-dependent phosphorylation of OPN, DMP1 and
+MEPE, while PMID:25789606 Figure 1 and Methods directly establish enamel-substrate
+phosphorylation with kinase-dead and site-mutant controls. Current
+[enamel mineralization](https://www.ebi.ac.uk/QuickGO/term/GO:0070166) is an is_a
+descendant of GO:0031214. It replaces the broad term only in the enamel-specific
+25789606 source row; both ancestor and descendant are not duplicated in the core.
+FAM20C's performed contribution is matrix-protein phosphorylation, not merely a
+clinical phenotype or loss-of-function requirement.
+
+The same kinase unit also phosphorylates ERO1A Ser145 and P4HB/PDI Ser357 in the
+controlled biochemical/cellular experiments of PMIDs:29858230 and 32149426. These
+changes modulate substrate redox/chaperone activities in tested ER-stress contexts.
+The substrates perform those activities; FAM20C performs phosphate transfer.
+FAM20A activation, S1P cleavage and COPII transport likewise remain partner roles,
+rather than extra FAM20C cores. No new process annotation is inferred from this prose.
 
 Core locations distinguish the membrane precursor's lumen-facing kinase domain from
 secreted active preparations. The extracellular location does not establish when every
@@ -89,3 +104,18 @@ retention is silently promoted to a demonstrated native processing state. Natura
 
 This authored guide follows the campaign's source-guide convention and does not replace
 the unavailable provider output. No publication quotation or NEW annotation is added.
+
+## 2026-10-25 — feedback clarification
+
+Repeated natural-product and phosphopeptide explanations have been consolidated here,
+in the standalone description and in the existing questions. This does not extend any
+assay to the natural 252-residue product. Imported sources, natural products and source
+access limits are preserved. The positive mouse calcium-overlay result is retained
+as non-core: GO:0005509 means calcium binding, so lack of a human calcium-bound
+structure or calcium stimulation of kinase catalysis is not a contradiction of that
+binding result. Native human calcium occupancy and physiological relevance remain open.
+
+No publication quotation is added under the campaign's [standing curation instruction](https://github.com/ai4curation/ai-gene-review/blob/1a677f069475ea82fa7db9b014058240be6e83d9/projects/CLINGEN_MENDELIAN.md#curation-instructions).
+Verified reference identifiers and precise public locators provide the claim-level
+provenance. This is an authored source guide, not an output attributed to an unavailable
+deep-research provider. Earlier journal entries remain historical and are not rewritten.
