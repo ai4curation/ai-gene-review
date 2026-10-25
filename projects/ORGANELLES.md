@@ -147,7 +147,7 @@ plastids come later.
    the location is peripheral to the gene's function). It says what the
    experiment showed. If the paper itself resolved a sub-compartment and
    the curator stopped short, keep the row and add the sub-compartment as a
-   `NEW` row under rule 4 (since the 2026-10-18 revision, rule 5).
+   `NEW` row under rules 4-5.
 3. **Synthesis (IBA, IC, IEA, ISS, ISO, ISA, ISM, RCA, ...): a red flag.**
    Examine the row rather than accepting it by default. A propagation or an
    inference has no assay limit to excuse the coarse term. Either the source
@@ -182,7 +182,7 @@ plastids come later.
    location keyword of `SL-0170` (Mitochondrion matrix) instead of `SL-0173`
    (Mitochondrion) maps to the matrix term directly.
 6. **`core_functions.locations`** should name the sub-compartment where the
-   core activity is shown to happen there, and may also carry the root if the
+   core activity is shown to happen, and may also carry the root if the
    organelle-level claim is independently supported. A well-supported
    sub-compartment location is not by itself where the function acts (MMADHC,
    2026-10-18).

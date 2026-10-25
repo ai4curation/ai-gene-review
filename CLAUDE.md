@@ -212,9 +212,11 @@ are not covered yet. For these five terms the policy is an exception to the
 - **Direct evidence** (IDA, EXP, HDA, HTP, ...) from an assay that cannot resolve the
   sub-compartment (organelle proteomics, whole-organelle co-staining, GFP fusion) is
   `ACCEPT`, or `KEEP_AS_NON_CORE` if the location is peripheral to the function.
-- **Existing synthesis rows** (IBA, IEA, ISS, ISO, IC, ...) are a red flag: examine what
-  the source rests on (the PAINT IBD seeds, the UniProt keyword, the ortholog's own
-  annotation). If the organelle claim holds, keep the row and record the check in
+- **Existing synthesis rows** (IBA, IEA, ISS, ISO, IC, ...) are a red flag for
+  granularity, not soundness: examine what the source rests on (the PAINT IBD seeds, the
+  UniProt keyword, the ortholog's own annotation) to see why the row stops at the
+  organelle and whether the organelle claim holds. For IBA this is the phylogenetic
+  reading described below, not a donor count. If the organelle claim holds, keep the row and record the check in
   `reason`; if it does not, `MARK_AS_OVER_ANNOTATED`, or `REMOVE` for a demonstrably
   wrong electronic mapping or over-propagation.
 - **Be bold about the sub-compartment, but add it, don't substitute.** When the gene
@@ -224,7 +226,7 @@ are not covered yet. For these five terms the policy is an exception to the
   inference you author and justify) beside the root rows. With one line, or lines that
   disagree, stay at the root and say why.
 - **`core_functions.locations`** names the sub-compartment only where the core activity
-  is shown to happen there; a well-supported sub-compartment location is not by itself
+  is shown to happen; a well-supported sub-compartment location is not by itself
   where the function acts (see the MMADHC note in the project).
 - **Check crude fractions for ER.** A "mitochondrial" fraction that was not checked for
   an ER marker cannot separate mitochondrion from mitochondria-associated ER membranes;
