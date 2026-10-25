@@ -40,12 +40,10 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `2_aminoethylphosphonate_degradation`: active first audit; review literature,
-  bacterial scope and step evidence curated. All six PSEPK, SALTY and
-  BACCE PhnW/PhnX member reviews are adjudicated and pass targeted validation.
-  Module validation passes without warnings; [draft PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538)
-  is open. Repository-wide validation, review and merge remain pending.
-- [ ] Remaining 701 modules: recorded individually as NOT_STARTED in the inventory.
+- [ ] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) is ready for review. All six members reviewed; module validation and GitHub validation/test checks pass. The automated reviewer failed before producing an assessment; required approval and merge remain pending.
+- [ ] `abscisic_acid_signaling`: [draft PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) audits six steps, eight family annotons, 26 references, and 19 members (524 adjudicated rows). Targeted checks pass with documented module advisories; broad validation, PR review and merge remain pending. Branch `cmungall/aigr-aba-taxon-audit`.
+- [ ] `activin_receptor_signaling`: research and member reviews are in progress in branch `cmungall/aigr-activin-taxon-audit`; no PR yet.
+- [ ] Remaining 699 modules: recorded individually as NOT_STARTED in the inventory.
 
 ## Notes
 
