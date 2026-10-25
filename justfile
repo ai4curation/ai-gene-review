@@ -93,6 +93,8 @@ validate-mappings:
 
 # Validate the generated RGD Pathway Ontology -> GO candidate mapping set
 # (projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.yaml) against the SSSOM schema.
+# Unlike the curated sets there is no GO label check: the set deliberately keeps
+# obsolete and unresolvable targets, flagged pw2go:qa/OBSOLETE_TARGET and qa/MISSING_TARGET.
 validate-rgd-mappings:
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.yaml
 
