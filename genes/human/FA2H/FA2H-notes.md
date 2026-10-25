@@ -64,3 +64,18 @@ For PMID:32814053, `full_text_unavailable` is true because the selected immutabl
 ## 2026-10-25 — Valid inherited functions and target-specific refinement
 
 The ER and fatty-acid 2-hydroxylase IBA rows now explicitly record `NO_FAILURE_CORE` and the inspected PTN000304948 source as `SUPPORTS_TRANSFER`. Their inherited annotations are sound; human and mouse evidence supports the more specific target terms already proposed. No propagation failure, paralog error or circularity is asserted. The 28 supported generic-binding contexts remain non-core under the project instruction.
+
+
+## 2026-10-25 — PR5511 feedback successor
+
+See the [FA2H source guide](FA2H-source-guide.md) for the final source and access boundaries.
+
+This checkpoint supersedes the earlier skin-action and broad-biosynthesis choices only as detailed in the companion delta. All 60 imported source objects, two product objects and earlier reference scopes remain preserved. Current actions are 12 ACCEPT, 16 MODIFY, 31 KEEP_AS_NON_CORE and one UNDECIDED; one catalytic core remains. The preceding checkpoints describe their own states.
+
+The positive human keratinocyte abstract of PMID:17355976 supports bounded skin-barrier retention as non-core: FA2H performs precursor hydroxylation associated with the lamellar-membrane phenotype. Its full Methods/controls/pixels remain unread. This human result must not be conflated with PMID:21628453 mouse whole-skin/sebaceous findings or its retained epidermal lipids. Identifier correctness is VERIFIED while the immutable abstract-only cache flag remains true.
+
+Official current GO confirms GalCer GO:0006682 and GlcCer GO:0006679 as separate is_a descendants of ceramide GO:0046513 and sphingolipid GO:0030148. Four broad rows now MODIFY to both supported branches. Each reason separates original broad support from independent GalCer and GlcCer experiments; this is neither a claim that each original tested both nor attribution of downstream glycosyltransferase chemistry. MODIFY follows the user-supplied action policy; the reviewer's TOO_GENERAL proposal was not followed. Valid IBA ancestry and accepted NO_FAILURE_CORE metadata remain intact.
+
+Three previously genuine but unused normal records now supply human disease context: PMID:19068277 and PMID:20853438 have complete cached mains with selected reading; PMID:20104589 remains abstract-only. Human genetics corroborates neural importance, without becoming a direct maintenance experiment or proving universal catalytic loss. In particular, PMID:20853438 reports unchanged R154C COS7 assay activity (data not shown) and reduced D6P2T abundance. No cache was fetched again or edited.
+
+Accessible human-abstract and Reactome ordering corroborate the free-substrate refinement. They do not disprove possible additional ceramide-bound turnover; GO:0120521 remains U with no invented source defect. A metal-occupancy question addresses the similarity-based curated two-Zn note without manufacturing measured occupancy or a NEW annotation. No publication quotations were added.
