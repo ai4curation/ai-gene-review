@@ -148,6 +148,9 @@ def expected(doc: dict, source: str) -> dict:
                     "id": scenario["id"],
                     "settings": settings,
                     "removed_connections": sorted([s, t] for s, t in removed),
+                    # A removed connection can leave a variable with no edges at all;
+                    # it then drops out of the scenario's network.
+                    "variables": list(variant.variables),
                     "rules": {v: variant.rules.get(v) for v in model.variables},
                     "attractors": summarise(attractors(variant, settings)),
                     "expectations_hold": result.passed,

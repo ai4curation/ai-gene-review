@@ -48,7 +48,7 @@ There are two kinds of case:
 | `rules` | each variable's update rule in BoolNet syntax; `null` for an input |
 | `edges` | `[source, target, sign, omitted]`, sorted; `omitted` marks a regulator the declared logic leaves out |
 | `free_attractors` | the asynchronous attractors with every input free |
-| `scenarios[]` | `id`, `settings` (fixed values), `removed_connections`, `rules` (the full rule map with those connections removed), `attractors` (with the settings fixed and other inputs free), and `expectations_hold` (the curated expectations pass) |
+| `scenarios[]` | `id`, `settings` (fixed values), `removed_connections`, `variables` (the scenario network's variables: a variable left with no connection drops out), `rules` (keyed by the base variables, with those connections removed), `attractors` (over the scenario's variables, with the settings fixed and other inputs free), and `expectations_hold` (the curated expectations pass) |
 
 Each attractor is `{size, always_on, always_off, oscillating}`: the number of states in
 the terminal strongly connected component, and which variables are constant on, constant

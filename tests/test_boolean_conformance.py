@@ -126,6 +126,7 @@ def test_attractors_agree_with_biodivine_aeon(name: str) -> None:
             model = (
                 module_to_boolean(doc, removed_connections=removed) if removed else base
             )
+            assert list(model.variables) == scenario["variables"], scenario["id"]
             assert aeon_summary(aeon, model, scenario["settings"]) == ours(
                 scenario["attractors"]
             ), scenario["id"]
