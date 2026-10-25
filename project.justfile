@@ -1642,8 +1642,8 @@ refresh-benchmark-snapshot commit="origin/main":
     diff <(echo "$before") <(uv run python scripts/benchmark_snapshot_headlines.py) || true
 
 # Move the ProtNLM2 evaluation's review snapshot (independent of the BioReason one) and
-# rebuild its derived reports and figures. Prose numbers in projects/PROTNLM_EVALUATION.md
-# and donkey40.md are hand-maintained; update them from the printed summary.
+# rebuild its derived reports, tables and figures. Prose numbers in projects/PROTNLM_EVALUATION.md,
+# donkey40.md, TREEGRAFTER.md and the per-cohort pages are hand-maintained; update them afterwards.
 refresh-protnlm-snapshot commit="origin/main":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1660,9 +1660,17 @@ refresh-protnlm-snapshot commit="origin/main":
     PY
     uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
     uv run python projects/PROTNLM_EVALUATION/cor_goa_entailment.py
+    # OpenScientist reconciliation pins verbatim rationale excerpts; if it fails, re-pick
+    # the excerpts in openscientist-reconciliation/override-rationale.tsv.
+    uv run python projects/PROTNLM_EVALUATION/reconcile_openscientist.py > /dev/null
+    # DONKEY40 is post-snapshot and read from the working tree, but its tables must track
+    # the current prediction and gene reviews (offline; horse_iba.tsv is committed).
+    obo="$(uv run python -c 'from ai_gene_review.bioreason_ontology import ensure_frozen_go; print(ensure_frozen_go())')"
+    uv run python projects/PROTNLM_EVALUATION/donkey40/compare_donkey40.py --go-obo "$obo" > /dev/null
     uv run python projects/PROTNLM_EVALUATION/build_benchmark_funnel.py refresh-reviews
     uv run python projects/PROTNLM_EVALUATION/build_benchmark_funnel.py render
     echo "ProtNLM2 review snapshot is now ${sha:0:10} (${date})."
+    echo "Update the hand-maintained numbers in PROTNLM_EVALUATION.md, donkey40.md, TREEGRAFTER.md and the per-cohort pages."
 
 # Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
 check-bioreason-sft-reviews:

@@ -185,15 +185,13 @@ def compute(
     # Benchmark targets that are not among the pilot records with GO or function
     # text: off-list accessions, and listed records with only names/locations/keywords.
     scope = [r for r in read_csv(HERE / "family-curation/scope.csv") if r["role"] == "prediction_target"]
-    targets = {r["accession"] for r in scope}
+    targets = check_target_count(summary)
     species_of = {r["accession"]: r["species"] for r in scope}
     off_list = sorted(t for t in targets if t not in taxon_of)
     off_list_by_species: dict[str, int] = {}
     for t in off_list:
         off_list_by_species[species_of[t]] = off_list_by_species.get(species_of[t], 0) + 1
     no_go_or_function = sorted(t for t in targets if t in taxon_of and not any(flags[t]))
-    if len(targets) != summary["prediction_targets"]:
-        raise typer.BadParameter(f"scope.csv has {len(targets)} prediction targets, benchmark-summary.json {summary['prediction_targets']}")
 
     taxon_counts: dict[int, int] = {}
     for t in taxon_of.values():
@@ -225,6 +223,15 @@ def compute(
     }
     FUNNEL_JSON.write_text(json.dumps(funnel, indent=2) + "\n")
     typer.echo(f"Wrote {FUNNEL_JSON}")
+
+
+def check_target_count(summary: dict) -> set[str]:
+    """Prediction-target accessions from scope.csv; raise if they disagree with the summary's count."""
+    scope = [r for r in read_csv(HERE / "family-curation/scope.csv") if r["role"] == "prediction_target"]
+    targets = {r["accession"] for r in scope}
+    if len(targets) != summary["prediction_targets"]:
+        raise typer.BadParameter(f"scope.csv has {len(targets)} prediction targets, benchmark-summary.json {summary['prediction_targets']}")
+    return targets
 
 
 def summary_fields(summary: dict) -> dict:
@@ -264,7 +271,15 @@ def refresh_reviews() -> None:
     data = json.loads(FUNNEL_JSON.read_text())
     summary = json.loads((HERE / "benchmark-summary.json").read_text())
     by_cohort = {c["cohort"]: c for c in summary["cohorts"]}
+    # The outside-GO-set block was computed against scope.csv; a changed target count
+    # needs a full `compute` with a fresh API dump.
+    check_target_count(summary)
     spec = {c["id"]: c for c in load_cohort_spec()["cohorts"]}
+    missing = sorted({c["id"] for c in data["cohorts"]} - set(spec))
+    if missing or set(spec) - {c["id"] for c in data["cohorts"]}:
+        raise typer.BadParameter(
+            f"{COHORTS_YAML.name} and {FUNNEL_JSON.name} list different cohorts; rerun `compute`"
+        )
     for c in data["cohorts"]:
         c.update(cohort_review_fields(spec[c["id"]], by_cohort))
     data.update(summary_fields(summary))

@@ -99,7 +99,7 @@ TreeGrafter rows (same term, nested, sibling or absent), and both against the
 ProtNLM2 predictions, using the same GO-relation logic as
 `TREEGRAFTER/tg_versus_protnlm.py`.
 
-Status: reviews done (2026-10-14); comparison below.
+Status: reviews done 2026-10-14, re-reviewed 2026-10-23 (#5309) and predictions rescored 2026-10-24 (#5351); comparison below.
 
 ## Results
 
@@ -114,29 +114,43 @@ action is the action the reviewer gave it in the donkey gene review.
 
 | Relation to the horse ortholog's IBA | Rows | Down-graded |
 |---|---|---|
-| same term | 199 | 21 (11%) |
-| TreeGrafter shallower | 9 | 3 |
+| same term | 199 | 39 (20%) |
+| TreeGrafter shallower | 9 | 4 |
 | TreeGrafter deeper | 1 | 1 |
 | sibling | 1 | 0 |
-| no related IBA term | 15 | 4 |
-| **all TreeGrafter rows** | **225** | **29 (12.9%)** |
+| no related IBA term | 15 | 7 |
+| **all TreeGrafter rows** | **225** | **51 (22.7%)** |
 
 Down-graded means REMOVE, MARK_AS_OVER_ANNOTATED, MODIFY or TOO_GENERAL;
-TOO_GENERAL (8 rows here) counts because, like MODIFY, the review did not keep
-the term as it is. Without it the share is 21/225 (9.3%). Per-row data:
+TOO_GENERAL (12 rows here) counts because, like MODIFY, the review did not keep
+the term as it is. Without it the share is 39/225 (17.3%), which is the
+definition the TreeGrafter corpus figure uses. Another 13 rows are UNDECIDED.
+The actions are those of the donkey gene reviews as re-reviewed on 2026-10-23
+(#5309). Per-row data:
 [`donkey40_tg_vs_iba.tsv`](donkey40/donkey40_tg_vs_iba.tsv).
 
-On these 40 genes, 88% of TreeGrafter rows carry the same term as horse IBA,
-and 14 of the 217 IBA terms have no related TreeGrafter row. For a protein
-whose closest reference ortholog is one speciation away, the graft lands in
-the right subfamily, and TreeGrafter acts as a copy of PAINT. The 12.9%
-down-graded share compares with 26.9% for the repo's TreeGrafter corpus, which
-is mostly bacterial and fungal (see [TREEGRAFTER](../TREEGRAFTER.md)); that
-snapshot predates TOO_GENERAL and has no such rows. Both figures come from the
-same agentic review process, so they compare the reviews' judgements, not
-independent ground truth.
+On these 40 genes, 88% of TreeGrafter rows (199/225) carry the same term as
+horse IBA, and 14 of the 217 IBA terms have no related TreeGrafter row. For a
+protein whose closest reference ortholog is one speciation away, the graft
+lands in the right subfamily: no donkey review attributes a down-grade to the
+placement. TreeGrafter therefore passes PAINT's terms on largely unchanged,
+faults included: 39 of the 51 down-graded rows carry exactly the term the
+horse ortholog receives as IBA.
 
-The 41 rows that are down-graded (29) or UNDECIDED (12) fall into five groups:
+A correct graft does not make the rows much more reliable. Under the corpus
+definition, 17.3% of donkey rows are down-graded, against 26.9% for the
+repo's TreeGrafter corpus (see [TREEGRAFTER](../TREEGRAFTER.md)), which is
+mostly bacterial and fungal and has no TOO_GENERAL rows; counting TOO_GENERAL,
+the donkey share is 22.7%. The gap is modest and rests on 40 genes: 24 of them
+have a down-graded row, and PARD3B and PIKFYVE have six each. It also mixes
+taxon with review vintage, since the corpus reviews are older. Both figures
+come from the same agentic review process, so they compare the reviews'
+judgements, not independent ground truth. About half of the donkey
+down-grades keep the biology and ask only for precision (12 TOO_GENERAL, 12
+MODIFY to a descendant term); REMOVE and MARK_AS_OVER_ANNOTATED together
+account for 23 rows (10.2%), six of them on one PIKFYVE fragment.
+
+The 64 rows that are down-graded (51) or UNDECIDED (13) fall into six groups:
 
 - **The donkey sequence model, not the graft (16 rows on three proteins:
   6 down-graded, 10 UNDECIDED).**
@@ -150,28 +164,47 @@ The 41 rows that are down-graded (29) or UNDECIDED (12) fall into five groups:
   TreeGrafter scores the family HMM and does not check that the protein keeps
   the domains the function needs. The PDIA4 entry (a KRAB/zinc-finger fusion)
   shows the same fault, but there the wrong rows come from other pipelines.
-- **The PAINT annotation itself (12 rows).** These terms are the same on the
-  horse IBA, so the question is about the IBD node, not the graft:
+- **A PAINT term that over-reaches (13 rows: 12 MARK_AS_OVER_ANNOTATED,
+  1 REMOVE).** Each is the same term the horse ortholog receives as IBA, so
+  the question is about the IBD node, not the graft:
   - the SNAP25 synaptic terms on SNAP23 (2);
   - mitophagy and piecemeal microautophagy of the nucleus on ATG4C;
   - endoderm formation and cytoplasm on DUSP5;
-  - cell adhesion on PARD3B, kinesin complex on NDEL1, detection of stimulus
-    on CADM1, and regulation of apoptotic process on USP36;
-  - two MODIFYs to a more exact term (IRF9, TGFBR3).
-- **True but too general (8 TOO_GENERAL rows).** A more specific term in the
-  same review entails each: phosphoprotein phosphatase activity on DUSP5,
-  cytoplasm and membrane on LNPEP, apical junction complex on PARD3B,
-  endoplasmic reticulum on PDIA4, DNA polymerase complex on POLD2,
-  N-acetyltransferase activity on SAT1, and fatty acid transmembrane
-  transporter activity on SLC27A5.
-- **TreeGrafter only (3 rows).**
+  - cell adhesion, microtubule cytoskeleton organization, intracellular
+    protein localization and epithelial apical/basal polarity on PARD3B;
+  - kinesin complex on NDEL1 (REMOVE), detection of stimulus on CADM1, and
+    regulation of apoptotic process on USP36.
+- **A PAINT term that is right but imprecise (14 MODIFY rows, all the same
+  term as horse IBA).** Twelve move to a descendant: the two DUSP5 terms
+  (MAP kinase phosphatase activity, ERK1/ERK2 cascade), actin filament binding
+  and ruffle membrane on EPS8L2, SMN-Sm protein complex on GEMIN7, type I
+  interferon signalling on IRF9, H3K36me2/me3 demethylase activity on KDM4C,
+  positive regulation of Pol II transcription on MITF, NADP+ biosynthesis on
+  NADK2, bile acid conjugation on SLC27A5, type III TGF-beta receptor activity
+  on TGFBR3, and nucleolus on USP36. Two are lateral: ALKAL2 to the
+  transmembrane receptor tyrosine kinase activator sibling, and LNPEP
+  proteolysis to peptide catabolic process.
+- **True but too general (12 TOO_GENERAL rows).** A more specific term in the
+  same review entails each: cytoplasm and membrane on LNPEP, apical junction
+  complex on PARD3B, endoplasmic reticulum on PDIA4, DNA polymerase complex on
+  POLD2, N-acetyltransferase activity on SAT1, plasma membrane and fatty acid
+  transmembrane transporter activity on SLC27A5, regulation of Pol II
+  transcription on IRF9, and regulation of gene expression, histone
+  demethylase activity and histone H3K9 demethylase activity on KDM4C.
+- **Not in horse IBA (6 rows).**
   - ATG3 carries `GO:0019776`; horse IBA has its replacement `GO:0141046`.
     This is the same release lag as the stale rows in TREEGRAFTER.
-  - Two GPAT2 rows (fatty acid metabolic process, mitochondrial membrane)
-    have no counterpart on horse.
-- **Not decidable from the available evidence (2 UNDECIDED rows).**
-  Phosphatidylinositol binding on PARD3B and pre-mRNA intronic binding on
-  RBM41, for which no cached literature tests the activity.
+  - Vesicle on EPS8L2, inflammatory response on LOXL3 and establishment of
+    centrosome localization on PARD3B (REMOVE): the reviews find each absent
+    from the family's current PAINT annotation.
+  - Two GPAT2 rows: fatty acid metabolic process has no horse counterpart, and
+    mitochondrial membrane is deeper than horse's mitochondrion and is
+    refined further to the outer membrane.
+- **Not decidable from the available evidence (3 UNDECIDED rows).**
+  Positive regulation of TGF-beta receptor signalling on FLCN, whose mouse
+  IMP source is not cached; phosphatidylinositol binding on PARD3B; and
+  pre-mRNA intronic binding on RBM41, for which no cached literature tests the
+  activity.
 
 ### ProtNLM2 on the same proteins
 
@@ -223,8 +256,9 @@ as expected now that TreeGrafter and IBA agree.
   - **Activity of an unrelated family:** myosin phosphatase on DUSP5.
 
 **Summary.** On a mammal one speciation from a reference proteome,
-TreeGrafter is reliable and redundant with IBA. Its errors there come from
-the input sequence, are inherited from PAINT, or are terms more general than
-the review keeps. ProtNLM2 is shallower where
+TreeGrafter is redundant with IBA: the graft lands correctly and copies the
+PAINT terms, but the reviews still down-grade 22.7% of its rows. Those errors
+come from the input sequence, are inherited from PAINT, or are terms more
+general than the review keeps. ProtNLM2 is shallower where
 the two overlap, but supplies most of the correct annotation that neither
 tree-based source has.
