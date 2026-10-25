@@ -25,3 +25,12 @@ The earlier PWY3O-981 GO:0019152 direction criticism is withdrawn: the current d
 Independent annotation reviewers checked the gene decisions, root fish inference limits and GO-CAM interpretation. No original annotation ids were rewritten to pass validation. Provider attempts failed authentication/quota and are documented without invented output. No PAINT ancestral-node assertion is introduced merely from family membership.
 
 Family conformance exposed three unresolved exact functional-clade boundaries: broad PTHR42940:SF8 includes AdhA plus CoA reductases; PTHR43161:SF26 includes BdhA plus other polyol activities; the PTHR43880 review has not established whole-SF3 ethanol activity. These roles are now separate, activity-filtered free-text family descriptors with verified representatives. Actual broad PANTHER assignments remain documented, but no narrower identifier is invented and no broad-family activity is asserted merely to satisfy validation. The other family selectors retain verified exact ids.
+
+
+## 2026-10-25 PR #5545 approved-review follow-up
+
+Removed bacterial PMID:36781054 and PMID:18820069 from the fungal Bdh1 annoton's function/evidence lists and removed its bacterial-route aside. Yeast Bdh1 remains grounded in PMID:10938079, PMID:19329666 and PMID:26729717; both bacterial sources remain on the separate bacterial BdhA variant. No reaction, member, family selector or reference inventory changed.
+
+Other suggestions were assessed explicitly. CARAX ADH8a3 retains its inferred ethanol-reaction refinement after checking the live GO definition: the reaction term does not assert ethanol exclusivity, and target physiology/expression plus ADH8a comparative biochemistry support a qualified inference. The two row reasons now spell out these limits; exact carp kinetics remain unresolved. Arabidopsis ADH1 core prose now explains why fermentation is emphasized while measured broader alcohol activity remains accepted in the annotations.
+
+CARAX E1alpha3 already states in its core description that the PDC contribution is inferred, complex-level and not an isolated-subunit assay or proof of absent residual PDH activity. Its three UNDECIDED rows ask different source claims; no unsupported NEW or extra annotation was manufactured. A YAML-anchor rewrite of repeated same-term/protein-binding reasons was declined as style-only churn: their identical biological claims intentionally receive consistent judgments, and the existing reasons remain independently readable. All 487 annotation rows and action totals are unchanged.

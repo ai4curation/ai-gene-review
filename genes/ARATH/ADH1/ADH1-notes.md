@@ -19,3 +19,8 @@ Research provenance: normal fetch/publication caching completed. No pre-existing
 Every original annotation was independently assessed; no source annotation fields or negation flags were changed. No NEW annotation rows were added. Core functions distinguish catalytic activity from stress induction and avoid pathway-exclusivity or compartment assumptions. Review counts: 52 rows; ACCEPT=13, KEEP_AS_NON_CORE=20, MODIFY=15, REMOVE=2, UNDECIDED=2. Targeted schema, quote, consistency and ontology validation is run after record-section backfill.
 
 Validation outcome: targeted `just validate ARATH ADH1` passed; the matching codex history record also passed schema validation. Original source annotation fields were preserved.
+
+
+## 2026-10-25 PR #5545 core-scope clarification
+
+The broad GO:0004022 annotations remain ACCEPT because PMID:23707506 reports activity on primary and secondary alcohols. The core description already acknowledged other alcohols; it now explicitly explains that the NADH-dependent fermentative reaction is the central physiological role synthesized here. Other measured substrate reactions do not by themselves establish additional central physiological roles. No redundant ancestor core-function entry was added, and no annotation decisions or source fields changed.
