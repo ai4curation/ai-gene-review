@@ -184,9 +184,8 @@ def compute(
 
     # Benchmark targets that are not among the pilot records with GO or function
     # text: off-list accessions, and listed records with only names/locations/keywords.
-    scope = [r for r in read_csv(HERE / "family-curation/scope.csv") if r["role"] == "prediction_target"]
-    targets = check_target_count(summary)
-    species_of = {r["accession"]: r["species"] for r in scope}
+    species_of = check_target_count(summary)
+    targets = set(species_of)
     off_list = sorted(t for t in targets if t not in taxon_of)
     off_list_by_species: dict[str, int] = {}
     for t in off_list:
@@ -225,10 +224,10 @@ def compute(
     typer.echo(f"Wrote {FUNNEL_JSON}")
 
 
-def check_target_count(summary: dict) -> set[str]:
-    """Prediction-target accessions from scope.csv; raise if they disagree with the summary's count."""
+def check_target_count(summary: dict) -> dict[str, str]:
+    """Prediction targets from scope.csv (accession -> species); raise if they disagree with the summary's count."""
     scope = [r for r in read_csv(HERE / "family-curation/scope.csv") if r["role"] == "prediction_target"]
-    targets = {r["accession"] for r in scope}
+    targets = {r["accession"]: r["species"] for r in scope}
     if len(targets) != summary["prediction_targets"]:
         raise typer.BadParameter(f"scope.csv has {len(targets)} prediction targets, benchmark-summary.json {summary['prediction_targets']}")
     return targets
@@ -275,10 +274,12 @@ def refresh_reviews() -> None:
     # needs a full `compute` with a fresh API dump.
     check_target_count(summary)
     spec = {c["id"]: c for c in load_cohort_spec()["cohorts"]}
-    missing = sorted({c["id"] for c in data["cohorts"]} - set(spec))
-    if missing or set(spec) - {c["id"] for c in data["cohorts"]}:
+    in_funnel = {c["id"] for c in data["cohorts"]}
+    if in_funnel != set(spec):
         raise typer.BadParameter(
-            f"{COHORTS_YAML.name} and {FUNNEL_JSON.name} list different cohorts; rerun `compute`"
+            f"{COHORTS_YAML.name} and {FUNNEL_JSON.name} list different cohorts "
+            f"(only in {COHORTS_YAML.name}: {sorted(set(spec) - in_funnel)}; "
+            f"only in {FUNNEL_JSON.name}: {sorted(in_funnel - set(spec))}); rerun `compute`"
         )
     for c in data["cohorts"]:
         c.update(cohort_review_fields(spec[c["id"]], by_cohort))

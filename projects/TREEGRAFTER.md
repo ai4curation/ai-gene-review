@@ -1606,7 +1606,7 @@ term is the wrong depth. A wrong reaction class (metZ) is rare.
 - **Test the fusion-seeded-root shape across PANTHER.** For every IBD on a
   family root, check whether all its seeds are multi-domain proteins whose
   extra domain the rest of the family lacks.
-- **Test a domain-coverage rule.** In DONKEY40, 20 down-graded or UNDECIDED
+- **Test a domain-coverage rule.** In DONKEY40, 16 down-graded or UNDECIDED
   TreeGrafter rows are on fragmentary or truncated donkey gene models. A rule
   that flags a TreeGrafter row when the protein lacks the InterPro domain its
   term depends on (for example a kinase term with no kinase domain) could be
@@ -1617,7 +1617,7 @@ term is the wrong depth. A wrong reaction class (metZ) is rare.
   HETGA rows (76% accepted) are a first mammalian batch and the 65 holozoan
   rows (63% down-graded) a first unicellular-eukaryote batch, both too small
   and too hand-picked to generalise from. DONKEY40 adds 225 mammalian rows,
-  selected by rule rather than by hand (9.3% down-graded).
+  selected by rule rather than by hand (17.3% down-graded, 39/225).
 - **File the `GO:0009329` label/axiom defect with GO.** This is the one item the
   2026-09-24 re-review turned from a suspicion into a verified finding (see the
   label-vs-definition bullet above): the term's definition is the AccA/AccD
