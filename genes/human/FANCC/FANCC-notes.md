@@ -176,3 +176,14 @@ The cytosol IDA is now KEEP_AS_NON_CORE. Re-reading the actual PMID:9596688 abst
   }
 }
 ```
+
+
+## 2026-10-25 — partner metadata and current-checkpoint clarification
+
+The partner-resolved checkpoint has 39 active imported contexts: 22 ACCEPT, 4 MODIFY, 7 KEEP_AS_NON_CORE and 6 UNDECIDED. One retired UNDECIDED adaptor proposal is retained separately. The review has 40 references, one core unit and 27 inherited quotation paths. Earlier 36-context counts and the verbatim superseded objects above document earlier checkpoints and remain historical. The current published PR body already reported the correct 39-context counts when inspected.
+
+The cytoplasm reason no longer describes the PMID:9596688 cytosol verdict as unresolved: that location is retained as non-core, while its detailed assay Methods remain unavailable. Four missing supporting_entities fields were copied from genuine seeder output against the unchanged committed GOA: FANCE/Q9HB96 in PMID:12649160 and PMID:33961781, MEOX2/Q6FHY5 in PMID:26871637, and GRP94/P14625 in PMID:9596688. No action, term, source identifier or order changed. The duplicate GRP94 source provenance remains explicit.
+
+Current source-guide and reference-note locator spacing is corrected. The earlier journal prefix is not rewritten; its compressed spellings denote the displayed 558-residue product and the historical row or table locators described with spaces in the current [source guide](FANCC-source-guide.md). That guide also clarifies the distinction between official comparator annotations and sibling review assertions, and the evidence-resolution reason for deferring a contributes-to molecular function. The existing question and experiment already state the unresolved step.
+
+All 27 inherited quotation paths, texts, reference associations and order are unchanged. The requested title-quote replacement and Xenopus-quote reordering are declined under the standing preservation instruction; no new publication quotations are added. All review actions, the retired proposal, biological description, core, reference identities/findings, status and absent alternative-products field remain unchanged.
