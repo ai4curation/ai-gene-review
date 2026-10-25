@@ -1,0 +1,100 @@
+# Consistency rules between review actions within one gene review.
+#
+# A review makes claims about the gene, not about evidence codes: two rows that
+# share a term are two pieces of evidence for one claim, and the actions on them
+# must not contradict each other. Each rule names a pair of actions, how the two
+# rows' terms are related, and how severe the combination is. Strictness is
+# ratcheted by editing `severity` here (OK -> INFO -> WARNING -> ERROR).
+#
+# Each rule reads as a sentence, left to right:
+#
+#   "the <action_1> row's term is <relation> the <action_2> row's term"
+#
+# Columns:
+#   action_1, action_2  An ActionEnum value, or a list of them (any of).
+#   relation            SAME_TERM      both rows carry the same term id (symmetric).
+#                       DESCENDANT_OF  action_1's term is a strict descendant
+#                                      (is_a/part_of) of action_2's term, i.e.
+#                                      action_1 is on the MORE SPECIFIC term.
+#                       ANCESTOR_OF    action_1's term is a strict ancestor of
+#                                      action_2's term, i.e. action_1 is on the
+#                                      MORE GENERAL term.
+#                       "A ANCESTOR_OF B" and "B DESCENDANT_OF A" are the same
+#                       rule; listing both is rejected as a duplicate.
+#   severity            OK (documented, not reported) | INFO | WARNING | ERROR.
+#   rationale           Why the combination is (in)consistent; shown in reports.
+#   term_1, term_2      Optional. Restrict the rule to rows whose term matches:
+#                         {exact: GO:0005515}               this term only
+#                         {exact: [GO:0003674, GO:0008150]} any of these terms
+#                       ({self_or_descendant: ...} is reserved; it needs the
+#                       ontology and is rejected until that lands.) SAME_TERM
+#                       rows share one term, so they take term_1 only.
+#   negated_1,          Optional, default false. true selects NOT (negated)
+#   negated_2           rows on that side. Polarity matters: a positive
+#                       annotation entails its ancestors, a NOT entails its
+#                       descendants, and REMOVE on a NOT row only doubts the
+#                       negative claim (it does not assert the positive one).
+#
+# Exceptions are just more specific rules. When several rules match a pair of
+# rows, the one with the most term filters wins (usually an OK row carving an
+# exception out of a general rule). Equally specific rules that can match the
+# same rows and disagree on severity are rejected when the table loads.
+#
+# Rows annotated to two different isoforms are never compared with each other.
+# Pairs not listed are not checked. For the very rare case where an apparent
+# contradiction is right, a row can carry review.consistency_exception.reason:
+# its conflicts are then reported at INFO with the reason.
+# DESCENDANT_OF / ANCESTOR_OF rules need the GO hierarchy (is_a + part_of), so
+# they are evaluated only when validating with the ontology loaded
+# (`ai-gene-review validate --terms` or `--ontology-checks`; `just validate` and
+# `just validate-all` do this). See docs/action_consistency.md.
+rules:
+  - action_1: ACCEPT
+    relation: SAME_TERM
+    action_2: REMOVE
+    severity: WARNING
+    rationale: >-
+      REMOVE says the claim is unlikely to be correct, ACCEPT says it is a core
+      function. Duplicate rows for a true claim reinforce it and are never grounds
+      for REMOVE, whatever their evidence code.
+  - action_1: ACCEPT
+    term_1: {exact: GO:0005515}
+    relation: SAME_TERM
+    action_2: REMOVE
+    severity: OK
+    rationale: >-
+      Exception: bare protein binding is slated for do-not-annotate and is tracked
+      separately by the protein-binding policy check (protein_binding_policy.py).
+  - action_1: [ACCEPT, KEEP_AS_NON_CORE]
+    negated_1: true
+    relation: SAME_TERM
+    action_2: [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL]
+    severity: WARNING
+    rationale: >-
+      Keeping a NOT annotation says the gene does not do this; keeping the positive
+      annotation says it does. Decide which the evidence supports (REMOVE or
+      UNDECIDED the other), or record a consistency_exception if both genuinely
+      hold in different contexts.
+  - action_1: [ACCEPT, KEEP_AS_NON_CORE]
+    negated_1: true
+    relation: ANCESTOR_OF
+    action_2: [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL]
+    severity: WARNING
+    rationale: >-
+      A NOT annotation entails NOT for every descendant term, so keeping NOT on a
+      term contradicts keeping a positive annotation to anything below it (e.g.
+      NOT autophagosome vs autophagosome membrane, which is part_of it). Decide
+      which the evidence supports, or record a consistency_exception.
+  - action_1: TOO_GENERAL
+    relation: ANCESTOR_OF
+    action_2: ACCEPT
+    severity: OK
+    rationale: >-
+      The intended use of TOO_GENERAL: a broad term subsumed by a more specific
+      accepted term.
+  - action_1: TOO_GENERAL
+    relation: ANCESTOR_OF
+    action_2: KEEP_AS_NON_CORE
+    severity: OK
+    rationale: >-
+      As above, for a more specific term kept as non-core.

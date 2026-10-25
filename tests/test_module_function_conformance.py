@@ -74,6 +74,8 @@ def test_core_supported_and_missing_review_are_separate(tmp_path):
         ("ACCEPT", "ANNOTATION_SUPPORTED"),
         ("NEW", "ANNOTATION_SUPPORTED"),
         ("KEEP_AS_NON_CORE", "NON_CORE_SUPPORTED"),
+        # TOO_GENERAL holds the claim true, only uninformative: it supports, not disputes
+        ("TOO_GENERAL", "ANNOTATION_SUPPORTED"),
         ("PENDING", "FUNCTION_UNREVIEWED"),
         ("UNDECIDED", "FUNCTION_UNREVIEWED"),
         ("REMOVE", "REVIEW_DISAGREEMENT"),

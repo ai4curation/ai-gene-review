@@ -52,8 +52,13 @@ SLOS-like multiple-malformation / dysmorphism syndrome with liver disease and
 lysosomal storage. Caused by SC5D variants.
 
 ## Annotation strategy
-- Core MF: GO:0000248 C-5 sterol desaturase activity + GO:0050046 delta7-sterol
-  5(6)-desaturase activity (both accurate; 0050046 is the precise reaction).
+- Core MF: GO:0050046 delta7-sterol 5(6)-desaturase activity, the precise
+  SC5D/ERG3-family reaction.
+- GO:0000248 "C-5 sterol desaturase activity" is not a parent of GO:0050046 and
+  is currently defined as 5,7,24(28)-ergostatrienol + O2 + NADPH =
+  5,7,22,24(28)-ergostatetraenol + 2 H2O + NADP+, i.e. the sterol C-22
+  desaturation rather than the SC5D/ERG3 C-5 reaction. Treat GO:0000248 rows as
+  MODIFY to GO:0050046 until the ontology term is redefined or obsoleted.
 - Core BP: cholesterol biosynthesis. GOA carries generic GO:0006695. UniProt DR
   also carries the more specific GO:0033490 (cholesterol biosynthetic process via
   lathosterol) IDA — a legitimate MODIFY target for the PMID:10786622 IDA, but

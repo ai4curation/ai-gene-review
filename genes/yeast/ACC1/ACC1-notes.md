@@ -1,0 +1,11 @@
+# ACC1 (YNR016C, Q00955) notes
+
+- Cytosolic acetyl-CoA carboxylase, EC 6.4.1.2; single multifunctional polypeptide with BC, BCCP and CT domains [UniProt:Q00955 "Carries out three functions: biotin carboxyl carrier protein, biotin carboxylase and carboxyltransferase"].
+- acc1 mutants lack ACC activity and need saturated C14-C16 fatty acids [PMID:6103540 "The mutant is deficient in de novo biosynthesis of long-chain fatty acids and specifically requires a saturated fatty acid of chain length 14-16 C atoms for growth"]; acc1-167 is a biotin carboxylase domain lesion [PMID:6103540 "acc1-167 contains a structural gene mutation in the biotin carboxylase domain"].
+- One polypeptide carries both partial activities [PMID:6108218 "acc1 is a cluster gene coding for a multifunctional protein harboring both acetyl-CoA carboxylase component enzyme activities on the same polypeptide chain"].
+- Essential even with fatty-acid supplementation (VLCFA / nuclear envelope role) [PMID:8098706 "acetyl-CoA carboxylase activity is essential for a process other than de novo fatty acid synthesis"]; [PMID:26458104 "ScACC is crucial for the production of very-long-chain fatty acids and the maintenance of the nuclear envelope"].
+- CT domain dimer forms the active site; inhibitors bind there [PMID:12663926 "The active site is at the interface of a dimer"]; [PMID:15341732 "The inhibitor is bound in the active site at the interface of a dimer of the CT domain"]. Holoenzyme is a homodimer [PMID:26458104].
+- Localisation: cytosol with peripheral association with cytosolic face of nuclear ER [PMID:9438137 "it is loosely associated with the cytosolic surface of the nuclear ER membrane"].
+- mtr7-1 (acc1) affects Gsp1p nuclear import [PMID:12730220] - indirect consequence of altered lipid/nuclear envelope, not a transport function -> over-annotation.
+- The mitochondrial ACC is the paralog HFA1, which has an MTS absent from Acc1p [PMID:14761959 "Other than Acc1p, the N-terminal sequence of Hfa1p comprises a canonical mitochondrial targeting signal"]. Mitochondrial HDA/IBA rows for ACC1 therefore questionable.
+- "acetyl-CoA biosynthetic process" IMP (PMID:15341732) is wrong direction: ACC consumes acetyl-CoA and makes malonyl-CoA -> MODIFY to malonyl-CoA biosynthetic process.

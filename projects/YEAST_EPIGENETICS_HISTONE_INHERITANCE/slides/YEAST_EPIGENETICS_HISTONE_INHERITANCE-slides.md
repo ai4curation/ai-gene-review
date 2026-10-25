@@ -38,7 +38,7 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 
 - **28 genes** reviewed: **1,373 existing annotations** plus 11 proposed NEW rows.
 - Current action split: **828 ACCEPT**, **184 KEEP_AS_NON_CORE**, **305 REMOVE**, 22 MODIFY, 19 MARK_AS_OVER_ANNOTATED, 15 UNDECIDED, 11 NEW.
-- **270 of the 305 removals** are generic `protein binding` rows; one cleanup remains: CLR4 is a fission yeast gene to drop or replace.
+- **270 of the 305 removals** are generic `protein binding` rows; CLR4, a fission yeast H3K9 methyltransferase with no budding yeast ortholog, is dropped from scope.
 
 ---
 
@@ -83,6 +83,6 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 
 - ✅ Reviewed: 28 intended genes in `genes/yeast/` (HATs, HDACs, SIR, HMTs, FACT/CAF-1/ASF1/RTT109, SWI/SNF, CHD1, RCO1, PHD1)
 - ✅ Chromatin assembly factor CAF-1: RLF2 (alias CAC1), CAC2 and MSI1 are now reviewed. The old `genes/yeast/CAF1/` folder was the CCR4-NOT deadenylase, now renamed POP2 and outside this project
-- ⬜ CLR4: replace with an *S. cerevisiae* gene or drop
+- ✅ CLR4 dropped: *S. cerevisiae* has no H3K9 methylation or Clr4/SUV39 ortholog, so the scope stays at 28 budding yeast genes
 
 **Read more:** `projects/YEAST_EPIGENETICS_HISTONE_INHERITANCE.md`

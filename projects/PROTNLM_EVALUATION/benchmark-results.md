@@ -5,7 +5,7 @@ title: ProtNLM cross-cohort results
 
 [Project overview](../PROTNLM_EVALUATION.md) · [Source counts](benchmark-summary.json) · [Summary generator](build_benchmark_summary.py) · [Narrative category index](narrative-review-index.yaml)
 
-Counts are a dated snapshot: as of 2026-09-27 (commit `c7551cb3db`). The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
+Counts are a dated snapshot: as of 2026-10-24 (commit `1ca4af83c6`). The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
 
 **186 of the 242 prediction targets have been assessed** at the time of this build: 162 have a GO prediction-review YAML (including 17 reviewed empty GO outputs) and 24 have only a narrative function review. The remaining 56 are selected but not yet reviewed and contribute nothing to any count below.
 
@@ -15,11 +15,11 @@ Each row counted here is one emitted GO term. Narrative functions, protein names
 
 | Category | GO claims |
 |---|---:|
-| COR | 52 |
-| CNN | 32 |
-| LSP | 84 |
-| UNC | 98 |
-| NPI | 20 |
+| COR | 35 |
+| CNN | 46 |
+| LSP | 85 |
+| UNC | 78 |
+| NPI | 42 |
 | PLI | 2 |
 | REP | 0 |
 | **Total** | **288** |
@@ -32,14 +32,14 @@ Latest annotation date in each target's cached GOA file (a lower bound on when t
 
 | Cohort | GO claims | COR | CNN | LSP | UNC | NPI | PLI | REP | COR share | Median cached GOA rows per target |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO50 | 77 | 18 | 8 | 14 | 25 | 10 | 2 | 0 | 23% | 4 |
-| HORSE40 | 89 | 33 | 8 | 5 | 42 | 1 | 0 | 0 | 37% | 6 |
-| FLY41 | 50 | 1 | 11 | 16 | 15 | 7 | 0 | 0 | 2% | 9 |
-| POMBE20 | 32 | 0 | 2 | 27 | 3 | 0 | 0 | 0 | 0% | 12.5 |
-| NEUROSPORA20 | 21 | 0 | 1 | 19 | 1 | 0 | 0 | 0 | 0% | 8.5 |
-| MOD_EVOLUTION20 | 19 | 0 | 2 | 3 | 12 | 2 | 0 | 0 | 0% | 1 |
+| ARGO50 | 77 | 16 | 10 | 10 | 25 | 15 | 1 | 0 | 21% | 4 |
+| HORSE40 | 89 | 16 | 21 | 10 | 28 | 13 | 1 | 0 | 18% | 6 |
+| FLY41 | 50 | 2 | 7 | 19 | 14 | 8 | 0 | 0 | 4% | 9 |
+| POMBE20 | 32 | 1 | 2 | 26 | 3 | 0 | 0 | 0 | 3% | 12.5 |
+| NEUROSPORA20 | 21 | 0 | 5 | 15 | 1 | 0 | 0 | 0 | 0% | 8.5 |
+| MOD_EVOLUTION20 | 19 | 0 | 1 | 5 | 7 | 6 | 0 | 0 | 0% | 1 |
 
-A mechanical is_a/part_of check of all 52 COR calls against each target's cached GOA ([`cor_goa_entailment.py`](cor_goa_entailment.py), [TSV](cor-goa-entailment.tsv)) finds ANCESTOR_SAME_ASPECT: 3, DESCENDANT: 5, NONE: 44. 3 COR calls are entailed by an existing target annotation and are candidates for LSP/CNN re-review (HORSE/WDPCP cytoplasm via axoneme; HORSE/WDPCP cilium via axoneme; HORSE/WDPCP cytoskeleton via axoneme). Entailment by an existing MF through relations outside go-basic, or by an InterPro2GO domain mapping, is not checked.
+A mechanical is_a/part_of check of all 35 COR calls against each target's cached GOA ([`cor_goa_entailment.py`](cor_goa_entailment.py), [TSV](cor-goa-entailment.tsv)) finds DESCENDANT: 4, NONE: 31. 0 COR calls are entailed by an existing target annotation and are candidates for LSP/CNN re-review. Entailment by an existing MF through relations outside go-basic, or by an InterPro2GO domain mapping, is not checked.
 
 ## Reviewed records with no GO predictions
 

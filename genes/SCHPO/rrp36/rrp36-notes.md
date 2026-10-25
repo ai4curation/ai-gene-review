@@ -21,3 +21,15 @@ The full original function paragraph and all atomic claims are assessed in [rrp3
 ## Provider report appraisal
 
 The Falcon report correctly distinguishes budding yeast/human RRP36 experiments from the fission yeast target; its absence-of-localization finding is incomplete because GOA includes the target tagged-ORFeome observations. The report and primary PMID:20038530 were inspected.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: Q9P6P2 is the reviewed, canonical Swiss-Prot entry for rrp36/SPAC823.04 (279 aa, sequence version 4 after the gene-model revision in PMID:21270388). It is not a fragment, isoform or alternative gene model. It carries the full RRP36 domain (PF06102, IPR009292), a coiled coil (160-218), and disordered charged termini (1-117, 245-279).
+
+Evolutionary grounding: PTHR21738 has one subfamily, SF0, and all 72 cached members are in it, including S. pombe Q9P6P2, S. cerevisiae RRP36 Q12481 and human RRP36 Q96EU6 (interpro/panther/PTHR21738/PTHR21738-entries.csv). The PAINT node PTN000497661 propagated the SSU-rRNA maturation process and 90S preribosome membership from SGD RRP36, and nucleolus from SGD plus human. PAINT did not propagate a pre-40S term, and I add none. The PANTHER family review (interpro/panther/PTHR21738/PTHR21738-review.yaml) agrees, with no subfamily placement issue.
+
+Literature: [PMID:20038530 "Its depletion affects early cleavages of the 35S pre-rRNA and results in a rapid decrease in mature 18S rRNA levels."], human ortholog conserved. [PMID:31996908 "strong positive interactions were observed for Rrp9 with Rrp36 and Sgd1"]; [PMID:31996908 "some SSU-processome proteins remain unmapped, including Rrp36 and Sgd1 for which no 3D structures are established"]. Fission yeast direct data are limited to the ORFeome localization (UniProt "Nucleus, nucleolus {ECO:0000269|PubMed:16823372}").
+
+Actions: GO:0000462 IBA ACCEPT. GO:0003674 ND ACCEPT (no activity or motif known). Nucleus HDA MODIFY to nucleolus, which is more specific, in the same paper, and already on the gene. Nucleolus HDA/IBA/IEA ACCEPT. 90S preribosome IBA ACCEPT. I rewrote the description to be more specific, added suggested questions and experiments, and proposed no NEW terms.
+
+Relative for next review: S. cerevisiae RRP36 (Q12481, YOR287C, SGD:S000005813). It is the PAINT donor in the same subfamily (SF0) and the experimentally characterised ortholog. There is no review in the repo (no genes/yeast/RRP36). Modules: none found for the SSU processome or 90S.
