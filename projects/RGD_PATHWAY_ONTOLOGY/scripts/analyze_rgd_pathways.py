@@ -235,7 +235,8 @@ RULE_TEXT = {
     "qa/ID_ECHO": "the GO local id equals the PW local id (likely a typo on the RGD page)",
     "qa/PAGE_XREF_DISAGREES": (
         "the page xref is neither equal to, nor an ancestor or descendant of, the term's other "
-        "GO mappings, which other lists as conflicts_with=<GO id>; the row is not used for matching"),
+        "GO mappings, which are listed in the other slot as conflicts_with=<GO id>; the row is not "
+        "used for matching"),
 }
 MAPPING_SET_ID = "https://w3id.org/ai4curation/ai-gene-review/mappings/pw2go"
 
@@ -260,8 +261,10 @@ def sssom_row(m: dict) -> dict:
         rules = ["src/LEXICAL_MATCH"]
         if src.endswith(":pathway->process"):
             rules.append("src/PATHWAY_TO_PROCESS")
+    elif src in SOURCE_RULE:
+        rules = ["src/" + SOURCE_RULE[src]]
     else:
-        rules = ["src/" + SOURCE_RULE[src]]  # a new source must be given a code
+        raise ValueError(f"match_source {src!r} has no src/ code: add it to SOURCE_RULE and RULE_TEXT")
     if m["object_status"] == "obsolete":
         rules.append("qa/OBSOLETE_TARGET")
     elif m["object_status"] == "missing":
@@ -269,9 +272,14 @@ def sssom_row(m: dict) -> dict:
     elif m["object_namespace"] != "biological_process":
         rules.append("qa/NOT_BIOLOGICAL_PROCESS")
     rules += ["qa/" + f for f in m.get("qa_flags", [])]
-    assert set(rules) <= set(RULE_TEXT), rules
+    undefined = sorted(set(rules) - set(RULE_TEXT))
+    if undefined:
+        raise ValueError(f"undefined rule codes {undefined}: add them to RULE_TEXT")
     see_also = list(m.get("replaced_by") or [])
-    conflicts = list(m.get("disagrees_with") or [])
+    # SSSOM "other" is a pipe-separated list of key=value pairs. A declared
+    # extension_definitions slot would be cleaner, but linkml-validate against
+    # sssom-schema 1.0.0 rejects it on mappings.
+    other = [f"conflicts_with={g}" for g in m.get("disagrees_with") or []]
     row = {k: m[k] for k in ("subject_id", "subject_label", "predicate_id") if m.get(k)}
     for k in ("object_id", "object_label", "mapping_justification", "subject_match_field",
               "object_match_field", "match_string"):
@@ -280,8 +288,8 @@ def sssom_row(m: dict) -> dict:
     row["curation_rule"] = [f"pw2go:{r}" for r in rules]
     if see_also:
         row["see_also"] = see_also
-    if conflicts:
-        row["other"] = "|".join(f"conflicts_with={g}" for g in conflicts)
+    if other:
+        row["other"] = "|".join(other)
     if m.get("comment"):
         row["comment"] = m["comment"]
     return row
