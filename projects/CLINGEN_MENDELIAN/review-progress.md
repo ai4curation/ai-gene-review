@@ -6530,3 +6530,52 @@ Only the F13B and F5 checkboxes change. Dated source inventories remain historic
 The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/7ada2e1aa38e8f4de29b777ab75db3757b455d36/history/projects/CLINGEN_MENDELIAN/2026-10-25T075339Z-codex-a15907.yaml).
+
+## Completion checkpoint 600 — 2026-10-25 09:12:43 UTC
+
+**600 complete; 2,276 remaining out of 2,876 primary catalogue genes.**
+Only F7 is added to [tracker 599, PR #5510](https://github.com/ai4curation/ai-gene-review/pull/5510).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F7 #5506](https://github.com/ai4curation/ai-gene-review/pull/5506) | [`6daec8360043`](https://github.com/ai4curation/ai-gene-review/commit/6daec8360043eb3efa11afd8caf4c8509492ec20) | [`305207f43d2d`](https://github.com/ai4curation/ai-gene-review/commit/305207f43d2d8c1add6219c550d1dc651ca1fdc4) | 76 | 56 / 1 | COMPLETE / 0 |
+
+The accepted F7 closure contains 61 files: its five-file gene directory,
+three curation histories and 53 external normal dependencies. Its 47 approved
+PR paths and 47 net merge paths, including the relevant source additions,
+match the accepted head, actual merge and fixed main `305207f43d2d8c1add6219c550d1dc651ca1fdc4`.
+Of those external dependencies, 39 were introduced by the F7 merge and 14
+were reused byte-for-byte from its parent; the queue distinguishes both sets.
+The queue records the exact paths and source hashes. This update changes no
+gene decision, product, quotation or source byte. F7 has no publication quotation
+anchors and receives no new annotations here.
+
+**F7.** Activated FVIIa cleaves factors IX and X in the tissue-factor-dependent extrinsic coagulation pathway. Tissue factor binding and calcium-supported membrane assembly support this same catalytic unit. This performed cleavage is distinct from activation of FVII itself. The two literal precursor products, A (466 residues) and B (444 residues), remain separate; their processing and functional equivalence are not assumed.
+
+F7 is COMPLETE with zero validation advisories while retaining 20 UNDECIDED
+source contexts. Its original-access, preparation and organism limits remain
+explicit in the gene review and source guide.
+
+All three Build and test jobs succeeded on the actual merge in
+[run 40177853365](https://github.com/ai4curation/ai-gene-review/actions/runs/40177853365).
+Accepted operative reads cover strict F7 validation, all-gene schema checks,
+704 module schemas, 16,546 histories and 42 history tests, and 718 family checks.
+The suite actually ran 12 examples, 4,293 tests, 278 doctests, mypy on 287 files,
+Ruff, 438 workflow tests and 19 JavaScript tests. The saved logs retain skipped
+tests and snippets, unresolved family/gene records, module advisories and a
+nonfatal SQL cleanup exception after successful tests. Aggregate gating adds
+no tests. This proposal neither reruns those validators nor resolves their
+unrelated scientific uncertainties.
+
+[F7 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/305207f43d2d8c1add6219c550d1dc651ca1fdc4/history/genes/human/F7/2026-10-25T082207Z-codex-e2532c.yaml).
+
+Update 126 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 125 earlier updates and all preceding progress bytes.
+Only the F7 checkbox changes. Dated source inventories remain historical.
+The campaign instructions now also identify authored source guides as evidence
+and locator records, distinct from generated provider deep-research outputs.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/7299f061c916cbf80c0e0ca11d6d6fe2942052fd/history/projects/CLINGEN_MENDELIAN/2026-10-25T092541Z-codex-cc9bbf.yaml).
