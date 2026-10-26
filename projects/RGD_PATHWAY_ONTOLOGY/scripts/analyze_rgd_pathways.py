@@ -255,6 +255,13 @@ def sssom_row(m: dict) -> dict:
     ...     "object_status": "ok", "object_namespace": "biological_process", "qa_flags": ["PAGE_XREF_DISAGREES"],
     ...     "disagrees_with": ["GO:4", "GO:5"]})["other"]
     'conflicts_with=GO:4|conflicts_with=GO:5'
+    >>> bad = {"match_source": "new_source", "object_status": "ok", "object_namespace": "biological_process"}
+    >>> sssom_row(bad)
+    Traceback (most recent call last):
+    ValueError: match_source 'new_source' has no src/ code: add it to SOURCE_RULE and RULE_TEXT
+    >>> sssom_row({**bad, "match_source": "pw_def_xref", "qa_flags": ["NEW_FLAG"]})
+    Traceback (most recent call last):
+    ValueError: undefined rule codes ['qa/NEW_FLAG']: add them to RULE_TEXT
     """
     src = m["match_source"]
     if src.startswith("lexical:"):
@@ -340,7 +347,9 @@ def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
             "id": f.stem,
             "title": (title_m.group(1).strip().strip("'\"") if title_m else f.stem),
             "go": set(re.findall(r"GO:\d{7}", txt)),
-            "pw": set(re.findall(r"PW:\d{7}", txt)),
+            # Only PW ids a module declares as its evidence sources count as "cites PW id";
+            # a PW id named in notes (often as an out-of-scope neighbour) does not.
+            "pw": set(re.findall(r"source_id:\s*['\"]?(PW:\d{7})", txt)),
             "symbols": {up2sym[u] for u in ups if u in up2sym},
         })
     return mods

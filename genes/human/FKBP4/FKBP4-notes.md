@@ -68,6 +68,14 @@ Detected in extracellular exosomes (HDA proteomics — likely passive secretion,
 - protein binding IPI block: KEEP_AS_NON_CORE generally; MODIFY the HSP90 ones to Hsp90 protein
   binding where partner is HSP90AA1/AB1; AR partner -> KEEP_AS_NON_CORE (real, informs AR pathway).
 
+
+## 2026-10-26 androgen-receptor module augmentation
+
+Reviewed the complete existing annotation inventory while retaining the imported fields and row counts. The focused changes distinguish AR evidence from GR/PR chaperone models; no new process annotation was manufactured from a necessity phenotype. Existing activities and client systems outside AR remain in scope. UniProt source-section metadata was derived with the normal backfill helper.
+The 69 imported rows are preserved. Human prostate cancer cells show FKBP52 contributions to AR dimerization/chromatin binding without an import defect [PMID:34057812]. Mouse Fkbp4 knockout selectively impairs androgen-dependent reproductive tissues but preserves AR ligand binding/nuclear entry [PMID:17142810]; this is comparative mouse evidence. Removed the claim that FKBP5 antagonizes all the same receptors. Preserve the NR3C1/dynein adaptor role without making it an obligatory AR mechanism. PPIase core support now quotes direct human comparative enzymology [PMID:11350175], not a UniProt protein name. Folding is a core process in which the protein performs work; HSP90 binding and cytosol refine broader terms. Current UniProt Q02790 and PTHR46512 entries place FKBP4 in PTHR46512:SF9. PTHR10516 and PTHR46512 PAINT caches share PTN002471265 IBD records; no mechanical repointing or circular-donor claim is warranted.
+
+PANTHER19.0 release classification independently resolves this target to PTHR10516:SF25, whereas current UniProt resolves it to PTHR46512:SF9. Both are source-supported; retain explicit source provenance rather than mechanically replacing one with the other.
+
 ## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
 
 Rows: GO:0005739 IEA (GO_REF:0000044, SL-0173) and GO:0005739 EXP (PMID:21730050, UniProt).
