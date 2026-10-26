@@ -104,3 +104,11 @@ All seven canonical checks pass: status update, standard validation, strict GOA 
 ## 2026-10-26 — Authored record format
 
 The interaction and database-decision tables are now YAML, following the repository rule for authored structured records. All 40 interaction records and 36 database records retain their field values and order. The source guide points to the YAML files; earlier notes describe the superseded TSV representation. Annotation decisions, source fields, normal caches, all 78 inherited quotations and product/core summaries are unchanged. The seven canonical checks and 236-narrative render remain applicable to the byte-identical main review.
+
+## 2026-10-26 — Gene-level receptor and self-association scope
+
+The signaling-receptor NAS assertion from PMID:7533181 has no isoform restriction. Its abstract explicitly introduces membrane Fas as an apoptosis-signaling cell-surface antigen, so the gene-level claim is refined to death receptor activity (GO:0005035). The soluble-transcript and COS-expression results still do not establish signaling by all soluble products; the operative full text remains unavailable.
+
+The saved IntAct EBI-494924 record for PMID:7536190 contains human FAS/P25445 on both sides of a two-hybrid interaction. This positive curated record and independent FAS self-association evidence support ACCEPT. The inherited quotation describes FADD and remains unchanged as historical review content, not support for the FAS–FAS claim. Original figure/construct details remain unverified; no upstream source defect is inferred.
+
+The FASLG-specific receptor-term proposal now also cites the actual reciprocal recombinant-ectodomain screen (PMID:35922511), without claiming a new target affinity measurement. The biological summary uses the supported FAS-triggered ASK1/JNK response in glutamine-deprived human HeLa cells (PMID:11096076); that experiment is in an apoptotic context. Earlier journal and quotation provenance is retained.
