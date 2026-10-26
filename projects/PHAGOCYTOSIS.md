@@ -1,6 +1,6 @@
 ---
 title: "Phagocytosis Modules"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse, worm, fly, DICDI]
 genes: [MEGF10, GULP1, ELMO1, DOCK1, RAC1, MERTK, GAS6, TIMD4, RAB5A, RAB7A, MON1A, CCZ1, PIK3C3, DNASE2, SLC48A1, SLC66A1, PRKDC, RICTOR, MYC, BHLHE40, BACH1, SPIC, HMOX1, NR1H3, NR1H2, PPARD, AHR, IDO1, TLR9, SIRT1, PBX1, DNMT3A, PTGS2, SLC12A2]
@@ -71,17 +71,25 @@ record the UniProt cross-reference in a note when it differs.
 The existing `phagocytic_engulfment` grounding of CED-1/MEGF10 in PTHR24035
 therefore agrees with PANTHER.
 
-## OpenScientist hypotheses (planned)
+## OpenScientist hypotheses
 
-Each is one computable question, run with the project defaults.
+Each was one phylogenetic-profile question, run with the project defaults. The
+reports are in the gene folders and are cited from the modules.
 
-1. Phylogenetic profile of PRKDC (DNA-PKcs): is the efferocytosis-induced
-   proliferation route limited to lineages that have DNA-PKcs?
-2. Do the BACH1 heme-degradation (cysteine-proline) motifs and SPIC orthologs
-   co-occur, and in which vertebrate clades?
-3. Is HRG1/SLC48A1 present in phagotrophic protists, which would suggest that
-   phagolysosomal heme export predates animals?
-4. What is the distribution of DNase II across phagocytic eukaryotes?
+| Question | Verdict | Effect on modules |
+|---|---|---|
+| Is the DNA-PKcs route limited by PRKDC distribution? ([report](../genes/human/PRKDC/PRKDC-hypotheses/prkdc-animal-distribution/openscientist.md)) | Partly supported. DNA-PKcs is ancestral to animals (sponges, cnidarians, most insects) and lost in *Drosophila* and *C. elegans*. | Proliferation module: taxon note and knowledge gap rewritten. |
+| Do SPIC and heme-sensing BACH1 co-occur? ([report](../genes/human/SPIC/SPIC-hypotheses/spic-bach1-cooccurrence/openscientist.md)) | Partly supported. SPIC is a jawed-vertebrate gene, never without BACH1; the BACH1 C-terminal CP motif is conserved in bony vertebrates. | Heme module: taxon note. |
+| Is HRG1 in phagotrophic protists? ([report](../genes/human/SLC48A1/SLC48A1-hypotheses/hrg1-protist-distribution/openscientist.md)) | Mostly refuted. Animals and choanoflagellates, one *Acanthamoeba* ortholog, none in *Dictyostelium*. | Degradation module: heme export marked animal-specific. |
+| Is DNase II in phagotrophic protists? ([report](../genes/human/DNASE2/DNASE2-hypotheses/dnase2-phagotroph-distribution/openscientist.md)) | Partly supported. Ancient but patchy; in *Dictyostelium* and *Acanthamoeba*, absent from choanoflagellates; does not track phagotrophy. | Degradation module: DNase II note. |
+
+## Reviews completed
+
+- Gene reviews: DNASE2, nuc-1, SLC48A1, SPIC, BACH1, BHLHE40, PRKDC, drpr.
+- PANTHER family reviews: PTHR10858 (DNase II) and PTHR31525 (HRG1). Both
+  suggest PAINT fixes: move apoptotic DNA fragmentation from the DNase II root
+  to an animal node, and restrict the HRG1 lysosomal membrane annotation to
+  SF1.
 
 ## Plan
 
@@ -92,6 +100,7 @@ Each is one computable question, run with the project defaults.
    selectors with cross-lineage exemplars. *(done: both now Eukaryota context,
    with Dictyostelium exemplars where conserved)*
 5. Write family reviews for the key families and gene reviews for exemplars
-   that lack them (DNASE2, nuc-1, drpr, SPIC, BACH1, SLC48A1, GULP1, ELMO1,
-   DOCK1, MERTK, BHLHE40).
+   that lack them. *(eight gene reviews and two family reviews done; still to
+   do: GULP1, ELMO1, DOCK1, MERTK and the CED-1/MEGF10 family)*
 6. Run the OpenScientist hypotheses and fold the results into the modules.
+   *(done)*
