@@ -5,3 +5,6 @@ This directory records normal read-only QuickGO queries used to identify the ori
 `trace_sources.py` reproduces the donor query and term-definition acquisition, with pagination. Stored responses intentionally omit relationship qualifiers. Donor traces cover rat/mouse neuronal subunits and mouse/rat/monkey alpha7. The initial eight-donor file has fewer than200 hits for each target; alpha7 includes second pages for the two donors with more than200. Query results are time-dependent; the checked-in responses preserve the inspected state.
 
 Molecular channel identity is supported by human functional/structural experiments. Native rodent experiments resolve physiology and compartments, but are not relabeled as human assays. Alpha7 PMID18458158 directly resolves axolemma localization;20164328 abstract-only access leaves exact amyloid-production sign/fibril distinctions unresolved. GO0017081 requires chloride-channel binding/modulation, whereas8145738 describes secondary chloride-current activation after alpha7 calcium influx.
+
+
+PR #5582 follow-up: `TERM_QUERIES` in the script is the literal input list. Previous JSON output is not an input dependency; a clean destination can bootstrap all donor and term requests. Existing preserved response files were not regenerated during this prose/source audit.

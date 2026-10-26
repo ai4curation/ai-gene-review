@@ -77,7 +77,7 @@ The PAINT node PTN000026396 encodes a Gq-family dopamine–PLC signaling inferen
 Sources: PMID:17194762, PMID:26377666
 
 ## GO:0060326 cell chemotaxis — UNDECIDED
-Full PMID26377666 measures human G14/Gz-chimera association and PLCbeta/IP3 signaling, not chemotaxis or migration. PMID18406577 supports G14 chemokine-receptor coupling, whereas its native THP-1 migration evidence concerns G16. Receptor coupling alone does not establish that G14 performs the annotated cell-migration program. The biological G14 chemotaxis claim remains unresolved rather than negated from absence of one assay.
+Full PMID:26377666 measures human G14/Gz-chimera association and PLCbeta/IP3 signaling, not chemotaxis or migration. PMID:18406577 supports G14 chemokine-receptor coupling, whereas its native THP-1 migration evidence concerns G16. Receptor coupling alone does not establish that G14 performs the annotated cell-migration program. The biological G14 chemotaxis claim remains unresolved rather than negated from absence of one assay.
 Sources: PMID:26377666, PMID:18406577
 
 ## GO:0070062 extracellular exosome — UNDECIDED
@@ -97,3 +97,8 @@ Original machine payloads and all qualifiers were compared with the authoritativ
 UniProt/PANTHER placement inspected: `PTHR10218:SF213`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
 
 See [source-analysis README](GNA14-source-analysis/README.md) for the exact vendor/method chain behind the human G14 BRET inference. The supplier accession and platform phylogenetic accession do not amount to sequencing the 2024 assayed plasmid.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

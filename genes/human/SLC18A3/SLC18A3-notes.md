@@ -20,3 +20,8 @@ The GO:0022857 row (zero-based index 24) inadvertently received a cellular-compo
 ### Terminal compartment correction after independent QA
 
 Live QuickGO definitions on 2026-10-26 confirm GO:0051630 acetylcholine uptake and GO:0051610 serotonin uptake require transport **into a cell**. The human VAChT assays measure vesicle or reconstituted-liposome loading. Accordingly all original uptake rows are MODIFY, not REMOVE: acetylcholine transport GO:0015870 replaces the acetylcholine uptake claims and core process; amine transport GO:0015837 replaces the serotonin uptake claim with the actual serotonin substrate and fusion/proteoliposome context explicit. Both current transport definitions permit movement within a cell. GO:0006837 serotonin transport and GO:0015844 monoamine transport are obsolete; no obsolete replacement or inferred native serotonergic vesicle-loading process is introduced. General transport refinements likewise use the current transport terms. Molecular antiporter assignments remain intact. Earlier journal statements describing uptake-term retention/refinement are superseded by this definition-level correction; the measured chemistry remains supported.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

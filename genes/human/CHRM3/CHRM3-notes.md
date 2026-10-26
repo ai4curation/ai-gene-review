@@ -10,3 +10,8 @@ TMEM147-associated ER membrane residence (PMID:21056967) coexists with plasma me
 Methods and limits: reviewed all 52 original annotations, preserving every machine-sourced term, qualifier, reference, partner and evidence field. No new annotation was added. Genuine Falcon and fallback provider attempts were made in the foundation batch and failed with authentication/quota errors; no provider report was fabricated. Normal PMID fetching and targeted public-source recovery were used instead, with access limitations stated per claim. Logs are retained under `.cache/module-audit-logs/acetylcholine-foundation-fetch/`; cached source files were not hand-edited. This review follows the current bare-protein-binding and root-organelle policies.
 
 Actions: ACCEPT 28, KEEP_AS_NON_CORE 4, MODIFY 12, REMOVE 5, UNDECIDED 3. Focused strict/schema, ontology-term and source-quote checks, record-section backfill and HTML rendering are recorded in the final audit report; remaining biological uncertainties above are not validation failures.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

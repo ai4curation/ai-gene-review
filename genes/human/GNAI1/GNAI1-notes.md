@@ -109,7 +109,7 @@ Gi1 modulates cyclase output in an isoform-dependent manner: purified Gi1 inhibi
 Sources: PMID:8119955
 
 ## GO:0007189 adenylate cyclase-activating G protein-coupled receptor signaling pathway — UNDECIDED
-The ISS donor P30804 resolves in the source chain to an adenylyl-cyclase family protein, not a Gi1 ortholog. Independently, high-concentration Gi alpha can stimulate some purified cyclases (PMID8119955), so activation is not biochemically impossible. However, that conditional effect does not establish a native Gi1-mediated cyclase-activating GPCR pathway; the precise pathway claim remains unresolved.
+The ISS donor P30804 resolves in the source chain to an adenylyl-cyclase family protein, not a Gi1 ortholog. Independently, high-concentration Gi alpha can stimulate some purified cyclases (PMID:8119955), so activation is not biochemically impossible. However, that conditional effect does not establish a native Gi1-mediated cyclase-activating GPCR pathway; the precise pathway claim remains unresolved.
 Sources: PMID:8119955
 
 ## GO:0007193 adenylate cyclase-inhibiting G protein-coupled receptor signaling pathway — ACCEPT
@@ -153,7 +153,7 @@ The prostaglandin receptor-coupling study directly tests Gi1 signaling, supporti
 Sources: PMID:16204467
 
 ## GO:0038112 interleukin-8-mediated signaling pathway — UNDECIDED
-The accessible original PMID15331768 source foregrounds neuromedin U receptor coupling. That alone cannot establish or refute additional IL-8 receptor experiments in uninspected full text. No independently verified Gi1-specific IL-8 signaling result was recovered, so retain uncertainty rather than assert a wrong-gene or wrong-receptor error.
+The accessible original PMID:15331768 source foregrounds neuromedin U receptor coupling. That alone cannot establish or refute additional IL-8 receptor experiments in uninspected full text. No independently verified Gi1-specific IL-8 signaling result was recovered, so retain uncertainty rather than assert a wrong-gene or wrong-receptor error.
 Sources: PMID:15331768
 
 ## GO:0043303 mast cell degranulation — KEEP_AS_NON_CORE
@@ -211,3 +211,8 @@ Focused strict/schema, source/quote and ontology checks, record-section backfill
 Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
 
 UniProt/PANTHER placement inspected: `PTHR10218:SF359`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

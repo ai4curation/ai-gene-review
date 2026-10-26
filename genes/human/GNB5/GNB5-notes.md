@@ -25,7 +25,7 @@ Gbeta5 is an intracellular soluble protein whose RGS complexes have a cytoplasmi
 Sources: PMID:10521509, PMID:15897264
 
 ## GO:0005834 heterotrimeric G-protein complex — KEEP_AS_NON_CORE
-Retain the ancestral heterotrimer membership assertion as bounded biochemical capacity. PMID9417126 reconstitutes Gbeta5–gamma2HF with Gq, whereas PMID25733868 finds no beta5 assemblies with Gi1 or GsL in its screen. The latter is not a universal negative. Neither result makes Gbeta5 interchangeable with beta1–4 in native signaling or redefines an RGS–Gbeta5 dimer as an alpha–beta–gamma heterotrimer.
+Retain the ancestral heterotrimer membership assertion as bounded biochemical capacity. PMID:9417126 reconstitutes Gbeta5–gamma2HF with Gq, whereas PMID:25733868 finds no beta5 assemblies with Gi1 or GsL in its screen. The latter is not a universal negative. Neither result makes Gbeta5 interchangeable with beta1–4 in native signaling or redefines an RGS–Gbeta5 dimer as an alpha–beta–gamma heterotrimer.
 Sources: PMID:9417126, PMID:25733868
 
 ## GO:0005886 plasma membrane — ACCEPT
@@ -41,7 +41,7 @@ Gbeta5 contributes structural and regulatory work to R7 GAP complexes that termi
 Sources: PMID:10521509, PMID:27677260, PMID:20884879
 
 ## GO:0007212 G protein-coupled dopamine receptor signaling pathway — KEEP_AS_NON_CORE
-The RGS9/Gbeta5 dopamine-receptor assay in PMID27677260 demonstrates defective termination with a human disease-associated GNB5 variant. Retain dopamine signaling as a specific implementation of the broader R7-complex function; the target itself among PAINT descendant evidence is legitimate experimental grounding.
+The RGS9/Gbeta5 dopamine-receptor assay in PMID:27677260 demonstrates defective termination with a human disease-associated GNB5 variant. Retain dopamine signaling as a specific implementation of the broader R7-complex function; the target itself among PAINT descendant evidence is legitimate experimental grounding.
 Sources: PMID:27677260
 
 ## GO:0016020 membrane — MODIFY
@@ -53,11 +53,11 @@ Gbeta5 supports assembly and stabilization of R7 RGS signaling complexes. Struct
 Sources: PMID:34815401, PMID:10521509
 
 ## GO:0030425 dendrite — KEEP_AS_NON_CORE
-Mouse retinal immunofluorescence in PMID25997951 localizes Gbeta5-containing signaling machinery to ON-bipolar dendritic tips, with cell-type-dependent loss in Lrit3 mutants. Retain this specific neuronal localization and its conserved human inference; it is not cone-photoreceptor outer-segment evidence.
+Mouse retinal immunofluorescence in PMID:25997951 localizes Gbeta5-containing signaling machinery to ON-bipolar dendritic tips, with cell-type-dependent loss in Lrit3 mutants. Retain this specific neuronal localization and its conserved human inference; it is not cone-photoreceptor outer-segment evidence.
 Sources: PMID:25997951
 
 ## GO:0051286 cell tip — KEEP_AS_NON_CORE
-Mouse retinal immunofluorescence in PMID25997951 localizes Gbeta5-containing signaling machinery to ON-bipolar dendritic tips, with cell-type-dependent loss in Lrit3 mutants. Retain this specific neuronal localization and its conserved human inference; it is not cone-photoreceptor outer-segment evidence.
+Mouse retinal immunofluorescence in PMID:25997951 localizes Gbeta5-containing signaling machinery to ON-bipolar dendritic tips, with cell-type-dependent loss in Lrit3 mutants. Retain this specific neuronal localization and its conserved human inference; it is not cone-photoreceptor outer-segment evidence.
 Sources: PMID:25997951
 
 ## GO:0031682 G-protein gamma-subunit binding — KEEP_AS_NON_CORE
@@ -89,7 +89,7 @@ Gbeta5 interacts with the folding/assembly machinery during RGS-complex biogenes
 Sources: PMID:19376773
 
 ## GO:0120199 cone photoreceptor outer segment — KEEP_AS_NON_CORE
-Publisher full text of PMID11262419 was recovered and inspected. Methods explicitly stain Gb5 with an antibody recognizing the long/short products, and Fig. 2 compares Gb5 in PNA-labeled cones of wild-type and Rgs9-null mouse retina. This directly supports the mouse cone outer-segment assignment and a qualified conserved human inference; it is not inferred solely from rod or RGS9 localization.
+Publisher full text of PMID:11262419 was recovered and inspected. Methods explicitly stain Gb5 with an antibody recognizing the long/short products, and Fig. 2 compares Gb5 in PNA-labeled cones of wild-type and Rgs9-null mouse retina. This directly supports the mouse cone outer-segment assignment and a qualified conserved human inference; it is not inferred solely from rod or RGS9 localization.
 Sources: PMID:11262419, url:https://www.molvis.org/molvis/v7/a11/
 
 ## GO:0003924 GTPase activity — MODIFY
@@ -111,3 +111,8 @@ Focused strict/schema, source/quote and ontology checks, record-section backfill
 Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
 
 UniProt/PANTHER placement inspected: `PTHR19850`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

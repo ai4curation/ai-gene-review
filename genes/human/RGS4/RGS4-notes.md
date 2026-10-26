@@ -17,11 +17,11 @@ RGS4 stabilizes the transition state of G alpha-mediated GTP hydrolysis; it is a
 Sources: PMID:8756726, PMID:9108480
 
 ## GO:0005516 calmodulin binding — ACCEPT
-PMID10747990 explicitly demonstrates calcium-dependent calmodulin binding to RGS4, including a complex with activated Gi1, and reversal of PIP3-mediated GAP inhibition. Retain this regulatory ligand-binding function.
+PMID:10747990 explicitly demonstrates calcium-dependent calmodulin binding to RGS4, including a complex with activated Gi1, and reversal of PIP3-mediated GAP inhibition. Retain this regulatory ligand-binding function.
 Sources: PMID:10747990
 
 ## GO:0005634 nucleus — KEEP_AS_NON_CORE
-Nuclear RGS4 is condition-dependent: PMID10791963 reports nuclear accumulation after inhibition of export or alteration of its export determinants. Predominantly cytoplasmic steady-state localization does not negate that observed pool.
+Nuclear RGS4 is condition-dependent: PMID:10791963 reports nuclear accumulation after inhibition of export or alteration of its export determinants. Predominantly cytoplasmic steady-state localization does not negate that observed pool.
 Sources: PMID:10791963
 
 ## GO:0005737 cytoplasm — ACCEPT
@@ -53,7 +53,7 @@ The RGS4-selective inhibitor study potentiated muscarinic bradycardia, supportin
 Sources: PMID:25844489, PMID:24318880
 
 ## GO:0019901 protein kinase binding — UNDECIDED
-The traced rat study PMID17084383 shows co-immunoprecipitation of RGS4 in a CASK-associated signaling complex. That supports association with a kinase-containing assembly but the accessible text does not establish a direct binary kinase-binding interaction. The precise binding claim remains unresolved pending target-level interaction mapping.
+The traced rat study PMID:17084383 shows co-immunoprecipitation of RGS4 in a CASK-associated signaling complex. That supports association with a kinase-containing assembly but the accessible text does not establish a direct binary kinase-binding interaction. The precise binding claim remains unresolved pending target-level interaction mapping.
 Sources: PMID:17084383
 
 ## GO:0032991 protein-containing complex — ACCEPT
@@ -61,7 +61,7 @@ The experimentally resolved RGS4–Gi1–MgGDP–AlF4 assembly establishes physi
 Sources: PMID:9108480
 
 ## GO:0001975 response to amphetamine — KEEP_AS_NON_CORE
-Rat RGS4 expression in VTA and nucleus accumbens correlates with amphetamine intake in PMID26321241. Retain the bounded stimulus-response inference without converting correlation into causal drug-seeking behavior.
+Rat RGS4 expression in VTA and nucleus accumbens correlates with amphetamine intake in PMID:26321241. Retain the bounded stimulus-response inference without converting correlation into causal drug-seeking behavior.
 Sources: PMID:26321241
 
 ## GO:0042220 response to cocaine — KEEP_AS_NON_CORE
@@ -89,11 +89,11 @@ RGS4 expression in cultured cardiomyocytes blocks agonist-driven growth and myof
 Sources: PMID:9918533
 
 ## GO:1900924 negative regulation of glycine import across plasma membrane — UNDECIDED
-The donor study PMID21798518 reports modulation of glycine-evoked patch-clamp currents, while GO:1900924 requires reduced glycine import into the cell. Glycine-receptor current and amino-acid uptake are distinct endpoints. Full target-level results and independent uptake measurements were not recovered, so the transferred uptake claim remains unresolved rather than accepted from the current assay.
+The donor study PMID:21798518 reports modulation of glycine-evoked patch-clamp currents, while GO:1900924 requires reduced glycine import into the cell. Glycine-receptor current and amino-acid uptake are distinct endpoints. Full target-level results and independent uptake measurements were not recovered, so the transferred uptake claim remains unresolved rather than accepted from the current assay.
 Sources: PMID:21798518
 
 ## GO:1901379 regulation of potassium ion transmembrane transport — MODIFY
-RGS4 regulates M2-gated potassium currents, and PMID24421355 specifically demonstrates inhibitory control of pilocarpine-mediated currents. Refine the unsigned transport-regulation term to the already asserted negative term; the older developmental-expression source alone is not a channel assay.
+RGS4 regulates M2-gated potassium currents, and PMID:24421355 specifically demonstrates inhibitory control of pilocarpine-mediated currents. Refine the unsigned transport-regulation term to the already asserted negative term; the older developmental-expression source alone is not a channel assay.
 Sources: PMID:24421355, PMID:11906535
 
 ## GO:1901380 negative regulation of potassium ion transmembrane transport — KEEP_AS_NON_CORE
@@ -101,7 +101,7 @@ Rat atrial and Xenopus reconstitution experiments demonstrate RGS4-dependent sup
 Sources: PMID:24421355
 
 ## GO:1990791 dorsal root ganglion development — MARK_AS_OVER_ANNOTATED
-The traced rat source PMID14550772 establishes adult sensory-neuron expression, regulation by GDNF and injury-induced downregulation. Those observations do not establish that RGS4 executes dorsal-root-ganglion development. The developmental transfer exceeds the source endpoint; an undiscovered developmental role is not excluded.
+The traced rat source PMID:14550772 establishes adult sensory-neuron expression, regulation by GDNF and injury-induced downregulation. Those observations do not establish that RGS4 executes dorsal-root-ganglion development. The developmental transfer exceeds the source endpoint; an undiscovered developmental role is not excluded.
 Sources: PMID:14550772
 
 ## GO:2000463 positive regulation of excitatory postsynaptic potential — KEEP_AS_NON_CORE
@@ -119,3 +119,8 @@ Focused strict/schema, source/quote and ontology checks, record-section backfill
 Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
 
 UniProt/PANTHER placement inspected: `PTHR10845:SF184`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

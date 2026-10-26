@@ -140,4 +140,9 @@ Original machine payloads and all qualifiers were compared with the authoritativ
 
 UniProt/PANTHER placement inspected: `PTHR10218:SF361`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
 
-Traced PAINT receptor sources: PMID18384820 rat mu-opioid receptor/Go co-precipitation; full PMID20548297 Fig2 includes CRFr–Go association despite foregrounding Gs sex differences. No sex difference in Go association is not a negative binding result.
+Traced PAINT receptor sources: PMID:18384820 rat mu-opioid receptor/Go co-precipitation; full PMID:20548297 Fig2 includes CRFr–Go association despite foregrounding Gs sex differences. No sex difference in Go association is not a negative binding result.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

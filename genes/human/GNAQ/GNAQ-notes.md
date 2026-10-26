@@ -57,7 +57,7 @@ Direct receptor-complex and coupling experiments establish recognition of intrac
 Sources: PMID:37991948, PMID:38632411
 
 ## GO:0005096 GTPase activator activity — UNDECIDED
-The original PMID15611106 abstract reports beta-arrestin1/Gq-dependent RhoA activation and stress-fiber formation, not acceleration of GTP hydrolysis by Gq on another GTPase. Full text could not be recovered despite targeted attempts. Gq is itself a GTPase and PLCbeta can act as its GAP; neither fact resolves whether this experimental row asserts an additional GAP function. Retain uncertainty rather than invert the enzyme/regulator roles from an abstract.
+The original PMID:15611106 abstract reports beta-arrestin1/Gq-dependent RhoA activation and stress-fiber formation, not acceleration of GTP hydrolysis by Gq on another GTPase. Full text could not be recovered despite targeted attempts. Gq is itself a GTPase and PLCbeta can act as its GAP; neither fact resolves whether this experimental row asserts an additional GAP function. Retain uncertainty rather than invert the enzyme/regulator roles from an abstract.
 Sources: PMID:15611106, PMID:20966218
 
 ## GO:0005634 nucleus — KEEP_AS_NON_CORE
@@ -69,7 +69,7 @@ The traced mouse study directly colocalizes Gq with alpha1 receptors and PLCbeta
 Sources: PMID:18802028
 
 ## GO:0005794 Golgi apparatus — KEEP_AS_NON_CORE
-PMID19001095 directly examines Gq trafficking between Golgi and plasma membrane. Retain the root Golgi assertion independently of the main plasma-membrane activity; no finer Golgi topology is manufactured.
+PMID:19001095 directly examines Gq trafficking between Golgi and plasma membrane. Retain the root Golgi assertion independently of the main plasma-membrane activity; no finer Golgi topology is manufactured.
 Sources: PMID:19001095
 
 ## GO:0005765 lysosomal membrane — UNDECIDED
@@ -77,19 +77,19 @@ The placental lysosome-proteomics source is accessible only without verified tar
 Sources: PMID:17897319
 
 ## GO:0001750 photoreceptor outer segment — UNDECIDED
-The traced comparative source PMID12196552 establishes chicken G11-associated opsin signaling, photoreceptor outer-segment staining and pineal-clock phase shifting. Its anti-Gq/11 staining and engineered M1 stimulation do not by themselves establish the same location or clock implementation for human GNAQ. The human target-specific inference remains unresolved; the chicken experiment is not rejected and absence of mammalian activity is not asserted.
+The traced comparative source PMID:12196552 establishes chicken G11-associated opsin signaling, photoreceptor outer-segment staining and pineal-clock phase shifting. Its anti-Gq/11 staining and engineered M1 stimulation do not by themselves establish the same location or clock implementation for human GNAQ. The human target-specific inference remains unresolved; the chicken experiment is not rejected and absence of mammalian activity is not asserted.
 Sources: PMID:12196552
 
 ## GO:0007603 phototransduction, visible light — UNDECIDED
-The traced comparative source PMID12196552 establishes chicken G11-associated opsin signaling, photoreceptor outer-segment staining and pineal-clock phase shifting. Its anti-Gq/11 staining and engineered M1 stimulation do not by themselves establish the same location or clock implementation for human GNAQ. The human target-specific inference remains unresolved; the chicken experiment is not rejected and absence of mammalian activity is not asserted.
+The traced comparative source PMID:12196552 establishes chicken G11-associated opsin signaling, photoreceptor outer-segment staining and pineal-clock phase shifting. Its anti-Gq/11 staining and engineered M1 stimulation do not by themselves establish the same location or clock implementation for human GNAQ. The human target-specific inference remains unresolved; the chicken experiment is not rejected and absence of mammalian activity is not asserted.
 Sources: PMID:12196552
 
 ## GO:0009649 entrainment of circadian clock — UNDECIDED
-The traced comparative source PMID12196552 establishes chicken G11-associated opsin signaling, photoreceptor outer-segment staining and pineal-clock phase shifting. Its anti-Gq/11 staining and engineered M1 stimulation do not by themselves establish the same location or clock implementation for human GNAQ. The human target-specific inference remains unresolved; the chicken experiment is not rejected and absence of mammalian activity is not asserted.
+The traced comparative source PMID:12196552 establishes chicken G11-associated opsin signaling, photoreceptor outer-segment staining and pineal-clock phase shifting. Its anti-Gq/11 staining and engineered M1 stimulation do not by themselves establish the same location or clock implementation for human GNAQ. The human target-specific inference remains unresolved; the chicken experiment is not rejected and absence of mammalian activity is not asserted.
 Sources: PMID:12196552
 
 ## GO:0007189 adenylate cyclase-activating G protein-coupled receptor signaling pathway — KEEP_AS_NON_CORE
-The PAINT assertion is placed at PTN008496048 with mouse Gnaq descendant evidence, not transferred from a generic Gs label. The original mouse transgenic source primarily measures reduced cyclase expression, but independent PMID8390980 shows Gq-coupled receptor enhancement of AC-II through PKC; retain this contextual pathway capability while distinguishing it from direct Gs-like binding to a cyclase catalytic domain.
+The PAINT assertion is placed at PTN008496048 with mouse Gnaq descendant evidence, not transferred from a generic Gs label. The original mouse transgenic source primarily measures reduced cyclase expression, but independent PMID:8390980 shows Gq-coupled receptor enhancement of AC-II through PKC; retain this contextual pathway capability while distinguishing it from direct Gs-like binding to a cyclase catalytic domain.
 Sources: PMID:10481072, PMID:8390980
 
 ## GO:0007200 phospholipase C-activating G protein-coupled receptor signaling pathway — ACCEPT
@@ -200,14 +200,19 @@ Original machine payloads and all qualifiers were compared with the authoritativ
 
 UniProt/PANTHER placement inspected: `PTHR10218:SF329`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
 
-GO0007208 is retained using independently fetched PMID32946782 (engineered Gq–5-HT2A). The original PMID37991948 is an effector PLCbeta3 assay and must not be described as a serotonin-receptor experiment.
+GO:0007208 is retained using independently fetched PMID:32946782 (engineered Gq–5-HT2A). The original PMID:37991948 is an effector PLCbeta3 assay and must not be described as a serotonin-receptor experiment.
 
 ## Mammalian phototransduction evidence follow-up
 
-Read normally recovered full PMID24958088 (PMC4282707) and PMID24870805 (PMC4037210). The earlier chicken-only rationale was incomplete. Retain a secondary visible-light phototransduction role for human GNAQ as comparative functional inference, not a direct human retinal assay. Full PMID24958088 Fig. 4 isolates endogenous mouse Gnaq and Gna11 contributions in melanopsin-expressing Neuro-2A cells: either supports the calcium response, whereas joint silencing eliminates it. Fig. 5 combines native retinal knockdown with pupil measurements and supports overlapping Gnaq/Gna11/Gna14 participation without separately establishing each isoform as necessary in vivo. This mammalian evidence supplements the older chicken source PMID12196552. PMID24870805 preserves responses in tested single/double knockout combinations and discusses compensation or alternative signaling; this limits necessity claims, not the demonstrated participation capacity. Neither experiment establishes an exclusive human isoform assignment or every ipRGC subtype.
+Read normally recovered full PMID:24958088 (PMC4282707) and PMID:24870805 (PMC4037210). The earlier chicken-only rationale was incomplete. Retain a secondary visible-light phototransduction role for human GNAQ as comparative functional inference, not a direct human retinal assay. Full PMID:24958088 Fig. 4 isolates endogenous mouse Gnaq and Gna11 contributions in melanopsin-expressing Neuro-2A cells: either supports the calcium response, whereas joint silencing eliminates it. Fig. 5 combines native retinal knockdown with pupil measurements and supports overlapping Gnaq/Gna11/Gna14 participation without separately establishing each isoform as necessary in vivo. This mammalian evidence supplements the older chicken source PMID:12196552. PMID:24870805 preserves responses in tested single/double knockout combinations and discusses compensation or alternative signaling; this limits necessity claims, not the demonstrated participation capacity. Neither experiment establishes an exclusive human isoform assignment or every ipRGC subtype.
 
-The precise human GNAQ outer-segment localization remains unresolved. PMID12196552 reports chicken Gq/11 immunolocalization with G11-associated opsin signaling. Full PMID24958088 adds adult mouse retinal localization, including Gnaq-selective cone-photoreceptor staining and cross-reactive Gnaq/11 staining, but the reported cone/photoreceptor-layer signal does not independently resolve this exact human subcompartment for each isoform. Its melanopsin experiments concern inner-retinal ganglion cells, not rod/cone outer segments. PMID24870805 examines neonatal ipRGC expression and function, which likewise does not settle outer-segment residence. These limitations do not demonstrate absence.
+The precise human GNAQ outer-segment localization remains unresolved. PMID:12196552 reports chicken Gq/11 immunolocalization with G11-associated opsin signaling. Full PMID:24958088 adds adult mouse retinal localization, including Gnaq-selective cone-photoreceptor staining and cross-reactive Gnaq/11 staining, but the reported cone/photoreceptor-layer signal does not independently resolve this exact human subcompartment for each isoform. Its melanopsin experiments concern inner-retinal ganglion cells, not rod/cone outer segments. PMID:24870805 examines neonatal ipRGC expression and function, which likewise does not settle outer-segment residence. These limitations do not demonstrate absence.
 
-The precise human GNAQ contribution to circadian entrainment remains unresolved after mammalian source review. Chicken pineal phase shifting in PMID12196552 is a different photoreceptive implementation. PMID24958088 measures cellular phototransduction and pupillary responses, not circadian entrainment. Full PMID24870805 actually tests mouse wheel-running rhythms: the tested mutant combinations retain light-dark entrainment and light-pulse phase shifting; Gnaq/Gna11 double mutants show a small reduction of period lengthening in constant light. That combined-genotype effect does not separately establish human GNAQ entrainment, and normal entrainment does not demonstrate absence of a redundant contribution. Do not equate melanopsin participation with proof of every downstream circadian role.
+The precise human GNAQ contribution to circadian entrainment remains unresolved after mammalian source review. Chicken pineal phase shifting in PMID:12196552 is a different photoreceptive implementation. PMID:24958088 measures cellular phototransduction and pupillary responses, not circadian entrainment. Full PMID:24870805 actually tests mouse wheel-running rhythms: the tested mutant combinations retain light-dark entrainment and light-pulse phase shifting; Gnaq/Gna11 double mutants show a small reduction of period lengthening in constant light. That combined-genotype effect does not separately establish human GNAQ entrainment, and normal entrainment does not demonstrate absence of a redundant contribution. Do not equate melanopsin participation with proof of every downstream circadian role.
 
 Both GO:0007603 ISS rows are now KEEP_AS_NON_CORE. The four outer-segment/entrainment rows remain UNDECIDED with distinct source-specific reasons. Original machine payloads, donor identifiers and qualifiers are unchanged; no new annotation or direct-human claim was added.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

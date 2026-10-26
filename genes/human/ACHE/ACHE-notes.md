@@ -12,3 +12,8 @@ Full PMID:17038428 actually studies mouse Ache knockout, 23 versus 29°C exposur
 Methods and limits: reviewed all 53 original annotations, preserving every machine-sourced term, qualifier, reference, partner and evidence field. No new annotation was added. Genuine Falcon and fallback provider attempts were made in the foundation batch and failed with authentication/quota errors; no provider report was fabricated. Normal PMID fetching and targeted public-source recovery were used instead, with access limitations stated per claim. Logs are retained under `.cache/module-audit-logs/acetylcholine-foundation-fetch/`; cached source files were not hand-edited. This review follows the current bare-protein-binding and root-organelle policies.
 
 Actions: ACCEPT 32, KEEP_AS_NON_CORE 6, MODIFY 7, REMOVE 2, UNDECIDED 6. Focused strict/schema, ontology-term and source-quote checks, record-section backfill and HTML rendering are recorded in the final audit report; remaining biological uncertainties above are not validation failures.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+The nucleus and Golgi claims remain retained, now KEEP_AS_NON_CORE: apoptosis-associated nuclear accumulation (PMID:11985878) and osteoblast Golgi/secretory localization (PMID:15454088) are contextual pools rather than the main synaptic hydrolysis compartment. Existing supporting quotations remain verbatim. The core process now uses the already accepted GO:0001507 acetylcholine catabolic process in synaptic cleft, consistent with its stated location. No original annotation payload or source field was changed.

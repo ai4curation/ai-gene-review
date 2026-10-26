@@ -85,11 +85,11 @@ Muscarinic receptor localization and native neurotransmitter-release experiments
 Sources: PMID:11880500
 
 ## GO:0032279 asymmetric synapse — KEEP_AS_NON_CORE
-The recovered abstract reports subtype-specific rat M2 electron microscopy, not a direct mouse assay. Retain the conserved secondary localization as an orthology inference; native mouse autoreceptor experiments provide complementary functional context, not the ultrastructural observation itself. PMID8182478 explicitly identifies many M2-immunoreactive terminals forming asymmetric synapses, independently corroborated in monkey cortex by PMID8389473.
+The recovered abstract reports subtype-specific rat M2 electron microscopy, not a direct mouse assay. Retain the conserved secondary localization as an orthology inference; native mouse autoreceptor experiments provide complementary functional context, not the ultrastructural observation itself. PMID:8182478 explicitly identifies many M2-immunoreactive terminals forming asymmetric synapses, independently corroborated in monkey cortex by PMID:8389473.
 Sources: PMID:8182478
 
 ## GO:0032280 symmetric synapse — KEEP_AS_NON_CORE
-The recovered abstract reports subtype-specific rat M2 electron microscopy, not a direct mouse assay. Retain the conserved secondary localization as an orthology inference; native mouse autoreceptor experiments provide complementary functional context, not the ultrastructural observation itself. PMID8182478 explicitly finds that most M2-positive axon terminals make symmetric synapses. This is a location inference, not proof of identical transmitter identity or proportions in every mouse region.
+The recovered abstract reports subtype-specific rat M2 electron microscopy, not a direct mouse assay. Retain the conserved secondary localization as an orthology inference; native mouse autoreceptor experiments provide complementary functional context, not the ultrastructural observation itself. PMID:8182478 explicitly finds that most M2-positive axon terminals make symmetric synapses. This is a location inference, not proof of identical transmitter identity or proportions in every mouse region.
 Sources: PMID:8182478
 
 ## GO:0043679 axon terminus — KEEP_AS_NON_CORE
@@ -97,7 +97,7 @@ The recovered abstract reports subtype-specific rat M2 electron microscopy, not 
 Sources: PMID:8182478, PMID:8389473
 
 ## GO:0098978 glutamatergic synapse — KEEP_AS_NON_CORE
-The rat source establishes M2-positive asymmetric contacts, while PMID8389473 explicitly places primate M2 at pre- and postsynaptic compartments of asymmetric pathways using excitatory amino acids. Together these support the conserved glutamatergic-synapse assignment as an anatomical and orthology inference, not direct glutamate colabeling of mouse M2 in the present sources. A muscarinic receptor can modulate a glutamatergic synapse without becoming a glutamate receptor; not every asymmetric synapse is being equated with a chemically verified glutamatergic contact.
+The rat source establishes M2-positive asymmetric contacts, while PMID:8389473 explicitly places primate M2 at pre- and postsynaptic compartments of asymmetric pathways using excitatory amino acids. Together these support the conserved glutamatergic-synapse assignment as an anatomical and orthology inference, not direct glutamate colabeling of mouse M2 in the present sources. A muscarinic receptor can modulate a glutamatergic synapse without becoming a glutamate receptor; not every asymmetric synapse is being equated with a chemically verified glutamatergic contact.
 Sources: PMID:8389473
 
 ## GO:0042734 presynaptic membrane — ACCEPT
@@ -117,7 +117,7 @@ M2 single- and M2/M4 double-knockout brain slices directly establish muscarinic 
 Sources: PMID:11880500
 
 ## GO:1990763 arrestin family protein binding — ACCEPT
-Arrestin association is part of muscarinic receptor regulation and is supported by conserved M2 receptor evidence, including phosphorylation-site-dependent M2–arrestin interaction in PMID10952973. Retain the specific partner-class binding function rather than treating it as generic protein binding.
+Arrestin association is part of muscarinic receptor regulation and is supported by conserved M2 receptor evidence, including phosphorylation-site-dependent M2–arrestin interaction in PMID:10952973. Retain the specific partner-class binding function rather than treating it as generic protein binding.
 Sources: PMID:10952973, PMID:11566136
 
 ## Research and access
@@ -134,4 +134,9 @@ UniProt/PANTHER placement inspected: `PTHR24247:SF207`. Broad G-alpha family PTH
 
 ## Bounded follow-up after source recovery
 
-Four original localization rows (zero-based37,38,42,47) changed from UNDECIDED to KEEP_AS_NON_CORE after normal retrieval of PMID8182478 and PMID8389473 by the parallel human-receptor reviewer. The rat/primate abstracts explicitly identify M2 and its ultrastructural distribution; the mouse assertions remain qualified orthology/anatomical inferences. The glutamatergic classification is supported by the cited excitatory-amino-acid pathway interpretation, not asserted as direct mouse transmitter colabeling. No other row payload, action, core function or biological summary changed. The previous helper history is preserved; a new follow-up history records this evidence improvement.
+Four original localization rows (zero-based37,38,42,47) changed from UNDECIDED to KEEP_AS_NON_CORE after normal retrieval of PMID:8182478 and PMID:8389473 by the parallel human-receptor reviewer. The rat/primate abstracts explicitly identify M2 and its ultrastructural distribution; the mouse assertions remain qualified orthology/anatomical inferences. The glutamatergic classification is supported by the cited excitatory-amino-acid pathway interpretation, not asserted as direct mouse transmitter colabeling. No other row payload, action, core function or biological summary changed. The previous helper history is preserved; a new follow-up history records this evidence improvement.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

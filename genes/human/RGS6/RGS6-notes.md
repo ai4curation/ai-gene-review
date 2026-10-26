@@ -5,7 +5,7 @@ All original annotation payloads, evidence codes, references and qualifiers were
 The whole record was reviewed, including secondary physiology and localization. Existing assertion specificity is judged independently of evidence code. Native, heterologous, mutant and orthology-based results are distinguished below.
 
 ## GO:0005096 GTPase activator activity — ACCEPT
-RGS6–GNB5 purified complexes accelerate Go GTP hydrolysis (PMID10521509), and native mouse Rgs6 deletion prolongs M2-linked GIRK signaling. These support GAP activity without assigning RGS4-like substrate breadth to every RGS6 complex. The conserved RGS domain and specific GNB5 partnership support the cross-species assignment.
+RGS6–GNB5 purified complexes accelerate Go GTP hydrolysis (PMID:10521509), and native mouse Rgs6 deletion prolongs M2-linked GIRK signaling. These support GAP activity without assigning RGS4-like substrate breadth to every RGS6 complex. The conserved RGS domain and specific GNB5 partnership support the cross-species assignment.
 Sources: PMID:10521509, PMID:20884879, PMID:24318880
 
 ## GO:0005634 nucleus — KEEP_AS_NON_CORE
@@ -71,3 +71,8 @@ Focused strict/schema, source/quote and ontology checks, record-section backfill
 Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
 
 UniProt/PANTHER placement inspected: `PTHR45746:SF2`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

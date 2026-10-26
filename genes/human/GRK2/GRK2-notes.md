@@ -9,19 +9,19 @@ GRK2 phosphorylates serine/threonine residues on GPCR and non-GPCR substrates. R
 Sources: PMID:19715378, PMID:21983013
 
 ## GO:0004674 protein serine/threonine kinase activity — ACCEPT
-Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
+Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID:15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
 Sources: PMID:19715378, PMID:8798423, PMID:21799898
 
 ## GO:0004703 G protein-coupled receptor kinase activity — ACCEPT
-Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
+Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID:15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
 Sources: PMID:19715378, PMID:8798423, PMID:21799898
 
 ## GO:0047696 beta-adrenergic receptor kinase activity — ACCEPT
-Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
+Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID:15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
 Sources: PMID:19715378, PMID:8798423, PMID:21799898
 
 ## GO:0005524 ATP binding — ACCEPT
-Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
+Purified receptor phosphorylation and ATP-dependent kinase experiments establish GRK2 serine/threonine kinase activity, including beta-adrenergic and other GPCR substrates. These are integral catalytic/cofactor functions. PMID:15102938 additionally shows kinase-independent mGlu4 regulation and is not by itself proof of phosphorylation of that receptor.
 Sources: PMID:19715378, PMID:8798423, PMID:21799898
 
 ## GO:0005515 protein binding — REMOVE
@@ -163,3 +163,8 @@ Focused strict/schema, source/quote and ontology checks, record-section backfill
 Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
 
 UniProt/PANTHER placement inspected: `PTHR24355:SF22`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

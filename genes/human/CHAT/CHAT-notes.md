@@ -26,7 +26,7 @@ Both broad pathways genuinely contain CHAT reaction 264622, whose catalyst 26461
 
 ## Access, review boundary and validation
 
-Normal publication caches remain unchanged even where authentic external primary text was available. PMID:11172068 full PMC and PMID:21163949 full normal text support the direct human assays; PMID:32814053 full institutional PDF supports screen methods. Selected indexed primary text supplies 10383456/12637523 localization context. The 10861222/17144655/16797789 caches remain abstract-only and their uninspected detailed protocols are not claimed. Failed PDF/challenge responses are excluded. The 12637523 detailed isolated-nuclei enzyme-assay Methods were not independently recovered; only its reported substrate-supported nuclear activity is described. Optional full-text-availability flags are omitted in favor of these explicit cache/access distinctions.
+Normal publication caches remain unchanged even where authentic external primary text was available. PMID:11172068 full PMC and PMID:21163949 full normal text support the direct human assays; PMID:32814053 full institutional PDF supports screen methods. Selected indexed primary text supplies PMID:10383456/12637523 localization context. The PMID:10861222/17144655/16797789 caches remain abstract-only and their uninspected detailed protocols are not claimed. Failed PDF/challenge responses are excluded. The PMID:12637523 detailed isolated-nuclei enzyme-assay Methods were not independently recovered; only its reported substrate-supported nuclear activity is described. Optional full-text-availability flags are omitted in favor of these explicit cache/access distinctions.
 
 PAINT PTN000502016 is recorded as the proximate source with historical reconstruction unresolved. Independent human evidence corroborates the retained assertions; neither donor number nor human self-reference is a defect. The authenticated GO-CAM index has 0 target matches. No NEW annotation is proposed, and no comparator-absence argument is used.
 
@@ -59,3 +59,8 @@ Current-session binding policy supersedes historical notes requesting retention 
 Methods and limits: reviewed all 117 original annotations, preserving every machine-sourced term, qualifier, reference, partner and evidence field. No new annotation was added. Genuine Falcon and fallback provider attempts were made in the foundation batch and failed with authentication/quota errors; no provider report was fabricated. Normal PMID fetching and targeted public-source recovery were used instead, with access limitations stated per claim. Logs are retained under `.cache/module-audit-logs/acetylcholine-foundation-fetch/`; cached source files were not hand-edited. This review follows the current bare-protein-binding and root-organelle policies.
 
 Actions: ACCEPT 11, KEEP_AS_NON_CORE 1, MODIFY 10, REMOVE 95. Focused strict/schema, ontology-term and source-quote checks, record-section backfill and HTML rendering are recorded in the final audit report; remaining biological uncertainties above are not validation failures.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.

@@ -17,8 +17,9 @@ for name,accessions in [('nicotinic-donor-trace.json',['P12389','Q91X60','Q8R4G9
             page+=1
         out[ac]={'urls':urls,'total':total,'annotations':entries}
     (ROOT/name).write_text(json.dumps(out,indent=2))
-for name in ['nicotinic-term-definitions.json','nicotinic-alpha7-term-definitions.json']:
-    old=json.loads((ROOT/name).read_text());out={}
-    for term in old:
+TERM_QUERIES = {'nicotinic-term-definitions.json': ['GO:0042472', 'GO:0015643', 'GO:0005102', 'GO:0060079', 'GO:0050910', 'GO:0051899', 'GO:0022848', 'GO:0007274'], 'nicotinic-alpha7-term-definitions.json': ['GO:0017081', 'GO:0042803', 'GO:0009409', 'GO:0051247', 'GO:1902004', 'GO:1905906', 'GO:0005262']}
+for name, terms in TERM_QUERIES.items():
+    out={}
+    for term in terms:
         r=requests.get('https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/'+term,headers={'Accept':'application/json'},timeout=60);r.raise_for_status();out[term]=r.json()['results'][0]
     (ROOT/name).write_text(json.dumps(out,indent=2))

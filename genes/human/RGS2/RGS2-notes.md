@@ -5,11 +5,11 @@ All original annotation payloads, evidence codes, references and qualifiers were
 The whole record was reviewed, including secondary physiology and localization. Existing assertion specificity is judged independently of evidence code. Native, heterologous, mutant and orthology-based results are distinguished below.
 
 ## GO:0001965 G-protein alpha-subunit binding — ACCEPT
-RGS2 binds activated G alpha and accelerates its intrinsic GTP hydrolysis. Wild-type biochemical selectivity favors Gq; the engineered Gi-binding mutants in PMID19478087 must not be presented as wild-type Gi specificity. Cell-based beta2-adrenergic Gi regulation is a distinct demonstrated context.
+RGS2 binds activated G alpha and accelerates its intrinsic GTP hydrolysis. Wild-type biochemical selectivity favors Gq; the engineered Gi-binding mutants in PMID:19478087 must not be presented as wild-type Gi specificity. Cell-based beta2-adrenergic Gi regulation is a distinct demonstrated context.
 Sources: PMID:19478087, PMID:21291891
 
 ## GO:0005096 GTPase activator activity — ACCEPT
-RGS2 binds activated G alpha and accelerates its intrinsic GTP hydrolysis. Wild-type biochemical selectivity favors Gq; the engineered Gi-binding mutants in PMID19478087 must not be presented as wild-type Gi specificity. Cell-based beta2-adrenergic Gi regulation is a distinct demonstrated context.
+RGS2 binds activated G alpha and accelerates its intrinsic GTP hydrolysis. Wild-type biochemical selectivity favors Gq; the engineered Gi-binding mutants in PMID:19478087 must not be presented as wild-type Gi specificity. Cell-based beta2-adrenergic Gi regulation is a distinct demonstrated context.
 Sources: PMID:19478087, PMID:21291891
 
 ## GO:0003924 GTPase activity — MODIFY
@@ -21,7 +21,7 @@ The interaction claim is not denied, but bare protein binding is uninformative u
 Source handling: original payload retained; no fabricated supporting quote.
 
 ## GO:0005516 calmodulin binding — UNDECIDED
-The accessible PMID10747990 abstract establishes calmodulin binding to tested RGS proteins and explicitly discusses RGS4, but does not identify whether RGS2 was one of the individually assayed proteins. Full target-level results could not be recovered. RGS2 calmodulin binding is therefore unresolved rather than rejected from a paralog-focused abstract.
+The accessible PMID:10747990 abstract establishes calmodulin binding to tested RGS proteins and explicitly discusses RGS4, but does not identify whether RGS2 was one of the individually assayed proteins. Full target-level results could not be recovered. RGS2 calmodulin binding is therefore unresolved rather than rejected from a paralog-focused abstract.
 Sources: PMID:10747990
 
 ## GO:0005634 nucleus — KEEP_AS_NON_CORE
@@ -41,7 +41,7 @@ RGS2 has an experimentally supported cytoplasmic/cytosolic pool in addition to i
 Sources: PMID:11278586, PMID:17901199
 
 ## GO:0005739 mitochondrion — KEEP_AS_NON_CORE
-The shorter translation product beginning at the fourth initiation site has curated experimentally supported mitochondrial localization in PMID17901199. Retain the root organelle assertion separately from the membrane/nuclear distributions of other isoforms; no submitochondrial topology is claimed.
+The shorter translation product beginning at the fourth initiation site has curated experimentally supported mitochondrial localization in PMID:17901199. Retain the root organelle assertion separately from the membrane/nuclear distributions of other isoforms; no submitochondrial topology is claimed.
 Sources: PMID:17901199
 
 ## GO:0005886 plasma membrane — MODIFY
@@ -65,7 +65,7 @@ RGS2 accelerates G alpha inactivation and limits receptor signaling. Its biochem
 Sources: PMID:19478087, PMID:21291891
 
 ## GO:0001975 response to amphetamine — KEEP_AS_NON_CORE
-Rat source PMID26321241 reports RGS2 expression changes correlated with amphetamine intake in VTA and nucleus accumbens. Retain a contextual orthology-based stimulus-response annotation, not a claim that human RGS2 metabolizes amphetamine or necessarily drives addiction.
+Rat source PMID:26321241 reports RGS2 expression changes correlated with amphetamine intake in VTA and nucleus accumbens. Retain a contextual orthology-based stimulus-response annotation, not a claim that human RGS2 metabolizes amphetamine or necessarily drives addiction.
 Sources: PMID:26321241
 
 ## GO:0045471 response to ethanol — KEEP_AS_NON_CORE
@@ -73,23 +73,23 @@ Chronic intermittent ethanol and withdrawal increased rat prefrontal RGS2 mRNA a
 Sources: PMID:28736108
 
 ## GO:0007283 spermatogenesis — MARK_AS_OVER_ANNOTATED
-The traced mouse source PMID14581517 is a differential-expression survey of germ-cell stages. Expression during spermatogenesis alone does not establish that RGS2 performs a spermatogenic step, and no independent RGS2-specific functional mechanism was identified in this review. The transfer is over-specific for the demonstrated expression evidence, not proof that a reproductive role is impossible.
+The traced mouse source PMID:14581517 is a differential-expression survey of germ-cell stages. Expression during spermatogenesis alone does not establish that RGS2 performs a spermatogenic step, and no independent RGS2-specific functional mechanism was identified in this review. The transfer is over-specific for the demonstrated expression evidence, not proof that a reproductive role is impossible.
 Sources: PMID:14581517
 
 ## GO:0010614 negative regulation of cardiac muscle hypertrophy — KEEP_AS_NON_CORE
-Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
+Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID:19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
 Sources: PMID:19127022
 
 ## GO:0046329 negative regulation of JNK cascade — KEEP_AS_NON_CORE
-Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
+Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID:19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
 Sources: PMID:19127022
 
 ## GO:0055119 relaxation of cardiac muscle — KEEP_AS_NON_CORE
-Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
+Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID:19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
 Sources: PMID:19127022
 
 ## GO:0060452 positive regulation of cardiac muscle contraction — KEEP_AS_NON_CORE
-Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
+Native mouse Rgs2 deletion under pressure overload increases Gq-linked hypertrophy and JNK activation, prevents adaptive increases in contractility and impairs relaxation (PMID:19127022). These support the specific cardiac regulatory processes as comparative physiological functions, not constitutive human myocardial phenotypes or direct kinase activity.
 Sources: PMID:19127022
 
 ## GO:0010855 adenylate cyclase inhibitor activity — KEEP_AS_NON_CORE
@@ -97,11 +97,11 @@ Alternative-initiation experiments directly show RGS2-dependent inhibition of ad
 Sources: PMID:17901199
 
 ## GO:0010976 positive regulation of neuron projection development — KEEP_AS_NON_CORE
-PMID16820281 reports direct RGS2–tubulin interaction through residues 41–60, stimulation of microtubule polymerization, and gain/loss effects on NGF-induced neurites in PC12 cells. Retain the binding and neurite functions with this comparative cellular scope; they are distinct from the main GAP mechanism.
+PMID:16820281 reports direct RGS2–tubulin interaction through residues 41–60, stimulation of microtubule polymerization, and gain/loss effects on NGF-induced neurites in PC12 cells. Retain the binding and neurite functions with this comparative cellular scope; they are distinct from the main GAP mechanism.
 Sources: PMID:16820281
 
 ## GO:0048487 beta-tubulin binding — KEEP_AS_NON_CORE
-PMID16820281 reports direct RGS2–tubulin interaction through residues 41–60, stimulation of microtubule polymerization, and gain/loss effects on NGF-induced neurites in PC12 cells. Retain the binding and neurite functions with this comparative cellular scope; they are distinct from the main GAP mechanism.
+PMID:16820281 reports direct RGS2–tubulin interaction through residues 41–60, stimulation of microtubule polymerization, and gain/loss effects on NGF-induced neurites in PC12 cells. Retain the binding and neurite functions with this comparative cellular scope; they are distinct from the main GAP mechanism.
 Sources: PMID:16820281
 
 ## GO:0017148 negative regulation of translation — KEEP_AS_NON_CORE
@@ -113,7 +113,7 @@ PKGI-alpha binding and phosphorylation enhance RGS2-mediated restraint of vascul
 Sources: PMID:14608379
 
 ## GO:0060135 maternal process involved in female pregnancy — KEEP_AS_NON_CORE
-The original rat myometrial study measured pregnancy-dependent expression and explicitly left its physiological role unknown. Independent mouse knockout experiments in PMID31030617 demonstrate RGS2-dependent uterine vascular remodeling and blood flow during pregnancy, supporting the conserved maternal process with a vascular, rather than proven direct parturition, mechanism.
+The original rat myometrial study measured pregnancy-dependent expression and explicitly left its physiological role unknown. Independent mouse knockout experiments in PMID:31030617 demonstrate RGS2-dependent uterine vascular remodeling and blood flow during pregnancy, supporting the conserved maternal process with a vascular, rather than proven direct parturition, mechanism.
 Sources: PMID:12712095, PMID:31030617
 
 ## GO:0061052 negative regulation of cell growth involved in cardiac muscle cell development — KEEP_AS_NON_CORE
@@ -125,11 +125,11 @@ RGS2 ablation and overexpression identify it as a terminator of beta2-adrenergic
 Sources: PMID:21291891
 
 ## GO:1900738 positive regulation of phospholipase C-activating G protein-coupled receptor signaling pathway — MODIFY
-The traced mouse source PMID19127022 shows the opposite regulatory sign: Rgs2 loss enhances Gq signaling and PLCbeta inhibition rescues the exaggerated hypertrophy. RGS2 suppresses this PLC-activating branch; improved contractility is a downstream benefit of negative signaling regulation, not positive regulation of the Gq–PLC pathway.
+The traced mouse source PMID:19127022 shows the opposite regulatory sign: Rgs2 loss enhances Gq signaling and PLCbeta inhibition rescues the exaggerated hypertrophy. RGS2 suppresses this PLC-activating branch; improved contractility is a downstream benefit of negative signaling regulation, not positive regulation of the Gq–PLC pathway.
 Sources: PMID:19127022
 
 ## GO:1900924 negative regulation of glycine import across plasma membrane — UNDECIDED
-The traced rat source PMID21798518 measures glycine-evoked electrical currents by whole-cell patch clamp, not glycine uptake. The live GO definition requires reduction of glycine import into the cell. This is a specific mismatch between the measured endpoint and the transferred transport claim; the inaccessible full text and lack of independent uptake evidence leave an actual RGS2 glycine-import mechanism unresolved.
+The traced rat source PMID:21798518 measures glycine-evoked electrical currents by whole-cell patch clamp, not glycine uptake. The live GO definition requires reduction of glycine import into the cell. This is a specific mismatch between the measured endpoint and the transferred transport claim; the inaccessible full text and lack of independent uptake evidence leave an actual RGS2 glycine-import mechanism unresolved.
 Sources: PMID:21798518
 
 ## Research and access
@@ -143,3 +143,8 @@ Focused strict/schema, source/quote and ontology checks, record-section backfill
 Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
 
 UniProt/PANTHER placement inspected: `PTHR10845:SF43`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.
