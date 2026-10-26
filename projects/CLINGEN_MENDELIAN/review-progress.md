@@ -6838,3 +6838,26 @@ checkbox changes; pending reviews, including FANCG and FANCI, remain unchecked.
 Dated source inventories are unchanged. Both project pages are regenerated and the append-only session history is validated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/481e17fe3f806a6e81060088f4876f78f7707b25/history/projects/CLINGEN_MENDELIAN/2026-10-26T015740Z-codex-050413.yaml).
+
+
+## Completion checkpoint 617 — 2026-10-26 03:52:08 UTC
+
+**617 complete; 2,259 remaining out of 2,876 catalogue genes.**
+This update adds FANCI, FANCG and FANCL to [tracker 614](https://github.com/ai4curation/ai-gene-review/pull/5551).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FANCI #5548](https://github.com/ai4curation/ai-gene-review/pull/5548) | 32 / 32 | DRAFT; 1 UNDECIDED; 4 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/6589ea9b3bc5b1737159b68f5a93e9cee7e398b5) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40262903072) |
+| [FANCG #5549](https://github.com/ai4curation/ai-gene-review/pull/5549) | 74 / 76 | DRAFT; 1 UNDECIDED; 27 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/acf7dc38e29a0f44983c013ee1685572b14b0431) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40263364785) |
+| [FANCL #5553](https://github.com/ai4curation/ai-gene-review/pull/5553) | 92 / 92 | DRAFT; 3 UNDECIDED; 46 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/bc4ace036adfab796710286e16b97ce7961edfc7) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40263994695) |
+
+The approved gene files, complete histories and source dependencies match their
+actual merges and the recorded main snapshot. Merge-group validation and tests
+passed; the coordinating AI agent accepted the operative results. The reviews
+retain their documented biological uncertainty and DRAFT status.
+
+Earlier progress, catalogue associations, queue records and dated source inventories
+remain preserved. Acceptance records the campaign review and is not a human
+maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/2a73e6825753cb82b5f1894b16b59c54c76ea282/history/projects/CLINGEN_MENDELIAN/2026-10-26T040115Z-codex-3109f2.yaml).
