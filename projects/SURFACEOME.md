@@ -206,6 +206,7 @@ by discarding true annotations.
 | ITPR3 | no | Same PANTHER-node PM IBA as ITPR1, **plus subtype-specific experimental support**: platelet surface biotinylation labels only type III (PMID:10828023), and TIRF localises type III to ER-PM junctions (PMID:21062895). | The clearest surface case of the three IP3Rs. Better labelled `contextual` (platelet / junctional surface pool). Reviewed row now carries a `part_of platelet` (CL:0000233) extension. |
 | F2, TF, VEGFA | no (secreted_only) | GO defines cell surface as "The external part of the cell wall and/or plasma membrane", which includes bound extrinsic proteins (thrombin on thrombomodulin/PARs, transferrin on TFRC, VEGFA on heparan sulfate). | A definitional disagreement, not an error on either side. The benchmark excludes surface-bound secreted ligands; GO includes them. |
 | SYNE2 | no (UniProt calls it surface) | UniProt lists Cell membrane for C-terminal-TM isoforms at focal adhesions, curator inference only (ECO:0000305). | Weak; leave as is. |
+| KLK2 | contextual (tissue_restricted_surface) | hK2 (kallikrein-2) is a secreted serine protease of prostate epithelium; it is released into seminal fluid and serum (a serum tumour marker). Our review has it extracellular with no plasma-membrane row. | The benchmark label is a mislabel in the other direction from ITPR1: a secreted protein called surface. There is no evidence for a stable KLK2 surface pool, so no annotation to add; recorded here as a disputed label. |
 
 Effect on the headline numbers: relabelling ITPR1 as `contextual` moves R2 (no
 IEA) from 69.4% to 70.1%. On yes vs no, with ITPR1 dropped from the `no` set,
@@ -228,8 +229,13 @@ The slot is `extensions` (a `predicate` from the Relation Ontology plus a `term`
 The idioms in the corpus:
 
 - `BFO:0000050` (part_of) + a cell type (`CL:…`) or tissue (`UBERON:…`) — e.g.
-  LRP4 `cell surface` part_of `neuron`, and now ITPR3 `plasma membrane` part_of
-  `platelet`. This is the one for "surface only in cell type X".
+  LRP4 `cell surface` part_of `neuron`; ITPR3 `plasma membrane` part_of `platelet`;
+  and, from the tissue_restricted_surface contextual set, IZUMO1 part_of `sperm`
+  (CL:0000019), LY6K part_of `sperm`, ALPG `external side of plasma membrane`
+  part_of `testis` (UBERON:0000473). This is the one for "surface only in cell
+  type / tissue X". Two of the five tissue_restricted contextual genes did not get
+  an extension: ZP3's core location is already the oocyte-specific `egg coat`, and
+  KLK2 is secreted (a disputed benchmark label; see §6), so has no surface row.
 - `BFO:0000066` (occurs_in) + a CC — mainly for an MF/activity row localised to a
   compartment.
 - `RO:0002233` (has input) + a `UniProtKB:…` partner — substrate/partner context,
