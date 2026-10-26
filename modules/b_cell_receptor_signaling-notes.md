@@ -51,3 +51,8 @@ CI run 40340779327 on PR #5584 interpreted the two YAML source-analysis tables a
 ## PR 5584 follow-up
 
 The CD79B function-id omission is now explained in the module notes: contribution to assembled receptor activity is established, while the descriptor lacks a contributes_to slot. It does not negate CD79B ITAM biology. CD79A adaptor function has independent docking evidence and is now reached by consistent role refinement of its existing receptor annotations. No module graph, member, edge, taxon, stoichiometry or route changed. The analysis YAML filenames remain unchanged; a general discovery-code change is outside this scientific follow-up.
+
+
+### 2026-10-26: PR 5584 contribution-policy follow-up
+
+Replaced the semicolon before the separate CD79B contribution-descriptor sentence with a period. This is a prose-only correction; all participants, functions, contexts, evidence, connections and Boolean routes are unchanged. The accompanying CD79A review correction respects the explicit contributes_to exception and does not change module activities.

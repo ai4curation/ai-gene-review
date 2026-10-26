@@ -44,3 +44,8 @@ Full primary PMID:9314552 directly establishes native mouse macrophage Fc-gamma-
 ## PR 5584 source and scope follow-up
 
 Live QuickGO ancestry confirms GO:0038096 is a descendant of GO:0007166, already represented twice. Both broad rows are refined to supported receptor branches, preserving Fc-gamma coverage without NEW redundancy. Full PMID9314552 shows native receptor-triggered Syk activation and downstream signaling, but discusses kinase-versus-adaptor explanations of the knockout phagocytic defect. Comparator LYN/HCK/FGR annotations show that receptor-proximal kinases are not conventionally excluded from this process; their annotation state is not supporting evidence. Cached GO-CAM 62b4ffe300006474 models mouse Syk as a kinase in BCR signaling and makes no negative statement about Fc-gamma signaling. Both inherited NEW rows remain unchanged.
+
+
+### 2026-10-26: PR 5584 contribution-policy follow-up
+
+Removed one exact duplicate bare PMID:9000133 entry from a single annotation review's supported_by list. The reference remains cited once in that list; distinct PMID:9314552 quotations remain. No biological judgment, annotation payload, action, or core function changed.
