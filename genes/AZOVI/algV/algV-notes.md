@@ -16,7 +16,7 @@ Accession O52197 is a reviewed Azotobacter vinelandii species-level record (taxo
 
 The strongest native acetylation experiment is the nonpolar algF mutant AJ34: “As expected, AJ34 produced unacetylated alginate” (PMID:10352233). It establishes the target system and AlgF contribution, not purified activity for every component. Pseudomonas protein assays inform homolog-based roles but are not Azotobacter assays. No direct acetyl-CoA transport, exact donor preference, complete relay order or target residue coordinates are asserted. The review uses subunit contribution for roles whose intrinsic target activity is unresolved; AlgF is not assigned an acetyltransferase enzyme activity.
 
-Nomenclature: the original and current Azotobacter literature uses algV; UniProt O52197 currently uses Name=algJ, Synonyms=algV. The fetched gene_symbol algV and folder are retained with algJ as an alias. This is the Pseudomonas AlgJ homolog, not the Azotobacter outer-membrane export protein historically named AlgJ (Q44497, now UniProt algE).
+Nomenclature: the original and current Azotobacter literature uses algV; UniProt O52197 currently uses Name=algJ, Synonyms=algV. The review deliberately uses gene_symbol algV and the algV folder, with algJ retained as an alias; algV is not claimed to be the fetched primary symbol. This is the Pseudomonas AlgJ homolog, not the Azotobacter outer-membrane export protein historically named AlgJ (Q44497, now UniProt algE).
 
 ## GO decisions and research provenance
 
