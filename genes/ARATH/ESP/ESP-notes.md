@@ -30,3 +30,23 @@
 - REMOVE: chloroplast (ISM) and the TAS JA row.
 - Proposed new term: epithionitrile-forming sulfolyase activity (EC 4.8.1.6), under GO:0016846.
 - No falcon deep-research file was available when this review was written.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (24) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+Specifier activity is optional aglucone redirection, not hydrolysis of intact glucosinolate or obligatory strengthening of defense.11752388 shows greaterT.ni feeding on nitrile-producing plants. Basal lowCol0 leaf expression does not imply universal coding-sequence knockout;17369373 directly studies conditionalWRKY53 recruitment and jasmonate response. Both same-term jasmonate rows now KEEP_AS_NON_CORE supported by17369373 even though11752388 is not the source for that response. C-S lyase interpretation has primary30900313 support; detailed Fe redox/rearrangement models remain mechanistic proposals. Existing iron-binding NEW retained from direct30395611.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final cross-row QA, 2026-10-26
+
+Kept location claims consistent with retained experimental compartments: a supported apoplast assignment refines a general extracellular prediction, while a main cytosolic or vacuolar location does not by itself disprove a secondary predicted pool. Conditional Arabidopsis ESP activity is distinguished from a universal coding knockout. Original annotation fields remain unchanged.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+AtSubP ISM chloroplast prediction is now MARK_AS_OVER_ANNOTATED. This is an unsupported positive computational compartment assignment, not failure to access an experimental publication, and not proof of absolute absence.
