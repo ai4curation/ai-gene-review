@@ -1,0 +1,4468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DELTA-OAT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --color-too-general: #14b8a6;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .action-too_general {
+            background-color: var(--color-too-general);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DELTA-OAT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9FNK4" target="_blank" class="term-link">
+                        Q9FNK4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DELTA-OAT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">23</span> Annotations</a>
+
+
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">12</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">2</span> Questions</a>
+
+
+
+        <a href="#review-experiments" title="Suggested experiments"><span class="nav-count">1</span> Experiments</a>
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9FNK4" data-a="DESCRIPTION: DELTA-OAT is a mitochondrial pyridoxal-phosphate-d..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DELTA-OAT is a mitochondrial pyridoxal-phosphate-dependent ornithine aminotransferase that converts ornithine to glutamate semialdehyde/P5C during arginine and ornithine degradation. It enables nitrogen recycling from these amino acids and contributes to P5C-dependent metabolic responses during non-host pathogen resistance. Its expression and activity respond to salinity in young seedlings, whereas native knockout studies do not support a major role in salt-induced proline synthesis.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0004587" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9576796
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of the ornithine-delta-aminotransferase cDNA and e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0004587" data-r="PMID:9576796" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0004587" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18419821
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase is essential for arginine c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0004587" data-r="PMID:18419821" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9576796
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of the ornithine-delta-aminotransferase cDNA and e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0004587" data-r="PMID:9576796" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT acts in the mitochondrial matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The full-length OAT-GFP construct colocalized with MitoTracker in Arabidopsis protoplasts; curated suborganellar assignment supports the more precise matrix term already present in this review.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000241155</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Proximate PAINT node traced from the seeded supporting_entities. Mitochondrial inheritance is consistent with target experiments; this is refinement to a supported matrix location, not a claim that the ancestral placement or donor set is wrong. The full ancestral reconstruction was not re-audited.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    mitochondrial matrix
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly identified the δOAT-GFP containing compartments as mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18419821
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase is essential for arginine c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0005739" data-r="PMID:18419821" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT acts in the mitochondrial matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The full-length OAT-GFP construct colocalized with MitoTracker in Arabidopsis protoplasts; curated suborganellar assignment supports the more precise matrix term already present in this review.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    mitochondrial matrix
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly identified the δOAT-GFP containing compartments as mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial matrix is the principal catabolic compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Native GFP targeting and nitrogen-source phenotypes place OAT in the mitochondrial degradation route; the matrix assignment is curated in UniProt, with imaging establishing mitochondria rather than resolving the matrix separately.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly identified the δOAT-GFP containing compartments as mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006527" target="_blank" class="term-link">
+                                    GO:0006527
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0006527" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates, and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence of altered amino-acid pools.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings demonstrated that oat mutants could not use Arg or Orn as nitrogen sources for growth.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006527" target="_blank" class="term-link">
+                                    GO:0006527
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18419821
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase is essential for arginine c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0006527" data-r="PMID:18419821" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates, and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence of altered amino-acid pools.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings demonstrated that oat mutants could not use Arg or Orn as nitrogen sources for growth.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006593" target="_blank" class="term-link">
+                                    GO:0006593
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9576796
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of the ornithine-delta-aminotransferase cDNA and e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0006593" data-r="PMID:9576796" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates, and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence of altered amino-acid pools.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings demonstrated that oat mutants could not use Arg or Orn as nitrogen sources for growth.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006593" target="_blank" class="term-link">
+                                    GO:0006593
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18419821
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase is essential for arginine c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0006593" data-r="PMID:18419821" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates, and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence of altered amino-acid pools.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings demonstrated that oat mutants could not use Arg or Orn as nitrogen sources for growth.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20018591" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20018591
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Divalent metal ions in plant mitochondria and their role in ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0008270" data-r="PMID:20018591" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The metal-affinity screen suggests association, but target-specific direct binding remains unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Full PMID:20018591 uses metal-loaded IMAC on mitochondrial extracts and identifies multiple proteins from enriched gel bands. This does not make metal binding false or require a physiological cofactor role; however, the exact target rows in supplemental S3/S4 could not be recovered, and direct binding versus co-purification is unresolved. Preserve the experimental annotation pending target-specific evidence rather than replacing it with the enzyme cofactor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20018591" target="_blank" class="term-link">
+                                        PMID:20018591
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The interaction of metal ions with mitochondrial proteins that might be responsible for these toxic effects was investigated in vitro using IMAC to trap metal-binding proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000122
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0009507" data-r="GO_REF:0000122" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> An additional plastid pool is unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct full-length GFP evidence supports mitochondria. The PMID:28887381 supplemental S1 target row lists mitochondrion and detects OAT in mixed fractions; it does not independently establish plastid import. The AtSubP prediction and proteomic annotation are preserved, but neither absence of a plastid assay nor mitochondrial targeting proves that dual localization is impossible.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly identified the δOAT-GFP containing compartments as mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+
+                                </span>
+
+                                <div class="support-text">The S1 Mapp sheet lists all four target proteins as mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009536" target="_blank" class="term-link">
+                                    GO:0009536
+                                </a>
+                            </span>
+                            <span class="term-label">plastid</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28887381" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28887381
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global Analysis of Membrane-associated Protein Oligomerizati...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0009536" data-r="PMID:28887381" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> An additional plastid pool is unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct full-length GFP evidence supports mitochondria. The PMID:28887381 supplemental S1 target row lists mitochondrion and detects OAT in mixed fractions; it does not independently establish plastid import. The AtSubP prediction and proteomic annotation are preserved, but neither absence of a plastid assay nor mitochondrial targeting proves that dual localization is impossible.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly identified the δOAT-GFP containing compartments as mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+
+                                </span>
+
+                                <div class="support-text">The S1 Mapp sheet lists all four target proteins as mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009626" target="_blank" class="term-link">
+                                    GO:0009626
+                                </a>
+                            </span>
+                            <span class="term-label">plant-type hypersensitive response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22321246" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22321246
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase and proline dehydrogenase g...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0009626" data-r="PMID:22321246" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT contributes to non-host bacterial resistance and the associated hypersensitive response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target Arabidopsis mutant evidence in PMID:22321246 links altered P5C metabolism to diminished pathogen-induced ROS and compromised resistance; Nicotiana silencing supplies complementary evidence. Retain this contextual defense role without claiming that OAT directly synthesizes ROS or operates as an immune receptor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22321246" target="_blank" class="term-link">
+                                        PMID:22321246
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Arabidopsis mutants for
+these genes compromised non-host resistance and showed a decrease in non-host
+pathogen-induced ROS.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009651" target="_blank" class="term-link">
+                                    GO:0009651
+                                </a>
+                            </span>
+                            <span class="term-label">response to salt stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9576796
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of the ornithine-delta-aminotransferase cDNA and e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0009651" data-r="PMID:9576796" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT expression and extract activity respond to salinity in young plantlets.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:9576796 directly observes age-dependent salt-induced expression and activity; the adult response is weaker. Response to a stimulus does not require a knockout fitness defect. The later null-mutant experiment rules against a major contribution to stress-induced proline accumulation under its conditions, not against the measured biochemical response.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link">
+                                        PMID:9576796
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In young plantlets, free Pro content, Delta1-pyrroline-5-carboxylate
+synthase mRNA, delta-OAT activity, and delta-OAT mRNA were all increased by
+salt-stress treatment.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings indicate that δOAT does not contribute significantly to stress-induced Pro biosynthesis in vivo during salt stress.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT is a PLP-dependent aminotransferase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The class-III aminotransferase classification and conserved curated cofactor site support PLP binding as a core catalytic property; this is independent of its salt-response phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SIMILARITY: Belongs to the class-III pyridoxal-phosphate-dependent
+CC       aminotransferase family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042538" target="_blank" class="term-link">
+                                    GO:0042538
+                                </a>
+                            </span>
+                            <span class="term-label">hyperosmotic salinity response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9576796
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of the ornithine-delta-aminotransferase cDNA and e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0042538" data-r="PMID:9576796" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT expression and extract activity respond to salinity in young plantlets.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:9576796 directly observes age-dependent salt-induced expression and activity; the adult response is weaker. Response to a stimulus does not require a knockout fitness defect. The later null-mutant experiment rules against a major contribution to stress-induced proline accumulation under its conditions, not against the measured biochemical response.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link">
+                                        PMID:9576796
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In young plantlets, free Pro content, Delta1-pyrroline-5-carboxylate
+synthase mRNA, delta-OAT activity, and delta-OAT mRNA were all increased by
+salt-stress treatment.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings indicate that δOAT does not contribute significantly to stress-induced Pro biosynthesis in vivo during salt stress.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22321246" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22321246
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase and proline dehydrogenase g...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0042742" data-r="PMID:22321246" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OAT contributes to non-host bacterial resistance and the associated hypersensitive response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target Arabidopsis mutant evidence in PMID:22321246 links altered P5C metabolism to diminished pathogen-induced ROS and compromised resistance; Nicotiana silencing supplies complementary evidence. Retain this contextual defense role without claiming that OAT directly synthesizes ROS or operates as an immune receptor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22321246" target="_blank" class="term-link">
+                                        PMID:22321246
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Arabidopsis mutants for
+these genes compromised non-host resistance and showed a decrease in non-host
+pathogen-induced ROS.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051646" target="_blank" class="term-link">
+                                    GO:0051646
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion localization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18419821
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase is essential for arginine c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0051646" data-r="PMID:18419821" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The experiment localizes OAT protein, not mitochondria within the cell.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The current GO:0051646 definition concerns transport or maintenance of mitochondria at cellular positions. Full PMID:18419821 images OAT-GFP import and tests catabolism; it does not show OAT performing organelle positioning. Mitochondrial residence is retained separately as cellular-component annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly identified the δOAT-GFP containing compartments as mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9576796
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of the ornithine-delta-aminotransferase cDNA and e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0055129" data-r="PMID:9576796" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The early inference of native proline synthesis was superseded by direct loss-of-function tests.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Full PMID:9576796 links coincident OAT activity/transcript and proline increases after salt, without demonstrating OAT-dependent flux into proline. Full PMID:18419821 then tests that inference using two null mutants and finds normal proline accumulation while demonstrating defective Arg/Orn catabolism. Retain the source measurements and salt-response rows, but reject the positive physiological biosynthesis claim rather than simultaneously accepting it and the NOT annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link">
+                                        PMID:9576796
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In young plantlets, free Pro content, Delta1-pyrroline-5-carboxylate
+synthase mRNA, delta-OAT activity, and delta-OAT mRNA were all increased by
+salt-stress treatment.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings indicate that δOAT does not contribute significantly to stress-induced Pro biosynthesis in vivo during salt stress.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18419821
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine-delta-aminotransferase is essential for arginine c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9FNK4" data-a="GO:0055129" data-r="PMID:18419821" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retain the explicit NOT annotation for native proline biosynthesis in the tested conditions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Full PMID:18419821 shows unchanged basal and salt-induced proline accumulation in two null lines despite loss of OAT activity, plus mitochondrial catabolic targeting. This negative result concerns the tested Arabidopsis physiological role, not the chemical impossibility of converting ornithine-derived carbon into proline in every engineered or nutritional context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                        PMID:18419821
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings indicate that δOAT does not contribute significantly to stress-induced Pro biosynthesis in vivo during salt stress.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transaminates free ornithine in mitochondrial arginine/ornithine degradation and nitrogen recycling.</h3>
+                <span class="vote-buttons" data-g="Q9FNK4" data-a="FUNCTION: Transaminates free ornithine in mitochondrial argi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                            L-ornithine transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006527" target="_blank" class="term-link">
+                                L-arginine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006593" target="_blank" class="term-link">
+                                L-ornithine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                PMID:18419821
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                                PMID:18419821
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These findings demonstrated that oat mutants could not use Arg or Orn as nitrogen sources for growth.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000122.md" target="_blank" class="term-link">
+                            GO_REF:0000122
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AtSubP analysis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18419821" target="_blank" class="term-link">
+                            PMID:18419821
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ornithine-delta-aminotransferase is essential for arginine catabolism but not for proline biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.</div>
+
+                        <div class="finding-text">"In oat1 and oat3 extracts, OAT activity was not significantly increased over control values and accounted for maximally 1/10 of the wildtype activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20018591" target="_blank" class="term-link">
+                            PMID:20018591
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Divalent metal ions in plant mitochondria and their role in interactions with proteins and oxidative stress-induced damage to respiratory function.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The metal-affinity screen suggests association, but target-specific direct binding remains unresolved.</div>
+
+                        <div class="finding-text">"The interaction of metal ions with mitochondrial proteins that might be responsible for these toxic effects was investigated in vitro using IMAC to trap metal-binding proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22321246" target="_blank" class="term-link">
+                            PMID:22321246
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ornithine-delta-aminotransferase and proline dehydrogenase genes play a role in non-host disease resistance by regulating pyrroline-5-carboxylate metabolism-induced hypersensitive response.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OAT contributes to non-host bacterial resistance and the associated hypersensitive response.</div>
+
+                        <div class="finding-text">"Arabidopsis mutants for
+these genes compromised non-host resistance and showed a decrease in non-host
+pathogen-induced ROS."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28887381" target="_blank" class="term-link">
+                            PMID:28887381
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global Analysis of Membrane-associated Protein Oligomerization Using Protein Correlation Profiling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9576796" target="_blank" class="term-link">
+                            PMID:9576796
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation of the ornithine-delta-aminotransferase cDNA and effect of salt stress on its expression in Arabidopsis thaliana.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OAT expression and extract activity respond to salinity in young plantlets.</div>
+
+                        <div class="finding-text">"In young plantlets, free Pro content, Delta1-pyrroline-5-carboxylate
+synthase mRNA, delta-OAT activity, and delta-OAT mRNA were all increased by
+salt-stress treatment."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Source-specific Arabidopsis localization audit</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">An additional plastid pool is unresolved.</div>
+
+                        <div class="finding-text">"The S1 Mapp sheet lists all four target proteins as mitochondrion."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for DELTA-OAT</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.</div>
+
+                        <div class="finding-text">"Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does a condition-specific plastid pool exist beyond the well-supported mitochondrial enzyme?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9FNK4" data-a="Q: Does a condition-specific plastid pool exist beyon..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does OAT-derived P5C influence non-host resistance without driving the principal stress-induced proline synthesis route?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9FNK4" data-a="Q: How does OAT-derived P5C influence non-host resist..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-experiments">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine endogenous tagging with organelle fractionation controls and isotope-labeled substrate/product measurements in single and complemented mutants to distinguish compartment-specific enzyme pools and pathway flux.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: native localization and isotope flux</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9FNK4" data-a="EXPERIMENT: Combine endogenous tagging with organelle fraction..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DELTA-OAT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9FNK4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="delta-oat-annotation-review-notes">DELTA-OAT annotation review notes</h1>
+<p>Identity: Q9FNK4 / At5g46180. Verified fetched PANTHER PTHR11986:SF18, ORNITHINE AMINOTRANSFERASE, MITOCHONDRIAL (parent PTHR11986 AMINOTRANSFERASE CLASS III).</p>
+<p>PMID:18419821 full text directly tests two OAT null lines: loss of extract OAT activity, failure to utilize Arg/Orn as nitrogen sources, amino-acid accumulation, OAT-GFP complementation, and full-length mitochondrial localization. OAT transfers the delta amino group of free ornithine to an oxo-acid; GSA/P5C feeds the catabolic pathway. This is not acetylornithine transamination. Its PLP family/cofactor site is conserved and curated.</p>
+<p>PMID:9576796 full text measures crude-extract activity and salt induction, including apparent Km near 91 mM in young plantlets. Do not describe these as purified recombinant kinetic constants. Salt-related expression/activity is valid, contextual biology. The older interpretation that this causes proline accumulation is correlational and contradicted by the later null-mutant tests under their conditions: retain the seeded NOT proline-biosynthesis row and REMOVE the positive claim, without changing either original payload or inferring that all ornithine carbon can never reach proline. Do not equate absence of a salt phenotype with absence of a measured salt response.</p>
+<p>GO:0051646 was checked live in QuickGO: it concerns the placement of mitochondria inside cells. The source shows the placement of OAT inside mitochondria, a different claim. REMOVE this experimental annotation after reading the full source, retaining matrix cellular-component annotations. Matrix precision also uses curated UniProt; GFP colocalization alone resolves mitochondria.</p>
+<p>PMID:22321246 abstract explicitly includes native Arabidopsis mutants and Nicotiana silencing, with reduced non-host resistance and pathogen-induced ROS. Preserve hypersensitive-response and bacterial-defense claims as contextual non-core functions; no claim that OAT directly generates ROS.</p>
+<p>Chloroplast/plastid claims and the Zn-binding screen remain UNDECIDED with specific evidence gaps; see source-analysis/README.md and exact extracted supplemental rows. Mitochondrial localization alone does not exclude dual targeting.</p>
+<h2 id="review-provenance-and-verification">Review provenance and verification</h2>
+<p>2026-10-26: Applied review and annotation-reviewer skills; consulted sibling annotation reviewer for bounded judgments on compartment inference and source-specific corrections. Normal Falcon research and PMID caching ran concurrently after exact-accession seeding. Falcon failed403 authorization and Perplexity-lite fallback failed401 insufficient quota for each target; no provider report was invented. Manual primary research above replaces the unavailable provider output. FEBA is not applicable to these plant targets. Cached publication files were fetched normally and never hand-edited.</p>
+<p>All seeded row payloads, including evidence, source, qualifiers, supporting_entities and the OAT NOT flag, are preserved; only review blocks were authored. No NEW annotation rows were added. GO-CAM absence was not used as evidence for a missing annotation or a new process assertion. Source-specific limitations remain explicit rather than deleting experimental claims merely for inaccessible details.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9FNK4
+gene_symbol: DELTA-OAT
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: DELTA-OAT is a mitochondrial pyridoxal-phosphate-dependent ornithine aminotransferase that
+  converts ornithine to glutamate semialdehyde/P5C during arginine and ornithine degradation. It enables
+  nitrogen recycling from these amino acids and contributes to P5C-dependent metabolic responses during
+  non-host pathogen resistance. Its expression and activity respond to salinity in young seedlings, whereas
+  native knockout studies do not support a major role in salt-induced proline synthesis.
+existing_annotations:
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - AGI_LocusCode:AT5G46180
+  - MGI:MGI:97394
+  - PANTHER:PTN000241224
+  - SGD:S000004430
+  - UniProtKB:P04181
+  - UniProtKB:P38021
+  - UniProtKB:Q6LFH8
+  - UniProtKB:Q92413
+  review:
+    summary: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    action: ACCEPT
+    reason: Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original
+      extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase
+      function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:18419821
+      supporting_text: In oat1 and oat3 extracts, OAT activity was not significantly increased over control
+        values and accounted for maximally 1/10 of the wildtype activity.
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:CATALYTIC ACTIVITY
+      supporting_text: Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9576796
+  qualifier: enables
+  review:
+    summary: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    action: ACCEPT
+    reason: Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original
+      extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase
+      function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+    supported_by:
+    - *id001
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:CATALYTIC ACTIVITY
+      supporting_text: Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR010164
+  - RHEA:13877
+  - EC:2.6.1.13
+  review:
+    summary: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    action: ACCEPT
+    reason: Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original
+      extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase
+      function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+    supported_by:
+    - *id001
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:CATALYTIC ACTIVITY
+      supporting_text: Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IMP
+  original_reference_id: PMID:18419821
+  qualifier: enables
+  review:
+    summary: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    action: ACCEPT
+    reason: Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original
+      extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase
+      function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+    supported_by:
+    - *id001
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:CATALYTIC ACTIVITY
+      supporting_text: Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde
+    additional_reference_ids:
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: ISS
+  original_reference_id: PMID:9576796
+  qualifier: enables
+  supporting_entities:
+  - SGD:S000004430
+  review:
+    summary: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    action: ACCEPT
+    reason: Native knockout extracts lose almost all OAT activity (PMID:18419821), corroborating the original
+      extract biochemistry (PMID:9576796), curated reaction, and inherited class-III aminotransferase
+      function. This is free ornithine catabolism, not acetylornithine biosynthesis.
+    supported_by:
+    - *id001
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:CATALYTIC ACTIVITY
+      supporting_text: Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - AGI_LocusCode:AT5G46180
+  - FB:FBgn0022774
+  - MGI:MGI:97394
+  - PANTHER:PTN000241155
+  - RGD:621724
+  - UniProtKB:P04181
+  review:
+    summary: OAT acts in the mitochondrial matrix.
+    action: MODIFY
+    reason: The full-length OAT-GFP construct colocalized with MitoTracker in Arabidopsis protoplasts;
+      curated suborganellar assignment supports the more precise matrix term already present in this review.
+    supported_by:
+    - &amp;id002
+      reference_id: PMID:18419821
+      supporting_text: colocalisation of the GFP-signal with the orange fluorescence of MitoTracker clearly
+        identified the δOAT-GFP containing compartments as mitochondria
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:SUBCELLULAR LOCATION
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion matrix&#39;
+    proposed_replacement_terms:
+    - id: GO:0005759
+      label: mitochondrial matrix
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000241155
+        source_status: SUPPORTS_TRANSFER
+        comment: Proximate PAINT node traced from the seeded supporting_entities. Mitochondrial inheritance
+          is consistent with target experiments; this is refinement to a supported matrix location, not
+          a claim that the ancestral placement or donor set is wrong. The full ancestral reconstruction
+          was not re-audited.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:18419821
+  qualifier: located_in
+  review:
+    summary: OAT acts in the mitochondrial matrix.
+    action: MODIFY
+    reason: The full-length OAT-GFP construct colocalized with MitoTracker in Arabidopsis protoplasts;
+      curated suborganellar assignment supports the more precise matrix term already present in this review.
+    supported_by:
+    - *id002
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:SUBCELLULAR LOCATION
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion matrix&#39;
+    proposed_replacement_terms:
+    - id: GO:0005759
+      label: mitochondrial matrix
+    additional_reference_ids:
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0170
+  review:
+    summary: Mitochondrial matrix is the principal catabolic compartment.
+    action: ACCEPT
+    reason: Native GFP targeting and nitrogen-source phenotypes place OAT in the mitochondrial degradation
+      route; the matrix assignment is curated in UniProt, with imaging establishing mitochondria rather
+      than resolving the matrix separately.
+    supported_by:
+    - *id002
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:SUBCELLULAR LOCATION
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion matrix&#39;
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0006527
+    label: L-arginine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - AGI_LocusCode:AT5G46180
+  - PANTHER:PTN000241155
+  - PomBase:SPBC21C3.08c
+  - SGD:S000004430
+  review:
+    summary: OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+    action: ACCEPT
+    reason: Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates,
+      and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence
+      of altered amino-acid pools.
+    supported_by:
+    - &amp;id003
+      reference_id: PMID:18419821
+      supporting_text: These findings demonstrated that oat mutants could not use Arg or Orn as nitrogen
+        sources for growth.
+    additional_reference_ids:
+    - PMID:18419821
+- term:
+    id: GO:0006527
+    label: L-arginine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:18419821
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+    action: ACCEPT
+    reason: Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates,
+      and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence
+      of altered amino-acid pools.
+    supported_by:
+    - *id003
+- term:
+    id: GO:0006593
+    label: L-ornithine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:9576796
+  qualifier: involved_in
+  review:
+    summary: OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+    action: ACCEPT
+    reason: Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates,
+      and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence
+      of altered amino-acid pools.
+    supported_by:
+    - *id003
+    additional_reference_ids:
+    - PMID:18419821
+- term:
+    id: GO:0006593
+    label: L-ornithine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:18419821
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: OAT executes ornithine breakdown and the downstream ornithine branch of arginine degradation.
+    action: ACCEPT
+    reason: Two null mutants fail to utilize Arg or Orn as nitrogen sources, accumulate pathway intermediates,
+      and are complemented by OAT-GFP. This establishes catabolic participation, not merely a consequence
+      of altered amino-acid pools.
+    supported_by:
+    - *id003
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: HDA
+  original_reference_id: PMID:20018591
+  qualifier: enables
+  review:
+    summary: The metal-affinity screen suggests association, but target-specific direct binding remains
+      unresolved.
+    action: UNDECIDED
+    reason: Full PMID:20018591 uses metal-loaded IMAC on mitochondrial extracts and identifies multiple
+      proteins from enriched gel bands. This does not make metal binding false or require a physiological
+      cofactor role; however, the exact target rows in supplemental S3/S4 could not be recovered, and
+      direct binding versus co-purification is unresolved. Preserve the experimental annotation pending
+      target-specific evidence rather than replacing it with the enzyme cofactor.
+    supported_by:
+    - reference_id: PMID:20018591
+      supporting_text: The interaction of metal ions with mitochondrial proteins that might be responsible
+        for these toxic effects was investigated in vitro using IMAC to trap metal-binding proteins.
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: ISM
+  original_reference_id: GO_REF:0000122
+  qualifier: located_in
+  review:
+    summary: An additional plastid pool is unresolved.
+    action: UNDECIDED
+    reason: Direct full-length GFP evidence supports mitochondria. The PMID:28887381 supplemental S1 target
+      row lists mitochondrion and detects OAT in mixed fractions; it does not independently establish
+      plastid import. The AtSubP prediction and proteomic annotation are preserved, but neither absence
+      of a plastid assay nor mitochondrial targeting proves that dual localization is impossible.
+    supported_by:
+    - *id002
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+      supporting_text: The S1 Mapp sheet lists all four target proteins as mitochondrion.
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+- term:
+    id: GO:0009536
+    label: plastid
+  evidence_type: HDA
+  original_reference_id: PMID:28887381
+  qualifier: located_in
+  review:
+    summary: An additional plastid pool is unresolved.
+    action: UNDECIDED
+    reason: Direct full-length GFP evidence supports mitochondria. The PMID:28887381 supplemental S1 target
+      row lists mitochondrion and detects OAT in mixed fractions; it does not independently establish
+      plastid import. The AtSubP prediction and proteomic annotation are preserved, but neither absence
+      of a plastid assay nor mitochondrial targeting proves that dual localization is impossible.
+    supported_by:
+    - *id002
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+      supporting_text: The S1 Mapp sheet lists all four target proteins as mitochondrion.
+    additional_reference_ids:
+    - PMID:18419821
+    - file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+- term:
+    id: GO:0009626
+    label: plant-type hypersensitive response
+  evidence_type: TAS
+  original_reference_id: PMID:22321246
+  qualifier: involved_in
+  review:
+    summary: OAT contributes to non-host bacterial resistance and the associated hypersensitive response.
+    action: KEEP_AS_NON_CORE
+    reason: The target Arabidopsis mutant evidence in PMID:22321246 links altered P5C metabolism to diminished
+      pathogen-induced ROS and compromised resistance; Nicotiana silencing supplies complementary evidence.
+      Retain this contextual defense role without claiming that OAT directly synthesizes ROS or operates
+      as an immune receptor.
+    supported_by:
+    - reference_id: PMID:22321246
+      supporting_text: &#39;Arabidopsis mutants for
+
+        these genes compromised non-host resistance and showed a decrease in non-host
+
+        pathogen-induced ROS.&#39;
+- term:
+    id: GO:0009651
+    label: response to salt stress
+  evidence_type: IDA
+  original_reference_id: PMID:9576796
+  qualifier: involved_in
+  review:
+    summary: OAT expression and extract activity respond to salinity in young plantlets.
+    action: KEEP_AS_NON_CORE
+    reason: PMID:9576796 directly observes age-dependent salt-induced expression and activity; the adult
+      response is weaker. Response to a stimulus does not require a knockout fitness defect. The later
+      null-mutant experiment rules against a major contribution to stress-induced proline accumulation
+      under its conditions, not against the measured biochemical response.
+    supported_by:
+    - &amp;id004
+      reference_id: PMID:9576796
+      supporting_text: &#39;In young plantlets, free Pro content, Delta1-pyrroline-5-carboxylate
+
+        synthase mRNA, delta-OAT activity, and delta-OAT mRNA were all increased by
+
+        salt-stress treatment.&#39;
+    - &amp;id005
+      reference_id: PMID:18419821
+      supporting_text: These findings indicate that δOAT does not contribute significantly to stress-induced
+        Pro biosynthesis in vivo during salt stress.
+    additional_reference_ids:
+    - PMID:18419821
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR005814
+  review:
+    summary: OAT is a PLP-dependent aminotransferase.
+    action: ACCEPT
+    reason: The class-III aminotransferase classification and conserved curated cofactor site support
+      PLP binding as a core catalytic property; this is independent of its salt-response phenotype.
+    supported_by:
+    - reference_id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+      record_section:
+      - CC:SIMILARITY
+      supporting_text: &#39;SIMILARITY: Belongs to the class-III pyridoxal-phosphate-dependent
+
+        CC       aminotransferase family.&#39;
+    additional_reference_ids:
+    - file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+- term:
+    id: GO:0042538
+    label: hyperosmotic salinity response
+  evidence_type: IDA
+  original_reference_id: PMID:9576796
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: OAT expression and extract activity respond to salinity in young plantlets.
+    action: KEEP_AS_NON_CORE
+    reason: PMID:9576796 directly observes age-dependent salt-induced expression and activity; the adult
+      response is weaker. Response to a stimulus does not require a knockout fitness defect. The later
+      null-mutant experiment rules against a major contribution to stress-induced proline accumulation
+      under its conditions, not against the measured biochemical response.
+    supported_by:
+    - *id004
+    - *id005
+    additional_reference_ids:
+    - PMID:18419821
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IEP
+  original_reference_id: PMID:22321246
+  qualifier: involved_in
+  review:
+    summary: OAT contributes to non-host bacterial resistance and the associated hypersensitive response.
+    action: KEEP_AS_NON_CORE
+    reason: The target Arabidopsis mutant evidence in PMID:22321246 links altered P5C metabolism to diminished
+      pathogen-induced ROS and compromised resistance; Nicotiana silencing supplies complementary evidence.
+      Retain this contextual defense role without claiming that OAT directly synthesizes ROS or operates
+      as an immune receptor.
+    supported_by:
+    - reference_id: PMID:22321246
+      supporting_text: &#39;Arabidopsis mutants for
+
+        these genes compromised non-host resistance and showed a decrease in non-host
+
+        pathogen-induced ROS.&#39;
+- term:
+    id: GO:0051646
+    label: mitochondrion localization
+  evidence_type: IDA
+  original_reference_id: PMID:18419821
+  qualifier: involved_in
+  review:
+    summary: The experiment localizes OAT protein, not mitochondria within the cell.
+    action: REMOVE
+    reason: The current GO:0051646 definition concerns transport or maintenance of mitochondria at cellular
+      positions. Full PMID:18419821 images OAT-GFP import and tests catabolism; it does not show OAT performing
+      organelle positioning. Mitochondrial residence is retained separately as cellular-component annotations.
+    supported_by:
+    - *id002
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:9576796
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: The early inference of native proline synthesis was superseded by direct loss-of-function
+      tests.
+    action: REMOVE
+    reason: Full PMID:9576796 links coincident OAT activity/transcript and proline increases after salt,
+      without demonstrating OAT-dependent flux into proline. Full PMID:18419821 then tests that inference
+      using two null mutants and finds normal proline accumulation while demonstrating defective Arg/Orn
+      catabolism. Retain the source measurements and salt-response rows, but reject the positive physiological
+      biosynthesis claim rather than simultaneously accepting it and the NOT annotation.
+    supported_by:
+    - *id004
+    - *id005
+    additional_reference_ids:
+    - PMID:18419821
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:18419821
+  qualifier: involved_in
+  negated: true
+  review:
+    summary: Retain the explicit NOT annotation for native proline biosynthesis in the tested conditions.
+    action: ACCEPT
+    reason: Full PMID:18419821 shows unchanged basal and salt-induced proline accumulation in two null
+      lines despite loss of OAT activity, plus mitochondrial catabolic targeting. This negative result
+      concerns the tested Arabidopsis physiological role, not the chemical impossibility of converting
+      ornithine-derived carbon into proline in every engineered or nutritional context.
+    supported_by:
+    - *id005
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Annotation-method provenance, not primary experimental evidence. Individual claims are
+      judged against independent target literature and curated functional information.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Annotation-method provenance, not primary experimental evidence. Individual claims are
+      judged against independent target literature and curated functional information.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Annotation-method provenance, not primary experimental evidence. Individual claims are
+      judged against independent target literature and curated functional information.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Annotation-method provenance, not primary experimental evidence. Individual claims are
+      judged against independent target literature and curated functional information.
+- id: GO_REF:0000122
+  title: AtSubP analysis
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Annotation-method provenance, not primary experimental evidence. Individual claims are
+      judged against independent target literature and curated functional information.
+- id: PMID:18419821
+  title: Ornithine-delta-aminotransferase is essential for arginine catabolism but not for proline biosynthesis.
+  findings:
+  - statement: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    supporting_text: In oat1 and oat3 extracts, OAT activity was not significantly increased over control
+      values and accounted for maximally 1/10 of the wildtype activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full cached text inspected.
+- id: PMID:20018591
+  title: Divalent metal ions in plant mitochondria and their role in interactions with proteins and oxidative
+    stress-induced damage to respiratory function.
+  findings:
+  - statement: The metal-affinity screen suggests association, but target-specific direct binding remains
+      unresolved.
+    supporting_text: The interaction of metal ions with mitochondrial proteins that might be responsible
+      for these toxic effects was investigated in vitro using IMAC to trap metal-binding proteins.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text inspected after normal refetch; IMAC uses solubilized mitochondrial extracts.
+      Exact S3/S4 target rows unavailable because supplementary document delivery returned HTML, so target-specific
+      binding remains unresolved; no assertion of absent binding.
+- id: PMID:22321246
+  title: Ornithine-delta-aminotransferase and proline dehydrogenase genes play a role in non-host disease
+    resistance by regulating pyrroline-5-carboxylate metabolism-induced hypersensitive response.
+  findings:
+  - statement: OAT contributes to non-host bacterial resistance and the associated hypersensitive response.
+    supporting_text: &#39;Arabidopsis mutants for
+
+      these genes compromised non-host resistance and showed a decrease in non-host
+
+      pathogen-induced ROS.&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached abstract inspected; full-text-dependent details are not treated as independently
+      verified.
+- id: PMID:28887381
+  title: Global Analysis of Membrane-associated Protein Oligomerization Using Protein Correlation Profiling.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full methods and all seven supplementary spreadsheets inspected with reproducible target
+      extraction. S1 labels these targets mitochondrion. Mixed fraction detection is not by itself evidence
+      of the specific plastid/cytosolic residence under review.
+- id: PMID:9576796
+  title: Isolation of the ornithine-delta-aminotransferase cDNA and effect of salt stress on its expression
+    in Arabidopsis thaliana.
+  findings:
+  - statement: OAT expression and extract activity respond to salinity in young plantlets.
+    supporting_text: &#39;In young plantlets, free Pro content, Delta1-pyrroline-5-carboxylate
+
+      synthase mRNA, delta-OAT activity, and delta-OAT mRNA were all increased by
+
+      salt-stress treatment.&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text inspected. Extract activity and age-specific salt induction are direct; the
+      proposed proline-biosynthesis interpretation was subsequently challenged by native null mutants
+      in PMID:18419821.
+- id: file:ARATH/DELTA-OAT/DELTA-OAT-source-analysis/README.md
+  title: Source-specific Arabidopsis localization audit
+  findings:
+  - statement: An additional plastid pool is unresolved.
+    supporting_text: The S1 Mapp sheet lists all four target proteins as mitochondrion.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Inspected source; provenance and assay scope are distinguished in the individual decisions.
+- id: file:ARATH/DELTA-OAT/DELTA-OAT-uniprot.txt
+  title: UniProt record for DELTA-OAT
+  findings:
+  - statement: DELTA-OAT catalyzes ornithine delta-transamination to glutamate semialdehyde/P5C.
+    record_section:
+    - CC:CATALYTIC ACTIVITY
+    supporting_text: Reaction=a 2-oxocarboxylate + L-ornithine = L-glutamate 5-semialdehyde
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Inspected source; provenance and assay scope are distinguished in the individual decisions.
+core_functions:
+- description: Transaminates free ornithine in mitochondrial arginine/ornithine degradation and nitrogen
+    recycling.
+  molecular_function:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  supported_by:
+  - *id001
+  - *id003
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  directly_involved_in:
+  - id: GO:0006527
+    label: L-arginine catabolic process
+  - id: GO:0006593
+    label: L-ornithine catabolic process
+suggested_questions:
+- question: Does a condition-specific plastid pool exist beyond the well-supported mitochondrial enzyme?
+- question: How does OAT-derived P5C influence non-host resistance without driving the principal stress-induced
+    proline synthesis route?
+suggested_experiments:
+- experiment_type: native localization and isotope flux
+  description: Combine endogenous tagging with organelle fractionation controls and isotope-labeled substrate/product
+    measurements in single and complemented mutants to distinguish compartment-specific enzyme pools and
+    pathway flux.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
