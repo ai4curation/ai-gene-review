@@ -299,6 +299,7 @@ with `broadMatch`, because it is one receptor's share of that response.
 The ATM row's `GO:0000077` DNA damage checkpoint signaling also covers
 ATR-dependent checkpoints, so one of the four GO-CAMs it matches
 (`65039e8700000123`, ATR activation) is an ATR model, not an ATM one.
+
 PKA signaling and beta-adrenergic signaling should extend
 `gpcr_camp_pka_signaling` rather than start new modules. That module is a compact
 five-gene module (ADRB2, GNAS, ADCY5, PRKACA, CREB1) grounded in `GO:0007188`, so
