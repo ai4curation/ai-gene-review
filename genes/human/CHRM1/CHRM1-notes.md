@@ -85,3 +85,14 @@ identify PMIDs, which were then cached with `just fetch-gene-pmids human CHRM1`.
 - REMOVE GO:0004435 (PLC activity belongs to PLCB), GO:0007197 (Gi/AC-inhibition is M2/M4),
   protein binding (uninformative; TMEM147 interaction is not disputed).
 - Developmental/proliferation TAS rows judged over-annotation.
+
+
+## 2026-10-26: complete source-specific acetylcholine panel audit
+
+Separate receptor activation from effector chemistry: the PIP2 phospholipase MF is removed because PLC, not the M1 receptor, performs lipid hydrolysis. Retain the PLC-linked receptor process. Full human M1–M4 CHO-cell experiments (PMID:11181437, normal PMC URL source) demonstrate broader coupling than a rigid Gq-only classification. Rat M1 cyclase inhibition (PMID:2846274), human M1 Gi activation and Gs/cAMP responses support contextual inhibitory and cyclic-nucleotide pathways rather than the old categorical exclusion.
+
+Native mouse M-current modulation (PMID:9371842) supports postsynaptic regulation; it does not by itself establish all forebrain localization. Rat/primate subtype-specific microscopy (PMID:23559406, PMID:8182478, PMID:7751967, PMID:8389473) directly supplies the anatomical evidence for dendritic, asymmetric/glutamatergic and occasional presynaptic pools. Predominantly postsynaptic distribution does not exclude those terminals. Mouse salivary single/double-knockout studies (PMID:15146045, PMID:15266016) establish dose-dependent M1 contribution alongside M3, with differing low-dose protocol results. The rat inherited positive intracellular protein transport claim remains unresolved because the specific donor experiment and cargo were not traced.
+
+Methods and limits: reviewed all 52 original annotations, preserving every machine-sourced term, qualifier, reference, partner and evidence field. No new annotation was added. Genuine Falcon and fallback provider attempts were made in the foundation batch and failed with authentication/quota errors; no provider report was fabricated. Normal PMID fetching and targeted public-source recovery were used instead, with access limitations stated per claim. Logs are retained under `.cache/module-audit-logs/acetylcholine-foundation-fetch/`; cached source files were not hand-edited. This review follows the current bare-protein-binding and root-organelle policies.
+
+Actions: ACCEPT 23, KEEP_AS_NON_CORE 15, MODIFY 10, REMOVE 3, UNDECIDED 1. Focused strict/schema, ontology-term and source-quote checks, record-section backfill and HTML rendering are recorded in the final audit report; remaining biological uncertainties above are not validation failures.
