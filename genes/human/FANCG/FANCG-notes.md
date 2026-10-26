@@ -26,12 +26,14 @@
 - Mitochondrial/oxidative-stress role: FANCG interacts with mitochondrial peroxiredoxin-3 (PRDX3) and a fraction localizes to mitochondria; FA-G cells show distorted mitochondria and reduced mitochondrial peroxidase activity. [PMID:17060495 "the FA group G (FANCG) protein is found in mitochondria. Wild-type but not G546R mutant FANCG physically interacts with the mitochondrial peroxidase peroxiredoxin-3 (PRDX3)"] and [PMID:17060495 "FA-G cells demonstrate distorted mitochondrial structures"]. Real, experimentally supported, but a minor moonlighting/secondary role secondary to the nuclear ICL-repair function → KEEP_AS_NON_CORE (mitochondrion, mitochondrion organization, PRDX3 binding).
 - αII-spectrin (SPTAN1) SH3-domain interaction via an SH3-binding motif in FANCG [PMID:19102630 "FANCG interacted with ... the SH3 domain ... The site of interaction in FANCG was mapped to a motif that binds to SH3 domains"] — specific but non-core scaffold interaction.
 
-## Molecular function interpretation
+## Historical molecular-function interpretation — superseded
+
+The following two blocks retain the starting review for provenance. Their absolute DNA-binding statement, screen-over-annotation policy and old action summary are superseded by the dated source reassessments, integrated review and follow-up below.
 - FANCG has NO known enzymatic/DNA-binding activity of its own. Within the FA core complex, DNA/branched-structure binding is via FANCM-MHF and the E3 catalysis via FANCL. FANCG is a TPR α-solenoid that acts as a protein-protein adaptor/scaffold: it binds FANCA directly and is required for assembly, stability and nuclear accumulation of the core complex.
 - Therefore the GOA MF "damaged DNA binding" (TAS, PMID:9806548, source PINC/ProtInc — an old low-quality mapping; the 9806548 abstract makes no DNA-binding claim) is best read as a complex-level property mis-attributed to the FANCG subunit → over-annotation.
 - "protein binding" (GO:0005515) IPI rows: the FANCA/FANCF rows are biologically central but the term is uninformative → keep as non-core. Rows from large binary-interactome / neurodegeneration-aggregation / host-pathogen screens (VIM, GFAP, CYP3A4, RAB5A, SUOX, tax, etc.) are non-specific → over-annotated.
 
-## Action summary rationale
+## Historical action-summary rationale — superseded
 - Core: FA nuclear complex (CC), interstrand cross-link repair (BP), DNA damage response (BP), DNA repair (BP), chromatin/nucleoplasm/nucleus locations. 
 - Non-core: cytoplasm/cytosol (minor form), nuclear speck, mitochondrion + mitochondrion organization + PRDX3 binding, spectrin/other specific PPIs.
 - Over-annotated: damaged DNA binding (MF), high-throughput/aggregation/host-pathogen protein-binding rows.
@@ -81,3 +83,11 @@ Six whole reference unions retain the historical note once and both exact new re
 ## 2026-10-25 — Canonical validation
 
 All six canonical checks pass, including current GOA matching, term/component validation and rendering of 160 narratives. Computed status is DRAFT with 14 advisories: 13 supported generic-binding advisories retained under the standing campaign instruction and one advisory for the unused inherited research file. Review all 74 current imported contexts and retain the inherited scaffold proposal with a more precise molecular function. Explicitly retire the earlier authored human homologous-recombination proposal while preserving positive nonhuman and complex-level evidence and its inherited quotations. One active annotation remains UNDECIDED. Adopt genuine current GOA while preserving all 49 inherited positions and 57 quotation associations. Keep 46 references and one scaffold core; no natural alternative product is inferred from transcript models or engineered constructs. Existing UniProt, publication/Reactome/family caches, provider outputs, prior history, generated HTML and unrelated work remain exact. New publication files are genuine additive fetches; no new quotation field is authored.
+
+## 2026-10-26 — Review-feedback follow-up proposal
+
+Thirteen screen-only partner-class replacements are withdrawn while their positive imported interactions remain KEEP_AS_NON_CORE under the project instruction. The Tax context retains its specific binding refinement because PMID:22458338 includes pairwise retesting plus human-cell reporter and knockdown follow-up; screen-wide validation rates are not assigned to individual pairs. Scaffold, mapped spectrin-SH3 and PRDX3 refinements remain supported by their separate evidence.
+
+The inherited GO_REF:0000052 title quote is preserved as method provenance and is explicitly not treated as FANCG experimental evidence. Chromatin is restored alongside nucleus in the structural core, supported by PMID:22343915 Figure 5H and accompanying Results. The redundant authored scaffold proposal at position 23 is retired without deleting its source object or quotes; imported-row scaffold replacements remain active. Both authored positions 23 and 48 are retained as retired records, leaving all 74 imported contexts active. All 57 quotation paths/text/reference associations and machine-source fields remain unchanged.
+
+Canonical validation of this follow-up: All six canonical checks pass and all 160 narratives render. Computed status is DRAFT with 27 advisories: 26 supported generic-binding records under the explicit project instruction and the unused inherited research file. All 74 imported contexts, 57 quotation/path/reference associations and 46 reference objects remain intact. The two retired authored rows remain historical records; normal sources, prior history and unrelated work remain unchanged.
