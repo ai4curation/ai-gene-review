@@ -352,6 +352,44 @@ in `data/summary.yaml`).
   MODIFY → GO:0006622 with `context_dropped: true`. The CLU core function now
   lists protein targeting to lysosome instead of the CMA-specific term.
 
+## Worked cases (round 2): caspase regulation
+
+The MF terms GO:0043027 *cysteine-type endopeptidase inhibitor activity
+involved in apoptotic process*, GO:0008656 *… activator activity involved in
+apoptotic process* and GO:0043028 *… regulator activity involved in apoptotic
+process*, across 22 genes. Each one's X is a genuine molecular function:
+GO:0004869 *cysteine-type endopeptidase inhibitor activity* or GO:0140608
+*cysteine-type endopeptidase activator activity*. Y (apoptotic process) is
+modelled by the apoptosis modules.
+
+**Ontology note.** GO places neither combined term under its genus.
+GO:0043027 is_a only GO:0043028, and GO:0008656 is_a GO:0016505 and GO:0043028.
+Neither is_a GO:0004869 or GO:0140608, so annotations to the combined term do
+not reach the genus by reasoning. Ticket 3 in
+[`upstream-tickets.md`](INVOLVED_IN_PRECOMPOSITION/upstream-tickets.md) asks
+for this to be fixed.
+
+| What | Genes | Outcome |
+|---|---|---|
+| Rows on the combined term that a reviewer had accepted | Diap1 (IBA, IEA), Diap2 (IBA, IDA, IEA; plus the GO:0043028 IMP row), XIAP, APAF1, CASP8, mouse Casp8, ced-4, and ced-4's GO:0016505 row | `DECOMPOSE_MODEL`: MODIFY to the genus, with `decomposed_into` naming the module element (`dmel_rhg_apoptosome_caspase_activation#diap1_diap1`, `apoptotic_execution_phase#xiap_caspase_inhibitor`, `intrinsic_apoptotic_signaling#apaf1_apaf1_apoptosome_scaffold`, `death_receptor_apoptotic_signaling#casp8_caspase_8_initiator_protease`, `c_elegans_core_apoptosis#ced4_caspase_activator`) and/or `in_core_functions`. Diap2 gained a core function for DrICE inhibition (PMID:16485033), because no module holds it. |
+| Rows on the genus that an earlier pass had MODIFYed *to* the combined term | Diap1 ×2, Diap2, XIAP ×5, APAF1 ×2, ced-4 ×2 | Reversed to ACCEPT. The genus was already right. |
+| MODIFYs from a broad term (protein binding, enzyme activator activity, positive regulation of protein processing…) that targeted the combined term | XIAP ×7, Dronc ×2, CASP9 ×2, ced-4 ×4 | The replacement is now the genus. |
+| Reviewer-proposed NEW rows on the combined term | Dark, API5, BCL2L12, CFLAR | The NEW row now uses the genus. |
+| Core-function MFs on the combined term | Dark, Diap1, Dronc, APAF1, API5, BCL2L12, CASP9, CFLAR, CYCS, XIAP, ced-4 | MF changed to the genus. `directly_involved_in` already names the apoptotic process. |
+| Module annotons on the combined term | `apoptotic_execution_phase` (XIAP), `c_elegans_core_apoptosis` (CED-4), `dmel_rhg_apoptosome_caspase_activation` (Dark target) | Function changed to the genus. The module itself is the context. |
+| CASP1 (TAS) | 1 | MODIFY to GO:0140608 with `context_dropped`. The enhancement of caspase-8 in Fas apoptosis is accessory to inflammasome function. |
+| **hid** (IDA + 5 IGI on GO:0043028) | 1 | **Decomposition exposed a wrong genus.** Hid binds DIAP1 and blocks its caspase inhibition (PMID:10481910); it does not bind caspases, which GO:0043028's definition requires. Changed laterally to GO:0140678 *molecular function inhibitor activity*, the same term the human module uses for the IAP antagonist DIABLO, linked to `dmel_rhg_apoptosome_caspase_activation#rhg_iap_antagonists_hid`. |
+| **BCL2L13** (NAS) | 1 | **The genus is unsupported.** The evidence is overexpression-induced, caspase-dependent apoptosis, so KEEP_AS_NON_CORE becomes MARK_AS_OVER_ANNOTATED. |
+| CD27, GAS6 (human, mouse), ced-3 | — | No change. These were already marked over-annotated, or lateral MODIFYs away from the term. |
+| Diap1 IDA and IGI rows marked UNDECIDED | — | No change. They are undecided because the cached evidence does not show the assay, a separate question from decomposition. |
+
+The inventory now also counts **reviewer-authored combined terms**: replacement
+terms and core-function terms that a review introduced, rather than GOA rows
+it reviewed. These are in `data/authored_precomposed.yaml`. After this round
+there are 269 uses across 161 genes: 150 in `directly_involved_in`, 109 as
+MODIFY replacements and 10 as core-function MFs. This is a second work stream:
+reviews have been actively moving annotations *toward* these terms.
+
 ### Lessons from round 1
 
 1. **`replaced_by` is automated by design, so a wrong one is a GO bug, not a
@@ -382,12 +420,7 @@ in `data/summary.yaml`).
 2. ~~**Obsolete-term rows**~~ — done (see above).
 3. ~~**Pilot**~~ — done: HSPA8 in human, mouse and rat, CLU, and the CMA module.
 4. **Next cases** — the clean, high-yield clusters:
-   - **MF part_of BP** (class A, 77 rows), above all
-     `cysteine-type endopeptidase inhibitor/regulator/activator activity
-     involved in apoptotic process` (33 rows across 18 genes: XIAP, CFLAR, APAF1, *Drosophila* Diap1/2, Dark, hid,
-     worm ced-3/ced-4…). Use the existing apoptosis modules
-     (`intrinsic_apoptotic_signaling`, `dmel_rhg_apoptosome_caspase_activation`,
-     `c_elegans_core_apoptosis`) as `module_associations`.
+   - ~~**Caspase regulation**~~: done in round 2, above.
    - **ESCRT-I** (`protein transport to vacuole involved in ubiquitin-dependent
      protein catabolic process via the multivesicular body sorting pathway`,
      10 rows, TSG101/VPS28/VPS37A–D/MVB12A/UBAP1). First check whether
@@ -396,14 +429,21 @@ in `data/summary.yaml`).
    - **hair-cell mechanotransduction** (`detection of mechanical stimulus
      involved in sensory perception of sound`, 18 rows). A module for the MET
      complex (TMC1/2, LHFPL5, TMIE, PCDH15, CDH23), not for hearing.
-5. **Full pass** — walk `data/annotations.yaml` gene by gene, from class A to
+5. **Authored combined terms** — work through
+   `data/authored_precomposed.yaml`. Largest groups: GO:1901030 *positive
+   regulation of mitochondrial outer membrane permeabilization involved in
+   apoptotic signaling pathway* (30 replacement uses; the BCL-2 family, with
+   `bcl2_family_momp_control`), GO:0106074 *aminoacyl-tRNA metabolism involved
+   in translational fidelity* (aminoacyl-tRNA editing) and GO:0006271 *DNA
+   strand elongation involved in DNA replication*.
+6. **Full pass** — walk `data/annotations.yaml` gene by gene, from class A to
    B, C and D. Check `gocam_same_gene` and `gocam_same_symbol_other_species`
    first, and confirm orthology before citing the symbol-matched hits.
-6. **Modules** — only for mechanisms, per the module policy. Developmental
+7. **Modules** — only for mechanisms, per the module policy. Developmental
    contexts (sprouting angiogenesis, ureteric bud branching, endocardial
    cushion, cardiac conduction) get no new modules; their rows point at the
    existing signalling modules or drop the context.
-7. **Upstream** — drafts are in
+8. **Upstream** — drafts are in
    [`upstream-tickets.md`](INVOLVED_IN_PRECOMPOSITION/upstream-tickets.md).
    Collect class D-iii terms and GO-CAM process nodes that
    still use precomposed BPs for go-ontology tickets. From round 1, file a

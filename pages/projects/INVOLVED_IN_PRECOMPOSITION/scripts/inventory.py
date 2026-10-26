@@ -275,6 +275,61 @@ def module_hits(accession: str, symbol: str, modules: dict[str, str]) -> list[st
     )
 
 
+def authored_uses(doc: dict, gene: str, inv: dict[str, GoTerm]) -> list[dict]:
+    """Precomposed terms a reviewer authored, rather than inherited from GOA.
+
+    Covers MODIFY replacement terms and core-function terms. These are the
+    places a review can introduce a precomposed term, as opposed to the GOA
+    rows it reviews.
+
+    >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
+    >>> doc = {"existing_annotations": [{"term": {"id": "GO:2"},
+    ...   "review": {"action": "MODIFY",
+    ...              "proposed_replacement_terms": [{"id": "GO:1", "label": "x involved in y"}]}}],
+    ...   "core_functions": [{"molecular_function": {"id": "GO:1", "label": "x involved in y"}}]}
+    >>> [u["slot"] for u in authored_uses(doc, "human/X", t)]
+    ['proposed_replacement_terms', 'core_functions.molecular_function']
+    """
+
+    def precomposed(term: dict) -> bool:
+        return term.get("id") in inv or INVOLVED_IN in str(term.get("label", ""))
+
+    out = []
+    for ea in doc.get("existing_annotations") or []:
+        review = ea.get("review") or {}
+        for t in review.get("proposed_replacement_terms") or []:
+            if precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": "proposed_replacement_terms",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                        "from": (ea.get("term") or {}).get("id"),
+                    }
+                )
+    for cf in doc.get("core_functions") or []:
+        for slot in ("molecular_function", "contributes_to_molecular_function"):
+            t = cf.get(slot) or {}
+            if precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": f"core_functions.{slot}",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                    }
+                )
+        for t in cf.get("directly_involved_in") or []:
+            if precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": "core_functions.directly_involved_in",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                    }
+                )
+    return out
+
+
 def main() -> None:
     """Build the inventory."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -320,6 +375,7 @@ def main() -> None:
     modules = {p.name: p.read_text() for p in sorted((REPO / "modules").glob("*.yaml"))}
 
     ann_rows = []
+    authored = []
     for path in sorted((REPO / "genes").glob("*/*/*-ai-review.yaml")):
         doc = yaml.load(path.read_text(), Loader=yaml.CSafeLoader)
         if not isinstance(doc, dict):
@@ -327,6 +383,7 @@ def main() -> None:
         org = path.parts[-3]
         acc = str(doc.get("id", ""))
         sym = str(doc.get("gene_symbol", ""))
+        authored.extend(authored_uses(doc, f"{org}/{path.parts[-2]}", inv))
         for ea in doc.get("existing_annotations") or []:
             term = ea.get("term") or {}
             tid, tlabel = term.get("id", ""), term.get("label", "")
@@ -463,10 +520,19 @@ def main() -> None:
         ),
     }
 
+    summary["authored_precomposed"] = {
+        "uses": len(authored),
+        "genes": len({a["gene"] for a in authored}),
+        "by_slot": dict(Counter(a["slot"] for a in authored).most_common()),
+    }
+
     dump = dict(sort_keys=False, allow_unicode=True, width=100)
     (args.out / "go_terms.yaml").write_text(yaml.safe_dump(go_rows, **dump))
     (args.out / "annotations.yaml").write_text(yaml.safe_dump(ann_rows, **dump))
     (args.out / "module_candidates.yaml").write_text(yaml.safe_dump(candidates, **dump))
+    (args.out / "authored_precomposed.yaml").write_text(
+        yaml.safe_dump(authored, **dump)
+    )
     (args.out / "summary.yaml").write_text(yaml.safe_dump(summary, **dump))
     print(yaml.safe_dump(summary, **dump))
 

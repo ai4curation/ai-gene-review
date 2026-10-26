@@ -53,7 +53,34 @@ Suggestion: before obsoleting a precomposed term with `replaced_by`, list the
 distinct molecular roles among its annotated genes. If they are not all
 covered by the replacement, use `consider`.
 
-## 3. Precomposed terms with no logical definition (to collect)
+## 3. Caspase-regulator terms are not under their genus
+
+**Title:** GO:0043027 and GO:0008656 are not subclasses of GO:0004869 / GO:0140608
+
+**Body:**
+
+GO:0043027 *cysteine-type endopeptidase inhibitor activity involved in apoptotic
+process* is_a only GO:0043028 *cysteine-type endopeptidase regulator activity
+involved in apoptotic process*. It is not a subclass of GO:0004869
+*cysteine-type endopeptidase inhibitor activity*. Likewise, GO:0008656
+*cysteine-type endopeptidase activator activity involved in apoptotic process*
+is_a GO:0016505 and GO:0043028, but not GO:0140608 *cysteine-type endopeptidase
+activator activity*. None of these terms has a logical definition, and
+GO:0043028 has no `part_of` apoptotic process. As a result, genes annotated
+only to the apoptosis-specific term (for example XIAP, DIAP1 and CED-4) are not
+returned by a query for cysteine-type endopeptidase inhibitor or activator
+activity.
+
+Requests:
+
+1. Add `is_a` to the genus and an `intersection_of` logical definition
+   (genus `and part_of GO:0006915`).
+2. Alternatively, given the obsoletion policy for precomposed terms, obsolete
+   them with `consider` pointing at the genus. A single `replaced_by` is unsafe
+   here: some annotated genes regulate the caspase only indirectly, and
+   *Drosophila* Hid, for example, acts on DIAP1 rather than on a caspase.
+
+## 4. Precomposed terms with no logical definition (to collect)
 
 Placeholder. During the full pass we are collecting live "involved in" terms
 that have no `intersection_of` but whose label splits into two GO terms (for
