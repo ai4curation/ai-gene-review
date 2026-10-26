@@ -19,7 +19,7 @@ For [PMID:10636927](https://pubmed.ncbi.nlm.nih.gov/10636927/), the [accessed or
 
 ## Interpretation limits
 
-The broad extracellular structural function covers elastic and elastin-free scaffolding and growth-factor storage. The elasticity annotation is a matrix-level IC inference; it does not require isolated fibrillin to behave as elastin. Integrin binding is an adhesive matrix activity. Generic positive protein-binding records remain non-core under the project instruction, with source-specific uncertainty preserved where operative assays or exact target records were inaccessible.
+The broad extracellular structural function covers elastic and elastin-free scaffolding and growth-factor storage. The elasticity annotation is a matrix-level IC inference; it does not require isolated fibrillin to behave as elastin. Integrin binding is an adhesive matrix activity. The five BMP/GDF prodomain interactions use the specific BMP-binding term. Other positive generic protein-binding records remain non-core when no evidence-backed specific term is available, with source-specific uncertainty preserved where operative assays or exact target records were inaccessible.
 
 Asprosin activity is assigned to the released product. The original glucogenic paper retains its DISPUTED reference assessment alongside the negative replication study and later positive evidence. Human recombinant ligand tested in rodent systems is distinguished from direct human physiology and from mouse-versus-human receptor evidence. The combined reference assessments preserve those limits while appending the additional database evidence scopes.
 

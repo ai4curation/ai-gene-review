@@ -1,6 +1,6 @@
 # FBN1 matrix and interaction evidence
 
-The [binding records](FBN1-binding-records.yaml) and [direct decisions](FBN1-direct-decisions.yaml) preserve each complete source annotation and its zero-based review index. Methods distinguish purified interactions, co-association, screening, localization and inferred structural roles. Supported generic protein binding is retained as non-core under the ClinGen project instruction; inaccessible target evidence remains undecided. No publication quotations are added.
+The [binding records](FBN1-binding-records.yaml) and [direct decisions](FBN1-direct-decisions.yaml) preserve each complete source annotation and its zero-based review index. Methods distinguish purified interactions, co-association, screening, localization and inferred structural roles. Supported specific binding terms refine measured interactions, including the five BMP/GDF prodomains; remaining generic protein binding is non-core when no evidence-backed specific term is available. Inaccessible target evidence remains undecided. No publication quotations are added.
 
 Microfibril structure supports a matrix-level contribution to elasticity. The elasticity annotation is an IC inference, not a claim that the cited microscopy measured isolated fibril recoil. The broader structural-constituent role remains informative for elastin-free anchorage and growth-factor scaffolding. Integrin binding supplies an extracellular adhesive ligand; it is not merely a downstream perturbation phenotype.
 
