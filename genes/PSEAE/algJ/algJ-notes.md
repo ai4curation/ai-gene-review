@@ -23,3 +23,7 @@ Validation outcome: `just validate PSEAE algJ` passed with no curation warnings,
 ## Independent final QA, 2026-10-25
 
 Corrected the PMID:37797696 construct attribution: the negative surrogate acetylesterase assay and binary ITC use P. putida proteins, whereas the isolated AlgF oligosaccharide-binding assay uses P. aeruginosa AlgF. The Results explicitly state “AlgFPa did not display any affinity for the oligomers tested.” This supersedes any earlier grouping of both negative assays as Pp. Native Pa co-IP and the Pa NMR structure remain target-specific.
+
+## 2026-10-26 cross-species assay consistency
+
+PMID:25165982 directly assays both PaAlgJ79–379 and KT2440 PpAlgJ75–370 with comparable surrogate-substrate kinetics. Both reviews now retain NEW GO:0008126 for this measured capacity, while neither uses the assay as its core physiological MF. Native relay donor/acceptor chemistry remains unresolved; process and localization cores are retained. Original GOA rows are unchanged.

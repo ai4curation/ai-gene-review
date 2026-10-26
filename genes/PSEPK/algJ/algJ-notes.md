@@ -42,3 +42,7 @@ Reassessed the pre-existing NEW process proposal rather than assuming it was jus
 Removed the redundant NEW GO:0051979 row because the existing biosynthesis row already proposes that same term via MODIFY. Copied its target-specific rationale and evidence into the replacement decision. This supersedes the prior note retaining every pre-existing proposal: all GOA source rows remain, while the duplicate reviewer-authored proposal does not. No biological coverage is lost.
 
 The live OLS parent lookup for GO:0051979 returned GO:0005976 polysaccharide metabolic process. This classifies modification of a polysaccharide; it does not restrict the participants to a polymer substrate or imply synthesis of the backbone.
+
+## 2026-10-26 cross-species assay consistency
+
+PMID:25165982 directly assays both PaAlgJ79–379 and KT2440 PpAlgJ75–370 with comparable surrogate-substrate kinetics. Both reviews now retain NEW GO:0008126 for this measured capacity, while neither uses the assay as its core physiological MF. Native relay donor/acceptor chemistry remains unresolved; process and localization cores are retained. Original GOA rows are unchanged.

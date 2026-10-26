@@ -24,3 +24,7 @@ Applied review, annotation-reviewer and core-function synthesis guidance. Defaul
 ## Family grounding
 
 IPR028362 — Alginate O-acetyltransferase AlgI; PTHR13285 — ACYLTRANSFERASE; PTHR13285:SF23 — TEICHOIC ACID D-ALANYLTRANSFERASE (official name does not establish a teichoic-acid substrate). Names verified through official InterPro API/PANTHER ontology and actual target UniProt membership. No PTN or subfamily id is guessed.
+
+## PR 5546 follow-up, 2026-10-25
+
+Retained GO:0016746 acyltransferase activity (ACCEPT) and used it as the core MF. MBOAT membership and locus context support the broad activity, but the pathway acetyl group alone does not resolve the intrinsic AlgI reaction. The earlier GO:0016407 refinement exceeded that evidence. This is the same evidential boundary used for the Pseudomonas AlgI homologs. All three original rows and machine-seeded fields remain intact.

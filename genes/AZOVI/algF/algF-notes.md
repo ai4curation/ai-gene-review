@@ -29,3 +29,7 @@ IPR035422 — Alginate O-acetyl transferase AlgF (family name does not prove int
 ## Independent final QA, 2026-10-25
 
 Removed contributes_to acetyltransferase activity from the core. Native algF genetics establish participation in acetylation; homolog interaction data support a noncatalytic organizational model. Neither demonstrates an enzymatic activity distributed across a complex that requires AlgF for catalysis. Retained the directly supported process/location core and all original annotation rows; no intrinsic adaptor activity is substituted because simultaneous bridging also remains hypothetical. Removed an AlgV-specific membrane-side sentence copied into the AlgF localization rationale.
+
+## PR 5546 follow-up, 2026-10-25
+
+Clarified the lateral GO:0042121 to GO:0051979 decision against the Pseudomonas comparator. PMID:31900562 explicitly reports a PDO300 algF production defect and effects on polymerization/secretion-complex stability; native ATCC 9046 AJ34 instead directly establishes production of unacetylated alginate (PMID:10352233). Those additional PDO300 phenotypes are not transferred as an established native Azotobacter biosynthetic role. No action changed. The 31900562 cache contains abstract/repository metadata despite full_text_html labeling, so the new assessment explicitly limits source access to the abstract.
