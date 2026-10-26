@@ -128,3 +128,34 @@ Transcriptional-regulation IEP annotations (PMID:8396422 promoter study): GO:003
 cellular response to insulin, GO:0051384 response to glucocorticoid — the paper shows
 the GOT1 promoter is regulated by these hormones; annotations describe regulation OF the
 gene, kept as non-core.
+
+## 2026-10-25 complete comparative aspartate/alanine audit
+
+All 57 original assertions were reassessed; all original non-review fields remain intact and no NEW row was added. This addendum supersedes earlier categorical claims that a metabolic enzyme cannot regulate signaling, calcium or cell state. It also supersedes the old generic-binding policy, without rewriting historical notes or denying any reported interaction. Three bare-binding rows are REMOVE as uninformative; measured EGFR/BRAF associations remain recorded. Broad true activity, compartment and metabolic parents are refined rather than called biologically over-annotated. PLP is integrated into the single catalytic core.
+
+### Core chemistry and evidence boundaries
+
+Human liver/heart enzyme purification in PMID:2241899 and PMID:7060339, the isoenzyme-selective serum studies PMID:2182221 and PMID:2731362, and human variant experiments in PMID:21900944 establish the native aspartate/2-oxoglutarate reaction. PMID:6391741 importantly distinguishes immunoreactive protein abundance from catalytic activity. Papers emphasizing mitochondrial AST still measure or selectively inactivate cytosolic AST; their titles are not evidence of wrong-gene curation. Net flux is reversible and context dependent. The MAS component perturbation study PMID:37647199 is abstract-only in the normal cache; its panel-level evidence supports the known shuttle role without pretending to inspect every genotype. GOT1 is a transaminase, not an NADH transporter/dehydrogenase and not a direct serine-synthesis enzyme.
+
+The cysteine reaction is curated from rat P13221; the human variant paper is not a direct cysteine kinetic assay. In full PMID:27827456, "2-OBA was incubated with glutamic acid and AST." The exposed assay identifies AST but does not resolve a purified human GOT1 preparation; aminooxyacetate is not isoform specific. Retain the curator-supported secondary reaction conservatively, not as newly measured human GOT1 kinetics. Cysteine-derived mercaptopyruvate must still be acted on by sulfurtransferase before sulfide is generated.
+
+### Source-traced regulatory corrections
+
+QuickGO donor tracing, saved in `.cache/module-audit-logs/aspartate-human-GOT1-donor-trace.json`, identifies the actual rat source papers; this metadata is provenance, never biological evidence.
+
+- Full PMID:26880260 uses primary rat pulmonary adventitial fibroblasts, lentiviral AAT1 overexpression/shRNA and cyclic stretch. "AAT1 overexpression blocked the increase in collagen I and III expression"; TGF-beta1 and Smad2/3 responses follow the same inhibitory direction. Correct GO:0030511 to negative regulation GO:0030512, with SOURCE_BAD/REGULATORY_SIGN_INVERSION metadata. Retain negative collagen regulation and mechanical response as conditional ortholog-supported processes. The proposed SO2 mechanism is not a direct receptor-binding assay and not proof of universal human anti-fibrotic activity.
+- PMID:29215467 explicitly reports cAST siRNA causing increased calcium, depolarization and apoptosis in BV2 microglia, with calpain-inhibitor rescue. The available abstract supports the regulatory direction; it does not independently resolve every rat donor construct or establish a human experiment. Retain calcium and depolarization effects non-core, rather than dismissing them as impossible for a cytosolic enzyme. A shorter literal quote avoids the validator's handling of the scientific notation [Ca] as editorial brackets.
+- Full PMID:28797105 includes human LX2 GOT1 siRNA and reduced proliferation. Much of the HSC activation evidence uses glutamine depletion or broad AOAA inhibition. The specific GO transdifferentiation definition requires conversion between differentiated fates without division/dedifferentiation, which those target-specific experiments do not directly establish. MARK_AS_OVER_ANNOTATED reflects this precision limit; the metabolic/cell-state connection itself is real.
+- PMID:29101047, PMID:25451275 and PMID:28962237 report ASAT/activity as toxicology or stress biomarkers. Those observations do not independently identify a human GOT1-specific adaptive mechanism or distinguish all AST isoenzymes. Retain the measurements, while marking the propagated target/process specificity as overstated. Response terms may include expression or activity changes; they are not rejected merely for being responses.
+- PMID:2364283 and PMID:7838383 directly localize cytosolic AspAT in rat axon terminals. Retain the conditional neuronal compartment inference; no contamination claim is warranted from its cytosolic identity.
+- PMID:8396422 and PMID:2837211 support hormonal expression/activity control in hepatoma/hepatocyte models. They do not make GOT1 a hormone sensor. Their available abstracts do not reconstruct every human construct detail, so the original curator's experimental attribution is not overruled from the cell-model name.
+
+### Glyceroneogenesis and other observations
+
+The glycerol donor traces to PMID:17545671, not the separate human-brain transaminase paper PMID:16039064. The former reports adipocyte aspartate incorporation into neutral lipids and "glycerol 3-phosphate formation for fatty acid re-esterification during fasting"; human adipose explants show coordinated expression. Refine both GO:0006114 rows to verified GO:0046167 glycerol-3-phosphate biosynthesis, a conditional metabolic contribution. GOT1 supplies oxaloacetate rather than performing the terminal reduction. Carboxylic-acid binding is a true substrate-binding property from native chemistry; PMID:2837211 itself is chiefly an induction study, not an independent affinity assay.
+
+All original exosome and sperm-nucleus proteomics were reviewed at the available study/abstract level. Their curated localization assertions remain non-core; no universal vesicle/nuclear function or contamination was invented without target-level evidence. Original target peptide tables were not reconstructed for every screen.
+
+### Access and validation
+
+Default Falcon and perplexity-lite fallback were attempted concurrently with publication caching and both failed with provider access/credit errors. No provider report was fabricated. Additional PMIDs were normally fetched; 429 failures were retried serially with backoff. Source-scope limits distinguish cached abstracts from full-text Results/Methods. The original PAINT rows lack preserved PTN identifiers; refinement metadata therefore records unresolved node provenance rather than inventing evolutionary placement. Notes, helper-generated codex history, strict/term validation, section backfill and HTML accompany the review.

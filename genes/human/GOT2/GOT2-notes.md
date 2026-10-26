@@ -144,3 +144,17 @@ GO:0003723 RNA binding and GO:0070062 extracellular exosome.
 
 No REMOVE actions taken (no clearly-wrong IEA identified; all electronic terms are biologically
 apt at worst as generic parents).
+
+## 2026-10-25 complete comparative aspartate audit
+
+All 37 original assertions were assessed, preserving every non-review field and adding no NEW row. Broad catalytic/transaminase terms are refined to both the supported aspartate and secondary kynurenine activities, and generic amino-acid/location terms to supported precise descendants. PLP is integrated into the single transaminase core. This supersedes prior statements that correct parent terms or physical RNA association are intrinsically over-annotations.
+
+The original human recombinant study PMID:26902786 and human disease/cellular activity study PMID:31422819 establish the enzyme identity and reaction. Human serum assays PMID:2182221, PMID:2567216 and PMID:2731362 distinguish isoenzyme activity; a negative clinical-biomarker conclusion does not negate the enzyme assay. A normal force-fetch of PMID:31422819 retained an abstract-only cache after a full-text retrieval rate limit, so no newly recovered full methods are claimed. Its abstract's phrase "highly oxidized cytosolic NAD-redox state" is not used to dictate shuttle chemistry; the coupled reaction and NAD+/NADH regeneration context are interpreted independently. PMID:37647199 supports the known MAS role through a panel of human-cell perturbations, but remains abstract-only locally. Neither paper makes GOT2 a direct serine-synthesis enzyme.
+
+The kynurenine reaction remains non-core and explicitly inferred from pig P00507, rather than newly claimed as a human kinetic result. Hydroxyproline participation is retained using the pathway in PMID:21998747 and Reactome R-HSA-6784393. The Reactome summary explicitly says the human reaction is inferred from rat homolog studies; a HOGA1 structural paper is not a purified human GOT2 hydroxyglutamate assay.
+
+Human HepG2 primary PMID:9537447 directly links ethanol to a plasma-membrane mAspAT/FABPpm pool and increased fatty-acid uptake, while mitochondrial levels remain unchanged. Preserve that contextual pool, transport association and ethanol response alongside the matrix catalytic core. This does not identify GOT2 as a transmembrane pore or mean all matrix enzyme molecules perform fatty-acid uptake.
+
+PMID:22681889 uses photoreactive nucleotide-enhanced UV crosslinking/oligo(dT) purification. RNA binding is retained KEEP_AS_NON_CORE: a metabolic enzyme can bind RNA, and its customary mitochondrial function does not disprove the experimental assertion. The exact target peptide/RNA-specificity table was not reconstructed from the abstract, so no regulatory mechanism is invented. Mitochondrial and exosome proteomics are likewise retained at their warranted compartment scope, without blanket contamination claims.
+
+Normal Falcon/default and perplexity-lite fallback attempts failed with provider access/credit errors while publication caching ran in parallel. Existing curated research and normally cached primary sources were used; no provider file was fabricated. Focused strict/ontology validation, section backfill, HTML and helper history document the update.

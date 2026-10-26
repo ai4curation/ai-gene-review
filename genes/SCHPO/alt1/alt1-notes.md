@@ -11,3 +11,18 @@ Putative alanine aminotransferase (EC 2.6.1.2). No S. pombe experimental data in
 - PomBase GO-CAM gomodel:67c10cc400000148 places both alt1 activities (alanine biosynthesis, alanine catabolism) in the **mitochondrial matrix** (IC). Module text also says "S. pombe alt1 enables GO:0004021 in the mitochondrial matrix". Given the missing transit peptide, I marked the mitochondrion/matrix rows UNDECIDED and accepted cytoplasm (UniProt curator inference) as best-available; core function gives no location.
 - S. cerevisiae ALT1 review core location = mitochondrial matrix; differs here deliberately.
 - GOA also has L-glutamate biosynthetic process IC (glutamate GO-CAM) -> non-core.
+
+
+## 2026-10-26 comparative annotation audit
+
+Reviewed all 12 existing rows and the core-function synthesis for SCHPO/alt1; no rows were added or dropped. Original GO terms, evidence codes, source identifiers and all other machine fields are preserved. Actions: {'ACCEPT': 8, 'MODIFY': 3, 'KEEP_AS_NON_CORE': 1}.
+
+The UniProt/PomBase localization assignments are retained as curated orthology-based inference. The previous review treated a shorter N-terminus and missing transit-peptide annotation as evidence against mitochondrial import; neither establishes targeting loss. The characterized S. cerevisiae Alt1 donor and conserved family support the inference, while native S. pombe import/localization experiments remain an open question. The matrix row is ACCEPT with explicit inference provenance, and both broader mitochondrion rows MODIFY to that supported matrix term. The broad cytoplasmic assignment is retained without claiming exclusive cytosolic residence or using sequence length as localization evidence. No native localization assay is claimed.
+
+The core is conserved reversible PLP-dependent alanine transamination; alanine synthesis and catabolism are inferred from the characterized donor. PMID:19396236 provides condition-specific native donor physiology, and PMID:23049841 distinguishes active Alt1 from inactive Alt2 rather than showing that all ALT-family proteins are uncertain. General transaminase activity refines to the supported MF; integral PLP binding is core. Future endogenous tagging, mitochondrial import and mutant flux assays would independently test the assignments.
+
+### Research access and provenance
+
+An actual per-gene Falcon attempt with Perplexity-lite fallback ran in parallel with normal publication caching. Falcon returned HTTP403 authentication failure; Perplexity returned HTTP401 insufficient quota. No provider report was fabricated. Manual evidence review is recorded here; research and publication logs are `.cache/module-audit-logs/aspartate-SCHPO-alt1-research.log` and `aspartate-SCHPO-alt1-publications.log`. Normal publication fetching succeeded. Cached abstracts are used only for explicit reported findings; unverified target-specific experiments are not confidently rejected.
+
+The annotation-reviewer workflow and current bare-protein-binding policy were applied. No GOA file is used as evidence. Existing sound source quotations were preserved, new quotations were checked against cached source text, and UniProt record sections were backfilled by the helper. Gene summaries are standalone biology. Histories use the helper with explicit Codex actor/tool; focused strict/term/source validation and HTML rendering are logged under `.cache/module-audit-logs/aspartate-SCHPO-alt1-*`. Final results and machine-payload proof are in the panel validation/payload manifests.

@@ -7,3 +7,20 @@
 
 ## Curation observations
 - Same YeastCyc precursor-supply BP inheritance as AAT1 (asparagine, homoserine, threonine) -> MARK_AS_OVER_ANNOTATED.
+
+
+## 2026-10-26 comparative annotation audit
+
+Reviewed all 44 existing rows and the core-function synthesis for yeast/AAT2; no rows were added or dropped. Original GO terms, evidence codes, source identifiers and all other machine fields are preserved. Actions: {'MODIFY': 8, 'ACCEPT': 31, 'KEEP_AS_NON_CORE': 5}.
+
+PMID:33397945 full tracing results establish Aat2 dominance in newly synthesized aspartate under the tested nitrogen-starvation conditions; “almost completely abolished” is not absolute abolition in every environment. PMID:9288922 explicitly reports: “We demonstrate that the gene AAT2 codes for the cytosolic and peroxisomal AAT activities.” Peroxisomal localization is therefore retained as a core enzyme location under oleate growth, with a separate contextual core and no assertion of obligatory beta-oxidation/redox-shuttle function. Cytosolic and peroxisomal flux are not equated.
+
+PMID:35621265 full results/figures 4, 5 and 7 show stronger peroxide-induced ribosome runoff and Gcn2/eIF2alpha activation in the deletion strain, while untreated translation is similar. Catalytic-dead Aat2 retains ribosome binding and restores normal restraint. GO:0032938 names *negative* regulation of translation; its definition was checked through live QuickGO. The existing row is MODIFY to GO:0045727 positive regulation of translation, explicitly limited to restraint of excessive repression during peroxide stress. This decision does not use the machine relationship qualifier or assert universal basal translation activation. The ribosomal-large-subunit binding row remains a specific non-core moonlighting activity. Independent annotation-reviewer consultation agreed with the direction correction.
+
+As with AAT1, actual downstream aspartate transamination participates in asparagine catabolism without binding Asn directly (PMID:36040324). Existing Asn/homoserine biosynthetic routes include substrate formation by AspAT and are retained as secondary contributions; broad threonine metabolism refines to biosynthesis. No new downstream process is proposed. Cofactor binding and glutamate/2-oxoglutarate chemistry are core, not peripheral merely because they are components of one enzyme reaction.
+
+### Research access and provenance
+
+An actual per-gene Falcon attempt with Perplexity-lite fallback ran in parallel with normal publication caching. Falcon returned HTTP403 authentication failure; Perplexity returned HTTP401 insufficient quota. No provider report was fabricated. Manual evidence review is recorded here; research and publication logs are `.cache/module-audit-logs/aspartate-yeast-AAT2-research.log` and `aspartate-yeast-AAT2-publications.log`. Normal publication fetching succeeded. Cached abstracts are used only for explicit reported findings; unverified target-specific experiments are not confidently rejected.
+
+The annotation-reviewer workflow and current bare-protein-binding policy were applied. No GOA file is used as evidence. Existing sound source quotations were preserved, new quotations were checked against cached source text, and UniProt record sections were backfilled by the helper. Gene summaries are standalone biology. Histories use the helper with explicit Codex actor/tool; focused strict/term/source validation and HTML rendering are logged under `.cache/module-audit-logs/aspartate-yeast-AAT2-*`. Final results and machine-payload proof are in the panel validation/payload manifests.

@@ -14,3 +14,18 @@ Mitochondrial aspartate aminotransferase; = classical glu1 (glutamate-requiring)
 
 ## Other
 - Shuttle (IC/ARBA) non-core: plausible by analogy (S. cerevisiae aat1 respiratory deficiency, PMID:22010850) but untested in S. pombe.
+
+
+## 2026-10-26 comparative annotation audit
+
+Reviewed all 21 existing rows and the core-function synthesis for SCHPO/maa1; no rows were added or dropped. Original GO terms, evidence codes, source identifiers and all other machine fields are preserved. Actions: {'MODIFY': 8, 'ACCEPT': 10, 'KEEP_AS_NON_CORE': 3}.
+
+Read full PMID:39502420, including the nonsense allele, integrated maa1 rescue, failure of multicopy caa1 rescue and weaker yhm2 suppression. Glutamate/glutamine dependence supports reverse AspAT chemistry supplying glutamate during the tested ammonium-assimilation conditions. These are causal genetic observations; they do not directly measure universal net flux. PMID:31641022 supplies the cytosolic/mitochondrial contrast and direct Caa1 biosynthetic evidence.
+
+The core retains reversible matrix AspAT and glutamate synthesis. Existing aspartate-biosynthetic inference remains secondary rather than being rejected simply because the reverse direction is more prominent in this experiment. Broad glutamate metabolism refines to the supported glutamate-biosynthetic child. Shuttle assignments remain non-core comparative inference. PLP binding and 2-oxoglutarate participation are integral chemistry. Matrix location is supported by curated/localization evidence; broad mitochondrial rows refine to matrix without redefining the original assay.
+
+### Research access and provenance
+
+An actual per-gene Falcon attempt with Perplexity-lite fallback ran in parallel with normal publication caching. Falcon returned HTTP403 authentication failure; Perplexity returned HTTP401 insufficient quota. No provider report was fabricated. Manual evidence review is recorded here; research and publication logs are `.cache/module-audit-logs/aspartate-SCHPO-maa1-research.log` and `aspartate-SCHPO-maa1-publications.log`. Normal publication fetching succeeded. Cached abstracts are used only for explicit reported findings; unverified target-specific experiments are not confidently rejected.
+
+The annotation-reviewer workflow and current bare-protein-binding policy were applied. No GOA file is used as evidence. Existing sound source quotations were preserved, new quotations were checked against cached source text, and UniProt record sections were backfilled by the helper. Gene summaries are standalone biology. Histories use the helper with explicit Codex actor/tool; focused strict/term/source validation and HTML rendering are logged under `.cache/module-audit-logs/aspartate-SCHPO-maa1-*`. Final results and machine-payload proof are in the panel validation/payload manifests.
