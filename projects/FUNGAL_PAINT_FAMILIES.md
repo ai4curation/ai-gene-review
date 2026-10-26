@@ -361,6 +361,12 @@ node seeded by a canonical sterol-pathway HMGR. The short AN1593 branch is an
 exception to the ER and ergosterol propagation, but retains the catalytic and
 broad isoprenoid-biosynthesis terms.
 
+- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
+  `COMPLETE`
+- [x] `yeast/HMG2` - *S. cerevisiae* regulated minor HMG-CoA reductase isozyme;
+  already `COMPLETE`
+- [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
+  exemplar
 - [x] `CANAL/HMG1` - Candida albicans long sterol-pathway HMG-CoA reductase;
   drafted in PR #5454
 - [x] `ASPFU/hmg1` - Aspergillus fumigatus long sterol-pathway HMG-CoA
@@ -369,10 +375,6 @@ broad isoprenoid-biosynthesis terms.
   drafted in PR #5458
 - [x] `EMENI/AN1593` - Aspergillus nidulans short pimaradiene-cluster
   HMG-CoA reductase; drafted in this branch
-- [ ] `yeast/HMG1` and `yeast/HMG2` - budding-yeast ER/nuclear-envelope
-  paralogs to align with the current PTHR10572 family review
-- [ ] `SCHPO/hmg1` - fission-yeast ER/nuclear-envelope HMGR to align with the
-  current PTHR10572 family review
 
 ---
 
@@ -386,6 +388,10 @@ broad isoprenoid-biosynthesis terms.
   `EMENI/cysD`, all of which fall in `PTHR43797:SF2` under the shared
   `PTN002887184` PAINT node for homocysteine synthase activity and
   L-homocysteine biosynthesis.
+- Started PTHR10572 HMG-CoA reductases with `CANAL/HMG1`. The family review
+  already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
+  membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
+  the eukaryotic peroxisomal-membrane IBA for fungal pruning.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission

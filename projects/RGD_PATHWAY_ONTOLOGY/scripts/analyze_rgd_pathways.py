@@ -8,7 +8,7 @@ plus ``projects/RGD_PATHWAY_ONTOLOGY/pathways/*.yaml`` (parsed RGD diagram pages
 
 Outputs (``projects/RGD_PATHWAY_ONTOLOGY/data/``):
 
-* ``pw_go_mappings.sssom.tsv`` -- candidate PW -> GO mappings, from two sources:
+* ``pw_go_mappings.sssom.yaml`` -- candidate PW -> GO mappings (SSSOM), from three sources:
   GO ids that PW cites as a definition source (``def_xref``) and exact
   normalized label/synonym matches (``lexical``), plus the "associated GO
   term" that RGD diagram pages cite (``rgd_page_go_xref``). Every row is a *candidate*;
@@ -214,6 +214,129 @@ def load_gocams(path: Path) -> tuple[dict[str, set[str]], dict[str, str], dict[s
     return sym_models, titles, model_bps
 
 
+# SSSOM slots for the lexical match fields.
+MATCH_FIELD = {"label": "rdfs:label", "exact_synonym": "oboInOwl:hasExactSynonym"}
+
+# Curation-rule CURIEs (prefix ``pw2go``) record, in a standard SSSOM slot, why a
+# row exists (``src/`` codes) and any QA finding on it (``qa/`` codes), so a report
+# selects problem rows with one prefix filter instead of parsing ``comment``.
+# Definitions are written into the mapping-set description.
+SOURCE_RULE = {"pw_def_xref": "PW_DEFINITION_XREF", "rgd_page_go_xref": "RGD_PAGE_GO_XREF"}
+RULE_TEXT = {
+    "src/PW_DEFINITION_XREF": "the GO id is cited as a definition source of the PW term",
+    "src/RGD_PAGE_GO_XREF": "the GO id is the 'associated GO term' on the term's RGD pathway page",
+    "src/LEXICAL_MATCH": "normalized PW label or exact synonym equals a GO label or exact synonym",
+    "src/PATHWAY_TO_PROCESS": (
+        "the lexical match needed the PW 'pathway' wording rewritten as a GO process; "
+        "match_string holds the normalized form that matched"),
+    "qa/OBSOLETE_TARGET": "the GO term is obsolete; see_also lists GO's replaced_by terms, if any",
+    "qa/MISSING_TARGET": "the GO id does not resolve in the GO release used",
+    "qa/NOT_BIOLOGICAL_PROCESS": "the GO term is not a biological process, so it is not used for matching",
+    "qa/ID_ECHO": "the GO local id equals the PW local id (likely a typo on the RGD page)",
+    "qa/PAGE_XREF_DISAGREES": (
+        "the page xref is neither equal to, nor an ancestor or descendant of, the term's other "
+        "GO mappings, which are listed in the other slot as conflicts_with=<GO id>; the row is not "
+        "used for matching"),
+}
+MAPPING_SET_ID = "https://w3id.org/ai4curation/ai-gene-review/mappings/pw2go"
+
+
+def sssom_row(m: dict) -> dict:
+    """One mapping as SSSOM slots, with QA findings as ``curation_rule`` CURIEs.
+
+    >>> r = sssom_row({"subject_id": "PW:1", "subject_label": "a", "predicate_id": "skos:relatedMatch",
+    ...     "object_id": "GO:2", "object_label": "b", "mapping_justification": "semapv:ManualMappingCuration",
+    ...     "match_source": "pw_def_xref", "object_status": "obsolete", "object_namespace": "",
+    ...     "replaced_by": ["GO:3"], "comment": "c"})
+    >>> r["curation_rule"], r["see_also"]
+    (['pw2go:src/PW_DEFINITION_XREF', 'pw2go:qa/OBSOLETE_TARGET'], ['GO:3'])
+    >>> sssom_row({**{k: r[k] for k in ("subject_id", "predicate_id", "object_id")},
+    ...     "mapping_justification": "semapv:ManualMappingCuration", "match_source": "rgd_page_go_xref",
+    ...     "object_status": "ok", "object_namespace": "biological_process", "qa_flags": ["PAGE_XREF_DISAGREES"],
+    ...     "disagrees_with": ["GO:4", "GO:5"]})["other"]
+    'conflicts_with=GO:4|conflicts_with=GO:5'
+    >>> bad = {"match_source": "new_source", "object_status": "ok", "object_namespace": "biological_process"}
+    >>> sssom_row(bad)
+    Traceback (most recent call last):
+    ValueError: match_source 'new_source' has no src/ code: add it to SOURCE_RULE and RULE_TEXT
+    >>> sssom_row({**bad, "match_source": "pw_def_xref", "qa_flags": ["NEW_FLAG"]})
+    Traceback (most recent call last):
+    ValueError: undefined rule codes ['qa/NEW_FLAG']: add them to RULE_TEXT
+    """
+    src = m["match_source"]
+    if src.startswith("lexical:"):
+        rules = ["src/LEXICAL_MATCH"]
+        if src.endswith(":pathway->process"):
+            rules.append("src/PATHWAY_TO_PROCESS")
+    elif src in SOURCE_RULE:
+        rules = ["src/" + SOURCE_RULE[src]]
+    else:
+        raise ValueError(f"match_source {src!r} has no src/ code: add it to SOURCE_RULE and RULE_TEXT")
+    if m["object_status"] == "obsolete":
+        rules.append("qa/OBSOLETE_TARGET")
+    elif m["object_status"] == "missing":
+        rules.append("qa/MISSING_TARGET")
+    elif m["object_namespace"] != "biological_process":
+        rules.append("qa/NOT_BIOLOGICAL_PROCESS")
+    rules += ["qa/" + f for f in m.get("qa_flags", [])]
+    undefined = sorted(set(rules) - set(RULE_TEXT))
+    if undefined:
+        raise ValueError(f"undefined rule codes {undefined}: add them to RULE_TEXT")
+    see_also = list(m.get("replaced_by") or [])
+    # SSSOM "other" is a pipe-separated list of key=value pairs. A declared
+    # extension_definitions slot would be cleaner, but linkml-validate against
+    # sssom-schema 1.0.0 rejects it on mappings.
+    other = [f"conflicts_with={g}" for g in m.get("disagrees_with") or []]
+    row = {k: m[k] for k in ("subject_id", "subject_label", "predicate_id") if m.get(k)}
+    for k in ("object_id", "object_label", "mapping_justification", "subject_match_field",
+              "object_match_field", "match_string"):
+        if m.get(k):
+            row[k] = m[k]
+    row["curation_rule"] = [f"pw2go:{r}" for r in rules]
+    if see_also:
+        row["see_also"] = see_also
+    if other:
+        row["other"] = "|".join(other)
+    if m.get("comment"):
+        row["comment"] = m["comment"]
+    return row
+
+
+def write_sssom(mappings: list[dict], path: Path) -> None:
+    """Write the candidate mappings as an SSSOM YAML mapping set."""
+    rule_doc = " ".join(f"pw2go:{k}: {v}." for k, v in RULE_TEXT.items())
+    doc = {
+        "mapping_set_id": MAPPING_SET_ID,
+        "mapping_set_title": "RGD Pathway Ontology to GO biological process candidate mappings",
+        "mapping_set_description": (
+            "Candidate PW -> GO mappings generated by projects/RGD_PATHWAY_ONTOLOGY/scripts/"
+            "analyze_rgd_pathways.py from GO ids cited in PW definitions, GO ids cited on RGD "
+            "pathway pages, and exact normalized label/synonym matches. None is curator-verified. "
+            "curation_rule records why each row exists and any QA finding: " + rule_doc),
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "creator_label": ["AI Gene Review project"],
+        "mapping_tool": "analyze_rgd_pathways.py",
+        "mapping_date": date.today().isoformat(),
+        "subject_source": "PW",
+        "object_source": "GO",
+        "curie_map": {
+            "PW": "http://purl.obolibrary.org/obo/PW_",
+            "GO": "http://purl.obolibrary.org/obo/GO_",
+            "skos": "http://www.w3.org/2004/02/skos/core#",
+            "semapv": "https://w3id.org/semapv/vocab/",
+            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+            "pw2go": MAPPING_SET_ID + "/rule/",
+        },
+        "mappings": [sssom_row(m) for m in sorted(mappings, key=lambda m: (m["subject_id"], m["object_id"]))],
+    }
+    with open(path, "w") as fh:
+        fh.write("# RGD Pathway Ontology -> GO candidate mappings (SSSOM) -- GENERATED, DO NOT HAND-EDIT.\n"
+                 "# Regenerate with projects/RGD_PATHWAY_ONTOLOGY/scripts/analyze_rgd_pathways.py and\n"
+                 "# validate with: just validate-rgd-mappings\n\n")
+        yaml.safe_dump(doc, fh, sort_keys=False, width=100, allow_unicode=True)
+
+
 def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
     mods = []
     for f in sorted(mod_dir.glob("*.yaml")):
@@ -224,7 +347,9 @@ def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
             "id": f.stem,
             "title": (title_m.group(1).strip().strip("'\"") if title_m else f.stem),
             "go": set(re.findall(r"GO:\d{7}", txt)),
-            "pw": set(re.findall(r"PW:\d{7}", txt)),
+            # Only PW ids a module declares as its evidence sources count as "cites PW id";
+            # a PW id named in notes (often as an out-of-scope neighbour) does not.
+            "pw": set(re.findall(r"source_id:\s*['\"]?(PW:\d{7})", txt)),
             "symbols": {up2sym[u] for u in ups if u in up2sym},
         })
     return mods
@@ -293,8 +418,8 @@ def main() -> int:
                 "object_label": g["name"] if g else "", "object_namespace": g["namespace"] if g else "",
                 "mapping_justification": "semapv:ManualMappingCuration",
                 "match_source": "rgd_page_go_xref", "object_status": status,
-                "comment": "RGD pathway page cites this as the 'associated GO term'"
-                + (f"; replaced_by {','.join(g['replaced_by'])}" if g and g["replaced_by"] else ""),
+                "replaced_by": g["replaced_by"] if g else [],
+                "comment": "RGD pathway page cites this as the 'associated GO term'.",
             })
         for x in t["def_xrefs"]:
             if not x.startswith("GO:") or (x, "def") in seen:
@@ -308,8 +433,8 @@ def main() -> int:
                 "object_label": g["name"] if g else "", "object_namespace": g["namespace"] if g else "",
                 "mapping_justification": "semapv:ManualMappingCuration",
                 "match_source": "pw_def_xref", "object_status": status,
-                "comment": "GO id cited as a definition source in PW; scope not asserted"
-                + (f"; replaced_by {','.join(g['replaced_by'])}" if g and g["replaced_by"] else ""),
+                "replaced_by": g["replaced_by"] if g else [],
+                "comment": "GO id cited as a definition source in PW; scope not asserted.",
             })
         names = [(t["name"], "label")] + [(s, "exact_synonym") for s, sc in t["synonyms"] if sc == "EXACT"]
         for nm, src in names:
@@ -328,9 +453,11 @@ def main() -> int:
                         "object_id": gid, "object_label": g["name"], "object_namespace": g["namespace"],
                         "mapping_justification": "semapv:LexicalMatching",
                         "match_source": f"lexical:{src}->{gsrc}" + ("" if verbatim else ":pathway->process"),
-                        "object_status": "ok", "comment": "",
+                        "object_status": "ok", "replaced_by": [],
+                        "subject_match_field": [MATCH_FIELD[src]],
+                        "object_match_field": [MATCH_FIELD[gsrc]],
+                        "match_string": [v],
                     })
-    # ``comment`` is often empty, so it is not the last column (no trailing tab).
     # ---- QA for page-scraped GO ids: they are typed by hand on RGD pages and,
     # unlike definition citations, are not otherwise cross-checked. Demote a page
     # xref that disagrees with this subject's definition-citation or lexical
@@ -345,34 +472,24 @@ def main() -> int:
     for m in mappings:
         if m["match_source"] != "rgd_page_go_xref":
             continue
-        notes = []
+        flags = []
         if m["object_id"].split(":")[1] == m["subject_id"].split(":")[1]:
-            notes.append("GO local id equals PW local id (likely typo)")
+            flags.append("ID_ECHO")
             page_flagged["id_echo"] += 1
         alt = others.get(m["subject_id"], set())
         related = {d for o in alt for d in descendants(o, go_kids, go_memo)} | {
             a for o in alt for a in ancestors(o, go)}
         if alt and m["object_id"] not in alt | related:
-            notes.append("disagrees with " + ",".join(sorted(alt)) + " from other sources")
+            flags.append("PAGE_XREF_DISAGREES")
+            m["disagrees_with"] = sorted(alt)
             page_flagged["disagrees"] += 1
-        if notes:
+        if flags:
             m["predicate_id"] = "skos:relatedMatch"
-            m["comment"] += "; QA: " + "; ".join(notes) + "; not used for matching"
+            m["qa_flags"] = flags
             m["qa_flag"] = True
             page_flagged["rows"] += 1
 
-    mcols = ["subject_id", "subject_label", "predicate_id", "object_id", "object_label",
-             "object_namespace", "mapping_justification", "comment", "match_source", "object_status"]
-    with open(args.out / "pw_go_mappings.sssom.tsv", "w", newline="") as fh:
-        fh.write("# curie_map:\n#   PW: http://purl.obolibrary.org/obo/PW_\n#   GO: http://purl.obolibrary.org/obo/GO_\n"
-                 "#   skos: http://www.w3.org/2004/02/skos/core#\n#   semapv: https://w3id.org/semapv/vocab/\n"
-                 "# mapping_set_id: https://github.com/ai4curation/ai-gene-review/blob/main/projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.tsv\n"
-                 f"# mapping_date: {date.today().isoformat()}\n"
-                 "# comment: Candidate mappings generated by analyze_rgd_pathways.py; not curator-verified.\n")
-        w = csv.DictWriter(fh, fieldnames=mcols, delimiter="\t", lineterminator="\n", extrasaction="ignore")
-        w.writeheader()
-        for m in sorted(mappings, key=lambda m: (m["subject_id"], m["object_id"])):
-            w.writerow(m)
+    write_sssom(mappings, args.out / "pw_go_mappings.sssom.yaml")
 
     by_pw_go: dict[str, list[dict]] = defaultdict(list)
     for m in mappings:

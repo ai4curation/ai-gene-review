@@ -74,3 +74,19 @@ def test_summary_codes_are_known(module: ModuleType) -> None:
     assert set(summary["go_counts"]) <= set(module.CATEGORIES)
     for cohort in summary["cohorts"]:
         assert set(cohort["go_counts"]) <= set(module.CATEGORIES)
+
+
+def test_review_fields_match_summary(module: ModuleType, funnel: dict) -> None:
+    """The funnel's review-derived fields equal what benchmark-summary.json implies.
+
+    Run ``build_benchmark_funnel.py refresh-reviews`` after a snapshot refresh;
+    otherwise the outcome figure silently shows the previous snapshot.
+    """
+    summary = json.loads((PROJECT / "benchmark-summary.json").read_text())
+    expected = module.summary_fields(summary)
+    assert {k: funnel[k] for k in expected} == expected
+    by_cohort = {c["cohort"]: c for c in summary["cohorts"]}
+    spec = {c["id"]: c for c in yaml.safe_load((PROJECT / "benchmark-cohorts.yaml").read_text())["cohorts"]}
+    for c in funnel["cohorts"]:
+        want = module.cohort_review_fields(spec[c["id"]], by_cohort)
+        assert {k: c[k] for k in want} == want, c["id"]

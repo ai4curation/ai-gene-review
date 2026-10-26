@@ -29,10 +29,12 @@ This is a focused evaluation of the available outputs, not a random proteome sam
 
 | Assessment | GO claims | Interpretation |
 |---|---:|---|
-| LSP | 19 | Supported, with a more specific established annotation |
-| CNN | 1 | Supported equivalent biology already annotated: NCU03033 nucleus |
+| LSP | 15 | Supported, with a more specific established annotation |
+| CNN | 5 | Supported equivalent biology already annotated: NCU01245 transcription by RNA polymerase III, NCU02539 nuclear DNA replication and DNA replication initiation, NCU03033 nucleus, NCU09880 spliceosomal complex |
 | UNC | 1 | NCU04937 DNA binding lacks decisive supporting or contrary evidence |
 | **Total** | **21** | **GO predictions only** |
+
+Counts are as of the 2026-10-24 review snapshot (commit `1ca4af83c6`); see the [cross-cohort results](benchmark-results.md).
 
 No GO claim is classified as COR, PLI, NPI or REP. The incorrect claims occur in the function paragraphs, demonstrating why those paragraphs require their own assessment. Across the three paragraphs, ubiquitin transfer and neuronal context are contradicted, glycerol phosphorylation and metabolism are supported, and a strong claim about regulating glycerol uptake remains uncertain. Fragment counts depend on how sentences are divided and are not pooled with GO terms.
 

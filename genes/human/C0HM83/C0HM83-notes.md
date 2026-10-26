@@ -67,3 +67,10 @@
 - mitochondrion IDA + IEA -> ACCEPT.
 - nucleus IDA + IEA -> KEEP_AS_NON_CORE (fractionation-only, one study, no function there).
 - No NEW: OCR/neuroprotection data are exogenous-peptide pharmacology; participation test not met.
+
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+- Rows: GO:0005739 IDA (PMID:36127429) ACCEPT; GO:0005739 IEA (GO_REF:0000044, SL-0173) ACCEPT. No sub-compartment rows. Actions unchanged; reasons extended.
+- IEA mapping check: the UniProt location is curated from the same paper [file:human/C0HM83/C0HM83-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:36127429}"], so the feature the mapping assumes is present. Added the UniProt file to references.
+- Rule 4: no presequence, no predicted TM (only MobiDB-lite disorder/proline-rich features); the cached full text has no mitoplast, protease-protection or sub-mitochondrial fractionation (grep for inner membrane/matrix/proteinase/mitoplast finds only the IMMT description and transcriptome GO enrichment). Binding of exogenous peptide to inner-membrane IMMT is one indirect line [PMID:36127429 "SHMOOSE bound the inner mitochondrial membrane mitofilin in multiple models including neuronal cells and dot blot"]. Stays at the root.
