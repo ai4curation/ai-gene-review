@@ -44,9 +44,9 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `abscisic_acid_signaling`: [PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) merged as `d4ae4f02f7ab9759d41d104d7cd7af0ec66abb16`. All 19 reviews (524 rows), 26 references and lineage-specific signaling constraints were verified in merged content after approved checks.
 - [x] `activin_receptor_signaling`: [PR #5541](https://github.com/ai4curation/ai-gene-review/pull/5541) merged as `aff0030d3689b50ae9f6d147fc8334a0b942f0a7`. All 11 reviews, 29 references, taxon/step evidence and session histories were verified unchanged from the approved head.
 - [x] `adp_heptose_biosynthesis`: [PR #5542](https://github.com/ai4curation/ai-gene-review/pull/5542) merged as `8954a5dc480f1311f440eb4e50f5cefca5931980` after approval and required checks. Its 16 member reviews, 12 references and 26 histories were inspected; 44 curated/history files match the approved head.
-- [x] `adrenal_steroidogenesis`: [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) merged as `72b4d12be1a4b1dbbd1e4abd526ecfd4e06b7a3f` after approval and required checks. All 13 reviews (434 rows), 26 references and 25 histories are curated; 65 scoped curation/history files match the approved head.
+- [ ] `adrenal_steroidogenesis`: previous [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) merged and was initially verified, but retrospective policy QA found 22 root-organelle refinements across seven reviewed representatives. Audit reopened for a separate module-specific follow-up; previous merge provenance is retained in the inventory.
 - [x] `aerobic_nicotinate_degradation`: [PR #5544](https://github.com/ai4curation/ai-gene-review/pull/5544) merged as `94a80ada9f7143d2fb1b38b5e97a5301859c0a7c`. Twelve references and twelve member reviews (43 rows) were verified; 64 scoped curated/history files match the approved head. The NicD localization supersession is recorded in the older audit ledger.
-- [x] `alcoholic_fermentation`: [PR #5545](https://github.com/ai4curation/ai-gene-review/pull/5545) merged as `16bffd8e632185a8be7f5d9936d01c18017d33f7`. All 23 members (487 original rows), 34 references and revised BdhA family scope were verified; all 105 scoped curation/history files match the approved head.
+- [ ] `alcoholic_fermentation`: previous [PR #5545](https://github.com/ai4curation/ai-gene-review/pull/5545) merged and was initially verified, but retrospective policy QA found two root-organelle refinements in SCHPO adh4. Audit reopened for a separate module-specific follow-up; prior merge provenance is retained.
 - [ ] `alginate_o_acetylation`: [PR #5546](https://github.com/ai4curation/ai-gene-review/pull/5546): 12 reviews, 52 rows and 15 references; full validation and current CI pass. A single normal scientific-review retry was requested after other review jobs demonstrated service recovery. Auto-merge remains enabled subject to the review gate.
 - [ ] `alginate_polymerization_export`: [draft PR #5552](https://github.com/ai4curation/ai-gene-review/pull/5552): 18 reviews, 99 rows and 23 references. Head `639f50743b` is approved with all checks passing. Keep draft until shared AlgX work in #5546 merges, then integrate and verify that dependency.
 - [x] `aliphatic_glucosinolate_myrosinase_defense`: [PR #5550](https://github.com/ai4curation/ai-gene-review/pull/5550) merged as `75d569bf94a697ed142f0f1397736819563b8d74`. All 187 scoped files from the 208-file paginated PR match the approved head; 35 reviews, 453 rows and 31 curated references are verified.
@@ -58,7 +58,7 @@ For each module, record evidence that all of the following are satisfied:
 - [ ] `arginine_catabolism_arginase_pathway`: [PR #5566](https://github.com/ai4curation/ai-gene-review/pull/5566): 18 reviews, 357 original rows and 359 final rows. Head `b49ce26701` retains 27 organelle assertions and adds two separately supported ARGAH matrix CCs. Canonical source identity, eight focused checks, eight new histories and independent scientific QA pass; renewed CI/review are required.
 - [ ] `aspartate_asparagine_metabolism`: 27 reviews, 548 preserved rows, 25 eukaryotic exemplars and two bacterial comparators; 44 source entries and two evidenced connections. Original full validation passed. Head `aea3abd270` corrects 22 mitochondrial organelle rows with all six focused checks passing. Fresh full validation is running on the corrected state before PR creation.
 - [ ] `aspartate_family_threonine_biosynthesis`: 24 reviews, 438 original rows and 439 final rows, including one supported plant stromal CC. Head `3e99143d2c` completes nine activity leaves, 27 sources, four continuity edges and six refreshed GO-CAM source assessments. Independent scientific QA, 24 focused checks, 18 route cases and 46 logic tests pass. Full repository validation is running before its separate PR.
-- [ ] Remaining 684 baseline modules: recorded as NOT_STARTED. Eight of 702 baseline audits are complete; ten further audits are active. Refresh upstream additions before final completion.
+- [ ] Remaining 684 baseline modules: recorded as NOT_STARTED. Six of 702 baseline audits are complete; twelve audits are active, including two reopened after retrospective QA. Refresh upstream additions before final completion.
 
 ## Notes
 
@@ -160,3 +160,15 @@ terminal full-validation success. A retrospective read-only check is also
 examining the eight previously merged audits for the newly noticed systematic
 policy errors; any substantive finding will reopen the affected module rather
 than treating prior approval as proof that it is correct.
+
+## 2026-10-26 — two merged audits reopened after policy QA
+
+The scoped retrospective check found 22 root-organelle refinement violations
+across seven adrenal-steroidogenesis representatives and two in the fission-yeast
+fermentation exemplar adh4. The other six previously merged modules have no
+candidate root-organelle violations in their representative reviews, and no
+curation-only/ontology-only module gaps were found in the eight-module check.
+Adrenal and fermentation are reopened: prior approved merges remain provenance,
+not evidence that these newly identified defects are acceptable. Separate
+module-specific corrective PRs are required. Current baseline accounting is
+six complete, twelve active/reopened and 684 not started (702 total).
