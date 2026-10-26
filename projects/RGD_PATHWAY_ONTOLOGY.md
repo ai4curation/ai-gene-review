@@ -134,8 +134,8 @@ split along their sub-pathways before modelling.
 - **PW cites retired GO terms.** 44 definition citations point at obsolete GO
   terms, and one at an id that no longer resolves. Several are amino-acid "metabolic process" terms that GO has since
   obsoleted, such as cysteine, histidine, tyrosine, phenylalanine and
-  tryptophan metabolic process. PW:0000543 (protein kinase A signaling) cites
-  GO:0010737, now "obsolete protein kinase A signaling", both in its definition
+  tryptophan metabolic process. PW:0000543 (protein kinase A (PKA) signaling
+  pathway) cites GO:0010737, now "obsolete protein kinase A signaling", both in its definition
   and on its diagram page. GO names no replacement, but the current term is
   GO:0141156 cAMP/PKA signal transduction. These can go back to RGD as a
   concrete update list. In the SSSOM file the 45 obsolete citation sites (44
@@ -147,8 +147,9 @@ split along their sub-pathways before modelling.
   angiotensin II and vasopressin signaling, renin-angiotensin, and
   mitochondrial and cytosolic iron-sulfur cluster assembly. Some do have a GO
   term under another name, for example `GO:0072331` (signal transduction by p53
-  class mediator) and `GO:0141156` (cAMP/PKA signal transduction). These 30 `needs_go_mapping` seeds are a curation list for
-  manual mapping or for `proposed_new_terms`.
+  class mediator) and `GO:0141156` (cAMP/PKA signal transduction). These 30
+  `needs_go_mapping` seeds are a curation list for manual mapping or for
+  `proposed_new_terms`.
 
 ### GO-CAM completeness
 
@@ -331,8 +332,8 @@ member gene products, only VWF, A2M and APOH have gene reviews.
 - Send RGD the 45 obsolete GO citation sites (44 in definitions, 1 on a
   diagram page; the page one repeats PW:0000543's definition citation, so 44
   distinct pairs), the unresolvable one and the 3 wrong page citations, with
-  GO's replacement where one exists, and GO:0141156 for PW:0000543. Filtering `curation_rule` on `pw2go:qa/` returns
-  all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
+  GO's replacement where one exists, and GO:0141156 for PW:0000543.
+  Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
 - Map the 30 `needs_go_mapping` seeds by hand, or record missing terms as

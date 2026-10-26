@@ -255,6 +255,13 @@ def sssom_row(m: dict) -> dict:
     ...     "object_status": "ok", "object_namespace": "biological_process", "qa_flags": ["PAGE_XREF_DISAGREES"],
     ...     "disagrees_with": ["GO:4", "GO:5"]})["other"]
     'conflicts_with=GO:4|conflicts_with=GO:5'
+    >>> bad = {"match_source": "new_source", "object_status": "ok", "object_namespace": "biological_process"}
+    >>> sssom_row(bad)
+    Traceback (most recent call last):
+    ValueError: match_source 'new_source' has no src/ code: add it to SOURCE_RULE and RULE_TEXT
+    >>> sssom_row({**bad, "match_source": "pw_def_xref", "qa_flags": ["NEW_FLAG"]})
+    Traceback (most recent call last):
+    ValueError: undefined rule codes ['qa/NEW_FLAG']: add them to RULE_TEXT
     """
     src = m["match_source"]
     if src.startswith("lexical:"):
