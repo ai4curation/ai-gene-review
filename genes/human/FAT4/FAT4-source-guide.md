@@ -38,3 +38,14 @@ Integration reading of the actual original Figure 1I pixels independently confir
 The concise core is this adhesion activity at the plasma membrane. Calcium binding supports its extracellular architecture; tissue-dependent Hippo/YAP and developmental effects remain subsidiary. The questions distinguish engineered intracellular deletion, native cellular context and the N-terminally shortened natural product. None assumes a universal downstream kinase route or product equivalence.
 
 The [direct decision table](FAT4-direct-decisions.yaml) and [database decision table](FAT4-database-decisions.yaml) include the full original source objects and exact annotation indices. Original article links and figure/table locators remain usable independently of private raw captures.
+
+
+## Review follow-up: public locators and source-record queries
+
+The [follow-up notes](FAT4-notes.md#review-follow-up-source-access-and-localization) give direct original-source links for the affinity values and Figure 1I caption discrepancy, and the reason no publication quotations are added under the campaign instruction. Genuine provider authentication failed; no provider report is claimed.
+
+For PMID:22153077, [the complete original article/supplement](https://ars.els-cdn.com/content/image/1-s2.0-S009286741101350X-mmc8.pdf) places Figure 6 on PDF page 12 and Figure S7A on PDF page 28. [Table S6](https://ars.els-cdn.com/content/image/1-s2.0-S009286741101350X-mmc6.pdf) identifies the two peptide sequences. The normal publication cache is abstract-only; the figures and operative Methods were recovered separately. IntAct EBI-5333444 currently pairs residues 4567–4582 with 3.1e-5 M, whereas EBI-5333467 pairs 4822–4837 with 3.7e-5 M. The original figures associate these approximate values with the reciprocal peptides. Both records are represented as PROBABLE/CHECK source defects on annotation index 1, with qualitative interaction support retained. The unresolved erratum content is a further reason to request a check rather than claim an established correction.
+
+For PMID:39955614, the [original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC11947466/) exposes Figure 1I, the conflicting caption sentence and the corresponding Results together. Figures 2 and 3 bound the minute-scale FRAP and calcium-withdrawal findings; they do not establish native tissue or natural-isoform equivalence.
+
+The updated index 4 replacement is GO:0016327 apicolateral plasma membrane. Its actual GO definition fits the Figure 5 membrane appositions in PMID:25355906: MDCK contacts above the tight junction and mouse neuroepithelial contacts above the adherens junction. This preserves the positive membrane localization while avoiding a classical adherens-junction identity. The broader apical part of cell observation at index 15 remains retained. At index 6 the supported heterophilic replacement is explicitly linked to its existing annotation at index 7.
