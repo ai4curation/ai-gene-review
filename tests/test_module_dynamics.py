@@ -366,7 +366,7 @@ def test_scenarios_on_an_external_model_warn_and_missing_files_error() -> None:
     ]
     assert warnings == [
         f"Executable model {external['id']}: its scenarios are not checked "
-        "(only module-derived Boolean models are simulated)"
+        "(only module-derived Boolean and agent-based models are simulated)"
     ]
 
 
