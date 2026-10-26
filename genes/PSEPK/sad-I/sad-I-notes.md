@@ -23,3 +23,12 @@ PMID:23229889, and remain hypotheses pending a reproducible sequence analysis
 and direct assay. [file:PSEPK/sad-I/sad-I-deep-research-openscientist.md]
 
 No direct assay of Q88K05 or pathway-specific KT2440 phenotype was located.
+
+
+## 2026-10-26 — complete target and source audit
+
+PP_2488/Q88K05 has the NAD-dependent SSADH FunFam 3.40.605.10:FF:000012 and GabD1-like CDD cd07100 classifications. Retain NAD-capable succinate-semialdehyde oxidation as a qualified family inference, not an exact-target assay. The previous NADP-keyword argument is superseded: an ARBA keyword or a subfamily label does not experimentally exclude NAD, and the NAD GO reaction does not assert that NADP is unusable. General catalytic terms now MODIFY to the supported SSADH activity instead of being called non-core.
+
+PMID:23229889 identifies Salmonella YneI and states "YneI can use both NAD(+) and NADP(+) as cofactors". PMID:3355840 resolves P. putida isoenzymes, but the accessible abstract gives no gene or strain assignment connecting either enzyme to PP_2488. Both papers remained abstract-only after actual normal forced retrieval. Their measured kinetics are not copied onto this target. The genuine OpenScientist report's residue mapping remains an unreproduced research lead; classification support comes from the independent database family records. There is no established cognate Gbd partner or dominant GABA/4HB/putrescine route.
+
+Workflow: all original annotation fields, order and flags and both raw source hashes were captured before changes. Existing genuine OpenScientist research was reused; no replacement report was fabricated. Normal publication caching and bacterial fitness retrieval were attempted; FEBA was unreachable and no fitness artifact was created. Manual primary/domain review supplies the decisions. No new annotation row was added.

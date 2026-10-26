@@ -23,3 +23,14 @@ PMID:23229889, and remain hypotheses pending a reproducible sequence analysis
 and direct assay. [file:PSEPK/sad-II/sad-II-deep-research-openscientist.md]
 
 No direct assay of Q88I50 or pathway-specific KT2440 phenotype was located.
+
+
+## 2026-10-26 — complete target and source audit
+
+PP_3151/Q88I50 has the NAD-dependent SSADH FunFam 3.40.605.10:FF:000012 and GabD1-like CDD cd07100 classifications. Retain NAD-capable succinate-semialdehyde oxidation as a qualified family inference; the old ARBA NADP-keyword conflict is not a reason to reject NAD capacity. Generic catalytic ancestors are refined rather than marked peripheral. Matched substrate/cofactor kinetics remain an expert question, and no NADP exclusion is asserted.
+
+PMID:32256468 calls PP_3151 "SadI", whereas this accession's current symbol is sad-II. The locus resolves this nomenclature difference: it is mentioned as an annotated SSA-oxidation candidate, not assayed individually. PMID:23229889 is Salmonella YneI; PMID:3355840 does not resolve its Pseudomonas enzyme preparations to this locus. Both remained abstract-only after actual full-text recovery attempts.
+
+Full PMID:40410945 identifies PP_3151 in engineered multigene deletions and cites the vanillin-induced proteome study PMID:25026441. This establishes relevant context, not isolated Sad-II vanillin turnover: altered production in strains deleting many oxidoreductases cannot be assigned to this one enzyme. The original 2014 cache remains abstract-only. No new vanillin process annotation is proposed. PR4748's genuine source-boundary distinctions are retained; provider residue alignments are not promoted to reproduced analyses.
+
+Workflow: all original annotation fields, order and flags and both raw source hashes were captured before changes. Existing genuine OpenScientist research was reused; no replacement report was fabricated. Normal publication caching and bacterial fitness retrieval were attempted; FEBA was unreachable and no fitness artifact was created. Manual primary/domain review supplies the decisions. No new annotation row was added.
