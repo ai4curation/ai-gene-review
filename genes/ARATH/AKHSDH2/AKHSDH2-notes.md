@@ -1,0 +1,11 @@
+# AKHSDH2 annotation review notes
+
+PMID12602885 explicitly studies akthr2 on chromosome4 and complements yeast hom6 and hom3. PMID16216875 full text explicitly maps At4g19710 to isoform II and compares it with At1g31230 isoform I; its HSDHII is relatively insensitive at physiological Thr while high concentrations can inhibit. PMID11812230 reports a470-kDa apparent oligomer converting to a320-kDa form with Thr; this is not an obligatory in vivo dimer claim. PMID12435751 specifies the Q443/Q524 regulatory sites on isoform II. PMID8204822 is the older akthr1 cloning paper, not direct new characterization of AKHSDH2; the common aspartate-metabolism claim is independently supported by isoform-II studies. NADPH/NADP assays are established, whereas NAD+ binding is retained as unresolved, not rejected from lack of NADH assay.
+
+## Evidence access and provenance
+
+Applied review and annotation-reviewer skills; reciprocal scientific consultation with the fungal-panel reviewer confirmed shared precursor participation and cofactor distinctions. Normal gene seeding used the exact UniProt accession. Falcon research and publication fetching were launched in parallel; Falcon returned403 and the actual perplexity-lite fallback returned401 (quota). No provider report was fabricated. Manual primary-source reading, normal publication caching, and reproducible supplemental-table extraction supply the evidence. All original annotation payload fields are preserved. The seeded panel contains no negated rows; this was explicitly checked rather than applying a generic negation rule.
+
+Supplementary localization evidence is in ../TS1/TS1-source-analysis/ (same ARATH parent). PMID18431481 exact locus rows support chloroplast/stromal assignment;28887381 labels TS1 plastid. Supplement endpoints for25293756 and20061580 returned no usable ZIP; no absent-row inference is made.
+
+Final QA: the CLAUDE.md root-organelle exception explicitly excludes plastids, so supported chloroplast-to-stroma refinements follow the general refinement policy. Original negated-row count is zero. PMID22303247 contains an incorrect HSK locus and a homoserine-dehydrogenase wording slip; primary evidence governs the identities and reactions.

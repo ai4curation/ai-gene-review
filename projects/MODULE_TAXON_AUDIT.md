@@ -47,12 +47,18 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `adrenal_steroidogenesis`: [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) merged as `72b4d12be1a4b1dbbd1e4abd526ecfd4e06b7a3f` after approval and required checks. All 13 reviews (434 rows), 26 references and 25 histories are curated; 65 scoped curation/history files match the approved head.
 - [x] `aerobic_nicotinate_degradation`: [PR #5544](https://github.com/ai4curation/ai-gene-review/pull/5544) merged as `94a80ada9f7143d2fb1b38b5e97a5301859c0a7c`. Twelve references and twelve member reviews (43 rows) were verified; 64 scoped curated/history files match the approved head. The NicD localization supersession is recorded in the older audit ledger.
 - [x] `alcoholic_fermentation`: [PR #5545](https://github.com/ai4curation/ai-gene-review/pull/5545) merged as `16bffd8e632185a8be7f5d9936d01c18017d33f7`. All 23 members (487 original rows), 34 references and revised BdhA family scope were verified; all 105 scoped curation/history files match the approved head.
-- [ ] `alginate_o_acetylation`: [PR #5546](https://github.com/ai4curation/ai-gene-review/pull/5546) has renewed approval and passing required checks at `167d6f14e5`; normal merge requested. Fifteen references, 12 member reviews (52 rows) and 42 histories are curated.
-- [ ] `alginate_polymerization_export`: [draft PR #5552](https://github.com/ai4curation/ai-gene-review/pull/5552) contains 22 curated references, 18 member reviews (94 rows) and 26 histories. Full repository validation and independent QA pass. Readiness awaits the three shared AlgX reviews in #5546, then rebase and consistency checks.
-- [ ] `aliphatic_glucosinolate_myrosinase_defense`: [PR #5550](https://github.com/ai4curation/ai-gene-review/pull/5550) has 31 curated references and 35 member reviews (453 rows). Full validation passed. Review follow-up restores supporting quotations, adjudicates source-resolvable localization claims and aligns IPMI activity/donor scope; renewed review remains required.
-- [ ] `androgen_receptor_signaling`: all 15 gene reviews (1,683 rows) pass targeted validation; the 26-reference module covers characterized jawed vertebrates with contextual cofactors and signed regulatory edges. Full repository validation is running.
-- [ ] `anti_crispr_suppression`: literature and module audit started in an isolated worktree. Existing members, new archaeal/Cas9/Cas13 exemplars and archived AcrVA5 are under review; SIRV1 biochemical activity is separated from the disputed native counterdefence claim.
-- [ ] Remaining 690 baseline modules: recorded individually as NOT_STARTED. Seven of 702 baseline audits are complete; three further module PRs are open and two modules are in progress. Refresh upstream additions before final completion.
+- [ ] `alginate_o_acetylation`: [PR #5546](https://github.com/ai4curation/ai-gene-review/pull/5546): 12 reviews (52 rows), 15 references and full validation complete. Approval and all head checks passed. The shared tracker conflict following #5550 was resolved without changing biological curation; renewed checks/review required.
+- [ ] `alginate_polymerization_export`: [draft PR #5552](https://github.com/ai4curation/ai-gene-review/pull/5552): 18 reviews (99 rows), 23 references; cross-species MF and source-defect corrections approved; subsequent ISS source-tracing follow-up `639f50743b` validated and pushed. Full validation passed. Awaiting shared AlgX completion in #5546 and renewed review.
+- [x] `aliphatic_glucosinolate_myrosinase_defense`: [PR #5550](https://github.com/ai4curation/ai-gene-review/pull/5550) merged as `75d569bf94a697ed142f0f1397736819563b8d74`. All 187 scoped files from the 208-file paginated PR match the approved head; 35 reviews, 453 rows and 31 curated references are verified.
+- [ ] `androgen_receptor_signaling`: [PR #5554](https://github.com/ai4curation/ai-gene-review/pull/5554): 15 reviews (1,683 preserved rows), 26 curated references. Head `65e616afb8` passed all CI and received approval. Final evidence-link and source-finding suggestions are published as `c50e214290`; all focused checks pass and no biological actions changed. Renewed checks/review are required before merge.
+- [ ] `anti_crispr_suppression`: [PR #5555](https://github.com/ai4curation/ai-gene-review/pull/5555): 13 reviews, 42 rows, full validation and CI pass. Scientific review now requests citation consolidation and removal of curation-only/ontology-only knowledge-gap entries; those follow-ups remain outstanding.
+- [ ] `apoptotic_execution_phase`: [PR #5558](https://github.com/ai4curation/ai-gene-review/pull/5558), sixteen human/mouse reviews complete (1,608 preserved rows), with 35 curated references and ten qualified edges. Full repository validation passed. CI found an all-optional module logic error; corrected head `b4f92e028b` requires CASP3 or CASP7 and passes 54 logic tests. Normal CI and scientific review must pass on that head.
+- [ ] `aps_dependent_assimilatory_sulfate_reduction`: [PR #5560](https://github.com/ai4curation/ai-gene-review/pull/5560): 29 reviews (496 rows), 28 module sources and five evidenced edges. Follow-up `038c18aa0d` resolves citation identity, exact source evidence, NOT-localization rationale and residual knowledge gaps. Eight changed reviews, module checks and nine added histories pass. Multistep catalytic participation is retained with an explicit evidence-based response. Renewed review and CI remain required.
+- [ ] `arginine_biosynthesis`: [PR #5563](https://github.com/ai4curation/ai-gene-review/pull/5563): 43 reviews (555 preserved rows), 22 references and nine evidenced edges. Full validation passed. Review identified 22 root-organelle refinements that violate the organelle-retention exception, plus CAR1/cytosol/source-defect follow-ups. CI exposed two stale TreeGrafter outcome records. These corrections are underway.
+- [ ] `arginine_catabolism_arginase_pathway`: [PR #5566](https://github.com/ai4curation/ai-gene-review/pull/5566): 18 reviews pass focused checks across budding/fission yeast, human and Arabidopsis (357 preserved rows). Five comparative reviews assessed among 34 curated source entries, distinct plant families modeled and all four connections sourced. Independent module QA, ARGAH2 family-scope reconciliation and full validation pass. Review identified 27 organelle-refinement policy errors and a localization-citation identity issue; corrections are underway.
+- [ ] `aspartate_asparagine_metabolism`: 27 reviews (548 preserved rows), 25 eukaryotic exemplars and two bacterial comparators. Module/source/family and route QA pass, with 44 source entries and two evidenced connections. Before PR creation, 22 mitochondrial organelle rows across six genes were corrected under the root-organelle exception; all six focused validations pass. The original full-validation process remains live; the changed state requires fresh validation.
+- [ ] `aspartate_family_threonine_biosynthesis`: All 24 individual gene reviews pass focused checks: 438 original rows preserved, 439 final rows including one directly supported Arabidopsis ASAD stromal localization. Three panels cover ten fungi, nine prokaryotes and five plants. The comparative module revision is underway, including phosphoserine-dependent ThrH, plant branch points, verified family placements and refreshed GO-CAM edges.
+- [ ] Remaining 684 baseline modules: recorded as NOT_STARTED. Eight of 702 baseline audits are complete; ten further audits are active. Refresh upstream additions before final completion.
 
 ## Notes
 
@@ -80,3 +86,60 @@ but does not replace this literature, taxon and member audit.
 ### 2026-10-26
 
 Verified nicotinate merge content and continued the alginate and glucosinolate audits. The glucosinolate critical review supports Brassicaceae scope for chain-elongated methionine chemistry; broader glucosinolate occurrence is not evidence for this complete pathway. Family membership checks preserve dual P450 assignments and distinguish demonstrated single-member activity from unresolved subfamily boundaries.
+
+The alginate acetylation audit deliberately uses `algV` for Azotobacter O52197, whose current UniProt primary name is `algJ` and synonym is `algV`. The alias distinguishes this acetylation protein from the historically named outer-membrane export AlgJ (Q44497, now `algE`); it is an explicit curation naming choice, not the fetched primary symbol. The final panel has 42 original GOA rows, four retained older proposals and six added proposals (52 total). Full validation has passed. History totals are reported by target scope rather than a moving PR delta after upstream merges.
+
+## 2026-10-26 — subsequent audit progress
+
+Glucosinolate reached approved merge-queue checks after source-level corrections. Alginate polymerization received coherent comparative molecular-function proposals and explicitly qualified PseudoCAP source-defect records. Androgen passed full validation and opened its own PR. Anti-CRISPR curation is committed while its single full validation continues. Apoptotic execution is the thirteenth started audit; conflicting Acinus evidence, AIF stimulus dependence and source-versus-function caspase adjudications are being examined rather than flattened into a uniform cascade.
+
+## 2026-10-26 — sulfate integration and arginine expansion
+
+All sulfate member panels are integrated (29 reviews, 496 rows); independent module QA retains measured chemistry separately from inferred native electron-carrier pairing. Full validation is running. Arginine review now covers the 39 original members, with literature-driven plant and archaeal sampling being developed. The shared automated-review failure is diagnosed from full workflow logs as an account usage limit; no scientific review ran for the latest affected heads. Build checks and independent curation continue, without bypassing approval.
+
+## 2026-10-26 — forty-three arginine member reviews validated
+
+The arginine member panel is complete:43 proteins and555 preserved annotation rows, including2 prior proposals and no newly added rows. All focused member checks, histories and renders pass; full validation is running. The added archaeal ArgJ is recycling-only, plant NAGK/WIN1 anchor plastid reactions, and short mycobacterial ArgA retains its weak glutamate-efficiency caveat. Independent module QA remains in progress. Sulfate is committed and its full reference validation continues. Apoptosis PR5558 is open; its automated review also hit the shared account quota before producing a verdict. The eight verified merges remain the only completed baseline audits.
+
+Independent arginine module QA is now complete: all43 family/member placements agree with fetched classifications, cached GO-CAM assertions were checked, and22 curated references support9 connections. The draft no longer attributes type2 ArgC classification to an unrelated review passage or restricts ArgA initiation to the linear release route. Full validation remains the outstanding pre-PR gate.
+
+## 2026-10-26 — arginase catabolism and CI follow-up
+
+The sixteenth audit separates demonstrated budding-yeast compartmental flux from broader fungal inference, restores the fission-yeast Arg3 re-synthesis context, and adds the distinct plant arginase/agmatinase family. Thirty-two sources and four evidence-backed connections are drafted. Sulfate and arginine full validation remain live. Apoptosis CI exposed a real module logic failure: an empty context satisfies its current all-optional structure. A biology-aware correction is underway; no approval or merge gate is bypassed.
+
+Sulfate full validation reached terminal success, current-main integration preserved all 197 scoped files, and PR #5560 is open. The apoptosis Boolean correction is published as `b4f92e028b` with 54 passing logic tests. All 18 arginase member checks now pass (357 preserved rows, no newly added rows); a direct ARGAH2 agmatinase result exposed an overly narrow family-level scope, which is being corrected from primary evidence.
+
+Independent arginase QA now passes: 34 source entries, four evidence-backed connections, 46 module-logic tests and 14 route cases. The PTHR11358 SF32 correction retains all existing PAINT assertions and APAUH exceptions; the global family/gene crosscheck reports zero conflicts across 734 families. All eighteen gene reviews are committed as `bfdb0069d7`; full validation is running before PR creation.
+
+The latest sulfate scientific-review run `40270283163` and corrected apoptosis run `40270373152` both ended with the verified account-usage-limit diagnostic before producing a review. Their build checks continue; no review approval is inferred from a workflow failure.
+
+## 2026-10-26 — aspartate/asparagine audit begins
+
+Arginine full validation and all 46 module-logic tests passed; PR #5563 is open. The seventeenth audit starts from a clean current-main worktree with 25 planned member reviews. The taxon boundary must distinguish the eukaryotic formation/turnover module from bacterial asparaginase comparators, add the plant N-terminal-nucleophile implementation, and avoid treating all reactions as glutamate-dependent transamination. Literature searches located comparative aminotransferase, ASNS and asparaginase reviews plus primary plant and fungal studies. The sulfate CI validation and suite jobs passed; remaining CI and scientific-review gates are still required.
+
+The aspartate/asparagine panel expanded to six Arabidopsis proteins after the plastid review identified two distinct AspAT implementations. All 27 reviews now pass with 548 preserved rows and no added annotations. Independent QA confirmed nine family labels,25 exemplar placements and12 exact GO-CAM activity links. Thirteen route cases pass. The newer ASP3 evolutionary evidence is reconciled into PTHR11707 without changing PAINT seeds or verdicts. Full validation is running.
+
+Arginase full validation passed with terminal exit zero and PR #5566 is open. Final Asp/Asn scientific QA corrected three negative localization rationales to UNDECIDED while retaining two directly assayed ASP5 negative enzyme activities. Final548-row totals are323 ACCEPT,110 MODIFY,65 non-core,20 REMOVE,25 UNDECIDED and5 over-annotation assessments. No new annotations were added.
+
+## 2026-10-26 — threonine backbone audit starts
+
+Asp/Asn curation is committed and pushed as `98bd4c37e3`; full validation is still running. The eighteenth audit uses an independent worktree and24 planned gene reviews. Two archaeal enzymes establish specific step exemplars, not an entire archaeal pathway. The proposed Arabidopsis ASAD locus At1g14810 lacks an official gene symbol and currently has prediction-heavy annotation; independent evidence must determine the strength of that exemplar. ThrH uses phosphoserine rather than ATP, plant O-phosphohomoserine also feeds methionine, and new Hom6/chromatin literature requires separation of metabolic and noncanonical effects.
+
+## 2026-10-26 — review follow-ups and completed threonine member panels
+
+Scientific review resumed for several PRs after earlier service quota failures.
+Sulfate evidence corrections are published with focused validation. Arginine
+review exposed an explicit root-organelle exception that also affects 22
+aspartate/asparagine rows; both sets are being corrected before completion.
+The arginine suite failure is two stale TreeGrafter ledger outcomes, not a
+reason to revert supported biological decisions.
+
+All 24 threonine member reviews now pass focused checks with 438 original
+annotation payloads preserved. Their final 439 rows comprise 321 ACCEPT,
+81 MODIFY, 18 KEEP_AS_NON_CORE, 10 REMOVE, six UNDECIDED, two
+MARK_AS_OVER_ANNOTATED and one NEW stromal localization. Current GO-CAMs now
+have forward causal edges missing from older cached models, and the module
+revision is checking those current assertions. No new module is counted as
+complete before its reviewed PR merges and the merged content is verified.
+
+Threonine integration caught and corrected a negative-annotation error: ThrH’s experimentally supported NOT ATP-dependent kinase assertion is ACCEPT, while its positive phosphoserine-dependent phosphotransferase assertion remains separate. Final panel counts above include this correction.

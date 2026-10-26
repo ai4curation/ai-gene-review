@@ -10,3 +10,18 @@ Aspartate kinase (EC 2.7.2.4), monofunctional (no HSD fusion), single aspartokin
 
 ## Consistency
 - Core = GO:0004072 / GO:0009090 / cytosol, identical to the HOM3 review and to GO-CAM gomodel:678073a900003175 (hom3 in cytosol, part_of GO:0009090).
+
+
+## 2026-10-26 systematic fungal threonine review
+
+Reviewed all 11 rows and the core synthesis for SCHPO/hom3. All original machine annotation fields are preserved; no rows were added or deleted. Current actions: {'ACCEPT': 10, 'MODIFY': 1}.
+
+Conserved aspartokinase chemistry is supported by curated P10869 donor inference, fungal family placement, and native budding-yeast biochemical studies PMID:2892836/6821505. PomBase experimental cytosolic localization is retained. Native fission-yeast kinetic regulation is not asserted from yeast threonine feedback alone. Broad amino-acid synthesis refines to the actual homoserine/threonine/methionine branches.
+
+PMID:31784357 full main text was fetched/read as the primary source behind the chromatin-association lead cited in PMID:39349514. Main text does not name Hom3/Hom2/Hom6, and exact supplementary target hits have not been independently verified here. No new nuclear/heterochromatin row or direct silencing mechanism follows from that lead.
+
+### Access, workflow and validation
+
+Actual per-gene Falcon research with Perplexity-lite fallback ran concurrently with normal publication caching. Both research providers failed authentication/quota checks; no provider report was fabricated. Publication caching succeeded. Logs are `.cache/module-audit-logs/threonine-SCHPO-hom3-research.log` and `threonine-SCHPO-hom3-publications.log`. Positive claims from abstract-only papers are limited to explicit results or independently publication-linked curated statements; inaccessible detailed evidence is not confidently rejected. Full new source caches and the publisher URL were obtained only through the normal fetcher.
+
+The review and annotation-reviewer skills, independent reviewer consultation, current protein-binding policy and GO term-definition checks were applied. UniProt quotes were backfilled with record sections. Focused strict/term/source validation, rendering, helper-generated Codex histories and original-payload proof are recorded in the threonine-fungal manifests under `.cache/module-audit-logs/`. No module/tracker edits were made.
