@@ -12,6 +12,7 @@ import csv
 import json
 import hashlib
 import requests
+import argparse
 from ruamel.yaml import YAML
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -19,6 +20,9 @@ OUT = Path(__file__).resolve().parent
 
 
 def main():
+    options = argparse.ArgumentParser(description=__doc__)
+    options.add_argument("--export-only", action="store_true", help="Regenerate TSV/access metadata without repeating donor API requests")
+    args = options.parse_args()
     parser = YAML(typ="safe")
     selected = parser.load(OUT / "transfer-evidence-audit.yaml")["cases"]
     fields = [
@@ -62,6 +66,8 @@ def main():
                 str(full[p]) for p in case["primary_pmids"]
             )
             writer.writerow(row)
+    if args.export_only:
+        return
     trace = {}
     for org, gene in [("human", "CASP3"), ("mouse", "Casp3")]:
         folder = ROOT / "genes" / org / gene
