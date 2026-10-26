@@ -115,7 +115,12 @@ Last updated: 2026-10-18
 - [x] TYW1B (Q6NUM6): TYW1 paralog. Activity only inferred; alignment (TYW1B-bioinformatics/) shows TYW1B lacks the FMN phosphate loop and 2 of 3 auxiliary-cluster cysteines. 8 rows: 4 UNDECIDED, 2 KEEP_AS_NON_CORE, 1 MODIFY, 1 REMOVE (protein binding); no core functions asserted
 - [x] RSAD1 (Q9HA92): HemW homolog; heme binding (IDA) is the only supported function. 12 rows: 3 ACCEPT, 3 KEEP_AS_NON_CORE, 3 MODIFY, 3 REMOVE (coproporphyrinogen oxidase + porphyrin biosynthesis, transferred from HemN; HemW subfamily lacks that activity)
 
-## Phase 2: *E. coli* K-12 (20)
+## Phase 2: *E. coli* K-12 (20 in scope, 19 reviewed)
+
+**lipA is not reviewed.** Its review file is still the `fetch-gene` stub
+(`status: INITIALIZED`, 18 `PENDING` rows). Only `lipA-notes.md` was written.
+See the 2026-10-19 note below.
+
 
 Characterised, in priority order:
 
@@ -139,17 +144,31 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 - [x] ybiY (P75794): putative PFL-activating enzyme 3. Partner YbiW is a 1,5-anhydroglucitol-6-P lyase (PMID:39283600); GO:0043365 REMOVEd; core MF GO:0043364. 8 rows, same split as pflC
 - [x] yjjW (P39409): putative glycyl-radical enzyme activase. Partner YjjI reaction unknown. 10 rows: 3 ACCEPT, 3 MODIFY, 3 REMOVE (protein binding), 1 KEEP_AS_NON_CORE; core MF GO:0043364
 - [x] aslB (P25550): anSME homolog. 5 rows: 2 KEEP_AS_NON_CORE, 1 MODIFY, 2 UNDECIDED (substrate untested; conflicting reports). No core functions. Residue mapping in aslB-bioinformatics/: 16/17 anSME catalytic features retained
-- [ ] ydeM (P76134): anaerobic sulfatase-maturating enzyme homolog
+- [x] ydeM (P76134): anSME homolog. 6 rows: 2 KEEP_AS_NON_CORE, 1 MODIFY, 2 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED (DNA damage IEP). No core functions. Retains 17/17 anSME features; adjacent ydeN mirrors the aslB/aslA arrangement
 - [x] ygiQ (Q46861) = **rlmX**. Settled by the PMID:41380683 full text (supplied 2026-10-19): a cobalamin-dependent radical SAM methyltransferase installing hypoxia-induced 5'(S)-ribose C5' methylations at 23S rRNA D2449 and Cm2498. 8 rows: 1 ACCEPT, 3 MODIFY, 4 NEW (SAM, cobalamin, rRNA binding; rRNA methylation). Proposed new term: 23S rRNA ribose-5'-C-methyltransferase activity (no EC/RHEA; all existing GO ribose-MTase terms are 2'-O)
 - [x] yhcC (P0ADW6): no longer uncharacterised. PMID:42239373 (preprint, full text) shows YhcC is the MnmL orthologue doing the anaerobic cmnm5s2U->nm5s2U demodification at tRNA position 34. 6 rows: 1 ACCEPT, 2 MODIFY, 3 NEW (tRNA binding, SAM binding, wobble uridine modification). Proposed new term for the demodifying activity
 
 ## Phase 3: consistency pass over existing reviews
 
-- [ ] Write the treatment rule for the generic rows (see "Starting observation")
+- [x] Write the treatment rule for the generic rows — adopted 2026-10-18 and
+      applied to all 28 Phase 1 and Phase 2 reviews; the table is in the
+      Overview above, under "Treatment rule for the generic rows"
 - [ ] Apply to: BACSU/lipA, METEA/pqqE, POPTR/LIP1, POPTR/LIP1P-1, POPTR/LIP1P-2,
       PSEPK/PP_1969, PSEPK/PP_2482, PSEPK/bioB, PSEPK/hemN, PSEPK/lipA,
       PSEPK/moaA, PSEPK/pqqE, SACEN/eryCV, SCHPO/bio2, STAWA/cfr, human/MOCS1,
-      yeast/BIO2
+      yeast/BIO2.
+      Conflicts confirmed during Phase 2, each by the reviewer of the
+      corresponding E. coli orthologue: PSEPK/bioB and PSEPK/lipA
+      MARK_AS_OVER_ANNOTATED the generic rows (the rule forbids this, since none
+      of them is false); BACSU/lipA ACCEPTs GO:0051536 and GO:0046872 instead of
+      refining them; yeast/BIO2 and SCHPO/bio2 ACCEPT GO:0051536; STAWA/cfr
+      MARK_AS_OVER_ANNOTATED GO:0003824 and KEEP_AS_NON_CORE GO:0051539;
+      PSEPK/moaA and PSEPK/hemN KEEP_AS_NON_CORE rows the rule would ACCEPT or
+      MODIFY, and PSEPK/moaA keeps GO:1904047 non-core. None of these reviews
+      carries a GO:1904047 row.
+- [ ] human/MOCS1 carries `status: INITIALIZED` although its 30 annotations are
+      reviewed and it has 4 core functions. Pre-existing; not touched by this
+      project's PR.
 - [ ] Cross-check against the relevant modules (biotin_biosynthesis,
       endogenous_protein_lipoylation, molybdenum_cofactor_biosynthesis,
       heme_biosynthesis, pqq_biosynthesis, bacterial_preq1_incorporation_queuosine_maturation,
@@ -177,6 +196,19 @@ Paralogs and uncharacterised, where the risk is over-annotation:
   activases, which set the pattern); pflC + ybiY + yjjW (activase paralogs);
   miaB + rimO (MTTases, matched to CDKAL1/CDK5RAP1); rlmN + epmB; hemN + hemW
   (matched to RSAD1); aslB + ydeM + ygiQ + yhcC (uncharacterised).
+- **lipA left unreviewed.** The bioB + lipA reviewer completed bioB, wrote
+  `lipA-notes.md`, and was then interrupted by a safety classifier partway
+  through writing the lipA review file, with an instruction not to reproduce
+  that content. It stopped rather than retrying. The lipA review file is
+  therefore still the untouched stub. The block looks like a false positive:
+  bioB (nearly identical chemistry) and human LIAS (the same enzyme) both
+  completed in the same session, and lipA reviews already exist for PSEPK and
+  BACSU. A second, unrelated classifier interruption occurred later in the same
+  session while summarising the aslB/ydeM/ygiQ/yhcC results in chat, so the
+  trigger does not appear to be lipA's subject matter. The task was not handed
+  to another reviewer, because reissuing blocked content through a different
+  agent would route around the decision rather than resolve it. lipA is left
+  for a separate session.
 
 ## 2026-10-18
 
