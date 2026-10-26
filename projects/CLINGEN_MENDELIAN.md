@@ -2998,13 +2998,10 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**614 of 2,876 genes are complete; 2,262 remain.**
-This checkpoint adds only FANCF to the
-[merged 613 tracker](https://github.com/ai4curation/ai-gene-review/pull/5533).
-[Checkpoint 614](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-614-2026-10-26-015051-utc) records its
-approved head, actual merge, preserved dependencies and executed merge-group CI.
-The complete gene directory, histories and selected sources match fixed main
-[`dd6e9ba2bd94`](https://github.com/ai4curation/ai-gene-review/commit/dd6e9ba2bd94ac4f513cb106bca7c984339f1985).
+**617 of 2,876 genes are complete; 2,259 remain.**
+This checkpoint adds FANCI, FANCG and FANCL after their accepted merges and successful
+merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-617-2026-10-26-035208-utc)
+links the completed reviews and their validation records.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed DRAFT status. Catalogue identities,
@@ -3755,9 +3752,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FANCD2** — HGNC:3585; [Fanconi anemia complementation group D2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5f0c260f-52d2-4225-9044-608f066ccfb2-2021-06-15T231506.767Z) (MONDO:0009214; AR; Definitive).
 - [x] **FANCE** — HGNC:3586; [Fanconi anemia complementation group E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6da55a6e-2cf8-499c-b842-b5a435dbff3f-2020-05-14T001745.604Z) (MONDO:0010953; AR; Definitive).
 - [x] **FANCF** — HGNC:3587; [Fanconi anemia complementation group F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_60719ed8-36fa-4d11-93b2-8036133510a6-2021-02-03T225456.822Z) (MONDO:0011325; AR; Definitive).
-- [ ] **FANCG** — HGNC:3588; [Fanconi anemia complementation group G](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1913bd10-1355-4067-93b6-9068924d77df-2019-04-19T160000.000Z) (MONDO:0013565; AR; Definitive).
-- [ ] **FANCI** — HGNC:25568; [Fanconi anemia complementation group I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a103db2f-a8b3-403b-993a-ac4215c118df-2021-06-15T233841.081Z) (MONDO:0012186; AR; Definitive).
-- [ ] **FANCL** — HGNC:20748; [Fanconi anemia complementation group L](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93d0cb5f-4859-4b28-b647-3f8226fe5921-2020-07-30T203845.671Z) (MONDO:0013566; AR; Definitive).
+- [x] **FANCG** — HGNC:3588; [Fanconi anemia complementation group G](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1913bd10-1355-4067-93b6-9068924d77df-2019-04-19T160000.000Z) (MONDO:0013565; AR; Definitive).
+- [x] **FANCI** — HGNC:25568; [Fanconi anemia complementation group I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a103db2f-a8b3-403b-993a-ac4215c118df-2021-06-15T233841.081Z) (MONDO:0012186; AR; Definitive).
+- [x] **FANCL** — HGNC:20748; [Fanconi anemia complementation group L](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93d0cb5f-4859-4b28-b647-3f8226fe5921-2020-07-30T203845.671Z) (MONDO:0013566; AR; Definitive).
 - [ ] **FANCM** — HGNC:23168; [FANCM Fanconi-like genomic instability disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb231b6-1452-4f24-a8c1-ab45a791e73c-2024-11-12T170000.000Z) (MONDO:0100578; AR; Definitive); [hereditary breast carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25744c57-8e53-403b-a2ec-fb405ad452cc-2024-11-22T180000.000Z) (MONDO:0016419; AD; Limited).
 - [ ] **FARS2** — HGNC:21062; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cf7594a-d934-4b6c-8052-94066d608c5a-2019-11-25T144756.827Z) (MONDO:0009723; AR; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f73e39c8-7021-4c25-846d-f7109f8d0e83-2024-12-16T050000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **FAS** — HGNC:11920; [FAS-related autoimmune lymphoproliferative immune disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f15d745-17a7-4aba-8083-72c7c13c2786-2025-10-14T160000.000Z) (MONDO:1060194; SD; Definitive).
