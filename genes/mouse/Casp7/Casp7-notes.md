@@ -15,3 +15,8 @@ Evidence handling: checked existing primary caches and retained unresolved preci
 Verified UniProt PANTHER placement: PTHR10454 CASPASE; CASP3/Casp3 SF198 CASPASE-3, CASP6/Casp6 SF206 CASPASE-6, CASP7/Casp7 SF31 CASPASE-7. These are membership checks, not assertions of identical physiological deployment.
 
 The annotation-reviewer consultation confirmed that true same-target catalytic/location claims should not be removed for citation weakness, and that substrate cleavage is not the same as the substrate's enzymatic reaction. Notes are comparative; only target-specific claims are asserted in the review.
+
+
+## PR #5558 follow-up: distinguish pore-repair evidence from location model (2026-10-26)
+
+The full text of PMID:35705808 demonstrates CASP7-dependent ASM cleavage and membrane repair in defined infection/pore contexts. Its figure/model text states: "We propose a model where caspase-7 diffuses through the gasdermin D pore, thereby entering the extracellular space." It also states: "Note that additional studies will be needed to validate the location of the caspase-7 and ASM interaction." The description, extracellular rows, conditional plasma-membrane rationale, and repair core now preserve this distinction. Both extracellular ACCEPT actions and the existing non-core plasma-membrane action are retained; the model caveat is not evidence against the curated location. No new annotation or source file was created. Prior genuine research attempts and publication retrieval are retained; this is a bounded primary-text reassessment, with independent annotation-reviewer consultation.
