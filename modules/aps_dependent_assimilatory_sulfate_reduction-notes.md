@@ -259,3 +259,8 @@ are retained and the biochemical selector restricts the family role.
 Review suggestion 15 was already represented: the second TRX1 core function
 explicitly carries GO:0000103 with thioredoxin-to-PAPS-reductase evidence. No
 redundant core assertion was added.
+
+
+## 2026-10-26 approved-review citation residuals
+
+Replaced the silverchair CDN URL reference/source identifier with canonical PMID:11319255 plus the already committed reproducible MET5 source-analysis artifact for full-text quotations. The bibliographic title remains the exact PMID title. The primary Results quotation is now accompanied by the Figure 3F/G legend identifying yeast P47169 (Met5) and Met10; the old pombe accession is still not equated to current sir1. This repairs citation identity and target traceability without changing any activity, family/member, compartment, reaction or connection. The artifact SHA256 was verified against the existing normally fetched publisher cache; no publication cache was edited. Gene-level FMN evidence received the same identifying legend without action or payload changes.

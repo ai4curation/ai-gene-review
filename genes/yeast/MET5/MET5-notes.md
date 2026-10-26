@@ -23,3 +23,8 @@ Research provenance: the existing real research reports and curated primary/publ
 Replaced the bare CDN citation with canonical PMID:11319255 and a reproducible source-analysis reference carrying exact Results/Figure 3F/G text and the durable DOI. Normal PMID refresh/warming did not recover the full body; no cache was hand-edited. Preserved domain-supported FMN binding without describing it as an isolated-subunit binding assay. Refined generic oxidoreductase to contribution to the holoenzyme activity and shortened the FMN summary.
 
 All original annotation payloads and row order are preserved. Focused validation and automatic record-section backfill pass; generated pages and append-only history record this follow-up.
+
+
+## 2026-10-26 approved-review citation follow-up
+
+Added the verbatim Figure 3F/G legend adjacent to the existing PuSR domain quotation in FMN evidence. The legend identifies PuSR as yeast P47169 (Met5) and separately identifies Met10, making the target assignment explicit within the supporting evidence. Both passages remain cited to the committed reproducible source-analysis artifact accompanying canonical PMID:11319255; its source-cache SHA256 was rechecked. No annotation action, machine payload, cofactor inference strength or subunit role changed. This is comparative domain evidence, not a new isolated-subunit FMN-binding assay.
