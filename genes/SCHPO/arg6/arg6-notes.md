@@ -17,3 +17,14 @@
 - GO:0097054 L-glutamate biosynthetic process (NAS, keyword mapping GO_REF:0000051) is wrong in direction: NAGS consumes glutamate. Remove.
 - Core MF GO:0004042, BP GO:0006526 (and GO:0006592 ornithine biosynthesis, IBA), CC mitochondrial matrix — same as yeast ARG2 review.
 - Yeast ARG2 is in the NAGS/NAGK complex (GO:0106098) with Arg5,6; no S. pombe evidence for arg6–arg11 complex in cached literature, so in_complex not asserted.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 11 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+The NAGS assignment combines fungal architecture, phylogenetic inference and native arginine auxotrophy. No purified target assay was established in the consulted sources. A pathway keyword does not turn glutamate consumption into glutamate biosynthesis; that directionally incompatible NAS claim remains removed.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-SCHPO-arg6-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 8, MODIFY 2, REMOVE 1. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.

@@ -16,3 +16,14 @@
 ## Decisions
 - Core: GO:0004358; BP GO:0006592 + GO:0006526; mitochondrial matrix. Consistent with ARG7 core.
 - ARBA generic BPs MODIFY -> GO:0006526.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 12 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+Recycling activity is supported by conserved ArgJ architecture and the characterized budding-yeast donor. The secondary acetyl-CoA activity is retained as a non-core PAINT/curated-family inference at PTN000559455, not a direct S. pombe assay or proven initiation route. ArgJ membership alone does not establish bifunctionality throughout the family. Native processing kinetics and quantitative initiation contribution remain open.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-SCHPO-aga1-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 7, KEEP_AS_NON_CORE 2, MODIFY 3. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.

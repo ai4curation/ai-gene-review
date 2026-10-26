@@ -10,3 +10,16 @@
 - Two core MFs: GO:0003991 (in GO:0106098 complex) and GO:0003942; BP GO:0006526/GO:0006592; CC GO:0005759.
 - NEW: part_of GO:0106098 NAGS/NAGK complex (IPI, PMID:11553611) - GOA has it only on ARG2.
 - RCA cytosol REMOVE; IEA cytoplasm MODIFY -> mitochondrial matrix; NAD binding over-annotated (NADP enzyme); generic grouping terms MODIFY.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 28 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+PMID:1649049 supports import-dependent precursor processing, unlike Arg7 pre-import maturation. PMID:11553611/12603335 support the kinase contribution to the NAGS complex and dispensability of the reductase for that support. The one pre-existing NEW complex annotation is preserved, not newly added. Mitochondrial DNA binding/transcription claims remain non-core on their own experimental evidence (PMID:15486299). NAD-binding inference is refined to the supported NADP specificity without asserting exclusion of every other nucleotide.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-yeast-ARG5,6-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 17, KEEP_AS_NON_CORE 1, MODIFY 8, NEW 1, REMOVE 1. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.
+
+Ontology-cache advisory: live QuickGO confirms GO:0003942 has the NADP+-specific label; the local ontology cache retains the older shorter label. The machine payload and current chemically specific label are preserved rather than rewritten to silence a stale-label warning.

@@ -11,3 +11,14 @@
 ## Decisions
 - IBA cytoplasm MODIFY -> mitochondrial matrix (ancestral cytosolic location; pombe enzyme relocated), propagation_review added.
 - Core: MF GO:0004087, contributes_to GO:0004088, in complex GO:0005951, matrix (CPA2 core but mitochondrial).
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 18 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+The mitochondrial large CPSase subunit contributes ATP-dependent carbamoyl-phosphate synthesis, with the small arg5 subunit supplying glutamine-derived ammonia. Curated compartment/pathway separation is retained. Magnesium/manganese binding refinement reflects curated cofactor inference; broad cytoplasm is compatible with a mitochondrial subcompartment.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-SCHPO-arg4-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 13, MODIFY 5. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.

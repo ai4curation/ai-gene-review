@@ -13,3 +13,14 @@ Evidence journal (no paid deep research run; built from UniProt and cached abstr
 
 ## Module-level observation
 - YeastPathways-derived GO-CAM places ARG8 in cytosol; module should model the ARG2/ARG5,6/ARG8/ARG7 segment in the mitochondrial matrix and the ornithine-to-arginine segment in the cytosol.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 18 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+PMID:2199330 supports acetylornithine aminotransferase chemistry and native yeast sequence. This enzyme catalyzes the fourth ornithine-producing reaction; the review no longer calls it the last step. Broad mitochondrial location is refined consistently to matrix.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-yeast-ARG8-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 13, MODIFY 4, REMOVE 1. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.
