@@ -6964,3 +6964,63 @@ completion credit. Acceptance is the coordinating AI agent's campaign audit, not
 a human maintainer sign-off or a site-deployment claim.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/64fc149d18202985f07aae37539ebd31a3f1f687/history/projects/CLINGEN_MENDELIAN/2026-10-26T172026Z-codex-2fa578.yaml).
+
+
+## Completion checkpoint 627 — 2026-10-26 19:04:30 UTC
+
+**627 complete; 2,249 remaining out of 2,876 catalogue genes.**
+This update adds FBXL4, FCHO1 and FDXR to the accepted [public checkpoint 624](https://github.com/ai4curation/ai-gene-review/pull/5592).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FBXL4 #5585](https://github.com/ai4curation/ai-gene-review/pull/5585) | 29 / 29 | DRAFT; 1 active UNDECIDED; 1 advisory | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/33ee3d1fdf9c1c5e830b9dc43345f615d0720e9e) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40363563232) |
+| [FCHO1 #5587](https://github.com/ai4curation/ai-gene-review/pull/5587) | 38 / 38 | DRAFT; 1 active UNDECIDED; 4 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/0a5c0cea3dd1c37cf29f4cd44aeb2d6f5fb50c4d) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40365669149) |
+| [FDXR #5590](https://github.com/ai4curation/ai-gene-review/pull/5590) | 27 / 27 | COMPLETE; 0 active UNDECIDED; 0 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/4cf9a117a288c6b355fff873b6ca3d51659f0026) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40376969928) |
+
+FBXL4 retains 29 source contexts, 29 references, one core function and all 60
+inherited quotation associations (54 annotation and six core). No product objects
+were added. Its DRAFT actions are eight ACCEPT, five TOO_GENERAL, four MODIFY,
+ten MARK_AS_OVER_ANNOTATED, one KEEP_AS_NON_CORE and one UNDECIDED. One inherited
+provider-citation advisory remains; the historical submitochondrial localization
+conflict remains explicit.
+
+FCHO1 contains 37 imported source contexts and one separately proposed NEW
+annotation, 25 references, three natural splice products, one core and no
+quotations. Its DRAFT actions are 24 ACCEPT, eight KEEP_AS_NON_CORE, three MODIFY,
+one TOO_GENERAL, one UNDECIDED and one NEW. Four permitted generic-binding
+advisories and the source-specific uncertainty remain explicit. Completion does
+not mean all biological uncertainty is resolved.
+
+FDXR retains 27 source contexts, 23 references, seven natural splice products,
+one activity-centered core and no quotations. Its computed status is COMPLETE,
+with 25 ACCEPT, one KEEP_AS_NON_CORE and one TOO_GENERAL decision, and zero target
+validation advisories. The splice-product identities and context-specific
+localization distinctions remain part of the accepted review.
+
+The accepted source closures contain 55 FBXL4, 48 FCHO1 and 47 FDXR paths, including
+all 22, 18 and 16 gene/history paths respectively. Their union contains
+144 distinct paths, with no conflicting shared bytes or modes. Each
+matches the actual merge and the captured main snapshot. ROOT accepted all three
+operative merge-group logs for each review; this tracker proposal reuses those
+acceptances without claiming another independent full-log reading.
+
+[FBN1 follow-up #5589](https://github.com/ai4curation/ai-gene-review/pull/5589)
+merged as [fcc63846](https://github.com/ai4curation/ai-gene-review/commit/fcc638463778de3f75470a294d11261871cf67b9).
+It receives **no additional gene credit**. Its six accepted file successors and
+three appended history records are preserved in the actual public624 baseline;
+earlier expected hashes and the reconciliation record remain unchanged.
+
+For clarity, FBN2's two natural splice products **P35556-1 and P35556-2** are in
+`alternative_products` in [FBN2-ai-review.yaml](https://github.com/ai4curation/ai-gene-review/blob/157216709d671e757496912521bcf35788f72bbe/genes/human/FBN2/FBN2-ai-review.yaml).
+[Product evidence](https://github.com/ai4curation/ai-gene-review/blob/157216709d671e757496912521bcf35788f72bbe/genes/human/FBN2/FBN2-product-evidence.yaml) records the
+sequence/provenance detail. Those splice products are separate from the two
+curated cleavage products. This is an appended clarification, not another completion.
+
+All 235 dated queue objects, 136 preceding completion updates, 220 project
+histories, catalogue identities/associations, source inventories and earlier
+progress remain exact. Only FBXL4, FCHO1 and FDXR are newly credited. The unpublished tracker626 draft
+is preserved separately; this update goes directly from public checkpoint 624 to 627.
+Acceptance denotes the coordinating AI agent's campaign audit, not a human
+maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/cc4fe8238b1cc52ff0c2fbfdf05027582d4fd7b0/history/projects/CLINGEN_MENDELIAN/2026-10-26T192506Z-codex-b29a42.yaml).

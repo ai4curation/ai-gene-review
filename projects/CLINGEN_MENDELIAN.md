@@ -2998,9 +2998,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**624 of 2,876 genes are complete; 2,252 remain.**
-This checkpoint adds the original FBN1 review and FBN2 after their accepted merges
-and successful merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-624-2026-10-26-171306-utc)
+**627 of 2,876 genes are complete; 2,249 remain.**
+This checkpoint adds FBXL4, FCHO1 and FDXR after their accepted merges and successful
+merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-627-2026-10-26-190430-utc)
 links the completed reviews and their validation records.
 
 Completion records accepted merged work; it does not resolve every biological
@@ -3764,9 +3764,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FBN1** — HGNC:3603; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8251) (MONDO:0019625; AD; Definitive).
 - [x] **FBN2** — HGNC:3604; [congenital contractural arachnodactyly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_deb482b7-5d38-44ee-a010-fe8f5a3413da-2025-11-07T170000.000Z) (MONDO:0007363; AD; Definitive).
 - [ ] **FBP1** — HGNC:3606; [fructose-1,6-bisphosphatase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b60910a5-26c4-484b-b323-d55ae96eb6f5-2025-11-14T170000.000Z) (MONDO:0009251; AR; Definitive).
-- [ ] **FBXL4** — HGNC:13601; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fed67104-182c-48f2-85c0-ecb05cd6dd72-2020-11-23T193117.246Z) (MONDO:0009723; AR; Definitive); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b211e7b2-d93b-4995-ad30-1f4d962867b0-2024-05-23T160000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **FCHO1** — HGNC:29002; [immunodeficiency 76](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae21f2b2-e283-404b-9517-74fad00a352a-2023-07-20T170000.000Z) (MONDO:0030898; AR; Definitive).
-- [ ] **FDXR** — HGNC:3642; [FDXR-related optic atrophy mitochondrial dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bcbf052e-c61e-4d0a-9aec-10409e8a5bdb-2025-07-17T160000.000Z) (MONDO:1060116; AR; Definitive).
+- [x] **FBXL4** — HGNC:13601; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fed67104-182c-48f2-85c0-ecb05cd6dd72-2020-11-23T193117.246Z) (MONDO:0009723; AR; Definitive); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b211e7b2-d93b-4995-ad30-1f4d962867b0-2024-05-23T160000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **FCHO1** — HGNC:29002; [immunodeficiency 76](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae21f2b2-e283-404b-9517-74fad00a352a-2023-07-20T170000.000Z) (MONDO:0030898; AR; Definitive).
+- [x] **FDXR** — HGNC:3642; [FDXR-related optic atrophy mitochondrial dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bcbf052e-c61e-4d0a-9aec-10409e8a5bdb-2025-07-17T160000.000Z) (MONDO:1060116; AR; Definitive).
 - [ ] **FECH** — HGNC:3647; [protoporphyria, erythropoietic, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1b6529d-0a99-4ffd-9bbf-6bc15d76cb10-2023-01-27T200000.000Z) (MONDO:0008319; AR; Definitive).
 - [ ] **FERMT1** — HGNC:15889; [Kindler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6023a89b-8aa7-4ed8-abd0-6a50c4d31af6-2026-04-08T160000.000Z) (MONDO:0008260; AR; Definitive).
 - [ ] **FERMT3** — HGNC:23151; [leukocyte adhesion deficiency 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_df792161-5efb-45f7-91ed-5fe76045fa06-2019-08-28T160000.000Z) (MONDO:0013016; AR; Definitive).
