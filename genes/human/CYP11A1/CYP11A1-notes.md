@@ -132,3 +132,7 @@ Counts: 32 ACCEPT, 11 MODIFY, 2 KEEP_AS_NON_CORE, 1 REMOVE. No NEW annotations w
 ## 2026-10-25: review evidence follow-up
 
 Replaced EC-only and bare cofactor-header quotations with the curated overall cholesterol-cleavage reaction and explicit heme cofactor statement, both experimentally supported by PMID:21636783 in the source record. No annotation actions or machine source fields changed.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root mitochondrion annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
