@@ -384,6 +384,10 @@ ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
   `EMENI/cysD`, all of which fall in `PTHR43797:SF2` under the shared
   `PTN002887184` PAINT node for homocysteine synthase activity and
   L-homocysteine biosynthesis.
+- Started PTHR10572 HMG-CoA reductases with `CANAL/HMG1`. The family review
+  already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
+  membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
+  the eukaryotic peroxisomal-membrane IBA for fungal pruning.
 - Continued PTHR10572 with `ASPFU/hmg1`, carrying forward the same conserved
   exact HMG-CoA reductase, isoprenoid, ER-membrane, fungal ergosterol, and
   fungal peroxisomal-overpropagation decisions into a siderophore-producing

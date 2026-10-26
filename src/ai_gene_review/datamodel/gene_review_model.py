@@ -190,6 +190,10 @@ class SourceDefectTypeEnum(str, Enum):
     """
     A GO-CAM causal edge has the wrong relation or direction.
     """
+    MISSING_ISOFORM = "MISSING_ISOFORM"
+    """
+    An isoform established in the literature is not among the isoforms of the reviewed UniProt entry. asserted_value is the entry (UniProtKB:Q96PV0); corrected_value names a sequence that carries the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
+    """
     OTHER = "OTHER"
     """
     Any other source-record defect; describe it in the explanation.
@@ -297,6 +301,10 @@ class SourceDefectRequestedChangeEnum(str, Enum):
     DELETE_ROW = "DELETE_ROW"
     """
     Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+    """
+    ADD = "ADD"
+    """
+    Add something the record lacks, e.g. a missing isoform; corrected_value names what should be added.
     """
     CHECK = "CHECK"
     """
@@ -1527,6 +1535,14 @@ class FunctionalIsoformMappingTypeEnum(str, Enum):
     """
     UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)
     """
+    REFSEQ_PROTEIN = "REFSEQ_PROTEIN"
+    """
+    Versioned RefSeq protein accession (e.g., NP_001123538.1). Use when the isoform is not among the reviewed UniProt entry's isoforms.
+    """
+    UNIPROTKB_UNREVIEWED = "UNIPROTKB_UNREVIEWED"
+    """
+    Unreviewed UniProtKB (TrEMBL) accession carrying the isoform's sequence (e.g., B7ZCA0). Use when the reviewed entry lacks the isoform.
+    """
 
 
 class PredictedTermTypeEnum(str, Enum):
@@ -2366,6 +2382,7 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'RuleReview',
                        'PredictionReview']} })
     isoform_specific_terms: Optional[list[Term]] = Field(default=None, description="""GO terms that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Using Term objects enables linkml-term-validator checking.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in UniProt's (or another source's) record of this isoform, for example an isoform established in the literature that the reviewed UniProt entry does not list (defect_type MISSING_ISOFORM). See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
 
 
 class FunctionalIsoformMapping(ConfiguredBaseModel):
@@ -2374,11 +2391,11 @@ class FunctionalIsoformMapping(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    type: FunctionalIsoformMappingTypeEnum = Field(default=..., description="""Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+    type: FunctionalIsoformMappingTypeEnum = Field(default=..., description="""Type of identifier (UNIPROT_ISOFORM, UNIPROT_CHAIN, REFSEQ_PROTEIN or UNIPROTKB_UNREVIEWED)""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'FunctionalIsoform',
                        'FunctionalIsoformMapping',
                        'RuleReviewEntry']} })
-    ids: list[str] = Field(default=..., description="""UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoformMapping']} })
+    ids: list[str] = Field(default=..., description="""UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc. For REFSEQ_PROTEIN: NP_001123538.1 (versioned RefSeq protein). For UNIPROTKB_UNREVIEWED: B7ZCA0 (a TrEMBL accession).""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoformMapping']} })
     residues: Optional[str] = Field(default=None, description="""Residue range for cleavage products (e.g., \"138-176\" for ACTH). Only applicable for UNIPROT_CHAIN type.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoformMapping']} })
 
 
@@ -2559,6 +2576,7 @@ class Finding(ConfiguredBaseModel):
     reference_section_type: Optional[ManuscriptSection] = Field(default=None, description="""Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference'], 'recommended': True} })
     record_section: Optional[list[str]] = Field(default=None, description="""For a quote from a database record (currently a cached UniProt record: a flat file, `file:...-uniprot.txt`, or a UniSave snapshot, `file:...-record-evidence.yaml`), the section(s) of the record the quote comes from, as the line code followed, where the line code has one, by its topic: the comment topic for `CC` (e.g. `CC:CAUTION`, `CC:FUNCTION`, `CC:SUBCELLULAR LOCATION`), the feature key for `FT` (e.g. `FT:BINDING`), the database for `DR` (e.g. `DR:Pfam`), and `REF` for a citation block. Plain line codes are used otherwise (e.g. `DE`, `KW`). A quote whose `...`-separated parts come from different sections lists each once, in order. A quote whose text occurs in several sections (a short phrase found in both a keyword and a comment) has no established section and is left without a value. This is the database-record counterpart of `reference_section_type`, which describes manuscript sections. The value is derived from the cited file, so fill it with `just backfill-record-sections` rather than by hand; validation warns when a stated value disagrees with the cited file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference']} })
     finding_review: Optional[FindingReview] = Field(default=None, description="""Manual reviewer assessment of this specific finding - in particular whether the finding remains current, is disputed, or has been overturned/superseded by later evidence. Reviewer-supplied; distinct from the statement/supporting_text that describe the finding itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding']} })
+    residue_mappings: Optional[list[ResidueMapping]] = Field(default=None, description="""Residues that this finding names by number, each given in the numbering the source used and, when that is not the displayed UniProt sequence, also in the displayed sequence. Papers often number residues on an isoform other than the one UniProt displays, so the same residue can appear under two numbers (RASAL2 Ser351 in isoform 2 is Ser203 in the displayed isoform). Both sides are checked against the real sequences.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding']} })
 
     @field_validator('record_section')
     def pattern_record_section(cls, v):
@@ -4094,9 +4112,10 @@ class ModelScenario(ConfiguredBaseModel):
     removed_connections: Optional[list[ConnectionReference]] = Field(default=None, description="""Connections dropped for this scenario, e.g. to show what the module predicted before a feedback loop was curated in.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
     expected_attractor_kind: Optional[AttractorKindEnum] = Field(default=None, description="""The kind of every attractor the scenario is expected to reach.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
     expected_attractor_count: Optional[int] = Field(default=None, description="""The expected number of attractors (1 = no multistability).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
-    expected_active: Optional[list[str]] = Field(default=None, description="""Elements expected to be active in every state of every attractor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
-    expected_inactive: Optional[list[str]] = Field(default=None, description="""Elements expected to be inactive in every state of every attractor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_active: Optional[list[str]] = Field(default=None, description="""Elements expected to be active in every state of every attractor (for Boolean models) or reached/populated by agents (for agent-based models).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_inactive: Optional[list[str]] = Field(default=None, description="""Elements expected to be inactive in every state of every attractor (for Boolean models) or unpopulated by agents (for agent-based models).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
     expected_oscillating: Optional[list[str]] = Field(default=None, description="""Elements expected to change value within an attractor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
+    expected_outcome_order: Optional[list[str]] = Field(default=None, description="""For quantitative or agent-based models, an ordered list of elements from highest to lowest terminal occupancy or output level (e.g., [e1, e2] asserts final_count[e1] > final_count[e2]).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelScenario']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
                        'AlternativeRecord',
                        'Descriptor',
@@ -4667,7 +4686,7 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4959,7 +4978,7 @@ class Review(ConfiguredBaseModel):
                        'CoreFunction']} })
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
 
 
 class ConsistencyException(ConfiguredBaseModel):
@@ -5045,6 +5064,17 @@ The validator compares this against the current record and, when they differ, sa
             err_msg = f"Invalid residue format: {v}"
             raise ValueError(err_msg)
         return v
+
+
+class ResidueMapping(ConfiguredBaseModel):
+    """
+    One residue named in a source, recorded in the sequence whose numbering the source used, and optionally the same residue in the displayed UniProt sequence of this gene. Each side is a ResiduePosition, so the validator can confirm both residues and that they are the same amino acid.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    as_reported: ResiduePosition = Field(default=..., description="""The residue as the source numbers it, in the sequence that numbering refers to, e.g. UniProtKB:Q9UJF2-2 (a UniProt isoform) or an unreviewed UniProtKB accession when the isoform is not in the reviewed entry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueMapping']} })
+    canonical: Optional[ResiduePosition] = Field(default=None, description="""The same residue in the displayed sequence of this review's entry (the review's own id). Omit when as_reported already is the displayed sequence, or when the residue has no counterpart there.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueMapping']} })
+    note: Optional[str] = Field(default=None, description="""How the mapping was established, or why canonical is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueMapping']} })
 
 
 class PropagationSource(ConfiguredBaseModel):
@@ -5941,6 +5971,7 @@ ConsistencyException.model_rebuild()
 PropagationReview.model_rebuild()
 ResidueClaim.model_rebuild()
 ResiduePosition.model_rebuild()
+ResidueMapping.model_rebuild()
 PropagationSource.model_rebuild()
 CoreFunction.model_rebuild()
 AnnotationExtension.model_rebuild()
