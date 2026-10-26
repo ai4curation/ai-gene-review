@@ -29,7 +29,9 @@ over-annotated calls are the honest result for a project dominated by homology
 transfer from experiments on other mammals. Twelve of the 14 reviewed proteins
 have final descriptions and synthesized core functions; K9IUF6 and K9J2R0
 still need description and core-function synthesis, and the `CALCA`/vCGRP seed
-is not yet reviewed because a transcriptome search found no matching peptide.
+is not yet reviewed because a
+[RefSeq/TSA transcriptome search](../genes/DESRO/CALCA/CALCA-bioinformatics/RESULTS.md)
+found no exact or one-mismatch match for the reported peptide.
 Remaining DESRO work is tracked in
 [#3994](https://github.com/ai4curation/ai-gene-review/issues/3994).
 
@@ -49,6 +51,7 @@ Project to curate vampire bat (Desmodus rotundus; UniProt code DESRO) salivary g
 - UniProt mapping table: `projects/VAMPIROME/uniprot_mapping.md`
 - UniProt mapping JSON: `projects/VAMPIROME/uniprot_mapping.json`
 - Candidate list JSON (UniProtKB reviewed vs TrEMBL split): `projects/VAMPIROME/uniprot_candidates.json`
+- [CALCA/vCGRP transcriptome search](../genes/DESRO/CALCA/CALCA-bioinformatics/RESULTS.md)
 - Related project: `projects/PARASITE_IMMUNE_MODULATORS.md`
 
 ## Reviewed seed gene (DESRO)
@@ -127,7 +130,8 @@ these accessions also appear in the reviewed priority shortlist above.
 
 - vCGRP (calcitonin gene-related peptide-like; vasodilatory peptide). Reported peptide sequence:
   SCNTATCVTHRLAGLLSRSGGVVSSDFTPTDTGSNSY (Toxins 2019, Kakumanu et al.). Mapping to
-  DESRO transcript/UniProt pending.
+  DESRO transcript/UniProt remains unresolved after exact and one-mismatch translated-transcript
+  searches of RefSeq and TSA GABZ01.
 - BatTrinityAbyss-321620
 - BatTrinityAbyss-429618
 - BatTrinityAbyss-489254
@@ -181,4 +185,5 @@ these accessions also appear in the reviewed priority shortlist above.
 - Added deep-research support snippets for core functions where available.
 - Created notes files for K9IMD0, K9IZA2, K9IYM3, and K9J287.
 - Created notes files for remaining shortlisted candidates (K9IJK6, K9IFY6, K9IWR0, K9IFT7, K9IWH5, K9IIP0, K9IUF6, K9IWC0, K9IWX5, K9J2R0).
-- Started `CALCA`/vCGRP mapping via transcriptome search; no peptide matches in RefSeq or TSA GABZ01 (see `CALCA-bioinformatics` RESULTS).
+- Started `CALCA`/vCGRP mapping via transcriptome search; no peptide matches in RefSeq or TSA GABZ01
+  (see [CALCA-bioinformatics RESULTS](../genes/DESRO/CALCA/CALCA-bioinformatics/RESULTS.md)).

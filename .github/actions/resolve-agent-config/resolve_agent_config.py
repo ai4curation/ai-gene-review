@@ -98,7 +98,8 @@ def resolve_matrix(config: dict, workflow: str) -> list[dict]:
     """Return the workflow's ``matrix:`` list (for ``strategy.matrix.include``).
 
     Each entry is a mapping (e.g. ``{effort, model, selector}``) and must include
-    a ``model``.
+    a ``model``. An optional ``max_turns`` must be a positive integer, since it is
+    interpolated into ``claude_args`` as ``--max-turns <value>``.
     """
     entry = _workflow_entry(config, workflow)
     matrix = entry.get("matrix")
@@ -115,6 +116,14 @@ def resolve_matrix(config: dict, workflow: str) -> list[dict]:
             raise ConfigError(
                 f"workflow '{workflow}' matrix entries must be mappings with a "
                 f"'model:'"
+            )
+        turns = item.get("max_turns")
+        if turns is not None and (
+            isinstance(turns, bool) or not isinstance(turns, int) or turns < 1
+        ):
+            raise ConfigError(
+                f"workflow '{workflow}' matrix max_turns must be a positive "
+                f"integer: {turns!r}"
             )
     return matrix
 

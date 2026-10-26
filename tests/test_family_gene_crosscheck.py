@@ -30,7 +30,8 @@ RECEPTOR_SF = "PANTHER:PTHR11022:SF41"
 TERM = "GO:0008745"
 
 
-def _family_review(*, scope="SUBFAMILY_ONLY", allowed=(CATALYTIC_SF,), node_affects=()):
+def _family_review(*, scope="SUBFAMILY_ONLY", allowed=(CATALYTIC_SF,), node_affects=(),
+                   node_verdict="NEEDS_PRUNING"):
     review = {
         "family_id": FAMILY,
         "term_assessments": [
@@ -47,7 +48,7 @@ def _family_review(*, scope="SUBFAMILY_ONLY", allowed=(CATALYTIC_SF,), node_affe
             {
                 "node_id": "PANTHER:PTN002475783",
                 "asserted_term": {"id": TERM, "label": "amidase"},
-                "assessment": "NEEDS_PRUNING",
+                "assessment": node_verdict,
                 "assessment_reason": "test",
                 "affected_subfamilies": [
                     {"id": sf, "label": "x"} for sf in node_affects
@@ -83,6 +84,8 @@ def _write_gene(tmp_path: Path, symbol: str, sf: str | None, action: str,
         # gene outside the allowed subfamilies that keeps the term -> conflict
         (RECEPTOR_SF, "ACCEPT", Verdict.CONFLICT),
         (RECEPTOR_SF, "KEEP_AS_NON_CORE", Verdict.CONFLICT),
+        # TOO_GENERAL holds the claim true (only uninformative), so it still conflicts
+        (RECEPTOR_SF, "TOO_GENERAL", Verdict.CONFLICT),
         # gene outside the allowed subfamilies that already flags it -> consistent
         (RECEPTOR_SF, "REMOVE", Verdict.OK),
         (RECEPTOR_SF, "MARK_AS_OVER_ANNOTATED", Verdict.OK),
@@ -130,6 +133,23 @@ def test_pruning_conflict_fires_for_affected_subfamily(tmp_path):
     assert "needs pruning" in results[0].message
 
 
+@pytest.mark.parametrize(
+    "verdict,fires",
+    [
+        ("LOSS_SUPPORTED", True),  # a correct IRD/IKR: the clade should not keep the term
+        ("LOSS_CONTRADICTED", False),  # the loss is wrong: keeping the term is right
+        ("LOSS_TOO_BROAD", False),
+    ],
+)
+def test_pruning_conflict_for_loss_verdicts(tmp_path, verdict, fires):
+    """Only a supported loss tells genes below it to drop the term."""
+    gene = _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "ACCEPT")
+    results = check_pruning_conflicts(
+        _family_review(node_affects=(RECEPTOR_SF,), node_verdict=verdict), {FAMILY: [gene]}
+    )
+    assert bool(results) is fires
+
+
 def test_pruning_ignores_unaffected_subfamily(tmp_path):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "ACCEPT")
     assert check_pruning_conflicts(
@@ -153,7 +173,68 @@ def test_converse_disagreement_over_annotated_is_unresolved_not_conflict(tmp_pat
     assert result.gene_action == "MARK_AS_OVER_ANNOTATED"
 
 
-@pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "UNDECIDED"])
+@pytest.mark.parametrize("kept", ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL"])
+def test_over_annotated_row_beside_a_retained_row_is_not_disagreement(tmp_path, kept):
+    """One row flagged, another row for the same term kept: the gene retains the term.
+
+    This is the qualifier split, e.g. an ``enables`` IEA marked over-annotated for a
+    non-catalytic subunit while the ``contributes_to`` ISS row is accepted. The gene
+    agrees the term belongs to it, so a family calling the term safe is not disputed.
+    """
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "qualifier": "contributes_to", "review": {"action": kept}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []
+
+
+def test_over_annotated_row_beside_an_identical_retained_row_is_still_reported(tmp_path):
+    """Same qualifier and evidence code, opposite verdicts: that is an inconsistency to surface."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "IBA",
+         "review": {"action": "ACCEPT"}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.UNRESOLVED
+
+
+def test_identical_retained_row_is_not_excused_by_a_third_differing_row(tmp_path):
+    """An identical kept row still makes the flag an inconsistency, whatever else is kept."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"] += [
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "IBA",
+         "review": {"action": "ACCEPT"}},
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "qualifier": "contributes_to", "review": {"action": "ACCEPT"}},
+    ]
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.UNRESOLVED
+
+
+def test_remove_row_beside_a_retained_row_still_conflicts(tmp_path):
+    """A REMOVE asserts the term is wrong, so a retained sibling row does not excuse it."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    doc = yaml.safe_load(gene.review_path.read_text())
+    doc["existing_annotations"].append(
+        {"term": {"id": TERM, "label": "x"}, "evidence_type": "ISS",
+         "review": {"action": "ACCEPT"}}
+    )
+    gene.review_path.write_text(yaml.safe_dump(doc))
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.CONFLICT
+
+
+@pytest.mark.parametrize(
+    "action", ["ACCEPT", "KEEP_AS_NON_CORE", "TOO_GENERAL", "MODIFY", "UNDECIDED"]
+)
 def test_converse_disagreement_ignores_non_disputing_actions(tmp_path, action):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
     assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []
@@ -287,6 +368,36 @@ def test_exception_for_member_without_gene_review_is_only_anchor_checked():
     """No gene review to compare: the exception stands on the family's own evidence."""
     review = _review_with_exception(member="NOREVIEW1")
     assert check_member_exceptions(review, {FAMILY: []}) == []
+
+
+def test_viral_records_are_indexed_as_out_of_paint_tree(tmp_path):
+    """Viral UniProt records carry out-of-tree InterPro DR PANTHER HMM hits: they are
+    indexed with in_paint_tree=False so PAINT-tree subfamily scope/pruning checks skip
+    them while check_member_exceptions can still verify explicit member_exceptions."""
+    _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "REMOVE")
+    viral_dir = tmp_path / "genes" / "BPT7" / "3.5"
+    viral_dir.mkdir(parents=True)
+    (viral_dir / "3.5-uniprot.txt").write_text(
+        "AC   P00806;\n"
+        "OC   Viruses; Duplodnaviria; Heunggongvirae; Uroviricota.\n"
+        "DR   PANTHER; PTHR11022; PEPTIDOGLYCAN RECOGNITION PROTEIN; 1.\n"
+        "DR   PANTHER; PTHR11022:SF41; PEPTIDOGLYCAN-RECOGNITION PROTEIN LC-RELATED; 1.\n"
+    )
+    (viral_dir / "3.5-ai-review.yaml").write_text(
+        yaml.safe_dump({
+            "id": "P00806",
+            "existing_annotations": [
+                {"term": {"id": TERM, "label": "amidase"}, "evidence_type": "IDA", "review": {"action": "ACCEPT"}}
+            ],
+        })
+    )
+    index = index_genes_by_family(tmp_path / "genes")
+    refs = {g.symbol: g for g in index.get(FAMILY, [])}
+    assert refs["PGRPLC"].in_paint_tree is True
+    assert refs["3.5"].in_paint_tree is False
+    review = _family_review(node_affects=(RECEPTOR_SF,))
+    assert [r.gene for r in check_scope_violations(review, index)] == ["PGRPLC"]
+    assert [r.gene for r in check_pruning_conflicts(review, index)] == ["PGRPLC"]
 
 
 # --------------------------------------------------------------------------

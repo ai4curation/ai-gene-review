@@ -8,7 +8,7 @@ from types import ModuleType
 import pytest
 import yaml
 
-from ai_gene_review.source_tree import ReviewSnapshot, WorkingTree, review_snapshot_tree
+from ai_gene_review.source_tree import PROTNLM_SNAPSHOT, ReviewSnapshot, WorkingTree, review_snapshot_tree
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -67,13 +67,13 @@ def test_benchmark_summary_keeps_output_types_and_scopes_separate(
 ) -> None:
     """Count each exact target once and exclude prose mentions of unrelated GO claims."""
     module = load_summary_module()
-    # Pinned at review_snapshot_commit in benchmark-policy.yaml.
-    data = module.collect(review_snapshot_tree(REPO_ROOT), WorkingTree(REPO_ROOT))
+    # Pinned at review_snapshot_commit in projects/PROTNLM_EVALUATION/review-snapshot.yaml.
+    data = module.collect(review_snapshot_tree(REPO_ROOT, PROTNLM_SNAPSHOT), WorkingTree(REPO_ROOT))
     assert data["distinct_records"] == 282
     assert data["prediction_targets"] == 242
     assert sum(data["go_counts"].values()) == 288
     assert data["go_counts"] == {
-        "COR": 52, "CNN": 32, "LSP": 84, "UNC": 98, "NPI": 20, "PLI": 2, "REP": 0
+        "COR": 35, "CNN": 46, "LSP": 85, "UNC": 78, "NPI": 42, "PLI": 2, "REP": 0
     }
     narratives = {r["gene"]: r["categories"] for r in data["narrative_reviews"]}
     assert narratives["human/NARF"] == ["PLI"]
@@ -112,7 +112,7 @@ def test_scope_edits_take_effect_without_touching_working_tree_genes(
     with scope.open("a", encoding="utf-8") as handle:
         handle.write("extra,prediction_target,PNEW,DROME,new,,\n")
     data = load_summary_module().collect(
-        review_snapshot_tree(REPO_ROOT), WorkingTree(config_copy)
+        review_snapshot_tree(REPO_ROOT, PROTNLM_SNAPSHOT), WorkingTree(config_copy)
     )
     assert data["prediction_targets"] == 243
     assert data["distinct_records"] == 283
@@ -128,7 +128,7 @@ def test_narrative_index_edit_without_snapshot_refresh_fails_loudly(
     index.write_text(yaml.safe_dump(registry), encoding="utf-8")
     with pytest.raises(AssertionError, match="Narrative index needs review"):
         load_summary_module().collect(
-            review_snapshot_tree(REPO_ROOT), WorkingTree(config_copy)
+            review_snapshot_tree(REPO_ROOT, PROTNLM_SNAPSHOT), WorkingTree(config_copy)
         )
 
 
@@ -211,3 +211,26 @@ def test_empty_reviews_require_completed_summary(
         AssertionError, match="Completed zero-output review with description required"
     ):
         load_summary_module().collect(WorkingTree(tmp_path), WorkingTree(tmp_path))
+
+
+def test_protnlm_snapshot_is_dated_and_recorded() -> None:
+    """The ProtNLM2 reports and the project page state ProtNLM's own review snapshot.
+
+    It is declared separately from the BioReason benchmark's snapshot, so the two
+    projects can be refreshed independently (``just refresh-protnlm-snapshot``).
+    """
+    import json
+    import re
+
+    from ai_gene_review.source_tree import commit_date, declared_review_snapshot
+
+    snapshot = declared_review_snapshot(REPO_ROOT, PROTNLM_SNAPSHOT)
+    assert snapshot.date == commit_date(REPO_ROOT, snapshot.commit)
+    recorded = {"commit": snapshot.commit, "date": snapshot.date}
+    summary = json.loads((REPO_ROOT / "projects/PROTNLM_EVALUATION/benchmark-summary.json").read_text())
+    funnel = json.loads((REPO_ROOT / "projects/PROTNLM_EVALUATION/benchmark-funnel.json").read_text())
+    assert summary["review_snapshot"] == recorded
+    assert funnel["review_snapshot"] == recorded
+    page = (REPO_ROOT / "projects/PROTNLM_EVALUATION.md").read_text(encoding="utf-8")
+    marker = re.compile(rf"{re.escape(snapshot.date)}\W{{1,3}}commit\W{{1,3}}{snapshot.short}\b")
+    assert marker.search(page), "projects/PROTNLM_EVALUATION.md does not state the ProtNLM review snapshot"
