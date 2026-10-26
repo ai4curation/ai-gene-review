@@ -321,8 +321,9 @@ What batch 3 showed:
   activity shown in the organelle and join the open-question worklist.
 - **To follow up:** GLYCTK's full-length N-terminus looks like a
   presequence (arginine-rich, acid-free) that UniProt does not annotate; a
-  targeting predictor would say whether it is a matrix candidate. FKBP4's
-  nucleus rows quote the same FKBP51 paper and need the same check.
+  targeting predictor would say whether it is a matrix candidate. (FKBP4's
+  nucleus rows, which quoted the same FKBP51 paper, were re-supported in
+  review of PR #5539.)
 
 ## 2026-10-24 (batch 2: 20 human genes)
 

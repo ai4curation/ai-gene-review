@@ -97,3 +97,5 @@ PMID:21730050 finding statement and the description sentence on mitochondria wer
 Still to revisit (outside the mitochondrion rows): the nucleus and other rows that quote
 "Shuttles from mitochondria to nucleus" as support, and the suggested question on the
 mitochondria-to-nucleus translocation of FKBP4, rest on the same mis-attributed paper.
+
+- Update (2026-10-25, review of PR #5539): the items listed above as still to revisit are done. The nucleus and four nucleoplasm rows now cite UniProt's dynein-dependent NR3C1 nuclear transport and its by-similarity Nucleus location instead of "Shuttles from mitochondria to nucleus"; the nucleus summary, UniProt finding statement, suggested question and experiment no longer presuppose an FKBP4 mitochondrial pool.
