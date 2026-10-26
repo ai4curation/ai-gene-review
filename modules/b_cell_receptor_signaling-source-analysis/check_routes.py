@@ -18,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 def main():
     doc = yaml.safe_load((ROOT / "modules/b_cell_receptor_signaling.yaml").read_text())
     objects = {x["id"]: x for x in walk(doc) if "id" in x}
-    panel = yaml.safe_load((HERE / "members.yaml").read_text())["members"]
+    panel = yaml.safe_load((HERE / "members.yaml.txt").read_text())["members"]
     accession = {(m["organism"], m["gene"]): m["accession"] for m in panel}
     assert not any(x.get("selector_type") == "FAMILY" for x in walk(doc))
     results = []

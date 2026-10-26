@@ -26,7 +26,7 @@ def walk(value):
 
 
 def main():
-    panel = yaml.safe_load((HERE / "members.yaml").read_text())["members"]
+    panel = yaml.safe_load((HERE / "members.yaml.txt").read_text())["members"]
     mapping, gene_index = {}, {}
     for entry in panel:
         path = ROOT / entry["review"]
