@@ -13,3 +13,7 @@ Final validation: just validate PSEPK algG passed. Original annotation fields we
 ## PR #5552 follow-up, 2026-10-26
 
 GO:0016857 was verified live as catalysis altering chiral centers in a carbohydrate molecule (EC5.1.3.-); polymer-bound mannuronate meets that definition. All three cores now use the valid broad term. Pa PMID:8144447 and Azotobacter PMID:8830682 directly assay recombinant target epimerization and support nonredundant IDA MF proposals; the pre-existing KT2440 ISS proposal remains comparative. All three precise-term proposals use an identical definition and GO parent; this is one ontology request with three supported use cases, not three distinct activities. RHEA:45572 was verified directly and is attached as module reaction evidence. No redundant specific NEW row was added.
+
+## 2026-10-26 — explicit ISS comparator and primary support
+
+The retained GO:0016857 ISS proposal now identifies Pseudomonas aeruginosa AlgG UniProtKB:Q51371 in review provenance. The original row payload, including its reference, qualifier and absent sequence-source field, is unchanged. The comparator is independently identified for this follow-up; it is not claimed as a recovered historical WITH field. PMID:8144447 supplies direct donor epimerase chemistry, with E. coli recombinant-host and P. aeruginosa native-complementation scope separated from KT2440 inference. No annotation actions or new rows changed.
