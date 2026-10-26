@@ -22,11 +22,11 @@ GO editors is at <https://claude.ai/artifact/8MJjKA2M2SDjcZAs9dL1ET>.
 
 | Order | Module | Status | Scope |
 |---|---|---|---|
-| — | `phagocytosis` (umbrella) | planned | Composes the steps below with `module_ref` |
+| — | [`phagocytosis`](../modules/phagocytosis.yaml) (umbrella) | DRAFT | Composes the steps below with `module_ref` |
 | 1 | [`phagocytic_engulfment`](../modules/phagocytic_engulfment.yaml) | exists (DRAFT) | Recognition, Rho-GTPase activation, actin, cup closure |
 | 2 | [`phagosome_maturation`](../modules/phagosome_maturation.yaml) | exists (DRAFT) | Rab5 → Rab7, fusion, acidification, NOX2 |
-| 3 | `phagolysosomal_cargo_degradation` | planned | Digestion of cargo DNA, protein and lipid, and export of the products |
-| 4 | Post-phagocytic programmes (optional parts) | planned | See below |
+| 3 | [`phagolysosomal_cargo_degradation`](../modules/phagolysosomal_cargo_degradation.yaml) | DRAFT | DNase II, cathepsins, amoebal lysozyme; export of amino acids, nucleosides, heme, cholesterol |
+| 4 | Post-phagocytic programmes (optional parts) | DRAFT | See below |
 
 Post-phagocytic programmes. Each is a separate module because each has its own
 trigger, signalling chain and output. The umbrella lists them as optional
@@ -34,10 +34,10 @@ alternatives.
 
 | Module | Trigger | Genes doing the work | Lineage evidence |
 |---|---|---|---|
-| `efferocytosis_induced_macrophage_proliferation` | apoptotic-cell DNA digested by DNase II | DNASE2, PRKDC, RICTOR, MYC, BHLHE40; MERTK arm | mouse |
-| `efferocytosis_induced_macrophage_priming` | corpse engulfment | drpr, bsk | Drosophila |
-| `efferocytosis_induced_anti_inflammatory_programme` | cargo sterols, fatty acids, tryptophan, methionine, DNA | NR1H2/3, PPARD, SIRT1/PBX1, IDO1/AHR, TLR9, DNMT3A/PTGS2, SLC12A2 | mouse |
-| `heme_induced_iron_recycling_macrophage_differentiation` | heme from engulfed erythrocytes | SLC48A1, BACH1, SPIC, HMOX1 | mouse |
+| [`efferocytosis_induced_macrophage_proliferation`](../modules/efferocytosis_induced_macrophage_proliferation.yaml) | apoptotic-cell DNA digested by DNase II | DNASE2, PRKDC, RICTOR, MYC, BHLHE40; MERTK arm | mouse |
+| [`efferocytosis_induced_macrophage_priming`](../modules/efferocytosis_induced_macrophage_priming.yaml) | corpse engulfment | drpr, bsk | Drosophila |
+| [`efferocytosis_induced_anti_inflammatory_programme`](../modules/efferocytosis_induced_anti_inflammatory_programme.yaml) | cargo sterols, fatty acids, tryptophan, methionine, DNA | NR1H2/3, PPARD, SIRT1/PBX1, IDO1/AHR, TLR9, DNMT3A/PTGS2, SLC12A2 | mouse |
+| [`heme_induced_iron_recycling_macrophage_differentiation`](../modules/heme_induced_iron_recycling_macrophage_differentiation.yaml) | heme from engulfed erythrocytes | SLC48A1, BACH1, SPIC, HMOX1 | mouse |
 
 ## Design rules
 
@@ -86,8 +86,8 @@ Each is one computable question, run with the project defaults.
 ## Plan
 
 1. Resolve families and PTNs for every participant. *(in progress)*
-2. Build the four post-phagocytic programme modules. *(proliferation, priming and heme modules drafted)*
-3. Build `phagolysosomal_cargo_degradation` and the `phagocytosis` umbrella.
+2. Build the four post-phagocytic programme modules. *(done, DRAFT)*
+3. Build `phagolysosomal_cargo_degradation` and the `phagocytosis` umbrella. *(done, DRAFT)*
 4. Revise `phagocytic_engulfment` and `phagosome_maturation` toward family
    selectors with cross-lineage exemplars.
 5. Write family reviews for the key families and gene reviews for exemplars
