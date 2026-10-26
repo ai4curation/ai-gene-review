@@ -102,9 +102,9 @@ All sulfate member panels are integrated (29 reviews, 496 rows); independent mod
 
 ## 2026-10-26 — forty-three arginine member reviews validated
 
-The arginine member panel is complete:43 proteins and555 preserved annotation rows, including2 prior proposals and no newly added rows. All focused member checks, histories and renders pass; full validation is running. The added archaeal ArgJ is recycling-only, plant NAGK/WIN1 anchor plastid reactions, and short mycobacterial ArgA retains its weak glutamate-efficiency caveat. Independent module QA remains in progress. Sulfate is committed and its full reference validation continues. Apoptosis PR5558 is open; its automated review also hit the shared account quota before producing a verdict. The eight verified merges remain the only completed baseline audits.
+The arginine member panel is complete: 43 proteins and 555 preserved annotation rows, including 2 prior proposals and no newly added rows. All focused member checks, histories and renders pass; full validation is running. The added archaeal ArgJ is recycling-only, plant NAGK/WIN1 anchor plastid reactions, and short mycobacterial ArgA retains its weak glutamate-efficiency caveat. Independent module QA remains in progress. Sulfate is committed and its full reference validation continues. Apoptosis PR #5558 is open; its automated review also hit the shared account quota before producing a verdict. The eight verified merges remain the only completed baseline audits.
 
-Independent arginine module QA is now complete: all43 family/member placements agree with fetched classifications, cached GO-CAM assertions were checked, and22 curated references support9 connections. The draft no longer attributes type2 ArgC classification to an unrelated review passage or restricts ArgA initiation to the linear release route. Full validation remains the outstanding pre-PR gate.
+Independent arginine module QA is now complete: all 43 family/member placements agree with fetched classifications, cached GO-CAM assertions were checked, and 22 curated references support 9 connections. The draft no longer attributes type 2 ArgC classification to an unrelated review passage or restricts ArgA initiation to the linear release route. Full validation remains the outstanding pre-PR gate.
 
 ## 2026-10-26 — arginase catabolism and CI follow-up
 
@@ -120,13 +120,13 @@ The latest sulfate scientific-review run `40270283163` and corrected apoptosis r
 
 Arginine full validation and all 46 module-logic tests passed; PR #5563 is open. The seventeenth audit starts from a clean current-main worktree with 25 planned member reviews. The taxon boundary must distinguish the eukaryotic formation/turnover module from bacterial asparaginase comparators, add the plant N-terminal-nucleophile implementation, and avoid treating all reactions as glutamate-dependent transamination. Literature searches located comparative aminotransferase, ASNS and asparaginase reviews plus primary plant and fungal studies. The sulfate CI validation and suite jobs passed; remaining CI and scientific-review gates are still required.
 
-The aspartate/asparagine panel expanded to six Arabidopsis proteins after the plastid review identified two distinct AspAT implementations. All 27 reviews now pass with 548 preserved rows and no added annotations. Independent QA confirmed nine family labels,25 exemplar placements and12 exact GO-CAM activity links. Thirteen route cases pass. The newer ASP3 evolutionary evidence is reconciled into PTHR11707 without changing PAINT seeds or verdicts. Full validation is running.
+The aspartate/asparagine panel expanded to six Arabidopsis proteins after the plastid review identified two distinct AspAT implementations. All 27 reviews now pass with 548 preserved rows and no added annotations. Independent QA confirmed nine family labels, 25 exemplar placements and 12 exact GO-CAM activity links. Thirteen route cases pass. The newer ASP3 evolutionary evidence is reconciled into PTHR11707 without changing PAINT seeds or verdicts. Full validation is running.
 
-Arginase full validation passed with terminal exit zero and PR #5566 is open. Final Asp/Asn scientific QA corrected three negative localization rationales to UNDECIDED while retaining two directly assayed ASP5 negative enzyme activities. Final548-row totals are323 ACCEPT,110 MODIFY,65 non-core,20 REMOVE,25 UNDECIDED and5 over-annotation assessments. No new annotations were added.
+Arginase full validation passed with terminal exit zero and PR #5566 is open. Final Asp/Asn scientific QA corrected three negative localization rationales to UNDECIDED while retaining two directly assayed ASP5 negative enzyme activities. Final 548-row totals are 323 ACCEPT, 110 MODIFY, 65 non-core, 20 REMOVE, 25 UNDECIDED and 5 over-annotation assessments. No new annotations were added.
 
 ## 2026-10-26 — threonine backbone audit starts
 
-Asp/Asn curation is committed and pushed as `98bd4c37e3`; full validation is still running. The eighteenth audit uses an independent worktree and24 planned gene reviews. Two archaeal enzymes establish specific step exemplars, not an entire archaeal pathway. The proposed Arabidopsis ASAD locus At1g14810 lacks an official gene symbol and currently has prediction-heavy annotation; independent evidence must determine the strength of that exemplar. ThrH uses phosphoserine rather than ATP, plant O-phosphohomoserine also feeds methionine, and new Hom6/chromatin literature requires separation of metabolic and noncanonical effects.
+Asp/Asn curation is committed and pushed as `98bd4c37e3`; full validation is still running. The eighteenth audit uses an independent worktree and 24 planned gene reviews. Two archaeal enzymes establish specific step exemplars, not an entire archaeal pathway. The proposed Arabidopsis ASAD locus At1g14810 lacks an official gene symbol and currently has prediction-heavy annotation; independent evidence must determine the strength of that exemplar. ThrH uses phosphoserine rather than ATP, plant O-phosphohomoserine also feeds methionine, and new Hom6/chromatin literature requires separation of metabolic and noncanonical effects.
 
 ## 2026-10-26 — review follow-ups and completed threonine member panels
 
@@ -192,7 +192,7 @@ The flowering panel covers 15 proteins and 303 final rows, with 302 pre-existing
 
 Published apoptosis second follow-up and preserved its shared TRAIL target. Integrated upstream section backfills into alginate, sulfate and arginase without changing approved gene/module biology; updated heads need renewed approval and CI. Controlled review-job retries also failed without verdicts, so no approval is inferred. Autonomous flowering is committed and pushed while full validation remains active.
 
-The twentieth audit, nuclear auxin signaling, has a14-target632-row baseline and native Marchantia exemplars resolved to published clones/loci. Recent receptor adenylate-cyclase evidence and the 2015 primary-source correction will be assessed explicitly. Six baseline audits remain complete, fourteen active, 682 unstarted.
+The twentieth audit, nuclear auxin signaling, has a 14-target, 632-row baseline and native Marchantia exemplars resolved to published clones/loci. Recent receptor adenylate-cyclase evidence and the 2015 primary-source correction will be assessed explicitly. Six baseline audits remain complete, fourteen active, 682 unstarted.
 
 ## 2026-10-26 — flowering PR, preserved integrations and complete inventory refresh
 

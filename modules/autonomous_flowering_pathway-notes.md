@@ -47,3 +47,15 @@ The current cached GO-CAM index has no matching rows for the 13 native accession
 Focused module validation uses an explicit 13-accession mapping parsed from each committed native UniProt PANTHER classification and the official PANTHER labels. This verifies the selected descriptor memberships without a new release-wide member-index download; it is not a claim to have rebuilt or checked every release assignment. The mapping and direct-validator invocation are retained in ignored audit artifacts. The module's source titles, quotations, GO branches and gene-function compatibility are checked by the normal validator.
 
 Route cases reject empty, output-only, rice-only and upstream-without-FLC contexts; recognize the documented four contribution choices; and require FY within the selected FCA bundle. All native members satisfy the representation. The existing module-logic suite also passes. Exact terminal checks, advisories and staging paths are reported in `.cache/module-audit-logs/autonomous-module-*`. A matching history record is generated with `just new-history` using actor/tool codex. No tracker edit, full-repository validation, commit or push is performed by this worker.
+
+
+## PR review follow-up: FLK reader specificity
+
+GO:1990247 now explicitly identifies the FLK activity on m6A-modified FLC
+mRNA. Its live ontology ancestry is the RNA-modification reader/adaptor
+branch, not an is_a descendant of mRNA binding; the independently supported
+mRNA-binding role remains in the gene review. PMID:37050878 directly reports
+modified-site recognition and reader-dependent complementation in its primary
+abstract; unsuccessful full-text retrieval is recorded in the gene notes.
+The module retains the same exact FLK selector, native context and pathway
+connections, with a more informative activity descriptor.

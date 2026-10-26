@@ -6,7 +6,7 @@ Re-reviewed all 30 original rows against primary evidence. Existing genuine Falc
 
 A key correction is the positive-transcription row. PMID:21464308 states: "Five genes showed decreased expression in the mutant, indicating that FLC binding can result in either transcriptional repression or activation." The full PMC article was inspected online and identifies SMZ/TOE3 among these targets; its normally retrieved local cache is currently abstract-only, and the force retrieval retry returned HTTP429. The quote in the review comes from the intact cached abstract, not a fabricated full-text extract. The result directly defeats the previous assumption that a floral repressor must exclusively repress transcription. The inhibitory FT/SOC1 mechanism remains supported.
 
-Protein binding was evaluated by partner and experiment: FLC-SVP MADS association is refined; the multiplex screen and FLZ13/regulatory interactions remain recorded without inferring a new activity from mere binding. Thermal clock effects are retained as non-core, while vernalization response remains a legitimate response claim. The generic differentiation mapping is refined to the experimentally supported inhibitory flowering role rather than removed just for breadth. Unsupported proposed terms for MADS assembly and silencing of the FLC locus were retired: existing activity terms cover the former, and being the locus silenced does not make the FLC protein the silencing enzyme. No annotation rows were added or removed.
+Protein binding was evaluated by partner and experiment: FLC-SVP MADS association is refined; the multiplex screen and FLZ13/regulatory interactions remain recorded without inferring a new activity from mere binding. Thermal clock effects are retained as non-core, while vernalization response remains a legitimate response claim. The generic differentiation mapping is corrected laterally to the experimentally supported inhibitory flowering role rather than removed just for breadth. Unsupported proposed terms for MADS assembly and silencing of the FLC locus were retired: existing activity terms cover the former, and being the locus silenced does not make the FLC protein the silencing enzyme. No annotation rows were added or removed.
 
 Normal publication caching (`just fetch-gene-pmids ARATH FLC`) completed. A targeted full-text refresh was interrupted by disk exhaustion before curated writes, then recovered serially after space was freed. Original source files were checked for intact metadata and abstracts; no cache text was edited manually. Existing real provider files were reused rather than fabricated or rewritten. Primary access levels below are those actually cached at final review.
 
@@ -70,3 +70,8 @@ The original annotation payloads, including any NOT/contributes-to fields, were 
 | PMID:21464308 | Abstract only |
 
 All cited primary caches were inspected at the stated access level; source-specific limits remain explicit in the review.
+
+
+## PR #5574 prose and justification follow-up
+
+Corrected citation spacing in reviewer-authored prose without altering original annotation payloads, source quotations, raw source files or prior histories. The five generic MODIFY rationales now separately explain DNA-recognition specificity, RNA polymerase II activity/process scope, floral regulatory role and regulatory sign. Flower-development membership to negative regulation is explicitly a lateral role correction, whereas unsigned to negative regulation specifies direction. Existing actions and support are unchanged.

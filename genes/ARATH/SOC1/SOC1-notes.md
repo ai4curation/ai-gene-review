@@ -92,3 +92,15 @@ The original annotation payloads, including any NOT/contributes-to fields, were 
 | PMID:31540691 | Abstract only |
 
 All cited primary caches were inspected at the stated access level; source-specific limits remain explicit in the review.
+
+## PR #5574 evidence-preservation follow-up (2026-10-26)
+
+Compared the review with `origin/main` and restored the reference-level findings after reading the cached publications at their stated access levels. The comparison contains 25 findings across 24 references (including the two distinct findings for PMID:18339670). Each reference now retains a source-specific finding; 17 primary-publication findings carry matched source quotations. The original-reference evidence for PMID:10834834, PMID:10995392 and PMID:21798944 is restored alongside the complementary independent evidence.
+
+PMID:10834834 directly identifies SOC1 as an early CONSTANS target required for CO-mediated flowering promotion. PMID:10995392 identifies the dominant FRI suppressor and overexpression rescue of late flowering. PMID:11123798 independently reports late-flowering agl20 mutants and constitutive-expression effects. The two positive-regulation ACCEPT reasons now distinguish those genetic results. The flower-development MODIFY remains unchanged biologically, but its reason explicitly describes a lateral correction to SOC1's positive regulatory role, not a descendant refinement. This supersedes the shorthand "refined" wording for that particular term pair in the earlier audit note.
+
+Full PMID:21798944 documents the binary yeast two-hybrid screen, but the cached main text does not independently expose the exact SOC1-AP1/FUL pairs. Its restored quotation therefore establishes the original assay context; the curated pair assignment and the independent SOC1 MADS interaction studies remain explicitly separate. Similarly, the abstract of PMID:11439126 does not resolve every SOC1 partner. Neither limit justifies erasing the original reference or overturning the supported heterodimerization action.
+
+Restored all four expert-tagged questions, rewording the cold/GA and meristem questions to retain valid response annotations and ask about specific contexts rather than presuppose removal. The complex-composition and root-development questions remain open; they do not manufacture new functions. The two newer native-partner/localization questions are retained, for six questions total. The genuine Falcon report remains a discovery source. The PANTHER metadata's generated description is explicitly marked `llm: true` and `checked: false`; its biological paragraph was removed from direct support for DNA binding, which already has direct SOC1 promoter-binding evidence. Its classification context is retained as a qualified reference finding.
+
+All 35 original annotation payloads and all 35 actions are unchanged. No new annotations, source-cache edits or provider reports were introduced. The source-support table above describes the earlier audit; the additional original-reference quotations documented here supplement its rows 1, 2, 10 and 18.

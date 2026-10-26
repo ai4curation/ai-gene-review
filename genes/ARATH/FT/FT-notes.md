@@ -63,3 +63,8 @@ The original annotation payloads, including any NOT/contributes-to fields, were 
 | PMID:31726375 | Full text |
 
 All cited primary caches were inspected at the stated access level; source-specific limits remain explicit in the review.
+
+
+## PR #5574 prose and justification follow-up
+
+Corrected citation spacing in reviewer-authored prose without altering original annotation payloads, source quotations, raw source files or prior histories. Flower-development membership to positive regulation is explicitly a lateral role correction; unsigned regulation to positive regulation specifies the supported direction. FT/FD-dependent AP1 activation remains the evidence, without asserting new direct target assays.
