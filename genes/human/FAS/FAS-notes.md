@@ -1,57 +1,38 @@
-# FAS (CD95/APO-1) Notes - ISOFORMS Project
+# FAS (CD95/APO-1): biological notes
 
-## Key Isoform Biology
+FAS is a type I cell-surface death receptor for FASLG. Its intracellular death domain recruits FADD into the CD95 DISC, coupling receptor activation to initiator-caspase activation and extrinsic apoptosis. The original APO-1 surface-expression/death experiments and FAS/FADD assembly studies support this mechanism ([PMID:1375228](https://pubmed.ncbi.nlm.nih.gov/1375228/), [PMID:20935634](https://pubmed.ncbi.nlm.nih.gov/20935634/)). FAS is the receptor, not the caspase, kinase or palmitoyltransferase in these pathways.
 
-FAS is a classic example of **antagonistic membrane vs soluble isoforms**.
+## Product architecture and measured phenotypes
 
-### Isoforms (7 named)
+The [preserved UniProt record](FAS-uniprot.txt) identifies the canonical membrane segment at residues 174–190 and death domain at 230–314. Alternative products are sequence-defined and should not be treated as functionally interchangeable.
 
-| Isoform | UniProt ID | Synonym | Key Feature | Function |
-|---------|------------|---------|-------------|----------|
-| Isoform 1 | P25445-1 | - | Full-length, membrane-bound | **INDUCES APOPTOSIS** |
-| Isoform 2 | P25445-2 | del2, D | Lacks exons | Soluble, blocks apoptosis |
-| Isoform 3 | P25445-3 | del3, E | Lacks exons | Soluble, blocks apoptosis |
-| Isoform 4 | P25445-4 | B | - | Soluble, blocks apoptosis |
-| Isoform 5 | P25445-5 | C | - | Soluble, blocks apoptosis |
-| **Isoform 6** | P25445-6 | TMdel, A | **Lacks TM domain** | Soluble, **BLOCKS APOPTOSIS** |
-| Isoform 7 | P25445-7 | FasExo8Del | - | Unknown |
+| Product | Sequence architecture relative to P25445-1 | Evidence-bound functional interpretation |
+|---|---|---|
+| P25445-1 | 335 residues; membrane anchor and intracellular death domain | Membrane death-receptor signaling and DISC assembly. |
+| P25445-2 (del2/D) | 103 residues; VSP_006481 replaces 66–103; VSP_006482 removes 104–335 | Short soluble product in expression studies; does not preserve the entire canonical ectodomain or intracellular death domain. |
+| P25445-3 (del3/E) | 86 residues; VSP_006483 replaces 66–86; VSP_006484 removes 87–335 | Short soluble product in expression studies; no inference of an intact canonical ligand-binding ectodomain. |
+| P25445-4 (B) | 149 residues; VSP_006485 replaces 112–149; VSP_006486 removes 150–335 | Soluble-product antagonism is supported within reported expression assays, without a universal sequestration mechanism. |
+| P25445-5 (C) | 132 residues; VSP_006487 replaces 112–132; VSP_006488 removes 133–335 | Soluble-product antagonism is supported within reported expression assays; the death domain is absent. |
+| P25445-6 (TMdel/A) | 314 residues; VSP_006489 removes 169–189, overlapping most of the membrane anchor; the downstream death domain remains | Soluble-product inhibition is reported, but the contribution of its retained death-domain sequence is not established by topology alone. |
+| P25445-7 (FasExo8Del) | 220 residues; VSP_045235 changes 218–220 and VSP_045236 removes 221–335; membrane segment remains, death domain is lost | A dominant-negative phenotype was reported in mutation-bearing HUT78 lymphoma clones; this is neither an uncharacterized product nor evidence for universal normal-tissue expression. |
 
-### Critical Antagonism: Membrane vs Soluble
+The source features and product identities are visible under ALTERNATIVE PRODUCTS, TRANSMEM, DOMAIN and VAR_SEQ in [UniProt P25445](https://www.uniprot.org/uniprotkb/P25445/entry). The table states sequence consequences separately from experimental function. The seven product objects in the review are preserved.
 
-**Membrane-bound FAS (Isoform 1)**:
-- Contains transmembrane domain
-- Forms DISC (Death-Inducing Signaling Complex)
-- Recruits FADD and CASP8
-- **TRIGGERS APOPTOSIS**
+Human soluble-product expression studies report inhibition of apoptosis. [PMID:7533181](https://pubmed.ncbi.nlm.nih.gov/7533181/) studies FasTMDel, FasDel2 and FasDel3 transcripts and COS-cell expression; its accessible original abstract does not resolve every receptor-activity or localization claim. [PMID:8648105](https://pubmed.ncbi.nlm.nih.gov/8648105/) reports inhibition of both antibody- and natural-ligand-induced apoptosis by five soluble variants. That positive phenotype does not establish direct ligand sequestration as the common mechanism. The full original [PMID:7575433](https://pubmed.ncbi.nlm.nih.gov/7575433/) distinguishes transcript abundance, undetectable minor protein products and predicted ligand-binding consequences; a prediction is not a negative binding assay. [PMID:8598453](https://pubmed.ncbi.nlm.nih.gov/8598453/) specifically identifies a deletion-insertion mutation producing FasExo8Del in resistant HUT78 clones. The original abstracts, rather than full operative bodies, were accessible for the other three papers.
 
-**Soluble FAS (Isoforms 2-6)**:
-UniProt states:
-> "The secreted isoforms 2 to 6 block apoptosis (in vitro)"
+## Assembly, membrane compartments and conditional outputs
 
-Mechanism: Soluble FAS acts as a **decoy receptor**, binding FasL without triggering apoptosis.
+Receptor self-association and signaling-complex formation are supported by distinct assays. Human BEAS-2B experiments show FAS multimer formation in a hyperoxic CAV1-associated context ([PMID:21382479](https://pubmed.ncbi.nlm.nih.gov/21382479/)); the original RIP discovery abstract explicitly identifies FAS itself as an interacting intracellular-domain product ([PMID:7538908](https://pubmed.ncbi.nlm.nih.gov/7538908/)). The positive IntAct FAS–FAS record for [PMID:7536190](https://pubmed.ncbi.nlm.nih.gov/7536190/) is retained, but its operative self-binding experiment was not readable. The old quotation about FADD self-association does not independently establish FAS self-binding.
 
-### Tissue-Specific Expression (UniProt)
+FAS participates in dynamic raft and non-raft membrane pools. Ligand-stimulated human receptor immunoprecipitation and gradient experiments support DISC association, without proving purified binary contact for every pair ([PMID:17159907](https://pubmed.ncbi.nlm.nih.gov/17159907/)). Human surface-labeling and fractionation experiments support membrane location and redistribution ([PMID:25301068](https://pubmed.ncbi.nlm.nih.gov/25301068/)). The concise core location is plasma membrane; positive raft annotations remain, without an exclusive raft claim.
 
-> "Isoform 1 and isoform 6 are expressed at equal levels in resting peripheral blood mononuclear cells. After activation there is an increase in isoform 1 and decrease in the levels of isoform 6."
+Conditional responses do not confer another protein's catalytic activity on FAS. Original HeLa experiments show ASK1/JNK activation after FAS ligation during glutamine deprivation and ERK activation in both glutamine conditions ([PMID:11096076](https://pubmed.ncbi.nlm.nih.gov/11096076/)); this remains an apoptotic context, not evidence of direct nutrient sensing. The original glioblastoma abstract reports FASLG-induced YES1/PI3K recruitment and invasion ([PMID:18328427](https://pubmed.ncbi.nlm.nih.gov/18328427/)); it does not verify the separately imported SRC, FADD or CASP8 interaction contexts. FAS-peptide SPR and structure 3EWT support calmodulin binding, while full-receptor stoichiometry and universal regulation are outside the accessible evidence ([PMID:24914971](https://pubmed.ncbi.nlm.nih.gov/24914971/)).
 
-This suggests splicing regulation shifts towards the pro-apoptotic membrane form upon immune activation.
+The proposed isoform questions ask how the TMdel architecture contributes to the measured protective phenotype and whether the FasExo8Del tumor-cell result generalizes to other defined contexts. They do not assert that these products have never been assayed or that a comprehensive later-literature search established their mechanisms as globally unknown. The [source guide](FAS-source-guide.md) records access boundaries, source-specific uncertainty and the current ontology proposal.
 
-## GOA Annotation Status
+## Historical journal
 
-- **96 total annotations**
-- **NO isoform-specific annotations** (no P25445-X identifiers)
-- All apoptosis annotations likely refer to membrane-bound isoform 1
-
-## Expected Annotation Issues
-
-1. **"Positive regulation of apoptotic process"** - TRUE for isoform 1, FALSE for isoforms 2-6
-2. **"Negative regulation of apoptotic process"** - should be annotated for soluble isoforms!
-3. **Death domain** - present in all, but only functional in membrane form
-
-## Key References
-
-- PMID:7533181, PMID:9184224 - Soluble FAS blocks apoptosis
-- PMID:7575433 - Isoform expression patterns
+The entries below preserve earlier review history. Their source counts, lane terminology, old binding policy and pending-integration statements describe earlier stages. The biological account and architecture table above, the current source guide and current annotation reasons supersede conflicting historical interpretations.
 
 ## 2026-09-30 APOPTOSIS generic-binding cleanup
 
