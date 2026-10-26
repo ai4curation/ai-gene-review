@@ -64,3 +64,13 @@ Dropped the two remaining `ortholog_experimental_goa.txt` quotes (GO:0030054 cel
 GO:0032991 protein-containing complex). A GO annotation listing is not evidence for an annotation; both
 rows keep their primary support (PMID:12459187, PMID:16458856). The listing reference is downgraded to
 relevance LOW and noted as provenance only.
+
+## 2026-10-26: caution on the cyberian deep research sequence figures
+
+`PARD3B-deep-research-cyberian.md` gives donkey–human sequence identity figures (88% global identity,
+95–99% within the N-terminal oligomerization region and the PDZ domains, 85 of 90 residues in
+Par3_HAL_N) and links four times to `SEQUENCE_ANALYSIS.md`. That file was written in the research
+agent's temporary working directory, which the client deletes after each run, so it was never
+committed and cannot be recovered. Do not quote these figures as `supporting_text` or rely on them for
+a curation decision until an alignment of A0A9L0JEY6 with human Q8TEW8 has been rerun and committed
+under `PARD3B-bioinformatics/`.
