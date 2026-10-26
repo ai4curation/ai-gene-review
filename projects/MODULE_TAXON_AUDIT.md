@@ -18,7 +18,7 @@ or its existing status says COMPLETE.
 ## Coverage and completion criteria
 
 [Inventory](MODULE_TAXON_AUDIT/inventory.json) records the initial 702-module universe
-at commit `18649bf003`. Every module starts unaudited for this project, including the
+at commit `18649bf003`. This branch now records 714 modules after checking the 12 upstream additions against the current module files; the original snapshot remains the provenance baseline. Every module starts unaudited for this project, including the
 20 already labelled COMPLETE. Structural counts are triage aids, not biological
 judgments. Recheck upstream for new, renamed and removed modules before declaring
 this project finished. Open PR overlaps are leads to inspect, not proof that the
@@ -54,7 +54,9 @@ For each module, record evidence that all of the following are satisfied:
 - [ ] `anti_crispr_suppression`: [PR #5555](https://github.com/ai4curation/ai-gene-review/pull/5555) opened after full validation passed. Thirteen reviewed representatives, 42 rows and qualified alternative mechanisms are committed on `ad799f71a2`; CI and scientific review are running.
 - [ ] `apoptotic_execution_phase`: sixteen human/mouse reviews complete (1,608 preserved rows), with 35 curated references and ten qualified edges. All focused checks pass; full validation is running.
 - [ ] `aps_dependent_assimilatory_sulfate_reduction`: 14th audit started. Comparative research distinguishes plant glutathione-dependent APR1, fungal/PAPS routes and the unresolved Pseudomonas CysI donor. Reviewing 26 existing members and adding three verified Arabidopsis exemplars.
-- [ ] Remaining 688 baseline modules: recorded as NOT_STARTED. Eight of 702 baseline audits are complete; six further audits are active. Refresh upstream additions before final completion.
+- [ ] `arginine_biosynthesis`: [PR #5563](https://github.com/ai4curation/ai-gene-review/pull/5563). All 43 member reviews and 555 rows are complete: 404 ACCEPT, 102 MODIFY, 20 KEEP_AS_NON_CORE, 16 REMOVE, 10 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED and 2 inherited NEW proposals. The current module has 16 family-backed activities, 22 assessed references, 9 evidence-backed connections and an explicit Bacteria/Archaea/Fungi/Viridiplantae occurrence envelope. Science at `a856224ea` is approved; the remaining request restores this tracker entry after main integration. Current checks and renewed review remain pending; this is not a merged audit.
+- [ ] `acetylcholine_signaling`: [PR #5582](https://github.com/ai4curation/ai-gene-review/pull/5582). Newly added to this branch's inventory from the canonical tracker with its verified active status and supporting audit evidence: 44 reviews and 2,786 preserved rows. The canonical record reports the published follow-up `d01f7211ca`, with renewed validation, integration and review still pending. This imported status is not a claim that this branch contains that PR's scientific changes.
+- [ ] Remaining 698 modules: recorded as NOT_STARTED. Eight of 714 inventoried audits are complete; eight further audits are active. The refresh added eleven not-started modules and the active acetylcholine audit to the original 702-entry snapshot. Refresh upstream additions before final completion.
 
 ## Notes
 
@@ -88,3 +90,12 @@ The alginate acetylation audit deliberately uses `algV` for Azotobacter O52197, 
 ## 2026-10-26 — subsequent audit progress
 
 Glucosinolate reached approved merge-queue checks after source-level corrections. Alginate polymerization received coherent comparative molecular-function proposals and explicitly qualified PseudoCAP source-defect records. Androgen passed full validation and opened its own PR. Anti-CRISPR curation is committed while its single full validation continues. Apoptotic execution is the thirteenth started audit; conflicting Acinus evidence, AIF stimulus dependence and source-versus-function caspase adjudications are being examined rather than flattened into a uniform cascade.
+
+
+## 2026-10-26 — restore the arginine audit after main integration
+
+The arginine audit expanded the original 39-member panel to 43 proteins with recycling-only METJA/argJ, ARATH/NAGK and ARATH/WIN1, and the short MYCTU/argA architecture. Acetyl-CoA-dependent initiation and acetylornithine recycling remain distinct; short MYCTU/argA glutamine kinetics do not establish efficient glutamate turnover. Arg7 pre-import processing is distinguished from Arg5,6 import-dependent processing. The four-root taxon envelope describes sampled occurrence, without imposing a common compartment or complete pathway on every lineage.
+
+All 555 member rows, including two inherited proposals, remain present. Independent module QA verified 43 family/member placements and checked the cached GO-CAM claims; 22 assessed references support nine connections. Historical full validation and 46 module-logic tests passed before subsequent integration. Follow-up corrected 22 root-mitochondrion actions, CAR1 urea-cycle consistency, arg3 propagation metadata and structured source defects; the latest reviewer explicitly approved the unchanged science. The current action totals are 404 ACCEPT, 102 MODIFY, 20 KEEP_AS_NON_CORE, 16 REMOVE, 10 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED and 2 NEW.
+
+Integration commit `a856224ea` retained the upstream tracker but dropped this audit's entry. This correction restores only the arginine entry among the 702 pre-existing rows, updates its structural metrics from the current module, and preserves every other existing audit row and narrative. The separate universe refresh adds twelve module paths verified on disk from the canonical inventory: eleven NOT_STARTED rows and the already published acetylcholine audit with its canonical PR evidence. Counts are recomputed for this branch rather than copied from the canonical tracker. No gene review, module or cached scientific source is changed; an active PR is not counted as complete.
