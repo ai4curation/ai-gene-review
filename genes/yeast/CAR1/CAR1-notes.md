@@ -14,3 +14,7 @@ Evidence journal (no paid deep research run; built from UniProt and cached publi
 - Core MF 2: GO:0090369 ornithine carbamoyltransferase inhibitor activity, in GO:1903269 complex with ARG3 (prevents futile cycling of arginine synthesis/degradation).
 - Urea cycle (IBA/IEA/IDA/IMP): yeast is not ureotelic; arginase is the first step of arginine catabolism to use arginine as nitrogen source (urea is further hydrolysed by DUR1,2). Experimental rows MODIFY -> L-arginine catabolic process; IBA MARK_AS_OVER_ANNOTATED (consistent with ARG1 review).
 - protein binding (ARG3) REMOVE: superseded by complex/inhibitor annotations (consistent with ARG3 review).
+
+## PR #5563 narrow synchronization, 2026-10-26
+
+Copied the four GO:0000050 row reviews exactly from the completed PR #5566 arginase audit. The term does not require ureotelic excretion. Native arginase supplies the urea/ornithine-generating reaction; the CAR1-ARG3 inhibitory interaction constrains simultaneous cycling and does not establish steady-state full-cycle flux. These rows are contextual non-core, consistent with the other fungal cycle enzymes. All original row payloads and unrelated CAR1 review decisions are preserved.
