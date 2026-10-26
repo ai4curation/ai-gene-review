@@ -1,0 +1,45 @@
+# FGA direct evidence
+
+The [review](FGA-ai-review.yaml) is the authority for annotation decisions. The [source records](FGA-direct-source-records.yaml) preserve each original annotation key, its zero-based position, methods and article locators. The [product joins](FGA-product-source-joins.yaml) retain processed-product identities that are absent from the seeded review fields.
+
+## Fibrinogen assembly and fibrin structure
+
+Human α chains enter αγ intermediates and assembled fibrinogen in the cell-fusion and labeling experiments of [PMID:8910396](https://pubmed.ncbi.nlm.nih.gov/8910396/) (Methods; Figures 1–5). The recipient BHK cells are hamster cells expressing human chains; the paper also examines human hepatoma cells. This is direct structural participation, rather than an inference solely from afibrinogenemia. The patient genetics in [PMID:10891444](https://pubmed.ncbi.nlm.nih.gov/10891444/) provide complementary necessity evidence, with the short-chain coding region distinguished from the alternative αE exon.
+
+The human fibrinogen structure in [PMID:19296670](https://pubmed.ncbi.nlm.nih.gov/19296670/) establishes an α-chain-containing complex, but the preparation has αC proteolysis and partial fibrinopeptide cleavage (Experimental Procedures, Figure 2). Its heterogeneity does not establish released fibrinopeptide A as a stable subunit.
+
+Human αC-truncation experiments in [PMID:37082262](https://pubmed.ncbi.nlm.nih.gov/37082262/) supply additional structural evidence (Methods 2.2.4–2.2.6; Results 3.1–3.2; Figures 1–4). Truncation lengthens the lag phase but increases final turbidity, so it is not described as a uniform reduction in polymerization. The reported fiber changes support an αC contribution to assembly; the EM Methods/Results sampling times and Figure 3 scale-bar descriptions differ. No quantitative fiber-density or magnification comparison is inferred from those inconsistencies. These are experimental truncations, not natural splice products.
+
+## Assembly-dependent fibrinolytic cofactor activity
+
+Human recombinant Aα221–610 oligomers bind tPA and plasminogen and enhance plasmin generation in [PMID:21806028](https://pubmed.ncbi.nlm.nih.gov/21806028/) (Figures 5–8). Soluble monomers are weak and internally cross-linked monomers are intermediate. The paper explicitly discusses disagreement with earlier immobilized-monomer results; aggregation is a proposed explanation, not a settled mechanism. Alpha-C-truncated human fibrin retains lower but positive activation in [PMID:37082262](https://pubmed.ncbi.nlm.nih.gov/37082262/) (Methods 2.2.7; Results 3.3; Figure 5).
+
+These measurements establish work by an FGA-derived template/cofactor, while tPA performs the cleavage. They support existing plasminogen-activation and fibrinolysis claims without inventing protease activity or assigning equal activity to all assemblies. The original [PMID:16846481](https://pubmed.ncbi.nlm.nih.gov/16846481/) R16C experiments remain inaccessible beyond the abstract; independent evidence does not erase that source limit.
+
+## Processed peptides and natural splice products
+
+Six authentic QuickGO contexts name either PRO_0000009021, fibrinopeptide A (canonical residues 20–35), or PRO_0000009022, mature α chain (36–866). The seed projects them into four rows. In particular, complex row 68 and clot-formation row 118 each collapse both identities. The positive structural role of the mature chain cannot silently become an activity of released FPA. Row 128 is specifically the free-FPA negative-coagulation assertion, whose operative source was not recovered. All joins, raw annotation identifiers and feature coordinates remain in the public product table.
+
+The natural records P02671-1 (αE) and P02671-2 (α) are preserved separately. Canonical chain coordinates are not a blanket processing map for the shorter splice form. No proteomics accession, experimental truncation or isolated-chain multimer is promoted to a new natural product.
+
+## Interactions and cell responses
+
+The K18 yeast two-hybrid screen reports 25 independent FGA clones, but the subsequent filament experiments concern Mrj ([PMID:10954706](https://pubmed.ncbi.nlm.nih.gov/10954706/), Methods and initial Results). A single K18-construct interaction does not establish keratin-filament binding. The generic interaction is retained as non-core.
+
+The FAM20C records are kinase-substrate assays. The actual [PMID:26091039](https://pubmed.ncbi.nlm.nih.gov/26091039/) Figure 4A shows α-chain phosphorylation; it does not separately measure binding affinity or co-immunoprecipitation. The earlier [PMID:22582013](https://pubmed.ncbi.nlm.nih.gov/22582013/) Table S1 was not recovered, and its curator-recorded peptide-label issue remains distinct from an independently demonstrated source defect. Phosphorylation alone does not justify a new kinase-binding function of FGA.
+
+Exact FGA/YWHAQ AP-MS associations are present in [PMID:28514442](https://pubmed.ncbi.nlm.nih.gov/28514442/) and [PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/). They support the more informative term **14-3-3 protein binding**. The first record has YWHAQ bait/FGA prey; the later 293T table has FGA bait/YWHAQ prey. These related BioPlex maps include reanalysis and expansion, so they are not treated as wholly independent replications. Neither association establishes purified binary affinity, regulatory activity or a uniquely resolved natural splice product.
+
+Human fibrinogen binds ICAM-1 and supports endothelial adhesion, ERK activation and survival, but γ-chain recognition peptides account for important responses ([PMID:9182580](https://pubmed.ncbi.nlm.nih.gov/9182580/), Figure 1B; [PMID:10903502](https://pubmed.ncbi.nlm.nih.gov/10903502/), Table 1 and survival/ERK experiments). The imported contributes_to assertions are evaluated as subunit contributions to the assembled ligand. Downstream cell responses remain non-core; they are not autonomous α-chain receptor or kinase activities.
+
+Human fibrinogen and fragment D produce vascular responses in **rat** preparations ([PMID:15739255](https://pubmed.ncbi.nlm.nih.gov/15739255/), Methods and Figures 6–8). Human fibrinogen also elicits endothelin-1/von Willebrand factor release in rat endothelial preparations ([PMID:19193866](https://pubmed.ncbi.nlm.nih.gov/19193866/), Methods and release/ERK Results). These contextual effects do not make fibrinogen a contractile enzyme, peptide hormone or secretory-machinery component. The original heterotypic adhesion assay in PMID:8100742 and trophoblast spreading assay in PMID:24041635 remain incompletely accessible and retain source-specific uncertainty.
+
+## Platelets, matrix and vesicle proteomics
+
+[PMID:6777381](https://pubmed.ncbi.nlm.nih.gov/6777381/) directly measures fibrinogen-derived fibrin on activated human platelets despite its thrombospondin-focused title (Figures 1–3). Calcium-dependent surface association is positive evidence; it does not establish calcium sensing or membrane-spanning topology. Alpha-granule origin is partly grounded in earlier cited work. The same surface experiment is represented more precisely by external side of plasma membrane than by its broad cell-surface parent.
+
+[PMID:6281794](https://pubmed.ncbi.nlm.nih.gov/6281794/) directly tests human isolated-chain preparations with human platelets (Table 1; Figure 1), with weaker α-chain than γ-chain activity and a self-association caveat. The patient proteomics of PMID:23382103 do not independently establish that reduced FGA causes the platelet phenotype; the generic aggregation role has separate direct support.
+
+Exact FGA target records were recovered from the human ECM workbooks in PMID:25037231 (Additional File 2, sheets A/B row 12) and PMID:28675934 (SI002, breast/omentum data). Matrisome classification is not itself a mechanical assay. Urinary Table 1 in PMID:19056867 identifies FGA separately from FGG; the deposited PXD000608 group for PMID:24769233 contains FGA in both vesicle-enriched and soluble fractions. Such measurements do not resolve vesicle-lumen residence, an intact precursor, free FPA or an isoform-specific peptide.
+
+Three proteomic source contexts remain unresolved: PMID:28344315 has an FGA **gene-expression** heatmap label but no recovered protein-table join; PMID:23533145 and PMID:22516433 lack the relevant original FGA target tables. Positive measurements elsewhere do not verify those specific HDA records. Full reference assessments distinguish unavailable main text from available deposited data or supplements.
