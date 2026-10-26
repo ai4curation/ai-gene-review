@@ -25,3 +25,14 @@ The urea-cycle rows are retained as contextual participation rather than rejecte
 Normal publication caching passed. Genuine Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota errors prevented a report. Manual source review is recorded here, with no fabricated provider-named research file. Abstract-only and bibliographic-only access are distinguished from full text; unknown target supplementary details are not treated as a contradiction. Logs are under `.cache/module-audit-logs/arginase-yeast-CAR1-*`.
 
 The initial focused validation passed. Record sections are backfilled, and final schema/term/reference validation, rendering and helper-history checks are recorded in the same log directory. Actions: ACCEPT 20, KEEP_AS_NON_CORE 6, MODIFY 7.
+
+
+## PR #5563 narrow synchronization, 2026-10-26
+
+
+Copied the four GO:0000050 row reviews exactly from the completed PR #5566 arginase audit. The term does not require ureotelic excretion. Native arginase supplies the urea/ornithine-generating reaction; the CAR1-ARG3 inhibitory interaction constrains simultaneous cycling and does not establish steady-state full-cycle flux. These rows are contextual non-core, consistent with the other fungal cycle enzymes. All original row payloads and unrelated CAR1 review decisions are preserved.
+
+
+## 2026-10-26 integration provenance
+
+Preserved the approved arginase audit and the published arginine follow-up notes together. This is a journal union; no CAR1 annotation, action, core function or source record changed.
