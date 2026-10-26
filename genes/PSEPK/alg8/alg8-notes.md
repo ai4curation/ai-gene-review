@@ -18,3 +18,8 @@ Final validation: just validate PSEPK alg8 passed. Original annotation fields we
 ## PR #5552 follow-up, 2026-10-26
 
 Hyaluronan-specific propagation is treated consistently as REMOVE across the three Alg8 reviews; supported alginate roles remain independently represented. Live UniProt PANTHER cross-references show that SF12 itself contains S. pyogenes HasA P0C0H0 (hyaluronan chemistry; PMID:8276791) and NodC P04340/P26024, in addition to the three Alg8 proteins. The SF12 label MANNURONAN SYNTHASE is therefore not a substrate-specific selector. GO:0085029 was checked live: matrix aggregation/arrangement/bonding, with no animal restriction. Retained the evidence gradient: Pa target-specific architecture, KT2440 related-strain inference, Azotobacter over-annotation without a comparable matrix-architecture result. Substituting a biofilm term would change the biological claim rather than simply refine it.
+
+
+## 2026-10-26 — ISS source trace
+
+Named P. aeruginosa Alg8 Q52463 as the sequence source for the retained KT2440 NEW ISS proposal. Added the direct ortholog polymerization/active-site evidence from PMID:16391057 and PMID:18524915, rather than relying on interaction evidence alone. All original GOA rows and the existing proposal count are unchanged.
