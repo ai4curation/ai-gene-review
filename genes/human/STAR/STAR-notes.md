@@ -146,3 +146,7 @@ Falcon deep research was attempted for human/STAR with perplexity-lite fallback.
 44. GO:0006694 (TAS; PMID:7761400): MODIFY — STAR-mediated cholesterol delivery participates in steroid hormone biosynthesis.
 
 Counts: 9 MODIFY, 22 ACCEPT, 7 KEEP_AS_NON_CORE, 5 REMOVE, 1 UNDECIDED. No NEW annotations were added. All original seeded annotation fields were preserved.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root mitochondrion annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
