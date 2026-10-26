@@ -120,3 +120,7 @@ Correct-but-general RNA activity/process rows are now MODIFY, not peripheral mer
 `just fetch-gene-pmids ECOLI rlmC` completed. The actual FEBA lookup for keio/b0859 failed because neither local data nor the remote source was reachable; no fitness artifact or negative biological conclusion was fabricated. Source/access logs and the original payload/raw-hash snapshot are in `.cache/module-audit-logs/rrna-three-*`. Independent annotation-reviewer consultation agreed with the qualified cofactor inference and separate TrmA/RlmD substrate boundaries.
 
 Validation: schema, term/ontology, source/quote and consistency checks pass with zero errors. Strict mode reports the available deep-research file is not cited in annotations; this is intentional, because primary and curated independent evidence replaces provider/prediction quotations. No artificial provider citation was added to clear the advisory.
+
+## 2026-10-26 — PR5586 cofactor wording
+
+The existing iron-ion-to-[4Fe-4S] MODIFY is explicitly a lateral correction supported by target HAMAP FT:BINDING features, not a GO descendant refinement or a direct RlmC spectroscopy assay. The RumA/RlmD motif and redox findings remain excluded from target experimental evidence. No action, payload or source byte changed.

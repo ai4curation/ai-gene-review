@@ -37,3 +37,9 @@ The paired-site draft now has three native alternatives, six independently evide
 Independent QA identified that FAMILY selectors would permit broader substitution despite prose limits. All six leaves now select exact GENE_PRODUCTs and retain their verified family descriptors as classification. Representative members are not treated as the limits of a broad family. The route predicate uses only the selected protein.
 
 QA confirmed the paired-site chemistry and recommended a stronger overall E. coli quotation. Both the module and variant now quote the YbjF loss result together with the full recombinant YgcA/U1939 sentence. Current TrmA P23003 belongs to PTHR47790, not the PTHR11061 classification of the four rRNA participants; historical biochemical homology does not justify asserting the same current PANTHER placement.
+
+## 2026-10-26 — PR5586 review-source boundary
+
+Removed the general Gram-stain sentence from the module evidence list. PMID:42517620 remains an explicitly assessed reference: its RlmC/RlmCD overview is useful historical context, but the MISCITED assessment is scoped to the RlmC iron-sulfur statement citing a RumA/RlmD primary, with the chemically incorrect N5 heading and overbroad taxonomic phrasing separately explained. The three direct native implementations and mollicute boundary remain supported by their primary sources; no participant, activity, variant, connection or route logic changed.
+
+Nonblocking source suggestions were assessed. The uncharacterized Q97R12 title remains a documented stale source label, not a claim that characterization is absent. A surprising PANTHER SF30 label does not itself establish wrong phylogenetic membership: the module uses verified family membership and exact genes without transferring the tRNA activity. No unsupported clade-misassignment source defect was manufactured from the label alone.
