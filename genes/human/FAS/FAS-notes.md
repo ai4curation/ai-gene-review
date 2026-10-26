@@ -119,3 +119,7 @@ Final synthesis also refines the broad InterPro signal-transduction assertion (h
 ## 2026-10-26 — Canonical validation
 
 All seven canonical checks pass: status update, standard validation, strict GOA matching, ontology terms, component checks, computed status and rendering of 236 narratives. DRAFT status retains 38 accounted advisories: 37 supported generic-binding cases under project policy and one intentional receptor-source MODIFY/UNDECIDED distinction. The existing UniProt cache, 75 normal dependencies, prior history and inherited HTML remain exact. Thirteen normal dependencies are genuine additions; the fresh GOA snapshot is adopted explicitly. Both evidence tables and a source guide document assay scope. Rendered HTML was checked privately. Unrelated workspace edits remain unchanged.
+
+## 2026-10-26 — Authored record format
+
+The interaction and database-decision tables are now YAML, following the repository rule for authored structured records. All 40 interaction records and 36 database records retain their field values and order. The source guide points to the YAML files; earlier notes describe the superseded TSV representation. Annotation decisions, source fields, normal caches, all 78 inherited quotations and product/core summaries are unchanged. The seven canonical checks and 236-narrative render remain applicable to the byte-identical main review.
