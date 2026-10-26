@@ -9,3 +9,12 @@ Applied review and annotation-reviewer skills; reciprocal scientific consultatio
 Supplementary localization evidence is in ../TS1/TS1-source-analysis/ (same ARATH parent). PMID18431481 exact locus rows support chloroplast/stromal assignment;28887381 labels TS1 plastid. Supplement endpoints for25293756 and20061580 returned no usable ZIP; no absent-row inference is made.
 
 Final QA: the CLAUDE.md root-organelle exception explicitly excludes plastids, so supported chloroplast-to-stroma refinements follow the general refinement policy. Original negated-row count is zero. PMID22303247 contains an incorrect HSK locus and a homoserine-dehydrogenase wording slip; primary evidence governs the identities and reactions.
+
+
+## PR #5569 source-specific corrective review (2026-10-26)
+
+Repaired mangled PMID/GO citation strings and spacing in reviewer prose. Source quotations, original annotations, evidence judgments, and target-specific supplemental source analyses remain unchanged.
+
+Annotation actions are unchanged; revisions clarify evidence or narrative.
+
+All 26 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.

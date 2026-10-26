@@ -16,3 +16,14 @@ Original experimental claims are judged holistically with independently establis
 
 
 Retrieval update: normal force-fetch of PMID:17012784 subsequently obtained the full text; Results3.2 now directly supplies the threonine-inhibition quote in the review. PMID:20418392 was normally cached and read as downstream native DAP-pathway corroboration, not as a direct MJ0571 assay.
+
+
+## PR #5569 source-specific corrective review (2026-10-26)
+
+The target family/reaction quote did not establish localization. Traced the ancestral IBA node and donor identities; no target loss or phylogenetic error is alleged. Native localization remains UNDECIDED pending independent source resolution; recombinant solubility is not relabeled as native compartment evidence.
+
+Corrected display symbol from accession Q57991 to the verified MJ0571 locus (no invented gene name), removed the unresolved core location, and attached actual curated pathway statements to process claims.
+
+Action changes: Row 3 GO:0005829: ACCEPT → UNDECIDED.
+
+All 8 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.

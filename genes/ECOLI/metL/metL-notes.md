@@ -16,3 +16,14 @@ Original experimental claims are judged holistically with independently establis
 
 
 Assembly source conflict: current UniProt says homotetramer, whereas the introduction of full PMID:17012784 cites a native solution dimer for AK-HDH II. No oligomer count is asserted in this review core; resolution requires the original Dautry-Varsat1977 experiment rather than transferring ThrA stoichiometry.
+
+
+## PR #5569 source-specific corrective review (2026-10-26)
+
+Live QuickGO definitions checked on 2026-10-26: GO:0004022 explicitly uses NAD+; GO:0004412 explicitly uses NADP+. Homoserine is a primary alcohol, so its NAD-dependent oxidation fits GO:0004022 without implying ethanol metabolism or substrate promiscuity. Both can refine their common broad oxidoreductase ancestor. Retain the NAD-dependent catalytic capacity as core across all four enzymes, while distinguishing directly measured yeast kinetics from conserved inference in other targets. Missing native cofactor comparisons limit claims about physiological preference, not the biological centrality of the supported homoserine reaction. Earlier fungal MODIFY to GO:0004412 erased the cofactor distinction and is superseded. Sources: https://www.ebi.ac.uk/QuickGO/term/GO:0004022 and https://www.ebi.ac.uk/QuickGO/term/GO:0004412 .
+
+Replaced genetic-map-only support for biosynthetic processes with the curated UniProt CC:PATHWAY statements identifying MetL steps 1 and 3. PMID:4148765 is not treated as biochemical pathway evidence.
+
+Action changes: the existing NAD-dependent alcohol-dehydrogenase and NAD+ binding assertions change from KEEP_AS_NON_CORE to ACCEPT, because both describe integral catalytic properties of the homoserine reaction. Evidence limitations are recorded separately from core status.
+
+All 20 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.

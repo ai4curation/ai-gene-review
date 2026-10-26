@@ -20,3 +20,12 @@ Original experimental claims are judged holistically with independently establis
 ## Correction of negated ATP-kinase review (2026-10-25)
 
 The original PMID:14699121 GO:0004413 IDA row has negated:true. Its supported claim is NOT ATP-dependent homoserine kinase, consistent with phosphoserine-donor chemistry and UniProt CC:CAUTION. The prior MODIFY to GO:0043899 mistakenly carried that negation onto the experimentally demonstrated phosphotransferase activity. Corrected to ACCEPT of the original negative assertion; the separate positive GO:0043899 row is unchanged. This supersedes the earlier review decision, not the original annotation or prior history.
+
+
+## PR #5569 source-specific corrective review (2026-10-26)
+
+The target family/reaction quote did not establish localization. Traced the ancestral IBA node and donor identities; no target loss or phylogenetic error is alleged. Native localization remains UNDECIDED pending independent source resolution; recombinant solubility is not relabeled as native compartment evidence.
+
+Action changes: Row 5 GO:0005737: ACCEPT → UNDECIDED.
+
+All 15 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.
