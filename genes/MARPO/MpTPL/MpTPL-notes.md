@@ -13,3 +13,8 @@ The 2015 MpTPL–D34/PB1 fusions are engineered recruitment experiments. Their d
 The normal full 2020 source is `url:https://edepot.wur.nl/523089` (PMID:32415296). Full MpARF2, but not full MpARF1, clearly associates with MpTPL in Arabidopsis-protoplast FRET–FLIM; LFG→AAA eliminates this interaction. LFG-peptide/MpTPL coexpression represses the tobacco reporter, supporting corepressor capacity. Native Marchantia MpARF2 genetics strengthens the circuit model but does not convert those heterologous assays into native complex isolation. GO:0003714 is the supported core MF. Nuclear action is retained as a conserved functional inference with the explicit lack of native-protein imaging, not as an ARBA-supported fact. Both initial rows are preserved and no automatic NEW MF/location row is added.
 
 Validation and source-closure results are recorded in `.cache/module-audit-logs/auxin-arf-tpl-final-report.md`; the committed helper history identifies this curation session.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Removed the domain-architecture quotation from nuclear localization support. The existing nuclear claim remains an explicitly reasoned functional inference from transcriptional repression, without claiming native imaging or mistaking the artificial promoter-reporter NLS for MpTPL localization. Core support distinguishes activity from localization. No payload/action changed.

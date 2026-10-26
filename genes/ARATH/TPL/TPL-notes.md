@@ -32,3 +32,8 @@ PMID:34075876 separates Mediator contacts, synthetic Arabidopsis-auxin circuitry
 Nuclear annotations remain ACCEPT. The AtSubP-only cytoplasm prediction is UNDECIDED: the inspected sources do not settle a cytoplasmic pool, and strong nuclear evidence is not counterevidence. This uncertainty concerns a prediction rather than a supposedly inaccessible publication. Broad transcription regulation is refined to the demonstrated negative direction. Auxin and jasmonate participation remains supported by active corepressor work, not merely necessity.
 
 Validation and source-closure results are recorded in `.cache/module-audit-logs/auxin-arf-tpl-final-report.md`; the committed helper history identifies this curation session.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Replaced NINJA-specific support on AFP2/AFP3 with the full paper's actual AFP–TPL Y2H result. Normally recovered full PMID:22065421 and swept all 81 screen-derived refinements: broad transcription-factor wording is no longer used to classify non-DNA-binding partners. Family/group results and screen methods are distinguished from exact curated pairs, whose supplemental tables are not all reproduced in the cache. All 94 MODIFY actions and original payloads are retained.

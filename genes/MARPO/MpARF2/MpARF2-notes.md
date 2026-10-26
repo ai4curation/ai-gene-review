@@ -13,3 +13,8 @@ PMID:26020919 reports that MpARF2 lowered the Gal4 reporter below control in tob
 PMID:40086441, full PDF `url:https://edepot.wur.nl/690102`, compares recombinant DNA-binding domains and shows that class-B MpARF2 shares tested DNA-recognition properties with class-A AtARF5. PMID:40168121 shows rescue by its B3 domain within an MpARF1 scaffold. Neither result changes the sign of full-length native MpARF2. The hormone-response row is refined to negative regulation of auxin signaling: an auxin-independent repressor can directly regulate the circuit without itself being switched by auxin. PAINT broad DNA-binding/nuclear/regulatory inheritance remains sound; the regulatory row is refined using target evidence, not rejected because the family includes both activators and repressors. All eight seeded rows are preserved.
 
 Validation and source-closure results are recorded in `.cache/module-audit-logs/auxin-arf-tpl-final-report.md`; the committed helper history identifies this curation session.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Removed the automated UniProt nucleus statement as purported independent confirmation of IEA. Nuclear activity is a functional inference from independently assayed ARF regulation; the concordant IBA retains its separate phylogenetic basis. Native imaging and exclusivity are not asserted. No row payload/action changed.

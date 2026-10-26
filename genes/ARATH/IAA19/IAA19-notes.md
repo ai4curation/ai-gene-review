@@ -29,3 +29,8 @@ Original source distribution:
 - PMID:28650476: 22 rows.
 - PMID:32612234: 35 rows.
 - PMID:9342315: 1 rows.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Added the degron/ubiquitin-ligase recognition core shared with the reviewed Aux/IAA siblings, with explicit inference from gene-specific msg2 domain-II mutations and the curated degradation-domain statement. This is not a purified affinity measurement, and does not assign proteolysis or ubiquitin-transfer activity to its substrate. No annotation row added or changed.

@@ -14,3 +14,8 @@ Original source distribution:
 
 - GO_REF:0000002: 1 rows.
 - GO_REF:0000120: 1 rows.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Replaced the mismatched nuclear-location quotations with the sanctioned RuleBase location statement and an explicitly functional inference from the GR-fusion experiment. The rule is corroborative classification, not an independent imaging assay. Removed the Fig 2B correction and clone identifier from positive functional support; both remain documented as source/identity caveats. No payload/action changed.

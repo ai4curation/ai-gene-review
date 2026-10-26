@@ -13,3 +13,8 @@ PMID:26020919 directly tests Gal4-fused full-length and middle-region proteins i
 The normally fetched full 2020 PDF is `url:https://edepot.wur.nl/523089`; the 2025 DBD paper is `url:https://edepot.wur.nl/690102` (canonical PMID:40086441). MpARF2 B3 or DBD swaps into MpARF1 test recognition within an activator scaffold, not the native activity of MpARF2. An isolated MpARF1 LFG peptide can repress with MpTPL in a reporter but full-length MpARF1 did not show the clear MpTPL interaction seen for MpARF2; no native MpARF1–MpTPL direct pair is manufactured. Nuclear function is a conserved inference, not a claim of exclusive residence. All five seeded rows were adjudicated and no NEW row added merely to mirror the independently supported core MF.
 
 Validation and source-closure results are recorded in `.cache/module-audit-logs/auxin-arf-tpl-final-report.md`; the committed helper history identifies this curation session.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Removed the automated UniProt nucleus statement as purported independent confirmation of the IEA. Nuclear activity is a functional inference from independently assayed ARF transcriptional regulation, with source references and explicit native-imaging limits. No row payload/action changed.

@@ -16,3 +16,8 @@ All five original IBA claims are ACCEPT with native corroboration and explicit p
 A complementing native-promoter MpTIR1-tdTomato fusion accumulates “at nucleus-like regions in most of the sporeling cells soon after germination” (text describing Supplemental Fig14), rather than relying on the separately NLS-tagged DII reporter. Nuclear localization is described with the authors' resolution; no NEW location term was needed. Knockouts survive as cell masses while losing normal organogenesis. Thus the native result does not support a universal requirement for cell viability or angiosperm-specific organ programs. Auxin-induced and auxin-repressed transcripts both occur; receptor activation does not imply all downstream genes are positively regulated.
 
 No NEW AC activity. The discussion explicitly says “It would be interesting to examine whether MpTIR1 has adenylate cyclase activity.” Arabidopsis and Physcomitrium results do not become a measured Marchantia capacity. Suggested experiments retain this as an open question.
+
+
+## 2026-10-26 — PR #5576 evidence follow-up
+
+Reconciled the member with its module by adding the independently supported nucleus location to both core activities, using the exact complementing native-promoter MpTIR1-tdTomato result (PMID:36529527). The authors report nucleus-like regions in sporelings; that resolution and construct limit remain explicit. No NEW row was manufactured solely for module coverage; all five original rows and actions remain unchanged.
