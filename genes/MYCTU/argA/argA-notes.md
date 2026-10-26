@@ -19,3 +19,7 @@ Important source correction: the downloaded UniProt kinetic line says acetyl-CoA
 The primary authors propose native pathway priming and/or partner-assisted activity to explain poor glutamate affinity; neither efficient native flux, a particular activating partner nor N-acetylglutamine deamidation is established. Existing direct glutamate MF and arginine BP are retained with those limits. Broad N-acetyl/acyltransferase rows are refined to the supported glutamate-specific activity without denying glutamine promiscuity.
 
 [PMID:17347518 Surprising arginine biosynthesis] supports the comparative short-NAGS architecture; fused ArgH-NAGS proteins are another implementation not represented by this target. UniProt and PANTHER ontology agree: PTHR43626 = ACYL-COA N-ACYLTRANSFERASE; SF4 = GCN5-RELATED N-ACETYLTRANSFERASE 2, CHLOROPLASTIC. These are broad family labels, not exclusive NAGS functional definitions; a module selector needs an exact member/GO function constraint or a free descriptor. The chloroplastic label does not imply bacterial organelle targeting.
+
+## PR #5563 source-defect follow-up, 2026-10-26
+
+Recorded the confirmed UniProt O33289 acetyl-CoA Km unit error in structured source_defects on the direct catalytic-activity row: 150 mM should be 150 micromolar, measured with glutamine. The 280 mM glutamine Km and glutamate nonsaturation at 600 mM remain unchanged. No source cache or original row payload was edited.

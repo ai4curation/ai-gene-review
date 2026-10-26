@@ -25,3 +25,9 @@ Normal publication caching completed. Normal Falcon research with Perplexity-lit
 Actions: ACCEPT 14, MODIFY 7. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.
 
 Ontology-cache advisory: live QuickGO confirms GO:0003942 has the NADP+-specific label; the local ontology cache retains the older shorter label. The machine payload and current chemically specific label are preserved rather than rewritten to silence a stale-label warning.
+
+## PR #5563 follow-up, 2026-10-26
+
+Restored supported GO:0005739 mitochondrion rows to ACCEPT under the explicit root-organelle policy; existing matrix rows remain separate. Reasons distinguish organelle screens, direct targeting, publication-linked curated evidence and unavailable full text. No original annotation payload changed. Cytosol decisions use target-specific fractionation/processing evidence rather than relationship qualifiers or generic precursor transit. For Aga1, matrix inference does not imply universal post-import autoproteolysis.
+
+The authored GO:0003942 label follows the repository ontology version; NADPH specificity remains explicit in the biological rationale. Original GOA term labels are preserved.
