@@ -23,3 +23,8 @@ PP_2650/Q88JJ9 is distinct from PP_2049/Q88L86. The old refinement to exact 4HB 
 The current source record independently identifies `Pfam; PF00465; Fe-ADH; 1.` and `InterPro; IPR018211; ADH_Fe_CS.` These support enzyme class and a catalytic metal site. The ARBA-only Fe cofactor sentence is not used to prove exact iron occupancy. No cellular location or new process is inferred merely from soluble-looking chemistry.
 
 Workflow: all original annotation fields, order and flags and both raw source hashes were captured before changes. Actual Falcon and fallback provider attempts failed; no provider report was fabricated. Normal publication caching and bacterial fitness retrieval were attempted; FEBA was unreachable and no fitness artifact was created. Manual primary/domain review supplies the decisions. No new annotation row was added.
+
+
+## PR #5591 source and cofactor follow-up — 2026-10-26
+
+Removed curation commentary from the standalone PP_2650 summary. The biological distinction from PP_2049 and unresolved substrate specificity remain intact; no action or core changed. All original annotation payloads, qualifiers, actions and raw UniProt/GOA bytes are preserved. No NEW annotation was added. Independent bounded consultation agreed that NAD capacity does not imply NADP exclusion. Focused validation, source checks, renders and preservation checks are recorded in the PR #5591 follow-up report.

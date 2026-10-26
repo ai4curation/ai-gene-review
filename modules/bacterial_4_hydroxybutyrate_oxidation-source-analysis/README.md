@@ -11,3 +11,8 @@ The script runs the production module validator with the six exact gene-review p
 It then compiles the actual module using the production module-logic compiler and checks all 64 subsets of the six members. Only subsets containing both Cupriavidus catalytic activities satisfy the required route; Pseudomonas-only sets, either isolated native enzyme and cross-species incomplete pairs fail. `route-cases.json` preserves the expected/results snapshot. New outputs go to `.cache/module-audit-logs/`.
 
 The predicate represents available catalytic activities in the stated selected/expressing context. It is not a prediction of native expression, growth, flux or chemistry from genome presence alone. The compiler does not infer the selected-strain condition; the module explicitly states that scientific limit. The required pair records a species-level biochemical implementation, not a jointly purified two-enzyme reconstitution.
+
+
+### PR #5591 ontology verification
+
+`ssadh-ontology-evidence.json` preserves the live QuickGO definitions and is_a/part_of ancestors retrieved on 2026-10-26, with request URLs. GO:0004777 and GO:0036243 descend from GO:0009013; GO:0009013 is not currently below GO:0004030. The module selects the measured GabD NADP branch and leaves Sad acceptor choice unresolved. This does not exclude the independently supported GabD NAD branch.
