@@ -23,7 +23,7 @@ Separately, 44 GO ids cited in PW definitions are obsolete and one no longer res
 yardstick for GO-CAM completeness. Across the 144 diagram pathways that
 describe normal biology, the median pathway has only 29% of its RGD-curated
 human genes in any human GO-CAM. The best single GO-CAM covers a median of 2
-genes of a pathway, and only 55 of the 144 have any human GO-CAM model whose
+genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
@@ -290,7 +290,15 @@ The 14 new candidates:
 For hormones without a receptor signaling pathway term, GO uses `cellular
 response to <ligand> stimulus`. That branch covers vasopressin, CRH, PTH and
 glucagon, and it is also the process of the mouse glucagon GO-CAM
-`636d9ce800000147`.
+`636d9ce800000147`. In GO a receptor signaling pathway sits under the cellular
+response to its ligand, so the response term is strictly the broader one. These
+rows still use `closeMatch`, because a PW "signaling pathway" includes the
+downstream response. The V2 vasopressin branch maps to the same `GO:1904117`
+with `broadMatch`, because it is one receptor's share of that response.
+
+The ATM row's `GO:0000077` DNA damage checkpoint signaling also covers
+ATR-dependent checkpoints, so one of the four GO-CAMs it matches
+(`65039e8700000123`, ATR activation) is an ATR model, not an ATM one.
 PKA signaling and beta-adrenergic signaling should extend
 `gpcr_camp_pka_signaling` rather than start new modules. That module is a compact
 five-gene module (ADRB2, GNAS, ADCY5, PRKACA, CREB1) grounded in `GO:0007188`, so
