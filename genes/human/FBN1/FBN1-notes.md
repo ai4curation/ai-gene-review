@@ -55,3 +55,11 @@ Asprosin's hormonal core includes the reported cAMP/PKA-associated signaling and
 ## 2026-10-26: BMP-binding specificity follow-up
 
 Five source contexts (indices 42–46) now refine generic binding to GO:0036122 BMP binding. The original human FBN1 rF23 experiments directly measure BMP2, BMP4, BMP7, BMP10 and GDF5/BMP14 prodomain binding ([PMID:18339631](https://doi.org/10.1074/jbc.M707820200), Results, Figure 6 and Table 3). The prodomain scope remains explicit; mature-ligand binding and receptor signaling are not inferred. This applies the same evidence-specific rule as the FBN2 review. All other annotation decisions, reference assessments, quotations and product objects remain unchanged.
+
+## 2026-10-26: fibronectin-binding follow-up
+
+The imported human fibronectin context (index 55, PMID:25034023, partner P02751) now uses MODIFY with GO:0001968 fibronectin binding. Original Methods 2.2 and Results 3.3/Figure 3B distinguish the positive recombinant human FBN1-fragment interaction from heparin effects on fibrillin self-association. The five previous BMP-prodomain refinements remain exact. The [direct source guide](FBN1-direct-source-guide.md) now also records the actual PMID:18339631 Figure 6A–B caption and Table 3 locators from the recovered original.
+
+MODIFY specifies a better term; it does not automatically classify the supported interaction as outside the core. The current structural core already describes fibrillin’s matrix-scaffold contribution to storage and availability of BMP complexes, supported separately by the prodomain binding and osteoblast matrix-sequestration evidence. A separate BMP-binding core would repeat that contribution here, so the existing core synthesis is retained. Prodomain binding alone is not assigned receptor activation or an unrestricted mature-ligand signaling effect.
+
+All other 153 review objects, all imported source objects, complete references, products and quotations remain unchanged. No new source, annotation, core term or quotation is added. Existing journal/history records are preserved; ROOT owns the follow-up history and PR linkage.
