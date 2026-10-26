@@ -15,3 +15,12 @@ See [the source guide](FARS2-source-guide.md) for original article URLs, complet
 ## 2026-10-26 — Canonical validation
 
 Canonical checks pass, including strict GOA matching, ontology/component validation, computed status and rendering of 216 narratives. Status remains DRAFT with exactly 81 supported generic-binding advisories and no unfinished annotations. All 17 selected machine and normal files remain exact. Fifteen normal sources include the exact accepted shared PTHR11538 entries and metadata from PR #2049, with a separately preserved PAINT file; authentic newer alternatives and seven unused discovery publications stay private. The binding-record table accompanies its source guide. Rendered HTML was checked privately. Unrelated workspace files remain unchanged.
+
+
+## 2026-10-26 — PR #5559 specificity and evidence-format follow-up
+
+The five broad assertions for nucleotide binding, aminoacyl-tRNA ligase activity, tRNA charging and cytoplasm are now TOO_GENERAL, each entailed by a positively retained strict descendant. This preserves the scientific claims and source-specific limits while separating term specificity from source validity. The revised counts are 17 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and five TOO_GENERAL; no imported context is pending and no annotation is added. The matrix inference is explicit in the core, alongside the independently supported mitochondrion location.
+
+The current [binding records](FARS2-binding-records.yaml) replace the historical TSV mentioned above. Conversion preserves all 81 rows and all fields, including exact partner accessions, record identifiers, empty author-release fields and caveats; PSI-MI methods are YAML lists. The prior history record is append-only and remains unchanged. A new history entry belongs to the final canonical follow-up.
+
+The primary 2009 enzyme experiments motivate a bounded question about cellular meta-tyrosine incorporation, with a proposed test that distinguishes aminoacylation and translational incorporation from post-translational oxidation. No new GO activity or process follows from the in-vitro alternative-substrate result. The standalone description, all 107 source objects, all 17 whole reference objects, all 81 binding reviews, zero-quotation boundary, product boundary and immutable source files are preserved.
