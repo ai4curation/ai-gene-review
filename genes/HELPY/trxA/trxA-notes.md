@@ -1,0 +1,15 @@
+# trxA: Helicobacter pylori 26695
+
+## 2026-10-26 — strain-resolved antioxidant review
+
+Applied the review and annotation-reviewer workflows to every seeded row. Original machine annotation fields, order, qualifiers and flags are preserved. No NEW annotations are proposed. Actual Falcon plus perplexity-lite attempts failed (403/authentication or quota failure); no generated report was fabricated. Publication acquisition ran in parallel and succeeded. The required FEBA fitness attempt failed because no HELPY mapping/local database or reachable source was available; no fitness file was written. Actual logs are retained in `.cache/module-audit-logs/helpy-review/`.
+
+PMID:11222594 was read in full through the normal cached author PDF (`publications/url_https___scb.wfu.edu_Poole-files_Baker_Hpylori.pdf.md`). The Methods distinguish 26695 genomic DNA, TIGR-ATCC genomic clones, recombinant E. coli expression, and native-component reconstitution. Table 2 identifies P21762 explicitly; HP0824 and HP0825 identify Trx1 and TrxR. Figures 2–6 measure the native H. pylori system. In contrast, fine AhpC/peroxide kinetic measurements deliberately replace native TrxR with E. coli TrxR to suppress background NADPH oxidase activity. This distinction is retained in all core descriptions.
+
+Live QuickGO definitions were checked on 2026-10-26. GO:0008379 is obsolete; current GO:0140824 explicitly names thioredoxin-dependent hydroperoxide reduction. GO:0102039 specifically requires NADH. GO:0019430 includes cellular superoxide removal and is not restricted to a direct dismutase reaction. Canonical PMID records and the full author PDF are cited separately so full-text quotations retain recoverable provenance. No GOA file, ARBA-only statement, protein name, keyword or evidence-existence field is used as functional support.
+
+The protein-disulfide reductase and redox-homeostasis claims are supported independently of ARBA by native Trx1 insulin-disulfide reduction and AhpC recycling (PMID:11222594). Trx2 can receive electrons from TrxR but fails to support AhpC turnover in the tested system; it is not interchangeable with Trx1 merely because both are thioredoxins.
+
+The canonical PMID:12576586 abstract reports viable trx mutants, limiting the early universal-essentiality hypothesis. Normal forced retrieval remained abstract-only. Full PMID:25964471 identifies the prior 26695 work and carefully distinguishes its own 43504 oxidative-damage assays from X47 mouse-colonization experiments. No DNA-repair or colonization annotation is inferred merely from damage/necessity phenotypes.
+
+PMID:16354674 reports Trx1-dependent reactivation of denatured arginase. The canonical abstract was read, and normal forced and publisher-URL recovery were attempted but did not recover full text (publisher 403). Exact strain/construct and separation of folding from thiol chemistry therefore remain a meaningful question. The reported positive finding is preserved; neither a negative conclusion nor a new exact-target chaperone assertion is manufactured.
