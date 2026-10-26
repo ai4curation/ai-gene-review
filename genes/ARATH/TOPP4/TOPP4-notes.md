@@ -1,0 +1,8 @@
+# TOPP4 curation notes
+
+
+## 2026-10-26 complete annotation audit
+
+All27 original rows reviewed, no NEW annotations. Direct target biochemical results support the PP1 MF and protein-dephosphorylation process. The PIF5 phosphorylation row is corrected to the measured removal reaction. The two PIF binding sources are kept distinct (AT1G09530/PIF3 versus AT3G59060/PIF5); direct PIF5 catalysis is not silently assigned to PIF3. RGA/GAI, PIF5, PIN1 and ATG13a substrate contexts were checked separately, including the opposite effects on DELLA versus PIF5 stability. Nuclear and cytoplasmic annotations are retained on direct target localization, with plasma-membrane observations described without manufacturing a new row. Full38851185 explicitly leaves the termination-module substrate unknown, so no RNA-polymerase-II-CTD phosphatase assertion is made. Protein-binding refinements use actual substrate reaction evidence where available; PP1R3 generic binding is removed as uninformative without rejecting the interaction.
+
+All seeded rows were reviewed, with original term, evidence, source, supporting-entity and qualifier/NOT payloads preserved. The shared normal Falcon attempt and perplexity-lite fallback both failed; logs are retained under `.cache/module-audit-logs/autonomous-flowering-fetch/ARATH-TOPP4-provider.log`. No provider report was fabricated. Manual primary-literature assessment and normal publication fetching supplied this review. Source access limits are stated per reference/claim. Generic protein binding follows the current informative-function policy; its removal does not reject the physical interactions. Nuclear localization does not by itself exclude additional compartments.
