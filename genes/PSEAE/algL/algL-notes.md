@@ -18,3 +18,10 @@ PMID8370530 is abstract-only in cache, with no full text successfully obtained. 
 - [PMID:8370530] Sequence of the algL gene of Pseudomonas aeruginosa and purification of its alginate lyase product.: Cached abstract supports lyase and localization; full text was not obtained to adjudicate the unexpected experimental threonine deaminase row. That row remains UNDECIDED.
 - [PMID:8550492] Alginate synthesis in Pseudomonas aeruginosa: the role of AlgL (alginate lyase) and AlgX.: Historical genetic necessity is interpreted alongside the direct homeostasis and genetic-background dependence in PMID34990713, not dismissed as a curation error.
 - [PMID:34990713] The Pseudomonas aeruginosa homeostasis enzyme AlgL clears the periplasmic space of accumulated alginate during polymer biosynthesis.: Direct PAO1-derived strain work, structural and biochemical assays, accumulation measurements and interaction tests distinguish homeostasis from a stable secretion-complex component.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+Added a SUSPECTED PseudoCAP source defect with requested_change CHECK for GO:0004794. The action remains UNDECIDED because PMID:8370530 is abstract-only. No corrected value or shared mapping cause is guessed; an upstream curator should inspect the actual assay and mapping. This is a query, not a confirmed correction or a report already sent.
+
+The schema has no PseudoCAP resource enum; source_defects uses OTHER with PseudoCAP explicitly named in the explanation. The export therefore appears in reports/source-defects/OTHER.md, rather than a dedicated PseudoCAP report.

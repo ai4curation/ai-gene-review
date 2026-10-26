@@ -27,3 +27,8 @@ IPR053728 — Alginate Permeability Channel-forming (homologous superfamily); IP
 ## Inferred transport MF
 
 Added one conservative ISS NEW GO:0015159 row. Specific target AlgE export/channel family, native outer-membrane localization and the curated probable alginate-pore assignment support the inferred molecular function. [PMID:21778407](https://pubmed.ncbi.nlm.nih.gov/21778407/) supplies Pseudomonas homolog structure/halide-flux/loop-complementation evidence. It is neither a native Azotobacter assay nor direct purified-polymer translocation. No BP was added; the two seeded rows and all source fields remain unchanged.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+Unified the existing-term representation on GO:0015159, whose live definition explicitly covers transfer of polysaccharides across a membrane. Removed the KT2440 alginate-channel NTR because the evidence does not require an additional channel-specific ontology proposal. Pa structure/halide flux/pore-mutant secretion phenotypes (PMID:21778407; PMID:23335756) support an IC molecular-function recommendation, not direct visualization of polymer passage. KT2440 and Azotobacter assignments remain ISS-level homolog inferences. The missing Pa and KT2440 MF rows are nonredundant with their BP/CC rows; no NEW process was added. Normal refetch of PMID:23335756 still returned abstract only, so no full-text-only assay detail was inferred.

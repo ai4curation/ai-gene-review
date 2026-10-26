@@ -28,3 +28,8 @@ IPR058834 — ALG44, beta-barrel domain; IPR058835 — ALG44, barrel-sandwich hy
 ## 2026-10-26 quotation-source QA
 
 Expanded the periplasm quotation to include the verbatim SUBCELLULAR LOCATION prefix, so automated record-section assignment distinguishes the curated location statement from the Periplasm keyword. No annotation action or original machine field changed.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+Retained the deliberate absence of a separate contributes_to GO:0047643 proposal. Native alg44 loss establishes alginate-production necessity; family/PilZ conservation supports a copolymerase model, but direct native complex activity attribution is absent. The reason now states this boundary rather than leaving an apparent unexplained cross-species asymmetry.

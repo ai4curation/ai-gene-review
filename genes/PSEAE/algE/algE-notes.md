@@ -14,3 +14,8 @@ Core polysaccharide transmembrane transporter activity GO:0015159 was checked in
 
 - [PMID:23335756] Dual roles of Pseudomonas aeruginosa AlgE in secretion of the virulence factor alginate and formation of the secretion complex.: Direct P. aeruginosa evidence; secretion phenotypes do not establish polysaccharide polymerase activity.
 - [PMID:21778407] Structural basis for alginate secretion across the bacterial outer membrane.: Direct P. aeruginosa structure and halide-flux experiments; halide flux is not direct reconstitution of alginate-polymer flux.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+Unified the existing-term representation on GO:0015159, whose live definition explicitly covers transfer of polysaccharides across a membrane. Removed the KT2440 alginate-channel NTR because the evidence does not require an additional channel-specific ontology proposal. Pa structure/halide flux/pore-mutant secretion phenotypes (PMID:21778407; PMID:23335756) support an IC molecular-function recommendation, not direct visualization of polymer passage. KT2440 and Azotobacter assignments remain ISS-level homolog inferences. The missing Pa and KT2440 MF rows are nonredundant with their BP/CC rows; no NEW process was added. Normal refetch of PMID:23335756 still returned abstract only, so no full-text-only assay detail was inferred.

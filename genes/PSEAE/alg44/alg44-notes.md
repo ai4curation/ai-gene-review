@@ -17,3 +17,10 @@ QuickGO GO:0009276 defines the peptidoglycan cell-wall layer, not the entire cel
 - [PMID:16797016] Alg44, a unique protein required for alginate biosynthesis in Pseudomonas aeruginosa.: Original article read in full as Chapter III of the author thesis (URL/pages in notes). No fatty-acid–CoA ligase assay appears in its methods/results. Older localization interpretation is qualified by PMID18524915.
 - [PMID:18524915] Membrane topology and roles of Pseudomonas aeruginosa Alg8 and Alg44 in alginate polymerization.: Direct P. aeruginosa mutagenesis/topology; not a purified Alg44 glycosyltransferase assay.
 - [PMID:25817996] Dimeric c-di-GMP is required for post-translational regulation of alginate production in Pseudomonas aeruginosa.: Direct P. aeruginosa Alg44 regulatory-ligand evidence; c-di-GMP binding is distinct from polymer glycosyltransferase chemistry.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+Recorded the confirmed PseudoCAP GO:0004467 source defect with DELETE_ROW rather than guessing a replacement activity or gene. The original article was re-inspected in the locally cached author thesis; its assays do not support fatty-acid activation. The cause is UNKNOWN; another suspicious PseudoCAP row is not proof of a common systematic error. Kept plasma membrane as the c-di-GMP core activity location because the PilZ domain faces the cytoplasm; periplasmic exposure remains correctly represented by the source annotation rows and assembly-role description.
+
+The schema has no PseudoCAP resource enum; source_defects uses OTHER with PseudoCAP explicitly named in the explanation. The export therefore appears in reports/source-defects/OTHER.md, rather than a dedicated PseudoCAP report.

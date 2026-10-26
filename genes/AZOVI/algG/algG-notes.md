@@ -28,3 +28,8 @@ IPR053409 — Mannuronan C5-epimerase (family). Actual membership is present in 
 ## 2026-10-26 quotation-source QA
 
 Expanded the periplasm quotation to include the verbatim SUBCELLULAR LOCATION prefix, so automated record-section assignment distinguishes the curated location statement from the Periplasm keyword. No annotation action or original machine field changed.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+GO:0016857 was verified live as catalysis altering chiral centers in a carbohydrate molecule (EC5.1.3.-); polymer-bound mannuronate meets that definition. All three cores now use the valid broad term. Pa PMID:8144447 and Azotobacter PMID:8830682 directly assay recombinant target epimerization and support nonredundant IDA MF proposals; the pre-existing KT2440 ISS proposal remains comparative. All three precise-term proposals use an identical definition and GO parent; this is one ontology request with three supported use cases, not three distinct activities. RHEA:45572 was verified directly and is attached as module reaction evidence. No redundant specific NEW row was added.

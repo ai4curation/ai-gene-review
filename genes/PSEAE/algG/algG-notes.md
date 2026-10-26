@@ -18,3 +18,8 @@ The two ubiquitin/proteasome IBAs at PTN007723485 are incompatible with this bac
 - [PMID:8144447] Pseudomonas aeruginosa AlgG is a polymer level alginate C5-mannuronan epimerase.: P. aeruginosa FRD1-derived AlgG, including recombinant expression; curated into the PAO1 species reference record. Not a PAO1-specific phenotype claim.
 - [PMID:16401084] Pseudomonas aeruginosa C5-mannuronan epimerase: steady-state kinetics and characterization of the product.: Do not conflate isolated-enzyme G-block capability with usual native P. aeruginosa polymer composition.
 - [PMID:16866359] Chemical mechanism and specificity of the C5-mannuronan epimerase reaction.: Direct enzyme chemistry, distinct from protein-dependent export role.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+GO:0016857 was verified live as catalysis altering chiral centers in a carbohydrate molecule (EC5.1.3.-); polymer-bound mannuronate meets that definition. All three cores now use the valid broad term. Pa PMID:8144447 and Azotobacter PMID:8830682 directly assay recombinant target epimerization and support nonredundant IDA MF proposals; the pre-existing KT2440 ISS proposal remains comparative. All three precise-term proposals use an identical definition and GO parent; this is one ontology request with three supported use cases, not three distinct activities. RHEA:45572 was verified directly and is attached as module reaction evidence. No redundant specific NEW row was added.

@@ -21,3 +21,8 @@ Required AlgG protection is scoped to the native P. aeruginosa node context and 
 ## 2026-10-26 executable scope of AlgG protection
 
 The broad template now makes the AlgG protection part optional while visibly retaining its experimentally established requirement in P. aeruginosa. The compiler does not interpret context.taxa as a conditional requirement; leaving the part globally required would incorrectly transfer Pa evidence across the template. No Azotobacter dispensability is inferred. A species-specific required implementation would need an explicit instantiation; this audit does not modify module logic.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+Verified live GO definitions for AlgG GO:0016857 and AlgE GO:0015159; both broad activities fit the demonstrated/inferred mechanisms. Unified gene representations with explicit direct-versus-ISS boundaries and no NEW process rows. Added RHEA:45572 to the AlgG function evidence, matching the existing notes claim. Retained the omitted Alg8 family ID after inspecting actual SF12 assignments: UniProt P0C0H0 HasA (hyaluronan chemistry), P04340/P26024 NodC, and the three Alg8 representatives all carry PTHR22913:SF12. This is diversity within SF12, not only its parent. Official UniProt REST source: https://rest.uniprot.org/uniprotkb/search?query=xref%3Apanther-PTHR22913%20AND%20reviewed%3Atrue&format=json&size=500 ; audited response retained locally in .cache/module-audit-logs/pr5552-panther-query1.json. The module names these counterexamples and retains the specific functional constraint. No AlgX dependency content was edited.
