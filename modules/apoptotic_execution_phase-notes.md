@@ -175,3 +175,43 @@ also passed schema validation. Logs are under `.cache/module-audit-logs/` as
 `apoptosis-module-final-validation.log`, `apoptosis-module-schema-validation.log`,
 `apoptosis-module-render.log` and
 `apoptosis-module-integration-history-validation.log`.
+
+
+## PR #5558 Boolean execution-route correction (2026-10-26)
+
+CI `test_no_curated_module_is_satisfied_by_an_empty_context` exposed a real
+logic error in the earlier integration: all ten parts were optional. The
+compiler represents an optional part as a choice including an empty branch,
+so prose requiring at least one execution route did not prevent the entire
+module from being satisfied when no activity held. This supersedes the earlier
+"Logic and participation" statement that optional flags plus prose encoded
+that requirement.
+
+CASP3 and CASP7 now form a required `ONE_OR_MORE` variant set under a principal
+executioner part. Either contribution, or both, satisfies that structural
+requirement. Their molecular activities, family selectors, evidence, IDs and
+connection endpoints are unchanged. PMID:18723680 supports treating the two
+major executioners as distinct substrate-selective contributions, not equal
+substitutes for every output; PMID:15525783 supplies the specifically mouse
+ICAD-cleavage alternative. The gate is the scope of this represented
+caspase-mediated implementation, not a new claim that either protease alone
+causes all death phenotypes or that all mammalian cell death requires CASP3/7.
+
+CASP6 remains a context-dependent proteolytic/amplification branch, consistent
+with the qualified PMID:32029622 edges. ICAD/CAD, Acinus, AIF, XIAP and SMAC
+remain optional additions. In particular, AIF-associated caspase-independent
+death alone does not instantiate this caspase-mediated execution template;
+its retained DNA-binding branch and contextual evidence are unchanged.
+Regulators alone cannot satisfy the template either. The restructuring leaves
+nine top-level parts representing the same ten activities, ten edges, sixteen
+protein representatives and thirty-five references.
+
+A parameterized regression checks all four CASP3/CASP7 combinations with all
+optional branches absent or present. This verifies that neither caspase is
+individually mandatory, that both may coexist, and that even all contextual
+branches together cannot bypass the executioner requirement. Focused module
+validation and LinkML schema validation passed; the only module advisories
+remain the two existing Acinus free-text-function notices. The HTML was
+regenerated at `pages/modules/apoptotic_execution_phase.html`. Final test and
+history results are recorded in the matching helper-created session history;
+logs use `.cache/module-audit-logs/apoptosis-logic-fix-*`.
