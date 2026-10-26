@@ -6,7 +6,7 @@ tags: [EVALUATION]
 collections: [HOMOLOGY_PROPAGATION]
 species: [ARATH, worm, DROME, mouse, human, CHICK]
 autolink_exclude: [ddl]
-genes: [At3g08840, KDTA, cec-10, npp-20, CG3226, Gprc5c, BTBD3]
+genes: [At3g08840, KDTA, cec-10, npp-20, CG3226, Gprc5c, BTBD3, LPXA, LPXB, LPXK, LPXD1, LPXD2, LPXC1, LPXC2, LPXC3, LPXC4, LPXC5]
 ---
 
 # Re-examining the RAR misannotation study (Wei et al. 2020)
@@ -117,6 +117,28 @@ annotation against the literature and, for IBA rows, the PAINT node.
 | mouse/Gprc5c | sevenless binding (InterPro2GO) | REMOVE (also visual perception from the same entry) | **Holds, for a different reason.** IPR002956 is a BOSS PRINTS signature matching two transmembrane segments; no GPRC5–ROS1 link is known. |
 | CHICK/BTBD3 | cerebral cortex development (IBA) | MODIFY → pallium development | **Holds, weakly.** The node is sound; the anatomy term doesn't fit birds. About 1,760 bird annotations use it, constrained only to Bilateria. |
 
+### The Arabidopsis lipid A pathway
+
+Since the lipid A flags were the paper's one clear error, we reviewed the whole
+Arabidopsis pathway rather than relying on KDTA alone (2026-10-26). All eleven
+enzymes are reviewed here, with the experimental evidence from Li et al. 2011
+and Joo et al. 2012 recorded on their rows.
+
+| Gene | Key evidence | Outcome |
+|---|---|---|
+| ARATH/LPXA | Purified enzyme active in vitro; complements *E. coli lpxA*; mutant has ~21% of wild-type lipid X | Lipid A biosynthetic process added as NEW (IDA), the only term the experiments support that GOA lacked |
+| ARATH/LPXC1 to ARATH/LPXC5 | Five tandem copies encoding identical proteins; RNAi of the cluster lowers lipid X; LpxC1.1-GFP is mitochondrial | Same calls on all five; the experiments cannot tell the copies apart |
+| ARATH/LPXD2 | Lipid X undetectable in the null | Main LpxD; activity and process accepted as core |
+| ARATH/LPXD1 | Lipid X not reduced in the null; R293K and missing acceptor-binding residues | Activity and process left UNDECIDED; only acyltransferase activity accepted |
+| ARATH/LPXB | Two nulls accumulate lipid X (42-fold) and UDP-2,3-diacyl-GlcN | Accepted |
+| ARATH/LPXK | Three nulls accumulate the disaccharide 1-phosphate | Accepted |
+| ARATH/KDTA | Null accumulates lipid IVA | Accepted (see above) |
+
+Across the set, the predicted `chloroplast` (ISM) rows were removed, because
+GFP fusions in Li et al. 2011 did not colocalise with chloroplasts. Rows using
+the obsolete `GO:2001289 lipid X metabolic process` were moved to `lipid A
+biosynthetic process`, except on LPXD1, which has no phenotype.
+
 Taken together, the paper was wrong about one family (plant lipid A). It was right
 about five, but for three of those the cause was not the one it suggested (plastid
 loss for DDL, a mis-scoped experimental term for npp-20, a bad InterPro signature
@@ -166,7 +188,7 @@ IBA is low quality.
 - [x] Read the full text of PMID:12937276 for the npp-20 IMP row.
 - [x] Chicken `cerebral cortex development`: reviewed in BTBD3.
 - [ ] Raise with GO: taxon constraints on `GO:0030907`/`GO:0033309` (Fungi), `GO:0044548` (Chordata) and a narrower one for `GO:0021987`; an IRD on PTN000917496; and review of the IPR002956 and IPR037893 InterPro2GO mappings.
-- [ ] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5), carrying the experimental evidence from PMID:21709257 and PMID:22545860 into those reviews. In progress.
+- [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
 - [ ] Rerun RAR on current GOA for our reviewed species (script not yet written).
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
 
