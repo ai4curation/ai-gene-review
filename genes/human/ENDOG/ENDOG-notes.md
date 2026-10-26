@@ -147,3 +147,49 @@ OpenScientist run, and it is a mechanistic question rather than a disease-gene o
   intermembrane-space-versus-matrix conflict without new wet-lab work.
 - **MITOMAP** deletion tables returned HTTP 403 to automated access; a deletion
   breakpoint catalog would need another route.
+
+## 2026-10-26 — OpenScientist H1: mtDNA breakpoints vs ENDOG motifs (negative)
+
+Ran the breakpoint-versus-motif test as a hypothesis job
+(`ENDOG-hypotheses/mtdna-breakpoint-motif-enrichment/`). It computed rather than
+summarised: it fetched the rCRS, the MitoBreak deletion table, the PMID:36198798
+supplementary NUMT tables and the UCSC NumtS track, and ran a GC-decile-matched
+permutation test.
+
+Result, in two parts:
+
+- **mtDNA deletions.** Breakpoints are enriched at G-quadruplex and C-rich motifs over
+  GC-matched controls (fold 1.17, z +13). But stratifying by junction repeats puts the
+  whole signal in deletions flanked by a direct repeat of >=5 bp (fold 1.24) and none in
+  repeat-free deletions (fold 0.97, p 0.91). mtDNA direct repeats are themselves G/C-rich,
+  so the motif enrichment is collinear with the classical mechanism
+  [file:human/ENDOG/ENDOG-hypotheses/mtdna-breakpoint-motif-enrichment/openscientist.md
+  "a mechanism that does not require ENDOG and fully accounts for the observed G/C-rich
+  localization"].
+- **NUMTs.** No enrichment in the 66,083-genome catalogue (germline p 0.39, somatic p 0.10)
+  or the independent UCSC set (p 0.59). That arm of the hypothesis is refuted.
+
+What I verified independently, rather than taking on trust: the rCRS base composition the
+report quotes is right (C 31.3%, G 13.1%, 16,569 bp), and the 9-bp deletion hotspot it
+leans on really is a C-rich direct repeat, `ACCCCCTCTAC` at 8271-8281 — which is the
+report's own central point, that at the hotspot the "motif" and the repeat are the same
+sequence.
+
+What cannot be checked: only an HTML and a PDF report were saved, with no code or
+intermediate tables, so the test statistics are not replayable. Treat the numbers as
+indicative.
+
+Consequences for the review. No action changed and no annotation added. The core-function
+sentence claiming G-quadruplex cleavage "may generate the common 9-bp mtDNA deletion" is
+now qualified, because the population data do not separate ENDOG from slipped replication.
+The eLife direct assay (PMID:36394256) is untouched — it shows ENDOG binds and cuts there;
+what is unsupported is the inference from that to ENDOG shaping the breakpoint landscape.
+The report's own GO suggestions were not adopted: `GO:0051880 G-quadruplex DNA binding` may
+well be right, but it should come from the primary assay, not from a coordinate analysis.
+
+The decisive experiment is now a suggested experiment on the review: breakpoint mapping in
+ENDOG-null versus wild-type cells, analysing repeat-free deletions separately, plus an
+in-vitro cleavage map on damaged templates. A static reference scan cannot see
+lesion-driven site selection, which PMID:41854021 says is ENDOG's actual preference — so
+this negative result does not exclude ENDOG involvement, it only removes the sequence-motif
+argument for it.
