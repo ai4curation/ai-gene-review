@@ -81,6 +81,8 @@ The caution overstated the gap. The committed alignment in `PARD3B-bioinformatic
 `RESULTS.md`, `RESULTS-rereview.md`) independently reproduces most of the report's sequence figures:
 88.27% identity over 1,202 aligned pairs; human PDZ2 383-468 85 of 86 identical; PDZ3 498-585 84 of 88;
 human 201-289 88 of 89; and the PDZ2-PDZ3 linker 469-497 26 of 29. Cite those files, not the report,
-for these values. Two report details have no exact committed counterpart and should not be quoted:
-"85 of 90 residues in Par3_HAL_N" (the committed window, human 1-82, gives 77 of 82) and the
-donkey residue the report maps to human Ser746.
+for these values. The report's mapping of human Ser746 (the 14-3-3 site; PMID:15721295) to donkey
+Ser743 also follows from the committed alignment blocks (donkey 181-890 : human 184-893). Both serines
+sit in the identical stretch LKKSSSLESLQ (human 741-751, donkey 738-748) of `Q8TEW8.fasta` and
+`PARD3B-uniprot.txt`. One report figure has no committed counterpart and should not be quoted:
+"85 of 90 residues in Par3_HAL_N"; the committed window, human 1-82, gives 77 of 82.
