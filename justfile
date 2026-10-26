@@ -91,6 +91,13 @@ validate-mappings:
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the generated RGD Pathway Ontology -> GO candidate mapping set
+# (projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.yaml) against the SSSOM schema.
+# Unlike the curated sets there is no GO label check: the set deliberately keeps
+# obsolete and unresolvable targets, flagged pw2go:qa/OBSOLETE_TARGET and qa/MISSING_TARGET.
+validate-rgd-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.yaml
+
 # Validate the curated RHEA->GO gap-fill mapping set (projects/RHEA/rhea2go.sssom.yaml):
 # (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
 validate-rhea-mappings:
