@@ -18,3 +18,10 @@ The full primary de Waal paper (PMID:18469035, doi:10.1530/REP-08-0055), Table 1
 [PMID:18469035] “The zebrafish Ar responded well in terms of binding and transactivation to synthetic androgens as well as to testosterone and 11-KT”
 
 [file:DANRE/ar/ar-uniprot.txt] “DR PROSITE; PS51030; NUCLEAR_REC_DBD_2; 1.”
+
+
+## PR5554 member follow-up — 2026-10-26
+
+Reviewed all 37 rows and replaced the single generic biochemical quote with claim-specific binding, phenotype, and structural-domain evidence. Chromatin association and nucleus are explicitly inferred conserved receptor roles; mRNA in situ is not protein localization. Native binding is directly supported by radioligand assays (17698417), whereas spermatogenic/oocyte/courtship claims cite their native perturbation studies. Full-text publisher/Scispace/ResearchGate routes for 18469035 returned HTTP 403; the previously inspected Table 1 quantitative cortisol evidence remains distinguished from the abstract cache. No direct zebrafish protein-localization or chromatin-occupancy experiment was identified in the inspected primary material.
+
+All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.

@@ -55,3 +55,10 @@ PANTHER19.0 release classification independently resolves this target to PTHR105
 ## 2026-10-26: integration source-cache check
 
 Normal fetching supplied the previously uncached PMID:26101251 and PMID:31434731 cited above, and Reactome:R-HSA-9909510. The latter is the reaction “FKBP5 binds CHUK:IKBKB:IKBKG”; corrected the reference title to its fetched title. The cytosol annotation remains supported independently by the curated UniProt localization statement, and no annotation payload or action changed.
+
+
+## PR5554 member follow-up — 2026-10-26
+
+Explicitly preserved and superseded the 2026-10-10 manual OMICS_EVIDENCE history for membrane association. Peripheral association does not require a membrane anchor. The NK membrane-fraction abstract does not resolve FKBP5-specific identification/controls, and publisher full text returned HTTP 403; UNDECIDED reflects that unresolved biological association, not an integral-membrane requirement. Project tracker remains parent-owned.
+
+All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.

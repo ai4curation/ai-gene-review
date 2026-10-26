@@ -18,3 +18,10 @@ Estrogen-response-element binding requires PAINT/sequence-specific evidence beyo
 [PMID:26507457] “ARα showed a unique intracellular localization with a higher transactivation response than that of ARβ”
 
 [file:ORYLA/arb/arb-uniprot.txt] “DR PROSITE; PS51030; NUCLEAR_REC_DBD_2; 1.”
+
+
+## PR5554 member follow-up — 2026-10-26
+
+Reviewed all 29 rows. Native 36918573 localization and ARE assays now support the appropriate claims. Chromatin association is explicitly a conserved inference, corroborated by direct mouse AR promoter ChIP/EMSA (27959439), not a native medaka ChIP result. Native ChIP-seq remains future work in the medaka paper. Cytoplasmic, cortisol/ERE and other unresolved claims remain unresolved; normal sperm does not exclude a modulatory role. Androgen binding is functional inference, not measured Ara/Arb affinity.
+
+All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.

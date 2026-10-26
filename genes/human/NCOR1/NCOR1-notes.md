@@ -25,3 +25,10 @@ The review by Sun and Xu ([PMID:32449767](https://pubmed.ncbi.nlm.nih.gov/324497
 ## Decision coverage
 
 110 source assertions reviewed; 56 ACCEPT, 7 KEEP_AS_NON_CORE, 8 MODIFY, 10 REMOVE, 29 UNDECIDED. The status is COMPLETE with explicit unresolved claims, not a statement that all evidence gaps have been closed.
+
+
+## PR5554 member follow-up — 2026-10-26
+
+GO:0000118 now quotes the original PMID18326024 statement explicitly identifying N-CoR within the HDAC3/TBL1/TBLR1 complex. The experiment localizes that complex to mitotic spindle; it is not mislabeled as a chromatin-purification experiment. NCOR1 complex membership does not assert deacetylase catalysis.
+
+All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.

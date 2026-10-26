@@ -26,3 +26,10 @@ Full cached PMID:18468998 was read: AR denotes alpha1D-adrenergic GPCR throughou
 [file:mouse/Ar/Ar-uniprot.txt] “Interacts via the ligand-binding domain with LXXLL and FXXLF motifs from NCOA1, NCOA2, NCOA3 and MAGEA11.”
 
 [PMID:18468998] “the alpha(1D)-adrenergic receptor (AR), which belongs to the adrenergic family of G-protein-coupled receptors (GPCRs).”
+
+
+## PR5554 member follow-up — 2026-10-26
+
+Restricted the nuclear steroid-receptor transcription core-function location to nucleus. Cytoplasmic receptor-pool annotations remain intact; cytosol is not presented as the location of DNA-dependent transcription.
+
+All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.

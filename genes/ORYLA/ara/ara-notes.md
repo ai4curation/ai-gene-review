@@ -18,3 +18,10 @@ Estrogen-response-element binding requires PAINT/sequence-specific evidence beyo
 [PMID:26507457] “ARα showed a unique intracellular localization with a higher transactivation response than that of ARβ”
 
 [file:ORYLA/ara/ara-uniprot.txt] “DR PROSITE; PS51030; NUCLEAR_REC_DBD_2; 1.”
+
+
+## PR5554 member follow-up — 2026-10-26
+
+Replaced generic 2015 abstract support with native 2023 knock-in localization and WT/mutant ARE reporter evidence (36918573). Ara is nuclear in POA/medulla cells but cytoplasmic in anal fin. Zinc binding is a sequence-domain inference. The OUP 2015 full-text route returned HTTP 403; no inaccessible figure was treated as inspected. No NEW annotation was manufactured for a module advisory.
+
+All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.

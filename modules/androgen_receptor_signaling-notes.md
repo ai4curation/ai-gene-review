@@ -48,3 +48,10 @@ The PANTHER release-plus-UniProt member index was built through `just ensure-pan
 ## Independent integration QA
 
 Root inspected the complete receptor/cofactor topology, 15-member panel, source scopes and 12 connections. Cofactor edges now encode their measured regulatory signs rather than using a generic input relation: the selected positive co-chaperone/coactivator effects and contextual NCOR1 repression remain machine-readable. Context conditions and evidence qualifiers are retained; no universal quantitative gate is inferred.
+
+
+## 2026-10-26 — PR 5554 module follow-up
+
+Corrected the stale statement that contribution edges were unsigned: their signs describe the experimentally supported, contextual direction of regulation, without imposing Boolean sufficiency. The ligand-sensing annoton now uses GO:0005497 androgen binding (current QuickGO definition checked: binding to an androgen, a male sex hormone); transcription remains GO:0003707. Source-specific NCOA1/NCOA2 evidence statements now describe the actual constructs/promoters or depletion assays from PMID:10567563, PMID:9717843 and PMID:17079484. Generalization caveats remain reviewer interpretations in role descriptions.
+
+The FKBP4/FKBP5 annotons already carry the requested annoton-level explanation of GO:0031072: human HSP90 binding is more precisely supported, while the shared mouse implementation establishes HSP90/receptor-complex association without independently resolving each binary contact. Retained the broader shared capability rather than transfer a direct binary assay between taxa.
