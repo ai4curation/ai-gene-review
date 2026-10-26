@@ -64,3 +64,36 @@ Dropped the two remaining `ortholog_experimental_goa.txt` quotes (GO:0030054 cel
 GO:0032991 protein-containing complex). A GO annotation listing is not evidence for an annotation; both
 rows keep their primary support (PMID:12459187, PMID:16458856). The listing reference is downgraded to
 relevance LOW and noted as provenance only.
+
+## 2026-10-26: caution on the cyberian deep research sequence figures
+
+`PARD3B-deep-research-cyberian.md` gives donkey–human sequence identity figures (88% global identity,
+95–99% within the N-terminal oligomerization region and the PDZ domains, 85 of 90 residues in
+Par3_HAL_N) and links four times to `SEQUENCE_ANALYSIS.md`. That file was written in the research
+agent's temporary working directory, which the client deletes after each run, so it was never
+committed and cannot be recovered. Do not quote these figures as `supporting_text` or rely on them for
+a curation decision until an alignment of A0A9L0JEY6 with human Q8TEW8 has been rerun and committed
+under `PARD3B-bioinformatics/`.
+
+## 2026-10-26: correction to the caution above
+
+The caution overstated the gap. The committed analyses in `PARD3B-bioinformatics/` independently
+reproduce most of the report's sequence figures. Cite these files, not the report, for these values:
+
+- Global identity: [file:EQUAS/PARD3B/PARD3B-bioinformatics/RESULTS.md "aligned pairs 1202; identical 1061; identity over aligned pairs 88.27%"] (`align.py`).
+- PDZ1 (human 201-289): [file:EQUAS/PARD3B/PARD3B-bioinformatics/RESULTS.md "human region 201-289: 89 of 89 residues aligned, 88 identical"].
+- PDZ2 (human 383-468): [file:EQUAS/PARD3B/PARD3B-bioinformatics/RESULTS.md "human region 383-468: 86 of 86 residues aligned, 85 identical"].
+- PDZ3 (human 498-585): [file:EQUAS/PARD3B/PARD3B-bioinformatics/RESULTS.md "human region 498-585: 88 of 88 residues aligned, 84 identical"].
+- N-terminal region with the Par3/HAL N-terminal domain (human 1-82): [file:EQUAS/PARD3B/PARD3B-bioinformatics/RESULTS.md "human region 1-82: 82 of 82 residues aligned, 77 identical"].
+- PDZ2-PDZ3 linker (human 469-497): [file:EQUAS/PARD3B/PARD3B-bioinformatics/RESULTS-rereview.md "donkey: human PARD3B 469-497: 29 of 29 aligned, 26 identical"] (`compare_interpdz_rereview.py`).
+- The report's mapping of human Ser746 (the 14-3-3 site; PMID:15721295) to donkey Ser743 follows from
+  the committed alignment block donkey 181-890 : human 184-893. Both serines sit in the identical
+  stretch LKKSSSLESLQ (human 741-751, donkey 738-748) of `Q8TEW8.fasta` and `PARD3B-uniprot.txt`.
+
+Three report figures have no committed counterpart, or conflict with one, and should not be quoted:
+
+- "85 of 90 residues" for the Par3_HAL_N region. The committed human 1-82 window gives 77 of 82 (93.9%).
+- "38 of 41 residues" for the PDZ2-PDZ3 linker. The committed linker window, from the UniProt PDZ2/PDZ3
+  boundaries, is human 469-497 and gives 26 of 29 (89.7%). Different window, different ratio.
+- "95–99%" across the N-terminal region, the three PDZ domains and the linker. This holds for the PDZ
+  domains (98.9%, 98.8%, 95.5%) but not for the N-terminal region (93.9%) or the linker (89.7%).

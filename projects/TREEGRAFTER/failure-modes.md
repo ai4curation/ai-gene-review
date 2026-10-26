@@ -15,6 +15,14 @@ autolink_gene_symbols: false
 > [rejection re-review](../TREEGRAFTER.md#rejection-re-review-2026-09-24)
 > outcomes and the [holozoan](holozoan-hippo-case-study.md) rows.
 
+> **Later curation (2026-10-26, PR #5550).** The Thlaspi TFP nucleus row
+> (`genes/THLAR/TFP/TFP-ai-review.yaml`, `GO:0005634`) is now `UNDECIDED`;
+> the prior call is preserved with explicit supersession in
+> `rereview-2026-09-24/batch-08.yaml`. The counts below remain the dated
+> `f81b9f300` snapshot, not a count of current reviews. A fresh extraction must
+> exclude that unresolved row from the downgraded population; keeping a row in
+> that population is not a biological reason to retain an over-annotation call.
+
 This sub-page drills into the **283 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it

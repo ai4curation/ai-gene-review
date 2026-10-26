@@ -360,17 +360,19 @@ deeper peroxisomal-membrane term together at `PANTHER:PTN000060347`; the
 peroxisomal term is mammalian-source compartment propagation that needs pruning
 from fungal ER HMG-CoA reductases.
 
-- [x] `CANAL/HMG1` - *Candida albicans* HMG-CoA reductase; drafted in PR #5454
+- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
+  `COMPLETE`
+- [x] `yeast/HMG2` - *S. cerevisiae* regulated minor HMG-CoA reductase isozyme;
+  already `COMPLETE`
+- [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
+  exemplar
+- [x] `CANAL/HMG1` - CGD *Candida albicans* class I HMG-CoA reductase; drafted
+  in PR #5454
 - [x] `ASPFU/hmg1` - major *Aspergillus fumigatus* HMG-CoA reductase with
   TAFC-linked mevalonate evidence; drafted in PR #5456
 - [x] `ASPFU/hmg2` - second *A. fumigatus* HMG-CoA reductase paralog; drafted
   in this branch
-- [ ] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase; already
-  `COMPLETE`
-- [ ] `yeast/HMG2` - *S. cerevisiae* HMG-CoA reductase paralog; already
-  `COMPLETE`
-- [ ] `SCHPO/hmg1` - fission-yeast HMG-CoA reductase; existing exemplar to
-  refresh
+- [ ] `EMENI/AN1593` - *Aspergillus nidulans* short PTHR10572 member
 
 ---
 
@@ -384,6 +386,10 @@ from fungal ER HMG-CoA reductases.
   `EMENI/cysD`, all of which fall in `PTHR43797:SF2` under the shared
   `PTN002887184` PAINT node for homocysteine synthase activity and
   L-homocysteine biosynthesis.
+- Started PTHR10572 HMG-CoA reductases with `CANAL/HMG1`. The family review
+  already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
+  membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
+  the eukaryotic peroxisomal-membrane IBA for fungal pruning.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
