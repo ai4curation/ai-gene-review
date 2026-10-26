@@ -356,7 +356,8 @@ Four more candidates were modelled, one module each:
   RGS2/RGS4/RGS6 terminate the signal. RGD's agrin, LRP4, MuSK, DOK7 and rapsyn
   genes are left out: they build the neuromuscular junction rather than transduce
   the signal, and GO keeps them under AChR clustering (`GO:0071340`), not
-  acetylcholine signaling. They are recorded as a separate module candidate.
+  acetylcholine signaling. They are modelled separately in `nmj_achr_clustering`
+  (third set).
 - [`modules/dopamine_receptor_signaling.yaml`](../modules/dopamine_receptor_signaling.yaml)
   ([PW:0000394](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000394.yaml)) is the striatal
   instance of `gpcr_camp_pka_signaling`. D1-like receptors act through Golf and
