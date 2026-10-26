@@ -11,4 +11,8 @@ Final validation: just validate PSEPK alg44 passed. Original annotation fields w
 
 ## 2026-10-26 — explicit ISS comparator and primary support
 
-The retained GO:0047643 ISS proposal now identifies Pseudomonas aeruginosa Alg44 UniProtKB:Q9HY69 in review provenance. The original row payload, including its reference, qualifier and absent sequence-source field, is unchanged. The comparator is independently identified for this follow-up; it is not claimed as a recovered historical WITH field. PMID:18524915 supports a regulatory contribution to the Alg8 machinery, alongside the existing ligand-site and interaction evidence; it does not establish autonomous Alg44 polymerase catalysis. No annotation actions or new rows changed.
+The retained GO:0047643 ISS proposal now identifies Pseudomonas aeruginosa Alg44 UniProtKB:Q9HY69 in review provenance. That pass left the reviewer-authored NEW proposal's reference and absent sequence-source field unchanged. Its earlier description as a machine-origin annotation was incorrect: this proposal is absent from GOA and its source fields are curator-authored. PMID:18524915 supports a regulatory contribution to the Alg8 machinery, alongside the existing ligand-site and interaction evidence; it does not establish autonomous Alg44 polymerase catalysis. No annotation actions or new rows changed.
+
+## 2026-10-26 — make the ISS proposal source explicit
+
+The NEW ISS proposal now names UniProtKB:Q9HY69 in supporting_entities. Both the synthase-contribution proposal and the inner-membrane location proposal use this characterized P. aeruginosa donor. This corrects proposal provenance without changing a machine-sourced GOA row, annotation action, qualifier, or molecular-function conclusion. The earlier provenance paragraph and session details are corrected where they falsely described these NEW rows as machine annotations.

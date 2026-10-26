@@ -16,4 +16,8 @@ GO:0016857 was verified live as catalysis altering chiral centers in a carbohydr
 
 ## 2026-10-26 — explicit ISS comparator and primary support
 
-The retained GO:0016857 ISS proposal now identifies Pseudomonas aeruginosa AlgG UniProtKB:Q51371 in review provenance. The original row payload, including its reference, qualifier and absent sequence-source field, is unchanged. The comparator is independently identified for this follow-up; it is not claimed as a recovered historical WITH field. PMID:8144447 supplies direct donor epimerase chemistry, with E. coli recombinant-host and P. aeruginosa native-complementation scope separated from KT2440 inference. No annotation actions or new rows changed.
+The retained GO:0016857 ISS proposal now identifies Pseudomonas aeruginosa AlgG UniProtKB:Q51371 in review provenance. That pass left the reviewer-authored NEW proposal's reference and absent sequence-source field unchanged. Its earlier description as a machine-origin annotation was incorrect: this proposal is absent from GOA and its source fields are curator-authored. PMID:8144447 supplies direct donor epimerase chemistry, with E. coli recombinant-host and P. aeruginosa native-complementation scope separated from KT2440 inference. No annotation actions or new rows changed.
+
+## 2026-10-26 — make the ISS proposal source explicit
+
+The NEW ISS proposal now names UniProtKB:Q51371 in supporting_entities. PMID:8144447 replaces the provider report as its original_reference_id and independently supports donor epimerization. This corrects proposal provenance without changing a machine-sourced GOA row, annotation action, qualifier, or molecular-function conclusion. The earlier provenance paragraph and session details are corrected where they falsely described these NEW rows as machine annotations.
