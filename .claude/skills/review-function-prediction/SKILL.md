@@ -221,6 +221,7 @@ Use these categories for `review.assessment`.
 - Prefer `UNC` over confident correctness when the prediction is absent from curated annotations and only weakly suggested by domains.
 - Once correctness is supported, prefer `CNN` over `COR` when the prediction is already in GOA/UniProt. Agreement with an unsupported existing assertion is not sufficient for either category.
 - Prefer `LSP` over `CNN` when the prediction is correct but materially less specific than the curated annotation.
+- Never cite a `-goa.tsv` file in `supported_by` (a blocking error). Say in `summary` that the term is already in GOA; quote the evidence for or against the term itself.
 - Use `PLI` only when the error is specifically homolog/paralog/subfamily confusion.
 - Use `NPI` for pathway absence, wrong organismal context, wrong compartment/process, or contradiction by curated function.
 - Use `REP` only when the best explanation is a generic high-frequency label rather than a specific biological confusion.

@@ -4,6 +4,8 @@ Literature titles and quotations use the shared reference validator. Local file
 excerpts allow layout whitespace and explicit ellipses. Missing source text is an
 error: an offline run must not certify evidence it cannot inspect. The CLI can
 fetch missing PMID caches using the repository's publication fetcher.
+A GOA file is never support (``goa_support``): whether a prediction is
+already annotated, as a CNN or LSP assessment says, belongs in the summary.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ import re
 
 import yaml
 
+from ai_gene_review.validation.goa_support import validate_goa_support
 from ai_gene_review.validation.supporting_text import build_supporting_text_validator
 from ai_gene_review.validation.validation_report import ValidationReport, ValidationSeverity
 
@@ -126,6 +129,7 @@ def validate_prediction_evidence(
                 report.metadata["verified_quotes"] += 1
             else:
                 error(f"Supporting text does not match source: {ref_id}", support_path)
+    validate_goa_support(data, report, path, root)
     return report
 
 
