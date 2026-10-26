@@ -8,6 +8,8 @@ import yaml
 
 from ai_gene_review.datamodel.gene_review_model import Review
 from ai_gene_review.validation import ValidationReport, validate_gene_review
+from ai_gene_review.validation.decomposition import check_decomposition
+from ai_gene_review.validation.validator import get_project_root
 
 PRECOMPOSED = {
     "id": "GO:0061740",
@@ -139,3 +141,76 @@ def test_slots_require_modify(action):
         {"action": action, "decomposed_into": {"in_core_functions": True}}
     )
     assert "decomposition_requires_modify" in _checks(report)
+
+
+def _check(review: dict, term: dict = PRECOMPOSED, **lookups) -> set[str]:
+    """Run check_decomposition directly, optionally with ontology lookups."""
+    report = ValidationReport(file_path=Path("test"), is_valid=True)
+    data = {"existing_annotations": [{"term": term, "review": review}]}
+    check_decomposition(data, report, get_project_root(), **lookups)
+    return {i.check_type for i in report.issues if i.check_type}
+
+
+DRIFTED = {
+    "id": "GO:0003252",
+    "label": "obsolete negative regulation of cell proliferation involved in heart valve morphogenesis",
+}
+NEG_PROLIF = {"id": "GO:0008285", "label": "negative regulation of cell population proliferation"}
+
+
+def test_genus_label_drift_needs_ontology():
+    """GO relabelled 'cell proliferation' to 'cell population proliferation'."""
+    review = {"action": "MODIFY", "proposed_replacement_terms": [NEG_PROLIF]}
+    assert "decomposition_context_dropped_silently" not in _check(review, DRIFTED)
+    synonyms = lambda i: frozenset({NEG_PROLIF["label"], "negative regulation of cell proliferation"})  # noqa: E731
+    assert "decomposition_context_dropped_silently" in _check(review, DRIFTED, names=synonyms)
+
+
+def test_is_a_ancestor_counts_as_genus_but_part_of_context_does_not():
+    review = {"action": "MODIFY", "proposed_replacement_terms": [{"id": "GO:0006622", "label": "x"}]}
+    assert "decomposition_context_dropped_silently" in _check(
+        review, is_a_ancestors=lambda t: frozenset({"GO:0006622"})
+    )
+    to_context = {"action": "MODIFY", "proposed_replacement_terms": [{"id": "GO:0061684", "label": "y"}]}
+    assert "decomposition_context_dropped_silently" not in _check(
+        to_context, is_a_ancestors=lambda t: frozenset({"GO:0006622"})
+    )
+
+
+@pytest.mark.parametrize(
+    "activity,expected",
+    [
+        ("gomodel:63c0ac2b00001252/63c0ac2b00001260", None),
+        ("gomodel:63c0ac2b00001252/0000000000000000", "decomposition_activity_not_found"),
+    ],
+)
+def test_gocam_activity_must_exist(activity, expected):
+    review = {
+        "action": "MODIFY",
+        "proposed_replacement_terms": [GENUS],
+        "decomposed_into": {"gocam_associations": [{"model": GOCAM, "activity": activity}]},
+    }
+    found = {c for c in _check(review) if c.startswith("decomposition_")}
+    assert found == ({expected} if expected else set())
+
+
+def test_module_element_cannot_be_a_cited_curie():
+    review = {
+        "action": "MODIFY",
+        "proposed_replacement_terms": [GENUS],
+        "decomposed_into": {"module_associations": [{"module": MODULE, "element": "GO:0097194"}]},
+    }
+    assert "decomposition_element_not_found" in _check(review)
+
+
+def test_empty_decomposed_into_is_an_error():
+    review = {"action": "MODIFY", "proposed_replacement_terms": [GENUS], "decomposed_into": {}}
+    assert "decomposition_empty" in _check(review)
+
+
+@pytest.mark.integration
+def test_real_go_synonym_catches_label_drift():
+    from ai_gene_review.validation.decomposition import go_names
+
+    review = {"action": "MODIFY", "proposed_replacement_terms": [NEG_PROLIF]}
+    assert "decomposition_context_dropped_silently" in _check(review, DRIFTED, names=go_names)
