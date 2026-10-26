@@ -23,8 +23,8 @@ GO editors is at <https://claude.ai/artifact/8MJjKA2M2SDjcZAs9dL1ET>.
 | Order | Module | Status | Scope |
 |---|---|---|---|
 | — | [`phagocytosis`](../modules/phagocytosis.yaml) (umbrella) | DRAFT | Composes the steps below with `module_ref` |
-| 1 | [`phagocytic_engulfment`](../modules/phagocytic_engulfment.yaml) | exists (DRAFT) | Recognition, Rho-GTPase activation, actin, cup closure |
-| 2 | [`phagosome_maturation`](../modules/phagosome_maturation.yaml) | exists (DRAFT) | Rab5 → Rab7, fusion, acidification, NOX2 |
+| 1 | [`phagocytic_engulfment`](../modules/phagocytic_engulfment.yaml) | DRAFT, revised | Recognition, Rho-GTPase activation, actin, cup closure |
+| 2 | [`phagosome_maturation`](../modules/phagosome_maturation.yaml) | DRAFT, revised | Rab5 → Rab7, fusion, acidification, NOX2 |
 | 3 | [`phagolysosomal_cargo_degradation`](../modules/phagolysosomal_cargo_degradation.yaml) | DRAFT | DNase II, cathepsins, amoebal lysozyme; export of amino acids, nucleosides, heme, cholesterol |
 | 4 | Post-phagocytic programmes (optional parts) | DRAFT | See below |
 
@@ -89,7 +89,8 @@ Each is one computable question, run with the project defaults.
 2. Build the four post-phagocytic programme modules. *(done, DRAFT)*
 3. Build `phagolysosomal_cargo_degradation` and the `phagocytosis` umbrella. *(done, DRAFT)*
 4. Revise `phagocytic_engulfment` and `phagosome_maturation` toward family
-   selectors with cross-lineage exemplars.
+   selectors with cross-lineage exemplars. *(done: both now Eukaryota context,
+   with Dictyostelium exemplars where conserved)*
 5. Write family reviews for the key families and gene reviews for exemplars
    that lack them (DNASE2, nuc-1, drpr, SPIC, BACH1, SLC48A1, GULP1, ELMO1,
    DOCK1, MERTK, BHLHE40).
