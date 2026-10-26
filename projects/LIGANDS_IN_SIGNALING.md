@@ -277,7 +277,7 @@ validators.
   receptors*, `GO:0008625`). Upgraded all steps from single-gene `ENTITY` selectors to `FAMILY`
   selectors. Ligand: Fas ligand subfamily (`PANTHER:PTHR11471:SF33`, within `PANTHER:PTHR11471`
   `TUMOR NECROSIS FACTOR FAMILY MEMBER`, PAINT node `PTN000895255`), *cytokine activity*
-  (`GO:0005125`). Receptor: FAS (`PANTHER:PTHR46874:SF1`) and TNFRSF10B (`PANTHER:PTHR15077:SF10`).
+  (`GO:0005125`). Receptor: FAS (`PANTHER:PTHR46874:SF1`) and DISC adaptor FADD (`PANTHER:PTHR15077:SF10`).
   GOA Category A gap resolved in the human `FASLG` gene review: `FASLG` carried `GO:0008625`
   (*extrinsic apoptotic signaling pathway via death domain receptors*) and `GO:0005125` (*cytokine
   activity*) but lacked `GO:0036337` (*Fas signaling pathway*), added as `NEW` (`PMID:7826947`).
