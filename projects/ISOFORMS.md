@@ -115,7 +115,7 @@ displayed sequence. Cases found so far:
 | Gene | UniProt entry | What the literature says | What UniProt records | Kind of mismatch |
 |---|---|---|---|---|
 | SYNGAP1 | Q96PV0 | Four C-terminal splice forms (alpha1, alpha2, beta, gamma); only alpha1 ends in the class I PDZ ligand -QTRV that binds PSD-95 (PMID:32579114) | Four named isoforms, none ending in -QTRV. The alpha1 C-terminus exists as RefSeq NP_001123538.1 (1292 aa), which the entry cross-references without assigning it to an isoform, and as unreviewed entries B7ZCA0 and A0A2R8Y6T2 | Literature isoform missing from the reviewed entry |
-| RASAL2 | Q9UJF2 | Phosphosites S351 (PMID:33563064) and Ser237 (PMID:33096593) | Both are serines only in isoform 2 (Q9UJF2-2, 1280 aa, the RefSeq NP_733793.2 form); in the displayed isoform 1 they are Ser203 and Ser89 | Residue numbering uses a non-displayed isoform |
+| RASAL2 | Q9UJF2 | Phosphosites S351 (PMID:33563064) and Ser237 (PMID:33096593) | Both are serines only in isoform 2 (Q9UJF2-2, 1280 aa, the RefSeq NP_733793.2 form); in the displayed sequence (Q9UJF2) they are Ser203 and Ser89 | Residue numbering uses a non-displayed isoform |
 
 Both were found while reviewing the SynGAP RasGAP subfamily (PRs #5338, #5364
 and the SYNGAP1 follow-up). In each case the error propagated into prose: the
@@ -123,29 +123,24 @@ SYNGAP1 description attributed the PDZ ligand to the whole protein, and a deep-
 research report placed RASAL2 S351 in the PH domain, which is correct for
 neither numbering.
 
-### Recording these in a structured way (proposal, not yet in the schema)
+### How these are recorded
 
-Today these mismatches can only be written as prose in a `functional_isoforms`
-description or a findings statement, so they cannot be counted or reported
-upstream. Two changes would cover both kinds:
+Each kind of mismatch has a structured home, so the cases can be counted and
+the ones that are UniProt's to fix can be reported to UniProt:
 
-1. **A literature isoform missing from UniProt.** Allow `functional_isoforms[].maps_to`
-   to name non-Swiss-Prot sequences (new mapping types such as `REFSEQ_PROTEIN`
-   and `UNIPROTKB_UNREVIEWED`), and allow a `source_defects` block on a
-   functional isoform with a new defect type (`MISSING_ISOFORM`, resource
-   `UNIPROT`, record the accession). A functional isoform with no
-   `UNIPROT_ISOFORM` mapping is then a computable gap, and
-   `just export-source-defects` already turns `source_defects` into per-resource
-   reports, so UniProt would get a list of missing isoforms for free.
-2. **Residue numbers given on a non-displayed isoform.** This is not an error
-   in UniProt, so it should not be a source defect. A small optional
-   `numbering_isoform` field (a UniProt isoform id, or a RefSeq protein when
-   UniProt lacks the isoform) on findings and on residue-bearing statements
-   would let a validator check that the named residue exists in that sequence.
-
-SYNGAP1 currently records alpha1 as a `functional_isoforms` entry with
-`maps_to` left empty and the RefSeq and unreviewed accessions in its
-description, which is the closest the current schema allows.
+1. **A literature isoform missing from UniProt** is a `functional_isoforms`
+   entry whose `maps_to` names the sequences that carry it (`REFSEQ_PROTEIN`,
+   `UNIPROTKB_UNREVIEWED`) and has no `UNIPROT_ISOFORM` mapping, plus a
+   `source_defects` item (`MISSING_ISOFORM`, resource `UNIPROT`,
+   `requested_change: ADD`). `just export-source-defects` writes these into the
+   report for UniProt. SYNGAP1 `SYNGAP1_ALPHA1` is the first.
+2. **Residue numbers given on a non-displayed isoform** are not an error in
+   UniProt, so they are not source defects. The finding carries
+   `residue_mappings`: the residue as the paper numbers it (`as_reported`, e.g.
+   `UniProtKB:Q9UJF2-2` 351 S) and the same residue in the displayed sequence
+   (`canonical`, `UniProtKB:Q9UJF2` 203 S). The validator resolves both against
+   the real sequences and fails a number read on the wrong one. The two RASAL2
+   findings are the first.
 
 ## References
 
