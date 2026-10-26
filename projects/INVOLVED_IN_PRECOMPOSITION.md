@@ -419,7 +419,8 @@ uv run python projects/INVOLVED_IN_PRECOMPOSITION/scripts/inventory.py \
 ```
 
 Outputs: `go_terms.yaml` (every "involved in" term, live or obsolete, with
-its decomposition and obsoletion pointers), `annotations.yaml` (every review
+its decomposition and obsoletion pointers; about 1 MB and regenerable, so it
+is git-ignored rather than committed), `annotations.yaml` (every review
 row, with action, decomposition, GO-CAM and module hits),
 `module_candidates.yaml`, and `summary.yaml`. Decompositions marked `source:
 label_split` come from splitting the label into two exact GO labels when GO
