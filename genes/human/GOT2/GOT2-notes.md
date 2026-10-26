@@ -158,3 +158,8 @@ Human HepG2 primary PMID:9537447 directly links ethanol to a plasma-membrane mAs
 PMID:22681889 uses photoreactive nucleotide-enhanced UV crosslinking/oligo(dT) purification. RNA binding is retained KEEP_AS_NON_CORE: a metabolic enzyme can bind RNA, and its customary mitochondrial function does not disprove the experimental assertion. The exact target peptide/RNA-specificity table was not reconstructed from the abstract, so no regulatory mechanism is invented. Mitochondrial and exosome proteomics are likewise retained at their warranted compartment scope, without blanket contamination claims.
 
 Normal Falcon/default and perplexity-lite fallback attempts failed with provider access/credit errors while publication caching ran in parallel. Existing curated research and normally cached primary sources were used; no provider file was fabricated. Focused strict/ontology validation, section backfill, HTML and helper history document the update.
+
+
+## Root-organelle policy correction (2026-10-25)
+
+Reassessed all 5 mitochondrion (GO:0005739) rows against their original source scope and independent localization evidence. Changed MODIFY to ACCEPT: CLAUDE.md and projects/ORGANELLES.md explicitly retain a supported root organelle rather than replacing it with a subcompartment. The row-specific reasons distinguish direct localization/proteomics from similarity or phylogenetic inference and preserve source-resolution limits. Existing matrix rows, core locations and other annotations are unchanged; no NEW row was added. This supersedes the earlier matrix-replacement decisions, not their historical records. No inferred granularity failure is retained for a biologically sound IBA.

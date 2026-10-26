@@ -17,3 +17,8 @@ Current UniProt's cofactor feature and Reactome's description of human GPT2 stru
 ## Access and provenance
 
 Normal Falcon/default and perplexity-lite fallback were attempted with publication caching in parallel. Both provider attempts failed with access/credit errors; no provider output was invented. All reviewed sources were normally cached; rate-limited requests were retried serially. Source files, alternative products and original annotation payloads remain unchanged. Helper-generated codex history, record-section backfill, strict/term validation, rendered HTML and row-preservation proof accompany this complete review.
+
+
+## Root-organelle policy correction (2026-10-25)
+
+Reassessed all 1 mitochondrion (GO:0005739) rows against their original source scope and independent localization evidence. Changed MODIFY to ACCEPT: CLAUDE.md and projects/ORGANELLES.md explicitly retain a supported root organelle rather than replacing it with a subcompartment. The row-specific reasons distinguish direct localization/proteomics from similarity or phylogenetic inference and preserve source-resolution limits. Existing matrix rows, core locations and other annotations are unchanged; no NEW row was added. This supersedes the earlier matrix-replacement decisions, not their historical records. No inferred granularity failure is retained for a biologically sound IBA.
