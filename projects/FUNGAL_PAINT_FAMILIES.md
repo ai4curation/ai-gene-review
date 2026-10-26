@@ -309,11 +309,84 @@ D-erythroascorbate biosynthesis.
 - [x] `SCHPO/alo1` - fission-yeast ALO-family member with PomBase NOT IGC rows
   against exact substrate/process transfer; marked `COMPLETE` in PR #5368
 
+## Family 15: Saccharopine Dehydrogenases
+
+`PTHR11133` contains a broad eukaryotic saccharopine-dehydrogenase ancestor,
+`PANTHER:PTN000123605`, that carries `GO:0004753 saccharopine dehydrogenase
+activity` and `GO:0005737 cytoplasm`. PAINT places `GO:0009085 L-lysine
+biosynthetic process` on two separate fungal nodes: `PANTHER:PTN000875292` for
+the NAD(+), L-lysine-forming `LYS1`/`lys3` branch and
+`PANTHER:PTN000875327` for the reciprocal NADP(+), L-glutamate-forming
+`LYS9`/`lys9` branch.
+
+- [ ] `yeast/LYS1` - *S. cerevisiae* peroxisomal/cytosolic
+  LYS1-family enzyme; already `COMPLETE`
+- [ ] `yeast/LYS9` - *S. cerevisiae* LYS9-family saccharopine reductase;
+  already `COMPLETE`
+- [ ] `SCHPO/lys3` - fission-yeast LYS1-family member; already reviewed and
+  ready for this family recheck
+- [ ] `SCHPO/lys9` - fission-yeast LYS9-family member; already reviewed and
+  ready for this family recheck
+- [x] `CANAL/LYS1` - CGD-seeded *Candida albicans* LYS1-family member; drafted
+  in this branch
+- [x] `NEUCR/lys-4` - *Neurospora crassa* LYS1-family member; merged in PR
+  #4644
+
+## Family 16: Homocysteine/Cysteine Synthases
+
+`PTHR43797` is a compact homocysteine/cysteine synthase family. Its fungal
+members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
+`GO:0051009` O-acetylhomoserine sulfhydrylase activity, and
+`GO:0071269` L-homocysteine biosynthetic process on the shared
+`PANTHER:PTN002887184` node seeded by *S. cerevisiae* `MET17`,
+*S. pombe* `met17`, the CGD *C. albicans* `MET15` member, and bacterial MetY.
+
+- [ ] `yeast/MET17` - *S. cerevisiae* bifunctional Met17/Met15 enzyme; already
+  drafted and needs PAINT-source refresh against `PTN002887184`
+- [ ] `SCHPO/met17` - fission-yeast O-acetylhomoserine sulfhydrylase; already
+  drafted and needs PAINT-source refresh against `PTN002887184`
+- [x] `CANAL/MET15` - CGD *Candida albicans* MET15 seed with 2024 direct
+  CaMet15p biochemical evidence; drafted in this branch
+- [ ] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
+  PTHR43797:SF2 subfamily
+
+## Family 17: HMG-CoA Reductases
+
+`PTHR10572` contains class I HMG-CoA reductases. PAINT places
+`GO:0004420` HMG-CoA reductase activity, `GO:0008299` isoprenoid
+biosynthesis, and `GO:0016126` sterol biosynthesis at the family-root
+`PANTHER:PTN000060346`, a eukaryotic ER-membrane assertion plus an over-broad
+peroxisomal-membrane assertion at `PANTHER:PTN000060347`, and a fungal
+ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
+
+- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
+  `COMPLETE`
+- [x] `yeast/HMG2` - *S. cerevisiae* regulated minor HMG-CoA reductase isozyme;
+  already `COMPLETE`
+- [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
+  exemplar
+- [x] `CANAL/HMG1` - CGD *Candida albicans* class I HMG-CoA reductase; drafted
+  in this PR
+- [ ] `ASPFU/hmg1` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 1
+- [ ] `ASPFU/hmg2` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 2
+- [ ] `EMENI/AN1593` - *Aspergillus nidulans* short PTHR10572 member
+
 ---
 
 # NOTES
 
 ## 2026-10-24
+
+- Added `PTHR43797`, the compact homocysteine/cysteine synthase family, as the
+  next fungal PAINT tranche. The initial batch covers the existing
+  `yeast/MET17` and `SCHPO/met17` drafts plus CGD `CANAL/MET15` and
+  `EMENI/cysD`, all of which fall in `PTHR43797:SF2` under the shared
+  `PTN002887184` PAINT node for homocysteine synthase activity and
+  L-homocysteine biosynthesis.
+- Started PTHR10572 HMG-CoA reductases with `CANAL/HMG1`. The family review
+  already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
+  membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
+  the eukaryotic peroxisomal-membrane IBA for fungal pruning.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
