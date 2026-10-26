@@ -1,0 +1,27 @@
+# FBXL4 database source guide
+
+The [decision table](FBXL4-database-decisions.yaml) preserves the complete original source object for each of 17 contexts in 15 whole source groups. All 29 imported source objects, 27 reference identities and 60 inherited quote paths and reference associations remain unchanged in the lane candidate. Source-specific uncertainty is retained independently of stronger evidence for a different compartment.
+
+## SCF inheritance and mitophagy regulation
+
+The [phylogeny evidence](FBXL4-phylogeny-evidence.yaml) records the genuine PANTHER v19 target-to-ancestor path, exact 621-residue sequence match and two literal IBD rows. Human FBXL4 leaf PTN002547906 descends from PTN002547163 in PTHR13318, whose official family name is PARTNER OF PAIRED, ISOFORM B-RELATED. The target subfamily is PTHR13318:SF152, F-BOX_LRR-REPEAT PROTEIN 4. All 15 rows in the selected PAINT file have negated=false. This supports the actual node placement; donor count and target self-WITH are not rejection criteria. The full experimental history of every descendant was not rereviewed.
+
+PMID:36896912 Results on SCF assembly and Figures 2–4 show human target association with SKP1/CUL1, F-box dependence, and BNIP3/NIX ubiquitination and turnover. PMID:37161784 Results and Figures 2/4 and EV1 provide additional receptor stability/rescue, tagged localization and ubiquitination evidence. The recovered original full text was read even though its normal cache remains abstract-only. This supports SCF membership and proteasomal catabolism; FBXL4 supplies substrate recognition rather than independent ligase chemistry. The ARBA autophagy annotation is corrected to negative regulation of mitophagy. This is a lateral role correction, not a typed ancestor refinement.
+
+## Distinct localization evidence
+
+The UniProt SL-0172 outer-membrane field explicitly cites PMID:36896912. Its human tagged-protein localization Results and Methods include protease accessibility and membrane-association evidence with compartment controls. Those results support outer membrane without establishing exclusive localization in every cell. Engineered targeting deletions are not natural products.
+
+Current UniProt also retains nucleus and cytoplasm without field-specific evidence tags. Cytoplasm includes organelles and is broader than outer membrane; it is not cytosol. HPA029140 reports supported nuclear-speck staining in A-431, U-251MG and U2OS. Three original blue/red/green images were viewed. Positive nuclear puncta are retained as a contextual location; the broad nucleus term is covered by this strict descendant. One antibody, no independently inspected speck-marker channel and no endogenous knockout/knockdown specificity experiment bound the claim. The matching antigen and its single-peak protein-array result do not remove those limits. Tissue IHC evidence is separate from ICC.
+
+PMID:23993194 localization Results, Figure 4 caption and Methods reported negative nuclear/postmitochondrial-cytosolic detection in the tested human conditions, plus distinct mouse-liver solubility evidence. Those observations do not establish universal exclusion of other pools. PMID:21757720 human JMJD2A association and turnover results do not directly image nuclear FBXL4. Historical mitochondrial quotes are preserved as context, not repurposed as proof that the HPA signal is nonspecific.
+
+## Reactome target routes
+
+All ten source events genuinely reach entity 8850899, reference entity 55118, Q9UKA2 residues 1–621, assigned to GO:0005829 cytosol. The decision table gives an explicit sequence of event, component and member edges for each source. Six CRL events pass through SCF/F-box complexes or sets; generic E3 routes include FBXL4 as an actual member. This verifies target membership rather than rejecting an event by its title. One target route per source was expanded; unrelated branches and every cited experiment were not exhaustively reviewed.
+
+These compartment assignments are pathway models, not independently resolved FBXL4 cytosolic localization assays. Outer membrane is not a strict descendant of cytosol, so the source claims remain UNDECIDED rather than being rewritten to outer membrane. The DCUN1D3 event has a plasma-membrane output while its nested FBXL4 component retains cytosol; this does not establish FBXL4 plasma-membrane localization. Reaction chemistry performed by other components is not transferred to FBXL4.
+
+## Reading limits and source preservation
+
+Actual original main-text passages and captions were read for PMID:36896912, PMID:37161784, PMID:23993194 and PMID:21757720; figure pixels and supplements were not independently inspected for these four studies. The HPA images were independently inspected. PMID:38992176 and PMID:40025034 are assessed by the direct lane, not claimed as independent reads here. Five official GO_REF pages were read as methods provenance, distinct from gene-specific experiments. Actual ARBA rule consequences were inspected; every target FunFam match and historical rule state was not replayed. Normal publications, Reactome and family files remain authentic, unchanged captures. No new quotations, natural products or annotations are proposed by this lane.
