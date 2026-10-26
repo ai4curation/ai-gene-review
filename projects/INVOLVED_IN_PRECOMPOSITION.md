@@ -130,10 +130,10 @@ MARK_AS_OVER_ANNOTATED 95, UNDECIDED 62, REMOVE 23, NEW 18, TOO_GENERAL 1. Apart
 project decomposed, the existing MODIFYs do not decompose: in the first
 snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves to a different term (e.g.
 `DNA strand elongation involved in DNA replication` → `G1/S transition of
-mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 314,
-IEA 255, ISS 163, IDA 123, IBA 87, IGI 79, other 131.
+mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 317,
+IEA 255, ISS 163, IDA 122, IBA 87, IGI 79, other 130.
 
-By organism folder: human 628 rows, mouse 142, DROME 96, worm 87, DICDI 75,
+By organism folder: human 626 rows, mouse 146, DROME 95, worm 87, DICDI 75,
 yeast 34, DANRE 19, other 71.
 
 ### Rows on already-obsolete terms (fix first)
@@ -406,13 +406,14 @@ would silently promote it.
 
 The inventory now also counts **reviewer-authored combined terms**: replacement
 terms, core-function terms and isoform-specific terms that a review
-introduced, rather than GOA rows it reviewed, plus combined terms used as a
-module annoton's function. These are in
+introduced, rather than GOA rows it reviewed, plus combined terms used
+anywhere in a module annoton (function, processes, targets). These are in
 [`data/authored_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/data/authored_precomposed.yaml).
-After this round there are 278 uses: 277 across 163 genes (150 in
+After this round there are 300 uses: 277 across 163 genes (150 in
 `directly_involved_in`, 114 as MODIFY replacements, 11 as core-function MFs
-and 2 as isoform-specific terms) and 1 module annoton
-(`synaptic_vesicle_exocytosis`, GO:0099626). This is a second work stream:
+and 2 as isoform-specific terms) and 23 in 12 modules (22 as annoton
+processes, led by GO:1901029/GO:1901030 in `bcl2_family_momp_control`, and 1
+as an annoton function, GO:0099626 in `synaptic_vesicle_exocytosis`). This is a second work stream:
 reviews have been actively moving annotations *toward* these terms.
 
 ### Lessons from round 1
@@ -492,7 +493,7 @@ its decomposition and obsoletion pointers), `annotations.yaml` (every review
 row, with action, decomposition, GO-CAM and module hits),
 `authored_precomposed.yaml` (combined terms that reviews introduced, as MODIFY
 replacements, in core functions or as isoform-specific terms, and combined
-terms used as module annoton functions; small, so committed),
+terms used in module annotons; small, so committed),
 `module_candidates.yaml`, and `summary.yaml`. The two large files,
 `go_terms.yaml` and `annotations.yaml` (about 1 MB each), are git-ignored;
 regenerate them locally before a full pass. Decompositions marked `source:

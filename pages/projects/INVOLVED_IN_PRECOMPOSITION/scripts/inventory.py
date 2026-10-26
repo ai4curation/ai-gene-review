@@ -343,38 +343,49 @@ def authored_uses(doc: dict, gene: str, inv: dict[str, GoTerm]) -> list[dict]:
     return out
 
 
-def module_function_uses(node: Any, module: str, inv: dict[str, GoTerm]) -> list[dict]:
-    """Precomposed terms used as an annoton function in a module YAML.
+def _term_dicts(node: Any) -> list[dict]:
+    """Every ``term`` mapping in a nested YAML structure."""
+    if isinstance(node, dict):
+        found = [node["term"]] if isinstance(node.get("term"), dict) else []
+        return found + [t for v in node.values() for t in _term_dicts(v)]
+    if isinstance(node, list):
+        return [t for item in node for t in _term_dicts(item)]
+    return []
+
+
+def module_annoton_uses(node: Any, module: str, inv: dict[str, GoTerm]) -> list[dict]:
+    """Precomposed terms used anywhere in a module annoton.
+
+    An annoton is a mapping with a ``function``. Every term inside it is
+    checked (function, processes, targets, inputs, locations), and the slot is
+    the annoton key it sits under.
 
     >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
-    >>> doc = {"parts": [{"node": {"annotons": [{"id": "a1", "function": {"term": {"id": "GO:1"}}},
-    ...                                         {"id": "a2", "function": {"term": {"id": "GO:3"}}}]}}]}
-    >>> [u["annoton"] for u in module_function_uses(doc, "m", t)]
-    ['a1']
+    >>> doc = {"parts": [{"node": {"annotons": [
+    ...     {"id": "a1", "function": {"term": {"id": "GO:1"}}},
+    ...     {"id": "a2", "function": {"term": {"id": "GO:3"}},
+    ...      "processes": [{"term": {"id": "GO:1"}}]}]}}]}
+    >>> [(u["annoton"], u["slot"]) for u in module_annoton_uses(doc, "m", t)]
+    [('a1', 'module.annoton.function'), ('a2', 'module.annoton.processes')]
     """
+    if isinstance(node, list):
+        return [u for item in node for u in module_annoton_uses(item, module, inv)]
+    if not isinstance(node, dict):
+        return []
+    if "function" not in node:
+        return [u for v in node.values() for u in module_annoton_uses(v, module, inv)]
     out = []
-    if isinstance(node, dict):
-        term = (
-            (node.get("function") or {}).get("term")
-            if isinstance(node.get("function"), dict)
-            else None
-        )
-        if isinstance(term, dict) and (
-            term.get("id") in inv or INVOLVED_IN in str(term.get("label", ""))
-        ):
-            out.append(
-                {
-                    "module": module,
-                    "slot": "module.annoton.function",
-                    "term": f"{term.get('id')} {term.get('label', '')}".strip(),
-                    "annoton": node.get("id"),
-                }
-            )
-        for value in node.values():
-            out.extend(module_function_uses(value, module, inv))
-    elif isinstance(node, list):
-        for item in node:
-            out.extend(module_function_uses(item, module, inv))
+    for key, value in node.items():
+        for term in _term_dicts(value):
+            if term.get("id") in inv or INVOLVED_IN in str(term.get("label", "")):
+                out.append(
+                    {
+                        "module": module,
+                        "slot": f"module.annoton.{key}",
+                        "term": f"{term.get('id')} {term.get('label', '')}".strip(),
+                        "annoton": node.get("id"),
+                    }
+                )
     return out
 
 
@@ -426,7 +437,7 @@ def main() -> None:
     authored = []
     for name, text in modules.items():
         authored.extend(
-            module_function_uses(
+            module_annoton_uses(
                 yaml.load(text, Loader=yaml.CSafeLoader),
                 name.removesuffix(".yaml"),
                 inv,
