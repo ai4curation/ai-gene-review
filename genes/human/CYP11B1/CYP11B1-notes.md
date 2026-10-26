@@ -67,3 +67,18 @@
   peptide hormone response, sterol/cortisol metabolic (parent), mitochondrion (broad).
 </content>
 </invoke>
+
+
+## Terminal steroidogenesis audit, 2026-10-25
+
+Manual primary-literature reassessment followed the review and annotation-reviewer workflow. Falcon deep research failed authentication, and its Perplexity-lite fallback failed with insufficient quota (run log `/tmp/adrenal-CYP11B1-deep.log`); the established outage was not retried for each homolog. No provider-branded research file was manufactured. Supported fetch commands supplied UniProt, GOA and publication caches. Abstract-only caches were treated as such, and inaccessible experimental evidence was not rejected merely for being inaccessible. No NEW biological-process rows were added.
+
+Evolutionary scope: PMID:32196091 reconstructs functional specialization after duplication in Old World primates. This is not a universal mammalian two-paralog architecture: some mammals retain a single multifunctional CYP11B, and other lineages have additional copies. PANTHER PTHR24279:SF1 has official label CYTOCHROME P450 11B2, MITOCHONDRIAL but also contains zebrafish cyp11c1; membership alone cannot establish aldosterone synthesis. Corticosterone 18-monooxygenase activity describes the hydroxylation step, not the final conversion of 18-hydroxycorticosterone to aldosterone.
+
+All 46 source rows were assessed. PMID:18215163 directly characterizes purified human CYP11B1 11beta-hydroxylation. PMID:15356073 provides full-text evidence that both CYP11B enzymes hydroxylate cortisol at C18, whereas only CYP11B2 further forms 18-oxocortisol. These secondary reactions are distinguished from the principal cortisol/corticosterone biosynthetic activity. Specific corticosterone 18-hydroxylation is supported more cautiously by the review discussion and curated sequence record; cortisol turnover alone does not establish corticosterone turnover.
+
+All four aldosterone-process assertions are UNDECIDED: failure to perform the terminal aldosterone reaction does not prove failure to contribute an upstream intermediate, but physiological CYP11B1-dependent aldosterone flux is not isolated by the available sources. The immune-response source is abstract-only and the clinical hypoglycemia source PMID:16114325 has no abstract; these remain UNDECIDED. Cholesterol/sterol pathway-context annotations are retained as non-core without claiming direct CYP11B1 cholesterol conversion. IBA assessments use the ancestral-node interpretation, not donor counts or self-inclusion. GO-CAM 67b1629100003765 independently represents CYP11B1 11beta-monooxygenase activity in cortisol biosynthesis at the mitochondrial inner membrane. The core is one heme-dependent monooxygenase activity, not separate heme-binding and iron-binding functions.
+
+## 2026-10-25: review evidence follow-up
+
+Expanded six ambiguous location quotations to include the SUBCELLULAR LOCATION heading, distinguishing the curated location statement from identical keyword text. No annotation actions or machine source fields changed.

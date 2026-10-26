@@ -67,3 +67,19 @@ GO:0019825 oxygen binding (legacy TAS from PINC/ProtInc, cited to PMID:2808364 w
 mention oxygen binding) is an over-annotation for a P450 — mark as over-annotated.
 Generic ARBA IEA BP terms (primary alcohol metabolic, olefinic compound metabolic) are
 mechanistically-derived over-general terms — keep as non-core / over-annotated.
+
+
+## 2026-10-25 complete annotation and taxon audit
+All seeded annotation fields outside review were preserved exactly. Every row was reassessed; broad true claims were refined and cofactor activities retained. No NEW process annotations were added. `just deep-research-falcon human CYP17A1 --fallback perplexity-lite` ran concurrently with publication caching. Falcon authentication failed, then Perplexity returned HTTP401 insufficient quota. Manual primary research substitutes for unavailable provider output; no provider-labelled report was fabricated.
+
+PMID25301938 structural/biochemical evidence supports human Delta5 lyase preference:17OH-pregnenolone→DHEA is efficient, while17OH-progesterone→androstenedione is poor rather than absent. PMID40340376(full text) directly measures second-electron transfer and product formation using b5 or POR. The dominant b5 effect on multiple-turnover kinetics is increased coupling; older9452426 yeast-microsome results cannot justify a universal allosteric-only/no-electron-transfer assertion.
+
+QuickGO definition GO0004508 is only17alpha hydroxylation(RHEA65760). Queries for17,20-lyase, hydroxyprogesterone deacetylase andEC1.14.14.32 found no specific matching GO term. Proposed steroid17,20-lyase MF therefore covers oxidative C17-C20 cleavage, C19 steroid+acetate products; EC1.14.14.32 and RHEA50244/14753 are in the curated UniProt reactions. The oxidative reaction is not assigned to a nonoxidative lyase class just from its common name.
+
+PMID19403566 supports tissue-specific rat adrenal repression versus testes; PMID7588219 demonstrates fetal mouse adrenal expression/activity(E12.5–14.5), lost by late gestation/adulthood. The boundary is normal adult adrenal output, not absence of the gene or gonadal activity. Mouse-focused36640554 includes human comparison and is not rejected from its title.
+
+GO-CAM67b1629100003765 gives CYP17A1 hydroxylase/cortisol roles; it does not supply lyase evidence. Cached Reactome193070/193099 describe lyase despite GO4508 attachment and name acetaldehyde instead of the acetate supported by primary chemistry/Rhea. These limitations are assessed explicitly. Reactome194002 incorrectly attributes pregnenolone→17OH-progesterone entirely to HSD3B; the CYP17 step is required.
+
+## PR #5543 gene-level follow-up (2026-10-25)
+
+Verified GO ancestry live on 2026-10-25 via https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0034651/paths/GO:0034308?relations=is_a,part_of . The response contains two paths, both entirely is_a: GO:0034651 → GO:0034650 → GO:0034308, and GO:0034651 → GO:0034309 → GO:0034308. Thus cortisol biosynthesis is a descendant of primary alcohol metabolism; the existing MODIFY is a specialization, not a lateral replacement. Added the explicit chains to the reason and shortened the summary to distinguish the claim from its justification. No actions or replacement terms changed.
