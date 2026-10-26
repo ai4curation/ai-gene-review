@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-25
+last_reviewed: 2026-10-26
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -41,13 +41,20 @@ For each module, record evidence that all of the following are satisfied:
 ## Status
 
 - [x] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) merged after approval and required checks, at `7d28f887b2dbbab34afee940716ba660efc3a173`. Six member reviews, comparative literature, step/edge evidence and taxon/family grounding were rechecked in the merged content.
-- [ ] `abscisic_acid_signaling`: [PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) has 19 reviewed members (524 rows), passed full local validation and is approved in the normal merge queue.
-- [ ] `activin_receptor_signaling`: [PR #5541](https://github.com/ai4curation/ai-gene-review/pull/5541) is approved with all required head checks green and awaits merge-queue integration. All 11 members and 29 references curated; full local validation passed.
-- [ ] `adp_heptose_biosynthesis`: [PR #5542](https://github.com/ai4curation/ai-gene-review/pull/5542) is approved and queued after full repository validation. All 16 members, 12 references and 26 histories are complete.
-- [ ] `adrenal_steroidogenesis`: [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) is ready after full validation. Its 13 gene reviews preserve 434 rows; 26 references and 21 histories are curated. Review fixes are pushed on `3837d4fbce`; upstream metadata-only conflicts are resolved on `988d038b7d` and renewed CI/review are running.
-- [ ] `aerobic_nicotinate_degradation`: [draft PR #5544](https://github.com/ai4curation/ai-gene-review/pull/5544) has 12 curated references and 12 gene reviews. Follow-up `90df36ce72` retains all 42 original rows and adds one evidence-backed NicC process proposal (43 total); 27 histories and all targeted checks pass. Full validation is running.
-- [ ] `alcoholic_fermentation`: [draft PR #5545](https://github.com/ai4curation/ai-gene-review/pull/5545) has 23 members and 487 original rows reviewed across yeast, plants, bacteria and Carassius; 34 curated references. Canonical and E1-derived entry variants, member-specific metal activation, native Bacillus branch and six comparative reviews are integrated. Targeted checks pass and full validation is running; the dedicated PR awaits full validation and review.
-- [ ] Remaining 695 baseline modules: recorded individually as NOT_STARTED. One of 702 baseline audits is complete; six further module PRs are open. Refresh upstream additions before final completion.
+- [x] `abscisic_acid_signaling`: [PR #5540](https://github.com/ai4curation/ai-gene-review/pull/5540) merged as `d4ae4f02f7ab9759d41d104d7cd7af0ec66abb16`. All 19 reviews (524 rows), 26 references and lineage-specific signaling constraints were verified in merged content after approved checks.
+- [x] `activin_receptor_signaling`: [PR #5541](https://github.com/ai4curation/ai-gene-review/pull/5541) merged as `aff0030d3689b50ae9f6d147fc8334a0b942f0a7`. All 11 reviews, 29 references, taxon/step evidence and session histories were verified unchanged from the approved head.
+- [x] `adp_heptose_biosynthesis`: [PR #5542](https://github.com/ai4curation/ai-gene-review/pull/5542) merged as `8954a5dc480f1311f440eb4e50f5cefca5931980` after approval and required checks. Its 16 member reviews, 12 references and 26 histories were inspected; 44 curated/history files match the approved head.
+- [x] `adrenal_steroidogenesis`: [PR #5543](https://github.com/ai4curation/ai-gene-review/pull/5543) merged as `72b4d12be1a4b1dbbd1e4abd526ecfd4e06b7a3f` after approval and required checks. All 13 reviews (434 rows), 26 references and 25 histories are curated; 65 scoped curation/history files match the approved head.
+- [x] `aerobic_nicotinate_degradation`: [PR #5544](https://github.com/ai4curation/ai-gene-review/pull/5544) merged as `94a80ada9f7143d2fb1b38b5e97a5301859c0a7c`. Twelve references and twelve member reviews (43 rows) were verified; 64 scoped curated/history files match the approved head. The NicD localization supersession is recorded in the older audit ledger.
+- [x] `alcoholic_fermentation`: [PR #5545](https://github.com/ai4curation/ai-gene-review/pull/5545) merged as `16bffd8e632185a8be7f5d9936d01c18017d33f7`. All 23 members (487 original rows), 34 references and revised BdhA family scope were verified; all 105 scoped curation/history files match the approved head.
+- [ ] `alginate_o_acetylation`: [PR #5546](https://github.com/ai4curation/ai-gene-review/pull/5546): 12 reviews (52 rows), 15 references and full validation complete. Tracking/nomenclature corrections on `e0c0c2a83c` approved; renewed CI is running; normal auto-merge enabled.
+- [ ] `alginate_polymerization_export`: [draft PR #5552](https://github.com/ai4curation/ai-gene-review/pull/5552): 18 reviews (99 rows), 23 references; cross-species MF and source-defect follow-up plus supported Azotobacter Alg8 ISS proposal `1a4548547f` validated. Full validation passed. Awaiting shared AlgX completion in #5546 and renewed review.
+- [ ] `aliphatic_glucosinolate_myrosinase_defense`: [PR #5550](https://github.com/ai4curation/ai-gene-review/pull/5550): all requested evidence/IPMI corrections approved on `9115b56b95`; required head checks passed and the normal merge queue is testing integration. 35 reviews, 453 rows, 31 references.
+- [ ] `androgen_receptor_signaling`: [PR #5554](https://github.com/ai4curation/ai-gene-review/pull/5554): 15 reviews across human, mouse, medaka, zebrafish and shark (1,683 preserved rows); 26 curated references. Full validation passed; review requested claim-specific evidence and rationale corrections, now underway.
+- [ ] `anti_crispr_suppression`: 13 reviewed representatives, 42 rows and qualified alternative mechanisms committed/pushed on `ad799f71a2`. Focused checks pass; full validation is running before PR creation.
+- [ ] `apoptotic_execution_phase`: sixteen human/mouse reviews complete (1,608 preserved rows), with 35 curated references and ten qualified edges. All focused checks pass; full validation is running.
+- [ ] `aps_dependent_assimilatory_sulfate_reduction`: 14th audit started. Comparative research distinguishes plant glutathione-dependent APR1, fungal/PAPS routes and the unresolved Pseudomonas CysI donor. Reviewing 26 existing members and adding three verified Arabidopsis exemplars.
+- [ ] Remaining 688 baseline modules: recorded as NOT_STARTED. Seven of 702 baseline audits are complete; seven further audits are active. Refresh upstream additions before final completion.
 
 ## Notes
 
@@ -71,3 +78,13 @@ of the same reactions. Archived DSM2067 records preserve strain identity after U
 only the kinase has an exact published-construct match, while three assignments remain qualified; the engineered S2 host is not mislabeled
 as an endogenous producer. The overlapping broad PR #5076 supplies ancestry edits
 but does not replace this literature, taxon and member audit.
+
+### 2026-10-26
+
+Verified nicotinate merge content and continued the alginate and glucosinolate audits. The glucosinolate critical review supports Brassicaceae scope for chain-elongated methionine chemistry; broader glucosinolate occurrence is not evidence for this complete pathway. Family membership checks preserve dual P450 assignments and distinguish demonstrated single-member activity from unresolved subfamily boundaries.
+
+The alginate acetylation audit deliberately uses `algV` for Azotobacter O52197, whose current UniProt primary name is `algJ` and synonym is `algV`. The alias distinguishes this acetylation protein from the historically named outer-membrane export AlgJ (Q44497, now `algE`); it is an explicit curation naming choice, not the fetched primary symbol. The final panel has 42 original GOA rows, four retained older proposals and six added proposals (52 total). Full validation has passed. History totals are reported by target scope rather than a moving PR delta after upstream merges.
+
+## 2026-10-26 — subsequent audit progress
+
+Glucosinolate reached approved merge-queue checks after source-level corrections. Alginate polymerization received coherent comparative molecular-function proposals and explicitly qualified PseudoCAP source-defect records. Androgen passed full validation and opened its own PR. Anti-CRISPR curation is committed while its single full validation continues. Apoptotic execution is the thirteenth started audit; conflicting Acinus evidence, AIF stimulus dependence and source-versus-function caspase adjudications are being examined rather than flattened into a uniform cascade.
