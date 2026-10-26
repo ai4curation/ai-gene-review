@@ -52,3 +52,7 @@ GO-CAM index checked using the actual UniProt ID: the human cortisol model inclu
 ## PR #5543 gene-level follow-up (2026-10-25)
 
 Replaced the two IEA ACCEPT rows supported only by EC labels with experimentally grounded CC:CATALYTIC ACTIVITY reactions: pregnenolone oxidation for GO:0003854 and pregn-5-ene-3,20-dione isomerization for GO:0004769. Both reaction records cite ECO:0000269|PubMed:25322271. Actions remain ACCEPT; original annotation fields unchanged.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root endoplasmic reticulum annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.

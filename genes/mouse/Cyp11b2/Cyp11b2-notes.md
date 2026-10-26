@@ -19,3 +19,7 @@ Evolutionary scope: PMID:32196091 reconstructs functional specialization after d
 ## PR #5543 Linux reference-path correction, 2026-10-25
 
 The tracked source is `genes/mouse/Cyp11b2/Cyp11b2-uniprot.txt`. Active review references now use `file:mouse/Cyp11b2/Cyp11b2-uniprot.txt`, matching Git path case exactly. Local case-insensitive filesystem validation had hidden the uppercase-organism mismatch that failed Linux CI. A case-sensitive audit against `git ls-files` covered all 14 curated YAML files changed by this PR (177 expanded file-reference occurrences, 12 unique references); this was the only mismatched source. Module and other active notes contained no incorrect path. Biological decisions and source quotations are unchanged, and earlier history target identifiers are preserved.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root mitochondrion annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
