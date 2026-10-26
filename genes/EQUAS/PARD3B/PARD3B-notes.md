@@ -74,3 +74,13 @@ agent's temporary working directory, which the client deletes after each run, so
 committed and cannot be recovered. Do not quote these figures as `supporting_text` or rely on them for
 a curation decision until an alignment of A0A9L0JEY6 with human Q8TEW8 has been rerun and committed
 under `PARD3B-bioinformatics/`.
+
+## 2026-10-26: correction to the caution above
+
+The caution overstated the gap. The committed alignment in `PARD3B-bioinformatics/` (`align.py`,
+`RESULTS.md`, `RESULTS-rereview.md`) independently reproduces most of the report's sequence figures:
+88.27% identity over 1,202 aligned pairs; human PDZ2 383-468 85 of 86 identical; PDZ3 498-585 84 of 88;
+human 201-289 88 of 89; and the PDZ2-PDZ3 linker 469-497 26 of 29. Cite those files, not the report,
+for these values. Two report details have no exact committed counterpart and should not be quoted:
+"85 of 90 residues in Par3_HAL_N" (the committed window, human 1-82, gives 77 of 82) and the
+donkey residue the report maps to human Ser746.
