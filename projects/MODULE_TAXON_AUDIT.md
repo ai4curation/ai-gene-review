@@ -54,7 +54,8 @@ For each module, record evidence that all of the following are satisfied:
 - [ ] `anti_crispr_suppression`: [PR #5555](https://github.com/ai4curation/ai-gene-review/pull/5555) opened after full validation passed. Thirteen reviewed representatives, 42 rows and qualified alternative mechanisms are committed on `ad799f71a2`; CI and scientific review are running.
 - [ ] `apoptotic_execution_phase`: sixteen human/mouse reviews complete (1,608 preserved rows), with 35 curated references and ten qualified edges. All focused checks pass; full validation is running.
 - [ ] `aps_dependent_assimilatory_sulfate_reduction`: 14th audit started. Comparative research distinguishes plant glutathione-dependent APR1, fungal/PAPS routes and the unresolved Pseudomonas CysI donor. Reviewing 26 existing members and adding three verified Arabidopsis exemplars.
-- [ ] Remaining 688 baseline modules: recorded as NOT_STARTED. Eight of 702 baseline audits are complete; six further audits are active. Refresh upstream additions before final completion.
+- [ ] `arginine_catabolism_arginase_pathway`: [PR #5566](https://github.com/ai4curation/ai-gene-review/pull/5566). Eighteen reviews preserve 357 original rows (359 current rows after two matrix proposals); 34 curated sources and four evidence-backed connections. Science remains approved at integrated head `78b415cf54`. Restoring the dropped tracker entry is the sole current review blocker; renewed review and merge remain required.
+- [ ] Remaining 698 of 714 inventoried modules: recorded as NOT_STARTED. 8 audits are complete; 8 further audits are active. This branch began with 702 entries; the explicit twelve-entry refresh is documented below. Recheck upstream additions before final completion.
 
 ## Notes
 
@@ -88,3 +89,34 @@ The alginate acetylation audit deliberately uses `algV` for Azotobacter O52197, 
 ## 2026-10-26 — subsequent audit progress
 
 Glucosinolate reached approved merge-queue checks after source-level corrections. Alginate polymerization received coherent comparative molecular-function proposals and explicitly qualified PseudoCAP source-defect records. Androgen passed full validation and opened its own PR. Anti-CRISPR curation is committed while its single full validation continues. Apoptotic execution is the thirteenth started audit; conflicting Acinus evidence, AIF stimulus dependence and source-versus-function caspase adjudications are being examined rather than flattened into a uniform cascade.
+
+
+## Restored historical audit notes
+
+The following three dated sections were authored during this audit and were lost when the shared tracker was resolved entirely to upstream. They describe progress at those earlier sessions, not current PR states; the current arginase status and row accounting appear in the checklist and restoration note below. Existing upstream notes are preserved verbatim.
+
+## 2026-10-26 — sulfate integration and arginine expansion
+
+All sulfate member panels are integrated (29 reviews, 496 rows); independent module QA retains measured chemistry separately from inferred native electron-carrier pairing. Full validation is running. Arginine review now covers the 39 original members, with literature-driven plant and archaeal sampling being developed. The shared automated-review failure is diagnosed from full workflow logs as an account usage limit; no scientific review ran for the latest affected heads. Build checks and independent curation continue, without bypassing approval.
+
+## 2026-10-26 — forty-three arginine member reviews validated
+
+The arginine member panel is complete: 43 proteins and 555 preserved annotation rows, including 2 prior proposals and no newly added rows. All focused member checks, histories and renders pass; full validation is running. The added archaeal ArgJ is recycling-only, plant NAGK/WIN1 anchor plastid reactions, and short mycobacterial ArgA retains its weak glutamate-efficiency caveat. Independent module QA remains in progress. Sulfate is committed and its full reference validation continues. Apoptosis PR #5558 is open; its automated review also hit the shared account quota before producing a verdict. The eight verified merges remain the only completed baseline audits.
+
+Independent arginine module QA is now complete: all 43 family/member placements agree with fetched classifications, cached GO-CAM assertions were checked, and 22 curated references support 9 connections. The draft no longer attributes type 2 ArgC classification to an unrelated review passage or restricts ArgA initiation to the linear release route. Full validation remains the outstanding pre-PR gate.
+
+## 2026-10-26 — arginase catabolism and CI follow-up
+
+The sixteenth audit separates demonstrated budding-yeast compartmental flux from broader fungal inference, restores the fission-yeast Arg3 re-synthesis context, and adds the distinct plant arginase/agmatinase family. Thirty-two sources and four evidence-backed connections are drafted. Sulfate and arginine full validation remain live. Apoptosis CI exposed a real module logic failure: an empty context satisfies its current all-optional structure. A biology-aware correction is underway; no approval or merge gate is bypassed.
+
+Sulfate full validation reached terminal success, current-main integration preserved all 197 scoped files, and PR #5560 is open. The apoptosis Boolean correction is published as `b4f92e028b` with 54 passing logic tests. All 18 arginase member checks now pass (357 preserved rows, no newly added rows); a direct ARGAH2 agmatinase result exposed an overly narrow family-level scope, which is being corrected from primary evidence.
+
+Independent arginase QA now passes: 34 source entries, four evidence-backed connections, 46 module-logic tests and 14 route cases. The PTHR11358 SF32 correction retains all existing PAINT assertions and APAUH exceptions; the global family/gene crosscheck reports zero conflicts across 734 families. All eighteen gene reviews are committed as `bfdb0069d7`; full validation is running before PR creation.
+
+The latest sulfate scientific-review run `40270283163` and corrected apoptosis run `40270373152` both ended with the verified account-usage-limit diagnostic before producing a review. Their build checks continue; no review approval is inferred from a workflow failure.
+
+## 2026-10-26 — arginase tracker restoration after integration
+
+The integration at `78b415cf54` preserved the approved gene, family and module science but dropped this audit's tracker entry and historical notes. Restored the entry from the canonical tracker with current module-derived structure: nine family-based annotons, each with function-level evidence, 18 represented proteins, Eukaryota context qualified to characterized fungal, plant and animal implementations, 34 curated source entries and four connections. The 357 original rows are preserved; two approved ARGAH1/ARGAH2 matrix proposals bring the current review total to 359. No biological assertion was changed. The latest reviewer explicitly approves the science and requests only tracker restoration; this audit remains active until renewed review/checks and verified merge.
+
+This branch's inventory initially contained 702 modules, not 714. Added the twelve missing canonical entries after verifying their module files: eleven remain NOT_STARTED, while acetylcholine_signaling retains its actual PR_OPEN status and evidence. The resulting 714-entry inventory has eight COMPLETE, eight active and 698 NOT_STARTED entries. Every unrelated pre-existing module entry and all upstream notes remain unchanged. These are branch-local totals, not a claim that main already carried the refreshed inventory or that an open PR has merged.
