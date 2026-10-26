@@ -29,3 +29,12 @@ The target family/reaction quote did not establish localization. Traced the ance
 Action changes: Row 5 GO:0005737: ACCEPT → UNDECIDED.
 
 All 15 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.
+
+
+## 2026-10-26 PR #5569 second follow-up
+
+Replaced the shared action-only summaries and catalytic boilerplate with enzyme-specific chemistry and row-specific source assessments. Existing annotation payloads and raw UniProt/GOA files remain unchanged. Distinct experimental, PAINT, domain/rule and homolog-transfer rows now state what each evidence stream establishes. No new biological annotation was proposed.
+
+PMID:14699121 establishes HPLC-detected phosphate transfer from phosphoserine to homoserine, with serine coproduct, alongside hydrolytic phosphoserine phosphatase activity. The original negated ATP-dependent homoserine-kinase row remains ACCEPT. Native double-mutant auxotrophy in PMID:10220164 is distinct from overexpression rescue of serB. The cytoplasmic IBA is now ACCEPT as a qualified ancestral inference: actual PTN000000002 is SOUND in the PTHR43344 family review and has publication-linked cytosolic PSPH donor evidence. No direct target localization assay is claimed.
+
+All 24 current panel reviews remain within the preservation proof (439 rows, including the pre-existing proposal). Focused schema/term/source checks, derived record sections, renders and helper-generated Codex histories accompany the changed genes. No module, tracker, staging, commit or full-repository validation is part of this follow-up.

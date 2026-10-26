@@ -27,3 +27,12 @@ Corrected display symbol from accession Q57991 to the verified MJ0571 locus (no 
 Action changes: Row 3 GO:0005829: ACCEPT → UNDECIDED.
 
 All 8 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.
+
+
+## 2026-10-26 PR #5569 second follow-up
+
+Replaced the shared action-only summaries and catalytic boilerplate with enzyme-specific chemistry and row-specific source assessments. Existing annotation payloads and raw UniProt/GOA files remain unchanged. Distinct experimental, PAINT, domain/rule and homolog-transfer rows now state what each evidence stream establishes. No new biological annotation was proposed.
+
+PMID:17012784 directly characterizes the monofunctional archaeal aspartokinase with aspartate/MgADP-bound structure, tetrameric assembly, threonine inhibition and no measured lysine feedback. The cytosol IBA is now ACCEPT as an inherited inference. Actual PTN000487132 seeds are MetL/P00562 and LysC/P08660, not ThrA; the family review requests pruning for plastid-targeted plant branches, not archaeal recipients. Neither the reaction equation nor crystallization is claimed as a native localization assay.
+
+All 24 current panel reviews remain within the preservation proof (439 rows, including the pre-existing proposal). Focused schema/term/source checks, derived record sections, renders and helper-generated Codex histories accompany the changed genes. No module, tracker, staging, commit or full-repository validation is part of this follow-up.
