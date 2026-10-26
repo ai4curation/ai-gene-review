@@ -241,6 +241,25 @@ The idioms in the corpus:
 - `RO:0002233` (has input) + a `UniProtKB:…` partner — substrate/partner context,
   the most common extension overall.
 
+Not every contextual mechanism is structurable this way, and the contextual
+buckets split cleanly:
+
+- **tissue_restricted_surface** (ALPG, IZUMO1, KLK2, LY6K, ZP3) — a *cell type*,
+  captured by `part_of CL/UBERON` as above.
+- **cell_state_induced** (CALR, DLL3, HMGB1, HSPA1A, HSPA5, HSPD1, SRC) and
+  **lysosomal_exocytosis** (CD63, LAMP1, LAMP2, LAMP3, SCARB2) — a *mechanism or
+  condition* (stress/apoptosis-induced display; fusion of a lysosome or granule
+  with the plasma membrane). GO has no extension predicate for "surface only under
+  condition X", so the correct representation is `KEEP_AS_NON_CORE` plus a prose
+  `reason`, not a manufactured extension. GO does have the process term
+  `GO:1990927` (calcium ion regulated lysosome exocytosis), but the LAMPs/CD63 are
+  **cargo carried by** that exocytosis, not performers of it, so adding it would be
+  over-annotation (the "do not add what curators declined" rule). The lysosomal set
+  is already handled consistently in our reviews (lysosomal membrane core, surface
+  non-core). CD63 is the one exception, with a genuine constitutive surface pool as
+  a core location — arguably the benchmark under-labels it (closer to `yes` than to
+  exocytosis-only `contextual`).
+
 Across the human corpus ~48 reviews use extensions (predicates seen: has input 134,
 occurs_in 73, part_of 53, plus a few regulates/has-output). So extensions are the
 sanctioned mechanism and should be used for contextual localization, but most
