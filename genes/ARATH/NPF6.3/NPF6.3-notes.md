@@ -1,3 +1,5 @@
+> Q05085 review consolidated on 2026-10-26: [canonical NRT1.1 review](../NRT1.1/NRT1.1-ai-review.yaml). The notes below are historical; current reconciled conclusions and source limits are in [NRT1.1 notes](../NRT1.1/NRT1.1-notes.md).
+
 # NPF6.3 review notes
 
 
