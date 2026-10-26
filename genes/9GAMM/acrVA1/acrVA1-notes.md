@@ -89,3 +89,10 @@ blockade) is the right call, even though AcrVA1 does also block dsDNA binding.
 Unreviewed entry, PDB-derived name, zero GOA annotations, for a protein whose mechanism
 was called "a mode of inhibition not previously observed for any anti-CRISPR protein".
 Same curation gap class as L7P7R7 and A0A2D0TCG3.
+
+
+## 2026-10-25 comparative anti-CRISPR audit
+
+PMID:30936531 establishes spacer cleavage, multiple turnover and release of the 3-prime fragment, not loss of the complete guide or permanent impossibility of reprogramming. PMID:31155345 (cached abstract; publisher highlights additionally identify a helix-alpha2 RNase active site) is later independent evidence, so the old claim that no candidate catalytic site had been reported was removed. The direct structural accession link is PDB 6NMD chain B, residues 5-174. The prior reviewer-authored host-cell-cytoplasm proposal was corrected to cytoplasm because the source record is bacterial and the native element is unresolved. No GOA assertion was changed.
+
+Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals were reassessed independently. Primary references were obtained through the normal publication cache. A normal Falcon attempt with perplexity-lite fallback failed; logs are in `.cache/module-audit-logs/anti-crispr-deep-9GAMM-acrVA1.log`. These are manual research notes, not provider-generated research.
