@@ -6811,3 +6811,30 @@ checkboxes change; pending reviews remain unchecked. Dated source inventories ar
 unchanged. The project pages are regenerated and the session history is validated.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/95d2eb9ce19350184086101fdde78948271ebd48/history/projects/CLINGEN_MENDELIAN/2026-10-25T180611Z-codex-f8a28c.yaml).
+
+
+## Completion checkpoint 614 — 2026-10-26 01:50:51 UTC
+
+**614 complete; 2,262 remaining out of 2,876 primary catalogue genes.**
+Only FANCF is added to [tracker 613, PR #5533](https://github.com/ai4curation/ai-gene-review/pull/5533).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure: gene+history / dependencies | Contexts; refs / cores | DRAFT warnings / active UNDECIDED | Merge-group Build |
+| --- | --- | --- | --- | --- | --- | --- |
+| [FANCF #5531](https://github.com/ai4curation/ai-gene-review/pull/5531) | [`4d6d2dd1b2c5`](https://github.com/ai4curation/ai-gene-review/commit/4d6d2dd1b2c574604d42cc394a6dd458cd136c8a) → [`23a88e84c365`](https://github.com/ai4curation/ai-gene-review/commit/23a88e84c365ef68e497809408a53284cf51df63) | 8 / 8 | 11 / 24 (35 total) | 27; 26 / 1 | 3 / 0 | [40220975572](https://github.com/ai4curation/ai-gene-review/actions/runs/40220975572) |
+
+The complete gene/history tree and selected source dependencies match the approved
+head, actual merge and fixed main `dd6e9ba2bd94ac4f513cb106bca7c984339f1985` in contents and modes.
+The queue retains all 35 path/blob/hash records; all 24 external source dependencies
+were reused unchanged from the merge parent. The validation, suite and aggregate
+test jobs passed on the actual merge; the coordinating agent's accepted operative
+reads retain the limits, skips, advisories and unresolved cases of that run.
+No post-merge deployment is claimed. The biological review remains DRAFT with three
+validation advisories. This update changes no gene annotation or publication quotation.
+
+All 235 queue objects, 131 earlier completion updates, catalogue identities,
+association text and preceding progress bytes remain preserved. Only FANCF's
+checkbox changes; pending reviews, including FANCG and FANCI, remain unchecked.
+Dated source inventories are unchanged. Both project pages are regenerated and the append-only session history is validated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/481e17fe3f806a6e81060088f4876f78f7707b25/history/projects/CLINGEN_MENDELIAN/2026-10-26T015740Z-codex-050413.yaml).
