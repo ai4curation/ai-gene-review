@@ -323,23 +323,27 @@ jobs:
         id: scope
         run: echo "run=${{ github.event_name == 'merge_group' || steps.changes.outputs.src == 'true' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.agents == 'true' }}" >> "$GITHUB_OUTPUT"
 
-      # The benchmark tests read frozen inputs with `git cat-file` at two declared
-      # commits: baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit
-      # (reviews/GOA behind the GO-GPT, BioReason sidecar and ProtNLM reports).
+      # The benchmark tests read frozen inputs with `git cat-file` at declared commits:
+      # baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit (reviews/GOA
+      # behind the GO-GPT and BioReason sidecar reports), plus the ProtNLM2
+      # evaluation's own review_snapshot_commit.
       - name: Fetch benchmark baseline and review snapshot commits
         if: github.event_name == 'merge_group' || steps.changes.outputs.src == 'true'
         shell: bash
         run: |
-          policy=projects/BIOREASON_COMPARISON/benchmark-policy.yaml
-          for field in baseline_commit review_snapshot_commit; do
+          fetch_field() {
+            local policy="$1" field="$2" commit
             commit="$(sed -n "s/^${field}: //p" "$policy")"
             if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "Invalid BioReason benchmark ${field}: $commit" >&2
+              echo "Invalid ${field} in ${policy}: $commit" >&2
               exit 1
             fi
             # persist-credentials is disabled; this targeted fetch uses public read access.
             git fetch --no-tags --depth=1 origin "$commit"
-          done
+          }
+          fetch_field projects/BIOREASON_COMPARISON/benchmark-policy.yaml baseline_commit
+          fetch_field projects/BIOREASON_COMPARISON/benchmark-policy.yaml review_snapshot_commit
+          fetch_field projects/PROTNLM_EVALUATION/review-snapshot.yaml review_snapshot_commit
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv

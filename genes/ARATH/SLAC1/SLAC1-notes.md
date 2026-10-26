@@ -92,3 +92,14 @@ PMID:30361234; the others are abstract-only.
   10-TM plasma-membrane channel.
 - GO:0090333 regulation of stomatal closure (IMP, PMID:29463779): SLAC1 executes
   closure (the anion efflux step) rather than regulating it; GO:0090332 fits.
+
+
+## 2026-10-25 — ABA module member audit
+
+Assessed all 44 annotation decisions and channel-centered core functions. Foundational genetics, plasma-membrane localization, heterologous electrophysiology and structure support SLAC1 as an ABA guard-cell anion effector. This does not make guard-cell output universal across land-plant ABA signaling. Core functions remain anion transport and stomatal closure.
+
+Inspected open PR #5402 before editing secondary potassium-channel inhibition rows. KAT1 refinement to GO:0070320 is independently supported by PMID:27002025 and the QuickGO definition (checked 2026-10-25). AKT2 retains broader GO:0019870: primary PMID:16316977 establishes inward-rectifying and nonrectifying gating modes, and available SLAC1 evidence does not resolve which mode was inhibited. This is an intentional evidence-based difference from PR #5402's uniform inward-rectifier replacement. Neither activity is added to core_functions.
+
+PMID:23126621 full text shows that "reducing [Ca(2+)](cyt) to < 10 nM rapidly restored the activity of K(+)(in) channels in slac1 closer to wild-type levels." Loss-of-function physiology involves calcium-dependent compensatory feedback and cannot be treated as a simple direct-inhibition phenotype. Existing heterologous/overexpression inhibitory activity is retained with this limitation; no exhaustive claim about absence of replication is made. PMID:31896774 additionally establishes RAF-SnRK2 input needed for SLAC1 activation after PP2C inactivation.
+
+Research used existing provider reports/manual notes and cached primary literature. All rows retain explicit decisions; unresolved findings are UNDECIDED rather than inferred from missing text. Record-section backfill and targeted validation were run for this session.
