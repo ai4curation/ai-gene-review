@@ -416,7 +416,7 @@ def merge_go_maps(go_maps: list[dict]) -> list[dict]:
     for m in go_maps:
         e = out.setdefault(m["object_id"], {"id": m["object_id"], "label": m["object_label"],
                                              "predicate": m["predicate_id"], "sources": []})
-        if rank[m["predicate_id"]] < rank[e["predicate"]]:
+        if rank.get(m["predicate_id"], 99) < rank.get(e["predicate"], 99):
             e["predicate"] = m["predicate_id"]
         e["sources"].append(m["match_source"])
     return list(out.values())
@@ -699,15 +699,16 @@ def main() -> int:
             "best_gocam": ({"model": r["best_gocam_model"], "title": r["best_gocam_title"],
                             "overlap": r["best_gocam_overlap"]} if r and r["best_gocam_model"] else None),
             "go_mappings": merge_go_maps(go_maps),
-            "go_mappings_not_for_matching": [
-                {"id": m["object_id"], "label": m["object_label"], "predicate": m["predicate_id"]}
-                for m in curated if m["subject_id"] == tid and not m["for_matching"]],
             "existing_modules": mod_hits,
             "subpathways": rec.get("diagram_pathway_links", []),
             "diagram_genes": [g["label"] for g in rec.get("diagram_gene_links", [])],
             "diagram_labels": rec.get("diagram_labels", []),
             "human_genes_rgd_curated": cur,
         })
+        unmatched = [{"id": m["object_id"], "label": m["object_label"], "predicate": m["predicate_id"]}
+                     for m in curated if m["subject_id"] == tid and not m["for_matching"]]
+        if unmatched:
+            seeds[-1]["go_mappings_not_for_matching"] = unmatched
     tier_order = {"candidate": 0, "related_module_only": 1, "needs_go_mapping": 2,
                   "no_specific_go_term": 3, "has_module": 4, "thin": 5, "out_of_scope": 6}
     seeds.sort(key=lambda s: (tier_order[s["tier"]], -(s["n_human_genes_rgd_curated"]), s["id"]))
