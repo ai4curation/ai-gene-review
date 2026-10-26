@@ -8,6 +8,9 @@ places:
 * ``existing_annotations[].review.source_defects`` in gene reviews
   (``genes/*/*/*-ai-review.yaml``), where the defective record is the GOA/MOD
   annotation row described by the enclosing ``existing_annotations`` entry;
+* ``functional_isoforms[].source_defects`` in gene reviews, where the defect is in
+  the source's record of an isoform (e.g. a literature isoform missing from the
+  reviewed UniProt entry); the row's ``term_id`` carries the functional isoform id;
 * ``activity_reviews[].source_defects`` in GO-CAM reviews
   (``gocams/*/*-review.yaml``), where it is the GO-CAM activity.
 
@@ -92,7 +95,7 @@ def _row(source_path: str, context: dict[str, Any], defect: dict[str, Any]) -> d
 
 
 def gene_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
-    """Yield defect rows from a gene review's existing annotations."""
+    """Yield defect rows from a gene review's existing annotations and functional isoforms."""
     data = _load(path)
     if not data:
         return
@@ -108,6 +111,15 @@ def gene_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
                 "evidence_type": ann.get("evidence_type", ""),
                 "original_reference_id": ann.get("original_reference_id", ""),
                 "qualifier": ann.get("qualifier", ""),
+            }
+            yield _row(str(path.relative_to(root)), context, defect)
+    for isoform in data.get("functional_isoforms") or []:
+        for defect in isoform.get("source_defects") or []:
+            context = {
+                "gene_symbol": data.get("gene_symbol", ""),
+                "subject_id": f"UniProtKB:{data.get('id', '')}",
+                "term_id": isoform.get("id", ""),
+                "term_label": isoform.get("name", ""),
             }
             yield _row(str(path.relative_to(root)), context, defect)
 
@@ -149,6 +161,9 @@ def _describe_change(r: dict[str, str]) -> str:
     'remove A:1 from has_input'
     >>> _describe_change({**base, "requested_change": "", "corrected_value": "A:2"})
     'A:1 → A:2'
+    >>> _describe_change({**base, "requested_change": "ADD", "slot": "",
+    ...                   "corrected_value": "RefSeq:NP_1.1"})
+    'add RefSeq:NP_1.1 to A:1'
     """
     asserted, corrected = r["asserted_value"], r["corrected_value"]
     label = f" ({r['corrected_label']})" if r["corrected_label"] else ""
@@ -158,6 +173,9 @@ def _describe_change(r: dict[str, str]) -> str:
         return f"remove {asserted}{where}"
     if action == "DELETE_ROW":
         return f"delete the record asserting {asserted}"
+    if action == "ADD":
+        where = f" ({r['slot']})" if r["slot"] else ""
+        return f"add {corrected}{label} to {asserted}{where}"
     if action == "CHECK":
         return f"check {asserted} (alternatives in the explanation)"
     if corrected:
