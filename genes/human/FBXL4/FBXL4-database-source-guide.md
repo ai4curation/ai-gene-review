@@ -1,6 +1,6 @@
 # FBXL4 database source guide
 
-The [decision table](FBXL4-database-decisions.yaml) preserves the complete original source object for each of 17 contexts in 15 whole source groups. All 29 imported source objects, 27 reference identities and 60 inherited quote paths and reference associations remain unchanged in the lane candidate. Source-specific uncertainty is retained independently of stronger evidence for a different compartment.
+The [decision table](FBXL4-database-decisions.yaml) preserves the complete original source object for each of 17 contexts in 15 whole source groups. All 29 imported source objects, 27 reference identities and 60 inherited quote paths and reference associations remain unchanged in the lane candidate. The current feedback successor distinguishes overextended modeled compartment evidence from the still-unresolved historical intermembrane-space experiment.
 
 ## SCF inheritance and mitophagy regulation
 
@@ -20,7 +20,7 @@ PMID:23993194 localization Results, Figure 4 caption and Methods reported negati
 
 All ten source events genuinely reach entity 8850899, reference entity 55118, Q9UKA2 residues 1–621, assigned to GO:0005829 cytosol. The decision table gives an explicit sequence of event, component and member edges for each source. Six CRL events pass through SCF/F-box complexes or sets; generic E3 routes include FBXL4 as an actual member. This verifies target membership rather than rejecting an event by its title. One target route per source was expanded; unrelated branches and every cited experiment were not exhaustively reviewed.
 
-These compartment assignments are pathway models, not independently resolved FBXL4 cytosolic localization assays. Outer membrane is not a strict descendant of cytosol, so the source claims remain UNDECIDED rather than being rewritten to outer membrane. The DCUN1D3 event has a plasma-membrane output while its nested FBXL4 component retains cytosol; this does not establish FBXL4 plasma-membrane localization. Reaction chemistry performed by other components is not transferred to FBXL4.
+These compartment assignments are pathway models, not independently resolved FBXL4 cytosolic localization assays. The ten rows are now MARK_AS_OVER_ANNOTATED: generic set membership overextends compartment evidence to the target, which has positive integral outer-membrane evidence. Entity 8850899 itself explicitly carries cytosol. The paths include F-box DefinedSet 976085 or generic E3 CandidateSet 976075; node 976110 is an SCF Complex. Neither exclusive mitochondrial localization nor universal absence of a cytosolic pool follows. The lack of a strict descendant relationship does not by itself prohibit a lateral MODIFY; MO is chosen because the modeled compartment claim exceeds its target-specific support, while the independent outer-membrane row already remains present. The DCUN1D3 event has a plasma-membrane output while its nested FBXL4 component retains cytosol; this does not establish FBXL4 plasma-membrane localization. Reaction chemistry performed by other components is not transferred to FBXL4.
 
 ## Reading limits and source preservation
 

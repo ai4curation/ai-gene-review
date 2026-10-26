@@ -31,3 +31,11 @@ The single core is SCF-FBXL4 substrate recognition at the mitochondrial outer me
 All 60 inherited quotation associations, including six core quotations, remain exact. The core adds only a bare PMID40025034 citation. All 27 inherited reference identities/titles/findings and all 29 source objects/order remain exact. Two genuine additional publications are included, and the four shared database primary scopes occur once in the complete primary assessments. No NEW annotation, natural product, invented provider report or new quotation was introduced. The original provider report and artifacts remain unchanged.
 
 See the [integrated source guide](FBXL4-source-guide.md) for the primary/database evidence links and explicit source limits.
+
+## 2026-10-26 — feedback adjudication
+
+The ten Reactome cytosol rows now use MARK_AS_OVER_ANNOTATED. Their actual routes and explicit target-entity cytosol field remain recorded; the issue is overextension of a generic ligase-set compartment model, not missing target membership or proof that FBXL4 can never occupy a cytosolic pool. DefinedSet 976085, CandidateSet 976075 and SCF Complex 976110 retain their actual types. The historical intermembrane-space source remains UNDECIDED.
+
+The TPP1 and DNM2 binding refinements remain MODIFY. Their official definitions concern binding itself, without effector/regulatory or physiological claims. Original Table S2 and six positive IntAct records support the exact pairs; the inherited abstract quotations are retained unchanged as study context and are not presented as pair-specific support. Missing target DULIP confirmation, unresolved insert boundaries and the lack of a mapped mature TPP1 chain remain explicit.
+
+The two still-open questions on additional SCF-FBXL4 substrates and direct-versus-secondary DRP1/fission effects are restored verbatim from the original review. Description/core prose now states biology directly, including the curated MTDPS13 context and the already-supported mouse Bnip3/Nix rescue. All source objects, reference objects and 60 inherited quotations retain exact paths/text/reference associations. The prior journal remains intact. Status remains DRAFT because of the inherited provider-citation advisory; this is not a new incomplete scientific task or a fabricated provider citation.
