@@ -260,6 +260,25 @@ plasma-membrane rows non-core; TGFB1 is core `extracellular region` with the
 GARP-presented `cell surface` pool non-core (GARP/LRRC32 presents it on Tregs,
 platelets and more, so no single cell type to pin a `part_of` on).
 
+The **dual_localization** set (ATP5F1B, B4GALT1, CD68, EREG, PMEL, STIM1, TGOLN2,
+TMED10, TYRP1, VDAC1) is a *subcellular* dual residence, not a cell-type context,
+so no `part_of CL/UBERON` extension applies. The right handling is to pick the
+correct core compartment and the correct action for the surface pool, and the set
+is handled consistently: one core location (mitochondrial outer membrane for
+VDAC1, Golgi for B4GALT1, ER for STIM1, melanosome for PMEL/TYRP1, endolysosome
+for CD68, TGN for TGOLN2, ER/ERGIC/Golgi for TMED10) with the plasma-membrane pool
+`KEEP_AS_NON_CORE` — or `MARK_AS_OVER_ANNOTATED` where PM is actually wrong
+(TMED10, an early-secretory cargo receptor), or `NEW`/`ACCEPT` where the surface
+pool is a real added finding (TYRP1 melanoma cell surface; EREG membrane proform).
+One row was inconsistent and is now fixed: ATP5F1B had its ecto-ATP-synthase
+`cell surface` row `KEEP_AS_NON_CORE` but its `plasma membrane` row `UNDECIDED`
+only because the publication was uncached; fetching Moser et al. 1999
+(PMID:10077593, the angiostatin/surface ATP-synthase paper) resolved it to
+`KEEP_AS_NON_CORE` with verbatim support. A remaining candidate refinement: STIM1's
+non-core `plasma membrane` rows could be MODIFYed to `GO:0140268` ER–PM contact
+site, since STIM1 stays in the ER and only reaches toward the PM at junctions
+(left as is for now — a minor genuinely PM-inserted pool also exists).
+
 Not every contextual mechanism is structurable this way, and the contextual
 buckets split cleanly:
 
