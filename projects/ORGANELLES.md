@@ -145,8 +145,9 @@ plastids come later.
    resolve the sub-compartment (organelle proteomics, whole-organelle
    co-staining, GFP fusion), the row is `ACCEPT` (or `KEEP_AS_NON_CORE` if
    the location is peripheral to the gene's function). It says what the
-   experiment showed. Use `MODIFY` only if the paper itself resolved a
-   sub-compartment and the curator stopped short.
+   experiment showed. If the paper itself resolved a sub-compartment and
+   the curator stopped short, keep the row and add the sub-compartment as a
+   `NEW` row under rules 4-5.
 3. **Synthesis (IBA, IC, IEA, ISS, ISO, ISA, ISM, RCA, ...): a red flag.**
    Examine the row rather than accepting it by default. A propagation or an
    inference has no assay limit to excuse the coarse term. Either the source
@@ -180,9 +181,11 @@ plastids come later.
    of PR #5208.) For the IEA rows, the lasting fix is upstream: a UniProt
    location keyword of `SL-0170` (Mitochondrion matrix) instead of `SL-0173`
    (Mitochondrion) maps to the matrix term directly.
-6. **`core_functions.locations`** should name the sub-compartment where it is
-   known, and may also carry the root if the organelle-level claim is
-   independently supported.
+6. **`core_functions.locations`** should name the sub-compartment where the
+   core activity is shown to happen, and may also carry the root if the
+   organelle-level claim is independently supported. A well-supported
+   sub-compartment location is not by itself where the function acts (MMADHC,
+   2026-10-18).
 
 ## Survey under this policy
 
@@ -260,8 +263,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
       candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
 - [ ] Decide on a validation warning
-- [ ] Add the policy to CLAUDE.md / the annotation-reviewer guidance once it
-      has been tried on a batch of genes
+- [x] Add the policy to CLAUDE.md (2026-10-25, after batches 1 and 2); the
+      annotation-reviewer guidance still to do
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
