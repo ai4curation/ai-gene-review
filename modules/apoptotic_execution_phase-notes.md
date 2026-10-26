@@ -262,3 +262,14 @@ The following three former knowledge-gap records concern coverage choices and fu
   resolution: Add an apoptotic surface-remodeling branch after reviewing XKR/ATP11C substrates
     and TIMD4-mediated clearance context.
 ```
+
+
+## 2026-10-26 — Preserve the shared executioner-step identifier
+
+CI against current main exposed two TRAIL module references to
+`apoptotic_execution_phase#executioner_caspase_proteolysis`. Restore that
+existing public node identifier on the required CASP3/CASP7 contribution.
+The revised ONE_OR_MORE principal-executioner logic and every activity,
+edge, source and gene review are unchanged. This preserves the intended
+shared proteolysis step without reverting the biological separation of
+CASP6 and context-dependent nuclear remodeling.
