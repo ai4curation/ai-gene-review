@@ -457,6 +457,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#example-an-isoform-missing-from-uniprot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example: an isoform missing from UniProt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#generating-reports" class="md-nav__link">
     <span class="md-ellipsis">
       Generating reports
@@ -615,6 +624,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#example-an-isoform-missing-from-uniprot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example: an isoform missing from UniProt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#generating-reports" class="md-nav__link">
     <span class="md-ellipsis">
       Generating reports
@@ -649,7 +667,9 @@ this repository's understanding. Examples:</p>
 <li>an annotation or GO-CAM activity attached to the wrong gene ("that gene,
   not this gene"), often through a shared symbol or a legacy alias;</li>
 <li>an annotation keyed to a reference that does not support it;</li>
-<li>an experimental evidence code on a review or meeting report, or a missing <code>NOT</code>.</li>
+<li>an experimental evidence code on a review or meeting report, or a missing <code>NOT</code>;</li>
+<li>an isoform established in the literature that the reviewed UniProt entry does
+  not list.</li>
 </ul>
 <p>The review <code>action</code> says what this repository does with the claim (for
 example <code>REMOVE</code> or <code>UNDECIDED</code>). <code>source_defects</code> says what the <strong>source</strong>
@@ -661,6 +681,8 @@ should fix, in a form from which a report to that resource can be generated.</p>
   is usually left unset.</li>
 <li>GO-CAM reviews: <code>activity_reviews[].source_defects</code>. Set <code>record</code> to the
   activity id.</li>
+<li>Functional isoforms: <code>functional_isoforms[].source_defects</code>, for a defect in
+  the source's record of that isoform. Set <code>record</code> to the UniProt accession.</li>
 </ul>
 <h2 id="fields">Fields</h2>
 <table>
@@ -675,7 +697,7 @@ should fix, in a form from which a report to that resource can be generated.</p>
 <tr>
 <td><code>defect_type</code></td>
 <td>yes</td>
-<td><code>WRONG_GENE_PRODUCT</code>, <code>WRONG_REFERENCE</code>, <code>WRONG_TERM</code>, <code>WRONG_EVIDENCE_CODE</code>, <code>MISSING_NEGATION</code>, <code>WRONG_WITH_FROM</code>, <code>WRONG_QUALIFIER</code>, <code>WRONG_CAUSAL_RELATION</code>, <code>OTHER</code></td>
+<td><code>WRONG_GENE_PRODUCT</code>, <code>WRONG_REFERENCE</code>, <code>WRONG_TERM</code>, <code>WRONG_EVIDENCE_CODE</code>, <code>MISSING_NEGATION</code>, <code>WRONG_WITH_FROM</code>, <code>WRONG_QUALIFIER</code>, <code>WRONG_CAUSAL_RELATION</code>, <code>MISSING_ISOFORM</code>, <code>OTHER</code></td>
 </tr>
 <tr>
 <td><code>resource</code></td>
@@ -695,12 +717,12 @@ should fix, in a form from which a report to that resource can be generated.</p>
 <tr>
 <td><code>requested_change</code></td>
 <td>no</td>
-<td><code>REPOINT</code> (replace with <code>corrected_value</code>), <code>DELETE_VALUE</code> (drop the value, keep the record), <code>DELETE_ROW</code>, or <code>CHECK</code> (the right change depends on information we could not see; the explanation gives the alternatives).</td>
+<td><code>REPOINT</code> (replace with <code>corrected_value</code>), <code>DELETE_VALUE</code> (drop the value, keep the record), <code>DELETE_ROW</code>, <code>ADD</code> (add <code>corrected_value</code>, which the record lacks), or <code>CHECK</code> (the right change depends on information we could not see; the explanation gives the alternatives).</td>
 </tr>
 <tr>
 <td><code>asserted_value</code></td>
 <td>yes</td>
-<td>What the source says now, as a CURIE (<code>AGI_LocusCode:AT2G45160</code>, <code>PMID:32213638</code>).</td>
+<td>What the source says now, as a CURIE (<code>AGI_LocusCode:AT2G45160</code>, <code>PMID:32213638</code>). For <code>requested_change: ADD</code> nothing wrong is asserted, so this names the record that lacks the value (the same CURIE as <code>record</code>, e.g. <code>UniProtKB:Q96PV0</code> for a missing isoform); group <code>ADD</code> rows separately when analysing asserted values.</td>
 </tr>
 <tr>
 <td><code>corrected_value</code> / <code>corrected_label</code></td>
@@ -750,6 +772,32 @@ should fix, in a form from which a report to that resource can be generated.</p>
     The H4K5 acetyltransferase activity is enabled_by SCL27, a GRAS protein
     that shares the HAM1 alias; the cited papers study MYST HAM1 (AT5G64610).
 </code></pre>
+<h2 id="example-an-isoform-missing-from-uniprot">Example: an isoform missing from UniProt</h2>
+<p>The literature describes four SynGAP C-terminal isoforms, and only alpha1 carries
+the PDZ ligand that binds PSD-95. None of the four isoforms in the reviewed
+entry Q96PV0 has that C-terminus, although RefSeq and two unreviewed UniProtKB
+entries do. The functional isoform maps to those sequences (<code>REFSEQ_PROTEIN</code>,
+<code>UNIPROTKB_UNREVIEWED</code>), and its defect asks UniProt to add the isoform:</p>
+<pre><code class="language-yaml">functional_isoforms:
+- id: SYNGAP1_ALPHA1
+  maps_to:
+  - type: REFSEQ_PROTEIN
+    ids: [NP_001123538.1]
+  source_defects:
+  - defect_type: MISSING_ISOFORM
+    resource: UNIPROT
+    record: UniProtKB:Q96PV0
+    requested_change: ADD
+    asserted_value: UniProtKB:Q96PV0
+    corrected_value: RefSeq:NP_001123538.1
+    confidence: CONFIRMED
+    explanation: &gt;-
+      None of the entry's four isoforms ends in the alpha1 C-terminus (-QTRV).
+</code></pre>
+<p>A functional isoform with no <code>UNIPROT_ISOFORM</code> mapping is one that the reviewed
+entry does not contain. When a paper only <em>numbers</em> residues on a non-displayed
+isoform, nothing in UniProt is wrong: record that with <code>residue_mappings</code> on
+the finding instead (see <code>CLAUDE.md</code>, Isoform and Negation Tracking).</p>
 <h2 id="generating-reports">Generating reports</h2>
 <pre><code class="language-bash">just export-source-defects
 </code></pre>
