@@ -10,8 +10,8 @@ species: [human, mouse, DROME, worm, DICDI, yeast]
 **Bottom line:** GO contains 784 live terms whose label reads "X involved in
 Y", and it has already obsoleted 1,265 more, 883 of them with a comment that
 the term "is pre-composed and should be captured as a GO-CAM model". Our gene
-reviews use 299 distinct such terms in 1,023 `existing_annotations` rows
-across 519 genes (23 species folders); 14 of those rows already sit on
+reviews use 316 distinct such terms in 1,152 `existing_annotations` rows
+across 594 genes (27 species folders); 14 of those rows sit on
 obsolete terms. The schema could not say where the Y context goes when a
 term is replaced by its X. This project added `decomposed_into` to MODIFY
 (pointing at a module, a GO-CAM or the gene's core functions, or recording that
@@ -114,25 +114,27 @@ here.
 |---|---|
 | live "involved in" terms in GO | 784 (BP 728, MF 53, CC 3) |
 | obsolete "involved in" terms | 1,265 (883 with a GO-CAM comment) |
-| review rows using one | 1,023 rows, 299 terms, 519 genes |
+| review rows using one | 1,152 rows, 316 terms, 594 genes |
 | rows on already-obsolete terms | 14 |
-| rows on nested terms (Y is itself "… involved in …") | 217 |
+| rows on nested terms (Y is itself "… involved in …") | 246 |
 | rows whose existing review already records an extension | 1 |
-| rows where the gene is in any cached GO-CAM | 257 |
+| rows where the gene is in any cached GO-CAM | 270 |
 | rows where a GO-CAM of the same gene realizes Y | 23 |
-| rows where a same-symbol GO-CAM in another species realizes Y | 16 |
-| rows whose gene is named in a module | 558 |
+| rows where a same-symbol GO-CAM in another species realizes Y | 17 |
+| rows whose gene is named in a module | 570 |
 
-Current review actions on these rows: KEEP_AS_NON_CORE 494, ACCEPT 288,
-MARK_AS_OVER_ANNOTATED 73, MODIFY 71, UNDECIDED 56, REMOVE 19, NEW 19,
-PENDING 3. **None of the 71 existing MODIFY rows decomposes.** One proposes
-the bare genus. The other 70 are lateral moves to a different term (e.g.
+Figures refreshed 2026-10-26, after merging `main`; the first snapshot
+(2026-10-18) had 1,023 rows over 519 genes. Current review actions on these
+rows: KEEP_AS_NON_CORE 548, ACCEPT 305, MODIFY 103, MARK_AS_OVER_ANNOTATED
+89, UNDECIDED 62, REMOVE 23, NEW 21, TOO_GENERAL 1. Apart from the rows this
+project decomposed, the existing MODIFYs do not decompose: in the first
+snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves to a different term (e.g.
 `DNA strand elongation involved in DNA replication` → `G1/S transition of
-mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 284,
-IEA 216, ISS 146, IDA 121, IGI 71, IBA 68, other 117.
+mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 314,
+IEA 255, ISS 163, IDA 123, IBA 87, IGI 79, other 131.
 
-By organism folder: human 554 rows, mouse 123, DROME 93, worm 82, DICDI 75,
-yeast 21, DANRE 19, other 56.
+By organism folder: human 628 rows, mouse 142, DROME 96, worm 87, DICDI 75,
+yeast 34, DANRE 19, other 71.
 
 ### Rows on already-obsolete terms (fix first)
 
@@ -181,7 +183,7 @@ the GAF.
 ### Recurring Y contexts
 
 [`data/module_candidates.yaml`](INVOLVED_IN_PRECOMPOSITION/data/module_candidates.yaml)
-groups rows by Y. There are 184 contexts; 67 have three or more genes, and
+groups rows by Y. There are 193 contexts; 73 have three or more genes, and
 54 of those are named by no module (crude test: the GO id does not appear in
 any module YAML). They are **not** a module to-do list. Read them through the
 module policy below: some Y's are really mechanisms (module material), most
@@ -243,10 +245,10 @@ saying where Y went:
 
 | Class | Rows | Default outcome |
 |---|---|---|
-| **A. MF `part_of` BP** | 72 | MODIFY to the MF. Y goes to the mechanism module or GO-CAM, or to a `core_function` (MF + `directly_involved_in: [Y]`) if core. |
-| **B. BP `part_of` BP** | 513 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
-| **C. regulation of a nested term** | 222 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
-| **D. no logical definition** | 216 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition. |
+| **A. MF `part_of` BP** | 77 | MODIFY to the MF. Y goes to the mechanism module or GO-CAM, or to a `core_function` (MF + `directly_involved_in: [Y]`) if core. |
+| **B. BP `part_of` BP** | 586 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
+| **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
+| **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition. |
 
 Outcomes:
 
@@ -312,7 +314,7 @@ gene-review HTML template shows `decomposed_into` as badges.
 ## Worked cases (round 1)
 
 Each case is recorded in the gene review with `decomposed_into` and validates
-cleanly. 16 rows now carry a recorded decomposition (`rows_decomposition_recorded`
+cleanly. 15 rows now carry a recorded decomposition (16 before human DNMT1 was retired upstream) (`rows_decomposition_recorded`
 in `data/summary.yaml`).
 
 ### The obsolete-term rows
@@ -322,7 +324,7 @@ in `data/summary.yaml`).
 | human/GATA3 (IEA, ISS) | GO:2000607 neg. reg. of cell proliferation involved in mesonephros development | `DROP_CONTEXT` | MODIFY → GO:0008285 negative regulation of cell population proliferation, supported by Grote et al. 2008 (PMID:19112489) citing Gata3's role in pro/mesonephric proliferation control. The mesonephros context is a peripheral developmental role of a transcription factor and is not carried. |
 | human/GATA3 (IEA, ISS ×2) | GO:2000703 / GO:2000734 neg. reg. of FGFR / GDNF-receptor signaling involved in ureteric bud formation | keep Y, drop X | **Decomposition exposed a bad genus.** In PMID:19112489, Gata3 acts *upstream of Ret* and maintains its expression. The ectopic buds of the mutant *require* GDNF/Ret and FGF signaling, so nothing shows Gata3 inhibiting those pathways. GO's `consider` list is advice for a curator, and on reading the evidence its genus (GO:0040037) is unsupported for GATA3. MODIFY → GO:0072106 regulation of ureteric bud formation, which is sign-neutral because the evidence points both ways. |
 | human/NOTCH1 (IEA, ISS) | GO:0003252 neg. reg. of cell proliferation involved in heart valve morphogenesis | `DROP_CONTEXT` | MODIFY → GO:0008285; the heart valve morphogenesis context is not carried. GO gave no replacement. The claim was not re-judged, because the mouse source was not inspected. |
-| human/DNMT1 (IMP), mouse/Dnmt1 (IEA, ISO) | GO:1905931 neg. reg. of VSMC differentiation involved in phenotypic switching | `DROP_CONTEXT` | MODIFY → GO:1905064; the phenotypic switching context is not carried. GO gave no replacement. The reason spells out the GO-CAM it abbreviates: DNMT1 methyltransferase activity silences *SOD2*, upstream of VSMC differentiation, which is indirect and non-core. |
+| human/DNMT1 (IMP), mouse/Dnmt1 (IEA, ISO) | GO:1905931 neg. reg. of VSMC differentiation involved in phenotypic switching | `DROP_CONTEXT` (mouse); retired (human) | mouse/Dnmt1: MODIFY → GO:1905064; the phenotypic switching context is not carried. GO gave no replacement. human/DNMT1: since round 1, GOA has re-annotated the source paper as two separate rows (GO:1900240 and GO:1905064), and `main` marks the old row `retired` and keeps it as KEEP_AS_NON_CORE. That migration is the split-into-two pattern, which loses the "as part of" link; here the context is peripheral anyway. The reason spells out the GO-CAM it abbreviates: DNMT1 methyltransferase activity silences *SOD2*, upstream of VSMC differentiation, which is indirect and non-core. |
 | yeast/GET3 (IMP) | GO:0000750 pheromone-dependent signal transduction involved in conjugation with cellular fusion | lateral; `replaced_by` is wrong for this gene | **A real upstream problem.** `replaced_by` is applied automatically, so GOA will move this IMP annotation to GO:0071507 pheromone response MAPK cascade. That suits the kinases, not GET3. Arr4/Get3 is a non-receptor GEF for Gpa1 (PMID:18261907), upstream of the cascade. Following the GO-CAM idiom in the *S. pombe* pheromone model `693b3c0900000536` (GEF activity positively regulates the cascade), MODIFY → GO:0062038 positive regulation of pheromone response MAPK cascade. |
 | SCHPO/cps1 (IBA), rat/Rgn (IDA) | GO:0051603 / GO:1903052 (pos. reg. of) proteolysis involved in protein catabolic process | no change | These already MODIFY to GO's `replaced_by`, which keeps Y (protein catabolic process). Nothing is lost, because proteolysis is annotated separately where it applies. |
 
@@ -380,7 +382,7 @@ in `data/summary.yaml`).
 2. ~~**Obsolete-term rows**~~ — done (see above).
 3. ~~**Pilot**~~ — done: HSPA8 in human, mouse and rat, CLU, and the CMA module.
 4. **Next cases** — the clean, high-yield clusters:
-   - **MF part_of BP** (class A, 72 rows), above all
+   - **MF part_of BP** (class A, 77 rows), above all
      `cysteine-type endopeptidase inhibitor/regulator/activator activity
      involved in apoptotic process` (33 rows across 18 genes: XIAP, CFLAR, APAF1, *Drosophila* Diap1/2, Dark, hid,
      worm ced-3/ced-4…). Use the existing apoptosis modules
@@ -401,7 +403,9 @@ in `data/summary.yaml`).
    contexts (sprouting angiogenesis, ureteric bud branching, endocardial
    cushion, cardiac conduction) get no new modules; their rows point at the
    existing signalling modules or drop the context.
-7. **Upstream** — collect class D-iii terms and GO-CAM process nodes that
+7. **Upstream** — drafts are in
+   [`upstream-tickets.md`](INVOLVED_IN_PRECOMPOSITION/upstream-tickets.md).
+   Collect class D-iii terms and GO-CAM process nodes that
    still use precomposed BPs for go-ontology tickets. From round 1, file a
    ticket on GO:0000750: its automated `replaced_by` GO:0071507 moves
    non-kinase participants such as the Gpa1 GEF Arr4/Get3 onto the MAPK

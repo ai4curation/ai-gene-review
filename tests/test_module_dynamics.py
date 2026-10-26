@@ -19,6 +19,7 @@ from ai_gene_review.module_boolean import (
     activation_logic_findings,
     module_file_to_boolean,
     module_to_boolean,
+    omitted_regulators,
 )
 from ai_gene_review.module_dynamics import (
     MAX_EXHAUSTIVE_VARIABLES,
@@ -26,6 +27,7 @@ from ai_gene_review.module_dynamics import (
     boolean_model_payload,
     boolean_models,
     run_declared_scenarios,
+    run_scenario,
 )
 from ai_gene_review.validation.module_validator import validate_executable_models
 
@@ -113,10 +115,6 @@ def test_activation_logic_becomes_the_rule(logic: Any, expected: str) -> None:
             "names a, which has no inhibiting connection into t",
         ),
         (
-            {"all_of": [{"element": "a"}, {"none_of": [{"element": "i"}]}]},
-            "regulator b has a connection into t but is not used",
-        ),
-        (
             {
                 "all_of": [
                     {"element": "a"},
@@ -139,7 +137,7 @@ def test_inconsistent_activation_logic_is_reported(logic: Any, message: str) -> 
     assert any(message in f for f in findings), findings
     with pytest.raises(ValueError):
         module_to_boolean(doc)
-    assert validate_executable_models(doc)[0]
+    assert validate_executable_models(doc, ROOT)[0]
 
 
 def test_activation_logic_on_a_flattened_container_is_rejected() -> None:
@@ -320,7 +318,7 @@ def test_removing_a_connection_named_by_activation_logic_is_reported_not_raised(
         {"id": "cut_b", "removed_connections": [{"source": "b", "target": "t"}]},
         logic,
     )
-    errors, _ = validate_executable_models(doc)
+    errors, _ = validate_executable_models(doc, ROOT)
     assert any(
         "cut_b" in e
         and "removed_connections break an activation_logic" in e
@@ -350,7 +348,7 @@ def test_a_model_too_large_to_enumerate_is_reported_not_raised() -> None:
             }
         ],
     }
-    errors, _ = validate_executable_models(doc)
+    errors, _ = validate_executable_models(doc, ROOT)
     assert any("exceeds the exhaustive limit" in e for e in errors), errors
 
 
@@ -368,7 +366,7 @@ def test_scenarios_on_an_external_model_warn_and_missing_files_error() -> None:
     ]
     assert warnings == [
         f"Executable model {external['id']}: its scenarios are not checked "
-        "(only module-derived Boolean models are simulated)"
+        "(only module-derived Boolean and agent-based models are simulated)"
     ]
 
 
@@ -402,3 +400,114 @@ def test_exhaustive_search_agrees_with_biodivine_aeon() -> None:
     graph = aeon.AsynchronousGraph(bn)
     theirs = sorted(int(a.cardinality()) for a in aeon.Attractors.attractors(graph))
     assert ours == theirs
+
+
+def test_a_document_without_a_module_mapping_is_left_to_schema_validation() -> None:
+    assert validate_executable_models({"id": "MODULE:x"}, ROOT) == ([], [])
+
+
+def test_model_files_resolve_against_the_project_root_not_the_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from ai_gene_review.validation.module_validator import validate_module_file
+
+    monkeypatch.chdir(tmp_path)  # nothing under models/ exists here
+    result = validate_module_file(
+        ERK, resolver=lambda curie: ("unavailable", None, set())
+    )
+    assert not [e for e in result.errors if "does not exist" in e], result.errors
+
+
+@pytest.mark.parametrize(
+    "omitted,message",
+    [
+        (None, "regulator b has a connection into t but is not used"),
+        (["b"], None),
+        (["a"], "omitted_regulators names a, which its activation_logic uses"),
+        (["zz"], "omitted_regulators names unknown element zz"),
+    ],
+)
+def test_a_regulator_left_out_must_be_declared(omitted: Any, message: Any) -> None:
+    """Leaving a modulator out is allowed only as a stated claim."""
+    doc = _toy({"all_of": [{"element": "a"}, {"none_of": [{"element": "i"}]}]})
+    if omitted is not None:
+        doc["module"]["parts"][3]["node"]["omitted_regulators"] = omitted
+    findings = activation_logic_findings(doc)
+    if message is None:
+        assert findings == []
+        assert module_to_boolean(doc).rules["t"] == "a & !i"
+        assert validate_executable_models(doc, ROOT) == ([], [])
+    else:
+        assert any(message in f for f in findings), findings
+
+
+def test_omitted_regulators_without_activation_logic_is_an_error() -> None:
+    doc = _toy()
+    doc["module"]["parts"][3]["node"]["omitted_regulators"] = ["b"]
+    assert activation_logic_findings(doc) == [
+        "t: omitted_regulators without activation_logic"
+    ]
+
+
+def _modules_with_derived_boolean_models() -> list[Path]:
+    paths = []
+    for p in sorted((ROOT / "modules").glob("*.yaml")):
+        text = p.read_text()
+        if "DERIVED_FROM_MODULE" in text and "executable_models:" in text:
+            paths.append(p)
+    return paths
+
+
+@pytest.mark.parametrize(
+    "path", _modules_with_derived_boolean_models(), ids=lambda p: p.stem
+)
+def test_every_curated_scenario_holds(path: Path) -> None:
+    doc = yaml.safe_load(path.read_text())
+    results = run_declared_scenarios(doc)
+    assert results, f"{path.stem} declares a derived Boolean model without scenarios"
+    assert [(r.scenario_id, r.failures) for r in results if not r.passed] == []
+
+
+def test_jak_stat_negative_regulators_act_where_the_module_says() -> None:
+    """SOCS and PTPs on JAK; PTP and PIAS on nuclear STATs; ERK only tunes.
+
+    The placement comes from child-level connections, so JAK activation needs
+    no activation_logic and the drawn graph matches the rules.
+    """
+    doc = yaml.safe_load((ROOT / "modules/jak_stat_signaling.yaml").read_text())
+    model = module_to_boolean(doc)
+    assert model.rules["jak_activation"] == (
+        "ligand_receptor_engagement & !(ptp_dephosphorylation | socs_feedback)"
+    )
+    inhibitors = {(e.source, e.target) for e in model.edges if e.sign == "-"}
+    assert ("pias_restraint", "jak_activation") not in inhibitors
+    assert ("socs_feedback", "stat_transcription") not in inhibitors
+    assert model.rules["stat_transcription"] == (
+        "stat_dimerization_import & !(ptp_dephosphorylation | pias_restraint)"
+    )
+
+
+def test_removing_an_omitted_regulator_does_not_break_the_logic() -> None:
+    """An ERK-less counterfactual: the logic never used ERK, so cutting it is fine."""
+    doc = yaml.safe_load((ROOT / "modules/jak_stat_signaling.yaml").read_text())
+    model = boolean_models(doc)[0]
+    sustained = next(s for s in model["scenarios"] if s["id"] == "sustained_cytokine")
+    scenario = {
+        **copy.deepcopy(sustained),
+        "id": "erk_cut",
+        "removed_connections": [
+            {"source": "mapk_branch_interface", "target": "stat_transcription"}
+        ],
+    }
+    removed = {("mapk_branch_interface", "stat_transcription")}
+    assert activation_logic_findings(doc, removed_connections=removed) == []
+    result = run_scenario(doc, "jak_stat_signaling_boolean", scenario)
+    assert result.failures == []
+
+
+def test_browser_payload_marks_omitted_regulators() -> None:
+    doc = yaml.safe_load((ROOT / "modules/jak_stat_signaling.yaml").read_text())
+    assert omitted_regulators(doc) == {"stat_transcription": ["mapk_branch_interface"]}
+    payload = boolean_model_payload(doc, boolean_models(doc)[0])
+    assert payload["omitted"] == {"stat_transcription": ["mapk_branch_interface"]}
+    assert ["mapk_branch_interface", "stat_transcription", "+"] in payload["edges"]

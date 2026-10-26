@@ -27,6 +27,7 @@ from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-un
 from ai_gene_review.validation.folded_scalar import (
     check_folded_scalar_hyphens,
 )
+from ai_gene_review.validation.alternative_records import validate_alternative_records
 from ai_gene_review.validation.action_consistency import (
     check_action_consistency,
     go_ancestors,
@@ -44,7 +45,11 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.local_source_text import (
     validate_local_source_quotes,
 )
-from ai_gene_review.validation.uniprot_quote_source import validate_uniprot_quote_sources
+from ai_gene_review.validation.uniprot_quote_source import (
+    validate_record_sections,
+    validate_uniprot_quote_sources,
+)
+from ai_gene_review.validation.goa_support import validate_goa_support
 from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
@@ -395,6 +400,8 @@ def validate_gene_review(
         # validator skips file: and Reactome: quotes entirely.
         validate_local_source_quotes(data, report, yaml_file_path)
         validate_uniprot_quote_sources(data, report)
+        validate_record_sections(data, report)
+        validate_goa_support(data, report, yaml_file_path)
 
     return report
 
@@ -480,6 +487,7 @@ def check_best_practices_rules(
     if check_supporting_text:
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
+    validate_alternative_records(data, report)
     check_protein_binding_policy(data, report)
     check_decomposition(data, report, get_project_root())
     check_action_consistency(
