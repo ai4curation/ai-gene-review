@@ -6922,3 +6922,45 @@ receive new completion credit. Acceptance is the coordinating AI agent's campaig
 audit, not a human maintainer sign-off or a site-deployment claim.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/3dc698edd025552a6d03ce4755b1f62f199a2344/history/projects/CLINGEN_MENDELIAN/2026-10-26T120127Z-codex-1d0155.yaml).
+
+
+## Completion checkpoint 624 — 2026-10-26 17:13:06 UTC
+
+**624 complete; 2,252 remaining out of 2,876 catalogue genes.**
+This update adds the original FBN1 review and FBN2 directly to
+[tracker 622](https://github.com/ai4curation/ai-gene-review/pull/5580).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FBN1 #5577](https://github.com/ai4curation/ai-gene-review/pull/5577) | 154 / 154 | DRAFT; 18 active UNDECIDED; 34 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/24979f933650dd98fe17d1c1e6895eeaf75a6bb4) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40318839090) |
+| [FBN2 #5583](https://github.com/ai4curation/ai-gene-review/pull/5583) | 60 / 60 | DRAFT; 1 active UNDECIDED; 9 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/157216709d671e757496912521bcf35788f72bbe) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40360845547) |
+
+The original FBN1 review retains all 154 source contexts, 81 references, two
+cleavage-product objects and five core functions. It has no splice-product
+objects or quotations. It remains DRAFT with 18 UNDECIDED decisions; its other
+actions are 59 ACCEPT, 46 KEEP_AS_NON_CORE, 14 MARK_AS_OVER_ANNOTATED, 11 MODIFY
+and six TOO_GENERAL. Its 34 merge-validation advisories comprise 28 conditional
+generic-binding and six source/product/claim consistency advisories.
+
+FBN2 retains all 60 source contexts, 32 references, two splice products and two
+curated cleavage products, three core functions and no quotations. It remains
+DRAFT with 22 ACCEPT, 29 KEEP_AS_NON_CORE, seven MODIFY, one TOO_GENERAL and one
+UNDECIDED decision. Its nine merge-validation advisories comprise eight permitted
+generic-binding cases and one source-specific extracellular-matrix consistency
+warning. Completion records accepted campaign reviews rather than certainty in
+every biological claim.
+
+The accepted FBN1 and FBN2 source closures contain 93 and 43 paths, including
+all 16 and 15 gene/history paths respectively. Their union has 112 distinct
+paths; each matches its actual merge and the captured main snapshot. The
+coordinating AI agent accepted all three operative merge-group logs for each
+review. This tracker proposal reuses those acceptances without claiming another
+independent full log reading.
+
+All 235 dated queue objects, 135 preceding completion updates, catalogue associations,
+source inventories and earlier progress remain preserved. FBN1 and FBN2 are the
+only newly credited distinct genes. FBN1 follow-up PR #5589 receives no additional
+completion credit. Acceptance is the coordinating AI agent's campaign audit, not
+a human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/64fc149d18202985f07aae37539ebd31a3f1f687/history/projects/CLINGEN_MENDELIAN/2026-10-26T172026Z-codex-2fa578.yaml).
