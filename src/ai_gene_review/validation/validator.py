@@ -32,6 +32,11 @@ from ai_gene_review.validation.action_consistency import (
     check_action_consistency,
     go_ancestors,
 )
+from ai_gene_review.validation.decomposition import (
+    check_decomposition,
+    go_is_a_ancestors,
+    go_names,
+)
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -488,6 +493,13 @@ def check_best_practices_rules(
     validate_reference_replacements(data, report)
     validate_alternative_records(data, report)
     check_protein_binding_policy(data, report)
+    check_decomposition(
+        data,
+        report,
+        get_project_root(),
+        is_a_ancestors=go_is_a_ancestors if check_ontology else None,
+        names=go_names if check_ontology else None,
+    )
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )
