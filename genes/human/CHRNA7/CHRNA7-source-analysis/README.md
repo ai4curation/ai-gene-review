@@ -1,0 +1,7 @@
+# Nicotinic receptor source tracing
+
+This directory records normal read-only QuickGO queries used to identify the original experimental publications behind the human nicotinic panel's transferred annotations. The response is provenance, not biological support for GO assertions. Review support cites the original normally cached publications or curated UniProt statements, never the annotation list itself. No relationship qualifier is requested or used in judgment.
+
+`trace_sources.py` reproduces the donor query and term-definition acquisition, with pagination. Stored responses intentionally omit relationship qualifiers. Donor traces cover rat/mouse neuronal subunits and mouse/rat/monkey alpha7. The initial eight-donor file has fewer than200 hits for each target; alpha7 includes second pages for the two donors with more than200. Query results are time-dependent; the checked-in responses preserve the inspected state.
+
+Molecular channel identity is supported by human functional/structural experiments. Native rodent experiments resolve physiology and compartments, but are not relabeled as human assays. Alpha7 PMID18458158 directly resolves axolemma localization;20164328 abstract-only access leaves exact amyloid-production sign/fibril distinctions unresolved. GO0017081 requires chloride-channel binding/modulation, whereas8145738 describes secondary chloride-current activation after alpha7 calcium influx.
