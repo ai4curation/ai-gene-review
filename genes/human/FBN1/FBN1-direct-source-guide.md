@@ -351,3 +351,8 @@ Citation identity checked against the genuine fetched record. Human skin and cil
 Read locus: ECM proteomics database methodology; exact FBN1 compartment record unresolved.
 
 Citation identity checked against the genuine fetched record. The database integrates ECM-enriched human and mouse proteomics with explicit accession/sample mapping. A FBN1-specific database result establishing the noncollagenous interstitial-matrix compartment was not accessed. General database methodology is not an exact target join. Source guide records the bounded original read and any supplementary limits.
+
+
+## 2026-10-26 claim-level follow-up
+
+The source access limits above remain unchanged. Accessible independent evidence now resolves the gene-level skeletal-development, microfibril, alpha5beta1, calcium, integrin-adhesion and noncollagenous interstitial-matrix claims; see the [feedback decisions](FBN1-feedback-decisions.yaml) and the [integrated guide](FBN1-source-guide.md#claim-level-follow-up). This does not verify the unread original assays, alphaVbeta6 or collagen XVI partners, or unresolved proteomics accessions. Heparin binding and the tissue-elasticity inference remain positive but non-core. The decision table retains the original methods and adds the independent assay provenance where used.
