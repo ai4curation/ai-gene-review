@@ -117,3 +117,9 @@ Visual-perception GO:0007601 remains MARK_AS_OVER_ANNOTATED: the original PMID:2
 ### Access and provenance
 
 Normal Falcon research and perplexity-lite fallback were attempted concurrently with normal publication caching. Falcon returned HTTP 403 authentication failure; the fallback returned HTTP 401 credit/quota failure. No provider report was fabricated. Existing curated notes and normally cached primary publications were used, with full-text versus abstract access recorded in reference reviews. Shared OAT reviews were fetched once by the coordinating agent. Source flat files and publication caches were not edited. Structured PAINT refinement metadata records the missing ancestral identifier in the legacy OAT row as unresolved; no node placement is invented. Focused strict/term validation, record-section backfill, HTML render and an append-only helper history accompany this review.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The human cloning and precursor-processing studies identify a mitochondrial matrix enzyme (PMID:3456579, PMID:1737786), supporting mitochondrial residence as a core location. Retain the organelle assertion alongside the existing matrix assertion; the original imaging or proteomics assays need not resolve the submitochondrial compartment. Existing matrix annotations and core functions are preserved.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

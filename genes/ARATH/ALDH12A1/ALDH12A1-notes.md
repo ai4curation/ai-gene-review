@@ -19,3 +19,9 @@ PMID:11743115 full text and14671022 abstract provide complementary mitochondrial
 All seeded row payloads, including evidence, source, qualifiers, supporting_entities and the OAT NOT flag, are preserved; only review blocks were authored. No NEW annotation rows were added. GO-CAM absence was not used as evidence for a missing annotation or a new process assertion. Source-specific limitations remain explicit rather than deleting experimental claims merely for inaccessible details.
 
 Validation note: live QuickGO on2026-10-26 confirms GO:0003842 is named L-glutamate gamma-semialdehyde dehydrogenase (NAD+) activity and defines NAD+-dependent chemistry. The local term-validator snapshot uses the older label lacking (NAD+); retain the current label and original payload, documenting this advisory rather than rewriting the source annotation.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The N-terminal GFP targeting experiment establishes mitochondrial localization in tobacco and Arabidopsis protoplasts (PMID:11532180), independently supporting the organelle claim. Retain mitochondrial residence alongside the existing matrix assignment. Neither the targeting assay nor each proteomic observation must resolve the subcompartment to support this retained annotation. Existing matrix annotations and core functions are preserved.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

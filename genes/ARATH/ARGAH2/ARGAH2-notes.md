@@ -19,3 +19,9 @@ Urea cycle retained contextually as ornithine recycling without a ureotelic requ
 All seeded row payloads, including evidence, source, qualifiers, supporting_entities and the OAT NOT flag, are preserved; only review blocks were authored. No NEW annotation rows were added. GO-CAM absence was not used as evidence for a missing annotation or a new process assertion. Source-specific limitations remain explicit rather than deleting experimental claims merely for inaccessible details.
 
 Validation note: the catalytic core includes arginine catabolism, which is not in the seeded BP rows. Chemistry and native activity support the core statement; no NEW BP is manufactured merely to silence the advisory.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The target Arabidopsis ARGAH2 construct colocalizes with a mitochondrial matrix marker in tobacco BY-2 cells, and selective permeabilization supports an internal mitochondrial pool (PMID:18567826). This establishes mitochondrial residence while the more specific matrix location is added separately. It does not exclude a distinct chloroplast pool under other conditions. Added one NEW matrix CC row from target-specific heterologous Figure2 localization and selective permeabilization. Canonical PMID identity is restored; exact full-text evidence is captured in reproducible source analysis without hand-editing the cache.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

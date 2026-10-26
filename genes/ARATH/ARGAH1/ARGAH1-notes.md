@@ -15,3 +15,9 @@ Urea cycle is retained as contextual ornithine/arginine recycling, not mammalian
 2026-10-26: Applied review and annotation-reviewer skills; consulted sibling annotation reviewer for bounded judgments on compartment inference and source-specific corrections. Normal Falcon research and PMID caching ran concurrently after exact-accession seeding. Falcon failed403 authorization and Perplexity-lite fallback failed401 insufficient quota for each target; no provider report was invented. Manual primary research above replaces the unavailable provider output. FEBA is not applicable to these plant targets. Cached publication files were fetched normally and never hand-edited.
 
 All seeded row payloads, including evidence, source, qualifiers, supporting_entities and the OAT NOT flag, are preserved; only review blocks were authored. No NEW annotation rows were added. GO-CAM absence was not used as evidence for a missing annotation or a new process assertion. Source-specific limitations remain explicit rather than deleting experimental claims merely for inaccessible details.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The target Arabidopsis ARGAH1 construct colocalizes with a mitochondrial matrix marker in tobacco BY-2 cells, and selective permeabilization supports an internal mitochondrial pool (PMID:18567826). This establishes mitochondrial residence while the more specific matrix location is added separately. It does not exclude a distinct chloroplast pool under other conditions. Added one NEW matrix CC row from target-specific heterologous Figure2 localization and selective permeabilization. Canonical PMID identity is restored; exact full-text evidence is captured in reproducible source analysis without hand-editing the cache.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

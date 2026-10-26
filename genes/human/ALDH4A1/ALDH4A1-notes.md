@@ -445,3 +445,9 @@ The full PMID:40355545 was rechecked, particularly the interaction and reconstit
 ### Access and provenance
 
 Normal Falcon and fallback perplexity-lite attempts failed with authentication/credit errors (403 and 401); no new provider output was invented. Publication caching ran in parallel and existing genuine research was reused. All original publications, curated source notes, reference assessments, core functions and the prior NEW payload were preserved. Current focused strict plus term validation, record-section backfill, render and helper-generated history record document the update. No GOA file was used as biological evidence.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The human P5CDH cloning study identifies a mitochondrial matrix enzyme (PMID:8621661), independently supporting the mitochondrial organelle claim. Retain that informative assertion alongside the matrix rows. The current root-organelle policy explicitly keeps the organelle; it does not replace it with the subcompartment or upgrade the resolution of the original HPA/proteomics assay. Existing matrix annotations and core functions are preserved.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

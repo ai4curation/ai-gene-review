@@ -17,3 +17,9 @@ Chloroplast/plastid claims and the Zn-binding screen remain UNDECIDED with speci
 2026-10-26: Applied review and annotation-reviewer skills; consulted sibling annotation reviewer for bounded judgments on compartment inference and source-specific corrections. Normal Falcon research and PMID caching ran concurrently after exact-accession seeding. Falcon failed403 authorization and Perplexity-lite fallback failed401 insufficient quota for each target; no provider report was invented. Manual primary research above replaces the unavailable provider output. FEBA is not applicable to these plant targets. Cached publication files were fetched normally and never hand-edited.
 
 All seeded row payloads, including evidence, source, qualifiers, supporting_entities and the OAT NOT flag, are preserved; only review blocks were authored. No NEW annotation rows were added. GO-CAM absence was not used as evidence for a missing annotation or a new process assertion. Source-specific limitations remain explicit rather than deleting experimental claims merely for inaccessible details.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+Full-length Arabidopsis OAT-GFP colocalizes with MitoTracker in protoplasts (PMID:18419821), directly establishing mitochondrial residence. Retain this informative organelle assertion alongside the existing curated matrix location; the imaging experiment itself does not resolve submitochondrial topology. Existing matrix annotations and core functions are preserved.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

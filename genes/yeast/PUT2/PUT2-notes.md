@@ -22,3 +22,9 @@ Normal publication caching passed. Genuine Falcon research with Perplexity-lite 
 The initial focused validation passed. Record sections are backfilled, and final schema/term/reference validation, rendering and helper-history checks are recorded in the same log directory. Actions: ACCEPT 12, KEEP_AS_NON_CORE 2, MODIFY 4, REMOVE 4, UNDECIDED 1.
 
 The local ontology cache may warn on the older GO:0003842 label without NAD+. Live QuickGO was checked and confirms the preserved current NAD+-specific label; raw annotation IDs/labels were not rewritten to silence the stale cache.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The mitochondrial proteome observation is independently corroborated by Put2 fractionation and activity-latency analysis in PMID:3025596. Retain the informative mitochondrial organelle claim alongside the separately supported matrix assignment. The original proteome assay need not resolve the submitochondrial compartment. Existing matrix annotations and core functions are preserved.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.
