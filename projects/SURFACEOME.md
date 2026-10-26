@@ -226,20 +226,39 @@ subtype. All rows stay `KEEP_AS_NON_CORE`.
 Contextual localization is recorded structurally with an **annotation extension**
 on the existing-annotation row, not in prose, wherever the context is grounded.
 The slot is `extensions` (a `predicate` from the Relation Ontology plus a `term`).
-The idioms in the corpus:
+**Prefer a cell-type-specific CC term over a generic term plus an extension,
+whenever GO has one.** GO already carries cell-type-specific surface terms such as
+`GO:0097524` sperm plasma membrane, `GO:1990913` sperm head plasma membrane and
+`GO:0097524`-like leaf terms; using one in `core_functions` says "surface, in this
+cell type" natively, which is cleaner than tagging a generic `plasma membrane` row
+with a `part_of` extension. From the tissue_restricted_surface set:
+
+- **CRISP1** — core location `GO:0097524` sperm plasma membrane (the exemplar).
+- **IZUMO1** — core location `GO:1990913` sperm head plasma membrane (exposed at
+  the equatorial segment after the acrosome reaction).
+- **LY6K** — core location `GO:0097524` sperm plasma membrane.
+- **ZP3** — core location is already the oocyte-specific `egg coat`.
+
+Use a `part_of` extension only when GO lacks a specific term:
 
 - `BFO:0000050` (part_of) + a cell type (`CL:…`) or tissue (`UBERON:…`) — e.g.
   LRP4 `cell surface` part_of `neuron`; ITPR3 `plasma membrane` part_of `platelet`;
-  and, from the tissue_restricted_surface contextual set, IZUMO1 part_of `sperm`
-  (CL:0000019), LY6K part_of `sperm`, ALPG `external side of plasma membrane`
-  part_of `testis` (UBERON:0000473). This is the one for "surface only in cell
-  type / tissue X". Two of the five tissue_restricted contextual genes did not get
-  an extension: ZP3's core location is already the oocyte-specific `egg coat`, and
-  KLK2 is secreted (a disputed benchmark label; see §6), so has no surface row.
+  **ALPG** `external side of plasma membrane` part_of `testis` (UBERON:0000473),
+  because GO has no "germ-cell surface" term. This is the idiom for "surface only
+  in cell type / tissue X" when no specific CC term exists. KLK2 gets neither: it
+  is secreted (a disputed benchmark label; see §6), with no surface row.
 - `BFO:0000066` (occurs_in) + a CC — mainly for an MF/activity row localised to a
   compartment.
 - `RO:0002233` (has input) + a `UniProtKB:…` partner — substrate/partner context,
   the most common extension overall.
+
+The **stable_surface_attachment** set is already handled by the same
+specific-term-first logic and needs no extensions: C3 carries `cell surface`
+(covalent thioester attachment to target surfaces) as a core location; CRISP1 uses
+sperm plasma membrane; FN1 is core `extracellular matrix` with the integrin-bound
+plasma-membrane rows non-core; TGFB1 is core `extracellular region` with the
+GARP-presented `cell surface` pool non-core (GARP/LRRC32 presents it on Tregs,
+platelets and more, so no single cell type to pin a `part_of` on).
 
 Not every contextual mechanism is structurable this way, and the contextual
 buckets split cleanly:
