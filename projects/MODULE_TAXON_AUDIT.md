@@ -18,8 +18,10 @@ or its existing status says COMPLETE.
 ## Coverage and completion criteria
 
 [Inventory](MODULE_TAXON_AUDIT/inventory.json) records the initial 702-module universe
-at commit `18649bf003`. Every module starts unaudited for this project, including the
-20 already labelled COMPLETE. Structural counts are triage aids, not biological
+at commit `18649bf003`, refreshed to 714 modules on 2026-10-26 using canonical
+ledger commit `3c93882525`. The twelve additions retain their actual audit states:
+eleven NOT_STARTED and acetylcholine_signaling PR_OPEN. At initialization every
+module was unaudited for this project, including the 20 already labelled COMPLETE. Structural counts are triage aids, not biological
 judgments. Recheck upstream for new, renamed and removed modules before declaring
 this project finished. Open PR overlaps are leads to inspect, not proof that the
 work has been done; broad PR #5076 alone overlaps many modules.
@@ -54,7 +56,9 @@ For each module, record evidence that all of the following are satisfied:
 - [ ] `anti_crispr_suppression`: [PR #5555](https://github.com/ai4curation/ai-gene-review/pull/5555) opened after full validation passed. Thirteen reviewed representatives, 42 rows and qualified alternative mechanisms are committed on `ad799f71a2`; CI and scientific review are running.
 - [ ] `apoptotic_execution_phase`: sixteen human/mouse reviews complete (1,608 preserved rows), with 35 curated references and ten qualified edges. All focused checks pass; full validation is running.
 - [ ] `aps_dependent_assimilatory_sulfate_reduction`: 14th audit started. Comparative research distinguishes plant glutathione-dependent APR1, fungal/PAPS routes and the unresolved Pseudomonas CysI donor. Reviewing 26 existing members and adding three verified Arabidopsis exemplars.
-- [ ] Remaining 688 baseline modules: recorded as NOT_STARTED. Eight of 702 baseline audits are complete; six further audits are active. Refresh upstream additions before final completion.
+- [ ] `acetylcholine_signaling`: [PR #5582](https://github.com/ai4curation/ai-gene-review/pull/5582) is open. Its canonical inventory entry is imported with the twelve-module universe refresh; it is not marked complete.
+- [ ] `auxin_polar_transport`: [PR #5579](https://github.com/ai4curation/ai-gene-review/pull/5579) remains open. Scientific review explicitly approved the unchanged curation at integrated head `daf3aa0cdb`; this follow-up restores the missing tracker entry. All 17 reviews (484 rows), 20 activities, 41 references and seven connections remain verified. Q05085 has one canonical NRT1.1 review. Fresh full validation previously passed for 9,076 reviews and 54 pathway files; tracker review, updated-head checks and merge remain pending.
+- [ ] Remaining 698 modules: recorded as NOT_STARTED. 8 of 714 audits are COMPLETE; 8 further audits are active. These totals preserve the existing upstream ledger states and import only the twelve missing entries plus the polar-transport restoration.
 
 ## Notes
 
@@ -88,3 +92,36 @@ The alginate acetylation audit deliberately uses `algV` for Azotobacter O52197, 
 ## 2026-10-26 — subsequent audit progress
 
 Glucosinolate reached approved merge-queue checks after source-level corrections. Alginate polymerization received coherent comparative molecular-function proposals and explicitly qualified PseudoCAP source-defect records. Androgen passed full validation and opened its own PR. Anti-CRISPR curation is committed while its single full validation continues. Apoptotic execution is the thirteenth started audit; conflicting Acinus evidence, AIF stimulus dependence and source-versus-function caspase adjudications are being examined rather than flattened into a uniform cascade.
+
+## 2026-10-26 — polar transport ledger restoration after main integration
+
+PR #5579 scientific review approved the integrated biological content; the remaining
+blocker was a tracker regression caused by selecting the upstream project files.
+The restored inventory entry derives its structural counts directly from the current
+module: 20 activities, each with a family descriptor and direct evidence, 41 curated
+references and seven connections. Seventeen unique accessions map to seventeen
+review files containing 484 rows. Q05085 is represented once as NRT1.1, preserving
+CHL1/NPF6.3 alias provenance. The 483 baseline assertions, including five inherited
+proposals, remain represented; the additional OsAUX1 proposal accounts for row 484.
+
+The audit distinguishes six native Arabidopsis multiactivity mechanisms from optional
+rice carrier segments and moss/Marchantia exporter comparators. Export assays alone
+do not establish polarized tissue flow or conservation of a complete network.
+Source-specific localization uncertainty, conditional ARATH/ABCB4 directionality, the
+ABCB1/ABCB19 brassinosteroid-homeostasis non-core framing, and qualified TWD1
+mechanisms remain as reviewed. This ledger repair changes none of those claims.
+
+The latest review confirms the scientific follow-ups; the previously completed full
+validation covered 9,076 reviews and 54 pathway files. The targeted tracker checks
+verify counts, canonical addition provenance and preservation of every other existing
+inventory row; a new project history and rendered page accompany this repair. The
+audit remains open until the updated tracker passes review/checks and the PR merges.
+
+The missing universe entries are acetylcholine_signaling, dna_cytosine_methylation_cycle,
+dopamine_receptor_signaling, il21_signaling, il22_signaling, il34_signaling,
+nmj_achr_clustering, prostanoid_biosynthesis, protein_kinase_c_signaling,
+reelin_signaling, trail_apoptotic_signaling and visual_phototransduction. They were
+imported verbatim from canonical ledger commit `3c93882525`: acetylcholine is PR_OPEN,
+and the other eleven are NOT_STARTED. No existing non-polar inventory row was
+replaced with a newer canonical state. This makes the 714-module universe complete
+without silently changing the status of unrelated audits.
