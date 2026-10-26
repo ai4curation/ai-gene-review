@@ -27,3 +27,16 @@ No falcon deep-research file was present at review time.
   (deep family 1 node seeded by flavonol UGTs; no evidence for UGT74C1)
 - GO:0005737 IBA -> ACCEPT
 - NEW GO:0019761 glucosinolate biosynthetic process (IMP, PMID:24779768)
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (8) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+PMID24779768 supports genetic complementation and thiohydroximate UGT activity in planta, not a requirement that every UGT74 member has identical substrate preference. Broad UDP-glycosyltransferase is refined consistently to the experimentally supported thiohydroximate activity. Retained the pre-existing biosynthesis NEW based on catalytic participation; no additional process row added. Unchecked peroxisomal HDA is undecided.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final consistency QA, 2026-10-26
+
+Removed chain-length feature text as localization evidence. Retained the PAINT cytoplasm judgment at its warranted precision, and left the unverified plastid prediction unresolved because absent targeting annotations do not establish absence.

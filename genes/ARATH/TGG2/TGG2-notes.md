@@ -29,3 +29,16 @@ No falcon deep-research file was present during review.
 - Plastid/chloroplast/ribosome HDA -> MARK_AS_OVER_ANNOTATED; plasmodesma, peroxisome,
   apoplast, secretory vesicle -> KEEP_AS_NON_CORE.
 - Core: GO:0019137; GO:0019762, GO:0002213; GO:0000325.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (21) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+Native redundancy withTGG1 is directly supported by16640593; loss of both changes damage-induced hydrolysis and some generalist herbivore outcomes. The19703694 purified isoforms areTGG1/4/5, so TGG2 secondary O-glucosidase remains inherited/comparative, not claimed directly assayed there. Refined O-hydrolase to the already-present beta-glucosidase term. Unchecked chloroplast/plastid/ribosome data remain undecided. No new seed-turnover process is inferred:31850033 explicitly does not findTGG1/2 responsible for the germination decline.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final cross-row QA, 2026-10-26
+
+Kept location claims consistent with retained experimental compartments: a supported apoplast assignment refines a general extracellular prediction, while a main cytosolic or vacuolar location does not by itself disprove a secondary predicted pool. Conditional Arabidopsis ESP activity is distinguished from a universal coding knockout. Original annotation fields remain unchanged.

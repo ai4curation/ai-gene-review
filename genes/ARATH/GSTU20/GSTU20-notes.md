@@ -32,3 +32,16 @@
 
 ### Falcon deep research (GSTU20-deep-research-falcon.md, appeared mid-session)
 - Consulted after the review was drafted. It frames GSTU20 as catalysing "or facilitating" the GSH-conjugation step, citing Zhang et al. 2022 and Choi et al. 2024 (Plant Physiol 196:1340, HY5-HDA9 repression of glucosinolate genes including GSTU20). Neither provides enzyme assays on the native intermediate (Choi 2024 is transcriptional regulation), so the no-NEW decision stands. Choi 2024 not cached/cited in the YAML.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (25) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+PMID17220357 and28223489 directly assay general GST activity and FIN219 interaction/adenylation stimulation. Both enzyme-binding rows now refine consistently to enzyme activation. PMID35145536 measures pathway mutants and profiles, not purified native activated-aldoxime conjugation: maintain that limitation. Generic GSH metabolism describes real conjugation; toxin catabolism is unresolved rather than assumed from family reputation. Unchecked organellar/apoplastic fractionation assignments remain undecided.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final consistency QA, 2026-10-26
+
+The FIN219-activation core location now matches the supported cytosol refinement already applied to its general cytoplasm annotations.

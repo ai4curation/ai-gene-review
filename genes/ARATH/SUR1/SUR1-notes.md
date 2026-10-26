@@ -24,3 +24,12 @@ Supersedes the "-> UNDECIDED ... abstract-only, no full text retrievable" line a
 - A search of the cached full text for SUR1, SUPERROOT, At2g20610, glucosinol, fung and pathogen returns no hits. The Accession Numbers section lists every gene studied: ODR1, ABI3, bHLH57, NCED2/3/5/6/9, CYP707A1-4, ABI4, DREB2C, TTG1, MYB5, DOG1, RDO5 and PP2A; At2g20610 is absent.
 - Query (re-run 2026-10-15): QuickGO REST, `https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=PMID:32213638&limit=200` returned 1 annotation: SUR1 (Q9SIV0) GO:0050832 IDA acts_upstream_of_or_within, assigned by TAIR; nothing for ODR1 or bHLH57.
 - Action: GO:0050832 IDA is REMOVE (unsupported by its reference; likely a mis-keyed reference in the TAIR record). Supporting quote from the accession list added to the row; the reference is now marked MISCITED, and a suggested question asks TAIR which paper was intended. This does not deny an indirect role of SUR1-derived indole glucosinolates in antifungal defense.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (17) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+PMID14871316 combines in vivo feeding/intermediate accumulation with recombinant djenkolic-acid cleavage, not a demonstrated purified native Cys-Gly assay. GGP1-to-SUR1 handoff is qualified using21712415. PMID41819465 reports significant residual indolic glucosinolates, so neither description nor core asserts universal sole-enzyme necessity. Tyrosine-catabolism removal was too confident about target-specific evolutionary loss; now over-annotated, without treating Taraxacum lack of TyrAT activity as proof for Arabidopsis. The C-S lyase class term is refined to the existing specific activity.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.

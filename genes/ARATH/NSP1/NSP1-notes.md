@@ -29,3 +29,16 @@ Supersedes the "seed germination and dormancy rows are UNDECIDED" and "mRNA bind
 
 - PMID:31850033 full text is now cached (`full_text_extraction_method: xml`). It contains no germination-rate, radicle-emergence or dormancy assay for nsp1-1; the phenotype is seed glucosinolate content over germination [PMID:31850033 "In contrast to Col-0 and tgg1 tgg2, germinating seeds of nsp1-1 did not contain higher total glucosinolate levels on day 4 relative to days 0 and 10 (Figure 7C)."]. The authors themselves call for more experiments to establish a direct NSP role in turnover. All seed germination rows (IEP, IMP, IEA) and the seed dormancy row are now MARK_AS_OVER_ANNOTATED; the metabolic phenotype is captured by the glucosinolate catabolic process IMP.
 - GO:0003729 mRNA binding (HDA, PMID:27729395 poly(A) interactome capture) is MARK_AS_OVER_ANNOTATED, matching the treatment of the same screen for PHYA. No NSP1-specific RNA-binding validation exists. Full-text access on 2026-10-15: `fetch-pmid PMID:27729395 --force` found PMC5134986 but the publisher restricts the XML, and the HTML and PDF fallbacks returned no usable content; the cache remains abstract-only, so NSP1's confidence tier in the screen was not checked.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (18) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+Use locus identifiers to separate alternate nomenclature: target At3g16400 can be calledAtNSP3 in earlier Kissen nomenclature, but30395611 explicitly usesAtNSP3 At3g16390 for iron quantification/mutants. Do not transfer that direct assay to this target.18987211 directly tests target nitrile formation;27990154 distinguishes seedNSP2, seedlingNSP1 and rootNSP1+NSP3.31850033 measures glucosinolate content during germination, not a demonstrated direct germination/dormancy mechanism. Retained those over-annotation decisions. mRNA-capture HDA is unresolved rather than rejected because no knownRNA role was expected.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final cross-row QA, 2026-10-26
+
+Kept location claims consistent with retained experimental compartments: a supported apoplast assignment refines a general extracellular prediction, while a main cytosolic or vacuolar location does not by itself disprove a secondary predicted pool. Conditional Arabidopsis ESP activity is distinguished from a universal coding knockout. Original annotation fields remain unchanged.

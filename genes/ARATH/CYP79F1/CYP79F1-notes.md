@@ -43,3 +43,12 @@ No falcon deep-research file was present at review time.
 - chloroplast ISM -> REMOVE; nucleus HDA -> MARK_AS_OVER_ANNOTATED; response to insect IEP x2 -> KEEP_AS_NON_CORE
 - GO note: no "aliphatic glucosinolate biosynthetic process" term exists; GO:0033506 (from homomethionine)
   and CYP79F1-specific MF terms GO:0103096-8 are obsolete; GO:0120526 is the live replacement.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (17) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Attempted defaultFalcon withPerplexity-lite fallback concurrently with normal publication caching; Falcon authentication failed and fallback returnedHTTP401 insufficient_quota. No provider report was fabricated. These plant targets do not require bacterial FEBA retrieval.
+
+Live QuickGO GO:0120526 defines an L-polyhomomethionine substrate class (RHEA51972), despite the shorter homomethionine label. It covers the mono-to-hexa range directly assayed in PMID12609033; the two same-term donor-class rows now have the same substrate-specific replacement. Broad oxidation/membrane terms are refined; heme/iron is intrinsic catalytic chemistry. The nucleus HDA is unresolved, not dismissed as contamination. The developmental phenotype is not assigned a uniquely proven substrate-accumulation mechanism.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.

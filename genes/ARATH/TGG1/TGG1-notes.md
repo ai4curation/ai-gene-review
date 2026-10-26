@@ -40,3 +40,16 @@ No falcon deep-research file was present during review. Additional PMIDs cached:
 ### Other decisions
 - carbohydrate metabolic process (IEA) -> MODIFY to GO:0019762.
 - Core: GO:0019137 thioglucosidase activity; GO:0019762, GO:0002213; GO:0000325.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (27) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+PMID19703694 directly assays TGG1, TGG4 andTGG5, including lower-efficiency O-beta-glucosidase activity. Therefore broad O-glycoside hydrolase is refined to beta-glucosidase, not to the S-glycoside thioglucosidase reaction. Main damage-triggered defense is supported by16640593, with herbivore-specific effects; no universal benefit to all attackers implied. Cohort organellar/ribosomal assignments are unresolved rather than declared contamination. Updated signaling core distinguishes ABA/acrolein calcium positioning from39894892 AITC responses; the required signaling role is not simply hydrolysis of an intact vacuolar substrate.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final cross-row QA, 2026-10-26
+
+Kept location claims consistent with retained experimental compartments: a supported apoplast assignment refines a general extracellular prediction, while a main cytosolic or vacuolar location does not by itself disprove a secondary predicted pool. Conditional Arabidopsis ESP activity is distinguished from a universal coding knockout. Original annotation fields remain unchanged.
