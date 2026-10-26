@@ -1,6 +1,6 @@
 # FBN1 matrix and interaction evidence
 
-The [binding records](FBN1-binding-records.yaml) and [direct decisions](FBN1-direct-decisions.yaml) preserve each complete source annotation and its zero-based review index. Methods distinguish purified interactions, co-association, screening, localization and inferred structural roles. Supported generic protein binding is retained as non-core under the ClinGen project instruction; inaccessible target evidence remains undecided. No publication quotations are added.
+The [binding records](FBN1-binding-records.yaml) and [direct decisions](FBN1-direct-decisions.yaml) preserve each complete source annotation and its zero-based review index. Methods distinguish purified interactions, co-association, screening, localization and inferred structural roles. Supported specific binding terms refine measured interactions, including the five BMP/GDF prodomains and the measured human fibronectin interaction; other retained generic protein-binding records remain non-core in this review. Further extracellular-matrix partner-class refinements were not adjudicated in this focused follow-up. Inaccessible target evidence remains undecided. No publication quotations are added.
 
 Microfibril structure supports a matrix-level contribution to elasticity. The elasticity annotation is an IC inference, not a claim that the cited microscopy measured isolated fibril recoil. The broader structural-constituent role remains informative for elastin-free anchorage and growth-factor scaffolding. Integrin binding supplies an extracellular adhesive ligand; it is not merely a downstream perturbation phenotype.
 
@@ -188,9 +188,9 @@ Citation identity checked against the genuine fetched record. Purified human LTB
 
 [Targeting of bone morphogenetic protein growth factor complexes to fibrillin.](https://doi.org/10.1074/jbc.M707820200)
 
-Read locus: Recombinant FBN1 and growth-factor-prodomain binding.
+Read locus: Recombinant FBN1 and growth-factor-prodomain binding; original Results, Figure 6A–B caption and Table 3. The recovered [author-uploaded original](https://www.researchgate.net/publication/5511976_Targeting_of_Bone_Morphogenetic_Protein_Growth_Factor_Complexes_to_Fibrillin) supplies these locators; the committed cache is abstract-only.
 
-Citation identity checked against the genuine fetched record. Human FBN1 N-terminal recombinant rF23 binds BMP2/BMP4/BMP7/BMP10/GDF5 prodomains by SPR; Table 3 lists the individual affinities. Human GDF5 prodomain is generated from human-cell cDNA (Table 1 NM_000557); purchased mature mouse GDF5 is a separate reagent. These are prodomain interactions, not proof of binding every mature free growth-factor dimer. Mouse tissue BMP localization is separate from recombinant human-binding data; no FBN1 growth-factor catalytic/receptor activity is inferred. Source guide records the bounded original read and any supplementary limits.
+Citation identity checked against the genuine fetched record. Human FBN1 N-terminal recombinant rF23 binds BMP2/BMP4/BMP7/BMP10/GDF5 prodomains by SPR; Figure 6A–B identifies the constructs and interaction sensorgrams, and Table 3 lists the individual affinities. The caption/table text was read; no additional figure-pixel inspection is claimed. Human GDF5 prodomain is generated from human-cell cDNA (Table 1 NM_000557); purchased mature mouse GDF5 is a separate reagent. These are prodomain interactions, not proof of binding every mature free growth-factor dimer. Mouse tissue BMP localization is separate from recombinant human-binding data; no FBN1 growth-factor catalytic/receptor activity is inferred. Source guide records the bounded original read and any supplementary limits.
 
 ## PMID 19349279
 
@@ -228,9 +228,9 @@ Citation identity checked against the genuine fetched record. Soluble human FBN1
 
 [Heparin/heparan sulfate controls fibrillin-1, -2 and -3 self-interactions in microfibril assembly.](https://doi.org/10.1016/j.febslet.2014.06.061)
 
-Read locus: Human recombinant fragment solid-phase homo/heterotypic binding; Figure 3.
+Read locus: Original Methods 2.2 (human plasma fibronectin), Results 3.3 and Figure 3B caption (human FBN1 N- and C-terminal fragment binding). These passages were recovered from the [indexed publisher original](https://www.sciencedirect.com/science/article/pii/S0014579314005481); the committed cache remains abstract-only.
 
-Citation identity checked against the genuine fetched record. Recombinant human FBN1/FBN2 and human plasma fibronectin are tested in solid-phase homo/heterotypic binding assays. Figure 3 includes FBN1 self-binding, FBN1–FBN2 and fibronectin binding. Heparin effects differ between fibrillin self/heterotypic interactions and fibronectin interaction. This is bounded original operative text; a complete original PDF was not recovered. Source guide records the bounded original read and any supplementary limits.
+Citation identity checked against the genuine fetched record. Recombinant human FBN1/FBN2 and human plasma fibronectin are tested in solid-phase homo/heterotypic binding assays. Figure 3A distinguishes fibrillin self/heterotypic interactions from Figure 3B fibronectin binding. The positive FBN1–fibronectin context is refined to GO:0001968 fibronectin binding. Heparin effects differ between fibrillin self/heterotypic interactions and fibronectin interaction. This is bounded original operative text; a complete original PDF was not recovered. Source guide records the bounded original read and any supplementary limits.
 
 ## PMID 26601954
 
