@@ -347,7 +347,9 @@ def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
             "id": f.stem,
             "title": (title_m.group(1).strip().strip("'\"") if title_m else f.stem),
             "go": set(re.findall(r"GO:\d{7}", txt)),
-            "pw": set(re.findall(r"PW:\d{7}", txt)),
+            # Only PW ids a module declares as its evidence sources count as "cites PW id";
+            # a PW id named in notes (often as an out-of-scope neighbour) does not.
+            "pw": set(re.findall(r"source_id:\s*['\"]?(PW:\d{7})", txt)),
             "symbols": {up2sym[u] for u in ups if u in up2sym},
         })
     return mods
