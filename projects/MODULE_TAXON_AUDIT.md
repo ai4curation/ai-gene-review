@@ -19,7 +19,7 @@ or its existing status says COMPLETE.
 
 [Inventory](MODULE_TAXON_AUDIT/inventory.json) records the initial 702-module universe
 at commit `18649bf003`, refreshed to 714 modules against `10fd59941f` on 2026-10-26.
-The 12 additions are explicitly queued as NOT_STARTED. Every module starts unaudited for this project, including the
+The 12 additions initially entered the queue as NOT_STARTED; their subsequent audit states are recorded below. Every module starts unaudited for this project, including the
 20 already labelled COMPLETE. Structural counts are triage aids, not biological
 judgments. Recheck upstream for new, renamed and removed modules before declaring
 this project finished. Open PR overlaps are leads to inspect, not proof that the
@@ -54,7 +54,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `aliphatic_glucosinolate_myrosinase_defense`: [PR #5550](https://github.com/ai4curation/ai-gene-review/pull/5550) merged as `75d569bf94a697ed142f0f1397736819563b8d74`. All 187 scoped files from the 208-file paginated PR match the approved head; 35 reviews, 453 rows and 31 curated references are verified.
 - [ ] `androgen_receptor_signaling`: [PR #5554](https://github.com/ai4curation/ai-gene-review/pull/5554). Current head `93ce23a1a7` is approved after source-level re-review and all build checks pass. Normal auto-merge was requested; GitHub currently reports BLOCKED without a queue entry. Fifteen reviews and 1,683 original row payloads remain preserved.
 - [ ] `anti_crispr_suppression`: [PR #5555](https://github.com/ai4curation/ai-gene-review/pull/5555). Follow-up 1a87dca60e qualifies AcrVA1 as contributing to assembly-dependent RNA cleavage and verifies AcrIF8 IPR057730/H9C181 membership using official InterPro and CDD responses. All 42 annotation objects and 26 raw hashes are unchanged. Strict focused checks pass; seven module advisories are explicitly retained. Current-main integration preserved all 114 branch files. Pushed for renewed review; fresh full validation session 1434 completed successfully (terminal exit 0).
-- [ ] `apoptotic_execution_phase`: [PR #5558](https://github.com/ai4curation/ai-gene-review/pull/5558). Scientific follow-up and tracker union are published at a7496544eff7cbe3cb844be911bf05ae635b0e91. All 1,608 original payloads and 32 raw hashes are preserved across sixteen genes. Ten justified mouse actions changed, fourteen execution refinements now cite actual execution evidence, and two strict checks pass without warnings. Full validation session 37836 remains live; renewed review and CI are required.
+- [ ] `apoptotic_execution_phase`: [PR #5558](https://github.com/ai4curation/ai-gene-review/pull/5558). Scientific follow-up and tracker union are published at a7496544eff7cbe3cb844be911bf05ae635b0e91. All 1,608 original payloads and 32 raw hashes are preserved across sixteen genes. Ten justified mouse actions changed, fourteen execution refinements now cite actual execution evidence, and two strict checks pass without warnings. Full validation session 37836 completed successfully: 9,094 reviews, zero errors, 29,664 corpus warnings and 54 pathway checks passed; renewed review and CI are required.
 - [x] `aps_dependent_assimilatory_sulfate_reduction`: [PR #5560](https://github.com/ai4curation/ai-gene-review/pull/5560). Merged as `6349c3ef3ea2c8604949502686281dde0c0aaa7a` after approval and passing checks. All 226 scoped curation, history and source files match approved head `8553f16ce5`. The audit covers 29 member reviews, 496 rows, 28 curated references and five qualified connections.
 - [ ] `arginine_biosynthesis`: [PR #5563](https://github.com/ai4curation/ai-gene-review/pull/5563). Tracker correction is published at 0c9ac5952cd3411c4bbf1abc1b337c5a5a7599ac, preserving all 701 unrelated upstream rows and all scientific files. Current-head scientific review hit the session quota before assessment; build CI is running. Forty-three members and 555 rows remain reviewed.
 - [ ] `arginine_catabolism_arginase_pathway`: [PR #5566](https://github.com/ai4curation/ai-gene-review/pull/5566). Tracker correction is published at 8e521a8612471b7aa0db46c542e7eb5006764660, preserving all 701 unrelated upstream rows and all scientific files. Eighteen reviews contain 357 preserved original rows and 359 current rows. Current-head scientific review hit the session quota before assessment; build checks continue.
@@ -65,7 +65,8 @@ For each module, record evidence that all of the following are satisfied:
 - [ ] `auxin_polar_transport`: [PR #5579](https://github.com/ai4curation/ai-gene-review/pull/5579). Tracker correction is published at f75fa24d36b9332d2eea1f0ebb3028991903dbbb, preserving all 701 unrelated upstream rows and all scientific files. Seventeen members and 484 rows remain reviewed. Current-head scientific review hit the session quota before assessment; build checks continue.
 - [ ] `b_cell_receptor_signaling`: [PR #5584](https://github.com/ai4curation/ai-gene-review/pull/5584). PR #5584 opened at 499ccca22adb7d11c727f257f431cb00230a6a7a after full validation session 61187 exited zero. All 22 reviews preserve 2,645 original rows and 44 raw hashes; two inherited proposals and no added annotations. The module has 20 activities, twelve edges, 32 assessed references and 36 findings. Independent scientific QA and twenty route cases pass; external review and current-head CI are pending.
 - [ ] `bacterial_23s_rrna_m5u747_methylation`: Audit 24 defines the paired U747/U1939 C5 methylation program under the retained original slug. Three native variants expose six site-specific activities with exact gene selectors, nine references including two reviews, and no asserted reaction order. All five reviews are complete: 55 original rows and ten raw hashes preserved (28 ACCEPT, 25 MODIFY, two KEEP_AS_NON_CORE; no NEW). Independent scientific QA passes after selector/quotation corrections; module validation has zero errors/warnings and twelve route cases pass. Full validation session 59894 is live in rrna-validate-all.log; no PR yet.
-- [ ] Remaining 690 modules are NOT_STARTED. Twelve of 714 current audits are complete; twelve remain active.
+- [ ] `bacterial_2_3_butanediol_acetoin_catabolism`: Audit 25 started in a clean worktree at `77121ffa32`. The existing module and five KT2440 gene reviews were inspected; additional representative identities and scope are being verified. Literature leads are identified, not asserted as fetched or reviewed.
+- [ ] Remaining 689 modules are NOT_STARTED. Twelve of 714 current audits are complete; thirteen remain active.
 
 ## Notes
 
@@ -271,3 +272,68 @@ B-cell receptor PR #5584 is open at `499ccca22a`. Its full validation session 61
 Three other full validation runs are now terminal with exit zero and final PASS lines: Asp/Asn session 3814 (9,098 reviews), threonine session 56949 (9,102) and anti-CRISPR session 1434 (9,092). Each reports zero errors and valid PMID citations in all 54 pathway files; repository-wide advisory warnings remain. ALAAT1's five citation-prose fixes are committed and pushed as `b402eb2fbf`. Apoptosis session 37836 remains live at the latest root poll. These validation results do not imply external scientific approval or merge.
 
 The rRNA audit boundary has been deliberately revised from the original isolated U747 reaction to the paired U747/U1939 C5 methylation program, retaining its historical slug. Three native alternatives expose six site-specific activities: two dedicated E. coli enzymes, or dual-specific Bacillus/Streptococcus RlmCD. No catalytic order is asserted. Exact gene-product selectors carry verified PTHR11061 classification without extending substrate specificity to the whole family. Nine references include two reviews; twelve route cases pass and module validation has zero errors/warnings. All five reviews are complete with 55 preserved original rows and ten raw hashes: 28 ACCEPT, 25 MODIFY and two KEEP_AS_NON_CORE, with no NEW. Independent scientific QA passes after exact-selector and quotation fixes. All five focused source/term checks pass; two intentional E. coli advisories remain and the two RlmCD reviews have zero warnings. Full validation session 59894 is now live in `rrna-validate-all.log`. TrmA is a specificity comparator, and a mollicute U1939-only pathway is outside this paired boundary. No PR has been opened for this audit.
+
+## Preserved branch and upstream integration notes
+
+The dated sections below retain earlier branch-specific and upstream audit evidence. Their counts and workflow states are historical snapshots; the current inventory above governs current accounting.
+
+## 2026-10-26 — restore the arginine audit after main integration
+
+The arginine audit expanded the original 39-member panel to 43 proteins with recycling-only METJA/argJ, ARATH/NAGK and ARATH/WIN1, and the short MYCTU/argA architecture. Acetyl-CoA-dependent initiation and acetylornithine recycling remain distinct; short MYCTU/argA glutamine kinetics do not establish efficient glutamate turnover. Arg7 pre-import processing is distinguished from Arg5,6 import-dependent processing. The four-root taxon envelope describes sampled occurrence, without imposing a common compartment or complete pathway on every lineage.
+
+All 555 member rows, including two inherited proposals, remain present. Independent module QA verified 43 family/member placements and checked the cached GO-CAM claims; 22 assessed references support nine connections. Historical full validation and 46 module-logic tests passed before subsequent integration. Follow-up corrected 22 root-mitochondrion actions, CAR1 urea-cycle consistency, arg3 propagation metadata and structured source defects; the latest reviewer explicitly approved the unchanged science. The current action totals are 404 ACCEPT, 102 MODIFY, 20 KEEP_AS_NON_CORE, 16 REMOVE, 10 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED and 2 NEW.
+
+Integration commit `a856224ea` retained the upstream tracker but dropped this audit's entry. This correction restores only the arginine entry among the 702 pre-existing rows, updates its structural metrics from the current module, and preserves every other existing audit row and narrative. The separate universe refresh adds twelve module paths verified on disk from the canonical inventory: eleven NOT_STARTED rows and the already published acetylcholine audit with its canonical PR evidence. Counts are recomputed for this branch rather than copied from the canonical tracker. No gene review, module or cached scientific source is changed; an active PR is not counted as complete.
+
+## 2026-10-26 — arginase tracker restoration after integration
+
+The integration at `78b415cf54` preserved the approved gene, family and module science but dropped this audit's tracker entry and historical notes. Restored the entry from the canonical tracker with current module-derived structure: nine family-based annotons, each with function-level evidence, 18 represented proteins, Eukaryota context qualified to characterized fungal, plant and animal implementations, 34 curated source entries and four connections. The 357 original rows are preserved; two approved ARGAH1/ARGAH2 matrix proposals bring the current review total to 359. No biological assertion was changed. The latest reviewer explicitly approves the science and requests only tracker restoration; this audit remains active until renewed review/checks and verified merge.
+
+This branch's inventory initially contained 702 modules, not 714. Added the twelve missing canonical entries after verifying their module files: eleven remain NOT_STARTED, while acetylcholine_signaling retains its actual PR_OPEN status and evidence. The resulting 714-entry inventory has eight COMPLETE, eight active and 698 NOT_STARTED entries. Every unrelated pre-existing module entry and all upstream notes remain unchanged. These are branch-local totals, not a claim that main already carried the refreshed inventory or that an open PR has merged.
+
+## 2026-10-26 — polar transport ledger restoration after main integration
+
+PR #5579 scientific review approved the integrated biological content; the remaining
+blocker was a tracker regression caused by selecting the upstream project files.
+The restored inventory entry derives its structural counts directly from the current
+module: 20 activities, each with a family descriptor and direct evidence, 41 curated
+references and seven connections. Seventeen unique accessions map to seventeen
+review files containing 484 rows. Q05085 is represented once as NRT1.1, preserving
+CHL1/NPF6.3 alias provenance. The 483 baseline assertions, including five inherited
+proposals, remain represented; the additional OsAUX1 proposal accounts for row 484.
+
+The audit distinguishes six native Arabidopsis multiactivity mechanisms from optional
+rice carrier segments and moss/Marchantia exporter comparators. Export assays alone
+do not establish polarized tissue flow or conservation of a complete network.
+Source-specific localization uncertainty, conditional ARATH/ABCB4 directionality, the
+ABCB1/ABCB19 brassinosteroid-homeostasis non-core framing, and qualified TWD1
+mechanisms remain as reviewed. This ledger repair changes none of those claims.
+
+The latest review confirms the scientific follow-ups; the previously completed full
+validation covered 9,076 reviews and 54 pathway files. The targeted tracker checks
+verify counts, canonical addition provenance and preservation of every other existing
+inventory row; a new project history and rendered page accompany this repair. The
+audit remains open until the updated tracker passes review/checks and the PR merges.
+
+The missing universe entries are acetylcholine_signaling, dna_cytosine_methylation_cycle,
+dopamine_receptor_signaling, il21_signaling, il22_signaling, il34_signaling,
+nmj_achr_clustering, prostanoid_biosynthesis, protein_kinase_c_signaling,
+reelin_signaling, trail_apoptotic_signaling and visual_phototransduction. They were
+imported verbatim from canonical ledger commit `3c93882525`: acetylcholine is PR_OPEN,
+and the other eleven are NOT_STARTED. No existing non-polar inventory row was
+replaced with a newer canonical state. This makes the 714-module universe complete
+without silently changing the status of unrelated audits.
+
+## 2026-10-26 — apoptosis source follow-up and tracker union
+
+The apoptosis audit retains distinct executioner activities and optional contextual branches: XIAP restraint is specific to caspase-3/7; ICAD folding and nuclease inhibition remain separate; Acinus condensation depends on experimental context; AIF is not universally downstream of caspase-3. The mammalian envelope describes characterized human and mouse implementations, without claiming identical dependencies throughout mammals. The corrected module requires a supported caspase-3-or-caspase-7 execution route while keeping contextual branches optional; empty-context satisfaction is not permitted.
+
+Follow-up `5c0c9cf686` reassesses 24 mouse and 12 human annotation review objects. Ten mouse non-core actions become ACCEPT, grounded in executioner substrate cleavage, cascade amplification, mitochondrial feedback, cytokine suppression and conditional GSDME activation. Native mouse evidence, human constructs, ortholog inference and abstract-only source limits remain distinct. All 1,608 original payloads and raw-source hashes are preserved, including two inherited proposals; the other fourteen member reviews and module graph are unchanged. Both focused gene validations pass with zero errors and warnings. Earlier full validation is historical; fresh validation after main integration remains underway.
+
+The tracker is rebuilt from upstream `fe302bb372`, replacing only this audit's existing row and status bullet. It retains all other upstream audit rows and prose, rather than reintroducing older branch statuses. Twelve missing canonical module rows are added only after verifying their paths: eleven NOT_STARTED and acetylcholine's actual PR_OPEN entry with evidence. Aggregate counts are recomputed from this union. This project-only correction changes no gene review, module or scientific source; publication, current CI and renewed scientific review remain separate gates.
+
+## 2026-10-26 — semantic tracker union for five current-main integrations
+
+The acetylcholine, arginine, arginase, polar-transport and apoptotic-execution branches were reconciled against pinned main `77121ffa32` and canonical tracker `9a873125b8`. All 714 module identities remain present: 12 complete, 13 active and 689 not started. Current scientific metrics and annotation actions were recomputed from each branch’s committed module and full representative review panel, while newer canonical workflow statuses were retained. This corrects stale family/activity/member counts and preserves each branch’s source-specific audit evidence and historical notes. These are tracker integrations, not new biological judgments or claims of merged completion. Existing full-validation processes remain owner-managed.
+
+Root subsequently verified apoptosis full-validation session 37836 exited zero, with 9,094 reviews and 54 pathway checks passing (29,664 existing corpus warnings). The threonine review retry began after the verified 14:50 UTC quota reset and remains in progress; no review success is inferred. These operational updates do not change completion counts.
