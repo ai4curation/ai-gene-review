@@ -41,3 +41,8 @@ Broad and substrate-specific terms were assessed consistently across evidence co
 ### Evidence-field cleanup, 2026-10-26
 
 Kept the alias crosswalk in the rationale and removed protein/gene-name quotes from supporting evidence. The experimental citation and reproducible sequence-comparison findings independently support the source attribution assessment.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.

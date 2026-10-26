@@ -45,3 +45,14 @@ Broad and substrate-specific terms were assessed consistently across evidence co
 ### Final consistency QA, 2026-10-26
 
 The FIN219-activation core location now matches the supported cytosol refinement already applied to its general cytoplasm annotations.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+Primary supplemental check for PMID:18431481: [annotated-protein workbook s005](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0001994.s005&type=supplementary), worksheet `supplTable5`, and [abundance workbook s003](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0001994.s003&type=supplementary), worksheet `supplTable1`, explicitly classify AT1G78370 as **"not plastid"**. Internal workbook titles and article table numbering differ, so file identifier plus locus are the stable join. These are direct reads of publisher supplements, not an inference from absent targeting signals. Working downloads are under `.cache/module-audit-logs/18431481-s003` and `18431481-s005`; source caches were not manually modified.
+
+Read PMID:28887381 full text, especially "Identification of True Membrane-associated Proteins" and Fig. 7: washed microsomes and sucrose gradients distinguish membrane association but do not separate organelles; named compartments are imported from SUBAcon/GFP knowledge. The paper states "no organelle fell in a single cluster". Mark the specific compartment claim as over-annotated while preserving proteomic detection. This applies projects/ORGANELLES.md at the actual resolution of the assay.
+
+Both GO:0019899 refinements now quote the FIN219–FIP1 adenylation-doubling result from PMID:28223489. PMID:18538804 remains abstract-only after force-fetch: GSTU20 apoplastic peptide identification/purity controls remain unresolved; unlike SUBAcon labels, this is a genuine access limitation.

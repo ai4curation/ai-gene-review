@@ -42,3 +42,10 @@ Reviewed every original row (10) and core function using review/annotation-revie
 PMID12970475 directly compares recombinant CYP83A1 and B1: aliphatic oximes favor A1; aromatic oximes are also accepted less efficiently. Reactive oxime activation precedes thiol capture, not production of the free downstream thiohydroximate in a single isolated step. The authored core uses the specifically defined proposed MF; general oxidation rows now share that replacement. Cytosolic-fraction HDA does not prove contamination and remains unresolved.
 
 Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+Read PMID:28887381 full text, especially "Identification of True Membrane-associated Proteins" and Fig. 7: washed microsomes and sucrose gradients distinguish membrane association but do not separate organelles; named compartments are imported from SUBAcon/GFP knowledge. The paper states "no organelle fell in a single cluster". Mark the specific compartment claim as over-annotated while preserving proteomic detection. This applies projects/ORGANELLES.md at the actual resolution of the assay.

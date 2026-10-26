@@ -43,3 +43,10 @@ Broad and substrate-specific terms were assessed consistently across evidence co
 ### Final cross-row QA, 2026-10-26
 
 Kept location claims consistent with retained experimental compartments: a supported apoplast assignment refines a general extracellular prediction, while a main cytosolic or vacuolar location does not by itself disprove a secondary predicted pool. Conditional Arabidopsis ESP activity is distinguished from a universal coding knockout. Original annotation fields remain unchanged.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+AtSubP ISM chloroplast prediction is now MARK_AS_OVER_ANNOTATED. This is an unsupported positive computational compartment assignment, not failure to access an experimental publication, and not proof of absolute absence.

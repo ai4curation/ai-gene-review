@@ -40,3 +40,12 @@ Broad and substrate-specific terms were assessed consistently across evidence co
 ### Final consistency QA, 2026-10-26
 
 Removed chain-length feature text as localization evidence. Retained the PAINT cytoplasm judgment at its warranted precision, and left the unverified plastid prediction unresolved because absent targeting annotations do not establish absence.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+Read PMID:28887381 full text, especially "Identification of True Membrane-associated Proteins" and Fig. 7: washed microsomes and sucrose gradients distinguish membrane association but do not separate organelles; named compartments are imported from SUBAcon/GFP knowledge. The paper states "no organelle fell in a single cluster". Mark the specific compartment claim as over-annotated while preserving proteomic detection. This applies projects/ORGANELLES.md at the actual resolution of the assay.
+
+AtSubP ISM chloroplast prediction is now MARK_AS_OVER_ANNOTATED. This is an unsupported positive computational compartment assignment, not failure to access an experimental publication, and not proof of absolute absence.

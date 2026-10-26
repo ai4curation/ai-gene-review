@@ -21,3 +21,8 @@ QuickGO is_a/part_of ancestry and exact reaction definitions were checked live o
 ## Research provenance
 
 Applied review, annotation-reviewer and core-function synthesis guidance. Normal fetch-gene seeded original rows; these fields are preserved. Default Falcon deep research and publication caching were launched concurrently. Falcon failed authentication (403) and automatic Perplexity-lite fallback failed with insufficient_quota (401); log /tmp/thlar-TAV2_LOCUS24872-deep.log. No provider report was fabricated. Manual source assessment and existing reproducible sequence analysis were used. Fitness retrieval is not applicable to this plant target. Target-specific publication searches did not establish a native assay for this exact accession; this is a literature-access conclusion, not proof that none exists.
+
+
+## 2026-10-26 PR 5550 follow-up: IPMI activity and donor scope
+
+Rechecked the distinction between the shared IIL1-like large subunit and the specialized SSU2/SSU3 small-subunit group. The small subunit retains IPM activity as non-core; the large subunit retains both leucine and methionine-chain-elongation reactions as core contributions, matching Arabidopsis IIL1. PMID:24608865 establishes substrate range for both small-subunit paralogs. The small-subunit NEW ISS row now names both the reciprocal SSU2 match Q9ZW84 and the SSU3 query Q9LYT7, with co-orthology explicitly qualified. No original GOA assertions changed.

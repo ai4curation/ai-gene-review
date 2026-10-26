@@ -27,3 +27,8 @@ Applied review, annotation-reviewer and core-function synthesis guidance. Normal
 ## 2026-10-26 independent evidence-selection QA
 
 Matched supporting quotations to the actual claim: specific SOT17 reciprocal mapping rather than the neighboring SOT18 search row, positive MAM condensation evidence for the functional claim, and direct homolog localization text where localization is inferred. Only relevant corrections apply to this gene. Annotation actions and all seeded fields are unchanged.
+
+
+## 2026-10-26 PR 5550 follow-up: IPMI activity and donor scope
+
+Rechecked the distinction between the shared IIL1-like large subunit and the specialized SSU2/SSU3 small-subunit group. The small subunit retains IPM activity as non-core; the large subunit retains both leucine and methionine-chain-elongation reactions as core contributions, matching Arabidopsis IIL1. PMID:24608865 establishes substrate range for both small-subunit paralogs. The small-subunit NEW ISS row now names both the reciprocal SSU2 match Q9ZW84 and the SSU3 query Q9LYT7, with co-orthology explicitly qualified. No original GOA assertions changed.

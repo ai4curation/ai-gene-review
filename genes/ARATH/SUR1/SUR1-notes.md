@@ -33,3 +33,10 @@ Reviewed every original row (17) and core function using review/annotation-revie
 PMID14871316 combines in vivo feeding/intermediate accumulation with recombinant djenkolic-acid cleavage, not a demonstrated purified native Cys-Gly assay. GGP1-to-SUR1 handoff is qualified using21712415. PMID41819465 reports significant residual indolic glucosinolates, so neither description nor core asserts universal sole-enzyme necessity. Tyrosine-catabolism removal was too confident about target-specific evolutionary loss; now over-annotated, without treating Taraxacum lack of TyrAT activity as proof for Arabidopsis. The C-S lyase class term is refined to the existing specific activity.
 
 Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+Read PMID:28887381 full text, especially "Identification of True Membrane-associated Proteins" and Fig. 7: washed microsomes and sucrose gradients distinguish membrane association but do not separate organelles; named compartments are imported from SUBAcon/GFP knowledge. The paper states "no organelle fell in a single cluster". Mark the specific compartment claim as over-annotated while preserving proteomic detection. This applies projects/ORGANELLES.md at the actual resolution of the assay.
