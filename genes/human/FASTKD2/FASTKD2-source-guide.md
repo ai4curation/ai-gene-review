@@ -1,0 +1,33 @@
+# FASTKD2 direct evidence guide
+
+FASTKD2 is supported as a mitochondrial RNA-binding protein involved in RNA handling and large-ribosomal-subunit assembly. The studies distinguish this role from kinase activity, an intrinsic nuclease reaction, stable structural membership in the mature ribosome, or chemical RNA modification catalyzed by neighboring enzymes. The two imported protein-product objects are retained; none of these reads establishes a new natural processing coordinate or product-specific function.
+
+## RNA binding and assembly
+
+[PMID:22658674](https://pubmed.ncbi.nlm.nih.gov/22658674/) reports UV-dependent mRNA capture and individual FASTKD2 validation in Figure 3C. The original PDF was read for the target assay. Its N-terminal fusion is not evidence of native mitochondrial targeting. The historical XLS supplements were retained but not parsed; the positive target claim rests on the original main experiment.
+
+For [PMID:22681889](https://pubmed.ncbi.nlm.nih.gov/22681889/), the article identity was verified and original-study evidence was read in the [author's dissertation](https://refubium.fu-berlin.de/bitstream/handle/fub188/9034/Dissertation_Baltz.pdf?sequence=1): Methods 3.5 and Table S1, PDF pages 140–142. FASTKD2 is a class-I mRNA-capture target; its actual table row was inspected visually. This is author primary evidence, not a recovered full journal PDF or proof of an individual FASTKD2 PAR-CLIP experiment.
+
+[PMID:26370583](https://pmc.ncbi.nlm.nih.gov/articles/PMC4604428/) provides tagged mitochondrial localization, UV-crosslink/iCLIP contacts with rRNA and mRNA substrates, including ND6, and RNAi/CRISPR transcript and translation analyses. Northern blots establish altered RNA processing or steady-state abundance, without measuring target decay half-lives. Selective 16S-rRNA loss can reflect defective assembly. The general RNA-processing annotation is too broad because retained mitochondrial RNA processing is its strict descendant. RNA binding remains informative beyond rRNA binding because FASTKD2 also contacts mRNA. Reduced metabolic labeling is interpreted through RNA handling and ribosome biogenesis, without asserting elongation chemistry.
+
+For [PMID:25683715](https://pubmed.ncbi.nlm.nih.gov/25683715/), the [author-uploaded original](https://www.researchgate.net/publication/272422310_Mitochondrial_RNA_Granules_Are_Centers_for_Posttranscriptional_RNA_Processing_and_Ribosome_Biogenesis) supplies the operative Figure 1 localization, Figures 3–4 RNA/assembly experiments, Figure 5 UV-crosslink immunoprecipitation/RNA-seq, and Methods. FASTKD2 binds 16S rRNA and promotes large-subunit and monosome assembly, but largely remains in light gradient fractions. Its RNA-granule localization is partial: the paper also reports roughly 30–40% overlap of the tested foci with mitochondrial nucleoids. That positive observation is retained with diffraction limits and does not establish DNA binding. Original text and captions were read; figure pixels and the complete supplementary package were not. FASTKD5-specific processing results are not transferred.
+
+## Localization and secondary phenotypes
+
+[PMID:18771761](https://pmc.ncbi.nlm.nih.gov/articles/PMC2556431/) Figure 4 and associated original experiments support mitochondrial localization and membrane-potential-dependent import, with protease protection lost after membrane disruption. Predicted cleavage and membrane topology are not experimentally mapped product features. Figure 5 shows altered staurosporine-induced fragmentation in patient fibroblasts and fragmentation after overexpression; the authors leave overexpression toxicity unresolved. This apoptosis association is retained outside the core molecular role.
+
+[PMID:20869947](https://pmc.ncbi.nlm.nih.gov/articles/PMC2963690/) explicitly assays the localization of human FASTKD1–5, including FASTKD2, despite foregrounding FASTKD3 in its title. C-terminal YFP fusions overlap mitochondrial staining in COS7 and U2OS cells. FASTKD3-specific perturbation and interaction functions are not transferred; Figure S4 pixels were not independently inspected.
+
+[PMID:34800366](https://pmc.ncbi.nlm.nih.gov/articles/PMC8664129/) identifies FASTKD2 in the human MitoCoP: Table S1B row 337, subtractive proteomics S2B row 6716, spatial proteomics S2E row 7627, and TOMM40 importomics S3A row 5777. These are actual target rows, distinct from incidental FASTKD2 mentions in other proteins' descriptions. The positive organelle evidence does not resolve a natural isoform or matrix-specific location.
+
+[PMID:27974379](https://pmc.ncbi.nlm.nih.gov/articles/PMC5210091/) supplies FASTKD2 mitochondrial immunopurification/BioID, expanded Figure EV1 GRSF1 colocalization, and transient RNA-associated module evidence. The operative read does not resolve the precise matrix-versus-matrix-facing-membrane position. The matrix annotation from this individual reference remains uncertain without negating positive mitochondrial/granule localization or separate curated matrix inference. The tested pseudouridine-synthase reactions do not establish FASTKD2-catalyzed chemistry. Original text and expanded captions were read; no figure pixels or supplementary tables were used to resolve compartment precision.
+
+## Protein interaction records
+
+The four generic interaction annotations are retained as non-core under the project's standing binding policy. [FASTKD2-binding-records.yaml](FASTKD2-binding-records.yaml) records each partner, assay methods, exact author-table rows, current IntAct join and interpretation limits. Partner function labels do not become FASTKD2 functions.
+
+[PMID:32814053](https://pubmed.ncbi.nlm.nih.gov/32814053/) Table S2 contains FASTKD2–LAMP2 and FASTKD2–SH3GLB1 yeast-two-hybrid edges. IntAct resolves the LAMP2 partner as P13473-2, while the author table is gene-level; the suffix is not silently promoted to independent isoform evidence. Extended-network copies and propagation scores are not additional experiments.
+
+[PMID:35156780](https://pmc.ncbi.nlm.nih.gov/articles/PMC8842165/) provides the wild-type CFTR MaMTH-HTS target in Dataset EV2 and EV4. One of two technical sequencing replicates contains the prey. The tagged HEK293 reporter assay does not establish native mitochondrial access or an individually validated CFTR-regulatory activity.
+
+[PMID:36012204](https://pmc.ncbi.nlm.nih.gov/articles/PMC9408702/) provides a positive FASTKD2 TurboID-versus-control enrichment, but the SAINT FDR is 0.0962, above the study's 0.01 high-confidence threshold; the APEX2 comparison is not enriched. The assay and current interaction records describe proximity. This is not a purified binary-binding result or proof that FASTKD2 regulates CFTR.
