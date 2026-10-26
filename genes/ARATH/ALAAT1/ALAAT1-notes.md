@@ -17,3 +17,7 @@ Repaired authored citation spacing and fused numeric prose while preserving orig
 ## PR 5568 residual citation punctuation (2026-10-26)
 
 The unfinished current-head reviewer comment identified five occurrences where PMID:31519798 was fused to the preceding sentence after “reoxygenation”. Restored the sentence space and PMID prefix in three annotation reasons and two reference assessments. The cached source is Lee and Bailey-Serres (2019), “Integrative Analysis from the Epigenome to Translatome Uncovers Patterns of Dominant Nuclear Regulation during Transient Stress”; its stress-response context remains distinct from the PMID:17319845 mutant/recovery evidence. No claim, action, annotation payload, quotation or raw source was changed. A scoped scan of all 27 reviews and the module found no other equivalent mangled known source IDs; the valid ECO:0000269|PubMed:16823372 notation in SCHPO maa1 was deliberately retained.
+
+## 2026-10-26 — source-specific review cleanup
+
+The eleven reference assessments now describe each paper's own findings and actual cached access level, keeping other-paper evidence in annotation reasons. Restored the existing PMID:22268146 mitochondrial-targeting finding and quotation after an interrupted prose-replacement script inadvertently removed the block; no source finding is lost. Fixed two line-wrap spaces within hyphenated words. No annotation payload, action, core function or raw source changed; no matrix annotation was added.

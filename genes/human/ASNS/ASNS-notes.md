@@ -34,7 +34,7 @@ The local GO-CAM index has no human P08243/ASNS activity entry. The textual ASNS
 
 The immutable human UniProt aggregation names WDR27/A2RRH5, TRIM69/Q86WT6 and TRIM69/Q86WT6-2. It does not by itself establish that every pair occurred in each cited publication.
 
-The exact human ASNS-bait/WDR27-prey two-hybrid record was independently read in [BioGRID interaction1037059](https://thebiogrid.org/interaction/1037059/asns-wdr27.html). Its publication link resolves to the Rolland2014 record and explicitly PMID25416956. This curated source-specific pair supports non-core retention, with the original supplementary constructs/raw reporter data unread. It does not establish a specialized WDR27 molecular function or endogenous complex.
+The exact human ASNS-bait/WDR27-prey two-hybrid record was independently read in [BioGRID interaction 1037059](https://thebiogrid.org/interaction/1037059/asns-wdr27.html). Its publication link resolves to the Rolland 2014 record and explicitly PMID:25416956. This curated source-specific pair supports non-core retention, with the original supplementary constructs/raw reporter data unread. It does not establish a specialized WDR27 molecular function or endogenous complex.
 
 The 2014 abbreviated extraction, 2019 variant-screen abstract/targeted Results and 2020 HuRI abstract/screen overview were read. Exact ASNS–TRIM69 source-specific tables, variant conditions and the TRIM69-2 construct remained unexposed. The current primary HuRI TRIM69 page returned an empty interaction table; search nonmatches are not contradictory experiments. These three source-specific assertions remain prospective UNDECIDED. No vendor aggregation is used to close them, and no ligase-binding function is inferred from a name alone.
 
@@ -78,3 +78,7 @@ Actual default Falcon and fallback perplexity-lite attempts failed with access/c
 ## PR #5568 follow-up, 2026-10-26
 
 Repaired authored citation spacing and fused numeric prose while preserving original annotation payloads, every action, raw UniProt/GOA records and all existing supporting quotations. Source-cited passages in notes were protected from rewriting. The WDR27 bare-binding REMOVE is based on an inspected source pair with no established more specific molecular function. The three TRIM69 UNDECIDED calls are retained under the local source-adjudication exception because exact study/variant/isoform records remain unresolved. Reasons now explicitly distinguish this exception from the informativeness of GO:0005515; binding need not be disproven to remove a generic term. Earlier historical source/policy passages and their quoted text remain intact.
+
+## 2026-10-26 — source-specific review cleanup
+
+Restored spaces and the PMID prefix in the historical BioGRID/Rolland citation sentence and its matching verbatim local-note quotation. The demonstrated interaction and current curation decision are unchanged; this is citation-text synchronization, not new source evidence.
