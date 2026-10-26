@@ -21,3 +21,7 @@ Repaired mangled PMID/GO citation strings and spacing in reviewer prose. Source 
 Annotation actions are unchanged; revisions clarify evidence or narrative.
 
 All 13 original rows and their non-review payloads were compared against the pre-correction snapshot and remain identical. This update supersedes contradictory earlier review prose; it does not overwrite fetched source files. Focused strict schema, term and source checks and HTML rendering are recorded in the PR follow-up report.
+
+## 2026-10-26 — source-specific PR #5569 follow-up
+
+Corrected three authored NCBI Gene:838046 identifier spacings. No source quotations, protein identity, activity inference or annotation actions changed.

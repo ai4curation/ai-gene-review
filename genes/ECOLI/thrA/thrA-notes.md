@@ -31,3 +31,7 @@ Replaced the shared action-only summaries and catalytic boilerplate with enzyme-
 The N-terminal ATP-dependent kinase and C-terminal homoserine dehydrogenase are distinguished. PMID:11368768 provides integrated E. coli pathway kinetics; PMID:204643 measures a dimer–tetramer equilibrium with active forms, not a mandatory single oligomer. NAD-dependent GO:0004022 remains ACCEPT and is not replaced by the NADP-specific sibling. Plant donor chemistry does not transfer chloroplast localization or allosteric regulation.
 
 All 24 current panel reviews remain within the preservation proof (439 rows, including the pre-existing proposal). Focused schema/term/source checks, derived record sections, renders and helper-generated Codex histories accompany the changed genes. No module, tracker, staging, commit or full-repository validation is part of this follow-up.
+
+## 2026-10-26 — source-specific PR #5569 follow-up
+
+The remaining action-only refinement summaries and generic refinement reasons were replaced with reaction-, pathway- or assembly-specific explanations. Existing actions and replacement terms are unchanged.

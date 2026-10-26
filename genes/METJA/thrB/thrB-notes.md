@@ -20,3 +20,7 @@ Replaced the shared action-only summaries and catalytic boilerplate with enzyme-
 PMID:11114929 compares archaeal homoserine and shikimate kinases directly and finds more than 1000-fold substrate preference. PMID:11535056 locates homoserine, ATP analogues and a magnesium-associated nucleotide geometry in the target structure. These establish substrate-specific kinase chemistry; the curated cytoplasmic assignment is kept separate from heterologous enzyme crystallization.
 
 All 24 current panel reviews remain within the preservation proof (439 rows, including the pre-existing proposal). Focused schema/term/source checks, derived record sections, renders and helper-generated Codex histories accompany the changed genes. No module, tracker, staging, commit or full-repository validation is part of this follow-up.
+
+## 2026-10-26 — source-specific PR #5569 follow-up
+
+The remaining action-only refinement summaries and generic refinement reasons were replaced with reaction-, pathway- or assembly-specific explanations. Existing actions and replacement terms are unchanged.

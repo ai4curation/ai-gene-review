@@ -20,3 +20,7 @@ Replaced the shared action-only summaries and catalytic boilerplate with enzyme-
 PMID:177283 directly purifies ThrB and tests homoserine/threonine competition and Mg2+ effects. Competitive inhibition is not recast as cooperative allostery. Genetic operon/mapping studies (PMID:4148765/4364333) are separated from catalytic evidence (PMID:8973190).
 
 All 24 current panel reviews remain within the preservation proof (439 rows, including the pre-existing proposal). Focused schema/term/source checks, derived record sections, renders and helper-generated Codex histories accompany the changed genes. No module, tracker, staging, commit or full-repository validation is part of this follow-up.
+
+## 2026-10-26 — source-specific PR #5569 follow-up
+
+The remaining action-only refinement summaries and generic refinement reasons were replaced with reaction-, pathway- or assembly-specific explanations. Existing actions and replacement terms are unchanged. The cytosol row keyed to PMID:15911532 now quotes that paper’s actual fractionation/2D-gel/MS statement, instead of the different MC4100 study PMID:18304323. The abstract does not name the target hit; the native curator assignment is retained without pretending the original protein table was reinspected.
