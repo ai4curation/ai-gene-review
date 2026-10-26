@@ -2998,9 +2998,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**619 of 2,876 genes are complete; 2,257 remain.**
-This checkpoint adds FANCM and FARS2 after their accepted merges and successful
-merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-619-2026-10-26-083826-utc)
+**622 of 2,876 genes are complete; 2,254 remain.**
+This checkpoint adds FAT4, FAS and FASTKD2 after their accepted merges and successful
+merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-622-2026-10-26-115737-utc)
 links the completed reviews and their validation records.
 
 Completion records accepted merged work; it does not resolve every biological
@@ -3757,10 +3757,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FANCL** — HGNC:20748; [Fanconi anemia complementation group L](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93d0cb5f-4859-4b28-b647-3f8226fe5921-2020-07-30T203845.671Z) (MONDO:0013566; AR; Definitive).
 - [x] **FANCM** — HGNC:23168; [FANCM Fanconi-like genomic instability disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb231b6-1452-4f24-a8c1-ab45a791e73c-2024-11-12T170000.000Z) (MONDO:0100578; AR; Definitive); [hereditary breast carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25744c57-8e53-403b-a2ec-fb405ad452cc-2024-11-22T180000.000Z) (MONDO:0016419; AD; Limited).
 - [x] **FARS2** — HGNC:21062; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cf7594a-d934-4b6c-8052-94066d608c5a-2019-11-25T144756.827Z) (MONDO:0009723; AR; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f73e39c8-7021-4c25-846d-f7109f8d0e83-2024-12-16T050000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **FAS** — HGNC:11920; [FAS-related autoimmune lymphoproliferative immune disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f15d745-17a7-4aba-8083-72c7c13c2786-2025-10-14T160000.000Z) (MONDO:1060194; SD; Definitive).
+- [x] **FAS** — HGNC:11920; [FAS-related autoimmune lymphoproliferative immune disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f15d745-17a7-4aba-8083-72c7c13c2786-2025-10-14T160000.000Z) (MONDO:1060194; SD; Definitive).
 - [ ] **FASLG** — HGNC:11936; [autoimmune lymphoproliferative syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_41cb5abc-acba-4838-8965-2051c4a9e9ca-2024-06-07T160000.000Z) (MONDO:0011158; AR; Definitive).
-- [ ] **FASTKD2** — HGNC:29160; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82883e8c-7ee6-447e-bdc6-8898c4848e7a-2022-07-21T160000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **FAT4** — HGNC:23109; [FAT4-related neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_32ce4642-0431-4bd8-b1da-fb69ef6b01da-2025-02-20T050000.000Z) (MONDO:0100603; AR; Definitive).
+- [x] **FASTKD2** — HGNC:29160; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82883e8c-7ee6-447e-bdc6-8898c4848e7a-2022-07-21T160000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **FAT4** — HGNC:23109; [FAT4-related neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_32ce4642-0431-4bd8-b1da-fb69ef6b01da-2025-02-20T050000.000Z) (MONDO:0100603; AR; Definitive).
 - [ ] **FBN1** — HGNC:3603; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8251) (MONDO:0019625; AD; Definitive).
 - [ ] **FBN2** — HGNC:3604; [congenital contractural arachnodactyly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_deb482b7-5d38-44ee-a010-fe8f5a3413da-2025-11-07T170000.000Z) (MONDO:0007363; AD; Definitive).
 - [ ] **FBP1** — HGNC:3606; [fructose-1,6-bisphosphatase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b60910a5-26c4-484b-b323-d55ae96eb6f5-2025-11-14T170000.000Z) (MONDO:0009251; AR; Definitive).

@@ -6889,3 +6889,36 @@ remain preserved. Acceptance records the coordinating AI agent’s campaign audi
 it is not a human maintainer sign-off.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/5bfff3399773d6395d82f8a2a353659cb4a76d82/history/projects/CLINGEN_MENDELIAN/2026-10-26T085031Z-codex-49663f.yaml).
+
+
+## Completion checkpoint 622 — 2026-10-26 11:57:37 UTC
+
+**622 complete; 2,254 remaining out of 2,876 catalogue genes.**
+This update adds FAT4, FAS and FASTKD2 to [tracker 619](https://github.com/ai4curation/ai-gene-review/pull/5575).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FAT4 #5573](https://github.com/ai4curation/ai-gene-review/pull/5573) | 21 / 21 | DRAFT; 1 active UNDECIDED; 1 binding advisory | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/ab132cafb81e79e66834afaf84f0206ff5f9e81c) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40311447908) |
+| [FAS #5567](https://github.com/ai4curation/ai-gene-review/pull/5567) | 111 / 117 | DRAFT; 6 active UNDECIDED; 37 binding advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/86be5a1126d5f0ce5ca081f7373afda0ed201fdc) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40311810521) |
+| [FASTKD2 #5570](https://github.com/ai4curation/ai-gene-review/pull/5570) | 31 / 31 | DRAFT; 1 active UNDECIDED; 4 binding advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/6fb9e79b44d53f248675021c9a25f2183a9ec757) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40313083066) |
+
+FAT4 retains 20 inherited source contexts and one proposed molecular-function
+annotation. FAS retains all 117 stored contexts, including six retired historical
+contexts; its active projection is 111. FASTKD2 retains all 31 source contexts.
+The reviews retain three, seven and two natural product objects respectively.
+DRAFT status and source-specific uncertainty remain explicit; completion records
+accepted campaign reviews rather than certainty in every biological claim.
+
+Their accepted source closures contain 30, 94 and 32 paths respectively
+(156 distinct paths in the union), including all 9, 21 and 11 gene/history
+paths. These objects match each actual merge and the captured main snapshot.
+The coordinating AI agent accepted the complete actual merge-group validation,
+suite and gate logs. This tracker proposal reuses those acceptances and does not
+claim another complete log reading.
+
+All 235 dated queue objects, 134 preceding completion updates, catalogue associations,
+source inventories and earlier progress remain preserved. Only FAT4, FAS and FASTKD2
+receive new completion credit. Acceptance is the coordinating AI agent's campaign
+audit, not a human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/3dc698edd025552a6d03ce4755b1f62f199a2344/history/projects/CLINGEN_MENDELIAN/2026-10-26T120127Z-codex-1d0155.yaml).
