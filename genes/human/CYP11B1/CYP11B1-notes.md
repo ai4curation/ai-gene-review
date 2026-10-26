@@ -82,3 +82,7 @@ All four aldosterone-process assertions are UNDECIDED: failure to perform the te
 ## 2026-10-25: review evidence follow-up
 
 Expanded six ambiguous location quotations to include the SUBCELLULAR LOCATION heading, distinguishing the curated location statement from identical keyword text. No annotation actions or machine source fields changed.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root mitochondrion annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.

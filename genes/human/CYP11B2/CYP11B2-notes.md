@@ -130,3 +130,9 @@ The existing negated cortisol-biosynthesis row from PMID:9703385 remains UNDECID
 Restricted the GO:0006700 MODIFY replacement list to aldosterone biosynthesis GO:0032342. The existing noncore glucocorticoid/cortisol rows already capture secondary chemistry; the broad ancestor need not be repeated as another replacement. Live QuickGO confirms GO:0034651 descends from GO:0006704. Corticosterone is also an experimentally established intermediate in aldosterone synthesis, so this change does not deny glucocorticoid chemistry. Positive cortisol and unresolved NOT rows remain unchanged.
 
 Integration refinement: retain both specific supported C21 outputs in the MODIFY replacement list, aldosterone and cortisol, as required for pleiotropic refinement. Replace the redundant glucocorticoid ancestor with its specific cortisol descendant. This does not change the noncore status of secondary cortisol chemistry or the unresolved NOT row.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root mitochondrion annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
+
+The committed source-access guide remains the provenance for the earlier full 1992 article and MitoCoP workbook reads; this follow-up read that guide, the accessible publication caches and curated UniProt. The MitoCoP entry is literature-pool NotID_130, not an independently detected target. Its active follow-up-scope statement has been synchronized to retain mitochondrion.

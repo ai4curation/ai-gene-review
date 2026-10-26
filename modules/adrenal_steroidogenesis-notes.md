@@ -35,3 +35,9 @@ All 13 targeted gene validations pass. Human CYP11B2 retains one documented posi
 ## Review follow-up: CYP17 localization context
 
 Both CYP17 hydroxylation nodes now distinguish established mammalian ER membrane context from the zebrafish Cyp17a2 evidence, which directly supports membrane association but does not independently settle ER localization. This parallels the existing fish Cyp11c1 mitochondrial-context qualification and leaves the gene review uncertainty intact.
+
+## Root-organelle corrective audit, 2026-10-26
+
+Reopened the completed audit to correct 22 prohibited root-organelle refinements across human STAR, CYP11A1, CYP11B1, CYP11B2, CYP17A1 and HSD3B2, and mouse Cyp11b2. All now retain mitochondrion or ER as ACCEPT, with existing subcompartment annotations and module reaction/compartment assertions unchanged. Organelle localization is informative even where membrane or matrix localization is separately supported. No new location or reaction is proposed.
+
+Source-specific limits remain: human CYP11B2 MitoCoP inclusion is literature-pool support, not direct detection; prior source-access accounts are distinguished from reads in this follow-up. HSD3B2 ER rows now cite ER-specific curated/publication-linked support rather than mitochondrial or catalytic observations. STAR outer-membrane activity remains distinct from post-import matrix localization. Mouse source transfers retain exact donor identities without inventing direct mouse topology assays. Granularity-only propagation-error narratives were corrected to supported organelle transfer; unrelated source caveats remain. The four older CYP11B2 TOO_GENERAL decisions had been changed to MODIFY in the merged audit; neither action followed the root-organelle exception. This corrective pass preserves all original annotation payloads and unrelated review decisions.

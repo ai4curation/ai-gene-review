@@ -83,3 +83,7 @@ GO-CAM67b1629100003765 gives CYP17A1 hydroxylase/cortisol roles; it does not sup
 ## PR #5543 gene-level follow-up (2026-10-25)
 
 Verified GO ancestry live on 2026-10-25 via https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0034651/paths/GO:0034308?relations=is_a,part_of . The response contains two paths, both entirely is_a: GO:0034651 → GO:0034650 → GO:0034308, and GO:0034651 → GO:0034309 → GO:0034308. Thus cortisol biosynthesis is a descendant of primary alcohol metabolism; the existing MODIFY is a specialization, not a lateral replacement. Added the explicit chains to the reason and shortened the summary to distinguish the claim from its justification. No actions or replacement terms changed.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root endoplasmic reticulum annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
