@@ -208,8 +208,9 @@ members. The completeness table therefore reports both counts
 
 ### Module seeds
 
-The `candidate` queue is empty. The 10 candidates of the 2026-10-20 triage were
-modelled in the second and third sets (below):
+The `candidate` queue is empty. Nine of the 10 candidates of the 2026-10-20 triage
+were modelled in the second and third sets (below). The tenth, IL-10 signaling,
+left the queue through a gene-overlap match and still has no module:
 
 | PW | Pathway | Curated human genes | Mapped GO | Module |
 |----|---------|--------------------:|-----------|--------|
@@ -512,7 +513,7 @@ These modules turned up more possible upstream errors:
 - [ ] Report obsolete GO citations to RGD
 - [ ] Map `needs_go_mapping` seeds
 - [x] Gene reviews for SREBP pathway members
-- [x] Model the `candidate` seeds (all 10 of the 2026-10-20 triage, in the second and third sets)
+- [x] Model the `candidate` seeds (9 of the 10 from the 2026-10-20 triage, in the second and third sets; IL-10 left the queue by gene overlap)
 
 ## Notes
 
