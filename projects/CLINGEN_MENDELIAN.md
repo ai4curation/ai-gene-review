@@ -2998,9 +2998,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**622 of 2,876 genes are complete; 2,254 remain.**
-This checkpoint adds FAT4, FAS and FASTKD2 after their accepted merges and successful
-merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-622-2026-10-26-115737-utc)
+**624 of 2,876 genes are complete; 2,252 remain.**
+This checkpoint adds the original FBN1 review and FBN2 after their accepted merges
+and successful merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-624-2026-10-26-171306-utc)
 links the completed reviews and their validation records.
 
 Completion records accepted merged work; it does not resolve every biological
@@ -3761,8 +3761,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **FASLG** — HGNC:11936; [autoimmune lymphoproliferative syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_41cb5abc-acba-4838-8965-2051c4a9e9ca-2024-06-07T160000.000Z) (MONDO:0011158; AR; Definitive).
 - [x] **FASTKD2** — HGNC:29160; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82883e8c-7ee6-447e-bdc6-8898c4848e7a-2022-07-21T160000.000Z) (MONDO:0044970; AR; Definitive).
 - [x] **FAT4** — HGNC:23109; [FAT4-related neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_32ce4642-0431-4bd8-b1da-fb69ef6b01da-2025-02-20T050000.000Z) (MONDO:0100603; AR; Definitive).
-- [ ] **FBN1** — HGNC:3603; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8251) (MONDO:0019625; AD; Definitive).
-- [ ] **FBN2** — HGNC:3604; [congenital contractural arachnodactyly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_deb482b7-5d38-44ee-a010-fe8f5a3413da-2025-11-07T170000.000Z) (MONDO:0007363; AD; Definitive).
+- [x] **FBN1** — HGNC:3603; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8251) (MONDO:0019625; AD; Definitive).
+- [x] **FBN2** — HGNC:3604; [congenital contractural arachnodactyly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_deb482b7-5d38-44ee-a010-fe8f5a3413da-2025-11-07T170000.000Z) (MONDO:0007363; AD; Definitive).
 - [ ] **FBP1** — HGNC:3606; [fructose-1,6-bisphosphatase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b60910a5-26c4-484b-b323-d55ae96eb6f5-2025-11-14T170000.000Z) (MONDO:0009251; AR; Definitive).
 - [ ] **FBXL4** — HGNC:13601; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fed67104-182c-48f2-85c0-ecb05cd6dd72-2020-11-23T193117.246Z) (MONDO:0009723; AR; Definitive); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b211e7b2-d93b-4995-ad30-1f4d962867b0-2024-05-23T160000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **FCHO1** — HGNC:29002; [immunodeficiency 76](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae21f2b2-e283-404b-9517-74fad00a352a-2023-07-20T170000.000Z) (MONDO:0030898; AR; Definitive).
