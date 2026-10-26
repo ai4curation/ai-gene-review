@@ -29,3 +29,7 @@ All original annotation payloads were compared before/after and preserved; only 
 ## 2026-10-26 final PR evidence follow-up
 
 Restore explicit PMID:18469035 evidence links on the two cortisol rows. The quantitative Table 1 result and high-concentration limitation remain in the reason and notes; no quotation from the abstract-only local cache is fabricated. Actions are unchanged.
+
+## 2026-10-26 reference consistency follow-up
+
+Normalize the cited UniProt file identifier to its declared reference identifier; no evidence or annotation decision changed.

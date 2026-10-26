@@ -25,3 +25,7 @@ All original annotation payloads were compared before/after and preserved; only 
 ## 2026-10-26 final PR evidence follow-up
 
 Add a source-specific domain-classification finding for the declared UniProt record, without substituting a signature for experimental localization evidence.
+
+## 2026-10-26 reference consistency follow-up
+
+Keep the Pfam finding statement focused on the observed domain architecture. The limitation on inferring experimental localization remains in the existing review and notes. No annotation decision or core function changed.

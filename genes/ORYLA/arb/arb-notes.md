@@ -29,3 +29,7 @@ All original annotation payloads were compared before/after and preserved; only 
 ## 2026-10-26 final PR evidence follow-up
 
 Add a source-specific finding to the already-declared medaka paralog functional-characterization reference PMID:26507457. The quote states the comparative alpha/beta result and does not invent a native assay.
+
+## 2026-10-26 reference consistency follow-up
+
+Normalize the UniProt reference identifier and extend the PMID:26507457 quotation with the next verbatim abstract sentence establishing site-directed mutagenesis and the two substitutions. No annotation decision or core function changed.
