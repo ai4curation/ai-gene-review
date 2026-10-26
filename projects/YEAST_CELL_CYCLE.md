@@ -3,8 +3,8 @@ title: "Yeast Cell Cycle & Translation Control"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
-last_reviewed: '2026-10-05'
-genes: [CLN3, CLN2, SIC1, WHI5, CLB5, CLB2, CDC28, SWE1, SUI2, TOR1]   # reviewed genes only; full candidate list is in the checklist below
+last_reviewed: '2026-10-23'
+genes: [CLN3, CLN2, CLN1, SIC1, WHI5, CLB5, CLB2, CDC28, SWE1, SUI2, TOR1]   # reviewed genes only; full candidate list is in the checklist below
 manifest:
   slides:
     - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
@@ -20,8 +20,8 @@ entry into S phase. This project plans to review the GO annotations of 23
 *S. cerevisiae* rows spanning that circuit and the translation and
 ribosome-biogenesis machinery thought to time it. The aim is to test whether GO
 captures translational control of the cell cycle as well as it captures the
-transcriptional program. Ten rows now have gene reviews in the repo when the
-EIF2A entry is normalized to the standard yeast symbol SUI2 (493 annotations
+transcriptional program. Eleven rows now have gene reviews in the repo when the
+EIF2A entry is normalized to the standard yeast symbol SUI2 (517 annotations
 assessed); the remaining rows still need review or symbol triage. The list also
 needs cleanup before the translation branch starts: yeast eIF1 is SUI1, "EIF3"
 names a complex rather than a gene, and SHE2 needs a narrower rationale than
@@ -60,13 +60,13 @@ This project reviews *Saccharomyces cerevisiae* genes central to **cell cycle re
 
 # STATUS
 
-Last updated: 2026-10-04
+Last updated: 2026-10-23
 
 ## Genes to Review
 
 ### G1 Cyclins & Cell Cycle Entry
 - Done: CLN3 - G1 cyclin (cell size sensor, upstream of translational control)
-- Todo: CLN1 - G1 cyclin (redundant with CLN2)
+- Done: CLN1 - G1 cyclin (G1/S cyclin paralogous to CLN2)
 - Done: CLN2 - G1 cyclin (critical output of Start mechanism)
 - Done: SIC1 - CDK inhibitor (Clb-CDK inhibitor)
 - Done: WHI5 - Start transcriptional corepressor of SBF-dependent G1-S genes
@@ -102,8 +102,8 @@ Last updated: 2026-10-04
 ## Progress
 
 - Total rows: 23
-- Reviewed: 10
-- Open review or symbol-triage rows: 13
+- Reviewed: 11
+- Open review or symbol-triage rows: 12
 - In progress: 0
 - Remaining work: [#3960](https://github.com/ai4curation/ai-gene-review/issues/3960)
 
@@ -118,3 +118,21 @@ Last updated: 2026-10-04
 - Selected 23 genes spanning cyclins, CDK machinery, ribosome biogenesis, and translation factors
 - Emphasis on emerging translational control mechanisms (Cln3/Whi5 regulatory circuits)
 - Ready to begin gene review workflow
+
+## 2026-10-23
+
+- CLN1 reviewed (24 GOA annotations), completing the G1 cyclin trio alongside
+  CLN2 and CLN3. Actions mirror the CLN2 review because CLN1's annotation set is
+  a strict subset of CLN2's: `GO:0016538` refined to `GO:0061575`, the seven bare
+  `GO:0005515` rows to `GO:0019901`, and the two unsigned "regulation of G1/S"
+  rows to `GO:1900087`.
+- One candidate `NEW` was considered and rejected on a comparator check:
+  `GO:0180040 negative regulation of pheromone response MAPK cascade` is carried
+  by only PPQ1 and AKR1 in budding yeast, and not by CLN2 despite its stronger
+  Ste5 evidence. SGD's convention for the Cln-pheromone relationship is
+  `GO:0000321` instead. Recorded as a suggested question.
+- Deep research was unavailable this run (no provider API keys), so CLN1's
+  literature synthesis is in `CLN1-notes.md` rather than a
+  `-deep-research-<provider>.md` file.
+- Remaining queue (12 rows): CLB6, CLB1, DBF4, RPS3, RPL3, IMP3, SHE2, RRN3,
+  SUI1, an eIF3 subunit selection, TIF1, MSN2.
