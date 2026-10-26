@@ -42,3 +42,7 @@ contribute to intersubunit interactions.”
 - [PMID:26634408] SsuD and SsuE form a specific enzyme–enzyme interaction. “The results from these studies suggest that optimal transfer of reduced flavin
 from SsuE to SsuD requires defined protein-protein interactions, but diffusion
 can occur under specified conditions.”
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+Re-inspected the committed Figure 5A image. Neighbor labels are clpS, oppA and tig; the ssuD bar position and heat-survival/complementation interpretation are unchanged. Added the corrected figure-analysis trace to the non-core heat-response support. All original annotation payloads, actions and source-cache bytes are preserved.

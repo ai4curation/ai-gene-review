@@ -33,3 +33,7 @@ CC       Rule:MF_01724}.”
 - [PMID:10480865] SsuABC mediates adaptive sulfur-source acquisition during sulfur limitation. “The Escherichia coli ssuEADCB gene cluster is required for the utilization of
 alkanesulfonates as sulfur sources, and is expressed under conditions of sulfate
 or cysteine starvation.”
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+Recovered full texts are cited through unchanged local publication files so verbatim quotes are checked. All original annotation payloads, actions and source-cache bytes are preserved.

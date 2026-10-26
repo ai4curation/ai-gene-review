@@ -30,3 +30,7 @@ PMID:10781534 full text was read at https://pmc.ncbi.nlm.nih.gov/articles/PMC101
 alkanesulfonates as sulfur sources, and is expressed under conditions of sulfate
 or cysteine starvation.”
 - [file:ECOLI/ssuA/ssuA-uniprot.txt] SsuA functions in the Gram-negative periplasm. “Periplasm {ECO:0000305}.”
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+Recovered full texts are cited through unchanged local publication files so verbatim quotes are checked. All original annotation payloads, actions and source-cache bytes are preserved.

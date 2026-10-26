@@ -15,3 +15,7 @@ Which endogenous reductase supplies reduced FMN when SsuE is absent during aliph
 Combine nonpolar ssuE deletion with candidate reductase deletions and matched complementation, then compare FMN reduction and sulfur-source growth; test purified SsuE with matched NADPH/NADH concentrations.
 
 A CONFIRMED UniProt source defect records the inverted CC:FUNCTION growth-necessity sentence for O85762, explicitly linked to the native S-313 paper. Raw bytes are unchanged; no upstream communication was made. This direct contradiction does not prove a native KT2440 phenotype.
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+The S-313 SsuE core description now states its tested arylsulfonate growth requirement alongside dispensability on aliphatic sulfonates/methionine. Biochemical participation and genetic necessity remain distinct. All original annotation payloads, actions and source-cache bytes are preserved.

@@ -39,3 +39,7 @@ A fresh literature search found Garret William O'Connell's 2024 DTU thesis, chap
 The apparent inverted SsuE CC growth requirement is recorded as a suspected transferred source defect; no native opposite phenotype is manufactured. Actual Falcon/fallback and fitness acquisition outcomes are recorded in the shared foundation logs; no failed provider output was fabricated. Existing genuine SsuB/SsuD reports remain discovery context. GOA files are annotation state, never biological support.
 
 Focused schema, term, title and source-quote validation: valid with zero errors. Two panel advisories concern available but uncited genuine provider reports (SsuB/SsuD); independent primary/classification support is used rather than copying provider prose to silence them. All five helper histories and renders pass. No panel accession occurs in the cached GO-CAM index.
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+Recovered full-source citations now point to the unchanged local publication caches so supporting quotations are mechanically checked. The 2024 doctoral thesis is unpublished primary evidence: joint ΔssuBC results do not isolate B versus C, while ΔssuD tests D separately. No isolated A/E necessity or purified KT2440 kinetics is inferred. All original annotation payloads, actions and source-cache bytes are preserved.

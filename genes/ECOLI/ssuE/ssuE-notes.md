@@ -49,3 +49,7 @@ from SsuE to SsuD requires defined protein-protein interactions, but diffusion
 can occur under specified conditions.”
 - [url:https://pmc.ncbi.nlm.nih.gov/articles/PMC6295896/] Wild-type E. coli SsuE reduces FMN with both NADH and NADPH at comparable rates. “Steady‐State Kinetic Parameters for Wild‐Type and Variants of MsuE and SsuE Measuring NAD(P)H‐Dependent FMN Reductase Activity”
 - [url:https://pmc.ncbi.nlm.nih.gov/articles/PMC6295896/] Wild-type E. coli SsuE reduces FMN with both NADH and NADPH at comparable rates. “Wild‐type SsuE | 3.0 ± 0.1 | 57 ± 5 | 5.2 ± 0.5 | 3.7 ± 0.4 | 80 ± 20 | 5 ± 2”
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+Recovered full texts are cited through unchanged local publication files so verbatim quotes are checked. Table 1 support now includes both donor headers and kinetic-column labels. NADH activity is explicitly recognized; no redundant NEW child term is added to the existing dual-donor annotation. All original annotation payloads, actions and source-cache bytes are preserved.
