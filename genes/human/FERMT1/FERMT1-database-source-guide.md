@@ -35,3 +35,7 @@ The actual ARBA00028907 consequent is positive regulation of cell migration. Its
 The [product map](FERMT1-database-product-map.yaml) preserves the four official splice sequences and their exact accepted reconstruction results. The full-length chain feature is not remapped into a new processed product. No common activity is asserted for every shortened product; artificial laboratory deletions and historical mouse constructs remain separate from natural human products.
 
 All 19 intake normal caches remain unchanged. Only actually used source dependencies are selected for this lane, with exact main reuse for PMID24681597 and a genuine additional repository fetch for PMID16876785. Source records, captions and cached abstracts are not rewritten. No new supporting-text quotation or annotation is introduced.
+
+## Review clarification, 2026-10-26
+
+The full Wnt original explicitly describes nuclear translocation. The retained uncertainty concerns the relative contribution of import, export, retention and stability to the measured nuclear pool; it does not impose a direct-pore-interaction or kinetic-assay requirement on GO:0042308. Full-text availability alone does not resolve that distinction. The imported row remains UNDECIDED, not accepted or confidently rejected. See the integrated literature journal for the independent official check showing that the TGF-beta activation process candidates GO:0036363 and GO:1901390 are obsolete, and for the proposed discriminating experiments.
