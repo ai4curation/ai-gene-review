@@ -28,3 +28,8 @@ Actions: ACCEPT 14, KEEP_AS_NON_CORE 1, MODIFY 7. Record sections were backfille
 ## PR #5563 follow-up, 2026-10-26
 
 Restored supported GO:0005739 mitochondrion rows to ACCEPT under the explicit root-organelle policy; existing matrix rows remain separate. Reasons distinguish organelle screens, direct targeting, publication-linked curated evidence and unavailable full text. No original annotation payload changed. Cytosol decisions use target-specific fractionation/processing evidence rather than relationship qualifiers or generic precursor transit. For Aga1, matrix inference does not imply universal post-import autoproteolysis.
+
+
+## PR5563 residual propagation-metadata correction (2026-10-26)
+
+The accepted IBA mitochondrion row retained TERM_SCOPING_PROBLEM / GRANULARITY_MISMATCH metadata from its superseded matrix-refinement decision. Corrected it to NO_FAILURE_CORE, retaining PTN000150427 as the proximate PAINT source with SUPPORTS_TRANSFER. PMID:1313366 distinguishes the native fission-yeast enzyme from predominantly cytoplasmic budding-yeast OTC expressed in S. pombe; independent full-text PMID:32896087 explicitly reports Arg3-GFP mitochondrial localization (Figure EV4). This supports the target's inherited organelle claim without reconstructing the ancestral placement or asserting that every OTC homolog is mitochondrial. Matrix annotations remain separate. No annotation payload, review action, other row or core function changed; four unrelated cytoplasm-to-matrix granularity assessments elsewhere in the panel remain valid and untouched.
