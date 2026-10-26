@@ -10,3 +10,9 @@ Research provenance: parent already attempted Falcon (403) and Perplexity-lite (
 Primary comparative donor corroboration: [PMID:26920048] reports maize SiR–Fd structures and interface-mutant effects on Fd-dependent turnover/binding. This supports the plant donor class but is explicitly not an Arabidopsis partner-pairing experiment.
 
 Access follow-up: normal publisher URL fetches for cold/stromule, cytosolic-proteome and chloroplast-envelope papers returned HTTP403; the apoplast DOI route yielded only an empty redirect shell. These are not full-text evidence and are excluded from the source manifest. Copper full text was recovered by the normal PMID fetcher, but the supplementary-file endpoint returned no target table.
+
+## 2026-10-26 PR #5560 evidence follow-up
+
+Corrected the cytosol NOT rationale: the claim excludes cytosol, and stromal imaging alone cannot establish that exclusion. It remains UNDECIDED. Each source finding now states what its own quote establishes. Added a structured residual DNA-binding gap, distinguishing maize/pea assays from Arabidopsis stromal imaging, with a proposed direct assay.
+
+All original annotation payloads and row order are preserved. Focused validation and automatic record-section backfill pass; generated pages and append-only history record this follow-up.

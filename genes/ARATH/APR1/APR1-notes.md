@@ -28,3 +28,9 @@ refinement with `SUPPORTS_TRANSFER`, not a phylogenetic failure. APR1's own
 AT4G04610 evidence is legitimate target grounding, not circularity. GSH-specific
 chemistry remains supported by the purified target and is not represented as a
 nonexistent ontology parent-child edge.
+
+## 2026-10-26 PR #5560 evidence follow-up
+
+Removed an unnecessary ontology-ancestry aside while retaining the experimentally supported glutathione-specific refinement. Live QuickGO confirmed GO:0009973 is not an is_a/part_of ancestor of GO:0033741 at this audit, but that graph detail is not needed to justify the chemistry.
+
+All original annotation payloads and row order are preserved. Focused validation and automatic record-section backfill pass; generated pages and append-only history record this follow-up.

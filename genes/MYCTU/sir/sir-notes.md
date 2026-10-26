@@ -8,3 +8,9 @@ Completed all 11 seeded rows for exact H37Rv P9WJ03/Rv2391. Full [PMID:17644602]
 Research provenance: parent already attempted Falcon (403) and Perplexity-lite (401 quota) for this batch; no generated report was fabricated. Existing PSEPK OpenScientist reports were used only as discovery. Source caches were fetched normally and never hand-edited. All original annotation payloads were preserved, with a retirement marker only for the existing CysI donor-specific NEW proposal.
 
 Propagation metadata follow-up: recorded the actual PAINT ancestral source as SUPPORTS_TRANSFER; donor-specific refinement does not invalidate the inherited broader activity.
+
+## 2026-10-26 PR #5560 evidence follow-up
+
+Separated the supported ferredoxin-type class from the unknown identity of its native donor. Quoted UniProt CC:CATALYTIC ACTIVITY, with curated PMID-linked chemistry, rather than the DE label. Added exact Reactome catalyst/compartment evidence through a reproducible ContentService extraction because the ordinary summary cache omits location. Source findings and core description are distinct; a structured native-partner knowledge gap and experiment record the remaining uncertainty.
+
+All original annotation payloads and row order are preserved. Focused validation and automatic record-section backfill pass; generated pages and append-only history record this follow-up.

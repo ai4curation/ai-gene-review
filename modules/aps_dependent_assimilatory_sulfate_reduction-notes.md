@@ -231,3 +231,31 @@ than a direct isolated-subunit FMN-binding assay.
 No further biological blocker was identified. Source-specific donor limits,
 mixed-family restrictions and unresolved carrier identity are preserved rather
 than converted into artificial certainty.
+
+## 2026-10-26 PR #5560 evidence follow-up
+
+Canonical citation identity, exact quoted subunit-domain evidence, NOT-localization
+reasoning and explicit residual knowledge gaps were repaired in the member reviews.
+The PMID:23794620 full text was recovered normally. PMID:11319255 remains abstract
+only after normal refresh/warming; its inspected publisher Results/Figure 3 are
+quoted in a reproducible source-analysis artifact with the durable DOI.
+
+Independent review of item 8 retains the E. coli CysD/CysN hydrogen-sulfide
+biosynthetic core and CysI cysteine-biosynthetic participation. Live GO:0070814 and
+GO:0019344 definitions cover reactions **and pathways** resulting in the product.
+CysD adenylates sulfate and CysN couples GTP hydrolysis to APS synthesis
+[PMID:2828368; PMID:8003495]; CysI reduces sulfite to the sulfide used by cysteine
+synthase. These gene products perform chemical work within the pathway. They are
+neither passive substrates nor genes whose only evidence is necessity. This does
+not assign sulfite-reductase activity to CysDN or cysteine-synthase activity to CysI.
+The project participation rule explicitly permits catalysing a step, and the schema
+does not restrict directly_involved_in to the terminal product-forming reaction.
+
+Live UniProt cross-references reconfirmed the initially surprising PANTHER
+placements: E. coli CysC/P0A6J1 is PTHR11055:SF63, whereas yeast MET14/Q02196 and
+S. pombe met14/Q9P7G9 are PTHR11055:SF1. They are not transposed; official names
+are retained and the biochemical selector restricts the family role.
+
+Review suggestion 15 was already represented: the second TRX1 core function
+explicitly carries GO:0000103 with thioredoxin-to-PAPS-reductase evidence. No
+redundant core assertion was added.
