@@ -317,6 +317,14 @@ It edits only the affected review blocks.
 After the pass: 304 `ACCEPT` (32 `TRUE_GAP`, 63 `INFERABLE`, 209 not yet
 classified), 31 `REMOVE` and 18 `MODIFY` (all `STALE`).
 
+**Follow-up (2026-10-26).** Merging `main` brought in 16 ND rows from reviews
+written before the rule (mouse Rtl1, Rtl3, Rtl4, Rtl5, Rtl6, Rtl8c, Rtl9,
+Scgb3a2; CANAL/LYS1), all `REMOVE` or `MODIFY`. The same script and the same
+reading applied: 10 rows rest on mouse literature (e.g. Rtl5/Rtl6/Rtl9
+knock-in and knockout studies) and stay as `STALE`; 6 rest on domains or on
+human orthologs and became `ACCEPT`, with mouse/Rtl8c's two inferred terms
+moved to `NEW` (`ISO`) rows.
+
 ## Plan
 
 - [x] Inventory script and summary ([data](NO_DATA/data/nd-summary.md))

@@ -3,7 +3,8 @@
 The rule (projects/NO_DATA.md): an ND row is ACCEPT unless literature on this
 gene product, in this species, identifies a function in that aspect. This
 script applies decisions made by reading each non-ACCEPT ND row's review
-reason and the review's other rows in the same aspect (2026-10-24):
+reason and the review's other rows in the same aspect (2026-10-24, extended on
+2026-10-26 to reviews merged from main after the first pass):
 
 - rows in ``STALE`` keep their REMOVE/MODIFY and gain ``nd_case: STALE``;
 - every other ND row with action KEEP_AS_NON_CORE, MARK_AS_OVER_ANNOTATED,
@@ -66,6 +67,12 @@ STALE = {
     ("yeast/TDA5", "GO:0003674"), ("yeast/THI5", "GO:0003674"),
     ("yeast/ZDS2", "GO:0003674"), ("yeast/CRT10", "GO:0005575"),
     ("yeast/SPH1", "GO:0003674"),
+    # Reviews merged from main after the first pass (2026-10-26).
+    ("mouse/Rtl1", "GO:0003674"), ("mouse/Rtl3", "GO:0008150"),
+    ("mouse/Rtl4", "GO:0005575"), ("mouse/Rtl5", "GO:0005575"),
+    ("mouse/Rtl5", "GO:0008150"), ("mouse/Rtl6", "GO:0005575"),
+    ("mouse/Rtl6", "GO:0008150"), ("mouse/Rtl9", "GO:0005575"),
+    ("mouse/Rtl9", "GO:0008150"), ("mouse/Scgb3a2", "GO:0008150"),
 }
 
 #: (organism/gene, ND root term) -> (evidence_type, qualifier) for a NEW row carrying
@@ -82,6 +89,8 @@ NEW_ROWS = {
     ("SCHPO/vms1", "GO:0003674"): ("ISS", "enables"),
     ("mouse/Sdhaf2__Q8C6I2", "GO:0003674"): ("ISO", "enables"),
     ("mouse/Shld2", "GO:0003674"): ("ISS", "enables"),
+    ("mouse/Rtl8c", "GO:0003674"): ("ISO", "enables"),
+    ("mouse/Rtl8c", "GO:0008150"): ("ISO", "involved_in"),
 }
 
 ACCEPT_REASON = (
