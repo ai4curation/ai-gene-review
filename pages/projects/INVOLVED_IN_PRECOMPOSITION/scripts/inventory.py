@@ -33,6 +33,7 @@ import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -278,17 +279,18 @@ def module_hits(accession: str, symbol: str, modules: dict[str, str]) -> list[st
 def authored_uses(doc: dict, gene: str, inv: dict[str, GoTerm]) -> list[dict]:
     """Precomposed terms a reviewer authored, rather than inherited from GOA.
 
-    Covers MODIFY replacement terms and core-function terms. These are the
-    places a review can introduce a precomposed term, as opposed to the GOA
-    rows it reviews.
+    Covers MODIFY replacement terms, core-function terms and isoform-specific
+    terms. These are the places a review can introduce a precomposed term, as
+    opposed to the GOA rows it reviews.
 
     >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
     >>> doc = {"existing_annotations": [{"term": {"id": "GO:2"},
     ...   "review": {"action": "MODIFY",
     ...              "proposed_replacement_terms": [{"id": "GO:1", "label": "x involved in y"}]}}],
-    ...   "core_functions": [{"molecular_function": {"id": "GO:1", "label": "x involved in y"}}]}
+    ...   "core_functions": [{"molecular_function": {"id": "GO:1", "label": "x involved in y"}}],
+    ...   "functional_isoforms": [{"id": "X-1", "isoform_specific_terms": [{"id": "GO:1"}]}]}
     >>> [u["slot"] for u in authored_uses(doc, "human/X", t)]
-    ['proposed_replacement_terms', 'core_functions.molecular_function']
+    ['proposed_replacement_terms', 'core_functions.molecular_function', 'functional_isoforms.isoform_specific_terms']
     """
 
     def precomposed(term: dict) -> bool:
@@ -327,6 +329,52 @@ def authored_uses(doc: dict, gene: str, inv: dict[str, GoTerm]) -> list[dict]:
                         "term": f"{t.get('id')} {t.get('label', '')}".strip(),
                     }
                 )
+    for iso in doc.get("functional_isoforms") or []:
+        for t in iso.get("isoform_specific_terms") or []:
+            if isinstance(t, dict) and precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": "functional_isoforms.isoform_specific_terms",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                        "isoform": iso.get("id"),
+                    }
+                )
+    return out
+
+
+def module_function_uses(node: Any, module: str, inv: dict[str, GoTerm]) -> list[dict]:
+    """Precomposed terms used as an annoton function in a module YAML.
+
+    >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
+    >>> doc = {"parts": [{"node": {"annotons": [{"id": "a1", "function": {"term": {"id": "GO:1"}}},
+    ...                                         {"id": "a2", "function": {"term": {"id": "GO:3"}}}]}}]}
+    >>> [u["annoton"] for u in module_function_uses(doc, "m", t)]
+    ['a1']
+    """
+    out = []
+    if isinstance(node, dict):
+        term = (
+            (node.get("function") or {}).get("term")
+            if isinstance(node.get("function"), dict)
+            else None
+        )
+        if isinstance(term, dict) and (
+            term.get("id") in inv or INVOLVED_IN in str(term.get("label", ""))
+        ):
+            out.append(
+                {
+                    "module": module,
+                    "slot": "module.annoton.function",
+                    "term": f"{term.get('id')} {term.get('label', '')}".strip(),
+                    "annoton": node.get("id"),
+                }
+            )
+        for value in node.values():
+            out.extend(module_function_uses(value, module, inv))
+    elif isinstance(node, list):
+        for item in node:
+            out.extend(module_function_uses(item, module, inv))
     return out
 
 
@@ -376,6 +424,14 @@ def main() -> None:
 
     ann_rows = []
     authored = []
+    for name, text in modules.items():
+        authored.extend(
+            module_function_uses(
+                yaml.load(text, Loader=yaml.CSafeLoader),
+                name.removesuffix(".yaml"),
+                inv,
+            )
+        )
     for path in sorted((REPO / "genes").glob("*/*/*-ai-review.yaml")):
         doc = yaml.load(path.read_text(), Loader=yaml.CSafeLoader)
         if not isinstance(doc, dict):
@@ -522,7 +578,8 @@ def main() -> None:
 
     summary["authored_precomposed"] = {
         "uses": len(authored),
-        "genes": len({a["gene"] for a in authored}),
+        "genes": len({a["gene"] for a in authored if "gene" in a}),
+        "modules": len({a["module"] for a in authored if "module" in a}),
         "by_slot": dict(Counter(a["slot"] for a in authored).most_common()),
     }
 

@@ -121,12 +121,12 @@ here.
 | rows where the gene is in any cached GO-CAM | 269 |
 | rows where a GO-CAM of the same gene realizes Y | 23 |
 | rows where a same-symbol GO-CAM in another species realizes Y | 17 (lower bound: the script maps 12 species folders to GO-CAM index labels, and rows in the other folders get no same-symbol hit) |
-| rows whose gene is named in a module | 570 |
+| rows whose gene is named in a module | 583 |
 
 Figures refreshed 2026-10-26, after merging `main`; the first snapshot
 (2026-10-18) had 1,023 rows over 519 genes. Current review actions on these
-rows: KEEP_AS_NON_CORE 548, ACCEPT 305, MODIFY 103, MARK_AS_OVER_ANNOTATED
-89, UNDECIDED 62, REMOVE 23, NEW 21, TOO_GENERAL 1. Apart from the rows this
+rows (after round 2): KEEP_AS_NON_CORE 550, ACCEPT 288, MODIFY 116,
+MARK_AS_OVER_ANNOTATED 95, UNDECIDED 62, REMOVE 23, NEW 18, TOO_GENERAL 1. Apart from the rows this
 project decomposed, the existing MODIFYs do not decompose: in the first
 snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves to a different term (e.g.
 `DNA strand elongation involved in DNA replication` → `G1/S transition of
@@ -183,8 +183,8 @@ the GAF.
 ### Recurring Y contexts
 
 [`data/module_candidates.yaml`](INVOLVED_IN_PRECOMPOSITION/data/module_candidates.yaml)
-groups rows by Y. There are 193 contexts; 73 have three or more genes, and
-54 of those are named by no module (crude test: the GO id does not appear in
+groups rows by Y. There are 194 contexts; 74 have three or more genes, and
+55 of those are named by no module (crude test: the GO id does not appear in
 any module YAML). They are **not** a module to-do list. Read them through the
 module policy below: some Y's are really mechanisms (module material), most
 are tissue or developmental contexts (not).
@@ -326,8 +326,9 @@ The gene-review HTML template shows `decomposed_into` as badges.
 ## Worked cases (round 1)
 
 Each case is recorded in the gene review with `decomposed_into` and validates
-cleanly. 15 rows now carry a recorded decomposition (16 before human DNMT1 was retired upstream) (`rows_decomposition_recorded`
-in `data/summary.yaml`).
+cleanly. After round 1, 15 rows carried a recorded decomposition (16 before
+human DNMT1 was retired upstream); round 2 brings `rows_decomposition_recorded`
+in `data/summary.yaml` to 33.
 
 ### The obsolete-term rows
 
@@ -390,7 +391,7 @@ for this to be fixed.
 | MODIFYs from a broad term (protein binding, enzyme activator activity, positive regulation of protein processing…) that targeted the combined term | XIAP ×7, Dronc ×2, CASP9 ×2, ced-4 ×4 | The replacement is now the genus. |
 | Reviewer-proposed NEW rows on the combined term | Dark, API5, BCL2L12, CFLAR | The NEW row now uses the genus. |
 | Core-function MFs on the combined term | Dark, Diap1, Dronc, APAF1, API5, BCL2L12, CASP9, CFLAR, CYCS, XIAP, ced-4 | MF changed to the genus. `directly_involved_in` already names the apoptotic process. |
-| Module annotons on the combined term | `apoptotic_execution_phase` (XIAP), `c_elegans_core_apoptosis` (CED-4), `dmel_rhg_apoptosome_caspase_activation` (Dark target) | Function changed to the genus. The module itself is the context. |
+| Module annotons on the combined term | `apoptotic_execution_phase` (XIAP), `c_elegans_core_apoptosis` (CED-4), `dmel_rhg_apoptosome_caspase_activation` (Dark target), `trail_apoptotic_signaling` (CFLAR; the module reached `main` during this round) | Function changed to the genus. The module itself is the context. CFLAR's two isoform-specific terms moved with its GOA row and core function. |
 | CASP1 (TAS) | 1 | **The genus is unsupported.** The source says the caspase-1 prodomain enhances Fas-mediated apoptosis "most probably" by facilitating caspase-8 activation, a hedged and indirect effect. KEEP_AS_NON_CORE becomes MARK_AS_OVER_ANNOTATED, consistent with BCL2L13. |
 | **hid** (IDA + 5 IGI on GO:0043028) | 1 | **Decomposition exposed a wrong genus.** Hid binds DIAP1 and blocks its caspase inhibition (PMID:10481910); it does not bind caspases, which GO:0043028's definition requires. Changed laterally to GO:0140311 *protein sequestering activity*, which hid already carries by IDA (PMID:15107838) and as a core function, linked to `dmel_rhg_apoptosome_caspase_activation#rhg_iap_antagonists_hid`. A first draft used the broader GO:0140678 *molecular function inhibitor activity*; review on #5565 pointed to the gene's own, more specific term. |
 | **BCL2L13** (NAS) | 1 | **The genus is unsupported.** The evidence is overexpression-induced, caspase-dependent apoptosis, so KEEP_AS_NON_CORE becomes MARK_AS_OVER_ANNOTATED. |
@@ -404,10 +405,14 @@ is doubtful, prefer MARK_AS_OVER_ANNOTATED (CASP1, BCL2L13) to a MODIFY that
 would silently promote it.
 
 The inventory now also counts **reviewer-authored combined terms**: replacement
-terms and core-function terms that a review introduced, rather than GOA rows
-it reviewed. These are in `data/authored_precomposed.yaml`. After this round
-there are 275 uses across 163 genes: 150 in `directly_involved_in`, 114 as
-MODIFY replacements and 11 as core-function MFs. This is a second work stream:
+terms, core-function terms and isoform-specific terms that a review
+introduced, rather than GOA rows it reviewed, plus combined terms used as a
+module annoton's function. These are in
+[`data/authored_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/data/authored_precomposed.yaml).
+After this round there are 278 uses: 277 across 163 genes (150 in
+`directly_involved_in`, 114 as MODIFY replacements, 11 as core-function MFs
+and 2 as isoform-specific terms) and 1 module annoton
+(`synaptic_vesicle_exocytosis`, GO:0099626). This is a second work stream:
 reviews have been actively moving annotations *toward* these terms.
 
 ### Lessons from round 1
@@ -486,7 +491,8 @@ Outputs: `go_terms.yaml` (every "involved in" term, live or obsolete, with
 its decomposition and obsoletion pointers), `annotations.yaml` (every review
 row, with action, decomposition, GO-CAM and module hits),
 `authored_precomposed.yaml` (combined terms that reviews introduced, as MODIFY
-replacements or in core functions; small, so committed),
+replacements, in core functions or as isoform-specific terms, and combined
+terms used as module annoton functions; small, so committed),
 `module_candidates.yaml`, and `summary.yaml`. The two large files,
 `go_terms.yaml` and `annotations.yaml` (about 1 MB each), are git-ignored;
 regenerate them locally before a full pass. Decompositions marked `source:
