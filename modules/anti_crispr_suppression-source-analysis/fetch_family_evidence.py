@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Refresh official family records without rewriting source responses."""
 from pathlib import Path
-import hashlib, json, urllib.request
+import hashlib
+import json
+import urllib.request
 from datetime import datetime, timezone
 base = Path(__file__).resolve().parent
 manifest = json.loads((base / "manifest.json").read_text())
