@@ -10,8 +10,8 @@ species: [human, mouse, DROME, worm, DICDI, yeast]
 **Bottom line:** GO contains 784 live terms whose label reads "X involved in
 Y", and it has already obsoleted 1,265 more, 883 of them with a comment that
 the term "is pre-composed and should be captured as a GO-CAM model". Our gene
-reviews use 316 distinct such terms in 1,152 `existing_annotations` rows
-across 594 genes (27 species folders); 14 of those rows sit on
+reviews use 318 distinct such terms in 1,153 `existing_annotations` rows
+across 593 genes (27 species folders); 14 of those rows sit on
 obsolete terms. The schema could not say where the Y context goes when a
 term is replaced by its X. This project added `decomposed_into` to MODIFY
 (pointing at a module, a GO-CAM or the gene's core functions, or recording that
@@ -114,11 +114,11 @@ here.
 |---|---|
 | live "involved in" terms in GO | 784 (BP 728, MF 53, CC 3) |
 | obsolete "involved in" terms | 1,265 (883 with a GO-CAM comment) |
-| review rows using one | 1,152 rows, 316 terms, 594 genes |
+| review rows using one | 1,153 rows, 318 terms, 593 genes |
 | rows on already-obsolete terms | 14 |
-| rows on nested terms (Y is itself "… involved in …") | 246 |
+| rows on nested terms (Y is itself "… involved in …") | 248 |
 | rows whose existing review already records an extension | 1 |
-| rows where the gene is in any cached GO-CAM | 270 |
+| rows where the gene is in any cached GO-CAM | 269 |
 | rows where a GO-CAM of the same gene realizes Y | 23 |
 | rows where a same-symbol GO-CAM in another species realizes Y | 17 (lower bound: the script maps 12 species folders to GO-CAM index labels, and rows in the other folders get no same-symbol hit) |
 | rows whose gene is named in a module | 570 |
@@ -406,8 +406,8 @@ would silently promote it.
 The inventory now also counts **reviewer-authored combined terms**: replacement
 terms and core-function terms that a review introduced, rather than GOA rows
 it reviewed. These are in `data/authored_precomposed.yaml`. After this round
-there are 269 uses across 161 genes: 150 in `directly_involved_in`, 109 as
-MODIFY replacements and 10 as core-function MFs. This is a second work stream:
+there are 275 uses across 163 genes: 150 in `directly_involved_in`, 114 as
+MODIFY replacements and 11 as core-function MFs. This is a second work stream:
 reviews have been actively moving annotations *toward* these terms.
 
 ### Lessons from round 1
