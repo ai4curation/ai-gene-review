@@ -25,3 +25,7 @@ Estrogen-response-element binding requires PAINT/sequence-specific evidence beyo
 Reviewed all 29 rows. Native 36918573 localization and ARE assays now support the appropriate claims. Chromatin association is explicitly a conserved inference, corroborated by direct mouse AR promoter ChIP/EMSA (27959439), not a native medaka ChIP result. Native ChIP-seq remains future work in the medaka paper. Cytoplasmic, cortisol/ERE and other unresolved claims remain unresolved; normal sperm does not exclude a modulatory role. Androgen binding is functional inference, not measured Ara/Arb affinity.
 
 All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.
+
+## 2026-10-26 final PR evidence follow-up
+
+Add a source-specific finding to the already-declared medaka paralog functional-characterization reference PMID:26507457. The quote states the comparative alpha/beta result and does not invent a native assay.

@@ -21,3 +21,7 @@ PMID:19819965 full text verifies the shark clone AB213019 (D0VX34), androgen-res
 Fetched the full primary 19819965 paper via the normal URL cache (PMC2795718), distinct from its abstract-only PMID cache. Figure 5 reports nuclear translocation of native shark AR in tagged COS-7 assays after DHT/11KT. Replaced the ARE boilerplate on localization and zinc-binding rows with the relevant localization and conserved zinc-finger passages. Ligand recognition remains functional inference from reporter activation and ligand-contact conservation, not a measured binding affinity.
 
 All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.
+
+## 2026-10-26 final PR evidence follow-up
+
+Add a source-specific domain-classification finding for the declared UniProt record, without substituting a signature for experimental localization evidence.

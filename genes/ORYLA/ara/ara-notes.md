@@ -25,3 +25,7 @@ Estrogen-response-element binding requires PAINT/sequence-specific evidence beyo
 Replaced generic 2015 abstract support with native 2023 knock-in localization and WT/mutant ARE reporter evidence (36918573). Ara is nuclear in POA/medulla cells but cytoplasmic in anal fin. Zinc binding is a sequence-domain inference. The OUP 2015 full-text route returned HTTP 403; no inaccessible figure was treated as inspected. No NEW annotation was manufactured for a module advisory.
 
 All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.
+
+## 2026-10-26 final PR evidence follow-up
+
+Add a source-specific finding to the already-declared medaka paralog functional-characterization reference PMID:26507457. The quote states the comparative alpha/beta result and does not invent a native assay.
