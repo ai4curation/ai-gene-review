@@ -166,7 +166,7 @@ IBA is low quality.
 - [x] Read the full text of PMID:12937276 for the npp-20 IMP row.
 - [x] Chicken `cerebral cortex development`: reviewed in BTBD3.
 - [ ] Raise with GO: taxon constraints on `GO:0030907`/`GO:0033309` (Fungi), `GO:0044548` (Chordata) and a narrower one for `GO:0021987`; an IRD on PTN000917496; and review of the IPR002956 and IPR037893 InterPro2GO mappings.
-- [ ] Ask TAIR for experimental lipid A (PMID:21709257) and mitochondrion annotations on the Arabidopsis Lpx/KdtA genes.
+- [ ] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5), carrying the experimental evidence from PMID:21709257 and PMID:22545860 into those reviews. In progress.
 - [ ] Rerun RAR on current GOA for our reviewed species (script not yet written).
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
 
