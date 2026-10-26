@@ -57,7 +57,7 @@ pre-crRNA processing nuclease) does not abolish the truncation, so the obvious a
 candidates are excluded without the AcrVA1 option being confirmed. The independent
 structural paper states the active reading without qualification
 [PMID:31155345 "AcrVA1 cleaves crRNA in a Cas12a-dependent manner, inactivating Cas12a-crRNA complexes."]
-but does not identify catalytic residues either.
+but the abstract alone does not identify catalytic residues. The later publisher-highlight inspection recorded below reports a candidate helix-alpha2 active site; the earlier categorical absence claim is superseded.
 
 **Curation decision.** GO:0004521 RNA endonuclease activity is asserted, because two
 independent groups report Cas12a-dependent endoribonucleolytic cleavage with multiple
@@ -101,3 +101,10 @@ Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals 
 ## PR5555 follow-up: canonical sources and evidence scope (2026-10-25)
 
 Restored the catalytic-entity caveat in the GO:0004521 IC reason. PMID:30936531 directly states that mutating Cas12a RuvC or pre-crRNA-processing centres did not prevent truncation but does not assign the catalytic component; a latent Cas12a RNase licensed by AcrVA1 would make AcrVA1 the activator, not the nuclease. PMID:31155345 publisher highlights explicitly identify an RNase active site in helix alpha2 (official ScienceDirect page inspected again), so the obsolete claim that no candidate site exists is not restored. Normal PMID refresh still supplied abstract only and normal publisher URL fetching returned403. The IC proposal remains conditional, without a fabricated full-text quote or conversion to IDA.
+
+
+## PR 5555 final scientific follow-up (2026-10-26)
+
+The second core now uses `contributes_to_molecular_function: GO:0004521` for the demonstrable AcrVA1–Cas12a-crRNA assembly activity. This makes the conservative catalytic-component boundary explicit in the structured summary while preserving the original IC proposal, its action and qualifier, and all source quotes. It does not assert that AcrVA1 lacks catalytic residues or cannot be activated by complex assembly.
+
+Re-read the complete cached PMID:30936531 Results and Discussion: multiple turnover and known Cas12a nuclease-site mutagenesis establish the reaction and exclude those tested sites, but the authors explicitly do not assign the catalytic center. Re-read the PMID:31155345 abstract, which attributes cleavage to AcrVA1. The earlier inspection of publisher highlights reported a helix-alpha2 RNase site; the current publisher retry returned HTTP 403 and a targeted search did not recover the full paper. No new claim to have inspected its residue-mutant experiments is made, and its published interpretation remains visible. The structured contribution is a conservative statement of the shared experimental result, not a rejection of the later paper.
