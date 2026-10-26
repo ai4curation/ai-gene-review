@@ -12,3 +12,9 @@ Deep research: not run. In this environment falcon times out and perplexity-lite
 - About 25 Ensembl/ARBA rodent physiology transfers (responses to cocaine, salt, estrogen and so on) and the minor-nucleotide binding terms are marked over-annotated.
 - 195 protein binding IPI rows are removed as uninformative.
 - The minor locations (exosome, sperm, melanosome, growth cones and so on) are kept as non-core.
+
+
+## 2026-10-26 androgen-receptor module augmentation
+
+Reviewed the complete existing annotation inventory while retaining the imported fields and row counts. The focused changes distinguish AR evidence from GR/PR chaperone models; no new process annotation was manufactured from a necessity phenotype. Existing activities and client systems outside AR remain in scope. UniProt source-section metadata was derived with the normal backfill helper.
+The 522-row review retains ATP-dependent folding, kinase client maturation, localization and peripheral client activities. The AR module must not infer a mandatory FKBP51-to-FKBP52 nuclear-import switch from generic steroid-receptor models: human prostate cancer cells retain AR nuclear entry after either FKBP depletion [PMID:34057812]. This is comparative co-chaperone evidence, not HSP90AA1-specific loss-of-function evidence. Corrected true-but-broad complex, cytoplasm and folding-chaperone terms to specific existing terms. Retained RNA binding based on covalent-UV human interactome studies [PMID:22658674; PMID:22681889], exosomal MHC-II association directly named in PMID:20458337, and tau aggregation supported by PMID:19363271. Other legacy negative judgments based only on indirectness or weak physiological relevance are now UNDECIDED where donor experiments were not resolved; this is an explicit evidence limit, not a claim that all transferred processes are false.

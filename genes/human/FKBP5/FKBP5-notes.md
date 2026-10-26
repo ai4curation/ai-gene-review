@@ -43,3 +43,15 @@ USP49 (Q70CQ1), MCMBP (Q9BTE3-2). HSP90AA1 (P07900), HSP90AB1 (P08238). 9660753=
 - membrane/exosome HDA: KEEP_AS_NON_CORE.
 - protein binding IPI block: KEEP_AS_NON_CORE generally; MODIFY HSP90 partners (P07900/P08238)
   to Hsp90 protein binding; MARK_AS_OVER_ANNOTATED the broad multi-partner screens.
+
+
+## 2026-10-26 androgen-receptor module augmentation
+
+Reviewed the complete existing annotation inventory while retaining the imported fields and row counts. The focused changes distinguish AR evidence from GR/PR chaperone models; no new process annotation was manufactured from a necessity phenotype. Existing activities and client systems outside AR remain in scope. UniProt source-section metadata was derived with the normal backfill helper.
+The 48 imported rows are preserved. FKBP51 inhibits GR/PR in established contexts yet positively regulates AR in human prostate cancer cells. Recombinant assays show recruitment of p23 to ATP-bound HSP90; cell assays show increased androgen-binding competent AR [PMID:20048054]. FKBP51 supports AR dimerization/chromatin binding without a nuclear-import requirement [PMID:34057812]. Normal male reproductive physiology after mouse Fkbp5 loss [PMID:17142810] is not a contradiction of cancer-context human activity. PPIase evidence now uses direct human enzymology [PMID:11350175]. Retained AKT/PHLPP1 scaffold function. Membrane-fraction HDA remains UNDECIDED because soluble proteins can associate transiently with membranes [PMID:19946888]. Q13451 resolves to PTHR46512:SF9; legacy PTHR10516 PAINT PTN002471265 provenance remains legitimate.
+
+PANTHER19.0 release classification independently resolves this target to PTHR10516:SF26, whereas current UniProt resolves it to PTHR46512:SF9. Both are source-supported; retain explicit source provenance rather than mechanically replacing one with the other.
+
+## 2026-10-26: integration source-cache check
+
+Normal fetching supplied the previously uncached PMID:26101251 and PMID:31434731 cited above, and Reactome:R-HSA-9909510. The latter is the reaction “FKBP5 binds CHUK:IKBKB:IKBKG”; corrected the reference title to its fetched title. The cytosol annotation remains supported independently by the curated UniProt localization statement, and no annotation payload or action changed.
