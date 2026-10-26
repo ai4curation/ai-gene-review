@@ -391,11 +391,17 @@ for this to be fixed.
 | Reviewer-proposed NEW rows on the combined term | Dark, API5, BCL2L12, CFLAR | The NEW row now uses the genus. |
 | Core-function MFs on the combined term | Dark, Diap1, Dronc, APAF1, API5, BCL2L12, CASP9, CFLAR, CYCS, XIAP, ced-4 | MF changed to the genus. `directly_involved_in` already names the apoptotic process. |
 | Module annotons on the combined term | `apoptotic_execution_phase` (XIAP), `c_elegans_core_apoptosis` (CED-4), `dmel_rhg_apoptosome_caspase_activation` (Dark target) | Function changed to the genus. The module itself is the context. |
-| CASP1 (TAS) | 1 | MODIFY to GO:0140608 with `context_dropped`. The enhancement of caspase-8 in Fas apoptosis is accessory to inflammasome function. |
-| **hid** (IDA + 5 IGI on GO:0043028) | 1 | **Decomposition exposed a wrong genus.** Hid binds DIAP1 and blocks its caspase inhibition (PMID:10481910); it does not bind caspases, which GO:0043028's definition requires. Changed laterally to GO:0140678 *molecular function inhibitor activity*, the same term the human module uses for the IAP antagonist DIABLO, linked to `dmel_rhg_apoptosome_caspase_activation#rhg_iap_antagonists_hid`. |
+| CASP1 (TAS) | 1 | **The genus is unsupported.** The source says the caspase-1 prodomain enhances Fas-mediated apoptosis "most probably" by facilitating caspase-8 activation, a hedged and indirect effect. KEEP_AS_NON_CORE becomes MARK_AS_OVER_ANNOTATED, consistent with BCL2L13. |
+| **hid** (IDA + 5 IGI on GO:0043028) | 1 | **Decomposition exposed a wrong genus.** Hid binds DIAP1 and blocks its caspase inhibition (PMID:10481910); it does not bind caspases, which GO:0043028's definition requires. Changed laterally to GO:0140311 *protein sequestering activity*, which hid already carries by IDA (PMID:15107838) and as a core function, linked to `dmel_rhg_apoptosome_caspase_activation#rhg_iap_antagonists_hid`. A first draft used the broader GO:0140678 *molecular function inhibitor activity*; review on #5565 pointed to the gene's own, more specific term. |
 | **BCL2L13** (NAS) | 1 | **The genus is unsupported.** The evidence is overexpression-induced, caspase-dependent apoptosis, so KEEP_AS_NON_CORE becomes MARK_AS_OVER_ANNOTATED. |
 | CD27, GAS6 (human, mouse), ced-3 | — | No change. These were already marked over-annotated, or lateral MODIFYs away from the term. |
 | Diap1 IDA and IGI rows marked UNDECIDED | — | No change. They are undecided because the cached evidence does not show the assay, a separate question from decomposition. |
+
+**Non-core rows.** MODIFY carries no core/non-core flag. When a KEEP_AS_NON_CORE
+row on a combined term is decomposed, the non-core judgment survives only in
+`reason`, or in whether a core function names the genus. Where the genus itself
+is doubtful, prefer MARK_AS_OVER_ANNOTATED (CASP1, BCL2L13) to a MODIFY that
+would silently promote it.
 
 The inventory now also counts **reviewer-authored combined terms**: replacement
 terms and core-function terms that a review introduced, rather than GOA rows
@@ -479,6 +485,8 @@ uv run python projects/INVOLVED_IN_PRECOMPOSITION/scripts/inventory.py \
 Outputs: `go_terms.yaml` (every "involved in" term, live or obsolete, with
 its decomposition and obsoletion pointers), `annotations.yaml` (every review
 row, with action, decomposition, GO-CAM and module hits),
+`authored_precomposed.yaml` (combined terms that reviews introduced, as MODIFY
+replacements or in core functions; small, so committed),
 `module_candidates.yaml`, and `summary.yaml`. The two large files,
 `go_terms.yaml` and `annotations.yaml` (about 1 MB each), are git-ignored;
 regenerate them locally before a full pass. Decompositions marked `source:
