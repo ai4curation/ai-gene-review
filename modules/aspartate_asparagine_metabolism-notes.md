@@ -152,9 +152,14 @@ AspAT-to-ASNS edges were checked. The family correction preserves the original
 PAINT assertions and verdicts. Full repository validation is running and remains
 the pre-PR gate; only an approved and verified merge completes this audit.
 
-Final negative-annotation audit: all six NOT rows in the27-gene panel were read.
+Final negative-annotation audit: all six NOT rows in the 27-gene panel were read.
 The four localization exclusions remain UNDECIDED because exact negative
 compartment evidence was not established; ASP5's two experimentally tested
 negative prephenate activities are ACCEPT. Three initially mismatched
 localization rationales and their associated reference findings were corrected
 before integration; the source payloads were unchanged.
+
+
+## PR #5568 prose follow-up, 2026-10-26
+
+Normalized fused citation prose only. Parsed comparison confirms that all selectors, functions, compartments, variant logic, connections, source quotations and annotation decisions remain unchanged. The member follow-up preserves all 548 original rows across 27 genes; source-specific uncertainties are retained. No new biological route or annotation is proposed.

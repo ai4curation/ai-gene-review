@@ -20,13 +20,13 @@ Mitochondrial aspartate aminotransferase; = classical glu1 (glutamate-requiring)
 
 Reviewed all 21 existing rows and the core-function synthesis for SCHPO/maa1; no rows were added or dropped. Original GO terms, evidence codes, source identifiers and all other machine fields are preserved. Actions: {'MODIFY': 8, 'ACCEPT': 10, 'KEEP_AS_NON_CORE': 3}.
 
-Read full PMID:39502420, including the nonsense allele, integrated maa1 rescue, failure of multicopy caa1 rescue and weaker yhm2 suppression. Glutamate/glutamine dependence supports reverse AspAT chemistry supplying glutamate during the tested ammonium-assimilation conditions. These are causal genetic observations; they do not directly measure universal net flux. PMID:31641022 supplies the cytosolic/mitochondrial contrast and direct Caa1 biosynthetic evidence.
+Read full text of PMID:39502420, including the nonsense allele, integrated maa1 rescue, failure of multicopy caa1 rescue and weaker yhm2 suppression. Glutamate/glutamine dependence supports reverse AspAT chemistry supplying glutamate during the tested ammonium-assimilation conditions. These are causal genetic observations; they do not directly measure universal net flux. PMID:31641022 supplies the cytosolic/mitochondrial contrast and direct Caa1 biosynthetic evidence.
 
 The core retains reversible matrix AspAT and glutamate synthesis. Existing aspartate-biosynthetic inference remains secondary rather than being rejected simply because the reverse direction is more prominent in this experiment. Broad glutamate metabolism refines to the supported glutamate-biosynthetic child. Shuttle assignments remain non-core comparative inference. PLP binding and 2-oxoglutarate participation are integral chemistry. Matrix location is supported by curated/localization evidence; broad mitochondrial rows refine to matrix without redefining the original assay.
 
 ### Research access and provenance
 
-An actual per-gene Falcon attempt with Perplexity-lite fallback ran in parallel with normal publication caching. Falcon returned HTTP403 authentication failure; Perplexity returned HTTP401 insufficient quota. No provider report was fabricated. Manual evidence review is recorded here; research and publication logs are `.cache/module-audit-logs/aspartate-SCHPO-maa1-research.log` and `aspartate-SCHPO-maa1-publications.log`. Normal publication fetching succeeded. Cached abstracts are used only for explicit reported findings; unverified target-specific experiments are not confidently rejected.
+An actual per-gene Falcon attempt with Perplexity-lite fallback ran in parallel with normal publication caching. Falcon returned HTTP 403 authentication failure; Perplexity returned HTTP 401 insufficient quota. No provider report was fabricated. Manual evidence review is recorded here; research and publication logs are `.cache/module-audit-logs/aspartate-SCHPO-maa1-research.log` and `aspartate-SCHPO-maa1-publications.log`. Normal publication fetching succeeded. Cached abstracts are used only for explicit reported findings; unverified target-specific experiments are not confidently rejected.
 
 The annotation-reviewer workflow and current bare-protein-binding policy were applied. No GOA file is used as evidence. Existing sound source quotations were preserved, new quotations were checked against cached source text, and UniProt record sections were backfilled by the helper. Gene summaries are standalone biology. Histories use the helper with explicit Codex actor/tool; focused strict/term/source validation and HTML rendering are logged under `.cache/module-audit-logs/aspartate-SCHPO-maa1-*`. Final results and machine-payload proof are in the panel validation/payload manifests.
 
@@ -34,3 +34,8 @@ The annotation-reviewer workflow and current bare-protein-binding policy were ap
 ## Root-organelle policy correction (2026-10-25)
 
 Reassessed all 3 mitochondrion (GO:0005739) rows against their original source scope and independent localization evidence. Changed MODIFY to ACCEPT: CLAUDE.md and projects/ORGANELLES.md explicitly retain a supported root organelle rather than replacing it with a subcompartment. The row-specific reasons distinguish direct localization/proteomics from similarity or phylogenetic inference and preserve source-resolution limits. Existing matrix rows, core locations and other annotations are unchanged; no NEW row was added. This supersedes the earlier matrix-replacement decisions, not their historical records. No inferred granularity failure is retained for a biologically sound IBA.
+
+
+## PR #5568 follow-up, 2026-10-26
+
+Repaired authored citation spacing and fused numeric prose while preserving original annotation payloads, every action, raw UniProt/GOA records and all existing supporting quotations. Source-cited passages in notes were protected from rewriting.
