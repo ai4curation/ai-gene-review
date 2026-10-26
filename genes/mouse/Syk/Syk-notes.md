@@ -39,3 +39,8 @@ The human IL8-production donor result (25251945) does not establish mouse IL8 pr
 
 
 Full primary PMID:9314552 directly establishes native mouse macrophage Fc-gamma-receptor signaling and phagocytosis, including substrate phosphorylation and failed internalization despite actin-cup formation. This independently supports the core process despite an annotation-coverage advisory. No NEW row is added solely to make core and annotation inventories identical. Legacy provider reports are not cited as primary evidence merely to silence their separate advisory.
+
+
+## PR 5584 source and scope follow-up
+
+Live QuickGO ancestry confirms GO:0038096 is a descendant of GO:0007166, already represented twice. Both broad rows are refined to supported receptor branches, preserving Fc-gamma coverage without NEW redundancy. Full PMID9314552 shows native receptor-triggered Syk activation and downstream signaling, but discusses kinase-versus-adaptor explanations of the knockout phagocytic defect. Comparator LYN/HCK/FGR annotations show that receptor-proximal kinases are not conventionally excluded from this process; their annotation state is not supporting evidence. Cached GO-CAM 62b4ffe300006474 models mouse Syk as a kinase in BCR signaling and makes no negative statement about Fc-gamma signaling. Both inherited NEW rows remain unchanged.

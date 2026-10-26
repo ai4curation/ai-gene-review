@@ -46,3 +46,8 @@ The final module has 32 assessed references, 36 mined findings, 20 grounded acti
 ## 2026-10-26 — source-analysis filenames excluded from module discovery
 
 CI run 40340779327 on PR #5584 interpreted the two YAML source-analysis tables as ModuleReview documents because the module schema recipe recursively collects `.yaml` files. The artifacts are now `evidence-findings.yaml.txt` and `members.yaml.txt`; both retain their original YAML bytes and parsed contents. Their consumers and documentation use the new paths. The biological module, all 22 gene reviews (2,645 annotation rows), and all 44 raw gene-source files are unchanged. This is a discovery-boundary correction, not a scientific revision. The exact CI command `just validate-modules` passed, as did the bounded production check (four existing CD79B contribution advisories), all 20 route cases, history validation and module rendering. No full repository validation was restarted for this extension-only change.
+
+
+## PR 5584 follow-up
+
+The CD79B function-id omission is now explained in the module notes: contribution to assembled receptor activity is established, while the descriptor lacks a contributes_to slot. It does not negate CD79B ITAM biology. CD79A adaptor function has independent docking evidence and is now reached by consistent role refinement of its existing receptor annotations. No module graph, member, edge, taxon, stoichiometry or route changed. The analysis YAML filenames remain unchanged; a general discovery-code change is outside this scientific follow-up.
