@@ -438,7 +438,28 @@ def is_uniprot_source(path: Path) -> bool:
     return path.name.endswith(UNIPROT_SOURCE_SUFFIXES)
 
 
-LOCATED, UNLOCATED, AMBIGUOUS = "located", "unlocated", "ambiguous"
+LOCATED, UNLOCATED, AMBIGUOUS, UNSEARCHABLE = "located", "unlocated", "ambiguous", "unsearchable"
+
+#: A quote that opens with a feature key and location, with or without the
+#: ``FT   `` line code (``FT   ACT_SITE  170``, ``TRANSIT  1..64``). The parsed
+#: statements keep the key as the topic, not as text, so it is matched there.
+_FEATURE_LEAD = re.compile(r"^\s*(?:FT {3})?([A-Z][A-Z0-9_]+) +(?=[<>?]?\d|\?)")
+
+
+def _feature_lead(quote: str, statements: Tuple[Statement, ...]) -> Optional[Tuple[str, str, str]]:
+    """``(key, location, rest)`` when *quote* opens with a feature key of this record."""
+    m = _FEATURE_LEAD.match(quote)
+    if not m or not any(s.field == "FT" and s.topic == m.group(1) for s in statements):
+        return None
+    location, *after = quote[m.end():].split(None, 1)
+    return m.group(1), location, after[0] if after else ""
+
+
+#: The ``...`` that joins the parts of a quote. The verbatim check splits on
+#: runs of two or more periods and treats ``\u2026`` as text; splitting here only
+#: on three or more keeps feature ranges (``1..64``) whole, and ``_quote_parts``
+#: then applies the verbatim check's rule within each part.
+_ELLIPSIS = re.compile(r"\.{3,}")
 
 
 def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
@@ -446,15 +467,69 @@ def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
 
     ``sections`` are those of the statements the quote spans, each once, in
     quote order; a line code copied with the quote (``CC   -!- CAUTION: ...``)
-    is ignored, as in ``locate_quote``. The status is ``UNLOCATED`` when a part
-    of the quote is not in the record, and ``AMBIGUOUS`` when a part occurs in
-    several places that lie in different sections (a short quote such as
-    ``Nucleus``, found in both a keyword and a comment): the section is then
-    not established, and no sections are returned rather than a guess.
+    is ignored, as in ``locate_quote``. Each ``...``-separated part is located
+    on its own. The status is ``UNLOCATED`` when a part of the quote is not in
+    the record, and ``AMBIGUOUS`` when a part occurs in several places that lie
+    in different sections (a short quote such as ``Nucleus``, found in both a
+    keyword and a comment): the section is then not established, and no
+    sections are returned rather than a guess. A quote with nothing searchable
+    in it (a bare number) is ``UNSEARCHABLE``; a part with nothing searchable
+    is skipped, so ``LOCATED`` means every searchable part was found (the
+    verbatim check, not this function, establishes that the whole quote is in
+    the record).
     """
     statements, text, starts = _index(path)
     sections: List[str] = []
-    for part in _quote_parts(quote):
+    for raw in _ELLIPSIS.split(quote):
+        status, found = _locate_part(raw, statements, text, starts)
+        if status == UNSEARCHABLE:
+            continue
+        if status != LOCATED:
+            return status, []
+        sections.extend(sec for sec in found if sec not in sections)
+    return (LOCATED, sections) if sections else (UNSEARCHABLE, [])
+
+
+def _locate_part(
+    raw: str, statements: Tuple[Statement, ...], text: str, starts: Tuple[int, ...]
+) -> Tuple[str, List[str]]:
+    """``(status, sections)`` for one ``...``-free part of a quote.
+
+    A part that opens with a feature key and location (with or without the
+    ``FT`` line code) is first matched against the record's features of that
+    key, since the key is the statement's topic rather than its text; failing
+    that, a longer part is searched as text without its leading key (it may
+    span several features). A further key later in the part is stripped only
+    when it keeps its ``FT`` line code.
+    """
+    feature = _feature_lead(raw, statements)
+    if feature is not None:
+        key, location, rest = feature
+        rest_parts = _quote_parts(rest)
+        normalize = _validator().normalize_text
+        matched = next(
+            (
+                s
+                for s in statements
+                if s.field == "FT"
+                and s.topic == key
+                and s.text.split()[:1] == [location]
+                and all(f" {p} " in f" {normalize(s.text)} " for p in rest_parts)
+            ),
+            None,
+        )
+        if matched is not None:
+            # no ambiguity check: every feature with this key has the same section
+            return LOCATED, [matched.section]
+        if not rest_parts:  # a key and location only, and no such feature
+            return UNLOCATED, []
+        # search the rest as text; the key is not text in the parsed record
+        raw = f"{location} {rest}"
+    parts = _quote_parts(raw)
+    if not parts:
+        return UNSEARCHABLE, []
+    sections: List[str] = []
+    for part in parts:
         occurrences = _occurrences(part, statements, text, starts)
         if not occurrences:
             return UNLOCATED, []
@@ -462,7 +537,7 @@ def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
         if len(candidates) > 1:
             return AMBIGUOUS, []
         sections.extend(sec for sec in candidates.pop() if sec not in sections)
-    return (LOCATED, sections) if sections else (UNLOCATED, [])
+    return LOCATED, sections
 
 
 def record_sections(quote: str, path: Path) -> Optional[List[str]]:

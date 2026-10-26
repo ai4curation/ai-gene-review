@@ -1,0 +1,3 @@
+# DSM2067 construct identity check
+
+The article PMID39116220 deposits synthetic constructs under GenBank PP708519–PP708545. `constructs.gb` is the unmodified NCBI efetch response retrieved 2026-10-25. `just fetch` retrieves the same accession set; `just compare` uses Biopython 1.85 to compare each CDS translation against each supplied archived UniProt sequence. Equality is exact across the full sequence, with no alignment, trimming or similarity threshold. The generic script accepts file paths and writes its tabular results to the requested output path. See RESULTS.md for interpretation. The four UniSave records were fetched independently by the documented archival wrapper in ../../gmhA1/gmhA1-bioinformatics/.

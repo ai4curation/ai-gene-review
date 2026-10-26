@@ -2,6 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60]
 ---
 
 # Organelles
@@ -144,8 +145,9 @@ plastids come later.
    resolve the sub-compartment (organelle proteomics, whole-organelle
    co-staining, GFP fusion), the row is `ACCEPT` (or `KEEP_AS_NON_CORE` if
    the location is peripheral to the gene's function). It says what the
-   experiment showed. Use `MODIFY` only if the paper itself resolved a
-   sub-compartment and the curator stopped short.
+   experiment showed. If the paper itself resolved a sub-compartment and
+   the curator stopped short, keep the row and add the sub-compartment as a
+   `NEW` row under rules 4-5.
 3. **Synthesis (IBA, IC, IEA, ISS, ISO, ISA, ISM, RCA, ...): a red flag.**
    Examine the row rather than accepting it by default. A propagation or an
    inference has no assay limit to excuse the coarse term. Either the source
@@ -179,9 +181,11 @@ plastids come later.
    of PR #5208.) For the IEA rows, the lasting fix is upstream: a UniProt
    location keyword of `SL-0170` (Mitochondrion matrix) instead of `SL-0173`
    (Mitochondrion) maps to the matrix term directly.
-6. **`core_functions.locations`** should name the sub-compartment where it is
-   known, and may also carry the root if the organelle-level claim is
-   independently supported.
+6. **`core_functions.locations`** should name the sub-compartment where the
+   core activity is shown to happen, and may also carry the root if the
+   organelle-level claim is independently supported. A well-supported
+   sub-compartment location is not by itself where the function acts (MMADHC,
+   2026-10-18).
 
 ## Survey under this policy
 
@@ -205,6 +209,19 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 ## Open questions
 
+- **`is_active_in` on root rows.** Some IBA rows carry `is_active_in
+  GO:0005739`, which says the gene's activity happens there, not only that
+  the protein is present. In batch 2 five GO:0005739 rows carry it: the IBA
+  rows of ACACA, ADO, ARAF and BRAF, and ABCC9's Ensembl IEA. For ADO and
+  BRAF the review's own reason argues the activity is elsewhere (ADO's
+  N-degron oxidation is cytosolic; BRAF's mitochondrial pool has no assigned
+  activity). ARAF shares BRAF's PAINT node (PTN000584576) and is the arguable
+  case: its reason does give it a mitochondrial role, <gene species="human" symbol="STK3">MST2</gene> sequestration,
+  though that is not among its annotated functions. ABCC9's short SUR2
+  variants have a real mitochondrial function, and ACACA's row is already
+  over-annotated. The policy so far judges the term, not the qualifier. A
+  later pass should check `is_active_in` rows and propose `located_in` where
+  the activity is not shown in the organelle.
 - **Fix the IEA rows upstream.** The root-only IEA rows on AARS2, CLYBL and
   MMADHC come from UniProt subcellular-location keyword `SL-0173`
   (Mitochondrion). Genes whose entries use `SL-0170` (Mitochondrion matrix),
@@ -236,7 +253,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [x] Red-flag worklist generated (`root_organelle_red_flags.md`)
 - [ ] Work through the root-only mitochondrial synthesis rows (285 in the
       2026-10-20 run), starting with human; apply rules 3 and 4
-  - [x] Batch 1: 20 human genes (2026-10-20); 76 human genes remain
+  - [x] Batch 1: 20 human genes (2026-10-20)
+  - [x] Batch 2: 20 human genes (2026-10-24); 44 human genes remain
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Revise to "add, don't substitute" after PR #5208 review: synthesis
       root rows ACCEPT, sub-compartment as a NEW row; validator exemption
@@ -245,12 +263,126 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
       candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
 - [ ] Decide on a validation warning
-- [ ] Add the policy to CLAUDE.md / the annotation-reviewer guidance once it
-      has been tried on a batch of genes
+- [x] Add the policy to CLAUDE.md (2026-10-25, after batches 1 and 2); the
+      annotation-reviewer guidance still to do
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-10-24 (batch 2: 20 human genes)
+
+The next 20 human genes, alphabetically, with root-only mitochondrion rows
+from synthesis evidence (ABCC9 to CFAP410). Only one gained a
+sub-compartment. This slice is dominated by signalling and cytosolic
+proteins that reach mitochondria transiently, so the main work was checking
+whether the organelle claim holds at all.
+
+| gene | outcome | evidence |
+|---|---|---|
+| ABCC9 | root | Ensembl projection rests on mouse IDA/IMP; mitochondrial forms are short splice products; inner-membrane KATP location only assumed |
+| ABL1 | root; NAS row ACCEPT to KEEP_AS_NON_CORE | kinase recruited under ROS or ER stress; no presequence or TM |
+| ACACA | root; IBA stays MARK_AS_OVER_ANNOTATED | PAINT node seeded only by ACC2-lineage genes; ACC1 is cytosolic |
+| ACBD3 | root | By similarity, from rodent PAP7 binding the mitochondrial PBR; one indirect line |
+| ADO | root; IBA, IEA and HTP rows to KEEP_AS_NON_CORE (were MARK_AS_OVER_ANNOTATED / REMOVE) | mouse fractionation and MitoCarta HDA behind the projection; the earlier "UniProt says cytosol" was wrong |
+| AGTPBP1 | NEW outer membrane (IC) | mouse sub-mitochondrial fractionation (PMID:20620870); soluble, no presequence or TM |
+| ANK2 | root | contact points on the mitochondrial surface by imaging; no anchor |
+| ARAF | root | sub-compartment lines disagree (rat IMS/matrix fractionation vs cytosolic-face <gene species="human" symbol="STK3">MST2</gene>/BAD roles) |
+| ARL16 | root | organelle-level co-staining only, of an N-extended variant |
+| ASAH2 | root; rows to MARK_AS_OVER_ANNOTATED | the original GFP construct was N-terminally truncated; full-length ASAH2 goes to the plasma membrane (PMID:15845354) |
+| ATP7B | root; HTP row UNDECIDED to KEEP_AS_NON_CORE | only the processed 140 kDa form is mitochondrial; MitoCoP call deferred to the curator, as for AMACR |
+| AZIN2 | root; row to MARK_AS_OVER_ANNOTATED | projection from a crude mouse fraction; the mouse protein also has a NOT row that was not projected |
+| BRAF | root | Bag1-dependent pool recruited to the mitochondrial surface; no anchor |
+| C0HM83 (SHMOOSE) | root | no presequence, no TM, no sub-mitochondrial assay |
+| CALR | root; row stays MARK_AS_OVER_ANNOTATED | one rat study; signal peptide, KDEL retention, curated ER lumen |
+| CAMK2A | root; ISS row UNDECIDED to MARK_AS_OVER_ANNOTATED | the mouse donor's antibody is pan-"CaMKII"; alpha is never named |
+| CASP4 | root | immuno-EM on ER and mitochondria; fractions ER-contaminated |
+| CAVIN1 | root; rows stay UNDECIDED | combined mitochondrial/nuclear pellet; full text not retrievable |
+| CCN6 | root | two direct sources; ER signal peptide; sub-mitochondrial data not citable |
+| CFAP410 | root | one hedged 1997 antisera study; MTS only predicted |
+
+What batch 2 showed:
+
+- **Transient recruitment is the common case.** ABL1, BRAF, ARAF, ANK2
+  and CASP4 reach the mitochondrial surface under signalling or stress. The
+  outer membrane is tempting, but none has an anchor or a fractionation
+  that separates surface from contact sites. As with TRAF3 they stay at the
+  root.
+- **Projections carry their source's weakness.** AZIN2's projection dropped
+  a NOT row on the mouse source; CAMK2A's donor IDA used a pan-CaMKII
+  antibody. Checking what the source annotation rests on decided both.
+- **The MAM lesson from STOM recurred.** CASP4's fractions were
+  ER-contaminated by the authors' own account, and CALR is an ER-lumen
+  protein supported by one rat study. Neither paper separates mitochondria
+  from ER contact membranes.
+- **Two earlier calls were reversed.** ADO, where an earlier review
+  misread UniProt, and ASAH2, where a 2005 follow-up showed the 2000
+  construct was truncated.
+- **Tooling:** `just backfill-record-sections` writes unquoted flow lists
+  (`[CC:SUBCELLULAR LOCATION]`) that the reference validator cannot parse.
+  The agents quoted them by hand in the files they touched.
+
+## 2026-10-24 (STOM and PTS re-checked)
+
+Batch 1 left both genes at the root with every row KEEP_AS_NON_CORE, flagged as
+possible organelle-level over-annotations. Two new sources settled what could be
+settled.
+
+**STOM: full text of PMID:25262680 does not support mitochondrion.** The
+cached copy is abstract-only, so the curator's AgBase IDA was not second-guessed
+in batch 1. The user supplied the full text (Kim et al. 2014, *J Microbiol
+Biotechnol* 24:1744-1754, doi:10.4014/jmb.1409.09063). The "mitochondrial"
+signal is co-fractionation in a crude heavy-membrane pellet that also carries ER:
+
+> "This fraction was enriched with mitochondria, as evidenced by the presence of
+> Hsp60, a mitochondrial matrix protein [28]. In this fraction, we also detected
+> the ER marker Grp78, probably because of the physical linkages between some
+> fractions of the ER and mitochondria."
+
+Sub-fractionation keeps the ER marker with stomatin:
+
+> "Analysis of the resulting four fractions by immunoblotting revealed that
+> HCV NS proteins had co-fractionated with stomatin, Hsp60, and calreticulin, an
+> ER lumen marker"
+
+and detergent pulls the mitochondrial marker away from stomatin:
+
+> "When the P15 fraction was treated with 1% NP40, NS5B and stomatin remained in
+> the same fraction, while Hsp60, which was released from mitochondria-derived
+> compartments, was detected in the bottom fractions"
+
+The authors themselves read the compartment as MAM, an ER region:
+
+> "our results suggest that the DRM in the P15 fraction might represent the
+> mitochondria-associated membranes, which are known to be reversibly tethered
+> to mitochondria and consist of a region of ER [44]."
+
+and imaging shows no mitochondrial pattern:
+
+> "Stomatin exhibited a distinct cytoplasmic and perinuclear localization (Fig. 2C)."
+
+Both GO:0005739 rows (the IDA and the circular Ensembl-projection IEA) are now
+MARK_AS_OVER_ANNOTATED, not REMOVE: the co-fractionation is real, it is the
+curator's source, and the paper does place stomatin on membranes tethered to
+mitochondria. GO:0044233 (mitochondria-associated endoplasmic reticulum membrane
+contact site) fits the authors' reading but rests on one detergent experiment
+with no MAM marker, so no NEW row. The reference now carries a
+`reference_review` saying the paper does not support mitochondrion.
+
+**PTS: conflicting weak lines, so UNDECIDED.** The only mitochondrial line is the
+LIFEdb GFP-fusion screen, which also alone seeds the PAINT node behind the IBA.
+The Human Protein Atlas detail (ENSG00000150787, downloaded 2026-10-24) is one
+antibody, HPA001481, passing protein-array validation, with immunofluorescence
+in A-431, U-251MG and U2OS showing cytosol only, at reliability "Approved". Its
+counterstains are nucleus, microtubules and ER, with no mitochondrial marker.
+One low-resolution direct row for and one approved single-antibody row against
+cannot be resolved without new data, so both rows are UNDECIDED (the enum's use
+for unresolvable evidence) rather than kept as if the claim stood.
+
+What this adds to the policy: a crude-fraction IDA is a red flag of its own when
+the fraction is not checked for ER. MAM co-purifies with mitochondria in every
+P15/heavy-membrane prep, so "found in the mitochondrial fraction" without an ER
+marker cannot distinguish mitochondrion from MAM.
 
 ## 2026-10-20 (batch 1: 20 human genes)
 
@@ -267,17 +399,17 @@ the PAINT-seed or mapping check.
 | DUT | NEW matrix (IC, isoform 3) | processed presequence, no TM, mtDNA replication context |
 | FEN1 | NEW matrix (IC) | protease protection, PMF-dependent import, soluble; internal pool is mostly FENMIT |
 | APEX1 | NEW IMS and matrix (IC) | Mia40-dependent import and PLA with Mia40; matrix pool repairs mtDNA (one group) |
-| ADCK2 | NEW inner membrane (IC) | predicted TM at the COQ8A anchor position, protease protection, yeast Cqd1 |
+| ADCK2 | NEW inner membrane (IC); GO:0016020 row MODIFY to it (in review) | predicted TM at the COQ8A anchor position, protease protection, yeast Cqd1 |
 | GPX4 | NEW inner membrane (IC, mitochondrial isoform) | rodent sub-mitochondrial fractionation, import, cardiolipin |
 | ABHD18 | NEW inner membrane (IC) | predicted presequence, cardiolipin substrate, yeast Cld1 analogy; least certain call |
 | AKAP10 | root | predicted MTS only; organelle itself contested |
 | DHFR | root | sub-mitochondrial data were for DHFR2 and later reattributed |
 | FADS1 | root; rows to KEEP_AS_NON_CORE | ER enzyme; one imaging study; isoform error in old review fixed |
-| STOM | root | Ensembl projection is circular; organelle claim weak |
+| STOM | root; rows to MARK_AS_OVER_ANNOTATED (2026-10-24) | Ensembl projection is circular; full text shows ER/MAM co-fractionation |
 | ASB9 | root | overexpression and crude pellet only |
 | SECISBP2 | root | MTS vs negative fractionation disagree |
 | RFK | root | yeast FMN1 is inner membrane, human RFK has no TM |
-| PTS | root | PAINT node seeded only by PTS's own GFP-screen row; HPA says cytosol |
+| PTS | root; rows to UNDECIDED (2026-10-24) | PAINT node seeded only by PTS's own GFP-screen row; HPA says cytosol |
 | TRAF3 | root | recruited via MAVS; no outer-membrane evidence |
 | HLCS | root | single functional line (matrix carboxylases), like PYCR2 |
 | GLOD4 | root | no presequence, no TM, crude fractionation only |
