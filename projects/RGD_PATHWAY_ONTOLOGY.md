@@ -27,13 +27,16 @@ genes of a pathway, and only 48 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 709 modules. Eighty-five already have a matching module, 4 are
-ready to model, 29 lack a GO process term, and 56 are disease or drug pathways
-and out of scope. Eight modules have now been derived from RGD diagrams: the pilot
-`srebp_signaling`; the linked blood set `coagulation_cascade`, `fibrinolysis`
-and `kallikrein_kinin_cascade`; and a second set, `acetylcholine_signaling`,
-`dopamine_receptor_signaling`, `visual_phototransduction` and
-`prostanoid_biosynthesis`. All eight pass schema and module validation.
+triaged against our 714 modules. Ninety already have a matching module, none is
+left in the `candidate` queue, 28 lack a GO process term, and 56 are disease or
+drug pathways and out of scope. Thirteen modules have now been derived from RGD
+diagrams: the pilot `srebp_signaling`; the linked blood set `coagulation_cascade`,
+`fibrinolysis` and `kallikrein_kinin_cascade`; a second set,
+`acetylcholine_signaling`, `dopamine_receptor_signaling`,
+`visual_phototransduction` and `prostanoid_biosynthesis`; and a third set,
+`protein_kinase_c_signaling`, `dna_cytosine_methylation_cycle`,
+`reelin_signaling`, `trail_apoptotic_signaling` and `nmj_achr_clustering`. All
+thirteen pass schema and module validation.
 
 ## Why this source
 
@@ -103,10 +106,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 85 |
-| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 4 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 90 |
+| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
 | `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 19 |
-| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 29 |
+| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 28 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
 
@@ -149,7 +152,7 @@ split along their sub-pathways before modelling.
   angiotensin II and vasopressin signaling, renin-angiotensin, and
   mitochondrial and cytosolic iron-sulfur cluster assembly. Some do have a GO
   term under another name, for example `GO:0072331` (signal transduction by p53
-  class mediator) and `GO:0141156` (cAMP/PKA signal transduction). These 29
+  class mediator) and `GO:0141156` (cAMP/PKA signal transduction). These 28
   `needs_go_mapping` seeds are a curation list for manual mapping or for
   `proposed_new_terms`.
 
@@ -205,19 +208,23 @@ members. The completeness table therefore reports both counts
 
 ### Module seeds
 
-The 4 remaining `candidate` seeds, ordered by number of curated genes, are the
-modelling queue for normal-biology pathways without a module:
+The `candidate` queue is empty. The 10 candidates of the 2026-10-20 triage were
+modelled in the second and third sets (below):
 
-| PW | Pathway | Curated human genes | Mapped GO | Note |
-|----|---------|--------------------:|-----------|------|
-| PW:0000840 | protein kinase C signaling | 32 | GO:0070528 | overlaps `gpcr_plc_calcium_pkc_signaling` |
-| PW:0001340 | DNA modification | 28 | GO:0006304 | |
-| PW:0000388 | reelin signaling | 15 | GO:0038026 | |
-| PW:0000682 | TRAIL signaling | 9 | GO:0036462 | |
+| PW | Pathway | Curated human genes | Mapped GO | Module |
+|----|---------|--------------------:|-----------|--------|
+| PW:0000841 | acetylcholine signaling | 40 | GO:0095500 | `acetylcholine_signaling` |
+| PW:0000394 | dopamine signaling | 38 | GO:0007212 | `dopamine_receptor_signaling` |
+| PW:0000962 | visual phototransduction | 33 | GO:0007602 | `visual_phototransduction` |
+| PW:0000840 | protein kinase C signaling | 32 | GO:0070528 | `protein_kinase_c_signaling` |
+| PW:0001340 | DNA modification | 28 | GO:0006304 | `dna_cytosine_methylation_cycle` |
+| PW:0000843 | muscarinic acetylcholine signaling | 19 | GO:0007213 | `acetylcholine_signaling` |
+| PW:0000388 | reelin signaling | 15 | GO:0038026 | `reelin_signaling` |
+| PW:0001243 | prostanoid biosynthesis | 14 | GO:0046457 | `prostanoid_biosynthesis` |
+| PW:0000682 | TRAIL signaling | 9 | GO:0036462 | `trail_apoptotic_signaling` |
+| PW:0000515 | IL-10 signaling | 7 | GO:0140105 | none (see below) |
 
-Of the 10 candidates in the previous triage, the second set (below) covers five:
-acetylcholine and its muscarinic sub-pathway, dopamine, visual phototransduction
-and prostanoid biosynthesis. IL-10 signaling
+IL-10 signaling
 (PW:0000515) now matches `il22_signaling`, which merged on `main` meanwhile, by gene
 overlap only (4 of its 7 genes are in the pathway); IL-10 itself still has no module.
 
@@ -394,6 +401,79 @@ opsin models), each dopamine receptor's G-protein step and several nicotinic and
 muscarinic receptors. No model covers phototransduction recovery, the DARPP-32
 switch or any prostanoid synthase.
 
+### Third set: PKC, DNA methylation, reelin, TRAIL, NMJ clustering
+
+The last four candidates were modelled, plus one module that the acetylcholine
+work split off:
+
+- [`modules/protein_kinase_c_signaling.yaml`](../modules/protein_kinase_c_signaling.yaml)
+  ([PW:0000840](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000840.yaml)) models the PKC
+  life cycle. The steps are HSP90/CDC37 chaperoning, priming by PDPK1 (with
+  mTORC2, which the RGD text names), activation by isoform class, anchoring by
+  RACK1 and PICK1, and dephosphorylation by PHLPP1/2. The classes are a variant
+  set: conventional PKCs need DAG and calcium, novel PKCs need DAG only, and
+  atypical PKCs sit on the PAR3/PAR6 scaffold. The second-messenger step is a
+  reference to `gpcr_plc_calcium_pkc_signaling`. RGD's substrate and cross-talk
+  genes (FSCN1, BTK, LCK, FYN, RASA1) are left out, and LDB3, PCNT and COPB1 are
+  described in prose only.
+- [`modules/dna_cytosine_methylation_cycle.yaml`](../modules/dna_cytosine_methylation_cycle.yaml)
+  ([PW:0001340](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001340.yaml)) covers de novo
+  methylation (DNMT3A/B, with DNMT3L), UHRF1-directed maintenance by DNMT1,
+  active demethylation by TET1-3 and TDG, and the methyl-CpG readers. TDG and
+  DNMT3L are not on RGD's list; RGD's own text and the GO definition of active
+  demethylation support adding them. Left out: the transcription factors on
+  RGD's list, the CXXC-domain histone enzymes (they belong to the
+  histone-modification sub-pathway), MBD4 (a mismatch glycosylase) and UHRF2.
+  By gene overlap alone it also matches the broad chromatin
+  modification/remodeling pathway (PW:0001337), the loose-match case described
+  above.
+- [`modules/reelin_signaling.yaml`](../modules/reelin_signaling.yaml)
+  ([PW:0000388](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000388.yaml)) runs from RELN
+  binding VLDLR and LRP8 to DAB1 phosphorylation by FYN and SRC, then the PI3K
+  and LIS1 branches. DAB1 degradation by the SOCS7/CUL5 ligase ends the signal.
+  The NMDA and AMPA receptor subunits are downstream targets, not participants.
+  The integrins and the PAF-AH catalytic subunits are context.
+- [`modules/trail_apoptotic_signaling.yaml`](../modules/trail_apoptotic_signaling.yaml)
+  ([PW:0000682](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000682.yaml)) is the
+  concrete TRAIL instance of `death_receptor_apoptotic_signaling`. TRAIL binds
+  DR4 or DR5, which assemble a DISC of FADD and caspase-8, held back by c-FLIP.
+  Caspase-10 and the decoy receptors are optional parts. The direct caspase
+  route and the BID-to-mitochondria route are a variant set that refers to the
+  intrinsic and execution modules. TRADD is left out, because studies of the
+  endogenous DISC find it is not recruited.
+- [`modules/nmj_achr_clustering.yaml`](../modules/nmj_achr_clustering.yaml)
+  covers the clustering arm of PW:0000842: neural agrin, LRP4, MuSK, DOK7 with
+  CRK/CRKL, and rapsyn. The muscle receptor is the thing clustered, not a
+  participant. No receptor subunit carries `GO:0071340`, which agrin, LRP4, MuSK
+  and rapsyn do.
+
+These modules turned up more possible upstream errors:
+
+- **RGD.** The PW:0000840 text says PDPK1 phosphorylates "the activation loop of
+  PLC"; it should say PKC.
+- **GOA.**
+  - PRKCZ, an atypical PKC, has an EXP annotation to calcium,diacylglycerol-
+    dependent kinase activity (`GO:0004698`). PRKCD, a calcium-independent novel
+    PKC, has an IDA one.
+  - TET1-3 lack `GO:0141167` active DNA demethylation, which only TDG carries,
+    although the term's definition starts with TET oxidation.
+- **GO-CAM, c-FLIP.** `685de18700006529` types c-FLIP with cysteine-type
+  endopeptidase activity, but its caspase-like domain lacks the catalytic
+  cysteine.
+- **GO-CAM, TRAIL models.** Both use generic receptor activity for DR4/DR5
+  instead of `GO:0036463` TRAIL receptor activity, and add a TRADD step that
+  rests on an overexpression study.
+- **GO-CAM, reelin.**
+  - Neither human reelin model includes VLDLR.
+  - In `66187e4700002704`, FYN's evidence is a paper on Nogo-A
+    (PMID:16979591), and CUL5's is a CUL5-ARIH2 structure paper (PMID:34518685).
+    Neither is about reelin or DAB1.
+- **GO-CAM, NMJ.** The mouse model `64c3044100000089` gives rapsyn the inner-ear
+  alpha9 receptor (Chrna9) as input, not the muscle receptor.
+- **GO-CAM, DNA methylation.** `6882d2b800000042` makes HLTF's H3K23
+  ubiquitination part of maintenance methylation. Its source, PMID:40680746,
+  raises a role in DNMT1 recruitment only as a possibility.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -409,11 +489,13 @@ switch or any prostanoid synthase.
   `proposed_new_terms`.
 - Review the blood-set member genes, starting with the proteases and cofactors
   that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
-- Model the remaining candidates. PKC signaling (PW:0000840) should probably
-  extend `gpcr_plc_calcium_pkc_signaling` rather than start a new module. DNA
-  modification, reelin and TRAIL signaling are new.
-- Model NMJ acetylcholine-receptor clustering (agrin, LRP4, MuSK, DOK7, rapsyn)
-  as its own module, as recorded in `acetylcholine_signaling`.
+- Model IL-10 signaling, which has only an IL-22 gene-overlap match, and the
+  mammalian pathways whose only match is a Drosophila, plant or bacterial module
+  (RNA polymerase I-III transcription, mitochondrial protein import, the microRNA
+  pathway, and the DNA repair pathways listed under Module seeds).
+- Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
+  receptors in the adult synapse, and a human PAR/Crumbs/Scribble polarity module
+  (the PKC module mentions the PAR complex only through the atypical PKCs).
 - Repeat the completeness measure with rat and mouse GO-CAMs. The index holds
   59 rat and 2,209 mouse activity rows.
 
@@ -429,7 +511,7 @@ switch or any prostanoid synthase.
 - [ ] Report obsolete GO citations to RGD
 - [ ] Map `needs_go_mapping` seeds
 - [x] Gene reviews for SREBP pathway members
-- [ ] Model the remaining `candidate` seeds (8 of 12 done, in two sets)
+- [x] Model the `candidate` seeds (all 10 of the 2026-10-20 triage, in the second and third sets)
 
 ## Notes
 
@@ -444,3 +526,7 @@ table, seeds and the SREBP pilot module were added. Inputs: PW release
 Second set of four modules (acetylcholine, dopamine receptor, visual
 phototransduction, prostanoid biosynthesis). The `has_module` test now counts
 a PW id only when a module cites it as an `evidence` source.
+
+Third set of five modules (PKC signaling, DNA cytosine methylation cycle,
+reelin, TRAIL apoptotic signaling, NMJ AChR clustering). The candidate queue
+is empty.
