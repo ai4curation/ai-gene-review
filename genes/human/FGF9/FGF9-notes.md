@@ -1,0 +1,15 @@
+# FGF9 notes
+
+## 2026-10-27 — extracellular ligand and context-dependent responses
+
+FGF9 acts as a secreted FGFR ligand with mitogenic activity. Its lack of a conventional cleaved signal peptide does not imply exclusion from the ER/Golgi secretory pathway. The original human cloning abstract reports secretion from transfected COS cells, and recovered CHO-product Results document mitogenic activity and preparation-specific N termini (PMID:8321227, Results around Figure 5). The rat microsomal/secretory experiments in PMID:10506195 should not be mislabeled as direct human assays. The 2000 paper is used only at the recovered abstract scope.
+
+Receptor recognition depends on receptor splice form and ligand construct. The 1996 receptor panel used mouse FGF9 and measured mitogenesis (PMID:8663044, Tables II–III); the 2017 human-construct work directly measured binding and ERK responses (PMID:28757146, Results/STAR Methods). Engineered truncations, monomeric mutants and receptor P252R are not natural protein products. One growth-factor core captures the biological unit rather than creating duplicate cores for binding and its downstream effects.
+
+Dimerization, heparan-sulfate binding and receptor potency affect different aspects of signaling. Mouse N143T increased tissue distribution while reducing potency for several receptors (PMID:19219044, Figures 3–8; PMID:28757146). Human synostoses association is retained without turning inconsistent S99D/S99N narrative labels into a confident variant assertion.
+
+Human fetal-testis expression is a developmental association, not a perturbation result (PMID:17848411, Figure 4). The adult substantia-nigra study positively identifies P31371 but does not assay substantia-nigra development (PMID:22926577, Tables 1–2). Human FGF9 rescue in a smooth-muscle cell line and rat knockdown/marker results support contextual proliferative, migratory and differentiation effects, with their reporting and organism limits retained (PMID:29118903, Figure 3E; PMID:28259995, Figures 5–6).
+
+The complete PAINT path supports nine inherited functions with no target-path IRD; loss judgments on the FGF12 branch do not apply here. All 152 Reactome contexts retain their original source keys and have P31371 participant matches. The reviewed location is the extracellular ligand, not the catalytic activity of other complex members. Two unavailable PMID:8575785 TAS statements remain unresolved despite independent support for signaling elsewhere.
+
+The [source evidence guide](FGF9-source-evidence.md) provides original links, operative locators and access limits. All 179 imported source objects and the original reference findings are preserved, with no new annotations, protein products or publication quotations. The genuine configured deep-research command returned nonzero and produced no provider report; its private traces remain opaque, and no cause is inferred. These authored notes and source guide are not provider output.
