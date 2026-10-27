@@ -2999,10 +2999,10 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**637 of 2,876 genes are complete; 2,239 remain.**
-This checkpoint adds DNM1, EIF2B1, FGB, EIF2B5, FGD4 and EIF2AK4 after their accepted actual
-merges and successful merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-637-2026-10-27-031347-utc)
-records their merge commits, validation evidence and retained uncertainties.
+**638 of 2,876 genes are complete; 2,238 remain.**
+This checkpoint adds FGF12 after verification of its actual merge and successful merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-638-2026-10-27-042418-utc) records the merge,
+validation evidence and retained source-specific uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3775,7 +3775,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FGB** — HGNC:3662; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_638c1588-9674-4bc3-a39c-2fc8f8b0ef09-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
 - [x] **FGD1** — HGNC:3663; [Aarskog-Scott syndrome, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b652280-1291-4166-ac59-62caabd977bb-2017-12-06T110000.000Z) (MONDO:0010589; XL; Definitive).
 - [x] **FGD4** — HGNC:19125; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0aae8cd-9d57-4d8c-83ae-ed968cf186bc-2020-04-14T131822.010Z) (MONDO:0015626; AR; Definitive).
-- [ ] **FGF12** — HGNC:3668; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54324da6-e7c7-4ad2-a669-d8ccd1a6b71a-2023-11-01T160000.000Z) (MONDO:0100062; AD; Definitive).
+- [x] **FGF12** — HGNC:3668; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54324da6-e7c7-4ad2-a669-d8ccd1a6b71a-2023-11-01T160000.000Z) (MONDO:0100062; AD; Definitive).
 - [ ] **FGF3** — HGNC:3681; [deafness with labyrinthine aplasia, microtia, and microdontia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5ca11e8c-6703-4be5-a8c2-82e6dcc865e4-2019-05-21T160000.000Z) (MONDO:0012541; AR; Definitive).
 - [ ] **FGF9** — HGNC:3687; [multiple synostoses syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1fd535ba-f5b4-469b-8866-894cf9e4e1d0-2025-06-24T040000.000Z) (MONDO:0017923; AD; Definitive).
 - [ ] **FGFR1** — HGNC:3688; [Hartsfield-Bixler-Demyer syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec5034c6-70cb-4ba3-bbb9-f65f6cad393d-2026-07-09T160000.000Z) (MONDO:0014196; AD; Moderate); [Pfeiffer syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4fef65d0-f73c-45fe-968e-86073674cb7e-2021-05-21T224433.397Z) (MONDO:0019659; AD; Definitive); [osteoglophonic dysplasia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d958e743-2ca0-4bb9-a198-364dd58005c3-2021-03-22T203501.315Z) (MONDO:0008150; AD; Limited).
