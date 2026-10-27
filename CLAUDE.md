@@ -196,6 +196,16 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+**Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
+went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
+model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
+was itself the over-annotation). Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
+retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
+not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
+`replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
+`replaced_by` upstream.
+See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
+
 ### ND annotations: reward adherence to the evidence-code guideline
 
 An ND (No biological Data available, `GO_REF:0000015`) row says a curator searched
@@ -672,6 +682,32 @@ just backfill-isoforms-organism human  # all genes in organism
 ```
 
 See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
+
+### When UniProt's isoforms and the literature disagree
+
+Two kinds of mismatch are recorded in structured form, not prose:
+
+- **An isoform the literature describes is missing from the reviewed entry**
+  (SYNGAP1: the alpha1 PDZ-ligand C-terminus is not among Q96PV0's isoforms).
+  Add a `functional_isoforms` entry, map it to the sequences that do carry it
+  (`REFSEQ_PROTEIN`, `UNIPROTKB_UNREVIEWED`), and record a `source_defects`
+  item with `defect_type: MISSING_ISOFORM`, `resource: UNIPROT`,
+  `requested_change: ADD`. `just export-source-defects` includes it in the
+  report for UniProt.
+- **A paper numbers residues on a non-displayed isoform** (RASAL2 "S351" is
+  Ser351 of Q9UJF2-2 and Ser203 of the displayed Q9UJF2, where 351 is Asp).
+  UniProt is not wrong here, so this is not a source defect. Add
+  `residue_mappings` to the finding: `as_reported` is the residue in the
+  numbering the paper used, `canonical` the same residue in the review's own
+  displayed sequence (the CURIE without an isoform suffix, `UniProtKB:Q9UJF2`,
+  never `-1`: the displayed isoform is not always isoform 1). Pin
+  `sequence_version` on both sides, as for any `ResiduePosition`. Each side is checked against the real sequence
+  (`python -m ai_gene_review.validation.finding_residue_mappings`, run by
+  `just validate-families`), so a number read on the wrong sequence fails;
+  a side that is not a UniProtKB sequence (a RefSeq-only isoform) is reported
+  unresolved rather than checked.
+  Never state a residue number in a finding without knowing which sequence it
+  refers to.
 
 ### Alternative-ORF peptides: one folder per UniProt accession
 
