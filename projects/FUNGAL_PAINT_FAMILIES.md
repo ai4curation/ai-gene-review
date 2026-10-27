@@ -374,8 +374,9 @@ ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
 - [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
   exemplar
 - [x] `CANAL/HMG1` - CGD *Candida albicans* class I HMG-CoA reductase; drafted
-  in this PR
-- [ ] `ASPFU/hmg1` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 1
+  in PR #5454
+- [x] `ASPFU/hmg1` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 1;
+  drafted in this branch
 - [ ] `ASPFU/hmg2` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 2
 - [ ] `EMENI/AN1593` - *Aspergillus nidulans* short PTHR10572 member
 
@@ -395,6 +396,10 @@ ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
   already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
   membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
   the eukaryotic peroxisomal-membrane IBA for fungal pruning.
+- Continued PTHR10572 with `ASPFU/hmg1`, carrying forward the same conserved
+  exact HMG-CoA reductase, isoprenoid, ER-membrane, fungal ergosterol, and
+  fungal peroxisomal-overpropagation decisions into a siderophore-producing
+  filamentous ascomycete.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
