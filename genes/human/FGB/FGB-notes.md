@@ -1,0 +1,13 @@
+# FGB integrated literature journal
+
+## 2026-10-26 — Beta-chain structure and contextual complex effects
+
+Human beta chains assemble with alpha and gamma chains into secreted fibrinogen. Chain-combination experiments in BHK recipients and the human fibrinogen structure establish a structural contribution by beta, beyond an indirect phenotype of gene loss ([PMID:8910396](https://pubmed.ncbi.nlm.nih.gov/8910396/), assembly Results; [PMID:19296670](https://pubmed.ncbi.nlm.nih.gov/19296670/), Overall Structure). The single structural core includes clot formation. Thrombin releases fibrinopeptide B; other proteins perform proteolytic catalysis and cross-linking.
+
+Whole-complex cell adhesion and platelet aggregation remain non-core contextual effects. The positive inherited PAINT assertions are retained with their actual node and sequence evidence; they are not rejected because the target appears among its own descendant evidence. The isolated modified beta-chain preparation was inactive in the platelet assay, and that result is not generalized to all assembled beta-chain states ([PMID:6281794](https://pubmed.ncbi.nlm.nih.gov/6281794/), Table 1). Alpha-C cofactor experiments do not establish a beta-chain enzyme-substrate adaptor core.
+
+The mouse-donor cortex assertion is refined to the external side of the plasma membrane. The recovered experiment measures added fluorescent fibrinogen at the outside of mouse megakaryocytes, with unspecified ligand species; separate human platelet evidence identifies surface-associated fibrin beta chains ([PMID:15914557](https://pubmed.ncbi.nlm.nih.gov/15914557/), Methods and Figure 1; [PMID:6777381](https://pubmed.ncbi.nlm.nih.gov/6777381/), Figure 3). The human target is not assigned a mouse recipient identity or an intracellular cortex location from peripheral fluorescence.
+
+All 113 decisions and all 82 reference assessments are integrated. The 65 ACCEPT, 28 KEEP_AS_NON_CORE, five TOO_GENERAL, one MODIFY and 14 UNDECIDED decisions preserve source-specific uncertainty where original experiments or exact target records remain inaccessible. No new GO annotation or publication quotation is introduced. The [direct journal](FGB-direct-notes.md), [direct evidence guide](FGB-direct-source-guide.md) and [database evidence guide](FGB-database-source-guide.md) retain precise evidence scopes and access limits.
+
+Two cleavage-product records describe official precursor coordinates separately from every imported parent-accession annotation. Proteomic accession groups do not prove a natural splice or released peptide. The genuine configured research-provider invocation produced no report; private traces were not read to infer a cause, and these notes document manual evidence assessment.
