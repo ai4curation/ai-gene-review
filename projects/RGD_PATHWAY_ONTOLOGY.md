@@ -1,7 +1,7 @@
 ---
 title: "RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds"
 maturity: SCOPING
-last_reviewed: 2026-10-20
+last_reviewed: 2026-10-26
 tags: [PIPELINE]
 species: [human]
 genes: [SCAP, INSIG1, INSIG2, MBTPS1, MBTPS2, SREBF1, SREBF2]
@@ -16,22 +16,27 @@ autolink_exclude: [PID, SREBP, ACO2, aco2, III]
 **Bottom line:** The Pathway Ontology (PW) from the Rat Genome Database (RGD)
 has 2,703 live terms. It is curated against human, rat and mouse genes, and RGD
 draws 200 of its pathways as interactive diagrams. We are using it three ways.
-First, as a source of PW→GO mappings: 616 PW terms now have at least one
-candidate GO biological-process mapping. Where PW's own definition cites a GO
+First, as a source of PW→GO mappings: 635 PW terms now have at least one
+GO biological-process mapping used for matching, 19 of them from hand curation. Where PW's own definition cites a GO
 term and our lexical match also finds one (397 terms), the two agree on 388.
 Separately, 44 GO ids cited in PW definitions are obsolete and one no longer resolves. Second, as a
 yardstick for GO-CAM completeness. Across the 144 diagram pathways that
 describe normal biology, the median pathway has only 29% of its RGD-curated
 human genes in any human GO-CAM. The best single GO-CAM covers a median of 2
-genes of a pathway, and only 48 of the 144 have any human GO-CAM model whose
+genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 687 modules. Seventy-seven already have a matching module, 10 are
-ready to model, 30 lack a GO process term, and 56 are disease or drug pathways
-and out of scope. Four modules have now been derived from RGD diagrams: the pilot
-`srebp_signaling`, and the linked blood set `coagulation_cascade`, `fibrinolysis`
-and `kallikrein_kinin_cascade`. All four pass schema and module validation.
+triaged against our 714 modules. Ninety already have a matching module, 14 are
+ready to model, 9 have only a broad GO process term or none, and 56 are disease
+or drug pathways and out of scope. Thirteen modules have now been derived from RGD
+diagrams: the pilot `srebp_signaling`; the linked blood set `coagulation_cascade`,
+`fibrinolysis` and `kallikrein_kinin_cascade`; a second set,
+`acetylcholine_signaling`, `dopamine_receptor_signaling`,
+`visual_phototransduction` and `prostanoid_biosynthesis`; and a third set,
+`protein_kinase_c_signaling`, `dna_cytosine_methylation_cycle`,
+`reelin_signaling`, `trail_apoptotic_signaling` and `nmj_achr_clustering`. All
+thirteen pass schema and module validation.
 
 ## Why this source
 
@@ -88,7 +93,7 @@ fetcher sends its own identifying user agent.
 
 | File | Contents |
 |------|----------|
-| `pw_go_mappings.sssom.tsv` | Candidate PW→GO mappings in SSSOM form, from three sources: GO ids PW cites in a definition (`skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. |
+| `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists (`pw2go:src/…`) and any QA finding (`pw2go:qa/…`), as fixed codes defined in the mapping-set description, so one prefix filter selects every problem row. `see_also` holds only GO's replacement for an obsolete target; the conflicting GO ids for a page citation that disagrees are in `other` as `conflicts_with=<GO id>`. |
 | `pw_gocam_completeness.tsv` | One row for each of the 1,677 PW terms with human genes. Genes are taken over the term and its descendants. The basis is the RGD-curated set when one exists and all sources otherwise. Columns give the share of basis genes in any human GO-CAM, the share with a gene review, the best-overlapping GO-CAM, and the GO-CAM models whose process falls under a mapped GO term, with the share of genes they contain. |
 | `module_seeds.yaml` | One seed per diagram pathway: diagram structure, RGD-curated human genes, merged GO mappings, GO-CAM coverage, matches to existing modules, and a triage tier. |
 | `summary.yaml` | Headline counts used on this page. |
@@ -101,10 +106,11 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id, or at least half of a module's genes are in the pathway | 77 |
-| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 10 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 20 |
-| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 30 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 90 |
+| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 14 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 24 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 9 |
+| `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
 
@@ -115,8 +121,10 @@ split along their sub-pathways before modelling.
 
 ### PW→GO mappings
 
-- **Coverage is good for metabolism and named signaling pathways.** 616 of
-  2,703 live PW terms have at least one current GO process mapping. 636 terms
+- **Coverage is good for metabolism and named signaling pathways.** 635 of
+  2,703 live PW terms have at least one current GO process mapping used for
+  matching. 19 of them come from the hand-curated set; the other 9 curated terms
+  have only a broad GO term or none. 636 terms
   cite GO in their definition and 417 have a lexical match.
 - **PW's definition citations are reliable.** Where both exist, the definition
   citation and the lexical match agree for 388 of 397 terms. In no case is the
@@ -134,15 +142,21 @@ split along their sub-pathways before modelling.
 - **PW cites retired GO terms.** 44 definition citations point at obsolete GO
   terms, and one at an id that no longer resolves. Several are amino-acid "metabolic process" terms that GO has since
   obsoleted, such as cysteine, histidine, tyrosine, phenylalanine and
-  tryptophan metabolic process. These can go back to RGD as a concrete update
-  list, filtered with `object_status` in the SSSOM file.
+  tryptophan metabolic process. PW:0000543 (protein kinase A (PKA) signaling
+  pathway) cites GO:0010737, now "obsolete protein kinase A signaling", both in its definition
+  and on its diagram page. GO names no replacement, but the current term is
+  GO:0141156 cAMP/PKA signal transduction. These can go back to RGD as a
+  concrete update list. In the SSSOM file the 45 obsolete citation sites (44
+  distinct PW→GO pairs) carry `pw2go:qa/OBSOLETE_TARGET` and the unresolvable
+  one `pw2go:qa/MISSING_TARGET`; 12 of the 45 list GO's replacement in
+  `see_also`.
 - **Some well-known pathways have no GO process match by label.** Examples are
   p53 signaling, AMPK signaling, PKA signaling, hypoxia-inducible factor,
   angiotensin II and vasopressin signaling, renin-angiotensin, and
   mitochondrial and cytosolic iron-sulfur cluster assembly. Some do have a GO
   term under another name, for example `GO:0072331` (signal transduction by p53
-  class mediator). These 30 `needs_go_mapping` seeds are a curation list for
-  manual mapping or for `proposed_new_terms`.
+  class mediator) and `GO:0141156` (cAMP/PKA signal transduction). All 28 such
+  diagram pathways are now mapped by hand; see Curated GO mappings below.
 
 ### GO-CAM completeness
 
@@ -196,21 +210,26 @@ members. The completeness table therefore reports both counts
 
 ### Module seeds
 
-The 10 `candidate` seeds, ordered by number of curated genes, are the
-modelling queue for normal-biology pathways without a module:
+Nine of the 10 candidates of the 2026-10-20 triage were modelled in the second
+and third sets (below). The tenth, IL-10 signaling, left the queue through a
+gene-overlap match and still has no module:
 
-| PW | Pathway | Curated human genes | Mapped GO | Note |
-|----|---------|--------------------:|-----------|------|
-| PW:0000841 | acetylcholine signaling | 40 | GO:0095500 | |
-| PW:0000394 | dopamine signaling | 38 | GO:0007212 | |
-| PW:0000962 | visual phototransduction | 33 | GO:0007602 | |
-| PW:0000840 | protein kinase C signaling | 32 | GO:0070528 | |
-| PW:0001340 | DNA modification | 28 | GO:0006304 | |
-| PW:0000843 | muscarinic acetylcholine signaling | 19 | GO:0007213 | |
-| PW:0000388 | reelin signaling | 15 | GO:0038026 | |
-| PW:0001243 | prostanoid biosynthesis | 14 | GO:0046457 | |
-| PW:0000682 | TRAIL signaling | 9 | GO:0036462 | |
-| PW:0000515 | IL-10 signaling | 7 | GO:0140105 | |
+| PW | Pathway | Curated human genes | Mapped GO | Module |
+|----|---------|--------------------:|-----------|--------|
+| PW:0000841 | acetylcholine signaling | 40 | GO:0095500 | `acetylcholine_signaling` |
+| PW:0000394 | dopamine signaling | 38 | GO:0007212 | `dopamine_receptor_signaling` |
+| PW:0000962 | visual phototransduction | 33 | GO:0007602 | `visual_phototransduction` |
+| PW:0000840 | protein kinase C signaling | 32 | GO:0070528 | `protein_kinase_c_signaling` |
+| PW:0001340 | DNA modification | 28 | GO:0006304 | `dna_cytosine_methylation_cycle` |
+| PW:0000843 | muscarinic acetylcholine signaling | 19 | GO:0007213 | `acetylcholine_signaling` |
+| PW:0000388 | reelin signaling | 15 | GO:0038026 | `reelin_signaling` |
+| PW:0001243 | prostanoid biosynthesis | 14 | GO:0046457 | `prostanoid_biosynthesis` |
+| PW:0000682 | TRAIL signaling | 9 | GO:0036462 | `trail_apoptotic_signaling` |
+| PW:0000515 | IL-10 signaling | 7 | GO:0140105 | none (see below) |
+
+IL-10 signaling
+(PW:0000515) now matches `il22_signaling`, which merged on `main` meanwhile, by gene
+overlap only (4 of its 7 genes are in the pathway); IL-10 itself still has no module.
 
 Re-running the triage after merging `main` on 2026-10-18 moved six former candidates. Five now
 match only by GO term to Drosophila or plant modules: RNA polymerase I, II and III
@@ -225,7 +244,103 @@ candidates for new eukaryotic modules.
 Two caveats apply to the `has_module` tier. A gene-overlap match needs only
 half of a module's genes in the pathway, so a broad pathway such as extrinsic
 apoptosis also matches the NF-kB and NLR modules. A has-module call means a
-related module exists, not that the module covers the whole RGD pathway.
+related module exists, not that the module covers the whole RGD pathway. A PW id
+counts as cited only when a module lists it as an `evidence` source; before
+2026-10-26 any mention counted, so a pathway a module's notes named as out of scope
+(kinin signaling, PW:0001480, in `kallikrein_kinin_cascade`) was miscounted as
+covered.
+
+### Curated GO mappings
+
+The 28 diagram pathways that had no GO process mapping were mapped by hand in
+[`data/pw_go_curated.sssom.yaml`](RGD_PATHWAY_ONTOLOGY/data/pw_go_curated.sssom.yaml),
+an SSSOM set with one comment per row. The script merges it into the generated set
+under `pw2go:src/CURATED_MAPPING`. It stops with an error if a curated GO id is
+missing, obsolete, not a biological process or mislabelled. Only `exactMatch`,
+`closeMatch` and `narrowMatch` rows are used for GO-CAM and module matching. A
+broad term such as `GO:0007186` G protein-coupled receptor signaling pathway would
+otherwise match every module under it.
+
+| Result | Pathways |
+|--------|---------:|
+| Specific GO term, now `candidate` | 14 |
+| Specific GO term, but only a GO-term module match (`related_module_only`) | 5 |
+| Only a broader GO term (`no_specific_go_term`) | 8 |
+| No GO process term at all (`no_specific_go_term`) | 1 |
+
+The 14 new candidates:
+
+| PW | Pathway | Curated human genes | GO | Predicate |
+|----|---------|--------------------:|----|-----------|
+| PW:0000639 | insulin-responsive GLUT4 glucose transport | 54 | GO:0044381 | close |
+| PW:0000543 | PKA signaling | 50 | GO:0141156 | close |
+| PW:0001361 | ATM signaling | 39 | GO:0000077 | narrow |
+| PW:0000244 | angiotensin II signaling | 33 | GO:0038166 | close |
+| PW:0002581 | NAD utilization | 33 | GO:0019677 | close |
+| PW:0000542 | AMPK signaling | 23 | GO:0061762 | narrow |
+| PW:0001503 | auditory mechanotransduction | 21 | GO:0050910 | narrow |
+| PW:0000360 | hypoxia-inducible factor | 20 | GO:0097411 | narrow |
+| PW:0000491 | vasopressin signaling | 17 | GO:1904117 | close |
+| PW:0000527 | angiotensin II via AT1 | 15 | GO:0086097 | close |
+| PW:0000493 | corticotropin-releasing hormone signaling | 12 | GO:0071376 | close |
+| PW:0000794 | epinephrine via beta adrenergic receptors | 8 | GO:0071880 | close |
+| PW:0001135 | parathyroid hormone signaling | 8 | GO:0071374 | close |
+| PW:0000676 | glucagon signaling | 5 | GO:0071377 | close |
+
+For hormones without a receptor signaling pathway term, GO uses `cellular
+response to <ligand> stimulus`. That branch covers vasopressin, CRH, PTH and
+glucagon, and it is also the process of the mouse glucagon GO-CAM
+`636d9ce800000147`. In GO a receptor signaling pathway sits under the cellular
+response to its ligand, so the response term is strictly the broader one. These
+rows still use `closeMatch`, because a PW "signaling pathway" includes the
+downstream response. The V2 vasopressin branch maps to the same `GO:1904117`
+with `broadMatch`, because it is one receptor's share of that response.
+
+The ATM row's `GO:0000077` DNA damage checkpoint signaling also covers
+ATR-dependent checkpoints, so one of the four GO-CAMs it matches
+(`65039e8700000123`, ATR activation) is an ATR model, not an ATM one.
+
+PKA signaling and beta-adrenergic signaling should extend
+`gpcr_camp_pka_signaling` rather than start new modules. That module is a compact
+five-gene module (ADRB2, GNAS, ADCY5, PRKACA, CREB1) grounded in `GO:0007188`, so
+the triage cannot link it to either pathway.
+
+The five `related_module_only` pathways are spliceosome, mRNA nuclear export and
+p53 signaling, whose only matches are Drosophila or *C. elegans* modules, and
+calcium-mediated signaling (matched by `t_cell_receptor_signaling`). The fifth,
+renin-angiotensin, matches `kallikrein_kinin_cascade` only because that module's
+notes discuss `GO:0002003` angiotensin maturation.
+
+The 9 `no_specific_go_term` pathways show where GO is coarser than PW. For the
+receptor pathways both GO branches were checked: `... receptor signaling
+pathway` and `cellular response to <ligand> stimulus`.
+
+- **Receptor pathways.**
+  - Bradykinin has neither kind of term. `GO:0140162` (venom-mediated vasodilation
+    by activation of bradykinin receptor signaling pathway) names a bradykinin
+    pathway term that does not exist, and the kinin cascade terms are kinin
+    generation, not signalling. Kinin signaling therefore maps only to
+    `GO:0007186`.
+  - The calcium-sensing receptor has only `GO:0071277` cellular response to
+    calcium ion, which covers every calcium response.
+  - The V2 vasopressin branch and angiotensin II via AT2 are receptor subtypes of
+    pathways that do have terms (`GO:1904117`, `GO:0038166`). GO does not split
+    those terms by receptor.
+- **CaMKII signaling.** GO obsoleted `GO:0099004` calmodulin dependent kinase
+  signaling pathway. The term it suggests instead, `GO:0061762`, is the
+  CAMKK-AMPK cascade, so CaMKII signaling maps only to `GO:0019722`. (ATM
+  signaling maps broadly to `GO:0042770`, and narrowly to `GO:0000077` DNA damage
+  checkpoint signaling, so it is a candidate.)
+- **Iron-sulfur assembly.** Mitochondrial and cytosolic iron-sulfur cluster
+  assembly both map only to `GO:0016226`, because GO does not separate the two
+  machineries.
+- **Others.** Titanium dioxide nanoparticle response maps to `GO:1990267`.
+  Histone modification has no process term at all (`sssom:NoTermFound`): GO
+  obsoleted `GO:0016570` histone modification and its children in favour of
+  molecular functions under `GO:0140993` histone modifying activity.
+
+These are candidates for GO term requests, or for modules grounded on molecular
+functions rather than on a process term.
 
 ### Pilot: SREBP signaling
 
@@ -286,9 +401,13 @@ between diagrams were given one home each:
   tPA and uPA, plasmin degradation of fibrin, and inhibition by PAI-1 and the
   other serpins, alpha-2-antiplasmin and TAFI.
 
-The triage re-run counts five seeds as `has_module` that were not before: the
-three pathways, the protein C anticoagulant pathway (PW:0000480) and kinin
-signaling (PW:0001480).
+The triage re-run counts four seeds as `has_module` that were not before: the
+three pathways and the protein C anticoagulant pathway (PW:0000480), which
+`coagulation_cascade` declares as an evidence source because its protein C part
+holds five of that pathway's six genes (all but PROCR). Kinin signaling
+(PW:0001480), which an earlier count included, is outside `kallikrein_kinin_cascade`
+and went back to `needs_go_mapping`; it is now curated to a broad GO term (see
+Curated GO mappings).
 
 Most of the curation work was in the non-enzymatic members, because the RGD
 diagrams draw them as plain nodes:
@@ -318,37 +437,182 @@ KNG1, BDKRB2: `6246724f00000632`) and plasminogen's role in matrix breakdown
 kallikrein and every inhibitor step have no curated model. Of the roughly 50
 member gene products, only VWF, A2M and APOH have gene reviews.
 
+### Second set: acetylcholine, dopamine, phototransduction, prostanoids
+
+Four more candidates were modelled, one module each:
+
+- [`modules/acetylcholine_signaling.yaml`](../modules/acetylcholine_signaling.yaml)
+  ([PW:0000841](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000841.yaml), with its
+  nicotinic and muscarinic sub-pathways PW:0000842 and PW:0000843) runs from
+  choline uptake (SLC5A7) and ACh synthesis (CHAT) to reception and hydrolysis
+  (ACHE). Vesicular loading and release are references to
+  `synaptic_vesicle_neurotransmitter_loading` and `synaptic_vesicle_exocytosis`.
+  Reception is a choice between five nicotinic receptor subtypes and the two
+  muscarinic G-protein arms, M1/M3/M5 to Gq/11 and M2/M4 to Gi/o. GRK2/GRK5 and
+  RGS2/RGS4/RGS6 terminate the signal. RGD's agrin, LRP4, MuSK, DOK7 and rapsyn
+  genes are left out: they build the neuromuscular junction rather than transduce
+  the signal, and GO keeps them under AChR clustering (`GO:0071340`), not
+  acetylcholine signaling. They are modelled separately in `nmj_achr_clustering`
+  (third set).
+- [`modules/dopamine_receptor_signaling.yaml`](../modules/dopamine_receptor_signaling.yaml)
+  ([PW:0000394](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000394.yaml)) is the striatal
+  instance of `gpcr_camp_pka_signaling`. D1-like receptors act through Golf and
+  ADCY5, then PKA and DARPP-32, which inhibits PP1; D2-like receptors inhibit
+  ADCY5 through Gi/o. Regulatory parts cover the DARPP-32 phospho-switch (CDK5,
+  PP2A, calcineurin, CK1), GRK/arrestin/RGS9-2 termination, STEP and the
+  beta-arrestin 2/PP2A/AKT arm. Dopamine synthesis stays in
+  `catecholamine_biosynthesis`. SRC is left out as peripheral, and the D1-D2
+  heteromer Gq arm is recorded as contested rather than asserted.
+- [`modules/visual_phototransduction.yaml`](../modules/visual_phototransduction.yaml)
+  ([PW:0000962](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000962.yaml)) gives each step,
+  from opsin through transducin, PDE6, the CNG channel and the NCKX exchanger,
+  a rod and a cone variant. Recovery covers GRK1/GRK7, the arrestins, recoverin,
+  the RGS9 GAP complex and cGMP resynthesis by retGC and the GCAPs, and the retinoid
+  cycle is a reference to `retinoid_visual_cycle`. RGD's human list has two
+  changes. CIMIP3 is dropped: it is a sperm-axoneme protein whose alias GUCA1ANB
+  ("GUCA1A neighbor") probably put it there. GUCA1A is added, because RGD's own
+  diagram draws Guca1a acting on the retinal guanylate cyclase.
+- [`modules/prostanoid_biosynthesis.yaml`](../modules/prostanoid_biosynthesis.yaml)
+  ([PW:0001243](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001243.yaml)) is a reaction
+  chain grounded in Rhea and ChEBI. PTGS1 or PTGS2 makes PGH2, which branches to
+  PGE2, PGD2, PGI2, TXA2 and PGF2alpha through the terminal synthases. AKR1A1 is
+  left out: nothing but RGD's own text supports a prostaglandin reaction for it,
+  so it is recorded as a knowledge gap. Arachidonate release by cPLA2, the
+  receptor sub-pathways and prostanoid inactivation are out of scope.
+
+These modules also turned up three possible upstream errors:
+
+- In the human cone-opsin GO-CAMs for OPN1SW and the OPN1MW genes, the PDE6C
+  activity is part of `GO:0070966` (no-go mRNA decay). The OPN1LW model places the
+  same activity in `GO:0141190` (transducin-mediated opsin signaling pathway).
+- PRXL2B's IBA/ISS term `GO:0047017` is defined by PGD2 reduction, but the
+  primary study of mouse and pig PRXL2B (PMID:18006499) found that PGD2 is not a
+  substrate. Its own reaction (RHEA:28214) has no GO molecular-function term.
+- RCVRN's TAS row for guanylate cyclase activator activity (`GO:0008048`) cites the
+  1991 paper behind a role recoverin is now thought not to have. That paper is not
+  cached, so this is a question rather than a finding.
+
+GO-CAM coverage is uneven. Curated human models cover the full rod and cone
+activation cascades (`6918f23700000035`, `68fac5ed00003872` and the other cone
+opsin models), each dopamine receptor's G-protein step and several nicotinic and
+muscarinic receptors. No model covers phototransduction recovery, the DARPP-32
+switch or any prostanoid synthase.
+
+### Third set: PKC, DNA methylation, reelin, TRAIL, NMJ clustering
+
+The last four candidates were modelled, plus one module that the acetylcholine
+work split off:
+
+- [`modules/protein_kinase_c_signaling.yaml`](../modules/protein_kinase_c_signaling.yaml)
+  ([PW:0000840](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000840.yaml)) models the PKC
+  life cycle. The steps are HSP90/CDC37 chaperoning, priming by PDPK1 (with
+  mTORC2, which the RGD text names), activation by isoform class, anchoring by
+  RACK1 and PICK1, and dephosphorylation by PHLPP1/2. The classes are a variant
+  set: conventional PKCs need DAG and calcium, novel PKCs need DAG only, and
+  atypical PKCs sit on the PAR3/PAR6 scaffold. The second-messenger step is a
+  reference to `gpcr_plc_calcium_pkc_signaling`. RGD's substrate and cross-talk
+  genes (FSCN1, BTK, LCK, FYN, RASA1) are left out, and LDB3, PCNT and COPB1 are
+  described in prose only.
+- [`modules/dna_cytosine_methylation_cycle.yaml`](../modules/dna_cytosine_methylation_cycle.yaml)
+  ([PW:0001340](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001340.yaml)) covers de novo
+  methylation (DNMT3A/B, with DNMT3L), UHRF1-directed maintenance by DNMT1,
+  active demethylation by TET1-3 and TDG, and the methyl-CpG readers. TDG and
+  DNMT3L are not on RGD's list; RGD's own text and the GO definition of active
+  demethylation support adding them. Left out: the transcription factors on
+  RGD's list, the CXXC-domain histone enzymes (they belong to the
+  histone-modification sub-pathway), MBD4 (a mismatch glycosylase) and UHRF2.
+  By gene overlap alone it also matches the broad chromatin
+  modification/remodeling pathway (PW:0001337), the loose-match case described
+  above.
+- [`modules/reelin_signaling.yaml`](../modules/reelin_signaling.yaml)
+  ([PW:0000388](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000388.yaml)) runs from RELN
+  binding VLDLR and LRP8 to DAB1 phosphorylation by FYN and SRC, then the PI3K
+  and LIS1 branches. DAB1 degradation by the SOCS7/CUL5 ligase ends the signal.
+  The NMDA and AMPA receptor subunits are downstream targets, not participants.
+  The integrins and the PAF-AH catalytic subunits are context.
+- [`modules/trail_apoptotic_signaling.yaml`](../modules/trail_apoptotic_signaling.yaml)
+  ([PW:0000682](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000682.yaml)) is the
+  concrete TRAIL instance of `death_receptor_apoptotic_signaling`. TRAIL binds
+  DR4 or DR5, which assemble a DISC of FADD and caspase-8, held back by c-FLIP.
+  Caspase-10 and the decoy receptors are optional parts. The direct caspase
+  route and the BID-to-mitochondria route are a variant set that refers to the
+  intrinsic and execution modules. TRADD is left out, because studies of the
+  endogenous DISC find it is not recruited.
+- [`modules/nmj_achr_clustering.yaml`](../modules/nmj_achr_clustering.yaml)
+  covers the clustering arm of PW:0000842: neural agrin, LRP4, MuSK, DOK7 with
+  CRK/CRKL, and rapsyn. The muscle receptor is the thing clustered, not a
+  participant. No receptor subunit carries `GO:0071340`, which agrin, LRP4, MuSK
+  and rapsyn do.
+
+These modules turned up more possible upstream errors:
+
+- **RGD.** The PW:0000840 text says PDPK1 phosphorylates "the activation loop of
+  PLC"; it should say PKC.
+- **GOA.**
+  - PRKCZ, an atypical PKC, has an EXP annotation to calcium,diacylglycerol-
+    dependent kinase activity (`GO:0004698`). PRKCD, a calcium-independent novel
+    PKC, has an IDA one.
+  - TET1-3 lack `GO:0141167` active DNA demethylation, which only TDG carries,
+    although the term's definition starts with TET oxidation.
+- **GO-CAM, c-FLIP.** `685de18700006529` types c-FLIP with cysteine-type
+  endopeptidase activity, but its caspase-like domain lacks the catalytic
+  cysteine.
+- **GO-CAM, TRAIL models.** Both use generic receptor activity for DR4/DR5
+  instead of `GO:0036463` TRAIL receptor activity, and add a TRADD step that
+  rests on an overexpression study.
+- **GO-CAM, reelin.**
+  - Neither human reelin model includes VLDLR.
+  - In `66187e4700002704`, FYN's evidence is a paper on Nogo-A
+    (PMID:16979591), and CUL5's is a CUL5-ARIH2 structure paper (PMID:34518685).
+    Neither is about reelin or DAB1.
+- **GO-CAM, NMJ.** The mouse model `64c3044100000089` gives rapsyn the inner-ear
+  alpha9 receptor (Chrna9) as input, not the muscle receptor.
+- **GO-CAM, DNA methylation.** `6882d2b800000042` makes HLTF's H3K23
+  ubiquitination part of maintenance methylation. Its source, PMID:40680746,
+  raises a role in DNMT1 recruitment only as a possibility.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
   definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
-- Send RGD the 44 obsolete GO citations, the unresolvable one and the 3 wrong page citations, with GO's replacement where one
-  exists (the SSSOM `comment` column).
-- Map the 30 `needs_go_mapping` seeds by hand, or record missing terms as
-  `proposed_new_terms`.
+- Send RGD the 45 obsolete GO citation sites (44 in definitions, 1 on a
+  diagram page; the page one repeats PW:0000543's definition citation, so 44
+  distinct pairs), the unresolvable one and the 3 wrong page citations, with
+  GO's replacement where one exists, and GO:0141156 for PW:0000543.
+  Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
+  `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
+  PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
+- Model the 14 new candidates from the curated mappings. PKA and
+  beta-adrenergic signaling should extend `gpcr_camp_pka_signaling`, and
+  angiotensin II via AT1 sits under angiotensin II signaling.
+- Raise the missing bradykinin (kinin) receptor signalling and CaMKII signalling
+  terms with GO, or record them as `proposed_new_terms` in the modules that need
+  them.
 - Review the blood-set member genes, starting with the proteases and cofactors
   that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
-- Model the next candidates: acetylcholine and dopamine signaling, visual
-  phototransduction and prostanoid biosynthesis.
+- Model IL-10 signaling, which has only an IL-22 gene-overlap match, and the
+  mammalian pathways whose only match is a Drosophila, plant or bacterial module
+  (RNA polymerase I-III transcription, mitochondrial protein import, the microRNA
+  pathway, and the DNA repair pathways listed under Module seeds).
+- Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
+  receptors in the adult synapse, and a human PAR/Crumbs/Scribble polarity module
+  (the PKC module mentions the PAR complex only through the atypical PKCs).
 - Repeat the completeness measure with rat and mouse GO-CAMs. The index holds
   59 rat and 2,209 mouse activity rows.
-- Consider citing PW ids in module `evidence` when a module is derived from or
-  checked against an RGD diagram, as the pilot does, so that the
-  `has_module` test can rely on explicit links.
 
 ## Status
 
 - [x] Fetch PW, RGD gene annotations and all 200 RGD diagram pages
 - [x] Parse diagram pages into structured records (`pathways/`)
-- [x] Candidate PW→GO mappings (`data/pw_go_mappings.sssom.tsv`)
+- [x] Candidate PW→GO mappings (`data/pw_go_mappings.sssom.yaml`; `just validate-rgd-mappings`)
 - [x] GO-CAM completeness table (`data/pw_gocam_completeness.tsv`)
 - [x] Module seeds and triage (`data/module_seeds.yaml`)
 - [x] Pilot module from an RGD diagram (`modules/srebp_signaling.yaml`)
 - [ ] Spot-check and promote definition-citation mappings
 - [ ] Report obsolete GO citations to RGD
-- [ ] Map `needs_go_mapping` seeds
-- [ ] Gene reviews for SREBP pathway members
-- [ ] Model the next `candidate` seeds
+- [x] Map `needs_go_mapping` seeds (all 28, in `data/pw_go_curated.sssom.yaml`)
+- [x] Gene reviews for SREBP pathway members
+- [x] Model the `candidate` seeds (9 of the 10 from the 2026-10-20 triage, in the second and third sets; IL-10 left the queue by gene overlap)
 
 ## Notes
 
@@ -357,3 +621,20 @@ member gene products, only VWF, A2M and APOH have gene reviews.
 Project created. Pipeline, parsed diagram records, mappings, completeness
 table, seeds and the SREBP pilot module were added. Inputs: PW release
 2026-05-16 and GO release 2026-07-26.
+
+### 2026-10-26
+
+Second set of four modules (acetylcholine, dopamine receptor, visual
+phototransduction, prostanoid biosynthesis). The `has_module` test now counts
+a PW id only when a module cites it as an `evidence` source.
+
+Third set of five modules (PKC signaling, DNA cytosine methylation cycle,
+reelin, TRAIL apoptotic signaling, NMJ AChR clustering). The candidate queue
+is empty.
+
+### 2026-10-26 (curated mappings)
+
+Hand-curated GO mappings for the 28 `needs_go_mapping` seeds
+(`data/pw_go_curated.sssom.yaml`). Fourteen became candidates, five match only
+other-taxon or GO-term modules, and 9 have only a broad GO term or none
+(new tier `no_specific_go_term`).
