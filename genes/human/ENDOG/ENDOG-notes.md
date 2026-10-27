@@ -193,3 +193,51 @@ in-vitro cleavage map on damaged templates. A static reference scan cannot see
 lesion-driven site selection, which PMID:41854021 says is ENDOG's actual preference — so
 this negative result does not exclude ENDOG involvement, it only removes the sequence-motif
 argument for it.
+
+## 2026-10-27 — OpenScientist H2: intermembrane space vs matrix (narrowed, not settled)
+
+Ran the sub-compartment question as a hypothesis job
+(`ENDOG-hypotheses/submitochondrial-localization-ims-vs-matrix/`). This run saved its
+executed code as provenance, which fetches the reference sequences from UniProt, so the
+analysis is inspectable in a way H1's was not.
+
+It computed sequence features for ENDOG against eight matrix and seven intermembrane-space
+reference proteins, with EXOG, worm CPS-6 and yeast NUC1 as controls. Every sequence fact
+it reports I checked against our own UniProt record and all are correct: transit peptide
+1-48 with mature chain 49-297, three cysteines in total (positions 84, 113, 196),
+presequence 16.7% arginine with net charge +5, and no twin CX9C or CX3C motif.
+
+The one solid gain is a negative. ENDOG enters by the cleavable-presequence TIM23 route and
+is **not** a MIA40 disulfide-relay substrate
+[file:human/ENDOG/ENDOG-hypotheses/submitochondrial-localization-ims-vs-matrix/openscientist.md
+"ENDOG is imported via the cleavable-presequence (TOM/TIM23) pathway, not the MIA40
+twin-cysteine pathway"], which rules out the twin-cysteine class of intermembrane-space
+residents such as CHCHD4 and TIMM13. That rests on a cysteine count anyone can repeat.
+
+It does not settle the compartment, and the run is clear about why. The presequence route
+delivers to both destinations
+[same file "Many IMS proteins (DIABLO/SMAC, HTRA2) are delivered by the same presequence
+machinery, then arrested or sorted into the IMS"], and its classifier failed on exactly
+those proteins while reaching only [same file "LOO-CV accuracy = 60.0% (9/15)"] against a
+53% majority-class baseline. The presequence signature is also shared with EXOG, so it is a
+family trait, not a discriminator. A dual or regulated localization fits everything computed
+[same file "reconciles all observations and is not excluded by any sequence feature computed
+here"].
+
+Two limitations it stated plainly rather than papering over: no external localization
+predictor was reachable (DeepMito returned 404, MitoFates refused the connection), so the
+result rests on its own classifiers; and it did not retrieve the four context papers I
+supplied, taking them as given.
+
+Consequences for the review. No action changed and no annotation added. The decision to stay
+at the root mitochondrion term is unchanged and now better argued: the import route is
+settled, the compartment is not. The sub-compartment check on the inner-membrane row records
+the import-pathway finding alongside the conflicting fractionation and imaging evidence. I
+did not adopt the run's suggestion to add `GO:0042645 mitochondrial nucleoid` from the TFAM
+colocalization — that is a judgement about whether one imaging result supports a
+sub-organelle component term, and it belongs to a curator reading PMID:36394256 directly,
+not to a sequence analysis that never opened the paper.
+
+What would settle it is unchanged from the organelle-policy note above and is cheap: mitoplast
+protease protection, where intermembrane-space proteins are degraded on swelling and matrix
+proteins are protected.
